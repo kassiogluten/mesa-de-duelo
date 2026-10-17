@@ -9,7 +9,7 @@ import { validateDeckLocal } from './deckRules';
 import './lobby.css';
 export { deckArt, deckColors } from './deckStats';
 
-type Mode = 'ai' | 'net';
+type Mode = 'ai' | 'net' | 'free';
 type DeckAction = 'library' | 'create' | 'import';
 export interface Lobby {
   refresh(): void;
@@ -19,6 +19,8 @@ export interface Lobby {
 }
 export interface LobbyOptions {
   onPlay(you: DeckData, opp: DeckData | null, config: MatchConfig, opponents?: (DeckData | null)[]): Promise<void>;
+  /** Mesa livre: sem servidor e sem regras automáticas. */
+  onFreePlay(you: DeckData, format: DeckFormat): void;
   onHost(you: DeckData, name: string, url: string, config: MatchConfig): Promise<void>;
   onJoin(you: DeckData, name: string, code: string, url: string): Promise<void>;
   onValidate(deck: DeckData, format: DeckFormat, url: string): Promise<DeckValidation>;
@@ -35,7 +37,7 @@ const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
   let format: DeckFormat | null = remembered === 'free' || remembered === 'pauper' || remembered === 'commander' ? remembered : null;
-  let mode: Mode = load('mesa:mode') === 'net' ? 'net' : 'ai';
+  let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
   let commanderOpponents = ['random', 'random', 'random'];
@@ -62,7 +64,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 10 9-5M12 12 3 7m9 5v10M7.5 4.5l9 5"/></svg><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v3"/></svg><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
-        </div></fieldset>
+          <button type="button" class="opponent-card free-card" data-setting="opponent" data-value="free"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h9a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M4 7v12a2 2 0 0 0 2 2h9"/></svg><span><strong>Mesa livre</strong></span></button>
+        </div><p class="setup-explanation" id="freeHelp" hidden>Sem regras automáticas: você compra, vira, desvira e move as cartas como numa mesa de verdade. Para testar o deck sozinho.</p></fieldset>
         <fieldset class="match-choice duration-choice" id="durationChoice"><legend>Partida</legend><div class="choice-segments"><button type="button" data-setting="length" data-value="bo1">Única</button><button type="button" data-setting="length" data-value="bo3">Melhor de três</button></div></fieldset>
         <fieldset class="match-choice player-count-choice" id="playerCountChoice" hidden><legend>Jogadores</legend><div class="choice-segments"><button type="button" data-setting="players" data-value="2">2</button><button type="button" data-setting="players" data-value="3">3</button><button type="button" data-setting="players" data-value="4">4</button></div></fieldset>
         <div class="opponent-choice" id="aiPanel"><label for="oppSel">Deck do computador</label><select id="oppSel" class="input-field"></select></div>
@@ -129,8 +132,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('.match-sidebar').classList.toggle('waiting-room', !!waitingRoom);
     $('#netPanel').hidden = mode !== 'net';
     const commander = format === 'commander';
-    $('#durationChoice').hidden = commander;
-    $('#playerCountChoice').hidden = !commander;
+    const free = mode === 'free';
+    $('#durationChoice').hidden = commander || free;
+    $('#playerCountChoice').hidden = !commander || free;
+    $('#freeHelp').hidden = !free;
     $('#opponentLegend').textContent = commander && playerCount > 2 ? 'Oponentes' : 'Oponente';
     $('#aiModeLabel').textContent = commander && playerCount > 2 ? 'Computadores' : 'Computador';
     $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Outras pessoas' : 'Outra pessoa';
@@ -146,12 +151,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     }
     for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #netUrl, [data-join] button, [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
     const deck = selected(), result = deck && format ? validations.get(key(deck)) : undefined;
-    const invalid = !!deck && !!format && (result ? !result.valid : validateDeckLocal(deck, format).status === 'invalid');
+    const invalid = !free && !!deck && !!format && (result ? !result.valid : validateDeckLocal(deck, format).status === 'invalid');
     const art = deck && deckArt(deck);
     $('#chosenDeck').innerHTML = `${art ? `<span class="chosen-art" style="background-image:url('${esc(art)}')" aria-hidden="true"></span>` : ''}${!deck ? `<span class="chosen-caption">${esc(formatName(format))}</span>` : ''}<strong>${esc(deck?.name ?? 'Escolha um deck para jogar')}</strong>${deck ? `<span>${result ? result.valid ? 'Verificado pelo servidor' : 'Precisa de ajustes' : deck.builtin ? 'Deck pronto' : 'Seu deck'}</span>` : ''}`;
     const start = $<HTMLButtonElement>('#startMatch');
     start.disabled = !format || !deck || invalid || busy || !!waitingRoom;
-    start.textContent = busy ? 'Preparando…' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : 'Criar sala';
+    start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : 'Criar sala';
     $('#roomInfo').hidden = !room;
     $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>Escolha um deck compatível e confirme abaixo.</p><button class="ghost-btn" data-lobby="cancel-lookup">Voltar a criar uma sala</button>` : '';
     $('#netWait').hidden = !waitingRoom;
@@ -170,6 +175,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     refresh();
     const request = ++preflight;
     if (!format) { setStatus('Escolha o formato antes de iniciar a partida.'); return; }
+    if (mode === 'free') { setStatus(''); return; }
     const currentKey = key(deck);
     void opts.onValidate(deck, format, url()).then(result => {
       if (request !== preflight) return;
@@ -181,6 +187,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const deck = selected();
     if (busy || !format || !deck) return;
     ++preflight;
+    if (mode === 'free') { setStatus(''); opts.onFreePlay(deck, format); return; }
     const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
     setBusy(true); setStatus('Verificando o deck…');
     try {
@@ -206,7 +213,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       if (choice.dataset.setting === 'format') {
         format = choice.dataset.value === 'commander' ? 'commander' : choice.dataset.value === 'pauper' ? 'pauper' : 'free'; save('mesa:format', format); youId = rememberedDeck(); preflight++; setStatus('');
       } else if (choice.dataset.setting === 'opponent') {
-        mode = choice.dataset.value === 'net' ? 'net' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
+        mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
       } else if (choice.dataset.setting === 'players') { playerCount = Number(choice.dataset.value); save('mesa:commanderPlayers', String(playerCount));
       } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
       refresh(); return;

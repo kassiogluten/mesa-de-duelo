@@ -6,21 +6,24 @@ import { createForgeTableView } from './ui/forgeTable';
 import { deckArt, mountLobby } from './ui/lobby';
 import { enterLandscape, mountRotateGate } from './ui/landscape';
 import { hideCardPreview } from './ui/cardInspector';
+import { createFreeTableView, loadFreeTable } from './ui/freeTable';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
   <div class="screen" id="scrLobby"></div>
   <div class="screen" id="scrGame" hidden></div>
   <div class="screen" id="scrDecks" hidden></div>
+  <div class="screen" id="scrFree" hidden></div>
   <footer class="credits">Cartas e imagens: <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.
   Magic: The Gathering é marca da Wizards of the Coast; projeto de fã, sem afiliação.</footer>`;
 
-const screens = { lobby: '#scrLobby', game: '#scrGame', decks: '#scrDecks' } as const;
+const screens = { lobby: '#scrLobby', game: '#scrGame', decks: '#scrDecks', free: '#scrFree' } as const;
 function show(name: keyof typeof screens) {
   hideCardPreview(true);
   screen = name;
   for (const [k, sel] of Object.entries(screens)) (document.querySelector(sel) as HTMLElement).hidden = k !== name;
-  document.body.dataset.screen = name;
+  // A mesa livre usa as mesmas regras de tela da partida (tela cheia, girar o celular).
+  document.body.dataset.screen = name === 'free' ? 'game' : name;
 }
 
 let forge: ForgeClient | null = null;
@@ -78,8 +81,13 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
 
 mountRotateGate();
 
+const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
+  onExit() { show('lobby'); lobby.refresh(); },
+});
+
 const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onPlay: async (you, opp, config, opponents) => { void enterLandscape(); await startMatch(you, opp, config, opponents); },
+  onFreePlay: (you, format) => { void enterLandscape(); leaveForge(); freeTable.open(you, format); show('free'); },
   onHost: async (you, name, url, config) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), config }, config); },
   onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you) }); },
   onValidate: async (deck, format, url) => (await requireForge(url)).validateDeck(forgeDeck(deck), format),
@@ -283,4 +291,6 @@ show('lobby');
 // Old shared links now open setup; no match starts without a format and deck choice.
 if (location.hash === '#jogar') history.replaceState(null, '', location.pathname + location.search);
 const saved = loadResume();
+const savedFree = loadFreeTable();
 if (saved) void resumeSaved(saved);
+else if (savedFree) { freeTable.resume(savedFree); show('free'); }
