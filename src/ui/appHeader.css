@@ -24,3 +24,5 @@
   .shared-shell-header .news-btn { padding: 6px 10px; font-size: 13px; }
   .shared-shell-header .news-ver { display: none; }
 }
+.shared-shell-header .home-news { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 700px) { .shared-shell-header .pwa-install { padding: 6px 10px; font-size: 13px; } }

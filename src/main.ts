@@ -1,4 +1,5 @@
 import './style.css';
+import { setupPwa } from './ui/pwa';
 import { type DeckData } from './decks';
 import { mountDeckBuilder } from './ui/deckbuilder';
 import { ForgeClient, FORGE_URL, type FState, type MatchConfig, type ClientMessage } from './forge/client';
@@ -80,6 +81,7 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
 });
 
 mountRotateGate();
+setupPwa();
 
 const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
   onExit() { show('lobby'); lobby.refresh(); },

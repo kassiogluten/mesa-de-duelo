@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.10.0] - 2026-10-17
+
+### Novo
+
+- **Instale o jogo** no computador ou no celular: no Chrome ou no Edge, use o botão **Instalar o jogo** no topo da tela inicial. Ele ganha ícone próprio, abre em tela cheia e não precisa de download. No iPhone ou iPad, o botão explica como adicionar à Tela de Início pelo Safari.
+- O jogo abre mais rápido nas próximas visitas, porque o visual e os sons ficam guardados no aparelho. Sem internet, a tela inicial e a **Mesa livre** continuam funcionando.
+- Quando sai uma versão nova, aparece um aviso com **Atualizar agora**. Se você estiver no meio de uma partida, ela continua de onde parou depois de atualizar.
+
 ## [0.9.0] - 2026-10-17
 
 ### Novo

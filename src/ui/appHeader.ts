@@ -1,4 +1,5 @@
 import { mountChangelog } from './changelog';
+import { installButton } from './pwa';
 import './appHeader.css';
 
 export interface AppHeaderOptions {
@@ -13,6 +14,7 @@ export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
   root.classList.add('home-top', 'shared-shell-header');
   root.innerHTML = `<a class="home-brand" href="#" aria-label="Mesa de Duelo — início" data-app-brand><span class="brand-mark" aria-hidden="true"></span><span>Mesa de Duelo</span></a><nav aria-label="Navegação principal"><button type="button" class="home-nav${options.active === 'play' ? ' active' : ''}" ${options.active === 'play' ? 'aria-current="page"' : ''} data-app-nav="play">Jogar</button><button type="button" class="home-nav${options.active === 'decks' ? ' active' : ''}" ${options.active === 'decks' ? 'aria-current="page"' : ''} data-app-nav="decks">Meus decks</button></nav><div class="home-news"></div>`;
   mountChangelog(root.querySelector('.home-news')!);
+  root.querySelector('.home-news')!.prepend(installButton());
   // Both screens stay mounted: keep disclosure IDs unique for assistive technology.
   const panel = root.querySelector<HTMLElement>('.news-panel')!;
   const disclosure = root.querySelector<HTMLButtonElement>('.news-btn')!;
