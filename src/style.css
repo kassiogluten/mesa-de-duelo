@@ -197,11 +197,15 @@ a { color: var(--gold); }
 .badge.copy { background: #6a4bc4; color: #fff; }
 .badge.token { background: #e8e2d0; color: #1b1a17; }
 .badge.copy + .badge.token { top: calc(3% + 15px); }
-/* Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita. */
-.slot.has-att { margin-right: calc(var(--cw) * 0.22 * var(--atts)); }
+/*
+ * Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita.
+ * A subida total para em 18% da carta (o degrau encolhe com mais anexos) e a margem de cima reserva
+ * o que passa do menor respiro das fileiras (6px): ela rola na horizontal e cortaria o que passasse dela.
+ */
+.slot.has-att { --att-rise: calc(var(--ch) * 0.12 * min(1, 1.5 / var(--atts))); margin-right: calc(var(--cw) * 0.22 * var(--atts)); margin-top: max(0px, var(--att-rise) * var(--atts) - 6px); }
 .slot > .att {
   position: absolute; left: 50%; top: 50%; width: var(--cw); height: var(--ch); --fw: var(--cw); z-index: 0; cursor: pointer;
-  transform: translate(calc(-50% + var(--cw) * 0.22 * var(--i)), calc(-50% - var(--ch) * 0.12 * var(--i)));
+  transform: translate(calc(-50% + var(--cw) * 0.22 * var(--i)), calc(-50% - var(--att-rise) * var(--i)));
 }
 .slot > .att .face { filter: brightness(0.9); }
 .slot > .att.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
