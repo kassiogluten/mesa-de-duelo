@@ -79,6 +79,8 @@ final class Session {
     private volatile int gameNumber = 1;
     private volatile int sideboardId;
     private volatile boolean abandoned;
+    /** Início da partida em andamento para as métricas; 0 quando já foi contada como encerrada. */
+    private volatile long startedAt;
     private final AtomicBoolean dirty = new AtomicBoolean();
     private final AtomicInteger questionSeq = new AtomicInteger();
     private volatile HostedMatch match;
@@ -136,6 +138,7 @@ final class Session {
     // ---------- Partida ----------
 
     synchronized void start() {
+        recordAbandoned();
         stop();
         matchId = UUID.randomUUID().toString();
         events.reset(); stateVersion.set(0);
@@ -168,6 +171,8 @@ final class Session {
         match = m;
         m.setEndGameHook(() -> ended(m));
         m.startMatch(config.rules(), null, players, guis, null);
+        startedAt = System.currentTimeMillis();
+        Metrics.matchStarted(config.format(), room, players.size());
         System.out.printf("Nova partida%s: %s%n", room ? " na sala " + code : "",
             String.join(" x ", players.stream().map(p -> p.getDeck().getName()).toList()));
         markDirty();
@@ -175,6 +180,15 @@ final class Session {
 
     private RegisteredPlayer registered(Deck deck) {
         return config.commander() ? RegisteredPlayer.forCommander(deck) : new RegisteredPlayer(deck);
+    }
+
+    /** Conta como abandonada a partida que ainda não terminou (fechada, saída ou trocada por outra). */
+    synchronized void recordAbandoned() {
+        // Não usa matchOver(): sair no meio também marca a série como encerrada, mas ela não foi concluída.
+        HostedMatch m = match;
+        boolean finished = m != null && m.getMatch() != null && m.getMatch().isMatchOver();
+        if (startedAt > 0 && !finished) Metrics.matchEnded(config.format(), room, "abandonada", startedAt);
+        startedAt = 0;
     }
 
     boolean matchOver() {
@@ -185,6 +199,8 @@ final class Session {
     private synchronized void ended(HostedMatch ended) {
         if (match != ended) return;
         matchPhase = matchOver() ? "complete" : "sideboarding";
+        Metrics.gameFinished(config.format(), room);
+        if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
         sideboardId++;
         for (Seat seat : seats) { seat.sideboardReady = false; seat.approvedDeck = null; }
         markDirty();

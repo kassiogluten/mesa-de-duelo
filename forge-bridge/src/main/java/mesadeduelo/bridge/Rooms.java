@@ -44,13 +44,30 @@ final class Rooms implements BridgeServer.Listener {
     });
 
     Rooms() {
-        publisher.scheduleWithFixedDelay(this::tick, 50, 50, TimeUnit.MILLISECONDS);
+        publisher.scheduleWithFixedDelay(() -> Metrics.TICK.record(this::tick), 50, 50, TimeUnit.MILLISECONDS);
+        registerMetrics();
     }
 
     private void tick() {
         for (Session s : byCode.values()) {
-            try { s.tick(); } catch (RuntimeException e) { e.printStackTrace(); }
+            try { s.tick(); } catch (RuntimeException e) { Metrics.TICK_ERRORS.increment(); e.printStackTrace(); }
         }
+    }
+
+    /** Contagens lidas na hora da coleta, direto das partidas vivas. */
+    private void registerMetrics() {
+        for (String format : Metrics.FORMATS) for (boolean room : new boolean[]{false, true}) {
+            Metrics.gauge("mesa.sessions", "Partidas vivas: jogando ou, em rede, sala aguardando jogadores",
+                () -> byCode.values().stream().filter(s -> s.isRoom() == room && format.equals(s.config.format()) && s.started()).count(),
+                "format", format, "mode", Metrics.mode(room), "state", "jogando");
+            if (room) Metrics.gauge("mesa.sessions", "Partidas vivas: jogando ou, em rede, sala aguardando jogadores",
+                () -> byCode.values().stream().filter(s -> s.isRoom() && format.equals(s.config.format()) && !s.started()).count(),
+                "format", format, "mode", Metrics.mode(true), "state", "aguardando");
+        }
+        Metrics.gauge("mesa.players.connected", "Jogadores humanos conectados a uma partida ou sala",
+            () -> byCode.values().stream().mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.channel != null).count()).sum());
+        Metrics.gauge("mesa.players.reconnecting", "Jogadores que caíram de uma partida em andamento e ainda podem voltar",
+            () -> byCode.values().stream().filter(Session::started).mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.deck != null && seat.channel == null).count()).sum());
     }
 
     @Override public void onConnect(Channel ch) {
@@ -96,9 +113,10 @@ final class Rooms implements BridgeServer.Listener {
 
     @Override
     public void onMessage(Channel ch, String text) {
+        Metrics.MESSAGES.increment();
         JsonObject msg;
         try { msg = JsonParser.parseString(text).getAsJsonObject(); }
-        catch (RuntimeException e) { BridgeServer.send(ch, Session.toast("error", "Mensagem inválida.")); return; }
+        catch (RuntimeException e) { Metrics.INVALID_MESSAGES.increment(); BridgeServer.send(ch, Session.toast("error", "Mensagem inválida.")); return; }
         String requestId = msg.has("requestId") && msg.get("requestId").isJsonPrimitive() ? msg.get("requestId").getAsString() : null;
         try {
             String type = MatchConfig.string(msg, "type");
@@ -139,11 +157,13 @@ final class Rooms implements BridgeServer.Listener {
                 }
             }
         } catch (InvalidDeck e) {
+            Metrics.REQUEST_ERRORS.increment();
             JsonObject response = new JsonObject(); response.addProperty("type", "validation-error");
             response.addProperty("target", e.target); response.add("validation", e.result.json());
             if (requestId != null) response.addProperty("requestId", requestId);
             BridgeServer.send(ch, response.toString());
         } catch (RuntimeException e) {
+            Metrics.REQUEST_ERRORS.increment();
             JsonObject response = new JsonObject();
             response.addProperty("type", requestId == null ? "error" : "request-error");
             response.addProperty("text", e.getMessage() == null ? "Não foi possível concluir esta ação." : e.getMessage());
@@ -312,6 +332,7 @@ final class Rooms implements BridgeServer.Listener {
     }
 
     private void close(Session s) {
+        s.recordAbandoned();
         s.stop();
         byCode.remove(s.code, s);
         for (Session.Seat seat : s.seats) {

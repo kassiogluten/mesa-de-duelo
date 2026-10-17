@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+  - name: Mesa de Duelo
+    folder: Mesa de Duelo
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards

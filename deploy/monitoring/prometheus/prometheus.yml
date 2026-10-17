@@ -1,0 +1,25 @@
+# Coleta as métricas da ponte (uso, partidas e JVM) e dos containers (cAdvisor).
+# Tudo pela rede interna do docker-compose; nada aqui fica público.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: bridge
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["bridge:7171"]
+
+  - job_name: cadvisor
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["cadvisor:8080"]
+    metric_relabel_configs:
+      # Só o que o painel usa: CPU, memória e rede por container.
+      - source_labels: [__name__]
+        regex: "container_(cpu_usage_seconds_total|memory_working_set_bytes|network_receive_bytes_total|network_transmit_bytes_total|spec_memory_limit_bytes|last_seen)"
+        action: keep
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

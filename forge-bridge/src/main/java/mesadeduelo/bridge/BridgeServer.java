@@ -11,7 +11,17 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
@@ -38,6 +48,7 @@ final class BridgeServer {
         this.host = host;
         this.port = port;
         this.listener = listener;
+        Metrics.gauge("mesa.ws.connections", "Conexões WebSocket abertas", this, BridgeServer::clientCount);
     }
 
     void start() throws InterruptedException {
@@ -51,6 +62,7 @@ final class BridgeServer {
                     ch.pipeline()
                         .addLast(new HttpServerCodec())
                         .addLast(new HttpObjectAggregator(1 << 16))
+                        .addLast(new HttpEndpoints())
                         .addLast(new WebSocketServerProtocolHandler("/ws", null, true, 1 << 20))
                         .addLast(new SimpleChannelInboundHandler<TextWebSocketFrame>() {
                             @Override protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame frame) {
@@ -86,4 +98,24 @@ final class BridgeServer {
     }
 
     int clientCount() { return clients.size(); }
+
+    /** GET /metrics (Prometheus) e GET /health; o resto segue para o WebSocket em /ws. */
+    private static final class HttpEndpoints extends ChannelInboundHandlerAdapter {
+        @Override public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            if (msg instanceof FullHttpRequest req && req.method() == HttpMethod.GET) {
+                String path = new QueryStringDecoder(req.uri()).path();
+                if ("/metrics".equals(path) || "/health".equals(path)) {
+                    req.release();
+                    boolean metrics = "/metrics".equals(path);
+                    byte[] body = (metrics ? Metrics.scrape() : "ok\n").getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    var res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(body));
+                    res.headers().set(HttpHeaderNames.CONTENT_TYPE, metrics ? "text/plain; version=0.0.4; charset=utf-8" : "text/plain; charset=utf-8");
+                    res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, body.length);
+                    ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
+                    return;
+                }
+            }
+            ctx.fireChannelRead(msg);
+        }
+    }
 }

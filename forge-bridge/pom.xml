@@ -25,6 +25,12 @@
       <artifactId>forge-gui</artifactId>
       <version>${forge.version}</version>
     </dependency>
+    <!-- Métricas no formato do Prometheus em /metrics (uso, partidas e JVM). -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+      <version>1.13.6</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId><artifactId>junit</artifactId><version>4.13.2</version><scope>test</scope>
     </dependency>
