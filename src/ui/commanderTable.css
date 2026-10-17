@@ -87,9 +87,13 @@
   .command-heading { margin-bottom: 4px; font-size: 11px; }
   .command-tax { font-size: 10px; padding: 1px 4px; }
   .commander-damage { font-size: 11px; }
-  .forge.multiplayer { --seat-rail: 194px; --seat-header: 66px; --ch: 56px; --cw: 40px; --lch: 34px; --lcw: 25px; grid-template-rows: 66px minmax(0, 1.2fr) 1px minmax(0, 1fr) 82px; }
+  .forge.multiplayer { --seat-rail: 194px; --seat-header: 44px; --ch: 84px; --cw: 60px; --lch: 58px; --lcw: 42px; grid-template-rows: 44px minmax(0, 1.25fr) 1px minmax(0, 1fr) 82px; }
   .forge.multiplayer .commander-opponents { gap: 6px; padding-inline: 8px; }
-  .forge.multiplayer .table-seat { padding-inline: 4px; }
+  /* Each seat: one heading line, a thin column for piles and commander, and the rest for cards. */
+  .forge.multiplayer .table-seat { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); padding-inline: 4px; }
+  .forge.multiplayer .seat-heading { grid-area: 1 / 1 / 2 / -1; }
+  .forge.multiplayer .seat-zones { grid-area: 2 / 1; }
+  .forge.multiplayer .table-seat > .field { grid-area: 2 / 2; }
   .seat-heading { min-height: 34px; gap: 5px; }
   .forge.multiplayer .seat-heading .avatar { grid-template-columns: 30px minmax(0, 1fr); min-height: 30px; gap: 0 7px; }
   .forge.multiplayer .seat-heading .portrait, .forge.multiplayer .seat-heading .life { width: 30px; height: 30px; min-width: 30px; }
@@ -99,23 +103,29 @@
   .seat-hand .back { width: 11px; height: 16px; }
   .seat-heading .commander-damage { font-size: 10px; }
   .seat-heading .commander-damage b { display: block; }
-  .seat-zones { min-height: 35px; padding: 2px 3px; gap: 4px; }
-  .forge.multiplayer .seat-zones .piles { gap: 9px; }
+  .seat-zones { flex-direction: column; justify-content: center; min-height: 0; padding: 2px 4px 2px 0; gap: 6px; }
+  .forge.multiplayer .seat-zones .piles { gap: 8px; }
   .forge.multiplayer .seat-zones .pile { width: 18px; height: 25px; --fw: 18px; }
-  .forge.multiplayer .seat-command .command-card { width: 23px; --fw: 23px; }
+  .forge.multiplayer .seat-command .command-card { width: 36px; --fw: 36px; }
   .forge.multiplayer .seat-command { gap: 7px; }
-  .forge.multiplayer .table-seat > .field { flex-direction: row; align-items: center; overflow-y: hidden; --ch: 49px; --cw: 35px; --lch: 28px; --lcw: 20px; }
-  .forge.multiplayer .table-seat .seat-row { width: 55%; flex: 1 1 55%; }
-  .forge.multiplayer .table-seat .lands-lane { width: 45%; flex-basis: 45%; }
+  .forge.multiplayer .table-seat > .field { flex-direction: row; align-items: center; overflow-y: hidden; --ch: clamp(56px, calc((100vh - 127px) * .555 - 52px), 84px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.multiplayer .table-seat .seat-row { width: 58%; flex: 1 1 58%; }
+  .forge.multiplayer .table-seat .lands-lane { width: 42%; flex-basis: 42%; --lch: calc(var(--ch) * .64); }
   .forge.multiplayer .table-seat .row { width: 100%; flex: 0 0 auto; min-height: calc(var(--ch) + 12px); padding: 6px 4px; }
   .forge.multiplayer .table-seat .lands { width: 100%; min-height: calc(var(--lch) + 10px); padding-block: 5px; }
-  .forge.multiplayer .phase-rail, .forge.multiplayer.stack-tight .phase-rail { top: 4px; left: 50%; right: auto; width: min(490px, calc(100% - 294px)); padding: 5px 8px; gap: 4px; max-width: none; transform: translateX(-50%); }
-  .forge.multiplayer .phase-step { font-size: 10px; gap: 4px; }
+  /* The turn track shrinks to one line: whose turn and the current step. */
+  .forge.multiplayer .phase-rail, .forge.multiplayer.stack-tight .phase-rail { top: 5px; left: 50%; right: auto; width: auto; max-width: calc(100% - 300px); flex-direction: row; align-items: center; padding: 6px 14px; gap: 12px; transform: translateX(-50%); }
+  .forge.commander-game .phase-heading { gap: 10px; }
+  .forge.commander-game .phase-track { display: flex; }
+  .forge.commander-game .phase-step:not(.current), .forge.commander-game .phase-step .phase-dot, .forge.commander-game .phase-step::before, .forge.commander-game .phase-detail { display: none; }
+  .forge.commander-game .phase-step { font-size: 12px; white-space: nowrap; }
   .forge.multiplayer .phase-detail { display: none; }
   .forge.multiplayer .phase-turn { font-size: 11px; }
   .forge.multiplayer .phase-owner { font-size: 12px; }
-  .forge.multiplayer > .field.me { padding-right: 8px; }
-  .forge.multiplayer > .field.me .row { min-height: calc(var(--ch) + 14px); padding-block: 7px; }
+  /* Own creatures and lands side by side, so both get the full height. */
+  .forge.multiplayer > .field.me { flex-direction: row; align-items: flex-start; padding-right: 8px; --ch: clamp(60px, calc((100vh - 127px) * .444 - 24px), 92px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.multiplayer > .field.me .row { width: auto; flex: 1 1 62%; min-height: calc(var(--ch) + 14px); padding-block: 7px; }
+  .forge.multiplayer > .field.me .row.lands { flex-basis: 38%; min-height: calc(var(--ch) + 14px); }
   .forge.multiplayer:not([data-opening]) .hand { left: 88px; height: 105px; }
   .forge.multiplayer:not([data-opening]) .hand:not(.crowded) .hand-slot { width: 76px; height: 106px; margin-left: -22px; }
   .forge.multiplayer:not([data-opening]) .hand:not(.crowded) .hcard { --fw: 76px; transform: translateY(calc(15% + var(--dy) * .35)) rotate(var(--rot)); }
@@ -123,12 +133,28 @@
   .forge.multiplayer .piles.me .pile { width: 17px; height: 24px; --fw: 17px; }
   .forge.multiplayer .piles.me .pile > span { font-size: 10px; min-width: 15px; padding-inline: 2px; }
   .forge.multiplayer .avatar-slot.me { left: 14px; bottom: 6px; }
-  .forge.multiplayer .own-command { left: 8px; bottom: 108px; }
-  .forge.multiplayer .own-command .command-card { width: 32px; --fw: 32px; }
+  .forge.multiplayer .own-command { left: 8px; bottom: 102px; }
+  .forge.multiplayer .own-command .command-card { width: 36px; --fw: 36px; }
   .forge.multiplayer .action.hand-decision { left: 88px; right: var(--seat-rail); bottom: 100px; }
   .forge.multiplayer .stack-panel { --stack-width: 112px; }
   .attack-choices { max-height: 96px; }
   .forge.multiplayer .attack-choices .arena-btn { padding: 5px 8px; min-height: 30px; font-size: 11px; }
+}
+
+/* Commander one-on-one on a phone: a slim header and creatures beside lands, so cards use the full field height. */
+@media (max-height: 500px), (max-width: 760px) {
+  .forge.commander-game:not(.multiplayer) { grid-template-rows: 72px minmax(0, 1fr) 2px minmax(0, 1fr) 82px; }
+  .forge.commander-game:not(.multiplayer) .phase-rail, .forge.commander-game.stack-tight:not(.multiplayer) .phase-rail { top: 6px; right: 8px; width: auto; flex-direction: row; align-items: center; padding: 6px 14px; gap: 12px; }
+  .forge.commander-game:not(.multiplayer) .piles.opp { top: 6px; left: 150px; right: auto; }
+  .forge.commander-game:not(.multiplayer) .duel-command .command-card { width: 36px; --fw: 36px; }
+  .forge.commander-game:not(.multiplayer) .avatar-slot.opp { top: 0; }
+  .forge.commander-game:not(.multiplayer) > .field { flex-direction: row; overflow-y: hidden; --ch: clamp(60px, calc((100vh - 156px) / 2 - 24px), 96px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.commander-game:not(.multiplayer) > .field.opp { align-items: flex-end; }
+  .forge.commander-game:not(.multiplayer) > .field.me { align-items: flex-start; }
+  .forge.commander-game:not(.multiplayer) > .field .row { width: auto; flex: 1 1 60%; min-height: calc(var(--ch) + 14px); padding-block: 7px; }
+  .forge.commander-game:not(.multiplayer) > .field .row.lands { flex-basis: 40%; }
+  .forge.commander-game:not(.multiplayer) .own-command { bottom: 100px; }
+  .forge.commander-game:not(.multiplayer) .own-command .command-card { width: 34px; --fw: 34px; }
 }
 
 /* A floating stack never changes the battlefield's geometry. */

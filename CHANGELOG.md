@@ -14,6 +14,10 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - O jogo abre mais rápido nas próximas visitas, porque o visual e os sons ficam guardados no aparelho. Sem internet, a tela inicial e a **Mesa livre** continuam funcionando.
 - Quando sai uma versão nova, aparece um aviso com **Atualizar agora**. Se você estiver no meio de uma partida, ela continua de onde parou depois de atualizar.
 
+### Mudou
+
+- **Cartas maiores no Commander pelo celular.** Com a tela deitada, as cartas no campo ficaram quase duas vezes maiores, tanto contra um oponente quanto contra três. Criaturas e terrenos agora ficam lado a lado, cada um com a altura toda do campo. O placar do turno virou uma linha só, com a vez de quem joga e a fase atual. Em cada oponente, o cemitério, o grimório e o comandante ficam numa coluna estreita ao lado das cartas.
+
 ## [0.9.0] - 2026-10-17
 
 ### Novo
