@@ -6,6 +6,62 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.8.0] - 2026-10-16
+
+### Novo
+
+- **Commander para 2, 3 ou 4 jogadores**, contra computadores ou com outras pessoas em uma sala. Escolha a quantidade de jogadores antes de iniciar; cada computador pode usar um deck diferente.
+- Partidas de Commander começam com **40 pontos de vida**, com zona de comando, custo adicional para conjurar novamente o comandante e registro de dano de combate por comandante. Uma eliminação mantém os demais jogadores na mesa; o último sobrevivente vence.
+- O editor de Commander destaca o comandante em uma área própria, separado das outras cartas. A seleção, a troca e as parcerias válidas têm controles próprios; a importação e a exportação preservam essa separação.
+- Validação de **100 cartas no total**, identidade de cor, limite de uma cópia, exceções do texto Oracle, comandantes, parcerias e legalidade. Decks incompletos podem ser salvos como rascunhos.
+- Quatro decks prontos de Commander: **Triunfo das Fichas**, **Destruição Dracônica**, **Perigo no Cemitério** e **Primeiro Voo**.
+
+### Mudou
+
+- A mesa mostra todos os oponentes, com vida em destaque, permanentes e zona de comando de cada um. Os campos usam toda a largura disponível e mantêm o tamanho quando a pilha ou uma janela aparece por cima. Fileiras cheias têm rolagem horizontal e controles nas bordas; a pilha flutua à direita, com cartas grandes, opção de recolher e galeria central.
+- Na declaração de atacantes, selecione várias criaturas e depois o jogador ou planeswalker que elas vão atacar, ou escolha o defensor primeiro. Divida os ataques em grupos, troque o defensor e retire apenas as criaturas selecionadas antes de confirmar. Cliques rápidos são preservados enquanto o jogo atualiza as atribuições.
+- Salas de Commander mostram os assentos ocupados e as vagas; a partida começa quando todos entram. Reconectar preserva o assento, e jogadores eliminados podem acompanhar o restante da partida sem revelar mãos ocultas.
+
+### Corrigido
+
+- **Atacar com tudo** permite escolher o oponente ou planeswalker antes de atribuir os ataques. Apenas as criaturas que podem atacar o defensor escolhido são selecionadas; a confirmação dos atacantes continua separada.
+- Ações de ataque desatualizadas liberam os controles para uma nova tentativa, sem travar a declaração de atacantes.
+- O carregamento das imagens das cartas não interrompe cliques em andamento.
+- Corrigidas falhas ao sair durante a abertura ou encerrar uma sala com vários jogadores. As decisões pendentes são liberadas, e as outras partidas continuam funcionando.
+
+## [0.7.0] - 2026-10-16
+
+### Novo
+
+- **Pauper** na criação da partida, com decks prontos para o formato e validação de legalidade, cartas banidas, limite de cópias, mínimo de 60 cartas no deck e máximo de 15 no sideboard.
+- Séries **melhor de três**, com placar e troca de cartas entre o deck e o sideboard antes da próxima partida. As trocas não são reveladas ao oponente.
+- Cartas jogáveis podem ser arrastadas da mão ou do exílio para o campo. O clique continua disponível.
+- A pilha ganhou uma galeria central: clique na pilha à direita para ver os efeitos ampliados, rolar horizontalmente e conferir a ordem de resolução e os alvos.
+- **Passar automaticamente** nas opções: o jogo passa a prioridade quando não há ações disponíveis, preservando as oportunidades de resposta. A preferência fica salva; o ritmo das animações pode ser ajustado separadamente.
+- **14 efeitos sonoros**, com impactos medievais, pequenas variações e sons diferentes para compras, terrenos, mágicas, habilidades, combate e início de cada turno. Dano ao jogador tem animação própria e uma explosão diferente da usada para dano às criaturas.
+- **Editar** nos seus decks da tela inicial e **Importar lista** dentro do editor. É possível preencher um deck vazio, somar cartas à lista atual ou substituí-la, mantendo o nome e o formato. A revisão mostra as quantidades do deck e do sideboard antes de salvar.
+
+### Mudou
+
+- **Meus decks** aparecem antes dos decks prontos, com um convite para criar o primeiro deck quando a coleção está vazia. Rascunhos continuam acessíveis para edição.
+- **Jogar** e **Meus decks** compartilham o mesmo cabeçalho. A configuração da partida fica em um painel à direita, com modo, formato e duração visíveis; nome e código de sala aparecem apenas nos fluxos de multiplayer que precisam deles.
+- O editor destaca o nome e a arte do deck, alinha o seletor de formato e reúne importação, exportação, duplicação e exclusão em **Ações do deck**. Textos redundantes foram removidos; decks vazios mostram apenas os controles necessários para começar.
+- A mesa mantém o azul e o dourado, com tipografia, espaçamento e hierarquia visual mais consistentes. As prévias dão prioridade à imagem grande da carta, e criaturas com voar recebem uma indicação visual de flutuação.
+- A escolha de quem começa e o mulligan agora acontecem no centro da tela. A mão inicial aparece em leque, cada carta aumenta ao passar o mouse e o botão de manter informa a quantidade de cartas.
+- As jogadas do oponente aparecem em sequência na mesa; mágicas e habilidades também aparecem na pilha à direita. Mágicas resolvidas automaticamente continuam visíveis por um breve momento, identificadas como **Jogada recente**, sem exigir confirmação extra nem atrasar suas respostas.
+- O turno e todas as fases ficam visíveis no topo, incluindo a etapa específica do combate ou da limpeza. Instruções para selecionar cartas da mão aparecem acima delas, com a quantidade já escolhida e o que falta selecionar.
+- Cartas que um efeito permite jogar do exílio ficam separadas ao lado da mão durante todo o prazo, mesmo sem mana ou fora do seu turno. Cartas suspensas mostram os marcadores de tempo; a decisão de conjurar aparece quando o último marcador é removido e a habilidade resolve.
+- No topo da partida ficam apenas **Menu** e tela cheia. **Registro** e **Opções** ficam dentro do menu; as opções abrem no centro, com estado visível dos efeitos sonoros, volume e ritmo das jogadas. Animações respeitam a preferência por movimento reduzido.
+
+### Corrigido
+
+- **Labareda Cauterizante** volta a ser reconhecida como jogável quando há mana e alvos válidos, inclusive quando a escolha de um alvo depende do outro.
+- **Raio da Fenda** oferece as opções de conjurar normalmente ou suspender quando está na mão. **Explosão de Fogo** distingue o pagamento de mana do sacrifício de duas Montanhas.
+- Declarar bloqueadores mantém a ligação entre a criatura selecionada e o atacante escolhido, inclusive com criaturas idênticas. Cartas selecionadas para sacrifício ou descarte recebem contorno, marca de seleção e contagem persistentes.
+- Uma escolha de conjuração pendente deixa de travar outras partidas ou dar a impressão de que o oponente parou. Sair de uma série encerra as decisões pendentes, e ações antigas são rejeitadas após mudanças de estado ou reconexão.
+- Códigos de sala com números são reconhecidos corretamente. Séries em melhor de três preservam o placar e as preferências ao reconectar ou iniciar a próxima partida.
+- Importar listas preserva o sideboard, avisa sobre linhas inválidas e cartas não encontradas e evita sobrescrever alterações feitas em outra aba. Falhas ao salvar mantêm a edição disponível para uma nova tentativa.
+
 ## [0.6.0] - 2026-10-16
 
 ### Novo

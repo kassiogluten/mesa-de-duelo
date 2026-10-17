@@ -19,6 +19,7 @@ import forge.game.card.CardView;
 import forge.game.card.CardView.CardStateView;
 import forge.game.card.CounterType;
 import forge.game.combat.CombatView;
+import forge.game.keyword.Keyword;
 import forge.game.keyword.KeywordView;
 import forge.game.player.Player;
 import forge.game.player.PlayerView;
@@ -33,7 +34,7 @@ final class StateJson {
     private static final String[] COLOR_KEYS = {"W", "U", "B", "R", "G"};
 
     /**
-     * @param viewer id do jogador que está vendo; a mão dos outros vai só como contagem. -1 mostra tudo.
+     * @param viewer id do jogador que está vendo; a mão dos outros vai só como contagem. Valores negativos ocultam todas as mãos.
      * @param game a partida por trás das views, para ler o poder/resistência base; pode ser null.
      */
     static JsonObject game(GameView gv, int viewer, Game game) {
@@ -47,9 +48,18 @@ final class StateJson {
         if (gv.isGameOver()) o.addProperty("winner", gv.getWinningPlayerName());
 
         JsonArray players = new JsonArray();
-        for (PlayerView p : gv.getPlayers()) players.add(player(p, viewer == -1 || viewer == p.getId(), game));
+        if (game != null) {
+            int seat = 0;
+            for (Player registered : game.getRegisteredPlayers()) {
+                PlayerView p = registered.getView();
+                JsonObject row = player(p, viewer == p.getId() && !(game.getRules().hasAppliedVariant(forge.game.GameType.Commander) && p.getHasLost()), game);
+                row.addProperty("seat", seat++); players.add(row);
+            }
+        } else for (PlayerView p : gv.getPlayers()) players.add(player(p, viewer == p.getId(), null));
         o.add("players", players);
         o.add("castable", castable(game, viewer));
+        o.add("playableExile", playableExile(game, viewer));
+        o.add("suspendedExile", suspendedExile(game, viewer));
 
         JsonArray stack = new JsonArray();
         if (gv.getStack() != null) {
@@ -68,12 +78,23 @@ final class StateJson {
 
         JsonArray combat = new JsonArray();
         CombatView cv = gv.getCombat();
-        if (cv != null) {
+        if (game != null && game.getCombat() != null) {
+            // CombatView commits blockers later; declarations must show the actual current pairs.
+            var live = game.getCombat();
+            for (Card attacker : live.getAttackers()) {
+                JsonObject c = new JsonObject(); c.addProperty("attacker", attacker.getId());
+                var defender = live.getDefenderByAttacker(attacker);
+                if (defender != null) { c.addProperty("defender", defender.getId()); c.addProperty("defenderKind", defender instanceof Player ? "player" : "card"); }
+                JsonArray blockers = new JsonArray();
+                for (Card blocker : live.getBlockers(attacker)) blockers.add(blocker.getId());
+                c.add("blockers", blockers); combat.add(c);
+            }
+        } else if (cv != null) {
             for (CardView att : cv.getAttackers()) {
                 JsonObject c = new JsonObject();
                 c.addProperty("attacker", att.getId());
                 GameEntityView def = cv.getDefender(att);
-                if (def != null) c.addProperty("defender", def.getId());
+                if (def != null) { c.addProperty("defender", def.getId()); c.addProperty("defenderKind", def instanceof PlayerView ? "player" : "card"); }
                 JsonArray blockers = new JsonArray();
                 if (cv.getBlockers(att) != null) for (CardView b : cv.getBlockers(att)) blockers.add(b.getId());
                 c.add("blockers", blockers);
@@ -97,13 +118,26 @@ final class StateJson {
         o.addProperty("name", p.getLobbyPlayerName());
         o.addProperty("ai", p.isAI());
         o.addProperty("life", p.getLife());
+        o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));
         o.add("hand", showHand ? cards(p.getHand(), game) : new JsonArray());
         o.add("battlefield", cards(p.getBattlefield(), game));
         o.add("graveyard", cards(p.getGraveyard(), game));
         o.add("exile", cards(p.getExile(), game));
-        // Zona de comando: só os emblemas (os efeitos temporários do Forge também moram lá).
+        JsonArray commandZone = new JsonArray(), commanders = new JsonArray(), commanderDamage = new JsonArray();
+        for (CardView c : nzv(p.getCommand())) if (c.isCommander()) commandZone.add(card(c, game));
+        for (CardView c : nzv(p.getCommanders())) {
+            JsonObject commander = new JsonObject(); commander.addProperty("id", c.getId());
+            commander.addProperty("name", c.getName()); commander.addProperty("casts", p.getCommanderCast(c));
+            commander.addProperty("tax", p.getCommanderCast(c) * 2); commanders.add(commander);
+        }
+        if (game != null) for (Player owner : game.getRegisteredPlayers()) for (Card commander : owner.getCommanders()) {
+            JsonObject damage = new JsonObject(); damage.addProperty("commanderId", commander.getId());
+            damage.addProperty("damage", p.getCommanderDamage(commander.getView())); commanderDamage.add(damage);
+        }
+        o.add("commandZone", commandZone); o.add("commanders", commanders); o.add("commanderDamage", commanderDamage);
+        // Os efeitos temporários do Forge também moram na zona de comando; não são cartas jogáveis.
         JsonArray emblems = new JsonArray();
         for (CardView c : nzv(p.getCommand())) if (c.isEmblem()) emblems.add(card(c, game));
         o.add("emblems", emblems);
@@ -245,8 +279,9 @@ final class StateJson {
             if (me == null || !me.equals(game.getPhaseHandler().getPriorityPlayer())) return ids;
             java.util.Set<Card> candidates = new java.util.LinkedHashSet<>();
             for (Card c : me.getCardsActivatableInExternalZones(false)) {
-                if (c.isInZone(ZoneType.Graveyard) || c.isInZone(ZoneType.Exile)) candidates.add(c);
+                if (c.isInZone(ZoneType.Graveyard) || c.isInZone(ZoneType.Exile) || c.isInZone(ZoneType.Command)) candidates.add(c);
             }
+            for (Card c : me.getCardsIn(ZoneType.Command)) if (c.isCommander()) candidates.add(c);
             for (Card c : me.getCardsIn(ZoneType.Exile)) if (c.isPlotted()) candidates.add(c);
             for (Card c : candidates) if (castableNow(c, me)) ids.add(c.getId());
         } catch (RuntimeException e) { /* leitura concorrente com a thread do jogo: sem destaque desta vez */ }
@@ -258,6 +293,36 @@ final class StateJson {
         return false;
     }
 
+    /** Zone permission outlives priority, timing and available mana; it never grants an extra action. */
+    static JsonArray playableExile(Game game, int viewer) {
+        JsonArray ids = new JsonArray();
+        Player player = game == null || viewer < 0 ? null : game.getPlayer(viewer);
+        if (player == null) return ids;
+        for (Card card : game.getCardsIn(ZoneType.Exile)) {
+            if (card.mayPlay(player).stream().anyMatch(option -> option.grantsZonePermissions())
+                || (card.getOwner().equals(player) && card.isPlotted())) ids.add(card.getId());
+        }
+        return ids;
+    }
+
+    /** A zero-counter suspended card stays visible only while its real Suspend trigger is pending. */
+    static JsonArray suspendedExile(Game game, int viewer) {
+        JsonArray ids = new JsonArray();
+        Player player = game == null || viewer < 0 ? null : game.getPlayer(viewer);
+        if (player == null) return ids;
+        java.util.Set<Integer> pending = new java.util.HashSet<>();
+        for (var item : game.getStack()) {
+            SpellAbility ability = item.getSpellAbility();
+            if (ability.getTrigger() != null && ability.getTrigger().isKeyword(Keyword.SUSPEND))
+                pending.add(ability.getHostCard().getId());
+        }
+        for (Card card : game.getCardsIn(ZoneType.Exile)) {
+            if (card.getOwner().equals(player) && !card.isFaceDown()
+                && (card.hasSuspend() || pending.contains(card.getId()))) ids.add(card.getId());
+        }
+        return ids;
+    }
+
     private static Map<CounterType, Integer> toMap(CardView c) {
         Map<CounterType, Integer> m = new java.util.LinkedHashMap<>();
         for (CounterType t : c.getCounters().elementSet()) m.put(t, c.getCounters().count(t));
@@ -265,7 +330,7 @@ final class StateJson {
     }
 
     /** Alvos de um item da pilha, somando as sub-habilidades (ex.: "destrua X e compre um card" com dois alvos). */
-    private static JsonObject stackTargets(StackItemView si) {
+    static JsonObject stackTargets(StackItemView si) {
         List<Object> all = new java.util.ArrayList<>();
         for (StackItemView step = si; step != null; step = step.getSubInstance()) {
             if (step.getTargetCards() != null) all.addAll(step.getTargetCards());
