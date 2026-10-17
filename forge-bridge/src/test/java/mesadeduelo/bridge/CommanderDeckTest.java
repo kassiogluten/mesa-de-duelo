@@ -18,7 +18,7 @@ public class CommanderDeckTest {
     private void rejects(JsonObject d, String code) {
         var r = check(d); assertTrue(r.json().toString(), r.issues().asList().stream().anyMatch(i -> code.equals(i.getAsJsonObject().get("code").getAsString())));
     }
-    @Test public void allFourStartersArePlayableByHumansAndAi() {
+    @Test public void allStartersArePlayableByHumansAndAi() {
         StringBuilder errors = new StringBuilder();
         long count = Decks.LISTS.values().stream().filter(d -> "commander".equals(d.get("format").getAsString())).peek(d -> {
             var r = DeckValidation.validateForAi(d, "commander");
@@ -27,7 +27,7 @@ public class CommanderDeckTest {
             assertEquals(1, r.json().getAsJsonObject("deck").getAsJsonArray("commanders").size());
         }).count();
         assertEquals(errors.toString(), 0, errors.length());
-        assertEquals(4, count); assertNotNull(Decks.random("commander"));
+        assertEquals(18, count); assertNotNull(Decks.random("commander"));
     }
     @Test public void countsSingletonAndOracleExceptions() {
         assertTrue(check(deck("Marwyn, the Nurturer", "Forest", 99)).valid());

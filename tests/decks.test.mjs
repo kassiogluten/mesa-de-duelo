@@ -270,7 +270,7 @@ test('Commander local rules enforce 100 total, singleton exceptions, identity in
   assert.equal(cardCopyLimit('Commander Bolt', undefined, 'commander'), 1);
   assert.equal(cardCopyLimit('Test Dwarves', cache('Test Dwarves', { oracle_text: 'A deck can have up to seven cards named Test Dwarves.' }), 'commander'), 7);
   for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) assert.equal(decks.totalDeckSize(deck), 100);
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 4);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 18);
 });
 
 
