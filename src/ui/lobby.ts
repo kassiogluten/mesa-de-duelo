@@ -43,7 +43,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const rememberedDeck = () => format ? load(`mesa:deck:${format}`) ?? (format === 'free' ? load('mesa:deck') : null) ?? '' : '';
   let youId = rememberedDeck();
   let oppId = load('mesa:opp') ?? 'random';
-  let query = '', expanded = false, showIncompatible = false, busy = false;
+  let query = '', showIncompatible = false, busy = false;
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
   const validations = new Map<string, DeckValidation>();
   let preflight = 0;
@@ -77,7 +77,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       </aside>
       <div class="deck-collection">
         <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="ghost-btn" data-lobby="import">Importar lista</button><button class="arena-btn secondary" data-lobby="create">Criar deck</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
-        <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div><button class="ghost-btn" id="expandTemplates" data-lobby="expand">Ver todos</button></header><div id="readyTiles" class="deck-tiles"></div></section>
+        <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
         <div class="library-toolbar"><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="deckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck"></label><label class="incompatible-toggle" id="incompatibleToggle" hidden><input type="checkbox" id="showIncompatible"> Mostrar incompatíveis</label></div>
       </div>
     </div></main></div>`;
@@ -114,9 +114,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d));
     $('#personalCount').textContent = personal.length ? String(personal.length) : '';
     $('#personalTiles').innerHTML = mine.length ? tiles(mine) : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${query ? 'Nenhum dos seus decks corresponde à busca.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${query ? 'clear' : 'incompatible'}">${query ? 'Limpar busca' : 'Mostrar decks incompatíveis'}</button></div>`;
-    $('#readyTiles').innerHTML = templates.length ? tiles(expanded ? templates : templates.slice(0, 4)) : '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>';
-    $('#expandTemplates').hidden = templates.length <= 4;
-    $('#expandTemplates').textContent = expanded ? 'Mostrar menos' : `Ver todos (${templates.length})`;
+    $('#readyTiles').innerHTML = templates.length ? tiles(templates) : '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>';
     $('#incompatibleToggle').hidden = !format || format === 'free';
     $<HTMLInputElement>('#showIncompatible').checked = showIncompatible;
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-setting]')) {
@@ -229,7 +227,6 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const action = target.closest<HTMLElement>('[data-lobby]')?.dataset.lobby;
     if (!busy && !waitingRoom && ['library','create','import'].includes(action ?? '')) opts.onDecks(action as DeckAction, format ?? undefined);
     if (action === 'start') void start();
-    if (action === 'expand') { expanded = !expanded; refresh(); }
     if (action === 'clear') { query = ''; $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
     if (action === 'cancel-lookup' && !busy) { room = null; refresh(); }
