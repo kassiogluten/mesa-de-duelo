@@ -17,6 +17,9 @@
   --heal: #63d68f;
   --display: 'Outfit', 'Segoe UI', system-ui, sans-serif;
   --body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --surface: #131d30;
+  --text: var(--ink);
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
 
   --ch: clamp(70px, 15vh, 175px);
   --cw: calc(var(--ch) * 0.716);
@@ -29,7 +32,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
-body { background: var(--bg-deep); color: var(--ink); font-family: var(--body); font-size: 15px; }
+body { background: var(--bg-deep); color: var(--ink); font-family: var(--body); font-size: 16px; }
 body[data-screen='game'] { overflow: hidden; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -194,15 +197,27 @@ a { color: var(--gold); }
 .badge.copy { background: #6a4bc4; color: #fff; }
 .badge.token { background: #e8e2d0; color: #1b1a17; }
 .badge.copy + .badge.token { top: calc(3% + 15px); }
-/* Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita. */
-.slot.has-att { margin-right: calc(var(--cw) * 0.22 * var(--atts)); }
+/*
+ * Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita.
+ * A subida total para em 18% da carta (o degrau encolhe com mais anexos) e a margem de cima reserva
+ * o que passa do menor respiro das fileiras (6px): ela rola na horizontal e cortaria o que passasse dela.
+ */
+.slot.has-att { --att-rise: calc(var(--ch) * 0.12 * min(1, 1.5 / var(--atts))); margin-right: calc(var(--cw) * 0.22 * var(--atts)); margin-top: max(0px, var(--att-rise) * var(--atts) - 6px); }
 .slot > .att {
   position: absolute; left: 50%; top: 50%; width: var(--cw); height: var(--ch); --fw: var(--cw); z-index: 0; cursor: pointer;
-  transform: translate(calc(-50% + var(--cw) * 0.22 * var(--i)), calc(-50% - var(--ch) * 0.12 * var(--i)));
+  transform: translate(calc(-50% + var(--cw) * 0.22 * var(--i)), calc(-50% - var(--att-rise) * var(--i)));
 }
 .slot > .att .face { filter: brightness(0.9); }
 .slot > .att.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
 .slot > .bfc { z-index: 1; }
+.att-n {
+  position: absolute; z-index: 5; display: inline-flex;
+  /* No canto de cima do último anexo do leque, como o ×N das pilhas (o canto de cima à esquerda é da lupa). */
+  right: calc(-6px - var(--cw) * 0.22 * var(--atts)); top: calc(-10px - var(--att-rise) * var(--atts)); align-items: center; gap: 2px; padding: 1px 6px 1px 4px; border-radius: 999px; cursor: pointer;
+  background: rgba(8, 12, 24, 0.9); border: 1px solid rgba(242, 181, 76, 0.6); color: var(--ink); font: 700 11px var(--display); min-height: 22px;
+}
+.att-n svg { width: 13px; height: 13px; }
+.att-n.actionable { border-color: var(--glow); box-shadow: 0 0 10px rgba(89, 181, 255, 0.75); }
 .preview-note { color: var(--gold-light); }
 .pt .down { color: #c62f17; }
 
@@ -534,7 +549,7 @@ a { color: var(--gold); }
 }
 /* O botão de ver as cartas sobe junto com o deck. */
 .tile-wrap:hover .deck-tile, .tile-wrap:hover .tile-peek { transform: translateY(-3px); }
-.tile-wrap:hover .deck-tile {: translateY(-3px); border-color: #56668f; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
+.tile-wrap:hover .deck-tile { border-color: #56668f; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
 .deck-tile:active { transform: scale(0.98); }
 .deck-tile.on { border-color: var(--gold); box-shadow: 0 0 20px rgba(242, 181, 76, 0.35); }
 .tile-art { display: block; aspect-ratio: 16 / 9; background: radial-gradient(circle at 40% 35%, #3b5689, #141d33) center / cover; transition: transform 0.4s ease; }
@@ -606,7 +621,7 @@ select.input-field {
 }
 @media (max-width: 520px) {
   .brand p { display: none; }
-  .ghost-btn span { display: none; }
+  .ghost-btn span { display: inline; }
   .deck-tiles { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
 /* Na tela inicial os créditos ficam no fim da página, sem cobrir os decks. */
@@ -756,7 +771,7 @@ body[data-screen='game'] .credits { display: none; }
   .card-search, .deck-list { grid-column: auto; grid-row: auto; position: static; max-height: none; }
   .deck-list ul { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
   .deck-item { flex: 0 0 200px; }
-  .builder-actions .ghost-btn span, .builder-head .ghost-btn span { display: none; }
+  .builder-actions .ghost-btn span, .builder-head .ghost-btn span { display: inline; }
 }
 
 /* ---------- Telas estreitas ---------- */
@@ -815,6 +830,15 @@ body[data-screen='game'] .credits { display: none; }
 .zone-view .q-face { cursor: zoom-in; }
 .zone-view .q-face.actionable { cursor: pointer; }
 .zone-view .q-face { position: relative; }
+/* Inspecionar fica embaixo da carta, na largura dela, e não solto ao lado. */
+.zone-card { display: flex; flex-direction: column; gap: 6px; width: min-content; }
+.zone-view .zone-card .icon-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 32px; padding: 4px;
+  border-radius: 8px; background: rgba(255, 255, 255, 0.04); color: var(--muted); font-size: 12px; font-weight: 600;
+}
+.zone-view .zone-card .icon-btn:hover, .zone-view .zone-card .icon-btn:focus-visible { color: var(--ink); }
+.zone-card .icon-btn svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+@media (pointer: coarse) { .zone-view .zone-card .icon-btn { min-height: 40px; } }
 .zone-tag {
   position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); padding: 2px 8px; border-radius: 999px;
   background: rgba(6, 9, 18, 0.85); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; white-space: nowrap;
@@ -976,14 +1000,14 @@ body[data-screen='game'] .credits { display: none; }
 /* Celular em pé: a mesa só funciona deitada (ver ui/landscape.ts). */
 .rotate-gate { display: none; }
 @media (pointer: coarse) and (orientation: portrait) and (max-width: 900px) {
-  .rotate-gate {
+  body[data-screen='game'] .rotate-gate {
     position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 10px; padding: 24px; text-align: center; background: radial-gradient(ellipse at 50% 40%, #1b2c4d, var(--bg-deep) 75%);
   }
   .rotate-gate h2 { margin: 6px 0 0; font: 700 24px var(--display); color: var(--gold); }
   .rotate-gate p { margin: 0 0 10px; color: var(--muted); }
   .rotate-phone { width: 96px; height: 96px; color: var(--gold); animation: rotate-hint 2.4s ease-in-out infinite; }
-  body:has(.rotate-gate) { overflow: hidden; }
+  body[data-screen='game']:has(.rotate-gate) { overflow: hidden; }
 }
 @keyframes rotate-hint { 0%, 25% { transform: rotate(0); } 55%, 80% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
 
@@ -1047,4 +1071,46 @@ body[data-screen='game'] .credits { display: none; }
   .dp-head h2 { font-size: 20px; }
   .dp-body { padding: 12px 14px 16px; }
   .dp-curve { height: 70px; }
+}
+
+/* Shared interaction and readability baseline. Surface-specific layouts live beside their views. */
+body { line-height: 1.5; }
+input, select, textarea { font: inherit; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button:disabled { cursor: not-allowed; }
+button { touch-action: manipulation; }
+button svg { flex-shrink: 0; }
+.mat { background: radial-gradient(ellipse at 50% 40%, var(--mat-center), var(--mat-mid) 52%, var(--bg-deep)); }
+.arena-btn { min-height: 44px; border-radius: 999px; font-size: 16px; letter-spacing: 0; text-transform: none; font-weight: 600; transition: background-color 150ms var(--ease-out), border-color 150ms var(--ease-out), transform 100ms var(--ease-out); }
+.arena-btn.primary { background: linear-gradient(180deg, #ffd27a, var(--gold) 45%, var(--gold-deep)); border-color: var(--gold-light); box-shadow: 0 2px 12px #f2b54c30, inset 0 1px 0 #ffffff80; color: #2b1700; }
+.arena-btn.primary:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 3px 16px #f2b54c50, inset 0 1px 0 #ffffff80; }
+.arena-btn.secondary { background: var(--surface); border-color: var(--line); }
+.arena-btn:hover:not(:disabled) { transform: none; }
+.arena-btn:active:not(:disabled), .icon-btn:active, .ghost-btn:active, .q-opt:active { transform: scale(0.96); }
+.ghost-btn, .icon-btn, .news-btn { min-height: 44px; border-radius: 10px; }
+.icon-btn, .field-label, .note, .room-tag, .net-adv { font-size: 14px; }
+.ghost-btn:hover { background: var(--surface); }
+.brand-mark { box-shadow: 0 2px 12px #f2b54c30; }
+.face { outline: 1px solid rgb(255 255 255 / 0.1); }
+.pip svg { width: 77%; height: 77%; fill: currentColor; }
+.pip .hybrid-glyph { font-size: 0.68em; font-weight: 800; }
+.pip-B { color: #fff; }
+.menu .btn { min-height: 44px; font-size: 15px; background: var(--surface); }
+.menu .btn:hover { transform: none; }
+.question, .deck-preview { background: #0d1426; }
+.prompt, .q-hint { font-size: 16px; }
+.log-drawer ul { font-size: 14px; line-height: 1.5; }
+.log-drawer h2 { font-size: 18px; }
+.turn-owner { letter-spacing: 0; text-transform: none; }
+.banner { animation-duration: 900ms; }
+.overlay > .result h2, .overlay > .result p, .overlay > .result .result-btns { animation: none; }
+.result.win h2, .result.lose h2 { text-shadow: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (pointer: coarse) { .mini, .dp-close, .tile-peek { min-width: 44px; min-height: 44px; } }
+@media (hover: none) {
+  .tile-wrap:hover .deck-tile, .tile-wrap:hover .tile-peek, .tile-wrap:hover .tile-art, .mode-card:hover, .r-img:hover:not(:disabled) img { transform: none; }
+  .hcard:hover { transform: translateY(calc(34% + var(--dy))) rotate(var(--rot)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

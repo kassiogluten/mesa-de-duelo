@@ -1,221 +1,222 @@
-/**
- * Animações da mesa. As telas redesenham tudo com innerHTML, então transições CSS não têm um "antes"
- * para partir. Aqui medimos cada carta (pela chave data-uid/data-fid/data-peek) antes do desenho e,
- * depois dele, animamos a diferença: carta que muda de zona voa até o novo lugar, carta que vira gira,
- * carta nova surge da mão do oponente ou do grimório, carta que some se desfaz e a vida mostra o quanto mudou.
- */
+import type { PresentationEvent } from './presentationTimeline';
 
-const KEYED = '[data-uid],[data-fid],[data-peek]';
+const KEYED = '[data-fid],[data-peek]';
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
-
-interface Snap {
-  el: HTMLElement;
-  cx: number;
-  cy: number;
-  w: number;
-  h: number;
-  tapped: boolean;
-  zone: string;
-  tough?: number;
-  hovered: boolean;
-}
-
+interface Point { cx: number; cy: number; w: number; h: number }
+interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string }
 export interface Motion {
-  /** Mede a mesa; chame logo antes de redesenhar. */
   capture(): void;
-  /** Anima a diferença entre a última medida e a mesa atual. */
-  play(): void;
-  /** Esquece a mesa anterior (nova partida). */
+  play(options?: { silent?: boolean; semantic?: boolean }): void;
+  present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }): void;
+  cancelPresentation(): void;
   reset(): void;
 }
-
-const keyOf = (el: HTMLElement) => el.dataset.uid ?? el.dataset.fid ?? el.dataset.peek!;
-const zoneOf = (el: HTMLElement) => el.parentElement?.closest<HTMLElement>('[id]')?.id ?? '';
-
-function reduced() {
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
-function snap(el: HTMLElement): Snap | null {
-  const r = el.getBoundingClientRect();
-  if (!r.width || !r.height) return null;
-  const t = el.querySelector('.pt b:last-child')?.textContent;
-  return {
-    el, cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: el.offsetWidth, h: el.offsetHeight,
-    tapped: !!el.closest('.slot.tapped'), zone: zoneOf(el), tough: t ? +t : undefined,
-    hovered: el.matches(':hover'),
-  };
-}
-
-function centerOf(el: Element | null): { cx: number; cy: number; w: number } | null {
+const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+function center(el: Element | null | undefined): Point | undefined {
   const r = el?.getBoundingClientRect();
-  return r && r.width ? { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width } : null;
+  return r?.width ? { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height } : undefined;
 }
 
+/** Spatial presentation is separate from the board state and can never capture pointer input. */
 export function createMotion(root: HTMLElement): Motion {
   let cards = new Map<string, Snap>();
-  let lives = new Map<string, number>();
   let primed = false;
-  /** Voos em andamento; se a mesa for redesenhada no meio do voo, a carta nova também espera o pouso. */
-  const flights = new Map<string, { anim: Animation; el: HTMLElement }>();
-
+  const effects = new Set<HTMLElement>();
+  const hiddenCards = new Set<HTMLElement>();
+  const animations = new Set<Animation>();
+  const timers = new Set<ReturnType<typeof setTimeout>>();
   const layer = () => root.firstElementChild as HTMLElement ?? root;
-
-  /** Cópia da carta presa à tela, usada para voos e para cartas que saem de jogo. */
-  function ghost(face: Element, s: { cx: number; cy: number; w: number; h: number }) {
-    const g = document.createElement('div');
-    g.className = 'fly';
-    g.style.cssText = `left:${s.cx - s.w / 2}px;top:${s.cy - s.h / 2}px;width:${s.w}px;height:${s.h}px;--fw:${s.w}px`;
-    g.append(face.cloneNode(true));
-    layer().append(g);
-    return g;
+  const later = (fn: () => void, ms: number) => {
+    const timer = setTimeout(() => { timers.delete(timer); fn(); }, ms);
+    timers.add(timer);
+  };
+  function animate(el: HTMLElement, frames: Keyframe[], duration: number) {
+    if (reduced()) return;
+    const animation = el.animate(frames, { duration, easing: EASE });
+    animations.add(animation);
+    animation.onfinish = animation.oncancel = () => animations.delete(animation);
+  }
+  function effect(className: string, point: Point, html?: string) {
+    const el = document.createElement('div');
+    el.className = className;
+    el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = `left:${point.cx}px;top:${point.cy}px;width:${point.w}px;height:${point.h}px;--fw:${point.w}px`;
+    if (html) el.innerHTML = html;
+    layer().append(el); effects.add(el);
+    return el;
+  }
+  function clear() {
+    for (const animation of animations) animation.cancel();
+    animations.clear();
+    for (const timer of timers) clearTimeout(timer);
+    timers.clear();
+    for (const el of effects) el.remove();
+    effects.clear();
+    for (const el of hiddenCards) el.style.opacity = '';
+    hiddenCards.clear();
+    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight'));
+  }
+  function remove(el: HTMLElement) { el.remove(); effects.delete(el); }
+  function pulse(el: HTMLElement | null, kind: boolean | 'attack-highlight' = false) {
+    if (!el) return;
+    const damage = kind === true;
+    const cls = kind === 'attack-highlight' ? kind : damage ? 'damage-flash' : 'semantic-highlight';
+    el.classList.add(cls);
+    if (damage) animate(el, [{ translate: '0 0' }, { translate: '0 3px', offset: .25 }, { translate: '0 0' }], 260);
+    later(() => el.classList.remove(cls), 850);
+  }
+  function playerDamage(event: PresentationEvent) {
+    for (const id of event.targets?.players ?? []) {
+      const avatar = root.querySelector<HTMLElement>(`.avatar[data-pid="${id}"]`);
+      const at = center(avatar?.querySelector('.life'));
+      if (!at) continue;
+      pulse(avatar, true);
+      const marker = effect('player-damage', { ...at, w: 90, h: 48 });
+      marker.textContent = event.delta ? `−${Math.abs(event.delta)}` : 'Dano';
+      if (!reduced()) animate(marker, [{ opacity: 1, translate: '0 0' }, { opacity: 1, translate: '0 -22px', offset: .7 }, { opacity: 0, translate: '0 -30px' }], 950);
+      later(() => remove(marker), 1000);
+    }
+    for (const id of event.targets?.cards ?? []) pulse(root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`), true);
   }
 
-  /** Voo de uma posição qualquer até a carta já desenhada; a carta real fica invisível até o pouso. */
-  function fly(k: string, el: HTMLElement, to: Snap, from: { cx: number; cy: number; w: number; tapped?: boolean }, delay = 0, fade = false) {
-    const face = el.querySelector('.face');
-    if (!face) return;
-    flights.get(k)?.anim.cancel();
-    const g = ghost(face, to);
-    el.style.opacity = '0';
-    const r0 = from.tapped ? 90 : 0, r1 = to.tapped ? 90 : 0;
-    const anim = g.animate([
-      { transform: `translate(${from.cx - to.cx}px, ${from.cy - to.cy}px) scale(${from.w / to.w}) rotate(${r0}deg)`, opacity: fade ? 0 : 1 },
-      { transform: `translate(${(from.cx - to.cx) * 0.35}px, ${(from.cy - to.cy) * 0.35 - 18}px) scale(${1.12}) rotate(${(r0 + r1) / 2}deg)`, opacity: 1, offset: 0.55 },
-      { transform: `translate(0, 0) scale(1) rotate(${r1}deg)`, opacity: 1 },
-    ], { duration: 460, delay, easing: EASE, fill: 'backwards' });
-    const flight = { anim, el };
-    flights.set(k, flight);
-    const land = () => {
-      g.remove();
-      flight.el.style.opacity = '';
-      if (flights.get(k) === flight) flights.delete(k);
-    };
-    anim.onfinish = land;
-    anim.oncancel = land;
-  }
-
-  /** Carta que continua na mesma zona: desliza (e gira, se virou ou desvirou). */
-  function shift(el: HTMLElement, prev: Snap, now: Snap) {
-    const dx = prev.cx - now.cx, dy = prev.cy - now.cy;
-    const turned = prev.tapped !== now.tapped;
-    if (!turned && Math.abs(dx) + Math.abs(dy) < 2) return;
-    if (prev.hovered && el.classList.contains('hcard')) return;
-    // A fileira (.slot) não tem transform próprio; a carta dentro dela já usa transform para centralizar e virar.
-    const target = el.closest<HTMLElement>('.slot') ?? el;
-    const from: Keyframe = { translate: `${dx}px ${dy}px` };
-    const to: Keyframe = { translate: '0 0' };
-    if (turned && target !== el) { from.rotate = now.tapped ? '-90deg' : '90deg'; to.rotate = '0deg'; }
-    target.animate([from, to], { duration: turned ? 320 : 280, easing: EASE });
-  }
-
-  function pop(el: HTMLElement) {
-    const target = el.closest<HTMLElement>('.slot') ?? el;
-    target.animate([
-      { scale: '0.4', opacity: 0, filter: 'brightness(2.2)' },
-      { scale: '1.08', opacity: 1, offset: 0.6 },
-      { scale: '1', filter: 'brightness(1)' },
-    ], { duration: 420, easing: EASE });
-  }
-
-  /** Carta que saiu da mesa sem ir para um lugar visível (exílio, ficha destruída, cemitério coberto). */
-  function vanish(s: Snap) {
-    const face = s.el.querySelector('.face');
-    if (!face) return;
-    const g = ghost(face, s);
-    if (s.tapped) g.style.rotate = '90deg';
-    g.animate([
-      { opacity: 1, scale: '1', filter: 'brightness(1)' },
-      { opacity: 0.9, scale: '1.06', filter: 'brightness(2) saturate(0.4)', offset: 0.3 },
-      { opacity: 0, scale: '0.7', filter: 'brightness(2.5) blur(3px)' },
-    ], { duration: 520, easing: 'ease-in' }).onfinish = () => g.remove();
-  }
-
-  function floatNum(at: Element, delta: number, small = false) {
-    const c = centerOf(at);
-    if (!c) return;
-    const f = document.createElement('div');
-    f.className = `float-num ${delta < 0 ? 'dmg' : 'heal'} ${small ? 'small' : ''}`;
-    f.textContent = delta > 0 ? `+${delta}` : String(delta);
-    f.style.cssText = `left:${c.cx}px;top:${c.cy}px`;
-    f.addEventListener('animationend', () => f.remove());
-    layer().append(f);
-  }
-
-  function readLives() {
-    const m = new Map<string, number>();
-    root.querySelectorAll<HTMLElement>('.avatar').forEach(a => {
-      const k = a.dataset.player ?? a.dataset.pid;
-      const v = parseInt(a.querySelector('.life')?.textContent ?? '', 10);
-      if (k !== undefined && !Number.isNaN(v)) m.set(k, v);
-    });
-    return m;
+  /**
+   * Habilidade (gatilho ou ativada) não move a carta: com a fonte no campo, ela brilha e ganha um aviso ao lado;
+   * fora do campo, a carta aparece parada no centro. Uma cópia voando parecia a criatura saindo do campo.
+   */
+  function ability(event: PresentationEvent, card: HTMLElement | null, options: { label: string; html?: string; duration: number }) {
+    const rect = card?.getBoundingClientRect();
+    if (card && rect?.width) {
+      pulse(card);
+      const note = document.createElement('div');
+      note.className = `ability-callout${event.trigger ? ' trigger' : ''}`;
+      note.setAttribute('aria-hidden', 'true');
+      // Raio para gatilho, engrenagem para habilidade ativada; o texto diz qual é.
+      note.innerHTML = event.trigger
+        ? '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 5-.1-3 2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L15 2.5h-4l-.4 2.5A8 8 0 0 0 8 6.5l-2.4-1-2 3.4 2 1.6-.1 3-2 1.6 2 3.4 2.4-1A8 8 0 0 0 10.6 19l.4 2.5h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4z"/></svg>';
+      const text = document.createElement('span'); text.textContent = options.label;
+      note.append(text);
+      layer().append(note); effects.add(note);
+      // Ao lado da carta, do lado que tiver espaço; sem sair da tela.
+      const width = note.offsetWidth, height = note.offsetHeight;
+      const right = rect.right + 10 + width <= innerWidth - 8;
+      note.style.left = `${right ? rect.right + 10 : Math.max(8, rect.left - 10 - width)}px`;
+      note.style.top = `${Math.min(innerHeight - height - 8, Math.max(8, rect.top + rect.height / 2 - height / 2))}px`;
+      note.classList.add(right ? 'right' : 'left');
+      if (!reduced()) animate(note, [{ opacity: 0, translate: right ? '-6px 0' : '6px 0' }, { opacity: 1, translate: '0 0', offset: .18 }, { opacity: 1, offset: .82 }, { opacity: 0 }], options.duration);
+      later(() => remove(note), options.duration);
+      return;
+    }
+    if (!options.html) return;
+    const bounds = layer().getBoundingClientRect();
+    const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
+    const piece = effect('presentation-piece', stage, options.html);
+    const caption = document.createElement('span');
+    caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
+    if (!reduced()) animate(piece, [{ opacity: 0, scale: '.96' }, { opacity: 1, scale: '1', offset: .2 }, { opacity: 1, offset: .82 }, { opacity: 0 }], options.duration);
+    later(() => remove(piece), options.duration);
   }
 
   return {
     capture() {
       cards = new Map();
       root.querySelectorAll<HTMLElement>(KEYED).forEach(el => {
-        const k = keyOf(el);
-        if (cards.has(k)) return;
-        const s = snap(el);
-        if (s) cards.set(k, s);
+        const key = el.dataset.fid ?? el.dataset.peek!;
+        if (cards.has(key)) return;
+        const at = center(el);
+        if (at) cards.set(key, { ...at, el, tapped: !!el.closest('.tapped'), zone: el.parentElement?.closest('[id]')?.id ?? '' });
       });
-      lives = readLives();
     },
-
-    play() {
-      if (reduced()) { primed = true; return; }
+    play(options = {}) {
+      if (options.silent || reduced()) { primed = true; return; }
       const seen = new Set<string>();
-      let deal = 0;
       root.querySelectorAll<HTMLElement>(KEYED).forEach(el => {
-        const k = keyOf(el);
-        if (seen.has(k)) return;
-        seen.add(k);
-        const now = snap(el);
-        if (!now) return;
-        const prev = cards.get(k);
-        const flying = flights.get(k);
-        if (flying && prev?.zone === now.zone) { flying.el = el; el.style.opacity = '0'; return; }
-        if (prev) {
-          if (prev.zone === now.zone) shift(el, prev, now);
-          else fly(k, el, now, prev);
-          if (prev.zone === now.zone && prev.tough !== undefined && now.tough !== undefined && prev.tough !== now.tough) {
-            floatNum(el, now.tough - prev.tough, true);
-          }
-          return;
+        const key = el.dataset.fid ?? el.dataset.peek!;
+        if (seen.has(key)) return;
+        seen.add(key);
+        const at = center(el), before = cards.get(key);
+        if (!at) return;
+        if (before) {
+          const zone = el.parentElement?.closest('[id]')?.id ?? '';
+          if (options.semantic && zone !== before.zone) return;
+          const dx = before.cx - at.cx, dy = before.cy - at.cy;
+          const turned = before.tapped !== !!el.closest('.tapped');
+          if (Math.abs(dx) + Math.abs(dy) < 2 && !turned) return;
+          const slot = el.closest<HTMLElement>('.slot') ?? el;
+          const from: Keyframe = { translate: `${dx}px ${dy}px` };
+          const to: Keyframe = { translate: '0 0' };
+          if (turned && slot !== el) { from.rotate = before.tapped ? '90deg' : '-90deg'; to.rotate = '0deg'; }
+          animate(slot, [from, to], 240);
+        } else if (primed && !options.semantic) {
+          animate(el.closest<HTMLElement>('.slot') ?? el, [{ opacity: 0, scale: '.92' }, { opacity: 1, scale: '1' }], 220);
         }
-        if (now.zone.endsWith('Hand') || now.zone === 'hand') {
-          // Compra: sai do grimório. Na primeira mão, as cartas chegam uma a uma.
-          const lib = centerOf(root.querySelector('.piles.me .lib'));
-          if (lib) { fly(k, el, now, lib, primed ? 0 : deal++ * 90); return; }
-        } else if (primed && el.closest('.field.opp, .stack-panel li.theirs')) {
-          const src = centerOf(root.querySelector('.opp-hand .back')) ?? centerOf(root.querySelector('.avatar-slot.opp'));
-          if (src) { fly(k, el, now, { ...src, w: now.w * 0.5 }, 0, true); return; }
-        }
-        if (primed) pop(el);
       });
-
-      if (primed) {
-        for (const [k, s] of cards) {
-          if (!seen.has(k) && !s.el.closest('.pile') && !s.zone.endsWith('Piles')) vanish(s);
-        }
-        const after = readLives();
-        for (const [k, v] of after) {
-          const before = lives.get(k);
-          if (before === undefined || before === v) continue;
-          const life = root.querySelector(`.avatar[data-player="${k}"] .life, .avatar[data-pid="${k}"] .life`);
-          if (!life) continue;
-          floatNum(life, v - before);
-          life.animate([{ scale: '1' }, { scale: '1.35', color: v < before ? 'var(--red)' : 'var(--heal)' }, { scale: '1' }], { duration: 600, easing: EASE });
-        }
-      }
       primed = true;
     },
-
-    reset() {
-      for (const f of flights.values()) f.anim.cancel();
-      cards = new Map(); lives = new Map(); primed = false;
+    present(event, options) {
+      // Nothing here mutates card state, waits on a network reply, or creates a priority stop.
+      if (document.hidden || root.hidden) return;
+      if (event.type === 'damage') { playerDamage(event); return; }
+      if (event.type === 'life-changed') return; // Paying life is not taking damage.
+      if (event.type === 'attackers') {
+        // Ataque é só vermelho: o dourado fica para seleção e bloqueio.
+        root.querySelectorAll<HTMLElement>('.slot.attacking > .bfc').forEach(el => pulse(el, 'attack-highlight'));
+        const banner = effect('combat-banner', { cx: 0, cy: 0, w: 0, h: 0 });
+        banner.removeAttribute('style');
+        banner.textContent = options.label;
+        if (!reduced()) animate(banner, [{ opacity: 0, scale: '.96' }, { opacity: 1, scale: '1', offset: .15 }, { opacity: 1, offset: .8 }, { opacity: 0 }], options.duration);
+        later(() => remove(banner), options.duration);
+        return;
+      }
+      if (event.type === 'blockers') {
+        root.querySelectorAll<HTMLElement>('.slot.blocking > .bfc').forEach(el => pulse(el));
+        return;
+      }
+      if (event.type === 'turn' || !options.html) return;
+      const id = event.card?.id ?? event.sourceId;
+      const card = id === undefined ? null : root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
+      if (event.type === 'ability-activated') { ability(event, card, options); return; }
+      const old = id === undefined ? undefined : cards.get(String(id));
+      const bounds = layer().getBoundingClientRect();
+      const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
+      const mine = event.actor === options.you;
+      const seat = !mine && event.actor !== undefined ? root.querySelector(`[data-seat-player="${event.actor}"]`) : null;
+      const hand = center(seat?.querySelector('.seat-hand')) ?? center(root.querySelector(mine ? '#fHand' : '#fOppHand')) ?? center(root.querySelector(mine ? '#fMeAvatar' : '#fOppAvatar')) ?? stage;
+      const target = center(card);
+      let from: Point = old ?? hand, to: Point = stage;
+      if (event.type === 'land-played' || event.type === 'entered') {
+        from = event.from === 'Stack' ? stage : hand;
+        to = target ?? center(seat?.querySelector('.lands')) ?? center(root.querySelector(mine ? '#fMeLands' : '#fOppLands')) ?? stage;
+      } else if (event.type === 'resolved') {
+        from = stage;
+        const targetId = event.targets?.players?.[0];
+        const targetCard = event.targets?.cards?.[0];
+        to = target ?? center(targetId !== undefined ? root.querySelector(`.avatar[data-pid="${targetId}"]`) : targetCard !== undefined ? root.querySelector(`.field [data-fid="${targetCard}"]`) : null) ?? stage;
+      } else if (event.type === 'left' || event.type === 'countered') {
+        from = event.type === 'countered' ? stage : old ?? target ?? stage;
+        to = center(seat?.querySelector('.piles .gy')) ?? center(root.querySelector(mine ? '#fMePiles .gy' : '#fOppPiles .gy')) ?? stage;
+      }
+      // Keep large cards readable while travelling, independent of a tiny hand or pile's dimensions.
+      const end = { ...to, w: stage.w, h: stage.h };
+      const piece = effect('presentation-piece', end, options.html);
+      const caption = document.createElement('span');
+      caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
+      const disappearing = ['left', 'countered', 'resolved'].includes(event.type);
+      if (!reduced()) animate(piece, [
+        { translate: `${from.cx - to.cx}px ${from.cy - to.cy}px`, scale: '.92', opacity: .8 },
+        { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 },
+        { translate: '0 0', scale: '1', opacity: disappearing ? .1 : 1 },
+      ], options.duration);
+      if (target && card) {
+        pulse(card);
+        if (options.hideDestination && !reduced() && ['land-played', 'entered'].includes(event.type)) { card.style.opacity = '0'; hiddenCards.add(card); }
+      }
+      later(() => {
+        remove(piece);
+        if (card && hiddenCards.delete(card)) card.style.opacity = '';
+      }, options.duration);
     },
+    cancelPresentation: clear,
+    reset() { clear(); cards = new Map(); primed = false; },
   };
 }
