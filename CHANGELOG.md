@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.9.0] - 2026-10-17
+
+### Novo
+
+- **Catorze novos decks prontos de Commander**, montados a partir das listas mais jogadas de cada comandante: **Noite de Y'shtola**, **Banquete de Sangue** (Edgar Markov), **Marcadores de Phyrexia** (Atraxa), **Horda Goblin** (Krenko), **Feitiços de Vivi**, **Olho de Sauron**, **Coro dos Anjos** (Giada), **Estouro Jurássico** (Pantlaza), **Lâminas Élficas** (Lathril), **Jardim de Bumbleflower**, **Moinho de Hope** (Hope Estheim), **Esgoto do Splinter**, **Ninjas de Satoru** e **Clã do Pé** (Super Shredder). Todos podem ser usados por você ou pelo computador.
+- No fim do jogo, **Ver campo de batalha** fecha o resultado e deixa a mesa à mostra, com cartas, cemitérios e exílio ainda abertos para consulta. O botão **Ver resultado** traz de volta a tela de vitória ou derrota, com as opções de jogar de novo ou voltar ao início.
+
+### Corrigido
+
+- O seu cemitério voltou a abrir com um clique; a área da mão cobria a pilha em algumas telas.
+
 ## [0.8.0] - 2026-10-16
 
 ### Novo
