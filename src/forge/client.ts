@@ -11,7 +11,7 @@ export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'stack-removed';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
-  text?: string; from?: string; to?: string; delta?: number;
+  text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {

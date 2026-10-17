@@ -63,6 +63,7 @@ final class VisibleEvents {
         } else if (event instanceof GameEventSpellAbilityCast x) {
             e = card(x.sa().isSpell() ? "spell-cast" : "ability-activated", x.si().getSourceCard());
             e.addProperty("stackId", x.si().getId());
+            if (x.si().isTrigger()) e.addProperty("trigger", true);
             e.addProperty("to", "Stack");
             if (x.si().getSourceCard() != null) e.addProperty("from", origins.get(x.si().getSourceCard().getId()));
             if (x.si().getActivatingPlayer() != null) actor(e, x.si().getActivatingPlayer().getId());

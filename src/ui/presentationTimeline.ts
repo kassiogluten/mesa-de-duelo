@@ -17,6 +17,8 @@ export interface PresentationEvent {
   cards?: number[];
   sourceId?: number;
   stackId?: number;
+  /** Habilidade desencadeada (gatilho), e não ativada por um jogador. */
+  trigger?: boolean;
   targets?: FTargets;
   text?: string;
   from?: string;
@@ -125,7 +127,8 @@ export function stateWithFrame(state: FState, frame: PresentationFrame | null): 
   };
 }
 export function presentationDuration(event: PresentationEvent, fast: boolean) {
-  const duration = ['spell-cast', 'ability-activated'].includes(event.type) ? 720
+  // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
+  const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? 1000 : event.type === 'spell-cast' ? 720
     : ['damage', 'countered', 'land-played'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
   return Math.round(duration * (fast ? .6 : 1));

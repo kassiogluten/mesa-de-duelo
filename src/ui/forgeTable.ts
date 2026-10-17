@@ -23,6 +23,7 @@ import { tablePlayers, validAttackSelection, legalAttackTargets, legalAttackGrou
 import './commanderTable.css';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
+const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICON_SHIELD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="currentColor"/></svg>';
 
 const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
@@ -163,6 +164,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   /** Seleção em andamento na pergunta aberta. */
   let qState: { id: number; picked: number[]; text: string; amounts: string[] } | null = null;
   let groupIds: number[] | null = null;
+  let groupTitle = '';
   let selectedBlocker: BlockSelection | null = null;
   const selectedAttackers = new Set<number>();
   let attackSelectionGen = -1;
@@ -687,9 +689,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
       `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small')}${selectedBadge(s, a)}</div>`).join('');
+    // Com dois ou mais anexos o leque fica estreito: o selo abre todos eles, junto da carta, em tamanho normal.
+    const attsN = attached.length > 1
+      ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
     const style = attached.length ? ` style="--atts:${attached.length}"` : '';
     if (attached.length) slot.push('has-att');
-    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${face(c, 'small')}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
+    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${face(c, 'small')}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
   }
 
   /** Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). */
@@ -720,7 +725,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       groups.set(k, [...(groups.get(k) ?? []), c]);
     }
     return [...groups.values()].map(cs => `<div class="stack" style="--n:${cs.length}">${cs.map(c => bfCard(s, c, atts.get(c.id))).join('')}${
-      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" aria-label="Ver ${cs.length} cópias de ${esc(label(cs[0]))}">×${cs.length}</button>` : ''}</div>`).join('');
+      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="Cartas do grupo" aria-label="Ver ${cs.length} cópias de ${esc(label(cs[0]))}">×${cs.length}</button>` : ''}</div>`).join('');
   }
 
   function backRow(s: FState, p: FPlayer) {
@@ -868,12 +873,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       }).join('')}</ul><div class="q-actions"><button class="arena-btn secondary" data-ui="zone-close">Fechar</button></div></section>`);
       el.hidden = false; syncModal(); return;
     }
-    const title = groupIds ? 'Cartas do grupo' : zoneKind === 'command' ? 'Zona de comando' : zoneKind === 'exile' ? 'Exílio' : 'Cemitério';
+    const title = groupIds ? groupTitle : zoneKind === 'command' ? 'Zona de comando' : zoneKind === 'exile' ? 'Exílio' : 'Cemitério';
     const cards = groupIds ? groupIds.map(id => findCard(id)).filter((c): c is FCard => !!c) : [...(zoneKind === 'command' ? p!.commandZone ?? [] : zoneKind === 'exile' ? p!.exile : p!.graveyard)].reverse();
     const card = (c: FCard) => `<div class="zone-card">${canUse(s, c)
-      ? `<div class="q-face actionable" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0" aria-label="Usar ${esc(label(c))}">${face(c, 'normal')}</div>`
+      ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${selectedBadge(s, c)}</div>`
       : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${face(c, 'normal')}${c.plotted ? '<div class="zone-tag">Tramada</div>' : ''}</button>`}
-      <button class="icon-btn" data-inspect="${c.id}">Inspecionar</button></div>`;
+      <button class="icon-btn" data-inspect="${c.id}">${inspectIcon}Inspecionar</button></div>`;
     setHTML(el, `<div class="question zone-view" role="dialog" aria-modal="true" aria-label="${title}">
       <h2>${title}${p ? ` · ${esc(p.name)}` : ''} (${cards.length})</h2>
       ${cards.length ? `<div class="q-opts cards">${cards.map(card).join('')}</div>` : '<p class="q-hint">Vazio.</p>'}
@@ -889,12 +894,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     switch (event.type) {
       case 'land-played': return `${who} jogou ${name}.`;
       case 'spell-cast': return `${who} conjurou ${name}.`;
-      case 'ability-activated': return `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}.`;
+      case 'ability-activated': return event.trigger ? `Gatilho${event.card?.name ? ` de ${name}` : ''}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}.`;
       case 'resolved': return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
       case 'countered': return `Anulado: ${event.card?.name ? name : 'efeito'}.`;
       case 'entered': return `${name} entrou no campo.`;
       case 'left': return `${name} saiu do campo.`;
-      case 'attackers': return `${who} declarou atacantes.`;
+      case 'attackers': return attackDescription(event);
       case 'blockers': return `${who} declarou bloqueadores.`;
       case 'turn': return `Turno de ${who}.`;
       case 'damage': {
@@ -904,6 +909,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'life-changed': return `${who}: ${event.delta && event.delta > 0 ? '+' : ''}${event.delta ?? 0} de vida.`;
       default: return event.text ?? 'O jogo avançou.';
     }
+  }
+  /** "Ana ataca você com 2 criaturas." — quem ataca, quem é atacado e com quantas. */
+  function attackDescription(event: PresentationEvent) {
+    const s = client?.state;
+    const you = s?.you;
+    const name = (id: number) => id === you ? 'você' : s?.players.find(p => p.id === id)?.name ?? 'Jogador';
+    const who = event.actor === you ? 'Você' : event.actor === undefined ? 'Jogador' : name(event.actor);
+    const defenders = [...(event.targets?.players ?? []).map(name),
+      ...(event.targets?.cards ?? []).map(id => findCard(id)).filter((c): c is FCard => !!c).map(label)];
+    const list = defenders.length > 1 ? `${defenders.slice(0, -1).join(', ')} e ${defenders.at(-1)}` : defenders[0];
+    const n = event.cards?.length ?? 0;
+    const count = n ? ` com ${n} ${n === 1 ? 'criatura' : 'criaturas'}` : '';
+    return `${who} ataca${list ? ` ${list}` : ''}${count}.`;
   }
   function targetsDescription(targets: PresentationEvent['targets']) {
     if (!targets) return '';
@@ -1422,7 +1440,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     const grouped = t.closest<HTMLElement>('[data-group]');
-    if (grouped && client?.state) { groupIds = grouped.dataset.group!.split(',').map(Number); zoneOf = null; zoneView(client.state); return; }
+    if (grouped && client?.state) { groupIds = grouped.dataset.group!.split(',').map(Number); groupTitle = grouped.dataset.groupTitle ?? 'Cartas do grupo'; zoneOf = null; zoneView(client.state); return; }
     const purePeek = t.closest<HTMLElement>('[data-peek]');
     if (purePeek && !purePeek.closest('[data-gy]')) { showPreview(cardFromElement(purePeek), purePeek, true); return; }
     const renderedQuestion = t.closest<HTMLElement>('[data-qid]');

@@ -54,12 +54,13 @@ export function createMotion(root: HTMLElement): Motion {
     effects.clear();
     for (const el of hiddenCards) el.style.opacity = '';
     hiddenCards.clear();
-    root.querySelectorAll('.damage-flash,.semantic-highlight').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight'));
+    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight'));
   }
   function remove(el: HTMLElement) { el.remove(); effects.delete(el); }
-  function pulse(el: HTMLElement | null, damage = false) {
+  function pulse(el: HTMLElement | null, kind: boolean | 'attack-highlight' = false) {
     if (!el) return;
-    const cls = damage ? 'damage-flash' : 'semantic-highlight';
+    const damage = kind === true;
+    const cls = kind === 'attack-highlight' ? kind : damage ? 'damage-flash' : 'semantic-highlight';
     el.classList.add(cls);
     if (damage) animate(el, [{ translate: '0 0' }, { translate: '0 3px', offset: .25 }, { translate: '0 0' }], 260);
     later(() => el.classList.remove(cls), 850);
@@ -76,6 +77,44 @@ export function createMotion(root: HTMLElement): Motion {
       later(() => remove(marker), 1000);
     }
     for (const id of event.targets?.cards ?? []) pulse(root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`), true);
+  }
+
+  /**
+   * Habilidade (gatilho ou ativada) não move a carta: com a fonte no campo, ela brilha e ganha um aviso ao lado;
+   * fora do campo, a carta aparece parada no centro. Uma cópia voando parecia a criatura saindo do campo.
+   */
+  function ability(event: PresentationEvent, card: HTMLElement | null, options: { label: string; html?: string; duration: number }) {
+    const rect = card?.getBoundingClientRect();
+    if (card && rect?.width) {
+      pulse(card);
+      const note = document.createElement('div');
+      note.className = `ability-callout${event.trigger ? ' trigger' : ''}`;
+      note.setAttribute('aria-hidden', 'true');
+      // Raio para gatilho, engrenagem para habilidade ativada; o texto diz qual é.
+      note.innerHTML = event.trigger
+        ? '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 5-.1-3 2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L15 2.5h-4l-.4 2.5A8 8 0 0 0 8 6.5l-2.4-1-2 3.4 2 1.6-.1 3-2 1.6 2 3.4 2.4-1A8 8 0 0 0 10.6 19l.4 2.5h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4z"/></svg>';
+      const text = document.createElement('span'); text.textContent = options.label;
+      note.append(text);
+      layer().append(note); effects.add(note);
+      // Ao lado da carta, do lado que tiver espaço; sem sair da tela.
+      const width = note.offsetWidth, height = note.offsetHeight;
+      const right = rect.right + 10 + width <= innerWidth - 8;
+      note.style.left = `${right ? rect.right + 10 : Math.max(8, rect.left - 10 - width)}px`;
+      note.style.top = `${Math.min(innerHeight - height - 8, Math.max(8, rect.top + rect.height / 2 - height / 2))}px`;
+      note.classList.add(right ? 'right' : 'left');
+      if (!reduced()) animate(note, [{ opacity: 0, translate: right ? '-6px 0' : '6px 0' }, { opacity: 1, translate: '0 0', offset: .18 }, { opacity: 1, offset: .82 }, { opacity: 0 }], options.duration);
+      later(() => remove(note), options.duration);
+      return;
+    }
+    if (!options.html) return;
+    const bounds = layer().getBoundingClientRect();
+    const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
+    const piece = effect('presentation-piece', stage, options.html);
+    const caption = document.createElement('span');
+    caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
+    if (!reduced()) animate(piece, [{ opacity: 0, scale: '.96' }, { opacity: 1, scale: '1', offset: .2 }, { opacity: 1, offset: .82 }, { opacity: 0 }], options.duration);
+    later(() => remove(piece), options.duration);
   }
 
   return {
@@ -119,14 +158,24 @@ export function createMotion(root: HTMLElement): Motion {
       if (document.hidden || root.hidden) return;
       if (event.type === 'damage') { playerDamage(event); return; }
       if (event.type === 'life-changed') return; // Paying life is not taking damage.
-      if (['attackers', 'blockers'].includes(event.type)) {
-        const selector = event.type === 'attackers' ? '.slot.attacking > .bfc' : '.slot.blocking > .bfc';
-        root.querySelectorAll<HTMLElement>(selector).forEach(el => pulse(el));
+      if (event.type === 'attackers') {
+        // Ataque é só vermelho: o dourado fica para seleção e bloqueio.
+        root.querySelectorAll<HTMLElement>('.slot.attacking > .bfc').forEach(el => pulse(el, 'attack-highlight'));
+        const banner = effect('combat-banner', { cx: 0, cy: 0, w: 0, h: 0 });
+        banner.removeAttribute('style');
+        banner.textContent = options.label;
+        if (!reduced()) animate(banner, [{ opacity: 0, scale: '.96' }, { opacity: 1, scale: '1', offset: .15 }, { opacity: 1, offset: .8 }, { opacity: 0 }], options.duration);
+        later(() => remove(banner), options.duration);
+        return;
+      }
+      if (event.type === 'blockers') {
+        root.querySelectorAll<HTMLElement>('.slot.blocking > .bfc').forEach(el => pulse(el));
         return;
       }
       if (event.type === 'turn' || !options.html) return;
       const id = event.card?.id ?? event.sourceId;
       const card = id === undefined ? null : root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
+      if (event.type === 'ability-activated') { ability(event, card, options); return; }
       const old = id === undefined ? undefined : cards.get(String(id));
       const bounds = layer().getBoundingClientRect();
       const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };

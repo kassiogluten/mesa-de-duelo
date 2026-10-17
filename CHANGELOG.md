@@ -13,10 +13,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Mesa livre**: um jeito de jogar sem nenhuma regra automática, para testar o deck sozinho. Escolha **Mesa livre** na tela inicial e o deck chega embaralhado, com sete cartas na mão e o comandante na zona de comando. Daí em diante tudo fica com você: comprar, virar e desvirar, jogar cartas, mandar para o cemitério, exílio, mão ou topo e fundo do grimório, pôr a face para baixo, marcadores, fichas, mulligan, vida, turno e **Desfazer**. Toque em uma carta da mão para jogá-la, toque no campo para virar ou desvirar e use o botão direito (ou segure o dedo) para ver todas as opções; no computador também dá para arrastar. O jogo continua de onde parou se a página for recarregada.
 - **Catorze novos decks prontos de Commander**, montados a partir das listas mais jogadas de cada comandante: **Noite de Y'shtola**, **Banquete de Sangue** (Edgar Markov), **Marcadores de Phyrexia** (Atraxa), **Horda Goblin** (Krenko), **Feitiços de Vivi**, **Olho de Sauron**, **Coro dos Anjos** (Giada), **Estouro Jurássico** (Pantlaza), **Lâminas Élficas** (Lathril), **Jardim de Bumbleflower**, **Moinho de Hope** (Hope Estheim), **Esgoto do Splinter**, **Ninjas de Satoru** e **Clã do Pé** (Super Shredder). Todos podem ser usados por você ou pelo computador.
 - No fim do jogo, **Ver campo de batalha** fecha o resultado e deixa a mesa à mostra, com cartas, cemitérios e exílio ainda abertos para consulta. O botão **Ver resultado** traz de volta a tela de vitória ou derrota, com as opções de jogar de novo ou voltar ao início.
+- Uma criatura com duas ou mais auras ou equipamentos ganha um **selo com um clipe e o número de cartas presas**. Clicar nele abre todas em tamanho normal, junto da criatura, para inspecionar, usar ou escolher como alvo. O selo brilha em azul quando alguma delas pode ser escolhida naquele momento.
+
+### Mudou
+
+- Quando uma carta no campo usa uma habilidade, ela não "voa" mais para o meio da mesa (parecia que estava saindo do campo). Agora ela brilha no lugar e ganha um aviso ao lado, que diz se foi um **gatilho** (com um raio) ou uma **habilidade ativada** por alguém (com uma engrenagem).
+- O ataque agora é marcado só em vermelho, e uma faixa no meio da mesa diz quem ataca quem e com quantas criaturas, por exemplo: "Diego ataca você e Bruno com 2 criaturas."
 
 ### Corrigido
 
 - O seu cemitério voltou a abrir com um clique; a área da mão cobria a pilha em algumas telas.
+- Ao ver o cemitério, o exílio, a zona de comando ou as cartas presas a uma criatura, o botão **Inspecionar** agora fica embaixo de cada carta, na largura dela, em vez de solto ao lado.
 
 ## [0.8.0] - 2026-10-16
 
