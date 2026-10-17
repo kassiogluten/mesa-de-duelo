@@ -148,6 +148,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const motion = createMotion(root);
   let lastDamage = new Map<number, number>();
   let disconnected = false;
+  /** No fim do jogo, o jogador fechou o resultado para olhar a mesa; o resultado volta pelo painel de ações. */
+  let observing = false;
   /** Versão do prompt em que o jogador já clicou num botão; evita clique duplo até o Forge responder. */
   let clickedGen = -1;
   /**
@@ -992,6 +994,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   function buttons(s: FState) {
+    if (s.gameOver && observing && !disconnected) {
+      const result = gameResult(s);
+      return `<span class="observe-label ${result.tone}">${result.title} · Jogo encerrado</span><button class="arena-btn primary" data-ui="result">Ver resultado</button>`;
+    }
     if (s.gameOver || s.question) return '';
     if (s.spectating) return '<span class="spectating-label">Você foi eliminado. Acompanhando a partida.</span>';
     if (s.input.opening === 'starting-player') {
@@ -1172,7 +1178,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && !findCard(pc.id, false)
       ? `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';
     const opening = s.input.opening;
-    const prompt = s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
+    const prompt = s.gameOver ? '' : s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
       : s.input.suspendCast ? 'Suspender: conjure agora sem pagar o custo de mana ou deixe a carta no exílio.'
       : s.input.blocking ? selectedBlocker ? `${label(findCard(selectedBlocker.blocker)!)}: escolha o atacante. Se já estiver bloqueando esse atacante, o clique remove o bloqueio.` : 'Escolha uma criatura sua e depois o atacante que ela vai bloquear.'
       : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''
@@ -1215,17 +1221,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fSeries').hidden = !s.match;
     $('#fSeries').textContent = s.match ? `Jogo ${s.match.gameNumber} · ${s.match.wins.join(' × ')}` : '';
 
+    if (!s.gameOver) observing = false;
     const ov = $('#fOverlay');
     if (s.sideboarding && !disconnected && !s.match?.over) {
       setHTML(ov, sideboardingHTML(s));
       ov.hidden = false;
+    } else if (s.gameOver && !disconnected && observing) {
+      ov.hidden = true; ov.dataset.html = '';
     } else if (s.gameOver && !disconnected) {
-      const abandoned = !!s.match?.abandoned;
-      const won = !abandoned && s.winner === me.name;
-      const html = `<div role="dialog" aria-modal="true" aria-label="Resultado da partida" class="result ${won ? 'win' : !abandoned && s.winner ? 'lose' : 'draw'}${ov.hidden ? '' : ' still'}">
-        <h2>${abandoned ? 'Partida encerrada' : won ? 'Vitória' : s.winner ? 'Derrota' : 'Empate'}</h2><p>${abandoned ? `Placar: ${s.match!.wins.join(' × ')}` : `Turno ${s.turn}${s.winner ? ` · ${esc(s.winner)} venceu` : ''}`}</p>
+      const result = gameResult(s);
+      const html = `<div role="dialog" aria-modal="true" aria-label="Resultado da partida" class="result ${result.tone}${ov.hidden ? '' : ' still'}">
+        <h2>${result.title}</h2><p>${result.detail}</p>
         ${rematchNote(s)}
-        <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="exit">Início</button></div>
+        <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="observe">Ver campo de batalha</button><button class="arena-btn secondary" data-ui="exit">Início</button></div>
       </div>`;
       if (ov.hidden || ov.dataset.html !== html) { ov.innerHTML = html; ov.dataset.html = html; }
       ov.hidden = false;
@@ -1250,6 +1258,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events });
     drawTargetArrows(visual);
     lastDamage = new Map(s.players.flatMap(p => p.battlefield.map(c => [c.id, c.damage ?? 0] as [number, number])));
+  }
+
+  function gameResult(s: FState) {
+    const abandoned = !!s.match?.abandoned;
+    const won = !abandoned && s.winner === tablePlayers(s).me?.name;
+    return {
+      tone: won ? 'win' : !abandoned && s.winner ? 'lose' : 'draw',
+      title: abandoned ? 'Partida encerrada' : won ? 'Vitória' : s.winner ? 'Derrota' : 'Empate',
+      detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}` : `Turno ${s.turn}${s.winner ? ` · ${esc(s.winner)} venceu` : ''}`,
+    };
   }
 
   function rematchButton(s: FState) {
@@ -1425,6 +1443,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (ui === 'rematch') { setMenu(false); opts.onRematch(); return; }
+    if (ui === 'observe' || ui === 'result') { observing = ui === 'observe'; render(); if (!observing) ($('#fOverlay').querySelector('[data-ui="observe"]') as HTMLElement | null)?.focus(); return; }
     if (ui === 'zone-close' || t.id === 'fZone') { closeZone(); return; }
     const ctr = t.closest<HTMLElement>('[data-ctr]')?.dataset.ctr ?? null;
     if (ctr || openCounter) {
@@ -1614,7 +1633,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     attach(c, pics) {
       autoPass.reset();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
-      client = c; portraits = pics; lastTurn = 0; disconnected = false; qState = null; clickedGen = -1; zoneOf = null;
+      client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);
       stackGalleryOpen = false; stackMinimized = false; $('#fStackGallery').hidden = true;
       handDrag.cancel(); stopPresentation(); timeline.reset(); silentNext = true; hideCardPreview(true);
