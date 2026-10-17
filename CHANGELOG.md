@@ -24,6 +24,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 - O seu cemitério voltou a abrir com um clique; a área da mão cobria a pilha em algumas telas.
 - Ao ver o cemitério, o exílio, a zona de comando ou as cartas presas a uma criatura, o botão **Inspecionar** agora fica embaixo de cada carta, na largura dela, em vez de solto ao lado.
+- Enquanto o oponente está com a prioridade, não aparece mais um botão **OK** sem função: o botão mostra quem está jogando (por exemplo, **Oponente jogando…**) até chegar a sua vez de decidir.
 
 ## [0.8.0] - 2026-10-16
 

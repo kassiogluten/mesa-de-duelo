@@ -859,6 +859,8 @@ final class Session {
                 }
                 boolean locked = seat.buttonsLocked();
                 seat.lockedAtLastFlush = locked;
+                // Sem input aberto (outro jogador com prioridade), os botões do último prompt ficam velhos: nada a confirmar.
+                if (currentInput == null) locked = true;
                 input.addProperty("gen", generation);
                 input.addProperty("message", seat.message);
                 input.add("ok", button(priority && "OK".equalsIgnoreCase(seat.okLabel) ? "Passar prioridade" : seat.okLabel, seat.okEnabled && !locked && !spectating));
