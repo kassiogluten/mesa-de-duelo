@@ -78,6 +78,8 @@
 .forge .avatar-slot.opp { left: 50%; }
 .forge .opp-hand { left: calc(50% + 50px); }
 .forge .piles.opp { top: 116px; right: 18px; }
+/* The hand box starts beside the player's piles and is taller than them; keep the graveyard clickable. */
+.forge .piles.me { z-index: 9; }
 .forge .phase-rail { top: 12px; right: 16px; transform: none; padding: 9px 11px; font-size: 13px; }
 .forge .phase-rail .ph:not(.on) { display: none; }
 .forge .turn-owner { max-width: 200px; font-size: 12px; }
