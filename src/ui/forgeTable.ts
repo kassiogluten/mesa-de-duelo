@@ -4,7 +4,7 @@ import { esc, manaHTML, pip, richText } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { canFullscreen, toggleFullscreen } from './landscape';
-import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
+import { followCardPreview, inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio } from './audio';
 import { AutoPassPreference } from './autoPassPreference';
@@ -1407,7 +1407,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return undefined;
   }
 
-  function showPreview(c: FCard | undefined, trigger?: HTMLElement, pinned = false) {
+  function showPreview(c: FCard | undefined, trigger?: HTMLElement, pinned = false, at?: { x: number; y: number }) {
     if (!pinned && (stackGalleryOpen || trigger?.closest('#fStack') || (client?.state && suppressOpeningPreview(client.state)))) return;
     if (!c || c.faceDown || !c.name) { hideCardPreview(); return; }
     const source = c.emblem ? emblemSource(c) : c.name;
@@ -1415,7 +1415,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       image: c.image ?? image(source, 'normal'),
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.typeLine };
-    if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger);
+    if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {
     if (el.dataset.event) return timeline.history.find(event => event.seq === Number(el.dataset.event))?.card;
@@ -1697,8 +1697,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('pointerover', e => {
     if ((e as PointerEvent).pointerType !== 'mouse') return;
     const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);
-    if (el && !handDrag.active) showPreview(cardFromElement(el), el);
+    // Com o mouse, a prévia acompanha o cursor; pelo teclado (focusin) ela fica no canto, como antes.
+    if (el && !handDrag.active) showPreview(cardFromElement(el), el, false, { x: (e as PointerEvent).clientX, y: (e as PointerEvent).clientY });
   });
+  root.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') followCardPreview(e.clientX, e.clientY); }, { passive: true });
   root.addEventListener('pointerout', e => {
     const to = (e as PointerEvent).relatedTarget as HTMLElement | null;
     if (!to?.closest?.(`${inspectable},.card-inspector-preview`)) hideCardPreview();

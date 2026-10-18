@@ -7,6 +7,8 @@
 .card-inspector-preview:has(.ci-image) .ci-details { display: none; }
 .card-inspector-preview .ci-image { width: 100%; max-height: none; margin: 0; border-radius: 10px; }
 .card-inspector-preview.on-table { pointer-events: none; }
+/* Seguindo o cursor (mesa de partida): um pouco menor, para não cobrir a mesa inteira. */
+.card-inspector-preview.following { width: min(300px, calc((100dvh - 136px) * .714)); max-height: calc(100dvh - 16px); }
 .card-inspector-preview.on-table .ci-control, .card-inspector-preview.on-table:has(.ci-image) .ci-head { display: none; }
 .ci-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
 .ci-head h2 { margin: 0; font: 600 20px/1.25 var(--display); overflow-wrap: anywhere; }

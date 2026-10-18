@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.14.0] - 2026-10-18
+
+### Mudou
+
+- **A carta ampliada acompanha o mouse.** Na partida, ao passar o mouse sobre uma carta, a versão ampliada aparece ao lado do cursor e o segue enquanto você move o mouse, em vez de ficar parada no canto da tela. Perto da borda direita ela passa para o outro lado do cursor, sem sair da tela. Pelo teclado, a prévia continua no canto, e o botão direito continua abrindo os detalhes completos.
+
 ## [0.13.0] - 2026-10-18
 
 ### Novo

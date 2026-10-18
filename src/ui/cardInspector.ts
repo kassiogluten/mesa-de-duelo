@@ -16,6 +16,9 @@ let origin: HTMLElement | undefined;
 let generation = 0;
 let showTimer: ReturnType<typeof setTimeout> | undefined;
 let hideTimer: ReturnType<typeof setTimeout> | undefined;
+/** Posição do mouse quando a prévia acompanha o cursor (só na mesa de partida); null = prévia no canto, como antes. */
+let pointer: { x: number; y: number } | null = null;
+let followFrame = 0;
 
 function safeImage(value?: string) {
   if (!value) return undefined;
@@ -92,20 +95,37 @@ function ensurePreview() {
   document.addEventListener('focusin', dismissOutside);
   return preview;
 }
-export function showCardPreview(card: InspectorCard, trigger?: HTMLElement) {
+/** Prévia ao lado do cursor: à direita dele se couber, senão à esquerda; centrada na altura do cursor, sem sair da tela. */
+function placeAtPointer(el: HTMLElement) {
+  if (!pointer) { el.classList.remove('following'); el.style.removeProperty('left'); el.style.removeProperty('top'); return; }
+  const gap = 22, margin = 8, w = el.offsetWidth, h = el.offsetHeight;
+  const left = pointer.x + gap + w <= innerWidth - margin ? pointer.x + gap : Math.max(margin, pointer.x - gap - w);
+  const top = Math.min(Math.max(margin, pointer.y - h / 2), Math.max(margin, innerHeight - h - margin));
+  el.classList.add('following');
+  el.style.left = `${Math.round(left)}px`; el.style.top = `${Math.round(top)}px`;
+}
+/** Acompanha o mouse enquanto a prévia aberta estiver seguindo o cursor (um reposicionamento por quadro). */
+export function followCardPreview(x: number, y: number) {
+  if (!pointer || !preview || preview.hidden) return;
+  pointer = { x, y };
+  if (followFrame) return;
+  followFrame = requestAnimationFrame(() => { followFrame = 0; if (preview && !preview.hidden) placeAtPointer(preview); });
+}
+export function showCardPreview(card: InspectorCard, trigger?: HTMLElement, at?: { x: number; y: number }) {
   if (modal?.open || card.faceDown || !card.name) return;
   clearTimeout(hideTimer); clearTimeout(showTimer);
   const el = ensurePreview();
   el.classList.toggle('on-table', !!trigger?.closest('.arena.forge'));
   const immediate = !el.hidden;
   origin = trigger;
+  pointer = at ?? null;
   showTimer = setTimeout(() => {
     hovered = card;
     const ticket = ++generation;
     // A native dialog's contents must remain in its top layer.
     const parent = trigger?.closest('dialog[open]') ?? document.body;
     if (el.parentElement !== parent) parent.append(el);
-    fill(el, card, true); el.hidden = false; resolve(el, card, true, ticket);
+    fill(el, card, true); el.hidden = false; placeAtPointer(el); resolve(el, card, true, ticket);
   }, immediate ? 0 : 120);
 }
 export function hideCardPreview(immediate = false) {
