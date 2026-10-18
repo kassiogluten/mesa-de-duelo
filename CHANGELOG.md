@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.13.0] - 2026-10-18
+
+### Novo
+
+- **Escolha como as cartas aparecem.** Em **Opções** da partida, a nova opção **Aparência das cartas** troca a imagem completa por **Arte e texto**: a arte da carta com nome, custo, tipo e texto de regras escritos pela mesa, mais fáceis de ler em telas pequenas. No campo, as cartas mostram só o nome e a arte, e o texto inteiro continua no inspetor. Terrenos básicos ficam só com a arte. A escolha fica salva no aparelho e vale na hora.
+
+### Mudou
+
+- **Trilha de fases no canto inferior direito.** A trilha de turno e fases saiu da linha do meio da mesa e fica agora logo abaixo dos botões de ação, no canto inferior direito, perto de onde você passa a vez. As dicas ao passar o mouse abrem para a esquerda.
+
 ## [0.12.0] - 2026-10-18
 
 ### Mudou

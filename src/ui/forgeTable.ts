@@ -1,7 +1,7 @@
 import type { FCard, FOption, FPlayer, FQuestion, FState, ForgeClient } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { esc, manaHTML, pip, richText } from './cardtext';
-import { colorFromCost, faceHTML } from './face';
+import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
@@ -22,6 +22,7 @@ import './decisionPrompt.css';
 import { tablePlayers, validAttackSelection, legalAttackTargets, legalAttackGroupTargets, availableAttackTargets, attackScope, AttackQueue, legalAttackAllTargets, attackAllAction, canPlayCommander, type Defender } from './commanderTable';
 import './commanderTable.css';
 import './arenaModals.css';
+import './cardStyle.css';
 import { shortInstruction } from './shortInstruction';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
@@ -102,6 +103,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%"></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fAutoPassLabel">Passar automaticamente</span><button class="sound-switch" id="fAutoPass" data-ui="auto-pass" role="switch" aria-checked="true" aria-labelledby="fAutoPassLabel" aria-describedby="fAutoPassHint fAutoPassStatus" disabled><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAutoPassState" aria-hidden="true">Ativado</span></button></div><p id="fAutoPassHint">Quando não houver ações disponíveis. As jogadas continuam visíveis.</p><p id="fAutoPassStatus" role="status">Aguardando conexão com o servidor.</p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
+        <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. O texto inteiro continua no inspetor.</p></div>
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
       </section>
     </div>
@@ -196,6 +198,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let returnFocus: HTMLElement | null = null;
   let currentModal: HTMLElement | null = null;
   try { fast = localStorage.getItem('mesa:pace') === 'fast'; } catch { /* Storage is optional. */ }
+  let cardStyle: CardStyle = 'full';
+  try { if (localStorage.getItem('mesa:cards') === 'art') cardStyle = 'art'; } catch { /* Storage is optional. */ }
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();
   const setHTML = (el: HTMLElement, html: string) => {
     const previous = renderedContent.get(el);
@@ -226,6 +230,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fVolume').setAttribute('aria-valuetext', `${volume}%`);
     $('#fVolumeValue').textContent = `${volume}%`;
     ($('#fPace') as HTMLSelectElement).value = fast ? 'fast' : 'normal';
+    ($('#fCardStyle') as HTMLSelectElement).value = cardStyle;
     syncAutoPass();
   }
   function setMenu(open: boolean, restore = false) {
@@ -402,9 +407,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function face(c: FCard, size: 'small' | 'normal') {
     if (c.faceDown || !c.name) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
+    // "Arte e texto" precisa da arte recortada; carta sem ela (ficha com imagem própria da ponte) fica com a imagem completa.
+    const sc = cacheGet(c.name);
+    const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
+    const style: CardStyle = cardStyle === 'art' && (art || !c.image) ? 'art' : 'full';
+    if (style === 'art' && !sc) image(c.name, size); // pede a carta ao Scryfall, como no modo de imagem completa
     return faceHTML({
       name: label(c), manaCost: c.manaCost ?? '', typeLine: ptOf(c.name)?.type_line || c.typeLine || '', power: c.power, toughness: c.toughness,
-      creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: c.image ?? image(c.name, size),
+      creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: style === 'full' ? c.image ?? image(c.name, size) : undefined,
+      style, art, text: ptOf(c.name)?.text || sc?.oracle_text, loyalty: c.planeswalker ? c.counters?.LOYALTY ?? 0 : undefined,
     });
   }
 
@@ -1675,6 +1686,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   });
   root.addEventListener('change', e => {
     const t = e.target as HTMLSelectElement;
+    if (t.id === 'fCardStyle') {
+      cardStyle = t.value === 'art' ? 'art' : 'full';
+      try { localStorage.setItem('mesa:cards', cardStyle); } catch { /* Storage is optional. */ }
+      renderTable(false);
+    }
     if (t.id === 'fPace') { fast = t.value === 'fast'; try { localStorage.setItem('mesa:pace', fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
   });
   const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect]';

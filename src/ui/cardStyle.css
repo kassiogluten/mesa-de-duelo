@@ -1,0 +1,34 @@
+/*
+ * "Arte e texto": carta montada pela mesa com a arte recortada do Scryfall. Tudo escala com a largura da carta
+ * (unidades cqw), então funciona na mão, no campo, nas escolhas e na pilha sem regras por lugar.
+ */
+.face.art-face {
+  container-type: inline-size; display: flex; flex-direction: column; gap: 2.4%; padding: 4.2%;
+  background: linear-gradient(160deg, var(--c1), var(--c2)); color: #1b1a17;
+}
+.af-head, .af-type, .af-text { background: #f6f0e1eb; border-radius: 3px; }
+.af-head { display: flex; align-items: center; justify-content: space-between; gap: 3cqw; flex: 0 0 auto; padding: 1.6cqw 3cqw; font: 700 7.6cqw/1.15 var(--body); }
+.af-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.af-cost { flex: 0 0 auto; display: inline-flex; font-size: 1em; }
+.af-art { position: relative; flex: 0 0 auto; aspect-ratio: 626 / 457; overflow: hidden; border-radius: 2px; background: #0d1018; box-shadow: inset 0 0 0 1px #0006; }
+.af-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.af-type { flex: 0 0 auto; padding: 1.3cqw 3cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 600 6cqw/1.2 var(--body); }
+.af-text {
+  flex: 1 1 auto; min-height: 0; padding: 2.4cqw 3cqw; overflow: hidden; font: 400 5.6cqw/1.28 var(--body);
+  -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent);
+}
+.af-text .pip { font-size: .9em; }
+.af-stat { position: absolute; right: 3.5%; bottom: 2.6%; padding: 1cqw 3.4cqw; border-radius: 4px; background: #f6f0e1; color: #1b1a17; font: 800 8cqw/1.1 var(--body); box-shadow: 0 1px 3px #0009; }
+.af-stat.af-loyalty { border-radius: 50% 50% 40% 40%; background: #1b1a17; color: #f6f0e1; }
+/* Terreno básico: só a arte, ocupando a carta. */
+.art-face.basic .af-art { flex: 1 1 auto; aspect-ratio: auto; }
+/* Cartas pequenas (no campo, pilhas): nome, custo, arte grande e P/R; o texto fica no inspetor. */
+@container (max-width: 104px) {
+  .af-type, .af-text { display: none; }
+  .af-art { flex: 1 1 auto; aspect-ratio: auto; }
+  .af-head { padding: 2cqw 3.5cqw; font-size: 10cqw; }
+  .af-cost { display: none; }
+  .af-stat { font-size: 11cqw; }
+}
+/* No campo a mesa já mostra P/R e lealdade atualizados (com marcadores); o selo impresso some para não duplicar. */
+.bfc .af-stat { display: none; }

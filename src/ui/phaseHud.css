@@ -1,8 +1,8 @@
-/* Trilha de fases compacta no estilo do Arena: ícones sobre a linha do meio, à esquerda; nomes só no hover. */
+/* Trilha de fases compacta no estilo do Arena: no canto inferior direito, abaixo dos botões de ação; nomes só no hover. */
 .forge { grid-template-rows: max(16vh, 124px) minmax(0, 1fr) 2px minmax(0, 1fr) 23vh; }
 .forge #fPhases.phase-trail {
-  position: absolute; z-index: 8; grid-row: 3 / 4; grid-column: auto; top: 50%; left: 14px; right: auto; bottom: auto; width: auto; max-width: none;
-  transform: translateY(-50%); display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 4px 8px 4px 4px;
+  position: absolute; z-index: 9; grid-row: auto; grid-column: auto; top: auto; left: auto; right: 16px; bottom: 16px; width: auto; max-width: none;
+  transform: none; display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 4px 8px 4px 4px;
   border: 1px solid #b9c7df26; border-radius: 999px; background: #0a1322e6; box-shadow: 0 4px 14px #0007; font: 400 12px/1.2 var(--body);
 }
 .phase-turn-badge { position: relative; display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 5px; border-radius: 999px; font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums; color: #1b1203; background: var(--gold); }
@@ -32,13 +32,9 @@
 .forge #fPhases [data-tip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 .forge #fPhases .phase-turn-badge[data-tip]::after { left: 0; transform: translateY(4px); }
 .forge #fPhases .phase-turn-badge[data-tip]:hover::after { transform: none; }
-/* Multiplayer: os assentos dos oponentes vão até a linha; a trilha fica logo abaixo, na sua metade. */
-.forge.multiplayer #fPhases.phase-trail { left: 10px; transform: translateY(6px); }
 @media (max-width: 1000px), (max-height: 500px) {
   .forge { grid-template-rows: max(16vh, 104px) minmax(0, 1fr) 2px minmax(0, 1fr) 21vh; }
-  .forge #fPhases.phase-trail { left: 8px; gap: 4px; padding: 3px 6px 3px 3px; }
-  /* Commander com vários jogadores: o comandante ocupa o canto esquerdo da sua metade; a trilha fica ao lado dele. */
-  .forge.commander-game #fPhases.phase-trail { left: 90px; }
+  .forge #fPhases.phase-trail { right: 6px; bottom: 6px; gap: 4px; padding: 3px 6px 3px 3px; }
   .phase-turn-badge { min-width: 20px; height: 20px; font-size: 11px; }
   .phase-active-portrait { width: 20px; height: 20px; font-size: 10px; }
   .forge #fPhases .phase-step { width: 20px; height: 20px; }
@@ -51,3 +47,10 @@
   right: 0; top: -38px; flex-direction: row; gap: 8px; z-index: 7;
   padding: 0 4px; border-radius: 6px; background: var(--bg-deep);
 }
+
+/* Os botões de ação sobem para a trilha caber embaixo deles. */
+.forge .action { bottom: 60px; }
+@media (max-width: 1000px), (max-height: 500px) { .forge .action { bottom: 38px; } }
+/* No canto direito, as dicas abrem para a esquerda para não sair da tela. */
+.forge #fPhases [data-tip]::after, .forge #fPhases .phase-turn-badge[data-tip]::after, .forge #fPhases .phase-active-portrait[data-tip]::after { left: auto; right: -4px; transform: translateY(4px); }
+.forge #fPhases [data-tip]:hover::after, .forge #fPhases .phase-turn-badge[data-tip]:hover::after, .forge #fPhases .phase-active-portrait[data-tip]:hover::after { transform: none; }
