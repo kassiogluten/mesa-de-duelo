@@ -13,7 +13,7 @@ import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTarge
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
 import { cardDecision, selectionMessage } from './decisionPrompt';
 import type { DeckEntry } from '../decks';
-import { phaseHudHTML } from './phaseHud';
+import { passLabel, phaseHudHTML } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
 import './gameplay.css';
 import './phaseHud.css';
@@ -131,7 +131,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     <aside class="stack-panel" id="fStack" aria-label="Mágicas e habilidades na pilha" hidden></aside>
     <svg class="target-arrows" id="fTargets" aria-hidden="true"></svg>
-    <nav class="phase-rail" id="fPhases" aria-label="Fases do turno"></nav>
+    <nav class="phase-rail phase-trail" id="fPhases" aria-label="Fases do turno"></nav>
     <div class="action" id="fAction"></div><div class="sr-only" id="fAnnouncement" aria-live="polite" aria-atomic="true"></div>
     <div class="banner" id="fBanner" hidden></div>
     <div class="toasts" id="fToasts" aria-live="polite"></div>
@@ -567,8 +567,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Keep the whole choice scrollable between the phase track and the actual hand.
     const header = getComputedStyle(arena).gridTemplateRows.split(' ')[0];
     const hand = $('#fHand').getBoundingClientRect();
-    const phaseBottom = $('#fPhases').getBoundingClientRect().bottom;
-    action.style.maxHeight = `${Math.max(0, hand.top - 8 - phaseBottom - 12)}px`;
+    // A trilha de fases fica na linha do meio; o limite de cima é a faixa do oponente no topo da mesa.
+    const topBottom = arena.getBoundingClientRect().top + parseFloat(header);
+    action.style.maxHeight = `${Math.max(0, hand.top - 8 - topBottom - 12)}px`;
     const bottom = arena.getBoundingClientRect().bottom - action.getBoundingClientRect().top + 8;
     arena.style.gridTemplateRows = `${header} minmax(0, 1fr) 2px minmax(0, 1fr) ${Math.max(hand.height, bottom)}px`;
   }
@@ -585,8 +586,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const action = $('#fAction').getBoundingClientRect();
     const natural = panel.getBoundingClientRect();
     const arenaBox = arena.getBoundingClientRect();
-    const phases = $('#fPhases').getBoundingClientRect();
-    const topSafe = phases.height ? phases.bottom - arenaBox.top + 12 : 60;
+    const topSafe = (parseFloat(getComputedStyle(arena).gridTemplateRows.split(' ')[0]) || 48) + 12;
     const overlapsAction = natural.right > action.left - 12 && natural.left < action.right + 12;
     const bottomSafe = overlapsAction ? action.top - arenaBox.top - 18 : arenaBox.height - 18;
     if (natural.top - arenaBox.top >= topSafe && natural.bottom - arenaBox.top <= bottomSafe) return;
@@ -1073,7 +1073,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…'}</button>`;
     const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying;
     const undo = endTurn && /fim de turno|end turn/i.test(cancel.label) ? '' : b('cancel', cancel, 'secondary');
-    const priority = s.input.priority ? { ...ok, label: 'Passar prioridade' } : ok;
+    const priority = s.input.priority ? { ...ok, label: passLabel(s) } : ok;
     return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') +
       (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
   }
@@ -1235,7 +1235,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const active = s.gameOver ? null : visual.activePlayer === me.id ? 'mine' : visual.activePlayer === opp.id ? 'theirs' : null;
     root.querySelector('.field.me')!.classList.toggle('turn', active === 'mine');
     root.querySelector('.field.opp')!.classList.toggle('turn', active === 'theirs');
-    setHTML($('#fPhases'), phaseHudHTML(visual));
+    // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
+    const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
+    setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined));
 
     // Carta que o prompt cita mas que não está à vista na mesa (topo do grimório na vidência/vigilância).
     const pc = s.input.card ?? s.input.targeting?.card;
@@ -1292,10 +1294,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lastTurn = s.turn;
       const el = $('#fBanner');
       el.textContent = s.activePlayer === s.you ? 'Seu turno' : multiplayer ? `Turno de ${s.players.find(p => p.id === s.activePlayer)?.name ?? 'outro jogador'}` : 'Turno do oponente';
+      // Reinicia a animação mesmo se o banner anterior ainda estiver na tela. Só visual: não segura a fila de eventos.
+      el.className = 'banner';
+      void el.offsetWidth;
       el.className = `banner ${s.activePlayer === s.you ? 'mine' : 'theirs'}`;
       el.hidden = false;
       clearTimeout(bannerTimer);
-      bannerTimer = window.setTimeout(() => { el.hidden = true; }, 1300);
+      bannerTimer = window.setTimeout(() => { el.hidden = true; }, 1200);
+      // Pulso discreto no número do turno da trilha.
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        root.querySelector<HTMLElement>('#fPhases .phase-turn-badge')?.animate?.(
+          [{ transform: 'scale(1)', boxShadow: '0 0 0 0 #fff0' }, { transform: 'scale(1.35)', boxShadow: '0 0 0 5px #ffffff40' }, { transform: 'scale(1)', boxShadow: '0 0 0 0 #fff0' }],
+          { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
     }
 
     $('#fRoomTag').textContent = s.room ? `Sala ${s.room.code}` : '';

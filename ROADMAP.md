@@ -96,15 +96,19 @@ Hoje as animações mostram o que aconteceu, mas são discretas e parecidas entr
 
 ## 9. Indicador de turno e fases no estilo do Arena
 
+Feito numa versão compacta: trilha de ícones na linha do meio, nomes e etapa só no hover (e no texto para leitores de tela), cor pelo dono do turno e o botão de passar dizendo o destino. As paradas configuráveis ficaram de fora por enquanto.
+
 Hoje o turno aparece num painel no canto com o número do turno, de quem é a vez e a lista de todas as etapas em texto pequeno. No Arena, a informação fica junto da mesa, com ícones e cores, e dá para ler de relance sem procurar.
 
-- [ ] Fases como uma trilha de ícones (início, principal 1, combate, principal 2, final), na lateral da mesa entre os dois campos, como no Arena; a etapa atual acesa e as outras apagadas.
-- [ ] De quem é a vez pela cor e pelo lado: a trilha (ou o brilho do campo) muda de cor quando o turno passa para o oponente.
-- [ ] Etapa atual com nome curto em destaque ("Combate — declarar atacantes") e o número do turno discreto ao lado.
-- [ ] Botão de passar integrado à trilha, mostrando para onde vai ("Para o combate", "Para o fim do turno"), como o botão principal do Arena.
-- [ ] Paradas: tocar numa fase marca uma parada (o jogo não passa por ela automaticamente), com a marca visível na trilha.
-- [ ] Animação curta ao trocar de etapa e um destaque maior na troca de turno ("Seu turno"), sem atrasar o jogo.
-- [ ] Versão compacta para o celular e para o Commander com vários jogadores (de quem é a vez pelo retrato do jogador).
+- [x] Fases como uma trilha de ícones (início, principal 1, combate, principal 2, final), na lateral da mesa entre os dois campos, como no Arena; a etapa atual acesa e as outras apagadas.
+- [x] De quem é a vez pela cor e pelo lado: a trilha (ou o brilho do campo) muda de cor quando o turno passa para o oponente.
+- [x] Etapa atual com nome curto em destaque ("Combate — declarar atacantes") e o número do turno discreto ao lado.
+- [x] Botão de passar integrado à trilha, mostrando para onde vai ("Para o combate", "Para o fim do turno"), como o botão principal do Arena.
+- [ ] (Fora por enquanto, a pedido) Paradas: tocar numa fase marca uma parada (o jogo não passa por ela automaticamente), com a marca visível na trilha.
+- [x] Animação curta ao trocar de etapa (o ícone atual acende e cresce).
+- [x] Destaque maior na troca de turno ("Seu turno"), sem atrasar o jogo.
+- [x] Versão compacta para o celular e para o Commander com vários jogadores.
+- [x] No Commander com vários jogadores, mostrar o retrato de quem joga junto da trilha.
 
 ## 10. Cache das imagens do Scryfall (sob demanda, com CDN)
 
@@ -120,3 +124,15 @@ A ideia é um cache que se forma **aos poucos, só com as imagens que alguém de
 - [ ] No aparelho: regra de cache do service worker para as imagens (CacheFirst, com limite de quantidade e de idade), para quem já viu uma carta não baixar de novo nem pela CDN.
 - [ ] Limpeza: limite de espaço no servidor, removendo as imagens menos usadas; métricas de acerto do cache e de buscas ao Scryfall no painel do Grafana.
 - [ ] Conferir os termos de uso de imagens do Scryfall e da Wizards antes de publicar.
+
+## 11. Escolher como as cartas aparecem (imagem inteira ou arte com layout próprio)
+
+Hoje a mesa mostra a imagem inteira da carta do Scryfall (`face()` em `src/ui/forgeTable.ts`). Em telas pequenas o texto impresso fica ilegível, e a imagem inteira pesa mais para baixar. Já existe um layout de texto montado pela mesa (`faceHTML`), usado quando não há imagem; ele pode virar uma opção de verdade.
+
+- [ ] Nova opção em **Opções** da partida (junto de sons e passar automaticamente): "Aparência das cartas" com **Imagem completa** (como hoje) e **Arte e texto** (layout próprio). Fica salva no aparelho e vale na hora, sem recarregar.
+- [ ] Layout próprio: arte recortada do Scryfall (`art_crop`) no topo, com nome, custo de mana em símbolos, linha de tipo, texto de regras em português (o que a mesa já busca) e poder/resistência ou lealdade, na moldura da cor da carta.
+- [ ] Texto legível no tamanho da mesa: no campo, mostrar só nome, custo e P/R (o texto completo fica no inspetor); na mão e no inspetor, o texto inteiro, reduzindo a fonte quando for longo.
+- [ ] Casos especiais: cartas de duas faces, sagas, planeswalkers, fichas sem arte, terrenos básicos (arte maior, sem caixa de texto) e cartas viradas para baixo.
+- [ ] Manter marcadores, selos de custo, brilhos de jogável/alvo/atacando e animações funcionando igual nos dois modos.
+- [ ] Usar também no construtor de decks e nos modais de escolha, ou deixar claro que a opção vale só para a mesa.
+- [ ] Combina com o cache de imagens (item 10): `art_crop` é bem menor que a imagem inteira.

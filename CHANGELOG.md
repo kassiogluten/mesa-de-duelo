@@ -6,6 +6,15 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.12.0] - 2026-10-18
+
+### Mudou
+
+- **Turno e fases no estilo do Arena.** O painel grande de fases no canto da tela virou uma trilha pequena de ícones sobre a linha do meio da mesa: início, principal 1, combate, principal 2 e final. A fase atual fica acesa em dourado no seu turno e em vermelho no turno do oponente, ao lado do número do turno. Passe o mouse num ícone para ver o nome da fase e a etapa exata, como "Combate · Declaração de atacantes". Com o canto livre, a mão e as pilhas do oponente voltaram para o lugar de antes.
+- **O botão de passar diz para onde o jogo vai.** No lugar de "Passar prioridade", o botão mostra **Para o combate**, **Para a principal 2**, **Para o fim do turno**, **Resolver** (quando há algo na pilha) ou **Passar** no turno do oponente. A ação é a mesma de antes.
+- **Troca de turno em destaque.** Quando o turno muda, uma faixa atravessa a mesa por pouco mais de um segundo: **Seu turno** em dourado, ou **Turno do oponente** (no Commander, **Turno de** e o nome do jogador) em vermelho. Ela não bloqueia cliques nem atrasa o jogo, e o número do turno na trilha pulsa de leve. Com a opção de reduzir animações do aparelho, a faixa só aparece e some, sem movimento.
+- **Retrato de quem joga no Commander.** Com mais de dois jogadores, a trilha de fases mostra o retrato pequeno de quem está jogando o turno, com anel dourado quando é você e vermelho quando é outro jogador. Passe o mouse no retrato para ver o nome.
+
 ## [0.11.0] - 2026-10-18
 
 ### Novo
