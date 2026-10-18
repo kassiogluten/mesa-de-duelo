@@ -7,7 +7,7 @@ interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string }
 export interface Motion {
   capture(): void;
   play(options?: { silent?: boolean; semantic?: boolean }): void;
-  present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }): void;
+  present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean }): void;
   cancelPresentation(): void;
   reset(): void;
 }
@@ -22,6 +22,9 @@ export function createMotion(root: HTMLElement): Motion {
   let cards = new Map<string, Snap>();
   let primed = false;
   const effects = new Set<HTMLElement>();
+  // Avisos de habilidade abertos, do mais antigo ao mais novo, com a carta de cada um.
+  const callouts: { note: HTMLElement; card: HTMLElement }[] = [];
+  const MAX_CALLOUTS = 3;
   const hiddenCards = new Set<HTMLElement>();
   const animations = new Set<Animation>();
   const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -52,11 +55,16 @@ export function createMotion(root: HTMLElement): Motion {
     timers.clear();
     for (const el of effects) el.remove();
     effects.clear();
+    callouts.length = 0;
     for (const el of hiddenCards) el.style.opacity = '';
     hiddenCards.clear();
     root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight'));
   }
-  function remove(el: HTMLElement) { el.remove(); effects.delete(el); }
+  function remove(el: HTMLElement) {
+    el.remove(); effects.delete(el);
+    const i = callouts.findIndex(c => c.note === el);
+    if (i >= 0) callouts.splice(i, 1);
+  }
   function pulse(el: HTMLElement | null, kind: boolean | 'attack-highlight' = false) {
     if (!el) return;
     const damage = kind === true;
@@ -83,10 +91,14 @@ export function createMotion(root: HTMLElement): Motion {
    * Habilidade (gatilho ou ativada) não move a carta: com a fonte no campo, ela brilha e ganha um aviso ao lado;
    * fora do campo, a carta aparece parada no centro. Uma cópia voando parecia a criatura saindo do campo.
    */
-  function ability(event: PresentationEvent, card: HTMLElement | null, options: { label: string; html?: string; duration: number }) {
+  function ability(event: PresentationEvent, card: HTMLElement | null, options: { label: string; html?: string; duration: number; calloutDuration?: number }) {
     const rect = card?.getBoundingClientRect();
     if (card && rect?.width) {
       pulse(card);
+      // Um aviso por carta, e poucos de uma vez: vários gatilhos seguidos não viram uma pilha de balões.
+      for (const old of callouts.filter(c => c.card === card)) remove(old.note);
+      while (callouts.length >= MAX_CALLOUTS) remove(callouts[0].note);
+      const hold = Math.max(options.duration, options.calloutDuration ?? 0);
       const note = document.createElement('div');
       note.className = `ability-callout${event.trigger ? ' trigger' : ''}`;
       note.setAttribute('aria-hidden', 'true');
@@ -96,15 +108,15 @@ export function createMotion(root: HTMLElement): Motion {
         : '<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 5-.1-3 2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L15 2.5h-4l-.4 2.5A8 8 0 0 0 8 6.5l-2.4-1-2 3.4 2 1.6-.1 3-2 1.6 2 3.4 2.4-1A8 8 0 0 0 10.6 19l.4 2.5h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4z"/></svg>';
       const text = document.createElement('span'); text.textContent = options.label;
       note.append(text);
-      layer().append(note); effects.add(note);
+      layer().append(note); effects.add(note); callouts.push({ note, card });
       // Ao lado da carta, do lado que tiver espaço; sem sair da tela.
       const width = note.offsetWidth, height = note.offsetHeight;
       const right = rect.right + 10 + width <= innerWidth - 8;
       note.style.left = `${right ? rect.right + 10 : Math.max(8, rect.left - 10 - width)}px`;
       note.style.top = `${Math.min(innerHeight - height - 8, Math.max(8, rect.top + rect.height / 2 - height / 2))}px`;
       note.classList.add(right ? 'right' : 'left');
-      if (!reduced()) animate(note, [{ opacity: 0, translate: right ? '-6px 0' : '6px 0' }, { opacity: 1, translate: '0 0', offset: .18 }, { opacity: 1, offset: .82 }, { opacity: 0 }], options.duration);
-      later(() => remove(note), options.duration);
+      if (!reduced()) animate(note, [{ opacity: 0, translate: right ? '-6px 0' : '6px 0' }, { opacity: 1, translate: '0 0', offset: .18 }, { opacity: 1, offset: .82 }, { opacity: 0 }], hold);
+      later(() => remove(note), hold);
       return;
     }
     if (!options.html) return;

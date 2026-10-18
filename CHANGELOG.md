@@ -6,6 +6,25 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.11.0] - 2026-10-18
+
+### Novo
+
+- **Marcadores de veneno na mesa.** O número de marcadores de veneno de cada jogador aparece num selo verde ao lado do retrato, contando até 10 (com 10, o jogador perde). A partir de 7 o selo brilha como alerta. Energia, experiência e outros marcadores de jogador também aparecem. No Commander com vários jogadores, os selos ficam na linha de cada oponente, ao lado da mão.
+- **Importe um deck pelo link.** Em **Importar lista**, cole o link público de um deck do Moxfield ou do Archidekt no lugar da lista. O jogo busca as cartas, usa o nome do deck de origem e mostra a revisão de sempre antes de salvar, com comandante, deck principal e sideboard separados. O Maybeboard fica de fora. Se o deck for privado ou o site não responder, a mensagem diz o motivo e você ainda pode colar a lista em texto.
+- **Ver a mesa no meio de uma escolha.** Quando uma janela pede para você escolher cartas ou opções (buscar um terreno, pagar um custo opcional, ordenar gatilhos), o botão **Ver a mesa** recolhe a janela numa barra acima da mão. Dá para olhar o campo e inspecionar cartas antes de decidir, e o que você já marcou continua marcado. Toque em **Voltar à escolha** (ou aperte Esc) para continuar. Enquanto isso, nada é jogado sem querer.
+
+### Mudou
+
+- **Janelas da partida no estilo do Arena.** Quando uma janela abre por cima da mesa (escolher cartas, cemitério e exílio, opções, fim de partida), a mesa fica atrás de uma sombra escura e levemente desfocada, e a janela entra com uma animação curta. Nas escolhas de cartas, as cartas aparecem grandes e soltas sobre o fundo, sem caixa em volta. A carta escolhida sobe e brilha em dourado, e as outras escurecem um pouco. As perguntas só com texto ficaram mais estreitas, com o título e os botões centralizados.
+- **Entrar numa sala ficou mais rápido.** Ao buscar o código de uma sala, você já entra nela com o deck que estava escolhido. Se ainda não tem um deck que sirva para o formato da sala, o jogo pede para escolher um antes. Quando não dá para entrar, a mensagem diz o motivo: sala que não existe, sala completa, partida já começada ou falta de conexão.
+- **Escolher quem atacar ficou mais fácil.** O seletor de alvo virou um painel **Atacar quem?**, com uma linha larga para cada alvo: a vida do jogador (ou a lealdade do planeswalker), o nome inteiro, de quem é a carta e quantas criaturas já vão para ele. No celular, o painel ganha mais largura enquanto você escolhe.
+- **Botão de ataque mais claro.** No combate, o botão diz **Não atacar** enquanto nenhuma criatura foi escalada e **Confirmar 2 atacantes** (com o número certo) depois que você escolhe quem ataca.
+- **Instruções da jogada curtas e em português.** Ao escolher um alvo ou pagar mana, a caixa ao lado dos botões diz só o que fazer, como "Escolha um alvo para Raio da Fenda (criatura)." ou "Pague o custo de mana de Jiboia.", em vez do texto inteiro da habilidade com o pedido em inglês. O texto completo continua em **Ver detalhes**, que abre a caixa para cima sem cobrir a mesa toda. Nas outras jogadas, o texto mostra as primeiras linhas inteiras, sem barra de rolagem.
+- **Avisos de gatilho ficam mais tempo na tela.** O balão que aparece ao lado da carta quando um gatilho dispara dura cerca de 2,5 segundos, em vez de 1, sem deixar a jogada mais lenta. Com vários gatilhos seguidos, cada carta mostra só o aviso mais recente, e no máximo três aparecem de uma vez.
+- **Cartas maiores no Commander pelo celular.** Com a tela deitada, as cartas no campo ficaram quase duas vezes maiores, tanto contra um oponente quanto contra três. Criaturas e terrenos ficam lado a lado, juntos no meio da mesa, cada um com a altura toda do campo. O placar do turno virou uma linha só, com a vez de quem joga e a fase atual.
+- **Oponentes mais compactos no Commander pelo celular.** Na mesa com três ou quatro jogadores, o grimório, o cemitério e o exílio de cada oponente ficam na linha de cima, junto da vida, da mão e do dano. Ao lado das cartas fica só o comandante, e o campo ganha mais espaço.
+
 ## [0.10.0] - 2026-10-17
 
 ### Novo
@@ -13,10 +32,6 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Instale o jogo** no computador ou no celular: no Chrome ou no Edge, use o botão **Instalar o jogo** no topo da tela inicial. Ele ganha ícone próprio, abre em tela cheia e não precisa de download. No iPhone ou iPad, o botão explica como adicionar à Tela de Início pelo Safari.
 - O jogo abre mais rápido nas próximas visitas, porque o visual e os sons ficam guardados no aparelho. Sem internet, a tela inicial e a **Mesa livre** continuam funcionando.
 - Quando sai uma versão nova, aparece um aviso com **Atualizar agora**. Se você estiver no meio de uma partida, ela continua de onde parou depois de atualizar.
-
-### Mudou
-
-- **Cartas maiores no Commander pelo celular.** Com a tela deitada, as cartas no campo ficaram quase duas vezes maiores, tanto contra um oponente quanto contra três. Criaturas e terrenos agora ficam lado a lado, cada um com a altura toda do campo. O placar do turno virou uma linha só, com a vez de quem joga e a fase atual. Em cada oponente, o cemitério, o grimório e o comandante ficam numa coluna estreita ao lado das cartas.
 
 ## [0.9.0] - 2026-10-17
 

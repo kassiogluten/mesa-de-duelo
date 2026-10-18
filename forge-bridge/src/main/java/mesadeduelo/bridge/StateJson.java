@@ -118,6 +118,12 @@ final class StateJson {
         o.addProperty("name", p.getLobbyPlayerName());
         o.addProperty("ai", p.isAI());
         o.addProperty("life", p.getLife());
+        // Marcadores do jogador (veneno, energia, experiência...): só vai quando há algum.
+        if (p.getCounters() != null) {
+            JsonObject counters = new JsonObject();
+            for (var entry : p.getCounters().entrySet()) if (entry.getCount() > 0) counters.addProperty(entry.getElement().toString(), entry.getCount());
+            if (counters.size() > 0) o.add("counters", counters);
+        }
         o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));

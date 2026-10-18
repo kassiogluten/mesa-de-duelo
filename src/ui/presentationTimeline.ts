@@ -133,3 +133,11 @@ export function presentationDuration(event: PresentationEvent, fast: boolean) {
       : event.type === 'turn' ? 480 : 340;
   return Math.round(duration * (fast ? .6 : 1));
 }
+/**
+ * Quanto o aviso de habilidade fica ao lado da carta. É mais longo que o passo da apresentação (que segura o
+ * próximo evento): o aviso continua legível enquanto o resto da jogada segue no ritmo de sempre.
+ */
+export function calloutDuration(event: PresentationEvent, fast: boolean) {
+  if (event.type !== 'ability-activated') return presentationDuration(event, fast);
+  return event.trigger ? (fast ? 2000 : 2600) : (fast ? 1600 : 2000);
+}

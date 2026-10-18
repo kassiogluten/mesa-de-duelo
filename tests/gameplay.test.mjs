@@ -9,7 +9,7 @@ async function sourceModule(path) {
   const result = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
   return import(`data:text/javascript;base64,${Buffer.from(result.outputText).toString('base64')}`);
 }
-const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
+const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
 const { createMotion } = await sourceModule('../src/ui/motion.ts');
 const { AudioEventGate, AudioEventMix, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
@@ -157,6 +157,17 @@ test('fast presentation remains visible and never introduces extra engine input'
     assert.ok(presentationDuration(event(1, type), true) >= 200);
     assert.ok(presentationDuration(event(1, type), true) < presentationDuration(event(1, type), false));
   }
+});
+
+test('trigger callouts outlast the playback step, even when a decision is waiting', () => {
+  const trigger = event(1, 'ability-activated', { trigger: true });
+  for (const fast of [false, true]) {
+    assert.ok(calloutDuration(trigger, fast) >= 2000);
+    assert.ok(calloutDuration(trigger, fast) > presentationDuration(trigger, fast));
+  }
+  assert.equal(presentationDuration(trigger, false), 1000);
+  assert.ok(calloutDuration(event(2, 'ability-activated'), false) < calloutDuration(trigger, false));
+  assert.equal(calloutDuration(event(3, 'spell-cast'), false), presentationDuration(event(3, 'spell-cast'), false));
 });
 
 test('damage to player gets its own sound, while life payment and creature damage stay distinct', () => {

@@ -102,6 +102,7 @@ const lobby = mountLobby(document.querySelector('#scrLobby')!, {
 const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
   onBack: () => { lobby.refresh(); show('lobby'); },
   onChange: () => lobby.refresh(),
+  fetchDeckSource: async (site, id) => (await requireForge(FORGE_URL)).fetchDeckSource(site, id),
   validateDeck: async (deck, format) => {
     const result = await (await requireForge(FORGE_URL)).validateDeck(forgeDeck(deck), format);
     return {...result, issues: result.issues.map(issue => ({...issue, section: issue.section === 'main' || issue.section === 'sideboard' || issue.section === 'commander' ? issue.section : undefined}))};

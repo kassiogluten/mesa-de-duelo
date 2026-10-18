@@ -128,6 +128,21 @@ final class Rooms implements BridgeServer.Listener {
                     BridgeServer.send(ch, response.toString());
                 }
                 case "lookup-room" -> lookup(ch, code(msg), requestId);
+                case "fetch-deck" -> {
+                    // A busca roda fora da thread da rede; a resposta volta com o mesmo requestId.
+                    String site = MatchConfig.string(msg, "site"), id = MatchConfig.string(msg, "id");
+                    DeckLinks.fetch(site, id).whenComplete((body, error) -> {
+                        JsonObject response = new JsonObject(); response.addProperty("requestId", requestId);
+                        if (error == null) { response.addProperty("type", "deck-source"); response.addProperty("body", body); }
+                        else {
+                            Throwable cause = error instanceof java.util.concurrent.CompletionException && error.getCause() != null ? error.getCause() : error;
+                            response.addProperty("type", "request-error");
+                            response.addProperty("text", cause instanceof IllegalArgumentException && cause.getMessage() != null ? cause.getMessage()
+                                    : "Não foi possível falar com o site do deck. Confira a conexão ou cole a lista em texto.");
+                        }
+                        BridgeServer.send(ch, response.toString());
+                    });
+                }
                 case "hello" -> onConnect(ch);
                 case "start" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));

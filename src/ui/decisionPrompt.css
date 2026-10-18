@@ -5,7 +5,7 @@
   background: linear-gradient(135deg, #16243af5, #091322f5); box-shadow: 0 6px 24px #0005;
 }
 .decision-heading { margin: 0 0 8px; color: var(--gold); font: 600 14px/1.3 var(--body); }
-.forge .action.card-decision .prompt { max-height: min(30vh, 240px); text-align: left; font: 500 16px/1.5 var(--body); text-shadow: none; overflow-wrap: anywhere; }
+.forge .action.card-decision .prompt { -webkit-line-clamp: 6; line-clamp: 6; text-align: left; font: 500 16px/24px var(--body); text-shadow: none; overflow-wrap: anywhere; }
 .decision-progress { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .decision-progress strong { color: var(--gold-light); font: 600 13px/1.4 var(--body); font-variant-numeric: tabular-nums; }
 .decision-progress span { color: #bec9dc; font: 400 13px/1.4 var(--body); }
@@ -16,14 +16,39 @@
   width: auto; padding: 14px 18px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
 }
 .forge .action.hand-decision > * { flex-shrink: 0; }
-.forge .action.card-decision.hand-decision .prompt { max-height: none; overflow: visible; }
+.forge .action.card-decision.hand-decision .prompt { display: block; -webkit-line-clamp: unset; line-clamp: none; max-height: none; overflow: visible; }
+.forge .action.card-decision .prompt-more { margin-left: 0; }
 .forge.has-hand-decision .hcard.playable { cursor: pointer; }
 @media (max-width: 1100px) { .forge .action.hand-decision { left: 160px; } }
 @media (max-width: 760px), (max-height: 500px) {
   .forge .action.card-decision { width: min(290px, 35vw); padding: 10px; gap: 8px; }
-  .forge .action.card-decision .prompt { font-size: 13px; line-height: 1.4; max-height: 25vh; }
+  .forge .action.card-decision .prompt { font-size: 13px; line-height: 18px; -webkit-line-clamp: 4; line-clamp: 4; }
   .decision-heading { font-size: 12px; margin-bottom: 5px; }
   .decision-progress { gap: 4px 10px; }
   .decision-progress strong, .decision-progress span { font-size: 12px; }
   .forge .action.hand-decision { left: 75px; right: var(--hand-right); bottom: calc(28vh + 8px); width: auto; }
+}
+
+/* "Ver a mesa": the choice shrinks to a bar above the hand and the board stays visible, only to look. */
+.q-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.q-head h2 { min-width: 0; }
+.forge .q-minimize { flex: none; min-height: 34px; padding: 6px 12px; font-size: 13px; }
+.overlay.minimized { background: none; pointer-events: none; place-items: end center; animation: none; }
+.question-bar {
+  pointer-events: auto; display: flex; align-items: center; gap: 14px; max-width: min(620px, calc(100vw - 24px));
+  margin-bottom: calc(clamp(144px, 23vh, 215px) + 10px); padding: 10px 12px 10px 16px; border: 1px solid var(--gold); border-radius: 12px;
+  background: linear-gradient(135deg, #16243af7, #091322f7); box-shadow: 0 8px 26px #000a; animation: rise-in .25s cubic-bezier(.2, .8, .2, 1);
+}
+.question-bar-text { display: flex; flex-direction: column; min-width: 0; }
+.question-bar-text strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--gold); font: 600 14px/1.3 var(--body); }
+.question-bar-text span { color: var(--ink); font: 600 13px/1.3 var(--body); font-variant-numeric: tabular-nums; }
+.question-bar-text small { color: #aab6ca; font: 400 12px/1.3 var(--body); }
+.forge .question-bar .arena-btn { flex: none; }
+.forge.multiplayer .question-bar { margin-bottom: calc(22vh + 10px); }
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .q-minimize { min-height: 30px; padding: 4px 9px; font-size: 12px; }
+  .question-bar { gap: 10px; margin-bottom: calc(28vh + 8px); padding: 7px 8px 7px 12px; }
+  .forge.multiplayer .question-bar { margin-bottom: 110px; }
+  .question-bar-text strong { font-size: 12px; }
+  .question-bar-text small { display: none; }
 }

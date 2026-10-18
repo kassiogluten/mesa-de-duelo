@@ -158,7 +158,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     start.disabled = !format || !deck || invalid || busy || !!waitingRoom;
     start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : 'Criar sala';
     $('#roomInfo').hidden = !room;
-    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>Escolha um deck compatível e confirme abaixo.</p><button class="ghost-btn" data-lobby="cancel-lookup">Voltar a criar uma sala</button>` : '';
+    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível e confirme abaixo.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Voltar a criar uma sala</button>` : '';
     $('#netWait').hidden = !waitingRoom;
     if (waitingRoom) {
       const capacity = waitingRoom.capacity ?? waitingRoom.config.playerCount ?? 2;
@@ -256,9 +256,17 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (!/^[ABCDEFGHJKLMNPQRSTUVWXYZ2-9]{4}$/.test(code)) { setStatus('Use o código de 4 caracteres da sala.', true); return; }
     preflight++; setBusy(true); setStatus('Buscando sala…');
     void opts.onLookup(code, netURL()).then(info => {
-      if (!info.available) throw new Error('Esta sala já está completa.');
+      if (!info.available) throw new Error(info.players.length >= (info.capacity ?? info.config.playerCount ?? 2) ? `A sala ${info.code} já está completa.` : `A partida da sala ${info.code} já começou.`);
       room = info; format = info.config.format; matchLength = info.config.matchLength; playerCount = info.config.playerCount ?? info.capacity ?? 2; youId = rememberedDeck(); setStatus('');
-    }).catch(error => setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true)).finally(() => setBusy(false));
+      return true;
+    }).catch(error => { setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false; }).then(found => {
+      setBusy(false);
+      if (!found) return;
+      // Com um deck lembrado que serve para o formato da sala, entra direto; senão pede o deck antes.
+      const deck = selected();
+      if (deck && validateDeckLocal(deck, format!).status !== 'invalid') void start();
+      else setStatus(`Escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`);
+    });
   });
   const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); }});
   refresh();

@@ -5,7 +5,7 @@ import { colorFromCost, faceHTML } from './face';
 import { createMotion } from './motion';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
-import { PresentationTimeline, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
+import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio } from './audio';
 import { AutoPassPreference } from './autoPassPreference';
 import { attachHandDrag } from './handDrag';
@@ -21,6 +21,8 @@ import './gameOptions.css';
 import './decisionPrompt.css';
 import { tablePlayers, validAttackSelection, legalAttackTargets, legalAttackGroupTargets, availableAttackTargets, attackScope, AttackQueue, legalAttackAllTargets, attackAllAction, canPlayCommander, type Defender } from './commanderTable';
 import './commanderTable.css';
+import './arenaModals.css';
+import { shortInstruction } from './shortInstruction';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -174,6 +176,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let attackAllGen: number | null = null;
   let stackGalleryOpen = false;
   let stackMinimized = false;
+  // Instrução aberta com "Ver detalhes"; volta a ficar recolhida quando a instrução muda.
+  let expandedPrompt = '';
+  // Pergunta recolhida com "Ver a mesa": vira uma barra e a mesa fica à vista, só para olhar.
+  let minimizedQuestion: number | null = null;
+  const questionMinimized = () => { const s = client?.state; return !!s?.question && !s.gameOver && minimizedQuestion === s.question.id; };
+  let shownInstruction = '';
   let sideboardDraft: { id: number; main: DeckEntry[]; sideboard: DeckEntry[] } | null = null;
   let sideboardError = '';
   let sideboardBusy = false;
@@ -243,7 +251,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   syncSettings();
   const handDrag = attachHandDrag(root, {
-    state: () => disconnected ? null : client?.state,
+    state: () => disconnected || questionMinimized() ? null : client?.state,
     beforeDrag: () => hideCardPreview(true),
     play: action => { stopPresentation(); client?.send(action); },
   });
@@ -265,7 +273,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (next instanceof HTMLInputElement && saved.start !== null && saved.end !== null && next.type !== 'number') next.setSelectionRange(saved.start, saved.end);
   }
   function syncModal() {
-    const required = ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery'].map(id => $(id)).find(el => !el.hidden) ?? null;
+    const required = ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery'].map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? null;
     if (required && !$('#fSettings').hidden) {
       $('#fSettings').hidden = true;
       root.querySelector('[aria-controls="fSettings"]')?.setAttribute('aria-expanded', 'false');
@@ -318,7 +326,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!entry || !s) return;
     const duration = presentationDuration(entry.event, fast || hasLiveDecision(s));
     motion.present(entry.event, { you: s.you, html: entry.event.card ? face(entry.event.card, 'normal') : undefined,
-      label: eventDescription(entry.event), duration, hideDestination: !hasLiveDecision(s) });
+      label: eventDescription(entry.event), duration, calloutDuration: calloutDuration(entry.event, fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
     audio.play(entry.event, timeline.matchId, entry.audible, s.you);
     if (entry.event.type === 'damage' && entry.event.targets?.players?.length) announce(eventDescription(entry.event));
     else if (!hasLiveDecision(s)) announce(eventDescription(entry.event));
@@ -747,15 +755,31 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<button class="pool-mana" data-mana="${c}" aria-label="Usar mana ${c} da reserva">${pip(c)}</button>` : pip(c))).join('');
     const art = portraits[idx];
     const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
-    return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}, ${p.life} de vida${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
+    return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}, ${p.life} de vida${playerCountersText(p)}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
       <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}></div>
       <div class="life">${p.life}</div>
+      ${playerCounters(p)}
       <div class="pname">${esc(p.name)}</div>
       ${pool ? `<div class="pool${spend ? ' spend' : ''}">${pool}</div>` : ''}
       ${emblems(p)}
       ${p.eliminated ? '<span class="seat-eliminated">Eliminado</span>' : ''}
       ${offline ? '<div class="offline">desconectado</div>' : ''}
     </div>`;
+  }
+
+  // Veneno primeiro (com 10 o jogador perde); os outros marcadores do jogador vêm depois, com nome em português.
+  const PLAYER_COUNTERS: Record<string, string> = { POISON: 'Veneno', ENERGY: 'Energia', EXPERIENCE: 'Experiência', RAD: 'Radiação', TICKET: 'Tíquete' };
+  const playerCounterName = (key: string) => PLAYER_COUNTERS[key] ?? key.charAt(0) + key.slice(1).toLowerCase();
+  const playerCounterList = (p: FPlayer) => Object.entries(p.counters ?? {}).filter(([, n]) => n > 0)
+    .sort(([a], [b]) => (a === 'POISON' ? -1 : b === 'POISON' ? 1 : 0));
+  const playerCountersText = (p: FPlayer) => playerCounterList(p).map(([k, n]) => `, ${n} ${k === 'POISON' ? `${n === 1 ? 'marcador' : 'marcadores'} de veneno` : `de ${playerCounterName(k).toLowerCase()}`}`).join('');
+  function playerCounters(p: FPlayer) {
+    const list = playerCounterList(p);
+    if (!list.length) return '';
+    return `<div class="player-counters" aria-hidden="true">${list.map(([k, n]) => {
+      const poison = k === 'POISON';
+      return `<span class="player-counter${poison ? ' poison' : ''}${poison && n >= 7 ? ' danger' : ''}" title="${esc(playerCounterName(k))}${poison ? ` (perde com 10)` : ''}">${poison ? '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.6 6 8.3 6 11.3a6 6 0 0 1-12 0c0-3 2.4-6.7 6-11.3z"/></svg>' : `<b>${esc(playerCounterName(k).slice(0, 3))}</b>`}${n}${poison ? '<small>/10</small>' : ''}</span>`;
+    }).join('')}</div>`;
   }
 
   function emblems(p: FPlayer) {
@@ -806,10 +830,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   function opponentSeat(s: FState, p: FPlayer, index: number) {
     return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
-      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div><span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>${damageButton(p)}</header>
+      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div><span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>${playerCounters(p)}${damageButton(p)}</header>
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
       <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(s, p.battlefield.filter(c => !isBackRow(c))))}</div>
     </section>`;
+  }
+  function attackConfirmLabel(attackers: number) {
+    return attackers ? `Confirmar ${attackers} ${attackers === 1 ? 'atacante' : 'atacantes'}` : 'Não atacar';
   }
   function clearAttackChoice(reset = false) {
     selectedAttackers.clear(); pinnedDefender = null; attackAllGen = null; attackSelectionGen = -1;
@@ -855,10 +882,22 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function attackChoices(s: FState) {
     if (attackAllGen === null && !selectedAttackers.size && !pinnedDefender && !attackQueue.queuedAttackers.length) return '';
     const removable = [...selectedAttackers].some(id => s.combat.some(pair => pair.attacker === id));
-    return `<div class="attack-choices" aria-label="Escolher defensor">${currentAttackTargets(s).map(target => {
+    // Cada alvo é uma linha inteira: vida ou lealdade, nome, de quem é e quantos atacantes já vão nele.
+    const targets = currentAttackTargets(s).map(target => {
       const pinned = pinnedDefender?.id === target.id && pinnedDefender.kind === target.kind;
-      return `<button class="arena-btn ${pinned ? 'primary' : 'secondary'}" data-defender="${target.id}" data-defender-kind="${target.kind}" data-gen="${s.input.gen}" aria-pressed="${pinned}">${esc(defenderName(s, target))}</button>`;
-    }).join('')}${removable ? '<button class="arena-btn secondary" data-ui="attack-remove">Retirar do combate</button>' : ''}${attackAllGen === null ? '<button class="icon-btn" data-ui="attack-clear">Limpar seleção</button>' : ''}</div>`;
+      const player = target.kind === 'player' ? s.players.find(p => p.id === target.id) : undefined;
+      const card = target.kind === 'card' ? findCard(target.id) : undefined;
+      const owner = card ? s.players.find(p => p.id === card.controller)?.name : undefined;
+      const mark = player ? player.life : card?.planeswalker ? card.counters?.LOYALTY ?? 0 : card?.counters?.DEFENSE ?? '';
+      const detail = player ? `${player.life} de vida` : `${card?.planeswalker ? 'Planeswalker' : 'Permanente'}${owner ? ` de ${owner}` : ''}`;
+      const coming = s.combat.filter(pair => pair.defender === target.id && (pair.defenderKind ?? 'player') === target.kind).length;
+      const name = defenderName(s, target);
+      return `<button class="attack-target${pinned ? ' on' : ''}${player ? '' : ' permanent'}" data-defender="${target.id}" data-defender-kind="${target.kind}" data-gen="${s.input.gen}" aria-pressed="${pinned}" aria-label="Atacar ${esc(name)}, ${esc(detail)}${coming ? `, ${coming} ${coming === 1 ? 'atacante' : 'atacantes'} já indo` : ''}">`
+        + `<span class="attack-target-mark" aria-hidden="true">${mark}</span><span class="attack-target-text"><strong>${esc(name)}</strong><small>${esc(detail)}</small></span>`
+        + `${coming ? `<span class="attack-target-count" aria-hidden="true">${coming}</span>` : ''}</button>`;
+    }).join('');
+    const tools = `${removable ? '<button class="icon-btn" data-ui="attack-remove">Retirar do combate</button>' : ''}${attackAllGen === null ? '<button class="icon-btn" data-ui="attack-clear">Limpar seleção</button>' : ''}`;
+    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle">Atacar quem?</h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
   }
 
   function zoneView(s: FState) {
@@ -1024,7 +1063,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     const decision = cardDecision(s);
     const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
-    const ok = s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: 'Confirmar bloqueios' } : s.input.attacking ? { ...s.input.ok, label: 'Confirmar atacantes', enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
+    const ok = s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: 'Confirmar bloqueios' } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
       : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount}` } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
     const cancel = attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
@@ -1057,7 +1096,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
     const opts = q.options ?? [];
-    const head = `<h2>${esc(q.title)}</h2>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
+    const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
     if (q.kind === 'amount') {
       const status = amountStatus(q);
       return `${head}<form data-q-amount-form><div class="q-amounts">${opts.map((o, i) => {
@@ -1104,6 +1143,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         ${isOrder ? '<button class="arena-btn secondary" data-q-keep>Manter ordem</button>' : ''}
         ${!single ? `<button class="arena-btn primary" data-q-submit ${ready ? '' : 'disabled'}>Confirmar</button>` : ''}
       </div>`;
+  }
+
+  function questionBar(q: FQuestion) {
+    const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
+    const picked = qState?.id === q.id ? qState.picked.length : 0;
+    const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
+    return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(q.title)}"><div class="question-bar-text"><strong>${esc(q.title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
   }
 
   function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[] }) {
@@ -1207,19 +1253,39 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fAction').classList.toggle('hand-decision', !!decision?.inHand);
     root.querySelector('.arena')!.classList.toggle('has-hand-decision', !!decision?.inHand);
     const instruction = decision ? selectionMessage(prompt) : prompt;
-    const lines = instruction.split('\n');
+    // O Forge manda "Carta (id) - texto da habilidade" antes do pedido; o pedido vem primeiro para não sumir no texto recolhido.
+    const sourceFirst = decision ? null : instruction.match(/^(.+ \(\d+\) - [\s\S]*?)\n\n([\s\S]+)$/);
+    const lines = (sourceFirst ? `${sourceFirst[2]}\n\n${sourceFirst[1]}` : instruction).split('\n');
     const heading = decision ? `<h2 class="decision-heading">${esc(lines.length > 1 ? lines.shift()! : 'Sua escolha')}</h2>` : '';
     const selectionCount = decision ? `<div class="decision-progress" role="status"><strong>${esc(decision.progress)}</strong><span>${esc(decision.instruction)}</span></div>` : '';
-    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt">${richText(lines.join('\n')).replace(/\n/g, '<br>')}</div></div>${selectionCount}${attackChoices(s)}<div class="btns">${buttons(s)}</div>`);
-    announce(instruction ? `${instruction}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''));
+    shownInstruction = instruction;
+    const expanded = !!instruction && expandedPrompt === instruction;
+    const more = `<button class="prompt-more" data-ui="prompt-more" aria-controls="fPrompt" aria-expanded="${expanded}" hidden>${expanded ? 'Ver menos' : 'Ver detalhes'}</button>`;
+    const attackPanel = attackChoices(s);
+    $('#fAction').classList.toggle('attack-choosing', !!attackPanel);
+    // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
+    const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
+    const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
+    const promptBody = short ? `<strong class="prompt-short">${esc(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
+    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${attackPanel}<div class="btns">${buttons(s)}</div>`);
+    // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
+    const promptEl = root.querySelector<HTMLElement>('#fPrompt');
+    const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
+    if (promptEl && moreEl) moreEl.hidden = !expanded && !short && promptEl.scrollHeight <= promptEl.clientHeight + 1;
+    announce(instruction ? `${short ?? instruction}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''));
 
     const qEl = $('#fQuestion');
     if (s.question && !s.gameOver) {
-      setHTML(qEl, `<div class="question" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      if (minimizedQuestion !== null && minimizedQuestion !== s.question.id) minimizedQuestion = null;
+      const minimized = questionMinimized();
+      qEl.classList.toggle('minimized', minimized);
+      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       qEl.hidden = false;
     } else {
       qEl.hidden = true;
+      qEl.classList.remove('minimized');
       qState = null;
+      minimizedQuestion = null;
     }
 
     if (s.turn !== lastTurn && !s.gameOver && s.turn > 0) {
@@ -1381,6 +1447,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('click', e => {
     const t = e.target as HTMLElement;
     const ui = t.closest<HTMLElement>('[data-ui]')?.dataset.ui;
+    if (ui === 'prompt-more') { expandedPrompt = expandedPrompt === shownInstruction ? '' : shownInstruction; renderTable(false); return; }
+    if (ui === 'question-minimize' || ui === 'question-restore') {
+      minimizedQuestion = ui === 'question-minimize' ? client?.state?.question?.id ?? null : null;
+      hideCardPreview(true); renderTable(false); syncModal();
+      root.querySelector<HTMLElement>(ui === 'question-minimize' ? '[data-ui="question-restore"]' : '[data-ui="question-minimize"]')?.focus({ preventScroll: true });
+      return;
+    }
+    // Com a escolha recolhida, a mesa é só para olhar: inspecionar, ver cemitério e menu, sem jogar nada.
+    if (questionMinimized() && !t.closest('#fQuestion, #fMenu, .log-drawer, [data-ui], [data-inspect], [data-peek], [data-gy], [data-stack-inspect]')) return;
     if (ui === 'stack-size') { stackMinimized = !stackMinimized; hideCardPreview(true); renderTable(false); return; }
     if (ui === 'row-scroll') {
       const control = t.closest<HTMLElement>('[data-scroll-row]')!;
@@ -1623,6 +1698,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (selectedBlocker) { selectedBlocker = null; e.preventDefault(); renderTable(false); return; }
       if (stackGalleryOpen) { e.preventDefault(); closeStackGallery(); return; }
       if (zoneOf !== null || groupIds) { closeZone(); return; }
+      if (questionMinimized()) { e.preventDefault(); root.querySelector<HTMLElement>('[data-ui="question-restore"]')?.click(); return; }
       hideCardPreview(true);
     }
     const target = e.target as HTMLElement;
