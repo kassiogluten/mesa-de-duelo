@@ -6,7 +6,7 @@ const players = [10, 23].map((id, seat) => ({ id, seat, name: seat ? 'Oponente' 
   hand: seat === 0 ? ['Llanowar Elves', 'Forest', 'Lightning Bolt', 'Rampant Growth', 'Cultivate'].map((n, i) => card(300 + i, n, id)) : [],
   battlefield: [card(100 + seat, 'Soul Warden', id, { manaCost: '{W}' }), land(200 + seat, id), land(210 + seat, id),
     ...(seat === 0 ? [card(250, 'Druid Class', id, { creature: false, manaCost: '{1}{G}', typeLine: 'Enchantment — Class', classLevel: 2, classMaxLevel: 3 })] : [])],
-  graveyard: [], exile: [], pool: {} }));
+  graveyard: [], exile: [], pool: {}, counters: seat === 0 ? { RAD: 3, ENERGY: 2 } : { POISON: 4, RAD: 1, EXPERIENCE: 2, CONTRACT: 1 } }));
 const state: any = { type: 'state', config: { format: 'standard', matchLength: 'bo3' }, match: { gameNumber: 2, wins: [1, 0], draws: 0, over: false, phase: 'playing', ready: [false, false] },
   room: { code: 'ABCD', seat: 0, token: 't', started: true, config: { format: 'standard', matchLength: 'bo3' }, players: [{ name: 'Você', connected: true, rematch: false }, { name: 'Oponente', connected: true, rematch: false }] },
   you: 10, players, turn: 3, phase: 'MAIN1', activePlayer: 10, gameOver: false, log: [], decks: [], stack: [], combat: [], castable: [],

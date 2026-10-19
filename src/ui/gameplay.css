@@ -255,10 +255,27 @@
 /* Marcadores do jogador ao lado do retrato: veneno em verde (com 10 o jogador perde), os outros discretos. */
 .player-counters { position: absolute; z-index: 2; top: -6px; left: calc(100% - 8px); display: flex; flex-direction: column; align-items: flex-start; gap: 3px; pointer-events: auto; }
 .player-counter { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px 2px 5px; border: 1px solid #5a6a92; border-radius: 999px; background: #0c1222f0; color: var(--ink); font: 700 12px/1.2 var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 2px 6px #0008; }
-.player-counter b { color: #aab6ca; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.player-counter { position: relative; cursor: help; }
+.player-counter svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
+.player-counter b { font-weight: 800; }
+.player-counter .ctr-tip { left: 0; bottom: calc(100% + 4px); width: max-content; max-width: 240px; white-space: normal; line-height: 1.35; font-weight: 500; text-align: left; }
+.player-counter:hover .ctr-tip, .player-counter.open .ctr-tip { display: block; }
+/* No topo da tela (oponente, assentos do Commander) o balão abre para baixo. */
+.avatar.opp .player-counter .ctr-tip, .seat-heading .player-counter .ctr-tip { top: calc(100% + 4px); bottom: auto; }
+.player-counter.rad { border-color: #c9d23a; background: linear-gradient(135deg, #2b2f0cf2, #15170af2); color: #eef59a; }
+.player-counter.rad svg { color: #e2ec4a; }
+.player-counter.energy { border-color: #e2a93a; color: #ffe1a3; }
+.player-counter.energy svg { color: #ffc74d; }
+.player-counter.experience { border-color: #a98ae6; color: #e2d6ff; }
+.player-counter.experience svg { color: #c4adff; }
+.player-counter.ticket { border-color: #e06aa0; color: #ffd0e5; }
+.player-counter.contract { border-color: #8fa3c4; color: #dbe5f5; }
+.player-counter.other svg { color: #aab6ca; }
+.player-counter.bump { animation: counter-bump .6s cubic-bezier(.2, .8, .2, 1); }
+@keyframes counter-bump { 35% { transform: scale(1.3); box-shadow: 0 0 0 2px currentColor, 0 0 14px currentColor; } }
 .player-counter small { color: #9fd7a0; font-size: 9px; font-weight: 600; }
 .player-counter.poison { border-color: #4caf50; background: linear-gradient(135deg, #12301af2, #0b1a10f2); color: #c8f5c9; }
-.player-counter.poison svg { width: 12px; height: 12px; fill: #7ee081; }
+.player-counter.poison svg { color: #7ee081; }
 .player-counter.poison.danger { border-color: #9be05a; box-shadow: 0 0 0 1px #9be05a80, 0 0 12px #7ee08190; animation: poison-pulse 1.4s ease-in-out infinite; }
 @keyframes poison-pulse { 50% { box-shadow: 0 0 0 1px #9be05a, 0 0 18px #9be05acc; } }
 .avatar.opp .player-counters { top: 22%; }
@@ -267,6 +284,6 @@
 .forge.multiplayer .seat-heading > .player-counters { position: static; flex-direction: row; gap: 4px; }
 @media (max-width: 760px), (max-height: 500px) {
   .player-counter { padding: 1px 5px 1px 4px; font-size: 10px; }
-  .player-counter.poison svg { width: 10px; height: 10px; }
+  .player-counter svg { width: 10px; height: 10px; }
 }
-@media (prefers-reduced-motion: reduce) { .player-counter.poison.danger { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .player-counter.poison.danger, .player-counter.bump { animation: none; } }

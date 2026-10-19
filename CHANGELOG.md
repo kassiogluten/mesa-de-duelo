@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.17.0] - 2026-10-18
+
+### Novo
+
+- **Marcadores de radiação e contrato no jogador.** A radiação ganhou selo próprio, amarelo com o símbolo de radiação, ao lado do retrato. Passe o mouse ou toque no selo para ver o que ela faz: no começo da fase principal antes do combate, as cartas do topo vão para o cemitério e cada uma que não for terreno custa 1 de vida e tira 1 marcador. Os marcadores de contrato também aparecem.
+
+### Mudou
+
+- **Cada marcador de jogador com ícone, cor e explicação.** Veneno, radiação, energia, experiência, tíquete e contrato mostram um ícone e o número, em vez de uma abreviação. Ao passar o mouse ou tocar, um balão diz o nome e o que o marcador faz; o veneno lembra quantos faltam para 10. Quando um número muda, o selo pulsa uma vez. No celular e no Commander com vários jogadores, os selos ficam no mesmo lugar de antes.
+
 ## [0.16.0] - 2026-10-18
 
 ### Novo

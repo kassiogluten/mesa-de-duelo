@@ -17,4 +17,13 @@ public class PlayerCountersTest {
         assertEquals(3, counters.get("POISON").getAsInt());
         assertEquals(2, counters.get("ENERGY").getAsInt());
     }
+
+    @Test public void radiationAndContractUseTheNamesTheTableTranslates() {
+        var game = ExilePermissionsTest.game(); var me = game.getPlayers().get(0);
+        me.setCounters(CounterEnumType.RAD, 3, me, false);
+        me.setCounters(CounterEnumType.CONTRACT, 1, me, false);
+        var counters = StateJson.player(me.getView(), true, game).getAsJsonObject("counters");
+        assertEquals(3, counters.get("RAD").getAsInt());
+        assertEquals(1, counters.get("CONTRACT").getAsInt());
+    }
 }

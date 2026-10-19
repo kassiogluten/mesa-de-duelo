@@ -16,6 +16,7 @@ import type { DeckEntry } from '../decks';
 import { passLabel, phaseHudHTML, turnBannerText } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
+import { playerCountersHTML, playerCountersText as countersText } from './playerCounters';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
 import './gameplay.css';
@@ -794,19 +795,22 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   // Veneno primeiro (com 10 o jogador perde); os outros marcadores do jogador vêm depois, com nome em português.
-  const PLAYER_COUNTERS: Record<string, string> = { POISON: 'Veneno', ENERGY: 'Energia', EXPERIENCE: 'Experiência', RAD: 'Radiação', TICKET: 'Tíquete' };
-  const playerCounterName = (key: string) => PLAYER_COUNTERS[key] ?? key.charAt(0) + key.slice(1).toLowerCase();
-  const playerCounterList = (p: FPlayer) => Object.entries(p.counters ?? {}).filter(([, n]) => n > 0)
-    .sort(([a], [b]) => (a === 'POISON' ? -1 : b === 'POISON' ? 1 : 0));
-  const playerCountersText = (p: FPlayer) => playerCounterList(p).map(([k, n]) => `, ${n} ${k === 'POISON' ? `${n === 1 ? 'marcador' : 'marcadores'} de veneno` : `de ${playerCounterName(k).toLowerCase()}`}`).join('');
-  function playerCounters(p: FPlayer) {
-    const list = playerCounterList(p);
-    if (!list.length) return '';
-    return `<div class="player-counters" aria-hidden="true">${list.map(([k, n]) => {
-      const poison = k === 'POISON';
-      return `<span class="player-counter${poison ? ' poison' : ''}${poison && n >= 7 ? ' danger' : ''}" title="${esc(playerCounterName(k))}${poison ? ` (perde com 10)` : ''}">${poison ? '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.6 4.6 6 8.3 6 11.3a6 6 0 0 1-12 0c0-3 2.4-6.7 6-11.3z"/></svg>' : `<b>${esc(playerCounterName(k).slice(0, 3))}</b>`}${n}${poison ? '<small>/10</small>' : ''}</span>`;
-    }).join('')}</div>`;
+  /** Tipos de marcador de jogador que mudaram neste desenho, para o selo pulsar uma vez. */
+  let counterBumps = new Map<number, Set<string>>();
+  const lastPlayerCounters = new Map<number, Record<string, number>>();
+  function trackPlayerCounters(players: FPlayer[]) {
+    counterBumps = new Map();
+    for (const p of players) {
+      const before = lastPlayerCounters.get(p.id), now = p.counters ?? {};
+      if (before) {
+        const changed = new Set([...Object.keys(before), ...Object.keys(now)].filter(k => (before[k] ?? 0) !== (now[k] ?? 0) && (now[k] ?? 0) > 0));
+        if (changed.size) counterBumps.set(p.id, changed);
+      }
+      lastPlayerCounters.set(p.id, { ...now });
+    }
   }
+  const playerCountersText = (p: FPlayer) => countersText(p.counters);
+  const playerCounters = (p: FPlayer) => playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter);
 
   function emblems(p: FPlayer) {
     const list = p.emblems ?? [];
@@ -1211,6 +1215,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (!validBlockSelection(s, selectedBlocker)) selectedBlocker = null;
     const visual = stateWithFrame(s, displayFrame);
+    trackPlayerCounters(visual.players);
     syncAttackChoice(s);
     const { me, opponents } = tablePlayers(visual);
     const opp = opponents[0];
