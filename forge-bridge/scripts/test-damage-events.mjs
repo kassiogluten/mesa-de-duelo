@@ -1,6 +1,6 @@
 // Real-engine regression: node forge-bridge/scripts/test-damage-events.mjs ws://127.0.0.1:7182/ws
 // Damage events carry what the table needs for the Arena-style effects: direct vs combat damage, the combat step,
-// double strike in both steps and lifelink followed by the controller's life gain.
+// double strike in both steps, lifelink followed by the controller's life gain, and a destroyed creature leaving with its reason.
 import assert from 'node:assert/strict';
 
 const endpoint = process.argv[2] || 'ws://127.0.0.1:7182/ws';
@@ -52,7 +52,9 @@ function advance() {
     const creature = own().hand.find(c => c.creature && playable(c));
     const bolt = own().hand.find(c => c.name === 'Lightning Bolt' && playable(c));
     const boltWanted = damage().filter(e => mine(e) && !e.combat).length < 2;
+    const murder = !destroyed() && opponent().battlefield.some(c => c.creature) && own().hand.find(c => c.name === 'Murder' && playable(c));
     if (main && land) once({type: 'card', id: land.id, gen: input.gen});
+    else if (murder) once({type: 'card', id: murder.id, gen: input.gen});
     else if (main && bolt && boltWanted && state.turn > 2) once({type: 'card', id: bolt.id, gen: input.gen});
     else if (main && creature) once({type: 'card', id: creature.id, gen: input.gen});
     else once({type: 'ok', gen: input.gen});
@@ -65,13 +67,14 @@ const doubled = () => {
   return hits.some(a => a.step === 'first-strike' && hits.some(b => b.sourceId === a.sourceId && b.step === 'regular' && b.seq > a.seq));
 };
 const lifelinked = () => damage().some(e => mine(e) && e.lifelink && [...events.values()].some(l => l.type === 'life-changed' && l.actor === state.you && l.delta > 0 && l.seq > e.seq));
-const done = () => damage().some(e => mine(e) && !e.combat) && damage().some(e => mine(e) && e.combat && e.step === 'regular') && doubled() && lifelinked();
+const destroyed = () => [...events.values()].find(e => e.type === 'left' && e.reason === 'destroyed');
+const done = () => !!destroyed() && damage().some(e => mine(e) && !e.combat) && damage().some(e => mine(e) && e.combat && e.step === 'regular') && doubled() && lifelinked();
 
 try {
   send({type: 'start', config: {format: 'free', matchLength: 'bo1'},
-    you: {name: 'Dano', cards: [{name: 'Mountain', count: 9}, {name: 'Plains', count: 9}, {name: 'Lightning Bolt', count: 6}, {name: 'Fencing Ace', count: 8}, {name: "Healer's Hawk", count: 8}]},
-    opponent: {name: 'Floresta', cards: [{name: 'Forest', count: 40}]}});
-  const deadline = Date.now() + 300000;
+    you: {name: 'Dano', cards: [{name: 'Mountain', count: 7}, {name: 'Plains', count: 7}, {name: 'Swamp', count: 7}, {name: 'Lightning Bolt', count: 5}, {name: 'Murder', count: 5}, {name: 'Fencing Ace', count: 8}, {name: "Healer's Hawk", count: 8}]},
+    opponent: {name: 'Floresta', cards: [{name: 'Forest', count: 34}, {name: 'Grizzly Bears', count: 6}]}});
+  const deadline = Date.now() + 420000;
   while (!done()) {
     if (failure) throw failure;
     if (Date.now() > deadline || state?.gameOver) throw new Error(`damage events: ${JSON.stringify({turn: state?.turn, phase: state?.phase, damage: damage().map(({frame, card, ...e}) => ({...e, card: card?.name}))})}`);
@@ -82,11 +85,13 @@ try {
   assert.equal(bolt.card.name, 'Lightning Bolt'); assert.equal(bolt.delta, -3); assert.equal(bolt.step, undefined);
   assert.ok(bolt.frame, 'damage carries the public frame');
   const swing = damage().find(e => mine(e) && e.combat && e.step === 'regular');
-  assert.equal(swing.targets.players[0], opponent().id);
+  const murdered = destroyed();
+  assert.equal(murdered.to, 'Graveyard'); assert.equal(murdered.card.name, 'Grizzly Bears');
   console.log(`PASS direct damage: ${bolt.card.name} ${bolt.delta} combat=${bolt.combat}`);
   console.log(`PASS combat damage: ${swing.card.name} ${swing.delta} step=${swing.step}`);
   console.log('PASS double strike: first-strike and regular hits from the same Fencing Ace');
   console.log("PASS lifelink: Healer's Hawk damage followed by your life gain");
+  console.log(`PASS destroyed: ${murdered.card.name} left for the ${murdered.to} with reason ${murdered.reason}`);
 } finally {
   if (ws.readyState === WebSocket.OPEN) { send({type: 'leave'}); await wait(200); }
   ws.close();

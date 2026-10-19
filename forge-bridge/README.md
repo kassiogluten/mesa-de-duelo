@@ -91,7 +91,12 @@ Dano (`type: "damage"`) chega um por fonte e alvo, na ordem em que o Forge causa
 | `loyalty` | dano a planeswalker. O Forge só avisa a lealdade caindo; a queda vira `damage` quando acontece no dano de combate (a fonte é o atacante desse planeswalker) ou enquanto outra carta resolve (a fonte é ela). |
 | `commander` | dano de combate de um comandante a um jogador. |
 | `self` | o jogador atingido controla a fonte (dor: terrenos de dor, Sol Ring de dor…). |
+| `prevented` | o dano foi gasto num escudo de prevenção ("previna os próximos N"): `delta` é o quanto foi prevenido. O Forge não avisa; a ponte vê o escudo diminuir (fora da limpeza do turno, onde eles expiram). Prevenções sem escudo (como Neblina) ainda não aparecem. |
 | `lethal` | criatura com dano marcado igual ou maior que a resistência (ou com toque mortífero), planeswalker sem lealdade, ou jogador cuja vida, somando o dano ainda não aplicado, chega a 0. |
+
+Saída do campo (`left`) traz `reason: "destroyed"` ou `"sacrificed"` quando é o caso (destruída e sacrificada vão para o cemitério; `to` diz para onde a carta foi: `Graveyard`, `Exile`, `Hand`, `Library`).
+
+Permanentes trazem, quando se aplicam: `ward` (custo da proteção contra alvos, como `"{2}"` ou o custo descrito pelo Forge), `protection` (de que a proteção protege: `"red"`, `"artifact"`, `"multicolored"`…, do parâmetro da palavra-chave), `phasedOut`, `cantAttack` / `cantBlock` (proibida por um efeito, pelas regras de combate do Forge; não conta enjoo, estar virada nem defensor) e `preventDamage` (dano que os escudos ainda vão prevenir; também nos jogadores).
 
 A perda de vida pelo dano vem depois, em `life-changed` (o Forge tira a vida de todos de uma vez); o ganho do vínculo com a vida vem como `life-changed` positivo do controlador logo depois do dano da fonte.
 

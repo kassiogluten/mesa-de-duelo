@@ -98,4 +98,49 @@ public class DamageEventsTest {
         assertTrue(events.json(0).asList().stream().map(e -> e.getAsJsonObject())
             .anyMatch(e -> "life-changed".equals(e.get("type").getAsString()) && e.get("actor").getAsInt() == a.getId() && e.get("delta").getAsInt() == 2));
     }
+
+    private static void cast(Game game, Player caster, String name, Object target) {
+        var spell = ExilePermissionsTest.add(game, name, caster, ZoneType.Hand).getFirstSpellAbility();
+        spell.setActivatingPlayer(caster);
+        if (target instanceof Card c) spell.getTargets().add(c); else spell.getTargets().add((Player) target);
+        game.getStack().add(spell); game.getStack().resolveStack();
+    }
+
+    @Test public void spentPreventionShieldBecomesPreventedDamage() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        Card bears = add(game, "Grizzly Bears", b);
+        VisibleEvents events = new VisibleEvents(() -> {}, () -> 1); events.attach(game);
+        cast(game, b, "Anoint", bears);
+        assertEquals(3, StateJson.card(bears.getView(), game).get("preventDamage").getAsInt());
+        cast(game, a, "Lightning Bolt", bears);
+        var hits = damage(events);
+        assertEquals(1, hits.size());
+        JsonObject shield = hits.get(0);
+        assertTrue(flag(shield, "prevented")); assertEquals(-3, shield.get("delta").getAsInt());
+        assertEquals(bears.getId(), target(shield, "cards")); assertEquals("Lightning Bolt", shield.getAsJsonObject("card").get("name").getAsString());
+        assertEquals(0, bears.getDamage());
+    }
+
+    @Test public void destroyedPermanentLeavesWithReason() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        Card bears = add(game, "Grizzly Bears", b);
+        VisibleEvents events = new VisibleEvents(() -> {}, () -> 1); events.attach(game);
+        cast(game, a, "Murder", bears);
+        JsonObject left = events.json(0).asList().stream().map(e -> e.getAsJsonObject()).filter(e -> "left".equals(e.get("type").getAsString())).findFirst().orElseThrow();
+        assertEquals("destroyed", left.get("reason").getAsString()); assertEquals("Graveyard", left.get("to").getAsString());
+    }
+
+    @Test public void permanentDetailsComeFromKeywordsAndCombatRules() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        Card spawn = add(game, "Aboleth Spawn", a), knight = add(game, "White Knight", a), bears = add(game, "Grizzly Bears", a);
+        Card pacifism = add(game, "Pacifism", b); pacifism.attachToEntity(bears, null);
+        game.getAction().checkStateEffects(true);
+        assertEquals("{2}", StateJson.card(spawn.getView(), game).get("ward").getAsString());
+        assertEquals("black", StateJson.card(knight.getView(), game).getAsJsonArray("protection").get(0).getAsString());
+        JsonObject pacified = StateJson.card(bears.getView(), game);
+        assertTrue(flag(pacified, "cantAttack")); assertTrue(flag(pacified, "cantBlock"));
+        assertFalse(StateJson.card(knight.getView(), game).has("cantAttack"));
+        assertEquals("Pay 3 life", PermanentDetails.wardCost("Ward:PayLife<3>"));
+        assertEquals("multicolored", PermanentDetails.protectionFrom("Protection:Card.MultiColor:multicolored"));
+    }
 }

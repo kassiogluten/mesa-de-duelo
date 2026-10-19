@@ -119,6 +119,7 @@ final class StateJson {
         o.addProperty("name", p.getLobbyPlayerName());
         o.addProperty("ai", p.isAI());
         o.addProperty("life", p.getLife());
+        if (p.getPreventNextDamage() > 0) o.addProperty("preventDamage", p.getPreventNextDamage());
         // Marcadores do jogador (veneno, energia, experiência...): só vai quando há algum.
         if (p.getCounters() != null) {
             JsonObject counters = new JsonObject();
@@ -211,6 +212,7 @@ final class StateJson {
         if (c.getController() != null) o.addProperty("controller", c.getController().getId());
         o.addProperty("tapped", c.isTapped());
         o.addProperty("token", c.isToken());
+        PermanentDetails.visible(o, c);
         if (c.isFaceDown()) {
             o.addProperty("faceDown", true);
             return o;
@@ -269,6 +271,7 @@ final class StateJson {
             for (KeywordView k : s.getKeywords()) if (k.keyword() != null && seen.add(k.keyword().name())) kws.add(k.keyword().name());
             o.add("keywords", kws);
         }
+        PermanentDetails.add(o, c, s, game);
         Map<CounterType, Integer> counters = c.getCounters() == null ? null : toMap(c);
         if (counters != null && !counters.isEmpty()) {
             JsonObject co = new JsonObject();

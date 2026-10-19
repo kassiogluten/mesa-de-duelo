@@ -22,6 +22,8 @@ final class VisibleEvents {
     private final Map<Integer, JsonObject> spells = new HashMap<>();
     private final Map<Integer, String> origins = new HashMap<>();
     private final DamageDetails damage = new DamageDetails();
+    /** Escudos de prevenção conhecidos ("c12", "p0" → quantidade), para ver quando um deles é gasto. */
+    private final Map<String, Integer> shields = new HashMap<>();
     private final Runnable changed;
     private final LongSupplier version;
     private long sequence;
@@ -32,7 +34,7 @@ final class VisibleEvents {
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -40,7 +42,7 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); sequence = 0; game = null; gameStarted = false; }
     synchronized boolean gameStarted() { return gameStarted; }
     synchronized long cursor() { return sequence; }
     synchronized JsonArray json(long after) {
@@ -59,6 +61,7 @@ final class VisibleEvents {
 
     @Subscribe public synchronized void receive(GameEvent event) {
         if (event instanceof GameEventGameStarted) { gameStarted = true; changed.run(); }
+        if (!(event instanceof GameEventPlayerPriority)) prevented();
         JsonObject e = null;
         if (event instanceof GameEventLandPlayed x) {
             e = card("land-played", x.land()); actor(e, x.player().getId()); e.addProperty("to", "Battlefield");
@@ -87,6 +90,7 @@ final class VisibleEvents {
             } else if (to == ZoneType.Battlefield || from == ZoneType.Battlefield) {
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
+                if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
             }
         } else if (event instanceof GameEventAttackersDeclared x && !x.attackersMap().isEmpty()) {
             e = type("attackers"); actor(e, x.player().getId());
@@ -103,6 +107,14 @@ final class VisibleEvents {
             damage.card(e, game, x.source(), x.card(), x.type() == GameEventCardDamaged.DamageType.Deathtouch, x.type() == GameEventCardDamaged.DamageType.M1M1Counters);
         } else if (event instanceof GameEventCardCounters x && x.card() != null && x.type() != null && x.type().is(CounterEnumType.LOYALTY) && x.newValue() < x.oldValue()) {
             e = damage.loyalty(game, game == null ? null : game.findByView(x.card()), x.oldValue() - x.newValue());
+        } else if (event instanceof GameEventCardSacrificed x && x.card() != null) {
+            // O Forge avisa o sacrifício depois de tirar a carta do campo: marca a saída que acabou de acontecer.
+            int id = x.card().getId();
+            for (var it = history.descendingIterator(); it.hasNext();) {
+                JsonObject old = it.next();
+                if (old.get("seq").getAsLong() < sequence - 8) break;
+                if ("left".equals(old.get("type").getAsString()) && old.has("sourceId") && old.get("sourceId").getAsInt() == id) { old.addProperty("reason", "sacrificed"); changed.run(); break; }
+            }
         } else if (event instanceof GameEventPlayerLivesChanged x) {
             e = type("life-changed"); actor(e, x.player().getId()); e.addProperty("delta", x.newLives() - x.oldLives());
             damage.lifeChanged(x.player().getId());
@@ -127,6 +139,41 @@ final class VisibleEvents {
             }
             append(e);
         }
+    }
+
+    /**
+     * Dano prevenido: o Forge não avisa, mas gasta o escudo da carta ou do jogador ("previna os próximos N"). Quando um
+     * escudo diminui fora da limpeza do turno (onde eles expiram), vira um `damage` com `prevented: true`.
+     */
+    private void prevented() {
+        if (game == null) return;
+        Map<String, Integer> now = new HashMap<>();
+        Map<String, Object> entities = new HashMap<>();
+        try {
+            for (var p : game.getPlayers()) { int n = p.getPreventNextDamageTotalShields(); if (n > 0 || shields.containsKey("p" + p.getId())) { now.put("p" + p.getId(), n); entities.put("p" + p.getId(), p.getView()); } }
+            for (var c : game.getCardsIn(ZoneType.Battlefield)) { int n = c.getPreventNextDamageTotalShields(); if (n > 0 || shields.containsKey("c" + c.getId())) { now.put("c" + c.getId(), n); entities.put("c" + c.getId(), c.getView()); } }
+        } catch (RuntimeException concurrentRead) { return; }
+        boolean cleanup = game.getPhaseHandler().is(forge.game.phase.PhaseType.CLEANUP);
+        for (var entry : now.entrySet()) {
+            int before = shields.getOrDefault(entry.getKey(), 0), after = entry.getValue();
+            if (after < before && !cleanup) {
+                JsonObject e = type("damage");
+                if (game.getStack().isResolving() && !game.getStack().isEmpty() && game.getStack().peekAbility() != null && game.getStack().peekAbility().getHostCard() != null) {
+                    CardView source = game.getStack().peekAbility().getHostCard().getView();
+                    e.add("card", StateJson.card(source)); e.addProperty("sourceId", source.getId());
+                    if (source.getController() != null) actor(e, source.getController().getId());
+                }
+                e.addProperty("delta", -(before - after));
+                e.add("targets", StateJson.targets(java.util.List.of(entities.get(entry.getKey()))));
+                e.addProperty("prevented", true);
+                e.addProperty("combat", game.getPhaseHandler().inCombat() && !game.getStack().isResolving());
+                JsonObject frame = publicFrame();
+                if (frame != null) e.add("frame", frame);
+                append(e);
+            }
+        }
+        shields.clear();
+        now.forEach((k, v) -> { if (v > 0) shields.put(k, v); });
     }
 
     private JsonObject publicFrame() {
