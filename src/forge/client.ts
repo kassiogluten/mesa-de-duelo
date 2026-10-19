@@ -81,13 +81,28 @@ export interface FPlayer {
   pool: Record<string, number>;
 }
 
-export interface FOption { kind?: 'card' | 'player'; card?: FCard; id?: number; label: string; min?: number; max?: number }
+export interface FOption {
+  kind?: 'card' | 'player' | 'ability'; card?: FCard; id?: number; label: string; min?: number; max?: number;
+  /** Gatilho para ordenar: texto da habilidade sem o nome da carta de origem (que vem em card). */
+  ability?: string;
+  /** Jeito de jogar a carta (cast, cycling, plot, flashback, evoke, adventure, land, ability...). */
+  mode?: string;
+  spell?: boolean;
+  /** Custo de mana da opção ({1}{R}) e os custos extras por extenso, como o Forge escreve. */
+  cost?: string;
+  extra?: string[];
+  description?: string;
+  /** Outra face ou metade usada pela opção (aventura, carta dividida). */
+  face?: { name: string; manaCost: string; typeLine: string };
+}
 
 export interface FQuestion {
   id: number;
   method: string;
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
+  /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta. */
+  purpose?: 'triggers' | 'play-mode';
   title: string;
   total?: number;
   min?: number;

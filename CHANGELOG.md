@@ -6,6 +6,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.15.0] - 2026-10-18
+
+### Novo
+
+- **Ordene seus gatilhos vendo as cartas.** Quando vários gatilhos seus disparam juntos, eles aparecem lado a lado como cartas, cada uma com o texto do que disparou. A da esquerda resolve primeiro e cada posição vem numerada. Toque nos gatilhos na ordem que quiser, ou arraste para trocar de lugar; **Desfazer** volta o último passo e **Ordem automática** resolve sem escolher. Gatilhos iguais da mesma carta ganham um selo ×2 ou ×3, mas continuam separados na pilha. Dá para inspecionar cada carta e usar **Ver a mesa** antes de decidir. Pelo teclado, as setas movem o gatilho e a posição é anunciada.
+- **Escolha como jogar uma carta vendo a carta.** Quando uma carta pode ser jogada de mais de um jeito, ela aparece grande com cada opção ao lado: **Conjurar**, **Reciclar**, **Tramar**, **Flashback**, **Evocar**, **Aventura** e outras, com o custo em símbolos de mana, custos extras por extenso (como sacrificar uma criatura ou pagar vida) e uma linha do que acontece. O jeito normal fica em destaque, e **Cancelar** volta para a mesa sem jogar nada. Habilidades de uma permanente aparecem do mesmo jeito.
+
+### Mudou
+
+- **Barra do topo mais útil na partida.** Ao lado do menu aparecem o formato, o código da sala, o placar da melhor de três (como "Jogo 2 · 1 × 0") e um aviso quando o oponente cai da conexão, sem precisar abrir o menu. No Commander com vários jogadores, essas informações continuam no menu para não apertar os assentos.
+- **Mais mesa no celular.** Com o celular deitado, a faixa do topo ficou bem mais baixa: o retrato do oponente fica deitado, com a vida ao lado, e o menu mostra só o ícone. As criaturas e os terrenos de cada lado cabem sem rolar.
+
+### Corrigido
+
+- **Os mesmos gatilhos de novo.** Quando o mesmo conjunto de gatilhos disparava pela segunda vez numa partida, a janela de ordenar podia chegar vazia e os gatilhos não iam para a pilha. Agora eles chegam na ordem que você escolheu da última vez, prontos para confirmar ou mudar.
+
 ## [0.14.0] - 2026-10-18
 
 ### Mudou

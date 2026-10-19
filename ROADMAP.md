@@ -138,3 +138,41 @@ Hoje a mesa mostra a imagem inteira da carta do Scryfall (`face()` em `src/ui/fo
 - [x] Vale para toda a partida (mesa, mão, pilha e janelas de escolha); o inspetor continua com a imagem completa.
 - [ ] Usar também no construtor de decks e na Mesa livre.
 - [x] Combina com o cache de imagens (item 10): `art_crop` é bem menor que a imagem inteira.
+
+## 12. Aproveitar melhor a barra superior dentro das partidas ✅
+
+Feito assim: a barra mostra, ao lado do menu, o formato, a sala, o placar da melhor de três e quem caiu da conexão (antes só dentro do menu). Turno e fase ficam na trilha e vida no retrato, então não se repetem nela. No celular a faixa do topo baixou de ~104 px para 58 px, com o retrato do oponente deitado e o menu só com o ícone, e as duas fileiras de cada campo cabem sem rolar. No Commander (vários jogadores, e 1×1 no celular) o status continua no menu, para não apertar os assentos.
+
+Durante a partida, a barra do topo da tela ocupa espaço sem mostrar muita coisa útil, tanto no computador quanto no celular. Ela pode render mais para o jogador ou encolher para deixar a mesa maior.
+
+- [x] Levantar o que a barra mostra hoje em partida (desktop e celular) e o que fica sobrando ou repetido em outros lugares da mesa.
+- [x] Decidir o que vale ficar sempre à vista nela (por exemplo: sala, turno/fase, vida e status dos jogadores, conexão, opções, sair) e o que pode ir para um menu.
+- [x] Desktop: usar a largura disponível para informação de relance, sem competir com a trilha de fases e a caixa de ação.
+- [x] Celular: barra mais baixa (ou recolhível) para ganhar altura de mesa, com os botões importantes ainda fáceis de tocar.
+- [x] Commander com vários jogadores: conferir que a barra não aperta os retratos e campos dos oponentes.
+- [x] Respeitar as áreas seguras do celular (entalhe, barra de gestos) e o modo PWA instalado.
+
+## 13. Tela de ordenar gatilhos no estilo do Arena ✅
+
+Quando vários gatilhos do jogador disparam ao mesmo tempo, o Forge pede a ordem em que vão para a pilha, e essa escolha hoje aparece como uma pergunta genérica. No Arena, os gatilhos aparecem como cartas lado a lado, na horizontal, e o jogador arruma a ordem vendo o que cada um faz.
+
+- [x] Tela própria para a ordem de gatilhos: cada gatilho como uma carta (a carta de origem com o texto da habilidade que disparou), enfileiradas na horizontal sobre o fundo escuro dos modais do Arena (item 7).
+- [x] Deixar claro qual resolve primeiro: numerar as posições e indicar o sentido ("resolve primeiro" / "resolve por último"), lembrando que o último a ir para a pilha é o primeiro a resolver.
+- [x] Reordenar arrastando as cartas e também tocando em sequência (tocar define a próxima posição), com botão para desfazer e um botão grande de confirmar.
+- [x] Ordem automática como atalho, para quem não quer escolher.
+- [x] Gatilhos repetidos da mesma carta agrupados ou marcados (×2, ×3), sem esconder que são separados na pilha.
+- [x] Poder minimizar para olhar a mesa, como nas outras escolhas de cartas (item 4), e inspecionar cada carta.
+- [x] Celular: rolar a fileira na horizontal quando não couber, com as cartas grandes o bastante para ler e arrastar.
+- [x] Teclado e leitor de tela: mover um gatilho com as setas e anunciar a posição.
+
+## 14. Escolher o modo de conjurar no estilo do Arena ✅
+
+Quando uma carta pode ser jogada de mais de um jeito (conjurar normal, reciclar, tramar/plot, custo alternativo, flashback, evocar etc.), a mesa mostra uma lista de botões só com texto, no formato "habilidade — Custo: …". O jogador não vê a carta e precisa ler cada linha para entender a diferença. No Arena, a carta aparece grande no centro e cada modo é uma opção visual ao lado dela.
+
+- [x] Mostrar a carta grande (imagem ou o layout "Arte e texto" do item 11) com as opções de jogar ao lado ou embaixo, sobre o fundo dos modais do item 7.
+- [x] Cada opção como um botão-cartão com o nome do modo em português ("Conjurar", "Reciclar", "Tramar", "Flashback"…), o custo em símbolos de mana (e custos extras, como sacrificar ou descartar, escritos por extenso) e uma linha curta do que acontece ("Compre um card", "Exile e conjure depois de graça").
+- [ ] Destacar a opção comum (conjurar normal) ✅ e desabilitar, com o motivo, as que não podem ser pagas agora: a ponte ainda não sabe (o Forge só oferece as opções que a carta permite, sem conferir a mana).
+- [x] Cartas de duas faces, aventuras e cartas divididas: mostrar a face ou a metade de cada opção (nome, custo e tipo da face; a imagem continua a da carta).
+- [x] Usar os dados que a ponte já manda (habilidade e custo de cada opção); se faltar o tipo do modo para traduzir e escolher o ícone, expor isso no protocolo em vez de interpretar o texto do Forge.
+- [x] Cancelar volta para a mesa sem jogar nada; minimizar para ver a mesa, como no item 4.
+- [x] Celular: carta e opções empilhadas, com botões grandes de tocar; teclado e leitor de tela anunciando modo e custo.

@@ -1,0 +1,33 @@
+/* Barra do topo da partida: menu, tela cheia e a informação de relance (formato, sala, placar, quem caiu). */
+.forge .topbar { align-items: center; right: auto; max-width: calc(50% - 90px); }
+.forge .match-bar { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 0 4px; padding: 0; list-style: none; overflow: hidden; }
+.forge .match-bar[hidden] { display: none; }
+.match-chip { flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: #0c1222d9; color: var(--muted); font: 600 12px/1.2 var(--body); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.match-chip.room { color: var(--gold); border-color: #f2b54c66; }
+.match-chip.series { color: var(--ink); }
+.match-chip.offline { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #ffb3a3; border-color: #ec5a3f80; background: #3b1d1dd9; }
+.match-chip.spectating { color: #bcd7ff; border-color: #59b5ff66; }
+.game-menu-meta.in-bar { display: none; }
+
+/* Celular (e telas baixas): faixa do topo bem mais baixa, retrato do oponente deitado, menu só com o ícone. */
+@media (max-height: 500px), (max-width: 760px) {
+  .forge:not(.multiplayer):not(.commander-game) { grid-template-rows: calc(58px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) 2px minmax(0, 1fr) 21vh; }
+  .forge:not(.multiplayer) .avatar-slot.opp { top: max(4px, env(safe-area-inset-top, 0px)); }
+  .forge:not(.multiplayer):not(.commander-game) .avatar.opp { grid-template-columns: auto auto; grid-template-rows: auto auto; align-items: center; column-gap: 6px; justify-items: start; }
+  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .portrait { grid-row: 1 / 3; width: 40px; height: 40px; }
+  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .life { margin-top: 0; }
+  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .pname { margin-top: 0; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .forge:not(.multiplayer):not(.commander-game) .opp-hand { top: -18px; left: calc(50% + 80px); }
+  /* A altura ganha vai para os campos: as duas fileiras de cada lado cabem sem rolar. */
+  .forge:not(.multiplayer):not(.commander-game) > .field { gap: 2px; }
+  .forge:not(.multiplayer):not(.commander-game) > .field .row.creatures { min-height: calc(var(--ch) + 10px); padding: 6px 8px 4px; }
+  .forge:not(.multiplayer):not(.commander-game) > .field .row.lands { min-height: calc(var(--lch) + 8px); padding: 4px 8px; }
+  .forge .game-menu-trigger { min-width: 40px; min-height: 40px; padding-inline: 10px; justify-content: center; }
+  .forge .game-menu-trigger .menu-label { display: none; }
+  .forge .topbar { max-width: calc(50% - 80px); }
+  .match-chip { padding: 3px 8px; font-size: 11px; }
+  .match-chip.format { display: none; }
+  /* Commander 1×1 no celular usa o canto de cima para as pilhas do oponente: o status volta para o menu. */
+  .forge.commander-game .match-bar { display: none; }
+  .forge.commander-game .game-menu-meta.in-bar { display: flex; }
+}

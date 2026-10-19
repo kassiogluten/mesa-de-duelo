@@ -15,6 +15,9 @@ import { cardDecision, selectionMessage } from './decisionPrompt';
 import type { DeckEntry } from '../decks';
 import { passLabel, phaseHudHTML } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
+import { matchBarHTML } from './matchBar';
+import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
+import './choiceScreens.css';
 import './gameplay.css';
 import './phaseHud.css';
 import './gameOptions.css';
@@ -23,6 +26,7 @@ import { tablePlayers, validAttackSelection, legalAttackTargets, legalAttackGrou
 import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
+import './matchBar.css';
 import { shortInstruction } from './shortInstruction';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
@@ -83,10 +87,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   <div class="arena forge">
     <div class="mat" aria-hidden="true"></div>
     <div class="topbar">
-      <button class="icon-btn game-menu-trigger" data-ui="menu" aria-expanded="false" aria-controls="fMenu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menu</span></button>
+      <button class="icon-btn game-menu-trigger" data-ui="menu" aria-label="Menu" aria-expanded="false" aria-controls="fMenu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="menu-label">Menu</span></button>
       <button class="icon-btn fs-btn" data-ui="fullscreen" aria-label="Tela cheia" title="Tela cheia"${canFullscreen() ? '' : ' hidden'}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-enter" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="fs-exit" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
       </button>
+      <ul class="match-bar" id="fMatchBar" aria-label="Partida"></ul>
     </div>
     <nav class="menu game-menu" id="fMenu" aria-label="Menu da partida" hidden>
       <div class="game-menu-meta"><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
@@ -167,6 +172,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let openCounter: string | null = null;
   /** Seleção em andamento na pergunta aberta. */
   let qState: { id: number; picked: number[]; text: string; amounts: string[] } | null = null;
+  /** Ordem dos gatilhos sendo montada na tela de ordenar gatilhos. */
+  let triggerOrder: { id: number; t: TriggerOrder } | null = null;
+  const triggersFor = (q: FQuestion) => {
+    if (triggerOrder?.id !== q.id) triggerOrder = { id: q.id, t: newTriggerOrder(q.options?.length ?? 0) };
+    return triggerOrder.t;
+  };
   let groupIds: number[] | null = null;
   let groupTitle = '';
   let selectedBlocker: BlockSelection | null = null;
@@ -264,7 +275,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -292,7 +303,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     root.querySelectorAll<HTMLElement>('.arena > *').forEach(el => { el.inert = !!active && el !== active; });
     if (!active && previousModal && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     if (active && !active.contains(document.activeElement) && !document.querySelector('dialog[open]')) {
-      active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]')?.focus({ preventScroll: true });
+      // A escolha principal da janela vem primeiro (o modo recomendado, o primeiro gatilho); senão, o primeiro controle.
+      (active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger]') ?? active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]'))?.focus({ preventScroll: true });
     }
   }
   function closeZone() { zoneOf = null; groupIds = null; $('#fZone').hidden = true; syncModal(); }
@@ -1106,6 +1118,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
+    if (isTriggerOrder(q)) return triggerOrderHTML(q, triggersFor(q), c => face(c, 'normal'), label);
+    if (isPlayMode(q)) return playModeHTML(q, c => face(c, 'normal'), label);
     const opts = q.options ?? [];
     const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
     if (q.kind === 'amount') {
@@ -1158,9 +1172,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function questionBar(q: FQuestion) {
     const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
-    const picked = qState?.id === q.id ? qState.picked.length : 0;
+    const picked = isTriggerOrder(q) ? triggerOrder?.id === q.id ? triggerOrder.t.placed : 0 : qState?.id === q.id ? qState.picked.length : 0;
     const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-    return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(q.title)}"><div class="question-bar-text"><strong>${esc(q.title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
+    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isPlayMode(q) ? 'Como jogar a carta' : q.title;
+    return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
   }
 
   function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[] }) {
@@ -1168,7 +1183,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!q || !client) return;
     stopPresentation();
     client.send({ type: 'answer', id: q.id, ...extra });
-    qState = null;
+    qState = null; triggerOrder = null;
     $('#fQuestion').hidden = true;
   }
 
@@ -1292,7 +1307,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (minimizedQuestion !== null && minimizedQuestion !== s.question.id) minimizedQuestion = null;
       const minimized = questionMinimized();
       qEl.classList.toggle('minimized', minimized);
-      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isPlayMode(s.question) ? ' play-mode' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       qEl.hidden = false;
     } else {
       qEl.hidden = true;
@@ -1326,6 +1341,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fMenuRematch').hidden = !!s.room || (s.config?.matchLength === 'bo3' && !s.match?.over);
     $('#fSeries').hidden = !s.match;
     $('#fSeries').textContent = s.match ? `Jogo ${s.match.gameNumber} · ${s.match.wins.join(' × ')}` : '';
+    // Na barra do topo ficam formato, sala, placar e quem caiu; no Commander com vários jogadores a faixa é dos assentos e isso fica no menu.
+    setHTML($('#fMatchBar'), multiplayer ? '' : matchBarHTML(s));
+    $('#fMatchBar').hidden = multiplayer;
+    root.querySelector('.game-menu-meta')!.classList.toggle('in-bar', !multiplayer);
 
     if (!s.gameOver) observing = false;
     const ov = $('#fOverlay');
@@ -1583,6 +1602,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       render();
       return;
     }
+    const trigger = t.closest<HTMLElement>('[data-trigger]');
+    const openQuestion = client.state?.question;
+    if (trigger && openQuestion && isTriggerOrder(openQuestion)) {
+      if (suppressTriggerClick) { suppressTriggerClick = false; return; }
+      const order = triggersFor(openQuestion), option = Number(trigger.dataset.trigger);
+      if (tapTrigger(order, option)) { render(); focusTrigger(option); announceTrigger(openQuestion, option); }
+      return;
+    }
+    if (t.closest('[data-trigger-undo]') && openQuestion && isTriggerOrder(openQuestion)) { if (undoTrigger(triggersFor(openQuestion))) render(); return; }
+    if (t.closest('[data-trigger-confirm]') && openQuestion && isTriggerOrder(openQuestion)) { answer({ indices: [...triggersFor(openQuestion).order] }); return; }
     if (t.closest('[data-q-submit]') && qState) { answer({ indices: qState.picked }); return; }
     if (t.closest('[data-q-none]')) { answer({ indices: [] }); return; }
     if (t.closest('[data-q-keep]')) { answer({ indices: (client.state?.question?.options ?? []).map((_, i) => i) }); return; }
@@ -1717,6 +1746,61 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);
     if (!el) return;
     e.preventDefault(); showPreview(cardFromElement(el), el, true);
+  });
+  // ---------- Ordem dos gatilhos: teclado e arrastar ----------
+  let suppressTriggerClick = false;
+  function focusTrigger(option: number) { root.querySelector<HTMLElement>(`[data-trigger="${option}"]`)?.focus({ preventScroll: false }); }
+  function announceTrigger(q: FQuestion, option: number) {
+    const order = triggersFor(q).order, pos = order.indexOf(option), o = q.options?.[option];
+    const name = typeof o !== 'string' && o?.card ? label(o.card) : 'Gatilho';
+    announce(`${name}: posição ${pos + 1} de ${order.length}, ${positionText(pos, order.length)}.`);
+  }
+  root.addEventListener('keydown', e => {
+    const card = (e.target as HTMLElement).closest?.<HTMLElement>('[data-trigger]');
+    const q = client?.state?.question;
+    if (!card || !q || !isTriggerOrder(q) || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault(); e.stopPropagation();
+    const order = triggersFor(q), option = Number(card.dataset.trigger), from = order.order.indexOf(option);
+    const to = e.key === 'ArrowLeft' ? from - 1 : e.key === 'ArrowRight' ? from + 1 : e.key === 'Home' ? 0 : order.order.length - 1;
+    if (moveTrigger(order, from, to)) render();
+    focusTrigger(option); announceTrigger(q, option);
+  }, true);
+  root.addEventListener('pointerdown', e => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>('[data-trigger]');
+    const q = client?.state?.question;
+    if (!card || !q || !isTriggerOrder(q) || e.button !== 0) return;
+    const row = card.closest<HTMLElement>('.trigger-row')!;
+    const option = Number(card.dataset.trigger), startX = e.clientX, startY = e.clientY;
+    const slot = card.closest<HTMLElement>('.trigger-slot')!;
+    let dragging = false;
+    const targetIndex = (x: number) => {
+      const slots = [...row.querySelectorAll<HTMLElement>('.trigger-slot')].filter(el => el !== slot);
+      return slots.filter(el => { const r = el.getBoundingClientRect(); return x > r.left + r.width / 2; }).length;
+    };
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      if (!dragging && Math.hypot(dx, ev.clientY - startY) < 10) return;
+      if (!dragging) {
+        // Na vertical, o gesto é rolar a página; só arrasta quando o movimento é para os lados.
+        if (Math.abs(ev.clientY - startY) > Math.abs(dx)) { stop(); return; }
+        dragging = true; slot.classList.add('dragging'); hideCardPreview(true);
+        try { card.setPointerCapture(ev.pointerId); } catch { /* sem captura, o arraste continua pelo root */ }
+      }
+      slot.style.transform = `translateX(${dx}px)`;
+      const to = targetIndex(ev.clientX);
+      row.querySelectorAll<HTMLElement>('.trigger-slot').forEach(el => el.classList.toggle('drop-before', el !== slot && [...row.children].filter(c => c !== slot).indexOf(el) === to));
+    };
+    const stop = () => { root.removeEventListener('pointermove', move); root.removeEventListener('pointerup', up); root.removeEventListener('pointercancel', stop); };
+    const up = (ev: PointerEvent) => {
+      stop();
+      if (!dragging) return;
+      suppressTriggerClick = true; setTimeout(() => { suppressTriggerClick = false; }, 0);
+      const order = triggersFor(q), from = order.order.indexOf(option);
+      slot.style.transform = '';
+      if (!moveTrigger(order, from, targetIndex(ev.clientX))) slot.classList.remove('dragging');
+      render(); focusTrigger(option); announceTrigger(q, option);
+    };
+    root.addEventListener('pointermove', move); root.addEventListener('pointerup', up); root.addEventListener('pointercancel', stop);
   });
   root.addEventListener('keydown', e => {
     if (e.key === 'Escape') {

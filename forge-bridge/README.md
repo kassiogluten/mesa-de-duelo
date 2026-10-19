@@ -69,6 +69,11 @@ Cada carta tem: `id`, `name` (em inglês, usado para buscar a imagem no Scryfall
 | `order` | `title`, `options[]` | `{type:"answer", id, indices:[nova ordem]}` |
 | `text` | `title`, `initial`, `numeric` | `{type:"answer", id, text:"3"}` |
 
+`purpose` marca duas perguntas com tela própria na mesa:
+
+- `"triggers"` (`kind: "order"`): gatilhos simultâneos. Cada opção traz `kind: "ability"`, `card` (a carta de origem) e `ability` (o texto do gatilho sem o nome da carta). A primeira da resposta resolve primeiro. Quando o Forge já tem uma ordem guardada para o mesmo conjunto de gatilhos, ela vem como ordem inicial das opções.
+- `"play-mode"` (`method: "getAbilityToPlay"`): jeitos de jogar uma carta ou de ativar uma habilidade. Cada opção traz `mode` (`cast`, `land`, `cycling`, `plot`, `foretell`, `flashback`, `evoke`, `adventure`, `ability`… e os custos alternativos do Forge em minúsculas), `spell`, `cost` (só a mana, como `{1}{R}`), `extra` (os outros custos, como o Forge escreve), `description` e, quando a opção usa outra face ou metade, `face` com `name`, `manaCost` e `typeLine`. Responder com `indices: []` cancela sem jogar nada.
+
 Também chegam `{type:"toast", text}` com mensagens do Forge e `{type:"error", text}` quando um comando falha. Em rede chega `{type:"room", room}` ao criar, entrar ou voltar para uma sala, com o mesmo formato do campo `room`.
 
 A mão do oponente vai só como contagem, as perguntas vão só para quem precisa responder, e um clique numa carta da mão do outro jogador é ignorado.

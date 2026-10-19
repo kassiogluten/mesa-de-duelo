@@ -493,7 +493,11 @@ final class Session {
                 if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
                 options.addAll((Collection<?>) a[1]);
                 JsonArray rows = optionsJson(options, null);
-                if (seat.controller() instanceof PlayerControllerHuman human) AbilityOptions.addCosts(human, options, rows);
+                if (seat.controller() instanceof PlayerControllerHuman human) {
+                    AbilityOptions.describe(human, options, rows);
+                    AbilityOptions.addCosts(human, options, rows);
+                }
+                q.addProperty("purpose", "play-mode");
                 q.add("options", rows);
             }
             case chooseSingleEntityForEffect -> {
@@ -517,6 +521,8 @@ final class Session {
                 options.addAll((Collection<?>) a[4]);
                 int remMin = (Integer) a[2], remMax = (Integer) a[3];
                 if (remMin == 0 && remMax == 0) {
+                    // Uma ordem já escolhida antes (os mesmos gatilhos de novo) chega pronta na lista de destino.
+                    if (a[5] instanceof Collection<?> placed) options.addAll(placed);
                     q.addProperty("kind", "order");
                 } else {
                     // many(): escolher um subconjunto (ex.: vidência "quais vão para o fundo"); os que sobram ficam de fora.
@@ -524,7 +530,9 @@ final class Session {
                     q.addProperty("min", remMax < 0 ? 0 : Math.max(0, options.size() - remMax));
                     q.addProperty("max", remMin < 0 ? options.size() : options.size() - remMin);
                 }
-                q.add("options", optionsJson(options, null));
+                JsonArray rows = optionsJson(options, null);
+                if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
+                q.add("options", rows);
             }
             case confirm -> {
                 q.addProperty("kind", "confirm");
