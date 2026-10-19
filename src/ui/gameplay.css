@@ -12,7 +12,8 @@
 .forge .ctr.kw { min-width: 21px; min-height: 21px; justify-content: center; }
 .forge .ctr.kw svg { width: 15px; height: 15px; }
 .forge .slot.has-flying::before { content: ''; position: absolute; left: 5%; right: 5%; bottom: -9px; height: 25px; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%); pointer-events: none; opacity: .65; animation: flying-mist 3.8s ease-in-out infinite alternate; }
-.forge .slot.has-flying > .bfc .face { box-shadow: 0 8px 12px #0007, 0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent); }
+/* Voar: a carta flutua um pouco acima da própria sombra, que fica mais longe e mais difusa. */
+.forge .slot.has-flying > .bfc .face { translate: 0 -3px; box-shadow: 0 13px 14px -3px #000a, 0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent); }
 .forge .slot.has-flying > .bfc.actionable .face { box-shadow: 0 8px 12px #0007, 0 0 0 2px var(--glow); }
 @keyframes flying-mist { from { transform: translateX(-4px) scale(.93); opacity: .3; } to { transform: translateX(4px) scale(1.08); opacity: .65; } }
 .inspect-card { display: grid; place-items: center; position: absolute; z-index: 7; left: -7px; top: -9px; width: 28px; height: 28px; padding: 5px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); color: var(--ink); cursor: zoom-in; }

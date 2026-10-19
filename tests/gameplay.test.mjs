@@ -427,3 +427,40 @@ test('hand dragging preserves click intent, only drops onto field, and rechecks 
   delete live.input.targeting; live.input.priority = false; assert.equal(canDragHandCard(live, 90, 42), false);
   live.input.priority = true; live.input.paying = true; assert.equal(canDragHandCard(live, 90, 42), false);
 });
+
+test('divided damage leaves the queue together; other events stay in order', () => {
+  const timeline = new PresentationTimeline();
+  timeline.ingest('m', [], { cursor: 0 });
+  const hit = (seq, extra) => event(seq, 'damage', { sourceId: 7, combat: false, delta: -1, ...extra });
+  timeline.ingest('m', [hit(1, { targets: { players: [2] } }), hit(2, { targets: { cards: [5] } }), hit(3, { targets: { cards: [6] } }), event(4, 'life-changed', { actor: 2, delta: -1 }), hit(5, {})]);
+  const first = timeline.advance();
+  assert.equal(first.event.seq, 1);
+  const rest = timeline.takeWhile(e => e.type === 'damage' && e.sourceId === first.event.sourceId);
+  assert.deepEqual(rest.map(r => r.event.seq), [2, 3]);
+  assert.equal(timeline.advance().event.type, 'life-changed');
+  assert.equal(timeline.advance().event.seq, 5);
+});
+
+test('heal, poison, shield and shatter have their own cues', () => {
+  assert.equal(soundForEvent(event(1, 'life-changed', { actor: 1, delta: 2 })), 'heal');
+  assert.equal(soundForEvent(event(2, 'damage', { infect: true, targets: { players: [1] } })), 'poison');
+  assert.equal(soundForEvent(event(3, 'damage', { wither: true, targets: { cards: [4] } })), 'poison');
+  assert.equal(soundForEvent(event(4, 'damage', { prevented: true, targets: { cards: [4] } })), 'shield');
+  assert.equal(soundForEvent(event(5, 'left', { reason: 'destroyed' })), 'shatter');
+  assert.equal(soundForEvent(event(6, 'left', { to: 'Exile' })), null);
+  assert.equal(new Set(['heal', 'poison', 'shield', 'shatter'].map(cue => SOUND_FILES[cue])).size, 4);
+});
+
+test('destroyed permanents shatter where they were; exiled ones vanish in place', () => {
+  const f = motionFixture();
+  const card = { id: 7, name: 'Bears' };
+  f.motion.capture();
+  f.motion.present(event(1, 'left', { card, actor: 1, to: 'Graveyard', reason: 'destroyed' }), { you: 1, html: '<div class="face"></div>', label: 'Destruída', duration: 500 });
+  assert.equal(f.nodes.filter(n => n.className === 'shatter-shard').length, 9);
+  assert.ok(f.nodes.some(n => n.className === 'shatter-flash'));
+  f.motion.reset();
+  const g = motionFixture();
+  g.motion.present(event(2, 'left', { card, actor: 1, to: 'Exile' }), { you: 1, html: '<div class="face"></div>', label: 'Exilada', duration: 500 });
+  assert.ok(g.nodes.some(n => n.className === 'exile-ring'));
+  g.motion.reset();
+});

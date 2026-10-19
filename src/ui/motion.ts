@@ -35,9 +35,9 @@ export function createMotion(root: HTMLElement): Motion {
     timers.add(timer);
   };
   /** `easing: 'linear'` deixa cada quadro com o seu próprio ritmo (golpe e projétil precisam chegar na hora do impacto). */
-  function animate(el: HTMLElement, frames: Keyframe[], duration: number, easing = EASE) {
+  function animate(el: HTMLElement, frames: Keyframe[], duration: number, easing = EASE, delay = 0) {
     if (reduced()) return;
-    const animation = el.animate(frames, { duration, easing });
+    const animation = el.animate(frames, { duration, easing, delay, fill: delay ? 'backwards' : 'auto' });
     animations.add(animation);
     animation.onfinish = animation.oncancel = () => animations.delete(animation);
   }
@@ -110,7 +110,7 @@ export function createMotion(root: HTMLElement): Motion {
   }
   function impact(event: PresentationEvent, look: DamageLook, target: ReturnType<typeof damageTarget>) {
     const at = target.at!;
-    pulse(target.el, true);
+    pulse(target.el, look.tone !== 'shield');
     const size = Math.max(64, Math.min(150, (target.player === undefined ? at.w : 90) * (look.heavy ? 1.5 : 1.15)));
     const burst = effect(`damage-impact ${look.tone}${look.heavy ? ' heavy' : ''}`, { ...at, w: size, h: size });
     animate(burst, [{ opacity: .95, scale: '.3' }, { opacity: .8, scale: '1', offset: .45 }, { opacity: 0, scale: '1.35' }], 520);
@@ -204,6 +204,7 @@ export function createMotion(root: HTMLElement): Motion {
       note.classList.add(right ? 'right' : 'left');
       if (!reduced()) animate(note, [{ opacity: 0, translate: right ? '-6px 0' : '6px 0' }, { opacity: 1, translate: '0 0', offset: .18 }, { opacity: 1, offset: .82 }, { opacity: 0 }], hold);
       later(() => remove(note), hold);
+      beams(event, card);
       return;
     }
     if (!options.html) return;
@@ -214,6 +215,69 @@ export function createMotion(root: HTMLElement): Motion {
     caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
     if (!reduced()) animate(piece, [{ opacity: 0, scale: '.96' }, { opacity: 1, scale: '1', offset: .2 }, { opacity: 1, offset: .82 }, { opacity: 0 }], options.duration);
     later(() => remove(piece), options.duration);
+  }
+
+  /** Feixe da carta de origem até cada alvo do gatilho ou da habilidade; com "reduzir movimento", só o destaque no alvo. */
+  function beams(event: PresentationEvent, card: HTMLElement) {
+    const from = center(card);
+    if (!from) return;
+    const targets = [...(event.targets?.cards ?? []).map(id => root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`)),
+      ...(event.targets?.players ?? []).map(id => root.querySelector<HTMLElement>(`.avatar[data-pid="${id}"]`))].filter((el): el is HTMLElement => !!el && el !== card);
+    targets.forEach((el, i) => {
+      const to = center(el);
+      if (!to) return;
+      const dx = to.cx - from.cx, dy = to.cy - from.cy, length = Math.hypot(dx, dy);
+      later(() => pulse(el), 260 + i * 60);
+      if (reduced() || length < 8) return;
+      const beam = effect(`ability-beam${event.trigger ? ' trigger' : ''}`, { cx: from.cx, cy: from.cy, w: length, h: 4 });
+      beam.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;
+      animate(beam, [{ scale: '0 1', opacity: .9 }, { scale: '1 1', opacity: 1, offset: .45 }, { scale: '1 1', opacity: 0 }], 700, 'ease-out', i * 60);
+      later(() => remove(beam), 760 + i * 60);
+    });
+  }
+  /** Para onde a carta vai ao sair do campo: cemitério, exílio, grimório ou mão. */
+  function destination(event: PresentationEvent, mine: boolean, seat: Element | null, hand: Point, stage: Point) {
+    const piles = (selector: string) => center(seat?.querySelector(`.piles ${selector}`)) ?? center(root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} ${selector}`));
+    if (event.to === 'Hand') return hand;
+    if (event.to === 'Exile') return piles('.exile') ?? piles('.gy') ?? stage;
+    if (event.to === 'Library') return piles('.lib') ?? stage;
+    return piles('.gy') ?? stage;
+  }
+  /** Destruída: a carta racha e solta fragmentos no lugar em que estava. */
+  function shatter(at: Point) {
+    const crack = effect('shatter-flash', { ...at, w: at.w * 1.1, h: at.h * 1.1 });
+    animate(crack, [{ opacity: .9, scale: '.9' }, { opacity: 0, scale: '1.2' }], 360);
+    later(() => remove(crack), 380);
+    for (let i = 0; i < 9; i++) {
+      const angle = (i / 9) * Math.PI * 2 + (i % 2 ? .3 : -.2), reach = 34 + (i * 17) % 30;
+      const shard = effect('shatter-shard', { cx: at.cx + Math.cos(angle) * at.w * .18, cy: at.cy + Math.sin(angle) * at.h * .18, w: 8 + (i * 5) % 9, h: 10 + (i * 7) % 12 });
+      animate(shard, [{ translate: '0 0', rotate: '0deg', opacity: 1 }, { translate: `${Math.cos(angle) * reach}px ${Math.sin(angle) * reach + 26}px`, rotate: `${(i % 2 ? 1 : -1) * (90 + i * 20)}deg`, opacity: 0 }], 520, 'cubic-bezier(.2,.6,.4,1)');
+      later(() => remove(shard), 540);
+    }
+  }
+  /**
+   * Saída do campo com um movimento por motivo: destruída racha antes de cair no cemitério, sacrificada afunda,
+   * exilada se desfaz em luz, devolvida sobe e voa para a mão. Morrer por dano e o resto voam para a pilha certa.
+   */
+  function leave(event: PresentationEvent, from: Point, to: Point, end: Point, piece: HTMLElement, duration: number) {
+    const go = { translate: `${from.cx - to.cx}px ${from.cy - to.cy}px` };
+    if (event.reason === 'destroyed') {
+      shatter(from);
+      animate(piece, [{ ...go, scale: '1', opacity: 1, filter: 'brightness(1.4)' }, { ...go, scale: '.96', opacity: .85, filter: 'brightness(.7) grayscale(.6)', offset: .3 }, { translate: '0 0', scale: '.85', opacity: .1, filter: 'brightness(.7) grayscale(.6)' }], duration, 'linear');
+    } else if (event.reason === 'sacrificed') {
+      animate(piece, [{ ...go, scale: '1', opacity: 1, filter: 'none' }, { translate: `${from.cx - to.cx}px ${from.cy - to.cy + 16}px`, scale: '.86', opacity: .75, filter: 'brightness(.55) sepia(.4)', offset: .38 }, { translate: '0 0', scale: '.8', opacity: .1, filter: 'brightness(.55) sepia(.4)' }], duration, 'ease-in');
+    } else if (event.to === 'Exile') {
+      // Some no lugar, em luz; não precisa atravessar a mesa até a pilha do exílio.
+      piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
+      const ring = effect('exile-ring', { ...from, w: end.w * 1.3, h: end.w * 1.3 });
+      animate(ring, [{ opacity: 0, scale: '.5' }, { opacity: .9, scale: '1', offset: .4 }, { opacity: 0, scale: '1.3' }], duration);
+      later(() => remove(ring), duration);
+      animate(piece, [{ opacity: 1, scale: '1', filter: 'brightness(1)' }, { opacity: .9, scale: '1.04', filter: 'brightness(2.2) saturate(.3)', offset: .45 }, { opacity: 0, scale: '1.1', filter: 'brightness(3) blur(3px)' }], duration);
+    } else if (event.to === 'Hand') {
+      animate(piece, [{ ...go, scale: '1', opacity: 1 }, { translate: `${from.cx - to.cx}px ${from.cy - to.cy - 26}px`, scale: '1.08', opacity: 1, offset: .3 }, { translate: '0 0', scale: '.6', opacity: .2 }], duration, 'ease-in-out');
+    } else {
+      animate(piece, [{ ...go, scale: '.92', opacity: .8 }, { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 }, { translate: '0 0', scale: '1', opacity: .1 }], duration);
+    }
   }
 
   return {
@@ -229,6 +293,7 @@ export function createMotion(root: HTMLElement): Motion {
     play(options = {}) {
       if (options.silent || reduced()) { primed = true; return; }
       const seen = new Set<string>();
+      let untapWave = 0;
       root.querySelectorAll<HTMLElement>(KEYED).forEach(el => {
         const key = el.dataset.fid ?? el.dataset.peek!;
         if (seen.has(key)) return;
@@ -242,10 +307,15 @@ export function createMotion(root: HTMLElement): Motion {
           const turned = before.tapped !== !!el.closest('.tapped');
           if (Math.abs(dx) + Math.abs(dy) < 2 && !turned) return;
           const slot = el.closest<HTMLElement>('.slot') ?? el;
-          const from: Keyframe = { translate: `${dx}px ${dy}px` };
-          const to: Keyframe = { translate: '0 0' };
-          if (turned && slot !== el) { from.rotate = before.tapped ? '90deg' : '-90deg'; to.rotate = '0deg'; }
-          animate(slot, [from, to], 240);
+          if (turned && slot !== el) {
+            // Virar tem peso: passa um pouco do ponto e assenta. Desvirar em lote vai em onda, uma carta depois da outra.
+            const untapping = before.tapped;
+            const lean = untapping ? '-6deg' : '6deg';
+            animate(slot, [{ translate: `${dx}px ${dy}px`, rotate: untapping ? '90deg' : '-90deg' }, { translate: '0 0', rotate: lean, offset: .72 }, { translate: '0 0', rotate: '0deg' }],
+              300, 'cubic-bezier(.3,.7,.4,1)', untapping ? Math.min(untapWave++, 12) * 45 : 0);
+          } else {
+            animate(slot, [{ translate: `${dx}px ${dy}px` }, { translate: '0 0' }], 240);
+          }
         } else if (primed && !options.semantic) {
           animate(el.closest<HTMLElement>('.slot') ?? el, [{ opacity: 0, scale: '.92' }, { opacity: 1, scale: '1' }], 220);
         }
@@ -292,17 +362,27 @@ export function createMotion(root: HTMLElement): Motion {
         const targetId = event.targets?.players?.[0];
         const targetCard = event.targets?.cards?.[0];
         to = target ?? center(targetId !== undefined ? root.querySelector(`.avatar[data-pid="${targetId}"]`) : targetCard !== undefined ? root.querySelector(`.field [data-fid="${targetCard}"]`) : null) ?? stage;
-      } else if (event.type === 'left' || event.type === 'countered') {
-        from = event.type === 'countered' ? stage : old ?? target ?? stage;
-        to = center(seat?.querySelector('.piles .gy')) ?? center(root.querySelector(mine ? '#fMePiles .gy' : '#fOppPiles .gy')) ?? stage;
+      } else if (event.type === 'left') {
+        from = old ?? target ?? stage;
+        to = destination(event, mine, seat, hand, stage);
+      } else if (event.type === 'countered') {
+        from = stage;
+        to = destination({ ...event, to: 'Graveyard' }, mine, seat, hand, stage);
       }
+      if (event.type === 'entered' && event.from === 'Exile') from = to; // Blink: volta no mesmo lugar, em luz.
       // Keep large cards readable while travelling, independent of a tiny hand or pile's dimensions.
       const end = { ...to, w: stage.w, h: stage.h };
       const piece = effect('presentation-piece', end, options.html);
       const caption = document.createElement('span');
       caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
       const disappearing = ['left', 'countered', 'resolved'].includes(event.type);
-      if (!reduced()) animate(piece, [
+      if (event.type === 'left') leave(event, from, to, end, piece, options.duration);
+      else if (event.type === 'entered' && event.from === 'Exile') {
+        const ring = effect('exile-ring', { ...to, w: end.w * 1.3, h: end.w * 1.3 });
+        animate(ring, [{ opacity: 0, scale: '1.3' }, { opacity: .9, scale: '1', offset: .5 }, { opacity: 0, scale: '.8' }], options.duration);
+        later(() => remove(ring), options.duration);
+        animate(piece, [{ opacity: 0, scale: '1.1', filter: 'brightness(3) blur(3px)' }, { opacity: .9, scale: '1.03', filter: 'brightness(2) saturate(.4)', offset: .5 }, { opacity: 1, scale: '1', filter: 'none' }], options.duration);
+      } else animate(piece, [
         { translate: `${from.cx - to.cx}px ${from.cy - to.cy}px`, scale: '.92', opacity: .8 },
         { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 },
         { translate: '0 0', scale: '1', opacity: disappearing ? .1 : 1 },

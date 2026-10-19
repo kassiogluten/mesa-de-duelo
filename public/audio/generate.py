@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic game cues. Standard library only; twelve original physical-model cues.
+"""Deterministic game cues. Standard library only; sixteen original physical-model cues.
 
 The two damage cues adapt bundled SFXMint-generated CC0 takes. Their checksums,
 licenses and generation provenance are recorded in sources/manifest.json; regeneration needs no network.
@@ -200,6 +200,40 @@ def block(buf):
     add_texture(buf, 0, .06, (600, 4400), .6, 1401, lambda t: math.exp(-t / .008))
 
 
+def heal(buf):
+    # Rising glass chimes over a soft breath: gain, not a hit.
+    for start, note, amplitude in [(0, 784, .55), (.075, 988, .7), (.15, 1319, 1)]:
+        add_modes(buf, start, [(note, .45, .32), (note * 2.01, .14, .18), (note * 3.02, .05, .09)], amplitude, attack=.006)
+    add_texture(buf, 0, .45, (1800, 7000), .08, 1501, lambda t: bell(t, .14, .1))
+
+
+def poison(buf):
+    # Thick bubbles: low wobbling drops with a wet hiss, slower than any hit.
+    for start, note, amplitude in [(0, 140, .8), (.11, 118, .65), (.2, 162, .5), (.33, 104, .7)]:
+        add_drum(buf, start, note, -22, .07, amplitude)
+        add_modes(buf, start, [(note * 3.1, .18, .03)], amplitude, attack=.004)
+    add_texture(buf, 0, .5, (300, 2200), .22, 1601, lambda t: bell(t, .22, .16))
+
+
+def shield(buf):
+    # A ward absorbing the blow: bright ringing plate that swells, then fades without a body impact.
+    add_texture(buf, 0, .09, (900, 5000), .5, 1701, lambda t: math.exp(-t / .012))
+    add_modes(buf, 0, [(1046, .4, .28), (1568, .3, .22), (2349, .16, .14), (3136, .07, .08)], attack=.004)
+    add_modes(buf, .02, [(523, .16, .3)], attack=.03)
+
+
+def shatter(buf):
+    # Destroyed: a crack, then many small bright shards falling and a gritty crumble.
+    add_texture(buf, 0, .05, (700, 6500), 1, 1801, lambda t: math.exp(-t / .007))
+    add_modes(buf, 0, [(220, .25, .05)], attack=.001)
+    rng = random.Random(1802)
+    for i in range(14):
+        start = .03 + rng.uniform(0, .38) * (i / 14) ** .6
+        frequency = rng.uniform(2200, 5200)
+        add_modes(buf, start, [(frequency, .09, .025), (frequency * 1.47, .04, .015)], rng.uniform(.4, 1), attack=.0008)
+    add_texture(buf, .04, .45, (400, 3000), .22, 1803, lambda t: math.exp(-t / .16))
+
+
 # file, material, duration, peak, reflection amount, composer
 DESIGNS = [
     ('01-card-draw', 'paper / two brushed strokes', .30, .28, 0, draw),
@@ -216,6 +250,10 @@ DESIGNS = [
     ('12-countered', 'suction and glass cut / swell then snap', .37, .36, .015, countered),
     ('13-attack', 'leather and air / forward rush', .43, .35, .03, attack),
     ('14-block', 'shield plate / bright contact', .52, .40, .045, block),
+    ('15-heal', 'glass chimes and breath / three rising notes', .62, .30, .04, heal),
+    ('16-poison', 'wet bubbles / four low drops', .62, .34, .02, poison),
+    ('17-shield', 'ringing ward plate / swell without impact', .60, .32, .05, shield),
+    ('18-shatter', 'crack and falling shards / crumble', .58, .40, .03, shatter),
 ]
 
 
@@ -248,5 +286,8 @@ def render(name, material, duration, peak, room, compose):
 
 
 if __name__ == '__main__':
+    # Optional names render only those cues (the others stay byte-for-byte as they are).
+    wanted = set(sys.argv[1:])
     for design in DESIGNS:
-        print(json.dumps(render(*design)))
+        if not wanted or design[0] in wanted:
+            print(json.dumps(render(*design)))

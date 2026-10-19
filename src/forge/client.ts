@@ -15,6 +15,10 @@ export interface FEvent {
   /** Só em `damage`; ver forge-bridge/README.md. */
   combat?: boolean; step?: 'first-strike' | 'regular'; doubleStrike?: boolean; trample?: boolean; deathtouch?: boolean; lifelink?: boolean;
   infect?: boolean; wither?: boolean; loyalty?: boolean; commander?: boolean; self?: boolean; lethal?: boolean;
+  /** `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). */
+  prevented?: boolean;
+  /** `left`: por que a carta saiu do campo, quando o Forge diz. */
+  reason?: 'destroyed' | 'sacrificed';
   frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {
@@ -57,6 +61,17 @@ export interface FCard {
   emblem?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
+  /** Custo da proteção contra alvos (ward), como "{2}" ou "Pay 3 life". */
+  ward?: string;
+  /** De que a proteção protege, como o Forge escreve: "red", "artifact", "multicolored"… */
+  protection?: string[];
+  /** Fora de fase (phasing): continua no campo, mas como se não existisse. */
+  phasedOut?: boolean;
+  /** Proibida de atacar ou de bloquear por um efeito (não conta enjoo, estar virada nem defensor). */
+  cantAttack?: boolean;
+  cantBlock?: boolean;
+  /** Dano que os escudos de prevenção ainda vão prevenir. */
+  preventDamage?: number;
   /** Id da carta a que esta aura ou equipamento está preso. */
   attachedTo?: number;
   attachedToPlayer?: number;
@@ -71,6 +86,8 @@ export interface FPlayer {
   ai: boolean;
   eliminated?: boolean;
   life: number;
+  /** Dano que os escudos de prevenção do jogador ainda vão prevenir. */
+  preventDamage?: number;
   /** Marcadores do jogador (POISON, ENERGY, EXPERIENCE, RAD, TICKET...), só os que existem. */
   counters?: Record<string, number>;
   library: number;

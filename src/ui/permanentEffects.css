@@ -1,0 +1,83 @@
+/*
+ * Efeitos contínuos das permanentes (permanentEffects.ts) e efeitos de movimento (motion.ts).
+ * Regra de legibilidade: nada cobre nome, custo ou P/T. Brilho fica atrás da carta, moldura só na borda de fora,
+ * detalhes embaixo dela. Movimento contínuo só sem "reduzir movimento".
+ */
+.bfc > .fx-glow, .bfc > .fx-frame, .bfc > .fx-base, .bfc > .fx-mark, .bfc > .fx-crosshair, .bfc > .fx-seals { position: absolute; pointer-events: none; }
+
+/* Brilho atrás da carta: só a parte que passa da borda aparece. */
+.bfc > .fx-glow { inset: 0; z-index: -1; border-radius: 6px; --c: #9fe3ff; box-shadow: 0 0 6px 4px color-mix(in srgb, var(--c) 90%, transparent), 0 0 16px 9px color-mix(in srgb, var(--c) 45%, transparent); opacity: 1; }
+.bfc > .fx-glow.hexproof { --c: #9fe3ff; }
+.bfc > .fx-glow.shroud { --c: #b9bfcc; box-shadow: 0 0 12px 6px #b9bfccaa, 0 0 26px 12px #8d94a466; }
+.bfc > .fx-glow.lifelink { --c: #7dffae; }
+.bfc > .fx-glow.enchanted { --c: var(--aura, var(--gold)); opacity: .65; }
+.bfc > .fx-glow.plus { --c: #7dffae; opacity: .45; }
+.bfc > .fx-glow.minus { --c: #b48cff; opacity: .5; }
+
+/* Moldura fora da carta (o miolo é transparente). */
+.bfc > .fx-frame { inset: -4px; z-index: 1; border-radius: 8px; border: 2px solid transparent; }
+.bfc > .fx-frame.indestructible { border: 3px solid #f2c75c; box-shadow: 0 0 0 1px #6b4a12, 0 0 10px #f2c75c88, inset 0 0 0 1px #fff3c4aa; }
+.bfc > .fx-frame.ward { border: 2px dashed #b89cff; box-shadow: 0 0 8px #9b7bff99; }
+.bfc > .fx-frame.protection { border: 2px solid #e9edf5; box-shadow: 0 0 0 1px #7b8496, 0 0 9px #ffffff66; }
+.bfc > .fx-frame.menace { border: 2px solid transparent; background: conic-gradient(from 0deg, #e5533c 0 6%, transparent 6% 12%) border-box; -webkit-mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); opacity: .9; }
+.bfc > .fx-frame.defender { inset: auto -5px -6px; height: 8px; border: 0; border-radius: 2px; background: repeating-linear-gradient(90deg, #8d97a8 0 10px, #5c6577 10px 12px); box-shadow: 0 2px 4px #0008; }
+.bfc > .fx-frame.token { border: 2px solid #d9dde6; box-shadow: 0 0 6px #ffffff40; }
+
+/* Detalhes na base, abaixo da carta. */
+.bfc > .fx-base { left: 6%; right: 6%; bottom: -12px; height: 14px; z-index: -1; border-radius: 50%; }
+.bfc > .fx-base.deathtouch { background: radial-gradient(ellipse, #2f6b3a 0, #173f22aa 45%, transparent 70%); filter: blur(2px); }
+.bfc > .fx-base.haste { background: radial-gradient(ellipse, #ffb35a 0, #ff6a2a88 40%, transparent 70%); filter: blur(2px); }
+.bfc > .fx-base.chained { bottom: -7px; height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, #a7afbd 0 6px, transparent 6px 9px); filter: none; z-index: 1; opacity: .85; }
+
+/* Lâminas da iniciativa e do golpe duplo: fora do canto de cima, à direita. */
+.bfc > .fx-mark { top: -7px; right: -7px; z-index: 3; display: flex; gap: 2px; transform: rotate(-35deg); }
+.bfc > .fx-mark i { display: block; width: 3px; height: 15px; border-radius: 2px; background: linear-gradient(#fff, #c7d2e4); box-shadow: 0 0 4px #fff9, 0 1px 2px #000a; }
+
+/* Mira de "alvo de algo na pilha", no meio da arte (longe do nome, do custo e do P/T). */
+.bfc > .fx-crosshair { left: 50%; top: 44%; width: 38%; aspect-ratio: 1; z-index: 3; transform: translate(-50%, -50%); border-radius: 50%; --c: #ff8a3d; border: 2px solid var(--c); box-shadow: 0 0 8px var(--c), inset 0 0 6px var(--c); }
+.bfc > .fx-crosshair::before, .bfc > .fx-crosshair::after { content: ''; position: absolute; left: 50%; top: 50%; background: var(--c); transform: translate(-50%, -50%); }
+.bfc > .fx-crosshair::before { width: 2px; height: 140%; }
+.bfc > .fx-crosshair::after { width: 140%; height: 2px; }
+.bfc.fx-targeted.mine > .fx-crosshair { --c: #59b5ff; }
+
+/* Selos embaixo da carta: custo da proteção contra alvos, proteção, escudo e virada para baixo. */
+.bfc > .fx-seals { left: 50%; bottom: -9px; z-index: 4; transform: translateX(-50%); display: flex; gap: 3px; white-space: nowrap; }
+.fx-seal { display: inline-flex; align-items: center; gap: 2px; padding: 0 5px; border-radius: 999px; background: rgba(9, 13, 24, .94); border: 1px solid currentColor; font: 700 9px/1.5 var(--body); box-shadow: 0 1px 3px #000a; pointer-events: auto; cursor: help; }
+.fx-seal .mana, .fx-seal .pip, .fx-seal svg, .fx-seal img { width: 10px; height: 10px; }
+.fx-seal.ward { color: #cdb9ff; }
+.fx-seal.protection { color: #eef2f8; }
+.fx-seal.prevent { color: #9fe3ff; }
+.fx-seal.face-down { color: var(--gold-light); }
+.slot.tapped .bfc > .fx-seals { transform: translateX(-50%) rotate(-90deg); transform-origin: 50% 50%; }
+
+/* Fora de fase: translúcida e tracejada. Com enjoo de invocação: um pouco apagada. */
+.bfc.fx-phased > .face { opacity: .35; outline: 2px dashed #9fd3ff; outline-offset: 2px; filter: grayscale(.5); }
+.bfc.fx-phased > :not(.face) { opacity: .5; }
+.bfc.fx-sick > .face { filter: saturate(.7) brightness(.88); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bfc > .fx-glow.hexproof { animation: fx-shimmer 3.2s ease-in-out infinite; }
+  .bfc > .fx-glow.lifelink { animation: fx-breathe 2.6s ease-in-out infinite; }
+  .bfc > .fx-frame.ward { animation: fx-runes 6s linear infinite; }
+  .bfc > .fx-base.deathtouch, .bfc > .fx-base.haste { animation: fx-drift 2.4s ease-in-out infinite alternate; }
+  .bfc > .fx-crosshair { animation: fx-aim 1.2s ease-in-out infinite; }
+}
+@keyframes fx-shimmer { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
+@keyframes fx-breathe { 0%, 100% { opacity: .4; scale: .98; } 50% { opacity: .85; scale: 1.02; } }
+@keyframes fx-runes { to { border-color: #d6c6ff; filter: hue-rotate(40deg); } }
+@keyframes fx-drift { from { translate: -3px 0; opacity: .7; } to { translate: 3px -2px; opacity: 1; } }
+@keyframes fx-aim { 0%, 100% { scale: .92; opacity: .75; } 50% { scale: 1.05; opacity: 1; } }
+
+/* ---- Efeitos de passagem (motion.ts) ---- */
+/* Escudo de prevenção: domo transparente, sem explosão. */
+.damage-impact.shield { background: radial-gradient(circle at 50% 60%, transparent 40%, #9fe3ff55 58%, #e6f8ff 64%, transparent 68%); box-shadow: 0 0 22px #9fe3ff; border-radius: 50% 50% 46% 46%; }
+.damage-number.shield { color: #9fe3ff; }
+.damage-number.shield > b { text-decoration: line-through; text-decoration-thickness: 3px; }
+/* Feixe de gatilho ou habilidade até o alvo. */
+.ability-beam { position: fixed; z-index: 34; pointer-events: none; transform-origin: 0 50%; transform: translateY(-50%) rotate(var(--angle, 0rad)); width: var(--fw) !important; border-radius: 999px; background: linear-gradient(90deg, #ffe2a0, #f2b54c 60%, #fff); box-shadow: 0 0 10px #f2b54c, 0 0 2px #fff; }
+.ability-beam.trigger { background: linear-gradient(90deg, #d9c8ff, #9b7bff 60%, #fff); box-shadow: 0 0 10px #9b7bff, 0 0 2px #fff; }
+/* Destruída: estalo e fragmentos. */
+.shatter-flash { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 8px; background: radial-gradient(closest-side, #fff, #ffd7a055 60%, transparent); }
+.shatter-shard { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); background: linear-gradient(135deg, #e9e2d0, #8c7e66); clip-path: polygon(50% 0, 100% 70%, 20% 100%); box-shadow: 0 0 4px #fff8; }
+/* Exilada ou voltando do exílio: anel de luz branca. */
+.exile-ring { position: fixed; z-index: 33; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 18px #fff, inset 0 0 14px #ffffffaa; opacity: 0; }

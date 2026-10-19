@@ -4,6 +4,7 @@ import { esc, manaHTML, pip, richText } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { damageDetail } from './damageEffects';
+import { auraColor, permanentFx, permanentFxHTML, permanentFxText } from './permanentEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
@@ -21,6 +22,7 @@ import { playerCountersHTML, playerCountersText as countersText } from './player
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
 import './gameplay.css';
+import './permanentEffects.css';
 import './phaseHud.css';
 import './gameOptions.css';
 import './decisionPrompt.css';
@@ -345,8 +347,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     renderTable(false);
     if (!entry || !s) return;
     const duration = presentationDuration(entry.event, fast || hasLiveDecision(s));
-    motion.present(entry.event, { you: s.you, html: entry.event.card ? face(entry.event.card, 'normal') : undefined,
-      label: eventDescription(entry.event), duration, calloutDuration: calloutDuration(entry.event, fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
+    // Dano dividido: os próximos danos da mesma mágica ou habilidade saem juntos, cada um para o seu alvo.
+    const first = entry.event;
+    const divided = first.type === 'damage' && !first.combat && !first.prevented && first.sourceId !== undefined
+      ? timeline.takeWhile(e => e.type === 'damage' && !e.combat && !e.prevented && e.sourceId === first.sourceId) : [];
+    for (const part of [entry, ...divided]) {
+      if (divided.length) part.event.divided = divided.length + 1;
+      motion.present(part.event, { you: s.you, html: part.event.card ? face(part.event.card, 'normal') : undefined,
+        label: eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
+    }
     audio.play(entry.event, timeline.matchId, entry.audible, s.you);
     if (entry.event.type === 'damage' && entry.event.targets?.players?.length) announce(eventDescription(entry.event));
     else if (!hasLiveDecision(s)) announce(eventDescription(entry.event));
@@ -721,7 +730,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip('ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k])).join('')}</span>` : '';
     const badges = [c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
       c.token ? '<span class="badge token">Ficha</span>' : ''].join('');
-    const aria = [label(c), c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '',
+    // Efeitos contínuos (item 17): moldura, brilho e selos, na borda ou fora da carta.
+    const caster = s.stack.find(item => item.targets?.cards?.includes(c.id))?.controller;
+    const aura = attached.find(a => /\bAura\b/.test(a.typeLine ?? ''));
+    const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, active: c.controller === s.activePlayer });
+    const fxView = permanentFxHTML(fx, aura ? auraColor(aura.manaCost) : undefined);
+    inner.push(...fxView.classes);
+    const aria = [label(c), c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
       `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small')}${selectedBadge(s, a)}</div>`).join('');
@@ -730,7 +745,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
     const style = attached.length ? ` style="--atts:${attached.length}"` : '';
     if (attached.length) slot.push('has-att');
-    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${face(c, 'small')}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
+    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${face(c, 'small')}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
   }
 
   /** Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). */
@@ -967,8 +982,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'ability-activated': return event.trigger ? `Gatilho${event.card?.name ? ` de ${name}` : ''}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}.`;
       case 'resolved': return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
       case 'countered': return `Anulado: ${event.card?.name ? name : 'efeito'}.`;
-      case 'entered': return `${name} entrou no campo.`;
-      case 'left': return `${name} saiu do campo.`;
+      // "Carta …" concorda com qualquer nome (o Cavaleiro, a Aura).
+      case 'left': return event.reason === 'destroyed' ? `Carta destruída: ${name}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}.`
+        : event.to === 'Exile' ? `Carta exilada: ${name}.` : event.to === 'Hand' ? `Volta para a mão: ${name}.` : event.to === 'Library' ? `Volta para o grimório: ${name}.` : `${name} saiu do campo.`;
+      case 'entered': return event.from === 'Exile' ? `Volta ao campo: ${name}.` : `${name} entrou no campo.`;
       case 'attackers': return attackDescription(event);
       case 'blockers': return `${who} declarou bloqueadores.`;
       case 'turn': return `Turno de ${who}.`;
@@ -978,6 +995,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
           ...(event.targets?.cards ?? []).map(id => { const c = findCard(id); return c ? label(c) : undefined; })].filter(Boolean).join(', ');
         const from = event.card?.name && !event.card.faceDown ? ` de ${label(event.card)}` : '';
         const what = event.infect && event.targets?.players?.length ? `${n} de veneno` : event.wither ? `${n} marcador${n === 1 ? '' : 'es'} −1/−1` : `${n} de dano`;
+        if (event.prevented) return `Escudo preveniu ${n} de dano${target ? ` a ${target}` : ''}${from}.`;
         return `${target ? `${target} sofreu ${what}` : `${what} causado`}${from}${damageDetail(event)}.`;
       }
       case 'life-changed': return `${who}: ${event.delta && event.delta > 0 ? '+' : ''}${event.delta ?? 0} de vida.`;

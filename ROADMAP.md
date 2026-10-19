@@ -194,14 +194,14 @@ Fonte dos dados: cada dano chega como evento `damage` da ponte (um por fonte e a
 - [x] Ganho de vida em geral: "+N" verde no retrato. Dados: `life-changed` com `delta` positivo.
 - [x] Infectar e murchar (infect/wither): em vez de número de dano, o alvo recebe marcadores −1/−1 (criatura) ou veneno (jogador), com cor e ícone próprios. Dados: `infect: true` (jogador) e `wither: true` (criatura, inclusive dano de infectar em criatura).
 - [x] Dano a planeswalker: projétil ou golpe até o planeswalker e a lealdade caindo em número flutuante. Dados: o Forge não avisa dano a planeswalker como dano, só a lealdade caindo; a ponte transforma essa queda em `damage` com `loyalty: true` quando ela acontece no dano de combate ou durante a resolução de outra carta.
-- [ ] Dano prevenido (escudo): escudo sobre o alvo e o número riscado. Dados: o Forge não manda evento de prevenção; precisa expor na ponte (o mapa de prevenção do dano) antes de mostrar.
-- [ ] Dano dividido entre vários alvos: vários projéteis saindo juntos da mesma fonte, cada um com seu número. Dados: já chegam vários `damage` seguidos com a mesma fonte; falta agrupá-los numa só apresentação.
+- [x] Dano prevenido (escudo): domo transparente sobre o alvo, o número riscado e o selo "Prevenido". Dados: o Forge não avisa; a ponte vê o escudo de prevenção ("previna os próximos N") diminuir e manda `damage` com `prevented: true`. Prevenções sem escudo (Neblina e afins) ainda não aparecem.
+- [x] Dano dividido entre vários alvos: vários projéteis saindo juntos da mesma fonte, cada um com seu número e o selo "Dividido". Dados: vários `damage` seguidos da mesma fonte, fora do combate, saem juntos da fila.
 - [x] Dano a si mesmo (dor: Sol Ring de dor, terrenos de dor, Phyrexian): o golpe "volta" para o próprio retrato, sem trajeto longo. Dados: `damage` em que o alvo é quem controla a fonte.
 - [x] Dano de comandante (Commander): selo de comandante no impacto e o contador "Dano x/21" pulsando. Dados: `commander: true` no `damage` de combate.
 - [x] Letal: criatura com dano igual ou maior que a resistência (ou com toque mortífero) treme e escurece antes de ir ao cemitério; jogador chegando a 0 de vida tem um impacto maior. Dados: `lethal: true` no `damage` (calculado pela ponte com a resistência e o dano marcado).
 - [x] Tremor leve da mesa em dano grande (5 ou mais, ou letal no jogador).
 - [x] Respeitar "reduzir movimento" do sistema: sem projéteis nem tremor, só o número e o destaque no alvo.
-- [ ] Som próprio para golpe, projétil, cura e veneno (hoje o dano usa um som só).
+- [x] Som próprio para cura, veneno (e −1/−1), escudo e carta destruída; golpe e projétil usam os sons de impacto que já existiam.
 - [ ] Conferir desempenho no celular com combates grandes (muitas criaturas atacando ao mesmo tempo).
 
 ## 16. Efeitos de movimento das permanentes no estilo do Arena
@@ -210,14 +210,14 @@ Hoje as permanentes só deslizam de um lugar para outro e piscam. No Arena, cada
 
 Fonte dos dados: eventos `entered` e `left` da ponte (com `from` e `to`), o quadro público de cada evento (carta virada ou não) e os avisos de habilidade (`ability-activated`, com `trigger`). O motivo da saída (destruída, sacrificada, exilada, devolvida) ainda não vem no evento. Teste no laboratório de efeitos (item 18).
 
-- [ ] Destruída: a carta racha e se desfaz em fragmentos a caminho do cemitério; diferente de sacrificada (afunda no campo) e de morrer por dano (ver item 15). Dados: expor na ponte o motivo da saída (o Forge avisa destruição e sacrifício em eventos próprios).
-- [ ] Virar e desvirar (tap/untap): rotação de 90° com um pouco de peso e um assentar no fim; desvirar em lote no começo do turno, em onda. Dados: carta `tapped` no quadro de cada evento; expor um evento de virar para não depender da diferença entre quadros.
-- [ ] Blink (exilar e voltar): a carta se dissolve em luz e reaparece no mesmo lugar, com o brilho de entrada. Dados: `left` para o exílio seguido de `entered` vindo do exílio para a mesma carta.
-- [ ] Bounce (voltar para a mão): a carta sobe, encolhe e voa até a mão do dono (ou até a contagem de mão do oponente). Dados: `left` com `to: "Hand"`.
-- [ ] Exilada: a carta se apaga num brilho branco e vai para a pilha de exílio. Dados: `left` com `to: "Exile"`.
-- [ ] Habilidade desencadeada (gatilho): a carta de origem dá um pulso com o raio e solta um feixe até o alvo, quando houver. Dados: `ability-activated` com `trigger: true` e `targets`.
-- [ ] Habilidade ativada: a carta se ergue um pouco (e vira, se o custo for virar), com a engrenagem e um feixe até o alvo. Dados: `ability-activated` sem `trigger`, com `targets`.
-- [ ] Respeitar "reduzir movimento" e o modo acelerado; nada disso pode segurar a vez do jogador.
+- [x] Destruída: a carta racha e solta fragmentos antes de cair no cemitério; sacrificada afunda e escurece; morrer por dano segue o item 15. Dados: `left` com `reason: "destroyed"` ou `"sacrificed"`, exposto pela ponte.
+- [x] Virar e desvirar (tap/untap): rotação de 90° que passa um pouco do ponto e assenta; desvirar várias de uma vez vai em onda. Dados: `tapped` de cada carta entre um estado e o outro (não precisou de evento novo).
+- [x] Blink (exilar e voltar): a carta se dissolve em luz e reaparece no mesmo lugar, com um anel branco. Dados: `left` para o exílio seguido de `entered` com `from: "Exile"`.
+- [x] Bounce (voltar para a mão): a carta sobe, encolhe e voa até a mão (ou até a mão do oponente). Dados: `left` com `to: "Hand"`.
+- [x] Exilada: a carta se apaga num brilho branco no lugar em que estava. Dados: `left` com `to: "Exile"`.
+- [x] Habilidade desencadeada (gatilho): a carta de origem dá um pulso com o raio e solta um feixe roxo até cada alvo. Dados: `ability-activated` com `trigger: true` e `targets`.
+- [x] Habilidade ativada: a engrenagem ao lado da carta e um feixe dourado até cada alvo; se o custo for virar, a carta vira com o movimento de virar. Dados: `ability-activated` sem `trigger`, com `targets`. (A carta ainda não "se ergue".)
+- [x] Respeitar "reduzir movimento" e o modo acelerado; nada disso pode segurar a vez do jogador.
 
 ## 17. Efeitos visuais contínuos nas permanentes
 
@@ -227,36 +227,36 @@ Fonte dos dados: cada carta do campo já traz `keywords` (nomes do enum `Keyword
 
 Cuidados em todos: o efeito fica na borda e atrás da carta, nunca sobre o nome, o custo ou o P/T; vários efeitos juntos se somam sem virar uma mancha (no máximo uma moldura e um brilho por vez, o resto como detalhe na borda); com "reduzir movimento", tudo fica parado (sem pulsar nem partículas), só a moldura ou o brilho fixo. Teste no laboratório de efeitos (item 18).
 
-- [ ] Resistência à magia (hexproof): brilho azul-claro e fino em volta da carta, com um leve reflexo correndo pela borda. Dados: `keywords` com `HEXPROOF`.
-- [ ] Proteção contra alvos (ward): moldura de runas na borda e o custo visível num selo pequeno no canto de baixo ("Ward {2}"). Dados: `WARD` em `keywords`; o custo precisa vir da ponte (`ward: "{2}"` ou o custo em texto do Forge, como "Pague 3 de vida").
-- [ ] Manto (shroud): névoa cinza suave em volta da carta, mais opaca que a do hexproof. Dados: `SHROUD`.
-- [ ] Indestrutível: moldura dourada grossa com brilho metálico parado. Dados: `INDESTRUCTIBLE`.
-- [ ] Proteção contra cor ou tipo: escudo na borda com a cor protegida (pips de mana) ou o tipo ("Proteção contra criaturas"). Dados: `PROTECTION`; a ponte precisa dizer de quê (`protection: ["R", "creatures"]`).
-- [ ] Voar: revisar a névoa atual (sombra deslocada para baixo, como se a carta flutuasse um pouco), sem atrapalhar a leitura dos ícones. Dados: `FLYING`.
-- [ ] Toque mortífero: fumaça verde-escura discreta na base da carta. Dados: `DEATHTOUCH`.
-- [ ] Vínculo com a vida: brilho verde-claro pulsando devagar na borda. Dados: `LIFELINK`.
-- [ ] Iniciativa e golpe duplo: um traço (ou dois) de lâmina no canto da carta. Dados: `FIRST_STRIKE`, `DOUBLE_STRIKE`.
-- [ ] Vigilância: olho discreto no canto; ao atacar, a carta continua de pé com um brilho rápido. Dados: `VIGILANCE`.
-- [ ] Ímpeto e enjoo de invocação: criatura com enjoo levemente apagada com o "zZ" atual; com ímpeto, faíscas curtas ao entrar no campo. Dados: `sick`, `HASTE`.
-- [ ] Defensor: moldura de muralha na base, sem brilho. Dados: `DEFENDER`.
-- [ ] Ameaçar: borda vermelha serrilhada discreta. Dados: `MENACE`.
-- [ ] Atropelar: marca de pegadas no canto. Dados: `TRAMPLE`.
-- [ ] Fases fora (phasing): carta translúcida, com contorno tracejado, até voltar. Dados: a ponte precisa expor `phasedOut` (o Forge sabe, a carta fica no campo).
-- [ ] Virada para baixo (morph, disfarce, manifestar): verso com textura própria e um selo do tipo ("Metamorfose 2/2"); só o dono vê o que é. Dados: `faceDown`; o tipo (morph, disfarce, manifestar) precisa vir da ponte.
-- [ ] Fichas e cópias: fichas com borda prateada; cópias com um selo "Cópia de …". Dados: `token`, `copyOf`.
-- [ ] Não pode atacar ou não pode bloquear: corrente cinza fina na base. Dados: a ponte precisa expor `cantAttack` / `cantBlock` (o Forge calcula; não ler o texto).
-- [ ] Encantada ou equipada: linha fina ligando a aura ou o equipamento à carta, e um brilho da cor da aura na carta encantada. Dados: `attachedTo` de quem está preso.
-- [ ] Alvo de algo na pilha: mira pulsando sobre a carta enquanto o efeito estiver na pilha, da cor de quem conjurou. Dados: `targets` de cada item de `stack`.
-- [ ] Prevenção de dano: escudo transparente com o número de dano que ainda será prevenido ("Prevenir 3"). Dados: a ponte precisa expor os escudos de prevenção da carta e do jogador.
-- [ ] Marcadores +1/+1 e −1/−1: brilho verde ou roxo fraco atrás da carta, além do número. Dados: `counters`.
+- [x] Resistência à magia (hexproof): brilho azul-claro e fino em volta da carta, com um leve reflexo correndo pela borda. Dados: `keywords` com `HEXPROOF`.
+- [x] Proteção contra alvos (ward): moldura tracejada de runas e o custo num selo embaixo da carta ("Ward {2}"). Dados: `WARD` em `keywords` e `ward` (o custo, do parâmetro da palavra-chave; custos que não são mana vêm como o Forge descreve, em inglês).
+- [x] Manto (shroud): névoa cinza suave em volta da carta, mais opaca que a do hexproof. Dados: `SHROUD`.
+- [x] Indestrutível: moldura dourada grossa com brilho metálico parado. Dados: `INDESTRUCTIBLE`.
+- [x] Proteção contra cor ou tipo: moldura clara e um selo com os símbolos de mana protegidos ou o tipo ("Prot. artefatos"). Dados: `PROTECTION` e `protection` (de quê, do parâmetro da palavra-chave).
+- [x] Voar: revisar a névoa atual (sombra deslocada para baixo, como se a carta flutuasse um pouco), sem atrapalhar a leitura dos ícones. Dados: `FLYING`.
+- [x] Toque mortífero: fumaça verde-escura discreta na base da carta. Dados: `DEATHTOUCH`.
+- [x] Vínculo com a vida: brilho verde-claro pulsando devagar na borda. Dados: `LIFELINK`.
+- [x] Iniciativa e golpe duplo: um traço (ou dois) de lâmina no canto da carta. Dados: `FIRST_STRIKE`, `DOUBLE_STRIKE`.
+- [ ] Vigilância: olho discreto no canto; ao atacar, a carta continua de pé com um brilho rápido. Dados: `VIGILANCE`. (Por ora só o ícone de palavra-chave que já existia.)
+- [x] Ímpeto e enjoo de invocação: criatura com enjoo levemente apagada no turno de quem a controla, com o "zZ" atual; com ímpeto, um brilho alaranjado na base enquanto ela ainda é nova. Dados: `sick`, `HASTE`.
+- [x] Defensor: moldura de muralha na base, sem brilho. Dados: `DEFENDER`.
+- [x] Ameaçar: borda vermelha serrilhada discreta. Dados: `MENACE`.
+- [ ] Atropelar: marca de pegadas no canto. Dados: `TRAMPLE`. (Por ora só o ícone de palavra-chave que já existia.)
+- [x] Fases fora (phasing): carta translúcida, com contorno tracejado, até voltar. Dados: `phasedOut`, exposto pela ponte.
+- [ ] Virada para baixo (morph, disfarce, manifestar): o verso já aparece e agora tem um selo "2/2" ✅; falta o tipo no selo ("Metamorfose", "Disfarce", "Manifestada"), que precisa vir da ponte. Dados: `faceDown`.
+- [x] Fichas e cópias: fichas com borda prateada (além do selo "Ficha"); cópias com o selo "Cópia", que mostra o original ao passar o mouse. Dados: `token`, `copyOf`.
+- [x] Não pode atacar ou não pode bloquear: corrente cinza fina na base, e o leitor de tela diz qual dos dois. Dados: `cantAttack` / `cantBlock`, calculados pela ponte com as regras de combate do Forge.
+- [x] Encantada ou equipada: o leque de anexos atrás da carta (que já existia) faz a ligação, e a carta encantada ganha um brilho da cor da aura. Dados: `attachedTo` de quem está preso.
+- [x] Alvo de algo na pilha: mira pulsando no meio da arte enquanto o efeito estiver na pilha, azul se foi você, laranja se foi o oponente. Dados: `targets` de cada item de `stack`.
+- [x] Prevenção de dano: selo "Prevenir 3" embaixo da carta enquanto o escudo durar. Dados: `preventDamage`, exposto pela ponte (também nos jogadores; o retrato ainda não mostra).
+- [x] Marcadores +1/+1 e −1/−1: brilho verde ou roxo fraco atrás da carta, além do número. Dados: `counters`.
 
 ## 18. Laboratório de efeitos
 
 Uma página de desenvolvimento para testar os efeitos dos itens 15, 16 e 17 na mesa de verdade, sem a ponte do Forge: `tests/fixtures/effects-lab.html` (abrir com `npm run dev`). Não é para o jogador e não entra nas novidades.
 
-- [ ] Montar o campo dos dois lados: criatura pequena e grande, criatura virada, ficha, planeswalker com lealdade, artefato, encantamento e aura presa a uma criatura, terreno, Classe com nível e carta virada para baixo; remover uma ou limpar tudo.
-- [ ] Para a permanente selecionada: ligar e desligar cada palavra-chave e estado do item 17, sozinhos ou vários juntos.
-- [ ] Disparar cada efeito de dano do item 15 entre as permanentes e os jogadores escolhidos (fonte e alvo): mágica, combate com bloqueio, atropelar, golpe duplo, toque mortífero, vínculo com a vida, infectar, murchar, dano prevenido, dano dividido, dor, letal.
-- [ ] Disparar cada movimento do item 16 na permanente selecionada: destruir, sacrificar, virar e desvirar, blink, devolver para a mão, exilar, gatilho e habilidade ativada com alvo.
-- [ ] Alternar a aparência das cartas (imagem inteira ou arte e texto), o tamanho de tela (celular deitado, tablet, computador) e "reduzir movimento" só na página.
-- [ ] Campo cheio (muitas permanentes dos dois lados) para conferir desempenho e sobreposição.
+- [x] Montar o campo dos dois lados: criatura pequena e grande, criatura virada, ficha, planeswalker com lealdade, artefato, encantamento e aura presa a uma criatura, terreno, Classe com nível e carta virada para baixo; remover uma ou limpar tudo.
+- [x] Para a permanente selecionada: ligar e desligar cada palavra-chave e estado do item 17, sozinhos ou vários juntos.
+- [x] Disparar cada efeito de dano do item 15 entre as permanentes e os jogadores escolhidos (fonte e alvo): mágica, combate com bloqueio, atropelar, golpe duplo, toque mortífero, vínculo com a vida, infectar, murchar, dano prevenido, dano dividido, dor, letal.
+- [x] Disparar cada movimento do item 16 na permanente selecionada: destruir, sacrificar, virar e desvirar, blink, devolver para a mão, exilar, gatilho e habilidade ativada com alvo.
+- [x] Alternar a aparência das cartas (imagem inteira ou arte e texto), o tamanho de tela (celular deitado, tablet, computador) e "reduzir movimento" só na página.
+- [x] Campo cheio (muitas permanentes dos dois lados) para conferir desempenho e sobreposição.

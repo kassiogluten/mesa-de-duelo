@@ -6,11 +6,12 @@ export const SOUND_FILES = {
   impact: '05-impact.wav', 'player-hit': '08-player-hit.wav', 'turn-self': '06-turn.wav', wing: '07-wing.wav',
   'turn-opponent': '09-opponent-turn.wav', ability: '10-ability.wav', resolved: '11-resolved.wav',
   countered: '12-countered.wav', attack: '13-attack.wav', block: '14-block.wav',
+  heal: '15-heal.wav', poison: '16-poison.wav', shield: '17-shield.wav', shatter: '18-shatter.wav',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = 'mesa:audio:v1';
 const MAX_VOICES = 4;
-const SOUND_REVISION = 'materials-4';
+const SOUND_REVISION = 'materials-5';
 // Includes the StereoPanner's correlated-channel crossfeed at the maximum pan.
 export const MIX_HEADROOM = .40;
 
@@ -25,7 +26,12 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     case 'entered': return event.card?.land ? 'land' : event.card?.keywords?.includes('FLYING') ? 'wing' : 'play';
     case 'attackers': return 'attack';
     case 'blockers': return 'block';
-    case 'damage': return event.targets?.players?.length ? 'player-hit' : 'impact';
+    case 'damage':
+      if (event.prevented) return 'shield';
+      if (event.wither || (event.infect && event.targets?.players?.length)) return 'poison';
+      return event.targets?.players?.length ? 'player-hit' : 'impact';
+    case 'life-changed': return (event.delta ?? 0) > 0 ? 'heal' : null;
+    case 'left': return event.reason === 'destroyed' ? 'shatter' : null;
     case 'turn': {
       const actor = event.actor ?? event.frame?.activePlayer;
       return you === undefined || actor == null ? null : actor === you ? 'turn-self' : 'turn-opponent';

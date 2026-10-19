@@ -19,6 +19,15 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - Golpe letal: a criatura treme e escurece antes de ir para o cemitério; dano grande ou que zera a vida faz a mesa tremer de leve.
 - Com "reduzir movimento" ligado no sistema, só aparecem o número e o destaque no alvo, sem projéteis nem tremor.
 - O histórico diz de onde veio o dano e o que mudou o golpe ("Oponente sofreu 4 de dano de Colossal Dreadmaw (Atropelar)").
+- Dano prevenido por um escudo ("previna os próximos 3") aparece como um domo azul com o número riscado.
+- Dano dividido entre vários alvos: os projéteis saem juntos da mesma mágica, cada um com o seu número.
+- Sons novos para ganhar vida, veneno e −1/−1, escudo de prevenção e carta destruída.
+- Cada saída do campo tem o seu movimento: destruída racha e solta fragmentos, sacrificada afunda, exilada se desfaz em luz, devolvida voa para a mão; uma carta que volta do exílio (blink) reaparece no mesmo lugar, com um anel de luz.
+- Virar e desvirar têm peso: a carta passa um pouco do ponto e assenta; desvirar várias de uma vez vai em onda.
+- Gatilhos e habilidades ativadas soltam um feixe da carta até cada alvo (roxo para gatilho, dourado para habilidade).
+- As permanentes mostram o que as protege ou muda o tempo todo, na borda da carta e sem cobrir nome, custo nem P/T: brilho de resistência à magia, manto, vínculo com a vida e marcadores; moldura de indestrutível, proteção, ameaçar, defensor e fichas; selos com o custo da proteção contra alvos ("Ward {2}"), de que a proteção protege e quanto dano o escudo ainda previne; lâminas de iniciativa e golpe duplo; fumaça de toque mortífero; corrente em quem não pode atacar ou bloquear; mira em quem é alvo de algo na pilha; carta fora de fase translúcida; carta encantada com o brilho da cor da aura.
+- Voar ficou mais claro: a carta flutua um pouco acima da própria sombra.
+- Criaturas com enjoo de invocação ficam levemente apagadas no turno de quem as controla.
 
 ## [0.17.1] - 2026-10-19
 

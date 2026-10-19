@@ -37,6 +37,10 @@ export interface PresentationEvent {
   commander?: boolean;
   self?: boolean;
   lethal?: boolean;
+  prevented?: boolean;
+  /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
+  divided?: number;
+  reason?: 'destroyed' | 'sacrificed';
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -113,6 +117,13 @@ export class PresentationTimeline {
       });
     }
     return accepted.length > 0;
+  }
+  /** Tira da fila os próximos eventos que ainda fazem parte do atual (como dano dividido entre vários alvos). */
+  takeWhile(test: (event: PresentationEvent) => boolean) {
+    const taken: PresentationEntry[] = [];
+    while (this.pending[0] && !this.pending[0].audioOnly && test(this.pending[0].event)) taken.push(this.pending.shift()!);
+    if (taken.length) this.lastPresentedSeq = Math.max(this.lastPresentedSeq, taken.at(-1)!.event.seq);
+    return taken;
   }
   advance(): PresentationEntry | null {
     this.current = this.pending.shift() ?? null;

@@ -38,3 +38,12 @@ test('big or lethal-to-player damage is heavy; deathtouch only marks creatures',
   assert.equal(damageDetail(hit({ combat: true, step: 'regular', deathtouch: true })), ' (Toque mortífero)');
   assert.equal(damageDetail(hit({ combat: false })), '');
 });
+
+test('prevented damage is a shield, never lethal or heavy; divided damage is marked', () => {
+  const shield = damageLook(player({ prevented: true, delta: -6, lethal: true }));
+  assert.equal(shield.tone, 'shield');
+  assert.deepEqual(shield.badges, ['Prevenido']);
+  assert.equal(shield.lethal, false); assert.equal(shield.heavy, false);
+  assert.deepEqual(damageLook(hit({ combat: false, divided: 3 })).badges, ['Dividido']);
+  assert.deepEqual(damageLook(hit({ combat: false, divided: 1 })).badges, []);
+});
