@@ -181,7 +181,7 @@ Quando uma carta pode ser jogada de mais de um jeito (conjurar normal, reciclar,
 
 Hoje o dano aparece como um número vermelho sobre a vida do jogador e um contorno vermelho na criatura. Não dá para ver de onde veio o dano, se foi combate ou mágica, nem as palavras-chave que mudam o resultado (atropelar, toque mortífero, vínculo com a vida). No Arena cada golpe tem origem, trajeto e impacto, e o número salta no alvo.
 
-Fonte dos dados: cada dano chega como evento `damage` da ponte (um por fonte e alvo, na ordem em que o Forge o causa, com o quadro público da mesa naquele instante). A ponte passa a dizer no próprio evento se é combate, em qual etapa (iniciativa ou normal), se é excesso de atropelar, se a fonte tem toque mortífero, vínculo com a vida, infectar ou murchar, se o alvo é planeswalker e se a fonte é comandante. Ganho e perda de vida chegam como `life-changed`.
+Fonte dos dados: cada dano chega como evento `damage` da ponte (um por fonte e alvo, na ordem em que o Forge o causa, com o quadro público da mesa naquele instante). A ponte passa a dizer no próprio evento se é combate, em qual etapa (iniciativa ou normal), se é excesso de atropelar, se a fonte tem toque mortífero, vínculo com a vida, infectar ou murchar, se o alvo é planeswalker e se a fonte é comandante. Ganho e perda de vida chegam como `life-changed`. Teste no laboratório de efeitos (item 18).
 
 - [x] Dano direto (mágica ou habilidade): projétil com rastro da fonte (carta no campo, ou a carta que está resolvendo) até o alvo — criatura, jogador ou planeswalker — e impacto no ponto de chegada. Dados: `damage` com `combat: false`; a fonte é `sourceId`/`card`.
 - [x] Dano de combate: o atacante avança até o bloqueador ou até o retrato do defensor e volta, com impacto no alvo; o bloqueador revida no atacante. Dados: `damage` com `combat: true`.
@@ -208,7 +208,7 @@ Fonte dos dados: cada dano chega como evento `damage` da ponte (um por fonte e a
 
 Hoje as permanentes só deslizam de um lugar para outro e piscam. No Arena, cada jeito de uma permanente mudar de estado ou sair do campo tem um movimento próprio, que diz o que aconteceu sem precisar ler o histórico.
 
-Fonte dos dados: eventos `entered` e `left` da ponte (com `from` e `to`), o quadro público de cada evento (carta virada ou não) e os avisos de habilidade (`ability-activated`, com `trigger`). O motivo da saída (destruída, sacrificada, exilada, devolvida) ainda não vem no evento.
+Fonte dos dados: eventos `entered` e `left` da ponte (com `from` e `to`), o quadro público de cada evento (carta virada ou não) e os avisos de habilidade (`ability-activated`, com `trigger`). O motivo da saída (destruída, sacrificada, exilada, devolvida) ainda não vem no evento. Teste no laboratório de efeitos (item 18).
 
 - [ ] Destruída: a carta racha e se desfaz em fragmentos a caminho do cemitério; diferente de sacrificada (afunda no campo) e de morrer por dano (ver item 15). Dados: expor na ponte o motivo da saída (o Forge avisa destruição e sacrifício em eventos próprios).
 - [ ] Virar e desvirar (tap/untap): rotação de 90° com um pouco de peso e um assentar no fim; desvirar em lote no começo do turno, em onda. Dados: carta `tapped` no quadro de cada evento; expor um evento de virar para não depender da diferença entre quadros.
@@ -218,3 +218,45 @@ Fonte dos dados: eventos `entered` e `left` da ponte (com `from` e `to`), o quad
 - [ ] Habilidade desencadeada (gatilho): a carta de origem dá um pulso com o raio e solta um feixe até o alvo, quando houver. Dados: `ability-activated` com `trigger: true` e `targets`.
 - [ ] Habilidade ativada: a carta se ergue um pouco (e vira, se o custo for virar), com a engrenagem e um feixe até o alvo. Dados: `ability-activated` sem `trigger`, com `targets`.
 - [ ] Respeitar "reduzir movimento" e o modo acelerado; nada disso pode segurar a vez do jogador.
+
+## 17. Efeitos visuais contínuos nas permanentes
+
+Hoje as palavras-chave aparecem como ícones pequenos na carta e só voar tem um efeito próprio (uma névoa embaixo da carta). No Arena, o que protege ou muda uma permanente fica visível o tempo todo: um brilho, uma moldura ou partículas que dizem "esta carta não pode ser alvo" ou "esta não morre" sem precisar abrir a carta.
+
+Fonte dos dados: cada carta do campo já traz `keywords` (nomes do enum `Keyword` do Forge: `HEXPROOF`, `WARD`, `SHROUD`, `INDESTRUCTIBLE`, `PROTECTION`, `FLYING`…), `sick`, `token`, `faceDown`, `copyOf`, `attachedTo` e `counters`; a pilha traz os alvos de cada item. O que falta (custo da proteção contra alvos, de que a proteção protege, fases fora, "não pode atacar/bloquear", escudos de prevenção) a ponte precisa expor, sem ler o texto da carta.
+
+Cuidados em todos: o efeito fica na borda e atrás da carta, nunca sobre o nome, o custo ou o P/T; vários efeitos juntos se somam sem virar uma mancha (no máximo uma moldura e um brilho por vez, o resto como detalhe na borda); com "reduzir movimento", tudo fica parado (sem pulsar nem partículas), só a moldura ou o brilho fixo. Teste no laboratório de efeitos (item 18).
+
+- [ ] Resistência à magia (hexproof): brilho azul-claro e fino em volta da carta, com um leve reflexo correndo pela borda. Dados: `keywords` com `HEXPROOF`.
+- [ ] Proteção contra alvos (ward): moldura de runas na borda e o custo visível num selo pequeno no canto de baixo ("Ward {2}"). Dados: `WARD` em `keywords`; o custo precisa vir da ponte (`ward: "{2}"` ou o custo em texto do Forge, como "Pague 3 de vida").
+- [ ] Manto (shroud): névoa cinza suave em volta da carta, mais opaca que a do hexproof. Dados: `SHROUD`.
+- [ ] Indestrutível: moldura dourada grossa com brilho metálico parado. Dados: `INDESTRUCTIBLE`.
+- [ ] Proteção contra cor ou tipo: escudo na borda com a cor protegida (pips de mana) ou o tipo ("Proteção contra criaturas"). Dados: `PROTECTION`; a ponte precisa dizer de quê (`protection: ["R", "creatures"]`).
+- [ ] Voar: revisar a névoa atual (sombra deslocada para baixo, como se a carta flutuasse um pouco), sem atrapalhar a leitura dos ícones. Dados: `FLYING`.
+- [ ] Toque mortífero: fumaça verde-escura discreta na base da carta. Dados: `DEATHTOUCH`.
+- [ ] Vínculo com a vida: brilho verde-claro pulsando devagar na borda. Dados: `LIFELINK`.
+- [ ] Iniciativa e golpe duplo: um traço (ou dois) de lâmina no canto da carta. Dados: `FIRST_STRIKE`, `DOUBLE_STRIKE`.
+- [ ] Vigilância: olho discreto no canto; ao atacar, a carta continua de pé com um brilho rápido. Dados: `VIGILANCE`.
+- [ ] Ímpeto e enjoo de invocação: criatura com enjoo levemente apagada com o "zZ" atual; com ímpeto, faíscas curtas ao entrar no campo. Dados: `sick`, `HASTE`.
+- [ ] Defensor: moldura de muralha na base, sem brilho. Dados: `DEFENDER`.
+- [ ] Ameaçar: borda vermelha serrilhada discreta. Dados: `MENACE`.
+- [ ] Atropelar: marca de pegadas no canto. Dados: `TRAMPLE`.
+- [ ] Fases fora (phasing): carta translúcida, com contorno tracejado, até voltar. Dados: a ponte precisa expor `phasedOut` (o Forge sabe, a carta fica no campo).
+- [ ] Virada para baixo (morph, disfarce, manifestar): verso com textura própria e um selo do tipo ("Metamorfose 2/2"); só o dono vê o que é. Dados: `faceDown`; o tipo (morph, disfarce, manifestar) precisa vir da ponte.
+- [ ] Fichas e cópias: fichas com borda prateada; cópias com um selo "Cópia de …". Dados: `token`, `copyOf`.
+- [ ] Não pode atacar ou não pode bloquear: corrente cinza fina na base. Dados: a ponte precisa expor `cantAttack` / `cantBlock` (o Forge calcula; não ler o texto).
+- [ ] Encantada ou equipada: linha fina ligando a aura ou o equipamento à carta, e um brilho da cor da aura na carta encantada. Dados: `attachedTo` de quem está preso.
+- [ ] Alvo de algo na pilha: mira pulsando sobre a carta enquanto o efeito estiver na pilha, da cor de quem conjurou. Dados: `targets` de cada item de `stack`.
+- [ ] Prevenção de dano: escudo transparente com o número de dano que ainda será prevenido ("Prevenir 3"). Dados: a ponte precisa expor os escudos de prevenção da carta e do jogador.
+- [ ] Marcadores +1/+1 e −1/−1: brilho verde ou roxo fraco atrás da carta, além do número. Dados: `counters`.
+
+## 18. Laboratório de efeitos
+
+Uma página de desenvolvimento para testar os efeitos dos itens 15, 16 e 17 na mesa de verdade, sem a ponte do Forge: `tests/fixtures/effects-lab.html` (abrir com `npm run dev`). Não é para o jogador e não entra nas novidades.
+
+- [ ] Montar o campo dos dois lados: criatura pequena e grande, criatura virada, ficha, planeswalker com lealdade, artefato, encantamento e aura presa a uma criatura, terreno, Classe com nível e carta virada para baixo; remover uma ou limpar tudo.
+- [ ] Para a permanente selecionada: ligar e desligar cada palavra-chave e estado do item 17, sozinhos ou vários juntos.
+- [ ] Disparar cada efeito de dano do item 15 entre as permanentes e os jogadores escolhidos (fonte e alvo): mágica, combate com bloqueio, atropelar, golpe duplo, toque mortífero, vínculo com a vida, infectar, murchar, dano prevenido, dano dividido, dor, letal.
+- [ ] Disparar cada movimento do item 16 na permanente selecionada: destruir, sacrificar, virar e desvirar, blink, devolver para a mão, exilar, gatilho e habilidade ativada com alvo.
+- [ ] Alternar a aparência das cartas (imagem inteira ou arte e texto), o tamanho de tela (celular deitado, tablet, computador) e "reduzir movimento" só na página.
+- [ ] Campo cheio (muitas permanentes dos dois lados) para conferir desempenho e sobreposição.
