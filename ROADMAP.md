@@ -176,3 +176,45 @@ Quando uma carta pode ser jogada de mais de um jeito (conjurar normal, reciclar,
 - [x] Usar os dados que a ponte já manda (habilidade e custo de cada opção); se faltar o tipo do modo para traduzir e escolher o ícone, expor isso no protocolo em vez de interpretar o texto do Forge.
 - [x] Cancelar volta para a mesa sem jogar nada; minimizar para ver a mesa, como no item 4.
 - [x] Celular: carta e opções empilhadas, com botões grandes de tocar; teclado e leitor de tela anunciando modo e custo.
+
+## 15. Efeitos de dano no estilo do Arena
+
+Hoje o dano aparece como um número vermelho sobre a vida do jogador e um contorno vermelho na criatura. Não dá para ver de onde veio o dano, se foi combate ou mágica, nem as palavras-chave que mudam o resultado (atropelar, toque mortífero, vínculo com a vida). No Arena cada golpe tem origem, trajeto e impacto, e o número salta no alvo.
+
+Fonte dos dados: cada dano chega como evento `damage` da ponte (um por fonte e alvo, na ordem em que o Forge o causa, com o quadro público da mesa naquele instante). A ponte passa a dizer no próprio evento se é combate, em qual etapa (iniciativa ou normal), se é excesso de atropelar, se a fonte tem toque mortífero, vínculo com a vida, infectar ou murchar, se o alvo é planeswalker e se a fonte é comandante. Ganho e perda de vida chegam como `life-changed`.
+
+- [x] Dano direto (mágica ou habilidade): projétil com rastro da fonte (carta no campo, ou a carta que está resolvendo) até o alvo — criatura, jogador ou planeswalker — e impacto no ponto de chegada. Dados: `damage` com `combat: false`; a fonte é `sourceId`/`card`.
+- [x] Dano de combate: o atacante avança até o bloqueador ou até o retrato do defensor e volta, com impacto no alvo; o bloqueador revida no atacante. Dados: `damage` com `combat: true`.
+- [x] Número flutuante de dano sobre o alvo (vermelho), com tamanho maior para dano grande. Dados: `delta` do `damage`.
+- [x] Atropelar (trample): o golpe atinge o bloqueador e o excesso segue até o jogador num segundo trajeto, marcado como "Atropelar". Dados: `damage` com `trample: true` quando o atacante bloqueado causa dano ao jogador ou planeswalker atacado.
+- [x] Golpe duplo (double strike): dois golpes, um na etapa de iniciativa e outro na normal, com selo "1º golpe"/"2º golpe". Dados: `step: "first-strike" | "regular"` e `doubleStrike: true`.
+- [x] Iniciativa (first strike): o golpe da etapa de iniciativa sai antes e marcado, sem esperar o revide. Dados: `step: "first-strike"`.
+- [x] Toque mortífero (deathtouch): impacto com marca própria (caveira) na criatura atingida, mesmo com 1 de dano. Dados: `deathtouch: true` (o Forge já informa o tipo de dano).
+- [x] Vínculo com a vida (lifelink): número verde "+N" subindo do retrato de quem controla a fonte, logo depois do golpe. Dados: `lifelink: true` no `damage` e o `life-changed` positivo que vem em seguida.
+- [x] Ganho de vida em geral: "+N" verde no retrato. Dados: `life-changed` com `delta` positivo.
+- [x] Infectar e murchar (infect/wither): em vez de número de dano, o alvo recebe marcadores −1/−1 (criatura) ou veneno (jogador), com cor e ícone próprios. Dados: `infect: true` (jogador) e `wither: true` (criatura, inclusive dano de infectar em criatura).
+- [x] Dano a planeswalker: projétil ou golpe até o planeswalker e a lealdade caindo em número flutuante. Dados: o Forge não avisa dano a planeswalker como dano, só a lealdade caindo; a ponte transforma essa queda em `damage` com `loyalty: true` quando ela acontece no dano de combate ou durante a resolução de outra carta.
+- [ ] Dano prevenido (escudo): escudo sobre o alvo e o número riscado. Dados: o Forge não manda evento de prevenção; precisa expor na ponte (o mapa de prevenção do dano) antes de mostrar.
+- [ ] Dano dividido entre vários alvos: vários projéteis saindo juntos da mesma fonte, cada um com seu número. Dados: já chegam vários `damage` seguidos com a mesma fonte; falta agrupá-los numa só apresentação.
+- [x] Dano a si mesmo (dor: Sol Ring de dor, terrenos de dor, Phyrexian): o golpe "volta" para o próprio retrato, sem trajeto longo. Dados: `damage` em que o alvo é quem controla a fonte.
+- [x] Dano de comandante (Commander): selo de comandante no impacto e o contador "Dano x/21" pulsando. Dados: `commander: true` no `damage` de combate.
+- [x] Letal: criatura com dano igual ou maior que a resistência (ou com toque mortífero) treme e escurece antes de ir ao cemitério; jogador chegando a 0 de vida tem um impacto maior. Dados: `lethal: true` no `damage` (calculado pela ponte com a resistência e o dano marcado).
+- [x] Tremor leve da mesa em dano grande (5 ou mais, ou letal no jogador).
+- [x] Respeitar "reduzir movimento" do sistema: sem projéteis nem tremor, só o número e o destaque no alvo.
+- [ ] Som próprio para golpe, projétil, cura e veneno (hoje o dano usa um som só).
+- [ ] Conferir desempenho no celular com combates grandes (muitas criaturas atacando ao mesmo tempo).
+
+## 16. Efeitos de movimento das permanentes no estilo do Arena
+
+Hoje as permanentes só deslizam de um lugar para outro e piscam. No Arena, cada jeito de uma permanente mudar de estado ou sair do campo tem um movimento próprio, que diz o que aconteceu sem precisar ler o histórico.
+
+Fonte dos dados: eventos `entered` e `left` da ponte (com `from` e `to`), o quadro público de cada evento (carta virada ou não) e os avisos de habilidade (`ability-activated`, com `trigger`). O motivo da saída (destruída, sacrificada, exilada, devolvida) ainda não vem no evento.
+
+- [ ] Destruída: a carta racha e se desfaz em fragmentos a caminho do cemitério; diferente de sacrificada (afunda no campo) e de morrer por dano (ver item 15). Dados: expor na ponte o motivo da saída (o Forge avisa destruição e sacrifício em eventos próprios).
+- [ ] Virar e desvirar (tap/untap): rotação de 90° com um pouco de peso e um assentar no fim; desvirar em lote no começo do turno, em onda. Dados: carta `tapped` no quadro de cada evento; expor um evento de virar para não depender da diferença entre quadros.
+- [ ] Blink (exilar e voltar): a carta se dissolve em luz e reaparece no mesmo lugar, com o brilho de entrada. Dados: `left` para o exílio seguido de `entered` vindo do exílio para a mesma carta.
+- [ ] Bounce (voltar para a mão): a carta sobe, encolhe e voa até a mão do dono (ou até a contagem de mão do oponente). Dados: `left` com `to: "Hand"`.
+- [ ] Exilada: a carta se apaga num brilho branco e vai para a pilha de exílio. Dados: `left` com `to: "Exile"`.
+- [ ] Habilidade desencadeada (gatilho): a carta de origem dá um pulso com o raio e solta um feixe até o alvo, quando houver. Dados: `ability-activated` com `trigger: true` e `targets`.
+- [ ] Habilidade ativada: a carta se ergue um pouco (e vira, se o custo for virar), com a engrenagem e um feixe até o alvo. Dados: `ability-activated` sem `trigger`, com `targets`.
+- [ ] Respeitar "reduzir movimento" e o modo acelerado; nada disso pode segurar a vez do jogador.

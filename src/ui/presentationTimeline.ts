@@ -24,6 +24,19 @@ export interface PresentationEvent {
   from?: string;
   to?: string;
   delta?: number;
+  /** Dano (`damage`): o que a ponte diz sobre o golpe. */
+  combat?: boolean;
+  step?: 'first-strike' | 'regular';
+  doubleStrike?: boolean;
+  trample?: boolean;
+  deathtouch?: boolean;
+  lifelink?: boolean;
+  infect?: boolean;
+  wither?: boolean;
+  loyalty?: boolean;
+  commander?: boolean;
+  self?: boolean;
+  lethal?: boolean;
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -129,7 +142,9 @@ export function stateWithFrame(state: FState, frame: PresentationFrame | null): 
 export function presentationDuration(event: PresentationEvent, fast: boolean) {
   // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
   const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? 1000 : event.type === 'spell-cast' ? 720
-    : ['damage', 'countered', 'land-played'].includes(event.type) ? 540
+    : event.type === 'damage' ? (event.combat ? 620 : 760)
+    : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
+    : ['countered', 'land-played'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
   return Math.round(duration * (fast ? .6 : 1));
 }

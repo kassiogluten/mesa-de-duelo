@@ -76,6 +76,25 @@ Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extr
 - `"triggers"` (`kind: "order"`): gatilhos simultâneos. Cada opção traz `kind: "ability"`, `card` (a carta de origem) e `ability` (o texto do gatilho sem o nome da carta). A primeira da resposta resolve primeiro. Quando o Forge já tem uma ordem guardada para o mesmo conjunto de gatilhos, ela vem como ordem inicial das opções.
 - `"play-mode"` (`method: "getAbilityToPlay"`): jeitos de jogar uma carta ou de ativar uma habilidade. Cada opção traz `mode` (`cast`, `land`, `cycling`, `plot`, `foretell`, `flashback`, `evoke`, `adventure`, `ability`… e os custos alternativos do Forge em minúsculas), `spell`, `cost` (só a mana, como `{1}{R}`), `extra` (os outros custos, como o Forge escreve), `description` e, quando a opção usa outra face ou metade, `face` com `name`, `manaCost` e `typeLine`. Responder com `indices: []` cancela sem jogar nada.
 
+`events` traz os eventos públicos do jogo em ordem (`seq` crescente; `eventCursor` é o último), cada um com `type`, `actor` (jogador), `card`/`sourceId` (a carta de origem), `targets` e, quase sempre, `frame` (a mesa pública naquele instante, para a animação mostrar o estado certo).
+
+Dano (`type: "damage"`) chega um por fonte e alvo, na ordem em que o Forge causa o dano; `card`/`sourceId` é a fonte, `targets` o alvo e `delta` o dano (negativo). A ponte acrescenta, a partir do estado do jogo (nunca do texto):
+
+| Campo | Quando |
+|---|---|
+| `combat` | sempre: `true` no dano de combate. Nas criaturas o Forge não diz; a ponte usa a etapa de dano de combate, a fonte em combate e nada resolvendo na pilha. |
+| `step` | no combate: `"first-strike"` (etapa de iniciativa) ou `"regular"`. |
+| `doubleStrike`, `deathtouch`, `lifelink` | a fonte tem golpe duplo, toque mortífero ou vínculo com a vida. |
+| `trample` | um atacante bloqueado causando dano ao jogador ou planeswalker que ataca (o excesso de atropelar). |
+| `wither` | o dano virou marcadores −1/−1 numa criatura (murchar ou infectar). |
+| `infect` | o dano a um jogador virou veneno. |
+| `loyalty` | dano a planeswalker. O Forge só avisa a lealdade caindo; a queda vira `damage` quando acontece no dano de combate (a fonte é o atacante desse planeswalker) ou enquanto outra carta resolve (a fonte é ela). |
+| `commander` | dano de combate de um comandante a um jogador. |
+| `self` | o jogador atingido controla a fonte (dor: terrenos de dor, Sol Ring de dor…). |
+| `lethal` | criatura com dano marcado igual ou maior que a resistência (ou com toque mortífero), planeswalker sem lealdade, ou jogador cuja vida, somando o dano ainda não aplicado, chega a 0. |
+
+A perda de vida pelo dano vem depois, em `life-changed` (o Forge tira a vida de todos de uma vez); o ganho do vínculo com a vida vem como `life-changed` positivo do controlador logo depois do dano da fonte.
+
 Também chegam `{type:"toast", text}` com mensagens do Forge e `{type:"error", text}` quando um comando falha. Em rede chega `{type:"room", room}` ao criar, entrar ou voltar para uma sala, com o mesmo formato do campo `room`.
 
 A mão do oponente vai só como contagem, as perguntas vão só para quem precisa responder, e um clique numa carta da mão do outro jogador é ignorado.

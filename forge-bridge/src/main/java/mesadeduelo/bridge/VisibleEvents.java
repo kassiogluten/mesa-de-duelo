@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import forge.game.Game;
 import forge.game.ability.ApiType;
 import forge.game.card.CardView;
+import forge.game.card.CounterEnumType;
 import forge.game.event.*;
 import forge.game.spellability.SpellAbilityView;
 import forge.game.zone.ZoneType;
@@ -20,6 +21,7 @@ final class VisibleEvents {
     private final ArrayDeque<JsonObject> history = new ArrayDeque<>();
     private final Map<Integer, JsonObject> spells = new HashMap<>();
     private final Map<Integer, String> origins = new HashMap<>();
+    private final DamageDetails damage = new DamageDetails();
     private final Runnable changed;
     private final LongSupplier version;
     private long sequence;
@@ -30,7 +32,7 @@ final class VisibleEvents {
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -38,7 +40,7 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); sequence = 0; game = null; gameStarted = false; }
     synchronized boolean gameStarted() { return gameStarted; }
     synchronized long cursor() { return sequence; }
     synchronized JsonArray json(long after) {
@@ -95,10 +97,15 @@ final class VisibleEvents {
             if (!blockers.isEmpty()) { e = type("blockers"); actor(e, x.defendingPlayer().getId()); e.add("cards", blockers); }
         } else if (event instanceof GameEventPlayerDamaged x) {
             e = card("damage", x.source()); e.addProperty("delta", -x.amount()); e.add("targets", StateJson.targets(java.util.List.of(x.target())));
+            damage.player(e, game, x.source(), x.target(), x.amount(), x.combat(), x.infect());
         } else if (event instanceof GameEventCardDamaged x) {
             e = card("damage", x.source()); e.addProperty("delta", -x.amount()); e.add("targets", StateJson.targets(java.util.List.of(x.card())));
+            damage.card(e, game, x.source(), x.card(), x.type() == GameEventCardDamaged.DamageType.Deathtouch, x.type() == GameEventCardDamaged.DamageType.M1M1Counters);
+        } else if (event instanceof GameEventCardCounters x && x.card() != null && x.type() != null && x.type().is(CounterEnumType.LOYALTY) && x.newValue() < x.oldValue()) {
+            e = damage.loyalty(game, game == null ? null : game.findByView(x.card()), x.oldValue() - x.newValue());
         } else if (event instanceof GameEventPlayerLivesChanged x) {
             e = type("life-changed"); actor(e, x.player().getId()); e.addProperty("delta", x.newLives() - x.oldLives());
+            damage.lifeChanged(x.player().getId());
         } else if (event instanceof GameEventTurnBegan x) {
             e = type("turn"); actor(e, x.turnOwner().getId()); e.addProperty("turn", x.turnNumber());
         } else if (event instanceof GameEventPlayerPriority x && x.priority() != null) {

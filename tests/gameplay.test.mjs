@@ -4,14 +4,16 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
 
-async function sourceModule(path) {
-  const source = (await readFile(new URL(path, import.meta.url), 'utf8')).replace('import.meta.env.BASE_URL', "'/'");
+async function sourceUri(path, imports = {}) {
+  let source = (await readFile(new URL(path, import.meta.url), 'utf8')).replace('import.meta.env.BASE_URL', "'/'");
+  for (const [from, to] of Object.entries(imports)) source = source.replace(`'${from}'`, JSON.stringify(await sourceUri(to)));
   const result = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-  return import(`data:text/javascript;base64,${Buffer.from(result.outputText).toString('base64')}`);
+  return `data:text/javascript;base64,${Buffer.from(result.outputText).toString('base64')}`;
 }
+const sourceModule = async (path, imports) => import(await sourceUri(path, imports));
 const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
-const { createMotion } = await sourceModule('../src/ui/motion.ts');
+const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts' });
 const { AudioEventGate, AudioEventMix, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
@@ -356,14 +358,55 @@ test('card travel uses fixed arena bounds and restores the actual card on cancel
   assert.equal(f.land.style.opacity, ''); assert.equal(piece.removed, true);
 });
 
-test('reduced motion retains static player-damage marker; life loss creates no damage effect', () => {
+const numberOf = f => f.nodes.find(n => n.className?.startsWith('damage-number'));
+const valueOf = marker => marker.children.find(c => c.textContent && !c.className)?.textContent;
+
+test('reduced motion retains static damage number without travel; life loss creates no damage effect', () => {
   const f = motionFixture(true);
   f.motion.present(event(1, 'life-changed', { actor: 1, delta: -2 }), { you: 1, label: 'Vida', duration: 340 });
   assert.equal(f.nodes.length, 0);
-  f.motion.present(event(2, 'damage', { targets: { players: [1] }, delta: -3 }), { you: 1, label: 'Dano', duration: 540 });
-  assert.equal(f.nodes.find(n => n.className === 'player-damage').textContent, '−3');
+  f.motion.present(event(2, 'damage', { sourceId: 7, targets: { players: [1] }, delta: -3 }), { you: 1, label: 'Dano', duration: 540 });
+  assert.equal(valueOf(numberOf(f)), '−3');
+  assert.equal(f.nodes.some(n => n.className?.startsWith('damage-bolt')), false);
   assert.equal(f.avatar.classes.has('damage-flash'), true);
   assert.equal(f.animated.length, 0);
+  f.motion.reset();
+});
+
+test('direct damage flies a projectile from the source and impacts the target afterwards', async () => {
+  const f = motionFixture();
+  f.motion.present(event(1, 'damage', { sourceId: 7, combat: false, targets: { players: [1] }, delta: -3 }), { you: 1, label: 'Dano', duration: 400 });
+  const bolt = f.nodes.find(n => n.className === 'damage-bolt damage');
+  assert.ok(bolt, 'projectile appears at the source');
+  assert.equal(numberOf(f), undefined, 'the number waits for the impact');
+  await new Promise(resolve => setTimeout(resolve, 260));
+  assert.equal(bolt.removed, true);
+  assert.equal(valueOf(numberOf(f)), '−3');
+  assert.ok(f.nodes.some(n => n.className?.startsWith('damage-impact')));
+  f.motion.reset();
+});
+
+test('combat damage strikes with a copy of the attacker and restores the card', async () => {
+  const f = motionFixture();
+  f.motion.present(event(1, 'damage', { sourceId: 7, combat: true, step: 'regular', doubleStrike: true, trample: true, targets: { players: [1] }, delta: -6 }),
+    { you: 1, label: 'Dano', duration: 300, html: '<div class="face"></div>' });
+  const ghost = f.nodes.find(n => n.className === 'presentation-piece strike-ghost');
+  assert.ok(ghost); assert.equal(f.land.style.opacity, '0');
+  await new Promise(resolve => setTimeout(resolve, 320));
+  const marker = numberOf(f);
+  assert.equal(marker.className, 'damage-number damage heavy');
+  const badges = marker.children.find(c => c.className === 'damage-badges').children.map(c => c.textContent);
+  assert.deepEqual(badges, ['2º golpe', 'Atropelar']);
+  assert.equal(ghost.removed, true); assert.equal(f.land.style.opacity, '');
+  f.motion.reset();
+});
+
+test('life gain shows a green number; life loss does not', () => {
+  const f = motionFixture(true);
+  f.motion.present(event(1, 'life-changed', { actor: 1, delta: 2 }), { you: 1, label: 'Vida', duration: 340 });
+  const marker = numberOf(f);
+  assert.equal(marker.className, 'damage-number heal');
+  assert.equal(valueOf(marker), '+2');
   f.motion.reset();
 });
 

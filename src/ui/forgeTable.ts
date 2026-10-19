@@ -3,6 +3,7 @@ import { cacheGet, fetchByNames } from '../scryfall';
 import { esc, manaHTML, pip, richText } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
+import { damageDetail } from './damageEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
@@ -972,8 +973,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'blockers': return `${who} declarou bloqueadores.`;
       case 'turn': return `Turno de ${who}.`;
       case 'damage': {
-        const target = (event.targets?.players ?? []).map(id => client?.state?.players.find(p => p.id === id)?.name).filter(Boolean).join(', ');
-        return target ? `${target} sofreu ${Math.abs(event.delta ?? 0)} de dano.` : `${Math.abs(event.delta ?? 0)} de dano causado.`;
+        const n = Math.abs(event.delta ?? 0);
+        const target = [...(event.targets?.players ?? []).map(id => client?.state?.players.find(p => p.id === id)?.name),
+          ...(event.targets?.cards ?? []).map(id => { const c = findCard(id); return c ? label(c) : undefined; })].filter(Boolean).join(', ');
+        const from = event.card?.name && !event.card.faceDown ? ` de ${label(event.card)}` : '';
+        const what = event.infect && event.targets?.players?.length ? `${n} de veneno` : event.wither ? `${n} marcador${n === 1 ? '' : 'es'} −1/−1` : `${n} de dano`;
+        return `${target ? `${target} sofreu ${what}` : `${what} causado`}${from}${damageDetail(event)}.`;
       }
       case 'life-changed': return `${who}: ${event.delta && event.delta > 0 ? '+' : ''}${event.delta ?? 0} de vida.`;
       default: return event.text ?? 'O jogo avançou.';
