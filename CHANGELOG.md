@@ -12,6 +12,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 - **Ordene seus gatilhos vendo as cartas.** Quando vários gatilhos seus disparam juntos, eles aparecem lado a lado como cartas, cada uma com o texto do que disparou. A da esquerda resolve primeiro e cada posição vem numerada. Toque nos gatilhos na ordem que quiser, ou arraste para trocar de lugar; **Desfazer** volta o último passo e **Ordem automática** resolve sem escolher. Gatilhos iguais da mesma carta ganham um selo ×2 ou ×3, mas continuam separados na pilha. Dá para inspecionar cada carta e usar **Ver a mesa** antes de decidir. Pelo teclado, as setas movem o gatilho e a posição é anunciada.
 - **Escolha como jogar uma carta vendo a carta.** Quando uma carta pode ser jogada de mais de um jeito, ela aparece grande com cada opção ao lado: **Conjurar**, **Reciclar**, **Tramar**, **Flashback**, **Evocar**, **Aventura** e outras, com o custo em símbolos de mana, custos extras por extenso (como sacrificar uma criatura ou pagar vida) e uma linha do que acontece. O jeito normal fica em destaque, e **Cancelar** volta para a mesa sem jogar nada. Habilidades de uma permanente aparecem do mesmo jeito.
+- **Turnos extras e combates extras à vista.** Um turno extra começa com a faixa **Turno extra** e o número do turno ganha um "+" na trilha de fases. Ao passar o mouse no número, a dica avisa os turnos extras que ainda vêm ("Depois: turno extra seu"). Um combate extra abre com a faixa **Combate extra**, o ícone do combate mostra quantos combates o turno tem (×2, ×3) e o botão de passar diz **Para o combate extra** quando é para lá que o jogo vai.
 
 ### Mudou
 
@@ -20,6 +21,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Corrigido
 
+- **"Fim de turno" não pula mais um combate extra.** Com um combate extra ainda por vir no seu turno, o atalho **Fim de turno** some até esse combate acontecer, para você não perder o ataque sem querer.
 - **Os mesmos gatilhos de novo.** Quando o mesmo conjunto de gatilhos disparava pela segunda vez numa partida, a janela de ordenar podia chegar vazia e os gatilhos não iam para a pilha. Agora eles chegam na ordem que você escolheu da última vez, prontos para confirmar ou mudar.
 
 ## [0.14.0] - 2026-10-18

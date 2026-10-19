@@ -5,7 +5,7 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
-const { phaseHudHTML, passLabel } = await import(uri(source));
+const { phaseHudHTML, passLabel, turnBannerText, upcomingTurnsText } = await import(uri(source));
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
 
@@ -82,4 +82,23 @@ test('the portrait never shows in a 1x1 game and unsafe image addresses never re
     assert.doesNotMatch(html, /background-image|<img|javascript/);
     assert.match(html, /phase-active-portrait theirs[^>]*>A<\/span>/);
   }
+});
+
+test('extra turns and extra combats are named on the trail, the banner and the pass button', () => {
+  const extra = { ...state, phase: 'MAIN2', extraTurn: true, extraTurns: [1, 1], extraCombats: 1, extraCombatAfter: ['MAIN2'], stack: [] };
+  assert.equal(turnBannerText(extra), 'Turno extra');
+  assert.equal(turnBannerText({ ...extra, activePlayer: 2 }), 'Turno extra do oponente');
+  assert.equal(turnBannerText(state), 'Seu turno');
+  assert.equal(upcomingTurnsText(extra), 'Depois: 2 turnos extras seu');
+  assert.equal(upcomingTurnsText({ ...extra, extraTurns: [2] }), 'Depois: turno extra do oponente');
+  assert.equal(passLabel(extra), 'Para o combate extra');
+  assert.equal(passLabel({ ...extra, phase: 'COMBAT_DAMAGE', extraCombatAfter: ['COMBAT_END'] }), 'Para o combate extra');
+  assert.equal(passLabel({ ...extra, phase: 'COMBAT_DAMAGE' }), 'Para a principal 2');
+  const html = phaseHudHTML(extra);
+  assert.match(html, /phase-turn-badge mine extra/);
+  assert.match(html, /phase-combat-count">×2</);
+  assert.match(html, /Seu turno extra/);
+  const second = phaseHudHTML({ ...state, phase: 'COMBAT_DECLARE_ATTACKERS', combatNumber: 2 });
+  assert.match(second, /Declaração de atacantes · Combate extra/);
+  assert.doesNotMatch(phaseHudHTML(state), /phase-combat-count|extra/);
 });

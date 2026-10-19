@@ -54,3 +54,9 @@
 /* No canto direito, as dicas abrem para a esquerda para não sair da tela. */
 .forge #fPhases [data-tip]::after, .forge #fPhases .phase-turn-badge[data-tip]::after, .forge #fPhases .phase-active-portrait[data-tip]::after { left: auto; right: -4px; transform: translateY(4px); }
 .forge #fPhases [data-tip]:hover::after, .forge #fPhases .phase-turn-badge[data-tip]:hover::after, .forge #fPhases .phase-active-portrait[data-tip]:hover::after { transform: none; }
+
+/* Turno extra: o número do turno ganha um "+" e um anel claro. Combates extras: selo ×N no ícone do combate. */
+.phase-turn-badge.extra { grid-auto-flow: column; gap: 1px; box-shadow: 0 0 0 2px #ffffffb0, 0 0 10px #ffffff55; }
+.phase-turn-badge.extra::before { content: '+'; font-weight: 800; }
+.forge #fPhases .phase-combat-count { position: absolute; top: -7px; right: -8px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #0c1222; border: 1px solid currentColor; color: var(--gold-light); font: 800 9px/13px var(--body); text-align: center; pointer-events: none; }
+.forge #fPhases .phase-track.theirs .phase-combat-count { color: #ffb3a3; }

@@ -13,7 +13,7 @@ import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTarge
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
 import { cardDecision, selectionMessage } from './decisionPrompt';
 import type { DeckEntry } from '../decks';
-import { passLabel, phaseHudHTML } from './phaseHud';
+import { passLabel, phaseHudHTML, turnBannerText } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
@@ -152,6 +152,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let client: ForgeClient | null = null;
   let portraits: (string | undefined)[] = [undefined, undefined];
   let lastTurn = 0;
+  let lastCombat = '';
   let zoneOf: number | null = null;
   let zoneKind: 'gy' | 'exile' | 'command' | 'damage' = 'gy';
   let bannerTimer = 0;
@@ -1094,8 +1095,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
     const mine = s.activePlayer === s.you;
     if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…'}</button>`;
-    const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying;
-    const undo = endTurn && /fim de turno|end turn/i.test(cancel.label) ? '' : b('cancel', cancel, 'secondary');
+    // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
+    const extraCombat = mine && (s.extraCombats ?? 0) > 0;
+    const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying && !extraCombat;
+    const undo = (endTurn || (extraCombat && !!s.input.priority)) && /fim de turno|end turn/i.test(cancel.label) ? '' : b('cancel', cancel, 'secondary');
     const priority = s.input.priority ? { ...ok, label: passLabel(s) } : ok;
     return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') +
       (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
@@ -1316,10 +1319,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       minimizedQuestion = null;
     }
 
-    if (s.turn !== lastTurn && !s.gameOver && s.turn > 0) {
+    const newTurn = s.turn !== lastTurn && !s.gameOver && s.turn > 0;
+    // Um combate extra começando ganha a mesma faixa, no mesmo turno.
+    const combatKey = `${s.turn}:${s.combatNumber ?? 0}`;
+    const extraCombatStarts = !newTurn && !s.gameOver && (s.combatNumber ?? 0) > 1 && combatKey !== lastCombat;
+    if (s.combatNumber) lastCombat = combatKey;
+    if (newTurn || extraCombatStarts) {
       lastTurn = s.turn;
       const el = $('#fBanner');
-      el.textContent = s.activePlayer === s.you ? 'Seu turno' : multiplayer ? `Turno de ${s.players.find(p => p.id === s.activePlayer)?.name ?? 'outro jogador'}` : 'Turno do oponente';
+      el.textContent = newTurn ? turnBannerText(s) : 'Combate extra';
       // Reinicia a animação mesmo se o banner anterior ainda estiver na tela. Só visual: não segura a fila de eventos.
       el.className = 'banner';
       void el.offsetWidth;

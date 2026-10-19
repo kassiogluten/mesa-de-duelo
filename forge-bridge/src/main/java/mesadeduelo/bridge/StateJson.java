@@ -44,6 +44,7 @@ final class StateJson {
         o.addProperty("phase", gv.getPhase() == null ? null : gv.getPhase().name());
         PlayerView active = gv.getPlayerTurn();
         o.addProperty("activePlayer", active == null ? null : active.getId());
+        TurnExtras.add(o, game);
         o.addProperty("gameOver", gv.isGameOver());
         if (gv.isGameOver()) o.addProperty("winner", gv.getWinningPlayerName());
 

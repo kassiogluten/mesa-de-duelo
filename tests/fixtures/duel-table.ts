@@ -16,6 +16,14 @@ const view = createForgeTableView(document.querySelector('#table')!, { onExit() 
 view.attach(client as any, []); view.render();
 const warden = (id: number) => ({ id, controller: 10, tapped: false, token: false, name: 'Soul Warden', manaCost: '{W}', typeLine: 'Creature — Human Cleric', creature: true, power: 1, toughness: 1 });
 Object.assign(window, { fixture: { state, client, view, messages, render: () => view.render(),
+  extras() {
+    Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
+    view.render();
+  },
+  extraCombat() {
+    Object.assign(state, { phase: 'COMBAT_DECLARE_ATTACKERS', combatNumber: 2, extraCombats: 0, extraCombatAfter: undefined });
+    view.render();
+  },
   triggers() {
     state.question = { id: 41, method: 'order', kind: 'order', purpose: 'triggers', title: 'Reordenar habilidades simultâneas', options: [
       { kind: 'ability', card: warden(100), label: 'Soul Warden - Whenever another creature enters, you gain 1 life.', ability: 'Whenever another creature enters, you gain 1 life.' },

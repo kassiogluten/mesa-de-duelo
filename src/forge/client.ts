@@ -143,6 +143,15 @@ export interface FState {
   turn: number;
   phase: string | null;
   activePlayer: number | null;
+  /** O turno atual é um turno extra. */
+  extraTurn?: boolean;
+  /** Jogadores dos turnos extras que ainda vão acontecer, na ordem. */
+  extraTurns?: number[];
+  /** Qual combate deste turno está acontecendo (2 = o primeiro combate extra). */
+  combatNumber?: number;
+  /** Combates extras ainda por vir neste turno e as fases depois das quais cada um começa. */
+  extraCombats?: number;
+  extraCombatAfter?: string[];
   gameOver: boolean;
   spectating?: boolean;
   winner?: string;
