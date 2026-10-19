@@ -6,6 +6,20 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.18.0] - 2026-10-19
+
+### Novo
+
+- Dano no estilo do Arena: mágicas e habilidades que causam dano soltam um projétil com rastro da carta (ou da pilha) até o alvo, com um impacto na chegada.
+- No combate, o atacante avança até o bloqueador ou até o retrato do defensor e volta; o bloqueador revida do mesmo jeito.
+- O número de dano salta sobre o alvo, maior quando o dano é grande; perto do topo da tela ele desce, para não sumir.
+- Selos no golpe: "Iniciativa", "1º golpe" e "2º golpe" (golpe duplo), "Atropelar" no excesso que passa para o jogador, "Comandante" e "Vínculo com a vida".
+- Toque mortífero mostra uma caveira na criatura atingida; murchar e infectar mostram "−N/−N" e "+N veneno" em roxo; dano a planeswalker aparece em laranja, como lealdade perdida.
+- Ganhar vida (vínculo com a vida ou qualquer outro efeito) mostra "+N" verde subindo do retrato.
+- Golpe letal: a criatura treme e escurece antes de ir para o cemitério; dano grande ou que zera a vida faz a mesa tremer de leve.
+- Com "reduzir movimento" ligado no sistema, só aparecem o número e o destaque no alvo, sem projéteis nem tremor.
+- O histórico diz de onde veio o dano e o que mudou o golpe ("Oponente sofreu 4 de dano de Colossal Dreadmaw (Atropelar)").
+
 ## [0.17.1] - 2026-10-19
 
 ### Corrigido

@@ -51,6 +51,19 @@ public class DamageEventsTest {
         assertEquals(bears.getId(), target(hit, "cards")); assertEquals("Lightning Bolt", hit.getAsJsonObject("card").get("name").getAsString());
     }
 
+    @Test public void burnOnPlaneswalkerBecomesLoyaltyDamage() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        Card jace = add(game, "Jace Beleren", b);
+        jace.setCounters(forge.game.card.CounterEnumType.LOYALTY, 3);
+        VisibleEvents events = new VisibleEvents(() -> {}, () -> 1); events.attach(game);
+        var bolt = ExilePermissionsTest.add(game, "Lightning Bolt", a, ZoneType.Hand).getFirstSpellAbility();
+        bolt.setActivatingPlayer(a); bolt.getTargets().add(jace); game.getStack().add(bolt); game.getStack().resolveStack();
+        JsonObject hit = damage(events).get(0);
+        assertTrue(flag(hit, "loyalty")); assertFalse(flag(hit, "combat")); assertTrue(flag(hit, "lethal"));
+        assertEquals(-3, hit.get("delta").getAsInt()); assertEquals(jace.getId(), target(hit, "cards"));
+        assertEquals("Lightning Bolt", hit.getAsJsonObject("card").get("name").getAsString());
+    }
+
     @Test public void trampleSplitsBetweenBlockerAndPlayer() {
         Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
         Card wurm = add(game, "Colossal Dreadmaw", a), bears = add(game, "Grizzly Bears", b);
