@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.17.1] - 2026-10-19
+
+### Corrigido
+
+- **Faixa do topo mais baixa também no computador.** A faixa com o menu, a tela cheia e o retrato do oponente só tinha encolhido no celular. Agora, em qualquer tela, o retrato do oponente fica deitado, com a vida, o nome e os marcadores lado a lado, e a faixa ocupa metade da altura de antes. Os campos ganham esse espaço, e as pilhas do oponente começam logo abaixo da faixa. No Commander com vários jogadores nada muda.
+- **"Para o combate extra" também na principal 1.** Com um combate extra marcado para logo depois da principal 1 (Relentless Assault conjurado antes do combate), o botão de passar dizia só "Para o combate". Agora diz **Para o combate extra**, como já fazia na principal 2.
+- **Botões de ação menores no celular, fora de cima das cartas.** **Para o combate**, **Fim de turno** e os outros botões ficaram mais baixos e estreitos no celular, e a fileira de baixo do seu campo agora termina antes deles: com muitas permanentes, ela rola para o lado em vez de passar por baixo dos botões. Vale para o 1×1 e para o Commander.
+
 ## [0.17.0] - 2026-10-18
 
 ### Novo

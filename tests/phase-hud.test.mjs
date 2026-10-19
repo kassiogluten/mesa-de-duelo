@@ -94,6 +94,7 @@ test('extra turns and extra combats are named on the trail, the banner and the p
   assert.equal(passLabel(extra), 'Para o combate extra');
   assert.equal(passLabel({ ...extra, phase: 'COMBAT_DAMAGE', extraCombatAfter: ['COMBAT_END'] }), 'Para o combate extra');
   assert.equal(passLabel({ ...extra, phase: 'COMBAT_DAMAGE' }), 'Para a principal 2');
+  assert.equal(passLabel({ ...extra, phase: 'MAIN1', extraCombatAfter: ['MAIN1'] }), 'Para o combate extra');
   const html = phaseHudHTML(extra);
   assert.match(html, /phase-turn-badge mine extra/);
   assert.match(html, /phase-combat-count">×2</);

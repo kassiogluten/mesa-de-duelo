@@ -110,8 +110,8 @@ export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' |
   if (state.activePlayer !== state.you) return 'Passar';
   const group = STEPS[state.phase ?? '']?.group;
   const after = state.extraCombatAfter ?? [];
-  // Um combate extra pode vir logo depois do combate (Combat Celebrant) ou depois da principal 2 (Relentless Assault).
-  if ((group === 'combat' && after.includes('COMBAT_END')) || (group === 'main2' && after.includes('MAIN2'))) return 'Para o combate extra';
+  // Um combate extra pode vir logo depois do combate (Combat Celebrant) ou depois de uma principal (Relentless Assault).
+  if ((group === 'combat' && after.includes('COMBAT_END')) || (group === 'main1' && after.includes('MAIN1')) || (group === 'main2' && after.includes('MAIN2'))) return 'Para o combate extra';
   return group === 'start' ? 'Para a principal 1' : group === 'main1' ? 'Para o combate' : group === 'combat' ? 'Para a principal 2'
     : group === 'main2' ? 'Para o fim do turno' : 'Passar';
 }

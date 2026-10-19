@@ -141,7 +141,7 @@ Hoje a mesa mostra a imagem inteira da carta do Scryfall (`face()` em `src/ui/fo
 
 ## 12. Aproveitar melhor a barra superior dentro das partidas ✅
 
-Feito assim: a barra mostra, ao lado do menu, o formato, a sala, o placar da melhor de três e quem caiu da conexão (antes só dentro do menu). Turno e fase ficam na trilha e vida no retrato, então não se repetem nela. No celular a faixa do topo baixou de ~104 px para 58 px, com o retrato do oponente deitado e o menu só com o ícone, e as duas fileiras de cada campo cabem sem rolar. No Commander (vários jogadores, e 1×1 no celular) o status continua no menu, para não apertar os assentos.
+Feito assim: a barra mostra, ao lado do menu, o formato, a sala, o placar da melhor de três e quem caiu da conexão (antes só dentro do menu). Turno e fase ficam na trilha e vida no retrato, então não se repetem nela. A faixa do topo baixou em todas as telas, com o retrato do oponente deitado e os marcadores dele em linha: no computador, de 16% da altura (173 px em 1080p) para 8% (86 px), e no celular de ~104 px para 58 px, com o menu só com o ícone e as duas fileiras de cada campo cabendo sem rolar. (Na primeira entrega só o celular tinha mudado.) No Commander (vários jogadores, e 1×1 no celular) o status continua no menu, para não apertar os assentos.
 
 Durante a partida, a barra do topo da tela ocupa espaço sem mostrar muita coisa útil, tanto no computador quanto no celular. Ela pode render mais para o jogador ou encolher para deixar a mesa maior.
 

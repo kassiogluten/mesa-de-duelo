@@ -9,15 +9,30 @@
 .match-chip.spectating { color: #bcd7ff; border-color: #59b5ff66; }
 .game-menu-meta.in-bar { display: none; }
 
-/* Celular (e telas baixas): faixa do topo bem mais baixa, retrato do oponente deitado, menu só com o ícone. */
+/*
+ * Faixa do topo no 1×1, em qualquer tela: só o menu, a tela cheia, o status e o retrato do oponente deitado
+ * (retrato, vida e nome lado a lado), com a mão dele espiando por cima. O resto da altura vai para os campos.
+ */
+.forge:not(.multiplayer) { --top-band: clamp(58px, 8vh, 88px); }
+.forge:not(.multiplayer) { grid-template-rows: calc(var(--top-band) + env(safe-area-inset-top, 0px)) minmax(0, 1fr) 2px minmax(0, 1fr) 23vh; }
+.forge:not(.multiplayer) .avatar-slot.opp { top: max(6px, env(safe-area-inset-top, 0px)); }
+.forge:not(.multiplayer) .avatar.opp { grid-template-columns: auto auto; grid-template-rows: auto auto; align-items: center; column-gap: 8px; justify-items: start; }
+.forge:not(.multiplayer) .avatar.opp .portrait { grid-row: 1 / 3; width: calc(var(--top-band) - 14px); height: calc(var(--top-band) - 14px); }
+.forge:not(.multiplayer) .avatar.opp .life { margin-top: 0; }
+.forge:not(.multiplayer) .avatar.opp .pname { margin-top: 0; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.forge:not(.multiplayer) .opp-hand { top: -3.6vh; left: calc(50% + 120px); }
+/* Marcadores do oponente em linha ao lado do nome, dentro da faixa, por cima da mão dele. */
+.forge:not(.multiplayer) .avatar.opp .player-counters { top: 50%; left: calc(100% + 8px); transform: translateY(-50%); flex-direction: row; z-index: 5; }
+/* As pilhas do oponente começam logo abaixo da faixa, no canto direito do campo dele. */
+.forge:not(.multiplayer) .piles.opp { top: calc(var(--top-band) + env(safe-area-inset-top, 0px) + 8px); }
+
+/* Celular (e telas baixas): a faixa fica no mínimo, o menu só com o ícone e as fileiras mais justas. */
 @media (max-height: 500px), (max-width: 760px) {
   .forge:not(.multiplayer):not(.commander-game) { grid-template-rows: calc(58px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) 2px minmax(0, 1fr) 21vh; }
-  .forge:not(.multiplayer) .avatar-slot.opp { top: max(4px, env(safe-area-inset-top, 0px)); }
-  .forge:not(.multiplayer):not(.commander-game) .avatar.opp { grid-template-columns: auto auto; grid-template-rows: auto auto; align-items: center; column-gap: 6px; justify-items: start; }
-  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .portrait { grid-row: 1 / 3; width: 40px; height: 40px; }
-  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .life { margin-top: 0; }
-  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .pname { margin-top: 0; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .portrait { width: 40px; height: 40px; }
+  .forge:not(.multiplayer):not(.commander-game) .avatar.opp .pname { max-width: 110px; }
   .forge:not(.multiplayer):not(.commander-game) .opp-hand { top: -18px; left: calc(50% + 80px); }
+  .forge:not(.multiplayer):not(.commander-game) .piles.opp { top: 8px; }
   /* A altura ganha vai para os campos: as duas fileiras de cada lado cabem sem rolar. */
   .forge:not(.multiplayer):not(.commander-game) > .field { gap: 2px; }
   .forge:not(.multiplayer):not(.commander-game) > .field .row.creatures { min-height: calc(var(--ch) + 10px); padding: 6px 8px 4px; }

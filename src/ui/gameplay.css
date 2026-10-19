@@ -287,3 +287,20 @@
   .player-counter svg { width: 10px; height: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .player-counter.poison.danger, .player-counter.bump { animation: none; } }
+
+/*
+ * Celular: botões de ação menores, e o seu campo termina antes deles. Com muitas permanentes a fileira rola
+ * em vez de passar por baixo de "Para o combate" e "Fim de turno".
+ */
+@media (max-width: 760px), (max-height: 500px) {
+  .forge { --action-w: min(148px, 26vw); }
+  .forge .action { width: var(--action-w); max-width: none; gap: 4px; }
+  .forge .action .btns { gap: 4px; }
+  .forge .action .arena-btn { min-height: 32px; padding: 5px 10px; font-size: 12px; line-height: 1.2; }
+  .forge .action .arena-btn.waiting { min-height: 28px; font-size: 11px; }
+  /* Só a fileira de baixo do seu campo divide a altura com os botões: ela termina antes deles. */
+  .forge:not([data-opening]) > .field.me > .row.lands { margin-right: calc(var(--action-w) + 6px); }
+  .forge > .field .row { scrollbar-width: thin; }
+  /* Quando a caixa traz uma pergunta com texto (escolher cartas), ela volta à largura de antes. */
+  .forge .action.card-decision { width: 190px; max-width: 30vw; }
+}
