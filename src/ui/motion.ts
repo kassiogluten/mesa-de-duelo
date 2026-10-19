@@ -34,9 +34,10 @@ export function createMotion(root: HTMLElement): Motion {
     const timer = setTimeout(() => { timers.delete(timer); fn(); }, ms);
     timers.add(timer);
   };
-  function animate(el: HTMLElement, frames: Keyframe[], duration: number) {
+  /** `easing: 'linear'` deixa cada quadro com o seu próprio ritmo (golpe e projétil precisam chegar na hora do impacto). */
+  function animate(el: HTMLElement, frames: Keyframe[], duration: number, easing = EASE) {
     if (reduced()) return;
-    const animation = el.animate(frames, { duration, easing: EASE });
+    const animation = el.animate(frames, { duration, easing });
     animations.add(animation);
     animation.onfinish = animation.oncancel = () => animations.delete(animation);
   }
@@ -95,13 +96,16 @@ export function createMotion(root: HTMLElement): Motion {
     return { el: null, at: center(root.querySelector('#fStack .stack-pile')) ?? { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: 0, h: 0 } };
   }
   function floatNumber(at: Point, text: string, classes: string, badges: string[] = [], icon = '') {
-    const marker = effect(`damage-number ${classes}`, { ...at, w: 120, h: 56 }, icon);
+    // Perto da borda de cima (retrato do oponente), o número desce em vez de subir para fora da tela.
+    const below = at.cy - at.h / 2 < 90;
+    const marker = effect(`damage-number ${classes}${below ? ' below' : ''}`, { ...at, cy: below ? at.cy + at.h / 2 + 6 : at.cy - at.h / 2, w: 120, h: 56 }, icon);
     const value = document.createElement('b'); value.textContent = text; marker.append(value);
     if (badges.length) {
       const list = document.createElement('span'); list.className = 'damage-badges'; marker.append(list);
       for (const badge of badges) { const tag = document.createElement('span'); tag.textContent = badge; list.append(tag); }
     }
-    animate(marker, [{ opacity: 0, translate: '0 6px', scale: '.7' }, { opacity: 1, translate: '0 -6px', scale: '1.12', offset: .16 }, { opacity: 1, translate: '0 -18px', scale: '1', offset: .7 }, { opacity: 0, translate: '0 -30px' }], 1100);
+    const rise = below ? 1 : -1;
+    animate(marker, [{ opacity: 0, translate: `0 ${-6 * rise}px`, scale: '.7' }, { opacity: 1, translate: `0 ${6 * rise}px`, scale: '1.12', offset: .16 }, { opacity: 1, translate: `0 ${18 * rise}px`, scale: '1', offset: .7 }, { opacity: 0, translate: `0 ${30 * rise}px` }], 1100);
     later(() => remove(marker), 1150);
   }
   function impact(event: PresentationEvent, look: DamageLook, target: ReturnType<typeof damageTarget>) {
@@ -144,7 +148,11 @@ export function createMotion(root: HTMLElement): Motion {
       const reach = Math.max(0, 1 - (Math.min(to.w, to.h) * .55 + Math.min(from.w, from.h) * .4) / Math.hypot(dx, dy));
       const travel = Math.round(duration * .9);
       source.el.style.opacity = '0'; hiddenCards.add(source.el);
-      animate(ghost, [{ translate: '0 0', scale: '1', rotate: turn }, { translate: `${-dx * .06}px ${-dy * .06}px`, scale: '1.05', rotate: turn, offset: .18 }, { translate: `${dx * reach}px ${dy * reach}px`, scale: '1.08', rotate: turn, offset: .45 }, { translate: '0 0', scale: '1', rotate: turn }], travel);
+      animate(ghost, [
+        { translate: '0 0', scale: '1', rotate: turn, easing: 'ease-out' },
+        { translate: `${-dx * .06}px ${-dy * .06}px`, scale: '1.05', rotate: turn, offset: .18, easing: 'cubic-bezier(.55, 0, .9, .45)' },
+        { translate: `${dx * reach}px ${dy * reach}px`, scale: '1.08', rotate: turn, offset: .45, easing: 'cubic-bezier(.2, .8, .2, 1)' },
+        { translate: '0 0', scale: '1', rotate: turn }], travel, 'linear');
       later(() => impact(event, look, target), travel * .45);
       later(() => { remove(ghost); if (source.el && hiddenCards.delete(source.el)) source.el.style.opacity = ''; }, travel);
       return;
@@ -152,7 +160,7 @@ export function createMotion(root: HTMLElement): Motion {
     const travel = Math.round(duration * .55);
     const bolt = effect(`damage-bolt ${look.tone}`, { ...from, w: 22, h: 22 });
     bolt.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;
-    animate(bolt, [{ translate: '0 0', scale: '.6', opacity: .6 }, { translate: `${dx * .5}px ${dy * .5}px`, scale: '1.1', opacity: 1, offset: .5 }, { translate: `${dx}px ${dy}px`, scale: '1', opacity: 1 }], travel);
+    animate(bolt, [{ translate: '0 0', scale: '.6', opacity: .6 }, { translate: `${dx * .4}px ${dy * .4}px`, scale: '1.1', opacity: 1, offset: .5 }, { translate: `${dx}px ${dy}px`, scale: '1', opacity: 1 }], travel, 'cubic-bezier(.45, 0, .85, .55)');
     if (source.el) pulse(source.el);
     later(() => { remove(bolt); impact(event, look, target); }, travel);
   }

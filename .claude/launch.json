@@ -58,6 +58,22 @@
       "env": {
         "VITE_FORGE_URL": "ws://127.0.0.1:7171/ws"
       }
+    },
+    {
+      "name": "dev-damage",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5186",
+        "--strictPort"
+      ],
+      "port": 5186,
+      "env": {
+        "VITE_FORGE_URL": "ws://127.0.0.1:7182/ws"
+      }
     }
   ]
 }

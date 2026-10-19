@@ -184,6 +184,7 @@
 .damage-flash .life { color: var(--red); box-shadow: 0 0 16px color-mix(in srgb, var(--red) 50%, transparent); }
 /* Dano no estilo do Arena: projétil, golpe, impacto e número flutuante (motion.ts). Nada aqui recebe clique. */
 .damage-number { position: fixed; z-index: 36; pointer-events: none; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 2px; width: max-content !important; height: auto !important; color: var(--red); text-shadow: 0 2px 4px var(--bg-deep), 0 0 2px var(--bg-deep), 0 0 12px #000a; }
+.damage-number.below { transform: translate(-50%, 0); flex-direction: column-reverse; }
 .damage-number > b { font: 800 34px/1.05 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .damage-number.heavy > b { font-size: 46px; }
 .damage-number.lethal > b { color: #ff6a4d; }
