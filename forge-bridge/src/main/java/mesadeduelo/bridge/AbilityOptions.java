@@ -59,6 +59,9 @@ final class AbilityOptions {
                 row.addProperty("kind", "ability");
                 row.addProperty("description", row.get("label").getAsString().trim());
                 row.addProperty("mode", mode(ability));
+                // Subir de nível numa Classe: o nível que a opção alcança ("ClassLevel$ EQ1" leva ao nível 2).
+                if (ability.getApi() == forge.game.ability.ApiType.ClassLevelUp && ability.hasParam("ClassLevel"))
+                    try { row.addProperty("level", Integer.parseInt(ability.getParam("ClassLevel").replaceAll("\\D", "")) + 1); } catch (NumberFormatException ignored) { }
                 if (ability.isSpell()) row.addProperty("spell", true);
                 JsonArray extra = new JsonArray();
                 String mana = "";
@@ -82,6 +85,7 @@ final class AbilityOptions {
     }
 
     static String mode(SpellAbility a) {
+        if (a.getApi() == forge.game.ability.ApiType.ClassLevelUp) return "class-level";
         if (a.isLandAbility()) return "land";
         if (a.isCycling()) return "cycling";
         if (a.isPlotting()) return "plot";

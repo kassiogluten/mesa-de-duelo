@@ -235,6 +235,12 @@ final class StateJson {
         o.addProperty("creature", s.isCreature());
         o.addProperty("land", s.isLand());
         if (s.isPlaneswalker()) o.addProperty("planeswalker", true);
+        // Encantamentos de Classe: nível atual e o mais alto que a carta tem (uma habilidade de subir por nível).
+        if (s.getType() != null && s.getType().hasSubtype("Class")) {
+            Card gc = game == null ? null : game.findByView(c);
+            o.addProperty("classLevel", Math.max(1, c.getClassLevel()));
+            if (gc != null) o.addProperty("classMaxLevel", 1 + (int) gc.getSpellAbilities().stream().filter(sa -> sa.getApi() == forge.game.ability.ApiType.ClassLevelUp).count());
+        }
         // Auras e equipamentos: a carta a que estão presos (ou o jogador, no caso de auras como Curse).
         if (c.getAttachedTo() != null) o.addProperty("attachedTo", c.getAttachedTo().getId());
         else if (c.getEnchantedPlayer() != null) o.addProperty("attachedToPlayer", c.getEnchantedPlayer().getId());

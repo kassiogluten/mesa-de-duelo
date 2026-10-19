@@ -160,6 +160,10 @@ export function playChoices(q: FQuestion): PlayChoice[] {
     // Duas formas de conjurar a mesma carta (Fireblast, por exemplo): a que não usa o custo impresso é a alternativa.
     const alternative = mode === 'cast' && casts > 1 && (extra.length > 0 || (o.cost ?? '') !== printed);
     const abilities = opts.filter(x => x.mode === 'ability').length;
+    if (mode === 'class-level') {
+      const lvl = o.level;
+      return { index, name: lvl ? `Subir para o nível ${lvl}` : 'Subir de nível', detail: 'Ganha a habilidade do próximo nível da Classe. Só quando poderia conjurar um feitiço.', cost: o.cost ?? '', extra, face: o.face, recommended: false };
+    }
     const name = alternative ? 'Custo alternativo' : mode === 'ability' && abilities > 1 ? `Habilidade ${opts.slice(0, index + 1).filter(x => x.mode === 'ability').length}`
       : known?.[0] ?? mode.charAt(0).toUpperCase() + mode.slice(1);
     const detail = alternative ? 'Conjure pagando este custo no lugar do custo de mana.'
@@ -176,7 +180,7 @@ const costWords = (cost: string) => (cost.match(/\{[^}]+\}/g) ?? []).map(s => s.
 export function playModeHTML(q: FQuestion, face: Face, label: Label) {
   const choices = playChoices(q);
   const card = q.card;
-  const playing = (q.options ?? []).some(o => typeof o !== 'string' && (o.spell || o.mode === 'land' || (o.mode && o.mode !== 'ability')));
+  const playing = (q.options ?? []).some(o => typeof o !== 'string' && (o.spell || o.mode === 'land' || (o.mode && o.mode !== 'ability' && o.mode !== 'class-level')));
   const title = playing ? card ? `Como jogar ${label(card)}?` : 'Como jogar esta carta?' : card ? `Qual habilidade de ${label(card)} usar?` : 'Qual habilidade usar?';
   return `<div class="q-head"><h2>${esc(title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>
     <div class="play-mode-body">

@@ -7,6 +7,7 @@ export interface InspectorCard {
   power?: number | string; toughness?: number | string; basePower?: number; baseToughness?: number;
   keywords?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
+  classLevel?: number; classMaxLevel?: number;
 }
 const keywords: Record<string, string> = { FLYING: 'Voar', FIRST_STRIKE: 'Iniciativa', DOUBLE_STRIKE: 'Golpe duplo', TRAMPLE: 'Atropelar', HASTE: 'Ímpeto', VIGILANCE: 'Vigilância', REACH: 'Alcance', DEATHTOUCH: 'Toque mortífero', LIFELINK: 'Vínculo com a vida', HEXPROOF: 'Resistência à magia', INDESTRUCTIBLE: 'Indestrutível', MENACE: 'Ameaçar', DEFENDER: 'Defensor' };
 let preview: HTMLElement | null = null;
@@ -41,6 +42,7 @@ function content(card: InspectorCard, compact: boolean) {
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
     ${card.keywords?.length ? `<ul class="ci-keywords">${card.keywords.map(k => `<li>${esc(keywords[k] ?? k.replaceAll('_', ' ').toLowerCase())}</li>`).join('')}</ul>` : ''}
     ${Object.entries(card.counters ?? {}).length ? `<p>Marcadores: ${Object.entries(card.counters!).map(([k,v]) => `${esc(k)} × ${v}`).join(', ')}</p>` : ''}
+    ${card.classLevel ? `<p class="ci-strength"><strong>Nível ${card.classLevel}${card.classMaxLevel ? ` de ${card.classMaxLevel}` : ''}</strong>${card.classMaxLevel && card.classLevel >= card.classMaxLevel ? ' <span>Nível máximo</span>' : ''}</p>` : ''}
     ${card.token ? '<p class="ci-note">Ficha</p>' : ''}${card.copyOf ? `<p class="ci-note">Cópia de ${esc(card.copyOf)}</p>` : ''}
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}
   </div></div>`;

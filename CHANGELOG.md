@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.16.0] - 2026-10-18
+
+### Novo
+
+- **Nível dos encantamentos de Classe à vista.** Uma Classe no campo mostra um selo com o nível atual e o máximo, como **Nv 2/3**. O inspetor diz o nível e avisa quando ele já é o máximo, e leitores de tela anunciam o nível junto do nome da carta. Ao subir de nível, a opção aparece como **Subir para o nível 2** (ou 3), com o custo em símbolos de mana.
+
 ## [0.15.0] - 2026-10-18
 
 ### Novo

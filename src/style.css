@@ -187,6 +187,10 @@ a { color: var(--gold); }
   padding: 1px 8px; background: #1b1a17; color: #f3efe4; border: 1px solid #f3efe4;
   clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); padding-bottom: 5px;
 }
+/* Nível de um encantamento de Classe: selo escuro com o nível atual e o máximo. */
+.pt.class-level { display: inline-flex; align-items: baseline; gap: 1px; padding: 1px 6px; background: #1b1a17; color: #f3efe4; border: 1px solid var(--gold); }
+.pt.class-level small { font-size: .62em; font-weight: 600; opacity: .8; }
+.pt.class-level small:first-child { margin-right: 2px; text-transform: uppercase; }
 /* O rótulo do ataque pode passar da borda da carta (virada, ele fica na lateral): fica por cima das vizinhas. */
 .slot.attacking, .slot.attacked { z-index: 3; }
 .slot.attacked > .bfc .face { box-shadow: 0 0 0 2px var(--red), 0 0 18px rgba(236, 90, 63, 0.8); }

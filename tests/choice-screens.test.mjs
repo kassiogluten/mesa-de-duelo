@@ -87,3 +87,12 @@ test('the top bar shows format, room, series and who dropped', () => {
   assert.deepEqual(bar.matchChips({ config: { format: 'free', matchLength: 'bo1' } }).map(c => c.kind), ['format']);
   assert.match(bar.matchBarHTML(s), /<li class="match-chip room"/);
 });
+
+test('leveling up a Class says which level it reaches', () => {
+  const q = { id: 7, method: 'getAbilityToPlay', kind: 'choose', min: 0, max: 1, card: { id: 11, name: 'Druid Class', classLevel: 1, classMaxLevel: 3 }, options: [
+    { label: 'a', mode: 'class-level', level: 2, cost: '{2}{G}', extra: [] },
+    { label: 'b', mode: 'ability', cost: '{T}', extra: [], description: 'Add {G}.' },
+  ] };
+  assert.equal(screens.playChoices(q)[0].name, 'Subir para o nível 2');
+  assert.match(screens.playModeHTML(q, () => '', c => c.name), /Qual habilidade de Druid Class usar\?/);
+});

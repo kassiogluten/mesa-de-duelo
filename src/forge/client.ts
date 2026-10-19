@@ -48,6 +48,9 @@ export interface FCard {
   blocking?: boolean;
   counters?: Record<string, number>;
   planeswalker?: boolean;
+  /** Encantamento de Classe: nível atual e o mais alto da carta. */
+  classLevel?: number;
+  classMaxLevel?: number;
   emblem?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
@@ -88,6 +91,8 @@ export interface FOption {
   /** Jeito de jogar a carta (cast, cycling, plot, flashback, evoke, adventure, land, ability...). */
   mode?: string;
   spell?: boolean;
+  /** Subir de nível numa Classe: o nível que a opção alcança. */
+  level?: number;
   /** Custo de mana da opção ({1}{R}) e os custos extras por extenso, como o Forge escreve. */
   cost?: string;
   extra?: string[];
