@@ -25,6 +25,17 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     Object.assign(state, { phase: 'COMBAT_DECLARE_ATTACKERS', combatNumber: 2, extraCombats: 0, extraCombatAfter: undefined });
     view.render();
   },
+  combatDamage(trample = true, ordered = true) {
+    const c = (id: number, name: string, power: number, toughness: number, controller: number) => ({ id, name, controller, tapped: false, token: false, creature: true, power, toughness, manaCost: '{3}{G}', typeLine: 'Creature' });
+    const options: any[] = [
+      { kind: 'card', card: c(801, 'Grizzly Bears', 2, 2, 23), label: 'Grizzly Bears', min: 0, max: 7, lethal: 2 },
+      { kind: 'card', card: c(802, 'Hill Giant', 3, 3, 23), label: 'Hill Giant', min: 0, max: 7, lethal: 3 },
+    ];
+    if (trample) options.push({ kind: 'player', id: 23, label: 'Oponente', min: 0, max: 7, defender: true });
+    state.question = { id: 43, method: 'assignCombatDamage', kind: 'amount', purpose: 'combat-damage', title: 'Distribua o dano de combate', total: 7, ordered, free: false, trample,
+      card: c(800, 'Craw Wurm', 7, 4, 10), options, suggested: trample ? [2, 3, 2] : [2, 5] };
+    view.render();
+  },
   triggers() {
     state.question = { id: 41, method: 'order', kind: 'order', purpose: 'triggers', title: 'Reordenar habilidades simultâneas', options: [
       { kind: 'ability', card: warden(100), label: 'Soul Warden - Whenever another creature enters, you gain 1 life.', ability: 'Whenever another creature enters, you gain 1 life.' },

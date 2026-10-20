@@ -597,7 +597,12 @@ final class Session {
                 }
                 q.add("options", rows);
             }
-            case assignCombatDamage -> { return autoCombatDamage(a); }
+            case assignCombatDamage -> {
+                // Bloqueio duplo (ou atropelar): o jogador escolhe como dividir o dano, com a divisão automática pronta.
+                @SuppressWarnings("unchecked") List<CardView> blockers = (List<CardView>) a[1];
+                if (blockers == null || blockers.isEmpty() || (Integer) a[2] <= 0) return autoCombatDamage(a);
+                CombatDamage.describe(q, options, a);
+            }
             case manipulateCardList -> {
                 List<CardView> out = new ArrayList<>();
                 ((Iterable<?>) a[1]).forEach(o -> out.add((CardView) o));
@@ -652,6 +657,7 @@ final class Session {
             case showInputDialog -> result = q.options().isEmpty() ? str(msg, "text", "") : pick(q, msg).stream().findFirst().orElse(null);
             case getAbilityToPlay, chooseSingleEntityForEffect -> result = pick(q, msg).stream().findFirst().orElse(null);
             case order -> result = new IGuiGame.OrderResult<>(pick(q, msg), false);
+            case assignCombatDamage -> result = CombatDamage.result(q.options(), CombatDamage.validate(q.json(), msg.get("amounts")));
             case assignGenericAmount -> {
                 int[] values = AmountAllocation.validate(q.json(), msg.get("amounts"));
                 Map<Object, Integer> allocation = new LinkedHashMap<>();
@@ -670,6 +676,7 @@ final class Session {
             return;
         }
         if (q.method() == ProtocolMethod.assignGenericAmount) { AmountAllocation.validate(q.json(), msg.get("amounts")); return; }
+        if (q.method() == ProtocolMethod.assignCombatDamage) { CombatDamage.validate(q.json(), msg.get("amounts")); return; }
         if (q.method() == ProtocolMethod.showInputDialog && q.options().isEmpty()) {
             String text = MatchConfig.string(msg, "text");
             if (text.length() > 1000) throw new IllegalArgumentException("A resposta é longa demais.");
@@ -731,6 +738,7 @@ final class Session {
                 }
                 yield allocation;
             }
+            case assignCombatDamage -> autoCombatDamage(q.args());
             case getChoices, chooseEntitiesForEffect -> new ArrayList<>(q.options().subList(0, Math.max(0, Math.min(q.options().size(), (Integer) (q.method() == ProtocolMethod.getChoices ? q.args()[1] : q.args()[2])))));
             default -> null;
         };

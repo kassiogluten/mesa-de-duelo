@@ -119,6 +119,9 @@ export interface FOption {
   cost?: string;
   extra?: string[];
   description?: string;
+  /** Divisão de dano de combate: dano que já mata este bloqueador; defender marca o jogador ou planeswalker atacado. */
+  lethal?: number;
+  defender?: boolean;
   /** Outra face ou metade usada pela opção (aventura, carta dividida). */
   face?: { name: string; manaCost: string; typeLine: string };
 }
@@ -129,7 +132,13 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
   /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta. */
-  purpose?: 'triggers' | 'play-mode';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage';
+  /** combat-damage: divisão automática sugerida, se há ordem entre bloqueadores, se vale qualquer divisão e as palavras-chave do atacante. */
+  suggested?: number[];
+  ordered?: boolean;
+  free?: boolean;
+  trample?: boolean;
+  deathtouch?: boolean;
   title: string;
   total?: number;
   min?: number;

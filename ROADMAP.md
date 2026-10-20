@@ -307,3 +307,15 @@ No formato Commander, o jogador escolhe o comandante e o deck é preenchido com 
 - [ ] Ao adicionar a lista a um deck que já tem cartas, cópias repetidas somam (a validação de Commander aponta). Talvez um modo "completar o deck" que pule as cartas que já estão nele.
 
 **Termos de uso do EDHREC (lidos em 19/10/2026, versão de 06/08/2024, edhrec.com/terms):** não há API pública documentada; o JSON é o que o próprio site usa. Os termos dão licença de acesso "somente para uso pessoal e não comercial", proíbem "gerar buscas, requisições ou consultas automatizadas ao site" por software ou scripts, e proíbem copiar, redistribuir ou republicar partes do site sem indicação em contrário. O `robots.txt` do site não bloqueia `/average-decks/` (e o EDHREC publica um sitemap dessas páginas), mas isso não muda os termos. Como fizemos para ficar o mais perto possível do permitido: uma requisição por ação do jogador, sem cache nem coleta em lote, sem guardar ou redistribuir os dados do EDHREC no projeto (os testes usam dados inventados), com a origem e o link de volta para o EDHREC na revisão. **Mesmo assim, é uma consulta automatizada a partir de um servidor.** Antes de abrir para muita gente (ou se o projeto tiver qualquer receita), pedir autorização ao EDHREC (contato do site) ou trocar por um link que o jogador abre e cola. Se o EDHREC pedir, basta tirar o site `edhrec` de `DeckLinks.java`.
+
+## 22. Distribuir o dano de combate em bloqueios duplos ✅
+
+Quando o atacante é bloqueado por duas ou mais criaturas (ou tem atropelar), o Forge pede a divisão do dano. Antes, a ponte respondia sozinha com letal em ordem.
+
+- [x] Ponte: pergunta `combat-damage` com o atacante, o total, o letal de cada bloqueador (toque mortífero e planeswalker inclusos), o defensor quando há atropelar e a divisão automática sugerida.
+- [x] Mesmas regras do diálogo do Forge, validadas na ponte: total exato, ordem entre bloqueadores quando o Forge pede, defensor só depois de letal em todos.
+- [x] Tela na mesa: atacante, alvos com − / +, Letal, Todo o resto, Distribuição automática, motivo de cada trava, minimizar para ver a mesa, leitor de tela.
+- [x] Teste no motor real com bloqueio duplo numa partida em rede (`forge-bridge/scripts/test-combat-damage.mjs`).
+- [ ] Bloqueador que bloqueia vários atacantes (a mesma pergunta, vista pelo lado de quem bloqueia): o Forge já usa o mesmo método, mas falta conferir numa partida.
+- [ ] Integrar com os efeitos de dano (itens 15 e 18): pré-visualizar na mesa quem morre com a divisão escolhida.
+

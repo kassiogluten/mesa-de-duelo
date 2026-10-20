@@ -21,6 +21,8 @@ import { matchBarHTML } from './matchBar';
 import { playerCountersHTML, playerCountersText as countersText } from './playerCounters';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
+import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
+import './combatDamage.css';
 import './gameplay.css';
 import './permanentEffects.css';
 import './phaseHud.css';
@@ -178,6 +180,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let openCounter: string | null = null;
   /** Seleção em andamento na pergunta aberta. */
   let qState: { id: number; picked: number[]; text: string; amounts: string[] } | null = null;
+  /** Divisão do dano de combate em andamento (bloqueio duplo ou atropelar). */
+  let damageSplit: { id: number; amounts: number[] } | null = null;
+  const splitFor = (q: FQuestion) => {
+    if (damageSplit?.id !== q.id) damageSplit = { id: q.id, amounts: autoSplit(q) };
+    return damageSplit.amounts;
+  };
   /** Ordem dos gatilhos sendo montada na tela de ordenar gatilhos. */
   let triggerOrder: { id: number; t: TriggerOrder } | null = null;
   const triggersFor = (q: FQuestion) => {
@@ -281,7 +289,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -310,7 +318,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!active && previousModal && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     if (active && !active.contains(document.activeElement) && !document.querySelector('dialog[open]')) {
       // A escolha principal da janela vem primeiro (o modo recomendado, o primeiro gatilho); senão, o primeiro controle.
-      (active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger]') ?? active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]'))?.focus({ preventScroll: true });
+      (active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled)') ?? active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]'))?.focus({ preventScroll: true });
     }
   }
   function closeZone() { zoneOf = null; groupIds = null; $('#fZone').hidden = true; syncModal(); }
@@ -1156,6 +1164,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
+    if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
     if (isTriggerOrder(q)) return triggerOrderHTML(q, triggersFor(q), c => face(c, 'normal'), label);
     if (isPlayMode(q)) return playModeHTML(q, c => face(c, 'normal'), label);
     const opts = q.options ?? [];
@@ -1212,7 +1221,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
     const picked = isTriggerOrder(q) ? triggerOrder?.id === q.id ? triggerOrder.t.placed : 0 : qState?.id === q.id ? qState.picked.length : 0;
     const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isPlayMode(q) ? 'Como jogar a carta' : q.title;
+    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
     return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
   }
 
@@ -1221,7 +1230,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!q || !client) return;
     stopPresentation();
     client.send({ type: 'answer', id: q.id, ...extra });
-    qState = null; triggerOrder = null;
+    qState = null; triggerOrder = null; damageSplit = null;
     $('#fQuestion').hidden = true;
   }
 
@@ -1346,7 +1355,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (minimizedQuestion !== null && minimizedQuestion !== s.question.id) minimizedQuestion = null;
       const minimized = questionMinimized();
       qEl.classList.toggle('minimized', minimized);
-      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isPlayMode(s.question) ? ' play-mode' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       qEl.hidden = false;
     } else {
       qEl.hidden = true;
@@ -1648,8 +1657,29 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       render();
       return;
     }
-    const trigger = t.closest<HTMLElement>('[data-trigger]');
     const openQuestion = client.state?.question;
+    if (openQuestion && isCombatDamage(openQuestion)) {
+      const step = t.closest<HTMLElement>('[data-cd-add],[data-cd-sub],[data-cd-lethal]');
+      if (step) {
+        const how = step.hasAttribute('data-cd-add') ? 'add' : step.hasAttribute('data-cd-sub') ? 'sub' : 'lethal';
+        const index = Number(step.dataset.cdAdd ?? step.dataset.cdSub ?? step.dataset.cdLethal);
+        damageSplit = { id: openQuestion.id, amounts: adjust(openQuestion, splitFor(openQuestion), index, how) };
+        const key = how === 'add' ? 'data-cd-add' : how === 'sub' ? 'data-cd-sub' : 'data-cd-lethal';
+        render();
+        // O foco fica no mesmo botão (ou no vizinho, se ele ficou desabilitado), e o novo valor é anunciado.
+        const again = root.querySelector<HTMLButtonElement>(`[${key}="${index}"]`);
+        (again && !again.disabled ? again : root.querySelector<HTMLElement>(`[data-cd-sub="${index}"]:not(:disabled), [data-cd-add="${index}"]:not(:disabled)`))?.focus();
+        announce(splitStatus(openQuestion, damageSplit.amounts).message);
+        return;
+      }
+      if (t.closest('[data-cd-auto]')) { damageSplit = { id: openQuestion.id, amounts: autoSplit(openQuestion) }; render(); return; }
+      if (t.closest('[data-cd-confirm]')) {
+        const amounts = splitFor(openQuestion);
+        if (splitStatus(openQuestion, amounts).valid) answer({ amounts });
+        return;
+      }
+    }
+    const trigger = t.closest<HTMLElement>('[data-trigger]');
     if (trigger && openQuestion && isTriggerOrder(openQuestion)) {
       if (suppressTriggerClick) { suppressTriggerClick = false; return; }
       const order = triggersFor(openQuestion), option = Number(trigger.dataset.trigger);

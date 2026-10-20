@@ -71,9 +71,10 @@ Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extr
 | `order` | `title`, `options[]` | `{type:"answer", id, indices:[nova ordem]}` |
 | `text` | `title`, `initial`, `numeric` | `{type:"answer", id, text:"3"}` |
 
-`purpose` marca duas perguntas com tela própria na mesa:
+`purpose` marca perguntas com tela própria na mesa:
 
 - `"triggers"` (`kind: "order"`): gatilhos simultâneos. Cada opção traz `kind: "ability"`, `card` (a carta de origem) e `ability` (o texto do gatilho sem o nome da carta). A primeira da resposta resolve primeiro. Quando o Forge já tem uma ordem guardada para o mesmo conjunto de gatilhos, ela vem como ordem inicial das opções.
+- `"combat-damage"` (`kind: "amount"`, `method: "assignCombatDamage"`): dividir o dano de um atacante bloqueado por duas ou mais criaturas, ou com atropelar. `card` é o atacante e `total` o dano. Cada opção traz `card` e `lethal` (o dano que já mata aquele bloqueador, 1 com toque mortífero, a lealdade num planeswalker). A opção com `defender: true` é o jogador ou planeswalker atacado, que recebe o excesso. `ordered` diz se um bloqueador só recebe dano depois do letal no anterior; `free` libera qualquer divisão. O defensor só recebe dano quando todos os bloqueadores têm letal. `suggested` é a divisão automática do Forge. A resposta é `{type:"answer", id, amounts:[...]}`, e a ponte recusa uma divisão fora dessas regras.
 - `"play-mode"` (`method: "getAbilityToPlay"`): jeitos de jogar uma carta ou de ativar uma habilidade. Cada opção traz `mode` (`cast`, `land`, `cycling`, `plot`, `foretell`, `flashback`, `evoke`, `adventure`, `ability`… e os custos alternativos do Forge em minúsculas), `spell`, `cost` (só a mana, como `{1}{R}`), `extra` (os outros custos, como o Forge escreve), `description` e, quando a opção usa outra face ou metade, `face` com `name`, `manaCost` e `typeLine`. Responder com `indices: []` cancela sem jogar nada.
 
 `events` traz os eventos públicos do jogo em ordem (`seq` crescente; `eventCursor` é o último), cada um com `type`, `actor` (jogador), `card`/`sourceId` (a carta de origem), `targets` e, quase sempre, `frame` (a mesa pública naquele instante, para a animação mostrar o estado certo).

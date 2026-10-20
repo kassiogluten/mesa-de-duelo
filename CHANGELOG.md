@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.21.0] - 2026-10-19
+
+### Novo
+
+- **Você distribui o dano em bloqueios duplos.** Quando sua criatura atacante é bloqueada por duas ou mais criaturas, ou tem atropelar, abre uma janela com o atacante e o dano total, cada bloqueador com o dano que o mata (**Letal: 2**, ou 1 com toque mortífero) e o jogador defendido como destino do excesso por atropelar. Use **−** e **+**, o botão **Letal** em cada bloqueador e **Todo o resto** no jogador. Ela já abre com a divisão automática pronta, então basta **Confirmar dano** se ela servir. O jogador só pode receber dano depois que todos os bloqueadores tiverem dano letal, e a janela diz o que falta. Antes, o jogo dividia sozinho.
+
 ## [0.20.1] - 2026-10-19
 
 ### Corrigido
