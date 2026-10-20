@@ -1121,7 +1121,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const cancel = attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
-      btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
+      btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
     const mine = s.activePlayer === s.you;
     if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…'}</button>`;
     // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
@@ -1839,6 +1839,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       render(); focusTrigger(option); announceTrigger(q, option);
     };
     root.addEventListener('pointermove', move); root.addEventListener('pointerup', up); root.addEventListener('pointercancel', stop);
+  });
+  // Espaço aperta o botão de passar da caixa de ação (passar, resolver, confirmar), como no Arena.
+  // Fica de fora quando o foco está num controle (o Espaço já é dele) ou quando uma janela está aberta.
+  document.addEventListener('keydown', e => {
+    if (e.key !== ' ' || e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+    if (!root.isConnected || root.closest('[hidden]') || !client?.state || disconnected) return;
+    const target = e.target as HTMLElement;
+    if (target !== document.body && target.closest('input, textarea, select, button, a, [contenteditable], [role="button"], [tabindex]')) return;
+    if (currentModal || document.querySelector('dialog[open]') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden) return;
+    // O botão de passar (OK, Resolver, "Para o combate"...): avança um passo. "Fim de turno" fica só no clique.
+    const primary = root.querySelector<HTMLButtonElement>('#fAction .btns [data-act="ok"]:not(:disabled)');
+    if (!primary) return;
+    e.preventDefault();
+    primary.click();
   });
   root.addEventListener('keydown', e => {
     if (e.key === 'Escape') {

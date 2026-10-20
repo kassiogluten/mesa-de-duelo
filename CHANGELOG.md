@@ -28,6 +28,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - As permanentes mostram o que as protege ou muda o tempo todo, na borda da carta e sem cobrir nome, custo nem P/T: brilho de resistência à magia, manto, vínculo com a vida e marcadores; moldura de indestrutível, proteção, ameaçar, defensor e fichas; selos com o custo da proteção contra alvos ("Ward {2}"), de que a proteção protege e quanto dano o escudo ainda previne; lâminas de iniciativa e golpe duplo; fumaça de toque mortífero; corrente em quem não pode atacar ou bloquear; mira em quem é alvo de algo na pilha; carta fora de fase translúcida; carta encantada com o brilho da cor da aura.
 - Voar ficou mais claro: a carta flutua um pouco acima da própria sombra.
 - Criaturas com enjoo de invocação ficam levemente apagadas no turno de quem as controla.
+- **Espaço para passar.** Na partida, a barra de espaço aperta o botão de passar da caixa de ação: **OK**, **Resolver**, **Para o combate** e afins. O atalho **Fim de turno** continua só no clique, para você não encerrar o turno sem querer. Com uma janela aberta ou com o foco numa carta ou num botão, o Espaço faz o de sempre.
+
+### Mudou
+
+- **Imagens do deck importado já ficam prontas.** Depois de salvar um deck importado (por link ou lista colada), as imagens das cartas, das duas faces e na versão em português quando existe, são baixadas aos poucos em segundo plano. Assim a primeira partida com o deck já abre com as cartas desenhadas.
+- **Decks não escolhidos com um círculo vazio.** Na escolha do deck, o escolhido continua com o check dourado e os outros agora mostram um círculo vazio no mesmo canto, para deixar claro que dá para marcá-los. Ao passar o mouse, o check aparece de leve.
 
 ## [0.17.1] - 2026-10-19
 

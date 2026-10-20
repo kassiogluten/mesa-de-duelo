@@ -1,7 +1,7 @@
 import './decks.css';
 import { DEFAULT_DECKS, countEntries, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { cardInfo, type Color } from '../cards';
-import { cacheGet, fetchByNames, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
+import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
 import { deckArt, deckColors, groupedRows, statsHTML } from './deckStats';
 import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
@@ -193,6 +193,13 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     } else user = [deck, ...loadUserDecks()];
     persist(importTarget ? 'Lista salva no mesmo deck. Todas as seções foram atualizadas.' : 'Deck importado. Todas as seções foram preservadas.');
     importReview = null; importTarget = null; importDraft = { name: '', text: '' }; edit(deck);
+    preloadImages(deck);
+  }
+  /** Deixa as imagens do deck no cache do navegador, para a primeira partida não abrir com cartas em branco. */
+  function preloadImages(deck: DeckData) {
+    let art = false;
+    try { art = localStorage.getItem('mesa:cards') === 'art'; } catch { /* Storage is optional. */ }
+    void preloadDeckImages(deckEntries(deck).map(e => e.name), art ? ['small', 'normal', 'art_crop'] : ['small', 'normal']).catch(() => {});
   }
   function render() { renderStatus(); if (view === 'library') renderLibrary(); else if (view === 'import') renderImport(); else renderEdit(); }
   async function loadData() {

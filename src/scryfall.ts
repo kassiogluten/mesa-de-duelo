@@ -215,6 +215,60 @@ export async function fetchByNames(names: string[], refreshLegality = false): Pr
   return out;
 }
 
+/**
+ * Endereços das imagens que a mesa mostra para estas cartas: cada face, na impressão em português
+ * quando ela tem scan (a mesma escolha de `sc.pt?.image_uris ?? sc.image_uris`). Só olha o cache.
+ */
+export function cardImageUrls(names: string[], sizes: (keyof Images)[] = ['small', 'normal']): string[] {
+  const urls = new Set<string>();
+  for (const n of new Set(names)) {
+    const c = cacheGet(n);
+    if (!c) continue;
+    const faces = Math.max(1, c.faceNames?.length ?? 0);
+    for (let i = 0; i < faces; i++) {
+      const u = (c.pt?.faceImages?.[i] ?? c.pt?.image_uris) ?? (c.faceImages?.[i] ?? c.image_uris);
+      for (const s of sizes) if (u?.[s]) urls.add(u[s]!);
+    }
+  }
+  return [...urls];
+}
+
+const preloaded = new Set<string>();
+function loadImage(url: string): Promise<void> {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.decoding = 'async';
+    (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'low';
+    img.onload = img.onerror = () => resolve();
+    img.src = url;
+  });
+}
+
+/**
+ * Baixa as imagens aos poucos (poucas de cada vez, com prioridade baixa) para que fiquem no cache
+ * do navegador antes da partida. Cada endereço é pedido uma vez por sessão; falhas são ignoradas.
+ * Devolve quantas imagens foram pedidas.
+ */
+export async function preloadImages(urls: string[], load: (url: string) => Promise<void> = loadImage, parallel = 4): Promise<number> {
+  const todo = [...new Set(urls)].filter(u => !preloaded.has(u));
+  todo.forEach(u => preloaded.add(u));
+  let next = 0;
+  const worker = async () => {
+    while (next < todo.length) {
+      const url = todo[next++];
+      try { await load(url); } catch { preloaded.delete(url); }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(parallel, todo.length) }, worker));
+  return todo.length;
+}
+
+/** Busca os dados (com a tradução) e pré-carrega as imagens das cartas de um deck recém-importado. */
+export async function preloadDeckImages(names: string[], sizes?: (keyof Images)[]): Promise<number> {
+  await fetchByNames(names);
+  return preloadImages(cardImageUrls(names, sizes));
+}
+
 export async function searchCards(q: string, page = 1, format?: 'free' | 'pauper' | 'commander'): Promise<{ cards: ScryCard[]; hasMore: boolean; total: number }> {
   if (format === 'pauper' || format === 'commander') q = `(${q}) f:${format}`;
   // Multilíngue para aceitar também o nome em português ("Golpe Relampejante").

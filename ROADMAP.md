@@ -15,7 +15,7 @@ Na importação de deck, o campo da lista aceita também o link público de um d
 - [x] Erros claros: link inválido, deck não encontrado, deck privado ou bloqueado pelo site, sem conexão, deck vazio.
 - [x] Bônus: aceitar também a lista em texto colado (`4 Lightning Bolt`, formato de exportação do Moxfield/Arena), que serve de alternativa quando o link falhar.
 - [ ] Conferir com um deck público real do Moxfield (testado com um id inexistente, que a API respondeu como "não encontrado", e com um deck real do Archidekt).
-- [ ] Pré-carregar as imagens com `fetchByNames` depois de importar.
+- [x] Pré-carregar as imagens com `fetchByNames` depois de importar (`preloadDeckImages` em `src/scryfall.ts`: tradução, depois as imagens de cada face, 4 por vez e com prioridade baixa; inclui a arte recortada no estilo "Arte e texto").
 
 ## 2. Custo de mana visível no leque de cartas da mão ✅
 
@@ -260,3 +260,37 @@ Uma página de desenvolvimento para testar os efeitos dos itens 15, 16 e 17 na m
 - [x] Disparar cada movimento do item 16 na permanente selecionada: destruir, sacrificar, virar e desvirar, blink, devolver para a mão, exilar, gatilho e habilidade ativada com alvo.
 - [x] Alternar a aparência das cartas (imagem inteira ou arte e texto), o tamanho de tela (celular deitado, tablet, computador) e "reduzir movimento" só na página.
 - [x] Campo cheio (muitas permanentes dos dois lados) para conferir desempenho e sobreposição.
+
+## 19. Limite de requisições (rate limit) nos pontos sensíveis
+
+Hoje nada limita quantas vezes um mesmo cliente pode abrir conexões ou pedir operações caras. Cada partida roda o Forge inteiro na ponte (memória e CPU), a importação por link busca o deck no Moxfield ou no Archidekt a partir do nosso servidor, e o cache de imagens (item 10) vai buscar no Scryfall. Um cliente com defeito, um script ou alguém mal-intencionado pode derrubar a ponte, esgotar a máquina ou fazer os serviços de fora bloquearem o nosso IP.
+
+A ideia é limitar **por IP (e por conexão, quando fizer sentido)** cada ponto que gasta recurso de verdade, com folga para o uso normal e uma mensagem clara em português quando o limite for atingido, sem derrubar a partida de quem está jogando.
+
+- [ ] Levantar os pontos sensíveis e quanto cada um custa: abrir conexão em `/ws`, criar sala e começar partida (sobe um jogo do Forge), entrar em sala (busca pelo código), validar deck, importar deck por link (busca externa), mensagens dentro da partida, `/metrics` e `/health`, e o endpoint de imagens do item 10.
+- [ ] nginx: `limit_conn` e `limit_req` por IP em `/ws` (novas conexões por segundo e conexões abertas ao mesmo tempo), com rajada pequena permitida; `/metrics` só para a rede interna (Prometheus), não para a internet.
+- [ ] Ponte: limite de partidas e salas abertas ao mesmo tempo por IP e no total do servidor (fila ou recusa com aviso quando a máquina estiver cheia), e tempo máximo para salas vazias ou paradas.
+- [ ] Ponte: limite de mensagens por conexão (por exemplo, balde de fichas por segundo), descartando ou fechando a conexão que inundar; respostas de jogo legítimas (passar, atacar, escolher) nunca podem esbarrar no limite.
+- [ ] Busca de sala pelo código: limitar tentativas por IP para ninguém varrer os códigos até achar uma sala alheia.
+- [ ] Importar por link: poucas importações por minuto por IP, cache curto do mesmo link, e respeitar os limites do Moxfield e do Archidekt (fila com intervalo mínimo e `User-Agent` identificado).
+- [ ] Imagens (item 10): o limite de buscas ao Scryfall já previsto lá, mais um limite por IP no endpoint para não virar um jeito de forçar downloads.
+- [ ] Busca de cartas no construtor de decks: o aparelho já fala direto com a API do Scryfall; conferir que a busca espera o jogador parar de digitar e respeita os ~10 pedidos por segundo que o Scryfall pede.
+- [ ] Mensagem para o jogador quando bater no limite ("Muitas tentativas, espere alguns segundos") em vez de erro genérico ou conexão caindo sem explicação.
+- [ ] Métricas no Grafana: pedidos recusados por limite, por ponto, e alertas quando um IP for bloqueado com frequência.
+- [ ] Testes: script que dispara conexões e mensagens em excesso e confere que o limite segura sem afetar uma partida normal rodando ao lado.
+
+## 20. Migrar a interface para Preact (ou React)
+
+Hoje a interface é TypeScript puro: cada tela monta o HTML em texto (`innerHTML`) e atualiza o DOM à mão (`src/ui/`, com a mesa da partida em `forgeTable.ts`, perto de 2.000 linhas). Isso funcionou até aqui, mas cada recurso novo (efeitos, modais do Arena, Commander com vários jogadores) aumenta o código que precisa lembrar o que já está na tela, onde ficam os ouvintes de evento e o que redesenhar quando o estado da ponte muda. Isso abre espaço para erros de tela desatualizada e torna mais difícil mexer sem quebrar outra parte.
+
+A ideia é passar para componentes com estado declarado, **aos poucos e sem parar o resto do roadmap**, com a mesa funcionando igual para o jogador em cada etapa.
+
+- [ ] Escolher a biblioteca: **Preact** (cerca de 4 KB, API do React, bom para PWA no celular) é o candidato principal; React só se alguma biblioteca indispensável exigir. Comparar peso no build, tempo de carga no celular e suporte do Vite.
+- [ ] Definir o estado: um modelo único do quadro da ponte (o que hoje chega pelo `client`) com sinais (`@preact/signals`) ou um store simples, e as telas lendo dele em vez de cada uma guardar sua cópia.
+- [ ] Migrar primeiro as telas mais isoladas (novidades, opções, lobby, importar deck, construtor de decks), uma por vez, convivendo com o código antigo.
+- [ ] Depois os modais de escolha (gatilhos, modo de conjurar, escolha de cartas, alocar dano) e por último a mesa da partida, quebrada em componentes (campo, mão, pilha, retratos, trilha de fases, caixa de ação).
+- [ ] Efeitos e animações (itens 15, 16 e 17, `motion.ts`, linha do tempo de apresentação) ficam fora do ciclo de redesenho: componentes expõem os elementos (refs) e os efeitos continuam animando direto no DOM, sem renderizar a mesa a cada quadro.
+- [ ] Desempenho: conferir que uma atualização da ponte só redesenha o que mudou, inclusive com campo cheio e no Commander com vários jogadores (laboratório de efeitos, item 18).
+- [ ] Manter o CSS atual (sem trocar por CSS-in-JS), o PWA, o modo offline e a acessibilidade (teclado, leitor de tela) iguais ou melhores.
+- [ ] Testes: testes de componente para as telas migradas e os testes de protocolo da ponte passando sem mudanças.
+- [ ] Remover o código antigo de cada tela assim que a versão nova estiver no ar.

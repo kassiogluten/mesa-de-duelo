@@ -55,3 +55,23 @@ test('malformed card cache falls back to retrieval instead of crashing a deck', 
   cached.set('scry:v1:corrupt test', JSON.stringify({ v: 3, name: 42 }));
   assert.equal(cacheGet('Corrupt Test'), null);
 });
+
+test('deck image preload lists every face once and asks each url once per session', async () => {
+  const { cardImageUrls, preloadImages } = await import('../src/scryfall.ts');
+  globalThis.fetch = async () => Response.json({ data: [
+    apiCard('Preload Plain', { lang: 'en', image_uris: { small: 'https://img.test/plain-s.jpg', normal: 'https://img.test/plain-n.jpg' } }),
+    apiCard('Preload Front // Preload Back', { layout: 'transform', lang: 'en', card_faces: [
+      { name: 'Preload Front', image_uris: { small: 'https://img.test/front-s.jpg', normal: 'https://img.test/front-n.jpg' } },
+      { name: 'Preload Back', image_uris: { small: 'https://img.test/back-s.jpg', normal: 'https://img.test/back-n.jpg' } },
+    ] }),
+  ] });
+  try {
+    await fetchByNames(['Preload Plain', 'Preload Front // Preload Back']);
+    const urls = cardImageUrls(['Preload Plain', 'Preload Plain', 'Preload Front // Preload Back', 'Unknown Card'], ['normal']);
+    assert.deepEqual(urls, ['https://img.test/plain-n.jpg', 'https://img.test/front-n.jpg', 'https://img.test/back-n.jpg']);
+    const loaded = [];
+    assert.equal(await preloadImages(urls, async url => { loaded.push(url); }, 2), 3);
+    assert.deepEqual(loaded.sort(), [...urls].sort());
+    assert.equal(await preloadImages(urls, async url => { loaded.push(url); }), 0);
+  } finally { globalThis.fetch = originalFetch; }
+});

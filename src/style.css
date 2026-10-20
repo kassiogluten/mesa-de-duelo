@@ -564,6 +564,10 @@ a { color: var(--gold); }
 .tile-wrap:hover .tile-art { transform: scale(1.05); }
 .tile-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--gold); color: #1d1406; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
 .tile-check svg { width: 16px; height: 16px; }
+/* Decks não escolhidos: o mesmo círculo, vazio, para mostrar que dá para marcar. Ao passar o mouse, o check aparece de leve. */
+.tile-check.empty { background: rgba(9, 13, 24, 0.55); border: 2px solid rgba(255, 255, 255, 0.75); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); color: transparent; transition: border-color 0.15s, color 0.15s; }
+.tile-wrap:hover .tile-check.empty, .deck-tile:focus-visible .tile-check.empty { border-color: var(--gold); color: rgba(242, 181, 76, 0.6); }
+.tile-wrap:hover .tile-check.empty::before, .deck-tile:focus-visible .tile-check.empty::before { content: '✓'; font-size: 13px; font-weight: 700; }
 .tile-tag { position: absolute; top: 8px; left: 8px; padding: 1px 8px; border-radius: 999px; background: rgba(9, 13, 24, 0.85); color: var(--gold-light); font-size: 11px; font-weight: 700; }
 .tile-info { display: flex; flex-direction: column; gap: 4px; padding: 9px 44px 11px 12px; }
 .tile-peek {
