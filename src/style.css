@@ -201,12 +201,11 @@ a { color: var(--gold); }
 .badge.copy { background: #6a4bc4; color: #fff; }
 .badge.token { background: #e8e2d0; color: #1b1a17; }
 .badge.copy + .badge.token { top: calc(3% + 15px); }
-/* Comandante no campo: coroa dourada no canto e um contorno dourado na carta. */
-.badge.commander { display: inline-flex; align-items: center; gap: 2px; padding: 1px 5px 1px 3px; background: linear-gradient(135deg, #f7d27a, #c98a1f); color: #2a1a04; }
-.badge.commander svg { width: 11px; height: 11px; }
-.badge.commander + .badge.copy { top: calc(3% + 15px); }
+/* Comandante no campo: só a coroa dourada no canto (o nome fica na dica e no leitor de tela) e um contorno dourado. */
+.badge.commander { display: inline-flex; align-items: center; justify-content: center; padding: 2px 3px; border-radius: 5px; background: linear-gradient(135deg, #f7d27a, #c98a1f); color: #2a1a04; }
+.badge.commander svg { width: max(12px, calc(var(--cw) * .17)); height: max(12px, calc(var(--cw) * .17)); }
+.badge.commander + .badge.copy { top: calc(3% + max(16px, calc(var(--cw) * .17) + 4px)); }
 .bfc:has(> .badge.commander) .face { outline: 2px solid #f2b54ccc; outline-offset: 1px; }
-@media (max-width: 760px), (max-height: 500px) { .badge.commander span { display: none; } .badge.commander { padding: 2px 3px; } }
 /*
  * Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita.
  * A subida total para em 18% da carta (o degrau encolhe com mais anexos) e a margem de cima reserva

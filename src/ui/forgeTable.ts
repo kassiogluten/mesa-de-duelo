@@ -729,7 +729,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<span class="counters">${shown.map(([k, v]) => chip('ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${v}`, v)).join('')}</span>` : '';
     const kws = c.creature ? keywordsOf(c) : [];
     const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip('ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k])).join('')}</span>` : '';
-    const badges = [c.commander ? `<span class="badge commander" title="Comandante">${ICON_CROWN}<span>Comandante</span></span>` : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
+    // A ponte marca o comandante; uma ponte mais antiga só manda a lista de comandantes de cada jogador (mesmo id da carta).
+    const isCommander = !!c.commander || s.players.some(p => p.commanders?.some(cm => cm.id === c.id));
+    const badges = [isCommander ? `<span class="badge commander" title="Comandante">${ICON_CROWN}</span>` : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
       c.token ? '<span class="badge token">Ficha</span>' : ''].join('');
     // Efeitos contínuos (item 17): moldura, brilho e selos, na borda ou fora da carta.
     const caster = s.stack.find(item => item.targets?.cards?.includes(c.id))?.controller;
@@ -737,7 +739,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, active: c.controller === s.activePlayer });
     const fxView = permanentFxHTML(fx, aura ? auraColor(aura.manaCost) : undefined);
     inner.push(...fxView.classes);
-    const aria = [label(c), c.commander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
+    const aria = [label(c), isCommander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
       `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small')}${selectedBadge(s, a)}</div>`).join('');

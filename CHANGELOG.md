@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.20.1] - 2026-10-19
+
+### Corrigido
+
+- **Coroa do comandante igual em todas as telas.** No computador, o selo do comandante trazia a palavra "Comandante" e ficava mais largo que a própria carta. Agora, em qualquer tela, o comandante no campo mostra só a coroa dourada no canto, um pouco maior, junto do contorno dourado. O nome continua na dica ao passar o mouse e no leitor de tela.
+- **Coroa aparece também com um servidor de partida mais antigo.** Se o servidor da partida ainda não tivesse sido atualizado, a coroa não aparecia. Agora a mesa também reconhece o comandante pela lista de comandantes de cada jogador.
+
 ## [0.20.0] - 2026-10-19
 
 ### Novo
