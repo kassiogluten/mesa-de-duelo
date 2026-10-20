@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.20.0] - 2026-10-19
+
+### Novo
+
+- **Resolver todos.** Com dois ou mais itens na pilha, a caixa de ação mostra **Resolver todos**, com o total, ao lado de **Resolver**. Um clique deixa a pilha inteira resolver sem precisar passar a vez a cada item. Se alguém acrescentar algo à pilha ou o jogo pedir uma escolha sua, como um alvo ou a ordem de gatilhos, a vez volta para você.
+- **Comandante marcado no campo.** No Commander, o comandante de cada jogador, quando está no campo de batalha, ganha uma coroa dourada no canto com a palavra **Comandante** e um contorno dourado, para achá-lo de relance entre as outras permanentes. No celular fica só a coroa. Leitores de tela anunciam "comandante" junto do nome.
+
 ## [0.19.0] - 2026-10-19
 
 ### Novo

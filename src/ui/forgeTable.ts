@@ -35,6 +35,7 @@ import { shortInstruction } from './shortInstruction';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
 const ICON_SHIELD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="currentColor"/></svg>';
 
 const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
@@ -728,7 +729,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<span class="counters">${shown.map(([k, v]) => chip('ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${v}`, v)).join('')}</span>` : '';
     const kws = c.creature ? keywordsOf(c) : [];
     const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip('ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k])).join('')}</span>` : '';
-    const badges = [c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
+    const badges = [c.commander ? `<span class="badge commander" title="Comandante">${ICON_CROWN}<span>Comandante</span></span>` : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
       c.token ? '<span class="badge token">Ficha</span>' : ''].join('');
     // Efeitos contínuos (item 17): moldura, brilho e selos, na borda ou fora da carta.
     const caster = s.stack.find(item => item.targets?.cards?.includes(c.id))?.controller;
@@ -736,7 +737,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, active: c.controller === s.activePlayer });
     const fxView = permanentFxHTML(fx, aura ? auraColor(aura.manaCost) : undefined);
     inner.push(...fxView.classes);
-    const aria = [label(c), c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
+    const aria = [label(c), c.commander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
       `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small')}${selectedBadge(s, a)}</div>`).join('');
@@ -1129,7 +1130,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying && !extraCombat;
     const undo = (endTurn || (extraCombat && !!s.input.priority)) && /fim de turno|end turn/i.test(cancel.label) ? '' : b('cancel', cancel, 'secondary');
     const priority = s.input.priority ? { ...ok, label: passLabel(s) } : ok;
-    return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') +
+    // Pilha longa: resolve tudo de uma vez. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão.
+    const resolveAll = !!s.input.priority && ok.enabled && s.stack.length >= 2 && !s.input.targeting && !s.input.paying
+      ? b('resolve-all', { label: `Resolver todos (${s.stack.length})`, enabled: true }, 'secondary') : '';
+    return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') + resolveAll +
       (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
   }
 
@@ -1493,10 +1497,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     setTimeout(() => el.remove(), 4500);
   }
 
-  function sendInputAction(act: 'ok' | 'cancel' | 'pass-turn', gen: number) {
+  function sendInputAction(act: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all', gen: number) {
     const s = client?.state;
     if (!client || !s || disconnected || gen !== s.input.gen || s.question) return;
-    if (act === 'pass-turn' ? !s.input.priority || !s.input.ok.enabled || s.input.paying || s.input.targeting || s.activePlayer !== s.you || !!s.stack.length : !s.input[act].enabled) return;
+    if (act === 'pass-turn' ? !s.input.priority || !s.input.ok.enabled || s.input.paying || s.input.targeting || s.activePlayer !== s.you || !!s.stack.length
+      : act === 'resolve-all' ? !s.input.priority || !s.input.ok.enabled || s.input.paying || s.input.targeting || s.stack.length < 2
+      : !s.input[act].enabled) return;
     if (gen === clickedGen && Date.now() - clickedAt < CLICK_LOCK_MS) return;
     if (s.input.attacking) {
       if (attackAllGen !== null) {
@@ -1657,7 +1663,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (conf) { answer({ value: conf.dataset.qConfirm === 'true' }); return; }
 
     const act = t.closest<HTMLElement>('[data-act]')?.dataset.act;
-    if (act === 'ok' || act === 'cancel' || act === 'pass-turn') {
+    if (act === 'ok' || act === 'cancel' || act === 'pass-turn' || act === 'resolve-all') {
       const control = t.closest<HTMLElement>('[data-act]')!;
       if (!renderedInputIsCurrent(control)) return;
       sendInputAction(act, Number(control.dataset.gen));

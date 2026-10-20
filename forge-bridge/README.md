@@ -117,6 +117,8 @@ A mão do oponente vai só como contagem, as perguntas vão só para quem precis
 | `{type:"card", id}` | Clica numa carta: jogar, conjurar, escolher alvo, atacar, bloquear ou pagar mana. |
 | `{type:"player", id}` | Clica num jogador, por exemplo como alvo. |
 | `{type:"ok"}` / `{type:"cancel"}` | Os dois botões do Forge; os rótulos vêm em `input`. |
+| `{type:"pass-turn", gen}` | Passa até o fim do turno (o "Fim de turno" da mesa). |
+| `{type:"resolve-all", gen}` | Passa até a pilha esvaziar. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão sua. |
 | `{type:"concede"}` | Desiste da partida. |
 | `{type:"answer", ...}` | Responde à `question` aberta. |
 

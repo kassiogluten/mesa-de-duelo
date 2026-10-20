@@ -305,7 +305,7 @@ final class Session {
     void onClientMessage(Seat seat, Channel source, String type, JsonObject msg) {
         if (seat.eliminated() && !Set.of("preferences", "hello").contains(type)) { rejectStaleAction(seat, type); return; }
         int actionGen = -1;
-        if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn").contains(type)) {
+        if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn", "resolve-all").contains(type)) {
             if (!msg.has("gen") || !msg.get("gen").isJsonPrimitive() || !msg.get("gen").getAsJsonPrimitive().isNumber()) { rejectStaleAction(seat, type); return; }
             actionGen = exactInt(msg.get("gen"));
             if (actionGen != seat.inputGen.get() || seat.question != null || !"playing".equals(matchPhase)) { rejectStaleAction(seat, type); return; }
@@ -332,6 +332,18 @@ final class Session {
                 seat.onEdt(genAtClick, c -> {
                     if (seat.livePriority() && seat.question == null)
                         c.applyYieldUpdate(new YieldUpdate.SetAutoPassUntilEndOfTurn(seat.me, true));
+                    markDirty();
+                });
+                markDirty();
+            }
+            case "resolve-all" -> {
+                // Passa até a pilha esvaziar, como o "Resolver tudo" do Forge. Respeita interrupções: se alguém
+                // acrescentar algo à pilha ou o jogo pedir uma decisão sua, a vez volta para você.
+                if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { markDirty(); break; }
+                seat.consumedGen = genAtClick; seat.consumedAt = System.currentTimeMillis();
+                seat.onEdt(genAtClick, c -> {
+                    if (seat.livePriority() && seat.question == null)
+                        c.applyYieldUpdate(new YieldUpdate.StackYield(seat.me, true, true));
                     markDirty();
                 });
                 markDirty();

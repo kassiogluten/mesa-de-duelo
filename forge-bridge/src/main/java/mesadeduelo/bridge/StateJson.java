@@ -237,6 +237,8 @@ final class StateJson {
         o.addProperty("creature", s.isCreature());
         o.addProperty("land", s.isLand());
         if (s.isPlaneswalker()) o.addProperty("planeswalker", true);
+        // Comandante em qualquer zona (no campo, a mesa marca a permanente com a coroa).
+        if (c.isCommander()) o.addProperty("commander", true);
         // Encantamentos de Classe: nível atual e o mais alto que a carta tem (uma habilidade de subir por nível).
         if (s.getType() != null && s.getType().hasSubtype("Class")) {
             Card gc = game == null ? null : game.findByView(c);

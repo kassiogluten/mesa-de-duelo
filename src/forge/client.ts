@@ -59,6 +59,8 @@ export interface FCard {
   classLevel?: number;
   classMaxLevel?: number;
   emblem?: boolean;
+  /** É o comandante de alguém (marca a permanente no campo). */
+  commander?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Custo da proteção contra alvos (ward), como "{2}" ou "Pay 3 life". */
@@ -235,7 +237,7 @@ export type ClientMessage =
   | { type: 'stack'; id: number; gen?: number }
   | { type: 'player'; id: number; gen?: number }
   | { type: 'mana'; color: string; gen?: number }
-  | { type: 'ok' | 'cancel' | 'pass-turn'; gen?: number } | { type: 'concede' } | { type: 'hello' }
+  | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string };
 
 /**
