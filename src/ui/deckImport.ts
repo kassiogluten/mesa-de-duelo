@@ -30,7 +30,9 @@ export function applyDeckImport(target: DeckData, incoming: DeckData, mode: Deck
   if (!incoming.cards.length && !incoming.sideboard?.length && !incoming.commanders?.length) throw new Error('A lista não contém cartas para importar.');
   const cards = combine([...(mode === 'merge' ? target.cards : []), ...incoming.cards]);
   const sideboard = combine([...(mode === 'merge' ? target.sideboard ?? [] : []), ...(incoming.sideboard ?? [])]);
-  const commanders = combine([...(mode === 'merge' ? target.commanders ?? [] : []), ...(incoming.commanders ?? [])]);
+  // Um comandante que já está na zona de comando não ganha segunda cópia ao adicionar a lista.
+  const kept = mode === 'merge' ? target.commanders ?? [] : [];
+  const commanders = combine([...kept, ...(incoming.commanders ?? []).filter(e => !kept.some(k => (k.oracleId && k.oracleId === e.oracleId) || k.name.toLowerCase() === e.name.toLowerCase()))]);
   const unresolved = [...new Set([...(mode === 'merge' ? target.unresolved ?? [] : []), ...(incoming.unresolved ?? [])])]
     .filter(name => [...cards, ...sideboard, ...commanders].some(entry => entry.name.toLowerCase() === name.toLowerCase()));
   return {

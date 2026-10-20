@@ -6,6 +6,20 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.19.0] - 2026-10-19
+
+### Novo
+
+- **Deck de Commander a partir do deck médio do EDHREC.** Na importação de deck, no formato Commander, escreva o nome do comandante (em português ou inglês; para dois, separe com +) e toque em **Usar o deck médio do EDHREC**: a lista chega montada com as cartas mais usadas nos decks publicados para ele e passa pela revisão de sempre, com as cartas não reconhecidas e o comandante na zona de comando. Num deck de Commander que já tem comandante, o mesmo botão aparece ao lado dele; se o deck já tiver cartas, você escolhe entre adicionar e substituir. A revisão mostra de onde veio a lista, quantos decks entraram na média e até que data, e lembra que é uma média, não uma lista testada.
+- **Links do EDHREC na importação.** O campo da lista aceita também o link do deck médio ou da página de um comandante no EDHREC (inclusive as versões econômica e temáticas).
+- **Espaço para passar.** Na partida, a barra de espaço aperta o botão de passar da caixa de ação: **OK**, **Resolver**, **Para o combate** e afins. O atalho **Fim de turno** continua só no clique, para você não encerrar o turno sem querer. Com uma janela aberta ou com o foco numa carta ou num botão, o Espaço faz o de sempre.
+
+### Mudou
+
+- **Imagens do deck importado já ficam prontas.** Depois de salvar um deck importado (por link ou lista colada), as imagens das cartas, das duas faces e na versão em português quando existe, são baixadas aos poucos em segundo plano. Assim a primeira partida com o deck já abre com as cartas desenhadas.
+- **Decks não escolhidos com um círculo vazio.** Na escolha do deck, o escolhido continua com o check dourado e os outros agora mostram um círculo vazio no mesmo canto, para deixar claro que dá para marcá-los. Ao passar o mouse, o check aparece de leve.
+- **Adicionar uma lista não duplica o comandante.** Ao somar uma lista a um deck que já tem o mesmo comandante, ele continua com uma cópia só na zona de comando.
+
 ## [0.18.0] - 2026-10-19
 
 ### Novo
@@ -28,12 +42,6 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - As permanentes mostram o que as protege ou muda o tempo todo, na borda da carta e sem cobrir nome, custo nem P/T: brilho de resistência à magia, manto, vínculo com a vida e marcadores; moldura de indestrutível, proteção, ameaçar, defensor e fichas; selos com o custo da proteção contra alvos ("Ward {2}"), de que a proteção protege e quanto dano o escudo ainda previne; lâminas de iniciativa e golpe duplo; fumaça de toque mortífero; corrente em quem não pode atacar ou bloquear; mira em quem é alvo de algo na pilha; carta fora de fase translúcida; carta encantada com o brilho da cor da aura.
 - Voar ficou mais claro: a carta flutua um pouco acima da própria sombra.
 - Criaturas com enjoo de invocação ficam levemente apagadas no turno de quem as controla.
-- **Espaço para passar.** Na partida, a barra de espaço aperta o botão de passar da caixa de ação: **OK**, **Resolver**, **Para o combate** e afins. O atalho **Fim de turno** continua só no clique, para você não encerrar o turno sem querer. Com uma janela aberta ou com o foco numa carta ou num botão, o Espaço faz o de sempre.
-
-### Mudou
-
-- **Imagens do deck importado já ficam prontas.** Depois de salvar um deck importado (por link ou lista colada), as imagens das cartas, das duas faces e na versão em português quando existe, são baixadas aos poucos em segundo plano. Assim a primeira partida com o deck já abre com as cartas desenhadas.
-- **Decks não escolhidos com um círculo vazio.** Na escolha do deck, o escolhido continua com o check dourado e os outros agora mostram um círculo vazio no mesmo canto, para deixar claro que dá para marcá-los. Ao passar o mouse, o check aparece de leve.
 
 ## [0.17.1] - 2026-10-19
 
