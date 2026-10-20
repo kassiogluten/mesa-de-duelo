@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.19.0] - 2026-10-19
+
+### Novo
+
+- **Deck de Commander a partir do deck médio do EDHREC.** Na importação de deck, no formato Commander, escreva o nome do comandante (em português ou inglês; para dois, separe com +) e toque em **Usar o deck médio do EDHREC**: a lista chega montada com as cartas mais usadas nos decks publicados para ele e passa pela revisão de sempre, com as cartas não reconhecidas e o comandante na zona de comando. Num deck de Commander que já tem comandante, o mesmo botão aparece ao lado dele; se o deck já tiver cartas, você escolhe entre adicionar e substituir. A revisão mostra de onde veio a lista, quantos decks entraram na média e até que data, e lembra que é uma média, não uma lista testada.
+- **Links do EDHREC na importação.** O campo da lista aceita também o link do deck médio ou da página de um comandante no EDHREC (inclusive as versões econômica e temáticas).
+
+### Mudou
+
+- **Adicionar uma lista não duplica o comandante.** Ao somar uma lista a um deck que já tem o mesmo comandante, ele continua com uma cópia só na zona de comando.
+
 ## [0.18.0] - 2026-10-19
 
 ### Novo

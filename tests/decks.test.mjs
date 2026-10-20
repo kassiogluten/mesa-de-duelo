@@ -252,6 +252,7 @@ test('Commander imports, exports, merges, and storage preserve a separate comman
   assert.deepEqual(applyDeckImport(target, commander, 'replace').commanders, commander.commanders);
   assert.equal(applyDeckImport(target, commander, 'merge').commanders.length, 2);
   assert.equal(target.commanders[0].name, 'Old Commander');
+  assert.deepEqual(applyDeckImport(commander, commander, 'merge').commanders, commander.commanders, 'the same commander is not doubled when adding a list');
   const store = storage(); assert.equal(decks.writeDeckLibrary(store, [commander]).ok, true);
   assert.deepEqual(decks.readDeckLibrary(store).decks[0].commanders, commander.commanders);
 });

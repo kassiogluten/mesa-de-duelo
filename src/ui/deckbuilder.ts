@@ -4,7 +4,7 @@ import { cardInfo, type Color } from '../cards';
 import { cacheGet, fetchByNames, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
 import { deckArt, deckColors, groupedRows, statsHTML } from './deckStats';
-import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
+import { deckLinkToList, deckOriginText, edhrecSlug, parseDeckLink, type DeckOrigin, type DeckSite } from '../deckLink';
 import { cardCopyLimit, copiesInDeck, validateDeckLocal, type ServerDeckValidation } from './deckRules';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { openDeckPreview } from './deckPreview';
@@ -18,7 +18,7 @@ interface BuilderOptions {
   onFormatChange?(format: DeckFormat): void;
   onPlay?(deck: DeckData): void;
   validateDeck?(deck: DeckData, format: DeckFormat): Promise<ServerDeckValidation>;
-  /** JSON público do deck no Moxfield ou no Archidekt (pela ponte). */
+  /** JSON público do deck no Moxfield ou no Archidekt, ou o deck médio do EDHREC (pela ponte). */
   fetchDeckSource?(site: DeckSite, id: string): Promise<string>;
 }
 export type DeckBuilderOpen = { action: 'create' | 'import' | 'library'; format?: DeckFormat } | { action: 'edit'; deckId: string; format?: DeckFormat };
@@ -70,6 +70,9 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let importMode: DeckImportMode | null = null;
   let importReview: { deck: DeckData; incoming: DeckData; parsed: ParsedList; missing: string[] } | null = null;
   let importAcknowledged = false;
+  /** Lista atual veio do deck médio do EDHREC; some quando o jogador mexe na lista. */
+  let importOrigin: DeckOrigin | null = null;
+  let edhrecName = '';
   const current = () => [...user, ...DEFAULT_DECKS].find(d => d.id === selected);
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
 
@@ -141,7 +144,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     return `<section class="dw-commander-zone" aria-label="Comandantes"><div class="dw-commander-cards">${commanders.map((entry, index) => {
       const sc = cacheGet(entry.name), info = sc ? cardInfo(sc) : null;
       return `<article class="dw-commander"><button type="button" class="dw-commander-portrait" data-inspect="${esc(entry.name)}" aria-label="Ler ${esc(info?.label ?? entry.name)}">${info?.image ? `<img src="${esc(info.image)}" alt="${esc(info.label)}">` : esc(entry.name)}</button><div><p class="dw-eyebrow">${index ? 'Segundo comandante' : 'Comandante'}</p><h2>${esc(info?.label ?? entry.name)}</h2>${!deck.builtin ? `<div class="dw-actions"><button type="button" class="dw-button" data-commander-slot="${index}" data-focus="commander:${index}">Trocar</button><button type="button" class="dw-button subtle" data-remove-commander="${index}" aria-label="Remover ${esc(info?.label ?? entry.name)}">Remover</button></div>` : ''}</div></article>`;
-    }).join('')}${!deck.builtin && commanders.length < 2 ? `<button type="button" class="${commanders.length ? 'dw-button subtle dw-commander-add' : 'dw-commander-empty'}" data-commander-slot="${commanders.length}" data-focus="commander:${commanders.length}">${commanders.length ? '+ Segundo comandante' : '<span>+</span><strong>Escolher comandante</strong><small>Sua estratégia começa aqui</small>'}</button>` : ''}</div><div class="dw-commander-summary"><p class="dw-eyebrow">Commander</p><strong>${totalDeckSize(deck)} <small>/ 100 cartas</small></strong><p>${COLORS.filter(c => identity.has(c)).map(pip).join('') || 'Identidade incolor'}</p><p class="dw-note">${deckSize(deck)} no deck · ${countEntries(commanders)} na zona de comando</p></div></section>`;
+    }).join('')}${!deck.builtin && commanders.length < 2 ? `<button type="button" class="${commanders.length ? 'dw-button subtle dw-commander-add' : 'dw-commander-empty'}" data-commander-slot="${commanders.length}" data-focus="commander:${commanders.length}">${commanders.length ? '+ Segundo comandante' : '<span>+</span><strong>Escolher comandante</strong><small>Sua estratégia começa aqui</small>'}</button>` : ''}</div><div class="dw-commander-summary"><p class="dw-eyebrow">Commander</p><strong>${totalDeckSize(deck)} <small>/ 100 cartas</small></strong><p>${COLORS.filter(c => identity.has(c)).map(pip).join('') || 'Identidade incolor'}</p><p class="dw-note">${deckSize(deck)} no deck · ${countEntries(commanders)} na zona de comando</p>${!deck.builtin && commanders.length ? '<button type="button" class="dw-button subtle" data-b="edhrec-current" data-focus="edhrec-current">Usar o deck médio do EDHREC</button>' : ''}</div></section>`;
   }
   function renderEdit() {
     const deck = current(); if (!deck) { view = 'library'; renderLibrary(); return; }
@@ -168,7 +171,13 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const review = importReview, target = importTarget;
     const needsChoice = !!target && !!deckEntries(target).length;
     const countLabel = (deck: DeckData) => `${deckSize(deck)} no principal · ${countEntries(deck.sideboard ?? [])} no sideboard${deck.commanders?.length ? ` · ${countEntries(deck.commanders)} na zona de comando` : ''}`;
-    $('#dwContent').innerHTML = `<section class="dw-import"><button type="button" class="dw-button subtle" data-b="import-cancel">← ${target ? 'Voltar ao deck' : 'Voltar aos meus decks'}</button><p class="dw-eyebrow">${review ? '2. Revise sua lista' : '1. Cole sua lista'}</p><h1 tabindex="-1" id="dwImportHeading">${target ? 'Importar lista neste deck' : 'Importar deck'}</h1><p>${target ? `<strong>${esc(target.name)}</strong> · ${formatLabel(target.format ?? 'free')}. O nome e o formato serão mantidos.` : 'Deck principal e sideboard serão preservados.'}</p>${review ? `<div class="dw-import-review"><h2>${esc(review.deck.name)}</h2>${needsChoice ? `<fieldset class="dw-import-mode"><legend>Como aplicar a lista?</legend><label><input type="radio" name="importMode" value="merge" data-focus="import-merge" ${importMode === 'merge' ? 'checked' : ''}><span><strong>Adicionar às cartas atuais</strong><small>Soma as cópias da lista em cada seção, incluindo os comandantes.</small></span></label><label><input type="radio" name="importMode" value="replace" data-focus="import-replace" ${importMode === 'replace' ? 'checked' : ''}><span><strong>Substituir todas as cartas</strong><small>Troca todas as seções, incluindo os comandantes, pela lista importada.</small></span></label></fieldset>` : ''}<div class="dw-import-counts" aria-live="polite">${target ? `<p><span>Deck atual</span><strong>${countLabel(target)}</strong></p>` : ''}<p><span>${target && !importMode ? 'Lista importada' : target ? 'Após salvar' : 'Lista reconhecida'}</span><strong>${countLabel(review.deck)}</strong></p></div>${review.missing.length ? `<div class="dw-error"><strong>Cartas não reconhecidas</strong><p>Estas cartas serão preservadas no rascunho, sem permitir iniciar uma partida até serem corrigidas:</p><ul>${review.missing.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}${review.parsed.skipped.length || review.parsed.ignored.length ? `<div class="dw-error"><p>Algumas linhas não serão adicionadas às cartas. A lista original ficará salva no rascunho.</p><ul>${[...review.parsed.skipped, ...review.parsed.ignored].map(line => `<li>${esc(line)}</li>`).join('')}</ul><label><input type="checkbox" id="dwImportAck" data-focus="import-ack" ${importAcknowledged ? 'checked' : ''}> Revisei as linhas acima e quero guardar o rascunho.</label></div>` : ''}${!target || importMode ? validationHTML(review.deck) : '<p class="dw-note">Escolha uma opção para conferir o resultado antes de salvar.</p>'}<details><summary>${target && importMode ? 'Lista após salvar' : 'Lista reconhecida'}</summary><pre>${esc(exportDeckList(review.deck))}</pre></details>${importError ? `<p class="dw-error" role="alert">${esc(importError)}</p>` : ''}<div class="dw-actions"><button type="button" class="dw-button" data-b="import-edit">Voltar à lista</button><button type="button" class="dw-button primary" data-b="import-save" ${importCanSave() ? '' : 'disabled'}>${target ? 'Salvar neste deck' : `Salvar ${review.missing.length ? 'rascunho' : 'deck'}`}</button></div></div>` : `<form id="dwImportForm">${!target ? `<div class="dw-import-fields"><label class="dw-field">Nome do deck<input id="dwImportName" data-focus="import-name" ${importBusy ? 'disabled' : ''} maxlength="80" value="${esc(importDraft.name)}" placeholder="Meu novo deck (ou o nome do link)"></label><label class="dw-field">Formato<select id="dwImportFormat" data-focus="import-format" ${importBusy ? 'disabled' : ''}>${formatOptions(format)}</select></label></div>` : ''}<label class="dw-field">Lista de cartas ou link do deck<textarea id="dwImportText" data-focus="import-text" ${importBusy ? 'disabled' : ''} rows="13" spellcheck="false" required placeholder="https://moxfield.com/decks/…&#10;&#10;ou&#10;&#10;Deck&#10;4 Lightning Bolt&#10;20 Mountain&#10;&#10;Sideboard&#10;2 Duress">${esc(importDraft.text)}</textarea></label><p class="dw-note">Cole o link público de um deck do Moxfield ou do Archidekt, ou a lista exportada do Arena, MTGO, Moxfield ou Archidekt. Uma carta por linha; nomes em português ou inglês. A seção Commander preserva seus comandantes. Maybeboard e fichas aparecem na revisão, sem entrar no deck.</p>${importError ? `<p class="dw-error" role="alert">${esc(importError)}</p>` : ''}<div class="dw-actions"><button class="dw-button primary" ${importBusy ? 'disabled' : ''}>${importBusy ? (parseDeckLink(importDraft.text) ? 'Buscando o deck…' : 'Conferindo cartas…') : 'Revisar importação'}</button><button type="button" class="dw-button" data-b="export-import">Baixar lista original</button></div></form>`}</section>`;
+    $('#dwContent').innerHTML = `<section class="dw-import"><button type="button" class="dw-button subtle" data-b="import-cancel">← ${target ? 'Voltar ao deck' : 'Voltar aos meus decks'}</button><p class="dw-eyebrow">${review ? '2. Revise sua lista' : '1. Cole sua lista'}</p><h1 tabindex="-1" id="dwImportHeading">${target ? 'Importar lista neste deck' : 'Importar deck'}</h1><p>${target ? `<strong>${esc(target.name)}</strong> · ${formatLabel(target.format ?? 'free')}. O nome e o formato serão mantidos.` : 'Deck principal e sideboard serão preservados.'}</p>${review ? `<div class="dw-import-review"><h2>${esc(review.deck.name)}</h2>${importOrigin ? originHTML(importOrigin) : ''}${needsChoice ? `<fieldset class="dw-import-mode"><legend>Como aplicar a lista?</legend><label><input type="radio" name="importMode" value="merge" data-focus="import-merge" ${importMode === 'merge' ? 'checked' : ''}><span><strong>Adicionar às cartas atuais</strong><small>Soma as cópias da lista em cada seção. Um comandante que já está no deck não é repetido.</small></span></label><label><input type="radio" name="importMode" value="replace" data-focus="import-replace" ${importMode === 'replace' ? 'checked' : ''}><span><strong>Substituir todas as cartas</strong><small>Troca todas as seções, incluindo os comandantes, pela lista importada.</small></span></label></fieldset>` : ''}<div class="dw-import-counts" aria-live="polite">${target ? `<p><span>Deck atual</span><strong>${countLabel(target)}</strong></p>` : ''}<p><span>${target && !importMode ? 'Lista importada' : target ? 'Após salvar' : 'Lista reconhecida'}</span><strong>${countLabel(review.deck)}</strong></p></div>${review.missing.length ? `<div class="dw-error"><strong>Cartas não reconhecidas</strong><p>Estas cartas serão preservadas no rascunho, sem permitir iniciar uma partida até serem corrigidas:</p><ul>${review.missing.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}${review.parsed.skipped.length || review.parsed.ignored.length ? `<div class="dw-error"><p>Algumas linhas não serão adicionadas às cartas. A lista original ficará salva no rascunho.</p><ul>${[...review.parsed.skipped, ...review.parsed.ignored].map(line => `<li>${esc(line)}</li>`).join('')}</ul><label><input type="checkbox" id="dwImportAck" data-focus="import-ack" ${importAcknowledged ? 'checked' : ''}> Revisei as linhas acima e quero guardar o rascunho.</label></div>` : ''}${!target || importMode ? validationHTML(review.deck) : '<p class="dw-note">Escolha uma opção para conferir o resultado antes de salvar.</p>'}<details><summary>${target && importMode ? 'Lista após salvar' : 'Lista reconhecida'}</summary><pre>${esc(exportDeckList(review.deck))}</pre></details>${importError ? `<p class="dw-error" role="alert">${esc(importError)}</p>` : ''}<div class="dw-actions"><button type="button" class="dw-button" data-b="import-edit">Voltar à lista</button><button type="button" class="dw-button primary" data-b="import-save" ${importCanSave() ? '' : 'disabled'}>${target ? 'Salvar neste deck' : `Salvar ${review.missing.length ? 'rascunho' : 'deck'}`}</button></div></div>` : `${(target?.format ?? format) === 'commander' ? edhrecFormHTML() : ''}<form id="dwImportForm">${!target ? `<div class="dw-import-fields"><label class="dw-field">Nome do deck<input id="dwImportName" data-focus="import-name" ${importBusy ? 'disabled' : ''} maxlength="80" value="${esc(importDraft.name)}" placeholder="Meu novo deck (ou o nome do link)"></label><label class="dw-field">Formato<select id="dwImportFormat" data-focus="import-format" ${importBusy ? 'disabled' : ''}>${formatOptions(format)}</select></label></div>` : ''}<label class="dw-field">Lista de cartas ou link do deck<textarea id="dwImportText" data-focus="import-text" ${importBusy ? 'disabled' : ''} rows="13" spellcheck="false" required placeholder="https://moxfield.com/decks/…&#10;&#10;ou&#10;&#10;Deck&#10;4 Lightning Bolt&#10;20 Mountain&#10;&#10;Sideboard&#10;2 Duress">${esc(importDraft.text)}</textarea></label><p class="dw-note">Cole o link público de um deck do Moxfield, do Archidekt ou do deck médio do EDHREC, ou a lista exportada do Arena, MTGO, Moxfield ou Archidekt. Uma carta por linha; nomes em português ou inglês. A seção Commander preserva seus comandantes. Maybeboard e fichas aparecem na revisão, sem entrar no deck.</p>${importError ? `<p class="dw-error" role="alert">${esc(importError)}</p>` : ''}<div class="dw-actions"><button class="dw-button primary" ${importBusy ? 'disabled' : ''}>${importBusy ? (parseDeckLink(importDraft.text) ? 'Buscando o deck…' : 'Conferindo cartas…') : 'Revisar importação'}</button><button type="button" class="dw-button" data-b="export-import">Baixar lista original</button></div></form>`}</section>`;
+  }
+  function originHTML(origin: DeckOrigin) {
+    return `<div class="dw-origin"><p><strong>Deck médio do EDHREC</strong> · ${esc(deckOriginText(origin, true))}. <a href="${esc(origin.url)}" target="_blank" rel="noopener noreferrer">Ver no EDHREC</a></p><p class="dw-note">É a média dos decks publicados no site, não uma lista testada. Revise antes de jogar.</p></div>`;
+  }
+  function edhrecFormHTML() {
+    return `<form id="dwEdhrecForm" class="dw-edhrec"><h2>Deck médio do EDHREC</h2><p class="dw-note">Escolha o comandante e a lista vem montada com as cartas mais usadas nos decks publicados para ele.</p><div class="dw-edhrec-row"><label class="dw-field">Comandante<input id="dwEdhrecName" data-focus="edhrec-name" ${importBusy ? 'disabled' : ''} maxlength="200" value="${esc(edhrecName)}" placeholder="Atraxa, Praetors' Voice" autocomplete="off"></label><button class="dw-button" ${importBusy ? 'disabled' : ''}>Usar o deck médio do EDHREC</button></div><p class="dw-note">Nome em português ou inglês. Para dois comandantes, separe com +.</p></form>`;
   }
   function beginImport(target?: DeckData) {
     if (target?.builtin) return;
@@ -177,6 +186,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     importTarget = target ? structuredClone(target) : null;
     importMode = target && !deckEntries(target).length ? 'replace' : null;
     importDraft = { name: target?.name ?? '', text: '' }; importReview = null; importError = ''; importAcknowledged = false;
+    importOrigin = null; edhrecName = (target?.commanders ?? []).map(e => cacheGet(e.name)?.name ?? e.name).join(' + ');
     view = 'import'; hideCardPreview(); render(); $('#dwImportText')?.focus();
   }
   function saveImport() {
@@ -246,21 +256,41 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     } catch (error) { if (seq !== searchSeq) return; searchError = `Não foi possível buscar as cartas: ${(error as Error).message}`; }
     searching = false; renderResults();
   }
-  /** Link do Moxfield ou do Archidekt no lugar da lista: busca o deck e troca o link pela lista, que segue para a revisão. */
+  /** Link do Moxfield, do Archidekt ou do EDHREC no lugar da lista: busca o deck e troca o link pela lista, que segue para a revisão. */
   async function resolveImportLink(): Promise<boolean> {
     const link = parseDeckLink(importDraft.text);
     if (!link) return true;
     if (!opts.fetchDeckSource) { importError = 'Importar por link precisa do servidor de jogo. Cole a lista em texto.'; renderImport(); return false; }
     const seq = ++importSeq; importBusy = true; importError = ''; renderImport();
     try {
-      const deck = deckLinkToList(link.site, await opts.fetchDeckSource(link.site, link.id));
+      const deck = deckLinkToList(link.site, await opts.fetchDeckSource(link.site, link.id), link.id);
       if (seq !== importSeq || view !== 'import') return false;
       importDraft = { name: importDraft.name.trim() || deck.name, text: deck.text };
+      importOrigin = deck.origin ?? null;
       return true;
     } catch (error) {
-      if (seq === importSeq) { importError = `Não foi possível importar pelo link. ${(error as Error).message}`; importBusy = false; renderImport(); }
+      if (seq === importSeq) { importError = `${link.site === 'edhrec' ? 'Não foi possível buscar o deck médio.' : 'Não foi possível importar pelo link.'} ${(error as Error).message}`; importBusy = false; renderImport(); }
       return false;
     }
+  }
+  /** Nome do comandante (ou dupla, com +) → nome em inglês pelo Scryfall → link do deck médio, que segue a importação de sempre. */
+  async function useEdhrec() {
+    const names = edhrecName.split('+').map(n => n.trim()).filter(Boolean);
+    if (!names.length || names.length > 2) { importError = names.length ? 'Escolha no máximo dois comandantes.' : 'Digite o nome do comandante.'; renderImport(); $('#dwEdhrecName')?.focus(); return; }
+    const seq = ++importSeq; importBusy = true; importError = ''; renderImport();
+    try {
+      const resolved = await resolveCardNames(names);
+      if (seq !== importSeq || view !== 'import') return;
+      if (resolved.missing.length) throw new Error(`Não encontrei ${resolved.missing.join(' e ')}. Confira o nome.`);
+      const slug = edhrecSlug(names.map(n => resolved.found.get(n.toLowerCase()) ?? n));
+      if (!slug) throw new Error('Este nome não serve para buscar no EDHREC.');
+      importDraft = { ...importDraft, text: `https://edhrec.com/average-decks/${slug}` };
+    } catch (error) {
+      if (seq === importSeq) { importError = `Não foi possível buscar o deck médio. ${(error as Error).message}`; importBusy = false; renderImport(); }
+      return;
+    }
+    importBusy = false;
+    await reviewImport();
   }
   async function reviewImport() {
     if (!(await resolveImportLink())) return;
@@ -351,6 +381,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'new': create(); break;
       case 'import': beginImport(); break;
       case 'import-current': { const deck = current(); if (deck) beginImport(deck); break; }
+      case 'edhrec-current': { const deck = current(); if (deck && !deck.builtin) { beginImport(deck); void useEdhrec(); } break; }
       case 'import-cancel': { user = loadUserDecks(); const deck = importTarget && user.find(d => d.id === importTarget!.id); importTarget = null; if (deck) edit(deck); else goLibrary(); break; }
       case 'dup': { const deck = current(); if (deck) duplicate(deck); break; }
       case 'del': { const deck = current(); if (deck && !deck.builtin) { removed = { deck, index: user.indexOf(deck) }; user = user.filter(d => d.id !== deck.id); selected = null; view = 'library'; persist('Deck excluído.'); render(); } break; }
@@ -373,6 +404,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   root.addEventListener('submit', e => {
     e.preventDefault(); const form = e.target as HTMLFormElement;
     if (form.id === 'dwImportForm') { if (!importBusy) void reviewImport(); }
+    if (form.id === 'dwEdhrecForm') { if (!importBusy) void useEdhrec(); }
     if (form.id === 'dwSearchForm') void runSearch();
   });
   root.addEventListener('input', e => {
@@ -380,12 +412,13 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (input.id === 'dwListQuery') { listQuery = input.value; preserveRender(renderLibrary); }
     if (input.id === 'dwCardQuery') searchQuery = input.value;
     if (input.id === 'dwImportName') importDraft.name = input.value;
-    if (input.id === 'dwImportText') importDraft.text = input.value;
+    if (input.id === 'dwImportText') { importDraft.text = input.value; importOrigin = null; }
+    if (input.id === 'dwEdhrecName') edhrecName = input.value;
     if (input.id === 'dwName') { const deck = current(); if (deck && !deck.builtin) { deck.name = input.value; $('#dwDeckTitle').setAttribute('aria-label', deck.name || 'Deck sem nome'); changed(deck); } }
   });
   root.addEventListener('change', e => {
     const input = e.target as HTMLInputElement;
-    if (input.id === 'dwFormat' || input.id === 'dwImportFormat') { format = input.value as DeckFormat; opts.onFormatChange?.(format); if (view === 'library') renderLibrary(); }
+    if (input.id === 'dwFormat' || input.id === 'dwImportFormat') { format = input.value as DeckFormat; opts.onFormatChange?.(format); if (view === 'library') renderLibrary(); else if (view === 'import' && !importReview) preserveRender(renderImport); }
     if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
     if (input.id === 'dwSearchType') { searchType = input.value; void runSearch(); }
     if (input.name === 'importMode' && importTarget && importReview && (input.value === 'merge' || input.value === 'replace')) {
