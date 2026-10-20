@@ -3,7 +3,7 @@ import { createForgeTableView } from '../../src/ui/forgeTable';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
- * efeitos de dano (item 15), de movimento (item 16) e os efeitos contínuos das permanentes (item 17).
+ * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17) e o mill (item 24).
  * Abra /tests/fixtures/effects-lab.html no `npm run dev`. A página mostra o painel e a mesa num quadro do tamanho
  * escolhido (?mesa abre só a mesa, que recebe os comandos do painel). Os eventos têm o mesmo formato que a ponte manda.
  */
@@ -45,6 +45,13 @@ const TEMPLATES: Record<string, [string, () => Record<string, unknown>]> = {
   land: ['Terreno (Forest)', () => card('Forest', { land: true, typeLine: 'Basic Land — Forest' })],
   facedown: ['Virada para baixo (metamorfose)', () => ({ faceDown: true })],
 };
+/** Cartas que caem no cemitério ao moer, em rodízio. */
+const MILL_POOL: [string, Record<string, unknown>][] = [
+  ['Forest', { land: true, typeLine: 'Basic Land — Forest' }], ['Llanowar Elves', { creature: true, typeLine: 'Creature — Elf Druid', manaCost: '{G}' }],
+  ['Lightning Bolt', { typeLine: 'Instant', manaCost: '{R}' }], ['Counterspell', { typeLine: 'Instant', manaCost: '{U}{U}' }],
+  ['Island', { land: true, typeLine: 'Basic Land — Island' }], ['Giant Growth', { typeLine: 'Instant', manaCost: '{G}' }],
+  ['Serra Angel', { creature: true, typeLine: 'Creature — Angel', manaCost: '{3}{W}{W}' }],
+];
 let nextId = 1000;
 function card(name: string, extra: Record<string, unknown> = {}) { return { name, tapped: false, token: false, creature: false, ...extra }; }
 function creature(name: string, power: number, toughness: number, manaCost: string, keywords: string[] = []) {
@@ -227,6 +234,18 @@ function table() {
     clear: () => { for (const p of players) p.battlefield = []; return 'Campo limpo.'; },
     reset: () => { setup(); return 'Mesa de volta ao começo.'; },
     full: () => { setup(true); return 'Campo cheio: confira sobreposição e desempenho.'; },
+    mill: c => {
+      // Como a ponte: um evento por carta, do topo do grimório para o cemitério, com a mágica que mandou moer.
+      const owner = sideOf(c.side), n = Math.min(Number(c.n), owner.library);
+      if (!n) return 'O grimório está vazio.';
+      for (let i = 0; i < n; i++) {
+        const [name, extra] = MILL_POOL[(nextId + i) % MILL_POOL.length];
+        const milled = { id: nextId++, controller: owner.id, ...card(name, extra) };
+        owner.library--; owner.graveyard.push(milled);
+        emit('mill', { card: structuredClone(milled), sourceId: milled.id, actor: owner.id, from: 'Library', to: 'Graveyard', sourceName: c.surveil ? 'Consider' : 'Thought Scour', ...(c.surveil ? { surveil: true } : {}) });
+      }
+      return c.surveil ? `Vidência: ${n} carta${n === 1 ? '' : 's'} do grimório para o cemitério.` : `Moer ${n}: as cartas saem do topo, viram e caem no cemitério; "−${n}" junto ao grimório.`;
+    },
     toggle: c => {
       const x = byId(c.id); if (!x) return;
       const on = !!c.value;
@@ -389,6 +408,8 @@ function panel() {
     <h2>Movimento (item 16, na selecionada)</h2>
     ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo']]
       .map(([k, t]) => `<button data-m="${k}">${t}</button>`).join('')}
+    <h2>Moer (item 24, do lado escolhido em Campo)</h2>
+    ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>
     <h2>Aparência e tela</h2>
     <select id="style">${opt('full', 'Imagem completa')}${opt('art', 'Arte e texto')}</select>
     <label class="chk" style="width:100%"><input type="checkbox" id="reduce"> Reduzir movimento (só nesta página)</label>
@@ -432,6 +453,7 @@ function panel() {
     if (b.dataset.c) send({ cmd: b.dataset.c, side: $<HTMLSelectElement>('side').value, template: $<HTMLSelectElement>('template').value, id: selectedId(), attachTo: selectedId() });
     if (b.dataset.d) send({ cmd: 'damage', kind: b.dataset.d, source: ref($<HTMLSelectElement>('source').value), target: ref($<HTMLSelectElement>('target').value), amount: $<HTMLInputElement>('amount').value });
     if (b.dataset.m) send({ cmd: 'move', kind: b.dataset.m, id: selectedId(), target: ref($<HTMLSelectElement>('target').value) });
+    if (b.dataset.mill) send({ cmd: 'mill', side: $<HTMLSelectElement>('side').value, n: b.dataset.mill, surveil: !!b.dataset.surveil });
     if (b.dataset.s) resize(b.dataset.s);
   });
   lab.addEventListener('change', e => {

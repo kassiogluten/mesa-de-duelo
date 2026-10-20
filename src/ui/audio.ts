@@ -17,7 +17,7 @@ export const MIX_HEADROOM = .40;
 
 export function soundForEvent(event: PresentationEvent, you?: number): SoundCue | null {
   switch (event.type) {
-    case 'draw': case 'discard': return 'draw';
+    case 'draw': case 'discard': case 'mill': return 'draw';
     case 'land-played': return 'land';
     case 'spell-cast': return 'cast';
     case 'ability-activated': return 'ability';

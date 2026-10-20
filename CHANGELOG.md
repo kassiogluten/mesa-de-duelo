@@ -6,6 +6,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.23.0] - 2026-10-20
+
+### Novo
+
+- **Moer animado.** Quando cartas vão do topo do grimório direto para o cemitério, elas saem uma a uma, viram de face para cima no ar e caem no cemitério. Junto ao grimório aparece quantas saíram (como "−4"). O histórico e o leitor de tela dizem quem moeu, qual mágica ou habilidade mandou moer e quais cartas foram (por exemplo, "Oponente moeu 3 cartas com …: Elfos de Llanowar, Contramágica e Crescimento Desenfreado"). Quando a carta vai para o cemitério por vidência, o aviso diz isso em vez de "moeu". Com 10 cartas ou mais, elas saem mais rápido e abertas em leque, sem segurar a partida. Com "reduzir movimento", só o cemitério ganha destaque.
+
+### Corrigido
+
+- **"Seu grimório" em vez de "você's grimório".** Alguns pedidos do jogo usavam o possessivo do inglês, como "Procurar você's grimório?" e "Olhando as cartas em Oponente's mão". Agora eles aparecem como "Procurar seu grimório?" e "Olhando as cartas na mão de Oponente", nas perguntas, nos pedidos e nos avisos.
+- **Comandante removido: botões dizem para onde ele vai.** Quando seu comandante ia para o cemitério ou o exílio, a pergunta mostrava o texto da regra em inglês, com **Sim** e **Não**. Agora ela diz onde ele está ("… está no cemitério") e os botões são **Enviar à zona de comando** e **Manter no cemitério** (ou **Manter no exílio**).
+- **Botão de bloqueio diz o que vai acontecer.** Na hora de bloquear, o botão dizia **Confirmar bloqueios** mesmo sem nenhuma criatura escolhida para bloquear. Agora, sem bloqueadores, ele diz **Sem bloqueio**; com bloqueadores, mostra quantos (**Confirmar 1 bloqueador**, **Confirmar 2 bloqueadores**), como já acontece no ataque.
+
 ## [0.22.0] - 2026-10-20
 
 ### Novo

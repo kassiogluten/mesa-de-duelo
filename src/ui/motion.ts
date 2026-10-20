@@ -1,8 +1,10 @@
-import type { PresentationEvent } from './presentationTimeline';
+import { millTiming, type PresentationEvent } from './presentationTimeline';
 import { damageLook, type DamageLook } from './damageEffects';
 
 const KEYED = '[data-fid],[data-peek]';
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+// Moer: sem a arrancada do EASE, para a virada cair no meio do voo.
+const MILL_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
 interface Point { cx: number; cy: number; w: number; h: number }
 interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string }
 export interface Motion {
@@ -11,6 +13,8 @@ export interface Motion {
   present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean }): void;
   /** Compra: versos de carta saem do grimório e vão para a mão. `cards` são as cartas novas da sua mão, mostradas ao chegar. */
   drew(actor: number, count: number, options: { you: number; cards: HTMLElement[]; fast: boolean }): number[];
+  /** Moer: as cartas saem do topo do grimório, viram de face para cima e caem no cemitério, uma depois da outra. */
+  milled(event: PresentationEvent, options: { you: number; fast: boolean; face: (card: NonNullable<PresentationEvent['card']>) => string }): void;
   cancelPresentation(): void;
   reset(): void;
 }
@@ -434,6 +438,46 @@ export function createMotion(root: HTMLElement): Motion {
       // Cartas além dos voos aparecem com a última.
       for (const card of options.cards.slice(flights)) later(() => reveal(card), travel + (flights - 1) * gap);
       return options.cards.map((_, i) => travel + Math.min(i, flights - 1) * gap);
+    },
+    milled(event, options) {
+      if (document.hidden || root.hidden) return;
+      const cards = event.milled ?? (event.card ? [event.card] : []);
+      const mine = event.actor === options.you;
+      const seat = mine ? null : root.querySelector(`[data-seat-player="${event.actor}"]`);
+      const piles = seat?.querySelector('.piles') ?? root.querySelector(mine ? '#fMePiles' : '#fOppPiles');
+      // A mesa pode ser redesenhada durante os voos: o cemitério é procurado de novo na hora do destaque.
+      const pile = () => (seat?.isConnected ? seat : null)?.querySelector<HTMLElement>('.piles .gy:not(.exile)')
+        ?? root.querySelector<HTMLElement>(mine ? '#fMePiles .gy:not(.exile)' : seat ? `[data-seat-player="${event.actor}"] .piles .gy:not(.exile)` : '#fOppPiles .gy:not(.exile)');
+      const libEl = piles?.querySelector<HTMLElement>('.lib') ?? null, gyEl = pile();
+      const library = center(libEl), grave = center(gyEl);
+      if (!library || !grave || !cards.length) { pulse(gyEl); return; }
+      const { flights, gap, travel } = millTiming(cards.length, options.fast);
+      const total = travel + (flights - 1) * gap;
+      // Quantas saíram, junto ao grimório (some sozinho; com "reduzir movimento" fica parado e some do mesmo jeito).
+      const below = library.cy - library.h / 2 < 90;
+      const count = effect(`mill-count${below ? ' below' : ''}`, { ...library, cy: below ? library.cy + library.h / 2 + 4 : library.cy - library.h / 2 - 4, w: 0, h: 0 });
+      count.textContent = `−${cards.length}`;
+      animate(count, [{ opacity: 0, scale: '.7' }, { opacity: 1, scale: '1.15', offset: .12 }, { opacity: 1, scale: '1', offset: .75 }, { opacity: 0 }], Math.max(1100, total + 500));
+      later(() => remove(count), Math.max(1100, total + 500));
+      if (reduced()) { pulse(gyEl); return; }
+      // A carta voa num tamanho legível e encolhe ao cair na pilha; com muitas, os voos se abrem em leque.
+      const w = Math.max(grave.w, 64) * 1.25, h = w * 1.4;
+      for (let i = 0; i < flights; i++) {
+        const spread = flights >= 6 ? (i - (flights - 1) / 2) * 7 : 0;
+        const ghost = effect('presentation-piece mill-ghost', { ...grave, w, h }, `${options.face(cards[i])}<div class="back"></div>`);
+        const dx = library.cx - grave.cx, dy = library.cy - grave.cy, delay = i * gap;
+        // O arco vai para dentro da mesa (o grimório fica junto da borda de cima ou de baixo).
+        const lift = Math.min(90, h * .7) * (grave.cy < window.innerHeight / 2 ? -1 : 1);
+        // Sobe do grimório de costas, fica de lado no alto do arco (a virada) e desce de face para cima no cemitério.
+        animate(ghost, [
+          { translate: `${dx}px ${dy}px`, scale: `${library.w / w} ${library.h / h}`, rotate: '0deg', opacity: .95 },
+          { translate: `${dx * .55 + spread}px ${dy * .55 - lift}px`, scale: '.06 1.05', rotate: `${spread * .4}deg`, offset: .45 },
+          { translate: `${dx * .4 + spread}px ${dy * .4 - lift}px`, scale: '1.05', rotate: `${spread * .4}deg`, offset: .6 },
+          { translate: '0 0', scale: `${grave.w / w} ${grave.h / h}`, rotate: '0deg', opacity: 1 }], travel, MILL_EASE, delay);
+        const back = ghost.querySelector<HTMLElement>('.back');
+        if (back) animate(back, [{ opacity: 1 }, { opacity: 1, offset: .44 }, { opacity: 0, offset: .46 }, { opacity: 0 }], travel, MILL_EASE, delay);
+        later(() => { remove(ghost); if (i === flights - 1) pulse(pile()); }, travel + delay);
+      }
     },
     cancelPresentation: clear,
     reset() { clear(); cards = new Map(); primed = false; },

@@ -48,6 +48,25 @@ public class VisibleEventsTest {
         assertEquals(0,resolved.getAsJsonObject("frame").getAsJsonArray("stack").size());
         assertEquals(20,b.getLife()); assertTrue(game.getStack().isEmpty());
     }
+    @Test public void millReportsEachCardInOrderWithOwnerAndSource() {
+        Game game=game(); VisibleEvents events=new VisibleEvents(()->{},()->1); events.attach(game);
+        Player a=game.getPlayers().get(0),b=game.getPlayers().get(1);
+        // Zone.add põe embaixo: o topo é a primeira carta da lista.
+        for(String name:List.of("Forest","Llanowar Elves","Giant Growth")) {
+            Card c=Card.fromPaperCard(DeckValidation.resolve(name),b); b.getZone(ZoneType.Library).add(c); c.setZone(b.getZone(ZoneType.Library));
+        }
+        SpellAbility scour=spell(game,a,"Thought Scour"); scour.getTargets().add(b); game.getStack().add(scour);
+        game.getStack().resolveStack();
+        var mills=events.json(0).asList().stream().map(e->e.getAsJsonObject()).filter(e->"mill".equals(e.get("type").getAsString())).toList();
+        assertEquals(2,mills.size());
+        assertEquals(List.of("Forest","Llanowar Elves"),mills.stream().map(e->e.getAsJsonObject("card").get("name").getAsString()).toList());
+        for(JsonObject m:mills) {
+            assertEquals(b.getId(),m.get("actor").getAsInt());
+            assertEquals("Thought Scour",m.get("sourceName").getAsString());
+            assertEquals("Library",m.get("from").getAsString()); assertEquals("Graveyard",m.get("to").getAsString());
+            assertFalse(m.has("surveil")); assertTrue(m.has("frame"));
+        }
+    }
     @Test public void unknownRemovalDoesNotSwallowLaterResolution() {
         Game game=game(); VisibleEvents events=new VisibleEvents(()->{},()->1); events.attach(game);
         Player a=game.getPlayers().get(0),b=game.getPlayers().get(1);

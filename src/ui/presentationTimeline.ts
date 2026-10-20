@@ -43,6 +43,11 @@ export interface PresentationEvent {
   /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
   divided?: number;
   reason?: 'destroyed' | 'sacrificed';
+  /** Moer (`mill`): de onde veio a ordem e se foi vidência. */
+  sourceName?: string;
+  surveil?: boolean;
+  /** Só na mesa: as cartas moídas seguidas do mesmo jogador, do topo para baixo, numa entrada só (`mill`). */
+  milled?: FCard[];
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -52,8 +57,16 @@ const QUEUE_LIMIT = 12;
 const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
-const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'attackers', 'blockers', 'damage', 'life-changed', 'turn']);
+const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'mill', 'attackers', 'blockers', 'damage', 'life-changed', 'turn']);
 const AUDIO_ONLY = new Set(['draw']);
+
+/** Cartas moídas uma depois da outra pelo mesmo jogador (e pelo mesmo motivo) viram um só movimento. */
+function sameMill(a: PresentationEvent | undefined, b: PresentationEvent) {
+  return a?.type === 'mill' && b.type === 'mill' && a.actor === b.actor && !!a.surveil === !!b.surveil && a.sourceName === b.sourceName;
+}
+function joinMill(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
+  return { ...b, milled: [...(a.milled ?? []), ...(b.milled ?? [])] };
+}
 
 function sameLandTransition(a: PresentationEvent, b: PresentationEvent) {
   const entry = a.type === 'entered' ? a : b.type === 'entered' ? b : null;
@@ -83,12 +96,19 @@ export class PresentationTimeline {
     for (const event of ordered) {
       if (event.seq <= this.cursor) continue;
       this.cursor = event.seq;
-      if (PRESENTABLE.has(event.type) || AUDIO_ONLY.has(event.type)) accepted.push(structuredClone(event));
+      if (!PRESENTABLE.has(event.type) && !AUDIO_ONLY.has(event.type)) continue;
+      const copy = structuredClone(event);
+      if (copy.type === 'mill') copy.milled = copy.card ? [copy.card] : [];
+      if (sameMill(accepted.at(-1), copy)) accepted[accepted.length - 1] = joinMill(accepted.at(-1)!, copy);
+      else accepted.push(copy);
     }
     this.cursor = Math.max(this.cursor, options.cursor ?? 0);
     const combined = [...this.history, ...accepted];
+    // Um mill que chega em dois pacotes continua sendo uma linha só no histórico.
     this.history = combined.filter(event => PRESENTABLE.has(event.type) &&
-      (event.type !== 'entered' || !combined.some(other => sameLandTransition(event, other)))).slice(-HISTORY_LIMIT);
+      (event.type !== 'entered' || !combined.some(other => sameLandTransition(event, other))))
+      .reduce<PresentationEvent[]>((list, event) => { if (sameMill(list.at(-1), event)) list[list.length - 1] = joinMill(list.at(-1)!, event); else list.push(event); return list; }, [])
+      .slice(-HISTORY_LIMIT);
     if (fresh || options.silent) { this.catchUp(); return accepted.length > 0; }
     for (const event of accepted) {
       const partner = combined.find(other => sameLandTransition(event, other));
@@ -101,6 +121,9 @@ export class PresentationTimeline {
       // A batch of draws by one player needs one cue, without adding a visual pause.
       if (audioOnly && previous?.audioOnly && previous.event.type === event.type && previous.event.actor === event.actor) {
         this.pending[this.pending.length - 1] = { event: { ...event, count: (previous.event.count ?? 1) + 1 }, audible: true, audioOnly: true };
+      } else if (previous && sameMill(previous.event, event)) {
+        // O resto de um mill que ainda espera a vez entra no mesmo movimento.
+        this.pending[this.pending.length - 1] = { ...previous, event: joinMill(previous.event, event) };
       } else {
         this.pending.push({ event, audible: true, ...(audioOnly ? { audioOnly: true } : {}) });
       }
@@ -158,12 +181,22 @@ export function stateWithFrame(state: FState, frame: PresentationFrame | null): 
 }
 export function presentationDuration(event: PresentationEvent, fast: boolean) {
   // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
+  if (event.type === 'mill') { const m = millTiming(event.milled?.length ?? 1, fast); return m.travel + (m.flights - 1) * m.gap + 160; }
   const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? 1000 : event.type === 'spell-cast' ? 720
     : event.type === 'damage' ? (event.combat ? 620 : 760)
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
     : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
   return Math.round(duration * (fast ? .6 : 1));
+}
+/**
+ * Ritmo do mill: uma carta voa depois da outra; com muitas, o intervalo encurta e só as primeiras voam (o resto chega
+ * junto com a última), para moer 10 ou 30 não segurar a partida.
+ */
+export function millTiming(count: number, fast: boolean) {
+  const flights = Math.max(1, Math.min(count, 8));
+  const gap = (count >= 10 ? 70 : count >= 5 ? 110 : 160) * (fast ? .6 : 1);
+  return { flights, gap: Math.round(gap), travel: fast ? 320 : 520 };
 }
 /**
  * Quanto o aviso de habilidade fica ao lado da carta. É mais longo que o passo da apresentação (que segura o

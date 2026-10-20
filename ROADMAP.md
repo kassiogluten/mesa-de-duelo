@@ -320,23 +320,23 @@ Quando o atacante é bloqueado por duas ou mais criaturas (ou tem atropelar), o 
 - [ ] Integrar com os efeitos de dano (itens 15 e 18): pré-visualizar na mesa quem morre com a divisão escolhida.
 
 
-## 23. Botão "Sem bloqueio" quando nenhum bloqueador foi escolhido
+## 23. Botão "Sem bloqueio" quando nenhum bloqueador foi escolhido ✅
 
 Na declaração de bloqueadores, o botão de confirmar diz **Confirmar bloqueios** mesmo quando o jogador não escolheu nenhum bloqueador, o que deixa dúvida se ele vai mesmo levar o dano todo.
 
-- [ ] Sem bloqueadores selecionados, o botão vira **Sem bloqueio**; com um ou mais, volta para **Confirmar bloqueios** (`src/ui/forgeTable.ts`, onde o rótulo de `s.input.blocking` é montado).
-- [ ] Trocar o rótulo na hora em que o jogador marca ou desmarca um bloqueador, sem esperar a resposta do servidor.
-- [ ] Leitor de tela: anunciar o novo rótulo.
+- [x] Sem bloqueadores declarados, o botão vira **Sem bloqueio**; com um ou mais, mostra quantos (**Confirmar 2 bloqueadores**), como o "Não atacar" do ataque.
+- [x] O rótulo troca assim que o servidor registra o bloqueio (cada clique de bloqueio já é enviado na hora), sem passo extra.
+- [x] Leitor de tela: o próprio botão leva o novo texto.
 
-## 24. Animação de mill
+## 24. Animação de mill ✅
 
 Quando cartas vão do topo do grimório direto para o cemitério (moer, "mill"), hoje elas só aparecem no cemitério e o grimório diminui, sem mostrar o movimento. Fica difícil perceber quantas cartas saíram e quais foram, principalmente quando é o oponente que moeu.
 
-- [ ] Ponte: avisar o mill como evento próprio, com o jogador, as cartas na ordem em que saíram do grimório e a fonte (a mágica ou habilidade que mandou moer). O Forge já marca esse momento ("Cards milled").
-- [ ] Mesa: as cartas saem do topo do grimório uma a uma, viram de face para cima e voam até o cemitério, com um pequeno intervalo entre elas. Com muitas cartas (moer 10 ou mais), acelerar ou agrupar em leque para não travar a partida.
-- [ ] Mostrar o total moído junto ao grimório (ex.: "−4") e anunciar no leitor de tela quantas cartas foram e quais.
-- [ ] Respeitar o ritmo rápido e o "reduzir movimento" do sistema: sem animação, só o destaque no cemitério.
-- [ ] Incluir no laboratório de efeitos (item 18): moer 1, 3 e 10 cartas, dos dois lados.
+- [x] Ponte: avisar o mill como evento próprio, com o jogador, as cartas na ordem em que saíram do grimório e a fonte (a mágica ou habilidade que mandou moer). O Forge já marca esse momento ("Cards milled").
+- [x] Mesa: as cartas saem do topo do grimório uma a uma, viram de face para cima e voam até o cemitério, com um pequeno intervalo entre elas. Com muitas cartas (moer 10 ou mais), acelerar ou agrupar em leque para não travar a partida.
+- [x] Mostrar o total moído junto ao grimório (ex.: "−4") e anunciar no leitor de tela quantas cartas foram e quais.
+- [x] Respeitar o ritmo rápido e o "reduzir movimento" do sistema: sem animação, só o destaque no cemitério.
+- [x] Incluir no laboratório de efeitos (item 18): moer 1, 3 e 10 cartas, dos dois lados (e vidência para o cemitério).
 
 ## 25. Escolher quais oponentes ver na mesa ✅
 

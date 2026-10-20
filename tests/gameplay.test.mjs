@@ -13,7 +13,7 @@ async function sourceUri(path, imports = {}) {
 const sourceModule = async (path, imports) => import(await sourceUri(path, imports));
 const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
-const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts' });
+const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts' });
 const { AudioEventGate, AudioEventMix, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
@@ -106,6 +106,30 @@ test('draw audio has a separate bound and never evicts pending visual actions', 
     assert.equal(entry.audioOnly, undefined, 'visual catch-up drops incidental audio');
     assert.equal(entry.audible, false);
   }
+});
+
+test('consecutive mills by one player become one presentation and one history line, across packets', () => {
+  const mill = (seq, id, extra = {}) => event(seq, 'mill', { actor: 2, card: { id, name: `Card ${id}` }, sourceName: 'Thought Scour', from: 'Library', to: 'Graveyard', ...extra });
+  const timeline = new PresentationTimeline(); timeline.ingest('a', []);
+  timeline.ingest('a', [mill(1, 50), mill(2, 51)]);
+  timeline.ingest('a', [mill(3, 52), event(4, 'resolved'), mill(5, 53, { actor: 1 })]);
+  assert.equal(timeline.queued, 3);
+  const first = timeline.advance().event;
+  assert.equal(first.type, 'mill');
+  assert.deepEqual(first.milled.map(c => c.id), [50, 51, 52]);
+  assert.equal(timeline.advance().event.type, 'resolved');
+  assert.deepEqual(timeline.advance().event.milled.map(c => c.id), [53]);
+  assert.deepEqual(timeline.history.map(e => [e.type, e.milled?.length]), [['mill', 3], ['resolved', undefined], ['mill', 1]]);
+  // Depois de começar, o resto chega como outro movimento, mas o histórico segue com uma linha só.
+  timeline.ingest('a', [mill(6, 54, { actor: 1 })]);
+  assert.deepEqual(timeline.advance().event.milled.map(c => c.id), [54]);
+  assert.equal(timeline.history.at(-1).milled.length, 2);
+  // Trinta cartas moídas não viram uma fila que força a mesa a pular o resto.
+  timeline.ingest('a', Array.from({ length: 30 }, (_, i) => mill(7 + i, 100 + i)));
+  assert.equal(timeline.queued, 1);
+  const big = timeline.advance();
+  assert.equal(big.audible, true); assert.equal(big.event.milled.length, 30);
+  assert.ok(presentationDuration(big.event, false) < 2000, 'a big mill stays short');
 });
 
 test('one played land presents once across coalesced and split packets; ramp entries remain', () => {

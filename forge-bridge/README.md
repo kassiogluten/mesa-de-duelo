@@ -79,7 +79,7 @@ Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extr
 
 `events` traz os eventos públicos do jogo em ordem (`seq` crescente; `eventCursor` é o último), cada um com `type`, `actor` (jogador), `card`/`sourceId` (a carta de origem), `targets` e, quase sempre, `frame` (a mesa pública naquele instante, para a animação mostrar o estado certo).
 
-Compra (`draw`) só traz `actor`: a carta comprada é secreta e o evento vai para todos. Descarte (`discard`) traz a carta (pública no cemitério), `actor` (o dono), `from: "Hand"` e `to: "Graveyard"`; vale para qualquer carta que vá da mão para o cemitério.
+Compra (`draw`) só traz `actor`: a carta comprada é secreta e o evento vai para todos. Descarte (`discard`) traz a carta (pública no cemitério), `actor` (o dono), `from: "Hand"` e `to: "Graveyard"`; vale para qualquer carta que vá da mão para o cemitério. Moer (`mill`) chega um por carta, na ordem em que saem do topo do grimório, com a carta (já pública), `actor` (o dono), `from: "Library"`, `to: "Graveyard"`, `sourceName` (a mágica ou habilidade que estava resolvendo, quando há) e `surveil: true` quando a carta foi para o cemitério por vidência, não por moer.
 
 Dano (`type: "damage"`) chega um por fonte e alvo, na ordem em que o Forge causa o dano; `card`/`sourceId` é a fonte, `targets` o alvo e `delta` o dano (negativo). A ponte acrescenta, a partir do estado do jogo (nunca do texto):
 

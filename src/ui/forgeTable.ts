@@ -12,6 +12,7 @@ import { createGameAudio } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
 import { MatchDiagnostics, type DiagnosticKind } from './matchDiagnostics';
 import { forcedSeatReason, visibleSeats } from './seatVisibility';
+import { fixPossessives } from './forgeText';
 import { VERSION } from './changelog';
 import { attachHandDrag } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
@@ -437,7 +438,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const first = entry.event;
     const divided = first.type === 'damage' && !first.combat && !first.prevented && first.sourceId !== undefined
       ? timeline.takeWhile(e => e.type === 'damage' && !e.combat && !e.prevented && e.sourceId === first.sourceId) : [];
-    for (const part of [entry, ...divided]) {
+    if (first.type === 'mill') motion.milled(first, { you: s.you, fast: fast || hasLiveDecision(s), face: card => face(card, 'normal') });
+    else for (const part of [entry, ...divided]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? face(part.event.card, 'normal') : undefined,
         label: eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
@@ -1023,6 +1025,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(s, p.battlefield.filter(c => !isBackRow(c))))}</div>
     </section>`;
   }
+  /** Sem nenhum bloqueador seu declarado, o botão diz que você não vai bloquear (como o "Não atacar" do ataque). */
+  function blockConfirmLabel(s: FState) {
+    const mine = new Set(s.players.find(p => p.id === s.you)?.battlefield.map(c => c.id));
+    const blockers = new Set(s.combat.flatMap(entry => entry.blockers).filter(id => mine.has(id))).size;
+    return blockers ? `Confirmar ${blockers} ${blockers === 1 ? 'bloqueador' : 'bloqueadores'}` : 'Sem bloqueio';
+  }
   function attackConfirmLabel(attackers: number) {
     return attackers ? `Confirmar ${attackers} ${attackers === 1 ? 'atacante' : 'atacantes'}` : 'Não atacar';
   }
@@ -1128,6 +1136,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'left': return event.reason === 'destroyed' ? `Carta destruída: ${name}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}.`
         : event.to === 'Exile' ? `Carta exilada: ${name}.` : event.to === 'Hand' ? `Volta para a mão: ${name}.` : event.to === 'Library' ? `Volta para o grimório: ${name}.` : `${name} saiu do campo.`;
       case 'discard': return `${who} descartou ${name}.`;
+      case 'mill': return millDescription(event, who);
       case 'entered': return event.from === 'Exile' ? `Volta ao campo: ${name}.` : `${name} entrou no campo.`;
       case 'attackers': return attackDescription(event);
       case 'blockers': return `${who} declarou bloqueadores.`;
@@ -1144,6 +1153,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'life-changed': return `${who}: ${event.delta && event.delta > 0 ? '+' : ''}${event.delta ?? 0} de vida.`;
       default: return event.text ?? 'O jogo avançou.';
     }
+  }
+  /** "Oponente moeu 3 cartas com Thought Scour: Forest, Llanowar Elves e Giant Growth." */
+  function millDescription(event: PresentationEvent, who: string) {
+    const cards = event.milled ?? (event.card ? [event.card] : []);
+    const names = cards.slice(0, 5).map(c => label(c));
+    if (cards.length > 5) names.push(`mais ${cards.length - 5}`);
+    const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
+    const n = cards.length, what = n === 1 ? 'uma carta' : `${n} cartas`;
+    const by = event.sourceName ? ` com ${ptOf(event.sourceName)?.name || event.sourceName}` : '';
+    if (event.surveil) return `${who} pôs ${what} do grimório no cemitério${by}${list ? `: ${list}` : ''}.`;
+    return n === 1 && list ? `${who} moeu ${list}${by}.` : `${who} moeu ${what}${by}${list ? `: ${list}` : ''}.`;
   }
   /** "Ana ataca você com 2 criaturas." — quem ataca, quem é atacado e com quantas. */
   function attackDescription(event: PresentationEvent) {
@@ -1259,7 +1279,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     const decision = cardDecision(s);
     const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
-    const ok = s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: 'Confirmar bloqueios' } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
+    const ok = s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
       : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount}` } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
     const cancel = attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
@@ -1302,6 +1322,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return { amounts, valid: validValues && remaining === 0, text: !validValues ? 'Respeite os limites indicados para cada alvo.' : remaining < 0 ? `Excesso: ${-remaining}.` : `Restante: ${remaining}.` };
   }
 
+  /** Comandante no cemitério ou no exílio (regra 903.9a): os botões dizem para onde ele vai. "Enviar" responde sim. */
+  function commanderZoneHTML(q: FQuestion) {
+    const place = q.zone === 'Exile' ? 'exílio' : 'cemitério';
+    const name = q.card ? label(q.card) : 'Seu comandante';
+    return `<div class="q-head"><h2>${esc(name)} está no ${place}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}
+      <p class="q-hint">Seu comandante pode ir para a zona de comando ou ficar no ${place}.</p>
+      <div class="q-actions"><button class="arena-btn primary" data-q-confirm="true">Enviar à zona de comando</button><button class="arena-btn secondary" data-q-confirm="false">Manter no ${place}</button></div>`;
+  }
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
     if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
@@ -1317,6 +1345,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         return `<label><span>${esc(optLabel(o))}<small>De ${min} a ${max}</small></span><input data-q-amount="${i}" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" value="${esc(qState!.amounts[i])}" aria-describedby="fAmountRemaining"></label>`;
       }).join('')}</div><p class="q-hint" id="fAmountRemaining" aria-live="polite">${status.text}</p><div class="q-actions"><button class="arena-btn primary" data-q-amount-submit ${status.valid ? '' : 'disabled'}>Confirmar distribuição</button></div></form>`;
     }
+    if (q.kind === 'confirm' && q.purpose === 'commander-zone') return commanderZoneHTML(q);
     if (q.kind === 'confirm') {
       return `${head}<div class="q-actions">${opts.map((o, i) =>
         `<button class="arena-btn ${i === 0 ? 'primary' : 'secondary'}" data-q-confirm="${i === 0}">${esc(optLabel(o))}</button>`).join('')}</div>`;
@@ -1411,9 +1440,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     return awaiting;
   }
+  // Textos do Forge (pedido, pergunta, opções): o possessivo em inglês ("você's grimório") vira português. Repetir não muda nada.
+  const playerNames = () => client?.state?.players.map(p => p.name) ?? [];
+  function fixForgeText(s: FState) {
+    const names = s.players.map(p => p.name);
+    if (s.input?.message) s.input.message = fixPossessives(s.input.message, names);
+    if (s.question) {
+      s.question.title = fixPossessives(s.question.title, names);
+      s.question.options = s.question.options?.map(o => typeof o === 'string' ? fixPossessives(o, names) : o);
+    }
+  }
   function renderTable(ingest: boolean) {
     const s = client?.state;
     if (!s || s.type !== 'state') return;
+    fixForgeText(s);
     autoPass.observe(s.preferences, !!client?.connected && !disconnected); syncAutoPass();
     passResponses.observe(s.preferences, !!client?.connected && !disconnected);
     const savedFocus = focusSnapshot();
@@ -1690,6 +1730,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   function notice(text: string, error = false) {
+    text = fixPossessives(text, playerNames());
     if (error) recordDiagnostic('aviso', text);
     if (error && client?.state?.input.attacking && attackQueue.busy) { clearAttackChoice(true); renderTable(false); }
     if (error && client?.state?.sideboarding) { sideboardError = text; sideboardBusy = false; render(); }

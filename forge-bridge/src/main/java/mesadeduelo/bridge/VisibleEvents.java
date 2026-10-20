@@ -91,6 +91,11 @@ final class VisibleEvents {
                 // Descarte (inclusive reciclar e descartar no fim do turno): a carta fica pública no cemitério.
                 e = card("discard", x.card()); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
                 e.addProperty("from", "Hand"); e.addProperty("to", "Graveyard");
+            } else if (from == ZoneType.Library && to == ZoneType.Graveyard) {
+                // Moer: o Forge move uma carta por vez, do topo, na ordem em que saem; a mesa junta as seguidas do mesmo jogador.
+                e = card("mill", x.card()); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
+                e.addProperty("from", "Library"); e.addProperty("to", "Graveyard");
+                millSource(e);
             } else if (to == ZoneType.Battlefield || from == ZoneType.Battlefield) {
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
@@ -178,6 +183,17 @@ final class VisibleEvents {
         }
         shields.clear();
         now.forEach((k, v) -> { if (v > 0) shields.put(k, v); });
+    }
+
+    /** A mágica ou habilidade resolvendo que mandou moer (`sourceName`), e `surveil` quando foi vidência, não moer. */
+    private void millSource(JsonObject e) {
+        if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return;
+        var root = game.getStack().peekAbility();
+        if (root == null) return;
+        if (root.getHostCard() != null) e.addProperty("sourceName", root.getHostCard().getName());
+        boolean mill = false, surveil = false;
+        for (var sa = root; sa != null; sa = sa.getSubAbility()) { mill |= sa.getApi() == ApiType.Mill; surveil |= sa.getApi() == ApiType.Surveil; }
+        if (surveil && !mill) e.addProperty("surveil", true);
     }
 
     private JsonObject publicFrame() {

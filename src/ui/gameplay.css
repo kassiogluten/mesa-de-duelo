@@ -339,3 +339,9 @@
 .draw-ghost { z-index: 31; }
 .draw-ghost .back { width: 100%; height: 100%; box-shadow: 0 10px 24px #0008; }
 .hand .hcard.incoming { opacity: 0; }
+/* Moer: a carta sai do grimório de costas, vira no alto do arco e cai no cemitério; "−N" junto ao grimório. */
+.mill-ghost { z-index: 31; transform-origin: 0 0; } /* a escala parte do centro da carta, que fica no ponto de chegada */
+.mill-ghost > .face { width: 100%; height: 100%; }
+.mill-ghost > .back { position: absolute; inset: 0; box-shadow: 0 10px 24px #0008; }
+.mill-count { position: fixed; z-index: 36; pointer-events: none; transform: translate(-50%, -100%); width: max-content !important; height: auto !important; color: #c9b8ff; font: 800 24px/1 var(--display); font-variant-numeric: tabular-nums; text-shadow: 0 2px 4px var(--bg-deep), 0 0 2px var(--bg-deep), 0 0 12px #000a; }
+.mill-count.below { transform: translate(-50%, 0); }

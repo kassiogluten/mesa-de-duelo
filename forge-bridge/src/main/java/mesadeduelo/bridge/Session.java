@@ -26,6 +26,7 @@ import forge.game.GameType;
 import forge.game.GameStage;
 import forge.game.GameView;
 import forge.game.card.CardView;
+import forge.game.zone.ZoneType;
 import forge.game.player.PlayerView;
 import forge.game.player.RegisteredPlayer;
 import forge.game.spellability.SpellAbility;
@@ -561,6 +562,7 @@ final class Session {
                 if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
                 @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
                 q.add("options", labelsJson(labels == null || labels.size() < 2 ? List.of("Sim", "Não") : labels));
+                commanderZone(q, a[0] instanceof CardView cv ? cv : null, String.valueOf(a[1]));
             }
             case showConfirmDialog -> {
                 q.addProperty("kind", "confirm");
@@ -676,6 +678,20 @@ final class Session {
             default -> result = pick(q, msg);
         }
         q.answer().complete(result);
+    }
+
+    /**
+     * Regra 903.9a: o comandante foi para o cemitério ou o exílio e o dono pode mandá-lo para a zona de comando.
+     * O Forge só manda o texto da regra em inglês; a pergunta ganha onde o comandante está, e a mesa nomeia os
+     * botões ("Enviar à zona de comando" ou "Manter no cemitério"). "Sim" continua sendo enviar.
+     */
+    private static void commanderZone(JsonObject q, CardView commander, String text) {
+        if (commander == null || !text.contains("its owner may put it into the command zone")) return;
+        q.addProperty("purpose", "commander-zone");
+        // Título curto em português para a barra da pergunta minimizada e mesas antigas.
+        q.addProperty("title", "Enviar o comandante para a zona de comando?");
+        ZoneType zone = commander.getZone();
+        q.addProperty("zone", zone == null ? "Graveyard" : zone.name());
     }
 
     private static void validateAnswer(Question q, JsonObject msg) {

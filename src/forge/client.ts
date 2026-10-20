@@ -13,7 +13,7 @@ export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mai
 export interface RoomInfo { code: string; config: MatchConfig; available: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
-  type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'stack-removed';
+  type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
   text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   /** Só em `damage`; ver forge-bridge/README.md. */
@@ -23,6 +23,8 @@ export interface FEvent {
   prevented?: boolean;
   /** `left`: por que a carta saiu do campo, quando o Forge diz. */
   reason?: 'destroyed' | 'sacrificed';
+  /** `mill`: a mágica ou habilidade que mandou moer, e se foi vidência em vez de moer. */
+  sourceName?: string; surveil?: boolean;
   frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {
@@ -136,7 +138,9 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
   /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta. */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone';
+  /** commander-zone: onde o comandante está agora (Graveyard ou Exile). */
+  zone?: string;
   /** combat-damage: divisão automática sugerida, se há ordem entre bloqueadores, se vale qualquer divisão e as palavras-chave do atacante. */
   suggested?: number[];
   ordered?: boolean;
