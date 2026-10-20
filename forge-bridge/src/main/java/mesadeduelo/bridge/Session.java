@@ -32,6 +32,8 @@ import forge.game.spellability.SpellAbility;
 import forge.game.spellability.StackItemView;
 import forge.gamemodes.match.HostedMatch;
 import forge.gamemodes.match.YieldUpdate;
+import forge.gamemodes.match.input.InputAttack;
+import forge.gamemodes.match.input.InputBlock;
 import forge.gamemodes.match.input.InputConfirm;
 import forge.gamemodes.match.input.InputConfirmMulligan;
 import forge.gamemodes.match.input.InputLondonMulligan;
@@ -423,6 +425,13 @@ final class Session {
     }
 
     private void rejectStaleAction(Seat seat, String type) {
+        // Só para o painel de erros da mesa: o jogador não vê aviso, mas fica registrado que a ação foi ignorada.
+        if (type != null) {
+            JsonObject diagnostic = new JsonObject();
+            diagnostic.addProperty("type", "diagnostic"); diagnostic.addProperty("code", "stale-action"); diagnostic.addProperty("action", type);
+            diagnostic.addProperty("text", "Ação ignorada: a tela estava desatualizada ou a vez já tinha mudado.");
+            seat.send(diagnostic.toString());
+        }
         if ("attack-group".equals(type) || "attack-all".equals(type)) {
             JsonObject error = new JsonObject();
             error.addProperty("type", "error"); error.addProperty("code", "stale-action"); error.addProperty("action", type);
@@ -848,6 +857,26 @@ final class Session {
         return f;
     }
 
+    /**
+     * Outros jogadores humanos com uma decisão aberta (alvo, sacrifício, pergunta, ataque ou bloqueio), para a mesa
+     * avisar "Aguardando Fulano escolher" em vez de parecer travada. Prioridade comum fica de fora.
+     */
+    private JsonArray deciding(Seat viewer) {
+        JsonArray list = new JsonArray();
+        for (Seat other : seats) {
+            if (other == viewer || other.me == null || other.eliminated()) continue;
+            Object in = other.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
+            String kind = other.question != null ? "choice"
+                : in instanceof InputAttack ? "attack" : in instanceof InputBlock ? "block"
+                : in != null && !(in instanceof InputPassPriority) ? "choice" : null;
+            if (kind == null) continue;
+            JsonObject entry = new JsonObject();
+            entry.addProperty("player", other.me.getId()); entry.addProperty("kind", kind);
+            list.add(entry);
+        }
+        return list;
+    }
+
     /** Monta o estado visto por um jogador; null se uma leitura concorrente falhar (refeita no próximo ciclo). */
     private JsonObject state(Seat seat) {
         HostedMatch m = match;
@@ -931,6 +960,7 @@ final class Session {
                 state.add("input", input);
                 Question q = seat.question;
                 if (q != null && !spectating) state.add("question", q.json());
+                state.add("deciding", deciding(seat));
                 // Phase/zone events can precede the actionable input. Never advertise an early cast.
                 if (!priority || !seat.okEnabled || locked || q != null) state.add("castable", new JsonArray());
                 if (generation != seat.inputGen.get()) return null;
@@ -941,6 +971,7 @@ final class Session {
         state.add("config", config.json());
         JsonObject preferences = new JsonObject();
         preferences.addProperty("autoPassNoActions", seat.autoPassNoActions);
+        preferences.addProperty("passResponses", seat.passResponses);
         state.add("preferences", preferences);
         state.add("match", matchJson());
         state.addProperty("matchId", matchId);
@@ -1044,6 +1075,8 @@ final class Session {
         private volatile long sentEventCursor;
         // A seat preference survives reconnects, the next game, and a rematch.
         private volatile boolean autoPassNoActions = true;
+        /** "Passar respostas": passa sozinho no turno dos outros e com algo na pilha. O próprio turno e as escolhas continuam parando. */
+        private volatile boolean passResponses;
 
         private volatile WebGuiGame gui;
         private volatile PlayerView me;
@@ -1112,18 +1145,48 @@ final class Session {
         }
 
         private void updatePreferences(Channel source, JsonObject message) {
-            JsonElement value = message.get("autoPassNoActions");
-            if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean())
+            Boolean autoPass = optionalBoolean(message, "autoPassNoActions"), responses = optionalBoolean(message, "passResponses");
+            if (autoPass == null && responses == null)
                 throw new IllegalArgumentException("Informe um valor booleano para a passagem automática de prioridade.");
-            boolean enabled = value.getAsBoolean();
             // Settings are independent of a prompt generation, but a replaced or departed socket
             // cannot change this seat. Resolve the controller at execution time across Bo3 games.
             FThreads.invokeInEdtLater(() -> {
                 if (channel != source) return;
-                autoPassNoActions = enabled;
                 IGameController current = controller();
-                if (current != null) current.applyYieldUpdate(new YieldUpdate.SetYieldPref(
-                    FPref.YIELD_AUTO_PASS_NO_ACTIONS, Boolean.toString(enabled)));
+                if (autoPass != null) {
+                    autoPassNoActions = autoPass;
+                    if (current != null) current.applyYieldUpdate(new YieldUpdate.SetYieldPref(
+                        FPref.YIELD_AUTO_PASS_NO_ACTIONS, Boolean.toString(autoPass)));
+                }
+                if (responses != null) {
+                    passResponses = responses;
+                    passResponseIfAsked();   // marcado com o pedido de resposta já aberto: passa este também
+                }
+                markDirty();
+            });
+        }
+
+        private static Boolean optionalBoolean(JsonObject message, String key) {
+            JsonElement value = message.get(key);
+            if (value == null) return null;
+            if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean())
+                throw new IllegalArgumentException("Informe um valor booleano para a passagem automática de prioridade.");
+            return value.getAsBoolean();
+        }
+
+        /**
+         * Com "Passar respostas" marcado, responde OK a um pedido de prioridade no turno de outro jogador
+         * ou com algo na pilha. Só vale para o pedido em que foi agendado: se o jogo pedir outra coisa antes, não passa.
+         */
+        private void passResponseIfAsked() {
+            WebGuiGame g = gui;
+            PlayerView p = me;
+            if (!passResponses || question != null || !okEnabled || g == null || p == null || g.getGameView() == null) return;
+            var view = g.getGameView();
+            boolean othersTurn = !p.equals(view.getPlayerTurn());
+            if (!othersTurn && (view.getStack() == null || view.getStack().isEmpty())) return;
+            onEdt(inputGen.get(), c -> {
+                if (passResponses && question == null && okEnabled && livePriority()) c.selectButtonOk();
                 markDirty();
             });
         }
@@ -1166,6 +1229,7 @@ final class Session {
                         inputGen.incrementAndGet();
                         okLabel = String.valueOf(a[1]); cancelLabel = String.valueOf(a[2]);
                         okEnabled = Boolean.TRUE.equals(a[3]); cancelEnabled = Boolean.TRUE.equals(a[4]);
+                        passResponseIfAsked();
                     }
                     case setSelectables -> {
                         Set<Integer> ids = new LinkedHashSet<>();

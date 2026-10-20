@@ -9,7 +9,9 @@ import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio } from './audio';
-import { AutoPassPreference } from './autoPassPreference';
+import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
+import { MatchDiagnostics, type DiagnosticKind } from './matchDiagnostics';
+import { VERSION } from './changelog';
 import { attachHandDrag } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
@@ -34,6 +36,8 @@ import './arenaModals.css';
 import './cardStyle.css';
 import './matchBar.css';
 import { shortInstruction } from './shortInstruction';
+import { awaitingDecision, waitingOnText } from './awaitingDecision';
+import './awaitingDecision.css';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -87,6 +91,8 @@ export interface ForgeTableView {
   reconnecting(attempt: number): void;
   /** reason substitui a explicação padrão (por exemplo, partida aberta em outra janela). */
   disconnected(reason?: string): void;
+  /** Ação recusada pela ponte sem aviso: só vai para o painel "Erros da partida". */
+  diagnostic(d: { code: string; action?: string; text: string }): void;
 }
 
 export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions): ForgeTableView {
@@ -103,6 +109,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <nav class="menu game-menu" id="fMenu" aria-label="Menu da partida" hidden>
       <div class="game-menu-meta"><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
       <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">Registro</button>
+      <button class="btn" data-ui="errors" aria-expanded="false" aria-controls="fErrorsDrawer">Erros da partida<span class="menu-count" id="fErrorsCount" hidden></span></button>
       <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">Opções</button>
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
@@ -119,6 +126,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
       </section>
     </div>
+    <aside class="log-drawer errors-drawer" id="fErrorsDrawer" hidden aria-labelledby="fErrorsTitle"><div class="stack-heading"><h2 id="fErrorsTitle">Erros da partida</h2><button class="icon-btn" data-ui="errors" aria-label="Fechar erros da partida">Fechar</button></div>
+      <p class="errors-hint">Avisos de erro, ações que o servidor ignorou, quedas de conexão e falhas da mesa. Copie o relatório para relatar um problema.</p>
+      <ul id="fErrors"></ul>
+      <div class="errors-actions"><button class="ghost-btn" data-ui="errors-copy">Copiar relatório</button><button class="ghost-btn" data-ui="errors-clear">Limpar</button></div>
+      <p class="errors-status" id="fErrorsStatus" role="status" aria-live="polite"></p></aside>
     <aside class="log-drawer" id="fLogDrawer" hidden><div class="stack-heading"><h2>Histórico da partida</h2><button class="icon-btn" data-ui="log" aria-label="Fechar histórico">Fechar</button></div><ul id="fLog"></ul></aside>
 
     <div class="opp-hand" id="fOppHand"></div>
@@ -147,6 +159,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <svg class="target-arrows" id="fTargets" aria-hidden="true"></svg>
     <nav class="phase-rail phase-trail" id="fPhases" aria-label="Fases do turno"></nav>
     <div class="action" id="fAction"></div><div class="sr-only" id="fAnnouncement" aria-live="polite" aria-atomic="true"></div>
+    <div class="await-callout" id="fAwait" hidden><span class="await-eyebrow" aria-hidden="true">Sua decisão</span><strong class="await-text"></strong></div>
     <div class="banner" id="fBanner" hidden></div>
     <div class="toasts" id="fToasts" aria-live="polite"></div>
     <div class="overlay" id="fQuestion" hidden></div>
@@ -163,6 +176,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let zoneOf: number | null = null;
   let zoneKind: 'gy' | 'exile' | 'command' | 'damage' = 'gy';
   let bannerTimer = 0;
+  /** Decisão em espera (prompt e tipo) e o lembrete que reforça o aviso se ela ficar parada. */
+  let awaitKey = '';
+  let awaitTimer = 0;
+  const AWAIT_REMINDER_MS = 8000;
   const motion = createMotion(root);
   let lastDamage = new Map<number, number>();
   let disconnected = false;
@@ -215,7 +232,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const timeline = new PresentationTimeline();
   const audio = createGameAudio();
   const autoPass = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); });
+  // "Passar respostas", ao lado dos botões: marcado, a ponte passa sozinha no turno do oponente e com algo na pilha.
+  const passResponses = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); }, undefined, { field: 'passResponses', key: PASS_RESPONSES_KEY, initial: false });
   let presentationTimer = 0;
+  // Cartas da sua mão já mostradas. Uma carta nova com compra na fila fica escondida até a animação de compra chegar nela.
+  let knownHand = new Set<number>();
+  let handPrimed = false;
+  let drawingNow = 0;
+  /** Cartas compradas ainda em voo (id → quando chegam): continuam escondidas mesmo se a mão for redesenhada no caminho. */
+  const arriving = new Map<number, number>();
   let displayFrame: PresentationFrame | null = null;
   let silentNext = true;
   let fast = false;
@@ -268,9 +293,41 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function setLog(open: boolean, restore = false) {
     $('#fLogDrawer').hidden = !open;
     root.querySelector('[aria-controls="fLogDrawer"]')?.setAttribute('aria-expanded', String(open));
-    if (open) { setMenu(false); $('#fLogDrawer').querySelector<HTMLElement>('button')?.focus({ preventScroll: true }); }
+    if (open) { setMenu(false); setErrors(false); $('#fLogDrawer').querySelector<HTMLElement>('button')?.focus({ preventScroll: true }); }
     else if (restore) root.querySelector<HTMLElement>('[data-ui="menu"]')?.focus({ preventScroll: true });
   }
+  const diagnostics = new MatchDiagnostics();
+  function recordDiagnostic(kind: DiagnosticKind, text: string, detail?: string) {
+    const s = client?.state;
+    diagnostics.add(kind, text, { matchId: s?.matchId ?? s?.session?.code, turn: s?.turn, phase: s?.phase }, detail);
+    renderErrors();
+  }
+  function renderErrors() {
+    const open = !$('#fErrorsDrawer').hidden;
+    if (open) diagnostics.markSeen();
+    const count = $('#fErrorsCount');
+    count.hidden = !diagnostics.unseen; count.textContent = String(diagnostics.unseen);
+    if (!open) return;
+    const time = (at: number) => new Date(at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setHTML($('#fErrors'), diagnostics.entries.length ? [...diagnostics.entries].reverse().map(e => `<li class="error-entry ${e.kind === 'falha da mesa' || e.kind === 'conexão' ? 'serious' : ''}">
+      <span class="error-meta">${time(e.at)} · ${esc(e.kind)}${e.repeats > 1 ? ` · ×${e.repeats}` : ''}${e.turn !== undefined ? ` · turno ${e.turn}` : ''}</span>
+      <span>${esc(e.text)}</span>${e.detail ? `<code>${esc(e.detail)}</code>` : ''}</li>`).join('') : '<li class="errors-empty">Nenhum erro nesta sessão.</li>');
+  }
+  function errorReport() {
+    const s = client?.state;
+    return diagnostics.report({ 'versão da mesa': VERSION, regras: s?.rulesVersion, motor: s?.engineVersion, formato: s?.config?.format,
+      jogadores: s?.players.length, partida: s?.matchId ?? s?.session?.code, navegador: navigator.userAgent });
+  }
+  function setErrors(open: boolean, restore = false) {
+    $('#fErrorsDrawer').hidden = !open;
+    root.querySelector('[aria-controls="fErrorsDrawer"]')?.setAttribute('aria-expanded', String(open));
+    $('#fErrorsStatus').textContent = '';
+    if (open) { setMenu(false); setLog(false); renderErrors(); $('#fErrorsDrawer').querySelector<HTMLElement>('button')?.focus({ preventScroll: true }); }
+    else if (restore) root.querySelector<HTMLElement>('[data-ui="menu"]')?.focus({ preventScroll: true });
+  }
+  // Falhas do próprio código da mesa durante a partida (o jogo segue, mas fica registrado).
+  window.addEventListener('error', e => { if (!root.hidden && root.isConnected) recordDiagnostic('falha da mesa', e.message || 'Erro inesperado', e.error?.stack?.split('\n').slice(0, 4).join('\n')); });
+  window.addEventListener('unhandledrejection', e => { if (!root.hidden && root.isConnected) recordDiagnostic('falha da mesa', String((e.reason as Error)?.message ?? e.reason ?? 'Promessa rejeitada'), (e.reason as Error)?.stack?.split('\n').slice(0, 4).join('\n')); });
   function setSettings(open: boolean) {
     if (open) {
       setMenu(false, true); setLog(false); hideCardPreview(true); syncSettings();
@@ -348,12 +405,27 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (document.hidden || root.hidden || disconnected) { stopPresentation(); return; }
     let entry = timeline.advance();
     const s = client?.state;
+    const draws: PresentationEvent[] = [];
     while (entry?.audioOnly) {
       if (s) audio.play(entry.event, timeline.matchId, entry.audible, s.you);
+      if (entry.event.type === 'draw' && entry.event.actor !== undefined) draws.push(entry.event);
       entry = timeline.advance();
     }
     displayFrame = s && !hasLiveDecision(s) ? entry?.event.frame ?? null : null;
+    drawingNow = s ? draws.filter(d => d.actor === s.you).reduce((n, d) => n + (d.count ?? 1), 0) : 0;
     renderTable(false);
+    drawingNow = 0;
+    // A mão inicial e os mulligans já têm a própria apresentação: sem voos por cima dela.
+    const gameBegun = timeline.history.some(e => e.type === 'turn');
+    if (s && draws.length && gameBegun && !suppressOpeningPreview(s)) {
+      const incoming = [...root.querySelectorAll<HTMLElement>('#fHand .hcard.incoming')];
+      for (const el of incoming) knownHand.add(Number(el.dataset.fid));
+      for (const draw of draws) {
+        const cards = draw.actor === s.you ? incoming : [];
+        const arrivals = motion.drew(draw.actor!, draw.count ?? 1, { you: s.you, cards, fast: fast || hasLiveDecision(s) });
+        cards.forEach((el, i) => arriving.set(Number(el.dataset.fid), performance.now() + (arrivals[i] ?? 0)));
+      }
+    }
     if (!entry || !s) return;
     const duration = presentationDuration(entry.event, fast || hasLiveDecision(s));
     // Dano dividido: os próximos danos da mesma mágica ou habilidade saem juntos, cada um para o seu alvo.
@@ -371,7 +443,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     presentationTimer = window.setTimeout(advancePresentation, duration);
   }
   function stopPresentation() {
-    clearTimeout(presentationTimer); timeline.catchUp(); displayFrame = null;
+    clearTimeout(presentationTimer); timeline.catchUp(); displayFrame = null; arriving.clear();
     motion.cancelPresentation(); audio.silence();
   }
   document.addEventListener('visibilitychange', () => {
@@ -561,29 +633,53 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
    * sai da carta que está sendo conjurada (azul); depois, de cada item da pilha (dourado se for seu, vermelho se
    * for do oponente).
    */
+  /** Item da pilha cujas setas estão em destaque: o que está sob o mouse ou com o foco, ou o que mira a carta ou o jogador apontado. */
+  let stackFocus: number | null = null;
+  function stackFocusFrom(el: HTMLElement | null): number | null {
+    const s = client?.state;
+    if (!el || !s?.stack.length) return null;
+    const item = el.closest<HTMLElement>('#fStack [data-stack], #fStackGallery [data-stack]');
+    if (item) return Number(item.dataset.stack);
+    const card = el.closest<HTMLElement>('.field [data-fid]');
+    if (card) return s.stack.find(si => si.targets?.cards?.includes(Number(card.dataset.fid)))?.id ?? null;
+    const player = el.closest<HTMLElement>('.avatar[data-pid]');
+    if (player) return s.stack.find(si => si.targets?.players?.includes(Number(player.dataset.pid)))?.id ?? null;
+    return null;
+  }
+  function setStackFocus(id: number | null) {
+    if (id === stackFocus) return;
+    stackFocus = id;
+    if (client?.state) drawTargetArrows(stateWithFrame(client.state, displayFrame));
+  }
+
   function drawTargetArrows(s: FState) {
     const svg = root.querySelector<SVGSVGElement>('#fTargets')!;
     const box = svg.getBoundingClientRect();
     const q = arrowRect;
     const targetRect = (kind: 'c' | 'p', id: number) =>
       kind === 'p' ? q(`.avatar-slot [data-pid="${id}"]`) : q(`.field [data-fid="${id}"]`) ?? q(`#fHand [data-fid="${id}"]`);
-    const links: { from: DOMRect; to: DOMRect; cls: string }[] = [];
-    const add = (from: DOMRect | undefined, t: { cards?: number[]; players?: number[] } | undefined, cls: string) => {
+    const links: { from: DOMRect; to: DOMRect; cls: string; tag?: string }[] = [];
+    const add = (from: DOMRect | undefined, t: { cards?: number[]; players?: number[] } | undefined, cls: string, tag?: string) => {
       if (!from || !t) return;
-      for (const id of t.cards ?? []) { const to = targetRect('c', id); if (to) links.push({ from, to, cls }); }
-      for (const id of t.players ?? []) { const to = targetRect('p', id); if (to) links.push({ from, to, cls }); }
+      for (const id of t.cards ?? []) { const to = targetRect('c', id); if (to) links.push({ from, to, cls, tag }); }
+      for (const id of t.players ?? []) { const to = targetRect('p', id); if (to) links.push({ from, to, cls, tag }); }
     };
     const stack = client?.state ? stackPresentation(client.state, timeline.current?.event).stack : s.stack;
+    // Com um item da pilha em foco (mouse ou teclado), só as setas dele ficam fortes e cada alvo ganha "Alvo de …".
+    const focused = stack.some(si => si.id === stackFocus) ? stackFocus : null;
     stack.forEach(si => {
       const from = q(`#fStack [data-stack="${si.id}"]`) ?? (si.source ? q(`.field [data-fid="${si.source.id}"]`) : undefined);
-      add(from, si.targets, si.controller === s.you ? 'mine' : 'theirs');
+      const owner = si.controller === s.you ? 'mine' : 'theirs';
+      if (focused === null) add(from, si.targets, owner);
+      else if (si.id === focused) add(from, si.targets, `${owner} focused`, `Alvo de ${si.source?.name ? label(si.source) : 'efeito na pilha'}`);
+      else add(from, si.targets, `${owner} dimmed`);
     });
     const tg = s.input.targeting;
     if (tg && !s.gameOver) {
       const from = q(`#fAction [data-peek="${tg.source}"]`) ?? q(`#fHand [data-fid="${tg.source}"]`) ?? q(`.field [data-fid="${tg.source}"]`);
       add(from, tg, 'choosing');
     }
-    const paths = links.map(({ from, to, cls }) => {
+    const paths = links.map(({ from, to, cls, tag }) => {
       const fx = from.left + from.width / 2 - box.left, fy = from.top + from.height / 2 - box.top;
       const ex = to.left + to.width / 2 - box.left, ey = to.top + to.height / 2 - box.top;
       // Sai da borda da carta de origem, para não cobrir a arte dela.
@@ -593,13 +689,21 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const dx = ex - sx, dy = ey - sy, len = Math.hypot(dx, dy) || 1, bend = Math.min(120, len * 0.25);
       const cx = (sx + ex) / 2 - (dy / len) * bend, cy = (sy + ey) / 2 + (dx / len) * bend;
       const d = `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
-      return `<path class="arrow-under" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fTargetHead-${cls})"/>` +
-        `<circle class="ring ${cls}" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="${(Math.min(to.width, to.height) * 0.32).toFixed(1)}"/>`;
+      const head = cls.split(' ')[0];
+      // Etiqueta acima do alvo (abaixo, se não couber no topo da tela); a largura é estimada pelo texto.
+      const width = tag ? Math.round(tag.length * 6.4 + 18) : 0, above = to.top - box.top > 30;
+      const ty = above ? to.top - box.top - 26 : to.bottom - box.top + 6;
+      const tx = Math.max(4, Math.min(box.width - width - 4, ex - width / 2));
+      const label = tag ? `<g class="target-tag ${head}"><rect x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" width="${width}" height="20" rx="10"/><text x="${(tx + width / 2).toFixed(1)}" y="${(ty + 14).toFixed(1)}">${esc(tag)}</text></g>` : '';
+      return `<path class="arrow-under ${cls}" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fTargetHead-${head})"/>` +
+        `<circle class="ring ${cls}" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="${(Math.min(to.width, to.height) * 0.32).toFixed(1)}"/>` + label;
     });
     const head = (cls: string) => `<marker id="fTargetHead-${cls}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
       <path class="head ${cls}" d="M0 0 10 5 0 10z" stroke="#120800" stroke-width="1"/></marker>`;
     const html = paths.length ? `<defs>${['mine', 'theirs', 'choosing'].map(head).join('')}</defs>${paths.join('')}` : '';
     if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
+    root.querySelectorAll('.stack-focus').forEach(el => el.classList.remove('stack-focus'));
+    if (focused !== null) root.querySelectorAll(`#fStack [data-stack="${focused}"], #fStackGallery [data-stack="${focused}"]`).forEach(el => el.classList.add('stack-focus'));
   }
 
   function layoutCardDecision() {
@@ -996,6 +1100,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       // "Carta …" concorda com qualquer nome (o Cavaleiro, a Aura).
       case 'left': return event.reason === 'destroyed' ? `Carta destruída: ${name}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}.`
         : event.to === 'Exile' ? `Carta exilada: ${name}.` : event.to === 'Hand' ? `Volta para a mão: ${name}.` : event.to === 'Library' ? `Volta para o grimório: ${name}.` : `${name} saiu do campo.`;
+      case 'discard': return `${who} descartou ${name}.`;
       case 'entered': return event.from === 'Exile' ? `Volta ao campo: ${name}.` : `${name} entrou no campo.`;
       case 'attackers': return attackDescription(event);
       case 'blockers': return `${who} declarou bloqueadores.`;
@@ -1134,7 +1239,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
       btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
     const mine = s.activePlayer === s.you;
-    if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…'}</button>`;
+    if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
     // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
     const extraCombat = mine && (s.extraCombats ?? 0) > 0;
     const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying && !extraCombat;
@@ -1145,6 +1250,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? b('resolve-all', { label: `Resolver todos (${s.stack.length})`, enabled: true }, 'secondary') : '';
     return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') + resolveAll +
       (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
+  }
+
+  /** Fica à vista durante toda a partida, também com o oponente jogando, para dar para desmarcar a qualquer hora. */
+  function passResponsesToggle(s: FState) {
+    if (!passResponses.supported || s.gameOver || s.spectating || s.input.opening || s.input.attacking || s.input.blocking) return '';
+    // Só junto da prioridade ou da espera: numa escolha (descarte, alvo, pagamento) ele só atrapalharia.
+    if (s.input.selection || s.input.targeting || s.input.paying || cardDecision(s) || (!s.input.priority && (s.input.ok.enabled || s.input.cancel.enabled))) return '';
+    return `<label class="pass-responses" title="Passa a prioridade sozinho no turno do oponente e quando há algo na pilha. Seu turno, ataques, bloqueios e escolhas continuam parando."><input type="checkbox" data-ui="pass-responses"${passResponses.value ? ' checked' : ''}${passResponses.pending !== null ? ' aria-busy="true"' : ''}> Passar respostas</label>`;
   }
 
   // ---------- Perguntas ----------
@@ -1236,10 +1349,46 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   // ---------- Desenho ----------
   function render() { renderTable(true); }
+
+  /**
+   * Decisão que segura a partida: aviso no centro da mesa, caixa de ação em destaque, o resto da mesa esmaecido
+   * e, se ela ficar parada, um lembrete com som. Com outro jogador decidindo, o aviso diz por quem a mesa espera.
+   */
+  function renderAwaiting(s: FState, text: string) {
+    const awaiting = awaitingDecision(s);
+    const arena = root.querySelector<HTMLElement>('.arena')!;
+    const action = $('#fAction');
+    const callout = $('#fAwait');
+    const waitingOn = awaiting ? '' : waitingOnText(s);
+    arena.classList.toggle('awaiting-decision', !!awaiting);
+    // Só esmaece quando há cartas para escolher; numa pergunta de sim/não a mesa continua normal.
+    arena.classList.toggle('focus-choices', !!awaiting && awaiting.kind !== 'confirm' && s.input.selectable.length > 0);
+    action.classList.toggle('awaiting', !!awaiting);
+    action.classList.toggle('centered-decision', !!awaiting?.centered && !s.input.suspendCast);
+    if (awaiting) { action.setAttribute('role', awaiting.centered ? 'dialog' : 'region'); action.setAttribute('aria-label', 'Sua decisão'); }
+    else { action.removeAttribute('role'); action.removeAttribute('aria-label'); }
+    callout.classList.toggle('waiting-on', !awaiting && !!waitingOn);
+    callout.querySelector('.await-text')!.textContent = awaiting ? text.replace(/\s+/g, ' ').trim() || 'Escolha para continuar.' : waitingOn;
+    // A pergunta centralizada já está no meio da mesa: o aviso só repetiria o texto em cima dela.
+    callout.hidden = !(awaiting && !awaiting.centered) && !waitingOn;
+    const key = awaiting ? `${s.matchId ?? ''}:${s.input.gen}:${awaiting.kind}` : '';
+    if (key !== awaitKey) {
+      awaitKey = key;
+      clearTimeout(awaitTimer);
+      arena.classList.remove('decision-stale');
+      if (key) awaitTimer = window.setTimeout(() => {
+        if (awaitKey !== key) return;
+        arena.classList.add('decision-stale');
+        audio.cue('turn-self', .5);
+      }, AWAIT_REMINDER_MS);
+    }
+    return awaiting;
+  }
   function renderTable(ingest: boolean) {
     const s = client?.state;
     if (!s || s.type !== 'state') return;
     autoPass.observe(s.preferences, !!client?.connected && !disconnected); syncAutoPass();
+    passResponses.observe(s.preferences, !!client?.connected && !disconnected);
     const savedFocus = focusSnapshot();
     const scrollPositions = new Map([...root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field')].map(el => [el.id, { left: el.scrollLeft, top: el.scrollTop }]));
     const silently = silentNext || document.hidden;
@@ -1289,6 +1438,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const fan = [...me.hand.map(c => ({ c, tag: '' })), ...extra];
     const n = fan.length;
     $('#fHand').classList.toggle('crowded', n > 7);
+    const drawsAhead = timeline.pendingDraws(s.you) + drawingNow > 0 && handPrimed && !suppressOpeningPreview(s) && timeline.history.some(e => e.type === 'turn');
+    for (const [id, at] of arriving) if (at <= performance.now()) arriving.delete(id);
+    const incoming = (id: number) => (drawsAhead && !knownHand.has(id)) || arriving.has(id);
     setHTML($('#fHand'), fan.map(({ c, tag }, i) => {
       const off = i - (n - 1) / 2;
       const sel = tag || usable(s, c.id) ? 'playable' : '';
@@ -1298,9 +1450,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       // Selo do custo acima do canto esquerdo: no leque, a carta seguinte cobre o canto direito, onde fica o custo impresso.
       const cost = !c.faceDown && c.manaCost ? `<div class="hcost" aria-hidden="true">${manaHTML(c.manaCost)}</div>` : '';
       const where = tag ? `<div class="hzone">${esc(tag)}</div>` : '';
-      return `<div class="hand-slot"><div class="hcard ${sel}${tag ? ' outside' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${tag ? ` (${esc(tag)})` : ''}"
+      return `<div class="hand-slot"><div class="hcard ${sel}${incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${tag ? ` (${esc(tag)})` : ''}"
         style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${face(c, 'normal')}${cost}${where}${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
     }).join(''));
+    knownHand = new Set(fan.map(({ c }) => c.id).filter(id => !incoming(id) || arriving.has(id)));
+    handPrimed = true;
 
     renderExileShelf(s);
     renderActivity();
@@ -1343,12 +1497,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${esc(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
-    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${attackPanel}<div class="btns">${buttons(s)}</div>`);
+    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${attackPanel}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
     if (promptEl && moreEl) moreEl.hidden = !expanded && !short && promptEl.scrollHeight <= promptEl.clientHeight + 1;
-    announce(instruction ? `${short ?? instruction}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''));
+    // O pedido é o último parágrafo do Forge ("Carta (id) - habilidade" vem antes); sem o número da carta.
+    const request = instruction.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean).pop() ?? '';
+    const awaiting = renderAwaiting(s, short ?? request.replace(/ \(\d+\)/g, ''));
+    announce(instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? instruction}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''));
 
     const qEl = $('#fQuestion');
     if (s.question && !s.gameOver) {
@@ -1498,6 +1655,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   function notice(text: string, error = false) {
+    if (error) recordDiagnostic('aviso', text);
     if (error && client?.state?.input.attacking && attackQueue.busy) { clearAttackChoice(true); renderTable(false); }
     if (error && client?.state?.sideboarding) { sideboardError = text; sideboardBusy = false; render(); }
     const el = document.createElement('div');
@@ -1575,6 +1733,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (ui === 'settings') { setSettings(true); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
+    if (ui === 'pass-responses') { if (client?.connected && !disconnected) passResponses.change(!passResponses.value); render(); return; }
     if (ui === 'auto-pass') { if (client?.connected && !disconnected) autoPass.change(!autoPass.value); syncAutoPass(); return; }
     if (ui === 'mute') { audio.setMuted(!audio.settings.muted); syncSettings(); return; }
     if (ui === 'sideboard-ready' || ui === 'next-game') {
@@ -1625,7 +1784,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (ui === 'menu') { setMenu($('#fMenu').hidden); return; }
-    if (ui === 'log') { setLog($('#fLogDrawer').hidden, true); return; }
+    if (ui === 'log') { setErrors(false); setLog($('#fLogDrawer').hidden, true); return; }
+    if (ui === 'errors') { setErrors($('#fErrorsDrawer').hidden, true); return; }
+    if (ui === 'errors-clear') { diagnostics.clear(); renderErrors(); $('#fErrorsStatus').textContent = 'Lista limpa.'; return; }
+    if (ui === 'errors-copy') {
+      const text = errorReport();
+      const status = $('#fErrorsStatus');
+      if (!navigator.clipboard) { status.textContent = 'Este navegador não permite copiar daqui.'; return; }
+      void navigator.clipboard.writeText(text).then(() => { status.textContent = 'Relatório copiado.'; },
+        () => { status.textContent = 'Não consegui copiar. Selecione o texto da lista e copie.'; });
+      return;
+    }
     if (ui === 'fullscreen') { void toggleFullscreen(); return; }
     if (ui === 'exit') {
       if (client?.state?.gameOver || disconnected || confirm(client?.state?.room ? 'Desistir e sair da sala?' : 'Desistir desta partida?')) { stopPresentation(); hideCardPreview(true); client?.send({ type: 'concede' }); opts.onExit(); }
@@ -1806,6 +1975,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (el && !handDrag.active) showPreview(cardFromElement(el), el, false, { x: (e as PointerEvent).clientX, y: (e as PointerEvent).clientY });
   });
   root.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') followCardPreview(e.clientX, e.clientY); }, { passive: true });
+  root.addEventListener('pointerover', e => setStackFocus(stackFocusFrom(e.target as HTMLElement)));
+  root.addEventListener('pointerout', e => setStackFocus(stackFocusFrom(e.relatedTarget as HTMLElement | null)));
+  root.addEventListener('focusin', e => setStackFocus(stackFocusFrom(e.target as HTMLElement)));
+  root.addEventListener('focusout', e => setStackFocus(stackFocusFrom(e.relatedTarget as HTMLElement | null)));
   root.addEventListener('pointerout', e => {
     const to = (e as PointerEvent).relatedTarget as HTMLElement | null;
     if (!to?.closest?.(`${inspectable},.card-inspector-preview`)) hideCardPreview();
@@ -1885,7 +2058,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!root.isConnected || root.closest('[hidden]') || !client?.state || disconnected) return;
     const target = e.target as HTMLElement;
     if (target !== document.body && target.closest('input, textarea, select, button, a, [contenteditable], [role="button"], [tabindex]')) return;
-    if (currentModal || document.querySelector('dialog[open]') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden) return;
+    if (currentModal || document.querySelector('dialog[open]') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden || !$('#fErrorsDrawer').hidden) return;
     // O botão de passar (OK, Resolver, "Para o combate"...): avança um passo. "Fim de turno" fica só no clique.
     const primary = root.querySelector<HTMLButtonElement>('#fAction .btns [data-act="ok"]:not(:disabled)');
     if (!primary) return;
@@ -1897,6 +2070,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (!$('#fSettings').hidden) { e.preventDefault(); setSettings(false); return; }
       if (!$('#fMenu').hidden) { e.preventDefault(); setMenu(false, true); return; }
       if (!$('#fLogDrawer').hidden) { e.preventDefault(); setLog(false, true); return; }
+      if (!$('#fErrorsDrawer').hidden) { e.preventDefault(); setErrors(false, true); return; }
       if (selectedAttackers.size || pinnedDefender || attackAllGen !== null || attackQueue.queuedAttackers.length) { clearAttackChoice(); e.preventDefault(); renderTable(false); return; }
       if (selectedBlocker) { selectedBlocker = null; e.preventDefault(); renderTable(false); return; }
       if (stackGalleryOpen) { e.preventDefault(); closeStackGallery(); return; }
@@ -1928,7 +2102,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   return {
     attach(c, pics) {
-      autoPass.reset();
+      autoPass.reset(); passResponses.reset(); knownHand = new Set(); handPrimed = false; arriving.clear();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
       client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);
@@ -1944,6 +2118,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     render,
     notice,
     reconnecting(attempt) {
+      if (attempt === 1) recordDiagnostic('conexão', 'A conexão caiu; tentando voltar sozinho.');
       disconnected = true; clearAttackChoice(true); autoPass.reset(); syncAutoPass();
       if (stackGalleryOpen) closeStackGallery();
       handDrag.cancel(); stopPresentation(); silentNext = true;
@@ -1955,7 +2130,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="result-btns"><button class="arena-btn secondary" data-ui="exit">Início</button></div></div>`;
       syncModal();
     },
+    diagnostic(d) { recordDiagnostic('ação ignorada', d.text, d.action ? `ação: ${d.action}` : undefined); },
     disconnected(reason) {
+      recordDiagnostic('conexão', reason ?? 'Conexão perdida com o servidor da partida.');
       disconnected = true; clearAttackChoice(true); autoPass.reset(); syncAutoPass();
       if (stackGalleryOpen) closeStackGallery();
       handDrag.cancel(); stopPresentation(); silentNext = true;

@@ -183,6 +183,7 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
     // Sala fechada ou código errado antes de a partida começar: volta ao formulário.
     if (error && current?.net && screen !== 'game') { current = null; lobby.showRoom(null); }
   };
+  client.onDiagnostic = d => { if (forge === client) forgeTable.diagnostic(d); };
   client.onGone = text => {
     // A ponte não conhece mais a partida (encerrada ou ponte reiniciada): esquece e volta ao início.
     current = null;

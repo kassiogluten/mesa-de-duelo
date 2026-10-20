@@ -17,7 +17,7 @@ export const MIX_HEADROOM = .40;
 
 export function soundForEvent(event: PresentationEvent, you?: number): SoundCue | null {
   switch (event.type) {
-    case 'draw': return 'draw';
+    case 'draw': case 'discard': return 'draw';
     case 'land-played': return 'land';
     case 'spell-cast': return 'cast';
     case 'ability-activated': return 'ability';
@@ -169,6 +169,21 @@ export function createGameAudio() {
       save();
     },
     silence,
+    /** Som avulso, fora da fila de eventos (lembrete de decisão parada); respeita o mudo e o volume. */
+    cue(cue: SoundCue, level = 1) {
+      if (settings.muted || !unlocked || document.hidden || !context || !master) return;
+      const buffer = buffers.get(cue);
+      if (!buffer) { void preload(); return; }
+      if (voices.size >= MAX_VOICES) return;
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      gain.gain.value = level;
+      source.connect(gain); gain.connect(master);
+      voices.add(source);
+      source.onended = () => { voices.delete(source); source.disconnect(); gain.disconnect(); };
+      source.start();
+    },
     play(event: PresentationEvent, matchId: string, audible: boolean, you?: number) {
       const allowed = gate.allow(`${matchId}:${event.seq}`, { ...settings, unlocked, visible: !document.hidden, audible });
       const cue = soundForEvent(event, you);

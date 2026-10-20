@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import java.util.concurrent.CountDownLatch;
 import forge.game.Game;
 
+import forge.game.combat.CombatView;
 import forge.game.phase.PhaseType;
 import forge.game.player.PlayerView;
 import forge.gamemodes.match.YieldUpdate;
@@ -23,8 +24,12 @@ import forge.trackable.TrackableCollection;
 final class WebGuiGame extends ProtocolGuiGame {
     /** Fases do próprio turno em que o jogador recebe prioridade com a pilha vazia. */
     private static final Set<PhaseType> STOPS_MINE = EnumSet.of(PhaseType.MAIN1, PhaseType.MAIN2, PhaseType.COMBAT_DECLARE_BLOCKERS);
-    /** Fases do turno do oponente: a janela de combate depois dos bloqueios. */
-    private static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_DECLARE_BLOCKERS);
+    /**
+     * Fases do turno do oponente: depois dos ataques (remover um atacante, criatura com lampejo para bloquear),
+     * depois dos bloqueios e a etapa final, a janela clássica para instantâneas antes do seu turno.
+     * Com "Passar automaticamente" ligado, o Forge só para nelas quando o jogador tem algo que pode usar agora.
+     */
+    private static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_DECLARE_ATTACKERS, PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.END_OF_TURN);
 
     private volatile PlayerView me;
     private final BooleanSupplier autoPassNoActions;
@@ -66,6 +71,11 @@ final class WebGuiGame extends ProtocolGuiGame {
     @Override
     public boolean isUiSetToSkipPhase(PlayerView playerTurn, PhaseType phase) {
         boolean mine = me != null && me.equals(playerTurn);
+        // Sem atacantes não há a que responder depois dos ataques: o oponente que não atacou não gera pedido.
+        if (!mine && phase == PhaseType.COMBAT_DECLARE_ATTACKERS) {
+            CombatView combat = getGameView() == null ? null : getGameView().getCombat();
+            if (combat == null || combat.getNumAttackers() == 0) return true;
+        }
         return !(mine ? STOPS_MINE : STOPS_THEIRS).contains(phase);
     }
 }

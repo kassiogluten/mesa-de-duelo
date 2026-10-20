@@ -179,6 +179,8 @@
   .dw-card-name:hover, .dw-preview .dp-card:hover { background: #ffffff06; }
 }
 @media (min-width: 1500px) { .dw-edit-layout:not(.search-open) .dw-card-list { columns: 2 400px; column-gap: 32px; } }
+/* Com a lista em duas colunas, o aviso de deck vazio ocupa a largura toda em vez de se partir ao meio. */
+.dw-card-list > .dw-empty { column-span: all; break-inside: avoid; }
 @media (max-width: 1000px) {
   .dw-edit-layout.search-open { grid-template-columns: minmax(0, 1fr); }
   .dw-search-panel { position: static; max-height: none; grid-row: 1; }

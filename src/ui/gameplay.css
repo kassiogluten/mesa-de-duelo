@@ -330,3 +330,12 @@
   /* Quando a caixa traz uma pergunta com texto (escolher cartas), ela volta à largura de antes. */
   .forge .action.card-decision { width: 190px; max-width: 30vw; }
 }
+/* "Passar respostas": discreto, logo abaixo dos botões de prioridade. */
+.forge .action .pass-responses { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 32px; margin-top: 6px; color: var(--muted); font-size: 12.5px; cursor: pointer; user-select: none; }
+.forge .action .pass-responses input { width: 16px; height: 16px; margin: 0; accent-color: var(--gold); cursor: pointer; }
+.forge .action .pass-responses:has(input:checked) { color: var(--gold-light); }
+.forge .action .pass-responses:has(input:focus-visible) { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
+/* Compra: verso de carta voando do grimório para a mão; a carta nova espera escondida até ele chegar. */
+.draw-ghost { z-index: 31; }
+.draw-ghost .back { width: 100%; height: 100%; box-shadow: 0 10px 24px #0008; }
+.hand .hcard.incoming { opacity: 0; }

@@ -1,24 +1,30 @@
 import type { FPreferences } from '../forge/client';
 
 export const AUTO_PASS_KEY = 'mesa:autoPassNoActions';
+export const PASS_RESPONSES_KEY = 'mesa:passResponses';
 interface PreferenceStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
-type SendPreference = (message: { type: 'preferences'; autoPassNoActions: boolean }) => void;
+type PreferenceField = keyof FPreferences;
+type SendPreference = (message: { type: 'preferences' } & Partial<FPreferences>) => void;
+interface PreferenceOptions { field: PreferenceField; key: string; initial: boolean }
 
-/** Only synchronizes an engine preference. It never passes priority on the player's behalf. */
+/** Only synchronizes a seat preference with the bridge; the bridge decides when it passes priority. */
 export class AutoPassPreference {
-  value = true;
+  value: boolean;
   supported = false;
   pending: boolean | null = null;
   private applied = false;
   private hasLocalChoice = false;
   private storage?: PreferenceStorage;
   private send: SendPreference;
+  private options: PreferenceOptions;
 
-  constructor(send: SendPreference, storage?: PreferenceStorage) {
+  constructor(send: SendPreference, storage?: PreferenceStorage, options: PreferenceOptions = { field: 'autoPassNoActions', key: AUTO_PASS_KEY, initial: true }) {
     this.send = send;
+    this.options = options;
+    this.value = options.initial;
     try {
       this.storage = storage ?? globalThis.localStorage;
-      const saved = this.storage?.getItem(AUTO_PASS_KEY);
+      const saved = this.storage?.getItem(options.key);
       if (saved === 'true' || saved === 'false') { this.value = saved === 'true'; this.hasLocalChoice = true; }
     } catch { /* Browser storage is optional; retain the choice for this mounted table. */ }
   }
@@ -27,8 +33,8 @@ export class AutoPassPreference {
 
   observe(preferences: FPreferences | undefined, connected: boolean) {
     if (!connected) { this.reset(); return; }
-    if (typeof preferences?.autoPassNoActions !== 'boolean') { this.supported = false; return; }
-    const confirmed = preferences.autoPassNoActions;
+    const confirmed = preferences?.[this.options.field];
+    if (typeof confirmed !== 'boolean') { this.supported = false; return; }
     this.supported = true;
     if (!this.applied) {
       // Without a browser override, keep the seat's setting when joining from another device.
@@ -57,11 +63,11 @@ export class AutoPassPreference {
   private dispatch() {
     // One outstanding request makes boolean echoes sufficient, even under rapid toggles.
     this.pending = this.value;
-    this.send({ type: 'preferences', autoPassNoActions: this.value });
+    this.send({ type: 'preferences', [this.options.field]: this.value });
   }
 
   private persist() {
     this.hasLocalChoice = true;
-    try { this.storage?.setItem(AUTO_PASS_KEY, String(this.value)); } catch { /* Keep the in-memory choice. */ }
+    try { this.storage?.setItem(this.options.key, String(this.value)); } catch { /* Keep the in-memory choice. */ }
   }
 }

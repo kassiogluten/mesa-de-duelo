@@ -9,6 +9,8 @@ export interface Motion {
   capture(): void;
   play(options?: { silent?: boolean; semantic?: boolean }): void;
   present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean }): void;
+  /** Compra: versos de carta saem do grimório e vão para a mão. `cards` são as cartas novas da sua mão, mostradas ao chegar. */
+  drew(actor: number, count: number, options: { you: number; cards: HTMLElement[]; fast: boolean }): number[];
   cancelPresentation(): void;
   reset(): void;
 }
@@ -60,7 +62,7 @@ export function createMotion(root: HTMLElement): Motion {
     callouts.length = 0;
     for (const el of hiddenCards) el.style.opacity = '';
     hiddenCards.clear();
-    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight,.lethal-hit,.heal-flash').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash'));
+    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight,.lethal-hit,.heal-flash,.incoming').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash', 'incoming'));
   }
   function remove(el: HTMLElement) {
     el.remove(); effects.delete(el);
@@ -365,6 +367,12 @@ export function createMotion(root: HTMLElement): Motion {
       } else if (event.type === 'left') {
         from = old ?? target ?? stage;
         to = destination(event, mine, seat, hand, stage);
+      } else if (event.type === 'discard') {
+        // Sai do lugar dela na mão (ou da mão do oponente), já de face para cima, e cai no cemitério.
+        from = old ?? hand;
+        to = destination({ ...event, to: 'Graveyard' }, mine, seat, hand, stage);
+        const pile = mine ? root.querySelector<HTMLElement>('#fMePiles .gy') : seat?.querySelector<HTMLElement>('.piles .gy') ?? root.querySelector<HTMLElement>('#fOppPiles .gy');
+        later(() => pulse(pile), options.duration * .8);
       } else if (event.type === 'countered') {
         from = stage;
         to = destination({ ...event, to: 'Graveyard' }, mine, seat, hand, stage);
@@ -375,7 +383,7 @@ export function createMotion(root: HTMLElement): Motion {
       const piece = effect('presentation-piece', end, options.html);
       const caption = document.createElement('span');
       caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
-      const disappearing = ['left', 'countered', 'resolved'].includes(event.type);
+      const disappearing = ['left', 'countered', 'resolved', 'discard'].includes(event.type);
       if (event.type === 'left') leave(event, from, to, end, piece, options.duration);
       else if (event.type === 'entered' && event.from === 'Exile') {
         const ring = effect('exile-ring', { ...to, w: end.w * 1.3, h: end.w * 1.3 });
@@ -395,6 +403,37 @@ export function createMotion(root: HTMLElement): Motion {
         remove(piece);
         if (card && hiddenCards.delete(card)) card.style.opacity = '';
       }, options.duration);
+    },
+    drew(actor, count, options) {
+      if (document.hidden || root.hidden || count < 1) return [];
+      const mine = actor === options.you;
+      const seat = mine ? null : root.querySelector(`[data-seat-player="${actor}"]`);
+      const library = (seat ? center(seat.querySelector('.piles .lib')) : undefined) ?? center(root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} .lib`));
+      const handPoint = center(seat?.querySelector('.seat-hand')) ?? center(root.querySelector(mine ? '#fHand' : '#fOppHand')) ?? center(root.querySelector(mine ? '#fMeAvatar' : '#fOppAvatar'));
+      // A mão pode ter sido redesenhada durante o voo: revela a carta que estiver lá agora, pelo id.
+      const reveal = (el: HTMLElement) => (root.querySelector<HTMLElement>(`#fHand [data-fid="${el.dataset.fid}"]`) ?? el).classList.remove('incoming');
+      if (!library || !handPoint || reduced()) { options.cards.forEach(reveal); return options.cards.map(() => 0); }
+      // Até 7 voos; numa compra grande o resto chega junto com o último.
+      const flights = Math.min(count, 7), gap = options.fast ? 60 : 110, travel = options.fast ? 300 : 460;
+      for (let i = 0; i < flights; i++) {
+        const card = options.cards[i];
+        const to = center(card) ?? handPoint;
+        const size = { w: card ? to.w : library.w, h: card ? to.h : library.h };
+        const ghost = effect('presentation-piece draw-ghost', { ...to, ...size }, '<div class="back"></div>');
+        const dx = library.cx - to.cx, dy = library.cy - to.cy;
+        // Sobe do grimório, faz um arco e assenta na mão; a sua carta vira de face para cima ao chegar.
+        animate(ghost, [
+          { translate: `${dx}px ${dy}px`, scale: String(library.w / Math.max(1, size.w)), opacity: .9 },
+          { translate: `${dx * .45}px ${dy * .45 - 30}px`, scale: '1.05', opacity: 1, offset: .5 },
+          { translate: '0 0', scale: '1', opacity: 1 }], travel, EASE, i * gap);
+        later(() => {
+          remove(ghost);
+          if (card) { reveal(card); animate(root.querySelector<HTMLElement>(`#fHand [data-fid="${card.dataset.fid}"]`) ?? card, [{ rotate: 'y 90deg', scale: '1.04' }, { rotate: 'y 0deg', scale: '1' }], 180); }
+        }, travel + i * gap);
+      }
+      // Cartas além dos voos aparecem com a última.
+      for (const card of options.cards.slice(flights)) later(() => reveal(card), travel + (flights - 1) * gap);
+      return options.cards.map((_, i) => travel + Math.min(i, flights - 1) * gap);
     },
     cancelPresentation: clear,
     reset() { clear(); cards = new Map(); primed = false; },

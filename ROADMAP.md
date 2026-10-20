@@ -319,3 +319,48 @@ Quando o atacante é bloqueado por duas ou mais criaturas (ou tem atropelar), o 
 - [ ] Bloqueador que bloqueia vários atacantes (a mesma pergunta, vista pelo lado de quem bloqueia): o Forge já usa o mesmo método, mas falta conferir numa partida.
 - [ ] Integrar com os efeitos de dano (itens 15 e 18): pré-visualizar na mesa quem morre com a divisão escolhida.
 
+
+## 23. Botão "Sem bloqueio" quando nenhum bloqueador foi escolhido
+
+Na declaração de bloqueadores, o botão de confirmar diz **Confirmar bloqueios** mesmo quando o jogador não escolheu nenhum bloqueador, o que deixa dúvida se ele vai mesmo levar o dano todo.
+
+- [ ] Sem bloqueadores selecionados, o botão vira **Sem bloqueio**; com um ou mais, volta para **Confirmar bloqueios** (`src/ui/forgeTable.ts`, onde o rótulo de `s.input.blocking` é montado).
+- [ ] Trocar o rótulo na hora em que o jogador marca ou desmarca um bloqueador, sem esperar a resposta do servidor.
+- [ ] Leitor de tela: anunciar o novo rótulo.
+
+## 24. Animação de mill
+
+Quando cartas vão do topo do grimório direto para o cemitério (moer, "mill"), hoje elas só aparecem no cemitério e o grimório diminui, sem mostrar o movimento. Fica difícil perceber quantas cartas saíram e quais foram, principalmente quando é o oponente que moeu.
+
+- [ ] Ponte: avisar o mill como evento próprio, com o jogador, as cartas na ordem em que saíram do grimório e a fonte (a mágica ou habilidade que mandou moer). O Forge já marca esse momento ("Cards milled").
+- [ ] Mesa: as cartas saem do topo do grimório uma a uma, viram de face para cima e voam até o cemitério, com um pequeno intervalo entre elas. Com muitas cartas (moer 10 ou mais), acelerar ou agrupar em leque para não travar a partida.
+- [ ] Mostrar o total moído junto ao grimório (ex.: "−4") e anunciar no leitor de tela quantas cartas foram e quais.
+- [ ] Respeitar o ritmo rápido e o "reduzir movimento" do sistema: sem animação, só o destaque no cemitério.
+- [ ] Incluir no laboratório de efeitos (item 18): moer 1, 3 e 10 cartas, dos dois lados.
+
+## 25. Escolher quais oponentes ver na mesa
+
+Em partidas com três ou mais jogadores (Commander), todos os oponentes dividem a parte de cima da tela. Com quatro jogadores, cada campo fica pequeno, e quem quer acompanhar de perto uma ameaça ou o oponente que está atacando não tem como dar mais espaço a ele.
+
+- [ ] Seletor de oponentes na mesa: o jogador marca quais oponentes aparecem. Os que ficam de fora viram uma faixa compacta com retrato, vida, cartas na mão, veneno e dano de comandante, e um clique traz o campo de volta.
+- [ ] Atalho "só este": ao clicar no retrato de um oponente, mostrar só o campo dele, em tamanho grande, e voltar a todos com o mesmo clique.
+- [ ] O espaço liberado vai para os oponentes exibidos (cartas maiores), em vez de ficar vazio.
+- [ ] Nunca esconder o que exige a atenção do jogador: o oponente que está atacando você, o dono de um alvo que você precisa escolher e o jogador ativo voltam à vista sozinhos enquanto durar a situação, com um aviso discreto.
+- [ ] Lembrar a escolha durante a partida (a escolha vale por assento, não por nome) e voltar a mostrar todos numa nova partida.
+- [ ] Teclado e leitor de tela: alternar cada oponente com o teclado e anunciar quem está oculto.
+- [ ] Celular: no lugar de faixas lado a lado, abas com um oponente por vez.
+
+## 26. Destaque para as ações que esperam o jogador ✅
+
+Quando o jogo para esperando uma decisão do jogador (sacrificar uma criatura, mover o comandante para a zona de comando, escolher um alvo, descartar, pagar um custo), o único sinal é a caixa de ação no canto da tela. Os jogadores relatam que demoram a perceber que a partida está parada por causa deles e ficam esperando o oponente.
+
+- [x] Deixar claro na mesa inteira que é a vez do jogador decidir: faixa ou aviso no centro da tela com a frase curta da decisão (a mesma do item 5), e a caixa de ação em destaque (brilho, pulso ou cor de alerta) enquanto a resposta não vier.
+- [x] Separar visualmente "decisão obrigatória" (sacrificar, escolher alvo, descartar, mover o comandante) de "prioridade comum" (só passar ou jogar algo), para o destaque forte não aparecer a cada passo de fase.
+- [x] Realçar na mesa as cartas que podem ser escolhidas e esmaecer o resto, para o jogador ver onde clicar sem ler a caixa.
+- [x] Perguntas que não dependem de cartas na mesa (mover o comandante para a zona de comando, sim/não, escolher um modo) abrem no centro, como os modais de escolha, em vez de ficarem só no canto.
+- [x] Se a decisão continuar parada por alguns segundos, reforçar o aviso (novo pulso, som discreto que respeita o volume das configurações).
+- [x] Do outro lado: mostrar aos oponentes "Aguardando [jogador] escolher…", para ninguém achar que a partida travou.
+- [x] Respeitar o "reduzir movimento" do sistema (destaque sem animação) e anunciar a decisão no leitor de tela assim que ela chegar.
+- [x] Celular: o aviso não pode cobrir as cartas que precisam ser escolhidas.
+  - No celular o aviso vira uma linha sobre a divisória da mesa e deixa passar os cliques; pode encostar no topo de uma carta.
+- [ ] Conferir numa partida real em rede: mover o comandante, sacrifício pedido por uma habilidade do oponente e o "Aguardando…" com três ou mais jogadores.

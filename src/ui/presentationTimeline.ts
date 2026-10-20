@@ -38,6 +38,8 @@ export interface PresentationEvent {
   self?: boolean;
   lethal?: boolean;
   prevented?: boolean;
+  /** Só na mesa: quantas compras seguidas do mesmo jogador viraram uma entrada só (`draw`). */
+  count?: number;
   /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
   divided?: number;
   reason?: 'destroyed' | 'sacrificed';
@@ -50,7 +52,7 @@ const QUEUE_LIMIT = 12;
 const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
-const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'attackers', 'blockers', 'damage', 'life-changed', 'turn']);
+const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'attackers', 'blockers', 'damage', 'life-changed', 'turn']);
 const AUDIO_ONLY = new Set(['draw']);
 
 function sameLandTransition(a: PresentationEvent, b: PresentationEvent) {
@@ -98,7 +100,7 @@ export class PresentationTimeline {
       const previous = this.pending.at(-1);
       // A batch of draws by one player needs one cue, without adding a visual pause.
       if (audioOnly && previous?.audioOnly && previous.event.type === event.type && previous.event.actor === event.actor) {
-        this.pending[this.pending.length - 1] = { event, audible: true, audioOnly: true };
+        this.pending[this.pending.length - 1] = { event: { ...event, count: (previous.event.count ?? 1) + 1 }, audible: true, audioOnly: true };
       } else {
         this.pending.push({ event, audible: true, ...(audioOnly ? { audioOnly: true } : {}) });
       }
@@ -124,6 +126,10 @@ export class PresentationTimeline {
     while (this.pending[0] && !this.pending[0].audioOnly && test(this.pending[0].event)) taken.push(this.pending.shift()!);
     if (taken.length) this.lastPresentedSeq = Math.max(this.lastPresentedSeq, taken.at(-1)!.event.seq);
     return taken;
+  }
+  /** Compras ainda na fila de um jogador: a mesa segura as cartas novas da mão até a animação de compra levá-las. */
+  pendingDraws(actor: number) {
+    return this.pending.reduce((total, entry) => total + (entry.event.type === 'draw' && entry.event.actor === actor ? entry.event.count ?? 1 : 0), 0);
   }
   advance(): PresentationEntry | null {
     this.current = this.pending.shift() ?? null;
@@ -155,7 +161,7 @@ export function presentationDuration(event: PresentationEvent, fast: boolean) {
   const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? 1000 : event.type === 'spell-cast' ? 720
     : event.type === 'damage' ? (event.combat ? 620 : 760)
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
-    : ['countered', 'land-played'].includes(event.type) ? 540
+    : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
   return Math.round(duration * (fast ? .6 : 1));
 }

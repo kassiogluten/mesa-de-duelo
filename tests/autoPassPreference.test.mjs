@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { AutoPassPreference, AUTO_PASS_KEY } from '../src/ui/autoPassPreference.ts';
+import { AutoPassPreference, AUTO_PASS_KEY, PASS_RESPONSES_KEY } from '../src/ui/autoPassPreference.ts';
 
 function fixture(value, fail = false) {
   const data = new Map(value === undefined ? [] : [[AUTO_PASS_KEY, value]]);
@@ -74,4 +74,18 @@ test('authoritative updates synchronize after acknowledgement; storage failures 
   assert.equal(p.value, false); assert.equal(sent.at(-1).autoPassNoActions, false);
   p.observe(state(false), true); p.observe(state(true), true);
   assert.equal(p.value, true); assert.equal(sent.length, 3);
+});
+
+test('"Passar respostas" uses its own field and key, off by default, hidden on older servers', () => {
+  const data = new Map(), sent = [];
+  const storage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
+  const p = new AutoPassPreference(message => sent.push(message), storage, { field: 'passResponses', key: PASS_RESPONSES_KEY, initial: false });
+  p.observe({ autoPassNoActions: true }, true);
+  assert.equal(p.supported, false); assert.deepEqual(sent, []);
+  p.observe({ autoPassNoActions: true, passResponses: false }, true);
+  assert.equal(p.supported, true); assert.equal(p.value, false);
+  p.observe({ autoPassNoActions: true, passResponses: false }, true);
+  p.change(true);
+  assert.deepEqual(sent.at(-1), { type: 'preferences', passResponses: true });
+  assert.equal(data.get(PASS_RESPONSES_KEY), 'true'); assert.equal(data.get(AUTO_PASS_KEY), undefined);
 });

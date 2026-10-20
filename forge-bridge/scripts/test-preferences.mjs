@@ -29,6 +29,8 @@ async function until(test, label, advance, timeout = 15000) {
 const own = p => p.state?.players.find(player => player.id === p.state.you);
 const priority = p => p.state?.input.priority && p.state.input.ok.enabled && !p.state.question;
 const main = p => priority(p) && p.state.activePlayer === p.state.you && p.state.phase === 'MAIN1';
+// A manual seat also stops in the opponent's end step; passing those stops reaches its own main.
+const mainPassingTheirTurn = p => { if (priority(p) && p.state.activePlayer !== p.state.you) p.send({type:'ok',gen:p.state.input.gen}); return main(p); };
 const landDeck = (name, land) => ({name,cards:[{name:land,count:60}]});
 async function room(a,b,deckA,deckB,length='bo1') {
   a.send({type:'host',name:'Preferences A',deck:deckA,config:{format:'free',matchLength:length}});
@@ -81,7 +83,7 @@ try {
   a.send({type:'next-game',id:side}); b.send({type:'next-game',id:side});
   await until(()=>a.state?.match.gameNumber===2&&(main(a)||main(b)),'Bo3 next game');
   assert.equal(a.state.preferences.autoPassNoActions,false); assert.equal(b.state.preferences.autoPassNoActions,true);
-  if (main(b)) {playLand(b); await until(()=>main(a),'A main in game two');}
+  if (main(b)) {playLand(b); await until(()=>mainPassingTheirTurn(a),'A main in game two');}
   playLand(a); await until(()=>priority(a)&&a.state.input.actionable.length===0,'new controller retained manual preference');
   const game2gen = a.state.input.gen; await wait(500); assert.equal(a.state.input.gen,game2gen);
   b.send({type:'concede'}); await until(()=>a.state?.match.over&&b.state?.match.over,'match end');
@@ -89,7 +91,7 @@ try {
   a.send({type:'rematch'}); b.send({type:'rematch'});
   await until(()=>a.state?.matchId!==matchId&&(main(a)||main(b)),'rematch');
   assert.equal(a.state.preferences.autoPassNoActions,false); assert.equal(b.state.preferences.autoPassNoActions,true);
-  if (main(b)) {playLand(b); await until(()=>main(a),'A main in rematch');}
+  if (main(b)) {playLand(b); await until(()=>mainPassingTheirTurn(a),'A main in rematch');}
   playLand(a); await until(()=>priority(a)&&a.state.input.actionable.length===0,'rematch controller retained manual preference');
   console.log('PASS per-seat default/isolation, strict booleans, manual empty priority, enabling advances, rejoin replacement, Bo3 and rematch controller seeding');
   a.send({type:'leave'}); b.send({type:'leave'});

@@ -6,6 +6,29 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.22.0] - 2026-10-20
+
+### Novo
+
+- **Compra animada.** Quando alguém compra, o verso da carta sai do grimório e voa até a mão. Na sua mão, a carta nova só aparece quando o verso chega, e vira de face para cima. Numa compra de várias cartas, elas saem uma atrás da outra. A mão inicial e os mulligans continuam com a apresentação de sempre.
+- **Descarte animado.** A carta descartada sai da mão já de face para cima e cai no cemitério, com aviso no histórico ("Oponente descartou…") e para o leitor de tela. Vale para descartar no fim do turno, reciclar e qualquer outro descarte.
+- **"Alvo de" na pilha.** Ao passar o mouse (ou o foco do teclado) sobre um item da pilha, as setas dele ficam em destaque e as dos outros recuam, e cada alvo ganha a etiqueta **Alvo de** com o nome da mágica ou habilidade. Funciona também ao contrário: apontar para uma carta ou um jogador alvejado destaca o item da pilha que mira nele.
+- **Erros da partida.** No menu da partida, **Erros da partida** lista os avisos de erro, as ações que o servidor ignorou (como um clique num pedido que já tinha mudado), as quedas de conexão e as falhas da própria mesa, com hora e turno. Um número vermelho no menu avisa quando há erros novos, e **Copiar relatório** junta tudo num texto para relatar um problema.
+- **Passar respostas.** Abaixo dos botões de prioridade há a caixa **Passar respostas**. Marcada, a mesa passa sozinha no turno do oponente e quando há algo na pilha, mesmo com instantâneas na mão. Seu turno, ataques, bloqueios e escolhas continuam parando. Ela fica à vista também com o oponente jogando, para desmarcar quando quiser responder de novo, e a escolha fica guardada para as próximas partidas.
+
+- **Fica claro quando a partida espera por você.** Quando o jogo para por uma decisão sua (sacrificar uma criatura, escolher um alvo, descartar, mover o comandante para a zona de comando), aparece um aviso **Sua decisão** no meio da mesa com o que fazer, e a caixa de ação ganha uma moldura dourada. Com cartas para escolher, o resto da mesa escurece e as cartas que você pode escolher ficam em destaque. Perguntas de sim ou não abrem no centro da tela, em vez de ficarem no canto. Se a decisão ficar parada por alguns segundos, o aviso pulsa de novo, com um som discreto se os efeitos sonoros estiverem ligados. A passagem de prioridade, os ataques e os bloqueios continuam como antes, sem o aviso.
+- **"Aguardando Ana escolher…".** Quando outro jogador da sala está decidindo algo, a mesa mostra quem ela está esperando: escolhendo, declarando atacantes ou declarando bloqueadores. Assim ninguém acha que a partida travou.
+
+### Mudou
+
+- **Você pode responder no fim do turno do oponente.** Antes, no turno do oponente, a mesa só parava para você depois dos bloqueios, então não dava para usar uma instantânea na etapa final dele, logo antes do seu turno. Agora ela também para na etapa final e logo depois dos ataques dele, se houver atacantes. Com **Passar automaticamente** ligado (o padrão), essas paradas só acontecem quando você tem algo que pode usar naquela hora, como uma instantânea e mana para pagá-la. Com ele desligado, a mesa para sempre.
+- **Cards de deck com novo visual na tela inicial.** O formato do deck agora aparece como uma etiqueta no rodapé do card (como **Livre**), e o olho e o botão **Editar** deram lugar a um menu **⋮** no canto: ele traz **Ver as cartas** e, nos seus decks, **Editar**. O menu fecha ao clicar fora ou com Esc.
+- **Gerenciar decks na tela inicial.** Os botões **Importar lista** e **Criar deck** de **Meus decks** deram lugar a um único **Gerenciar decks**, que leva à sua coleção (onde também dá para importar listas). Para começar um deck novo, use o card vazio **Criar deck**, sempre no fim dos seus decks.
+
+### Corrigido
+
+- **Aviso de deck vazio inteiro em telas largas.** Em monitores largos, o aviso "Deck vazio." de um deck novo aparecia partido em duas colunas, com o texto de um lado e os botões **Adicionar cartas** e **Importar lista** do outro. Agora ele aparece como um bloco só.
+
 ## [0.21.0] - 2026-10-19
 
 ### Novo

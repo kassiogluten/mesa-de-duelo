@@ -46,3 +46,15 @@
   .game-options footer .arena-btn { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .game-options *, .forge .game-menu * { transition: none; } .game-options button:active, .forge .game-menu .btn:active { transform: none; } }
+/* Erros da partida: número de erros novos no menu e a lista na gaveta lateral. */
+.forge .game-menu .menu-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: 999px; background: var(--red); color: #fff; font: 700 12px var(--body); vertical-align: 1px; }
+.forge .game-menu .menu-count[hidden] { display: none; }
+.errors-drawer .errors-hint { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.errors-drawer ul { overflow-y: auto; }
+.errors-drawer .error-entry { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-left: 3px solid #e7b04b99; border-radius: 6px; background: #ffffff08; color: var(--ink); }
+.errors-drawer .error-entry.serious { border-left-color: var(--red); }
+.errors-drawer .error-meta { color: var(--muted); font-size: 11.5px; }
+.errors-drawer code { font-size: 11px; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+.errors-drawer .errors-empty { color: var(--muted); }
+.errors-drawer .errors-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.errors-drawer .errors-status { min-height: 1.2em; margin: 8px 0 0; color: var(--gold-light); font-size: 12.5px; }

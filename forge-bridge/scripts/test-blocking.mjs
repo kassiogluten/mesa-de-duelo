@@ -71,6 +71,9 @@ try {
   await until(() => a.room?.code, 'room');
   b.send({type: 'join', code: a.room.code, name: b.name, deck});
   await until(() => defender?.state?.input.blocking, 'two attackers and two blockers', advance);
+  // The attacker's table names who it is waiting on instead of looking stuck.
+  await until(() => attacker.state.deciding?.some(d => d.player === defender.state.you && d.kind === 'block'), 'attacker sees the defender blocking');
+  assert.ok(!defender.state.deciding?.some(d => d.player === defender.state.you), 'own decision listed as someone else\'s');
   const initial = defender.state.input.blocking;
   assert.equal(initial.attackers.length, 2); assert.equal(initial.blockers.length, 2);
   const target = initial.attackers.find(id => id !== initial.selectedAttacker);
@@ -93,7 +96,7 @@ try {
   defender.send({type: 'block', attacker: initial.selectedAttacker, blocker, gen: defender.state.input.gen});
   await until(() => assigned(initial.selectedAttacker, blocker), 'exact reassignment after removal');
   assert.ok(peers.every(peer => peer.errors.length === 0), JSON.stringify(peers.flatMap(peer => peer.errors)));
-  console.log('PASS: identical instances, explicit second-attacker pair, immediate combat assignments, missing/stale generation rejection, replay safety, removal and reassignment');
+  console.log('PASS: waiting-on notice, identical instances, explicit second-attacker pair, immediate combat assignments, missing/stale generation rejection, replay safety, removal and reassignment');
 } finally {
   for (const peer of peers) if (peer.ws.readyState === WebSocket.OPEN) peer.send({type: 'leave'});
   await wait(300); for (const peer of peers) peer.ws.close();

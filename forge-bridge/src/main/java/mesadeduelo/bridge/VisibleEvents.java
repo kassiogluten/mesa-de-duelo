@@ -87,6 +87,10 @@ final class VisibleEvents {
             if (to == ZoneType.Stack && from != null) origins.put(x.card().getId(), from.name());
             if (from == ZoneType.Library && to == ZoneType.Hand) {
                 e = type("draw"); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
+            } else if (from == ZoneType.Hand && to == ZoneType.Graveyard) {
+                // Descarte (inclusive reciclar e descartar no fim do turno): a carta fica pública no cemitério.
+                e = card("discard", x.card()); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
+                e.addProperty("from", "Hand"); e.addProperty("to", "Graveyard");
             } else if (to == ZoneType.Battlefield || from == ZoneType.Battlefield) {
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());

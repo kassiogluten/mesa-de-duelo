@@ -33,6 +33,10 @@ const load = (key: string) => { try { return localStorage.getItem(key); } catch 
 const save = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* Browser-local preferences are optional. */ } };
 const formatName = (f: DeckFormat | null) => f === 'commander' ? 'Commander' : f === 'pauper' ? 'Pauper' : f === 'free' ? 'Livre' : 'Escolha o formato';
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
+const MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+// Último lugar da prateleira "Meus decks": um card vazio para começar um deck novo.
+const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-tile new-deck-tile" data-lobby="create"><span class="new-deck-plus" aria-hidden="true">+</span><span>Criar deck</span></button></div>';
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
@@ -57,7 +61,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const config = (): MatchConfig => ({ format: format!, matchLength: format === 'commander' ? 'bo1' : matchLength, playerCount: format === 'commander' ? playerCount : 2 });
   root.innerHTML = `<div class="lobby library-home"><div class="mat" aria-hidden="true"></div>
     <header class="home-top"></header>
-    <main class="home-content"><div class="home-intro"><h1>Seu próximo duelo.</h1><p>Escolha como jogar. O seu deck vem primeiro.</p></div>
+    <main class="home-content"><div class="home-intro"><h1>Como jogar:</h1><p>Escolha seu deck, o formato de jogo e seu oponente.</p></div>
     <div class="play-layout">
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="free">Livre</button><button type="button" data-setting="format" data-value="commander">Commander</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
@@ -79,7 +83,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div class="match-ready" aria-label="Resumo da partida"><div class="chosen-deck" id="chosenDeck"></div><button class="arena-btn primary big" id="startMatch" data-lobby="start" disabled>Jogar</button><p id="status" class="lobby-status" role="status" aria-live="polite"></p></div>
       </aside>
       <div class="deck-collection">
-        <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="ghost-btn" data-lobby="import">Importar lista</button><button class="arena-btn secondary" data-lobby="create">Criar deck</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
+        <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="arena-btn secondary" data-lobby="library">Gerenciar decks</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
         <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
         <div class="library-toolbar"><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="deckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck"></label><label class="incompatible-toggle" id="incompatibleToggle" hidden><input type="checkbox" id="showIncompatible"> Mostrar incompatíveis</label></div>
       </div>
@@ -103,20 +107,21 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   function tiles(decks: DeckData[]) {
     return decks.map(d => {
-      const art = deckArt(d), on = youId === d.id;
-      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span><span class="tile-meta">${deckColors(d).map(pip).join('')}<span>${deckSize(d) + (d.format === 'commander' ? countEntries(d.commanders ?? []) : 0)} cartas</span></span><span class="tile-validity">${esc(validationLabel(d))}</span></span></button><button type="button" class="tile-peek" data-peek="${esc(d.id)}" aria-label="Ver as cartas de ${esc(d.name)}">${EYE}</button>${!d.builtin ? `<button type="button" class="tile-edit" data-edit-deck="${esc(d.id)}" aria-label="Editar ${esc(d.name)}">Editar</button>` : ''}</div>`;
+      const art = deckArt(d), on = youId === d.id, label = validationLabel(d);
+      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span><span class="tile-meta">${deckColors(d).map(pip).join('')}<span>${deckSize(d) + (d.format === 'commander' ? countEntries(d.commanders ?? []) : 0)} cartas</span></span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
     }).join('');
   }
   function refresh() {
     const focused = document.activeElement as HTMLElement | null;
-    const focusId = root.contains(focused) ? focused?.dataset.deck ?? focused?.dataset.peek ?? focused?.dataset.editDeck : undefined;
+    // Ver e Editar ficam no menu do deck, que fecha ao redesenhar: o foco volta para o botão do menu.
+    const focusId = root.contains(focused) ? focused?.dataset.deck ?? focused?.dataset.tileMenu ?? focused?.dataset.peek ?? focused?.dataset.editDeck : undefined;
     const focusedOpponent = focused?.dataset.opponentSlot;
-    const focusAttribute = focused?.dataset.editDeck ? 'edit-deck' : focused?.dataset.peek ? 'peek' : 'deck';
+    const focusAttribute = focused?.dataset.deck ? 'deck' : 'tile-menu';
     const decks = allDecks(), personal = decks.filter(d => !d.builtin), ready = decks.filter(d => d.builtin);
     if (!decks.some(d => d.id === youId)) youId = '';
     const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d));
     $('#personalCount').textContent = personal.length ? String(personal.length) : '';
-    $('#personalTiles').innerHTML = mine.length ? tiles(mine) : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${query ? 'Nenhum dos seus decks corresponde à busca.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${query ? 'clear' : 'incompatible'}">${query ? 'Limpar busca' : 'Mostrar decks incompatíveis'}</button></div>`;
+    $('#personalTiles').innerHTML = mine.length ? tiles(mine) + NEW_DECK_TILE : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${query ? 'Nenhum dos seus decks corresponde à busca.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${query ? 'clear' : 'incompatible'}">${query ? 'Limpar busca' : 'Mostrar decks incompatíveis'}</button></div>`;
     $('#readyTiles').innerHTML = templates.length ? tiles(templates) : '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>';
     $('#incompatibleToggle').hidden = !format || format === 'free';
     $<HTMLInputElement>('#showIncompatible').checked = showIncompatible;
@@ -218,6 +223,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
       refresh(); return;
     }
+    const menuButton = target.closest<HTMLButtonElement>('[data-tile-menu]');
+    if (menuButton) { toggleTileMenu(menuButton); return; }
+    closeTileMenus();
     const editId = target.closest<HTMLButtonElement>('[data-edit-deck]')?.dataset.editDeck;
     if (editId && !busy && !waitingRoom && loadUserDecks().some(d => d.id === editId)) { preflight++; opts.onEditDeck(editId); return; }
     const picked = target.closest<HTMLElement>('[data-deck]')?.dataset.deck;
@@ -238,6 +246,34 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
     if (action === 'cancel-lookup' && !busy) { room = null; refresh(); }
     if (action === 'cancel-room') { opts.onCancelRoom(); waitingRoom = null; refresh(); }
+  });
+  function closeTileMenus(except?: HTMLButtonElement) {
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-tile-menu][aria-expanded="true"]')) {
+      if (button === except) continue;
+      button.setAttribute('aria-expanded', 'false');
+      (button.nextElementSibling as HTMLElement).hidden = true;
+    }
+  }
+  function toggleTileMenu(button: HTMLButtonElement) {
+    const open = button.getAttribute('aria-expanded') !== 'true';
+    closeTileMenus(button);
+    button.setAttribute('aria-expanded', String(open));
+    const menu = button.nextElementSibling as HTMLElement;
+    menu.hidden = !open;
+    if (open) menu.querySelector<HTMLButtonElement>('button')?.focus();
+  }
+  // O menu fecha ao clicar fora dele ou quando o Tab leva o foco para outro lugar.
+  document.addEventListener('pointerdown', e => { if (!(e.target as HTMLElement).closest?.('.tile-menu, [data-tile-menu]')) closeTileMenus(); });
+  root.addEventListener('focusout', e => {
+    const wrap = (e.target as HTMLElement).closest('.tile-wrap');
+    if (wrap && e.relatedTarget && !wrap.contains(e.relatedTarget as Node)) closeTileMenus();
+  });
+  root.addEventListener('keydown', e => {
+    const menu = (e.target as HTMLElement).closest<HTMLElement>('.tile-menu');
+    if (!menu) return;
+    const items = [...menu.querySelectorAll<HTMLButtonElement>('button')], at = items.indexOf(e.target as HTMLButtonElement);
+    if (e.key === 'Escape') { e.preventDefault(); const button = menu.previousElementSibling as HTMLButtonElement; closeTileMenus(); button.focus(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(at + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]?.focus(); }
   });
   root.addEventListener('input', e => { if ((e.target as HTMLElement).id === 'deckSearch') { query = (e.target as HTMLInputElement).value.trim(); refresh(); } });
   root.addEventListener('change', e => {

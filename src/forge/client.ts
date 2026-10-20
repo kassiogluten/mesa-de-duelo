@@ -2,14 +2,18 @@ import type { DeckData, DeckEntry, DeckFormat } from '../decks';
 
 /** Cliente da ponte do Forge (forge-bridge). Formato das mensagens descrito em forge-bridge/README.md. */
 
-export interface FPreferences { autoPassNoActions: boolean }
+export interface FPreferences {
+  autoPassNoActions: boolean;
+  /** "Só respostas": passes priority on opponents' turns and with something on the stack. Absent on older bridges. */
+  passResponses?: boolean;
+}
 export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
 export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mainCount?: number; sideboardCount?: number; commanderCount?: number; rulesVersion: string; engineVersion: string }
 export interface RoomInfo { code: string; config: MatchConfig; available: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
-  type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'stack-removed';
+  type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'stack-removed';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
   text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   /** Só em `damage`; ver forge-bridge/README.md. */
@@ -217,6 +221,8 @@ export interface FState {
     attacking?: { attackers: number[]; defenders: { id: number; kind: 'player' | 'card' }[]; legalAssignments: { attacker: number; defenders: { id: number; kind: 'player' | 'card' }[] }[] };
     targeting?: FTargets & { source: number; card?: FCard } };
   question?: FQuestion;
+  /** Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. */
+  deciding?: { player: number; kind: 'choice' | 'attack' | 'block' }[];
   room?: FRoom;
   /** Para voltar a esta partida se a conexão cair: {type:"rejoin", code, token}. */
   session?: { code: string; token: string; room: boolean };
@@ -236,7 +242,7 @@ export type ClientMessage =
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt' | 'edhrec'; id: string }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
   | { type: 'rematch' } | { type: 'leave' }
-  | { type: 'preferences'; autoPassNoActions: boolean }
+  | ({ type: 'preferences' } & Partial<FPreferences>)
   | { type: 'card'; id: number; gen?: number }
   | { type: 'block'; attacker: number; blocker: number; gen: number }
   | { type: 'attack'; attacker: number; defender: number; defenderKind: 'player' | 'card'; gen: number }
@@ -278,6 +284,8 @@ export class ForgeClient {
   onNotice: (text: string, error: boolean) => void = () => {};
   onClose: () => void = () => {};
   onValidation: (validation: DeckValidation, target: string) => void = () => {};
+  /** Ação recusada pela ponte sem aviso ao jogador (ex.: clique num pedido que já tinha mudado). Vai só para o painel de erros. */
+  onDiagnostic: (diagnostic: { code: string; action?: string; text: string }) => void = () => {};
   onHello: (info: {supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string}) => void = () => {};
   private requestSequence = 0;
   private pending = new Map<string, {resolve: (value: any) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout>}>();
@@ -336,6 +344,7 @@ export class ForgeClient {
         else if (msg.type === 'hello') this.onHello(msg);
         else if (msg.type === 'toast') this.onNotice(msg.text, false);
         else if (msg.type === 'error') this.onNotice(msg.text, true);
+        else if (msg.type === 'diagnostic') this.onDiagnostic({ code: String(msg.code ?? ''), action: msg.action, text: String(msg.text ?? '') });
         else if (msg.type === 'gone') this.onGone(msg.text);
         else if (msg.type === 'replaced') { this.replaced = true; this.onNotice(msg.text, true); }
       };
