@@ -338,29 +338,14 @@ Quando cartas vão do topo do grimório direto para o cemitério (moer, "mill"),
 - [ ] Respeitar o ritmo rápido e o "reduzir movimento" do sistema: sem animação, só o destaque no cemitério.
 - [ ] Incluir no laboratório de efeitos (item 18): moer 1, 3 e 10 cartas, dos dois lados.
 
-## 25. Escolher quais oponentes ver na mesa
+## 25. Escolher quais oponentes ver na mesa ✅
 
 Em partidas com três ou mais jogadores (Commander), todos os oponentes dividem a parte de cima da tela. Com quatro jogadores, cada campo fica pequeno, e quem quer acompanhar de perto uma ameaça ou o oponente que está atacando não tem como dar mais espaço a ele.
 
-- [ ] Seletor de oponentes na mesa: o jogador marca quais oponentes aparecem. Os que ficam de fora viram uma faixa compacta com retrato, vida, cartas na mão, veneno e dano de comandante, e um clique traz o campo de volta.
-- [ ] Atalho "só este": ao clicar no retrato de um oponente, mostrar só o campo dele, em tamanho grande, e voltar a todos com o mesmo clique.
-- [ ] O espaço liberado vai para os oponentes exibidos (cartas maiores), em vez de ficar vazio.
-- [ ] Nunca esconder o que exige a atenção do jogador: o oponente que está atacando você, o dono de um alvo que você precisa escolher e o jogador ativo voltam à vista sozinhos enquanto durar a situação, com um aviso discreto.
-- [ ] Lembrar a escolha durante a partida (a escolha vale por assento, não por nome) e voltar a mostrar todos numa nova partida.
-- [ ] Teclado e leitor de tela: alternar cada oponente com o teclado e anunciar quem está oculto.
-- [ ] Celular: no lugar de faixas lado a lado, abas com um oponente por vez.
-
-## 26. Destaque para as ações que esperam o jogador ✅
-
-Quando o jogo para esperando uma decisão do jogador (sacrificar uma criatura, mover o comandante para a zona de comando, escolher um alvo, descartar, pagar um custo), o único sinal é a caixa de ação no canto da tela. Os jogadores relatam que demoram a perceber que a partida está parada por causa deles e ficam esperando o oponente.
-
-- [x] Deixar claro na mesa inteira que é a vez do jogador decidir: faixa ou aviso no centro da tela com a frase curta da decisão (a mesma do item 5), e a caixa de ação em destaque (brilho, pulso ou cor de alerta) enquanto a resposta não vier.
-- [x] Separar visualmente "decisão obrigatória" (sacrificar, escolher alvo, descartar, mover o comandante) de "prioridade comum" (só passar ou jogar algo), para o destaque forte não aparecer a cada passo de fase.
-- [x] Realçar na mesa as cartas que podem ser escolhidas e esmaecer o resto, para o jogador ver onde clicar sem ler a caixa.
-- [x] Perguntas que não dependem de cartas na mesa (mover o comandante para a zona de comando, sim/não, escolher um modo) abrem no centro, como os modais de escolha, em vez de ficarem só no canto.
-- [x] Se a decisão continuar parada por alguns segundos, reforçar o aviso (novo pulso, som discreto que respeita o volume das configurações).
-- [x] Do outro lado: mostrar aos oponentes "Aguardando [jogador] escolher…", para ninguém achar que a partida travou.
-- [x] Respeitar o "reduzir movimento" do sistema (destaque sem animação) e anunciar a decisão no leitor de tela assim que ela chegar.
-- [x] Celular: o aviso não pode cobrir as cartas que precisam ser escolhidas.
-  - No celular o aviso vira uma linha sobre a divisória da mesa e deixa passar os cliques; pode encostar no topo de uma carta.
-- [ ] Conferir numa partida real em rede: mover o comandante, sacrifício pedido por uma habilidade do oponente e o "Aguardando…" com três ou mais jogadores.
+- [x] Cada oponente tem **Ocultar** e **Só este** no cabeçalho do campo. O oculto vira uma coluna estreita com retrato, vida, cartas na mão, marcadores (veneno e outros), dano de comandante, grimório e cemitério, e **Mostrar campo** traz o campo de volta (`src/ui/seatVisibility.ts`).
+- [x] Atalho "só este": mostra só o campo daquele oponente, largo, com terrenos ao lado das criaturas; **Ver todos** volta. Ficou num botão em vez do clique no retrato, porque o retrato já serve para escolher o jogador como alvo ou defensor.
+- [x] O espaço liberado vai para os oponentes exibidos: com dois à vista as criaturas crescem, com um só ficam do tamanho das suas.
+- [x] Nunca esconder o que exige a atenção do jogador: o oponente que está atacando você, o dono de uma carta que você precisa escolher ou alvejar, um planeswalker que você pode atacar e um atacante que você pode bloquear voltam à vista sozinhos, com a etiqueta "À vista: …". O retrato do oculto continua clicável para alvos de jogador. O jogador ativo **não** volta sozinho: a cada turno de um oponente oculto, o campo dele reabriria e a escolha deixaria de valer.
+- [x] A escolha vale durante a partida (por assento) e volta a mostrar todos numa nova partida. Nunca fica sem nenhum oponente à vista.
+- [x] Teclado e leitor de tela: os botões têm nome e estado, o foco fica no botão correspondente depois da troca, e a mesa anuncia "Campo de … oculto" ou "Mostrando só o campo de …".
+- [ ] Celular: hoje o oculto vira uma coluna só com retrato e um botão de olho. Faltam as abas com um oponente por vez.

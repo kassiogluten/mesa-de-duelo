@@ -10,6 +10,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Novo
 
+- **Escolha quais oponentes ver.** No Commander com três ou mais jogadores, cada oponente tem **Ocultar** e **Só este** no alto do campo. O oculto vira uma coluna estreita com vida, mão, marcadores, dano de comandante e as pilhas, e **Mostrar campo** traz o campo de volta. Com **Só este**, o campo daquele oponente fica largo, com os terrenos ao lado das criaturas, e **Ver todos** volta ao normal. Quem estiver atacando você, ou tiver uma carta que você precisa escolher, volta à vista sozinho com o aviso "À vista: …". A escolha vale até o fim da partida.
 - **Compra animada.** Quando alguém compra, o verso da carta sai do grimório e voa até a mão. Na sua mão, a carta nova só aparece quando o verso chega, e vira de face para cima. Numa compra de várias cartas, elas saem uma atrás da outra. A mão inicial e os mulligans continuam com a apresentação de sempre.
 - **Descarte animado.** A carta descartada sai da mão já de face para cima e cai no cemitério, com aviso no histórico ("Oponente descartou…") e para o leitor de tela. Vale para descartar no fim do turno, reciclar e qualquer outro descarte.
 - **"Alvo de" na pilha.** Ao passar o mouse (ou o foco do teclado) sobre um item da pilha, as setas dele ficam em destaque e as dos outros recuam, e cada alvo ganha a etiqueta **Alvo de** com o nome da mágica ou habilidade. Funciona também ao contrário: apontar para uma carta ou um jogador alvejado destaca o item da pilha que mira nele.
@@ -21,6 +22,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Mudou
 
+- **Criaturas maiores.** No computador, as criaturas no campo ficaram maiores, mais fáceis de ler sem abrir a carta: cerca de 17% no duelo e 20% a 25% no Commander com três ou mais jogadores, no seu campo e nos dos oponentes. Com menos oponentes à vista, as criaturas deles crescem ainda mais. Os terrenos continuam do mesmo tamanho, e a mesa segue cabendo sem rolar.
 - **Você pode responder no fim do turno do oponente.** Antes, no turno do oponente, a mesa só parava para você depois dos bloqueios, então não dava para usar uma instantânea na etapa final dele, logo antes do seu turno. Agora ela também para na etapa final e logo depois dos ataques dele, se houver atacantes. Com **Passar automaticamente** ligado (o padrão), essas paradas só acontecem quando você tem algo que pode usar naquela hora, como uma instantânea e mana para pagá-la. Com ele desligado, a mesa para sempre.
 - **Cards de deck com novo visual na tela inicial.** O formato do deck agora aparece como uma etiqueta no rodapé do card (como **Livre**), e o olho e o botão **Editar** deram lugar a um menu **⋮** no canto: ele traz **Ver as cartas** e, nos seus decks, **Editar**. O menu fecha ao clicar fora ou com Esc.
 - **Gerenciar decks na tela inicial.** Os botões **Importar lista** e **Criar deck** de **Meus decks** deram lugar a um único **Gerenciar decks**, que leva à sua coleção (onde também dá para importar listas). Para começar um deck novo, use o card vazio **Criar deck**, sempre no fim dos seus decks.

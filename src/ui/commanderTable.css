@@ -40,7 +40,7 @@
 .forge.commander-game[data-opening] .own-command { visibility: hidden; }
 
 /* Three or four seats: a shared upper tabletop and the viewer's full lower edge. */
-.forge.multiplayer { --seat-rail: 270px; --seat-header: 114px; --hand-right: var(--seat-rail); --ch: clamp(76px, 12vh, 128px); --cw: calc(var(--ch) * .716); --lch: clamp(45px, 7.5vh, 80px); --lcw: calc(var(--lch) * .716); grid-template-rows: var(--seat-header) minmax(0, 1.12fr) 2px minmax(0, 1fr) 22vh; }
+.forge.multiplayer { --seat-rail: 270px; --seat-header: 114px; --hand-right: var(--seat-rail); --ch: clamp(84px, 15vh, 160px); --cw: calc(var(--ch) * .716); --lch: clamp(45px, 7.5vh, 80px); --lcw: calc(var(--lch) * .716); grid-template-rows: var(--seat-header) minmax(0, 1.12fr) 2px minmax(0, 1fr) 22vh; }
 .forge.multiplayer > .opp-hand, .forge.multiplayer > .avatar-slot.opp, .forge.multiplayer > .piles.opp, .forge.multiplayer > .field.opp { display: none; }
 .forge.multiplayer .commander-opponents { display: grid; grid-row: 2; grid-template-columns: repeat(var(--opponent-count), minmax(0, 1fr)); min-height: 0; padding: 0 16px; gap: 14px; margin-right: 0; z-index: 2; }
 .forge.multiplayer .table-seat { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid #bba47b55; padding: 0 12px 0 8px; background: radial-gradient(ellipse at 50% 0, #26385055, transparent 76%); }
@@ -70,7 +70,7 @@
 .forge.multiplayer .seat-command .command-card { width: 29px; --fw: 29px; }
 .forge.multiplayer .seat-command .command-tax { font-size: 10px; padding: 1px 4px; }
 .forge.multiplayer .seat-command .inspect-card { display: none; }
-.forge.multiplayer .table-seat > .field { padding: 0; min-height: 0; flex: 1; overflow-x: hidden; overflow-y: auto; justify-content: flex-start; --ch: clamp(68px, 10vh, 106px); --cw: calc(var(--ch) * .716); --lch: clamp(40px, 6.5vh, 65px); --lcw: calc(var(--lch) * .716); }
+.forge.multiplayer .table-seat > .field { padding: 0; min-height: 0; flex: 1; overflow-x: hidden; overflow-y: auto; justify-content: flex-start; --ch: clamp(72px, 12vh, 130px); --cw: calc(var(--ch) * .716); --lch: clamp(40px, 6.5vh, 65px); --lcw: calc(var(--lch) * .716); }
 .forge.multiplayer .table-seat .row { min-height: calc(var(--ch) + 18px); padding: 9px 6px; gap: 8px; }
 .forge.multiplayer .table-seat .lands { min-height: calc(var(--lch) + 16px); }
 .forge.multiplayer .table-seat .perm-group { gap: 8px; }
@@ -203,4 +203,44 @@
   .attack-target-text strong { font-size: 12px; }
   .attack-target-text small { font-size: 10px; }
   .forge .attack-tools .icon-btn { min-height: 30px; padding: 4px 8px; font-size: 11px; }
+}
+
+/* Escolher quais oponentes ver: botões no cabeçalho de cada campo e o oponente oculto como coluna estreita. */
+.forge.multiplayer { --collapsed-seat: minmax(118px, 150px); }
+.seat-view { display: flex; gap: 4px; margin-left: auto; flex: 0 0 auto; }
+.seat-view-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 8px; border: 1px solid #ffffff1f; border-radius: 8px; background: #0d1626cc; color: var(--muted); font: 600 11.5px var(--body); cursor: pointer; }
+.seat-view-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.seat-view-btn:hover, .seat-view-btn[aria-pressed='true'] { color: var(--gold-light); border-color: #e7b04b80; }
+.seat-view-btn:focus-visible, .seat-show:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.seat-forced { position: absolute; z-index: 4; top: 62px; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; margin: 0; padding: 2px 9px; box-shadow: 0 2px 8px #0008; border-radius: 999px; background: #3a2c10; color: var(--gold-light); font: 600 11px var(--body); }
+.forge.multiplayer .table-seat.forced { box-shadow: inset 0 0 0 1px #e7b04b55; }
+.forge.multiplayer .table-seat.collapsed { align-items: stretch; gap: 8px; padding: 0 6px; background: linear-gradient(#0d1626aa, transparent); }
+.forge.multiplayer .table-seat.collapsed .seat-heading { flex-direction: column; align-items: flex-start; gap: 6px; padding: 6px 0 8px; }
+.forge.multiplayer .table-seat.collapsed .seat-heading .avatar-slot { flex: 0 0 auto; width: 100%; }
+.forge.multiplayer .table-seat.collapsed .seat-zones { min-height: 0; padding: 0; justify-content: flex-start; }
+.seat-summary { margin: 0; color: var(--muted); font-size: 11.5px; }
+.seat-show { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 6px 10px; border: 1px solid #e7b04b80; border-radius: 8px; background: #e7b04b1a; color: var(--gold-light); font: 600 12px var(--body); cursor: pointer; }
+.seat-show:hover { background: #e7b04b33; }
+.seat-show svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; }
+@media (max-height: 500px), (max-width: 760px) {
+  /* Celular: só os ícones, e o oculto vira uma coluna de retrato e botão. */
+  .forge.multiplayer { --collapsed-seat: minmax(60px, 76px); }
+  .seat-view-btn span { display: none; }
+  .seat-view-btn { min-height: 28px; min-width: 28px; padding: 3px; justify-content: center; }
+  .forge.multiplayer .table-seat.collapsed { display: flex; flex-direction: column; }
+  .forge.multiplayer .table-seat.collapsed .seat-summary, .forge.multiplayer .table-seat.collapsed .seat-zones,
+  .forge.multiplayer .table-seat.collapsed .commander-damage, .forge.multiplayer .table-seat.collapsed .seat-hand, .seat-show span { display: none; }
+  .forge.multiplayer .table-seat.collapsed .seat-heading .pname { display: none; }
+  .seat-show { min-height: 30px; padding: 4px; }
+}
+/* Criaturas maiores nos campos dos oponentes: as fileiras cedem o respiro de cima e de baixo. */
+.forge.multiplayer .table-seat .row { min-height: calc(var(--ch) + 10px); padding-block: 5px; }
+.forge.multiplayer .table-seat .lands { min-height: calc(var(--lch) + 10px); }
+/* Menos oponentes à vista, cartas maiores: o espaço liberado vai para quem ficou. */
+/* Um só: campo largo, terrenos ao lado das criaturas, e as criaturas crescem até o tamanho do seu campo. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .forge.multiplayer .commander-opponents[data-shown='2'] .table-seat > .field { --ch: clamp(74px, 12.5vh, 140px); }
+  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat > .field { flex-direction: row; align-items: center; overflow-y: hidden; --ch: clamp(80px, 15vh, 170px); --lch: clamp(46px, 9vh, 96px); }
+  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat .seat-row { width: 62%; flex: 1 1 62%; }
+  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat .lands-lane { width: 38%; flex: 0 1 38%; }
 }

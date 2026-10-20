@@ -11,6 +11,7 @@ import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDec
 import { createGameAudio } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
 import { MatchDiagnostics, type DiagnosticKind } from './matchDiagnostics';
+import { forcedSeatReason, visibleSeats } from './seatVisibility';
 import { VERSION } from './changelog';
 import { attachHandDrag } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
@@ -236,6 +237,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const passResponses = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); }, undefined, { field: 'passResponses', key: PASS_RESPONSES_KEY, initial: false });
   let presentationTimer = 0;
   // Cartas da sua mão já mostradas. Uma carta nova com compra na fila fica escondida até a animação de compra chegar nela.
+  // Oponentes ocultos e o "só este" (partidas com três ou mais jogadores). Valem até a partida mudar.
+  let hiddenSeats = new Set<number>();
+  let soloSeat: number | null = null;
+  let seatsMatch = '';
   let knownHand = new Set<number>();
   let handPrimed = false;
   let drawingNow = 0;
@@ -989,9 +994,31 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lane.querySelector<HTMLButtonElement>('.forward-scroll')!.hidden = !overflow || row.scrollLeft + row.clientWidth >= row.scrollWidth - 2;
     });
   }
-  function opponentSeat(s: FState, p: FPlayer, index: number) {
-    return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
+  const EYE_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c7 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const FOCUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="3"/></svg>';
+  /** Botões de cada oponente: esconder o campo e mostrar só ele. Só existem com dois ou mais oponentes. */
+  function seatControls(p: FPlayer, shown: boolean, count: number) {
+    if (count < 2) return '';
+    const solo = soloSeat === p.id;
+    return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">
+      <button type="button" class="seat-view-btn" data-seat-solo="${p.id}" aria-pressed="${solo}" title="${solo ? 'Voltar a ver todos os oponentes' : `Ver só ${esc(p.name)}`}" aria-label="${solo ? 'Voltar a ver todos os oponentes' : `Ver só o campo de ${esc(p.name)}`}">${FOCUS}<span>${solo ? 'Ver todos' : 'Só este'}</span></button>
+      ${shown && !solo ? `<button type="button" class="seat-view-btn" data-seat-hide="${p.id}" title="Ocultar o campo de ${esc(p.name)}" aria-label="Ocultar o campo de ${esc(p.name)}">${EYE_OFF}<span>Ocultar</span></button>` : ''}
+    </div>`;
+  }
+  /** Oponente oculto: faixa compacta com retrato, vida, mão, marcadores e dano de comandante, e um botão para voltar. */
+  function collapsedSeat(s: FState, p: FPlayer, index: number) {
+    return `<section class="table-seat collapsed${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)} oculto${p.eliminated ? ', eliminado' : ''}">
       <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div><span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>${playerCounters(p)}${damageButton(p)}</header>
+      <p class="seat-summary">${p.battlefield.filter(c => c.creature).length} criaturas · ${p.battlefield.filter(c => c.land).length} terrenos</p>
+      <div class="seat-zones"><div class="piles">${piles(s, p)}</div></div>
+      <button type="button" class="seat-show" data-seat-show="${p.id}" aria-label="Mostrar o campo de ${esc(p.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Mostrar campo</span></button>
+    </section>`;
+  }
+  function opponentSeat(s: FState, p: FPlayer, index: number, count = 1, forced: string | null = null) {
+    const chosen = soloSeat !== null ? soloSeat === p.id : !hiddenSeats.has(p.id);
+    return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
+      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div><span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>${playerCounters(p)}${damageButton(p)}${seatControls(p, true, count)}</header>
+      ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : ''}
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
       <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(s, p.battlefield.filter(c => !isBackRow(c))))}</div>
     </section>`;
@@ -1416,7 +1443,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     motion.capture();
 
     $('#fOpponents').hidden = !multiplayer;
-    setHTML($('#fOpponents'), multiplayer ? opponents.map((player, i) => opponentSeat(visual, player, i)).join('') : '');
+    const match = s.matchId ?? s.session?.code ?? '';
+    if (match !== seatsMatch) { seatsMatch = match; hiddenSeats = new Set(); soloSeat = null; }
+    if (soloSeat !== null && !opponents.some(p => p.id === soloSeat)) soloSeat = null;
+    const shownSeats = visibleSeats(visual, opponents, { hidden: hiddenSeats, solo: soloSeat });
+    // Ocultos viram uma coluna estreita; o espaço que sobra vai para os campos à vista.
+    $('#fOpponents').style.gridTemplateColumns = opponents.map(p => shownSeats.has(p.id) ? 'minmax(0, 1fr)' : 'var(--collapsed-seat)').join(' ');
+    $('#fOpponents').dataset.shown = String(shownSeats.size);
+    setHTML($('#fOpponents'), multiplayer ? opponents.map((player, i) => shownSeats.has(player.id)
+      ? opponentSeat(visual, player, i, opponents.length, forcedSeatReason(visual, player)) : collapsedSeat(visual, player, i)).join('') : '');
     const command = $('#fCommand');
     command.hidden = !(me.commanders?.length);
     setHTML(command, command.hidden ? '' : `<span class="command-heading">Comando</span><div class="command-track">${commandCards(s, me)}</div>${damageButton(me)}`);
@@ -1710,6 +1745,32 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     // Com a escolha recolhida, a mesa é só para olhar: inspecionar, ver cemitério e menu, sem jogar nada.
     if (questionMinimized() && !t.closest('#fQuestion, #fMenu, .log-drawer, [data-ui], [data-inspect], [data-peek], [data-gy], [data-stack-inspect]')) return;
+    const seatSolo = t.closest<HTMLElement>('[data-seat-solo]')?.dataset.seatSolo;
+    const seatHide = t.closest<HTMLElement>('[data-seat-hide]')?.dataset.seatHide;
+    const seatShow = t.closest<HTMLElement>('[data-seat-show]')?.dataset.seatShow;
+    if (seatSolo !== undefined || seatHide !== undefined || seatShow !== undefined) {
+      const name = (id: number) => client?.state?.players.find(p => p.id === id)?.name ?? 'Oponente';
+      let message: string;
+      if (seatSolo !== undefined) {
+        const id = Number(seatSolo);
+        soloSeat = soloSeat === id ? null : id;
+        message = soloSeat === null ? 'Mostrando todos os oponentes.' : `Mostrando só o campo de ${name(id)}. Os outros oponentes ficaram ocultos.`;
+      } else if (seatHide !== undefined) {
+        hiddenSeats.add(Number(seatHide)); message = `Campo de ${name(Number(seatHide))} oculto.`;
+      } else {
+        const id = Number(seatShow);
+        // "Mostrar" num "só este" desfaz o isolamento; fora dele, só tira o oponente da lista de ocultos.
+        if (soloSeat !== null) { hiddenSeats = new Set(client?.state?.players.filter(p => p.id !== soloSeat && p.id !== id && p.id !== client?.state?.you).map(p => p.id)); soloSeat = null; }
+        hiddenSeats.delete(id); message = `Campo de ${name(id)} à vista.`;
+      }
+      renderTable(false);
+      // A renderização anuncia o pedido atual; o aviso da troca vem depois para não ser apagado.
+      announce(message);
+      const seat = seatShow ?? seatSolo ?? seatHide;
+      const focus = root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-solo]`) ?? root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-show]`);
+      focus?.focus({ preventScroll: true });
+      return;
+    }
     if (ui === 'stack-size') { stackMinimized = !stackMinimized; hideCardPreview(true); renderTable(false); return; }
     if (ui === 'row-scroll') {
       const control = t.closest<HTMLElement>('[data-scroll-row]')!;

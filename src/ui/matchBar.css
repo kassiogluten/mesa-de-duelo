@@ -27,6 +27,8 @@
 .forge:not(.multiplayer) .piles.opp { top: calc(var(--top-band) + env(safe-area-inset-top, 0px) + 8px); }
 
 /* Celular (e telas baixas): a faixa fica no mínimo, o menu só com o ícone e as fileiras mais justas. */
+/* Criaturas maiores no duelo: as fileiras cedem um pouco do respiro para os dois lados caberem sem rolar. */
+.forge:not(.multiplayer):not(.commander-game) > .field .row { min-height: calc(var(--ch) + 16px); padding-block: 8px; }
 @media (max-height: 500px), (max-width: 760px) {
   .forge:not(.multiplayer):not(.commander-game) { grid-template-rows: calc(58px + env(safe-area-inset-top, 0px)) minmax(0, 1fr) 2px minmax(0, 1fr) 21vh; }
   .forge:not(.multiplayer):not(.commander-game) .avatar.opp .portrait { width: 40px; height: 40px; }
