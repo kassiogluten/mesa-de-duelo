@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.26.0] - 2026-10-20
+
+### Mudou
+
+- **Menos avisos na escolha de deck.** Os decks que ainda vão ser verificados quando a partida começar não mostram mais a etiqueta "Verificar … ao jogar". Os avisos "Válido para …", "Precisa de ajustes" e "Incompatível com o formato" continuam.
+- **Botões com ícones no fim da partida.** **Início** ganhou um ícone de casa e **Ver campo de batalha**, um ícone de olho.
+
 ## [0.25.0] - 2026-10-20
 
 ### Novo

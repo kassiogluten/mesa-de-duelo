@@ -103,7 +103,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const cached = validations.get(key(deck));
     if (cached) return cached.valid ? `Válido para ${formatName(format)}` : 'Precisa de ajustes';
     const local = validateDeckLocal(deck, format);
-    return local.status === 'invalid' ? 'Incompatível com o formato' : format && format !== 'free' ? `Verificar ${formatName(format)} ao jogar` : 'Livre';
+    return local.status === 'invalid' ? 'Incompatível com o formato' : format && format !== 'free' ? '' : 'Livre';
   }
   function tiles(decks: DeckData[]) {
     return decks.map(d => {

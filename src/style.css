@@ -447,6 +447,8 @@ a { color: var(--gold); }
 .result.draw h2 { color: var(--ink); }
 .result p { color: var(--muted); font-size: 18px; margin: 10px 0 24px; }
 .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.result-btns .arena-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.result-btns .arena-btn svg { width: 1.2em; height: 1.2em; flex: none; }
 
 @keyframes pulse { 50% { filter: brightness(1.25); } }
 @keyframes hit {
