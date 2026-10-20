@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.24.0] - 2026-10-20
+
+### Novo
+
+- **40 novos decks prontos de Commander.** Agora os 50 comandantes mais populares do EDHREC nos últimos dois anos estão entre os decks prontos: aos 10 que já estavam (Y'shtola, Edgar Markov, Atraxa, Krenko, Vivi, Sauron, Giada, Pantlaza, Lathril e Ms. Bumbleflower) se juntam The Ur-Dragon, Kaalia, Teval, Azula, Toph, The Wise Mothman, Jodah, Cloud, Hearthhull, Nekusar, Kefka, Kenrith, Yuriko, Sephiroth, Isshin, Baylen, Valgavoth, Miirym, Chatterfang, Ulalek, Hashaton, Frodo e Sam, Ashling, Esika, Bello, Hakbal, Muldrotha, Rin e Seri, Glarb, Animar, Arcades, Maralen, Aragorn, Mr. House, Kuja, Ygra, Caesar, Flubs, The Necrobloom e Wilhelt. Cada lista é o deck médio do EDHREC para o comandante, com as cartas que o oponente controlado pelo computador ainda não sabe jogar trocadas pela carta mais usada do mesmo tipo, então todos servem tanto para você quanto para os oponentes.
+
 ## [0.23.0] - 2026-10-20
 
 ### Novo
