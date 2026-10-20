@@ -150,11 +150,13 @@ a { color: var(--gold); }
 .tag.atk { background: var(--red); color: #fff; }
 .tag.blk { background: var(--gold); color: #2a1600; }
 .tag.zzz { background: #2a3550; color: #c8d4f0; font-style: italic; }
-/* Setas do bloqueio, por cima dos campos e abaixo dos avatares e da mão. */
+/* Setas do ataque e do bloqueio, por cima dos campos e abaixo dos avatares e da mão. */
 .combat-arrows { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
 .combat-arrows .arrow, .combat-arrows .arrow-under { fill: none; stroke-linecap: round; animation: fade-in 0.3s 0.25s ease both; }
 .combat-arrows .arrow-under { stroke: rgba(20, 10, 0, 0.7); stroke-width: 8px; }
 .combat-arrows .arrow { stroke: var(--gold); stroke-width: 3.5px; stroke-dasharray: 10 6; }
+.combat-arrows .arrow.attack { stroke: var(--red); }
+.combat-arrows .blocked { opacity: 0.45; }
 .target-arrows { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; overflow: visible; }
 .target-arrows .arrow, .target-arrows .arrow-under, .target-arrows .ring { fill: none; stroke-linecap: round; animation: fade-in 0.25s ease both; }
 .target-arrows .arrow-under { stroke: rgba(10, 5, 0, 0.65); stroke-width: 8px; }

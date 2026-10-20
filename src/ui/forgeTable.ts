@@ -460,10 +460,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.querySelectorAll<HTMLElement>('.row').forEach(row => {
     row.tabIndex = 0;
     row.setAttribute('aria-label', `${row.closest('.opp') ? 'Campo do oponente' : 'Seu campo'}: ${row.classList.contains('lands') ? 'terrenos e outros permanentes' : 'criaturas'}. Role para ver todas as cartas.`);
-    row.addEventListener('scroll', () => { if (client?.state) { const visual = stateWithFrame(client.state, displayFrame); drawBlockArrows(visual); drawTargetArrows(visual); } }, { passive: true });
+    row.addEventListener('scroll', () => { if (client?.state) { const visual = stateWithFrame(client.state, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); } }, { passive: true });
   });
 
-  $('#fOpponents').addEventListener('scroll', () => { syncSeatScroll(); if (client?.state) { const visual = stateWithFrame(client.state, displayFrame); drawBlockArrows(visual); drawTargetArrows(visual); } }, true);
+  $('#fOpponents').addEventListener('scroll', () => { syncSeatScroll(); if (client?.state) { const visual = stateWithFrame(client.state, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); } }, true);
 
   // ---------- Imagens do Scryfall, buscadas por nome ----------
   const wanted = new Set<string>();
@@ -590,8 +590,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   /**
-   * Setas do bloqueio: de cada bloqueador até a criatura que ele bloqueia. Mede a mesa já desenhada
-   * (antes das animações) e é refeita quando a janela muda de tamanho.
+   * Setas do combate: de cada atacante até quem ele ataca (vermelhas) e de cada bloqueador até a criatura que ele
+   * bloqueia (douradas). Mede a mesa já desenhada (antes das animações) e é refeita quando a janela muda de tamanho.
    */
   function arrowRect(selector: string): DOMRect | undefined {
     const el = root.querySelector<HTMLElement>(selector);
@@ -606,14 +606,35 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     return rect;
   }
-  function drawBlockArrows(s: FState) {
+  function drawCombatArrows(s: FState) {
     const svg = root.querySelector<SVGSVGElement>('#fArrows')!;
     const box = svg.getBoundingClientRect();
     const rectOf = (id: number) => arrowRect(`.field [data-fid="${id}"]`);
     const paths: string[] = [];
-    for (const { attacker, blockers } of s.combat) {
+    // Contra um jogador, só com mais de um oponente: no duelo, o defensor é sempre o mesmo.
+    const multiplayer = s.players.length > 2;
+    for (const { attacker, defender, defenderKind, blockers } of s.combat) {
       const a = rectOf(attacker);
       if (!a) continue;
+      const toPlayer = (defenderKind ?? 'player') === 'player';
+      const t = toPlayer ? multiplayer ? arrowRect(`.avatar-slot [data-pid="${defender}"]`) : undefined : defender === undefined ? undefined : rectOf(defender);
+      if (t) {
+        // Da borda do atacante à borda do defensor, curvada para o lado como as setas de alvo; atacantes já
+        // bloqueados ficam mais apagados, já que o dano vai para o bloqueador.
+        const fx = a.left + a.width / 2 - box.left, fy = a.top + a.height / 2 - box.top;
+        const tx = t.left + t.width / 2 - box.left, ty = t.top + t.height / 2 - box.top;
+        const dx = tx - fx, dy = ty - fy;
+        const clip = (r: DOMRect) => Math.min(r.width / 2 / (Math.abs(dx) || 1e-6), r.height / 2 / (Math.abs(dy) || 1e-6), 1);
+        const from = clip(a), to = 1 - clip(t);
+        if (to > from) {
+          const sx = fx + dx * from, sy = fy + dy * from, ex = fx + dx * to, ey = fy + dy * to;
+          const len = Math.hypot(ex - sx, ey - sy) || 1, bend = Math.min(80, len * 0.15);
+          const cx = (sx + ex) / 2 - ((ey - sy) / len) * bend, cy = (sy + ey) / 2 + ((ex - sx) / len) * bend;
+          const d = `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+          const cls = `attack${blockers.length ? ' blocked' : ''}`;
+          paths.push(`<path class="arrow-under ${cls}" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fAttackHead)"/>`);
+        }
+      }
       blockers.forEach((id, j) => {
         const b = rectOf(id);
         if (!b) return;
@@ -630,7 +651,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       });
     }
     const html = paths.length ? `<defs><marker id="fArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-      <path d="M0 0 10 5 0 10z" fill="var(--gold)" stroke="#2a1600" stroke-width="1"/></marker></defs>${paths.join('')}` : '';
+      <path d="M0 0 10 5 0 10z" fill="var(--gold)" stroke="#2a1600" stroke-width="1"/></marker>
+      <marker id="fAttackHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+      <path d="M0 0 10 5 0 10z" fill="var(--red)" stroke="#2a0800" stroke-width="1"/></marker></defs>${paths.join('')}` : '';
     // O estado chega várias vezes no mesmo combate: só redesenha (e reanima) quando as setas mudam.
     if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
   }
@@ -765,7 +788,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   window.addEventListener('resize', () => {
     const s = client?.state;
-    if (s?.type === 'state' && !root.hidden) { layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawBlockArrows(visual); drawTargetArrows(visual); }
+    if (s?.type === 'state' && !root.hidden) { layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
   });
 
   const COUNTER_LABEL: Record<string, string> = { P1P1: '+1/+1', M1M1: '-1/-1', LOYALTY: 'Lealdade', SHIELD: 'Escudo', STUN: 'Atordoar' };
@@ -1664,7 +1687,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     layoutCardDecision();
     layoutStack();
     syncSeatScroll();
-    drawBlockArrows(visual);
+    drawCombatArrows(visual);
     motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events });
     drawTargetArrows(visual);
     lastDamage = new Map(s.players.flatMap(p => p.battlefield.map(c => [c.id, c.damage ?? 0] as [number, number])));

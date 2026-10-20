@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.25.0] - 2026-10-20
+
+### Novo
+
+- **Setas de ataque.** Nas partidas com mais de um oponente, cada criatura atacando ganha uma seta vermelha até o jogador que ela ataca, então dá para ver de relance quem está indo em quem. Ataques a planeswalkers também ganham seta, em qualquer partida. As setas aparecem já enquanto você escolhe os atacantes e, quando a criatura é bloqueada, a seta dela fica mais apagada, ao lado da seta dourada do bloqueio.
+
 ## [0.24.0] - 2026-10-20
 
 ### Novo
