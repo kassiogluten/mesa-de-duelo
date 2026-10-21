@@ -1585,7 +1585,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';
     const opening = s.input.opening;
     const prompt = s.gameOver ? '' : s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
-      : s.input.commanderMove ? `${s.input.commanderMove.card ? label(s.input.commanderMove.card) : 'Seu comandante'} iria para ${zoneWithArticle(s.input.commanderMove.to)}. Para onde vai?`
+      : s.input.commanderMove ? `${s.input.commanderMove.card ? label(s.input.commanderMove.card) : 'Seu comandante'} ${s.input.commanderMove.stays ? 'está n' : 'iria para '}${zoneWithArticle(s.input.commanderMove.to)}. Para onde vai?`
       : s.input.suspendCast ? 'Suspender: conjure agora sem pagar o custo de mana ou deixe a carta no exílio.'
       : s.input.blocking ? selectedBlocker ? `${label(findCard(selectedBlocker.blocker)!)}: escolha o atacante. Se já estiver bloqueando esse atacante, o clique remove o bloqueio.` : 'Escolha uma criatura sua e depois o atacante que ela vai bloquear.'
       : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''

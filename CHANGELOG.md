@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.29.1] - 2026-10-21
+
+### Corrigido
+
+- **Comandante no cemitério ou no exílio: botões com o destino.** Quando o seu comandante ia para o cemitério ou o exílio, às vezes a pergunta aparecia na caixa de ação com o texto da regra em inglês e os botões **Sim** e **Não**. Agora ela diz onde ele está e os botões são **Zona de comando** e **Cemitério** (ou **Exílio**).
+
 ## [0.29.0] - 2026-10-20
 
 ### Mudou

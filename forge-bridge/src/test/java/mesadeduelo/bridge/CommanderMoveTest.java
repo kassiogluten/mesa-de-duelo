@@ -39,4 +39,21 @@ public class CommanderMoveTest {
         // Any other yes/no prompt is left alone.
         assertNull(InputContext.commanderMove(new InputConfirm(human, "Other?", "Sim", "Não", true)));
     }
+
+    /** Rule 903.9a: the state-based question for a commander already in the graveyard keeps it there on "no". */
+    @Test public void commanderInTheGraveyardNamesWhereItStays() {
+        var game = CommanderEngineTest.game(2); var me = game.getPlayers().get(0);
+        Card commander = ExilePermissionsTest.add(game, "Isamaru, Hound of Konda", me, ZoneType.Graveyard);
+        commander.setCommander(true); me.addCommander(commander);
+        var sa = commander.getCurrentState().getFirstSpellAbilityWithFallback();
+        var human = new PlayerControllerHuman(game, me, new LobbyPlayerHuman("Test"));
+        String rule = commander.getDisplayName() + ": If a commander is in a graveyard or in exile and that card was put into that zone since the last time state-based actions were checked, its owner may put it into the command zone.";
+        var json = InputContext.commanderMove(new InputConfirm(human, rule, "Sim", "Não", true, commander.getView(), sa));
+        assertNotNull(json);
+        assertEquals("Graveyard", json.get("to").getAsString());
+        assertTrue(json.get("stays").getAsBoolean());
+        assertEquals(commander.getId(), json.getAsJsonObject("card").get("id").getAsInt());
+        // The same ability with another question is left alone.
+        assertNull(InputContext.commanderMove(new InputConfirm(human, "Cast it?", "Sim", "Não", true, commander.getView(), sa)));
+    }
 }

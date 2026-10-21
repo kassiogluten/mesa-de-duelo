@@ -225,7 +225,8 @@ export interface FState {
     /** Escolha de conjurar durante a resolução do gatilho de suspender; usa OK/Cancelar. */
     suspendCast?: { card: FCard };
     /** Regra 903.9b: o comandante iria para a mão ou o grimório (to) e pode ir à zona de comando no lugar. */
-    commanderMove?: { to: 'Hand' | 'Library' | 'Graveyard' | 'Exile' | string; card?: FCard };
+    /** Comandante iria para `to` (903.9b) ou, com `stays`, já está em `to` (903.9a, cemitério ou exílio). */
+    commanderMove?: { to: 'Hand' | 'Library' | 'Graveyard' | 'Exile' | string; stays?: boolean; card?: FCard };
     /** Atacantes e bloqueadores da declaração atual, identificados pela instância da carta. */
     blocking?: { selectedAttacker: number | null; attackers: number[]; blockers: number[]; legalAssignments: { blocker: number; attackers: number[] }[] };
     attacking?: { attackers: number[]; defenders: { id: number; kind: 'player' | 'card' }[]; legalAssignments: { attacker: number; defenders: { id: number; kind: 'player' | 'card' }[] }[] };

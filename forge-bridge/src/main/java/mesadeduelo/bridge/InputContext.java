@@ -42,6 +42,7 @@ final class InputContext {
     private static final Field DEFENDER = field(InputBlock.class, "defender");
     private static final Field CONFIRM_ABILITY = field(InputConfirm.class, "sa");
     private static final Field CONFIRM_CARD = field(InputConfirm.class, "card");
+    private static final Field CONFIRM_MESSAGE = field(InputConfirm.class, "message");
     private static final Field SELECT_MIN = field(InputSelectManyBase.class, "min");
     private static final Field SELECT_MAX = field(InputSelectManyBase.class, "max");
 
@@ -71,12 +72,31 @@ final class InputContext {
     static JsonObject commanderMove(Object input) {
         if (!(input instanceof InputConfirm)) return null;
         SpellAbility ability = (SpellAbility) value(CONFIRM_ABILITY, input);
+        JsonObject stays = commanderStays(ability, (String) value(CONFIRM_MESSAGE, input));
+        if (stays != null) return stays;
         if (ability == null || ability.getReplacementEffect() == null || !ability.getReplacementEffect().hasParam("CommanderMoveReplacement")) return null;
         if (!(ability.getReplacingObject(forge.game.ability.AbilityKey.OriginalParams) instanceof java.util.Map<?, ?> params)) return null;
         JsonObject result = new JsonObject();
         if (params.get(forge.game.ability.AbilityKey.Destination) instanceof ZoneType to) result.addProperty("to", to.name());
         if (params.get(forge.game.ability.AbilityKey.Affected) instanceof Card card) result.add("card", StateJson.card(card.getView()));
         return result.has("to") ? result : null;
+    }
+
+    /**
+     * Regra 903.9a: o comandante já está no cemitério ou no exílio, e a ação baseada em estado pergunta (com a
+     * primeira habilidade dele e o texto da regra em inglês) se ele vai para a zona de comando. Sai com
+     * {@code stays: true}: "Não" o deixa onde está.
+     */
+    static JsonObject commanderStays(SpellAbility ability, String message) {
+        if (ability == null || message == null || !message.contains("its owner may put it into the command zone")) return null;
+        Card card = ability.getHostCard();
+        if (card == null || card.getZone() == null) return null;
+        ZoneType zone = card.getZone().getZoneType();
+        if (zone != ZoneType.Graveyard && zone != ZoneType.Exile) return null;
+        JsonObject result = new JsonObject();
+        result.addProperty("to", zone.name()); result.addProperty("stays", true);
+        result.add("card", StateJson.card(card.getView()));
+        return result;
     }
 
     /** Card choices only: counter allocation and player selection have different counting semantics. */
