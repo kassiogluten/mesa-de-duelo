@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.27.0] - 2026-10-20
+
+### Novo
+
+- **Filtro de cores nas listas de decks.** Na escolha do deck da tela inicial e em **Meus decks** há agora um botão para cada cor (branco, azul, preto, vermelho e verde) e um para incolor. Marque quantas quiser: a lista mostra os decks que têm todas as cores marcadas, e cada cor a mais estreita a busca. **Incolor** mostra só os decks sem cor. **Limpar cores** volta a mostrar tudo, e o filtro funciona junto da busca por nome. Na tela inicial, a busca e as cores ficam agora no topo da lista de decks, e não mais embaixo.
+
+### Mudou
+
+- **Comandante nos cartões de deck.** Os decks de Commander mostram o comandante embaixo do nome, com uma coroa (os dois nomes, no caso de parceiros), nas duas listas. A busca também acha o deck pelo nome do comandante.
+
 ## [0.26.0] - 2026-10-20
 
 ### Mudou

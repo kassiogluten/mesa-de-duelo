@@ -1,11 +1,13 @@
 import { allDecks, countEntries, deckSize, loadUserDecks, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom } from '../forge/client';
-import { fetchByNames } from '../scryfall';
+import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
 import { deckArt, deckColors } from './deckStats';
 import { validateDeckLocal } from './deckRules';
+import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
+import './deckFilters.css';
 import './lobby.css';
 export { deckArt, deckColors } from './deckStats';
 
@@ -50,6 +52,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   let youId = rememberedDeck();
   let oppId = load('mesa:opp') ?? 'random';
   let query = '', showIncompatible = false, busy = false;
+  let colorFilter = new Set<ColorFilter>();
+  const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
   const validations = new Map<string, DeckValidation>();
   let preflight = 0;
@@ -83,9 +87,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div class="match-ready" aria-label="Resumo da partida"><div class="chosen-deck" id="chosenDeck"></div><button class="arena-btn primary big" id="startMatch" data-lobby="start" disabled>Jogar</button><p id="status" class="lobby-status" role="status" aria-live="polite"></p></div>
       </aside>
       <div class="deck-collection">
+        <div class="library-toolbar"><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="deckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck"></label><div id="lobbyColorFilter"></div><label class="incompatible-toggle" id="incompatibleToggle" hidden><input type="checkbox" id="showIncompatible"> Mostrar incompatíveis</label></div>
         <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="arena-btn secondary" data-lobby="library">Gerenciar decks</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
         <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
-        <div class="library-toolbar"><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="deckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck"></label><label class="incompatible-toggle" id="incompatibleToggle" hidden><input type="checkbox" id="showIncompatible"> Mostrar incompatíveis</label></div>
       </div>
     </div></main></div>`;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
@@ -97,7 +101,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const local = validateDeckLocal(deck, format ?? 'free');
     return !format || showIncompatible || (validations.get(key(deck))?.valid ?? local.status !== 'invalid');
   }
-  function matches(deck: DeckData) { return !query || deck.name.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR')); }
+  function matches(deck: DeckData) { return matchesQuery(deck, query, ptName) && matchesColors(deckColors(deck), colorFilter); }
+  const filtering = () => !!query || colorFilter.size > 0;
   function validationLabel(deck: DeckData) {
     if (!format) return '';
     const cached = validations.get(key(deck));
@@ -108,7 +113,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   function tiles(decks: DeckData[]) {
     return decks.map(d => {
       const art = deckArt(d), on = youId === d.id, label = validationLabel(d);
-      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span><span class="tile-meta">${deckColors(d).map(pip).join('')}<span>${deckSize(d) + (d.format === 'commander' ? countEntries(d.commanders ?? []) : 0)} cartas</span></span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
+      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span>${commanderLineHTML(d, ptName, 'tile-commander')}<span class="tile-meta">${deckColors(d).map(pip).join('')}<span>${deckSize(d) + (d.format === 'commander' ? countEntries(d.commanders ?? []) : 0)} cartas</span></span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
     }).join('');
   }
   function refresh() {
@@ -121,8 +126,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (!decks.some(d => d.id === youId)) youId = '';
     const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d));
     $('#personalCount').textContent = personal.length ? String(personal.length) : '';
-    $('#personalTiles').innerHTML = mine.length ? tiles(mine) + NEW_DECK_TILE : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${query ? 'Nenhum dos seus decks corresponde à busca.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${query ? 'clear' : 'incompatible'}">${query ? 'Limpar busca' : 'Mostrar decks incompatíveis'}</button></div>`;
+    $('#personalTiles').innerHTML = mine.length ? tiles(mine) + NEW_DECK_TILE : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${filtering() ? 'Nenhum dos seus decks corresponde à busca e às cores.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${filtering() ? 'clear' : 'incompatible'}">${filtering() ? 'Limpar filtros' : 'Mostrar decks incompatíveis'}</button></div>`;
     $('#readyTiles').innerHTML = templates.length ? tiles(templates) : '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>';
+    $('#lobbyColorFilter').innerHTML = colorFilterHTML(colorFilter, 'data-color-filter');
     $('#incompatibleToggle').hidden = !format || format === 'free';
     $<HTMLInputElement>('#showIncompatible').checked = showIncompatible;
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-setting]')) {
@@ -213,6 +219,14 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   root.addEventListener('click', e => {
     const target = e.target as HTMLElement;
+    const color = target.closest<HTMLButtonElement>('[data-color-filter]')?.dataset.colorFilter;
+    if (color) {
+      colorFilter = color === 'clear' ? new Set() : toggleColor(colorFilter, color as ColorFilter);
+      refresh();
+      // O foco fica na mesma cor (ou na primeira, depois de limpar) para continuar escolhendo pelo teclado.
+      root.querySelector<HTMLElement>(`[data-color-filter="${color === 'clear' ? 'W' : color}"]`)?.focus();
+      return;
+    }
     const choice = target.closest<HTMLButtonElement>('[data-setting]');
     if (choice && !choice.disabled) {
       if (choice.dataset.setting === 'format') {
@@ -242,7 +256,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const action = target.closest<HTMLElement>('[data-lobby]')?.dataset.lobby;
     if (!busy && !waitingRoom && ['library','create','import'].includes(action ?? '')) opts.onDecks(action as DeckAction, format ?? undefined);
     if (action === 'start') void start();
-    if (action === 'clear') { query = ''; $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
+    if (action === 'clear') { query = ''; colorFilter = new Set(); $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
     if (action === 'cancel-lookup' && !busy) { room = null; refresh(); }
     if (action === 'cancel-room') { opts.onCancelRoom(); waitingRoom = null; refresh(); }

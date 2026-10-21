@@ -81,7 +81,8 @@
 .empty-cards i:nth-child(3) { transform: rotate(10deg); border-color: #b28b4b; background: #1d304d; }
 .empty-cards i:nth-child(3)::after { content: '+'; position: absolute; inset: 8px; display: grid; place-items: center; border: 1px solid #b28b4b44; border-radius: 4px; color: #c39c5f; font: 32px var(--body); }
 .shelf-empty { grid-column: 1/-1; padding: 20px; border: 1px dashed var(--line); color: var(--muted); }
-.library-toolbar { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; padding: 6px 0 0; border-top: 1px solid #ffffff0b; }
+/* Busca e filtro de cores no topo da lista, antes das prateleiras de decks. */
+.library-toolbar { display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; margin: 0 0 22px; padding: 0 0 12px; border-bottom: 1px solid #ffffff0b; }
 .library-toolbar .search { max-width: 260px; flex: 1; background: transparent; border: 0; }
 .library-toolbar .search svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; flex-shrink: 0; }
 .library-toolbar .search input { padding: 12px 0; font-size: 14px; }

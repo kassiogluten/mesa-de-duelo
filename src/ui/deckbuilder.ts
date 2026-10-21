@@ -10,6 +10,8 @@ import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { openDeckPreview } from './deckPreview';
 import { mountAppHeader } from './appHeader';
 import { applyDeckImport, deckImportSnapshot, type DeckImportMode } from './deckImport';
+import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
+import './deckFilters.css';
 
 interface BuilderOptions {
   onBack(): void;
@@ -40,6 +42,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let selected: string | null = null;
   let view: 'library' | 'edit' | 'import' = 'library';
   let listQuery = '';
+  let libraryColors = new Set<ColorFilter>();
+  const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let showReady = false;
   let notice = '';
   let saveError = getDeckStorageState().error ?? '';
@@ -116,12 +120,13 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   function cardTile(deck: DeckData, personal: boolean) {
     const art = deckArt(deck), local = validateDeckLocal(deck, format);
-    return `<article class="dw-deck"><button type="button" class="dw-cover" data-peek="${esc(deck.id)}" aria-label="Ver cartas de ${esc(deck.name)}">${art ? `<img src="${esc(art)}" alt="" loading="lazy">` : '<span aria-hidden="true">▱</span>'}<span>${personal ? 'Seu deck' : 'Deck pronto'}</span></button><div class="dw-deck-info"><h3>${esc(deck.name)}</h3><p>${deckColors(deck).map(pip).join('')}<span>${totalDeckSize(deck)} cartas${deck.sideboard?.length ? ` · ${countEntries(deck.sideboard)} no sideboard` : ''}</span></p><p class="dw-deck-valid ${local.status}">${formatLabel(deck.format ?? 'free')}${format === 'pauper' ? ` · ${local.status === 'valid' ? 'Compatível com Pauper' : local.status === 'invalid' ? 'Precisa de ajustes' : 'Não verificado'}` : ''}</p><div class="dw-actions"><button type="button" class="dw-button ${personal ? 'primary' : ''}" data-select="${esc(deck.id)}" data-focus="deck:${esc(deck.id)}">${personal ? 'Editar deck' : 'Ver deck'}</button>${!personal ? `<button type="button" class="dw-button" data-copy="${esc(deck.id)}">Criar cópia</button>` : ''}</div></div></article>`;
+    return `<article class="dw-deck"><button type="button" class="dw-cover" data-peek="${esc(deck.id)}" aria-label="Ver cartas de ${esc(deck.name)}">${art ? `<img src="${esc(art)}" alt="" loading="lazy">` : '<span aria-hidden="true">▱</span>'}<span>${personal ? 'Seu deck' : 'Deck pronto'}</span></button><div class="dw-deck-info"><h3>${esc(deck.name)}</h3>${commanderLineHTML(deck, ptName, 'dw-deck-commander')}<p>${deckColors(deck).map(pip).join('')}<span>${totalDeckSize(deck)} cartas${deck.sideboard?.length ? ` · ${countEntries(deck.sideboard)} no sideboard` : ''}</span></p><p class="dw-deck-valid ${local.status}">${formatLabel(deck.format ?? 'free')}${format === 'pauper' ? ` · ${local.status === 'valid' ? 'Compatível com Pauper' : local.status === 'invalid' ? 'Precisa de ajustes' : 'Não verificado'}` : ''}</p><div class="dw-actions"><button type="button" class="dw-button ${personal ? 'primary' : ''}" data-select="${esc(deck.id)}" data-focus="deck:${esc(deck.id)}">${personal ? 'Editar deck' : 'Ver deck'}</button>${!personal ? `<button type="button" class="dw-button" data-copy="${esc(deck.id)}">Criar cópia</button>` : ''}</div></div></article>`;
   }
   function renderLibrary() {
-    const match = (d: DeckData) => d.name.toLocaleLowerCase('pt-BR').includes(listQuery.toLocaleLowerCase('pt-BR'));
+    const match = (d: DeckData) => matchesQuery(d, listQuery, ptName) && matchesColors(deckColors(d), libraryColors);
+    const filtering = !!listQuery.trim() || libraryColors.size > 0;
     const mine = user.filter(match), ready = DEFAULT_DECKS.filter(match).filter(d => format === 'free' ? d.format !== 'commander' : d.format === format);
-    $('#dwContent').innerHTML = `<section class="dw-library"><div class="dw-title"><div><p class="dw-eyebrow">Sua coleção</p><h1>Meus decks <small>${user.length}</small></h1><p>Crie, ajuste e escolha o seu próximo deck.</p></div><div class="dw-actions"><button type="button" class="dw-button" data-b="import">Importar lista</button><button type="button" class="dw-button primary" data-b="new">Criar deck</button></div></div><div class="dw-library-tools"><label class="dw-search"><span>Buscar deck</span><input type="search" id="dwListQuery" data-focus="library-search" value="${esc(listQuery)}" placeholder="Nome do deck" autocomplete="off"></label><label class="dw-field">Formato<select id="dwFormat" data-focus="library-format">${formatOptions(format)}</select></label></div>${mine.length ? `<div class="dw-deck-grid">${mine.map(d => cardTile(d, true)).join('')}</div>` : `<div class="dw-empty"><h2>${user.length ? 'Nenhum deck com esse nome.' : 'Você ainda não tem nenhum deck.'}</h2><p>${user.length ? 'Tente outro nome ou limpe a busca.' : 'Crie seu primeiro deck, importe uma lista ou faça uma cópia de um deck pronto.'}</p><div class="dw-actions">${user.length ? '<button type="button" class="dw-button" data-b="clear-search">Limpar busca</button>' : '<button type="button" class="dw-button primary" data-b="new">Criar deck</button><button type="button" class="dw-button" data-b="import">Importar lista</button>'}</div></div>`}<details class="dw-ready" ${showReady ? 'open' : ''}><summary>Decks prontos <small>${ready.length}</small><span>Escolha um ponto de partida</span></summary><div class="dw-deck-grid">${ready.map(d => cardTile(d, false)).join('') || '<p>Nenhum deck pronto com esse nome.</p>'}</div></details></section>`;
+    $('#dwContent').innerHTML = `<section class="dw-library"><div class="dw-title"><div><p class="dw-eyebrow">Sua coleção</p><h1>Meus decks <small>${user.length}</small></h1><p>Crie, ajuste e escolha o seu próximo deck.</p></div><div class="dw-actions"><button type="button" class="dw-button" data-b="import">Importar lista</button><button type="button" class="dw-button primary" data-b="new">Criar deck</button></div></div><div class="dw-library-tools"><label class="dw-search"><span>Buscar deck</span><input type="search" id="dwListQuery" data-focus="library-search" value="${esc(listQuery)}" placeholder="Nome do deck" autocomplete="off"></label><label class="dw-field">Formato<select id="dwFormat" data-focus="library-format">${formatOptions(format)}</select></label><div class="dw-field dw-color-field"><span>Cores</span>${colorFilterHTML(libraryColors, 'data-library-color')}</div></div>${mine.length ? `<div class="dw-deck-grid">${mine.map(d => cardTile(d, true)).join('')}</div>` : `<div class="dw-empty"><h2>${user.length ? filtering && libraryColors.size ? 'Nenhum deck com esse nome e essas cores.' : 'Nenhum deck com esse nome.' : 'Você ainda não tem nenhum deck.'}</h2><p>${user.length ? 'Tente outro nome, outras cores ou limpe os filtros.' : 'Crie seu primeiro deck, importe uma lista ou faça uma cópia de um deck pronto.'}</p><div class="dw-actions">${user.length ? '<button type="button" class="dw-button" data-b="clear-search">Limpar filtros</button>' : '<button type="button" class="dw-button primary" data-b="new">Criar deck</button><button type="button" class="dw-button" data-b="import">Importar lista</button>'}</div></div>`}<details class="dw-ready" ${showReady ? 'open' : ''}><summary>Decks prontos <small>${ready.length}</small><span>Escolha um ponto de partida</span></summary><div class="dw-deck-grid">${ready.map(d => cardTile(d, false)).join('') || `<p>Nenhum deck pronto com ${libraryColors.size ? 'esse nome e essas cores' : 'esse nome'}.</p>`}</div></details></section>`;
     root.querySelector('.dw-ready')?.addEventListener('toggle', e => { const next = (e.target as HTMLDetailsElement).open; if (next !== showReady) { showReady = next; if (next) void loadData(); } });
   }
   function validationHTML(deck: DeckData) {
@@ -364,6 +369,13 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const ds = target.dataset;
     if (ds.b === 'deck-actions') { setDeckActions(!deckActionsOpen, true); return; }
     if (target.closest('#dwDeckActions')) setDeckActions(false, true);
+    if (ds.libraryColor) {
+      const color = ds.libraryColor;
+      libraryColors = color === 'clear' ? new Set() : toggleColor(libraryColors, color as ColorFilter);
+      renderLibrary();
+      root.querySelector<HTMLElement>(`[data-library-color="${color === 'clear' ? 'W' : color}"]`)?.focus();
+      return;
+    }
     if (ds.inspect) { hideCardPreview(); inspectCard({ name: ds.inspect }, target); return; }
     if (ds.peek) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.peek); if (deck) openDeckPreview(deck, { selected: false, onPick: () => edit(deck), pickLabel: deck.builtin ? 'Ver deck' : 'Editar deck' }); return; }
     if (ds.select) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.select); if (deck) edit(deck); return; }
@@ -398,7 +410,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'export-import': download(importDraft.text, 'lista-original.txt'); break;
       case 'recovery': download(exportDeckRecovery(), 'recuperacao-decks.json', 'application/json'); break;
       case 'retry-save': persist(); break;
-      case 'clear-search': listQuery = ''; renderLibrary(); break;
+      case 'clear-search': listQuery = ''; libraryColors = new Set(); renderLibrary(); break;
       case 'search': commanderSlot = null; searchOpen = !searchOpen; hideCardPreview(); renderEdit(); if (searchOpen) $('#dwCardQuery')?.focus(); break;
       case 'open-search': commanderSlot = null; searchOpen = true; renderEdit(); $('#dwCardQuery')?.focus(); break;
       case 'more': void runSearch(true); break;
