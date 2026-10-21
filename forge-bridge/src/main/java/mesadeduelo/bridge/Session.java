@@ -1066,6 +1066,8 @@ final class Session {
                 if (blocking != null) input.add("blocking", blocking);
                 JsonObject suspendCast = InputContext.suspendCast(currentInput);
                 if (suspendCast != null) input.add("suspendCast", suspendCast);
+                JsonObject commanderMove = InputContext.commanderMove(currentInput);
+                if (commanderMove != null) input.add("commanderMove", commanderMove);
                 JsonObject selection = InputContext.selection(currentInput);
                 if (selection != null) input.add("selection", selection);
                 Set<Integer> playerChoices = InputContext.playerChoices(currentInput);

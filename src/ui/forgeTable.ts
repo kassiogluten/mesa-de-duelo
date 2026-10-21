@@ -1307,9 +1307,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     const decision = cardDecision(s);
     const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
-    const ok = s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
+    const move = s.input.commanderMove;
+    const ok = move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
       : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount}` } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
-    const cancel = attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
+    const cancel = move ? { ...s.input.cancel, label: zoneName(move.to) } : attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
       btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
@@ -1350,13 +1351,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return { amounts, valid: validValues && remaining === 0, text: !validValues ? 'Respeite os limites indicados para cada alvo.' : remaining < 0 ? `Excesso: ${-remaining}.` : `Restante: ${remaining}.` };
   }
 
-  /** Comandante no cemitério ou no exílio (regra 903.9a): os botões dizem para onde ele vai. "Enviar" responde sim. */
+  /** Nome de cada zona para os botões do comandante, e com artigo para a frase ("para a mão"). */
+  const ZONES: Record<string, [string, string]> = { Hand: ['Mão', 'a mão'], Library: ['Grimório', 'o grimório'], Graveyard: ['Cemitério', 'o cemitério'], Exile: ['Exílio', 'o exílio'] };
+  const zoneName = (z: string) => ZONES[z]?.[0] ?? z;
+  const zoneWithArticle = (z: string) => ZONES[z]?.[1] ?? z;
+  /** Comandante no cemitério ou no exílio (regra 903.9a): os botões dizem para onde ele vai. "Zona de comando" responde sim. */
   function commanderZoneHTML(q: FQuestion) {
     const place = q.zone === 'Exile' ? 'exílio' : 'cemitério';
     const name = q.card ? label(q.card) : 'Seu comandante';
     return `<div class="q-head"><h2>${esc(name)} está no ${place}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}
       <p class="q-hint">Seu comandante pode ir para a zona de comando ou ficar no ${place}.</p>
-      <div class="q-actions"><button class="arena-btn primary" data-q-confirm="true">Enviar à zona de comando</button><button class="arena-btn secondary" data-q-confirm="false">Manter no ${place}</button></div>`;
+      <div class="q-actions"><button class="arena-btn primary" data-q-confirm="true">Zona de comando</button><button class="arena-btn secondary" data-q-confirm="false">${q.zone === 'Exile' ? 'Exílio' : 'Cemitério'}</button></div>`;
   }
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
@@ -1580,6 +1585,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';
     const opening = s.input.opening;
     const prompt = s.gameOver ? '' : s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
+      : s.input.commanderMove ? `${s.input.commanderMove.card ? label(s.input.commanderMove.card) : 'Seu comandante'} iria para ${zoneWithArticle(s.input.commanderMove.to)}. Para onde vai?`
       : s.input.suspendCast ? 'Suspender: conjure agora sem pagar o custo de mana ou deixe a carta no exílio.'
       : s.input.blocking ? selectedBlocker ? `${label(findCard(selectedBlocker.blocker)!)}: escolha o atacante. Se já estiver bloqueando esse atacante, o clique remove o bloqueio.` : 'Escolha uma criatura sua e depois o atacante que ela vai bloquear.'
       : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''

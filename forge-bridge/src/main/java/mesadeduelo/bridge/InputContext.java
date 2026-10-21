@@ -63,6 +63,22 @@ final class InputContext {
         JsonObject result = new JsonObject(); result.add("card", StateJson.card(card)); return result;
     }
 
+    /**
+     * Regra 903.9b: o comandante iria para a mão ou o grimório e o dono pode mandá-lo à zona de comando.
+     * O Forge pergunta num "Sim/Não" com o texto da regra em inglês; o destino vem dos parâmetros do movimento
+     * guardados na habilidade da substituição, para a mesa nomear os botões ("Zona de comando" ou "Mão").
+     */
+    static JsonObject commanderMove(Object input) {
+        if (!(input instanceof InputConfirm)) return null;
+        SpellAbility ability = (SpellAbility) value(CONFIRM_ABILITY, input);
+        if (ability == null || ability.getReplacementEffect() == null || !ability.getReplacementEffect().hasParam("CommanderMoveReplacement")) return null;
+        if (!(ability.getReplacingObject(forge.game.ability.AbilityKey.OriginalParams) instanceof java.util.Map<?, ?> params)) return null;
+        JsonObject result = new JsonObject();
+        if (params.get(forge.game.ability.AbilityKey.Destination) instanceof ZoneType to) result.addProperty("to", to.name());
+        if (params.get(forge.game.ability.AbilityKey.Affected) instanceof Card card) result.add("card", StateJson.card(card.getView()));
+        return result.has("to") ? result : null;
+    }
+
     /** Card choices only: counter allocation and player selection have different counting semantics. */
     static JsonObject selection(Object input) {
         if (!(input instanceof InputSelectEntitiesFromList<?> select)) return null;

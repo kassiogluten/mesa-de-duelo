@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.28.1] - 2026-10-20
+
+### Corrigido
+
+- **Botões com o destino do comandante.** Quando o comandante pode ir para a zona de comando, os botões agora dizem os dois lugares: **Zona de comando** ou **Cemitério**, **Zona de comando** ou **Exílio**, **Zona de comando** ou **Mão** (e **Grimório**). Quando ele iria para a mão ou o grimório, a pergunta aparecia com o texto da regra em inglês e os botões **Sim** e **Não**; agora diz em português para onde ele iria.
+
 ## [0.28.0] - 2026-10-20
 
 ### Novo
