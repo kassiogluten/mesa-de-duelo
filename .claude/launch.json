@@ -74,6 +74,19 @@
       "env": {
         "VITE_FORGE_URL": "ws://127.0.0.1:7182/ws"
       }
+    },
+    {
+      "name": "rea-mtg",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8767",
+        "--directory",
+        "C:/Users/Kassio/rea-mtg"
+      ],
+      "port": 8767,
+      "autoPort": false
     }
   ]
 }
