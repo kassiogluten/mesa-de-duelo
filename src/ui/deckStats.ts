@@ -30,6 +30,25 @@ export function deckStats(deck: DeckData) {
     average: spellCount ? spells.reduce((sum, r) => sum + (r.cmc ?? 0) * r.count, 0) / spellCount : null,
   };
 }
+/**
+ * Preço do deck em dólar: comandantes, principal e sideboard, pela impressão que o Scryfall devolve (TCGplayer).
+ * `missing` conta as cópias sem preço (carta sem dados ainda, ou sem preço no Scryfall).
+ */
+export function deckPrice(deck: DeckData): { total: number; missing: number } {
+  let total = 0, missing = 0;
+  for (const e of [...(deck.commanders ?? []), ...deck.cards, ...(deck.sideboard ?? [])]) {
+    const usd = cacheGet(e.name)?.usd;
+    if (typeof usd === 'number') total += usd * e.count; else missing += e.count;
+  }
+  return { total, missing };
+}
+const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+/** "US$ 123.45", ou vazio quando nenhuma carta tem preço ainda. */
+export function deckPriceText(deck: DeckData): string {
+  const { total, missing } = deckPrice(deck);
+  if (!total && missing) return '';
+  return `${usd.format(total).replace('$', 'US$ ')}${missing ? '+' : ''}`;
+}
 export function deckColors(deck: DeckData): Color[] {
   const colors = new Set(deckRows([...(deck.commanders ?? []), ...deck.cards]).flatMap(r => r.info?.colors ?? []));
   return (['W', 'U', 'B', 'R', 'G'] as Color[]).filter(c => colors.has(c));
@@ -40,12 +59,18 @@ export function deckArt(deck: DeckData): string | undefined {
   const rows = deckRows(deck.cards).filter(r => r.info?.artCrop).sort((a, b) => (b.cmc ?? 0) - (a.cmc ?? 0));
   return (rows.find(r => r.info?.type === 'creature') ?? rows.find(r => r.info?.type !== 'land'))?.info?.artCrop;
 }
+function priceHTML(deck: DeckData): string {
+  const { missing } = deckPrice(deck), text = deckPriceText(deck);
+  const note = missing ? `${missing} ${missing === 1 ? 'carta' : 'cartas'} sem preço` : 'Scryfall, em dólar';
+  return `<p class="ds-average ds-price">Preço estimado<b>${text || '–'}</b><small>${text ? note : 'Ainda sem preços'}</small></p>`;
+}
 export function statsHTML(deck: DeckData): string {
   const stats = deckStats(deck), peak = Math.max(1, ...stats.curve);
   const partial = stats.unknown > 0;
   return `<div class="ds-stats">
     <div class="ds-counts"><span><b>${stats.creatures}</b> criaturas</span><span><b>${stats.spells}</b> outras mágicas</span><span><b>${stats.lands}</b> terrenos</span></div>
     <div class="ds-curve" role="img" aria-label="${esc(`Curva de mana${partial ? ' parcial' : ''}: ${stats.curve.map((n, i) => `custo ${CURVE[i]}, ${n} cartas`).join('; ')}`)}">${stats.curve.map((n, i) => `<span class="ds-bar"><b>${n || '–'}</b><i style="height:${n / peak * 52}px"></i><small>${CURVE[i]}</small></span>`).join('')}</div>
+    ${priceHTML(deck)}
     <p class="ds-average">Custo médio${partial ? ' parcial' : ''}<b>${stats.average === null ? '–' : stats.average.toFixed(1).replace('.', ',')}</b><small>Sem terrenos</small></p>
     ${partial ? `<p class="ds-incomplete" role="status">Dados pendentes de ${stats.unknown} ${stats.unknown === 1 ? 'carta' : 'cartas'}. As estatísticas estão incompletas.</p>` : ''}
   </div>`;

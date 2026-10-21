@@ -251,7 +251,7 @@ export type ClientMessage =
   | { type: 'rejoin'; code: string; token: string }
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
-  | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt' | 'edhrec'; id: string }
+  | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
   | { type: 'rematch' } | { type: 'leave' }
   | ({ type: 'preferences' } & Partial<FPreferences>)
@@ -308,7 +308,7 @@ export class ForgeClient {
     this.pending.clear();
   }
 
-  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt' | 'edhrec'; id: string }, timeoutMs = 12000): Promise<T> {
+  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }, timeoutMs = 12000): Promise<T> {
     if (!this.connected) return Promise.reject(new Error('Conecte-se ao servidor para verificar.'));
     const requestId = `request-${++this.requestSequence}`;
     return new Promise((resolve, reject) => {
@@ -325,7 +325,7 @@ export class ForgeClient {
   lookupRoom(code: string): Promise<RoomInfo> { return this.request({type: 'lookup-room', code}); }
 
   /** JSON da API pública do Moxfield ou do Archidekt, buscado pela ponte (o navegador esbarra no CORS). */
-  fetchDeckSource(site: 'moxfield' | 'archidekt' | 'edhrec', id: string): Promise<string> { return this.request({type: 'fetch-deck', site, id}, 20000); }
+  fetchDeckSource(site: 'moxfield' | 'archidekt', id: string): Promise<string> { return this.request({type: 'fetch-deck', site, id}, 20000); }
 
   connect(url = FORGE_URL, timeoutMs = 3000): Promise<void> {
     return new Promise((resolve, reject) => {

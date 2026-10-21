@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.29.0] - 2026-10-20
+
+### Novo
+
+- **Preço estimado dos decks.** Cada deck mostra quanto custa, em dólar, somando comandantes, deck principal e sideboard pelos preços do Scryfall. O valor aparece no cartão do deck em **Meus decks** e nos decks prontos, na escolha do deck antes da partida, e junto da curva de mana ao abrir ou editar um deck. Os preços são atualizados uma vez por dia. Quando alguma carta não tem preço, o valor vem com um **+** e o editor diz quantas ficaram de fora.
+
+### Mudou
+
+- **Saiu o deck médio do EDHREC.** A busca do deck médio não funcionava direito e foi retirada: o bloco **Deck médio do EDHREC** na importação de Commander, o botão **Usar o deck médio do EDHREC** ao lado do comandante e os links do EDHREC no campo da lista não existem mais. Para importar por link, use um deck público do Moxfield ou do Archidekt, ou cole a lista em texto. Os decks que você já montou com ele continuam salvos como estão.
+
 ## [0.28.1] - 2026-10-20
 
 ### Corrigido

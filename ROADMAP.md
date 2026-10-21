@@ -295,18 +295,9 @@ A ideia é passar para componentes com estado declarado, **aos poucos e sem para
 - [ ] Testes: testes de componente para as telas migradas e os testes de protocolo da ponte passando sem mudanças.
 - [ ] Remover o código antigo de cada tela assim que a versão nova estiver no ar.
 
-## 21. Deck médio do EDHREC no construtor de Commander ✅
+## 21. Deck médio do EDHREC no construtor de Commander ❌ (removido)
 
-No formato Commander, o jogador escolhe o comandante e o deck é preenchido com o "deck médio" do EDHREC, passando pela mesma revisão da importação.
-
-- [x] Fonte: `https://json.edhrec.com/pages/average-decks/{slug}.json` → `deck.commander` (nomes) e `deck.cards` agrupado por tipo, cada carta como `[nome, quantidade]` (um grupo pode ter subgrupos). Número de decks em `container.json_dict.card.num_decks`; a data mostrada é a do deck mais recente em `savedate_counts`.
-- [x] Slug conferido com casos reais: nome em inglês, só a face da frente (`Esika, God of the Tree // …` → `esika-god-of-the-tree`), sem acentos (`Lim-Dûl` → `lim-dul`), sem apóstrofos, vírgulas ou dois-pontos (`Ratonhnhaké:ton` → `ratonhnhaketon`), espaços e hífens viram um hífen. Duplas: os dois slugs juntos; na ordem "errada" o EDHREC responde `{"redirect": "/average-decks/…"}` e a ponte segue uma vez (vale para parceiros e antecedentes). Variações `/{slug}/budget`, `/expensive` e temas também existem.
-- [x] Ponte (`DeckLinks.java`, site `edhrec` na mensagem `fetch-deck`): só monta o endereço a partir de um slug validado (`[a-z0-9]+(-[a-z0-9]+)*`, com uma variação opcional), e só segue redirecionamentos para outro slug válido. Comandante sem deck médio responde **403** (não 404) com XML do S3; vira "o EDHREC não tem deck médio para este comandante".
-- [x] Frontend: bloco "Deck médio do EDHREC" na importação (formato Commander), botão no comandante do editor, nome em português resolvido pelo Scryfall, link `edhrec.com/average-decks/…` ou `edhrec.com/commanders/…` aceito no campo da lista. A origem (EDHREC, número de decks, data) aparece na revisão e fica como comentário no topo da lista original salva.
-- [ ] Alguns decks médios vêm com 99 cartas no total (ex.: Kraum + Tymna), porque a média do EDHREC arredonda. A validação aponta; dá para sugerir completar com terrenos básicos.
-- [ ] Ao adicionar a lista a um deck que já tem cartas, cópias repetidas somam (a validação de Commander aponta). Talvez um modo "completar o deck" que pule as cartas que já estão nele.
-
-**Termos de uso do EDHREC (lidos em 19/10/2026, versão de 06/08/2024, edhrec.com/terms):** não há API pública documentada; o JSON é o que o próprio site usa. Os termos dão licença de acesso "somente para uso pessoal e não comercial", proíbem "gerar buscas, requisições ou consultas automatizadas ao site" por software ou scripts, e proíbem copiar, redistribuir ou republicar partes do site sem indicação em contrário. O `robots.txt` do site não bloqueia `/average-decks/` (e o EDHREC publica um sitemap dessas páginas), mas isso não muda os termos. Como fizemos para ficar o mais perto possível do permitido: uma requisição por ação do jogador, sem cache nem coleta em lote, sem guardar ou redistribuir os dados do EDHREC no projeto (os testes usam dados inventados), com a origem e o link de volta para o EDHREC na revisão. **Mesmo assim, é uma consulta automatizada a partir de um servidor.** Antes de abrir para muita gente (ou se o projeto tiver qualquer receita), pedir autorização ao EDHREC (contato do site) ou trocar por um link que o jogador abre e cola. Se o EDHREC pedir, basta tirar o site `edhrec` de `DeckLinks.java`.
+Chegou a existir (bloco na importação, botão no comandante, link do EDHREC aceito no campo da lista, busca pela ponte), mas não funcionava de forma confiável e foi removido por completo em 20/10/2026. A importação por link voltou a aceitar só Moxfield e Archidekt. Os termos de uso do EDHREC também não liberam consultas automatizadas, então não vale voltar a essa fonte sem uma API oficial.
 
 ## 22. Distribuir o dano de combate em bloqueios duplos ✅
 
@@ -349,3 +340,19 @@ Em partidas com três ou mais jogadores (Commander), todos os oponentes dividem 
 - [x] A escolha vale durante a partida (por assento) e volta a mostrar todos numa nova partida. Nunca fica sem nenhum oponente à vista.
 - [x] Teclado e leitor de tela: os botões têm nome e estado, o foco fica no botão correspondente depois da troca, e a mesa anuncia "Campo de … oculto" ou "Mostrando só o campo de …".
 - [ ] Celular: hoje o oculto vira uma coluna só com retrato e um botão de olho. Faltam as abas com um oponente por vez.
+
+## 26. Mulligan em paralelo com os outros jogadores
+
+Hoje cada jogador decide a mão inicial na sua vez, e em Commander com quatro pessoas a mesa espera uma de cada vez. A ideia é todos decidirem ao mesmo tempo (a regra permite: as decisões só são reveladas juntas). Fazer **só se a implementação for simples**.
+
+- [ ] Avaliação inicial (20/10/2026): não é simples. O próprio Forge faz o mulligan em sequência: o serviço de mulligan percorre os jogadores em ordem na thread da partida, e a escolha de cada humano trava essa thread até a resposta. Paralelizar exige substituir esse serviço por um nosso (pedir as decisões a todos os assentos de uma vez pela ponte, esperar todas e só então aplicar na ordem de turno), cuidando também do London (devolver cartas ao fundo), de quem cai no meio e da IA.
+- [ ] Alternativa mais barata, se quiser só reduzir a espera: mostrar a mão inicial a todos assim que as cartas são compradas, para cada um já ir pensando enquanto os anteriores decidem.
+
+## 27. Arte da coleção mais recente nas cartas
+
+Hoje a imagem de cada carta é a da impressão que o Scryfall devolve na busca por nome (terrenos básicos já têm arte fixa). A ideia é usar sempre a arte da coleção mais recente, preferindo a versão **borderless** e, sem ela, a **versão padrão** (moldura normal), nunca promos, versões estendidas, showcase de temas estranhos ou impressões só digitais.
+
+- [ ] Escolher a impressão com uma busca `!"Nome" unique=prints order=released dir=desc`, filtrando `border_color:borderless` primeiro e depois `frame_effects` vazio, sem `promo`, `digital` ou `oversized`.
+- [ ] Fazer isso em lote, sem uma busca por carta: o `/cards/collection` aceita `set` + `collector_number`, então dá para guardar a impressão escolhida no cache e só refazer a escolha de tempos em tempos.
+- [ ] Manter a impressão em português quando ela existe para a mesma coleção; se a tradução for de uma coleção antiga, decidir entre arte nova em inglês ou arte antiga em português.
+- [ ] O preço estimado do deck usa a mesma impressão; com a arte escolhida, ele passa a refletir essa versão (borderless costuma custar mais). Talvez separar: arte da impressão escolhida, preço da mais barata.
