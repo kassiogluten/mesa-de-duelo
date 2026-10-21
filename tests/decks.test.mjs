@@ -14,7 +14,7 @@ const decks = await import('../src/decks.ts');
 const { applyDeckImport, deckImportSnapshot } = await import('../src/ui/deckImport.ts');
 const { cardCopyLimit, copiesInDeck, validateDeckLocal } = await import('../src/ui/deckRules.ts');
 const { deckStats, statsHTML } = await import('../src/ui/deckStats.ts');
-const { legalityFresh } = await import('../src/scryfall.ts');
+const { legalityFresh, cachePut } = await import('../src/scryfall.ts');
 function storage(initial = {}, failWrites = false) {
   const data = new Map(Object.entries(initial));
   return { data, getItem: key => data.get(key) ?? null, setItem(key, value) { if (failWrites) throw new Error('QuotaExceededError'); data.set(key, value); } };
@@ -23,7 +23,7 @@ const local = storage();
 globalThis.localStorage = local;
 function cache(name, values = {}) {
   const card = { name, layout: 'normal', type_line: 'Instant', mana_cost: '{R}', cmc: 1, legalities: { pauper: 'legal' }, fetchedAt: Date.now(), oracle_id: name, v: 3, ...values };
-  local.setItem(`scry:v1:${name.toLowerCase()}`, JSON.stringify(card));
+  cachePut(card);
   return card;
 }
 const example = { id: 'personal-123', name: 'Meu deck', cards: [{ name: 'Lightning Bolt', count: 4 }], sideboard: [{ name: 'Duress', count: 2 }], format: 'pauper' };
@@ -126,8 +126,7 @@ test('Pauper counts main and sideboard separately and combines copy limits', () 
 });
 
 test('canonical Oracle identity catches aliases across main and sideboard', () => {
-  cache('Alias Front', { oracle_id: 'same-card', name: 'Canonical // Back' });
-  cache('Canonical // Back', { oracle_id: 'same-card' });
+  cache('Canonical // Back', { oracle_id: 'same-card', faceNames: ['Alias Front'] });
   const result = validateDeckLocal({ ...example, cards: [{ name: 'Forest', count: 56 }, { name: 'Alias Front', count: 4 }], sideboard: [{ name: 'Canonical // Back', count: 1 }] });
   assert.ok(result.issues.some(i => i.code === 'copies'));
 });

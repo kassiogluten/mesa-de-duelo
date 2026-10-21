@@ -8,6 +8,11 @@
   backdrop-filter: blur(3px) saturate(.75);
   animation: arena-backdrop-in .28s ease both;
 }
+/* Modal respondido: a cópia deixada no lugar some com a vinheta e a caixa descendo um pouco. */
+.forge > .overlay.overlay-leaving:not(.minimized):not(.stack-gallery-overlay) { pointer-events: none; animation: arena-backdrop-out .26s ease both; }
+.forge > .overlay.overlay-leaving .question { animation: arena-modal-out .22s ease-in both; }
+@keyframes arena-backdrop-out { to { opacity: 0; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); } }
+@keyframes arena-modal-out { to { opacity: 0; transform: translateY(14px) scale(.96); } }
 @keyframes arena-backdrop-in { from { opacity: 0; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); } }
 
 /* Painel das perguntas sem cartas: escuro, translúcido e sem a moldura dourada forte. */

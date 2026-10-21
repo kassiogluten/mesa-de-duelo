@@ -29,6 +29,9 @@ test('ward cost, protection, prevention and face-down get readable seals', () =>
   assert.match(fx.seals[1].html, /Prot\./); assert.match(fx.seals[1].html, /artefatos/);
   assert.equal(fx.seals[2].html, 'Prevenir 3');
   assert.equal(permanentFx({ id: 3, tapped: false, token: false, faceDown: true }).seals[0].html, '2/2');
+  const morph = permanentFx({ id: 3, tapped: false, token: false, faceDown: true, faceDownKind: 'morph' }).seals[0];
+  assert.equal(morph.html, 'Metamorfose 2/2');
+  assert.equal(morph.label, 'Virada para baixo (Metamorfose), 2/2');
   assert.equal(permanentFx(creature({ keywords: ['WARD'], ward: 'Pay 3 life' })).seals[0].html, 'Ward Pay 3 life');
   assert.equal(protectionLabel('vampire'), 'vampire');
 });
@@ -53,4 +56,12 @@ test('effects never take pointer input and only move without reduced motion', ()
   assert.doesNotMatch(before.replace(/@keyframes[\s\S]*$/, ''), /animation:/, 'no animation outside the motion block');
   assert.equal(auraColor('{1}{W}'), '#f4e7b8');
   assert.equal(auraColor('{W}{U}'), '#f2b54c');
+});
+
+test('vigilance and trample get small marks on the left edge, creatures only', () => {
+  const fx = permanentFx(creature({ keywords: ['TRAMPLE', 'VIGILANCE'] }));
+  assert.deepEqual(fx.corner, ['vigilance', 'trample']);
+  assert.match(permanentFxHTML(fx).html, /fx-corner[^]*class="vigilance"[^]*class="trample"/);
+  assert.deepEqual(permanentFx({ id: 4, tapped: false, token: false, keywords: ['VIGILANCE'] }).corner, []);
+  assert.match(css, /\.slot\.attacking:not\(\.tapped\) \.bfc > \.fx-corner i\.vigilance/);
 });

@@ -41,6 +41,8 @@ export interface FCard {
   /** Imagem da ficha no Scryfall, calculada pela ponte (fichas não são achadas pelo nome). */
   image?: string;
   faceDown?: boolean;
+  /** Como a permanente ficou virada para baixo (só no campo). */
+  faceDownKind?: 'morph' | 'disguise' | 'manifest' | 'cloak';
   name?: string;
   set?: string;
   manaCost?: string;

@@ -1,9 +1,22 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { searchCards, cacheGet, fetchByNames } from '../src/scryfall.ts';
+import { registerHooks } from 'node:module';
+
+// Imports sem extensão, como no Vite.
+registerHooks({ resolve(specifier, context, nextResolve) {
+  try { return nextResolve(specifier, context); }
+  catch (error) {
+    if (error.code === 'ERR_MODULE_NOT_FOUND' && specifier.startsWith('.') && !/\.[cm]?[jt]sx?$/.test(specifier)) return nextResolve(`${specifier}.ts`, context);
+    throw error;
+  }
+} });
+const { searchCards, cacheGet, fetchByNames, loadCardCache } = await import('../src/scryfall.ts');
 
 const cached = new Map();
-globalThis.localStorage = { getItem: key => cached.get(key) ?? null, setItem: (key, value) => cached.set(key, value) };
+globalThis.localStorage = {
+  getItem: key => cached.get(key) ?? null, setItem: (key, value) => cached.set(key, value), removeItem: key => cached.delete(key),
+  key: i => [...cached.keys()][i] ?? null, get length() { return cached.size; },
+};
 const originalFetch = globalThis.fetch;
 function apiCard(name, more = {}) {
   return { name, oracle_id: `oracle:${name}`, layout: 'normal', type_line: 'Instant', cmc: 1, mana_cost: '{R}', oracle_text: 'Deal 3 damage.', legalities: { pauper: 'legal' }, rarity: 'uncommon', lang: 'pt', image_status: 'highres_scan', ...more };
@@ -51,9 +64,19 @@ test('cards remain available in memory when browser storage rejects writes', asy
   } finally { globalThis.fetch = originalFetch; globalThis.localStorage = originalStorage; }
 });
 
-test('malformed card cache falls back to retrieval instead of crashing a deck', () => {
+test('malformed card cache falls back to retrieval instead of crashing a deck', async () => {
   cached.set('scry:v1:corrupt test', JSON.stringify({ v: 3, name: 42 }));
+  await loadCardCache();
   assert.equal(cacheGet('Corrupt Test'), null);
+});
+
+test('cards left in localStorage by older versions move out of it, freeing room for decks', async () => {
+  cached.set('scry:v1:legacy test', JSON.stringify({ v: 3, name: 'Legacy Test', type_line: 'Instant', layout: 'normal' }));
+  cached.set('mesa:decks:v2', '[]');
+  await loadCardCache();
+  assert.equal(cacheGet('Legacy Test').name, 'Legacy Test');
+  assert.deepEqual([...cached.keys()].filter(k => k.startsWith('scry:')), []);
+  assert.equal(cached.get('mesa:decks:v2'), '[]', 'decks stay untouched');
 });
 
 test('deck image preload lists every face once and asks each url once per session', async () => {

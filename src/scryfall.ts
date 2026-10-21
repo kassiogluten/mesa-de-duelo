@@ -1,3 +1,5 @@
+import * as cardStore from './cardStore';
+
 type Images = { small?: string; normal?: string; art_crop?: string };
 
 /**
@@ -38,10 +40,11 @@ export interface ScryCard {
 
 /**
  * Cliente mínimo da API do Scryfall (https://scryfall.com/docs/api).
- * Respeita o intervalo pedido pela API entre requisições e guarda as cartas no localStorage.
+ * Respeita o intervalo pedido pela API entre requisições e guarda as cartas no IndexedDB (`cardStore`).
  */
 const API = 'https://api.scryfall.com';
-const CACHE_PREFIX = 'scry:v1:';
+/** Chave antiga das cartas no localStorage: movidas para o IndexedDB ao abrir o jogo. */
+const LEGACY_PREFIX = 'scry:v1:';
 const MIN_INTERVAL = 110;
 
 let queue: Promise<unknown> = Promise.resolve();
@@ -138,16 +141,31 @@ export function legalityFresh(card: ScryCard): boolean {
   return !!card.legalities && !!card.fetchedAt && Date.now() - card.fetchedAt < LEGALITY_TTL;
 }
 
+const validCard = (c: any): c is ScryCard => !!c && c.v === FORMAT && typeof c.name === 'string' && typeof c.type_line === 'string' && typeof c.layout === 'string';
+
 export function cacheGet(name: string): ScryCard | null {
   const cached = memory.get(name.toLowerCase());
-  if (cached) return withBasicArt(cached);
+  return cached ? withBasicArt(cached) : null;
+}
+
+/**
+ * Carrega as cartas guardadas para a memória, antes das telas abrirem (cacheGet é síncrono). As cartas que ainda
+ * estiverem no localStorage, de versões antigas, passam para o IndexedDB e saem de lá, liberando espaço para os decks.
+ */
+export async function loadCardCache() {
   try {
-    const raw = localStorage.getItem(CACHE_PREFIX + name.toLowerCase());
-    const c: ScryCard | null = raw ? JSON.parse(raw) : null;
-    if (!c || c.v !== FORMAT || typeof c.name !== 'string' || typeof c.type_line !== 'string' || typeof c.layout !== 'string') return null;
-    memory.set(name.toLowerCase(), c);
-    return withBasicArt(c);
-  } catch { return null; }
+    const legacy: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key?.startsWith(LEGACY_PREFIX)) legacy.push(key); }
+    for (const key of legacy) {
+      const name = key.slice(LEGACY_PREFIX.length);
+      try {
+        const c = JSON.parse(localStorage.getItem(key) ?? 'null');
+        if (validCard(c) && !memory.has(name)) { memory.set(name, c); void cardStore.write(name, c); }
+      } catch { /* entrada corrompida: só some */ }
+      localStorage.removeItem(key);
+    }
+  } catch { /* localStorage bloqueado */ }
+  for (const [name, c] of await cardStore.readAll<ScryCard>()) if (validCard(c) && !memory.has(name)) memory.set(name, c);
 }
 
 /** A carta vista por uma das faces: imagem e nome em português daquela face. */
@@ -160,15 +178,15 @@ function faceView(card: ScryCard, i: number): ScryCard {
 }
 
 /** Guarda a carta pelo nome completo e também pelo nome de cada face ("The Enigma Jewel", "Locus of Enlightenment"). */
-function cachePut(card: ScryCard) {
+export function cachePut(card: ScryCard) {
   memory.set(card.name.toLowerCase(), card);
-  card.faceNames?.forEach((fn, i) => { if (fn) memory.set(fn.toLowerCase(), faceView(card, i)); });
-  try {
-    localStorage.setItem(CACHE_PREFIX + card.name.toLowerCase(), JSON.stringify(card));
-    card.faceNames?.forEach((fn, i) => {
-      if (fn && fn.toLowerCase() !== card.name.toLowerCase()) localStorage.setItem(CACHE_PREFIX + fn.toLowerCase(), JSON.stringify(faceView(card, i)));
-    });
-  } catch { /* cache cheio ou bloqueado */ }
+  void cardStore.write(card.name.toLowerCase(), card);
+  card.faceNames?.forEach((fn, i) => {
+    if (!fn || fn.toLowerCase() === card.name.toLowerCase()) return;
+    const view = faceView(card, i);
+    memory.set(fn.toLowerCase(), view);
+    void cardStore.write(fn.toLowerCase(), view);
+  });
 }
 
 /**

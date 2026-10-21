@@ -937,6 +937,46 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return `${lands ? `<div class="perm-group lands-group">${lands}</div>` : ''}${others ? `<div class="perm-group others-group" aria-label="Artefatos e encantamentos">${others}</div>` : ''}`;
   }
 
+  /** Saída animada de um modal respondido: uma cópia sem clique some aos poucos no lugar dele. */
+  function leaveOverlay(el: HTMLElement) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ghost = el.cloneNode(true) as HTMLElement;
+    ghost.removeAttribute('id');
+    ghost.querySelectorAll('[id]').forEach(child => child.removeAttribute('id'));
+    ghost.classList.add('overlay-leaving');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.inert = true;
+    el.after(ghost);
+    ghost.addEventListener('animationend', event => { if (event.target === ghost) ghost.remove(); });
+    window.setTimeout(() => ghost.remove(), 600);
+  }
+
+  /** Vida mostrada por jogador: quando o número muda, ele conta até o novo valor, com cor e um pulso no retrato. */
+  const shownLife = new Map<number, number>();
+  const countedLife = new WeakSet<Element>();
+  function countLife() {
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for (const el of root.querySelectorAll<HTMLElement>('.avatar[data-pid] > .life')) {
+      if (countedLife.has(el)) continue;
+      countedLife.add(el);
+      const pid = Number(el.parentElement!.dataset.pid), to = Number(el.textContent);
+      const from = shownLife.get(pid);
+      shownLife.set(pid, to);
+      if (from === undefined || from === to || Number.isNaN(to) || still) continue;
+      const avatarEl = el.parentElement!, dir = to > from ? 'life-up' : 'life-down';
+      avatarEl.classList.remove('life-up', 'life-down'); void avatarEl.offsetWidth; avatarEl.classList.add(dir);
+      const start = performance.now(), duration = Math.min(700, 160 + Math.abs(to - from) * 60);
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        el.textContent = String(Math.round(from + (to - from) * (1 - (1 - t) ** 3)));
+        if (t < 1 && el.isConnected) requestAnimationFrame(step);
+        else { el.textContent = String(to); window.setTimeout(() => avatarEl.classList.remove(dir), 400); }
+      };
+      el.textContent = String(from);
+      requestAnimationFrame(step);
+    }
+  }
+
   function avatar(s: FState, p: FPlayer, idx: number) {
     const cls = ['avatar', idx === 0 ? 'me' : 'opp'];
     if (s.activePlayer === p.id && !s.gameOver) cls.push('active');
@@ -1628,6 +1668,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       qEl.hidden = false;
     } else {
+      if (!qEl.hidden && !qEl.classList.contains('minimized')) leaveOverlay(qEl);
       qEl.hidden = true;
       qEl.classList.remove('minimized');
       qState = null;
@@ -1657,6 +1698,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
           { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
       }
     }
+
+    countLife();
 
     $('#fRoomTag').textContent = s.room ? `Sala ${s.room.code}` : '';
     $('#fRoomTag').hidden = !s.room;
@@ -2247,7 +2290,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   return {
     attach(c, pics) {
-      autoPass.reset(); passResponses.reset(); knownHand = new Set(); handPrimed = false; arriving.clear();
+      autoPass.reset(); passResponses.reset(); knownHand = new Set(); handPrimed = false; arriving.clear(); shownLife.clear();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
       client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);

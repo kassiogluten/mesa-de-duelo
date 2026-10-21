@@ -254,6 +254,14 @@ a { color: var(--gold); }
   font: 800 2.7vh / 1 var(--body); font-variant-numeric: tabular-nums; text-shadow: 0 2px 2px #000;
 }
 .avatar.hit .life { animation: lifehit 0.6s ease; }
+/* Vida mudando: o número conta até o novo valor, verde ao subir e vermelho ao descer, com um pulso no retrato. */
+.avatar.life-up .life { color: #7dffae; border-color: #3fbf73; transition: color .2s, border-color .2s; }
+.avatar.life-down .life { color: #ff9a85; border-color: #d9563f; transition: color .2s, border-color .2s; }
+.avatar.life-up .portrait { animation: life-pulse-up .6s ease-out; }
+.avatar.life-down .portrait { animation: life-pulse-down .6s ease-out; }
+@keyframes life-pulse-up { 40% { box-shadow: 0 0 0 3px #3fbf7388, 0 0 22px #7dffae99; } }
+@keyframes life-pulse-down { 40% { box-shadow: 0 0 0 3px #d9563f88, 0 0 22px #ff6a4f99; } }
+@media (prefers-reduced-motion: reduce) { .avatar.life-up .portrait, .avatar.life-down .portrait { animation: none; } }
 .pname { margin-top: 2px; font-size: clamp(11px, 1.5vh, 14px); color: var(--muted); font-weight: 600; }
 .emblems { position: absolute; left: calc(100% + 6px); bottom: 0; display: flex; gap: 4px; }
 .emblem {

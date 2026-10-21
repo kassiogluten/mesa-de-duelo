@@ -406,6 +406,12 @@ export function createMotion(root: HTMLElement): Motion {
       later(() => {
         remove(piece);
         if (card && hiddenCards.delete(card)) card.style.opacity = '';
+        // Terreno ou permanente chegando ao campo: um "assentar" curto; fichas surgem com um brilho.
+        if (id !== undefined && ['land-played', 'entered'].includes(event.type) && event.from !== 'Exile') {
+          const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
+          if (landed) animate(landed, [{ scale: '1.06', translate: '0 -4px' }, { scale: '.97', translate: '0 1px', offset: .55 }, { scale: '1', translate: '0 0' }], 240, 'cubic-bezier(.3,.7,.4,1)');
+          if (landed && event.card?.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
+        }
       }, options.duration);
     },
     drew(actor, count, options) {

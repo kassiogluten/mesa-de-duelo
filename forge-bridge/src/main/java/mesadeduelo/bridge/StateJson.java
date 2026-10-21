@@ -206,6 +206,18 @@ final class StateJson {
         return url;
     }
 
+    /** Como a permanente ficou virada para baixo (informação pública): metamorfose, disfarce, manifestada ou encoberta. */
+    static String faceDownKind(Card gc) {
+        if (gc == null) return null;
+        if (gc.isManifested()) return "manifest";
+        if (gc.isCloaked()) return "cloak";
+        SpellAbility cast = gc.getCastSA();
+        if (cast == null) return null;
+        if (cast.isKeyword(Keyword.DISGUISE)) return "disguise";
+        if (cast.isKeyword(Keyword.MORPH) || cast.isKeyword(Keyword.MEGAMORPH)) return "morph";
+        return null;
+    }
+
     static JsonObject card(CardView c, Game game) {
         JsonObject o = new JsonObject();
         o.addProperty("id", c.getId());
@@ -215,6 +227,10 @@ final class StateJson {
         PermanentDetails.visible(o, c);
         if (c.isFaceDown()) {
             o.addProperty("faceDown", true);
+            if (c.getZone() == ZoneType.Battlefield) {
+                String kind = faceDownKind(game == null ? null : game.findByView(c));
+                if (kind != null) o.addProperty("faceDownKind", kind);
+            }
             return o;
         }
         CardStateView s = c.getCurrentState();

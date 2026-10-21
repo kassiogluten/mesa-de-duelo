@@ -34,8 +34,11 @@
 .dw-deck { min-width: 0; border: 1px solid var(--dw-line); background: var(--dw-surface); border-radius: 12px; overflow: hidden; }
 .dw-cover { width: 100%; aspect-ratio: 16/9; display: block; position: relative; padding: 0; border: 0; cursor: pointer; background: linear-gradient(130deg, #29466c, #13213a); color: var(--dw-muted); overflow: hidden; }
 .dw-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dw-cover > span:last-child { position: absolute; bottom: 10px; left: 12px; background: #081222db; color: #edf2fa; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
-.dw-cover > span:first-child:not(:last-child) { font-size: 50px; }
+.dw-cover-tag { position: absolute; top: 10px; left: 12px; background: #081222db; color: #edf2fa; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+/* Cores do deck sobre a arte, no canto inferior esquerdo, num selo com o fundo desfocado (como na tela inicial). */
+.dw-cover-colors { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 3px; padding: 4px 6px; border-radius: 999px; background: rgb(9 13 24 / .45); -webkit-backdrop-filter: blur(6px) saturate(1.2); backdrop-filter: blur(6px) saturate(1.2); box-shadow: 0 2px 8px #0006, inset 0 0 0 1px #ffffff1f; line-height: 0; }
+.dw-cover-colors .pip { font-size: 16px; }
+.dw-cover > span[aria-hidden] { font-size: 50px; }
 .dw-deck-info { padding: 16px; }
 .dw-deck-info h3 { margin: 0 0 8px; font: 600 18px/1.3 var(--body, sans-serif); }
 .dw-deck-info p { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--dw-muted); margin: 8px 0; }
@@ -199,7 +202,15 @@
   .dw-edit-controls { grid-column: 1/-1; justify-content: space-between; }
   .dw-edit-controls > .dw-field { flex: 1; max-width: 180px; }
 }
-@media (max-width: 700px) { .deck-workspace { padding: 0 16px 40px; } }
+@media (max-width: 700px) {
+  .deck-workspace { padding: 0 16px 40px; }
+  /* Filtros da lista: a busca ocupa a linha toda; formato e cores vão para a linha de baixo. */
+  .dw-library-tools { flex-wrap: wrap; align-items: flex-start; gap: 14px 16px; }
+  .dw-library-tools .dw-search { flex: 1 1 100%; max-width: none; }
+  .dw-library-tools > .dw-field:not(.dw-color-field) { flex: 0 0 auto; }
+  .dw-library-tools .dw-color-field { flex: 1 1 200px; min-width: 0; }
+}
+@media (max-width: 440px) { .dw-library-tools .dw-color-field { flex-basis: 100%; } }
 @media (max-width: 520px) {
   .dw-edit-controls { gap: 8px; }
   .dw-actions-trigger { padding-inline: 12px; }
@@ -210,7 +221,9 @@
   .dw-deck-grid { grid-template-columns: 1fr; }
   .dw-deck { display: grid; grid-template-columns: 110px minmax(0, 1fr); }
   .dw-cover { aspect-ratio: auto; height: 100%; }
-  .dw-cover > span:last-child { left: 6px; bottom: 6px; font-size: 10px; }
+  .dw-cover-tag { left: 6px; top: 6px; font-size: 10px; }
+  .dw-cover-colors { left: 6px; bottom: 6px; padding: 3px 5px; }
+  .dw-cover-colors .pip { font-size: 13px; }
   .dw-deck-info { padding: 13px; }
   .dw-deck-info h3 { font-size: 17px; }
   .dw-deck-info .dw-button { padding-inline: 10px; }

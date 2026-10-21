@@ -74,7 +74,7 @@ A mesa já segue a ideia do Arena, mas os modais e painéis ainda parecem de sit
 - [x] Modais que escurecem o fundo (escolha de cartas, revelar, cemitério/exílio, pilha, resultado): fundo com vinheta e desfoque leve da mesa, em vez de uma camada preta chapada; entrada animada.
 - [x] Nas escolhas de cartas, as cartas grandes e soltas sobre o fundo escuro, sem "caixa" em volta; título curto em cima e botões grandes embaixo, centralizados.
 - [x] Carta escolhida com brilho e leve elevação (como no Arena), em vez de só a borda.
-- [ ] Saída animada dos modais (hoje somem de uma vez quando a escolha é respondida).
+- [x] Saída animada dos modais (a janela de escolha respondida some com a vinheta e a caixa descendo um pouco).
 - [ ] Botões principais no estilo do Arena: forma, cor e brilho consistentes entre "OK", "Confirmar", "Passar" e "Fim de turno".
 - [ ] Revisar painéis menores (caixa de ação, seletor de ataque, barra de escolha recolhida) para seguir a mesma linguagem.
 - [ ] Conferir contraste e leitura no celular e com "reduzir movimento" do sistema.
@@ -86,15 +86,15 @@ Hoje as animações mostram o que aconteceu, mas são discretas e parecidas entr
 - [ ] Conjurar: a carta sai da mão, cresce no centro da mesa por um instante e vai para a pilha; ao resolver, desce até o campo (ou vai para o cemitério) com um leve impacto.
 - [ ] Ataque: criaturas avançam inclinadas na direção do defensor; no dano, um golpe rápido com tremor e o número de dano saltando no alvo.
 - [ ] Bloqueio: o bloqueador desliza até a frente do atacante, com a ligação entre os dois bem visível.
-- [ ] Dano e morte: carta treme e escurece ao receber dano letal, depois se desfaz em direção ao cemitério.
-- [ ] Vida do jogador: o número conta para cima ou para baixo, com cor e um pulso no retrato.
-- [ ] Terreno e fichas: entram com um "assentar" curto no campo; fichas aparecem com brilho.
-- [ ] Virar e desvirar com rotação suave e um pouco de peso, em vez de troca seca.
-- [ ] Gatilhos e habilidades: brilho na carta de origem e um feixe até o alvo, quando houver.
-- [ ] Manter o ritmo: nada pode segurar a vez do jogador; respeitar "reduzir movimento" do sistema e o modo acelerado.
+- [x] Dano e morte: carta treme e escurece ao receber dano letal, depois se desfaz em direção ao cemitério. (Feito no item 15, letal, e no item 16, destruída.)
+- [x] Vida do jogador: o número conta para cima ou para baixo, com cor e um pulso no retrato.
+- [x] Terreno e fichas: entram com um "assentar" curto no campo; fichas aparecem com brilho.
+- [x] Virar e desvirar com rotação suave e um pouco de peso, em vez de troca seca. (Feito no item 16.)
+- [x] Gatilhos e habilidades: brilho na carta de origem e um feixe até o alvo, quando houver. (Feito no item 16.)
+- [x] Manter o ritmo: nada pode segurar a vez do jogador; respeitar "reduzir movimento" do sistema e o modo acelerado.
 - [ ] Conferir desempenho no celular (sem travar com muitas cartas na mesa).
 
-## 9. Indicador de turno e fases no estilo do Arena
+## 9. Indicador de turno e fases no estilo do Arena ✅
 
 Feito numa versão compacta: trilha de ícones na linha do meio, nomes e etapa só no hover (e no texto para leitores de tela), cor pelo dono do turno e o botão de passar dizendo o destino. As paradas configuráveis ficaram de fora por enquanto.
 
@@ -121,6 +121,7 @@ A ideia é um cache que se forma **aos poucos, só com as imagens que alguém de
 - [ ] Sem importação em massa: nenhum job de pré-carga nem varredura dos bulk data do Scryfall. O cache cresce só com o uso real.
 - [ ] Respeitar o Scryfall: no máximo uma busca por imagem ainda não guardada, fila com limite de requisições por segundo, `User-Agent` identificado e reaproveitar a imagem já guardada mesmo se a busca falhar depois.
 - [ ] No frontend, trocar `cards.scryfall.io` pelo endereço do cache, com volta automática para o Scryfall se o cache estiver fora do ar.
+- [x] Dados das cartas (texto, tradução e endereços das imagens) guardados no IndexedDB em vez do localStorage, para não disputar espaço com os decks; o que estava no localStorage passa para lá sozinho.
 - [ ] No aparelho: regra de cache do service worker para as imagens (CacheFirst, com limite de quantidade e de idade), para quem já viu uma carta não baixar de novo nem pela CDN.
 - [ ] Limpeza: limite de espaço no servidor, removendo as imagens menos usadas; métricas de acerto do cache e de buscas ao Scryfall no painel do Grafana.
 - [ ] Conferir os termos de uso de imagens do Scryfall e da Wizards antes de publicar.
@@ -204,7 +205,7 @@ Fonte dos dados: cada dano chega como evento `damage` da ponte (um por fonte e a
 - [x] Som próprio para cura, veneno (e −1/−1), escudo e carta destruída; golpe e projétil usam os sons de impacto que já existiam.
 - [ ] Conferir desempenho no celular com combates grandes (muitas criaturas atacando ao mesmo tempo).
 
-## 16. Efeitos de movimento das permanentes no estilo do Arena
+## 16. Efeitos de movimento das permanentes no estilo do Arena ✅
 
 Hoje as permanentes só deslizam de um lugar para outro e piscam. No Arena, cada jeito de uma permanente mudar de estado ou sair do campo tem um movimento próprio, que diz o que aconteceu sem precisar ler o histórico.
 
@@ -219,7 +220,7 @@ Fonte dos dados: eventos `entered` e `left` da ponte (com `from` e `to`), o quad
 - [x] Habilidade ativada: a engrenagem ao lado da carta e um feixe dourado até cada alvo; se o custo for virar, a carta vira com o movimento de virar. Dados: `ability-activated` sem `trigger`, com `targets`. (A carta ainda não "se ergue".)
 - [x] Respeitar "reduzir movimento" e o modo acelerado; nada disso pode segurar a vez do jogador.
 
-## 17. Efeitos visuais contínuos nas permanentes
+## 17. Efeitos visuais contínuos nas permanentes ✅
 
 Hoje as palavras-chave aparecem como ícones pequenos na carta e só voar tem um efeito próprio (uma névoa embaixo da carta). No Arena, o que protege ou muda uma permanente fica visível o tempo todo: um brilho, uma moldura ou partículas que dizem "esta carta não pode ser alvo" ou "esta não morre" sem precisar abrir a carta.
 
@@ -236,13 +237,13 @@ Cuidados em todos: o efeito fica na borda e atrás da carta, nunca sobre o nome,
 - [x] Toque mortífero: fumaça verde-escura discreta na base da carta. Dados: `DEATHTOUCH`.
 - [x] Vínculo com a vida: brilho verde-claro pulsando devagar na borda. Dados: `LIFELINK`.
 - [x] Iniciativa e golpe duplo: um traço (ou dois) de lâmina no canto da carta. Dados: `FIRST_STRIKE`, `DOUBLE_STRIKE`.
-- [ ] Vigilância: olho discreto no canto; ao atacar, a carta continua de pé com um brilho rápido. Dados: `VIGILANCE`. (Por ora só o ícone de palavra-chave que já existia.)
+- [x] Vigilância: olho discreto na borda esquerda; ao atacar, a carta continua de pé e o olho dá um brilho rápido. Dados: `VIGILANCE`.
 - [x] Ímpeto e enjoo de invocação: criatura com enjoo levemente apagada no turno de quem a controla, com o "zZ" atual; com ímpeto, um brilho alaranjado na base enquanto ela ainda é nova. Dados: `sick`, `HASTE`.
 - [x] Defensor: moldura de muralha na base, sem brilho. Dados: `DEFENDER`.
 - [x] Ameaçar: borda vermelha serrilhada discreta. Dados: `MENACE`.
-- [ ] Atropelar: marca de pegadas no canto. Dados: `TRAMPLE`. (Por ora só o ícone de palavra-chave que já existia.)
+- [x] Atropelar: marca de pegadas na borda esquerda, abaixo do olho da vigilância. Dados: `TRAMPLE`.
 - [x] Fases fora (phasing): carta translúcida, com contorno tracejado, até voltar. Dados: `phasedOut`, exposto pela ponte.
-- [ ] Virada para baixo (morph, disfarce, manifestar): o verso já aparece e agora tem um selo "2/2" ✅; falta o tipo no selo ("Metamorfose", "Disfarce", "Manifestada"), que precisa vir da ponte. Dados: `faceDown`.
+- [x] Virada para baixo (morph, disfarce, manifestar, encobrir): o verso com o selo "Metamorfose 2/2", "Disfarce 2/2", "Manifestada 2/2" ou "Encoberta 2/2". Dados: `faceDown` e `faceDownKind`, exposto pela ponte.
 - [x] Fichas e cópias: fichas com borda prateada (além do selo "Ficha"); cópias com o selo "Cópia", que mostra o original ao passar o mouse. Dados: `token`, `copyOf`.
 - [x] Não pode atacar ou não pode bloquear: corrente cinza fina na base, e o leitor de tela diz qual dos dois. Dados: `cantAttack` / `cantBlock`, calculados pela ponte com as regras de combate do Forge.
 - [x] Encantada ou equipada: o leque de anexos atrás da carta (que já existia) faz a ligação, e a carta encantada ganha um brilho da cor da aura. Dados: `attachedTo` de quem está preso.
@@ -250,7 +251,7 @@ Cuidados em todos: o efeito fica na borda e atrás da carta, nunca sobre o nome,
 - [x] Prevenção de dano: selo "Prevenir 3" embaixo da carta enquanto o escudo durar. Dados: `preventDamage`, exposto pela ponte (também nos jogadores; o retrato ainda não mostra).
 - [x] Marcadores +1/+1 e −1/−1: brilho verde ou roxo fraco atrás da carta, além do número. Dados: `counters`.
 
-## 18. Laboratório de efeitos
+## 18. Laboratório de efeitos ✅
 
 Uma página de desenvolvimento para testar os efeitos dos itens 15, 16 e 17 na mesa de verdade, sem a ponte do Forge: `tests/fixtures/effects-lab.html` (abrir com `npm run dev`). Não é para o jogador e não entra nas novidades.
 
@@ -274,7 +275,7 @@ A ideia é limitar **por IP (e por conexão, quando fizer sentido)** cada ponto 
 - [ ] Busca de sala pelo código: limitar tentativas por IP para ninguém varrer os códigos até achar uma sala alheia.
 - [ ] Importar por link: poucas importações por minuto por IP, cache curto do mesmo link, e respeitar os limites do Moxfield e do Archidekt (fila com intervalo mínimo e `User-Agent` identificado).
 - [ ] Imagens (item 10): o limite de buscas ao Scryfall já previsto lá, mais um limite por IP no endpoint para não virar um jeito de forçar downloads.
-- [ ] Busca de cartas no construtor de decks: o aparelho já fala direto com a API do Scryfall; conferir que a busca espera o jogador parar de digitar e respeita os ~10 pedidos por segundo que o Scryfall pede.
+- [x] Busca de cartas no construtor de decks: o aparelho já fala direto com a API do Scryfall; conferido: a busca só sai ao enviar o formulário ou trocar um filtro (não a cada tecla), e todo pedido ao Scryfall passa por uma fila com 110 ms entre pedidos (~9 por segundo).
 - [ ] Mensagem para o jogador quando bater no limite ("Muitas tentativas, espere alguns segundos") em vez de erro genérico ou conexão caindo sem explicação.
 - [ ] Métricas no Grafana: pedidos recusados por limite, por ponto, e alertas quando um IP for bloqueado com frequência.
 - [ ] Testes: script que dispara conexões e mensagens em excesso e confere que o limite segura sem afetar uma partida normal rodando ao lado.
@@ -345,7 +346,7 @@ Em partidas com três ou mais jogadores (Commander), todos os oponentes dividem 
 
 Hoje cada jogador decide a mão inicial na sua vez, e em Commander com quatro pessoas a mesa espera uma de cada vez. A ideia é todos decidirem ao mesmo tempo (a regra permite: as decisões só são reveladas juntas). Fazer **só se a implementação for simples**.
 
-- [ ] Avaliação inicial (20/10/2026): não é simples. O próprio Forge faz o mulligan em sequência: o serviço de mulligan percorre os jogadores em ordem na thread da partida, e a escolha de cada humano trava essa thread até a resposta. Paralelizar exige substituir esse serviço por um nosso (pedir as decisões a todos os assentos de uma vez pela ponte, esperar todas e só então aplicar na ordem de turno), cuidando também do London (devolver cartas ao fundo), de quem cai no meio e da IA.
+- [x] Avaliação inicial (20/10/2026): não é simples. O próprio Forge faz o mulligan em sequência: o serviço de mulligan percorre os jogadores em ordem na thread da partida, e a escolha de cada humano trava essa thread até a resposta. Paralelizar exige substituir esse serviço por um nosso (pedir as decisões a todos os assentos de uma vez pela ponte, esperar todas e só então aplicar na ordem de turno), cuidando também do London (devolver cartas ao fundo), de quem cai no meio e da IA.
 - [ ] Alternativa mais barata, se quiser só reduzir a espera: mostrar a mão inicial a todos assim que as cartas são compradas, para cada um já ir pensando enquanto os anteriores decidem.
 
 ## 27. Arte da coleção mais recente nas cartas

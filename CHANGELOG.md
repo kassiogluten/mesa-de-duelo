@@ -6,6 +6,29 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.30.0] - 2026-10-21
+
+### Novo
+
+- **Vigilância e atropelar visíveis na carta.** Criaturas com vigilância ganham um olho e as com atropelar ganham pegadas, em selos pequenos na borda esquerda da carta. Ao atacar com vigilância, a carta continua de pé e o olho dá um brilho rápido.
+- **Vida contando.** Quando a vida de um jogador muda, o número conta até o novo valor, verde ao subir e vermelho ao descer, com um pulso no retrato.
+- **Tipo da carta virada para baixo.** O selo "2/2" das permanentes viradas para baixo agora diz como ela entrou assim: **Metamorfose**, **Disfarce**, **Manifestada** ou **Encoberta**.
+
+### Mudou
+
+- **Janelas de escolha saem com animação.** Ao responder, a janela some aos poucos em vez de desaparecer de uma vez.
+- **Botão Jogar sempre à vista no celular.** Na tela inicial, o deck escolhido e o botão **Jogar** ficam presos no rodapé, em pé ou deitado. Antes era preciso escolher o deck lá embaixo na lista e voltar para o topo para começar a partida; deitado, o botão nem aparecia na tela.
+- **Detalhes da carta melhores no celular deitado.** Ao ampliar uma carta, a imagem ocupa a altura toda da tela à esquerda, e o nome, o texto e os detalhes ficam ao lado. Antes, o título largo em cima empurrava a carta para fora da tela.
+- **Mais espaço para os seus decks.** As informações das cartas que o jogo guarda no aparelho (texto, tradução e imagens a mostrar) agora ficam num armazenamento separado, sem disputar espaço com os decks salvos. As que já estavam guardadas passam para lá sozinhas na primeira vez que você abrir o jogo.
+- **Cores do deck sobre a arte.** Na escolha de deck da tela inicial e em **Meus decks**, os símbolos das cores ficam no canto inferior esquerdo da imagem do deck, num selo com fundo desfocado, deixando o nome e a quantidade de cartas mais limpos embaixo. Em **Meus decks**, a etiqueta "Seu deck" ou "Deck pronto" foi para o canto de cima.
+- **Permanentes assentam ao entrar.** Terrenos e outras permanentes dão um pequeno "assentar" quando chegam ao campo, e fichas surgem com um brilho.
+
+Tudo isso fica parado com "reduzir movimento" do sistema.
+
+### Corrigido
+
+- **Filtros de Meus decks no celular.** Em pé, os rótulos "Buscar deck" e "Formato" ficavam um sobre o outro e o campo de busca ficava espremido. Agora a busca ocupa a linha toda, com o formato e as cores embaixo.
+
 ## [0.29.1] - 2026-10-21
 
 ### Corrigido
