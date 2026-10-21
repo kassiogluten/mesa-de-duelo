@@ -16,8 +16,6 @@ export interface ScryCard {
   rarity?: string;
   legalities?: Record<string, 'legal' | 'not_legal' | 'restricted' | 'banned'>;
   fetchedAt?: number;
-  /** Preço em dólar da impressão que o Scryfall devolve (TCGplayer); null quando não tem preço, ausente em cache antigo. */
-  usd?: number | null;
   layout: string;
   mana_cost?: string;
   type_line: string;
@@ -107,15 +105,6 @@ function slimPt(c: any): ScryCard['pt'] {
   };
 }
 
-/** Preço normal; sem ele, o foil ou o etched (cartas que só saíram assim). */
-function price(p: any): number | null {
-  for (const key of ['usd', 'usd_foil', 'usd_etched']) {
-    const n = Number(p?.[key]);
-    if (p?.[key] != null && Number.isFinite(n) && n >= 0) return n;
-  }
-  return null;
-}
-
 function slim(c: any): ScryCard {
   const pt = c.lang === 'pt';
   const faces: any[] = Array.isArray(c.card_faces) ? c.card_faces : [];
@@ -128,7 +117,6 @@ function slim(c: any): ScryCard {
     rarity: c.rarity,
     legalities: c.legalities,
     fetchedAt: Date.now(),
-    usd: price(c.prices),
     layout: c.layout,
     mana_cost: c.mana_cost ?? faces[0]?.mana_cost,
     type_line: c.type_line,
@@ -206,49 +194,23 @@ async function addPortuguese(cards: ScryCard[]) {
   }
 }
 
-/**
- * A impressão que o /cards/collection devolve às vezes não tem preço (terreno básico de coleção nova, promo).
- * Para essas, o preço vem da impressão mais barata que tem preço, em lotes de buscas `prefer:usd-low`.
- */
-async function addPrices(cards: ScryCard[]) {
-  const todo = cards.filter(c => c.usd === null);
-  for (let i = 0; i < todo.length; i += 30) {
-    const chunk = todo.slice(i, i + 30);
-    const q = `(${chunk.map(c => `!"${c.name.replace(/"/g, '')}"`).join(' or ')}) (usd>=0 or usdfoil>=0) prefer:usd-low`;
-    try {
-      const { status, json } = await request(`/cards/search?q=${encodeURIComponent(q)}&unique=cards`);
-      const found = new Map<string, number | null>((status === 404 ? [] : json?.data ?? []).map((d: any) => [d.name.toLowerCase(), price(d.prices)]));
-      for (const c of chunk) {
-        const usd = found.get(c.name.toLowerCase());
-        if (typeof usd === 'number') { c.usd = usd; cachePut(c); }
-      }
-    } catch { /* sem rede: fica sem preço até a próxima atualização */ }
-  }
-}
-
 /** Busca cartas pelo nome exato. A chave do mapa é o nome em minúsculas. */
 export async function fetchByNames(names: string[], refreshLegality = false): Promise<Map<string, ScryCard>> {
   const out = new Map<string, ScryCard>();
-  const missing: string[] = [], fetched: ScryCard[] = [];
+  const missing: string[] = [];
   for (const n of new Set(names)) {
     const c = cacheGet(n);
-    // Legalidade e preço são do dia e vêm na mesma busca; cache de antes do preço também é buscado de novo.
-    if (c && (!refreshLegality || (legalityFresh(c) && c.usd !== undefined))) out.set(n.toLowerCase(), c); else missing.push(n);
+    if (c && (!refreshLegality || legalityFresh(c))) out.set(n.toLowerCase(), c); else missing.push(n);
   }
   for (let i = 0; i < missing.length; i += 75) {
     const chunk = missing.slice(i, i + 75);
     const { json } = await request('/cards/collection', { identifiers: chunk.map(name => ({ name: lookupName(name) })) });
     for (const d of json?.data ?? []) {
-      const s = slim(d), old = cacheGet(s.name);
-      // Atualizar legalidade e preço não precisa buscar de novo a impressão em português.
-      if (old?.ptChecked && old.name === s.name) { s.pt = old.pt; s.ptChecked = true; }
+      const s = slim(d);
       cachePut(s);
-      fetched.push(s);
       out.set(s.name.toLowerCase(), s);
     }
   }
-  // Só as recém-buscadas: carta sem preço em nenhuma impressão não gera uma busca a cada tela.
-  await addPrices(fetched);
   await addPortuguese([...out.values()]);
   return out;
 }

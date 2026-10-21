@@ -38,7 +38,7 @@ export function openDeckPreview(deck: DeckData, opts: DeckPreviewOptions) {
     show(inspected ?? deck.cards.find(e => cacheGet(e.name))?.name);
   }
   render();
-  fetchByNames(deckEntries(deck).map(e => e.name), true).then(() => { if (dlg.open) render(); }).catch(() => {
+  fetchByNames(deckEntries(deck).map(e => e.name)).then(() => { if (dlg.open) render(); }).catch(() => {
     if (dlg.open) { const p = document.createElement('p'); p.className = 'dw-error'; p.textContent = 'Algumas cartas não puderam ser carregadas. A lista continua disponível.'; dlg.querySelector('.dp-body')?.prepend(p); }
   });
   const hover = (e: Event) => { const card = (e.target as HTMLElement).closest<HTMLElement>('[data-card]'); if (card) show(card.dataset.card); };

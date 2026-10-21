@@ -355,4 +355,3 @@ Hoje a imagem de cada carta é a da impressão que o Scryfall devolve na busca p
 - [ ] Escolher a impressão com uma busca `!"Nome" unique=prints order=released dir=desc`, filtrando `border_color:borderless` primeiro e depois `frame_effects` vazio, sem `promo`, `digital` ou `oversized`.
 - [ ] Fazer isso em lote, sem uma busca por carta: o `/cards/collection` aceita `set` + `collector_number`, então dá para guardar a impressão escolhida no cache e só refazer a escolha de tempos em tempos.
 - [ ] Manter a impressão em português quando ela existe para a mesma coleção; se a tradução for de uma coleção antiga, decidir entre arte nova em inglês ou arte antiga em português.
-- [ ] O preço estimado do deck usa a mesma impressão; com a arte escolhida, ele passa a refletir essa versão (borderless costuma custar mais). Talvez separar: arte da impressão escolhida, preço da mais barata.
