@@ -27,11 +27,20 @@ public class StaleAttackActionTest {
         command.addProperty("type", type); command.addProperty("gen", generation); return command;
     }
 
+    /** Since 0.22.0 every ignored action first goes to the match errors panel as a diagnostic. */
+    private static void diagnostic(EmbeddedChannel channel, String action) { frame(channel, "diagnostic", action); }
+
+    /** Attack commands then get the explicit error that releases the client's attack queue. */
     private static void error(EmbeddedChannel channel, String action) {
+        diagnostic(channel, action);
+        frame(channel, "error", action);
+    }
+
+    private static void frame(EmbeddedChannel channel, String type, String action) {
         TextWebSocketFrame frame = channel.readOutbound(); assertNotNull("Explicit rejection releases the client queue", frame);
         try {
             JsonObject json = JsonParser.parseString(frame.text()).getAsJsonObject();
-            assertEquals("error", json.get("type").getAsString());
+            assertEquals(type, json.get("type").getAsString());
             assertEquals("stale-action", json.get("code").getAsString());
             assertEquals(action, json.get("action").getAsString());
         } finally { frame.release(); }
@@ -51,7 +60,9 @@ public class StaleAttackActionTest {
                 session.onClientMessage(session.seats[0], channel, action, missing); error(channel, action);
                 session.onClientMessage(session.seats[0], channel, action, command(action, 0)); error(channel, action);
             }
+            // Other stale actions are only logged for the errors panel: no error that would interrupt the player.
             session.onClientMessage(session.seats[0], channel, "ok", command("ok", -1));
+            diagnostic(channel, "ok");
             assertNull(channel.readOutbound());
         } finally { channel.finishAndReleaseAll(); }
     }

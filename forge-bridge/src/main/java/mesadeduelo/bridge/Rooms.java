@@ -337,6 +337,7 @@ final class Rooms implements BridgeServer.Listener {
             s.markDirty(); expireIfAbandoned(s); return;
         }
         if (seat != null) {
+            seat.conceded = true;
             s.abandon(seat);
             seat.channel = null;
             seat.rematch = false;

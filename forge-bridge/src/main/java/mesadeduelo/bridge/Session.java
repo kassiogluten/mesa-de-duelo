@@ -89,6 +89,12 @@ final class Session {
     private volatile HostedMatch match;
     private volatile MatchLifecycle lifecycle = new MatchLifecycle();
 
+    /** Votação aberta para pular o turno de quem caiu, e os assentos com o turno já aprovado para pular. */
+    private SkipVote skipVote;
+    private final Set<Integer> skipApproved = new java.util.HashSet<>();
+    /** Assentos aprovados cujo turno já começou: quando o turno passar para outro, a aprovação acaba. */
+    private final Set<Integer> skipTurnStarted = new java.util.HashSet<>();
+
     private record Question(int id, ProtocolMethod method, Object[] args, List<Object> options,
                             CompletableFuture<Object> answer, JsonObject json) { }
 
@@ -351,7 +357,8 @@ final class Session {
                 });
                 markDirty();
             }
-            case "concede" -> concede(seat);
+            case "skip-vote" -> voteSkip(seat, msg);
+            case "concede" -> { if (isRoom()) seat.conceded = true; concede(seat); }
             case "attack" -> {
                 int attacker = exactInt(msg.get("attacker")), defender = exactInt(msg.get("defender"));
                 String kind = MatchConfig.string(msg, "defenderKind");
@@ -811,12 +818,152 @@ final class Session {
         return arr;
     }
 
+    // ---------- Pular o turno de quem caiu ----------
+
+    /** Assentos que podem votar agora: conectados, ainda no jogo e diferentes do alvo. */
+    private Set<Integer> skipVoters(int target) {
+        Set<Integer> voters = new java.util.LinkedHashSet<>();
+        for (Seat each : seats) if (each.index != target && each.channel != null && each.me != null && !each.eliminated()) voters.add(each.index);
+        return voters;
+    }
+
+    private Seat seatOfPlayer(int playerId) {
+        for (Seat each : seats) if (each.me != null && each.me.getId() == playerId) return each;
+        return null;
+    }
+
+    /** {type:"skip-vote", target: id do jogador, value: true|false}. Abre a votação ou registra o voto. */
+    private void voteSkip(Seat voter, JsonObject msg) {
+        if (!isRoom() || !started() || !"playing".equals(matchPhase) || voter.channel == null || voter.eliminated()) return;
+        if (!msg.has("target")) return;
+        Seat target = seatOfPlayer(exactInt(msg.get("target")));
+        if (target == null || target == voter || target.channel != null || target.eliminated() || target.departed) {
+            voter.send(toast("error", "Só dá para votar para pular o turno de um jogador desconectado.")); return;
+        }
+        boolean value = !msg.has("value") || msg.get("value").getAsBoolean();
+        synchronized (skipApproved) {
+            if (skipApproved.contains(target.index)) return;
+            if (skipVote != null && skipVote.target != target.index) {
+                voter.send(toast("error", "Já há uma votação aberta. Espere ela terminar.")); return;
+            }
+            boolean opened = skipVote == null;
+            if (opened) skipVote = new SkipVote(target.index);
+            skipVote.vote(voter.index, value);
+            if (opened) for (Seat each : seats) if (each != voter && each != target)
+                each.send(toast("toast", voter.name + " abriu uma votação para pular o turno de " + target.name + "."));
+            settleSkipVote();
+        }
+        markDirty();
+    }
+
+    /** Fecha a votação se já há maioria (ou se ela ficou impossível). Chamado com o lock de skipApproved. */
+    private void settleSkipVote() {
+        if (skipVote == null) return;
+        Seat target = seats[skipVote.target];
+        if (target.channel != null) { skipVote = null; return; }
+        SkipVote.Result r = skipVote.result(skipVoters(skipVote.target));
+        if (r == SkipVote.Result.OPEN) return;
+        skipVote = null;
+        if (r == SkipVote.Result.APPROVED) {
+            skipApproved.add(target.index);
+            broadcast(toast("toast", "Aprovado: o turno de " + target.name + " será pulado."));
+        } else broadcast(toast("toast", "A votação para pular o turno de " + target.name + " não passou."));
+    }
+
+    private void broadcast(String message) { for (Seat each : seats) each.send(message); }
+
+    /** A cada tick: quem voltou cancela tudo; quem foi aprovado tem o turno passado pela ponte. */
+    private void tickSkips() {
+        if (!isRoom()) return;
+        boolean changed = false;
+        synchronized (skipApproved) {
+            if (skipVote != null) {
+                SkipVote before = skipVote;
+                settleSkipVote();
+                changed |= skipVote != before;
+            }
+            if (skipApproved.isEmpty()) { if (changed) markDirty(); return; }
+            HostedMatch m = match;
+            GameView gv = m == null ? null : m.getGameView();
+            PlayerView active = gv == null ? null : gv.getPlayerTurn();
+            for (Integer index : List.copyOf(skipApproved)) {
+                Seat seat = seats[index];
+                boolean back = seat.channel != null, gone = seat.eliminated() || gv == null || gv.isGameOver();
+                boolean theirTurn = active != null && seat.me != null && active.getId() == seat.me.getId();
+                if (theirTurn) skipTurnStarted.add(index);
+                boolean turnOver = skipTurnStarted.contains(index) && !theirTurn;
+                if (back || gone || turnOver) {
+                    skipApproved.remove(index); skipTurnStarted.remove(index); changed = true;
+                    if (turnOver && !back && !gone) broadcast(toast("toast", "O turno de " + seat.name + " foi pulado."));
+                    if (back) broadcast(toast("toast", seat.name + " voltou e joga normalmente."));
+                    continue;
+                }
+                autopilot(seat);
+            }
+        }
+        if (changed) markDirty();
+    }
+
+    /**
+     * Passa a vez pelo jogador desconectado, sem jogar nada: responde perguntas com a escolha padrão, passa a
+     * prioridade, não ataca nem bloqueia e, na limpeza, descarta as primeiras cartas que o Forge oferecer.
+     */
+    private void autopilot(Seat seat) {
+        Question q = seat.question;
+        if (q != null) { if (!q.answer().isDone()) q.answer().complete(defaultAnswer(q)); return; }
+        if (!(seat.controller() instanceof PlayerControllerHuman human)) return;
+        Object input = human.getInputQueue().getInput();
+        if (input == null) return;
+        int gen = seat.inputGen.get();
+        long now = System.currentTimeMillis();
+        if (seat.autopilotGen == gen && now - seat.autopilotAt < 1200) return;
+        seat.autopilotGen = gen; seat.autopilotAt = now;
+        if (input instanceof InputPayMana) { if (seat.cancelEnabled) seat.onEdt(gen, IGameController::selectButtonCancel); return; }
+        boolean passes = input instanceof InputPassPriority || input instanceof InputAttack || input instanceof InputBlock
+            || input instanceof InputConfirm || input instanceof InputConfirmMulligan;
+        if (!passes && !seat.okEnabled && !seat.selectable.isEmpty()) {
+            CardView cv = findCard(seat, seat.selectable.iterator().next());
+            if (cv != null) { seat.onEdt(gen, c -> c.selectCard(cv, null, null)); return; }
+        }
+        if (seat.okEnabled) seat.onEdt(gen, IGameController::selectButtonOk);
+        else if (seat.cancelEnabled) seat.onEdt(gen, IGameController::selectButtonCancel);
+    }
+
+    /** Para a mesa: a votação aberta, como está e o voto deste assento; e quem já tem o turno aprovado para pular. */
+    private JsonObject skipJson(Seat seat) {
+        if (!isRoom()) return null;
+        synchronized (skipApproved) {
+            if (skipVote == null && skipApproved.isEmpty()) return null;
+            JsonObject o = new JsonObject();
+            if (skipVote != null) {
+                Seat target = seats[skipVote.target];
+                Set<Integer> voters = skipVoters(skipVote.target);
+                JsonObject v = new JsonObject();
+                if (target.me != null) v.addProperty("target", target.me.getId());
+                v.addProperty("name", target.name);
+                v.addProperty("yes", skipVote.yes.size());
+                v.addProperty("no", skipVote.no.size());
+                v.addProperty("voters", voters.size());
+                v.addProperty("needed", SkipVote.needed(voters.size()));
+                v.addProperty("canVote", voters.contains(seat.index));
+                if (skipVote.yes.contains(seat.index)) v.addProperty("mine", "yes");
+                else if (skipVote.no.contains(seat.index)) v.addProperty("mine", "no");
+                o.add("vote", v);
+            }
+            JsonArray skipping = new JsonArray();
+            for (Integer index : skipApproved) if (seats[index].me != null) skipping.add(seats[index].me.getId());
+            o.add("skipping", skipping);
+            return o;
+        }
+    }
+
     // ---------- Publicação do estado ----------
 
     void markDirty() { stateVersion.incrementAndGet(); dirty.set(true); }
 
     /** Chamado pelo publicador de {@link Rooms} a cada 50 ms. */
     void tick() {
+        tickSkips();
         // Se o Forge não abriu um prompt novo depois do clique, os botões voltam a funcionar.
         for (Seat seat : seats) if (seat.lockedAtLastFlush && !seat.buttonsLocked()) dirty.set(true);
         if (!dirty.getAndSet(false)) return;
@@ -1000,6 +1147,8 @@ final class Session {
         if ("sideboarding".equals(matchPhase) && seat.registered != null) state.add("sideboarding", sideboardingJson(seat));
         state.add("session", sessionJson(seat));
         if (isRoom()) state.add("room", roomJson(seat));
+        JsonObject skip = skipJson(seat);
+        if (skip != null) state.add("skip", skip);
         JsonArray decks = new JsonArray();
         Decks.LISTS.keySet().forEach(decks::add);
         state.add("decks", decks);
@@ -1032,6 +1181,8 @@ final class Session {
             p.addProperty("seat", s.index);
             p.addProperty("playerId", s.me == null ? null : s.me.getId());
             p.addProperty("eliminated", s.eliminated());
+            // Desistiu (pelo menu ou saindo da sala): a mesa tira o jogador de vista, em vez de mostrar o assento eliminado.
+            if (s.conceded && s.eliminated()) p.addProperty("conceded", true);
             p.addProperty("name", s.name);
             p.addProperty("connected", s.channel != null);
             p.addProperty("rematch", s.rematch);
@@ -1085,6 +1236,8 @@ final class Session {
         volatile Deck deck;
         volatile boolean rematch;
         volatile boolean departed;
+        /** Desistiu deste jogo (no Commander com vários jogadores, a mesa tira o assento de vista). */
+        volatile boolean conceded;
         private volatile RegisteredPlayer registered;
         private volatile Deck approvedDeck;
         private volatile boolean sideboardReady;
@@ -1116,6 +1269,9 @@ final class Session {
          */
         private final AtomicInteger inputGen = new AtomicInteger();
         private volatile int consumedGen = -1;
+        /** Última ação da ponte por este assento quando o turno dele está sendo pulado (uma por versão do prompt). */
+        private volatile int autopilotGen = -1;
+        private volatile long autopilotAt;
         private volatile long consumedAt;
         private static final long CONSUMED_TIMEOUT_MS = 1500;
         private volatile boolean lockedAtLastFlush;
@@ -1135,7 +1291,7 @@ final class Session {
         void send(String json) { BridgeServer.send(channel, json); }
 
         private void reset() {
-            clearInput(); rematch = false; question = null; approvedDeck = null; sideboardReady = false; sentEventCursor = 0;
+            clearInput(); rematch = false; conceded = false; question = null; approvedDeck = null; sideboardReady = false; sentEventCursor = 0;
             inputGen.incrementAndGet(); consumedGen = -1;
         }
 

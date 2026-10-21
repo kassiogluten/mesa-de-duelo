@@ -169,8 +169,12 @@ export interface FRoom {
   config: MatchConfig;
   rulesVersion?: string;
   engineVersion?: string;
-  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean }[];
+  /** conceded: desistiu (pelo menu ou saindo da sala); a mesa tira o assento de vista. */
+  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean }[];
 }
+
+export interface FSkipVote { target: number; name: string; yes: number; no: number; voters: number; needed: number; canVote: boolean; mine?: 'yes' | 'no' }
+export interface FSkip { vote?: FSkipVote; skipping: number[] }
 
 export interface FState {
   type: 'state';
@@ -228,6 +232,8 @@ export interface FState {
   /** Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. */
   deciding?: { player: number; kind: 'choice' | 'attack' | 'block' }[];
   room?: FRoom;
+  /** Em rede: votação para pular o turno de quem caiu e os jogadores com o turno já aprovado para pular. */
+  skip?: FSkip;
   /** Para voltar a esta partida se a conexão cair: {type:"rejoin", code, token}. */
   session?: { code: string; token: string; room: boolean };
   decks: string[];
@@ -257,6 +263,7 @@ export type ClientMessage =
   | { type: 'player'; id: number; gen?: number }
   | { type: 'mana'; color: string; gen?: number }
   | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
+  | { type: 'skip-vote'; target: number; value?: boolean }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string };
 
 /**

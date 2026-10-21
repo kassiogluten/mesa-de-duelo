@@ -1,0 +1,30 @@
+/* Faixa de quem caiu, abaixo da barra do topo: quem é, o voto aberto e o botão para votar. */
+.forge .skip-bar { position: absolute; z-index: 30; top: calc(var(--top-band, 64px) + env(safe-area-inset-top, 0px) + 6px); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; width: min(560px, calc(100vw - 24px)); pointer-events: none; }
+.forge .skip-bar[hidden] { display: none; }
+.forge.multiplayer .skip-bar { top: calc(var(--seat-header, 114px) + 6px); }
+.skip-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; border-radius: 12px; border: 1px solid #ec5a3f66; background: #1b0f12f0; box-shadow: 0 8px 24px #0009; color: var(--ink); pointer-events: auto; }
+.skip-row.vote { border-color: #f2b54c88; background: #1b170ef2; }
+.skip-row.approved { border-color: #59b5ff66; background: #0d1828f0; }
+.skip-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; font: 600 13px/1.3 var(--body); }
+.skip-text small { color: var(--muted); font-weight: 500; font-size: 12px; }
+.skip-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.skip-row .arena-btn { flex-shrink: 0; padding: 7px 12px; font-size: 12px; }
+.skip-note { color: var(--muted); font-size: 12px; }
+@media (max-height: 500px), (max-width: 760px) {
+  .forge .skip-bar { top: calc(58px + env(safe-area-inset-top, 0px) + 4px); width: min(480px, calc(100vw - 16px)); }
+  .skip-row { padding: 6px 8px 6px 10px; gap: 8px; }
+  .skip-text small { display: none; }
+}
+
+/* Commander com vários jogadores: a linha livre do topo, ao lado do menu, para não cobrir os assentos. */
+.forge.multiplayer .skip-bar { top: max(4px, env(safe-area-inset-top, 0px)); left: auto; right: 12px; transform: none; width: min(560px, calc(100vw - 140px)); }
+.forge.multiplayer .skip-row { min-height: 36px; padding: 3px 4px 3px 12px; }
+.forge.multiplayer .skip-text { flex-direction: row; align-items: baseline; gap: 8px; white-space: nowrap; overflow: hidden; }
+.forge.multiplayer .skip-text small { overflow: hidden; text-overflow: ellipsis; }
+.forge.multiplayer .skip-row .arena-btn { padding: 5px 10px; }
+@media (max-height: 500px), (max-width: 760px) {
+  .forge.multiplayer .skip-bar { top: max(2px, env(safe-area-inset-top, 0px)); width: calc(100vw - 120px); }
+  .forge.multiplayer .skip-row { min-height: 0; padding: 2px 3px 2px 10px; }
+  /* A linha dos assentos começa logo abaixo: botões de 34 px cabem no espaço livre do topo. */
+  .forge.multiplayer .skip-row .arena-btn { min-height: 34px; padding: 4px 12px; }
+}

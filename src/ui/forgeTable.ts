@@ -22,6 +22,8 @@ import type { DeckEntry } from '../decks';
 import { passLabel, phaseHudHTML, turnBannerText } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
+import { skipBarHTML } from './skipVote';
+import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText } from './playerCounters';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
@@ -110,6 +112,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       </button>
       <ul class="match-bar" id="fMatchBar" aria-label="Partida"></ul>
     </div>
+    <div class="skip-bar" id="fSkipBar" aria-live="polite" hidden></div>
     <nav class="menu game-menu" id="fMenu" aria-label="Menu da partida" hidden>
       <div class="game-menu-meta"><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
       <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">Registro</button>
@@ -1496,7 +1499,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const visual = stateWithFrame(s, displayFrame);
     trackPlayerCounters(visual.players);
     syncAttackChoice(s);
-    const { me, opponents } = tablePlayers(visual);
+    const { me, opponents: seated } = tablePlayers(visual);
+    // Quem desistiu sai da mesa: o Forge já tirou as cartas dessa pessoa do jogo, e o assento vazio só ocuparia espaço.
+    const conceded = new Set((s.room?.players ?? []).filter(p => p.conceded && p.playerId !== undefined).map(p => p.playerId!));
+    const remaining = seated.filter(p => !conceded.has(p.id));
+    const opponents = remaining.length ? remaining : seated;
     const opp = opponents[0];
     const multiplayer = visual.players.length > 2;
     const arena = root.querySelector<HTMLElement>('.arena')!;
@@ -1653,6 +1660,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fSeries').textContent = s.match ? `Jogo ${s.match.gameNumber} · ${s.match.wins.join(' × ')}` : '';
     // Na barra do topo ficam formato, sala, placar e quem caiu; no Commander com vários jogadores a faixa é dos assentos e isso fica no menu.
     setHTML($('#fMatchBar'), multiplayer ? '' : matchBarHTML(s));
+    const skipBar = skipBarHTML(s);
+    setHTML($('#fSkipBar'), skipBar);
+    $('#fSkipBar').hidden = !skipBar;
     $('#fMatchBar').hidden = multiplayer;
     root.querySelector('.game-menu-meta')!.classList.toggle('in-bar', !multiplayer);
 
@@ -1953,6 +1963,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       render();
       return;
     }
+    const skip = t.closest<HTMLElement>('[data-skip-vote]');
+    if (skip) { client.send({ type: 'skip-vote', target: Number(skip.dataset.skipVote), value: skip.dataset.value !== 'false' }); return; }
     const openQuestion = client.state?.question;
     if (openQuestion && isCombatDamage(openQuestion)) {
       const step = t.closest<HTMLElement>('[data-cd-add],[data-cd-sub],[data-cd-lethal]');

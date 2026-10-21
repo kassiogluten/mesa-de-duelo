@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.28.0] - 2026-10-20
+
+### Novo
+
+- **Votação para pular o turno de quem caiu.** Numa sala, quando alguém perde a conexão, aparece uma faixa avisando quem caiu, com o botão **Votar para pular o turno**. Só votam os jogadores que estão online, e a votação passa com a maioria deles (sozinho online, o seu voto decide). Cada um responde **Sim** ou **Não** e vê a contagem. Aprovada, a mesa passa a vez no lugar da pessoa desconectada, sem jogar nada, sem atacar e sem bloquear, até o fim do turno dela. Se ela voltar antes, joga normalmente.
+
+### Mudou
+
+- **Quem desiste sai da mesa.** No Commander com vários jogadores, quem desiste (pelo menu ou saindo da sala) some da mesa: as cartas dessa pessoa já saíam do jogo, e agora o assento vazio também deixa de aparecer, abrindo espaço para os outros. Quem perde jogando continua com o assento à vista, marcado como eliminado.
+
 ## [0.27.0] - 2026-10-20
 
 ### Novo

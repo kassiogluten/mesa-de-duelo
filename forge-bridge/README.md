@@ -103,7 +103,7 @@ Permanentes trazem, quando se aplicam: `ward` (custo da proteção contra alvos,
 
 A perda de vida pelo dano vem depois, em `life-changed` (o Forge tira a vida de todos de uma vez); o ganho do vínculo com a vida vem como `life-changed` positivo do controlador logo depois do dano da fonte.
 
-Também chegam `{type:"toast", text}` com mensagens do Forge e `{type:"error", text}` quando um comando falha. Quando a ponte ignora uma ação vencida (pedido que já mudou, clique duplo), chega `{type:"diagnostic", code:"stale-action", action, text}`: a mesa não mostra aviso, só registra no painel "Erros da partida". Em rede chega `{type:"room", room}` ao criar, entrar ou voltar para uma sala, com o mesmo formato do campo `room`.
+Também chegam `{type:"toast", text}` com mensagens do Forge e `{type:"error", text}` quando um comando falha. Quando a ponte ignora uma ação vencida (pedido que já mudou, clique duplo), chega `{type:"diagnostic", code:"stale-action", action, text}`: a mesa não mostra aviso, só registra no painel "Erros da partida". Em `room.players`, `conceded: true` marca quem desistiu da partida (a mesa tira o assento de vista). Em rede chega `{type:"room", room}` ao criar, entrar ou voltar para uma sala, com o mesmo formato do campo `room`.
 
 A mão do oponente vai só como contagem, as perguntas vão só para quem precisa responder, e um clique numa carta da mão do outro jogador é ignorado.
 
@@ -122,6 +122,7 @@ A mão do oponente vai só como contagem, as perguntas vão só para quem precis
 | `{type:"ok"}` / `{type:"cancel"}` | Os dois botões do Forge; os rótulos vêm em `input`. |
 | `{type:"pass-turn", gen}` | Passa até o fim do turno (o "Fim de turno" da mesa). |
 | `{type:"resolve-all", gen}` | Passa até a pilha esvaziar. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão sua. |
+| `{type:"skip-vote", target, value}` | Em sala, vota para pular o turno do jogador desconectado `target` (id do jogador); `value: false` vota não. Só votam os conectados (menos o alvo), e passa com a maioria. Aprovado, a ponte passa a vez desse jogador sem jogar nada até o fim do turno dele, ou até ele voltar. O estado traz `skip: {vote?: {target, name, yes, no, voters, needed, canVote, mine?}, skipping: [ids]}`. |
 | `{type:"concede"}` | Desiste da partida. |
 | `{type:"answer", ...}` | Responde à `question` aberta. |
 
