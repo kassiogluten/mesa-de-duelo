@@ -15,8 +15,8 @@ services:
       dockerfile: forge-bridge/Dockerfile
     environment:
       - JAVA_OPTS=${JAVA_OPTS:--Xmx2g}
-      # Senha da área de admin (/admin): sem ela, a área fica desligada.
-      - MESA_ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      # Senha da área de admin (/admin), em ADMIN_PASSWORD ou MESA_ADMIN_PASSWORD no Coolify: sem ela, a área fica desligada.
+      - MESA_ADMIN_PASSWORD=${MESA_ADMIN_PASSWORD:-${ADMIN_PASSWORD:-}}
     expose:
       - "7171"
     volumes:
