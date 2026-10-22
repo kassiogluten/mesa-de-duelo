@@ -8,12 +8,14 @@ Esforço: **P** (poucas horas), **M** (um ou dois dias), **G** (vários dias ou 
 
 ## Correções e robustez
 
-### S1. Cache de cartas no localStorage perto do limite · Correção · M
+### S1. Cache de cartas no localStorage perto do limite · Correção · M · em parte ✅
 
 O cache do Scryfall guarda cada carta no `localStorage` (`scry:v1:…`), uma chave pelo nome e outra para cada face. Com os 58 decks prontos são cerca de 2.650 chaves. O navegador dá uns 5 MB por site, e quando enche o `cachePut` falha sem avisar. A partir daí as cartas novas são buscadas de novo a cada tela, as imagens e traduções somem do cache e os decks salvos (que dividem o mesmo espaço) correm risco.
 
-- [ ] Medir o tamanho atual do cache com todos os decks prontos abertos.
-- [ ] Mover o cache de cartas para o IndexedDB (sem limite prático) e deixar o `localStorage` só para decks e preferências.
+Aceita em parte e feita na v0.30.0 (registrada no item 10 do `ROADMAP.md`): o cache foi para o IndexedDB e as cartas antigas migram sozinhas. Sem o limite de 5 MB, a medição perdeu o sentido. Ficam as duas otimizações abaixo.
+
+- [x] ~~Medir o tamanho atual do cache com todos os decks prontos abertos.~~ Desnecessário depois da mudança para o IndexedDB.
+- [x] Mover o cache de cartas para o IndexedDB (sem limite prático) e deixar o `localStorage` só para decks e preferências.
 - [ ] Guardar as faces como apelido (só o nome da carta inteira) em vez de cópias completas.
 - [ ] Limpar cartas que não aparecem em nenhum deck há muito tempo.
 
