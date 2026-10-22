@@ -302,8 +302,10 @@ export async function searchCards(q: string, page = 1, format?: 'free' | 'pauper
  * Confere nomes digitados ou colados contra o Scryfall e devolve o nome oficial (em inglês) de cada um.
  * Aceita a face da frente de cartas de duas faces e, para o que não achar, tenta o nome impresso
  * em outros idiomas (ex.: "Golpe Relampejante"). A chave do mapa é o nome de entrada em minúsculas.
+ * Um nome impresso que serve para mais de uma carta ("Expulsar" é Cast Out e Expel) não é resolvido:
+ * vai para `ambiguous` com as opções, para o jogador escolher em vez de ficar com a primeira.
  */
-export async function resolveCardNames(names: string[]): Promise<{ found: Map<string, string>; missing: string[] }> {
+export async function resolveCardNames(names: string[]): Promise<{ found: Map<string, string>; missing: string[]; ambiguous: { name: string; options: string[] }[] }> {
   const found = new Map<string, string>();
   const todo: string[] = [];
   for (const n of new Set(names)) {
@@ -323,11 +325,15 @@ export async function resolveCardNames(names: string[]): Promise<{ found: Map<st
     for (const n of chunk) { const hit = byName.get(n.toLowerCase()); if (hit) found.set(n.toLowerCase(), hit); }
   }
   const missing: string[] = [];
+  const ambiguous: { name: string; options: string[] }[] = [];
   for (const n of todo.filter(n => !found.has(n.toLowerCase()))) {
     try {
       const r = await searchCards(`!"${n.replace(/"/g, '')}"`);
-      if (r.cards[0]) found.set(n.toLowerCase(), r.cards[0].name); else missing.push(n);
+      const options = [...new Set(r.cards.map(c => c.name))];
+      if (options.length === 1) found.set(n.toLowerCase(), options[0]);
+      else if (options.length) ambiguous.push({ name: n, options });
+      else missing.push(n);
     } catch { missing.push(n); }
   }
-  return { found, missing };
+  return { found, missing, ambiguous };
 }
