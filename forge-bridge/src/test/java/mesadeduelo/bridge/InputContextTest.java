@@ -6,6 +6,9 @@ import forge.game.Game;
 import forge.game.ability.ApiType;
 import forge.game.card.Card;
 import forge.game.card.CardCollection;
+import forge.game.card.CounterEnumType;
+import forge.game.GameEntity;
+import forge.util.collect.FCollection;
 import forge.game.combat.Combat;
 import forge.game.keyword.Keyword;
 import forge.game.player.Player;
@@ -96,6 +99,40 @@ public class InputContextTest {
             input.setCancelAllowed(true); input.selectButtonCancel();
             assertEquals(0, InputContext.selection(input).getAsJsonArray("cards").size());
             assertNull(InputContext.selection(new InputSelectEntitiesFromList<>(human, 1, 1, game.getPlayers())));
+        });
+    }
+    @Test public void proliferateRatesEachCounterForTheChooserAndSelectsWithoutAutoConfirming() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        Card mine = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        Card theirs = ExilePermissionsTest.add(game, "Grizzly Bears", other, ZoneType.Battlefield);
+        Card shrunk = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        mine.setCounters(CounterEnumType.P1P1, 2); theirs.setCounters(CounterEnumType.M1M1, 1); shrunk.setCounters(CounterEnumType.M1M1, 1);
+        other.setCounters(CounterEnumType.POISON, 3, other, false); me.setCounters(CounterEnumType.POISON, 1, me, false);
+        var ability = ExilePermissionsTest.add(game, "Steady Progress", me, ZoneType.Hand).getFirstSpellAbility();
+        ability.setActivatingPlayer(me);
+        FCollection<GameEntity> choices = new FCollection<>(java.util.List.of(me, other, mine, theirs, shrunk));
+        FThreads.invokeInEdtAndWait(() -> {
+            var input = new InputSelectEntitiesFromList<>(human(game, me), 0, choices.size(), choices, ability);
+            input.showMessage();
+            var rows = InputContext.proliferate(input).getAsJsonArray("candidates").asList().stream().map(e -> e.getAsJsonObject())
+                .collect(java.util.stream.Collectors.toMap(e -> e.get("kind").getAsString() + e.get("id").getAsInt(), e -> e));
+            assertEquals("bad", rows.get("player" + me.getId()).get("effect").getAsString());
+            assertEquals("good", rows.get("player" + other.getId()).get("effect").getAsString());
+            assertEquals("good", rows.get("card" + mine.getId()).get("effect").getAsString());
+            assertEquals("good", rows.get("card" + theirs.getId()).get("effect").getAsString());
+            assertEquals("bad", rows.get("card" + shrunk.getId()).get("effect").getAsString());
+            assertTrue(rows.get("card" + theirs.getId()).get("suggested").getAsBoolean());
+            assertEquals(2, rows.get("card" + mine.getId()).getAsJsonArray("counters").get(0).getAsJsonObject().get("count").getAsInt());
+            assertNull(InputContext.proliferate(new InputSelectCardsFromList(human(game, me), 0, 1, new CardCollection(mine))));
+
+            assertTrue(InputContext.playerChoices(input).containsAll(java.util.List.of(me.getId(), other.getId())));
+            assertTrue(InputContext.selectExactly(input, java.util.List.of(mine.getId(), theirs.getId(), shrunk.getId()), java.util.List.of(me.getId(), other.getId())));
+            var selection = InputContext.selection(input);
+            assertEquals(3, selection.getAsJsonArray("cards").size()); assertEquals(2, selection.getAsJsonArray("players").size());
+            // Se o Forge tivesse confirmado sozinho ao marcar todos, esta troca não mudaria nada.
+            assertTrue(InputContext.selectExactly(input, java.util.List.of(theirs.getId()), java.util.List.of(other.getId())));
+            assertEquals(java.util.Set.of(theirs, other), java.util.Set.copyOf(input.getSelected()));
+            assertFalse(InputContext.selectExactly(input, java.util.List.of(-5), java.util.List.of()));
         });
     }
 }

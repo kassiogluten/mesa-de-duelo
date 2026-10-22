@@ -393,7 +393,7 @@ final class Session {
     void onClientMessage(Seat seat, Channel source, String type, JsonObject msg) {
         if (seat.eliminated() && !Set.of("preferences", "hello").contains(type)) { rejectStaleAction(seat, type); return; }
         int actionGen = -1;
-        if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn", "resolve-all").contains(type)) {
+        if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn", "resolve-all", "select-set").contains(type)) {
             if (!msg.has("gen") || !msg.get("gen").isJsonPrimitive() || !msg.get("gen").getAsJsonPrimitive().isNumber()) { rejectStaleAction(seat, type); return; }
             actionGen = exactInt(msg.get("gen"));
             if (actionGen != seat.inputGen.get() || seat.question != null || !"playing".equals(matchPhase)) { rejectStaleAction(seat, type, actionGen); return; }
@@ -503,6 +503,17 @@ final class Session {
                 };
                 if (color >= 0) seat.onEdt(genAtClick, c -> c.useMana(color));
             }
+            case "select-set" -> {
+                List<Integer> cards = new ArrayList<>(), players = new ArrayList<>();
+                if (msg.has("cards") && msg.get("cards").isJsonArray()) for (JsonElement id : msg.getAsJsonArray("cards")) cards.add(exactInt(id));
+                if (msg.has("players") && msg.get("players").isJsonArray()) for (JsonElement id : msg.getAsJsonArray("players")) players.add(exactInt(id));
+                seat.onEdt(genAtClick, type, c -> {
+                    if (!(c instanceof PlayerControllerHuman human)
+                        || !InputContext.selectExactly(human.getInputQueue().getInput(), cards, players))
+                        seat.send(toast("error", "Não foi possível marcar essa escolha. Toque de novo nas permanentes e jogadores."));
+                    markDirty();
+                });
+            }
             case "player" -> {
                 PlayerView pv = findPlayer(msg.get("id").getAsInt());
                 if (pv != null) seat.onEdt(genAtClick, c -> c.selectPlayer(pv, null));
@@ -527,6 +538,7 @@ final class Session {
                 case "attack-group" -> "grupo " + msg.get("attackers") + " → " + msg.get("defender");
                 case "block" -> "bloqueador " + msg.get("blocker") + " → atacante " + msg.get("attacker");
                 case "mana" -> "cor " + msg.get("color");
+                case "select-set" -> "cartas " + msg.get("cards") + " jogadores " + msg.get("players");
                 case "skip-vote" -> "alvo " + msg.get("target") + " voto " + (msg.has("value") ? msg.get("value") : "true");
                 case "answer" -> {
                     Question q = seat.question;
@@ -1183,6 +1195,8 @@ final class Session {
                 if (commanderMove != null) input.add("commanderMove", commanderMove);
                 JsonObject selection = InputContext.selection(currentInput);
                 if (selection != null) input.add("selection", selection);
+                JsonObject proliferate = InputContext.proliferate(currentInput);
+                if (proliferate != null) input.add("proliferate", proliferate);
                 Set<Integer> playerChoices = InputContext.playerChoices(currentInput);
                 if (currentInput instanceof InputLondonMulligan) input.addProperty("opening", "mulligan-bottom");
                 else if (currentInput instanceof InputConfirmMulligan) input.addProperty("opening", "mulligan");

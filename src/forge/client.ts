@@ -223,7 +223,10 @@ export interface FState {
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
   input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; card?: FCard; paying?: boolean;
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
-    selection?: { cards: number[]; min: number; max: number };
+    /** players: só quando jogadores também podem ser escolhidos (proliferar). */
+    selection?: { cards: number[]; players?: number[]; min: number; max: number };
+    /** Proliferar: o que pode ganhar marcadores e se cada marcador ajuda ou prejudica quem escolhe. */
+    proliferate?: { candidates: ProliferateCandidate[] };
     /** Escolha de conjurar durante a resolução do gatilho de suspender; usa OK/Cancelar. */
     suspendCast?: { card: FCard };
     /** Regra 903.9b: o comandante iria para a mão ou o grimório (to) e pode ir à zona de comando no lugar. */
@@ -242,6 +245,13 @@ export interface FState {
   /** Para voltar a esta partida se a conexão cair: {type:"rejoin", code, token}. */
   session?: { code: string; token: string; room: boolean };
   decks: string[];
+}
+
+export type ProliferateEffect = 'good' | 'bad' | 'mixed' | 'neutral';
+/** holder: jogador de cujo lado o marcador conta (o próprio jogador, o controlador ou quem protege a batalha). */
+export interface ProliferateCandidate {
+  kind: 'card' | 'player'; id: number; holder?: number; effect: ProliferateEffect; suggested: boolean;
+  counters: { type: string; count: number; effect: Exclude<ProliferateEffect, 'mixed'> }[];
 }
 
 /** Alvos de uma mágica ou habilidade: ids de cartas e de jogadores. */
@@ -266,6 +276,7 @@ export type ClientMessage =
   | { type: 'attack-group'; attackers: number[]; defender: null; gen: number }
   | { type: 'stack'; id: number; gen?: number }
   | { type: 'player'; id: number; gen?: number }
+  | { type: 'select-set'; cards: number[]; players: number[]; gen: number }
   | { type: 'mana'; color: string; gen?: number }
   | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
   | { type: 'skip-vote'; target: number; value?: boolean }

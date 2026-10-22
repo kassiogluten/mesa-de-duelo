@@ -7,6 +7,9 @@ import forge.game.ability.ApiType;
 import forge.game.GameEntity;
 import forge.game.card.Card;
 import forge.game.card.CardView;
+import forge.game.card.CounterAiCategory;
+import forge.game.card.CounterEnumType;
+import forge.game.card.CounterType;
 import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
 import forge.game.keyword.Keyword;
@@ -18,6 +21,7 @@ import forge.gamemodes.match.input.InputAttack;
 import forge.gamemodes.match.input.InputConfirm;
 import forge.gamemodes.match.input.InputSelectEntitiesFromList;
 import forge.gamemodes.match.input.InputSelectManyBase;
+import forge.gamemodes.match.input.MassSelectMode;
 
 /** Typed context for the pinned Forge inputs whose public API omits their selection state. */
 final class InputContext {
@@ -45,6 +49,8 @@ final class InputContext {
     private static final Field CONFIRM_MESSAGE = field(InputConfirm.class, "message");
     private static final Field SELECT_MIN = field(InputSelectManyBase.class, "min");
     private static final Field SELECT_MAX = field(InputSelectManyBase.class, "max");
+    private static final Field SELECT_ABILITY = field(InputSelectManyBase.class, "sa");
+    private static final Field MASS_SELECT = field(InputSelectEntitiesFromList.class, "massSelectMode");
 
     private static Field field(Class<?> type, String name) {
         try { Field field = type.getDeclaredField(name); field.setAccessible(true); return field; }
@@ -99,13 +105,26 @@ final class InputContext {
         return result;
     }
 
-    /** Card choices only: counter allocation and player selection have different counting semantics. */
+    /**
+     * Card choices, or cards and players together (proliferar): counter allocation and "choose a player"
+     * have different counting semantics. Players only appear in {@code players} when they can be chosen.
+     */
     static JsonObject selection(Object input) {
         if (!(input instanceof InputSelectEntitiesFromList<?> select)) return null;
-        for (var choice : select.getValidChoices()) if (!(choice instanceof Card)) return null;
-        JsonObject result = new JsonObject(); JsonArray cards = new JsonArray();
-        for (var choice : select.getSelected()) if (choice instanceof Card card) cards.add(card.getId());
+        boolean anyCard = false, anyPlayer = false;
+        for (var choice : select.getValidChoices()) {
+            if (choice instanceof Card) anyCard = true;
+            else if (choice instanceof Player) anyPlayer = true;
+            else return null;
+        }
+        if (!anyCard && !proliferating(select)) return null;
+        JsonObject result = new JsonObject(); JsonArray cards = new JsonArray(), players = new JsonArray();
+        for (var choice : select.getSelected()) {
+            if (choice instanceof Card card) cards.add(card.getId());
+            else if (choice instanceof Player player) players.add(player.getId());
+        }
         result.add("cards", cards);
+        if (anyPlayer) result.add("players", players);
         result.addProperty("min", (Integer) value(SELECT_MIN, input));
         result.addProperty("max", (Integer) value(SELECT_MAX, input));
         return result;
@@ -114,11 +133,88 @@ final class InputContext {
     static java.util.Set<Integer> playerChoices(Object input) {
         if (!(input instanceof InputSelectEntitiesFromList<?> select)) return java.util.Set.of();
         java.util.Set<Integer> players = new java.util.LinkedHashSet<>();
+        boolean mixed = proliferating(select);
         for (var choice : select.getValidChoices()) {
-            if (!(choice instanceof Player player)) return java.util.Set.of();
-            players.add(player.getId());
+            if (choice instanceof Player player) players.add(player.getId());
+            else if (!mixed) return java.util.Set.of();
         }
         return players;
+    }
+
+    private static boolean proliferating(InputSelectEntitiesFromList<?> select) {
+        SpellAbility ability = (SpellAbility) value(SELECT_ABILITY, select);
+        return ability != null && ability.getApi() == ApiType.Proliferate;
+    }
+
+    /**
+     * Proliferar: cada permanente ou jogador que pode receber marcadores, com cada tipo de marcador dito
+     * {@code good}, {@code bad} ou {@code neutral} para quem prolifera. A categoria vem da IA do Forge (bom
+     * ou ruim para quem tem o marcador) e se inverte quando é de um oponente: -1/-1 numa criatura dele ajuda.
+     * {@code suggested} marca o que só ajuda.
+     */
+    static JsonObject proliferate(Object input) {
+        if (!(input instanceof InputSelectEntitiesFromList<?> select) || !proliferating(select)) return null;
+        Player chooser = ((SpellAbility) value(SELECT_ABILITY, select)).getActivatingPlayer();
+        JsonArray candidates = new JsonArray();
+        for (GameEntity entity : select.getValidChoices()) {
+            Player holder = holder(entity);
+            JsonObject row = new JsonObject(); JsonArray counters = new JsonArray();
+            row.addProperty("kind", entity instanceof Player ? "player" : "card");
+            row.addProperty("id", entity.getId());
+            if (holder != null) row.addProperty("holder", holder.getId());
+            boolean good = false, bad = false;
+            for (var entry : entity.getCounters().entrySet()) {
+                if (entry.getCount() <= 0) continue;
+                String effect = counterEffect(entity, entry.getElement(), holder, chooser);
+                good |= effect.equals("good"); bad |= effect.equals("bad");
+                JsonObject counter = new JsonObject();
+                counter.addProperty("type", entry.getElement().toString());
+                counter.addProperty("count", entry.getCount());
+                counter.addProperty("effect", effect);
+                counters.add(counter);
+            }
+            row.add("counters", counters);
+            row.addProperty("effect", good && bad ? "mixed" : good ? "good" : bad ? "bad" : "neutral");
+            row.addProperty("suggested", good && !bad);
+            candidates.add(row);
+        }
+        JsonObject result = new JsonObject(); result.add("candidates", candidates); return result;
+    }
+
+    /** De que lado o marcador conta: o jogador, o controlador da permanente ou quem protege a batalha. */
+    private static Player holder(GameEntity entity) {
+        if (entity instanceof Player player) return player;
+        if (!(entity instanceof Card card)) return null;
+        if (card.isBattle() && card.getProtectingPlayer() != null) return card.getProtectingPlayer();
+        return card.getController();
+    }
+
+    static String counterEffect(GameEntity entity, CounterType type, Player holder, Player chooser) {
+        CounterAiCategory category = entity instanceof Card card ? forge.ai.ComputerUtil.getCounterCategory(type, card)
+            // Radiação no jogador: o Forge a deixa neutra, mas ela tira cartas do grimório e vida de quem a tem.
+            : type.is(CounterEnumType.RAD) ? CounterAiCategory.Negative : type.getAiCategory();
+        if (category == CounterAiCategory.Neutral || holder == null || chooser == null) return "neutral";
+        boolean ally = !holder.isOpponentOf(chooser);
+        return (category == CounterAiCategory.Positive) == ally ? "good" : "bad";
+    }
+
+    /**
+     * Deixa a escolha do proliferar exatamente com estas cartas e jogadores, de uma vez. Antes de cada clique o
+     * modo de seleção em massa sai de NONE, senão o Forge confirma sozinho ao marcar o último: quem confirma é o jogador.
+     */
+    static boolean selectExactly(Object input, java.util.Collection<Integer> cardIds, java.util.Collection<Integer> playerIds) {
+        if (!(input instanceof InputSelectEntitiesFromList<?> select) || !proliferating(select)) return false;
+        java.util.Set<Integer> validCards = new java.util.HashSet<>(), validPlayers = new java.util.HashSet<>();
+        for (GameEntity entity : select.getValidChoices()) (entity instanceof Player ? validPlayers : validCards).add(entity.getId());
+        if (!validCards.containsAll(cardIds) || !validPlayers.containsAll(playerIds)) return false;
+        for (GameEntity entity : java.util.List.copyOf(select.getValidChoices())) {
+            boolean wanted = entity instanceof Player ? playerIds.contains(entity.getId()) : cardIds.contains(entity.getId());
+            if (wanted == select.getSelected().contains(entity)) continue;
+            try { MASS_SELECT.set(select, MassSelectMode.ALL); } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
+            if (entity instanceof Card card) select.selectCard(card, null, null);
+            else select.selectPlayer((Player) entity, null);
+        }
+        return true;
     }
 
     static JsonObject attacking(Object input) {
