@@ -357,3 +357,49 @@ Hoje a imagem de cada carta é a da impressão que o Scryfall devolve na busca p
 - [ ] Escolher a impressão com uma busca `!"Nome" unique=prints order=released dir=desc`, filtrando `border_color:borderless` primeiro e depois `frame_effects` vazio, sem `promo`, `digital` ou `oversized`.
 - [ ] Fazer isso em lote, sem uma busca por carta: o `/cards/collection` aceita `set` + `collector_number`, então dá para guardar a impressão escolhida no cache e só refazer a escolha de tempos em tempos.
 - [ ] Manter a impressão em português quando ela existe para a mesma coleção; se a tradução for de uma coleção antiga, decidir entre arte nova em inglês ou arte antiga em português.
+
+## 28. Relatos de sugestões e erros, com a partida anexada
+
+Hoje, quem encontra um erro ou tem uma ideia precisa falar com a gente por fora do jogo, e quase nunca dá para saber o que estava na mesa naquela hora. O painel **Erros da partida** copia um relatório em texto, mas não tem como enviá-lo e ele não mostra a mesa. A ideia é o jogador relatar **de dentro do jogo**, na tela inicial ou durante a partida, e, se quiser, anexar a partida, para darmos um jeito de repeti-la, ver o erro acontecer e conferir a correção.
+
+Desenho e motivos de cada decisão em `docs/relatos-e-repeticao.md`. Em resumo: o aparelho grava os estados que recebeu da ponte e as ações que enviou. Esses dados bastam para **repetir a partida na mesa, sem a ponte** (como o laboratório de efeitos). A ponte guarda os decks de todos e um retrato do Forge (`GameState`) a cada turno, para **restaurar a partida no motor** quando o erro for de regra. Os relatos ficam em arquivos no servidor, recebidos por uma rota HTTP própria com limite de envio. Nada vai sozinho para o GitHub.
+
+Etapa 1: gravar a partida no aparelho
+- [ ] Gravador da mesa: cada `state` recebido (sem repetir `stateVersion`), cada mensagem enviada com `gen` e o quadro visto, os avisos e erros da ponte e da mesa, com horário.
+- [ ] Junto: versão da mesa, regras e motor, formato, o próprio deck, aparelho (navegador, tela, toque, PWA) e preferências (aparência das cartas, ritmo, reduzir movimento, passar automaticamente).
+- [ ] Limite de 2 MB comprimidos (gzip nativo do navegador): passando disso, ficam o primeiro quadro e os mais recentes. Medir o tamanho real numa partida longa de Commander e, se precisar, guardar só as diferenças entre quadros.
+- [ ] A última partida fica guardada no IndexedDB, para relatar da tela inicial depois que ela acabou ou depois de recarregar a página.
+- [ ] Para desenvolvimento: **Baixar gravação** no painel de erros, com o mesmo arquivo que o relato vai enviar.
+
+Etapa 2: repetir a partida na mesa (página de desenvolvimento)
+- [ ] `tests/fixtures/replay.html`, no molde do laboratório de efeitos (item 18): abre o arquivo, monta a mesa com um cliente falso e entrega os quadros na ordem, com as animações.
+- [ ] Controles: tocar e pausar, quadro a quadro, velocidade, ir ao momento do relato, e trocar aparência, tamanho de tela e "reduzir movimento".
+- [ ] Lista lateral com as ações enviadas, os cliques recusados e os erros, cada um levando ao seu quadro.
+- [ ] Conferir com uma partida 1×1 contra o computador e uma de Commander em rede.
+
+Etapa 3: formulário e envio
+- [ ] Botão **Enviar sugestão ou erro** no menu da tela inicial e no menu da partida, e **Relatar este erro** no painel de erros.
+- [ ] Formulário curto: **Sugestão** ou **Algo deu errado**, descrição obrigatória (até 2.000 caracteres) e **Anexar a partida**, com o tamanho e um "o que vai junto". Vem marcado num erro durante a partida e desmarcado numa sugestão.
+- [ ] Rota `POST /api/relatos` na ponte, com agregador próprio de até 3 MB, sem mexer no limite das outras rotas. No nginx: a rota, `client_max_body_size 3m` e `X-Real-IP`.
+- [ ] Relatos guardados em arquivos num volume próprio (`relatos/AAAA-MM/<código>.json.gz` e um índice). O jogador recebe o código ("Relato R-7K2Q enviado").
+- [ ] Sem rede ou com o servidor fora, o relato fica numa fila no IndexedDB e sai sozinho depois.
+- [ ] Limites (ligados ao item 19): `limit_req` no nginx, até 10 relatos por hora por IP na ponte (o IP só como resumo, em memória, sem gravar), recusa clara quando o disco estiver cheio e mensagem em português ao bater no limite.
+- [ ] Teclado, leitor de tela e celular. Enviar não pausa a partida nem segura a vez.
+
+Etapa 4: diário da partida na ponte
+- [ ] Guardar em memória, enquanto a partida existir, os decks de todos os jogadores (inclusive os do computador), a configuração, quem começou e os mulligans.
+- [ ] Retrato do Forge (`GameState`) no começo de cada turno (os últimos 3) e no instante do relato.
+- [ ] Diário das ações aceitas e recusadas de cada assento e das respostas a perguntas (até 2.000 por partida).
+- [ ] O relato com partida anexada leva esse lado junto, gravado só no servidor. Mão e grimório dos outros nunca voltam a nenhum jogador.
+
+Etapa 5: restaurar a partida no Forge
+- [ ] Modo de desenvolvimento da ponte que lê um relato, cria a partida com os mesmos decks e aplica o retrato do turno escolhido, para continuar dali pela mesa com o diário ao lado.
+- [ ] Do retrato ao teste: transformar um relato num teste de regressão em `forge-bridge/src/test`, no estilo dos testes com o motor real.
+- [ ] Conferir os limites do `GameState` (efeitos até o fim do turno, gatilhos atrasados, escolhas feitas em turnos anteriores) e anotar no relato o que não voltou igual.
+- [ ] Descartado por enquanto: repetir a partida inteira por semente. O Forge usa um gerador aleatório só para todas as partidas do processo, e a IA depende da ordem das threads.
+
+Etapa 6: triagem e manutenção
+- [ ] Script para listar, baixar e abrir relatos do servidor, e para criar uma issue no GitHub a partir de um relato escolhido, só com o texto e o resumo técnico, sem a partida.
+- [ ] Retenção de 90 dias ou 1 GB, apagando os mais antigos primeiro.
+- [ ] Métricas no Grafana: relatos recebidos por tipo e com ou sem partida, recusados por motivo e espaço ocupado.
+- [ ] Novidades (`CHANGELOG.md`) a cada etapa que o jogador perceber (a 3 principalmente).
