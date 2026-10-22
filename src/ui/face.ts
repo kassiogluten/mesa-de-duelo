@@ -10,19 +10,25 @@ export interface FaceInfo {
   /** 'W' | 'U' | 'B' | 'R' | 'G' | 'M' (multicolor) | 'L' (terreno) | 'C' (incolor) */
   color: string;
   image?: string;
-  /** Modo "Arte e texto": arte recortada do Scryfall, texto de regras e lealdade. */
+  /** Modos "Arte e texto" e "Arena": arte recortada do Scryfall (no Arena, só no campo), texto de regras e lealdade. */
   style?: CardStyle;
   art?: string;
   text?: string;
   loyalty?: number;
+  /** Ficha: no estilo Arena, a moldura tem o topo arredondado. */
+  token?: boolean;
 }
 
-/** Como as cartas aparecem na mesa: imagem completa do Scryfall ou arte recortada com layout próprio. */
-export type CardStyle = 'full' | 'art';
+/**
+ * Como as cartas aparecem na mesa: imagem completa do Scryfall, arte recortada com layout próprio, ou "Arena":
+ * imagem completa na mão e nas escolhas e só a arte nas permanentes, com P/R e marcadores num rodapé.
+ */
+export type CardStyle = 'full' | 'art' | 'arena';
 
 /** Carta desenhada: imagem do Scryfall por cima de uma moldura em CSS que aparece se a imagem faltar. */
 export function faceHTML(f: FaceInfo) {
   if (f.style === 'art') return artFaceHTML(f);
+  if (f.style === 'arena') return arenaFaceHTML(f);
   return `<div class="face col-${f.color}">
     <div class="fb">
       <div class="fb-head"><span class="fb-name">${esc(f.name)}</span><span class="fb-cost">${manaHTML(f.manaCost)}</span></div>
@@ -47,6 +53,24 @@ function artFaceHTML(f: FaceInfo) {
     <div class="af-art">${f.art ? `<img src="${f.art}" alt="" draggable="false" loading="lazy" onerror="this.remove()">` : ''}</div>
     ${basic ? '' : `<div class="af-type">${esc(f.typeLine)}</div>${f.text ? `<div class="af-text">${richText(f.text).replace(/\n/g, '<br>')}</div>` : ''}`}
     ${stat}
+  </div>`;
+}
+
+/** Moldura do estilo Arena pelo tipo da permanente, na ordem em que um tipo vence o outro (encantamento criatura é criatura). */
+function arenaKind(f: Pick<FaceInfo, 'typeLine' | 'creature' | 'loyalty'>) {
+  if (f.loyalty !== undefined || /\bplaneswalker\b/i.test(f.typeLine)) return 'planeswalker';
+  if (f.creature || /\b(creature|criatura)\b/i.test(f.typeLine)) return 'creature';
+  if (/\b(enchantment|encantamento)\b/i.test(f.typeLine)) return 'enchantment';
+  if (/\b(artifact|artefato)\b/i.test(f.typeLine)) return 'artifact';
+  if (/\b(land|terreno)\b/i.test(f.typeLine)) return 'land';
+  return 'other';
+}
+
+/** Permanente no estilo Arena: a arte ocupa a carta inteira; P/R, lealdade e marcadores vêm da mesa, no rodapé. */
+function arenaFaceHTML(f: FaceInfo) {
+  return `<div class="face arena-face col-${f.color} ar-${arenaKind(f)}${f.token ? ' ar-token' : ''}">
+    ${f.art ? `<img src="${f.art}" alt="" draggable="false" loading="lazy" onerror="this.remove()">` : ''}
+    <div class="ar-foot"></div>
   </div>`;
 }
 

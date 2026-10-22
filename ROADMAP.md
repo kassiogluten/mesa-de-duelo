@@ -356,3 +356,12 @@ Hoje a imagem de cada carta é a da impressão que o Scryfall devolve na busca p
 - [ ] Escolher a impressão com uma busca `!"Nome" unique=prints order=released dir=desc`, filtrando `border_color:borderless` primeiro e depois `frame_effects` vazio, sem `promo`, `digital` ou `oversized`.
 - [ ] Fazer isso em lote, sem uma busca por carta: o `/cards/collection` aceita `set` + `collector_number`, então dá para guardar a impressão escolhida no cache e só refazer a escolha de tempos em tempos.
 - [ ] Manter a impressão em português quando ela existe para a mesma coleção; se a tradução for de uma coleção antiga, decidir entre arte nova em inglês ou arte antiga em português.
+
+## 28. Cartas exiladas sob uma criatura aparecem abaixo dela
+
+Cartas que uma permanente exila "sob si" ou "com ela" (Banisher Priest, Hostage Taker, cartas com imprint como Isochron Scepter etc.) hoje só aparecem no exílio comum, sem ligação visível com quem as exilou. A ideia é mostrá-las presas à permanente, saindo por baixo dela, como os anexos.
+
+- [ ] Descobrir como o Forge liga a carta exilada à fonte (`ExiledWith`, `Imprinted`, `encoded`) e mandar essa ligação pela ponte.
+- [ ] Desenhar as cartas exiladas atrás da permanente, aparecendo pela borda de baixo (como o leque de auras e equipamentos, mas para baixo e com aparência de exílio).
+- [ ] Contador e janela para ver todas quando forem várias, e a mesma lista no inspetor da permanente.
+- [ ] Quando a permanente sai do campo, as cartas voltam a aparecer só no exílio.

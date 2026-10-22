@@ -6,6 +6,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.31.0] - 2026-10-22
+
+### Novo
+
+- **Cartas no estilo Arena.** Em **Menu › Aparência das cartas** há a nova opção **Arena**: as permanentes no campo mostram só a arte, ocupando a carta inteira, dentro de uma moldura na cor da carta. Quando a permanente tem poder/resistência, lealdade ou marcadores, a moldura se alarga embaixo num rodapé com esses números. A moldura muda com o tipo: criaturas na cor da carta, planeswalkers escuros com filete dourado, encantamentos claros com pontos de luz, artefatos em metal escovado e terrenos em pedra. Criaturas e fichas ficam quadradas, e as fichas têm o topo arredondado. Na mão, nas escolhas e na pilha as cartas continuam com a imagem completa, e o texto inteiro segue no inspetor.
+
+### Mudou
+
+- **Enjoo de invocação mais fácil de ver.** Além de um pouco apagadas, as criaturas com enjoo agora ficam com a imagem levemente borrada, e o selo de enjoo trocou o zZ por um emoji tonto 😵‍💫. O selo e os números continuam nítidos.
+- **Ícone de alcance.** O ícone de alcance nas cartas do campo agora é um arco e flecha.
+- **Quem não pode atacar ou bloquear.** Criaturas impedidas por um efeito de atacar ganham uma espada riscada de vermelho, e as impedidas de bloquear ganham um escudo riscado, nos selos da borda esquerda da carta, junto com vigilância e atropelar. A corrente embaixo da carta continua.
+- **Sem lâminas no canto da carta.** Criaturas com iniciativa ou golpe duplo não mostram mais os traços brancos no canto de cima da carta; essas habilidades continuam nos ícones de palavras-chave.
+
+### Corrigido
+
+- **Cartas cortadas na linha do meio da mesa.** Criaturas declaradas atacantes sobem em direção ao oponente e tinham o topo cortado; nas partidas com vários oponentes, as cartas do fim do campo deles também eram cortadas pela linha que divide a mesa. Agora elas passam por cima da linha, inteiras.
+- **Selos e efeitos cortados nas cartas do campo.** Os selos de enjoo e do número do ataque ficavam com o topo cortado; agora aparecem dentro da carta, no alto. Marcas, selos de proteção e outros efeitos que saem um pouco da carta também deixaram de ser cortados.
+
 ## [0.30.0] - 2026-10-21
 
 ### Novo

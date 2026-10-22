@@ -140,8 +140,9 @@ a { color: var(--gold); }
 .bfc.selected .face { box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(255, 255, 255, 0.7); }
 .bfc.hit { animation: hit 0.5s ease; }
 
+/* Dentro da carta, no topo: a fileira rola na horizontal e cortaria um selo que passasse da borda de cima. */
 .tag {
-  position: absolute; left: 50%; top: -9px; transform: translateX(-50%); z-index: 2;
+  position: absolute; left: 50%; top: 3px; transform: translateX(-50%); z-index: 2;
   display: inline-flex; align-items: center; gap: 2px; padding: 1px 7px; border-radius: 999px;
   font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -149,7 +150,7 @@ a { color: var(--gold); }
 .tag svg { width: 12px; height: 12px; }
 .tag.atk { background: var(--red); color: #fff; }
 .tag.blk { background: var(--gold); color: #2a1600; }
-.tag.zzz { background: #2a3550; color: #c8d4f0; font-style: italic; }
+.tag.zzz { background: #2a3550; color: #c8d4f0; font-style: normal; }
 /* Setas do ataque e do bloqueio, por cima dos campos e abaixo dos avatares e da mão. */
 .combat-arrows { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
 .combat-arrows .arrow, .combat-arrows .arrow-under { fill: none; stroke-linecap: round; animation: fade-in 0.3s 0.25s ease both; }

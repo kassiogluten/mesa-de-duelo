@@ -50,7 +50,7 @@ const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12
 const ICON_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
 const ICON_SHIELD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="currentColor"/></svg>';
 
-const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
+const svg = (...ds: string[]) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ds.map(d => `<path d="${d}" fill="currentColor"/>`).join('')}</svg>`;
 /** Ícone de cada tipo de marcador; os sem ícone próprio usam um disco. */
 const COUNTER_ICON: Record<string, string> = {
   P1P1: svg('M12 3 3 13h5v8h8v-8h5z'),
@@ -67,7 +67,7 @@ const COUNTER_DISC = svg('M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4a5 5 0 1 1 0 1
 /** Ícone de cada palavra-chave mostrada na carta do campo. */
 const KEYWORD_ICON: Record<string, string> = {
   FLYING: svg('M2 12c4-1 7-4 9-9 1 4 0 8-2 10 3-1 6-1 9 1-3 0-6 1-8 3 2 0 4 1 5 3-5 1-10 0-13-8z'),
-  REACH: svg('M12 2 6 9h4v13h4V9h4z'),
+  REACH: svg('M14.85 19.05Q15.5 8.5 4.95 9.15 12.7 11.3 14.85 19.05z', 'M4.95 9.15 14.85 19.05 14.28 19.62 4.38 9.72z', 'M3 20 17 6 18 7 4 21z', 'M21 3 19 9 15 5z', 'M5.5 18.5 2 17.5 3.5 16zM5.5 18.5 6.5 22 8 20.5z'),
   TRAMPLE: svg('M3 5h4l6 7-6 7H3l6-7zm8 0h4l6 7-6 7h-4l6-7z'),
   MENACE: svg('M3 3l5 6h8l5-6-1 9a8 8 0 0 1-16 0zm6 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z'),
   FIRST_STRIKE: ICON_SWORD,
@@ -129,7 +129,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%"></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fAutoPassLabel">Passar automaticamente</span><button class="sound-switch" id="fAutoPass" data-ui="auto-pass" role="switch" aria-checked="true" aria-labelledby="fAutoPassLabel" aria-describedby="fAutoPassHint fAutoPassStatus" disabled><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAutoPassState" aria-hidden="true">Ativado</span></button></div><p id="fAutoPassHint">Quando não houver ações disponíveis. As jogadas continuam visíveis.</p><p id="fAutoPassStatus" role="status">Aguardando conexão com o servidor.</p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
-        <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. O texto inteiro continua no inspetor.</p></div>
+        <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
       </section>
     </div>
@@ -260,7 +260,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let currentModal: HTMLElement | null = null;
   try { fast = localStorage.getItem('mesa:pace') === 'fast'; } catch { /* Storage is optional. */ }
   let cardStyle: CardStyle = 'full';
-  try { if (localStorage.getItem('mesa:cards') === 'art') cardStyle = 'art'; } catch { /* Storage is optional. */ }
+  const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
+  try { cardStyle = parseCardStyle(localStorage.getItem('mesa:cards')); } catch { /* Storage is optional. */ }
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();
   const setHTML = (el: HTMLElement, html: string) => {
     const previous = renderedContent.get(el);
@@ -522,17 +523,25 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const emblemSource = (c: FCard) => (c.name ?? '').replace(/^Emblem\s*[—–-]\s*/i, '');
   const emblemLabel = (c: FCard) => `Emblema de ${ptOf(emblemSource(c))?.name || emblemSource(c)}`;
 
-  function face(c: FCard, size: 'small' | 'normal') {
-    if (c.faceDown || !c.name) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
-    // "Arte e texto" precisa da arte recortada; carta sem ela (ficha com imagem própria da ponte) fica com a imagem completa.
+  /** Estilo da carta neste lugar: o Arena só troca a imagem pela arte nas permanentes do campo (`field`). */
+  function faceStyle(c: FCard, field: boolean): CardStyle {
+    if (c.faceDown || !c.name) return 'full';
+    // Os dois precisam da arte recortada; carta sem ela (ficha com imagem própria da ponte) fica com a imagem completa.
     const sc = cacheGet(c.name);
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
-    const style: CardStyle = cardStyle === 'art' && (art || !c.image) ? 'art' : 'full';
+    return cardStyle === 'art' && (art || !c.image) ? 'art' : cardStyle === 'arena' && field && art ? 'arena' : 'full';
+  }
+
+  function face(c: FCard, size: 'small' | 'normal', field = false) {
+    if (c.faceDown || !c.name) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
+    const sc = cacheGet(c.name);
+    const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
+    const style = faceStyle(c, field);
     if (style === 'art' && !sc) image(c.name, size); // pede a carta ao Scryfall, como no modo de imagem completa
     return faceHTML({
       name: label(c), manaCost: c.manaCost ?? '', typeLine: ptOf(c.name)?.type_line || c.typeLine || '', power: c.power, toughness: c.toughness,
       creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: style === 'full' ? c.image ?? image(c.name, size) : undefined,
-      style, art, text: ptOf(c.name)?.text || sc?.oracle_text, loyalty: c.planeswalker ? c.counters?.LOYALTY ?? 0 : undefined,
+      style, art, text: ptOf(c.name)?.text || sc?.oracle_text, loyalty: c.planeswalker ? c.counters?.LOYALTY ?? 0 : undefined, token: !!c.token,
     });
   }
 
@@ -862,7 +871,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ci.attack) tag = `<span class="tag atk">${ICON_SWORD}${ci.attack}${target ? ` ▸ ${esc(label(target).split(',')[0])}` : defendingPlayer && s.players.length > 2 ? ` ▸ ${esc(defendingPlayer.name)}` : ''}</span>`;
     else if (ci.block) tag = `<span class="tag blk">${ICON_SHIELD}${ci.block}</span>`;
     else if (attackers.length) tag = `<span class="tag atk">Atacado ${ICON_SWORD}${attackers.join(',')}</span>`;
-    else if (c.creature && c.sick && c.controller === s.activePlayer) tag = '<span class="tag zzz">zZ</span>';
+    else if (c.creature && c.sick && c.controller === s.activePlayer) tag = '<span class="tag zzz" title="Enjoo de invocação">😵‍💫</span>';
     if (selectedAttackers.has(c.id) || attackQueue.queuedAttackers.includes(c.id) || (attackAllGen !== null && legalAttackTargets(s, { attacker: c.id, gen: attackAllGen }).length)) { inner.push('attack-selected'); tag = `<span class="tag block-pending">${ICON_SWORD}Selecionada</span>`; }
     if (currentAttackTargets(s).some(target => target.kind === 'card' && target.id === c.id)) inner.push('attack-target');
     if (blockSelected) tag = `<span class="tag block-pending">${ICON_SHIELD}Selecionada</span>`;
@@ -886,16 +895,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, active: c.controller === s.activePlayer });
     const fxView = permanentFxHTML(fx, aura ? auraColor(aura.manaCost) : undefined);
     inner.push(...fxView.classes);
+    if (faceStyle(c, true) === 'arena') {
+      inner.push('ar-field');
+      if (c.creature || c.token) slot.push('ar-square');
+    }
     const aria = [label(c), isCommander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
-      `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small')}${selectedBadge(s, a)}</div>`).join('');
+      `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');
     // Com dois ou mais anexos o leque fica estreito: o selo abre todos eles, junto da carta, em tamanho normal.
     const attsN = attached.length > 1
       ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
     const style = attached.length ? ` style="--atts:${attached.length}"` : '';
     if (attached.length) slot.push('has-att');
-    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${face(c, 'small')}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
+    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
   }
 
   /** Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). */
@@ -2149,7 +2162,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('change', e => {
     const t = e.target as HTMLSelectElement;
     if (t.id === 'fCardStyle') {
-      cardStyle = t.value === 'art' ? 'art' : 'full';
+      cardStyle = parseCardStyle(t.value);
       try { localStorage.setItem('mesa:cards', cardStyle); } catch { /* Storage is optional. */ }
       renderTable(false);
     }
