@@ -134,10 +134,11 @@ const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
 const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onPlay: async (you, opp, config, opponents) => { void enterLandscape(); await startMatch(you, opp, config, opponents); },
   onFreePlay: (you, format) => { void enterLandscape(); leaveForge(); freeTable.open(you, format); show('free'); },
-  onHost: async (you, name, url, config) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), config }, config); },
+  onHost: async (you, name, url, config, visibility) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), config, visibility }, config); },
   onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you) }); },
   onValidate: async (deck, format, url) => (await requireForge(url)).validateDeck(forgeDeck(deck), format),
   onLookup: async (code, url) => (await requireForge(url)).lookupRoom(code),
+  onListRooms: async url => (await requireForge(url)).listRooms(),
   onCancelRoom: () => { leaveForge(); lobby.setStatus(''); },
   onDecks: (action = 'library', format) => { builder.open({action, format}); show('decks'); },
   onEditDeck: deckId => { builder.open({action: 'edit', deckId}); show('decks'); },

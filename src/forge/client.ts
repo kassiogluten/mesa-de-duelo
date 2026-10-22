@@ -10,6 +10,9 @@ export interface FPreferences {
 export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
 export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mainCount?: number; sideboardCount?: number; commanderCount?: number; rulesVersion: string; engineVersion: string }
+export type RoomVisibility = 'private' | 'public';
+/** Uma sala pública aberta, como aparece na lista da tela inicial (sem tokens nem decks). */
+export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean }
 export interface RoomInfo { code: string; config: MatchConfig; available: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
@@ -167,6 +170,8 @@ export interface FRoom {
   seat: number;
   token: string;
   started: boolean;
+  /** Sala pública, listada na tela inicial. Ausente em pontes antigas (privada). */
+  public?: boolean;
   capacity?: number;
   config: MatchConfig;
   rulesVersion?: string;
@@ -259,11 +264,12 @@ export interface FTargets { cards?: number[]; players?: number[] }
 
 export type ClientMessage =
   | { type: 'start'; you: unknown; opponent: unknown; opponents?: unknown[]; config: MatchConfig }
-  | { type: 'host'; name: string; deck: unknown; config: MatchConfig }
+  | { type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility }
   | { type: 'join'; code: string; name: string; deck: unknown }
   | { type: 'rejoin'; code: string; token: string }
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
+  | { type: 'list-rooms'; requestId: string }
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
   | { type: 'rematch' } | { type: 'leave' }
@@ -324,7 +330,7 @@ export class ForgeClient {
     this.pending.clear();
   }
 
-  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }, timeoutMs = 12000): Promise<T> {
+  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'list-rooms' } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }, timeoutMs = 12000): Promise<T> {
     if (!this.connected) return Promise.reject(new Error('Conecte-se ao servidor para verificar.'));
     const requestId = `request-${++this.requestSequence}`;
     return new Promise((resolve, reject) => {
@@ -339,6 +345,9 @@ export class ForgeClient {
   }
 
   lookupRoom(code: string): Promise<RoomInfo> { return this.request({type: 'lookup-room', code}); }
+
+  /** Salas públicas abertas (com lugar e sem partida começada). As privadas nunca vêm na lista. */
+  listRooms(): Promise<PublicRoom[]> { return this.request({type: 'list-rooms'}); }
 
   /** JSON da API pública do Moxfield ou do Archidekt, buscado pela ponte (o navegador esbarra no CORS). */
   fetchDeckSource(site: 'moxfield' | 'archidekt', id: string): Promise<string> { return this.request({type: 'fetch-deck', site, id}, 20000); }
@@ -355,10 +364,11 @@ export class ForgeClient {
         try { msg = JSON.parse(ev.data); } catch { return; }
         if (msg.requestId && this.pending.has(msg.requestId)) {
           const request = this.pending.get(msg.requestId)!;
-          if (['validation', 'room-info', 'deck-source', 'request-error', 'error'].includes(msg.type)) {
+          if (['validation', 'room-info', 'room-list', 'deck-source', 'request-error', 'error'].includes(msg.type)) {
             clearTimeout(request.timer); this.pending.delete(msg.requestId);
             if (msg.type === 'validation') request.resolve(msg.validation);
             else if (msg.type === 'room-info') request.resolve(msg.room);
+            else if (msg.type === 'room-list') request.resolve(Array.isArray(msg.rooms) ? msg.rooms : []);
             else if (msg.type === 'deck-source') request.resolve(msg.body);
             else request.reject(new Error(msg.text ?? 'Não foi possível concluir a solicitação.'));
             return;

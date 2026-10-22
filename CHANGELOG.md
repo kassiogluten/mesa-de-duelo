@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.35.0] - 2026-10-22
+
+### Novo
+
+- **Salas públicas.** Ao criar uma sala para jogar com outra pessoa, escolha **Privada** ou **Pública**. A privada continua como sempre: só entra quem tiver o código. A pública aparece para todo mundo na tela inicial.
+- **Lista de salas abertas.** Em **Outra pessoa**, a seção **Salas públicas** mostra quem está esperando, o formato e quantos lugares já foram ocupados. A lista se atualiza sozinha e também pelo botão **Atualizar**. Um toque em **Entrar** coloca você na sala, com as mesmas regras de entrar pelo código: precisa ter lugar, a partida não pode ter começado e o deck tem que servir para o formato da sala.
+
 ## [0.34.0] - 2026-10-22
 
 ### Novo

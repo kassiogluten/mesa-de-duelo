@@ -72,6 +72,8 @@ final class Session {
     /** Código para voltar à partida ({type:"rejoin", code, token}); numa sala em rede é o código que os jogadores digitam. */
     final String code;
     private final boolean room;
+    /** Sala pública: aparece na lista da tela inicial ({type:"list-rooms"}); a privada só se acha pelo código. */
+    private volatile boolean publicRoom;
     final Seat[] seats;
     private final List<Deck> aiDecks;
     final MatchConfig config;
@@ -137,12 +139,21 @@ final class Session {
     }
 
     static Session room(String code, Channel host, String name, Deck deck, MatchConfig config) {
+        return room(code, host, name, deck, config, false);
+    }
+
+    static Session room(String code, Channel host, String name, Deck deck, MatchConfig config, boolean publicRoom) {
         Session s = new Session(code, true, config.playerCount(), List.of(), config);
+        s.publicRoom = publicRoom;
         s.seats[0].bind(host, name, deck);
         return s;
     }
 
     boolean isRoom() { return room; }
+    boolean isPublic() { return room && publicRoom; }
+    long createdAt() { return createdAt; }
+    /** Entra na lista de salas públicas: aberta, com lugar, sem partida começada e com alguém conectado. */
+    boolean listed() { return isPublic() && !full() && !started() && anyoneConnected(); }
     boolean started() { return match != null; }
     boolean full() { for (Seat s : seats) if (s.deck == null) return false; return true; }
 
@@ -1300,6 +1311,7 @@ final class Session {
         r.addProperty("seat", seat.index);
         r.addProperty("token", seat.token);
         r.addProperty("started", started());
+        r.addProperty("public", isPublic());
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json());
         MatchConfig.versions(r);
@@ -1331,6 +1343,23 @@ final class Session {
             JsonObject p = new JsonObject(); p.addProperty("seat", seat.index); p.addProperty("name", seat.name); p.addProperty("connected", seat.channel != null); players.add(p);
         }
         r.add("players", players); return r;
+    }
+
+    /**
+     * Uma linha da lista de salas públicas. Só o que a mesa mostra a quem ainda não entrou: o código
+     * (que já é público nesta sala), o anfitrião, o formato e os lugares ocupados. Nada de tokens ou decks.
+     */
+    JsonObject listingJson() {
+        JsonObject r = new JsonObject();
+        r.addProperty("code", code);
+        r.addProperty("host", seats[0].deck != null ? seats[0].name : "Jogador");
+        r.add("config", config.json());
+        r.addProperty("capacity", config.playerCount());
+        int players = 0;
+        for (Seat seat : seats) if (seat.deck != null) players++;
+        r.addProperty("players", players);
+        r.addProperty("started", started());
+        return r;
     }
 
     void sendRoom(Seat seat) {
