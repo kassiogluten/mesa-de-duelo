@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.33.0] - 2026-10-22
+
+### Novo
+
+- **Créditos, aviso legal e contato.** No fim da tela inicial há um rodapé com os créditos de quem faz o jogo funcionar (Scryfall, Moxfield, Archidekt e as fontes), o aviso de que a Mesa de Duelo é conteúdo de fã gratuito, sem nenhum vínculo com a Wizards of the Coast, e o WhatsApp para contato: (33) 92000-1670.
+- **Virar cartas de duas faces na lista do deck.** Ao ver um deck ou ler uma carta (no preview, na prévia ao passar o mouse e na carta ampliada), as cartas de dupla face e que se transformam ganham o botão **Ver o verso**, que gira a carta e mostra a outra face. As cartas flip de Kamigawa ganham **Girar a carta**, que vira a imagem de cabeça para baixo para ler a outra metade.
+
 ## [0.32.0] - 2026-10-22
 
 ### Novo

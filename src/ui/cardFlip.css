@@ -1,0 +1,9 @@
+/* Cartas flip (Kamigawa): a outra metade é lida de cabeça para baixo. */
+.ci-image, .dw-preview-image img { transition: transform .35s ease; }
+.cf-upside-down { transform: rotate(180deg); }
+.cf-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.cf-toggle::before { content: '⟲'; font-size: 1.1em; line-height: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ci-image, .dw-preview-image img { transition: none; }
+}
+.dp-flip { width: 100%; margin-top: 10px; }

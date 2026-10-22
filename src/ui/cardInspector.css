@@ -2,7 +2,9 @@
 .card-inspector-preview { position: fixed; z-index: 80; top: 56px; left: 16px; width: min(380px, calc((100dvh - 136px) * .714)); max-width: calc(100vw - 32px); max-height: calc(100dvh - 96px); display: flex; flex-direction: column; text-align: left; border-radius: 14px; }
 .card-inspector-preview:has(.ci-image) .ci-head { order: 2; padding: 0; border: 0; }
 .card-inspector-preview:has(.ci-image) .ci-head > div { display: none; }
-.card-inspector-preview:has(.ci-image) .ci-control { width: 100%; border: 0; border-radius: 0; min-height: 36px; padding: 5px 12px; background: #111c30; }
+.card-inspector-preview:has(.ci-image) .ci-actions { width: 100%; gap: 0; }
+.card-inspector-preview:has(.ci-image) .ci-actions .ci-control + .ci-control { border-left: 1px solid var(--line); }
+.card-inspector-preview:has(.ci-image) .ci-control { flex: 1; width: 100%; border: 0; border-radius: 0; min-height: 36px; padding: 5px 12px; background: #111c30; }
 .card-inspector-preview:has(.ci-image) .ci-body { padding: 0; overflow: hidden; }
 .card-inspector-preview:has(.ci-image) .ci-details { display: none; }
 .card-inspector-preview .ci-image { width: 100%; max-height: none; margin: 0; border-radius: 10px; }
@@ -13,6 +15,7 @@
 .ci-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
 .ci-head h2 { margin: 0; font: 600 20px/1.25 var(--display); overflow-wrap: anywhere; }
 .ci-cost { display: flex; gap: 2px; margin-top: 8px; font-size: 20px; }
+.ci-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .ci-control { padding: 8px 12px; min-height: 44px; border-radius: 8px; border: 1px solid var(--line); background: #1a2944; cursor: pointer; font-size: 14px; flex-shrink: 0; }
 .ci-control:hover { border-color: var(--gold); }
 .ci-body { padding: 16px; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }

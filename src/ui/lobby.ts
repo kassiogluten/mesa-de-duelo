@@ -6,6 +6,7 @@ import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
 import { deckArt, deckColors } from './deckStats';
 import { validateDeckLocal } from './deckRules';
+import { siteFooterHTML } from './siteFooter';
 import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
 import './deckFilters.css';
 import './lobby.css';
@@ -91,7 +92,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="arena-btn secondary" data-lobby="library">Gerenciar decks</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
         <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
       </div>
-    </div></main></div>`;
+    </div></main>${siteFooterHTML()}</div>`;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   $('#netName').setAttribute('value', load('mesa:name') ?? '');
   $('#netUrl').setAttribute('value', load('mesa:forgeUrl') ?? '');

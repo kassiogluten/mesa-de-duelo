@@ -5,6 +5,7 @@ import { cacheGet, fetchByNames } from '../scryfall';
 import { esc, manaHTML, pip, richText } from './cardtext';
 import { deckArt, deckColors, groupedRows, statsHTML } from './deckStats';
 import { inspectCard } from './cardInspector';
+import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
 
 interface DeckPreviewOptions {
   selected: boolean;
@@ -28,7 +29,8 @@ export function openDeckPreview(deck: DeckData, opts: DeckPreviewOptions) {
     inspected = name;
     const sc = name ? cacheGet(name) : null, info = sc ? cardInfo(sc) : null;
     const el = dlg.querySelector('#dpCard')!;
-    el.innerHTML = info ? `<button type="button" class="dw-preview-image" data-inspect="${esc(name!)}" aria-label="Ampliar e ler ${esc(info.label)}">${info.image ? `<img src="${esc(info.image)}" alt="">` : esc(info.label)}</button><h3>${esc(info.label)}</h3><p>${manaHTML(info.manaCost)}</p><div class="dw-oracle">${info.text.split('\n').filter(Boolean).map(p => `<p>${richText(p)}</p>`).join('')}</div>` : '<p class="dw-note">Escolha uma carta para ler seus detalhes.</p>';
+    const sides = info?.image ? cardSides(sc) : null;
+    el.innerHTML = info ? `<button type="button" class="dw-preview-image" data-inspect="${esc(name!)}" aria-label="Ampliar e ler ${esc(info.label)}">${info.image ? `<img src="${esc(info.image)}" alt="">` : esc(info.label)}</button>${sides ? flipButtonHTML(sides, 'dw-button dp-flip') : ''}<h3>${esc(info.label)}</h3><p>${manaHTML(info.manaCost)}</p><div class="dw-oracle">${info.text.split('\n').filter(Boolean).map(p => `<p>${richText(p)}</p>`).join('')}</div>` : '<p class="dw-note">Escolha uma carta para ler seus detalhes.</p>';
   }
   function group(entries: DeckData['cards'], sideboard = false) {
     return groupedRows(entries).map(g => `<section class="dp-group"><h3>${sideboard ? 'Sideboard · ' : ''}${g.label} <small>${countEntries(g.rows)}</small></h3><ul>${g.rows.map(row => `<li><button type="button" class="dp-card" data-card="${esc(row.name)}" aria-label="Ler ${esc(row.info?.label ?? row.name)}, ${row.count} ${row.count === 1 ? 'cópia' : 'cópias'}"><span class="dp-n">${row.count}</span><span class="dp-name">${esc(row.info?.label ?? row.name)}</span><span class="dp-cost">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button></li>`).join('')}</ul></section>`).join('');
@@ -47,6 +49,8 @@ export function openDeckPreview(deck: DeckData, opts: DeckPreviewOptions) {
   dlg.addEventListener('click', e => {
     const target = e.target as HTMLElement;
     if (target === dlg || target.closest('[data-close]')) { dlg.close(); return; }
+    const flip = target.closest<HTMLElement>('[data-flip]'), sides = flip && inspected ? cardSides(cacheGet(inspected)) : null;
+    if (flip) { if (sides) turnCard(dlg.querySelector<HTMLImageElement>('.dw-preview-image img'), flip, sides); return; }
     const card = target.closest<HTMLElement>('[data-card],[data-inspect]');
     if (card) { inspectCard({ name: card.dataset.card ?? card.dataset.inspect! }, card); return; }
     if (target.closest('[data-pick]')) { dlg.close(); opts.onPick(); }

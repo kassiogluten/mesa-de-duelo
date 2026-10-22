@@ -1,5 +1,6 @@
 import { cacheGet, fetchByNames } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
+import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
 import './cardInspector.css';
 
 export interface InspectorCard {
@@ -25,6 +26,12 @@ function safeImage(value?: string) {
   if (!value) return undefined;
   try { const url = new URL(value, location.href); return ['https:', 'http:'].includes(url.protocol) ? url.href : undefined; } catch { return undefined; }
 }
+/** Faces da carta para o botão de virar; na mesa, a face à mostra fica sendo a "frente". */
+function sidesOf(card: InspectorCard) {
+  const sides = card.faceDown || !card.name ? null : cardSides(cacheGet(card.name));
+  if (sides?.kind === 'dfc' && card.image && card.image === sides.images[1]) sides.images.reverse();
+  return sides;
+}
 function content(card: InspectorCard, compact: boolean) {
   const hidden = card.faceDown || !card.name;
   const sc = hidden ? null : cacheGet(card.name!);
@@ -36,7 +43,8 @@ function content(card: InspectorCard, compact: boolean) {
   const power = hidden ? undefined : card.power ?? sc?.power;
   const toughness = hidden ? undefined : card.toughness ?? sc?.toughness;
   const current = card.basePower !== undefined && (card.basePower !== power || card.baseToughness !== toughness);
-  return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div>${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : '<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta">Fechar</button>'}</header>
+  const sides = image ? sidesOf(card) : null;
+  return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div><span class="ci-actions">${sides ? flipButtonHTML(sides, 'ci-control') : ''}${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : '<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta">Fechar</button>'}</span></header>
   <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? `<img class="ci-image" src="${esc(image)}" alt="${esc(name)}" draggable="false">` : ''}<div class="ci-details">
     ${type ? `<p class="ci-type">${esc(type)}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
@@ -58,6 +66,10 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
   el.querySelector('img')?.addEventListener('error', e => {
     (e.target as HTMLElement).remove(); el.querySelector('.ci-body')?.classList.add('ci-no-image');
   }, { once: true });
+  el.querySelector<HTMLElement>('[data-flip]')?.addEventListener('click', e => {
+    const sides = sidesOf(card);
+    if (sides) turnCard(el.querySelector<HTMLImageElement>('.ci-image'), e.currentTarget as HTMLElement, sides);
+  });
   el.querySelector('[data-ci-pin]')?.addEventListener('click', () => inspectCard(card, origin));
   el.querySelector('[data-ci-close]')?.addEventListener('click', () => modal?.close());
 }
