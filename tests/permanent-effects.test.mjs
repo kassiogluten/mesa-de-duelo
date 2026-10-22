@@ -36,14 +36,13 @@ test('ward cost, protection, prevention and face-down get readable seals', () =>
   assert.equal(protectionLabel('vampire'), 'vampire');
 });
 
-test('base details, strike marks, phasing, restrictions and targeting', () => {
+test('base details, phasing, restrictions and targeting', () => {
   const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'HASTE'], sick: true, cantAttack: true, phasedOut: true }), { targeted: 'theirs', active: true });
   assert.deepEqual(fx.base, ['deathtouch', 'haste', 'chained']);
-  assert.deepEqual(fx.marks, ['double-strike']);
   const view = permanentFxHTML(fx);
   assert.deepEqual(view.classes, ['fx-phased', 'fx-sick', 'fx-targeted theirs']);
   assert.match(view.html, /fx-crosshair/);
-  assert.equal((view.html.match(/<i><\/i>/g) ?? []).length, 2, 'double strike draws two blades');
+  assert.doesNotMatch(view.html, /fx-mark/, 'first and double strike have no mark on top');
   assert.equal(permanentFxText(fx), 'fora de fase, não pode atacar, alvo de algo na pilha');
   assert.equal(permanentFx(creature({ sick: true })).sick, false, 'summoning sickness only dims on its controller\'s turn');
 });
@@ -64,4 +63,11 @@ test('vigilance and trample get small marks on the left edge, creatures only', (
   assert.match(permanentFxHTML(fx).html, /fx-corner[^]*class="vigilance"[^]*class="trample"/);
   assert.deepEqual(permanentFx({ id: 4, tapped: false, token: false, keywords: ['VIGILANCE'] }).corner, []);
   assert.match(css, /\.slot\.attacking:not\(\.tapped\) \.bfc > \.fx-corner i\.vigilance/);
+});
+
+test('creatures that cannot attack or block show a crossed sword or shield on the left edge', () => {
+  assert.deepEqual(permanentFx(creature({ keywords: ['VIGILANCE'], cantAttack: true, cantBlock: true })).corner, ['vigilance', 'no-attack', 'no-block']);
+  assert.deepEqual(permanentFx(creature({ cantBlock: true })).corner, ['no-block']);
+  assert.match(css, /\.fx-corner i\.no-attack \{ background-image/);
+  assert.match(css, /\.fx-corner i\.no-block \{ background-image/);
 });

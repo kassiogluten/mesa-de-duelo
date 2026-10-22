@@ -70,7 +70,8 @@
 .forge.multiplayer .seat-command .command-card { width: 29px; --fw: 29px; }
 .forge.multiplayer .seat-command .command-tax { font-size: 10px; padding: 1px 4px; }
 .forge.multiplayer .seat-command .inspect-card { display: none; }
-.forge.multiplayer .table-seat > .field { padding: 0; min-height: 0; flex: 1; overflow-x: hidden; overflow-y: auto; justify-content: flex-start; --ch: clamp(72px, 12vh, 130px); --cw: calc(var(--ch) * .716); --lch: clamp(40px, 6.5vh, 65px); --lcw: calc(var(--lch) * .716); }
+/* Sem corte: uma carta que passa da altura do assento fica por cima da linha que divide a mesa (as fileiras rolam na horizontal). */
+.forge.multiplayer .table-seat > .field { padding: 0; min-height: 0; flex: 1; overflow: visible; justify-content: flex-start; --ch: clamp(72px, 12vh, 130px); --cw: calc(var(--ch) * .716); --lch: clamp(40px, 6.5vh, 65px); --lcw: calc(var(--lch) * .716); }
 .forge.multiplayer .table-seat .row { min-height: calc(var(--ch) + 18px); padding: 9px 6px; gap: 8px; }
 .forge.multiplayer .table-seat .lands { min-height: calc(var(--lch) + 16px); }
 .forge.multiplayer .table-seat .perm-group { gap: 8px; }
@@ -123,7 +124,7 @@
   .forge.multiplayer .seat-zones .pile { width: 18px; height: 25px; --fw: 18px; }
   .forge.multiplayer .seat-command .command-card { width: 36px; --fw: 36px; }
   .forge.multiplayer .seat-command { gap: 7px; }
-  .forge.multiplayer .table-seat > .field { flex-direction: row; align-items: center; overflow-y: hidden; --ch: clamp(56px, calc((100vh - 127px) * .555 - 52px), 84px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.multiplayer .table-seat > .field { flex-direction: row; align-items: center; overflow: visible; --ch: clamp(56px, calc((100vh - 127px) * .555 - 52px), 84px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
   .forge.multiplayer .table-seat .seat-row { width: 58%; flex: 1 1 58%; }
   .forge.multiplayer .table-seat .lands-lane { width: 42%; flex-basis: 42%; --lch: calc(var(--ch) * .64); }
   .forge.multiplayer .table-seat .row { width: 100%; flex: 0 0 auto; min-height: calc(var(--ch) + 12px); padding: 6px 4px; }
@@ -163,7 +164,7 @@
   .forge.commander-game:not(.multiplayer) .piles.opp { top: 6px; left: 150px; right: auto; }
   .forge.commander-game:not(.multiplayer) .duel-command .command-card { width: 36px; --fw: 36px; }
   .forge.commander-game:not(.multiplayer) .avatar-slot.opp { top: 0; }
-  .forge.commander-game:not(.multiplayer) > .field { flex-direction: row; overflow-y: hidden; --ch: clamp(60px, calc((100vh - 156px) / 2 - 24px), 96px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.commander-game:not(.multiplayer) > .field { flex-direction: row; overflow: visible; --ch: clamp(60px, calc((100vh - 156px) / 2 - 24px), 96px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
   .forge.commander-game:not(.multiplayer) > .field.opp { align-items: flex-end; }
   .forge.commander-game:not(.multiplayer) > .field.me { align-items: flex-start; padding-right: 84px; }
   /* Each row only as wide as its cards, so creatures and lands sit together in the middle of the field. */
@@ -240,7 +241,7 @@
 /* Um só: campo largo, terrenos ao lado das criaturas, e as criaturas crescem até o tamanho do seu campo. */
 @media (min-width: 761px) and (min-height: 501px) {
   .forge.multiplayer .commander-opponents[data-shown='2'] .table-seat > .field { --ch: clamp(74px, 12.5vh, 140px); }
-  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat > .field { flex-direction: row; align-items: center; overflow-y: hidden; --ch: clamp(80px, 15vh, 170px); --lch: clamp(46px, 9vh, 96px); }
+  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat > .field { flex-direction: row; align-items: center; overflow: visible; --ch: clamp(80px, 15vh, 170px); --lch: clamp(46px, 9vh, 96px); }
   .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat .seat-row { width: 62%; flex: 1 1 62%; }
   .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat .lands-lane { width: 38%; flex: 0 1 38%; }
 }

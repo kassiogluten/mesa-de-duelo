@@ -6,7 +6,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
-## [0.31.0] - 2026-10-22
+## [0.32.0] - 2026-10-22
 
 ### Novo
 
@@ -14,6 +14,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Mandar a partida junto.** Marcando **Anexar a partida**, o relato leva as jogadas que você viu, o seu deck e os apelidos dos jogadores, para conseguirmos repetir na mesa o que aconteceu e conferir a correção. Vem marcado quando é um erro durante a partida e desmarcado numa sugestão, e mostra o tamanho antes de enviar. A última partida fica guardada no aparelho, então dá para relatar da tela inicial depois que ela acabou ou depois de recarregar a página.
 - **Relatar este erro.** O painel **Erros da partida** ganhou um botão que abre o formulário já como erro, com a partida e a lista de erros juntas.
 - **Relato guardado sem internet.** Sem conexão ou com o servidor fora do ar, o relato fica guardado no aparelho e é enviado sozinho quando a conexão voltar.
+
+## [0.31.0] - 2026-10-22
+
+### Novo
+
+- **Cartas no estilo Arena.** Em **Menu › Aparência das cartas** há a nova opção **Arena**: as permanentes no campo mostram só a arte, ocupando a carta inteira, dentro de uma moldura na cor da carta. Quando a permanente tem poder/resistência, lealdade ou marcadores, a moldura se alarga embaixo num rodapé com esses números. A moldura muda com o tipo: criaturas na cor da carta, planeswalkers escuros com filete dourado, encantamentos claros com pontos de luz, artefatos em metal escovado e terrenos em pedra. Criaturas e fichas ficam quadradas, e as fichas têm o topo arredondado. Na mão, nas escolhas e na pilha as cartas continuam com a imagem completa, e o texto inteiro segue no inspetor.
+
+### Mudou
+
+- **Enjoo de invocação mais fácil de ver.** Além de um pouco apagadas, as criaturas com enjoo agora ficam com a imagem levemente borrada, e o selo de enjoo trocou o zZ por um emoji tonto 😵‍💫. O selo e os números continuam nítidos.
+- **Ícone de alcance.** O ícone de alcance nas cartas do campo agora é um arco e flecha.
+- **Quem não pode atacar ou bloquear.** Criaturas impedidas por um efeito de atacar ganham uma espada riscada de vermelho, e as impedidas de bloquear ganham um escudo riscado, nos selos da borda esquerda da carta, junto com vigilância e atropelar. A corrente embaixo da carta continua.
+- **Sem lâminas no canto da carta.** Criaturas com iniciativa ou golpe duplo não mostram mais os traços brancos no canto de cima da carta; essas habilidades continuam nos ícones de palavras-chave.
+
+### Corrigido
+
+- **Cartas cortadas na linha do meio da mesa.** Criaturas declaradas atacantes sobem em direção ao oponente e tinham o topo cortado; nas partidas com vários oponentes, as cartas do fim do campo deles também eram cortadas pela linha que divide a mesa. Agora elas passam por cima da linha, inteiras.
+- **Selos e efeitos cortados nas cartas do campo.** Os selos de enjoo e do número do ataque ficavam com o topo cortado; agora aparecem dentro da carta, no alto. Marcas, selos de proteção e outros efeitos que saem um pouco da carta também deixaram de ser cortados.
 
 ## [0.30.0] - 2026-10-21
 

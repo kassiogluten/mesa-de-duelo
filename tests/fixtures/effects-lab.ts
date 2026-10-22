@@ -337,7 +337,7 @@ function table() {
       try { localStorage.setItem('mesa:cards', c.value); } catch { /* opcional */ }
       const select = document.querySelector<HTMLSelectElement>('#fCardStyle');
       if (select) { select.value = c.value; select.dispatchEvent(new Event('change', { bubbles: true })); }
-      return c.value === 'art' ? 'Cartas em arte e texto.' : 'Cartas com a imagem inteira.';
+      return c.value === 'art' ? 'Cartas em arte e texto.' : c.value === 'arena' ? 'Cartas no estilo Arena: só a arte no campo.' : 'Cartas com a imagem inteira.';
     },
     reduce: c => { reduce = !!c.value; if (reduce) document.head.append(still); else still.remove(); return reduce ? 'Reduzir movimento ligado nesta página.' : 'Movimento normal.'; },
   };
@@ -411,7 +411,7 @@ function panel() {
     <h2>Moer (item 24, do lado escolhido em Campo)</h2>
     ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>
     <h2>Aparência e tela</h2>
-    <select id="style">${opt('full', 'Imagem completa')}${opt('art', 'Arte e texto')}</select>
+    <select id="style">${opt('full', 'Imagem completa')}${opt('art', 'Arte e texto')}${opt('arena', 'Arena')}</select>
     <label class="chk" style="width:100%"><input type="checkbox" id="reduce"> Reduzir movimento (só nesta página)</label>
     <div>${[['desktop', 'Computador'], ['tablet', 'Tablet'], ['phone', 'Celular deitado']].map(([k, t]) => `<button data-s="${k}">${t}</button>`).join('')}</div>`;
 

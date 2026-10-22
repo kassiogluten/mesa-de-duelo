@@ -120,7 +120,7 @@ function panel() {
     <input type="range" id="seek" min="0" max="0" value="0" aria-label="Quadro">
     <p id="pos">Nenhuma partida aberta.</p>
     <div class="ctl"><select id="speed" aria-label="Velocidade">${opt('0.5', '0,5×')}${opt('1', '1×')}${opt('2', '2×')}${opt('4', '4×')}${opt('10', '10×')}</select>
-      <select id="style" aria-label="Aparência das cartas">${opt('full', 'Imagem completa')}${opt('art', 'Arte e texto')}</select></div>
+      <select id="style" aria-label="Aparência das cartas">${opt('full', 'Imagem completa')}${opt('art', 'Arte e texto')}${opt('arena', 'Arena')}</select></div>
     <label><input type="checkbox" id="reduce"> Reduzir movimento</label>
     <div id="sizes"></div>
   </div><div id="info"></div><ol id="list" aria-label="Ações e erros"></ol>`;
@@ -210,7 +210,9 @@ function panel() {
     if (device?.viewport) sizes.unshift(['player', `Tela do jogador (${device.viewport})`]);
     $('#sizes').innerHTML = sizes.map(([k, t]) => `<button data-s="${k}">${t}</button>`).join('');
     playerSize = device?.viewport?.split('×').map(Number) as [number, number] | undefined;
-    if (meta?.preferences?.cards === 'arte e texto' || prefs.cards === 'arte e texto') { ($('#style') as HTMLSelectElement).value = 'art'; send({ cmd: 'style', value: 'art' }); }
+    // A mesa na aparência que o jogador usava.
+    const style = prefs.cards === 'arte e texto' ? 'art' : prefs.cards === 'arena' ? 'arena' : null;
+    if (style) { ($('#style') as HTMLSelectElement).value = style; send({ cmd: 'style', value: style }); }
     resize(device?.viewport ? 'player' : size);
     $('#msg').textContent = `${name} aberto.`;
     goTo(0);

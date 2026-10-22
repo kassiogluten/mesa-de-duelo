@@ -10,9 +10,8 @@ export interface PermanentFx {
   frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'defender' | 'token';
   glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'plus' | 'minus';
   base: ('deathtouch' | 'haste' | 'chained')[];
-  marks: ('first-strike' | 'double-strike')[];
-  /** Detalhes na borda esquerda: olho (vigilância) e pegadas (atropelar). */
-  corner: ('vigilance' | 'trample')[];
+  /** Detalhes na borda esquerda: olho (vigilância), pegadas (atropelar) e espada/escudo riscados (não pode atacar/bloquear). */
+  corner: ('vigilance' | 'trample' | 'no-attack' | 'no-block')[];
   seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down'; html: string; label: string }[];
   phased: boolean;
   targeted?: 'mine' | 'theirs';
@@ -48,8 +47,9 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   if (c.creature && has('DEATHTOUCH')) base.push('deathtouch');
   if (c.creature && has('HASTE') && c.sick) base.push('haste');
   if (c.creature && (c.cantAttack || c.cantBlock)) base.push('chained');
-  const marks: PermanentFx['marks'] = c.creature && has('DOUBLE_STRIKE') ? ['double-strike'] : c.creature && has('FIRST_STRIKE') ? ['first-strike'] : [];
   const corner: PermanentFx['corner'] = c.creature ? (['VIGILANCE', 'TRAMPLE'] as const).filter(has).map(k => k === 'VIGILANCE' ? 'vigilance' : 'trample') : [];
+  if (c.creature && c.cantAttack) corner.push('no-attack');
+  if (c.creature && c.cantBlock) corner.push('no-block');
   const seals: PermanentFx['seals'] = [];
   if (has('WARD')) seals.push({ kind: 'ward', html: `Ward ${c.ward?.startsWith('{') ? manaHTML(c.ward) : esc(c.ward ?? '')}`, label: `Proteção contra alvos${c.ward ? `: ${c.ward}` : ''}` });
   if (c.protection?.length) {
@@ -63,7 +63,7 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
     seals.push({ kind: 'face-down', html: kind ? `${kind} 2/2` : '2/2', label: `Virada para baixo${kind ? ` (${kind})` : ''}, 2/2` });
   }
   const restricted = c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : undefined;
-  return { frame, glow, base, marks, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick && context.active), restricted };
+  return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick && context.active), restricted };
 }
 
 /** Classes da carta e o HTML dos efeitos (desenhados atrás ou na borda da carta, sem receber clique). */
@@ -73,7 +73,6 @@ export function permanentFxHTML(fx: PermanentFx, auraColor?: string) {
     fx.glow ? `<span class="fx-glow ${fx.glow}"${fx.glow === 'enchanted' && auraColor ? ` style="--aura:${auraColor}"` : ''} aria-hidden="true"></span>` : '',
     fx.frame ? `<span class="fx-frame ${fx.frame}" aria-hidden="true"></span>` : '',
     ...fx.base.map(b => `<span class="fx-base ${b}" aria-hidden="true"></span>`),
-    ...fx.marks.map(m => `<span class="fx-mark ${m}" aria-hidden="true"><i></i>${m === 'double-strike' ? '<i></i>' : ''}</span>`),
     fx.corner.length ? `<span class="fx-corner" aria-hidden="true">${fx.corner.map(k => `<i class="${k}"></i>`).join('')}</span>` : '',
     fx.targeted ? '<span class="fx-crosshair" aria-hidden="true"></span>' : '',
     fx.seals.length ? `<span class="fx-seals">${fx.seals.map(seal => `<span class="fx-seal ${seal.kind}" title="${esc(seal.label)}">${seal.html}</span>`).join('')}</span>` : '',

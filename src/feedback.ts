@@ -67,7 +67,7 @@ export function deviceInfo(): DeviceInfo {
 export function localPreferences(): Record<string, unknown> {
   const read = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
   return {
-    cards: read('mesa:cards') === 'art' ? 'arte e texto' : 'imagem completa',
+    cards: read('mesa:cards') === 'art' ? 'arte e texto' : read('mesa:cards') === 'arena' ? 'arena' : 'imagem completa',
     pace: read('mesa:pace') === 'fast' ? 'rápido sem resposta' : 'normal',
     reducedMotion: media('(prefers-reduced-motion: reduce)'),
     autoPassNoActions: read('mesa:autoPassNoActions') !== 'false',

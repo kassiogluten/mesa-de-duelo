@@ -31,3 +31,21 @@ test('basic lands show only the art, and names and text are escaped', () => {
   const html = faceHTML({ ...base, style: 'art', name: '<b>x</b>', text: '<script>alert(1)</script>' });
   assert.doesNotMatch(html, /<script>|<b>x/);
 });
+
+test('arena layout shows only the cropped art with an empty footer for the table stats', () => {
+  const html = faceHTML({ ...base, style: 'arena', art: 'https://img/art.jpg', creature: true, power: 2, toughness: 3, text: 'texto' });
+  assert.match(html, /face arena-face col-R/); assert.match(html, /src="https:\/\/img\/art.jpg"/); assert.match(html, /class="ar-foot"/);
+  assert.doesNotMatch(html, /full.jpg|Raio|texto|2\/3/);
+});
+
+test('arena frame follows the permanent type and tokens get their own shape', () => {
+  const arena = f => faceHTML({ ...base, style: 'arena', art: 'https://img/art.jpg', ...f });
+  assert.match(arena({ creature: true, typeLine: 'Criatura Encantamento — Deus' }), /ar-creature"/);
+  assert.match(arena({ typeLine: 'Legendary Planeswalker — Chandra', loyalty: 4 }), /ar-planeswalker"/);
+  assert.match(arena({ typeLine: 'Encantamento — Aura' }), /ar-enchantment"/);
+  assert.match(arena({ typeLine: 'Artefato' }), /ar-artifact"/);
+  assert.match(arena({ typeLine: 'Artifact Land' }), /ar-artifact"/);
+  assert.match(arena({ typeLine: 'Terreno Básico — Floresta' }), /ar-land"/);
+  assert.match(arena({ typeLine: 'Battle — Siege' }), /ar-other"/);
+  assert.match(arena({ creature: true, typeLine: 'Token Creature — Soldier', token: true }), /ar-creature ar-token"/);
+});

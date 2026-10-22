@@ -3,7 +3,7 @@
  * Regra de legibilidade: nada cobre nome, custo ou P/T. Brilho fica atrás da carta, moldura só na borda de fora,
  * detalhes embaixo dela. Movimento contínuo só sem "reduzir movimento".
  */
-.bfc > .fx-glow, .bfc > .fx-frame, .bfc > .fx-base, .bfc > .fx-mark, .bfc > .fx-crosshair, .bfc > .fx-corner, .bfc > .fx-seals { position: absolute; pointer-events: none; }
+.bfc > .fx-glow, .bfc > .fx-frame, .bfc > .fx-base, .bfc > .fx-crosshair, .bfc > .fx-corner, .bfc > .fx-seals { position: absolute; pointer-events: none; }
 
 /* Brilho atrás da carta: só a parte que passa da borda aparece. */
 .bfc > .fx-glow { inset: 0; z-index: -1; border-radius: 6px; --c: #9fe3ff; box-shadow: 0 0 6px 4px color-mix(in srgb, var(--c) 90%, transparent), 0 0 16px 9px color-mix(in srgb, var(--c) 45%, transparent); opacity: 1; }
@@ -30,8 +30,6 @@
 .bfc > .fx-base.chained { bottom: -7px; height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, #a7afbd 0 6px, transparent 6px 9px); filter: none; z-index: 1; opacity: .85; }
 
 /* Lâminas da iniciativa e do golpe duplo: fora do canto de cima, à direita. */
-.bfc > .fx-mark { top: -7px; right: -7px; z-index: 3; display: flex; gap: 2px; transform: rotate(-35deg); }
-.bfc > .fx-mark i { display: block; width: 3px; height: 15px; border-radius: 2px; background: linear-gradient(#fff, #c7d2e4); box-shadow: 0 0 4px #fff9, 0 1px 2px #000a; }
 
 /* Mira de "alvo de algo na pilha", no meio da arte (longe do nome, do custo e do P/T). */
 .bfc > .fx-crosshair { left: 50%; top: 44%; width: 38%; aspect-ratio: 1; z-index: 3; transform: translate(-50%, -50%); border-radius: 50%; --c: #ff8a3d; border: 2px solid var(--c); box-shadow: 0 0 8px var(--c), inset 0 0 6px var(--c); }
@@ -50,10 +48,12 @@
 .fx-seal.face-down { color: var(--gold-light); }
 .slot.tapped .bfc > .fx-seals { transform: translateX(-50%) rotate(-90deg); transform-origin: 50% 50%; }
 
-/* Fora de fase: translúcida e tracejada. Com enjoo de invocação: um pouco apagada. */
+/* Fora de fase: translúcida e tracejada. Com enjoo de invocação: um pouco apagada e com a imagem levemente borrada
+   (o leve zoom esconde a borda esmaecida do blur). */
 .bfc.fx-phased > .face { opacity: .35; outline: 2px dashed #9fd3ff; outline-offset: 2px; filter: grayscale(.5); }
 .bfc.fx-phased > :not(.face) { opacity: .5; }
 .bfc.fx-sick > .face { filter: saturate(.7) brightness(.88); }
+.bfc.fx-sick > .face img { filter: blur(0.7px); transform: scale(1.04); }
 
 @media (prefers-reduced-motion: no-preference) {
   .bfc > .fx-glow.hexproof { animation: fx-shimmer 3.2s ease-in-out infinite; }
@@ -76,6 +76,8 @@
 .bfc > .fx-corner i { display: block; width: 14px; height: 14px; border-radius: 50%; background: rgba(9, 13, 24, .9) center / 10px no-repeat; box-shadow: 0 0 0 1px #c7d2e4aa, 0 1px 2px #000a; }
 .bfc > .fx-corner i.vigilance { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f4e7b8'%3E%3Cpath d='M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8z'/%3E%3C/svg%3E"); }
 .bfc > .fx-corner i.trample { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0b98a'%3E%3Cellipse cx='8' cy='15' rx='3' ry='4.5'/%3E%3Cellipse cx='16' cy='9' rx='3' ry='4.5'/%3E%3Ccircle cx='5.5' cy='8.5' r='1.3'/%3E%3Ccircle cx='8' cy='7.5' r='1.3'/%3E%3Ccircle cx='10.5' cy='8.5' r='1.3'/%3E%3Ccircle cx='13.5' cy='2.8' r='1.3'/%3E%3Ccircle cx='16' cy='2' r='1.3'/%3E%3Ccircle cx='18.5' cy='2.8' r='1.3'/%3E%3C/svg%3E"); }
+.bfc > .fx-corner i.no-attack { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z' fill='%23d6dce8'/%3E%3Cpath d='M4 4l16 16' stroke='%23ff5a4a' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.bfc > .fx-corner i.no-block { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z' fill='%23d6dce8'/%3E%3Cpath d='M4 4l16 16' stroke='%23ff5a4a' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
 
 /* ---- Efeitos de passagem (motion.ts) ---- */
 /* Escudo de prevenção: domo transparente, sem explosão. */

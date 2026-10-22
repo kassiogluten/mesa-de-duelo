@@ -1,8 +1,24 @@
 /* The table stays spatial: cards occupy the mat; the stack only opens for pending effects. */
 .forge { --hand-right: 300px; --exile-card-width: var(--hcw); --exile-width: calc(var(--exile-visible, 1) * var(--exile-card-width) + (var(--exile-visible, 1) - 1) * 12px + 16px); grid-template-columns: minmax(0, 1fr); --ch: clamp(96px, 17vh, 190px); --cw: calc(var(--ch) * .716); --lch: clamp(62px, 9.5vh, 105px); --lcw: calc(var(--lch) * .716); }
 .forge .mat { background: repeating-linear-gradient(60deg, #ffffff04 0 2px, transparent 2px 26px), repeating-linear-gradient(-60deg, #ffffff04 0 2px, transparent 2px 26px), radial-gradient(ellipse at 50% 50%, var(--mat-center), var(--mat-mid) 45%, var(--bg-deep) 92%); }
-.forge .field { min-width: 0; padding: 0 58px; gap: 0; overflow-x: hidden; overflow-y: auto; justify-content: safe center; }
+/* Os campos não cortam nada (cada fileira rola na horizontal): cartas que sobem no ataque passam por cima da linha do meio. */
+.forge .field { min-width: 0; padding: 0 58px; gap: 0; overflow: visible; justify-content: safe center; }
 .forge .row { min-width: 0; width: 100%; flex-shrink: 0; justify-content: safe center; overflow-x: auto; overflow-y: hidden; min-height: calc(var(--ch) + 24px); padding: 12px 12px; scrollbar-width: thin; scrollbar-color: var(--muted) transparent; scroll-padding: 20px; }
+/*
+ * A fileira rola na horizontal e por isso corta na vertical (o CSS não deixa uma direção rolar e a outra vazar). Para
+ * os selos, marcas e efeitos que saem da carta caberem, o conteúdo ganha uma folga em cima e embaixo que a fileira
+ * devolve com margem negativa, sem mudar a mesa. Com atacantes (que avançam 28% da carta para o oponente), a folga
+ * cresce do lado do oponente; a sobra fica sem clique.
+ */
+.forge .row { --bleed: 16px; }
+.forge .row:has(> *) { margin-block: calc(-1 * var(--bleed)); }
+.forge .row > * { margin-block: var(--bleed); }
+.forge .row:has(.slot.attacking) { --lift: calc(var(--ch) * .28); pointer-events: none; }
+.forge .row:has(.slot.attacking) > * { pointer-events: auto; }
+.forge .field.me .row:has(.slot.attacking) > * { margin-top: calc(var(--bleed) + var(--lift)); }
+.forge .field.me .row:has(.slot.attacking) { margin-top: calc(-1 * (var(--bleed) + var(--lift))); }
+.forge .field.opp .row:has(.slot.attacking) > * { margin-bottom: calc(var(--bleed) + var(--lift)); }
+.forge .field.opp .row:has(.slot.attacking) { margin-bottom: calc(-1 * (var(--bleed) + var(--lift))); }
 .forge .row.lands { min-height: calc(var(--lch) + 16px); padding: 8px 12px; }
 .forge .row > *, .forge .perm-group, .forge .slot { flex-shrink: 0; }
 .forge .slot { transition: none; }

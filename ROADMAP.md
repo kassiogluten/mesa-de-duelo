@@ -407,3 +407,12 @@ Etapa 6: triagem e manutenção
 - [x] Retenção de 90 dias ou 1 GB, apagando os mais antigos primeiro.
 - [x] Métricas no Grafana: relatos recebidos por tipo e com ou sem partida, recusados por motivo e espaço ocupado.
 - [x] Novidades (`CHANGELOG.md`) a cada etapa que o jogador perceber (a 3 principalmente).
+
+## 29. Cartas exiladas sob uma criatura aparecem abaixo dela
+
+Cartas que uma permanente exila "sob si" ou "com ela" (Banisher Priest, Hostage Taker, cartas com imprint como Isochron Scepter etc.) hoje só aparecem no exílio comum, sem ligação visível com quem as exilou. A ideia é mostrá-las presas à permanente, saindo por baixo dela, como os anexos.
+
+- [ ] Descobrir como o Forge liga a carta exilada à fonte (`ExiledWith`, `Imprinted`, `encoded`) e mandar essa ligação pela ponte.
+- [ ] Desenhar as cartas exiladas atrás da permanente, aparecendo pela borda de baixo (como o leque de auras e equipamentos, mas para baixo e com aparência de exílio).
+- [ ] Contador e janela para ver todas quando forem várias, e a mesma lista no inspetor da permanente.
+- [ ] Quando a permanente sai do campo, as cartas voltam a aparecer só no exílio.
