@@ -1,0 +1,114 @@
+/* Área de admin: as cores e botões da mesa, numa página que rola (a mesa não rola). */
+body { min-height: 100%; height: auto; }
+#admin { min-height: 100dvh; }
+.adm-muted { margin: 0; color: var(--muted); font-size: 14px; }
+.adm-error { margin: 0; color: #ff9f86; font-size: 14px; }
+.adm-error:empty { display: none; }
+.adm-card { border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--surface) 70%, var(--bg-deep)); }
+.adm-ghost { min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--ink); font: 600 14px var(--body); cursor: pointer; }
+.adm-ghost:hover { border-color: var(--gold); }
+.adm-danger { color: #ff9f86; }
+.adm-danger:hover { border-color: var(--red); }
+#admin .arena-btn { min-width: 0; min-height: 40px; padding: 8px 16px; font: 600 14px/1.2 var(--body); letter-spacing: 0; text-transform: none; text-decoration: none; display: inline-flex; align-items: center; }
+#admin select, #admin input, #admin textarea { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-deep); color: var(--ink); font: 400 15px var(--body); }
+#admin label { display: grid; gap: 4px; color: var(--muted); font: 600 13px var(--body); }
+.brand-mark { display: inline-block; width: 22px; height: 22px; border-radius: 6px; transform: rotate(45deg) scale(.9); background: linear-gradient(135deg, var(--gold-light), var(--gold-deep)); box-shadow: 0 0 14px #f2b54c44; }
+
+/* Entrar */
+.adm-login { min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
+.adm-login form { width: min(360px, 100%); display: grid; gap: 12px; padding: 28px; text-align: center; }
+.adm-login h1 { margin: 6px 0 0; font: 600 24px var(--display); }
+.adm-login p { margin: 0 0 8px; color: var(--muted); }
+.adm-login label { text-align: left; }
+.adm-login .brand-mark { justify-self: center; }
+.adm-login .arena-btn { justify-content: center; min-height: 46px; }
+
+/* Moldura */
+.adm-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 24px; padding: 10px max(16px, calc((100vw - 1280px) / 2)); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg-deep) 88%, transparent); backdrop-filter: blur(8px); }
+.adm-brand { display: inline-flex; align-items: center; gap: 10px; color: var(--gold); font: 700 18px var(--display); text-decoration: none; }
+.adm-tabs { display: flex; gap: 4px; margin-right: auto; }
+.adm-tabs a { padding: 8px 14px; border-radius: 8px; color: var(--muted); font-weight: 600; text-decoration: none; }
+.adm-tabs a[aria-current="true"] { color: var(--gold-light); background: #f2b54c14; box-shadow: inset 0 -2px var(--gold); }
+.adm-main { width: min(1280px, 100%); margin: 0 auto; padding: 20px 16px 40px; }
+.adm-main h1 { margin: 0; font: 600 26px var(--display); }
+
+/* Relatos */
+.adm-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.adm-head .adm-ghost { margin-left: auto; }
+.adm-filters { display: grid; grid-template-columns: 220px 180px 1fr; gap: 12px; margin: 16px 0; }
+.adm-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.adm-split.has-detail { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.adm-split:not(.has-detail) .adm-detail { display: none; }
+.adm-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.adm-row { display: grid; gap: 4px; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--surface) 50%, var(--bg-deep)); color: var(--ink); text-align: left; cursor: pointer; }
+.adm-row:hover { border-color: #f2b54c66; }
+.adm-row.on { border-color: var(--gold); background: #f2b54c10; }
+.adm-row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-row-top time { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.adm-row-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #d8deea; font-size: 14px; }
+.adm-row-meta { color: var(--muted); font-size: 12px; }
+.adm-empty { padding: 24px; color: var(--muted); text-align: center; }
+.adm-kind, .adm-status { padding: 1px 8px; border-radius: 99px; font: 600 12px/1.6 var(--body); white-space: nowrap; }
+.adm-kind { background: #59b5ff1c; color: #9ad3ff; }
+.adm-kind.erro { background: #ec5a3f22; color: #ff9f86; }
+.adm-status { border: 1px solid var(--line); color: var(--muted); }
+.adm-status.s-novo { border-color: var(--gold); color: var(--gold-light); }
+.adm-status.s-issue { border-color: #59b5ff88; color: #9ad3ff; }
+.adm-status.s-resolvido { border-color: #63d68f88; color: var(--heal); }
+
+/* Detalhe */
+.adm-detail { position: sticky; top: 76px; max-height: calc(100dvh - 92px); overflow: auto; padding: 4px 4px 16px; }
+.adm-detail-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.adm-detail h2 { margin: 0; font: 600 22px var(--display); letter-spacing: .03em; }
+.adm-detail h3 { margin: 20px 0 8px; font: 600 15px var(--body); color: var(--gold-light); }
+.adm-back { display: none; }
+.adm-quote { margin: 14px 0; padding: 12px 14px; border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; background: #ffffff08; white-space: pre-wrap; font-size: 15px; }
+.adm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-notice { min-height: 20px; margin: 8px 0 0; color: var(--gold-light); font-size: 14px; }
+.adm-status-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+.adm-status-form h3 { grid-column: 1 / -1; margin: 0; }
+.adm-wide { grid-column: 1 / -1; }
+.adm-form-end { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.adm-dl { display: grid; grid-template-columns: 140px 1fr; gap: 6px 12px; margin: 0; font-size: 14px; }
+.adm-dl dt { color: var(--muted); }
+.adm-dl dd { margin: 0; overflow-wrap: anywhere; }
+.adm-errors { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.adm-errors li { padding: 8px 10px; border-radius: 8px; background: #ec5a3f12; }
+.adm-errors time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.adm-errors code, .adm-detail pre { display: block; margin-top: 4px; white-space: pre-wrap; color: var(--muted); font-size: 12px; }
+.adm-detail details { margin-top: 12px; }
+.adm-detail summary { cursor: pointer; font-weight: 600; }
+
+/* Páginas de teste */
+.adm-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.adm-page { display: grid; gap: 6px; height: 100%; padding: 16px; color: var(--ink); text-decoration: none; }
+.adm-page:hover { border-color: var(--gold); }
+.adm-page strong { color: var(--gold-light); font: 600 17px var(--display); }
+.adm-page span { color: #d8deea; font-size: 14px; }
+.adm-page code { color: var(--muted); font-size: 12px; }
+
+@media (max-width: 860px) {
+  .adm-top { gap: 8px 12px; flex-wrap: wrap; }
+  .adm-top .adm-ghost { margin-left: auto; }
+  .adm-tabs { order: 3; width: 100%; margin-right: 0; overflow-x: auto; }
+  .adm-tabs a { white-space: nowrap; }
+  .adm-filters { grid-template-columns: 1fr 1fr; }
+  .adm-search { grid-column: 1 / -1; }
+  .adm-split.has-detail { grid-template-columns: minmax(0, 1fr); }
+  .adm-split.has-detail .adm-list { display: none; }
+  .adm-detail { position: static; max-height: none; }
+  .adm-back { display: inline-flex; }
+  .adm-status-form { grid-template-columns: 1fr; }
+  .adm-dl { grid-template-columns: 110px 1fr; }
+}
+
+/* Partidas */
+.adm-matches { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.adm-match { display: grid; gap: 8px; padding: 14px 16px; }
+.adm-players { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.adm-players li.out { opacity: .55; }
+.adm-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; background: var(--muted); }
+.adm-dot.on { background: var(--heal); box-shadow: 0 0 8px #63d68f88; }
+.adm-dot.off { background: var(--red); }
+.adm-dot.ai { background: #59b5ff; }
+.adm-id { font-size: 12px; overflow-wrap: anywhere; }

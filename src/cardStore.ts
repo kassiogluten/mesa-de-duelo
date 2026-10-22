@@ -3,25 +3,13 @@
  * crescer sem disputar o espaço (cerca de 5 MB) que os decks usam. Sem IndexedDB (navegação privada, testes), tudo
  * vira no-op e as cartas ficam só na memória da página.
  */
-const DB_NAME = 'mesa-de-duelo';
-const STORE = 'scryfall';
+import { openDb, STORES } from './idb';
 
-let opening: Promise<IDBDatabase | null> | null = null;
-function open(): Promise<IDBDatabase | null> {
-  return opening ??= new Promise(resolve => {
-    try {
-      if (typeof indexedDB === 'undefined') { resolve(null); return; }
-      const request = indexedDB.open(DB_NAME, 1);
-      request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains(STORE)) request.result.createObjectStore(STORE); };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = request.onblocked = () => resolve(null);
-    } catch { resolve(null); }
-  });
-}
+const STORE = STORES.cards;
 
 /** Todas as cartas guardadas, como pares [nome em minúsculas, carta]. */
 export async function readAll<T>(): Promise<[string, T][]> {
-  const db = await open();
+  const db = await openDb();
   if (!db) return [];
   return new Promise(resolve => {
     try {
@@ -45,7 +33,7 @@ async function flush() {
   const batch = pending;
   pending = new Map();
   flushing = null;
-  const db = await open();
+  const db = await openDb();
   if (!db || !batch.size) return;
   await new Promise<void>(resolve => {
     try {

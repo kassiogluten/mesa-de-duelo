@@ -10,7 +10,7 @@ import { followCardPreview, inspectCard, showCardPreview, hideCardPreview } from
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
-import { MatchDiagnostics, type DiagnosticKind } from './matchDiagnostics';
+import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
 import { forcedSeatReason, visibleSeats } from './seatVisibility';
 import { fixPossessives } from './forgeText';
 import { VERSION } from './changelog';
@@ -87,6 +87,12 @@ const KEYWORD_ICON: Record<string, string> = {
 export interface ForgeTableOptions {
   onExit(): void;
   onRematch(): void;
+  /** "Enviar sugestão ou erro" no menu e "Relatar este erro" no painel de erros (com o relatório do painel). */
+  onFeedback?(request: { kind: 'sugestao' | 'erro'; attach?: boolean; diagnostics?: string }): void;
+  /** "Baixar gravação" no painel de erros (desenvolvimento): o mesmo arquivo que o relato envia. */
+  onDownloadRecording?(): Promise<void>;
+  /** Cada erro registrado no painel, para a gravação da partida. */
+  onDiagnostic?(entry: DiagnosticEntry): void;
 }
 
 export interface ForgeTableView {
@@ -99,6 +105,11 @@ export interface ForgeTableView {
   disconnected(reason?: string): void;
   /** Ação recusada pela ponte sem aviso: só vai para o painel "Erros da partida". */
   diagnostic(d: { code: string; action?: string; text: string }): void;
+}
+
+/** Ferramentas de desenvolvimento na mesa: no `npm run dev` ou com localStorage "mesa:dev" = "1". */
+function devTools() {
+  try { return import.meta.env?.DEV === true || localStorage.getItem('mesa:dev') === '1'; } catch { return false; }
 }
 
 export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions): ForgeTableView {
@@ -117,6 +128,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <div class="game-menu-meta"><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
       <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">Registro</button>
       <button class="btn" data-ui="errors" aria-expanded="false" aria-controls="fErrorsDrawer">Erros da partida<span class="menu-count" id="fErrorsCount" hidden></span></button>
+      <button class="btn" data-ui="feedback" aria-haspopup="dialog"${opts.onFeedback ? '' : ' hidden'}>Enviar sugestão ou erro</button>
       <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">Opções</button>
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
@@ -134,9 +146,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       </section>
     </div>
     <aside class="log-drawer errors-drawer" id="fErrorsDrawer" hidden aria-labelledby="fErrorsTitle"><div class="stack-heading"><h2 id="fErrorsTitle">Erros da partida</h2><button class="icon-btn" data-ui="errors" aria-label="Fechar erros da partida">Fechar</button></div>
-      <p class="errors-hint">Avisos de erro, ações que o servidor ignorou, quedas de conexão e falhas da mesa. Copie o relatório para relatar um problema.</p>
+      <p class="errors-hint">Avisos de erro, ações que o servidor ignorou, quedas de conexão e falhas da mesa. Relate o erro para mandar a partida junto, ou copie o relatório.</p>
       <ul id="fErrors"></ul>
-      <div class="errors-actions"><button class="ghost-btn" data-ui="errors-copy">Copiar relatório</button><button class="ghost-btn" data-ui="errors-clear">Limpar</button></div>
+      <div class="errors-actions"><button class="ghost-btn" data-ui="errors-report" aria-haspopup="dialog"${opts.onFeedback ? '' : ' hidden'}>Relatar este erro</button><button class="ghost-btn" data-ui="errors-copy">Copiar relatório</button><button class="ghost-btn" data-ui="errors-download"${opts.onDownloadRecording && devTools() ? '' : ' hidden'}>Baixar gravação</button><button class="ghost-btn" data-ui="errors-clear">Limpar</button></div>
       <p class="errors-status" id="fErrorsStatus" role="status" aria-live="polite"></p></aside>
     <aside class="log-drawer" id="fLogDrawer" hidden><div class="stack-heading"><h2>Histórico da partida</h2><button class="icon-btn" data-ui="log" aria-label="Fechar histórico">Fechar</button></div><ul id="fLog"></ul></aside>
 
@@ -310,7 +322,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const diagnostics = new MatchDiagnostics();
   function recordDiagnostic(kind: DiagnosticKind, text: string, detail?: string) {
     const s = client?.state;
-    diagnostics.add(kind, text, { matchId: s?.matchId ?? s?.session?.code, turn: s?.turn, phase: s?.phase }, detail);
+    const entry = diagnostics.add(kind, text, { matchId: s?.matchId ?? s?.session?.code, turn: s?.turn, phase: s?.phase }, detail);
+    opts.onDiagnostic?.(entry);
     renderErrors();
   }
   function renderErrors() {
@@ -1972,6 +1985,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'menu') { setMenu($('#fMenu').hidden); return; }
     if (ui === 'log') { setErrors(false); setLog($('#fLogDrawer').hidden, true); return; }
     if (ui === 'errors') { setErrors($('#fErrorsDrawer').hidden, true); return; }
+    if (ui === 'feedback') { setMenu(false); opts.onFeedback?.({ kind: 'sugestao' }); return; }
+    if (ui === 'errors-report') { opts.onFeedback?.({ kind: 'erro', attach: true, diagnostics: errorReport() }); return; }
+    if (ui === 'errors-download') {
+      const status = $('#fErrorsStatus');
+      status.textContent = 'Preparando a gravação…';
+      void opts.onDownloadRecording?.().then(() => { status.textContent = 'Gravação baixada.'; }, () => { status.textContent = 'Não consegui preparar a gravação.'; });
+      return;
+    }
     if (ui === 'errors-clear') { diagnostics.clear(); renderErrors(); $('#fErrorsStatus').textContent = 'Lista limpa.'; return; }
     if (ui === 'errors-copy') {
       const text = errorReport();
@@ -2246,7 +2267,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!root.isConnected || root.closest('[hidden]') || !client?.state || disconnected) return;
     const target = e.target as HTMLElement;
     if (target !== document.body && target.closest('input, textarea, select, button, a, [contenteditable], [role="button"], [tabindex]')) return;
-    if (currentModal || document.querySelector('dialog[open]') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden || !$('#fErrorsDrawer').hidden) return;
+    if (currentModal || document.querySelector('dialog[open], .feedback-overlay') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden || !$('#fErrorsDrawer').hidden) return;
     // O botão de passar (OK, Resolver, "Para o combate"...): avança um passo. "Fim de turno" fica só no clique.
     const primary = root.querySelector<HTMLButtonElement>('#fAction .btns [data-act="ok"]:not(:disabled)');
     if (!primary) return;

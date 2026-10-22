@@ -71,6 +71,34 @@ final class Metrics {
                 .record(java.time.Duration.ofMillis(System.currentTimeMillis() - startedAtMillis));
     }
 
+    static final String[] FEEDBACK_KINDS = {"sugestao", "erro"};
+    static final String[] FEEDBACK_REJECTIONS = {"invalido", "grande", "limite", "disco", "erro"};
+
+    static {
+        // Séries com zero desde o início, para o painel não ficar vazio antes do primeiro relato.
+        for (String kind : FEEDBACK_KINDS) for (boolean attached : new boolean[]{false, true}) feedbackCounter(kind, attached);
+        for (String reason : FEEDBACK_REJECTIONS) rejectedCounter(reason);
+    }
+
+    private static Counter feedbackCounter(String kind, boolean attached) {
+        return Counter.builder("mesa.feedback.received").description("Relatos guardados, por tipo e se vieram com a partida")
+            .tags("kind", kind, "attached", String.valueOf(attached)).register(REGISTRY);
+    }
+
+    private static Counter rejectedCounter(String reason) {
+        return Counter.builder("mesa.feedback.rejected").description("Relatos recusados: inválido, grande demais, limite por IP, disco ou erro")
+            .tags("reason", reason).register(REGISTRY);
+    }
+
+    static void feedbackReceived(String kind, boolean attached) {
+        feedbackCounter("erro".equals(kind) ? "erro" : "sugestao", attached).increment();
+    }
+
+    static void feedbackRejected(String reason) {
+        for (String r : FEEDBACK_REJECTIONS) if (r.equals(reason)) { rejectedCounter(r).increment(); return; }
+        rejectedCounter("erro").increment();
+    }
+
     static <T> void gauge(String name, String description, T source, ToDoubleFunction<T> value, String... tags) {
         Gauge.builder(name, source, value).description(description).tags(tags).register(REGISTRY);
     }

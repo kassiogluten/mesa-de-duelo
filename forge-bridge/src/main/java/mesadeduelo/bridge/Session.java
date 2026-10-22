@@ -84,10 +84,18 @@ final class Session {
     private volatile boolean abandoned;
     /** Início da partida em andamento para as métricas; 0 quando já foi contada como encerrada. */
     private volatile long startedAt;
+    /** Quando a sala ou partida foi criada e quando começou a partida atual (para a área de admin). */
+    private final long createdAt = System.currentTimeMillis();
+    private volatile long playingSince;
     private final AtomicBoolean dirty = new AtomicBoolean();
     private final AtomicInteger questionSeq = new AtomicInteger();
     private volatile HostedMatch match;
     private volatile MatchLifecycle lifecycle = new MatchLifecycle();
+    /** Diário desta partida (decks, retratos, ações), refeito a cada {@link #start()}; só sai num relato. */
+    private volatile MatchJournal journal;
+    /** Só no modo de repetição: nomes da IA e o retrato a aplicar no começo do jogo (veja {@link Replay}). */
+    private volatile List<String> aiNames;
+    private volatile java.util.function.Consumer<forge.game.Game> startHook;
 
     /** Votação aberta para pular o turno de quem caiu, e os assentos com o turno já aprovado para pular. */
     private SkipVote skipVote;
@@ -118,6 +126,16 @@ final class Session {
         return s;
     }
 
+    /** Repetição de um relato: o humano e as IAs na ordem dada, e o gancho que aplica o retrato no jogo novo. */
+    static Session replay(String code, Channel ch, String name, Deck you, List<Deck> opponents, List<String> opponentNames,
+                          MatchConfig config, java.util.function.Consumer<forge.game.Game> hook) {
+        Session s = solo(code, ch, you, opponents, config);
+        s.seats[0].name = name;
+        s.aiNames = List.copyOf(opponentNames);
+        s.startHook = hook;
+        return s;
+    }
+
     static Session room(String code, Channel host, String name, Deck deck, MatchConfig config) {
         Session s = new Session(code, true, config.playerCount(), List.of(), config);
         s.seats[0].bind(host, name, deck);
@@ -142,6 +160,49 @@ final class Session {
         HostedMatch m = match;
         GameView gv = m == null ? null : m.getGameView();
         return gv != null && gv.isGameOver();
+    }
+
+    /**
+     * Resumo para a área de admin: quem está na partida, conectado ou não, e em que turno ela está.
+     * Só o que aparece na mesa de qualquer jogador; sem tokens, mãos nem decks.
+     */
+    JsonObject adminJson() {
+        JsonObject o = new JsonObject();
+        o.addProperty("code", code); o.addProperty("room", room);
+        o.addProperty("format", config.format()); o.addProperty("matchLength", config.matchLength()); o.addProperty("playerCount", config.playerCount());
+        o.addProperty("createdAt", java.time.Instant.ofEpochMilli(createdAt).toString());
+        if (playingSince > 0) o.addProperty("startedAt", java.time.Instant.ofEpochMilli(playingSince).toString());
+        o.addProperty("matchId", matchId);
+        o.addProperty("state", !started() ? "aguardando" : matchOver() ? "encerrada" : "sideboarding".equals(matchPhase) ? "entre jogos" : gameOver() ? "jogo encerrado" : "jogando");
+        o.addProperty("gameNumber", gameNumber);
+        HostedMatch m = match;
+        GameView gv = m == null ? null : m.getGameView();
+        if (gv != null) {
+            o.addProperty("turn", gv.getTurn());
+            if (gv.getPhase() != null) o.addProperty("phase", gv.getPhase().name());
+            if (gv.getPlayerTurn() != null) o.addProperty("activePlayer", gv.getPlayerTurn().getName());
+        }
+        JsonArray players = new JsonArray();
+        for (Seat seat : seats) {
+            if (seat.deck == null) continue;
+            JsonObject p = new JsonObject();
+            p.addProperty("name", seat.name); p.addProperty("ai", false); p.addProperty("seat", seat.index);
+            p.addProperty("connected", seat.channel != null); p.addProperty("conceded", seat.conceded);
+            p.addProperty("deck", seat.deck.getName());
+            players.add(p);
+        }
+        for (int i = 0; i < aiDecks.size(); i++) {
+            JsonObject p = new JsonObject();
+            p.addProperty("name", aiNames != null ? aiNames.get(i) : aiDecks.size() == 1 ? "Oponente" : "Oponente " + (i + 1));
+            p.addProperty("ai", true); p.addProperty("deck", aiDecks.get(i).getName());
+            players.add(p);
+        }
+        if (gv != null && gv.getPlayers() != null) for (PlayerView pv : gv.getPlayers()) for (JsonElement e : players) {
+            JsonObject p = e.getAsJsonObject();
+            if (p.get("name").getAsString().equals(pv.getName())) { p.addProperty("life", pv.getLife()); p.addProperty("lost", pv.getHasLost()); }
+        }
+        o.add("players", players);
+        return o;
     }
 
     // ---------- Partida ----------
@@ -175,12 +236,27 @@ final class Session {
             players.add(rp);
             guis.put(rp, g);
         }
-        for (int i = 0; i < aiDecks.size(); i++)
-            players.add(registered(aiDecks.get(i)).setPlayer(GamePlayerUtil.createAiPlayer(aiDecks.size() == 1 ? "Oponente" : "Oponente " + (i + 1))));
+        for (int i = 0; i < aiDecks.size(); i++) {
+            String name = aiNames != null ? aiNames.get(i) : aiDecks.size() == 1 ? "Oponente" : "Oponente " + (i + 1);
+            players.add(registered(aiDecks.get(i)).setPlayer(GamePlayerUtil.createAiPlayer(name)));
+        }
+        // O Forge põe os humanos antes da IA (HostedMatch), então esta é a ordem dos jogadores no jogo.
+        MatchJournal j = new MatchJournal(matchId, code, room, config);
+        for (int i = 0; i < players.size(); i++) {
+            boolean ai = i >= seats.length;
+            j.player(i, players.get(i).getPlayer().getName(), ai, ai ? null : seats[i].index, players.get(i).getDeck());
+        }
+        journal = j;
         match = m;
         m.setEndGameHook(() -> ended(m));
+        var hook = startHook;
+        if (hook != null) {
+            // Só no primeiro jogo: numa melhor de três, os jogos seguintes começam normalmente.
+            AtomicBoolean applied = new AtomicBoolean();
+            m.setStartGameHook(() -> { if (applied.compareAndSet(false, true)) hook.accept(m.getGame()); });
+        }
         m.startMatch(config.rules(), null, players, guis, null);
-        startedAt = System.currentTimeMillis();
+        startedAt = playingSince = System.currentTimeMillis();
         Metrics.matchStarted(config.format(), room, players.size());
         System.out.printf("Nova partida%s: %s%n", room ? " na sala " + code : "",
             String.join(" x ", players.stream().map(p -> p.getDeck().getName()).toList()));
@@ -311,15 +387,19 @@ final class Session {
 
     // ---------- Mensagens do navegador ----------
 
+    /** Diário atual (null antes de a partida começar). */
+    MatchJournal journal() { return journal; }
+
     void onClientMessage(Seat seat, Channel source, String type, JsonObject msg) {
         if (seat.eliminated() && !Set.of("preferences", "hello").contains(type)) { rejectStaleAction(seat, type); return; }
         int actionGen = -1;
         if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn", "resolve-all").contains(type)) {
             if (!msg.has("gen") || !msg.get("gen").isJsonPrimitive() || !msg.get("gen").getAsJsonPrimitive().isNumber()) { rejectStaleAction(seat, type); return; }
             actionGen = exactInt(msg.get("gen"));
-            if (actionGen != seat.inputGen.get() || seat.question != null || !"playing".equals(matchPhase)) { rejectStaleAction(seat, type); return; }
+            if (actionGen != seat.inputGen.get() || seat.question != null || !"playing".equals(matchPhase)) { rejectStaleAction(seat, type, actionGen); return; }
         }
         final int genAtClick = actionGen;
+        log(seat, type, genAtClick, "recebida", actionDetail(seat, type, msg));
         switch (type) {
             case "preferences" -> seat.updatePreferences(source, msg);
             case "sideboard" -> submitSideboard(seat, msg, false);
@@ -432,7 +512,40 @@ final class Session {
         }
     }
 
-    private void rejectStaleAction(Seat seat, String type) {
+    private void log(Seat seat, String type, int gen, String result, String detail) {
+        MatchJournal j = journal;
+        if (j != null && type != null) j.action(seat.index, type, gen, stateVersion.get(), result, detail);
+    }
+
+    /** Resumo curto da ação para o diário: ids de cartas e jogadores e as respostas, nunca o que o jogador não vê. */
+    private static String actionDetail(Seat seat, String type, JsonObject msg) {
+        try {
+            return switch (type) {
+                case "card", "player", "stack" -> type + " " + msg.get("id");
+                case "attack" -> "atacante " + msg.get("attacker") + " → " + msg.get("defenderKind") + " " + msg.get("defender");
+                case "attack-all" -> "todos → " + msg.get("defenderKind") + " " + msg.get("defender");
+                case "attack-group" -> "grupo " + msg.get("attackers") + " → " + msg.get("defender");
+                case "block" -> "bloqueador " + msg.get("blocker") + " → atacante " + msg.get("attacker");
+                case "mana" -> "cor " + msg.get("color");
+                case "skip-vote" -> "alvo " + msg.get("target") + " voto " + (msg.has("value") ? msg.get("value") : "true");
+                case "answer" -> {
+                    Question q = seat.question;
+                    String asked = q == null ? "pergunta já respondida" : q.method() + (q.json().has("title") ? " \"" + q.json().get("title").getAsString() + "\"" : "");
+                    StringBuilder answer = new StringBuilder(asked).append(":");
+                    for (String key : List.of("indices", "value", "text", "amounts")) if (msg.has(key)) answer.append(' ').append(key).append('=').append(msg.get(key));
+                    yield answer.toString();
+                }
+                default -> null;
+            };
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private void rejectStaleAction(Seat seat, String type) { rejectStaleAction(seat, type, -1); }
+
+    private void rejectStaleAction(Seat seat, String type, int gen) {
+        log(seat, type, gen, "recusada", null);
         // Só para o painel de erros da mesa: o jogador não vê aviso, mas fica registrado que a ação foi ignorada.
         if (type != null) {
             JsonObject diagnostic = new JsonObject();
@@ -1393,6 +1506,8 @@ final class Session {
                         @SuppressWarnings("unchecked") TrackableCollection<PlayerView> mine = (TrackableCollection<PlayerView>) a[0];
                         me = mine.iterator().next();
                         if (match != null) events.attach(match.getGame());
+                        MatchJournal j = journal;
+                        if (match != null && j != null && j.matchId.equals(belongsToMatch)) j.attach(match.getGame(), gameNumber);
                     }
                     case showPromptMessage -> {
                         message = a[1] == null ? "" : String.valueOf(a[1]);

@@ -65,9 +65,27 @@ O `docker-compose.yml` sobe dois serviços: `web` (o site no nginx, que repassa 
 
 1. No Coolify, crie um recurso a partir deste repositório no GitHub e escolha o build pack **Docker Compose** (arquivo `docker-compose.yml`).
 2. Coloque o domínio (ex.: `https://mesa.seudominio.com`) só no serviço **web**. A ponte não precisa de domínio nem de porta aberta.
-3. Faça o deploy. O primeiro build da ponte demora (clona e compila o Forge); o servidor precisa de uns 3 GB de RAM livres para compilar e 2 GB para rodar. `JAVA_OPTS` muda a memória da ponte (padrão `-Xmx2g`).
+3. Defina `ADMIN_PASSWORD` nas variáveis do recurso para ligar a área de admin em `https://seu-dominio/admin` (relatos dos jogadores e partidas em andamento).
+4. Faça o deploy. O primeiro build da ponte demora (clona e compila o Forge); o servidor precisa de uns 3 GB de RAM livres para compilar e 2 GB para rodar. `JAVA_OPTS` muda a memória da ponte (padrão `-Xmx2g`).
 
 A página publicada conecta em `wss://seu-dominio/ws` sozinha. Para atualizar o Forge, troque `FORGE_COMMIT` no `forge-bridge/Dockerfile` (e `forge.version` no `pom.xml`, se a versão mudar).
+
+## Relatos dos jogadores
+
+Pelo botão **Enviar sugestão ou erro** (tela inicial e menu da partida), o jogador manda um relato para a ponte (`POST /api/relatos`). Com **Anexar a partida**, vai junto a gravação do que a mesa recebeu e enviou (`src/forge/recording.ts`) e, no servidor, o diário da ponte (decks de todos e retratos do Forge). Desenho completo em `docs/relatos-e-repeticao.md`.
+
+Os relatos se tratam na **área de admin** (`/admin`, senha em `ADMIN_PASSWORD` no Coolify ou `MESA_ADMIN_PASSWORD` na ponte; sem senha, ela fica desligada). Lá dá para filtrar por estado e tipo, ler o relato, repetir a partida na mesa, abrir uma issue já preenchida no GitHub (no seu navegador, sem token no servidor), anotar e marcar como visto, virou issue, resolvido ou descartado, e excluir. A aba **Partidas** mostra as partidas e salas vivas na ponte, e **Páginas de teste** leva às páginas de `tests/fixtures` (repetição, laboratório de efeitos e as mesas de teste), que também vão no build de produção, fora do cache do app instalado. No `npm run dev`: `MESA_ADMIN_PASSWORD=uma-senha npm run forge` e abra `http://localhost:5173/admin.html`.
+
+Pelo terminal, com os arquivos copiados do servidor:
+
+```bash
+node deploy/relatos.mjs baixar             # copia os relatos do container da ponte para ./relatos
+node deploy/relatos.mjs listar             # código, data, tipo, versão, formato e tamanho
+node deploy/relatos.mjs abrir R-7K2Q       # endereço da página de repetição com o relato aberto
+node deploy/relatos.mjs issue R-7K2Q       # monta uma issue só com o texto e o resumo técnico (--criar para publicar)
+```
+
+A página de repetição (`/tests/fixtures/replay.html`; com `?relato=R-7K2Q`, abre o relato pela sessão da área de admin) abre um relato ou o arquivo de **Baixar gravação** e entrega os estados gravados à mesa, sem a ponte: tocar e pausar, quadro a quadro, velocidade, ir ao momento do relato, tamanho de tela, aparência das cartas e "reduzir movimento". **Baixar gravação** aparece no painel **Erros da partida** no `npm run dev`, ou em qualquer lugar com `localStorage.setItem('mesa:dev', '1')`.
 
 ## Estrutura
 
@@ -78,6 +96,8 @@ A página publicada conecta em `wss://seu-dominio/ws` sozinha. Para atualizar o 
 | `src/decks.ts` | Decks padrão e decks salvos pelo jogador. |
 | `src/ui/` | Telas: início, mesa (`forgeTable.ts`) e montador de decks. |
 | `src/forge/client.ts` | Cliente WebSocket da ponte e tipos do protocolo (inclusive salas em rede). |
+| `src/forge/recording.ts` e `src/feedback.ts` | Gravação da partida e envio dos relatos, com fila no IndexedDB. |
+| `deploy/relatos.mjs` | Triagem dos relatos guardados no servidor. |
 | `forge-bridge/` | Ponte em Java para o Forge (licença GPL-3.0). |
 
 Cartas aparecem em português (nome, tipo e imagem da impressão PT do Scryfall) quando existe tradução; sem ela, ficam em inglês.

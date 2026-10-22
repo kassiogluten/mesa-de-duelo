@@ -26,6 +26,8 @@ Pela raiz do projeto, os mesmos comandos são `npm run forge:instalar` e `npm ru
 |---|---|
 | `./scripts/rodar.sh` | **play**: humano x IA (`start`) e humano x humano em salas (`host`/`join`). Cada conexão joga a sua partida. |
 | `./scripts/rodar.sh --mode=watch --a=verde --b=vermelho --delay=150` | **watch**: partidas IA x IA, transmitindo o estado a cada evento. Útil para depurar o JSON. |
+| `./scripts/rodar.sh --mode=replay --relato=/caminho/R-7K2Q.json.gz [--retrato=N]` | **replay** (desenvolvimento): como o play, mas a primeira partida contra a IA aberta na mesa (qualquer deck) vira a do relato. Veja [Repetir um relato no Forge](#repetir-um-relato-no-forge). |
+| `--feedback-dir=/pasta` | Onde guardar os relatos (o mesmo que `-Dmesa.feedback.dir`; padrão `~/.forge/mesa-relatos`, `/data` no Docker). |
 | `--lang=en-US` | Idioma dos prompts do Forge (padrão `pt-BR`). |
 | `--port=7171` | Porta da WebSocket. |
 | `--host=127.0.0.1` | Endereço em que a ponte escuta. Use `0.0.0.0` para partidas em rede (`npm run forge:rede`). |
@@ -127,6 +129,36 @@ A mão do oponente vai só como contagem, as perguntas vão só para quem precis
 | `{type:"skip-vote", target, value}` | Em sala, vota para pular o turno do jogador desconectado `target` (id do jogador); `value: false` vota não. Só votam os conectados (menos o alvo), e passa com a maioria. Aprovado, a ponte passa a vez desse jogador sem jogar nada até o fim do turno dele, ou até ele voltar. O estado traz `skip: {vote?: {target, name, yes, no, voters, needed, canVote, mine?}, skipping: [ids]}`. |
 | `{type:"concede"}` | Desiste da partida. |
 | `{type:"answer", ...}` | Responde à `question` aberta. |
+
+### HTTP: relatos dos jogadores
+
+`POST /api/relatos` (o nginx repassa só esta rota, além de `/ws`) recebe uma sugestão ou um relato de erro. O corpo é um JSON em UTF-8 comprimido com gzip (`Content-Encoding: gzip`), até 3 MB comprimido e 64 MB aberto; esta rota tem agregador próprio, e as outras continuam com 64 KB. A ponte lê `v` (1), `kind` (`sugestao`/`erro`), `description` (1 a 2.000 caracteres), `app.version`, `match.format` e `recording`, e guarda o resto como veio.
+
+- Com `X-Mesa-Partida` e `X-Mesa-Token` (os mesmos do `rejoin`) de um assento e uma gravação (`recording` não nulo), o diário da partida na ponte vai junto. Vale para partidas vivas e para as encerradas há menos de 30 minutos. O token não é guardado.
+- Respostas: `201 {code:"R-7K2Q"}`, ou `{error}` com uma frase para o jogador: `400` (inválido), `413` (grande demais), `429` (mais de 10 por hora por IP), `507` (disco cheio). Responde a `OPTIONS` (CORS, para o Vite em `:5173`).
+- O IP vem de `X-Real-IP` e só é usado como resumo (SHA-256 com sal sorteado a cada execução), em memória, para o limite.
+- Arquivos: `relatos/AAAA-MM/<código>.json.gz` com `{code, receivedAt, bridge, report}` e o índice `relatos/indice.jsonl`. Retenção ao iniciar a ponte e a cada hora: 90 dias e até 1 GB, apagando os mais antigos (`-Dmesa.feedback.maxAgeDays`, `-Dmesa.feedback.maxBytes`). Recusa com 507 abaixo de 50 MB livres no volume.
+
+O **diário da partida** (`MatchJournal`) fica só em memória, um por partida (refeito na revanche, mantido entre os jogos da melhor de três): decks de todos (inclusive da IA), configuração, quem começou e os mulligans, um retrato do Forge (`GameState`) no começo de cada turno (os 3 últimos, tirados logo depois do desvirar) e outro no instante do relato, e as últimas 2.000 mensagens de cada assento (`recebida` ou `recusada`, com `gen`, `stateVersion` e um resumo como os índices da resposta). Ele tem a mão e o grimório de todos, então nunca vai para nenhum jogador.
+
+### HTTP: área de admin
+
+Rotas em `/api/admin/` para a página `/admin.html` do site. A senha vem de `MESA_ADMIN_PASSWORD` (ou `-Dmesa.admin.password`); sem ela, toda rota responde `503` e a área fica desligada.
+
+- `POST login {password}` devolve `{token, expiresAt}` (12 horas, só em memória: reiniciar a ponte pede login de novo). As outras rotas pedem `Authorization: Bearer <token>`. Cinco senhas erradas em 15 minutos bloqueiam o login daquele IP (o IP só como resumo, como nos relatos).
+- `GET partidas`: partidas e salas vivas, com estado, turno, fase, de quem é a vez e cada jogador (nome, IA ou humano, conectado, vida, deck). Sem tokens nem cartas.
+- `GET relatos`: o índice (com `summary`, o começo da descrição) e o tratamento de cada um. `GET relatos/{código}` devolve o `.json.gz` guardado.
+- `PUT relatos/{código}/estado {status, note?, issue?}`: `novo`, `visto`, `issue`, `resolvido` ou `descartado`, guardado em `relatos/estado.json`. `DELETE relatos/{código}` apaga o relato.
+
+### Repetir um relato no Forge
+
+`--mode=replay --relato=...` mostra os retratos do relato e usa o último (ou `--retrato=N`). Ao começar uma partida contra a IA na mesa, a ponte monta a do relato: mesma configuração, quem relatou como humano com o seu deck e os outros como IA com os deles. Responda ao mulligan normalmente: logo depois o retrato é aplicado e substitui mãos, grimórios e campo. O console mostra o que não voltou igual e as ações do diário dali em diante, como roteiro. A revanche repete o mesmo retrato.
+
+O Forge põe o humano antes da IA, então a ordem dos jogadores é girada para quem relatou ficar em primeiro, sem mudar a ordem dos turnos (o retrato é renumerado do mesmo jeito).
+
+Para virar teste de regressão, `RelatoFixture` (em `src/test`) monta um jogo sem tela com os decks do relato e o retrato aplicado, na ordem original: `RelatoFixture.load(Path.of("R-7K2Q.json.gz")).game(2)`. `ReplayRoundTripTest` mostra o caminho completo.
+
+Limites do `GameState`: não voltam efeitos "até o fim do turno", gatilhos atrasados, a pilha, escolhas de turnos anteriores que não ficam na carta, contadores do turno (mágicas conjuradas, tempestade), o histórico de mulligans e o placar da melhor de três (o retrato vale só para o primeiro jogo da repetição). Por isso o retrato é do começo do turno, com a pilha vazia; o do instante do relato é de melhor esforço.
 
 ## Como funciona
 

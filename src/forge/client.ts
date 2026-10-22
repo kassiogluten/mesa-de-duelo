@@ -303,6 +303,8 @@ export class ForgeClient {
   /** Ação recusada pela ponte sem aviso ao jogador (ex.: clique num pedido que já tinha mudado). Vai só para o painel de erros. */
   onDiagnostic: (diagnostic: { code: string; action?: string; text: string }) => void = () => {};
   onHello: (info: {supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string}) => void = () => {};
+  /** Cada mensagem enviada (para a gravação da partida); delivered false quando a conexão já estava fechada. */
+  onSend: (msg: ClientMessage, delivered: boolean) => void = () => {};
   private requestSequence = 0;
   private pending = new Map<string, {resolve: (value: any) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout>}>();
 
@@ -370,7 +372,9 @@ export class ForgeClient {
   get connected() { return !!this.ws && this.ws.readyState === WebSocket.OPEN; }
 
   send(msg: ClientMessage) {
-    if (this.connected) this.ws!.send(JSON.stringify(msg));
+    const delivered = this.connected;
+    if (delivered) this.ws!.send(JSON.stringify(msg));
+    this.onSend(msg, delivered);
   }
 
   close() {

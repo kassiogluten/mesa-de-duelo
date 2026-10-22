@@ -1,7 +1,18 @@
+import { readdirSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Além do jogo: a área de admin (/admin.html) e as páginas de teste da mesa (/tests/fixtures/*.html), linkadas
+// na área de admin. Os scripts delas saem em ferramentas/ e ficam fora do cache do app instalado.
+const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.endsWith('.html')).map(f => [f.replace('.html', ''), `tests/fixtures/${f}`]));
+
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: { index: 'index.html', admin: 'admin.html', ...fixtures },
+      output: { entryFileNames: chunk => chunk.name === 'index' ? 'assets/[name]-[hash].js' : 'ferramentas/[name]-[hash].js' },
+    },
+  },
   plugins: [
     VitePWA({
       // A página decide quando atualizar: o jogador vê "Nova versão" e escolhe a hora (src/ui/pwa.ts).
@@ -32,9 +43,9 @@ export default defineConfig({
       workbox: {
         // O visual e os sons ficam guardados: o jogo abre rápido e, sem servidor, ainda mostra a tela inicial.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
-        globIgnores: ['audio/sources/**'],
+        globIgnores: ['audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/ws/],
+        navigateFallbackDenylist: [/^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {

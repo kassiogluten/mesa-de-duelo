@@ -27,7 +27,7 @@ import io.netty.channel.Channel;
  * {type:"rejoin", code, token} devolve o jogador ao seu assento, inclusive depois de recarregar a página.
  * Uma partida sem ninguém conectado é encerrada depois de {@link #GRACE_SECONDS}.
  */
-final class Rooms implements BridgeServer.Listener {
+final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** Sem letras e números fáceis de confundir (O/0, I/1). */
     private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int MAX_NAME = 24;
@@ -37,6 +37,14 @@ final class Rooms implements BridgeServer.Listener {
     /** Todas as partidas vivas, salas e partidas contra a IA, pelo código de volta. */
     private final Map<String, Session> byCode = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
+    /** Diários de partidas encerradas há pouco, para quem relata da tela inicial logo depois de sair. */
+    private final Map<String, Closed> closed = new java.util.LinkedHashMap<>();
+    private static final long CLOSED_KEEP_MS = Long.getLong("mesa.journal.keepMinutes", 30) * 60_000;
+    private static final int MAX_CLOSED = 20;
+    /** Modo de repetição: o primeiro "start" vira a partida do relato (veja {@link Replay}). */
+    private volatile Replay replay;
+
+    private record Closed(MatchJournal journal, Map<String, Integer> tokens, long until) { }
     private final ScheduledExecutorService publisher = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "BridgePublisher");
         t.setDaemon(true);
@@ -68,6 +76,40 @@ final class Rooms implements BridgeServer.Listener {
             () -> byCode.values().stream().mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.channel != null).count()).sum());
         Metrics.gauge("mesa.players.reconnecting", "Jogadores que caíram de uma partida em andamento e ainda podem voltar",
             () -> byCode.values().stream().filter(Session::started).mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.deck != null && seat.channel == null).count()).sum());
+    }
+
+    void replay(Replay r) { replay = r; }
+
+    /** O diário da partida em que o token ocupa um assento, viva ou encerrada há pouco; null se não houver. */
+    /** Partidas e salas vivas, para a área de admin (mais recentes primeiro). */
+    JsonArray adminSessions() {
+        JsonArray all = new JsonArray();
+        byCode.values().stream().map(Session::adminJson)
+            .sorted(java.util.Comparator.comparing((JsonObject o) -> o.get("createdAt").getAsString()).reversed()).forEach(all::add);
+        return all;
+    }
+
+    @Override public JsonObject journal(String code, String token) {
+        if (code == null || token == null || token.isEmpty()) return null;
+        MatchJournal journal = null;
+        Integer seat = null;
+        boolean live = false;
+        synchronized (this) {
+            Session s = byCode.get(code);
+            if (s != null) for (Session.Seat each : s.seats) if (sameToken(each.token, token)) { journal = s.journal(); seat = each.index; live = true; }
+            if (journal == null) {
+                long now = System.currentTimeMillis();
+                closed.values().removeIf(c -> c.until < now);
+                Closed c = closed.get(code);
+                if (c != null) for (var e : c.tokens.entrySet()) if (sameToken(e.getKey(), token)) { journal = c.journal; seat = e.getValue(); }
+            }
+        }
+        // Fora da trava das salas: o retrato do instante do relato pode demorar alguns milissegundos.
+        return journal == null ? null : journal.json(seat, live);
+    }
+
+    private static boolean sameToken(String a, String b) {
+        return a != null && java.security.MessageDigest.isEqual(a.getBytes(java.nio.charset.StandardCharsets.UTF_8), b.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     @Override public void onConnect(Channel ch) {
@@ -145,17 +187,22 @@ final class Rooms implements BridgeServer.Listener {
                 }
                 case "hello" -> onConnect(ch);
                 case "start" -> {
-                    MatchConfig config = MatchConfig.parse(msg.get("config"));
-                    Deck you = validated(msg.get("you"), config.format(), "you");
-                    java.util.List<Deck> opponents = new java.util.ArrayList<>();
-                    if (msg.has("opponents")) {
-                        if (!msg.get("opponents").isJsonArray() || msg.getAsJsonArray("opponents").size() != config.playerCount() - 1)
-                            throw new IllegalArgumentException("Escolha um deck para cada oponente.");
-                        for (JsonElement opponent : msg.getAsJsonArray("opponents")) opponents.add(aiDeck(opponent, config));
-                    } else {
-                        for (int i = 1; i < config.playerCount(); i++) opponents.add(aiDeck(msg.get("opponent"), config));
+                    // Modo de repetição: o primeiro "start" vira a partida do relato, com os decks gravados nele.
+                    Replay r = replay;
+                    if (r != null) { replay = null; replayed(ch, r); }
+                    else {
+                        MatchConfig config = MatchConfig.parse(msg.get("config"));
+                        Deck you = validated(msg.get("you"), config.format(), "you");
+                        java.util.List<Deck> opponents = new java.util.ArrayList<>();
+                        if (msg.has("opponents")) {
+                            if (!msg.get("opponents").isJsonArray() || msg.getAsJsonArray("opponents").size() != config.playerCount() - 1)
+                                throw new IllegalArgumentException("Escolha um deck para cada oponente.");
+                            for (JsonElement opponent : msg.getAsJsonArray("opponents")) opponents.add(aiDeck(opponent, config));
+                        } else {
+                            for (int i = 1; i < config.playerCount(); i++) opponents.add(aiDeck(msg.get("opponent"), config));
+                        }
+                        solo(ch, you, opponents, config);
                     }
-                    solo(ch, you, opponents, config);
                 }
                 case "host" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
@@ -245,6 +292,14 @@ final class Rooms implements BridgeServer.Listener {
     private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config) {
         leave(ch);
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
+        byCode.put(s.code, s);
+        byChannel.put(ch, s);
+        s.start();
+    }
+
+    private synchronized void replayed(Channel ch, Replay r) {
+        leave(ch);
+        Session s = r.session(newCode(8), ch);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.start();
@@ -348,6 +403,14 @@ final class Rooms implements BridgeServer.Listener {
     }
 
     private void close(Session s) {
+        MatchJournal journal = s.journal();
+        if (journal != null) {
+            Map<String, Integer> tokens = new java.util.HashMap<>();
+            for (Session.Seat seat : s.seats) if (seat.token != null) tokens.put(seat.token, seat.index);
+            closed.remove(s.code);
+            closed.put(s.code, new Closed(journal, tokens, System.currentTimeMillis() + CLOSED_KEEP_MS));
+            for (var it = closed.keySet().iterator(); closed.size() > MAX_CLOSED && it.hasNext(); ) { it.next(); it.remove(); }
+        }
         s.recordAbandoned();
         s.stop();
         byCode.remove(s.code, s);

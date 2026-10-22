@@ -95,3 +95,11 @@ Dois caminhos complementares, cada um para um tipo de erro:
   - Botões grandes **Enviar** e **Cancelar**.
 - **Depois de enviar**: "Relato R-7K2Q enviado. Obrigado!", com o código para citar depois. Sem rede, ou com o servidor fora: "Guardado; envio quando a conexão voltar". Fica na fila no IndexedDB e sai sozinho depois.
 - Teclado, leitor de tela e celular como nas outras janelas. Enviar não pausa a partida nem segura a vez.
+
+## Como ficou (implementação)
+
+- **Gravação** (`src/forge/recording.ts`): cada quadro é a diferença do anterior (os itens das listas casam pelo `id`), com um quadro inteiro a cada 40. O token de volta ao assento sai de `session` e `room` antes de gravar. Uma partida 1×1 de 13 turnos deu 181 quadros, 360 KB em texto e 29 KB comprimidos.
+- **Envio** (`src/feedback.ts`): o corpo é o relato em gzip. Com a partida anexada, os cabeçalhos `X-Mesa-Partida` e `X-Mesa-Token` deixam a ponte achar o diário; o token não é gravado. Sem IndexedDB (navegação privada) não há fila, e o formulário fica aberto para tentar de novo. Um 404 também vai para a fila (ponte ainda sem a rota).
+- **Ponte** (`Feedback`, `FeedbackStore`, `FeedbackRateLimit`, `MatchJournal`, `Replay`): além das respostas do desenho, devolve 503 quando a fila de gravação (16 relatos) está cheia. Ao passar de 1 GB, apaga os mais antigos antes de recusar; 507 só com menos de 50 MB livres no volume. O diário de uma partida fechada fica 30 minutos (até 20 partidas), para o relato feito da tela inicial logo depois de sair.
+- **Retrato do turno**: tirado logo depois de desvirar (fase `UNTAP`), não no evento de começo do turno. Restaurado, o turno segue para a manutenção.
+- **Restaurar** (`./scripts/rodar.sh --mode=replay --relato=... [--retrato=N]`): o primeiro "Jogar contra o computador" da página vira a partida do relato. O Forge sempre põe os humanos antes da IA, então a ordem gira para quem relatou ficar em primeiro (a ordem dos turnos não muda), e o retrato é renumerado. `RelatoFixture` (testes) mantém a ordem original.

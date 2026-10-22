@@ -24,8 +24,10 @@ import forge.model.FModel;
  *
  * --mode=play  (padrão) espera o navegador: humano x IA ({type:"start"}) ou humano x humano em salas (veja Rooms).
  * --mode=watch roda partidas IA x IA e transmite o estado a cada evento.
+ * --mode=replay --relato=R-XXXX.json.gz [--retrato=N] é o modo play, mas o primeiro "start" repete o relato (veja {@link Replay}).
  *
- * Opções: --port=7171 --host=127.0.0.1 (0.0.0.0 para aceitar outras máquinas) --mode=play|watch; no modo watch: --delay=150 --a=vermelho --b=verde --games=1 --exit
+ * Opções: --port=7171 --host=127.0.0.1 (0.0.0.0 para aceitar outras máquinas) --mode=play|watch|replay; no modo watch: --delay=150 --a=vermelho --b=verde --games=1 --exit
+ * --feedback-dir=/pasta (mesmo que -Dmesa.feedback.dir) guarda os relatos de POST /api/relatos (padrão: ~/.forge/mesa-relatos).
  * Propriedade do sistema: -Dforge.dir=/caminho/do/clone/do/forge (padrão: ~/forge)
  */
 public final class Main {
@@ -44,6 +46,8 @@ public final class Main {
         int games = Integer.parseInt(opt.getOrDefault("games", "1"));
         String deckA = opt.getOrDefault("a", "vermelho");
         String deckB = opt.getOrDefault("b", "verde");
+        if (opt.containsKey("feedback-dir")) System.setProperty("mesa.feedback.dir", opt.get("feedback-dir"));
+        String mode = opt.getOrDefault("mode", "play");
 
         String forgeDir = System.getProperty("forge.dir", System.getProperty("user.home") + "/forge");
         long t0 = System.currentTimeMillis();
@@ -64,10 +68,28 @@ public final class Main {
         });
         System.out.printf("Forge inicializado em %d ms%n", System.currentTimeMillis() - t0);
 
-        if (!"watch".equals(opt.getOrDefault("mode", "play"))) {
-            BridgeServer server = new BridgeServer(host, port, new Rooms());
+        if (!"watch".equals(mode)) {
+            Rooms rooms = new Rooms();
+            if ("replay".equals(mode)) {
+                if (!opt.containsKey("relato")) throw new IllegalArgumentException("Informe o relato: --relato=/caminho/R-XXXX.json.gz");
+                JsonObject journal = Replay.journalOf(Path.of(opt.get("relato")));
+                System.out.println("Retratos do relato:");
+                System.out.print(Replay.list(journal));
+                Replay replay = new Replay(journal, opt.containsKey("retrato") ? Integer.valueOf(opt.get("retrato")) : null);
+                rooms.replay(replay);
+                System.out.printf("Modo replay: abra a mesa e comece uma partida contra a IA (qualquer deck); ela vira a do relato com o retrato %d.%n", replay.snapshotIndex);
+            }
+            BridgeServer server = new BridgeServer(host, port, rooms);
+            FeedbackStore store = FeedbackStore.fromSystem();
+            Feedback feedback = new Feedback(store, rooms);
+            feedback.startRetention();
+            server.feedback(feedback);
+            Admin admin = Admin.fromEnvironment(store, rooms::adminSessions);
+            server.admin(admin);
             server.start();
-            System.out.printf("Modo play: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)%n", host, port);
+            System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
+            System.out.println(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");
+            System.out.printf("Modo %s: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)%n", mode, host, port);
             if (!"127.0.0.1".equals(host)) System.out.println("Aceitando conexões de outras máquinas: partidas em rede liberadas.");
             Thread.currentThread().join();
             return;

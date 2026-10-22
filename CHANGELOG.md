@@ -6,6 +6,15 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.31.0] - 2026-10-22
+
+### Novo
+
+- **Enviar sugestão ou erro de dentro do jogo.** Na tela inicial (no topo, ao lado de **Novidades**) e no menu da partida há o botão **Enviar sugestão ou erro**. Escolha **Sugestão** ou **Algo deu errado**, conte o que aconteceu e envie: você recebe um código, como "Relato R-7K2Q enviado", para citar depois. O formulário diz antes o que vai junto: o texto, a versão do jogo e o tipo de aparelho. Nada de e-mail, conta ou IP.
+- **Mandar a partida junto.** Marcando **Anexar a partida**, o relato leva as jogadas que você viu, o seu deck e os apelidos dos jogadores, para conseguirmos repetir na mesa o que aconteceu e conferir a correção. Vem marcado quando é um erro durante a partida e desmarcado numa sugestão, e mostra o tamanho antes de enviar. A última partida fica guardada no aparelho, então dá para relatar da tela inicial depois que ela acabou ou depois de recarregar a página.
+- **Relatar este erro.** O painel **Erros da partida** ganhou um botão que abre o formulário já como erro, com a partida e a lista de erros juntas.
+- **Relato guardado sem internet.** Sem conexão ou com o servidor fora do ar, o relato fica guardado no aparelho e é enviado sozinho quando a conexão voltar.
+
 ## [0.30.0] - 2026-10-21
 
 ### Novo

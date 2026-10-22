@@ -24,4 +24,5 @@ COPY --from=build /bridge/target/lib ./lib
 COPY --from=build /bridge/target/forge-bridge-*.jar ./forge-bridge.jar
 ENV JAVA_OPTS="-Xmx2g"
 EXPOSE 7171
-CMD ["sh", "-c", "exec java $JAVA_OPTS -Dforge.dir=/opt/forge -cp '/app/forge-bridge.jar:/app/lib/*' mesadeduelo.bridge.Main --host=0.0.0.0 --port=7171"]
+# Relatos em /data (volume feedback-data no docker-compose). Vem antes de JAVA_OPTS, que pode trocar a pasta.
+CMD ["sh", "-c", "exec java -Dmesa.feedback.dir=/data $JAVA_OPTS -Dforge.dir=/opt/forge -cp '/app/forge-bridge.jar:/app/lib/*' mesadeduelo.bridge.Main --host=0.0.0.0 --port=7171"]

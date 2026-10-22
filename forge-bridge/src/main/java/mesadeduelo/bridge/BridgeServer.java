@@ -30,6 +30,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 /**
  * Servidor WebSocket em ws://HOST:PORTA/ws. No modo watch, quem conecta recebe na hora o último estado publicado
  * por {@link #broadcast}; no modo play cada conexão recebe só o que é endereçado a ela ({@link #send(Channel, String)}).
+ * Na mesma porta: GET /metrics, GET /health e, no modo play, POST /api/relatos ({@link Feedback}) e a área de admin ({@link Admin}).
  */
 final class BridgeServer {
     private final String host;
@@ -37,6 +38,10 @@ final class BridgeServer {
     private final ChannelGroup clients = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private final Listener listener;
     private volatile String last;
+    /** Rota POST /api/relatos; null no modo watch. */
+    private volatile Feedback feedback;
+    /** Rotas /api/admin/; null no modo watch. */
+    private volatile Admin admin;
 
     interface Listener {
         void onConnect(Channel ch);
@@ -51,6 +56,9 @@ final class BridgeServer {
         Metrics.gauge("mesa.ws.connections", "Conexões WebSocket abertas", this, BridgeServer::clientCount);
     }
 
+    void feedback(Feedback f) { feedback = f; }
+    void admin(Admin a) { admin = a; }
+
     void start() throws InterruptedException {
         EventLoopGroup boss = new NioEventLoopGroup(1);
         EventLoopGroup workers = new NioEventLoopGroup(2);
@@ -59,9 +67,15 @@ final class BridgeServer {
             .channel(NioServerSocketChannel.class)
             .childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override protected void initChannel(SocketChannel ch) {
+                    Feedback f = feedback;
+                    ch.pipeline().addLast(new HttpServerCodec());
+                    // Os relatos têm agregador próprio de 3 MB; as outras rotas continuam com 64 KB.
+                    if (f != null) ch.pipeline().addLast(new Feedback.Route("agregador"));
+                    ch.pipeline().addLast("agregador", new HttpObjectAggregator(1 << 16));
+                    if (f != null) ch.pipeline().addLast(f.new Handler());
+                    Admin a = admin;
+                    if (a != null) ch.pipeline().addLast(a.new Handler());
                     ch.pipeline()
-                        .addLast(new HttpServerCodec())
-                        .addLast(new HttpObjectAggregator(1 << 16))
                         .addLast(new HttpEndpoints())
                         .addLast(new WebSocketServerProtocolHandler("/ws", null, true, 1 << 20))
                         .addLast(new SimpleChannelInboundHandler<TextWebSocketFrame>() {

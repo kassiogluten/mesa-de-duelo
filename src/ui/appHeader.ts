@@ -1,5 +1,7 @@
 import { mountChangelog } from './changelog';
 import { installButton } from './pwa';
+import { openFeedbackForm } from './feedbackForm';
+import { latestMatch } from '../feedback';
 import './appHeader.css';
 
 export interface AppHeaderOptions {
@@ -12,7 +14,7 @@ export interface AppHeaderOptions {
 export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
   let disabled = false;
   root.classList.add('home-top', 'shared-shell-header');
-  root.innerHTML = `<a class="home-brand" href="#" aria-label="Mesa de Duelo — início" data-app-brand><span class="brand-mark" aria-hidden="true"></span><span>Mesa de Duelo</span></a><nav aria-label="Navegação principal"><button type="button" class="home-nav${options.active === 'play' ? ' active' : ''}" ${options.active === 'play' ? 'aria-current="page"' : ''} data-app-nav="play">Jogar</button><button type="button" class="home-nav${options.active === 'decks' ? ' active' : ''}" ${options.active === 'decks' ? 'aria-current="page"' : ''} data-app-nav="decks">Meus decks</button></nav><div class="home-news"></div>`;
+  root.innerHTML = `<a class="home-brand" href="#" aria-label="Mesa de Duelo — início" data-app-brand><span class="brand-mark" aria-hidden="true"></span><span>Mesa de Duelo</span></a><nav aria-label="Navegação principal"><button type="button" class="home-nav${options.active === 'play' ? ' active' : ''}" ${options.active === 'play' ? 'aria-current="page"' : ''} data-app-nav="play">Jogar</button><button type="button" class="home-nav${options.active === 'decks' ? ' active' : ''}" ${options.active === 'decks' ? 'aria-current="page"' : ''} data-app-nav="decks">Meus decks</button></nav><div class="home-news"><button type="button" class="news-btn feedback-btn" data-app-feedback aria-label="Enviar sugestão ou erro"><span class="feedback-long" aria-hidden="true">Enviar sugestão ou erro</span><span class="feedback-short" aria-hidden="true">Relatar</span></button></div>`;
   mountChangelog(root.querySelector('.home-news')!);
   root.querySelector('.home-news')!.prepend(installButton());
   // Both screens stay mounted: keep disclosure IDs unique for assistive technology.
@@ -21,6 +23,11 @@ export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
   panel.id = `news-panel-${options.active}`;
   disclosure.setAttribute('aria-controls', panel.id);
   root.addEventListener('click', event => {
+    if ((event.target as HTMLElement).closest('[data-app-feedback]')) {
+      panel.hidden = true; disclosure.setAttribute('aria-expanded', 'false');
+      openFeedbackForm({ from: 'inicio', match: latestMatch });
+      return;
+    }
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-app-nav], [data-app-brand]');
     if (!target) return;
     event.preventDefault();

@@ -8,6 +8,10 @@ import { deckArt, mountLobby } from './ui/lobby';
 import { enterLandscape, mountRotateGate } from './ui/landscape';
 import { hideCardPreview } from './ui/cardInspector';
 import { createFreeTableView, loadFreeTable } from './ui/freeTable';
+import { MatchRecorder, type RecordingMeta } from './forge/recording';
+import { buildReport, deviceInfo, encodeReport, latestMatch, loadLastMatch, localPreferences, saveLastMatch, setLiveMatch, startFeedbackQueue, type MatchAttachment } from './feedback';
+import { openFeedbackForm } from './ui/feedbackForm';
+import { VERSION } from './ui/changelog';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -64,8 +68,48 @@ function loadResume(): ForgeMatch | null {
   } catch { return null; }
 }
 
+/**
+ * Gravação da partida para os relatos (item 28): estados recebidos, mensagens enviadas e erros. Fica na memória
+ * e, de tempos em tempos, no IndexedDB, para relatar da tela inicial depois que a partida acabou.
+ */
+const recorder = new MatchRecorder({ app: VERSION });
+/** Assento da partida gravada, para a ponte juntar o diário dela ao relato. Continua depois de sair da partida. */
+let recordedSeat: Pick<MatchAttachment, 'url' | 'code' | 'token'> = {};
+const recordingMeta = (m: ForgeMatch): RecordingMeta => ({ app: VERSION, net: m.net, format: m.config?.format, deck: forgeDeck(m.deck), device: deviceInfo(), preferences: localPreferences() });
+const liveAttachment = (): MatchAttachment | null => recorder.empty ? null : { recording: recorder.snapshot(), ...recordedSeat };
+setLiveMatch(liveAttachment);
+let savedRevision = -1;
+function persistRecording() {
+  if (recorder.empty || recorder.revision === savedRevision) return;
+  savedRevision = recorder.revision;
+  void saveLastMatch(liveAttachment()!);
+}
+setInterval(persistRecording, 20000);
+addEventListener('pagehide', persistRecording);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') persistRecording(); });
+startFeedbackQueue();
+
+function download(bytes: Uint8Array, name: string) {
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/gzip' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
+  onFeedback({ kind, attach, diagnostics }) {
+    openFeedbackForm({ kind, from: 'partida', attach, diagnostics, match: latestMatch });
+  },
+  async onDownloadRecording() {
+    const match = await latestMatch();
+    if (!match) throw new Error('Nenhuma partida gravada.');
+    const report = buildReport({ kind: 'erro', description: 'Gravação baixada do painel de erros.', from: 'partida', version: VERSION, recording: match.recording });
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
+    download(await encodeReport(report), `mesa-gravacao-${stamp}.json.gz`);
+  },
+  onDiagnostic(entry) { recorder.note(entry.kind, entry.text, entry.detail); },
   onExit() {
+    persistRecording();
     forge?.send({ type: 'leave' });
     current = null;
     clearResume();
@@ -147,9 +191,16 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
   forge = client;
   forgeUrl = url;
   let prev: FState | null = null;
+  client.onSend = msg => { if (forge === client && current) recorder.sent(msg); };
   client.onState = s => {
     if (forge !== client) return;
     const m = current;
+    if (m) {
+      // Revanche ou "Recomeçar": a ponte troca o matchId e a gravação começa de novo.
+      if (s.matchId && recorder.matchId && s.matchId !== recorder.matchId) { persistRecording(); recorder.reset(recordingMeta(m)); }
+      recorder.received(s);
+      recordedSeat = { url: m.url, code: s.session?.code ?? m.code, token: s.session?.token ?? m.token };
+    }
     if (m && s.session) {
       m.code = s.session.code;
       m.token = s.session.token;
@@ -178,6 +229,8 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
   };
   client.onNotice = (text, error) => {
     if (error) finishStart(text);
+    // Erros na mesa já entram pelo painel de erros (onDiagnostic).
+    if (current && (!error || screen !== 'game')) recorder.note(error ? 'erro' : 'aviso', text);
     if (screen === 'game') forgeTable.notice(text, error);
     else lobby.setStatus(text, error);
     // Sala fechada ou código errado antes de a partida começar: volta ao formulário.
@@ -216,6 +269,8 @@ function enterForgeTable(client: ForgeClient, m: ForgeMatch) {
 async function requestMatch(client: ForgeClient, match: ForgeMatch, message: ClientMessage) {
   finishStart('Uma nova solicitação substituiu a anterior.');
   current = match;
+  persistRecording();
+  recorder.reset(recordingMeta(match));
   return new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       if (current === match) { client.send({type: 'leave'}); current = null; clearResume(); lobby.showRoom(null); }
@@ -282,6 +337,12 @@ async function autoReconnect() {
 /** Ao abrir a página: se havia uma partida em andamento, volta para ela. */
 async function resumeSaved(saved: ForgeMatch) {
   current = saved;
+  // Recarregou a página no meio da partida: a gravação guardada continua de onde parou.
+  const last = await loadLastMatch();
+  if (current !== saved) return;
+  if (last && last.code === saved.code) { recorder.resume(last.recording); recorder.note('conexão', 'Página recarregada; a gravação continua.'); }
+  else recorder.reset(recordingMeta(saved));
+  recordedSeat = { url: saved.url, code: saved.code, token: saved.token };
   lobby.setStatus('Voltando à partida em andamento…');
   if (await reconnect()) return;
   if (current === saved) {

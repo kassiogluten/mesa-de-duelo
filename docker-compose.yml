@@ -15,10 +15,14 @@ services:
       dockerfile: forge-bridge/Dockerfile
     environment:
       - JAVA_OPTS=${JAVA_OPTS:--Xmx2g}
+      # Senha da área de admin (/admin): sem ela, a área fica desligada.
+      - MESA_ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
     expose:
       - "7171"
     volumes:
       - forge-data:/root/.forge
+      # Relatos dos jogadores (relatos/AAAA-MM/<código>.json.gz e indice.jsonl), com retenção de 90 dias ou 1 GB.
+      - feedback-data:/data
     restart: unless-stopped
 
   prometheus:
@@ -68,5 +72,6 @@ services:
 
 volumes:
   forge-data:
+  feedback-data:
   prometheus-data:
   grafana-data:
