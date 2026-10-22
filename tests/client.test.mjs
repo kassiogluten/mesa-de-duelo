@@ -38,6 +38,22 @@ test('overlapping validation and room requests resolve by identity, not response
   client.close();
 });
 
+test('public room list is a request of its own and the host message carries the visibility', async () => {
+  const { client, socket } = await connect();
+  const rooms = client.listRooms();
+  assert.deepEqual(Object.keys(socket.sent[0]).sort(), ['requestId', 'type']);
+  assert.equal(socket.sent[0].type, 'list-rooms');
+  const listed = [{ code: 'WXYZ', host: 'Ana', config: { format: 'pauper', matchLength: 'bo1' }, capacity: 2, players: 1, started: false }];
+  socket.receive({ type: 'room-list', requestId: socket.sent[0].requestId, rooms: listed });
+  assert.deepEqual(await rooms, listed);
+  const empty = client.listRooms();
+  socket.receive({ type: 'room-list', requestId: socket.sent[1].requestId });
+  assert.deepEqual(await empty, [], 'a list without rooms is empty, not undefined');
+  client.send({ type: 'host', name: 'Ana', deck, config: { format: 'pauper', matchLength: 'bo1' }, visibility: 'public' });
+  assert.equal(socket.sent[2].visibility, 'public');
+  client.close();
+});
+
 test('request errors reject their request without swallowing live game updates', async () => {
   const { client, socket } = await connect();
   let received;

@@ -100,6 +100,18 @@
 .network-code input { text-transform: uppercase; }
 .network-code button { padding: 8px 12px; min-width: 65px; font-size: 13px; }
 .network-setup .net-adv { font-size: 13px; }
+.network-setup .visibility-choice { margin: 0; }
+.public-rooms { display: grid; gap: 8px; }
+.public-rooms-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.public-rooms-head h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+.public-rooms-head .ghost-btn { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.public-rooms-empty { margin: 0; padding: 10px 12px; border: 1px dashed #ffffff24; border-radius: 8px; font-size: 13px; color: var(--muted); }
+.public-room-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; max-height: 260px; overflow-y: auto; }
+.public-room { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid #f2b54c40; border-radius: 8px; background: #f2b54c08; }
+.public-room-text { flex: 1; display: grid; gap: 2px; min-width: 0; font-size: 13px; }
+.public-room-text strong { overflow-wrap: anywhere; }
+.public-room-text small { font-size: 12px; color: var(--muted); }
+.public-room .arena-btn { flex: none; min-width: 72px; min-height: 40px; padding: 8px 14px; font-size: 13px; }
 .network-setup .net-adv label { margin-top: 10px; }
 .room-info { padding: 12px; border-left: 2px solid var(--gold); background: #f2b54c08; font-size: 13px; }
 .room-info p { margin: 0 0 8px; }

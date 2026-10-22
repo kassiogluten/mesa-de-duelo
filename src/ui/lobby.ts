@@ -1,9 +1,10 @@
 import { allDecks, countEntries, deckSize, loadUserDecks, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
-import { FORGE_URL, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom } from '../forge/client';
+import { FORGE_URL, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
+import { joinableRooms, publicRoomsHTML, type PublicRoomsState } from './publicRooms';
 import { deckArt, deckColors } from './deckStats';
 import { validateDeckLocal } from './deckRules';
 import { siteFooterHTML } from './siteFooter';
@@ -24,10 +25,12 @@ export interface LobbyOptions {
   onPlay(you: DeckData, opp: DeckData | null, config: MatchConfig, opponents?: (DeckData | null)[]): Promise<void>;
   /** Mesa livre: sem servidor e sem regras automáticas. */
   onFreePlay(you: DeckData, format: DeckFormat): void;
-  onHost(you: DeckData, name: string, url: string, config: MatchConfig): Promise<void>;
+  onHost(you: DeckData, name: string, url: string, config: MatchConfig, visibility: RoomVisibility): Promise<void>;
   onJoin(you: DeckData, name: string, code: string, url: string): Promise<void>;
   onValidate(deck: DeckData, format: DeckFormat, url: string): Promise<DeckValidation>;
   onLookup(code: string, url: string): Promise<RoomInfo>;
+  /** Salas públicas abertas na ponte. */
+  onListRooms(url: string): Promise<PublicRoom[]>;
   onCancelRoom(): void;
   onDecks(action?: DeckAction, format?: DeckFormat): void;
   onEditDeck(deckId: string): void;
@@ -38,6 +41,8 @@ const formatName = (f: DeckFormat | null) => f === 'commander' ? 'Commander' : f
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
 const MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+/** De quanto em quanto tempo a lista de salas públicas se atualiza sozinha, com a tela à vista. */
+const ROOMS_EVERY_MS = 10_000;
 // Último lugar da prateleira "Meus decks": um card vazio para começar um deck novo.
 const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-tile new-deck-tile" data-lobby="create"><span class="new-deck-plus" aria-hidden="true">+</span><span>Criar deck</span></button></div>';
 
@@ -56,6 +61,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   let colorFilter = new Set<ColorFilter>();
   const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
+  // Toda sala nova começa privada: só vira pública se o jogador escolher.
+  let visibility: RoomVisibility = 'private';
+  let publicRooms: PublicRoomsState = null, roomsHTML = '', roomsRequest = 0;
+  let roomsTimer: ReturnType<typeof setInterval> | undefined;
   const validations = new Map<string, DeckValidation>();
   let preflight = 0;
   const key = (deck: DeckData) => JSON.stringify([url(), format, deck.cards, deck.sideboard ?? [], deck.commanders ?? []]);
@@ -81,7 +90,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div id="commanderAiPanel" class="commander-ai-panel" hidden></div>
         <section class="network-setup" id="netPanel" aria-label="Jogar com outra pessoa" hidden>
           <label for="netName">Seu nome<input id="netName" class="input-field" maxlength="24" autocomplete="nickname" placeholder="Jogador"></label>
+          <section class="public-rooms" id="publicRooms" aria-labelledby="publicRoomsTitle"><div class="public-rooms-head"><h2 id="publicRoomsTitle">Salas públicas</h2><button type="button" class="ghost-btn" data-lobby="rooms-refresh" aria-label="Atualizar a lista de salas públicas">Atualizar</button></div><div id="publicRoomList" aria-busy="false"></div><p class="sr-only" id="publicRoomsStatus" role="status" aria-live="polite"></p></section>
           <form data-join><label for="netCode">Já tem um código?<span class="network-code"><input id="netCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD"><button type="submit" class="arena-btn secondary">Buscar</button></span></label></form>
+          <fieldset class="match-choice visibility-choice" id="visibilityChoice"><legend>Nova sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="private">Privada</button><button type="button" data-setting="visibility" data-value="public">Pública</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset>
           <details class="net-adv"><summary>Conexão</summary><label for="netUrl">Endereço do servidor</label><input id="netUrl" class="input-field" spellcheck="false" placeholder="${esc(FORGE_URL)}"></details>
           <div id="roomInfo" class="room-info" hidden></div><div id="netWait" class="net-wait" hidden></div>
         </section>
@@ -134,7 +145,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $<HTMLInputElement>('#showIncompatible').checked = showIncompatible;
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-setting]')) {
       const setting = button.dataset.setting;
-      const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : matchLength;
+      const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : matchLength;
       button.setAttribute('aria-pressed', String(button.dataset.value === value));
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
@@ -143,6 +154,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     header.setDisabled(busy || !!waitingRoom);
     $('.match-sidebar').classList.toggle('waiting-room', !!waitingRoom);
     $('#netPanel').hidden = mode !== 'net';
+    $('#publicRooms').hidden = !!room;
+    $('#visibilityChoice').hidden = !!room;
+    $('#visibilityHelp').textContent = visibility === 'public' ? 'Aparece na lista de salas públicas: qualquer pessoa pode entrar.' : 'Só entra quem tiver o código da sala.';
     const commander = format === 'commander';
     const free = mode === 'free';
     $('#durationChoice').hidden = commander || free;
@@ -161,7 +175,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       commanderOpponents = commanderOpponents.map(id => id === 'random' || aiPool.some(d => d.id === id) ? id : 'random');
       $('#commanderAiPanel').innerHTML = '<p class="commander-ai-heading">Decks dos computadores</p>' + commanderOpponents.slice(0, playerCount - 1).map((id, i) => `<label class="opponent-choice" for="commanderOpp${i}"><span class="computer-seat-number" aria-hidden="true">${i + 1}</span><select id="commanderOpp${i}" aria-label="Deck do computador ${i + 1}" class="input-field" data-opponent-slot="${i}"><option value="random">Deck aleatório</option>${aiPool.map(d => `<option value="${esc(d.id)}" ${id === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`).join('');
     }
-    for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #netUrl, [data-join] button, [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
+    for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #netUrl, [data-join] button, [data-join-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
     const deck = selected(), result = deck && format ? validations.get(key(deck)) : undefined;
     const invalid = !free && !!deck && !!format && (result ? !result.valid : validateDeckLocal(deck, format).status === 'invalid');
     const art = deck && deckArt(deck);
@@ -174,11 +188,45 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#netWait').hidden = !waitingRoom;
     if (waitingRoom) {
       const capacity = waitingRoom.capacity ?? waitingRoom.config.playerCount ?? 2;
-      $('#netWait').innerHTML = `<span>${formatName(waitingRoom.config.format)} · ${waitingRoom.players.length}/${capacity} jogadores</span><strong class="net-code" aria-label="Código da sala">${esc(waitingRoom.code)}</strong><p class="room-invitation">Compartilhe o código para completar a mesa.</p><ol class="room-seats">${Array.from({length: capacity}, (_, seat) => { const player = waitingRoom!.players.find((p, i) => (p.seat ?? i) === seat); return `<li class="${player ? 'occupied' : ''}"><span>${player ? esc(player.name) : 'Lugar disponível'}${seat === waitingRoom!.seat ? ' · Você' : ''}</span><small>${player ? player.connected ? 'Pronto' : 'Reconectando…' : 'Aguardando'}</small></li>`; }).join('')}</ol><button class="arena-btn secondary" data-lobby="cancel-room">Sair da sala</button>`;
+      $('#netWait').innerHTML = `<span>${waitingRoom.public ? 'Sala pública' : 'Sala privada'} · ${formatName(waitingRoom.config.format)} · ${waitingRoom.players.length}/${capacity} jogadores</span><strong class="net-code" aria-label="Código da sala">${esc(waitingRoom.code)}</strong><p class="room-invitation">${waitingRoom.public ? 'A sala aparece na lista de salas públicas. Você também pode compartilhar o código.' : 'Compartilhe o código para completar a mesa.'}</p><ol class="room-seats">${Array.from({length: capacity}, (_, seat) => { const player = waitingRoom!.players.find((p, i) => (p.seat ?? i) === seat); return `<li class="${player ? 'occupied' : ''}"><span>${player ? esc(player.name) : 'Lugar disponível'}${seat === waitingRoom!.seat ? ' · Você' : ''}</span><small>${player ? player.connected ? 'Pronto' : 'Reconectando…' : 'Aguardando'}</small></li>`; }).join('')}</ol><button class="arena-btn secondary" data-lobby="cancel-room">Sair da sala</button>`;
     }
     if (focusedOpponent !== undefined) root.querySelector<HTMLElement>(`[data-opponent-slot="${CSS.escape(focusedOpponent)}"]`)?.focus({preventScroll: true});
     if (focusId) root.querySelector<HTMLElement>(`[data-${focusAttribute}="${CSS.escape(focusId)}"]`)?.focus({preventScroll: true});
+    syncRoomPolling();
   }
+  // ---------- Salas públicas ----------
+  // Só procura com "Outra pessoa" escolhido, fora de uma sala e com a aba à vista; com a partida na tela, o lobby fica escondido.
+  const wantRooms = () => mode === 'net' && !waitingRoom && !room && document.visibilityState === 'visible';
+  function syncRoomPolling() {
+    if (wantRooms() && !roomsTimer) {
+      void loadRooms();
+      roomsTimer = setInterval(() => { if (!root.hidden && !busy) void loadRooms(); }, ROOMS_EVERY_MS);
+    } else if (!wantRooms() && roomsTimer) { clearInterval(roomsTimer); roomsTimer = undefined; }
+  }
+  async function loadRooms(announce = false) {
+    const request = ++roomsRequest, list = $('#publicRoomList');
+    list.setAttribute('aria-busy', 'true');
+    let next: PublicRoomsState;
+    try { next = await opts.onListRooms(netURL()); } catch { next = 'error'; }
+    if (request !== roomsRequest) return;
+    list.setAttribute('aria-busy', 'false');
+    publicRooms = next;
+    renderRooms();
+    if (announce) {
+      const count = Array.isArray(next) ? joinableRooms(next).length : -1;
+      $('#publicRoomsStatus').textContent = count < 0 ? 'Não foi possível ver as salas agora.' : count === 0 ? 'Nenhuma sala pública aberta.' : count === 1 ? 'Uma sala pública aberta.' : `${count} salas públicas abertas.`;
+    }
+  }
+  function renderRooms() {
+    const list = $('#publicRoomList'), html = publicRoomsHTML(publicRooms, busy || !!waitingRoom);
+    if (html === roomsHTML) return;
+    // A lista muda sozinha: quem estava com o foco num "Entrar" continua nele, ou vai para o Atualizar se a sala sumiu.
+    const focused = document.activeElement as HTMLElement | null;
+    const focusCode = focused && list.contains(focused) ? focused.dataset.joinRoom : undefined;
+    list.innerHTML = roomsHTML = html;
+    if (focusCode !== undefined) (list.querySelector<HTMLElement>(`[data-join-room="${CSS.escape(focusCode)}"]`) ?? $('[data-lobby=rooms-refresh]')).focus({preventScroll: true});
+  }
+  document.addEventListener('visibilitychange', () => syncRoomPolling());
   const setBusy = (value: boolean) => { busy = value; refresh(); };
   function choose(deck: DeckData) {
     if (busy || waitingRoom) return;
@@ -200,7 +248,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (busy || !format || !deck) return;
     ++preflight;
     if (mode === 'free') { setStatus(''); opts.onFreePlay(deck, format); return; }
-    const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
+    const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, roomVisibility = visibility, opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
     setBusy(true); setStatus('Verificando o deck…');
     try {
       const result = await opts.onValidate(deck, matchConfig.format, endpoint);
@@ -208,7 +256,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       if (!result.valid) { setStatus(result.issues.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' '), true); return; }
       if (selectedMode === 'net') {
         if (selectedRoom) await opts.onJoin(deck, playerName, selectedRoom.code, endpoint);
-        else await opts.onHost(deck, playerName, endpoint, matchConfig);
+        else await opts.onHost(deck, playerName, endpoint, matchConfig, roomVisibility);
       } else {
         const opponent = opponentId === 'random' ? null : allDecks().find(d => d.builtin && d.id === opponentId);
         if (opponent === undefined) { setStatus('Não há um deck do computador compatível com este formato.', true); return; }
@@ -234,6 +282,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         format = choice.dataset.value === 'commander' ? 'commander' : choice.dataset.value === 'pauper' ? 'pauper' : 'free'; save('mesa:format', format); youId = rememberedDeck(); preflight++; setStatus('');
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
+      } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private';
       } else if (choice.dataset.setting === 'players') { playerCount = Number(choice.dataset.value); save('mesa:commanderPlayers', String(playerCount));
       } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
       refresh(); return;
@@ -260,6 +309,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (action === 'clear') { query = ''; colorFilter = new Set(); $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
     if (action === 'cancel-lookup' && !busy) { room = null; refresh(); }
+    if (action === 'rooms-refresh' && !busy && !waitingRoom) void loadRooms(true);
+    const joinCode = target.closest<HTMLButtonElement>('[data-join-room]')?.dataset.joinRoom;
+    if (joinCode && !busy && !waitingRoom) findRoom(joinCode, true);
     if (action === 'cancel-room') { opts.onCancelRoom(); waitingRoom = null; refresh(); }
   });
   function closeTileMenus(except?: HTMLButtonElement) {
@@ -305,6 +357,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     e.preventDefault(); if (busy) return;
     const code = $<HTMLInputElement>('#netCode').value.trim().toUpperCase();
     if (!/^[ABCDEFGHJKLMNPQRSTUVWXYZ2-9]{4}$/.test(code)) { setStatus('Use o código de 4 caracteres da sala.', true); return; }
+    findRoom(code, false);
+  });
+  /** Busca a sala pelo código e entra nela; pela lista de salas públicas é o mesmo caminho, com as mesmas regras. */
+  function findRoom(code: string, fromList: boolean) {
     preflight++; setBusy(true); setStatus('Buscando sala…');
     void opts.onLookup(code, netURL()).then(info => {
       if (!info.available) throw new Error(info.players.length >= (info.capacity ?? info.config.playerCount ?? 2) ? `A sala ${info.code} já está completa.` : `A partida da sala ${info.code} já começou.`);
@@ -312,13 +368,14 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       return true;
     }).catch(error => { setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false; }).then(found => {
       setBusy(false);
-      if (!found) return;
+      // A sala da lista pode ter enchido ou começado nesse meio-tempo: a lista se atualiza.
+      if (!found) { if (fromList) void loadRooms(); return; }
       // Com um deck lembrado que serve para o formato da sala, entra direto; senão pede o deck antes.
       const deck = selected();
       if (deck && validateDeckLocal(deck, format!).status !== 'invalid') void start();
       else setStatus(`Escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`);
     });
-  });
+  }
   const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); }});
   refresh();
   void fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name))).then(refresh).catch(() => {});

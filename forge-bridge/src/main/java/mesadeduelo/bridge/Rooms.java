@@ -19,7 +19,8 @@ import io.netty.channel.Channel;
  * Distribui as conexões entre as partidas. Cada conexão está em no máximo uma {@link Session}:
  * uma partida contra a IA ({type:"start"}) ou uma sala em rede com código de 4 letras.
  *
- * Salas: {type:"host", name, deck} cria; {type:"join", code, name, deck} entra e a partida começa;
+ * Salas: {type:"host", name, deck, visibility} cria (privada, a não ser com visibility:"public");
+ * {type:"join", code, name, deck} entra e a partida começa; {type:"list-rooms"} lista as salas públicas abertas;
  * {type:"rematch"} pede revanche (contra a IA começa na hora, em rede quando os dois pedirem);
  * {type:"leave"} concede e sai.
  *
@@ -32,6 +33,8 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int MAX_NAME = 24;
     private static final long GRACE_SECONDS = Long.getLong("mesa.grace", 300);
+    /** Quantas salas públicas a lista mostra de uma vez (as que esperam há mais tempo primeiro). */
+    private static final int MAX_LISTED = 30;
 
     private final Map<Channel, Session> byChannel = new ConcurrentHashMap<>();
     /** Todas as partidas vivas, salas e partidas contra a IA, pelo código de volta. */
@@ -170,6 +173,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                     BridgeServer.send(ch, response.toString());
                 }
                 case "lookup-room" -> lookup(ch, code(msg), requestId);
+                case "list-rooms" -> {
+                    JsonObject response = new JsonObject(); response.addProperty("type", "room-list");
+                    response.addProperty("requestId", requestId); response.add("rooms", publicRooms());
+                    BridgeServer.send(ch, response.toString());
+                }
                 case "fetch-deck" -> {
                     // A busca roda fora da thread da rede; a resposta volta com o mesmo requestId.
                     String site = MatchConfig.string(msg, "site"), id = MatchConfig.string(msg, "id");
@@ -206,7 +214,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 }
                 case "host" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
-                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config);
+                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg));
                 }
                 case "join" -> join(ch, code(msg), name(msg), msg.get("deck"));
                 case "rejoin" -> rejoin(ch, code(msg), msg.has("token") ? MatchConfig.string(msg, "token") : "");
@@ -260,6 +268,21 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         BridgeServer.send(ch, response.toString());
     }
 
+    /** Salas públicas abertas: sem as cheias, as já começadas e as que ficaram sem ninguém conectado. */
+    synchronized JsonArray publicRooms() {
+        JsonArray rooms = new JsonArray();
+        byCode.values().stream().filter(Session::listed)
+            .sorted(java.util.Comparator.comparingLong(Session::createdAt)).limit(MAX_LISTED)
+            .map(Session::listingJson).forEach(rooms::add);
+        return rooms;
+    }
+
+    /** Sem o campo, ou com qualquer outro valor, a sala é privada, como sempre foi. */
+    private static boolean publicRoom(JsonObject msg) {
+        JsonElement e = msg.get("visibility");
+        return e != null && e.isJsonPrimitive() && "public".equals(e.getAsString());
+    }
+
     private static String name(JsonObject msg) {
         JsonElement e = msg.get("name");
         String n = e == null || e.isJsonNull() ? "" : e.getAsString().strip();
@@ -305,13 +328,13 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         s.start();
     }
 
-    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config) {
+    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom) {
         leave(ch);
-        Session s = Session.room(newCode(4), ch, name, deck, config);
+        Session s = Session.room(newCode(4), ch, name, deck, config, publicRoom);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.sendRoom(s.seats[0]);
-        System.out.printf("Sala %s criada por %s (%s)%n", s.code, name, deck.getName());
+        System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deck.getName());
     }
 
     private synchronized void join(Channel ch, String code, String name, JsonElement payload) {
