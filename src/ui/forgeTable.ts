@@ -18,6 +18,8 @@ import { attachHandDrag } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
 import { cardDecision, selectionMessage } from './decisionPrompt';
+import { isProliferating, proliferateBoardClass, proliferateClear, proliferateOkLabel, proliferatePanelHTML, proliferateSuggestion, proliferateToggle } from './proliferate';
+import './proliferate.css';
 import type { DeckEntry } from '../decks';
 import { passLabel, phaseHudHTML, turnBannerText } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
@@ -867,6 +869,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const selected = selectedForInput(s, c.id);
     const selectionCandidate = !!s.input.selection && (usable(s, c.id) || selected);
     if (selected) inner.push('choice-selected');
+    const prolif = proliferateBoardClass(s, 'card', c.id);
+    if (prolif) inner.push(prolif);
     const blockCandidate = !!s.input.blocking?.blockers.includes(c.id);
     const blockSelected = validBlockSelection(s, selectedBlocker) && selectedBlocker.blocker === c.id;
     if (blockCandidate) inner.push('block-candidate');
@@ -1008,6 +1012,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (s.activePlayer === p.id && !s.gameOver) cls.push('active');
     if (!p.eliminated && (s.input.selectablePlayers?.includes(p.id) || currentAttackTargets(s).some(target => target.kind === 'player' && target.id === p.id))) cls.push('selectable-player');
     if (p.eliminated) cls.push('eliminated');
+    const prolif = proliferateBoardClass(s, 'player', p.id);
+    if (prolif) cls.push(prolif);
+    if (prolif && s.input.selection?.players?.includes(p.id)) cls.push('choice-selected');
     // Pagando um custo: cada símbolo da sua reserva vira um botão que gasta aquela mana.
     const spend = p.id === s.you && !!s.input.paying;
     const pool = Object.entries(p.pool).flatMap(([c, n]) => Array(n).fill(spend
@@ -1360,6 +1367,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     </div>`;
   }
 
+  function proliferateNames(s: FState) {
+    const who = (playerId: number | undefined) => playerId === s.you ? 'Seu' : `De ${s.players.find(p => p.id === playerId)?.name ?? 'oponente'}`;
+    return {
+      name: (c: { kind: 'card' | 'player'; id: number }) => c.kind === 'player'
+        ? c.id === s.you ? 'Você' : s.players.find(p => p.id === c.id)?.name ?? 'Jogador'
+        : (() => { const card = findCard(c.id); return card ? label(card).split(',')[0] : 'Permanente'; })(),
+      whose: (c: { kind: 'card' | 'player'; id: number; holder?: number }) => c.kind === 'player' ? 'Jogador' : who(c.holder),
+    };
+  }
+
   function buttons(s: FState) {
     if (s.gameOver && observing && !disconnected) {
       const result = gameResult(s);
@@ -1375,8 +1392,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
     const move = s.input.commanderMove;
     const ok = move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
-      : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount}` } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
-    const cancel = move ? { ...s.input.cancel, label: zoneName(move.to) } : attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
+      : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount}` } : isProliferating(s) ? { ...s.input.ok, label: proliferateOkLabel(s) } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
+    // No proliferar o Cancelar do Forge troca o modo de seleção em massa ("Meu", "Todos"); a lista tem os próprios atalhos.
+    const cancel = isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
       btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
@@ -1666,24 +1684,26 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const sourceFirst = decision ? null : instruction.match(/^(.+ \(\d+\) - [\s\S]*?)\n\n([\s\S]+)$/);
     const lines = (sourceFirst ? `${sourceFirst[2]}\n\n${sourceFirst[1]}` : instruction).split('\n');
     const heading = decision ? `<h2 class="decision-heading">${esc(lines.length > 1 ? lines.shift()! : 'Sua escolha')}</h2>` : '';
-    const selectionCount = decision ? `<div class="decision-progress" role="status"><strong>${esc(decision.progress)}</strong><span>${esc(decision.instruction)}</span></div>` : '';
+    const prolifPanel = isProliferating(s) ? proliferatePanelHTML(s, proliferateNames(s)) : '';
+    const selectionCount = decision && !prolifPanel ? `<div class="decision-progress" role="status"><strong>${esc(decision.progress)}</strong><span>${esc(decision.instruction)}</span></div>` : '';
     shownInstruction = instruction;
     const expanded = !!instruction && expandedPrompt === instruction;
     const more = `<button class="prompt-more" data-ui="prompt-more" aria-controls="fPrompt" aria-expanded="${expanded}" hidden>${expanded ? 'Ver menos' : 'Ver detalhes'}</button>`;
     const attackPanel = attackChoices(s);
     $('#fAction').classList.toggle('attack-choosing', !!attackPanel);
+    $('#fAction').classList.toggle('proliferating', !!prolifPanel);
     // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
     const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${esc(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
-    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${attackPanel}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
+    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${prolifPanel}${attackPanel}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
     if (promptEl && moreEl) moreEl.hidden = !expanded && !short && promptEl.scrollHeight <= promptEl.clientHeight + 1;
     // O pedido é o último parágrafo do Forge ("Carta (id) - habilidade" vem antes); sem o número da carta.
     const request = instruction.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean).pop() ?? '';
-    const awaiting = renderAwaiting(s, short ?? request.replace(/ \(\d+\)/g, ''));
+    const awaiting = renderAwaiting(s, isProliferating(s) ? 'Proliferar: marque o que ganha marcadores' : short ?? request.replace(/ \(\d+\)/g, ''));
     announce(instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? instruction}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''));
 
     const qEl = $('#fQuestion');
@@ -2092,6 +2112,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       sendInputAction(act, Number(control.dataset.gen));
       return;
     }
+    const prolifRow = t.closest<HTMLElement>('[data-prolif-kind]'), prolifTool = t.closest<HTMLElement>('[data-prolif]');
+    if ((prolifRow || prolifTool) && client.state && isProliferating(client.state)) {
+      const control = (prolifRow ?? prolifTool)!;
+      if (!renderedInputIsCurrent(control)) return;
+      const s = client.state;
+      const message = prolifRow ? proliferateToggle(s, prolifRow.dataset.prolifKind === 'player' ? 'player' : 'card', Number(prolifRow.dataset.prolifId))
+        : prolifTool!.dataset.prolif === 'suggested' ? proliferateSuggestion(s) : proliferateClear(s);
+      if (message) { stopPresentation(); client.send(message); }
+      return;
+    }
     if (t.closest('.emblem')) return; // fica dentro do retrato, mas não é um clique no jogador
     const mana = t.closest<HTMLElement>('[data-mana]')?.dataset.mana;
     if (mana) { const control = t.closest<HTMLElement>('[data-mana]')!; if (renderedInputIsCurrent(control)) { stopPresentation(); client.send({ type: 'mana', color: mana, gen: Number(control.dataset.gen) }); } return; }
@@ -2105,11 +2135,21 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       chooseAttackDefender(client.state, { id: Number(pl.dataset.pid), kind: 'player' }, Number(pl.dataset.gen));
       return;
     }
+    // Proliferar: o clique no retrato ou na carta passa pela mesma escolha da lista (o Forge confirmaria sozinho ao marcar o último).
+    if (pl && client.state && isProliferating(client.state)) {
+      const message = renderedInputIsCurrent(pl) ? proliferateToggle(client.state, 'player', Number(pl.dataset.pid)) : null;
+      if (message) { stopPresentation(); client.send(message); }
+      return;
+    }
     if (pl) { if (renderedInputIsCurrent(pl) && client.state?.input.selectablePlayers?.includes(+pl.dataset.pid!)) { stopPresentation(); client.send({ type: 'player', id: +pl.dataset.pid!, gen: Number(pl.dataset.gen) }); } return; }
     const cd = t.closest<HTMLElement>('[data-fid]');
     if (!cd || !renderedInputIsCurrent(cd)) return;
     const s = client.state!;
     const id = Number(cd.dataset.fid), gen = Number(cd.dataset.gen);
+    if (isProliferating(s) && gen === s.input.gen) {
+      const message = proliferateToggle(s, 'card', id);
+      if (message) { stopPresentation(); client.send(message); return; }
+    }
     if (s.input.attacking && cd.closest('.field')) {
       if (s.input.attacking.attackers.includes(id)) {
         attackAllGen = null;

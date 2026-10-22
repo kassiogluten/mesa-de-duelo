@@ -6,6 +6,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.34.0] - 2026-10-22
+
+### Novo
+
+- **Proliferar sem confusão.** Ao proliferar, aparece uma lista com tudo que pode ganhar marcadores, separada em **Te ajuda** (verde ▲), **Te prejudica** (vermelho ▼) e **Ajuda e prejudica**. A conta é feita do seu lado: um −1/−1 na criatura do oponente ou o veneno dele aparecem como bons para você; a lealdade do planeswalker dele ou o seu próprio veneno, como ruins. Cada linha mostra o número antes e depois (por exemplo "+1/+1 2→3"), e o veneno que chegaria a 10 avisa "perde a partida".
+- **Só o que me ajuda.** Um toque marca de uma vez tudo que só te favorece; **Limpar** desmarca tudo. Também dá para marcar tocando na carta ou no retrato do jogador, e no campo cada um ganha um contorno na cor do efeito.
+- **Aviso antes de confirmar.** Se você marcou algo que te prejudica, o painel avisa. O botão diz **Proliferar (N)** ou **Não proliferar**, e a escolha só vale quando você confirma: marcar todos não confirma mais sozinho.
+
+### Corrigido
+
+- **Proliferar com jogadores e permanentes juntos.** Quando havia marcadores em jogadores e em permanentes ao mesmo tempo, não dava para escolher os jogadores nem ver o que já estava marcado.
+
 ## [0.33.0] - 2026-10-22
 
 ### Novo
