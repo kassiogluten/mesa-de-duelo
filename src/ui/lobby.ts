@@ -40,6 +40,7 @@ const save = (key: string, value: string) => { try { localStorage.setItem(key, v
 const formatName = (f: DeckFormat | null) => f === 'commander' ? 'Commander' : f === 'pauper' ? 'Pauper' : f === 'free' ? 'Livre' : 'Escolha o formato';
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
 const MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+const REFRESH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
 /** De quanto em quanto tempo a lista de salas públicas se atualiza sozinha, com a tela à vista. */
 const ROOMS_EVERY_MS = 10_000;
@@ -78,6 +79,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     <main class="home-content"><div class="home-intro"><h1>Como jogar:</h1><p>Escolha seu deck, o formato de jogo e seu oponente.</p></div>
     <div class="play-layout">
       <aside class="match-sidebar" aria-label="Configuração da partida">
+        <div class="match-setup">
         <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="free">Livre</button><button type="button" data-setting="format" data-value="commander">Commander</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 10 9-5M12 12 3 7m9 5v10M7.5 4.5l9 5"/></svg><span><strong id="aiModeLabel">Computador</strong></span></button>
@@ -90,12 +92,15 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div id="commanderAiPanel" class="commander-ai-panel" hidden></div>
         <section class="network-setup" id="netPanel" aria-label="Jogar com outra pessoa" hidden>
           <label for="netName">Seu nome<input id="netName" class="input-field" maxlength="24" autocomplete="nickname" placeholder="Jogador"></label>
-          <section class="public-rooms" id="publicRooms" aria-labelledby="publicRoomsTitle"><div class="public-rooms-head"><h2 id="publicRoomsTitle">Salas públicas</h2><button type="button" class="ghost-btn" data-lobby="rooms-refresh" aria-label="Atualizar a lista de salas públicas">Atualizar</button></div><div id="publicRoomList" aria-busy="false"></div><p class="sr-only" id="publicRoomsStatus" role="status" aria-live="polite"></p></section>
-          <form data-join><label for="netCode">Já tem um código?<span class="network-code"><input id="netCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD"><button type="submit" class="arena-btn secondary">Buscar</button></span></label></form>
-          <fieldset class="match-choice visibility-choice" id="visibilityChoice"><legend>Nova sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="private">Privada</button><button type="button" data-setting="visibility" data-value="public">Pública</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset>
+          <section class="net-group" id="joinGroup" aria-labelledby="joinTitle"><h3 class="net-group-title" id="joinTitle">Entrar numa sala</h3>
+            <section class="public-rooms" id="publicRooms" aria-labelledby="publicRoomsTitle"><div class="public-rooms-head"><h4 id="publicRoomsTitle">Salas públicas</h4><button type="button" class="link-btn" data-lobby="rooms-refresh" aria-label="Atualizar a lista de salas públicas">${REFRESH}Atualizar</button></div><div id="publicRoomList" aria-busy="false"></div><p class="sr-only" id="publicRoomsStatus" role="status" aria-live="polite"></p></section>
+            <form data-join><label for="netCode">Ou digite o código da sala<span class="network-code"><input id="netCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD"><button type="submit" class="arena-btn secondary">Entrar</button></span></label></form>
+          </section>
+          <fieldset class="net-group visibility-choice" id="visibilityChoice"><legend class="net-group-title">Ou crie a sua sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="private">Privada</button><button type="button" data-setting="visibility" data-value="public">Pública</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset>
           <details class="net-adv"><summary>Conexão</summary><label for="netUrl">Endereço do servidor</label><input id="netUrl" class="input-field" spellcheck="false" placeholder="${esc(FORGE_URL)}"></details>
           <div id="roomInfo" class="room-info" hidden></div><div id="netWait" class="net-wait" hidden></div>
         </section>
+        </div>
         <div class="match-ready" aria-label="Resumo da partida"><div class="chosen-deck" id="chosenDeck"></div><button class="arena-btn primary big" id="startMatch" data-lobby="start" disabled>Jogar</button><p id="status" class="lobby-status" role="status" aria-live="polite"></p></div>
       </aside>
       <div class="deck-collection">
@@ -156,7 +161,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#netPanel').hidden = mode !== 'net';
     $('#publicRooms').hidden = !!room;
     $('#visibilityChoice').hidden = !!room;
-    $('#visibilityHelp').textContent = visibility === 'public' ? 'Aparece na lista de salas públicas: qualquer pessoa pode entrar.' : 'Só entra quem tiver o código da sala.';
+    $('#visibilityHelp').textContent = visibility === 'public' ? 'Aparece na lista acima para qualquer pessoa entrar.' : 'Só entra quem receber o código.';
     const commander = format === 'commander';
     const free = mode === 'free';
     $('#durationChoice').hidden = commander || free;
@@ -227,6 +232,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (focusCode !== undefined) (list.querySelector<HTMLElement>(`[data-join-room="${CSS.escape(focusCode)}"]`) ?? $('[data-lobby=rooms-refresh]')).focus({preventScroll: true});
   }
   document.addEventListener('visibilitychange', () => syncRoomPolling());
+  // A barra lateral ocupa só o que sobra da tela abaixo do topo dela, para o botão Jogar nunca ficar fora da vista.
+  let fitFrame = 0;
+  const fitSidebar = () => { fitFrame = 0; if (!root.isConnected) return; const bar = $('.match-sidebar'); bar.style.setProperty('--sidebar-room', `${Math.max(280, innerHeight - Math.max(bar.getBoundingClientRect().top, 16) - 16)}px`); };
+  const queueFit = () => { if (!fitFrame) fitFrame = requestAnimationFrame(fitSidebar); };
+  addEventListener('scroll', queueFit, {passive: true});
+  addEventListener('resize', queueFit);
   const setBusy = (value: boolean) => { busy = value; refresh(); };
   function choose(deck: DeckData) {
     if (busy || waitingRoom) return;
@@ -378,6 +389,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); }});
   refresh();
+  fitSidebar();
   void fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name))).then(refresh).catch(() => {});
   return { refresh, setStatus, setBusy, showRoom(nextRoom) {
     preflight++; waitingRoom = nextRoom;

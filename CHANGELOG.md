@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.36.0] - 2026-10-22
+
+### Mudou
+
+- **Barra de configuração da partida sempre ao alcance.** Em telas mais baixas, as opções de formato, oponente e sala rolam dentro da própria barra, e o resumo com o deck escolhido e o botão **Jogar** (ou **Criar sala**) fica sempre visível embaixo. Não é mais preciso rolar toda a lista de decks para chegar ao botão.
+- **Jogar com outra pessoa mais claro.** As opções agora aparecem em dois blocos: **Entrar numa sala**, com as salas públicas e o campo do código, e **Ou crie a sua sala**, com a escolha entre privada e pública. O botão ao lado do código passou a se chamar **Entrar**.
+
 ## [0.35.0] - 2026-10-22
 
 ### Novo
