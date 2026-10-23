@@ -21,7 +21,7 @@ import { cardDecision, selectionMessage } from './decisionPrompt';
 import { isProliferating, proliferateBoardClass, proliferateClear, proliferateOkLabel, proliferatePanelHTML, proliferateSuggestion, proliferateToggle } from './proliferate';
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
-import { passLabel, phaseHudHTML, turnBannerText } from './phaseHud';
+import { passLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
@@ -193,6 +193,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let client: ForgeClient | null = null;
   let portraits: (string | undefined)[] = [undefined, undefined];
   let lastTurn = 0;
+  // Relógio do turno: começa quando a mesa vê o turno mudar (ou ao abrir a partida) e anda a cada segundo.
+  let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
+  const tickTurnClock = () => {
+    const el = root.querySelector<HTMLElement>('[data-turn-timer]');
+    if (!root.isConnected || !el) { clearInterval(clockTimer); clockTimer = undefined; return; }
+    el.textContent = turnTimeText(Date.now() - clockSince);
+  };
+  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver'>) => {
+    const key = `${s.turn}:${s.activePlayer}`;
+    if (key !== clockTurn) { clockTurn = key; clockSince = Date.now(); }
+    tickTurnClock();
+    if (!s.gameOver && !clockTimer) clockTimer = setInterval(tickTurnClock, 1000);
+  };
   let lastCombat = '';
   let zoneOf: number | null = null;
   let zoneKind: 'gy' | 'exile' | 'command' | 'damage' = 'gy';
@@ -1665,6 +1678,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined));
+    syncTurnClock(visual);
 
     // Carta que o prompt cita mas que não está à vista na mesa (topo do grimório na vidência/vigilância).
     const pc = s.input.card ?? s.input.targeting?.card;

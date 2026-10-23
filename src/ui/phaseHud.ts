@@ -80,6 +80,13 @@ function activePlayerPortrait(state: HudState, portrait?: string): string {
  * mouse e o resumo completo vai para leitores de tela. A cor diz de quem é o turno. `activePortrait` é a arte do
  * retrato de quem joga o turno, mostrada só com mais de dois jogadores.
  */
+/** Tempo do turno no relógio da trilha: "0:07", "12:30" e, passando de uma hora, "1:02:05". */
+export function turnTimeText(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(total / 3600), m = Math.floor(total / 60) % 60, s = total % 60;
+  const ss = String(s).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+}
+
 export function phaseHudHTML(state: HudState, activePortrait?: string): string {
   const step = STEPS[state.phase ?? ''];
   const activeIndex = PHASES.findIndex(([key]) => key === step?.group);
@@ -90,7 +97,8 @@ export function phaseHudHTML(state: HudState, activePortrait?: string): string {
   const upcoming = state.gameOver ? '' : upcomingTurnsText(state);
   const summary = [`Turno ${state.turn}`, owner(state), detail, step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
   return `<span class="sr-only">${esc(summary)}</span>${activePlayerPortrait(state, activePortrait)}
-    <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>
+    <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
+    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>`}
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}" aria-hidden="true">${PHASES.map(([key, label, icon], index) => {
       const current = step?.group === key && !state.gameOver;
       const tip = [current ? `${label} · ${detail}` : label, key === 'combat' ? combat : ''].filter(Boolean).join(' · ');

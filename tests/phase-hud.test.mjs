@@ -5,7 +5,7 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
-const { phaseHudHTML, passLabel, turnBannerText, upcomingTurnsText } = await import(uri(source));
+const { phaseHudHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText } = await import(uri(source));
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
 
@@ -102,4 +102,14 @@ test('extra turns and extra combats are named on the trail, the banner and the p
   const second = phaseHudHTML({ ...state, phase: 'COMBAT_DECLARE_ATTACKERS', combatNumber: 2 });
   assert.match(second, /Declaração de atacantes · Combate extra/);
   assert.doesNotMatch(phaseHudHTML(state), /phase-combat-count|extra/);
+});
+
+test('the turn clock shows minutes and seconds, and hours only past one hour', () => {
+  assert.equal(turnTimeText(0), '0:00');
+  assert.equal(turnTimeText(7_900), '0:07');
+  assert.equal(turnTimeText(750_000), '12:30');
+  assert.equal(turnTimeText(3_725_000), '1:02:05');
+  assert.equal(turnTimeText(-500), '0:00');
+  assert.match(phaseHudHTML(state), /data-turn-timer/);
+  assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }), /data-turn-timer/);
 });

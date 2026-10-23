@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.38.0] - 2026-10-22
+
+### Novo
+
+- **Relógio do turno.** Na trilha de fases, ao lado do número do turno, um relógio mostra há quanto tempo o turno atual está rolando (por exemplo **0:42**). Ele zera a cada turno novo, seja o seu ou o do oponente, e some quando a partida termina.
+
 ## [0.37.0] - 2026-10-22
 
 ### Novo
