@@ -10,6 +10,7 @@ import { followCardPreview, inspectCard, showCardPreview, hideCardPreview } from
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
+import { createTurnNotice } from './turnNotice';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
 import { forcedSeatReason, visibleSeats } from './seatVisibility';
 import { fixPossessives } from './forgeText';
@@ -142,6 +143,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="game-option-row"><span id="fSoundLabel">Efeitos sonoros</span><button class="sound-switch" id="fMute" data-ui="mute" role="switch" aria-checked="false" aria-labelledby="fSoundLabel"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fSoundState" aria-hidden="true">Desligados</span></button></div>
         <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%"></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fAutoPassLabel">Passar automaticamente</span><button class="sound-switch" id="fAutoPass" data-ui="auto-pass" role="switch" aria-checked="true" aria-labelledby="fAutoPassLabel" aria-describedby="fAutoPassHint fAutoPassStatus" disabled><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAutoPassState" aria-hidden="true">Ativado</span></button></div><p id="fAutoPassHint">Quando não houver ações disponíveis. As jogadas continuam visíveis.</p><p id="fAutoPassStatus" role="status">Aguardando conexão com o servidor.</p></div>
+        <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
         <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
@@ -268,6 +270,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const autoPass = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); });
   // "Passar respostas", ao lado dos botões: marcado, a ponte passa sozinha no turno do oponente e com algo na pilha.
   const passResponses = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); }, undefined, { field: 'passResponses', key: PASS_RESPONSES_KEY, initial: false });
+  const turnNotice = createTurnNotice();
   let presentationTimer = 0;
   // Cartas da sua mão já mostradas. Uma carta nova com compra na fila fica escondida até a animação de compra chegar nela.
   // Oponentes ocultos e o "só este" (partidas com três ou mais jogadores). Valem até a partida mudar.
@@ -307,6 +310,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fAutoPassState').textContent = autoPass.value ? 'Ativado' : 'Desativado';
     const status = $('#fAutoPassStatus');
     status.textContent = !connected ? 'Aguardando conexão com o servidor.' : !autoPass.supported ? 'Este servidor não oferece esta opção.' : autoPass.pending !== null ? 'Aplicando…' : '';
+    status.hidden = !status.textContent;
+  }
+  function syncTurnNotice() {
+    const permission = turnNotice.permission;
+    const control = $('#fTurnNotice') as HTMLButtonElement;
+    control.disabled = permission === 'unsupported' || permission === 'denied';
+    control.setAttribute('aria-checked', String(turnNotice.enabled));
+    $('#fTurnNoticeState').textContent = turnNotice.enabled ? 'Ligado' : 'Desligado';
+    const status = $('#fTurnNoticeStatus');
+    status.textContent = permission === 'unsupported' ? 'Este navegador não mostra avisos do sistema. A aba continua piscando.'
+      : permission === 'denied' ? 'O navegador bloqueou os avisos desta página. Libere nas permissões do site para ligar. A aba continua piscando.' : '';
     status.hidden = !status.textContent;
   }
   function syncSettings() {
@@ -1589,6 +1603,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     fixForgeText(s);
     autoPass.observe(s.preferences, !!client?.connected && !disconnected); syncAutoPass();
     passResponses.observe(s.preferences, !!client?.connected && !disconnected);
+    if (s.spectating) turnNotice.reset(); else turnNotice.observe(s);
     const savedFocus = focusSnapshot();
     const scrollPositions = new Map([...root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field')].map(el => [el.id, { left: el.scrollLeft, top: el.scrollTop }]));
     const silently = silentNext || document.hidden;
@@ -1980,10 +1995,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       $('#fStackGallery').querySelector<HTMLElement>('.stack-gallery-card.actionable, .stack-gallery-card')?.focus({ preventScroll: true });
       return;
     }
-    if (ui === 'settings') { setSettings(true); return; }
+    if (ui === 'settings') { syncTurnNotice(); setSettings(true); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
     if (ui === 'pass-responses') { if (client?.connected && !disconnected) passResponses.change(!passResponses.value); render(); return; }
     if (ui === 'auto-pass') { if (client?.connected && !disconnected) autoPass.change(!autoPass.value); syncAutoPass(); return; }
+    if (ui === 'turn-notice') { void turnNotice.setEnabled(!turnNotice.enabled).then(syncTurnNotice); return; }
     if (ui === 'mute') { audio.setMuted(!audio.settings.muted); syncSettings(); return; }
     if (ui === 'sideboard-ready' || ui === 'next-game') {
       const sb = client?.state?.sideboarding;
@@ -2054,7 +2070,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (ui === 'fullscreen') { void toggleFullscreen(); return; }
     if (ui === 'exit') {
-      if (client?.state?.gameOver || disconnected || confirm(client?.state?.room ? 'Desistir e sair da sala?' : 'Desistir desta partida?')) { stopPresentation(); hideCardPreview(true); client?.send({ type: 'concede' }); opts.onExit(); }
+      if (client?.state?.gameOver || disconnected || confirm(client?.state?.room ? 'Desistir e sair da sala?' : 'Desistir desta partida?')) { stopPresentation(); hideCardPreview(true); turnNotice.reset(); client?.send({ type: 'concede' }); opts.onExit(); }
       return;
     }
     if (ui === 'rematch') { setMenu(false); opts.onRematch(); return; }
@@ -2381,7 +2397,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   return {
     attach(c, pics) {
-      autoPass.reset(); passResponses.reset(); knownHand = new Set(); handPrimed = false; arriving.clear(); shownLife.clear();
+      autoPass.reset(); passResponses.reset(); turnNotice.reset(); knownHand = new Set(); handPrimed = false; arriving.clear(); shownLife.clear();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
       client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);
@@ -2392,7 +2408,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       $('#fOverlay').hidden = true;
       $('#fQuestion').hidden = true;
       $('#fZone').hidden = true;
-      syncAutoPass(); syncModal();
+      syncAutoPass(); syncTurnNotice(); syncModal();
     },
     render,
     notice,

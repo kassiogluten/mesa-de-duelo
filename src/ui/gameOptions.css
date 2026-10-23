@@ -16,7 +16,7 @@
 .game-options .game-options-close { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; background: var(--surface); }
 .game-option-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sound-switch { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 4px 0 4px 4px; background: none; border: 0; border-radius: 24px; color: var(--muted); font: 500 13px var(--body); cursor: pointer; }
-.sound-switch > #fSoundState, .sound-switch > #fAutoPassState { min-width: 72px; text-align: left; }
+.sound-switch > #fSoundState, .sound-switch > #fAutoPassState, .sound-switch > #fTurnNoticeState { min-width: 72px; text-align: left; }
 .sound-switch-track { display: block; width: 46px; height: 28px; padding: 3px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 99px; background: var(--bg-deep); transition: background-color 120ms ease; }
 .sound-switch-track > span { display: block; width: 20px; height: 20px; border-radius: 50%; background: #d4d8df; box-shadow: 0 1px 3px #0005; transition: transform 120ms cubic-bezier(.2, 0, 0, 1); }
 .sound-switch[aria-checked="true"] { color: var(--ink); }
@@ -30,7 +30,7 @@
 .game-option-auto-pass .game-option-row > :first-child { min-width: 0; }
 .game-option-auto-pass .sound-switch { flex-shrink: 0; }
 .game-option-auto-pass p { margin: 10px 0 0; color: var(--muted); font: 400 13px/1.55 var(--body); }
-.game-option-auto-pass #fAutoPassStatus { color: var(--gold-light); }
+.game-option-auto-pass #fAutoPassStatus, .game-option-auto-pass #fTurnNoticeStatus { color: var(--gold-light); }
 .game-option-pace { display: grid; gap: 10px; margin-top: 24px; }
 .game-option-pace select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-deep); color: var(--ink); font: inherit; }
 .game-option-pace p { margin: 0; color: var(--muted); font: 400 13px/1.55 var(--body); }

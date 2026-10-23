@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.39.0] - 2026-10-22
+
+### Novo
+
+- **Aviso de que é o seu turno.** Fez sua jogada e foi para outra aba ou minimizou o navegador? Quando o seu turno começar, o título da aba pisca **Seu turno!** até você voltar para a mesa.
+- **Notificação do sistema.** Em **Opções**, ligue **Notificar quando for seu turno** para receber também um aviso do computador ou do celular. Na primeira vez, o navegador pede permissão. Tocar no aviso traz a mesa de volta.
+
 ## [0.38.2] - 2026-10-22
 
 ### Corrigido
