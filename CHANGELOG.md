@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.38.2] - 2026-10-22
+
+### Corrigido
+
+- **Nome em português que serve para duas cartas.** Na importação de lista, um nome como "Expulsar" (que é tanto Cast Out quanto Expel) não vira mais a primeira carta encontrada sem aviso. A revisão mostra o nome com as opções, o deck fica como rascunho e a partida só começa depois de você trocar pelo nome em inglês da carta certa.
+
 ## [0.38.1] - 2026-10-22
 
 ### Corrigido
