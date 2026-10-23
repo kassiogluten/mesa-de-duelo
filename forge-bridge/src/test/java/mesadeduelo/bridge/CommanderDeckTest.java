@@ -28,7 +28,7 @@ public class CommanderDeckTest {
             assertEquals(commanders, r.json().getAsJsonObject("deck").getAsJsonArray("commanders").size());
         }).count();
         assertEquals(errors.toString(), 0, errors.length());
-        assertEquals(58, count); assertNotNull(Decks.random("commander"));
+        assertEquals(78, count); assertNotNull(Decks.random("commander"));
     }
     @Test public void countsSingletonAndOracleExceptions() {
         assertTrue(check(deck("Marwyn, the Nurturer", "Forest", 99)).valid());

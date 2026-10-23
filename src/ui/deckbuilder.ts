@@ -3,7 +3,7 @@ import { DEFAULT_DECKS, countEntries, deckEntries, deckSize, totalDeckSize, expo
 import { cardInfo, type Color } from '../cards';
 import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
-import { deckArt, deckColors, groupedRows, statsHTML } from './deckStats';
+import { deckArt, deckColors, deckPriceHTML, groupedRows, statsHTML } from './deckStats';
 import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
 import { cardCopyLimit, copiesInDeck, validateDeckLocal, type ServerDeckValidation } from './deckRules';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
@@ -117,7 +117,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   function cardTile(deck: DeckData, personal: boolean) {
     const art = deckArt(deck), local = validateDeckLocal(deck, format), colors = deckColors(deck);
-    return `<article class="dw-deck"><button type="button" class="dw-cover" data-peek="${esc(deck.id)}" aria-label="Ver cartas de ${esc(deck.name)}">${art ? `<img src="${esc(art)}" alt="" loading="lazy">` : '<span aria-hidden="true">▱</span>'}${colors.length ? `<span class="dw-cover-colors">${colors.map(pip).join('')}</span>` : ''}<span class="dw-cover-tag">${personal ? 'Seu deck' : 'Deck pronto'}</span></button><div class="dw-deck-info"><h3>${esc(deck.name)}</h3>${commanderLineHTML(deck, ptName, 'dw-deck-commander')}<p><span>${totalDeckSize(deck)} cartas${deck.sideboard?.length ? ` · ${countEntries(deck.sideboard)} no sideboard` : ''}</span></p><p class="dw-deck-valid ${local.status}">${formatLabel(deck.format ?? 'free')}${format === 'pauper' ? ` · ${local.status === 'valid' ? 'Compatível com Pauper' : local.status === 'invalid' ? 'Precisa de ajustes' : 'Não verificado'}` : ''}</p><div class="dw-actions"><button type="button" class="dw-button ${personal ? 'primary' : ''}" data-select="${esc(deck.id)}" data-focus="deck:${esc(deck.id)}">${personal ? 'Editar deck' : 'Ver deck'}</button>${!personal ? `<button type="button" class="dw-button" data-copy="${esc(deck.id)}">Criar cópia</button>` : ''}</div></div></article>`;
+    return `<article class="dw-deck"><button type="button" class="dw-cover" data-peek="${esc(deck.id)}" aria-label="Ver cartas de ${esc(deck.name)}">${art ? `<img src="${esc(art)}" alt="" loading="lazy">` : '<span aria-hidden="true">▱</span>'}${colors.length ? `<span class="dw-cover-colors">${colors.map(pip).join('')}</span>` : ''}<span class="dw-cover-tag">${personal ? 'Seu deck' : 'Deck pronto'}</span></button><div class="dw-deck-info"><h3>${esc(deck.name)}</h3>${commanderLineHTML(deck, ptName, 'dw-deck-commander')}<p><span>${totalDeckSize(deck)} cartas${deck.sideboard?.length ? ` · ${countEntries(deck.sideboard)} no sideboard` : ''}</span>${deckPriceHTML(deck, 'dw-deck-price', true)}</p><p class="dw-deck-valid ${local.status}">${formatLabel(deck.format ?? 'free')}${format === 'pauper' ? ` · ${local.status === 'valid' ? 'Compatível com Pauper' : local.status === 'invalid' ? 'Precisa de ajustes' : 'Não verificado'}` : ''}</p><div class="dw-actions"><button type="button" class="dw-button ${personal ? 'primary' : ''}" data-select="${esc(deck.id)}" data-focus="deck:${esc(deck.id)}">${personal ? 'Editar deck' : 'Ver deck'}</button>${!personal ? `<button type="button" class="dw-button" data-copy="${esc(deck.id)}">Criar cópia</button>` : ''}</div></div></article>`;
   }
   function renderLibrary() {
     const match = (d: DeckData) => matchesQuery(d, listQuery, ptName) && matchesColors(deckColors(d), libraryColors);
@@ -227,7 +227,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     user.unshift(deck); persist(); edit(deck); $('#dwName')?.focus(); ($('#dwName') as HTMLInputElement)?.select();
   }
   function duplicate(source: DeckData) {
-    const deck: DeckData = { ...source, id: crypto.randomUUID(), name: `${source.name} (cópia)`, builtin: false, cards: source.cards.map(e => ({ ...e })), commanders: source.commanders?.map(e => ({ ...e })) ?? [], sideboard: source.sideboard?.map(e => ({ ...e })) ?? [], sourceTemplateId: source.builtin ? source.id : source.sourceTemplateId, updatedAt: new Date().toISOString() };
+    const { price: _price, ...rest } = source;
+    const deck: DeckData = { ...rest, id: crypto.randomUUID(), name: `${source.name} (cópia)`, builtin: false, cards: source.cards.map(e => ({ ...e })), commanders: source.commanders?.map(e => ({ ...e })) ?? [], sideboard: source.sideboard?.map(e => ({ ...e })) ?? [], sourceTemplateId: source.builtin ? source.id : source.sourceTemplateId, updatedAt: new Date().toISOString() };
     user.unshift(deck); persist('Cópia criada nos seus decks.'); edit(deck);
   }
   function change(name: string, delta: number, move = false) {

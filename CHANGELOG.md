@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.41.0] - 2026-10-23
+
+### Novo
+
+- **20 novos decks prontos de Commander.** Chegam os comandantes mais populares do EDHREC nos últimos dois anos que ainda não estavam entre os decks prontos, deixando de fora os que têm verde: Oloro, Breya, Teysa Karlov, Zhulodok, Zurgo Stormrender, Arabella, Shorikai, Queen Marchesa, Urza, Terra, K'rrik, Kilo, Ghyrson Starn, Ragost, Norman Osborn, Eriette, Captain N'ghathrod, Alela, Magda e Obeka. Cada lista é o deck médio do EDHREC para o comandante, com as cartas que o oponente controlado pelo computador ainda não sabe jogar trocadas pela carta mais usada do mesmo tipo, então todos servem tanto para você quanto para os oponentes.
+- **Preço dos decks prontos.** Na lista de decks e na escolha do deck da partida, os decks prontos com preço registrado mostram quanto custam as cartas em dólar, por exemplo "US$ 922,14". Passe o mouse sobre o valor (ou toque nele, na lista de decks) para ver o que ele significa: quanto custam as cartas pela edição mais barata de cada uma, e em que data foi feita a cotação. Por enquanto só os 20 decks novos de Commander têm preço; os outros chegam depois. Cópias de um deck pronto não levam o preço, já que podem ser mudadas.
+
+### Mudou
+
+- **"Passar respostas" virou um ícone também no computador.** A opção deixou de ocupar uma linha inteira embaixo dos botões: agora é o botão ⏩ ao lado do último botão, como no celular, dourado quando está ligada. Passe o mouse sobre ele para ver o que faz.
+
 ## [0.40.0] - 2026-10-23
 
 ### Novo
