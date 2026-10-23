@@ -150,7 +150,11 @@ a { color: var(--gold); }
 .tag svg { width: 12px; height: 12px; }
 .tag.atk { background: var(--red); color: #fff; }
 .tag.blk { background: var(--gold); color: #2a1600; }
-.tag.zzz { background: #2a3550; color: #c8d4f0; font-style: normal; }
+.tag.zzz { background: #2a3550; color: #c8d4f0; font-style: normal; padding: 1px 5px; }
+.tag.zzz .dizzy { width: 16px; height: 16px; }
+.dizzy-orbit { transform-box: view-box; transform-origin: 12px 12px; animation: dizzy-spin 2.4s linear infinite; }
+@keyframes dizzy-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .dizzy-orbit { animation: none; } }
 /* Setas do ataque e do bloqueio, por cima dos campos e abaixo dos avatares e da mão. */
 .combat-arrows { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
 .combat-arrows .arrow, .combat-arrows .arrow-under { fill: none; stroke-linecap: round; animation: fade-in 0.3s 0.25s ease both; }
@@ -274,9 +278,27 @@ a { color: var(--gold); }
   background: radial-gradient(circle at 35% 30%, #4a5f8c, #1a2440) 50% 18% / 260% auto no-repeat;
 }
 .emblem:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
-.pool { position: absolute; left: calc(100% + 6px); top: 30%; display: flex; gap: 2px; padding: 3px 6px; border-radius: 999px; background: var(--panel); font-size: 18px; }
-.pool.spend { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
-.pool-mana { all: unset; display: inline-flex; cursor: pointer; border-radius: 999px; transition: transform 0.12s ease; }
+/*
+ * Reserva de mana dentro do retrato: o retrato fica desfocado por baixo e os símbolos crescem conforme cabem
+ * (uma cor ocupa quase tudo; várias se dividem em linhas, uma sobre a outra). Os símbolos ficam acima da vida,
+ * que cobre a parte de baixo do retrato.
+ */
+.portrait { position: relative; container-type: size; }
+.pool {
+  position: absolute; inset: 0; z-index: 1; box-sizing: border-box; padding: 6% 6% 30%; display: flex; flex-direction: column; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 1px 4%;
+  border-radius: 50%; background: rgba(8, 12, 24, 0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); font-size: 15cqh;
+}
+/* A vida fica por cima da reserva. */
+.avatar .life { position: relative; z-index: 2; }
+.pool[data-n='1'] { font-size: 38cqh; }
+.pool[data-n='2'] { font-size: 28cqh; }
+.pool[data-n='3'] { font-size: 20cqh; }
+.pool.spend { box-shadow: inset 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+.pool-stack { display: inline-flex; align-items: center; }
+.pool-n { margin-left: 1px; font: 700 0.6em var(--display); color: var(--ink); text-shadow: 0 1px 2px #000; }
+.mana-option { display: inline-flex; align-items: center; gap: 0.4em; }
+.mana-option .pip { font-size: 1.1em; }
+.pool-mana { all: unset; display: inline-flex; align-items: center; cursor: pointer; border-radius: 999px; transition: transform 0.12s ease; }
 .pool-mana:hover, .pool-mana:focus-visible { transform: scale(1.25); }
 .pool-mana:focus-visible { outline: 2px solid var(--glow); outline-offset: 1px; }
 

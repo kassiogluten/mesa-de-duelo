@@ -6,6 +6,30 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.40.0] - 2026-10-23
+
+### Novo
+
+- **Terrenos virados num monte só, no celular.** Depois de pagar uma mágica, os terrenos virados se juntam numa pilha só, mesmo com nomes diferentes, com o total em **×N**. Toque no número para ver cada um. Os terrenos também continuam empilhados na hora de declarar ataque.
+- **Segurar para ver.** No celular e no tablet, segure o dedo sobre qualquer carta para ver a carta inteira, inclusive no iPhone. Segurar não joga a carta nem a escolhe, e o toque rápido continua fazendo o de sempre.
+- **Tempo de jogo no resultado.** A tela de vitória, derrota ou empate mostra quanto tempo o jogo durou, por exemplo "Turno 9 · 14:32 de jogo". Numa melhor de três, cada jogo conta o seu tempo.
+- **Cor da mana nas escolhas.** Quando o jogo pede para escolher uma cor de mana ou qual habilidade de mana usar, cada opção mostra o símbolo da mana ao lado do nome.
+
+### Mudou
+
+- **Reserva de mana dentro do retrato.** A mana que sobra aparece sobre o retrato do jogador, que fica desfocado enquanto houver mana. Mana da mesma cor vira um símbolo só, com a quantidade ao lado (por exemplo, verde ×3), e cada cor fica numa linha. Pagando um custo, tocar no símbolo gasta uma de cada vez. No Commander com vários jogadores, a reserva dos oponentes fica abaixo do nome.
+- **Artefatos e encantamentos antes dos terrenos.** Na fileira de trás, artefatos, encantamentos e outras permanentes que não são criaturas vêm primeiro. Com muitos terrenos, são os terrenos que ficam para rolar, e o resto continua à vista.
+- **"Passar respostas" virou um ícone no celular.** Em vez de ocupar uma linha inteira embaixo dos botões, a opção é um botão ⏩ ao lado do último botão, dourado quando está ligada. No computador continua com o texto.
+- **Desvirar só com o ícone.** No terreno virado cuja mana ainda não foi gasta, o selo de desvirar mostra só a seta ↺, sem o texto.
+- **Terrenos menores no celular.** A fileira de terrenos ficou mais baixa, e as criaturas ficam com mais espaço na mesa.
+- **Mesa sem lupa no celular.** A lupa cobria boa parte das cartas na mesa, na mão e na zona de comando. Para ver uma carta, segure o dedo sobre ela. As cartas do oponente abrem também com um toque. Na escolha da mão inicial, a lupa continua.
+- **Terrenos não empurram mais as criaturas no Commander pelo celular.** Quando terrenos e criaturas ficam lado a lado, os terrenos ocupam no máximo pouco mais de um terço da largura. Se não couberem, a fileira rola. Sem criaturas em campo, os terrenos usam a largura toda.
+
+### Corrigido
+
+- **Selo de enjoo de invocação em dobro.** Em alguns aparelhos o selo da criatura que acabou de entrar aparecia com dois emojis. Agora é um desenho próprio, igual em todo aparelho: estrelinhas girando em volta, como quem ficou tonto. Com a opção de reduzir movimento do sistema ligada, elas ficam paradas.
+- **Terrenos escondidos atrás dos botões no celular.** No duelo pelo celular, a sua fileira de terrenos passava por baixo de "Para o combate" e "Fim de turno", e as últimas cartas ficavam escondidas sem dar para rolar até elas. Agora a fileira termina antes dos botões e rola.
+
 ## [0.39.1] - 2026-10-23
 
 ### Corrigido

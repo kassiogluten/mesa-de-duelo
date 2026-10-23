@@ -54,6 +54,8 @@
 .hand-drag-ghost { position: fixed; z-index: 80; aspect-ratio: 488 / 680; pointer-events: none; transform: translate(-50%, -70%); filter: drop-shadow(0 12px 15px #0008); }
 .hand-drag-ghost .face { height: 100%; outline: 2px solid var(--gold); }
 .forge.dragging-hand { user-select: none; cursor: grabbing; }
+/* Segurar uma carta abre a carta: sem o menu do sistema nem seleção de texto por cima. */
+.forge [data-fid] { -webkit-touch-callout: none; user-select: none; }
 .forge.dragging-hand .field { outline: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); outline-offset: -8px; }
 
 /* Exile remains separate from the hand, even while the permission cannot currently be used. */
@@ -242,10 +244,12 @@
 @media (hover: hover) and (pointer: fine) { .inspect-card { opacity: 0; } .slot:hover > .inspect-card,.hand-slot:hover > .inspect-card,.stack-card-wrap:hover > .inspect-card,.inspect-card:focus-visible { opacity: 1; } }
 @media (max-width: 1100px) { .forge { --hand-right: 265px; } .forge .field { padding-left: 18px; padding-right: 18px; } .forge .hand { left: 160px; } .forge .action { width: 235px; } }
 @media (max-width: 760px), (max-height: 500px) {
-  .forge { --hand-right: 205px; --exile-card-width: 62px; grid-template-columns: minmax(0, 1fr); --ch: clamp(62px, 16vh, 104px); --cw: calc(var(--ch) * .716); --lch: clamp(42px, 10vh, 66px); --lcw: calc(var(--lch) * .716); }
+  .forge { --hand-right: 205px; --exile-card-width: 62px; grid-template-columns: minmax(0, 1fr); --ch: clamp(62px, 16vh, 104px); --cw: calc(var(--ch) * .716); --lch: clamp(36px, 8.5vh, 56px); --lcw: calc(var(--lch) * .716); }
   .forge .field { padding: 0 8px; }
   .forge .row { min-height: calc(var(--ch) + 22px); padding: 12px 8px 10px; }
   .forge .row.lands { min-height: calc(var(--lch) + 16px); padding: 8px; }
+  /* Cartas pequenas demais para a lupa: ela cobriria a carta. Tocar numa carta que não faz nada agora (ou segurar) mostra a carta. */
+  .forge .field .inspect-card, .forge .own-command .inspect-card, .forge .duel-command .inspect-card, .forge:not([data-opening]) .hand .inspect-card { display: none; }
   .forge .stack-panel { --stack-width: clamp(112px, 16vw, 165px); right: 12px; padding: 0; max-height: none; }
   .forge .stack-panel .stack-heading { margin-bottom: 36px; }
   .stack-layer { transform: translate(calc(var(--depth) * -5px), calc(var(--depth) * -10px)) rotate(calc(var(--depth) * -2deg)); }
@@ -342,7 +346,9 @@
   .forge .action .arena-btn { min-height: 32px; padding: 5px 10px; font-size: 12px; line-height: 1.2; }
   .forge .action .arena-btn.waiting { min-height: 28px; font-size: 11px; }
   /* Só a fileira de baixo do seu campo divide a altura com os botões: ela termina antes deles. */
-  .forge:not([data-opening]) > .field.me > .row.lands { margin-right: calc(var(--action-w) + 6px); }
+  .forge:not([data-opening]) > .field.me > .row.lands { width: calc(100% - var(--action-w) - 6px); margin-right: calc(var(--action-w) + 6px); }
+  /* No duelo, seu retrato fica sobre o começo da fileira: a primeira permanente começa depois dele. */
+  .forge:not(.multiplayer):not(.commander-game):not([data-opening]) > .field.me > .row.lands { padding-left: 64px; }
   .forge > .field .row { scrollbar-width: thin; }
   /* Quando a caixa traz uma pergunta com texto (escolher cartas), ela volta à largura de antes. */
   .forge .action.card-decision { width: 190px; max-width: 30vw; }
@@ -352,6 +358,19 @@
 .forge .action .pass-responses input { width: 16px; height: 16px; margin: 0; accent-color: var(--gold); cursor: pointer; }
 .forge .action .pass-responses:has(input:checked) { color: var(--gold-light); }
 .forge .action .pass-responses:has(input:focus-visible) { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
+.forge .action .pass-responses-icon { display: none; }
+/*
+ * Celular: "Passar respostas" vira um botão só com o ícone, ao lado do último botão da caixa, em vez de uma linha
+ * inteira. Ligado, ele fica dourado; o nome continua para o leitor de tela e no toque longo (title).
+ */
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .action:has(> .pass-responses) > .btns > :last-child { margin-right: 38px; }
+  .forge .action > .pass-responses { position: absolute; right: 0; bottom: 0; width: 32px; min-height: 32px; height: 32px; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 10px; background: #101a2e; }
+  .forge .action > .pass-responses input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+  .forge .action > .pass-responses-text, .forge .action > .pass-responses .pass-responses-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .forge .action > .pass-responses .pass-responses-icon { display: block; width: 18px; height: 18px; }
+  .forge .action > .pass-responses:has(input:checked) { color: #1a1408; background: var(--gold); border-color: var(--gold); }
+}
 /* Compra: verso de carta voando do grimório para a mão; a carta nova espera escondida até ele chegar. */
 .draw-ghost { z-index: 31; }
 .draw-ghost .back { width: 100%; height: 100%; box-shadow: 0 10px 24px #0008; }

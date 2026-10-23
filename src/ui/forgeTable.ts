@@ -1,6 +1,6 @@
 import type { FCard, FOption, FPlayer, FQuestion, FState, ForgeClient } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
-import { esc, manaHTML, pip, richText } from './cardtext';
+import { esc, manaHTML, optionHTML, pip, richText } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { damageDetail } from './damageEffects';
@@ -51,6 +51,11 @@ const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.
 const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
 const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
+const ICON_PASS = '<svg class="pass-responses-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5v13l8.5-6.5zm9 0v13l8.5-6.5z" fill="currentColor"/></svg>';
+/** Enjoo de invocação: estrelinhas girando em volta, como personagem tonto de desenho animado. */
+const ICON_DIZZY = '<svg class="dizzy" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="2 2.4"/><g class="dizzy-orbit">'
+  + [[12, 5, 1], [18.06, 15.5, .75], [5.94, 15.5, .6]].map(([x, y, k]) => `<path transform="translate(${x} ${y}) scale(${k})" d="M0-4.2 1.1-1.1 4.2 0 1.1 1.1 0 4.2-1.1 1.1-4.2 0-1.1-1.1z" fill="#ffd66b"/>`).join('')
+  + '</g></svg>';
 const ICON_SHIELD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="currentColor"/></svg>';
 
 const svg = (...ds: string[]) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ds.map(d => `<path d="${d}" fill="currentColor"/>`).join('')}</svg>`;
@@ -917,8 +922,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ci.attack) tag = `<span class="tag atk">${ICON_SWORD}${ci.attack}${target ? ` ▸ ${esc(label(target).split(',')[0])}` : defendingPlayer && s.players.length > 2 ? ` ▸ ${esc(defendingPlayer.name)}` : ''}</span>`;
     else if (ci.block) tag = `<span class="tag blk">${ICON_SHIELD}${ci.block}</span>`;
     else if (attackers.length) tag = `<span class="tag atk">Atacado ${ICON_SWORD}${attackers.join(',')}</span>`;
-    else if (untappable) tag = '<span class="tag untap" title="A mana ainda não foi gasta: toque para desvirar e devolver a mana">↺ Desvirar</span>';
-    else if (c.creature && c.sick && c.controller === s.activePlayer) tag = '<span class="tag zzz" title="Enjoo de invocação">😵‍💫</span>';
+    else if (untappable) tag = '<span class="tag untap" title="A mana ainda não foi gasta: toque para desvirar e devolver a mana" aria-hidden="true">↺</span>';
+    else if (c.creature && c.sick && c.controller === s.activePlayer) tag = `<span class="tag zzz" title="Enjoo de invocação">${ICON_DIZZY}</span>`;
     if (selectedAttackers.has(c.id) || attackQueue.queuedAttackers.includes(c.id) || (attackAllGen !== null && legalAttackTargets(s, { attacker: c.id, gen: attackAllGen }).length)) { inner.push('attack-selected'); tag = `<span class="tag block-pending">${ICON_SWORD}Selecionada</span>`; }
     if (currentAttackTargets(s).some(target => target.kind === 'card' && target.id === c.id)) inner.push('attack-target');
     if (blockSelected) tag = `<span class="tag block-pending">${ICON_SHIELD}Selecionada</span>`;
@@ -970,31 +975,41 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return !!c.land || /\b(Artifact|Enchantment)\b/i.test(c.typeLine ?? '');
   }
 
+  /** Celular: a mesa é estreita e os terrenos virados, que ocupam a largura de uma carta deitada, vão para um monte só. */
+  const compactTable = matchMedia('(max-width: 760px), (max-height: 500px)');
+  compactTable.addEventListener('change', () => { if (client?.state?.type === 'state' && !root.hidden) render(); });
+
   /**
    * Empilha cópias iguais: mesmo nome, estado, marcadores e, nas criaturas, mesmo P/T, dano, palavras-chave
-   * e enjoo. Cartas com algo preso ou envolvidas no combate ficam sozinhas.
+   * e enjoo. Cartas com algo preso ou envolvidas no combate ficam sozinhas (ao declarar ataque, todas menos os
+   * terrenos, que não atacam nem são atacados). Com `tappedPile`, os terrenos virados
+   * sem marcadores formam um monte só, de nomes diferentes.
    */
-  function stacks(s: FState, cards: FCard[]) {
+  function stacks(s: FState, cards: FCard[], tappedPile = false) {
     const atts = attachmentsOf(s);
     const groups = new Map<string, FCard[]>();
     for (const c of cards) {
       const ctr = Object.entries(c.counters ?? {}).filter(([, v]) => v).sort().join(',');
       const ci = combatIndex(s, c.id);
-      const alone = !!s.input.attacking || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
+      const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
       const body = c.creature ? `|${c.power}/${c.toughness}|${c.damage ?? 0}|${[...(c.keywords ?? [])].sort()}|${!!c.sick}` : '';
-      const k = alone ? `#${c.id}` : `${c.name}|${c.tapped}|${usable(s, c.id)}|${c.token}|${c.copyOf ?? ''}|${ctr}${body}`;
+      const k = alone ? `#${c.id}` : tappedPile && c.land && c.tapped && !ctr && !usable(s, c.id) && !s.input.untappable?.includes(c.id) ? 'tapped-lands' : `${c.name}|${c.tapped}|${usable(s, c.id)}|${c.token}|${c.copyOf ?? ''}|${ctr}${body}`;
       groups.set(k, [...(groups.get(k) ?? []), c]);
     }
-    return [...groups.values()].map(cs => `<div class="stack" style="--n:${cs.length}">${cs.map(c => bfCard(s, c, atts.get(c.id))).join('')}${
-      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="Cartas do grupo" aria-label="Ver ${cs.length} cópias de ${esc(label(cs[0]))}">×${cs.length}</button>` : ''}</div>`).join('');
+    return [...groups.values()].map(cs => {
+      const mixed = cs.some(c => c.name !== cs[0].name);
+      return `<div class="stack" style="--n:${cs.length}">${cs.map(c => bfCard(s, c, atts.get(c.id))).join('')}${
+        cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="${mixed ? 'Terrenos virados' : 'Cartas do grupo'}" aria-label="${mixed ? `Ver ${cs.length} terrenos virados` : `Ver ${cs.length} cópias de ${esc(label(cs[0]))}`}">×${cs.length}</button>` : ''}</div>`;
+    }).join('');
   }
 
   function backRow(s: FState, p: FPlayer) {
     const byId = battlefieldById(s);
     const back = p.battlefield.filter(c => isBackRow(c) && (c.attachedTo == null || !byId.has(c.attachedTo)));
-    const lands = stacks(s, back.filter(c => c.land));
+    const lands = stacks(s, back.filter(c => c.land), compactTable.matches);
     const others = stacks(s, back.filter(c => !c.land));
-    return `${lands ? `<div class="perm-group lands-group">${lands}</div>` : ''}${others ? `<div class="perm-group others-group" aria-label="Artefatos e encantamentos">${others}</div>` : ''}`;
+    // Artefatos e encantamentos primeiro: a fileira começa por eles, e quando não cabe tudo são os terrenos que ficam para rolar.
+    return `${others ? `<div class="perm-group others-group" aria-label="Artefatos e encantamentos">${others}</div>` : ''}${lands ? `<div class="perm-group lands-group">${lands}</div>` : ''}`;
   }
 
   /** Saída animada de um modal respondido: uma cópia sem clique some aos poucos no lugar dele. */
@@ -1045,18 +1060,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const prolif = proliferateBoardClass(s, 'player', p.id);
     if (prolif) cls.push(prolif);
     if (prolif && s.input.selection?.players?.includes(p.id)) cls.push('choice-selected');
-    // Pagando um custo: cada símbolo da sua reserva vira um botão que gasta aquela mana.
+    // Mana da mesma cor num símbolo só, com a quantidade. Pagando um custo, cada símbolo vira um botão que gasta uma.
     const spend = p.id === s.you && !!s.input.paying;
-    const pool = Object.entries(p.pool).flatMap(([c, n]) => Array(n).fill(spend
-      ? `<button class="pool-mana" data-mana="${c}" aria-label="Usar mana ${c} da reserva">${pip(c)}</button>` : pip(c))).join('');
+    const colors = Object.values(p.pool).filter(n => n > 0).length;
+    const pool = Object.entries(p.pool).filter(([, n]) => n > 0).map(([c, n]) => {
+      const html = `${pip(c)}${n > 1 ? `<b class="pool-n" aria-hidden="true">×${n}</b>` : ''}`;
+      return spend ? `<button class="pool-mana" data-mana="${c}" aria-label="Usar mana ${c} da reserva (${n} disponíve${n > 1 ? 'is' : 'l'})">${html}</button>` : `<span class="pool-stack">${html}</span>`;
+    }).join('');
     const art = portraits[idx];
     const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
     return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}, ${p.life} de vida${playerCountersText(p)}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
-      <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}></div>
+      <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
       <div class="life">${p.life}</div>
       ${playerCounters(p)}
       <div class="pname">${esc(p.name)}</div>
-      ${pool ? `<div class="pool${spend ? ' spend' : ''}">${pool}</div>` : ''}
       ${emblems(p)}
       ${p.eliminated ? '<span class="seat-eliminated">Eliminado</span>' : ''}
       ${offline ? '<div class="offline">desconectado</div>' : ''}
@@ -1427,7 +1444,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const cancel = isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
-      btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${esc(btn.label)}</button>` : '';
+      btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${optionHTML(btn.label)}</button>` : '';
     const mine = s.activePlayer === s.you;
     if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
     // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
@@ -1447,7 +1464,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!passResponses.supported || s.gameOver || s.spectating || s.input.opening || s.input.attacking || s.input.blocking) return '';
     // Só junto da prioridade ou da espera: numa escolha (descarte, alvo, pagamento) ele só atrapalharia.
     if (s.input.selection || s.input.targeting || s.input.paying || cardDecision(s) || (!s.input.priority && (s.input.ok.enabled || s.input.cancel.enabled))) return '';
-    return `<label class="pass-responses" title="Passa a prioridade sozinho no turno do oponente e quando há algo na pilha. Seu turno, ataques, bloqueios e escolhas continuam parando."><input type="checkbox" data-ui="pass-responses"${passResponses.value ? ' checked' : ''}${passResponses.pending !== null ? ' aria-busy="true"' : ''}> Passar respostas</label>`;
+    return `<label class="pass-responses" title="Passa a prioridade sozinho no turno do oponente e quando há algo na pilha. Seu turno, ataques, bloqueios e escolhas continuam parando."><input type="checkbox" data-ui="pass-responses"${passResponses.value ? ' checked' : ''}${passResponses.pending !== null ? ' aria-busy="true"' : ''}>${ICON_PASS}<span class="pass-responses-text">Passar respostas</span></label>`;
   }
 
   // ---------- Perguntas ----------
@@ -1495,7 +1512,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (q.kind === 'confirm' && q.purpose === 'commander-zone') return commanderZoneHTML(q);
     if (q.kind === 'confirm') {
       return `${head}<div class="q-actions">${opts.map((o, i) =>
-        `<button class="arena-btn ${i === 0 ? 'primary' : 'secondary'}" data-q-confirm="${i === 0}">${esc(optLabel(o))}</button>`).join('')}</div>`;
+        `<button class="arena-btn ${i === 0 ? 'primary' : 'secondary'}" data-q-confirm="${i === 0}">${optionHTML(optLabel(o))}</button>`).join('')}</div>`;
     }
     if (q.kind === 'reveal') {
       const anyCards = opts.some(o => typeof o !== 'string' && o.card);
@@ -1518,7 +1535,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const on = pos >= 0 ? 'on' : '';
       const badge = isOrder && pos >= 0 ? `<span class="q-badge">${pos + 1}</span>` : on && !single ? '<span class="q-badge">✓</span>' : '';
       const card = typeof o !== 'string' && o.card ? `<div class="q-face">${face(o.card, 'normal')}</div>` : '';
-      return `<button class="q-opt ${on} ${card ? 'has-card' : ''}" data-q-opt="${i}">${card}<span>${esc(optLabel(o))}</span>${badge}</button>`;
+      return `<button class="q-opt ${on} ${card ? 'has-card' : ''}" data-q-opt="${i}">${card}<span>${optionHTML(optLabel(o))}</span>${badge}</button>`;
     }).join('');
     const n = qState.picked.length;
     const ready = n >= min && n <= max;
@@ -1835,10 +1852,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function gameResult(s: FState) {
     const abandoned = !!s.match?.abandoned;
     const won = !abandoned && s.winner === tablePlayers(s).me?.name;
+    const played = s.match?.gameMs != null ? ` · ${turnTimeText(s.match.gameMs)} de jogo` : '';
     return {
       tone: won ? 'win' : !abandoned && s.winner ? 'lose' : 'draw',
       title: abandoned ? 'Partida encerrada' : won ? 'Vitória' : s.winner ? 'Derrota' : 'Empate',
-      detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}` : `Turno ${s.turn}${s.winner ? ` · ${esc(s.winner)} venceu` : ''}`,
+      detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}${played}` : `Turno ${s.turn}${played}${s.winner ? ` · ${esc(s.winner)} venceu` : ''}`,
     };
   }
 
@@ -2220,6 +2238,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (s.input.suspendCast?.card.id === id) { sendInputAction('ok', gen); return; }
       if (!canPlayExileCard(s, id, gen) && !canSelectExileCard(s, id, gen)) { showPreview(findCard(id), cd, true); return; }
     }
+    // Celular: sem lupa, tocar numa carta do oponente que não faz nada agora mostra a carta. Nas suas, o toque é sempre
+    // do jogo (o terreno vira por mana mesmo fora da lista de usáveis); para ver, segure.
+    const theirs = findCard(id)?.controller !== s.you;
+    if (compactTable.matches && cd.closest('.field') && theirs && !usable(s, id) && !selectedForInput(s, id)) { showPreview(findCard(id), cd, true); return; }
     // Usar uma carta do cemitério ou do exílio fecha a janela, para a pergunta seguinte aparecer.
     if (cd.closest('#fZone')) closeZone();
     stopPresentation();
@@ -2289,8 +2311,34 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('contextmenu', e => {
     const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);
     if (!el) return;
-    e.preventDefault(); showPreview(cardFromElement(el), el, true);
+    e.preventDefault();
+    if (!heldOpen) showPreview(cardFromElement(el), el, true);
   });
+  /*
+   * Segurar para ver: no toque, segurar uma carta parada abre a carta, no iPhone também (lá o toque longo não vira
+   * contextmenu). O toque que abriu não joga a carta; mexer o dedo (rolar, arrastar da mão) desiste.
+   */
+  const HOLD_MS = 450;
+  let hold: { pointer: number; x: number; y: number; timer: number } | null = null;
+  let heldOpen = false;
+  const endHold = () => { if (hold) clearTimeout(hold.timer); hold = null; };
+  root.addEventListener('pointerdown', e => {
+    endHold(); heldOpen = false;
+    if (e.pointerType === 'mouse' || !e.isPrimary) return;
+    const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);
+    if (!el) return;
+    hold = { pointer: e.pointerId, x: e.clientX, y: e.clientY, timer: window.setTimeout(() => {
+      hold = null;
+      if (handDrag.active || !el.isConnected) return;
+      handDrag.cancel(); heldOpen = true; showPreview(cardFromElement(el), el, true);
+    }, HOLD_MS) };
+  });
+  root.addEventListener('pointermove', e => { if (hold?.pointer === e.pointerId && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 10) endHold(); }, { passive: true });
+  root.addEventListener('pointerup', endHold);
+  root.addEventListener('pointercancel', endHold);
+  root.addEventListener('scroll', endHold, { capture: true, passive: true });
+  root.addEventListener('keydown', () => { heldOpen = false; }, true);
+  root.addEventListener('click', e => { if (heldOpen) { heldOpen = false; e.preventDefault(); e.stopImmediatePropagation(); } }, true);
   // ---------- Ordem dos gatilhos: teclado e arrastar ----------
   let suppressTriggerClick = false;
   function focusTrigger(option: number) { root.querySelector<HTMLElement>(`[data-trigger="${option}"]`)?.focus({ preventScroll: false }); }
