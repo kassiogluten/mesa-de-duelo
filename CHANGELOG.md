@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.39.1] - 2026-10-23
+
+### Corrigido
+
+- **Servidor ocupando cada vez mais memória.** Cada partida terminada continuava ocupando memória no servidor até ele ser reiniciado, e com o tempo ele podia cair no meio de uma partida. Agora a memória é liberada quando a partida acaba.
+
 ## [0.39.0] - 2026-10-22
 
 ### Novo

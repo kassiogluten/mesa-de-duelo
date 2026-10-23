@@ -81,6 +81,9 @@ final class MatchJournal {
         }
     }
 
+    /** Partida encerrada: solta o jogo (o diário ainda fica guardado um tempo para relatos, sem prender o motor). */
+    synchronized void detach() { game = null; pendingSnapshot = false; }
+
     private boolean hasGame(int number) {
         for (var g : games) if (g.getAsJsonObject().get("gameNumber").getAsInt() == number) return true;
         return false;

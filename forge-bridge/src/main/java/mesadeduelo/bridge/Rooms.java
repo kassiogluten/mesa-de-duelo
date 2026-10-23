@@ -428,6 +428,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private void close(Session s) {
         MatchJournal journal = s.journal();
         if (journal != null) {
+            journal.detach();
             Map<String, Integer> tokens = new java.util.HashMap<>();
             for (Session.Seat seat : s.seats) if (seat.token != null) tokens.put(seat.token, seat.index);
             closed.remove(s.code);
