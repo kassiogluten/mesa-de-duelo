@@ -68,6 +68,20 @@ final class MatchLifecycle {
         }
     }
 
+    /**
+     * The game thread waiting on this player is the one stable point to run castability checks: they rebuild
+     * static effects, so the state publisher must only read the result. The gate keeps clicks out meanwhile.
+     */
+    private void refreshCastable(Game game, int playerId) {
+        if (game == null || game.isGameOver()) return;
+        var player = game.getRegisteredPlayers().stream().filter(p -> p.getId() == playerId).findFirst().orElse(null);
+        if (player == null) return;
+        Runnable refresh = () -> Castable.refresh(player, Castable.currentInput(player));
+        if (GuiBase.getInterface() instanceof HeadlessGui headless) headless.runGameMutation(refresh);
+        else refresh.run();
+        changed.accept(game);
+    }
+
     private void finishAbandonedInput(Game game, int playerId) {
         var player = game.getRegisteredPlayers().stream().filter(p -> p.getId() == playerId).findFirst().orElse(null);
         if (player == null || !(player.getController() instanceof PlayerControllerHuman human)) return;
@@ -85,6 +99,7 @@ final class MatchLifecycle {
     }
 
     void awaitInput(Game game, int playerId, CountDownLatch done) throws InterruptedException {
+        refreshCastable(game, playerId);
         do {
             pump(game);
             if (cancelled || game.isGameOver() || isConceding(game, playerId)) {

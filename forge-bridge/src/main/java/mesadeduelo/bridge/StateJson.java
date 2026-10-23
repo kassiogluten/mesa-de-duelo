@@ -299,32 +299,11 @@ final class StateJson {
         return o;
     }
 
-    /**
-     * Cartas fora da mão que o jogador pode usar agora: flashback e afins no cemitério; tramadas, foretell,
-     * Aventura e "você pode conjurar" no exílio (inclusive do exílio do oponente). O destaque do Forge
-     * (setWeaklySelectable) deixa várias de fora, as tramadas sempre. Só com prioridade; não confere a mana.
-     */
+    /** {@link Castable}: lê o que a thread do jogo calculou; conferir aqui refaria os efeitos estáticos ao lado dela. */
     static JsonArray castable(Game game, int viewer) {
-        JsonArray ids = new JsonArray();
-        if (game == null || viewer < 0) return ids;
-        try {
-            Player me = null;
-            for (Player pl : game.getPlayers()) if (pl.getId() == viewer) me = pl;
-            if (me == null || !me.equals(game.getPhaseHandler().getPriorityPlayer())) return ids;
-            java.util.Set<Card> candidates = new java.util.LinkedHashSet<>();
-            for (Card c : me.getCardsActivatableInExternalZones(false)) {
-                if (c.isInZone(ZoneType.Graveyard) || c.isInZone(ZoneType.Exile) || c.isInZone(ZoneType.Command)) candidates.add(c);
-            }
-            for (Card c : me.getCardsIn(ZoneType.Command)) if (c.isCommander()) candidates.add(c);
-            for (Card c : me.getCardsIn(ZoneType.Exile)) if (c.isPlotted()) candidates.add(c);
-            for (Card c : candidates) if (castableNow(c, me)) ids.add(c.getId());
-        } catch (RuntimeException e) { /* leitura concorrente com a thread do jogo: sem destaque desta vez */ }
-        return ids;
-    }
-
-    private static boolean castableNow(Card c, Player who) {
-        for (SpellAbility sa : c.getAllPossibleAbilities(who, true)) if (!sa.isManaAbility()) return true;
-        return false;
+        if (game == null || viewer < 0) return new JsonArray();
+        for (Player pl : game.getPlayers()) if (pl.getId() == viewer) return Castable.read(pl);
+        return new JsonArray();
     }
 
     /** Zone permission outlives priority, timing and available mana; it never grants an extra action. */

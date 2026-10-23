@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.38.1] - 2026-10-22
+
+### Corrigido
+
+- **Partida que caía com alguns decks.** Com certos decks, principalmente de Commander, a partida podia travar e cair na hora em que voltava a ser a sua vez de agir, por exemplo logo depois do dano de combate. Isso acontecia mais com comandantes de duas faces, cartas com Disfarce e cartas que se conjuram do cemitério, como as liberadas pelo Underworld Breach. O destaque das cartas que você pode jogar do cemitério, do exílio e da zona de comando continua igual, sem derrubar a partida.
+
 ## [0.38.0] - 2026-10-22
 
 ### Novo
