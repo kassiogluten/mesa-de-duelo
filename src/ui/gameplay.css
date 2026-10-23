@@ -79,6 +79,7 @@
 .forge .bfc.block-candidate { cursor: pointer; }
 .forge .bfc.block-selected > .face { outline: 3px solid #f3f6ff; outline-offset: 3px; box-shadow: 0 0 18px #ffffff55; }
 .forge .bfc.block-target > .face { outline: 3px solid var(--gold); outline-offset: 3px; }
+.forge .tag.untap { background: #e9edf5; color: #101b2f; font-size: 10px; cursor: pointer; }
 .forge .tag.block-pending { background: #e9edf5; color: #101b2f; font-size: 10px; }
 @media (hover: hover) and (pointer: fine) { .exile-card:hover { transform: translateY(-6px); } }
 

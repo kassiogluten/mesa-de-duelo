@@ -496,7 +496,8 @@ final class Session {
             }
             case "card" -> {
                 CardView cv = findCard(seat, msg.get("id").getAsInt());
-                if (cv != null) seat.onEdt(genAtClick, c -> c.selectCard(cv, null, null));
+                // Uma carta virada para mana que ainda está na reserva: o clique desvira e devolve a mana.
+                if (cv != null) seat.onEdt(genAtClick, c -> { if (ManaUndo.untap(c, cv.getId())) markDirty(); else c.selectCard(cv, null, null); });
             }
             case "stack" -> {
                 int id = exactInt(msg.get("id"));
@@ -1252,6 +1253,11 @@ final class Session {
                 JsonArray act = new JsonArray();
                 seat.actionable.forEach(act::add);
                 input.add("actionable", act);
+                if (priority && !locked) {
+                    JsonArray untap = new JsonArray();
+                    ManaUndo.untappable(seat.controller()).forEach(untap::add);
+                    if (!untap.isEmpty()) input.add("untappable", untap);
+                }
                 // Pagando um custo de mana: a reserva fica clicável no retrato.
                 if (seat.controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana) {
                     input.addProperty("paying", true);

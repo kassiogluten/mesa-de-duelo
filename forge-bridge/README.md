@@ -50,6 +50,8 @@ Pela raiz do projeto, os mesmos comandos são `npm run forge:instalar` e `npm ru
   "log": ["..."],
   "input": { "message": "Prioridade: Você ...", "ok": { "label": "OK", "enabled": true },
              "cancel": { "label": "Fim de Turno", "enabled": true }, "selectable": [29, 31],
+             // viradas para mana com a mana ainda na reserva: {type:"card"} nelas desvira e devolve a mana
+             "untappable": [29],
              // conjurando (escolhendo alvos ou pagando): a carta que alveja e os alvos já escolhidos
              "targeting": { "source": 18, "card": { /* carta */ }, "cards": [], "players": [1] } },
   "question": null,
@@ -122,7 +124,7 @@ A mão do oponente vai só como contagem, as perguntas vão só para quem precis
 | `{type:"rejoin", code, token}` | Volta ao assento depois de a conexão cair, em sala ou contra a IA (`code` e `token` vêm em `session`). Se a partida não existe mais, a resposta é `{type:"gone", text}`; se outra conexão ocupava o assento, ela recebe `{type:"replaced", text}` e é fechada. |
 | `{type:"rematch"}` | Contra a IA recomeça na hora; em rede, quando os dois pedirem. |
 | `{type:"leave"}` | Concede e sai da sala. A sala fecha quando não sobra ninguém conectado. |
-| `{type:"card", id}` | Clica numa carta: jogar, conjurar, escolher alvo, atacar, bloquear ou pagar mana. |
+| `{type:"card", id}` | Clica numa carta: jogar, conjurar, escolher alvo, atacar, bloquear ou pagar mana. Numa carta de `input.untappable`, desvira e devolve a mana. |
 | `{type:"player", id}` | Clica num jogador, por exemplo como alvo. |
 | `{type:"ok"}` / `{type:"cancel"}` | Os dois botões do Forge; os rótulos vêm em `input`. |
 | `{type:"pass-turn", gen}` | Passa até o fim do turno (o "Fim de turno" da mesa). |

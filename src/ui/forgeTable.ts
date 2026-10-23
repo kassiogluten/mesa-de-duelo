@@ -865,7 +865,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (c.attacking || ci.attack) slot.push('attacking');
     if (c.blocking || ci.block) slot.push('blocking');
     const inner = ['bfc'];
-    if (usable(s, c.id)) inner.push('actionable');
+    // Virada para mana e com a mana ainda na reserva: um toque desvira e devolve a mana.
+    const untappable = !!s.input.untappable?.includes(c.id);
+    if (usable(s, c.id) || untappable) inner.push('actionable');
     const selected = selectedForInput(s, c.id);
     const selectionCandidate = !!s.input.selection && (usable(s, c.id) || selected);
     if (selected) inner.push('choice-selected');
@@ -888,6 +890,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ci.attack) tag = `<span class="tag atk">${ICON_SWORD}${ci.attack}${target ? ` ▸ ${esc(label(target).split(',')[0])}` : defendingPlayer && s.players.length > 2 ? ` ▸ ${esc(defendingPlayer.name)}` : ''}</span>`;
     else if (ci.block) tag = `<span class="tag blk">${ICON_SHIELD}${ci.block}</span>`;
     else if (attackers.length) tag = `<span class="tag atk">Atacado ${ICON_SWORD}${attackers.join(',')}</span>`;
+    else if (untappable) tag = '<span class="tag untap" title="A mana ainda não foi gasta: toque para desvirar e devolver a mana">↺ Desvirar</span>';
     else if (c.creature && c.sick && c.controller === s.activePlayer) tag = '<span class="tag zzz" title="Enjoo de invocação">😵‍💫</span>';
     if (selectedAttackers.has(c.id) || attackQueue.queuedAttackers.includes(c.id) || (attackAllGen !== null && legalAttackTargets(s, { attacker: c.id, gen: attackAllGen }).length)) { inner.push('attack-selected'); tag = `<span class="tag block-pending">${ICON_SWORD}Selecionada</span>`; }
     if (currentAttackTargets(s).some(target => target.kind === 'card' && target.id === c.id)) inner.push('attack-target');
@@ -916,7 +919,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       inner.push('ar-field');
       if (c.creature || c.token) slot.push('ar-square');
     }
-    const aria = [label(c), isCommander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
+    const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', c.token ? 'ficha' : '', permanentFxText(fx),
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
       `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.37.0] - 2026-10-22
+
+### Novo
+
+- **Desvirar o que você virou para mana.** Virou uma criatura ou um terreno para gerar mana e ainda não gastou essa mana? A carta mostra **↺ Desvirar**: um toque nela desvira a carta e tira da reserva a mana que ela gerou. Dá para escolher qual carta desvirar, mesmo que não seja a última que você virou. Depois que a mana é gasta (ou a fase muda), a carta fica virada como de costume.
+
 ## [0.36.0] - 2026-10-22
 
 ### Mudou

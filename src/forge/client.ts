@@ -225,8 +225,9 @@ export interface FState {
   /** actionable: cartas que podem ser usadas agora (jogáveis, atacantes ou bloqueadores possíveis). */
   /** card: carta citada pelo prompt (ex.: a do topo do grimório na vidência ou na vigilância de 1). */
   /** paying: pagando um custo de mana; a mana da reserva pode ser gasta com {type:"mana", color}. */
+  /** untappable: permanentes viradas para mana com a mana ainda na reserva; clicar ({type:"card"}) desvira e devolve a mana. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
-  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; card?: FCard; paying?: boolean;
+  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; card?: FCard; paying?: boolean;
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
     /** players: só quando jogadores também podem ser escolhidos (proliferar). */
     selection?: { cards: number[]; players?: number[]; min: number; max: number };
