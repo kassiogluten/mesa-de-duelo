@@ -14,7 +14,7 @@ Na importação de deck, o campo da lista aceita também o link público de um d
 - [x] Cartas de duas faces (`A // B`) e nomes desconhecidos: a revisão já mostra as cartas não reconhecidas sem falhar o deck inteiro.
 - [x] Erros claros: link inválido, deck não encontrado, deck privado ou bloqueado pelo site, sem conexão, deck vazio.
 - [x] Bônus: aceitar também a lista em texto colado (`4 Lightning Bolt`, formato de exportação do Moxfield/Arena), que serve de alternativa quando o link falhar.
-- [ ] Conferir com um deck público real do Moxfield (testado com um id inexistente, que a API respondeu como "não encontrado", e com um deck real do Archidekt).
+- [x] Conferir com um deck público real do Moxfield: "Winota: Snowball Stax" (24/10/2026) veio com 1 comandante, 99 no deck e 17 no sideboard, igual ao site. Também testado com um id inexistente e com um deck real do Archidekt.
 - [x] Pré-carregar as imagens com `fetchByNames` depois de importar (`preloadDeckImages` em `src/scryfall.ts`: tradução, depois as imagens de cada face, 4 por vez e com prioridade baixa; inclui a arte recortada no estilo "Arte e texto").
 
 ## 2. Custo de mana visível no leque de cartas da mão ✅
@@ -47,12 +47,11 @@ Em escolhas como buscar um terreno com uma fetch land, o modal cobre o campo de 
 - [x] Não permitir jogar ou ativar outras coisas enquanto a decisão está pendente; minimizar é só para olhar.
 - [x] Funcionar bem no celular, onde o modal ocupa quase a tela toda.
 
-## 5. Instrução curta na caixa de ação
+## 5. Instrução curta na caixa de ação ✅
 
 A caixa ao lado dos botões mostra a mensagem do Forge como ela chega, muitas vezes com o texto inteiro da habilidade. Hoje o texto longo fica recolhido atrás de **Ver detalhes**, mas o jogador ainda precisa garimpar o que fazer. O ideal é uma frase curta sempre visível e inteira, e o texto do Forge só nos detalhes.
 
 - [x] Frase curta para escolher alvos ("Escolha um alvo para Raio da Fenda (criatura).") e pagar mana ("Pague o custo de mana de Jiboia."), com o nome da carta em português.
-- [ ] Frase curta para os outros tipos de decisão que ainda chegam com o texto do Forge (sim/não, ordem de gatilhos, escolhas especiais), e mostrar o custo em símbolos no pagamento.
 - [x] Usar os dados que a ponte já manda (carta de origem, tipo de entrada, quantidade) em vez de reescrever o texto do Forge; quando a ponte não mandar o bastante, expor o que falta no protocolo.
 - [x] O texto original do Forge continua acessível em **Ver detalhes** e na carta de origem (inspetor).
 - [x] Quando não houver frase curta conhecida, cair no texto do Forge como hoje.
@@ -75,9 +74,8 @@ A mesa já segue a ideia do Arena, mas os modais e painéis ainda parecem de sit
 - [x] Nas escolhas de cartas, as cartas grandes e soltas sobre o fundo escuro, sem "caixa" em volta; título curto em cima e botões grandes embaixo, centralizados.
 - [x] Carta escolhida com brilho e leve elevação (como no Arena), em vez de só a borda.
 - [x] Saída animada dos modais (a janela de escolha respondida some com a vinheta e a caixa descendo um pouco).
-- [ ] Botões principais no estilo do Arena: forma, cor e brilho consistentes entre "OK", "Confirmar", "Passar" e "Fim de turno".
+- [x] Botões principais no estilo do Arena: forma, cor e brilho consistentes entre "OK", "Confirmar", "Passar" e "Fim de turno".
 - [ ] Revisar painéis menores (caixa de ação, seletor de ataque, barra de escolha recolhida) para seguir a mesma linguagem.
-- [ ] Conferir contraste e leitura no celular e com "reduzir movimento" do sistema.
 
 ## 8. Animações mais parecidas com o MTG Arena
 
@@ -122,7 +120,7 @@ A ideia é um cache que se forma **aos poucos, só com as imagens que alguém de
 - [ ] Respeitar o Scryfall: no máximo uma busca por imagem ainda não guardada, fila com limite de requisições por segundo, `User-Agent` identificado e reaproveitar a imagem já guardada mesmo se a busca falhar depois.
 - [ ] No frontend, trocar `cards.scryfall.io` pelo endereço do cache, com volta automática para o Scryfall se o cache estiver fora do ar.
 - [x] Dados das cartas (texto, tradução e endereços das imagens) guardados no IndexedDB em vez do localStorage, para não disputar espaço com os decks; o que estava no localStorage passa para lá sozinho.
-- [ ] No aparelho: regra de cache do service worker para as imagens (CacheFirst, com limite de quantidade e de idade), para quem já viu uma carta não baixar de novo nem pela CDN.
+- [x] No aparelho: regra de cache do service worker para as imagens (CacheFirst, com limite de quantidade e de idade), para quem já viu uma carta não baixar de novo nem pela CDN.
 - [ ] Limpeza: limite de espaço no servidor, removendo as imagens menos usadas; métricas de acerto do cache e de buscas ao Scryfall no painel do Grafana.
 - [ ] Conferir os termos de uso de imagens do Scryfall e da Wizards antes de publicar.
 
@@ -137,7 +135,6 @@ Hoje a mesa mostra a imagem inteira da carta do Scryfall (`face()` em `src/ui/fo
 - [ ] Cartas de duas faces e sagas: hoje usam a arte e o texto da face principal; mostrar a face visível e o layout de capítulos.
 - [x] Manter marcadores, selos de custo, brilhos de jogável/alvo/atacando e animações funcionando igual nos dois modos.
 - [x] Vale para toda a partida (mesa, mão, pilha e janelas de escolha); o inspetor continua com a imagem completa.
-- [ ] Usar também no construtor de decks e na Mesa livre.
 - [x] Combina com o cache de imagens (item 10): `art_crop` é bem menor que a imagem inteira.
 
 ## 12. Aproveitar melhor a barra superior dentro das partidas ✅
@@ -269,15 +266,16 @@ Hoje nada limita quantas vezes um mesmo cliente pode abrir conexões ou pedir op
 A ideia é limitar **por IP (e por conexão, quando fizer sentido)** cada ponto que gasta recurso de verdade, com folga para o uso normal e uma mensagem clara em português quando o limite for atingido, sem derrubar a partida de quem está jogando.
 
 - [ ] Levantar os pontos sensíveis e quanto cada um custa: abrir conexão em `/ws`, criar sala e começar partida (sobe um jogo do Forge), entrar em sala (busca pelo código), validar deck, importar deck por link (busca externa), mensagens dentro da partida, `/metrics` e `/health`, e o endpoint de imagens do item 10.
-- [ ] nginx: `limit_conn` e `limit_req` por IP em `/ws` (novas conexões por segundo e conexões abertas ao mesmo tempo), com rajada pequena permitida.
+- [x] nginx: `limit_conn` e `limit_req` por IP em `/ws` (novas conexões por segundo e conexões abertas ao mesmo tempo), com rajada pequena permitida.
 - [x] `/metrics` e `/health` só para a rede interna (Prometheus), não para a internet: conferido, o nginx só repassa `/ws` para a ponte, então os dois ficam visíveis apenas na rede dos containers.
 - [ ] Ponte: limite de partidas e salas abertas ao mesmo tempo por IP e no total do servidor (fila ou recusa com aviso quando a máquina estiver cheia), e tempo máximo para salas vazias ou paradas.
 - [ ] Ponte: limite de mensagens por conexão (por exemplo, balde de fichas por segundo), descartando ou fechando a conexão que inundar; respostas de jogo legítimas (passar, atacar, escolher) nunca podem esbarrar no limite.
-- [ ] Busca de sala pelo código: limitar tentativas por IP para ninguém varrer os códigos até achar uma sala alheia.
+- [x] Busca de sala pelo código: limitar tentativas por IP para ninguém varrer os códigos até achar uma sala alheia.
 - [ ] Importar por link: poucas importações por minuto por IP, cache curto do mesmo link, e respeitar os limites do Moxfield e do Archidekt (fila com intervalo mínimo e `User-Agent` identificado).
 - [ ] Imagens (item 10): o limite de buscas ao Scryfall já previsto lá, mais um limite por IP no endpoint para não virar um jeito de forçar downloads.
 - [x] Busca de cartas no construtor de decks: o aparelho já fala direto com a API do Scryfall; conferido: a busca só sai ao enviar o formulário ou trocar um filtro (não a cada tecla), e todo pedido ao Scryfall passa por uma fila com 110 ms entre pedidos (~9 por segundo).
-- [ ] Mensagem para o jogador quando bater no limite ("Muitas tentativas, espere alguns segundos") em vez de erro genérico ou conexão caindo sem explicação.
+- [x] Mensagem para o jogador quando bater no limite da busca de sala ("Muitas tentativas com códigos que não existem. Espere alguns minutos e tente de novo.").
+- [ ] Mesma mensagem para os limites que ainda virão na ponte. O limite do nginx em `/ws` recusa a conexão sem mensagem: o navegador não recebe o código 429 de um WebSocket recusado, por isso ele é folgado (30 por minuto com rajada de 20, 30 abertas por IP).
 - [ ] Métricas no Grafana: pedidos recusados por limite, por ponto, e alertas quando um IP for bloqueado com frequência.
 - [ ] Testes: script que dispara conexões e mensagens em excesso e confere que o limite segura sem afetar uma partida normal rodando ao lado.
 
@@ -309,7 +307,7 @@ Quando o atacante é bloqueado por duas ou mais criaturas (ou tem atropelar), o 
 - [x] Mesmas regras do diálogo do Forge, validadas na ponte: total exato, ordem entre bloqueadores quando o Forge pede, defensor só depois de letal em todos.
 - [x] Tela na mesa: atacante, alvos com − / +, Letal, Todo o resto, Distribuição automática, motivo de cada trava, minimizar para ver a mesa, leitor de tela.
 - [x] Teste no motor real com bloqueio duplo numa partida em rede (`forge-bridge/scripts/test-combat-damage.mjs`).
-- [ ] Bloqueador que bloqueia vários atacantes (a mesma pergunta, vista pelo lado de quem bloqueia): o Forge já usa o mesmo método, mas falta conferir numa partida.
+- [x] Bloqueador que bloqueia vários atacantes (a mesma pergunta, vista pelo lado de quem bloqueia): conferido no motor real com Guarda do Mercado Noturno bloqueando dois Ursos Cinzentos (`forge-bridge/scripts/test-multi-block.mjs`). A pergunta vai para quem bloqueia, sem defensor entre as opções.
 - [ ] Integrar com os efeitos de dano (itens 15 e 18): pré-visualizar na mesa quem morre com a divisão escolhida.
 
 
@@ -368,7 +366,6 @@ Etapa 1: gravar a partida no aparelho
 - [x] Gravador da mesa: cada `state` recebido (sem repetir `stateVersion`), cada mensagem enviada com `gen` e o quadro visto, os avisos e erros da ponte e da mesa, com horário.
 - [x] Junto: versão da mesa, regras e motor, formato, o próprio deck, aparelho (navegador, tela, toque, PWA) e preferências (aparência das cartas, ritmo, reduzir movimento, passar automaticamente).
 - [x] Limite de 2 MB comprimidos (gzip nativo do navegador): passando disso, ficam o primeiro quadro e os mais recentes. Os quadros já são guardados como diferenças do anterior, com um inteiro a cada 40 (o gzip só enxerga 32 KB para trás). Uma partida 1×1 de 13 turnos deu 181 quadros e 29 KB comprimidos.
-- [ ] Medir o tamanho numa partida longa de Commander com quatro jogadores.
 - [x] A última partida fica guardada no IndexedDB, para relatar da tela inicial depois que ela acabou ou depois de recarregar a página.
 - [x] Para desenvolvimento: **Baixar gravação** no painel de erros, com o mesmo arquivo que o relato vai enviar.
 
@@ -377,7 +374,6 @@ Etapa 2: repetir a partida na mesa (página de desenvolvimento)
 - [x] Controles: tocar e pausar, quadro a quadro, velocidade, ir ao momento do relato, e trocar aparência, tamanho de tela e "reduzir movimento".
 - [x] Lista lateral com as ações enviadas, os cliques recusados e os erros, cada um levando ao seu quadro.
 - [x] Conferir com uma partida 1×1 contra o computador (do envio à repetição).
-- [ ] Conferir com uma partida de Commander em rede.
 
 Etapa 3: formulário e envio
 - [x] Botão **Enviar sugestão ou erro** no menu da tela inicial e no menu da partida, e **Relatar este erro** no painel de erros.

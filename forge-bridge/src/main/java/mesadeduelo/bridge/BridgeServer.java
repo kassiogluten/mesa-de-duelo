@@ -25,7 +25,10 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
+
+import java.net.InetSocketAddress;
 
 /**
  * Servidor WebSocket em ws://HOST:PORTA/ws. No modo watch, quem conecta recebe na hora o último estado publicado
@@ -38,6 +41,8 @@ final class BridgeServer {
     private final ChannelGroup clients = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private final Listener listener;
     private volatile String last;
+    /** IP de quem abriu a conexão, pelo X-Real-IP do nginx (sem ele, o endereço do socket). */
+    private static final AttributeKey<String> IP = AttributeKey.valueOf("mesa.ip");
     /** Rota POST /api/relatos; null no modo watch. */
     private volatile Feedback feedback;
     /** Rotas /api/admin/; null no modo watch. */
@@ -83,7 +88,9 @@ final class BridgeServer {
                                 listener.onMessage(ctx.channel(), frame.text());
                             }
                             @Override public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-                                if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete) {
+                                if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete handshake) {
+                                    String real = handshake.requestHeaders().get("X-Real-IP");
+                                    if (real != null && !real.isBlank()) ctx.channel().attr(IP).set(real.strip());
                                     clients.add(ctx.channel());
                                     String snapshot = last;
                                     if (snapshot != null) ctx.channel().writeAndFlush(new TextWebSocketFrame(snapshot));
@@ -109,6 +116,12 @@ final class BridgeServer {
     /** Envia para uma conexão só; ignora se ela já fechou. */
     static void send(Channel ch, String json) {
         if (ch != null && ch.isActive()) ch.writeAndFlush(new TextWebSocketFrame(json));
+    }
+
+    static String ip(Channel ch) {
+        String ip = ch.attr(IP).get();
+        if (ip != null) return ip;
+        return ch.remoteAddress() instanceof InetSocketAddress a && a.getAddress() != null ? a.getAddress().getHostAddress() : String.valueOf(ch.remoteAddress());
     }
 
     int clientCount() { return clients.size(); }

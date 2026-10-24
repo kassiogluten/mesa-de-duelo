@@ -58,6 +58,18 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: { cacheName: 'google-fonts', expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 }, cacheableResponse: { statuses: [0, 200] } },
           },
+          {
+            // Imagens das cartas: a mesma URL nunca muda de conteúdo. A busca vai em modo CORS (o Scryfall manda
+            // Access-Control-Allow-Origin: *) para a resposta não ser opaca, que o navegador conta como ~7 MB na cota.
+            urlPattern: ({ url }) => url.origin === 'https://cards.scryfall.io',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'scryfall-images',
+              fetchOptions: { mode: 'cors', credentials: 'omit' },
+              expiration: { maxEntries: 1500, maxAgeSeconds: 60 * 60 * 24 * 90, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
         ],
       },
     }),

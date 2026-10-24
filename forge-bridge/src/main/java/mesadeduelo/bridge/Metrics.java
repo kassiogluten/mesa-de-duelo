@@ -41,6 +41,7 @@ final class Metrics {
     static final Counter MESSAGES = Counter.builder("mesa.ws.messages.received").description("Mensagens recebidas dos navegadores").register(REGISTRY);
     static final Counter INVALID_MESSAGES = Counter.builder("mesa.ws.messages.invalid").description("Mensagens que não eram JSON válido").register(REGISTRY);
     static final Counter REQUEST_ERRORS = Counter.builder("mesa.requests.rejected").description("Pedidos recusados (deck inválido, sala cheia, código errado...)").register(REGISTRY);
+    static final Counter CODE_MISSES_BLOCKED = Counter.builder("mesa.rooms.code.blocked").description("Buscas de sala recusadas por excesso de códigos errados do mesmo IP").register(REGISTRY);
     static final Counter TICK_ERRORS = Counter.builder("mesa.tick.errors").description("Exceções ao publicar o estado das partidas").register(REGISTRY);
     static final Timer TICK = Timer.builder("mesa.tick").description("Tempo para publicar o estado de todas as partidas (a cada 50 ms)").register(REGISTRY);
 

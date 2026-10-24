@@ -2,3 +2,4 @@ node_modules
 dist
 forge-bridge/target
 relatos
+.env

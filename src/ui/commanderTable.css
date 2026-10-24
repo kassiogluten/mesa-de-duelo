@@ -127,7 +127,7 @@
   .forge.multiplayer .seat-command { gap: 7px; }
   .forge.multiplayer .table-seat > .field { flex-direction: row; align-items: center; overflow: visible; --ch: clamp(56px, calc((100vh - 127px) * .555 - 52px), 84px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
   .forge.multiplayer .table-seat .seat-row { width: 66%; flex: 1 1 66%; }
-  .forge.multiplayer .table-seat .lands-lane { width: 34%; flex-basis: 34%; --lch: calc(var(--ch) * .56); }
+  .forge.multiplayer .table-seat .lands-lane { width: 34%; flex-basis: 34%; }
   .forge.multiplayer .table-seat .row { width: 100%; flex: 0 0 auto; min-height: calc(var(--ch) + 12px); padding: 6px 4px; }
   .forge.multiplayer .table-seat .lands { width: 100%; min-height: calc(var(--lch) + 10px); padding-block: 5px; }
   /* The turn track shrinks to one line: whose turn and the current step. */

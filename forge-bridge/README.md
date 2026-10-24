@@ -16,6 +16,8 @@ Precisa de JDK 17 ou mais recente e de Maven.
 
 Pela raiz do projeto, os mesmos comandos são `npm run forge:instalar` e `npm run forge`.
 
+O `rodar.sh` carrega o `.env` da raiz, se existir (fora do git; modelo em `.env.example`). Nele fica a senha da área de admin local (`MESA_ADMIN_PASSWORD`, `admin` no modelo).
+
 - O `instalar-forge.sh` corrige os poms instalados. O Forge usa a versão `${revision}` sem o flatten-maven-plugin, e sem essa correção o Maven não resolve a dependência fora do projeto do Forge.
 - A ponte lê as cartas de `~/forge/forge-gui/res`. Para usar outro lugar, rode com `-Dforge.dir=...`.
 - As preferências e os logs do Forge ficam em `~/.forge`.
@@ -120,7 +122,7 @@ A mão do oponente vai só como contagem, as perguntas vão só para quem precis
 | `{type:"start", you, opponent}` | Começa uma partida contra a IA. Cada deck é um id padrão (`"verde"`) ou `{name, cards:[{name, count}]}`. |
 | `{type:"host", name, deck, visibility}` | Cria uma sala em rede e responde com `room` (código de 4 letras). Sem `visibility`, ou com `"private"`, a sala é privada e só se acha pelo código; com `"public"` ela entra na lista de `list-rooms`. O `room` traz `public`. |
 | `{type:"list-rooms", requestId}` | Responde `{type:"room-list", requestId, rooms:[{code, host, config, capacity, players, started}]}`: as salas públicas com lugar, sem partida começada e com alguém conectado, as mais antigas primeiro (até 30). Salas privadas nunca aparecem. |
-| `{type:"join", code, name, deck}` | Entra na sala; com os dois assentos ocupados, a partida começa. |
+| `{type:"join", code, name, deck}` | Entra na sala; com os dois assentos ocupados, a partida começa. Depois de 10 códigos que não existem em 10 minutos, o mesmo IP fica com `join` e `lookup-room` recusados até a janela passar (`-Dmesa.codeMisses` e `-Dmesa.codeMissesMinutes`). O IP vem do `X-Real-IP` que o nginx manda. |
 | `{type:"rejoin", code, token}` | Volta ao assento depois de a conexão cair, em sala ou contra a IA (`code` e `token` vêm em `session`). Se a partida não existe mais, a resposta é `{type:"gone", text}`; se outra conexão ocupava o assento, ela recebe `{type:"replaced", text}` e é fechada. |
 | `{type:"rematch"}` | Contra a IA recomeça na hora; em rede, quando os dois pedirem. |
 | `{type:"leave"}` | Concede e sai da sala. A sala fecha quando não sobra ninguém conectado. |

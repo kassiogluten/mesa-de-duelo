@@ -2,6 +2,8 @@
 # Build and run. Set FORGE_DIR, M2_REPO, JAVA_HOME and MVN for portable installations.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Variáveis locais (como MESA_ADMIN_PASSWORD) do .env na raiz do projeto, se existir.
+if [ -f ../.env ]; then set -a; . ../.env; set +a; fi
 FORGE_DIR="${FORGE_DIR:-$HOME/forge}"
 M2="${M2_REPO:-$HOME/.m2/repository}"
 MVN="${MVN:-mvn}"

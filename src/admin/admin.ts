@@ -26,6 +26,7 @@ const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/duel-table.html', 'Mesa 1×1', 'Partida fixa contra um oponente, com contadores, Classe e perguntas (gatilhos, jeitos de jogar, dano de combate) pelo console.'],
   ['/tests/fixtures/duel-table.html?cenario=proliferar', 'Proliferar', 'Escolha do proliferar com marcadores bons e ruins dos dois lados (veneno, +1/+1, −1/−1, lealdade, energia). Os cliques marcam e o Proliferar aplica os marcadores.'],
   ['/tests/fixtures/commander-table.html', 'Mesa de Commander', 'Quatro jogadores, para conferir o layout dos assentos, a pilha e o campo cheio.'],
+  ['/tests/fixtures/commander-endgame.html', 'Commander: fim de partida', 'Quatro mesas cheias no fim do jogo (fichas, planeswalkers, equipamentos, comandantes em campo) para ajustar o posicionamento. Pelo console: fixture.pilha(), fixture.ataque(), fixture.eliminar().'],
   ['/tests/fixtures/extra-turn.html', 'Turno e combate extra', 'Roteiro de Time Walk e Relentless Assault: os cliques da mesa avançam a simulação.'],
 ];
 

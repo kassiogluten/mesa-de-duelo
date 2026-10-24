@@ -96,4 +96,23 @@ public class PublicRoomsTest {
             for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
         }
     }
+
+    @Test public void tooManyWrongCodesBlockTheSearchForAWhile() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), visitor = new EmbeddedChannel();
+        try {
+            String code = host(rooms, ana, "Ana", null);
+            for (int i = 0; i < 10; i++) {
+                rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"m" + i + "\",\"code\":\"ZZZ" + i + "\"}");
+                assertTrue(next(visitor, "request-error").get("text").getAsString().startsWith("Não existe sala"));
+            }
+            // Mesmo o código certo fica recusado, senão a varredura só precisaria continuar.
+            rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"ok\",\"code\":\"" + code + "\"}");
+            assertTrue(next(visitor, "request-error").get("text").getAsString().startsWith("Muitas tentativas"));
+            rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":\"verde\"}");
+            assertTrue(next(visitor, "error").get("text").getAsString().startsWith("Muitas tentativas"));
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
 }

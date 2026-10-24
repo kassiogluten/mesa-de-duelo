@@ -6,6 +6,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.43.0] - 2026-10-24
+
+### Novo
+
+- **Comandante sugerido na importação.** Ao importar uma lista de 100 cartas num deck Commander sem a seção de comandante, se a primeira carta for uma criatura lendária, a revisão pergunta se você quer usá-la como comandante. Aceitando, ela vai para a zona de comando; recusando, fica no deck como estava.
+- **Imagens das cartas guardadas no aparelho.** Uma carta que você já viu não é baixada de novo: a imagem fica guardada no navegador por até 90 dias, então a mesa abre mais rápido e gasta menos internet, inclusive no celular.
+
+### Mudou
+
+- **Botões da partida com o mesmo visual.** Os botões principais (OK, Confirmar, Passar, Fim de turno, Sim) têm o mesmo brilho dourado na barra de ação, nas perguntas e nas janelas de escolha. Um botão que ainda não pode ser usado fica escuro e apagado, igual ao "Aguardando…", em vez de um dourado acinzentado. O **Sim** e o **Não** das perguntas ficaram mais largos e fáceis de tocar.
+- **Busca de sala pelo código mais protegida.** Depois de muitos códigos que não existem seguidos, a busca pede para esperar alguns minutos, com o aviso "Muitas tentativas com códigos que não existem". Assim ninguém consegue tentar códigos até achar a sala privada de outra pessoa. Quem digita o código certo nunca chega perto do limite.
+
+### Corrigido
+
+- **Terrenos dos oponentes inteiros no celular.** No Commander com três ou mais jogadores, os terrenos, artefatos e encantamentos em pé dos oponentes apareciam achatados, com a parte de cima e a de baixo da carta cortadas. Agora eles têm a altura certa da carta.
+
 ## [0.42.0] - 2026-10-24
 
 ### Novo

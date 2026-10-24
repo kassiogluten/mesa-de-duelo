@@ -40,6 +40,9 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** Todas as partidas vivas, salas e partidas contra a IA, pelo código de volta. */
     private final Map<String, Session> byCode = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
+    /** Códigos de sala que não existem, por IP: sem isso daria para varrer os códigos até achar uma sala alheia. */
+    private final FeedbackRateLimit codeMisses = new FeedbackRateLimit(
+        Integer.getInteger("mesa.codeMisses", 10), Long.getLong("mesa.codeMissesMinutes", 10) * 60_000);
     /** Diários de partidas encerradas há pouco, para quem relata da tela inicial logo depois de sair. */
     private final Map<String, Closed> closed = new java.util.LinkedHashMap<>();
     private static final long CLOSED_KEEP_MS = Long.getLong("mesa.journal.keepMinutes", 30) * 60_000;
@@ -261,11 +264,26 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     }
 
     private synchronized void lookup(Channel ch, String code, String requestId) {
-        Session s = byCode.get(code);
-        if (s == null || !s.isRoom()) throw new IllegalArgumentException("Não existe sala com o código " + code + ".");
+        Session s = room(ch, code);
         JsonObject response = new JsonObject(); response.addProperty("type", "room-info");
         response.addProperty("requestId", requestId); response.add("room", s.publicRoomJson());
         BridgeServer.send(ch, response.toString());
+    }
+
+    /** A sala do código; depois de muitos códigos errados seguidos, recusa até mesmo os certos por um tempo. */
+    private Session room(Channel ch, String code) {
+        String key = codeMisses.key(BridgeServer.ip(ch));
+        long now = System.currentTimeMillis();
+        if (codeMisses.exceeded(key, now)) {
+            Metrics.CODE_MISSES_BLOCKED.increment();
+            throw new IllegalArgumentException("Muitas tentativas com códigos que não existem. Espere alguns minutos e tente de novo.");
+        }
+        Session s = byCode.get(code);
+        if (s == null || !s.isRoom()) {
+            codeMisses.record(key, now);
+            throw new IllegalArgumentException("Não existe sala com o código " + code + ".");
+        }
+        return s;
     }
 
     /** Salas públicas abertas: sem as cheias, as já começadas e as que ficaram sem ninguém conectado. */
@@ -338,8 +356,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     }
 
     private synchronized void join(Channel ch, String code, String name, JsonElement payload) {
-        Session s = byCode.get(code);
-        if (s == null || !s.isRoom()) throw new IllegalArgumentException("Não existe sala com o código " + code + ".");
+        Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
         Deck deck = validated(payload, s.config.format(), "deck");
