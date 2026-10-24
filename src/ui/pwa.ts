@@ -33,6 +33,33 @@ function iosHint() {
   el.querySelector('button')!.addEventListener('click', () => el.remove());
 }
 
+// O botão Novidades mostra um spinner enquanto o jogo procura ou baixa uma versão nova (data-pwa-update no <html>).
+let checking = false;
+let downloading = false;
+function syncUpdateStatus() {
+  const status = downloading ? 'downloading' : checking ? 'checking' : '';
+  if (status) document.documentElement.dataset.pwaUpdate = status;
+  else delete document.documentElement.dataset.pwaUpdate;
+}
+
+function checkForUpdate(registration: ServiceWorkerRegistration) {
+  if (!navigator.onLine || checking) return;
+  checking = true;
+  syncUpdateStatus();
+  void registration.update().catch(() => {}).finally(() => { checking = false; syncUpdateStatus(); });
+}
+
+function watchDownload(registration: ServiceWorkerRegistration) {
+  const track = (worker: ServiceWorker | null) => {
+    if (!worker) return;
+    const sync = () => { downloading = worker.state === 'installing'; syncUpdateStatus(); };
+    worker.addEventListener('statechange', sync);
+    sync();
+  };
+  registration.addEventListener('updatefound', () => track(registration.installing));
+  track(registration.installing);
+}
+
 /** Registra o service worker, o aviso de versão nova e o aviso de sem internet. Chamar uma vez, no início. */
 export function setupPwa() {
   addEventListener('beforeinstallprompt', event => {
@@ -61,8 +88,11 @@ export function setupPwa() {
       });
     },
     onRegisteredSW(_url, registration) {
+      if (!registration) return;
+      watchDownload(registration);
       // Quem deixa o jogo aberto por horas também recebe o aviso.
-      if (registration) setInterval(() => { if (navigator.onLine) void registration.update(); }, UPDATE_CHECK_MS);
+      checkForUpdate(registration);
+      setInterval(() => checkForUpdate(registration), UPDATE_CHECK_MS);
     },
   });
 }

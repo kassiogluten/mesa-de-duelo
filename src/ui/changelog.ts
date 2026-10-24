@@ -52,7 +52,7 @@ export function mountChangelog(host: HTMLElement) {
   el.className = 'news';
   el.innerHTML = `
     <button class="news-btn" aria-expanded="false" aria-controls="newsPanel">
-      Novidades <span class="news-ver">v${esc(VERSION)}</span><span class="news-dot" ${seen() === VERSION ? 'hidden' : ''}></span>
+      Novidades <span class="news-ver">v${esc(VERSION)}</span><span class="news-dot" ${seen() === VERSION ? 'hidden' : ''}></span><span class="news-sync" aria-hidden="true"></span>
     </button>
     <div class="news-panel" id="newsPanel" role="dialog" aria-label="Novidades" hidden>
       ${RELEASES.map(r => `<section class="news-rel">

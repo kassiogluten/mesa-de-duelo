@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.40.0] - 2026-10-24
+
+### Novo
+
+- **Procurando atualização.** Um anel gira em volta do ponto do botão **Novidades** enquanto o jogo confere se saiu uma versão nova, e gira mais rápido enquanto ela está sendo baixada. Quando termina, aparece o aviso de **Nova versão do jogo** de sempre.
+
 ## [0.39.0] - 2026-10-22
 
 ### Novo
