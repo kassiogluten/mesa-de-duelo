@@ -1,6 +1,6 @@
 import { cardInfo, type CardInfo, type CardType, type Color } from '../cards';
 import { cacheGet } from '../scryfall';
-import { countEntries, type DeckData, type DeckEntry } from '../decks';
+import { countEntries, deckPriceDescription, deckPriceText, type DeckData, type DeckEntry } from '../decks';
 import { esc } from './cardtext';
 
 export const CURVE = ['0', '1', '2', '3', '4', '5', '6+'];
@@ -49,4 +49,12 @@ export function statsHTML(deck: DeckData): string {
     <p class="ds-average">Custo médio${partial ? ' parcial' : ''}<b>${stats.average === null ? '–' : stats.average.toFixed(1).replace('.', ',')}</b><small>Sem terrenos</small></p>
     ${partial ? `<p class="ds-incomplete" role="status">Dados pendentes de ${stats.unknown} ${stats.unknown === 1 ? 'carta' : 'cartas'}. As estatísticas estão incompletas.</p>` : ''}
   </div>`;
+}
+
+/** Preço do deck com a dica explicando o valor. Fora de um botão, o valor recebe foco para a dica abrir no toque e no teclado. */
+export function deckPriceHTML(deck: DeckData, className: string, focusable: boolean) {
+  const text = deckPriceText(deck);
+  if (!text) return '';
+  const tip = `price-tip-${esc(deck.id)}`;
+  return `<span class="deck-price ${className}"${focusable ? ` tabindex="0" aria-describedby="${tip}"` : ''}>${text}<span class="deck-price-tip" id="${tip}" role="tooltip">${esc(deckPriceDescription(deck))}</span></span>`;
 }

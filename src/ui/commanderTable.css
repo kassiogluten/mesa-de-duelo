@@ -51,6 +51,8 @@
 .forge.multiplayer .seat-heading .avatar-slot { position: static; flex: 1; min-width: 0; }
 .forge.multiplayer .seat-heading .avatar { display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto; min-height: 44px; align-items: center; justify-items: start; column-gap: 10px; }
 .forge.multiplayer .seat-heading .portrait { width: 44px; height: 44px; grid-column: 1; grid-row: 1 / 3; border-width: 2px; }
+/* No cabeçalho do assento a vida cobre o retrato: a reserva fica numa linha abaixo do nome. */
+.forge.multiplayer .seat-heading .pool { inset: auto; left: calc(100% + 10px); bottom: -1px; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; gap: 3px; width: max-content; border-radius: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 0; font-size: 12px; }
 .forge.multiplayer .seat-heading .life { grid-column: 1; grid-row: 1 / 3; z-index: 1; margin: 0; padding: 0; width: 44px; min-width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 35% 25%, #263b55, #0a1425 80%); border: 2px solid #ad9470; box-shadow: 0 0 0 3px #080f1c, inset 0 1px 2px #ffffff20, 0 3px 8px #0007; font-size: 22px; }
 .forge.multiplayer .seat-heading .pname { grid-column: 2; grid-row: 1; margin: 0; color: #f5e9d6; font-size: 15px; font-weight: 700; letter-spacing: .015em; text-shadow: 0 2px 3px #0008; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .forge.multiplayer .seat-heading .seat-eliminated { grid-column: 2; grid-row: 2; }
@@ -58,7 +60,6 @@
 .forge.multiplayer .seat-heading .avatar.active .pname { color: #ffe5ac; }
 .forge.multiplayer .seat-heading .avatar.selectable-player .life { border-color: var(--glow); outline: 2px solid var(--glow); outline-offset: 3px; }
 .forge.multiplayer .seat-heading .avatar.eliminated .life { border-color: #686e78; color: #b8bec8; box-shadow: 0 0 0 3px #080f1c; }
-.forge.multiplayer .seat-heading .pool { position: static; grid-column: 2; grid-row: 2; padding: 1px 0; font-size: 11px; background: none; flex-wrap: wrap; }
 .forge.multiplayer .seat-heading .emblems { left: 48px; bottom: -12px; }
 .forge.multiplayer .seat-heading .emblem { min-width: 20px; min-height: 20px; width: 20px; height: 20px; }
 .seat-hand { display: flex; align-items: center; gap: 5px; color: var(--muted); font: 600 12px var(--body); }
@@ -125,8 +126,8 @@
   .forge.multiplayer .seat-command .command-card { width: 36px; --fw: 36px; }
   .forge.multiplayer .seat-command { gap: 7px; }
   .forge.multiplayer .table-seat > .field { flex-direction: row; align-items: center; overflow: visible; --ch: clamp(56px, calc((100vh - 127px) * .555 - 52px), 84px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
-  .forge.multiplayer .table-seat .seat-row { width: 58%; flex: 1 1 58%; }
-  .forge.multiplayer .table-seat .lands-lane { width: 42%; flex-basis: 42%; --lch: calc(var(--ch) * .64); }
+  .forge.multiplayer .table-seat .seat-row { width: 66%; flex: 1 1 66%; }
+  .forge.multiplayer .table-seat .lands-lane { width: 34%; flex-basis: 34%; --lch: calc(var(--ch) * .56); }
   .forge.multiplayer .table-seat .row { width: 100%; flex: 0 0 auto; min-height: calc(var(--ch) + 12px); padding: 6px 4px; }
   .forge.multiplayer .table-seat .lands { width: 100%; min-height: calc(var(--lch) + 10px); padding-block: 5px; }
   /* The turn track shrinks to one line: whose turn and the current step. */
@@ -139,9 +140,10 @@
   .forge.multiplayer .phase-turn { font-size: 11px; }
   .forge.multiplayer .phase-owner { font-size: 12px; }
   /* Own creatures and lands side by side, so both get the full height. */
-  .forge.multiplayer > .field.me { flex-direction: row; align-items: flex-start; padding-right: 8px; --ch: clamp(60px, calc((100vh - 127px) * .444 - 24px), 92px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.multiplayer > .field.me { flex-direction: row; align-items: flex-start; padding-right: 8px; --ch: clamp(60px, calc((100vh - 127px) * .444 - 24px), 92px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .6); --lcw: calc(var(--lch) * .716); }
   .forge.multiplayer > .field.me .row { width: auto; flex: 0 1 auto; min-height: calc(var(--ch) + 14px); padding-block: 7px; }
-  .forge.multiplayer > .field.me .row.lands { min-height: calc(var(--ch) + 14px); }
+  .forge.multiplayer > .field.me .row.lands { min-height: calc(var(--ch) + 14px); max-width: 38%; }
+  .forge.multiplayer > .field.me:has(> .row.creatures:empty) .row.lands { max-width: none; }
   .forge.multiplayer > .field.me .row:empty { padding-inline: 0; }
   .forge.multiplayer:not([data-opening]) .hand { left: 88px; height: 105px; }
   .forge.multiplayer:not([data-opening]) .hand:not(.crowded) .hand-slot { width: 76px; height: 106px; margin-left: -22px; }
@@ -164,12 +166,15 @@
   .forge.commander-game:not(.multiplayer) .piles.opp { top: 6px; left: 150px; right: auto; }
   .forge.commander-game:not(.multiplayer) .duel-command .command-card { width: 36px; --fw: 36px; }
   .forge.commander-game:not(.multiplayer) .avatar-slot.opp { top: 0; }
-  .forge.commander-game:not(.multiplayer) > .field { flex-direction: row; overflow: visible; --ch: clamp(60px, calc((100vh - 156px) / 2 - 24px), 96px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  .forge.commander-game:not(.multiplayer) > .field { flex-direction: row; overflow: visible; --ch: clamp(60px, calc((100vh - 156px) / 2 - 24px), 96px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .6); --lcw: calc(var(--lch) * .716); }
   .forge.commander-game:not(.multiplayer) > .field.opp { align-items: flex-end; }
   .forge.commander-game:not(.multiplayer) > .field.me { align-items: flex-start; padding-right: 84px; }
   /* Each row only as wide as its cards, so creatures and lands sit together in the middle of the field. */
   .forge.commander-game:not(.multiplayer) > .field .row { width: auto; flex: 0 1 auto; min-height: calc(var(--ch) + 14px); padding-block: 7px; }
   .forge.commander-game:not(.multiplayer) > .field .row:empty { padding-inline: 0; }
+  /* Os terrenos rolam antes de tomar o lugar das criaturas. */
+  .forge.commander-game:not(.multiplayer) > .field .row.lands { max-width: 38%; }
+  .forge.commander-game:not(.multiplayer) > .field:has(> .row.creatures:empty) .row.lands { max-width: none; }
   .forge.commander-game:not(.multiplayer) .own-command { bottom: 100px; }
   .forge.commander-game:not(.multiplayer) .own-command .command-card { width: 34px; --fw: 34px; }
 }

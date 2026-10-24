@@ -25,3 +25,14 @@ export function manaHTML(cost: string) {
   return (cost.match(/\{[^}]+\}/g) ?? []).map(s => pip(s.slice(1, -1))).join('');
 }
 export const richText = (t: string) => esc(t).replace(/\{([A-Z0-9/]+)\}/g, (_, s) => pip(s));
+
+/** Nomes de cor que o Forge manda nas escolhas de mana (em português ou inglês). */
+const COLOR_WORDS: Record<string, string> = {
+  branco: 'W', branca: 'W', white: 'W', azul: 'U', blue: 'U', preto: 'B', preta: 'B', black: 'B',
+  vermelho: 'R', vermelha: 'R', red: 'R', verde: 'G', green: 'G', incolor: 'C', colorless: 'C',
+};
+/** Rótulo de uma opção ou botão: uma cor ganha o símbolo da mana ao lado, e os símbolos {G}, {T}... viram ícones. */
+export function optionHTML(label: string) {
+  const sym = COLOR_WORDS[label.trim().toLowerCase()];
+  return sym ? `<span class="mana-option">${pip(sym)}${esc(label)}</span>` : richText(label);
+}

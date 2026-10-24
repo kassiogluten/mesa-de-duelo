@@ -15,6 +15,8 @@ export interface DeckData {
   importSource?: string;
   importHistory?: string[];
   unresolved?: string[];
+  /** Soma do preço das cartas em dólar na data registrada (só nos decks prontos). */
+  price?: { usd: number; date: string };
 }
 export const DEFAULT_DECKS = starterDecks as DeckData[];
 const BASICS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'].map(n => n.toLowerCase()));
@@ -23,6 +25,10 @@ export const countEntries = (entries: DeckEntry[]) => entries.reduce((s, e) => s
 export const deckSize = (d: DeckData) => countEntries(d.cards);
 export const totalDeckSize = (d: DeckData) => deckSize(d) + countEntries(d.commanders ?? []);
 export const deckEntries = (d: DeckData) => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])];
+/** "US$ 1.605,93" para decks prontos com preço registrado; vazio nos outros. */
+export const deckPriceText = (d: DeckData) => d.builtin && d.price ? `US$ ${d.price.usd.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+/** O que o preço significa, para a dica sobre o valor. */
+export const deckPriceDescription = (d: DeckData) => d.price ? `Quanto custam as ${totalDeckSize(d)} cartas em dólar, pela edição mais barata de cada uma, no Scryfall em ${d.price.date.split('-').reverse().join('/')}. É uma referência: o preço muda com o tempo.` : '';
 export const allDecks = (): DeckData[] => [...loadUserDecks(), ...DEFAULT_DECKS];
 
 export const DECK_STORAGE_KEY = 'mesa:decks:v2';

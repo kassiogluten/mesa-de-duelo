@@ -13,7 +13,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 const decks = await import('../src/decks.ts');
 const { applyDeckImport, deckImportSnapshot } = await import('../src/ui/deckImport.ts');
 const { cardCopyLimit, copiesInDeck, validateDeckLocal } = await import('../src/ui/deckRules.ts');
-const { deckStats, statsHTML } = await import('../src/ui/deckStats.ts');
+const { deckPriceHTML, deckStats, statsHTML } = await import('../src/ui/deckStats.ts');
 const { legalityFresh, cachePut } = await import('../src/scryfall.ts');
 function storage(initial = {}, failWrites = false) {
   const data = new Map(Object.entries(initial));
@@ -270,7 +270,19 @@ test('Commander local rules enforce 100 total, singleton exceptions, identity in
   assert.equal(cardCopyLimit('Commander Bolt', undefined, 'commander'), 1);
   assert.equal(cardCopyLimit('Test Dwarves', cache('Test Dwarves', { oracle_text: 'A deck can have up to seven cards named Test Dwarves.' }), 'commander'), 7);
   for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) assert.equal(decks.totalDeckSize(deck), 100);
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 58);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 78);
+});
+
+test('starter deck price shows only when recorded, and not on personal decks', () => {
+  const urza = decks.DEFAULT_DECKS.find(d => d.id === 'commander-urza');
+  assert.equal(decks.deckPriceText(urza), 'US$ 1.605,93');
+  assert.match(decks.deckPriceDescription(urza), /^Quanto custam as 100 cartas em dólar, pela edição mais barata de cada uma, no Scryfall em 23\/10\/2026\./);
+  assert.match(deckPriceHTML(urza, 'x', true), /tabindex="0" aria-describedby="price-tip-commander-urza">US\$ 1\.605,93<span class="deck-price-tip" id="price-tip-commander-urza" role="tooltip">/);
+  assert.doesNotMatch(deckPriceHTML(urza, 'x', false), /tabindex/);
+  assert.equal(deckPriceHTML({ ...urza, builtin: false }, 'x', true), '');
+  assert.equal(decks.deckPriceText(decks.DEFAULT_DECKS.find(d => d.id === 'commander-atraxa')), '');
+  assert.equal(decks.deckPriceText({ ...urza, builtin: false }), '');
+  for (const deck of decks.DEFAULT_DECKS.filter(d => d.price)) assert.ok(deck.price.usd > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.price.date), deck.id);
 });
 
 

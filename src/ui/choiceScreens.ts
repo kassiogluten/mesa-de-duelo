@@ -1,5 +1,5 @@
 import type { FCard, FOption, FQuestion } from '../forge/client';
-import { esc, manaHTML } from './cardtext';
+import { esc, manaHTML, richText } from './cardtext';
 
 /*
  * Duas escolhas no estilo do Arena: a ordem dos gatilhos simultâneos (cartas lado a lado, a da esquerda
@@ -191,7 +191,7 @@ export function playModeHTML(q: FQuestion, face: Face, label: Label) {
         return `<li><button type="button" class="play-mode-option${c.recommended ? ' recommended' : ''}" data-q-opt="${c.index}" aria-label="${esc(`${c.name}${c.face ? ` (${c.face.name})` : ''}, ${spoken}. ${c.detail}`)}">
           <span class="play-mode-head"><strong>${esc(c.name)}</strong>${costs || '<span class="play-mode-free">Sem custo</span>'}</span>
           ${c.face ? `<span class="play-mode-face">${esc(c.face.name)}${c.face.manaCost ? ` ${manaHTML(c.face.manaCost)}` : ''}<small>${esc(c.face.typeLine)}</small></span>` : ''}
-          ${c.detail ? `<span class="play-mode-detail">${esc(c.detail)}</span>` : ''}
+          ${c.detail ? `<span class="play-mode-detail">${richText(c.detail)}</span>` : ''}
         </button></li>`;
       }).join('')}</ul>
     </div>

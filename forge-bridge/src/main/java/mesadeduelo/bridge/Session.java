@@ -89,6 +89,9 @@ final class Session {
     /** Quando a sala ou partida foi criada e quando começou a partida atual (para a área de admin). */
     private final long createdAt = System.currentTimeMillis();
     private volatile long playingSince;
+    /** Início do jogo atual (cada jogo de uma melhor de três conta do zero) e quanto ele durou, -1 enquanto não termina. */
+    private volatile long gameSince;
+    private volatile long gameMs = -1;
     private final AtomicBoolean dirty = new AtomicBoolean();
     private final AtomicInteger questionSeq = new AtomicInteger();
     private volatile HostedMatch match;
@@ -267,7 +270,7 @@ final class Session {
             m.setStartGameHook(() -> { if (applied.compareAndSet(false, true)) hook.accept(m.getGame()); });
         }
         m.startMatch(config.rules(), null, players, guis, null);
-        startedAt = playingSince = System.currentTimeMillis();
+        startedAt = playingSince = gameSince = System.currentTimeMillis(); gameMs = -1;
         Metrics.matchStarted(config.format(), room, players.size());
         System.out.printf("Nova partida%s: %s%n", room ? " na sala " + code : "",
             String.join(" x ", players.stream().map(p -> p.getDeck().getName()).toList()));
@@ -295,6 +298,7 @@ final class Session {
     private synchronized void ended(HostedMatch ended) {
         if (match != ended) return;
         matchPhase = matchOver() ? "complete" : "sideboarding";
+        if (gameSince > 0) gameMs = System.currentTimeMillis() - gameSince;
         Metrics.gameFinished(config.format(), room);
         if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
         sideboardId++;
@@ -318,7 +322,7 @@ final class Session {
         seat.approvedDeck = validation.deck(); seat.sideboardReady = true; markDirty();
         for (Seat each : seats) if (!each.sideboardReady) return;
         HostedMatch continuing = match;
-        matchPhase = "playing"; gameNumber++;
+        matchPhase = "playing"; gameNumber++; gameSince = System.currentTimeMillis(); gameMs = -1;
         for (Seat each : seats) { each.inputGen.incrementAndGet(); each.clearInput(); }
         FThreads.invokeInEdtLater(() -> {
             if (match != continuing || abandoned) return;
@@ -331,6 +335,7 @@ final class Session {
         JsonObject o = new JsonObject();
         o.addProperty("gameNumber", gameNumber); o.addProperty("over", matchOver()); o.addProperty("phase", matchPhase);
         o.addProperty("abandoned", abandoned);
+        if (gameMs >= 0) o.addProperty("gameMs", gameMs);
         JsonArray wins = new JsonArray(), ready = new JsonArray();
         int draws = 0;
         HostedMatch m = match;

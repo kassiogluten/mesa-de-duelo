@@ -1,5 +1,6 @@
 package mesadeduelo.bridge;
 
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,7 +31,8 @@ import forge.player.PlayerControllerHuman;
 final class Castable {
     private Castable() { }
 
-    private record Snapshot(Object input, List<Integer> ids) { }
+    /** O pedido fica numa referência fraca: ele leva ao jogador e ao jogo, e prenderia a chave do WeakHashMap. */
+    private record Snapshot(WeakReference<Object> input, List<Integer> ids) { }
 
     private static final Map<Game, Map<Integer, Snapshot>> SNAPSHOTS = Collections.synchronizedMap(new WeakHashMap<>());
 
@@ -44,7 +46,7 @@ final class Castable {
         List<Integer> ids;
         try { ids = compute(who); }
         catch (RuntimeException e) { ids = List.of(); }
-        byPlayer.put(who.getId(), new Snapshot(input, ids));
+        byPlayer.put(who.getId(), new Snapshot(new WeakReference<>(input), ids));
     }
 
     /** Qualquer thread: o resultado só vale enquanto o mesmo pedido de prioridade estiver aberto. */
@@ -52,7 +54,8 @@ final class Castable {
         JsonArray out = new JsonArray();
         Map<Integer, Snapshot> byPlayer = SNAPSHOTS.get(who.getGame());
         Snapshot snapshot = byPlayer == null ? null : byPlayer.get(who.getId());
-        if (snapshot == null || snapshot.input() != currentInput(who)) return out;
+        Object input = snapshot == null ? null : snapshot.input().get();
+        if (input == null || input != currentInput(who)) return out;
         for (int id : snapshot.ids()) out.add(id);
         return out;
     }
