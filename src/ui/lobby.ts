@@ -14,6 +14,7 @@ import './lobby.css';
 export { deckArt, deckColors } from './deckStats';
 
 type Mode = 'ai' | 'net' | 'free';
+type NetTab = 'join' | 'create';
 type DeckAction = 'library' | 'create' | 'import';
 export interface Lobby {
   refresh(): void;
@@ -64,6 +65,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
   // Toda sala nova começa privada: só vira pública se o jogador escolher.
   let visibility: RoomVisibility = 'private';
+  let netTab: NetTab = load('mesa:netTab') === 'create' ? 'create' : 'join';
   let publicRooms: PublicRoomsState = null, roomsHTML = '', roomsRequest = 0;
   let roomsTimer: ReturnType<typeof setInterval> | undefined;
   const validations = new Map<string, DeckValidation>();
@@ -82,9 +84,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div class="match-setup">
         <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="free">Livre</button><button type="button" data-setting="format" data-value="commander">Commander</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
-          <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 10 9-5M12 12 3 7m9 5v10M7.5 4.5l9 5"/></svg><span><strong id="aiModeLabel">Computador</strong></span></button>
-          <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v3"/></svg><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
-          <button type="button" class="opponent-card free-card" data-setting="opponent" data-value="free"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h9a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M4 7v12a2 2 0 0 0 2 2h9"/></svg><span><strong>Mesa livre</strong></span></button>
+          <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
+          <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
+          <button type="button" class="opponent-card free-card" data-setting="opponent" data-value="free"><span><strong>Mesa livre</strong></span></button>
         </div><p class="setup-explanation" id="freeHelp" hidden>Sem regras automáticas: você compra, vira, desvira e move as cartas como numa mesa de verdade. Para testar o deck sozinho.</p></fieldset>
         <fieldset class="match-choice duration-choice" id="durationChoice"><legend>Partida</legend><div class="choice-segments"><button type="button" data-setting="length" data-value="bo1">Única</button><button type="button" data-setting="length" data-value="bo3">Melhor de três</button></div></fieldset>
         <fieldset class="match-choice player-count-choice" id="playerCountChoice" hidden><legend>Jogadores</legend><div class="choice-segments"><button type="button" data-setting="players" data-value="2">2</button><button type="button" data-setting="players" data-value="3">3</button><button type="button" data-setting="players" data-value="4">4</button></div></fieldset>
@@ -92,11 +94,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div id="commanderAiPanel" class="commander-ai-panel" hidden></div>
         <section class="network-setup" id="netPanel" aria-label="Jogar com outra pessoa" hidden>
           <label for="netName">Seu nome<input id="netName" class="input-field" maxlength="24" autocomplete="nickname" placeholder="Jogador"></label>
-          <section class="net-group" id="joinGroup" aria-labelledby="joinTitle"><h3 class="net-group-title" id="joinTitle">Entrar numa sala</h3>
+          <div class="net-tabs-block"><span class="side-label" id="netTabsLabel">Sala</span><div class="choice-segments net-tabs" role="tablist" aria-labelledby="netTabsLabel"><button type="button" role="tab" id="netTabJoin" data-net-tab="join" aria-controls="joinGroup">Entrar numa sala</button><button type="button" role="tab" id="netTabCreate" data-net-tab="create" aria-controls="createGroup">Criar sala</button></div></div>
+          <section class="net-group" id="joinGroup" role="tabpanel" aria-labelledby="netTabJoin">
             <section class="public-rooms" id="publicRooms" aria-labelledby="publicRoomsTitle"><div class="public-rooms-head"><h4 id="publicRoomsTitle">Salas públicas</h4><button type="button" class="link-btn" data-lobby="rooms-refresh" aria-label="Atualizar a lista de salas públicas">${REFRESH}Atualizar</button></div><div id="publicRoomList" aria-busy="false"></div><p class="sr-only" id="publicRoomsStatus" role="status" aria-live="polite"></p></section>
             <form data-join><label for="netCode">Ou digite o código da sala<span class="network-code"><input id="netCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD"><button type="submit" class="arena-btn secondary">Entrar</button></span></label></form>
           </section>
-          <fieldset class="net-group visibility-choice" id="visibilityChoice"><legend class="net-group-title">Ou crie a sua sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="private">Privada</button><button type="button" data-setting="visibility" data-value="public">Pública</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset>
+          <div class="net-group" id="createGroup" role="tabpanel" aria-labelledby="netTabCreate"><fieldset class="match-choice visibility-choice"><legend>Tipo de sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="private">Privada</button><button type="button" data-setting="visibility" data-value="public">Pública</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset></div>
           <details class="net-adv"><summary>Conexão</summary><label for="netUrl">Endereço do servidor</label><input id="netUrl" class="input-field" spellcheck="false" placeholder="${esc(FORGE_URL)}"></details>
           <div id="roomInfo" class="room-info" hidden></div><div id="netWait" class="net-wait" hidden></div>
         </section>
@@ -159,17 +162,29 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     header.setDisabled(busy || !!waitingRoom);
     $('.match-sidebar').classList.toggle('waiting-room', !!waitingRoom);
     $('#netPanel').hidden = mode !== 'net';
+    for (const tab of root.querySelectorAll<HTMLButtonElement>('[data-net-tab]')) {
+      const on = tab.dataset.netTab === netTab;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      tab.disabled = busy || !!waitingRoom;
+    }
+    $('#joinGroup').hidden = netTab !== 'join';
+    $('#createGroup').hidden = netTab !== 'create';
     $('#publicRooms').hidden = !!room;
-    $('#visibilityChoice').hidden = !!room;
-    $('#visibilityHelp').textContent = visibility === 'public' ? 'Aparece na lista acima para qualquer pessoa entrar.' : 'Só entra quem receber o código.';
+    $('#visibilityHelp').textContent = visibility === 'public' ? 'Aparece na lista de salas públicas para qualquer pessoa entrar.' : 'Só entra quem receber o código.';
     const commander = format === 'commander';
     const free = mode === 'free';
-    $('#durationChoice').hidden = commander || free;
-    $('#playerCountChoice').hidden = !commander || free;
+    // Quem entra numa sala joga com as regras dela: duração e número de jogadores são escolhas de quem cria.
+    const joining = mode === 'net' && netTab === 'join';
+    // Contra outra pessoa, duração e jogadores ficam dentro da aba Criar sala, junto do tipo de sala.
+    const roomSetup = mode === 'net' ? $('#createGroup') : $('.match-setup'), anchor = mode === 'net' ? $('.visibility-choice') : $('#aiPanel');
+    for (const id of ['#durationChoice', '#playerCountChoice']) if ($(id).parentElement !== roomSetup) roomSetup.insertBefore($(id), anchor);
+    $('#durationChoice').hidden = commander || free || joining;
+    $('#playerCountChoice').hidden = !commander || free || joining;
     $('#freeHelp').hidden = !free;
     $('#opponentLegend').textContent = commander && playerCount > 2 ? 'Oponentes' : 'Oponente';
-    $('#aiModeLabel').textContent = commander && playerCount > 2 ? 'Computadores' : 'Computador';
-    $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Outras pessoas' : 'Outra pessoa';
+    $('#aiModeLabel').textContent = commander && playerCount > 2 ? 'Bots' : 'Bot';
+    $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Humanos' : 'Humano';
     $('#aiPanel').hidden = mode !== 'ai' || commander;
     $('#commanderAiPanel').hidden = mode !== 'ai' || !commander;
     const aiPool = ready.filter(d => (format === 'commander' ? d.format === 'commander' : d.format !== 'commander') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
@@ -178,7 +193,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $<HTMLSelectElement>('#oppSel').value = oppId;
     if (commander) {
       commanderOpponents = commanderOpponents.map(id => id === 'random' || aiPool.some(d => d.id === id) ? id : 'random');
-      $('#commanderAiPanel').innerHTML = '<p class="commander-ai-heading">Decks dos computadores</p>' + commanderOpponents.slice(0, playerCount - 1).map((id, i) => `<label class="opponent-choice" for="commanderOpp${i}"><span class="computer-seat-number" aria-hidden="true">${i + 1}</span><select id="commanderOpp${i}" aria-label="Deck do computador ${i + 1}" class="input-field" data-opponent-slot="${i}"><option value="random">Deck aleatório</option>${aiPool.map(d => `<option value="${esc(d.id)}" ${id === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`).join('');
+      $('#commanderAiPanel').innerHTML = '<p class="commander-ai-heading side-label">Decks dos computadores</p>' + commanderOpponents.slice(0, playerCount - 1).map((id, i) => `<label class="opponent-choice" for="commanderOpp${i}"><span class="computer-seat-number" aria-hidden="true">${i + 1}</span><select id="commanderOpp${i}" aria-label="Deck do computador ${i + 1}" class="input-field" data-opponent-slot="${i}"><option value="random">Deck aleatório</option>${aiPool.map(d => `<option value="${esc(d.id)}" ${id === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`).join('');
     }
     for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #netUrl, [data-join] button, [data-join-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
     const deck = selected(), result = deck && format ? validations.get(key(deck)) : undefined;
@@ -186,10 +201,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const art = deck && deckArt(deck);
     $('#chosenDeck').innerHTML = `${art ? `<span class="chosen-art" style="background-image:url('${esc(art)}')" aria-hidden="true"></span>` : ''}${!deck ? `<span class="chosen-caption">${esc(formatName(format))}</span>` : ''}<strong>${esc(deck?.name ?? 'Escolha um deck para jogar')}</strong>${deck ? `<span>${result ? result.valid ? 'Verificado pelo servidor' : 'Precisa de ajustes' : deck.builtin ? 'Deck pronto' : 'Seu deck'}</span>` : ''}`;
     const start = $<HTMLButtonElement>('#startMatch');
-    start.disabled = !format || !deck || invalid || busy || !!waitingRoom;
-    start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : 'Criar sala';
+    start.disabled = !format || !deck || invalid || busy || !!waitingRoom || (joining && !room);
+    start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : joining ? 'Escolha a sala' : 'Criar sala';
     $('#roomInfo').hidden = !room;
-    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível e confirme abaixo.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Voltar a criar uma sala</button>` : '';
+    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível e confirme abaixo.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Escolher outra sala</button>` : '';
     $('#netWait').hidden = !waitingRoom;
     if (waitingRoom) {
       const capacity = waitingRoom.capacity ?? waitingRoom.config.playerCount ?? 2;
@@ -201,7 +216,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   // ---------- Salas públicas ----------
   // Só procura com "Outra pessoa" escolhido, fora de uma sala e com a aba à vista; com a partida na tela, o lobby fica escondido.
-  const wantRooms = () => mode === 'net' && !waitingRoom && !room && document.visibilityState === 'visible';
+  const wantRooms = () => mode === 'net' && netTab === 'join' && !waitingRoom && !room && document.visibilityState === 'visible';
   function syncRoomPolling() {
     if (wantRooms() && !roomsTimer) {
       void loadRooms();
@@ -210,6 +225,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   async function loadRooms(announce = false) {
     const request = ++roomsRequest, list = $('#publicRoomList');
+    if (publicRooms === null) renderRooms();
     list.setAttribute('aria-busy', 'true');
     let next: PublicRoomsState;
     try { next = await opts.onListRooms(netURL()); } catch { next = 'error'; }
@@ -298,6 +314,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
       refresh(); return;
     }
+    const tab = target.closest<HTMLButtonElement>('[data-net-tab]');
+    if (tab && !tab.disabled) { selectNetTab(tab.dataset.netTab === 'create' ? 'create' : 'join'); return; }
     const menuButton = target.closest<HTMLButtonElement>('[data-tile-menu]');
     if (menuButton) { toggleTileMenu(menuButton); return; }
     closeTileMenus();
@@ -325,6 +343,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (joinCode && !busy && !waitingRoom) findRoom(joinCode, true);
     if (action === 'cancel-room') { opts.onCancelRoom(); waitingRoom = null; refresh(); }
   });
+  /** Trocar de aba desfaz a sala encontrada pelo código: cada aba tem o seu caminho até o botão de baixo. */
+  function selectNetTab(next: NetTab, focus = false) {
+    if (next !== netTab) { netTab = next; save('mesa:netTab', netTab); room = null; preflight++; setStatus(''); refresh(); }
+    if (focus) root.querySelector<HTMLElement>(`[data-net-tab="${next}"]`)?.focus();
+  }
   function closeTileMenus(except?: HTMLButtonElement) {
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-tile-menu][aria-expanded="true"]')) {
       if (button === except) continue;
@@ -347,6 +370,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (wrap && e.relatedTarget && !wrap.contains(e.relatedTarget as Node)) closeTileMenus();
   });
   root.addEventListener('keydown', e => {
+    const tab = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-net-tab]');
+    if (tab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault();
+      selectNetTab(e.key === 'Home' ? 'join' : e.key === 'End' ? 'create' : tab.dataset.netTab === 'join' ? 'create' : 'join', true);
+      return;
+    }
     const menu = (e.target as HTMLElement).closest<HTMLElement>('.tile-menu');
     if (!menu) return;
     const items = [...menu.querySelectorAll<HTMLButtonElement>('button')], at = items.indexOf(e.target as HTMLButtonElement);
@@ -375,7 +404,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     preflight++; setBusy(true); setStatus('Buscando sala…');
     void opts.onLookup(code, netURL()).then(info => {
       if (!info.available) throw new Error(info.players.length >= (info.capacity ?? info.config.playerCount ?? 2) ? `A sala ${info.code} já está completa.` : `A partida da sala ${info.code} já começou.`);
-      room = info; format = info.config.format; matchLength = info.config.matchLength; playerCount = info.config.playerCount ?? info.capacity ?? 2; youId = rememberedDeck(); setStatus('');
+      room = info; netTab = 'join'; format = info.config.format; matchLength = info.config.matchLength; playerCount = info.config.playerCount ?? info.capacity ?? 2; youId = rememberedDeck(); setStatus('');
       return true;
     }).catch(error => { setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false; }).then(found => {
       setBusy(false);

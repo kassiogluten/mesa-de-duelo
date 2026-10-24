@@ -6,12 +6,32 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
-## [0.41.0] - 2026-10-24
+## [0.42.0] - 2026-10-24
+
+### Novo
+
+- **Procurando atualização.** Um anel gira em volta do ponto do botão **Novidades** enquanto o jogo confere se saiu uma versão nova, e gira mais rápido enquanto ela está sendo baixada. Quando termina, aparece o aviso de **Nova versão do jogo** de sempre.
+
+### Mudou
+
+- **Abas para entrar ou criar uma sala.** Jogando contra outra pessoa, a coluna da partida ficou mais curta: **Entrar numa sala** mostra as salas públicas e o campo do código, e **Criar sala** reúne os jogadores, a duração e se a sala é privada ou pública. O jogo lembra a última aba usada. Na aba de entrar, o botão de baixo espera você escolher uma sala.
+- **Coluna da partida com um visual só.** Formato, oponente, jogadores, tipo de sala, campos e listas agora têm a mesma altura, os mesmos cantos e o mesmo destaque dourado no que está escolhido, com todos os títulos no mesmo estilo. As opções de oponente ficaram só com o nome, sem ícone, e o botão de jogar não quebra mais o texto em duas linhas.
+
+## [0.41.0] - 2026-10-23
 
 ### Novo
 
 - **20 novos decks prontos de Commander.** Chegam os comandantes mais populares do EDHREC nos últimos dois anos que ainda não estavam entre os decks prontos, deixando de fora os que têm verde: Oloro, Breya, Teysa Karlov, Zhulodok, Zurgo Stormrender, Arabella, Shorikai, Queen Marchesa, Urza, Terra, K'rrik, Kilo, Ghyrson Starn, Ragost, Norman Osborn, Eriette, Captain N'ghathrod, Alela, Magda e Obeka. Cada lista é o deck médio do EDHREC para o comandante, com as cartas que o oponente controlado pelo computador ainda não sabe jogar trocadas pela carta mais usada do mesmo tipo, então todos servem tanto para você quanto para os oponentes.
 - **Preço dos decks prontos.** Na lista de decks e na escolha do deck da partida, os decks prontos com preço registrado mostram quanto custam as cartas em dólar, por exemplo "US$ 922,14". Passe o mouse sobre o valor (ou toque nele, na lista de decks) para ver o que ele significa: quanto custam as cartas pela edição mais barata de cada uma, e em que data foi feita a cotação. Por enquanto só os 20 decks novos de Commander têm preço; os outros chegam depois. Cópias de um deck pronto não levam o preço, já que podem ser mudadas.
+
+### Mudou
+
+- **"Passar respostas" virou um ícone também no computador.** A opção deixou de ocupar uma linha inteira embaixo dos botões: agora é o botão ⏩ ao lado do último botão, como no celular, dourado quando está ligada. Passe o mouse sobre ele para ver o que faz.
+
+## [0.40.0] - 2026-10-23
+
+### Novo
+
 - **Terrenos virados num monte só, no celular.** Depois de pagar uma mágica, os terrenos virados se juntam numa pilha só, mesmo com nomes diferentes, com o total em **×N**. Toque no número para ver cada um. Os terrenos também continuam empilhados na hora de declarar ataque.
 - **Segurar para ver.** No celular e no tablet, segure o dedo sobre qualquer carta para ver a carta inteira, inclusive no iPhone. Segurar não joga a carta nem a escolhe, e o toque rápido continua fazendo o de sempre.
 - **Tempo de jogo no resultado.** A tela de vitória, derrota ou empate mostra quanto tempo o jogo durou, por exemplo "Turno 9 · 14:32 de jogo". Numa melhor de três, cada jogo conta o seu tempo.
@@ -21,7 +41,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 - **Reserva de mana dentro do retrato.** A mana que sobra aparece sobre o retrato do jogador, que fica desfocado enquanto houver mana. Mana da mesma cor vira um símbolo só, com a quantidade ao lado (por exemplo, verde ×3), e cada cor fica numa linha. Pagando um custo, tocar no símbolo gasta uma de cada vez. No Commander com vários jogadores, a reserva dos oponentes fica abaixo do nome.
 - **Artefatos e encantamentos antes dos terrenos.** Na fileira de trás, artefatos, encantamentos e outras permanentes que não são criaturas vêm primeiro. Com muitos terrenos, são os terrenos que ficam para rolar, e o resto continua à vista.
-- **"Passar respostas" virou um ícone.** A opção deixou de ocupar uma linha inteira embaixo dos botões: agora é o botão ⏩ ao lado do último botão, no celular e no computador, dourado quando está ligada. Passe o mouse sobre ele para ver o que faz.
+- **"Passar respostas" virou um ícone no celular.** Em vez de ocupar uma linha inteira embaixo dos botões, a opção é um botão ⏩ ao lado do último botão, dourado quando está ligada. No computador continua com o texto.
 - **Desvirar só com o ícone.** No terreno virado cuja mana ainda não foi gasta, o selo de desvirar mostra só a seta ↺, sem o texto.
 - **Terrenos menores no celular.** A fileira de terrenos ficou mais baixa, e as criaturas ficam com mais espaço na mesa.
 - **Mesa sem lupa no celular.** A lupa cobria boa parte das cartas na mesa, na mão e na zona de comando. Para ver uma carta, segure o dedo sobre ela. As cartas do oponente abrem também com um toque. Na escolha da mão inicial, a lupa continua.
@@ -31,13 +51,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 - **Selo de enjoo de invocação em dobro.** Em alguns aparelhos o selo da criatura que acabou de entrar aparecia com dois emojis. Agora é um desenho próprio, igual em todo aparelho: estrelinhas girando em volta, como quem ficou tonto. Com a opção de reduzir movimento do sistema ligada, elas ficam paradas.
 - **Terrenos escondidos atrás dos botões no celular.** No duelo pelo celular, a sua fileira de terrenos passava por baixo de "Para o combate" e "Fim de turno", e as últimas cartas ficavam escondidas sem dar para rolar até elas. Agora a fileira termina antes dos botões e rola.
+
+## [0.39.1] - 2026-10-23
+
+### Corrigido
+
 - **Servidor ocupando cada vez mais memória.** Cada partida terminada continuava ocupando memória no servidor até ele ser reiniciado, e com o tempo ele podia cair no meio de uma partida. Agora a memória é liberada quando a partida acaba.
-
-## [0.40.0] - 2026-10-24
-
-### Novo
-
-- **Procurando atualização.** Um anel gira em volta do ponto do botão **Novidades** enquanto o jogo confere se saiu uma versão nova, e gira mais rápido enquanto ela está sendo baixada. Quando termina, aparece o aviso de **Nova versão do jogo** de sempre.
 
 ## [0.39.0] - 2026-10-22
 
