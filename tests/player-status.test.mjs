@@ -17,8 +17,8 @@ test('the monarch gets a crown seal that explains the rule and pulses when it ar
 });
 
 test('land plays show only on the player turn and dim once the last land is played', () => {
-  assert.match(playerStatusHTML(player({}), 3), /player-counter lands" .*<b>0<\/b><small>\/1<\/small>/);
-  assert.match(playerStatusHTML(player({ landsPlayed: 1 }), 3), /player-counter lands done/);
+  assert.match(playerStatusHTML(player({}), 3), /player-counter land-plays" .*<b>0<\/b><small>\/1<\/small>/);
+  assert.match(playerStatusHTML(player({ landsPlayed: 1 }), 3), /player-counter land-plays done/);
   assert.match(playerStatusHTML(player({ landsPlayed: 3, maxLands: -1 }), 3), /<small>\/∞<\/small>/);
   assert.doesNotMatch(playerStatusHTML(player({ landsPlayed: 3, maxLands: -1 }), 3), /done/);
   assert.equal(landsText(player({ landsPlayed: 1, maxLands: 3 })), '1 de 3');

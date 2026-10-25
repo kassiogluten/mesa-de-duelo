@@ -31,7 +31,7 @@ export function playerStatusHTML(p: FPlayer, active?: number | null, open: strin
   if (showsLands(p, active)) {
     const key = `p${p.id}:LANDS`, played = p.landsPlayed ?? 0;
     const done = p.maxLands !== -1 && played >= (p.maxLands ?? 1);
-    html += `<span class="player-counter lands${done ? ' done' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${LAND_ICON}<b>${played}</b><small>/${p.maxLands === -1 ? '∞' : p.maxLands}</small><span class="ctr-tip">${esc(`Terrenos jogados neste turno: ${landsText(p)}.${done ? ' Não dá para jogar outro terreno neste turno.' : ''}`)}</span></span>`;
+    html += `<span class="player-counter land-plays${done ? ' done' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${LAND_ICON}<b>${played}</b><small>/${p.maxLands === -1 ? '∞' : p.maxLands}</small><span class="ctr-tip">${esc(`Terrenos jogados neste turno: ${landsText(p)}.${done ? ' Não dá para jogar outro terreno neste turno.' : ''}`)}</span></span>`;
   }
   return html;
 }

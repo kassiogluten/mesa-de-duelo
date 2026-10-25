@@ -392,7 +392,7 @@
 .mill-count.below { transform: translate(-50%, 0); }
 .player-counter.monarch { border-color: #e8b64c; background: linear-gradient(135deg, #33250af2, #170f04f2); color: #ffe3a1; }
 .player-counter.monarch svg { color: #f2c14e; }
-.player-counter.lands { border-color: #9a8b6c; color: #e9e1cf; }
-.player-counter.lands svg { color: #c9b98f; }
-.player-counter.lands.done { opacity: .55; }
-.player-counter.lands small { color: #b8ad95; }
+.player-counter.land-plays { border-color: #9a8b6c; color: #e9e1cf; }
+.player-counter.land-plays svg { color: #c9b98f; }
+.player-counter.land-plays.done { opacity: .55; }
+.player-counter.land-plays small { color: #b8ad95; }

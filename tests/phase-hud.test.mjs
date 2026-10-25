@@ -51,7 +51,10 @@ test('turn owner is shown by color, explicit in the summary, and player names re
 });
 test('the pass button names where the game goes next', () => {
   const s = (phase, extra = {}) => ({ phase, activePlayer: 1, you: 1, stack: [], ...extra });
-  assert.equal(passLabel(s('UPKEEP')), 'Para a principal 1');
+  assert.equal(passLabel(s('UPKEEP')), 'Comprar');
+  assert.equal(passLabel(s('DRAW')), 'Para a principal 1');
+  assert.equal(passLabel(s('UPKEEP', { activePlayer: 2 })), 'Passar');
+  assert.equal(passLabel(s('UPKEEP', { stack: [{ id: 1 }] })), 'Resolver');
   assert.equal(passLabel(s('MAIN1')), 'Para o combate');
   assert.equal(passLabel(s('COMBAT_DECLARE_BLOCKERS')), 'Para a principal 2');
   assert.equal(passLabel(s('MAIN2')), 'Para o fim do turno');

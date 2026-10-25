@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.46.1] - 2026-10-25
+
+### Mudou
+
+- **Botão Comprar na manutenção.** Quando o jogo para na sua manutenção, o botão de ação mostra **Comprar**, porque passar ali leva você à compra do turno.
+
 ## [0.46.0] - 2026-10-25
 
 ### Novo

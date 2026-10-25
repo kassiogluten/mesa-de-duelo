@@ -146,6 +146,8 @@ export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops:
 export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' | 'stack' | 'extraCombatAfter'>): string {
   if (state.stack.length) return 'Resolver';
   if (state.activePlayer !== state.you) return 'Passar';
+  // Na sua manutenção, passar leva à compra.
+  if (state.phase === 'UPKEEP') return 'Comprar';
   const group = STEPS[state.phase ?? '']?.group;
   const after = state.extraCombatAfter ?? [];
   // Um combate extra pode vir logo depois do combate (Combat Celebrant) ou depois de uma principal (Relentless Assault).
