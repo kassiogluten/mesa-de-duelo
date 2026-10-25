@@ -65,3 +65,7 @@
 .phase-turn-badge.extra::before { content: '+'; font-weight: 800; }
 .forge #fPhases .phase-combat-count { position: absolute; top: -7px; right: -8px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #0c1222; border: 1px solid currentColor; color: var(--gold-light); font: 800 9px/13px var(--body); text-align: center; pointer-events: none; }
 .forge #fPhases .phase-track.theirs .phase-combat-count { color: #ffb3a3; }
+
+/* Etapa marcada para parar no turno do oponente: ponto no grupo; parado nela, um anel dourado na etapa atual. */
+.forge #fPhases .phase-stop-dot { position: absolute; bottom: -3px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px #0a1322; pointer-events: none; }
+.forge #fPhases .phase-track.theirs .phase-step.current.held { box-shadow: 0 0 0 2px var(--gold), 0 0 12px #f2b54c80; }

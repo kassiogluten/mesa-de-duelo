@@ -6,6 +6,8 @@ export interface FPreferences {
   autoPassNoActions: boolean;
   /** "Só respostas": passes priority on opponents' turns and with something on the stack. Absent on older bridges. */
   passResponses?: boolean;
+  /** Etapas do turno dos oponentes em que o jogo segura a prioridade (nomes do Forge, como "UPKEEP"). Ausente em pontes antigas. */
+  opponentStops?: string[];
 }
 export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
@@ -76,6 +78,11 @@ export interface FCard {
   commander?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
+  /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
+  prepared?: boolean;
+  preparedSpell?: string;
+  /** No exílio, a cópia do feitiço preparado: o nome da criatura de onde ela veio. */
+  preparedFrom?: string;
   /** Custo da proteção contra alvos (ward), como "{2}" ou "Pay 3 life". */
   ward?: string;
   /** De que a proteção protege, como o Forge escreve: "red", "artifact", "multicolored"… */
@@ -92,7 +99,11 @@ export interface FCard {
   attachedToPlayer?: number;
   /** Nome original de uma carta que está copiando outra (Clone, por exemplo). */
   copyOf?: string;
+  /** Mutação: as cartas que formam a permanente, de cima para baixo (sem nome quando viradas para baixo). */
+  merged?: FMergedCard[];
 }
+
+export interface FMergedCard { id: number; name?: string; set?: string; image?: string; token?: boolean; faceDown?: boolean }
 
 export interface FPlayer {
   id: number;

@@ -35,7 +35,7 @@ export function auraColor(manaCost = '') {
 }
 export const protectionLabel = (from: string) => PROTECTION_LABEL[from] ?? from;
 
-export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean; active?: boolean } = {}): PermanentFx {
+export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean } = {}): PermanentFx {
   const k = new Set(c.keywords ?? []);
   const has = (name: string) => k.has(name);
   const p1 = c.counters?.P1P1 ?? 0, m1 = c.counters?.M1M1 ?? 0;
@@ -63,7 +63,7 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
     seals.push({ kind: 'face-down', html: kind ? `${kind} 2/2` : '2/2', label: `Virada para baixo${kind ? ` (${kind})` : ''}, 2/2` });
   }
   const restricted = c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : undefined;
-  return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick && context.active), restricted };
+  return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
 /** Classes da carta e o HTML dos efeitos (desenhados atrás ou na borda da carta, sem receber clique). */

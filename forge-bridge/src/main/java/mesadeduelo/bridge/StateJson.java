@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import forge.ImageKeys;
 import forge.StaticData;
 import forge.card.CardEdition;
+import forge.card.CardStateName;
 import forge.card.MagicColor;
 import forge.game.Game;
 import forge.game.GameEntityView;
@@ -250,6 +251,15 @@ final class StateJson {
             Card gc = game == null ? null : game.findByView(c);
             if (gc != null && gc.isPlotted()) o.addProperty("plotted", true);
         }
+        // Preparar (Strixhaven): a criatura marca o feitiço que pode copiar; a cópia espera no exílio do dono.
+        // O Forge cria a cópia como ficha, mas para o jogador ela é o feitiço preparado daquela criatura.
+        if (s.getState() == CardStateName.PreparedSpell) {
+            o.addProperty("token", false);
+            if (c.getAlternateState() != null) o.addProperty("preparedFrom", c.getAlternateState().getName());
+        } else if (c.getPreparedSpell() != null) {
+            o.addProperty("prepared", true);
+            o.addProperty("preparedSpell", c.getPreparedSpell().getCurrentState().getName());
+        }
         o.addProperty("creature", s.isCreature());
         o.addProperty("land", s.isLand());
         if (s.isPlaneswalker()) o.addProperty("planeswalker", true);
@@ -268,6 +278,7 @@ final class StateJson {
         if (c.isCloned() && c.getBackup() != null && !s.getName().equals(c.getBackup().getName())) {
             o.addProperty("copyOf", c.getBackup().getName());
         }
+        if (c.getZone() == ZoneType.Battlefield) addMerged(o, game == null ? null : game.findByView(c));
         if (s.isCreature()) {
             o.addProperty("power", s.getPower());
             o.addProperty("toughness", s.getToughness());
@@ -286,8 +297,11 @@ final class StateJson {
         if (s.getKeywords() != null && !s.getKeywords().isEmpty()) {
             JsonArray kws = new JsonArray();
             java.util.Set<String> seen = new java.util.LinkedHashSet<>();
-            for (KeywordView k : s.getKeywords()) if (k.keyword() != null && seen.add(k.keyword().name())) kws.add(k.keyword().name());
-            o.add("keywords", kws);
+            for (KeywordView k : s.getKeywords()) {
+                // UNDEFINED: habilidades sem palavra-chave própria (como "esta criatura entra preparada").
+                if (k.keyword() != null && k.keyword() != Keyword.UNDEFINED && seen.add(k.keyword().name())) kws.add(k.keyword().name());
+            }
+            if (!kws.isEmpty()) o.add("keywords", kws);
         }
         PermanentDetails.add(o, c, s, game);
         Map<CounterType, Integer> counters = c.getCounters() == null ? null : toMap(c);
@@ -297,6 +311,29 @@ final class StateJson {
             o.add("counters", co);
         }
         return o;
+    }
+
+    /**
+     * Mutação: as cartas que formam a permanente, de cima para baixo, com o nome impresso de cada uma
+     * (a de cima dá nome e força; as de baixo, só habilidades). Cartas viradas para baixo vão sem nome.
+     */
+    static void addMerged(JsonObject o, Card gc) {
+        if (gc == null || !gc.hasMergedCard()) return;
+        JsonArray merged = new JsonArray();
+        for (Card part : gc.getMergedCards()) {
+            JsonObject m = new JsonObject();
+            m.addProperty("id", part.getId());
+            if (part.isFaceDown()) m.addProperty("faceDown", true);
+            else {
+                forge.game.card.CardState printed = part.getOriginalState(part.getCurrentStateName());
+                m.addProperty("name", printed.getName());
+                m.addProperty("set", printed.getSetCode());
+                String img = tokenImage(printed.getView());
+                if (img != null) { m.addProperty("token", true); m.addProperty("image", img); }
+            }
+            merged.add(m);
+        }
+        o.add("merged", merged);
     }
 
     /** {@link Castable}: lê o que a thread do jogo calculou; conferir aqui refaria os efeitos estáticos ao lado dela. */

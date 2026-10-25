@@ -6,6 +6,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.44.0] - 2026-10-24
+
+### Novo
+
+- **Parar no turno do oponente.** Em **Opções**, escolha as etapas do turno do oponente em que o jogo deve parar para você: manutenção, compra, as principais, cada etapa do combate ou a etapa final. Nelas o jogo segura a prioridade com você, mesmo sem nada que dê para jogar e com **Passar respostas** ligado, e você passa quando quiser. As etapas marcadas ganham um ponto dourado na trilha de fases durante o turno do oponente, e a etapa em que o jogo está parado para você fica com um anel dourado. A escolha vale para a partida inteira e fica guardada no navegador.
+- **Mutação à mostra.** Uma criatura mutada agora tem o selo **Mutada** na mesa, com quantas cartas a formam, e as bordas das cartas de baixo aparecem atrás dela. Passando o mouse ou inspecionando, aparece qual carta está por cima e quais estão embaixo, com o texto de cada uma, já que a criatura tem as habilidades de todas.
+
+### Corrigido
+
+- **Criaturas preparadas à mostra.** Uma criatura preparada (como as de Strixhaven que "entram preparadas") agora tem o selo **Preparada** na mesa. Passando o mouse ou inspecionando, aparece qual feitiço dá para conjurar. O selo some quando a cópia é conjurada.
+- **Feitiço preparado no exílio.** A cópia do feitiço que espera no exílio não aparece mais como "Ficha": o inspetor diz de qual criatura ela é, e o exílio a marca como **Preparado**.
+- **Marcadores com nome em português.** Os marcadores de cartas como o Black Market (carga), as Sagas (saga), as cartas suspensas (tempo) e outros apareciam com o nome em inglês no balão da carta e no inspetor. Agora aparecem em português, como já apareciam ao proliferar.
+- **Sem números soltos depois do nome da carta.** O texto da pilha, das decisões, dos botões e do histórico às vezes mostrava um número entre parênteses depois do nome da carta, como "Lightning Bolt (123)". Era um código interno do jogo e não aparece mais.
+- **Sem "undefined" nas palavras-chave.** O inspetor de algumas cartas, como as que entram preparadas, mostrava uma palavra-chave "undefined". Ela não aparece mais.
+- **Enjoo de invocação até o próximo turno.** A criatura que acabou de entrar perdia o selo de enjoo e o visual apagado assim que o turno passava para o oponente. Agora ela continua marcada durante o turno do oponente e só fica pronta quando começa o próximo turno de quem a controla.
+
 ## [0.43.0] - 2026-10-24
 
 ### Novo

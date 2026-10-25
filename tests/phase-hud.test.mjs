@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
+const stopsModule = uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
+const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./opponentStops'", JSON.stringify(stopsModule));
 const { phaseHudHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText } = await import(uri(source));
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
@@ -112,4 +113,20 @@ test('the turn clock shows minutes and seconds, and hours only past one hour', (
   assert.equal(turnTimeText(-500), '0:00');
   assert.match(phaseHudHTML(state), /data-turn-timer/);
   assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }), /data-turn-timer/);
+});
+
+test('marked opponent steps show a dot on their group only during an opponent turn, and the held step gets a ring', () => {
+  const theirs = { ...state, activePlayer: 2, phase: 'UPKEEP', stack: [] };
+  const stops = ['UPKEEP', 'DRAW', 'COMBAT_DECLARE_ATTACKERS'];
+  const html = phaseHudHTML(theirs, undefined, stops);
+  assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
+  assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada: Manutenção, Compra"/);
+  assert.match(html, /Combate · Parada: Atacantes/);
+  assert.match(html, /phase-step current held/);
+  assert.match(html, /Parada sua/);
+  assert.doesNotMatch(html, /<button|data-act|role="button"|tabindex=/);
+  assert.doesNotMatch(phaseHudHTML({ ...theirs, stack: [{ id: 1 }] }, undefined, stops), /held/);
+  assert.doesNotMatch(phaseHudHTML({ ...theirs, phase: 'MAIN1' }, undefined, stops), /held/);
+  const mine = phaseHudHTML({ ...state, phase: 'UPKEEP', stack: [] }, undefined, stops);
+  assert.doesNotMatch(mine, /phase-stop-dot|held|Parada/);
 });

@@ -208,6 +208,14 @@ a { color: var(--gold); }
 .badge.copy { background: #6a4bc4; color: #fff; }
 .badge.token { background: #e8e2d0; color: #1b1a17; }
 .badge.copy + .badge.token { top: calc(3% + 15px); }
+/* Mutação: o selo e as bordas das cartas de baixo aparecendo atrás da criatura. */
+.badge.mutated { background: #b4462f; color: #fff; }
+.badge + .badge.mutated, .badge.mutated + .badge.token { top: calc(3% + 15px); }
+.badge + .badge.mutated + .badge.token { top: calc(3% + 30px); }
+.bfc.mutated .face { box-shadow: 3px -3px 0 -1px #b4462fcc, 6px -6px 0 -2px #b4462f88; }
+.badge.prepared { background: #2f7d6b; color: #fff; }
+.badge + .badge.prepared { top: calc(3% + 15px); }
+.badge + .badge + .badge.prepared { top: calc(3% + 30px); }
 /* Comandante no campo: só a coroa dourada no canto (o nome fica na dica e no leitor de tela) e um contorno dourado. */
 .badge.commander { display: inline-flex; align-items: center; justify-content: center; padding: 2px 3px; border-radius: 5px; background: linear-gradient(135deg, #f7d27a, #c98a1f); color: #2a1a04; }
 .badge.commander svg { width: max(12px, calc(var(--cw) * .17)); height: max(12px, calc(var(--cw) * .17)); }

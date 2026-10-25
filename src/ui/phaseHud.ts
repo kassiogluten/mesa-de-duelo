@@ -1,5 +1,6 @@
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
+import { holdingStop, stopsByGroup } from './opponentStops';
 
 /** Cinco grupos como no Arena: início (desvirar, manutenção, compra), as duas principais, combate e final. */
 const PHASES = [
@@ -24,7 +25,7 @@ const STEPS: Record<string, { group: string; detail: string }> = {
   END_OF_TURN: { group: 'end', detail: 'Etapa final' },
   CLEANUP: { group: 'end', detail: 'Limpeza' },
 };
-type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats'>;
+type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats'> & { stack?: FState['stack'] };
 
 function owner(state: HudState) {
   const mine = state.activePlayer === state.you;
@@ -75,11 +76,6 @@ function activePlayerPortrait(state: HudState, portrait?: string): string {
   return `<span class="phase-active-portrait ${mine ? 'mine' : 'theirs'}" aria-hidden="true" data-tip="${esc(mine ? 'Seu turno' : `Turno de ${player.name}`)}"${art ? ` style="background-image:url('${art}')"` : ''}>${initial}</span>`;
 }
 
-/**
- * Trilha compacta de fases, só informativa (nunca avança o motor). Ícones à vista; os nomes aparecem ao passar o
- * mouse e o resumo completo vai para leitores de tela. A cor diz de quem é o turno. `activePortrait` é a arte do
- * retrato de quem joga o turno, mostrada só com mais de dois jogadores.
- */
 /** Tempo do turno no relógio da trilha: "0:07", "12:30" e, passando de uma hora, "1:02:05". */
 export function turnTimeText(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(total / 3600), m = Math.floor(total / 60) % 60, s = total % 60;
@@ -87,7 +83,13 @@ export function turnTimeText(ms: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
-export function phaseHudHTML(state: HudState, activePortrait?: string): string {
+/**
+ * Trilha compacta de fases, só informativa (nunca avança o motor). Ícones à vista; os nomes aparecem ao passar o
+ * mouse e o resumo completo vai para leitores de tela. A cor diz de quem é o turno. `activePortrait` é a arte do
+ * retrato de quem joga o turno, mostrada só com mais de dois jogadores. `stops` são as etapas marcadas para parar
+ * no turno dos oponentes: no turno de outro jogador, os grupos com uma delas ganham um ponto.
+ */
+export function phaseHudHTML(state: HudState, activePortrait?: string, stops: readonly string[] = []): string {
   const step = STEPS[state.phase ?? ''];
   const activeIndex = PHASES.findIndex(([key]) => key === step?.group);
   const mine = state.activePlayer === state.you;
@@ -95,17 +97,21 @@ export function phaseHudHTML(state: HudState, activePortrait?: string): string {
   const baseDetail = state.gameOver ? 'Jogo concluído' : step?.detail ?? 'Aguardando o início do turno';
   const detail = step?.group === 'combat' && (state.combatNumber ?? 0) > 1 ? `${baseDetail} · Combate extra` : baseDetail;
   const upcoming = state.gameOver ? '' : upcomingTurnsText(state);
-  const summary = [`Turno ${state.turn}`, owner(state), detail, step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
+  const marked = mine || state.gameOver ? new Map<string, string[]>() : stopsByGroup(stops);
+  const holding = !state.gameOver && holdingStop({ ...state, stack: state.stack ?? [] }, stops);
+  const summary = [`Turno ${state.turn}`, owner(state), detail, holding ? 'Parada sua' : '', step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
   return `<span class="sr-only">${esc(summary)}</span>${activePlayerPortrait(state, activePortrait)}
     <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
     <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>`}
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}" aria-hidden="true">${PHASES.map(([key, label, icon], index) => {
       const current = step?.group === key && !state.gameOver;
-      const tip = [current ? `${label} · ${detail}` : label, key === 'combat' ? combat : ''].filter(Boolean).join(' · ');
+      const held = marked.get(key);
+      const tip = [current ? `${label} · ${detail}` : label, key === 'combat' ? combat : '', held ? `Parada: ${held.join(', ')}` : ''].filter(Boolean).join(' · ');
       // Selo no combate: quantos combates o turno tem até agora (contando os que ainda vêm).
       const combats = key === 'combat' && !state.gameOver ? Math.max(state.combatNumber ?? 0, 1) + (state.extraCombats ?? 0) : 0;
       const badge = combats > 1 ? `<b class="phase-combat-count">×${combats}</b>` : '';
-      return `<li class="phase-step${current ? ' current' : ''}${index < activeIndex ? ' passed' : ''}" data-phase="${key}" data-tip="${esc(tip)}"><svg viewBox="0 0 24 24">${icon}</svg>${badge}</li>`;
+      const stop = held ? '<i class="phase-stop-dot"></i>' : '';
+      return `<li class="phase-step${current ? ' current' : ''}${current && holding ? ' held' : ''}${index < activeIndex ? ' passed' : ''}" data-phase="${key}" data-tip="${esc(tip)}"><svg viewBox="0 0 24 24">${icon}</svg>${badge}${stop}</li>`;
     }).join('')}</ol>`;
 }
 
