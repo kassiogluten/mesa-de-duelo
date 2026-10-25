@@ -153,6 +153,7 @@ final class StateJson {
         JsonArray emblems = new JsonArray();
         for (CardView c : nzv(p.getCommand())) if (c.isEmblem()) emblems.add(card(c, game));
         o.add("emblems", emblems);
+        Dungeons.add(o, p, game);
         JsonObject pool = new JsonObject();
         for (int i = 0; i < 5; i++) pool.addProperty(COLOR_KEYS[i], p.getMana(MagicColor.WUBRG[i]));
         pool.addProperty("C", p.getMana(MagicColor.COLORLESS));

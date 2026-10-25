@@ -29,6 +29,7 @@ import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
+import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
 import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
@@ -227,7 +228,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   };
   let lastCombat = '';
   let zoneOf: number | null = null;
-  let zoneKind: 'gy' | 'exile' | 'command' | 'damage' = 'gy';
+  let zoneKind: 'gy' | 'exile' | 'command' | 'damage' | 'dungeon' = 'gy';
   let bannerTimer = 0;
   /** Decisão em espera (prompt e tipo) e o lembrete que reforça o aviso se ela ficar parada. */
   let awaitKey = '';
@@ -1152,8 +1153,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lastPlayerCounters.set(p.id, { ...now });
     }
   }
-  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted);
-  const playerCounters = (p: FPlayer) => playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted);
+  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + dungeonText(p);
+  const playerCounters = (p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted), dungeonBadgesHTML(p, openCounter));
 
   function emblems(p: FPlayer) {
     const list = p.emblems ?? [];
@@ -1305,6 +1306,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const el = $('#fZone');
     const p = s.players.find(pl => pl.id === zoneOf);
     if (!p && !groupIds) { closeZone(); return; }
+    if (zoneKind === 'dungeon' && p && !groupIds) { setHTML(el, dungeonViewHTML(p)); el.hidden = false; syncModal(); return; }
     if (zoneKind === 'damage' && p && !groupIds) {
       setHTML(el, `<section class="question commander-ledger" role="dialog" aria-modal="true" aria-label="Dano de comandante"><h2>Dano de comandante · ${esc(p.name)}</h2><p class="q-hint">Dano de combate recebido de cada comandante. O limite é 21 para cada carta.</p><ul>${(p.commanderDamage ?? []).map(item => {
         const owner = s.players.find(player => player.commanders?.some(c => c.id === item.commanderId));
@@ -1558,6 +1560,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (isPlayMode(q)) return playModeHTML(q, c => face(c, 'normal'), label);
     const opts = q.options ?? [];
     const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
+    if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, client?.state?.players.find(p => p.id === q.dungeonOwner));
     if (q.kind === 'amount') {
       const status = amountStatus(q);
       return `${head}<form data-q-amount-form><div class="q-amounts">${opts.map((o, i) => {
@@ -2167,7 +2170,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (!client) return;
     const gy = t.closest<HTMLElement>('[data-gy]');
-    if (gy && client.state) { groupIds = null; zoneOf = +gy.dataset.gy!; zoneKind = gy.dataset.zone === 'exile' ? 'exile' : gy.dataset.zone === 'command' ? 'command' : gy.dataset.zone === 'damage' ? 'damage' : 'gy'; zoneView(client.state); return; }
+    if (gy && client.state) { groupIds = null; zoneOf = +gy.dataset.gy!; zoneKind = gy.dataset.zone === 'exile' ? 'exile' : gy.dataset.zone === 'command' ? 'command' : gy.dataset.zone === 'damage' ? 'damage' : gy.dataset.zone === 'dungeon' ? 'dungeon' : 'gy'; zoneView(client.state); return; }
 
     const opt = t.closest<HTMLElement>('[data-q-opt]');
     if (opt && qState) {

@@ -657,7 +657,9 @@ final class Session {
                 q.addProperty("max", (Integer) a[2]);
                 @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
                 options.addAll((Collection<?>) a[3]);
-                q.add("options", optionsJson(options, display));
+                JsonArray rows = optionsJson(options, display);
+                Dungeons.roomChoice(hosted.getGame(), options, rows, q);
+                q.add("options", rows);
             }
             case getAbilityToPlay -> {
                 Collection<?> abilities = (Collection<?>) a[1];

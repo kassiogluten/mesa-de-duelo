@@ -134,6 +134,22 @@ export interface FPlayer {
   /** Emblemas na zona de comando (nome "Emblem — Planeswalker"). */
   emblems?: FCard[];
   pool: Record<string, number>;
+  /** Masmorra em andamento na zona de comando (se aventurar). */
+  dungeon?: FDungeon;
+  /** Nomes das masmorras que o jogador já completou. */
+  completedDungeons?: string[];
+  /** Tem a iniciativa. */
+  initiative?: boolean;
+}
+
+export interface FDungeon {
+  id: number;
+  name: string;
+  image?: string;
+  /** Sala atual; ausente antes de entrar. */
+  room?: string;
+  /** Salas na ordem do card (a primeira é a entrada), com o efeito e para onde cada uma leva. */
+  rooms: { name: string; text: string; next: string[] }[];
 }
 
 export interface FOption {
@@ -154,6 +170,8 @@ export interface FOption {
   defender?: boolean;
   /** Outra face ou metade usada pela opção (aventura, carta dividida). */
   face?: { name: string; manaCost: string; typeLine: string };
+  /** dungeon-room: nome da sala da masmorra que a opção escolhe. */
+  room?: string;
 }
 
 export interface FQuestion {
@@ -162,9 +180,11 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
   /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta. */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room';
   /** commander-zone: onde o comandante está agora (Graveyard ou Exile). */
   zone?: string;
+  /** dungeon-room: id do jogador dono da masmorra. */
+  dungeonOwner?: number;
   /** combat-damage: divisão automática sugerida, se há ordem entre bloqueadores, se vale qualquer divisão e as palavras-chave do atacante. */
   suggested?: number[];
   ordered?: boolean;

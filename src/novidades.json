@@ -11,6 +11,12 @@
       { "img": "0.44.0/anel-selo.webp", "legenda": "O selo do Anel ao lado do retrato, com quantas vezes ele tentou. Tocando, aparecem as habilidades que ele já deu." },
       { "img": "0.44.0/anel-portador.webp", "legenda": "O Portador do Anel ganha um anel dourado no canto da carta." }
     ],
+    "Masmorras na mesa": [
+      { "img": "0.44.0/masmorra-selo.webp", "legenda": "O selo da masmorra junto dos outros marcadores do jogador: passo 2 de 4." },
+      { "img": "0.44.0/masmorra-mapa.webp", "legenda": "Tocando no selo abre o mapa, com a sala atual, as próximas possíveis e as masmorras já completadas." },
+      { "img": "0.44.0/masmorra-escolha.webp", "legenda": "Na hora de avançar, as salas possíveis ficam destacadas e é só tocar numa delas." },
+      { "img": "0.44.0/iniciativa.webp", "legenda": "Quem tem a iniciativa ganha um selo dourado que explica como ela funciona." }
+    ],
     "Mutação à mostra": [
       { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." },
       { "img": "0.44.0/mutada-detalhes.webp", "legenda": "Inspecionando a Illuna mutada: a carta de cima em destaque e, embaixo, a miniatura e o texto de cada carta que ficou sob ela. Tocar na miniatura abre a carta." }
