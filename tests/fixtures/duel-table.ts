@@ -53,7 +53,7 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       ] } });
     view.render();
   },
-  /** Monarca, terrenos do turno, permanente roubada, incitada, regeneração e escolhas da carta. */
+  /** Monarca, terrenos do turno, permanente roubada, atiçada, regeneração e escolhas da carta. */
   tableStatus() {
     const [me, opp] = state.players;
     Object.assign(me, { monarch: true, landsPlayed: 0, maxLands: 1, counters: {} });

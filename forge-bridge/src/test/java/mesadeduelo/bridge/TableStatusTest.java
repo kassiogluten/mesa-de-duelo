@@ -10,7 +10,7 @@ import forge.game.zone.ZoneType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Estados que o motor já aplica e a mesa desenha: monarca, terrenos do turno, controle trocado, incitada, regeneração e escolhas. */
+/** Estados que o motor já aplica e a mesa desenha: monarca, terrenos do turno, controle trocado, atiçada, regeneração e escolhas. */
 public class TableStatusTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
 

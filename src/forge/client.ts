@@ -82,7 +82,7 @@ export interface FCard {
   ringBearer?: boolean;
   /** Dono da permanente, só quando outro jogador a controla (controle trocado). */
   owner?: number;
-  /** Jogadores que incitaram a criatura (goad). */
+  /** Jogadores que atiçaram a criatura (goad). */
   goadedBy?: number[];
   /** Escudos de regeneração ativos. */
   shields?: number;

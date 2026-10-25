@@ -78,7 +78,7 @@ test('engine-only states become small seals with the full sentence in the toolti
   const byKind = Object.fromEntries(fx.seals.map(seal => [seal.kind, seal]));
   assert.match(byKind.control.label, /Pertence a Ana; quem a controla agora é Bruno/);
   assert.doesNotMatch(byKind.control.html, /Ana/, 'control shows only the icon on the table');
-  assert.match(byKind.goaded.label, /Incitada por Ana: .*que não seja Ana/);
+  assert.match(byKind.goaded.label, /Atiçada por Ana: .*que não seja Ana/);
   assert.match(byKind.regen.html, /×2/);
   assert.match(byKind.regen.label, /2 escudos de regeneração/);
   assert.match(byKind.chosen.html, /Elf/);

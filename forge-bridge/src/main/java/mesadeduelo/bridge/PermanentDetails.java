@@ -16,7 +16,7 @@ import forge.game.zone.ZoneType;
 /**
  * Estados de uma permanente que a mesa desenha como efeito contínuo e que as palavras-chave sozinhas não dizem: o custo
  * da proteção contra alvos (ward), de que a proteção protege, fases fora, "não pode atacar/bloquear" e os escudos de
- * prevenção, além de dono, incitação, regeneração e escolhas (em {@link #status}). Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
+ * prevenção, além de dono, atiçamento, regeneração e escolhas (em {@link #status}). Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
  */
 final class PermanentDetails {
     private PermanentDetails() {}
@@ -29,7 +29,7 @@ final class PermanentDetails {
 
     /**
      * Estados públicos de uma permanente no campo, inclusive virada para baixo: o dono quando outro jogador a controla,
-     * os escudos de regeneração e quem a incitou. As escolhas feitas pela carta só vão com ela à mostra.
+     * os escudos de regeneração e quem a atiçou. As escolhas feitas pela carta só vão com ela à mostra.
      */
     static void status(JsonObject o, CardView c, Game game) {
         if (c.getZone() != ZoneType.Battlefield) return;

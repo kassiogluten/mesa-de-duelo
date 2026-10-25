@@ -78,8 +78,8 @@ const STATUS_ICON: Record<StatusKind, string> = {
 const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
 
 /**
- * Estados que o motor guarda e a carta impressa não mostra: controle trocado, incitada, escudos de regeneração e o que a
- * carta escolheu. Na mesa ficam como selos pequenos (controle e incitada só com o ícone); o texto vai no balão e no inspetor.
+ * Estados que o motor guarda e a carta impressa não mostra: controle trocado, atiçada, escudos de regeneração e o que a
+ * carta escolheu. Na mesa ficam como selos pequenos (controle e atiçada só com o ícone); o texto vai no balão e no inspetor.
  */
 export function permanentStatus(c: FCard, playerName: (id: number) => string = id => `Jogador ${id}`): PermanentFx['seals'] {
   const seals: PermanentFx['seals'] = [];
@@ -89,7 +89,7 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
   }
   if (c.goadedBy?.length) {
     const by = list(c.goadedBy.map(playerName));
-    seals.push({ kind: 'goaded', html: STATUS_ICON.goaded, label: `Incitada por ${by}: ataca em todo combate, se puder, e ataca um jogador que não seja ${by}, se puder. Dura até o próximo turno de quem incitou.` });
+    seals.push({ kind: 'goaded', html: STATUS_ICON.goaded, label: `Atiçada por ${by}: ataca em todo combate, se puder, e ataca um jogador que não seja ${by}, se puder. Dura até o próximo turno de quem atiçou.` });
   }
   if (c.shields) {
     seals.push({ kind: 'regen', html: `${STATUS_ICON.regen}${c.shields > 1 ? `×${c.shields}` : ''}`, label: `${c.shields > 1 ? `${c.shields} escudos de regeneração` : 'Escudo de regeneração'}: da próxima vez que seria destruída neste turno, em vez disso é virada, sai do combate e perde o dano marcado.` });

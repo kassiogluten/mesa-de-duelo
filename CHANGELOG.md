@@ -6,16 +6,20 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
-## [0.45.0] - 2026-10-25
+## [0.46.0] - 2026-10-25
 
 ### Novo
 
 - **Monarca à mostra.** Quem é o monarca ganha um selo de coroa ao lado do retrato, que pulsa quando a coroa troca de mãos. Passando o mouse ou tocando, aparece a regra: o monarca compra um card no começo da etapa final, e quem causar dano de combate a ele passa a ser o monarca.
 - **Terrenos do turno.** No turno de cada jogador, um selo pequeno ao lado do retrato mostra quantos terrenos ele já jogou e quantos pode jogar, como 0/1, contando os terrenos extras de cartas como Azusa e Exploration. O selo fica apagado quando não dá para jogar mais nenhum.
 - **Permanente roubada.** Uma permanente controlada por quem não é o dono (Threaten, Control Magic, Hostage Taker) ganha um ícone discreto embaixo da carta. Passando o mouse na carta, aparece embaixo da imagem a quem ela pertence e quem a controla agora; o mesmo vale para os outros estados abaixo, que também aparecem no inspetor.
-- **Criatura incitada.** A criatura incitada ganha um ícone embaixo da carta. O detalhe diz quem incitou, que ela precisa atacar em todo combate e atacar outro jogador, e até quando dura.
+- **Criatura atiçada.** A criatura atiçada ganha um ícone embaixo da carta. O detalhe diz quem atiçou, que ela precisa atacar em todo combate e atacar outro jogador, e até quando dura.
 - **Escudos de regeneração.** A permanente com regeneração pronta mostra o escudo embaixo da carta, com a quantidade quando houver mais de um, e o detalhe explica o que acontece da próxima vez que ela seria destruída.
 - **O que a carta escolheu.** Cartas que escolhem algo ao entrar mostram a escolha num selo pequeno embaixo da carta: o tipo do Cavern of Souls, a cor do Iona, a carta nomeada pela Pithing Needle, o jogador da Stuffy Doll, o número ou o modo. O texto completo aparece ao passar o mouse e no inspetor.
+
+### Corrigido
+
+- **Ver a carta antes de escolher.** Nas escolhas de carta, como o terreno que uma fetch land vai buscar, passar o mouse numa opção mostra a carta ampliada, e o botão direito (ou segurar o dedo, no celular) abre o detalhe completo. Um clique normal continua escolhendo a carta.
 
 ## [0.44.0] - 2026-10-24
 

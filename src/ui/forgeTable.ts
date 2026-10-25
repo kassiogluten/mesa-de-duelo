@@ -1597,7 +1597,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const on = pos >= 0 ? 'on' : '';
       const badge = isOrder && pos >= 0 ? `<span class="q-badge">${pos + 1}</span>` : on && !single ? '<span class="q-badge">✓</span>' : '';
       const card = typeof o !== 'string' && o.card ? `<div class="q-face">${face(o.card, 'normal')}</div>` : '';
-      return `<button class="q-opt ${on} ${card ? 'has-card' : ''}" data-q-opt="${i}">${card}<span>${optionHTML(optLabel(o))}</span>${badge}</button>`;
+      const peek = typeof o !== 'string' && o.card && !o.card.faceDown && o.card.name ? ` data-q-card="${o.card.id}"` : '';
+      return `<button class="q-opt ${on} ${card ? 'has-card' : ''}" data-q-opt="${i}"${peek}>${card}<span>${optionHTML(optLabel(o))}</span>${badge}</button>`;
     }).join('');
     const n = qState.picked.length;
     const ready = n >= min && n <= max;
@@ -1972,7 +1973,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (el.dataset.event) return timeline.history.find(event => event.seq === Number(el.dataset.event))?.card;
     const stackId = el.dataset.stack ?? el.dataset.stackInspect;
     if (stackId !== undefined && client?.state) return (el.closest('#fStackGallery') ? client.state.stack : stackPresentation(client.state, timeline.current?.event).stack).find(item => item.id === Number(stackId))?.source;
-    const id = el.dataset.inspect ?? el.dataset.fid ?? el.dataset.peek;
+    const id = el.dataset.inspect ?? el.dataset.fid ?? el.dataset.peek ?? el.dataset.qCard;
     return id === undefined ? undefined : findCard(Number(id));
   }
 
@@ -2357,7 +2358,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (t.id === 'fPace') { fast = t.value === 'fast'; try { localStorage.setItem('mesa:pace', fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
   });
-  const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect]';
+  const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect],[data-q-card]';
   root.addEventListener('pointerover', e => {
     if ((e as PointerEvent).pointerType !== 'mouse') return;
     const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);

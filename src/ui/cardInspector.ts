@@ -11,7 +11,7 @@ export interface InspectorCard {
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
   classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
   merged?: MergedPart[];
-  /** Estados da permanente explicados por extenso (controle trocado, incitada, regeneração, escolhas). */
+  /** Estados da permanente explicados por extenso (controle trocado, atiçada, regeneração, escolhas). */
   notes?: string[];
 }
 type MergedPart = { name?: string; image?: string; faceDown?: boolean };
