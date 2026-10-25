@@ -12,6 +12,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 - **Parar no turno do oponente.** Em **Opções**, escolha as etapas do turno do oponente em que o jogo deve parar para você: manutenção, compra, as principais, cada etapa do combate ou a etapa final. Nelas o jogo segura a prioridade com você, mesmo sem nada que dê para jogar e com **Passar respostas** ligado, e você passa quando quiser. As etapas marcadas ganham um ponto dourado na trilha de fases durante o turno do oponente, e a etapa em que o jogo está parado para você fica com um anel dourado. A escolha vale para a partida inteira e fica guardada no navegador.
 - **Mutação à mostra.** Uma criatura mutada agora tem o selo **Mutada** na mesa, com quantas cartas a formam, e as bordas das cartas de baixo aparecem atrás dela. Passando o mouse ou inspecionando, aparece qual carta está por cima e quais estão embaixo, com o texto de cada uma, já que a criatura tem as habilidades de todas.
+- **Novidades em imagens.** O painel **Novidades** ganhou o link **Ver as novidades em imagens**, que abre uma página com prints de como cada mudança aparece na mesa, versão por versão. Toque numa imagem para ampliar. As versões com imagens têm também um atalho **ver em imagens** ao lado do número.
 
 ### Corrigido
 

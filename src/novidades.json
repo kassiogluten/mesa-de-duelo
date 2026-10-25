@@ -1,0 +1,16 @@
+{
+  "0.44.0": {
+    "Mutação à mostra": [
+      { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." }
+    ],
+    "Criaturas preparadas à mostra": [
+      { "img": "0.44.0/preparada.webp", "legenda": "A criatura preparada ganha o selo **Preparada**. Passando o mouse, aparece qual feitiço dá para conjurar." }
+    ],
+    "Feitiço preparado no exílio": [
+      { "img": "0.44.0/preparado-exilio.webp", "legenda": "No exílio, a cópia do feitiço aparece marcada como **Preparado**, e não mais como ficha." }
+    ],
+    "Enjoo de invocação até o próximo turno": [
+      { "img": "0.44.0/enjoo.webp", "legenda": "Já no turno do oponente, a criatura que acabou de entrar continua apagada e com o selo de enjoo." }
+    ]
+  }
+}

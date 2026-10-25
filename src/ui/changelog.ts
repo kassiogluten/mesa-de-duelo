@@ -1,31 +1,41 @@
 import changelog from '../../CHANGELOG.md?raw';
+import visuals from '../novidades.json';
 import { esc } from './cardtext';
 
-interface Release { version: string; date: string; html: string }
+/** Um item da lista: o título em negrito do começo ("Relógio da partida") e o grupo em que está (Novo, Mudou...). */
+export interface ReleaseItem { group: string; title: string; text: string }
+export interface Release { version: string; date: string; html: string; items: ReleaseItem[] }
+/** Imagens de cada item em src/novidades.json: versão → título do item → figuras (arquivo em public/novidades/). */
+export interface Shot { img: string; legenda: string }
+export const VISUALS = visuals as Record<string, Record<string, Shot[]>>;
 
 /** Negrito e código, o pouco de Markdown inline que o CHANGELOG usa. */
-const inline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>');
+export const inline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>');
 
 /** Lê as seções `## [X.Y.Z] - AAAA-MM-DD` do CHANGELOG.md; o texto antes da primeira fica de fora. */
-function parse(md: string): Release[] {
+export function parse(md: string): Release[] {
   const out: Release[] = [];
   let cur: Release | null = null;
   let list = false;
+  let group = '';
   const close = () => { if (cur && list) cur.html += '</ul>'; list = false; };
   for (const raw of md.split('\n')) {
     const line = raw.trim();
     const head = /^## \[(.+?)\](?:\s*-\s*(\d{4})-(\d{2})-(\d{2}))?/.exec(line);
     if (head) {
       close();
-      cur = { version: head[1], date: head[2] ? `${head[4]}/${head[3]}/${head[2]}` : '', html: '' };
+      cur = { version: head[1], date: head[2] ? `${head[4]}/${head[3]}/${head[2]}` : '', html: '', items: [] };
+      group = '';
       out.push(cur);
       continue;
     }
     if (!cur || !line) continue;
-    if (line.startsWith('### ')) { close(); cur.html += `<h4>${inline(line.slice(4))}</h4>`; continue; }
+    if (line.startsWith('### ')) { close(); group = line.slice(4); cur.html += `<h4>${inline(line.slice(4))}</h4>`; continue; }
     if (line.startsWith('- ')) {
       if (!list) { cur.html += '<ul>'; list = true; }
       cur.html += `<li>${inline(line.slice(2))}</li>`;
+      const item = /^\*\*(.+?)\.?\*\*\s*(.*)$/.exec(line.slice(2));
+      if (item) cur.items.push({ group, title: item[1], text: item[2] });
       continue;
     }
     close();
@@ -35,7 +45,7 @@ function parse(md: string): Release[] {
   return out;
 }
 
-const RELEASES = parse(changelog);
+export const RELEASES = parse(changelog);
 export const VERSION = RELEASES[0]?.version ?? '';
 
 const SEEN_KEY = 'mesa:novidades';
@@ -55,8 +65,9 @@ export function mountChangelog(host: HTMLElement) {
       Novidades <span class="news-ver">v${esc(VERSION)}</span><span class="news-dot" ${seen() === VERSION ? 'hidden' : ''}></span><span class="news-sync" aria-hidden="true"></span>
     </button>
     <div class="news-panel" id="newsPanel" role="dialog" aria-label="Novidades" hidden>
+      <a class="news-visual-all" href="/novidades.html">Ver as novidades em imagens</a>
       ${RELEASES.map(r => `<section class="news-rel">
-        <h3>Versão ${esc(r.version)}${r.date ? ` <small>${r.date}</small>` : ''}</h3>${r.html}
+        <h3>Versão ${esc(r.version)}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
       </section>`).join('')}
     </div>`;
   host.append(el);
