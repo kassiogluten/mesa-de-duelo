@@ -6,8 +6,8 @@ import { adminError, adminFetch, adminSession, saveAdminSession } from './sessio
 import { issueBody, issueTitle, newIssueUrl, reportOf } from './reportSummary';
 
 /*
- * Área de admin (/admin.html): os relatos guardados na ponte, com estado, nota e issue, e os links das páginas de
- * teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
+ * Área de admin (/admin.html): os relatos guardados na ponte, com estado, nota e issue, as partidas vivas e as
+ * concluídas (histórico por mês) e os links das páginas de teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
  */
 
 type Status = 'novo' | 'visto' | 'issue' | 'resolvido' | 'descartado';
@@ -77,7 +77,7 @@ function shell() {
   root.innerHTML = `<header class="adm-top"><a class="adm-brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
     <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
     <button class="adm-ghost" data-act="logout">Sair</button></header>
-    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas em andamento" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
+    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admHistorico" class="adm-history"></div></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
   root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova.</p>
     <ul class="adm-pages">${TEST_PAGES.map(([href, title, text]) => `<li><a class="adm-card adm-page" href="${href}" target="_blank" rel="noopener"><strong>${esc(title)}</strong><span>${esc(text)}</span><code>${esc(href)}</code></a></li>`).join('')}</ul>`;
   syncTab();
@@ -91,7 +91,7 @@ function syncTab() {
   root.querySelector<HTMLElement>('#admPartidas')!.hidden = current !== 'partidas';
   clearInterval(matchesTimer);
   // Na aba de partidas, a lista se atualiza sozinha a cada 10 s.
-  if (current === 'partidas') { void loadMatches(); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
+  if (current === 'partidas') { void loadMatches(); void loadHistory(historyMonth); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
 }
 
 // ---------------------------------------------------------------- partidas
@@ -108,7 +108,7 @@ const ago = (iso: string) => {
 };
 
 async function loadMatches() {
-  const section = root.querySelector<HTMLElement>('#admPartidas');
+  const section = root.querySelector<HTMLElement>('#admVivas');
   if (!section) return;
   try {
     const response = await adminFetch('partidas');
@@ -131,6 +131,81 @@ async function loadMatches() {
   } catch { section.innerHTML = '<p class="adm-error">Não consegui falar com a ponte. Ela está no ar?</p>'; }
 }
 addEventListener('hashchange', () => { if (root.querySelector('.adm-top')) syncTab(); });
+
+// ---------------------------------------------------------------- histórico
+
+/** Uma partida concluída, como a ponte grava (veja MatchHistory.java): os índices apontam para players. */
+interface PastMatch {
+  id: string; startedAt: string; endedAt: string; ms: number; format: string; length: string; mode: 'ia' | 'rede'; public?: boolean;
+  winner: number | null;
+  players: { name?: string; ai: boolean; deck: string; colors: string; commander?: string; wins: number }[];
+  games: { winner: number | null; turns: number; ms?: number; end?: string; result: string[]; mull: number[] }[];
+}
+const LOSS: Record<string, string> = { LifeReachedZero: 'vida', Conceded: 'desistência', Milled: 'grimório vazio', Poisoned: 'veneno', CommanderDamage: 'dano de comandante', SpellEffect: 'efeito de carta', OpponentWon: 'vitória de outro' };
+let historyMonth = '';
+let past: PastMatch[] = [];
+const minutes = (ms: number) => ms < 60000 ? `${Math.round(ms / 1000)} s` : ms < 3600000 ? `${Math.round(ms / 60000)} min` : `${Math.floor(ms / 3600000)} h ${Math.round(ms / 60000) % 60} min`;
+const monthName = (month: string) => new Date(`${month}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+const playerName = (p: PastMatch['players'][number], i: number) => p.name ?? (p.ai ? 'IA' : i === 0 ? 'Jogador' : `Jogador ${i + 1}`);
+const average = (values: number[]) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+
+async function loadHistory(month = '') {
+  const section = root.querySelector<HTMLElement>('#admHistorico');
+  if (!section) return;
+  try {
+    const response = await adminFetch(month ? `historico/${month}` : 'historico');
+    if (response.status === 401) { clearInterval(matchesTimer); login('A sessão acabou. Entre de novo.'); return; }
+    if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
+    const json = await response.json() as { meses: string[]; mes: string; partidas: PastMatch[] };
+    historyMonth = json.mes; past = json.partidas;
+    renderHistory(json.meses);
+  } catch { section.innerHTML = '<p class="adm-error">Não consegui ler o histórico na ponte.</p>'; }
+}
+
+function renderHistory(months: string[]) {
+  const section = root.querySelector<HTMLElement>('#admHistorico')!;
+  const count = (test: (m: PastMatch) => boolean) => past.filter(test).length;
+  const formats = Object.entries(FORMATS).map(([key, label]) => [label, count(m => m.format === key)] as const).filter(([, n]) => n);
+  const games = past.flatMap(m => m.games);
+  // Decks humanos e da IA juntos: quantas partidas cada um jogou e quantas venceu.
+  const decks = new Map<string, { played: number; won: number }>();
+  for (const m of past) m.players.forEach((p, i) => {
+    const d = decks.get(p.deck) ?? { played: 0, won: 0 };
+    d.played++; if (m.winner === i) d.won++;
+    decks.set(p.deck, d);
+  });
+  const topDecks = [...decks].sort((a, b) => b[1].played - a[1].played || b[1].won - a[1].won).slice(0, 5);
+  const tile = (label: string, value: string, detail = '') => `<div class="adm-card adm-tile${value.length > 12 ? ' long' : ''}"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ''}</div>`;
+  const ending = (m: PastMatch, g: PastMatch['games'][number]) => g.winner === null ? 'empate'
+    : g.result.map((r, i) => LOSS[r] ? `${playerName(m.players[i], i)} por ${LOSS[r]}` : null).filter(Boolean).join(', ');
+  section.innerHTML = `<div class="adm-head"><h2>Concluídas</h2><p class="adm-muted">${historyMonth ? `${past.length} ${past.length === 1 ? 'partida' : 'partidas'} em ${esc(monthName(historyMonth))}` : 'Nenhuma partida concluída ainda.'}</p>
+      ${months.length ? `<label class="adm-month">Mês<select data-history-month>${months.map(m => `<option value="${m}"${m === historyMonth ? ' selected' : ''}>${esc(monthName(m))}</option>`).join('')}</select></label>` : ''}
+      <button class="adm-ghost" data-act="history">Atualizar</button>${historyMonth ? '<button class="adm-ghost" data-act="history-download">Baixar .jsonl</button>' : ''}</div>
+    ${past.length ? `<div class="adm-tiles">
+      ${tile('Partidas', String(past.length), `${count(m => m.mode === 'ia')} contra a IA · ${count(m => m.mode === 'rede')} em rede`)}
+      ${tile('Formatos', formats.map(([label, n]) => `${label} ${n}`).join(' · '))}
+      ${tile('Duração média', minutes(average(past.map(m => m.ms))), `${games.length} ${games.length === 1 ? 'jogo' : 'jogos'} no total`)}
+      ${tile('Turnos por jogo', average(games.map(g => g.turns)).toFixed(1).replace('.', ','), `${games.flatMap(g => g.mull).reduce((a, b) => a + b, 0)} mulligans`)}
+      <div class="adm-card adm-tile adm-decks"><span>Decks mais jogados</span><ol>${topDecks.map(([deck, d]) => `<li><strong>${esc(deck)}</strong> <small>${d.played} ${d.played === 1 ? 'partida' : 'partidas'} · ${Math.round(100 * d.won / d.played)}% de vitórias</small></li>`).join('')}</ol></div>
+    </div>
+    <ul class="adm-past">${past.map(m => `<li class="adm-card adm-past-row">
+      <div class="adm-row-top"><strong>${esc([FORMATS[m.format] ?? m.format, m.length === 'bo3' ? 'melhor de três' : null].filter(Boolean).join(' · '))}</strong>
+        <span class="adm-status">${m.mode === 'ia' ? 'contra a IA' : m.public ? 'sala pública' : 'sala privada'}</span><time>${when(m.endedAt)}</time></div>
+      <ul class="adm-players">${m.players.map((p, i) => `<li class="${m.winner === i ? 'won' : ''}"><span class="adm-dot ${p.ai ? 'ai' : 'on'}"></span><strong>${esc(playerName(p, i))}</strong>
+        <span class="adm-muted"> · ${esc(p.commander ?? p.deck)} (${esc(p.colors)})</span>${m.length === 'bo3' ? ` · ${p.wins} ${p.wins === 1 ? 'vitória' : 'vitórias'}` : ''}${m.winner === i ? ' · venceu' : ''}</li>`).join('')}</ul>
+      <p class="adm-muted">${esc([minutes(m.ms), ...m.games.map((g, n) => `${m.games.length > 1 ? `jogo ${n + 1}: ` : ''}${g.turns} turnos, ${ending(m, g)}`)].join(' · '))}</p></li>`).join('')}</ul>`
+    : historyMonth ? '<p class="adm-empty">Nenhuma partida neste mês.</p>' : ''}`;
+}
+
+async function downloadHistory() {
+  const response = await adminFetch(`historico/${historyMonth}.jsonl`);
+  if (!response.ok) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(await response.blob());
+  a.download = `partidas-${historyMonth}.jsonl`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
 
 // ---------------------------------------------------------------- relatos
 
@@ -267,6 +342,8 @@ root.addEventListener('click', async e => {
       break;
     case 'reload': details.clear(); await load(); break;
     case 'matches': await loadMatches(); break;
+    case 'history': await loadHistory(historyMonth); break;
+    case 'history-download': await downloadHistory(); break;
     case 'back': selected = null; renderList(); break;
     case 'issue':
       // A issue abre no GitHub; aqui o relato já fica como "Virou issue", esperando o número.
@@ -303,6 +380,7 @@ root.addEventListener('submit', e => {
 
 root.addEventListener('input', e => {
   const t = e.target as HTMLInputElement | HTMLSelectElement;
+  if (t.hasAttribute('data-history-month')) { void loadHistory(t.value); return; }
   if (!t.dataset.filter) return;
   filter = { ...filter, [t.dataset.filter]: t.value };
   if (t instanceof HTMLInputElement) {

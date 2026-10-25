@@ -95,6 +95,10 @@ final class Session {
     /** Início do jogo atual (cada jogo de uma melhor de três conta do zero) e quanto ele durou, -1 enquanto não termina. */
     private volatile long gameSince;
     private volatile long gameMs = -1;
+    /** Duração de cada jogo já terminado da partida atual, na ordem, para o histórico. */
+    private final List<Long> gameDurations = new ArrayList<>();
+    /** Onde vai o resumo de cada partida concluída (veja {@link MatchHistory}); a repetição de relatos não grava. */
+    private volatile java.util.function.Consumer<JsonObject> history = ignored -> { };
     private final AtomicBoolean dirty = new AtomicBoolean();
     private final AtomicInteger questionSeq = new AtomicInteger();
     private volatile HostedMatch match;
@@ -154,6 +158,8 @@ final class Session {
         s.seats[0].bind(host, name, deck);
         return s;
     }
+
+    void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
 
     boolean isRoom() { return room; }
     boolean isPublic() { return room && publicRoom; }
@@ -230,6 +236,7 @@ final class Session {
         matchId = UUID.randomUUID().toString();
         events.reset(); stateVersion.set(0);
         matchPhase = "playing"; gameNumber = 1; abandoned = false;
+        gameDurations.clear();
         HostedMatch m = new HostedMatch();
         MatchLifecycle life = new MatchLifecycle(game -> {
             if (match != m) return;
@@ -303,10 +310,95 @@ final class Session {
         matchPhase = matchOver() ? "complete" : "sideboarding";
         if (gameSince > 0) gameMs = System.currentTimeMillis() - gameSince;
         Metrics.gameFinished(config.format(), room);
+        gameDurations.add(gameMs);
+        if (ended.getMatch() != null && ended.getMatch().isMatchOver()) {
+            try { history.accept(historyJson(ended.getMatch())); }
+            catch (RuntimeException e) { System.err.println("Histórico: resumo da partida falhou: " + e); }
+        }
         if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
         sideboardId++;
         for (Seat seat : seats) { seat.sideboardReady = false; seat.approvedDeck = null; }
         markDirty();
+    }
+
+    /**
+     * Resumo final de uma partida concluída, uma linha do {@link MatchHistory}. Os índices de {@code winner} e dos
+     * arrays de cada jogo apontam para {@code players}, na ordem do Forge (humanos antes da IA). O apelido só entra
+     * nas salas em rede: contra a IA o humano não digita nome ("Você").
+     *
+     * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, winner: índice|null,
+     *  players:[{name?, ai, deck, colors, commander?, wins}],
+     *  games:[{winner: índice|null, turns, ms?, end, result:["win"|"draw"|motivo da derrota do Forge], mull:[n]}]}
+     */
+    JsonObject historyJson(forge.game.Match fm) {
+        long now = System.currentTimeMillis();
+        JsonObject o = new JsonObject();
+        o.addProperty("id", matchId);
+        o.addProperty("startedAt", java.time.Instant.ofEpochMilli(playingSince).truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString());
+        o.addProperty("endedAt", java.time.Instant.ofEpochMilli(now).truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString());
+        o.addProperty("ms", now - playingSince);
+        o.addProperty("format", config.format()); o.addProperty("length", config.matchLength());
+        o.addProperty("mode", Metrics.mode(room));
+        if (room) o.addProperty("public", publicRoom);
+        List<RegisteredPlayer> order = fm.getPlayers();
+        JsonArray players = new JsonArray();
+        int best = -1, bestWins = -1;
+        boolean tie = false;
+        for (int i = 0; i < order.size(); i++) {
+            RegisteredPlayer rp = order.get(i);
+            Seat seat = null;
+            for (Seat each : seats) if (each.registered == rp) seat = each;
+            JsonObject p = new JsonObject();
+            if (room && seat != null) p.addProperty("name", seat.name);
+            p.addProperty("ai", seat == null);
+            Deck deck = seat != null && seat.deck != null ? seat.deck : rp.getDeck();
+            p.addProperty("deck", deck.getName());
+            p.addProperty("colors", colors(deck));
+            if (config.commander()) {
+                List<String> commanders = new ArrayList<>();
+                for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getName());
+                if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
+            }
+            int wins = fm.getGamesWonBy(rp.getPlayer());
+            p.addProperty("wins", wins);
+            if (wins > bestWins) { best = i; bestWins = wins; tie = false; } else if (wins == bestWins) tie = true;
+            players.add(p);
+        }
+        if (bestWins > 0 && !tie) o.addProperty("winner", best); else o.add("winner", com.google.gson.JsonNull.INSTANCE);
+        o.add("players", players);
+        JsonArray games = new JsonArray();
+        int n = 0;
+        for (forge.game.GameOutcome outcome : fm.getOutcomes()) {
+            JsonObject g = new JsonObject();
+            int winner = outcome.getWinningPlayer() == null ? -1 : order.indexOf(outcome.getWinningPlayer());
+            if (winner >= 0) g.addProperty("winner", winner); else g.add("winner", com.google.gson.JsonNull.INSTANCE);
+            g.addProperty("turns", outcome.getLastTurnNumber());
+            if (n < gameDurations.size() && gameDurations.get(n) >= 0) g.addProperty("ms", gameDurations.get(n));
+            if (outcome.getWinCondition() != null) g.addProperty("end", outcome.getWinCondition().name());
+            JsonArray result = new JsonArray(), mull = new JsonArray();
+            for (RegisteredPlayer rp : order) {
+                forge.game.player.PlayerStatistics stats = null;
+                for (var e : outcome) if (e.getKey() == rp) stats = e.getValue();
+                var po = stats == null ? null : stats.getOutcome();
+                result.add(po == null ? "draw" : po.hasWon() ? "win" : po.lossState != null ? po.lossState.name() : "draw");
+                mull.add(stats == null ? 0 : stats.getMulliganCount());
+            }
+            g.add("result", result); g.add("mull", mull);
+            games.add(g);
+            n++;
+        }
+        o.add("games", games);
+        return o;
+    }
+
+    /** Cores do deck (comandantes e grimório) em WUBRG; "C" para incolor. */
+    static String colors(Deck deck) {
+        int mask = 0;
+        for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Commander})
+            for (var e : deck.getOrCreate(section)) mask |= e.getKey().getRules().getColor().getColor();
+        StringBuilder sb = new StringBuilder();
+        for (byte c : MagicColor.WUBRG) if ((mask & c) != 0) sb.append(MagicColor.toShortString(c));
+        return sb.length() == 0 ? "C" : sb.toString();
     }
 
     private synchronized void submitSideboard(Seat seat, JsonObject msg, boolean unchanged) {

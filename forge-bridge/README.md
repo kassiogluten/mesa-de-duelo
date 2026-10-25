@@ -155,8 +155,21 @@ Rotas em `/api/admin/` para a página `/admin.html` do site. A senha vem de `MES
 
 - `POST login {password}` devolve `{token, expiresAt}` (12 horas, só em memória: reiniciar a ponte pede login de novo). As outras rotas pedem `Authorization: Bearer <token>`. Cinco senhas erradas em 15 minutos bloqueiam o login daquele IP (o IP só como resumo, como nos relatos).
 - `GET partidas`: partidas e salas vivas, com estado, turno, fase, de quem é a vez e cada jogador (nome, IA ou humano, conectado, vida, deck). Sem tokens nem cartas.
+- `GET historico[/AAAA-MM]`: `{meses, mes, partidas}` com as partidas concluídas do mês (o mais recente, sem mês). `GET historico/AAAA-MM.jsonl` baixa o arquivo do mês.
 - `GET relatos`: o índice (com `summary`, o começo da descrição) e o tratamento de cada um. `GET relatos/{código}` devolve o `.json.gz` guardado.
 - `PUT relatos/{código}/estado {status, note?, issue?}`: `novo`, `visto`, `issue`, `resolvido` ou `descartado`, guardado em `relatos/estado.json`. `DELETE relatos/{código}` apaga o relato.
+
+### Histórico de partidas
+
+Cada partida **concluída** (contra a IA ou em rede; abandonadas e a repetição de relatos ficam de fora) vira uma linha JSON em `partidas/AAAA-MM.jsonl`, ao lado da pasta `relatos/` (`/data/partidas` no Docker), pelo mês do fim em UTC. Só o resumo final, umas centenas de bytes, então nada é apagado:
+
+```json
+{"id":"…","startedAt":"…","endedAt":"…","ms":2280000,"format":"pauper","length":"bo3","mode":"rede","public":true,"winner":0,
+ "players":[{"name":"Ana","ai":false,"deck":"Elfos","colors":"G","wins":2},{"name":"Bruno","ai":false,"deck":"Burn","colors":"R","wins":1}],
+ "games":[{"winner":0,"turns":7,"ms":600000,"end":"AllOpponentsLost","result":["win","LifeReachedZero"],"mull":[0,1]}]}
+```
+
+Os índices (`winner` e os arrays de cada jogo) apontam para `players`, na ordem do Forge (humanos antes da IA). `result` traz `win`, `draw` ou o motivo da derrota do Forge (`LifeReachedZero`, `Conceded`, `Milled`, `Poisoned`, `CommanderDamage`...). O apelido só entra nas salas em rede (contra a IA o humano não digita nome) e `commander` só no Commander. A área de admin mostra o histórico na aba **Partidas**, com totais do mês, e baixa o `.jsonl`.
 
 ### Repetir um relato no Forge
 

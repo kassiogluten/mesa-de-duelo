@@ -69,7 +69,7 @@ public class AdminTest {
         assertFalse("no seat token in the summary", summary.toString().contains(waiting.seats[0].token));
 
         var all = new com.google.gson.JsonArray(); all.add(summary);
-        Admin admin = new Admin(store(), () -> all, "abre-te", now::get);
+        Admin admin = new Admin(store(), () -> all, null, "abre-te", now::get);
         assertEquals(401, admin.handle("GET", "partidas", null, new byte[0], "ip").status());
         JsonObject list = json(admin.handle("GET", "partidas", login(admin), new byte[0], "ip"));
         assertEquals("ABCD", list.getAsJsonArray("partidas").get(0).getAsJsonObject().get("code").getAsString());

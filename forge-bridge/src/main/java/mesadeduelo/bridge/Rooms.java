@@ -86,6 +86,10 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     void replay(Replay r) { replay = r; }
 
+    /** Resumo das partidas concluídas (veja {@link MatchHistory}); sem ele, nada é gravado. */
+    private volatile java.util.function.Consumer<JsonObject> history = ignored -> { };
+    void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
+
     /** O diário da partida em que o token ocupa um assento, viva ou encerrada há pouco; null se não houver. */
     /** Partidas e salas vivas, para a área de admin (mais recentes primeiro). */
     JsonArray adminSessions() {
@@ -333,6 +337,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config) {
         leave(ch);
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
+        s.history(history);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.start();
@@ -349,6 +354,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom) {
         leave(ch);
         Session s = Session.room(newCode(4), ch, name, deck, config, publicRoom);
+        s.history(history);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.sendRoom(s.seats[0]);

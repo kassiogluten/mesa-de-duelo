@@ -112,3 +112,22 @@ body { min-height: 100%; height: auto; }
 .adm-dot.off { background: var(--red); }
 .adm-dot.ai { background: #59b5ff; }
 .adm-id { font-size: 12px; overflow-wrap: anywhere; }
+
+/* Partidas concluídas */
+.adm-history { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); }
+.adm-history h2 { margin: 0; font: 600 22px var(--display); }
+#admin .adm-month { grid-auto-flow: column; align-items: center; gap: 8px; margin-left: auto; }
+.adm-history .adm-month ~ .adm-ghost { margin-left: 0; }
+.adm-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+.adm-tile { display: grid; align-content: start; gap: 4px; padding: 12px 14px; }
+.adm-tile span { color: var(--muted); font: 600 13px var(--body); }
+.adm-tile strong { font: 600 22px var(--display); font-variant-numeric: tabular-nums; }
+.adm-tile small { color: var(--muted); font-size: 13px; }
+.adm-tile.long strong { font-size: 17px; line-height: 1.3; }
+.adm-decks { grid-column: span 2; }
+.adm-decks ol { display: grid; gap: 2px; margin: 0; padding-left: 20px; font-size: 14px; }
+.adm-decks ol strong { font: 600 14px var(--body); }
+.adm-past { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.adm-past-row { display: grid; gap: 6px; padding: 12px 14px; }
+.adm-players li.won strong { color: var(--gold-light); }
+@media (max-width: 860px) { .adm-decks { grid-column: auto; } #admin .adm-month { margin-left: 0; } }

@@ -45,6 +45,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  * Erros de senha contam por IP (só o resumo, como nos relatos): 5 em 15 minutos e o login fica bloqueado.
  *
  *   GET    partidas                partidas e salas vivas na ponte (quem joga, conectado ou não, turno)
+ *   GET    historico[/AAAA-MM]     {meses, mes, partidas}: as partidas concluídas do mês (o mais recente sem mês)
+ *   GET    historico/AAAA-MM.jsonl o arquivo do mês, para baixar
  *   GET    relatos                 índice com o estado de cada relato
  *   GET    relatos/{código}        o arquivo .json.gz guardado
  *   PUT    relatos/{código}/estado {status, note?, issue?}
@@ -65,6 +67,8 @@ final class Admin {
     private final FeedbackStore store;
     /** Partidas vivas (as salas da ponte); devolve uma lista vazia nos testes. */
     private final java.util.function.Supplier<JsonArray> matches;
+    /** Partidas concluídas; null nos testes que não usam o histórico. */
+    private final MatchHistory history;
     private final byte[] password;
     private final FeedbackRateLimit failures = new FeedbackRateLimit(MAX_FAILURES, FAILURE_WINDOW);
     /** Sessões abertas: token → fim. Só em memória: reiniciar a ponte pede login de novo. */
@@ -74,19 +78,20 @@ final class Admin {
     private final ThreadPoolExecutor workers = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(32),
         r -> { Thread t = new Thread(r, "Admin"); t.setDaemon(true); return t; });
 
-    Admin(FeedbackStore store, String password, LongSupplier clock) { this(store, JsonArray::new, password, clock); }
+    Admin(FeedbackStore store, String password, LongSupplier clock) { this(store, JsonArray::new, null, password, clock); }
 
-    Admin(FeedbackStore store, java.util.function.Supplier<JsonArray> matches, String password, LongSupplier clock) {
+    Admin(FeedbackStore store, java.util.function.Supplier<JsonArray> matches, MatchHistory history, String password, LongSupplier clock) {
         this.store = store;
         this.matches = matches;
+        this.history = history;
         this.password = password == null || password.isBlank() ? null : sha(password);
         this.clock = clock;
     }
 
     /** Senha de MESA_ADMIN_PASSWORD ou -Dmesa.admin.password. */
-    static Admin fromEnvironment(FeedbackStore store, java.util.function.Supplier<JsonArray> matches) {
+    static Admin fromEnvironment(FeedbackStore store, java.util.function.Supplier<JsonArray> matches, MatchHistory history) {
         String password = System.getProperty("mesa.admin.password", System.getenv("MESA_ADMIN_PASSWORD"));
-        return new Admin(store, matches, password, System::currentTimeMillis);
+        return new Admin(store, matches, history, password, System::currentTimeMillis);
     }
 
     boolean enabled() { return password != null; }
@@ -105,6 +110,7 @@ final class Admin {
             if (path.equals("logout") && "POST".equals(method)) { sessions.remove(token(authorization)); return Response.json(200, new JsonObject()); }
             if (path.equals("relatos") && "GET".equals(method)) return list();
             if (path.equals("partidas") && "GET".equals(method)) { JsonObject o = new JsonObject(); o.add("partidas", matches.get()); return Response.json(200, o); }
+            if ((path.equals("historico") || path.startsWith("historico/")) && "GET".equals(method)) return history(path.substring("historico".length()));
             String[] parts = path.split("/");
             if (parts.length >= 2 && parts[0].equals("relatos")) {
                 String code = parts[1].toUpperCase();
@@ -166,6 +172,25 @@ final class Admin {
         }
         JsonObject o = new JsonObject();
         o.add("relatos", items); o.addProperty("totalBytes", store.totalBytes());
+        return Response.json(200, o);
+    }
+
+    /** {@code rest} é "", "/AAAA-MM" ou "/AAAA-MM.jsonl". */
+    private Response history(String rest) throws IOException {
+        if (history == null) return Response.error(404, "Histórico de partidas desligado.");
+        String month = rest.startsWith("/") ? rest.substring(1) : "";
+        if (month.endsWith(".jsonl")) {
+            Path file = history.file(month.substring(0, month.length() - ".jsonl".length()));
+            return file == null ? Response.error(404, "Sem partidas nesse mês.") : new Response(200, "application/x-ndjson; charset=utf-8", Files.readAllBytes(file));
+        }
+        java.util.List<String> months = history.months();
+        if (month.isEmpty()) month = months.isEmpty() ? "" : months.get(0);
+        else if (!month.matches("\\d{4}-\\d{2}")) throw new IllegalArgumentException("Mês inválido: use AAAA-MM.");
+        JsonObject o = new JsonObject();
+        JsonArray list = new JsonArray();
+        months.forEach(list::add);
+        o.add("meses", list); o.addProperty("mes", month);
+        o.add("partidas", month.isEmpty() ? new JsonArray() : history.read(month));
         return Response.json(200, o);
     }
 

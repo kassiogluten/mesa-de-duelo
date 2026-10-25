@@ -84,10 +84,13 @@ public final class Main {
             Feedback feedback = new Feedback(store, rooms);
             feedback.startRetention();
             server.feedback(feedback);
-            Admin admin = Admin.fromEnvironment(store, rooms::adminSessions);
+            MatchHistory history = new MatchHistory(store.dir().resolveSibling("partidas"));
+            rooms.history(history::record);
+            Admin admin = Admin.fromEnvironment(store, rooms::adminSessions, history);
             server.admin(admin);
             server.start();
             System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
+            System.out.printf("Histórico de partidas em %s%n", history.dir());
             System.out.println(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");
             System.out.printf("Modo %s: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)%n", mode, host, port);
             if (!"127.0.0.1".equals(host)) System.out.println("Aceitando conexões de outras máquinas: partidas em rede liberadas.");
