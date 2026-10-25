@@ -132,6 +132,17 @@ test('marked opponent steps show a dot on their group, and the held step gets a 
   assert.doesNotMatch(mine, /current held|Parada sua/);
 });
 
+test('the match clock shows how long the current game has run, only while it runs', () => {
+  const match = { gameNumber: 1, wins: [0, 0], draws: 0, over: false, phase: 'playing', ready: [], elapsedMs: 754_000 };
+  const html = phaseHudHTML({ ...state, match });
+  assert.match(html, /class="phase-match-clock" data-tip="Duração da partida"/);
+  assert.match(html, /<span data-match-timer aria-hidden="true">12:34<\/span>/);
+  assert.match(phaseHudHTML({ ...state, match: { ...match, gameNumber: 2 } }), /data-tip="Duração do jogo 2"/);
+  assert.doesNotMatch(phaseHudHTML({ ...state, match: { ...match, elapsedMs: undefined, gameMs: 754_000 } }), /data-match-timer/);
+  assert.doesNotMatch(phaseHudHTML({ ...state, match, gameOver: true }), /data-match-timer/);
+  assert.doesNotMatch(phaseHudHTML(state), /data-match-timer/);
+});
+
 test('with editable stops every track icon is a button that opens the menu of its group, for opponents and on your own turn', () => {
   const stops = ['UPKEEP', 'COMBAT_DAMAGE'];
   for (const s of [{ ...state, stack: [] }, { ...state, activePlayer: 2, stack: [] }]) {

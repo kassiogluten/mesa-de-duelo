@@ -204,14 +204,24 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let lastTurn = 0;
   // Relógio do turno: começa quando a mesa vê o turno mudar (ou ao abrir a partida) e anda a cada segundo.
   let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
+  // Relógio da partida: o servidor diz quanto o jogo já durou; só se reajusta se o atraso da rede passar de 2 s.
+  let gameSince = 0, gameNumber = 0;
   const tickTurnClock = () => {
     const el = root.querySelector<HTMLElement>('[data-turn-timer]');
     if (!root.isConnected || !el) { clearInterval(clockTimer); clockTimer = undefined; return; }
     el.textContent = turnTimeText(Date.now() - clockSince);
+    const game = root.querySelector<HTMLElement>('[data-match-timer]');
+    if (game && gameSince) game.textContent = turnTimeText(Date.now() - gameSince);
   };
-  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver'>) => {
+  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver' | 'match'>) => {
     const key = `${s.turn}:${s.activePlayer}`;
     if (key !== clockTurn) { clockTurn = key; clockSince = Date.now(); }
+    const elapsed = s.match?.elapsedMs;
+    if (elapsed == null) gameSince = 0;
+    else {
+      const since = Date.now() - elapsed;
+      if (s.match!.gameNumber !== gameNumber || Math.abs(since - gameSince) > 2000) { gameNumber = s.match!.gameNumber; gameSince = since; }
+    }
     tickTurnClock();
     if (!s.gameOver && !clockTimer) clockTimer = setInterval(tickTurnClock, 1000);
   };

@@ -36,6 +36,8 @@ export interface FMatch {
   gameNumber: number; wins: number[]; draws: number; over: boolean; abandoned?: boolean;
   /** Duração do jogo que acabou de terminar, em ms (medida pelo servidor); ausente enquanto ele não termina. */
   gameMs?: number;
+  /** Quanto o jogo em andamento já durou quando o estado saiu do servidor, em ms; ausente depois que ele termina. */
+  elapsedMs?: number;
   phase: 'playing' | 'sideboarding' | 'complete'; ready: boolean[];
 }
 export interface FSideboarding { id: number; main: DeckEntry[]; sideboard: DeckEntry[]; ready: boolean }

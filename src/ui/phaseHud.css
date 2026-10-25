@@ -11,6 +11,12 @@
 .phase-timer { position: relative; min-width: 34px; color: #c8d4f0; font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums; text-align: left; }
 .forge #fPhases .phase-timer[data-tip]::after { left: 0; transform: translateY(4px); }
 .forge #fPhases .phase-timer[data-tip]:hover::after { transform: none; }
+/* Relógio da partida: separado do turno por um traço, com um cronômetro para não confundir com o tempo do turno. */
+.phase-match-clock {
+  position: relative; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 4px; border-right: 1px solid #b9c7df33;
+  color: var(--muted); font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums;
+}
+.phase-match-clock svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 /* Commander com vários jogadores: retrato de quem joga o turno, com o anel na cor do dono; o nome fica na dica. */
 .phase-active-portrait {
   position: relative; display: grid; place-items: center; flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
@@ -41,6 +47,8 @@
   .forge #fPhases.phase-trail { right: 6px; bottom: 6px; gap: 4px; padding: 3px 6px 3px 3px; }
   .phase-turn-badge { min-width: 20px; height: 20px; font-size: 11px; }
   .phase-timer { min-width: 30px; font-size: 11px; }
+  .phase-match-clock { gap: 3px; padding: 0 6px 0 3px; font-size: 11px; }
+  .phase-match-clock svg { width: 12px; height: 12px; }
   .phase-active-portrait { width: 20px; height: 20px; font-size: 10px; }
   .forge #fPhases .phase-step { width: 20px; height: 20px; }
   .phase-step svg { width: 13px; height: 13px; }

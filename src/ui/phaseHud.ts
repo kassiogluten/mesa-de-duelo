@@ -25,7 +25,7 @@ const STEPS: Record<string, { group: string; detail: string }> = {
   END_OF_TURN: { group: 'end', detail: 'Etapa final' },
   CLEANUP: { group: 'end', detail: 'Limpeza' },
 };
-type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats'> & { stack?: FState['stack'] };
+type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats'> & { stack?: FState['stack']; match?: FState['match'] };
 
 function owner(state: HudState) {
   const mine = state.activePlayer === state.you;
@@ -83,6 +83,17 @@ export function turnTimeText(ms: number): string {
   return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
+/**
+ * Relógio da partida, no começo da trilha: quanto o jogo em andamento já dura, contado pelo servidor. Some no fim do
+ * jogo (o resultado mostra a duração) e com um servidor que não manda o tempo. Numa série, conta só o jogo atual.
+ */
+function matchClockHTML(state: HudState): string {
+  const elapsed = state.match?.elapsedMs;
+  if (elapsed == null || state.gameOver) return '';
+  const tip = (state.match?.gameNumber ?? 1) > 1 ? `Duração do jogo ${state.match!.gameNumber}` : 'Duração da partida';
+  return `<span class="phase-match-clock" data-tip="${tip}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.5 1.5M10 3h4"/></svg><span data-match-timer aria-hidden="true">${turnTimeText(elapsed)}</span></span>`;
+}
+
 /** Paradas no turno dos oponentes na trilha: as etapas marcadas, se dá para mudá-las agora e o grupo com o menu aberto. */
 export interface HudStops { value: readonly string[]; editable?: boolean; open?: string | null }
 
@@ -110,7 +121,7 @@ export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops:
   const marked = state.gameOver ? new Map<string, string[]>() : stopsByGroup(stops);
   const holding = !state.gameOver && holdingStop({ ...state, stack: state.stack ?? [] }, stops);
   const summary = [`Turno ${state.turn}`, owner(state), detail, holding ? 'Parada sua' : '', step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
-  return `<span class="sr-only">${esc(summary)}</span>${activePlayerPortrait(state, activePortrait)}
+  return `<span class="sr-only">${esc(summary)}</span>${matchClockHTML(state)}${activePlayerPortrait(state, activePortrait)}
     <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
     <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>`}
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}${edit ? ' editable' : ''}"${edit ? '' : ' aria-hidden="true"'}>${PHASES.map(([key, label, icon], index) => {

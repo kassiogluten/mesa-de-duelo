@@ -339,6 +339,8 @@ final class Session {
         o.addProperty("gameNumber", gameNumber); o.addProperty("over", matchOver()); o.addProperty("phase", matchPhase);
         o.addProperty("abandoned", abandoned);
         if (gameMs >= 0) o.addProperty("gameMs", gameMs);
+        // Enquanto o jogo corre, quanto tempo já passou (não a hora de início, para o relógio do navegador não importar).
+        else if (gameSince > 0 && "playing".equals(matchPhase)) o.addProperty("elapsedMs", System.currentTimeMillis() - gameSince);
         JsonArray wins = new JsonArray(), ready = new JsonArray();
         int draws = 0;
         HostedMatch m = match;
