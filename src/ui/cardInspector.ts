@@ -11,6 +11,8 @@ export interface InspectorCard {
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
   classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
   merged?: MergedPart[];
+  /** Estados da permanente explicados por extenso (controle trocado, incitada, regeneração, escolhas). */
+  notes?: string[];
 }
 type MergedPart = { name?: string; image?: string; faceDown?: boolean };
 /** Mutação: quais cartas formam a permanente, a de cima primeiro (nomes em português quando já carregados). */
@@ -53,6 +55,8 @@ function content(card: InspectorCard, compact: boolean) {
   const toughness = hidden ? undefined : card.toughness ?? sc?.toughness;
   const current = card.basePower !== undefined && (card.basePower !== power || card.baseToughness !== toughness);
   const sides = image ? sidesOf(card) : null;
+  // Na prévia, os estados da permanente ficam numa faixa abaixo da imagem; no inspetor, junto do texto.
+  const notes = hidden ? [] : card.notes ?? [];
   return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div><span class="ci-actions">${sides ? flipButtonHTML(sides, 'ci-control') : ''}${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : '<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta">Fechar</button>'}</span></header>
   <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? `<img class="ci-image" src="${esc(image)}" alt="${esc(name)}" draggable="false">` : ''}<div class="ci-details">
     ${type ? `<p class="ci-type">${esc(type)}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
@@ -62,11 +66,12 @@ function content(card: InspectorCard, compact: boolean) {
     ${card.classLevel ? `<p class="ci-strength"><strong>Nível ${card.classLevel}${card.classMaxLevel ? ` de ${card.classMaxLevel}` : ''}</strong>${card.classMaxLevel && card.classLevel >= card.classMaxLevel ? ' <span>Nível máximo</span>' : ''}</p>` : ''}
     ${card.token ? '<p class="ci-note">Ficha</p>' : ''}${card.copyOf ? `<p class="ci-note">Cópia de ${esc(card.copyOf)}</p>` : ''}
     ${(card.merged?.length ?? 0) > 1 ? `<p class="ci-note">${esc(mergedText(card.merged!))}. Nome, tipo e força vêm da carta de cima; a criatura tem as habilidades de todas.</p>${mergedRules(card.merged!)}` : ''}
+    ${compact ? '' : notes.map(note => `<p class="ci-note">${esc(note)}</p>`).join('')}
     ${card.ringBearer ? '<p class="ci-note">Portador do Anel de quem a controla. O que o Anel já faz por ele aparece no selo do Anel, ao lado do retrato do jogador.</p>' : ''}
     ${card.prepared ? `<p class="ci-note">Preparada${card.preparedSpell ? `: quem a controla pode conjurar uma cópia de ${esc(card.preparedSpell)}. Conjurar a cópia tira a preparação.` : ''}</p>` : ''}
     ${card.preparedFrom ? `<p class="ci-note">Feitiço preparado de ${esc(card.preparedFrom)}: pode ser conjurado enquanto a criatura estiver preparada.</p>` : ''}
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}
-  </div></div>`;
+  </div>${compact && notes.length ? `<ul class="ci-status">${notes.map(note => `<li>${esc(note)}</li>`).join('')}</ul>` : ''}</div>`;
 }
 /** Cartas de baixo de uma mutação, com miniatura e texto: as habilidades delas também valem. Tocar na miniatura abre a carta. */
 function mergedRules(merged: MergedPart[]) {

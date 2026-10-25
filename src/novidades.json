@@ -1,4 +1,28 @@
 {
+  "0.45.0": {
+    "Monarca à mostra": [
+      { "img": "0.45.0/monarca.webp", "legenda": "O selo **Monarca** com a coroa, ao lado do retrato de quem é o monarca." }
+    ],
+    "Terrenos do turno": [
+      { "img": "0.45.0/terrenos.webp", "legenda": "No seu turno, o selo de terreno mostra 0/1: nenhum terreno jogado de um possível." }
+    ],
+    "Permanente roubada": [
+      { "img": "0.45.0/roubada.webp", "legenda": "Os Elfos de Llanowar do seu lado, controlados pelo oponente, com o ícone de troca de controle embaixo da carta." },
+      { "img": "0.45.0/roubada-detalhe.webp", "legenda": "Passando o mouse, a faixa embaixo da imagem diz a quem a carta pertence e quem a controla agora." }
+    ],
+    "Criatura incitada": [
+      { "img": "0.45.0/incitada.webp", "legenda": "A criatura incitada, com o ícone de estrela embaixo da carta." },
+      { "img": "0.45.0/incitada-detalhe.webp", "legenda": "O detalhe diz quem incitou, que ela ataca em todo combate e até quando dura." }
+    ],
+    "Escudos de regeneração": [
+      { "img": "0.45.0/regeneracao.webp", "legenda": "O escudo de regeneração embaixo da carta." },
+      { "img": "0.45.0/regeneracao-detalhe.webp", "legenda": "O detalhe explica o que acontece da próxima vez que ela seria destruída." }
+    ],
+    "O que a carta escolheu": [
+      { "img": "0.45.0/escolha.webp", "legenda": "A Agulha Medular com a carta nomeada e a Caverna das Almas com o tipo Elf, em selos pequenos embaixo de cada carta." },
+      { "img": "0.45.0/escolha-detalhe.webp", "legenda": "Passando o mouse na Caverna das Almas, aparece o que ela escolheu." }
+    ]
+  },
   "0.44.0": {
     "Parar no turno do oponente": [
       { "img": "0.44.0/paradas-menu.webp", "legenda": "Tocando no ícone do combate, o menu mostra as etapas daquela fase. As marcadas ficam douradas e o ícone ganha um ponto." },

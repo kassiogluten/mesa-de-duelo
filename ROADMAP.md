@@ -420,12 +420,12 @@ Como aconteceu com mutação, preparar, o Anel e as masmorras: o motor já aplic
 Regra de visual para todos: na mesa, o mínimo (um ícone pequeno, um contorno, um ponto), sem cobrir a arte nem disputar atenção com P/T e marcadores. O detalhe vai no balão ao passar o mouse ou tocar, e no inspetor: o que é, de onde veio, quem escolheu, até quando vale e o que a regra faz.
 
 Prioridade alta (comum em Commander, muda decisões na hora):
-- [ ] **Monarca** (`Game.getMonarch`): selo de coroa no retrato de quem é o monarca, com balão explicando (compra no fim do turno, quem causar dano de combate toma). Aviso quando troca de mãos.
-- [ ] **Controle trocado** (`CardView.getOwner` ≠ controlador): marca na permanente roubada (Threaten, Treachery, Hostage Taker) com o nome do dono, e no inspetor "Controlada por X, dona: Y". Distinguir o "até o fim do turno" quando der.
-- [ ] **Escolhas feitas pela carta** (`getChosenType`, `getChosenColors`, `getNamedCard`, `getChosenPlayer`, `getChosenNumber`, `getChosenMode`): mostrar na permanente e no inspetor o que foi escolhido. Ex.: tipo do Cavern of Souls/Kindred Discovery, cor do Iona, carta nomeada pela Pithing Needle, oponente da Curse/Stuffy Doll.
-- [ ] **Incitada** (`Card.isGoaded`, `getGoadMap`): selo na criatura e de quem é o goad; ajuda a entender por que ela é obrigada a atacar e não pode atacar quem incitou.
-- [ ] **Escudos de regeneração** (`CardView.getShieldCount`): selo com a quantidade, como já existe para a prevenção de dano.
-- [ ] **Terrenos jogados no turno** (`Player.getLandsPlayedThisTurn` / `getMaxLandPlays`): "Terreno 0/1" perto da mão ou da trilha de fases, contando terrenos extras (Azusa, Exploration).
+- [x] **Monarca** (`Game.getMonarch`): selo de coroa no retrato de quem é o monarca, com balão explicando (compra no fim do turno, quem causar dano de combate toma). Aviso quando troca de mãos.
+- [x] **Controle trocado** (`CardView.getOwner` ≠ controlador): marca na permanente roubada (Threaten, Treachery, Hostage Taker) com o nome do dono, e no inspetor "Controlada por X, dona: Y". Ainda falta distinguir o "até o fim do turno".
+- [x] **Escolhas feitas pela carta** (`getChosenType`, `getChosenColors`, `getNamedCard`, `getChosenPlayer`, `getChosenNumber`, `getChosenMode`): mostrar na permanente e no inspetor o que foi escolhido. Ex.: tipo do Cavern of Souls/Kindred Discovery, cor do Iona, carta nomeada pela Pithing Needle, oponente da Curse/Stuffy Doll.
+- [x] **Incitada** (`Card.isGoaded`, `getGoadMap`): selo na criatura e de quem é o goad; ajuda a entender por que ela é obrigada a atacar e não pode atacar quem incitou.
+- [x] **Escudos de regeneração** (`CardView.getShieldCount`): selo com a quantidade, como já existe para a prevenção de dano.
+- [x] **Terrenos jogados no turno** (`Player.getLandsPlayedThisTurn` / `getMaxLandPlays`): "0/1" ao lado do retrato no turno do jogador, contando terrenos extras (Azusa, Exploration).
 
 Prioridade média (mecânicas de coleções específicas):
 - [ ] **Dia e noite** (`Game.isDay` / `isNight`): sol ou lua na trilha de fases, com balão da regra de troca. Some enquanto não for nem dia nem noite.

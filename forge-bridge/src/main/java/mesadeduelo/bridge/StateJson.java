@@ -127,9 +127,15 @@ final class StateJson {
             for (var entry : p.getCounters().entrySet()) if (entry.getCount() > 0) counters.addProperty(entry.getElement().toString(), entry.getCount());
             if (counters.size() > 0) o.add("counters", counters);
         }
-        // O Anel te tenta: quantas vezes já tentou o jogador (o Anel ganha uma habilidade a cada vez, até a quarta).
-        Player ringHolder = game == null ? null : game.getPlayer(p.getId());
-        if (ringHolder != null && ringHolder.getNumRingTemptedYou() > 0) o.addProperty("ringTempted", ringHolder.getNumRingTemptedYou());
+        Player engine = game == null ? null : game.getPlayer(p.getId());
+        if (engine != null) {
+            // O Anel te tenta: quantas vezes já tentou o jogador (o Anel ganha uma habilidade a cada vez, até a quarta).
+            if (engine.getNumRingTemptedYou() > 0) o.addProperty("ringTempted", engine.getNumRingTemptedYou());
+            if (engine.isMonarch()) o.addProperty("monarch", true);
+            // Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite).
+            o.addProperty("landsPlayed", engine.getLandsPlayedThisTurn());
+            o.addProperty("maxLands", engine.getMaxLandPlaysInfinite() ? -1 : engine.getMaxLandPlays());
+        }
         o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));
@@ -230,6 +236,7 @@ final class StateJson {
         o.addProperty("tapped", c.isTapped());
         o.addProperty("token", c.isToken());
         PermanentDetails.visible(o, c);
+        PermanentDetails.status(o, c, game);
         if (c.isFaceDown()) {
             o.addProperty("faceDown", true);
             if (c.getZone() == ZoneType.Battlefield) {

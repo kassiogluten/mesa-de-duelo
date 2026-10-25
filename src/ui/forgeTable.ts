@@ -4,7 +4,7 @@ import { esc, manaHTML, optionHTML, pip, richText, withoutCardIds } from './card
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { damageDetail } from './damageEffects';
-import { auraColor, permanentFx, permanentFxHTML, permanentFxText } from './permanentEffects';
+import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStatus } from './permanentEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPreview } from './cardInspector';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
@@ -29,6 +29,7 @@ import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
+import { playerStatusHTML, playerStatusText } from './playerStatus';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
@@ -1002,7 +1003,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Efeitos contínuos (item 17): moldura, brilho e selos, na borda ou fora da carta.
     const caster = s.stack.find(item => item.targets?.cards?.includes(c.id))?.controller;
     const aura = attached.find(a => /\bAura\b/.test(a.typeLine ?? ''));
-    const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura });
+    const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, playerName });
     const fxView = permanentFxHTML(fx, aura ? auraColor(aura.manaCost) : undefined);
     inner.push(...fxView.classes);
     if (faceStyle(c, true) === 'arena') {
@@ -1145,7 +1146,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function trackPlayerCounters(players: FPlayer[]) {
     counterBumps = new Map();
     for (const p of players) {
-      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}) };
+      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}), ...(p.monarch ? { MONARCH: 1 } : {}) };
       if (before) {
         const changed = new Set([...Object.keys(before), ...Object.keys(now)].filter(k => (before[k] ?? 0) !== (now[k] ?? 0) && (now[k] ?? 0) > 0));
         if (changed.size) counterBumps.set(p.id, changed);
@@ -1153,8 +1154,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lastPlayerCounters.set(p.id, { ...now });
     }
   }
-  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + dungeonText(p);
-  const playerCounters = (p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted), dungeonBadgesHTML(p, openCounter));
+  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, client?.state?.activePlayer) + dungeonText(p);
+  const playerCounters = (p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted),
+    playerStatusHTML(p, client?.state?.activePlayer, openCounter, counterBumps.get(p.id)) + dungeonBadgesHTML(p, openCounter));
 
   function emblems(p: FPlayer) {
     const list = p.emblems ?? [];
@@ -1666,6 +1668,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   // Textos do Forge (pedido, pergunta, opções): o possessivo em inglês ("você's grimório") vira português. Repetir não muda nada.
   const playerNames = () => client?.state?.players.map(p => p.name) ?? [];
+  /** Nome para as frases da mesa; o próprio jogador é "você". */
+  function playerName(id: number) { return id === client?.state?.you ? 'você' : client?.state?.players.find(p => p.id === id)?.name ?? `Jogador ${id}`; }
   function fixForgeText(s: FState) {
     const names = s.players.map(p => p.name);
     if (s.input?.message) s.input.message = fixPossessives(s.input.message, names);
@@ -1960,7 +1964,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const card = { ...c, name: c.emblem ? emblemLabel(c) : c.name,
       image: c.image ?? image(source, 'normal'),
       text: ptOf(c.name)?.text || c.text,
-      typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.typeLine };
+      typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.typeLine,
+      notes: permanentStatus(c, playerName).map(seal => seal.label) };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {

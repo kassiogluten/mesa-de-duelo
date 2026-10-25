@@ -92,3 +92,10 @@
 .shatter-shard { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); background: linear-gradient(135deg, #e9e2d0, #8c7e66); clip-path: polygon(50% 0, 100% 70%, 20% 100%); box-shadow: 0 0 4px #fff8; }
 /* Exilada ou voltando do exílio: anel de luz branca. */
 .exile-ring { position: fixed; z-index: 33; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 18px #fff, inset 0 0 14px #ffffffaa; opacity: 0; }
+/* Estados guardados pelo motor (controle trocado, incitada, regeneração, escolhas): discretos; o texto fica no balão. */
+.fx-seal.control { color: #e3a6ff; }
+.fx-seal.goaded { color: #ff9a6a; }
+.fx-seal.regen { color: #8fe0a2; }
+.fx-seal.chosen { color: #f4e7b8; }
+.fx-seal.control, .fx-seal.goaded { padding: 1px 2px; }
+.fx-chosen { display: inline-block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; }

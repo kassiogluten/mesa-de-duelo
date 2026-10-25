@@ -71,3 +71,19 @@ test('creatures that cannot attack or block show a crossed sword or shield on th
   assert.match(css, /\.fx-corner i\.no-attack \{ background-image/);
   assert.match(css, /\.fx-corner i\.no-block \{ background-image/);
 });
+
+test('engine-only states become small seals with the full sentence in the tooltip', () => {
+  const names = { 1: 'Ana', 2: 'Bruno' };
+  const fx = permanentFx(creature({ controller: 2, owner: 1, goadedBy: [1], shields: 2, chosen: { types: ['Elf'], colors: ['green'], names: ['Lightning Bolt'], player: 1 } }), { playerName: id => names[id] });
+  const byKind = Object.fromEntries(fx.seals.map(seal => [seal.kind, seal]));
+  assert.match(byKind.control.label, /Pertence a Ana; quem a controla agora é Bruno/);
+  assert.doesNotMatch(byKind.control.html, /Ana/, 'control shows only the icon on the table');
+  assert.match(byKind.goaded.label, /Incitada por Ana: .*que não seja Ana/);
+  assert.match(byKind.regen.html, /×2/);
+  assert.match(byKind.regen.label, /2 escudos de regeneração/);
+  assert.match(byKind.chosen.html, /Elf/);
+  assert.match(byKind.chosen.label, /tipo Elf; cor verde; carta nomeada Lightning Bolt; jogador Ana/);
+  assert.match(permanentFxText(fx), /controla agora é Bruno/);
+  assert.equal(permanentFx(creature({ controller: 1, owner: 1 })).seals.length, 0, 'owner equal to controller is not a steal');
+  assert.match(permanentFxHTML(fx).html, /class="fx-seal regen" title="2 escudos/);
+});
