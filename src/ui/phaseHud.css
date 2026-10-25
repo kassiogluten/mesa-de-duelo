@@ -1,7 +1,8 @@
-/* Trilha de fases compacta no estilo do Arena: no canto inferior direito, abaixo dos botões de ação; nomes só no hover. */
+/* Trilha de fases compacta no estilo do Arena: no canto inferior direito, abaixo dos botões de ação; nomes só no hover.
+   Uma camada acima dos botões, para a dica que abre para cima não ficar atrás deles. */
 .forge { grid-template-rows: max(16vh, 124px) minmax(0, 1fr) 2px minmax(0, 1fr) 23vh; }
 .forge #fPhases.phase-trail {
-  position: absolute; z-index: 9; grid-row: auto; grid-column: auto; top: auto; left: auto; right: 16px; bottom: 16px; width: auto; max-width: none;
+  position: absolute; z-index: 10; grid-row: auto; grid-column: auto; top: auto; left: auto; right: 16px; bottom: 16px; width: auto; max-width: none;
   transform: none; display: flex; flex-direction: row; align-items: center; gap: 6px; padding: 4px 8px 4px 4px;
   border: 1px solid #b9c7df26; border-radius: 999px; background: #0a1322e6; box-shadow: 0 4px 14px #0007; font: 400 12px/1.2 var(--body);
 }

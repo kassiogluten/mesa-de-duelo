@@ -5,10 +5,12 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import forge.game.Game;
+import forge.game.card.Card;
 import forge.game.event.GameEventTurnPhase;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.player.PlayerView;
+import forge.game.zone.ZoneType;
 import forge.gamemodes.match.YieldController;
 import forge.gamemodes.net.IRemote;
 import forge.gamemodes.net.event.IdentifiableNetEvent;
@@ -43,6 +45,15 @@ public class HeldStopsTest {
         YieldController yields() { return human.getYieldController(); }
         boolean autoPass() { return yields().getBoolPref(FPref.YIELD_AUTO_PASS_NO_ACTIONS); }
         void step(Player turn, PhaseType phase) { game.fireEvent(new GameEventTurnPhase(turn, phase, "")); }
+        /** Põe o jogo na etapa como o motor faz: a troca de etapa avisa a tela antes da prioridade. */
+        void enter(Player turn, PhaseType phase) { game.getPhaseHandler().devModeSet(phase, turn); }
+        boolean skipsMine(PhaseType phase) { return yields().isSkippingPhase(me.getView(), phase); }
+
+        void add(String name, Player owner) {
+            Card card = Card.fromPaperCard(DeckValidation.resolve(name), owner);
+            owner.getZone(ZoneType.Battlefield).add(card);
+            card.setZone(owner.getZone(ZoneType.Battlefield));
+        }
     }
 
     @Test public void markedOpponentStepStopsEvenWithoutActions() {
@@ -81,5 +92,34 @@ public class HeldStopsTest {
         assertFalse(f.gui.holding());
         assertTrue(f.autoPass());
         assertFalse("a etapa final continua sendo uma parada padrão", f.yields().isSkippingPhase(f.opponent.getView(), PhaseType.END_OF_TURN));
+    }
+
+    @Test public void ownUpkeepAndDrawStopOnlyForAPermanentAbility() {
+        Fixture f = new Fixture();
+        f.add("Forest", f.me);
+        f.enter(f.me, PhaseType.UPKEEP);
+        assertTrue("só habilidade de mana: a manutenção continua pulada", f.skipsMine(PhaseType.UPKEEP));
+
+        f.add("Bottle Gnomes", f.me);
+        f.enter(f.me, PhaseType.UPKEEP);
+        assertFalse("com uma habilidade usável agora a manutenção para", f.skipsMine(PhaseType.UPKEEP));
+        f.enter(f.me, PhaseType.DRAW);
+        assertTrue("a manutenção volta a ser pulada quando acaba", f.skipsMine(PhaseType.UPKEEP));
+        assertFalse("a compra também para", f.skipsMine(PhaseType.DRAW));
+        f.enter(f.me, PhaseType.MAIN1);
+        assertTrue(f.skipsMine(PhaseType.DRAW));
+
+        f.enter(f.opponent, PhaseType.UPKEEP);
+        assertTrue("no turno do oponente as paradas marcadas continuam valendo", f.yields().isSkippingPhase(f.opponent.getView(), PhaseType.UPKEEP));
+    }
+
+    @Test public void cardsInHandDoNotOpenTheOwnUpkeep() {
+        Fixture f = new Fixture();
+        Card bolt = Card.fromPaperCard(DeckValidation.resolve("Lightning Bolt"), f.me);
+        f.me.getZone(ZoneType.Hand).add(bolt);
+        bolt.setZone(f.me.getZone(ZoneType.Hand));
+        f.add("Mountain", f.me);
+        f.enter(f.me, PhaseType.UPKEEP);
+        assertTrue(f.skipsMine(PhaseType.UPKEEP));
     }
 }

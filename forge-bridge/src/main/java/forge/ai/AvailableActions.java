@@ -43,14 +43,22 @@ public final class AvailableActions {
             new ZoneScan(ZoneType.Battlefield, false),
             new ZoneScan(ZoneType.Flashback,   true));
 
+    /** Bridge addition: only the permanents, for steps where a hand card alone is no reason to stop. */
+    private static final List<ZoneScan> BATTLEFIELD = List.of(new ZoneScan(ZoneType.Battlefield, false));
+
     /** Boolean form: early-exits on the first actionable card. */
     public static boolean compute(Player player, long timeoutMs) {
-        return withAiController(player, () -> !walk(player, timeoutMs, true).isEmpty());
+        return withAiController(player, () -> !walk(player, SCANS, timeoutMs, true).isEmpty());
     }
 
     /** Set form: walks every card so highlight consumers can mark the actionable subset. */
     public static Set<CardView> collectActionable(Player player, long timeoutMs) {
-        return withAiController(player, () -> walk(player, timeoutMs, false));
+        return withAiController(player, () -> walk(player, SCANS, timeoutMs, false));
+    }
+
+    /** Bridge addition: does a permanent the player controls have a non-mana ability usable now? */
+    public static boolean computeOnBattlefield(Player player, long timeoutMs) {
+        return withAiController(player, () -> !walk(player, BATTLEFIELD, timeoutMs, true).isEmpty());
     }
 
     /** Run the predictive sweep under an AI controller so cost-adjustment chooseX
@@ -63,18 +71,18 @@ public final class AvailableActions {
         return result.get();
     }
 
-    private static Set<CardView> walk(Player player, long timeoutMs, boolean earlyExit) {
+    private static Set<CardView> walk(Player player, List<ZoneScan> scans, long timeoutMs, boolean earlyExit) {
         long deadlineNanos = System.nanoTime() + timeoutMs * 1_000_000L;
         Set<CardView> actionable = new HashSet<>();
         Set<CardView> visited = new HashSet<>();
 
-        for (ZoneScan scan : SCANS) {
+        for (ZoneScan scan : scans) {
             Iterable<Card> cards = scan.sortByCmc()
                     ? sortedCardsIn(player, scan.zone())
                     : player.getCardsIn(scan.zone());
             for (Card card : cards) {
                 if (checkTimeout(deadlineNanos, timeoutMs)) {
-                    addUnvisited(actionable, visited, player);
+                    addUnvisited(actionable, visited, player, scans);
                     return actionable;
                 }
                 CardView cv = card.getView();
@@ -172,8 +180,8 @@ public final class AvailableActions {
 
     /** Timeout fallback: mark only the cards we never got to evaluate (FP-safe).
      *  Cards we visited and ruled out keep their determination. */
-    private static void addUnvisited(Set<CardView> actionable, Set<CardView> visited, Player player) {
-        for (ZoneScan scan : SCANS) {
+    private static void addUnvisited(Set<CardView> actionable, Set<CardView> visited, Player player, List<ZoneScan> scans) {
+        for (ZoneScan scan : scans) {
             for (Card c : player.getCardsIn(scan.zone())) {
                 CardView cv = c.getView();
                 if (!visited.contains(cv)) actionable.add(cv);
