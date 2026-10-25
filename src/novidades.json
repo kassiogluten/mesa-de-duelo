@@ -12,6 +12,10 @@
     "Feitiço preparado no exílio": [
       { "img": "0.44.0/preparado-exilio.webp", "legenda": "No exílio, a cópia do feitiço aparece marcada como **Preparado**, e não mais como ficha." }
     ],
+    "Marcadores com nome em português": [
+      { "img": "0.44.0/marcadores-pt.webp", "legenda": "No Mercado Negro, o selo mostra só o raio da carga; o balão diz **Carga ×3**." },
+      { "img": "0.44.0/marcadores-pt-forca.webp", "legenda": "Marcadores +1/+1 e −1/−1 continuam com o número à vista no selo." }
+    ],
     "Enjoo de invocação até o próximo turno": [
       { "img": "0.44.0/enjoo.webp", "legenda": "Já no turno do oponente, a criatura que acabou de entrar continua apagada e com o selo de enjoo." }
     ]

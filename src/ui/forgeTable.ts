@@ -868,6 +868,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   });
 
   const COUNTER_LABEL: Record<string, string> = { P1P1: '+1/+1', M1M1: '-1/-1', LOYALTY: 'Lealdade', SHIELD: 'Escudo', STUN: 'Atordoar' };
+  /** Só os marcadores que mudam o P/T mostram o número no selo; nos outros a quantidade fica no balão. */
+  const PT_COUNTERS = new Set(['P1P1', 'M1M1']);
   const counterLabel = (k: string) => COUNTER_LABEL[k] ?? KEYWORD_LABEL[k] ?? counterName(k);
 
   /** Palavras-chave que viram marcador na carta do campo. */
@@ -949,7 +951,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       : c.classLevel ? `<span class="pt class-level" title="${esc(classLevelText(c))}"><small>Nv</small><b>${c.classLevel}</b>${c.classMaxLevel ? `<small>/${c.classMaxLevel}</small>` : ''}</span>` : '';
     const shown = Object.entries(c.counters ?? {}).filter(([k]) => !(c.planeswalker && k === 'LOYALTY'));
     const counters = shown.length
-      ? `<span class="counters">${shown.map(([k, v]) => chip('ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${v}`, v)).join('')}</span>` : '';
+      ? `<span class="counters">${shown.map(([k, v]) => chip('ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${v}`, PT_COUNTERS.has(k) ? v : undefined)).join('')}</span>` : '';
     const kws = c.creature ? keywordsOf(c) : [];
     const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip('ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k])).join('')}</span>` : '';
     // A ponte marca o comandante; uma ponte mais antiga só manda a lista de comandantes de cada jogador (mesmo id da carta).
