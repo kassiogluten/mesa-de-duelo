@@ -31,7 +31,7 @@ import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
 import { playerStatusHTML, playerStatusText } from './playerStatus';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
-import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
+import { choiceOrder, isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
 import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
 import './combatDamage.css';
@@ -1592,8 +1592,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const max = isOrder ? opts.length : q.max ?? 1;
     const single = !isOrder && max === 1;
     const anyCards = opts.some(o => typeof o !== 'string' && o.card);
-    const items = opts.map((o, i) => {
-      const pos = qState!.picked.indexOf(i);
+    const items = choiceOrder(q, label).map(i => {
+      const o = opts[i], pos = qState!.picked.indexOf(i);
       const on = pos >= 0 ? 'on' : '';
       const badge = isOrder && pos >= 0 ? `<span class="q-badge">${pos + 1}</span>` : on && !single ? '<span class="q-badge">✓</span>' : '';
       const card = typeof o !== 'string' && o.card ? `<div class="q-face">${face(o.card, 'normal')}</div>` : '';

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.47.0] - 2026-10-25
+
+### Mudou
+
+- **Busca em ordem de custo.** Ao procurar uma carta no grimório (e nas outras escolhas entre cartas, como descartar), as opções aparecem ordenadas pelo custo de mana, da mais barata para a mais cara, e por nome quando o custo empata. Fica mais fácil achar a carta certa com um tutor num grimório cheio.
+
 ## [0.46.1] - 2026-10-25
 
 ### Mudou

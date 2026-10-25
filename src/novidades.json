@@ -1,4 +1,9 @@
 {
+  "0.47.0": {
+    "Busca em ordem de custo": [
+      { "img": "0.47.0/busca-por-custo.webp", "legenda": "Procurando no grimório, as cartas vêm das de custo 1 até o Craterhoof Behemoth, de custo 8." }
+    ]
+  },
   "0.46.1": {
     "Botão Comprar na manutenção": [
       { "img": "0.46.1/manutencao-comprar.webp", "legenda": "Na sua manutenção, com a trilha acesa no **Início**, o botão de ação diz **Comprar**." }

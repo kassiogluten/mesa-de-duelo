@@ -11,7 +11,25 @@ type Label = (c: FCard) => string;
 const opt = (q: FQuestion, i: number) => { const o = q.options?.[i]; return typeof o === 'string' || !o ? { label: o ?? '' } as FOption : o; };
 
 export const isTriggerOrder = (q: FQuestion) => q.kind === 'order' && q.purpose === 'triggers';
-export const isPlayMode = (q: FQuestion) => q.method === 'getAbilityToPlay' || q.purpose === 'play-mode';
+/** Valor de mana pelo custo impresso ({X} vale 0); numa carta de duas faces, só a primeira conta. */
+export const manaValue = (cost = '') => (cost.split(' // ')[0].match(/\{[^}]+\}/g) ?? [])
+  .reduce((sum, raw) => { const x = raw.slice(1, -1); return sum + (/^\d+$/.test(x) ? +x : x === 'X' ? 0 : 1); }, 0);
+
+/**
+ * Ordem de exibição das opções de uma escolha de cartas (buscar no grimório, descartar...): por valor de mana
+ * e depois pelo nome. Devolve os índices originais, que são o que vai na resposta. Ordenar só vale quando
+ * a ordem da lista não significa nada, então escolhas de ordem e opções que não são cartas ficam como vieram.
+ */
+export function choiceOrder(q: FQuestion, name: (c: FCard) => string = c => c.name ?? '') {
+  const opts = q.options ?? [];
+  const indices = opts.map((_, i) => i);
+  const cards = opts.map(o => typeof o === 'string' ? undefined : o.card);
+  if (q.kind !== 'choose' || !cards.length || cards.some(c => !c || c.faceDown)) return indices;
+  const key = cards.map(c => ({ mv: manaValue(c!.manaCost), name: name(c!) }));
+  return indices.sort((a, b) => key[a].mv - key[b].mv || key[a].name.localeCompare(key[b].name, 'pt-BR'));
+}
+
+export const isPlayMode =(q: FQuestion) => q.method === 'getAbilityToPlay' || q.purpose === 'play-mode';
 
 // ---------- Ordem dos gatilhos ----------
 

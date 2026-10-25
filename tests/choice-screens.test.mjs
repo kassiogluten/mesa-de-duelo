@@ -96,3 +96,14 @@ test('leveling up a Class says which level it reaches', () => {
   assert.equal(screens.playChoices(q)[0].name, 'Subir para o nível 2');
   assert.match(screens.playModeHTML(q, () => '', c => c.name), /Qual habilidade de Druid Class usar\?/);
 });
+
+test('card choices are shown by mana value, then name, keeping the original indices', () => {
+  const card = (id, name, manaCost) => ({ card: { id, name, manaCost, tapped: false, token: false }, label: name });
+  const q = { id: 9, method: 'chooseCards', kind: 'choose', title: 'Procurar seu grimório', options: [
+    card(1, 'Craterhoof Behemoth', '{5}{G}{G}{G}'), card(2, 'Forest', ''), card(3, 'Llanowar Elves', '{G}'),
+    card(4, 'Fireball', '{X}{R}'), card(5, 'Birds of Paradise', '{G}'), card(6, 'Delver of Secrets // Insectile Aberration', '{U} // '),
+  ] };
+  assert.deepEqual(screens.choiceOrder(q), [1, 4, 5, 3, 2, 0]);
+  assert.deepEqual(screens.choiceOrder({ ...q, kind: 'order' }), [0, 1, 2, 3, 4, 5]);
+  assert.deepEqual(screens.choiceOrder({ ...q, options: [...q.options, 'Nenhuma'] }), [0, 1, 2, 3, 4, 5, 6]);
+});
