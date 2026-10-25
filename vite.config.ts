@@ -44,11 +44,17 @@ export default defineConfig({
       workbox: {
         // O visual e os sons ficam guardados: o jogo abre rápido e, sem servidor, ainda mostra a tela inicial.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
-        globIgnores: ['audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
+        globIgnores: ['audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // Pacotes de sons temáticos (public/audio/<pacote>/): só o clássico vai no pacote do app; os outros são guardados ao escolher.
+            urlPattern: ({ url }) => /^\/audio\/[^/]+\//.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'pacotes-de-sons', expiration: { maxEntries: 200 } },
+          },
           {
             // Prints das novidades (public/novidades/): ficam fora do pacote do app e são guardados quando vistos.
             urlPattern: ({ url }) => url.pathname.startsWith('/novidades/'),

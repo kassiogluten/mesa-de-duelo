@@ -35,8 +35,10 @@
   },
   "derivatives": {
     "05-impact.wav": "Take 4: onset trim, faster compact burst, low-pass filtering, short envelope and light physical impact layer.",
-    "08-player-hit.wav": "Take 1: onset trim, slower deeper burst, low-pass filtering, longer envelope and restrained low-body layer."
+    "08-player-hit.wav": "Take 1: onset trim, slower deeper burst, low-pass filtering, longer envelope and restrained low-body layer.",
+    "arena/05-impact.wav": "Take 4: onset trim, faster punchy burst, low-pass filtering, short envelope, drum and metal layers.",
+    "arena/08-player-hit.wav": "Take 1: onset trim, slower deep blast, darker low-pass filtering, long envelope, sub drum and rumble layers."
   },
-  "regenerate": "python3 public/audio/generate.py",
-  "notes": "The two original generated takes are bundled for deterministic offline regeneration. The other twelve cues use original procedural synthesis. Generated audio was downloaded through the Studio interface; no permanent public download URL was supplied."
+  "regenerate": "python3 public/audio/generate.py && python3 public/audio/generate_packs.py",
+  "notes": "The two original generated takes are bundled for deterministic offline regeneration. The other twelve cues use original procedural synthesis. Generated audio was downloaded through the Studio interface; no permanent public download URL was supplied. The themed packs (generate_packs.py) are original procedural synthesis too, except the two Arena damage cues adapted above."
 }

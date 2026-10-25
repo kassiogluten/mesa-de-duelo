@@ -1,4 +1,9 @@
 {
+  "0.48.0": {
+    "Pacotes de sons": [
+      { "img": "0.48.0/pacotes-de-sons.webp", "legenda": "Em **Opções**, a lista **Pacote de sons** logo abaixo do volume, com **Taverna** escolhido." }
+    ]
+  },
   "0.47.0": {
     "Busca em ordem de custo": [
       { "img": "0.47.0/busca-por-custo.webp", "legenda": "Procurando no grimório, as cartas vêm das de custo 1 até o Craterhoof Behemoth, de custo 8." }

@@ -1,6 +1,18 @@
 import type { PresentationEvent } from './presentationTimeline';
 
-export interface AudioSettings { muted: boolean; volume: number }
+/** Same cues, same file names: each themed pack lives in its own folder under audio/. */
+export const SOUND_PACKS = [
+  { id: 'classico', name: 'Clássico' },
+  { id: '8bits', name: '8 bits' },
+  { id: 'fantasia', name: 'Fantasia' },
+  { id: 'aventura', name: 'Aventura fofa' },
+  { id: 'arena', name: 'Arena épica' },
+  { id: 'taverna', name: 'Taverna' },
+  { id: 'scifi', name: 'Ficção científica' },
+  { id: 'discreto', name: 'Discreto' },
+] as const;
+export type SoundPack = typeof SOUND_PACKS[number]['id'];
+export interface AudioSettings { muted: boolean; volume: number; pack: SoundPack }
 export const SOUND_FILES = {
   draw: '01-card-draw.wav', play: '02-card-play.wav', land: '03-land.wav', cast: '04-cast.wav',
   impact: '05-impact.wav', 'player-hit': '08-player-hit.wav', 'turn-self': '06-turn.wav', wing: '07-wing.wav',
@@ -58,7 +70,12 @@ export function soundVariation(event: PresentationEvent, matchId: string, you?: 
 
 export function normalizeAudioSettings(value: Partial<AudioSettings> | null | undefined): AudioSettings {
   const volume = typeof value?.volume === 'number' && Number.isFinite(value.volume) ? Math.max(0, Math.min(1, value.volume)) : .35;
-  return { muted: value?.muted !== false, volume };
+  const pack = SOUND_PACKS.find(entry => entry.id === value?.pack)?.id ?? 'classico';
+  return { muted: value?.muted !== false, volume, pack };
+}
+
+export function soundUrl(pack: SoundPack, cue: SoundCue) {
+  return `audio/${pack === 'classico' ? '' : `${pack}/`}${SOUND_FILES[cue]}`;
 }
 
 /** Consume event IDs even when silent: enabling audio must never replay earlier events. */
@@ -106,8 +123,9 @@ export function createGameAudio() {
   let context: AudioContext | null = null;
   let master: GainNode | null = null;
   let unlocked = false;
-  const buffers = new Map<SoundCue, AudioBuffer>();
-  const loading = new Map<SoundCue, Promise<void>>();
+  // Keyed by pack/cue: a pack switched mid-load never fills the new pack with the old one's sounds.
+  const buffers = new Map<string, AudioBuffer>();
+  const loading = new Map<string, Promise<void>>();
   const voices = new Set<AudioBufferSourceNode>();
   const gate = new AudioEventGate();
   const mix = new AudioEventMix();
@@ -122,19 +140,22 @@ export function createGameAudio() {
   async function preload() {
     const ctx = context;
     if (!ctx || settings.muted) return;
+    const pack = settings.pack;
     await Promise.allSettled((Object.keys(SOUND_FILES) as SoundCue[]).map(cue => {
-      if (buffers.has(cue)) return Promise.resolve();
-      if (loading.has(cue)) return loading.get(cue)!;
-      const pending = fetch(`${import.meta.env.BASE_URL}audio/${SOUND_FILES[cue]}?v=${SOUND_REVISION}`)
+      const key = `${pack}/${cue}`;
+      if (buffers.has(key)) return Promise.resolve();
+      if (loading.has(key)) return loading.get(key)!;
+      const pending = fetch(`${import.meta.env.BASE_URL}${soundUrl(pack, cue)}?v=${SOUND_REVISION}`)
         .then(r => { if (!r.ok) throw new Error('Audio unavailable'); return r.arrayBuffer(); })
         .then(data => ctx.decodeAudioData(data))
-        .then(buffer => { buffers.set(cue, buffer); })
+        .then(buffer => { if (settings.pack === pack) buffers.set(key, buffer); })
         .catch(() => { /* A missing asset never interrupts a match. */ })
-        .finally(() => loading.delete(cue));
-      loading.set(cue, pending);
+        .finally(() => loading.delete(key));
+      loading.set(key, pending);
       return pending;
     }));
   }
+  const buffer = (cue: SoundCue) => buffers.get(`${settings.pack}/${cue}`);
   async function unlock() {
     try {
       if (!context) {
@@ -168,16 +189,25 @@ export function createGameAudio() {
       if (settings.volume === 0) silence();
       save();
     },
+    /** Troca o pacote e toca uma amostra dele (o início do seu turno), para ouvir na hora. */
+    async setPack(pack: SoundPack) {
+      settings = normalizeAudioSettings({ ...settings, pack });
+      save();
+      silence();
+      buffers.clear();
+      await preload();
+      this.cue('turn-self', .8);
+    },
     silence,
     /** Som avulso, fora da fila de eventos (lembrete de decisão parada); respeita o mudo e o volume. */
     cue(cue: SoundCue, level = 1) {
       if (settings.muted || !unlocked || document.hidden || !context || !master) return;
-      const buffer = buffers.get(cue);
-      if (!buffer) { void preload(); return; }
+      const sample = buffer(cue);
+      if (!sample) { void preload(); return; }
       if (voices.size >= MAX_VOICES) return;
       const source = context.createBufferSource();
       const gain = context.createGain();
-      source.buffer = buffer;
+      source.buffer = sample;
       gain.gain.value = level;
       source.connect(gain); gain.connect(master);
       voices.add(source);
@@ -188,8 +218,8 @@ export function createGameAudio() {
       const allowed = gate.allow(`${matchId}:${event.seq}`, { ...settings, unlocked, visible: !document.hidden, audible });
       const cue = soundForEvent(event, you);
       if (!allowed || !cue || !context || !master) return;
-      const buffer = buffers.get(cue);
-      if (!buffer) { void preload(); return; }
+      const sample = buffer(cue);
+      if (!sample) { void preload(); return; }
       const level = mix.level(event, matchId);
       if (!level) return;
       if (voices.size >= MAX_VOICES) {
@@ -200,7 +230,7 @@ export function createGameAudio() {
       const gain = context.createGain();
       const pan = context.createStereoPanner();
       const variation = soundVariation(event, matchId, you);
-      source.buffer = buffer;
+      source.buffer = sample;
       source.playbackRate.value = variation.rate;
       gain.gain.value = variation.gain * level;
       pan.pan.value = variation.pan;

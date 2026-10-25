@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.48.0] - 2026-10-25
+
+### Novo
+
+- **Pacotes de sons.** Em **Opções**, logo abaixo do volume, dá para escolher o pacote de efeitos sonoros da mesa: **Clássico** (o de sempre), **8 bits**, com bipes e ruídos de videogame antigo; **Fantasia**, com harpa, sinos e trompas; **Aventura fofa**, com marimba, bolhas e apitos de desenho; **Arena épica**, com tambores de guerra, metal e explosões pesadas; **Taverna**, com cartas na mesa de madeira, canecas, moedas, dados e alaúde; **Ficção científica**, com lasers, bipes e campos de força; e **Discreto**, só com toques curtos e baixinhos. Ao trocar, toca uma amostra do pacote escolhido, e a escolha fica guardada para as próximas partidas.
+
 ## [0.47.0] - 2026-10-25
 
 ### Mudou

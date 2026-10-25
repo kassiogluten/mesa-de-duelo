@@ -14,7 +14,7 @@ const sourceModule = async (path, imports) => import(await sourceUri(path, impor
 const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
 const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts' });
-const { AudioEventGate, AudioEventMix, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
+const { AudioEventGate, AudioEventMix, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
   return { type: 'state', you: 1, turn: 3, phase: 'MAIN1', activePlayer: 2, gameOver: false,
@@ -260,7 +260,9 @@ test('sound gate consumes muted, hidden, locked and catch-up events without repl
     assert.equal(gate.allow('a:1', base), false);
     assert.equal(gate.allow('a:2', base), true);
   }
-  assert.deepEqual(normalizeAudioSettings(null), { muted: true, volume: .35 });
+  assert.deepEqual(normalizeAudioSettings(null), { muted: true, volume: .35, pack: 'classico' });
+  assert.equal(normalizeAudioSettings({ pack: 'arena' }).pack, 'arena');
+  assert.equal(normalizeAudioSettings({ pack: 'inexistente' }).pack, 'classico');
   assert.equal(normalizeAudioSettings({ muted: false, volume: 99 }).volume, 1);
   assert.equal(normalizeAudioSettings({ volume: NaN }).volume, .35);
 });
@@ -307,10 +309,39 @@ test('audio is gesture gated, persisted, capped at four voices and stopped when 
   assert.equal(JSON.parse(stored.get('mesa:audio:v1')).muted, true);
 });
 
+test('switching sound pack loads that folder, persists it and plays a sample', async () => {
+  const listeners = new Map(), stored = new Map(), sources = [], urls = [];
+  globalThis.localStorage = { getItem: key => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) };
+  globalThis.document = { hidden: false, addEventListener: (name, cb) => listeners.set(name, cb) };
+  globalThis.fetch = async url => { urls.push(url); return { ok: true, arrayBuffer: async () => ({ url }) }; };
+  globalThis.AudioContext = class {
+    constructor() { this.state = 'suspended'; this.currentTime = 0; }
+    async resume() { this.state = 'running'; }
+    createGain() { return { gain: { value: 0, setTargetAtTime() {} }, connect() {}, disconnect() {} }; }
+    createStereoPanner() { return { pan: { value: 0 }, connect() {}, disconnect() {} }; }
+    async decodeAudioData(data) { return data; }
+    createBufferSource() {
+      const source = { playbackRate: { value: 1 }, connect() {}, disconnect() {}, start() { this.started = true; }, stop() {} };
+      sources.push(source); return source;
+    }
+  };
+  const audio = createGameAudio();
+  listeners.get('pointerdown')({ isTrusted: true });
+  audio.setMuted(false);
+  for (let i = 0; i < 12; i++) await Promise.resolve();
+  assert.ok(urls.every(url => /\/audio\/\d\d-[^/]+\.wav/.test(url)), 'classic pack stays at the audio root');
+  await audio.setPack('8bits');
+  assert.equal(JSON.parse(stored.get('mesa:audio:v1')).pack, '8bits');
+  assert.equal(urls.filter(url => url.includes('/audio/8bits/')).length, Object.keys(SOUND_FILES).length);
+  assert.equal(sources.length, 1, 'a sample of the new pack plays');
+  assert.match(sources[0].buffer.url, /\/audio\/8bits\/06-turn\.wav/);
+  audio.setMuted(true);
+});
+
 test('all shipped sound assets are short stereo PCM without clipping', async () => {
   const hashes = new Set();
-  for (const name of Object.values(SOUND_FILES)) {
-    const wav = await readFile(new URL(`../public/audio/${name}`, import.meta.url));
+  for (const pack of SOUND_PACKS) for (const cue of Object.keys(SOUND_FILES)) {
+    const wav = await readFile(new URL(`../public/${soundUrl(pack.id, cue)}`, import.meta.url));
     assert.equal(wav.toString('ascii', 0, 4), 'RIFF'); assert.equal(wav.toString('ascii', 8, 12), 'WAVE');
     assert.equal(wav.readUInt16LE(22), 2); assert.equal(wav.readUInt32LE(24), 44100); assert.equal(wav.readUInt16LE(34), 16);
     assert.ok((wav.length - 44) / (44100 * 4) <= 1.1);
@@ -320,7 +351,7 @@ test('all shipped sound assets are short stereo PCM without clipping', async () 
     assert.ok(maximum / 32767 * 1.04 * 4 * MIX_HEADROOM * stereoCrossfeed < 1, 'four panned maximum-volume voices retain mixing headroom');
     hashes.add(createHash('sha256').update(wav).digest('hex'));
   }
-  assert.equal(hashes.size, Object.values(SOUND_FILES).length, 'semantic cues must not reuse the same waveform');
+  assert.equal(hashes.size, Object.values(SOUND_FILES).length * SOUND_PACKS.length, 'semantic cues must not reuse the same waveform');
 });
 
 

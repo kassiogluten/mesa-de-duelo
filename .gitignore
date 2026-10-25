@@ -3,3 +3,4 @@ dist
 forge-bridge/target
 relatos
 .env
+__pycache__/

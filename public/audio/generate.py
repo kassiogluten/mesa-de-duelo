@@ -257,7 +257,8 @@ DESIGNS = [
 ]
 
 
-def render(name, material, duration, peak, room, compose):
+def render(name, material, duration, peak, room, compose, out=OUT, taps=((.029, 1), (.071, .45))):
+    """taps: early reflections as (delay in seconds, share of room); themed packs bring their own space."""
     mono = [0.0] * round(duration * RATE)
     compose(mono)
     mean = sum(mono) / len(mono)
@@ -265,7 +266,7 @@ def render(name, material, duration, peak, room, compose):
             for i, sample in enumerate(mono)]
     channels = []
     for offset in [0, 97]:
-        reflections = [(round(RATE * .029) + offset, room), (round(RATE * .071) + offset, room * .45)]
+        reflections = [(round(RATE * delay) + offset, room * share) for delay, share in taps]
         channels.append([(sample + sum(mono[i - d] * gain for d, gain in reflections if i >= d))
                          * min(1, (len(mono) - i - 1) / (RATE * .015)) for i, sample in enumerate(mono)])
     gain = peak / (max(abs(sample) for channel in channels for sample in channel) or 1)
@@ -274,7 +275,7 @@ def render(name, material, duration, peak, room, compose):
     clipped = sum(abs(sample) >= 32767 for sample in pcm)
     if sys.byteorder != 'little':
         pcm.byteswap()
-    path = OUT / f'{name}.wav'
+    path = out / f'{name}.wav'
     with wave.open(str(path), 'wb') as wav:
         wav.setnchannels(2)
         wav.setsampwidth(2)

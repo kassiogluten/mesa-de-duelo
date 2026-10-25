@@ -8,7 +8,7 @@ import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStat
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPreview } from './cardInspector';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
-import { createGameAudio } from './audio';
+import { createGameAudio, SOUND_PACKS, type SoundPack } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
 import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
@@ -149,7 +149,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <section class="game-options" role="dialog" aria-modal="true" aria-labelledby="fSettingsTitle">
         <header class="game-options-heading"><h2 id="fSettingsTitle">Opções</h2><button class="icon-btn game-options-close" data-ui="settings-close" aria-label="Fechar opções"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header>
         <div class="game-option-row"><span id="fSoundLabel">Efeitos sonoros</span><button class="sound-switch" id="fMute" data-ui="mute" role="switch" aria-checked="false" aria-labelledby="fSoundLabel"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fSoundState" aria-hidden="true">Desligados</span></button></div>
-        <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%"></div>
+        <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%">
+          <div class="game-option-pace"><label for="fSoundPack">Pacote de sons</label><select id="fSoundPack" aria-describedby="fSoundPackHint">${SOUND_PACKS.map(pack => `<option value="${pack.id}">${pack.name}</option>`).join('')}</select><p id="fSoundPackHint">Ao trocar, toca uma amostra do pacote escolhido.</p></div></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fAutoPassLabel">Passar automaticamente</span><button class="sound-switch" id="fAutoPass" data-ui="auto-pass" role="switch" aria-checked="true" aria-labelledby="fAutoPassLabel" aria-describedby="fAutoPassHint fAutoPassStatus" disabled><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAutoPassState" aria-hidden="true">Ativado</span></button></div><p id="fAutoPassHint">Quando não houver ações disponíveis. As jogadas continuam visíveis.</p><p id="fAutoPassStatus" role="status">Aguardando conexão com o servidor.</p></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
@@ -387,6 +388,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     ($('#fVolume') as HTMLInputElement).value = String(volume);
     $('#fVolume').setAttribute('aria-valuetext', `${volume}%`);
     $('#fVolumeValue').textContent = `${volume}%`;
+    ($('#fSoundPack') as HTMLSelectElement).value = settings.pack;
     ($('#fPace') as HTMLSelectElement).value = fast ? 'fast' : 'normal';
     ($('#fCardStyle') as HTMLSelectElement).value = cardStyle;
     syncAutoPass();
@@ -2356,6 +2358,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       try { localStorage.setItem('mesa:cards', cardStyle); } catch { /* Storage is optional. */ }
       renderTable(false);
     }
+    if (t.id === 'fSoundPack') { void audio.setPack(t.value as SoundPack); }
     if (t.id === 'fPace') { fast = t.value === 'fast'; try { localStorage.setItem('mesa:pace', fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
   });
   const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect],[data-q-card]';
