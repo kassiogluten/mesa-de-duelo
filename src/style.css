@@ -221,6 +221,9 @@ a { color: var(--gold); }
 .badge.commander svg { width: max(12px, calc(var(--cw) * .17)); height: max(12px, calc(var(--cw) * .17)); }
 .badge.commander + .badge.copy { top: calc(3% + max(16px, calc(var(--cw) * .17) + 4px)); }
 .bfc:has(> .badge.commander) .face { outline: 2px solid #f2b54ccc; outline-offset: 1px; }
+/* Portador do Anel: anel dourado no canto oposto ao dos outros selos. */
+.badge.ring-bearer { left: auto; right: 3%; display: inline-flex; align-items: center; justify-content: center; padding: 2px; border-radius: 50%; background: radial-gradient(circle, #3a2a08, #1a1204); color: #f2c14e; box-shadow: 0 0 0 1px #f2c14e99, 0 0 8px #f2c14e88; }
+.badge.ring-bearer svg { width: max(11px, calc(var(--cw) * .15)); height: max(11px, calc(var(--cw) * .15)); }
 /*
  * Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita.
  * A subida total para em 18% da carta (o degrau encolhe com mais anexos) e a margem de cima reserva

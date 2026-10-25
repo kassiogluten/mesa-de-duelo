@@ -28,7 +28,7 @@ import { stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import './skipVote.css';
-import { playerCountersHTML, playerCountersText as countersText } from './playerCounters';
+import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
 import { isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
 import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
@@ -991,7 +991,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const isCommander = !!c.commander || s.players.some(p => p.commanders?.some(cm => cm.id === c.id));
     const mutated = (c.merged?.length ?? 0) > 1;
     if (mutated) inner.push('mutated');
-    const badges = [isCommander ? `<span class="badge commander" title="Comandante">${ICON_CROWN}</span>` : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
+    // Portador do Anel: anel dourado no canto de cima à direita; a dica diz o que o Anel já faz por ele.
+    const ringTempted = c.ringBearer ? s.players.find(p => p.id === c.controller)?.ringTempted ?? 0 : 0;
+    const badges = [isCommander ? `<span class="badge commander" title="Comandante">${ICON_CROWN}</span>` : '',
+      c.ringBearer ? `<span class="badge ring-bearer" title="${esc(['Portador do Anel.', ringTempted ? ringText(ringTempted) : ''].join(' ').trim())}">${RING_ICON}</span>` : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
       mutated ? `<span class="badge mutated" title="${esc(mergedText(c.merged!))}">Mutada ×${c.merged!.length}</span>` : '',
       c.token ? '<span class="badge token">Ficha</span>' : '',
       c.prepared ? `<span class="badge prepared" title="${esc(c.preparedSpell ? `Preparada: quem a controla pode conjurar uma cópia de ${c.preparedSpell}` : 'Preparada')}">Preparada</span>` : ''].join('');
@@ -1005,7 +1008,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       inner.push('ar-field');
       if (c.creature || c.token) slot.push('ar-square');
     }
-    const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
+    const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.ringBearer ? 'Portador do Anel' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
       kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
     const atts = attached.map((a, i) =>
       `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');
@@ -1141,7 +1144,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function trackPlayerCounters(players: FPlayer[]) {
     counterBumps = new Map();
     for (const p of players) {
-      const before = lastPlayerCounters.get(p.id), now = p.counters ?? {};
+      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}) };
       if (before) {
         const changed = new Set([...Object.keys(before), ...Object.keys(now)].filter(k => (before[k] ?? 0) !== (now[k] ?? 0) && (now[k] ?? 0) > 0));
         if (changed.size) counterBumps.set(p.id, changed);
@@ -1149,8 +1152,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lastPlayerCounters.set(p.id, { ...now });
     }
   }
-  const playerCountersText = (p: FPlayer) => countersText(p.counters);
-  const playerCounters = (p: FPlayer) => playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter);
+  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted);
+  const playerCounters = (p: FPlayer) => playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted);
 
   function emblems(p: FPlayer) {
     const list = p.emblems ?? [];

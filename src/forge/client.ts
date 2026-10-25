@@ -78,6 +78,8 @@ export interface FCard {
   emblem?: boolean;
   /** É o comandante de alguém (marca a permanente no campo). */
   commander?: boolean;
+  /** Portador do Anel de quem a controla (o Anel te tenta). */
+  ringBearer?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
@@ -118,6 +120,8 @@ export interface FPlayer {
   preventDamage?: number;
   /** Marcadores do jogador (POISON, ENERGY, EXPERIENCE, RAD, TICKET...), só os que existem. */
   counters?: Record<string, number>;
+  /** Quantas vezes o Anel já tentou o jogador; ausente se nunca tentou. */
+  ringTempted?: number;
   library: number;
   handCount: number;
   hand: FCard[];

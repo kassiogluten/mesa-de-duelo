@@ -9,7 +9,7 @@ export interface InspectorCard {
   power?: number | string; toughness?: number | string; basePower?: number; baseToughness?: number;
   keywords?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
-  classLevel?: number; classMaxLevel?: number; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
+  classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
   merged?: MergedPart[];
 }
 type MergedPart = { name?: string; image?: string; faceDown?: boolean };
@@ -62,6 +62,7 @@ function content(card: InspectorCard, compact: boolean) {
     ${card.classLevel ? `<p class="ci-strength"><strong>Nível ${card.classLevel}${card.classMaxLevel ? ` de ${card.classMaxLevel}` : ''}</strong>${card.classMaxLevel && card.classLevel >= card.classMaxLevel ? ' <span>Nível máximo</span>' : ''}</p>` : ''}
     ${card.token ? '<p class="ci-note">Ficha</p>' : ''}${card.copyOf ? `<p class="ci-note">Cópia de ${esc(card.copyOf)}</p>` : ''}
     ${(card.merged?.length ?? 0) > 1 ? `<p class="ci-note">${esc(mergedText(card.merged!))}. Nome, tipo e força vêm da carta de cima; a criatura tem as habilidades de todas.</p>${mergedRules(card.merged!)}` : ''}
+    ${card.ringBearer ? '<p class="ci-note">Portador do Anel de quem a controla. O que o Anel já faz por ele aparece no selo do Anel, ao lado do retrato do jogador.</p>' : ''}
     ${card.prepared ? `<p class="ci-note">Preparada${card.preparedSpell ? `: quem a controla pode conjurar uma cópia de ${esc(card.preparedSpell)}. Conjurar a cópia tira a preparação.` : ''}</p>` : ''}
     ${card.preparedFrom ? `<p class="ci-note">Feitiço preparado de ${esc(card.preparedFrom)}: pode ser conjurado enquanto a criatura estiver preparada.</p>` : ''}
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}

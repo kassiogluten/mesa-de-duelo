@@ -25,6 +25,22 @@ const KINDS: Record<string, CounterKind> = {
     hint: () => 'Marcador de contrato no jogador.' },
 };
 
+/** O Anel: as habilidades que ele ganha a cada vez que tenta o jogador, da primeira à quarta. */
+export const RING_ABILITIES = [
+  'Seu Portador do Anel é lendário e não pode ser bloqueado por criaturas com poder maior.',
+  'Sempre que seu Portador do Anel atacar, compre um card e depois descarte um card.',
+  'Sempre que seu Portador do Anel ficar bloqueado por uma criatura, o controlador dela a sacrifica no fim do combate.',
+  'Sempre que seu Portador do Anel causar dano de combate a um jogador, cada oponente perde 3 pontos de vida.',
+];
+export const RING_ICON = svg('M12 4C7 4 3 7.6 3 12s4 8 9 8 9-3.6 9-8-4-8-9-8zm0 3c3.6 0 6 2.3 6 5s-2.4 5-6 5-6-2.3-6-5 2.4-5 6-5z');
+
+const times = (n: number) => n === 1 ? '1 vez' : `${n} vezes`;
+
+/** Quantas vezes o Anel tentou e o que ele já faz (as habilidades acumulam até a quarta). */
+export function ringText(tempted: number) {
+  return `O Anel tentou ${times(tempted)}. ${RING_ABILITIES.slice(0, Math.min(tempted, 4)).join(' ')}`;
+}
+
 const kind = (key: string): CounterKind => KINDS[key] ?? {
   name: key.charAt(0) + key.slice(1).toLowerCase().replaceAll('_', ' '), tone: 'other', icon: DISC, hint: () => '',
 };
@@ -38,23 +54,28 @@ export function playerCounterList(counters: Record<string, number> | undefined) 
 }
 
 /** Texto para o leitor de tela, junto do nome e da vida do jogador. */
-export function playerCountersText(counters: Record<string, number> | undefined) {
+export function playerCountersText(counters: Record<string, number> | undefined, ringTempted = 0) {
   return playerCounterList(counters).map(([k, n]) => k === 'POISON'
     ? `, ${n} ${n === 1 ? 'marcador' : 'marcadores'} de veneno de 10`
-    : `, ${n} ${n === 1 ? 'marcador' : 'marcadores'} de ${kind(k).name.toLowerCase()}`).join('');
+    : `, ${n} ${n === 1 ? 'marcador' : 'marcadores'} de ${kind(k).name.toLowerCase()}`).join('')
+    + (ringTempted > 0 ? `, o Anel tentou ${times(ringTempted)}` : '');
 }
 
 /**
- * Selos ao lado do retrato. `changed` diz quais tipos mudaram desde o último desenho (pulso curto);
+ * Selos ao lado do retrato. `changed` diz quais tipos mudaram desde o último desenho (pulso curto; RING é o Anel);
  * `open` é a chave do balão aberto por clique. O texto completo do jogador já vai no rótulo do retrato.
+ * O Anel vem por último, com quantas vezes tentou o jogador.
  */
-export function playerCountersHTML(playerId: number, counters: Record<string, number> | undefined, changed: Set<string> = new Set(), open: string | null = null) {
+export function playerCountersHTML(playerId: number, counters: Record<string, number> | undefined, changed: Set<string> = new Set(), open: string | null = null, ringTempted = 0) {
   const list = playerCounterList(counters);
-  if (!list.length) return '';
+  if (!list.length && ringTempted <= 0) return '';
+  const ringKey = `p${playerId}:RING`;
+  const ring = ringTempted > 0
+    ? `<span class="player-counter ring${changed.has('RING') ? ' bump' : ''}${open === ringKey ? ' open' : ''}" data-ctr="${ringKey}" data-counter="RING">${RING_ICON}<b>${ringTempted}</b><span class="ctr-tip">${esc(ringText(ringTempted))}</span></span>` : '';
   return `<div class="player-counters" aria-hidden="true">${list.map(([k, n]) => {
     const c = kind(k), key = `p${playerId}:${k}`;
     const danger = k === 'POISON' && n >= 7;
     const tip = `${c.name}: ${n}${c.limit ? ` de ${c.limit}` : ''}. ${c.hint(n)}`.trim();
     return `<span class="player-counter ${c.tone}${danger ? ' danger' : ''}${changed.has(k) ? ' bump' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" data-counter="${esc(k)}">${c.icon}<b>${n}</b>${c.limit ? `<small>/${c.limit}</small>` : ''}<span class="ctr-tip">${esc(tip)}</span></span>`;
-  }).join('')}</div>`;
+  }).join('')}${ring}</div>`;
 }

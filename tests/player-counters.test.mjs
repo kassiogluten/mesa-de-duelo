@@ -34,3 +34,16 @@ test('poison shows the limit, warns from 7 and the counter that changed pulses',
 test('the screen reader text names each counter', () => {
   assert.equal(playerCountersText({ POISON: 1, RAD: 2 }), ', 1 marcador de veneno de 10, 2 marcadores de radiação');
 });
+
+test('the Ring shows how many times it tempted the player and the abilities it has so far', () => {
+  const html = playerCountersHTML(3, {}, new Set(['RING']), null, 2);
+  assert.match(html, /player-counter ring bump" data-ctr="p3:RING"/);
+  assert.match(html, /<b>2<\/b>/);
+  assert.match(html, /O Anel tentou 2 vezes\. Seu Portador do Anel é lendário/);
+  assert.match(html, /compre um card e depois descarte um card\./);
+  assert.doesNotMatch(html, /sacrifica/);
+  assert.match(playerCountersHTML(3, {}, new Set(), null, 6), /cada oponente perde 3 pontos de vida/);
+  assert.equal(playerCountersHTML(3, {}, new Set(), null, 0), '');
+  assert.match(playerCountersHTML(3, { POISON: 1 }, new Set(), null, 1), /poison[\s\S]*ring/);
+  assert.equal(playerCountersText({}, 1), ', o Anel tentou 1 vez');
+});

@@ -127,6 +127,9 @@ final class StateJson {
             for (var entry : p.getCounters().entrySet()) if (entry.getCount() > 0) counters.addProperty(entry.getElement().toString(), entry.getCount());
             if (counters.size() > 0) o.add("counters", counters);
         }
+        // O Anel te tenta: quantas vezes já tentou o jogador (o Anel ganha uma habilidade a cada vez, até a quarta).
+        Player ringHolder = game == null ? null : game.getPlayer(p.getId());
+        if (ringHolder != null && ringHolder.getNumRingTemptedYou() > 0) o.addProperty("ringTempted", ringHolder.getNumRingTemptedYou());
         o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));
@@ -265,6 +268,7 @@ final class StateJson {
         if (s.isPlaneswalker()) o.addProperty("planeswalker", true);
         // Comandante em qualquer zona (no campo, a mesa marca a permanente com a coroa).
         if (c.isCommander()) o.addProperty("commander", true);
+        if (c.getZone() == ZoneType.Battlefield && c.isRingBearer()) o.addProperty("ringBearer", true);
         // Encantamentos de Classe: nível atual e o mais alto que a carta tem (uma habilidade de subir por nível).
         if (s.getType() != null && s.getType().hasSubtype("Class")) {
             Card gc = game == null ? null : game.findByView(c);

@@ -7,6 +7,10 @@
     "Relógio da partida": [
       { "img": "0.44.0/relogio.webp", "legenda": "O cronômetro abre a trilha de fases, antes do número e do tempo do turno." }
     ],
+    "O Anel te tenta": [
+      { "img": "0.44.0/anel-selo.webp", "legenda": "O selo do Anel ao lado do retrato, com quantas vezes ele tentou. Tocando, aparecem as habilidades que ele já deu." },
+      { "img": "0.44.0/anel-portador.webp", "legenda": "O Portador do Anel ganha um anel dourado no canto da carta." }
+    ],
     "Mutação à mostra": [
       { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." },
       { "img": "0.44.0/mutada-detalhes.webp", "legenda": "Inspecionando a Illuna mutada: a carta de cima em destaque e, embaixo, a miniatura e o texto de cada carta que ficou sob ela. Tocar na miniatura abre a carta." }
