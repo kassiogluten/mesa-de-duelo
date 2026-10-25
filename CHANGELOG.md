@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.43.1] - 2026-10-24
+
+### Corrigido
+
+- **Capas dos decks Commander certas.** Ao abrir o jogo, vários decks Commander apareciam com a mesma capa (como Commander's Sphere ou Arcane Signet) até as cartas terminarem de carregar. Agora a capa é sempre a arte do comandante, e os comandantes são carregados antes do resto das cartas, então as capas aparecem bem mais rápido.
+
 ## [0.43.0] - 2026-10-24
 
 ### Novo

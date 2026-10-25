@@ -214,7 +214,12 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const requestView = view, requestSelected = selected;
     const target = view === 'edit' ? current() : undefined;
     const decks = target ? [target] : [...user, ...(showReady ? DEFAULT_DECKS : [])];
-    try { await fetchByNames(decks.flatMap(d => deckEntries(d).map(e => e.name)), true); if (view === requestView && selected === requestSelected) preserveRender(render); }
+    const rerender = () => { if (view === requestView && selected === requestSelected) preserveRender(render); };
+    try {
+      // Na biblioteca, os comandantes (as capas) chegam antes da lista inteira.
+      if (!target) await fetchByNames(decks.flatMap(d => (d.commanders ?? []).map(e => e.name))).then(rerender).catch(() => {});
+      await fetchByNames(decks.flatMap(d => deckEntries(d).map(e => e.name)), true); rerender();
+    }
     catch { if (view === 'edit') { notice = 'Alguns dados das cartas não foram carregados. O deck continua disponível.'; renderStatus(); } }
   }
   function resetSearch() { searchSeq++; results = []; searchQuery = ''; searchType = ''; searchColors.clear(); hasMore = false; searching = false; searchError = ''; }

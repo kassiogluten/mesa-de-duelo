@@ -419,7 +419,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); }});
   refresh();
   fitSidebar();
-  void fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name))).then(refresh).catch(() => {});
+  // Os comandantes vêm primeiro: são as capas dos decks, e a lista inteira (milhares de cartas) demora a chegar.
+  void fetchByNames(allDecks().flatMap(d => (d.commanders ?? []).map(c => c.name))).then(refresh).catch(() => {})
+    .then(() => fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name)))).then(refresh).catch(() => {});
   return { refresh, setStatus, setBusy, showRoom(nextRoom) {
     preflight++; waitingRoom = nextRoom;
     if (nextRoom) { mode = 'net'; format = nextRoom.config.format; matchLength = nextRoom.config.matchLength; playerCount = nextRoom.config.playerCount ?? nextRoom.capacity ?? 2; }

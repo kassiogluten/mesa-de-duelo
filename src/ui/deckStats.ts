@@ -35,8 +35,9 @@ export function deckColors(deck: DeckData): Color[] {
   return (['W', 'U', 'B', 'R', 'G'] as Color[]).filter(c => colors.has(c));
 }
 export function deckArt(deck: DeckData): string | undefined {
-  const commanderArt = deckRows(deck.commanders ?? []).find(r => r.info?.artCrop)?.info?.artCrop;
-  if (commanderArt) return commanderArt;
+  // Com comandante, a capa é só a dele: enquanto os dados dele não chegam, outra carta já carregada (Sol Ring,
+  // Arcane Signet…) viraria a capa de vários decks ao mesmo tempo.
+  if (deck.commanders?.length) return deckRows(deck.commanders).find(r => r.info?.artCrop)?.info?.artCrop;
   const rows = deckRows(deck.cards).filter(r => r.info?.artCrop).sort((a, b) => (b.cmc ?? 0) - (a.cmc ?? 0));
   return (rows.find(r => r.info?.type === 'creature') ?? rows.find(r => r.info?.type !== 'land'))?.info?.artCrop;
 }
