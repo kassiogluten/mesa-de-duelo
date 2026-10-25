@@ -1,4 +1,13 @@
 {
+  "0.45.0": {
+    "Parar na sua manutenção quando há o que usar": [
+      { "img": "0.45.0/manutencao-trilha.webp", "legenda": "No seu turno, a trilha de fases acende a **Manutenção**: o jogo parou ali, antes da compra, e a prioridade é sua." },
+      { "img": "0.45.0/manutencao-habilidade.webp", "legenda": "Os Gnomos de Garrafa ficam destacados porque dá para sacrificá-los agora. É uma habilidade assim que faz o jogo parar na manutenção." }
+    ],
+    "Nome da fase à vista": [
+      { "img": "0.45.0/dica-trilha.webp", "legenda": "Passando o mouse no ícone da fase, o nome **Início · Manutenção** aparece por cima do botão **Fim de turno**, não mais atrás dele." }
+    ]
+  },
   "0.44.0": {
     "Parar no turno do oponente": [
       { "img": "0.44.0/paradas-menu.webp", "legenda": "Tocando no ícone do combate, o menu mostra as etapas daquela fase. As marcadas ficam douradas e o ícone ganha um ponto." },

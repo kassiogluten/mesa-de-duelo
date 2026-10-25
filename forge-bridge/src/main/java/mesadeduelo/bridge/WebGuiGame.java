@@ -6,6 +6,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.concurrent.CountDownLatch;
 import com.google.common.eventbus.Subscribe;
+import forge.ai.AvailableActions;
 import forge.game.Game;
 
 import forge.game.GameView;
@@ -13,6 +14,7 @@ import forge.game.combat.CombatView;
 import forge.game.event.GameEvent;
 import forge.game.event.GameEventTurnPhase;
 import forge.game.phase.PhaseType;
+import forge.game.player.Player;
 import forge.game.player.PlayerView;
 import forge.gamemodes.match.YieldUpdate;
 import forge.gamemodes.net.IRemote;
@@ -38,6 +40,12 @@ final class WebGuiGame extends ProtocolGuiGame {
     static final Set<PhaseType> HOLDABLE = EnumSet.of(PhaseType.UPKEEP, PhaseType.DRAW, PhaseType.MAIN1, PhaseType.COMBAT_BEGIN,
         PhaseType.COMBAT_DECLARE_ATTACKERS, PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.COMBAT_DAMAGE, PhaseType.COMBAT_END,
         PhaseType.MAIN2, PhaseType.END_OF_TURN);
+    /**
+     * Etapas do próprio turno que só param quando uma permanente sua tem uma habilidade ativada (fora as de mana)
+     * que pode ser usada agora: a janela antes da compra. Uma carta na mão sozinha não para aqui.
+     */
+    private static final Set<PhaseType> STOPS_MINE_WITH_ABILITY = EnumSet.of(PhaseType.UPKEEP, PhaseType.DRAW);
+    private static final long ABILITY_SCAN_MS = 1000;
 
     private volatile PlayerView me;
     private final BooleanSupplier autoPassNoActions;
@@ -45,6 +53,8 @@ final class WebGuiGame extends ProtocolGuiGame {
     private final Supplier<Set<PhaseType>> held;
     /** O jogo está numa etapa marcada: a passagem automática fica desligada até a etapa acabar. */
     private volatile boolean holding;
+    /** Etapa do próprio turno aberta porque havia uma habilidade para usar nela; null fora dela. */
+    private volatile PhaseType openedForAbility;
     private volatile Game watched;
 
     private final MatchLifecycle lifecycle;
@@ -115,15 +125,33 @@ final class WebGuiGame extends ProtocolGuiGame {
         if (next == null || next == watched) return;
         watched = next;
         holding = false;
+        openedForAbility = null;
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 if (watched != next || !(event instanceof GameEventTurnPhase step)) return;
+                openForAbility(next, step.playerTurn(), step.phase());
                 boolean hold = holds(step.playerTurn(), step.phase());
                 if (hold == holding) return;
                 holding = hold;
                 syncAutoPass();
             }
         });
+    }
+
+    /** Na sua manutenção e na sua compra, decide antes da prioridade se a etapa para ou é pulada. */
+    private void openForAbility(Game g, PlayerView turn, PhaseType phase) {
+        PlayerView mine = me;
+        boolean candidate = mine != null && mine.equals(turn) && STOPS_MINE_WITH_ABILITY.contains(phase);
+        PhaseType was = openedForAbility;
+        if (!candidate && was == null) return;
+        Player player = candidate ? g.getPlayer(mine) : null;
+        PhaseType open = player != null && AvailableActions.computeOnBattlefield(player, ABILITY_SCAN_MS) ? phase : null;
+        openedForAbility = open;
+        IGameController controller = getGameController(mine);
+        if (controller == null) return;
+        for (PhaseType ph : STOPS_MINE_WITH_ABILITY) {
+            if (ph == was || ph == open) controller.applyYieldUpdate(new YieldUpdate.SkipPhase(mine, ph, isUiSetToSkipPhase(mine, ph)));
+        }
     }
 
     private boolean holds(PlayerView turn, PhaseType phase) {
@@ -139,6 +167,7 @@ final class WebGuiGame extends ProtocolGuiGame {
     @Override
     public boolean isUiSetToSkipPhase(PlayerView playerTurn, PhaseType phase) {
         boolean mine = me != null && me.equals(playerTurn);
+        if (mine && phase == openedForAbility) return false;
         if (!mine && held.get().contains(phase)) return false;
         // Sem atacantes não há a que responder depois dos ataques: o oponente que não atacou não gera pedido.
         if (!mine && phase == PhaseType.COMBAT_DECLARE_ATTACKERS) {

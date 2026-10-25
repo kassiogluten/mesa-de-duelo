@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.45.0] - 2026-10-25
+
+### Mudou
+
+- **Parar na sua manutenção quando há o que usar.** O jogo agora para na sua manutenção e na sua compra quando uma permanente sua tem uma habilidade ativada que dá para usar naquele momento, como sacrificar Gnomos de Garrafa ou virar uma criatura para causar dano. Antes ele passava direto por essas etapas, e não dava para usar a habilidade antes de comprar. Habilidades de mana e cartas na mão não fazem o jogo parar ali, e quando não há nada para usar, ele continua passando direto.
+
+### Corrigido
+
+- **Nome da fase à vista.** O nome que aparece ao passar o mouse num ícone da trilha de fases ficava escondido atrás dos botões de ação. Agora ele aparece por cima deles.
+
 ## [0.44.0] - 2026-10-24
 
 ### Novo
