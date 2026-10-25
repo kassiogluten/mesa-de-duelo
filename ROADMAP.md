@@ -412,3 +412,33 @@ Cartas que uma permanente exila "sob si" ou "com ela" (Banisher Priest, Hostage 
 - [ ] Desenhar as cartas exiladas atrás da permanente, aparecendo pela borda de baixo (como o leque de auras e equipamentos, mas para baixo e com aparência de exílio).
 - [ ] Contador e janela para ver todas quando forem várias, e a mesma lista no inspetor da permanente.
 - [ ] Quando a permanente sai do campo, as cartas voltam a aparecer só no exílio.
+
+## 30. Mostrar na mesa o que o Forge já acompanha
+
+Como aconteceu com mutação, preparar, o Anel e as masmorras: o motor já aplica a regra, mas a mesa não diz nada, e o jogador só percebe pelo efeito (ou não percebe). Levantamento feito em 24/10/2026 comparando o que a ponte manda (`StateJson`, `PermanentDetails`, `TurnExtras`) com o que o Forge guarda em `Game`, `Player` e `CardView`. Nada disto aparece hoje na mesa.
+
+Regra de visual para todos: na mesa, o mínimo (um ícone pequeno, um contorno, um ponto), sem cobrir a arte nem disputar atenção com P/T e marcadores. O detalhe vai no balão ao passar o mouse ou tocar, e no inspetor: o que é, de onde veio, quem escolheu, até quando vale e o que a regra faz.
+
+Prioridade alta (comum em Commander, muda decisões na hora):
+- [ ] **Monarca** (`Game.getMonarch`): selo de coroa no retrato de quem é o monarca, com balão explicando (compra no fim do turno, quem causar dano de combate toma). Aviso quando troca de mãos.
+- [ ] **Controle trocado** (`CardView.getOwner` ≠ controlador): marca na permanente roubada (Threaten, Treachery, Hostage Taker) com o nome do dono, e no inspetor "Controlada por X, dona: Y". Distinguir o "até o fim do turno" quando der.
+- [ ] **Escolhas feitas pela carta** (`getChosenType`, `getChosenColors`, `getNamedCard`, `getChosenPlayer`, `getChosenNumber`, `getChosenMode`): mostrar na permanente e no inspetor o que foi escolhido. Ex.: tipo do Cavern of Souls/Kindred Discovery, cor do Iona, carta nomeada pela Pithing Needle, oponente da Curse/Stuffy Doll.
+- [ ] **Incitada** (`Card.isGoaded`, `getGoadMap`): selo na criatura e de quem é o goad; ajuda a entender por que ela é obrigada a atacar e não pode atacar quem incitou.
+- [ ] **Escudos de regeneração** (`CardView.getShieldCount`): selo com a quantidade, como já existe para a prevenção de dano.
+- [ ] **Terrenos jogados no turno** (`Player.getLandsPlayedThisTurn` / `getMaxLandPlays`): "Terreno 0/1" perto da mão ou da trilha de fases, contando terrenos extras (Azusa, Exploration).
+
+Prioridade média (mecânicas de coleções específicas):
+- [ ] **Dia e noite** (`Game.isDay` / `isNight`): sol ou lua na trilha de fases, com balão da regra de troca. Some enquanto não for nem dia nem noite.
+- [ ] **Contagem de mágicas no turno** (`Player.getSpellsCastThisTurn`, tempestade): número na trilha de fases ou no retrato quando houver carta na mesa que se importe (Storm, Prowess não precisa).
+- [ ] **Bênção da cidade** (`Player.hasBlessing`, Ascend) e **Velocidade** (`Player.getSpeed`, Aetherdrift): selos no retrato.
+- [ ] **Estados de uma vez só** (`isMonstrous`, `isRenowned`, `isSuspected`, `isSaddled`, `getCrewedByThisTurn`, `isExertedThisTurn`, `isDetained`, `isHarnessed`, `isSolved`): ícone pequeno na permanente; o nome em português e o que muda ficam no balão e no inspetor. Suspeita e Exaurida mudam o combate, as outras habilitam habilidades.
+- [ ] **Ligações entre cartas** (`getPairedWith` do Soulbond, `getEncodedCards` do Cipher, `getHaunting`/`getHauntedBy`): linha ou destaque entre as duas ao passar o mouse, e a lista no inspetor. Junto do item 29 (exiladas sob a criatura), que usa `getExiledWith`/`getImprintedCards`.
+- [ ] **Batalhas** (`CardView.getProtectingPlayer`): quem defende a batalha, ao lado dos marcadores de defesa.
+- [ ] **Previstas no exílio** (`isForeTold`): para o dono, mostrar qual carta está prevista e o custo; para os outros, só "Prevista" no verso.
+
+Prioridade baixa:
+- [ ] **Tamanho máximo da mão** (`PlayerView.getMaxHandSize` / `hasUnlimitedHandSize`): só quando diferente de 7 (Reliquary Tower, Spellbook).
+- [ ] **Pilha mais completa**: marcar cópias de mágica (`isCopiedSpell`), o valor de X escolhido e os custos opcionais pagos (`StackItemView.getOptionalCostString`, kicker, gift). Conferir antes o que o texto da pilha já traz.
+- [ ] **Vida ganha e perdida no turno** (`getLifeGainedThisTurn`, `getLifeLostThisTurn`): no balão do retrato, para cartas de revolta, sangue e afins.
+
+Para cada um: mandar o dado pela ponte só quando existir (como `ringTempted`), testar com o motor real em `forge-bridge/src/test`, montar a página de teste e entrar no `CHANGELOG.md` com prints em **Novidades em imagens**.
