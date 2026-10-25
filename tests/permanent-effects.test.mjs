@@ -37,14 +37,14 @@ test('ward cost, protection, prevention and face-down get readable seals', () =>
 });
 
 test('base details, phasing, restrictions and targeting', () => {
-  const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'HASTE'], sick: true, cantAttack: true, phasedOut: true }), { targeted: 'theirs', active: true });
+  const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'HASTE'], sick: true, cantAttack: true, phasedOut: true }), { targeted: 'theirs' });
   assert.deepEqual(fx.base, ['deathtouch', 'haste', 'chained']);
   const view = permanentFxHTML(fx);
   assert.deepEqual(view.classes, ['fx-phased', 'fx-sick', 'fx-targeted theirs']);
   assert.match(view.html, /fx-crosshair/);
   assert.doesNotMatch(view.html, /fx-mark/, 'first and double strike have no mark on top');
   assert.equal(permanentFxText(fx), 'fora de fase, não pode atacar, alvo de algo na pilha');
-  assert.equal(permanentFx(creature({ sick: true })).sick, false, 'summoning sickness only dims on its controller\'s turn');
+  assert.equal(permanentFx(creature({ sick: true })).sick, true, 'summoning sickness stays until its controller\'s next turn');
 });
 
 test('effects never take pointer input and only move without reduced motion', () => {

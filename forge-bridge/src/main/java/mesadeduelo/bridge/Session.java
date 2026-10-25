@@ -1,7 +1,10 @@
 package mesadeduelo.bridge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -26,6 +29,7 @@ import forge.game.GameType;
 import forge.game.GameStage;
 import forge.game.GameView;
 import forge.game.card.CardView;
+import forge.game.phase.PhaseType;
 import forge.game.zone.ZoneType;
 import forge.game.player.PlayerView;
 import forge.game.player.RegisteredPlayer;
@@ -51,7 +55,6 @@ import forge.gui.FThreads;
 import forge.gui.GuiBase;
 import forge.gui.interfaces.IGuiGame;
 import forge.interfaces.IGameController;
-import forge.localinstance.properties.ForgePreferences.FPref;
 import forge.player.GamePlayerUtil;
 import forge.player.LobbyPlayerHuman;
 import forge.player.PlayerControllerHuman;
@@ -243,7 +246,7 @@ final class Session {
             String name = seat.name;
             for (int n = 2; !names.add(name); n++) name = seat.name + " (" + n + ")";
             seat.name = name;
-            WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.autoPassNoActions, life, m::getGame);
+            WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.autoPassNoActions, () -> seat.opponentStops, life, m::getGame);
             seat.gui = g;
             RegisteredPlayer rp = registered(seat.deck).setPlayer(new LobbyPlayerHuman(name));
             seat.registered = rp;
@@ -336,6 +339,8 @@ final class Session {
         o.addProperty("gameNumber", gameNumber); o.addProperty("over", matchOver()); o.addProperty("phase", matchPhase);
         o.addProperty("abandoned", abandoned);
         if (gameMs >= 0) o.addProperty("gameMs", gameMs);
+        // Enquanto o jogo corre, quanto tempo já passou (não a hora de início, para o relógio do navegador não importar).
+        else if (gameSince > 0 && "playing".equals(matchPhase)) o.addProperty("elapsedMs", System.currentTimeMillis() - gameSince);
         JsonArray wins = new JsonArray(), ready = new JsonArray();
         int draws = 0;
         HostedMatch m = match;
@@ -652,7 +657,9 @@ final class Session {
                 q.addProperty("max", (Integer) a[2]);
                 @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
                 options.addAll((Collection<?>) a[3]);
-                q.add("options", optionsJson(options, display));
+                JsonArray rows = optionsJson(options, display);
+                Dungeons.roomChoice(hosted.getGame(), options, rows, q);
+                q.add("options", rows);
             }
             case getAbilityToPlay -> {
                 Collection<?> abilities = (Collection<?>) a[1];
@@ -1286,6 +1293,9 @@ final class Session {
         JsonObject preferences = new JsonObject();
         preferences.addProperty("autoPassNoActions", seat.autoPassNoActions);
         preferences.addProperty("passResponses", seat.passResponses);
+        JsonArray stops = new JsonArray();
+        for (PhaseType phase : seat.opponentStops) stops.add(phase.name());
+        preferences.add("opponentStops", stops);
         state.add("preferences", preferences);
         state.add("match", matchJson());
         state.addProperty("matchId", matchId);
@@ -1415,6 +1425,8 @@ final class Session {
         private volatile boolean autoPassNoActions = true;
         /** "Passar respostas": passa sozinho no turno dos outros e com algo na pilha. O próprio turno e as escolhas continuam parando. */
         private volatile boolean passResponses;
+        /** Etapas do turno dos oponentes em que o jogo segura a prioridade para este assento, mesmo sem ações. */
+        private volatile Set<PhaseType> opponentStops = Set.of();
 
         private volatile WebGuiGame gui;
         private volatile PlayerView me;
@@ -1487,17 +1499,21 @@ final class Session {
 
         private void updatePreferences(Channel source, JsonObject message) {
             Boolean autoPass = optionalBoolean(message, "autoPassNoActions"), responses = optionalBoolean(message, "passResponses");
-            if (autoPass == null && responses == null)
+            Set<PhaseType> stops = optionalStops(message);
+            if (autoPass == null && responses == null && stops == null)
                 throw new IllegalArgumentException("Informe um valor booleano para a passagem automática de prioridade.");
             // Settings are independent of a prompt generation, but a replaced or departed socket
             // cannot change this seat. Resolve the controller at execution time across Bo3 games.
             FThreads.invokeInEdtLater(() -> {
                 if (channel != source) return;
-                IGameController current = controller();
+                WebGuiGame current = gui;
                 if (autoPass != null) {
                     autoPassNoActions = autoPass;
-                    if (current != null) current.applyYieldUpdate(new YieldUpdate.SetYieldPref(
-                        FPref.YIELD_AUTO_PASS_NO_ACTIONS, Boolean.toString(autoPass)));
+                    if (current != null) current.syncAutoPass();
+                }
+                if (stops != null) {
+                    opponentStops = stops;
+                    if (current != null) current.stopsChanged();
                 }
                 if (responses != null) {
                     passResponses = responses;
@@ -1505,6 +1521,22 @@ final class Session {
                 }
                 markDirty();
             });
+        }
+
+        /** As etapas marcadas, na ordem do turno; null quando a mensagem não muda as paradas. */
+        private static Set<PhaseType> optionalStops(JsonObject message) {
+            JsonElement value = message.get("opponentStops");
+            if (value == null) return null;
+            if (!value.isJsonArray()) throw new IllegalArgumentException("Escolha as etapas do turno do oponente em que o jogo para.");
+            EnumSet<PhaseType> stops = EnumSet.noneOf(PhaseType.class);
+            for (JsonElement each : value.getAsJsonArray()) {
+                PhaseType phase = each.isJsonPrimitive() && each.getAsJsonPrimitive().isString()
+                    ? Arrays.stream(PhaseType.values()).filter(p -> p.name().equals(each.getAsString())).findFirst().orElse(null) : null;
+                if (phase == null || !WebGuiGame.HOLDABLE.contains(phase))
+                    throw new IllegalArgumentException("Essa etapa do turno do oponente não dá prioridade. Escolha outra.");
+                stops.add(phase);
+            }
+            return Collections.unmodifiableSet(stops);
         }
 
         private static Boolean optionalBoolean(JsonObject message, String key) {
@@ -1522,7 +1554,8 @@ final class Session {
         private void passResponseIfAsked() {
             WebGuiGame g = gui;
             PlayerView p = me;
-            if (!passResponses || question != null || !okEnabled || g == null || p == null || g.getGameView() == null) return;
+            // Numa etapa marcada para segurar a prioridade, a vez fica com o jogador mesmo com "Passar respostas".
+            if (!passResponses || question != null || !okEnabled || g == null || p == null || g.getGameView() == null || g.holding()) return;
             var view = g.getGameView();
             boolean othersTurn = !p.equals(view.getPlayerTurn());
             if (!othersTurn && (view.getStack() == null || view.getStack().isEmpty())) return;

@@ -11,6 +11,12 @@
 .phase-timer { position: relative; min-width: 34px; color: #c8d4f0; font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums; text-align: left; }
 .forge #fPhases .phase-timer[data-tip]::after { left: 0; transform: translateY(4px); }
 .forge #fPhases .phase-timer[data-tip]:hover::after { transform: none; }
+/* Relógio da partida: separado do turno por um traço, com um cronômetro para não confundir com o tempo do turno. */
+.phase-match-clock {
+  position: relative; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 4px; border-right: 1px solid #b9c7df33;
+  color: var(--muted); font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums;
+}
+.phase-match-clock svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 /* Commander com vários jogadores: retrato de quem joga o turno, com o anel na cor do dono; o nome fica na dica. */
 .phase-active-portrait {
   position: relative; display: grid; place-items: center; flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
@@ -41,6 +47,8 @@
   .forge #fPhases.phase-trail { right: 6px; bottom: 6px; gap: 4px; padding: 3px 6px 3px 3px; }
   .phase-turn-badge { min-width: 20px; height: 20px; font-size: 11px; }
   .phase-timer { min-width: 30px; font-size: 11px; }
+  .phase-match-clock { gap: 3px; padding: 0 6px 0 3px; font-size: 11px; }
+  .phase-match-clock svg { width: 12px; height: 12px; }
   .phase-active-portrait { width: 20px; height: 20px; font-size: 10px; }
   .forge #fPhases .phase-step { width: 20px; height: 20px; }
   .phase-step svg { width: 13px; height: 13px; }
@@ -65,3 +73,25 @@
 .phase-turn-badge.extra::before { content: '+'; font-weight: 800; }
 .forge #fPhases .phase-combat-count { position: absolute; top: -7px; right: -8px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #0c1222; border: 1px solid currentColor; color: var(--gold-light); font: 800 9px/13px var(--body); text-align: center; pointer-events: none; }
 .forge #fPhases .phase-track.theirs .phase-combat-count { color: #ffb3a3; }
+
+/* Etapa marcada para parar no turno do oponente: ponto no grupo; parado nela, um anel dourado na etapa atual. */
+.forge #fPhases .phase-stop-dot { position: absolute; bottom: -3px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 1.5px #0a1322; pointer-events: none; }
+.forge #fPhases .phase-track.theirs .phase-step.current.held { box-shadow: 0 0 0 2px var(--gold), 0 0 12px #f2b54c80; }
+
+/* Os ícones da trilha abrem o menu de paradas no turno do oponente. */
+.forge #fPhases .phase-step-btn { display: grid; place-items: center; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer; }
+.forge #fPhases .phase-track.editable .phase-step:not(.current):hover { color: var(--ink); background: #ffffff14; }
+.forge #fPhases .phase-step.open { color: var(--ink); background: #ffffff1f; }
+.forge #fPhases .phase-step-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.stop-menu {
+  position: fixed; z-index: 30; width: max-content; max-width: min(300px, calc(100vw - 16px)); box-sizing: border-box; padding: 12px;
+  border: 1px solid #b9c7df33; border-radius: 14px; background: #0a1322f5; box-shadow: 0 8px 24px #0009; color: var(--ink); font: 500 13px/1.4 var(--body);
+}
+.stop-menu[hidden] { display: none; }
+.stop-menu-title { margin: 0; font: 600 13px/1.3 var(--body); }
+.stop-menu-hint { margin: 10px 0 0; color: var(--muted); font: 400 12px/1.45 var(--body); }
+.stop-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.stop-step { min-height: 34px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--bg-deep); color: var(--muted); font: 500 13px var(--body); cursor: pointer; transition: background-color 120ms ease, color 120ms ease; }
+.stop-step[aria-pressed="true"] { border-color: transparent; background: var(--gold); color: #1b1203; }
+.stop-step:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .stop-step { transition: none; } }

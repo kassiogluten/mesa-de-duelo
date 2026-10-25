@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
+const stopsModule = uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
+const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./opponentStops'", JSON.stringify(stopsModule));
 const { phaseHudHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText } = await import(uri(source));
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
@@ -112,4 +113,46 @@ test('the turn clock shows minutes and seconds, and hours only past one hour', (
   assert.equal(turnTimeText(-500), '0:00');
   assert.match(phaseHudHTML(state), /data-turn-timer/);
   assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }), /data-turn-timer/);
+});
+
+test('marked opponent steps show a dot on their group, and the held step gets a ring only during an opponent turn', () => {
+  const theirs = { ...state, activePlayer: 2, phase: 'UPKEEP', stack: [] };
+  const stops = ['UPKEEP', 'DRAW', 'COMBAT_DECLARE_ATTACKERS'];
+  const html = phaseHudHTML(theirs, undefined, stops);
+  assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
+  assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada no turno do oponente: Manutenção, Compra"/);
+  assert.match(html, /Combate · Parada no turno do oponente: Atacantes/);
+  assert.match(html, /phase-step current held/);
+  assert.match(html, /Parada sua/);
+  assert.doesNotMatch(html, /<button|data-act|role="button"|tabindex=/);
+  assert.doesNotMatch(phaseHudHTML({ ...theirs, stack: [{ id: 1 }] }, undefined, stops), /held/);
+  assert.doesNotMatch(phaseHudHTML({ ...theirs, phase: 'MAIN1' }, undefined, stops), /held/);
+  const mine = phaseHudHTML({ ...state, phase: 'UPKEEP', stack: [] }, undefined, stops);
+  assert.equal((mine.match(/phase-stop-dot/g) ?? []).length, 2);
+  assert.doesNotMatch(mine, /current held|Parada sua/);
+});
+
+test('the match clock shows how long the current game has run, only while it runs', () => {
+  const match = { gameNumber: 1, wins: [0, 0], draws: 0, over: false, phase: 'playing', ready: [], elapsedMs: 754_000 };
+  const html = phaseHudHTML({ ...state, match });
+  assert.match(html, /class="phase-match-clock" data-tip="Duração da partida"/);
+  assert.match(html, /<span data-match-timer aria-hidden="true">12:34<\/span>/);
+  assert.match(phaseHudHTML({ ...state, match: { ...match, gameNumber: 2 } }), /data-tip="Duração do jogo 2"/);
+  assert.doesNotMatch(phaseHudHTML({ ...state, match: { ...match, elapsedMs: undefined, gameMs: 754_000 } }), /data-match-timer/);
+  assert.doesNotMatch(phaseHudHTML({ ...state, match, gameOver: true }), /data-match-timer/);
+  assert.doesNotMatch(phaseHudHTML(state), /data-match-timer/);
+});
+
+test('with editable stops every track icon is a button that opens the menu of its group, for opponents and on your own turn', () => {
+  const stops = ['UPKEEP', 'COMBAT_DAMAGE'];
+  for (const s of [{ ...state, stack: [] }, { ...state, activePlayer: 2, stack: [] }]) {
+    const html = phaseHudHTML(s, undefined, { value: stops, editable: true, open: 'combat' });
+    assert.equal((html.match(/<button type="button" class="phase-step-btn"/g) ?? []).length, 5);
+    assert.doesNotMatch(html, /<ol[^>]*aria-hidden/);
+    assert.match(html, /data-stop-group="start" aria-label="Início: paradas no turno do oponente \(Manutenção\)" aria-haspopup="true" aria-expanded="false"/);
+    assert.match(html, /data-stop-group="combat" aria-label="Combate: paradas no turno do oponente \(Dano de combate\)" aria-haspopup="true" aria-expanded="true"/);
+    assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
+    assert.doesNotMatch(html, /data-phase="combat" data-tip/);
+  }
+  assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }, undefined, { value: stops, editable: true }), /<button/);
 });

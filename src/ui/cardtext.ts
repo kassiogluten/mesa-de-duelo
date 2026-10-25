@@ -24,7 +24,9 @@ export const pip = (sym: string) => {
 export function manaHTML(cost: string) {
   return (cost.match(/\{[^}]+\}/g) ?? []).map(s => pip(s.slice(1, -1))).join('');
 }
-export const richText = (t: string) => esc(t).replace(/\{([A-Z0-9/]+)\}/g, (_, s) => pip(s));
+/** O Forge cita cartas como "Nome (id)"; o id é interno da partida e não diz nada ao jogador. */
+export const withoutCardIds = (t: string) => t.replace(/ \(\d+\)/g, '');
+export const richText = (t: string) => esc(withoutCardIds(t)).replace(/\{([A-Z0-9/]+)\}/g, (_, s) => pip(s));
 
 /** Nomes de cor que o Forge manda nas escolhas de mana (em português ou inglês). */
 const COLOR_WORDS: Record<string, string> = {

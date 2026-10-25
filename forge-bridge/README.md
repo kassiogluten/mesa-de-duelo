@@ -131,6 +131,7 @@ A mão do oponente vai só como contagem, as perguntas vão só para quem precis
 | `{type:"ok"}` / `{type:"cancel"}` | Os dois botões do Forge; os rótulos vêm em `input`. |
 | `{type:"pass-turn", gen}` | Passa até o fim do turno (o "Fim de turno" da mesa). |
 | `{type:"resolve-all", gen}` | Passa até a pilha esvaziar. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão sua. |
+| `{type:"preferences", autoPassNoActions?, passResponses?, opponentStops?}` | Preferências do assento, que valem para os próximos jogos e a revanche; o estado devolve todas em `preferences`. `opponentStops` é a lista de etapas do turno dos oponentes (`UPKEEP`, `DRAW`, `MAIN1`, `COMBAT_BEGIN`, `COMBAT_DECLARE_ATTACKERS`, `COMBAT_DECLARE_BLOCKERS`, `COMBAT_DAMAGE`, `COMBAT_END`, `MAIN2`, `END_OF_TURN`) em que o jogo segura a prioridade: nelas o Forge não pula a etapa, a passagem automática fica desligada e o "Passar respostas" não passa. |
 | `{type:"skip-vote", target, value}` | Em sala, vota para pular o turno do jogador desconectado `target` (id do jogador); `value: false` vota não. Só votam os conectados (menos o alvo), e passa com a maioria. Aprovado, a ponte passa a vez desse jogador sem jogar nada até o fim do turno dele, ou até ele voltar. O estado traz `skip: {vote?: {target, name, yes, no, voters, needed, canVote, mine?}, skipping: [ids]}`. |
 | `{type:"concede"}` | Desiste da partida. |
 | `{type:"answer", ...}` | Responde à `question` aberta. |

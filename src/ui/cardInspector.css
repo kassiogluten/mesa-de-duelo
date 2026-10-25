@@ -26,6 +26,11 @@
 .ci-strength { border-top: 1px solid var(--line); padding-top: 12px; font-variant-numeric: tabular-nums; }
 .ci-strength strong { font-size: 22px; }
 .ci-strength span, .ci-note { color: var(--muted); font-size: 14px; }
+.ci-merged { display: flex; gap: 12px; align-items: flex-start; margin-top: 14px; }
+.ci-merged h3 { margin: 0 0 4px; font-size: 15px; }
+.ci-merged-thumb { flex: none; width: 76px; padding: 0; border: 0; border-radius: 5px; background: none; cursor: zoom-in; }
+.ci-merged-thumb img { display: block; width: 100%; border-radius: 5px; outline: 1px solid #ffffff1a; }
+.ci-merged-thumb:hover img, .ci-merged-thumb:focus-visible img { outline: 2px solid var(--gold); }
 .ci-keywords { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 12px 0; padding: 0; }
 .ci-keywords li { border-radius: 6px; padding: 3px 8px; background: #1d3050; font-size: 14px; }
 .card-inspector { width: min(780px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }

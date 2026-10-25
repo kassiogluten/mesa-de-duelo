@@ -1,6 +1,7 @@
 import { cacheGet, fetchByNames } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
+import { counterName } from './proliferate';
 import './cardInspector.css';
 
 export interface InspectorCard {
@@ -8,7 +9,15 @@ export interface InspectorCard {
   power?: number | string; toughness?: number | string; basePower?: number; baseToughness?: number;
   keywords?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
-  classLevel?: number; classMaxLevel?: number;
+  classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
+  merged?: MergedPart[];
+}
+type MergedPart = { name?: string; image?: string; faceDown?: boolean };
+/** Mutação: quais cartas formam a permanente, a de cima primeiro (nomes em português quando já carregados). */
+export function mergedText(merged: { name?: string; faceDown?: boolean }[]) {
+  const names = merged.map(m => m.faceDown || !m.name ? 'uma carta virada para baixo' : cacheGet(m.name)?.pt?.name || m.name);
+  const under = names.slice(1);
+  return `Mutada: ${names[0]} por cima${under.length ? `, ${under.length > 1 ? `${under.slice(0, -1).join(', ')} e ${under.at(-1)}` : under[0]} embaixo` : ''}`;
 }
 const keywords: Record<string, string> = { FLYING: 'Voar', FIRST_STRIKE: 'Iniciativa', DOUBLE_STRIKE: 'Golpe duplo', TRAMPLE: 'Atropelar', HASTE: 'Ímpeto', VIGILANCE: 'Vigilância', REACH: 'Alcance', DEATHTOUCH: 'Toque mortífero', LIFELINK: 'Vínculo com a vida', HEXPROOF: 'Resistência à magia', INDESTRUCTIBLE: 'Indestrutível', MENACE: 'Ameaçar', DEFENDER: 'Defensor' };
 let preview: HTMLElement | null = null;
@@ -49,11 +58,23 @@ function content(card: InspectorCard, compact: boolean) {
     ${type ? `<p class="ci-type">${esc(type)}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
     ${card.keywords?.length ? `<ul class="ci-keywords">${card.keywords.map(k => `<li>${esc(keywords[k] ?? k.replaceAll('_', ' ').toLowerCase())}</li>`).join('')}</ul>` : ''}
-    ${Object.entries(card.counters ?? {}).length ? `<p>Marcadores: ${Object.entries(card.counters!).map(([k,v]) => `${esc(k)} × ${v}`).join(', ')}</p>` : ''}
+    ${Object.entries(card.counters ?? {}).length ? `<p>Marcadores: ${Object.entries(card.counters!).map(([k,v]) => `${esc(counterName(k))} × ${v}`).join(', ')}</p>` : ''}
     ${card.classLevel ? `<p class="ci-strength"><strong>Nível ${card.classLevel}${card.classMaxLevel ? ` de ${card.classMaxLevel}` : ''}</strong>${card.classMaxLevel && card.classLevel >= card.classMaxLevel ? ' <span>Nível máximo</span>' : ''}</p>` : ''}
     ${card.token ? '<p class="ci-note">Ficha</p>' : ''}${card.copyOf ? `<p class="ci-note">Cópia de ${esc(card.copyOf)}</p>` : ''}
+    ${(card.merged?.length ?? 0) > 1 ? `<p class="ci-note">${esc(mergedText(card.merged!))}. Nome, tipo e força vêm da carta de cima; a criatura tem as habilidades de todas.</p>${mergedRules(card.merged!)}` : ''}
+    ${card.ringBearer ? '<p class="ci-note">Portador do Anel de quem a controla. O que o Anel já faz por ele aparece no selo do Anel, ao lado do retrato do jogador.</p>' : ''}
+    ${card.prepared ? `<p class="ci-note">Preparada${card.preparedSpell ? `: quem a controla pode conjurar uma cópia de ${esc(card.preparedSpell)}. Conjurar a cópia tira a preparação.` : ''}</p>` : ''}
+    ${card.preparedFrom ? `<p class="ci-note">Feitiço preparado de ${esc(card.preparedFrom)}: pode ser conjurado enquanto a criatura estiver preparada.</p>` : ''}
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}
   </div></div>`;
+}
+/** Cartas de baixo de uma mutação, com miniatura e texto: as habilidades delas também valem. Tocar na miniatura abre a carta. */
+function mergedRules(merged: MergedPart[]) {
+  return merged.map((m, i) => ({ m, i })).slice(1).filter(({ m }) => !m.faceDown && m.name).map(({ m, i }) => {
+    const sc = cacheGet(m.name!), name = sc?.pt?.name || m.name!;
+    const thumb = safeImage(m.image ?? sc?.pt?.image_uris?.normal ?? sc?.image_uris?.normal);
+    return `<section class="ci-merged">${thumb ? `<button type="button" class="ci-merged-thumb" data-ci-merged="${i}" aria-label="Ver ${esc(name)}"><img src="${esc(thumb)}" alt="" draggable="false"></button>` : ''}<div><h3>${esc(name)}</h3><div class="ci-rules">${richText(sc?.pt?.text ?? sc?.oracle_text ?? 'Carregando informações da carta…')}</div></div></section>`;
+  }).join('');
 }
 function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
   const focused = document.activeElement;
@@ -63,7 +84,7 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
   const body = el.querySelector('.ci-body');
   if (body) body.scrollTop = scrollTop;
   if (restoreControl) el.querySelector<HTMLElement>('.ci-control')?.focus({preventScroll: true});
-  el.querySelector('img')?.addEventListener('error', e => {
+  el.querySelector('.ci-image')?.addEventListener('error', e => {
     (e.target as HTMLElement).remove(); el.querySelector('.ci-body')?.classList.add('ci-no-image');
   }, { once: true });
   el.querySelector<HTMLElement>('[data-flip]')?.addEventListener('click', e => {
@@ -71,11 +92,18 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
     if (sides) turnCard(el.querySelector<HTMLImageElement>('.ci-image'), e.currentTarget as HTMLElement, sides);
   });
   el.querySelector('[data-ci-pin]')?.addEventListener('click', () => inspectCard(card, origin));
+  el.querySelectorAll<HTMLElement>('[data-ci-merged]').forEach(b => b.addEventListener('click', () => {
+    const m = card.merged![Number(b.dataset.ciMerged)];
+    inspectCard({ name: m.name, image: m.image }, origin);
+  }));
   el.querySelector('[data-ci-close]')?.addEventListener('click', () => modal?.close());
 }
 function resolve(el: HTMLElement, card: InspectorCard, compact: boolean, ticket: number) {
-  if (card.faceDown || !card.name || (card.text !== undefined && card.image)) return;
-  void fetchByNames([card.name]).then(() => {
+  if (card.faceDown || !card.name) return;
+  const parts = (card.merged ?? []).slice(1).flatMap(m => m.faceDown || !m.name || cacheGet(m.name) ? [] : [m.name]);
+  const known = card.text !== undefined && card.image;
+  if (known && !parts.length) return;
+  void fetchByNames(known ? parts : [card.name, ...parts]).then(() => {
     if (ticket !== generation || !el.isConnected) return;
     fill(el, card, compact);
     if (!cacheGet(card.name!) && card.text === undefined) {

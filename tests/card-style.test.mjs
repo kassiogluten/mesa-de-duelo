@@ -49,3 +49,9 @@ test('arena frame follows the permanent type and tokens get their own shape', ()
   assert.match(arena({ typeLine: 'Battle — Siege' }), /ar-other"/);
   assert.match(arena({ creature: true, typeLine: 'Token Creature — Soldier', token: true }), /ar-creature ar-token"/);
 });
+
+test('texto do Forge perde o id interno da carta', async () => {
+  const { richText, withoutCardIds } = await import(cardtext);
+  assert.equal(withoutCardIds('Lightning Bolt (123) - Deal 3 damage to Grizzly Bears (45).'), 'Lightning Bolt - Deal 3 damage to Grizzly Bears.');
+  assert.equal(richText('Llanowar Elves (7): {T}').includes('(7)'), false);
+});

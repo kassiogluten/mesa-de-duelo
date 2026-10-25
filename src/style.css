@@ -208,11 +208,22 @@ a { color: var(--gold); }
 .badge.copy { background: #6a4bc4; color: #fff; }
 .badge.token { background: #e8e2d0; color: #1b1a17; }
 .badge.copy + .badge.token { top: calc(3% + 15px); }
+/* Mutação: o selo e as bordas das cartas de baixo aparecendo atrás da criatura. */
+.badge.mutated { background: #b4462f; color: #fff; }
+.badge + .badge.mutated, .badge.mutated + .badge.token { top: calc(3% + 15px); }
+.badge + .badge.mutated + .badge.token { top: calc(3% + 30px); }
+.bfc.mutated .face { box-shadow: 3px -3px 0 -1px #b4462fcc, 6px -6px 0 -2px #b4462f88; }
+.badge.prepared { background: #2f7d6b; color: #fff; }
+.badge + .badge.prepared { top: calc(3% + 15px); }
+.badge + .badge + .badge.prepared { top: calc(3% + 30px); }
 /* Comandante no campo: só a coroa dourada no canto (o nome fica na dica e no leitor de tela) e um contorno dourado. */
 .badge.commander { display: inline-flex; align-items: center; justify-content: center; padding: 2px 3px; border-radius: 5px; background: linear-gradient(135deg, #f7d27a, #c98a1f); color: #2a1a04; }
 .badge.commander svg { width: max(12px, calc(var(--cw) * .17)); height: max(12px, calc(var(--cw) * .17)); }
 .badge.commander + .badge.copy { top: calc(3% + max(16px, calc(var(--cw) * .17) + 4px)); }
 .bfc:has(> .badge.commander) .face { outline: 2px solid #f2b54ccc; outline-offset: 1px; }
+/* Portador do Anel: anel dourado no canto oposto ao dos outros selos. */
+.badge.ring-bearer { left: auto; right: 3%; display: inline-flex; align-items: center; justify-content: center; padding: 2px; border-radius: 50%; background: radial-gradient(circle, #3a2a08, #1a1204); color: #f2c14e; box-shadow: 0 0 0 1px #f2c14e99, 0 0 8px #f2c14e88; }
+.badge.ring-bearer svg { width: max(11px, calc(var(--cw) * .15)); height: max(11px, calc(var(--cw) * .15)); }
 /*
  * Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita.
  * A subida total para em 18% da carta (o degrau encolhe com mais anexos) e a margem de cima reserva
@@ -1006,6 +1017,12 @@ html[data-pwa-update='downloading'] .news-sync { border-bottom-color: var(--gold
 .news-rel ul { margin: 4px 0; padding-left: 18px; }
 .news-rel li { margin: 3px 0; }
 .news-rel code { background: #18223a; padding: 1px 5px; border-radius: 4px; }
+.news-visual-all {
+  display: block; margin: 12px 0 2px; padding: 8px 12px; border-radius: 10px; border: 1px solid #f2b54c55; background: #f2b54c12;
+  color: var(--gold-light); font-weight: 600; text-align: center; text-decoration: none;
+}
+.news-visual-all:hover { border-color: var(--gold); }
+.news-visual { margin-left: 8px; font: 500 12px var(--body); white-space: nowrap; }
 
 /* ---------- Celular deitado (telas baixas) ---------- */
 @media (orientation: landscape) and (max-height: 500px) {

@@ -6,6 +6,8 @@ export interface FPreferences {
   autoPassNoActions: boolean;
   /** "Só respostas": passes priority on opponents' turns and with something on the stack. Absent on older bridges. */
   passResponses?: boolean;
+  /** Etapas do turno dos oponentes em que o jogo segura a prioridade (nomes do Forge, como "UPKEEP"). Ausente em pontes antigas. */
+  opponentStops?: string[];
 }
 export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
@@ -34,6 +36,8 @@ export interface FMatch {
   gameNumber: number; wins: number[]; draws: number; over: boolean; abandoned?: boolean;
   /** Duração do jogo que acabou de terminar, em ms (medida pelo servidor); ausente enquanto ele não termina. */
   gameMs?: number;
+  /** Quanto o jogo em andamento já durou quando o estado saiu do servidor, em ms; ausente depois que ele termina. */
+  elapsedMs?: number;
   phase: 'playing' | 'sideboarding' | 'complete'; ready: boolean[];
 }
 export interface FSideboarding { id: number; main: DeckEntry[]; sideboard: DeckEntry[]; ready: boolean }
@@ -74,8 +78,15 @@ export interface FCard {
   emblem?: boolean;
   /** É o comandante de alguém (marca a permanente no campo). */
   commander?: boolean;
+  /** Portador do Anel de quem a controla (o Anel te tenta). */
+  ringBearer?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
+  /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
+  prepared?: boolean;
+  preparedSpell?: string;
+  /** No exílio, a cópia do feitiço preparado: o nome da criatura de onde ela veio. */
+  preparedFrom?: string;
   /** Custo da proteção contra alvos (ward), como "{2}" ou "Pay 3 life". */
   ward?: string;
   /** De que a proteção protege, como o Forge escreve: "red", "artifact", "multicolored"… */
@@ -92,7 +103,11 @@ export interface FCard {
   attachedToPlayer?: number;
   /** Nome original de uma carta que está copiando outra (Clone, por exemplo). */
   copyOf?: string;
+  /** Mutação: as cartas que formam a permanente, de cima para baixo (sem nome quando viradas para baixo). */
+  merged?: FMergedCard[];
 }
+
+export interface FMergedCard { id: number; name?: string; set?: string; image?: string; token?: boolean; faceDown?: boolean }
 
 export interface FPlayer {
   id: number;
@@ -105,6 +120,8 @@ export interface FPlayer {
   preventDamage?: number;
   /** Marcadores do jogador (POISON, ENERGY, EXPERIENCE, RAD, TICKET...), só os que existem. */
   counters?: Record<string, number>;
+  /** Quantas vezes o Anel já tentou o jogador; ausente se nunca tentou. */
+  ringTempted?: number;
   library: number;
   handCount: number;
   hand: FCard[];
@@ -117,6 +134,22 @@ export interface FPlayer {
   /** Emblemas na zona de comando (nome "Emblem — Planeswalker"). */
   emblems?: FCard[];
   pool: Record<string, number>;
+  /** Masmorra em andamento na zona de comando (se aventurar). */
+  dungeon?: FDungeon;
+  /** Nomes das masmorras que o jogador já completou. */
+  completedDungeons?: string[];
+  /** Tem a iniciativa. */
+  initiative?: boolean;
+}
+
+export interface FDungeon {
+  id: number;
+  name: string;
+  image?: string;
+  /** Sala atual; ausente antes de entrar. */
+  room?: string;
+  /** Salas na ordem do card (a primeira é a entrada), com o efeito e para onde cada uma leva. */
+  rooms: { name: string; text: string; next: string[] }[];
 }
 
 export interface FOption {
@@ -137,6 +170,8 @@ export interface FOption {
   defender?: boolean;
   /** Outra face ou metade usada pela opção (aventura, carta dividida). */
   face?: { name: string; manaCost: string; typeLine: string };
+  /** dungeon-room: nome da sala da masmorra que a opção escolhe. */
+  room?: string;
 }
 
 export interface FQuestion {
@@ -145,9 +180,11 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
   /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta. */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room';
   /** commander-zone: onde o comandante está agora (Graveyard ou Exile). */
   zone?: string;
+  /** dungeon-room: id do jogador dono da masmorra. */
+  dungeonOwner?: number;
   /** combat-damage: divisão automática sugerida, se há ordem entre bloqueadores, se vale qualquer divisão e as palavras-chave do atacante. */
   suggested?: number[];
   ordered?: boolean;

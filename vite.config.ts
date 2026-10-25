@@ -2,15 +2,16 @@ import { readdirSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// Além do jogo: a área de admin (/admin.html) e as páginas de teste da mesa (/tests/fixtures/*.html), linkadas
-// na área de admin. Os scripts delas saem em ferramentas/ e ficam fora do cache do app instalado.
+// Além do jogo: as novidades em imagens (/novidades.html, linkada no painel Novidades e guardada com o app), a área
+// de admin (/admin.html) e as páginas de teste da mesa (/tests/fixtures/*.html), linkadas na área de admin. Os
+// scripts das duas últimas saem em ferramentas/ e ficam fora do cache do app instalado.
 const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.endsWith('.html')).map(f => [f.replace('.html', ''), `tests/fixtures/${f}`]));
 
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: { index: 'index.html', admin: 'admin.html', ...fixtures },
-      output: { entryFileNames: chunk => chunk.name === 'index' ? 'assets/[name]-[hash].js' : 'ferramentas/[name]-[hash].js' },
+      input: { index: 'index.html', novidades: 'novidades.html', admin: 'admin.html', ...fixtures },
+      output: { entryFileNames: chunk => chunk.name === 'index' || chunk.name === 'novidades' ? 'assets/[name]-[hash].js' : 'ferramentas/[name]-[hash].js' },
     },
   },
   plugins: [
@@ -48,6 +49,12 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // Prints das novidades (public/novidades/): ficam fora do pacote do app e são guardados quando vistos.
+            urlPattern: ({ url }) => url.pathname.startsWith('/novidades/'),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'novidades', expiration: { maxEntries: 200 } },
+          },
           {
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
             handler: 'StaleWhileRevalidate',
