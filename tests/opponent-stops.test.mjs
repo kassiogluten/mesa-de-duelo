@@ -74,3 +74,13 @@ test('the options buttons say which steps are marked, and holding needs an oppon
   assert.equal(holdingStop({ ...s, stack: [{}] }, ['UPKEEP']), false);
   assert.equal(holdingStop(s, ['DRAW']), false);
 });
+
+test('the track menu lists only the steps of the chosen group', async () => {
+  const { stopMenuHTML } = await import(uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+  const combat = stopMenuHTML('combat', 'Combate', ['COMBAT_END']);
+  assert.equal((combat.match(/data-stop=/g) ?? []).length, 5);
+  assert.match(combat, /Combate · turno do oponente/);
+  assert.match(combat, /data-stop="COMBAT_END" aria-pressed="true"/);
+  assert.match(combat, /todos os oponentes/);
+  assert.equal((stopMenuHTML('start', 'Início', []).match(/data-stop=/g) ?? []).length, 2);
+});

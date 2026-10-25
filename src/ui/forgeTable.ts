@@ -10,7 +10,7 @@ import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPr
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
-import { OpponentStopsPreference, stopsOptionsHTML } from './opponentStops';
+import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
 import { forcedSeatReason, visibleSeats } from './seatVisibility';
@@ -23,7 +23,7 @@ import { cardDecision, selectionMessage } from './decisionPrompt';
 import { counterName, isProliferating, proliferateBoardClass, proliferateClear, proliferateOkLabel, proliferatePanelHTML, proliferateSuggestion, proliferateToggle } from './proliferate';
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
-import { passLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
+import { passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
 import { stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
@@ -149,7 +149,6 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="game-option-row"><span id="fSoundLabel">Efeitos sonoros</span><button class="sound-switch" id="fMute" data-ui="mute" role="switch" aria-checked="false" aria-labelledby="fSoundLabel"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fSoundState" aria-hidden="true">Desligados</span></button></div>
         <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%"></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fAutoPassLabel">Passar automaticamente</span><button class="sound-switch" id="fAutoPass" data-ui="auto-pass" role="switch" aria-checked="true" aria-labelledby="fAutoPassLabel" aria-describedby="fAutoPassHint fAutoPassStatus" disabled><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAutoPassState" aria-hidden="true">Ativado</span></button></div><p id="fAutoPassHint">Quando não houver ações disponíveis. As jogadas continuam visíveis.</p><p id="fAutoPassStatus" role="status">Aguardando conexão com o servidor.</p></div>
-        <div class="game-option-auto-pass game-option-stops" role="group" aria-labelledby="fStopsLabel" aria-describedby="fStopsHint fStopsStatus"><span id="fStopsLabel">Parar no turno do oponente</span><div class="stop-steps" id="fStops">${stopsOptionsHTML([], false)}</div><p id="fStopsHint">Nas etapas marcadas o jogo segura a prioridade para você, mesmo sem ações disponíveis e com Passar respostas ligado. As etapas ficam marcadas com um ponto na trilha de fases.</p><p id="fStopsStatus" role="status">Aguardando conexão com o servidor.</p></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
         <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
@@ -188,6 +187,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <aside class="stack-panel" id="fStack" aria-label="Mágicas e habilidades na pilha" hidden></aside>
     <svg class="target-arrows" id="fTargets" aria-hidden="true"></svg>
     <nav class="phase-rail phase-trail" id="fPhases" aria-label="Fases do turno"></nav>
+    <div class="stop-menu" id="fStopMenu" role="dialog" aria-labelledby="fStopMenuTitle" hidden></div>
     <div class="action" id="fAction"></div><div class="sr-only" id="fAnnouncement" aria-live="polite" aria-atomic="true"></div>
     <div class="await-callout" id="fAwait" hidden><span class="await-eyebrow" aria-hidden="true">Sua decisão</span><strong class="await-text"></strong></div>
     <div class="banner" id="fBanner" hidden></div>
@@ -321,17 +321,40 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     status.textContent = !connected ? 'Aguardando conexão com o servidor.' : !autoPass.supported ? 'Este servidor não oferece esta opção.' : autoPass.pending !== null ? 'Aplicando…' : '';
     status.hidden = !status.textContent;
   }
+  /** Grupo da trilha de fases com o menu de paradas aberto. */
+  let stopMenu: string | null = null;
+  /** Dá para marcar paradas agora: a ponte oferece a opção e você está jogando. */
+  const stopsEditable = () => !!client?.connected && !disconnected && opponentStops.supported && !!client.state && !client.state.gameOver && !client.state.spectating;
   function syncStops() {
-    const connected = !!client?.connected && !disconnected;
+    if (stopMenu && !stopsEditable()) { setStopMenu(null); return; }
     // Só os atributos mudam: o botão que acabou de ser tocado continua com o foco.
-    for (const button of $('#fStops').querySelectorAll<HTMLButtonElement>('[data-stop]')) {
-      button.disabled = !connected || !opponentStops.supported;
+    for (const button of $('#fStopMenu').querySelectorAll<HTMLButtonElement>('[data-stop]'))
       button.setAttribute('aria-pressed', String((opponentStops.value as string[]).includes(button.dataset.stop!)));
-    }
-    const status = $('#fStopsStatus');
-    status.textContent = !connected ? 'Aguardando conexão com o servidor.' : !opponentStops.supported ? 'Este servidor não oferece esta opção.' : opponentStops.pending !== null ? 'Aplicando…' : '';
-    status.hidden = !status.textContent;
   }
+  function setStopMenu(group: string | null, focus = false) {
+    const menu = $('#fStopMenu');
+    const previous = stopMenu;
+    stopMenu = group;
+    menu.hidden = !group;
+    if (group) { menu.innerHTML = stopMenuHTML(group, phaseGroupLabel(group), opponentStops.value); }
+    if (client?.state) render();
+    if (group) {
+      placeStopMenu();
+      if (focus) menu.querySelector<HTMLElement>('[data-stop]')?.focus({ preventScroll: true });
+    } else if (focus && previous) root.querySelector<HTMLElement>(`[data-stop-group="${previous}"]`)?.focus({ preventScroll: true });
+  }
+  /** O menu abre acima do ícone (abaixo, quando a trilha está no alto da tela), sem sair da tela. */
+  function placeStopMenu() {
+    const menu = $('#fStopMenu');
+    const anchor = stopMenu ? root.querySelector<HTMLElement>(`[data-stop-group="${stopMenu}"]`) : null;
+    if (!anchor || menu.hidden) return;
+    const a = anchor.getBoundingClientRect(), m = menu.getBoundingClientRect(), gap = 10;
+    const left = Math.min(Math.max(8, a.left + a.width / 2 - m.width / 2), window.innerWidth - m.width - 8);
+    const above = a.top - m.height - gap >= 8;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${above ? a.top - m.height - gap : a.bottom + gap}px`;
+  }
+  window.addEventListener('resize', placeStopMenu);
   function syncTurnNotice() {
     const permission = turnNotice.permission;
     const control = $('#fTurnNotice') as HTMLButtonElement;
@@ -354,7 +377,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fVolumeValue').textContent = `${volume}%`;
     ($('#fPace') as HTMLSelectElement).value = fast ? 'fast' : 'normal';
     ($('#fCardStyle') as HTMLSelectElement).value = cardStyle;
-    syncAutoPass(); syncStops();
+    syncAutoPass();
   }
   function setMenu(open: boolean, restore = false) {
     $('#fMenu').hidden = !open;
@@ -420,7 +443,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -1731,7 +1754,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     root.querySelector('.field.opp')!.classList.toggle('turn', active === 'theirs');
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
-    setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, opponentStops.supported ? opponentStops.value : []));
+    setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stopsEditable(), open: stopMenu }));
+    placeStopMenu();
     syncTurnClock(visual);
 
     // Carta que o prompt cita mas que não está à vista na mesa (topo do grimório na vidência/vigilância).
@@ -1979,6 +2003,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('click', e => {
     const t = e.target as HTMLElement;
     const ui = t.closest<HTMLElement>('[data-ui]')?.dataset.ui;
+    // Paradas no turno do oponente: o ícone da trilha abre o menu do grupo; fora dele, o menu fecha.
+    const stopGroup = t.closest<HTMLElement>('[data-stop-group]')?.dataset.stopGroup;
+    if (stopGroup) { setStopMenu(stopMenu === stopGroup ? null : stopGroup, e.detail === 0); return; }
+    const stop = t.closest<HTMLElement>('#fStopMenu [data-stop]');
+    if (stop) { if (stopsEditable()) opponentStops.toggle(stop.dataset.stop!); syncStops(); render(); return; }
+    if (stopMenu && !t.closest('#fStopMenu')) setStopMenu(null);
     if (ui === 'prompt-more') { expandedPrompt = expandedPrompt === shownInstruction ? '' : shownInstruction; renderTable(false); return; }
     if (ui === 'question-minimize' || ui === 'question-restore') {
       minimizedQuestion = ui === 'question-minimize' ? client?.state?.question?.id ?? null : null;
@@ -2038,8 +2068,6 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'settings') { syncTurnNotice(); setSettings(true); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
     if (ui === 'pass-responses') { if (client?.connected && !disconnected) passResponses.change(!passResponses.value); render(); return; }
-    const stop = t.closest<HTMLElement>('[data-stop]');
-    if (stop) { if (client?.connected && !disconnected) opponentStops.toggle(stop.dataset.stop!); syncStops(); render(); return; }
     if (ui === 'auto-pass') { if (client?.connected && !disconnected) autoPass.change(!autoPass.value); syncAutoPass(); return; }
     if (ui === 'turn-notice') { void turnNotice.setEnabled(!turnNotice.enabled).then(syncTurnNotice); return; }
     if (ui === 'mute') { audio.setMuted(!audio.settings.muted); syncSettings(); return; }
@@ -2434,6 +2462,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   });
   root.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      if (stopMenu) { e.preventDefault(); setStopMenu(null, true); return; }
       if (!$('#fSettings').hidden) { e.preventDefault(); setSettings(false); return; }
       if (!$('#fMenu').hidden) { e.preventDefault(); setMenu(false, true); return; }
       if (!$('#fLogDrawer').hidden) { e.preventDefault(); setLog(false, true); return; }

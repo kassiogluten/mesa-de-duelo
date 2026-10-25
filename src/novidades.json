@@ -1,5 +1,9 @@
 {
   "0.44.0": {
+    "Parar no turno do oponente": [
+      { "img": "0.44.0/paradas-menu.webp", "legenda": "Tocando no ícone do combate, o menu mostra as etapas daquela fase. As marcadas ficam douradas e o ícone ganha um ponto." },
+      { "img": "0.44.0/paradas-segurando.webp", "legenda": "No turno do oponente, o jogo parou em **Atacantes**, uma etapa marcada, e a prioridade é sua." }
+    ],
     "Mutação à mostra": [
       { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." },
       { "img": "0.44.0/mutada-detalhes.webp", "legenda": "Inspecionando a Illuna mutada: a carta de cima em destaque e, embaixo, a miniatura e o texto de cada carta que ficou sob ela. Tocar na miniatura abre a carta." }

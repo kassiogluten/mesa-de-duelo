@@ -58,9 +58,3 @@
 .errors-drawer .errors-empty { color: var(--muted); }
 .errors-drawer .errors-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .errors-drawer .errors-status { min-height: 1.2em; margin: 8px 0 0; color: var(--gold-light); font-size: 12.5px; }
-/* Etapas do turno do oponente em que o jogo para: botões que ficam dourados quando marcados. */
-.stop-steps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.stop-step { min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--bg-deep); color: var(--muted); font: 500 13px var(--body); cursor: pointer; transition: background-color 120ms ease, color 120ms ease; }
-.stop-step[aria-pressed="true"] { border-color: transparent; background: var(--gold); color: #1b1203; }
-.stop-step:disabled { opacity: .5; cursor: default; }
-.game-option-stops #fStopsStatus { color: var(--gold-light); }

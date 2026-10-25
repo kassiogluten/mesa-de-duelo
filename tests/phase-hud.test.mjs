@@ -115,18 +115,33 @@ test('the turn clock shows minutes and seconds, and hours only past one hour', (
   assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }), /data-turn-timer/);
 });
 
-test('marked opponent steps show a dot on their group only during an opponent turn, and the held step gets a ring', () => {
+test('marked opponent steps show a dot on their group, and the held step gets a ring only during an opponent turn', () => {
   const theirs = { ...state, activePlayer: 2, phase: 'UPKEEP', stack: [] };
   const stops = ['UPKEEP', 'DRAW', 'COMBAT_DECLARE_ATTACKERS'];
   const html = phaseHudHTML(theirs, undefined, stops);
   assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
-  assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada: Manutenção, Compra"/);
-  assert.match(html, /Combate · Parada: Atacantes/);
+  assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada no turno do oponente: Manutenção, Compra"/);
+  assert.match(html, /Combate · Parada no turno do oponente: Atacantes/);
   assert.match(html, /phase-step current held/);
   assert.match(html, /Parada sua/);
   assert.doesNotMatch(html, /<button|data-act|role="button"|tabindex=/);
   assert.doesNotMatch(phaseHudHTML({ ...theirs, stack: [{ id: 1 }] }, undefined, stops), /held/);
   assert.doesNotMatch(phaseHudHTML({ ...theirs, phase: 'MAIN1' }, undefined, stops), /held/);
   const mine = phaseHudHTML({ ...state, phase: 'UPKEEP', stack: [] }, undefined, stops);
-  assert.doesNotMatch(mine, /phase-stop-dot|held|Parada/);
+  assert.equal((mine.match(/phase-stop-dot/g) ?? []).length, 2);
+  assert.doesNotMatch(mine, /current held|Parada sua/);
+});
+
+test('with editable stops every track icon is a button that opens the menu of its group, for opponents and on your own turn', () => {
+  const stops = ['UPKEEP', 'COMBAT_DAMAGE'];
+  for (const s of [{ ...state, stack: [] }, { ...state, activePlayer: 2, stack: [] }]) {
+    const html = phaseHudHTML(s, undefined, { value: stops, editable: true, open: 'combat' });
+    assert.equal((html.match(/<button type="button" class="phase-step-btn"/g) ?? []).length, 5);
+    assert.doesNotMatch(html, /<ol[^>]*aria-hidden/);
+    assert.match(html, /data-stop-group="start" aria-label="Início: paradas no turno do oponente \(Manutenção\)" aria-haspopup="true" aria-expanded="false"/);
+    assert.match(html, /data-stop-group="combat" aria-label="Combate: paradas no turno do oponente \(Dano de combate\)" aria-haspopup="true" aria-expanded="true"/);
+    assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
+    assert.doesNotMatch(html, /data-phase="combat" data-tip/);
+  }
+  assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }, undefined, { value: stops, editable: true }), /<button/);
 });

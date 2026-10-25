@@ -36,10 +36,17 @@ export function holdingStop(state: { activePlayer: number | null; you: number; p
   return state.activePlayer !== null && state.activePlayer !== state.you && !state.stack.length && !!state.phase && stops.includes(state.phase);
 }
 
-/** Botões das etapas nas opções da partida; `aria-pressed` diz quais estão marcadas. */
-export function stopsOptionsHTML(stops: readonly string[], enabled: boolean): string {
-  return STOP_STEPS.map(([step, label]) =>
+/** Botões das etapas (só as do grupo da trilha, se informado); `aria-pressed` diz quais estão marcadas. */
+export function stopsOptionsHTML(stops: readonly string[], enabled: boolean, group?: string): string {
+  return STOP_STEPS.filter(([, , g]) => !group || g === group).map(([step, label]) =>
     `<button type="button" class="stop-step" data-stop="${step}" aria-pressed="${stops.includes(step)}"${enabled ? '' : ' disabled'}>${esc(label)}</button>`).join('');
+}
+
+/** Menu que abre ao tocar num ícone da trilha de fases: as etapas daquele grupo, para todos os oponentes. */
+export function stopMenuHTML(group: string, title: string, stops: readonly string[]): string {
+  return `<p class="stop-menu-title" id="fStopMenuTitle">${esc(title)} · turno do oponente</p>
+    <div class="stop-steps">${stopsOptionsHTML(stops, true, group)}</div>
+    <p class="stop-menu-hint">Nas etapas marcadas o jogo para e segura a prioridade para você, mesmo sem ações e com Passar respostas ligado. Vale para todos os oponentes.</p>`;
 }
 
 interface PreferenceStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
