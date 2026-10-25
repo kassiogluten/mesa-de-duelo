@@ -14,6 +14,10 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Mutação à mostra.** Uma criatura mutada agora tem o selo **Mutada** na mesa, com quantas cartas a formam, e as bordas das cartas de baixo aparecem atrás dela. Passando o mouse ou inspecionando, aparece qual carta está por cima e quais estão embaixo, com o texto de cada uma, já que a criatura tem as habilidades de todas.
 - **Novidades em imagens.** O painel **Novidades** ganhou o link **Ver as novidades em imagens**, que abre uma página com prints de como cada mudança aparece na mesa, versão por versão. Toque numa imagem para ampliar. As versões com imagens têm também um atalho **ver em imagens** ao lado do número.
 
+### Mudou
+
+- **Exílio mais discreto.** As cartas do exílio que dá para jogar, ao lado direito da mão, ficaram menores e com contorno e brilho mais suaves, para não chamarem mais atenção que a própria mão.
+
 ### Corrigido
 
 - **Criaturas preparadas à mostra.** Uma criatura preparada (como as de Strixhaven que "entram preparadas") agora tem o selo **Preparada** na mesa. Passando o mouse ou inspecionando, aparece qual feitiço dá para conjurar. O selo some quando a cópia é conjurada.

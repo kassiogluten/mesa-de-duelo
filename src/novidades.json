@@ -3,6 +3,9 @@
     "Mutação à mostra": [
       { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." }
     ],
+    "Exílio mais discreto": [
+      { "img": "0.44.0/exilio-menor.webp", "legenda": "As cartas do exílio, à direita da mão, agora menores que as da mão e com um contorno mais suave." }
+    ],
     "Criaturas preparadas à mostra": [
       { "img": "0.44.0/preparada.webp", "legenda": "A criatura preparada ganha o selo **Preparada**. Passando o mouse, aparece qual feitiço dá para conjurar." }
     ],
