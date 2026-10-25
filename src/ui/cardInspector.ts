@@ -10,8 +10,9 @@ export interface InspectorCard {
   keywords?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
   classLevel?: number; classMaxLevel?: number; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
-  merged?: { name?: string; faceDown?: boolean }[];
+  merged?: MergedPart[];
 }
+type MergedPart = { name?: string; image?: string; faceDown?: boolean };
 /** Mutação: quais cartas formam a permanente, a de cima primeiro (nomes em português quando já carregados). */
 export function mergedText(merged: { name?: string; faceDown?: boolean }[]) {
   const names = merged.map(m => m.faceDown || !m.name ? 'uma carta virada para baixo' : cacheGet(m.name)?.pt?.name || m.name);
@@ -66,11 +67,12 @@ function content(card: InspectorCard, compact: boolean) {
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}
   </div></div>`;
 }
-/** Texto das cartas de baixo de uma mutação: as habilidades delas também valem. */
-function mergedRules(merged: { name?: string; faceDown?: boolean }[]) {
-  return merged.slice(1).filter(m => !m.faceDown && m.name).map(m => {
-    const sc = cacheGet(m.name!);
-    return `<section class="ci-merged"><h3>${esc(sc?.pt?.name || m.name!)}</h3><div class="ci-rules">${richText(sc?.pt?.text ?? sc?.oracle_text ?? 'Carregando informações da carta…')}</div></section>`;
+/** Cartas de baixo de uma mutação, com miniatura e texto: as habilidades delas também valem. Tocar na miniatura abre a carta. */
+function mergedRules(merged: MergedPart[]) {
+  return merged.map((m, i) => ({ m, i })).slice(1).filter(({ m }) => !m.faceDown && m.name).map(({ m, i }) => {
+    const sc = cacheGet(m.name!), name = sc?.pt?.name || m.name!;
+    const thumb = safeImage(m.image ?? sc?.pt?.image_uris?.normal ?? sc?.image_uris?.normal);
+    return `<section class="ci-merged">${thumb ? `<button type="button" class="ci-merged-thumb" data-ci-merged="${i}" aria-label="Ver ${esc(name)}"><img src="${esc(thumb)}" alt="" draggable="false"></button>` : ''}<div><h3>${esc(name)}</h3><div class="ci-rules">${richText(sc?.pt?.text ?? sc?.oracle_text ?? 'Carregando informações da carta…')}</div></div></section>`;
   }).join('');
 }
 function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
@@ -81,7 +83,7 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
   const body = el.querySelector('.ci-body');
   if (body) body.scrollTop = scrollTop;
   if (restoreControl) el.querySelector<HTMLElement>('.ci-control')?.focus({preventScroll: true});
-  el.querySelector('img')?.addEventListener('error', e => {
+  el.querySelector('.ci-image')?.addEventListener('error', e => {
     (e.target as HTMLElement).remove(); el.querySelector('.ci-body')?.classList.add('ci-no-image');
   }, { once: true });
   el.querySelector<HTMLElement>('[data-flip]')?.addEventListener('click', e => {
@@ -89,6 +91,10 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
     if (sides) turnCard(el.querySelector<HTMLImageElement>('.ci-image'), e.currentTarget as HTMLElement, sides);
   });
   el.querySelector('[data-ci-pin]')?.addEventListener('click', () => inspectCard(card, origin));
+  el.querySelectorAll<HTMLElement>('[data-ci-merged]').forEach(b => b.addEventListener('click', () => {
+    const m = card.merged![Number(b.dataset.ciMerged)];
+    inspectCard({ name: m.name, image: m.image }, origin);
+  }));
   el.querySelector('[data-ci-close]')?.addEventListener('click', () => modal?.close());
 }
 function resolve(el: HTMLElement, card: InspectorCard, compact: boolean, ticket: number) {

@@ -1,7 +1,8 @@
 {
   "0.44.0": {
     "Mutação à mostra": [
-      { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." }
+      { "img": "0.44.0/mutada.webp", "legenda": "O selo **Mutada ×2** e a borda da carta de baixo aparecendo atrás da criatura." },
+      { "img": "0.44.0/mutada-detalhes.webp", "legenda": "Inspecionando a Illuna mutada: a carta de cima em destaque e, embaixo, a miniatura e o texto de cada carta que ficou sob ela. Tocar na miniatura abre a carta." }
     ],
     "Exílio mais discreto": [
       { "img": "0.44.0/exilio-menor.webp", "legenda": "As cartas do exílio, à direita da mão, agora menores que as da mão e com um contorno mais suave." }
