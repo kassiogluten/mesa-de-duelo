@@ -80,6 +80,14 @@ export interface FCard {
   commander?: boolean;
   /** Portador do Anel de quem a controla (o Anel te tenta). */
   ringBearer?: boolean;
+  /** Dono da permanente, só quando outro jogador a controla (controle trocado). */
+  owner?: number;
+  /** Jogadores que atiçaram a criatura (goad). */
+  goadedBy?: number[];
+  /** Escudos de regeneração ativos. */
+  shields?: number;
+  /** O que a carta escolheu (tipo, cores, carta nomeada, jogador, número, modo), só o que existe. */
+  chosen?: FChosen;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
@@ -109,6 +117,8 @@ export interface FCard {
 
 export interface FMergedCard { id: number; name?: string; set?: string; image?: string; token?: boolean; faceDown?: boolean }
 
+export interface FChosen { types?: string[]; colors?: string[]; names?: string[]; player?: number; number?: string; mode?: string }
+
 export interface FPlayer {
   id: number;
   seat?: number;
@@ -122,6 +132,11 @@ export interface FPlayer {
   counters?: Record<string, number>;
   /** Quantas vezes o Anel já tentou o jogador; ausente se nunca tentou. */
   ringTempted?: number;
+  /** É o monarca. */
+  monarch?: boolean;
+  /** Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite). */
+  landsPlayed?: number;
+  maxLands?: number;
   library: number;
   handCount: number;
   hand: FCard[];

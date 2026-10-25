@@ -53,6 +53,18 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       ] } });
     view.render();
   },
+  /** Monarca, terrenos do turno, permanente roubada, atiçada, regeneração e escolhas da carta. */
+  tableStatus() {
+    const [me, opp] = state.players;
+    Object.assign(me, { monarch: true, landsPlayed: 0, maxLands: 1, counters: {} });
+    Object.assign(opp, { landsPlayed: 0, maxLands: 1, counters: {} });
+    me.battlefield[0].shields = 1;
+    me.battlefield.push({ ...land(270, 10), name: 'Cavern of Souls', typeLine: 'Land', chosen: { types: ['Elf'] } },
+      { ...card(271, 'Pithing Needle', 10, { creature: false, manaCost: '{1}', typeLine: 'Artifact' }), chosen: { names: ['Grim Lavamancer'] } });
+    opp.battlefield.push({ ...card(272, 'Llanowar Elves', 23, { manaCost: '{G}' }), owner: 10 });
+    opp.battlefield[0].goadedBy = [10];
+    view.render();
+  },
   extras() {
     Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
     view.render();

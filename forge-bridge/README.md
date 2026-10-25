@@ -109,6 +109,8 @@ Saída do campo (`left`) traz `reason: "destroyed"` ou `"sacrificed"` quando é 
 
 Permanentes trazem, quando se aplicam: `ward` (custo da proteção contra alvos, como `"{2}"` ou o custo descrito pelo Forge), `protection` (de que a proteção protege: `"red"`, `"artifact"`, `"multicolored"`…, do parâmetro da palavra-chave), `phasedOut`, `cantAttack` / `cantBlock` (proibida por um efeito, pelas regras de combate do Forge; não conta enjoo, estar virada nem defensor) e `preventDamage` (dano que os escudos ainda vão prevenir; também nos jogadores).
 
+Também no campo: `owner` (dono, só quando outro jogador controla a permanente), `goadedBy` (jogadores que a incitaram), `shields` (escudos de regeneração) e `chosen` (o que a carta escolheu: `types`, `colors`, `names`, `player`, `number`, `mode`, só o que existe). Os jogadores trazem `monarch: true` quando são o monarca, `landsPlayed` (terrenos jogados no turno) e `maxLands` (quantos pode jogar; `-1` = sem limite).
+
 A perda de vida pelo dano vem depois, em `life-changed` (o Forge tira a vida de todos de uma vez); o ganho do vínculo com a vida vem como `life-changed` positivo do controlador logo depois do dano da fonte.
 
 Também chegam `{type:"toast", text}` com mensagens do Forge e `{type:"error", text}` quando um comando falha. Quando a ponte ignora uma ação vencida (pedido que já mudou, clique duplo), chega `{type:"diagnostic", code:"stale-action", action, text}`: a mesa não mostra aviso, só registra no painel "Erros da partida". Em `room.players`, `conceded: true` marca quem desistiu da partida (a mesa tira o assento de vista). Em rede chega `{type:"room", room}` ao criar, entrar ou voltar para uma sala, com o mesmo formato do campo `room`.

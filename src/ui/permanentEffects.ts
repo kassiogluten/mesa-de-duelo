@@ -12,7 +12,7 @@ export interface PermanentFx {
   base: ('deathtouch' | 'haste' | 'chained')[];
   /** Detalhes na borda esquerda: olho (vigilância), pegadas (atropelar) e espada/escudo riscados (não pode atacar/bloquear). */
   corner: ('vigilance' | 'trample' | 'no-attack' | 'no-block')[];
-  seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down'; html: string; label: string }[];
+  seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down' | StatusKind; html: string; label: string }[];
   phased: boolean;
   targeted?: 'mine' | 'theirs';
   sick: boolean;
@@ -35,7 +35,7 @@ export function auraColor(manaCost = '') {
 }
 export const protectionLabel = (from: string) => PROTECTION_LABEL[from] ?? from;
 
-export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean } = {}): PermanentFx {
+export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean; playerName?: (id: number) => string } = {}): PermanentFx {
   const k = new Set(c.keywords ?? []);
   const has = (name: string) => k.has(name);
   const p1 = c.counters?.P1P1 ?? 0, m1 = c.counters?.M1M1 ?? 0;
@@ -62,8 +62,51 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
     const kind = c.faceDownKind && FACE_DOWN_LABEL[c.faceDownKind];
     seals.push({ kind: 'face-down', html: kind ? `${kind} 2/2` : '2/2', label: `Virada para baixo${kind ? ` (${kind})` : ''}, 2/2` });
   }
+  seals.push(...permanentStatus(c, context.playerName));
   const restricted = c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : undefined;
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
+}
+
+type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen';
+const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
+const STATUS_ICON: Record<StatusKind, string> = {
+  control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
+  goaded: icon('M12 2 9 9H2l5.6 4.2L5.5 21 12 16.3l6.5 4.7-2.1-7.8L22 9h-7z'),
+  regen: icon('M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z'),
+  chosen: icon('M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 9A1.5 1.5 0 1 0 7.5 6a1.5 1.5 0 0 0 0 3z'),
+};
+const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
+
+/**
+ * Estados que o motor guarda e a carta impressa não mostra: controle trocado, atiçada, escudos de regeneração e o que a
+ * carta escolheu. Na mesa ficam como selos pequenos (controle e atiçada só com o ícone); o texto vai no balão e no inspetor.
+ */
+export function permanentStatus(c: FCard, playerName: (id: number) => string = id => `Jogador ${id}`): PermanentFx['seals'] {
+  const seals: PermanentFx['seals'] = [];
+  if (c.owner !== undefined && c.controller !== undefined && c.owner !== c.controller) {
+    const owner = playerName(c.owner);
+    seals.push({ kind: 'control', html: STATUS_ICON.control, label: `Pertence a ${owner}; quem a controla agora é ${playerName(c.controller)}. Volta para ${owner} quando o efeito de controle acabar.` });
+  }
+  if (c.goadedBy?.length) {
+    const by = list(c.goadedBy.map(playerName));
+    seals.push({ kind: 'goaded', html: STATUS_ICON.goaded, label: `Atiçada por ${by}: ataca em todo combate, se puder, e ataca um jogador que não seja ${by}, se puder. Dura até o próximo turno de quem atiçou.` });
+  }
+  if (c.shields) {
+    seals.push({ kind: 'regen', html: `${STATUS_ICON.regen}${c.shields > 1 ? `×${c.shields}` : ''}`, label: `${c.shields > 1 ? `${c.shields} escudos de regeneração` : 'Escudo de regeneração'}: da próxima vez que seria destruída neste turno, em vez disso é virada, sai do combate e perde o dano marcado.` });
+  }
+  const ch = c.chosen;
+  if (ch) {
+    const shown: string[] = [], said: string[] = [];
+    const colors = ch.colors ?? [];
+    if (ch.types?.length) { shown.push(esc(ch.types.join(' / '))); said.push(`tipo ${ch.types.join(' e ')}`); }
+    if (colors.length) { shown.push(colors.map(k => COLOR_PIP[k] ? pip(COLOR_PIP[k]) : esc(protectionLabel(k))).join('')); said.push(`${colors.length > 1 ? 'cores' : 'cor'} ${list(colors.map(protectionLabel))}`); }
+    if (ch.names?.length) { shown.push(esc(ch.names[0])); said.push(`${ch.names.length > 1 ? 'cartas nomeadas' : 'carta nomeada'} ${list(ch.names)}`); }
+    if (ch.player !== undefined) { shown.push(esc(playerName(ch.player))); said.push(`jogador ${playerName(ch.player)}`); }
+    if (ch.number) { shown.push(esc(ch.number)); said.push(`número ${ch.number}`); }
+    if (ch.mode) { shown.push(esc(ch.mode)); said.push(`modo ${ch.mode}`); }
+    if (said.length) seals.push({ kind: 'chosen', html: `${STATUS_ICON.chosen}<span class="fx-chosen">${shown.join(' · ')}</span>`, label: `Escolhido pela carta: ${said.join('; ')}.` });
+  }
+  return seals;
 }
 
 /** Classes da carta e o HTML dos efeitos (desenhados atrás ou na borda da carta, sem receber clique). */

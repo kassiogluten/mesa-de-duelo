@@ -16,7 +16,7 @@ import forge.game.zone.ZoneType;
 /**
  * Estados de uma permanente que a mesa desenha como efeito contínuo e que as palavras-chave sozinhas não dizem: o custo
  * da proteção contra alvos (ward), de que a proteção protege, fases fora, "não pode atacar/bloquear" e os escudos de
- * prevenção. Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
+ * prevenção, além de dono, atiçamento, regeneração e escolhas (em {@link #status}). Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
  */
 final class PermanentDetails {
     private PermanentDetails() {}
@@ -25,6 +25,47 @@ final class PermanentDetails {
     static void visible(JsonObject o, CardView c) {
         if (c.isPhasedOut()) o.addProperty("phasedOut", true);
         if (c.getZone() == ZoneType.Battlefield && c.getPreventNextDamage() > 0) o.addProperty("preventDamage", c.getPreventNextDamage());
+    }
+
+    /**
+     * Estados públicos de uma permanente no campo, inclusive virada para baixo: o dono quando outro jogador a controla,
+     * os escudos de regeneração e quem a atiçou. As escolhas feitas pela carta só vão com ela à mostra.
+     */
+    static void status(JsonObject o, CardView c, Game game) {
+        if (c.getZone() != ZoneType.Battlefield) return;
+        if (c.getOwner() != null && c.getController() != null && c.getOwner().getId() != c.getController().getId()) o.addProperty("owner", c.getOwner().getId());
+        if (c.getShieldCount() > 0) o.addProperty("shields", c.getShieldCount());
+        if (!c.isFaceDown()) chosen(o, c);
+        if (game == null) return;
+        try {
+            Card gc = game.findByView(c);
+            if (gc == null || !gc.isGoaded()) return;
+            JsonArray by = new JsonArray();
+            for (Player p : gc.getGoaded()) by.add(p.getId());
+            o.add("goadedBy", by);
+        } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
+    }
+
+    /** O que a carta escolheu ao entrar ou resolver (tipo, cores, carta nomeada, jogador, número, modo); só vai quando há algo. */
+    static void chosen(JsonObject o, CardView c) {
+        JsonObject ch = new JsonObject();
+        JsonArray types = new JsonArray();
+        for (String t : new String[] {c.getChosenType(), c.getChosenType2()}) if (t != null && !t.isEmpty()) types.add(t);
+        if (!types.isEmpty()) ch.add("types", types);
+        if (c.getChosenColors() != null && !c.getChosenColors().isEmpty()) {
+            JsonArray colors = new JsonArray();
+            for (String color : c.getChosenColors()) colors.add(color.toLowerCase());
+            ch.add("colors", colors);
+        }
+        if (c.getNamedCard() != null && !c.getNamedCard().isEmpty()) {
+            JsonArray names = new JsonArray();
+            for (String name : c.getNamedCard()) if (name != null && !name.isEmpty()) names.add(name);
+            if (!names.isEmpty()) ch.add("names", names);
+        }
+        if (c.getChosenPlayer() != null) ch.addProperty("player", c.getChosenPlayer().getId());
+        if (c.getChosenNumber() != null && !c.getChosenNumber().isEmpty()) ch.addProperty("number", c.getChosenNumber());
+        if (c.getChosenMode() != null && !c.getChosenMode().isEmpty()) ch.addProperty("mode", c.getChosenMode());
+        if (ch.size() > 0) o.add("chosen", ch);
     }
 
     static void add(JsonObject o, CardView c, CardStateView s, Game game) {

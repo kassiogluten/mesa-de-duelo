@@ -61,3 +61,6 @@
   .card-inspector .ci-details { grid-column: 2; grid-row: 2; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 14px 14px; font-size: 15px; }
 }
 @media (max-height: 500px) { .card-inspector-preview { top: 8px; max-height: calc(100dvh - 16px); width: min(380px, calc((100dvh - 56px) * .714)); } }
+/* Estados da permanente (controle trocado, atiçada, regeneração, escolhas) na prévia ao passar o mouse. */
+.ci-status { margin: 0; padding: 8px 12px 10px; list-style: none; display: grid; gap: 4px; font-size: 13px; line-height: 1.4; color: #d5dcea; background: #0c1426; border-top: 1px solid var(--line); }
+.ci-status li { padding-left: 10px; border-left: 2px solid var(--gold); }
