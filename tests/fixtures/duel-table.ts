@@ -65,6 +65,16 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     opp.battlefield[0].goadedBy = [10];
     view.render();
   },
+  /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
+  libraryTop() {
+    const [me, opp] = state.players;
+    me.battlefield.push(card(280, 'Future Sight', 10, { creature: false, manaCost: '{2}{U}{U}{U}', typeLine: 'Enchantment' }));
+    opp.battlefield.push(card(281, 'Courser of Kruphix', 23, { manaCost: '{1}{G}{G}', typeLine: 'Enchantment Creature — Centaur', power: 2, toughness: 4 }));
+    me.libraryTop = card(290, 'Llanowar Elves', 10, { manaCost: '{G}', typeLine: 'Creature — Elf Druid', power: 1, toughness: 1 });
+    opp.libraryTop = { ...land(291, 23) };
+    state.castable = [290];
+    view.render();
+  },
   extras() {
     Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
     view.render();

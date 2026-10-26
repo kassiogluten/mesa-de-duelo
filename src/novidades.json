@@ -1,4 +1,12 @@
 {
+  "0.50.0": {
+    "Topo do grimório à vista": [
+      { "img": "0.50.0/topo-oponente.webp", "legenda": "Com o Courser of Kruphix do oponente, o topo do grimório dele fica revelado: uma **Floresta**." }
+    ],
+    "Jogar do topo do grimório": [
+      { "img": "0.50.0/topo-seu.webp", "legenda": "Com Future Sight, os **Elfos de Llanowar** do topo do seu grimório brilham: dá para conjurá-los dali." }
+    ]
+  },
   "0.49.0": {
     "Devoção à vista": [
       { "img": "0.49.0/devocao-mercador.webp", "legenda": "O Mercador Cinzento de Asfódelos com o selo de devoção ao preto: **4**." },

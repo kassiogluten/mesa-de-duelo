@@ -706,6 +706,8 @@ final class Session {
         for (PlayerView p : gv.getPlayers()) {
             List<Iterable<CardView>> zones = new ArrayList<>(List.of(nz(p.getBattlefield()), nz(p.getGraveyard()), nz(p.getExile()), nz(p.getCommand())));
             if (p.equals(seat.me)) zones.add(nz(p.getHand()));
+            // Topo do grimório que o jogador pode ver: dá para jogá-lo com Future Sight e afins.
+            for (CardView top : nz(p.getLibrary())) { if (top.canBeShownTo(seat.me)) zones.add(List.of(top)); break; }
             for (Iterable<CardView> zone : zones) {
                 for (CardView c : zone) if (c.getId() == id) return c;
             }

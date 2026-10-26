@@ -450,3 +450,21 @@ A caixa ao lado dos botões de ação, quando mostra uma frase (escolher alvo, p
 - [x] No computador, a fileira de terrenos sempre termina antes da caixa, na largura dela com uma escolha de cartas (a mais larga), como já acontecia no celular. Nada muda de lugar quando a caixa aparece; com muitos terrenos a fileira rola.
 - [x] No celular, a caixa de escolha de cartas fica na largura dos botões, com os botões um embaixo do outro, em vez de passar por cima dos terrenos.
 - [x] Conferido no duelo, no Commander com vários jogadores e no celular.
+
+## 32. Entender uma remoção que passou despercebida
+
+Distraído, o jogador olha a mesa e uma permanente sua sumiu, sem ter visto a pilha. Hoje fica difícil descobrir o porquê. Levantamento feito em 26/10/2026:
+
+- O histórico existe (Menu → Registro), mas fica escondido e diz só "Carta destruída: X.", sem a mágica ou habilidade que causou.
+- A ponte não liga a saída do campo à causa: o evento `left` (`VisibleEvents.java`) leva só a carta, o destino e o motivo (destruída ou sacrificada). O moer já faz essa ligação com `millSource()`, olhando o que está resolvendo no topo da pilha.
+- Remoção em massa é justamente o caso que a mesa não mostra: com mais de 12 eventos na fila (`QUEUE_LIMIT` em `presentationTimeline.ts`), ela pula as animações e mostra só as 4 últimas. Com a aba escondida, tudo passa sem animação.
+- O histórico guarda 60 eventos: um wrath com gatilhos de morte pode empurrar a própria mágica para fora.
+
+Alternativas (recomendado: A + B, e talvez D):
+
+- [ ] **A. Causa no histórico** (base para as outras): a ponte grava em `left` a carta que estava resolvendo e o `stackId` dela, e o histórico junta tudo numa linha ("Wrath of God (Ana) destruiu 7 permanentes: 3 suas — Llanowar Elves, …"). Mudar também o limite de 60 eventos, ou fazer a remoção em massa ocupar uma linha só, para a causa não sair do histórico.
+- [ ] **B. Resumo "Enquanto você não olhava"**: um aviso que fica na tela até o jogador fechar, quando ele perde permanentes por efeito de outro jogador e a mesa não mostrou isso direito (fila pulada, aba escondida ou 3 ou mais de uma vez). Mostra a carta causadora, miniaturas do que saiu e um link para o histórico.
+- [ ] **C. Fantasma no lugar da carta**: a vaga fica esmaecida por alguns segundos, ou até a próxima ação, com "Destruída por …". Com muitas cartas o campo fica poluído, e a mesa ainda reorganiza as fileiras.
+- [ ] **D. Histórico à mão**: botão do Registro direto na mesa, com contador de eventos não vistos.
+
+A decidir antes de começar: qual combinação; se o resumo vale só para as permanentes do jogador ou também para as do oponente; se aparece só quando a mesa não mostrou a remoção ou em toda remoção em massa.

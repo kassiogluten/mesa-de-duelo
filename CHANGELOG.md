@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.50.0] - 2026-10-26
+
+### Novo
+
+- **Topo do grimório à vista.** Com cartas que deixam olhar o topo do grimório a qualquer momento (como Vizier of the Menagerie e Bolas's Citadel), a carta do topo aparece de face para cima no seu grimório, só para você. Quando o topo é revelado (Courser of Kruphix, Future Sight), todos os jogadores o veem. Toque nele para ver a carta.
+- **Jogar do topo do grimório.** Quando dá para conjurar ou jogar a carta do topo (Future Sight, Bolas's Citadel, o terreno com Courser of Kruphix), o grimório brilha e a carta aparece também na ponta da sua mão, com a etiqueta **Topo do grimório**. Toque nela para jogar, como uma carta da mão.
+
 ## [0.49.0] - 2026-10-26
 
 ### Novo

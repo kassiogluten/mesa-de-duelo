@@ -21,8 +21,9 @@ import forge.player.PlayerControllerHuman;
 
 /**
  * Cartas fora da mão que o jogador pode usar agora: flashback e afins no cemitério; tramadas, foretell,
- * Aventura e "você pode conjurar" no exílio (inclusive do exílio do oponente); o comandante. O destaque do Forge
- * (setWeaklySelectable) deixa várias de fora, as tramadas sempre. Só com prioridade; não confere a mana.
+ * Aventura e "você pode conjurar" no exílio (inclusive do exílio do oponente); o comandante; o topo do grimório
+ * (Future Sight, Bolas's Citadel). O destaque do Forge (setWeaklySelectable) deixa várias de fora, as tramadas
+ * sempre. Só com prioridade; não confere a mana.
  *
  * <p>Conferir se uma carta pode ser conjurada mexe no motor: para a face de trás, a Aventura ou a mágica com
  * outra forma, o Forge refaz os efeitos estáticos (CR 601.3e). Por isso a conta roda só na thread do jogo,
@@ -67,7 +68,7 @@ final class Castable {
     static List<Integer> compute(Player me) {
         Set<Card> candidates = new LinkedHashSet<>();
         for (Card c : me.getCardsActivatableInExternalZones(false)) {
-            if (c.isInZone(ZoneType.Graveyard) || c.isInZone(ZoneType.Exile) || c.isInZone(ZoneType.Command)) candidates.add(c);
+            if (c.isInZone(ZoneType.Graveyard) || c.isInZone(ZoneType.Exile) || c.isInZone(ZoneType.Command) || c.isInZone(ZoneType.Library)) candidates.add(c);
         }
         for (Card c : me.getCardsIn(ZoneType.Command)) if (c.isCommander()) candidates.add(c);
         for (Card c : me.getCardsIn(ZoneType.Exile)) if (c.isPlotted()) candidates.add(c);

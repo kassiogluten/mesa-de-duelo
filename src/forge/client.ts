@@ -140,6 +140,8 @@ export interface FPlayer {
   landsPlayed?: number;
   maxLands?: number;
   library: number;
+  /** Carta do topo do grimório, só quando quem recebe o estado pode vê-la (Vizier of the Menagerie, Courser of Kruphix...). */
+  libraryTop?: FCard;
   handCount: number;
   hand: FCard[];
   battlefield: FCard[];

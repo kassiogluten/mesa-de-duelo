@@ -335,6 +335,7 @@ a { color: var(--gold); }
 .pile.exile > span { color: var(--muted); }
 .pile.actionable .gy-top .face, .pile.actionable .gy-top { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); border-radius: 6% / 4.5%; }
 .pile.actionable.exile .gy-top { filter: none; }
+.pile.lib.actionable .gy-top { cursor: pointer; }
 .pile > span {
   position: absolute; right: -6px; bottom: -6px; min-width: 22px; padding: 1px 5px; border-radius: 999px;
   background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 700; text-align: center;

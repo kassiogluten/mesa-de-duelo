@@ -661,6 +661,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     for (const p of s.players) {
       const mine = p.id === s.you;
       for (const c of p.graveyard) if (canUse(s, c)) out.push({ c, tag: mine ? 'Cemitério' : `Cemitério de ${p.name}` });
+      if (p.libraryTop && canUse(s, p.libraryTop)) out.push({ c: p.libraryTop, tag: mine ? 'Topo do grimório' : `Topo do grimório de ${p.name}` });
     }
     return out;
   }
@@ -1211,7 +1212,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const ex = p.exile[p.exile.length - 1];
     const exLive = p.exile.some(c => canUse(s, c)) ? ' actionable' : '';
     const exile = ex ? `<div class="pile gy exile${exLive}" data-gy="${p.id}" data-zone="exile" role="button" tabindex="0" title="Exílio" aria-label="Ver exílio de ${esc(p.name)} (${p.exile.length})"><div class="gy-top" data-peek="${ex.id}">${face(ex, 'small')}</div><span>${p.exile.length}</span></div>` : '';
-    return `<div class="pile lib" title="Grimório"><div class="back"></div><span>${p.library}</span></div>
+    // Topo do grimório à vista (Vizier of the Menagerie, Courser of Kruphix...): tocar joga a carta quando dá, senão mostra.
+    const lt = p.libraryTop;
+    const library = lt
+      ? `<div class="pile lib top-visible${canUse(s, lt) ? ' actionable' : ''}" title="Grimório"><div class="gy-top" data-fid="${lt.id}" data-library-top role="button" tabindex="0" aria-label="${esc(label(lt))}, topo do grimório de ${esc(p.name)}${canUse(s, lt) ? '. Jogar' : ''}">${face(lt, 'small')}</div><span>${p.library}</span></div>`
+      : `<div class="pile lib" title="Grimório"><div class="back"></div><span>${p.library}</span></div>`;
+    return `${library}
       <div class="pile gy${gyLive}" data-gy="${p.id}" data-zone="gy" role="button" tabindex="0" title="Cemitério" aria-label="Ver cemitério de ${esc(p.name)} (${p.graveyard.length})">${top ? `<div class="gy-top" data-peek="${top.id}">${face(top, 'small')}</div>` : '<div class="gy-empty"></div>'}<span>${p.graveyard.length}</span></div>${exile}`;
   }
 
@@ -2003,7 +2009,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const s = client?.state;
     if (!s) return undefined;
     for (const p of stateWithFrame(s, displayFrame).players) {
-      for (const c of [...p.hand, ...p.battlefield, ...p.graveyard, ...p.exile, ...(p.commandZone ?? []), ...(p.emblems ?? [])]) if (c.id === id) return c;
+      for (const c of [...p.hand, ...p.battlefield, ...p.graveyard, ...p.exile, ...(p.commandZone ?? []), ...(p.emblems ?? []), ...(p.libraryTop ? [p.libraryTop] : [])]) if (c.id === id) return c;
     }
     const onStack = s.stack.find(si => si.source?.id === id)?.source;
     if (onStack) return onStack;
@@ -2352,6 +2358,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (cd.hasAttribute('data-command-card') && !canPlayCommander(s, id, gen)) { showPreview(findCard(id), cd, true); return; }
+    if (cd.hasAttribute('data-library-top')) { const top = findCard(id); if (!top || gen !== s.input.gen || !canUse(s, top)) { showPreview(top, cd, true); return; } }
     if (s.input.blocking && cd.closest('.field')) {
       if (s.input.blocking.blockers.includes(id)) {
         selectedBlocker = selectedBlocker?.blocker === id ? null : { blocker: id, gen };

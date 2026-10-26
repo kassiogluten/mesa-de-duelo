@@ -55,6 +55,8 @@ final class StateJson {
             for (Player registered : game.getRegisteredPlayers()) {
                 PlayerView p = registered.getView();
                 JsonObject row = player(p, viewer == p.getId() && !(game.getRules().hasAppliedVariant(forge.game.GameType.Commander) && p.getHasLost()), game);
+                JsonObject top = libraryTop(p, gv, viewer, game);
+                if (top != null) row.add("libraryTop", top);
                 row.addProperty("seat", seat++); players.add(row);
             }
         } else for (PlayerView p : gv.getPlayers()) players.add(player(p, viewer == p.getId(), null));
@@ -168,6 +170,22 @@ final class StateJson {
         pool.addProperty("C", p.getMana(MagicColor.COLORLESS));
         o.add("pool", pool);
         return o;
+    }
+
+    /**
+     * Topo do grimório, só para quem pode vê-lo: "olhe o topo a qualquer momento" (Vizier of the Menagerie, Bolas's
+     * Citadel) mostra ao dono; "jogue com o topo revelado" (Courser of Kruphix, Future Sight) mostra a todos.
+     * Espectador vê só o que todos os jogadores veem.
+     */
+    static JsonObject libraryTop(PlayerView p, GameView gv, int viewer, Game game) {
+        CardView top = null;
+        for (CardView c : nzv(p.getLibrary())) { top = c; break; }
+        if (top == null) return null;
+        PlayerView seen = null;
+        for (PlayerView pv : gv.getPlayers()) if (pv.getId() == viewer) seen = pv;
+        boolean visible = seen != null ? top.canBeShownTo(seen) : !gv.getPlayers().isEmpty();
+        if (seen == null) for (PlayerView pv : gv.getPlayers()) visible &= top.canBeShownTo(pv);
+        return visible ? card(top, game) : null;
     }
 
     private static Iterable<CardView> nzv(Iterable<CardView> it) { return it == null ? java.util.List.of() : it; }
