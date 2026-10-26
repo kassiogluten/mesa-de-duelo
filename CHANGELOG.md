@@ -10,6 +10,11 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Corrigido
 
+- **Cabeçalho numa linha só.** No celular deitado e em telas estreitas, **Jogar**, **Meus decks** e o botão de relato cabem numa linha só, sem quebrar o texto em duas. O botão de relato aparece como **Relatar**.
+- **Títulos de Meus decks.** A tela **Meus decks** usa nos títulos a mesma letra do resto do jogo, e a lista de formatos ganhou a mesma seta das outras listas.
+- **Créditos uma vez só.** No fim da tela inicial, a linha de créditos não aparece mais repetida embaixo do rodapé.
+- **Novidades em imagens no celular.** Na página **Novidades em imagens**, a marca e o botão **Voltar ao jogo** não encostam mais nas bordas da tela.
+- **Janela de sugestão.** Com **Sugestão** marcada, a caixa de texto pergunta qual é a sua ideia, em vez de pedir o que deu errado. O fundo da janela também não deixa mais aparecer o texto da tela de trás.
 - **Terrenos livres da caixa de ação.** Quando a caixa ao lado dos botões mostrava uma frase ("Escolha um terreno para sacrificar") ou uma escolha de cartas, ela subia por cima dos últimos terrenos da direita, e às vezes era justamente um deles que precisava ser escolhido. Agora a fileira de terrenos sempre termina antes da caixa e, com muitos terrenos, rola em vez de passar por baixo. No celular, a caixa de escolha de cartas ficou da largura dos botões, com os botões um embaixo do outro.
 
 ## [0.48.1] - 2026-10-26

@@ -1,6 +1,7 @@
 /* Novidades em imagens (novidades.html): cada item do CHANGELOG com o print de como ficou na mesa. */
 body { overflow-y: auto; }
-.vis-top { padding: 0 16px; }
+/* Duas classes a mais que .shared-shell-header.home-top, que zera o padding: sem isso a marca encostava na borda. */
+.shared-shell-header.home-top.vis-top { padding-inline: 16px; }
 .vis-back {
   margin-left: auto; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel);
   color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px;

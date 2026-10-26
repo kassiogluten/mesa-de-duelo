@@ -67,6 +67,7 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
   };
   function sync() {
     overlay.querySelectorAll<HTMLInputElement>('[name="fbKind"]').forEach(input => { input.checked = input.value === kind; });
+    text.placeholder = kind === 'erro' ? 'O que você fez e o que aconteceu?' : 'Qual é a sua ideia?';
     const length = text.value.length;
     $('#fbCount').textContent = `${length.toLocaleString('pt-BR')} de ${DESCRIPTION_LIMIT.toLocaleString('pt-BR')}`;
     $('#fbWhat').innerHTML = `<strong>O que vai junto:</strong> o texto que você escreveu, a versão do jogo e o tipo de aparelho (navegador, tamanho da tela, toque e se o jogo está instalado)${attach.checked && match

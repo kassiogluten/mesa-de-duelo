@@ -1,5 +1,20 @@
 {
   "0.48.2": {
+    "Cabeçalho numa linha só": [
+      { "img": "0.48.2/cabecalho.webp", "legenda": "O topo no celular deitado: **Jogar**, **Meus decks**, **Relatar** e **Novidades** numa linha só." }
+    ],
+    "Títulos de Meus decks": [
+      { "img": "0.48.2/meus-decks.webp", "legenda": "O título **Meus decks** na letra do jogo e a lista **Formato** com a seta nova." }
+    ],
+    "Créditos uma vez só": [
+      { "img": "0.48.2/rodape.webp", "legenda": "O fim da tela inicial, só com o rodapé de créditos, aviso e contato." }
+    ],
+    "Novidades em imagens no celular": [
+      { "img": "0.48.2/novidades-celular.webp", "legenda": "O topo da página no celular deitado, com espaço dos dois lados." }
+    ],
+    "Janela de sugestão": [
+      { "img": "0.48.2/relato.webp", "legenda": "A janela com **Sugestão** marcada e a caixa de texto perguntando “Qual é a sua ideia?”." }
+    ],
     "Terrenos livres da caixa de ação": [
       { "img": "0.48.2/terrenos-livres-da-caixa.webp", "legenda": "No computador, a fileira de terrenos termina antes da caixa com a frase \"Escolha um terreno para sacrificar\", e todos os terrenos ficam à vista para escolher." },
       { "img": "0.48.2/terrenos-livres-no-celular.webp", "legenda": "No celular, a caixa da escolha de cartas fica estreita, com os botões um embaixo do outro, e não cobre mais os terrenos." }

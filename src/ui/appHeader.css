@@ -8,12 +8,12 @@
 .shared-shell-header .brand-mark { position: relative; width: 28px; height: 28px; border-radius: 7px; transform: rotate(45deg) scale(.9); flex-shrink: 0; box-shadow: 0 0 18px #f2b54c44, inset 0 0 0 2px #ffffff40; }
 .shared-shell-header .brand-mark::after { content: ''; position: absolute; inset: 4px; border: 1px solid #ffffff30; border-radius: 4px; }
 .shared-shell-header.home-top nav { display: flex; align-items: center; align-self: stretch; gap: 8px; order: 0; width: auto; }
-.shared-shell-header .home-nav { min-height: 44px; padding: 8px 16px; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer; font: 600 15px/1.35 var(--body, sans-serif); }
+.shared-shell-header .home-nav { min-height: 44px; padding: 8px 16px; white-space: nowrap; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer; font: 600 15px/1.35 var(--body, sans-serif); }
 .shared-shell-header .home-nav.active { color: var(--gold-light); background: #f2b54c0c; box-shadow: inset 0 -2px var(--gold); }
 .shared-shell-header .home-nav:disabled, .shared-shell-header [aria-disabled='true'] { opacity: .55; cursor: default; }
 .shared-shell-header .home-news { margin-left: auto; }
 .shared-shell-header .home-news .news { position: relative; inset: auto; }
-.shared-shell-header .news-btn { min-height: 40px; }
+.shared-shell-header .news-btn { min-height: 40px; white-space: nowrap; }
 .shared-shell-header :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) { .shared-shell-header .home-nav:hover:not(:disabled) { color: var(--ink); background: #ffffff08; } }
 @media (max-width: 700px) {
@@ -29,6 +29,13 @@
 .shared-shell-header .feedback-btn .feedback-short { display: none; }
 @media (max-width: 700px) {
   .shared-shell-header .feedback-btn { padding: 6px 10px; font-size: 13px; }
+  .shared-shell-header .feedback-btn .feedback-long { display: none; }
+  .shared-shell-header .feedback-btn .feedback-short { display: inline; }
+}
+/* Celular deitado e tablet estreito: cabe numa linha só, com o rótulo curto do relato (antes "Meus decks" e "Enviar sugestão ou erro" quebravam em duas linhas). */
+@media (min-width: 701px) and (max-width: 960px) {
+  .shared-shell-header.home-top { gap: 20px; }
+  .shared-shell-header .home-nav { padding-inline: 12px; }
   .shared-shell-header .feedback-btn .feedback-long { display: none; }
   .shared-shell-header .feedback-btn .feedback-short { display: inline; }
 }
