@@ -21,7 +21,7 @@ export function mergedText(merged: { name?: string; faceDown?: boolean }[]) {
   const under = names.slice(1);
   return `Mutada: ${names[0]} por cima${under.length ? `, ${under.length > 1 ? `${under.slice(0, -1).join(', ')} e ${under.at(-1)}` : under[0]} embaixo` : ''}`;
 }
-const keywords: Record<string, string> = { FLYING: 'Voar', FIRST_STRIKE: 'Iniciativa', DOUBLE_STRIKE: 'Golpe duplo', TRAMPLE: 'Atropelar', HASTE: 'Ímpeto', VIGILANCE: 'Vigilância', REACH: 'Alcance', DEATHTOUCH: 'Toque mortífero', LIFELINK: 'Vínculo com a vida', HEXPROOF: 'Resistência à magia', INDESTRUCTIBLE: 'Indestrutível', MENACE: 'Ameaçar', DEFENDER: 'Defensor' };
+const keywords: Record<string, string> = { FLYING: 'Voar', FIRST_STRIKE: 'Iniciativa', DOUBLE_STRIKE: 'Golpe duplo', TRAMPLE: 'Atropelar', HASTE: 'Ímpeto', VIGILANCE: 'Vigilância', REACH: 'Alcance', DEATHTOUCH: 'Toque mortífero', LIFELINK: 'Vínculo com a vida', HEXPROOF: 'Resistência à magia', INDESTRUCTIBLE: 'Indestrutível', MENACE: 'Ameaçar', DEFENDER: 'Defensor', SHROUD: 'Manto', WARD: 'Proteção contra alvos', PROTECTION: 'Proteção' };
 let preview: HTMLElement | null = null;
 let modal: HTMLDialogElement | null = null;
 let hovered: InspectorCard | null = null;

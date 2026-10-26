@@ -897,6 +897,15 @@ body[data-screen='lobby'] .credits { display: none; }
 .ctr:hover .ctr-tip, .ctr:focus-visible .ctr-tip, .ctr.open .ctr-tip { display: block; }
 .slot.tapped .ctr-tip { transform: rotate(-90deg); transform-origin: left bottom; }
 .slot.tapped .ctr.kw .ctr-tip { transform-origin: right bottom; }
+/* Marcadores e palavras-chave que não cabem na carta: um selo só, com a lista no balão e tudo no inspetor. */
+.ctr-sum { display: none; cursor: pointer; }
+.bfc.crowded > .counters, .bfc.crowded > .kws { display: none; }
+/* O balão de um selo fica na frente das cartas vizinhas. */
+.slot:has(.ctr:hover, .ctr:focus-visible, .ctr.open) { z-index: 8; }
+.slot > .bfc:has(.ctr:hover, .ctr:focus-visible, .ctr.open) { z-index: 8; }
+.bfc.crowded > .ctr-sum { display: inline-flex; position: absolute; left: 3%; bottom: 3%; z-index: 3; }
+.ctr-sum .ctr-tip { width: max-content; max-width: 220px; white-space: normal; line-height: 1.35; font-weight: 500; }
+.ctr-sum .ctr-tip small { display: block; margin-top: 2px; color: var(--gold-light); }
 
 .stack-panel {
   position: absolute; z-index: 9; right: calc(max(1.2vw, env(safe-area-inset-right, 0px)) + 150px); top: 50%; transform: translateY(-50%);
@@ -931,6 +940,9 @@ body[data-screen='lobby'] .credits { display: none; }
   background: rgba(6, 9, 18, 0.85); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; white-space: nowrap;
 }
 .zone-view .q-face.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+.zone-view .exile-status { left: 8px; right: 8px; bottom: 8px; padding: 6px 4px; border-radius: 6px; font-size: 12px; }
+.zone-view .q-face.actionable .exile-status { color: #cfe8ff; box-shadow: inset 0 0 0 1px #59b5ff66; }
+.zone-view .q-face:has(.exile-status) .zone-tag { bottom: 40px; }
 .question.enter { animation: rise-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .question h2 { margin: 0 0 10px; font: 700 20px var(--display); color: var(--ink); }
 .q-hint { color: var(--muted); margin: 0 0 10px; }

@@ -73,6 +73,8 @@ const COUNTER_ICON: Record<string, string> = {
   TIME: svg('M6 2h12v5l-4 5 4 5v5H6v-5l4-5-4-5zm2 2v2.3l4 5 4-5V4z'),
   OIL: svg('M12 2c3 4.5 6 8 6 12a6 6 0 0 1-12 0c0-4 3-7.5 6-12z'),
 };
+/** Selo único dos marcadores e palavras-chave quando eles não cabem na carta. */
+const ICON_LAYERS = svg('M12 2 2 7l10 5 10-5z', 'm2 12 2.4-1.2L12 14.6l7.6-3.8L22 12l-10 5z', 'm2 17 2.4-1.2L12 19.6l7.6-3.8L22 17l-10 5z');
 const COUNTER_DISC = svg('M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10z');
 
 /** Ícone de cada palavra-chave mostrada na carta do campo. */
@@ -663,6 +665,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return out;
   }
 
+  /** Etiqueta de uma carta do exílio que dá para jogar ou está suspensa: a mesma na prateleira e na janela do exílio. */
+  function exileCaption(s: FState, { card, suspended, choosing }: ReturnType<typeof exileShelfCards>[number]) {
+    const playable = canPlayExileCard(s, card.id, s.input.gen);
+    const time = card.counters?.TIME ?? 0;
+    const status = choosing ? 'Conjurar agora' : suspended ? time > 0 ? `Suspensa · ${time}` : 'Aguardando resolução' : playable ? card.land ? 'Jogar terreno' : 'Conjurar' : 'Aguardando o momento de jogar';
+    const caption = choosing ? 'Conjurar' : suspended ? time > 0 ? 'Suspensa' : 'Na pilha' : playable ? 'Jogar' : 'Aguarde';
+    return { playable, time, status, caption };
+  }
+
   function renderExileShelf(s: FState) {
     const cards = exileShelfCards(s);
     const shelf = $('#fExileShelf');
@@ -670,13 +681,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     shelf.hidden = !cards.length;
     arena.classList.toggle('has-exile-shelf', !!cards.length);
     arena.style.setProperty('--exile-visible', String(Math.min(2, cards.length)));
-    setHTML(shelf, `<span class="exile-shelf-label">Exílio</span><div class="exile-shelf-track" tabindex="0" aria-label="Cartas no exílio. Role para ver todas.">${cards.map(({ card, suspended, permission, choosing }) => {
-      const playable = canPlayExileCard(s, card.id, s.input.gen);
+    shelf.classList.toggle('scrolls', cards.length > 2);
+    setHTML(shelf, `<span class="exile-shelf-label">Exílio</span><div class="exile-shelf-track" tabindex="0" aria-label="Cartas no exílio. Role para ver todas.">${cards.map(entry => {
+      const { card, suspended, permission, choosing } = entry;
+      const { playable, time, status, caption } = exileCaption(s, entry);
       const selecting = canSelectExileCard(s, card.id, s.input.gen);
       const selected = selectedForInput(s, card.id);
-      const time = card.counters?.TIME ?? 0;
-      const status = choosing ? 'Conjurar agora' : suspended ? time > 0 ? `Suspensa · ${time}` : 'Aguardando resolução' : playable ? card.land ? 'Jogar terreno' : 'Conjurar' : 'Aguardando o momento de jogar';
-      const caption = choosing ? 'Conjurar' : suspended ? time > 0 ? 'Suspensa' : 'Na pilha' : playable ? 'Jogar' : 'Aguarde';
       return `<div class="exile-slot"><div class="exile-card${playable ? ' playable' : ''}${selecting ? ' selectable' : ''}${selected ? ' choice-selected' : ''}${choosing ? ' suspend-ready' : ''}${!playable && !choosing && !selecting ? ' waiting' : ''}" data-fid="${card.id}" data-exile-card role="button" tabindex="0"${selecting ? ` aria-pressed="${selected}"` : ''} aria-label="${esc(label(card))}, exílio. ${status}${permission && suspended ? '. Também pode ser jogada pela permissão de exílio' : ''}">${face(card, 'normal')}
         ${suspended ? `<span class="exile-time" title="${time} ${time === 1 ? 'marcador de tempo' : 'marcadores de tempo'}">${COUNTER_ICON.TIME}<b>${time}</b></span>` : ''}
         <span class="exile-status" title="${esc(status)}">${caption}</span>${selectedBadge(s, card)}</div>${inspectButton(card)}</div>`;
@@ -865,6 +875,26 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     arena.style.gridTemplateRows = `${header} minmax(0, 1fr) 2px minmax(0, 1fr) ${Math.max(hand.height, bottom)}px`;
   }
 
+  /** Marcadores e palavras-chave que encostam no P/T, um no outro ou passam da metade da carta viram um selo só. */
+  function layoutCounters() {
+    root.querySelectorAll<HTMLElement>('.bfc:has(> .ctr-sum)').forEach(card => {
+      const [counters, kws, pt] = ['.counters', '.kws', '.pt'].map(sel => card.querySelector<HTMLElement>(`:scope > ${sel}`));
+      card.classList.remove('crowded');
+      counters?.style.removeProperty('max-width');
+      // Na carta comum, os marcadores quebram em linhas antes do P/T em vez de passar por baixo dele.
+      if (counters && pt && !card.classList.contains('ar-field')) {
+        const room = pt.offsetLeft - counters.offsetLeft - 2;
+        if (room < counters.offsetWidth) counters.style.maxWidth = `${Math.max(0, room)}px`;
+      }
+      const box = (el: HTMLElement | null) => el && { left: el.offsetLeft, top: el.offsetTop, right: el.offsetLeft + el.offsetWidth, bottom: el.offsetTop + el.offsetHeight };
+      const [c, k] = [box(counters), box(kws)];
+      const half = card.offsetHeight / 2;
+      const crowded = (counters && counters.scrollWidth > counters.clientWidth + 1) || (c && c.top < half) || (k && k.top < half)
+        || (c && k && c.left < k.right && k.left < c.right && c.top < k.bottom && k.top < c.bottom);
+      card.classList.toggle('crowded', !!crowded);
+    });
+  }
+
   function layoutStack() {
     const arena = root.querySelector<HTMLElement>('.arena')!;
     const panel = $('#fStack');
@@ -899,14 +929,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     panel.style.transform = 'none';
   }
 
+  // A largura dos selos muda quando a fonte termina de carregar.
+  document.fonts?.addEventListener('loadingdone', () => { if (!root.hidden) layoutCounters(); });
   window.addEventListener('resize', () => {
     const s = client?.state;
-    if (s?.type === 'state' && !root.hidden) { layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
+    if (s?.type === 'state' && !root.hidden) { layoutCounters(); layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
   });
 
   const COUNTER_LABEL: Record<string, string> = { P1P1: '+1/+1', M1M1: '-1/-1', LOYALTY: 'Lealdade', SHIELD: 'Escudo', STUN: 'Atordoar' };
-  /** Só os marcadores que mudam o P/T mostram o número no selo; nos outros a quantidade fica no balão. */
-  const PT_COUNTERS = new Set(['P1P1', 'M1M1']);
   const counterLabel = (k: string) => COUNTER_LABEL[k] ?? KEYWORD_LABEL[k] ?? counterName(k);
 
   /** Palavras-chave que viram marcador na carta do campo. */
@@ -988,9 +1018,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       : c.classLevel ? `<span class="pt class-level" title="${esc(classLevelText(c))}"><small>Nv</small><b>${c.classLevel}</b>${c.classMaxLevel ? `<small>/${c.classMaxLevel}</small>` : ''}</span>` : '';
     const shown = Object.entries(c.counters ?? {}).filter(([k]) => !(c.planeswalker && k === 'LOYALTY'));
     const counters = shown.length
-      ? `<span class="counters">${shown.map(([k, v]) => chip('ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${v}`, PT_COUNTERS.has(k) ? v : undefined)).join('')}</span>` : '';
+      ? `<span class="counters">${shown.map(([k, v]) => chip('ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${v}`, v)).join('')}</span>` : '';
     const kws = c.creature ? keywordsOf(c) : [];
     const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip('ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k])).join('')}</span>` : '';
+    // Selo único que substitui marcadores e palavras-chave quando eles não cabem na carta (layoutCounters); toca e abre o inspetor.
+    const sumText = [shown.length ? `Marcadores: ${shown.map(([k, v]) => `${counterLabel(k)} ×${v}`).join(', ')}.` : '', kws.length ? `Habilidades: ${kws.map(k => KEYWORD_LABEL[k]).join(', ')}.` : ''].filter(Boolean).join(' ');
+    const sumHTML = shown.length + kws.length > 1 && !c.faceDown && c.name
+      ? `<span class="ctr ctr-sum" data-inspect="${c.id}" role="button" tabindex="0" aria-label="${esc(`${sumText} Toque para ver os detalhes.`)}">${ICON_LAYERS}<b>${shown.length + kws.length}</b><span class="ctr-tip">${esc(sumText)}<small>Toque para ver os detalhes.</small></span></span>` : '';
     // A ponte marca o comandante; uma ponte mais antiga só manda a lista de comandantes de cada jogador (mesmo id da carta).
     const isCommander = !!c.commander || s.players.some(p => p.commanders?.some(cm => cm.id === c.id));
     const mutated = (c.merged?.length ?? 0) > 1;
@@ -1021,7 +1055,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
     const style = attached.length ? ` style="--atts:${attached.length}"` : '';
     if (attached.length) slot.push('has-att');
-    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
+    return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
   }
 
   /** Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). */
@@ -1321,9 +1355,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     const title = groupIds ? groupTitle : zoneKind === 'command' ? 'Zona de comando' : zoneKind === 'exile' ? 'Exílio' : 'Cemitério';
     const cards = groupIds ? groupIds.map(id => findCard(id)).filter((c): c is FCard => !!c) : [...(zoneKind === 'command' ? p!.commandZone ?? [] : zoneKind === 'exile' ? p!.exile : p!.graveyard)].reverse();
+    // No exílio, as cartas da prateleira levam a mesma etiqueta de lá (Jogar, Aguarde, Suspensa...).
+    const shelf = new Map(zoneKind === 'exile' && !groupIds ? exileShelfCards(s).map(entry => [entry.card.id, exileCaption(s, entry)]) : []);
+    const tags = (c: FCard) => {
+      const caption = shelf.get(c.id);
+      return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
+    };
     const card = (c: FCard) => `<div class="zone-card">${canUse(s, c)
-      ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${selectedBadge(s, c)}</div>`
-      : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${face(c, 'normal')}${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}</button>`}
+      ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`
+      : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}${shelf.has(c.id) ? `. ${esc(shelf.get(c.id)!.status)}` : ''}">${face(c, 'normal')}${tags(c)}</button>`}
       <button class="icon-btn" data-inspect="${c.id}">${inspectIcon}Inspecionar</button></div>`;
     setHTML(el, `<div class="question zone-view" role="dialog" aria-modal="true" aria-label="${title}">
       <h2>${title}${p ? ` · ${esc(p.name)}` : ''} (${cards.length})</h2>
@@ -1908,6 +1948,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     applyOpeningPresentation(root, s);
     restoreFocus(savedFocus);
     syncModal();
+    layoutCounters();
     layoutExileShelf();
     layoutCardDecision();
     layoutStack();
@@ -2364,6 +2405,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect],[data-q-card]';
   root.addEventListener('pointerover', e => {
     if ((e as PointerEvent).pointerType !== 'mouse') return;
+    // Sobre um selo de marcador ou palavra-chave, vale o balão dele, sem a prévia da carta por cima.
+    if ((e.target as HTMLElement).closest('.bfc .ctr')) { hideCardPreview(); return; }
     const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);
     // Com o mouse, a prévia acompanha o cursor; pelo teclado (focusin) ela fica no canto, como antes.
     if (el && !handDrag.active) showPreview(cardFromElement(el), el, false, { x: (e as PointerEvent).clientX, y: (e as PointerEvent).clientY });
