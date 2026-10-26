@@ -1,4 +1,21 @@
 {
+  "0.48.1": {
+    "Cabeçalho numa linha só": [
+      { "img": "0.48.1/cabecalho.webp", "legenda": "O topo no celular deitado: **Jogar**, **Meus decks**, **Relatar** e **Novidades** numa linha só." }
+    ],
+    "Títulos de Meus decks": [
+      { "img": "0.48.1/meus-decks.webp", "legenda": "O título **Meus decks** na letra do jogo e a lista **Formato** com a seta nova." }
+    ],
+    "Créditos uma vez só": [
+      { "img": "0.48.1/rodape.webp", "legenda": "O fim da tela inicial, só com o rodapé de créditos, aviso e contato." }
+    ],
+    "Novidades em imagens no celular": [
+      { "img": "0.48.1/novidades-celular.webp", "legenda": "O topo da página no celular deitado, com espaço dos dois lados." }
+    ],
+    "Janela de sugestão": [
+      { "img": "0.48.1/relato.webp", "legenda": "A janela com **Sugestão** marcada e a caixa de texto perguntando “Qual é a sua ideia?”." }
+    ]
+  },
   "0.48.0": {
     "Pacotes de sons": [
       { "img": "0.48.0/pacotes-de-sons.webp", "legenda": "Em **Opções**, a lista **Pacote de sons** logo abaixo do volume, com **Taverna** escolhido." }

@@ -714,6 +714,8 @@ body[data-screen='lobby'] .credits, body[data-screen='decks'] .credits { positio
 .credits { position: fixed; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--muted); z-index: 2; pointer-events: none; }
 .credits a { pointer-events: auto; }
 body[data-screen='game'] .credits { display: none; }
+/* A tela inicial já tem o rodapé completo, com estes créditos (ui/siteFooter.ts). */
+body[data-screen='lobby'] .credits { display: none; }
 
 /* ---------- Decks ---------- */
 .builder { min-height: 100vh; box-sizing: border-box; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); background: radial-gradient(ellipse at 50% 0%, #1a2a48, var(--bg-deep) 70%) fixed; }
