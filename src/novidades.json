@@ -1,4 +1,24 @@
 {
+  "0.48.1": {
+    "Exílio jogável em destaque": [
+      { "img": "0.48.1/exilio-jogavel.webp", "legenda": "Ao lado da mão, a carta do exílio que dá para jogar tem o contorno azul e a etiqueta **Jogar**; a que está esperando fica apagada, com **Aguarde**." },
+      { "img": "0.48.1/exilio-hover.webp", "legenda": "Com o mouse em cima, a carta do exílio cresce até o tamanho das cartas da mão." }
+    ],
+    "Um selo só quando a carta está cheia": [
+      { "img": "0.48.1/selo-de-marcadores.webp", "legenda": "A Ezuri, cheia de marcadores e habilidades, mostra um selo só com o total (14); ao lado, o Rhox, com poucos, continua com cada marcador à vista." },
+      { "img": "0.48.1/selo-de-marcadores-balao.webp", "legenda": "Com o mouse no selo, o balão lista os marcadores com as quantidades e as habilidades da carta." },
+      { "img": "0.48.1/selo-de-marcadores-detalhes.webp", "legenda": "Tocando no selo, o detalhe da carta mostra todas as habilidades e todos os marcadores." }
+    ],
+    "Janela do exílio com contorno e etiquetas": [
+      { "img": "0.48.1/janela-do-exilio.webp", "legenda": "Na janela do exílio, as cartas jogáveis com contorno azul, as etiquetas **Jogar** e **Aguarde** e o selo **Tramada** numa carta que também dá para jogar." }
+    ],
+    "Quantidade de marcadores à vista": [
+      { "img": "0.48.1/marcadores-com-quantidade.webp", "legenda": "Cada selo de marcador mostra a quantidade ao lado do ícone: +1/+1 e escudo no Encarregado das Almas, experiência e atordoar na Meria e carga no Mercado Negro." }
+    ],
+    "Botão Jogar por cima dos créditos": [
+      { "img": "0.48.1/botao-jogar-por-cima-dos-creditos.webp", "legenda": "No celular, a barra com o deck escolhido e o botão **Jogar** fica na frente dos créditos ao rolar a tela inicial." }
+    ]
+  },
   "0.48.0": {
     "Pacotes de sons": [
       { "img": "0.48.0/pacotes-de-sons.webp", "legenda": "Em **Opções**, a lista **Pacote de sons** logo abaixo do volume, com **Taverna** escolhido." }

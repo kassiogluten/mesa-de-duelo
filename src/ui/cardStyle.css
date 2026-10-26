@@ -56,6 +56,7 @@
 .bfc.ar-field > .pt.loyalty, .bfc.ar-field > .pt.class-level { right: 6%; bottom: calc(var(--ar-foot) * .2); }
 .bfc.ar-field > .counters { left: 6%; bottom: 0; height: var(--ar-foot); align-items: center; max-width: 58%; flex-wrap: nowrap; }
 .bfc.ar-field > .counters .ctr { background: #0006; box-shadow: inset 0 0 0 1px #ffffff26; }
+.bfc.ar-field.crowded > .ctr-sum { left: 6%; bottom: calc(var(--ar-foot) / 2); transform: translateY(50%); background: #0006; box-shadow: inset 0 0 0 1px #ffffff26; }
 .bfc.ar-field > .kws { bottom: calc(var(--ar-foot) + 3px); }
 /*
  * Moldura por tipo: criatura na cor da carta, planeswalker escuro com filete dourado, encantamento claro e estrelado,

@@ -130,4 +130,7 @@ body { min-height: 100%; height: auto; }
 .adm-past { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .adm-past-row { display: grid; gap: 6px; padding: 12px 14px; }
 .adm-players li.won strong { color: var(--gold-light); }
+.adm-thumb { display: inline-block; width: 36px; height: 26px; margin-right: 6px; border-radius: 4px; vertical-align: middle; object-fit: cover; background: var(--line); }
+.adm-thumb + .adm-thumb { margin-left: -2px; }
+.adm-past .adm-dot { vertical-align: middle; }
 @media (max-width: 860px) { .adm-decks { grid-column: auto; } #admin .adm-month { margin-left: 0; } }

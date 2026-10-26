@@ -2,6 +2,7 @@ import '../style.css';
 import './admin.css';
 import { esc } from '../ui/cardtext';
 import { readJson } from '../forge/recording';
+import { cacheGet, fetchByNames, loadCardCache } from '../scryfall';
 import { adminError, adminFetch, adminSession, saveAdminSession } from './session';
 import { issueBody, issueTitle, newIssueUrl, reportOf } from './reportSummary';
 
@@ -159,6 +160,7 @@ async function loadHistory(month = '') {
     const json = await response.json() as { meses: string[]; mes: string; partidas: PastMatch[] };
     historyMonth = json.mes; past = json.partidas;
     renderHistory(json.meses);
+    void loadCommanderArt(json.meses);
   } catch { section.innerHTML = '<p class="adm-error">Não consegui ler o histórico na ponte.</p>'; }
 }
 
@@ -191,10 +193,30 @@ function renderHistory(months: string[]) {
     <ul class="adm-past">${past.map(m => `<li class="adm-card adm-past-row">
       <div class="adm-row-top"><strong>${esc([FORMATS[m.format] ?? m.format, m.length === 'bo3' ? 'melhor de três' : null].filter(Boolean).join(' · '))}</strong>
         <span class="adm-status">${m.mode === 'ia' ? 'contra a IA' : m.public ? 'sala pública' : 'sala privada'}</span><time>${when(m.endedAt)}</time></div>
-      <ul class="adm-players">${m.players.map((p, i) => `<li class="${m.winner === i ? 'won' : ''}"><span class="adm-dot ${p.ai ? 'ai' : 'on'}"></span><strong>${esc(playerName(p, i))}</strong>
+      <ul class="adm-players">${m.players.map((p, i) => `<li class="${m.winner === i ? 'won' : ''}"><span class="adm-dot ${p.ai ? 'ai' : 'on'}"></span>${commanderThumbs(p.commander)}<strong>${esc(playerName(p, i))}</strong>
         <span class="adm-muted"> · ${esc(p.commander ?? p.deck)} (${esc(p.colors)})</span>${m.length === 'bo3' ? ` · ${p.wins} ${p.wins === 1 ? 'vitória' : 'vitórias'}` : ''}${m.winner === i ? ' · venceu' : ''}</li>`).join('')}</ul>
       <p class="adm-muted">${esc([minutes(m.ms), ...m.games.map((g, n) => `${m.games.length > 1 ? `jogo ${n + 1}: ` : ''}${g.turns} turnos, ${ending(m, g)}`)].join(' · '))}</p></li>`).join('')}</ul>`
     : historyMonth ? '<p class="adm-empty">Nenhuma partida neste mês.</p>' : ''}`;
+}
+
+/** Miniaturas (arte recortada) dos comandantes de um jogador; "A + B" são dois parceiros. */
+function commanderThumbs(commander?: string) {
+  return (commander?.split(' + ') ?? []).map(name => {
+    const sc = cacheGet(name), art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
+    return art ? `<img class="adm-thumb" src="${esc(art)}" alt="" title="${esc(name)}" loading="lazy">` : `<span class="adm-thumb" title="${esc(name)}"></span>`;
+  }).join('');
+}
+
+// O cache de cartas do Scryfall é o mesmo do jogo (IndexedDB); só busca na API os comandantes que ainda não estão nele.
+let cardCache: Promise<void> | undefined;
+async function loadCommanderArt(months: string[]) {
+  try {
+    await (cardCache ??= loadCardCache());
+    const names = past.flatMap(m => m.players.flatMap(p => p.commander?.split(' + ') ?? []));
+    const missing = names.filter(n => !cacheGet(n));
+    renderHistory(months);
+    if (missing.length) { await fetchByNames(missing); renderHistory(months); }
+  } catch { /* sem miniaturas: a lista continua com os nomes */ }
 }
 
 async function downloadHistory() {

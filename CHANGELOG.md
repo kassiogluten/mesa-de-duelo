@@ -6,6 +6,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.48.1] - 2026-10-26
+
+### Mudou
+
+- **Exílio jogável em destaque.** As cartas do exílio ao lado da mão ficaram um pouco maiores, mas ainda menores que as da mão. A que dá para jogar agora ganha o mesmo contorno azul das cartas jogáveis da mão, e a que está esperando continua apagada. Passando o mouse, a carta cresce até o tamanho das cartas da mão.
+- **Um selo só quando a carta está cheia.** Quando os marcadores e as habilidades de uma permanente não cabem na carta (encostariam no poder/resistência, um no outro ou cobririam mais da metade dela), eles viram um único selo com o total de itens. Passando o mouse, o balão lista todos os marcadores com as quantidades e todas as habilidades; tocando, abre o detalhe da carta com tudo. Os marcadores que cabem continuam à vista, agora sem passar por baixo do poder/resistência, e o balão de um selo fica na frente das cartas vizinhas, sem a prévia da carta por cima.
+
+### Corrigido
+
+- **Janela do exílio com contorno e etiquetas.** Ao abrir o exílio, as cartas que dá para jogar voltaram a ter o contorno azul, e as que você pode jogar por algum efeito mostram a mesma etiqueta da mesa (**Jogar**, **Aguarde**, **Suspensa**). O selo **Tramada** ou **Preparado** não some mais quando a carta pode ser jogada. No cemitério e no exílio, as cartas que só dá para inspecionar perderam a moldura cinza em volta.
+- **Quantidade de marcadores à vista.** Os selos de marcadores nas permanentes voltaram a mostrar a quantidade ao lado do ícone, como experiência, tempo, carga, escudo e atordoar, e não só nos +1/+1 e −1/−1. O nome do marcador continua no balão ao passar o mouse ou tocar.
+- **Botão Jogar por cima dos créditos.** No celular, ao rolar a tela inicial até o fim, o texto dos créditos passava por cima da barra presa embaixo com o deck escolhido e o botão **Jogar**. Agora a barra fica sempre na frente.
+
 ## [0.48.0] - 2026-10-25
 
 ### Novo

@@ -43,6 +43,10 @@
 }
 .forge .q-opt.has-card .q-face, .forge .zone-view .q-face { width: 168px; --fw: 168px; transition: filter .18s; }
 .forge .q-opt.has-card .q-face .face, .forge .zone-view .q-face .face { box-shadow: 0 14px 30px rgb(0 0 0 / .6); transition: box-shadow .18s; }
+/* Carta que só abre o inspetor é um botão: sem o fundo e a borda padrão, fica igual às outras. */
+.forge .zone-view button.q-face { padding: 0; border: 0; background: none; color: inherit; }
+/* No cemitério e no exílio, o que dá para usar agora mantém o contorno azul da mesa. */
+.forge .zone-view .q-face.actionable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 18px rgb(89 181 255 / .6), 0 14px 30px rgb(0 0 0 / .6); }
 .forge .q-opt.has-card > span:not(.q-badge) { max-width: 168px; }
 .forge .q-opt.has-card:hover { transform: translateY(-6px); border: 0; }
 .forge .q-opt.has-card:hover .q-face .face { box-shadow: 0 0 0 2px rgb(89 181 255 / .8), 0 0 22px rgb(89 181 255 / .45), 0 18px 34px rgb(0 0 0 / .65); }

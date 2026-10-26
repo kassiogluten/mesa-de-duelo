@@ -192,6 +192,8 @@
  */
 @media (max-width: 700px), (max-height: 500px) {
   .lobby.library-home { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  /* A barra presa vive dentro do conteúdo: ele precisa ficar acima do rodapé (z-index 1, que vem depois), senão os créditos passam por cima dela. */
+  .home-content { z-index: 2; }
   .match-sidebar { position: static; max-height: none; }
   .match-setup { overflow: visible; margin: 0; padding: 0; -webkit-mask-image: none; mask-image: none; }
   .match-ready {
