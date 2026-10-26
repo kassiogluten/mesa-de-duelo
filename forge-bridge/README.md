@@ -46,8 +46,10 @@ O `rodar.sh` carrega o `.env` da raiz, se existir (fora do git; modelo em `.env.
   "players": [{ "id": 0, "name": "Você", "life": 20, "library": 30, "handCount": 6,
                 "hand": [/* cartas; vazio para o oponente */], "battlefield": [], "graveyard": [], "exile": [],
                 "pool": { "W": 0, "U": 0, "B": 0, "R": 0, "G": 1, "C": 0 } }],
-  "stack": [{ "id": 12, "text": "...", "source": { /* carta */ }, "controller": 1,
-              "targets": { "cards": [40], "players": [] } }], // alvos, somando as sub-habilidades
+  "stack": [{ "id": 12, "text": "...", "kind": "spell", "source": { /* carta */ }, "controller": 1,
+              "targets": { "cards": [40], "players": [] }, // alvos, somando as sub-habilidades
+              // só quando pago além do custo normal: forma de conjurar, vezes reforçada, outros opcionais e o X
+              "cast": { "mode": "flashback", "kicker": 1, "extras": ["buyback"], "x": 3 } }],
   "combat": [{ "attacker": 40, "defender": 0, "blockers": [33] }],
   "log": ["..."],
   "input": { "message": "Prioridade: Você ...", "ok": { "label": "OK", "enabled": true },
@@ -68,7 +70,7 @@ Cada carta tem: `id`, `name` (em inglês, usado para buscar a imagem no Scryfall
 
 Em `input`, `commanderMove: {to, card}` marca o "Sim/Não" da regra 903.9b: o comandante iria para `to` (`Hand`, `Library`…) e o dono pode mandá-lo à zona de comando no lugar. `ok` manda à zona de comando e `cancel` deixa ir para `to`. Com `stays: true` é a pergunta da regra 903.9a: o comandante já está em `to` (`Graveyard` ou `Exile`) e `cancel` o deixa lá.
 
-Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extraTurns` lista os jogadores dos turnos extras que ainda vêm, na ordem; durante um combate, `combatNumber` diz qual combate do turno é (2 = o primeiro extra); `extraCombats` conta os combates extras ainda por vir e `extraCombatAfter` traz as fases depois das quais eles começam (`MAIN1`, `MAIN2`, `COMBAT_END`…). Os campos só aparecem quando há algo extra.
+Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extraTurns` lista os jogadores dos turnos extras que ainda vêm, na ordem; durante um combate, `combatNumber` diz qual combate do turno é (2 = o primeiro extra); `extraCombats` conta os combates extras ainda por vir e `extraCombatAfter` traz as fases depois das quais eles começam (`MAIN1`, `MAIN2`, `COMBAT_END`…); `extraPhaseAfter` mapeia cada fase que, por uma etapa extra, não segue para a fase normal à fase que vem depois dela (`{"COMBAT_END": "UPKEEP", "UPKEEP": "MAIN2"}` com manutenções extras depois do combate). Os campos só aparecem quando há algo extra.
 
 `question` aparece quando o Forge precisa de uma decisão e a partida fica parada até a resposta:
 
@@ -109,7 +111,7 @@ Saída do campo (`left`) traz `reason: "destroyed"` ou `"sacrificed"` quando é 
 
 Permanentes trazem, quando se aplicam: `ward` (custo da proteção contra alvos, como `"{2}"` ou o custo descrito pelo Forge), `protection` (de que a proteção protege: `"red"`, `"artifact"`, `"multicolored"`…, do parâmetro da palavra-chave), `phasedOut`, `cantAttack` / `cantBlock` (proibida por um efeito, pelas regras de combate do Forge; não conta enjoo, estar virada nem defensor) e `preventDamage` (dano que os escudos ainda vão prevenir; também nos jogadores).
 
-Também no campo: `owner` (dono, só quando outro jogador controla a permanente), `goadedBy` (jogadores que a incitaram), `shields` (escudos de regeneração) e `chosen` (o que a carta escolheu: `types`, `colors`, `names`, `player`, `number`, `mode`, só o que existe). Os jogadores trazem `monarch: true` quando são o monarca, `landsPlayed` (terrenos jogados no turno) e `maxLands` (quantos pode jogar; `-1` = sem limite).
+Também no campo: `owner` (dono, só quando outro jogador controla a permanente), `goadedBy` (jogadores que a incitaram), `shields` (escudos de regeneração) e `chosen` (o que a carta escolheu: `types`, `colors`, `names`, `player`, `number`, `mode`, só o que existe) e `devotion` nas cartas que contam com devoção (`colors`, `value` para quem controla e, nos deuses de Theros, `need`, o mínimo para ser criatura). Os jogadores trazem `monarch: true` quando são o monarca, `landsPlayed` (terrenos jogados no turno) e `maxLands` (quantos pode jogar; `-1` = sem limite).
 
 A perda de vida pelo dano vem depois, em `life-changed` (o Forge tira a vida de todos de uma vez); o ganho do vínculo com a vida vem como `life-changed` positivo do controlador logo depois do dano da fonte.
 

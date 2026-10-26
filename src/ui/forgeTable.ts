@@ -24,7 +24,7 @@ import { counterName, isProliferating, proliferateBoardClass, proliferateClear, 
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
 import { passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
-import { stackPresentation } from './stackPresentation';
+import { STACK_KINDS, stackBadgeText, stackCastLine, stackCastTag, stackOwnerLine, stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import './skipVote.css';
@@ -45,7 +45,7 @@ import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
 import './matchBar.css';
-import { shortInstruction } from './shortInstruction';
+import { paymentButtonLabels, shortInstruction } from './shortInstruction';
 import { awaitingDecision, waitingOnText } from './awaitingDecision';
 import './awaitingDecision.css';
 
@@ -1435,6 +1435,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ...(targets.players ?? []).map(id => client?.state?.players.find(p => p.id === id)?.name).filter(Boolean)];
     return names.length ? `Alvo${names.length > 1 ? 's' : ''}: ${names.join(', ')}` : '';
   }
+  /** Selo que diz por que o item está na pilha (mágica, habilidade ou gatilho) e, se houver, como foi conjurado. */
+  function stackKindBadge(si: FState['stack'][number]) {
+    const kind = si.kind && STACK_KINDS[si.kind];
+    const tag = stackCastTag(si.cast);
+    if (!kind && !tag) return '';
+    // No celular, com a forma de conjurar, o ícone já diz o tipo: a palavra sai para o selo caber na pilha estreita.
+    const label = kind ? `<span class="stack-kind-label${tag ? ' with-cast' : ''}">${kind.label}${tag ? ' · ' : ''}</span>` : '';
+    return `<span class="stack-kind ${si.kind ?? 'spell'}" title="${esc(stackBadgeText(si))}">${kind ? `<svg viewBox="0 0 16 16" aria-hidden="true">${kind.icon}</svg>` : ''}${label}${esc(tag)}</span>`;
+  }
   function stackFace(si: FState['stack'][number]) {
     return si.source ? face(si.source, 'normal') : `<div class="stack-effect-face"><span>Efeito na pilha</span><p>${richText(si.text)}</p></div>`;
   }
@@ -1443,8 +1452,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const top = s.stack[0];
     if (!top) return '';
     return `<div class="stack-heading"><h2>Pilha</h2><span class="stack-count">${count}</span>${`<button class="stack-size-toggle" data-ui="stack-size" aria-label="${stackMinimized ? 'Expandir a pilha' : 'Recolher a pilha para ver o campo'}" aria-expanded="${!stackMinimized}">${stackMinimized ? '+' : '−'}</button>`}</div>
-      <button class="stack-pile" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${stackGalleryOpen}" aria-controls="fStackGallery"`} aria-label="${replaying ? `Inspecionar ${top.source ? esc(label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(label(top.source)) : 'O efeito do topo'} resolve primeiro.`}">
-        ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(si)}</div>`).join('')}
+      <button class="stack-pile" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${stackGalleryOpen}" aria-controls="fStackGallery"`} aria-label="${stackBadgeText(top) ? `${esc(stackBadgeText(top))}. ` : ''}${replaying ? `Inspecionar ${top.source ? esc(label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(label(top.source)) : 'O efeito do topo'} resolve primeiro.`}">
+        ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(si)}${i ? '' : stackKindBadge(si)}</div>`).join('')}
         <span class="stack-top-label">${replaying ? 'Jogada recente' : 'Resolve primeiro'}</span>
       </button><span class="stack-open-hint">${replaying ? 'Clique para inspecionar' : 'Clique para ver a pilha'}</span>`;
   }
@@ -1461,11 +1470,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <ol class="stack-gallery-track" tabindex="0" aria-label="Efeitos em ordem de resolução. Role para ver todos.">${s.stack.map((si, i) => {
         const selectable = !!s.input.selectableStacks?.includes(si.id);
         const name = si.source ? label(si.source) : 'Efeito';
+        const owner = s.players.find(p => p.id === si.controller)?.name;
         return `<li class="stack-gallery-item ${si.controller === s.you ? 'mine' : 'theirs'}" data-stack-instance="${si.id}">
           <div class="stack-gallery-order"><b>${i + 1}</b><span>${i === 0 ? 'Resolve primeiro' : `${i + 1}º na resolução`}</span></div>
-          <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}">${stackFace(si)}</button>
-          <div class="stack-gallery-owner">${esc(s.players.find(p => p.id === si.controller)?.name ?? 'Efeito')}</div>
-          <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}"><p>${richText(si.text)}</p>${targetsDescription(si.targets) ? `<p class="stack-targets">${esc(targetsDescription(si.targets))}</p>` : ''}</div>
+          <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}">${stackFace(si)}${stackKindBadge(si)}</button>
+          <div class="stack-gallery-owner">${esc(stackOwnerLine(si, s.you, owner))}</div>
+          <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}"><p>${richText(si.text)}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${targetsDescription(si.targets) ? `<p class="stack-targets">${esc(targetsDescription(si.targets))}</p>` : ''}</div>
           <div class="stack-gallery-actions">${selectable ? `<button class="arena-btn primary" data-stack="${si.id}" data-gen="${s.input.gen}">Selecionar como alvo</button>` : ''}${si.source ? `<button class="icon-btn" data-stack-inspect="${si.id}" aria-label="Inspecionar ${esc(name)}">Inspecionar</button>` : ''}</div>
         </li>`;
       }).join('')}</ol>
@@ -1541,10 +1551,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const decision = cardDecision(s);
     const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
     const move = s.input.commanderMove;
-    const ok = move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
+    const payment = s.input.paying ? paymentButtonLabels(s.input) : null;
+    const ok = payment && s.input.ok.label ? { ...s.input.ok, label: payment.ok } : move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && attackAllGen === null && !selectedAttackers.size && !attackQueue.busy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
       : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount}` } : isProliferating(s) ? { ...s.input.ok, label: proliferateOkLabel(s) } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
     // No proliferar o Cancelar do Forge troca o modo de seleção em massa ("Meu", "Todos"); a lista tem os próprios atalhos.
-    const cancel = isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
+    const cancel = payment && s.input.cancel.label ? { ...s.input.cancel, label: payment.cancel } : isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : attackAllGen !== null ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' } : s.input.cancel;
     const waiting = (clickedGen === s.input.gen && Date.now() - clickedAt < CLICK_LOCK_MS) || (!!s.input.attacking && attackQueue.busy);
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
       btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${optionHTML(btn.label)}</button>` : '';
@@ -1558,6 +1569,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Pilha longa: resolve tudo de uma vez. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão.
     const resolveAll = !!s.input.priority && ok.enabled && s.stack.length >= 2 && !s.input.targeting && !s.input.paying
       ? b('resolve-all', { label: `Resolver todos (${s.stack.length})`, enabled: true }, 'secondary') : '';
+    // Sem mana para o automático, só sobra desistir ou não pagar: ele vira o botão de destaque.
+    if (s.input.paying && s.input.canAutoPay === false && cancel.enabled) return b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
     return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') + resolveAll +
       (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
   }
@@ -1853,7 +1866,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
     const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
-    const promptBody = short ? `<strong class="prompt-short">${esc(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
+    const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${prolifPanel}${attackPanel}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');

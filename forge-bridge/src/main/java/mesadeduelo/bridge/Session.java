@@ -1217,7 +1217,24 @@ final class Session {
         }
     }
 
-    private static java.lang.reflect.Field selectTargetsSa, payManaSa, mulliganStartingPlayer, londonReturnCount;
+    private static java.lang.reflect.Field selectTargetsSa, payManaSa, payManaEffect, mulliganStartingPlayer, londonReturnCount;
+
+    /**
+     * O que o pagamento de mana paga, para a mesa dizer o que o Cancelar desfaz: "spell" (a conjuração volta atrás),
+     * "ability" (a ativação volta atrás) ou "effect" (um custo pedido no meio de um efeito, como "a menos que pague
+     * {3}"; cancelar é só não pagar). O Forge guarda isso em campos protegidos do input.
+     */
+    static String payingFor(InputPayMana in) {
+        try {
+            if (payManaEffect == null) payManaEffect = accessible(InputPayMana.class, "effect");
+            if (payManaEffect.getBoolean(in)) return "effect";
+            if (payManaSa == null) payManaSa = accessible(InputPayMana.class, "saPaidFor");
+            SpellAbility sa = (SpellAbility) payManaSa.get(in);
+            return sa == null ? null : sa.isSpell() ? "spell" : "ability";
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            return null;
+        }
+    }
 
     /**
      * Mágica sendo conjurada (escolhendo alvos ou pagando o custo): a carta que alveja ({@code source}) e os alvos
@@ -1363,8 +1380,12 @@ final class Session {
                     if (!untap.isEmpty()) input.add("untappable", untap);
                 }
                 // Pagando um custo de mana: a reserva fica clicável no retrato.
-                if (seat.controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana) {
+                if (seat.controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana pay) {
                     input.addProperty("paying", true);
+                    // O OK é o Automático; ele vem desligado também na trava curta depois de um clique, e só aqui quer dizer falta de mana.
+                    input.addProperty("canAutoPay", seat.okEnabled && !seat.okLabel.isEmpty());
+                    String payingFor = payingFor(pay);
+                    if (payingFor != null) input.addProperty("payingFor", payingFor);
                 }
                 JsonObject targeting = targeting(seat);
                 if (targeting != null) input.add("targeting", targeting);

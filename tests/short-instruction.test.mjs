@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const code = await readFile(new URL('../src/ui/shortInstruction.ts', import.meta.url), 'utf8');
 const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { shortInstruction } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { paymentButtonLabels, shortInstruction } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 
 const targeting = (message, name) => ({ message, targeting: { card: name ? { name } : undefined } });
 
@@ -32,4 +32,25 @@ test('mana payment names the card; other prompts keep the Forge text', () => {
   assert.equal(shortInstruction({ message: 'Sentinela da Urtica - Criatura 2 / 2\n\nPagar Custo de Mana: ', paying: true, card: { name: 'Sentinela da Urtica' } }), 'Pague o custo de mana de Sentinela da Urtica.');
   assert.equal(shortInstruction({ message: 'Relâmpago em Cadeia (134)\n\nRelâmpago em Cadeia (134) -\n\nPagar Custo de Mana: ', paying: true }), 'Pague o custo de mana de Relâmpago em Cadeia.');
   assert.equal(shortInstruction({ message: 'Escolha uma opção' }), null);
+});
+
+test('a cost asked by an effect names the card asking for it', () => {
+  assert.equal(shortInstruction({ message: 'Estudo Rístico (88)\n\nPagar Custo de Mana: {1}', paying: true, payingFor: 'effect', card: { name: 'Rhystic Study' } }, name => name === 'Rhystic Study' ? 'Estudo Rístico' : name),
+    'Estudo Rístico pede {1}. Pague ou recuse.');
+  assert.equal(shortInstruction({ message: 'Estudo Rístico (88)\n\nPagar Custo de Mana: {1}', paying: true, payingFor: 'effect', canAutoPay: false, card: { name: 'Estudo Rístico' } }),
+    'Estudo Rístico pede {1}, e a sua mana não dá para pagar.');
+  assert.equal(shortInstruction({ message: 'Estudo Rístico (88)', paying: true, payingFor: 'effect', canAutoPay: true, card: { name: 'Estudo Rístico' } }),
+    'Estudo Rístico pede um pagamento de mana. Pague ou recuse.');
+  assert.equal(shortInstruction({ message: 'Pagar Custo de Mana: 1', paying: true, payingFor: 'effect' }), 'Pague o custo pedido ou recuse.');
+  assert.equal(shortInstruction({ message: '', paying: true, payingFor: 'spell', card: { name: 'Savannah Lions' } }), 'Pague o custo de mana de Savannah Lions.');
+});
+
+test('mana payment buttons say what the automatic payment and the cancel do', () => {
+  assert.deepEqual(paymentButtonLabels({ payingFor: 'spell', canAutoPay: true, ok: { enabled: true } }), { ok: 'Pagar automaticamente', cancel: 'Desistir da mágica' });
+  assert.deepEqual(paymentButtonLabels({ payingFor: 'ability', canAutoPay: false, ok: { enabled: false } }), { ok: 'Mana insuficiente', cancel: 'Desistir da habilidade' });
+  assert.deepEqual(paymentButtonLabels({ payingFor: 'effect', canAutoPay: true, ok: { enabled: true } }), { ok: 'Pagar automaticamente', cancel: 'Não pagar' });
+  // Na trava curta depois de um clique o botão desliga, mas a mana não acabou.
+  assert.equal(paymentButtonLabels({ payingFor: 'spell', canAutoPay: true, ok: { enabled: false } }).ok, 'Pagar automaticamente');
+  // Ponte antiga, sem os campos novos: segue o estado do botão e um cancelar genérico.
+  assert.deepEqual(paymentButtonLabels({ ok: { enabled: false } }), { ok: 'Mana insuficiente', cancel: 'Desistir' });
 });

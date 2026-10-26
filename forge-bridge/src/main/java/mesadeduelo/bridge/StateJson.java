@@ -69,10 +69,13 @@ final class StateJson {
                 JsonObject s = new JsonObject();
                 s.addProperty("id", si.getId());
                 s.addProperty("text", si.getText());
+                s.addProperty("kind", stackKind(si));
                 if (si.getSourceCard() != null) s.add("source", card(si.getSourceCard()));
                 if (si.getActivatingPlayer() != null) s.addProperty("controller", si.getActivatingPlayer().getId());
                 JsonObject t = stackTargets(si);
                 if (t != null) s.add("targets", t);
+                JsonObject cast = StackCast.of(game, si.getId());
+                if (cast != null) s.add("cast", cast);
                 stack.add(s);
             }
         }
@@ -392,6 +395,11 @@ final class StateJson {
     }
 
     /** Alvos de um item da pilha, somando as sub-habilidades (ex.: "destrua X e compre um card" com dois alvos). */
+    /** Spell, activated ability or trigger: the table labels each stack item so players know why a card is there. */
+    static String stackKind(StackItemView si) {
+        return si.isTrigger() ? "trigger" : si.isAbility() ? "ability" : "spell";
+    }
+
     static JsonObject stackTargets(StackItemView si) {
         List<Object> all = new java.util.ArrayList<>();
         for (StackItemView step = si; step != null; step = step.getSubInstance()) {

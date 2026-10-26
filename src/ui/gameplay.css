@@ -119,6 +119,11 @@
 .stack-layer > .face { box-shadow: 0 8px 18px #0009; outline: 1px solid #ffffff25; outline-offset: -1px; }
 .stack-layer.actionable > .face { outline: 2px solid var(--glow); outline-offset: 3px; }
 .stack-top-label { position: absolute; z-index: 7; left: 50%; bottom: -9px; transform: translateX(-50%); width: max-content; padding: 5px 12px; border: 1px solid var(--gold); border-radius: 999px; background: var(--bg-deep); color: var(--gold); font: 600 12px var(--body); pointer-events: none; }
+.stack-kind { position: absolute; z-index: 7; left: 50%; top: -11px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 5px; width: max-content; padding: 4px 10px 4px 8px; border: 1px solid currentColor; border-radius: 999px; background: var(--bg-deep); font: 600 11px var(--body); letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 3px 8px #0008; pointer-events: none; }
+.stack-kind svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
+.stack-kind.spell { color: #9cc8ff; }
+.stack-kind.ability { color: var(--gold); }
+.stack-kind.trigger { color: #d1b2ff; }
 .stack-open-hint { display: block; margin-top: 20px; text-align: center; color: var(--muted); font: 400 12px var(--body); }
 .stack-pile:focus-visible { outline: 2px solid var(--gold); outline-offset: 8px; }
 /* Only when live controls need the space below the pile. */
@@ -150,9 +155,10 @@
 .stack-gallery-card:focus-visible { transform: translateY(-5px) scale(1.06); transition: none; outline: 2px solid var(--gold); outline-offset: 7px; }
 .stack-gallery-owner { margin-top: 12px; color: var(--gold); font: 600 12px var(--body); }
 .stack-gallery-item.theirs .stack-gallery-owner { color: #e7aaa0; }
-.stack-gallery-effect { max-height: 76px; margin-top: 6px; overflow-y: auto; scrollbar-width: thin; }
+.stack-gallery-effect { max-height: 98px; margin-top: 6px; overflow-y: auto; scrollbar-width: thin; }
 .stack-gallery-effect p { font: 400 14px/1.45 var(--body); margin: 0; overflow-wrap: anywhere; }
 .stack-gallery-effect .stack-targets { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.stack-gallery-effect .stack-cast { margin-top: 5px; color: var(--gold); font-size: 12px; }
 .stack-gallery-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
 .forge .stack-gallery-actions .arena-btn { font-size: 13px; padding: 9px 12px; }
 .stack-gallery-actions .icon-btn { font-size: 12px; padding: 8px 10px; }
@@ -276,6 +282,9 @@
   .stack-layer { transform: translate(calc(var(--depth) * -5px), calc(var(--depth) * -10px)) rotate(calc(var(--depth) * -2deg)); }
   .stack-open-hint { margin-top: 15px; font-size: 10px; }
   .stack-top-label { font-size: 10px; padding: 4px 9px; }
+  .stack-kind { top: -9px; padding: 3px 7px 3px 6px; font-size: 9px; gap: 4px; }
+  .stack-kind-label.with-cast { display: none; }
+  .stack-kind svg { width: 10px; height: 10px; }
   .stack-gallery { --gallery-card-width: clamp(140px, (100dvh - 125px) * .716, 190px); }
   .stack-gallery-heading { padding: 12px 18px 0; gap: 12px; }
   .stack-gallery-heading h2 { font-size: 22px; }

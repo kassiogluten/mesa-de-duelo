@@ -139,16 +139,25 @@ export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops:
     }).join('')}</ol>`;
 }
 
+/** Para onde vai o botão de passar quando uma etapa extra muda a fase seguinte. */
+const NEXT_LABEL: Record<string, string> = {
+  UNTAP: 'Para o início extra', UPKEEP: 'Para a manutenção extra', DRAW: 'Comprar', MAIN1: 'Para a principal 1',
+  COMBAT_BEGIN: 'Para o combate extra', MAIN2: 'Para a principal 2', END_OF_TURN: 'Para o fim do turno', CLEANUP: 'Para o fim do turno',
+};
+
 /**
  * Texto do botão de passar a prioridade: diz para onde o jogo vai, como no Arena. Só o rótulo muda; a ação
  * continua a mesma. Com algo na pilha, passar deixa o topo resolver.
  */
-export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' | 'stack' | 'extraCombatAfter'>): string {
+export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' | 'stack' | 'extraCombatAfter' | 'extraPhaseAfter'>): string {
   if (state.stack.length) return 'Resolver';
   if (state.activePlayer !== state.you) return 'Passar';
+  const group = STEPS[state.phase ?? '']?.group;
+  // Uma etapa extra muda o que vem depois: a manutenção extra depois do combate volta para a principal 2, não para a compra.
+  const next = state.extraPhaseAfter?.[group === 'combat' ? 'COMBAT_END' : state.phase ?? ''];
+  if (next && NEXT_LABEL[next]) return NEXT_LABEL[next];
   // Na sua manutenção, passar leva à compra.
   if (state.phase === 'UPKEEP') return 'Comprar';
-  const group = STEPS[state.phase ?? '']?.group;
   const after = state.extraCombatAfter ?? [];
   // Um combate extra pode vir logo depois do combate (Combat Celebrant) ou depois de uma principal (Relentless Assault).
   if ((group === 'combat' && after.includes('COMBAT_END')) || (group === 'main1' && after.includes('MAIN1')) || (group === 'main2' && after.includes('MAIN2'))) return 'Para o combate extra';

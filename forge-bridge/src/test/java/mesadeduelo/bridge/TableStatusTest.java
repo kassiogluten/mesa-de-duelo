@@ -56,4 +56,28 @@ public class TableStatusTest {
         assertEquals("Lightning Bolt", ch.getAsJsonArray("names").get(0).getAsString());
         assertEquals(other.getId(), ch.get("player").getAsInt());
     }
+
+    @Test public void devotionCardsCarryTheCountAndTheGodThreshold() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        assertFalse(StateJson.card(bears.getView(), game).has("devotion"));
+
+        Card thassa = ExilePermissionsTest.add(game, "Thassa, God of the Sea", me, ZoneType.Battlefield);
+        ExilePermissionsTest.add(game, "Merfolk of the Pearl Trident", me, ZoneType.Battlefield);
+        JsonObject d = StateJson.card(thassa.getView(), game).getAsJsonObject("devotion");
+        assertEquals("[\"U\"]", d.get("colors").toString());
+        assertEquals(2, d.get("value").getAsInt());
+        assertEquals(5, d.get("need").getAsInt());
+
+        Card mogis = ExilePermissionsTest.add(game, "Mogis, God of Slaughter", me, ZoneType.Battlefield);
+        JsonObject dual = StateJson.card(mogis.getView(), game).getAsJsonObject("devotion");
+        assertEquals("[\"B\",\"R\"]", dual.get("colors").toString());
+        assertEquals(2, dual.get("value").getAsInt());
+        assertEquals(7, dual.get("need").getAsInt());
+
+        Card merchant = ExilePermissionsTest.add(game, "Gray Merchant of Asphodel", me, ZoneType.Battlefield);
+        JsonObject black = StateJson.card(merchant.getView(), game).getAsJsonObject("devotion");
+        assertEquals(3, black.get("value").getAsInt());
+        assertFalse(black.has("need"));
+    }
 }

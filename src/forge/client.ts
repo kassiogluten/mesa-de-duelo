@@ -88,6 +88,8 @@ export interface FCard {
   shields?: number;
   /** O que a carta escolheu (tipo, cores, carta nomeada, jogador, número, modo), só o que existe. */
   chosen?: FChosen;
+  /** Cartas que contam com devoção: as cores (W, U, B, R, G), o valor para quem controla e, nos deuses de Theros, o mínimo para ser criatura. */
+  devotion?: { colors: string[]; value: number; need?: number };
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
@@ -261,6 +263,8 @@ export interface FState {
   /** Combates extras ainda por vir neste turno e as fases depois das quais cada um começa. */
   extraCombats?: number;
   extraCombatAfter?: string[];
+  /** Fases que, por causa de uma etapa extra, não seguem para a fase normal, e a fase que vem depois de cada uma. */
+  extraPhaseAfter?: Record<string, string>;
   gameOver: boolean;
   spectating?: boolean;
   winner?: string;
@@ -271,7 +275,7 @@ export interface FState {
   playableExile?: number[];
   /** Cartas suspensas e cartas cujo gatilho de suspender ainda está na pilha. */
   suspendedExile?: number[];
-  stack: { id: number; text: string; source?: FCard; controller?: number; targets?: FTargets }[];
+  stack: { id: number; text: string; /** Ausente em pontes antigas. */ kind?: 'spell' | 'ability' | 'trigger'; /** Só quando pago além do custo normal: forma de conjurar (flashback, aventura...), vezes reforçada, outros opcionais e o X. */ cast?: { mode?: string; kicker?: number; extras?: string[]; x?: number }; source?: FCard; controller?: number; targets?: FTargets }[];
   combat: { attacker: number; defender?: number; defenderKind?: 'player' | 'card'; blockers: number[] }[];
   log: string[];
   you: number;
@@ -279,9 +283,10 @@ export interface FState {
   /** actionable: cartas que podem ser usadas agora (jogáveis, atacantes ou bloqueadores possíveis). */
   /** card: carta citada pelo prompt (ex.: a do topo do grimório na vidência ou na vigilância de 1). */
   /** paying: pagando um custo de mana; a mana da reserva pode ser gasta com {type:"mana", color}. */
+  /** payingFor: o que o pagamento paga (mágica, habilidade ou custo pedido por um efeito), para o rótulo do Cancelar; canAutoPay: o Automático consegue pagar (fora da trava curta de clique). */
   /** untappable: permanentes viradas para mana com a mana ainda na reserva; clicar ({type:"card"}) desvira e devolve a mana. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
-  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; card?: FCard; paying?: boolean;
+  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean;
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
     /** players: só quando jogadores também podem ser escolhidos (proliferar). */
     selection?: { cards: number[]; players?: number[]; min: number; max: number };

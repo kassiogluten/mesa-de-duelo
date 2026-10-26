@@ -6,6 +6,8 @@
 export interface ShortInstructionInput {
   message: string;
   paying?: boolean;
+  payingFor?: 'spell' | 'ability' | 'effect';
+  canAutoPay?: boolean;
   card?: { name?: string };
   targeting?: { card?: { name?: string } };
 }
@@ -60,6 +62,24 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
     const how = request.upTo ? `até ${request.count} ${request.count === 1 ? 'alvo' : 'alvos'}` : request.count === 1 ? 'um alvo' : `${request.count} alvos`;
     return `Escolha ${how}${name ? ` para ${name}` : ''}${request.kind ? ` (${request.kind})` : ''}.`;
   }
+  // Custo pedido por um efeito (Estudo Rístico, Mana Leak): a carta costuma ser de outro jogador, e pagar é opcional.
+  if (input.paying && input.payingFor === 'effect') {
+    const cost = input.message.match(/(?:Custo de Mana|Mana Cost):\s*((?:\{[A-Z0-9/]+\})+)/i)?.[1];
+    const asks = `${name ?? 'O efeito'} pede ${cost ?? 'um pagamento de mana'}`;
+    return input.canAutoPay === false ? `${asks}, e a sua mana não dá para pagar.` : name ? `${asks}. Pague ou recuse.` : 'Pague o custo pedido ou recuse.';
+  }
   if (input.paying) return name ? `Pague o custo de mana de ${name}.` : 'Pague o custo de mana.';
   return null;
+}
+
+/**
+ * Rótulos dos botões do pagamento de mana. O Forge só manda "Automático" e "Cancelar"; desativado, o automático
+ * quer dizer que a mana à vista não paga o custo, e o Cancelar desfaz a conjuração ou a ativação, ou só recusa o
+ * pagamento quando o custo vem de um efeito ("a menos que pague {3}").
+ */
+export function paymentButtonLabels(input: Pick<ShortInstructionInput, 'payingFor' | 'canAutoPay'> & { ok: { enabled: boolean } }): { ok: string; cancel: string } {
+  return {
+    ok: input.canAutoPay ?? input.ok.enabled ? 'Pagar automaticamente' : 'Mana insuficiente',
+    cancel: input.payingFor === 'spell' ? 'Desistir da mágica' : input.payingFor === 'ability' ? 'Desistir da habilidade' : input.payingFor === 'effect' ? 'Não pagar' : 'Desistir',
+  };
 }

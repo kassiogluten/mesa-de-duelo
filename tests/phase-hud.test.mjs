@@ -99,6 +99,12 @@ test('extra turns and extra combats are named on the trail, the banner and the p
   assert.equal(passLabel({ ...extra, phase: 'COMBAT_DAMAGE', extraCombatAfter: ['COMBAT_END'] }), 'Para o combate extra');
   assert.equal(passLabel({ ...extra, phase: 'COMBAT_DAMAGE' }), 'Para a principal 2');
   assert.equal(passLabel({ ...extra, phase: 'MAIN1', extraCombatAfter: ['MAIN1'] }), 'Para o combate extra');
+  // Manutenções extras: depois do combate (voltam para a principal 2) ou repetidas antes da compra.
+  const upkeeps = { extraPhaseAfter: { COMBAT_END: 'UPKEEP', UPKEEP: 'MAIN2' } };
+  assert.equal(passLabel({ ...state, stack: [], phase: 'COMBAT_DAMAGE', ...upkeeps }), 'Para a manutenção extra');
+  assert.equal(passLabel({ ...state, stack: [], phase: 'UPKEEP', ...upkeeps }), 'Para a principal 2');
+  assert.equal(passLabel({ ...state, stack: [], phase: 'UPKEEP', extraPhaseAfter: { UPKEEP: 'UPKEEP' } }), 'Para a manutenção extra');
+  assert.equal(passLabel({ ...state, stack: [], phase: 'UPKEEP', extraPhaseAfter: { UPKEEP: 'UPKEEP' }, activePlayer: 2 }), 'Passar');
   const html = phaseHudHTML(extra);
   assert.match(html, /phase-turn-badge mine extra/);
   assert.match(html, /phase-combat-count">×2</);

@@ -87,3 +87,17 @@ test('engine-only states become small seals with the full sentence in the toolti
   assert.equal(permanentFx(creature({ controller: 1, owner: 1 })).seals.length, 0, 'owner equal to controller is not a steal');
   assert.match(permanentFxHTML(fx).html, /class="fx-seal regen" title="2 escudos/);
 });
+
+test('devotion cards show the count, and gods show how much is missing to become a creature', () => {
+  const seal = devotion => permanentFx(creature({ devotion })).seals.find(s => s.kind.startsWith('devotion'));
+  const god = seal({ colors: ['U'], value: 3, need: 5 });
+  assert.equal(god.kind, 'devotion');
+  assert.match(god.html, /3\/5$/);
+  assert.equal(god.label, 'Devoção ao azul: 3. Só é criatura com 5 (faltam 2).');
+  const awake = seal({ colors: ['B', 'R'], value: 7, need: 7 });
+  assert.equal(awake.kind, 'devotion met');
+  assert.equal(awake.label, 'Devoção ao preto e vermelho: 7. Com 7 ou mais, é criatura.');
+  assert.equal(seal({ colors: ['B'], value: 4 }).label, 'Devoção ao preto: 4.');
+  assert.match(seal({ colors: ['B'], value: 4 }).html, /4$/);
+  assert.equal(seal(undefined), undefined);
+});

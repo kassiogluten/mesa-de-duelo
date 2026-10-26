@@ -8,7 +8,7 @@ const load = async path => {
   const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
   return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 };
-const { stackPresentation } = await load('../src/ui/stackPresentation.ts');
+const { stackPresentation, stackOwnerLine, stackBadgeText, stackCastLine } = await load('../src/ui/stackPresentation.ts');
 const { PresentationTimeline } = await load('../src/ui/presentationTimeline.ts');
 const card = { id: 21, name: 'Raging Goblin', creature: true, controller: 2 };
 const spell = { id: 701, source: card, controller: 2, text: 'Raging Goblin', targets: {} };
@@ -76,4 +76,28 @@ test('initial/reconnect catch-up cannot replay an already processed stack', () =
   timeline.ingest('game', [{ ...cast, seq: 4 }], { silent: true });
   assert.equal(timeline.current, null);
   assert.deepEqual(stackPresentation(state, timeline.current?.event), { stack: [], replaying: false });
+});
+
+test('stack items say whether they were cast, activated or triggered, and by whom', () => {
+  assert.equal(stackOwnerLine({ ...spell, kind: 'spell' }, 2, 'Ana'), 'Sua mágica');
+  assert.equal(stackOwnerLine({ ...spell, kind: 'ability' }, 1, 'Ana'), 'Habilidade ativada por Ana');
+  assert.equal(stackOwnerLine({ ...spell, kind: 'trigger' }, 1, 'Ana'), 'Gatilho de Ana');
+  assert.equal(stackOwnerLine({ ...spell, kind: 'trigger' }, 2, 'Ana'), 'Seu gatilho');
+  assert.equal(stackOwnerLine(spell, 1, 'Ana'), 'Ana', 'older bridges send no kind');
+});
+
+test('the badge and the gallery say how a spell was paid for', () => {
+  assert.equal(stackBadgeText({ ...spell, kind: 'spell' }), 'Mágica');
+  assert.equal(stackBadgeText({ ...spell, kind: 'spell', cast: { kicker: 1 } }), 'Mágica · Reforçada');
+  assert.equal(stackBadgeText({ ...spell, kind: 'spell', cast: { kicker: 2 } }), 'Mágica · Reforçada ×2');
+  assert.equal(stackBadgeText({ ...spell, kind: 'spell', cast: { mode: 'flashback', kicker: 1 } }), 'Mágica · Flashback', 'the way it was cast wins the small badge');
+  assert.equal(stackBadgeText({ ...spell, kind: 'ability', cast: { x: 3 } }), 'Habilidade · X=3');
+  assert.equal(stackBadgeText({ ...spell, cast: { extras: ['buyback'] } }), 'Recompra', 'older bridges send no kind');
+  assert.equal(stackBadgeText({ ...spell, kind: 'spell', cast: { mode: 'unknown' } }), 'Mágica', 'unknown ways of casting stay quiet');
+
+  assert.equal(stackCastLine(undefined), '');
+  assert.equal(stackCastLine({ kicker: 1 }), 'Conjurada com reforço.');
+  assert.equal(stackCastLine({ mode: 'flashback', kicker: 2, extras: ['buyback'], x: 3 }), 'Conjurada por flashback, com reforço 2 vezes e com recompra. X = 3.');
+  assert.equal(stackCastLine({ mode: 'adventure' }), 'Conjurada como aventura.');
+  assert.equal(stackCastLine({ x: 0 }), 'X = 0.');
 });

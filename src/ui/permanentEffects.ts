@@ -21,6 +21,7 @@ export interface PermanentFx {
 }
 
 const COLOR_PIP: Record<string, string> = { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' };
+const PIP_COLOR = Object.fromEntries(Object.entries(COLOR_PIP).map(([name, letter]) => [letter, name]));
 const PROTECTION_LABEL: Record<string, string> = {
   white: 'branco', blue: 'azul', black: 'preto', red: 'vermelho', green: 'verde', artifact: 'artefatos', artifacts: 'artefatos',
   creature: 'criaturas', creatures: 'criaturas', multicolored: 'multicoloridas', monocolored: 'monocoloridas', everything: 'tudo',
@@ -67,9 +68,9 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
-type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen';
+type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'devotion' | 'devotion met';
 const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
-const STATUS_ICON: Record<StatusKind, string> = {
+const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen', string> = {
   control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
   goaded: icon('M12 2 9 9H2l5.6 4.2L5.5 21 12 16.3l6.5 4.7-2.1-7.8L22 9h-7z'),
   regen: icon('M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z'),
@@ -78,8 +79,8 @@ const STATUS_ICON: Record<StatusKind, string> = {
 const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
 
 /**
- * Estados que o motor guarda e a carta impressa não mostra: controle trocado, atiçada, escudos de regeneração e o que a
- * carta escolheu. Na mesa ficam como selos pequenos (controle e atiçada só com o ícone); o texto vai no balão e no inspetor.
+ * Estados que o motor guarda e a carta impressa não mostra: controle trocado, atiçada, escudos de regeneração, o que a
+ * carta escolheu e a devoção das cartas que contam com ela. Na mesa ficam como selos pequenos (controle e atiçada só com o ícone); o texto vai no balão e no inspetor.
  */
 export function permanentStatus(c: FCard, playerName: (id: number) => string = id => `Jogador ${id}`): PermanentFx['seals'] {
   const seals: PermanentFx['seals'] = [];
@@ -105,6 +106,15 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
     if (ch.number) { shown.push(esc(ch.number)); said.push(`número ${ch.number}`); }
     if (ch.mode) { shown.push(esc(ch.mode)); said.push(`modo ${ch.mode}`); }
     if (said.length) seals.push({ kind: 'chosen', html: `${STATUS_ICON.chosen}<span class="fx-chosen">${shown.join(' · ')}</span>`, label: `Escolhido pela carta: ${said.join('; ')}.` });
+  }
+  const dev = c.devotion;
+  if (dev?.colors.length) {
+    const pips = dev.colors.map(k => pip(k)).join('');
+    const to = `Devoção ao ${list(dev.colors.map(k => protectionLabel(PIP_COLOR[k] ?? k)))}: ${dev.value}`;
+    const met = dev.need !== undefined && dev.value >= dev.need;
+    const label = dev.need === undefined ? `${to}.`
+      : met ? `${to}. Com ${dev.need} ou mais, é criatura.` : `${to}. Só é criatura com ${dev.need} (falta${dev.need - dev.value > 1 ? 'm' : ''} ${dev.need - dev.value}).`;
+    seals.push({ kind: met ? 'devotion met' : 'devotion', html: `${pips}${dev.value}${dev.need !== undefined ? `/${dev.need}` : ''}`, label });
   }
   return seals;
 }

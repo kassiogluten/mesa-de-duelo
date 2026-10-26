@@ -6,6 +6,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.49.0] - 2026-10-26
+
+### Novo
+
+- **Devoção à vista.** As cartas que contam com devoção, como o Mercador Cinzento de Asfódelos, ganham um selo embaixo com o símbolo da cor e a sua devoção atual. Nos deuses de Theros, o selo mostra quanto você tem e quanto precisa para o deus virar criatura (por exemplo, **3/5**), e fica verde quando ele já é criatura. Passando o mouse, o balão explica quanto falta.
+- **O que está na pilha.** Cada carta da pilha ganha um selo dizendo por que ela está ali: **Mágica** (foi conjurada), **Habilidade** (alguém ativou uma habilidade dela) ou **Gatilho** (uma habilidade dela disparou sozinha). Ao abrir a pilha, embaixo de cada carta aparece também quem a pôs ali, como **Sua mágica**, **Habilidade ativada por Ana** ou **Gatilho de Ana**.
+- **Como a mágica foi conjurada.** O selo da pilha também diz quando a mágica foi paga de um jeito diferente do normal: **Mágica · Reforçada** quando o reforço foi pago (com **×2** se foi mais de uma vez), **Mágica · Flashback**, **Mágica · Aventura**, **Mágica · Evocar** e outras formas de conjurar, **Recompra**, **Entrelaçada** e outros custos opcionais, e o valor de **X**. Ao abrir a pilha, uma linha embaixo do efeito explica tudo, como **Conjurada por flashback, com reforço 2 vezes e com recompra. X = 3.** Assim dá para saber, antes de responder, se aquela mágica vai fazer o efeito maior.
+
+### Mudou
+
+- **Botões claros ao pagar mana.** Na hora de pagar um custo, o botão **Automático** virou **Pagar automaticamente** e, quando a sua mana não dá para pagar, aparece apagado como **Mana insuficiente**. O **Cancelar** agora diz o que acontece: **Desistir da mágica** (a carta volta para a mão), **Desistir da habilidade** ou, quando é uma carta pedindo um pagamento opcional, como o Estudo Rístico do oponente, **Não pagar**. Nesse caso, a frase acima dos botões diz quem pede e quanto (**Estudo Rístico pede {1}**) e avisa quando a sua mana não dá. Sem mana para pagar, o botão de destaque passa a ser o que desiste ou não paga.
+
+### Corrigido
+
+- **Botão certo nas manutenções extras.** Numa manutenção extra que vem depois do combate, o botão de ação não diz mais **Comprar**: ele mostra **Para a principal 2**, que é para onde o jogo vai, já que a compra do turno já passou. Quando uma carta repete a manutenção antes da compra, o botão mostra **Para a manutenção extra** e só diz **Comprar** na última.
+
 ## [0.48.2] - 2026-10-26
 
 ### Corrigido

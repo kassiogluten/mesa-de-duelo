@@ -35,4 +35,18 @@ public class TurnExtrasTest {
         assertEquals(1, o.get("extraCombats").getAsInt());
         assertEquals("[\"MAIN2\"]", o.get("extraCombatAfter").toString());
     }
+
+    @Test public void extraUpkeepsAfterCombatPointBackToTheSecondMain() {
+        var game = ExilePermissionsTest.game();
+        game.getPhaseHandler().addExtraPhase(PhaseType.COMBAT_END, List.of(PhaseType.UPKEEP), PhaseType.MAIN2);
+        JsonObject o = new JsonObject(); TurnExtras.add(o, game);
+        assertEquals("{\"UPKEEP\":\"MAIN2\",\"COMBAT_END\":\"UPKEEP\"}", o.get("extraPhaseAfter").toString());
+    }
+
+    @Test public void extraUpkeepBeforeTheDrawOnlyNamesTheRepeat() {
+        var game = ExilePermissionsTest.game();
+        game.getPhaseHandler().addExtraPhase(PhaseType.UPKEEP, List.of(PhaseType.UPKEEP), PhaseType.DRAW);
+        JsonObject o = new JsonObject(); TurnExtras.add(o, game);
+        assertEquals("{\"UPKEEP\":\"UPKEEP\"}", o.get("extraPhaseAfter").toString());
+    }
 }

@@ -45,6 +45,8 @@ final class TurnExtras {
                 for (PhaseType p : PhaseType.values()) if (ph.hasExtraPhaseAfter(p, PhaseType.COMBAT_BEGIN)) after.add(p.name());
                 o.add("extraCombatAfter", after);
             }
+            JsonObject next = extraPhaseLinks(ph);
+            if (next.size() > 0) o.add("extraPhaseAfter", next);
         } catch (IllegalAccessException | RuntimeException e) {
             // Lido fora da thread do jogo: se a pilha mudar no meio, o próximo estado traz o valor certo.
         }
@@ -58,6 +60,23 @@ final class TurnExtras {
         for (int i = items.length - 1; i >= 1; i--) {
             Player p = ((ExtraTurn) items[i]).getPlayer();
             if (p != null) out.add(p.getId());
+        }
+        return out;
+    }
+
+    /**
+     * Fases depois das quais o jogo não segue a ordem normal por causa de uma etapa extra, e para onde ele vai.
+     * Assim o botão de passar não diz "Comprar" numa manutenção extra que leva de volta à principal 2.
+     */
+    static JsonObject extraPhaseLinks(PhaseHandler ph) throws IllegalAccessException {
+        @SuppressWarnings("unchecked") Map<PhaseType, Stack<ExtraPhase>> phases = (Map<PhaseType, Stack<ExtraPhase>>) PHASES.get(ph);
+        boolean reversed = ph.getPlayerTurn().isPhasesReversed();
+        JsonObject out = new JsonObject();
+        for (PhaseType p : PhaseType.values()) {
+            Stack<ExtraPhase> stack = phases.get(p);
+            if (stack == null || stack.isEmpty()) continue;
+            PhaseType next = stack.peek().getPhase();
+            if (next != PhaseType.getNext(p, reversed)) out.addProperty(p.name(), next.name());
         }
         return out;
     }

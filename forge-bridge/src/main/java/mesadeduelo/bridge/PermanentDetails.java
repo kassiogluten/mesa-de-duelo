@@ -2,6 +2,9 @@ package mesadeduelo.bridge;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import forge.card.MagicColor;
+import forge.card.mana.ManaAtom;
+import forge.card.mana.ManaCostShard;
 import forge.game.Game;
 import forge.game.card.Card;
 import forge.game.card.CardView.CardStateView;
@@ -11,12 +14,13 @@ import forge.game.cost.Cost;
 import forge.game.keyword.Keyword;
 import forge.game.keyword.KeywordView;
 import forge.game.player.Player;
+import forge.game.staticability.StaticAbility;
 import forge.game.zone.ZoneType;
 
 /**
  * Estados de uma permanente que a mesa desenha como efeito contínuo e que as palavras-chave sozinhas não dizem: o custo
  * da proteção contra alvos (ward), de que a proteção protege, fases fora, "não pode atacar/bloquear" e os escudos de
- * prevenção, além de dono, atiçamento, regeneração e escolhas (em {@link #status}). Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
+ * prevenção, além de dono, atiçamento, regeneração, escolhas e devoção (em {@link #status}). Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
  */
 final class PermanentDetails {
     private PermanentDetails() {}
@@ -39,11 +43,52 @@ final class PermanentDetails {
         if (game == null) return;
         try {
             Card gc = game.findByView(c);
+            if (gc != null && !c.isFaceDown()) devotion(o, gc);
             if (gc == null || !gc.isGoaded()) return;
             JsonArray by = new JsonArray();
             for (Player p : gc.getGoaded()) by.add(p.getId());
             o.add("goadedBy", by);
         } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
+    }
+
+    /**
+     * Devoção das cartas que contam com ela (Count$Devotion e Count$DevotionDual nas variáveis da carta): as cores, o valor
+     * para o controlador, somado como o Forge soma, e, nos deuses de Theros, a devoção que falta para virar criatura.
+     */
+    static void devotion(JsonObject o, Card gc) {
+        Player controller = gc.getController();
+        if (controller == null) return;
+        for (String value : gc.getSVars().values()) {
+            String[] sq = value.startsWith("Count$") ? value.substring(6).split("[.$/]") : new String[0];
+            if (sq.length < 2 || !(sq[0].equals("Devotion") || sq[0].equals("DevotionDual") && sq.length >= 3)) continue;
+            String first = sq[1].equals("Chosen") ? gc.getChosenColor() : sq[1];
+            if (first == null || first.isEmpty()) continue;
+            byte color = ManaAtom.fromName(MagicColor.toShortString(first));
+            if (sq[0].equals("DevotionDual")) color |= ManaAtom.fromName(MagicColor.toShortString(sq[2]));
+            if (color == 0) continue;
+            int count = controller.getDevotionMod();
+            for (Card permanent : controller.getCardsIn(ZoneType.Battlefield))
+                for (ManaCostShard shard : permanent.getManaCost()) if (shard.isColor(color)) count++;
+            JsonObject d = new JsonObject();
+            JsonArray colors = new JsonArray();
+            for (char letter : "WUBRG".toCharArray()) if ((color & ManaAtom.fromName(letter)) != 0) colors.add(String.valueOf(letter));
+            d.add("colors", colors);
+            d.addProperty("value", count);
+            Integer need = creatureThreshold(gc, value);
+            if (need != null) d.addProperty("need", need);
+            o.add("devotion", d);
+            return;
+        }
+    }
+
+    /** "Enquanto sua devoção for menor que N, não é criatura": o N, lido da habilidade estática que tira o tipo. */
+    private static Integer creatureThreshold(Card gc, String count) {
+        for (StaticAbility st : gc.getStaticAbilities()) {
+            String compare = st.getParam("SVarCompare"), removes = st.getParam("RemoveType"), svar = st.getParam("CheckSVar");
+            if (compare == null || removes == null || svar == null || !removes.contains("Creature") || !count.equals(gc.getSVar(svar))) continue;
+            if (compare.matches("LT\\d+")) return Integer.parseInt(compare.substring(2));
+        }
+        return null;
     }
 
     /** O que a carta escolheu ao entrar ou resolver (tipo, cores, carta nomeada, jogador, número, modo); só vai quando há algo. */
