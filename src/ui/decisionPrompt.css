@@ -1,6 +1,6 @@
 /* Card choices stay readable while the actual cards remain interactive. */
 .forge .action.card-decision {
-  width: min(340px, 29vw); max-width: none; gap: 12px; align-items: stretch;
+  width: var(--action-reserve); max-width: none; gap: 12px; align-items: stretch;
   padding: 16px; border: 1px solid #f2b54c70; border-radius: 12px;
   background: linear-gradient(135deg, #16243af5, #091322f5); box-shadow: 0 6px 24px #0005;
 }
@@ -21,7 +21,9 @@
 .forge.has-hand-decision .hcard.playable { cursor: pointer; }
 @media (max-width: 1100px) { .forge .action.hand-decision { left: 160px; } }
 @media (max-width: 760px), (max-height: 500px) {
-  .forge .action.card-decision { width: min(290px, 35vw); padding: 10px; gap: 8px; }
+  /* Na largura dos botões, para não cobrir os terrenos (a fileira termina antes deles); os botões ficam um embaixo do outro. */
+  .forge .action.card-decision { width: var(--action-w); padding: 10px; gap: 8px; }
+  .forge .action.card-decision:not(.hand-decision) .btns { flex-direction: column; }
   .forge .action.card-decision .prompt { font-size: 13px; line-height: 18px; -webkit-line-clamp: 4; line-clamp: 4; }
   .decision-heading { font-size: 12px; margin-bottom: 5px; }
   .decision-progress { gap: 4px 10px; }

@@ -162,6 +162,13 @@
 .forge .log-drawer { background: var(--panel); width: min(350px, calc(100vw - 24px)); }
 .forge .log-drawer li { padding: 7px 0; border-bottom: 1px solid var(--line); }
 .forge .action { right: 16px; bottom: 16px; width: 265px; max-width: 29vw; gap: 10px; }
+/*
+ * Seu campo de terrenos termina antes da caixa de ação, na largura dela quando traz uma escolha de cartas (a mais larga):
+ * com frase ou escolha, a caixa sobe até a fileira e cobriria os terrenos da direita. A fileira rola em vez de passar por baixo.
+ */
+.forge { --action-reserve: min(340px, 29vw); }
+.forge:not([data-opening]) > .field.me > .row.lands { --action-space: calc(16px + var(--action-reserve) + 8px - 58px); width: calc(100% - var(--action-space)); margin-right: var(--action-space); }
+.forge.multiplayer:not([data-opening]) > .field.me > .row.lands { --action-space: calc(16px + var(--action-reserve) + 8px - 12px); }
 /* Altura de linha em px inteiros: com fração, o texto aberto passa 1px da caixa e ganha barra de rolagem. */
 .forge .action .prompt { font-size: 14px; line-height: 20px; text-align: right; width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; }
 .forge .action .prompt:empty { display: none; }
@@ -366,8 +373,6 @@
   /* No duelo, seu retrato fica sobre o começo da fileira: a primeira permanente começa depois dele. */
   .forge:not(.multiplayer):not(.commander-game):not([data-opening]) > .field.me > .row.lands { padding-left: 64px; }
   .forge > .field .row { scrollbar-width: thin; }
-  /* Quando a caixa traz uma pergunta com texto (escolher cartas), ela volta à largura de antes. */
-  .forge .action.card-decision { width: 190px; max-width: 30vw; }
 }
 /*
  * "Passar respostas": um botão só com o ícone, ao lado do último botão da caixa, em vez de uma linha inteira embaixo.

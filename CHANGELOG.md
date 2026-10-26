@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.48.2] - 2026-10-26
+
+### Corrigido
+
+- **Terrenos livres da caixa de ação.** Quando a caixa ao lado dos botões mostrava uma frase ("Escolha um terreno para sacrificar") ou uma escolha de cartas, ela subia por cima dos últimos terrenos da direita, e às vezes era justamente um deles que precisava ser escolhido. Agora a fileira de terrenos sempre termina antes da caixa e, com muitos terrenos, rola em vez de passar por baixo. No celular, a caixa de escolha de cartas ficou da largura dos botões, com os botões um embaixo do outro.
+
 ## [0.48.1] - 2026-10-26
 
 ### Mudou

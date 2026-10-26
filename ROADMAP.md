@@ -442,3 +442,11 @@ Prioridade baixa:
 - [ ] **Vida ganha e perdida no turno** (`getLifeGainedThisTurn`, `getLifeLostThisTurn`): no balão do retrato, para cartas de revolta, sangue e afins.
 
 Para cada um: mandar o dado pela ponte só quando existir (como `ringTempted`), testar com o motor real em `forge-bridge/src/test`, montar a página de teste e entrar no `CHANGELOG.md` com prints em **Novidades em imagens**.
+
+## 31. Caixa de ação por cima dos terrenos ✅
+
+A caixa ao lado dos botões de ação, quando mostra uma frase (escolher alvo, pagar custo) ou uma escolha de cartas, cresce para cima e ficava por cima dos últimos terrenos da direita. Às vezes era justamente um desses terrenos que precisava ser escolhido, e não havia como alcançá-lo.
+
+- [x] No computador, a fileira de terrenos sempre termina antes da caixa, na largura dela com uma escolha de cartas (a mais larga), como já acontecia no celular. Nada muda de lugar quando a caixa aparece; com muitos terrenos a fileira rola.
+- [x] No celular, a caixa de escolha de cartas fica na largura dos botões, com os botões um embaixo do outro, em vez de passar por cima dos terrenos.
+- [x] Conferido no duelo, no Commander com vários jogadores e no celular.

@@ -1,4 +1,10 @@
 {
+  "0.48.2": {
+    "Terrenos livres da caixa de ação": [
+      { "img": "0.48.2/terrenos-livres-da-caixa.webp", "legenda": "No computador, a fileira de terrenos termina antes da caixa com a frase \"Escolha um terreno para sacrificar\", e todos os terrenos ficam à vista para escolher." },
+      { "img": "0.48.2/terrenos-livres-no-celular.webp", "legenda": "No celular, a caixa da escolha de cartas fica estreita, com os botões um embaixo do outro, e não cobre mais os terrenos." }
+    ]
+  },
   "0.48.1": {
     "Exílio jogável em destaque": [
       { "img": "0.48.1/exilio-jogavel.webp", "legenda": "Ao lado da mão, a carta do exílio que dá para jogar tem o contorno azul e a etiqueta **Jogar**; a que está esperando fica apagada, com **Aguarde**." },
