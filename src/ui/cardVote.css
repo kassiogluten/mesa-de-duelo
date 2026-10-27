@@ -1,0 +1,18 @@
+/* Votação do conselho: a carta que vota com o texto ao lado, os votos já dados e o que cada voto faz. */
+.forge .question:has(.vote-source) { width: min(640px, 94vw); }
+.forge .vote-source { display: flex; gap: 18px; align-items: flex-start; margin: 4px 0 14px; text-align: left; }
+.forge .vote-card { flex: 0 0 auto; width: 150px; --fw: 150px; cursor: zoom-in; }
+.forge .vote-card .face { box-shadow: 0 12px 28px rgb(0 0 0 / .55); }
+.forge .vote-rules { min-width: 0; flex: 1; display: grid; gap: 10px; font: 400 14px/1.55 var(--body); color: var(--ink); }
+.forge .vote-rules p { margin: 0; }
+.forge .vote-tally { padding: 8px 12px; border: 1px solid rgb(242 181 76 / .3); border-radius: 10px; background: rgb(242 181 76 / .08); color: var(--gold-light); font-weight: 500; }
+.forge .vote-tally span { display: block; color: var(--muted); font: 600 11px/1.4 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.forge .vote-opts .q-opt.vote-opt { flex-direction: column; align-items: flex-start; gap: 3px; padding: 11px 16px; text-align: left; }
+.forge .vote-opt strong { color: var(--ink); font: 600 16px/1.3 var(--body); }
+.forge .vote-opt small { color: var(--muted); font: 400 13px/1.45 var(--body); }
+.forge .vote-opt:hover small { color: var(--ink); }
+@media (max-width: 560px) {
+  .forge .vote-source { gap: 12px; }
+  .forge .vote-card { width: 96px; --fw: 96px; }
+  .forge .vote-rules { font-size: 13px; }
+}

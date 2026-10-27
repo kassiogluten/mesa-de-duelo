@@ -45,8 +45,10 @@ import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
 import './matchBar.css';
-import { paymentButtonLabels, shortInstruction } from './shortInstruction';
+import { paymentButtonLabels, shortInstruction, voteRequest } from './shortInstruction';
 import { awaitingDecision, waitingOnText } from './awaitingDecision';
+import { isVote, voteHTML, voteTallyText } from './cardVote';
+import './cardVote.css';
 import { confirmUpkeepMana, upkeepManaKey } from './upkeepMana';
 import './upkeepMana.css';
 import './awaitingDecision.css';
@@ -1629,6 +1631,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
     if (isTriggerOrder(q)) return triggerOrderHTML(q, triggersFor(q), c => face(c, 'normal'), label);
     if (isPlayMode(q)) return playModeHTML(q, c => face(c, 'normal'), label);
+    if (isVote(q)) return voteHTML(q, { face: c => face(c, 'normal'), label, rulesText: c => ptOf(c.name)?.text || c.text || '', playerName });
     const opts = q.options ?? [];
     const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
     if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, client?.state?.players.find(p => p.id === q.dungeonOwner));
@@ -1682,11 +1685,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       </div>`;
   }
 
+  /** Voto numa permanente: a escolha é no campo, e o painel diz de qual votação ela é. */
+  function voteBoardPrompt(vote: NonNullable<FState['input']['vote']>) {
+    const tally = vote.votes.length ? `\nVotos até agora: ${voteTallyText(vote.votes, playerName)}` : '';
+    return `Votação: ${label(vote.card)}${tally}\n\n${voteRequest(label(vote.card))}`;
+  }
+
   function questionBar(q: FQuestion) {
     const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
     const picked = isTriggerOrder(q) ? triggerOrder?.id === q.id ? triggerOrder.t.placed : 0 : qState?.id === q.id ? qState.picked.length : 0;
     const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
+    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isVote(q) && q.card ? `Votação: ${label(q.card)}` : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
     return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
   }
 
@@ -1849,15 +1858,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     syncTurnClock(visual);
 
     // Carta que o prompt cita mas que não está à vista na mesa (topo do grimório na vidência/vigilância).
-    const pc = s.input.card ?? s.input.targeting?.card;
-    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && !findCard(pc.id, false)
+    // A carta que vota fica à vista mesmo estando na pilha: é ela que explica o voto.
+    const pc = s.input.vote?.card ?? s.input.card ?? s.input.targeting?.card;
+    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || !findCard(pc.id, false))
       ? `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';
     const opening = s.input.opening;
     const prompt = s.gameOver ? '' : s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
       : s.input.commanderMove ? `${s.input.commanderMove.card ? label(s.input.commanderMove.card) : 'Seu comandante'} ${s.input.commanderMove.stays ? 'está n' : 'iria para '}${zoneWithArticle(s.input.commanderMove.to)}. Para onde vai?`
       : s.input.suspendCast ? 'Suspender: conjure agora sem pagar o custo de mana ou deixe a carta no exílio.'
       : s.input.blocking ? selectedBlocker ? `${label(findCard(selectedBlocker.blocker)!)}: escolha o atacante. Se já estiver bloqueando esse atacante, o clique remove o bloqueio.` : 'Escolha uma criatura sua e depois o atacante que ela vai bloquear.'
-      : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''
+      : s.input.vote ? voteBoardPrompt(s.input.vote) : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''
       : opening === 'mulligan-bottom' ? s.input.message.replace(/(\d+)\s+carta\(s\)/g, (_, n: string) => `${n} ${Number(n) === 1 ? 'carta' : 'cartas'}`) : s.input.message;
     $('#fAction').classList.toggle('suspend-choice', !!s.input.suspendCast);
     const decision = cardDecision(s);
@@ -2023,6 +2033,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (onStack) return onStack;
     if (!withPrompt) return undefined;
     if (s.input.card?.id === id) return s.input.card;
+    if (s.input.vote?.card.id === id) return s.input.vote.card;
+    if (s.question?.card?.id === id) return s.question.card;
     if (s.input.suspendCast?.card.id === id) return s.input.suspendCast.card;
     for (const o of s.question?.options ?? []) if (typeof o !== 'string' && o.card?.id === id) return o.card;
     return undefined;

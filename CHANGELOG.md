@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.54.0] - 2026-10-27
+
+### Novo
+
+- **Votações com a carta à vista.** Em cartas de votação, como Expropriate, Coercive Portal e Council's Judgment, a escolha agora mostra a carta que pediu o voto, com o texto dela, e embaixo de cada opção o trecho que diz o que aquele voto faz. Os votos que já foram dados aparecem em **Votos até agora**, e o aviso de cada voto chega em português ("Ana votou em Time."). Quando o voto é numa permanente, a carta fica ao lado do painel e o pedido diz de qual votação ele é.
+
+### Corrigido
+
+- **Moeda em português.** Ao jogar uma moeda, o pedido agora diz qual carta pede e pergunta "Costurado no Tempo: cara ou coroa?", com os botões **Cara** e **Coroa**. O resultado chega num aviso claro, como "Costurado no Tempo: você ganhou na moeda." ou, nas moedas sem escolha como Duelo de Mana, "a moeda de Oponente deu coroa.", em vez de frases quebradas como "Você vitórias o cara-coroa". Com Krark's Thumb, a escolha entre as duas moedas também ficou em português, e na pilha a mágica mostra o próprio texto em vez de "flips a coin".
+
 ## [0.53.0] - 2026-10-27
 
 ### Novo

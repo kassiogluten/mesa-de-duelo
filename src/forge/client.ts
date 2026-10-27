@@ -198,12 +198,14 @@ export interface FQuestion {
   method: string;
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
-  /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta. */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room';
+  /** triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). */
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote';
   /** commander-zone: onde o comandante está agora (Graveyard ou Exile). */
   zone?: string;
   /** dungeon-room: id do jogador dono da masmorra. */
   dungeonOwner?: number;
+  /** vote: votos já dados nesta votação (fora as secretas), com o rótulo da opção como o Forge escreve. */
+  votes?: FVote[];
   /** combat-damage: divisão automática sugerida, se há ordem entre bloqueadores, se vale qualquer divisão e as palavras-chave do atacante. */
   suggested?: number[];
   ordered?: boolean;
@@ -219,6 +221,8 @@ export interface FQuestion {
   initial?: string;
   numeric?: boolean;
 }
+
+export interface FVote { player: number; label: string }
 
 export interface FButton { label: string; enabled: boolean }
 
@@ -307,7 +311,9 @@ export interface FState {
     /** Atacantes e bloqueadores da declaração atual, identificados pela instância da carta. */
     blocking?: { selectedAttacker: number | null; attackers: number[]; blockers: number[]; legalAssignments: { blocker: number; attackers: number[] }[] };
     attacking?: { attackers: number[]; defenders: { id: number; kind: 'player' | 'card' }[]; legalAssignments: { attacker: number; defenders: { id: number; kind: 'player' | 'card' }[] }[] };
-    targeting?: FTargets & { source: number; card?: FCard } };
+    targeting?: FTargets & { source: number; card?: FCard };
+    /** Voto numa permanente, escolhido tocando no campo: a carta que vota e os votos já dados. */
+    vote?: { card: FCard; votes: FVote[] } };
   question?: FQuestion;
   /** Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. */
   deciding?: { player: number; kind: 'choice' | 'attack' | 'block' }[];

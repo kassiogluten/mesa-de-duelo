@@ -102,6 +102,8 @@ final class Session {
     private volatile java.util.function.Consumer<JsonObject> history = ignored -> { };
     private final AtomicBoolean dirty = new AtomicBoolean();
     private final AtomicInteger questionSeq = new AtomicInteger();
+    /** Votos já anunciados na votação do conselho em andamento. */
+    private final Votes.Tally voteTally = new Votes.Tally();
     private volatile HostedMatch match;
     private volatile MatchLifecycle lifecycle = new MatchLifecycle();
     /** Diário desta partida (decks, retratos, ações), refeito a cada {@link #start()}; só sai num relato. */
@@ -755,6 +757,8 @@ final class Session {
                 JsonArray rows = optionsJson(options, display);
                 Dungeons.roomChoice(hosted.getGame(), options, rows, q);
                 q.add("options", rows);
+                CoinFlipText.choice(q);
+                voteQuestion(q, hosted.getGame());
             }
             case getAbilityToPlay -> {
                 Collection<?> abilities = (Collection<?>) a[1];
@@ -780,6 +784,7 @@ final class Session {
                 q.addProperty("max", 1);
                 options.addAll((Collection<?>) a[1]);
                 q.add("options", optionsJson(options, null));
+                voteQuestion(q, hosted.getGame());
             }
             case chooseEntitiesForEffect -> {
                 q.addProperty("kind", "choose");
@@ -1054,6 +1059,38 @@ final class Session {
             arr.add(j);
         }
         return arr;
+    }
+
+    /** Pedido de voto: a carta que vota e os votos já dados, para a mesa explicar cada opção. */
+    private void voteQuestion(JsonObject q, forge.game.Game game) {
+        SpellAbility vote = Votes.current(game);
+        if (vote == null || vote.getHostCard() == null || !Votes.isVotePrompt(q.get("title").getAsString())) return;
+        q.addProperty("purpose", "vote");
+        q.addProperty("title", "Votação: " + vote.getHostCard().getName());
+        q.add("card", StateJson.card(vote.getHostCard().getView()));
+        q.add("votes", votesJson(game, voteTally.of(vote)));
+    }
+
+    private static JsonArray votesJson(forge.game.Game game, List<String[]> votes) {
+        JsonArray arr = new JsonArray();
+        for (String[] v : votes) {
+            for (forge.game.player.Player p : game.getRegisteredPlayers()) if (p.getName().equals(v[0])) {
+                JsonObject j = new JsonObject(); j.addProperty("player", p.getId()); j.addProperty("label", v[1]); arr.add(j); break;
+            }
+        }
+        return arr;
+    }
+
+    /** Anúncio de voto do Forge (em inglês, com a contagem crua): guarda a contagem e vira um aviso curto. */
+    private String voteNotice(forge.game.Game game, String text) {
+        SpellAbility vote = Votes.current(game);
+        if (vote == null) return text;
+        List<String> names = game.getRegisteredPlayers().stream().map(forge.game.player.Player::getName).toList();
+        List<String[]> votes = Votes.parse(text, names);
+        if (votes == null) return text;
+        voteTally.observe(vote, votes);
+        String notice = Votes.notice(text, names);
+        return notice != null ? notice : text;
     }
 
     private static JsonArray labelsJson(List<String> labels) {
@@ -1401,6 +1438,14 @@ final class Session {
                 if (targeting != null) input.add("targeting", targeting);
                 CardView promptCard = seat.promptCard;
                 if (promptCard != null) input.add("card", StateJson.card(promptCard));
+                // Voto numa permanente (Council's Judgment): escolhido tocando no campo, com a carta que vota à vista.
+                SpellAbility voting = Votes.isVotePrompt(seat.message) ? Votes.current(m.getGame()) : null;
+                if (voting != null && voting.getHostCard() != null) {
+                    JsonObject vote = new JsonObject();
+                    vote.add("card", StateJson.card(voting.getHostCard().getView()));
+                    vote.add("votes", votesJson(m.getGame(), voteTally.of(voting)));
+                    input.add("vote", vote);
+                }
                 state.add("input", input);
                 Question q = seat.question;
                 if (q != null && !spectating) state.add("question", q.json());
@@ -1742,13 +1787,13 @@ final class Session {
                         if (match != null && j != null && j.matchId.equals(belongsToMatch)) j.attach(match.getGame(), gameNumber);
                     }
                     case showPromptMessage -> {
-                        message = a[1] == null ? "" : String.valueOf(a[1]);
+                        message = a[1] == null ? "" : CoinFlipText.prompt(String.valueOf(a[1]));
                         promptCard = a.length > 2 && a[2] instanceof CardView cv ? cv : null;
                         inputGen.incrementAndGet();
                     }
                     case updateButtons -> {
                         inputGen.incrementAndGet();
-                        okLabel = String.valueOf(a[1]); cancelLabel = String.valueOf(a[2]);
+                        okLabel = CoinFlipText.label(String.valueOf(a[1])); cancelLabel = CoinFlipText.label(String.valueOf(a[2]));
                         okEnabled = Boolean.TRUE.equals(a[3]); cancelEnabled = Boolean.TRUE.equals(a[4]);
                         passResponseIfAsked();
                     }
@@ -1772,7 +1817,8 @@ final class Session {
                         actionable = ids;
                     }
                     case clearWeaklySelectable -> actionable = Set.of();
-                    case message, showErrorDialog -> Seat.this.send(toast("toast", String.valueOf(a[0])));
+                    case message -> Seat.this.send(toast("toast", CoinFlipText.notice(voteNotice(hosted.getGame(), String.valueOf(a[0])), a.length > 1 && a[1] != null ? String.valueOf(a[1]) : null)));
+                    case showErrorDialog -> Seat.this.send(toast("toast", String.valueOf(a[0])));
                     default -> { }
                 }
                 markDirty();

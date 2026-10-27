@@ -12,6 +12,8 @@ export interface ShortInstructionInput {
   phyrexianLife?: number;
   card?: { name?: string };
   targeting?: { card?: { name?: string } };
+  /** Voto numa permanente: a carta que vota. */
+  vote?: { card: { name?: string } };
 }
 
 const WORDS: Record<string, string> = {
@@ -58,6 +60,7 @@ function sourceName(input: ShortInstructionInput, translate: (name: string) => s
 /** translate: nome da carta no idioma da mesa (o motor manda o nome em inglês). */
 export function shortInstruction(input: ShortInstructionInput, translate: (name: string) => string = name => name): string | null {
   const name = sourceName(input, translate);
+  if (input.vote) return voteRequest(input.vote.card.name ? translate(input.vote.card.name) : undefined);
   if (input.targeting) {
     const request = parseTargetRequest(input.message);
     if (!request) return name ? `Escolha o alvo de ${name}.` : null;
@@ -76,6 +79,11 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
     return input.phyrexianLife === undefined ? ask : `${ask} ${phyrexianHint(input.phyrexianLife)}`;
   }
   return null;
+}
+
+/** Voto numa permanente (Council's Judgment): a escolha é tocando no campo. */
+export function voteRequest(name: string | undefined): string {
+  return `Votação${name ? ` de ${name}` : ''}: toque na permanente em que você vota.`;
 }
 
 /** O Forge só tira a vida no fim do pagamento: a frase diz quanto já ficou separado. */

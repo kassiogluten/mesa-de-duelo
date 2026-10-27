@@ -1,4 +1,14 @@
 {
+  "0.54.0": {
+    "Votações com a carta à vista": [
+      { "img": "0.54.0/votacao-carta.webp", "legenda": "Votação de Expropriate: a carta e o texto dela no alto, o voto do oponente em **Votos até agora** e, em cada opção, o que aquele voto faz." },
+      { "img": "0.54.0/votacao-permanente.webp", "legenda": "Voto numa permanente com Council's Judgment: a carta fica ao lado do painel, que diz de qual votação é a escolha." }
+    ],
+    "Moeda em português": [
+      { "img": "0.54.0/moeda-pedido.webp", "legenda": "O pedido da moeda diz a carta e pergunta cara ou coroa, com os botões **Cara** e **Coroa**." },
+      { "img": "0.54.0/moeda-aviso.webp", "legenda": "O resultado de cada moeda chega num aviso com o nome da carta: quem ganhou ou o lado que saiu." }
+    ]
+  },
   "0.53.0": {
     "Aviso de mana na manutenção": [
       { "img": "0.53.0/aviso-mana-manutencao.webp", "legenda": "Na manutenção, tocar num terreno pergunta antes: a mana some quando o jogo passa para a fase principal. **Voltar** deixa o terreno desvirado." }

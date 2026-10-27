@@ -72,7 +72,7 @@ final class VisibleEvents {
             e.addProperty("to", "Stack");
             if (x.si().getSourceCard() != null) e.addProperty("from", origins.get(x.si().getSourceCard().getId()));
             if (x.si().getActivatingPlayer() != null) actor(e, x.si().getActivatingPlayer().getId());
-            e.addProperty("text", x.si().getText());
+            e.addProperty("text", CoinFlipText.stack(x.si().getText()));
             e.add("targets", StateJson.stackTargets(x.si()));
             spells.put(x.sa().getId(), e.deepCopy());
             if (spells.size() > HISTORY_LIMIT) spells.keySet().removeIf(id -> id != x.sa().getId() && spells.size() > HISTORY_LIMIT);

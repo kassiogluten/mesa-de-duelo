@@ -71,7 +71,7 @@ final class StateJson {
             for (StackItemView si : gv.getStack()) {
                 JsonObject s = new JsonObject();
                 s.addProperty("id", si.getId());
-                s.addProperty("text", si.getText());
+                s.addProperty("text", CoinFlipText.stack(si.getText()));
                 s.addProperty("kind", stackKind(si));
                 if (si.getSourceCard() != null) s.add("source", card(si.getSourceCard()));
                 if (si.getActivatingPlayer() != null) s.addProperty("controller", si.getActivatingPlayer().getId());
@@ -114,7 +114,7 @@ final class StateJson {
         JsonArray log = new JsonArray();
         if (gv.getGameLog() != null) {
             List<GameLogEntry> entries = gv.getGameLog().getLogEntries(null);
-            for (int i = 0; i < Math.min(40, entries.size()); i++) log.add(entries.get(i).message());
+            for (int i = 0; i < Math.min(40, entries.size()); i++) log.add(CoinFlipText.stack(entries.get(i).message()));
         }
         o.add("log", log);
         return o;
