@@ -249,8 +249,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             response.addProperty("type", requestId == null ? "error" : "request-error");
             response.addProperty("text", e.getMessage() == null ? "Não foi possível concluir esta ação." : e.getMessage());
             if (requestId != null) response.addProperty("requestId", requestId);
+            // O link de convite cria a sala que não existe: o motivo vem à parte, sem depender do texto.
+            if (e instanceof RoomNotFound) response.addProperty("reason", "room-not-found");
             BridgeServer.send(ch, response.toString());
         }
+    }
+
+    private static final class RoomNotFound extends IllegalArgumentException {
+        RoomNotFound(String code) { super("Não existe sala com o código " + code + "."); }
     }
 
     private static final class InvalidDeck extends IllegalArgumentException {
@@ -289,7 +295,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = byCode.get(code);
         if (s == null || !s.isRoom()) {
             codeMisses.record(key, now);
-            throw new IllegalArgumentException("Não existe sala com o código " + code + ".");
+            throw new RoomNotFound(code);
         }
         return s;
     }

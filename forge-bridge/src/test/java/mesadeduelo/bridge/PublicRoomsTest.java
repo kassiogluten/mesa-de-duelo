@@ -73,6 +73,12 @@ public class PublicRoomsTest {
             rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"r2\",\"code\":\"" + secret + "\"}");
             assertEquals(secret, next(visitor, "room-info").getAsJsonObject("room").get("code").getAsString());
 
+            // Sala que não existe: o motivo vem à parte, para o link de convite oferecer criá-la.
+            rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"r3\",\"code\":\"1O1O\"}");
+            JsonObject missing = next(visitor, "request-error");
+            assertEquals("r3", missing.get("requestId").getAsString());
+            assertEquals("room-not-found", missing.get("reason").getAsString());
+
             // Cheia, a partida começa e a sala sai da lista.
             rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + open + "\",\"name\":\"Dora\",\"deck\":\"verde\"}");
             next(visitor, "room");

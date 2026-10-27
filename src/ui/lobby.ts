@@ -1,5 +1,5 @@
 import { allDecks, countEntries, deckSize, loadUserDecks, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
-import { FORGE_URL, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
+import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
@@ -421,7 +421,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       if (!info.available) throw new Error(info.players.length >= (info.capacity ?? info.config.playerCount ?? 2) ? `A sala ${info.code} já está completa.` : `A partida da sala ${info.code} já começou.`);
       room = info; netTab = 'join'; format = info.config.format; matchLength = info.config.matchLength; playerCount = info.config.playerCount ?? info.capacity ?? 2; youId = rememberedDeck(); setStatus('');
       return true;
-    }).catch(error => { setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false; }).then(found => {
+    }).catch(error => {
+      // Pelo link, a sala que ainda não existe pode ser criada ali: a aba Criar sala já vem com o código.
+      if (fromLink && error instanceof RequestError && error.reason === 'room-not-found') { offerLinkRoom(code); return false; }
+      setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false;
+    }).then(found => {
       setBusy(false);
       // A sala da lista pode ter enchido ou começado nesse meio-tempo: a lista se atualiza.
       if (!found) { if (fromList) void loadRooms(); return; }
@@ -433,6 +437,15 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       else if (unnamed) { setStatus(fits ? `Digite seu nome e toque em Entrar na sala ${room!.code}.` : `Digite seu nome e escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`); $('#netName').focus(); }
       else setStatus(`Escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`);
     });
+  }
+  /** Sala do link que ainda não existe: pública, com o código do link, esperando quem abriu confirmar em Criar sala. */
+  function offerLinkRoom(code: string) {
+    visibility = 'public'; $<HTMLInputElement>('#netCode').value = '';
+    selectNetTab('create');
+    $<HTMLInputElement>('#roomCode').value = code; refresh();
+    const unnamed = !$<HTMLInputElement>('#netName').value.trim();
+    setStatus(`A sala ${code} ainda não existe. ${unnamed ? 'Digite seu nome, confira' : 'Confira'} as opções e toque em Criar sala para abri-la com esse código.`);
+    if (unnamed) $('#netName').focus();
   }
   const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); }});
   refresh();

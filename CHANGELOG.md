@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.52.0] - 2026-10-27
+
+### Novo
+
+- **Link que cria a sala.** Se você abrir um link de sala que ainda não existe, a mesa não para mais no aviso de erro: ela abre a aba **Criar sala** já com o código do link e como sala pública, e é só conferir as opções e tocar em **Criar sala**. Assim dá para combinar um link com os amigos antes de alguém abrir a sala.
+
 ## [0.51.0] - 2026-10-27
 
 ### Novo

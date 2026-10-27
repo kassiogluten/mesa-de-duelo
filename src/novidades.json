@@ -1,4 +1,9 @@
 {
+  "0.52.0": {
+    "Link que cria a sala": [
+      { "img": "0.52.0/link-cria-sala.webp", "legenda": "Abrindo o link da sala **BOLO**, que ainda não existia: a aba **Criar sala** já vem com o código e como sala pública, esperando o toque em **Criar sala**." }
+    ]
+  },
   "0.51.0": {
     "Escolha o código da sala": [
       { "img": "0.51.0/codigo-da-sala.webp", "legenda": "Criando uma sala privada com o código **MESA**: o campo avisa que códigos fáceis podem ser adivinhados. Vazio, o código é sorteado." }

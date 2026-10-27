@@ -369,6 +369,12 @@ function defaultUrl() {
   return `ws://${host.includes(':') ? `[${host}]` : host}:7171/ws`;
 }
 
+/** Erro de uma consulta à ponte; `reason` diz o motivo quando a mesa reage a ele (como 'room-not-found'). */
+export class RequestError extends Error {
+  readonly reason?: string;
+  constructor(message: string, reason?: string) { super(message); this.reason = reason; }
+}
+
 export const FORGE_URL: string = import.meta.env?.VITE_FORGE_URL ?? defaultUrl();
 
 export class ForgeClient {
@@ -438,7 +444,7 @@ export class ForgeClient {
             else if (msg.type === 'room-info') request.resolve(msg.room);
             else if (msg.type === 'room-list') request.resolve(Array.isArray(msg.rooms) ? msg.rooms : []);
             else if (msg.type === 'deck-source') request.resolve(msg.body);
-            else request.reject(new Error(msg.text ?? 'Não foi possível concluir a solicitação.'));
+            else request.reject(new RequestError(msg.text ?? 'Não foi possível concluir a solicitação.', msg.reason));
             return;
           }
         }
