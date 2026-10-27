@@ -34,13 +34,16 @@ export function deckColors(deck: DeckData): Color[] {
   const colors = new Set(deckRows([...(deck.commanders ?? []), ...deck.cards]).flatMap(r => r.info?.colors ?? []));
   return (['W', 'U', 'B', 'R', 'G'] as Color[]).filter(c => colors.has(c));
 }
-export function deckArt(deck: DeckData): string | undefined {
+function coverRow(deck: DeckData): DeckRow | undefined {
   // Com comandante, a capa é só a dele: enquanto os dados dele não chegam, outra carta já carregada (Sol Ring,
   // Arcane Signet…) viraria a capa de vários decks ao mesmo tempo.
-  if (deck.commanders?.length) return deckRows(deck.commanders).find(r => r.info?.artCrop)?.info?.artCrop;
+  if (deck.commanders?.length) return deckRows(deck.commanders).find(r => r.info?.artCrop);
   const rows = deckRows(deck.cards).filter(r => r.info?.artCrop).sort((a, b) => (b.cmc ?? 0) - (a.cmc ?? 0));
-  return (rows.find(r => r.info?.type === 'creature') ?? rows.find(r => r.info?.type !== 'land'))?.info?.artCrop;
+  return rows.find(r => r.info?.type === 'creature') ?? rows.find(r => r.info?.type !== 'land');
 }
+export function deckArt(deck: DeckData): string | undefined { return coverRow(deck)?.info?.artCrop; }
+/** Nome da carta da capa, para os outros verem a mesma arte no lobby da sala. */
+export function deckCover(deck: DeckData): string | undefined { return coverRow(deck)?.name; }
 export function statsHTML(deck: DeckData): string {
   const stats = deckStats(deck), peak = Math.max(1, ...stats.curve);
   const partial = stats.unknown > 0;

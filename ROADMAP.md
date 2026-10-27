@@ -468,3 +468,27 @@ Alternativas (recomendado: A + B, e talvez D):
 - [ ] **D. Histórico à mão**: botão do Registro direto na mesa, com contador de eventos não vistos.
 
 A decidir antes de começar: qual combinação; se o resumo vale só para as permanentes do jogador ou também para as do oponente; se aparece só quando a mesa não mostrou a remoção ou em toda remoção em massa.
+
+## 33. Melhorar a sala de espera
+
+Depois de criar ou entrar numa sala, a barra lateral vira a sala de espera: formato, código, lugares ("Pronto", "Reconectando…", "Aguardando") e o botão "Sair da sala". Levantamento feito em 26/10/2026:
+
+- A partida começa sozinha quando o último lugar é ocupado (`join` em `Rooms.java`). Ninguém confirma que está pronto, e o anfitrião não pode começar antes com menos gente.
+- Um lugar vazio só se preenche com outra pessoa: em Commander com quatro, se aparecerem três, a mesa fica esperando. O motor já aceita computadores junto com pessoas (`Session` monta os jogadores além dos assentos com `aiDecks`), só a sala não oferece.
+- O código aparece grande, mas não tem botão de copiar nem link para mandar: quem recebe precisa abrir o site, ir em Entrar e digitar.
+- A sala mostra só o nome de cada um; o deck, as cores e o comandante ficam escondidos até a partida.
+- Com a aba escondida, nada avisa que alguém entrou ou que a partida começou (o aviso do título e da notificação, `turnNotice.ts`, só existe para o turno).
+- Não há como tirar da sala quem entrou e sumiu; o lugar só se libera quando a pessoa sai.
+
+Alternativas (recomendado: A, B e C primeiro; D e E em seguida):
+
+- [x] **A. Convite fácil** (0.51.0): botão de copiar o código e de compartilhar um link (`/?sala=CÓDIGO`, com o compartilhamento do celular quando houver) que abre a tela inicial já na sala, pronta para escolher o deck e entrar (o item 3 já entra direto pelo código).
+- [x] **Código escolhido por quem cria a sala** (0.51.0): campo opcional de 4 letras ou números (vazio, sorteia), com aviso na sala privada de que códigos fáceis podem ser adivinhados. Código ocupado conta como tentativa errada, como na busca, para ninguém achar salas alheias por aí.
+- [ ] **B. Avisos com a aba escondida**: som curto, título piscando e notificação quando alguém entra, sai ou a partida começa, reaproveitando a permissão já pedida para o aviso de turno.
+- [ ] **C. Completar com o computador**: o anfitrião troca um lugar vazio por um computador (deck aleatório ou escolhido, como no Commander contra a IA) e pode desfazer enquanto a partida não começa. Precisa da ponte aceitar assentos de IA numa sala.
+- [ ] **D. Pronto e começar**: cada jogador marca "Pronto" (e pode trocar o deck antes), e o anfitrião começa quando todos estiverem prontos, inclusive com lugares vazios virando computador. Muda o começo automático de hoje.
+- [x] **E. Ver quem está na mesa** (0.51.0: lobby em tela própria com nome, arte e comandante; o nome do deck continua escondido): deck, cores e comandante de cada lugar (o comandante já é público), com o mesmo selo de deck verificado da escolha de deck.
+- [ ] **F. Anfitrião tira da sala**: remover quem está "Reconectando…" há muito tempo, para o lugar voltar a ficar livre.
+- [x] **G. Conversa curta na sala** (0.51.0): mensagens rápidas prontas ("Já volto", "Pode começar", "Vou trocar o deck"), sem texto livre para não precisar de moderação.
+
+A decidir antes de começar: se o começo continua automático quando a sala enche ou passa a depender do anfitrião (D); se o deck dos outros aparece antes da partida ou só o comandante (E); se o computador pode ocupar lugar em sala pública ou só em privada (C).

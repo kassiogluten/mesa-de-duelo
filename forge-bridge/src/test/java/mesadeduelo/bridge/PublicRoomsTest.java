@@ -115,4 +115,78 @@ public class PublicRoomsTest {
             for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
         }
     }
+
+    private static String hostMessage(String name, String code) {
+        return "{\"type\":\"host\",\"name\":\"" + name + "\",\"deck\":\"verde\",\"config\":" + CONFIG + ",\"code\":\"" + code + "\"}";
+    }
+
+    @Test public void hostCanChooseTheRoomCode() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), visitor = new EmbeddedChannel();
+        try {
+            // O código escolhido pode usar as letras e números que o sorteio evita (O, 0, I, 1).
+            rooms.onMessage(ana, hostMessage("Ana", " bo1o "));
+            assertEquals("BO1O", next(ana, "room").getAsJsonObject("room").get("code").getAsString());
+            rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"r1\",\"code\":\"bo1o\"}");
+            assertEquals("BO1O", next(visitor, "room-info").getAsJsonObject("room").get("code").getAsString());
+
+            rooms.onMessage(bia, hostMessage("Bia", "BO1O"));
+            assertTrue(next(bia, "error").get("text").getAsString().contains("já está em uso"));
+            rooms.onMessage(bia, hostMessage("Bia", "AB-1"));
+            assertTrue(next(bia, "error").get("text").getAsString().startsWith("O código da sala precisa"));
+            // Vazio, sorteia como sempre.
+            rooms.onMessage(bia, hostMessage("Bia", ""));
+            assertEquals(4, next(bia, "room").getAsJsonObject("room").get("code").getAsString().length());
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
+    @Test public void waitingRoomShowsCoversCommandersAndQuickMessages() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), caio = new EmbeddedChannel();
+        try {
+            rooms.onMessage(ana, "{\"type\":\"host\",\"name\":\"Ana\",\"deck\":\"vermelho\",\"cover\":\"Raging Goblin\",\"config\":{\"format\":\"free\",\"matchLength\":\"bo1\",\"playerCount\":2}}");
+            JsonObject room = next(ana, "room").getAsJsonObject("room");
+            assertEquals("Raging Goblin", room.getAsJsonArray("players").get(0).getAsJsonObject().get("cover").getAsString());
+
+            // Uma capa que não está no deck é ignorada: a sala não mostra cartas que o jogador não tem.
+            rooms.onMessage(bia, "{\"type\":\"host\",\"name\":\"Bia\",\"deck\":\"commander-dragoes\",\"cover\":\"Black Lotus\",\"config\":{\"format\":\"commander\",\"matchLength\":\"bo1\",\"playerCount\":3}}");
+            room = next(bia, "room").getAsJsonObject("room");
+            JsonObject host = room.getAsJsonArray("players").get(0).getAsJsonObject();
+            assertEquals("Atarka, World Render", host.get("commander").getAsString());
+            assertEquals("No Commander, a capa é o comandante", "Atarka, World Render", host.get("cover").getAsString());
+
+            rooms.onMessage(caio, "{\"type\":\"join\",\"code\":\"" + room.get("code").getAsString() + "\",\"name\":\"Caio\",\"deck\":\"commander-zumbis\",\"cover\":\"Black Lotus\"}");
+            next(caio, "room");
+            rooms.onMessage(caio, "{\"type\":\"room-say\",\"key\":\"hello\"}");
+            JsonObject said = next(bia, "room-say");
+            assertEquals(1, said.get("seat").getAsInt());
+            assertEquals("hello", said.get("key").getAsString());
+            assertEquals("Quem mandou também vê o balão", "hello", next(caio, "room-say").get("key").getAsString());
+            rooms.onMessage(caio, "{\"type\":\"room-say\",\"key\":\"qualquer coisa\"}");
+            assertEquals("Mensagem desconhecida.", next(caio, "error").get("text").getAsString());
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, caio}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
+    @Test public void choosingTakenCodesCountsAsWrongGuesses() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), visitor = new EmbeddedChannel();
+        try {
+            String code = host(rooms, ana, "Ana", null);
+            for (int i = 0; i < 10; i++) {
+                rooms.onMessage(visitor, hostMessage("Bia", code));
+                assertTrue(next(visitor, "error").get("text").getAsString().contains("já está em uso"));
+            }
+            // Senão daria para achar as salas alheias criando salas com cada código.
+            rooms.onMessage(visitor, hostMessage("Bia", code));
+            assertTrue(next(visitor, "error").get("text").getAsString().startsWith("Muitas tentativas"));
+            rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"ok\",\"code\":\"" + code + "\"}");
+            assertTrue("A busca também fica bloqueada", next(visitor, "request-error").get("text").getAsString().startsWith("Muitas tentativas"));
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
 }

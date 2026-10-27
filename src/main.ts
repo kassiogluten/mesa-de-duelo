@@ -4,7 +4,7 @@ import { type DeckData } from './decks';
 import { mountDeckBuilder } from './ui/deckbuilder';
 import { ForgeClient, FORGE_URL, type FState, type MatchConfig, type ClientMessage } from './forge/client';
 import { createForgeTableView } from './ui/forgeTable';
-import { deckArt, mountLobby } from './ui/lobby';
+import { deckArt, deckCover, mountLobby } from './ui/lobby';
 import { enterLandscape, mountRotateGate } from './ui/landscape';
 import { hideCardPreview } from './ui/cardInspector';
 import { createFreeTableView, loadFreeTable } from './ui/freeTable';
@@ -134,12 +134,13 @@ const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
 const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onPlay: async (you, opp, config, opponents) => { void enterLandscape(); await startMatch(you, opp, config, opponents); },
   onFreePlay: (you, format) => { void enterLandscape(); leaveForge(); freeTable.open(you, format); show('free'); },
-  onHost: async (you, name, url, config, visibility) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), config, visibility }, config); },
-  onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you) }); },
+  onHost: async (you, name, url, config, visibility, code) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), cover: deckCover(you), config, visibility, ...(code ? { code } : {}) }, config); },
+  onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you), cover: deckCover(you) }); },
   onValidate: async (deck, format, url) => (await requireForge(url)).validateDeck(forgeDeck(deck), format),
   onLookup: async (code, url) => (await requireForge(url)).lookupRoom(code),
   onListRooms: async url => (await requireForge(url)).listRooms(),
   onCancelRoom: () => { leaveForge(); lobby.setStatus(''); },
+  onSay: key => forge?.send({ type: 'room-say', key }),
   onDecks: (action = 'library', format) => { builder.open({action, format}); show('decks'); },
   onEditDeck: deckId => { builder.open({action: 'edit', deckId}); show('decks'); },
 });
@@ -223,6 +224,7 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
       saveResume(); lobby.showRoom(r); lobby.setStatus(''); finishStart();
     }
   };
+  client.onRoomSay = (seat, key) => lobby.roomSay(seat, key);
   client.onValidation = (validation, target) => {
     const message = `${target === 'opponent' ? 'Deck do computador: ' : ''}${validation.issues.map(issue => `${issue.card ? `${issue.card}: ` : ''}${issue.message}`).join(' ')}`;
     if (screen === 'game') forgeTable.notice(message, true);
@@ -358,5 +360,10 @@ show('lobby');
 if (location.hash === '#jogar') history.replaceState(null, '', location.pathname + location.search);
 const saved = loadResume();
 const savedFree = loadFreeTable();
+// Link de convite (?sala=MESA): sai do endereço para recarregar a página não entrar de novo.
+const roomLink = new URLSearchParams(location.search).get('sala')?.trim().toUpperCase();
+if (roomLink) { const params = new URLSearchParams(location.search); params.delete('sala'); history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : '') + location.hash); }
+// Quem já está numa partida volta para ela; o link fica para depois.
 if (saved) void resumeSaved(saved);
+else if (roomLink) lobby.openRoomLink(roomLink);
 else if (savedFree) { freeTable.resume(savedFree); show('free'); }

@@ -22,6 +22,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import forge.card.MagicColor;
+import forge.card.mana.ManaAtom;
 import forge.deck.Deck;
 import forge.deck.DeckSection;
 import forge.game.GameEntityView;
@@ -612,7 +613,7 @@ final class Session {
                 // Gastar a mana da reserva no pagamento (o Forge não a usa sozinho, só no Automático).
                 byte color = switch (str(msg, "color", "")) {
                     case "W" -> MagicColor.WHITE; case "U" -> MagicColor.BLUE; case "B" -> MagicColor.BLACK;
-                    case "R" -> MagicColor.RED; case "G" -> MagicColor.GREEN; case "C" -> MagicColor.COLORLESS;
+                    case "R" -> MagicColor.RED; case "G" -> MagicColor.GREEN; case "C" -> (byte) ManaAtom.COLORLESS;
                     default -> -1;
                 };
                 if (color >= 0) seat.onEdt(genAtClick, c -> c.useMana(color));
@@ -1371,6 +1372,8 @@ final class Session {
                 JsonArray stackTargets = new JsonArray(); seat.selectableStacks.forEach(stackTargets::add);
                 input.add("selectableStacks", stackTargets);
                 Set<Integer> playerIds = new LinkedHashSet<>(seat.selectablePlayers); playerIds.addAll(playerChoices);
+                JsonObject phyrexianLife = InputContext.phyrexianLife(currentInput);
+                if (phyrexianLife != null) playerIds.add(phyrexianLife.get("player").getAsInt());
                 JsonArray playerTargets = new JsonArray(); playerIds.forEach(playerTargets::add);
                 input.add("selectablePlayers", playerTargets);
                 JsonArray act = new JsonArray();
@@ -1388,6 +1391,8 @@ final class Session {
                     input.addProperty("canAutoPay", seat.okEnabled && !seat.okLabel.isEmpty());
                     String payingFor = payingFor(pay);
                     if (payingFor != null) input.addProperty("payingFor", payingFor);
+                    // Mana phyrexiana: o retrato (ou o botão) paga um símbolo com 2 de vida.
+                    if (phyrexianLife != null) input.addProperty("phyrexianLife", phyrexianLife.get("pending").getAsInt());
                 }
                 JsonObject targeting = targeting(seat);
                 if (targeting != null) input.add("targeting", targeting);
@@ -1463,6 +1468,11 @@ final class Session {
             p.addProperty("name", s.name);
             p.addProperty("connected", s.channel != null);
             p.addProperty("rematch", s.rematch);
+            // O lobby mostra a capa e o comandante (que já é público na partida); o resto do deck fica escondido.
+            List<String> commanders = commanderNames(s.deck);
+            if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
+            String cover = commanders.isEmpty() ? s.cover : commanders.get(0);
+            if (cover != null) p.addProperty("cover", cover);
             ps.add(p);
         }
         r.add("players", ps);
@@ -1498,6 +1508,19 @@ final class Session {
         return r;
     }
 
+    static List<String> commanderNames(Deck deck) {
+        List<String> names = new ArrayList<>();
+        for (var e : deck.getOrCreate(DeckSection.Commander)) names.add(e.getKey().getName());
+        return names;
+    }
+
+    /** A carta de capa pedida pelo jogador, se estiver mesmo no deck; senão nenhuma. */
+    static String coverOf(Deck deck, String requested) {
+        if (requested == null || requested.isBlank()) return null;
+        for (var e : deck.getMain()) if (e.getKey().getName().equals(requested)) return requested;
+        return null;
+    }
+
     void sendRoom(Seat seat) {
         JsonObject o = new JsonObject();
         o.addProperty("type", "room");
@@ -1530,6 +1553,10 @@ final class Session {
         volatile Deck deck;
         volatile boolean rematch;
         volatile boolean departed;
+        /** Carta cuja arte representa o deck no lobby (sem comandante); null sem capa. */
+        volatile String cover;
+        /** Última mensagem pronta no lobby, para ninguém encher a sala de balões. */
+        volatile long saidAt;
         /** Desistiu deste jogo (no Commander com vários jogadores, a mesa tira o assento de vista). */
         volatile boolean conceded;
         private volatile RegisteredPlayer registered;

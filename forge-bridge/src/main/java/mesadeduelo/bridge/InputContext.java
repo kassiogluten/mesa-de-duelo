@@ -13,12 +13,15 @@ import forge.game.card.CounterType;
 import forge.game.combat.Combat;
 import forge.game.combat.CombatUtil;
 import forge.game.keyword.Keyword;
+import forge.game.mana.ManaCostBeingPaid;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 import forge.gamemodes.match.input.InputBlock;
 import forge.gamemodes.match.input.InputAttack;
 import forge.gamemodes.match.input.InputConfirm;
+import forge.gamemodes.match.input.InputPayMana;
+import forge.gamemodes.match.input.InputPayManaOfCostPayment;
 import forge.gamemodes.match.input.InputSelectEntitiesFromList;
 import forge.gamemodes.match.input.InputSelectManyBase;
 import forge.gamemodes.match.input.MassSelectMode;
@@ -51,6 +54,11 @@ final class InputContext {
     private static final Field SELECT_MAX = field(InputSelectManyBase.class, "max");
     private static final Field SELECT_ABILITY = field(InputSelectManyBase.class, "sa");
     private static final Field MASS_SELECT = field(InputSelectEntitiesFromList.class, "massSelectMode");
+    private static final Field PAY_PLAYER = field(InputPayMana.class, "player");
+    private static final Field PAY_COST = field(InputPayMana.class, "manaCost");
+    private static final Field PAY_ABILITY = field(InputPayMana.class, "saPaidFor");
+    private static final Field PAY_EFFECT = field(InputPayMana.class, "effect");
+    private static final Field PAY_LIFE = field(InputPayMana.class, "phyLifeToLose");
 
     private static Field field(Class<?> type, String name) {
         try { Field field = type.getDeclaredField(name); field.setAccessible(true); return field; }
@@ -59,6 +67,25 @@ final class InputContext {
     private static Object value(Field field, Object input) {
         try { return field.get(input); }
         catch (IllegalAccessException e) { throw new IllegalStateException(e); }
+    }
+
+    /**
+     * Mana phyrexiana: o Forge paga um símbolo com 2 de vida quando quem paga clica em si mesmo
+     * ({@code InputPayManaOfCostPayment.onPlayerSelected}), mas não marca o jogador como clicável.
+     * Devolve quem pode pagar mais um símbolo com vida e a vida já separada ({@code pending}), que o Forge
+     * só tira no fim do pagamento; ou null.
+     */
+    static JsonObject phyrexianLife(Object input) {
+        if (!(input instanceof InputPayManaOfCostPayment)) return null;
+        Player player = (Player) value(PAY_PLAYER, input);
+        ManaCostBeingPaid cost = (ManaCostBeingPaid) value(PAY_COST, input);
+        int pending = (Integer) value(PAY_LIFE, input);
+        if (player == null || cost == null || !cost.containsPhyrexianMana()
+            || !player.canPayLife(pending + 2, (Boolean) value(PAY_EFFECT, input), (SpellAbility) value(PAY_ABILITY, input))) return null;
+        JsonObject result = new JsonObject();
+        result.addProperty("player", player.getId());
+        result.addProperty("pending", pending);
+        return result;
     }
 
     static JsonObject suspendCast(Object input) {

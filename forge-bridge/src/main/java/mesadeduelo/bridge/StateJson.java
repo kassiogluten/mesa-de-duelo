@@ -11,6 +11,7 @@ import forge.StaticData;
 import forge.card.CardEdition;
 import forge.card.CardStateName;
 import forge.card.MagicColor;
+import forge.card.mana.ManaAtom;
 import forge.game.Game;
 import forge.game.GameEntityView;
 import forge.game.GameLogEntry;
@@ -167,7 +168,8 @@ final class StateJson {
         Dungeons.add(o, p, game);
         JsonObject pool = new JsonObject();
         for (int i = 0; i < 5; i++) pool.addProperty(COLOR_KEYS[i], p.getMana(MagicColor.WUBRG[i]));
-        pool.addProperty("C", p.getMana(MagicColor.COLORLESS));
+        // A reserva guarda o incolor como ManaAtom.COLORLESS (32); MagicColor.COLORLESS é 0 e nunca tem mana.
+        pool.addProperty("C", p.getMana((byte) ManaAtom.COLORLESS));
         o.add("pool", pool);
         return o;
     }

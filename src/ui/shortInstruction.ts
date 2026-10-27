@@ -8,6 +8,8 @@ export interface ShortInstructionInput {
   paying?: boolean;
   payingFor?: 'spell' | 'ability' | 'effect';
   canAutoPay?: boolean;
+  /** Mana phyrexiana que ainda dá para pagar com vida: a vida já separada nos cliques anteriores. */
+  phyrexianLife?: number;
   card?: { name?: string };
   targeting?: { card?: { name?: string } };
 }
@@ -66,10 +68,20 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
   if (input.paying && input.payingFor === 'effect') {
     const cost = input.message.match(/(?:Custo de Mana|Mana Cost):\s*((?:\{[A-Z0-9/]+\})+)/i)?.[1];
     const asks = `${name ?? 'O efeito'} pede ${cost ?? 'um pagamento de mana'}`;
+    if (input.phyrexianLife !== undefined) return `${asks}. ${phyrexianHint(input.phyrexianLife)}`;
     return input.canAutoPay === false ? `${asks}, e a sua mana não dá para pagar.` : name ? `${asks}. Pague ou recuse.` : 'Pague o custo pedido ou recuse.';
   }
-  if (input.paying) return name ? `Pague o custo de mana de ${name}.` : 'Pague o custo de mana.';
+  if (input.paying) {
+    const ask = name ? `Pague o custo de mana de ${name}.` : 'Pague o custo de mana.';
+    return input.phyrexianLife === undefined ? ask : `${ask} ${phyrexianHint(input.phyrexianLife)}`;
+  }
   return null;
+}
+
+/** O Forge só tira a vida no fim do pagamento: a frase diz quanto já ficou separado. */
+function phyrexianHint(pending: number): string {
+  const hint = 'Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano.';
+  return pending > 0 ? `${hint} Já são ${pending} de vida.` : hint;
 }
 
 /**

@@ -139,15 +139,6 @@
 .room-info { padding: 12px; border-radius: var(--control-radius); border: 1px solid var(--on-line); background: #f2b54c08; font-size: 13px; }
 .room-info p { margin: 0 0 8px; }
 .room-info .ghost-btn { padding: 8px 0; font-size: 13px; white-space: normal; }
-.room-seats { padding: 0; margin: 16px 0; list-style: none; display: grid; gap: 6px; }
-.room-seats li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: var(--control-h); padding: 8px 10px; border: 1px dashed #ffffff24; border-radius: var(--control-radius); font-size: 13px; color: var(--muted); }
-.room-seats li.occupied { border-style: solid; border-color: #f2b54c40; background: #f2b54c08; color: var(--ink); }
-.room-seats li > span { min-width: 0; overflow-wrap: anywhere; }
-.room-seats small { font-size: 11px; white-space: nowrap; color: var(--muted); }
-.waiting-room .match-setup > .match-choice, .waiting-room .network-setup > :not(#netWait), .waiting-room #startMatch { display: none; }
-.waiting-room .net-wait { margin: 0; }
-.waiting-room .chosen-deck { margin-bottom: 0; }
-.room-invitation { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 @media (max-width: 1050px) {
   .play-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; }
   .match-sidebar { padding-left: 22px; }

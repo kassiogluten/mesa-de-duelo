@@ -990,13 +990,8 @@ body[data-screen='lobby'] .credits { display: none; }
 .net-adv .input-field { margin-top: 6px; }
 .net-adv p { margin: 8px 0 0; line-height: 1.45; }
 .net-adv code { background: #18223a; padding: 1px 5px; border-radius: 4px; color: var(--ink); }
-.net-wait { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 10px; padding: 14px; border-radius: 12px; border: 1px dashed var(--gold-deep); background: rgba(242, 181, 76, 0.06); color: var(--muted); text-align: center; font-size: 13px; }
-.net-wait-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.net-code { font: 800 34px var(--display); letter-spacing: 0.2em; color: var(--gold); user-select: all; }
-.net-wait-hint { display: flex; align-items: center; gap: 8px; }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); animation: pulse 1.2s ease-in-out infinite; flex: 0 0 auto; }
 @keyframes pulse { 50% { opacity: 0.25; transform: scale(0.7); } }
-.net-wait .arena-btn { margin-top: 4px; }
 .avatar .offline { position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); white-space: nowrap; padding: 1px 8px; border-radius: 999px; background: #3b1d1d; color: #ffb3a3; font-size: 11px; }
 .overlay > .result.still h2, .overlay > .result.still p, .overlay > .result.still .result-btns { animation: none; }
 

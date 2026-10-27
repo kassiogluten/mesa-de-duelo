@@ -75,6 +75,14 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     state.castable = [290];
     view.render();
   },
+  /** Pagando Gitaxian Probe ({U/P}) sem mana azul: o retrato e o botão pagam com vida. */
+  phyrexian(pending = 0) {
+    Object.assign(state.input, { gen: 9, priority: false, message: 'Gitaxian Probe\n\nPagar Custo de Mana: {U/P}', actionable: [], selectable: [200, 210], selectablePlayers: [10],
+      paying: true, payingFor: 'spell', canAutoPay: false, phyrexianLife: pending,
+      card: { id: 303, controller: 10, tapped: false, token: false, name: 'Gitaxian Probe', manaCost: '{U/P}', typeLine: 'Sorcery' },
+      ok: { label: 'Automático', enabled: false }, cancel: { label: 'Cancelar', enabled: true } });
+    view.render();
+  },
   extras() {
     Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
     view.render();

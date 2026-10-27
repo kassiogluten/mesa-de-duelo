@@ -34,6 +34,15 @@ test('mana payment names the card; other prompts keep the Forge text', () => {
   assert.equal(shortInstruction({ message: 'Escolha uma opção' }), null);
 });
 
+test('phyrexian mana points at your portrait and counts the life already set aside', () => {
+  assert.equal(shortInstruction({ message: '', paying: true, payingFor: 'spell', phyrexianLife: 0, card: { name: 'Gitaxian Probe' } }),
+    'Pague o custo de mana de Gitaxian Probe. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano.');
+  assert.equal(shortInstruction({ message: '', paying: true, payingFor: 'spell', phyrexianLife: 2, card: { name: 'Thundering Tanadon' } }),
+    'Pague o custo de mana de Thundering Tanadon. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano. Já são 2 de vida.');
+  assert.equal(shortInstruction({ message: 'Pagar Custo de Mana: {U/P}', paying: true, payingFor: 'effect', canAutoPay: false, phyrexianLife: 0, card: { name: 'Gitaxian Probe' } }),
+    'Gitaxian Probe pede {U/P}. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano.');
+});
+
 test('a cost asked by an effect names the card asking for it', () => {
   assert.equal(shortInstruction({ message: 'Estudo Rístico (88)\n\nPagar Custo de Mana: {1}', paying: true, payingFor: 'effect', card: { name: 'Rhystic Study' } }, name => name === 'Rhystic Study' ? 'Estudo Rístico' : name),
     'Estudo Rístico pede {1}. Pague ou recuse.');

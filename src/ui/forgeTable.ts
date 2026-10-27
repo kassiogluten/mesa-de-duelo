@@ -1575,9 +1575,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Pilha longa: resolve tudo de uma vez. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão.
     const resolveAll = !!s.input.priority && ok.enabled && s.stack.length >= 2 && !s.input.targeting && !s.input.paying
       ? b('resolve-all', { label: `Resolver todos (${s.stack.length})`, enabled: true }, 'secondary') : '';
-    // Sem mana para o automático, só sobra desistir ou não pagar: ele vira o botão de destaque.
-    if (s.input.paying && s.input.canAutoPay === false && cancel.enabled) return b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
-    return undo + b('ok', priority, endTurn ? 'secondary' : 'primary') + resolveAll +
+    // Mana phyrexiana: o mesmo que tocar no próprio retrato, um símbolo por 2 de vida.
+    const lifeEnabled = s.input.paying && s.input.phyrexianLife !== undefined;
+    const life = (kind: string) => lifeEnabled ? b('phyrexian-life', { label: 'Pagar 2 de vida', enabled: true }, kind) : '';
+    // Sem mana para o automático, a vida vira o destaque; sem ela, só sobra desistir ou não pagar.
+    if (s.input.paying && s.input.canAutoPay === false && cancel.enabled)
+      return lifeEnabled ? life('primary') + b('ok', ok, 'secondary') + b('cancel', cancel, 'secondary') : b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
+    return undo + life('secondary') + b('ok', priority, endTurn ? 'secondary' : 'primary') + resolveAll +
       (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
   }
 
@@ -2293,6 +2297,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (conf) { answer({ value: conf.dataset.qConfirm === 'true' }); return; }
 
     const act = t.closest<HTMLElement>('[data-act]')?.dataset.act;
+    if (act === 'phyrexian-life') {
+      const control = t.closest<HTMLElement>('[data-act]')!, s = client?.state, gen = Number(control.dataset.gen);
+      if (!renderedInputIsCurrent(control) || !client || !s || disconnected || gen !== s.input.gen || s.input.phyrexianLife === undefined) return;
+      if (gen === clickedGen && Date.now() - clickedAt < CLICK_LOCK_MS) return;
+      clickedGen = gen; clickedAt = Date.now();
+      stopPresentation(); client.send({ type: 'player', id: s.you, gen });
+      return;
+    }
     if (act === 'ok' || act === 'cancel' || act === 'pass-turn' || act === 'resolve-all') {
       const control = t.closest<HTMLElement>('[data-act]')!;
       if (!renderedInputIsCurrent(control)) return;

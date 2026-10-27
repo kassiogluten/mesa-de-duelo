@@ -1,4 +1,26 @@
 {
+  "0.51.0": {
+    "Escolha o código da sala": [
+      { "img": "0.51.0/codigo-da-sala.webp", "legenda": "Criando uma sala privada com o código **MESA**: o campo avisa que códigos fáceis podem ser adivinhados. Vazio, o código é sorteado." }
+    ],
+    "Link para convidar": [
+      { "img": "0.51.0/link-da-sala.webp", "legenda": "O link da sala **MESA**, com os botões **Copiar link** e **Compartilhar**." }
+    ],
+    "Sala de espera nova": [
+      { "img": "0.51.0/sala-de-espera.webp", "legenda": "Uma sala de Commander com 2 de 3 jogadores: cada lugar mostra o nome, a arte e o comandante, e o terceiro ainda está livre." }
+    ],
+    "Mensagens rápidas na sala": [
+      { "img": "0.51.0/mensagens-prontas.webp", "legenda": "As mensagens prontas que dá para mandar enquanto a mesa não enche." },
+      { "img": "0.51.0/balao.webp", "legenda": "O balão **Oi, pessoal!** sobre o lugar da Bia, que mandou a mensagem." }
+    ],
+    "Pagar mana phyrexiana com vida": [
+      { "img": "0.51.0/mana-phyrexiana-botao.webp", "legenda": "Pagando Gitaxian Probe sem mana azul: a instrução manda tocar no seu retrato, e o botão **Pagar 2 de vida** faz o mesmo." },
+      { "img": "0.51.0/mana-phyrexiana-retrato.webp", "legenda": "Durante o pagamento, seu retrato fica destacado: cada toque paga um símbolo phyrexiano com 2 de vida." }
+    ],
+    "Mana incolor na reserva": [
+      { "img": "0.51.0/mana-incolor-reserva.webp", "legenda": "Duas manas incolores e uma verde na reserva, à vista no seu retrato." }
+    ]
+  },
   "0.50.0": {
     "Topo do grimório à vista": [
       { "img": "0.50.0/topo-oponente.webp", "legenda": "Com o Courser of Kruphix do oponente, o topo do grimório dele fica revelado: uma **Floresta**." }

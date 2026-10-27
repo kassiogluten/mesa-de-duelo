@@ -235,8 +235,12 @@ export interface FRoom {
   rulesVersion?: string;
   engineVersion?: string;
   /** conceded: desistiu (pelo menu ou saindo da sala); a mesa tira o assento de vista. */
-  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean }[];
+  /** commander e cover (carta da arte do deck) só aparecem para o lobby; o resto do deck fica escondido. */
+  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string }[];
 }
+
+/** Mensagens prontas do lobby; a ponte recusa qualquer outra. */
+export type RoomSaying = 'hello' | 'back' | 'invite' | 'glhf';
 
 export interface FSkipVote { target: number; name: string; yes: number; no: number; voters: number; needed: number; canVote: boolean; mine?: 'yes' | 'no' }
 export interface FSkip { vote?: FSkipVote; skipping: number[] }
@@ -288,7 +292,7 @@ export interface FState {
   /** payingFor: o que o pagamento paga (mágica, habilidade ou custo pedido por um efeito), para o rótulo do Cancelar; canAutoPay: o Automático consegue pagar (fora da trava curta de clique). */
   /** untappable: permanentes viradas para mana com a mana ainda na reserva; clicar ({type:"card"}) desvira e devolve a mana. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
-  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean;
+  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number;
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
     /** players: só quando jogadores também podem ser escolhidos (proliferar). */
     selection?: { cards: number[]; players?: number[]; min: number; max: number };
@@ -326,8 +330,9 @@ export interface FTargets { cards?: number[]; players?: number[] }
 
 export type ClientMessage =
   | { type: 'start'; you: unknown; opponent: unknown; opponents?: unknown[]; config: MatchConfig }
-  | { type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility }
-  | { type: 'join'; code: string; name: string; deck: unknown }
+  | { type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string }
+  | { type: 'join'; code: string; name: string; deck: unknown; cover?: string }
+  | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
@@ -372,6 +377,7 @@ export class ForgeClient {
   room: FRoom | null = null;
   onState: (s: FState) => void = () => {};
   onRoom: (r: FRoom) => void = () => {};
+  onRoomSay: (seat: number, key: RoomSaying) => void = () => {};
   /** A partida foi aberta em outra janela, que assumiu o assento: não adianta reconectar sozinho. */
   replaced = false;
   /** A ponte não conhece mais a partida pedida no "rejoin". */
@@ -441,6 +447,7 @@ export class ForgeClient {
           if (msg.room) this.room = msg.room;
           this.onState(msg);
         } else if (msg.type === 'room') { this.room = msg.room; this.onRoom(msg.room); }
+        else if (msg.type === 'room-say') this.onRoomSay(msg.seat, msg.key);
         else if (msg.type === 'validation-error') this.onValidation(msg.validation, msg.target);
         else if (msg.type === 'hello') this.onHello(msg);
         else if (msg.type === 'toast') this.onNotice(msg.text, false);

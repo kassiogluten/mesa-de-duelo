@@ -19,8 +19,11 @@ import io.netty.channel.Channel;
  * Distribui as conexões entre as partidas. Cada conexão está em no máximo uma {@link Session}:
  * uma partida contra a IA ({type:"start"}) ou uma sala em rede com código de 4 letras.
  *
- * Salas: {type:"host", name, deck, visibility} cria (privada, a não ser com visibility:"public");
- * {type:"join", code, name, deck} entra e a partida começa; {type:"list-rooms"} lista as salas públicas abertas;
+ * Salas: {type:"host", name, deck, visibility, code} cria (privada, a não ser com visibility:"public";
+ * com o código pedido em code, ou sorteado sem ele);
+ * {type:"join", code, name, deck} entra, e a partida começa quando a sala enche; host e join aceitam cover, a carta
+ * cuja arte representa o deck no lobby; {type:"room-say", key} manda uma mensagem pronta aos outros da sala;
+ * {type:"list-rooms"} lista as salas públicas abertas;
  * {type:"rematch"} pede revanche (contra a IA começa na hora, em rede quando os dois pedirem);
  * {type:"leave"} concede e sai.
  *
@@ -221,9 +224,10 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 }
                 case "host" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
-                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg));
+                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg));
                 }
-                case "join" -> join(ch, code(msg), name(msg), msg.get("deck"));
+                case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg));
+                case "room-say" -> say(ch, MatchConfig.string(msg, "key"));
                 case "rejoin" -> rejoin(ch, code(msg), msg.has("token") ? MatchConfig.string(msg, "token") : "");
                 case "rematch" -> rematch(ch);
                 case "leave" -> leave(ch);
@@ -312,9 +316,40 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         return n.length() > MAX_NAME ? n.substring(0, MAX_NAME) : n;
     }
 
+    private static String cover(JsonObject msg) {
+        JsonElement e = msg.get("cover");
+        return e == null || !e.isJsonPrimitive() ? null : e.getAsString();
+    }
+
     private static String code(JsonObject msg) {
         JsonElement e = msg.get("code");
         return e == null || e.isJsonNull() ? "" : e.getAsString().strip().toUpperCase();
+    }
+
+    /** Código escolhido por quem cria a sala: 4 letras ou números, ou null para a ponte sortear. */
+    private static String chosenCode(JsonObject msg) {
+        String c = code(msg);
+        if (c.isEmpty()) return null;
+        if (!c.matches("[A-Z0-9]{4}")) throw new IllegalArgumentException("O código da sala precisa ter 4 letras ou números.");
+        return c;
+    }
+
+    /**
+     * O código escolhido, se estiver livre. Um código ocupado conta como tentativa errada na busca:
+     * senão daria para descobrir as salas alheias criando salas com cada código.
+     */
+    private String freeCode(Channel ch, String code) {
+        String key = codeMisses.key(BridgeServer.ip(ch));
+        long now = System.currentTimeMillis();
+        if (codeMisses.exceeded(key, now)) {
+            Metrics.CODE_MISSES_BLOCKED.increment();
+            throw new IllegalArgumentException("Muitas tentativas com códigos já usados. Espere alguns minutos e tente de novo.");
+        }
+        if (byCode.containsKey(code)) {
+            codeMisses.record(key, now);
+            throw new IllegalArgumentException("O código " + code + " já está em uso. Escolha outro ou deixe o campo vazio para sortear.");
+        }
+        return code;
     }
 
     private static String label(Session s) {
@@ -351,9 +386,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         s.start();
     }
 
-    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom) {
+    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom, String chosen, String cover) {
+        String code = chosen == null ? null : freeCode(ch, chosen);
         leave(ch);
-        Session s = Session.room(newCode(4), ch, name, deck, config, publicRoom);
+        Session s = Session.room(code != null ? code : newCode(4), ch, name, deck, config, publicRoom);
+        s.seats[0].cover = Session.coverOf(deck, cover);
         s.history(history);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
@@ -361,7 +398,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deck.getName());
     }
 
-    private synchronized void join(Channel ch, String code, String name, JsonElement payload) {
+    private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover) {
         Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
@@ -369,6 +406,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         leave(ch);
         Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> each.deck == null).findFirst().orElseThrow();
         seat.bind(ch, name, deck);
+        seat.cover = Session.coverOf(deck, cover);
         byChannel.put(ch, s);
         System.out.printf("Sala %s: %s entrou (%s)%n", code, name, deck.getName());
         for (Session.Seat each : s.seats) s.sendRoom(each);
@@ -469,6 +507,24 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             }
         }
         if (s.isRoom()) System.out.printf("Sala %s fechada%n", s.code);
+    }
+
+    /** Mensagens prontas do lobby: sem texto livre, não há o que moderar. */
+    private static final java.util.Set<String> SAYINGS = java.util.Set.of("hello", "back", "invite", "glhf");
+    private static final long SAY_EVERY_MS = 1500;
+
+    /** {type:"room-say", key}: o balão vai para todos da sala, enquanto a partida não começa. */
+    private synchronized void say(Channel ch, String key) {
+        Session s = byChannel.get(ch);
+        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        if (seat == null || !s.isRoom() || s.started()) return;
+        if (!SAYINGS.contains(key)) throw new IllegalArgumentException("Mensagem desconhecida.");
+        long now = System.currentTimeMillis();
+        if (now - seat.saidAt < SAY_EVERY_MS) return;
+        seat.saidAt = now;
+        JsonObject o = new JsonObject();
+        o.addProperty("type", "room-say"); o.addProperty("seat", seat.index); o.addProperty("key", key);
+        for (Session.Seat each : s.seats) if (each.deck != null) each.send(o.toString());
     }
 
     private static void broadcastRoom(Session s) {

@@ -6,6 +6,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.51.0] - 2026-10-27
+
+### Novo
+
+- **Escolha o código da sala.** Ao criar uma sala, você pode digitar um código de 4 letras ou números, como **MESA** ou **BOLO**, para os amigos lembrarem fácil. Deixando o campo vazio, o código é sorteado como antes. Se o código já estiver em uso, a mesa avisa para escolher outro.
+- **Link para convidar.** Na sala de espera, **Copiar link** copia um endereço que leva direto para a sala; no celular, **Compartilhar** manda o link pelo aplicativo que você quiser. Quem abre o link já tendo um nome e um deck que sirva entra na hora; senão, a mesa pede o nome e o deck antes.
+- **Sala de espera nova.** Depois de criar ou entrar numa sala, a tela inteira vira a sala de espera: o código em destaque, quantos jogadores faltam e um lugar para cada um, com o nome, a arte do deck e, no Commander, o comandante. As outras cartas continuam escondidas até a partida. Ela começa sozinha quando a mesa enche, como antes.
+- **Mensagens rápidas na sala.** Na sala de espera, os botões **Oi, pessoal!**, **Já volto**, **Vou chamar mais gente** e **Boa partida!** mostram um balão sobre o seu lugar para todos da sala.
+
+### Mudou
+
+- **Códigos com O, I, 0 e 1.** O campo de entrar numa sala agora aceita qualquer letra ou número, para os códigos escolhidos funcionarem.
+
+### Corrigido
+
+- **Pagar mana phyrexiana com vida.** Cartas com símbolos phyrexianos, como Gitaxian Probe e Dismember, agora podem ser pagas com 2 de vida por símbolo, como manda a regra. Durante o pagamento, toque no seu retrato ou no botão **Pagar 2 de vida**. A instrução diz quanto de vida você já separou, e a vida sai quando o pagamento termina. O pagamento automático continua usando só mana.
+- **Mana incolor na reserva.** A mana incolor (como a de Wastes e Sol Ring) agora aparece no seu retrato junto com as outras cores, e tocar nela a gasta no pagamento.
+
 ## [0.50.0] - 2026-10-26
 
 ### Novo
