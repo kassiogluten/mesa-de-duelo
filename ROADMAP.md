@@ -581,3 +581,20 @@ Alternativas (recomendado: A + B):
 - [ ] **D. Contra a IA**: gravar também as partidas abandonadas contra a IA, ou deixar só as salas em rede.
 
 A decidir antes de começar: se a queda sem volta conta como concessão de quem caiu (e se for todo mundo, quem perde); em Commander, quando um jogador sai e os outros continuam, se a saída dele já entra no histórico ou só no fim da partida.
+
+## 38. Mostrar a versão durante a partida
+
+Hoje a versão da mesa (a do topo do `CHANGELOG.md`) só aparece no painel Novidades da tela inicial. Durante a partida não há onde ver, e isso atrapalha quando alguém manda um print ou relata um erro: não dá para saber se a pessoa está numa versão antiga guardada no navegador ou no app instalado. Levantamento feito em 27/10/2026:
+
+- A ponte já manda as versões das regras e do motor (`rulesVersion`, `engineVersion`), e elas vão no relato de erro, mas a versão da própria mesa não vai.
+- O menu da partida já tem um canto de informações discretas no topo (sala e placar da série).
+
+Alternativas para mostrar (recomendado: A + D):
+
+- [ ] **A. Rodapé do menu**: uma linha pequena e apagada no fim do menu da partida ("Mesa de Duelo 0.54.1"), abaixo de "Desistir e voltar ao início". Só vê quem abre o menu.
+- [ ] **B. Rodapé de Opções**: a mesma linha no fim da janela de Opções, que é onde se procura esse tipo de coisa num jogo.
+- [ ] **C. Escondido**: só aparece com um toque longo (ou passando o mouse) no botão do menu, como dica.
+- [ ] **D. No relato e no "Copiar relatório"**: incluir a versão da mesa junto das versões de regras e motor, para o admin ver sem depender do print.
+- [ ] **E. Versões da ponte junto**: ao tocar na linha da versão, mostrar também regras e motor (útil para teste, sem pesar para o jogador).
+
+A decidir antes de começar: o texto da linha (só o número ou com o nome da mesa); se avisa quando a mesa e o servidor estão em versões diferentes (por exemplo, "Há uma versão nova, recarregue a página").
