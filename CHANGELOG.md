@@ -16,6 +16,10 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Quem defende a batalha.** As batalhas mostram embaixo da carta, ao lado dos marcadores de defesa, um escudo com o nome de quem as defende. O balão lembra que é esse jogador quem bloqueia os atacantes, quanto dano falta para derrotá-la e o que acontece quando ela cai.
 - **Cartas previstas à vista.** As cartas que você prevê (Foretell) agora aparecem de face para cima no seu exílio, com a etiqueta **Prevista** e o custo previsto, e ficam na prateleira do exílio ao lado da mão: quando dá para conjurar, toque nela, como uma carta da mão. Antes, até para você ela ficava de costas. Os oponentes continuam vendo só o verso, agora com a etiqueta **Prevista**.
 
+### Corrigido
+
+- **Erros longos na barra lateral.** Quando a mesa avisa um problema comprido embaixo do botão **Jogar** (como um deck com várias cartas fora do formato), a mensagem agora ocupa no máximo algumas linhas e o resto rola dentro dela, em vez de empurrar a barra lateral e esconder o botão.
+
 ## [0.54.0] - 2026-10-27
 
 ### Novo
