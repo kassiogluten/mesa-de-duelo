@@ -543,3 +543,24 @@ Registrar o bracket (a faixa de poder oficial do Commander: 1 Exibição, 2 Bás
 Decks do jogador já salvos: o bracket é calculado na primeira abertura depois da atualização e guardado no dispositivo; dali em diante, só quando as cartas mudarem.
 
 Combos: entram os 100 mais usados, com todas as marcações de `bracketTag`. Se a lista dos mais usados não se mostrar confiável, os combos saem do cálculo.
+
+## 36. Histórico de jogadas mais detalhado e agrupado
+
+O histórico da partida (Menu → Registro) é uma lista corrida, da jogada mais nova para a mais antiga, com uma frase curta por evento. Levantamento feito em 27/10/2026:
+
+- Cada evento vira uma linha solta (`eventDescription` em `forgeTable.ts`): só o moer de várias cartas seguidas e o terreno jogado já viram uma linha só. Um turno cheio, ou uma remoção em massa, enche a lista de linhas parecidas.
+- Não há separação por turno: a linha "Turno de Ana." aparece no meio das outras, sem número do turno nem fase.
+- Faltam detalhes que a ponte já manda ou que a mesa já conhece: os alvos da mágica ou da habilidade, quem controlava a carta que saiu do campo, o custo pago, o resultado do combate (quem bloqueou quem, o que morreu). A saída do campo também não diz o que causou (ver item 32, alternativa A).
+- Compras de carta ficam de fora (só tocam o som), então não dá para saber quantas cartas alguém comprou no turno.
+- O limite de 60 eventos (`HISTORY_LIMIT` em `presentationTimeline.ts`) apaga o começo da partida bem rápido em Commander com quatro.
+
+Alternativas (recomendado: A + B + C, e D junto com o item 32):
+
+- [ ] **A. Agrupar por turno**: um cabeçalho por turno ("Turno 5 · Ana"), com as jogadas dele embaixo; os turnos antigos ficam recolhidos e abrem com um toque.
+- [ ] **B. Juntar o que aconteceu junto**: a mágica e o que ela causou numa linha só ("Wrath of God (Ana) destruiu 7 permanentes"), com as cartas afetadas ao abrir a linha; o mesmo para o dano de combate e os gatilhos de morte em sequência.
+- [ ] **C. Mais detalhes por linha**: alvos, controlador, de onde a carta veio e para onde foi, compras ("Bruno comprou 2 cartas"), com miniatura da carta e toque para ampliar (como já acontece no nome da carta).
+- [ ] **D. Causa da saída do campo**: é a alternativa A do item 32; vale fazer junto, porque o agrupamento de B depende dela.
+- [ ] **E. Guardar a partida inteira**: tirar ou aumentar bastante o limite de 60, já que o agrupamento deixa a lista curta.
+- [ ] **F. Filtros**: só minhas jogadas, só de um oponente, só combate, só remoções.
+
+A decidir antes de começar: se os turnos antigos ficam recolhidos ou abertos; até onde vão os detalhes (custo pago e fase podem poluir); se as compras dos oponentes aparecem com a quantidade (é informação pública na mesa de verdade).
