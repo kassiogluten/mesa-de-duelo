@@ -102,4 +102,16 @@ public class TableStatusTest {
         assertFalse(StateJson.card(bears.getView(), game).has("countsSpells"));
         assertFalse("only where the count can matter", StateJson.card(grapeshotInYard.getView(), game).has("countsSpells"));
     }
+
+    @Test public void blessingAndSpeedReachThePlayer() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
+        JsonObject before = StateJson.player(me.getView(), true, game);
+        assertFalse(before.has("blessing"));
+        assertFalse(before.has("speed"));
+        me.setBlessing(true, null);
+        me.increaseSpeed(); me.increaseSpeed();
+        JsonObject after = StateJson.player(me.getView(), true, game);
+        assertTrue(after.get("blessing").getAsBoolean());
+        assertEquals(2, after.get("speed").getAsInt());
+    }
 }

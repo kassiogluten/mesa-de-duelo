@@ -4,6 +4,14 @@ import { esc } from './cardtext';
 const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
 const MONARCH_ICON = svg('M2 8l5 4 5-7 5 7 5-4-2 11H4zm2 13h16v2H4z');
 const LAND_ICON = svg('M2 20 9 7l4 7 2-3 7 9z');
+const BLESSING_ICON = svg('M3 21V10l3-3 3 3V6l3-4 3 4v4l3-3 3 3v11h-7v-5h-4v5z');
+const SPEED_ICON = svg('M12 4a10 10 0 0 0-10 10c0 2 .6 3.9 1.6 5.5h16.8A10 10 0 0 0 22 14 10 10 0 0 0 12 4zm5.2 4.4-4 6.3a1.8 1.8 0 1 1-2.4-1.9z');
+export const BLESSING_HINT = 'Bênção da cidade: vem do Ascend, quando o jogador controla dez permanentes, e dura até o fim da partida, mesmo que ele perca permanentes depois.';
+/** O que a velocidade faz e como sobe, com o próximo passo. */
+export function speedText(speed: number) {
+  return `Velocidade ${speed} de 4. ${speed >= 4 ? 'Velocidade máxima: as habilidades de velocidade máxima estão ligadas.'
+    : 'Sobe 1, no máximo uma vez por turno, quando um oponente perde vida no turno deste jogador. Com 4, ligam as habilidades de velocidade máxima.'}`;
+}
 const SPELLS_ICON = svg('M13 2 4 14h7l-1 8 9-12h-7z');
 export const MONARCH_HINT = 'Monarca: no começo da etapa final, compra um card. Quem causar dano de combate ao monarca passa a ser o monarca.';
 
@@ -26,20 +34,28 @@ function spellsText(p: FPlayer, spellsTotal: number) {
 
 /** Texto para o leitor de tela, junto do nome e da vida do jogador. */
 export function playerStatusText(p: FPlayer, active?: number | null, spellsTotal?: number) {
-  return [p.monarch ? ', é o monarca' : '', showsLands(p, active) ? `, terrenos jogados neste turno: ${landsText(p)}` : '',
+  return [p.monarch ? ', é o monarca' : '', p.blessing ? ', tem a bênção da cidade' : '', p.speed ? `, velocidade ${p.speed} de 4` : '', showsLands(p, active) ? `, terrenos jogados neste turno: ${landsText(p)}` : '',
     showsSpells(p, spellsTotal) ? `, ${spellsText(p, spellsTotal!).toLowerCase()}` : ''].join('');
 }
 
 /**
- * Selos de monarca, de terrenos e de mágicas do turno, ao lado dos marcadores do jogador. Os terrenos só aparecem no
+ * Selos de monarca, bênção da cidade, velocidade, terrenos e mágicas do turno, ao lado dos marcadores do jogador. Os terrenos só aparecem no
  * turno do jogador e ficam apagados quando ele já jogou todos. `changed` traz MONARCH quando a coroa acabou de chegar
- * e SPELLS quando o jogador conjurou mais uma mágica.
+ * (BLESSING e SPEED, da mesma forma, quando chegam ou mudam) e SPELLS quando o jogador conjurou mais uma mágica.
  */
 export function playerStatusHTML(p: FPlayer, active?: number | null, open: string | null = null, changed: Set<string> = new Set(), spellsTotal?: number) {
   let html = '';
   if (p.monarch) {
     const key = `p${p.id}:MONARCH`;
     html += `<span class="player-counter monarch${changed.has('MONARCH') ? ' bump' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${MONARCH_ICON}<b>Monarca</b><span class="ctr-tip">${esc(MONARCH_HINT)}</span></span>`;
+  }
+  if (p.blessing) {
+    const key = `p${p.id}:BLESSING`;
+    html += `<span class="player-counter blessing${changed.has('BLESSING') ? ' bump' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${BLESSING_ICON}<b>Bênção</b><span class="ctr-tip">${esc(BLESSING_HINT)}</span></span>`;
+  }
+  if (p.speed) {
+    const key = `p${p.id}:SPEED`;
+    html += `<span class="player-counter speed${p.speed >= 4 ? ' max' : ''}${changed.has('SPEED') ? ' bump' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${SPEED_ICON}<b>${p.speed}</b><small>/4</small><span class="ctr-tip">${esc(speedText(p.speed))}</span></span>`;
   }
   if (showsLands(p, active)) {
     const key = `p${p.id}:LANDS`, played = p.landsPlayed ?? 0;

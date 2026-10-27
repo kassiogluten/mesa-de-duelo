@@ -11,6 +11,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 ### Novo
 
 - **Mágicas do turno.** Quando há na mesa uma carta que conta as mágicas conjuradas no turno, como as de Tempestade (Grapeshot, Brain Freeze) ou Thousand-Year Storm, um selo com um raio aparece ao lado do retrato de cada jogador que já conjurou, com quantas foram. Tocando no selo, o balão diz também o total da mesa, que é o que a Tempestade conta. Sem uma carta dessas à vista, nada aparece.
+- **Bênção da cidade e Velocidade.** Quem ganha a bênção da cidade (Ascend, de Ixalan) passa a ter o selo **Bênção** ao lado do retrato, para a partida toda. Com cartas de Start your engines!, a velocidade de cada jogador aparece num selo de velocímetro, de 1 a 4, que fica destacado na velocidade máxima. Tocando nos selos, o balão explica de onde vem a bênção e como a velocidade sobe.
 
 ## [0.54.0] - 2026-10-27
 

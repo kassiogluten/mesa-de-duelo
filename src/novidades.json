@@ -2,6 +2,11 @@
   "0.55.0": {
     "Mágicas do turno": [
       { "img": "0.55.0/magicas-turno.webp", "legenda": "Com Grapeshot na mão, o selo do raio ao lado do seu retrato mostra 2 mágicas neste turno; o balão lembra que a mesa toda já conjurou 3." }
+    ],
+    "Bênção da cidade e Velocidade": [
+      { "img": "0.55.0/bencao.webp", "legenda": "O selo **Bênção** ao lado do seu retrato, com o balão explicando que ela dura até o fim da partida." },
+      { "img": "0.55.0/velocidade.webp", "legenda": "O velocímetro mostra velocidade 2 de 4, e o balão diz como ela sobe." },
+      { "img": "0.55.0/velocidade-maxima.webp", "legenda": "O oponente na velocidade máxima: o selo fica destacado e as habilidades de velocidade máxima estão ligadas." }
     ]
   },
   "0.54.0": {

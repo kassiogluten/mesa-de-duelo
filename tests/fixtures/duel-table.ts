@@ -73,6 +73,13 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     me.hand.push(card(305, 'Grapeshot', 10, { creature: false, manaCost: '{1}{R}', typeLine: 'Sorcery', countsSpells: true }));
     view.render();
   },
+  /** Bênção da cidade no seu retrato e velocidade nos dois (a do oponente no máximo). */
+  blessingSpeed() {
+    const [me, opp] = state.players;
+    Object.assign(me, { blessing: true, speed: 2, counters: {} });
+    Object.assign(opp, { speed: 4, counters: {} });
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;

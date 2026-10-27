@@ -141,6 +141,10 @@ export interface FPlayer {
   /** Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite). */
   landsPlayed?: number;
   maxLands?: number;
+  /** Tem a bênção da cidade (Ascend): dura até o fim da partida. */
+  blessing?: boolean;
+  /** Velocidade (Start your engines!), de 1 a 4; ausente enquanto o jogador não tem velocidade. */
+  speed?: number;
   /** Mágicas que o jogador conjurou neste turno; ausente quando nenhuma. */
   spellsCast?: number;
   library: number;

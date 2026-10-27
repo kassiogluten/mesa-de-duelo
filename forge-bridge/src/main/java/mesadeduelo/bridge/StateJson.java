@@ -141,6 +141,9 @@ final class StateJson {
             // Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite).
             o.addProperty("landsPlayed", engine.getLandsPlayedThisTurn());
             o.addProperty("maxLands", engine.getMaxLandPlaysInfinite() ? -1 : engine.getMaxLandPlays());
+            // Bênção da cidade (Ascend) é para sempre; a velocidade (Start your engines!) vai de 1 a 4 e nunca cai a 0.
+            if (engine.hasBlessing()) o.addProperty("blessing", true);
+            if (engine.getSpeed() > 0) o.addProperty("speed", engine.getSpeed());
             // Mágicas que o jogador conjurou neste turno (Tempestade soma as de todos).
             try { if (engine.getSpellsCastThisTurn() > 0) o.addProperty("spellsCast", engine.getSpellsCastThisTurn()); }
             catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem contagem desta vez */ }

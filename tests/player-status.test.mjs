@@ -43,3 +43,14 @@ test('spells cast this turn show only when a visible card counts them, with the 
   assert.doesNotMatch(playerStatusHTML(player({}), 9, null, new Set(), 3), /spells-cast/, 'hidden for players with no spell');
   assert.match(playerStatusText(ana, 9, 3), /, 2 mágicas conjuradas neste turno/);
 });
+
+test('the city blessing and the speed get seals by the portrait, with the rule in the tooltip', () => {
+  const html = playerStatusHTML(player({ blessing: true, speed: 2 }), 9, null, new Set(['SPEED']));
+  assert.match(html, /player-counter blessing" data-ctr="p3:BLESSING"/);
+  assert.match(html, /dura até o fim da partida/);
+  assert.match(html, /player-counter speed bump" data-ctr="p3:SPEED".*<b>2<\/b><small>\/4<\/small>/);
+  assert.match(html, /Velocidade 2 de 4\. Sobe 1, no máximo uma vez por turno/);
+  assert.match(playerStatusHTML(player({ speed: 4 }), 9), /player-counter speed max".*Velocidade máxima/);
+  assert.doesNotMatch(playerStatusHTML(player({}), 9), /blessing|speed/);
+  assert.match(playerStatusText(player({ blessing: true, speed: 3 }), 9), /, tem a bênção da cidade, velocidade 3 de 4/);
+});
