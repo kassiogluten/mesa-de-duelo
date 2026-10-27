@@ -90,6 +90,8 @@ export interface FCard {
   chosen?: FChosen;
   /** Cartas que contam com devoção: as cores (W, U, B, R, G), o valor para quem controla e, nos deuses de Theros, o mínimo para ser criatura. */
   devotion?: { colors: string[]; value: number; need?: number };
+  /** Conta as mágicas conjuradas no turno (Tempestade e afins); só no campo, na mão, na pilha e na zona de comando. */
+  countsSpells?: boolean;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
@@ -139,6 +141,8 @@ export interface FPlayer {
   /** Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite). */
   landsPlayed?: number;
   maxLands?: number;
+  /** Mágicas que o jogador conjurou neste turno; ausente quando nenhuma. */
+  spellsCast?: number;
   library: number;
   /** Carta do topo do grimório, só quando quem recebe o estado pode vê-la (Vizier of the Menagerie, Courser of Kruphix...). */
   libraryTop?: FCard;

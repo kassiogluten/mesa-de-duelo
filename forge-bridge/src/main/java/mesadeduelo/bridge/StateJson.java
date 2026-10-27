@@ -141,6 +141,9 @@ final class StateJson {
             // Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite).
             o.addProperty("landsPlayed", engine.getLandsPlayedThisTurn());
             o.addProperty("maxLands", engine.getMaxLandPlaysInfinite() ? -1 : engine.getMaxLandPlays());
+            // Mágicas que o jogador conjurou neste turno (Tempestade soma as de todos).
+            try { if (engine.getSpellsCastThisTurn() > 0) o.addProperty("spellsCast", engine.getSpellsCastThisTurn()); }
+            catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem contagem desta vez */ }
         }
         o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
@@ -281,6 +284,7 @@ final class StateJson {
         // Emblemas não têm texto Oracle: o texto vem das habilidades que o efeito carrega.
         o.addProperty("text", c.isEmblem() ? c.getText().replace("\r", "").trim() : s.getOracleText());
         if (c.isEmblem()) o.addProperty("emblem", true);
+        PermanentDetails.countsSpells(o, c, game);
         if (c.getZone() == ZoneType.Exile) {
             Card gc = game == null ? null : game.findByView(c);
             if (gc != null && gc.isPlotted()) o.addProperty("plotted", true);

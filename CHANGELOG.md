@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.55.0] - 2026-10-27
+
+### Novo
+
+- **Mágicas do turno.** Quando há na mesa uma carta que conta as mágicas conjuradas no turno, como as de Tempestade (Grapeshot, Brain Freeze) ou Thousand-Year Storm, um selo com um raio aparece ao lado do retrato de cada jogador que já conjurou, com quantas foram. Tocando no selo, o balão diz também o total da mesa, que é o que a Tempestade conta. Sem uma carta dessas à vista, nada aparece.
+
 ## [0.54.0] - 2026-10-27
 
 ### Novo

@@ -15,6 +15,7 @@ import forge.game.keyword.Keyword;
 import forge.game.keyword.KeywordView;
 import forge.game.player.Player;
 import forge.game.staticability.StaticAbility;
+import forge.game.trigger.Trigger;
 import forge.game.zone.ZoneType;
 
 /**
@@ -89,6 +90,31 @@ final class PermanentDetails {
             if (compare.matches("LT\\d+")) return Integer.parseInt(compare.substring(2));
         }
         return null;
+    }
+
+    /**
+     * Cartas que contam as mágicas conjuradas no turno: Tempestade ou, no script do Forge, uma contagem ou condição de
+     * mágicas do turno (Count$ThisTurnCast, ActivatorThisTurnCast, as mágicas antes desta). Só no campo, na mão,
+     * na pilha e na zona de comando, onde a contagem pode mudar uma decisão.
+     */
+    static void countsSpells(JsonObject o, CardView c, Game game) {
+        if (game == null || c.getZone() == null || !SPELL_COUNT_ZONES.contains(c.getZone())) return;
+        try {
+            Card gc = game.findByView(c);
+            if (gc != null && countsSpells(gc)) o.addProperty("countsSpells", true);
+        } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
+    }
+    private static final java.util.Set<ZoneType> SPELL_COUNT_ZONES = java.util.EnumSet.of(ZoneType.Battlefield, ZoneType.Hand, ZoneType.Stack, ZoneType.Command);
+
+    static boolean countsSpells(Card gc) {
+        if (gc.hasKeyword(Keyword.STORM)) return true;
+        for (String value : gc.getSVars().values()) if (mentionsSpellCount(value)) return true;
+        for (Trigger t : gc.getTriggers()) for (String value : t.getMapParams().values()) if (mentionsSpellCount(value)) return true;
+        for (StaticAbility st : gc.getStaticAbilities()) for (String value : st.getMapParams().values()) if (mentionsSpellCount(value)) return true;
+        return false;
+    }
+    private static boolean mentionsSpellCount(String value) {
+        return value != null && (value.contains("ThisTurnCast_") || value.contains("ActivatorThisTurnCast") || value.contains("SpellsCastThisTurn") || value.contains("CurrentCastSpells"));
     }
 
     /** O que a carta escolheu ao entrar ou resolver (tipo, cores, carta nomeada, jogador, número, modo); só vai quando há algo. */

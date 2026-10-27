@@ -29,7 +29,7 @@ import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
-import { playerStatusHTML, playerStatusText } from './playerStatus';
+import { playerStatusHTML, playerStatusText, turnSpellsTotal } from './playerStatus';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { choiceOrder, isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
@@ -1189,7 +1189,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function trackPlayerCounters(players: FPlayer[]) {
     counterBumps = new Map();
     for (const p of players) {
-      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}), ...(p.monarch ? { MONARCH: 1 } : {}) };
+      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}), ...(p.monarch ? { MONARCH: 1 } : {}), ...(p.spellsCast ? { SPELLS: p.spellsCast } : {}) };
       if (before) {
         const changed = new Set([...Object.keys(before), ...Object.keys(now)].filter(k => (before[k] ?? 0) !== (now[k] ?? 0) && (now[k] ?? 0) > 0));
         if (changed.size) counterBumps.set(p.id, changed);
@@ -1197,9 +1197,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lastPlayerCounters.set(p.id, { ...now });
     }
   }
-  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, client?.state?.activePlayer) + dungeonText(p);
+  const spellsTotal = () => turnSpellsTotal(client?.state?.players ?? []);
+  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, client?.state?.activePlayer, spellsTotal()) + dungeonText(p);
   const playerCounters = (p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted),
-    playerStatusHTML(p, client?.state?.activePlayer, openCounter, counterBumps.get(p.id)) + dungeonBadgesHTML(p, openCounter));
+    playerStatusHTML(p, client?.state?.activePlayer, openCounter, counterBumps.get(p.id), spellsTotal()) + dungeonBadgesHTML(p, openCounter));
 
   function emblems(p: FPlayer) {
     const list = p.emblems ?? [];

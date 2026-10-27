@@ -65,6 +65,14 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     opp.battlefield[0].goadedBy = [10];
     view.render();
   },
+  /** Mágicas do turno: Grapeshot na mão conta, então os retratos mostram quantas cada um conjurou. */
+  spellsCast() {
+    const [me, opp] = state.players;
+    Object.assign(me, { spellsCast: 2, counters: {} });
+    Object.assign(opp, { spellsCast: 1, counters: {} });
+    me.hand.push(card(305, 'Grapeshot', 10, { creature: false, manaCost: '{1}{R}', typeLine: 'Sorcery', countsSpells: true }));
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;

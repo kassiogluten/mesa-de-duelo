@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import forge.game.Game;
 import forge.game.card.Card;
 import forge.game.player.Player;
+import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -79,5 +80,26 @@ public class TableStatusTest {
         JsonObject black = StateJson.card(merchant.getView(), game).getAsJsonObject("devotion");
         assertEquals(3, black.get("value").getAsInt());
         assertFalse(black.has("need"));
+    }
+
+    @Test public void spellsCastThisTurnAndCardsThatCountThem() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        assertFalse(StateJson.player(me.getView(), true, game).has("spellsCast"));
+        for (Player caster : List.of(me, me, other)) {
+            SpellAbility cast = ExilePermissionsTest.add(game, "Lightning Bolt", caster, ZoneType.Graveyard).getFirstSpellAbility();
+            cast.setActivatingPlayer(caster);
+            game.getStack().getSpellsCastThisTurn().add(cast);
+        }
+        assertEquals(2, StateJson.player(me.getView(), true, game).get("spellsCast").getAsInt());
+        assertEquals(1, StateJson.player(other.getView(), true, game).get("spellsCast").getAsInt());
+
+        Card grapeshot = ExilePermissionsTest.add(game, "Grapeshot", me, ZoneType.Hand);
+        Card storm = ExilePermissionsTest.add(game, "Thousand-Year Storm", me, ZoneType.Battlefield);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        Card grapeshotInYard = ExilePermissionsTest.add(game, "Grapeshot", me, ZoneType.Graveyard);
+        assertTrue(StateJson.card(grapeshot.getView(), game).get("countsSpells").getAsBoolean());
+        assertTrue(StateJson.card(storm.getView(), game).get("countsSpells").getAsBoolean());
+        assertFalse(StateJson.card(bears.getView(), game).has("countsSpells"));
+        assertFalse("only where the count can matter", StateJson.card(grapeshotInYard.getView(), game).has("countsSpells"));
     }
 }

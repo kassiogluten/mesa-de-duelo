@@ -416,3 +416,5 @@
 .player-counter.land-plays svg { color: #c9b98f; }
 .player-counter.land-plays.done { opacity: .55; }
 .player-counter.land-plays small { color: #b8ad95; }
+.player-counter.spells-cast { border-color: #b46cd8; color: #f0dcff; }
+.player-counter.spells-cast svg { color: #e7a6ff; }
