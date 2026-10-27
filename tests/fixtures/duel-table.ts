@@ -89,6 +89,11 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     opp.battlefield.push(card(276, 'Gruff Triplets', 23, { manaCost: '{3}{G}{G}', typeLine: 'Creature — Satyr Warrior', power: 3, toughness: 3, keywords: ['MENACE'], states: ['suspected'] }));
     view.render();
   },
+  /** Batalha do oponente que você defende. */
+  battle() {
+    state.players[1].battlefield.push(card(277, 'Invasion of Zendikar', 23, { creature: false, manaCost: '{3}{G}', typeLine: 'Battle — Siege', counters: { DEFENSE: 3 }, protector: 10 }));
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;

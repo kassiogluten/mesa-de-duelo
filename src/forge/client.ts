@@ -84,6 +84,8 @@ export interface FCard {
   owner?: number;
   /** Jogadores que atiçaram a criatura (goad). */
   goadedBy?: number[];
+  /** Batalha: o jogador que a defende. */
+  protector?: number;
   /** Escudos de regeneração ativos. */
   shields?: number;
   /** O que a carta escolheu (tipo, cores, carta nomeada, jogador, número, modo), só o que existe. */

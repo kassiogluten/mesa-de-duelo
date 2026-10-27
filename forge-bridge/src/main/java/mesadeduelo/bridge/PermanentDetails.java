@@ -40,6 +40,8 @@ final class PermanentDetails {
         if (c.getZone() != ZoneType.Battlefield) return;
         if (c.getOwner() != null && c.getController() != null && c.getOwner().getId() != c.getController().getId()) o.addProperty("owner", c.getOwner().getId());
         if (c.getShieldCount() > 0) o.addProperty("shields", c.getShieldCount());
+        // Batalhas: quem as defende (é quem bloqueia os atacantes dela e a quem o dano a ela é causado).
+        if (c.getProtectingPlayer() != null) o.addProperty("protector", c.getProtectingPlayer().getId());
         if (!c.isFaceDown()) chosen(o, c);
         if (game == null) return;
         try {

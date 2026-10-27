@@ -116,3 +116,12 @@ test('one-time states become icon-only seals with the name and what changes in t
   assert.doesNotMatch(byKind['state exerted'].html, /Exaurida/, 'only the icon on the table');
   assert.match(permanentFxHTML(fx).html, /class="fx-seal state suspected" title="Suspeita/);
 });
+
+test('a battle shows who protects it, with the defense left in the tooltip', () => {
+  const names = { 1: 'Ana', 2: 'Bruno' };
+  const battle = { id: 9, name: 'Invasion of Zendikar', controller: 1, protector: 2, counters: { DEFENSE: 3 }, typeLine: 'Battle — Siege' };
+  const seal = permanentFx(battle, { playerName: id => names[id] }).seals.find(s => s.kind === 'protector');
+  assert.match(seal.html, /Bruno/);
+  assert.match(seal.label, /^Batalha defendida por Bruno: .*Faltam 3 de dano/);
+  assert.equal(permanentFx(creature({})).seals.some(s => s.kind === 'protector'), false);
+});

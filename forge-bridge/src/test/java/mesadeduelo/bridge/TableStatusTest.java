@@ -131,4 +131,13 @@ public class TableStatusTest {
         assertEquals("Llanowar Elves", o.getAsJsonArray("saddledBy").get(0).getAsString());
         assertEquals("Llanowar Elves", o.getAsJsonArray("crewedBy").get(0).getAsString());
     }
+
+    @Test public void battleCarriesWhoProtectsIt() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        Card battle = ExilePermissionsTest.add(game, "Invasion of Zendikar", me, ZoneType.Battlefield);
+        battle.setProtectingPlayer(other);
+        assertEquals(other.getId(), StateJson.card(battle.getView(), game).get("protector").getAsInt());
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        assertFalse(StateJson.card(bears.getView(), game).has("protector"));
+    }
 }

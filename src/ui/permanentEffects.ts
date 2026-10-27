@@ -68,12 +68,13 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
-type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'devotion' | 'devotion met' | `state ${FCardState}`;
+type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'devotion' | 'devotion met' | `state ${FCardState}`;
 const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
-const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen', string> = {
+const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen' | 'protector', string> = {
   control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
   goaded: icon('M12 2 9 9H2l5.6 4.2L5.5 21 12 16.3l6.5 4.7-2.1-7.8L22 9h-7z'),
   regen: icon('M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z'),
+  protector: icon('M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z'),
   chosen: icon('M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 9A1.5 1.5 0 1 0 7.5 6a1.5 1.5 0 0 0 0 3z'),
 };
 const STATE_ICON: Record<FCardState, string> = {
@@ -114,6 +115,11 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
   if (c.owner !== undefined && c.controller !== undefined && c.owner !== c.controller) {
     const owner = playerName(c.owner);
     seals.push({ kind: 'control', html: STATUS_ICON.control, label: `Pertence a ${owner}; quem a controla agora é ${playerName(c.controller)}. Volta para ${owner} quando o efeito de controle acabar.` });
+  }
+  if (c.protector !== undefined) {
+    const who = playerName(c.protector), defense = c.counters?.DEFENSE;
+    seals.push({ kind: 'protector', html: `${STATUS_ICON.protector}<span class="fx-chosen">${esc(who)}</span>`,
+      label: `Batalha defendida por ${who}: é quem bloqueia as criaturas que a atacam${defense !== undefined ? `. Faltam ${defense} de dano para derrotá-la` : ''}. Quando sai o último marcador de defesa, quem a controla a exila e pode conjurá-la transformada.` });
   }
   if (c.goadedBy?.length) {
     const by = list(c.goadedBy.map(playerName));
