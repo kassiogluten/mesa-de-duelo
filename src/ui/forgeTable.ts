@@ -47,6 +47,8 @@ import './cardStyle.css';
 import './matchBar.css';
 import { paymentButtonLabels, shortInstruction } from './shortInstruction';
 import { awaitingDecision, waitingOnText } from './awaitingDecision';
+import { confirmUpkeepMana, upkeepManaKey } from './upkeepMana';
+import './upkeepMana.css';
 import './awaitingDecision.css';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
@@ -251,6 +253,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
    */
   let clickedAt = 0;
   const CLICK_LOCK_MS = 1600;
+  /** Manutenção (partida e turno) em que o jogador já confirmou gerar mana mesmo assim. */
+  let upkeepManaConfirmed = '';
   /** Marcador com o balão aberto por clique (id da carta e tipo), até clicar fora. */
   let openCounter: string | null = null;
   /** Seleção em andamento na pergunta aberta. */
@@ -2393,6 +2397,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (compactTable.matches && cd.closest('.field') && theirs && !usable(s, id) && !selectedForInput(s, id)) { showPreview(findCard(id), cd, true); return; }
     // Usar uma carta do cemitério ou do exílio fecha a janela, para a pergunta seguinte aparecer.
     if (cd.closest('#fZone')) closeZone();
+    // Na sua manutenção, virar algo só para mana pede confirmação, uma vez por manutenção.
+    const upkeepKey = upkeepManaKey(s, id);
+    if (upkeepKey && upkeepKey !== upkeepManaConfirmed) {
+      const card = findCard(id);
+      void confirmUpkeepMana(card ? label(card) : 'esta carta').then(yes => {
+        const now = client?.state;
+        if (!yes || !now || disconnected || upkeepManaKey(now, id) !== upkeepKey) return;
+        upkeepManaConfirmed = upkeepKey;
+        stopPresentation();
+        client!.send({ type: 'card', id, gen: now.input.gen });
+      });
+      return;
+    }
     stopPresentation();
     client.send({ type: 'card', id: +cd.dataset.fid!, gen: Number(cd.dataset.gen) });
   });

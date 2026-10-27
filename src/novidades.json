@@ -1,4 +1,9 @@
 {
+  "0.53.0": {
+    "Aviso de mana na manutenção": [
+      { "img": "0.53.0/aviso-mana-manutencao.webp", "legenda": "Na manutenção, tocar num terreno pergunta antes: a mana some quando o jogo passa para a fase principal. **Voltar** deixa o terreno desvirado." }
+    ]
+  },
   "0.52.0": {
     "Link que cria a sala": [
       { "img": "0.52.0/link-cria-sala.webp", "legenda": "Abrindo o link da sala **BOLO**, que ainda não existia: a aba **Criar sala** já vem com o código e como sala pública, esperando o toque em **Criar sala**." }

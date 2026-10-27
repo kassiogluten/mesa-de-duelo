@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.53.0] - 2026-10-27
+
+### Novo
+
+- **Aviso de mana na manutenção.** Na sua manutenção, antes da fase principal, tocar num terreno (ou em outra permanente que só gera mana) agora abre um aviso: a mana gerada ali some quando o jogo passa para a fase principal. Toque em **Voltar** para não virar nada, ou em **Gerar mana mesmo assim** se é isso mesmo que você quer. O aviso aparece uma vez por manutenção; pagando um custo ou respondendo a algo na pilha, os terrenos viram direto, como antes.
+
 ## [0.52.0] - 2026-10-27
 
 ### Novo

@@ -291,8 +291,9 @@ export interface FState {
   /** paying: pagando um custo de mana; a mana da reserva pode ser gasta com {type:"mana", color}. */
   /** payingFor: o que o pagamento paga (mágica, habilidade ou custo pedido por um efeito), para o rótulo do Cancelar; canAutoPay: o Automático consegue pagar (fora da trava curta de clique). */
   /** untappable: permanentes viradas para mana com a mana ainda na reserva; clicar ({type:"card"}) desvira e devolve a mana. */
+  /** manaOnly: suas permanentes em que um clique agora só geraria mana. Ausente em pontes antigas. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
-  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number;
+  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number;
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
     /** players: só quando jogadores também podem ser escolhidos (proliferar). */
     selection?: { cards: number[]; players?: number[]; min: number; max: number };

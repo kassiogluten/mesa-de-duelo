@@ -1,0 +1,17 @@
+/* Aviso de mana na manutenção: mesma caixa das opções de jogo, por cima da mesa. */
+.upkeep-mana {
+  width: min(440px, calc(100vw - 32px)); box-sizing: border-box; padding: 24px; border: 1px solid rgb(242 181 76 / .32); border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 50%, var(--bg-deep)); color: var(--ink); box-shadow: 0 8px 20px #0004, 0 32px 80px #0007; font: 500 15px/1.5 var(--body);
+}
+.upkeep-mana::backdrop { background: #060b12b8; }
+.upkeep-mana h2 { margin: 0 0 12px; color: var(--gold-light); font: 600 21px/1.25 var(--body); letter-spacing: -.02em; }
+.upkeep-mana p { margin: 0 0 10px; }
+.upkeep-mana strong { color: var(--ink); font-weight: 700; }
+.upkeep-mana .upkeep-mana-hint { color: var(--muted); font: 400 13px/1.55 var(--body); }
+.upkeep-mana footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.upkeep-mana footer .arena-btn { min-width: 0; min-height: 44px; padding: 10px 18px; border-radius: 10px; font: 600 14px var(--body); letter-spacing: 0; text-transform: none; }
+.upkeep-mana :focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+@media (max-width: 480px) {
+  .upkeep-mana { padding: 20px; border-radius: 18px; }
+  .upkeep-mana footer { flex-direction: column-reverse; }
+}

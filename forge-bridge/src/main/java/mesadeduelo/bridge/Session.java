@@ -1383,6 +1383,9 @@ final class Session {
                     JsonArray untap = new JsonArray();
                     ManaUndo.untappable(seat.controller()).forEach(untap::add);
                     if (!untap.isEmpty()) input.add("untappable", untap);
+                    JsonArray manaOnly = new JsonArray();
+                    ManaOnly.ids(seat.controller()).forEach(manaOnly::add);
+                    if (!manaOnly.isEmpty()) input.add("manaOnly", manaOnly);
                 }
                 // Pagando um custo de mana: a reserva fica clicável no retrato.
                 if (seat.controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana pay) {
