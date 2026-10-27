@@ -45,6 +45,7 @@ final class PermanentDetails {
         try {
             Card gc = game.findByView(c);
             if (gc != null && !c.isFaceDown()) devotion(o, gc);
+            if (gc != null) states(o, gc);
             if (gc == null || !gc.isGoaded()) return;
             JsonArray by = new JsonArray();
             for (Player p : gc.getGoaded()) by.add(p.getId());
@@ -90,6 +91,31 @@ final class PermanentDetails {
             if (compare.matches("LT\\d+")) return Integer.parseInt(compare.substring(2));
         }
         return null;
+    }
+
+    /**
+     * Estados que uma mecânica liga uma vez e o Forge guarda na carta: monstruosa, renomada, suspeita, selada e
+     * tripulada no turno (com quem selou ou tripulou), exaurida (não desvira na próxima etapa de desvirar de quem a
+     * controla), detida, atrelada e caso solucionado. Vão em {@code states}, só os que valem.
+     */
+    static void states(JsonObject o, Card gc) {
+        JsonArray states = new JsonArray();
+        if (gc.isMonstrous()) states.add("monstrous");
+        if (gc.isRenowned()) states.add("renowned");
+        if (gc.isSuspected()) states.add("suspected");
+        if (gc.isSaddled()) { states.add("saddled"); names(o, "saddledBy", gc.getSaddledByThisTurn()); }
+        if (!gc.getCrewedByThisTurn().isEmpty()) { states.add("crewed"); names(o, "crewedBy", gc.getCrewedByThisTurn()); }
+        if (gc.getController() != null && gc.isExertedBy(gc.getController())) states.add("exerted");
+        if (gc.isDetained()) states.add("detained");
+        if (gc.isHarnessed()) states.add("harnessed");
+        if (gc.isSolved()) states.add("solved");
+        if (!states.isEmpty()) o.add("states", states);
+    }
+    private static void names(JsonObject o, String key, Iterable<Card> cards) {
+        if (cards == null) return;
+        JsonArray names = new JsonArray();
+        for (Card c : cards) if (!c.isFaceDown()) names.add(c.getName());
+        if (!names.isEmpty()) o.add(key, names);
     }
 
     /**

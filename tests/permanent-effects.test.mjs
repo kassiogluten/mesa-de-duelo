@@ -101,3 +101,18 @@ test('devotion cards show the count, and gods show how much is missing to become
   assert.match(seal({ colors: ['B'], value: 4 }).html, /4$/);
   assert.equal(seal(undefined), undefined);
 });
+
+test('one-time states become icon-only seals with the name and what changes in the tooltip', () => {
+  const fx = permanentFx(creature({ states: ['monstrous', 'suspected', 'saddled', 'crewed', 'exerted', 'detained', 'solved'], saddledBy: ['Llanowar Elves'], crewedBy: ['Soul Warden', 'Llanowar Elves'] }));
+  const byKind = Object.fromEntries(fx.seals.map(seal => [seal.kind, seal]));
+  assert.match(byKind['state monstrous'].label, /^Monstruosa: /);
+  assert.match(byKind['state suspected'].label, /ameaça e não pode bloquear/);
+  assert.match(byKind['state saddled'].label, /Selada neste turno por Llanowar Elves/);
+  assert.match(byKind['state crewed'].label, /Tripulada neste turno por Soul Warden e Llanowar Elves/);
+  assert.match(byKind['state exerted'].label, /não desvira na próxima etapa de desvirar/);
+  assert.match(byKind['state detained'].label, /^Detida: /);
+  assert.match(byKind['state solved'].label, /Caso solucionado/);
+  assert.match(byKind['state exerted'].html, /^<svg/);
+  assert.doesNotMatch(byKind['state exerted'].html, /Exaurida/, 'only the icon on the table');
+  assert.match(permanentFxHTML(fx).html, /class="fx-seal state suspected" title="Suspeita/);
+});

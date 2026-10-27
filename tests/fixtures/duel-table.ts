@@ -80,6 +80,15 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     Object.assign(opp, { speed: 4, counters: {} });
     view.render();
   },
+  /** Estados de uma vez só: monstruosa, suspeita, exaurida e um veículo tripulado. */
+  oneTimeStates() {
+    const [me, opp] = state.players;
+    me.battlefield.push(card(273, 'Polukranos, World Eater', 10, { manaCost: '{2}{G}{G}', typeLine: 'Legendary Creature — Hydra', power: 8, toughness: 8, counters: { P1P1: 3 }, states: ['monstrous'] }),
+      card(274, 'Glorybringer', 10, { manaCost: '{3}{R}{R}', typeLine: 'Creature — Dragon', power: 4, toughness: 4, keywords: ['FLYING', 'HASTE'], states: ['exerted'], tapped: true }),
+      card(275, 'Smuggler\'s Copter', 10, { manaCost: '{2}', typeLine: 'Artifact Creature — Vehicle', power: 3, toughness: 3, keywords: ['FLYING'], states: ['crewed'], crewedBy: ['Llanowar Elves'] }));
+    opp.battlefield.push(card(276, 'Gruff Triplets', 23, { manaCost: '{3}{G}{G}', typeLine: 'Creature — Satyr Warrior', power: 3, toughness: 3, keywords: ['MENACE'], states: ['suspected'] }));
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;

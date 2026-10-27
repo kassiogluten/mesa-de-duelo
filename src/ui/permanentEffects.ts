@@ -1,4 +1,4 @@
-import type { FCard } from '../forge/client';
+import type { FCard, FCardState } from '../forge/client';
 import { esc, manaHTML, pip } from './cardtext';
 
 /**
@@ -68,7 +68,7 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
-type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'devotion' | 'devotion met';
+type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'devotion' | 'devotion met' | `state ${FCardState}`;
 const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
 const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen', string> = {
   control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
@@ -76,11 +76,38 @@ const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen', string> = {
   regen: icon('M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z'),
   chosen: icon('M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 9A1.5 1.5 0 1 0 7.5 6a1.5 1.5 0 0 0 0 3z'),
 };
+const STATE_ICON: Record<FCardState, string> = {
+  monstrous: icon('M5 3c1 4 1 7 0 10l3 1c1-3 1-7 0-11zm5 0c1 5 1 9 0 14l3 1c1-5 1-10 0-15zm5 1c1 5 1 9 0 13l3 1c1-5 1-9 0-14zM3 18h18v3H3z'),
+  renowned: icon('M12 2l2.4 5 5.6.8-4 3.9.9 5.5L12 14.6 7.1 17.2l.9-5.5-4-3.9 5.6-.8zM6 19h12v3H6z'),
+  suspected: icon('M10 2a8 8 0 0 1 6.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1 1 10 2zm0 3a2.8 2.8 0 0 0-2.8 2.8h2a.8.8 0 1 1 1.3.6c-.9.7-1.5 1.3-1.5 2.6h2c0-.6.2-.8.8-1.3A2.8 2.8 0 0 0 10 5zm-1 7v2h2v-2z'),
+  saddled: icon('M4 9c3 0 5 2 8 2s5-2 8-2l1 4c-2 0-3 1-4 3h-2l-1 5h-4l-1-5H7c-1-2-2-3-4-3z'),
+  crewed: icon('M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 3a7 7 0 0 1 6.9 6H14a2 2 0 0 0-4 0H5.1A7 7 0 0 1 12 5zM5.1 13H10l-2.5 5.3A7 7 0 0 1 5.1 13zm8.9 0h4.9a7 7 0 0 1-2.4 5.3z'),
+  exerted: icon('M11 2h2v11l3.5-3.5 1.4 1.4L12 16.8l-5.9-5.9 1.4-1.4L11 13zM4 19h16v3H4z'),
+  detained: icon('M7 10V7a5 5 0 0 1 10 0v3h2v12H5V10zm3 0h4V7a2 2 0 0 0-4 0zm1 4v4h2v-4z'),
+  harnessed: icon('M12 2l7 5v10l-7 5-7-5V7zm0 4-3 2v8l3 2 3-2V8z'),
+  solved: icon('M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'),
+};
+/** Nome e o que o estado muda, para o balão e o inspetor. */
+function stateLabel(state: FCardState, c: FCard) {
+  const by = (names?: string[]) => names?.length ? ` por ${list(names)}` : '';
+  switch (state) {
+    case 'monstrous': return 'Monstruosa: já usou a monstruosidade e não fica monstruosa de novo. O que depende de ela ser monstruosa vale enquanto estiver no campo.';
+    case 'renowned': return 'Renomada: ganhou o renome ao causar dano de combate a um jogador e não ganha de novo. O que depende de ela ser renomada vale enquanto estiver no campo.';
+    case 'suspected': return 'Suspeita: tem ameaça e não pode bloquear enquanto estiver suspeita.';
+    case 'saddled': return `Selada neste turno${by(c.saddledBy)}: o que vale quando ela ataca selada está ligado. Deixa de estar selada no fim do turno.`;
+    case 'crewed': return `Tripulada neste turno${by(c.crewedBy)}.`;
+    case 'exerted': return 'Exaurida: não desvira na próxima etapa de desvirar de quem a controla.';
+    case 'detained': return 'Detida: não pode atacar nem bloquear, e as habilidades ativadas dela não podem ser ativadas, até o próximo turno de quem a deteve.';
+    case 'harnessed': return 'Atrelada: o que depende de ela estar atrelada está ligado.';
+    case 'solved': return 'Caso solucionado: a habilidade de Solucionado está ligada.';
+  }
+}
 const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
 
 /**
  * Estados que o motor guarda e a carta impressa não mostra: controle trocado, atiçada, escudos de regeneração, o que a
- * carta escolheu e a devoção das cartas que contam com ela. Na mesa ficam como selos pequenos (controle e atiçada só com o ícone); o texto vai no balão e no inspetor.
+ * carta escolheu, a devoção das cartas que contam com ela e os estados de uma vez só (monstruosa, suspeita, exaurida...).
+ * Na mesa ficam como selos pequenos (controle, atiçada e os estados só com o ícone); o texto vai no balão e no inspetor.
  */
 export function permanentStatus(c: FCard, playerName: (id: number) => string = id => `Jogador ${id}`): PermanentFx['seals'] {
   const seals: PermanentFx['seals'] = [];
@@ -107,6 +134,7 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
     if (ch.mode) { shown.push(esc(ch.mode)); said.push(`modo ${ch.mode}`); }
     if (said.length) seals.push({ kind: 'chosen', html: `${STATUS_ICON.chosen}<span class="fx-chosen">${shown.join(' · ')}</span>`, label: `Escolhido pela carta: ${said.join('; ')}.` });
   }
+  for (const state of c.states ?? []) if (STATE_ICON[state]) seals.push({ kind: `state ${state}`, html: STATE_ICON[state], label: stateLabel(state, c) });
   const dev = c.devotion;
   if (dev?.colors.length) {
     const pips = dev.colors.map(k => pip(k)).join('');

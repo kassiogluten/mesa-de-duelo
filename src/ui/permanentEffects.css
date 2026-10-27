@@ -101,3 +101,8 @@
 .fx-seal.devotion.met { color: #8fe0a2; }
 .fx-seal.control, .fx-seal.goaded { padding: 1px 2px; }
 .fx-chosen { display: inline-block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; }
+/* Estados de uma vez só (monstruosa, suspeita, exaurida...): só o ícone; o nome e o que muda ficam no balão. */
+.fx-seal.state { padding: 1px 2px; color: #d9dfec; }
+.fx-seal.state.suspected, .fx-seal.state.detained { color: #ff9a6a; }
+.fx-seal.state.exerted { color: #9fb6d8; }
+.fx-seal.state.monstrous, .fx-seal.state.renowned, .fx-seal.state.solved { color: #f2c14e; }

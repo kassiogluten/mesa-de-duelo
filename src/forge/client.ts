@@ -90,6 +90,11 @@ export interface FCard {
   chosen?: FChosen;
   /** Cartas que contam com devoção: as cores (W, U, B, R, G), o valor para quem controla e, nos deuses de Theros, o mínimo para ser criatura. */
   devotion?: { colors: string[]; value: number; need?: number };
+  /** Estados ligados uma vez por uma mecânica (monstrous, renowned, suspected, saddled, crewed, exerted, detained, harnessed, solved). */
+  states?: FCardState[];
+  /** Quem selou ou tripulou a permanente neste turno (nomes das cartas). */
+  saddledBy?: string[];
+  crewedBy?: string[];
   /** Conta as mágicas conjuradas no turno (Tempestade e afins); só no campo, na mão, na pilha e na zona de comando. */
   countsSpells?: boolean;
   /** Tramada (plot) no exílio. */
@@ -120,6 +125,8 @@ export interface FCard {
 }
 
 export interface FMergedCard { id: number; name?: string; set?: string; image?: string; token?: boolean; faceDown?: boolean }
+
+export type FCardState = 'monstrous' | 'renowned' | 'suspected' | 'saddled' | 'crewed' | 'exerted' | 'detained' | 'harnessed' | 'solved';
 
 export interface FChosen { types?: string[]; colors?: string[]; names?: string[]; player?: number; number?: string; mode?: string }
 

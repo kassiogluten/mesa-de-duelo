@@ -7,6 +7,11 @@
       { "img": "0.55.0/bencao.webp", "legenda": "O selo **Bênção** ao lado do seu retrato, com o balão explicando que ela dura até o fim da partida." },
       { "img": "0.55.0/velocidade.webp", "legenda": "O velocímetro mostra velocidade 2 de 4, e o balão diz como ela sobe." },
       { "img": "0.55.0/velocidade-maxima.webp", "legenda": "O oponente na velocidade máxima: o selo fica destacado e as habilidades de velocidade máxima estão ligadas." }
+    ],
+    "Estados das permanentes": [
+      { "img": "0.55.0/estados.webp", "legenda": "Polukranos monstruoso, Portador da Glória exaurido e o Cóptero do Contrabandista tripulado, cada um com seu ícone pequeno embaixo da carta." },
+      { "img": "0.55.0/estado-suspeita.webp", "legenda": "Passando o mouse na criatura suspeita, o balão explica que ela tem ameaça e não pode bloquear." },
+      { "img": "0.55.0/estado-exaurida.webp", "legenda": "No Portador da Glória exaurido, o balão lembra que ele não desvira na próxima etapa de desvirar." }
     ]
   },
   "0.54.0": {

@@ -114,4 +114,21 @@ public class TableStatusTest {
         assertTrue(after.get("blessing").getAsBoolean());
         assertEquals(2, after.get("speed").getAsInt());
     }
+
+    @Test public void oneTimeStatesAreListed() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        Card elves = ExilePermissionsTest.add(game, "Llanowar Elves", me, ZoneType.Battlefield);
+        assertFalse(StateJson.card(bears.getView(), game).has("states"));
+        bears.setMonstrous(true); bears.setRenowned(true); bears.setSuspected(true);
+        bears.setSaddled(true); bears.setSaddledByThisTurn(new forge.game.card.CardCollection(elves));
+        bears.exert(); bears.detain(other); bears.setHarnessed(true); bears.setSolved(true);
+        bears.setCrewedByThisTurn(new forge.game.card.CardCollection(elves));
+        JsonObject o = StateJson.card(bears.getView(), game);
+        List<String> states = new java.util.ArrayList<>();
+        o.getAsJsonArray("states").forEach(e -> states.add(e.getAsString()));
+        assertEquals(List.of("monstrous", "renowned", "suspected", "saddled", "crewed", "exerted", "detained", "harnessed", "solved"), states);
+        assertEquals("Llanowar Elves", o.getAsJsonArray("saddledBy").get(0).getAsString());
+        assertEquals("Llanowar Elves", o.getAsJsonArray("crewedBy").get(0).getAsString());
+    }
 }
