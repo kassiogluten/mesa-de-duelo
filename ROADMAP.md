@@ -564,3 +564,17 @@ Alternativas (recomendado: A + B + C, e D junto com o item 32):
 - [ ] **F. Filtros**: só minhas jogadas, só de um oponente, só combate, só remoções.
 
 A decidir antes de começar: se os turnos antigos ficam recolhidos ou abertos; até onde vão os detalhes (custo pago e fase podem poluir); se as compras dos oponentes aparecem com a quantidade (é informação pública na mesa de verdade).
+
+## 37. Cálculo de vida ao definir bloqueadores
+
+Na declaração de bloqueadores, o jogador precisa somar de cabeça o poder de cada atacante que ficou sem bloqueio para saber com quanta vida vai sair do combate, e se o combate é letal. Em Commander, com vários atacantes, atropelar e dano de comandante, a conta fica difícil e é fácil errar.
+
+- [ ] Mostrar, enquanto o jogador escolhe os bloqueadores, a vida prevista depois do combate ("20 → 13"), atualizando a cada bloqueio marcado ou desfeito.
+- [ ] Destacar quando o combate é letal ("Letal!") ou deixa a vida muito baixa, para o jogador perceber antes de confirmar.
+- [ ] Entrar na conta: atacantes sem bloqueio, golpe duplo, excesso de atropelar sobre o bloqueador (pelo letal do bloqueador, como na divisão do item 22), dano de comandante (21) e veneno de infectar (10), cada um com o seu limite.
+- [ ] Também no ataque ao planeswalker: a lealdade prevista dele.
+- [ ] Leitor de tela: anunciar a vida prevista quando ela mudar.
+
+Fonte dos dados: o ideal é a ponte calcular com as regras do Forge (prevenção, proteção, efeitos que dobram o dano), e a mesa só mostrar; uma conta só na mesa, com poder, palavras-chave e bloqueios, sai mais rápido, mas erra nos casos com efeitos de substituição.
+
+A decidir antes de começar: onde aparece (no retrato do jogador, na caixa de ação junto do **Confirmar bloqueios**, ou nos dois); se a conta vem da ponte ou da mesa; se mostra a previsão também para o atacante (quanto o oponente vai tomar) e para os outros jogadores em Commander.
