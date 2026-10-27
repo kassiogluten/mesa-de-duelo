@@ -65,6 +65,11 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     opp.battlefield[0].goadedBy = [10];
     view.render();
   },
+  /** Dia ou noite na trilha de fases, com as mágicas que quem joga o turno já conjurou. */
+  dayNight(time: 'day' | 'night' = 'day', spells = 0, active = 10) {
+    Object.assign(state, { dayTime: time, activeSpells: spells, activePlayer: active });
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;

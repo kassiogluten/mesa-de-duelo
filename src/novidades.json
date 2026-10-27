@@ -1,4 +1,10 @@
 {
+  "0.55.0": {
+    "Dia e noite": [
+      { "img": "0.55.0/dia.webp", "legenda": "De dia, o sol ao lado do relógio do turno. O balão explica que vira noite se você não conjurar mágicas neste turno e que nenhuma foi conjurada até agora." },
+      { "img": "0.55.0/noite.webp", "legenda": "De noite, a lua com estrelas no turno do oponente: vira dia se o oponente conjurar 2 mágicas ou mais, e 1 já foi conjurada." }
+    ]
+  },
   "0.54.0": {
     "Votações com a carta à vista": [
       { "img": "0.54.0/votacao-carta.webp", "legenda": "Votação de Expropriate: a carta e o texto dela no alto, o voto do oponente em **Votos até agora** e, em cada opção, o que aquele voto faz." },

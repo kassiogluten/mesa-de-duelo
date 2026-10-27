@@ -49,4 +49,19 @@ public class TurnExtrasTest {
         JsonObject o = new JsonObject(); TurnExtras.add(o, game);
         assertEquals("{\"UPKEEP\":\"UPKEEP\"}", o.get("extraPhaseAfter").toString());
     }
+
+    @Test public void dayAndNightOnlyGoOnceTheGameHasOne() {
+        var game = ExilePermissionsTest.game();
+        JsonObject none = new JsonObject(); StateJson.dayNight(none, game);
+        assertFalse(none.toString(), none.has("dayTime") || none.has("activeSpells"));
+
+        game.setDayTime(false);
+        JsonObject day = new JsonObject(); StateJson.dayNight(day, game);
+        assertEquals("day", day.get("dayTime").getAsString());
+        assertEquals(0, day.get("activeSpells").getAsInt());
+
+        game.setDayTime(true);
+        JsonObject night = new JsonObject(); StateJson.dayNight(night, game);
+        assertEquals("night", night.get("dayTime").getAsString());
+    }
 }

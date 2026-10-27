@@ -72,6 +72,8 @@ Em `input`, `commanderMove: {to, card}` marca o "Sim/Não" da regra 903.9b: o co
 
 Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extraTurns` lista os jogadores dos turnos extras que ainda vêm, na ordem; durante um combate, `combatNumber` diz qual combate do turno é (2 = o primeiro extra); `extraCombats` conta os combates extras ainda por vir e `extraCombatAfter` traz as fases depois das quais eles começam (`MAIN1`, `MAIN2`, `COMBAT_END`…); `extraPhaseAfter` mapeia cada fase que, por uma etapa extra, não segue para a fase normal à fase que vem depois dela (`{"COMBAT_END": "UPKEEP", "UPKEEP": "MAIN2"}` com manutenções extras depois do combate). Os campos só aparecem quando há algo extra.
 
+Dia e noite: `dayTime` (`"day"` ou `"night"`) depois que a partida vira um dos dois, com `activeSpells`, as mágicas que o jogador do turno já conjurou nele (o que decide a troca no turno seguinte). Sem dia nem noite, os dois campos não vêm.
+
 `question` aparece quando o Forge precisa de uma decisão e a partida fica parada até a resposta:
 
 | `kind` | Campos | Resposta |

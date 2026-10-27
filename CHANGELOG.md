@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.55.0] - 2026-10-27
+
+### Novo
+
+- **Dia e noite.** Quando uma carta torna a partida dia ou noite (como as de Innistrad: Caçada à Meia-Noite), um sol ou uma lua aparece na trilha de fases, ao lado do relógio do turno, e gira quando vira. Passe o mouse ou toque nele para ver a regra da troca: de dia, vira noite se quem joga o turno não conjurar mágicas; de noite, vira dia se essa pessoa conjurar duas ou mais. O balão diz também quantas mágicas ela já conjurou no turno. Enquanto a partida não é nem dia nem noite, nada aparece.
+
 ## [0.54.1] - 2026-10-27
 
 ### Corrigido

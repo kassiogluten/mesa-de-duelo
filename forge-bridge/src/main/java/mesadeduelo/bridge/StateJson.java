@@ -47,6 +47,7 @@ final class StateJson {
         PlayerView active = gv.getPlayerTurn();
         o.addProperty("activePlayer", active == null ? null : active.getId());
         TurnExtras.add(o, game);
+        dayNight(o, game);
         o.addProperty("gameOver", gv.isGameOver());
         if (gv.isGameOver()) o.addProperty("winner", gv.getWinningPlayerName());
 
@@ -118,6 +119,17 @@ final class StateJson {
         }
         o.add("log", log);
         return o;
+    }
+
+    /**
+     * Dia e noite (Innistrad: Caçada à Meia-Noite): só vai quando a partida já virou dia ou noite. Junto, quantas
+     * mágicas quem joga o turno já conjurou, que é o que decide se vira no próximo turno.
+     */
+    static void dayNight(JsonObject o, Game game) {
+        if (game == null || game.isNeitherDayNorNight()) return;
+        o.addProperty("dayTime", game.isDay() ? "day" : "night");
+        Player active = game.getPhaseHandler() == null ? null : game.getPhaseHandler().getPlayerTurn();
+        if (active != null) o.addProperty("activeSpells", active.getSpellsCastThisTurn());
     }
 
     static JsonObject player(PlayerView p, boolean showHand, Game game) {

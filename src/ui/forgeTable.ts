@@ -344,6 +344,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   /** Grupo da trilha de fases com o menu de paradas aberto. */
   let stopMenu: string | null = null;
+  // Dia ou noite do último desenho da trilha: o sol ou a lua pulsa quando vira.
+  let lastDayTime: FState['dayTime'];
   /** Dá para marcar paradas agora: a ponte oferece a opção e você está jogando. */
   const stopsEditable = () => !!client?.connected && !disconnected && opponentStops.supported && !!client.state && !client.state.gameOver && !client.state.spectating;
   function syncStops() {
@@ -1854,6 +1856,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stopsEditable(), open: stopMenu }));
+    if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) root.querySelector('.phase-daynight')?.classList.add('bump');
+    lastDayTime = visual.dayTime;
     placeStopMenu();
     syncTurnClock(visual);
 

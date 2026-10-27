@@ -25,7 +25,7 @@ const STEPS: Record<string, { group: string; detail: string }> = {
   END_OF_TURN: { group: 'end', detail: 'Etapa final' },
   CLEANUP: { group: 'end', detail: 'Limpeza' },
 };
-type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats'> & { stack?: FState['stack']; match?: FState['match'] };
+type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats' | 'dayTime' | 'activeSpells'> & { stack?: FState['stack']; match?: FState['match'] };
 
 function owner(state: HudState) {
   const mine = state.activePlayer === state.you;
@@ -57,6 +57,35 @@ function combatText(state: HudState) {
   const now = n > 1 ? `Combate extra${n > 2 ? ` (${n}º combate)` : ''}` : '';
   const next = more ? `${more === 1 ? 'mais um combate' : `mais ${more} combates`} neste turno` : '';
   return [now, next].filter(Boolean).join(' · ');
+}
+
+const SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+// A lua da noite leva estrelas para não se confundir com o ícone da fase final.
+const MOON = '<path d="M17 15.5A7 7 0 0 1 8.5 7a7 7 0 1 0 8.5 8.5z"/><path class="star" d="M17.5 3.5v3M16 5h3M21 9v2M20 10h2"/>';
+
+/**
+ * Regra de troca do dia e da noite para quem joga o turno: de dia, vira noite se ele não conjurar mágicas; de noite,
+ * vira dia se ele conjurar duas ou mais. Diz também se, pelas mágicas do turno até agora, já está decidido.
+ */
+export function dayNightText(state: HudState): string {
+  if (!state.dayTime) return '';
+  const mine = state.activePlayer === state.you;
+  const name = state.players.find(p => p.id === state.activePlayer)?.name;
+  const who = mine ? 'você' : state.players.length > 2 && name ? name : 'o oponente';
+  const known = state.activeSpells != null, spells = state.activeSpells ?? 0;
+  if (state.dayTime === 'day') {
+    const rule = `Dia. Se ${who} não conjurar mágicas neste turno, vira noite no próximo turno.`;
+    return !known ? rule : spells ? `${rule} Já ${spells === 1 ? 'foi conjurada 1 mágica' : `foram conjuradas ${spells} mágicas`}: continua dia.` : `${rule} Nenhuma mágica até agora.`;
+  }
+  const rule = `Noite. Se ${who} conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno.`;
+  return !known ? rule : spells >= 2 ? `${rule} Já foram conjuradas ${spells}: vira dia.` : `${rule} ${spells ? '1 mágica' : 'Nenhuma mágica'} até agora.`;
+}
+
+/** Sol ou lua ao lado do número do turno; some enquanto a partida não é nem dia nem noite. */
+function dayNightHTML(state: HudState): string {
+  if (!state.dayTime || state.gameOver) return '';
+  const day = state.dayTime === 'day';
+  return `<span class="phase-daynight ${day ? 'day' : 'night'}" aria-hidden="true" data-tip="${esc(dayNightText(state))}"><svg viewBox="0 0 24 24" aria-hidden="true">${day ? SUN : MOON}</svg></span>`;
 }
 
 /** Só endereços de imagem simples entram no estilo inline; qualquer outra coisa cai na inicial do nome. */
@@ -120,10 +149,10 @@ export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops:
   const upcoming = state.gameOver ? '' : upcomingTurnsText(state);
   const marked = state.gameOver ? new Map<string, string[]>() : stopsByGroup(stops);
   const holding = !state.gameOver && holdingStop({ ...state, stack: state.stack ?? [] }, stops);
-  const summary = [`Turno ${state.turn}`, owner(state), detail, holding ? 'Parada sua' : '', step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
+  const summary = [`Turno ${state.turn}`, owner(state), state.gameOver ? '' : dayNightText(state), detail, holding ? 'Parada sua' : '', step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
   return `<span class="sr-only">${esc(summary)}</span>${matchClockHTML(state)}${activePlayerPortrait(state, activePortrait)}
     <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
-    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>`}
+    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>`}${dayNightHTML(state)}
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}${edit ? ' editable' : ''}"${edit ? '' : ' aria-hidden="true"'}>${PHASES.map(([key, label, icon], index) => {
       const current = step?.group === key && !state.gameOver;
       const held = marked.get(key);

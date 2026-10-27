@@ -275,6 +275,9 @@ export interface FState {
   extraCombatAfter?: string[];
   /** Fases que, por causa de uma etapa extra, não seguem para a fase normal, e a fase que vem depois de cada uma. */
   extraPhaseAfter?: Record<string, string>;
+  /** Dia ou noite, só depois que a partida vira um dos dois; e as mágicas que quem joga o turno já conjurou nele. */
+  dayTime?: 'day' | 'night';
+  activeSpells?: number;
   gameOver: boolean;
   spectating?: boolean;
   winner?: string;
