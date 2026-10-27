@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.54.1] - 2026-10-27
+
+### Corrigido
+
+- **Cartas com o mesmo nome da face de outra carta.** Importar ou usar um deck com Rampant Growth, Lightning Bolt, Demonic Tutor, Swords to Plowshares, Brainstorm, Raise Dead e outras não dá mais o erro "O identificador da carta não corresponde ao nome informado". A mesa confundia essas cartas com cartas de duas faces que têm uma face com o mesmo nome, como Studious First-Year // Rampant Growth e Emeritus of Conflict // Lightning Bolt.
+- **Avisos longos na escolha de deck.** Quando o deck tem muitos problemas, a mensagem embaixo do botão **Jogar** passa a ter altura máxima e rola por dentro, em vez de empurrar a tela para baixo.
+
 ## [0.54.0] - 2026-10-27
 
 ### Novo

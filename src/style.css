@@ -686,7 +686,7 @@ select.input-field {
 }
 .play-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-width: 0; margin-top: 8px; }
 .play-btn svg { width: 20px; height: 20px; }
-.lobby-status { min-height: 1.4em; margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+.lobby-status { min-height: 1.4em; max-height: 7em; overflow-y: auto; overflow-wrap: anywhere; margin: 12px 0 0; color: var(--muted); font-size: 14px; }
 .lobby-status:empty { display: none; }
 .lobby-status.error { color: #ff9f86; }
 
