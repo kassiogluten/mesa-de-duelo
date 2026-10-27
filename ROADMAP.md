@@ -523,13 +523,13 @@ Registrar o bracket (a faixa de poder oficial do Commander: 1 Exibição, 2 Bás
 - Game Changers (quantos).
 - Destruição de terrenos em massa.
 - Turnos extras (em sequência).
-- Combos de duas cartas (os que ganham o jogo ou travam a mesa cedo).
-- Tutores (quantos).
+- Combos de duas cartas: só os mais usados, para a lista ficar pequena e conferível à mão.
+- Tutores eficientes (quantos): os que buscam qualquer carta por pouca mana, como Demonic Tutor e Vampiric Tutor. Tutores de terreno, de criatura de um tipo ou caros não contam.
 
 **De onde vêm as listas** (decidido, conferido em 27/10/2026):
 
-- **Scryfall** para as listas de cartas: `is:gamechanger` (53 cartas, a lista oficial), `otag:mass-land-denial` (106), `otag:extra-turn` (53) e `otag:tutor` (1120, a filtrar: a regra se preocupa com tutores eficientes). É o mesmo caminho da legalidade do Commander (`update-commander-legality.py`), tem as listas completas e uma API estável.
-- **Commander Spellbook** para os combos de duas cartas: é a base de combos que o próprio Archidekt usa, permite filtrar por `cards=2 legal:commander` e cada combo traz um `bracketTag` que separa os combos que importam para o bracket.
+- **Scryfall** para as listas de cartas: `is:gamechanger` (53 cartas, a lista oficial), `otag:mass-land-denial` (106), `otag:extra-turn` (53) e, para os tutores, `otag:tutor mv<=3 o:"search your library for a card"` (52 cartas, com alguns falsos positivos como Alpine Houndmaster, que a revisão à mão tira). É o mesmo caminho da legalidade do Commander (`update-commander-legality.py`), tem as listas completas e uma API estável.
+- **Commander Spellbook** para os combos de duas cartas: é a base de combos que o próprio Archidekt usa, permite filtrar por `cards=2 legal:commander` e ordenar por `-popularity` (quantos decks do EDHREC usam o combo; o primeiro, Sanguine Bond + Exquisite Blood, está em cerca de 150 mil). A lista guarda os 100 mais usados, com o `bracketTag` de cada um.
 - O Archidekt fica de fora como fonte das listas: os sinais por carta (`gameChanger`, `extraTurns`, `massLandDenial`, `tutor`, `twoCardComboIds`) só vêm dentro de um deck, sem uma lista avulsa. Serve só para trazer o `edhBracket` escolhido pelo dono na importação por link.
 - O Commander Spellbook também tem uma rota que estima o bracket de um deck (`/estimate-bracket`), útil para conferir o cálculo local nos decks prontos, não para usar a cada deck.
 
@@ -540,4 +540,6 @@ Registrar o bracket (a faixa de poder oficial do Commander: 1 Exibição, 2 Bás
 - [ ] Na importação por link do Archidekt, trazer o `edhBracket` do deck quando vier preenchido (respeitando o mínimo calculado).
 - [ ] Mostrar o bracket de cada lugar na sala de espera e, talvez, filtrar a busca de salas e a escolha de deck por bracket.
 
-A decidir antes de começar: quais tutores contam (a lista do Scryfall é ampla demais); quais `bracketTag` do Commander Spellbook entram como combo de duas cartas; o que fazer com os decks do jogador já salvos (calcular na primeira abertura depois da atualização e guardar).
+Decks do jogador já salvos: o bracket é calculado na primeira abertura depois da atualização e guardado no dispositivo; dali em diante, só quando as cartas mudarem.
+
+Combos: entram os 100 mais usados, com todas as marcações de `bracketTag`. Se a lista dos mais usados não se mostrar confiável, os combos saem do cálculo.
