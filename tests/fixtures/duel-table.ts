@@ -94,6 +94,14 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     state.players[1].battlefield.push(card(277, 'Invasion of Zendikar', 23, { creature: false, manaCost: '{3}{G}', typeLine: 'Battle — Siege', counters: { DEFENSE: 3 }, protector: 10 }));
     view.render();
   },
+  /** Previstas no exílio: a sua de face para cima, com o custo previsto (dá para conjurar); a do oponente só o verso. */
+  foretold() {
+    const [me, opp] = state.players;
+    me.exile.push(card(278, 'Saw It Coming', 10, { creature: false, manaCost: '{1}{U}{U}', typeLine: 'Instant', foretold: true, foretellCost: '{1}{U}' }));
+    opp.exile.push({ id: 279, controller: 23, tapped: false, token: false, faceDown: true, foretold: true });
+    Object.assign(state, { playableExile: [278], castable: [278] });
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;

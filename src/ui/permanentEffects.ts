@@ -68,7 +68,7 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
-type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'devotion' | 'devotion met' | `state ${FCardState}`;
+type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'foretold' | 'devotion' | 'devotion met' | `state ${FCardState}`;
 const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
 const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen' | 'protector', string> = {
   control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
@@ -141,6 +141,8 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
     if (said.length) seals.push({ kind: 'chosen', html: `${STATUS_ICON.chosen}<span class="fx-chosen">${shown.join(' · ')}</span>`, label: `Escolhido pela carta: ${said.join('; ')}.` });
   }
   for (const state of c.states ?? []) if (STATE_ICON[state]) seals.push({ kind: `state ${state}`, html: STATE_ICON[state], label: stateLabel(state, c) });
+  // Prevista só existe no exílio: não vira selo na mesa, só a frase do balão e do inspetor.
+  if (c.foretold && c.name) seals.push({ kind: 'foretold', html: '', label: `Prevista: ${c.foretellCost ? `quem a previu pode conjurá-la do exílio por ${c.foretellCost}` : 'quem a previu pode conjurá-la do exílio pelo custo previsto'}, a partir do turno seguinte ao da previsão. Os outros jogadores só veem o verso.` });
   const dev = c.devotion;
   if (dev?.colors.length) {
     const pips = dev.colors.map(k => pip(k)).join('');

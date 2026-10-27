@@ -140,4 +140,22 @@ public class TableStatusTest {
         Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
         assertFalse(StateJson.card(bears.getView(), game).has("protector"));
     }
+
+    @Test public void foretoldCardShowsItsFaceOnlyToTheOwner() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        Card saw = ExilePermissionsTest.add(game, "Saw It Coming", me, ZoneType.Exile);
+        saw.setForetold(true); saw.turnFaceDown(true);
+        JsonObject theirs = StateJson.player(me.getView(), false, game).getAsJsonArray("exile").get(0).getAsJsonObject();
+        assertTrue(theirs.get("faceDown").getAsBoolean());
+        assertTrue(theirs.get("foretold").getAsBoolean());
+        assertFalse(theirs.has("name"));
+        JsonObject mine = StateJson.player(me.getView(), true, game).getAsJsonArray("exile").get(0).getAsJsonObject();
+        assertFalse(mine.has("faceDown"));
+        assertTrue(mine.get("foretold").getAsBoolean());
+        assertEquals("Saw It Coming", mine.get("name").getAsString());
+        assertEquals("{1}{U}{U}", mine.get("manaCost").getAsString());
+        assertEquals("{1}{U}", mine.get("foretellCost").getAsString());
+        assertTrue(StateJson.playableExile(game, me.getId()).contains(new com.google.gson.JsonPrimitive(saw.getId())));
+        assertFalse(StateJson.playableExile(game, other.getId()).contains(new com.google.gson.JsonPrimitive(saw.getId())));
+    }
 }

@@ -154,7 +154,7 @@ final class StateJson {
         o.add("hand", showHand ? cards(p.getHand(), game) : new JsonArray());
         o.add("battlefield", cards(p.getBattlefield(), game));
         o.add("graveyard", cards(p.getGraveyard(), game));
-        o.add("exile", cards(p.getExile(), game));
+        o.add("exile", showHand ? Foretold.forOwner(p.getExile(), game) : cards(p.getExile(), game));
         JsonArray commandZone = new JsonArray(), commanders = new JsonArray(), commanderDamage = new JsonArray();
         for (CardView c : nzv(p.getCommand())) if (c.isCommander()) commandZone.add(card(c, game));
         for (CardView c : nzv(p.getCommanders())) {
@@ -266,6 +266,7 @@ final class StateJson {
         o.addProperty("token", c.isToken());
         PermanentDetails.visible(o, c);
         PermanentDetails.status(o, c, game);
+        if (c.getZone() == ZoneType.Exile && c.isForeTold()) o.addProperty("foretold", true);
         if (c.isFaceDown()) {
             o.addProperty("faceDown", true);
             if (c.getZone() == ZoneType.Battlefield) {
@@ -392,7 +393,7 @@ final class StateJson {
         if (player == null) return ids;
         for (Card card : game.getCardsIn(ZoneType.Exile)) {
             if (card.mayPlay(player).stream().anyMatch(option -> option.grantsZonePermissions())
-                || (card.getOwner().equals(player) && card.isPlotted())) ids.add(card.getId());
+                || (card.getOwner().equals(player) && (card.isPlotted() || card.isForetold()))) ids.add(card.getId());
         }
         return ids;
     }

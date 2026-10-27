@@ -5,7 +5,7 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
-const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel } = await import(uri(source));
+const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus } = await import(uri(source));
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
 
@@ -124,4 +124,11 @@ test('a battle shows who protects it, with the defense left in the tooltip', () 
   assert.match(seal.html, /Bruno/);
   assert.match(seal.label, /^Batalha defendida por Bruno: .*Faltam 3 de dano/);
   assert.equal(permanentFx(creature({})).seals.some(s => s.kind === 'protector'), false);
+});
+
+test('a foretold card explains its foretell cost only in the tooltip', () => {
+  const seals = permanentStatus({ id: 5, name: 'Saw It Coming', foretold: true, foretellCost: '{1}{U}' });
+  assert.equal(seals.length, 1);
+  assert.match(seals[0].label, /^Prevista: quem a previu pode conjurá-la do exílio por \{1\}\{U\}/);
+  assert.equal(permanentStatus({ id: 6, faceDown: true, foretold: true }).length, 0, 'the back says nothing more');
 });

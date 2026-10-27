@@ -16,6 +16,10 @@
     "Quem defende a batalha": [
       { "img": "0.55.0/batalha.webp", "legenda": "Invasão de Zendikar com 3 marcadores de defesa e o escudo dizendo que quem a defende é você." },
       { "img": "0.55.0/batalha-detalhe.webp", "legenda": "O balão explica quem bloqueia, quanto dano falta e o que acontece quando sai o último marcador de defesa." }
+    ],
+    "Cartas previstas à vista": [
+      { "img": "0.55.0/prevista.webp", "legenda": "Saw It Coming prevista na prateleira do exílio, de face para cima, com a etiqueta **Prevista** e o custo {1}{U}, pronta para **Jogar**." },
+      { "img": "0.55.0/prevista-oponente.webp", "legenda": "No exílio do oponente, a carta prevista continua de costas, só com a etiqueta **Prevista**." }
     ]
   },
   "0.54.0": {

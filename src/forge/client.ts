@@ -99,6 +99,9 @@ export interface FCard {
   crewedBy?: string[];
   /** Conta as mágicas conjuradas no turno (Tempestade e afins); só no campo, na mão, na pilha e na zona de comando. */
   countsSpells?: boolean;
+  /** Prevista (foretell) no exílio; para o dono vem de face para cima, com o custo previsto em foretellCost. */
+  foretold?: boolean;
+  foretellCost?: string;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
