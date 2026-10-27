@@ -564,3 +564,20 @@ Alternativas (recomendado: A + B + C, e D junto com o item 32):
 - [ ] **F. Filtros**: só minhas jogadas, só de um oponente, só combate, só remoções.
 
 A decidir antes de começar: se os turnos antigos ficam recolhidos ou abertos; até onde vão os detalhes (custo pago e fase podem poluir); se as compras dos oponentes aparecem com a quantidade (é informação pública na mesa de verdade).
+
+## 37. Registrar partidas abandonadas como concedidas
+
+O histórico de partidas da área de admin só grava a série que termina de verdade (o Forge dá a partida por encerrada). Levantamento feito em 27/10/2026:
+
+- Quem sai da sala no meio, fecha a aba e não volta no prazo de reconexão, ou abandona a partida contra a IA, some do histórico: a partida só vira o contador "abandonada" nas métricas, sem jogadores, decks nem vencedor.
+- Na sala em rede, sair já conta como conceder o jogo atual, e o oponente vê a partida encerrada; mas a série não chega a ser concluída, então nada é gravado.
+- Com isso, as estatísticas por deck e por jogador contam só quem jogou até o fim, e quem costuma desistir de partidas perdidas não aparece.
+
+Alternativas (recomendado: A + B):
+
+- [ ] **A. Gravar como concessão**: ao encerrar uma partida abandonada, gravar a linha do histórico com os jogos já disputados, o jogo atual como derrota de quem saiu (motivo "concedeu") e a vitória da série para quem ficou.
+- [ ] **B. Marcar o jeito que acabou**: um campo novo na linha (concluída, concedida, abandonada por queda) para filtrar na área de admin e não misturar com as partidas jogadas até o fim.
+- [ ] **C. Abandono antes do primeiro turno**: não gravar nada quando ninguém chegou a jogar (mulligan, sala que nem começou), para não encher o histórico.
+- [ ] **D. Contra a IA**: gravar também as partidas abandonadas contra a IA, ou deixar só as salas em rede.
+
+A decidir antes de começar: se a queda sem volta conta como concessão de quem caiu (e se for todo mundo, quem perde); em Commander, quando um jogador sai e os outros continuam, se a saída dele já entra no histórico ou só no fim da partida.
