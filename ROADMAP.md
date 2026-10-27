@@ -492,3 +492,52 @@ Alternativas (recomendado: A, B e C primeiro; D e E em seguida):
 - [x] **G. Conversa curta na sala** (0.51.0): mensagens rápidas prontas ("Já volto", "Pode começar", "Vou trocar o deck"), sem texto livre para não precisar de moderação.
 
 A decidir antes de começar: se o começo continua automático quando a sala enche ou passa a depender do anfitrião (D); se o deck dos outros aparece antes da partida ou só o comandante (E); se o computador pode ocupar lugar em sala pública ou só em privada (C).
+
+## 34. Filtro de formato também nos meus decks
+
+Ao escolher um formato, só os decks prontos são filtrados; os decks do próprio jogador continuam todos na lista, inclusive os de outro formato. Levantamento feito em 27/10/2026:
+
+- Na biblioteca de decks (Gerenciar decks), o seletor "Formato" filtra só a seção "Decks prontos" (`renderLibrary` em `deckbuilder.ts`); "Meus decks" usa só o nome e as cores.
+- Na escolha de deck da tela inicial, os decks prontos passam por `allowed()`, mas "Meus decks" passa só pela busca e pelas cores (`refresh` em `lobby.ts`).
+
+- [ ] Aplicar o formato também a "Meus decks" nas duas telas, com o contador mostrando quantos aparecem de quantos existem.
+- [ ] Mensagem de lista vazia que diga que há decks de outros formatos, com o atalho "Mostrar decks incompatíveis" que já existe na tela inicial.
+
+A decidir antes de começar: se o deck de formato "Livre" aparece em todos os formatos; se o deck que existe no formato mas está incompleto ou inválido some da lista ou aparece marcado.
+
+## 35. Bracket de cada deck
+
+Registrar o bracket (a faixa de poder oficial do Commander: 1 Exibição, 2 Básico, 3 Melhorado, 4 Otimizado, 5 cEDH) de cada deck de Commander, tanto dos decks prontos quanto dos decks do jogador, para combinar partidas de força parecida. Só vale para Commander. Levantamento feito em 27/10/2026:
+
+- Hoje nenhum deck guarda o bracket: os decks prontos (`shared/starter-decks.json`) têm nome, cartas, formato e preço; os do jogador, o mesmo sem o preço.
+- Parte do bracket dá para calcular pelas cartas, mas o resto é intenção de quem montou o deck: um deck sem nada que pese pode ser 1 ou 2. Por isso o jogador escolhe, mas nunca abaixo do mínimo calculado.
+
+**Onde fica guardado** (sem consultas repetidas):
+
+- Decks prontos: o bracket fica no próprio código, em `shared/starter-decks.json`, como o preço. Calculado uma vez pelo script e conferido à mão.
+- Decks do jogador: o bracket (o mínimo calculado e o escolhido) fica no dispositivo, junto com o deck. O mínimo só é recalculado quando a lista de cartas muda, e o cálculo é todo local, com as listas abaixo; nada de consultar sites ao abrir a biblioteca ou escolher deck.
+- As listas de cartas que pesam no cálculo ficam em arquivos do código (como `shared/commander-legality.json`), mantidas à mão depois de alimentadas uma vez por script.
+
+**O que entra no cálculo**: tudo o que as regras de bracket olham.
+
+- Game Changers (quantos).
+- Destruição de terrenos em massa.
+- Turnos extras (em sequência).
+- Combos de duas cartas (os que ganham o jogo ou travam a mesa cedo).
+- Tutores (quantos).
+
+**De onde vêm as listas** (decidido, conferido em 27/10/2026):
+
+- **Scryfall** para as listas de cartas: `is:gamechanger` (53 cartas, a lista oficial), `otag:mass-land-denial` (106), `otag:extra-turn` (53) e `otag:tutor` (1120, a filtrar: a regra se preocupa com tutores eficientes). É o mesmo caminho da legalidade do Commander (`update-commander-legality.py`), tem as listas completas e uma API estável.
+- **Commander Spellbook** para os combos de duas cartas: é a base de combos que o próprio Archidekt usa, permite filtrar por `cards=2 legal:commander` e cada combo traz um `bracketTag` que separa os combos que importam para o bracket.
+- O Archidekt fica de fora como fonte das listas: os sinais por carta (`gameChanger`, `extraTurns`, `massLandDenial`, `tutor`, `twoCardComboIds`) só vêm dentro de um deck, sem uma lista avulsa. Serve só para trazer o `edhBracket` escolhido pelo dono na importação por link.
+- O Commander Spellbook também tem uma rota que estima o bracket de um deck (`/estimate-bracket`), útil para conferir o cálculo local nos decks prontos, não para usar a cada deck.
+
+- [ ] Script para alimentar as listas (Scryfall e Commander Spellbook) em arquivos do código; depois disso, ajustes à mão.
+- [ ] Cálculo local do bracket mínimo com todos os sinais acima, explicando o porquê ("3 Game Changers: …; turno extra: …").
+- [ ] Bracket dos decks prontos de Commander em `shared/starter-decks.json`, conferido à mão, com o selo na escolha de deck e na biblioteca.
+- [ ] Bracket dos decks do jogador guardado no dispositivo: o jogador escolhe a partir do mínimo, nunca abaixo; se o deck ganhar uma carta que sobe o mínimo, o bracket sobe junto.
+- [ ] Na importação por link do Archidekt, trazer o `edhBracket` do deck quando vier preenchido (respeitando o mínimo calculado).
+- [ ] Mostrar o bracket de cada lugar na sala de espera e, talvez, filtrar a busca de salas e a escolha de deck por bracket.
+
+A decidir antes de começar: quais tutores contam (a lista do Scryfall é ampla demais); quais `bracketTag` do Commander Spellbook entram como combo de duas cartas; o que fazer com os decks do jogador já salvos (calcular na primeira abertura depois da atualização e guardar).
