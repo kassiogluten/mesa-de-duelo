@@ -90,6 +90,7 @@ public final class Main {
             server.admin(admin);
             Accounts accounts = Accounts.fromEnvironment(store.dir().getParent());
             server.accounts(accounts);
+            admin.accounts(accounts);
             server.start();
             System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
             System.out.printf("Histórico de partidas em %s%n", history.dir());

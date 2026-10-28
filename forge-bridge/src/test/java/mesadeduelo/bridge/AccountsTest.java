@@ -181,4 +181,18 @@ public class AccountsTest {
         JsonObject jwks = new JsonObject(); var list = new com.google.gson.JsonArray(); list.add(jwk); jwks.add("keys", list);
         assertEquals(pub, GoogleIdToken.GoogleKeys.parse(jwks).get("abc"));
     }
+
+    @Test public void adminSeesOnlyTheCounts() throws IOException {
+        Accounts a = accounts();
+        enter(a, "1"); enter(a, "1"); enter(a, "2");
+        Admin admin = new Admin(new FeedbackStore(tmp.getRoot().toPath().resolve("relatos"), 1L << 30, java.time.Duration.ofDays(90), 0), com.google.gson.JsonArray::new, null, "abre-te", now::get);
+        Admin.Response login = admin.handle("POST", "login", null, "{\"password\":\"abre-te\"}".getBytes(StandardCharsets.UTF_8), "ip");
+        String auth = "Bearer " + json(login).get("token").getAsString();
+        assertFalse("off without accounts", json(admin.handle("GET", "partidas", auth, new byte[0], "ip")).has("contas"));
+        admin.accounts(a);
+        JsonObject contas = json(admin.handle("GET", "partidas", auth, new byte[0], "ip")).getAsJsonObject("contas");
+        assertEquals(2, contas.get("total").getAsInt());
+        assertEquals(3, contas.get("aparelhos").getAsInt());
+        assertEquals(2, contas.size());
+    }
 }

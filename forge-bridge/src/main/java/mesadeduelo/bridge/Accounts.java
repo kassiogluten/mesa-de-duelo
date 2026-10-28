@@ -87,6 +87,8 @@ final class Accounts {
         Accounts a = new Accounts(base.resolve("contas"), google, System::currentTimeMillis);
         Metrics.gauge("mesa.accounts", "Contas de jogadores", a, Accounts::count);
         Metrics.gauge("mesa.accounts.sessions", "Sessões de conta abertas (aparelhos logados)", a, Accounts::sessionCount);
+        // Séries com zero desde o início, para o painel não ficar vazio antes do primeiro login.
+        for (String result : new String[]{"ok", "recusado", "limite", "erro"}) loginCounter(result);
         return a;
     }
 

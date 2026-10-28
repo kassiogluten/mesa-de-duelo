@@ -171,7 +171,7 @@ Tudo desta fase fica atrás de `mesa:dev`. Por isso, ela não muda a versão nem
 - [x] Teste com um ID token falso assinado por uma chave de teste (`AccountsTest`), em vez do `test-protocol.mjs`: as rotas são HTTP e são testadas direto.
 - [ ] Testar de ponta a ponta com o client ID real (computador, Android e iPhone com o PWA instalado).
 - [x] Métricas na ponte: `mesa_accounts` (contas), `mesa_accounts_sessions` (aparelhos logados) e `mesa_accounts_logins_total{result=ok|recusado|limite|erro}`.
-- [ ] Painel no Grafana e quadro no admin com essas métricas.
+- [x] Painel no Grafana (linha "Contas dos jogadores": contas, aparelhos conectados e logins por hora) e, no admin, o total de contas e de aparelhos no resumo da aba Partidas.
 
 ### Fase 2: sincronizar Meus decks (0.64.0)
 

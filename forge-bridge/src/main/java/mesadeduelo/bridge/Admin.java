@@ -44,7 +44,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  * POST login {password} devolve {token, expiresAt}; as outras rotas pedem "Authorization: Bearer <token>".
  * Erros de senha contam por IP (só o resumo, como nos relatos): 5 em 15 minutos e o login fica bloqueado.
  *
- *   GET    partidas                partidas e salas vivas na ponte (quem joga, conectado ou não, turno)
+ *   GET    partidas                partidas e salas vivas na ponte (quem joga, conectado ou não, turno) e, com as contas
+ *                                  ligadas, {contas: {total, aparelhos}}
  *   GET    historico[/AAAA-MM]     {meses, mes, partidas}: as partidas concluídas do mês (o mais recente sem mês)
  *   GET    historico/AAAA-MM.jsonl o arquivo do mês, para baixar
  *   GET    relatos                 índice com o estado de cada relato
@@ -69,6 +70,8 @@ final class Admin {
     private final java.util.function.Supplier<JsonArray> matches;
     /** Partidas concluídas; null nos testes que não usam o histórico. */
     private final MatchHistory history;
+    /** Resumo das contas dos jogadores; null com as contas desligadas. */
+    private volatile Accounts accounts;
     private final byte[] password;
     private final FeedbackRateLimit failures = new FeedbackRateLimit(MAX_FAILURES, FAILURE_WINDOW);
     /** Sessões abertas: token → fim. Só em memória: reiniciar a ponte pede login de novo. */
@@ -95,6 +98,7 @@ final class Admin {
     }
 
     boolean enabled() { return password != null; }
+    void accounts(Accounts a) { accounts = a; }
 
     private static byte[] sha(String text) {
         try { return MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)); }
@@ -109,7 +113,7 @@ final class Admin {
             if (!authorized(authorization)) return Response.error(401, "Entre de novo: a sessão acabou ou a senha mudou.");
             if (path.equals("logout") && "POST".equals(method)) { sessions.remove(token(authorization)); return Response.json(200, new JsonObject()); }
             if (path.equals("relatos") && "GET".equals(method)) return list();
-            if (path.equals("partidas") && "GET".equals(method)) { JsonObject o = new JsonObject(); o.add("partidas", matches.get()); return Response.json(200, o); }
+            if (path.equals("partidas") && "GET".equals(method)) return liveMatches();
             if ((path.equals("historico") || path.startsWith("historico/")) && "GET".equals(method)) return history(path.substring("historico".length()));
             String[] parts = path.split("/");
             if (parts.length >= 2 && parts[0].equals("relatos")) {
@@ -159,6 +163,18 @@ final class Admin {
         if (end == null) return false;
         if (end < clock.getAsLong()) { sessions.remove(token(authorization)); return false; }
         return true;
+    }
+
+    private Response liveMatches() {
+        JsonObject o = new JsonObject();
+        o.add("partidas", matches.get());
+        Accounts a = accounts;
+        if (a != null && a.enabled()) {
+            JsonObject c = new JsonObject();
+            c.addProperty("total", a.count()); c.addProperty("aparelhos", a.sessionCount());
+            o.add("contas", c);
+        }
+        return Response.json(200, o);
     }
 
     private Response list() {
