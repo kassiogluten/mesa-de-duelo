@@ -15,6 +15,7 @@ import forge.game.keyword.Keyword;
 import forge.game.keyword.KeywordView;
 import forge.game.player.Player;
 import forge.game.staticability.StaticAbility;
+import forge.game.trigger.Trigger;
 import forge.game.zone.ZoneType;
 
 /**
@@ -39,11 +40,14 @@ final class PermanentDetails {
         if (c.getZone() != ZoneType.Battlefield) return;
         if (c.getOwner() != null && c.getController() != null && c.getOwner().getId() != c.getController().getId()) o.addProperty("owner", c.getOwner().getId());
         if (c.getShieldCount() > 0) o.addProperty("shields", c.getShieldCount());
+        // Batalhas: quem as defende (é quem bloqueia os atacantes dela e a quem o dano a ela é causado).
+        if (c.getProtectingPlayer() != null) o.addProperty("protector", c.getProtectingPlayer().getId());
         if (!c.isFaceDown()) chosen(o, c);
         if (game == null) return;
         try {
             Card gc = game.findByView(c);
             if (gc != null && !c.isFaceDown()) devotion(o, gc);
+            if (gc != null) states(o, gc);
             if (gc == null || !gc.isGoaded()) return;
             JsonArray by = new JsonArray();
             for (Player p : gc.getGoaded()) by.add(p.getId());
@@ -89,6 +93,56 @@ final class PermanentDetails {
             if (compare.matches("LT\\d+")) return Integer.parseInt(compare.substring(2));
         }
         return null;
+    }
+
+    /**
+     * Estados que uma mecânica liga uma vez e o Forge guarda na carta: monstruosa, renomada, suspeita, selada e
+     * tripulada no turno (com quem selou ou tripulou), exaurida (não desvira na próxima etapa de desvirar de quem a
+     * controla), detida, atrelada e caso solucionado. Vão em {@code states}, só os que valem.
+     */
+    static void states(JsonObject o, Card gc) {
+        JsonArray states = new JsonArray();
+        if (gc.isMonstrous()) states.add("monstrous");
+        if (gc.isRenowned()) states.add("renowned");
+        if (gc.isSuspected()) states.add("suspected");
+        if (gc.isSaddled()) { states.add("saddled"); names(o, "saddledBy", gc.getSaddledByThisTurn()); }
+        if (!gc.getCrewedByThisTurn().isEmpty()) { states.add("crewed"); names(o, "crewedBy", gc.getCrewedByThisTurn()); }
+        if (gc.getController() != null && gc.isExertedBy(gc.getController())) states.add("exerted");
+        if (gc.isDetained()) states.add("detained");
+        if (gc.isHarnessed()) states.add("harnessed");
+        if (gc.isSolved()) states.add("solved");
+        if (!states.isEmpty()) o.add("states", states);
+    }
+    private static void names(JsonObject o, String key, Iterable<Card> cards) {
+        if (cards == null) return;
+        JsonArray names = new JsonArray();
+        for (Card c : cards) if (!c.isFaceDown()) names.add(c.getName());
+        if (!names.isEmpty()) o.add(key, names);
+    }
+
+    /**
+     * Cartas que contam as mágicas conjuradas no turno: Tempestade ou, no script do Forge, uma contagem ou condição de
+     * mágicas do turno (Count$ThisTurnCast, ActivatorThisTurnCast, as mágicas antes desta). Só no campo, na mão,
+     * na pilha e na zona de comando, onde a contagem pode mudar uma decisão.
+     */
+    static void countsSpells(JsonObject o, CardView c, Game game) {
+        if (game == null || c.getZone() == null || !SPELL_COUNT_ZONES.contains(c.getZone())) return;
+        try {
+            Card gc = game.findByView(c);
+            if (gc != null && countsSpells(gc)) o.addProperty("countsSpells", true);
+        } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
+    }
+    private static final java.util.Set<ZoneType> SPELL_COUNT_ZONES = java.util.EnumSet.of(ZoneType.Battlefield, ZoneType.Hand, ZoneType.Stack, ZoneType.Command);
+
+    static boolean countsSpells(Card gc) {
+        if (gc.hasKeyword(Keyword.STORM)) return true;
+        for (String value : gc.getSVars().values()) if (mentionsSpellCount(value)) return true;
+        for (Trigger t : gc.getTriggers()) for (String value : t.getMapParams().values()) if (mentionsSpellCount(value)) return true;
+        for (StaticAbility st : gc.getStaticAbilities()) for (String value : st.getMapParams().values()) if (mentionsSpellCount(value)) return true;
+        return false;
+    }
+    private static boolean mentionsSpellCount(String value) {
+        return value != null && (value.contains("ThisTurnCast_") || value.contains("ActivatorThisTurnCast") || value.contains("SpellsCastThisTurn") || value.contains("CurrentCastSpells"));
     }
 
     /** O que a carta escolheu ao entrar ou resolver (tipo, cores, carta nomeada, jogador, número, modo); só vai quando há algo. */

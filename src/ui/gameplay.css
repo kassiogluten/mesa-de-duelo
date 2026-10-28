@@ -435,6 +435,14 @@
 .player-counter.land-plays svg { color: #c9b98f; }
 .player-counter.land-plays.done { opacity: .55; }
 .player-counter.land-plays small { color: #b8ad95; }
+.player-counter.spells-cast { border-color: #b46cd8; color: #f0dcff; }
+.player-counter.spells-cast svg { color: #e7a6ff; }
+.player-counter.blessing { border-color: #e9d48a; color: #fff3c9; }
+.player-counter.blessing svg { color: #f4dd86; }
+.player-counter.speed { border-color: #e07a4a; color: #ffd9c4; }
+.player-counter.speed svg { color: #ff9a62; }
+.player-counter.speed small { color: #d9a98f; }
+.player-counter.speed.max { background: linear-gradient(135deg, #4a1d0cf2, #1d0b04f2); border-color: #ff7a3a; }
 /* Tempo do último turno: discreto, para não competir com vida e marcadores. */
 .player-counter.last-turn { border-color: #7d8aa5; color: #c8d4f0; font-variant-numeric: tabular-nums; }
 .player-counter.last-turn svg { color: #9fb0d1; }

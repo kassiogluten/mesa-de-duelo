@@ -30,7 +30,7 @@ import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
-import { playerStatusHTML, playerStatusText } from './playerStatus';
+import { playerStatusHTML, playerStatusText, turnSpellsTotal } from './playerStatus';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { choiceOrder, isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
@@ -704,10 +704,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function exileCaption(s: FState, { card, suspended, choosing }: ReturnType<typeof exileShelfCards>[number]) {
     const playable = canPlayExileCard(s, card.id, s.input.gen);
     const time = card.counters?.TIME ?? 0;
-    const status = choosing ? 'Conjurar agora' : suspended ? time > 0 ? `Suspensa · ${time}` : 'Aguardando resolução' : playable ? card.land ? 'Jogar terreno' : 'Conjurar' : 'Aguardando o momento de jogar';
+    const status = choosing ? 'Conjurar agora' : suspended ? time > 0 ? `Suspensa · ${time}` : 'Aguardando resolução'
+      : card.foretold ? `Prevista${card.foretellCost ? `: conjure por ${card.foretellCost}` : ''}${playable ? '' : ', a partir do turno seguinte ao da previsão'}`
+      : playable ? card.land ? 'Jogar terreno' : 'Conjurar' : 'Aguardando o momento de jogar';
     const caption = choosing ? 'Conjurar' : suspended ? time > 0 ? 'Suspensa' : 'Na pilha' : playable ? 'Jogar' : 'Aguarde';
     return { playable, time, status, caption };
   }
+
+  /** Etiqueta da carta prevista: "Prevista" e, para o dono, o custo previsto. */
+  const foretoldTag = (c: FCard) => `<div class="zone-tag foretold" title="${esc(c.foretellCost ? `Prevista: conjure por ${c.foretellCost}` : 'Prevista')}">Prevista${c.foretellCost ? ` ${manaHTML(c.foretellCost)}` : ''}</div>`;
 
   function renderExileShelf(s: FState) {
     const cards = exileShelfCards(s);
@@ -723,6 +728,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const selecting = canSelectExileCard(s, card.id, s.input.gen);
       const selected = selectedForInput(s, card.id);
       return `<div class="exile-slot"><div class="exile-card${playable ? ' playable' : ''}${selecting ? ' selectable' : ''}${selected ? ' choice-selected' : ''}${choosing ? ' suspend-ready' : ''}${!playable && !choosing && !selecting ? ' waiting' : ''}" data-fid="${card.id}" data-exile-card role="button" tabindex="0"${selecting ? ` aria-pressed="${selected}"` : ''} aria-label="${esc(label(card))}, exílio. ${status}${permission && suspended ? '. Também pode ser jogada pela permissão de exílio' : ''}">${face(card, 'normal')}
+        ${card.foretold ? foretoldTag(card) : ''}
         ${suspended ? `<span class="exile-time" title="${time} ${time === 1 ? 'marcador de tempo' : 'marcadores de tempo'}">${COUNTER_ICON.TIME}<b>${time}</b></span>` : ''}
         <span class="exile-status" title="${esc(status)}">${caption}</span>${selectedBadge(s, card)}</div>${inspectButton(card)}</div>`;
     }).join('')}</div>`);
@@ -910,7 +916,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     arena.style.gridTemplateRows = `${header} minmax(0, 1fr) 2px minmax(0, 1fr) ${Math.max(hand.height, bottom)}px`;
   }
 
-  /** Marcadores e palavras-chave que encostam no P/T, um no outro ou passam da metade da carta viram um selo só. */
+  /** Marcadores e palavras-chave que encostam no P/T, um no outro ou cobrem mais de dois terços da carta viram um selo só. */
   function layoutCounters() {
     root.querySelectorAll<HTMLElement>('.bfc:has(> .ctr-sum)').forEach(card => {
       const [counters, kws, pt] = ['.counters', '.kws', '.pt'].map(sel => card.querySelector<HTMLElement>(`:scope > ${sel}`));
@@ -923,8 +929,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       }
       const box = (el: HTMLElement | null) => el && { left: el.offsetLeft, top: el.offsetTop, right: el.offsetLeft + el.offsetWidth, bottom: el.offsetTop + el.offsetHeight };
       const [c, k] = [box(counters), box(kws)];
-      const half = card.offsetHeight / 2;
-      const crowded = (counters && counters.scrollWidth > counters.clientWidth + 1) || (c && c.top < half) || (k && k.top < half)
+      // Dois terços da carta, com uma folga para três linhas de habilidades caberem certinho.
+      const limit = card.offsetHeight / 3 - 2;
+      const crowded = (counters && counters.scrollWidth > counters.clientWidth + 1) || (c && c.top < limit) || (k && k.top < limit)
         || (c && k && c.left < k.right && k.left < c.right && c.top < k.bottom && k.top < c.bottom);
       card.classList.toggle('crowded', !!crowded);
     });
@@ -1217,7 +1224,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function trackPlayerCounters(players: FPlayer[]) {
     counterBumps = new Map();
     for (const p of players) {
-      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}), ...(p.monarch ? { MONARCH: 1 } : {}) };
+      const before = lastPlayerCounters.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}), ...(p.monarch ? { MONARCH: 1 } : {}), ...(p.spellsCast ? { SPELLS: p.spellsCast } : {}),
+        ...(p.blessing ? { BLESSING: 1 } : {}), ...(p.speed ? { SPEED: p.speed } : {}) };
       if (before) {
         const changed = new Set([...Object.keys(before), ...Object.keys(now)].filter(k => (before[k] ?? 0) !== (now[k] ?? 0) && (now[k] ?? 0) > 0));
         if (changed.size) counterBumps.set(p.id, changed);
@@ -1225,9 +1233,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lastPlayerCounters.set(p.id, { ...now });
     }
   }
-  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, client?.state?.activePlayer) + dungeonText(p);
+  const spellsTotal = () => turnSpellsTotal(client?.state?.players ?? []);
+  const playerCountersText = (p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, client?.state?.activePlayer, spellsTotal()) + dungeonText(p);
   const playerCounters = (p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, counterBumps.get(p.id), openCounter, p.ringTempted),
-    playerStatusHTML(p, client?.state?.activePlayer, openCounter, counterBumps.get(p.id)) + dungeonBadgesHTML(p, openCounter));
+    playerStatusHTML(p, client?.state?.activePlayer, openCounter, counterBumps.get(p.id), spellsTotal()) + dungeonBadgesHTML(p, openCounter));
 
   function emblems(p: FPlayer) {
     const list = p.emblems ?? [];
@@ -1399,7 +1408,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const shelf = new Map(zoneKind === 'exile' && !groupIds ? exileShelfCards(s).map(entry => [entry.card.id, exileCaption(s, entry)]) : []);
     const tags = (c: FCard) => {
       const caption = shelf.get(c.id);
-      return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
+      return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.foretold ? foretoldTag(c) : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
     };
     const card = (c: FCard) => `<div class="zone-card">${canUse(s, c)
       ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`

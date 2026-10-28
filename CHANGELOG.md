@@ -6,6 +6,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.58.0] - 2026-10-28
+
+### Novo
+
+- **Mágicas do turno.** Quando há na mesa uma carta que conta as mágicas conjuradas no turno, como as de Tempestade (Grapeshot, Brain Freeze) ou Thousand-Year Storm, um selo com um raio aparece ao lado do retrato de cada jogador que já conjurou, com quantas foram. Tocando no selo, o balão diz também o total da mesa, que é o que a Tempestade conta. Sem uma carta dessas à vista, nada aparece.
+- **Bênção da cidade e Velocidade.** Quem ganha a bênção da cidade (Ascend, de Ixalan) passa a ter o selo **Bênção** ao lado do retrato, para a partida toda. Com cartas de Start your engines!, a velocidade de cada jogador aparece num selo de velocímetro, de 1 a 4, que fica destacado na velocidade máxima. Tocando nos selos, o balão explica de onde vem a bênção e como a velocidade sobe.
+- **Estados das permanentes.** Criaturas e outras permanentes ganham um ícone pequeno embaixo da carta quando ficam monstruosas, renomadas, suspeitas, seladas, tripuladas, exauridas, detidas, atreladas, ou quando um Caso é solucionado. Passando o mouse (ou no inspetor), o balão diz o nome do estado e o que ele muda, como "Exaurida: não desvira na próxima etapa de desvirar de quem a controla" ou quem tripulou o veículo neste turno.
+- **Quem defende a batalha.** As batalhas mostram embaixo da carta, ao lado dos marcadores de defesa, um escudo com o nome de quem as defende. O balão lembra que é esse jogador quem bloqueia os atacantes, quanto dano falta para derrotá-la e o que acontece quando ela cai.
+- **Cartas previstas à vista.** As cartas que você prevê (Foretell) agora aparecem de face para cima no seu exílio, com a etiqueta **Prevista** e o custo previsto, e ficam na prateleira do exílio ao lado da mão: quando dá para conjurar, toque nela, como uma carta da mão. Antes, até para você ela ficava de costas. Os oponentes continuam vendo só o verso, agora com a etiqueta **Prevista**.
+- **Cinco decks do meta do Padrão.** Chegam como decks prontos cinco dos arquétipos mais jogados hoje no Padrão: **Lifegain**, **Dimir Reanimator**, **Jeskai Artifacts**, **Azorius Momo** e **Rakdos Lizards**, com as listas de torneio do MTGGoldfish (60 cartas mais 15 de sideboard). Os outros arquétipos do topo, como Dimir Midrange, Mono-Green Landfall e Izzet Spellementals, já estavam entre os decks prontos.
+- **Novo formato: Sacola 50.** Ao lado do Pauper, o formato **Sacola 50** usa as cartas do Legacy, com as banidas dele, em decks de pelo menos 60 cartas e sideboard de até 15. A regra da comunidade é o deck inteiro custar até R$ 50: a mesa não confere o preço, só lembra o limite embaixo dos formatos e no montador, para você combinar com o oponente. A busca de cartas do montador mostra só cartas do Legacy num deck Sacola 50.
+- **Sete decks prontos de Sacola 50**, tirados das listas dos torneios SACOLA50 e de decks da comunidade: **Delver Azul**, **Fantasmas de Orzhov**, **Veneno da Floresta** (infectar), **Fúria Vermelha**, **Tempestade de Ciclagem**, **Sacrifício dos Myr** e **Energia Jeskai**. Eles aparecem primeiro na lista quando o formato está escolhido e podem ser usados por você ou pelo computador.
+- **Voar e Toque mortífero na borda da carta.** As criaturas que voam ganham uma asinha, e as com toque mortífero, uma caveira verde, na coluna de ícones da borda esquerda da carta, ao lado do olho da Vigilância e das pegadas do Atropelar. Assim dá para reconhecer essas criaturas de relance, mesmo quando as habilidades viram um selo só.
+
+### Mudou
+
+- **Mais marcadores à vista na carta.** Os marcadores e as habilidades de uma permanente agora podem ocupar até dois terços da altura da carta antes de virarem um único selo com o total, em vez de só metade. Com vários marcadores e habilidades ao mesmo tempo, você continua vendo cada um sem precisar abrir o balão.
+
 ## [0.57.0] - 2026-10-28
 
 ### Novo

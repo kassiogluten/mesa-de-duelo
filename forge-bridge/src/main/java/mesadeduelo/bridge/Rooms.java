@@ -128,7 +128,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     @Override public void onConnect(Channel ch) {
         JsonObject hello = new JsonObject();
         hello.addProperty("type", "hello");
-        JsonArray formats = new JsonArray(); formats.add("free"); formats.add("pauper"); formats.add("commander");
+        JsonArray formats = new JsonArray(); formats.add("free"); formats.add("pauper"); formats.add("sacola50"); formats.add("commander");
         hello.add("supportedFormats", formats);
         MatchConfig.versions(hello);
         BridgeServer.send(ch, hello.toString());

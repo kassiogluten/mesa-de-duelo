@@ -46,6 +46,14 @@ public class BridgeRulesTest {
             assertTrue(id + ": " + result.json(), result.valid());
         });
         assertNotNull(Decks.random("pauper"));
+        assertNotNull(Decks.random("sacola50"));
+    }
+    @Test public void sacolaUsesLegacyCardsAndBans() {
+        assertTrue(DeckValidation.validate(deck("Island",56,"Brainstorm",4),"sacola50").valid());
+        has(DeckValidation.validate(deck("Island",56,"Mental Misstep",4),"sacola50"),"banned-card");
+        has(DeckValidation.validate(deck("Island",59),"sacola50"),"main-too-small");
+        JsonObject d=deck("Island",60); d.add("sideboard",entries("Island",16)); has(DeckValidation.validate(d,"sacola50"),"sideboard-too-large");
+        assertEquals(3,new MatchConfig("sacola50","bo3").rules().getGamesPerMatch());
     }
     @Test public void minimumIsSixtyNotExactlySixty() {
         has(validate(deck("Island",59)), "main-too-small");

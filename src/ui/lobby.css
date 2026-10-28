@@ -31,6 +31,8 @@
 .choice-segments button[aria-pressed=true], .choice-segments button[aria-selected=true], .opponent-card[aria-pressed=true] { color: var(--on-ink); border-color: var(--on-line); background: var(--on-bg); box-shadow: 0 2px 4px #0003; }
 .choice-segments button:hover:not(:disabled, [aria-pressed=true], [aria-selected=true]), .opponent-card:hover:not(:disabled, [aria-pressed=true]) { color: var(--ink); }
 .choice-segments button:disabled, .opponent-card:disabled { cursor: default; opacity: .55; }
+/* Quatro formatos: 2×2 na barra lateral, uma linha só quando houver largura. */
+.format-choice .choice-segments { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
 .setup-explanation { font-size: 13px; line-height: 1.5; color: var(--muted); margin: var(--label-gap) 0 0; }
 .opponent-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .opponent-card { display: flex; align-items: center; justify-content: center; text-align: center; min-height: var(--control-h); border-radius: var(--control-radius); border: 1px solid var(--control-line); background: var(--control-bg); padding: 6px 8px; color: var(--muted); cursor: pointer; }
@@ -64,7 +66,8 @@
 }
 .match-ready .arena-btn.big:active:not(:disabled):not(:focus-visible) { transform: scale(.96); }
 @media (prefers-reduced-motion: reduce) { .match-ready .arena-btn.big:active:not(:disabled):not(:focus-visible) { transform: none; } }
-.match-ready .lobby-status { margin: 12px 0 0; font-size: 13px; }
+/* Erros longos (ex.: deck inválido com várias cartas) não empurram o botão: a mensagem rola dentro de uma altura fixa. */
+.match-ready .lobby-status { margin: 12px 0 0; font-size: 13px; max-height: 7.5em; overflow-y: auto; overscroll-behavior: contain; overflow-wrap: anywhere; scrollbar-width: thin; scrollbar-color: #ffffff26 transparent; }
 .match-ready .lobby-status:empty { display: none; }
 .deck-collection { min-width: 0; grid-column: 1; grid-row: 1; }
 .deck-shelf { margin: 0 0 28px; }
@@ -201,7 +204,7 @@
   .chosen-deck .chosen-art { display: block; top: 50%; width: 34px; height: 42px; transform: translateY(-50%); }
   .chosen-deck strong { font-size: 15px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
   .match-ready .arena-btn.big { width: auto; min-width: 120px; padding-inline: 14px; gap: 8px; font-size: 16px; letter-spacing: .025em; }
-  .match-ready .lobby-status { grid-column: 1/-1; margin: 0; font-size: 12px; }
+  .match-ready .lobby-status { grid-column: 1/-1; margin: 0; font-size: 12px; max-height: 5em; }
 }
 @media (max-width: 360px) {
   .match-ready .arena-btn.big { min-width: 96px; }

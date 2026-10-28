@@ -43,7 +43,7 @@ final class DeckValidation {
     }
 
     static Result validate(JsonElement payload, String format) {
-        if (!Set.of("free", "pauper", "commander").contains(format)) throw new IllegalArgumentException("Formato não suportado.");
+        if (!Set.of("free", "pauper", "sacola50", "commander").contains(format)) throw new IllegalArgumentException("Formato não suportado.");
         JsonArray issues = new JsonArray();
         Deck deck = new Deck("Deck");
         if (payload != null && payload.isJsonPrimitive() && payload.getAsJsonPrimitive().isString()) {
@@ -113,24 +113,31 @@ final class DeckValidation {
         return normalized == null ? card : normalized;
     }
 
+    /** Nome que o jogador vê nas mensagens de cada formato de 60 cartas. */
+    private static String formatLabel(String format) { return "sacola50".equals(format) ? "Sacola 50" : "Pauper"; }
+
     private static void checkRules(Deck deck, String format, JsonArray issues) {
         int main = deck.getMain().countAll(), side = deck.getOrCreate(DeckSection.Sideboard).countAll();
-        if (main < ("pauper".equals(format) ? 60 : 1))
-            issue(issues, "main-too-small", "pauper".equals(format) ? "Pauper exige pelo menos 60 cartas no deck principal." : "Adicione pelo menos uma carta ao deck.", null, "main");
+        boolean constructed = "pauper".equals(format) || "sacola50".equals(format);
+        if (main < (constructed ? 60 : 1))
+            issue(issues, "main-too-small", constructed ? formatLabel(format) + " exige pelo menos 60 cartas no deck principal." : "Adicione pelo menos uma carta ao deck.", null, "main");
         if ("commander".equals(format)) { checkCommander(deck, issues); return; }
         if (deck.getOrCreate(DeckSection.Commander).countAll() > 0)
             issue(issues, "wrong-section", "A zona de comando exige o formato Commander.", null, "commander");
-        if (!"pauper".equals(format)) return;
+        if (!constructed) return;
+        boolean pauper = "pauper".equals(format);
+        String label = formatLabel(format);
         if (side > 15) issue(issues, "sideboard-too-large", "O sideboard pode ter até 15 cartas.", null, "sideboard");
-        GameFormat pauper = FModel.getFormats().getPauper();
+        // Sacola 50 usa as cartas e as banidas do Legacy; o limite de preço é combinado entre os jogadores, sem checagem aqui.
+        GameFormat rules = pauper ? FModel.getFormats().getPauper() : FModel.getFormats().getLegacy();
         for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Sideboard}) {
             for (var entry : deck.getOrCreate(section)) {
                 PaperCard card = entry.getKey();
                 String where = section == DeckSection.Main ? "main" : "sideboard";
-                if (UNIVERSAL_BANS.contains(card.getName()) || pauper.getBannedCardNames().contains(card.getName()))
-                    issue(issues, "banned-card", "Esta carta está banida no Pauper.", card.getName(), where);
-                else if (card.getRules().isCustom() || !PauperLegality.permits(card.getName()) || !pauper.getFilterRules().test(card))
-                    issue(issues, "wrong-format", "Esta carta não é permitida no Pauper.", card.getName(), where);
+                if (UNIVERSAL_BANS.contains(card.getName()) || rules.getBannedCardNames().contains(card.getName()))
+                    issue(issues, "banned-card", "Esta carta está banida no " + label + ".", card.getName(), where);
+                else if (card.getRules().isCustom() || (pauper && !PauperLegality.permits(card.getName())) || !rules.getFilterRules().test(card))
+                    issue(issues, "wrong-format", "Esta carta não é permitida no " + label + ".", card.getName(), where);
             }
         }
         Map<String, Integer> counts = poolCounts(deck);
@@ -144,9 +151,9 @@ final class DeckValidation {
         }
         // Keep Forge's construction checks as a backstop for additional engine restrictions.
         String construction = DeckFormat.Constructed.getDeckConformanceProblem(deck);
-        String legality = pauper.getDeckConformanceProblem(deck);
+        String legality = rules.getDeckConformanceProblem(deck);
         if (issues.isEmpty() && construction != null) issue(issues, "construction", "O deck não atende às regras de construção: " + construction, null, null);
-        if (issues.isEmpty() && legality != null) issue(issues, "wrong-format", "O deck contém cartas não permitidas no Pauper: " + legality, null, null);
+        if (issues.isEmpty() && legality != null) issue(issues, "wrong-format", "O deck contém cartas não permitidas no " + label + ": " + legality, null, null);
     }
 
     private static void checkCommander(Deck deck, JsonArray issues) {

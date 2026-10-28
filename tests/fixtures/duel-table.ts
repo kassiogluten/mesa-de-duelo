@@ -65,6 +65,43 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     opp.battlefield[0].goadedBy = [10];
     view.render();
   },
+  /** Mágicas do turno: Grapeshot na mão conta, então os retratos mostram quantas cada um conjurou. */
+  spellsCast() {
+    const [me, opp] = state.players;
+    Object.assign(me, { spellsCast: 2, counters: {} });
+    Object.assign(opp, { spellsCast: 1, counters: {} });
+    me.hand.push(card(305, 'Grapeshot', 10, { creature: false, manaCost: '{1}{R}', typeLine: 'Sorcery', countsSpells: true }));
+    view.render();
+  },
+  /** Bênção da cidade no seu retrato e velocidade nos dois (a do oponente no máximo). */
+  blessingSpeed() {
+    const [me, opp] = state.players;
+    Object.assign(me, { blessing: true, speed: 2, counters: {} });
+    Object.assign(opp, { speed: 4, counters: {} });
+    view.render();
+  },
+  /** Estados de uma vez só: monstruosa, suspeita, exaurida e um veículo tripulado. */
+  oneTimeStates() {
+    const [me, opp] = state.players;
+    me.battlefield.push(card(273, 'Polukranos, World Eater', 10, { manaCost: '{2}{G}{G}', typeLine: 'Legendary Creature — Hydra', power: 8, toughness: 8, counters: { P1P1: 3 }, states: ['monstrous'] }),
+      card(274, 'Glorybringer', 10, { manaCost: '{3}{R}{R}', typeLine: 'Creature — Dragon', power: 4, toughness: 4, keywords: ['FLYING', 'HASTE'], states: ['exerted'], tapped: true }),
+      card(275, 'Smuggler\'s Copter', 10, { manaCost: '{2}', typeLine: 'Artifact Creature — Vehicle', power: 3, toughness: 3, keywords: ['FLYING'], states: ['crewed'], crewedBy: ['Llanowar Elves'] }));
+    opp.battlefield.push(card(276, 'Gruff Triplets', 23, { manaCost: '{3}{G}{G}', typeLine: 'Creature — Satyr Warrior', power: 3, toughness: 3, keywords: ['MENACE'], states: ['suspected'] }));
+    view.render();
+  },
+  /** Batalha do oponente que você defende. */
+  battle() {
+    state.players[1].battlefield.push(card(277, 'Invasion of Zendikar', 23, { creature: false, manaCost: '{3}{G}', typeLine: 'Battle — Siege', counters: { DEFENSE: 3 }, protector: 10 }));
+    view.render();
+  },
+  /** Previstas no exílio: a sua de face para cima, com o custo previsto (dá para conjurar); a do oponente só o verso. */
+  foretold() {
+    const [me, opp] = state.players;
+    me.exile.push(card(278, 'Saw It Coming', 10, { creature: false, manaCost: '{1}{U}{U}', typeLine: 'Instant', foretold: true, foretellCost: '{1}{U}' }));
+    opp.exile.push({ id: 279, controller: 23, tapped: false, token: false, faceDown: true, foretold: true });
+    Object.assign(state, { playableExile: [278], castable: [278] });
+    view.render();
+  },
   /** Dia ou noite na trilha de fases, com as mágicas que quem joga o turno já conjurou. */
   dayNight(time: 'day' | 'night' = 'day', spells = 0, active = 10) {
     Object.assign(state, { dayTime: time, activeSpells: spells, activePlayer: active });

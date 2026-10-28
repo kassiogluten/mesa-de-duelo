@@ -5,7 +5,7 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
-const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel } = await import(uri(source));
+const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus } = await import(uri(source));
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
 
@@ -57,10 +57,13 @@ test('effects never take pointer input and only move without reduced motion', ()
   assert.equal(auraColor('{W}{U}'), '#f2b54c');
 });
 
-test('vigilance and trample get small marks on the left edge, creatures only', () => {
-  const fx = permanentFx(creature({ keywords: ['TRAMPLE', 'VIGILANCE'] }));
-  assert.deepEqual(fx.corner, ['vigilance', 'trample']);
-  assert.match(permanentFxHTML(fx).html, /fx-corner[^]*class="vigilance"[^]*class="trample"/);
+test('flying, vigilance, trample and deathtouch get small marks on the left edge, creatures only', () => {
+  const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'TRAMPLE', 'VIGILANCE', 'FLYING'] }));
+  assert.deepEqual(fx.corner, ['flying', 'vigilance', 'trample', 'deathtouch']);
+  assert.match(permanentFxHTML(fx).html, /fx-corner[^]*class="flying"[^]*class="vigilance"[^]*class="trample"[^]*class="deathtouch"/);
+  assert.match(css, /\.fx-corner i\.flying \{ background-image/);
+  assert.match(css, /\.fx-corner i\.deathtouch \{ background-image/);
+  assert.deepEqual(permanentFx({ id: 4, tapped: false, token: false, keywords: ['FLYING'] }).corner, []);
   assert.deepEqual(permanentFx({ id: 4, tapped: false, token: false, keywords: ['VIGILANCE'] }).corner, []);
   assert.match(css, /\.slot\.attacking:not\(\.tapped\) \.bfc > \.fx-corner i\.vigilance/);
 });
@@ -100,4 +103,35 @@ test('devotion cards show the count, and gods show how much is missing to become
   assert.equal(seal({ colors: ['B'], value: 4 }).label, 'Devoção ao preto: 4.');
   assert.match(seal({ colors: ['B'], value: 4 }).html, /4$/);
   assert.equal(seal(undefined), undefined);
+});
+
+test('one-time states become icon-only seals with the name and what changes in the tooltip', () => {
+  const fx = permanentFx(creature({ states: ['monstrous', 'suspected', 'saddled', 'crewed', 'exerted', 'detained', 'solved'], saddledBy: ['Llanowar Elves'], crewedBy: ['Soul Warden', 'Llanowar Elves'] }));
+  const byKind = Object.fromEntries(fx.seals.map(seal => [seal.kind, seal]));
+  assert.match(byKind['state monstrous'].label, /^Monstruosa: /);
+  assert.match(byKind['state suspected'].label, /ameaça e não pode bloquear/);
+  assert.match(byKind['state saddled'].label, /Selada neste turno por Llanowar Elves/);
+  assert.match(byKind['state crewed'].label, /Tripulada neste turno por Soul Warden e Llanowar Elves/);
+  assert.match(byKind['state exerted'].label, /não desvira na próxima etapa de desvirar/);
+  assert.match(byKind['state detained'].label, /^Detida: /);
+  assert.match(byKind['state solved'].label, /Caso solucionado/);
+  assert.match(byKind['state exerted'].html, /^<svg/);
+  assert.doesNotMatch(byKind['state exerted'].html, /Exaurida/, 'only the icon on the table');
+  assert.match(permanentFxHTML(fx).html, /class="fx-seal state suspected" title="Suspeita/);
+});
+
+test('a battle shows who protects it, with the defense left in the tooltip', () => {
+  const names = { 1: 'Ana', 2: 'Bruno' };
+  const battle = { id: 9, name: 'Invasion of Zendikar', controller: 1, protector: 2, counters: { DEFENSE: 3 }, typeLine: 'Battle — Siege' };
+  const seal = permanentFx(battle, { playerName: id => names[id] }).seals.find(s => s.kind === 'protector');
+  assert.match(seal.html, /Bruno/);
+  assert.match(seal.label, /^Batalha defendida por Bruno: .*Faltam 3 de dano/);
+  assert.equal(permanentFx(creature({})).seals.some(s => s.kind === 'protector'), false);
+});
+
+test('a foretold card explains its foretell cost only in the tooltip', () => {
+  const seals = permanentStatus({ id: 5, name: 'Saw It Coming', foretold: true, foretellCost: '{1}{U}' });
+  assert.equal(seals.length, 1);
+  assert.match(seals[0].label, /^Prevista: quem a previu pode conjurá-la do exílio por \{1\}\{U\}/);
+  assert.equal(permanentStatus({ id: 6, faceDown: true, foretold: true }).length, 0, 'the back says nothing more');
 });

@@ -429,12 +429,12 @@ Prioridade alta (comum em Commander, muda decisões na hora):
 
 Prioridade média (mecânicas de coleções específicas):
 - [x] **Dia e noite** (`Game.isDay` / `isNight`): sol ou lua na trilha de fases, com balão da regra de troca. Some enquanto não for nem dia nem noite.
-- [ ] **Contagem de mágicas no turno** (`Player.getSpellsCastThisTurn`, tempestade): número na trilha de fases ou no retrato quando houver carta na mesa que se importe (Storm, Prowess não precisa).
-- [ ] **Bênção da cidade** (`Player.hasBlessing`, Ascend) e **Velocidade** (`Player.getSpeed`, Aetherdrift): selos no retrato.
-- [ ] **Estados de uma vez só** (`isMonstrous`, `isRenowned`, `isSuspected`, `isSaddled`, `getCrewedByThisTurn`, `isExertedThisTurn`, `isDetained`, `isHarnessed`, `isSolved`): ícone pequeno na permanente; o nome em português e o que muda ficam no balão e no inspetor. Suspeita e Exaurida mudam o combate, as outras habilitam habilidades.
+- [x] **Contagem de mágicas no turno** (`Player.getSpellsCastThisTurn`, tempestade): número na trilha de fases ou no retrato quando houver carta na mesa que se importe (Storm, Prowess não precisa).
+- [x] **Bênção da cidade** (`Player.hasBlessing`, Ascend) e **Velocidade** (`Player.getSpeed`, Aetherdrift): selos no retrato.
+- [x] **Estados de uma vez só** (`isMonstrous`, `isRenowned`, `isSuspected`, `isSaddled`, `getCrewedByThisTurn`, `isExertedThisTurn`, `isDetained`, `isHarnessed`, `isSolved`): ícone pequeno na permanente; o nome em português e o que muda ficam no balão e no inspetor. Suspeita e Exaurida mudam o combate, as outras habilitam habilidades.
 - [ ] **Ligações entre cartas** (`getPairedWith` do Soulbond, `getEncodedCards` do Cipher, `getHaunting`/`getHauntedBy`): linha ou destaque entre as duas ao passar o mouse, e a lista no inspetor. Junto do item 29 (exiladas sob a criatura), que usa `getExiledWith`/`getImprintedCards`.
-- [ ] **Batalhas** (`CardView.getProtectingPlayer`): quem defende a batalha, ao lado dos marcadores de defesa.
-- [ ] **Previstas no exílio** (`isForeTold`): para o dono, mostrar qual carta está prevista e o custo; para os outros, só "Prevista" no verso.
+- [x] **Batalhas** (`CardView.getProtectingPlayer`): quem defende a batalha, ao lado dos marcadores de defesa.
+- [x] **Previstas no exílio** (`isForeTold`): para o dono, mostrar qual carta está prevista e o custo; para os outros, só "Prevista" no verso.
 
 Prioridade baixa:
 - [ ] **Tamanho máximo da mão** (`PlayerView.getMaxHandSize` / `hasUnlimitedHandSize`): só quando diferente de 7 (Reliquary Tower, Spellbook).
@@ -599,3 +599,17 @@ Alternativas para mostrar (recomendado: A + D):
 - [x] **E. Versões da ponte junto**: ao tocar na linha da versão, mostrar também regras e motor (útil para teste, sem pesar para o jogador).
 
 Decidido em 28/10/2026: A + D + E, com o texto "Mesa de Duelo X.Y.Z". D já estava pronto (o relato leva `app.version` e o "Copiar relatório" tem a linha "versão da mesa"). O aviso de versão nova já existe: é o banner "Nova versão do jogo" do app (`src/ui/pwa.ts`), que aparece também durante a partida.
+
+## 39. Cálculo de vida ao definir bloqueadores
+
+Na declaração de bloqueadores, o jogador precisa somar de cabeça o poder de cada atacante que ficou sem bloqueio para saber com quanta vida vai sair do combate, e se o combate é letal. Em Commander, com vários atacantes, atropelar e dano de comandante, a conta fica difícil e é fácil errar.
+
+- [ ] Mostrar, enquanto o jogador escolhe os bloqueadores, a vida prevista depois do combate ("20 → 13"), atualizando a cada bloqueio marcado ou desfeito.
+- [ ] Destacar quando o combate é letal ("Letal!") ou deixa a vida muito baixa, para o jogador perceber antes de confirmar.
+- [ ] Entrar na conta: atacantes sem bloqueio, golpe duplo, excesso de atropelar sobre o bloqueador (pelo letal do bloqueador, como na divisão do item 22), dano de comandante (21) e veneno de infectar (10), cada um com o seu limite.
+- [ ] Também no ataque ao planeswalker: a lealdade prevista dele.
+- [ ] Leitor de tela: anunciar a vida prevista quando ela mudar.
+
+Fonte dos dados: o ideal é a ponte calcular com as regras do Forge (prevenção, proteção, efeitos que dobram o dano), e a mesa só mostrar; uma conta só na mesa, com poder, palavras-chave e bloqueios, sai mais rápido, mas erra nos casos com efeitos de substituição.
+
+A decidir antes de começar: onde aparece (no retrato do jogador, na caixa de ação junto do **Confirmar bloqueios**, ou nos dois); se a conta vem da ponte ou da mesa; se mostra a previsão também para o atacante (quanto o oponente vai tomar) e para os outros jogadores em Commander.

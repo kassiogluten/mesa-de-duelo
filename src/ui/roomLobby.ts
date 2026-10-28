@@ -1,5 +1,5 @@
 import { cardInfo } from '../cards';
-import type { DeckFormat } from '../decks';
+import { FORMAT_LABEL, type DeckFormat } from '../decks';
 import type { FRoom, RoomSaying } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { esc } from './cardtext';
@@ -22,7 +22,7 @@ export const SAYINGS: [RoomSaying, string][] = [['hello', 'Oi, pessoal!'], ['bac
 const SAID_MS = 6000;
 /** Igual ao intervalo mínimo da ponte: antes disso, outro clique seria ignorado lá. */
 const SAY_EVERY_MS = 1500;
-const formatName = (f: DeckFormat) => f === 'commander' ? 'Commander' : f === 'pauper' ? 'Pauper' : 'Livre';
+const formatName = (f: DeckFormat) => FORMAT_LABEL[f];
 const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
 const artOf = (name: string | undefined) => { const sc = name ? cacheGet(name) : null; return sc ? cardInfo(sc).artCrop : undefined; };
 /** Link de convite: abre a tela inicial já na sala (veja o "?sala=" em main.ts). */

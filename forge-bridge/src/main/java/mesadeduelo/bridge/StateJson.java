@@ -154,6 +154,12 @@ final class StateJson {
             // Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite).
             o.addProperty("landsPlayed", engine.getLandsPlayedThisTurn());
             o.addProperty("maxLands", engine.getMaxLandPlaysInfinite() ? -1 : engine.getMaxLandPlays());
+            // Bênção da cidade (Ascend) é para sempre; a velocidade (Start your engines!) vai de 1 a 4 e nunca cai a 0.
+            if (engine.hasBlessing()) o.addProperty("blessing", true);
+            if (engine.getSpeed() > 0) o.addProperty("speed", engine.getSpeed());
+            // Mágicas que o jogador conjurou neste turno (Tempestade soma as de todos).
+            try { if (engine.getSpellsCastThisTurn() > 0) o.addProperty("spellsCast", engine.getSpellsCastThisTurn()); }
+            catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem contagem desta vez */ }
         }
         o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
@@ -161,7 +167,7 @@ final class StateJson {
         o.add("hand", showHand ? cards(p.getHand(), game) : new JsonArray());
         o.add("battlefield", cards(p.getBattlefield(), game));
         o.add("graveyard", cards(p.getGraveyard(), game));
-        o.add("exile", cards(p.getExile(), game));
+        o.add("exile", showHand ? Foretold.forOwner(p.getExile(), game) : cards(p.getExile(), game));
         JsonArray commandZone = new JsonArray(), commanders = new JsonArray(), commanderDamage = new JsonArray();
         for (CardView c : nzv(p.getCommand())) if (c.isCommander()) commandZone.add(card(c, game));
         for (CardView c : nzv(p.getCommanders())) {
@@ -309,6 +315,7 @@ final class StateJson {
         o.addProperty("token", c.isToken());
         PermanentDetails.visible(o, c);
         PermanentDetails.status(o, c, game);
+        if (c.getZone() == ZoneType.Exile && c.isForeTold()) o.addProperty("foretold", true);
         if (c.isFaceDown()) {
             o.addProperty("faceDown", true);
             if (c.getZone() == ZoneType.Battlefield) {
@@ -330,6 +337,7 @@ final class StateJson {
         // Emblemas não têm texto Oracle: o texto vem das habilidades que o efeito carrega.
         o.addProperty("text", c.isEmblem() ? c.getText().replace("\r", "").trim() : s.getOracleText());
         if (c.isEmblem()) o.addProperty("emblem", true);
+        PermanentDetails.countsSpells(o, c, game);
         if (c.getZone() == ZoneType.Exile) {
             Card gc = game == null ? null : game.findByView(c);
             if (gc != null && gc.isPlotted()) o.addProperty("plotted", true);
@@ -434,7 +442,7 @@ final class StateJson {
         if (player == null) return ids;
         for (Card card : game.getCardsIn(ZoneType.Exile)) {
             if (card.mayPlay(player).stream().anyMatch(option -> option.grantsZonePermissions())
-                || (card.getOwner().equals(player) && card.isPlotted())) ids.add(card.getId());
+                || (card.getOwner().equals(player) && (card.isPlotted() || card.isForetold()))) ids.add(card.getId());
         }
         return ids;
     }

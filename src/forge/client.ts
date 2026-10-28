@@ -89,12 +89,24 @@ export interface FCard {
   owner?: number;
   /** Jogadores que atiçaram a criatura (goad). */
   goadedBy?: number[];
+  /** Batalha: o jogador que a defende. */
+  protector?: number;
   /** Escudos de regeneração ativos. */
   shields?: number;
   /** O que a carta escolheu (tipo, cores, carta nomeada, jogador, número, modo), só o que existe. */
   chosen?: FChosen;
   /** Cartas que contam com devoção: as cores (W, U, B, R, G), o valor para quem controla e, nos deuses de Theros, o mínimo para ser criatura. */
   devotion?: { colors: string[]; value: number; need?: number };
+  /** Estados ligados uma vez por uma mecânica (monstrous, renowned, suspected, saddled, crewed, exerted, detained, harnessed, solved). */
+  states?: FCardState[];
+  /** Quem selou ou tripulou a permanente neste turno (nomes das cartas). */
+  saddledBy?: string[];
+  crewedBy?: string[];
+  /** Conta as mágicas conjuradas no turno (Tempestade e afins); só no campo, na mão, na pilha e na zona de comando. */
+  countsSpells?: boolean;
+  /** Prevista (foretell) no exílio; para o dono vem de face para cima, com o custo previsto em foretellCost. */
+  foretold?: boolean;
+  foretellCost?: string;
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */
@@ -124,6 +136,8 @@ export interface FCard {
 
 export interface FMergedCard { id: number; name?: string; set?: string; image?: string; token?: boolean; faceDown?: boolean }
 
+export type FCardState = 'monstrous' | 'renowned' | 'suspected' | 'saddled' | 'crewed' | 'exerted' | 'detained' | 'harnessed' | 'solved';
+
 export interface FChosen { types?: string[]; colors?: string[]; names?: string[]; player?: number; number?: string; mode?: string }
 
 export interface FPlayer {
@@ -144,6 +158,12 @@ export interface FPlayer {
   /** Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite). */
   landsPlayed?: number;
   maxLands?: number;
+  /** Tem a bênção da cidade (Ascend): dura até o fim da partida. */
+  blessing?: boolean;
+  /** Velocidade (Start your engines!), de 1 a 4; ausente enquanto o jogador não tem velocidade. */
+  speed?: number;
+  /** Mágicas que o jogador conjurou neste turno; ausente quando nenhuma. */
+  spellsCast?: number;
   /** Quanto durou o turno mais recente que o jogador terminou, em ms (medido pelo servidor); ausente antes do primeiro. */
   lastTurnMs?: number;
   library: number;

@@ -1126,6 +1126,684 @@
     "sideboard": []
   },
   {
+    "id": "padrao-lifegain",
+    "name": "Lifegain",
+    "builtin": true,
+    "cards": [
+      {
+        "name": "Enlightened Confidant",
+        "count": 4
+      },
+      {
+        "name": "Concealed Courtyard",
+        "count": 4
+      },
+      {
+        "name": "Erode",
+        "count": 2
+      },
+      {
+        "name": "Dalkovan Encampment",
+        "count": 1
+      },
+      {
+        "name": "Aunt May",
+        "count": 2
+      },
+      {
+        "name": "Starting Town",
+        "count": 4
+      },
+      {
+        "name": "Amalia Benavides Aguirre",
+        "count": 4
+      },
+      {
+        "name": "Haliya, Guided by Light",
+        "count": 4
+      },
+      {
+        "name": "Case of the Uneaten Feast",
+        "count": 4
+      },
+      {
+        "name": "Multiversal Passage",
+        "count": 4
+      },
+      {
+        "name": "Moseo, Vein's New Dean",
+        "count": 4
+      },
+      {
+        "name": "Lunar Convocation",
+        "count": 3
+      },
+      {
+        "name": "Hinterland Sanctifier",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 4
+      },
+      {
+        "name": "Liliana the Faultless",
+        "count": 2
+      },
+      {
+        "name": "Starscape Cleric",
+        "count": 3
+      },
+      {
+        "name": "Deep-Cavern Bat",
+        "count": 2
+      },
+      {
+        "name": "Great Arashin City",
+        "count": 1
+      },
+      {
+        "name": "Godless Shrine",
+        "count": 4
+      }
+    ],
+    "format": "free",
+    "sideboard": [
+      {
+        "name": "Phyrexian Arena",
+        "count": 1
+      },
+      {
+        "name": "Deep-Cavern Bat",
+        "count": 1
+      },
+      {
+        "name": "Shattered Acolyte",
+        "count": 2
+      },
+      {
+        "name": "Strategic Betrayal",
+        "count": 1
+      },
+      {
+        "name": "Seam Rip",
+        "count": 2
+      },
+      {
+        "name": "Pyrrhic Strike",
+        "count": 2
+      },
+      {
+        "name": "Ghost Vacuum",
+        "count": 1
+      },
+      {
+        "name": "Duress",
+        "count": 2
+      },
+      {
+        "name": "Vicious Rivalry",
+        "count": 1
+      },
+      {
+        "name": "Lunar Convocation",
+        "count": 1
+      },
+      {
+        "name": "Space-Time Anomaly",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "padrao-dimir-reanimator",
+    "name": "Dimir Reanimator",
+    "builtin": true,
+    "cards": [
+      {
+        "name": "Uldaros Theorix",
+        "count": 3
+      },
+      {
+        "name": "Swamp",
+        "count": 3
+      },
+      {
+        "name": "Seasoned Cryomancer",
+        "count": 4
+      },
+      {
+        "name": "Theorix Charm",
+        "count": 2
+      },
+      {
+        "name": "Restless Reef",
+        "count": 4
+      },
+      {
+        "name": "Deceit",
+        "count": 4
+      },
+      {
+        "name": "Winternight Stories",
+        "count": 1
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Bitter Triumph",
+        "count": 3
+      },
+      {
+        "name": "Superior Spider-Man",
+        "count": 4
+      },
+      {
+        "name": "Multiversal Passage",
+        "count": 2
+      },
+      {
+        "name": "Cavern of Souls",
+        "count": 2
+      },
+      {
+        "name": "Shipwreck Marsh",
+        "count": 4
+      },
+      {
+        "name": "Undercity Sewers",
+        "count": 2
+      },
+      {
+        "name": "Deadly Cover-Up",
+        "count": 1
+      },
+      {
+        "name": "The Theorist, Jace Beleren",
+        "count": 2
+      },
+      {
+        "name": "Requiting Hex",
+        "count": 3
+      },
+      {
+        "name": "Watery Grave",
+        "count": 4
+      },
+      {
+        "name": "Strategic Betrayal",
+        "count": 2
+      },
+      {
+        "name": "Gloomlake Verge",
+        "count": 4
+      },
+      {
+        "name": "Overlord of the Balemurk",
+        "count": 3
+      }
+    ],
+    "format": "free",
+    "sideboard": [
+      {
+        "name": "Disdainful Stroke",
+        "count": 1
+      },
+      {
+        "name": "Doomsday Excruciator",
+        "count": 2
+      },
+      {
+        "name": "Qarsi Revenant",
+        "count": 2
+      },
+      {
+        "name": "Ghost Vacuum",
+        "count": 2
+      },
+      {
+        "name": "Deadly Cover-Up",
+        "count": 1
+      },
+      {
+        "name": "M.O.D.O.K.",
+        "count": 1
+      },
+      {
+        "name": "Day of Black Sun",
+        "count": 2
+      },
+      {
+        "name": "Emeritus of Ideation",
+        "count": 1
+      },
+      {
+        "name": "Flashfreeze",
+        "count": 2
+      },
+      {
+        "name": "Spell Snare",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "padrao-jeskai-artifacts",
+    "name": "Jeskai Artifacts",
+    "builtin": true,
+    "cards": [
+      {
+        "name": "Island",
+        "count": 4
+      },
+      {
+        "name": "Boomerang Basics",
+        "count": 2
+      },
+      {
+        "name": "Candy Trail",
+        "count": 3
+      },
+      {
+        "name": "Castle Doom",
+        "count": 4
+      },
+      {
+        "name": "Clay-Fired Bricks",
+        "count": 1
+      },
+      {
+        "name": "Cryogen Relic",
+        "count": 2
+      },
+      {
+        "name": "Erode",
+        "count": 1
+      },
+      {
+        "name": "Floodfarm Verge",
+        "count": 4
+      },
+      {
+        "name": "Fomori Vault",
+        "count": 1
+      },
+      {
+        "name": "Hallowed Fountain",
+        "count": 3
+      },
+      {
+        "name": "Gleaming Bastion",
+        "count": 1
+      },
+      {
+        "name": "Day of Judgment",
+        "count": 1
+      },
+      {
+        "name": "Braided Net",
+        "count": 1
+      },
+      {
+        "name": "Perilous Snare",
+        "count": 3
+      },
+      {
+        "name": "Pinnacle Starcage",
+        "count": 3
+      },
+      {
+        "name": "Authority of the Consuls",
+        "count": 2
+      },
+      {
+        "name": "Repurposing Bay",
+        "count": 3
+      },
+      {
+        "name": "Simulacrum Synthesizer",
+        "count": 4
+      },
+      {
+        "name": "Spring-Loaded Sawblades",
+        "count": 2
+      },
+      {
+        "name": "The Fire Crystal",
+        "count": 1
+      },
+      {
+        "name": "The Irencrag",
+        "count": 1
+      },
+      {
+        "name": "The Mind Stone",
+        "count": 2
+      },
+      {
+        "name": "United Battlefront",
+        "count": 4
+      },
+      {
+        "name": "White Auracite",
+        "count": 1
+      },
+      {
+        "name": "Meticulous Archive",
+        "count": 1
+      },
+      {
+        "name": "Plains",
+        "count": 5
+      }
+    ],
+    "format": "free",
+    "sideboard": [
+      {
+        "name": "Astelli Reclaimer",
+        "count": 1
+      },
+      {
+        "name": "Rest in Peace",
+        "count": 2
+      },
+      {
+        "name": "Krang, Master Mind",
+        "count": 1
+      },
+      {
+        "name": "Day of Judgment",
+        "count": 2
+      },
+      {
+        "name": "No More Lies",
+        "count": 2
+      },
+      {
+        "name": "Pinnacle Starcage",
+        "count": 1
+      },
+      {
+        "name": "Authority of the Consuls",
+        "count": 2
+      },
+      {
+        "name": "Voice of Victory",
+        "count": 2
+      },
+      {
+        "name": "Torpor Orb",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "padrao-azorius-momo",
+    "name": "Azorius Momo",
+    "builtin": true,
+    "cards": [
+      {
+        "name": "Abandoned Air Temple",
+        "count": 2
+      },
+      {
+        "name": "Steamcore Scholar",
+        "count": 4
+      },
+      {
+        "name": "Sage of the Skies",
+        "count": 4
+      },
+      {
+        "name": "Momo, Friendly Flier",
+        "count": 4
+      },
+      {
+        "name": "Nurturing Pixie",
+        "count": 2
+      },
+      {
+        "name": "Starting Town",
+        "count": 2
+      },
+      {
+        "name": "Starfield Shepherd",
+        "count": 4
+      },
+      {
+        "name": "Hallowed Fountain",
+        "count": 4
+      },
+      {
+        "name": "Daydream",
+        "count": 4
+      },
+      {
+        "name": "Gleaming Bastion",
+        "count": 2
+      },
+      {
+        "name": "Seam Rip",
+        "count": 2
+      },
+      {
+        "name": "Quantum Riddler",
+        "count": 4
+      },
+      {
+        "name": "Mockingbird",
+        "count": 1
+      },
+      {
+        "name": "Erode",
+        "count": 3
+      },
+      {
+        "name": "Guiding Hydra",
+        "count": 1
+      },
+      {
+        "name": "Floodfarm Verge",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 7
+      },
+      {
+        "name": "Springleaf Drum",
+        "count": 4
+      },
+      {
+        "name": "Practiced Offense",
+        "count": 2
+      }
+    ],
+    "format": "free",
+    "sideboard": [
+      {
+        "name": "Clarion Conqueror",
+        "count": 3
+      },
+      {
+        "name": "Flashfreeze",
+        "count": 1
+      },
+      {
+        "name": "Spider-Sense",
+        "count": 1
+      },
+      {
+        "name": "Curious Farm Animals",
+        "count": 1
+      },
+      {
+        "name": "Rest in Peace",
+        "count": 3
+      },
+      {
+        "name": "Seam Rip",
+        "count": 2
+      },
+      {
+        "name": "Wan Shi Tong, Librarian",
+        "count": 2
+      },
+      {
+        "name": "Disdainful Stroke",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "padrao-rakdos-lizards",
+    "name": "Rakdos Lizards",
+    "builtin": true,
+    "cards": [
+      {
+        "name": "Blazemire Verge",
+        "count": 4
+      },
+      {
+        "name": "Gev, Scaled Scorch",
+        "count": 3
+      },
+      {
+        "name": "Hired Claw",
+        "count": 1
+      },
+      {
+        "name": "Valley Flamecaller",
+        "count": 1
+      },
+      {
+        "name": "Burst Lightning",
+        "count": 2
+      },
+      {
+        "name": "Thought-Stalker Warlock",
+        "count": 2
+      },
+      {
+        "name": "Blood Crypt",
+        "count": 4
+      },
+      {
+        "name": "Ingris Stingerquill",
+        "count": 3
+      },
+      {
+        "name": "Starting Town",
+        "count": 2
+      },
+      {
+        "name": "Master of Barbs",
+        "count": 4
+      },
+      {
+        "name": "Haunted Ridge",
+        "count": 1
+      },
+      {
+        "name": "Valley Flamecaller",
+        "count": 1
+      },
+      {
+        "name": "Stingerquill Charm",
+        "count": 3
+      },
+      {
+        "name": "Flamecache Gecko",
+        "count": 4
+      },
+      {
+        "name": "Fireglass Mentor",
+        "count": 2
+      },
+      {
+        "name": "Hired Claw",
+        "count": 3
+      },
+      {
+        "name": "Rockface Village",
+        "count": 2
+      },
+      {
+        "name": "Cavern of Souls",
+        "count": 2
+      },
+      {
+        "name": "Mountain",
+        "count": 1
+      },
+      {
+        "name": "Mountain",
+        "count": 1
+      },
+      {
+        "name": "Mountain",
+        "count": 2
+      },
+      {
+        "name": "Swamp",
+        "count": 1
+      },
+      {
+        "name": "Swamp",
+        "count": 3
+      },
+      {
+        "name": "Stingerquill Charm",
+        "count": 1
+      },
+      {
+        "name": "Iridescent Vinelasher",
+        "count": 4
+      },
+      {
+        "name": "Stinging Vitriol",
+        "count": 2
+      },
+      {
+        "name": "Ravine Raider",
+        "count": 1
+      }
+    ],
+    "format": "free",
+    "sideboard": [
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Laughing Jasper Flint",
+        "count": 2
+      },
+      {
+        "name": "Requiting Hex",
+        "count": 3
+      },
+      {
+        "name": "Thought-Stalker Warlock",
+        "count": 2
+      },
+      {
+        "name": "Vengeful Tracker",
+        "count": 3
+      },
+      {
+        "name": "Sunspine Lynx",
+        "count": 1
+      },
+      {
+        "name": "The Legend of Roku",
+        "count": 1
+      }
+    ]
+  },
+  {
     "id": "pauper-brasa",
     "name": "Brasa e Relâmpago",
     "builtin": true,
@@ -1274,6 +1952,724 @@
       {
         "name": "Spidersilk Armor",
         "count": 2
+      }
+    ]
+  },
+  {
+    "id": "sacola-delver",
+    "name": "Delver Azul",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Island",
+        "count": 18
+      },
+      {
+        "name": "Delver of Secrets",
+        "count": 4
+      },
+      {
+        "name": "Pteramander",
+        "count": 4
+      },
+      {
+        "name": "Siren Stormtamer",
+        "count": 1
+      },
+      {
+        "name": "Sailors' Bane",
+        "count": 4
+      },
+      {
+        "name": "Fall from Favor",
+        "count": 1
+      },
+      {
+        "name": "Thought Scour",
+        "count": 4
+      },
+      {
+        "name": "Opt",
+        "count": 4
+      },
+      {
+        "name": "Brainstorm",
+        "count": 3
+      },
+      {
+        "name": "Spell Pierce",
+        "count": 2
+      },
+      {
+        "name": "Lose Focus",
+        "count": 1
+      },
+      {
+        "name": "Frantic Inventory",
+        "count": 4
+      },
+      {
+        "name": "Memory Lapse",
+        "count": 1
+      },
+      {
+        "name": "Counterspell",
+        "count": 3
+      },
+      {
+        "name": "Mana Leak",
+        "count": 4
+      },
+      {
+        "name": "Winds of Rebuke",
+        "count": 1
+      },
+      {
+        "name": "Unsubstantiate",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 2
+      },
+      {
+        "name": "Scrabbling Claws",
+        "count": 1
+      },
+      {
+        "name": "Annul",
+        "count": 3
+      },
+      {
+        "name": "Vapor Snag",
+        "count": 2
+      },
+      {
+        "name": "Essence Capture",
+        "count": 4
+      },
+      {
+        "name": "Negate",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id": "sacola-orzhov",
+    "name": "Fantasmas de Orzhov",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Tainted Field",
+        "count": 3
+      },
+      {
+        "name": "Swamp",
+        "count": 10
+      },
+      {
+        "name": "Plains",
+        "count": 5
+      },
+      {
+        "name": "Caves of Koilos",
+        "count": 4
+      },
+      {
+        "name": "Shambling Vent",
+        "count": 1
+      },
+      {
+        "name": "Silverquill Silencer",
+        "count": 4
+      },
+      {
+        "name": "Tidehollow Sculler",
+        "count": 4
+      },
+      {
+        "name": "Elite Spellbinder",
+        "count": 3
+      },
+      {
+        "name": "Wasteland Strangler",
+        "count": 3
+      },
+      {
+        "name": "Ravenloft Adventurer",
+        "count": 4
+      },
+      {
+        "name": "Passageway Seer",
+        "count": 2
+      },
+      {
+        "name": "Bloodchief's Thirst",
+        "count": 3
+      },
+      {
+        "name": "Inquisition of Kozilek",
+        "count": 4
+      },
+      {
+        "name": "Cabal Therapy",
+        "count": 1
+      },
+      {
+        "name": "Vindicate",
+        "count": 2
+      },
+      {
+        "name": "Lingering Souls",
+        "count": 4
+      },
+      {
+        "name": "Power Word Kill",
+        "count": 3
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Burrenton Forge-Tender",
+        "count": 2
+      },
+      {
+        "name": "Scrabbling Claws",
+        "count": 3
+      },
+      {
+        "name": "Gerrard's Verdict",
+        "count": 3
+      },
+      {
+        "name": "Disenchant",
+        "count": 4
+      },
+      {
+        "name": "Zealous Persecution",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id": "sacola-infect",
+    "name": "Veneno da Floresta",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Forest",
+        "count": 15
+      },
+      {
+        "name": "Centaur Garden",
+        "count": 1
+      },
+      {
+        "name": "Llanowar Elves",
+        "count": 4
+      },
+      {
+        "name": "Glistener Elf",
+        "count": 4
+      },
+      {
+        "name": "Ichorclaw Myr",
+        "count": 4
+      },
+      {
+        "name": "Blight Mamba",
+        "count": 4
+      },
+      {
+        "name": "Rancor",
+        "count": 1
+      },
+      {
+        "name": "Season of Growth",
+        "count": 4
+      },
+      {
+        "name": "Scale Up",
+        "count": 4
+      },
+      {
+        "name": "Wild Shape",
+        "count": 3
+      },
+      {
+        "name": "Snakeskin Veil",
+        "count": 4
+      },
+      {
+        "name": "Might of Old Krosa",
+        "count": 4
+      },
+      {
+        "name": "Blossoming Defense",
+        "count": 4
+      },
+      {
+        "name": "Invigorate",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Armored Scrapgorger",
+        "count": 1
+      },
+      {
+        "name": "Gemrazer",
+        "count": 1
+      },
+      {
+        "name": "Shifting Ceratops",
+        "count": 2
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 2
+      },
+      {
+        "name": "Audacity",
+        "count": 2
+      },
+      {
+        "name": "Nature's Claim",
+        "count": 4
+      },
+      {
+        "name": "Become Immense",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-vermelho",
+    "name": "Fúria Vermelha",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Castle Embereth",
+        "count": 2
+      },
+      {
+        "name": "Mountain",
+        "count": 15
+      },
+      {
+        "name": "Monastery Swiftspear",
+        "count": 3
+      },
+      {
+        "name": "Fanatical Firebrand",
+        "count": 2
+      },
+      {
+        "name": "Feldon, Ronom Excavator",
+        "count": 2
+      },
+      {
+        "name": "Viashino Pyromancer",
+        "count": 2
+      },
+      {
+        "name": "Kari Zev, Skyship Raider",
+        "count": 2
+      },
+      {
+        "name": "Burning-Tree Emissary",
+        "count": 4
+      },
+      {
+        "name": "Anax, Hardened in the Forge",
+        "count": 2
+      },
+      {
+        "name": "Reckless Bushwhacker",
+        "count": 3
+      },
+      {
+        "name": "Torbran, Thane of Red Fell",
+        "count": 2
+      },
+      {
+        "name": "Bonecrusher Giant",
+        "count": 2
+      },
+      {
+        "name": "Kumano Faces Kakkazan",
+        "count": 3
+      },
+      {
+        "name": "Claim the Firstborn",
+        "count": 2
+      },
+      {
+        "name": "Light Up the Stage",
+        "count": 2
+      },
+      {
+        "name": "Infuriate",
+        "count": 2
+      },
+      {
+        "name": "Shock",
+        "count": 4
+      },
+      {
+        "name": "Burning Sun's Fury",
+        "count": 2
+      },
+      {
+        "name": "Lightning Strike",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Goblin Chainwhirler",
+        "count": 2
+      },
+      {
+        "name": "Burning Hands",
+        "count": 2
+      },
+      {
+        "name": "Fry",
+        "count": 2
+      },
+      {
+        "name": "Heartfire",
+        "count": 2
+      },
+      {
+        "name": "Abrade",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "sacola-ciclagem",
+    "name": "Tempestade de Ciclagem",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Drifting Meadow",
+        "count": 4
+      },
+      {
+        "name": "Blasted Landscape",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 1
+      },
+      {
+        "name": "Smoldering Crater",
+        "count": 4
+      },
+      {
+        "name": "Scattered Groves",
+        "count": 4
+      },
+      {
+        "name": "Sheltered Thicket",
+        "count": 4
+      },
+      {
+        "name": "Irrigated Farmland",
+        "count": 4
+      },
+      {
+        "name": "Flourishing Fox",
+        "count": 4
+      },
+      {
+        "name": "Valiant Rescuer",
+        "count": 4
+      },
+      {
+        "name": "Drannith Stinger",
+        "count": 4
+      },
+      {
+        "name": "Vile Manifestation",
+        "count": 4
+      },
+      {
+        "name": "Timeless Dragon",
+        "count": 4
+      },
+      {
+        "name": "Hollow One",
+        "count": 4
+      },
+      {
+        "name": "Fluctuator",
+        "count": 4
+      },
+      {
+        "name": "Footfall Crater",
+        "count": 3
+      },
+      {
+        "name": "Jolted Awake",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 3
+      },
+      {
+        "name": "Damping Sphere",
+        "count": 3
+      },
+      {
+        "name": "Gaea's Blessing",
+        "count": 1
+      },
+      {
+        "name": "Angelsong",
+        "count": 3
+      },
+      {
+        "name": "Disenchant",
+        "count": 4
+      },
+      {
+        "name": "Zenith Flare",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-myr",
+    "name": "Sacrifício dos Myr",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Swamp",
+        "count": 20
+      },
+      {
+        "name": "Temple of Silence",
+        "count": 2
+      },
+      {
+        "name": "Abyssal Gatekeeper",
+        "count": 3
+      },
+      {
+        "name": "Perilous Myr",
+        "count": 4
+      },
+      {
+        "name": "Myr Retriever",
+        "count": 4
+      },
+      {
+        "name": "Armix, Filigree Thrasher",
+        "count": 4
+      },
+      {
+        "name": "Junk Diver",
+        "count": 4
+      },
+      {
+        "name": "Myr Kinsmith",
+        "count": 4
+      },
+      {
+        "name": "Jinxed Idol",
+        "count": 1
+      },
+      {
+        "name": "Warlock Class",
+        "count": 3
+      },
+      {
+        "name": "Heartless Summoning",
+        "count": 4
+      },
+      {
+        "name": "The Sibsig Ceremony",
+        "count": 1
+      },
+      {
+        "name": "Bastion of Remembrance",
+        "count": 4
+      },
+      {
+        "name": "Hostile Negotiations",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 1
+      },
+      {
+        "name": "Duress",
+        "count": 4
+      },
+      {
+        "name": "Tendrils of Despair",
+        "count": 2
+      },
+      {
+        "name": "Rats' Feast",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "sacola-jeskai",
+    "name": "Energia Jeskai",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Perilous Landscape",
+        "count": 3
+      },
+      {
+        "name": "Castle Vantress",
+        "count": 1
+      },
+      {
+        "name": "Island",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 2
+      },
+      {
+        "name": "Mountain",
+        "count": 3
+      },
+      {
+        "name": "Mystic Monastery",
+        "count": 2
+      },
+      {
+        "name": "Port Town",
+        "count": 2
+      },
+      {
+        "name": "Aether Hub",
+        "count": 4
+      },
+      {
+        "name": "Prairie Stream",
+        "count": 1
+      },
+      {
+        "name": "Celestial Colonnade",
+        "count": 2
+      },
+      {
+        "name": "Timeless Dragon",
+        "count": 1
+      },
+      {
+        "name": "Goblin Dark-Dwellers",
+        "count": 4
+      },
+      {
+        "name": "Jace, Architect of Thought",
+        "count": 1
+      },
+      {
+        "name": "Elminster",
+        "count": 1
+      },
+      {
+        "name": "Wrath of the Skies",
+        "count": 2
+      },
+      {
+        "name": "Slagstorm",
+        "count": 2
+      },
+      {
+        "name": "Galvanic Discharge",
+        "count": 4
+      },
+      {
+        "name": "Tune the Narrative",
+        "count": 4
+      },
+      {
+        "name": "Lightning Helix",
+        "count": 3
+      },
+      {
+        "name": "Mana Leak",
+        "count": 4
+      },
+      {
+        "name": "Think Twice",
+        "count": 4
+      },
+      {
+        "name": "Flame Sweep",
+        "count": 2
+      },
+      {
+        "name": "Electrolyze",
+        "count": 2
+      },
+      {
+        "name": "Supreme Will",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Niv-Mizzet, Parun",
+        "count": 1
+      },
+      {
+        "name": "Saheeli, Sublime Artificer",
+        "count": 1
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 3
+      },
+      {
+        "name": "Runed Halo",
+        "count": 1
+      },
+      {
+        "name": "Timely Reinforcements",
+        "count": 1
+      },
+      {
+        "name": "Test of Talents",
+        "count": 4
+      },
+      {
+        "name": "Abrade",
+        "count": 3
+      },
+      {
+        "name": "Forsake the Worldly",
+        "count": 1
       }
     ]
   },
