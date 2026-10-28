@@ -6,7 +6,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
-## [0.55.0] - 2026-10-27
+## [0.58.0] - 2026-10-28
 
 ### Novo
 
@@ -21,9 +21,46 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 - **Mais marcadores à vista na carta.** Os marcadores e as habilidades de uma permanente agora podem ocupar até dois terços da altura da carta antes de virarem um único selo com o total, em vez de só metade. Com vários marcadores e habilidades ao mesmo tempo, você continua vendo cada um sem precisar abrir o balão.
 
+## [0.57.0] - 2026-10-28
+
+### Novo
+
+- **Versão da mesa no menu da partida.** No fim do menu da partida, abaixo de "Desistir e voltar ao início", aparece em letras pequenas a versão da mesa (por exemplo **Mesa de Duelo 0.57.0**). Assim, quem manda um print ou relata um erro mostra também em que versão está jogando. Toque na linha para ver as versões das regras e do motor do servidor, e toque de novo para voltar.
+- **Histórico da partida por turno.** O Registro (no menu da partida) agora separa as jogadas por turno, com o número do turno e de quem é. O turno atual e o anterior ficam abertos; os mais antigos ficam recolhidos, mostrando quantas jogadas tiveram, e abrem com um toque. A mágica e o que ela causou viram uma linha só ("Você conjurou Cólera de Deus: destruiu 4 permanentes"), e o mesmo vale para o dano de combate com as criaturas que morreram, para os gatilhos seguidos da mesma carta e para remoções em sequência. Toque no número ao lado da linha para ver cada carta afetada.
+- **Mais detalhes no histórico.** Cada linha traz uma miniatura da carta (toque para ampliar), os alvos da mágica ou da habilidade, de quem era a carta que saiu do campo, de onde veio a carta conjurada (cemitério, exílio, zona de comando) e quem bloqueou quem. As compras também aparecem, com a quantidade ("Oponente comprou 2 cartas"), sem dizer quais cartas.
+
+### Mudou
+
+- **Histórico da partida inteira.** O Registro não apaga mais o começo da partida depois de 60 jogadas: ele guarda a partida toda.
+
+## [0.56.1] - 2026-10-27
+
 ### Corrigido
 
-- **Erros longos na barra lateral.** Quando a mesa avisa um problema comprido embaixo do botão **Jogar** (como um deck com várias cartas fora do formato), a mensagem agora ocupa no máximo algumas linhas e o resto rola dentro dela, em vez de empurrar a barra lateral e esconder o botão.
+- **Cartas viradas para baixo que você pode olhar.** A carta escondida pela Mosswort Bridge (e por outras cartas que exilam virado para baixo) aparecia só com o verso até para você. Agora, no seu exílio, ela mostra a frente um pouco apagada, com um olho no canto: virada para baixo, mas só você vê. O mesmo vale para as suas criaturas viradas para baixo no campo (metamorfose, disfarce, manifestar): elas continuam com o verso e o olho, e a prévia e o inspetor mostram qual carta é. O oponente segue vendo só o verso.
+
+## [0.56.0] - 2026-10-27
+
+### Novo
+
+- **Tempo do último turno.** Junto da vida de cada jogador, um selo com uma ampulheta mostra quanto durou o turno mais recente dele (por exemplo **1:12**). Ele aparece depois que o jogador termina o primeiro turno e fica escondido durante o turno dele, quando quem conta é o relógio da trilha de fases. Passe o mouse ou toque nele para ver a duração.
+
+### Mudou
+
+- **Relógio do turno.** O tempo do turno na trilha de fases agora é contado pelo servidor, como o relógio da partida: ele continua certo depois de recarregar a página ou voltar de uma queda de conexão, em vez de recomeçar do zero.
+
+## [0.55.0] - 2026-10-27
+
+### Novo
+
+- **Dia e noite.** Quando uma carta torna a partida dia ou noite (como as de Innistrad: Caçada à Meia-Noite), um sol ou uma lua aparece na trilha de fases, ao lado do relógio do turno, e gira quando vira. Passe o mouse ou toque nele para ver a regra da troca: de dia, vira noite se quem joga o turno não conjurar mágicas; de noite, vira dia se essa pessoa conjurar duas ou mais. O balão diz também quantas mágicas ela já conjurou no turno. Enquanto a partida não é nem dia nem noite, nada aparece.
+
+## [0.54.1] - 2026-10-27
+
+### Corrigido
+
+- **Cartas com o mesmo nome da face de outra carta.** Importar ou usar um deck com Rampant Growth, Lightning Bolt, Demonic Tutor, Swords to Plowshares, Brainstorm, Raise Dead e outras não dá mais o erro "O identificador da carta não corresponde ao nome informado". A mesa confundia essas cartas com cartas de duas faces que têm uma face com o mesmo nome, como Studious First-Year // Rampant Growth e Emeritus of Conflict // Lightning Bolt.
+- **Avisos longos na escolha de deck.** Quando o deck tem muitos problemas, a mensagem embaixo do botão **Jogar** passa a ter altura máxima e rola por dentro, em vez de empurrar a tela para baixo.
 
 ## [0.54.0] - 2026-10-27
 

@@ -78,6 +78,20 @@ public class BridgeRulesTest {
         JsonObject d=deck("Island",60); d.getAsJsonArray("cards").get(0).getAsJsonObject().addProperty("oracleId","bad-id");
         has(validate(d),"identity-mismatch");
     }
+    @Test public void cardNameIsNotShadowedByAnotherCardsFace() throws Exception {
+        // Faces like the Rampant Growth in Studious First-Year // Rampant Growth must not take another card's identity.
+        for (String file : new String[]{"/pauper-legality.json", "/commander-legality.json"}) {
+            try (var in = new java.io.InputStreamReader(getClass().getResourceAsStream(file), java.nio.charset.StandardCharsets.UTF_8)) {
+                for (JsonElement e : JsonParser.parseReader(in).getAsJsonObject().getAsJsonArray("cards")) {
+                    String name = e.getAsJsonObject().get("name").getAsString(), id = e.getAsJsonObject().get("oracleId").getAsString();
+                    String got = file.startsWith("/pauper") ? PauperLegality.oracleId(name) : CommanderLegality.oracleId(name);
+                    assertEquals(file + " " + name, id, got);
+                }
+            }
+        }
+        JsonObject d=deck("Rampant Growth",60); d.getAsJsonArray("cards").get(0).getAsJsonObject().addProperty("oracleId","8539f295-5d58-4436-a73a-b9277c4c7795");
+        assertTrue(DeckValidation.validate(d,"free").valid());
+    }
     @Test public void freeAllowsCasualSizesButStillRejectsMalformedCards() {
         assertTrue(DeckValidation.validate(deck("Lightning Bolt",40),"free").valid());
         has(DeckValidation.validate(deck("Not a Real Card",40),"free"),"unknown-card");

@@ -4,9 +4,10 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
+const clock = uri(await readFile(new URL('../src/ui/clock.ts', import.meta.url), 'utf8'));
 const stopsModule = uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./opponentStops'", JSON.stringify(stopsModule));
-const { phaseHudHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText } = await import(uri(source));
+const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./opponentStops'", JSON.stringify(stopsModule)).replace("'./clock'", JSON.stringify(clock));
+const { phaseHudHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import(uri(source));
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
 
@@ -164,4 +165,19 @@ test('with editable stops every track icon is a button that opens the menu of it
     assert.doesNotMatch(html, /data-phase="combat" data-tip/);
   }
   assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }, undefined, { value: stops, editable: true }), /<button/);
+});
+
+test('day and night show a sun or a moon with the switching rule, and nothing while the game has neither', () => {
+  assert.doesNotMatch(phaseHudHTML(state), /phase-daynight/);
+  const day = phaseHudHTML({ ...state, dayTime: 'day', activeSpells: 0 });
+  assert.match(day, /class="phase-daynight day"[^>]*data-tip="Dia\. Se você não conjurar mágicas neste turno, vira noite no próximo turno\. Nenhuma mágica até agora\."/);
+  assert.match(day, /<span class="sr-only">Turno 4 · Seu turno · Dia\./);
+  assert.match(dayNightText({ ...state, dayTime: 'day', activeSpells: 1 }), /Já foi conjurada 1 mágica: continua dia\.$/);
+  const night = { ...state, activePlayer: 2, dayTime: 'night' };
+  assert.match(phaseHudHTML({ ...night, activeSpells: 1 }), /class="phase-daynight night"[^>]*data-tip="Noite\. Se o oponente conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno\. 1 mágica até agora\."/);
+  assert.match(dayNightText({ ...night, activeSpells: 3 }), /Já foram conjuradas 3: vira dia\.$/);
+  assert.equal(dayNightText(night), 'Noite. Se o oponente conjurar 2 mágicas ou mais neste turno, vira dia no próximo turno.');
+  const table = { ...night, players: [...state.players, { id: 3, name: '<Ana>' }], activePlayer: 3, activeSpells: 0 };
+  assert.match(phaseHudHTML(table), /Se &lt;Ana&gt; conjurar/);
+  assert.doesNotMatch(phaseHudHTML({ ...night, gameOver: true }), /phase-daynight|Noite/);
 });

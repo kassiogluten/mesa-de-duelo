@@ -7,6 +7,7 @@ import { damageDetail } from './damageEffects';
 import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStatus } from './permanentEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPreview } from './cardInspector';
+import { historyTurns, listNames, turnSummary, type HistoryItem, type HistoryNames } from './historyLog';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio, SOUND_PACKS, type SoundPack } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
@@ -78,6 +79,8 @@ const COUNTER_ICON: Record<string, string> = {
   OIL: svg('M12 2c3 4.5 6 8 6 12a6 6 0 0 1-12 0c0-4 3-7.5 6-12z'),
 };
 /** Selo único dos marcadores e palavras-chave quando eles não cabem na carta. */
+/** De onde veio a carta conjurada, no histórico (da mão não precisa dizer). */
+const ZONE_FROM: Record<string, string> = { Graveyard: 'do cemitério', Exile: 'do exílio', Command: 'da zona de comando', Library: 'do grimório' };
 const ICON_LAYERS = svg('M12 2 2 7l10 5 10-5z', 'm2 12 2.4-1.2L12 14.6l7.6-3.8L22 12l-10 5z', 'm2 17 2.4-1.2L12 19.6l7.6-3.8L22 17l-10 5z');
 const COUNTER_DISC = svg('M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10z');
 
@@ -150,6 +153,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
       <button class="btn" data-ui="exit">Desistir e voltar ao início</button>
+      <button type="button" class="game-menu-version" data-ui="version" aria-pressed="false" title="Toque para ver as versões das regras e do motor">Mesa de Duelo ${esc(VERSION)}</button>
     </nav>
     <div class="overlay game-options-overlay" id="fSettings" hidden>
       <section class="game-options" role="dialog" aria-modal="true" aria-labelledby="fSettingsTitle">
@@ -211,7 +215,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let client: ForgeClient | null = null;
   let portraits: (string | undefined)[] = [undefined, undefined];
   let lastTurn = 0;
-  // Relógio do turno: começa quando a mesa vê o turno mudar (ou ao abrir a partida) e anda a cada segundo.
+  // Relógio do turno: o servidor diz quanto o turno já durou (como no relógio da partida); numa ponte antiga, começa
+  // quando a mesa vê o turno mudar (ou ao abrir a partida). Anda a cada segundo.
   let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
   // Relógio da partida: o servidor diz quanto o jogo já durou; só se reajusta se o atraso da rede passar de 2 s.
   let gameSince = 0, gameNumber = 0;
@@ -222,9 +227,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const game = root.querySelector<HTMLElement>('[data-match-timer]');
     if (game && gameSince) game.textContent = turnTimeText(Date.now() - gameSince);
   };
-  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver' | 'match'>) => {
+  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver' | 'match' | 'turnElapsedMs'>) => {
     const key = `${s.turn}:${s.activePlayer}`;
     if (key !== clockTurn) { clockTurn = key; clockSince = Date.now(); }
+    // Durante a animação de um evento antigo a mesa mostra outro turno; o tempo do servidor é o do turno de agora.
+    const live = client?.state;
+    if (s.turnElapsedMs != null && live?.turn === s.turn && live.activePlayer === s.activePlayer) {
+      const since = Date.now() - s.turnElapsedMs;
+      if (Math.abs(since - clockSince) > 2000) clockSince = since;
+    }
     const elapsed = s.match?.elapsedMs;
     if (elapsed == null) gameSince = 0;
     else {
@@ -330,7 +341,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   };
   const inspectIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6m-3-3v6"/></svg>';
   const selectedBadge = (s: FState, c: FCard) => selectedForInput(s, c.id) ? '<span class="choice-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span>' : '';
-  const inspectButton = (c: FCard) => !c.faceDown && c.name ? `<button class="inspect-card" data-inspect="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${inspectIcon}</button>` : '';
+  const inspectButton = (c: FCard) => (!c.faceDown && c.name) || c.hiddenFace?.name ? `<button class="inspect-card" data-inspect="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${inspectIcon}</button>` : '';
 
   function syncAutoPass() {
     const connected = !!client?.connected && !disconnected;
@@ -344,6 +355,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   /** Grupo da trilha de fases com o menu de paradas aberto. */
   let stopMenu: string | null = null;
+  // Dia ou noite do último desenho da trilha: o sol ou a lua pulsa quando vira.
+  let lastDayTime: FState['dayTime'];
   /** Dá para marcar paradas agora: a ponte oferece a opção e você está jogando. */
   const stopsEditable = () => !!client?.connected && !disconnected && opponentStops.supported && !!client.state && !client.state.gameOver && !client.state.spectating;
   function syncStops() {
@@ -403,15 +416,21 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   function setMenu(open: boolean, restore = false) {
     $('#fMenu').hidden = !open;
+    // Toda vez que o menu abre, a linha do rodapé volta a mostrar a versão da mesa.
+    const version = $('#fMenu').querySelector<HTMLElement>('[data-ui="version"]');
+    if (open && version) { version.setAttribute('aria-pressed', 'false'); version.textContent = `Mesa de Duelo ${VERSION}`; }
     const trigger = root.querySelector<HTMLElement>('[data-ui="menu"]')!;
     trigger.setAttribute('aria-expanded', String(open));
     if (open) $('#fMenu').querySelector<HTMLElement>('button:not([hidden])')?.focus({ preventScroll: true });
     else if (restore) trigger.focus({ preventScroll: true });
   }
+  function restoreLogFocus(key: string) {
+    root.querySelector<HTMLElement>(`#fLog [data-log-toggle="${CSS.escape(key)}"]`)?.focus({ preventScroll: true });
+  }
   function setLog(open: boolean, restore = false) {
     $('#fLogDrawer').hidden = !open;
     root.querySelector('[aria-controls="fLogDrawer"]')?.setAttribute('aria-expanded', String(open));
-    if (open) { setMenu(false); setErrors(false); $('#fLogDrawer').querySelector<HTMLElement>('button')?.focus({ preventScroll: true }); }
+    if (open) { renderLog(); setMenu(false); setErrors(false); $('#fLogDrawer').querySelector<HTMLElement>('button')?.focus({ preventScroll: true }); }
     else if (restore) root.querySelector<HTMLElement>('[data-ui="menu"]')?.focus({ preventScroll: true });
   }
   const diagnostics = new MatchDiagnostics();
@@ -465,7 +484,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -625,7 +644,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   /** Nome, tipo e texto impressos em português, quando o Scryfall tem a tradução. */
   const ptOf = (name: string | undefined) => (name ? cacheGet(name)?.pt : undefined);
-  const label = (c: FCard) => ptOf(c.name)?.name || c.name || 'Carta';
+  const label = (c: FCard) => ptOf(c.name)?.name || c.name || (c.hiddenFace?.name ? `${ptOf(c.hiddenFace.name)?.name || c.hiddenFace.name} (virada para baixo)` : 'Carta');
+  /** A carta virada para baixo como você a vê: com a frente, quando pode olhá-la. */
+  const seenFace = (c: FCard): FCard => c.faceDown && c.hiddenFace?.name ? { ...c, ...c.hiddenFace, faceDown: false } : c;
+  const HIDDEN_EYE = '<span class="hidden-eye" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>';
   /** "Emblem — Kaito, Bane of Nightmares" → "Kaito, Bane of Nightmares" (o planeswalker que gerou o emblema). */
   const emblemSource = (c: FCard) => (c.name ?? '').replace(/^Emblem\s*[—–-]\s*/i, '');
   const emblemLabel = (c: FCard) => `Emblema de ${ptOf(emblemSource(c))?.name || emblemSource(c)}`;
@@ -639,7 +661,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return cardStyle === 'art' && (art || !c.image) ? 'art' : cardStyle === 'arena' && field && art ? 'arena' : 'full';
   }
 
-  function face(c: FCard, size: 'small' | 'normal', field = false) {
+  function face(c: FCard, size: 'small' | 'normal', field = false): string {
+    // Virada para baixo e você pode olhar: no campo segue o verso (ela é uma 2/2 sem nome); fora dele, a frente apagada.
+    // Nos dois, um olho no canto; qual carta é e por que só você vê ficam na prévia e no inspetor.
+    if (c.faceDown && c.hiddenFace?.name) {
+      const html = field ? '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>' : face(seenFace(c), size);
+      return html.replace(/^\s*<div class="face/, `<div class="face hidden-known${field ? ' on-field' : ''}`).replace(/<\/div>\s*$/, `${HIDDEN_EYE}</div>`);
+    }
     if (c.faceDown || !c.name) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
     const sc = cacheGet(c.name);
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
@@ -1395,28 +1423,35 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     syncModal();
   }
 
-  function eventDescription(event: PresentationEvent) {
+  /** A frase de um evento. `detailed` (no histórico) acrescenta alvos, de quem era a carta e de onde ela veio. */
+  function eventDescription(event: PresentationEvent, detailed = false) {
     const who = client?.state?.players.find(p => p.id === event.actor)?.name ?? 'Jogador';
     const name = event.card?.name ? label(event.card) : 'uma carta';
+    const on = detailed ? historyTargets(event) : '';
+    const from = detailed && event.from && ZONE_FROM[event.from] ? ` ${ZONE_FROM[event.from]}` : '';
+    const owner = detailed && event.actor !== undefined ? ` (${event.actor === client?.state?.you ? 'sua' : `de ${who}`})` : '';
     switch (event.type) {
-      case 'land-played': return `${who} jogou ${name}.`;
-      case 'spell-cast': return `${who} conjurou ${name}.`;
-      case 'ability-activated': return event.trigger ? `Gatilho${event.card?.name ? ` de ${name}` : ''}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}.`;
+      case 'land-played': return `${who} jogou ${name}${from}.`;
+      case 'spell-cast': return `${who} conjurou ${name}${from}${on}.`;
+      case 'ability-activated': return event.trigger ? `Gatilho${event.card?.name ? ` de ${name}` : ''}${on}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}${on}.`;
+      case 'draw': return `${who} comprou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`}.`;
       case 'resolved': return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
       case 'countered': return `Anulado: ${event.card?.name ? name : 'efeito'}.`;
       // "Carta …" concorda com qualquer nome (o Cavaleiro, a Aura).
-      case 'left': return event.reason === 'destroyed' ? `Carta destruída: ${name}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}.`
-        : event.to === 'Exile' ? `Carta exilada: ${name}.` : event.to === 'Hand' ? `Volta para a mão: ${name}.` : event.to === 'Library' ? `Volta para o grimório: ${name}.` : `${name} saiu do campo.`;
+      case 'left': return event.reason === 'destroyed' ? `Carta destruída: ${name}${owner}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}${owner}.`
+        : event.to === 'Exile' ? `Carta exilada: ${name}${owner}.` : event.to === 'Hand' ? `Volta para a mão: ${name}${owner}.` : event.to === 'Library' ? `Volta para o grimório: ${name}${owner}.`
+        : detailed && event.to === 'Graveyard' ? `Para o cemitério: ${name}${owner}.` : `${name}${owner} saiu do campo.`;
       case 'discard': return `${who} descartou ${name}.`;
       case 'mill': return millDescription(event, who);
-      case 'entered': return event.from === 'Exile' ? `Volta ao campo: ${name}.` : `${name} entrou no campo.`;
+      case 'entered': return event.from === 'Exile' ? `Volta ao campo: ${name}${owner}.` : detailed && event.from === 'Graveyard' ? `Volta do cemitério ao campo: ${name}${owner}.`
+        : detailed && event.card?.token && !event.from ? `Ficha criada: ${name}${owner}.` : `${name} entrou no campo${owner}.`;
       case 'attackers': return attackDescription(event);
-      case 'blockers': return `${who} declarou bloqueadores.`;
+      case 'blockers': { const n = event.cards?.length ?? 0; return detailed && n ? `${who} bloqueou com ${n} ${n === 1 ? 'criatura' : 'criaturas'}.` : `${who} declarou bloqueadores.`; }
       case 'turn': return `Turno de ${who}.`;
       case 'damage': {
         const n = Math.abs(event.delta ?? 0);
         const target = [...(event.targets?.players ?? []).map(id => client?.state?.players.find(p => p.id === id)?.name),
-          ...(event.targets?.cards ?? []).map(id => { const c = findCard(id); return c ? label(c) : undefined; })].filter(Boolean).join(', ');
+          ...(event.targets?.cards ?? []).map(id => { const c = findCard(id) ?? frameCard(id, event); return c ? label(c) : undefined; })].filter(Boolean).join(', ');
         const from = event.card?.name && !event.card.faceDown ? ` de ${label(event.card)}` : '';
         const what = event.infect && event.targets?.players?.length ? `${n} de veneno` : event.wither ? `${n} marcador${n === 1 ? '' : 'es'} −1/−1` : `${n} de dano`;
         if (event.prevented) return `Escudo preveniu ${n} de dano${target ? ` a ${target}` : ''}${from}.`;
@@ -1425,6 +1460,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'life-changed': return `${who}: ${event.delta && event.delta > 0 ? '+' : ''}${event.delta ?? 0} de vida.`;
       default: return event.text ? withoutCardIds(event.text) : 'O jogo avançou.';
     }
+  }
+  /** Uma carta que já saiu do campo, como estava na mesa no momento do evento. */
+  function frameCard(id: number, event: PresentationEvent) {
+    for (const p of event.frame?.players ?? []) { const c = p.battlefield.find(card => card.id === id); if (c) return c; }
+    return event.frame?.stack.find(si => si.source?.id === id)?.source;
+  }
+  /** " em Bruno e Llanowar Elves": os alvos da mágica ou da habilidade, para o histórico. */
+  function historyTargets(event: PresentationEvent) {
+    if (event.type !== 'spell-cast' && event.type !== 'ability-activated') return '';
+    const s = client?.state;
+    const names = [...(event.targets?.players ?? []).map(id => id === s?.you ? 'você' : s?.players.find(p => p.id === id)?.name),
+      ...(event.targets?.cards ?? []).map(id => { const c = findCard(id) ?? frameCard(id, event); return c ? label(c) : undefined; })].filter((n): n is string => !!n);
+    return names.length ? ` em ${listNames(names)}` : '';
   }
   /** "Oponente moeu 3 cartas com Thought Scour: Forest, Llanowar Elves e Giant Growth." */
   function millDescription(event: PresentationEvent, who: string) {
@@ -1520,11 +1568,52 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     setHTML(el, s.stack.length ? stackPanel(s, presentation.replaying) : '');
     el.scrollTop = scrollTop;
     renderStackGallery(authoritative);
-    // Optional drawer only: ordinary draws and priority changes never crowd the table.
-    setHTML($('#fLog'), timeline.history.slice().reverse().map(event => `<li>${event.card?.name && !event.card.faceDown
-      ? `<button class="history-inspect" data-event="${event.seq}">${esc(eventDescription(event))}</button>`
-      : `<span>${esc(eventDescription(event))}</span>`}</li>`).join('') || '<li>As jogadas aparecerão aqui.</li>');
+    renderLog();
     restoreFocus(focused);
+  }
+
+  /** Turnos e linhas do histórico abertos ou fechados pelo jogador; sem escolha, ficam abertos o turno atual e o anterior. */
+  const historyOpen = new Map<string, boolean>();
+  let historyMatch = '';
+  /** As cartas que o histórico mostra, para ampliar mesmo depois de terem saído da mesa. */
+  const historyCards = new Map<string, FCard>();
+  const historyNames: HistoryNames = {
+    player: id => id === undefined ? 'Jogador' : client?.state?.players.find(p => p.id === id)?.name ?? 'Jogador',
+    card: event => event.card?.name && !event.card.faceDown ? label(event.card) : undefined,
+    cardById: (id, event) => frameCard(id, event) ?? findCard(id, false),
+    label,
+    describe: event => eventDescription(event, true),
+  };
+  function historyThumb(card: FCard | undefined) {
+    const art = card && (card.image ?? image(card.name, 'small'));
+    return `<span class="history-thumb"${art ? ` style="background-image:url('${art}')"` : ''} aria-hidden="true"></span>`;
+  }
+  function historyItem(item: HistoryItem) {
+    if (!item.card) return `<span class="history-text">${esc(item.text)}</span>`;
+    historyCards.set(item.key, item.card);
+    return `<button class="history-inspect" data-event="${item.key}">${historyThumb(item.card)}<span class="history-text">${esc(item.text)}</span></button>`;
+  }
+  /** Histórico agrupado (Menu → Registro): só é montado com a gaveta aberta. */
+  function renderLog() {
+    if ($('#fLogDrawer').hidden) return;
+    if (historyMatch !== timeline.matchId) { historyMatch = timeline.matchId; historyOpen.clear(); }
+    historyCards.clear();
+    const you = client?.state?.you;
+    historyNames.you = you;
+    const turns = historyTurns(timeline.history, historyNames);
+    const recent = new Set(turns.slice(-2).map(t => t.key));
+    setHTML($('#fLog'), turns.slice().reverse().map(turn => {
+      const open = historyOpen.get(turn.key) ?? recent.has(turn.key);
+      const title = turn.turn === undefined ? 'Início da partida' : `Turno ${turn.turn} · ${turn.actor === you ? 'Você' : esc(historyNames.player(turn.actor))}`;
+      return `<li class="history-turn${turn.actor !== undefined && turn.actor === you ? ' mine' : ''}">
+        <button class="history-turn-head" data-log-toggle="${turn.key}" aria-expanded="${open}"><span class="history-caret" aria-hidden="true"></span><span class="history-turn-title">${title}</span><span class="history-turn-count">${turnSummary(turn)}</span></button>
+        <ul class="history-lines"${open ? '' : ' hidden'}>${turn.lines.slice().reverse().map(line => {
+          const expanded = historyOpen.get(line.key) ?? false;
+          const more = line.children.length ? `<button class="history-more" data-log-toggle="${line.key}" aria-expanded="${expanded}" aria-label="${expanded ? 'Esconder' : 'Mostrar'} os detalhes (${line.children.length})">${line.children.length}<span class="history-caret" aria-hidden="true"></span></button>` : '';
+          return `<li class="history-line${line.actor !== undefined && line.actor === you ? ' mine' : ''}"><div class="history-row">${historyItem(line)}${more}</div>${line.children.length && expanded
+            ? `<ul class="history-details">${line.children.map(child => `<li>${historyItem(child)}</li>`).join('')}</ul>` : ''}</li>`;
+        }).join('') || '<li class="history-line history-empty">Nenhuma jogada ainda.</li>'}</ul></li>`;
+    }).join('') || '<li class="history-empty">As jogadas aparecerão aqui.</li>');
   }
 
   function sideboardingHTML(s: FState) {
@@ -1863,6 +1952,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stopsEditable(), open: stopMenu }));
+    if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) root.querySelector('.phase-daynight')?.classList.add('bump');
+    lastDayTime = visual.dayTime;
     placeStopMenu();
     syncTurnClock(visual);
 
@@ -2051,17 +2142,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function showPreview(c: FCard | undefined, trigger?: HTMLElement, pinned = false, at?: { x: number; y: number }) {
     if (!pinned && (stackGalleryOpen || trigger?.closest('#fStack') || (client?.state && suppressOpeningPreview(client.state)))) return;
+    const secret = !!c?.faceDown && !!c.hiddenFace?.name;
+    if (c) c = seenFace(c);
     if (!c || c.faceDown || !c.name) { hideCardPreview(); return; }
     const source = c.emblem ? emblemSource(c) : c.name;
     const card = { ...c, name: c.emblem ? emblemLabel(c) : c.name,
       image: c.image ?? image(source, 'normal'),
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.typeLine,
-      notes: permanentStatus(c, playerName).map(seal => seal.label) };
+      notes: [...(secret ? ['Virada para baixo: só você pode ver qual carta é.'] : []), ...permanentStatus(c, playerName).map(seal => seal.label)] };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {
-    if (el.dataset.event) return timeline.history.find(event => event.seq === Number(el.dataset.event))?.card;
+    if (el.dataset.event) return historyCards.get(el.dataset.event);
     const stackId = el.dataset.stack ?? el.dataset.stackInspect;
     if (stackId !== undefined && client?.state) return (el.closest('#fStackGallery') ? client.state.stack : stackPresentation(client.state, timeline.current?.event).stack).find(item => item.id === Number(stackId))?.source;
     const id = el.dataset.inspect ?? el.dataset.fid ?? el.dataset.peek ?? el.dataset.qCard;
@@ -2204,6 +2297,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     const sbInspect = t.closest<HTMLElement>('[data-sb-inspect]');
     if (sbInspect) { inspectCard({ name: sbInspect.dataset.sbInspect }, sbInspect); return; }
+    const logToggle = t.closest<HTMLElement>('[data-log-toggle]');
+    if (logToggle) {
+      const key = logToggle.dataset.logToggle!;
+      historyOpen.set(key, logToggle.getAttribute('aria-expanded') !== 'true');
+      renderLog(); restoreLogFocus(key);
+      return;
+    }
     const inspecting = t.closest<HTMLElement>('[data-inspect],[data-event],[data-stack-inspect]');
     if (inspecting) { showPreview(cardFromElement(inspecting), inspecting, true); return; }
     const stackTarget = t.closest<HTMLElement>('[data-stack]');
@@ -2232,6 +2332,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (ui === 'menu') { setMenu($('#fMenu').hidden); return; }
+    if (ui === 'version') {
+      // A versão da mesa vem do topo das Novidades; ao tocar, alterna para as versões que a ponte informou.
+      const button = t.closest<HTMLElement>('[data-ui="version"]')!;
+      const bridge = button.getAttribute('aria-pressed') !== 'true';
+      const s = client?.state;
+      button.setAttribute('aria-pressed', String(bridge));
+      button.textContent = bridge ? `Regras ${s?.rulesVersion ?? '?'} · Motor ${s?.engineVersion ?? '?'}` : `Mesa de Duelo ${VERSION}`;
+      return;
+    }
     if (ui === 'log') { setErrors(false); setLog($('#fLogDrawer').hidden, true); return; }
     if (ui === 'errors') { setErrors($('#fErrorsDrawer').hidden, true); return; }
     if (ui === 'feedback') { setMenu(false); opts.onFeedback?.({ kind: 'sugestao' }); return; }

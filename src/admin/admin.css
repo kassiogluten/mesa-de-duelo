@@ -55,6 +55,8 @@ body { min-height: 100%; height: auto; }
 .adm-status.s-novo { border-color: var(--gold); color: var(--gold-light); }
 .adm-status.s-issue { border-color: #59b5ff88; color: #9ad3ff; }
 .adm-status.s-resolvido { border-color: #63d68f88; color: var(--heal); }
+.adm-status.e-concedida { border-color: #f2b54c88; color: var(--gold-light); }
+.adm-status.e-queda { border-color: #ff7a7a88; color: #ffb3b3; }
 
 /* Detalhe */
 .adm-detail { position: sticky; top: 76px; max-height: calc(100dvh - 92px); overflow: auto; padding: 4px 4px 16px; }

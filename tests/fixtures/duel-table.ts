@@ -102,6 +102,11 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     Object.assign(state, { playableExile: [278], castable: [278] });
     view.render();
   },
+  /** Dia ou noite na trilha de fases, com as mágicas que quem joga o turno já conjurou. */
+  dayNight(time: 'day' | 'night' = 'day', spells = 0, active = 10) {
+    Object.assign(state, { dayTime: time, activeSpells: spells, activePlayer: active });
+    view.render();
+  },
   /** Topo do grimório à vista: o seu dá para conjurar (Future Sight), o do oponente está revelado (Courser of Kruphix). */
   libraryTop() {
     const [me, opp] = state.players;
@@ -155,6 +160,49 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       { kind: 'ability', label: 'Plot {1}{R} — Custo: {1}{R}', mode: 'plot', cost: '{1}{R}', extra: [], description: 'Plot {1}{R}' },
       { kind: 'ability', label: 'Evoke — Custo: sacrificar', mode: 'evoke', spell: true, cost: '', extra: ['Sacrifice a creature'], description: 'Evoke—Sacrifice a creature' },
     ] };
+    view.render();
+  },
+  /** Uma partida curta já jogada, para o histórico (Menu → Registro): turnos, mágicas com o que causaram, combate e gatilhos. */
+  history() {
+    const me = 10, opp = 23;
+    const c = (id: number, name: string, controller: number) => card(id, name, controller);
+    const elves = c(400, 'Llanowar Elves', me), bears = c(401, 'Grizzly Bears', opp), angel = c(402, 'Serra Angel', opp), artist = c(403, 'Blood Artist', opp);
+    const knight = c(404, 'Knight of Autumn', opp), warden = c(100, 'Soul Warden', me);
+    let seq = 0;
+    const frame = (stackId?: number, combat: any[] = []) => ({ turn: 0, phase: 'MAIN1', activePlayer: me, combat,
+      stack: stackId ? [{ id: stackId }] : [], players: [{ id: me, life: 20, handCount: 5, library: 50, battlefield: [elves, warden] }, { id: opp, life: 20, handCount: 5, library: 50, battlefield: [bears, angel, artist, knight] }] });
+    const ev = (type: string, extra: any = {}) => ({ seq: ++seq, stateVersion: seq, type, ...extra });
+    const cast = (id: number, actor: number, src: any, extra: any = {}) => ev('spell-cast', { actor, stackId: id, sourceId: src.id, card: src, frame: frame(id), ...extra });
+    const resolved = (id: number, actor: number, src: any, extra: any = {}) => ev('resolved', { actor, stackId: id, sourceId: src.id, card: src, frame: frame(id), ...extra });
+    const trigger = (id: number) => ev('ability-activated', { actor: opp, trigger: true, stackId: id, sourceId: artist.id, card: artist, frame: frame(id) });
+    state.matchId = 'historico';
+    state.events = [
+      ev('draw', { actor: me, count: 7 }), ev('draw', { actor: opp, count: 7 }),
+      ev('turn', { actor: me, turn: 1 }), ev('land-played', { actor: me, card: c(500, 'Forest', me), frame: frame() }),
+      cast(1, me, elves), ev('entered', { actor: me, sourceId: elves.id, card: elves, from: 'Stack', frame: frame(1) }), resolved(1, me, elves),
+      ev('turn', { actor: opp, turn: 2 }), ev('draw', { actor: opp }), ev('land-played', { actor: opp, card: c(501, 'Mountain', opp), frame: frame() }),
+      cast(2, opp, c(405, 'Lightning Bolt', opp), { targets: { cards: [elves.id] } }),
+      ev('damage', { actor: opp, card: c(405, 'Lightning Bolt', opp), delta: -3, targets: { cards: [elves.id] }, frame: frame(2) }),
+      resolved(2, opp, c(405, 'Lightning Bolt', opp)), ev('left', { actor: me, sourceId: elves.id, card: elves, reason: 'destroyed', from: 'Battlefield', to: 'Graveyard', frame: frame() }),
+      ev('turn', { actor: me, turn: 3 }), ev('draw', { actor: me }),
+      cast(3, me, c(406, 'Wrath of God', me)),
+      ...[bears, angel, artist, knight].map(x => ev('left', { actor: opp, sourceId: x.id, card: x, reason: 'destroyed', from: 'Battlefield', to: 'Graveyard', frame: frame(3) })),
+      resolved(3, me, c(406, 'Wrath of God', me)),
+      trigger(11), trigger(12), trigger(13),
+      ...[13, 12, 11].flatMap(id => [ev('life-changed', { actor: me, delta: -1, frame: frame(id) }), ev('life-changed', { actor: opp, delta: 1, frame: frame(id) }), resolved(id, opp, artist, { trigger: true })]),
+      ev('turn', { actor: opp, turn: 4 }), ev('draw', { actor: opp }),
+      ev('attackers', { actor: opp, cards: [angel.id, bears.id], targets: { players: [me] }, frame: frame(undefined, [{ attacker: angel.id, blockers: [] }, { attacker: bears.id, blockers: [] }]) }),
+      ev('blockers', { actor: me, cards: [warden.id], frame: frame(undefined, [{ attacker: angel.id, blockers: [] }, { attacker: bears.id, blockers: [warden.id] }]) }),
+      ev('damage', { actor: opp, combat: true, card: angel, delta: -4, targets: { players: [me] }, frame: frame() }),
+      ev('damage', { actor: opp, combat: true, card: bears, delta: -2, targets: { cards: [warden.id] }, frame: frame() }),
+      ev('damage', { actor: me, combat: true, card: warden, delta: -1, targets: { cards: [bears.id] }, frame: frame() }),
+      ev('life-changed', { actor: me, delta: -4, frame: frame() }),
+      ev('left', { actor: me, sourceId: warden.id, card: warden, reason: 'destroyed', from: 'Battlefield', to: 'Graveyard', frame: frame() }),
+      ev('turn', { actor: me, turn: 5 }), ev('draw', { actor: me }),
+      cast(4, me, c(407, 'Divination', me)), ev('draw', { actor: me }), ev('draw', { actor: me }), resolved(4, me, c(407, 'Divination', me)),
+    ];
+    state.eventCursor = seq;
+    state.turn = 5;
     view.render();
   },
 } });

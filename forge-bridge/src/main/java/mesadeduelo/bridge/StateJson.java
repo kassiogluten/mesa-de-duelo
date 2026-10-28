@@ -47,6 +47,7 @@ final class StateJson {
         PlayerView active = gv.getPlayerTurn();
         o.addProperty("activePlayer", active == null ? null : active.getId());
         TurnExtras.add(o, game);
+        dayNight(o, game);
         o.addProperty("gameOver", gv.isGameOver());
         if (gv.isGameOver()) o.addProperty("winner", gv.getWinningPlayerName());
 
@@ -58,6 +59,7 @@ final class StateJson {
                 JsonObject row = player(p, viewer == p.getId() && !(game.getRules().hasAppliedVariant(forge.game.GameType.Commander) && p.getHasLost()), game);
                 JsonObject top = libraryTop(p, gv, viewer, game);
                 if (top != null) row.add("libraryTop", top);
+                hiddenFaces(row, p, gv, viewer);
                 row.addProperty("seat", seat++); players.add(row);
             }
         } else for (PlayerView p : gv.getPlayers()) players.add(player(p, viewer == p.getId(), null));
@@ -118,6 +120,17 @@ final class StateJson {
         }
         o.add("log", log);
         return o;
+    }
+
+    /**
+     * Dia e noite (Innistrad: Caçada à Meia-Noite): só vai quando a partida já virou dia ou noite. Junto, quantas
+     * mágicas quem joga o turno já conjurou, que é o que decide se vira no próximo turno.
+     */
+    static void dayNight(JsonObject o, Game game) {
+        if (game == null || game.isNeitherDayNorNight()) return;
+        o.addProperty("dayTime", game.isDay() ? "day" : "night");
+        Player active = game.getPhaseHandler() == null ? null : game.getPhaseHandler().getPlayerTurn();
+        if (active != null) o.addProperty("activeSpells", active.getSpellsCastThisTurn());
     }
 
     static JsonObject player(PlayerView p, boolean showHand, Game game) {
@@ -194,6 +207,42 @@ final class StateJson {
         boolean visible = seen != null ? top.canBeShownTo(seen) : !gv.getPlayers().isEmpty();
         if (seen == null) for (PlayerView pv : gv.getPlayers()) visible &= top.canBeShownTo(pv);
         return visible ? card(top, game) : null;
+    }
+
+    /**
+     * Cartas viradas para baixo que quem está vendo pode olhar (a escondida pela Mosswort Bridge e as outras de
+     * "esconder", as próprias criaturas com metamorfose ou disfarce): a frente vai em {@code hiddenFace}, à parte,
+     * para a carta continuar sendo, no jogo, uma carta sem nome. Segue a regra do Forge; espectador não vê nenhuma.
+     */
+    static void hiddenFaces(JsonObject row, PlayerView p, GameView gv, int viewer) {
+        PlayerView seen = null;
+        for (PlayerView pv : gv.getPlayers()) if (pv.getId() == viewer) seen = pv;
+        if (seen == null) return;
+        hiddenFaces(row.getAsJsonArray("battlefield"), p.getBattlefield(), seen);
+        hiddenFaces(row.getAsJsonArray("exile"), p.getExile(), seen);
+    }
+
+    private static void hiddenFaces(JsonArray json, Iterable<CardView> zone, PlayerView seen) {
+        if (json == null || zone == null) return;
+        int i = 0;
+        for (CardView c : zone) {
+            if (i >= json.size()) return;
+            JsonObject o = json.get(i++).getAsJsonObject();
+            if (!c.isFaceDown() || o.get("id").getAsInt() != c.getId() || !c.canFaceDownBeShownTo(seen)) continue;
+            CardStateView s = c.getAlternateState();
+            if (s == null || s.getName() == null || s.getName().isEmpty()) continue;
+            JsonObject face = new JsonObject();
+            face.addProperty("name", s.getName());
+            face.addProperty("set", s.getSetCode());
+            String cost = s.getManaCost() == null ? "" : s.getManaCost().toString();
+            face.addProperty("manaCost", "no cost".equals(cost) ? "" : cost);
+            face.addProperty("typeLine", s.getType() == null ? "" : s.getType().toString());
+            face.addProperty("text", s.getOracleText());
+            face.addProperty("creature", s.isCreature());
+            face.addProperty("land", s.isLand());
+            if (s.isCreature()) { face.addProperty("power", s.getPower()); face.addProperty("toughness", s.getToughness()); }
+            o.add("hiddenFace", face);
+        }
     }
 
     private static Iterable<CardView> nzv(Iterable<CardView> it) { return it == null ? java.util.List.of() : it; }

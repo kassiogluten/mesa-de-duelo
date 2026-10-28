@@ -1,34 +1,68 @@
 {
-  "0.55.0": {
+  "0.58.0": {
     "Mágicas do turno": [
-      { "img": "0.55.0/magicas-turno.webp", "legenda": "Com Grapeshot na mão, o selo do raio ao lado do seu retrato mostra 2 mágicas neste turno; o balão lembra que a mesa toda já conjurou 3." }
+      { "img": "0.58.0/magicas-turno.webp", "legenda": "Com Grapeshot na mão, o selo do raio ao lado do seu retrato mostra 2 mágicas neste turno; o balão lembra que a mesa toda já conjurou 3." }
     ],
     "Bênção da cidade e Velocidade": [
-      { "img": "0.55.0/bencao.webp", "legenda": "O selo **Bênção** ao lado do seu retrato, com o balão explicando que ela dura até o fim da partida." },
-      { "img": "0.55.0/velocidade.webp", "legenda": "O velocímetro mostra velocidade 2 de 4, e o balão diz como ela sobe." },
-      { "img": "0.55.0/velocidade-maxima.webp", "legenda": "O oponente na velocidade máxima: o selo fica destacado e as habilidades de velocidade máxima estão ligadas." }
+      { "img": "0.58.0/bencao.webp", "legenda": "O selo **Bênção** ao lado do seu retrato, com o balão explicando que ela dura até o fim da partida." },
+      { "img": "0.58.0/velocidade.webp", "legenda": "O velocímetro mostra velocidade 2 de 4, e o balão diz como ela sobe." },
+      { "img": "0.58.0/velocidade-maxima.webp", "legenda": "O oponente na velocidade máxima: o selo fica destacado e as habilidades de velocidade máxima estão ligadas." }
     ],
     "Estados das permanentes": [
-      { "img": "0.55.0/estados.webp", "legenda": "Polukranos monstruoso, Portador da Glória exaurido e o Cóptero do Contrabandista tripulado, cada um com seu ícone pequeno embaixo da carta." },
-      { "img": "0.55.0/estado-suspeita.webp", "legenda": "Passando o mouse na criatura suspeita, o balão explica que ela tem ameaça e não pode bloquear." },
-      { "img": "0.55.0/estado-exaurida.webp", "legenda": "No Portador da Glória exaurido, o balão lembra que ele não desvira na próxima etapa de desvirar." }
+      { "img": "0.58.0/estados.webp", "legenda": "Polukranos monstruoso, Portador da Glória exaurido e o Cóptero do Contrabandista tripulado, cada um com seu ícone pequeno embaixo da carta." },
+      { "img": "0.58.0/estado-suspeita.webp", "legenda": "Passando o mouse na criatura suspeita, o balão explica que ela tem ameaça e não pode bloquear." },
+      { "img": "0.58.0/estado-exaurida.webp", "legenda": "No Portador da Glória exaurido, o balão lembra que ele não desvira na próxima etapa de desvirar." }
     ],
     "Quem defende a batalha": [
-      { "img": "0.55.0/batalha.webp", "legenda": "Invasão de Zendikar com 3 marcadores de defesa e o escudo dizendo que quem a defende é você." },
-      { "img": "0.55.0/batalha-detalhe.webp", "legenda": "O balão explica quem bloqueia, quanto dano falta e o que acontece quando sai o último marcador de defesa." }
+      { "img": "0.58.0/batalha.webp", "legenda": "Invasão de Zendikar com 3 marcadores de defesa e o escudo dizendo que quem a defende é você." },
+      { "img": "0.58.0/batalha-detalhe.webp", "legenda": "O balão explica quem bloqueia, quanto dano falta e o que acontece quando sai o último marcador de defesa." }
     ],
     "Cartas previstas à vista": [
-      { "img": "0.55.0/prevista.webp", "legenda": "Saw It Coming prevista na prateleira do exílio, de face para cima, com a etiqueta **Prevista** e o custo {1}{U}, pronta para **Jogar**." },
-      { "img": "0.55.0/prevista-oponente.webp", "legenda": "No exílio do oponente, a carta prevista continua de costas, só com a etiqueta **Prevista**." }
+      { "img": "0.58.0/prevista.webp", "legenda": "Saw It Coming prevista na prateleira do exílio, de face para cima, com a etiqueta **Prevista** e o custo {1}{U}, pronta para **Jogar**." },
+      { "img": "0.58.0/prevista-oponente.webp", "legenda": "No exílio do oponente, a carta prevista continua de costas, só com a etiqueta **Prevista**." }
     ],
     "Voar e Toque mortífero na borda da carta": [
-      { "img": "0.55.0/voar-toque-mortifero.webp", "legenda": "Uma criatura com Voar e Toque mortífero mostra a asa e a caveira verde na borda esquerda da carta." }
+      { "img": "0.58.0/voar-toque-mortifero.webp", "legenda": "Uma criatura com Voar e Toque mortífero mostra a asa e a caveira verde na borda esquerda da carta." }
     ],
     "Mais marcadores à vista na carta": [
-      { "img": "0.55.0/mais-marcadores.webp", "legenda": "À esquerda, o Ezuri com um marcador e sete habilidades mostra cada ícone, em três linhas; à direita, a Hidra, que não cabe nem assim, continua com o selo único (16)." }
+      { "img": "0.58.0/mais-marcadores.webp", "legenda": "À esquerda, o Ezuri com um marcador e sete habilidades mostra cada ícone, em três linhas; à direita, a Hidra, que não cabe nem assim, continua com o selo único (16)." }
+    ]
+  },
+  "0.57.0": {
+    "Versão da mesa no menu da partida": [
+      { "img": "0.57.0/menu.webp", "legenda": "No fim do menu da partida, abaixo de **Desistir e voltar ao início**, a linha discreta **Mesa de Duelo 0.57.0**." },
+      { "img": "0.57.0/regras-motor.webp", "legenda": "Tocando na linha, ela passa a mostrar as versões das regras e do motor do servidor." }
     ],
-    "Erros longos na barra lateral": [
-      { "img": "0.55.0/erro-rolagem.webp", "legenda": "Um aviso comprido de deck fora do Pauper fica limitado a poucas linhas embaixo do botão **Jogar**; o resto da mensagem rola ali mesmo." }
+    "Histórico da partida por turno": [
+      { "img": "0.57.0/turnos.webp", "legenda": "O Registro com um bloco por turno: o atual e o anterior abertos, os mais antigos recolhidos com quantas jogadas tiveram." },
+      { "img": "0.57.0/magica.webp", "legenda": "Cólera de Deus numa linha só, aberta para mostrar as quatro permanentes destruídas; logo acima, os três gatilhos do Artista do Sangue juntos." }
+    ],
+    "Mais detalhes no histórico": [
+      { "img": "0.57.0/combate.webp", "legenda": "O dano de combate aberto, com miniaturas de cada carta, e a linha do bloqueio dizendo qual criatura bloqueou qual." }
+    ]
+  },
+  "0.56.1": {
+    "Cartas viradas para baixo que você pode olhar": [
+      { "img": "0.56.1/exilio-virada.webp", "legenda": "No seu exílio, a carta escondida aparece com a frente apagada e o olho no canto: só você vê que é um Raio." },
+      { "img": "0.56.1/campo-virada.webp", "legenda": "Sua criatura com metamorfose segue com o verso no campo, agora com o olho no canto." },
+      { "img": "0.56.1/inspetor-virada.webp", "legenda": "O inspetor mostra a carta virada para baixo e avisa que só você pode ver qual carta é." }
+    ]
+  },
+  "0.56.0": {
+    "Tempo do último turno": [
+      { "img": "0.56.0/oponente.webp", "legenda": "No seu turno, o selo com a ampulheta ao lado da vida do oponente diz que o último turno dele durou 1:12." },
+      { "img": "0.56.0/voce.webp", "legenda": "No turno do oponente, o seu selo mostra quanto durou o seu último turno: 0:48." }
+    ]
+  },
+  "0.55.0": {
+    "Dia e noite": [
+      { "img": "0.55.0/dia.webp", "legenda": "De dia, o sol ao lado do relógio do turno. O balão explica que vira noite se você não conjurar mágicas neste turno e que nenhuma foi conjurada até agora." },
+      { "img": "0.55.0/noite.webp", "legenda": "De noite, a lua com estrelas no turno do oponente: vira dia se o oponente conjurar 2 mágicas ou mais, e 1 já foi conjurada." }
+    ]
+  },
+  "0.54.1": {
+    "Avisos longos na escolha de deck": [
+      { "img": "0.54.1/erro-rolagem.webp", "legenda": "Um aviso comprido de deck fora do Pauper fica limitado a poucas linhas embaixo do botão **Jogar**; o resto da mensagem rola ali mesmo." }
     ]
   },
   "0.54.0": {

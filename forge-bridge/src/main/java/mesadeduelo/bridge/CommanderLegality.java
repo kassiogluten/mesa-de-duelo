@@ -19,7 +19,8 @@ final class CommanderLegality {
                 var card = value.getAsJsonObject();
                 String name = card.get("name").getAsString(), id = card.get("oracleId").getAsString();
                 names.put(key(name), id);
-                for (String face : name.split(" // ")) names.put(key(face), id);
+                // A real card wins over a face of another one (Rampant Growth vs. Studious First-Year // Rampant Growth).
+                for (String face : name.split(" // ")) if (!face.equals(name)) names.putIfAbsent(key(face), id);
             }
             return Map.copyOf(names);
         } catch (java.io.IOException e) { throw new IllegalStateException("Cannot load Commander legality snapshot", e); }

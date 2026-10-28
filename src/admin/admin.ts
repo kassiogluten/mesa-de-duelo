@@ -135,15 +135,22 @@ addEventListener('hashchange', () => { if (root.querySelector('.adm-top')) syncT
 
 // ---------------------------------------------------------------- histórico
 
-/** Uma partida concluída, como a ponte grava (veja MatchHistory.java): os índices apontam para players. */
+/** Uma partida gravada, como a ponte grava (veja MatchHistory.java): os índices apontam para players. */
 interface PastMatch {
   id: string; startedAt: string; endedAt: string; ms: number; format: string; length: string; mode: 'ia' | 'rede'; public?: boolean;
+  /** Como acabou; as linhas gravadas antes do campo existir são todas concluídas. */
+  end?: End;
   winner: number | null;
   players: { name?: string; ai: boolean; deck: string; colors: string; commander?: string; wins: number }[];
   games: { winner: number | null; turns: number; ms?: number; end?: string; result: string[]; mull: number[] }[];
 }
 const LOSS: Record<string, string> = { LifeReachedZero: 'vida', Conceded: 'desistência', Milled: 'grimório vazio', Poisoned: 'veneno', CommanderDamage: 'dano de comandante', SpellEffect: 'efeito de carta', OpponentWon: 'vitória de outro' };
+type End = 'concluida' | 'concedida' | 'queda';
+const ENDS: Record<End, [string, string]> = { concluida: ['Concluídas', 'concluída'], concedida: ['Concedidas', 'concedida'], queda: ['Quedas', 'queda'] };
+const endOf = (m: PastMatch): End => m.end ?? 'concluida';
 let historyMonth = '';
+let historyMonths: string[] = [];
+let historyEnd: End | '' = '';
 let past: PastMatch[] = [];
 const minutes = (ms: number) => ms < 60000 ? `${Math.round(ms / 1000)} s` : ms < 3600000 ? `${Math.round(ms / 60000)} min` : `${Math.floor(ms / 3600000)} h ${Math.round(ms / 60000) % 60} min`;
 const monthName = (month: string) => new Date(`${month}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -158,45 +165,53 @@ async function loadHistory(month = '') {
     if (response.status === 401) { clearInterval(matchesTimer); login('A sessão acabou. Entre de novo.'); return; }
     if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
     const json = await response.json() as { meses: string[]; mes: string; partidas: PastMatch[] };
-    historyMonth = json.mes; past = json.partidas;
-    renderHistory(json.meses);
-    void loadCommanderArt(json.meses);
+    historyMonth = json.mes; past = json.partidas; historyMonths = json.meses;
+    renderHistory();
+    void loadCommanderArt();
   } catch { section.innerHTML = '<p class="adm-error">Não consegui ler o histórico na ponte.</p>'; }
 }
 
-function renderHistory(months: string[]) {
+function renderHistory() {
   const section = root.querySelector<HTMLElement>('#admHistorico')!;
-  const count = (test: (m: PastMatch) => boolean) => past.filter(test).length;
+  const months = historyMonths;
+  // Os totais seguem o filtro de como a partida acabou.
+  const shown = historyEnd ? past.filter(m => endOf(m) === historyEnd) : past;
+  const count = (test: (m: PastMatch) => boolean) => shown.filter(test).length;
   const formats = Object.entries(FORMATS).map(([key, label]) => [label, count(m => m.format === key)] as const).filter(([, n]) => n);
-  const games = past.flatMap(m => m.games);
+  const games = shown.flatMap(m => m.games);
   // Decks humanos e da IA juntos: quantas partidas cada um jogou e quantas venceu.
   const decks = new Map<string, { played: number; won: number }>();
-  for (const m of past) m.players.forEach((p, i) => {
+  for (const m of shown) m.players.forEach((p, i) => {
     const d = decks.get(p.deck) ?? { played: 0, won: 0 };
     d.played++; if (m.winner === i) d.won++;
     decks.set(p.deck, d);
   });
   const topDecks = [...decks].sort((a, b) => b[1].played - a[1].played || b[1].won - a[1].won).slice(0, 5);
   const tile = (label: string, value: string, detail = '') => `<div class="adm-card adm-tile${value.length > 12 ? ' long' : ''}"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ''}</div>`;
-  const ending = (m: PastMatch, g: PastMatch['games'][number]) => g.winner === null ? 'empate'
-    : g.result.map((r, i) => LOSS[r] ? `${playerName(m.players[i], i)} por ${LOSS[r]}` : null).filter(Boolean).join(', ');
-  section.innerHTML = `<div class="adm-head"><h2>Concluídas</h2><p class="adm-muted">${historyMonth ? `${past.length} ${past.length === 1 ? 'partida' : 'partidas'} em ${esc(monthName(historyMonth))}` : 'Nenhuma partida concluída ainda.'}</p>
+  const ending = (m: PastMatch, g: PastMatch['games'][number]) => {
+    const losses = g.result.map((r, i) => LOSS[r] ? `${playerName(m.players[i], i)} por ${LOSS[r]}` : null).filter(Boolean).join(', ');
+    if (g.end === 'Interrupted') return losses ? `interrompido (${losses})` : 'interrompido';
+    return losses || (g.winner === null ? 'empate' : '');
+  };
+  const total = (end: End | '') => end ? past.filter(m => endOf(m) === end).length : past.length;
+  section.innerHTML = `<div class="adm-head"><h2>Histórico</h2><p class="adm-muted">${historyMonth ? `${shown.length} ${shown.length === 1 ? 'partida' : 'partidas'} em ${esc(monthName(historyMonth))}` : 'Nenhuma partida gravada ainda.'}</p>
       ${months.length ? `<label class="adm-month">Mês<select data-history-month>${months.map(m => `<option value="${m}"${m === historyMonth ? ' selected' : ''}>${esc(monthName(m))}</option>`).join('')}</select></label>` : ''}
+      ${historyMonth ? `<label class="adm-month">Fim<select data-history-end>${(['', 'concluida', 'concedida', 'queda'] as const).map(e => `<option value="${e}"${e === historyEnd ? ' selected' : ''}>${e ? ENDS[e][0] : 'Todas'} (${total(e)})</option>`).join('')}</select></label>` : ''}
       <button class="adm-ghost" data-act="history">Atualizar</button>${historyMonth ? '<button class="adm-ghost" data-act="history-download">Baixar .jsonl</button>' : ''}</div>
-    ${past.length ? `<div class="adm-tiles">
-      ${tile('Partidas', String(past.length), `${count(m => m.mode === 'ia')} contra a IA · ${count(m => m.mode === 'rede')} em rede`)}
+    ${shown.length ? `<div class="adm-tiles">
+      ${tile('Partidas', String(shown.length), `${count(m => m.mode === 'ia')} contra a IA · ${count(m => m.mode === 'rede')} em rede`)}
       ${tile('Formatos', formats.map(([label, n]) => `${label} ${n}`).join(' · '))}
-      ${tile('Duração média', minutes(average(past.map(m => m.ms))), `${games.length} ${games.length === 1 ? 'jogo' : 'jogos'} no total`)}
+      ${tile('Duração média', minutes(average(shown.map(m => m.ms))), `${games.length} ${games.length === 1 ? 'jogo' : 'jogos'} no total`)}
       ${tile('Turnos por jogo', average(games.map(g => g.turns)).toFixed(1).replace('.', ','), `${games.flatMap(g => g.mull).reduce((a, b) => a + b, 0)} mulligans`)}
       <div class="adm-card adm-tile adm-decks"><span>Decks mais jogados</span><ol>${topDecks.map(([deck, d]) => `<li><strong>${esc(deck)}</strong> <small>${d.played} ${d.played === 1 ? 'partida' : 'partidas'} · ${Math.round(100 * d.won / d.played)}% de vitórias</small></li>`).join('')}</ol></div>
     </div>
-    <ul class="adm-past">${past.map(m => `<li class="adm-card adm-past-row">
+    <ul class="adm-past">${shown.map(m => `<li class="adm-card adm-past-row">
       <div class="adm-row-top"><strong>${esc([FORMATS[m.format] ?? m.format, m.length === 'bo3' ? 'melhor de três' : null].filter(Boolean).join(' · '))}</strong>
-        <span class="adm-status">${m.mode === 'ia' ? 'contra a IA' : m.public ? 'sala pública' : 'sala privada'}</span><time>${when(m.endedAt)}</time></div>
+        <span class="adm-status">${m.mode === 'ia' ? 'contra a IA' : m.public ? 'sala pública' : 'sala privada'}</span>${endOf(m) !== 'concluida' ? `<span class="adm-status e-${endOf(m)}">${ENDS[endOf(m)][1]}</span>` : ''}<time>${when(m.endedAt)}</time></div>
       <ul class="adm-players">${m.players.map((p, i) => `<li class="${m.winner === i ? 'won' : ''}"><span class="adm-dot ${p.ai ? 'ai' : 'on'}"></span>${commanderThumbs(p.commander)}<strong>${esc(playerName(p, i))}</strong>
         <span class="adm-muted"> · ${esc(p.commander ?? p.deck)} (${esc(p.colors)})</span>${m.length === 'bo3' ? ` · ${p.wins} ${p.wins === 1 ? 'vitória' : 'vitórias'}` : ''}${m.winner === i ? ' · venceu' : ''}</li>`).join('')}</ul>
-      <p class="adm-muted">${esc([minutes(m.ms), ...m.games.map((g, n) => `${m.games.length > 1 ? `jogo ${n + 1}: ` : ''}${g.turns} turnos, ${ending(m, g)}`)].join(' · '))}</p></li>`).join('')}</ul>`
-    : historyMonth ? '<p class="adm-empty">Nenhuma partida neste mês.</p>' : ''}`;
+      <p class="adm-muted">${esc([minutes(m.ms), ...m.games.map((g, n) => `${m.games.length > 1 ? `jogo ${n + 1}: ` : ''}${g.turns} turnos${ending(m, g) ? `, ${ending(m, g)}` : ''}`)].join(' · '))}</p></li>`).join('')}</ul>`
+    : historyMonth ? `<p class="adm-empty">${historyEnd ? `Nenhuma partida ${ENDS[historyEnd][1]} neste mês.` : 'Nenhuma partida neste mês.'}</p>` : ''}`;
 }
 
 /** Miniaturas (arte recortada) dos comandantes de um jogador; "A + B" são dois parceiros. */
@@ -209,13 +224,13 @@ function commanderThumbs(commander?: string) {
 
 // O cache de cartas do Scryfall é o mesmo do jogo (IndexedDB); só busca na API os comandantes que ainda não estão nele.
 let cardCache: Promise<void> | undefined;
-async function loadCommanderArt(months: string[]) {
+async function loadCommanderArt() {
   try {
     await (cardCache ??= loadCardCache());
     const names = past.flatMap(m => m.players.flatMap(p => p.commander?.split(' + ') ?? []));
     const missing = names.filter(n => !cacheGet(n));
-    renderHistory(months);
-    if (missing.length) { await fetchByNames(missing); renderHistory(months); }
+    renderHistory();
+    if (missing.length) { await fetchByNames(missing); renderHistory(); }
   } catch { /* sem miniaturas: a lista continua com os nomes */ }
 }
 
@@ -403,6 +418,7 @@ root.addEventListener('submit', e => {
 root.addEventListener('input', e => {
   const t = e.target as HTMLInputElement | HTMLSelectElement;
   if (t.hasAttribute('data-history-month')) { void loadHistory(t.value); return; }
+  if (t.hasAttribute('data-history-end')) { historyEnd = t.value as End | ''; renderHistory(); return; }
   if (!t.dataset.filter) return;
   filter = { ...filter, [t.dataset.filter]: t.value };
   if (t instanceof HTMLInputElement) {

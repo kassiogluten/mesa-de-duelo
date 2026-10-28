@@ -62,13 +62,15 @@ test('backlog catches up with bounded silent presentation, retaining meaningful 
   while ((entry = timeline.advance())) { ids.push(entry.event.seq); assert.equal(entry.audible, false); }
   assert.deepEqual(ids, [22, 23, 24, 25]);
   timeline.ingest('a', Array.from({ length: 100 }, (_, i) => event(i + 26)), { silent: true });
-  assert.equal(timeline.history.length, 60); assert.equal(timeline.queued, 0);
+  assert.equal(timeline.history.length, 125, 'the whole match stays in the history'); assert.equal(timeline.queued, 0);
+  timeline.ingest('a', Array.from({ length: 4000 }, (_, i) => event(i + 126)), { silent: true });
+  assert.equal(timeline.history.length, 3000); assert.equal(timeline.history.at(-1).seq, 4125);
 });
 
-test('draw and priority events advance cursor without filling stack/history presentation', () => {
+test('draw and priority events advance cursor without filling stack presentation; draws are counted in the history', () => {
   const timeline = new PresentationTimeline(); timeline.ingest('a', []);
-  timeline.ingest('a', [event(1, 'draw'), event(2, 'priority'), event(3, 'damage')], { cursor: 8 });
-  assert.equal(timeline.cursor, 8); assert.deepEqual(timeline.history.map(e => e.type), ['damage']);
+  timeline.ingest('a', [event(1, 'draw', { actor: 1 }), event(2, 'priority'), event(3, 'damage')], { cursor: 8 });
+  assert.equal(timeline.cursor, 8); assert.deepEqual(timeline.history.map(e => e.type), ['draw', 'damage']);
   const draw = timeline.advance();
   assert.equal(draw.event.type, 'draw'); assert.equal(draw.audioOnly, true); assert.equal(draw.audible, true);
   assert.equal(timeline.advance().event.type, 'damage');
@@ -76,6 +78,9 @@ test('draw and priority events advance cursor without filling stack/history pres
   assert.equal(timeline.queued, 0);
   timeline.ingest('a', [event(9, 'draw')]);
   assert.equal(timeline.queued, 0, 'silent draw must not replay after catch-up');
+  timeline.ingest('a', [event(10, 'draw', { actor: 2 }), event(11, 'draw', { actor: 2 })]);
+  timeline.ingest('a', [event(12, 'draw', { actor: 2 })]);
+  assert.deepEqual(timeline.history.slice(-1).map(e => [e.type, e.actor, e.count]), [['draw', 2, 3]], 'draws in a row by one player are one history entry, across packets');
 });
 
 test('a cast followed by fourteen draws and resolution preserves the full visual sequence', () => {
@@ -86,7 +91,7 @@ test('a cast followed by fourteen draws and resolution preserves the full visual
   assert.deepEqual(entries.map(e => e.event.seq), [1, 8, 15, 16]);
   assert.ok(entries.every(e => e.audible), 'draws must not force silent visual catch-up');
   assert.deepEqual(entries.filter(e => !e.audioOnly).map(e => e.event.type), ['spell-cast', 'resolved']);
-  assert.deepEqual(timeline.history.map(e => e.type), ['spell-cast', 'resolved']);
+  assert.deepEqual(timeline.history.map(e => [e.type, e.count]), [['spell-cast', undefined], ['draw', 7], ['draw', 7], ['resolved', undefined]]);
   timeline.ingest('a', [event(15, 'draw', { actor: 2 })]);
   assert.equal(timeline.queued, 0, 'coalesced draws remain consumed');
 });

@@ -52,6 +52,11 @@ export interface FCard {
   faceDown?: boolean;
   /** Como a permanente ficou virada para baixo (só no campo). */
   faceDownKind?: 'morph' | 'disguise' | 'manifest' | 'cloak';
+  /**
+   * Frente de uma carta virada para baixo que só quem recebe o estado pode ver (a escondida pela Mosswort Bridge, a
+   * sua criatura com metamorfose). Fica à parte: no jogo a carta continua sem nome, e no campo é uma 2/2.
+   */
+  hiddenFace?: Pick<FCard, 'name' | 'set' | 'manaCost' | 'typeLine' | 'text' | 'creature' | 'land' | 'power' | 'toughness'>;
   name?: string;
   set?: string;
   manaCost?: string;
@@ -159,6 +164,8 @@ export interface FPlayer {
   speed?: number;
   /** Mágicas que o jogador conjurou neste turno; ausente quando nenhuma. */
   spellsCast?: number;
+  /** Quanto durou o turno mais recente que o jogador terminou, em ms (medido pelo servidor); ausente antes do primeiro. */
+  lastTurnMs?: number;
   library: number;
   /** Carta do topo do grimório, só quando quem recebe o estado pode vê-la (Vizier of the Menagerie, Courser of Kruphix...). */
   libraryTop?: FCard;
@@ -295,6 +302,11 @@ export interface FState {
   extraCombatAfter?: string[];
   /** Fases que, por causa de uma etapa extra, não seguem para a fase normal, e a fase que vem depois de cada uma. */
   extraPhaseAfter?: Record<string, string>;
+  /** Dia ou noite, só depois que a partida vira um dos dois; e as mágicas que quem joga o turno já conjurou nele. */
+  dayTime?: 'day' | 'night';
+  activeSpells?: number;
+  /** Quanto o turno atual já durou quando o estado saiu do servidor, em ms; ausente no fim do jogo e em pontes antigas. */
+  turnElapsedMs?: number;
   gameOver: boolean;
   spectating?: boolean;
   winner?: string;

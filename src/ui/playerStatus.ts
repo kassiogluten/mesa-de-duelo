@@ -1,5 +1,6 @@
 import type { FPlayer } from '../forge/client';
 import { esc } from './cardtext';
+import { turnTimeText } from './clock';
 
 const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
 const MONARCH_ICON = svg('M2 8l5 4 5-7 5 7 5-4-2 11H4zm2 13h16v2H4z');
@@ -13,6 +14,7 @@ export function speedText(speed: number) {
     : 'Sobe 1, no máximo uma vez por turno, quando um oponente perde vida no turno deste jogador. Com 4, ligam as habilidades de velocidade máxima.'}`;
 }
 const SPELLS_ICON = svg('M13 2 4 14h7l-1 8 9-12h-7z');
+const HOURGLASS_ICON = svg('M6 2h12v2h-1v3l-4 5 4 5v3h1v2H6v-2h1v-3l4-5-4-5V4H6zm3 2v2.3l3 3.7 3-3.7V4zm3 9.9-3 3.8V20h6v-2.3z');
 export const MONARCH_HINT = 'Monarca: no começo da etapa final, compra um card. Quem causar dano de combate ao monarca passa a ser o monarca.';
 
 /** "0 de 1" ou "2, sem limite": terrenos jogados no turno e quantos pode jogar. */
@@ -21,6 +23,8 @@ export function landsText(p: FPlayer) {
   return p.maxLands === -1 ? `${played}, sem limite` : `${played} de ${p.maxLands ?? 1}`;
 }
 const showsLands = (p: FPlayer, active: number | null | undefined) => p.id === active && p.maxLands !== undefined;
+/** O tempo do último turno fica de fora no turno do próprio jogador: ali vale o relógio da trilha. */
+const showsLastTurn = (p: FPlayer, active: number | null | undefined) => p.lastTurnMs != null && p.id !== active;
 
 /**
  * Mágicas do turno: só aparecem quando há na mesa uma carta que as conta (`spellsTotal` é o total da mesa, que a
@@ -35,13 +39,14 @@ function spellsText(p: FPlayer, spellsTotal: number) {
 /** Texto para o leitor de tela, junto do nome e da vida do jogador. */
 export function playerStatusText(p: FPlayer, active?: number | null, spellsTotal?: number) {
   return [p.monarch ? ', é o monarca' : '', p.blessing ? ', tem a bênção da cidade' : '', p.speed ? `, velocidade ${p.speed} de 4` : '', showsLands(p, active) ? `, terrenos jogados neste turno: ${landsText(p)}` : '',
-    showsSpells(p, spellsTotal) ? `, ${spellsText(p, spellsTotal!).toLowerCase()}` : ''].join('');
+    showsSpells(p, spellsTotal) ? `, ${spellsText(p, spellsTotal!).toLowerCase()}` : '', showsLastTurn(p, active) ? `, último turno durou ${turnTimeText(p.lastTurnMs!)}` : ''].join('');
 }
 
 /**
- * Selos de monarca, bênção da cidade, velocidade, terrenos e mágicas do turno, ao lado dos marcadores do jogador. Os terrenos só aparecem no
- * turno do jogador e ficam apagados quando ele já jogou todos. `changed` traz MONARCH quando a coroa acabou de chegar
- * (BLESSING e SPEED, da mesma forma, quando chegam ou mudam) e SPELLS quando o jogador conjurou mais uma mágica.
+ * Selos de monarca, bênção da cidade, velocidade, terrenos, mágicas do turno e tempo do último turno, ao lado dos marcadores
+ * do jogador. Os terrenos só aparecem no turno do jogador e ficam apagados quando ele já jogou todos; o tempo, fora dele.
+ * `changed` traz MONARCH quando a coroa acabou de chegar (BLESSING e SPEED, da mesma forma, quando chegam ou mudam) e
+ * SPELLS quando o jogador conjurou mais uma mágica.
  */
 export function playerStatusHTML(p: FPlayer, active?: number | null, open: string | null = null, changed: Set<string> = new Set(), spellsTotal?: number) {
   let html = '';
@@ -65,6 +70,10 @@ export function playerStatusHTML(p: FPlayer, active?: number | null, open: strin
   if (showsSpells(p, spellsTotal)) {
     const key = `p${p.id}:SPELLS`;
     html += `<span class="player-counter spells-cast${changed.has('SPELLS') ? ' bump' : ''}${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${SPELLS_ICON}<b>${p.spellsCast}</b><span class="ctr-tip">${esc(spellsText(p, spellsTotal!))}</span></span>`;
+  }
+  if (showsLastTurn(p, active)) {
+    const key = `p${p.id}:LASTTURN`, time = turnTimeText(p.lastTurnMs!);
+    html += `<span class="player-counter last-turn${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${HOURGLASS_ICON}<b>${time}</b><span class="ctr-tip">${esc(`Último turno: durou ${time}.`)}</span></span>`;
   }
   return html;
 }

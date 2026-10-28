@@ -428,7 +428,7 @@ Prioridade alta (comum em Commander, muda decisões na hora):
 - [x] **Terrenos jogados no turno** (`Player.getLandsPlayedThisTurn` / `getMaxLandPlays`): "0/1" ao lado do retrato no turno do jogador, contando terrenos extras (Azusa, Exploration).
 
 Prioridade média (mecânicas de coleções específicas):
-- [ ] **Dia e noite** (`Game.isDay` / `isNight`): sol ou lua na trilha de fases, com balão da regra de troca. Some enquanto não for nem dia nem noite.
+- [x] **Dia e noite** (`Game.isDay` / `isNight`): sol ou lua na trilha de fases, com balão da regra de troca. Some enquanto não for nem dia nem noite.
 - [x] **Contagem de mágicas no turno** (`Player.getSpellsCastThisTurn`, tempestade): número na trilha de fases ou no retrato quando houver carta na mesa que se importe (Storm, Prowess não precisa).
 - [x] **Bênção da cidade** (`Player.hasBlessing`, Ascend) e **Velocidade** (`Player.getSpeed`, Aetherdrift): selos no retrato.
 - [x] **Estados de uma vez só** (`isMonstrous`, `isRenowned`, `isSuspected`, `isSaddled`, `getCrewedByThisTurn`, `isExertedThisTurn`, `isDetained`, `isHarnessed`, `isSolved`): ícone pequeno na permanente; o nome em português e o que muda ficam no balão e no inspetor. Suspeita e Exaurida mudam o combate, as outras habilitam habilidades.
@@ -556,16 +556,51 @@ O histórico da partida (Menu → Registro) é uma lista corrida, da jogada mais
 
 Alternativas (recomendado: A + B + C, e D junto com o item 32):
 
-- [ ] **A. Agrupar por turno**: um cabeçalho por turno ("Turno 5 · Ana"), com as jogadas dele embaixo; os turnos antigos ficam recolhidos e abrem com um toque.
-- [ ] **B. Juntar o que aconteceu junto**: a mágica e o que ela causou numa linha só ("Wrath of God (Ana) destruiu 7 permanentes"), com as cartas afetadas ao abrir a linha; o mesmo para o dano de combate e os gatilhos de morte em sequência.
-- [ ] **C. Mais detalhes por linha**: alvos, controlador, de onde a carta veio e para onde foi, compras ("Bruno comprou 2 cartas"), com miniatura da carta e toque para ampliar (como já acontece no nome da carta).
+- [x] **A. Agrupar por turno**: um cabeçalho por turno ("Turno 5 · Ana"), com as jogadas dele embaixo; os turnos antigos ficam recolhidos e abrem com um toque.
+- [x] **B. Juntar o que aconteceu junto**: a mágica e o que ela causou numa linha só ("Wrath of God (Ana) destruiu 7 permanentes"), com as cartas afetadas ao abrir a linha; o mesmo para o dano de combate e os gatilhos de morte em sequência.
+- [x] **C. Mais detalhes por linha**: alvos, controlador, de onde a carta veio e para onde foi, compras ("Bruno comprou 2 cartas"), com miniatura da carta e toque para ampliar (como já acontece no nome da carta).
 - [ ] **D. Causa da saída do campo**: é a alternativa A do item 32; vale fazer junto, porque o agrupamento de B depende dela.
-- [ ] **E. Guardar a partida inteira**: tirar ou aumentar bastante o limite de 60, já que o agrupamento deixa a lista curta.
+- [x] **E. Guardar a partida inteira**: tirar ou aumentar bastante o limite de 60, já que o agrupamento deixa a lista curta.
 - [ ] **F. Filtros**: só minhas jogadas, só de um oponente, só combate, só remoções.
 
-A decidir antes de começar: se os turnos antigos ficam recolhidos ou abertos; até onde vão os detalhes (custo pago e fase podem poluir); se as compras dos oponentes aparecem com a quantidade (é informação pública na mesa de verdade).
+Feito em 28/10/2026 (0.57.0): A + B + C + E. Decidido: o turno atual e o anterior ficam abertos, os mais antigos recolhidos; sem custo pago nem fase nas linhas; as compras de todos aparecem só com a quantidade. Sem mexer na ponte (D), a mesa liga à mágica o que acontece enquanto ela é o topo da pilha, logo antes de resolver (a remoção em massa já aparece como "Cólera de Deus: destruiu 4 permanentes"); o que morre depois, por ação de estado, continua numa linha à parte. Ficaram para depois: D (junto com o item 32) e F.
 
-## 37. Cálculo de vida ao definir bloqueadores
+## 37. Registrar partidas abandonadas como concedidas
+
+O histórico de partidas da área de admin só grava a série que termina de verdade (o Forge dá a partida por encerrada). Levantamento feito em 27/10/2026:
+
+- Quem sai da sala no meio, fecha a aba e não volta no prazo de reconexão, ou abandona a partida contra a IA, some do histórico: a partida só vira o contador "abandonada" nas métricas, sem jogadores, decks nem vencedor.
+- Na sala em rede, sair já conta como conceder o jogo atual, e o oponente vê a partida encerrada; mas a série não chega a ser concluída, então nada é gravado.
+- Com isso, as estatísticas por deck e por jogador contam só quem jogou até o fim, e quem costuma desistir de partidas perdidas não aparece.
+- O botão "Desistir e voltar ao início" passa pelo mesmo caminho: numa partida de 1 jogo, ou no jogo que decide a série, ele encerra a série e a linha é gravada (motivo "desistência"); numa melhor de 3 antes do jogo decisivo, ou entre jogos, nada é gravado.
+
+Alternativas (recomendado: A + B):
+
+- [x] **A. Gravar como concessão**: ao encerrar uma partida abandonada, gravar a linha do histórico com os jogos já disputados, o jogo atual como derrota de quem saiu (motivo "concedeu") e a vitória da série para quem ficou.
+- [x] **B. Marcar o jeito que acabou**: um campo novo na linha (concluída, concedida, abandonada por queda) para filtrar na área de admin e não misturar com as partidas jogadas até o fim.
+- [x] **C. Abandono antes do primeiro turno**: não gravar nada quando ninguém chegou a jogar (mulligan, sala que nem começou), para não encher o histórico.
+- [x] **D. Contra a IA**: gravar também as partidas abandonadas contra a IA, ou deixar só as salas em rede.
+
+Decidido em 28/10/2026 e feito: a queda sem volta (ninguém voltou no prazo, ou quem ficou sai depois que o outro caiu) é gravada como "queda", com o jogo interrompido e sem vencedor da série; as abandonadas contra a IA também são gravadas; a partida que não chegou ao turno 1 não é gravada. Em Commander, a saída de um jogador entra só no fim da partida, como já acontecia. Na área de admin, a seção virou "Histórico", com selo "concedida" ou "queda" em cada linha e o filtro "Fim" (os totais seguem o filtro).
+
+## 38. Mostrar a versão durante a partida ✅
+
+Hoje a versão da mesa (a do topo do `CHANGELOG.md`) só aparece no painel Novidades da tela inicial. Durante a partida não há onde ver, e isso atrapalha quando alguém manda um print ou relata um erro: não dá para saber se a pessoa está numa versão antiga guardada no navegador ou no app instalado. Levantamento feito em 27/10/2026:
+
+- A ponte já manda as versões das regras e do motor (`rulesVersion`, `engineVersion`), e elas vão no relato de erro, mas a versão da própria mesa não vai.
+- O menu da partida já tem um canto de informações discretas no topo (sala e placar da série).
+
+Alternativas para mostrar (recomendado: A + D):
+
+- [x] **A. Rodapé do menu**: uma linha pequena e apagada no fim do menu da partida ("Mesa de Duelo 0.54.1"), abaixo de "Desistir e voltar ao início". Só vê quem abre o menu.
+- [ ] **B. Rodapé de Opções**: a mesma linha no fim da janela de Opções, que é onde se procura esse tipo de coisa num jogo.
+- [ ] **C. Escondido**: só aparece com um toque longo (ou passando o mouse) no botão do menu, como dica.
+- [x] **D. No relato e no "Copiar relatório"**: incluir a versão da mesa junto das versões de regras e motor, para o admin ver sem depender do print.
+- [x] **E. Versões da ponte junto**: ao tocar na linha da versão, mostrar também regras e motor (útil para teste, sem pesar para o jogador).
+
+Decidido em 28/10/2026: A + D + E, com o texto "Mesa de Duelo X.Y.Z". D já estava pronto (o relato leva `app.version` e o "Copiar relatório" tem a linha "versão da mesa"). O aviso de versão nova já existe: é o banner "Nova versão do jogo" do app (`src/ui/pwa.ts`), que aparece também durante a partida.
+
+## 39. Cálculo de vida ao definir bloqueadores
 
 Na declaração de bloqueadores, o jogador precisa somar de cabeça o poder de cada atacante que ficou sem bloqueio para saber com quanta vida vai sair do combate, e se o combate é letal. Em Commander, com vários atacantes, atropelar e dano de comandante, a conta fica difícil e é fácil errar.
 

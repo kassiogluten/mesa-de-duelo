@@ -160,7 +160,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             synchronized (this) {
                 if (byCode.get(s.code) == s && !s.anyoneConnected()) {
                     System.out.printf("%s: ninguém voltou em %d s%n", label(s), GRACE_SECONDS);
-                    close(s);
+                    close(s, null);
                 }
             }
         }, GRACE_SECONDS, TimeUnit.SECONDS);
@@ -475,7 +475,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = byChannel.remove(ch);
         if (s == null) return;
         Session.Seat seat = s.seatOf(ch);
-        if (!s.isRoom()) { close(s); return; }
+        if (!s.isRoom()) { close(s, seat); return; }
         if (seat != null && !s.started() && seat.index != 0) {
             seat.channel = null; seat.deck = null; seat.departed = true;
             for (Session.Seat each : s.seats) if (each.deck != null) s.sendRoom(each);
@@ -487,12 +487,13 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             seat.channel = null;
             seat.rematch = false;
         }
-        if (!s.started() || !s.anyoneConnected()) { close(s); return; }
+        if (!s.started() || !s.anyoneConnected()) { close(s, seat); return; }
         notifyOthers(s, seat, (seat == null ? "O oponente" : seat.name) + " saiu da sala.");
         s.markDirty();
     }
 
-    private void close(Session s) {
+    /** Fecha a partida; {@code quitter} saiu por vontade própria (sem ele, ninguém voltou a tempo). */
+    private void close(Session s, Session.Seat quitter) {
         MatchJournal journal = s.journal();
         if (journal != null) {
             journal.detach();
@@ -502,7 +503,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             closed.put(s.code, new Closed(journal, tokens, System.currentTimeMillis() + CLOSED_KEEP_MS));
             for (var it = closed.keySet().iterator(); closed.size() > MAX_CLOSED && it.hasNext(); ) { it.next(); it.remove(); }
         }
-        s.recordAbandoned();
+        s.recordAbandoned(quitter);
         s.stop();
         byCode.remove(s.code, s);
         for (Session.Seat seat : s.seats) {

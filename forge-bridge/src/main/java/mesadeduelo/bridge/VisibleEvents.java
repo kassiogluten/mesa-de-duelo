@@ -29,12 +29,16 @@ final class VisibleEvents {
     private long sequence;
     private Game game;
     private boolean gameStarted;
+    /** Relógio dos turnos: quem joga o turno atual, desde quando, e quanto durou o último turno de cada jogador. */
+    private int turnOwner = -1;
+    private long turnSince;
+    private final Map<Integer, Long> lastTurnMs = new HashMap<>();
 
     VisibleEvents(Runnable changed, LongSupplier version) { this.changed = changed; this.version = version; }
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); clearTurns();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -42,7 +46,31 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
+    private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); }
+
+    /** Começo de turno: fecha o turno anterior na conta de quem o jogou. */
+    private void turnBegan(int owner) {
+        long now = System.currentTimeMillis();
+        if (turnOwner >= 0 && turnSince > 0) lastTurnMs.put(turnOwner, now - turnSince);
+        turnOwner = owner; turnSince = now;
+    }
+
+    /**
+     * Tempos medidos aqui, e não no navegador, para não zerarem ao recarregar: {@code turnElapsedMs} (quanto o turno
+     * atual já durou) e, em cada jogador, {@code lastTurnMs} (quanto durou o turno mais recente que ele terminou).
+     */
+    synchronized void addTurnTimes(JsonObject state) {
+        boolean over = state.has("gameOver") && state.get("gameOver").getAsBoolean();
+        var active = state.get("activePlayer");
+        if (!over && turnSince > 0 && active != null && !active.isJsonNull() && active.getAsInt() == turnOwner)
+            state.addProperty("turnElapsedMs", System.currentTimeMillis() - turnSince);
+        if (state.has("players")) for (var e : state.getAsJsonArray("players")) {
+            JsonObject p = e.getAsJsonObject();
+            Long ms = lastTurnMs.get(p.get("id").getAsInt());
+            if (ms != null) p.addProperty("lastTurnMs", ms);
+        }
+    }
     synchronized boolean gameStarted() { return gameStarted; }
     synchronized long cursor() { return sequence; }
     synchronized JsonArray json(long after) {
@@ -128,6 +156,7 @@ final class VisibleEvents {
             e = type("life-changed"); actor(e, x.player().getId()); e.addProperty("delta", x.newLives() - x.oldLives());
             damage.lifeChanged(x.player().getId());
         } else if (event instanceof GameEventTurnBegan x) {
+            turnBegan(x.turnOwner().getId());
             e = type("turn"); actor(e, x.turnOwner().getId()); e.addProperty("turn", x.turnNumber());
         } else if (event instanceof GameEventPlayerPriority x && x.priority() != null) {
             e = type("priority"); actor(e, x.priority().getId());
