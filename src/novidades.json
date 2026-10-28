@@ -3,6 +3,13 @@
     "Versão da mesa no menu da partida": [
       { "img": "0.57.0/menu.webp", "legenda": "No fim do menu da partida, abaixo de **Desistir e voltar ao início**, a linha discreta **Mesa de Duelo 0.57.0**." },
       { "img": "0.57.0/regras-motor.webp", "legenda": "Tocando na linha, ela passa a mostrar as versões das regras e do motor do servidor." }
+    ],
+    "Histórico da partida por turno": [
+      { "img": "0.57.0/turnos.webp", "legenda": "O Registro com um bloco por turno: o atual e o anterior abertos, os mais antigos recolhidos com quantas jogadas tiveram." },
+      { "img": "0.57.0/magica.webp", "legenda": "Cólera de Deus numa linha só, aberta para mostrar as quatro permanentes destruídas; logo acima, os três gatilhos do Artista do Sangue juntos." }
+    ],
+    "Mais detalhes no histórico": [
+      { "img": "0.57.0/combate.webp", "legenda": "O dano de combate aberto, com miniaturas de cada carta, e a linha do bloqueio dizendo qual criatura bloqueou qual." }
     ]
   },
   "0.56.1": {

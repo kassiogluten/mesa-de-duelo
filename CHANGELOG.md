@@ -11,6 +11,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 ### Novo
 
 - **Versão da mesa no menu da partida.** No fim do menu da partida, abaixo de "Desistir e voltar ao início", aparece em letras pequenas a versão da mesa (por exemplo **Mesa de Duelo 0.57.0**). Assim, quem manda um print ou relata um erro mostra também em que versão está jogando. Toque na linha para ver as versões das regras e do motor do servidor, e toque de novo para voltar.
+- **Histórico da partida por turno.** O Registro (no menu da partida) agora separa as jogadas por turno, com o número do turno e de quem é. O turno atual e o anterior ficam abertos; os mais antigos ficam recolhidos, mostrando quantas jogadas tiveram, e abrem com um toque. A mágica e o que ela causou viram uma linha só ("Você conjurou Cólera de Deus: destruiu 4 permanentes"), e o mesmo vale para o dano de combate com as criaturas que morreram, para os gatilhos seguidos da mesma carta e para remoções em sequência. Toque no número ao lado da linha para ver cada carta afetada.
+- **Mais detalhes no histórico.** Cada linha traz uma miniatura da carta (toque para ampliar), os alvos da mágica ou da habilidade, de quem era a carta que saiu do campo, de onde veio a carta conjurada (cemitério, exílio, zona de comando) e quem bloqueou quem. As compras também aparecem, com a quantidade ("Oponente comprou 2 cartas"), sem dizer quais cartas.
+
+### Mudou
+
+- **Histórico da partida inteira.** O Registro não apaga mais o começo da partida depois de 60 jogadas: ele guarda a partida toda.
 
 ## [0.56.1] - 2026-10-27
 

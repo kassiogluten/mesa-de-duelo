@@ -164,9 +164,28 @@
 .stack-gallery-actions .icon-btn { font-size: 12px; padding: 8px 10px; }
 .stack-gallery-help { flex-shrink: 0; margin: 0; padding: 6px 24px 16px; text-align: center; color: var(--muted); font: 400 12px var(--body); }
 @media (hover: hover) and (pointer: fine) { .stack-gallery-card:hover { transform: translateY(-5px) scale(1.06); z-index: 3; } }
-.history-inspect { border: 0; background: none; padding: 0; text-align: left; color: var(--ink); font: inherit; cursor: zoom-in; }
-.forge .log-drawer { background: var(--panel); width: min(350px, calc(100vw - 24px)); }
-.forge .log-drawer li { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.forge .log-drawer { background: var(--panel); width: min(370px, calc(100vw - 24px)); }
+/* Histórico agrupado: um bloco por turno, uma linha por jogada, detalhes que abrem com um toque. */
+.forge .log-drawer #fLog { gap: 6px; }
+.history-turn { display: flex; flex-direction: column; }
+.history-turn-head { display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 6px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--gold); font: 700 13px var(--display); text-align: left; cursor: pointer; }
+.history-turn-title { flex: 1; }
+.history-turn-count { color: var(--muted); font: 400 11px var(--body); }
+.history-turn.mine > .history-turn-head .history-turn-title::after { content: ''; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--gold); vertical-align: middle; }
+.history-caret { display: inline-block; width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; transition: transform .15s; }
+[aria-expanded="false"] > .history-caret { transform: rotate(-90deg); }
+.log-drawer .history-lines, .log-drawer .history-details { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.history-line { padding: 5px 0 5px 4px; border-bottom: 1px solid var(--line); }
+.history-line.mine { color: var(--ink); }
+.history-row { display: flex; align-items: flex-start; gap: 6px; }
+.history-row > .history-text, .history-details .history-text { flex: 1; }
+.history-inspect { display: flex; align-items: flex-start; gap: 7px; flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; color: inherit; font: inherit; cursor: zoom-in; }
+.history-thumb { flex-shrink: 0; width: 30px; height: 22px; margin-top: 1px; border-radius: 4px; border: 1px solid var(--line); background: #1a2338 center 28% / 140% auto no-repeat; }
+.history-more { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; background: #1a2338; color: var(--muted); font: 600 11px var(--body); cursor: pointer; }
+.history-more:hover, .history-turn-head:hover { color: var(--gold-light); }
+.log-drawer .history-details { margin: 5px 0 2px 37px; padding-left: 8px; border-left: 2px solid var(--line); gap: 4px; font-size: 12px; }
+.history-details .history-thumb { width: 24px; height: 18px; }
+.history-empty { padding: 6px 4px; color: var(--muted); }
 .forge .action { right: 16px; bottom: 16px; width: 265px; max-width: 29vw; gap: 10px; }
 /*
  * Seu campo de terrenos termina antes da caixa de ação, na largura dela quando traz uma escolha de cartas (a mais larga):

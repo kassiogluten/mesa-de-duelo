@@ -556,14 +556,14 @@ O histórico da partida (Menu → Registro) é uma lista corrida, da jogada mais
 
 Alternativas (recomendado: A + B + C, e D junto com o item 32):
 
-- [ ] **A. Agrupar por turno**: um cabeçalho por turno ("Turno 5 · Ana"), com as jogadas dele embaixo; os turnos antigos ficam recolhidos e abrem com um toque.
-- [ ] **B. Juntar o que aconteceu junto**: a mágica e o que ela causou numa linha só ("Wrath of God (Ana) destruiu 7 permanentes"), com as cartas afetadas ao abrir a linha; o mesmo para o dano de combate e os gatilhos de morte em sequência.
-- [ ] **C. Mais detalhes por linha**: alvos, controlador, de onde a carta veio e para onde foi, compras ("Bruno comprou 2 cartas"), com miniatura da carta e toque para ampliar (como já acontece no nome da carta).
+- [x] **A. Agrupar por turno**: um cabeçalho por turno ("Turno 5 · Ana"), com as jogadas dele embaixo; os turnos antigos ficam recolhidos e abrem com um toque.
+- [x] **B. Juntar o que aconteceu junto**: a mágica e o que ela causou numa linha só ("Wrath of God (Ana) destruiu 7 permanentes"), com as cartas afetadas ao abrir a linha; o mesmo para o dano de combate e os gatilhos de morte em sequência.
+- [x] **C. Mais detalhes por linha**: alvos, controlador, de onde a carta veio e para onde foi, compras ("Bruno comprou 2 cartas"), com miniatura da carta e toque para ampliar (como já acontece no nome da carta).
 - [ ] **D. Causa da saída do campo**: é a alternativa A do item 32; vale fazer junto, porque o agrupamento de B depende dela.
-- [ ] **E. Guardar a partida inteira**: tirar ou aumentar bastante o limite de 60, já que o agrupamento deixa a lista curta.
+- [x] **E. Guardar a partida inteira**: tirar ou aumentar bastante o limite de 60, já que o agrupamento deixa a lista curta.
 - [ ] **F. Filtros**: só minhas jogadas, só de um oponente, só combate, só remoções.
 
-A decidir antes de começar: se os turnos antigos ficam recolhidos ou abertos; até onde vão os detalhes (custo pago e fase podem poluir); se as compras dos oponentes aparecem com a quantidade (é informação pública na mesa de verdade).
+Feito em 28/10/2026 (0.57.0): A + B + C + E. Decidido: o turno atual e o anterior ficam abertos, os mais antigos recolhidos; sem custo pago nem fase nas linhas; as compras de todos aparecem só com a quantidade. Sem mexer na ponte (D), a mesa liga à mágica o que acontece enquanto ela é o topo da pilha, logo antes de resolver (a remoção em massa já aparece como "Cólera de Deus: destruiu 4 permanentes"); o que morre depois, por ação de estado, continua numa linha à parte. Ficaram para depois: D (junto com o item 32) e F.
 
 ## 37. Registrar partidas abandonadas como concedidas
 
