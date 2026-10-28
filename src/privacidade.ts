@@ -65,12 +65,12 @@ app.innerHTML = `
 
     <section id="conta">
       <h2>Conta com Google</h2>
-      <p>Entrar com Google serve para guardar seus decks e preferências e encontrá-los em outros aparelhos. Ao entrar, o Google envia ao jogo o seu identificador na conta Google, o seu nome, a sua foto e o seu e-mail. Desses dados, o servidor guarda:</p>
+      <p>Entrar com Google serve para guardar seus decks e encontrá-los em outros aparelhos. Ao entrar, o Google envia ao jogo o seu identificador na conta Google, o seu nome, a sua foto e o seu e-mail. Desses dados, o servidor guarda:</p>
       <ul>
         <li>um código derivado do seu identificador Google, que não permite descobrir qual é a conta;</li>
         <li>o seu primeiro nome e o endereço da sua foto do Google, atualizados a cada vez que você entra;</li>
-        <li>o seu apelido na mesa, que você pode mudar;</li>
-        <li>os decks e as preferências que você salvar enquanto estiver conectado, incluindo os decks apagados há menos de 30 dias, que ficam numa lixeira para você poder recuperar;</li>
+        <li>um apelido para a mesa, criado a partir do seu primeiro nome;</li>
+        <li>os decks que você salvar enquanto estiver conectado, incluindo os apagados há menos de 30 dias, que ficam numa lixeira para você poder recuperar;</li>
         <li>as sessões abertas (uma por aparelho conectado), guardadas de forma que não podem ser usadas por quem lê o arquivo. Uma sessão vale 180 dias e se renova enquanto você usa o jogo.</li>
       </ul>
       <p><strong>O e-mail e o nome completo não são guardados.</strong> A foto não é mostrada aos outros jogadores: ela aparece só no seu cabeçalho.</p>

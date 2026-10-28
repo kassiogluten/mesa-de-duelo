@@ -1,5 +1,8 @@
 /* Conta no cabeçalho: botão do Google ou a foto com o menu. */
 .conta { position: relative; display: flex; align-items: center; }
+/* O botão do Google é um iframe de tema claro: com a página em color-scheme dark, o navegador pinta o fundo dele
+   de branco. O mesmo esquema no contêiner deixa o fundo transparente. */
+.conta-google, .conta-faixa-google { color-scheme: light; }
 .conta-google { min-height: 32px; }
 .conta > .conta-erro { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; width: max-content; max-width: 260px; margin: 0; padding: 8px 10px; border-radius: 8px; background: #3a1d22; }
 .conta-erro { color: #ffb4a8; font: 500 13px/1.4 var(--body); }
@@ -45,4 +48,22 @@
 @media (max-width: 480px) {
   .conta-dialogo { padding: 20px; border-radius: 18px; }
   .conta-dialogo footer { flex-direction: column-reverse; }
+}
+
+/* Faixa em Meus decks para quem ainda não entrou. */
+.conta-faixa {
+  display: flex; align-items: center; gap: 14px; margin: 0 0 18px; padding: 12px 12px 12px 16px; border-radius: 14px;
+  background: linear-gradient(90deg, #f2b54c14, #59b5ff0f); border: 1px solid #f2b54c40;
+}
+.conta-faixa > svg { width: 26px; height: 26px; flex: none; fill: none; stroke: var(--gold); stroke-width: 1.8; stroke-linejoin: round; }
+.conta-faixa p { flex: 1; margin: 0; color: #c9d0de; font: 400 14px/1.5 var(--body); }
+.conta-faixa strong { color: var(--ink); font-weight: 600; }
+.conta-faixa-google { flex: none; min-height: 32px; }
+.conta-faixa-fechar { flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.conta-faixa-fechar:hover, .conta-faixa-fechar:focus-visible { background: #ffffff12; color: var(--ink); outline: none; }
+@media (max-width: 700px) {
+  .conta-faixa { position: relative; flex-wrap: wrap; gap: 10px; padding-right: 44px; }
+  .conta-faixa p { flex-basis: calc(100% - 40px); }
+  .conta-faixa-google { margin-left: 40px; }
+  .conta-faixa-fechar { position: absolute; top: 8px; right: 8px; }
 }

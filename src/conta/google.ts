@@ -43,11 +43,11 @@ export function carregarGoogle(): Promise<GoogleId | null> {
   return loading;
 }
 
-/** O botão oficial do Google; no celular, só o ícone, para caber no cabeçalho. */
-export async function desenharBotao(parent: HTMLElement) {
+/** O botão oficial do Google; no cabeçalho do celular, só o ícone, para caber ({@code iconOnNarrow}). */
+export async function desenharBotao(parent: HTMLElement, iconOnNarrow = true) {
   const id = await carregarGoogle();
   if (!id || !parent.isConnected) return;
-  const narrow = matchMedia('(max-width: 700px)').matches;
+  const narrow = iconOnNarrow && matchMedia('(max-width: 700px)').matches;
   id.renderButton(parent, narrow
     ? { type: 'icon', theme: 'filled_black', size: 'medium', shape: 'circle' }
     : { type: 'standard', theme: 'filled_black', size: 'medium', shape: 'pill', text: 'signin_with', locale: 'pt-BR' });

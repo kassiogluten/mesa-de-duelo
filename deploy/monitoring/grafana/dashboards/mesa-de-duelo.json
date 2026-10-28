@@ -1600,8 +1600,8 @@
     },
     {
       "type": "timeseries",
-      "title": "Logins com Google (por hora)",
-      "description": "ok: entrou; recusado: o token não passou na conferência; limite: muitas tentativas do mesmo IP; erro: não deu para falar com o Google.",
+      "title": "Logins e sincronizações (por hora)",
+      "description": "Logins com Google: ok (entrou), recusado (o token não passou na conferência), limite (muitas tentativas do mesmo IP) ou erro (não deu para falar com o Google). Sincronizações: envios de mudanças de decks para a conta.",
       "id": 33,
       "datasource": {
         "type": "prometheus",
@@ -1622,6 +1622,15 @@
           "expr": "sum by (result) (increase(mesa_accounts_logins_total[1h]))",
           "legendFormat": "{{result}}",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_accounts_syncs_total[1h]))",
+          "legendFormat": "sincronizações",
+          "refId": "B"
         }
       ],
       "fieldConfig": {

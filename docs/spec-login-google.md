@@ -163,32 +163,32 @@ Avaliado em 28/10/2026: **é possível e vale usar**, como complemento ao botão
 Tudo desta fase fica atrás de `mesa:dev`. Por isso, ela não muda a versão nem ganha CHANGELOG ou novidades.html: o primeiro item que o jogador vê é o da fase 2, que traz também o login.
 
 - [x] `Accounts.java` e `GoogleIdToken.java`: entrar, sair, `eu`, apagar conta, sessão persistente (180 dias, renovada com o uso, até 20 aparelhos por conta), conferência do ID token sem dependência nova e limite de 20 logins por IP a cada 15 minutos. Testes em `AccountsTest`.
-- [ ] Agregador maior só para `/api/conta/` (fica para a fase 2: na fase 1 os pedidos são pequenos e cabem nos 64 KB).
+- [x] Agregador maior só para `/api/conta/sincronizar` (4 MB), feito na fase 2.
 - [x] `GOOGLE_CLIENT_ID` no compose (ponte e build do site), `location /api/conta/` no nginx e `.env.example`.
 - [x] One Tap na tela inicial e em Meus decks, com login automático para quem já entrou antes (ver [Google One Tap](#google-one-tap)). Ele é cancelado ao abrir a mesa, e o login automático é desligado ao sair.
 - [x] Botão **Entrar com Google** no cabeçalho (só o ícone no celular). Logado, ele vira a foto com um menu: nome, **Sair**, **Apagar minha conta**. No computador, a conta fica depois de Novidades; no celular, na linha das abas.
 - [x] Página de política de privacidade (`privacidade.html`, versão 0.63.0), linkada no rodapé e no menu da conta. Ela já descreve a sincronia e a lixeira da fase 2; se a fase 2 mudar algo do que está lá, a página muda junto.
 - [x] Teste com um ID token falso assinado por uma chave de teste (`AccountsTest`), em vez do `test-protocol.mjs`: as rotas são HTTP e são testadas direto.
-- [ ] Testar de ponta a ponta com o client ID real (computador, Android e iPhone com o PWA instalado).
+- [ ] Testar de ponta a ponta com o client ID real: computador feito em 28/10/2026 (login e pergunta de juntar); faltam Android e iPhone com o PWA instalado.
 - [x] Métricas na ponte: `mesa_accounts` (contas), `mesa_accounts_sessions` (aparelhos logados) e `mesa_accounts_logins_total{result=ok|recusado|limite|erro}`.
 - [x] Painel no Grafana (linha "Contas dos jogadores": contas, aparelhos conectados e logins por hora) e, no admin, o total de contas e de aparelhos no resumo da aba Partidas.
 
-### Fase 2: sincronizar Meus decks (0.64.0)
+### Fase 2: sincronizar Meus decks (0.63.0)
 
 - [x] `merge.ts` com testes: junção no primeiro login, deduplicação por conteúdo, conflito que mantém os dois e apagar contra editar.
 - [x] `sync.ts`: fila, envio, busca do que mudou, várias abas e sem rede. Testado no navegador com a ponte simulada (junção, mudanças de outro aparelho, conflito, sem conexão, lixeira, sair, cancelar).
 - [x] Rotas `estado` e `sincronizar` na ponte, com `rev` por conta (`AccountDecks.java`, testes em `AccountDecksTest`). `sincronizar` aceita até 4 MB.
-- [ ] Tirar o login de trás de `mesa:dev`.
-- [ ] Métricas de sincronia: `mesa_accounts_syncs_total` já existe na ponte; falta pôr no Grafana.
+- [x] Tirar o login de trás de `mesa:dev`: as contas aparecem sempre que o site é gerado com `GOOGLE_CLIENT_ID`.
+- [x] Métricas de sincronia: `mesa_accounts_syncs_total`, no painel "Logins e sincronizações" do Grafana.
 - [x] Diálogo do primeiro login: **Juntar à conta** / **Usar só os da conta**. A cópia de antes da conta sai pelo menu da conta (**Baixar decks de antes da conta**).
 - [x] Diálogo de sair: **Manter os decks aqui** / **Tirar deste navegador**, com aviso quando há alterações ainda não enviadas.
 - [x] Lixeira: lista dos decks apagados nos últimos 30 dias, com **Restaurar**, no menu da conta.
 - [x] Linha de sincronia no menu da conta (sincronizados, sincronizando, sem conexão com N alterações, erro) e contorno na foto quando há aviso.
-- [ ] Aviso em Meus decks para quem não entrou: "Entre com Google para ter estes decks em outros aparelhos."
-- [ ] Página de teste em `tests/fixtures/` para montar os diálogos e tirar os prints, com a ponte simulada.
-- [ ] CHANGELOG e novidades.html, cobrindo também o login e o One Tap da fase 1: prints do botão, do menu da conta, da pergunta ao entrar e da lixeira.
+- [x] Faixa em Meus decks para quem tem decks e não entrou: "Seus decks ficam só neste navegador. Entre com Google para tê-los em qualquer aparelho.", com o botão do Google e um × que a esconde no aparelho.
+- [x] Prints tirados no próprio jogo com a ponte simulada por um script de página (no lugar de uma página em `tests/fixtures/`).
+- [x] CHANGELOG (na 0.63.0) e novidades.html: botão, pergunta ao entrar, menu da conta, lixeira e faixa em Meus decks.
 
-### Fase 3: preferências, apelido e foto (0.65.0)
+### Fase 3: preferências, apelido e foto (0.64.0)
 
 - [ ] `src/prefs.ts` reunindo as chaves sincronizadas.
 - [ ] Sincronizar as preferências e o apelido (vale a última gravação).

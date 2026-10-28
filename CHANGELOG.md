@@ -10,6 +10,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Novo
 
+- **Entrar com Google e Meus decks em todos os aparelhos.** O botão Entrar com Google, no topo da tela, guarda seus decks numa conta: eles aparecem no celular, no computador e em qualquer navegador onde você entrar, e o que você muda num aparelho chega aos outros sozinho (sem internet, a mudança espera e sobe quando a conexão voltar). Se o navegador já tiver decks, o jogo pergunta se eles entram na conta ou se você prefere usar só os da conta; se o mesmo deck estiver diferente nos dois lugares, ficam os dois. Decks apagados ficam 30 dias na Lixeira, no menu da conta. Entrar é opcional: sem conta, tudo continua como antes.
 - **Política de privacidade.** Uma página nova explica, em português simples, quais dados o jogo usa, onde eles ficam, por quanto tempo e como pedir para ver ou apagar. O link fica no rodapé da tela inicial, ao lado do contato.
 
 ## [0.62.0] - 2026-10-28

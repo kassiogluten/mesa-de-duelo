@@ -12,11 +12,8 @@ export const GOOGLE_CLIENT_ID: string = import.meta.env?.VITE_GOOGLE_CLIENT_ID ?
 export interface ContaPerfil { id: string; nome?: string; foto?: string; apelido?: string }
 export interface ContaSessao { token: string; expiresAt: string; conta: ContaPerfil }
 
-/** Enquanto a sincronia dos decks não fica pronta, as contas só aparecem no `npm run dev` ou com "mesa:dev" = "1". */
-export function contasLigadas(): boolean {
-  if (!GOOGLE_CLIENT_ID) return false;
-  try { return import.meta.env?.DEV === true || localStorage.getItem('mesa:dev') === '1'; } catch { return false; }
-}
+/** As contas aparecem quando o site foi gerado com o client ID do Google (GOOGLE_CLIENT_ID no deploy). */
+export const contasLigadas = (): boolean => !!GOOGLE_CLIENT_ID;
 
 /** Sem localStorage, a sessão vale só nesta página. */
 let memory: ContaSessao | null = null;
