@@ -670,11 +670,15 @@ Causa: a fila de apresentação da mesa (`presentationTimeline.ts`) trata cada f
 
 Como resolver (na ordem em que eu faria):
 
-- [ ] **Juntar as entradas da mesma origem num movimento só**, como o mill (item 24) já faz: `entered` seguidos, do mesmo jogador e da mesma resolução (a ponte manda o `sourceName`/`stackId` de quem criou, como faz no mill), viram um evento com a lista de cartas. As fichas entram juntas, em cascata curta (60 a 110 ms entre elas, só as 8 primeiras voam e o resto chega com a última, como em `millTiming`). Com 8 fichas, a parte das fichas cai de ~2,7 s (8 × 340 ms) para ~1,4 s, o mesmo de moer 8.
-- [ ] **Fichas iguais entram empilhadas**: o campo já agrupa cartas iguais num monte com "×N"; a animação vai direto para esse monte, que cresce com um "+8", em vez de 8 cartas voando para o mesmo lugar.
-- [ ] **Histórico numa linha**: "Hare Apparent criou 8 fichas de Coelho", em vez de 8 linhas.
-- [ ] **A fila não pula fichas**: o limite de 12 eventos passa a contar os movimentos juntos, e não cada ficha, para a rajada não ser descartada no meio.
-- [ ] **Vários gatilhos seguidos (blink em todos)**: cada gatilho continua sendo um passo, com o aviso do gatilho, mas mais curto quando vários iguais resolvem em sequência (por exemplo, o segundo em diante sem o aviso de 1 s, ou um aviso só, "×5").
+- [x] **Juntar as entradas da mesma origem num movimento só**, como o mill (item 24) já faz: `entered` seguidos, do mesmo jogador e da mesma resolução (a ponte manda o `sourceName`/`stackId` de quem criou, como faz no mill), viram um evento com a lista de cartas. As fichas entram juntas, em cascata curta (60 a 110 ms entre elas, só as 8 primeiras voam e o resto chega com a última, como em `millTiming`). Com 8 fichas, a parte das fichas cai de ~2,7 s (8 × 340 ms) para ~1,4 s, o mesmo de moer 8.
+- [x] **Fichas iguais entram empilhadas**: o campo já agrupa cartas iguais num monte com "×N"; a animação vai direto para esse monte, que cresce com um "+8", em vez de 8 cartas voando para o mesmo lugar.
+- [x] **Histórico numa linha**: "Hare Apparent criou 8 fichas de Coelho", em vez de 8 linhas.
+- [x] **A fila não pula fichas**: o limite de 12 eventos passa a contar os movimentos juntos, e não cada ficha, para a rajada não ser descartada no meio.
+- [x] **Vários gatilhos seguidos (blink em todos)**: cada gatilho continua sendo um passo, com o aviso do gatilho, mas mais curto quando vários iguais resolvem em sequência (por exemplo, o segundo em diante sem o aviso de 1 s, ou um aviso só, "×5").
 - [ ] **Conferir o lado da ponte numa partida real**: se, com muitos gatilhos, a demora vem também da prioridade (o jogador ou a IA passando a cada gatilho), avaliar a passagem automática para gatilhos sem escolha.
-- [ ] Leitor de tela: uma frase só, "8 fichas de Coelho entraram".
-- [ ] Laboratório de efeitos (item 18): incluir "criar N fichas" e conferir na página de rajada que as 8 fichas aparecem em até 1,5 s.
+- [x] Leitor de tela: uma frase só, "8 fichas de Coelho entraram".
+- [x] Laboratório de efeitos (item 18): incluir "criar N fichas" e conferir na página de rajada que as 8 fichas aparecem em até 1,5 s.
+
+Decidido em 28/10/2026 (versão 0.61.0): a ponte manda, em cada `entered` que acontece enquanto algo resolve, o `stackId` e o `sourceName` do que está resolvendo. A mesa junta os `entered` seguidos do mesmo jogador, vindos do mesmo lugar e com o mesmo `stackId` (fichas, Living Death, blink em massa); sem `stackId`, cada entrada continua sendo um passo. O movimento junto usa `entryTiming` (até 8 voos, 60 a 110 ms entre eles, 420 ms de viagem): 8 fichas levam ~1 s. As cartas do monte ficam escondidas até a ficha pousar, e o monte mostra "+N". No blink, a saída para o exílio some da apresentação quando a volta vem no mesmo pacote (o histórico continua com ela). Gatilhos iguais seguidos (mesmo jogador e nome): do segundo em diante o aviso é de 400 ms (e o balão, de 1,4 s), as resoluções da sequência têm 180 ms e as fichas dela usam o ritmo rápido; esses passos curtos não contam no limite de 12 da fila. O histórico diz "criou 8 fichas de Rabbit" quando as fichas vêm de uma mágica ou gatilho.
+
+Medido depois (mesmas condições): conjurar com 2, 4 e 8 Hares: 3,4 s, 3,7 s e 3,8 s; blink em 3 Hares (6 fichas): 4,0 s; blink em 5 (20 fichas): 6,7 s, sem pular nenhuma. Ficou aberto o lado da ponte numa partida real (a prioridade entre os gatilhos).

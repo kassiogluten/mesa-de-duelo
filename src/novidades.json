@@ -1,4 +1,17 @@
 {
+  "0.61.0": {
+    "Várias fichas de uma vez": [
+      { "img": "0.61.0/fichas-cascata.webp", "legenda": "Oito fichas de Soldado criadas de uma vez: elas surgem com um brilho, uma logo atrás da outra, e vão direto para o monte ×8, que mostra **+8**." },
+      { "img": "0.61.0/fichas-historico.webp", "legenda": "No histórico, o gatilho de Hare Apparent fica numa linha só: criou 8 fichas de Rabbit. Tocando no 8, abre a lista com cada ficha." }
+    ],
+    "Fichas que apareciam de repente": [
+      { "img": "0.61.0/fichas-vinte.webp", "legenda": "Vinte fichas de uma vez também chegam em cascata, sem pular nenhuma, com **+20** sobre o monte." }
+    ],
+    "Vidência e vigilância de uma carta com a imagem": [
+      { "img": "0.61.0/videncia-uma-carta.webp", "legenda": "Vidência 1 com Opt: a carta do topo aparece inteira na caixa de ação, acima da pergunta, com **Fundo** e **Topo**." },
+      { "img": "0.61.0/vigilancia-uma-carta.webp", "legenda": "Vigilância 1 com Consider: a mesma caixa, com **Cemitério** e **Grimório**." }
+    ]
+  },
   "0.60.0": {
     "Vidência com as cartas inteiras": [
       { "img": "0.60.0/videncia-escolha.webp", "legenda": "Vidência 3: as cartas na ordem do grimório, com **Raio** no topo. Counterspell vai para o **Fundo**, e a frase resume: 2 ficam no topo, 1 vai para o fundo." },

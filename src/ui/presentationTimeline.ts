@@ -50,6 +50,10 @@ export interface PresentationEvent {
   surveil?: boolean;
   /** Só na mesa: as cartas moídas seguidas do mesmo jogador, do topo para baixo, numa entrada só (`mill`). */
   milled?: FCard[];
+  /** Só na mesa: as permanentes que a mesma resolução pôs no campo, uma depois da outra, num movimento só (`entered`). */
+  entries?: FCard[];
+  /** Só na mesa: gatilho da mesma carta logo depois de outro igual (blink em todos), com um aviso mais curto. */
+  repeat?: boolean;
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -70,6 +74,21 @@ function sameMill(a: PresentationEvent | undefined, b: PresentationEvent) {
 function joinMill(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
   return { ...b, milled: [...(a.milled ?? []), ...(b.milled ?? [])] };
 }
+
+/** Entradas seguidas do mesmo jogador, vindas do mesmo lugar e da mesma resolução (fichas, blink em massa). */
+function sameEntry(a: PresentationEvent | undefined, b: PresentationEvent) {
+  return a?.type === 'entered' && b.type === 'entered' && a.actor === b.actor && (a.from ?? null) === (b.from ?? null) &&
+    a.stackId !== undefined && a.stackId === b.stackId;
+}
+function joinEntry(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
+  return { ...b, repeat: a.repeat, entries: [...(a.entries ?? (a.card ? [a.card] : [])), ...(b.card ? [b.card] : [])] };
+}
+/** Gatilho (na pilha ou resolvendo), por jogador e nome da carta: vários iguais seguidos passam mais rápido. */
+function triggerKey(event: PresentationEvent) {
+  return (event.type === 'ability-activated' || event.type === 'resolved') && event.trigger && event.card?.name ? `${event.actor}:${event.card.name}` : null;
+}
+// O que um gatilho causa ao resolver não interrompe a sequência de gatilhos iguais.
+const TRIGGER_EFFECTS = new Set(['entered', 'left', 'damage', 'life-changed', 'mill', 'discard']);
 
 /** Compras seguidas do mesmo jogador: no histórico, "Bruno comprou 2 cartas". */
 function sameDraw(a: PresentationEvent | undefined, b: PresentationEvent) {
@@ -96,6 +115,8 @@ export class PresentationTimeline {
   private pending: PresentationEntry[] = [];
   private initialized = false;
   private lastPresentedSeq = 0;
+  /** Os gatilhos iguais da sequência atual: quantos foram para a pilha. */
+  private triggers: { key: string; count: number } | null = null;
   get queued() { return this.pending.length; }
 
   ingest(matchId: string, events: readonly PresentationEvent[], options: { silent?: boolean; cursor?: number } = {}) {
@@ -123,6 +144,9 @@ export class PresentationTimeline {
       .slice(-HISTORY_LIMIT);
     if (fresh || options.silent) { this.catchUp(); return accepted.length > 0; }
     for (const event of accepted) {
+      // Blink: a volta em luz já mostra a saída; a carta não precisa voar para o exílio antes.
+      if (event.type === 'left' && event.to === 'Exile' && accepted.some(other => other.seq > event.seq && other.type === 'entered' &&
+        other.from === 'Exile' && (other.card?.id ?? other.sourceId) === (event.card?.id ?? event.sourceId))) continue;
       const partner = combined.find(other => sameLandTransition(event, other));
       if (partner) {
         if (event.type === 'entered' || partner.seq <= this.lastPresentedSeq) continue;
@@ -136,12 +160,17 @@ export class PresentationTimeline {
       } else if (previous && sameMill(previous.event, event)) {
         // O resto de um mill que ainda espera a vez entra no mesmo movimento.
         this.pending[this.pending.length - 1] = { ...previous, event: joinMill(previous.event, event) };
+      } else if (previous && sameEntry(previous.event, event)) {
+        // Fichas criadas juntas entram juntas: um movimento, e não um passo de 340 ms por ficha.
+        this.pending[this.pending.length - 1] = { ...previous, event: joinEntry(previous.event, event) };
       } else {
+        if (!audioOnly) this.markRepeat(event);
         this.pending.push({ event, audible: true, ...(audioOnly ? { audioOnly: true } : {}) });
       }
     }
     const visual = this.pending.filter(entry => !entry.audioOnly);
-    if (visual.length > QUEUE_LIMIT) {
+    // Os passos curtos dos gatilhos repetidos não contam: o blink em todos não é descartado no meio.
+    if (visual.filter(entry => !entry.event.repeat).length > QUEUE_LIMIT) {
       // History retains the actions; the table catches up silently instead of playing a sound storm.
       this.pending = visual.slice(-CATCH_UP_LIMIT).map(entry => ({ ...entry, audible: false }));
       this.current = null;
@@ -154,6 +183,22 @@ export class PresentationTimeline {
       });
     }
     return accepted.length > 0;
+  }
+  /**
+   * Blink em todos: o primeiro gatilho tem o aviso inteiro; do segundo em diante, e nas resoluções de uma sequência de
+   * gatilhos iguais, o passo é curto.
+   */
+  private markRepeat(event: PresentationEvent) {
+    const key = triggerKey(event);
+    if (!key) {
+      if (!TRIGGER_EFFECTS.has(event.type)) this.triggers = null;
+      else if (event.type === 'entered' && (this.triggers?.count ?? 0) > 1) event.repeat = true;
+      return;
+    }
+    if (event.type === 'ability-activated') {
+      this.triggers = this.triggers?.key === key ? { key, count: this.triggers.count + 1 } : { key, count: 1 };
+      if (this.triggers.count > 1) event.repeat = true;
+    } else if (this.triggers?.key === key && this.triggers.count > 1) event.repeat = true;
   }
   /** Tira da fila os próximos eventos que ainda fazem parte do atual (como dano dividido entre vários alvos). */
   takeWhile(test: (event: PresentationEvent) => boolean) {
@@ -174,7 +219,7 @@ export class PresentationTimeline {
   catchUp() { this.pending = []; this.current = null; this.lastPresentedSeq = this.cursor; }
   reset(matchId = '') {
     this.matchId = matchId; this.cursor = 0; this.history = []; this.current = null;
-    this.pending = []; this.initialized = false; this.lastPresentedSeq = 0;
+    this.pending = []; this.initialized = false; this.lastPresentedSeq = 0; this.triggers = null;
   }
 }
 
@@ -193,13 +238,26 @@ export function stateWithFrame(state: FState, frame: PresentationFrame | null): 
 }
 export function presentationDuration(event: PresentationEvent, fast: boolean) {
   // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
-  if (event.type === 'mill') { const m = millTiming(event.milled?.length ?? 1, fast); return m.travel + (m.flights - 1) * m.gap + 160; }
-  const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? 1000 : event.type === 'spell-cast' ? 720
+  if (event.type === 'mill' || (event.entries?.length ?? 0) > 1) {
+    const m = event.type === 'mill' ? millTiming(event.milled?.length ?? 1, fast) : entryTiming(event.entries!.length, fast || !!event.repeat);
+    return m.travel + (m.flights - 1) * m.gap + 160;
+  }
+  const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : 1000)
+    : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
     : event.type === 'damage' ? (event.combat ? 620 : 760)
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
     : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
   return Math.round(duration * (fast ? .6 : 1));
+}
+/**
+ * Ritmo das permanentes que entram juntas (fichas, blink em massa): uma cascata curta, de 60 a 110 ms entre elas, e só
+ * as 8 primeiras voam; o resto chega com a última.
+ */
+export function entryTiming(count: number, fast: boolean) {
+  const flights = Math.max(1, Math.min(count, 8));
+  const gap = (count >= 8 ? 60 : count >= 5 ? 80 : 110) * (fast ? .6 : 1);
+  return { flights, gap: Math.round(gap), travel: fast ? 260 : 420 };
 }
 /**
  * Ritmo do mill: uma carta voa depois da outra; com muitas, o intervalo encurta e só as primeiras voam (o resto chega
@@ -216,5 +274,6 @@ export function millTiming(count: number, fast: boolean) {
  */
 export function calloutDuration(event: PresentationEvent, fast: boolean) {
   if (event.type !== 'ability-activated') return presentationDuration(event, fast);
+  if (event.repeat) return fast ? 1000 : 1400;
   return event.trigger ? (fast ? 2000 : 2600) : (fast ? 1600 : 2000);
 }
