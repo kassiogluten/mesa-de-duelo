@@ -32,7 +32,9 @@
 .choice-segments button:hover:not(:disabled, [aria-pressed=true], [aria-selected=true]), .opponent-card:hover:not(:disabled, [aria-pressed=true]) { color: var(--ink); }
 .choice-segments button:disabled, .opponent-card:disabled { cursor: default; opacity: .55; }
 /* Quatro formatos: 2×2 na barra lateral, uma linha só quando houver largura. */
-.format-choice .choice-segments { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.format-choice .choice-segments { display: grid; grid-template-columns: repeat(2, 1fr); }
+.format-choice .format-others { grid-template-columns: repeat(3, 1fr); margin-top: 6px; }
+.format-choice .format-others[hidden] { display: none; }
 .setup-explanation { font-size: 13px; line-height: 1.5; color: var(--muted); margin: var(--label-gap) 0 0; }
 .opponent-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .opponent-card { display: flex; align-items: center; justify-content: center; text-align: center; min-height: var(--control-h); border-radius: var(--control-radius); border: 1px solid var(--control-line); background: var(--control-bg); padding: 6px 8px; color: var(--muted); cursor: pointer; }

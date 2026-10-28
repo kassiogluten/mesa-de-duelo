@@ -1,4 +1,10 @@
 {
+  "0.65.0": {
+    "Commander já vem escolhido": [
+      { "img": "0.65.0/formato-commander.webp", "legenda": "Na primeira visita, o formato já vem em **Commander**; os outros ficam guardados em **Outros**." },
+      { "img": "0.65.0/formato-outros.webp", "legenda": "Tocando em **Outros**, Pauper, Sacola 50 e Livre aparecem numa linha logo abaixo, com o último que você usou já marcado." }
+    ]
+  },
   "0.64.1": {
     "Improvisar e convocar escolhendo na mesa": [
       { "img": "0.64.1/improvisar-caixa.webp", "legenda": "Bola de Fogo com X=4 e a Inspiring Statuary em campo: a caixa explica que cada artefato virado paga {1}, conta os artefatos escolhidos e mostra que ainda falta pagar {1}{R} com mana." },
