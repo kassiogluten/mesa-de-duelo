@@ -27,7 +27,7 @@ O `rodar.sh` carrega o `.env` da raiz, se existir (fora do git; modelo em `.env.
 | Comando | O que faz |
 |---|---|
 | `./scripts/rodar.sh` | **play**: humano x IA (`start`) e humano x humano em salas (`host`/`join`). Cada conexão joga a sua partida. |
-| `./scripts/rodar.sh --mode=watch --a=verde --b=vermelho --delay=150` | **watch**: partidas IA x IA, transmitindo o estado a cada evento. Útil para depurar o JSON. |
+| `./scripts/rodar.sh --mode=watch --a=pauper-floresta --b=pauper-brasa --delay=150` | **watch**: partidas IA x IA, transmitindo o estado a cada evento. Útil para depurar o JSON. |
 | `./scripts/rodar.sh --mode=replay --relato=/caminho/R-7K2Q.json.gz [--retrato=N]` | **replay** (desenvolvimento): como o play, mas a primeira partida contra a IA aberta na mesa (qualquer deck) vira a do relato. Veja [Repetir um relato no Forge](#repetir-um-relato-no-forge). |
 | `--feedback-dir=/pasta` | Onde guardar os relatos (o mesmo que `-Dmesa.feedback.dir`; padrão `~/.forge/mesa-relatos`, `/data` no Docker). |
 | `--lang=en-US` | Idioma dos prompts do Forge (padrão `pt-BR`). |
@@ -62,7 +62,7 @@ O `rodar.sh` carrega o `.env` da raiz, se existir (fora do git; modelo em `.env.
   "session": { "code": "K7QM", "token": "...", "room": true }, // para voltar com "rejoin" se a conexão cair
   "room": null, // em rede: { "code": "K7QM", "seat": 0, "token": "...", "started": true,
                 //            "players": [{ "name": "Ana", "connected": true, "rematch": false }] }
-  "decks": ["vermelho", "verde", "azorius"]
+  "decks": ["padrao-auras", "pauper-brasa", "pauper-floresta"]
 }
 ```
 

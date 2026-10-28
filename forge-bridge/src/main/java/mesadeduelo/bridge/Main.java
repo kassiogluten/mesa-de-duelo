@@ -44,8 +44,8 @@ public final class Main {
         String host = opt.getOrDefault("host", "127.0.0.1");
         long delay = Long.parseLong(opt.getOrDefault("delay", "150"));
         int games = Integer.parseInt(opt.getOrDefault("games", "1"));
-        String deckA = opt.getOrDefault("a", "vermelho");
-        String deckB = opt.getOrDefault("b", "verde");
+        String deckA = opt.getOrDefault("a", "pauper-brasa");
+        String deckB = opt.getOrDefault("b", "pauper-floresta");
         if (opt.containsKey("feedback-dir")) System.setProperty("mesa.feedback.dir", opt.get("feedback-dir"));
         String mode = opt.getOrDefault("mode", "play");
 
