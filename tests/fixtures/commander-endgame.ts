@@ -141,6 +141,34 @@ Object.assign(window, { fixture: { state, client, view, messages, render, player
     Object.assign(state.input, { priority: true, actionable: [] });
     render();
   },
+  /** Previsão do combate do ataque() acima, como a ponte manda: Diego morre, Carla fica perto e a Vraska de Bruno cai. */
+  previsao() {
+    if (state.phase !== 'COMBAT_DECLARE_BLOCKERS') (window as any).fixture.ataque();
+    const vraska = atraxaField.find(c => c.name.startsWith('Vraska'))!;
+    state.forecast = [
+      { player: ATRAXA, life: 23, lifeAfter: 17, planeswalkers: [{ id: vraska.id, loyalty: 6, after: 0 }] },
+      { player: KRENKO, life: 7, lifeAfter: 4, poison: 7, poisonAfter: 7 },
+      { player: URZA, life: 3, lifeAfter: -5, commander: [{ commanderId: edgar.id, damage: 14, after: 22 }], lethal: 'life' },
+    ];
+    render();
+  },
+  /** Bruno e Carla atacam você e você escolhe os bloqueadores, com a vida prevista (letal com Atraxa sem bloqueio). */
+  bloqueio(letal = true) {
+    const goblins = krenkoField.filter(c => c.name === 'Goblin').slice(0, 2);
+    const attackers = [atraxa, ...goblins];
+    state.phase = 'COMBAT_DECLARE_BLOCKERS'; state.activePlayer = ATRAXA;
+    attackers.forEach(c => { c.attacking = true; c.tapped = c !== atraxa; });
+    const mine = meField.filter(c => c.creature && !c.tapped);
+    const blocker = mine.find(c => c.name === 'Cordial Vampire')!;
+    state.combat = attackers.map(c => ({ attacker: c.id, defender: ME, defenderKind: 'player', blockers: !letal && c === atraxa ? [blocker.id] : [] }));
+    blocker.blocking = !letal;
+    state.forecast = [letal
+      ? { player: ME, life: 14, lifeAfter: 5, poison: 3, poisonAfter: 3, commander: [{ commanderId: atraxa.id, damage: 14, after: 21 }], lethal: 'commander' }
+      : { player: ME, life: 14, lifeAfter: 12, poison: 3, poisonAfter: 3 }];
+    Object.assign(state.input, { gen: state.input.gen + 1, priority: false, actionable: mine.map(c => c.id), message: 'Declare os bloqueadores.',
+      ok: { label: 'OK', enabled: true }, blocking: { selectedAttacker: null, attackers: attackers.map(c => c.id), blockers: mine.map(c => c.id), legalAssignments: mine.map(c => ({ blocker: c.id, attackers: attackers.map(a => a.id) })) } });
+    render();
+  },
   /** Tira um jogador da partida (padrão: Diego, com 3 de vida). */
   eliminar(id = URZA) { Object.assign(player(id), { eliminated: true, life: 0 }); render(); },
   /** Volta para a cena inicial. */
