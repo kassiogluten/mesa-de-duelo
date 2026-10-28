@@ -2020,9 +2020,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Na escolha de alvos (antes da pilha), a carta que pede o alvo aparece mesmo no campo, com a habilidade e o que falta.
     // A do topo do grimório conta como fora de vista: enquanto se olha (vidência 1, vigilância 1) ela vem também como
     // topo do monte, que é só uma miniatura.
+    // Na escolha de cartas de um custo (sacrificar outro artefato, descartar), a carta que pede também aparece, mesmo
+    // no campo, a não ser que ela mesma esteja entre as que dá para escolher.
     const pc = s.input.vote?.card ?? s.input.card ?? s.input.targeting?.card;
     const choosingTargets = !!s.input.targeting && !s.input.paying && !s.input.vote && !s.gameOver;
-    const targetSource = choosingTargets && !!pc && pc.id === s.input.targeting!.source;
+    const decision = cardDecision(s);
+    const targetSource = (choosingTargets && !!pc && pc.id === s.input.targeting!.source) ||
+      (!!decision && !!pc && !s.input.selectable.includes(pc.id) && !s.input.selection!.cards.includes(pc.id));
     const onLibraryTop = !!pc && s.players.some(p => p.libraryTop?.id === pc.id);
     const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || targetSource || onLibraryTop || !findCard(pc.id, false))
       ? targetSource
@@ -2038,7 +2042,6 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       : s.input.vote ? voteBoardPrompt(s.input.vote) : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''
       : opening === 'mulligan-bottom' ? s.input.message.replace(/(\d+)\s+carta\(s\)/g, (_, n: string) => `${n} ${Number(n) === 1 ? 'carta' : 'cartas'}`) : s.input.message;
     $('#fAction').classList.toggle('suspend-choice', !!s.input.suspendCast);
-    const decision = cardDecision(s);
     $('#fAction').classList.toggle('card-decision', !!decision);
     $('#fAction').classList.toggle('hand-decision', !!decision?.inHand);
     root.querySelector('.arena')!.classList.toggle('has-hand-decision', !!decision?.inHand);
@@ -2046,7 +2049,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // O Forge manda "Carta (id) - texto da habilidade" antes do pedido; o pedido vem primeiro para não sumir no texto recolhido.
     const sourceFirst = decision ? null : instruction.match(/^(.+ \(\d+\) - [\s\S]*?)\n\n([\s\S]+)$/);
     const lines = (sourceFirst ? `${sourceFirst[2]}\n\n${sourceFirst[1]}` : instruction).split('\n');
-    const heading = decision ? `<h2 class="decision-heading">${esc(lines.length > 1 ? lines.shift()! : 'Sua escolha')}</h2>` : '';
+    const heading = decision ? `<h2 class="decision-heading">${esc(withoutCardIds(lines.length > 1 ? lines.shift()! : 'Sua escolha'))}</h2>` : '';
     const prolifPanel = isProliferating(s) ? proliferatePanelHTML(s, proliferateNames(s)) : '';
     const selectionCount = decision && !prolifPanel ? `<div class="decision-progress" role="status"><strong>${esc(decision.progress)}</strong><span>${esc(decision.instruction)}</span></div>` : '';
     shownInstruction = instruction;

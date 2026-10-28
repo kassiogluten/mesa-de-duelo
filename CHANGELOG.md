@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.61.1] - 2026-10-28
+
+### Corrigido
+
+- **Carta que pede o custo à vista.** Ao pagar um custo escolhendo cartas, como o "sacrifique outro artefato" do Repurposing Bay, a caixa de ação passa a mostrar a carta que está pedindo, inteira, mesmo quando ela está no seu campo; tocar nela abre o inspetor. O título da caixa também não mostra mais um número entre parênteses depois do nome da carta.
+
 ## [0.61.0] - 2026-10-28
 
 ### Mudou
