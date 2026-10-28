@@ -611,3 +611,35 @@ Na declaração de bloqueadores, o jogador precisa somar de cabeça o poder de c
 - [x] Leitor de tela: anunciar a vida prevista quando ela mudar.
 
 Decidido em 28/10/2026: a conta vem da ponte (`CombatForecast`, com as contas do Forge em `ComputerUtilCombat`: prevenção, proteção, golpe duplo, atropelar, infectar e veneno extra), e vai no estado como `forecast` só na etapa de declarar bloqueadores. Aparece nos dois lugares: selo no retrato de cada jogador atacado, que todos na mesa veem, e uma frase na caixa de ação de quem bloqueia, junto do **Confirmar bloqueios**. "Vida muito baixa" quer dizer 5 ou menos, ou estar a 2 do limite de veneno ou de dano de comandante. Ficou de fora: vida ganha por bloqueadores com vínculo com a vida e gatilhos de combate (como "sempre que atacar"), que o Forge também não prevê.
+
+## 40. Vidência com as cartas inteiras
+
+Na vidência (scry) de mais de uma carta, a escolha do que vai para o fundo do grimório mostra só o nome de cada carta. Para decidir, o jogador precisa saber o que a carta faz, e acaba tendo que lembrar ou adivinhar. Na vigilância (surveil) com várias cartas, a escolha já mostra cada carta inteira, com os detalhes.
+
+- [ ] Mostrar as cartas da vidência inteiras (imagem ou "Arte e texto", conforme a opção do jogador), do mesmo jeito da vigilância com várias cartas, em vez da lista de nomes.
+- [ ] Tocar na carta abre o inspetor, com o texto em português.
+- [ ] Manter a ordem do topo do grimório visível (qual é a primeira) e a escolha de topo ou fundo de cada carta, inclusive a ordem das que ficam no topo.
+- [ ] Funcionar em tela estreita e com muitas cartas (vidência 3 ou mais), sem cobrir os botões de confirmar.
+- [ ] Leitor de tela: anunciar o nome e o tipo de cada carta, como hoje.
+
+## 41. Testar a mão revelada (Telepathy e afins)
+
+Cartas como Telepathy, Revelation e Seer's Vision fazem o oponente jogar com a mão revelada, e Gitaxian Probe, Thoughtseize e Duress mostram a mão por um momento. Ainda não foi testado como isso aparece na mesa. Pela leitura do código (28/10/2026), a ponte só manda as cartas da mão para o próprio dono: para os outros vai só a quantidade, então a mão revelada provavelmente não aparece.
+
+- [ ] Testar com Telepathy no campo (os dois lados, contra a IA e em sala em rede) e anotar o que aparece hoje.
+- [ ] Testar também quem revela a mão só uma vez (Gitaxian Probe, Peek) e quem escolhe uma carta da mão do oponente (Thoughtseize, Duress).
+- [ ] Se não aparecer: a ponte manda as cartas da mão para quem o Forge permite ver, e a mesa mostra a mão do oponente de face para cima (sem dar para jogar), com toque para ampliar.
+- [ ] Quando o efeito sai do campo, a mão volta a ficar escondida.
+- [ ] Commander: só para os jogadores que podem ver (Telepathy mostra a mão de todos os oponentes; outras cartas, só a de um).
+- [ ] Incluir no laboratório de efeitos (item 18).
+
+## 42. Carta de origem na escolha de alvos
+
+Quando um gatilho ou habilidade pede alvo antes de ir para a pilha, a mensagem no centro da mesa diz só o nome da carta ("Escolha um alvo para …"). A imagem da carta só aparece ali quando ela não está à vista na mesa; se a carta está no campo (o caso comum dos gatilhos), o jogador precisa achar a carta e abrir o inspetor para lembrar o que o efeito faz e que alvo serve.
+
+- [ ] Mostrar na mensagem a carta que está pedindo o alvo, inteira (imagem ou "Arte e texto", conforme a opção do jogador), também quando ela está no campo, enquanto o efeito ainda não foi para a pilha.
+- [ ] Destacar o texto da habilidade que disparou (gatilho ou habilidade ativada), em português, para não precisar ler a carta toda.
+- [ ] Mais detalhes do alvo: que tipo de alvo serve (criatura, jogador, planeswalker…), quantos falta escolher e quais já foram marcados.
+- [ ] Tocar na carta abre o inspetor; a seta de alvo continua saindo da carta.
+- [ ] Não cobrir os alvos nem os botões em tela estreita; com "Ver a mesa" (item 4), a carta some junto com a mensagem.
+- [ ] Leitor de tela: anunciar a carta e a habilidade junto do pedido.
