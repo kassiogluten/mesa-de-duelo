@@ -39,3 +39,9 @@
   .shared-shell-header .feedback-btn .feedback-long { display: none; }
   .shared-shell-header .feedback-btn .feedback-short { display: inline; }
 }
+/* Conta: depois de Novidades; no celular, na linha das abas, para a primeira linha não quebrar. */
+.shared-shell-header.home-top > .conta { margin-left: -32px; }
+@media (max-width: 700px) {
+  .shared-shell-header.home-top > .conta { order: 4; margin-left: 0; }
+  .shared-shell-header.home-top:has(> .conta:not([hidden])) nav { width: auto; flex: 1; }
+}

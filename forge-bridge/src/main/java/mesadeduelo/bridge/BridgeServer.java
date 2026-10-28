@@ -47,6 +47,8 @@ final class BridgeServer {
     private volatile Feedback feedback;
     /** Rotas /api/admin/; null no modo watch. */
     private volatile Admin admin;
+    /** Rotas /api/conta/; null no modo watch. */
+    private volatile Accounts accounts;
 
     interface Listener {
         void onConnect(Channel ch);
@@ -63,6 +65,7 @@ final class BridgeServer {
 
     void feedback(Feedback f) { feedback = f; }
     void admin(Admin a) { admin = a; }
+    void accounts(Accounts a) { accounts = a; }
 
     void start() throws InterruptedException {
         EventLoopGroup boss = new NioEventLoopGroup(1);
@@ -76,10 +79,14 @@ final class BridgeServer {
                     ch.pipeline().addLast(new HttpServerCodec());
                     // Os relatos têm agregador próprio de 3 MB; as outras rotas continuam com 64 KB.
                     if (f != null) ch.pipeline().addLast(new Feedback.Route("agregador"));
+                    // A sincronia dos decks da conta também: até 4 MB.
+                    if (accounts != null) ch.pipeline().addLast(new Accounts.Route("agregador"));
                     ch.pipeline().addLast("agregador", new HttpObjectAggregator(1 << 16));
                     if (f != null) ch.pipeline().addLast(f.new Handler());
                     Admin a = admin;
                     if (a != null) ch.pipeline().addLast(a.new Handler());
+                    Accounts c = accounts;
+                    if (c != null) ch.pipeline().addLast(c.new Handler());
                     ch.pipeline()
                         .addLast(new HttpEndpoints())
                         .addLast(new WebSocketServerProtocolHandler("/ws", null, true, 1 << 20))

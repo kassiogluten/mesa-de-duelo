@@ -6,11 +6,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
-## [0.62.1] - 2026-10-28
+## [0.64.1] - 2026-10-28
 
 ### Corrigido
 
 - **Improvisar e convocar escolhendo na mesa.** Ao conjurar uma mágica com improvisar (como as que ganham a habilidade da Inspiring Statuary), os artefatos que podem ajudar a pagar ficam destacados e marcam com um toque; a caixa de ação explica, em português, que cada um paga {1} e mostra quanto ainda falta, e o X também pode ser pago assim. Antes não dava para escolher nenhum artefato e o pedido vinha em inglês, numa janela que cobria o campo. O mesmo vale para convocar, com as criaturas. Desistir da mágica no pagamento da mana agora desvira os artefatos usados, e mágicas sem custo genérico (como o Choque) vão direto para a mana, sem pedir artefatos que não pagariam nada.
+
+## [0.64.0] - 2026-10-28
+
+### Novo
+
+- **Seu nome e as preferências da mesa também acompanham a conta.** Com a conta Google, o nome que você usa na mesa e as preferências (som, aviso de turno, ritmo da mesa, passar a vez automaticamente e onde o jogo para no turno do oponente) são os mesmos em todos os aparelhos. Na primeira vez que você entra, se o campo Seu nome estiver vazio, ele já vem com o seu primeiro nome do Google, e você pode mudar quando quiser. Uma preferência mudada num aparelho vale nos outros a partir da próxima partida.
+
+## [0.63.0] - 2026-10-28
+
+### Novo
+
+- **Entrar com Google e Meus decks em todos os aparelhos.** O botão Entrar com Google, no topo da tela, guarda seus decks numa conta: eles aparecem no celular, no computador e em qualquer navegador onde você entrar, e o que você muda num aparelho chega aos outros sozinho (sem internet, a mudança espera e sobe quando a conexão voltar). Se o navegador já tiver decks, o jogo pergunta se eles entram na conta ou se você prefere usar só os da conta; se o mesmo deck estiver diferente nos dois lugares, ficam os dois. Decks apagados ficam 30 dias na Lixeira, no menu da conta. Entrar é opcional: sem conta, tudo continua como antes.
+- **Política de privacidade.** Uma página nova explica, em português simples, quais dados o jogo usa, onde eles ficam, por quanto tempo e como pedir para ver ou apagar. O link fica no rodapé da tela inicial, ao lado do contato.
 
 ## [0.62.0] - 2026-10-28
 

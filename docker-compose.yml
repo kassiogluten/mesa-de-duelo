@@ -2,7 +2,11 @@
 # Monitoramento (deploy/monitoring/README.md): Prometheus coleta a ponte e o cAdvisor; o Grafana mostra o painel.
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        # Client ID do Google (OAuth "Web application"), em GOOGLE_CLIENT_ID no Coolify: o mesmo valor vai para a ponte.
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     depends_on:
       - bridge
     expose:
@@ -17,11 +21,14 @@ services:
       - JAVA_OPTS=${JAVA_OPTS:--Xmx2g}
       # Senha da área de admin (/admin), em ADMIN_PASSWORD ou MESA_ADMIN_PASSWORD no Coolify: sem ela, a área fica desligada.
       - MESA_ADMIN_PASSWORD=${MESA_ADMIN_PASSWORD:-${ADMIN_PASSWORD:-}}
+      # Contas dos jogadores (Entrar com Google): sem o client ID, ficam desligadas. Guardadas em /data/contas.
+      - MESA_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     expose:
       - "7171"
     volumes:
       - forge-data:/root/.forge
-      # Relatos dos jogadores (relatos/AAAA-MM/<código>.json.gz e indice.jsonl), com retenção de 90 dias ou 1 GB.
+      # Relatos dos jogadores (relatos/AAAA-MM/<código>.json.gz e indice.jsonl), com retenção de 90 dias ou 1 GB,
+      # e as contas (contas/), que não têm retenção: este volume precisa de backup.
       - feedback-data:/data
     restart: unless-stopped
 

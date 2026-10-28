@@ -1,8 +1,26 @@
 {
-  "0.62.1": {
+  "0.64.1": {
     "Improvisar e convocar escolhendo na mesa": [
-      { "img": "0.62.1/improvisar-caixa.webp", "legenda": "Bola de Fogo com X=4 e a Inspiring Statuary em campo: a caixa explica que cada artefato virado paga {1}, conta os artefatos escolhidos e mostra que ainda falta pagar {1}{R} com mana." },
-      { "img": "0.62.1/improvisar-artefatos.webp", "legenda": "Os artefatos que podem ajudar a pagar ficam destacados no campo; os escolhidos ganham o sinal de marcado. Os terrenos ficam de fora, para pagar o resto com mana." }
+      { "img": "0.64.1/improvisar-caixa.webp", "legenda": "Bola de Fogo com X=4 e a Inspiring Statuary em campo: a caixa explica que cada artefato virado paga {1}, conta os artefatos escolhidos e mostra que ainda falta pagar {1}{R} com mana." },
+      { "img": "0.64.1/improvisar-artefatos.webp", "legenda": "Os artefatos que podem ajudar a pagar ficam destacados no campo; os escolhidos ganham o sinal de marcado. Os terrenos ficam de fora, para pagar o resto com mana." }
+    ]
+  },
+  "0.64.0": {
+    "Seu nome e as preferências da mesa também acompanham a conta": [
+      { "img": "0.64.0/nome-do-google.webp", "legenda": "Na primeira vez que você entra com o campo **Seu nome** vazio, ele já vem com o seu primeiro nome do Google; o que você escrever ali vale em todos os aparelhos." }
+    ]
+  },
+  "0.63.0": {
+    "Entrar com Google e Meus decks em todos os aparelhos": [
+      { "img": "0.63.0/entrar-com-google.webp", "legenda": "O botão **Fazer login com o Google** fica no topo da tela, ao lado de Novidades." },
+      { "img": "0.63.0/pergunta-ao-entrar.webp", "legenda": "Ao entrar num navegador que já tem decks, o jogo pergunta se eles entram na conta ou se você prefere usar só os da conta." },
+      { "img": "0.63.0/menu-da-conta.webp", "legenda": "Depois de entrar, a foto (ou a inicial) abre o menu da conta, que mostra se os decks estão sincronizados e leva à Lixeira." },
+      { "img": "0.63.0/lixeira.webp", "legenda": "Na Lixeira, os decks apagados nos últimos 30 dias voltam para Meus decks com **Restaurar**." },
+      { "img": "0.63.0/faixa-meus-decks.webp", "legenda": "Em Meus decks, quem ainda não entrou vê um aviso com o botão do Google; o × esconde o aviso." }
+    ],
+    "Política de privacidade": [
+      { "img": "0.63.0/link-no-rodape.webp", "legenda": "No rodapé da tela inicial, o link **Política de privacidade** fica ao lado do contato." },
+      { "img": "0.63.0/pagina-de-privacidade.webp", "legenda": "O começo da página: a data da última atualização e um resumo do que o jogo faz (e não faz) com os seus dados." }
     ]
   },
   "0.61.2": {

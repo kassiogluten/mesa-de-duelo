@@ -59,6 +59,9 @@ function validDeck(v: unknown): v is DeckData {
     && (v.unresolved === undefined || (Array.isArray(v.unresolved) && v.unresolved.every(n => typeof n === 'string')));
 }
 
+/** Como o deck fica ao ser lido do armazenamento: sem formato vira Livre, e todo deck do jogador tem sideboard. */
+export const normalizeDeck = (record: DeckData): DeckData => ({ ...record, builtin: false, format: record.format ?? 'free', sideboard: record.sideboard ?? [] });
+
 /** Invalid records are retained verbatim for export; migration never rewrites v1. */
 export function readDeckLibrary(storage: DeckStorage): LibraryState {
   let raw: string | null = null;
@@ -79,7 +82,7 @@ export function readDeckLibrary(storage: DeckStorage): LibraryState {
     for (const record of records) {
       if (!validDeck(record) || seen.has(record.id)) { recovery.push(record); continue; }
       seen.add(record.id);
-      decks.push({ ...record, builtin: false, format: record.format ?? 'free', sideboard: record.sideboard ?? [] });
+      decks.push(normalizeDeck(record));
     }
     const result: LibraryState = { decks, recovery };
     if (recovery.length) result.error = 'Alguns registros precisam de recuperação. Exporte os dados originais; seus decks reconhecidos continuam disponíveis.';
@@ -102,9 +105,14 @@ export function loadUserDecks(): DeckData[] {
   return state.decks;
 }
 export function getDeckStorageState(): LibraryState { return state; }
+/** Os decks deste navegador guardados quando o jogador escolheu "Usar só os da conta" (um por troca). */
+export const ACCOUNT_BACKUP_PREFIX = 'mesa:decks:antes-da-conta:';
 export function exportDeckRecovery(): string {
   const original: Record<string, string | null> = {};
-  try { for (const key of [LEGACY_DECK_KEY, DECK_STORAGE_KEY, 'mesa:decks:v1:backup']) original[key] = localStorage.getItem(key); } catch { /* Include in-memory drafts even without storage. */ }
+  try {
+    const backups = Object.keys(localStorage).filter(key => key.startsWith(ACCOUNT_BACKUP_PREFIX));
+    for (const key of [LEGACY_DECK_KEY, DECK_STORAGE_KEY, 'mesa:decks:v1:backup', ...backups]) original[key] = localStorage.getItem(key);
+  } catch { /* Include in-memory drafts even without storage. */ }
   return JSON.stringify({ exportedAt: new Date().toISOString(), decks: volatileDecks ?? state.decks, recovery: state.recovery, original }, null, 2);
 }
 export function writeDeckLibrary(storage: DeckStorage, decks: DeckData[], recovery: unknown[] = []): SaveResult {
@@ -124,12 +132,17 @@ export function writeDeckLibrary(storage: DeckStorage, decks: DeckData[], recove
     return { ok: true };
   } catch { return { ok: false, error: 'Não foi possível salvar neste navegador. Suas alterações estão nesta aba; exporte uma cópia ou tente novamente.' }; }
 }
+/** Quem acompanha cada gravação dos decks do jogador (a sincronia da conta); só as que deram certo. */
+let savedListener: ((decks: DeckData[]) => void) | null = null;
+export function onUserDecksSaved(listener: ((decks: DeckData[]) => void) | null) { savedListener = listener; }
+
 export function saveUserDecks(decks: DeckData[]): SaveResult {
   let result: SaveResult;
   try { result = writeDeckLibrary(localStorage, decks, state.recovery); }
   catch { result = { ok: false, error: 'O armazenamento não está disponível. Exporte uma cópia para guardar suas alterações.' }; }
   state = { ...state, decks, error: result.ok ? undefined : result.error };
   volatileDecks = result.ok ? null : decks;
+  if (result.ok) savedListener?.(decks);
   return result;
 }
 

@@ -117,10 +117,11 @@ async function loadMatches() {
     const response = await adminFetch('partidas');
     if (response.status === 401) { clearInterval(matchesTimer); login('A sessão acabou. Entre de novo.'); return; }
     if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
-    const matches = (await response.json() as { partidas: LiveMatch[] }).partidas;
+    const { partidas: matches, contas } = await response.json() as { partidas: LiveMatch[]; contas?: { total: number; aparelhos: number } };
     const playing = matches.filter(m => m.state === 'jogando').length;
     const online = matches.reduce((n, m) => n + m.players.filter(p => !p.ai && p.connected).length, 0);
-    section.innerHTML = `<div class="adm-head"><h1>Partidas</h1><p class="adm-muted">${[`${playing} jogando`, matches.length > playing ? `${matches.length - playing} esperando ou encerrando` : null, `${online} ${online === 1 ? 'jogador conectado' : 'jogadores conectados'}`, `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`].filter(Boolean).join(' · ')}</p>
+    section.innerHTML = `<div class="adm-head"><h1>Partidas</h1><p class="adm-muted">${[`${playing} jogando`, matches.length > playing ? `${matches.length - playing} esperando ou encerrando` : null, `${online} ${online === 1 ? 'jogador conectado' : 'jogadores conectados'}`,
+      contas && `${contas.total} ${contas.total === 1 ? 'conta' : 'contas'} (${contas.aparelhos} ${contas.aparelhos === 1 ? 'aparelho conectado' : 'aparelhos conectados'})`, `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`].filter(Boolean).join(' · ')}</p>
         <button class="adm-ghost" data-act="matches">Atualizar</button></div>
       ${matches.length ? `<ul class="adm-matches">${matches.map(m => `<li class="adm-card adm-match">
         <div class="adm-row-top"><strong>${esc(m.room ? `Sala ${m.code}` : 'Contra o computador')}</strong><span class="adm-status s-${m.state === 'jogando' ? 'resolvido' : m.state === 'aguardando' ? 'novo' : 'visto'}">${esc(m.state)}</span>

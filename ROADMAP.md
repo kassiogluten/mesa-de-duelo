@@ -682,3 +682,13 @@ Como resolver (na ordem em que eu faria):
 Decidido em 28/10/2026 (versão 0.61.0): a ponte manda, em cada `entered` que acontece enquanto algo resolve, o `stackId` e o `sourceName` do que está resolvendo. A mesa junta os `entered` seguidos do mesmo jogador, vindos do mesmo lugar e com o mesmo `stackId` (fichas, Living Death, blink em massa); sem `stackId`, cada entrada continua sendo um passo. O movimento junto usa `entryTiming` (até 8 voos, 60 a 110 ms entre eles, 420 ms de viagem): 8 fichas levam ~1 s. As cartas do monte ficam escondidas até a ficha pousar, e o monte mostra "+N". No blink, a saída para o exílio some da apresentação quando a volta vem no mesmo pacote (o histórico continua com ela). Gatilhos iguais seguidos (mesmo jogador e nome): do segundo em diante o aviso é de 400 ms (e o balão, de 1,4 s), as resoluções da sequência têm 180 ms e as fichas dela usam o ritmo rápido; esses passos curtos não contam no limite de 12 da fila. O histórico diz "criou 8 fichas de Rabbit" quando as fichas vêm de uma mágica ou gatilho.
 
 Medido depois (mesmas condições): conjurar com 2, 4 e 8 Hares: 3,4 s, 3,7 s e 3,8 s; blink em 3 Hares (6 fichas): 4,0 s; blink em 5 (20 fichas): 6,7 s, sem pular nenhuma. Ficou aberto o lado da ponte numa partida real (a prioridade entre os gatilhos).
+
+## 44. Entrar com Google e sincronizar Meus decks
+
+O jogador entra com a conta Google e encontra os mesmos decks em qualquer aparelho. Se entrar num navegador que já tem decks, o jogo pergunta se junta esses decks à conta ou se usa só os da conta. A conta também guarda as preferências da mesa e o apelido. Login opcional, pelo cabeçalho.
+
+Spec completa, com as decisões, a arquitetura, o protocolo de sincronia e as fases: [`docs/spec-login-google.md`](docs/spec-login-google.md).
+
+- [x] Fase 1: conta na ponte (`/api/conta/`), botão Entrar com Google, One Tap, sair e apagar conta.
+- [x] Fase 2: sincronizar Meus decks, com a pergunta ao entrar, a lixeira de 30 dias e o envio sem rede (0.63.0, junto com a fase 1).
+- [x] Fase 3: preferências, apelido e foto (0.64.0).
