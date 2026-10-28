@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.57.0] - 2026-10-28
+
+### Novo
+
+- **Versão da mesa no menu da partida.** No fim do menu da partida, abaixo de "Desistir e voltar ao início", aparece em letras pequenas a versão da mesa (por exemplo **Mesa de Duelo 0.57.0**). Assim, quem manda um print ou relata um erro mostra também em que versão está jogando. Toque na linha para ver as versões das regras e do motor do servidor, e toque de novo para voltar.
+
 ## [0.56.1] - 2026-10-27
 
 ### Corrigido

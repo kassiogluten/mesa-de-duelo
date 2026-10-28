@@ -1,4 +1,10 @@
 {
+  "0.57.0": {
+    "Versão da mesa no menu da partida": [
+      { "img": "0.57.0/menu.webp", "legenda": "No fim do menu da partida, abaixo de **Desistir e voltar ao início**, a linha discreta **Mesa de Duelo 0.57.0**." },
+      { "img": "0.57.0/regras-motor.webp", "legenda": "Tocando na linha, ela passa a mostrar as versões das regras e do motor do servidor." }
+    ]
+  },
   "0.56.1": {
     "Cartas viradas para baixo que você pode olhar": [
       { "img": "0.56.1/exilio-virada.webp", "legenda": "No seu exílio, a carta escondida aparece com a frente apagada e o olho no canto: só você vê que é um Raio." },
