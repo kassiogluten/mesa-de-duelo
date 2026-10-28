@@ -4,6 +4,9 @@
       { "img": "0.67.0/formato-standard.webp", "legenda": "Em **Outros**, o Standard aparece ao lado de Pauper, Sacola 50 e Livre." },
       { "img": "0.67.0/decks-standard.webp", "legenda": "Com o Standard escolhido, os decks prontos do formato mostram o selo **Standard**." }
     ],
+    "Cada formato mostra só os seus decks prontos": [
+      { "img": "0.67.0/sacola-so-com-os-seus.webp", "legenda": "Com o Sacola 50 escolhido, a lista mostra só os sete decks prontos de Sacola 50, e o computador sorteia só entre eles." }
+    ],
     "Outros formatos em duas linhas": [
       { "img": "0.67.0/formato-standard.webp", "legenda": "Standard e Pauper na primeira linha, Sacola 50 e Livre na segunda." }
     ]

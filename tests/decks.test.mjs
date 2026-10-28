@@ -324,3 +324,12 @@ test('Commander tags preserve command designation and do not infer a sideboard f
   const explicit = decks.parseDeckList('1 Marwyn, the Nurturer [Commander]\n\n99 Forest\nSB: 1 Island');
   assert.deepEqual(explicit.sideboard, [{ name: 'Island', count: 1 }]);
 });
+
+test('each format lists only the ready decks built for it; Livre lists every 60-card one', () => {
+  const count = f => decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, f)).length;
+  assert.equal(count('standard'), 16);
+  assert.equal(count('pauper'), 2);
+  assert.equal(count('sacola50'), 7, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
+  assert.equal(count('free'), 25);
+  assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length);
+});

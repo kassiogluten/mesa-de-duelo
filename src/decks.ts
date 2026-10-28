@@ -7,6 +7,11 @@ export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', standar
 export const isConstructed = (format: DeckFormat | undefined): format is 'standard' | 'pauper' | 'sacola50' => format === 'standard' || format === 'pauper' || format === 'sacola50';
 /** Formato do Scryfall que dá a legalidade das cartas: o Sacola 50 usa as do Legacy. */
 export const scryfallFormat = (format: DeckFormat | undefined) => format === 'sacola50' ? 'legacy' : format === 'standard' || format === 'pauper' || format === 'commander' ? format : undefined;
+/**
+ * Decks prontos listados num formato: só os montados para ele, mesmo que outros também sejam legais (os de Standard e
+ * de Pauper valem no Sacola 50, que usa o Legacy). No Livre entram todos os de 60 cartas.
+ */
+export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'free' ? d.format !== 'commander' : (d.format ?? 'free') === format;
 /** O Sacola 50 não confere preço: o aviso lembra o limite combinado. */
 export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro custando até R$ 50. A mesa não confere o preço: combine com o oponente.';
 export interface DeckEntry { name: string; count: number; oracleId?: string }

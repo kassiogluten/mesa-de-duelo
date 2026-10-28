@@ -14,6 +14,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Mudou
 
+- **Cada formato mostra só os seus decks prontos.** Em Standard, Pauper e Sacola 50, a lista de decks prontos e o deck do computador ficam só com os montados para aquele formato. Antes, o Sacola 50 também listava os decks de Standard e de Pauper, porque as cartas deles valem no Legacy. No Livre continuam todos os decks de 60 cartas, e os seus decks aparecem em todo formato em que forem válidos, como antes.
 - **Outros formatos em duas linhas.** Com o Standard, os formatos de Outros ficam em duas linhas de dois, para caber na barra lateral e no celular.
 
 ## [0.66.0] - 2026-10-28

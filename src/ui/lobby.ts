@@ -1,4 +1,4 @@
-import { allDecks, countEntries, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
+import { allDecks, countEntries, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
@@ -138,6 +138,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const setStatus = (message: string, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error', error); roomLobby.setStatus(message, error); };
   function allowed(deck: DeckData) {
     if (deck.format === 'commander' && format !== 'commander') return false;
+    if (deck.builtin && format && !readyDeckFits(deck, format)) return false;
     const local = validateDeckLocal(deck, format ?? 'free');
     return !format || showIncompatible || (validations.get(key(deck))?.valid ?? local.status !== 'invalid');
   }
@@ -215,7 +216,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Humanos' : 'Humano';
     $('#aiPanel').hidden = mode !== 'ai' || commander;
     $('#commanderAiPanel').hidden = mode !== 'ai' || !commander;
-    const aiPool = ready.filter(d => (format === 'commander' ? d.format === 'commander' : d.format !== 'commander') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
+    // O mesmo critério da lista e do sorteio da ponte: os decks prontos do formato (no Livre, todos os de 60 cartas).
+    const aiPool = ready.filter(d => readyDeckFits(d, format ?? 'free') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
     if (oppId !== 'random' && !aiPool.some(d => d.id === oppId)) oppId = 'random';
     $<HTMLSelectElement>('#oppSel').innerHTML = '<option value="random">Aleatório entre os compatíveis</option>' + aiPool.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
     $<HTMLSelectElement>('#oppSel').value = oppId;
