@@ -30,7 +30,7 @@ public class ReplayRoundTripTest {
     /** Joga até o começo do turno {@code turns} e devolve o diário (com até 3 retratos). */
     static JsonObject playedJournal(int turns) throws Exception {
         MatchConfig config = new MatchConfig("free", "bo1");
-        List<Deck> decks = List.of(Decks.build("vermelho"), Decks.build("verde"));
+        List<Deck> decks = List.of(Decks.build("pauper-brasa"), Decks.build("pauper-floresta"));
         List<RegisteredPlayer> players = new ArrayList<>();
         MatchJournal journal = new MatchJournal("teste", "CODIGO", false, config);
         for (int i = 0; i < decks.size(); i++) {
@@ -89,7 +89,7 @@ public class ReplayRoundTripTest {
             int index = line.charAt(1) - '0';
             assertEquals(line, Integer.parseInt(line.substring(line.indexOf('=') + 1)), restored.getPlayers().get(index).getLife());
         }
-        Game again = RelatoFixture.game(fixture.config(), List.of(Decks.build("vermelho"), Decks.build("verde")), List.of("a", "b"), actual);
+        Game again = RelatoFixture.game(fixture.config(), List.of(Decks.build("pauper-brasa"), Decks.build("pauper-floresta")), List.of("a", "b"), actual);
         assertEquals(zones(restored), zones(again));
         assertTrue(String.join("\n", diff), diff.stream().noneMatch(line -> line.contains("faltando") || line.contains("a mais") || line.contains("life")));
     }

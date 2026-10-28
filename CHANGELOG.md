@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.62.0] - 2026-10-28
+
+### Mudou
+
+- **Decks prontos de 40 cartas removidos.** Fúria da Montanha, Coração da Mata e Céu Aberto saíram da lista de decks prontos; todos os decks prontos agora têm o tamanho do seu formato. As cópias que você já fez deles continuam em Meus decks, e quem estava com um deles escolhido só precisa escolher outro antes de jogar.
+
 ## [0.61.2] - 2026-10-28
 
 ### Corrigido
