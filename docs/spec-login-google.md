@@ -175,15 +175,15 @@ Tudo desta fase fica atrás de `mesa:dev`. Por isso, ela não muda a versão nem
 
 ### Fase 2: sincronizar Meus decks (0.64.0)
 
-- [ ] `merge.ts` com testes: junção no primeiro login, deduplicação por conteúdo, conflito que mantém os dois e apagar contra editar.
-- [ ] `sync.ts`: fila, envio, busca do que mudou, várias abas e sem rede.
-- [ ] Rotas `estado` e `sincronizar` na ponte, com `rev` por conta.
+- [x] `merge.ts` com testes: junção no primeiro login, deduplicação por conteúdo, conflito que mantém os dois e apagar contra editar.
+- [x] `sync.ts`: fila, envio, busca do que mudou, várias abas e sem rede. Testado no navegador com a ponte simulada (junção, mudanças de outro aparelho, conflito, sem conexão, lixeira, sair, cancelar).
+- [x] Rotas `estado` e `sincronizar` na ponte, com `rev` por conta (`AccountDecks.java`, testes em `AccountDecksTest`). `sincronizar` aceita até 4 MB.
 - [ ] Tirar o login de trás de `mesa:dev`.
-- [ ] Métricas de sincronia: `mesa_accounts_syncs_total` e `mesa_accounts_conflicts_total`, no admin e no Grafana.
-- [ ] Diálogo do primeiro login: **Juntar à conta** / **Usar só os da conta**.
-- [ ] Diálogo de sair: **Manter os decks aqui** / **Tirar deste navegador**.
-- [ ] Lixeira: lista dos decks apagados nos últimos 30 dias, com **Restaurar** (em Meus decks ou no menu da conta).
-- [ ] Selo de sincronia no menu da conta.
+- [ ] Métricas de sincronia: `mesa_accounts_syncs_total` já existe na ponte; falta pôr no Grafana.
+- [x] Diálogo do primeiro login: **Juntar à conta** / **Usar só os da conta**. A cópia de antes da conta sai pelo menu da conta (**Baixar decks de antes da conta**).
+- [x] Diálogo de sair: **Manter os decks aqui** / **Tirar deste navegador**, com aviso quando há alterações ainda não enviadas.
+- [x] Lixeira: lista dos decks apagados nos últimos 30 dias, com **Restaurar**, no menu da conta.
+- [x] Linha de sincronia no menu da conta (sincronizados, sincronizando, sem conexão com N alterações, erro) e contorno na foto quando há aviso.
 - [ ] Aviso em Meus decks para quem não entrou: "Entre com Google para ter estes decks em outros aparelhos."
 - [ ] Página de teste em `tests/fixtures/` para montar os diálogos e tirar os prints, com a ponte simulada.
 - [ ] CHANGELOG e novidades.html, cobrindo também o login e o One Tap da fase 1: prints do botão, do menu da conta, da pergunta ao entrar e da lixeira.

@@ -14,6 +14,7 @@ import { openFeedbackForm } from './ui/feedbackForm';
 import { VERSION } from './ui/changelog';
 import { atualizarConta } from './conta/session';
 import { esconderOneTap, mostrarOneTap } from './conta/google';
+import { iniciarSincronia } from './ui/contaMenu';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -159,6 +160,10 @@ const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
     return {...result, issues: result.issues.map(issue => ({...issue, section: issue.section === 'main' || issue.section === 'sideboard' || issue.section === 'commander' ? issue.section : undefined}))};
   },
 });
+
+// Decks que chegaram da conta (outro aparelho, junção, lixeira) ou de outra aba: as duas telas se redesenham.
+addEventListener('mesa:decks-sincronizados', () => { lobby.refresh(); builder.refresh(); });
+iniciarSincronia();
 
 const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [] });
 async function requireForge(url: string): Promise<ForgeClient> {

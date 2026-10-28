@@ -83,6 +83,7 @@ public class AccountsTest {
         assertEquals("Kassio", account.get("apelido").getAsString());
         assertEquals("https://lh3.googleusercontent.com/a/foto=s96-c", account.get("foto").getAsString());
         assertEquals(1, a.count());
+        assertEquals(Accounts.accountId("123"), account.get("id").getAsString());
 
         String file = Files.readString(a.dir().resolve(Accounts.accountId("123") + ".json"));
         assertFalse("no e-mail on disk", file.contains("k@exemplo.com"));

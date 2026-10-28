@@ -45,7 +45,7 @@ import mesadeduelo.bridge.Admin.Response;
  * as sessões ficam em {@code <dir>/sessoes.json}, só com o hash do token, e sobrevivem a um reinício da ponte.
  * Sem client ID (MESA_GOOGLE_CLIENT_ID ou -Dmesa.google.clientId), toda rota responde 503.
  *
- *   POST   entrar   {credential}   → {token, expiresAt, conta}
+ *   POST   entrar   {credential}   → {token, expiresAt, conta: {id, nome, foto, apelido}}
  *   GET    eu                      → {conta}
  *   POST   sair                    invalida o token
  *   DELETE conta                   apaga a conta e todas as sessões dela
@@ -177,7 +177,7 @@ final class Accounts {
         JsonObject o = new JsonObject();
         o.addProperty("token", token);
         o.addProperty("expiresAt", Instant.ofEpochMilli(now + SESSION_MILLIS).toString());
-        o.add("conta", profile.deepCopy());
+        o.add("conta", publicProfile(id, profile));
         return Response.json(200, o);
     }
 
@@ -185,7 +185,7 @@ final class Accounts {
         JsonObject a = read(account);
         if (a == null) return Response.error(401, "Entre de novo: a conta não existe mais.");
         JsonObject o = new JsonObject();
-        o.add("conta", a.getAsJsonObject("perfil"));
+        o.add("conta", publicProfile(account, a.getAsJsonObject("perfil")));
         return Response.json(200, o);
     }
 
@@ -220,6 +220,13 @@ final class Accounts {
         JsonObject result = action.apply(a);
         if (write || purged) write(account, a);
         return result == null ? Response.error(404, "Esse deck não está mais na lixeira.") : Response.json(200, result);
+    }
+
+    /** O perfil com o id da conta: o navegador o usa para saber se quem entrou é a mesma conta dos decks dali. */
+    private static JsonObject publicProfile(String id, JsonObject profile) {
+        JsonObject o = profile.deepCopy();
+        o.addProperty("id", id);
+        return o;
     }
 
     private synchronized void logout(String authorization) throws IOException {

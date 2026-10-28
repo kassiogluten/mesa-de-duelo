@@ -8,7 +8,8 @@ const KEY = 'mesa:conta:v1';
 export const CONTA_API = bridgeHttpUrl('/api/conta/');
 export const GOOGLE_CLIENT_ID: string = import.meta.env?.VITE_GOOGLE_CLIENT_ID ?? '';
 
-export interface ContaPerfil { nome?: string; foto?: string; apelido?: string }
+/** {@code id} é opaco (um resumo do id do Google): só serve para saber se é a mesma conta. */
+export interface ContaPerfil { id: string; nome?: string; foto?: string; apelido?: string }
 export interface ContaSessao { token: string; expiresAt: string; conta: ContaPerfil }
 
 /** Enquanto a sincronia dos decks não fica pronta, as contas só aparecem no `npm run dev` ou com "mesa:dev" = "1". */
