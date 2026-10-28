@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import forge.card.ColorSet;
 import forge.card.ICardFace;
+import forge.card.mana.ManaCost;
+import forge.card.mana.ManaCostShard;
 import forge.game.Game;
 import forge.game.GameEntity;
 import forge.game.card.Card;
@@ -59,13 +61,40 @@ final class AskingController extends PlayerControllerHuman {
     }
 
     // Conjurar, ativar e gatilhos: tudo o que se pergunta até ir para a pilha (modos, X, custos opcionais, alvos).
-    @Override public boolean playChosenSpellAbility(SpellAbility sa) { return asking(sa, () -> super.playChosenSpellAbility(sa)); }
-    @Override public boolean playSaFromPlayEffect(SpellAbility sa) { return asking(sa, () -> super.playSaFromPlayEffect(sa)); }
+    @Override public boolean playChosenSpellAbility(SpellAbility sa) { return untapIfUndone(() -> asking(sa, () -> super.playChosenSpellAbility(sa))); }
+    @Override public boolean playSaFromPlayEffect(SpellAbility sa) { return untapIfUndone(() -> asking(sa, () -> super.playSaFromPlayEffect(sa))); }
     @Override public boolean playTrigger(Card host, WrappedAbility wrapper, boolean isMandatory) { return asking(host, () -> super.playTrigger(host, wrapper, isMandatory)); }
     @Override public boolean confirmTrigger(WrappedAbility wrapper) { return asking(wrapper.getHostCard(), () -> super.confirmTrigger(wrapper)); }
     @Override public boolean chooseTargetsFor(SpellAbility sa) { return asking(sa, () -> super.chooseTargetsFor(sa)); }
     @Override public boolean confirmReplacementEffect(ReplacementEffect effect, SpellAbility effectSA, GameEntity affected, String question) {
         return asking(effect.getHostCard(), () -> super.confirmReplacementEffect(effect, effectSA, affected, question));
+    }
+
+    /**
+     * Artefatos virados no improvisar (e no dobrar água) da conjuração em curso. Ao desfazer uma conjuração, o Forge
+     * só desvira as criaturas da convocação; estes ficariam virados sem ter pagado nada.
+     */
+    private final List<Card> tappedToPay = new java.util.ArrayList<>();
+
+    @Override public Map<Card, ManaCostShard> chooseCardsForConvokeOrImprovise(SpellAbility sa, ManaCost manaCost, CardCollectionView untappedCards,
+                                                                             boolean artifacts, boolean creatures, Integer maxReduction) {
+        // Artefatos (improvisar, dobrar água) só pagam {1}: sem custo genérico, o Forge pediria uma escolha que não serve para nada.
+        if (artifacts && manaCost.getGenericCost() == 0) return new java.util.HashMap<>();
+        Map<Card, ManaCostShard> chosen = asking(sa, () -> super.chooseCardsForConvokeOrImprovise(sa, manaCost, untappedCards, artifacts, creatures, maxReduction));
+        if (artifacts) tappedToPay.addAll(chosen.keySet());
+        return chosen;
+    }
+
+    /** Só o que foi virado nesta conjuração: outra pode começar no meio dela (uma habilidade ativada ao pagar). */
+    private boolean untapIfUndone(Supplier<Boolean> play) {
+        int from = tappedToPay.size();
+        try {
+            boolean played = play.get();
+            if (!played) for (Card c : tappedToPay.subList(from, tappedToPay.size())) if (c.isTapped()) c.setTapped(false);
+            return played;
+        } finally {
+            tappedToPay.subList(from, tappedToPay.size()).clear();
+        }
     }
 
     // Escolhas pedidas por um efeito, com a habilidade que pede.

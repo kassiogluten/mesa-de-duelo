@@ -22,6 +22,7 @@ import forge.gamemodes.match.input.InputAttack;
 import forge.gamemodes.match.input.InputConfirm;
 import forge.gamemodes.match.input.InputPayMana;
 import forge.gamemodes.match.input.InputPayManaOfCostPayment;
+import forge.gamemodes.match.input.InputSelectCardsForConvokeOrImprovise;
 import forge.gamemodes.match.input.InputSelectEntitiesFromList;
 import forge.gamemodes.match.input.InputSelectManyBase;
 import forge.gamemodes.match.input.InputSelectTargets;
@@ -55,6 +56,10 @@ final class InputContext {
     private static final Field SELECT_MIN = field(InputSelectManyBase.class, "min");
     private static final Field SELECT_MAX = field(InputSelectManyBase.class, "max");
     private static final Field SELECT_ABILITY = field(InputSelectManyBase.class, "sa");
+    private static final Field TAP_AVAILABLE = field(InputSelectCardsForConvokeOrImprovise.class, "availableCards");
+    private static final Field TAP_REMAINING = field(InputSelectCardsForConvokeOrImprovise.class, "remainingCost");
+    private static final Field TAP_ARTIFACTS = field(InputSelectCardsForConvokeOrImprovise.class, "artifacts");
+    private static final Field TAP_CREATURES = field(InputSelectCardsForConvokeOrImprovise.class, "creatures");
     private static final Field MASS_SELECT = field(InputSelectEntitiesFromList.class, "massSelectMode");
     private static final Field PAY_PLAYER = field(InputPayMana.class, "player");
     private static final Field PAY_COST = field(InputPayMana.class, "manaCost");
@@ -198,6 +203,14 @@ final class InputContext {
      * have different counting semantics. Players only appear in {@code players} when they can be chosen.
      */
     static JsonObject selection(Object input) {
+        if (input instanceof InputSelectCardsForConvokeOrImprovise tap) {
+            JsonObject result = new JsonObject(); JsonArray cards = new JsonArray();
+            for (Card card : tap.getSelected()) cards.add(card.getId());
+            result.add("cards", cards);
+            result.addProperty("min", 0);
+            result.addProperty("max", (Integer) value(SELECT_MAX, input));
+            return result;
+        }
         if (!(input instanceof InputSelectEntitiesFromList<?> select)) return null;
         boolean anyCard = false, anyPlayer = false;
         for (var choice : select.getValidChoices()) {
@@ -216,6 +229,27 @@ final class InputContext {
         result.addProperty("min", (Integer) value(SELECT_MIN, input));
         result.addProperty("max", (Integer) value(SELECT_MAX, input));
         return result;
+    }
+
+    /**
+     * Improvisar, convocar e dobrar água: antes da mana, o Forge pede as permanentes para virar, mas não as marca
+     * como selecionáveis. kind diz qual das três (improvise, convoke, waterbend) e remaining, o custo que ainda falta.
+     */
+    static JsonObject tapToPay(Object input) {
+        if (!(input instanceof InputSelectCardsForConvokeOrImprovise tap)) return null;
+        boolean artifacts = (Boolean) value(TAP_ARTIFACTS, input), creatures = (Boolean) value(TAP_CREATURES, input);
+        JsonObject result = new JsonObject();
+        result.addProperty("kind", artifacts && creatures ? "waterbend" : artifacts ? "improvise" : "convoke");
+        result.addProperty("remaining", String.valueOf(value(TAP_REMAINING, tap)));
+        return result;
+    }
+
+    /** As permanentes que ainda podem ser viradas no improvisar, convocar ou dobrar água (as já escolhidas inclusive). */
+    static java.util.Set<Integer> tapToPayChoices(Object input) {
+        if (!(input instanceof InputSelectCardsForConvokeOrImprovise)) return java.util.Set.of();
+        java.util.Set<Integer> ids = new java.util.LinkedHashSet<>();
+        for (Object card : (Iterable<?>) value(TAP_AVAILABLE, input)) ids.add(((Card) card).getId());
+        return ids;
     }
 
     static java.util.Set<Integer> playerChoices(Object input) {

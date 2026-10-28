@@ -1466,6 +1466,8 @@ final class Session {
                 if (commanderMove != null) input.add("commanderMove", commanderMove);
                 JsonObject selection = InputContext.selection(currentInput);
                 if (selection != null) input.add("selection", selection);
+                JsonObject tapToPay = InputContext.tapToPay(currentInput);
+                if (tapToPay != null) input.add("tapToPay", tapToPay);
                 JsonObject proliferate = InputContext.proliferate(currentInput);
                 if (proliferate != null) input.add("proliferate", proliferate);
                 Set<Integer> playerChoices = InputContext.playerChoices(currentInput);
@@ -1502,7 +1504,9 @@ final class Session {
                 input.add("ok", button(priority && "OK".equalsIgnoreCase(seat.okLabel) ? "Passar prioridade" : seat.okLabel, seat.okEnabled && !locked && !spectating));
                 input.add("cancel", button(seat.cancelLabel, seat.cancelEnabled && !locked && !spectating));
                 JsonArray sel = new JsonArray();
-                seat.selectable.forEach(sel::add);
+                Set<Integer> selectableIds = new LinkedHashSet<>(seat.selectable);
+                selectableIds.addAll(InputContext.tapToPayChoices(currentInput));
+                selectableIds.forEach(sel::add);
                 input.add("selectable", sel);
                 JsonArray stackTargets = new JsonArray(); seat.selectableStacks.forEach(stackTargets::add);
                 input.add("selectableStacks", stackTargets);

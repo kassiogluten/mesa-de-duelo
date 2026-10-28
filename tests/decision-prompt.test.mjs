@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const code = await readFile(new URL('../src/ui/decisionPrompt.ts', import.meta.url), 'utf8');
 const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { cardDecision, selectionMessage } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 function state() {
   return { you: 0, players: [{ id: 0, hand: [{ id: 11 }, { id: 12 }, { id: 13 }] }], input: {
     priority: false, selectable: [11, 12, 13], selection: { cards: [], min: 2, max: 2 }, ok: { enabled: false },
@@ -43,4 +43,20 @@ test('opening, questions, finished games and priority do not inherit a card-choi
 test('cleanup instructions retain the engine hand limit and correct singular/plural', () => {
   assert.equal(selectionMessage('Escolha 1 carta(s) para descartar para levar sua mão ao máximo de 7 cartas.'), 'Escolha 1 carta para descartar para levar sua mão ao máximo de 7 cartas.');
   assert.equal(selectionMessage('Escolha 2 carta(s). Limite: 5.'), 'Escolha 2 cartas. Limite: 5.');
+});
+test('improvise, convoke and waterbend explain what tapping pays and what is left', () => {
+  const s = state();
+  s.input.selectable = [21, 22, 23];
+  s.input.selection = { cards: [], min: 0, max: 3 };
+  s.input.tapToPay = { kind: 'improvise', remaining: '{4}{R}' };
+  assert.deepEqual(cardDecision(s), { inHand: false, progress: 'Nenhum artefato escolhido', instruction: 'Confirme para pagar o resto com mana.' });
+  s.input.selection.cards = [21];
+  assert.equal(cardDecision(s).progress, '1 artefato escolhido');
+  s.input.selection.cards = [21, 22]; s.input.tapToPay = { kind: 'convoke', remaining: '0' };
+  assert.equal(cardDecision(s).progress, '2 criaturas escolhidas');
+  assert.equal(cardDecision(s).instruction, 'Confirme para conjurar.');
+  assert.equal(tapToPayMessage({ kind: 'improvise', remaining: '{1}{R}' }, 'Bola de Fogo'),
+    'Improvisar: Bola de Fogo\nToque nos artefatos que vão ajudar a pagar: cada um virado paga {1}. Falta pagar {1}{R}.');
+  assert.match(tapToPayMessage({ kind: 'convoke', remaining: '{0}' }), /^Convocar\n.*O custo já está todo pago\.$/);
+  assert.equal(tapToPayShort({ kind: 'improvise', remaining: '{4}' }, 'O Infindável'), 'Improvisar: vire artefatos para ajudar a pagar O Infindável.');
 });

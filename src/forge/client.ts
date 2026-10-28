@@ -350,6 +350,8 @@ export interface FState {
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
     /** players: só quando jogadores também podem ser escolhidos (proliferar). */
     selection?: { cards: number[]; players?: number[]; min: number; max: number };
+    /** Improvisar, convocar ou dobrar água: virar permanentes antes da mana (selection traz as já viradas); remaining é o custo que falta. */
+    tapToPay?: { kind: 'improvise' | 'convoke' | 'waterbend'; remaining: string };
     /** Proliferar: o que pode ganhar marcadores e se cada marcador ajuda ou prejudica quem escolhe. */
     proliferate?: { candidates: ProliferateCandidate[] };
     /** Escolha de conjurar durante a resolução do gatilho de suspender; usa OK/Cancelar. */

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.64.1] - 2026-10-28
+
+### Corrigido
+
+- **Improvisar e convocar escolhendo na mesa.** Ao conjurar uma mágica com improvisar (como as que ganham a habilidade da Inspiring Statuary), os artefatos que podem ajudar a pagar ficam destacados e marcam com um toque; a caixa de ação explica, em português, que cada um paga {1} e mostra quanto ainda falta, e o X também pode ser pago assim. Antes não dava para escolher nenhum artefato e o pedido vinha em inglês, numa janela que cobria o campo. O mesmo vale para convocar, com as criaturas. Desistir da mágica no pagamento da mana agora desvira os artefatos usados, e mágicas sem custo genérico (como o Choque) vão direto para a mana, sem pedir artefatos que não pagariam nada.
+
 ## [0.64.0] - 2026-10-28
 
 ### Novo

@@ -12,7 +12,7 @@ const state: any = { type: 'state', config: { format: 'standard', matchLength: '
   you: 10, players, turn: 3, phase: 'MAIN1', activePlayer: 10, gameOver: false, log: [], decks: [], stack: [], combat: [], castable: [],
   input: { gen: 7, priority: true, message: '', ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false }, selectable: [], actionable: [300, 302] }, events: [] };
 const messages: unknown[] = [];
-const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateProliferate(message); } };
+const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateProliferate(message); simulateImprovise(message); } };
 /** Cenário de proliferar: a escolha muda como a ponte mudaria, e confirmar dá +1 de cada marcador aos marcados. */
 function simulateProliferate(message: any) {
   const input = state.input;
@@ -30,6 +30,29 @@ function simulateProliferate(message: any) {
   } else return;
   setTimeout(() => view.render());
 }
+/** Cenário de improvisar: tocar num artefato marca ou desmarca e muda o que falta; confirmar vira os marcados. */
+function simulateImprovise(message: any) {
+  const input = state.input;
+  if (!input.tapToPay || message.gen !== input.gen) return;
+  if (message.type === 'card' && input.selectable.includes(message.id)) {
+    const cards: number[] = input.selection.cards;
+    if (cards.includes(message.id)) cards.splice(cards.indexOf(message.id), 1);
+    else if (cards.length < input.selection.max) cards.push(message.id);
+    input.tapToPay = { kind: 'improvise', remaining: improviseCost(4 - cards.length) };
+    input.message = improviseMessage(input.tapToPay.remaining);
+    input.gen++;
+  } else if (message.type === 'ok') {
+    const [me] = state.players;
+    for (const c of me.battlefield) if (input.selection.cards.includes(c.id)) c.tapped = true;
+    me.hand = me.hand.filter((c: any) => c.id !== 306);
+    state.log.push(`Bola de Fogo: ${input.selection.cards.length} artefatos virados pelo improvisar; falta ${input.tapToPay.remaining}.`);
+    Object.assign(state.input, { gen: input.gen + 1, priority: true, message: '', tapToPay: undefined, selection: undefined, selectable: [], card: undefined,
+      ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false } });
+  } else return;
+  setTimeout(() => view.render());
+}
+const improviseCost = (generic: number) => `${generic ? `{${generic}}` : ''}{R}`;
+const improviseMessage = (remaining: string) => `Fireball (306) - Fireball (306) deals 4 damage divided evenly (rounded down) to \nOponente. (X=4)\nChoose artifact to tap for Improvise.\nRemaining mana cost is ${remaining}`;
 const view = createForgeTableView(document.querySelector('#table')!, { onExit() {}, onRematch() {} });
 view.attach(client as any, []); view.render();
 const warden = (id: number) => ({ id, controller: 10, tapped: false, token: false, name: 'Soul Warden', manaCost: '{W}', typeLine: 'Creature — Human Cleric', creature: true, power: 1, toughness: 1 });
@@ -51,6 +74,23 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
         { kind: 'player', id: 10, holder: 10, effect: 'mixed', suggested: false, counters: [{ type: 'POISON', count: 2, effect: 'bad' }, { type: 'ENERGY', count: 2, effect: 'good' }] },
         { kind: 'player', id: 23, holder: 23, effect: 'good', suggested: true, counters: [{ type: 'POISON', count: 9, effect: 'good' }] },
       ] } });
+    view.render();
+  },
+  /**
+   * Improvisar: Bola de Fogo com X=4 e a Inspiring Statuary em campo. Os artefatos (Statuary, Ornithopter,
+   * Darksteel Relic, Mind Stone) pagam {1} cada; tocar marca e desmarca, e Confirmar vira os marcados.
+   */
+  improvise() {
+    const [me] = state.players;
+    const artifact = (id: number, name: string, manaCost: string, extra = {}) => card(id, name, 10, { creature: false, manaCost, typeLine: 'Artifact', ...extra });
+    if (!me.battlefield.some((c: any) => c.id === 330)) me.battlefield.push(
+      artifact(330, 'Inspiring Statuary', '{3}'), artifact(331, 'Ornithopter', '{0}', { creature: true, typeLine: 'Artifact Creature — Thopter', power: 0, toughness: 2, keywords: ['FLYING'] }),
+      artifact(332, 'Darksteel Relic', '{0}'), artifact(333, 'Mind Stone', '{2}'), { ...land(334, 10), name: 'Mountain', typeLine: 'Basic Land — Mountain' });
+    const fireball = card(306, 'Fireball', 10, { creature: false, manaCost: '{X}{R}', typeLine: 'Sorcery', keywords: ['IMPROVISE'] });
+    if (!me.hand.some((c: any) => c.id === 306)) me.hand.push(fireball);
+    Object.assign(state.input, { gen: 11, priority: false, actionable: [], selectable: [330, 331, 332, 333], selectablePlayers: [], card: fireball,
+      message: improviseMessage('{4}{R}'), ok: { label: 'OK', enabled: true }, cancel: { label: 'Cancelar', enabled: false },
+      selection: { cards: [], min: 0, max: 4 }, tapToPay: { kind: 'improvise', remaining: '{4}{R}' } });
     view.render();
   },
   /** Monarca, terrenos do turno, permanente roubada, atiçada, regeneração e escolhas da carta. */
@@ -267,4 +307,6 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     view.render();
   },
 } });
-if (new URLSearchParams(location.search).get('cenario') === 'proliferar') (window as any).fixture.proliferate();
+const cenario = new URLSearchParams(location.search).get('cenario');
+if (cenario === 'proliferar') (window as any).fixture.proliferate();
+if (cenario === 'improvisar') (window as any).fixture.improvise();
