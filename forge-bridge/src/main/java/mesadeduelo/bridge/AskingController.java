@@ -1,0 +1,116 @@
+package mesadeduelo.bridge;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import forge.card.ColorSet;
+import forge.card.ICardFace;
+import forge.game.Game;
+import forge.game.GameEntity;
+import forge.game.card.Card;
+import forge.game.card.CardCollection;
+import forge.game.card.CardCollectionView;
+import forge.game.card.CardView;
+import forge.game.card.CounterType;
+import forge.game.player.DelayedReveal;
+import forge.game.player.Player;
+import forge.game.player.PlayerActionConfirmMode;
+import forge.game.player.PlayerController.BinaryChoiceType;
+import forge.game.replacement.ReplacementEffect;
+import forge.game.spellability.AbilitySub;
+import forge.game.spellability.OptionalCostValue;
+import forge.game.spellability.SpellAbility;
+import forge.game.trigger.WrappedAbility;
+import forge.player.LobbyPlayerHuman;
+import forge.player.PlayerControllerHuman;
+import forge.util.GuiDisplayUtil;
+import forge.util.collect.FCollectionView;
+
+/**
+ * Controlador humano que lembra qual carta está pedindo a decisão em curso (conjurar, ativar, um gatilho, uma
+ * escolha do efeito), para a mesa mostrar de onde vem cada pergunta ou escolha. O Forge só cita a carta em
+ * alguns pedidos; aqui ela vem de quem chamou a escolha.
+ */
+final class AskingController extends PlayerControllerHuman {
+    private volatile CardView asking;
+
+    AskingController(Game game, Player player, LobbyPlayerHuman lobby) { super(game, player, lobby); }
+
+    /** A carta da decisão em curso, ou {@code null} fora de uma (prioridade comum). */
+    CardView asking() { return asking; }
+
+    private <T> T asking(Card host, Supplier<T> choice) {
+        CardView previous = asking;
+        if (host != null) asking = host.getView();
+        try { return choice.get(); } finally { asking = previous; }
+    }
+    private <T> T asking(SpellAbility sa, Supplier<T> choice) { return asking(sa == null ? null : sa.getHostCard(), choice); }
+
+    /** Jogador humano da mesa: cria o {@link AskingController} no lugar do controlador padrão. */
+    static final class Lobby extends LobbyPlayerHuman {
+        Lobby(String name) { super(name); }
+        @Override public Player createIngamePlayer(Game game, int id) {
+            Player player = new Player(GuiDisplayUtil.personalizeHuman(getName()), game, id);
+            player.setFirstController(new AskingController(game, player, this));
+            return player;
+        }
+    }
+
+    // Conjurar, ativar e gatilhos: tudo o que se pergunta até ir para a pilha (modos, X, custos opcionais, alvos).
+    @Override public boolean playChosenSpellAbility(SpellAbility sa) { return asking(sa, () -> super.playChosenSpellAbility(sa)); }
+    @Override public boolean playSaFromPlayEffect(SpellAbility sa) { return asking(sa, () -> super.playSaFromPlayEffect(sa)); }
+    @Override public boolean playTrigger(Card host, WrappedAbility wrapper, boolean isMandatory) { return asking(host, () -> super.playTrigger(host, wrapper, isMandatory)); }
+    @Override public boolean confirmTrigger(WrappedAbility wrapper) { return asking(wrapper.getHostCard(), () -> super.confirmTrigger(wrapper)); }
+    @Override public boolean chooseTargetsFor(SpellAbility sa) { return asking(sa, () -> super.chooseTargetsFor(sa)); }
+    @Override public boolean confirmReplacementEffect(ReplacementEffect effect, SpellAbility effectSA, GameEntity affected, String question) {
+        return asking(effect.getHostCard(), () -> super.confirmReplacementEffect(effect, effectSA, affected, question));
+    }
+
+    // Escolhas pedidas por um efeito, com a habilidade que pede.
+    @Override public Integer announceRequirements(SpellAbility sa, int min, int max, String announce) { return asking(sa, () -> super.announceRequirements(sa, min, max, announce)); }
+    @Override public List<OptionalCostValue> chooseOptionalCosts(SpellAbility sa, List<OptionalCostValue> costs) { return asking(sa, () -> super.chooseOptionalCosts(sa, costs)); }
+    @Override public List<AbilitySub> chooseModeForAbility(SpellAbility sa, List<AbilitySub> possible, int min, int num, boolean allowRepeat) {
+        return asking(sa, () -> super.chooseModeForAbility(sa, possible, min, num, allowRepeat));
+    }
+    @Override public boolean confirmAction(SpellAbility sa, PlayerActionConfirmMode mode, String message, List<String> options, Card cardToShow, Map<String, Object> params) {
+        return asking(sa, () -> super.confirmAction(sa, mode, message, options, cardToShow, params));
+    }
+    @Override public boolean chooseBinary(SpellAbility sa, String question, BinaryChoiceType kind, Boolean defaultVal) { return asking(sa, () -> super.chooseBinary(sa, question, kind, defaultVal)); }
+    @Override public CardCollectionView choosePermanentsToSacrifice(SpellAbility sa, int min, int max, CardCollectionView valid, String message) {
+        return asking(sa, () -> super.choosePermanentsToSacrifice(sa, min, max, valid, message));
+    }
+    @Override public CardCollectionView choosePermanentsToDestroy(SpellAbility sa, int min, int max, CardCollectionView valid, String message) {
+        return asking(sa, () -> super.choosePermanentsToDestroy(sa, min, max, valid, message));
+    }
+    @Override public CardCollectionView chooseCardsForEffect(CardCollectionView list, SpellAbility sa, String title, int min, int max, boolean isOptional, Map<String, Object> params) {
+        return asking(sa, () -> super.chooseCardsForEffect(list, sa, title, min, max, isOptional, params));
+    }
+    @Override public CardCollection chooseCardsForEffectMultiple(Map<String, CardCollection> validMap, SpellAbility sa, String title, boolean isOptional) {
+        return asking(sa, () -> super.chooseCardsForEffectMultiple(validMap, sa, title, isOptional));
+    }
+    @Override public CardCollectionView chooseCardsToDiscardFrom(Player p, SpellAbility sa, CardCollection valid, int min, int max, CardCollectionView visible) {
+        return asking(sa, () -> super.chooseCardsToDiscardFrom(p, sa, valid, min, max, visible));
+    }
+    @Override public <T extends GameEntity> T chooseSingleEntityForEffect(FCollectionView<T> options, DelayedReveal reveal, SpellAbility sa, String title, boolean isOptional, Player targeted, Map<String, Object> params) {
+        return asking(sa, () -> super.chooseSingleEntityForEffect(options, reveal, sa, title, isOptional, targeted, params));
+    }
+    @Override public <T extends GameEntity> List<T> chooseEntitiesForEffect(FCollectionView<T> options, int min, int max, DelayedReveal reveal, SpellAbility sa, String title, Player targeted, Map<String, Object> params) {
+        return asking(sa, () -> super.chooseEntitiesForEffect(options, min, max, reveal, sa, title, targeted, params));
+    }
+    @Override public SpellAbility chooseSingleSpellForEffect(List<SpellAbility> spells, SpellAbility sa, String title, Map<String, Object> params) {
+        return asking(sa, () -> super.chooseSingleSpellForEffect(spells, sa, title, params));
+    }
+    @Override public int chooseNumber(SpellAbility sa, String title, int min, int max) { return asking(sa, () -> super.chooseNumber(sa, title, min, max)); }
+    @Override public int chooseNumber(SpellAbility sa, String title, List<Integer> choices, Player related) { return asking(sa, () -> super.chooseNumber(sa, title, choices, related)); }
+    @Override public String chooseSomeType(String kind, SpellAbility sa, Collection<String> valid, boolean isOptional) { return asking(sa, () -> super.chooseSomeType(kind, sa, valid, isOptional)); }
+    @Override public ColorSet chooseColors(String message, SpellAbility sa, int min, int max, ColorSet options) { return asking(sa, () -> super.chooseColors(message, sa, min, max, options)); }
+    @Override public byte chooseColor(String message, SpellAbility sa, ColorSet colors) { return asking(sa, () -> super.chooseColor(message, sa, colors)); }
+    @Override public CounterType chooseCounterType(List<CounterType> options, SpellAbility sa, String prompt, Map<String, Object> params) {
+        return asking(sa, () -> super.chooseCounterType(options, sa, prompt, params));
+    }
+    @Override public String chooseProtectionType(SpellAbility sa, List<String> choices) { return asking(sa, () -> super.chooseProtectionType(sa, choices)); }
+    @Override public String chooseCardName(SpellAbility sa, Predicate<ICardFace> cpp, String valid, String message) { return asking(sa, () -> super.chooseCardName(sa, cpp, valid, message)); }
+    @Override public String chooseCardName(SpellAbility sa, List<ICardFace> faces, String message) { return asking(sa, () -> super.chooseCardName(sa, faces, message)); }
+}

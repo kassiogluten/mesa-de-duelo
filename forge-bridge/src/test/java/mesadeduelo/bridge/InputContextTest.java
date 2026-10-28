@@ -101,6 +101,37 @@ public class InputContextTest {
             assertNull(InputContext.selection(new InputSelectEntitiesFromList<>(human, 1, 1, game.getPlayers())));
         });
     }
+    @Test public void choicesDuringResolutionCarryTheCardThatIsResolving() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        var alarm = VisibleEventsTest.spell(game, me, "Raise the Alarm"); game.getStack().add(alarm);
+        FThreads.invokeInEdtAndWait(() -> {
+            var human = human(game, me);
+            var choose = new InputSelectCardsFromList(human, 1, 1, new CardCollection(java.util.List.of(bears)));
+            assertNull("fora da resolução não há de onde vir o pedido", InputContext.resolvingSource(choose, game));
+            game.getStack().setResolving(true);
+            try {
+                assertEquals("Raise the Alarm", InputContext.resolvingSource(choose, game).getName());
+                assertEquals("Raise the Alarm", InputContext.resolvingSource(new InputSelectEntitiesFromList<>(human, 1, 1, game.getPlayers()), game).getName());
+                assertNull(InputContext.resolvingSource(null, game));
+            } finally { game.getStack().setResolving(false); }
+        });
+    }
+    @Test public void everyQuestionKnowsWhichCardIsAskingAndForgetsItAfterwards() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        var asked = new java.util.ArrayList<String>();
+        var controller = new AskingController(game, me, new AskingController.Lobby("Test"));
+        controller.setGui((IGuiGame) Proxy.newProxyInstance(IGuiGame.class.getClassLoader(), new Class<?>[]{IGuiGame.class}, (proxy, method, args) -> {
+            if (controller.asking() != null) asked.add(controller.asking().getName());
+            return method.getReturnType() == boolean.class ? false : method.getReturnType() == int.class ? 0 : null;
+        }));
+        FThreads.invokeInEdtAndWait(() -> {
+            try { controller.chooseNumber(bears.getFirstSpellAbility(), "Escolha um número", 0, 3); } catch (RuntimeException ignored) { }
+        });
+        assertTrue(asked.contains("Grizzly Bears"));
+        assertNull(controller.asking());
+    }
     @Test public void proliferateRatesEachCounterForTheChooserAndSelectsWithoutAutoConfirming() {
         Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
         Card mine = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);

@@ -29,7 +29,7 @@ public class VisibleEventsTest {
         game.setNoGUIUser(); game.getPhaseHandler().devModeSet(PhaseType.MAIN1, game.getPlayers().get(0));
         return game;
     }
-    private static SpellAbility spell(Game game, Player player, String name) {
+    static SpellAbility spell(Game game, Player player, String name) {
         Card c=Card.fromPaperCard(DeckValidation.resolve(name),player);
         player.getZone(ZoneType.Hand).add(c); c.setZone(player.getZone(ZoneType.Hand));
         SpellAbility ability=c.getFirstSpellAbility(); ability.setActivatingPlayer(player); return ability;

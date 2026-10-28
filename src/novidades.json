@@ -1,4 +1,11 @@
 {
+  "0.61.2": {
+    "Carta que pede a decisão sempre à vista": [
+      { "img": "0.61.2/carta-que-pede.webp", "legenda": "O Saqueador Saco-de-carne pede uma criatura para sacrificar: ele aparece inteiro ao lado da caixa de ação, mesmo estando no campo e sendo uma das opções." },
+      { "img": "0.61.2/pergunta-com-carta.webp", "legenda": "A Propagação da Utopia pede uma cor: a janela mostra a carta acima das opções." },
+      { "img": "0.61.2/videncia-pedido-por.webp", "legenda": "Na vidência, o selo \"Pedido por\" mostra a carta que mandou olhar o topo; tocar nela abre a carta para ler." }
+    ]
+  },
   "0.61.1": {
     "Carta que pede o custo à vista": [
       { "img": "0.61.1/carta-do-custo.webp", "legenda": "Sacrificar outro artefato para o Repurposing Bay: a carta aparece inteira ao lado da caixa de ação, mesmo estando no campo, e o título traz só o nome, sem o número entre parênteses." }

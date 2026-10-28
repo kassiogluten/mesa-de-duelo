@@ -2020,14 +2020,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Na escolha de alvos (antes da pilha), a carta que pede o alvo aparece mesmo no campo, com a habilidade e o que falta.
     // A do topo do grimório conta como fora de vista: enquanto se olha (vidência 1, vigilância 1) ela vem também como
     // topo do monte, que é só uma miniatura.
-    // Na escolha de cartas de um custo (sacrificar outro artefato, descartar), a carta que pede também aparece, mesmo
-    // no campo, a não ser que ela mesma esteja entre as que dá para escolher.
-    const pc = s.input.vote?.card ?? s.input.card ?? s.input.targeting?.card;
+    // Em qualquer outra decisão fora da prioridade (pagar, confirmar, escolher cartas ou jogadores para um custo ou para
+    // o que um efeito pede ao resolver), a carta que pede também aparece, mesmo no campo ou entre as opções.
     const choosingTargets = !!s.input.targeting && !s.input.paying && !s.input.vote && !s.gameOver;
+    const pc = s.input.vote?.card ?? (choosingTargets ? s.input.targeting!.card : undefined) ?? s.input.card ?? s.input.targeting?.card;
     const decision = cardDecision(s);
-    const targetSource = (choosingTargets && !!pc && pc.id === s.input.targeting!.source) ||
-      (!!decision && !!pc && !s.input.selectable.includes(pc.id) && !s.input.selection!.cards.includes(pc.id));
     const onLibraryTop = !!pc && s.players.some(p => p.libraryTop?.id === pc.id);
+    const deciding = !s.gameOver && !s.question && !s.input.priority && !s.input.vote && !s.input.opening && !s.input.attacking && !s.input.blocking;
+    const targetSource = !!pc && (choosingTargets ? pc.id === s.input.targeting!.source : deciding && !onLibraryTop);
     const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || targetSource || onLibraryTop || !findCard(pc.id, false))
       ? targetSource
         ? `<div class="prompt-card target-source-card" data-peek="${pc.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(label(pc))}">${face(pc, 'normal')}</div>`

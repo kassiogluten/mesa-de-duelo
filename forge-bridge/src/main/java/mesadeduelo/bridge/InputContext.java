@@ -177,6 +177,23 @@ final class InputContext {
     }
 
     /**
+     * Escolha feita durante a resolução (escolher uma criatura, um jogador, cartas da mão): o Forge não cita a carta
+     * no pedido, então vai a da mágica ou habilidade que está resolvendo, para a mesa mostrar de onde vem o pedido.
+     */
+    static CardView resolvingSource(Object input, forge.game.Game game) {
+        return input instanceof InputSelectEntitiesFromList<?> ? resolvingSource(game) : null;
+    }
+
+    /** A carta da mágica ou habilidade que está resolvendo agora, se houver. */
+    static CardView resolvingSource(forge.game.Game game) {
+        if (game == null) return null;
+        var stack = game.getStack();
+        if (!stack.isResolving() || stack.isEmpty()) return null;
+        var top = stack.peek();
+        return top == null || top.getSourceCard() == null ? null : top.getSourceCard().getView();
+    }
+
+    /**
      * Card choices, or cards and players together (proliferar): counter allocation and "choose a player"
      * have different counting semantics. Players only appear in {@code players} when they can be chosen.
      */

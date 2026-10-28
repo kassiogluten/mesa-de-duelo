@@ -4,6 +4,9 @@
   border: 0; background: none; box-shadow: none;
 }
 #fQuestion .question.library-choice .q-hint { max-width: 640px; margin: 0 auto; color: var(--muted); }
+#fQuestion .question.library-choice .library-source { display: flex; align-items: center; gap: 10px; margin: 0 auto; padding: 4px 12px 4px 4px; border: 1px solid #f2b54c55; border-radius: 10px; background: #0c1222cc; color: var(--muted); font: 500 13px var(--body); cursor: zoom-in; }
+#fQuestion .question.library-choice .library-source b { color: var(--gold-light); font-weight: 700; }
+.library-source-face { width: 46px; --fw: 46px; aspect-ratio: 488 / 680; flex: 0 0 auto; }
 #fQuestion .question.library-choice .library-summary { color: var(--ink); font-weight: 600; }
 /* Os botões de confirmar ficam sempre à vista, mesmo quando a janela precisa rolar. */
 #fQuestion .question.library-choice .q-actions { position: sticky; bottom: 0; z-index: 3; padding: 10px 0 16px; background: linear-gradient(180deg, transparent, rgb(2 4 10 / .85) 35%); }
