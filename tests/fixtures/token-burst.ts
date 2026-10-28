@@ -73,15 +73,16 @@ function table() {
     return item;
   }
   function resolveTop() {
+    // Como a ponte: enquanto o gatilho resolve, ele continua no topo da pilha no quadro de cada ficha.
     const [item, ...rest] = state.stack;
-    state.stack = rest;
     const count = hares().filter((h: any) => h.id !== item.source.id).length;
     for (let i = 0; i < count; i++) {
       const token = rabbit();
       me().battlefield.push(token);
-      emit('entered', { card: structuredClone(token), sourceId: token.id, actor: ME, from: null, to: 'Battlefield' });
+      emit('entered', { card: structuredClone(token), sourceId: token.id, actor: ME, from: null, to: 'Battlefield', stackId: item.id, sourceName: item.source.name });
     }
-    emit('resolved', { card: structuredClone(item.source), sourceId: item.source.id, actor: ME, stackId: item.id, from: 'Stack' });
+    state.stack = rest;
+    emit('resolved', { card: structuredClone(item.source), sourceId: item.source.id, actor: ME, stackId: item.id, trigger: true, from: 'Stack' });
     return count;
   }
 
@@ -104,12 +105,12 @@ function table() {
       flush();
     } else {
       // Blink em massa (como Ghostly Flicker em todos, ou Brago): todos os Hares voltam juntos, e cada um dispara.
-      const all = hares();
+      const all = hares(), blink = nextId++;
       for (const h of all) {
         me().battlefield = me().battlefield.filter((x: any) => x !== h);
         emit('left', { card: structuredClone(h), sourceId: h.id, actor: ME, from: 'Battlefield', to: 'Exile' });
       }
-      for (const h of all) { me().battlefield.push(h); emit('entered', { card: structuredClone(h), sourceId: h.id, actor: ME, from: 'Exile', to: 'Battlefield' }); }
+      for (const h of all) { me().battlefield.push(h); emit('entered', { card: structuredClone(h), sourceId: h.id, actor: ME, from: 'Exile', to: 'Battlefield', stackId: blink, sourceName: 'Ghostly Flicker' }); }
       flush(); await sleep(gap);
       for (const h of all) trigger(h);
       flush(); await sleep(gap);

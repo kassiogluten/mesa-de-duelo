@@ -6,6 +6,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.61.0] - 2026-10-28
+
+### Mudou
+
+- **Várias fichas de uma vez.** Quando uma mágica ou um gatilho cria várias fichas (Hare Apparent, Raise the Alarm e afins), elas entram juntas, numa cascata curta, em vez de uma de cada vez: oito fichas aparecem em cerca de um segundo. Fichas iguais vão direto para o monte, que mostra quantas chegaram ("+8"). O mesmo vale para as cartas que a mesma mágica põe no campo de uma vez, como as que voltam juntas do exílio; e a carta que pisca (vai para o exílio e volta na hora) não voa mais até o exílio antes de voltar em luz. O histórico resume numa linha só ("Gatilho de Hare Apparent: criou 8 fichas de Rabbit"), e o leitor de tela diz uma frase só ("8 fichas de Rabbit entraram no campo").
+- **Gatilhos repetidos mais rápidos.** Quando vários gatilhos iguais disparam seguidos, como num blink em todos os seus Hare Apparent, o primeiro mostra o aviso inteiro e os seguintes, e as resoluções deles, passam mais rápido.
+
+### Corrigido
+
+- **Fichas que apareciam de repente.** Com muitas fichas de uma vez (20 Coelhos num blink em cinco Hare Apparent), a mesa desistia da animação no meio e as fichas que faltavam surgiam de uma vez, sem som. Agora todas são mostradas.
+- **Vidência e vigilância de uma carta com a imagem.** Na vidência 1 e na vigilância 1 (Opt, Consider e afins), a caixa de ação mostrava só o nome da carta do topo do grimório. Agora mostra a carta inteira junto da pergunta, e tocar nela abre o inspetor.
+
 ## [0.60.0] - 2026-10-28
 
 ### Novo

@@ -128,6 +128,7 @@ final class VisibleEvents {
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
                 if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
+                if (to == ZoneType.Battlefield) entrySource(e);
             }
         } else if (event instanceof GameEventAttackersDeclared x && !x.attackersMap().isEmpty()) {
             e = type("attackers"); actor(e, x.player().getId());
@@ -223,6 +224,15 @@ final class VisibleEvents {
         boolean mill = false, surveil = false;
         for (var sa = root; sa != null; sa = sa.getSubAbility()) { mill |= sa.getApi() == ApiType.Mill; surveil |= sa.getApi() == ApiType.Surveil; }
         if (surveil && !mill) e.addProperty("surveil", true);
+    }
+
+    /** Quem pôs a permanente no campo: a mesa junta num movimento só as que entram pela mesma resolução (fichas, blink em massa). */
+    private void entrySource(JsonObject e) {
+        if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return;
+        var resolving = game.getStack().peek();
+        if (resolving == null) return;
+        e.addProperty("stackId", resolving.getId());
+        if (resolving.getSourceCard() != null) e.addProperty("sourceName", resolving.getSourceCard().getName());
     }
 
     private JsonObject publicFrame() {

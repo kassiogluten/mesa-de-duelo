@@ -137,6 +137,57 @@ test('consecutive mills by one player become one presentation and one history li
   assert.ok(presentationDuration(big.event, false) < 2000, 'a big mill stays short');
 });
 
+test('tokens made by one resolution enter as one movement; the history keeps each card', () => {
+  const token = (seq, id, extra = {}) => event(seq, 'entered', { actor: 1, card: { id, name: 'Rabbit', token: true }, from: null, to: 'Battlefield', stackId: 9, sourceName: 'Hare Apparent', ...extra });
+  const timeline = new PresentationTimeline(); timeline.ingest('a', []);
+  timeline.ingest('a', [...Array.from({ length: 8 }, (_, i) => token(1 + i, 100 + i)), event(9, 'resolved', { stackId: 9 }),
+    token(10, 200, { stackId: 11 }), token(11, 201, { stackId: 11, actor: 2 }), token(12, 202, { stackId: undefined }), token(13, 203, { stackId: undefined })]);
+  const burst = timeline.advance().event;
+  assert.deepEqual(burst.entries.map(c => c.id), [100, 101, 102, 103, 104, 105, 106, 107]);
+  assert.equal(burst.seq, 8, 'o quadro do campo é o da última ficha');
+  assert.ok(presentationDuration(burst, false) <= 1500, 'oito fichas aparecem em até 1,5 s');
+  assert.ok(presentationDuration(burst, false) < 8 * presentationDuration(token(0, 1), false));
+  assert.equal(timeline.advance().event.type, 'resolved');
+  // Outra resolução, outro jogador ou sem resolução conhecida: movimentos separados.
+  assert.deepEqual([1, 2, 3, 4].map(() => timeline.advance().event.entries?.length), [undefined, undefined, undefined, undefined]);
+  assert.equal(timeline.history.filter(e => e.type === 'entered').length, 12);
+  // Cinquenta fichas não fazem a mesa pular o resto.
+  timeline.ingest('a', Array.from({ length: 50 }, (_, i) => token(20 + i, 300 + i, { stackId: 70 })));
+  assert.equal(timeline.queued, 1);
+  const big = timeline.advance();
+  assert.equal(big.audible, true); assert.equal(big.event.entries.length, 50);
+});
+
+test('blink in all: the return replaces the trip to exile, and repeated triggers are short without dropping tokens', () => {
+  const hares = [1, 2, 3, 4, 5].map(id => ({ id, name: 'Hare Apparent' }));
+  const timeline = new PresentationTimeline(); timeline.ingest('a', []);
+  let seq = 0;
+  timeline.ingest('a', [...hares.map(h => event(++seq, 'left', { actor: 1, card: h, from: 'Battlefield', to: 'Exile' })),
+    ...hares.map(h => event(++seq, 'entered', { actor: 1, card: h, from: 'Exile', to: 'Battlefield', stackId: 50 }))]);
+  assert.equal(timeline.queued, 1);
+  assert.equal(timeline.advance().event.entries.length, 5);
+  assert.equal(timeline.history.filter(e => e.type === 'left').length, 5, 'o histórico continua com as saídas');
+  timeline.ingest('a', hares.map((h, i) => event(++seq, 'ability-activated', { actor: 1, card: h, trigger: true, stackId: 60 + i })));
+  for (let i = 0; i < 5; i++) {
+    timeline.ingest('a', [...[0, 1, 2, 3].map(n => event(++seq, 'entered', { actor: 1, card: { id: 100 + i * 4 + n, name: 'Rabbit', token: true }, from: null, stackId: 64 - i })),
+      event(++seq, 'resolved', { actor: 1, card: hares[4 - i], trigger: true, stackId: 64 - i })]);
+  }
+  const shown = []; let entry;
+  while ((entry = timeline.advance())) shown.push(entry.event);
+  const triggers = shown.filter(e => e.type === 'ability-activated');
+  assert.deepEqual(triggers.map(e => !!e.repeat), [false, true, true, true, true]);
+  assert.ok(presentationDuration(triggers[1], false) < presentationDuration(triggers[0], false));
+  assert.ok(calloutDuration(triggers[1], false) < calloutDuration(triggers[0], false));
+  assert.equal(shown.filter(e => e.type === 'entered').reduce((n, e) => n + e.entries.length, 0), 20, 'nenhuma ficha é pulada');
+  assert.ok(shown.filter(e => e.type === 'resolved').every(e => e.repeat));
+  // Um gatilho só, sozinho, continua com o aviso inteiro e a resolução de sempre.
+  timeline.ingest('a', [event(++seq, 'spell-cast', { actor: 1 }), event(++seq, 'ability-activated', { actor: 1, card: hares[0], trigger: true, stackId: 90 }),
+    event(++seq, 'resolved', { actor: 1, card: hares[0], trigger: true, stackId: 90 })]);
+  timeline.advance();
+  assert.equal(timeline.advance().event.repeat, undefined);
+  assert.equal(timeline.advance().event.repeat, undefined);
+});
+
 test('one played land presents once across coalesced and split packets; ramp entries remain', () => {
   const entered = event(1, 'entered', { sourceId: 7, from: 'Hand', to: 'Battlefield' });
   const played = event(2, 'land-played', { card: { id: 7 } });

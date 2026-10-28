@@ -577,6 +577,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const divided = first.type === 'damage' && !first.combat && !first.prevented && first.sourceId !== undefined
       ? timeline.takeWhile(e => e.type === 'damage' && !e.combat && !e.prevented && e.sourceId === first.sourceId) : [];
     if (first.type === 'mill') motion.milled(first, { you: s.you, fast: fast || hasLiveDecision(s), face: card => face(card, 'normal') });
+    else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: fast || hasLiveDecision(s), face: card => face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
     else for (const part of [entry, ...divided]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? face(part.event.card, 'normal') : undefined,
@@ -1464,7 +1465,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         : detailed && event.to === 'Graveyard' ? `Para o cemitério: ${name}${owner}.` : `${name}${owner} saiu do campo.`;
       case 'discard': return `${who} descartou ${name}.`;
       case 'mill': return millDescription(event, who);
-      case 'entered': return event.from === 'Exile' ? `Volta ao campo: ${name}${owner}.` : detailed && event.from === 'Graveyard' ? `Volta do cemitério ao campo: ${name}${owner}.`
+      case 'entered': if ((event.entries?.length ?? 0) > 1) return entriesDescription(event.entries!, event.from);
+        return event.from === 'Exile' ? `Volta ao campo: ${name}${owner}.` : detailed && event.from === 'Graveyard' ? `Volta do cemitério ao campo: ${name}${owner}.`
         : detailed && event.card?.token && !event.from ? `Ficha criada: ${name}${owner}.` : `${name} entrou no campo${owner}.`;
       case 'attackers': return attackDescription(event);
       case 'blockers': { const n = event.cards?.length ?? 0; return detailed && n ? `${who} bloqueou com ${n} ${n === 1 ? 'criatura' : 'criaturas'}.` : `${who} declarou bloqueadores.`; }
@@ -1505,6 +1507,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const by = event.sourceName ? ` com ${ptOf(event.sourceName)?.name || event.sourceName}` : '';
     if (event.surveil) return `${who} pôs ${what} do grimório no cemitério${by}${list ? `: ${list}` : ''}.`;
     return n === 1 && list ? `${who} moeu ${list}${by}.` : `${who} moeu ${what}${by}${list ? `: ${list}` : ''}.`;
+  }
+  /** "8 fichas de Rabbit entraram no campo." — as permanentes que a mesma resolução pôs no campo de uma vez. */
+  function entriesDescription(cards: FCard[], from?: string) {
+    const n = cards.length, same = cards.every(c => c.name === cards[0].name), name = label(cards[0]);
+    const list = listNames([...cards.slice(0, 5).map(label), ...(n > 5 ? [`mais ${n - 5}`] : [])]);
+    if (from === 'Exile') return same ? `${n} × ${name} voltam ao campo.` : `${n} permanentes voltam ao campo: ${list}.`;
+    if (cards.every(c => c.token) && !from) return same ? `${n} fichas de ${name} entraram no campo.` : `${n} fichas entraram no campo.`;
+    return same ? `${n} × ${name} entraram no campo.` : `${n} permanentes entraram no campo: ${list}.`;
   }
   /** "Ana ataca você com 2 criaturas." — quem ataca, quem é atacado e com quantas. */
   function attackDescription(event: PresentationEvent) {
@@ -2008,10 +2018,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Carta que o prompt cita mas que não está à vista na mesa (topo do grimório na vidência/vigilância).
     // A carta que vota fica à vista mesmo estando na pilha: é ela que explica o voto.
     // Na escolha de alvos (antes da pilha), a carta que pede o alvo aparece mesmo no campo, com a habilidade e o que falta.
+    // A do topo do grimório conta como fora de vista: enquanto se olha (vidência 1, vigilância 1) ela vem também como
+    // topo do monte, que é só uma miniatura.
     const pc = s.input.vote?.card ?? s.input.card ?? s.input.targeting?.card;
     const choosingTargets = !!s.input.targeting && !s.input.paying && !s.input.vote && !s.gameOver;
     const targetSource = choosingTargets && !!pc && pc.id === s.input.targeting!.source;
-    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || targetSource || !findCard(pc.id, false))
+    const onLibraryTop = !!pc && s.players.some(p => p.libraryTop?.id === pc.id);
+    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || targetSource || onLibraryTop || !findCard(pc.id, false))
       ? targetSource
         ? `<div class="prompt-card target-source-card" data-peek="${pc.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(label(pc))}">${face(pc, 'normal')}</div>`
         : `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';

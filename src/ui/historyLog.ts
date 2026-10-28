@@ -142,7 +142,7 @@ export function effectParts(events: readonly PresentationEvent[], names: History
     if (group.length) parts.push(verb(group.length === 1 ? names.card(group[0]) ?? permanents(1) : permanents(group.length)));
   }
   const entered = events.filter(e => e.type === 'entered' && (skip === undefined || e.sourceId !== skip));
-  if (entered.length) parts.push(enteredText(entered, names));
+  if (entered.length) parts.push(enteredText(entered, names, true));
   const damage = events.filter(e => e.type === 'damage' && !e.prevented);
   if (damage.length) {
     const total = damage.reduce((n, e) => n + Math.abs(e.delta ?? 0), 0);
@@ -172,7 +172,13 @@ export function effectParts(events: readonly PresentationEvent[], names: History
   }
   return parts;
 }
-function enteredText(entered: readonly PresentationEvent[], names: HistoryNames) {
+function enteredText(entered: readonly PresentationEvent[], names: HistoryNames, byEffect = false) {
+  // Fichas criadas pela mágica ou pelo gatilho: "criou 8 fichas de Rabbit".
+  if (byEffect && entered.every(e => e.card?.token && !e.from)) {
+    const n = entered.length, same = entered.every(e => cardKey(e) && cardKey(e) === cardKey(entered[0])), name = names.card(entered[0]);
+    if (same && name) return n === 1 ? `criou uma ficha de ${name}` : `criou ${n} fichas de ${name}`;
+    return n === 1 ? 'criou uma ficha' : `criou ${n} fichas`;
+  }
   if (entered.length === 1) return `${names.card(entered[0]) ?? 'uma permanente'} entrou no campo`;
   const same = entered.every(e => cardKey(e) && cardKey(e) === cardKey(entered[0]));
   return same ? `${entered.length} × ${names.card(entered[0])} entraram no campo` : `${permanents(entered.length)} entraram no campo`;

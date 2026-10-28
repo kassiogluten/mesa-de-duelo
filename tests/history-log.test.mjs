@@ -116,6 +116,18 @@ test('removals and tokens in a row, outside a resolution, are grouped too', () =
     ['2 cartas destruídas: A e B.', 'left C.', '2 × Zombie entraram no campo.']);
 });
 
+test('tokens made by a trigger read as one line: "criou 8 fichas de Rabbit"', () => {
+  seq = 0;
+  const hare = card(5, 'Hare Apparent');
+  const events = [ev('ability-activated', { actor: 1, trigger: true, stackId: 9, card: hare, ...onStack(9) }),
+    ...Array.from({ length: 8 }, (_, i) => ev('entered', { actor: 1, card: { id: 100 + i, name: 'Rabbit', token: true }, from: null, stackId: 9, ...onStack(9) })),
+    ev('resolved', { actor: 1, trigger: true, stackId: 9, card: hare, ...onStack(9) })];
+  const [only] = historyTurns(events, names)[0].lines;
+  assert.match(only.text, /: criou 8 fichas de Rabbit\.$/);
+  assert.equal(only.children.length, 8);
+  assert.deepEqual(effectParts([ev('entered', { card: { id: 1, name: 'Rabbit', token: true } }), ev('entered', { card: { id: 2, name: 'Bird', token: true } })], names), ['criou 2 fichas']);
+});
+
 test('attackers and blockers list their creatures', () => {
   seq = 0;
   const angel = card(1, 'Serra Angel'), bears = card(2, 'Grizzly Bears');

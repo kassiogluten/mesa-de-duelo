@@ -3,8 +3,8 @@ import { createForgeTableView } from '../../src/ui/forgeTable';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
- * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17), o mill (item 24)
- * e a mão revelada do oponente (item 41, Telepathy e afins).
+ * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17), o mill (item 24),
+ * a mão revelada do oponente (item 41, Telepathy e afins) e várias fichas de uma vez (item 43).
  * Abra /tests/fixtures/effects-lab.html no `npm run dev`. A página mostra o painel e a mesa num quadro do tamanho
  * escolhido (?mesa abre só a mesa, que recebe os comandos do painel). Os eventos têm o mesmo formato que a ponte manda.
  */
@@ -247,6 +247,18 @@ function table() {
       }
       return c.surveil ? `Vidência: ${n} carta${n === 1 ? '' : 's'} do grimório para o cemitério.` : `Moer ${n}: as cartas saem do topo, viram e caem no cemitério; "−${n}" junto ao grimório.`;
     },
+    tokens: c => {
+      // Como a ponte: um `entered` por ficha, todas com a mesma resolução (`stackId`); a mesa junta num movimento só.
+      const owner = sideOf(c.side), n = Number(c.n), resolution = nextId++;
+      const kinds: [string, string][] = c.mixed ? [['Soldier', 'Token Creature — Soldier'], ['Spirit', 'Token Creature — Spirit']] : [['Soldier', 'Token Creature — Soldier']];
+      for (let i = 0; i < n; i++) {
+        const [name, typeLine] = kinds[i % kinds.length];
+        const token = { id: nextId++, controller: owner.id, ...card(name, { token: true, creature: true, power: 1, toughness: 1, basePower: 1, baseToughness: 1, damage: 0, sick: true, typeLine, keywords: name === 'Spirit' ? ['FLYING'] : [] }) };
+        owner.battlefield.push(token);
+        emit('entered', { card: structuredClone(token), sourceId: token.id, actor: owner.id, from: null, to: 'Battlefield', stackId: resolution, sourceName: 'Raise the Alarm' });
+      }
+      return `Criar ${n} fichas: chegam juntas, em cascata curta, e o monte mostra "+${n}".`;
+    },
     toggle: c => {
       const x = byId(c.id); if (!x) return;
       const on = !!c.value;
@@ -422,6 +434,8 @@ function panel() {
       .map(([k, t]) => `<button data-m="${k}">${t}</button>`).join('')}
     <h2>Moer (item 24, do lado escolhido em Campo)</h2>
     ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>
+    <h2>Fichas (item 43, do lado escolhido em Campo)</h2>
+    ${[['1', 'Criar 1'], ['3', 'Criar 3'], ['8', 'Criar 8'], ['20', 'Criar 20']].map(([n, t]) => `<button data-tokens="${n}">${t}</button>`).join('')}<button data-tokens="4" data-mixed="1">4 fichas mistas</button>
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
@@ -468,6 +482,7 @@ function panel() {
     if (b.dataset.d) send({ cmd: 'damage', kind: b.dataset.d, source: ref($<HTMLSelectElement>('source').value), target: ref($<HTMLSelectElement>('target').value), amount: $<HTMLInputElement>('amount').value });
     if (b.dataset.m) send({ cmd: 'move', kind: b.dataset.m, id: selectedId(), target: ref($<HTMLSelectElement>('target').value) });
     if (b.dataset.mill) send({ cmd: 'mill', side: $<HTMLSelectElement>('side').value, n: b.dataset.mill, surveil: !!b.dataset.surveil });
+    if (b.dataset.tokens) send({ cmd: 'tokens', side: $<HTMLSelectElement>('side').value, n: b.dataset.tokens, mixed: !!b.dataset.mixed });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.s) resize(b.dataset.s);
   });

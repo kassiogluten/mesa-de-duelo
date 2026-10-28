@@ -1,4 +1,4 @@
-import { millTiming, type PresentationEvent } from './presentationTimeline';
+import { entryTiming, millTiming, type PresentationEvent } from './presentationTimeline';
 import { damageLook, type DamageLook } from './damageEffects';
 
 const KEYED = '[data-fid],[data-peek]';
@@ -15,6 +15,8 @@ export interface Motion {
   drew(actor: number, count: number, options: { you: number; cards: HTMLElement[]; fast: boolean }): number[];
   /** Moer: as cartas saem do topo do grimório, viram de face para cima e caem no cemitério, uma depois da outra. */
   milled(event: PresentationEvent, options: { you: number; fast: boolean; face: (card: NonNullable<PresentationEvent['card']>) => string }): void;
+  /** Várias permanentes da mesma resolução (fichas, blink em massa): chegam em cascata curta, e cada monte mostra quantas ganhou ("+8"). */
+  entered(event: PresentationEvent, options: { you: number; fast: boolean; face: (card: NonNullable<PresentationEvent['card']>) => string; hideDestination?: boolean }): void;
   cancelPresentation(): void;
   reset(): void;
 }
@@ -64,7 +66,7 @@ export function createMotion(root: HTMLElement): Motion {
     for (const el of effects) el.remove();
     effects.clear();
     callouts.length = 0;
-    for (const el of hiddenCards) el.style.opacity = '';
+    for (const el of hiddenCards) { el.style.opacity = ''; el.style.visibility = ''; }
     hiddenCards.clear();
     root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight,.lethal-hit,.heal-flash,.incoming').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash', 'incoming'));
   }
@@ -483,6 +485,64 @@ export function createMotion(root: HTMLElement): Motion {
         const back = ghost.querySelector<HTMLElement>('.back');
         if (back) animate(back, [{ opacity: 1 }, { opacity: 1, offset: .44 }, { opacity: 0, offset: .46 }, { opacity: 0 }], travel, MILL_EASE, delay);
         later(() => { remove(ghost); if (i === flights - 1) pulse(pile()); }, travel + delay);
+      }
+    },
+    entered(event, options) {
+      if (document.hidden || root.hidden) return;
+      const cards = event.entries ?? (event.card ? [event.card] : []);
+      if (!cards.length) return;
+      const mine = event.actor === options.you;
+      const seat = !mine && event.actor !== undefined ? root.querySelector(`[data-seat-player="${event.actor}"]`) : null;
+      const bounds = layer().getBoundingClientRect();
+      const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
+      const hand = center(seat?.querySelector('.seat-hand')) ?? center(root.querySelector(mine ? '#fHand' : '#fOppHand')) ?? stage;
+      // Fichas (sem origem) e cartas que voltam do exílio surgem no próprio lugar; as outras vêm de onde estavam.
+      const origin = !event.from || event.from === 'Exile' ? null : event.from === 'Stack' ? stage : event.from === 'Hand' ? hand
+        : destination({ ...event, to: event.from }, mine, seat, hand, stage);
+      const { flights, gap, travel } = entryTiming(cards.length, options.fast || !!event.repeat);
+      const total = travel + (flights - 1) * gap;
+      // Cada monte de cartas iguais recebe as suas: "+8" em cima do monte, que cresce conforme elas chegam.
+      const piles = new Map<HTMLElement, number>();
+      cards.forEach((card, i) => {
+        const el = root.querySelector<HTMLElement>(`.field [data-fid="${card.id}"]`);
+        const pile = el?.closest<HTMLElement>('.stack') ?? el;
+        // Some a carta inteira, com a moldura e a lupa, até a ficha chegar: o monte cresce conforme elas pousam. É pela
+        // visibilidade, porque a animação de entrada da mesa mexe na opacidade.
+        const slot = el?.closest<HTMLElement>('.slot') ?? el;
+        if (pile) piles.set(pile, (piles.get(pile) ?? 0) + 1);
+        const delay = Math.min(i, flights - 1) * gap;
+        if (slot && options.hideDestination && !reduced()) { slot.style.visibility = 'hidden'; hiddenCards.add(slot); }
+        const to = center(el);
+        if (i < flights && to && !reduced()) {
+          const w = to.w * 1.15, h = to.h * 1.15;
+          const piece = effect('presentation-piece', { ...to, w, h }, options.face(card));
+          if (!origin) animate(piece, [
+            { opacity: 0, scale: '.6', filter: event.from === 'Exile' ? 'brightness(3) blur(3px)' : 'brightness(2.4) blur(2px)' },
+            { opacity: 1, scale: '1.06', filter: 'brightness(1.6)', offset: .6 },
+            { opacity: 1, scale: `${1 / 1.15}`, filter: 'none' }], travel, EASE, delay);
+          else animate(piece, [
+            { translate: `${origin.cx - to.cx}px ${origin.cy - to.cy}px`, scale: '.92', opacity: .8 },
+            { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 },
+            { translate: '0 0', scale: `${1 / 1.15}`, opacity: 1 }], travel, EASE, delay);
+          later(() => remove(piece), travel + delay);
+        }
+        later(() => {
+          // A mesa pode ter sido redesenhada durante a cascata: a carta é procurada de novo pelo id.
+          if (slot && hiddenCards.delete(slot)) slot.style.visibility = '';
+          const landed = root.querySelector<HTMLElement>(`.field [data-fid="${card.id}"]`);
+          if (landed && card.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
+        }, reduced() ? 0 : travel + delay);
+      });
+      for (const [pile, n] of piles) {
+        later(() => pulse(pile), reduced() ? 0 : total);
+        const at = center(pile);
+        if (n < 2 || !at) continue;
+        // Acima do monte e das fichas que ainda estão chegando (elas surgem um pouco maiores que a carta).
+        const count = effect('entry-count', { ...at, cy: at.cy - at.h * .62 - 6, w: 0, h: 0 });
+        count.textContent = `+${n}`;
+        // Linear: o número fica inteiro durante a cascata e só some depois que a última ficha pousa.
+        animate(count, [{ opacity: 0, scale: '.7' }, { opacity: 1, scale: '1.15', offset: .12 }, { opacity: 1, scale: '1', offset: .75 }, { opacity: 0 }], Math.max(1100, total + 500), 'linear');
+        later(() => remove(count), Math.max(1100, total + 500));
       }
     },
     cancelPresentation: clear,

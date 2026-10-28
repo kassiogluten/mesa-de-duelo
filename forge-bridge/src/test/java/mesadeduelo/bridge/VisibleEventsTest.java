@@ -69,6 +69,21 @@ public class VisibleEventsTest {
             assertFalse(m.has("surveil")); assertTrue(m.has("frame"));
         }
     }
+    @Test public void tokensCreatedTogetherCarryTheResolutionThatMadeThem() {
+        Game game=game(); VisibleEvents events=new VisibleEvents(()->{},()->1); events.attach(game);
+        Player a=game.getPlayers().get(0);
+        SpellAbility alarm=spell(game,a,"Raise the Alarm"); game.getStack().add(alarm);
+        int stackId=game.getStack().peek().getId();
+        game.getStack().resolveStack();
+        var entered=events.json(0).asList().stream().map(e->e.getAsJsonObject()).filter(e->"entered".equals(e.get("type").getAsString())).toList();
+        assertEquals(2,entered.size());
+        for(JsonObject e:entered) {
+            assertEquals(stackId,e.get("stackId").getAsInt());
+            assertEquals("Raise the Alarm",e.get("sourceName").getAsString());
+            assertTrue(e.getAsJsonObject("card").get("token").getAsBoolean());
+            assertEquals(a.getId(),e.get("actor").getAsInt());
+        }
+    }
     @Test public void eachPlayerKeepsTheLengthOfTheirLatestFinishedTurn() throws InterruptedException {
         Game game=game(); VisibleEvents events=new VisibleEvents(()->{},()->1); events.attach(game);
         Player a=game.getPlayers().get(0),b=game.getPlayers().get(1);
