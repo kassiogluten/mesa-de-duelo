@@ -1,4 +1,10 @@
 {
+  "0.62.1": {
+    "Improvisar e convocar escolhendo na mesa": [
+      { "img": "0.62.1/improvisar-caixa.webp", "legenda": "Bola de Fogo com X=4 e a Inspiring Statuary em campo: a caixa explica que cada artefato virado paga {1}, conta os artefatos escolhidos e mostra que ainda falta pagar {1}{R} com mana." },
+      { "img": "0.62.1/improvisar-artefatos.webp", "legenda": "Os artefatos que podem ajudar a pagar ficam destacados no campo; os escolhidos ganham o sinal de marcado. Os terrenos ficam de fora, para pagar o resto com mana." }
+    ]
+  },
   "0.61.2": {
     "Carta que pede a decisão sempre à vista": [
       { "img": "0.61.2/carta-que-pede.webp", "legenda": "O Saqueador Saco-de-carne pede uma criatura para sacrificar: ele aparece inteiro ao lado da caixa de ação, mesmo estando no campo e sendo uma das opções." },

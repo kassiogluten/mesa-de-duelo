@@ -20,7 +20,7 @@ import { VERSION } from './changelog';
 import { attachHandDrag } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
-import { cardDecision, selectionMessage } from './decisionPrompt';
+import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
 import { counterName, isProliferating, proliferateBoardClass, proliferateClear, proliferateOkLabel, proliferatePanelHTML, proliferateSuggestion, proliferateToggle } from './proliferate';
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
@@ -2040,7 +2040,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       : s.input.suspendCast ? 'Suspender: conjure agora sem pagar o custo de mana ou deixe a carta no exílio.'
       : s.input.blocking ? selectedBlocker ? `${label(findCard(selectedBlocker.blocker)!)}: escolha o atacante. Se já estiver bloqueando esse atacante, o clique remove o bloqueio.` : 'Escolha uma criatura sua e depois o atacante que ela vai bloquear.'
       : s.input.vote ? voteBoardPrompt(s.input.vote) : s.input.priority && !s.input.paying && !s.input.targeting ? '' : opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined) ? ''
-      : opening === 'mulligan-bottom' ? s.input.message.replace(/(\d+)\s+carta\(s\)/g, (_, n: string) => `${n} ${Number(n) === 1 ? 'carta' : 'cartas'}`) : s.input.message;
+      : opening === 'mulligan-bottom' ? s.input.message.replace(/(\d+)\s+carta\(s\)/g, (_, n: string) => `${n} ${Number(n) === 1 ? 'carta' : 'cartas'}`)
+      : s.input.tapToPay ? tapToPayMessage(s.input.tapToPay, s.input.card ? label(s.input.card) : undefined) : s.input.message;
     $('#fAction').classList.toggle('suspend-choice', !!s.input.suspendCast);
     $('#fAction').classList.toggle('card-decision', !!decision);
     $('#fAction').classList.toggle('hand-decision', !!decision?.inHand);
@@ -2072,7 +2073,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (promptEl && moreEl) moreEl.hidden = !expanded && !short && promptEl.scrollHeight <= promptEl.clientHeight + 1;
     // O pedido é o último parágrafo do Forge ("Carta (id) - habilidade" vem antes); sem o número da carta.
     const request = instruction.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean).pop() ?? '';
-    const awaiting = renderAwaiting(s, isProliferating(s) ? 'Proliferar: marque o que ganha marcadores' : short ?? withoutCardIds(request));
+    const awaiting = renderAwaiting(s, isProliferating(s) ? 'Proliferar: marque o que ganha marcadores'
+      : s.input.tapToPay ? tapToPayShort(s.input.tapToPay, s.input.card ? label(s.input.card) : undefined) : short ?? withoutCardIds(request));
     // A previsão do combate vai junto: a cada bloqueio marcado ou desfeito, a frase muda e o leitor de tela lê de novo.
     const forecastSpoken = (s.forecast ?? []).map(f => forecastText(f, f.player === s.you ? null : s.players.find(p => p.id === f.player)?.name ?? 'O defensor', cardName)).join(' ');
     const targetSpoken = targetPanel && targetInfo ? ` ${targetInfoText(targetInfo)}` : '';

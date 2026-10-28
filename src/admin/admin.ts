@@ -27,6 +27,7 @@ const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/token-burst.html', 'Rajada de fichas', 'Hare Apparent no campo: conjura mais um ou dá blink em todos e mede quanto a mesa leva para mostrar as fichas.'],
   ['/tests/fixtures/duel-table.html','Mesa 1×1', 'Partida fixa contra um oponente, com contadores, Classe e perguntas (gatilhos, jeitos de jogar, dano de combate) pelo console.'],
   ['/tests/fixtures/duel-table.html?cenario=proliferar', 'Proliferar', 'Escolha do proliferar com marcadores bons e ruins dos dois lados (veneno, +1/+1, −1/−1, lealdade, energia). Os cliques marcam e o Proliferar aplica os marcadores.'],
+  ['/tests/fixtures/duel-table.html?cenario=improvisar', 'Improvisar', 'Bola de Fogo com X=4 e a Inspiring Statuary em campo: os artefatos ficam destacados, cada toque marca ou desmarca e a caixa mostra quanto falta pagar. Confirmar vira os marcados. Simulado, sem a ponte.'],
   ['/tests/fixtures/commander-table.html', 'Mesa de Commander', 'Quatro jogadores, para conferir o layout dos assentos, a pilha e o campo cheio.'],
   ['/tests/fixtures/commander-endgame.html', 'Commander: fim de partida', 'Quatro mesas cheias no fim do jogo (fichas, planeswalkers, equipamentos, comandantes em campo) para ajustar o posicionamento. Pelo console: fixture.pilha(), fixture.ataque(), fixture.eliminar().'],
   ['/tests/fixtures/extra-turn.html', 'Turno e combate extra', 'Roteiro de Time Walk e Relentless Assault: os cliques da mesa avançam a simulação.'],
