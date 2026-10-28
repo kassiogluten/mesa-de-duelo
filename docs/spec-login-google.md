@@ -169,7 +169,7 @@ Tudo desta fase fica atrás de `mesa:dev`. Por isso, ela não muda a versão nem
 - [x] Botão **Entrar com Google** no cabeçalho (só o ícone no celular). Logado, ele vira a foto com um menu: nome, **Sair**, **Apagar minha conta**. No computador, a conta fica depois de Novidades; no celular, na linha das abas.
 - [x] Página de política de privacidade (`privacidade.html`, versão 0.63.0), linkada no rodapé e no menu da conta. Ela já descreve a sincronia e a lixeira da fase 2; se a fase 2 mudar algo do que está lá, a página muda junto.
 - [x] Teste com um ID token falso assinado por uma chave de teste (`AccountsTest`), em vez do `test-protocol.mjs`: as rotas são HTTP e são testadas direto.
-- [ ] Testar de ponta a ponta com o client ID real: computador feito em 28/10/2026 (login e pergunta de juntar); faltam Android e iPhone com o PWA instalado.
+- [ ] Testar de ponta a ponta com o client ID real: computador e Android feitos em 28/10/2026; falta o iPhone com o PWA instalado.
 - [x] Métricas na ponte: `mesa_accounts` (contas), `mesa_accounts_sessions` (aparelhos logados) e `mesa_accounts_logins_total{result=ok|recusado|limite|erro}`.
 - [x] Painel no Grafana (linha "Contas dos jogadores": contas, aparelhos conectados e logins por hora) e, no admin, o total de contas e de aparelhos no resumo da aba Partidas.
 
