@@ -1,4 +1,9 @@
 {
+  "0.61.1": {
+    "Carta que pede o custo à vista": [
+      { "img": "0.61.1/carta-do-custo.webp", "legenda": "Sacrificar outro artefato para o Repurposing Bay: a carta aparece inteira ao lado da caixa de ação, mesmo estando no campo, e o título traz só o nome, sem o número entre parênteses." }
+    ]
+  },
   "0.61.0": {
     "Várias fichas de uma vez": [
       { "img": "0.61.0/fichas-cascata.webp", "legenda": "Oito fichas de Soldado criadas de uma vez: elas surgem com um brilho, uma logo atrás da outra, e vão direto para o monte ×8, que mostra **+8**." },
