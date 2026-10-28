@@ -36,6 +36,47 @@ public class ExilePermissionsTest {
         return card;
     }
 
+    private static com.google.gson.JsonObject cardIn(com.google.gson.JsonObject state, Player owner, String zone, int id) {
+        for (var row : state.getAsJsonArray("players")) {
+            var p = row.getAsJsonObject();
+            if (p.get("id").getAsInt() != owner.getId()) continue;
+            for (var c : p.getAsJsonArray(zone)) if (c.getAsJsonObject().get("id").getAsInt() == id) return c.getAsJsonObject();
+        }
+        throw new AssertionError("card " + id + " not in " + zone);
+    }
+
+    @Test public void hideawayCardShowsItsFaceOnlyToTheBridgeController() {
+        Game game = game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        for (String name : List.of("Forest", "Llanowar Elves", "Giant Growth", "Lightning Bolt", "Mountain")) add(game, name, me, ZoneType.Library);
+        Card bridge = add(game, "Mosswort Bridge", me, ZoneType.Hand);
+        game.getAction().moveToPlay(bridge, null, null);
+        // O gatilho de esconder (Hideaway 4), resolvido direto: olha as 4 de cima e exila uma virada para baixo.
+        var trigger = bridge.getTriggers().stream().filter(t -> t.getMode() == forge.game.trigger.TriggerType.ChangesZone).findFirst().orElseThrow();
+        var hideaway = trigger.ensureAbility(); hideaway.setActivatingPlayer(me);
+        forge.game.ability.AbilityUtils.resolve(hideaway);
+        game.getAction().checkStaticAbilities();
+        var hidden = me.getCardsIn(ZoneType.Exile);
+        assertEquals(1, hidden.size());
+        Card exiled = hidden.get(0);
+        assertTrue(exiled.isFaceDown());
+        var mine = cardIn(StateJson.game(game.getView(), me.getId(), game), me, "exile", exiled.getId());
+        assertTrue(mine.get("faceDown").getAsBoolean());
+        assertFalse("the card itself stays nameless", mine.has("name"));
+        assertEquals(exiled.getState(forge.card.CardStateName.Original).getName(), mine.getAsJsonObject("hiddenFace").get("name").getAsString());
+        assertFalse(cardIn(StateJson.game(game.getView(), other.getId(), game), me, "exile", exiled.getId()).has("hiddenFace"));
+        assertFalse(cardIn(StateJson.game(game.getView(), -2, game), me, "exile", exiled.getId()).has("hiddenFace"));
+    }
+
+    @Test public void faceDownCreatureShowsItsFaceToItsControllerOnly() {
+        Game game = game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        Card morph = add(game, "Llanowar Elves", me, ZoneType.Battlefield);
+        morph.turnFaceDown(true);
+        var mine = cardIn(StateJson.game(game.getView(), me.getId(), game), me, "battlefield", morph.getId());
+        assertEquals("Llanowar Elves", mine.getAsJsonObject("hiddenFace").get("name").getAsString());
+        assertFalse(mine.has("name"));
+        assertFalse(cardIn(StateJson.game(game.getView(), other.getId(), game), me, "battlefield", morph.getId()).has("hiddenFace"));
+    }
+
     @Test public void impulsePermissionIsVisibleWithoutManaAndDuringOpponentsTurn() {
         Game game = game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
         add(game, "Mountain", me, ZoneType.Library);

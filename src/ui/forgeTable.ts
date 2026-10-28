@@ -337,7 +337,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   };
   const inspectIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6m-3-3v6"/></svg>';
   const selectedBadge = (s: FState, c: FCard) => selectedForInput(s, c.id) ? '<span class="choice-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span>' : '';
-  const inspectButton = (c: FCard) => !c.faceDown && c.name ? `<button class="inspect-card" data-inspect="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${inspectIcon}</button>` : '';
+  const inspectButton = (c: FCard) => (!c.faceDown && c.name) || c.hiddenFace?.name ? `<button class="inspect-card" data-inspect="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${inspectIcon}</button>` : '';
 
   function syncAutoPass() {
     const connected = !!client?.connected && !disconnected;
@@ -634,7 +634,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   /** Nome, tipo e texto impressos em português, quando o Scryfall tem a tradução. */
   const ptOf = (name: string | undefined) => (name ? cacheGet(name)?.pt : undefined);
-  const label = (c: FCard) => ptOf(c.name)?.name || c.name || 'Carta';
+  const label = (c: FCard) => ptOf(c.name)?.name || c.name || (c.hiddenFace?.name ? `${ptOf(c.hiddenFace.name)?.name || c.hiddenFace.name} (virada para baixo)` : 'Carta');
+  /** A carta virada para baixo como você a vê: com a frente, quando pode olhá-la. */
+  const seenFace = (c: FCard): FCard => c.faceDown && c.hiddenFace?.name ? { ...c, ...c.hiddenFace, faceDown: false } : c;
+  const HIDDEN_EYE = '<span class="hidden-eye" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>';
   /** "Emblem — Kaito, Bane of Nightmares" → "Kaito, Bane of Nightmares" (o planeswalker que gerou o emblema). */
   const emblemSource = (c: FCard) => (c.name ?? '').replace(/^Emblem\s*[—–-]\s*/i, '');
   const emblemLabel = (c: FCard) => `Emblema de ${ptOf(emblemSource(c))?.name || emblemSource(c)}`;
@@ -648,7 +651,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return cardStyle === 'art' && (art || !c.image) ? 'art' : cardStyle === 'arena' && field && art ? 'arena' : 'full';
   }
 
-  function face(c: FCard, size: 'small' | 'normal', field = false) {
+  function face(c: FCard, size: 'small' | 'normal', field = false): string {
+    // Virada para baixo e você pode olhar: no campo segue o verso (ela é uma 2/2 sem nome); fora dele, a frente apagada.
+    // Nos dois, um olho no canto; qual carta é e por que só você vê ficam na prévia e no inspetor.
+    if (c.faceDown && c.hiddenFace?.name) {
+      const html = field ? '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>' : face(seenFace(c), size);
+      return html.replace(/^\s*<div class="face/, `<div class="face hidden-known${field ? ' on-field' : ''}`).replace(/<\/div>\s*$/, `${HIDDEN_EYE}</div>`);
+    }
     if (c.faceDown || !c.name) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
     const sc = cacheGet(c.name);
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
@@ -2053,13 +2062,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function showPreview(c: FCard | undefined, trigger?: HTMLElement, pinned = false, at?: { x: number; y: number }) {
     if (!pinned && (stackGalleryOpen || trigger?.closest('#fStack') || (client?.state && suppressOpeningPreview(client.state)))) return;
+    const secret = !!c?.faceDown && !!c.hiddenFace?.name;
+    if (c) c = seenFace(c);
     if (!c || c.faceDown || !c.name) { hideCardPreview(); return; }
     const source = c.emblem ? emblemSource(c) : c.name;
     const card = { ...c, name: c.emblem ? emblemLabel(c) : c.name,
       image: c.image ?? image(source, 'normal'),
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.typeLine,
-      notes: permanentStatus(c, playerName).map(seal => seal.label) };
+      notes: [...(secret ? ['Virada para baixo: só você pode ver qual carta é.'] : []), ...permanentStatus(c, playerName).map(seal => seal.label)] };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {

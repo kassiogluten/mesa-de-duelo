@@ -419,3 +419,11 @@
 /* Tempo do último turno: discreto, para não competir com vida e marcadores. */
 .player-counter.last-turn { border-color: #7d8aa5; color: #c8d4f0; font-variant-numeric: tabular-nums; }
 .player-counter.last-turn svg { color: #9fb0d1; }
+/* Virada para baixo, mas você pode olhar (Mosswort Bridge, sua metamorfose): fora do campo, a frente um pouco apagada;
+   nos dois casos, um olho pequeno no canto. Qual carta é e por que só você vê ficam na prévia e no inspetor. */
+.face.hidden-known:not(.on-field) > :not(.hidden-eye) { filter: brightness(.72) saturate(.75); }
+.face.hidden-known .hidden-eye {
+  position: absolute; z-index: 2; top: 5%; right: 6%; display: grid; place-items: center; width: clamp(14px, 16%, 24px); aspect-ratio: 1; border-radius: 50%;
+  background: #0a1322e6; box-shadow: 0 0 0 1px #b9c7df59; color: #dfe7f7;
+}
+.face.hidden-known .hidden-eye svg { width: 70%; height: 70%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

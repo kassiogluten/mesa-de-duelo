@@ -52,6 +52,11 @@ export interface FCard {
   faceDown?: boolean;
   /** Como a permanente ficou virada para baixo (só no campo). */
   faceDownKind?: 'morph' | 'disguise' | 'manifest' | 'cloak';
+  /**
+   * Frente de uma carta virada para baixo que só quem recebe o estado pode ver (a escondida pela Mosswort Bridge, a
+   * sua criatura com metamorfose). Fica à parte: no jogo a carta continua sem nome, e no campo é uma 2/2.
+   */
+  hiddenFace?: Pick<FCard, 'name' | 'set' | 'manaCost' | 'typeLine' | 'text' | 'creature' | 'land' | 'power' | 'toughness'>;
   name?: string;
   set?: string;
   manaCost?: string;

@@ -1,4 +1,11 @@
 {
+  "0.56.1": {
+    "Cartas viradas para baixo que você pode olhar": [
+      { "img": "0.56.1/exilio-virada.webp", "legenda": "No seu exílio, a carta escondida aparece com a frente apagada e o olho no canto: só você vê que é um Raio." },
+      { "img": "0.56.1/campo-virada.webp", "legenda": "Sua criatura com metamorfose segue com o verso no campo, agora com o olho no canto." },
+      { "img": "0.56.1/inspetor-virada.webp", "legenda": "O inspetor mostra a carta virada para baixo e avisa que só você pode ver qual carta é." }
+    ]
+  },
   "0.56.0": {
     "Tempo do último turno": [
       { "img": "0.56.0/oponente.webp", "legenda": "No seu turno, o selo com a ampulheta ao lado da vida do oponente diz que o último turno dele durou 1:12." },

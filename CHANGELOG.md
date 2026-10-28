@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.56.1] - 2026-10-27
+
+### Corrigido
+
+- **Cartas viradas para baixo que você pode olhar.** A carta escondida pela Mosswort Bridge (e por outras cartas que exilam virado para baixo) aparecia só com o verso até para você. Agora, no seu exílio, ela mostra a frente um pouco apagada, com um olho no canto: virada para baixo, mas só você vê. O mesmo vale para as suas criaturas viradas para baixo no campo (metamorfose, disfarce, manifestar): elas continuam com o verso e o olho, e a prévia e o inspetor mostram qual carta é. O oponente segue vendo só o verso.
+
 ## [0.56.0] - 2026-10-27
 
 ### Novo
