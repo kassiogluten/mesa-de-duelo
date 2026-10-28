@@ -24,6 +24,12 @@
     "Cinco decks do meta do Padrão": [
       { "img": "0.58.0/decks-meta-padrao.webp", "legenda": "Os cinco decks novos entre os decks prontos: **Lifegain**, **Dimir Reanimator**, **Jeskai Artifacts**, **Azorius Momo** e **Rakdos Lizards**, todos com 60 cartas." }
     ],
+    "Novo formato: Sacola 50": [
+      { "img": "0.58.0/sacola-formato.webp", "legenda": "O Sacola 50 entre os formatos, com o aviso do limite de R$ 50 logo abaixo: a mesa não confere o preço." }
+    ],
+    "Sete decks prontos de Sacola 50": [
+      { "img": "0.58.0/sacola-decks.webp", "legenda": "Com o Sacola 50 escolhido, os decks dele abrem a lista de decks prontos: **Delver Azul**, **Fantasmas de Orzhov**, **Veneno da Floresta** e os outros." }
+    ],
     "Voar e Toque mortífero na borda da carta": [
       { "img": "0.58.0/voar-toque-mortifero.webp", "legenda": "Uma criatura com Voar e Toque mortífero mostra a asa e a caveira verde na borda esquerda da carta." }
     ],

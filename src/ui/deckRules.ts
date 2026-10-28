@@ -1,4 +1,4 @@
-import { countEntries, deckEntries, isBasic, type DeckData, type DeckFormat } from '../decks';
+import { countEntries, deckEntries, FORMAT_LABEL, isBasic, isConstructed, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
 import { cacheGet, legalityFresh, type ScryCard } from '../scryfall';
 
 export interface DeckIssue { code: string; message: string; card?: string; section?: 'main' | 'sideboard' | 'commander' }
@@ -21,8 +21,8 @@ export function copiesInDeck(deck: DeckData, name: string): number {
 export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.format ?? 'free'): LocalDeckValidation {
   const issues: DeckIssue[] = [], unknown = new Set<string>();
   const main = countEntries(deck.cards), side = countEntries(deck.sideboard ?? []);
-  if (!main || (format === 'pauper' && main < 60)) issues.push({ code: 'main_count', message: format === 'pauper' ? `O deck principal precisa de pelo menos 60 cartas. Faltam ${60 - main}.` : 'Adicione cartas ao deck principal.', section: 'main' });
-  if (format === 'pauper' && side > 15) issues.push({ code: 'sideboard_count', message: `O sideboard pode ter até 15 cartas. Remova ${side - 15}.`, section: 'sideboard' });
+  if (!main || (isConstructed(format) && main < 60)) issues.push({ code: 'main_count', message: isConstructed(format) ? `O deck principal precisa de pelo menos 60 cartas. Faltam ${60 - main}.` : 'Adicione cartas ao deck principal.', section: 'main' });
+  if (isConstructed(format) && side > 15) issues.push({ code: 'sideboard_count', message: `O sideboard pode ter até 15 cartas. Remova ${side - 15}.`, section: 'sideboard' });
   const commanders = deck.commanders ?? [];
   const commanderCount = countEntries(commanders);
   const identity = new Set(commanders.flatMap(e => cacheGet(e.name)?.color_identity ?? []));
@@ -38,9 +38,10 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
     for (const entry of entries) {
       if (!Number.isSafeInteger(entry.count) || entry.count < 1) { issues.push({ code: 'quantity', card: entry.name, section, message: `Quantidade inválida: ${entry.name}.` }); continue; }
       const card = cacheGet(entry.name);
-      if (format === 'pauper' || format === 'commander') {
-        if (!card || !legalityFresh(card) || !card.legalities?.[format]) unknown.add(entry.name);
-        else if (card.legalities[format] !== 'legal') issues.push({ code: card.legalities[format] === 'banned' ? 'banned' : 'format', card: entry.name, section, message: `${card.pt?.name || entry.name}: ${card.legalities[format] === 'banned' ? `banida em ${format === 'commander' ? 'Commander' : 'Pauper'}` : `não é válida em ${format === 'commander' ? 'Commander' : 'Pauper'}`}.` });
+      const legality = scryfallFormat(format);
+      if (legality) {
+        if (!card || !legalityFresh(card) || !card.legalities?.[legality]) unknown.add(entry.name);
+        else if (card.legalities[legality] !== 'legal') issues.push({ code: card.legalities[legality] === 'banned' ? 'banned' : 'format', card: entry.name, section, message: `${card.pt?.name || entry.name}: ${card.legalities[legality] === 'banned' ? `banida em ${FORMAT_LABEL[format]}` : `não é válida em ${FORMAT_LABEL[format]}`}.` });
       }
       if (format === 'commander' && card && commanders.every(e => cacheGet(e.name)?.color_identity) && (card.color_identity ?? []).some(c => !identity.has(c)))
         issues.push({ code: 'color_identity', card: entry.name, section, message: `${card.pt?.name || entry.name}: identidade de cor fora da identidade dos comandantes. Confira eventuais exceções no servidor.` });
@@ -49,7 +50,7 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
       if (previous) previous.count += entry.count; else copies.set(key, { count: entry.count, name: entry.name, card });
     }
   }
-  if (format === 'pauper' || format === 'commander') for (const { count, name, card } of copies.values()) {
+  if (isConstructed(format) || format === 'commander') for (const { count, name, card } of copies.values()) {
     const limit = cardCopyLimit(name, card, format);
     if (count > limit && (card || isBasic(name))) issues.push({ code: 'copies', card: name, message: `${name}: ${count} cópias ${format === 'commander' ? 'entre o deck e a zona de comando' : 'entre o deck e o sideboard'}; o limite é ${limit}.` });
   }

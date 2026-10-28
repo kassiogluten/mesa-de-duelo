@@ -1,4 +1,4 @@
-import { allDecks, countEntries, deckSize, loadUserDecks, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
+import { allDecks, countEntries, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
@@ -43,7 +43,7 @@ export interface LobbyOptions {
 }
 const load = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 const save = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* Browser-local preferences are optional. */ } };
-const formatName = (f: DeckFormat | null) => f === 'commander' ? 'Commander' : f === 'pauper' ? 'Pauper' : f === 'free' ? 'Livre' : 'Escolha o formato';
+const formatName = (f: DeckFormat | null) => f ? FORMAT_LABEL[f] : 'Escolha o formato';
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
 const MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 const REFRESH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -57,7 +57,7 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
-  let format: DeckFormat | null = remembered === 'free' || remembered === 'pauper' || remembered === 'commander' ? remembered : null;
+  let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? null;
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
@@ -91,7 +91,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     <div class="play-layout">
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <div class="match-setup">
-        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="free">Livre</button><button type="button" data-setting="format" data-value="commander">Commander</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
+        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button><button type="button" data-setting="format" data-value="commander">Commander</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
@@ -156,7 +156,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const focusAttribute = focused?.dataset.deck ? 'deck' : 'tile-menu';
     const decks = allDecks(), personal = decks.filter(d => !d.builtin), ready = decks.filter(d => d.builtin);
     if (!decks.some(d => d.id === youId)) youId = '';
-    const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d));
+    // Os decks prontos do formato escolhido vêm primeiro; os outros compatíveis (como os do Livre no Sacola 50) depois.
+    const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d)).sort((a, b) => Number(b.format === format) - Number(a.format === format));
     $('#personalCount').textContent = personal.length ? String(personal.length) : '';
     $('#personalTiles').innerHTML = mine.length ? tiles(mine) + NEW_DECK_TILE : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${filtering() ? 'Nenhum dos seus decks corresponde à busca e às cores.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${filtering() ? 'clear' : 'incompatible'}">${filtering() ? 'Limpar filtros' : 'Mostrar decks incompatíveis'}</button></div>`;
     $('#readyTiles').innerHTML = templates.length ? tiles(templates) : '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>';
@@ -169,8 +170,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       button.setAttribute('aria-pressed', String(button.dataset.value === value));
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
-    $('#formatHelp').textContent = 'Escolha um formato para começar.';
-    $('#formatHelp').hidden = !!format;
+    $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : 'Escolha um formato para começar.';
+    $('#formatHelp').hidden = !!format && format !== 'sacola50';
     header.setDisabled(busy || !!waitingRoom);
     $('.home-intro').hidden = $('.play-layout').hidden = !!waitingRoom;
     roomLobby.render(waitingRoom);
@@ -316,7 +317,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const choice = target.closest<HTMLButtonElement>('[data-setting]');
     if (choice && !choice.disabled) {
       if (choice.dataset.setting === 'format') {
-        format = choice.dataset.value === 'commander' ? 'commander' : choice.dataset.value === 'pauper' ? 'pauper' : 'free'; save('mesa:format', format); youId = rememberedDeck(); preflight++; setStatus('');
+        format = DECK_FORMATS.find(f => f === choice.dataset.value) ?? 'free'; save('mesa:format', format); youId = rememberedDeck(); preflight++; setStatus('');
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
       } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private';

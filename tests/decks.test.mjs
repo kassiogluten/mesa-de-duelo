@@ -179,6 +179,18 @@ test('Pauper ready decks contain 60 main, 15 sideboard and stay separate from le
   assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'free').length, 19);
 });
 
+test('Sacola 50 ready decks have 60 main, up to 15 sideboard, and check cards against Legacy', () => {
+  const sacola = decks.DEFAULT_DECKS.filter(d => d.format === 'sacola50');
+  assert.equal(sacola.length, 7);
+  for (const deck of sacola) { assert.equal(decks.deckSize(deck), 60); assert.ok(decks.countEntries(deck.sideboard) <= 15); assert.match(deck.id, /^sacola-/); }
+  assert.equal(decks.scryfallFormat('sacola50'), 'legacy');
+  assert.equal(decks.scryfallFormat('free'), undefined);
+  const short = { id: 's', name: 'S', format: 'sacola50', cards: [{ name: 'Island', count: 59 }], sideboard: [{ name: 'Island', count: 16 }] };
+  const codes = validateDeckLocal(short).issues.map(i => i.code);
+  assert.ok(codes.includes('main_count') && codes.includes('sideboard_count'));
+  assert.match(decks.SACOLA_HINT, /R\$ 50/);
+});
+
 
 test('import into an empty deck keeps ID, name, format and unknown metadata', () => {
   const target = { ...example, name: 'Meu rascunho', cards: [], sideboard: [], sourceTemplateId: 'old-template', custom: { favorite: true } };

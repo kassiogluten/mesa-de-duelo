@@ -8,14 +8,14 @@ import forge.game.GameType;
 /** Immutable, room-owned rules. Never mutate global Forge preferences per match. */
 record MatchConfig(String format, String matchLength, int playerCount) {
     static final String ENGINE_VERSION = "2.0.16-SNAPSHOT+0b0f7ecc5111.mesa1";
-    static final String RULES_VERSION = "pauper-commander-2026-10-16-v2";
+    static final String RULES_VERSION = "pauper-sacola50-commander-2026-10-28";
 
     MatchConfig(String format, String matchLength) { this(format, matchLength, 2); }
 
     boolean commander() { return "commander".equals(format); }
 
     MatchConfig {
-        if (!"free".equals(format) && !"pauper".equals(format) && !"commander".equals(format))
+        if (!"free".equals(format) && !"pauper".equals(format) && !"sacola50".equals(format) && !"commander".equals(format))
             throw new IllegalArgumentException("Formato não suportado.");
         if (!"bo1".equals(matchLength) && !"bo3".equals(matchLength))
             throw new IllegalArgumentException("Duração da partida não suportada.");

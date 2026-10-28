@@ -1,6 +1,14 @@
 import starterDecks from '../shared/starter-decks.json' with { type: 'json' };
 
-export type DeckFormat = 'free' | 'pauper' | 'commander';
+export type DeckFormat = 'free' | 'pauper' | 'sacola50' | 'commander';
+export const DECK_FORMATS: readonly DeckFormat[] = ['pauper', 'sacola50', 'free', 'commander'];
+export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander' };
+/** Formatos de 60 cartas com sideboard de 15 e legalidade conferida. */
+export const isConstructed = (format: DeckFormat | undefined): format is 'pauper' | 'sacola50' => format === 'pauper' || format === 'sacola50';
+/** Formato do Scryfall que dá a legalidade das cartas: o Sacola 50 usa as do Legacy. */
+export const scryfallFormat = (format: DeckFormat | undefined) => format === 'sacola50' ? 'legacy' : format === 'pauper' || format === 'commander' ? format : undefined;
+/** O Sacola 50 não confere preço: o aviso lembra o limite combinado. */
+export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro custando até R$ 50. A mesa não confere o preço: combine com o oponente.';
 export interface DeckEntry { name: string; count: number; oracleId?: string }
 export interface DeckData {
   id: string;
@@ -46,7 +54,7 @@ function validEntries(v: unknown): v is DeckEntry[] {
 }
 function validDeck(v: unknown): v is DeckData {
   return object(v) && typeof v.id === 'string' && !!v.id && typeof v.name === 'string' && validEntries(v.cards)
-    && (v.sideboard === undefined || validEntries(v.sideboard)) && (v.format === undefined || v.format === 'free' || v.format === 'pauper' || v.format === 'commander')
+    && (v.sideboard === undefined || validEntries(v.sideboard)) && (v.format === undefined || DECK_FORMATS.includes(v.format as DeckFormat))
     && (v.commanders === undefined || validEntries(v.commanders))
     && (v.unresolved === undefined || (Array.isArray(v.unresolved) && v.unresolved.every(n => typeof n === 'string')));
 }

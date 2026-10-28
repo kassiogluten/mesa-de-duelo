@@ -1,4 +1,5 @@
 import * as cardStore from './cardStore';
+import { scryfallFormat, type DeckFormat } from './decks';
 
 type Images = { small?: string; normal?: string; art_crop?: string };
 
@@ -287,8 +288,9 @@ export async function preloadDeckImages(names: string[], sizes?: (keyof Images)[
   return preloadImages(cardImageUrls(names, sizes));
 }
 
-export async function searchCards(q: string, page = 1, format?: 'free' | 'pauper' | 'commander'): Promise<{ cards: ScryCard[]; hasMore: boolean; total: number }> {
-  if (format === 'pauper' || format === 'commander') q = `(${q}) f:${format}`;
+export async function searchCards(q: string, page = 1, format?: DeckFormat): Promise<{ cards: ScryCard[]; hasMore: boolean; total: number }> {
+  const legality = scryfallFormat(format);
+  if (legality) q = `(${q}) f:${legality}`;
   // Multilíngue para aceitar também o nome em português ("Golpe Relampejante").
   const { status, json } = await request(`/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=name&include_multilingual=true&page=${page}`);
   if (status === 404) return { cards: [], hasMore: false, total: 0 };

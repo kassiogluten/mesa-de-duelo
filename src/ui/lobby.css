@@ -31,6 +31,8 @@
 .choice-segments button[aria-pressed=true], .choice-segments button[aria-selected=true], .opponent-card[aria-pressed=true] { color: var(--on-ink); border-color: var(--on-line); background: var(--on-bg); box-shadow: 0 2px 4px #0003; }
 .choice-segments button:hover:not(:disabled, [aria-pressed=true], [aria-selected=true]), .opponent-card:hover:not(:disabled, [aria-pressed=true]) { color: var(--ink); }
 .choice-segments button:disabled, .opponent-card:disabled { cursor: default; opacity: .55; }
+/* Quatro formatos: 2×2 na barra lateral, uma linha só quando houver largura. */
+.format-choice .choice-segments { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
 .setup-explanation { font-size: 13px; line-height: 1.5; color: var(--muted); margin: var(--label-gap) 0 0; }
 .opponent-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .opponent-card { display: flex; align-items: center; justify-content: center; text-align: center; min-height: var(--control-h); border-radius: var(--control-radius); border: 1px solid var(--control-line); background: var(--control-bg); padding: 6px 8px; color: var(--muted); cursor: pointer; }
