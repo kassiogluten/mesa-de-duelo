@@ -112,6 +112,7 @@ final class StateJson {
             }
         }
         o.add("combat", combat);
+        CombatForecast.add(o, game);
 
         JsonArray log = new JsonArray();
         if (gv.getGameLog() != null) {

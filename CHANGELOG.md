@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.59.0] - 2026-10-28
+
+### Novo
+
+- **Vida prevista ao escolher os bloqueadores.** Enquanto você marca os bloqueios, a caixa de ação mostra, junto do botão de confirmar, com quanto você sai do combate ("Depois do combate, você fica com 12 de vida") e muda a cada bloqueio marcado ou desfeito. Entram na conta os atacantes sem bloqueio, o golpe duplo, o que passa do bloqueador com atropelar, o veneno de infectar, o dano de comandante e os efeitos que previnem dano. Quando o combate derrota você, aparece **Letal!** em vermelho; com 5 de vida ou menos (ou a 2 do limite de veneno ou de comandante), o aviso fica amarelo. O leitor de tela lê a previsão de novo a cada mudança.
+- **Previsão do combate para a mesa toda.** Durante a declaração de bloqueadores, o retrato de cada jogador atacado mostra a vida prevista ("→ 4"), o veneno e o dano de comandante que vão entrar, e **Letal!** quando o combate o derrota. Os planeswalkers atacados mostram a lealdade de agora e a prevista ("6 → 0").
+
 ## [0.58.0] - 2026-10-28
 
 ### Novo

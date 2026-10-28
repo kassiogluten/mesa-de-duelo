@@ -31,6 +31,8 @@ import { skipBarHTML } from './skipVote';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
 import { playerStatusHTML, playerStatusText, turnSpellsTotal } from './playerStatus';
+import { forecastBadgeHTML, forecastLineHTML, forecastText, walkerForecast } from './combatForecast';
+import './combatForecast.css';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { choiceOrder, isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
@@ -1056,7 +1058,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const loyalty = c.planeswalker ? c.counters?.LOYALTY ?? 0 : undefined;
     const pt = c.creature
       ? `<span class="pt"><b class="${delta(c.power ?? 0, c.basePower)}">${c.power}</b>/<b class="${dmg > 0 ? 'down' : delta(c.toughness ?? 0, c.baseToughness)}">${(c.toughness ?? 0) - dmg}</b></span>`
-      : loyalty !== undefined ? `<span class="pt loyalty" title="Lealdade"><b>${loyalty}</b></span>`
+      : loyalty !== undefined ? loyaltyHTML(s, c.id, loyalty)
       : c.classLevel ? `<span class="pt class-level" title="${esc(classLevelText(c))}"><small>Nv</small><b>${c.classLevel}</b>${c.classMaxLevel ? `<small>/${c.classMaxLevel}</small>` : ''}</span>` : '';
     const shown = Object.entries(c.counters ?? {}).filter(([k]) => !(c.planeswalker && k === 'LOYALTY'));
     const counters = shown.length
@@ -1206,9 +1208,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }).join('');
     const art = portraits[idx];
     const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
-    return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}, ${p.life} de vida${playerCountersText(p)}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
+    const forecast = s.forecast?.find(f => f.player === p.id);
+    return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}, ${p.life} de vida${playerCountersText(p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
       <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
       <div class="life">${p.life}</div>
+      ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
       ${playerCounters(p)}
       <div class="pname">${esc(p.name)}</div>
       ${emblems(p)}
@@ -1317,6 +1321,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
       <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(s, p.battlefield.filter(c => !isBackRow(c))))}</div>
     </section>`;
+  }
+  /** Nome de um comandante ou planeswalker na frase da previsão do combate. */
+  const cardName = (id: number) => { const c = findCard(id, false); return c ? label(c) : 'Comandante'; };
+  /** Lealdade do planeswalker; atacado, na declaração de bloqueadores, também a prevista depois do combate ("3 → 1"). */
+  function loyaltyHTML(s: FState, id: number, loyalty: number) {
+    const w = walkerForecast(s.forecast, id);
+    if (!w || w.after >= w.loyalty) return `<span class="pt loyalty" title="Lealdade"><b>${loyalty}</b></span>`;
+    return `<span class="pt loyalty forecast${w.after <= 0 ? ' lethal' : ''}" title="Lealdade: ${w.loyalty} agora, ${w.after} depois do combate"><b>${w.loyalty}</b><span class="lf-arrow">→</span><b>${w.after}</b></span>`;
   }
   /** Sem nenhum bloqueador seu declarado, o botão diz que você não vai bloquear (como o "Não atacar" do ataque). */
   function blockConfirmLabel(s: FState) {
@@ -1985,13 +1997,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const expanded = !!instruction && expandedPrompt === instruction;
     const more = `<button class="prompt-more" data-ui="prompt-more" aria-controls="fPrompt" aria-expanded="${expanded}" hidden>${expanded ? 'Ver menos' : 'Ver detalhes'}</button>`;
     const attackPanel = attackChoices(s);
+    const myForecast = s.input.blocking ? s.forecast?.find(f => f.player === s.you) : undefined;
+    const blockForecast = myForecast ? forecastLineHTML(myForecast, cardName) : '';
     $('#fAction').classList.toggle('attack-choosing', !!attackPanel);
     $('#fAction').classList.toggle('proliferating', !!prolifPanel);
     // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
     const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
-    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${prolifPanel}${attackPanel}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
+    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
@@ -1999,7 +2013,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // O pedido é o último parágrafo do Forge ("Carta (id) - habilidade" vem antes); sem o número da carta.
     const request = instruction.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean).pop() ?? '';
     const awaiting = renderAwaiting(s, isProliferating(s) ? 'Proliferar: marque o que ganha marcadores' : short ?? withoutCardIds(request));
-    announce(instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''));
+    // A previsão do combate vai junto: a cada bloqueio marcado ou desfeito, a frase muda e o leitor de tela lê de novo.
+    const forecastSpoken = (s.forecast ?? []).map(f => forecastText(f, f.player === s.you ? null : s.players.find(p => p.id === f.player)?.name ?? 'O defensor', cardName)).join(' ');
+    announce([instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
 
     const qEl = $('#fQuestion');
     if (s.question && !s.gameOver) {

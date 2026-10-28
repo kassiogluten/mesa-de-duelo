@@ -276,6 +276,17 @@ export type RoomSaying = 'hello' | 'back' | 'invite' | 'glhf';
 export interface FSkipVote { target: number; name: string; yes: number; no: number; voters: number; needed: number; canVote: boolean; mine?: 'yes' | 'no' }
 export interface FSkip { vote?: FSkipVote; skipping: number[] }
 
+/**
+ * Previsão do combate de um jogador atacado, com as regras do Forge (prevenção, golpe duplo, atropelar, infectar).
+ * poison só vem quando há veneno; commander, os comandantes que causam dano; lethal diz o que derrota o jogador.
+ */
+export interface FForecast {
+  player: number; life: number; lifeAfter: number; poison?: number; poisonAfter?: number;
+  commander?: { commanderId: number; damage: number; after: number }[];
+  planeswalkers?: { id: number; loyalty: number; after: number }[];
+  lethal?: 'life' | 'poison' | 'commander';
+}
+
 export interface FState {
   type: 'state';
   config?: MatchConfig;
@@ -319,6 +330,8 @@ export interface FState {
   suspendedExile?: number[];
   stack: { id: number; text: string; /** Ausente em pontes antigas. */ kind?: 'spell' | 'ability' | 'trigger'; /** Só quando pago além do custo normal: forma de conjurar (flashback, aventura...), vezes reforçada, outros opcionais e o X. */ cast?: { mode?: string; kicker?: number; extras?: string[]; x?: number }; source?: FCard; controller?: number; targets?: FTargets }[];
   combat: { attacker: number; defender?: number; defenderKind?: 'player' | 'card'; blockers: number[] }[];
+  /** Só na declaração de bloqueadores: como cada jogador atacado sai do combate com os bloqueios marcados até agora. Ausente em pontes antigas. */
+  forecast?: FForecast[];
   log: string[];
   you: number;
   /** gen: versão do prompt; acompanha os cliques em OK/Cancelar para a ponte descartar cliques atrasados. */

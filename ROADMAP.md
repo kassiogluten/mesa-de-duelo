@@ -600,16 +600,14 @@ Alternativas para mostrar (recomendado: A + D):
 
 Decidido em 28/10/2026: A + D + E, com o texto "Mesa de Duelo X.Y.Z". D já estava pronto (o relato leva `app.version` e o "Copiar relatório" tem a linha "versão da mesa"). O aviso de versão nova já existe: é o banner "Nova versão do jogo" do app (`src/ui/pwa.ts`), que aparece também durante a partida.
 
-## 39. Cálculo de vida ao definir bloqueadores
+## 39. Cálculo de vida ao definir bloqueadores ✅
 
 Na declaração de bloqueadores, o jogador precisa somar de cabeça o poder de cada atacante que ficou sem bloqueio para saber com quanta vida vai sair do combate, e se o combate é letal. Em Commander, com vários atacantes, atropelar e dano de comandante, a conta fica difícil e é fácil errar.
 
-- [ ] Mostrar, enquanto o jogador escolhe os bloqueadores, a vida prevista depois do combate ("20 → 13"), atualizando a cada bloqueio marcado ou desfeito.
-- [ ] Destacar quando o combate é letal ("Letal!") ou deixa a vida muito baixa, para o jogador perceber antes de confirmar.
-- [ ] Entrar na conta: atacantes sem bloqueio, golpe duplo, excesso de atropelar sobre o bloqueador (pelo letal do bloqueador, como na divisão do item 22), dano de comandante (21) e veneno de infectar (10), cada um com o seu limite.
-- [ ] Também no ataque ao planeswalker: a lealdade prevista dele.
-- [ ] Leitor de tela: anunciar a vida prevista quando ela mudar.
+- [x] Mostrar, enquanto o jogador escolhe os bloqueadores, a vida prevista depois do combate ("20 → 13"), atualizando a cada bloqueio marcado ou desfeito.
+- [x] Destacar quando o combate é letal ("Letal!") ou deixa a vida muito baixa, para o jogador perceber antes de confirmar.
+- [x] Entrar na conta: atacantes sem bloqueio, golpe duplo, excesso de atropelar sobre o bloqueador (pelo letal do bloqueador, como na divisão do item 22), dano de comandante (21) e veneno de infectar (10), cada um com o seu limite.
+- [x] Também no ataque ao planeswalker: a lealdade prevista dele.
+- [x] Leitor de tela: anunciar a vida prevista quando ela mudar.
 
-Fonte dos dados: o ideal é a ponte calcular com as regras do Forge (prevenção, proteção, efeitos que dobram o dano), e a mesa só mostrar; uma conta só na mesa, com poder, palavras-chave e bloqueios, sai mais rápido, mas erra nos casos com efeitos de substituição.
-
-A decidir antes de começar: onde aparece (no retrato do jogador, na caixa de ação junto do **Confirmar bloqueios**, ou nos dois); se a conta vem da ponte ou da mesa; se mostra a previsão também para o atacante (quanto o oponente vai tomar) e para os outros jogadores em Commander.
+Decidido em 28/10/2026: a conta vem da ponte (`CombatForecast`, com as contas do Forge em `ComputerUtilCombat`: prevenção, proteção, golpe duplo, atropelar, infectar e veneno extra), e vai no estado como `forecast` só na etapa de declarar bloqueadores. Aparece nos dois lugares: selo no retrato de cada jogador atacado, que todos na mesa veem, e uma frase na caixa de ação de quem bloqueia, junto do **Confirmar bloqueios**. "Vida muito baixa" quer dizer 5 ou menos, ou estar a 2 do limite de veneno ou de dano de comandante. Ficou de fora: vida ganha por bloqueadores com vínculo com a vida e gatilhos de combate (como "sempre que atacar"), que o Forge também não prevê.

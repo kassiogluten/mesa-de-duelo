@@ -1,4 +1,17 @@
 {
+  "0.59.0": {
+    "Vida prevista ao escolher os bloqueadores": [
+      { "img": "0.59.0/caixa-bloqueio.webp", "legenda": "Com um bloqueador marcado, a caixa de ação diz com quanto você sai do combate: **12 de vida**." },
+      { "img": "0.59.0/caixa-letal.webp", "legenda": "Sem bloqueio, Atraxa chegaria a 21 de dano de comandante: a frase fica vermelha e termina em **Letal!**." },
+      { "img": "0.59.0/retrato-letal.webp", "legenda": "No seu retrato, o selo mostra o que derrota você: **Comandante 21/21, Letal!**." }
+    ],
+    "Previsão do combate para a mesa toda": [
+      { "img": "0.59.0/oponente-letal.webp", "legenda": "Diego, com 3 de vida, iria a **−5** e a 22 de dano de comandante: o selo abaixo da vida avisa **Letal!**." },
+      { "img": "0.59.0/oponente.webp", "legenda": "Carla ficaria com **4** de vida: o selo fica amarelo, perto de perder." },
+      { "img": "0.59.0/duelo.webp", "legenda": "No 1 contra 1, a previsão do oponente aparece à esquerda do retrato, com o veneno que vai entrar." },
+      { "img": "0.59.0/planeswalker.webp", "legenda": "Planeswalker atacado sem bloqueio: a lealdade cai de **6 para 0**." }
+    ]
+  },
   "0.58.0": {
     "Mágicas do turno": [
       { "img": "0.58.0/magicas-turno.webp", "legenda": "Com Grapeshot na mão, o selo do raio ao lado do seu retrato mostra 2 mágicas neste turno; o balão lembra que a mesa toda já conjurou 3." }
