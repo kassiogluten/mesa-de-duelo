@@ -88,6 +88,9 @@ final class Session {
     private volatile int gameNumber = 1;
     private volatile int sideboardId;
     private volatile boolean abandoned;
+    /** Quem desistiu primeiro da partida atual (o humano contra a IA sai por aqui), e se a linha do histórico já foi gravada. */
+    private volatile Seat conceder;
+    private volatile boolean recorded;
     /** Início da partida em andamento para as métricas; 0 quando já foi contada como encerrada. */
     private volatile long startedAt;
     /** Quando a sala ou partida foi criada e quando começou a partida atual (para a área de admin). */
@@ -234,11 +237,11 @@ final class Session {
     // ---------- Partida ----------
 
     synchronized void start() {
-        recordAbandoned();
+        recordAbandoned(null);
         stop();
         matchId = UUID.randomUUID().toString();
         events.reset(); stateVersion.set(0);
-        matchPhase = "playing"; gameNumber = 1; abandoned = false;
+        matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null; recorded = false;
         gameDurations.clear();
         HostedMatch m = new HostedMatch();
         MatchLifecycle life = new MatchLifecycle(game -> {
@@ -294,13 +297,43 @@ final class Session {
         return config.commander() ? RegisteredPlayer.forCommander(deck) : new RegisteredPlayer(deck);
     }
 
-    /** Conta como abandonada a partida que ainda não terminou (fechada, saída ou trocada por outra). */
-    synchronized void recordAbandoned() {
+    /**
+     * Conta como abandonada a partida que ainda não terminou (fechada, saída ou trocada por outra) e grava a linha do
+     * histórico: {@code quitter} saiu e concede; sem ele, contra a IA vale quem já tinha desistido, senão é queda.
+     */
+    synchronized void recordAbandoned(Seat quitter) {
         // Não usa matchOver(): sair no meio também marca a série como encerrada, mas ela não foi concluída.
         HostedMatch m = match;
         boolean finished = m != null && m.getMatch() != null && m.getMatch().isMatchOver();
         if (startedAt > 0 && !finished) Metrics.matchEnded(config.format(), room, "abandonada", startedAt);
         startedAt = 0;
+        recordUnfinished(quitter != null ? (othersGone(quitter) ? null : quitter) : room ? null : conceder);
+    }
+
+    /** Numa sala, todos os outros já caíram ou saíram: quem sai agora não está desistindo contra ninguém. */
+    private boolean othersGone(Seat seat) {
+        if (!room) return false;
+        for (Seat each : seats) if (each != seat && each.deck != null && !each.conceded && each.channel != null) return false;
+        return true;
+    }
+
+    /** Grava a série que acabou antes da hora, com o jogo em andamento: {@code quitter} concede, sem ele é queda. */
+    private void recordUnfinished(Seat quitter) {
+        HostedMatch m = match;
+        if (recorded || m == null || m.getMatch() == null || m.getMatch().isMatchOver()) return;
+        record(m.getMatch(), quitter == null ? "queda" : "concedida", quitter, m.getGame());
+    }
+
+    /** Uma linha por partida; a que não chegou ao primeiro turno (mulligan, sala recém-começada) não é gravada. */
+    private void record(forge.game.Match fm, String end, Seat quitter, forge.game.Game current) {
+        if (recorded) return;
+        recorded = true;
+        try {
+            JsonObject line = historyJson(fm, end, quitter, current);
+            boolean played = false;
+            for (JsonElement g : line.getAsJsonArray("games")) played |= g.getAsJsonObject().get("turns").getAsInt() > 0;
+            if (played) history.accept(line);
+        } catch (RuntimeException e) { System.err.println("Histórico: resumo da partida falhou: " + e); }
     }
 
     boolean matchOver() {
@@ -314,10 +347,8 @@ final class Session {
         if (gameSince > 0) gameMs = System.currentTimeMillis() - gameSince;
         Metrics.gameFinished(config.format(), room);
         gameDurations.add(gameMs);
-        if (ended.getMatch() != null && ended.getMatch().isMatchOver()) {
-            try { history.accept(historyJson(ended.getMatch())); }
-            catch (RuntimeException e) { System.err.println("Histórico: resumo da partida falhou: " + e); }
-        }
+        if (ended.getMatch() != null && ended.getMatch().isMatchOver()) record(ended.getMatch(), null, null, null);
+        else if (abandoned) recordUnfinished(conceder);
         if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
         sideboardId++;
         for (Seat seat : seats) { seat.sideboardReady = false; seat.approvedDeck = null; }
@@ -329,11 +360,19 @@ final class Session {
      * arrays de cada jogo apontam para {@code players}, na ordem do Forge (humanos antes da IA). O apelido só entra
      * nas salas em rede: contra a IA o humano não digita nome ("Você").
      *
-     * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, winner: índice|null,
+     * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, end, winner: índice|null,
      *  players:[{name?, ai, deck, colors, commander?, wins}],
-     *  games:[{winner: índice|null, turns, ms?, end, result:["win"|"draw"|motivo da derrota do Forge], mull:[n]}]}
+     *  games:[{winner: índice|null, turns, ms?, end, result:["win"|"draw"|"playing"|motivo da derrota do Forge], mull:[n]}]}
      */
-    JsonObject historyJson(forge.game.Match fm) {
+    JsonObject historyJson(forge.game.Match fm) { return historyJson(fm, null, null, null); }
+
+    /**
+     * {@code end}: "concluida" (jogada até o fim), "concedida" (decidida por desistência ou saída) ou "queda" (ninguém
+     * voltou; a série fica sem vencedor). Null deduz do último jogo: concedida quando todos os que perderam desistiram.
+     * {@code quitter} é quem saiu antes de a série acabar: a série vai para o outro (só com dois jogadores). O jogo
+     * {@code current} ainda em andamento entra no fim, com o motivo "Conceded" de quem saiu ou "Interrupted" na queda.
+     */
+    JsonObject historyJson(forge.game.Match fm, String end, Seat quitter, forge.game.Game current) {
         long now = System.currentTimeMillis();
         JsonObject o = new JsonObject();
         o.addProperty("id", matchId);
@@ -344,31 +383,7 @@ final class Session {
         o.addProperty("mode", Metrics.mode(room));
         if (room) o.addProperty("public", publicRoom);
         List<RegisteredPlayer> order = fm.getPlayers();
-        JsonArray players = new JsonArray();
-        int best = -1, bestWins = -1;
-        boolean tie = false;
-        for (int i = 0; i < order.size(); i++) {
-            RegisteredPlayer rp = order.get(i);
-            Seat seat = null;
-            for (Seat each : seats) if (each.registered == rp) seat = each;
-            JsonObject p = new JsonObject();
-            if (room && seat != null) p.addProperty("name", seat.name);
-            p.addProperty("ai", seat == null);
-            Deck deck = seat != null && seat.deck != null ? seat.deck : rp.getDeck();
-            p.addProperty("deck", deck.getName());
-            p.addProperty("colors", colors(deck));
-            if (config.commander()) {
-                List<String> commanders = new ArrayList<>();
-                for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getName());
-                if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
-            }
-            int wins = fm.getGamesWonBy(rp.getPlayer());
-            p.addProperty("wins", wins);
-            if (wins > bestWins) { best = i; bestWins = wins; tie = false; } else if (wins == bestWins) tie = true;
-            players.add(p);
-        }
-        if (bestWins > 0 && !tie) o.addProperty("winner", best); else o.add("winner", com.google.gson.JsonNull.INSTANCE);
-        o.add("players", players);
+        int quit = quitter == null ? -1 : order.indexOf(quitter.registered);
         JsonArray games = new JsonArray();
         int n = 0;
         for (forge.game.GameOutcome outcome : fm.getOutcomes()) {
@@ -390,6 +405,64 @@ final class Session {
             games.add(g);
             n++;
         }
+        // O jogo interrompido: quem saiu concede (com dois jogadores, o outro vence); na queda, ninguém vence.
+        int unfinishedWinner = -1;
+        if (current != null && !current.isGameOver() && current.getMatch() == fm) {
+            unfinishedWinner = quit >= 0 && order.size() == 2 ? 1 - quit : -1;
+            JsonObject g = new JsonObject();
+            if (unfinishedWinner >= 0) g.addProperty("winner", unfinishedWinner); else g.add("winner", com.google.gson.JsonNull.INSTANCE);
+            g.addProperty("turns", current.getPhaseHandler().getTurn());
+            if (gameSince > 0) g.addProperty("ms", now - gameSince);
+            g.addProperty("end", quit >= 0 ? "Conceded" : "Interrupted");
+            JsonArray result = new JsonArray(), mull = new JsonArray();
+            for (int i = 0; i < order.size(); i++) {
+                forge.game.player.Player p = null;
+                for (var each : current.getRegisteredPlayers()) if (each.getRegisteredPlayer() == order.get(i)) p = each;
+                var po = p == null ? null : p.getOutcome();
+                result.add(i == quit ? "Conceded" : i == unfinishedWinner ? "win"
+                    : p != null && p.hasLost() && po != null && po.lossState != null ? po.lossState.name() : "playing");
+                mull.add(p == null ? 0 : p.getStats().getMulliganCount());
+            }
+            g.add("result", result); g.add("mull", mull);
+            games.add(g);
+        }
+        if (end == null) {
+            // Decidida por desistência quando todos os que perderam o último jogo desistiram.
+            boolean conceded = false, other = false;
+            if (!games.isEmpty()) for (JsonElement r : games.get(games.size() - 1).getAsJsonObject().getAsJsonArray("result")) {
+                String why = r.getAsString();
+                if ("Conceded".equals(why)) conceded = true; else if (!"win".equals(why) && !"draw".equals(why)) other = true;
+            }
+            end = conceded && !other ? "concedida" : "concluida";
+        }
+        o.addProperty("end", end);
+        JsonArray players = new JsonArray();
+        int best = -1, bestWins = -1;
+        boolean tie = false;
+        for (int i = 0; i < order.size(); i++) {
+            RegisteredPlayer rp = order.get(i);
+            Seat seat = null;
+            for (Seat each : seats) if (each.registered == rp) seat = each;
+            JsonObject p = new JsonObject();
+            if (room && seat != null) p.addProperty("name", seat.name);
+            p.addProperty("ai", seat == null);
+            Deck deck = seat != null && seat.deck != null ? seat.deck : rp.getDeck();
+            p.addProperty("deck", deck.getName());
+            p.addProperty("colors", colors(deck));
+            if (config.commander()) {
+                List<String> commanders = new ArrayList<>();
+                for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getName());
+                if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
+            }
+            int wins = fm.getGamesWonBy(rp.getPlayer()) + (i == unfinishedWinner ? 1 : 0);
+            p.addProperty("wins", wins);
+            if (wins > bestWins) { best = i; bestWins = wins; tie = false; } else if (wins == bestWins) tie = true;
+            players.add(p);
+        }
+        // Quem sai entrega a série a quem ficou; na queda, ela fica sem vencedor.
+        int winner = "queda".equals(end) ? -1 : quit >= 0 && order.size() == 2 ? 1 - quit : bestWins > 0 && !tie ? best : -1;
+        if (winner >= 0) o.addProperty("winner", winner); else o.add("winner", com.google.gson.JsonNull.INSTANCE);
+        o.add("players", players);
         o.add("games", games);
         return o;
     }
@@ -477,6 +550,12 @@ final class Session {
     /** Explicit departure ends an unfinished series; a completed result remains intact. */
     synchronized void abandon(Seat seat) {
         if (!config.commander() && !matchOver()) {
+            // Com o jogo em andamento, a linha sai quando a desistência terminar o jogo (veja ended).
+            HostedMatch m = match;
+            boolean playing = m != null && m.getGame() != null && !m.getGame().isGameOver();
+            if (othersGone(seat)) recordUnfinished(null);
+            else if (!playing) recordUnfinished(seat);
+            if (conceder == null) conceder = seat;
             abandoned = true;
             matchPhase = "complete";
             markDirty();
@@ -486,7 +565,8 @@ final class Session {
 
     /** Concede o jogo atual; entre jogos, encerra a partida sem inventar vitórias. */
     synchronized void concede(Seat seat) {
-        if ("sideboarding".equals(matchPhase)) { abandoned = true; matchPhase = "complete"; markDirty(); }
+        if (conceder == null && !matchOver()) conceder = seat;
+        if ("sideboarding".equals(matchPhase)) { recordUnfinished(seat); abandoned = true; matchPhase = "complete"; markDirty(); }
         HostedMatch current = match;
         if (current == null || current.getGame() == null || gameOver() || seat.me == null) return;
         lifecycle.requestConcede(current.getGame(), seat.me.getId());
@@ -1608,7 +1688,7 @@ final class Session {
         volatile long saidAt;
         /** Desistiu deste jogo (no Commander com vários jogadores, a mesa tira o assento de vista). */
         volatile boolean conceded;
-        private volatile RegisteredPlayer registered;
+        volatile RegisteredPlayer registered;
         private volatile Deck approvedDeck;
         private volatile boolean sideboardReady;
         private volatile long sentEventCursor;

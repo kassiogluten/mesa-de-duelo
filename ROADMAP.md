@@ -572,15 +572,16 @@ O histórico de partidas da área de admin só grava a série que termina de ver
 - Quem sai da sala no meio, fecha a aba e não volta no prazo de reconexão, ou abandona a partida contra a IA, some do histórico: a partida só vira o contador "abandonada" nas métricas, sem jogadores, decks nem vencedor.
 - Na sala em rede, sair já conta como conceder o jogo atual, e o oponente vê a partida encerrada; mas a série não chega a ser concluída, então nada é gravado.
 - Com isso, as estatísticas por deck e por jogador contam só quem jogou até o fim, e quem costuma desistir de partidas perdidas não aparece.
+- O botão "Desistir e voltar ao início" passa pelo mesmo caminho: numa partida de 1 jogo, ou no jogo que decide a série, ele encerra a série e a linha é gravada (motivo "desistência"); numa melhor de 3 antes do jogo decisivo, ou entre jogos, nada é gravado.
 
 Alternativas (recomendado: A + B):
 
-- [ ] **A. Gravar como concessão**: ao encerrar uma partida abandonada, gravar a linha do histórico com os jogos já disputados, o jogo atual como derrota de quem saiu (motivo "concedeu") e a vitória da série para quem ficou.
-- [ ] **B. Marcar o jeito que acabou**: um campo novo na linha (concluída, concedida, abandonada por queda) para filtrar na área de admin e não misturar com as partidas jogadas até o fim.
-- [ ] **C. Abandono antes do primeiro turno**: não gravar nada quando ninguém chegou a jogar (mulligan, sala que nem começou), para não encher o histórico.
-- [ ] **D. Contra a IA**: gravar também as partidas abandonadas contra a IA, ou deixar só as salas em rede.
+- [x] **A. Gravar como concessão**: ao encerrar uma partida abandonada, gravar a linha do histórico com os jogos já disputados, o jogo atual como derrota de quem saiu (motivo "concedeu") e a vitória da série para quem ficou.
+- [x] **B. Marcar o jeito que acabou**: um campo novo na linha (concluída, concedida, abandonada por queda) para filtrar na área de admin e não misturar com as partidas jogadas até o fim.
+- [x] **C. Abandono antes do primeiro turno**: não gravar nada quando ninguém chegou a jogar (mulligan, sala que nem começou), para não encher o histórico.
+- [x] **D. Contra a IA**: gravar também as partidas abandonadas contra a IA, ou deixar só as salas em rede.
 
-A decidir antes de começar: se a queda sem volta conta como concessão de quem caiu (e se for todo mundo, quem perde); em Commander, quando um jogador sai e os outros continuam, se a saída dele já entra no histórico ou só no fim da partida.
+Decidido em 28/10/2026 e feito: a queda sem volta (ninguém voltou no prazo, ou quem ficou sai depois que o outro caiu) é gravada como "queda", com o jogo interrompido e sem vencedor da série; as abandonadas contra a IA também são gravadas; a partida que não chegou ao turno 1 não é gravada. Em Commander, a saída de um jogador entra só no fim da partida, como já acontecia. Na área de admin, a seção virou "Histórico", com selo "concedida" ou "queda" em cada linha e o filtro "Fim" (os totais seguem o filtro).
 
 ## 38. Mostrar a versão durante a partida
 
