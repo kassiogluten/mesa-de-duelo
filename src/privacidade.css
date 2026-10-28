@@ -1,0 +1,13 @@
+/* Política de privacidade (privacidade.html): texto corrido, com a mesma moldura das Novidades em imagens. */
+.priv { max-width: 820px; }
+.priv section { scroll-margin-top: 16px; }
+.priv h2 { margin: 36px 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); font: 700 22px var(--display); color: var(--gold); }
+.priv p, .priv li { color: #c9d0de; font-size: 15px; line-height: 1.65; }
+.priv p { margin: 0 0 12px; }
+.priv ul { margin: 0 0 12px; padding-left: 22px; }
+.priv li { margin-bottom: 6px; }
+.priv strong { color: var(--ink); font-weight: 600; }
+.priv a { color: var(--gold-light); text-underline-offset: 2px; }
+.priv-resumo { margin: 20px 0 8px; padding: 18px 20px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.priv-resumo ul { margin: 0; padding-left: 20px; }
+.priv-resumo li:last-child { margin-bottom: 0; }

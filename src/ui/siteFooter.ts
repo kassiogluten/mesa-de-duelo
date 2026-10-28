@@ -7,7 +7,7 @@ const ext = (href: string, text: string) => `<a href="${href}" target="_blank" r
 
 /**
  * Rodapé da tela inicial: créditos de quem faz o jogo funcionar, o aviso da Política de Conteúdo de Fãs da Wizards
- * (texto pedido pela política, traduzido) e o contato.
+ * (texto pedido pela política, traduzido), o contato e a política de privacidade.
  */
 export function siteFooterHTML() {
   return `<footer class="site-footer">
@@ -17,6 +17,6 @@ export function siteFooterHTML() {
     <p class="site-legal">Mesa de Duelo é conteúdo de fã não oficial, gratuito, permitido pela ${ext('https://company.wizards.com/pt-br/legal/fancontentpolicy', 'Política de Conteúdo de Fãs')}.
       Não é aprovado nem endossado pela Wizards of the Coast e não tem nenhum vínculo com ela. Partes dos materiais usados são propriedade da Wizards of the Coast.
       Magic: The Gathering e seus logotipos são marcas da Wizards of the Coast LLC. ©Wizards of the Coast LLC.</p>
-    <p class="site-contact">Contato: ${ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`)}</p>
+    <p class="site-contact">Contato: ${ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`)} · <a href="/privacidade.html">Política de privacidade</a></p>
   </footer>`;
 }
