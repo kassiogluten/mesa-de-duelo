@@ -7,6 +7,9 @@
 .game-menu-divider { height: 1px; margin: 4px 12px; background: var(--line); }
 .game-menu-meta { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; color: var(--muted); font: 500 12px var(--body); }
 .game-menu-meta:not(:has(> :not([hidden]))) { display: none; }
+/* Versão da mesa no fim do menu: discreta, para prints e relatos. Ao tocar, mostra regras e motor da ponte. */
+.forge .game-menu .game-menu-version { align-self: center; margin-top: 2px; padding: 6px 12px; border: 0; border-radius: 6px; background: none; color: var(--muted); font: 500 11px var(--body); letter-spacing: .02em; cursor: pointer; font-variant-numeric: tabular-nums; }
+.forge .game-menu .game-menu-version:hover { color: var(--ink); }
 .game-menu-meta .room-tag, .game-menu-meta .series-score { padding: 0; background: none; border: 0; }
 
 .forge .game-options-overlay { z-index: 45; padding: 20px; background: #060b12b8; animation: none; }

@@ -582,7 +582,7 @@ Alternativas (recomendado: A + B):
 
 A decidir antes de começar: se a queda sem volta conta como concessão de quem caiu (e se for todo mundo, quem perde); em Commander, quando um jogador sai e os outros continuam, se a saída dele já entra no histórico ou só no fim da partida.
 
-## 38. Mostrar a versão durante a partida
+## 38. Mostrar a versão durante a partida ✅
 
 Hoje a versão da mesa (a do topo do `CHANGELOG.md`) só aparece no painel Novidades da tela inicial. Durante a partida não há onde ver, e isso atrapalha quando alguém manda um print ou relata um erro: não dá para saber se a pessoa está numa versão antiga guardada no navegador ou no app instalado. Levantamento feito em 27/10/2026:
 
@@ -591,10 +591,10 @@ Hoje a versão da mesa (a do topo do `CHANGELOG.md`) só aparece no painel Novid
 
 Alternativas para mostrar (recomendado: A + D):
 
-- [ ] **A. Rodapé do menu**: uma linha pequena e apagada no fim do menu da partida ("Mesa de Duelo 0.54.1"), abaixo de "Desistir e voltar ao início". Só vê quem abre o menu.
+- [x] **A. Rodapé do menu**: uma linha pequena e apagada no fim do menu da partida ("Mesa de Duelo 0.54.1"), abaixo de "Desistir e voltar ao início". Só vê quem abre o menu.
 - [ ] **B. Rodapé de Opções**: a mesma linha no fim da janela de Opções, que é onde se procura esse tipo de coisa num jogo.
 - [ ] **C. Escondido**: só aparece com um toque longo (ou passando o mouse) no botão do menu, como dica.
-- [ ] **D. No relato e no "Copiar relatório"**: incluir a versão da mesa junto das versões de regras e motor, para o admin ver sem depender do print.
-- [ ] **E. Versões da ponte junto**: ao tocar na linha da versão, mostrar também regras e motor (útil para teste, sem pesar para o jogador).
+- [x] **D. No relato e no "Copiar relatório"**: incluir a versão da mesa junto das versões de regras e motor, para o admin ver sem depender do print.
+- [x] **E. Versões da ponte junto**: ao tocar na linha da versão, mostrar também regras e motor (útil para teste, sem pesar para o jogador).
 
-A decidir antes de começar: o texto da linha (só o número ou com o nome da mesa); se avisa quando a mesa e o servidor estão em versões diferentes (por exemplo, "Há uma versão nova, recarregue a página").
+Decidido em 28/10/2026: A + D + E, com o texto "Mesa de Duelo X.Y.Z". D já estava pronto (o relato leva `app.version` e o "Copiar relatório" tem a linha "versão da mesa"). O aviso de versão nova já existe: é o banner "Nova versão do jogo" do app (`src/ui/pwa.ts`), que aparece também durante a partida.

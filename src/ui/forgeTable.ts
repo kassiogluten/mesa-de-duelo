@@ -150,6 +150,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
       <button class="btn" data-ui="exit">Desistir e voltar ao início</button>
+      <button type="button" class="game-menu-version" data-ui="version" aria-pressed="false" title="Toque para ver as versões das regras e do motor">Mesa de Duelo ${esc(VERSION)}</button>
     </nav>
     <div class="overlay game-options-overlay" id="fSettings" hidden>
       <section class="game-options" role="dialog" aria-modal="true" aria-labelledby="fSettingsTitle">
@@ -412,6 +413,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   function setMenu(open: boolean, restore = false) {
     $('#fMenu').hidden = !open;
+    // Toda vez que o menu abre, a linha do rodapé volta a mostrar a versão da mesa.
+    const version = $('#fMenu').querySelector<HTMLElement>('[data-ui="version"]');
+    if (open && version) { version.setAttribute('aria-pressed', 'false'); version.textContent = `Mesa de Duelo ${VERSION}`; }
     const trigger = root.querySelector<HTMLElement>('[data-ui="menu"]')!;
     trigger.setAttribute('aria-expanded', String(open));
     if (open) $('#fMenu').querySelector<HTMLElement>('button:not([hidden])')?.focus({ preventScroll: true });
@@ -2245,6 +2249,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (ui === 'menu') { setMenu($('#fMenu').hidden); return; }
+    if (ui === 'version') {
+      // A versão da mesa vem do topo das Novidades; ao tocar, alterna para as versões que a ponte informou.
+      const button = t.closest<HTMLElement>('[data-ui="version"]')!;
+      const bridge = button.getAttribute('aria-pressed') !== 'true';
+      const s = client?.state;
+      button.setAttribute('aria-pressed', String(bridge));
+      button.textContent = bridge ? `Regras ${s?.rulesVersion ?? '?'} · Motor ${s?.engineVersion ?? '?'}` : `Mesa de Duelo ${VERSION}`;
+      return;
+    }
     if (ui === 'log') { setErrors(false); setLog($('#fLogDrawer').hidden, true); return; }
     if (ui === 'errors') { setErrors($('#fErrorsDrawer').hidden, true); return; }
     if (ui === 'feedback') { setMenu(false); opts.onFeedback?.({ kind: 'sugestao' }); return; }
