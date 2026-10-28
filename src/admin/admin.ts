@@ -20,7 +20,7 @@ interface Item {
 type Stored = Record<string, any>;
 
 const STATUS: Record<Status, string> = { novo: 'Novo', visto: 'Visto', issue: 'Virou issue', resolvido: 'Resolvido', descartado: 'Descartado' };
-const FORMATS: Record<string, string> = { commander: 'Commander', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
+const FORMATS: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
 const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/replay.html', 'Repetição de partida', 'Abre um relato ou o arquivo de "Baixar gravação" e repete a partida na mesa, quadro a quadro.'],
   ['/tests/fixtures/effects-lab.html', 'Laboratório de efeitos', 'Monta o campo e dispara dano, movimento, efeitos contínuos e moer, sem a ponte.'],

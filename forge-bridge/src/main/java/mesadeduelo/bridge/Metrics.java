@@ -24,7 +24,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
  */
 final class Metrics {
     static final PrometheusMeterRegistry REGISTRY = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-    static final String[] FORMATS = {"free", "pauper", "sacola50", "commander"};
+    static final String[] FORMATS = {"free", "standard", "pauper", "sacola50", "commander"};
     static final String[] MODES = {"ia", "rede"};
 
     static {

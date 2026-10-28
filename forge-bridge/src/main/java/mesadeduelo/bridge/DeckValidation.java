@@ -43,7 +43,7 @@ final class DeckValidation {
     }
 
     static Result validate(JsonElement payload, String format) {
-        if (!Set.of("free", "pauper", "sacola50", "commander").contains(format)) throw new IllegalArgumentException("Formato não suportado.");
+        if (!Set.of("free", "standard", "pauper", "sacola50", "commander").contains(format)) throw new IllegalArgumentException("Formato não suportado.");
         JsonArray issues = new JsonArray();
         Deck deck = new Deck("Deck");
         if (payload != null && payload.isJsonPrimitive() && payload.getAsJsonPrimitive().isString()) {
@@ -114,11 +114,11 @@ final class DeckValidation {
     }
 
     /** Nome que o jogador vê nas mensagens de cada formato de 60 cartas. */
-    private static String formatLabel(String format) { return "sacola50".equals(format) ? "Sacola 50" : "Pauper"; }
+    private static String formatLabel(String format) { return "sacola50".equals(format) ? "Sacola 50" : "standard".equals(format) ? "Standard" : "Pauper"; }
 
     private static void checkRules(Deck deck, String format, JsonArray issues) {
         int main = deck.getMain().countAll(), side = deck.getOrCreate(DeckSection.Sideboard).countAll();
-        boolean constructed = "pauper".equals(format) || "sacola50".equals(format);
+        boolean constructed = "standard".equals(format) || "pauper".equals(format) || "sacola50".equals(format);
         if (main < (constructed ? 60 : 1))
             issue(issues, "main-too-small", constructed ? formatLabel(format) + " exige pelo menos 60 cartas no deck principal." : "Adicione pelo menos uma carta ao deck.", null, "main");
         if ("commander".equals(format)) { checkCommander(deck, issues); return; }
@@ -128,8 +128,9 @@ final class DeckValidation {
         boolean pauper = "pauper".equals(format);
         String label = formatLabel(format);
         if (side > 15) issue(issues, "sideboard-too-large", "O sideboard pode ter até 15 cartas.", null, "sideboard");
-        // Sacola 50 usa as cartas e as banidas do Legacy; o limite de preço é combinado entre os jogadores, sem checagem aqui.
-        GameFormat rules = pauper ? FModel.getFormats().getPauper() : FModel.getFormats().getLegacy();
+        // Standard usa as coleções e as banidas do formato do Forge (res/formats/Sanctioned/Standard.txt). Sacola 50 usa as
+        // do Legacy; o limite de preço é combinado entre os jogadores, sem checagem aqui.
+        GameFormat rules = pauper ? FModel.getFormats().getPauper() : "standard".equals(format) ? FModel.getFormats().getStandard() : FModel.getFormats().getLegacy();
         for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Sideboard}) {
             for (var entry : deck.getOrCreate(section)) {
                 PaperCard card = entry.getKey();

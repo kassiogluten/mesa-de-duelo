@@ -14,7 +14,7 @@ export interface FeedbackFormOptions {
   diagnostics?: string;
 }
 
-const FORMATS: Record<string, string> = { commander: 'Commander', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
+const FORMATS: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
 const closeIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
 
 function when(at: number) {
