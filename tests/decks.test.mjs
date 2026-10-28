@@ -176,7 +176,7 @@ test('Pauper ready decks contain 60 main, 15 sideboard and stay separate from le
   const pauper = decks.DEFAULT_DECKS.filter(d => d.format === 'pauper');
   assert.equal(pauper.length, 2);
   for (const deck of pauper) { assert.equal(decks.deckSize(deck), 60); assert.equal(decks.countEntries(deck.sideboard), 15); assert.equal(deck.builtin, true); }
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'free').length, 14);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'free').length, 19);
 });
 
 

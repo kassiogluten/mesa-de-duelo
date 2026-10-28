@@ -21,6 +21,9 @@
       { "img": "0.58.0/prevista.webp", "legenda": "Saw It Coming prevista na prateleira do exílio, de face para cima, com a etiqueta **Prevista** e o custo {1}{U}, pronta para **Jogar**." },
       { "img": "0.58.0/prevista-oponente.webp", "legenda": "No exílio do oponente, a carta prevista continua de costas, só com a etiqueta **Prevista**." }
     ],
+    "Cinco decks do meta do Padrão": [
+      { "img": "0.58.0/decks-meta-padrao.webp", "legenda": "Os cinco decks novos entre os decks prontos: **Lifegain**, **Dimir Reanimator**, **Jeskai Artifacts**, **Azorius Momo** e **Rakdos Lizards**, todos com 60 cartas." }
+    ],
     "Voar e Toque mortífero na borda da carta": [
       { "img": "0.58.0/voar-toque-mortifero.webp", "legenda": "Uma criatura com Voar e Toque mortífero mostra a asa e a caveira verde na borda esquerda da carta." }
     ],
