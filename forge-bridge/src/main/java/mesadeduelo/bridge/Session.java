@@ -1387,6 +1387,9 @@ final class Session {
             o.addProperty("source", sa.getHostCard().getId());
             // Ao conjurar, a carta já saiu da mão: vai junto para a mesa mostrar de onde sai a seta.
             o.add("card", StateJson.card(CardView.get(sa.getHostCard())));
+            // Na escolha de alvos: a habilidade que pede o alvo, o que serve e quantos faltam.
+            JsonObject details = InputContext.targetDetails(in);
+            if (details != null) for (var entry : details.entrySet()) o.add(entry.getKey(), entry.getValue());
             return o;
         } catch (ReflectiveOperationException | RuntimeException e) {
             return null;

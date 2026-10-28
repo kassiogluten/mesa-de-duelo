@@ -10,6 +10,11 @@
       { "img": "0.60.0/leque-revelado.webp", "legenda": "Com Telepathy na mesa, o leque do oponente fica de face para cima ao lado do retrato, com o selo **Mão revelada**. Toque numa carta para ampliar." },
       { "img": "0.60.0/selo-commander.webp", "legenda": "No Commander, o número de cartas na mão de Ana ganha um olho e a etiqueta **Revelada**." },
       { "img": "0.60.0/galeria-mao.webp", "legenda": "Tocando no selo, abre a galeria com a mão inteira de Diego, só para ver." }
+    ],
+    "Carta de origem na escolha de alvos": [
+      { "img": "0.60.0/gatilho-no-campo.webp", "legenda": "O gatilho do Chupacabra Voraz pede alvo: a carta aparece ao lado da caixa de ação, com o gatilho em destaque e **Falta 1 alvo**." },
+      { "img": "0.60.0/alvo-marcado.webp", "legenda": "Com o alvo escolhido, a caixa diz **Alvo marcado** e mostra qual foi: Ursos Cinzentos." },
+      { "img": "0.60.0/tela-estreita.webp", "legenda": "No celular, a carta do Feiticeiro Pródigo fica pequena dentro da caixa, com a habilidade e o que falta, sem cobrir as criaturas que podem ser alvo." }
     ]
   },
   "0.59.0": {

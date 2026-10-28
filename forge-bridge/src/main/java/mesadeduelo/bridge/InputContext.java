@@ -24,6 +24,8 @@ import forge.gamemodes.match.input.InputPayMana;
 import forge.gamemodes.match.input.InputPayManaOfCostPayment;
 import forge.gamemodes.match.input.InputSelectEntitiesFromList;
 import forge.gamemodes.match.input.InputSelectManyBase;
+import forge.gamemodes.match.input.InputSelectTargets;
+import forge.game.spellability.TargetRestrictions;
 import forge.gamemodes.match.input.MassSelectMode;
 
 /** Typed context for the pinned Forge inputs whose public API omits their selection state. */
@@ -59,6 +61,8 @@ final class InputContext {
     private static final Field PAY_ABILITY = field(InputPayMana.class, "saPaidFor");
     private static final Field PAY_EFFECT = field(InputPayMana.class, "effect");
     private static final Field PAY_LIFE = field(InputPayMana.class, "phyLifeToLose");
+    private static final Field TARGETS_ABILITY = field(InputSelectTargets.class, "sa");
+    private static final Field TARGETS_NUM = field(InputSelectTargets.class, "numTargets");
 
     private static Field field(Class<?> type, String name) {
         try { Field field = type.getDeclaredField(name); field.setAccessible(true); return field; }
@@ -86,6 +90,46 @@ final class InputContext {
         result.addProperty("player", player.getId());
         result.addProperty("pending", pending);
         return result;
+    }
+
+    /**
+     * Escolha de alvos antes de ir para a pilha: o que pede o alvo ({@code kind}: "spell", "ability" ou "trigger"),
+     * o texto da habilidade como o Forge escreve (já no idioma da mesa, com o nome da carta), quantos alvos este
+     * passo pede ({@code min}/{@code max}) e quantos já foram marcados nele ({@code count}), e o que serve como alvo
+     * ({@code valid}, na sintaxe do Forge, como "Creature.OppCtrl"; {@code zones} só fora do campo de batalha).
+     * Para mágicas o texto fica de fora: a carta inteira é a mágica.
+     */
+    static JsonObject targetDetails(Object input) {
+        if (!(input instanceof InputSelectTargets)) return null;
+        SpellAbility sa = (SpellAbility) value(TARGETS_ABILITY, input);
+        if (sa == null) return null;
+        SpellAbility root = sa.getRootAbility();
+        String kind = root.isSpell() ? "spell" : root.isTrigger() ? "trigger" : "ability";
+        JsonObject result = new JsonObject();
+        result.addProperty("kind", kind);
+        String text = kind.equals("spell") ? "" : abilityText(root);
+        if (!text.isEmpty()) result.addProperty("ability", text);
+        Integer fixed = (Integer) value(TARGETS_NUM, input);
+        result.addProperty("min", fixed != null ? fixed : sa.getMinTargets());
+        result.addProperty("max", fixed != null ? fixed : sa.getMaxTargets());
+        result.addProperty("count", sa.getTargets().size());
+        TargetRestrictions tgt = sa.getTargetRestrictions();
+        if (tgt != null) {
+            JsonArray valid = new JsonArray();
+            for (String v : tgt.getValidTgts()) valid.add(v);
+            if (!valid.isEmpty()) result.add("valid", valid);
+            JsonArray zones = new JsonArray();
+            for (ZoneType zone : tgt.getZone()) if (zone != ZoneType.Battlefield) zones.add(zone.name());
+            if (!zones.isEmpty()) result.add("zones", zones);
+        }
+        return result;
+    }
+
+    /** Gatilho: a descrição do gatilho inteira ("Quando ... entrar, destrua ..."); ativada: custo e efeito. */
+    static String abilityText(SpellAbility root) {
+        String text = root.isTrigger() ? root.getTrigger().toString() : "";
+        if (text.isBlank()) text = root.toString();
+        return text.replace("(Targeting ERROR)", "").replaceAll("\\s+", " ").trim();
     }
 
     static JsonObject suspendCast(Object input) {
