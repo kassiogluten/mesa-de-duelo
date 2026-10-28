@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.63.0] - 2026-10-28
+
+### Novo
+
+- **Política de privacidade.** Uma página nova explica, em português simples, quais dados o jogo usa, onde eles ficam, por quanto tempo e como pedir para ver ou apagar. O link fica no rodapé da tela inicial, ao lado do contato.
+
 ## [0.62.0] - 2026-10-28
 
 ### Mudou

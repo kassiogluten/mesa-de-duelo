@@ -1,4 +1,10 @@
 {
+  "0.63.0": {
+    "Política de privacidade": [
+      { "img": "0.63.0/link-no-rodape.webp", "legenda": "No rodapé da tela inicial, o link **Política de privacidade** fica ao lado do contato." },
+      { "img": "0.63.0/pagina-de-privacidade.webp", "legenda": "O começo da página: a data da última atualização e um resumo do que o jogo faz (e não faz) com os seus dados." }
+    ]
+  },
   "0.61.2": {
     "Carta que pede a decisão sempre à vista": [
       { "img": "0.61.2/carta-que-pede.webp", "legenda": "O Saqueador Saco-de-carne pede uma criatura para sacrificar: ele aparece inteiro ao lado da caixa de ação, mesmo estando no campo e sendo uma das opções." },
