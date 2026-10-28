@@ -890,6 +890,7 @@ final class Session {
                 }
                 JsonArray rows = optionsJson(options, null);
                 if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
+                else LibraryChoice.describe(q, String.valueOf(a[0]), options);
                 q.add("options", rows);
             }
             case confirm -> {

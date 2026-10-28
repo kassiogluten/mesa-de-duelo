@@ -1,4 +1,12 @@
 {
+  "0.60.0": {
+    "Vidência com as cartas inteiras": [
+      { "img": "0.60.0/videncia-escolha.webp", "legenda": "Vidência 3: as cartas na ordem do grimório, com **Raio** no topo. Counterspell vai para o **Fundo**, e a frase resume: 2 ficam no topo, 1 vai para o fundo." },
+      { "img": "0.60.0/videncia-ordem.webp", "legenda": "Com mais de uma no topo, a tela seguinte mostra a ordem em que elas vão ficar. As setas trocam a carta de lugar; aqui Counterspell passou para o topo." },
+      { "img": "0.60.0/vigilancia.webp", "legenda": "A vigilância usa a mesma tela, com **Cemitério** no lugar de Fundo." },
+      { "img": "0.60.0/videncia-celular.webp", "legenda": "Vidência 5 no celular deitado: as cartas encolhem, e os botões de cada carta e o **Confirmar** continuam à vista." }
+    ]
+  },
   "0.59.0": {
     "Vida prevista ao escolher os bloqueadores": [
       { "img": "0.59.0/caixa-bloqueio.webp", "legenda": "Com um bloqueador marcado, a caixa de ação diz com quanto você sai do combate: **12 de vida**." },

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.60.0] - 2026-10-28
+
+### Novo
+
+- **Vidência com as cartas inteiras.** Na vidência de duas ou mais cartas, as cartas aparecem lado a lado, inteiras (na imagem ou em "Arte e texto", conforme a sua opção), na ordem do grimório: a da esquerda é a do topo, marcada com **Topo**. Embaixo de cada uma, escolha **Topo** ou **Fundo**, e uma frase resume a escolha ("2 ficam no topo, 1 vai para o fundo"). Tocar na carta abre o inspetor, com o texto em português. Se ficar mais de uma no topo, a tela seguinte mostra as cartas na ordem em que vão ficar, com setas para trocar a ordem antes de confirmar. A vigilância usa a mesma tela, com **Cemitério** no lugar de **Fundo**. Antes, as cartas apareciam ordenadas pelo custo, e não dava para saber qual era a do topo. No celular deitado, as cartas encolhem para caber com os botões, e com muitas cartas a fileira rola de lado; o **Confirmar** fica sempre à vista. O leitor de tela diz o nome, o tipo, a posição e para onde vai cada carta.
+
 ## [0.59.0] - 2026-10-28
 
 ### Novo

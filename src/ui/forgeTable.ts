@@ -36,6 +36,8 @@ import './combatForecast.css';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { choiceOrder, isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
+import { isLibraryChoice, libraryChoiceHTML, libraryHeading, librarySummary, libraryStart, moveLibraryCard, placeLibraryCard } from './libraryChoice';
+import './libraryChoice.css';
 import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
 import './combatDamage.css';
 import './gameplay.css';
@@ -486,7 +488,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-lib-place', 'data-lib-move', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -1737,10 +1739,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <div class="q-actions"><button class="arena-btn primary" data-q-confirm="true">Zona de comando</button><button class="arena-btn secondary" data-q-confirm="false">${q.zone === 'Exile' ? 'Exílio' : 'Cemitério'}</button></div>`;
   }
   function questionHTML(q: FQuestion) {
-    if (!qState || qState.id !== q.id) qState = { id: q.id, picked: [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
+    if (!qState || qState.id !== q.id) qState = { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
     if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
     if (isTriggerOrder(q)) return triggerOrderHTML(q, triggersFor(q), c => face(c, 'normal'), label);
     if (isPlayMode(q)) return playModeHTML(q, c => face(c, 'normal'), label);
+    if (isLibraryChoice(q)) return libraryChoiceHTML(q, qState.picked, c => face(c, 'normal'), label, c => ptOf(c.name)?.type_line || c.typeLine || '');
     if (isVote(q)) return voteHTML(q, { face: c => face(c, 'normal'), label, rulesText: c => ptOf(c.name)?.text || c.text || '', playerName });
     const opts = q.options ?? [];
     const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
@@ -1805,7 +1808,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
     const picked = isTriggerOrder(q) ? triggerOrder?.id === q.id ? triggerOrder.t.placed : 0 : qState?.id === q.id ? qState.picked.length : 0;
     const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isVote(q) && q.card ? `Votação: ${label(q.card)}` : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
+    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isVote(q) && q.card ? `Votação: ${label(q.card)}` : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
     return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
   }
 
@@ -2022,7 +2025,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (minimizedQuestion !== null && minimizedQuestion !== s.question.id) minimizedQuestion = null;
       const minimized = questionMinimized();
       qEl.classList.toggle('minimized', minimized);
-      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       qEl.hidden = false;
     } else {
       if (!qEl.hidden && !qEl.classList.contains('minimized')) leaveOverlay(qEl);
@@ -2394,6 +2397,26 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const gy = t.closest<HTMLElement>('[data-gy]');
     if (gy && client.state) { groupIds = null; zoneOf = +gy.dataset.gy!; zoneKind = gy.dataset.zone === 'exile' ? 'exile' : gy.dataset.zone === 'command' ? 'command' : gy.dataset.zone === 'damage' ? 'damage' : gy.dataset.zone === 'dungeon' ? 'dungeon' : 'gy'; zoneView(client.state); return; }
 
+    const libPlace = t.closest<HTMLElement>('[data-lib-place]');
+    const libMove = t.closest<HTMLElement>('[data-lib-move]');
+    const libQuestion = client.state?.question;
+    if ((libPlace || libMove) && qState && libQuestion && isLibraryChoice(libQuestion) && qState.id === libQuestion.id) {
+      if (libPlace) {
+        const [to, option] = libPlace.dataset.libPlace!.split(':');
+        if (placeLibraryCard(qState.picked, Number(option), to === 'away')) { render(); announce(librarySummary(libQuestion, qState.picked)); }
+      } else {
+        const [pos, dir] = libMove!.dataset.libMove!.split(':').map(Number);
+        if (moveLibraryCard(qState.picked, pos, dir < 0 ? -1 : 1)) {
+          render();
+          // O foco acompanha a carta na nova posição (ou fica na outra seta, se esta acabou na ponta).
+          const at = pos + dir;
+          (root.querySelector<HTMLButtonElement>(`[data-lib-move="${at}:${dir}"]:not(:disabled)`) ?? root.querySelector<HTMLElement>(`[data-lib-move="${at}:${-dir}"]`))?.focus({ preventScroll: true });
+          const moved = libQuestion.options?.[qState.picked[at]];
+          if (moved && typeof moved !== 'string' && moved.card) announce(`${label(moved.card)}: ${at + 1}ª de ${qState.picked.length}${at === 0 ? ', no topo' : ''}.`);
+        }
+      }
+      return;
+    }
     const opt = t.closest<HTMLElement>('[data-q-opt]');
     if (opt && qState) {
       const q = client.state?.question;

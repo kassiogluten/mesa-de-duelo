@@ -612,15 +612,17 @@ Na declaração de bloqueadores, o jogador precisa somar de cabeça o poder de c
 
 Decidido em 28/10/2026: a conta vem da ponte (`CombatForecast`, com as contas do Forge em `ComputerUtilCombat`: prevenção, proteção, golpe duplo, atropelar, infectar e veneno extra), e vai no estado como `forecast` só na etapa de declarar bloqueadores. Aparece nos dois lugares: selo no retrato de cada jogador atacado, que todos na mesa veem, e uma frase na caixa de ação de quem bloqueia, junto do **Confirmar bloqueios**. "Vida muito baixa" quer dizer 5 ou menos, ou estar a 2 do limite de veneno ou de dano de comandante. Ficou de fora: vida ganha por bloqueadores com vínculo com a vida e gatilhos de combate (como "sempre que atacar"), que o Forge também não prevê.
 
-## 40. Vidência com as cartas inteiras
+## 40. Vidência com as cartas inteiras ✅
 
 Na vidência (scry) de mais de uma carta, a escolha do que vai para o fundo do grimório mostra só o nome de cada carta. Para decidir, o jogador precisa saber o que a carta faz, e acaba tendo que lembrar ou adivinhar. Na vigilância (surveil) com várias cartas, a escolha já mostra cada carta inteira, com os detalhes.
 
-- [ ] Mostrar as cartas da vidência inteiras (imagem ou "Arte e texto", conforme a opção do jogador), do mesmo jeito da vigilância com várias cartas, em vez da lista de nomes.
-- [ ] Tocar na carta abre o inspetor, com o texto em português.
-- [ ] Manter a ordem do topo do grimório visível (qual é a primeira) e a escolha de topo ou fundo de cada carta, inclusive a ordem das que ficam no topo.
-- [ ] Funcionar em tela estreita e com muitas cartas (vidência 3 ou mais), sem cobrir os botões de confirmar.
-- [ ] Leitor de tela: anunciar o nome e o tipo de cada carta, como hoje.
+- [x] Mostrar as cartas da vidência inteiras (imagem ou "Arte e texto", conforme a opção do jogador), do mesmo jeito da vigilância com várias cartas, em vez da lista de nomes.
+- [x] Tocar na carta abre o inspetor, com o texto em português.
+- [x] Manter a ordem do topo do grimório visível (qual é a primeira) e a escolha de topo ou fundo de cada carta, inclusive a ordem das que ficam no topo.
+- [x] Funcionar em tela estreita e com muitas cartas (vidência 3 ou mais), sem cobrir os botões de confirmar.
+- [x] Leitor de tela: anunciar o nome e o tipo de cada carta, como hoje.
+
+Decidido em 28/10/2026: a diferença não estava na ponte. O Forge pergunta a vidência e a vigilância do mesmo jeito (dois passos: o que sai do topo e, se sobrar mais de uma, a ordem das que ficam), e a ponte já mandava as cartas inteiras, na ordem do grimório, nas duas (conferido com um teste no motor); a lista só de nomes descrita acima não se repetiu nem na leitura do código nem na página de teste da mesa. O que atrapalhava estava na mesa: a escolha genérica de cartas ordena as opções por custo de mana e por nome, então a carta do topo podia aparecer em qualquer lugar, sem nada que dissesse qual era a primeira, e o passo da ordem só dava números por toque. Agora a ponte marca as duas perguntas (`purpose: "library"`, com o passo `bottom`, `graveyard` ou `top`), reconhecidas pelas mensagens do próprio Forge, e a mesa tem uma tela própria, usada também pela vigilância para as duas continuarem iguais: cartas na ordem do grimório, com o número da posição e **Topo** na primeira; tocar na carta abre o inspetor, e a escolha fica em dois botões embaixo de cada carta (**Topo** e **Fundo**, ou **Cemitério**), com todas começando no topo e uma frase de resumo. No passo da ordem, a carta da esquerda é a do topo, setas trocam a carta com a vizinha e não há "Manter ordem", porque confirmar sem mexer já mantém. Em tela baixa as cartas encolhem e a seta de direção some; com muitas cartas a fileira rola de lado, e os botões de confirmar ficam presos embaixo. O leitor de tela lê nome, tipo, posição e destino de cada carta, e anuncia o resumo ou a nova posição a cada mudança. Ficou de fora: arrastar as cartas entre topo e fundo, como no Arena, e escolher a ordem das cartas que vão para o fundo (o Forge não pergunta).
 
 ## 41. Testar a mão revelada (Telepathy e afins)
 

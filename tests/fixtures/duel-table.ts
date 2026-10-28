@@ -153,13 +153,33 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     view.render();
   },
   castModes() {
-    const bolt = { id: 302, controller: 10, tapped: false, token: false, name: 'Lightning Bolt', manaCost: '{R}', typeLine: 'Instant', text: 'Lightning Bolt deals 3 damage to any target.' };
+    const bolt = { id: 302, controller: 10, tapped: false, token: false, name: 'Lightning Bolt', manaCost: '{R}', typeLine: 'Instant', text: 'Lightning Bolt deals 3 damage to any target.', power: undefined, toughness: undefined };
     state.question = { id: 42, method: 'getAbilityToPlay', kind: 'choose', purpose: 'play-mode', title: 'Qual habilidade usar?', min: 0, max: 1, card: bolt, options: [
       { kind: 'ability', label: 'Lightning Bolt - Lightning Bolt deals 3 damage to any target. — Custo: {R}', mode: 'cast', spell: true, cost: '{R}', extra: [], description: 'Lightning Bolt deals 3 damage to any target.' },
       { kind: 'ability', label: 'Cycling {2} — Custo: {2}', mode: 'cycling', cost: '{2}', extra: [], description: 'Cycling {2}' },
       { kind: 'ability', label: 'Plot {1}{R} — Custo: {1}{R}', mode: 'plot', cost: '{1}{R}', extra: [], description: 'Plot {1}{R}' },
       { kind: 'ability', label: 'Evoke — Custo: sacrificar', mode: 'evoke', spell: true, cost: '', extra: ['Sacrifice a creature'], description: 'Evoke—Sacrifice a creature' },
     ] };
+    view.render();
+  },
+  /**
+   * Vidência e vigilância de várias cartas, como a ponte manda (o topo do grimório primeiro). "bottom" é a
+   * escolha do fundo (ou do cemitério, na vigilância) e "top" a ordem das que ficam em cima.
+   */
+  library(effect: 'scry' | 'surveil' = 'scry', n = 3, step: 'bottom' | 'top' = 'bottom') {
+    const top = [
+      card(901, 'Lightning Bolt', 10, { creature: false, manaCost: '{R}', typeLine: 'Instant', text: 'Lightning Bolt deals 3 damage to any target.', power: undefined, toughness: undefined }),
+      card(902, 'Counterspell', 10, { creature: false, manaCost: '{U}{U}', typeLine: 'Instant', text: 'Counter target spell.', power: undefined, toughness: undefined }),
+      card(903, 'Forest', 10, { creature: false, land: true, manaCost: '', typeLine: 'Basic Land — Forest', text: '({T}: Add {G}.)', power: undefined, toughness: undefined }),
+      card(904, 'Serra Angel', 10, { manaCost: '{3}{W}{W}', typeLine: 'Creature — Angel', power: 4, toughness: 4, text: 'Flying, vigilance' }),
+      card(905, 'Llanowar Elves', 10, { manaCost: '{G}', typeLine: 'Creature — Elf Druid', power: 1, toughness: 1, text: '{T}: Add {G}.' }),
+    ].slice(0, n);
+    const options = top.map(c => ({ kind: 'card', card: c, label: `${c.name} (${c.id})` }));
+    const title = step === 'top' ? 'Organize as cartas que irão no topo do seu grimório'
+      : effect === 'scry' ? 'Escolha as cartas a serem colocadas no fundo do seu grimório' : 'Escolha as cartas pra colocar no cemitério';
+    const library = step === 'top' ? 'top' : effect === 'scry' ? 'bottom' : 'graveyard';
+    state.question = step === 'top' ? { id: 60 + n, method: 'order', kind: 'order', purpose: 'library', library, title, options }
+      : { id: 70 + n, method: 'order', kind: 'choose', purpose: 'library', library, title, min: 0, max: n, options };
     view.render();
   },
   /** Uma partida curta já jogada, para o histórico (Menu → Registro): turnos, mágicas com o que causaram, combate e gatilhos. */
