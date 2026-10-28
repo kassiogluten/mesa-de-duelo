@@ -450,7 +450,7 @@ final class Session {
             p.addProperty("colors", colors(deck));
             if (config.commander()) {
                 List<String> commanders = new ArrayList<>();
-                for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getName());
+                for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getDisplayName());
                 if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
             }
             int wins = fm.getGamesWonBy(rp.getPlayer()) + (i == unfinishedWinner ? 1 : 0);
@@ -1661,14 +1661,14 @@ final class Session {
 
     static List<String> commanderNames(Deck deck) {
         List<String> names = new ArrayList<>();
-        for (var e : deck.getOrCreate(DeckSection.Commander)) names.add(e.getKey().getName());
+        for (var e : deck.getOrCreate(DeckSection.Commander)) names.add(e.getKey().getDisplayName());
         return names;
     }
 
     /** A carta de capa pedida pelo jogador, se estiver mesmo no deck; senão nenhuma. */
     static String coverOf(Deck deck, String requested) {
         if (requested == null || requested.isBlank()) return null;
-        for (var e : deck.getMain()) if (e.getKey().getName().equals(requested)) return requested;
+        for (var e : deck.getMain()) if (e.getKey().getDisplayName().equals(requested)) return requested;
         return null;
     }
 

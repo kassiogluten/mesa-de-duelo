@@ -54,4 +54,16 @@ public class CommanderDeckTest {
         d.getAsJsonArray("commanders").add(rows("Lathril, Blade of the Elves", 1).get(0)); rejects(d, "commander-construction");
         d = deck("Marwyn, the Nurturer", "Forest", 99); d.add("sideboard", rows("Forest", 1)); rejects(d, "sideboard-not-supported");
     }
+    @Test public void universesWithinCommandersKeepTheirOracleName() throws Exception {
+        // Secret Lair cards reprinted in Universes Within: Forge files them under the Secret Lair name.
+        for (String line : java.nio.file.Files.readAllLines(java.nio.file.Path.of(System.getProperty("forge.dir"), "forge-gui/res/editions/Universes Within.txt"))) {
+            var m = java.util.regex.Pattern.compile("^[0-9]+ [A-Z] (.+?) @.*$").matcher(line);
+            if (!m.matches()) continue;
+            var card = DeckValidation.resolve(m.group(1));
+            assertEquals(m.group(1), card.getDisplayName()); assertNotNull(m.group(1), CommanderLegality.oracleId(card.getDisplayName()));
+        }
+        var r = check(deck("Wernog, Rider's Chaplain", "Plains", 99)); assertTrue(r.json().toString(), r.valid());
+        assertEquals("Wernog, Rider's Chaplain", r.json().getAsJsonObject("deck").getAsJsonArray("commanders").get(0).getAsJsonObject().get("name").getAsString());
+        assertEquals("Wernog, Rider's Chaplain", Session.commanderNames(r.deck()).get(0));
+    }
 }

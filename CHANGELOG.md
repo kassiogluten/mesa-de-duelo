@@ -11,6 +11,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 ### Corrigido
 
 - **Menus do topo na sala de espera.** Esperando jogadores numa sala, Jogar, Meus decks e a marca Mesa de Duelo ficavam apagados, sem dizer por quê. Agora eles funcionam: ao tocar, a mesa pergunta se você quer sair da sala, com **Ficar na sala** em destaque. Se confirmar, você sai da sala e vai para onde tocou.
+- **Comandantes do Universes Within.** Cartas da Secret Lair que ganharam outro nome no Universes Within, como Wernog, Rider's Chaplain, Greymond, Avacyn's Stalwart e Hansk, Slayer Zealot, eram recusadas como comandante (e no deck de Commander) com o aviso de que não eram permitidas. Agora elas valem no Commander e aparecem na mesa com o nome e a imagem certos.
 
 ## [0.67.0] - 2026-10-28
 

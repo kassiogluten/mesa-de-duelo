@@ -23,6 +23,7 @@ import forge.model.FModel;
 /** Server preflight shared by creation, AI, joining, and sideboarding. No partial decks. */
 final class DeckValidation {
     private static final int MAX_ENTRIES = 500, MAX_CARDS = 5000;
+    private static final String UNIVERSES_WITHIN = "UniversesWithin";
     private static final Map<String, String> TRANSLATED_NAMES = translatedNames();
     private static final Set<String> UNIVERSAL_BANS = Set.of("Cleanse", "Crusade", "Imprison",
         "Invoke Prejudice", "Jihad", "Pradesh Gypsies", "Stone-Throwing Devils");
@@ -66,7 +67,7 @@ final class DeckValidation {
     static Result validateForAi(JsonElement payload, String format) {
         Result result = validate(payload, format);
         if (result.valid()) result.deck().getUnplayableAICards().unplayable.forEach((section, cards) -> {
-            for (PaperCard card : cards) issue(result.issues(), "unsupported-ai-card", "A IA ainda não consegue jogar esta carta corretamente. Escolha outra carta para o deck do oponente.", card.getName(), section == DeckSection.Main ? "main" : "sideboard");
+            for (PaperCard card : cards) issue(result.issues(), "unsupported-ai-card", "A IA ainda não consegue jogar esta carta corretamente. Escolha outra carta para o deck do oponente.", card.getDisplayName(), section == DeckSection.Main ? "main" : "sideboard");
         });
         return result;
     }
@@ -109,6 +110,9 @@ final class DeckValidation {
         PaperCard card = db.getCard(TRANSLATED_NAMES.getOrDefault(name.strip().toLowerCase(Locale.ROOT), name));
         if (card == null && name.contains(" // ")) card = db.getCard(name.substring(0, name.indexOf(" // ")));
         if (card == null) return null;
+        // O Forge guarda as cartas do Universes Within com o nome da Secret Lair (Will the Wise), que o Scryfall e a
+        // lista de legalidade não conhecem: quem pediu pelo nome do Oracle (Wernog, Rider's Chaplain) fica com ele.
+        if (UNIVERSES_WITHIN.equals(card.getFunctionalVariant())) return card;
         PaperCard normalized = db.getCard(db.getNormalizedName(card.getName()));
         return normalized == null ? card : normalized;
     }
@@ -136,9 +140,9 @@ final class DeckValidation {
                 PaperCard card = entry.getKey();
                 String where = section == DeckSection.Main ? "main" : "sideboard";
                 if (UNIVERSAL_BANS.contains(card.getName()) || rules.getBannedCardNames().contains(card.getName()))
-                    issue(issues, "banned-card", "Esta carta está banida no " + label + ".", card.getName(), where);
+                    issue(issues, "banned-card", "Esta carta está banida no " + label + ".", card.getDisplayName(), where);
                 else if (card.getRules().isCustom() || (pauper && !PauperLegality.permits(card.getName())) || !rules.getFilterRules().test(card))
-                    issue(issues, "wrong-format", "Esta carta não é permitida no " + label + ".", card.getName(), where);
+                    issue(issues, "wrong-format", "Esta carta não é permitida no " + label + ".", card.getDisplayName(), where);
             }
         }
         Map<String, Integer> counts = poolCounts(deck);
@@ -148,7 +152,7 @@ final class DeckValidation {
             Integer exception = DeckFormat.canHaveSpecificNumberInDeck(card);
             int limit = exception == null ? 4 : exception;
             if (entry.getValue() > limit)
-                issue(issues, "too-many-copies", "O limite é de " + limit + " cópias entre o deck principal e o sideboard.", card.getName(), null);
+                issue(issues, "too-many-copies", "O limite é de " + limit + " cópias entre o deck principal e o sideboard.", card.getDisplayName(), null);
         }
         // Keep Forge's construction checks as a backstop for additional engine restrictions.
         String construction = DeckFormat.Constructed.getDeckConformanceProblem(deck);
@@ -171,9 +175,9 @@ final class DeckValidation {
             var rules = e.getKey().getRules();
             identity |= rules.getColorIdentity().getColor();
             if (e.getValue() != 1 || !DeckFormat.Commander.isLegalCommander(rules) || (commanderCount == 1 && rules.canBeBackground()))
-                issue(issues, "invalid-commander", "Esta carta não pode ocupar esta posição de comandante.", e.getKey().getName(), "commander");
+                issue(issues, "invalid-commander", "Esta carta não pode ocupar esta posição de comandante.", e.getKey().getDisplayName(), "commander");
             if (rules.getAddsWildCardColor() || rules.getDeckRules().iterator().hasNext())
-                issue(issues, "unsupported-commander-choice", "Comandantes com escolhas extras de cor ou regras especiais de construção ainda não são suportados nesta mesa.", e.getKey().getName(), "commander");
+                issue(issues, "unsupported-commander-choice", "Comandantes com escolhas extras de cor ou regras especiais de construção ainda não são suportados nesta mesa.", e.getKey().getDisplayName(), "commander");
         }
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Commander, DeckSection.Sideboard}) {
@@ -182,17 +186,17 @@ final class DeckValidation {
                 PaperCard card = e.getKey();
                 counts.merge(StaticData.instance().getCommonCards().getNormalizedName(card.getName()), e.getValue(), Integer::sum);
                 if (UNIVERSAL_BANS.contains(card.getName()) || FModel.getFormats().get("Commander").getBannedCardNames().contains(card.getName()))
-                    issue(issues, "banned-card", "Esta carta está banida em Commander.", card.getName(), where);
-                else if (card.getRules().isCustom() || !CommanderLegality.permits(card.getName()) || !DeckFormat.Commander.isLegalCard(card))
-                    issue(issues, "wrong-format", "Esta carta não é permitida em Commander.", card.getName(), where);
+                    issue(issues, "banned-card", "Esta carta está banida em Commander.", card.getDisplayName(), where);
+                else if (card.getRules().isCustom() || !CommanderLegality.permits(card.getDisplayName()) || !DeckFormat.Commander.isLegalCard(card))
+                    issue(issues, "wrong-format", "Esta carta não é permitida em Commander.", card.getDisplayName(), where);
                 if (!card.getRules().getColorIdentity().hasNoColorsExcept(identity))
-                    issue(issues, "color-identity", "A identidade de cor desta carta está fora da identidade dos comandantes.", card.getName(), where);
+                    issue(issues, "color-identity", "A identidade de cor desta carta está fora da identidade dos comandantes.", card.getDisplayName(), where);
             }
         }
         for (var e : counts.entrySet()) {
             PaperCard card = resolve(e.getKey());
             if (card != null && e.getValue() > DeckFormat.Commander.getMaxCardCopies(card))
-                issue(issues, "too-many-copies", "Commander permite uma cópia de cada carta, salvo terrenos básicos e exceções do texto Oracle.", card.getName(), null);
+                issue(issues, "too-many-copies", "Commander permite uma cópia de cada carta, salvo terrenos básicos e exceções do texto Oracle.", card.getDisplayName(), null);
         }
         String problem = DeckFormat.Commander.getDeckConformanceProblem(deck);
         if (problem != null) issue(issues, "commander-construction", "Confira os comandantes, a parceria e a construção do deck: " + problem, null, null);
@@ -214,8 +218,8 @@ final class DeckValidation {
     static JsonArray entries(CardPool pool) {
         JsonArray a = new JsonArray();
         for (var e : pool) {
-            JsonObject o = new JsonObject(); o.addProperty("name", e.getKey().getName()); o.addProperty("count", e.getValue());
-            String oracleId = oracleId(e.getKey().getName());
+            JsonObject o = new JsonObject(); o.addProperty("name", e.getKey().getDisplayName()); o.addProperty("count", e.getValue());
+            String oracleId = oracleId(e.getKey().getDisplayName());
             if (oracleId != null) o.addProperty("oracleId", oracleId);
             a.add(o);
         }
