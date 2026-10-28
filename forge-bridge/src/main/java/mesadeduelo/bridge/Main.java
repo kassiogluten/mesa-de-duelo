@@ -88,9 +88,12 @@ public final class Main {
             rooms.history(history::record);
             Admin admin = Admin.fromEnvironment(store, rooms::adminSessions, history);
             server.admin(admin);
+            Accounts accounts = Accounts.fromEnvironment(store.dir().getParent());
+            server.accounts(accounts);
             server.start();
             System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
             System.out.printf("Histórico de partidas em %s%n", history.dir());
+            System.out.println(accounts.enabled() ? "Contas ligadas em /api/conta/ (" + accounts.count() + " em " + accounts.dir() + ")." : "Contas desligadas (defina MESA_GOOGLE_CLIENT_ID).");
             System.out.println(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");
             System.out.printf("Modo %s: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)%n", mode, host, port);
             if (!"127.0.0.1".equals(host)) System.out.println("Aceitando conexões de outras máquinas: partidas em rede liberadas.");

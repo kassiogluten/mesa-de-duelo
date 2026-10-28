@@ -12,6 +12,8 @@ import { MatchRecorder, type RecordingMeta } from './forge/recording';
 import { buildReport, deviceInfo, encodeReport, latestMatch, loadLastMatch, localPreferences, saveLastMatch, setLiveMatch, startFeedbackQueue, type MatchAttachment } from './feedback';
 import { openFeedbackForm } from './ui/feedbackForm';
 import { VERSION } from './ui/changelog';
+import { atualizarConta } from './conta/session';
+import { esconderOneTap, mostrarOneTap } from './conta/google';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -29,6 +31,8 @@ function show(name: keyof typeof screens) {
   for (const [k, sel] of Object.entries(screens)) (document.querySelector(sel) as HTMLElement).hidden = k !== name;
   // A mesa livre usa as mesmas regras de tela da partida (tela cheia, girar o celular).
   document.body.dataset.screen = name === 'free' ? 'game' : name;
+  // One Tap só na tela inicial e em Meus decks: nunca por cima da mesa.
+  if (name === 'lobby' || name === 'decks') void mostrarOneTap(); else esconderOneTap();
 }
 
 let forge: ForgeClient | null = null;
@@ -126,6 +130,7 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
 
 mountRotateGate();
 setupPwa();
+void atualizarConta();
 
 const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
   onExit() { show('lobby'); lobby.refresh(); },
