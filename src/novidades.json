@@ -1,4 +1,11 @@
 {
+  "0.60.0": {
+    "Mão revelada à vista": [
+      { "img": "0.60.0/leque-revelado.webp", "legenda": "Com Telepathy na mesa, o leque do oponente fica de face para cima ao lado do retrato, com o selo **Mão revelada**. Toque numa carta para ampliar." },
+      { "img": "0.60.0/selo-commander.webp", "legenda": "No Commander, o número de cartas na mão de Ana ganha um olho e a etiqueta **Revelada**." },
+      { "img": "0.60.0/galeria-mao.webp", "legenda": "Tocando no selo, abre a galeria com a mão inteira de Diego, só para ver." }
+    ]
+  },
   "0.59.0": {
     "Vida prevista ao escolher os bloqueadores": [
       { "img": "0.59.0/caixa-bloqueio.webp", "legenda": "Com um bloqueador marcado, a caixa de ação diz com quanto você sai do combate: **12 de vida**." },

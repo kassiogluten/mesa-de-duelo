@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.60.0] - 2026-10-28
+
+### Novo
+
+- **Mão revelada à vista.** Com Telepathy, Revelation, Seer's Vision e outras cartas que fazem jogar com a mão revelada, você passa a ver as cartas da mão do oponente. No 1 contra 1, o leque do oponente vira de face para cima no mesmo lugar, com o selo **Mão revelada**; toque numa carta para ampliar no inspetor (ela continua sendo do oponente, só dá para olhar). No Commander, o número de cartas na mão de cada oponente ganha um olho e a etiqueta **Revelada**: tocando nele, abre a galeria com a mão inteira, como a do cemitério. Só vê quem a regra deixa ver (Telepathy mostra a mão dos seus oponentes para todos, mas não a sua), e quando a carta sai do campo a mão volta a ficar escondida. Quem olha a mão uma vez (Peek, Gitaxian Probe) ou escolhe uma carta dela (Thoughtseize, Duress) continua vendo as cartas inteiras na escolha.
+
 ## [0.59.0] - 2026-10-28
 
 ### Novo

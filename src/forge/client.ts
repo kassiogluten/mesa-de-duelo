@@ -171,6 +171,8 @@ export interface FPlayer {
   libraryTop?: FCard;
   handCount: number;
   hand: FCard[];
+  /** Cartas da mão de outro jogador que você pode ver (Telepathy, Revelation...); ausente quando nenhuma. Não dá para jogá-las. */
+  revealedHand?: FCard[];
   battlefield: FCard[];
   graveyard: FCard[];
   exile: FCard[];

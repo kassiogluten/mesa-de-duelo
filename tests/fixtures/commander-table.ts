@@ -18,6 +18,12 @@ view.attach(client as any, []);view.render();
 Object.assign(window, {fixture:{state,client,view,messages,render:()=>view.render(),attack(){state.phase='COMBAT_DECLARE_ATTACKERS';Object.assign(state.input,{priority:false,attacking:{attackers:[102],defenders:[{id:10,kind:'player'},{id:23,kind:'player'},{id:49,kind:'player'}],legalAssignments:[{attacker:102,defenders:[{id:10,kind:'player'},{id:23,kind:'player'},{id:49,kind:'player'}]}]}});view.render();}}});
 
 Object.assign((window as any).fixture, {
+  /** Telepathy de Carla (você): a mão de cada oponente fica revelada; o selo da mão de cada um abre a galeria. */
+  revealedHand(on = true) {
+    const hands = [['Swords to Plowshares','Sol Ring','Command Tower','Rhystic Study','Cyclonic Rift','Smothering Tithe','Arcane Signet'],['Counterspell','Island','Mystic Remora'],[],['Lightning Bolt','Mountain','Blasphemous Act','Chaos Warp','Dockside Extortionist']];
+    state.players.forEach((p:any,seat)=>{ if(p.id===state.you)return; if(!on){delete p.revealedHand;return;} p.revealedHand=hands[seat].map((name,i)=>card(700+seat*10+i,name,p.id,{creature:false,typeLine:'Card',manaCost:''})); p.handCount=hands[seat].length; });
+    view.render();
+  },
   opening() { Object.assign(state.input, {opening:'starting-player',priority:false,selectablePlayers:ids,actionable:[],ok:{label:'',enabled:false},cancel:{label:'',enabled:false}}); view.render(); },
   stress() {
     const names = ['Llanowar Elves','Elvish Mystic','Fyndhorn Elves','Birds of Paradise','Elvish Visionary','Sakura-Tribe Elder','Wood Elves','Reclamation Sage','Eternal Witness','Solemn Simulacrum','Beast Whisperer','Llanowar Visionary','Ghalta, Primal Hunger','Garruk’s Packleader','Terastodon','Acidic Slime','Avenger of Zendikar','Rampaging Baloths','Scavenging Ooze','Tireless Tracker','Courser of Kruphix','Lotus Cobra'];

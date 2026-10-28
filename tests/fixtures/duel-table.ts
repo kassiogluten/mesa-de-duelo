@@ -162,6 +162,26 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     ] };
     view.render();
   },
+  /** Mão revelada (Telepathy): o oponente tem 5 cartas e você vê todas, ou só `shown` delas. */
+  revealedHand(shown = 5) {
+    const opp = state.players[1];
+    const names: [string, Record<string, unknown>][] = [['Counterspell', { creature: false, typeLine: 'Instant', manaCost: '{U}{U}' }], ['Lightning Bolt', { creature: false, typeLine: 'Instant', manaCost: '{R}' }],
+      ['Serra Angel', { typeLine: 'Creature — Angel', manaCost: '{3}{W}{W}', power: 4, toughness: 4 }], ['Llanowar Elves', { manaCost: '{G}', power: 1, toughness: 1 }], ['Island', { creature: false, land: true, typeLine: 'Basic Land — Island', manaCost: '' }]];
+    opp.handCount = 5;
+    opp.revealedHand = names.slice(0, shown).map(([n, extra], i) => card(600 + i, n, 23, extra));
+    if (!shown) delete opp.revealedHand;
+    view.render();
+  },
+  /** Peek / Gitaxian Probe: o Forge mostra a mão como um reveal() (min e max -1), com as cartas inteiras. */
+  peekReveal() {
+    const opp = 23;
+    state.question = { id: 77, method: 'getChoices', kind: 'reveal', title: 'Olhando a mão de Oponente', min: -1, max: -1, options: [
+      { kind: 'card', label: 'Counterspell', card: card(610, 'Counterspell', opp, { creature: false, typeLine: 'Instant', manaCost: '{U}{U}' }) },
+      { kind: 'card', label: 'Serra Angel', card: card(611, 'Serra Angel', opp, { typeLine: 'Creature — Angel', manaCost: '{3}{W}{W}', power: 4, toughness: 4 }) },
+      { kind: 'card', label: 'Island', card: card(612, 'Island', opp, { creature: false, land: true, typeLine: 'Basic Land — Island', manaCost: '' }) },
+    ] };
+    view.render();
+  },
   /** Uma partida curta já jogada, para o histórico (Menu → Registro): turnos, mágicas com o que causaram, combate e gatilhos. */
   history() {
     const me = 10, opp = 23;

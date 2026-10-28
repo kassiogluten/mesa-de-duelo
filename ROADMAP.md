@@ -622,16 +622,18 @@ Na vidência (scry) de mais de uma carta, a escolha do que vai para o fundo do g
 - [ ] Funcionar em tela estreita e com muitas cartas (vidência 3 ou mais), sem cobrir os botões de confirmar.
 - [ ] Leitor de tela: anunciar o nome e o tipo de cada carta, como hoje.
 
-## 41. Testar a mão revelada (Telepathy e afins)
+## 41. Testar a mão revelada (Telepathy e afins) ✅
 
 Cartas como Telepathy, Revelation e Seer's Vision fazem o oponente jogar com a mão revelada, e Gitaxian Probe, Thoughtseize e Duress mostram a mão por um momento. Ainda não foi testado como isso aparece na mesa. Pela leitura do código (28/10/2026), a ponte só manda as cartas da mão para o próprio dono: para os outros vai só a quantidade, então a mão revelada provavelmente não aparece.
 
-- [ ] Testar com Telepathy no campo (os dois lados, contra a IA e em sala em rede) e anotar o que aparece hoje.
-- [ ] Testar também quem revela a mão só uma vez (Gitaxian Probe, Peek) e quem escolhe uma carta da mão do oponente (Thoughtseize, Duress).
-- [ ] Se não aparecer: a ponte manda as cartas da mão para quem o Forge permite ver, e a mesa mostra a mão do oponente de face para cima (sem dar para jogar), com toque para ampliar.
-- [ ] Quando o efeito sai do campo, a mão volta a ficar escondida.
-- [ ] Commander: só para os jogadores que podem ver (Telepathy mostra a mão de todos os oponentes; outras cartas, só a de um).
-- [ ] Incluir no laboratório de efeitos (item 18).
+- [x] Testar com Telepathy no campo (os dois lados, contra a IA e em sala em rede) e anotar o que aparece hoje.
+- [x] Testar também quem revela a mão só uma vez (Gitaxian Probe, Peek) e quem escolhe uma carta da mão do oponente (Thoughtseize, Duress).
+- [x] Se não aparecer: a ponte manda as cartas da mão para quem o Forge permite ver, e a mesa mostra a mão do oponente de face para cima (sem dar para jogar), com toque para ampliar.
+- [x] Quando o efeito sai do campo, a mão volta a ficar escondida.
+- [x] Commander: só para os jogadores que podem ver (Telepathy mostra a mão de todos os oponentes; outras cartas, só a de um).
+- [x] Incluir no laboratório de efeitos (item 18).
+
+Decidido em 28/10/2026: o teste na ponte (`RevealedHandTest`, com Telepathy e Revelation no campo, conferindo o estado que cada jogador recebe) confirmou que hoje não aparecia nada: o Forge já marcava as cartas como visíveis (`MayLookAt` das cartas, lido por `CardView.canBeShownTo`), mas a ponte mandava aos outros só `handCount`. Agora vai à parte, em `revealedHand`, só o que quem recebe pode ver pela regra do Forge (sem lista de nomes de cartas), como o topo do grimório; o espectador vê o que todos os jogadores veem, a mão jogável (`hand`) continua só do dono e as cartas não entram em `castable`. Telepathy segue o Forge: a mão dos oponentes fica à vista de todos (revelada é pública), a de quem a controla não; Revelation mostra todas; com a carta fora do campo, nada vai. Na mesa: no duelo, o leque do oponente vira de face para cima logo abaixo da linha do retrato (no lugar dele ficaria por baixo dos marcadores), com o selo "Mão revelada", e tocar abre o inspetor; com só parte da mão à vista, o resto fica de costas. No Commander, o selo da mão ganha o olho, com a etiqueta "Revelada" pendurada embaixo para não roubar o espaço do nome, e abre a galeria do cemitério/exílio com o título "Mão revelada" e a nota "Só para ver". A revelação momentânea já funcionava: Peek e Gitaxian Probe passam pelo `reveal()` do Forge, que a ponte manda como pergunta "reveal" com as cartas inteiras, e Thoughtseize e Duress pela escolha de cartas com as faces (a ponte desliga `UI_SELECT_FROM_CARD_DISPLAYS`, então o Forge não pede para tocar em cartas fora da mesa); conferido pela leitura do código e numa cena da página de teste do duelo. O laboratório de efeitos ganhou "Mão revelada" (revelar tudo, só uma carta, esconder). Ficou de fora: testar numa partida real contra a IA e em sala em rede (os testes foram na ponte e nas páginas de teste da mesa) e um teste automático da pergunta "reveal" passando pela ponte.
 
 ## 42. Carta de origem na escolha de alvos
 
