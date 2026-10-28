@@ -92,8 +92,11 @@ export function libraryChoiceHTML(q: FQuestion, picked: number[], face: Face, la
     </li>`;
   }).join('');
   const summary = ordering ? '' : `<p class="q-hint library-summary" aria-live="polite">${esc(librarySummary(q, picked))}</p>`;
+  // A carta que mandou olhar o topo (a vidência de um feitiço, a vigilância de uma criatura), para ler o que ela faz.
+  const source = q.card && !q.card.faceDown && q.card.name
+    ? `<button type="button" class="library-source" data-inspect="${q.card.id}" aria-label="${esc(`Pedido por ${label(q.card)}. Toque para ler a carta.`)}"><div class="library-source-face">${face(q.card)}</div><span>Pedido por <b>${esc(label(q.card))}</b></span></button>` : '';
   return `<div class="q-head"><h2>${libraryHeading(q)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>
-    <p class="q-hint" id="fLibraryHelp">${esc(hint(q))}</p>
+    ${source}<p class="q-hint" id="fLibraryHelp">${esc(hint(q))}</p>
     <div class="library-direction" aria-hidden="true"><span>Topo do grimório</span><i></i><span>Mais abaixo</span></div>
     <ol class="library-row" aria-label="Cartas do topo do grimório, da primeira para a última" aria-describedby="fLibraryHelp">${slots}</ol>
     ${summary}

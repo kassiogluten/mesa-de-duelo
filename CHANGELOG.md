@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.61.2] - 2026-10-28
+
+### Corrigido
+
+- **Carta que pede a decisão sempre à vista.** Toda decisão que uma carta pede mostra a carta que está pedindo, inteira: alvos, custos, pagamentos, confirmações e tudo o que um efeito manda escolher ao resolver (sacrificar uma criatura, escolher um jogador, descartar), mesmo quando ela está no campo ou é uma das opções. As perguntas em janela (escolher uma cor, um tipo, um número, sim ou não) também trazem a carta, e a vidência e a vigilância dizem qual carta mandou olhar o topo.
+
 ## [0.61.1] - 2026-10-28
 
 ### Corrigido

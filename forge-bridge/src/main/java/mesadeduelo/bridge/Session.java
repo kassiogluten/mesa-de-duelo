@@ -57,7 +57,6 @@ import forge.gui.GuiBase;
 import forge.gui.interfaces.IGuiGame;
 import forge.interfaces.IGameController;
 import forge.player.GamePlayerUtil;
-import forge.player.LobbyPlayerHuman;
 import forge.player.PlayerControllerHuman;
 import forge.trackable.TrackableCollection;
 import forge.util.FSerializableFunction;
@@ -261,7 +260,7 @@ final class Session {
             seat.name = name;
             WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.autoPassNoActions, () -> seat.opponentStops, life, m::getGame);
             seat.gui = g;
-            RegisteredPlayer rp = registered(seat.deck).setPlayer(new LobbyPlayerHuman(name));
+            RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name));
             seat.registered = rp;
             players.add(rp);
             guis.put(rp, g);
@@ -812,6 +811,15 @@ final class Session {
 
     // ---------- Perguntas que bloqueiam a thread do jogo ----------
 
+    /**
+     * A carta que pede a decisão em curso: a que o controlador marcou ao chamar a escolha (conjurar, ativar, gatilho,
+     * efeito) ou, numa escolha durante a resolução, a da mágica ou habilidade que está resolvendo.
+     */
+    private static CardView asking(Seat seat, Object input, forge.game.Game game) {
+        if (seat.controller() instanceof AskingController controller && controller.asking() != null) return controller.asking();
+        return input == null ? InputContext.resolvingSource(game) : InputContext.resolvingSource(input, game);
+    }
+
     private Object ask(Seat seat, GuiGameEvent ev, HostedMatch hosted, MatchLifecycle life) {
         Object[] a = ev.getObjects();
         JsonObject q = new JsonObject();
@@ -963,6 +971,11 @@ final class Session {
             }
         }
 
+        // Toda pergunta mostra a carta que a fez, mesmo quando o Forge não a cita.
+        if (!q.has("card")) {
+            CardView source = asking(seat, null, hosted.getGame());
+            if (source != null) q.add("card", StateJson.card(source));
+        }
         Question question = new Question(id, ev.getMethod(), a, options, new CompletableFuture<>(), q);
         var game = hosted.getGame();
         int playerId = seat.me == null ? -1 : seat.me.getId();
@@ -1522,6 +1535,7 @@ final class Session {
                 JsonObject targeting = targeting(seat);
                 if (targeting != null) input.add("targeting", targeting);
                 CardView promptCard = seat.promptCard;
+                if (promptCard == null) promptCard = asking(seat, currentInput, m.getGame());
                 if (promptCard != null) input.add("card", StateJson.card(promptCard));
                 // Voto numa permanente (Council's Judgment): escolhido tocando no campo, com a carta que vota à vista.
                 SpellAbility voting = Votes.isVotePrompt(seat.message) ? Votes.current(m.getGame()) : null;
