@@ -46,9 +46,13 @@ function salvar(s: ContaSessao | null) {
   notify();
 }
 
+/** Uma ponte que aceita a conexão e não responde (antiga, sem as rotas de conta) não pode deixar o jogo esperando para sempre. */
+const TIMEOUT_MS = 20_000;
+const withTimeout = (init: RequestInit): RequestInit => ({ ...init, signal: init.signal ?? AbortSignal.timeout(TIMEOUT_MS) });
+
 /** Pedido à ponte com o token; 401 apaga a sessão guardada. */
 export async function contaFetch(path: string, init: RequestInit = {}, s = contaSessao()) {
-  const response = await fetch(CONTA_API + path, { ...init, headers: { ...init.headers, ...(s ? { Authorization: `Bearer ${s.token}` } : {}) } });
+  const response = await fetch(CONTA_API + path, withTimeout({ ...init, headers: { ...init.headers, ...(s ? { Authorization: `Bearer ${s.token}` } : {}) } }));
   if (response.status === 401 && s) salvar(null);
   return response;
 }
@@ -61,13 +65,15 @@ async function mensagem(response: Response) {
 /** Troca a credencial do Google pela sessão da ponte. */
 export async function entrar(credential: string): Promise<boolean> {
   try {
-    const response = await fetch(CONTA_API + 'entrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }) });
+    const response = await fetch(CONTA_API + 'entrar', withTimeout({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }) }));
     if (!response.ok) { lastError = await mensagem(response); notify(); return false; }
     lastError = '';
     salvar(await response.json() as ContaSessao);
     return true;
-  } catch {
-    lastError = 'Sem conexão com o servidor. Tente de novo quando a internet voltar.';
+  } catch (e) {
+    lastError = e instanceof DOMException && e.name === 'TimeoutError'
+      ? 'O servidor não respondeu. Tente entrar de novo daqui a pouco.'
+      : 'Sem conexão com o servidor. Tente de novo quando a internet voltar.';
     notify();
     return false;
   }

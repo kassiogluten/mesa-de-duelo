@@ -106,7 +106,9 @@ async function cycle() {
     setStatus({ kind: 'ok' });
   } catch (e) {
     const pendentes = Object.keys(readState()?.pendentes ?? {}).length;
-    setStatus(e instanceof TypeError ? { kind: 'offline', pendentes } : { kind: 'erro', text: e instanceof Error ? e.message : 'Falha ao sincronizar.' });
+    // Sem rede (TypeError) ou servidor que não responde (TimeoutError): a fila espera a próxima vez.
+    const offline = e instanceof TypeError || (e instanceof DOMException && e.name === 'TimeoutError');
+    setStatus(offline ? { kind: 'offline', pendentes } : { kind: 'erro', text: e instanceof Error ? e.message : 'Falha ao sincronizar.' });
   }
 }
 
