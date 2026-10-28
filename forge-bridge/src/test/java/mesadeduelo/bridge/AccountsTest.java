@@ -195,4 +195,30 @@ public class AccountsTest {
         assertEquals(3, contas.get("aparelhos").getAsInt());
         assertEquals(2, contas.size());
     }
+
+    @Test public void decksSyncThroughTheRoutesAndSurviveARestart() throws IOException {
+        Accounts a = accounts();
+        String auth = enter(a, "42");
+        byte[] change = "{\"mudancas\":[{\"id\":\"d1\",\"base\":0,\"deck\":{\"id\":\"d1\",\"name\":\"Burn\",\"cards\":[{\"name\":\"Lightning Bolt\",\"count\":4}]}}]}".getBytes(StandardCharsets.UTF_8);
+        Admin.Response sent = a.handle("POST", "sincronizar", auth, change, "ip");
+        assertEquals(200, sent.status());
+        assertEquals(1, json(sent).get("rev").getAsLong());
+
+        Accounts restarted = accounts();
+        JsonObject state = json(restarted.handle("GET", "estado", auth, new byte[0], "ip"));
+        assertEquals("Burn", state.getAsJsonArray("decks").get(0).getAsJsonObject().getAsJsonObject("deck").get("name").getAsString());
+        assertEquals(0, json(restarted.handle("GET", "estado/1", auth, new byte[0], "ip")).getAsJsonArray("decks").size());
+        assertEquals(400, restarted.handle("GET", "estado/x", auth, new byte[0], "ip").status());
+        assertEquals(400, restarted.handle("POST", "sincronizar", auth, "nada".getBytes(StandardCharsets.UTF_8), "ip").status());
+
+        byte[] gone = "{\"mudancas\":[{\"id\":\"d1\",\"base\":1,\"apagar\":true}]}".getBytes(StandardCharsets.UTF_8);
+        assertEquals(200, restarted.handle("POST", "sincronizar", auth, gone, "ip").status());
+        assertEquals(1, json(restarted.handle("GET", "lixeira", auth, new byte[0], "ip")).getAsJsonArray("decks").size());
+        assertEquals(200, restarted.handle("POST", "lixeira/d1/restaurar", auth, new byte[0], "ip").status());
+        assertEquals(404, restarted.handle("POST", "lixeira/d1/restaurar", auth, new byte[0], "ip").status());
+        assertEquals(401, restarted.handle("GET", "estado", null, new byte[0], "ip").status());
+
+        String other = enter(restarted, "43");
+        assertEquals("accounts never see each other's decks", 0, json(restarted.handle("GET", "estado", other, new byte[0], "ip")).getAsJsonArray("decks").size());
+    }
 }

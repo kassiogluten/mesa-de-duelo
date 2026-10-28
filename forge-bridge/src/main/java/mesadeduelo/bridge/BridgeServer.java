@@ -79,6 +79,8 @@ final class BridgeServer {
                     ch.pipeline().addLast(new HttpServerCodec());
                     // Os relatos têm agregador próprio de 3 MB; as outras rotas continuam com 64 KB.
                     if (f != null) ch.pipeline().addLast(new Feedback.Route("agregador"));
+                    // A sincronia dos decks da conta também: até 4 MB.
+                    if (accounts != null) ch.pipeline().addLast(new Accounts.Route("agregador"));
                     ch.pipeline().addLast("agregador", new HttpObjectAggregator(1 << 16));
                     if (f != null) ch.pipeline().addLast(f.new Handler());
                     Admin a = admin;

@@ -49,6 +49,13 @@ import mesadeduelo.bridge.Admin.Response;
  *   GET    eu                      → {conta}
  *   POST   sair                    invalida o token
  *   DELETE conta                   apaga a conta e todas as sessões dela
+ *   GET    estado[/REV]            {rev, decks}: os decks que mudaram depois de REV (sem REV, todos os vivos)
+ *   POST   sincronizar {mudancas}  {rev, aplicadas, conflitos, recusadas} (ver {@link AccountDecks#sync})
+ *   GET    lixeira                 {decks}: os apagados nos últimos 30 dias
+ *   POST   lixeira/{id}/restaurar  {id, rev, deck, contaRev}
+ *
+ * Só "sincronizar" aceita corpo grande (até {@link #MAX_SYNC_BYTES}, para o primeiro login com muitos decks);
+ * o resto passa pelo agregador de 64 KB.
  */
 final class Accounts {
     static final String PREFIX = "/api/conta/";
@@ -59,6 +66,8 @@ final class Accounts {
     static final int MAX_LOGINS = 20;
     static final long LOGIN_WINDOW = 15 * 60_000L;
     static final int NICKNAME_MAX = 24;
+    static final int MAX_SYNC_BYTES = 4 << 20;
+    static final String SYNC_PATH = PREFIX + "sincronizar";
 
     private record Login(String account, long expires) { }
 
@@ -89,6 +98,7 @@ final class Accounts {
         Metrics.gauge("mesa.accounts.sessions", "Sessões de conta abertas (aparelhos logados)", a, Accounts::sessionCount);
         // Séries com zero desde o início, para o painel não ficar vazio antes do primeiro login.
         for (String result : new String[]{"ok", "recusado", "limite", "erro"}) loginCounter(result);
+        syncCounter();
         return a;
     }
 
@@ -107,6 +117,11 @@ final class Accounts {
             if (path.equals("eu") && "GET".equals(method)) return me(account);
             if (path.equals("sair") && "POST".equals(method)) { logout(authorization); return Response.json(200, new JsonObject()); }
             if (path.equals("conta") && "DELETE".equals(method)) { delete(account); return Response.json(200, new JsonObject()); }
+            if ((path.equals("estado") || path.startsWith("estado/")) && "GET".equals(method)) return state(account, path.substring("estado".length()));
+            if (path.equals("sincronizar") && "POST".equals(method)) return sync(account, body);
+            if (path.equals("lixeira") && "GET".equals(method)) return withDecks(account, false, AccountDecks::trash);
+            String[] parts = path.split("/");
+            if (parts.length == 3 && parts[0].equals("lixeira") && parts[2].equals("restaurar") && "POST".equals(method)) return restore(account, parts[1]);
             return Response.error(404, "Rota desconhecida das contas.");
         } catch (IllegalArgumentException e) {
             return Response.error(400, e.getMessage());
@@ -172,6 +187,39 @@ final class Accounts {
         JsonObject o = new JsonObject();
         o.add("conta", a.getAsJsonObject("perfil"));
         return Response.json(200, o);
+    }
+
+    private Response state(String account, String rest) throws IOException {
+        long since;
+        try { since = rest.isEmpty() ? 0 : Long.parseLong(rest.substring(1)); }
+        catch (NumberFormatException e) { throw new IllegalArgumentException("Revisão inválida."); }
+        if (since < 0) throw new IllegalArgumentException("Revisão inválida.");
+        return withDecks(account, false, a -> AccountDecks.state(a, since));
+    }
+
+    private Response sync(String account, byte[] body) throws IOException {
+        JsonObject changes;
+        try { changes = JsonParser.parseString(new String(body, StandardCharsets.UTF_8)).getAsJsonObject(); }
+        catch (RuntimeException e) { throw new IllegalArgumentException("Corpo inválido."); }
+        long now = clock.getAsLong();
+        Response r = withDecks(account, true, a -> AccountDecks.sync(a, changes, now));
+        syncCounter().increment();
+        return r;
+    }
+
+    private Response restore(String account, String id) throws IOException { return withDecks(account, true, a -> AccountDecks.restore(a, id)); }
+
+    /**
+     * Lê a conta, limpa a lixeira vencida, roda {@code action} e grava se for uma escrita (ou se a limpeza mudou algo).
+     * Só restaurar devolve null: o deck não está mais na lixeira.
+     */
+    private synchronized Response withDecks(String account, boolean write, java.util.function.Function<JsonObject, JsonObject> action) throws IOException {
+        JsonObject a = read(account);
+        if (a == null) return Response.error(401, "Entre de novo: a conta não existe mais.");
+        boolean purged = AccountDecks.purge(a, clock.getAsLong());
+        JsonObject result = action.apply(a);
+        if (write || purged) write(account, a);
+        return result == null ? Response.error(404, "Esse deck não está mais na lixeira.") : Response.json(200, result);
     }
 
     private synchronized void logout(String authorization) throws IOException {
@@ -278,12 +326,38 @@ final class Accounts {
         return url != null && url.length() <= 1000 && url.matches("https://[a-z0-9-]+\\.googleusercontent\\.com/[^\\s\"'<>]*") ? url : null;
     }
 
+    private static Counter syncCounter() {
+        return Counter.builder("mesa.accounts.syncs").description("Envios de mudanças de decks para a conta").register(Metrics.REGISTRY);
+    }
+
     private static Counter loginCounter(String result) {
         return Counter.builder("mesa.accounts.logins").description("Tentativas de entrar com Google: ok, recusado, limite ou erro")
             .tags("result", result).register(Metrics.REGISTRY);
     }
 
     // ---------- Netty ----------
+
+    /** Antes do agregador: o POST de sincronizar troca o agregador de 64 KB por um de {@link #MAX_SYNC_BYTES}. */
+    static final class Route extends ChannelInboundHandlerAdapter {
+        private final String aggregator;
+        Route(String aggregator) { this.aggregator = aggregator; }
+        @Override public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            if (msg instanceof io.netty.handler.codec.http.HttpRequest req && !(msg instanceof FullHttpRequest)
+                && req.method() == io.netty.handler.codec.http.HttpMethod.POST && SYNC_PATH.equals(new QueryStringDecoder(req.uri()).path())
+                && ctx.pipeline().get(aggregator) != null && ctx.pipeline().get(aggregator).getClass() == io.netty.handler.codec.http.HttpObjectAggregator.class) {
+                ctx.pipeline().replace(aggregator, aggregator, new Aggregator());
+            }
+            ctx.fireChannelRead(msg);
+        }
+    }
+
+    /** Agregador grande que responde 413 em JSON, com a frase para o jogador. */
+    static final class Aggregator extends io.netty.handler.codec.http.HttpObjectAggregator {
+        Aggregator() { super(MAX_SYNC_BYTES); }
+        @Override protected void handleOversizedMessage(ChannelHandlerContext ctx, io.netty.handler.codec.http.HttpMessage oversized) {
+            Admin.respond(ctx, Response.error(413, "Decks demais para enviar de uma vez. Tente de novo: o jogo manda em partes."));
+        }
+    }
 
     /** Depois do agregador de 64 KB: tudo em /api/conta/, fora da thread da rede. */
     final class Handler extends ChannelInboundHandlerAdapter {
