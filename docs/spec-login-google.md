@@ -190,10 +190,10 @@ Tudo desta fase fica atrás de `mesa:dev`. Por isso, ela não muda a versão nem
 
 ### Fase 3: preferências, apelido e foto (0.64.0)
 
-- [ ] `src/prefs.ts` reunindo as chaves sincronizadas.
-- [ ] Sincronizar as preferências e o apelido (vale a última gravação).
-- [ ] Apelido sugerido pelo primeiro nome do Google quando "Seu nome" estiver vazio.
-- [ ] CHANGELOG e novidades.html.
+- [x] `src/conta/prefs.ts` com as chaves sincronizadas e as regras (funções puras, testes em `tests/conta-prefs.test.mjs`). Em vez de trocar as gravações espalhadas pelas telas, a sincronia compara os valores com os da última vez: cada tela continua gravando a sua chave como antes.
+- [x] Sincronizar as preferências e o nome na mesa (vale a última gravação), na mesma troca dos decks. Elas sobem ao salvar um deck, ao mudar o nome, ao sair da aba e a cada 5 minutos; as que chegam valem a partir da próxima partida (o nome, na hora).
+- [x] Nome sugerido pelo primeiro nome do Google quando "Seu nome" estiver vazio e a conta ainda não tiver nome.
+- [x] CHANGELOG (0.64.0) e novidades.html. A política de privacidade passou a citar o nome e as preferências.
 
 ## Riscos
 

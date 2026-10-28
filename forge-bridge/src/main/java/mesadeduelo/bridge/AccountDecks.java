@@ -15,13 +15,26 @@ import com.google.gson.JsonObject;
  * Cada deck guardado é {deck, rev} ou, apagado, {deck, rev, apagadoEm}: o deck continua lá 30 dias, na lixeira.
  * O {@code rev} da conta sobe a cada mudança aceita, e cada deck guarda o rev da última mudança dele; o navegador
  * pede o que mudou desde o último rev que viu e manda cada mudança com o rev em que ela se baseou.
+ *
+ * As preferências da mesa (só as de {@link #PREF_KEYS}) vão no mesmo arquivo, em {prefs: {chave: {valor, rev}}},
+ * e na mesma troca: vale a última gravação, sem conflito. Valor null apaga a preferência.
  */
 final class AccountDecks {
     static final int MAX_DECKS = 300;
     static final long TRASH_MILLIS = 30 * 86_400_000L;
     static final int MAX_ID = 100, MAX_NAME = 200, MAX_ENTRIES = 1000, MAX_COUNT = 9999, MAX_DECK_CHARS = 200_000;
 
+    /** As chaves do localStorage que acompanham a conta; o resto é deste aparelho. */
+    static final java.util.Set<String> PREF_KEYS = java.util.Set.of("mesa:audio:v1", "mesa:turnNotice", "mesa:pace",
+        "mesa:passResponses", "mesa:autoPassNoActions", "mesa:opponentStops", "mesa:name");
+    static final int MAX_PREF_CHARS = 4000;
+
     private AccountDecks() { }
+
+    private static JsonObject prefs(JsonObject account) {
+        if (!account.has("prefs")) account.add("prefs", new JsonObject());
+        return account.getAsJsonObject("prefs");
+    }
 
     private static JsonArray decks(JsonObject account) {
         if (!account.has("decks")) account.add("decks", new JsonArray());
@@ -66,6 +79,10 @@ final class AccountDecks {
         JsonObject o = new JsonObject();
         o.addProperty("rev", rev(account));
         o.add("decks", changes);
+        JsonObject prefs = new JsonObject();
+        for (Map.Entry<String, JsonElement> e : prefs(account).entrySet())
+            if (e.getValue().getAsJsonObject().get("rev").getAsLong() > since) prefs.add(e.getKey(), e.getValue().getAsJsonObject().get("valor"));
+        o.add("prefs", prefs);
         return o;
     }
 
@@ -78,13 +95,13 @@ final class AccountDecks {
     }
 
     /**
-     * Aplica {mudancas: [{id, base, deck} | {id, base, apagar: true}]}. A mudança entra se o deck não mudou na conta
+     * Aplica {mudancas: [{id, base, deck} | {id, base, apagar: true}], prefs?: {chave: valor}}. A mudança entra se o deck não mudou na conta
      * depois de {@code base}; senão volta em {@code conflitos} com a versão da conta. Deck inválido ou acima do limite
      * volta em {@code recusadas}, com o motivo para o jogador.
      */
     static JsonObject sync(JsonObject account, JsonObject body, long now) {
         JsonArray input = body.has("mudancas") && body.get("mudancas").isJsonArray() ? body.getAsJsonArray("mudancas") : null;
-        if (input == null) throw new IllegalArgumentException("Pedido sem a lista de mudanças.");
+        if (input == null) input = new JsonArray();
         if (input.size() > MAX_DECKS * 2) throw new IllegalArgumentException("Mudanças demais num pedido só.");
         Map<String, JsonObject> current = byId(account);
         JsonArray applied = new JsonArray(), conflicts = new JsonArray(), refused = new JsonArray();
@@ -114,6 +131,7 @@ final class AccountDecks {
             entry.addProperty("rev", nextRev(account));
             applied.add(done(id, entry.get("rev").getAsLong()));
         }
+        if (body.has("prefs") && body.get("prefs").isJsonObject()) syncPrefs(account, body.getAsJsonObject("prefs"));
         JsonObject o = new JsonObject();
         o.addProperty("rev", rev(account));
         o.add("aplicadas", applied); o.add("conflitos", conflicts); o.add("recusadas", refused);
@@ -122,6 +140,22 @@ final class AccountDecks {
 
     /** Um deck que a conta não tem (nem na lixeira): para o navegador, foi apagado lá. */
     private static JsonObject gone(String id) { JsonObject o = done(id, 0); o.addProperty("apagado", true); return o; }
+
+    /** Grava as preferências que mudaram; chaves desconhecidas ou valores grandes demais são ignorados. */
+    private static void syncPrefs(JsonObject account, JsonObject input) {
+        JsonObject stored = prefs(account);
+        for (Map.Entry<String, JsonElement> e : input.entrySet()) {
+            JsonElement value = e.getValue();
+            boolean text = value.isJsonPrimitive() && value.getAsJsonPrimitive().isString();
+            if (!PREF_KEYS.contains(e.getKey()) || !(text || value.isJsonNull()) || (text && value.getAsString().length() > MAX_PREF_CHARS)) continue;
+            JsonObject old = stored.has(e.getKey()) ? stored.getAsJsonObject(e.getKey()) : null;
+            if (old != null && old.get("valor").equals(value)) continue;
+            JsonObject entry = new JsonObject();
+            entry.add("valor", value);
+            entry.addProperty("rev", nextRev(account));
+            stored.add(e.getKey(), entry);
+        }
+    }
 
     private static JsonObject done(String id, long rev) { JsonObject o = new JsonObject(); o.addProperty("id", id); o.addProperty("rev", rev); return o; }
 

@@ -2,6 +2,7 @@ import { apagarConta, contaErro, contaSessao, contasLigadas, onContaChange, sair
 import { desenharBotao, esquecerLoginAutomatico } from '../conta/google';
 import { clearSyncNotice, flush, forgetAccount, onSyncChange, restore, startSync, syncNotice, syncStatus, trash, type FirstLoginAnswer } from '../conta/sync';
 import { ACCOUNT_BACKUP_PREFIX, exportDeckRecovery } from '../decks';
+import { NAME_KEY } from '../conta/prefs';
 import { esc } from './cardtext';
 
 /** Há cópia dos decks de antes de "Usar só os da conta"? */
@@ -11,7 +12,7 @@ import './contaMenu.css';
 /** Uma linha sobre a sincronia, no menu da conta. */
 function syncLine(): string {
   const s = syncStatus();
-  return s.kind === 'ok' ? 'Decks sincronizados'
+  return s.kind === 'ok' ? 'Decks e preferências sincronizados'
     : s.kind === 'enviando' ? 'Sincronizando os decks…'
     : s.kind === 'offline' ? (s.pendentes ? `Sem conexão: ${s.pendentes} ${s.pendentes === 1 ? 'alteração esperando' : 'alterações esperando'}` : 'Sem conexão')
     : s.kind === 'erro' ? `Não deu para sincronizar: ${s.text}` : '';
@@ -36,7 +37,10 @@ export function mountContaMenu(slot: HTMLElement) {
       void desenharBotao(slot.querySelector<HTMLElement>('[data-conta-google]')!);
       return;
     }
-    const nome = s.conta.apelido || s.conta.nome || 'Sua conta';
+    // O nome na mesa é o apelido da conta: ele sincroniza junto com as preferências.
+    let mesa = '';
+    try { mesa = localStorage.getItem(NAME_KEY)?.trim() ?? ''; } catch { /* sem armazenamento */ }
+    const nome = mesa || s.conta.apelido || s.conta.nome || 'Sua conta';
     const foto = s.conta.foto
       ? `<img src="${esc(s.conta.foto)}" alt="" referrerpolicy="no-referrer">`
       : `<span aria-hidden="true">${esc([...nome][0]?.toUpperCase() ?? '?')}</span>`;
@@ -76,6 +80,7 @@ export function mountContaMenu(slot: HTMLElement) {
 
   render();
   onContaChange(render);
+  addEventListener('mesa:prefs-sincronizadas', render);
   // Só atualiza a linha da sincronia, sem fechar o menu aberto.
   onSyncChange(() => {
     const line = slot.querySelector<HTMLElement>('.conta-sync');

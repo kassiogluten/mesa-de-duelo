@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.64.0] - 2026-10-28
+
+### Novo
+
+- **Seu nome e as preferências da mesa também acompanham a conta.** Com a conta Google, o nome que você usa na mesa e as preferências (som, aviso de turno, ritmo da mesa, passar a vez automaticamente e onde o jogo para no turno do oponente) são os mesmos em todos os aparelhos. Na primeira vez que você entra, se o campo Seu nome estiver vazio, ele já vem com o seu primeiro nome do Google, e você pode mudar quando quiser. Uma preferência mudada num aparelho vale nos outros a partir da próxima partida.
+
 ## [0.63.0] - 2026-10-28
 
 ### Novo

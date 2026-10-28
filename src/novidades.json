@@ -1,4 +1,9 @@
 {
+  "0.64.0": {
+    "Seu nome e as preferências da mesa também acompanham a conta": [
+      { "img": "0.64.0/nome-do-google.webp", "legenda": "Na primeira vez que você entra com o campo **Seu nome** vazio, ele já vem com o seu primeiro nome do Google; o que você escrever ali vale em todos os aparelhos." }
+    ]
+  },
   "0.63.0": {
     "Entrar com Google e Meus decks em todos os aparelhos": [
       { "img": "0.63.0/entrar-com-google.webp", "legenda": "O botão **Fazer login com o Google** fica no topo da tela, ao lado de Novidades." },
