@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.67.0] - 2026-10-28
+
+### Novo
+
+- **Novo formato: Standard.** Em Outros, ao lado de Pauper, Sacola 50 e Livre, o formato **Standard** usa as cartas e as banidas do Standard atual, em decks de pelo menos 60 cartas, com sideboard de até 15 e até 4 cópias de cada carta. Os 16 decks prontos montados a partir de listas do Standard (como Toca dos Coelhos, Teorema de Jace, Lifegain e Rakdos Lizards) passam a ser deste formato e mostram o selo **Standard**; antes eles apareciam como Livre. No Livre, continuam aparecendo todos os decks de 60 cartas.
+
+### Mudou
+
+- **Cada formato mostra só os seus decks prontos.** Em Standard, Pauper e Sacola 50, a lista de decks prontos e o deck do computador ficam só com os montados para aquele formato. Antes, o Sacola 50 também listava os decks de Standard e de Pauper, porque as cartas deles valem no Legacy. No Livre continuam todos os decks de 60 cartas, e os seus decks aparecem em todo formato em que forem válidos, como antes.
+- **Outros formatos em duas linhas.** Com o Standard, os formatos de Outros ficam em duas linhas de dois, para caber na barra lateral e no celular.
+
 ## [0.66.0] - 2026-10-28
 
 ### Novo

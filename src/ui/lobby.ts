@@ -1,4 +1,4 @@
-import { allDecks, countEntries, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
+import { allDecks, countEntries, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
@@ -94,7 +94,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     <div class="play-layout">
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <div class="match-setup">
-        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
+        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
@@ -138,6 +138,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const setStatus = (message: string, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error', error); roomLobby.setStatus(message, error); };
   function allowed(deck: DeckData) {
     if (deck.format === 'commander' && format !== 'commander') return false;
+    if (deck.builtin && format && !readyDeckFits(deck, format)) return false;
     const local = validateDeckLocal(deck, format ?? 'free');
     return !format || showIncompatible || (validations.get(key(deck))?.valid ?? local.status !== 'invalid');
   }
@@ -215,7 +216,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Humanos' : 'Humano';
     $('#aiPanel').hidden = mode !== 'ai' || commander;
     $('#commanderAiPanel').hidden = mode !== 'ai' || !commander;
-    const aiPool = ready.filter(d => (format === 'commander' ? d.format === 'commander' : d.format !== 'commander') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
+    // O mesmo critério da lista e do sorteio da ponte: os decks prontos do formato (no Livre, todos os de 60 cartas).
+    const aiPool = ready.filter(d => readyDeckFits(d, format ?? 'free') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
     if (oppId !== 'random' && !aiPool.some(d => d.id === oppId)) oppId = 'random';
     $<HTMLSelectElement>('#oppSel').innerHTML = '<option value="random">Aleatório entre os compatíveis</option>' + aiPool.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
     $<HTMLSelectElement>('#oppSel').value = oppId;

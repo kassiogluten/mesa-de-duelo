@@ -65,7 +65,7 @@
         "count": 2
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -150,7 +150,7 @@
         "count": 2
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -227,7 +227,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -320,7 +320,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -409,7 +409,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -462,7 +462,7 @@
         "count": 3
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -543,7 +543,7 @@
         "count": 2
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -640,7 +640,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -741,7 +741,7 @@
         "count": 2
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -838,7 +838,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -951,7 +951,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": []
   },
   {
@@ -1036,7 +1036,7 @@
         "count": 4
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": [
       {
         "name": "Phyrexian Arena",
@@ -1174,7 +1174,7 @@
         "count": 3
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": [
       {
         "name": "Disdainful Stroke",
@@ -1328,7 +1328,7 @@
         "count": 5
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": [
       {
         "name": "Astelli Reclaimer",
@@ -1450,7 +1450,7 @@
         "count": 2
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": [
       {
         "name": "Clarion Conqueror",
@@ -1600,7 +1600,7 @@
         "count": 1
       }
     ],
-    "format": "free",
+    "format": "standard",
     "sideboard": [
       {
         "name": "Duress",

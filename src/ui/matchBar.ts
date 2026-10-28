@@ -3,7 +3,7 @@ import { esc } from './cardtext';
 
 export interface MatchChip { kind: 'format' | 'room' | 'series' | 'offline' | 'spectating'; text: string; label: string }
 
-const FORMAT: Record<string, string> = { commander: 'Commander', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
+const FORMAT: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
 
 /** Informação de relance da barra do topo: o que antes só aparecia ao abrir o menu. */
 export function matchChips(s: FState): MatchChip[] {

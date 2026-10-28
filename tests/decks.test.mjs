@@ -176,7 +176,19 @@ test('Pauper ready decks contain 60 main, 15 sideboard and stay separate from le
   const pauper = decks.DEFAULT_DECKS.filter(d => d.format === 'pauper');
   assert.equal(pauper.length, 2);
   for (const deck of pauper) { assert.equal(decks.deckSize(deck), 60); assert.equal(decks.countEntries(deck.sideboard), 15); assert.equal(deck.builtin, true); }
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'free').length, 16);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'free').length, 0, 'every 60-card ready deck names the format it was built for');
+});
+
+test('Standard ready decks have 60 main, up to 15 sideboard, and check cards against Standard', () => {
+  const standard = decks.DEFAULT_DECKS.filter(d => d.format === 'standard');
+  assert.equal(standard.length, 16);
+  for (const deck of standard) { assert.equal(decks.deckSize(deck), 60); assert.ok(decks.countEntries(deck.sideboard) <= 15); assert.equal(deck.builtin, true); }
+  assert.equal(decks.scryfallFormat('standard'), 'standard');
+  assert.equal(decks.isConstructed('standard'), true);
+  assert.equal(decks.FORMAT_LABEL.standard, 'Standard');
+  const short = { id: 's', name: 'S', format: 'standard', cards: [{ name: 'Island', count: 59 }], sideboard: [{ name: 'Island', count: 16 }] };
+  const codes = validateDeckLocal(short).issues.map(i => i.code);
+  assert.ok(codes.includes('main_count') && codes.includes('sideboard_count'));
 });
 
 test('Sacola 50 ready decks have 60 main, up to 15 sideboard, and check cards against Legacy', () => {
@@ -311,4 +323,13 @@ test('Commander tags preserve command designation and do not infer a sideboard f
   }
   const explicit = decks.parseDeckList('1 Marwyn, the Nurturer [Commander]\n\n99 Forest\nSB: 1 Island');
   assert.deepEqual(explicit.sideboard, [{ name: 'Island', count: 1 }]);
+});
+
+test('each format lists only the ready decks built for it; Livre lists every 60-card one', () => {
+  const count = f => decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, f)).length;
+  assert.equal(count('standard'), 16);
+  assert.equal(count('pauper'), 2);
+  assert.equal(count('sacola50'), 7, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
+  assert.equal(count('free'), 25);
+  assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length);
 });

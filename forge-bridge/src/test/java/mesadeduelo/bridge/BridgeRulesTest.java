@@ -47,6 +47,15 @@ public class BridgeRulesTest {
         });
         assertNotNull(Decks.random("pauper"));
         assertNotNull(Decks.random("sacola50"));
+        assertNotNull(Decks.random("standard"));
+    }
+    @Test public void standardUsesForgeStandardSetsAndBans() {
+        assertTrue(DeckValidation.validate(deck("Island",56,"Llanowar Elves",4),"standard").valid());
+        has(DeckValidation.validate(deck("Island",56,"Brainstorm",4),"standard"),"wrong-format");
+        has(DeckValidation.validate(deck("Island",56,"Heartfire Hero",4),"standard"),"banned-card");
+        has(DeckValidation.validate(deck("Island",59),"standard"),"main-too-small");
+        JsonObject d=deck("Island",60); d.add("sideboard",entries("Island",16)); has(DeckValidation.validate(d,"standard"),"sideboard-too-large");
+        assertEquals(3,new MatchConfig("standard","bo3").rules().getGamesPerMatch());
     }
     @Test public void sacolaUsesLegacyCardsAndBans() {
         assertTrue(DeckValidation.validate(deck("Island",56,"Brainstorm",4),"sacola50").valid());
@@ -105,7 +114,7 @@ public class BridgeRulesTest {
         has(DeckValidation.validate(deck("Not a Real Card",40),"free"),"unknown-card");
     }
     @Test public void configRejectsUnknownsAndKeepsAIHumanControlOff() {
-        try { new MatchConfig("standard","bo1"); fail(); } catch (IllegalArgumentException expected) { }
+        try { new MatchConfig("modern","bo1"); fail(); } catch (IllegalArgumentException expected) { }
         try { new MatchConfig("pauper","bo5"); fail(); } catch (IllegalArgumentException expected) { }
         assertEquals(3,new MatchConfig("pauper","bo3").rules().getGamesPerMatch());
         assertFalse(new MatchConfig("pauper","bo3").rules().getSideboardForAI());

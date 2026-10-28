@@ -33,7 +33,8 @@
 .choice-segments button:disabled, .opponent-card:disabled { cursor: default; opacity: .55; }
 /* Quatro formatos: 2×2 na barra lateral, uma linha só quando houver largura. */
 .format-choice .choice-segments { display: grid; grid-template-columns: repeat(2, 1fr); }
-.format-choice .format-others { grid-template-columns: repeat(3, 1fr); margin-top: 6px; }
+/* Standard, Pauper, Sacola 50 e Livre: dois por linha, que cabem na barra lateral e no celular. */
+.format-choice .format-others { grid-template-columns: repeat(2, 1fr); margin-top: 6px; }
 .format-choice .format-others[hidden] { display: none; }
 .setup-explanation { font-size: 13px; line-height: 1.5; color: var(--muted); margin: var(--label-gap) 0 0; }
 .opponent-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
