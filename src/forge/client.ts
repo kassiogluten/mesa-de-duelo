@@ -139,6 +139,8 @@ export interface FPlayer {
   /** Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite). */
   landsPlayed?: number;
   maxLands?: number;
+  /** Quanto durou o turno mais recente que o jogador terminou, em ms (medido pelo servidor); ausente antes do primeiro. */
+  lastTurnMs?: number;
   library: number;
   /** Carta do topo do grimório, só quando quem recebe o estado pode vê-la (Vizier of the Menagerie, Courser of Kruphix...). */
   libraryTop?: FCard;
@@ -278,6 +280,8 @@ export interface FState {
   /** Dia ou noite, só depois que a partida vira um dos dois; e as mágicas que quem joga o turno já conjurou nele. */
   dayTime?: 'day' | 'night';
   activeSpells?: number;
+  /** Quanto o turno atual já durou quando o estado saiu do servidor, em ms; ausente no fim do jogo e em pontes antigas. */
+  turnElapsedMs?: number;
   gameOver: boolean;
   spectating?: boolean;
   winner?: string;

@@ -3,6 +3,7 @@ package mesadeduelo.bridge;
 import static org.junit.Assert.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import forge.ai.LobbyPlayerAi;
 import forge.game.Game;
@@ -10,6 +11,7 @@ import forge.game.Match;
 import forge.game.card.Card;
 import forge.game.event.GameEventSpellResolved;
 import forge.game.event.GameEventSpellRemovedFromStack;
+import forge.game.event.GameEventTurnBegan;
 import forge.game.phase.PhaseType;
 import forge.game.player.Player;
 import forge.game.player.RegisteredPlayer;
@@ -66,6 +68,32 @@ public class VisibleEventsTest {
             assertEquals("Library",m.get("from").getAsString()); assertEquals("Graveyard",m.get("to").getAsString());
             assertFalse(m.has("surveil")); assertTrue(m.has("frame"));
         }
+    }
+    @Test public void eachPlayerKeepsTheLengthOfTheirLatestFinishedTurn() throws InterruptedException {
+        Game game=game(); VisibleEvents events=new VisibleEvents(()->{},()->1); events.attach(game);
+        Player a=game.getPlayers().get(0),b=game.getPlayers().get(1);
+        java.util.function.IntFunction<JsonObject> state=active->{
+            JsonObject s=new JsonObject(); s.addProperty("activePlayer",active); s.addProperty("gameOver",false);
+            JsonArray players=new JsonArray();
+            for(Player p:List.of(a,b)) { JsonObject row=new JsonObject(); row.addProperty("id",p.getId()); players.add(row); }
+            s.add("players",players); return s;
+        };
+        events.receive(new GameEventTurnBegan(a.getView(),1));
+        JsonObject first=state.apply(a.getId()); events.addTurnTimes(first);
+        assertTrue(first.has("turnElapsedMs"));
+        for(var p:first.getAsJsonArray("players")) assertFalse(p.getAsJsonObject().has("lastTurnMs"));
+        Thread.sleep(30);
+        events.receive(new GameEventTurnBegan(b.getView(),2));
+        JsonObject second=state.apply(b.getId()); events.addTurnTimes(second);
+        JsonObject rowA=second.getAsJsonArray("players").get(0).getAsJsonObject(), rowB=second.getAsJsonArray("players").get(1).getAsJsonObject();
+        assertTrue(rowA.get("lastTurnMs").getAsLong()>=30);
+        assertFalse(rowB.has("lastTurnMs"));
+        assertTrue(second.get("turnElapsedMs").getAsLong()<30);
+        JsonObject over=state.apply(b.getId()); over.addProperty("gameOver",true); events.addTurnTimes(over);
+        assertFalse(over.has("turnElapsedMs"));
+        events.attach(game());
+        JsonObject next=state.apply(a.getId()); events.addTurnTimes(next);
+        assertFalse(next.has("turnElapsedMs")); assertFalse(next.getAsJsonArray("players").get(0).getAsJsonObject().has("lastTurnMs"));
     }
     @Test public void unknownRemovalDoesNotSwallowLaterResolution() {
         Game game=game(); VisibleEvents events=new VisibleEvents(()->{},()->1); events.attach(game);

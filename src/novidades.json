@@ -1,4 +1,10 @@
 {
+  "0.56.0": {
+    "Tempo do último turno": [
+      { "img": "0.56.0/oponente.webp", "legenda": "No seu turno, o selo com a ampulheta ao lado da vida do oponente diz que o último turno dele durou 1:12." },
+      { "img": "0.56.0/voce.webp", "legenda": "No turno do oponente, o seu selo mostra quanto durou o seu último turno: 0:48." }
+    ]
+  },
   "0.55.0": {
     "Dia e noite": [
       { "img": "0.55.0/dia.webp", "legenda": "De dia, o sol ao lado do relógio do turno. O balão explica que vira noite se você não conjurar mágicas neste turno e que nenhuma foi conjurada até agora." },

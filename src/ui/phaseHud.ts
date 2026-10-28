@@ -1,5 +1,6 @@
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
+import { turnTimeText } from './clock';
 import { holdingStop, stopsByGroup } from './opponentStops';
 
 /** Cinco grupos como no Arena: início (desvirar, manutenção, compra), as duas principais, combate e final. */
@@ -105,12 +106,7 @@ function activePlayerPortrait(state: HudState, portrait?: string): string {
   return `<span class="phase-active-portrait ${mine ? 'mine' : 'theirs'}" aria-hidden="true" data-tip="${esc(mine ? 'Seu turno' : `Turno de ${player.name}`)}"${art ? ` style="background-image:url('${art}')"` : ''}>${initial}</span>`;
 }
 
-/** Tempo do turno no relógio da trilha: "0:07", "12:30" e, passando de uma hora, "1:02:05". */
-export function turnTimeText(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(total / 3600), m = Math.floor(total / 60) % 60, s = total % 60;
-  const ss = String(s).padStart(2, '0');
-  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
-}
+export { turnTimeText };
 
 /**
  * Relógio da partida, no começo da trilha: quanto o jogo em andamento já dura, contado pelo servidor. Some no fim do

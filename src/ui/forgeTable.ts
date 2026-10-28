@@ -211,7 +211,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let client: ForgeClient | null = null;
   let portraits: (string | undefined)[] = [undefined, undefined];
   let lastTurn = 0;
-  // Relógio do turno: começa quando a mesa vê o turno mudar (ou ao abrir a partida) e anda a cada segundo.
+  // Relógio do turno: o servidor diz quanto o turno já durou (como no relógio da partida); numa ponte antiga, começa
+  // quando a mesa vê o turno mudar (ou ao abrir a partida). Anda a cada segundo.
   let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
   // Relógio da partida: o servidor diz quanto o jogo já durou; só se reajusta se o atraso da rede passar de 2 s.
   let gameSince = 0, gameNumber = 0;
@@ -222,9 +223,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const game = root.querySelector<HTMLElement>('[data-match-timer]');
     if (game && gameSince) game.textContent = turnTimeText(Date.now() - gameSince);
   };
-  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver' | 'match'>) => {
+  const syncTurnClock = (s: Pick<FState, 'turn' | 'activePlayer' | 'gameOver' | 'match' | 'turnElapsedMs'>) => {
     const key = `${s.turn}:${s.activePlayer}`;
     if (key !== clockTurn) { clockTurn = key; clockSince = Date.now(); }
+    // Durante a animação de um evento antigo a mesa mostra outro turno; o tempo do servidor é o do turno de agora.
+    const live = client?.state;
+    if (s.turnElapsedMs != null && live?.turn === s.turn && live.activePlayer === s.activePlayer) {
+      const since = Date.now() - s.turnElapsedMs;
+      if (Math.abs(since - clockSince) > 2000) clockSince = since;
+    }
     const elapsed = s.match?.elapsedMs;
     if (elapsed == null) gameSince = 0;
     else {

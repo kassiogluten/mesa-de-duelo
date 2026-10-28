@@ -416,3 +416,6 @@
 .player-counter.land-plays svg { color: #c9b98f; }
 .player-counter.land-plays.done { opacity: .55; }
 .player-counter.land-plays small { color: #b8ad95; }
+/* Tempo do último turno: discreto, para não competir com vida e marcadores. */
+.player-counter.last-turn { border-color: #7d8aa5; color: #c8d4f0; font-variant-numeric: tabular-nums; }
+.player-counter.last-turn svg { color: #9fb0d1; }

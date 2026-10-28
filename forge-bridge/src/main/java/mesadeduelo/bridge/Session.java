@@ -1350,6 +1350,7 @@ final class Session {
             } else {
                 PlayerView p = seat.me;
                 state = StateJson.game(gv, p == null ? -2 : p.getId(), m.getGame());
+                events.addTurnTimes(state);
                 state.addProperty("you", p == null ? -1 : p.getId());
                 boolean spectating = seat.eliminated();
                 state.addProperty("spectating", spectating);

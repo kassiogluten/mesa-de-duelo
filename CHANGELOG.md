@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.56.0] - 2026-10-27
+
+### Novo
+
+- **Tempo do último turno.** Junto da vida de cada jogador, um selo com uma ampulheta mostra quanto durou o turno mais recente dele (por exemplo **1:12**). Ele aparece depois que o jogador termina o primeiro turno e fica escondido durante o turno dele, quando quem conta é o relógio da trilha de fases. Passe o mouse ou toque nele para ver a duração.
+
+### Mudou
+
+- **Relógio do turno.** O tempo do turno na trilha de fases agora é contado pelo servidor, como o relógio da partida: ele continua certo depois de recarregar a página ou voltar de uma queda de conexão, em vez de recomeçar do zero.
+
 ## [0.55.0] - 2026-10-27
 
 ### Novo
