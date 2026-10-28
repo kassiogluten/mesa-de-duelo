@@ -15,6 +15,11 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Estados das permanentes.** Criaturas e outras permanentes ganham um ícone pequeno embaixo da carta quando ficam monstruosas, renomadas, suspeitas, seladas, tripuladas, exauridas, detidas, atreladas, ou quando um Caso é solucionado. Passando o mouse (ou no inspetor), o balão diz o nome do estado e o que ele muda, como "Exaurida: não desvira na próxima etapa de desvirar de quem a controla" ou quem tripulou o veículo neste turno.
 - **Quem defende a batalha.** As batalhas mostram embaixo da carta, ao lado dos marcadores de defesa, um escudo com o nome de quem as defende. O balão lembra que é esse jogador quem bloqueia os atacantes, quanto dano falta para derrotá-la e o que acontece quando ela cai.
 - **Cartas previstas à vista.** As cartas que você prevê (Foretell) agora aparecem de face para cima no seu exílio, com a etiqueta **Prevista** e o custo previsto, e ficam na prateleira do exílio ao lado da mão: quando dá para conjurar, toque nela, como uma carta da mão. Antes, até para você ela ficava de costas. Os oponentes continuam vendo só o verso, agora com a etiqueta **Prevista**.
+- **Voar e Toque mortífero na borda da carta.** As criaturas que voam ganham uma asinha, e as com toque mortífero, uma caveira verde, na coluna de ícones da borda esquerda da carta, ao lado do olho da Vigilância e das pegadas do Atropelar. Assim dá para reconhecer essas criaturas de relance, mesmo quando as habilidades viram um selo só.
+
+### Mudou
+
+- **Mais marcadores à vista na carta.** Os marcadores e as habilidades de uma permanente agora podem ocupar até dois terços da altura da carta antes de virarem um único selo com o total, em vez de só metade. Com vários marcadores e habilidades ao mesmo tempo, você continua vendo cada um sem precisar abrir o balão.
 
 ### Corrigido
 

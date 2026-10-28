@@ -10,8 +10,8 @@ export interface PermanentFx {
   frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'defender' | 'token';
   glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'plus' | 'minus';
   base: ('deathtouch' | 'haste' | 'chained')[];
-  /** Detalhes na borda esquerda: olho (vigilância), pegadas (atropelar) e espada/escudo riscados (não pode atacar/bloquear). */
-  corner: ('vigilance' | 'trample' | 'no-attack' | 'no-block')[];
+  /** Detalhes na borda esquerda: asa (voar), olho (vigilância), pegadas (atropelar), caveira (toque mortífero) e espada/escudo riscados (não pode atacar/bloquear). */
+  corner: ('flying' | 'vigilance' | 'trample' | 'deathtouch' | 'no-attack' | 'no-block')[];
   seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down' | StatusKind; html: string; label: string }[];
   phased: boolean;
   targeted?: 'mine' | 'theirs';
@@ -48,7 +48,8 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   if (c.creature && has('DEATHTOUCH')) base.push('deathtouch');
   if (c.creature && has('HASTE') && c.sick) base.push('haste');
   if (c.creature && (c.cantAttack || c.cantBlock)) base.push('chained');
-  const corner: PermanentFx['corner'] = c.creature ? (['VIGILANCE', 'TRAMPLE'] as const).filter(has).map(k => k === 'VIGILANCE' ? 'vigilance' : 'trample') : [];
+  const CORNER = { FLYING: 'flying', VIGILANCE: 'vigilance', TRAMPLE: 'trample', DEATHTOUCH: 'deathtouch' } as const;
+  const corner: PermanentFx['corner'] = c.creature ? (Object.keys(CORNER) as (keyof typeof CORNER)[]).filter(has).map(k => CORNER[k]) : [];
   if (c.creature && c.cantAttack) corner.push('no-attack');
   if (c.creature && c.cantBlock) corner.push('no-block');
   const seals: PermanentFx['seals'] = [];

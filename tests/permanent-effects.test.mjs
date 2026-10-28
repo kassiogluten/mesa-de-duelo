@@ -57,10 +57,13 @@ test('effects never take pointer input and only move without reduced motion', ()
   assert.equal(auraColor('{W}{U}'), '#f2b54c');
 });
 
-test('vigilance and trample get small marks on the left edge, creatures only', () => {
-  const fx = permanentFx(creature({ keywords: ['TRAMPLE', 'VIGILANCE'] }));
-  assert.deepEqual(fx.corner, ['vigilance', 'trample']);
-  assert.match(permanentFxHTML(fx).html, /fx-corner[^]*class="vigilance"[^]*class="trample"/);
+test('flying, vigilance, trample and deathtouch get small marks on the left edge, creatures only', () => {
+  const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'TRAMPLE', 'VIGILANCE', 'FLYING'] }));
+  assert.deepEqual(fx.corner, ['flying', 'vigilance', 'trample', 'deathtouch']);
+  assert.match(permanentFxHTML(fx).html, /fx-corner[^]*class="flying"[^]*class="vigilance"[^]*class="trample"[^]*class="deathtouch"/);
+  assert.match(css, /\.fx-corner i\.flying \{ background-image/);
+  assert.match(css, /\.fx-corner i\.deathtouch \{ background-image/);
+  assert.deepEqual(permanentFx({ id: 4, tapped: false, token: false, keywords: ['FLYING'] }).corner, []);
   assert.deepEqual(permanentFx({ id: 4, tapped: false, token: false, keywords: ['VIGILANCE'] }).corner, []);
   assert.match(css, /\.slot\.attacking:not\(\.tapped\) \.bfc > \.fx-corner i\.vigilance/);
 });

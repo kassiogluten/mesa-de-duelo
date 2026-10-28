@@ -888,7 +888,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     arena.style.gridTemplateRows = `${header} minmax(0, 1fr) 2px minmax(0, 1fr) ${Math.max(hand.height, bottom)}px`;
   }
 
-  /** Marcadores e palavras-chave que encostam no P/T, um no outro ou passam da metade da carta viram um selo só. */
+  /** Marcadores e palavras-chave que encostam no P/T, um no outro ou cobrem mais de dois terços da carta viram um selo só. */
   function layoutCounters() {
     root.querySelectorAll<HTMLElement>('.bfc:has(> .ctr-sum)').forEach(card => {
       const [counters, kws, pt] = ['.counters', '.kws', '.pt'].map(sel => card.querySelector<HTMLElement>(`:scope > ${sel}`));
@@ -901,8 +901,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       }
       const box = (el: HTMLElement | null) => el && { left: el.offsetLeft, top: el.offsetTop, right: el.offsetLeft + el.offsetWidth, bottom: el.offsetTop + el.offsetHeight };
       const [c, k] = [box(counters), box(kws)];
-      const half = card.offsetHeight / 2;
-      const crowded = (counters && counters.scrollWidth > counters.clientWidth + 1) || (c && c.top < half) || (k && k.top < half)
+      // Dois terços da carta, com uma folga para três linhas de habilidades caberem certinho.
+      const limit = card.offsetHeight / 3 - 2;
+      const crowded = (counters && counters.scrollWidth > counters.clientWidth + 1) || (c && c.top < limit) || (k && k.top < limit)
         || (c && k && c.left < k.right && k.left < c.right && c.top < k.bottom && k.top < c.bottom);
       card.classList.toggle('crowded', !!crowded);
     });

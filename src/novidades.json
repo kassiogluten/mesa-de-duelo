@@ -21,6 +21,12 @@
       { "img": "0.55.0/prevista.webp", "legenda": "Saw It Coming prevista na prateleira do exílio, de face para cima, com a etiqueta **Prevista** e o custo {1}{U}, pronta para **Jogar**." },
       { "img": "0.55.0/prevista-oponente.webp", "legenda": "No exílio do oponente, a carta prevista continua de costas, só com a etiqueta **Prevista**." }
     ],
+    "Voar e Toque mortífero na borda da carta": [
+      { "img": "0.55.0/voar-toque-mortifero.webp", "legenda": "Uma criatura com Voar e Toque mortífero mostra a asa e a caveira verde na borda esquerda da carta." }
+    ],
+    "Mais marcadores à vista na carta": [
+      { "img": "0.55.0/mais-marcadores.webp", "legenda": "À esquerda, o Ezuri com um marcador e sete habilidades mostra cada ícone, em três linhas; à direita, a Hidra, que não cabe nem assim, continua com o selo único (16)." }
+    ],
     "Erros longos na barra lateral": [
       { "img": "0.55.0/erro-rolagem.webp", "legenda": "Um aviso comprido de deck fora do Pauper fica limitado a poucas linhas embaixo do botão **Jogar**; o resto da mensagem rola ali mesmo." }
     ]
