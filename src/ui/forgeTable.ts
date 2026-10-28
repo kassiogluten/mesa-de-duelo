@@ -48,7 +48,7 @@ import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
 import './matchBar.css';
-import { paymentButtonLabels, shortInstruction, voteRequest } from './shortInstruction';
+import { abilityKindLabel, paymentButtonLabels, shortInstruction, targetProgress, voteRequest } from './shortInstruction';
 import { awaitingDecision, waitingOnText } from './awaitingDecision';
 import { isVote, voteHTML, voteTallyText } from './cardVote';
 import './cardVote.css';
@@ -872,7 +872,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     });
     const tg = s.input.targeting;
     if (tg && !s.gameOver) {
-      const from = q(`#fAction [data-peek="${tg.source}"]`) ?? q(`#fHand [data-fid="${tg.source}"]`) ?? q(`.field [data-fid="${tg.source}"]`);
+      // A seta sai da carta no campo quando ela está lá; senão, da carta na caixa de ação ou na mão.
+      const from = q(`.field [data-fid="${tg.source}"]`) ?? q(`#fAction [data-peek="${tg.source}"]`) ?? q(`#fHand [data-fid="${tg.source}"]`);
       add(from, tg, 'choosing');
     }
     const paths = links.map(({ from, to, cls, tag }) => {
@@ -1825,6 +1826,34 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
    * Decisão que segura a partida: aviso no centro da mesa, caixa de ação em destaque, o resto da mesa esmaecido
    * e, se ela ficar parada, um lembrete com som. Com outro jogador decidindo, o aviso diz por quem a mesa espera.
    */
+  /**
+   * Escolha de alvos antes da pilha: o gatilho ou a habilidade que pede o alvo (no idioma do motor, que já vem em
+   * português quando a carta tem tradução), quantos alvos faltam e quais já foram marcados.
+   */
+  interface TargetInfo { source: string; kind: string | null; ability: string; progress: string | null; chosen: string[] }
+  function targetInfoOf(s: FState): TargetInfo | null {
+    const t = s.input.targeting;
+    if (!t) return null;
+    const src = t.card ?? findCard(t.source);
+    const kind = abilityKindLabel(t.kind);
+    const ability = kind && t.ability ? withoutCardIds(t.ability).trim() : '';
+    const chosen = [...(t.cards ?? []).map(id => { const c = findCard(id); return c ? label(c) : null; }),
+      ...(t.players ?? []).map(id => id === s.you ? 'você' : s.players.find(p => p.id === id)?.name ?? null)].filter((n): n is string => !!n);
+    const progress = targetProgress(t);
+    if (!ability && !progress && !chosen.length) return null;
+    return { source: src ? label(src) : 'a carta', kind, ability, progress, chosen };
+  }
+  function targetInfoHTML(info: TargetInfo) {
+    const ability = info.ability ? `<div class="target-ability"><p><span class="target-ability-kind">${esc(info.kind!)}</span> ${richText(info.ability)}</p></div>` : '';
+    const status = [info.progress ? `<strong>${esc(info.progress)}</strong>` : '', info.chosen.length ? `<span>Marcado${info.chosen.length > 1 ? 's' : ''}: ${esc(info.chosen.join(', '))}</span>` : ''].filter(Boolean).join('');
+    return `<div class="target-info">${ability}${status ? `<p class="target-status">${status}</p>` : ''}</div>`;
+  }
+  /** O mesmo, para o leitor de tela. */
+  function targetInfoText(info: TargetInfo) {
+    return [info.ability ? `${info.kind} de ${info.source}: ${/[.!?]$/.test(info.ability) ? info.ability : `${info.ability}.`}` : '', info.progress ? `${info.progress}.` : '', info.chosen.length ? `Marcado${info.chosen.length > 1 ? 's' : ''}: ${info.chosen.join(', ')}.` : '']
+      .filter(Boolean).join(' ');
+  }
+
   function renderAwaiting(s: FState, text: string) {
     const awaiting = awaitingDecision(s);
     const arena = root.querySelector<HTMLElement>('.arena')!;
@@ -1971,9 +2000,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     // Carta que o prompt cita mas que não está à vista na mesa (topo do grimório na vidência/vigilância).
     // A carta que vota fica à vista mesmo estando na pilha: é ela que explica o voto.
+    // Na escolha de alvos (antes da pilha), a carta que pede o alvo aparece mesmo no campo, com a habilidade e o que falta.
     const pc = s.input.vote?.card ?? s.input.card ?? s.input.targeting?.card;
-    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || !findCard(pc.id, false))
-      ? `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';
+    const choosingTargets = !!s.input.targeting && !s.input.paying && !s.input.vote && !s.gameOver;
+    const targetSource = choosingTargets && !!pc && pc.id === s.input.targeting!.source;
+    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || targetSource || !findCard(pc.id, false))
+      ? targetSource
+        ? `<div class="prompt-card target-source-card" data-peek="${pc.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(label(pc))}">${face(pc, 'normal')}</div>`
+        : `<div class="prompt-card" data-peek="${pc.id}">${face(pc, 'normal')}</div>` : '';
+    const targetInfo = choosingTargets ? targetInfoOf(s) : null;
+    $('#fAction').classList.toggle('target-source', !!promptCard && targetSource);
     const opening = s.input.opening;
     const prompt = s.gameOver ? '' : s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
       : s.input.commanderMove ? `${s.input.commanderMove.card ? label(s.input.commanderMove.card) : 'Seu comandante'} ${s.input.commanderMove.stays ? 'está n' : 'iria para '}${zoneWithArticle(s.input.commanderMove.to)}. Para onde vai?`
@@ -2005,7 +2041,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
-    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
+    const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';
+    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
@@ -2015,7 +2052,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const awaiting = renderAwaiting(s, isProliferating(s) ? 'Proliferar: marque o que ganha marcadores' : short ?? withoutCardIds(request));
     // A previsão do combate vai junto: a cada bloqueio marcado ou desfeito, a frase muda e o leitor de tela lê de novo.
     const forecastSpoken = (s.forecast ?? []).map(f => forecastText(f, f.player === s.you ? null : s.players.find(p => p.id === f.player)?.name ?? 'O defensor', cardName)).join(' ');
-    announce([instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
+    const targetSpoken = targetPanel && targetInfo ? ` ${targetInfoText(targetInfo)}` : '';
+    announce([instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
 
     const qEl = $('#fQuestion');
     if (s.question && !s.gameOver) {
@@ -2152,6 +2190,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (s.input.vote?.card.id === id) return s.input.vote.card;
     if (s.question?.card?.id === id) return s.question.card;
     if (s.input.suspendCast?.card.id === id) return s.input.suspendCast.card;
+    if (s.input.targeting?.card?.id === id) return s.input.targeting.card;
     for (const o of s.question?.options ?? []) if (typeof o !== 'string' && o.card?.id === id) return o.card;
     return undefined;
   }

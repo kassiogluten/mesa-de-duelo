@@ -1,4 +1,11 @@
 {
+  "0.60.0": {
+    "Carta de origem na escolha de alvos": [
+      { "img": "0.60.0/gatilho-no-campo.webp", "legenda": "O gatilho do Chupacabra Voraz pede alvo: a carta aparece ao lado da caixa de ação, com o gatilho em destaque e **Falta 1 alvo**." },
+      { "img": "0.60.0/alvo-marcado.webp", "legenda": "Com o alvo escolhido, a caixa diz **Alvo marcado** e mostra qual foi: Ursos Cinzentos." },
+      { "img": "0.60.0/tela-estreita.webp", "legenda": "No celular, a carta do Feiticeiro Pródigo fica pequena dentro da caixa, com a habilidade e o que falta, sem cobrir as criaturas que podem ser alvo." }
+    ]
+  },
   "0.59.0": {
     "Vida prevista ao escolher os bloqueadores": [
       { "img": "0.59.0/caixa-bloqueio.webp", "legenda": "Com um bloqueador marcado, a caixa de ação diz com quanto você sai do combate: **12 de vida**." },

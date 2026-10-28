@@ -633,13 +633,15 @@ Cartas como Telepathy, Revelation e Seer's Vision fazem o oponente jogar com a m
 - [ ] Commander: só para os jogadores que podem ver (Telepathy mostra a mão de todos os oponentes; outras cartas, só a de um).
 - [ ] Incluir no laboratório de efeitos (item 18).
 
-## 42. Carta de origem na escolha de alvos
+## 42. Carta de origem na escolha de alvos ✅
 
 Quando um gatilho ou habilidade pede alvo antes de ir para a pilha, a mensagem no centro da mesa diz só o nome da carta ("Escolha um alvo para …"). A imagem da carta só aparece ali quando ela não está à vista na mesa; se a carta está no campo (o caso comum dos gatilhos), o jogador precisa achar a carta e abrir o inspetor para lembrar o que o efeito faz e que alvo serve.
 
-- [ ] Mostrar na mensagem a carta que está pedindo o alvo, inteira (imagem ou "Arte e texto", conforme a opção do jogador), também quando ela está no campo, enquanto o efeito ainda não foi para a pilha.
-- [ ] Destacar o texto da habilidade que disparou (gatilho ou habilidade ativada), em português, para não precisar ler a carta toda.
-- [ ] Mais detalhes do alvo: que tipo de alvo serve (criatura, jogador, planeswalker…), quantos falta escolher e quais já foram marcados.
-- [ ] Tocar na carta abre o inspetor; a seta de alvo continua saindo da carta.
-- [ ] Não cobrir os alvos nem os botões em tela estreita; com "Ver a mesa" (item 4), a carta some junto com a mensagem.
-- [ ] Leitor de tela: anunciar a carta e a habilidade junto do pedido.
+- [x] Mostrar na mensagem a carta que está pedindo o alvo, inteira (imagem ou "Arte e texto", conforme a opção do jogador), também quando ela está no campo, enquanto o efeito ainda não foi para a pilha.
+- [x] Destacar o texto da habilidade que disparou (gatilho ou habilidade ativada), em português, para não precisar ler a carta toda.
+- [x] Mais detalhes do alvo: que tipo de alvo serve (criatura, jogador, planeswalker…), quantos falta escolher e quais já foram marcados.
+- [x] Tocar na carta abre o inspetor; a seta de alvo continua saindo da carta.
+- [x] Não cobrir os alvos nem os botões em tela estreita; com "Ver a mesa" (item 4), a carta some junto com a mensagem.
+- [x] Leitor de tela: anunciar a carta e a habilidade junto do pedido.
+
+Decidido em 28/10/2026: a ponte manda junto do `targeting`, só na escolha de alvos (não no pagamento), o que pede o alvo (`kind`: mágica, habilidade ou gatilho), o texto da habilidade como o Forge escreve (`ability`: a descrição do gatilho inteira ou o custo e o efeito da ativada; já vem em português quando a carta tem tradução no Forge, como o resto das mensagens), `min`/`max`/`count` do passo atual e as restrições de alvo (`valid`, `zones`). A carta usa a mesma `.prompt-card` da vidência (100px ao lado da caixa de ação, com a opção de imagem ou "Arte e texto"); a habilidade fica num bloco com o rótulo **Gatilho** ou **Habilidade** dentro da caixa, embaixo do pedido, e a linha de baixo diz "Falta 1 alvo", "Pode marcar mais 2 alvos" ou "Alvo marcado", com os nomes já marcados. O tipo de alvo continua na frase curta do pedido; quando a frase do Forge não dá para traduzir, a mesa completa pelas restrições ("criatura de um oponente", "carta num cemitério"). A seta sai da carta no campo quando ela está lá, e da carta na caixa quando não está (mágicas). Em tela estreita, a carta entra na caixa (56px, em cima) e o pedido fica só no aviso do centro da mesa, para a caixa não crescer sobre o campo. "Ver a mesa" só existe nas janelas de escolha; a escolha de alvo fica na caixa de ação, e a carta, dentro dela, some junto. Ficou de fora: destacar o parágrafo dentro da própria carta e traduzir pelo texto do Scryfall a habilidade das cartas que o Forge não traduz (aparece como o Forge manda, em inglês); mágicas não ganham o bloco da habilidade, porque a carta inteira é a mágica.

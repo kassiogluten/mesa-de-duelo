@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const code = await readFile(new URL('../src/ui/shortInstruction.ts', import.meta.url), 'utf8');
 const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { paymentButtonLabels, shortInstruction } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { abilityKindLabel, paymentButtonLabels, shortInstruction, targetProgress, validTargetKind } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 
 const targeting = (message, name) => ({ message, targeting: { card: name ? { name } : undefined } });
 
@@ -62,4 +62,35 @@ test('mana payment buttons say what the automatic payment and the cancel do', ()
   assert.equal(paymentButtonLabels({ payingFor: 'spell', canAutoPay: true, ok: { enabled: false } }).ok, 'Pagar automaticamente');
   // Ponte antiga, sem os campos novos: segue o estado do botão e um cancelar genérico.
   assert.deepEqual(paymentButtonLabels({ ok: { enabled: false } }), { ok: 'Mana insuficiente', cancel: 'Desistir' });
+});
+
+test('what can be targeted comes from the engine restrictions when the request cannot be translated', () => {
+  assert.equal(validTargetKind(['Creature.OppCtrl']), 'criatura de um oponente');
+  assert.equal(validTargetKind(['Creature', 'Player']), 'criatura ou jogador');
+  assert.equal(validTargetKind(['Creature.YouCtrl+nonToken', 'Planeswalker.YouCtrl', 'Battle']), 'criatura que você controla, planeswalker que você controla ou batalha');
+  assert.equal(validTargetKind(['Card.Creature+YouOwn'], ['Graveyard']), 'criatura num cemitério');
+  assert.equal(validTargetKind(['Any']), null);
+  assert.equal(validTargetKind(['Emblem']), null);
+  assert.equal(validTargetKind(undefined), null);
+  const input = { message: 'Select target tapped creature', targeting: { card: { name: 'X' }, valid: ['Creature.tapped'] } };
+  assert.equal(shortInstruction(input), 'Escolha um alvo para X (criatura).');
+  assert.equal(shortInstruction({ message: 'Algo diferente', targeting: { card: { name: 'X' }, valid: ['Player'] } }), 'Escolha o alvo de X (jogador).');
+  assert.equal(shortInstruction({ message: 'Select any target', targeting: { card: { name: 'Raio' }, valid: ['Any'] } }), 'Escolha um alvo para Raio.');
+});
+
+test('target progress says how many are missing, how many more fit, or that all are marked', () => {
+  assert.equal(targetProgress({ min: 1, max: 1, count: 0 }), 'Falta 1 alvo');
+  assert.equal(targetProgress({ min: 2, max: 2, count: 0 }), 'Faltam 2 alvos');
+  assert.equal(targetProgress({ min: 1, max: 1, count: 1 }), 'Alvo marcado');
+  assert.equal(targetProgress({ min: 2, max: 2, count: 2 }), 'Todos os alvos marcados');
+  assert.equal(targetProgress({ min: 0, max: 2, count: 0 }), 'Até 2 alvos');
+  assert.equal(targetProgress({ min: 0, max: 3, count: 1 }), 'Pode marcar mais 2 alvos');
+  assert.equal(targetProgress({}), null, 'old bridges send no counts');
+});
+
+test('only triggers and activated abilities get a highlighted ability label', () => {
+  assert.equal(abilityKindLabel('trigger'), 'Gatilho');
+  assert.equal(abilityKindLabel('ability'), 'Habilidade');
+  assert.equal(abilityKindLabel('spell'), null);
+  assert.equal(abilityKindLabel(undefined), null);
 });

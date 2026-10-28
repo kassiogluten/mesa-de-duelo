@@ -356,7 +356,7 @@ export interface FState {
     /** Atacantes e bloqueadores da declaração atual, identificados pela instância da carta. */
     blocking?: { selectedAttacker: number | null; attackers: number[]; blockers: number[]; legalAssignments: { blocker: number; attackers: number[] }[] };
     attacking?: { attackers: number[]; defenders: { id: number; kind: 'player' | 'card' }[]; legalAssignments: { attacker: number; defenders: { id: number; kind: 'player' | 'card' }[] }[] };
-    targeting?: FTargets & { source: number; card?: FCard };
+    targeting?: FTargeting;
     /** Voto numa permanente, escolhido tocando no campo: a carta que vota e os votos já dados. */
     vote?: { card: FCard; votes: FVote[] } };
   question?: FQuestion;
@@ -379,6 +379,19 @@ export interface ProliferateCandidate {
 
 /** Alvos de uma mágica ou habilidade: ids de cartas e de jogadores. */
 export interface FTargets { cards?: number[]; players?: number[] }
+
+/**
+ * Escolhendo alvos antes de ir para a pilha: a carta que alveja (source/card) e os alvos já escolhidos. Só na
+ * escolha em si (não no pagamento) e ausentes em pontes antigas: kind diz o que pede o alvo; ability é o texto da
+ * habilidade ou do gatilho como o motor escreve (fica de fora nas mágicas); min/max/count são deste passo da
+ * escolha; valid é o que serve como alvo, na sintaxe do Forge ("Creature.OppCtrl"), e zones, fora do campo.
+ */
+export interface FTargeting extends FTargets {
+  source: number; card?: FCard;
+  kind?: 'spell' | 'ability' | 'trigger'; ability?: string;
+  min?: number; max?: number; count?: number;
+  valid?: string[]; zones?: string[];
+}
 
 export type ClientMessage =
   | { type: 'start'; you: unknown; opponent: unknown; opponents?: unknown[]; config: MatchConfig }

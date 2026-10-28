@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.60.0] - 2026-10-28
+
+### Novo
+
+- **Carta de origem na escolha de alvos.** Quando um gatilho ou uma habilidade pede alvo antes de ir para a pilha, a caixa de ação mostra a carta que está pedindo, inteira (do jeito que você escolheu ver as cartas), mesmo quando ela está no seu campo. Junto vem o texto do gatilho ou da habilidade em destaque, quantos alvos ainda faltam e quais você já marcou. Se a frase do pedido não diz o tipo de alvo, a mesa completa pelo que a regra aceita (criatura de um oponente, jogador, carta num cemitério…). Toque na carta para abrir o inspetor; a seta de alvo continua saindo da carta no campo. No celular, a carta fica pequena dentro da caixa, sem cobrir os alvos, e o pedido fica no aviso do centro da mesa. O leitor de tela lê a habilidade e o que falta junto do pedido.
+
 ## [0.59.0] - 2026-10-28
 
 ### Novo

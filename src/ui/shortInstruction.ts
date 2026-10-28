@@ -11,7 +11,8 @@ export interface ShortInstructionInput {
   /** Mana phyrexiana que ainda dá para pagar com vida: a vida já separada nos cliques anteriores. */
   phyrexianLife?: number;
   card?: { name?: string };
-  targeting?: { card?: { name?: string } };
+  /** valid/zones: o que serve como alvo, quando o pedido do Forge não dá para traduzir. */
+  targeting?: { card?: { name?: string }; valid?: string[]; zones?: string[] };
   /** Voto numa permanente: a carta que vota. */
   vote?: { card: { name?: string } };
 }
@@ -63,9 +64,11 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
   if (input.vote) return voteRequest(input.vote.card.name ? translate(input.vote.card.name) : undefined);
   if (input.targeting) {
     const request = parseTargetRequest(input.message);
-    if (!request) return name ? `Escolha o alvo de ${name}.` : null;
+    const fallback = validTargetKind(input.targeting.valid, input.targeting.zones);
+    if (!request) return name ? `Escolha o alvo de ${name}${fallback ? ` (${fallback})` : ''}.` : null;
     const how = request.upTo ? `até ${request.count} ${request.count === 1 ? 'alvo' : 'alvos'}` : request.count === 1 ? 'um alvo' : `${request.count} alvos`;
-    return `Escolha ${how}${name ? ` para ${name}` : ''}${request.kind ? ` (${request.kind})` : ''}.`;
+    const kind = request.kind || fallback;
+    return `Escolha ${how}${name ? ` para ${name}` : ''}${kind ? ` (${kind})` : ''}.`;
   }
   // Custo pedido por um efeito (Estudo Rístico, Mana Leak): a carta costuma ser de outro jogador, e pagar é opcional.
   if (input.paying && input.payingFor === 'effect') {
@@ -79,6 +82,53 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
     return input.phyrexianLife === undefined ? ask : `${ask} ${phyrexianHint(input.phyrexianLife)}`;
   }
   return null;
+}
+
+const VALID: Record<string, string> = {
+  creature: 'criatura', player: 'jogador', opponent: 'oponente', planeswalker: 'planeswalker', permanent: 'permanente',
+  artifact: 'artefato', enchantment: 'encantamento', land: 'terreno', battle: 'batalha', card: 'carta',
+  instant: 'mágica instantânea', sorcery: 'feitiço', spell: 'mágica',
+};
+const OWNERS: Record<string, string> = { oppctrl: 'de um oponente', youctrl: 'que você controla', youdontctrl: 'que você não controla' };
+const ZONE_NAMES: Record<string, string> = { Graveyard: 'num cemitério', Exile: 'no exílio', Hand: 'na mão', Library: 'no grimório', Stack: 'na pilha' };
+
+/**
+ * O que serve como alvo, a partir das restrições do motor ("Creature.OppCtrl", "Player", "Any"): só o tipo e quem
+ * controla, que é o que o jogador precisa para achar o alvo. Null se algum tipo não for conhecido ou servir qualquer alvo.
+ */
+export function validTargetKind(valid: readonly string[] | undefined, zones: readonly string[] = []): string | null {
+  if (!valid?.length) return null;
+  // "Qualquer alvo" já é o que a frase diz sem o tipo.
+  if (valid.some(v => v.toLowerCase() === 'any')) return null;
+  const kinds: string[] = [];
+  for (const entry of valid) {
+    const [base, ...rest] = entry.split('.');
+    const props = rest.join('.').split('+').map(p => p.toLowerCase());
+    // "Card.Creature": a carta pelo tipo dela (fora do campo, como no cemitério).
+    const typed = base.toLowerCase() === 'card' ? props.find(p => VALID[p] && p !== 'card') : undefined;
+    const word = VALID[typed ?? base.toLowerCase()];
+    if (!word) return null;
+    const owner = props.map(p => OWNERS[p]).find(Boolean);
+    const text = owner ? `${word} ${owner}` : word;
+    if (!kinds.includes(text)) kinds.push(text);
+  }
+  const where = zones.map(z => ZONE_NAMES[z]).filter(Boolean);
+  const list = kinds.length > 1 ? `${kinds.slice(0, -1).join(', ')} ou ${kinds[kinds.length - 1]}` : kinds[0];
+  return where.length ? `${list} ${where.join(' ou ')}` : list;
+}
+
+/** Quantos alvos ainda faltam neste passo da escolha: "Falta 1 alvo", "Pode marcar mais 2", "Todos os alvos marcados". */
+export function targetProgress(t: { min?: number; max?: number; count?: number }): string | null {
+  if (t.min === undefined || t.max === undefined || t.count === undefined || t.max <= 0) return null;
+  const alvos = (n: number) => `${n} ${n === 1 ? 'alvo' : 'alvos'}`;
+  if (t.count < t.min) return `${t.min - t.count === 1 ? 'Falta' : 'Faltam'} ${alvos(t.min - t.count)}`;
+  if (t.count >= t.max) return t.max === 1 ? 'Alvo marcado' : 'Todos os alvos marcados';
+  return t.count === 0 ? `Até ${alvos(t.max)}` : `Pode marcar mais ${alvos(t.max - t.count)}`;
+}
+
+/** Nome do que pede o alvo, para o rótulo da habilidade na caixa de ação. */
+export function abilityKindLabel(kind: 'spell' | 'ability' | 'trigger' | undefined): string | null {
+  return kind === 'trigger' ? 'Gatilho' : kind === 'ability' ? 'Habilidade' : null;
 }
 
 /** Voto numa permanente (Council's Judgment): a escolha é tocando no campo. */

@@ -135,4 +135,44 @@ public class InputContextTest {
             assertFalse(InputContext.selectExactly(input, java.util.List.of(-5), java.util.List.of()));
         });
     }
+    @Test public void targetSelectionCarriesTheTriggerTextWhatItTargetsAndHowManyAreLeft() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), opponent = game.getPlayers().get(1);
+        Card chupacabra = ExilePermissionsTest.add(game, "Ravenous Chupacabra", me, ZoneType.Battlefield);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", opponent, ZoneType.Battlefield);
+        var trigger = chupacabra.getTriggers().get(0);
+        var ability = trigger.ensureAbility(); ability.setTrigger(trigger); ability.setActivatingPlayer(me);
+        FThreads.invokeInEdtAndWait(() -> {
+            var input = new forge.gamemodes.match.input.InputSelectTargets(human(game, me), java.util.List.of(bears), ability, true, null, null, null, false);
+            var details = InputContext.targetDetails(input);
+            assertEquals("trigger", details.get("kind").getAsString());
+            String text = details.get("ability").getAsString();
+            assertTrue(text, text.contains("Ravenous Chupacabra") && text.toLowerCase().contains("destroy target creature"));
+            assertFalse(text, text.contains("CARDNAME"));
+            assertEquals(1, details.get("min").getAsInt()); assertEquals(1, details.get("max").getAsInt());
+            assertEquals(0, details.get("count").getAsInt());
+            assertTrue(details.getAsJsonArray("valid").get(0).getAsString().startsWith("Creature"));
+            assertFalse(details.has("zones"));
+            ability.getTargets().add(bears);
+            assertEquals(1, InputContext.targetDetails(input).get("count").getAsInt());
+        });
+    }
+    @Test public void activatedAbilityTextKeepsTheCostAndSpellsLeaveTheTextOut() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), opponent = game.getPlayers().get(1);
+        Card sorcerer = ExilePermissionsTest.add(game, "Prodigal Sorcerer", me, ZoneType.Battlefield);
+        Card bolt = ExilePermissionsTest.add(game, "Lightning Bolt", me, ZoneType.Hand);
+        var ping = sorcerer.getSpellAbilities().stream().filter(sa -> sa.usesTargeting()).findFirst().orElseThrow();
+        ping.setActivatingPlayer(me);
+        var cast = bolt.getFirstSpellAbility(); cast.setActivatingPlayer(me);
+        FThreads.invokeInEdtAndWait(() -> {
+            var details = InputContext.targetDetails(new forge.gamemodes.match.input.InputSelectTargets(human(game, me), java.util.List.of(), ping, true, null, null, null, false));
+            assertEquals("ability", details.get("kind").getAsString());
+            assertTrue(details.get("ability").getAsString(), details.get("ability").getAsString().startsWith("{T}:"));
+            var spell = InputContext.targetDetails(new forge.gamemodes.match.input.InputSelectTargets(human(game, me), java.util.List.of(), cast, true, null, null, null, false));
+            assertEquals("spell", spell.get("kind").getAsString());
+            assertFalse(spell.has("ability"));
+            assertEquals("Any", spell.getAsJsonArray("valid").get(0).getAsString());
+            assertNull(InputContext.targetDetails(new Object()));
+            assertNotNull(opponent);
+        });
+    }
 }

@@ -125,6 +125,27 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       ok: { label: 'Automático', enabled: false }, cancel: { label: 'Cancelar', enabled: true } });
     view.render();
   },
+  /**
+   * Gatilho pedindo alvo antes da pilha: Chupacabra Voraz no seu campo (e não fora da mesa) aparece na caixa de ação,
+   * com o gatilho em destaque e o que falta marcar. chosen: já marcou o alvo; ability: habilidade ativada.
+   */
+  targetSource(mode: 'trigger' | 'chosen' | 'ability' = 'trigger') {
+    const [me, opp] = state.players;
+    const chupa = card(282, 'Ravenous Chupacabra', 10, { manaCost: '{2}{B}{B}', typeLine: 'Creature — Beast Horror', power: 2, toughness: 2 });
+    const sorcerer = card(283, 'Prodigal Sorcerer', 10, { manaCost: '{2}{U}', typeLine: 'Creature — Human Wizard', power: 1, toughness: 1, tapped: mode === 'ability' });
+    const bears = card(284, 'Grizzly Bears', 23, { manaCost: '{1}{G}', typeLine: 'Creature — Bear' });
+    const giant = card(285, 'Hill Giant', 23, { manaCost: '{3}{R}', typeLine: 'Creature — Giant', power: 3, toughness: 3 });
+    if (!me.battlefield.some((c: any) => c.id === 282)) { me.battlefield.push(chupa, sorcerer); opp.battlefield.push(bears, giant); }
+    const ability = mode === 'ability'
+      ? { source: sorcerer, kind: 'ability', text: '{T}: Feiticeiro Pródigo causa 1 ponto de dano a qualquer alvo.', ask: 'Select any target', valid: ['Any'], selectable: [100, 101, 282, 283, 284, 285], players: [10, 23] }
+      : { source: chupa, kind: 'trigger', text: 'Quando Chupacabra Voraz entrar no campo de batalha, destrua a criatura alvo que um oponente controla.', ask: 'Select target creature an opponent controls', valid: ['Creature.OppCtrl'], selectable: [101, 284, 285], players: [] };
+    const chosen = mode === 'chosen';
+    Object.assign(state.input, { gen: 10, priority: false, actionable: [], selectable: ability.selectable, selectablePlayers: ability.players,
+      message: `${ability.source.name} (${ability.source.id}) - ${ability.text}\n\n${ability.ask}${chosen ? '\nTargeted: \nGrizzly Bears (284)' : ''}`,
+      ok: { label: 'OK', enabled: chosen }, cancel: { label: 'Cancelar', enabled: false }, card: ability.source,
+      targeting: { source: ability.source.id, card: ability.source, kind: ability.kind, ability: ability.text, min: 1, max: 1, count: chosen ? 1 : 0, valid: ability.valid, cards: chosen ? [284] : [] } });
+    view.render();
+  },
   extras() {
     Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
     view.render();
