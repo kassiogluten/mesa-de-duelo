@@ -59,6 +59,10 @@ final class StateJson {
                 JsonObject row = player(p, viewer == p.getId() && !(game.getRules().hasAppliedVariant(forge.game.GameType.Commander) && p.getHasLost()), game);
                 JsonObject top = libraryTop(p, gv, viewer, game);
                 if (top != null) row.add("libraryTop", top);
+                if (viewer != p.getId()) {
+                    JsonArray revealed = revealedHand(p, gv, viewer, game);
+                    if (!revealed.isEmpty()) row.add("revealedHand", revealed);
+                }
                 hiddenFaces(row, p, gv, viewer);
                 row.addProperty("seat", seat++); players.add(row);
             }
@@ -208,6 +212,23 @@ final class StateJson {
         boolean visible = seen != null ? top.canBeShownTo(seen) : !gv.getPlayers().isEmpty();
         if (seen == null) for (PlayerView pv : gv.getPlayers()) visible &= top.canBeShownTo(pv);
         return visible ? card(top, game) : null;
+    }
+
+    /**
+     * Mão revelada (Telepathy, Revelation, Seer's Vision): as cartas da mão de outro jogador que quem está vendo pode
+     * olhar, pela regra do Forge ({@code MayLookAt} das cartas). Elas vão à parte de {@code hand}, que continua sendo a
+     * mão jogável do dono. Espectador vê só o que todos os jogadores veem; com o efeito fora do campo, nada vai.
+     */
+    static JsonArray revealedHand(PlayerView p, GameView gv, int viewer, Game game) {
+        JsonArray out = new JsonArray();
+        PlayerView seen = null;
+        for (PlayerView pv : gv.getPlayers()) if (pv.getId() == viewer) seen = pv;
+        for (CardView c : nzv(p.getHand())) {
+            boolean visible = seen != null ? c.canBeShownTo(seen) : !gv.getPlayers().isEmpty();
+            if (seen == null) for (PlayerView pv : gv.getPlayers()) visible &= c.canBeShownTo(pv);
+            if (visible) out.add(card(c, game));
+        }
+        return out;
     }
 
     /**

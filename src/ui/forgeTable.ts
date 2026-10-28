@@ -55,6 +55,8 @@ import { awaitingDecision, waitingOnText } from './awaitingDecision';
 import { isVote, voteHTML, voteTallyText } from './cardVote';
 import './cardVote.css';
 import { confirmUpkeepMana, upkeepManaKey } from './upkeepMana';
+import { oppHandHTML, revealedCards, revealedCountText, seatHandHTML } from './revealedHand';
+import './revealedHand.css';
 import './upkeepMana.css';
 import './awaitingDecision.css';
 
@@ -251,7 +253,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   };
   let lastCombat = '';
   let zoneOf: number | null = null;
-  let zoneKind: 'gy' | 'exile' | 'command' | 'damage' | 'dungeon' = 'gy';
+  let zoneKind: 'gy' | 'exile' | 'command' | 'damage' | 'dungeon' | 'hand' = 'gy';
   let bannerTimer = 0;
   /** Decisão em espera (prompt e tipo) e o lembrete que reforça o aviso se ela ficar parada. */
   let awaitKey = '';
@@ -1309,7 +1311,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   /** Oponente oculto: faixa compacta com retrato, vida, mão, marcadores e dano de comandante, e um botão para voltar. */
   function collapsedSeat(s: FState, p: FPlayer, index: number) {
     return `<section class="table-seat collapsed${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)} oculto${p.eliminated ? ', eliminado' : ''}">
-      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div><span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>${playerCounters(p)}${damageButton(p)}</header>
+      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}</header>
       <p class="seat-summary">${p.battlefield.filter(c => c.creature).length} criaturas · ${p.battlefield.filter(c => c.land).length} terrenos</p>
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div></div>
       <button type="button" class="seat-show" data-seat-show="${p.id}" aria-label="Mostrar o campo de ${esc(p.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Mostrar campo</span></button>
@@ -1318,7 +1320,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function opponentSeat(s: FState, p: FPlayer, index: number, count = 1, forced: string | null = null) {
     const chosen = soloSeat !== null ? soloSeat === p.id : !hiddenSeats.has(p.id);
     return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
-      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div><span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>${playerCounters(p)}${damageButton(p)}${seatControls(p, true, count)}</header>
+      <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}${seatControls(p, true, count)}</header>
       ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : ''}
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
       <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(s, p.battlefield.filter(c => !isBackRow(c))))}</div>
@@ -1416,20 +1418,24 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       }).join('')}</ul><div class="q-actions"><button class="arena-btn secondary" data-ui="zone-close">Fechar</button></div></section>`);
       el.hidden = false; syncModal(); return;
     }
-    const title = groupIds ? groupTitle : zoneKind === 'command' ? 'Zona de comando' : zoneKind === 'exile' ? 'Exílio' : 'Cemitério';
-    const cards = groupIds ? groupIds.map(id => findCard(id)).filter((c): c is FCard => !!c) : [...(zoneKind === 'command' ? p!.commandZone ?? [] : zoneKind === 'exile' ? p!.exile : p!.graveyard)].reverse();
+    // Mão revelada (Telepathy e afins): só para ver; com o efeito fora do campo, a galeria fecha.
+    if (zoneKind === 'hand' && p && !groupIds && !revealedCards(p).length) { closeZone(); return; }
+    const title = groupIds ? groupTitle : zoneKind === 'command' ? 'Zona de comando' : zoneKind === 'exile' ? 'Exílio' : zoneKind === 'hand' ? 'Mão revelada' : 'Cemitério';
+    const cards = groupIds ? groupIds.map(id => findCard(id)).filter((c): c is FCard => !!c)
+      : zoneKind === 'hand' ? revealedCards(p!) : [...(zoneKind === 'command' ? p!.commandZone ?? [] : zoneKind === 'exile' ? p!.exile : p!.graveyard)].reverse();
     // No exílio, as cartas da prateleira levam a mesma etiqueta de lá (Jogar, Aguarde, Suspensa...).
     const shelf = new Map(zoneKind === 'exile' && !groupIds ? exileShelfCards(s).map(entry => [entry.card.id, exileCaption(s, entry)]) : []);
     const tags = (c: FCard) => {
       const caption = shelf.get(c.id);
       return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.foretold ? foretoldTag(c) : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
     };
-    const card = (c: FCard) => `<div class="zone-card">${canUse(s, c)
+    const card = (c: FCard) => `<div class="zone-card">${zoneKind !== 'hand' && canUse(s, c)
       ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`
       : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}${shelf.has(c.id) ? `. ${esc(shelf.get(c.id)!.status)}` : ''}">${face(c, 'normal')}${tags(c)}</button>`}
       <button class="icon-btn" data-inspect="${c.id}">${inspectIcon}Inspecionar</button></div>`;
     setHTML(el, `<div class="question zone-view" role="dialog" aria-modal="true" aria-label="${title}">
-      <h2>${title}${p ? ` · ${esc(p.name)}` : ''} (${cards.length})</h2>
+      <h2>${title}${p ? ` · ${esc(p.name)}` : ''} (${zoneKind === 'hand' && p && !groupIds ? revealedCountText(p) : cards.length})</h2>
+      ${zoneKind === 'hand' && p && !groupIds ? `<p class="q-hint">Só para ver: quem joga estas cartas é ${esc(p.name)}.</p>` : ''}
       ${cards.length ? `<div class="q-opts cards">${cards.map(card).join('')}</div>` : '<p class="q-hint">Vazio.</p>'}
       <div class="q-actions"><button class="arena-btn secondary" data-ui="zone-close">Fechar</button></div>
     </div>`);
@@ -1921,10 +1927,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const command = $('#fCommand');
     command.hidden = !(me.commanders?.length);
     setHTML(command, command.hidden ? '' : `<span class="command-heading">Comando</span><div class="command-track">${commandCards(s, me)}</div>${damageButton(me)}`);
-    setHTML($('#fOppHand'), multiplayer ? '' : Array.from({ length: opp.handCount }, (_, i) => {
-      const off = i - (opp.handCount - 1) / 2;
-      return `<div class="back" style="--rot:${-off * 3}deg;--dy:${-off * off * 1.5}px"></div>`;
-    }).join(''));
+    setHTML($('#fOppHand'), multiplayer ? '' : oppHandHTML(opp, c => face(c, 'small'), label));
+    $('#fOppHand').classList.toggle('revealed', !multiplayer && revealedCards(opp).length > 0);
     setHTML($('#fOppAvatar'), multiplayer ? '' : avatar(visual, opp, 1));
     setHTML($('#fMeAvatar'), avatar(visual, me, 0));
     setHTML($('#fOppPiles'), multiplayer ? '' : piles(visual, opp) + (opp.commanders?.length ? `<div class="duel-command">${commandCards(s, opp)}${damageButton(opp)}</div>` : ''));
@@ -2146,7 +2150,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const s = client?.state;
     if (!s) return undefined;
     for (const p of stateWithFrame(s, displayFrame).players) {
-      for (const c of [...p.hand, ...p.battlefield, ...p.graveyard, ...p.exile, ...(p.commandZone ?? []), ...(p.emblems ?? []), ...(p.libraryTop ? [p.libraryTop] : [])]) if (c.id === id) return c;
+      for (const c of [...p.hand, ...p.battlefield, ...p.graveyard, ...p.exile, ...(p.commandZone ?? []), ...(p.emblems ?? []), ...(p.libraryTop ? [p.libraryTop] : []), ...revealedCards(p)]) if (c.id === id) return c;
     }
     const onStack = s.stack.find(si => si.source?.id === id)?.source;
     if (onStack) return onStack;
@@ -2395,7 +2399,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (!client) return;
     const gy = t.closest<HTMLElement>('[data-gy]');
-    if (gy && client.state) { groupIds = null; zoneOf = +gy.dataset.gy!; zoneKind = gy.dataset.zone === 'exile' ? 'exile' : gy.dataset.zone === 'command' ? 'command' : gy.dataset.zone === 'damage' ? 'damage' : gy.dataset.zone === 'dungeon' ? 'dungeon' : 'gy'; zoneView(client.state); return; }
+    if (gy && client.state) { groupIds = null; zoneOf = +gy.dataset.gy!; zoneKind = gy.dataset.zone === 'exile' ? 'exile' : gy.dataset.zone === 'command' ? 'command' : gy.dataset.zone === 'damage' ? 'damage' : gy.dataset.zone === 'dungeon' ? 'dungeon' : gy.dataset.zone === 'hand' ? 'hand' : 'gy'; zoneView(client.state); return; }
 
     const libPlace = t.closest<HTMLElement>('[data-lib-place]');
     const libMove = t.closest<HTMLElement>('[data-lib-move]');

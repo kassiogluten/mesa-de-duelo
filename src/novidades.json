@@ -5,6 +5,11 @@
       { "img": "0.60.0/videncia-ordem.webp", "legenda": "Com mais de uma no topo, a tela seguinte mostra a ordem em que elas vão ficar. As setas trocam a carta de lugar; aqui Counterspell passou para o topo." },
       { "img": "0.60.0/vigilancia.webp", "legenda": "A vigilância usa a mesma tela, com **Cemitério** no lugar de Fundo." },
       { "img": "0.60.0/videncia-celular.webp", "legenda": "Vidência 5 no celular deitado: as cartas encolhem, e os botões de cada carta e o **Confirmar** continuam à vista." }
+    ],
+    "Mão revelada à vista": [
+      { "img": "0.60.0/leque-revelado.webp", "legenda": "Com Telepathy na mesa, o leque do oponente fica de face para cima ao lado do retrato, com o selo **Mão revelada**. Toque numa carta para ampliar." },
+      { "img": "0.60.0/selo-commander.webp", "legenda": "No Commander, o número de cartas na mão de Ana ganha um olho e a etiqueta **Revelada**." },
+      { "img": "0.60.0/galeria-mao.webp", "legenda": "Tocando no selo, abre a galeria com a mão inteira de Diego, só para ver." }
     ]
   },
   "0.59.0": {

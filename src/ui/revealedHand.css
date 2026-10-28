@@ -1,0 +1,37 @@
+/* Mão revelada (Telepathy e afins): o leque do oponente vira de face para cima no duelo; no Commander, o selo da mão ganha um olho. */
+.forge:not(.multiplayer) .opp-hand.revealed { top: 8.6vh; align-items: flex-start; gap: 0; }
+.forge .opp-hand .revealed-fan { display: flex; }
+.forge .opp-hand .revealed-card, .forge .opp-hand.revealed .back {
+  width: 6.6vh; height: 9.2vh; --fw: 6.6vh; margin-left: -2.4vh; padding: 0; border: 0; background: none; color: inherit; cursor: zoom-in;
+  transform: translateY(var(--dy)) rotate(var(--rot)); transform-origin: 50% 0; transition: transform .15s ease;
+}
+.forge .opp-hand .revealed-card:first-child { margin-left: 0; }
+.forge .opp-hand .revealed-card .face { width: 100%; height: 100%; box-shadow: 0 0 0 1.5px #9fd3ffaa, 0 3px 8px #000a; }
+.forge .opp-hand .revealed-card:hover, .forge .opp-hand .revealed-card:focus-visible { z-index: 2; transform: translateY(calc(var(--dy) + 0.8vh)) rotate(0deg) scale(1.12); }
+.forge .opp-hand .revealed-card:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+.forge .revealed-tag {
+  align-self: center; display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  background: #0c1830f0; border: 1px solid #9fd3ff88; color: #d7ecff; font: 700 11px / 1.2 var(--body); box-shadow: 0 2px 8px #0008; pointer-events: none;
+}
+.forge .revealed-tag .eye, .seat-hand.revealed .eye { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Mesma largura do selo de costas (o nome do jogador precisa do espaço); a etiqueta fica pendurada embaixo. */
+.seat-hand.revealed {
+  position: relative; flex: none; gap: 2px; padding: 1px 3px; border-radius: 7px; cursor: pointer;
+  background: #0c1830e0; border: 1px solid #9fd3ff88; color: #d7ecff; font: 700 12px / 1.2 var(--body);
+}
+.seat-hand.revealed b { font-variant-numeric: tabular-nums; }
+.seat-hand.revealed .seat-hand-tag {
+  position: absolute; top: calc(100% - 3px); left: 50%; transform: translateX(-50%); padding: 0 4px; border-radius: 4px; white-space: nowrap;
+  background: #0c1830; border: 1px solid #9fd3ff66; font-size: 8px; line-height: 1.35; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #9fd3ff;
+}
+.seat-hand.revealed:hover, .seat-hand.revealed:focus-visible { border-color: var(--glow); box-shadow: 0 0 10px #59b5ff66; }
+.seat-hand.revealed:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+@media (max-height: 500px), (max-width: 760px) {
+  .seat-hand.revealed { padding: 1px 4px; font-size: 11px; }
+  .seat-hand.revealed .eye { width: 12px; height: 12px; }
+  .seat-hand.revealed .seat-hand-tag { font-size: 7px; }
+  .forge .revealed-tag { font-size: 10px; padding: 2px 7px; margin-left: 6px; }
+  .forge:not(.multiplayer):not(.commander-game) .opp-hand.revealed { top: 50px; }
+}
+@media (prefers-reduced-motion: reduce) { .forge .opp-hand .revealed-card { transition: none; } }

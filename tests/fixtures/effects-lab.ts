@@ -3,7 +3,8 @@ import { createForgeTableView } from '../../src/ui/forgeTable';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
- * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17) e o mill (item 24).
+ * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17), o mill (item 24)
+ * e a mão revelada do oponente (item 41, Telepathy e afins).
  * Abra /tests/fixtures/effects-lab.html no `npm run dev`. A página mostra o painel e a mesa num quadro do tamanho
  * escolhido (?mesa abre só a mesa, que recebe os comandos do painel). Os eventos têm o mesmo formato que a ponte manda.
  */
@@ -333,6 +334,17 @@ function table() {
         }
       }
     },
+    // Mão revelada (item 41): a ponte manda em revealedHand as cartas que você pode ver; esconder é tirar o campo.
+    reveal: c => {
+      const opp = sideOf('opp');
+      const hand = ['Counterspell', 'Lightning Bolt', 'Serra Angel', 'Island'].map(name => ({ id: nextId++, controller: OPP, ...card(name, ({
+        Counterspell: { typeLine: 'Instant', manaCost: '{U}{U}' }, 'Lightning Bolt': { typeLine: 'Instant', manaCost: '{R}' },
+        'Serra Angel': { creature: true, power: 4, toughness: 4, typeLine: 'Creature — Angel', manaCost: '{3}{W}{W}' }, Island: { land: true, typeLine: 'Basic Land — Island' } } as Record<string, Record<string, unknown>>)[name]) }));
+      opp.handCount = hand.length;
+      if (c.kind === 'none') { delete opp.revealedHand; return 'Mão do oponente escondida de novo: o leque volta a ficar de costas.'; }
+      opp.revealedHand = c.kind === 'one' ? hand.slice(0, 1) : hand;
+      return c.kind === 'one' ? 'Uma carta da mão à vista: ela fica de face para cima e as outras de costas.' : 'Mão revelada (Telepathy): o leque do oponente vira de face para cima; toque numa carta para inspecionar.';
+    },
     style: c => {
       try { localStorage.setItem('mesa:cards', c.value); } catch { /* opcional */ }
       const select = document.querySelector<HTMLSelectElement>('#fCardStyle');
@@ -410,6 +422,8 @@ function panel() {
       .map(([k, t]) => `<button data-m="${k}">${t}</button>`).join('')}
     <h2>Moer (item 24, do lado escolhido em Campo)</h2>
     ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>
+    <h2>Mão revelada (item 41)</h2>
+    ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
     <select id="style">${opt('full', 'Imagem completa')}${opt('art', 'Arte e texto')}${opt('arena', 'Arena')}</select>
     <label class="chk" style="width:100%"><input type="checkbox" id="reduce"> Reduzir movimento (só nesta página)</label>
@@ -454,6 +468,7 @@ function panel() {
     if (b.dataset.d) send({ cmd: 'damage', kind: b.dataset.d, source: ref($<HTMLSelectElement>('source').value), target: ref($<HTMLSelectElement>('target').value), amount: $<HTMLInputElement>('amount').value });
     if (b.dataset.m) send({ cmd: 'move', kind: b.dataset.m, id: selectedId(), target: ref($<HTMLSelectElement>('target').value) });
     if (b.dataset.mill) send({ cmd: 'mill', side: $<HTMLSelectElement>('side').value, n: b.dataset.mill, surveil: !!b.dataset.surveil });
+    if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.s) resize(b.dataset.s);
   });
   lab.addEventListener('change', e => {
