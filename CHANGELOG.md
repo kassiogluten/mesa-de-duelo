@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.57.0] - 2026-10-28
+
+### Novo
+
+- **Histórico da partida por turno.** O Registro (no menu da partida) agora separa as jogadas por turno, com o número do turno e de quem é. O turno atual e o anterior ficam abertos; os mais antigos ficam recolhidos, mostrando quantas jogadas tiveram, e abrem com um toque. A mágica e o que ela causou viram uma linha só ("Você conjurou Cólera de Deus: destruiu 4 permanentes"), e o mesmo vale para o dano de combate com as criaturas que morreram, para os gatilhos seguidos da mesma carta e para remoções em sequência. Toque no número ao lado da linha para ver cada carta afetada.
+- **Mais detalhes no histórico.** Cada linha traz uma miniatura da carta (toque para ampliar), os alvos da mágica ou da habilidade, de quem era a carta que saiu do campo, de onde veio a carta conjurada (cemitério, exílio, zona de comando) e quem bloqueou quem. As compras também aparecem, com a quantidade ("Oponente comprou 2 cartas"), sem dizer quais cartas.
+
+### Mudou
+
+- **Histórico da partida inteira.** O Registro não apaga mais o começo da partida depois de 60 jogadas: ele guarda a partida toda.
+
 ## [0.56.1] - 2026-10-27
 
 ### Corrigido

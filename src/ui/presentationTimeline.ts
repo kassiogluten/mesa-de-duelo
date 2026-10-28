@@ -38,6 +38,8 @@ export interface PresentationEvent {
   self?: boolean;
   lethal?: boolean;
   prevented?: boolean;
+  /** Número do turno que começou (`turn`). */
+  turn?: number;
   /** Só na mesa: quantas compras seguidas do mesmo jogador viraram uma entrada só (`draw`). */
   count?: number;
   /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
@@ -52,7 +54,8 @@ export interface PresentationEvent {
   frame?: PresentationFrame;
 }
 export interface PresentationEntry { event: PresentationEvent; audible: boolean; audioOnly?: boolean }
-const HISTORY_LIMIT = 60;
+// O histórico agrupa os eventos por turno e jogada; guardar a partida inteira não enche a lista.
+const HISTORY_LIMIT = 3000;
 const QUEUE_LIMIT = 12;
 const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
@@ -66,6 +69,14 @@ function sameMill(a: PresentationEvent | undefined, b: PresentationEvent) {
 }
 function joinMill(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
   return { ...b, milled: [...(a.milled ?? []), ...(b.milled ?? [])] };
+}
+
+/** Compras seguidas do mesmo jogador: no histórico, "Bruno comprou 2 cartas". */
+function sameDraw(a: PresentationEvent | undefined, b: PresentationEvent) {
+  return a?.type === 'draw' && b.type === 'draw' && a.actor === b.actor;
+}
+function join(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
+  return sameDraw(a, b) ? { ...b, count: (a.count ?? 1) + (b.count ?? 1) } : joinMill(a, b);
 }
 
 function sameLandTransition(a: PresentationEvent, b: PresentationEvent) {
@@ -105,9 +116,10 @@ export class PresentationTimeline {
     this.cursor = Math.max(this.cursor, options.cursor ?? 0);
     const combined = [...this.history, ...accepted];
     // Um mill que chega em dois pacotes continua sendo uma linha só no histórico.
-    this.history = combined.filter(event => PRESENTABLE.has(event.type) &&
-      (event.type !== 'entered' || !combined.some(other => sameLandTransition(event, other))))
-      .reduce<PresentationEvent[]>((list, event) => { if (sameMill(list.at(-1), event)) list[list.length - 1] = joinMill(list.at(-1)!, event); else list.push(event); return list; }, [])
+    // As compras entram no histórico (com a quantidade), mas não na apresentação da mesa.
+    this.history = combined.filter((event, i) => (PRESENTABLE.has(event.type) || event.type === 'draw') &&
+      (event.type !== 'entered' || !combined.slice(Math.max(0, i - 3), i + 4).some(other => sameLandTransition(event, other))))
+      .reduce<PresentationEvent[]>((list, event) => { if (sameMill(list.at(-1), event) || sameDraw(list.at(-1), event)) list[list.length - 1] = join(list.at(-1)!, event); else list.push(event); return list; }, [])
       .slice(-HISTORY_LIMIT);
     if (fresh || options.silent) { this.catchUp(); return accepted.length > 0; }
     for (const event of accepted) {
