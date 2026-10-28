@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.67.1] - 2026-10-28
+
+### Corrigido
+
+- **Menus do topo na sala de espera.** Esperando jogadores numa sala, Jogar, Meus decks e a marca Mesa de Duelo ficavam apagados, sem dizer por quê. Agora eles funcionam: ao tocar, a mesa pergunta se você quer sair da sala, com **Ficar na sala** em destaque. Se confirmar, você sai da sala e vai para onde tocou.
+
 ## [0.67.0] - 2026-10-28
 
 ### Novo

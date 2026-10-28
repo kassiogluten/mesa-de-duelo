@@ -1,4 +1,9 @@
 {
+  "0.67.1": {
+    "Menus do topo na sala de espera": [
+      { "img": "0.67.1/sair-da-sala.webp", "legenda": "Tocando em **Meus decks** na sala de espera, a mesa pergunta se você quer sair da sala; **Ficar na sala** vem em destaque." }
+    ]
+  },
   "0.67.0": {
     "Novo formato: Standard": [
       { "img": "0.67.0/formato-standard.webp", "legenda": "Em **Outros**, o Standard aparece ao lado de Pauper, Sacola 50 e Livre." },

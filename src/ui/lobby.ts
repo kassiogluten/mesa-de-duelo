@@ -5,7 +5,7 @@ import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
 import { joinableRooms, publicRoomsHTML, type PublicRoomsState } from './publicRooms';
-import { mountRoomLobby } from './roomLobby';
+import { confirmLeaveRoom, mountRoomLobby } from './roomLobby';
 import { deckArt, deckColors, deckPriceHTML } from './deckStats';
 import { validateDeckLocal } from './deckRules';
 import { siteFooterHTML } from './siteFooter';
@@ -186,7 +186,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#formatOthers').hidden = !format || format === 'commander';
     $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : 'Escolha um formato para começar.';
     $('#formatHelp').hidden = !!format && format !== 'sacola50';
-    header.setDisabled(busy || !!waitingRoom);
+    header.setDisabled(busy);
     $('.home-intro').hidden = $('.play-layout').hidden = !!waitingRoom;
     roomLobby.render(waitingRoom);
     $('#netPanel').hidden = mode !== 'net';
@@ -464,7 +464,13 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     setStatus(`A sala ${code} ainda não existe. ${unnamed ? 'Digite seu nome, confira' : 'Confira'} as opções e toque em Criar sala para abri-la com esse código.`);
     if (unnamed) $('#netName').focus();
   }
-  const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); }});
+  const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); },
+    async beforeNav(to) {
+      if (!waitingRoom) return true;
+      if (!await confirmLeaveRoom(waitingRoom.code, to) || !waitingRoom) return false;
+      opts.onCancelRoom(); waitingRoom = null; refresh();
+      return !busy;
+    }});
   refresh();
   fitSidebar();
   // Os comandantes vêm primeiro: são as capas dos decks, e a lista inteira (milhares de cartas) demora a chegar.
@@ -478,6 +484,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     findRoom(code, false, true);
   }, showRoom(nextRoom) {
     preflight++; waitingRoom = nextRoom;
+    // A partida começou (ou a sala acabou) com a pergunta de sair aberta: não há mais de onde sair.
+    if (!nextRoom) document.querySelector<HTMLDialogElement>('dialog.room-leave')?.close();
     if (nextRoom) { mode = 'net'; format = nextRoom.config.format; matchLength = nextRoom.config.matchLength; playerCount = nextRoom.config.playerCount ?? nextRoom.capacity ?? 2; }
     refresh();
   }};

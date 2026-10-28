@@ -28,6 +28,29 @@ const artOf = (name: string | undefined) => { const sc = name ? cacheGet(name) :
 /** Link de convite: abre a tela inicial já na sala (veja o "?sala=" em main.ts). */
 export const roomLink = (code: string) => `${location.origin}${location.pathname}?sala=${encodeURIComponent(code)}`;
 
+/** Os menus do topo levam para fora da sala: pergunta antes. "Ficar na sala" vem em foco: na dúvida, ninguém sai. */
+export function confirmLeaveRoom(code: string, to: 'play' | 'decks'): Promise<boolean> {
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const dlg = document.createElement('dialog');
+  dlg.className = 'conta-dialogo room-leave';
+  dlg.setAttribute('aria-labelledby', 'roomLeaveTitle'); dlg.setAttribute('aria-describedby', 'roomLeaveText');
+  dlg.innerHTML = `<h2 id="roomLeaveTitle">Sair da sala ${esc(code)}?</h2>`
+    + `<p id="roomLeaveText">Você está esperando jogadores. ${to === 'decks' ? 'Para ir a Meus decks, você sai da sala' : 'Para voltar à escolha de formato e deck, você sai da sala'}.</p>`
+    + `<footer><button type="button" class="arena-btn secondary" data-leave="yes">${to === 'decks' ? 'Sair e ir para Meus decks' : 'Sair da sala'}</button><button type="button" class="arena-btn primary" data-leave="no">Ficar na sala</button></footer>`;
+  document.body.append(dlg);
+  return new Promise(resolve => {
+    let answer = false;
+    dlg.addEventListener('click', e => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-leave]');
+      if (btn) { answer = btn.dataset.leave === 'yes'; dlg.close(); }
+      else if (e.target === dlg) dlg.close();
+    });
+    dlg.addEventListener('close', () => { dlg.remove(); if (!answer && opener?.isConnected) opener.focus({ preventScroll: true }); resolve(answer); });
+    dlg.showModal();
+    dlg.querySelector<HTMLElement>('[data-leave="no"]')?.focus();
+  });
+}
+
 export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLobby {
   let room: FRoom | null = null;
   const said = new Map<number, { key: RoomSaying; timer: ReturnType<typeof setTimeout> }>();

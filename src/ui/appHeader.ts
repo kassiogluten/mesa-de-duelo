@@ -9,6 +9,8 @@ export interface AppHeaderOptions {
   active: 'play' | 'decks';
   onPlay(): void;
   onDecks(): void;
+  /** Pergunta antes de sair da tela (por exemplo, da sala de espera); `false` fica onde está. */
+  beforeNav?(to: 'play' | 'decks'): boolean | Promise<boolean>;
 }
 
 /** Shared navigation stays in the same place throughout setup and the deck library. */
@@ -27,7 +29,7 @@ export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
   const disclosure = root.querySelector<HTMLButtonElement>('.news-btn')!;
   panel.id = `news-panel-${options.active}`;
   disclosure.setAttribute('aria-controls', panel.id);
-  root.addEventListener('click', event => {
+  root.addEventListener('click', async event => {
     if ((event.target as HTMLElement).closest('[data-app-feedback]')) {
       panel.hidden = true; disclosure.setAttribute('aria-expanded', 'false');
       openFeedbackForm({ from: 'inicio', match: latestMatch });
@@ -38,7 +40,9 @@ export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
     event.preventDefault();
     if (disabled) return;
     panel.hidden = true; disclosure.setAttribute('aria-expanded', 'false');
-    if (target.dataset.appNav === 'decks') options.onDecks(); else options.onPlay();
+    const to = target.dataset.appNav === 'decks' ? 'decks' : 'play';
+    if (options.beforeNav && !await options.beforeNav(to)) return;
+    if (to === 'decks') options.onDecks(); else options.onPlay();
   });
   return {
     setDisabled(value: boolean) {
