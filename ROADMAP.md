@@ -691,4 +691,4 @@ Spec completa, com as decisões, a arquitetura, o protocolo de sincronia e as fa
 
 - [x] Fase 1: conta na ponte (`/api/conta/`), botão Entrar com Google, One Tap, sair e apagar conta.
 - [x] Fase 2: sincronizar Meus decks, com a pergunta ao entrar, a lixeira de 30 dias e o envio sem rede (0.63.0, junto com a fase 1).
-- [ ] Fase 3: preferências, apelido e foto.
+- [x] Fase 3: preferências, apelido e foto (0.64.0).

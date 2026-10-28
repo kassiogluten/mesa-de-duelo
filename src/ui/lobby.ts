@@ -12,6 +12,7 @@ import { siteFooterHTML } from './siteFooter';
 import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
 import './deckFilters.css';
 import './lobby.css';
+import { prefsChanged } from '../conta/sync';
 export { deckArt, deckColors, deckCover } from './deckStats';
 
 type Mode = 'ai' | 'net' | 'free';
@@ -125,6 +126,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const roomLobby = mountRoomLobby($('#roomLobby'), {onSay: key => opts.onSay(key), onLeave: () => { opts.onCancelRoom(); waitingRoom = null; refresh(); }});
   $('#netName').setAttribute('value', load('mesa:name') ?? '');
+  // O nome veio da conta (outro aparelho, ou o primeiro nome do Google): atualiza o campo, se ninguém estiver digitando.
+  addEventListener('mesa:prefs-sincronizadas', () => {
+    const input = $<HTMLInputElement>('#netName');
+    if (document.activeElement !== input) input.value = load('mesa:name') ?? '';
+  });
   $('#netUrl').setAttribute('value', load('mesa:forgeUrl') ?? '');
   // Na sala de espera a barra lateral some: os avisos (alguém voltou, erro da ponte) aparecem no lobby da sala.
   const setStatus = (message: string, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error', error); roomLobby.setStatus(message, error); };
@@ -404,7 +410,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (target.id === 'showIncompatible') showIncompatible = target.checked;
     if (target.dataset.opponentSlot !== undefined) { commanderOpponents[Number(target.dataset.opponentSlot)] = target.value; save('mesa:commanderOpponents', JSON.stringify(commanderOpponents)); }
     if (target.id === 'oppSel') { oppId = target.value; save('mesa:opp', oppId); }
-    if (target.id === 'netName') save('mesa:name', target.value.trim());
+    if (target.id === 'netName') { save('mesa:name', target.value.trim()); prefsChanged(); }
     if (target.id === 'netUrl') { save('mesa:forgeUrl', target.value.trim()); room = null; validations.clear(); preflight++; }
     refresh();
   });

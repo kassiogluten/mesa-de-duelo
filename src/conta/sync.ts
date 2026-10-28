@@ -1,12 +1,14 @@
 import { ACCOUNT_BACKUP_PREFIX, loadUserDecks, normalizeDeck, onUserDecksSaved, saveUserDecks, type DeckData } from '../decks';
 import { applyRemote, decksToAsk, joinAccount, planFirstLogin, resolveConflict, type RemoteChange } from './merge';
+import { firstPrefs, localChanges, mergeRemote, readPrefs, writePrefs, SYNCED_PREFS, type Prefs } from './prefs';
 import { contaFetch, contaSessao, contasLigadas, onContaChange } from './session';
 
 /**
  * Sincronia de Meus decks com a conta (docs/spec-login-google.md). O localStorage continua sendo onde os decks
  * vivem; a conta é uma réplica. Cada gravação marca o que mudou numa fila guardada no localStorage, enviada em
  * segundo plano; sem rede, ela espera. Ao abrir o jogo, ao voltar para a aba e a cada 5 minutos, o jogo busca o que
- * mudou em outros aparelhos. As regras de junção e de conflito ficam em merge.ts.
+ * mudou em outros aparelhos. As regras de junção e de conflito ficam em merge.ts. As preferências da mesa (prefs.ts)
+ * vão na mesma troca: o que mudou aqui desde a última sincronia sobe, e vale a última gravação.
  */
 const KEY = 'mesa:conta:sync:v1';
 const PULL_EVERY = 5 * 60_000;
@@ -19,6 +21,8 @@ export interface SyncState {
   /** Revisão de cada deck na conta, base da próxima mudança dele. */
   base: Record<string, number>;
   pendentes: Record<string, 'salvo' | 'apagado'>;
+  /** As preferências como estavam na última sincronia; ausente nos estados de antes delas. */
+  prefs?: Prefs;
 }
 export type SyncStatus = { kind: 'off' } | { kind: 'ok' } | { kind: 'enviando' } | { kind: 'offline'; pendentes: number } | { kind: 'erro'; text: string };
 
@@ -101,11 +105,12 @@ async function cycle() {
     s = readState()!;
   }
   try {
-    if (Object.keys(s.pendentes).length) { setStatus({ kind: 'enviando' }); await push(s); }
+    if (!s.prefs) s = await startPrefs(s);
+    if (Object.keys(s.pendentes).length || Object.keys(localChanges(readPrefs(), s.prefs!)).length) { setStatus({ kind: 'enviando' }); await push(s); }
     await pull(readState()!);
     setStatus({ kind: 'ok' });
   } catch (e) {
-    const pendentes = Object.keys(readState()?.pendentes ?? {}).length;
+    const pendentes = pendingChanges();
     // Sem rede (TypeError) ou servidor que não responde (TimeoutError): a fila espera a próxima vez.
     const offline = e instanceof TypeError || (e instanceof DOMException && e.name === 'TimeoutError');
     setStatus(offline ? { kind: 'offline', pendentes } : { kind: 'erro', text: e instanceof Error ? e.message : 'Falha ao sincronizar.' });
@@ -120,7 +125,7 @@ async function json<T>(response: Response): Promise<T> {
   return await response.json() as T;
 }
 
-interface StateResponse { rev: number; decks: { id: string; rev: number; deck?: DeckData; apagado?: true }[] }
+interface StateResponse { rev: number; decks: { id: string; rev: number; deck?: DeckData; apagado?: true }[]; prefs?: Prefs }
 const toChange = (c: StateResponse['decks'][number]): RemoteChange => c.apagado ? { id: c.id, deleted: true } : { id: c.id, deck: c.deck! };
 
 /**
@@ -147,9 +152,28 @@ async function firstLogin(conta: string): Promise<boolean> {
     decks = joined.decks;
     for (const d of joined.upload) pendentes[d.id] = 'salvo';
   }
-  writeState({ conta, rev: state.rev, base, pendentes });
+  const prefs = firstPrefs(readPrefs(), state.prefs ?? {}, contaSessao()?.conta.apelido);
+  applyPrefs(prefs.apply);
+  writeState({ conta, rev: state.rev, base, pendentes, prefs: prefs.synced });
   saveFromAccount(decks);
   return true;
+}
+
+/** Um navegador que já sincronizava decks antes das preferências: faz com elas o que o primeiro login faz. */
+async function startPrefs(s: SyncState): Promise<SyncState> {
+  const state = await json<StateResponse>(await contaFetch('estado'));
+  const prefs = firstPrefs(readPrefs(), state.prefs ?? {}, contaSessao()?.conta.apelido);
+  applyPrefs(prefs.apply);
+  const next = { ...(readState() ?? s), prefs: prefs.synced };
+  writeState(next);
+  return next;
+}
+
+/** Grava preferências vindas da conta e avisa as telas que mostram alguma delas (o nome na mesa, por exemplo). */
+function applyPrefs(values: Prefs) {
+  if (!Object.keys(values).length) return;
+  writePrefs(values);
+  dispatchEvent(new CustomEvent('mesa:prefs-sincronizadas'));
 }
 
 interface SyncResponse {
@@ -167,11 +191,13 @@ async function push(s: SyncState) {
     const deck = s.pendentes[id] === 'salvo' ? byId.get(id) : undefined;
     return deck ? { id, base: s.base[id] ?? 0, deck } : { id, base: s.base[id] ?? 0, apagar: true };
   });
+  const prefs = localChanges(readPrefs(), s.prefs ?? {});
   const result = await json<SyncResponse>(await contaFetch('sincronizar', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mudancas }),
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mudancas, prefs }),
   }));
   // Relê: a fila pode ter crescido enquanto o pedido ia e voltava.
   const next = readState() ?? s;
+  next.prefs = { ...next.prefs, ...prefs };
   const sent = new Map(mudancas.map(m => [m.id, m]));
   let library = loadUserDecks(), changed = false;
   const stillSame = (id: string) => {
@@ -206,12 +232,23 @@ async function pull(s: SyncState) {
     saveFromAccount(applyRemote(loadUserDecks(), state.decks.map(toChange), pending));
     for (const c of state.decks) if (!pending.has(c.id)) next.base[c.id] = c.rev;
   }
+  if (state.prefs && Object.keys(state.prefs).length) {
+    const merged = mergeRemote(readPrefs(), next.prefs ?? {}, state.prefs);
+    applyPrefs(merged.apply);
+    next.prefs = merged.synced;
+  }
   next.rev = Math.max(next.rev, state.rev);
   writeState(next);
 }
 
+/** Uma tela gravou uma preferência: ela sobe junto com o próximo envio, daqui a pouco. */
+export function prefsChanged() { if (contaSessao() && readState()) schedule(); }
+
 /** Quantas mudanças daqui ainda não chegaram à conta. */
-export const pendingChanges = () => Object.keys(readState()?.pendentes ?? {}).length;
+export function pendingChanges() {
+  const s = readState();
+  return s ? Object.keys(s.pendentes).length + (s.prefs ? Object.keys(localChanges(readPrefs(), s.prefs)).length : 0) : 0;
+}
 
 /** Tenta enviar o que falta agora (antes de sair da conta); devolve quantas mudanças ficaram sem enviar. */
 export async function flush(): Promise<number> {
@@ -219,10 +256,13 @@ export async function flush(): Promise<number> {
   return pendingChanges();
 }
 
-/** Ao sair da conta: "manter" deixa os decks como decks comuns daqui; "tirar" apaga Meus decks deste navegador. */
+/**
+ * Ao sair da conta: "manter" deixa decks e preferências como estão, agora só deste navegador; "tirar" apaga Meus decks
+ * e volta as preferências da mesa (e o nome) ao padrão.
+ */
 export function forgetAccount(removeDecks: boolean) {
   writeState(null);
-  if (removeDecks) saveFromAccount([]);
+  if (removeDecks) { saveFromAccount([]); applyPrefs(Object.fromEntries(SYNCED_PREFS.map(key => [key, null]))); }
   setStatus({ kind: 'off' });
 }
 
@@ -251,7 +291,8 @@ export function startSync(askFirstLogin: AskFirstLogin, signOut: () => Promise<v
   onUserDecksSaved(onSaved);
   onContaChange(() => { if (contaSessao()) void run(); else setStatus({ kind: 'off' }); });
   addEventListener('online', () => void run());
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && contaSessao()) void run(); });
+  // Voltando à aba, busca o que mudou; saindo dela, envia o que mudou aqui (as preferências não avisam ao gravar).
+  document.addEventListener('visibilitychange', () => { if (contaSessao()) void run(); });
   setInterval(() => { if (!document.hidden && contaSessao()) void run(); }, PULL_EVERY);
   // Outra aba gravou decks: atualiza a foto do que esta aba conhece e redesenha a lista.
   addEventListener('storage', e => { if (e.key === 'mesa:decks:v2') { takeSnapshot(loadUserDecks()); dispatchEvent(new CustomEvent('mesa:decks-sincronizados')); } });

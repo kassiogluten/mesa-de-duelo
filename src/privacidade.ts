@@ -27,7 +27,7 @@ app.innerHTML = `
       <ul>
         <li><strong>Sem anúncios, sem rastreadores, sem venda de dados.</strong> O jogo não usa ferramentas de análise nem de publicidade.</li>
         <li><strong>A conta é opcional.</strong> Dá para jogar sem entrar; nesse caso, seus decks ficam só no seu aparelho.</li>
-        <li><strong>Com a conta Google,</strong> guardamos só o seu primeiro nome, a foto, o apelido e o que você salva no jogo. Não guardamos seu e-mail.</li>
+        <li><strong>Com a conta Google,</strong> guardamos só o seu primeiro nome, a foto, o nome que você usa na mesa e o que você salva no jogo (decks e preferências). Não guardamos seu e-mail.</li>
         <li><strong>Você apaga a conta quando quiser,</strong> no menu da conta, sem precisar pedir a ninguém.</li>
       </ul>
     </section>
@@ -65,11 +65,12 @@ app.innerHTML = `
 
     <section id="conta">
       <h2>Conta com Google</h2>
-      <p>Entrar com Google serve para guardar seus decks e encontrá-los em outros aparelhos. Ao entrar, o Google envia ao jogo o seu identificador na conta Google, o seu nome, a sua foto e o seu e-mail. Desses dados, o servidor guarda:</p>
+      <p>Entrar com Google serve para guardar seus decks, o seu nome na mesa e as preferências da mesa e encontrá-los em outros aparelhos. Ao entrar, o Google envia ao jogo o seu identificador na conta Google, o seu nome, a sua foto e o seu e-mail. Desses dados, o servidor guarda:</p>
       <ul>
         <li>um código derivado do seu identificador Google, que não permite descobrir qual é a conta;</li>
         <li>o seu primeiro nome e o endereço da sua foto do Google, atualizados a cada vez que você entra;</li>
-        <li>um apelido para a mesa, criado a partir do seu primeiro nome;</li>
+        <li>o seu nome na mesa (na primeira vez, o seu primeiro nome, se o campo estiver vazio), que você pode mudar;</li>
+        <li>as preferências da mesa: som, aviso de turno, ritmo, passar a vez automaticamente e onde o jogo para no turno do oponente;</li>
         <li>os decks que você salvar enquanto estiver conectado, incluindo os apagados há menos de 30 dias, que ficam numa lixeira para você poder recuperar;</li>
         <li>as sessões abertas (uma por aparelho conectado), guardadas de forma que não podem ser usadas por quem lê o arquivo. Uma sessão vale 180 dias e se renova enquanto você usa o jogo.</li>
       </ul>
@@ -116,7 +117,7 @@ app.innerHTML = `
     <section id="bases">
       <h2>Por que podemos usar esses dados</h2>
       <ul>
-        <li><strong>Para entregar o que você pediu</strong> (art. 7º, V, da LGPD): rodar a partida, guardar a conta e sincronizar os decks.</li>
+        <li><strong>Para entregar o que você pediu</strong> (art. 7º, V, da LGPD): rodar a partida, guardar a conta e sincronizar os decks, o nome e as preferências.</li>
         <li><strong>Por interesse legítimo</strong> (art. 7º, IX): manter o jogo seguro, evitar abusos e corrigir erros, usando o mínimo de dados.</li>
         <li><strong>Com o seu consentimento</strong> (art. 7º, I): os relatos e as partidas anexadas a eles, que só são enviados quando você escolhe.</li>
       </ul>

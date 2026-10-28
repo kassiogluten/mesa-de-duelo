@@ -118,4 +118,26 @@ public class AccountDecksTest {
         assertEquals("editing still works at the limit", 1, over.getAsJsonArray("aplicadas").size());
         assertTrue(over.getAsJsonArray("recusadas").get(0).getAsJsonObject().get("motivo").getAsString().contains("300"));
     }
+
+    private static JsonObject prefs(JsonObject account, String json) {
+        JsonObject body = new JsonObject(); body.add("prefs", JsonParser.parseString(json));
+        return AccountDecks.sync(account, body, NOW);
+    }
+
+    @Test public void preferencesFollowTheLastWriteAndOnlyKnownKeysAreKept() {
+        JsonObject account = new JsonObject();
+        prefs(account, "{\"mesa:name\":\"Kassio\",\"mesa:pace\":\"fast\",\"mesa:resume\":\"partida\",\"mesa:turnNotice\":\"" + "x".repeat(AccountDecks.MAX_PREF_CHARS + 1) + "\"}");
+        JsonObject all = AccountDecks.state(account, 0).getAsJsonObject("prefs");
+        assertEquals(2, all.size());
+        assertEquals("Kassio", all.get("mesa:name").getAsString());
+        assertEquals(2, AccountDecks.state(account, 0).get("rev").getAsLong());
+
+        assertEquals("unchanged values do not bump the revision", 2, prefs(account, "{\"mesa:name\":\"Kassio\"}").get("rev").getAsLong());
+        prefs(account, "{\"mesa:name\":\"Kassinho\",\"mesa:pace\":null}");
+        JsonObject changed = AccountDecks.state(account, 2).getAsJsonObject("prefs");
+        assertEquals("Kassinho", changed.get("mesa:name").getAsString());
+        assertTrue("null clears the preference", changed.get("mesa:pace").isJsonNull());
+        assertEquals(0, AccountDecks.state(account, 4).getAsJsonObject("prefs").size());
+        assertEquals("decks untouched", 0, AccountDecks.state(account, 0).getAsJsonArray("decks").size());
+    }
 }
