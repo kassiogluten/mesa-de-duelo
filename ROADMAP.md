@@ -643,3 +643,32 @@ Quando um gatilho ou habilidade pede alvo antes de ir para a pilha, a mensagem n
 - [ ] Tocar na carta abre o inspetor; a seta de alvo continua saindo da carta.
 - [ ] Não cobrir os alvos nem os botões em tela estreita; com "Ver a mesa" (item 4), a carta some junto com a mensagem.
 - [ ] Leitor de tela: anunciar a carta e a habilidade junto do pedido.
+
+## 43. Várias fichas de uma vez
+
+Quando uma mágica ou um gatilho cria várias fichas, elas entram no campo uma por uma, e a jogada demora. Com Hare Apparent, cada Hare novo cria uma ficha de Coelho para cada outro Hare: com 8 no campo, são 8 fichas, cada uma com a sua animação de entrada.
+
+Página de teste: **Rajada de fichas** (`tests/fixtures/token-burst.html`, também na lista da área de admin). Ela monta o campo com N Hare Apparent e manda os eventos como a ponte manda: um `entered` por ficha, cada um com o quadro do campo naquele momento. O painel mede quanto a mesa leva para mostrar tudo.
+
+Medido em 28/10/2026 (computador, movimento normal, 150 ms entre um estado da ponte e o próximo):
+
+| Caso | Hares | Fichas | Tempo na mesa |
+| --- | --- | --- | --- |
+| Conjurar mais um | 2 | 2 | 3,4 s |
+| Conjurar mais um | 4 | 4 | 4,1 s |
+| Conjurar mais um | 8 | 8 | 5,5 s |
+| Blink em todos | 3 | 6 | 2,9 s |
+| Blink em todos | 5 | 20 | 3,9 s (pulou fichas) |
+
+Causa: a fila de apresentação da mesa (`presentationTimeline.ts`) trata cada ficha como um evento `entered` próprio, de 340 ms (204 ms no modo rápido), e avança o quadro do campo uma ficha por vez. Quando a fila passa de 12 eventos, a mesa desiste, pula para os 4 últimos sem som, e as fichas do meio aparecem de repente. Então são dois defeitos: até 12 fichas fica lento, e acima disso a apresentação dá um salto.
+
+Como resolver (na ordem em que eu faria):
+
+- [ ] **Juntar as entradas da mesma origem num movimento só**, como o mill (item 24) já faz: `entered` seguidos, do mesmo jogador e da mesma resolução (a ponte manda o `sourceName`/`stackId` de quem criou, como faz no mill), viram um evento com a lista de cartas. As fichas entram juntas, em cascata curta (60 a 110 ms entre elas, só as 8 primeiras voam e o resto chega com a última, como em `millTiming`). Com 8 fichas, a parte das fichas cai de ~2,7 s (8 × 340 ms) para ~1,4 s, o mesmo de moer 8.
+- [ ] **Fichas iguais entram empilhadas**: o campo já agrupa cartas iguais num monte com "×N"; a animação vai direto para esse monte, que cresce com um "+8", em vez de 8 cartas voando para o mesmo lugar.
+- [ ] **Histórico numa linha**: "Hare Apparent criou 8 fichas de Coelho", em vez de 8 linhas.
+- [ ] **A fila não pula fichas**: o limite de 12 eventos passa a contar os movimentos juntos, e não cada ficha, para a rajada não ser descartada no meio.
+- [ ] **Vários gatilhos seguidos (blink em todos)**: cada gatilho continua sendo um passo, com o aviso do gatilho, mas mais curto quando vários iguais resolvem em sequência (por exemplo, o segundo em diante sem o aviso de 1 s, ou um aviso só, "×5").
+- [ ] **Conferir o lado da ponte numa partida real**: se, com muitos gatilhos, a demora vem também da prioridade (o jogador ou a IA passando a cada gatilho), avaliar a passagem automática para gatilhos sem escolha.
+- [ ] Leitor de tela: uma frase só, "8 fichas de Coelho entraram".
+- [ ] Laboratório de efeitos (item 18): incluir "criar N fichas" e conferir na página de rajada que as 8 fichas aparecem em até 1,5 s.
