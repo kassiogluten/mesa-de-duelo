@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.65.0] - 2026-10-28
+
+### Mudou
+
+- **Commander já vem escolhido.** Na tela inicial, o formato abre em Commander para quem ainda não escolheu nenhum. Pauper, Sacola 50 e Livre ficam em Outros: tocando nele, os três aparecem numa linha logo abaixo, e Outros volta ao último deles que você usou. Quem já tinha escolhido um formato continua abrindo nele.
+
 ## [0.64.1] - 2026-10-28
 
 ### Corrigido

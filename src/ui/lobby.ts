@@ -58,7 +58,9 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
-  let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? null;
+  // Commander é o padrão; os demais ficam em "Outros", que volta ao último deles usado (Pauper na primeira vez).
+  let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
+  const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => f !== 'commander' && f === load('mesa:otherFormat')) ?? 'pauper';
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
@@ -92,7 +94,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     <div class="play-layout">
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <div class="match-setup">
-        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button><button type="button" data-setting="format" data-value="commander">Commander</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
+        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
@@ -173,9 +175,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-setting]')) {
       const setting = button.dataset.setting;
       const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : matchLength;
-      button.setAttribute('aria-pressed', String(button.dataset.value === value));
+      const others = setting === 'format' && button.dataset.value === 'others';
+      button.setAttribute('aria-pressed', String(others ? !!format && format !== 'commander' : button.dataset.value === value));
+      if (others) button.setAttribute('aria-expanded', String(!!format && format !== 'commander'));
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
+    $('#formatOthers').hidden = !format || format === 'commander';
     $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : 'Escolha um formato para começar.';
     $('#formatHelp').hidden = !!format && format !== 'sacola50';
     header.setDisabled(busy || !!waitingRoom);
@@ -323,7 +328,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const choice = target.closest<HTMLButtonElement>('[data-setting]');
     if (choice && !choice.disabled) {
       if (choice.dataset.setting === 'format') {
-        format = DECK_FORMATS.find(f => f === choice.dataset.value) ?? 'free'; save('mesa:format', format); youId = rememberedDeck(); preflight++; setStatus('');
+        format = choice.dataset.value === 'others' ? otherFormat() : DECK_FORMATS.find(f => f === choice.dataset.value) ?? 'free'; save('mesa:format', format);
+        if (format !== 'commander') save('mesa:otherFormat', format); youId = rememberedDeck(); preflight++; setStatus('');
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
       } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private';
