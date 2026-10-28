@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.66.0] - 2026-10-28
+
+### Novo
+
+- **Selo do formato nos decks prontos.** Na tela Jogar, cada deck pronto de 60 cartas mostra, ao lado da contagem de cartas, para qual formato ele foi montado: Pauper, Sacola 50 ou Livre. O selo aparece mesmo quando o deck é listado em outro formato, como os decks do Livre que servem no Sacola 50.
+
 ## [0.65.0] - 2026-10-28
 
 ### Mudou

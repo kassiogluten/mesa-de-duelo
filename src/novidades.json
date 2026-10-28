@@ -1,4 +1,9 @@
 {
+  "0.66.0": {
+    "Selo do formato nos decks prontos": [
+      { "img": "0.66.0/selo-do-formato.webp", "legenda": "Com o formato em Sacola 50, a Energia Jeskai mostra o selo **Sacola 50**, e os decks do Livre que também servem aparecem com o selo **Livre**." }
+    ]
+  },
   "0.65.0": {
     "Commander já vem escolhido": [
       { "img": "0.65.0/formato-commander.webp", "legenda": "Na primeira visita, o formato já vem em **Commander**; os outros ficam guardados em **Outros**." },
