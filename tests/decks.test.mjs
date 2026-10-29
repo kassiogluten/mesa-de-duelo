@@ -174,7 +174,7 @@ test('shared stats use authoritative mana value, exclude lands/sideboard and dis
 
 test('Pauper ready decks contain 60 main, 15 sideboard and stay separate from legacy templates', () => {
   const pauper = decks.DEFAULT_DECKS.filter(d => d.format === 'pauper');
-  assert.equal(pauper.length, 2);
+  assert.equal(pauper.length, 12);
   for (const deck of pauper) { assert.equal(decks.deckSize(deck), 60); assert.equal(decks.countEntries(deck.sideboard), 15); assert.equal(deck.builtin, true); }
   assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'free').length, 0, 'every 60-card ready deck names the format it was built for');
 });
@@ -328,8 +328,8 @@ test('Commander tags preserve command designation and do not infer a sideboard f
 test('each format lists only the ready decks built for it; Livre lists every 60-card one', () => {
   const count = f => decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, f)).length;
   assert.equal(count('standard'), 16);
-  assert.equal(count('pauper'), 2);
+  assert.equal(count('pauper'), 12);
   assert.equal(count('sacola50'), 17, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
-  assert.equal(count('free'), 35);
+  assert.equal(count('free'), 45);
   assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length);
 });

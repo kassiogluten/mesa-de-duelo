@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.74.0] - 2026-10-29
+
+### Novo
+
+- **Dez decks prontos novos de Pauper**, com as listas dos arquétipos mais jogados hoje no Pauper, segundo o MTGGoldfish (60 cartas mais 15 de sideboard): **Terror Azul** (Tolarian Terror e mágicas baratas), **Fadas Dimir** (fadas que anulam mágicas e Ninjas), **Afinidade Grixis** (artefatos baratos e terrenos-artefato), **Combo do Espião** (Balustrade Spy esvazia o próprio grimório para vencer de uma vez), **Tempestade Rubi** (rituais e várias mágicas no mesmo turno), **Incêndio Jund** (sacrificar artefatos e terrenos para ganhar vantagem), **Jardins Golgari** (Khalni Garden e remoções pretas), **Neblina sem Fim** (impedir o dano de combate até ganhar), **Familiares** (criaturas que voltam à mão e baixam o custo das mágicas) e **Esquadrão Branco** (criaturas brancas pequenas e voadoras). Com o Pauper escolhido, agora são 12 decks prontos para você ou para o computador.
+
 ## [0.73.0] - 2026-10-29
 
 ### Novo

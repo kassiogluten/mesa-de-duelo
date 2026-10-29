@@ -1785,6 +1785,1198 @@
     ]
   },
   {
+    "id": "pauper-terror",
+    "name": "Terror Azul",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Brainstorm",
+        "count": 4
+      },
+      {
+        "name": "Counterspell",
+        "count": 4
+      },
+      {
+        "name": "Cryptic Serpent",
+        "count": 4
+      },
+      {
+        "name": "Deem Inferior",
+        "count": 2
+      },
+      {
+        "name": "Deep Analysis",
+        "count": 1
+      },
+      {
+        "name": "Delver of Secrets",
+        "count": 4
+      },
+      {
+        "name": "Dispel",
+        "count": 2
+      },
+      {
+        "name": "Force Spike",
+        "count": 2
+      },
+      {
+        "name": "Island",
+        "count": 16
+      },
+      {
+        "name": "Lórien Revealed",
+        "count": 4
+      },
+      {
+        "name": "Mental Note",
+        "count": 4
+      },
+      {
+        "name": "Ponder",
+        "count": 2
+      },
+      {
+        "name": "Sleep of the Dead",
+        "count": 2
+      },
+      {
+        "name": "Spell Pierce",
+        "count": 1
+      },
+      {
+        "name": "Thought Scour",
+        "count": 4
+      },
+      {
+        "name": "Tolarian Terror",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Annul",
+        "count": 1
+      },
+      {
+        "name": "Blue Elemental Blast",
+        "count": 2
+      },
+      {
+        "name": "Gut Shot",
+        "count": 4
+      },
+      {
+        "name": "Hydroblast",
+        "count": 4
+      },
+      {
+        "name": "Murmuring Mystic",
+        "count": 2
+      },
+      {
+        "name": "Steel Sabotage",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "pauper-fadas",
+    "name": "Fadas Dimir",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Counterspell",
+        "count": 4
+      },
+      {
+        "name": "Swamp",
+        "count": 1
+      },
+      {
+        "name": "Spellstutter Sprite",
+        "count": 4
+      },
+      {
+        "name": "Augur of Bolas",
+        "count": 2
+      },
+      {
+        "name": "Seething Landscape",
+        "count": 2
+      },
+      {
+        "name": "Agony Warp",
+        "count": 1
+      },
+      {
+        "name": "Baleful Strix",
+        "count": 4
+      },
+      {
+        "name": "Island",
+        "count": 10
+      },
+      {
+        "name": "Cast Down",
+        "count": 2
+      },
+      {
+        "name": "Ice Tunnel",
+        "count": 4
+      },
+      {
+        "name": "Snuff Out",
+        "count": 4
+      },
+      {
+        "name": "Moon-Circuit Hacker",
+        "count": 1
+      },
+      {
+        "name": "Extract a Confession",
+        "count": 1
+      },
+      {
+        "name": "Mukotai Ambusher",
+        "count": 1
+      },
+      {
+        "name": "Faerie Seer",
+        "count": 3
+      },
+      {
+        "name": "Thorn of the Black Rose",
+        "count": 2
+      },
+      {
+        "name": "Bojuka Bog",
+        "count": 1
+      },
+      {
+        "name": "Brainstorm",
+        "count": 4
+      },
+      {
+        "name": "Ninja of the Deep Hours",
+        "count": 2
+      },
+      {
+        "name": "Suffocating Fumes",
+        "count": 1
+      },
+      {
+        "name": "Dispel",
+        "count": 2
+      },
+      {
+        "name": "Lórien Revealed",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Campfire",
+        "count": 1
+      },
+      {
+        "name": "Hydroblast",
+        "count": 4
+      },
+      {
+        "name": "Blue Elemental Blast",
+        "count": 2
+      },
+      {
+        "name": "Annul",
+        "count": 4
+      },
+      {
+        "name": "Relic of Progenitus",
+        "count": 2
+      },
+      {
+        "name": "Arms of Hadar",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "pauper-afinidade",
+    "name": "Afinidade Grixis",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Black Mage's Rod",
+        "count": 2
+      },
+      {
+        "name": "Blood Fountain",
+        "count": 2
+      },
+      {
+        "name": "Drossforge Bridge",
+        "count": 4
+      },
+      {
+        "name": "Galvanic Blast",
+        "count": 4
+      },
+      {
+        "name": "Great Furnace",
+        "count": 3
+      },
+      {
+        "name": "Ichor Wellspring",
+        "count": 4
+      },
+      {
+        "name": "Krark-Clan Shaman",
+        "count": 3
+      },
+      {
+        "name": "Makeshift Munitions",
+        "count": 1
+      },
+      {
+        "name": "Mistvault Bridge",
+        "count": 4
+      },
+      {
+        "name": "Myr Enforcer",
+        "count": 4
+      },
+      {
+        "name": "Nihil Spellbomb",
+        "count": 2
+      },
+      {
+        "name": "Reckoner's Bargain",
+        "count": 4
+      },
+      {
+        "name": "Refurbished Familiar",
+        "count": 4
+      },
+      {
+        "name": "Seat of the Synod",
+        "count": 2
+      },
+      {
+        "name": "Sewer-veillance Cam",
+        "count": 2
+      },
+      {
+        "name": "Silverbluff Bridge",
+        "count": 2
+      },
+      {
+        "name": "Swamp",
+        "count": 1
+      },
+      {
+        "name": "Thoughtcast",
+        "count": 4
+      },
+      {
+        "name": "Toxin Analysis",
+        "count": 2
+      },
+      {
+        "name": "Utrom Monitor",
+        "count": 3
+      },
+      {
+        "name": "Vault of Whispers",
+        "count": 3
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Blue Elemental Blast",
+        "count": 4
+      },
+      {
+        "name": "Breath Weapon",
+        "count": 2
+      },
+      {
+        "name": "Extract a Confession",
+        "count": 2
+      },
+      {
+        "name": "Gorilla Shaman",
+        "count": 1
+      },
+      {
+        "name": "Hydroblast",
+        "count": 2
+      },
+      {
+        "name": "Pyroblast",
+        "count": 1
+      },
+      {
+        "name": "Red Elemental Blast",
+        "count": 2
+      },
+      {
+        "name": "Unexpected Fangs",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "pauper-espiao",
+    "name": "Combo do Espião",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Elves of Deep Shadow",
+        "count": 1
+      },
+      {
+        "name": "Overgrown Battlement",
+        "count": 4
+      },
+      {
+        "name": "Gatecreeper Vine",
+        "count": 2
+      },
+      {
+        "name": "Balustrade Spy",
+        "count": 4
+      },
+      {
+        "name": "Mesmeric Fiend",
+        "count": 4
+      },
+      {
+        "name": "Wall of Roots",
+        "count": 2
+      },
+      {
+        "name": "Lotleth Giant",
+        "count": 2
+      },
+      {
+        "name": "Saruli Caretaker",
+        "count": 4
+      },
+      {
+        "name": "Masked Vandal",
+        "count": 4
+      },
+      {
+        "name": "Quirion Ranger",
+        "count": 2
+      },
+      {
+        "name": "Generous Ent",
+        "count": 4
+      },
+      {
+        "name": "Nyxborn Hydra",
+        "count": 2
+      },
+      {
+        "name": "Sagu Wildling",
+        "count": 4
+      },
+      {
+        "name": "Troll of Khazad-dûm",
+        "count": 1
+      },
+      {
+        "name": "Lotus Petal",
+        "count": 2
+      },
+      {
+        "name": "Dread Return",
+        "count": 2
+      },
+      {
+        "name": "Lead the Stampede",
+        "count": 4
+      },
+      {
+        "name": "Winding Way",
+        "count": 4
+      },
+      {
+        "name": "Land Grant",
+        "count": 4
+      },
+      {
+        "name": "Forest",
+        "count": 3
+      },
+      {
+        "name": "Swamp",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Mountain",
+        "count": 1
+      },
+      {
+        "name": "Flaring Pain",
+        "count": 1
+      },
+      {
+        "name": "Faerie Macabre",
+        "count": 3
+      },
+      {
+        "name": "Vandalblast",
+        "count": 2
+      },
+      {
+        "name": "Nylea's Disciple",
+        "count": 4
+      },
+      {
+        "name": "Writhing Chrysalis",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "pauper-tempestade",
+    "name": "Tempestade Rubi",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Big Score",
+        "count": 3
+      },
+      {
+        "name": "Crossover Collaboration",
+        "count": 2
+      },
+      {
+        "name": "Desperate Ritual",
+        "count": 4
+      },
+      {
+        "name": "First Day of Class",
+        "count": 3
+      },
+      {
+        "name": "Geothermal Crevice",
+        "count": 4
+      },
+      {
+        "name": "Glimpse the Impossible",
+        "count": 4
+      },
+      {
+        "name": "Goblin Anarchomancer",
+        "count": 4
+      },
+      {
+        "name": "Hickory Woodlot",
+        "count": 4
+      },
+      {
+        "name": "Manamorphose",
+        "count": 4
+      },
+      {
+        "name": "Mountain",
+        "count": 5
+      },
+      {
+        "name": "Reckless Impulse",
+        "count": 4
+      },
+      {
+        "name": "Sandstone Needle",
+        "count": 4
+      },
+      {
+        "name": "Seething Song",
+        "count": 4
+      },
+      {
+        "name": "Seize the Storm",
+        "count": 2
+      },
+      {
+        "name": "Thornscape Familiar",
+        "count": 4
+      },
+      {
+        "name": "Twinned Vision",
+        "count": 3
+      },
+      {
+        "name": "Wrenn's Resolve",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Abandon Attachments",
+        "count": 1
+      },
+      {
+        "name": "Firebending Lesson",
+        "count": 1
+      },
+      {
+        "name": "Flaring Pain",
+        "count": 1
+      },
+      {
+        "name": "Gruul Turf",
+        "count": 1
+      },
+      {
+        "name": "It'll Quench Ya!",
+        "count": 1
+      },
+      {
+        "name": "Origin of Metalbending",
+        "count": 1
+      },
+      {
+        "name": "Pyroblast",
+        "count": 4
+      },
+      {
+        "name": "Red Elemental Blast",
+        "count": 2
+      },
+      {
+        "name": "Waterbending Lesson",
+        "count": 1
+      },
+      {
+        "name": "Weather the Storm",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "pauper-incendio",
+    "name": "Incêndio Jund",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Krark-Clan Shaman",
+        "count": 3
+      },
+      {
+        "name": "Nyxborn Hydra",
+        "count": 2
+      },
+      {
+        "name": "Refurbished Familiar",
+        "count": 4
+      },
+      {
+        "name": "Writhing Chrysalis",
+        "count": 4
+      },
+      {
+        "name": "Blood Fountain",
+        "count": 1
+      },
+      {
+        "name": "Lembas",
+        "count": 2
+      },
+      {
+        "name": "Nihil Spellbomb",
+        "count": 2
+      },
+      {
+        "name": "Ichor Wellspring",
+        "count": 4
+      },
+      {
+        "name": "Cast Down",
+        "count": 3
+      },
+      {
+        "name": "Eviscerator's Insight",
+        "count": 2
+      },
+      {
+        "name": "Fanatical Offering",
+        "count": 4
+      },
+      {
+        "name": "Toxin Analysis",
+        "count": 2
+      },
+      {
+        "name": "Cleansing Wildfire",
+        "count": 4
+      },
+      {
+        "name": "Makeshift Munitions",
+        "count": 1
+      },
+      {
+        "name": "Drossforge Bridge",
+        "count": 3
+      },
+      {
+        "name": "Vault of Whispers",
+        "count": 2
+      },
+      {
+        "name": "Swamp",
+        "count": 3
+      },
+      {
+        "name": "Mountain",
+        "count": 1
+      },
+      {
+        "name": "Slagwoods Bridge",
+        "count": 4
+      },
+      {
+        "name": "Twisted Landscape",
+        "count": 4
+      },
+      {
+        "name": "Forest",
+        "count": 2
+      },
+      {
+        "name": "Pulse of Murasa",
+        "count": 1
+      },
+      {
+        "name": "Terminate",
+        "count": 1
+      },
+      {
+        "name": "Bojuka Bog",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Red Elemental Blast",
+        "count": 2
+      },
+      {
+        "name": "Heritage Reclamation",
+        "count": 1
+      },
+      {
+        "name": "Vandalblast",
+        "count": 2
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Troublemaker Ouphe",
+        "count": 2
+      },
+      {
+        "name": "Breath Weapon",
+        "count": 2
+      },
+      {
+        "name": "Weather the Storm",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id": "pauper-jardins",
+    "name": "Jardins Golgari",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Accursed Marauder",
+        "count": 1
+      },
+      {
+        "name": "Avenging Hunter",
+        "count": 1
+      },
+      {
+        "name": "Snuff Out",
+        "count": 1
+      },
+      {
+        "name": "Campfire",
+        "count": 2
+      },
+      {
+        "name": "Cast Down",
+        "count": 4
+      },
+      {
+        "name": "Nihil Spellbomb",
+        "count": 3
+      },
+      {
+        "name": "Defile",
+        "count": 3
+      },
+      {
+        "name": "Eviscerator's Insight",
+        "count": 4
+      },
+      {
+        "name": "Fanatical Offering",
+        "count": 4
+      },
+      {
+        "name": "Haunted Mire",
+        "count": 1
+      },
+      {
+        "name": "Khalni Garden",
+        "count": 4
+      },
+      {
+        "name": "Ichor Wellspring",
+        "count": 4
+      },
+      {
+        "name": "Lembas",
+        "count": 2
+      },
+      {
+        "name": "Crypt Rats",
+        "count": 3
+      },
+      {
+        "name": "Spinning Darkness",
+        "count": 1
+      },
+      {
+        "name": "Bojuka Bog",
+        "count": 2
+      },
+      {
+        "name": "Tithing Blade",
+        "count": 2
+      },
+      {
+        "name": "Troll of Khazad-dûm",
+        "count": 3
+      },
+      {
+        "name": "Witch's Cottage",
+        "count": 2
+      },
+      {
+        "name": "Swamp",
+        "count": 10
+      },
+      {
+        "name": "Fungal Infection",
+        "count": 1
+      },
+      {
+        "name": "Suffocating Fumes",
+        "count": 1
+      },
+      {
+        "name": "Sagu Wildling",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Drown in Sorrow",
+        "count": 2
+      },
+      {
+        "name": "Avenging Hunter",
+        "count": 1
+      },
+      {
+        "name": "Troublemaker Ouphe",
+        "count": 3
+      },
+      {
+        "name": "Weather the Storm",
+        "count": 4
+      },
+      {
+        "name": "Faerie Macabre",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "pauper-neblina",
+    "name": "Neblina sem Fim",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Pieces of the Puzzle",
+        "count": 1
+      },
+      {
+        "name": "Thornwood Falls",
+        "count": 4
+      },
+      {
+        "name": "Island",
+        "count": 6
+      },
+      {
+        "name": "Simic Growth Chamber",
+        "count": 4
+      },
+      {
+        "name": "Stream of Thought",
+        "count": 2
+      },
+      {
+        "name": "Tangle",
+        "count": 3
+      },
+      {
+        "name": "Weather the Storm",
+        "count": 4
+      },
+      {
+        "name": "Moment's Peace",
+        "count": 4
+      },
+      {
+        "name": "Arcane Denial",
+        "count": 4
+      },
+      {
+        "name": "Behold the Multiverse",
+        "count": 4
+      },
+      {
+        "name": "Tangled Islet",
+        "count": 2
+      },
+      {
+        "name": "Forest",
+        "count": 3
+      },
+      {
+        "name": "Lórien Revealed",
+        "count": 4
+      },
+      {
+        "name": "Fog",
+        "count": 1
+      },
+      {
+        "name": "Plunder the Trollshaws",
+        "count": 4
+      },
+      {
+        "name": "Radiant Fountain",
+        "count": 2
+      },
+      {
+        "name": "Campfire",
+        "count": 2
+      },
+      {
+        "name": "Bojuka Bog",
+        "count": 1
+      },
+      {
+        "name": "Respite",
+        "count": 1
+      },
+      {
+        "name": "Counterspell",
+        "count": 1
+      },
+      {
+        "name": "Growth Spiral",
+        "count": 1
+      },
+      {
+        "name": "Echoing Truth",
+        "count": 1
+      },
+      {
+        "name": "Opt",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Hydroblast",
+        "count": 4
+      },
+      {
+        "name": "Envelop",
+        "count": 1
+      },
+      {
+        "name": "Murmuring Mystic",
+        "count": 2
+      },
+      {
+        "name": "Blue Elemental Blast",
+        "count": 2
+      },
+      {
+        "name": "Steel Sabotage",
+        "count": 1
+      },
+      {
+        "name": "Faerie Trickery",
+        "count": 1
+      },
+      {
+        "name": "Faerie Macabre",
+        "count": 2
+      },
+      {
+        "name": "Sagittars' Volley",
+        "count": 1
+      },
+      {
+        "name": "Bojuka Bog",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "pauper-familiares",
+    "name": "Familiares",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Snap",
+        "count": 4
+      },
+      {
+        "name": "Preordain",
+        "count": 4
+      },
+      {
+        "name": "Ephemerate",
+        "count": 2
+      },
+      {
+        "name": "God-Pharaoh's Faithful",
+        "count": 4
+      },
+      {
+        "name": "Lórien Revealed",
+        "count": 4
+      },
+      {
+        "name": "Snow-Covered Island",
+        "count": 7
+      },
+      {
+        "name": "Mortuary Mire",
+        "count": 1
+      },
+      {
+        "name": "Mulldrifter",
+        "count": 4
+      },
+      {
+        "name": "Azorius Chancery",
+        "count": 4
+      },
+      {
+        "name": "Sunscape Familiar",
+        "count": 4
+      },
+      {
+        "name": "Glacial Floodplain",
+        "count": 1
+      },
+      {
+        "name": "Snow-Covered Plains",
+        "count": 2
+      },
+      {
+        "name": "Contaminated Landscape",
+        "count": 2
+      },
+      {
+        "name": "Archaeomancer",
+        "count": 3
+      },
+      {
+        "name": "Ghostly Flicker",
+        "count": 2
+      },
+      {
+        "name": "Meeting of Minds",
+        "count": 3
+      },
+      {
+        "name": "Lonely Arroyo",
+        "count": 1
+      },
+      {
+        "name": "Negate",
+        "count": 2
+      },
+      {
+        "name": "Glorious Gale",
+        "count": 3
+      },
+      {
+        "name": "Sea Gate Oracle",
+        "count": 3
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Hydroblast",
+        "count": 4
+      },
+      {
+        "name": "Dust to Dust",
+        "count": 3
+      },
+      {
+        "name": "Negate",
+        "count": 2
+      },
+      {
+        "name": "Stonehorn Dignitary",
+        "count": 2
+      },
+      {
+        "name": "Last Breath",
+        "count": 2
+      },
+      {
+        "name": "Envelop",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "pauper-esquadrao",
+    "name": "Esquadrão Branco",
+    "builtin": true,
+    "format": "pauper",
+    "cards": [
+      {
+        "name": "Plains",
+        "count": 17
+      },
+      {
+        "name": "Idyllic Grange",
+        "count": 2
+      },
+      {
+        "name": "Thraben Inspector",
+        "count": 4
+      },
+      {
+        "name": "Novice Inspector",
+        "count": 4
+      },
+      {
+        "name": "Raffine's Informant",
+        "count": 4
+      },
+      {
+        "name": "Kor Skyfisher",
+        "count": 4
+      },
+      {
+        "name": "Leonardo, Big Brother",
+        "count": 3
+      },
+      {
+        "name": "Spider-Man, Web-Slinger",
+        "count": 2
+      },
+      {
+        "name": "Thraben Charm",
+        "count": 4
+      },
+      {
+        "name": "Guardians' Pledge",
+        "count": 2
+      },
+      {
+        "name": "Prismatic Strands",
+        "count": 3
+      },
+      {
+        "name": "Greatsword of Tyr",
+        "count": 1
+      },
+      {
+        "name": "Eagles of the North",
+        "count": 1
+      },
+      {
+        "name": "Lunarch Veteran",
+        "count": 4
+      },
+      {
+        "name": "Journey to Nowhere",
+        "count": 1
+      },
+      {
+        "name": "Battle Screech",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Journey to Nowhere",
+        "count": 2
+      },
+      {
+        "name": "Dust to Dust",
+        "count": 4
+      },
+      {
+        "name": "Destroy Evil",
+        "count": 2
+      },
+      {
+        "name": "Palace Sentinels",
+        "count": 2
+      },
+      {
+        "name": "Martyr of Sands",
+        "count": 3
+      },
+      {
+        "name": "Standard Bearer",
+        "count": 2
+      }
+    ]
+  },
+  {
     "id": "sacola-delver",
     "name": "Delver Azul",
     "builtin": true,
