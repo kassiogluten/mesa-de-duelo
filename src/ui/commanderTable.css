@@ -20,6 +20,9 @@
 .seat-eliminated { color: #ffb9a9; font: 600 11px var(--body); }
 .avatar.eliminated .portrait { filter: grayscale(1); }
 .spectating-label { color: var(--muted); font: 500 14px/1.5 var(--body); }
+/* Quem assiste escolhe de qual jogador vê a mesa. */
+.watch-seats { display: flex; flex-wrap: wrap; gap: 6px; }
+.watch-seats .arena-btn { min-height: 36px; padding: 6px 14px; font-size: 13px; }
 /* Who to attack: a small panel with one wide row per target, so names and life fit and each row is easy to hit. */
 .attack-choices { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #f2b54c55; border-radius: 12px; background: linear-gradient(135deg, #16243af5, #091322f5); box-shadow: 0 6px 20px #0006; }
 .attack-choices-title { margin: 0; color: var(--gold); font: 600 13px/1.3 var(--body); }

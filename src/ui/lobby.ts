@@ -4,7 +4,7 @@ import { cacheGet, fetchByNames } from '../scryfall';
 import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
-import { joinableRooms, publicRoomsHTML, type PublicRoomsState } from './publicRooms';
+import { joinableRooms, publicRoomsHTML, watchableRooms, type PublicRoomsState } from './publicRooms';
 import { confirmLeaveRoom, mountRoomLobby } from './roomLobby';
 import { deckArt, deckColors, deckPriceHTML } from './deckStats';
 import { validateDeckLocal } from './deckRules';
@@ -33,9 +33,11 @@ export interface LobbyOptions {
   onFreePlay(you: DeckData, format: DeckFormat): void;
   onHost(you: DeckData, name: string, url: string, config: MatchConfig, visibility: RoomVisibility, code: string): Promise<void>;
   onJoin(you: DeckData, name: string, code: string, url: string): Promise<void>;
+  /** Assistir à partida já começada de uma sala, sem deck e sem assento. */
+  onWatch(code: string, name: string, url: string): Promise<void>;
   onValidate(deck: DeckData, format: DeckFormat, url: string): Promise<DeckValidation>;
   onLookup(code: string, url: string): Promise<RoomInfo>;
-  /** Salas públicas abertas na ponte. */
+  /** Salas públicas na ponte, com lugar ou em andamento. */
   onListRooms(url: string): Promise<PublicRoom[]>;
   onCancelRoom(): void;
   onSay(key: RoomSaying): void;
@@ -225,7 +227,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       commanderOpponents = commanderOpponents.map(id => id === 'random' || aiPool.some(d => d.id === id) ? id : 'random');
       $('#commanderAiPanel').innerHTML = '<p class="commander-ai-heading side-label">Decks dos computadores</p>' + commanderOpponents.slice(0, playerCount - 1).map((id, i) => `<label class="opponent-choice" for="commanderOpp${i}"><span class="computer-seat-number" aria-hidden="true">${i + 1}</span><select id="commanderOpp${i}" aria-label="Deck do computador ${i + 1}" class="input-field" data-opponent-slot="${i}"><option value="random">Deck aleatório</option>${aiPool.map(d => `<option value="${esc(d.id)}" ${id === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`).join('');
     }
-    for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #roomCode, #netUrl, [data-join] button, [data-join-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
+    for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #roomCode, #netUrl, [data-join] button, [data-join-room], [data-watch-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
     const deck = selected(), result = deck && format ? validations.get(key(deck)) : undefined;
     const invalid = !free && !!deck && !!format && (result ? !result.valid : validateDeckLocal(deck, format).status === 'invalid');
     const art = deck && deckArt(deck);
@@ -259,8 +261,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     publicRooms = next;
     renderRooms();
     if (announce) {
-      const count = Array.isArray(next) ? joinableRooms(next).length : -1;
-      $('#publicRoomsStatus').textContent = count < 0 ? 'Não foi possível ver as salas agora.' : count === 0 ? 'Nenhuma sala pública aberta.' : count === 1 ? 'Uma sala pública aberta.' : `${count} salas públicas abertas.`;
+      const count = Array.isArray(next) ? joinableRooms(next).length : -1, live = Array.isArray(next) ? watchableRooms(next).length : 0;
+      const liveText = !live ? '' : live === 1 ? ' Uma partida em andamento para assistir.' : ` ${live} partidas em andamento para assistir.`;
+      $('#publicRoomsStatus').textContent = count < 0 ? 'Não foi possível ver as salas agora.' : (count === 0 ? (live ? 'Nenhuma sala com lugar.' : 'Nenhuma sala pública aberta.') : count === 1 ? 'Uma sala pública aberta.' : `${count} salas públicas abertas.`) + liveText;
     }
   }
   function renderRooms() {
@@ -268,9 +271,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (html === roomsHTML) return;
     // A lista muda sozinha: quem estava com o foco num "Entrar" continua nele, ou vai para o Atualizar se a sala sumiu.
     const focused = document.activeElement as HTMLElement | null;
-    const focusCode = focused && list.contains(focused) ? focused.dataset.joinRoom : undefined;
+    const focusJoin = focused && list.contains(focused) ? focused.dataset.joinRoom : undefined, focusWatch = focused && list.contains(focused) ? focused.dataset.watchRoom : undefined;
     list.innerHTML = roomsHTML = html;
-    if (focusCode !== undefined) (list.querySelector<HTMLElement>(`[data-join-room="${CSS.escape(focusCode)}"]`) ?? $('[data-lobby=rooms-refresh]')).focus({preventScroll: true});
+    if (focusJoin !== undefined) (list.querySelector<HTMLElement>(`[data-join-room="${CSS.escape(focusJoin)}"]`) ?? $('[data-lobby=rooms-refresh]')).focus({preventScroll: true});
+    else if (focusWatch !== undefined) (list.querySelector<HTMLElement>(`[data-watch-room="${CSS.escape(focusWatch)}"]`) ?? $('[data-lobby=rooms-refresh]')).focus({preventScroll: true});
   }
   document.addEventListener('visibilitychange', () => syncRoomPolling());
   // A barra lateral ocupa só o que sobra da tela abaixo do topo dela, para o botão Jogar nunca ficar fora da vista.
@@ -368,6 +372,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (action === 'rooms-refresh' && !busy && !waitingRoom) void loadRooms(true);
     const joinCode = target.closest<HTMLButtonElement>('[data-join-room]')?.dataset.joinRoom;
     if (joinCode && !busy && !waitingRoom) findRoom(joinCode, true);
+    const watchCode = target.closest<HTMLButtonElement>('[data-watch-room]')?.dataset.watchRoom;
+    if (watchCode) void watch(watchCode, true);
     if (action === 'cancel-room') { opts.onCancelRoom(); waitingRoom = null; refresh(); }
   });
   /** Trocar de aba desfaz a sala encontrada pelo código: cada aba tem o seu caminho até o botão de baixo. */
@@ -434,7 +440,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   /** Busca a sala pelo código e entra nela; pela lista de salas públicas é o mesmo caminho, com as mesmas regras. */
   function findRoom(code: string, fromList: boolean, fromLink = false) {
     preflight++; setBusy(true); setStatus('Buscando sala…');
+    let live = false;
     void opts.onLookup(code, netURL()).then(info => {
+      // Pelo código ou pelo link, a partida já começada abre para assistir.
+      if (!info.available && info.started) { live = true; return false; }
       if (!info.available) throw new Error(info.players.length >= (info.capacity ?? info.config.playerCount ?? 2) ? `A sala ${info.code} já está completa.` : `A partida da sala ${info.code} já começou.`);
       room = info; netTab = 'join'; format = info.config.format; matchLength = info.config.matchLength; playerCount = info.config.playerCount ?? info.capacity ?? 2; youId = rememberedDeck(); setStatus('');
       return true;
@@ -444,6 +453,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false;
     }).then(found => {
       setBusy(false);
+      if (live) { void watch(code, fromList); return; }
       // A sala da lista pode ter enchido ou começado nesse meio-tempo: a lista se atualiza.
       if (!found) { if (fromList) void loadRooms(); return; }
       // Com um deck lembrado que serve para o formato da sala, entra direto; senão pede o deck antes.
@@ -454,6 +464,17 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       else if (unnamed) { setStatus(fits ? `Digite seu nome e toque em Entrar na sala ${room!.code}.` : `Digite seu nome e escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`); $('#netName').focus(); }
       else setStatus(`Escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`);
     });
+  }
+  /** Assiste à partida da sala; sem nome digitado, os jogadores veem "Espectador". */
+  async function watch(code: string, fromList: boolean) {
+    if (busy || waitingRoom) return;
+    preflight++; setBusy(true); setStatus(`Entrando para assistir à sala ${code}…`);
+    try { await opts.onWatch(code, $<HTMLInputElement>('#netName').value.trim() || 'Espectador', netURL()); setStatus(''); }
+    catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Não foi possível assistir a esta partida.', true);
+      // A partida da lista pode ter acabado nesse meio-tempo: a lista se atualiza.
+      if (fromList) void loadRooms();
+    } finally { setBusy(false); }
   }
   /** Sala do link que ainda não existe: pública, com o código do link, esperando quem abriu confirmar em Criar sala. */
   function offerLinkRoom(code: string) {

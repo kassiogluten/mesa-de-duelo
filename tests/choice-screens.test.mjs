@@ -86,6 +86,12 @@ test('the top bar shows format, room, series and who dropped', () => {
   assert.deepEqual(bar.matchChips(s).map(c => c.text), ['Pauper', 'Sala K7QM', 'Jogo 2 · 1 × 0', 'Bia desconectado']);
   assert.deepEqual(bar.matchChips({ config: { format: 'free', matchLength: 'bo1' } }).map(c => c.kind), ['format']);
   assert.match(bar.matchBarHTML(s), /<li class="match-chip room"/);
+  // Quem assiste: a contagem na barra, com os nomes no título; e o aviso de quem só assiste.
+  const watched = { ...s, room: { ...s.room, spectators: ['Eva', 'Caio'] } };
+  const audience = bar.matchChips(watched).find(c => c.kind === 'audience');
+  assert.equal(audience.text, '2 assistindo');
+  assert.equal(audience.label, 'Assistindo: Eva, Caio');
+  assert.equal(bar.matchChips({ ...s, spectating: true, watching: true }).find(c => c.kind === 'spectating').label, 'Você está assistindo, sem jogar');
 });
 
 test('leveling up a Class says which level it reaches', () => {

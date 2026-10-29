@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const { joinableRooms, publicRoomsHTML } = await import(uri((await readFile(new URL('../src/ui/publicRooms.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const { joinableRooms, watchableRooms, publicRoomsHTML } = await import(uri((await readFile(new URL('../src/ui/publicRooms.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
 
 const room = (over = {}) => ({ code: 'WXYZ', host: 'Ana', config: { format: 'pauper', matchLength: 'bo1' }, capacity: 2, players: 1, started: false, ...over });
 
@@ -25,11 +25,24 @@ test('each open room shows host, format and seats with a labelled join button', 
 });
 
 test('full or started rooms never get a join button, even if the bridge sends them', () => {
-  const rooms = [room({ code: 'FULL', players: 2 }), room({ code: 'LIVE', started: true }), room({ code: 'OPEN' })];
+  const rooms = [room({ code: 'FULL', players: 2 }), room({ code: 'LIVE', started: true, players: 2 }), room({ code: 'OPEN' })];
   assert.deepEqual(joinableRooms(rooms).map(r => r.code), ['OPEN']);
   const html = publicRoomsHTML(rooms);
-  assert.doesNotMatch(html, /FULL|LIVE/);
+  assert.doesNotMatch(html, /FULL/);
+  assert.doesNotMatch(html, /data-join-room="LIVE"/);
   assert.match(publicRoomsHTML([room({ players: 2 })]), /Nenhuma sala pública aberta/);
+});
+
+test('started rooms stay listed after the open ones, with a watch button and how many are watching', () => {
+  const rooms = [room({ code: 'LIVE', host: 'Bia', started: true, players: 2, spectators: 3 }), room({ code: 'OPEN' })];
+  assert.deepEqual(watchableRooms(rooms).map(r => r.code), ['LIVE']);
+  const html = publicRoomsHTML(rooms);
+  assert.ok(html.indexOf('data-join-room="OPEN"') < html.indexOf('data-watch-room="LIVE"'), 'open rooms come first');
+  assert.match(html, /<li class="public-room live">/);
+  assert.match(html, /Sala de Bia<\/strong><small><span class="public-room-live">Em andamento<\/span>Pauper · 2 jogadores · 3 assistindo<\/small>/);
+  assert.match(html, /data-watch-room="LIVE" aria-label="Assistir à partida da sala de Bia: Pauper, em andamento">Assistir<\/button>/);
+  assert.match(publicRoomsHTML([room({ started: true, players: 2 })]), /Pauper · 2 jogadores<\/small>/, 'no watcher count when nobody watches');
+  assert.match(publicRoomsHTML([room({ started: true, players: 2 })], true), /data-watch-room="WXYZ"[^>]* disabled>Assistir/);
 });
 
 test('host names are escaped and buttons can be disabled while busy', () => {

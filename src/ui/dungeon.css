@@ -1,4 +1,4 @@
-/* Masmorras: selos de iniciativa e de masmorra ao lado do retrato, o mapa de salas e a escolha da próxima sala. */
+/* Masmorras: selos de dianteira e de masmorra ao lado do retrato, o mapa de salas e a escolha da próxima sala. */
 button.player-counter { cursor: pointer; font: inherit; font: 700 12px/1.2 var(--body); }
 button.player-counter:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .player-counter small { opacity: .7; font-weight: 600; }

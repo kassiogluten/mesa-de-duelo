@@ -3,7 +3,7 @@ import './dungeon.css';
 import { esc } from './cardtext';
 
 /*
- * Masmorras (se aventurar na masmorra, iniciativa): o selo ao lado do retrato, o mapa de salas e a escolha
+ * Masmorras (se aventurar na masmorra, dianteira): o selo ao lado do retrato, o mapa de salas e a escolha
  * da próxima sala. A sala atual vem do servidor; as salas por onde o jogador já passou o Forge não guarda,
  * então o mapa só marca a atual, as próximas possíveis e as que ficaram para trás pela profundidade.
  */
@@ -12,7 +12,7 @@ const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d=
 export const DUNGEON_ICON = svg('M3 21V9l2-1V4h3v2h2V4h4v2h2V4h3v4l2 1v12h-7v-5a2 2 0 0 0-4 0v5z');
 const INITIATIVE_ICON = svg('M12 2 4 6v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6zm-1 5h2v6h-2zm0 8h2v2h-2z');
 
-export const INITIATIVE_HINT = 'Iniciativa: quem a toma, e quem a tem no começo da própria manutenção, se aventura na Undercity. Quem causar dano de combate a esse jogador toma a iniciativa.';
+export const INITIATIVE_HINT = 'Dianteira: quem a toma, e quem a tem no começo da própria manutenção, se aventura na Undercity. Quem causar dano de combate a esse jogador toma a dianteira.';
 
 /** Profundidade de cada sala: o caminho mais longo desde a entrada (a primeira sala). */
 export function roomDepths(dungeon: FDungeon) {
@@ -55,19 +55,19 @@ const completedText = (p: FPlayer) => {
 /** Texto para o leitor de tela, junto do nome e da vida do jogador. */
 export function dungeonText(p: FPlayer) {
   const parts: string[] = [];
-  if (p.initiative) parts.push('tem a iniciativa');
+  if (p.initiative) parts.push('tem a dianteira');
   if (p.dungeon) parts.push(p.dungeon.room ? `na masmorra ${p.dungeon.name}, sala ${p.dungeon.room}` : `na masmorra ${p.dungeon.name}`);
   const done = completedText(p);
   if (done) parts.push(done);
   return parts.map(t => `, ${t}`).join('');
 }
 
-/** Selos de iniciativa e de masmorra, para ir junto dos marcadores do jogador. `open` é o balão aberto por clique. */
+/** Selos de dianteira e de masmorra, para ir junto dos marcadores do jogador. `open` é o balão aberto por clique. */
 export function dungeonBadgesHTML(p: FPlayer, open: string | null = null) {
   let html = '';
   if (p.initiative) {
     const key = `p${p.id}:INITIATIVE`;
-    html += `<span class="player-counter initiative${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${INITIATIVE_ICON}<b>Iniciativa</b><span class="ctr-tip">${esc(INITIATIVE_HINT)}</span></span>`;
+    html += `<span class="player-counter initiative${open === key ? ' open' : ''}" data-ctr="${key}" aria-hidden="true">${INITIATIVE_ICON}<b>Dianteira</b><span class="ctr-tip">${esc(INITIATIVE_HINT)}</span></span>`;
   }
   const d = p.dungeon, done = p.completedDungeons?.length ?? 0;
   if (d || done) {

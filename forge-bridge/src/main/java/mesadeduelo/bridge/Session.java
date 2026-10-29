@@ -169,13 +169,24 @@ final class Session {
     boolean isRoom() { return room; }
     boolean isPublic() { return room && publicRoom; }
     long createdAt() { return createdAt; }
-    /** Entra na lista de salas públicas: aberta, com lugar, sem partida começada e com alguém conectado. */
-    boolean listed() { return isPublic() && !full() && !started() && anyoneConnected(); }
+    /**
+     * Entra na lista de salas públicas, com alguém conectado: com lugar, para entrar, ou já com a partida
+     * começada, para assistir.
+     */
+    boolean listed() { return isPublic() && anyoneConnected() && (started() || !full()); }
     boolean started() { return match != null; }
     boolean full() { for (Seat s : seats) if (s.deck == null) return false; return true; }
 
     Seat seatOf(Channel ch) {
         for (Seat s : seats) if (s.channel == ch) return s;
+        return null;
+    }
+
+    /** Quem assiste sem jogar ({type:"watch"}); não ocupa assento nem segura a partida aberta. */
+    final List<Watcher> watchers = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    Watcher watcherOf(Channel ch) {
+        for (Watcher w : watchers) if (w.channel == ch) return w;
         return null;
     }
 
@@ -252,6 +263,8 @@ final class Session {
         List<RegisteredPlayer> players = new ArrayList<>();
         Map<RegisteredPlayer, IGuiGame> guis = new LinkedHashMap<>();
         Set<String> names = new java.util.HashSet<>();
+        // Revanche: os eventos recomeçam do zero, também para quem assiste.
+        for (Watcher w : watchers) w.sentEventCursor = 0;
         for (Seat seat : seats) {
             seat.reset();
             // O frontend reconhece o vencedor pelo nome, então os humanos precisam de nomes diferentes.
@@ -1349,6 +1362,57 @@ final class Session {
             seat.send(state.toString());
             if (state.has("eventCursor")) seat.sentEventCursor = state.get("eventCursor").getAsLong();
         }
+        for (Watcher w : watchers) {
+            JsonObject state = state(w);
+            if (state == null) { dirty.set(true); return; }
+            BridgeServer.send(w.channel, state.toString());
+            if (state.has("eventCursor")) w.sentEventCursor = state.get("eventCursor").getAsLong();
+        }
+    }
+
+    /**
+     * O estado visto por quem assiste: a mesa do jogador escolhido, sem a mão de ninguém (como um oponente veria),
+     * sem botões, perguntas nem preferências, e sem token para voltar a um assento.
+     */
+    private JsonObject state(Watcher w) {
+        HostedMatch m = match;
+        GameView gv = m == null ? null : m.getGameView();
+        if (gv == null) return null;
+        JsonObject state;
+        try {
+            state = StateJson.game(gv, -2, m.getGame());
+            events.addTurnTimes(state);
+            // O jogador escolhido; sem escolha (ou se ele não está mais no jogo), o anfitrião.
+            int you = -1, host = seats[0].me == null ? -1 : seats[0].me.getId();
+            for (PlayerView p : gv.getPlayers()) if (p.getId() == w.player) you = p.getId();
+            if (you < 0) for (PlayerView p : gv.getPlayers()) if (p.getId() == host || you < 0) you = p.getId();
+            state.addProperty("you", you);
+            state.addProperty("spectating", true);
+            state.addProperty("watching", true);
+            JsonObject input = new JsonObject();
+            input.addProperty("gen", 0);
+            input.addProperty("message", "");
+            input.add("ok", button("", false));
+            input.add("cancel", button("", false));
+            for (String empty : new String[]{"selectable", "selectableStacks", "selectablePlayers", "actionable"}) input.add(empty, new JsonArray());
+            state.add("input", input);
+            state.add("deciding", deciding(null));
+            state.add("castable", new JsonArray());
+        } catch (RuntimeException e) {
+            return null;
+        }
+        state.add("config", config.json());
+        state.add("match", matchJson());
+        state.addProperty("matchId", matchId);
+        MatchConfig.versions(state);
+        synchronized (events) {
+            state.add("events", events.json(w.sentEventCursor));
+            state.addProperty("eventCursor", events.cursor());
+            state.addProperty("stateVersion", stateVersion.get());
+        }
+        state.add("room", roomJson(-1, null));
+        state.add("decks", new JsonArray());
+        return state;
     }
 
     private static java.lang.reflect.Field selectTargetsSa, payManaSa, payManaEffect, mulliganStartingPlayer, londonReturnCount;
@@ -1596,12 +1660,15 @@ final class Session {
         return o;
     }
 
-    /** {code, seat, token, started, players:[{name, connected, rematch}]} */
-    JsonObject roomJson(Seat seat) {
+    /** {code, seat, token, started, players:[{name, connected, rematch}], spectators:[nome]} */
+    JsonObject roomJson(Seat seat) { return roomJson(seat.index, seat.token); }
+
+    /** Para quem assiste: assento -1 e sem token. */
+    private JsonObject roomJson(int seatIndex, String token) {
         JsonObject r = new JsonObject();
         r.addProperty("code", code);
-        r.addProperty("seat", seat.index);
-        r.addProperty("token", seat.token);
+        r.addProperty("seat", seatIndex);
+        if (token != null) r.addProperty("token", token);
         r.addProperty("started", started());
         r.addProperty("public", isPublic());
         r.addProperty("capacity", config.playerCount());
@@ -1627,12 +1694,15 @@ final class Session {
             ps.add(p);
         }
         r.add("players", ps);
+        JsonArray spectators = new JsonArray();
+        for (Watcher w : watchers) spectators.add(w.name);
+        r.add("spectators", spectators);
         return r;
     }
 
     JsonObject publicRoomJson() {
         JsonObject r = new JsonObject();
-        r.addProperty("code", code); r.addProperty("available", !full() && !started());
+        r.addProperty("code", code); r.addProperty("available", !full() && !started()); r.addProperty("started", started());
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json()); MatchConfig.versions(r);
         JsonArray players = new JsonArray();
@@ -1656,6 +1726,7 @@ final class Session {
         for (Seat seat : seats) if (seat.deck != null) players++;
         r.addProperty("players", players);
         r.addProperty("started", started());
+        r.addProperty("spectators", watchers.size());
         return r;
     }
 
@@ -1692,6 +1763,18 @@ final class Session {
         o.addProperty("text", text);
         return o.toString();
     }
+
+    /** Quem assiste: a conexão, o nome que os jogadores veem e de qual jogador vê a mesa (-1: o anfitrião). */
+    static final class Watcher {
+        final Channel channel;
+        final String name;
+        volatile int player = -1;
+        /** Começa no evento atual: quem chega no meio não revê as animações do que já passou. */
+        volatile long sentEventCursor;
+        Watcher(Channel channel, String name, long cursor) { this.channel = channel; this.name = name; this.sentEventCursor = cursor; }
+    }
+
+    long eventCursor() { return events.cursor(); }
 
     // ---------- Assento de um jogador humano ----------
 

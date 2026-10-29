@@ -11,10 +11,16 @@ body { overflow-y: auto; }
 .vis h1 { margin: 8px 0 6px; font: 800 32px/1.15 var(--display); color: var(--gold-light); }
 .vis-lead { margin: 0 0 18px; color: var(--muted); max-width: 70ch; line-height: 1.5; }
 .vis-empty { color: var(--muted); }
-.vis-index { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-.vis-index a { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; font-weight: 600; font-size: 14px; }
-.vis-index a:hover { border-color: var(--gold); }
 .vis-rel { scroll-margin-top: 16px; }
+.vis-rel h2:focus { outline: none; }
+.vis-rel h2:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+/* Versões anteriores, de cinco em cinco, no fim da lista. */
+.vis-more {
+  display: block; margin: 28px auto 0; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); font: 600 15px var(--body); cursor: pointer;
+}
+.vis-more:hover { border-color: var(--gold); }
+.vis-more[hidden] { display: none; }
 .vis-rel h2 { margin: 36px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); font: 700 22px var(--display); color: var(--gold); }
 .vis-rel h2 small { margin-left: 8px; font: 400 14px var(--body); color: var(--muted); }
 .vis-item {

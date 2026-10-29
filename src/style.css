@@ -361,6 +361,10 @@ a { color: var(--gold); }
 }
 .hcost .pip { font-size: 0.95em; vertical-align: 0; }
 .hcard:hover, .hcard:focus-visible { transform: translateY(-2%) scale(1.1); z-index: 60 !important; }
+/* Mão de quem é assistido: de costas, sem levantar ao passar o mouse. */
+.hcard.hidden-card { cursor: default; }
+.hcard.hidden-card .back { width: 100%; height: 100%; box-sizing: border-box; }
+.hcard.hidden-card:hover { transform: translateY(calc(34% + var(--dy))) rotate(var(--rot)); }
 .hcard.playable .face { box-shadow: 0 0 0 2px var(--glow), 0 0 18px rgba(89, 181, 255, 0.8); }
 /* Cartas de fora da mão (cemitério, exílio) que dá para usar agora: separadas da mão e com a zona embaixo. */
 .hcard.outside:not(:first-child) { margin-left: calc(var(--hcw) * 0.12); }

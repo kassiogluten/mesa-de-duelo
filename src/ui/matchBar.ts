@@ -1,7 +1,7 @@
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 
-export interface MatchChip { kind: 'format' | 'room' | 'series' | 'offline' | 'spectating'; text: string; label: string }
+export interface MatchChip { kind: 'format' | 'room' | 'series' | 'offline' | 'spectating' | 'audience'; text: string; label: string }
 
 const FORMAT: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
 
@@ -10,8 +10,11 @@ export function matchChips(s: FState): MatchChip[] {
   const chips: MatchChip[] = [];
   const format = s.config?.format ? FORMAT[s.config.format] : undefined;
   if (format) chips.push({ kind: 'format', text: format, label: `Formato ${format}` });
-  if (s.spectating) chips.push({ kind: 'spectating', text: 'Assistindo', label: 'Você está assistindo a partida' });
+  if (s.spectating) chips.push({ kind: 'spectating', text: 'Assistindo', label: s.watching ? 'Você está assistindo, sem jogar' : 'Você está assistindo a partida' });
   if (s.room) chips.push({ kind: 'room', text: `Sala ${s.room.code}`, label: `Sala ${s.room.code}` });
+  // Quem assiste: a contagem na barra e os nomes ao passar o mouse (e no menu, para o toque).
+  const audience = s.room?.spectators ?? [];
+  if (audience.length) chips.push({ kind: 'audience', text: `${audience.length} assistindo`, label: `Assistindo: ${audience.join(', ')}` });
   if (s.match && s.config?.matchLength === 'bo3') {
     const score = s.match.wins.join(' × ');
     chips.push({ kind: 'series', text: `Jogo ${s.match.gameNumber} · ${score}`, label: `Jogo ${s.match.gameNumber} da melhor de três, placar ${score}` });

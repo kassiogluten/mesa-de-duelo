@@ -152,13 +152,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="skip-bar" id="fSkipBar" aria-live="polite" hidden></div>
     <nav class="menu game-menu" id="fMenu" aria-label="Menu da partida" hidden>
       <div class="game-menu-meta"><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
+      <p class="game-menu-audience" id="fAudience" hidden></p>
       <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">Registro</button>
       <button class="btn" data-ui="errors" aria-expanded="false" aria-controls="fErrorsDrawer">Erros da partida<span class="menu-count" id="fErrorsCount" hidden></span></button>
       <button class="btn" data-ui="feedback" aria-haspopup="dialog"${opts.onFeedback ? '' : ' hidden'}>Enviar sugestão ou erro</button>
       <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">Opções</button>
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
-      <button class="btn" data-ui="exit">Desistir e voltar ao início</button>
+      <button class="btn" data-ui="exit" id="fMenuExit">Desistir e voltar ao início</button>
       <button type="button" class="game-menu-version" data-ui="version" aria-pressed="false" title="Toque para ver as versões das regras e do motor">Mesa de Duelo ${esc(VERSION)}</button>
     </nav>
     <div class="overlay game-options-overlay" id="fSettings" hidden>
@@ -1684,6 +1685,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return `<span class="observe-label ${result.tone}">${result.title} · Jogo encerrado</span><button class="arena-btn primary" data-ui="result">Ver resultado</button>`;
     }
     if (s.gameOver || s.question) return '';
+    if (s.watching) return watchBarHTML(s);
     if (s.spectating) return '<span class="spectating-label">Você foi eliminado. Acompanhando a partida.</span>';
     if (s.input.opening === 'starting-player') {
       const choices = s.players.filter(player => s.input.selectablePlayers?.includes(player.id));
@@ -1997,6 +1999,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return `<div class="hand-slot"><div class="hcard ${sel}${incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${tag ? ` (${esc(tag)})` : ''}"
         style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${face(c, 'normal')}${cost}${where}${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
     }).join(''));
+    // Quem assiste não vê a mão de ninguém: a de baixo também fica de costas, só com a quantidade.
+    if (s.watching) setHTML($('#fHand'), Array.from({ length: me.handCount }, (_, i) => {
+      const off = i - (me.handCount - 1) / 2;
+      return `<div class="hand-slot"><div class="hcard hidden-card" aria-hidden="true" style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}"><div class="back"></div></div></div>`;
+    }).join(''));
     knownHand = new Set(fan.map(({ c }) => c.id).filter(id => !incoming(id) || arriving.has(id)));
     handPrimed = true;
 
@@ -2123,6 +2130,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     $('#fRoomTag').textContent = s.room ? `Sala ${s.room.code}` : '';
     $('#fRoomTag').hidden = !s.room;
+    const audience = s.room?.spectators ?? [];
+    $('#fAudience').textContent = audience.length ? `Assistindo: ${audience.join(', ')}` : '';
+    $('#fAudience').hidden = !audience.length;
+    $('#fMenuExit').textContent = s.watching ? 'Parar de assistir' : 'Desistir e voltar ao início';
     // Em rede não dá para recomeçar no meio: a revanche só existe no fim da partida, com os dois de acordo.
     $('#fMenuRematch').hidden = !!s.room || (s.config?.matchLength === 'bo3' && !s.match?.over);
     $('#fSeries').hidden = !s.match;
@@ -2177,8 +2188,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   function gameResult(s: FState) {
     const abandoned = !!s.match?.abandoned;
-    const won = !abandoned && s.winner === tablePlayers(s).me?.name;
     const played = s.match?.gameMs != null ? ` · ${turnTimeText(s.match.gameMs)} de jogo` : '';
+    // Quem assiste não vence nem perde: o título diz quem venceu.
+    if (s.watching) return {
+      tone: 'draw',
+      title: abandoned ? 'Partida encerrada' : s.winner ? `${esc(s.winner)} venceu` : 'Empate',
+      detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}${played}` : `Turno ${s.turn}${played}`,
+    };
+    const won = !abandoned && s.winner === tablePlayers(s).me?.name;
     return {
       tone: won ? 'win' : !abandoned && s.winner ? 'lose' : 'draw',
       title: abandoned ? 'Partida encerrada' : won ? 'Vitória' : s.winner ? 'Derrota' : 'Empate',
@@ -2186,8 +2203,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     };
   }
 
+  /** Quem assiste: o aviso e um botão por jogador, para ver a partida da mesa de cada um. */
+  function watchBarHTML(s: FState) {
+    const seats = s.players.map(p => `<button class="arena-btn ${p.id === s.you ? 'primary' : 'secondary'}" data-ui="watch-player" data-player="${p.id}" aria-pressed="${p.id === s.you}">${esc(p.name)}</button>`).join('');
+    return `<span class="spectating-label">Assistindo. Ver a mesa de:</span><span class="watch-seats" role="group" aria-label="Ver a mesa de">${seats}</span>`;
+  }
+
   function rematchButton(s: FState) {
     const r = s.room;
+    if (s.watching) return '';
     if (!r) return '<button class="arena-btn primary" data-ui="rematch">Jogar de novo</button>';
     const mine = r.players[r.seat];
     const others = r.players.filter((_, index) => index !== r.seat);
@@ -2441,6 +2465,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (ui === 'fullscreen') { void toggleFullscreen(); return; }
+    if (ui === 'watch-player') {
+      const player = Number(t.closest<HTMLElement>('[data-player]')?.dataset.player);
+      if (client?.state?.watching && Number.isInteger(player) && player !== client.state.you) client.send({ type: 'watch-player', player });
+      return;
+    }
+    if (ui === 'exit' && client?.state?.watching) { stopPresentation(); hideCardPreview(true); turnNotice.reset(); opts.onExit(); return; }
     if (ui === 'exit') {
       if (client?.state?.gameOver || disconnected || confirm(client?.state?.room ? 'Desistir e sair da sala?' : 'Desistir desta partida?')) { stopPresentation(); hideCardPreview(true); turnNotice.reset(); client?.send({ type: 'concede' }); opts.onExit(); }
       return;

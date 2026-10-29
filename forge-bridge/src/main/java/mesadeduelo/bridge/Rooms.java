@@ -23,7 +23,9 @@ import io.netty.channel.Channel;
  * com o código pedido em code, ou sorteado sem ele);
  * {type:"join", code, name, deck} entra, e a partida começa quando a sala enche; host e join aceitam cover, a carta
  * cuja arte representa o deck no lobby; {type:"room-say", key} manda uma mensagem pronta aos outros da sala;
- * {type:"list-rooms"} lista as salas públicas abertas;
+ * {type:"list-rooms"} lista as salas públicas abertas e as em andamento;
+ * {type:"watch", code, name} assiste à partida já começada de uma sala, sem ocupar assento (pública ou privada, com o código);
+ * {type:"watch-player", player} troca o jogador de cuja mesa o espectador vê a partida;
  * {type:"rematch"} pede revanche (contra a IA começa na hora, em rede quando os dois pedirem);
  * {type:"leave"} concede e sai.
  *
@@ -38,6 +40,8 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private static final long GRACE_SECONDS = Long.getLong("mesa.grace", 300);
     /** Quantas salas públicas a lista mostra de uma vez (as que esperam há mais tempo primeiro). */
     private static final int MAX_LISTED = 30;
+    /** Espectadores por sala, para uma sala muito assistida não pesar na partida. */
+    private static final int MAX_WATCHERS = Integer.getInteger("mesa.maxWatchers", 20);
 
     private final Map<Channel, Session> byChannel = new ConcurrentHashMap<>();
     /** Todas as partidas vivas, salas e partidas contra a IA, pelo código de volta. */
@@ -138,6 +142,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     public synchronized void onDisconnect(Channel ch) {
         Session s = byChannel.remove(ch);
         if (s == null) return;
+        if (dropWatcher(s, ch)) return;
         Session.Seat seat = s.seatOf(ch);
         if (seat == null) return;
         seat.channel = null;
@@ -227,6 +232,8 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                     host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg));
                 }
                 case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg));
+                case "watch" -> watch(ch, code(msg), name(msg));
+                case "watch-player" -> watchPlayer(ch, msg);
                 case "room-say" -> say(ch, MatchConfig.string(msg, "key"));
                 case "rejoin" -> rejoin(ch, code(msg), msg.has("token") ? MatchConfig.string(msg, "token") : "");
                 case "rematch" -> rematch(ch);
@@ -300,7 +307,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         return s;
     }
 
-    /** Salas públicas abertas: sem as cheias, as já começadas e as que ficaram sem ninguém conectado. */
+    /** Salas públicas com lugar ou em andamento (para assistir), sem as que ficaram sem ninguém conectado. */
     synchronized JsonArray publicRooms() {
         JsonArray rooms = new JsonArray();
         byCode.values().stream().filter(Session::listed)
@@ -420,6 +427,39 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         else s.markDirty();
     }
 
+    /** Entra como espectador numa partida já começada; quem estava em outra partida sai dela antes. */
+    private synchronized void watch(Channel ch, String code, String name) {
+        Session s = room(ch, code);
+        if (s.seatOf(ch) != null) throw new IllegalArgumentException("Você já está jogando nesta sala.");
+        if (s.watcherOf(ch) != null) return;
+        if (!s.started()) throw new IllegalArgumentException("A partida da sala " + code + " ainda não começou. Entre na sala para jogar.");
+        if (s.watchers.size() >= MAX_WATCHERS) throw new IllegalArgumentException("A sala " + code + " já tem o máximo de espectadores.");
+        leave(ch);
+        s.watchers.add(new Session.Watcher(ch, name, s.eventCursor()));
+        byChannel.put(ch, s);
+        System.out.printf("Sala %s: %s está assistindo%n", code, name);
+        s.markDirty();
+    }
+
+    private synchronized void watchPlayer(Channel ch, JsonObject msg) {
+        Session s = byChannel.get(ch);
+        Session.Watcher w = s == null ? null : s.watcherOf(ch);
+        JsonElement player = msg.get("player");
+        if (w == null || player == null || !player.isJsonPrimitive()) return;
+        w.player = player.getAsInt();
+        s.markDirty();
+    }
+
+    /** Tira o espectador da sala; false se a conexão não era de um espectador. */
+    private boolean dropWatcher(Session s, Channel ch) {
+        Session.Watcher w = s.watcherOf(ch);
+        if (w == null) return false;
+        s.watchers.remove(w);
+        System.out.printf("%s: %s parou de assistir%n", label(s), w.name);
+        s.markDirty();
+        return true;
+    }
+
     private synchronized void rejoin(Channel ch, String code, String token) {
         Session s = byCode.get(code);
         Session.Seat seat = null;
@@ -474,6 +514,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private synchronized void leave(Channel ch) {
         Session s = byChannel.remove(ch);
         if (s == null) return;
+        if (dropWatcher(s, ch)) return;
         Session.Seat seat = s.seatOf(ch);
         if (!s.isRoom()) { close(s, seat); return; }
         if (seat != null && !s.started() && seat.index != 0) {
@@ -513,6 +554,12 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 seat.channel = null;
             }
         }
+        // Quem assiste volta ao início: não há assento para onde voltar.
+        for (Session.Watcher w : s.watchers) {
+            byChannel.remove(w.channel, s);
+            BridgeServer.send(w.channel, Session.toast("gone", "A partida da sala " + s.code + " terminou."));
+        }
+        s.watchers.clear();
         if (s.isRoom()) System.out.printf("Sala %s fechada%n", s.code);
     }
 

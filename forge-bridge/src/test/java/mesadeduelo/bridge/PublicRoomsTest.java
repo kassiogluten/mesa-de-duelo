@@ -11,11 +11,14 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Só as salas públicas abertas entram na lista da tela inicial; as privadas continuam só pelo código. */
+/** Só as salas públicas entram na lista da tela inicial, abertas ou em andamento; as privadas continuam só pelo código. */
 public class PublicRoomsTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
 
     private static final String CONFIG = "{\"format\":\"free\",\"matchLength\":\"bo1\"}";
+    /** Decks pequenos de terrenos básicos: a lista que importa aqui é a de salas, não o jogo. */
+    private static final String RED = "{\"name\":\"Vermelho\",\"cards\":[{\"name\":\"Mountain\",\"count\":60}]}";
+    private static final String GREEN = "{\"name\":\"Verde\",\"cards\":[{\"name\":\"Forest\",\"count\":60}]}";
 
     /** A primeira mensagem do tipo pedido, descartando as outras (hello, estados, avisos). */
     private static JsonObject next(EmbeddedChannel ch, String type) throws InterruptedException {
@@ -41,7 +44,7 @@ public class PublicRoomsTest {
     }
 
     private static String host(Rooms rooms, EmbeddedChannel ch, String name, String visibility) throws InterruptedException {
-        rooms.onMessage(ch, "{\"type\":\"host\",\"name\":\"" + name + "\",\"deck\":\"vermelho\",\"config\":" + CONFIG
+        rooms.onMessage(ch, "{\"type\":\"host\",\"name\":\"" + name + "\",\"deck\":" + RED + ",\"config\":" + CONFIG
             + (visibility == null ? "" : ",\"visibility\":\"" + visibility + "\"") + "}");
         JsonObject room = next(ch, "room").getAsJsonObject("room");
         assertEquals("public".equals(visibility), room.get("public").getAsBoolean());
@@ -79,10 +82,13 @@ public class PublicRoomsTest {
             assertEquals("r3", missing.get("requestId").getAsString());
             assertEquals("room-not-found", missing.get("reason").getAsString());
 
-            // Cheia, a partida começa e a sala sai da lista.
-            rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + open + "\",\"name\":\"Dora\",\"deck\":\"verde\"}");
+            // Cheia, a partida começa e a sala continua na lista, agora para assistir.
+            rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + open + "\",\"name\":\"Dora\",\"deck\":" + GREEN + "}");
             next(visitor, "room");
-            assertEquals(0, list(rooms, caio).size());
+            JsonArray playing = list(rooms, caio);
+            assertEquals(1, playing.size());
+            assertTrue(playing.get(0).getAsJsonObject().get("started").getAsBoolean());
+            assertEquals(2, playing.get(0).getAsJsonObject().get("players").getAsInt());
         } finally {
             for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, caio, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
         }
@@ -103,6 +109,85 @@ public class PublicRoomsTest {
         }
     }
 
+    /** O primeiro estado de partida que chegar, descartando os outros. */
+    private static JsonObject state(EmbeddedChannel ch) throws InterruptedException {
+        long until = System.currentTimeMillis() + 30_000;
+        while (System.currentTimeMillis() < until) {
+            JsonObject s = next(ch, "state");
+            if (s.has("players")) return s;
+        }
+        throw new AssertionError("Sem estado de partida");
+    }
+
+    @Test public void spectatorsWatchStartedRoomsWithoutHandsOrControls() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), eva = new EmbeddedChannel();
+        try {
+            String code = host(rooms, ana, "Ana", null);
+            // Antes de começar não há o que assistir: quem chega entra para jogar.
+            rooms.onMessage(eva, "{\"type\":\"watch\",\"code\":\"" + code + "\",\"name\":\"Eva\"}");
+            assertTrue(next(eva, "error").get("text").getAsString().contains("ainda não começou"));
+
+            rooms.onMessage(bia, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":" + GREEN + "}");
+            JsonObject first = state(ana);
+            // Sala privada: quem tem o código pode assistir.
+            rooms.onMessage(eva, "{\"type\":\"watch\",\"code\":\"" + code.toLowerCase() + "\",\"name\":\"Eva\"}");
+            JsonObject seen = state(eva);
+            assertTrue(seen.get("watching").getAsBoolean());
+            assertTrue(seen.get("spectating").getAsBoolean());
+            assertFalse("Sem token para tomar um assento", seen.toString().contains("token"));
+            assertFalse(seen.has("session"));
+            assertFalse(seen.has("question"));
+            assertFalse(seen.getAsJsonObject("input").getAsJsonObject("ok").get("enabled").getAsBoolean());
+            assertEquals(-1, seen.getAsJsonObject("room").get("seat").getAsInt());
+            int anaId = first.get("you").getAsInt(), biaId = -1;
+            assertEquals("Começa pela mesa do anfitrião", anaId, seen.get("you").getAsInt());
+            for (var p : seen.getAsJsonArray("players")) {
+                JsonObject player = p.getAsJsonObject();
+                assertEquals("Nenhuma mão à vista", 0, player.getAsJsonArray("hand").size());
+                assertTrue("Quantas cartas cada um tem continua à vista", player.has("handCount"));
+                if (player.get("id").getAsInt() != anaId) biaId = player.get("id").getAsInt();
+            }
+
+            // Os jogadores veem quem assiste.
+            JsonObject withEva;
+            do withEva = state(ana); while (withEva.getAsJsonObject("room").getAsJsonArray("spectators").isEmpty());
+            assertEquals("Eva", withEva.getAsJsonObject("room").getAsJsonArray("spectators").get(0).getAsString());
+
+            rooms.onMessage(eva, "{\"type\":\"watch-player\",\"player\":" + biaId + "}");
+            JsonObject other;
+            do other = state(eva); while (other.get("you").getAsInt() != biaId);
+            for (var p : other.getAsJsonArray("players")) assertEquals(0, p.getAsJsonObject().getAsJsonArray("hand").size());
+
+            // Comandos de jogo do espectador são ignorados, e sair não derruba a partida.
+            rooms.onMessage(eva, "{\"type\":\"concede\"}");
+            rooms.onMessage(eva, "{\"type\":\"leave\"}");
+            JsonObject after;
+            do after = state(ana); while (!after.getAsJsonObject("room").getAsJsonArray("spectators").isEmpty());
+            assertFalse(after.get("gameOver").getAsBoolean());
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, eva}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
+    @Test public void spectatorsAreSentHomeWhenTheRoomCloses() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), eva = new EmbeddedChannel();
+        try {
+            String code = host(rooms, ana, "Ana", "public");
+            rooms.onMessage(bia, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":" + GREEN + "}");
+            state(ana);
+            rooms.onMessage(eva, "{\"type\":\"watch\",\"code\":\"" + code + "\",\"name\":\"Eva\"}");
+            state(eva);
+            assertEquals(1, list(rooms, eva).get(0).getAsJsonObject().get("spectators").getAsInt());
+            rooms.onMessage(ana, "{\"type\":\"leave\"}");
+            rooms.onMessage(bia, "{\"type\":\"leave\"}");
+            assertTrue(next(eva, "gone").get("text").getAsString().contains("terminou"));
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, eva}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
     @Test public void tooManyWrongCodesBlockTheSearchForAWhile() throws Exception {
         Rooms rooms = new Rooms();
         EmbeddedChannel ana = new EmbeddedChannel(), visitor = new EmbeddedChannel();
@@ -115,7 +200,7 @@ public class PublicRoomsTest {
             // Mesmo o código certo fica recusado, senão a varredura só precisaria continuar.
             rooms.onMessage(visitor, "{\"type\":\"lookup-room\",\"requestId\":\"ok\",\"code\":\"" + code + "\"}");
             assertTrue(next(visitor, "request-error").get("text").getAsString().startsWith("Muitas tentativas"));
-            rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":\"verde\"}");
+            rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":" + GREEN + "}");
             assertTrue(next(visitor, "error").get("text").getAsString().startsWith("Muitas tentativas"));
         } finally {
             for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
@@ -123,7 +208,7 @@ public class PublicRoomsTest {
     }
 
     private static String hostMessage(String name, String code) {
-        return "{\"type\":\"host\",\"name\":\"" + name + "\",\"deck\":\"verde\",\"config\":" + CONFIG + ",\"code\":\"" + code + "\"}";
+        return "{\"type\":\"host\",\"name\":\"" + name + "\",\"deck\":" + GREEN + ",\"config\":" + CONFIG + ",\"code\":\"" + code + "\"}";
     }
 
     @Test public void hostCanChooseTheRoomCode() throws Exception {
@@ -152,7 +237,7 @@ public class PublicRoomsTest {
         Rooms rooms = new Rooms();
         EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), caio = new EmbeddedChannel();
         try {
-            rooms.onMessage(ana, "{\"type\":\"host\",\"name\":\"Ana\",\"deck\":\"vermelho\",\"cover\":\"Raging Goblin\",\"config\":{\"format\":\"free\",\"matchLength\":\"bo1\",\"playerCount\":2}}");
+            rooms.onMessage(ana, "{\"type\":\"host\",\"name\":\"Ana\",\"deck\":{\"name\":\"Goblins\",\"cards\":[{\"name\":\"Mountain\",\"count\":56},{\"name\":\"Raging Goblin\",\"count\":4}]},\"cover\":\"Raging Goblin\",\"config\":{\"format\":\"free\",\"matchLength\":\"bo1\",\"playerCount\":2}}");
             JsonObject room = next(ana, "room").getAsJsonObject("room");
             assertEquals("Raging Goblin", room.getAsJsonArray("players").get(0).getAsJsonObject().get("cover").getAsString());
 

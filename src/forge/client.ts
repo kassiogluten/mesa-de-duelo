@@ -14,8 +14,9 @@ export interface ValidationIssue { code: string; message: string; card?: string;
 export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mainCount?: number; sideboardCount?: number; commanderCount?: number; rulesVersion: string; engineVersion: string }
 export type RoomVisibility = 'private' | 'public';
 /** Uma sala pública aberta, como aparece na lista da tela inicial (sem tokens nem decks). */
-export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean }
-export interface RoomInfo { code: string; config: MatchConfig; available: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
+/** started: a partida já começou e a sala aparece para assistir; spectators: quantos assistem (ausente em pontes antigas). */
+export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean; spectators?: number }
+export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed';
@@ -272,6 +273,8 @@ export interface FRoom {
   /** conceded: desistiu (pelo menu ou saindo da sala); a mesa tira o assento de vista. */
   /** commander e cover (carta da arte do deck) só aparecem para o lobby; o resto do deck fica escondido. */
   players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string }[];
+  /** Nomes de quem assiste sem jogar. Ausente em pontes antigas. */
+  spectators?: string[];
 }
 
 /** Mensagens prontas do lobby; a ponte recusa qualquer outra. */
@@ -323,7 +326,10 @@ export interface FState {
   /** Quanto o turno atual já durou quando o estado saiu do servidor, em ms; ausente no fim do jogo e em pontes antigas. */
   turnElapsedMs?: number;
   gameOver: boolean;
+  /** Sem decisões a tomar: eliminado no Commander ou, com watching, assistindo sem jogar. */
   spectating?: boolean;
+  /** Assistindo à partida de uma sala sem ocupar assento; `you` é o jogador de cuja mesa se vê a partida. */
+  watching?: boolean;
   winner?: string;
   players: FPlayer[];
   /** Cartas do cemitério ou do exílio (de qualquer jogador) que você pode usar agora: flashback, tramadas... */
@@ -405,6 +411,7 @@ export type ClientMessage =
   | { type: 'join'; code: string; name: string; deck: unknown; cover?: string }
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
+  | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number }
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
   | { type: 'list-rooms'; requestId: string }
@@ -491,7 +498,7 @@ export class ForgeClient {
 
   lookupRoom(code: string): Promise<RoomInfo> { return this.request({type: 'lookup-room', code}); }
 
-  /** Salas públicas abertas (com lugar e sem partida começada). As privadas nunca vêm na lista. */
+  /** Salas públicas com lugar ou em andamento (para assistir). As privadas nunca vêm na lista. */
   listRooms(): Promise<PublicRoom[]> { return this.request({type: 'list-rooms'}); }
 
   /** JSON da API pública do Moxfield ou do Archidekt, buscado pela ponte (o navegador esbarra no CORS). */

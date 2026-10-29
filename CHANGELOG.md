@@ -6,7 +6,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
-## [0.67.2] - 2026-10-28
+## [0.68.0] - 2026-10-28
+
+### Novo
+
+- **Assistir a uma partida.** Partidas em rede agora podem ser assistidas: toque em **Assistir** numa sala pública em andamento, ou digite o código (ou abra o link) de uma sala, pública ou privada, cuja partida já começou. Quem assiste vê o campo, os cemitérios, a pilha e a vida de todos, mas nenhuma mão. Nos botões do canto da mesa, escolhe de qual jogador vê a mesa. Assistir não ocupa lugar na sala, e **Parar de assistir**, no Menu, volta ao início sem atrapalhar a partida.
+- **Salas públicas em andamento.** Quando a partida começa, a sala pública continua na lista, com o selo **Em andamento**, quantos jogam, quantos assistem e o botão **Assistir**. As salas com lugar continuam no topo, com o botão Entrar.
+- **Quem está assistindo.** Os jogadores veem na barra do topo quantas pessoas assistem à partida, com os nomes ao passar o mouse. No Menu, aparecem os nomes de quem assiste.
+
+### Mudou
+
+- **Novidades em imagens mais enxuta.** A página abre com as cinco versões mais recentes, sem a fileira de botões de versão no topo. No fim, **Mostrar versões anteriores** traz mais cinco de cada vez. O link **ver em imagens** do painel Novidades continua abrindo direto na versão escolhida.
+- **Dianteira.** A mecânica das cartas de Dungeons & Dragons que leva à Undercity agora se chama **Dianteira**, como nas cartas em português; o selo dourado ao lado do retrato e a explicação dele usam o nome novo. Antes ela aparecia como Iniciativa, o mesmo nome do golpe que sai antes no combate, que continua se chamando Iniciativa.
 
 ### Corrigido
 

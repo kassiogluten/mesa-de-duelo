@@ -7,6 +7,9 @@
 .match-chip.series { color: var(--ink); }
 .match-chip.offline { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #ffb3a3; border-color: #ec5a3f80; background: #3b1d1dd9; }
 .match-chip.spectating { color: #bcd7ff; border-color: #59b5ff66; }
+.match-chip.audience { color: #bcd7ff; }
+/* Nomes de quem assiste, no menu: no toque não há o balão do título da barra. */
+.forge .game-menu .game-menu-audience { margin: 0; padding: 2px 4px; color: var(--muted); font: 500 12px/1.4 var(--body); overflow-wrap: anywhere; }
 .game-menu-meta.in-bar { display: none; }
 
 /*

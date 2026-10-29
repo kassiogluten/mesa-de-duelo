@@ -33,7 +33,7 @@ test('badges show initiative and the dungeon step, and the map button opens the 
   assert.match(html, /player-counter initiative/);
   assert.match(html, /data-gy="3" data-zone="dungeon"/);
   assert.match(html, /<b>2<\/b><small>\/5<\/small>/);
-  assert.equal(dungeonText(p), ', tem a iniciativa, na masmorra Undercity, sala Lost Well, 1 masmorra completada');
+  assert.equal(dungeonText(p), ', tem a dianteira, na masmorra Undercity, sala Lost Well, 1 masmorra completada');
   assert.equal(dungeonBadgesHTML({ id: 1, name: 'Bia' }), '');
 });
 

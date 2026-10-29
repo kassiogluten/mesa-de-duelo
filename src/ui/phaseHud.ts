@@ -26,10 +26,14 @@ const STEPS: Record<string, { group: string; detail: string }> = {
   END_OF_TURN: { group: 'end', detail: 'Etapa final' },
   CLEANUP: { group: 'end', detail: 'Limpeza' },
 };
-type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats' | 'dayTime' | 'activeSpells'> & { stack?: FState['stack']; match?: FState['match'] };
+type HudState = Pick<FState, 'turn' | 'phase' | 'activePlayer' | 'you' | 'players' | 'gameOver' | 'extraTurn' | 'extraTurns' | 'combatNumber' | 'extraCombats' | 'dayTime' | 'activeSpells'> & { stack?: FState['stack']; match?: FState['match']; watching?: boolean };
+
+/** O turno é de quem vê a mesa. Quem só assiste não tem turno: os textos usam o nome de quem joga, mesmo no 1x1. */
+const yours = (state: HudState, id: number | null | undefined) => id === state.you && !state.watching;
+const byName = (state: HudState) => state.players.length > 2 || !!state.watching;
 
 function owner(state: HudState) {
-  const mine = state.activePlayer === state.you;
+  const mine = yours(state, state.activePlayer);
   const activeName = state.players.find(player => player.id === state.activePlayer)?.name;
   const extra = state.extraTurn ? ' extra' : '';
   return state.gameOver ? 'Jogo encerrado' : mine ? `Seu turno${extra}` : activeName === 'Oponente' ? `Turno${extra} do oponente` : activeName ? `Turno${extra} de ${activeName}` : 'Preparando o jogo';
@@ -37,17 +41,17 @@ function owner(state: HudState) {
 
 /** "Turno extra" no começo de um turno extra, como a faixa de troca de turno mostra. */
 export function turnBannerText(state: HudState) {
-  const mine = state.activePlayer === state.you;
+  const mine = yours(state, state.activePlayer);
   const name = state.players.find(player => player.id === state.activePlayer)?.name;
-  if (state.extraTurn) return mine ? 'Turno extra' : state.players.length > 2 && name ? `Turno extra de ${name}` : 'Turno extra do oponente';
-  return mine ? 'Seu turno' : state.players.length > 2 ? `Turno de ${name ?? 'outro jogador'}` : 'Turno do oponente';
+  if (state.extraTurn) return mine ? 'Turno extra' : byName(state) && name ? `Turno extra de ${name}` : 'Turno extra do oponente';
+  return mine ? 'Seu turno' : byName(state) ? `Turno de ${name ?? 'outro jogador'}` : 'Turno do oponente';
 }
 
 /** Turnos extras que vêm depois deste, para a dica e os leitores de tela. */
 export function upcomingTurnsText(state: HudState) {
   const queue = state.extraTurns ?? [];
   if (!queue.length) return '';
-  const who = (id: number) => id === state.you ? 'seu' : state.players.length > 2 ? `de ${state.players.find(p => p.id === id)?.name ?? 'outro jogador'}` : 'do oponente';
+  const who = (id: number) => yours(state, id) ? 'seu' : byName(state) ? `de ${state.players.find(p => p.id === id)?.name ?? 'outro jogador'}` : 'do oponente';
   const first = who(queue[0]);
   return queue.length === 1 ? `Depois: turno extra ${first}` : queue.every(id => id === queue[0]) ? `Depois: ${queue.length} turnos extras ${first}` : `Depois: ${queue.length} turnos extras, o próximo ${first}`;
 }
@@ -70,9 +74,9 @@ const MOON = '<path d="M17 15.5A7 7 0 0 1 8.5 7a7 7 0 1 0 8.5 8.5z"/><path class
  */
 export function dayNightText(state: HudState): string {
   if (!state.dayTime) return '';
-  const mine = state.activePlayer === state.you;
+  const mine = yours(state, state.activePlayer);
   const name = state.players.find(p => p.id === state.activePlayer)?.name;
-  const who = mine ? 'você' : state.players.length > 2 && name ? name : 'o oponente';
+  const who = mine ? 'você' : byName(state) && name ? name : 'o oponente';
   const known = state.activeSpells != null, spells = state.activeSpells ?? 0;
   if (state.dayTime === 'day') {
     const rule = `Dia. Se ${who} não conjurar mágicas neste turno, vira noite no próximo turno.`;
@@ -103,7 +107,7 @@ function activePlayerPortrait(state: HudState, portrait?: string): string {
   const mine = state.activePlayer === state.you;
   const art = portrait && SAFE_PORTRAIT.test(portrait) ? portrait : '';
   const initial = art ? '' : esc(Array.from(player.name.trim())[0]?.toUpperCase() ?? '?');
-  return `<span class="phase-active-portrait ${mine ? 'mine' : 'theirs'}" aria-hidden="true" data-tip="${esc(mine ? 'Seu turno' : `Turno de ${player.name}`)}"${art ? ` style="background-image:url('${art}')"` : ''}>${initial}</span>`;
+  return `<span class="phase-active-portrait ${mine ? 'mine' : 'theirs'}" aria-hidden="true" data-tip="${esc(yours(state, player.id) ? 'Seu turno' : `Turno de ${player.name}`)}"${art ? ` style="background-image:url('${art}')"` : ''}>${initial}</span>`;
 }
 
 export { turnTimeText };
