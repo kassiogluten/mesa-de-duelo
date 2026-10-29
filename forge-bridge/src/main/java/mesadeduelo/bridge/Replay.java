@@ -57,7 +57,7 @@ final class Replay {
             throw new IllegalArgumentException("Retrato " + snapshotIndex + " não existe (há " + shots.size() + ").");
         snapshot = shots.get(snapshotIndex).getAsJsonObject();
         JsonObject c = journal.getAsJsonObject("config");
-        config = new MatchConfig(c.get("format").getAsString(), c.get("matchLength").getAsString(), c.get("playerCount").getAsInt());
+        config = new MatchConfig(c.get("format").getAsString(), c.get("matchLength").getAsString(), c.get("playerCount").getAsInt(), c.has("undo") && c.get("undo").getAsBoolean());
         players = MatchJournal.players(journal);
         int reporter = reporterPosition(journal, players), n = players.size();
         order = new ArrayList<>();

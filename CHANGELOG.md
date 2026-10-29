@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.69.0] - 2026-10-29
+
+### Novo
+
+- **Desfazer jogadas.** Ao criar uma partida, contra o computador ou numa sala, escolha **Desfazer: Ligado**. Na partida, o botão **Desfazer**, no alto da mesa, volta para antes da sua última decisão: conjurar uma mágica, ativar uma habilidade, jogar um terreno ou passar a vez. Para voltar mais, toque de novo. Contra o computador, volta na hora. Numa sala, os outros recebem o pedido ("Ana pediu para desfazer: conjurar Raio") e escolhem **Aceitar** ou **Recusar**: só volta se todos aceitarem, e quem pediu pode desistir. Todos sabem que a opção está ligada: o selo **Desfazer ligado** aparece na lista de salas públicas e na sala de espera, o botão fica à vista de todos durante a partida e o histórico registra cada volta. Sem a opção, nada muda: ninguém desfaz jogadas.
+
 ## [0.68.2] - 2026-10-29
 
 ### Corrigido

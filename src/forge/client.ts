@@ -9,7 +9,8 @@ export interface FPreferences {
   /** Etapas do turno dos oponentes em que o jogo segura a prioridade (nomes do Forge, como "UPKEEP"). Ausente em pontes antigas. */
   opponentStops?: string[];
 }
-export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
+/** undo: a partida foi criada com o Desfazer (pedir para voltar a última decisão, com a aprovação dos outros). */
+export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number; undo?: boolean }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
 export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mainCount?: number; sideboardCount?: number; commanderCount?: number; rulesVersion: string; engineVersion: string }
 export type RoomVisibility = 'private' | 'public';
@@ -283,6 +284,13 @@ export type RoomSaying = 'hello' | 'back' | 'invite' | 'glhf';
 export interface FSkipVote { target: number; name: string; yes: number; no: number; voters: number; needed: number; canVote: boolean; mine?: 'yes' | 'no' }
 export interface FSkip { vote?: FSkipVote; skipping: number[] }
 
+/** Uma decisão que dá para desfazer: o que o jogador fez e quando; text é a frase pronta ("jogar Floresta"). */
+export interface FUndoStep { action: 'pass' | 'land' | 'cast' | 'ability'; card?: string; turn: number; phase?: string; text: string }
+/** Pedido de desfazer aberto: de quem, o que volta, se é o seu, se você vota e quem ainda não aceitou. */
+export interface FUndoRequest { player?: number; name: string; step: FUndoStep; mine: boolean; canVote: boolean; vote?: 'yes' | 'no'; waiting: string[] }
+/** Só nas partidas com o Desfazer: a sua última decisão (o que um pedido desfaria agora) e o pedido aberto. */
+export interface FUndo { last?: FUndoStep; pending: boolean; request?: FUndoRequest }
+
 /**
  * Previsão do combate de um jogador atacado, com as regras do Forge (prevenção, golpe duplo, atropelar, infectar).
  * poison só vem quando há veneno; commander, os comandantes que causam dano; lethal diz o que derrota o jogador.
@@ -377,6 +385,7 @@ export interface FState {
   room?: FRoom;
   /** Em rede: votação para pular o turno de quem caiu e os jogadores com o turno já aprovado para pular. */
   skip?: FSkip;
+  undo?: FUndo;
   /** Para voltar a esta partida se a conexão cair: {type:"rejoin", code, token}. */
   session?: { code: string; token: string; room: boolean };
   decks: string[];
@@ -431,6 +440,7 @@ export type ClientMessage =
   | { type: 'mana'; color: string; gen?: number }
   | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
   | { type: 'skip-vote'; target: number; value?: boolean }
+  | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string };
 
 /**

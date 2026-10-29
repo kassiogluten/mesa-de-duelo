@@ -692,3 +692,11 @@ Spec completa, com as decisões, a arquitetura, o protocolo de sincronia e as fa
 - [x] Fase 1: conta na ponte (`/api/conta/`), botão Entrar com Google, One Tap, sair e apagar conta.
 - [x] Fase 2: sincronizar Meus decks, com a pergunta ao entrar, a lixeira de 30 dias e o envio sem rede (0.63.0, junto com a fase 1).
 - [x] Fase 3: preferências, apelido e foto (0.64.0).
+
+## 45. Botão principal sempre na ação mais comum
+
+Na caixa de ação, o botão em destaque (primário) deve ser sempre o que o jogador mais costuma apertar naquele momento. Exemplo: na manutenção, **Comprar** é o primário, e não a opção de parar ou agir.
+
+- [ ] Levantar os momentos com dois ou mais botões (manutenção, compra, combate, fim de turno, respostas na pilha, escolhas de abertura) e qual é a ação mais comum em cada um.
+- [ ] Tornar primário o botão da ação mais comum em cada momento, sem mudar o que cada botão faz.
+- [ ] Conferir que o atalho de teclado (Enter/espaço) segue o botão primário.

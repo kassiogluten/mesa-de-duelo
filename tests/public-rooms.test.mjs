@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const { joinableRooms, watchableRooms, publicRoomsHTML } = await import(uri((await readFile(new URL('../src/ui/publicRooms.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const undo = uri((await readFile(new URL('../src/ui/undo.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
+const { joinableRooms, watchableRooms, publicRoomsHTML } = await import(uri((await readFile(new URL('../src/ui/publicRooms.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./undo'", JSON.stringify(undo))));
 
 const room = (over = {}) => ({ code: 'WXYZ', host: 'Ana', config: { format: 'pauper', matchLength: 'bo1' }, capacity: 2, players: 1, started: false, ...over });
 
@@ -50,4 +51,12 @@ test('host names are escaped and buttons can be disabled while busy', () => {
   assert.doesNotMatch(html, /<b>/);
   assert.match(html, /Sala de &lt;b&gt;/);
   assert.match(html, /data-join-room="WXYZ"[^>]* disabled>Entrar/);
+});
+
+test('a room created with Desfazer says so in the list, also for screen readers', () => {
+  const html = publicRoomsHTML([room({ config: { format: 'pauper', matchLength: 'bo1', undo: true } }), room({ code: 'KLMN', started: true, players: 2, config: { format: 'pauper', matchLength: 'bo1', undo: true } })]);
+  assert.equal(html.match(/class="undo-badge"/g)?.length, 2);
+  assert.match(html, /aria-label="Entrar na sala de Ana: Pauper, 1 de 2 jogadores, com Desfazer ligado"/);
+  assert.match(html, /em andamento, com Desfazer ligado"/);
+  assert.doesNotMatch(publicRoomsHTML([room()]), /Desfazer/);
 });

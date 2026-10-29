@@ -6,11 +6,12 @@ import forge.game.GameRules;
 import forge.game.GameType;
 
 /** Immutable, room-owned rules. Never mutate global Forge preferences per match. */
-record MatchConfig(String format, String matchLength, int playerCount) {
+record MatchConfig(String format, String matchLength, int playerCount, boolean undo) {
     static final String ENGINE_VERSION = "2.0.16-SNAPSHOT+0b0f7ecc5111.mesa1";
     static final String RULES_VERSION = "standard-pauper-sacola50-commander-2026-10-28";
 
     MatchConfig(String format, String matchLength) { this(format, matchLength, 2); }
+    MatchConfig(String format, String matchLength, int playerCount) { this(format, matchLength, playerCount, false); }
 
     boolean commander() { return "commander".equals(format); }
 
@@ -36,7 +37,10 @@ record MatchConfig(String format, String matchLength, int playerCount) {
             try { count = v.getAsBigDecimal().intValueExact(); }
             catch (ArithmeticException e) { throw new IllegalArgumentException("Número de jogadores inválido."); }
         }
-        return new MatchConfig(string(o, "format"), string(o, "matchLength"), count);
+        // Desfazer: escolhido ao criar a partida e igual para todos na mesa. Sem o campo, desligado.
+        JsonElement undo = o.get("undo");
+        if (undo != null && !(undo.isJsonPrimitive() && undo.getAsJsonPrimitive().isBoolean())) throw new IllegalArgumentException("Opção de desfazer inválida.");
+        return new MatchConfig(string(o, "format"), string(o, "matchLength"), count, undo != null && undo.getAsBoolean());
     }
 
     static String string(JsonObject o, String key) {
@@ -62,6 +66,7 @@ record MatchConfig(String format, String matchLength, int playerCount) {
         o.addProperty("format", format);
         o.addProperty("matchLength", matchLength);
         if (commander()) o.addProperty("playerCount", playerCount);
+        if (undo) o.addProperty("undo", true);
         return o;
     }
 

@@ -64,6 +64,9 @@ public final class Main {
             // Como no Arena: com a pilha ou a fase sem nada que o jogador possa fazer (nenhuma carta jogável
             // nem habilidade pagável, sem contar as de mana), a prioridade passa sozinha em vez de pedir OK.
             prefs.setPref(FPref.YIELD_AUTO_PASS_NO_ACTIONS, "true");
+            // O desfazer do próprio Forge fica desligado: a mesa tem o seu, com pedido e aprovação (UndoHistory).
+            // Ligado, ele tiraria um retrato a cada prioridade e o Cancelar viraria "Desfazer" sem ninguém aceitar.
+            prefs.setPref(FPref.UI_UNDO_MODE, forge.localinstance.properties.ForgeConstants.UNDO_MODE_OFF);
             return null;
         });
         System.out.printf("Forge inicializado em %d ms%n", System.currentTimeMillis() - t0);

@@ -65,6 +65,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => f !== 'commander' && f === load('mesa:otherFormat')) ?? 'pauper';
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
+  // Desfazer: desligado até o jogador escolher; depois, a última escolha vale para as próximas partidas.
+  let undo = load('mesa:undo') === 'on';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
   let commanderOpponents = ['random', 'random', 'random'];
   try { const saved = JSON.parse(load('mesa:commanderOpponents') ?? 'null'); if (Array.isArray(saved)) commanderOpponents = commanderOpponents.map((fallback, i) => typeof saved[i] === 'string' ? saved[i] : fallback); } catch { /* Ignore invalid optional preferences. */ }
@@ -89,7 +91,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const netName = () => (root.querySelector('#netName') as HTMLInputElement).value.trim() || 'Jogador';
   const roomCode = () => (root.querySelector('#roomCode') as HTMLInputElement).value.trim().toUpperCase();
   const roomCodeHelp = () => { $('#roomCodeHelp').textContent = roomCode() && visibility === 'private' ? 'Códigos fáceis podem ser adivinhados por outras pessoas.' : 'Deixe vazio para sortear.'; };
-  const config = (): MatchConfig => ({ format: format!, matchLength: format === 'commander' ? 'bo1' : matchLength, playerCount: format === 'commander' ? playerCount : 2 });
+  const config = (): MatchConfig => ({ format: format!, matchLength: format === 'commander' ? 'bo1' : matchLength, playerCount: format === 'commander' ? playerCount : 2, ...(undo ? { undo: true } : {}) });
   root.innerHTML = `<div class="lobby library-home"><div class="mat" aria-hidden="true"></div>
     <header class="home-top"></header>
     <main class="home-content"><div class="home-intro"><h1>Como jogar:</h1><p>Escolha seu deck, o formato de jogo e seu oponente.</p></div>
@@ -104,6 +106,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         </div><p class="setup-explanation" id="freeHelp" hidden>Sem regras automáticas: você compra, vira, desvira e move as cartas como numa mesa de verdade. Para testar o deck sozinho.</p></fieldset>
         <fieldset class="match-choice duration-choice" id="durationChoice"><legend>Partida</legend><div class="choice-segments"><button type="button" data-setting="length" data-value="bo1">Única</button><button type="button" data-setting="length" data-value="bo3">Melhor de três</button></div></fieldset>
         <fieldset class="match-choice player-count-choice" id="playerCountChoice" hidden><legend>Jogadores</legend><div class="choice-segments"><button type="button" data-setting="players" data-value="2">2</button><button type="button" data-setting="players" data-value="3">3</button><button type="button" data-setting="players" data-value="4">4</button></div></fieldset>
+        <fieldset class="match-choice undo-choice" id="undoChoice"><legend>Desfazer</legend><div class="choice-segments" aria-describedby="undoHelp"><button type="button" data-setting="undo" data-value="off">Desligado</button><button type="button" data-setting="undo" data-value="on">Ligado</button></div><p class="setup-explanation" id="undoHelp"></p></fieldset>
         <div class="opponent-choice" id="aiPanel"><label for="oppSel">Deck do computador</label><select id="oppSel" class="input-field"></select></div>
         <div id="commanderAiPanel" class="commander-ai-panel" hidden></div>
         <section class="network-setup" id="netPanel" aria-label="Jogar com outra pessoa" hidden>
@@ -179,7 +182,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $<HTMLInputElement>('#showIncompatible').checked = showIncompatible;
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-setting]')) {
       const setting = button.dataset.setting;
-      const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : matchLength;
+      const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : setting === 'undo' ? (undo ? 'on' : 'off') : matchLength;
       const others = setting === 'format' && button.dataset.value === 'others';
       button.setAttribute('aria-pressed', String(others ? !!format && format !== 'commander' : button.dataset.value === value));
       if (others) button.setAttribute('aria-expanded', String(!!format && format !== 'commander'));
@@ -209,9 +212,13 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const joining = mode === 'net' && netTab === 'join';
     // Contra outra pessoa, duração e jogadores ficam dentro da aba Criar sala, junto do tipo de sala.
     const roomSetup = mode === 'net' ? $('#createGroup') : $('.match-setup'), anchor = mode === 'net' ? $('.visibility-choice') : $('#aiPanel');
-    for (const id of ['#durationChoice', '#playerCountChoice']) if ($(id).parentElement !== roomSetup) roomSetup.insertBefore($(id), anchor);
+    for (const id of ['#durationChoice', '#playerCountChoice', '#undoChoice']) if ($(id).parentElement !== roomSetup) roomSetup.insertBefore($(id), anchor);
     $('#durationChoice').hidden = commander || free || joining;
     $('#playerCountChoice').hidden = !commander || free || joining;
+    $('#undoChoice').hidden = free || joining;
+    $('#undoHelp').textContent = !undo ? 'O que foi feito fica feito: ninguém volta jogadas.'
+      : mode === 'net' ? 'Qualquer jogador pode pedir para voltar a própria última decisão. Só volta se todos os outros aceitarem, e todos veem que está ligado.'
+      : 'Você pode voltar a sua última decisão (conjurar, jogar um terreno, passar a vez) quantas vezes precisar.';
     $('#freeHelp').hidden = !free;
     $('#opponentLegend').textContent = commander && playerCount > 2 ? 'Oponentes' : 'Oponente';
     $('#aiModeLabel').textContent = commander && playerCount > 2 ? 'Bots' : 'Bot';
@@ -236,7 +243,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     start.disabled = !format || !deck || invalid || busy || !!waitingRoom || (joining && !room);
     start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : joining ? 'Escolha a sala' : 'Criar sala';
     $('#roomInfo').hidden = !room;
-    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível e confirme abaixo.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Escolher outra sala</button>` : '';
+    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores${room.config.undo ? ' · <strong>Desfazer ligado</strong>' : ''}</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível e confirme abaixo.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Escolher outra sala</button>` : '';
     if (focusedOpponent !== undefined) root.querySelector<HTMLElement>(`[data-opponent-slot="${CSS.escape(focusedOpponent)}"]`)?.focus({preventScroll: true});
     if (focusId) root.querySelector<HTMLElement>(`[data-${focusAttribute}="${CSS.escape(focusId)}"]`)?.focus({preventScroll: true});
     syncRoomPolling();
@@ -341,6 +348,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
       } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private';
+      } else if (choice.dataset.setting === 'undo') { undo = choice.dataset.value === 'on'; save('mesa:undo', undo ? 'on' : 'off');
       } else if (choice.dataset.setting === 'players') { playerCount = Number(choice.dataset.value); save('mesa:commanderPlayers', String(playerCount));
       } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
       refresh(); return;

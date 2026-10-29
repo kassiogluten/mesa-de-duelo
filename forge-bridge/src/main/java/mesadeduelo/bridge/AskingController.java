@@ -37,8 +37,11 @@ import forge.util.collect.FCollectionView;
  */
 final class AskingController extends PlayerControllerHuman {
     private volatile CardView asking;
+    /** Desfazer da sala; null quando a partida foi criada sem ele. */
+    private final UndoHistory undo;
 
-    AskingController(Game game, Player player, LobbyPlayerHuman lobby) { super(game, player, lobby); }
+    AskingController(Game game, Player player, LobbyPlayerHuman lobby) { this(game, player, lobby, null); }
+    AskingController(Game game, Player player, LobbyPlayerHuman lobby, UndoHistory undo) { super(game, player, lobby); this.undo = undo; }
 
     /** A carta da decisão em curso, ou {@code null} fora de uma (prioridade comum). */
     CardView asking() { return asking; }
@@ -52,12 +55,33 @@ final class AskingController extends PlayerControllerHuman {
 
     /** Jogador humano da mesa: cria o {@link AskingController} no lugar do controlador padrão. */
     static final class Lobby extends LobbyPlayerHuman {
-        Lobby(String name) { super(name); }
+        private final UndoHistory undo;
+        Lobby(String name) { this(name, null); }
+        Lobby(String name, UndoHistory undo) { super(name); this.undo = undo; }
         @Override public Player createIngamePlayer(Game game, int id) {
             Player player = new Player(GuiDisplayUtil.personalizeHuman(getName()), game, id);
-            player.setFirstController(new AskingController(game, player, this));
+            player.setFirstController(new AskingController(game, player, this, undo));
             return player;
         }
+    }
+
+    /**
+     * Prioridade com o desfazer ligado: guarda o jogo antes do prompt e, depois, o que o jogador decidiu. Um pedido de
+     * desfazer aprovado volta o jogo aqui, na thread do jogo; a lista vazia faz o Forge abrir a prioridade de novo
+     * (para quem a tinha no retrato).
+     */
+    @Override public List<SpellAbility> chooseSpellAbilityToPlay() {
+        if (undo == null) return super.chooseSpellAbilityToPlay();
+        if (undo.applyPending(getGame()) != null) return java.util.Collections.emptyList();
+        UndoHistory.Step step = undo.capture(getGame(), getPlayer());
+        WebGuiGame gui = getGui() instanceof WebGuiGame w ? w : null;
+        if (gui != null) gui.watchSkip();
+        List<SpellAbility> chosen = super.chooseSpellAbilityToPlay();
+        // Sem prompt (passe automático ou fase pulada) não é uma decisão do jogador.
+        boolean skipped = gui != null && gui.skipped();
+        if (undo.applyPending(getGame()) != null) return java.util.Collections.emptyList();
+        if (!skipped) undo.decided(step, chosen);
+        return chosen;
     }
 
     // Conjurar, ativar e gatilhos: tudo o que se pergunta até ir para a pilha (modos, X, custos opcionais, alvos).

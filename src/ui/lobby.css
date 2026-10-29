@@ -166,7 +166,7 @@
   .play-layout { display: flex; flex-direction: column; gap: 28px; }
   .match-sidebar { position: static; width: 100%; border-left: 0; padding: 0 0 24px; border-bottom: 1px solid #ffffff14; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
   .match-setup { display: contents; }
-  .format-choice, .player-count-choice, .duration-choice, .commander-ai-panel { grid-column: 1/-1; }
+  .format-choice, .player-count-choice, .duration-choice, .undo-choice, .commander-ai-panel { grid-column: 1/-1; }
   .match-choice:has(.opponent-cards) { grid-column: 1/-1; grid-row: 2; }
   .opponent-cards { grid-template-columns: 1fr 1fr; }
   .opponent-card strong { font-size: 14px; }

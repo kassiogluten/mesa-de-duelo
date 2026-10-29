@@ -62,6 +62,20 @@ final class WebGuiGame extends ProtocolGuiGame {
     private final MatchLifecycle lifecycle;
     private final Supplier<Game> game;
 
+    /** Thread que está pedindo a prioridade (veja {@link #watchSkip}) e se ela pulou o prompt. */
+    private volatile Thread watching;
+    private volatile boolean skipped;
+
+    /** Thread do jogo, antes de pedir a prioridade: a partir daqui {@link #skipped} diz se o Forge passou sem perguntar. */
+    void watchSkip() { skipped = false; watching = Thread.currentThread(); }
+    boolean skipped() { watching = null; return skipped; }
+
+    /** O Forge chama isto, na thread do jogo, quando passa a prioridade sem abrir o prompt. */
+    @Override public void awaitNextInput() {
+        if (Thread.currentThread() == watching) skipped = true;
+        super.awaitNextInput();
+    }
+
     WebGuiGame(IRemote remote, BooleanSupplier autoPassNoActions, MatchLifecycle lifecycle, Supplier<Game> game) {
         this(remote, autoPassNoActions, Set::of, lifecycle, game);
     }

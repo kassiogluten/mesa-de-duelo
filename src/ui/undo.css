@@ -1,0 +1,16 @@
+/* Desfazer: o selo de "ligado" (fora da mesa), o botão da barra do topo (que é o aviso dentro da partida) e a faixa do pedido (que usa a linha da faixa de quem caiu). */
+.undo-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 1px 8px 1px 6px; border: 1px solid #8fd3a866; border-radius: 999px; background: #10261bd9; color: #a9e8c0; font: 600 11px/1.5 var(--body); white-space: nowrap; vertical-align: middle; }
+.undo-badge svg, .forge .undo-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.forge .undo-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding-inline: 12px; color: #a9e8c0; border-color: #8fd3a866; }
+.forge .undo-btn svg { width: 18px; height: 18px; stroke-width: 1.8; }
+.forge .undo-btn[hidden] { display: none; }
+.forge .undo-btn:disabled { opacity: .55; cursor: default; }
+.skip-row.undo { border-color: #8fd3a888; background: #0f1d17f2; }
+.room-undo { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 0; margin: 8px 0 4px; color: var(--muted); font-size: 13px; }
+.room-undo[hidden] { display: none; }
+.room-undo .undo-badge { margin-left: 0; }
+.public-room-text .undo-badge { justify-self: start; margin: 2px 0 0; }
+@media (max-height: 500px), (max-width: 760px) {
+  .forge .undo-btn { min-width: 40px; padding-inline: 10px; justify-content: center; }
+  .forge .undo-btn .undo-label { display: none; }
+}

@@ -1,4 +1,13 @@
 {
+  "0.69.0": {
+    "Desfazer jogadas": [
+      { "img": "0.69.0/criar-com-desfazer.webp", "legenda": "Ao criar a partida, a escolha **Desfazer** com **Ligado** marcado e a explicação logo abaixo." },
+      { "img": "0.69.0/lista-salas.webp", "legenda": "Na lista de salas públicas, a sala criada com a opção traz o selo **Desfazer ligado** antes de alguém entrar." },
+      { "img": "0.69.0/sala-de-espera.webp", "legenda": "Na sala de espera, o selo **Desfazer ligado** com a regra: só volta se todos aceitarem." },
+      { "img": "0.69.0/botao-desfazer.webp", "legenda": "Durante a partida, o botão **Desfazer** fica no alto da mesa, ao lado do Menu, à vista de todos os jogadores." },
+      { "img": "0.69.0/pedido-desfazer.webp", "legenda": "O pedido chega para os outros com o que vai voltar, \"conjurar Raio\", e os botões **Aceitar** e **Recusar**." }
+    ]
+  },
   "0.68.2": {
     "Escolher o oponente que decide": [
       { "img": "0.68.2/escolher-oponente.webp", "legenda": "Com três oponentes, a caixa de ação diz que o Curator of Destinies pede para escolher quem vai decidir, com um botão para cada oponente." }

@@ -1,5 +1,6 @@
 import type { PublicRoom } from '../forge/client';
 import { esc } from './cardtext';
+import { undoBadgeHTML } from './undo';
 
 /*
  * Salas públicas na tela inicial: a lista que a ponte manda ({type:"list-rooms"}), com o botão de entrar nas
@@ -34,13 +35,13 @@ export function publicRoomsHTML(state: PublicRoomsState, disabled = false): stri
   if (!rooms.length && !live.length) return '<p class="public-rooms-empty">Nenhuma sala pública aberta.</p>';
   const open = rooms.map(room => {
     const details = [formatLabel(room), lengthLabel(room), seatsLabel(room)].filter(Boolean).join(' · ');
-    const label = `Entrar na sala de ${room.host}: ${formatLabel(room)}, ${room.players} de ${room.capacity} jogadores`;
-    return `<li class="public-room"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small>${esc(details)}</small></span><button type="button" class="arena-btn secondary" data-join-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Entrar</button></li>`;
+    const label = `Entrar na sala de ${room.host}: ${formatLabel(room)}, ${room.players} de ${room.capacity} jogadores${room.config.undo ? ', com Desfazer ligado' : ''}`;
+    return `<li class="public-room"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small>${esc(details)}</small>${room.config.undo ? undoBadgeHTML() : ''}</span><button type="button" class="arena-btn secondary" data-join-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Entrar</button></li>`;
   });
   const playing = live.map(room => {
     const details = [formatLabel(room), `${room.players} jogadores`, watchersLabel(room)].filter(Boolean).join(' · ');
-    const label = `Assistir à partida da sala de ${room.host}: ${formatLabel(room)}, em andamento`;
-    return `<li class="public-room live"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small><span class="public-room-live">Em andamento</span>${esc(details)}</small></span><button type="button" class="arena-btn secondary" data-watch-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Assistir</button></li>`;
+    const label = `Assistir à partida da sala de ${room.host}: ${formatLabel(room)}, em andamento${room.config.undo ? ', com Desfazer ligado' : ''}`;
+    return `<li class="public-room live"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small><span class="public-room-live">Em andamento</span>${esc(details)}</small>${room.config.undo ? undoBadgeHTML() : ''}</span><button type="button" class="arena-btn secondary" data-watch-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Assistir</button></li>`;
   });
   return `<ul class="public-room-list">${[...open, ...playing].join('')}</ul>`;
 }

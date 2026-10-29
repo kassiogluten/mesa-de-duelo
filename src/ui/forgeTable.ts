@@ -28,6 +28,8 @@ import { passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText 
 import { STACK_KINDS, stackBadgeText, stackCastLine, stackCastTag, stackOwnerLine, stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
+import { UNDO_ICON, undoBarHTML, undoButtonState } from './undo';
+import './undo.css';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
 import { playerStatusHTML, playerStatusText, turnSpellsTotal } from './playerStatus';
@@ -147,6 +149,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <button class="icon-btn fs-btn" data-ui="fullscreen" aria-label="Tela cheia" title="Tela cheia"${canFullscreen() ? '' : ' hidden'}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-enter" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="fs-exit" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
       </button>
+      <button class="icon-btn undo-btn" id="fUndo" data-ui="undo" hidden>${UNDO_ICON}<span class="undo-label">Desfazer</span></button>
       <ul class="match-bar" id="fMatchBar" aria-label="Partida"></ul>
     </div>
     <div class="skip-bar" id="fSkipBar" aria-live="polite" hidden></div>
@@ -2153,7 +2156,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fSeries').textContent = s.match ? `Jogo ${s.match.gameNumber} · ${s.match.wins.join(' × ')}` : '';
     // Na barra do topo ficam formato, sala, placar e quem caiu; no Commander com vários jogadores a faixa é dos assentos e isso fica no menu.
     setHTML($('#fMatchBar'), multiplayer ? '' : matchBarHTML(s));
-    const skipBar = skipBarHTML(s);
+    const undoButton = undoButtonState(s), undoEl = $('#fUndo') as HTMLButtonElement;
+    undoEl.hidden = undoButton.hidden; undoEl.disabled = undoButton.disabled;
+    undoEl.title = undoButton.title; undoEl.setAttribute('aria-label', undoButton.title || 'Desfazer');
+    const skipBar = skipBarHTML(s) + undoBarHTML(s);
     setHTML($('#fSkipBar'), skipBar);
     $('#fSkipBar').hidden = !skipBar;
     $('#fMatchBar').hidden = multiplayer;
@@ -2478,6 +2484,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return;
     }
     if (ui === 'fullscreen') { void toggleFullscreen(); return; }
+    if (ui === 'undo') { const state = client?.state; if (state && !undoButtonState(state).disabled) client!.send({ type: 'undo-request' }); return; }
     if (ui === 'watch-player') {
       const player = Number(t.closest<HTMLElement>('[data-player]')?.dataset.player);
       if (client?.state?.watching && Number.isInteger(player) && player !== client.state.you) client.send({ type: 'watch-player', player });
@@ -2534,6 +2541,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       render();
       return;
     }
+    const undoChoice = t.closest<HTMLElement>('[data-undo]')?.dataset.undo;
+    if (undoChoice) { client.send(undoChoice === 'cancel' ? { type: 'undo-cancel' } : { type: 'undo-vote', value: undoChoice === 'yes' }); return; }
     const skip = t.closest<HTMLElement>('[data-skip-vote]');
     if (skip) { client.send({ type: 'skip-vote', target: Number(skip.dataset.skipVote), value: skip.dataset.value !== 'false' }); return; }
     const openQuestion = client.state?.question;

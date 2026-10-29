@@ -4,6 +4,8 @@ import type { FRoom, RoomSaying } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { esc } from './cardtext';
 import './roomLobby.css';
+import { undoBadgeHTML } from './undo';
+import './undo.css';
 
 /** Lobby da sala em rede: o que se vê depois de criar ou entrar, até a mesa encher e a partida começar. */
 export interface RoomLobby {
@@ -56,7 +58,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
   const said = new Map<number, { key: RoomSaying; timer: ReturnType<typeof setTimeout> }>();
   const requested = new Set<string>();
   let copiedTimer: ReturnType<typeof setTimeout> | undefined;
-  el.innerHTML = `<header class="room-lobby-head"><p class="room-kicker" id="roomKicker"></p><h1>Sala <strong class="room-lobby-code" id="roomLobbyCode"></strong></h1><p class="room-progress" id="roomProgress"></p></header>
+  el.innerHTML = `<header class="room-lobby-head"><p class="room-kicker" id="roomKicker"></p><p class="room-undo" id="roomUndo" hidden></p><h1>Sala <strong class="room-lobby-code" id="roomLobbyCode"></strong></h1><p class="room-progress" id="roomProgress"></p></header>
     <section class="room-share" aria-labelledby="roomShareTitle"><h2 id="roomShareTitle">Chame quem falta</h2>
       <div class="room-link-row"><input id="roomLinkField" class="input-field" readonly aria-label="Link de convite"><button type="button" class="arena-btn primary" data-room="copy">Copiar link</button><button type="button" class="arena-btn secondary" data-room="share" hidden>Compartilhar</button></div>
       <p class="room-share-help" id="roomShareHelp"></p></section>
@@ -89,6 +91,8 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
     }
     const capacity = next.capacity ?? next.config.playerCount ?? 2, full = next.players.length >= capacity;
     $('#roomKicker').textContent = `${next.public ? 'Sala pública' : 'Sala privada'} · ${formatName(next.config.format)} · ${next.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'}`;
+    $('#roomUndo').hidden = !next.config.undo;
+    $('#roomUndo').innerHTML = next.config.undo ? `${undoBadgeHTML()}<span>&nbsp;Qualquer jogador pode pedir para voltar a própria última decisão; só volta se todos aceitarem.</span>` : '';
     $('#roomLobbyCode').textContent = next.code;
     $('#roomProgress').textContent = full ? 'Mesa completa. A partida vai começar.' : `${next.players.length} de ${capacity} jogadores. A partida começa sozinha quando a mesa encher.`;
     $<HTMLInputElement>('#roomLinkField').value = roomLink(next.code);

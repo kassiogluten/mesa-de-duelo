@@ -120,6 +120,11 @@ final class Session {
     /** Assentos aprovados cujo turno já começou: quando o turno passar para outro, a aprovação acaba. */
     private final Set<Integer> skipTurnStarted = new java.util.HashSet<>();
 
+    /** Desfazer (opção da partida): os retratos de cada decisão e o pedido aberto; null com a opção desligada. */
+    private final UndoHistory undo;
+    private UndoRequest undoRequest;
+    private final Object undoLock = new Object();
+
     private record Question(int id, ProtocolMethod method, Object[] args, List<Object> options,
                             CompletableFuture<Object> answer, JsonObject json) { }
 
@@ -130,6 +135,8 @@ final class Session {
         this.config = config;
         seats = new Seat[humans];
         for (int i = 0; i < humans; i++) seats[i] = new Seat(i);
+        undo = config.undo() ? new UndoHistory() : null;
+        if (undo != null) undo.undone = this::undone;
     }
 
     static Session solo(String code, Channel ch, Deck you, Deck opponent, MatchConfig config) {
@@ -253,6 +260,7 @@ final class Session {
         events.reset(); stateVersion.set(0);
         matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null; recorded = false;
         gameDurations.clear();
+        if (undo != null) { undo.clear(); synchronized (undoLock) { undoRequest = null; } }
         HostedMatch m = new HostedMatch();
         MatchLifecycle life = new MatchLifecycle(game -> {
             if (match != m) return;
@@ -273,7 +281,7 @@ final class Session {
             seat.name = name;
             WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.autoPassNoActions, () -> seat.opponentStops, life, m::getGame);
             seat.gui = g;
-            RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name));
+            RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name, undo));
             seat.registered = rp;
             players.add(rp);
             guis.put(rp, g);
@@ -363,6 +371,7 @@ final class Session {
         else if (abandoned) recordUnfinished(conceder);
         if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
         sideboardId++;
+        if (undo != null) { undo.clear(); synchronized (undoLock) { undoRequest = null; } }
         for (Seat seat : seats) { seat.sideboardReady = false; seat.approvedDeck = null; }
         markDirty();
     }
@@ -646,6 +655,9 @@ final class Session {
                 markDirty();
             }
             case "skip-vote" -> voteSkip(seat, msg);
+            case "undo-request" -> requestUndo(seat);
+            case "undo-vote" -> voteUndo(seat, !msg.has("value") || msg.get("value").getAsBoolean());
+            case "undo-cancel" -> cancelUndo(seat);
             case "concede" -> { if (isRoom()) seat.conceded = true; concede(seat); }
             case "attack" -> {
                 int attacker = exactInt(msg.get("attacker")), defender = exactInt(msg.get("defender"));
@@ -749,6 +761,7 @@ final class Session {
                 case "mana" -> "cor " + msg.get("color");
                 case "select-set" -> "cartas " + msg.get("cards") + " jogadores " + msg.get("players");
                 case "skip-vote" -> "alvo " + msg.get("target") + " voto " + (msg.has("value") ? msg.get("value") : "true");
+                case "undo-vote" -> "voto " + (msg.has("value") ? msg.get("value") : "true");
                 case "answer" -> {
                     Question q = seat.question;
                     String asked = q == null ? "pergunta já respondida" : q.method() + (q.json().has("title") ? " \"" + q.json().get("title").getAsString() + "\"" : "");
@@ -1345,6 +1358,115 @@ final class Session {
         }
     }
 
+    // ---------- Desfazer ----------
+
+    /** Quem precisa aceitar um pedido de {@code requester}: os outros humanos conectados e ainda no jogo. */
+    private Set<Integer> undoVoters(int requester) {
+        Set<Integer> voters = new java.util.LinkedHashSet<>();
+        for (Seat each : seats) if (each.index != requester && each.channel != null && each.me != null && !each.eliminated()) voters.add(each.index);
+        return voters;
+    }
+
+    /** {type:"undo-request"}: pede para voltar à última decisão deste assento. Contra a IA, volta na hora. */
+    private void requestUndo(Seat seat) {
+        if (undo == null || !started() || !"playing".equals(matchPhase) || gameOver() || seat.me == null || seat.eliminated()) return;
+        synchronized (undoLock) {
+            if (undoRequest != null || undo.hasPending()) { seat.send(toast("error", "Já há um pedido de desfazer em andamento. Espere ele terminar.")); return; }
+            UndoHistory.Step step = undo.lastOf(seat.me.getId());
+            if (step == null) { seat.send(toast("error", "Ainda não há nada seu para desfazer.")); return; }
+            Set<Integer> voters = undoVoters(seat.index);
+            if (isRoom() && voters.isEmpty()) { seat.send(toast("error", "Não há ninguém conectado para aceitar o pedido agora.")); return; }
+            undoRequest = new UndoRequest(seat.index, step);
+            for (Integer v : voters) seats[v].send(toast("toast", seat.name + " pediu para desfazer: " + step.text() + "."));
+            settleUndo();
+        }
+        markDirty();
+    }
+
+    /** {type:"undo-vote", value}: aceitar (true) ou recusar o pedido aberto. */
+    private void voteUndo(Seat seat, boolean value) {
+        synchronized (undoLock) {
+            if (undoRequest == null || undoRequest.requester == seat.index || !undoVoters(undoRequest.requester).contains(seat.index)) return;
+            undoRequest.vote(seat.index, value);
+            settleUndo();
+        }
+        markDirty();
+    }
+
+    /** {type:"undo-cancel"}: quem pediu desiste antes de os outros responderem. */
+    private void cancelUndo(Seat seat) {
+        synchronized (undoLock) {
+            if (undoRequest == null || undoRequest.requester != seat.index) return;
+            undoRequest = null;
+            for (Seat each : seats) if (each != seat) each.send(toast("toast", seat.name + " desistiu de desfazer."));
+        }
+        markDirty();
+    }
+
+    /** Fecha o pedido quando todos aceitaram ou alguém recusou. Chamado com o undoLock. */
+    private void settleUndo() {
+        UndoRequest r = undoRequest;
+        if (r == null) return;
+        Seat requester = seats[r.requester];
+        if (gameOver() || requester.channel == null || requester.eliminated()) { undoRequest = null; return; }
+        Set<Integer> voters = undoVoters(r.requester);
+        UndoRequest.Result result = r.result(voters);
+        if (result == UndoRequest.Result.OPEN) return;
+        undoRequest = null;
+        if (result == UndoRequest.Result.REJECTED) {
+            List<String> refused = r.no.stream().map(i -> seats[i].name).toList();
+            requester.send(toast("toast", String.join(" e ", refused) + (refused.size() > 1 ? " recusaram" : " recusou") + " desfazer: " + r.step.text() + "."));
+            for (Seat each : seats) if (each != requester && !r.no.contains(each.index)) each.send(toast("toast", "O pedido de " + requester.name + " para desfazer foi recusado."));
+            return;
+        }
+        List<String> accepted = r.yes.stream().map(i -> seats[i].name).toList();
+        undo.approve(r.step, accepted.isEmpty() ? null : (accepted.size() > 1 ? "aceito por " + String.join(" e ", accepted) : "aceito por " + accepted.get(0)));
+        // Quem está com a prioridade aberta tem o prompt reaberto: o Forge volta para a thread do jogo, que restaura.
+        // Em outra escolha (bloqueio, alvo, pergunta), o jogo volta assim que ela terminar e alguém tiver a prioridade.
+        for (Seat each : seats) if (each.controller() instanceof PlayerControllerHuman human && human.getInputQueue().getInput() instanceof InputPassPriority priority)
+            FThreads.invokeInEdtLater(priority::restartPrompt);
+    }
+
+    /** Thread do jogo, logo depois de voltar: avisa todo mundo e registra no diário. */
+    private void undone(UndoHistory.Step step) {
+        Seat requester = null;
+        for (Seat each : seats) if (each.me != null && each.me.getId() == step.player().getId()) requester = each;
+        if (requester != null) log(requester, "undo", -1, "aplicada", step.text());
+        String who = requester == null ? step.player().getName() : requester.name;
+        for (Seat each : seats) each.send(toast("toast", each == requester ? "Desfeito: " + step.text() + "." : who + " desfez: " + step.text() + "."));
+        for (Seat each : seats) each.inputGen.incrementAndGet();
+        markDirty();
+    }
+
+    /** Para a mesa: o que este assento desfaria agora e o pedido aberto, com o voto dele. */
+    private JsonObject undoJson(Seat seat) {
+        if (undo == null || seat.me == null) return null;
+        JsonObject o = new JsonObject();
+        synchronized (undoLock) {
+            UndoHistory.Step last = gameOver() || seat.eliminated() ? null : undo.lastOf(seat.me.getId());
+            if (last != null) o.add("last", last.json());
+            o.addProperty("pending", undo.hasPending());
+            UndoRequest r = undoRequest;
+            if (r != null) {
+                Seat requester = seats[r.requester];
+                Set<Integer> voters = undoVoters(r.requester);
+                JsonObject req = new JsonObject();
+                if (requester.me != null) req.addProperty("player", requester.me.getId());
+                req.addProperty("name", requester.name);
+                req.add("step", r.step.json());
+                req.addProperty("mine", requester == seat);
+                req.addProperty("canVote", voters.contains(seat.index));
+                if (r.yes.contains(seat.index)) req.addProperty("vote", "yes");
+                else if (r.no.contains(seat.index)) req.addProperty("vote", "no");
+                JsonArray waiting = new JsonArray();
+                for (Integer v : voters) if (!r.yes.contains(v)) waiting.add(seats[v].name);
+                req.add("waiting", waiting);
+                o.add("request", req);
+            }
+        }
+        return o;
+    }
+
     // ---------- Publicação do estado ----------
 
     void markDirty() { stateVersion.incrementAndGet(); dirty.set(true); }
@@ -1352,6 +1474,11 @@ final class Session {
     /** Chamado pelo publicador de {@link Rooms} a cada 50 ms. */
     void tick() {
         tickSkips();
+        if (undo != null) synchronized (undoLock) {
+            UndoRequest before = undoRequest;
+            settleUndo();
+            if (undoRequest != before) markDirty();
+        }
         // Se o Forge não abriu um prompt novo depois do clique, os botões voltam a funcionar.
         for (Seat seat : seats) if (seat.lockedAtLastFlush && !seat.buttonsLocked()) dirty.set(true);
         if (!dirty.getAndSet(false)) return;
@@ -1645,6 +1772,8 @@ final class Session {
         if (isRoom()) state.add("room", roomJson(seat));
         JsonObject skip = skipJson(seat);
         if (skip != null) state.add("skip", skip);
+        JsonObject undoState = undoJson(seat);
+        if (undoState != null) state.add("undo", undoState);
         JsonArray decks = new JsonArray();
         Decks.LISTS.keySet().forEach(decks::add);
         state.add("decks", decks);
