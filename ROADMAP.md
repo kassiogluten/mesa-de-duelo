@@ -693,10 +693,12 @@ Spec completa, com as decisões, a arquitetura, o protocolo de sincronia e as fa
 - [x] Fase 2: sincronizar Meus decks, com a pergunta ao entrar, a lixeira de 30 dias e o envio sem rede (0.63.0, junto com a fase 1).
 - [x] Fase 3: preferências, apelido e foto (0.64.0).
 
-## 45. Botão principal sempre na ação mais comum
+## 45. Botão principal sempre na ação mais comum ✅
 
 Na caixa de ação, o botão em destaque (primário) deve ser sempre o que o jogador mais costuma apertar naquele momento. Exemplo: na manutenção, **Comprar** é o primário, e não a opção de parar ou agir.
 
-- [ ] Levantar os momentos com dois ou mais botões (manutenção, compra, combate, fim de turno, respostas na pilha, escolhas de abertura) e qual é a ação mais comum em cada um.
-- [ ] Tornar primário o botão da ação mais comum em cada momento, sem mudar o que cada botão faz.
-- [ ] Conferir que o atalho de teclado (Enter/espaço) segue o botão primário.
+- [x] Levantar os momentos com dois ou mais botões (manutenção, compra, combate, fim de turno, respostas na pilha, escolhas de abertura) e qual é a ação mais comum em cada um.
+- [x] Tornar primário o botão da ação mais comum em cada momento, sem mudar o que cada botão faz.
+- [x] Conferir que o atalho de teclado (Enter/espaço) segue o botão primário.
+
+Decidido em 29/10/2026 (versão 0.70.0): o levantamento mostrou que só o seu turno com a pilha vazia fugia da regra; nos outros momentos o primário já era o mais comum (**Resolver** com a pilha cheia, **Passar** no turno do oponente, **Manter** no mulligan, **Eu jogo**, o pagamento automático, o **Sim** das perguntas, você no "Quem começa?"). No seu turno, **Fim de turno** era sempre o primário; agora, no início do turno (desvirar, manutenção, compra) e na principal 1, o primário é passar a etapa (**Comprar**, **Para a principal 1**, **Para o combate**, sempre, mesmo sem criaturas), e do combate em diante continua **Fim de turno** (`passIsPrimary` em `src/ui/phaseHud.ts`). O Espaço continua apertando só o botão de passar a etapa e nunca **Fim de turno**, para não encerrar o turno sem querer: até a principal 1 ele segue o primário; depois, aperta o secundário. Na caixa de ação do turno (coluna), o primário fica sempre por último, embaixo, na ordem do HTML (para o Tab e o leitor de tela seguirem a tela), também no **Resolver** e no **Pagar 2 de vida**; as caixas com botões lado a lado (abertura, perguntas, escolhas de carta) ficaram como estavam.

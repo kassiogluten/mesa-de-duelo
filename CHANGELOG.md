@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.70.0] - 2026-10-29
+
+### Mudou
+
+- **Botão em destaque na ação mais comum.** No seu turno, com a pilha vazia, o botão dourado agora é o que você mais costuma apertar em cada momento. Na manutenção e na compra, o destaque fica em **Comprar** e **Para a principal 1**; na principal 1, em **Para o combate**. Do combate em diante (principal 2 e etapa final), **Fim de turno** continua em destaque. O botão em destaque também fica sempre embaixo, no mesmo lugar, inclusive o **Resolver** quando há algo na pilha. Os botões fazem o mesmo de antes, só muda qual brilha e a ordem. O Espaço segue passando só uma etapa e nunca encerra o turno.
+
 ## [0.69.0] - 2026-10-29
 
 ### Novo

@@ -193,3 +193,12 @@ export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' |
   return group === 'start' ? 'Para a principal 1' : group === 'main1' ? 'Para o combate' : group === 'combat' ? 'Para a principal 2'
     : group === 'main2' ? 'Para o fim do turno' : 'Passar';
 }
+
+/**
+ * No seu turno, com a pilha vazia, qual botão fica em destaque: passar a etapa ou "Fim de turno". Até a principal 1
+ * o comum é seguir (comprar, ir para o combate); do combate em diante, encerrar o turno.
+ */
+export function passIsPrimary(state: Pick<FState, 'phase'>): boolean {
+  const group = STEPS[state.phase ?? '']?.group;
+  return group === 'start' || group === 'main1';
+}

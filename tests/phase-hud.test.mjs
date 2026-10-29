@@ -7,7 +7,7 @@ const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta
 const clock = uri(await readFile(new URL('../src/ui/clock.ts', import.meta.url), 'utf8'));
 const stopsModule = uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
 const source = (await readFile(new URL('../src/ui/phaseHud.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./opponentStops'", JSON.stringify(stopsModule)).replace("'./clock'", JSON.stringify(clock));
-const { phaseHudHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import(uri(source));
+const { phaseHudHTML, passIsPrimary, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import(uri(source));
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
 
@@ -62,6 +62,10 @@ test('the pass button names where the game goes next', () => {
   assert.equal(passLabel(s('END_OF_TURN')), 'Passar');
   assert.equal(passLabel(s('MAIN1', { activePlayer: 2 })), 'Passar');
   assert.equal(passLabel(s('MAIN1', { stack: [{ id: 1 }] })), 'Resolver');
+});
+test('on your turn the pass button leads until main 1, then "Fim de turno" takes the highlight', () => {
+  for (const phase of ['UNTAP', 'UPKEEP', 'DRAW', 'MAIN1']) assert.equal(passIsPrimary({ phase }), true, phase);
+  for (const phase of ['COMBAT_BEGIN', 'COMBAT_DAMAGE', 'COMBAT_END', 'MAIN2', 'END_OF_TURN', 'CLEANUP']) assert.equal(passIsPrimary({ phase }), false, phase);
 });
 test('in multiplayer Commander the active player portrait sits by the track, colored by owner, with the escaped name in the tip', () => {
   const players = [{ id: 1, name: 'Você' }, { id: 2, name: 'Ana' }, { id: 3, name: '<b>"Bia"</b>' }, { id: 4, name: 'Caio' }];

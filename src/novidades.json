@@ -1,4 +1,12 @@
 {
+  "0.70.0": {
+    "Botão em destaque na ação mais comum": [
+      { "img": "0.70.0/manutencao.webp", "legenda": "Na sua manutenção, **Comprar** fica em destaque, embaixo, e **Fim de turno** fica em cima, apagado." },
+      { "img": "0.70.0/principal-1.webp", "legenda": "Na principal 1, o destaque vai para **Para o combate**, no mesmo lugar." },
+      { "img": "0.70.0/principal-2.webp", "legenda": "Na principal 2, **Fim de turno** volta a ser o destaque e desce para o lugar do botão principal." },
+      { "img": "0.70.0/resolver.webp", "legenda": "Com mágicas na pilha, **Resolver** fica embaixo, em destaque, e **Resolver todos** fica em cima." }
+    ]
+  },
   "0.69.0": {
     "Desfazer jogadas": [
       { "img": "0.69.0/criar-com-desfazer.webp", "legenda": "Ao criar a partida, a escolha **Desfazer** com **Ligado** marcado e a explicação logo abaixo." },

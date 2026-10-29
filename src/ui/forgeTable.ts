@@ -24,7 +24,7 @@ import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from '
 import { counterName, isProliferating, proliferateBoardClass, proliferateClear, proliferateOkLabel, proliferatePanelHTML, proliferateSuggestion, proliferateToggle } from './proliferate';
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
-import { passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
+import { passIsPrimary, passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
 import { STACK_KINDS, stackBadgeText, stackCastLine, stackCastTag, stackOwnerLine, stackPresentation } from './stackPresentation';
 import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
@@ -1733,9 +1733,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const life = (kind: string) => lifeEnabled ? b('phyrexian-life', { label: 'Pagar 2 de vida', enabled: true }, kind) : '';
     // Sem mana para o automático, a vida vira o destaque; sem ela, só sobra desistir ou não pagar.
     if (s.input.paying && s.input.canAutoPay === false && cancel.enabled)
-      return lifeEnabled ? life('primary') + b('ok', ok, 'secondary') + b('cancel', cancel, 'secondary') : b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
-    return undo + life('secondary') + b('ok', priority, endTurn ? 'secondary' : 'primary') + resolveAll +
-      (endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'primary') : '');
+      return lifeEnabled ? b('ok', ok, 'secondary') + b('cancel', cancel, 'secondary') + life('primary') : b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
+    // Em destaque, o que se aperta mais: comprar e ir para o combate no começo do turno, "Fim de turno" depois.
+    // O destaque fica sempre por último (embaixo), para a mão achar o botão no mesmo lugar.
+    const passFirst = !endTurn || passIsPrimary(s);
+    const pass = b('ok', priority, passFirst ? 'primary' : 'secondary');
+    const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, passFirst ? 'secondary' : 'primary') : '';
+    return undo + life('secondary') + resolveAll + (passFirst ? passTurn + pass : pass + passTurn);
   }
 
   /** Fica à vista durante toda a partida, também com o oponente jogando, para dar para desmarcar a qualquer hora. */
