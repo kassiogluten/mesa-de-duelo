@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.73.0] - 2026-10-29
+
+### Novo
+
+- **Dez decks prontos novos de Sacola 50**, tirados de listas de jogadores da comunidade Sacola 50, cada um com um jeito diferente de jogar: **Rampa Eldrazi** (terrenos que geram muita mana para baixar Eldrazi grandes), **Vingança da Prole** (devolver criaturas do cemitério ao campo), **Ninhada de Ratos** (ratos que fazem o oponente descartar), **Escola dos Goblins** (goblins agressivos em preto e vermelho), **Réplica da Neve** (cartas da neve e cópias de criaturas), **Tudo que Reluz** (artefatos e equipamentos brancos), **Pestilência Golgari** (Pestilence limpando a mesa), **Prisão Dimir** (travar os terrenos e as criaturas do oponente), **Lâmina de Laelia** (Laelia e Soulflayer crescendo e ganhando habilidades) e **Fúria Boros** (ataque rápido com mágicas de dano). Com o Sacola 50 escolhido, agora são 17 decks prontos para você ou para o computador.
+
 ## [0.72.0] - 2026-10-29
 
 ### Novo

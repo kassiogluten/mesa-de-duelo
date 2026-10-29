@@ -2503,6 +2503,1130 @@
     ]
   },
   {
+    "id": "sacola-eldrazi",
+    "name": "Rampa Eldrazi",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Trenchpost",
+        "count": 1
+      },
+      {
+        "name": "Snow-Covered Forest",
+        "count": 7
+      },
+      {
+        "name": "Urza's Factory",
+        "count": 1
+      },
+      {
+        "name": "Cloudpost",
+        "count": 4
+      },
+      {
+        "name": "Glimmerpost",
+        "count": 4
+      },
+      {
+        "name": "Deserted Temple",
+        "count": 1
+      },
+      {
+        "name": "Glaring Fleshraker",
+        "count": 4
+      },
+      {
+        "name": "Omo, Queen of Vesuva",
+        "count": 2
+      },
+      {
+        "name": "Thief of Existence",
+        "count": 3
+      },
+      {
+        "name": "Vile Redeemer",
+        "count": 1
+      },
+      {
+        "name": "Endbringer",
+        "count": 2
+      },
+      {
+        "name": "Breaker of Creation",
+        "count": 1
+      },
+      {
+        "name": "Ugin, the Ineffable",
+        "count": 1
+      },
+      {
+        "name": "World Map",
+        "count": 3
+      },
+      {
+        "name": "Chromatic Sphere",
+        "count": 4
+      },
+      {
+        "name": "Chromatic Star",
+        "count": 4
+      },
+      {
+        "name": "Oblivion Stone",
+        "count": 4
+      },
+      {
+        "name": "Echoes of Eternity",
+        "count": 2
+      },
+      {
+        "name": "Ancient Stirrings",
+        "count": 4
+      },
+      {
+        "name": "Sylvan Scrying",
+        "count": 4
+      },
+      {
+        "name": "Spatial Contortion",
+        "count": 2
+      },
+      {
+        "name": "Scour from Existence",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Wastescape Battlemage",
+        "count": 4
+      },
+      {
+        "name": "Scrabbling Claws",
+        "count": 3
+      },
+      {
+        "name": "Multani's Presence",
+        "count": 2
+      },
+      {
+        "name": "Null Elemental Blast",
+        "count": 1
+      },
+      {
+        "name": "Fog",
+        "count": 2
+      },
+      {
+        "name": "Natural State",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id": "sacola-vinganca",
+    "name": "Vingança da Prole",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Hidden Grotto",
+        "count": 1
+      },
+      {
+        "name": "Sacred Peaks",
+        "count": 1
+      },
+      {
+        "name": "Rakdos Carnarium",
+        "count": 1
+      },
+      {
+        "name": "Vivid Crag",
+        "count": 1
+      },
+      {
+        "name": "Boros Garrison",
+        "count": 1
+      },
+      {
+        "name": "Swamp",
+        "count": 6
+      },
+      {
+        "name": "Plains",
+        "count": 3
+      },
+      {
+        "name": "Mountain",
+        "count": 5
+      },
+      {
+        "name": "Vivid Meadow",
+        "count": 1
+      },
+      {
+        "name": "Vivid Marsh",
+        "count": 1
+      },
+      {
+        "name": "Canyon Slough",
+        "count": 1
+      },
+      {
+        "name": "Sheltered Thicket",
+        "count": 1
+      },
+      {
+        "name": "Orzhov Basilica",
+        "count": 1
+      },
+      {
+        "name": "Rix Maadi Reveler",
+        "count": 4
+      },
+      {
+        "name": "Gorging Vulture",
+        "count": 3
+      },
+      {
+        "name": "Alpine Guide",
+        "count": 4
+      },
+      {
+        "name": "Auramancer",
+        "count": 1
+      },
+      {
+        "name": "Banisher Priest",
+        "count": 1
+      },
+      {
+        "name": "Venomous Hierophant",
+        "count": 4
+      },
+      {
+        "name": "Rambunctious Mutt",
+        "count": 2
+      },
+      {
+        "name": "Cataclysmic Gearhulk",
+        "count": 1
+      },
+      {
+        "name": "Goremand",
+        "count": 1
+      },
+      {
+        "name": "Dark Hatchling",
+        "count": 1
+      },
+      {
+        "name": "Laquatus's Champion",
+        "count": 1
+      },
+      {
+        "name": "Noosegraf Mob",
+        "count": 1
+      },
+      {
+        "name": "Broodmate Dragon",
+        "count": 2
+      },
+      {
+        "name": "Offspring's Revenge",
+        "count": 4
+      },
+      {
+        "name": "Cathartic Reunion",
+        "count": 4
+      },
+      {
+        "name": "Unburial Rites",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Geological Appraiser",
+        "count": 4
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Blightning",
+        "count": 4
+      },
+      {
+        "name": "Rootborn Defenses",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-ratos",
+    "name": "Ninhada de Ratos",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Swamp",
+        "count": 20
+      },
+      {
+        "name": "Sewer Rats",
+        "count": 4
+      },
+      {
+        "name": "Nezumi Informant",
+        "count": 3
+      },
+      {
+        "name": "Nezumi Prowler",
+        "count": 2
+      },
+      {
+        "name": "Piper of the Swarm",
+        "count": 3
+      },
+      {
+        "name": "Burglar Rat",
+        "count": 4
+      },
+      {
+        "name": "Skullsnatcher",
+        "count": 1
+      },
+      {
+        "name": "Pack Rat",
+        "count": 2
+      },
+      {
+        "name": "Voracious Vermin",
+        "count": 3
+      },
+      {
+        "name": "Lord Skitter's Butcher",
+        "count": 1
+      },
+      {
+        "name": "Karumonix, the Rat King",
+        "count": 4
+      },
+      {
+        "name": "Chittering Rats",
+        "count": 4
+      },
+      {
+        "name": "Tribute to Horobi",
+        "count": 1
+      },
+      {
+        "name": "Hymn to Tourach",
+        "count": 4
+      },
+      {
+        "name": "Nameless Inversion",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Nezumi Graverobber",
+        "count": 2
+      },
+      {
+        "name": "Skullsnatcher",
+        "count": 2
+      },
+      {
+        "name": "Pack Rat",
+        "count": 1
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 1
+      },
+      {
+        "name": "Gloom",
+        "count": 1
+      },
+      {
+        "name": "Hecatomb",
+        "count": 1
+      },
+      {
+        "name": "Duress",
+        "count": 1
+      },
+      {
+        "name": "Drain Life",
+        "count": 3
+      },
+      {
+        "name": "Dismember",
+        "count": 2
+      },
+      {
+        "name": "Contagion",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-goblins",
+    "name": "Escola dos Goblins",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Jagged Barrens",
+        "count": 1
+      },
+      {
+        "name": "Riveteers Overlook",
+        "count": 1
+      },
+      {
+        "name": "Rakdos Carnarium",
+        "count": 2
+      },
+      {
+        "name": "Swamp",
+        "count": 3
+      },
+      {
+        "name": "Mountain",
+        "count": 9
+      },
+      {
+        "name": "Barbarian Ring",
+        "count": 2
+      },
+      {
+        "name": "Goblin Guide",
+        "count": 4
+      },
+      {
+        "name": "Skirk Prospector",
+        "count": 4
+      },
+      {
+        "name": "Putrid Goblin",
+        "count": 4
+      },
+      {
+        "name": "Munitions Expert",
+        "count": 4
+      },
+      {
+        "name": "Dark-Dweller Oracle",
+        "count": 2
+      },
+      {
+        "name": "Mogg War Marshal",
+        "count": 3
+      },
+      {
+        "name": "Spike Jester",
+        "count": 4
+      },
+      {
+        "name": "Stingscourger",
+        "count": 1
+      },
+      {
+        "name": "Pashalik Mons",
+        "count": 1
+      },
+      {
+        "name": "Goblin Matron",
+        "count": 4
+      },
+      {
+        "name": "Gempalm Incinerator",
+        "count": 3
+      },
+      {
+        "name": "Makeshift Munitions",
+        "count": 1
+      },
+      {
+        "name": "Blightning",
+        "count": 3
+      },
+      {
+        "name": "First Day of Class",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Goblin Cratermaker",
+        "count": 1
+      },
+      {
+        "name": "Cabal Slaver",
+        "count": 2
+      },
+      {
+        "name": "Twinshot Sniper",
+        "count": 3
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Tarfire",
+        "count": 1
+      },
+      {
+        "name": "Terminate",
+        "count": 2
+      },
+      {
+        "name": "Abrade",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id": "sacola-neve",
+    "name": "Réplica da Neve",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Glacial Floodplain",
+        "count": 4
+      },
+      {
+        "name": "Snow-Covered Forest",
+        "count": 7
+      },
+      {
+        "name": "Snow-Covered Island",
+        "count": 6
+      },
+      {
+        "name": "Snow-Covered Plains",
+        "count": 3
+      },
+      {
+        "name": "Frost Augur",
+        "count": 4
+      },
+      {
+        "name": "Pilfering Hawk",
+        "count": 2
+      },
+      {
+        "name": "Sculptor of Winter",
+        "count": 3
+      },
+      {
+        "name": "Rime Tender",
+        "count": 4
+      },
+      {
+        "name": "Iceberg Cancrix",
+        "count": 4
+      },
+      {
+        "name": "Moritte of the Frost",
+        "count": 4
+      },
+      {
+        "name": "Icebreaker Kraken",
+        "count": 1
+      },
+      {
+        "name": "Coldsteel Heart",
+        "count": 3
+      },
+      {
+        "name": "On Thin Ice",
+        "count": 4
+      },
+      {
+        "name": "Winter's Rest",
+        "count": 2
+      },
+      {
+        "name": "Croaking Counterpart",
+        "count": 1
+      },
+      {
+        "name": "Search for Glory",
+        "count": 2
+      },
+      {
+        "name": "Glacial Revelation",
+        "count": 4
+      },
+      {
+        "name": "Rite of Replication",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Icebind Pillar",
+        "count": 3
+      },
+      {
+        "name": "Winter's Rest",
+        "count": 1
+      },
+      {
+        "name": "Energy Tap",
+        "count": 2
+      },
+      {
+        "name": "Disenchant",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-reluz",
+    "name": "Tudo que Reluz",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Secluded Steppe",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 15
+      },
+      {
+        "name": "Alseid of Life's Bounty",
+        "count": 4
+      },
+      {
+        "name": "Kor Duelist",
+        "count": 4
+      },
+      {
+        "name": "Spirited Companion",
+        "count": 3
+      },
+      {
+        "name": "Ingenious Smith",
+        "count": 4
+      },
+      {
+        "name": "Knight of Meadowgrain",
+        "count": 2
+      },
+      {
+        "name": "Porcelain Legionnaire",
+        "count": 4
+      },
+      {
+        "name": "Bonesplitter",
+        "count": 2
+      },
+      {
+        "name": "Glimmerlight",
+        "count": 4
+      },
+      {
+        "name": "Barbed Spike",
+        "count": 2
+      },
+      {
+        "name": "Nettlecyst",
+        "count": 3
+      },
+      {
+        "name": "Michiko's Reign of Truth",
+        "count": 1
+      },
+      {
+        "name": "All That Glitters",
+        "count": 4
+      },
+      {
+        "name": "Dispatch",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Kitesail Apprentice",
+        "count": 4
+      },
+      {
+        "name": "Cathar Commando",
+        "count": 4
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 1
+      },
+      {
+        "name": "Dog Umbra",
+        "count": 1
+      },
+      {
+        "name": "Realmbreaker's Grasp",
+        "count": 3
+      },
+      {
+        "name": "Armored Ascension",
+        "count": 1
+      },
+      {
+        "name": "Disenchant",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-pestilencia",
+    "name": "Pestilência Golgari",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Forest",
+        "count": 8
+      },
+      {
+        "name": "Snow-Covered Swamp",
+        "count": 11
+      },
+      {
+        "name": "Wall of Roots",
+        "count": 4
+      },
+      {
+        "name": "Scavenging Ooze",
+        "count": 3
+      },
+      {
+        "name": "Yavimaya Elder",
+        "count": 2
+      },
+      {
+        "name": "Ranging Raptors",
+        "count": 4
+      },
+      {
+        "name": "Cacophodon",
+        "count": 4
+      },
+      {
+        "name": "Stuffy Doll",
+        "count": 3
+      },
+      {
+        "name": "Generous Ent",
+        "count": 3
+      },
+      {
+        "name": "Sun Droplet",
+        "count": 2
+      },
+      {
+        "name": "Urza's Armor",
+        "count": 1
+      },
+      {
+        "name": "Withering Wisps",
+        "count": 4
+      },
+      {
+        "name": "Pestilence",
+        "count": 3
+      },
+      {
+        "name": "Inquisition of Kozilek",
+        "count": 4
+      },
+      {
+        "name": "Seed of Hope",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Whirling Dervish",
+        "count": 3
+      },
+      {
+        "name": "Sarulf, Realm Eater",
+        "count": 1
+      },
+      {
+        "name": "Stuffy Doll",
+        "count": 1
+      },
+      {
+        "name": "Pestilence",
+        "count": 1
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Run Afoul",
+        "count": 2
+      },
+      {
+        "name": "Molder",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-dimir",
+    "name": "Prisão Dimir",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Island",
+        "count": 9
+      },
+      {
+        "name": "Swamp",
+        "count": 5
+      },
+      {
+        "name": "Evolving Wilds",
+        "count": 4
+      },
+      {
+        "name": "Dismal Backwater",
+        "count": 2
+      },
+      {
+        "name": "Rishadan Dockhand",
+        "count": 4
+      },
+      {
+        "name": "Horned Loch-Whale",
+        "count": 2
+      },
+      {
+        "name": "Black Vise",
+        "count": 1
+      },
+      {
+        "name": "Icy Manipulator",
+        "count": 3
+      },
+      {
+        "name": "Psychic Venom",
+        "count": 4
+      },
+      {
+        "name": "Blight",
+        "count": 4
+      },
+      {
+        "name": "Contaminated Ground",
+        "count": 4
+      },
+      {
+        "name": "Slow Motion",
+        "count": 2
+      },
+      {
+        "name": "Portent",
+        "count": 4
+      },
+      {
+        "name": "Memory Lapse",
+        "count": 4
+      },
+      {
+        "name": "Mana Leak",
+        "count": 4
+      },
+      {
+        "name": "Early Frost",
+        "count": 3
+      },
+      {
+        "name": "Complicate",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Faerie Macabre",
+        "count": 1
+      },
+      {
+        "name": "Fatestitcher",
+        "count": 2
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 1
+      },
+      {
+        "name": "Corrupted Roots",
+        "count": 1
+      },
+      {
+        "name": "Chill",
+        "count": 3
+      },
+      {
+        "name": "Gloom",
+        "count": 3
+      },
+      {
+        "name": "Energy Flux",
+        "count": 2
+      },
+      {
+        "name": "Withdraw",
+        "count": 1
+      },
+      {
+        "name": "Cower in Fear",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-laelia",
+    "name": "Lâmina de Laelia",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Shattered Landscape",
+        "count": 1
+      },
+      {
+        "name": "Terramorphic Expanse",
+        "count": 3
+      },
+      {
+        "name": "Swamp",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 4
+      },
+      {
+        "name": "Mountain",
+        "count": 4
+      },
+      {
+        "name": "Caves of Koilos",
+        "count": 1
+      },
+      {
+        "name": "Isolated Chapel",
+        "count": 1
+      },
+      {
+        "name": "Needle Spires",
+        "count": 1
+      },
+      {
+        "name": "Ruin-Lurker Bat",
+        "count": 2
+      },
+      {
+        "name": "Banehound",
+        "count": 4
+      },
+      {
+        "name": "Typhoid Rats",
+        "count": 2
+      },
+      {
+        "name": "Spark Elemental",
+        "count": 1
+      },
+      {
+        "name": "Hushbringer",
+        "count": 3
+      },
+      {
+        "name": "Fencing Ace",
+        "count": 3
+      },
+      {
+        "name": "Adorned Pouncer",
+        "count": 1
+      },
+      {
+        "name": "Laelia, the Blade Reforged",
+        "count": 4
+      },
+      {
+        "name": "Odric, Lunarch Marshal",
+        "count": 3
+      },
+      {
+        "name": "Soulflayer",
+        "count": 4
+      },
+      {
+        "name": "Eater of Virtue",
+        "count": 4
+      },
+      {
+        "name": "Song of Blood",
+        "count": 2
+      },
+      {
+        "name": "Path to Exile",
+        "count": 4
+      },
+      {
+        "name": "Incinerate",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Typhoid Rats",
+        "count": 2
+      },
+      {
+        "name": "Odric, Blood-Cursed",
+        "count": 1
+      },
+      {
+        "name": "Cairn Wanderer",
+        "count": 1
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 3
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Song of Blood",
+        "count": 1
+      },
+      {
+        "name": "Disenchant",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-boros",
+    "name": "Fúria Boros",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Boros Garrison",
+        "count": 3
+      },
+      {
+        "name": "Plains",
+        "count": 8
+      },
+      {
+        "name": "Mountain",
+        "count": 8
+      },
+      {
+        "name": "Clifftop Retreat",
+        "count": 1
+      },
+      {
+        "name": "Figure of Destiny",
+        "count": 4
+      },
+      {
+        "name": "Duergar Assailant",
+        "count": 4
+      },
+      {
+        "name": "Conduit Goblin",
+        "count": 4
+      },
+      {
+        "name": "Battlegate Mimic",
+        "count": 2
+      },
+      {
+        "name": "Akroan Hoplite",
+        "count": 3
+      },
+      {
+        "name": "General Ferrous Rokiric",
+        "count": 4
+      },
+      {
+        "name": "Brion Stoutarm",
+        "count": 1
+      },
+      {
+        "name": "Balefire Liege",
+        "count": 2
+      },
+      {
+        "name": "Glass of the Guildpact",
+        "count": 1
+      },
+      {
+        "name": "Chained to the Rocks",
+        "count": 4
+      },
+      {
+        "name": "Scourge of the Nobilis",
+        "count": 2
+      },
+      {
+        "name": "Scurry of Gremlins",
+        "count": 1
+      },
+      {
+        "name": "Lightning Bolt",
+        "count": 1
+      },
+      {
+        "name": "Lightning Helix",
+        "count": 4
+      },
+      {
+        "name": "Blood Lust",
+        "count": 2
+      },
+      {
+        "name": "Chance for Glory",
+        "count": 1
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Duergar Hedge-Mage",
+        "count": 4
+      },
+      {
+        "name": "Blood Lust",
+        "count": 2
+      }
+    ]
+  },
+  {
     "id": "commander-fichas",
     "name": "Triunfo das Fichas",
     "builtin": true,

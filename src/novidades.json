@@ -1,4 +1,9 @@
 {
+  "0.73.0": {
+    "Dez decks prontos novos de Sacola 50": [
+      { "img": "0.73.0/sacola-dez-decks.webp", "legenda": "Com o Sacola 50 escolhido, os dez decks novos aparecem logo depois da Energia Jeskai: de **Rampa Eldrazi** a **Fúria Boros**, cada um com as cores dele." }
+    ]
+  },
   "0.72.0": {
     "Bracket dos decks de Commander": [
       { "img": "0.72.0/escolha-de-deck.webp", "legenda": "Na escolha de deck, o selo **Bracket 3** ao lado do número de cartas de um deck de Commander." },
