@@ -54,6 +54,22 @@ test('two-face rules and images survive slim cache and remain readable by either
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test('a prepared spell face never takes the place of the real card with the same name', async () => {
+  const real = apiCard('Prepared Name', { oracle_id: 'oracle:real', type_line: 'Sorcery' });
+  const prepare = apiCard('Prepare Creature // Prepared Name', { oracle_id: 'oracle:prepare', layout: 'prepare', oracle_text: undefined, card_faces: [
+    { name: 'Prepare Creature', mana_cost: '{1}{B}', oracle_text: 'Whenever you attack, prepare.' },
+    { name: 'Prepared Name', mana_cost: '{X}{B}{B}', oracle_text: 'Each opponent loses X life.' },
+  ] });
+  for (const order of [[real, prepare], [prepare, real]]) {
+    globalThis.fetch = async () => Response.json({ data: order, total_cards: 2, has_more: false });
+    try {
+      await searchCards(`prepared ${order[0].name}`);
+      assert.equal(cacheGet('Prepared Name').oracle_id, 'oracle:real');
+      assert.equal(cacheGet('Prepare Creature').oracle_id, 'oracle:prepare');
+    } finally { globalThis.fetch = originalFetch; }
+  }
+});
+
 test('cards remain available in memory when browser storage rejects writes', async () => {
   const originalStorage = globalThis.localStorage;
   globalThis.localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('quota'); } };

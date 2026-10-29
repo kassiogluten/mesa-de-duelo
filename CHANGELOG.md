@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.67.2] - 2026-10-28
+
+### Corrigido
+
+- **Cartas com o mesmo nome de uma magia preparada.** Exsanguinate (Dessangrar) e Stensian Sanguinist (que prepara uma Exsanguinate) eram contadas como a mesma carta: com uma delas no deck de Commander, o **+** da outra ficava apagado. Agora cada uma conta como carta própria e as duas podem entrar no deck.
+
 ## [0.67.1] - 2026-10-28
 
 ### Corrigido

@@ -166,7 +166,10 @@ export async function loadCardCache() {
       localStorage.removeItem(key);
     }
   } catch { /* localStorage bloqueado */ }
-  for (const [name, c] of await cardStore.readAll<ScryCard>()) if (validCard(c) && !memory.has(name)) memory.set(name, c);
+  // Versões antigas deixavam a magia preparada ocupar o nome de uma carta real (ver cachePut): esses registros
+  // são descartados e a carta é buscada de novo pelo nome.
+  for (const [name, c] of await cardStore.readAll<ScryCard>())
+    if (validCard(c) && !memory.has(name) && !(c.layout === 'prepare' && isFaceAlias(name, c))) memory.set(name, c);
 }
 
 /** A carta vista por uma das faces: imagem e nome em português daquela face. */
@@ -178,12 +181,21 @@ function faceView(card: ScryCard, i: number): ScryCard {
   };
 }
 
-/** Guarda a carta pelo nome completo e também pelo nome de cada face ("The Enigma Jewel", "Locus of Enlightenment"). */
+/** Registro guardado pelo nome de uma face, e não pelo nome da própria carta. */
+const isFaceAlias = (key: string, c: ScryCard) => c.name.toLowerCase() !== key;
+
+/**
+ * Guarda a carta pelo nome completo e também pelo nome de cada face ("The Enigma Jewel", "Locus of Enlightenment").
+ * A face nunca toma o lugar de uma carta de verdade com o mesmo nome: a magia preparada "Exsanguinate" da
+ * Stensian Sanguinist não pode virar a Exsanguinate, senão o deck conta as duas como a mesma carta.
+ */
 export function cachePut(card: ScryCard) {
   memory.set(card.name.toLowerCase(), card);
   void cardStore.write(card.name.toLowerCase(), card);
   card.faceNames?.forEach((fn, i) => {
     if (!fn || fn.toLowerCase() === card.name.toLowerCase()) return;
+    const existing = memory.get(fn.toLowerCase());
+    if (existing && !isFaceAlias(fn.toLowerCase(), existing)) return;
     const view = faceView(card, i);
     memory.set(fn.toLowerCase(), view);
     void cardStore.write(fn.toLowerCase(), view);
@@ -322,8 +334,8 @@ export async function resolveCardNames(names: string[]): Promise<{ found: Map<st
       const s = slim(d);
       cachePut(s);
       byName.set(s.name.toLowerCase(), s.name);
-      for (const f of d.card_faces ?? []) if (f.name) byName.set(String(f.name).toLowerCase(), s.name);
     }
+    for (const d of json?.data ?? []) for (const f of d.card_faces ?? []) if (f.name && !byName.has(String(f.name).toLowerCase())) byName.set(String(f.name).toLowerCase(), d.name);
     for (const n of chunk) { const hit = byName.get(n.toLowerCase()); if (hit) found.set(n.toLowerCase(), hit); }
   }
   const missing: string[] = [];
