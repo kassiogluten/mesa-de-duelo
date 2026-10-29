@@ -39,6 +39,9 @@ function coverRow(deck: DeckData): DeckRow | undefined {
   // Com comandante, a capa é só a dele: enquanto os dados dele não chegam, outra carta já carregada (Sol Ring,
   // Arcane Signet…) viraria a capa de vários decks ao mesmo tempo.
   if (deck.commanders?.length) return deckRows(deck.commanders).find(r => r.info?.artCrop);
+  // A capa escolhida pelo jogador vale enquanto a carta estiver no deck principal, mesmo antes de os dados chegarem.
+  const chosen = deck.format !== 'commander' && deck.cover ? deckRows(deck.cards).find(r => r.name === deck.cover) : undefined;
+  if (chosen) return chosen;
   const rows = deckRows(deck.cards).filter(r => r.info?.artCrop).sort((a, b) => (b.cmc ?? 0) - (a.cmc ?? 0));
   return rows.find(r => r.info?.type === 'creature') ?? rows.find(r => r.info?.type !== 'land');
 }

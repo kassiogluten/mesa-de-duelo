@@ -11,6 +11,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 ### Novo
 
 - **Dez decks prontos novos de Pauper**, com as listas dos arquétipos mais jogados hoje no Pauper, segundo o MTGGoldfish (60 cartas mais 15 de sideboard): **Terror Azul** (Tolarian Terror e mágicas baratas), **Fadas Dimir** (fadas que anulam mágicas e Ninjas), **Afinidade Grixis** (artefatos baratos e terrenos-artefato), **Combo do Espião** (Balustrade Spy esvazia o próprio grimório para vencer de uma vez), **Tempestade Rubi** (rituais e várias mágicas no mesmo turno), **Incêndio Jund** (sacrificar artefatos e terrenos para ganhar vantagem), **Jardins Golgari** (Khalni Garden e remoções pretas), **Neblina sem Fim** (impedir o dano de combate até ganhar), **Familiares** (criaturas que voltam à mão e baixam o custo das mágicas) e **Esquadrão Branco** (criaturas brancas pequenas e voadoras). Com o Pauper escolhido, agora são 12 decks prontos para você ou para o computador.
+- **Escolher a capa do seu deck.** No editor dos seus decks, cada carta do deck principal ganha um botão com o desenho de uma imagem: toque nele para usar a arte daquela carta como capa do deck. A capa aparece no topo do editor, em Meus decks, na tela Jogar e para os outros jogadores na sala de espera. A carta da capa fica com o botão em destaque; toque de novo para voltar à capa automática, que também volta se a carta sair do deck principal. Não vale para terrenos básicos nem para decks de Commander, em que a capa continua sendo o comandante.
 
 ## [0.73.0] - 2026-10-29
 

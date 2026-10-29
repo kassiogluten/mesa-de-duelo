@@ -33,6 +33,8 @@ export interface DeckData {
   price?: { usd: number; date: string };
   /** Bracket escolhido para o deck de Commander (nos prontos, conferido à mão); deckBracket o mantém acima do mínimo. */
   bracket?: Bracket;
+  /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander. */
+  cover?: string;
 }
 export const DEFAULT_DECKS = starterDecks as DeckData[];
 const BASICS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'].map(n => n.toLowerCase()));
@@ -64,6 +66,7 @@ function validDeck(v: unknown): v is DeckData {
   return object(v) && typeof v.id === 'string' && !!v.id && typeof v.name === 'string' && validEntries(v.cards)
     && (v.sideboard === undefined || validEntries(v.sideboard)) && (v.format === undefined || DECK_FORMATS.includes(v.format as DeckFormat))
     && (v.commanders === undefined || validEntries(v.commanders)) && (v.bracket === undefined || isBracket(v.bracket))
+    && (v.cover === undefined || typeof v.cover === 'string')
     && (v.unresolved === undefined || (Array.isArray(v.unresolved) && v.unresolved.every(n => typeof n === 'string')));
 }
 

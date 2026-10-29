@@ -1,5 +1,5 @@
 import './decks.css';
-import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, isConstructed, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
+import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, isBasic, isConstructed, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { cardInfo, type Color } from '../cards';
 import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
@@ -103,6 +103,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     // Uma carta que sobe o mínimo leva o bracket escolhido junto.
     if (deck.bracket && deck.format === 'commander') { const min = estimateBracket(deck).min; if (min > deck.bracket) deck.bracket = min; }
     deck.unresolved = deck.unresolved?.filter(name => deckEntries(deck).some(entry => entry.name === name));
+    // A capa escolhida sai junto com a carta do deck principal; a capa volta a ser automática.
+    if (deck.cover && !deck.cards.some(entry => entry.name === deck.cover)) delete deck.cover;
     deck.updatedAt = new Date().toISOString();
     validationSeq++; validation = null; validationError = ''; validating = false;
     persist();
@@ -145,8 +147,14 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const entries = section === 'main' ? deck.cards : deck.sideboard ?? [];
     return groupedRows(entries).map(group => `<section class="dw-card-group"><h3>${group.label}<span>${countEntries(group.rows)}</span></h3><ul>${group.rows.map(row => {
       const label = row.info?.label ?? row.name;
-      return `<li><button type="button" class="dw-card-name" data-inspect="${esc(row.name)}" data-focus="inspect:${esc(row.name)}"><span class="dw-card-art">${row.info?.artCrop ? `<img src="${esc(row.info.artCrop)}" alt="" loading="lazy">` : ''}</span><span>${esc(label)}</span><span class="dw-mana">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button>${deck.builtin ? `<b class="dw-count">${row.count}</b>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(row.name)}" data-focus="dec:${esc(row.name)}" aria-label="Remover uma cópia de ${esc(label)}">−</button><span>${row.count}</span><button type="button" data-add="${esc(row.name)}" data-focus="add:${esc(row.name)}" aria-label="Adicionar uma cópia de ${esc(label)}">+</button></div>`}<button type="button" class="dw-transfer" data-move="${esc(row.name)}" data-focus="move:${esc(row.name)}" ${deck.builtin || deck.format === 'commander' ? 'hidden' : ''} title="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}" aria-label="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}: ${esc(label)}">${section === 'main' ? '→' : '←'}</button></li>`;
+      return `<li><button type="button" class="dw-card-name" data-inspect="${esc(row.name)}" data-focus="inspect:${esc(row.name)}"><span class="dw-card-art">${row.info?.artCrop ? `<img src="${esc(row.info.artCrop)}" alt="" loading="lazy">` : ''}</span><span>${esc(label)}</span><span class="dw-mana">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button>${deck.builtin ? `<b class="dw-count">${row.count}</b>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(row.name)}" data-focus="dec:${esc(row.name)}" aria-label="Remover uma cópia de ${esc(label)}">−</button><span>${row.count}</span><button type="button" data-add="${esc(row.name)}" data-focus="add:${esc(row.name)}" aria-label="Adicionar uma cópia de ${esc(label)}">+</button></div>`}<button type="button" class="dw-transfer" data-move="${esc(row.name)}" data-focus="move:${esc(row.name)}" ${deck.builtin || deck.format === 'commander' ? 'hidden' : ''} title="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}" aria-label="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}: ${esc(label)}">${section === 'main' ? '→' : '←'}</button>${coverButtonHTML(deck, row.name, label)}</li>`;
     }).join('')}</ul></section>`).join('') || `<div class="dw-empty compact"><h3>${section === 'main' ? 'Deck vazio.' : 'Sideboard vazio.'}</h3>${!deck.builtin ? `<div class="dw-actions">${!searchOpen ? '<button type="button" class="dw-button primary" data-b="open-search">Adicionar cartas</button>' : ''}<button type="button" class="dw-button" data-b="import-current">Importar lista</button></div>` : ''}</div>`;
+  }
+  /** Escolher a carta como capa do deck: só no deck principal, sem os básicos e fora do Commander, onde a capa é o comandante. */
+  function coverButtonHTML(deck: DeckData, name: string, label: string) {
+    if (deck.builtin || deck.format === 'commander' || section !== 'main' || isBasic(name)) return '';
+    const chosen = deck.cover === name, text = chosen ? `Capa do deck: ${label}. Toque para voltar à capa automática` : `Usar ${label} como capa do deck`;
+    return `<button type="button" class="dw-cover-pick" data-cover="${esc(name)}" data-focus="cover:${esc(name)}" aria-pressed="${chosen}" title="${chosen ? 'Capa do deck (toque para voltar à automática)' : 'Usar como capa do deck'}" aria-label="${esc(text)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg></button>`;
   }
   function commanderHTML(deck: DeckData) {
     if (deck.format !== 'commander') return '';
@@ -390,6 +398,11 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (ds.add) { change(ds.add, 1); return; }
     if (ds.dec) { change(ds.dec, -1); return; }
     if (ds.move) { change(ds.move, -1, true); return; }
+    if (ds.cover) {
+      const deck = current(); if (!deck || deck.builtin || deck.format === 'commander') return;
+      if (deck.cover === ds.cover) delete deck.cover; else deck.cover = ds.cover;
+      changed(deck); preserveRender(renderEdit); return;
+    }
     if (ds.color) { const color = ds.color as Color; searchColors.has(color) ? searchColors.delete(color) : searchColors.add(color); target.setAttribute('aria-pressed', String(searchColors.has(color))); void runSearch(); return; }
     switch (ds.b) {
       case 'home': goHome(); break;

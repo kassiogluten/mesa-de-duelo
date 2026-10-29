@@ -2,6 +2,11 @@
   "0.74.0": {
     "Dez decks prontos novos de Pauper": [
       { "img": "0.74.0/pauper-dez-decks.webp", "legenda": "Com o Pauper escolhido, os dez decks novos aparecem depois de Brasa e Relâmpago e Força da Floresta: de **Terror Azul** a **Esquadrão Branco**, cada um com as cores dele." }
+    ],
+    "Escolher a capa do seu deck": [
+      { "img": "0.74.0/capa-botao.webp", "legenda": "No editor, o botão de imagem no fim de cada carta do deck principal; o do Pescador Celeste Kor está em destaque porque ele é a capa." },
+      { "img": "0.74.0/capa-editor.webp", "legenda": "A arte do Pescador Celeste Kor vira a capa no topo do editor." },
+      { "img": "0.74.0/capa-jogar.webp", "legenda": "Na tela Jogar, o deck aparece com a capa escolhida." }
     ]
   },
   "0.73.0": {

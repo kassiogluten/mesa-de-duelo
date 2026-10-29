@@ -13,7 +13,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
 const decks = await import('../src/decks.ts');
 const { applyDeckImport, deckImportSnapshot } = await import('../src/ui/deckImport.ts');
 const { cardCopyLimit, copiesInDeck, validateDeckLocal } = await import('../src/ui/deckRules.ts');
-const { deckPriceHTML, deckStats, statsHTML } = await import('../src/ui/deckStats.ts');
+const { deckArt, deckCover, deckPriceHTML, deckStats, statsHTML } = await import('../src/ui/deckStats.ts');
 const { legalityFresh, cachePut } = await import('../src/scryfall.ts');
 function storage(initial = {}, failWrites = false) {
   const data = new Map(Object.entries(initial));
@@ -332,4 +332,20 @@ test('each format lists only the ready decks built for it; Livre lists every 60-
   assert.equal(count('sacola50'), 17, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
   assert.equal(count('free'), 45);
   assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length);
+});
+
+test('a chosen cover card wins while it stays in the main deck, never in Commander', () => {
+  cache('Cover Dragon', { type_line: 'Creature — Dragon', mana_cost: '{4}{R}{R}', cmc: 6, image_uris: { art_crop: 'dragon.jpg' } });
+  cache('Cover Shock', { image_uris: { art_crop: 'shock.jpg' } });
+  const deck = { id: 'c', name: 'C', format: 'free', cards: [{ name: 'Cover Dragon', count: 2 }, { name: 'Cover Shock', count: 4 }], sideboard: [] };
+  assert.equal(deckArt(deck), 'dragon.jpg');
+  assert.equal(deckArt({ ...deck, cover: 'Cover Shock' }), 'shock.jpg');
+  assert.equal(deckCover({ ...deck, cover: 'Cover Shock' }), 'Cover Shock');
+  assert.equal(deckArt({ ...deck, cover: 'Not In Deck' }), 'dragon.jpg');
+  assert.equal(deckArt({ ...deck, cards: [deck.cards[0]], sideboard: [deck.cards[1]], cover: 'Cover Shock' }), 'dragon.jpg');
+  assert.equal(deckArt({ ...deck, format: 'commander', cover: 'Cover Shock' }), 'dragon.jpg');
+  const store = storage({ [decks.DECK_STORAGE_KEY]: JSON.stringify({ version: 2, decks: [{ ...deck, cover: 'Cover Shock' }, { ...deck, id: 'bad', cover: 3 }] }) });
+  const read = decks.readDeckLibrary(store);
+  assert.equal(read.decks.length, 1);
+  assert.equal(read.decks[0].cover, 'Cover Shock');
 });

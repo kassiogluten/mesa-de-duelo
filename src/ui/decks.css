@@ -124,6 +124,9 @@
 .dw-stepper span, .dw-count { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
 .dw-stepper button:disabled { opacity: .3; cursor: default; }
 .dw-transfer { font-size: 18px; color: var(--dw-muted); min-width: 32px; }
+.dw-cover-pick { display: grid; place-items: center; min-width: 32px; min-height: 40px; padding: 0; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--dw-muted); cursor: pointer; }
+.dw-cover-pick svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dw-cover-pick[aria-pressed='true'] { color: var(--dw-accent); border-color: var(--dw-accent); }
 .dw-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 18px 14px; }
 .dw-results article { min-width: 0; }
 .dw-result-art { display: block; width: 100%; aspect-ratio: 488/680; padding: 0; border: 0; border-radius: 6px; background: var(--dw-raised); color: var(--dw-ink); cursor: zoom-in; }
@@ -188,7 +191,7 @@
 .dw-preview-side > summary { cursor: pointer; min-height: 36px; }
 @media (hover: hover) and (pointer: fine) {
   .dw-deck-title input:hover { border-bottom-color: #f2b54c66; }
-  .dw-button:hover:not(:disabled), .dw-stepper button:hover:not(:disabled), .dw-transfer:hover { background: #253953; border-color: #627b9b; }
+  .dw-button:hover:not(:disabled), .dw-stepper button:hover:not(:disabled), .dw-transfer:hover, .dw-cover-pick:hover { background: #253953; border-color: #627b9b; }
   .dw-button.primary:hover:not(:disabled) { background: linear-gradient(180deg, #ffd27a, var(--gold) 45%, var(--gold-deep)); color: #2b1700; border-color: var(--gold-light); filter: brightness(1.08); box-shadow: 0 3px 16px #f2b54c50, inset 0 1px 0 #ffffff80; }
   .dw-card-name:hover, .dw-preview .dp-card:hover { background: #ffffff06; }
 }
@@ -244,7 +247,7 @@
   .dw-mana { font-size: 12px; }
   .dw-stepper { gap: 0; }
   .dw-stepper button { min-width: 32px; }
-  .dw-transfer { min-width: 28px; }
+  .dw-transfer, .dw-cover-pick { min-width: 28px; }
   .dw-import form, .dw-import-review { padding: 16px; }
   .dw-import-fields { flex-direction: column; }
   .ds-stats { gap: 14px; }
