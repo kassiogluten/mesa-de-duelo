@@ -94,6 +94,12 @@ public class HeldStopsTest {
         assertFalse("a etapa final continua sendo uma parada padrão", f.yields().isSkippingPhase(f.opponent.getView(), PhaseType.END_OF_TURN));
     }
 
+    @Test public void opponentBeginningOfCombatIsADefaultStop() {
+        Fixture f = new Fixture();
+        assertFalse("antes dos ataques do oponente dá para usar instantâneas e lampejo", f.yields().isSkippingPhase(f.opponent.getView(), PhaseType.COMBAT_BEGIN));
+        assertTrue("no próprio turno o início do combate continua pulado", f.skipsMine(PhaseType.COMBAT_BEGIN));
+    }
+
     @Test public void ownUpkeepAndDrawStopOnlyForAPermanentAbility() {
         Fixture f = new Fixture();
         f.add("Forest", f.me);

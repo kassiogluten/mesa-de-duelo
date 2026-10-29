@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.68.1] - 2026-10-28
+
+### Corrigido
+
+- **Prioridade no início do combate do oponente.** Antes de o oponente declarar atacantes, o jogo pulava direto para os ataques, sem dar chance de usar uma instantânea ou uma carta com lampejo (por exemplo, para virar ou remover uma criatura antes que ela ataque). Agora, se você tem algo que pode usar, o jogo para no início do combate do oponente e espera você agir ou passar.
+
 ## [0.68.0] - 2026-10-28
 
 ### Novo

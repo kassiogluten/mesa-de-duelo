@@ -31,11 +31,13 @@ final class WebGuiGame extends ProtocolGuiGame {
     /** Fases do próprio turno em que o jogador recebe prioridade com a pilha vazia. */
     private static final Set<PhaseType> STOPS_MINE = EnumSet.of(PhaseType.MAIN1, PhaseType.MAIN2, PhaseType.COMBAT_DECLARE_BLOCKERS);
     /**
-     * Fases do turno do oponente: depois dos ataques (remover um atacante, criatura com lampejo para bloquear),
+     * Fases do turno do oponente: o início do combate (virar ou remover uma criatura antes que ela ataque),
+     * depois dos ataques (remover um atacante, criatura com lampejo para bloquear),
      * depois dos bloqueios e a etapa final, a janela clássica para instantâneas antes do seu turno.
      * Com "Passar automaticamente" ligado, o Forge só para nelas quando o jogador tem algo que pode usar agora.
      */
-    private static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_DECLARE_ATTACKERS, PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.END_OF_TURN);
+    private static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_BEGIN, PhaseType.COMBAT_DECLARE_ATTACKERS,
+        PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.END_OF_TURN);
     /** Etapas do turno de um oponente que o jogador pode marcar para segurar a prioridade (as que dão prioridade). */
     static final Set<PhaseType> HOLDABLE = EnumSet.of(PhaseType.UPKEEP, PhaseType.DRAW, PhaseType.MAIN1, PhaseType.COMBAT_BEGIN,
         PhaseType.COMBAT_DECLARE_ATTACKERS, PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.COMBAT_DAMAGE, PhaseType.COMBAT_END,

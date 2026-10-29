@@ -1,4 +1,9 @@
 {
+  "0.68.1": {
+    "Prioridade no início do combate do oponente": [
+      { "img": "0.68.1/prioridade-inicio-combate.webp", "legenda": "No turno do oponente, com o combate aceso na trilha de fases, o jogo para antes dos ataques: o Raio fica em destaque na mão e o botão **Passar** espera você agir." }
+    ]
+  },
   "0.68.0": {
     "Assistir a uma partida": [
       { "img": "0.68.0/assistindo-barra.webp", "legenda": "Na barra do topo de quem assiste, o selo **Assistindo** ao lado da sala." },
