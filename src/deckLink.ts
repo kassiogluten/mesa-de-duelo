@@ -15,6 +15,8 @@ export function parseDeckLink(text: string): DeckLink | null {
   return null;
 }
 
+import type { Bracket } from './brackets';
+
 type Entry = { name: string; count: number };
 const line = (e: Entry) => `${e.count} ${e.name}`;
 const section = (title: string, entries: Entry[]) => entries.length ? `${title}\n${entries.map(line).join('\n')}` : '';
@@ -52,12 +54,14 @@ function fromArchidekt(json: any) {
   return { name: typeof json?.name === 'string' ? json.name : '', commanders, main, side };
 }
 
-/** Lista em texto (formato de exportação do Moxfield) e nome do deck de origem. */
-export function deckLinkToList(site: DeckSite, body: string): { name: string; text: string } {
+/** Lista em texto (formato de exportação do Moxfield), nome do deck de origem e, do Archidekt, o bracket do dono. */
+export function deckLinkToList(site: DeckSite, body: string): { name: string; text: string; bracket?: Bracket } {
   let json: unknown;
   try { json = JSON.parse(body); } catch { throw new Error('O site devolveu uma resposta que não é um deck.'); }
   const deck = site === 'moxfield' ? fromMoxfield(json) : fromArchidekt(json);
   if (!deck.main.length && !deck.commanders.length) throw new Error('O deck está vazio ou é privado.');
   const text = [section('Commander', deck.commanders), section('Deck', deck.main), section('Sideboard', deck.side)].filter(Boolean).join('\n\n');
-  return { name: deck.name.trim(), text };
+  // O bracket que o dono deu ao deck no Archidekt (edhBracket, null quando ele não escolheu).
+  const bracket = site === 'archidekt' ? (json as { edhBracket?: unknown } | null)?.edhBracket : undefined;
+  return { name: deck.name.trim(), text, ...(typeof bracket === 'number' && [1, 2, 3, 4, 5].includes(bracket) ? { bracket: bracket as Bracket } : {}) };
 }

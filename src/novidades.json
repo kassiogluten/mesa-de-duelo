@@ -1,4 +1,18 @@
 {
+  "0.72.0": {
+    "Bracket dos decks de Commander": [
+      { "img": "0.72.0/escolha-de-deck.webp", "legenda": "Na escolha de deck, o selo **Bracket 3** ao lado do número de cartas de um deck de Commander." },
+      { "img": "0.72.0/meus-decks.webp", "legenda": "Em Meus decks, o bracket aparece na linha das cartas, depois do total." },
+      { "img": "0.72.0/editor.webp", "legenda": "No editor, a escolha do bracket ao lado do comandante, com o que a faixa quer dizer e, em **Por que no mínimo Bracket 3?**, os Game Changers e os combos que pesaram." }
+    ],
+    "Bracket na sala": [
+      { "img": "0.72.0/sala-de-espera.webp", "legenda": "Na sala de espera, cada lugar mostra o bracket do deck de quem sentou, embaixo do comandante." },
+      { "img": "0.72.0/lista-salas.webp", "legenda": "Na lista de salas públicas, a sala de Commander diz os brackets da mesa: aqui, **Brackets 3 a 4**." }
+    ],
+    "Bracket na partida": [
+      { "img": "0.72.0/partida.webp", "legenda": "Na mesa de Commander, o selo **B2** e o **B3** na borda do círculo de vida de cada oponente mostram o bracket do deck de cada um." }
+    ]
+  },
   "0.71.0": {
     "Janela de remoção": [
       { "img": "0.71.0/janela-remocao.webp", "legenda": "Depois de um Wrath of God do oponente, a janela mostra a carta que causou à esquerda e as permanentes destruídas ao lado, separadas entre as suas e as do oponente." }

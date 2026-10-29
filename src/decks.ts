@@ -1,4 +1,5 @@
 import starterDecks from '../shared/starter-decks.json' with { type: 'json' };
+import { isBracket, type Bracket } from './brackets';
 
 export type DeckFormat = 'free' | 'standard' | 'pauper' | 'sacola50' | 'commander';
 export const DECK_FORMATS: readonly DeckFormat[] = ['standard', 'pauper', 'sacola50', 'free', 'commander'];
@@ -30,6 +31,8 @@ export interface DeckData {
   unresolved?: string[];
   /** Soma do preço das cartas em dólar na data registrada (só nos decks prontos). */
   price?: { usd: number; date: string };
+  /** Bracket escolhido para o deck de Commander (nos prontos, conferido à mão); deckBracket o mantém acima do mínimo. */
+  bracket?: Bracket;
 }
 export const DEFAULT_DECKS = starterDecks as DeckData[];
 const BASICS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'].map(n => n.toLowerCase()));
@@ -60,7 +63,7 @@ function validEntries(v: unknown): v is DeckEntry[] {
 function validDeck(v: unknown): v is DeckData {
   return object(v) && typeof v.id === 'string' && !!v.id && typeof v.name === 'string' && validEntries(v.cards)
     && (v.sideboard === undefined || validEntries(v.sideboard)) && (v.format === undefined || DECK_FORMATS.includes(v.format as DeckFormat))
-    && (v.commanders === undefined || validEntries(v.commanders))
+    && (v.commanders === undefined || validEntries(v.commanders)) && (v.bracket === undefined || isBracket(v.bracket))
     && (v.unresolved === undefined || (Array.isArray(v.unresolved) && v.unresolved.every(n => typeof n === 'string')));
 }
 

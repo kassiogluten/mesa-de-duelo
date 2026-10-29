@@ -39,6 +39,7 @@ export function applyDeckImport(target: DeckData, incoming: DeckData, mode: Deck
     ...target, cards, sideboard, commanders, unresolved,
     importHistory: [...new Set([...(target.importHistory ?? []), ...(target.importSource ? [target.importSource] : [])])],
     importSource: incoming.importSource ?? target.importSource,
+    bracket: incoming.bracket ?? target.bracket,
     updatedAt: new Date().toISOString(),
   };
 }

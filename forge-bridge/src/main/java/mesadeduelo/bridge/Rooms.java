@@ -22,7 +22,8 @@ import io.netty.channel.Channel;
  * Salas: {type:"host", name, deck, visibility, code} cria (privada, a não ser com visibility:"public";
  * com o código pedido em code, ou sorteado sem ele);
  * {type:"join", code, name, deck} entra, e a partida começa quando a sala enche; host e join aceitam cover, a carta
- * cuja arte representa o deck no lobby; {type:"room-say", key} manda uma mensagem pronta aos outros da sala;
+ * cuja arte representa o deck no lobby, e bracket (1 a 5), a faixa de poder que o jogador deu ao deck de Commander
+ * (start também, com o de cada deck escolhido para o computador dentro do próprio deck); {type:"room-say", key} manda uma mensagem pronta aos outros da sala;
  * {type:"list-rooms"} lista as salas públicas abertas e as em andamento;
  * {type:"watch", code, name} assiste à partida já começada de uma sala, sem ocupar assento (pública ou privada, com o código);
  * {type:"watch-player", player} troca o jogador de cuja mesa o espectador vê a partida;
@@ -217,21 +218,23 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                         MatchConfig config = MatchConfig.parse(msg.get("config"));
                         Deck you = validated(msg.get("you"), config.format(), "you");
                         java.util.List<Deck> opponents = new java.util.ArrayList<>();
+                        java.util.List<Integer> brackets = new java.util.ArrayList<>();
+                        brackets.add(bracket(msg));
                         if (msg.has("opponents")) {
                             if (!msg.get("opponents").isJsonArray() || msg.getAsJsonArray("opponents").size() != config.playerCount() - 1)
                                 throw new IllegalArgumentException("Escolha um deck para cada oponente.");
-                            for (JsonElement opponent : msg.getAsJsonArray("opponents")) opponents.add(aiDeck(opponent, config));
+                            for (JsonElement opponent : msg.getAsJsonArray("opponents")) { Deck d = aiDeck(opponent, config); opponents.add(d); brackets.add(aiBracket(opponent, d)); }
                         } else {
-                            for (int i = 1; i < config.playerCount(); i++) opponents.add(aiDeck(msg.get("opponent"), config));
+                            for (int i = 1; i < config.playerCount(); i++) { Deck d = aiDeck(msg.get("opponent"), config); opponents.add(d); brackets.add(aiBracket(msg.get("opponent"), d)); }
                         }
-                        solo(ch, you, opponents, config);
+                        solo(ch, you, opponents, config, brackets);
                     }
                 }
                 case "host" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
-                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg));
+                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg), bracket(msg));
                 }
-                case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg));
+                case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg), bracket(msg));
                 case "watch" -> watch(ch, code(msg), name(msg));
                 case "watch-player" -> watchPlayer(ch, msg);
                 case "room-say" -> say(ch, MatchConfig.string(msg, "key"));
@@ -284,6 +287,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             ? Decks.random(config.format()) : validated(opponent, config.format(), "opponent");
     }
 
+    /** Bracket do deck do computador: o que a mesa mandou junto do deck escolhido, ou o do deck pronto sorteado aqui. */
+    private static int aiBracket(JsonElement opponent, Deck deck) {
+        return opponent != null && opponent.isJsonObject() ? bracket(opponent.getAsJsonObject()) : Decks.bracket(deck);
+    }
+
     private synchronized void lookup(Channel ch, String code, String requestId) {
         Session s = room(ch, code);
         JsonObject response = new JsonObject(); response.addProperty("type", "room-info");
@@ -334,6 +342,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         return e == null || !e.isJsonPrimitive() ? null : e.getAsString();
     }
 
+    /** Bracket declarado pelo jogador (1 a 5); 0 sem bracket ou com qualquer outro valor. */
+    private static int bracket(JsonObject msg) {
+        JsonElement e = msg.get("bracket");
+        if (e == null || !e.isJsonPrimitive() || !e.getAsJsonPrimitive().isNumber()) return 0;
+        double b = e.getAsDouble();
+        return b >= 1 && b <= 5 && b == Math.floor(b) ? (int) b : 0;
+    }
+
     private static String code(JsonObject msg) {
         JsonElement e = msg.get("code");
         return e == null || e.isJsonNull() ? "" : e.getAsString().strip().toUpperCase();
@@ -382,9 +398,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     // ---------- Partidas ----------
 
-    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config) {
+    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets) {
         leave(ch);
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
+        s.seats[0].bracket = config.commander() ? brackets.get(0) : 0;
+        if (config.commander()) s.aiBrackets(brackets.subList(1, brackets.size()));
         s.history(history);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
@@ -399,11 +417,12 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         s.start();
     }
 
-    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom, String chosen, String cover) {
+    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom, String chosen, String cover, int bracket) {
         String code = chosen == null ? null : freeCode(ch, chosen);
         leave(ch);
         Session s = Session.room(code != null ? code : newCode(4), ch, name, deck, config, publicRoom);
         s.seats[0].cover = Session.coverOf(deck, cover);
+        s.seats[0].bracket = config.commander() ? bracket : 0;
         s.history(history);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
@@ -411,7 +430,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deck.getName());
     }
 
-    private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover) {
+    private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover, int bracket) {
         Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
@@ -420,6 +439,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> each.deck == null).findFirst().orElseThrow();
         seat.bind(ch, name, deck);
         seat.cover = Session.coverOf(deck, cover);
+        seat.bracket = s.config.commander() ? bracket : 0;
         byChannel.put(ch, s);
         System.out.printf("Sala %s: %s entrou (%s)%n", code, name, deck.getName());
         for (Session.Seat each : s.seats) s.sendRoom(each);

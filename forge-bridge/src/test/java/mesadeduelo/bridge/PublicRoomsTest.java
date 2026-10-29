@@ -262,6 +262,48 @@ public class PublicRoomsTest {
         }
     }
 
+    @Test public void commanderSeatsShowTheirBracketInTheRoomAndTheList() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), caio = new EmbeddedChannel(), visitor = new EmbeddedChannel();
+        try {
+            rooms.onMessage(ana, "{\"type\":\"host\",\"name\":\"Ana\",\"deck\":\"commander-dragoes\",\"bracket\":3,\"visibility\":\"public\",\"config\":{\"format\":\"commander\",\"matchLength\":\"bo1\",\"playerCount\":4}}");
+            JsonObject room = next(ana, "room").getAsJsonObject("room");
+            assertEquals(3, room.getAsJsonArray("players").get(0).getAsJsonObject().get("bracket").getAsInt());
+            // Um valor fora de 1 a 5 vale como sem bracket.
+            rooms.onMessage(bia, "{\"type\":\"join\",\"code\":\"" + room.get("code").getAsString() + "\",\"name\":\"Bia\",\"deck\":\"commander-zumbis\",\"bracket\":9}");
+            room = next(bia, "room").getAsJsonObject("room");
+            assertFalse(room.getAsJsonArray("players").get(1).getAsJsonObject().has("bracket"));
+            rooms.onMessage(caio, "{\"type\":\"join\",\"code\":\"" + room.get("code").getAsString() + "\",\"name\":\"Caio\",\"deck\":\"commander-voadores\",\"bracket\":4}");
+            next(caio, "room");
+            assertEquals("[3,4]", list(rooms, visitor).get(0).getAsJsonObject().getAsJsonArray("brackets").toString());
+
+            // Fora do Commander, não há bracket nem na sala nem na lista.
+            EmbeddedChannel dani = new EmbeddedChannel();
+            try {
+                rooms.onMessage(dani, "{\"type\":\"host\",\"name\":\"Dani\",\"deck\":" + RED + ",\"bracket\":2,\"config\":" + CONFIG + "}");
+                assertFalse(next(dani, "room").getAsJsonObject("room").getAsJsonArray("players").get(0).getAsJsonObject().has("bracket"));
+            } finally { rooms.onMessage(dani, "{\"type\":\"leave\"}"); dani.finishAndReleaseAll(); }
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia, caio, visitor}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
+    @Test public void matchStateCarriesEachPlayersBracketAgainstTheComputer() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel();
+        try {
+            // Um oponente escolhido pela mesa (com o bracket junto) e um deck pronto pelo id (o bracket conferido dele).
+            String chosen = "{\"name\":\"Voadores\",\"bracket\":4,\"cards\":" + Decks.template("commander-voadores").get("cards") + ",\"commanders\":" + Decks.template("commander-voadores").get("commanders") + "}";
+            rooms.onMessage(ana, "{\"type\":\"start\",\"you\":\"commander-dragoes\",\"bracket\":3,\"opponents\":[" + chosen + ",\"commander-goblins\"],\"config\":{\"format\":\"commander\",\"matchLength\":\"bo1\",\"playerCount\":3}}");
+            JsonObject state = next(ana, "state");
+            while (!state.has("players") || state.getAsJsonArray("players").isEmpty()) state = next(ana, "state");
+            JsonArray players = state.getAsJsonArray("players");
+            assertEquals(3, players.get(0).getAsJsonObject().get("bracket").getAsInt());
+            assertEquals(4, players.get(1).getAsJsonObject().get("bracket").getAsInt());
+            assertEquals(Decks.template("commander-goblins").get("bracket").getAsInt(), players.get(2).getAsJsonObject().get("bracket").getAsInt());
+        } finally { rooms.onMessage(ana, "{\"type\":\"leave\"}"); ana.finishAndReleaseAll(); }
+    }
+
     @Test public void choosingTakenCodesCountsAsWrongGuesses() throws Exception {
         Rooms rooms = new Rooms();
         EmbeddedChannel ana = new EmbeddedChannel(), visitor = new EmbeddedChannel();

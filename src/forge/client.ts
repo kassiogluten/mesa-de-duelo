@@ -16,7 +16,8 @@ export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mai
 export type RoomVisibility = 'private' | 'public';
 /** Uma sala pública aberta, como aparece na lista da tela inicial (sem tokens nem decks). */
 /** started: a partida já começou e a sala aparece para assistir; spectators: quantos assistem (ausente em pontes antigas). */
-export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean; spectators?: number }
+/** brackets: no Commander, o bracket de cada lugar ocupado que tem um. */
+export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean; spectators?: number; brackets?: number[] }
 export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
@@ -153,6 +154,8 @@ export interface FPlayer {
   preventDamage?: number;
   /** Marcadores do jogador (POISON, ENERGY, EXPERIENCE, RAD, TICKET...), só os que existem. */
   counters?: Record<string, number>;
+  /** Bracket do deck de Commander do jogador (1 a 5); ausente fora do Commander ou sem bracket. */
+  bracket?: number;
   /** Quantas vezes o Anel já tentou o jogador; ausente se nunca tentou. */
   ringTempted?: number;
   /** É o monarca. */
@@ -272,8 +275,8 @@ export interface FRoom {
   rulesVersion?: string;
   engineVersion?: string;
   /** conceded: desistiu (pelo menu ou saindo da sala); a mesa tira o assento de vista. */
-  /** commander e cover (carta da arte do deck) só aparecem para o lobby; o resto do deck fica escondido. */
-  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string }[];
+  /** commander, cover (carta da arte do deck) e bracket (no Commander) só aparecem para o lobby; o resto do deck fica escondido. */
+  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string; bracket?: number }[];
   /** Nomes de quem assiste sem jogar. Ausente em pontes antigas. */
   spectators?: string[];
 }
@@ -415,9 +418,9 @@ export interface FTargeting extends FTargets {
 }
 
 export type ClientMessage =
-  | { type: 'start'; you: unknown; opponent: unknown; opponents?: unknown[]; config: MatchConfig }
-  | { type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string }
-  | { type: 'join'; code: string; name: string; deck: unknown; cover?: string }
+  | { type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig }
+  | { type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number }
+  | { type: 'join'; code: string; name: string; deck: unknown; cover?: string; bracket?: number }
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
   | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number }

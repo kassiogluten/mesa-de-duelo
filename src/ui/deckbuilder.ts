@@ -3,7 +3,8 @@ import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, 
 import { cardInfo, type Color } from '../cards';
 import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
-import { deckArt, deckColors, deckPriceHTML, groupedRows, statsHTML } from './deckStats';
+import { bracketBadgeHTML, deckArt, deckColors, deckPriceHTML, groupedRows, statsHTML } from './deckStats';
+import { BRACKET_DESCRIPTION, BRACKET_NAME, BRACKETS, bracketLabel, deckBracket, estimateBracket, isBracket, type Bracket } from '../brackets';
 import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
 import { cardCopyLimit, copiesInDeck, validateDeckLocal, type ServerDeckValidation } from './deckRules';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
@@ -68,6 +69,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let validationSeq = 0;
   let validationError = '';
   let importDraft = { name: '', text: '' };
+  /** Bracket que veio com o deck do link (Archidekt); vale só para Commander e nunca abaixo do mínimo. */
+  let importBracket: Bracket | undefined;
   let importBusy = false;
   let importError = '';
   let importSeq = 0;
@@ -97,6 +100,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     renderStatus(); opts.onChange();
   }
   function changed(deck: DeckData) {
+    // Uma carta que sobe o mínimo leva o bracket escolhido junto.
+    if (deck.bracket && deck.format === 'commander') { const min = estimateBracket(deck).min; if (min > deck.bracket) deck.bracket = min; }
     deck.unresolved = deck.unresolved?.filter(name => deckEntries(deck).some(entry => entry.name === name));
     deck.updatedAt = new Date().toISOString();
     validationSeq++; validation = null; validationError = ''; validating = false;
@@ -120,7 +125,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   function cardTile(deck: DeckData, personal: boolean) {
     const art = deckArt(deck), local = validateDeckLocal(deck, format), colors = deckColors(deck);
-    return `<article class="dw-deck"><button type="button" class="dw-cover" data-peek="${esc(deck.id)}" aria-label="Ver cartas de ${esc(deck.name)}">${art ? `<img src="${esc(art)}" alt="" loading="lazy">` : '<span aria-hidden="true">▱</span>'}${colors.length ? `<span class="dw-cover-colors">${colors.map(pip).join('')}</span>` : ''}<span class="dw-cover-tag">${personal ? 'Seu deck' : 'Deck pronto'}</span></button><div class="dw-deck-info"><h3>${esc(deck.name)}</h3>${commanderLineHTML(deck, ptName, 'dw-deck-commander')}<p><span>${totalDeckSize(deck)} cartas${deck.sideboard?.length ? ` · ${countEntries(deck.sideboard)} no sideboard` : ''}</span>${deckPriceHTML(deck, 'dw-deck-price', true)}</p><p class="dw-deck-valid ${local.status}">${formatLabel(deck.format ?? 'free')}${isConstructed(format) ? ` · ${local.status === 'valid' ? `Compatível com ${FORMAT_LABEL[format]}` : local.status === 'invalid' ? 'Precisa de ajustes' : 'Não verificado'}` : ''}</p><div class="dw-actions"><button type="button" class="dw-button ${personal ? 'primary' : ''}" data-select="${esc(deck.id)}" data-focus="deck:${esc(deck.id)}">${personal ? 'Editar deck' : 'Ver deck'}</button>${!personal ? `<button type="button" class="dw-button" data-copy="${esc(deck.id)}">Criar cópia</button>` : ''}</div></div></article>`;
+    return `<article class="dw-deck"><button type="button" class="dw-cover" data-peek="${esc(deck.id)}" aria-label="Ver cartas de ${esc(deck.name)}">${art ? `<img src="${esc(art)}" alt="" loading="lazy">` : '<span aria-hidden="true">▱</span>'}${colors.length ? `<span class="dw-cover-colors">${colors.map(pip).join('')}</span>` : ''}<span class="dw-cover-tag">${personal ? 'Seu deck' : 'Deck pronto'}</span></button><div class="dw-deck-info"><h3>${esc(deck.name)}</h3>${commanderLineHTML(deck, ptName, 'dw-deck-commander')}<p><span>${totalDeckSize(deck)} cartas${deck.sideboard?.length ? ` · ${countEntries(deck.sideboard)} no sideboard` : ''}</span>${deckPriceHTML(deck, 'dw-deck-price', true)}${bracketBadgeHTML(deck, 'dw-deck-bracket')}</p><p class="dw-deck-valid ${local.status}">${formatLabel(deck.format ?? 'free')}${isConstructed(format) ? ` · ${local.status === 'valid' ? `Compatível com ${FORMAT_LABEL[format]}` : local.status === 'invalid' ? 'Precisa de ajustes' : 'Não verificado'}` : ''}</p><div class="dw-actions"><button type="button" class="dw-button ${personal ? 'primary' : ''}" data-select="${esc(deck.id)}" data-focus="deck:${esc(deck.id)}">${personal ? 'Editar deck' : 'Ver deck'}</button>${!personal ? `<button type="button" class="dw-button" data-copy="${esc(deck.id)}">Criar cópia</button>` : ''}</div></div></article>`;
   }
   function renderLibrary() {
     const match = (d: DeckData) => matchesQuery(d, listQuery, ptName) && matchesColors(deckColors(d), libraryColors);
@@ -150,7 +155,14 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     return `<section class="dw-commander-zone" aria-label="Comandantes"><div class="dw-commander-cards">${commanders.map((entry, index) => {
       const sc = cacheGet(entry.name), info = sc ? cardInfo(sc) : null;
       return `<article class="dw-commander"><button type="button" class="dw-commander-portrait" data-inspect="${esc(entry.name)}" aria-label="Ler ${esc(info?.label ?? entry.name)}">${info?.image ? `<img src="${esc(info.image)}" alt="${esc(info.label)}">` : esc(entry.name)}</button><div><p class="dw-eyebrow">${index ? 'Segundo comandante' : 'Comandante'}</p><h2>${esc(info?.label ?? entry.name)}</h2>${!deck.builtin ? `<div class="dw-actions"><button type="button" class="dw-button" data-commander-slot="${index}" data-focus="commander:${index}">Trocar</button><button type="button" class="dw-button subtle" data-remove-commander="${index}" aria-label="Remover ${esc(info?.label ?? entry.name)}">Remover</button></div>` : ''}</div></article>`;
-    }).join('')}${!deck.builtin && commanders.length < 2 ? `<button type="button" class="${commanders.length ? 'dw-button subtle dw-commander-add' : 'dw-commander-empty'}" data-commander-slot="${commanders.length}" data-focus="commander:${commanders.length}">${commanders.length ? '+ Segundo comandante' : '<span>+</span><strong>Escolher comandante</strong><small>Sua estratégia começa aqui</small>'}</button>` : ''}</div><div class="dw-commander-summary"><p class="dw-eyebrow">Commander</p><strong>${totalDeckSize(deck)} <small>/ 100 cartas</small></strong><p>${COLORS.filter(c => identity.has(c)).map(pip).join('') || 'Identidade incolor'}</p><p class="dw-note">${deckSize(deck)} no deck · ${countEntries(commanders)} na zona de comando</p></div></section>`;
+    }).join('')}${!deck.builtin && commanders.length < 2 ? `<button type="button" class="${commanders.length ? 'dw-button subtle dw-commander-add' : 'dw-commander-empty'}" data-commander-slot="${commanders.length}" data-focus="commander:${commanders.length}">${commanders.length ? '+ Segundo comandante' : '<span>+</span><strong>Escolher comandante</strong><small>Sua estratégia começa aqui</small>'}</button>` : ''}</div><div class="dw-commander-summary"><p class="dw-eyebrow">Commander</p><strong>${totalDeckSize(deck)} <small>/ 100 cartas</small></strong><p>${COLORS.filter(c => identity.has(c)).map(pip).join('') || 'Identidade incolor'}</p><p class="dw-note">${deckSize(deck)} no deck · ${countEntries(commanders)} na zona de comando</p>${bracketHTML(deck)}</div></section>`;
+  }
+  /** O bracket do deck: o jogador escolhe a partir do mínimo das cartas, com o porquê do mínimo. */
+  function bracketHTML(deck: DeckData) {
+    const bracket = deckBracket(deck); if (!bracket) return '';
+    const estimate = estimateBracket(deck), weighs = estimate.reasons.filter(r => r.min > 1), informs = estimate.reasons.filter(r => r.min === 1);
+    const summary = estimate.min > 1 ? `Por que no mínimo ${bracketLabel(estimate.min)}?` : 'Nada nas cartas pede um bracket mais alto';
+    return `<div class="dw-bracket"><label class="dw-field">Bracket<select id="dwBracket" data-focus="deck-bracket" ${deck.builtin ? 'disabled' : ''}>${BRACKETS.map(b => `<option value="${b}" ${b === bracket ? 'selected' : ''} ${b < estimate.min ? 'disabled' : ''}>${b} · ${BRACKET_NAME[b]}</option>`).join('')}</select></label><p class="dw-note">${esc(BRACKET_DESCRIPTION[bracket])}</p>${estimate.reasons.length ? `<details class="dw-bracket-why"><summary>${summary}</summary><ul>${[...weighs.map(r => `<li><b>${bracketLabel(r.min)}</b> ${esc(r.text)}</li>`), ...informs.map(r => `<li class="dw-bracket-info">${esc(r.text)} <small>(não muda o bracket)</small></li>`)].join('')}</ul></details>` : `<p class="dw-note">${summary}.</p>`}</div>`;
   }
   function renderEdit() {
     const deck = current(); if (!deck) { view = 'library'; renderLibrary(); return; }
@@ -185,7 +197,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     importSeq++; importBusy = false; validationSeq++; validating = false; validation = null; validationError = '';
     importTarget = target ? structuredClone(target) : null;
     importMode = target && !deckEntries(target).length ? 'replace' : null;
-    importDraft = { name: target?.name ?? '', text: '' }; importReview = null; importError = ''; importAcknowledged = false; importCommanderOffer = null;
+    importDraft = { name: target?.name ?? '', text: '' }; importBracket = undefined; importReview = null; importError = ''; importAcknowledged = false; importCommanderOffer = null;
     view = 'import'; hideCardPreview(); render(); $('#dwImportText')?.focus();
   }
   function saveImport() {
@@ -278,6 +290,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       const deck = deckLinkToList(link.site, await opts.fetchDeckSource(link.site, link.id));
       if (seq !== importSeq || view !== 'import') return false;
       importDraft = { name: importDraft.name.trim() || deck.name, text: deck.text };
+      importBracket = deck.bracket;
       return true;
     } catch (error) {
       if (seq === importSeq) { importError = `Não foi possível importar pelo link. ${(error as Error).message}`; importBusy = false; renderImport(); }
@@ -303,6 +316,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
         return [...merged.values()];
       };
       const incoming: DeckData = { id: crypto.randomUUID(), name: source.name.trim() || 'Deck importado', format: importFormat, cards: normalize(parsed.main), sideboard: normalize(parsed.sideboard), commanders: normalize(parsed.commanders), importSource: source.text, unresolved: [...resolved.missing, ...resolved.ambiguous.map(a => a.name)], updatedAt: new Date().toISOString() };
+      if (importBracket && importFormat === 'commander') { const min = estimateBracket(incoming).min; incoming.bracket = importBracket > min ? importBracket : min; }
       importReview = { deck: importTarget ? applyDeckImport(importTarget, incoming, importMode ?? 'replace') : incoming, incoming, parsed, missing: resolved.missing, ambiguous: resolved.ambiguous };
       const first = incoming.cards[0], firstType = first ? cacheGet(first.name)?.type_line.split('//')[0] ?? '' : '';
       importCommanderOffer = importFormat === 'commander' && !incoming.commanders?.length && countEntries(incoming.cards) === 100
@@ -432,6 +446,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const input = e.target as HTMLInputElement;
     if (input.id === 'dwFormat' || input.id === 'dwImportFormat') { format = input.value as DeckFormat; opts.onFormatChange?.(format); if (view === 'library') renderLibrary(); else if (view === 'import' && !importReview) preserveRender(renderImport); }
     if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
+    if (input.id === 'dwBracket') { const deck = current(), value = Number(input.value); if (deck && !deck.builtin && isBracket(value)) { deck.bracket = value; changed(deck); preserveRender(renderEdit); } }
     if (input.id === 'dwSearchType') { searchType = input.value; void runSearch(); }
     if (input.name === 'importMode' && importTarget && importReview && (input.value === 'merge' || input.value === 'replace')) {
       importMode = input.value; validationSeq++; validating = false; validation = null; validationError = ''; importError = '';

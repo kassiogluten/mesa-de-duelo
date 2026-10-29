@@ -43,3 +43,11 @@ test('empty, private or broken answers give a clear error', () => {
   assert.throws(() => deckLinkToList('moxfield', '<html>'), /não é um deck/);
   assert.throws(() => deckLinkToList('archidekt', JSON.stringify({ name: 'x', cards: [] })), /vazio ou é privado/);
 });
+
+test('Archidekt brings the bracket the owner chose; Moxfield and an empty one do not', () => {
+  const cards = [{ quantity: 1, card: { oracleCard: { name: 'Krenko, Mob Boss' } }, categories: ['Commander'] }, { quantity: 99, card: { oracleCard: { name: 'Mountain' } }, categories: [] }];
+  assert.equal(deckLinkToList('archidekt', JSON.stringify({ name: 'Goblins', edhBracket: 3, cards })).bracket, 3);
+  assert.equal('bracket' in deckLinkToList('archidekt', JSON.stringify({ name: 'Goblins', edhBracket: null, cards })), false);
+  assert.equal('bracket' in deckLinkToList('archidekt', JSON.stringify({ name: 'Goblins', edhBracket: 9, cards })), false);
+  assert.equal('bracket' in deckLinkToList('moxfield', JSON.stringify({ name: 'x', edhBracket: 3, boards: { mainboard: { cards: { a: { quantity: 1, card: { name: 'Forest' } } } } } })), false);
+});

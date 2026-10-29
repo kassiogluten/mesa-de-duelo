@@ -25,6 +25,7 @@
 .seat-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .seat-tags span { padding: 2px 8px; border-radius: 999px; background: #f2b54c1f; color: var(--gold-light); font-size: 11px; font-weight: 600; }
 .seat-commander { color: var(--ink); font-size: 13px; overflow-wrap: anywhere; }
+.seat-bracket { align-self: flex-start; padding: 2px 8px; border: 1px solid #ffffff2e; border-radius: 999px; background: #ffffff0a; color: var(--ink); font-size: 11px; font-weight: 600; cursor: help; }
 .seat-state { color: var(--muted); font-size: 12px; }
 .room-seat.away .seat-state { color: #ffb3a3; }
 .room-seat.open .seat-state::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--gold); vertical-align: 1px; animation: pulse 1.2s ease-in-out infinite; }

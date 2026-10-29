@@ -2507,6 +2507,7 @@
     "name": "Triunfo das Fichas",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Emmara, Soul of the Accord",
@@ -2810,6 +2811,7 @@
     "name": "Destruição Dracônica",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Atarka, World Render",
@@ -3109,6 +3111,7 @@
     "name": "Perigo no Cemitério",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Gisa and Geralf",
@@ -3404,6 +3407,7 @@
     "name": "Primeiro Voo",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Isperia, Supreme Judge",
@@ -3703,6 +3707,7 @@
     "name": "Noite de Y'shtola",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Y'shtola, Night's Blessed",
@@ -4078,6 +4083,7 @@
     "name": "Banquete de Sangue",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Edgar Markov",
@@ -4441,6 +4447,7 @@
     "name": "Marcadores de Phyrexia",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Atraxa, Praetors' Voice",
@@ -4816,6 +4823,7 @@
     "name": "Horda Goblin",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Krenko, Mob Boss",
@@ -5111,6 +5119,7 @@
     "name": "Feitiços de Vivi",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Vivi Ornitier",
@@ -5466,6 +5475,7 @@
     "name": "Olho de Sauron",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Sauron, the Dark Lord",
@@ -5805,6 +5815,7 @@
     "name": "Coro dos Anjos",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Giada, Font of Hope",
@@ -6116,6 +6127,7 @@
     "name": "Estouro Jurássico",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Pantlaza, Sun-Favored",
@@ -6475,6 +6487,7 @@
     "name": "Lâminas Élficas",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Lathril, Blade of the Elves",
@@ -6814,6 +6827,7 @@
     "name": "Jardim de Bumbleflower",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Ms. Bumbleflower",
@@ -7185,6 +7199,7 @@
     "name": "Moinho de Hope",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Hope Estheim",
@@ -7524,6 +7539,7 @@
     "name": "Esgoto do Splinter",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Splinter, Radical Rat",
@@ -7887,6 +7903,7 @@
     "name": "Ninjas de Satoru",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Satoru Umezawa",
@@ -8230,6 +8247,7 @@
     "name": "Clã do Pé",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Super Shredder",
@@ -8549,6 +8567,7 @@
     "name": "Linhagem do Ur-Dragão",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "The Ur-Dragon",
@@ -8944,6 +8963,7 @@
     "name": "Hoste de Kaalia",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Kaalia of the Vast",
@@ -9303,6 +9323,7 @@
     "name": "Equilíbrio de Teval",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Teval, the Balanced Scale",
@@ -9678,6 +9699,7 @@
     "name": "Chamas de Azula",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Fire Lord Azula",
@@ -10041,6 +10063,7 @@
     "name": "Dobra de Metal da Toph",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Toph, the First Metalbender",
@@ -10404,6 +10427,7 @@
     "name": "Radiação do Homem-Mariposa",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "The Wise Mothman",
@@ -10775,6 +10799,7 @@
     "name": "Lendas de Jodah",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Jodah, the Unifier",
@@ -11158,6 +11183,7 @@
     "name": "Lâmina de Cloud",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Cloud, Ex-SOLDIER",
@@ -11537,6 +11563,7 @@
     "name": "Semente do Mundo",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Hearthhull, the Worldseed",
@@ -11900,6 +11927,7 @@
     "name": "Tormento de Nekusar",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Nekusar, the Mindrazer",
@@ -12259,6 +12287,7 @@
     "name": "Loucura de Kefka",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Kefka, Court Mage",
@@ -12634,6 +12663,7 @@
     "name": "Corte de Kenrith",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Kenrith, the Returned King",
@@ -13021,6 +13051,7 @@
     "name": "Sombra de Yuriko",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Yuriko, the Tiger's Shadow",
@@ -13376,6 +13407,7 @@
     "name": "Asa Negra de Sephiroth",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Sephiroth, Fabled SOLDIER",
@@ -13687,6 +13719,7 @@
     "name": "Duelo de Isshin",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Isshin, Two Heavens as One",
@@ -14046,6 +14079,7 @@
     "name": "Colheita de Baylen",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Baylen, the Haymaker",
@@ -14325,6 +14359,7 @@
     "name": "Pesadelo de Valgavoth",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Valgavoth, Harrower of Souls",
@@ -14680,6 +14715,7 @@
     "name": "Covil de Miirym",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Miirym, Sentinel Wyrm",
@@ -15039,6 +15075,7 @@
     "name": "Esquilos de Chatterfang",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Chatterfang, Squirrel General",
@@ -15394,6 +15431,7 @@
     "name": "Eldrazi de Ulalek",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Ulalek, Fused Atrocity",
@@ -15797,6 +15835,7 @@
     "name": "Punho do Escaravelho",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Hashaton, Scarab's Fist",
@@ -16172,6 +16211,7 @@
     "name": "Jornada do Condado",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Frodo, Adventurous Hobbit",
@@ -16539,6 +16579,7 @@
     "name": "Fogo de Ashling",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Ashling, the Limitless",
@@ -16922,6 +16963,7 @@
     "name": "Árvore de Esika",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Esika, God of the Tree",
@@ -17317,6 +17359,7 @@
     "name": "Melodia de Bello",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Bello, Bard of the Brambles",
@@ -17660,6 +17703,7 @@
     "name": "Maré de Hakbal",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Hakbal of the Surging Soul",
@@ -18003,6 +18047,7 @@
     "name": "Maré Sepulcral",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Muldrotha, the Gravetide",
@@ -18366,6 +18411,7 @@
     "name": "Cães e Gatos",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Rin and Seri, Inseparable",
@@ -18721,6 +18767,7 @@
     "name": "Presságio de Glarb",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Glarb, Calamity's Augur",
@@ -19092,6 +19139,7 @@
     "name": "Fúria Elemental de Animar",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Animar, Soul of Elements",
@@ -19459,6 +19507,7 @@
     "name": "Muralha de Arcades",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Arcades, the Strategist",
@@ -19818,6 +19867,7 @@
     "name": "Corte das Fadas",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Maralen, Fae Ascendant",
@@ -20181,6 +20231,7 @@
     "name": "Aliança de Aragorn",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Aragorn, the Uniter",
@@ -20556,6 +20607,7 @@
     "name": "Cassino do Sr. House",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Mr. House, President and CEO",
@@ -20919,6 +20971,7 @@
     "name": "Feitiçaria de Kuja",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Kuja, Genome Sorcerer",
@@ -21254,6 +21307,7 @@
     "name": "Fome de Ygra",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Ygra, Eater of All",
@@ -21597,6 +21651,7 @@
     "name": "Legião de César",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Caesar, Legion's Emperor",
@@ -21964,6 +22019,7 @@
     "name": "Malabares de Flubs",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Flubs, the Fool",
@@ -22323,6 +22379,7 @@
     "name": "Jardim Necroflor",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "The Necrobloom",
@@ -22714,6 +22771,7 @@
     "name": "Podridão de Wilhelt",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Wilhelt, the Rotcleaver",
@@ -23057,6 +23115,7 @@
     "name": "Vida Eterna de Oloro",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Oloro, Ageless Ascetic",
@@ -23424,6 +23483,7 @@
     "name": "Máquinas de Breya",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Breya, Etherium Shaper",
@@ -23819,6 +23879,7 @@
     "name": "Pacto de Teysa",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Teysa Karlov",
@@ -24166,6 +24227,7 @@
     "name": "Vazio de Zhulodok",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Zhulodok, Void Gorger",
@@ -24549,6 +24611,7 @@
     "name": "Tempestade de Zurgo",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Zurgo Stormrender",
@@ -24920,6 +24983,7 @@
     "name": "Brinquedos de Arabella",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Arabella, Abandoned Doll",
@@ -25259,6 +25323,7 @@
     "name": "Motor de Shorikai",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Shorikai, Genesis Engine",
@@ -25614,6 +25679,7 @@
     "name": "Coroa de Marchesa",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Queen Marchesa",
@@ -25981,6 +26047,7 @@
     "name": "Oficina de Urza",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Urza, Lord High Artificer",
@@ -26320,6 +26387,7 @@
     "name": "Esperança de Terra",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Terra, Herald of Hope",
@@ -26703,6 +26771,7 @@
     "name": "Sangue de K'rrik",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "K'rrik, Son of Yawgmoth",
@@ -27022,6 +27091,7 @@
     "name": "Engrenagens de Kilo",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Kilo, Apogee Mind",
@@ -27405,6 +27475,7 @@
     "name": "Mutação de Ghyrson",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Ghyrson Starn, Kelermorph",
@@ -27748,6 +27819,7 @@
     "name": "Cozinha de Ragost",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Ragost, Deft Gastronaut",
@@ -28095,6 +28167,7 @@
     "name": "Laboratório de Norman Osborn",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Norman Osborn",
@@ -28466,6 +28539,7 @@
     "name": "Maçã de Eriette",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Eriette of the Charmed Apple",
@@ -28809,6 +28883,7 @@
     "name": "Tripulação de N'ghathrod",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Captain N'ghathrod",
@@ -29156,6 +29231,7 @@
     "name": "Fadas de Alela",
     "builtin": true,
     "format": "commander",
+    "bracket": 3,
     "commanders": [
       {
         "name": "Alela, Cunning Conqueror",
@@ -29503,6 +29579,7 @@
     "name": "Bando de Magda",
     "builtin": true,
     "format": "commander",
+    "bracket": 4,
     "commanders": [
       {
         "name": "Magda, Brazen Outlaw",
@@ -29834,6 +29911,7 @@
     "name": "Segundos de Obeka",
     "builtin": true,
     "format": "commander",
+    "bracket": 2,
     "commanders": [
       {
         "name": "Obeka, Splitter of Seconds",

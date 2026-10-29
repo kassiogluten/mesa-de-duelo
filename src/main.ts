@@ -1,6 +1,7 @@
 import './style.css';
 import { setupPwa } from './ui/pwa';
 import { type DeckData } from './decks';
+import { deckBracket } from './brackets';
 import { mountDeckBuilder } from './ui/deckbuilder';
 import { ForgeClient, FORGE_URL, type FState, type MatchConfig, type ClientMessage } from './forge/client';
 import { createForgeTableView } from './ui/forgeTable';
@@ -144,8 +145,8 @@ const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
 const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onPlay: async (you, opp, config, opponents) => { void enterLandscape(); await startMatch(you, opp, config, opponents); },
   onFreePlay: (you, format) => { void enterLandscape(); leaveForge(); freeTable.open(you, format); show('free'); },
-  onHost: async (you, name, url, config, visibility, code) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), cover: deckCover(you), config, visibility, ...(code ? { code } : {}) }, config); },
-  onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you), cover: deckCover(you) }); },
+  onHost: async (you, name, url, config, visibility, code) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), cover: deckCover(you), bracket: deckBracket(you), config, visibility, ...(code ? { code } : {}) }, config); },
+  onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you), cover: deckCover(you), bracket: deckBracket(you) }); },
   onWatch: async (code, name, url) => { void enterLandscape(); await startWatching(url, code, name); },
   onValidate: async (deck, format, url) => (await requireForge(url)).validateDeck(forgeDeck(deck), format),
   onLookup: async (code, url) => (await requireForge(url)).lookupRoom(code),
@@ -171,6 +172,8 @@ addEventListener('mesa:decks-sincronizados', () => { lobby.refresh(); builder.re
 iniciarSincronia();
 
 const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [] });
+/** Deck escolhido para o computador, com o bracket junto para a mesa mostrar na partida. */
+const aiDeck = (d: DeckData) => ({ ...forgeDeck(d), bracket: deckBracket(d) });
 async function requireForge(url: string): Promise<ForgeClient> {
   const client = await connectForge(url, null);
   if (!client) throw new Error('Não foi possível conectar ao servidor de jogo. Confira a conexão e tente novamente.');
@@ -306,7 +309,7 @@ async function startMatch(you: DeckData, opp: DeckData | null, config: MatchConf
   const client = await requireForge(FORGE_URL);
   lastMatch = [you, opp, config, opponents];
   lobby.setStatus('Preparando a mesa…');
-  await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), opponent: opp ? forgeDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? forgeDeck(d) : null) } : {}), config});
+  await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config});
 }
 async function startNetMatch(you: DeckData, url: string, message: ClientMessage, config?: MatchConfig) {
   const client = await requireForge(url);

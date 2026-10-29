@@ -3,6 +3,8 @@ import { FORMAT_LABEL, type DeckFormat } from '../decks';
 import type { FRoom, RoomSaying } from '../forge/client';
 import { cacheGet, fetchByNames } from '../scryfall';
 import { esc } from './cardtext';
+import { bracketLabel, isBracket } from '../brackets';
+import { bracketTitle } from './deckStats';
 import './roomLobby.css';
 import { undoBadgeHTML } from './undo';
 import './undo.css';
@@ -77,7 +79,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
       const art = artOf(player.cover), me = seat === r.seat, bubble = said.get(seat);
       const tags = [seat === 0 ? 'Anfitrião' : '', me ? 'Você' : ''].filter(Boolean);
       const commander = player.commander?.split(' + ').map(ptName).join(' + ');
-      return `<li class="room-seat${me ? ' me' : ''}${player.connected ? '' : ' away'}"><span class="seat-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''} aria-hidden="true"></span><span class="seat-info">${tags.length ? `<span class="seat-tags">${tags.map(t => `<span>${t}</span>`).join('')}</span>` : ''}<strong class="seat-name">${esc(player.name)}</strong>${commander ? `<span class="seat-commander">${esc(commander)}</span>` : ''}<span class="seat-state">${player.connected ? 'Na sala' : 'Reconectando…'}</span></span>${bubble ? `<span class="seat-bubble">${esc(SAYINGS.find(([k]) => k === bubble.key)?.[1] ?? '')}</span>` : ''}</li>`;
+      return `<li class="room-seat${me ? ' me' : ''}${player.connected ? '' : ' away'}"><span class="seat-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''} aria-hidden="true"></span><span class="seat-info">${tags.length ? `<span class="seat-tags">${tags.map(t => `<span>${t}</span>`).join('')}</span>` : ''}<strong class="seat-name">${esc(player.name)}</strong>${commander ? `<span class="seat-commander">${esc(commander)}</span>` : ''}${isBracket(player.bracket) ? `<span class="deck-bracket seat-bracket" title="${esc(bracketTitle(player.bracket))}">${bracketLabel(player.bracket)}</span>` : ''}<span class="seat-state">${player.connected ? 'Na sala' : 'Reconectando…'}</span></span>${bubble ? `<span class="seat-bubble">${esc(SAYINGS.find(([k]) => k === bubble.key)?.[1] ?? '')}</span>` : ''}</li>`;
     }).join('');
   }
   function render(next: FRoom | null) {

@@ -279,6 +279,7 @@ a { color: var(--gold); }
 @keyframes life-pulse-down { 40% { box-shadow: 0 0 0 3px #d9563f88, 0 0 22px #ff6a4f99; } }
 @media (prefers-reduced-motion: reduce) { .avatar.life-up .portrait, .avatar.life-down .portrait { animation: none; } }
 .pname { margin-top: 2px; font-size: clamp(11px, 1.5vh, 14px); color: var(--muted); font-weight: 600; }
+.pbracket { display: inline-block; margin-left: 5px; padding: 0 5px; border: 1px solid #ffffff38; border-radius: 999px; background: #ffffff10; color: var(--ink); font-size: .8em; font-weight: 700; line-height: 1.45; vertical-align: 1px; letter-spacing: 0; cursor: help; }
 .emblems { position: absolute; left: calc(100% + 6px); bottom: 0; display: flex; gap: 4px; }
 .emblem {
   width: 4.2vh; height: 4.2vh; min-width: 28px; min-height: 28px; border-radius: 50%; padding: 2px; cursor: zoom-in;
@@ -651,6 +652,7 @@ a { color: var(--gold); }
 .tile-meta .tile-price { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 12px }
 /* Dica do preço do deck: abre acima da linha do preço, na largura dela, ao passar o mouse ou focar o valor. */
 .deck-price { cursor: help; }
+.tile-meta .deck-bracket { cursor: help; }
 .deck-price:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 3px; }
 .deck-price-tip {
   position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 5; opacity: 0; visibility: hidden; transform: translateY(4px); pointer-events: none;

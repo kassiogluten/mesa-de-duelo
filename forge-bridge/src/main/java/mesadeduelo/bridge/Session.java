@@ -112,6 +112,8 @@ final class Session {
     private volatile MatchJournal journal;
     /** Só no modo de repetição: nomes da IA e o retrato a aplicar no começo do jogo (veja {@link Replay}). */
     private volatile List<String> aiNames;
+    /** Bracket do deck de cada computador, na ordem dos decks (0 sem bracket); vazio fora do Commander. */
+    private volatile List<Integer> aiBrackets = List.of();
     private volatile java.util.function.Consumer<forge.game.Game> startHook;
 
     /** Votação aberta para pular o turno de quem caiu, e os assentos com o turno já aprovado para pular. */
@@ -172,6 +174,19 @@ final class Session {
     }
 
     void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
+    void aiBrackets(List<Integer> brackets) { aiBrackets = List.copyOf(brackets); }
+
+    /** O bracket de cada jogador no estado, pela ordem em que entraram no jogo: os assentos e depois os computadores. */
+    private void addBrackets(JsonObject state) {
+        if (!config.commander() || !state.has("players")) return;
+        for (JsonElement e : state.getAsJsonArray("players")) {
+            JsonObject p = e.getAsJsonObject();
+            if (!p.has("seat")) continue;
+            int i = p.get("seat").getAsInt(), ai = i - seats.length;
+            int bracket = i < seats.length ? seats[i].bracket : ai < aiBrackets.size() ? aiBrackets.get(ai) : 0;
+            if (bracket > 0) p.addProperty("bracket", bracket);
+        }
+    }
 
     boolean isRoom() { return room; }
     boolean isPublic() { return room && publicRoom; }
@@ -1509,6 +1524,7 @@ final class Session {
         try {
             state = StateJson.game(gv, -2, m.getGame());
             events.addTurnTimes(state);
+            addBrackets(state);
             // O jogador escolhido; sem escolha (ou se ele não está mais no jogo), o anfitrião.
             int you = -1, host = seats[0].me == null ? -1 : seats[0].me.getId();
             for (PlayerView p : gv.getPlayers()) if (p.getId() == w.player) you = p.getId();
@@ -1639,6 +1655,7 @@ final class Session {
                 PlayerView p = seat.me;
                 state = StateJson.game(gv, p == null ? -2 : p.getId(), m.getGame());
                 events.addTurnTimes(state);
+                addBrackets(state);
                 state.addProperty("you", p == null ? -1 : p.getId());
                 boolean spectating = seat.eliminated();
                 state.addProperty("spectating", spectating);
@@ -1820,6 +1837,7 @@ final class Session {
             if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
             String cover = commanders.isEmpty() ? s.cover : commanders.get(0);
             if (cover != null) p.addProperty("cover", cover);
+            if (s.bracket > 0) p.addProperty("bracket", s.bracket);
             ps.add(p);
         }
         r.add("players", ps);
@@ -1843,7 +1861,7 @@ final class Session {
 
     /**
      * Uma linha da lista de salas públicas. Só o que a mesa mostra a quem ainda não entrou: o código
-     * (que já é público nesta sala), o anfitrião, o formato e os lugares ocupados. Nada de tokens ou decks.
+     * (que já é público nesta sala), o anfitrião, o formato, os lugares ocupados e, no Commander, os brackets. Nada de tokens ou decks.
      */
     JsonObject listingJson() {
         JsonObject r = new JsonObject();
@@ -1852,8 +1870,11 @@ final class Session {
         r.add("config", config.json());
         r.addProperty("capacity", config.playerCount());
         int players = 0;
-        for (Seat seat : seats) if (seat.deck != null) players++;
+        JsonArray brackets = new JsonArray();
+        for (Seat seat : seats) if (seat.deck != null) { players++; if (seat.bracket > 0) brackets.add(seat.bracket); }
         r.addProperty("players", players);
+        // No Commander, o bracket de cada lugar ocupado, para quem procura uma mesa de força parecida.
+        if (!brackets.isEmpty()) r.add("brackets", brackets);
         r.addProperty("started", started());
         r.addProperty("spectators", watchers.size());
         return r;
@@ -1918,6 +1939,8 @@ final class Session {
         volatile boolean departed;
         /** Carta cuja arte representa o deck no lobby (sem comandante); null sem capa. */
         volatile String cover;
+        /** Bracket que o jogador deu ao deck de Commander (1 a 5); 0 sem bracket. */
+        volatile int bracket;
         /** Última mensagem pronta no lobby, para ninguém encher a sala de balões. */
         volatile long saidAt;
         /** Desistiu deste jogo (no Commander com vários jogadores, a mesa tira o assento de vista). */

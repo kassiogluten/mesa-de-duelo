@@ -50,6 +50,8 @@ import './phaseHud.css';
 import './gameOptions.css';
 import './decisionPrompt.css';
 import { tablePlayers, validAttackSelection, legalAttackTargets, legalAttackGroupTargets, availableAttackTargets, attackScope, AttackQueue, legalAttackAllTargets, attackAllAction, canPlayCommander, type Defender } from './commanderTable';
+import { bracketLabel, isBracket } from '../brackets';
+import { bracketTitle } from './deckStats';
 import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
@@ -1224,12 +1226,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const art = portraits[idx];
     const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
     const forecast = s.forecast?.find(f => f.player === p.id);
-    return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}, ${p.life} de vida${playerCountersText(p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
+    return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
       <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
       <div class="life">${p.life}</div>
       ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
       ${playerCounters(p)}
-      <div class="pname">${esc(p.name)}</div>
+      <div class="pname">${esc(p.name)}${isBracket(p.bracket) ? `<span class="pbracket" title="${esc(bracketTitle(p.bracket))}" aria-hidden="true">B${p.bracket}</span>` : ''}</div>
       ${emblems(p)}
       ${p.eliminated ? '<span class="seat-eliminated">Eliminado</span>' : ''}
       ${offline ? '<div class="offline">desconectado</div>' : ''}

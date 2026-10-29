@@ -507,7 +507,7 @@ Ao escolher um formato, só os decks prontos são filtrados; os decks do própri
 
 A decidir antes de começar: se o deck de formato "Livre" aparece em todos os formatos; se o deck que existe no formato mas está incompleto ou inválido some da lista ou aparece marcado.
 
-## 35. Bracket de cada deck
+## 35. Bracket de cada deck ✅
 
 Registrar o bracket (a faixa de poder oficial do Commander: 1 Exibição, 2 Básico, 3 Melhorado, 4 Otimizado, 5 cEDH) de cada deck de Commander, tanto dos decks prontos quanto dos decks do jogador, para combinar partidas de força parecida. Só vale para Commander. Levantamento feito em 27/10/2026:
 
@@ -535,12 +535,13 @@ Registrar o bracket (a faixa de poder oficial do Commander: 1 Exibição, 2 Bás
 - O Archidekt fica de fora como fonte das listas: os sinais por carta (`gameChanger`, `extraTurns`, `massLandDenial`, `tutor`, `twoCardComboIds`) só vêm dentro de um deck, sem uma lista avulsa. Serve só para trazer o `edhBracket` escolhido pelo dono na importação por link.
 - O Commander Spellbook também tem uma rota que estima o bracket de um deck (`/estimate-bracket`), útil para conferir o cálculo local nos decks prontos, não para usar a cada deck.
 
-- [ ] Script para alimentar as listas (Scryfall e Commander Spellbook) em arquivos do código; depois disso, ajustes à mão.
-- [ ] Cálculo local do bracket mínimo com todos os sinais acima, explicando o porquê ("3 Game Changers: …; turno extra: …").
-- [ ] Bracket dos decks prontos de Commander em `shared/starter-decks.json`, conferido à mão, com o selo na escolha de deck e na biblioteca.
-- [ ] Bracket dos decks do jogador guardado no dispositivo: o jogador escolhe a partir do mínimo, nunca abaixo; se o deck ganhar uma carta que sobe o mínimo, o bracket sobe junto.
-- [ ] Na importação por link do Archidekt, trazer o `edhBracket` do deck quando vier preenchido (respeitando o mínimo calculado).
-- [ ] Mostrar o bracket de cada lugar na sala de espera e, talvez, filtrar a busca de salas e a escolha de deck por bracket.
+- [x] Script para alimentar as listas (Scryfall e Commander Spellbook) em arquivos do código; depois disso, ajustes à mão (0.72.0: `update-commander-brackets.py` → `shared/commander-brackets.json`, com os falsos positivos de tutores e de destruição de terrenos tirados à mão no próprio script).
+- [x] Cálculo local do bracket mínimo com todos os sinais acima, explicando o porquê ("3 Game Changers: …; turno extra: …") (0.72.0, `src/brackets.ts`): 1 a 3 Game Changers pedem 3, 4 ou mais pedem 4; destruição de terrenos em massa pede 4; 3 ou mais cartas de turno extra (dá para encadear) pedem 4, menos que isso só informa; combos pelo `bracketTag` (E 1, C e O 2, P e S 3, R 4). Os tutores só informam: a Wizards os tirou das regras de bracket em 21/10/2025 (os mais fortes já são Game Changers).
+- [x] Bracket dos decks prontos de Commander em `shared/starter-decks.json`, conferido à mão, com o selo na escolha de deck e na biblioteca (0.72.0: o mínimo calculado, pelo menos 2; conferido contra o `/estimate-bracket` do Commander Spellbook, que subiu Banquete de Sangue e Kilo para 4 e Estouro Jurássico para 3 por combos fora dos 100 mais usados).
+- [x] Bracket dos decks do jogador guardado no dispositivo: o jogador escolhe a partir do mínimo, nunca abaixo; se o deck ganhar uma carta que sobe o mínimo, o bracket sobe junto (0.72.0: só o escolhido fica guardado no deck; o mínimo é recalculado na hora, todo local e sem consulta a sites, e sem escolha o deck fica em 2 ou no mínimo, se for maior).
+- [x] Na importação por link do Archidekt, trazer o `edhBracket` do deck quando vier preenchido (respeitando o mínimo calculado).
+- [x] Mostrar o bracket de cada lugar na sala de espera (0.72.0, também na lista de salas públicas: "Bracket 3" ou "Brackets 2 a 4", e dentro da partida, no selo "B3" de cada jogador, inclusive contra o computador).
+- [ ] Filtrar a busca de salas e a escolha de deck por bracket (deixado para depois).
 
 Decks do jogador já salvos: o bracket é calculado na primeira abertura depois da atualização e guardado no dispositivo; dali em diante, só quando as cartas mudarem.
 

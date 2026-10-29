@@ -2,6 +2,7 @@ import { cardInfo, type CardInfo, type CardType, type Color } from '../cards';
 import { cacheGet } from '../scryfall';
 import { countEntries, deckPriceDescription, deckPriceText, type DeckData, type DeckEntry } from '../decks';
 import { esc } from './cardtext';
+import { BRACKET_DESCRIPTION, BRACKET_NAME, bracketLabel, deckBracket, type Bracket } from '../brackets';
 
 export const CURVE = ['0', '1', '2', '3', '4', '5', '6+'];
 export const CARD_GROUPS: [CardType, string][] = [
@@ -53,6 +54,14 @@ export function statsHTML(deck: DeckData): string {
     <p class="ds-average">Custo médio${partial ? ' parcial' : ''}<b>${stats.average === null ? '–' : stats.average.toFixed(1).replace('.', ',')}</b><small>Sem terrenos</small></p>
     ${partial ? `<p class="ds-incomplete" role="status">Dados pendentes de ${stats.unknown} ${stats.unknown === 1 ? 'carta' : 'cartas'}. As estatísticas estão incompletas.</p>` : ''}
   </div>`;
+}
+
+/** O que o bracket quer dizer, para a dica do selo. */
+export const bracketTitle = (b: Bracket) => `${bracketLabel(b)} · ${BRACKET_NAME[b]}: ${BRACKET_DESCRIPTION[b]}`;
+/** Selo "Bracket 3" do deck de Commander; vazio nos outros formatos. */
+export function bracketBadgeHTML(deck: DeckData, className: string) {
+  const bracket = deckBracket(deck);
+  return bracket ? `<span class="deck-bracket ${className}" title="${esc(bracketTitle(bracket))}">${bracketLabel(bracket)}</span>` : '';
 }
 
 /** Preço do deck com a dica explicando o valor. Fora de um botão, o valor recebe foco para a dica abrir no toque e no teclado. */

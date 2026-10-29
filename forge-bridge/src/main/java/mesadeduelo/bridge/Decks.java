@@ -33,6 +33,13 @@ final class Decks {
         return result.deck();
     }
 
+    /** Bracket conferido à mão de um deck pronto (pelo nome, como o sorteio o monta); 0 se não houver. */
+    static int bracket(Deck deck) {
+        for (JsonObject o : LISTS.values())
+            if (o.has("bracket") && o.get("name").getAsString().equals(deck.getName())) return o.get("bracket").getAsInt();
+        return 0;
+    }
+
     static Deck random(String format) {
         var valid = LISTS.values().stream()
             .filter(o -> "free".equals(format) ? !"commander".equals(o.has("format") ? o.get("format").getAsString() : "free") : format.equals(o.has("format") ? o.get("format").getAsString() : "free"))

@@ -60,3 +60,13 @@ test('a room created with Desfazer says so in the list, also for screen readers'
   assert.match(html, /em andamento, com Desfazer ligado"/);
   assert.doesNotMatch(publicRoomsHTML([room()]), /Desfazer/);
 });
+
+test('Commander rooms show the brackets of the seated players', () => {
+  const commander = { format: 'commander', matchLength: 'bo1', playerCount: 4 };
+  assert.match(publicRoomsHTML([room({ config: commander, capacity: 4, brackets: [3] })]), /<small>Commander · Bracket 3 · 1\/4 jogadores<\/small>/);
+  const mixed = publicRoomsHTML([room({ config: commander, capacity: 4, players: 2, brackets: [4, 2] })]);
+  assert.match(mixed, /Commander · Brackets 2 a 4 · 2\/4 jogadores/);
+  assert.match(mixed, /aria-label="Entrar na sala de Ana: Commander, Brackets 2 a 4, 2 de 4 jogadores"/);
+  assert.match(publicRoomsHTML([room({ config: commander, started: true, players: 4, brackets: [3, 3] })]), /Commander · Bracket 3 · 4 jogadores/);
+  assert.doesNotMatch(publicRoomsHTML([room()]), /Bracket/);
+});

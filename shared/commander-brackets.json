@@ -1,0 +1,944 @@
+{
+ "asOf": "2026-10-29",
+ "sources": {
+  "gameChangers": "scryfall: is:gamechanger",
+  "massLandDenial": "scryfall: otag:mass-land-denial",
+  "extraTurns": "scryfall: otag:extra-turn",
+  "tutors": "scryfall: otag:tutor mv<=3 o:\"search your library for a card\"",
+  "combos": "https://backend.commanderspellbook.com/variants/?q=cards%3D2+legal%3Acommander&ordering=-popularity&limit=100"
+ },
+ "gameChangers": [
+  "Ad Nauseam",
+  "Ancient Tomb",
+  "Aura Shards",
+  "Biorhythm",
+  "Bolas's Citadel",
+  "Braids, Cabal Minion",
+  "Chrome Mox",
+  "Coalition Victory",
+  "Consecrated Sphinx",
+  "Crop Rotation",
+  "Cyclonic Rift",
+  "Demonic Tutor",
+  "Drannith Magistrate",
+  "Enlightened Tutor",
+  "Farewell",
+  "Field of the Dead",
+  "Fierce Guardianship",
+  "Force of Will",
+  "Gaea's Cradle",
+  "Gamble",
+  "Gifts Ungiven",
+  "Glacial Chasm",
+  "Grand Arbiter Augustin IV",
+  "Grim Monolith",
+  "Humility",
+  "Imperial Seal",
+  "Intuition",
+  "Jeska's Will",
+  "Lion's Eye Diamond",
+  "Mana Vault",
+  "Mishra's Workshop",
+  "Mox Diamond",
+  "Mystical Tutor",
+  "Narset, Parter of Veils",
+  "Natural Order",
+  "Necropotence",
+  "Notion Thief",
+  "Opposition Agent",
+  "Orcish Bowmasters",
+  "Panoptic Mirror",
+  "Rhystic Study",
+  "Seedborn Muse",
+  "Serra's Sanctum",
+  "Smothering Tithe",
+  "Survival of the Fittest",
+  "Teferi's Protection",
+  "Tergrid, God of Fright // Tergrid's Lantern",
+  "Thassa's Oracle",
+  "The One Ring",
+  "The Tabernacle at Pendrell Vale",
+  "Underworld Breach",
+  "Vampiric Tutor",
+  "Worldly Tutor"
+ ],
+ "massLandDenial": [
+  "Acid Rain",
+  "Apocalypse",
+  "Armageddon",
+  "Avalanche",
+  "Back to Basics",
+  "Balancing Act",
+  "Bearer of the Heavens",
+  "Bend or Break",
+  "Blood Moon",
+  "Boil",
+  "Boiling Seas",
+  "Boom // Bust",
+  "Break the Ice",
+  "Burning Sands",
+  "Cataclysm",
+  "Catastrophe",
+  "Chaos Moon",
+  "Choke",
+  "Cleansing",
+  "Contamination",
+  "Conversion",
+  "Curse of Marit Lage",
+  "Curse of the Cabal",
+  "Death Cloud",
+  "Decree of Annihilation",
+  "Desolation",
+  "Desolation Angel",
+  "Destructive Flow",
+  "Devastating Dreams",
+  "Devastation",
+  "Dimensional Breach",
+  "Drought",
+  "Earthlink",
+  "Epicenter",
+  "Equipoise",
+  "Exhaustion",
+  "Fall of the Thran",
+  "Flashfires",
+  "Gilt-Leaf Archdruid",
+  "Glaciers",
+  "Global Ruin",
+  "Harbinger of the Seas",
+  "Hokori, Dust Drinker",
+  "Illusionary Terrain",
+  "Impending Disaster",
+  "Infernal Darkness",
+  "Jokulhaups",
+  "Keldon Firebombers",
+  "Land Equilibrium",
+  "Magus of the Balance",
+  "Magus of the Moon",
+  "Mana Breach",
+  "Mana Vortex",
+  "Mist of Stagnation",
+  "Myojin of Infinite Rage",
+  "Naked Singularity",
+  "Nature's Wrath",
+  "Obliterate",
+  "Omen of Fire",
+  "Overburden",
+  "Pox Plague",
+  "Price of Glory",
+  "Quicksilver Fountain",
+  "Raiding Party",
+  "Ravages of War",
+  "Razia's Purification",
+  "Razing Snidd",
+  "Reality Twist",
+  "Realm Razer",
+  "Restore Balance",
+  "Rising Waters",
+  "Ritual of Subdual",
+  "Ruination",
+  "Rumbling Crescendo",
+  "Shivan Harvest",
+  "Soulscour",
+  "Spelltithe Enforcer",
+  "Stasis",
+  "Static Orb",
+  "Stench of Evil",
+  "Stoneshaker Shaman",
+  "Storm Cauldron",
+  "Sunder",
+  "Tainted Aether",
+  "Tectonic Break",
+  "Temporal Distortion",
+  "Thieves' Auction",
+  "Thoughts of Ruin",
+  "Tsabo's Web",
+  "Tsunami",
+  "Volcanic Awakening",
+  "Wake of Destruction",
+  "Whims of the Fates",
+  "Wildfire",
+  "Winter Moon",
+  "Winter Orb",
+  "Winter's Night",
+  "Worldfire",
+  "Worldpurge",
+  "Worldslayer",
+  "Zhao, the Moon Slayer"
+ ],
+ "extraTurns": [
+  "Alchemist's Gambit",
+  "Alrund's Epiphany",
+  "Beacon of Tomorrows",
+  "Capture of Jingzhou",
+  "Chance for Glory",
+  "Emrakul, the Promised End",
+  "Eon Frolicker",
+  "Expropriate",
+  "Final Fortune",
+  "Gonti's Aether Heart",
+  "Ichormoon Gauntlet",
+  "Kang the Conqueror",
+  "Karn's Temporal Sundering",
+  "Last Chance",
+  "Lighthouse Chronologist",
+  "Lost Isle Calling",
+  "Magistrate's Scepter",
+  "Magosi, the Waterveil",
+  "Medomai the Ageless",
+  "Mu Yanling",
+  "Nexus of Fate",
+  "Notorious Throng",
+  "Part the Waterveil",
+  "Perch Protection",
+  "Plea for Power",
+  "Ral Zarek",
+  "Regenerations Restored",
+  "Rise of the Eldrazi",
+  "Sage of Hours",
+  "Savor the Moment",
+  "Search the City",
+  "Second Chance",
+  "Seedtime",
+  "Stitch in Time",
+  "Teferi, Master of Time",
+  "Teferi, Timebender",
+  "Temporal Extortion",
+  "Temporal Manipulation",
+  "Temporal Mastery",
+  "Temporal Trespass",
+  "The Legend of Kuruk // Avatar Kuruk",
+  "Time Sieve",
+  "Time Stretch",
+  "Time Warp",
+  "Timesifter",
+  "Timestream Navigator",
+  "Twice Upon a Time // Unlikely Meeting",
+  "Ugin's Nexus",
+  "Ultimecia, Time Sorceress // Ultimecia, Omnipotent",
+  "Walk the Aeons",
+  "Wanderwine Prophets",
+  "Warrior's Oath",
+  "Wormfang Manta"
+ ],
+ "tutors": [
+  "Case of the Stashed Skeleton",
+  "Cruel Tutor",
+  "Demonic Bargain",
+  "Demonic Tutor",
+  "Diabolic Intent",
+  "Dig Up",
+  "Entomb",
+  "Gamble",
+  "Grim Tutor",
+  "Imperial Seal",
+  "Infernal Tutor",
+  "Insatiable Avarice",
+  "Long-Term Plans",
+  "Profane Tutor",
+  "Rhystic Tutor",
+  "Vampiric Tutor",
+  "Wishclaw Talisman"
+ ],
+ "combos": [
+  {
+   "cards": [
+    "Exquisite Blood",
+    "Sanguine Bond"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Demonic Consultation",
+    "Thassa's Oracle"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Tainted Pact",
+    "Thassa's Oracle"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Exquisite Blood",
+    "Vito, Thorn of the Dusk Rose"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Dramatic Reversal",
+    "Isochron Scepter"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bloodthirsty Conqueror",
+    "Vito, Thorn of the Dusk Rose"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bloodthirsty Conqueror",
+    "Sanguine Bond"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Gravecrawler",
+    "Phyrexian Altar"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Enduring Tenacity",
+    "Exquisite Blood"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Dualcaster Mage",
+    "Twinflame"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Curiosity",
+    "Niv-Mizzet, Parun"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Hullbreaker Horror",
+    "Mox Amber"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Basalt Monolith",
+    "Forsaken Monument"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Bloodthirsty Conqueror",
+    "Enduring Tenacity"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Chatterfang, Squirrel General",
+    "Pitiless Plunderer"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bloodchief Ascension",
+    "Mindcrank"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Exquisite Blood",
+    "Marauding Blight-Priest"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Nuka-Cola Vending Machine",
+    "Peregrin Took"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Aetherflux Reservoir",
+    "Exquisite Blood"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Dakmor Salvage",
+    "The Gitrog Monster"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bruvac the Grandiloquent",
+    "Maddening Cacophony"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Felidar Guardian",
+    "Restoration Angel"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Basalt Monolith",
+    "Rings of Brighthearth"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Heliod, Sun-Crowned",
+    "Walking Ballista"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Peer into the Abyss",
+    "Sheoldred, the Apocalypse"
+   ],
+   "tag": "O"
+  },
+  {
+   "cards": [
+    "Dualcaster Mage",
+    "Molten Duplication"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Niv-Mizzet, Parun",
+    "Niv-Mizzet, Visionary"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bloodthirsty Conqueror",
+    "Marauding Blight-Priest"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Deadeye Navigator",
+    "Peregrine Drake"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Aggravated Assault",
+    "The Reaver Cleaver"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Basalt Monolith",
+    "Kinnan, Bonder Prodigy"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Orcish Bowmasters",
+    "Peer into the Abyss"
+   ],
+   "tag": "P"
+  },
+  {
+   "cards": [
+    "Blasphemous Act",
+    "Repercussion"
+   ],
+   "tag": "C"
+  },
+  {
+   "cards": [
+    "Niv-Mizzet, Parun",
+    "Ophidian Eye"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Jeska's Will",
+    "Reiterate"
+   ],
+   "tag": "P"
+  },
+  {
+   "cards": [
+    "Aetherflux Reservoir",
+    "Bloodthirsty Conqueror"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Sol Ring",
+    "Tidespout Tyrant"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Priest of Titania",
+    "Staff of Domination"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Aggravated Assault",
+    "Sword of Feast and Famine"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Peer into the Abyss",
+    "Underworld Dreams"
+   ],
+   "tag": "O"
+  },
+  {
+   "cards": [
+    "Food Chain",
+    "Squee, the Immortal"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Blowfly Infestation",
+    "Nest of Scarabs"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Niv-Mizzet, Parun",
+    "Tandem Lookout"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Experimental Confectioner",
+    "Peregrin Took"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Elvish Archdruid",
+    "Staff of Domination"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Blowfly Infestation",
+    "Flourishing Defenses"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Blowfly Infestation",
+    "Hapatra, Vizier of Poisons"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Marwyn, the Nurturer",
+    "Staff of Domination"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Aurelia, the Warleader",
+    "Helm of the Host"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Dualcaster Mage",
+    "Saw in Half"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Peer into the Abyss",
+    "Psychosis Crawler"
+   ],
+   "tag": "P"
+  },
+  {
+   "cards": [
+    "Aggravated Assault",
+    "Ancient Copper Dragon"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Mana Geyser",
+    "Reiterate"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Vorinclex, Monstrous Raider",
+    "Vraska, Betrayal's Sting"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Ivy Lane Denizen",
+    "Scurry Oak"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Circle of Dreams Druid",
+    "Staff of Domination"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Ashaya, Soul of the Wild",
+    "Quirion Ranger"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Exquisite Blood",
+    "Starscape Cleric"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Ancient Gold Dragon",
+    "Dragon Tempest"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Dualcaster Mage",
+    "Electroduplicate"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Kiki-Jiki, Mirror Breaker",
+    "Zealous Conscripts"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Haze of Rage",
+    "Storm-Kiln Artist"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Dualcaster Mage",
+    "Heat Shimmer"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Approach of the Second Sun",
+    "Windfall"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Curiosity",
+    "Niv-Mizzet, the Firemind"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Basalt Monolith",
+    "Forensic Gadgeteer"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Combat Celebrant",
+    "Helm of the Host"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Godo, Bandit Warlord",
+    "Helm of the Host"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bruvac the Grandiloquent",
+    "Traumatize"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Teferi, Temporal Archmage",
+    "The Chain Veil"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Maddening Cacophony",
+    "Riverchurn Monument"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Approach of the Second Sun",
+    "Mystical Tutor"
+   ],
+   "tag": "P"
+  },
+  {
+   "cards": [
+    "Marauding Raptor",
+    "Polyraptor"
+   ],
+   "tag": "P"
+  },
+  {
+   "cards": [
+    "Ioreth of the Healing House",
+    "Marvin, Murderous Mimic"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "The Gitrog Monster",
+    "The Necrobloom"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Kaalia of the Vast",
+    "Master of Cruelties"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Aggravated Assault",
+    "Old Gnawbone"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Basking Broodscale",
+    "Rosie Cotton of South Lane"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Selvala, Heart of the Wilds",
+    "Staff of Domination"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bloom Tender",
+    "Freed from the Real"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Aggravated Assault",
+    "Neheb, the Eternal"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Narset's Reversal",
+    "Twinning Staff"
+   ],
+   "tag": "E"
+  },
+  {
+   "cards": [
+    "Glacial Chasm",
+    "Icetill Explorer"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bloodthirsty Conqueror",
+    "Starscape Cleric"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Bruvac the Grandiloquent",
+    "Jidoor, Aristocratic Capital // Overture"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Niv-Mizzet, Visionary",
+    "Niv-Mizzet, the Firemind"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Karn, the Great Creator",
+    "Mycosynth Lattice"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Glint-Horn Buccaneer",
+    "Malcolm, Keen-Eyed Navigator"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Priest of Titania",
+    "Umbral Mantle"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Blasphemous Act",
+    "Toralf, God of Fury // Toralf's Hammer"
+   ],
+   "tag": "P"
+  },
+  {
+   "cards": [
+    "Chain of Smog",
+    "Professor Onyx"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Approach of the Second Sun",
+    "Reprieve"
+   ],
+   "tag": "C"
+  },
+  {
+   "cards": [
+    "Mycosynth Lattice",
+    "Vandalblast"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Maskwood Nexus",
+    "The World Tree"
+   ],
+   "tag": "C"
+  },
+  {
+   "cards": [
+    "Ondu Spiritdancer",
+    "Secret Arcade // Dusty Parlor"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Chain of Smog",
+    "Witherbloom Apprentice"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Heartless Hidetsugu",
+    "Solphim, Mayhem Dominus"
+   ],
+   "tag": "R"
+  },
+  {
+   "cards": [
+    "Bruvac the Grandiloquent",
+    "Cut Your Losses"
+   ],
+   "tag": "S"
+  },
+  {
+   "cards": [
+    "Hellkite Charger",
+    "Old Gnawbone"
+   ],
+   "tag": "O"
+  },
+  {
+   "cards": [
+    "Flourishing Defenses",
+    "High Perfect Morcant"
+   ],
+   "tag": "R"
+  }
+ ]
+}

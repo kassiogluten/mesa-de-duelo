@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.72.0] - 2026-10-29
+
+### Novo
+
+- **Bracket dos decks de Commander.** Cada deck de Commander mostra o seu bracket, a faixa de poder oficial do formato (1 Exibição, 2 Básico, 3 Melhorado, 4 Otimizado, 5 cEDH), no selo **Bracket 3** da escolha de deck e de Meus decks; passe o mouse no selo para ver o que a faixa quer dizer. Os decks prontos já vêm com o bracket conferido. Nos seus decks, escolha o bracket no editor, ao lado do comandante: a mesa calcula o mínimo pelas cartas (Game Changers, destruição de terrenos em massa, turnos extras que dão para encadear e os combos de duas cartas mais usados) e não deixa escolher abaixo dele. Em **Por que no mínimo Bracket 3?** aparecem as cartas que pesaram. Se você colocar uma carta que sobe o mínimo, o bracket sobe junto. Enquanto você não escolhe, o deck fica no 2, ou no mínimo, se for maior. Ao importar pelo link do Archidekt, o deck chega com o bracket que o dono marcou lá, se não estiver abaixo do mínimo.
+- **Bracket na sala.** Nas salas de Commander, cada lugar da sala de espera mostra o bracket do deck de quem sentou, e a lista de salas públicas mostra os brackets da mesa ("Bracket 3" ou "Brackets 2 a 4"), para você achar uma partida de força parecida.
+- **Bracket na partida.** Nas partidas de Commander, em rede ou contra o computador, o bracket do deck de cada jogador aparece junto do retrato, como **B3**: ao lado do seu nome e na borda do círculo de vida de cada oponente. Passe o mouse no selo para ver o nome da faixa. Contra o computador, vale o bracket do deck pronto que ele joga.
+
 ## [0.71.0] - 2026-10-29
 
 ### Novo

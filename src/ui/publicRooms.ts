@@ -26,6 +26,14 @@ export function watchableRooms(rooms: PublicRoom[]): PublicRoom[] {
   return rooms.filter(room => room.started);
 }
 
+/** "Bracket 3", ou "Brackets 2 a 4" quando os lugares ocupados diferem. */
+export function bracketsLabel(room: PublicRoom) {
+  const brackets = room.brackets ?? [];
+  if (!brackets.length) return '';
+  const low = Math.min(...brackets), high = Math.max(...brackets);
+  return low === high ? `Bracket ${low}` : `Brackets ${low} a ${high}`;
+}
+
 const watchersLabel = (room: PublicRoom) => room.spectators ? `${room.spectators} assistindo` : '';
 
 export function publicRoomsHTML(state: PublicRoomsState, disabled = false): string {
@@ -34,12 +42,12 @@ export function publicRoomsHTML(state: PublicRoomsState, disabled = false): stri
   const rooms = joinableRooms(state), live = watchableRooms(state);
   if (!rooms.length && !live.length) return '<p class="public-rooms-empty">Nenhuma sala pública aberta.</p>';
   const open = rooms.map(room => {
-    const details = [formatLabel(room), lengthLabel(room), seatsLabel(room)].filter(Boolean).join(' · ');
-    const label = `Entrar na sala de ${room.host}: ${formatLabel(room)}, ${room.players} de ${room.capacity} jogadores${room.config.undo ? ', com Desfazer ligado' : ''}`;
+    const details = [formatLabel(room), bracketsLabel(room), lengthLabel(room), seatsLabel(room)].filter(Boolean).join(' · ');
+    const label = `Entrar na sala de ${room.host}: ${[formatLabel(room), bracketsLabel(room)].filter(Boolean).join(', ')}, ${room.players} de ${room.capacity} jogadores${room.config.undo ? ', com Desfazer ligado' : ''}`;
     return `<li class="public-room"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small>${esc(details)}</small>${room.config.undo ? undoBadgeHTML() : ''}</span><button type="button" class="arena-btn secondary" data-join-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Entrar</button></li>`;
   });
   const playing = live.map(room => {
-    const details = [formatLabel(room), `${room.players} jogadores`, watchersLabel(room)].filter(Boolean).join(' · ');
+    const details = [formatLabel(room), bracketsLabel(room), `${room.players} jogadores`, watchersLabel(room)].filter(Boolean).join(' · ');
     const label = `Assistir à partida da sala de ${room.host}: ${formatLabel(room)}, em andamento${room.config.undo ? ', com Desfazer ligado' : ''}`;
     return `<li class="public-room live"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small><span class="public-room-live">Em andamento</span>${esc(details)}</small>${room.config.undo ? undoBadgeHTML() : ''}</span><button type="button" class="arena-btn secondary" data-watch-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Assistir</button></li>`;
   });
