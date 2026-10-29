@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.71.0] - 2026-10-29
+
+### Novo
+
+- **Janela de remoção.** Quando outro jogador tira permanentes do campo com uma mágica ou habilidade (destruir, exilar, devolver à mão, fazer sacrificar), abre uma janela assim que a mesa termina de mostrar a jogada. Ela traz a carta que causou, o que ela fez ("Wrath of God (Ana) destruiu 7 permanentes") e as cartas que saíram, separadas entre as suas e as de cada oponente. Vale também para a criatura que morre logo depois de um Raio. Toque numa carta para ver os detalhes e em **OK** para fechar; o jogo não espera por ela. Remoções que você mesmo fez, mortes em combate e cartas que voltam na hora (blink) não abrem a janela.
+
+### Mudou
+
+- **Histórico diz de quem eram as cartas.** No Registro, a linha de uma remoção em massa agora diz de quem eram as permanentes: "destruiu 7 permanentes (3 suas e 4 de Ana)".
+
 ## [0.70.0] - 2026-10-29
 
 ### Mudou

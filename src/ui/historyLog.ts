@@ -128,8 +128,20 @@ function merge(list: Unit[]) {
   return out;
 }
 
-/** O que a mágica, a habilidade ou o combate causou, em poucas palavras ("destruiu 7 permanentes"). */
-export function effectParts(events: readonly PresentationEvent[], names: HistoryNames, skip?: number): string[] {
+/** De quem eram as permanentes: "3 suas e 4 de Ana", as suas primeiro. */
+export function ownersText(events: readonly PresentationEvent[], names: HistoryNames) {
+  const actors = [...new Set(events.map(e => e.actor))].sort((a, b) => Number(b === names.you) - Number(a === names.you));
+  return listNames(actors.map(actor => {
+    const n = events.filter(e => e.actor === actor).length;
+    return actor === names.you ? `${n} ${n === 1 ? 'sua' : 'suas'}` : `${n} de ${names.player(actor)}`;
+  }), actors.length);
+}
+
+/**
+ * O que a mágica, a habilidade ou o combate causou, em poucas palavras ("destruiu 7 permanentes (3 suas e 4 de Ana)").
+ * `owners: false` deixa de fora de quem eram as permanentes, para quem já mostra isso de outro jeito.
+ */
+export function effectParts(events: readonly PresentationEvent[], names: HistoryNames, skip?: number, owners = true): string[] {
   const parts: string[] = [];
   const left = events.filter(e => e.type === 'left');
   const leaving: [string, (list: string) => string][] = [
@@ -139,7 +151,7 @@ export function effectParts(events: readonly PresentationEvent[], names: History
   const kind = (e: PresentationEvent) => e.reason ?? (leaving.some(([k]) => k === e.to) ? e.to! : '');
   for (const [k, verb] of [...leaving, ['', (list: string) => `tirou ${list} do campo`] as [string, (list: string) => string]]) {
     const group = left.filter(e => kind(e) === k);
-    if (group.length) parts.push(verb(group.length === 1 ? names.card(group[0]) ?? permanents(1) : permanents(group.length)));
+    if (group.length) parts.push(verb(group.length === 1 ? names.card(group[0]) ?? permanents(1) : `${permanents(group.length)}${owners ? ` (${ownersText(group, names)})` : ''}`));
   }
   const entered = events.filter(e => e.type === 'entered' && (skip === undefined || e.sourceId !== skip));
   if (entered.length) parts.push(enteredText(entered, names, true));

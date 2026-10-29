@@ -1,4 +1,12 @@
 {
+  "0.71.0": {
+    "Janela de remoção": [
+      { "img": "0.71.0/janela-remocao.webp", "legenda": "Depois de um Wrath of God do oponente, a janela mostra a carta que causou à esquerda e as permanentes destruídas ao lado, separadas entre as suas e as do oponente." }
+    ],
+    "Histórico diz de quem eram as cartas": [
+      { "img": "0.71.0/historico-remocao.webp", "legenda": "No Registro, a linha do Wrath of God diz quantas das permanentes destruídas eram suas e quantas eram do oponente." }
+    ]
+  },
   "0.70.0": {
     "Botão em destaque na ação mais comum": [
       { "img": "0.70.0/manutencao.webp", "legenda": "Na sua manutenção, **Comprar** fica em destaque, embaixo, e **Fim de turno** fica em cima, apagado." },

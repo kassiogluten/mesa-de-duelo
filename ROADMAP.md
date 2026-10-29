@@ -451,7 +451,7 @@ A caixa ao lado dos botões de ação, quando mostra uma frase (escolher alvo, p
 - [x] No celular, a caixa de escolha de cartas fica na largura dos botões, com os botões um embaixo do outro, em vez de passar por cima dos terrenos.
 - [x] Conferido no duelo, no Commander com vários jogadores e no celular.
 
-## 32. Entender uma remoção que passou despercebida
+## 32. Entender uma remoção que passou despercebida ✅
 
 Distraído, o jogador olha a mesa e uma permanente sua sumiu, sem ter visto a pilha. Hoje fica difícil descobrir o porquê. Levantamento feito em 26/10/2026:
 
@@ -462,12 +462,14 @@ Distraído, o jogador olha a mesa e uma permanente sua sumiu, sem ter visto a pi
 
 Alternativas (recomendado: A + B, e talvez D):
 
-- [ ] **A. Causa no histórico** (base para as outras): a ponte grava em `left` a carta que estava resolvendo e o `stackId` dela, e o histórico junta tudo numa linha ("Wrath of God (Ana) destruiu 7 permanentes: 3 suas — Llanowar Elves, …"). Mudar também o limite de 60 eventos, ou fazer a remoção em massa ocupar uma linha só, para a causa não sair do histórico.
+- [x] **A. Causa no histórico** (base para as outras): a ponte grava em `left` a carta que estava resolvendo e o `stackId` dela, e o histórico junta tudo numa linha ("Wrath of God (Ana) destruiu 7 permanentes: 3 suas — Llanowar Elves, …"). Mudar também o limite de 60 eventos, ou fazer a remoção em massa ocupar uma linha só, para a causa não sair do histórico.
 - [ ] **B. Resumo "Enquanto você não olhava"**: um aviso que fica na tela até o jogador fechar, quando ele perde permanentes por efeito de outro jogador e a mesa não mostrou isso direito (fila pulada, aba escondida ou 3 ou mais de uma vez). Mostra a carta causadora, miniaturas do que saiu e um link para o histórico.
 - [ ] **C. Fantasma no lugar da carta**: a vaga fica esmaecida por alguns segundos, ou até a próxima ação, com "Destruída por …". Com muitas cartas o campo fica poluído, e a mesa ainda reorganiza as fileiras.
 - [ ] **D. Histórico à mão**: botão do Registro direto na mesa, com contador de eventos não vistos.
 
 A decidir antes de começar: qual combinação; se o resumo vale só para as permanentes do jogador ou também para as do oponente; se aparece só quando a mesa não mostrou a remoção ou em toda remoção em massa.
+
+Decidido em 29/10/2026 (versão 0.71.0): no lugar de B, C e D, uma janela só, no estilo da que mostra cartas reveladas, em toda remoção feita por outro jogador, das suas permanentes e das dos oponentes. Ela abre quando a mesa termina de mostrar a jogada (ou quando a aba volta a ficar visível) e espera qualquer escolha ou outra janela fechar; o jogo não espera por ela. Mostra a carta que causou, o título "Wrath of God (Ana) destruiu 7 permanentes" e as cartas que saíram, agrupadas por dono (as suas primeiro). Ficam de fora as remoções que você mesmo fez, as mortes em combate, os custos (sacrificar para ativar) e o blink. Várias seguidas abrem uma depois da outra, até 5 na fila. A ponte manda agora em `left` o `stackId` e o `sourceName` do que está resolvendo (como já fazia em `entered`). A criatura que morre pelas ações baseadas no estado logo depois da mágica (dano de um Raio, -2/-2 do Disfigure) sai sem `stackId`, e a mesa usa a última resolução, desde que só efeitos dela tenham vindo no meio (`src/ui/removalNotice.ts`; `forge-bridge/scripts/test-removal-source.mjs` confere os dois casos no motor). Do item A, o histórico já juntava a mágica e o que ela causou e guardava 3000 eventos; agora também diz de quem eram as permanentes ("destruiu 7 permanentes (3 suas e 4 de Ana)").
 
 ## 33. Melhorar a sala de espera
 

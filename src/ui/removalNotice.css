@@ -1,0 +1,18 @@
+/* Remoção feita por outro jogador: a carta que causou à esquerda e as que saíram, por dono, ao lado. */
+.forge .removal-notice .removal-body { display: flex; align-items: flex-start; justify-content: center; gap: 28px; max-height: 62vh; overflow-y: auto; padding: 4px 6px; }
+.forge .removal-notice .removal-cause { flex: none; padding-top: 34px; }
+.forge .removal-notice .removal-cause .q-face { width: 188px; --fw: 188px; }
+.forge .removal-notice .removal-groups { display: grid; gap: 10px; min-width: 0; }
+.forge .removal-notice .removal-group h3 { margin: 0; font: 600 15px/1.3 var(--display); color: var(--muted); letter-spacing: .02em; }
+.forge .removal-notice .removal-group .q-opts.cards { justify-content: flex-start; padding-top: 8px; }
+.forge .removal-notice .removal-group .q-face { width: 132px; --fw: 132px; }
+.forge .removal-notice .removal-group .q-face .face { filter: saturate(.75) brightness(.9); }
+
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .removal-notice .removal-body { flex-direction: column; align-items: center; gap: 12px; }
+  .forge .removal-notice .removal-cause { padding-top: 0; }
+  .forge .removal-notice .removal-cause .q-face { width: 112px; --fw: 112px; }
+  .forge .removal-notice .removal-group .q-face { width: 84px; --fw: 84px; }
+  .forge .removal-notice .removal-group h3 { text-align: center; }
+  .forge .removal-notice .removal-group .q-opts.cards { justify-content: center; }
+}

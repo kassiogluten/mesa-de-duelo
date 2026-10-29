@@ -7,7 +7,9 @@ import { damageDetail } from './damageEffects';
 import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStatus } from './permanentEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPreview } from './cardInspector';
-import { historyTurns, listNames, turnSummary, type HistoryItem, type HistoryNames } from './historyLog';
+import { effectParts, historyTurns, listNames, turnSummary, type HistoryItem, type HistoryNames } from './historyLog';
+import { removalNotices, removedByOwner, type RemovalNotice } from './removalNotice';
+import './removalNotice.css';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio, SOUND_PACKS, type SoundPack } from './audio';
 import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
@@ -219,6 +221,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="overlay" id="fOverlay" hidden></div>
     <div class="overlay" id="fZone" hidden></div>
     <div class="overlay stack-gallery-overlay" id="fStackGallery" hidden></div>
+    <div class="overlay" id="fRemoval" hidden></div>
   </div>`;
 
   const $ = (sel: string) => root.querySelector(sel) as HTMLElement;
@@ -276,6 +279,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
    */
   let clickedAt = 0;
   const CLICK_LOCK_MS = 1600;
+  /** Janelas de remoção esperando a vez: com mais do que isso, ficam a da tela e as mais recentes. */
+  const REMOVAL_QUEUE_LIMIT = 5;
   /** Manutenção (partida e turno) em que o jogador já confirmou gerar mana mesmo assim. */
   let upkeepManaConfirmed = '';
   /** Marcador com o balão aberto por clique (id da carta e tipo), até clicar fora. */
@@ -508,7 +513,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (next instanceof HTMLInputElement && saved.start !== null && saved.end !== null && next.type !== 'number') next.setSelectionRange(saved.start, saved.end);
   }
   function syncModal() {
-    const required = ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery'].map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? null;
+    const required = ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval'].map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? null;
     if (required && !$('#fSettings').hidden) {
       $('#fSettings').hidden = true;
       root.querySelector('[aria-controls="fSettings"]')?.setAttribute('aria-expanded', 'false');
@@ -523,7 +528,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!active && previousModal && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     if (active && !active.contains(document.activeElement) && !document.querySelector('dialog[open]')) {
       // A escolha principal da janela vem primeiro (o modo recomendado, o primeiro gatilho); senão, o primeiro controle.
-      (active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled)') ?? active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]'))?.focus({ preventScroll: true });
+      (active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]') ?? active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]'))?.focus({ preventScroll: true });
     }
   }
   function closeZone() { zoneOf = null; groupIds = null; $('#fZone').hidden = true; syncModal(); }
@@ -1628,6 +1633,65 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     historyCards.set(item.key, item.card);
     return `<button class="history-inspect" data-event="${item.key}">${historyThumb(item.card)}<span class="history-text">${esc(item.text)}</span></button>`;
   }
+  // ---------- Remoções feitas por outro jogador ----------
+  /** As janelas que ainda vão abrir, a primeira na tela; cada uma é uma mágica ou habilidade. */
+  let removalQueue: RemovalNotice[] = [];
+  let removalSeq = 0;
+  let removalMatch: string | null = null;
+  const removalCards = new Map<string, FCard>();
+  /** Junta as remoções novas do histórico. Ao abrir uma partida já em andamento, o que passou não abre janela. */
+  function collectRemovals(s: FState) {
+    const last = timeline.history.at(-1)?.seq ?? 0;
+    if (removalMatch !== timeline.matchId) { removalMatch = timeline.matchId; removalSeq = last; removalQueue = []; return; }
+    if (last <= removalSeq) return;
+    if (!s.watching) for (const notice of removalNotices(timeline.history, removalSeq, s.you)) {
+      // Uma remoção em massa que chega em dois pacotes continua sendo uma janela só.
+      const same = removalQueue.find(other => other.cause.stackId === notice.cause.stackId);
+      if (same) same.removed.push(...notice.removed); else removalQueue.push(notice);
+    }
+    removalSeq = last;
+    // Muitas seguidas: ficam as mais recentes; o histórico guarda todas.
+    if (removalQueue.length > REMOVAL_QUEUE_LIMIT) removalQueue = [removalQueue[0], ...removalQueue.slice(-(REMOVAL_QUEUE_LIMIT - 1))];
+  }
+  /** A janela abre quando a mesa termina de mostrar a jogada, e espera qualquer escolha ou outra janela fechar. */
+  function syncRemoval(s: FState) {
+    const el = $('#fRemoval');
+    const blocked = s.gameOver || disconnected || (!!s.question && !questionMinimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || stackGalleryOpen;
+    const notice = removalQueue[0];
+    if (!notice || blocked || (el.hidden && (timeline.current || timeline.queued))) { el.hidden = true; return; }
+    const html = removalHTML(notice, s);
+    if (el.hidden || el.dataset.html !== html) { setHTML(el, html); el.dataset.html = html; }
+    el.hidden = false;
+  }
+  function removalHTML(notice: RemovalNotice, s: FState) {
+    removalCards.clear();
+    historyNames.you = s.you;
+    const { card, name, controller } = notice.cause;
+    const cause = card?.name && !card.faceDown ? label(card) : name ?? 'Um efeito';
+    const title = `${cause} (${historyNames.player(controller)}) ${effectParts(notice.removed, historyNames, undefined, false).join('; ')}`;
+    const thumb = (key: string, c: FCard) => {
+      removalCards.set(key, c);
+      return `<button class="q-face" data-event="${key}" aria-label="Inspecionar ${esc(label(c))}">${face(c, 'normal')}</button>`;
+    };
+    const groups = removedByOwner(notice, s.you).map(({ owner, removed }) => `<section class="removal-group">
+      <h3>${owner === s.you ? 'Suas' : `De ${esc(historyNames.player(owner))}`} (${removed.length})</h3>
+      <div class="q-opts cards">${removed.map(e => e.card ? thumb(`rm${e.seq}`, e.card) : '').join('')}</div></section>`).join('');
+    const more = removalQueue.length - 1;
+    return `<section class="question zone-view removal-notice" role="dialog" aria-modal="true" aria-labelledby="fRemovalTitle">
+      <h2 id="fRemovalTitle">${esc(title)}</h2>
+      <div class="removal-body">${card ? `<div class="removal-cause">${thumb('rm-cause', card)}</div>` : ''}<div class="removal-groups">${groups}</div></div>
+      ${more ? `<p class="q-hint">${more === 1 ? 'Mais uma remoção' : `Mais ${more} remoções`} depois desta.</p>` : ''}
+      <div class="q-actions"><button class="arena-btn primary" data-ui="removal-ok">OK</button></div></section>`;
+  }
+  function closeRemoval() {
+    const el = $('#fRemoval');
+    if (el.hidden) return;
+    removalQueue.shift();
+    leaveOverlay(el); el.hidden = true; el.dataset.html = '';
+    if (client?.state) syncRemoval(client.state);
+    syncModal();
+  }
+
   /** Histórico agrupado (Menu → Registro): só é montado com a gaveta aberta. */
   function renderLog() {
     if ($('#fLogDrawer').hidden) return;
@@ -1952,6 +2016,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const beforeCurrent = timeline.current;
       timeline.ingest(s.matchId ?? s.session?.code ?? 'local', s.events ?? [], { silent: silently, cursor: s.eventCursor });
       silentNext = false;
+      collectRemovals(s);
       if (beforeCurrent && !timeline.current) { clearTimeout(presentationTimer); motion.cancelPresentation(); }
       if (silently || hasLiveDecision(s)) displayFrame = null;
       if (!timeline.current && timeline.queued) { advancePresentation(); return; }
@@ -2188,6 +2253,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     } else if (!disconnected) { ov.hidden = true; ov.dataset.html = ''; }
 
     if (zoneOf !== null || groupIds) zoneView(s);
+    syncRemoval(s);
     root.querySelectorAll<HTMLElement>('[data-fid],[data-pid],[data-mana]').forEach(el => { el.dataset.gen = String(el.closest('.field,.avatar-slot') ? visual.input.gen : s.input.gen); });
     // Covered identical copies stay reachable through the group chooser, without dozens of duplicate Tab stops.
     root.querySelectorAll<HTMLElement>('.field .stack').forEach(stack => {
@@ -2281,7 +2347,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {
-    if (el.dataset.event) return historyCards.get(el.dataset.event);
+    if (el.dataset.event) return historyCards.get(el.dataset.event) ?? removalCards.get(el.dataset.event);
     const stackId = el.dataset.stack ?? el.dataset.stackInspect;
     if (stackId !== undefined && client?.state) return (el.closest('#fStackGallery') ? client.state.stack : stackPresentation(client.state, timeline.current?.event).stack).find(item => item.id === Number(stackId))?.source;
     const id = el.dataset.inspect ?? el.dataset.fid ?? el.dataset.peek ?? el.dataset.qCard;
@@ -2450,6 +2516,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (purePeek && !purePeek.closest('[data-gy]')) { showPreview(cardFromElement(purePeek), purePeek, true); return; }
     const renderedQuestion = t.closest<HTMLElement>('[data-qid]');
     if (renderedQuestion && Number(renderedQuestion.dataset.qid) !== client?.state?.question?.id) return;
+    if (ui === 'removal-ok') { closeRemoval(); return; }
     if (ui === 'attack-clear') { clearAttackChoice(); renderTable(false); return; }
     if (ui === 'attack-remove') {
       const s = client?.state;
@@ -2866,6 +2933,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if (stopMenu) { e.preventDefault(); setStopMenu(null, true); return; }
+      if (!$('#fRemoval').hidden) { e.preventDefault(); closeRemoval(); return; }
       if (!$('#fSettings').hidden) { e.preventDefault(); setSettings(false); return; }
       if (!$('#fMenu').hidden) { e.preventDefault(); setMenu(false, true); return; }
       if (!$('#fLogDrawer').hidden) { e.preventDefault(); setLog(false, true); return; }

@@ -40,7 +40,7 @@ test('a spell and what it caused while resolving become one line, with the cards
     ev('resolved', { actor: 1, stackId: 9, card: card(30, 'Wrath of God'), ...onStack(9) })];
   const [turn] = historyTurns(events, names);
   assert.equal(turn.lines.length, 1);
-  assert.equal(turn.lines[0].text, 'spell-cast Wrath of God: destruiu 3 permanentes.');
+  assert.equal(turn.lines[0].text, 'spell-cast Wrath of God: destruiu 3 permanentes (1 sua e 2 de Bruno).');
   assert.deepEqual(turn.lines[0].children.map(c => c.card.name), ['Llanowar Elves', 'Grizzly Bears', 'Serra Angel']);
 });
 
