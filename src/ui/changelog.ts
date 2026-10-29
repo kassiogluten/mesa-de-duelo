@@ -56,6 +56,12 @@ function markSeen() {
   try { localStorage.setItem(SEEN_KEY, VERSION); } catch { /* sem armazenamento */ }
 }
 
+/** Quantas versões o painel mostra de cada vez: as mais recentes primeiro, e o resto pelo botão no fim. */
+const PAGE = 5;
+const releaseHTML = (r: Release) => `<section class="news-rel">
+        <h3 tabindex="-1">Versão ${esc(r.version)}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
+      </section>`;
+
 /** Botão "Novidades" com a versão atual; abre um painel com o histórico. Um ponto marca versão ainda não vista. */
 export function mountChangelog(host: HTMLElement) {
   const el = document.createElement('div');
@@ -66,14 +72,30 @@ export function mountChangelog(host: HTMLElement) {
     </button>
     <div class="news-panel" id="newsPanel" role="dialog" aria-label="Novidades" hidden>
       <a class="news-visual-all" href="/novidades.html">Ver as novidades em imagens</a>
-      ${RELEASES.map(r => `<section class="news-rel">
-        <h3>Versão ${esc(r.version)}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
-      </section>`).join('')}
+      ${RELEASES.slice(0, PAGE).map(releaseHTML).join('')}
+      <button type="button" class="news-more" hidden></button>
     </div>`;
   host.append(el);
 
   const btn = el.querySelector<HTMLButtonElement>('.news-btn')!;
   const panel = el.querySelector<HTMLElement>('.news-panel')!;
+  const more = el.querySelector<HTMLButtonElement>('.news-more')!;
+  let shown = Math.min(PAGE, RELEASES.length);
+  const syncMore = () => {
+    const left = RELEASES.length - shown;
+    more.hidden = !left;
+    more.textContent = `Mostrar versões anteriores (${left} ${left === 1 ? 'restante' : 'restantes'})`;
+  };
+  syncMore();
+  more.addEventListener('click', () => {
+    const next = RELEASES.slice(shown, shown + PAGE);
+    more.insertAdjacentHTML('beforebegin', next.map(releaseHTML).join(''));
+    const sections = panel.querySelectorAll<HTMLElement>('.news-rel');
+    // O foco vai para a primeira versão que apareceu, para continuar lendo dali.
+    sections[shown]?.querySelector<HTMLElement>('h3')?.focus();
+    shown += next.length;
+    syncMore();
+  });
   const toggle = (open: boolean) => {
     panel.hidden = !open;
     btn.setAttribute('aria-expanded', String(open));

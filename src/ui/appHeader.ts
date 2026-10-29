@@ -26,7 +26,8 @@ export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
   mountContaMenu(conta);
   // Both screens stay mounted: keep disclosure IDs unique for assistive technology.
   const panel = root.querySelector<HTMLElement>('.news-panel')!;
-  const disclosure = root.querySelector<HTMLButtonElement>('.news-btn')!;
+  // O botão de relatar também usa .news-btn: o que abre o painel é o de dentro de .news.
+  const disclosure = root.querySelector<HTMLButtonElement>('.news > .news-btn')!;
   panel.id = `news-panel-${options.active}`;
   disclosure.setAttribute('aria-controls', panel.id);
   root.addEventListener('click', async event => {

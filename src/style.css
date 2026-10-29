@@ -1031,6 +1031,15 @@ html[data-pwa-update='downloading'] .news-sync { border-bottom-color: var(--gold
 .news-rel ul { margin: 4px 0; padding-left: 18px; }
 .news-rel li { margin: 3px 0; }
 .news-rel code { background: #18223a; padding: 1px 5px; border-radius: 4px; }
+.news-rel h3:focus { outline: none; }
+.news-rel h3:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+/* Versões anteriores, de cinco em cinco, no fim do painel. */
+.news-more {
+  display: block; width: 100%; margin: 12px 0 2px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #ffffff08;
+  color: var(--ink); font: 600 14px var(--body); cursor: pointer;
+}
+.news-more:hover { border-color: var(--gold); }
+.news-more[hidden] { display: none; }
 .news-visual-all {
   display: block; margin: 12px 0 2px; padding: 8px 12px; border-radius: 10px; border: 1px solid #f2b54c55; background: #f2b54c12;
   color: var(--gold-light); font-weight: 600; text-align: center; text-decoration: none;

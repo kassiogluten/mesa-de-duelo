@@ -13,6 +13,9 @@
     "Novidades em imagens mais enxuta": [
       { "img": "0.68.0/novidades-versoes-anteriores.webp", "legenda": "No fim da página, **Mostrar versões anteriores** diz quantas versões ainda faltam." }
     ],
+    "Painel Novidades mais curto": [
+      { "img": "0.68.0/painel-novidades-anteriores.webp", "legenda": "No fim do painel **Novidades**, o botão **Mostrar versões anteriores** diz quantas versões ainda faltam." }
+    ],
     "Dianteira": [
       { "img": "0.68.0/dianteira.webp", "legenda": "O selo dourado **Dianteira** ao lado dos marcadores do jogador, com a explicação aberta." }
     ],

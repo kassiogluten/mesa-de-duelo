@@ -17,10 +17,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 ### Mudou
 
 - **Novidades em imagens mais enxuta.** A página abre com as cinco versões mais recentes, sem a fileira de botões de versão no topo. No fim, **Mostrar versões anteriores** traz mais cinco de cada vez. O link **ver em imagens** do painel Novidades continua abrindo direto na versão escolhida.
+- **Painel Novidades mais curto.** O painel que abre no botão **Novidades** do topo mostra as cinco versões mais recentes, em vez do histórico inteiro. No fim, **Mostrar versões anteriores** traz mais cinco de cada vez.
 - **Dianteira.** A mecânica das cartas de Dungeons & Dragons que leva à Undercity agora se chama **Dianteira**, como nas cartas em português; o selo dourado ao lado do retrato e a explicação dele usam o nome novo. Antes ela aparecia como Iniciativa, o mesmo nome do golpe que sai antes no combate, que continua se chamando Iniciativa.
 
 ### Corrigido
 
+- **Botão Novidades no leitor de tela.** O leitor de tela não ligava o botão **Novidades** ao painel que ele abre; agora anuncia o painel aberto ou fechado.
 - **Cartas com o mesmo nome de uma magia preparada.** Exsanguinate (Dessangrar) e Stensian Sanguinist (que prepara uma Exsanguinate) eram contadas como a mesma carta: com uma delas no deck de Commander, o **+** da outra ficava apagado. Agora cada uma conta como carta própria e as duas podem entrar no deck.
 
 ## [0.67.1] - 2026-10-28
