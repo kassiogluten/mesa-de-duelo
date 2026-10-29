@@ -30,6 +30,7 @@ const PHRASES: [RegExp, string][] = [
   [/\ban opponent controls\b/g, 'de um oponente'],
   [/\byou don't control\b/g, 'que você não controla'],
 ];
+const CHOOSER = /^(?:Seletor|Chooser)\s*:?$/i;
 const COUNTS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
 
 /** Traduz o tipo do alvo ("creature or player"); null se sobrar alguma palavra desconhecida. */
@@ -62,6 +63,8 @@ function sourceName(input: ShortInstructionInput, translate: (name: string) => s
 export function shortInstruction(input: ShortInstructionInput, translate: (name: string) => string = name => name): string | null {
   const name = sourceName(input, translate);
   if (input.vote) return voteRequest(input.vote.card.name ? translate(input.vote.card.name) : undefined);
+  // "Um oponente escolhe" com mais de um oponente (Curator of Destinies, Fact or Fiction): o Forge só pergunta "Seletor:".
+  if (CHOOSER.test(input.message.trim())) return name ? `${name}: escolha o oponente que vai decidir.` : 'Escolha o oponente que vai decidir.';
   if (input.targeting) {
     const request = parseTargetRequest(input.message);
     const fallback = validTargetKind(input.targeting.valid, input.targeting.zones);

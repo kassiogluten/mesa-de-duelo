@@ -24,6 +24,8 @@ Object.assign((window as any).fixture, {
     state.players.forEach((p:any,seat)=>{ if(p.id===state.you)return; if(!on){delete p.revealedHand;return;} p.revealedHand=hands[seat].map((name,i)=>card(700+seat*10+i,name,p.id,{creature:false,typeLine:'Card',manaCost:''})); p.handCount=hands[seat].length; });
     view.render();
   },
+  /** Curator of Destinies com três oponentes: escolher qual deles decide a pilha (só jogadores na mesa). */
+  chooser() { Object.assign(state.input, {priority:false,message:'Seletor:',card:card(600,'Curator of Destinies',36,{manaCost:'{4}{U}{U}',typeLine:'Creature — Sphinx',power:5,toughness:5}),selectablePlayers:ids.filter(id=>id!==36),actionable:[],ok:{label:'OK',enabled:false},cancel:{label:'',enabled:false}}); view.render(); },
   opening() { Object.assign(state.input, {opening:'starting-player',priority:false,selectablePlayers:ids,actionable:[],ok:{label:'',enabled:false},cancel:{label:'',enabled:false}}); view.render(); },
   stress() {
     const names = ['Llanowar Elves','Elvish Mystic','Fyndhorn Elves','Birds of Paradise','Elvish Visionary','Sakura-Tribe Elder','Wood Elves','Reclamation Sage','Eternal Witness','Solemn Simulacrum','Beast Whisperer','Llanowar Visionary','Ghalta, Primal Hunger','Garruk’s Packleader','Terastodon','Acidic Slime','Avenger of Zendikar','Rampaging Baloths','Scavenging Ooze','Tireless Tracker','Courser of Kruphix','Lotus Cobra'];

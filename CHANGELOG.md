@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.68.2] - 2026-10-29
+
+### Corrigido
+
+- **Escolher o oponente que decide.** Em partidas com mais de um oponente, cartas como Curator of Destinies pedem que você escolha qual oponente vai decidir (qual pilha fica com você, por exemplo). A mesa mostrava só "Seletor:" e "Aguardando o jogo…", e parecia travada. Agora a caixa diz o que fazer, como "Curator of Destinies: escolha o oponente que vai decidir.", e traz um botão com o nome de cada oponente. Tocar no retrato dele continua valendo.
+
 ## [0.68.1] - 2026-10-28
 
 ### Corrigido

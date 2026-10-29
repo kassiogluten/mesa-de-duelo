@@ -94,3 +94,9 @@ test('only triggers and activated abilities get a highlighted ability label', ()
   assert.equal(abilityKindLabel('spell'), null);
   assert.equal(abilityKindLabel(undefined), null);
 });
+
+test('choosing which opponent decides names the card instead of the bare "Seletor:"', () => {
+  assert.equal(shortInstruction({ message: 'Seletor:', card: { name: 'Curator of Destinies' } }), 'Curator of Destinies: escolha o oponente que vai decidir.');
+  assert.equal(shortInstruction({ message: 'Chooser:' }), 'Escolha o oponente que vai decidir.');
+  assert.equal(shortInstruction({ message: 'Seletor: algo mais' }), null);
+});

@@ -1679,6 +1679,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     };
   }
 
+  /** O jogo espera a escolha de um jogador e nada mais (sem cartas, alvos, combate ou pagamento). */
+  function choosingPlayer(s: FState) {
+    const input = s.input;
+    return !!input.selectablePlayers?.length && !input.selectable.length && !input.selectableStacks?.length && !input.priority && !input.opening
+      && !input.targeting && !input.paying && !input.attacking && !input.blocking && !input.vote && !input.selection && !isProliferating(s);
+  }
+
   function buttons(s: FState) {
     if (s.gameOver && observing && !disconnected) {
       const result = gameResult(s);
@@ -1690,6 +1697,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (s.input.opening === 'starting-player') {
       const choices = s.players.filter(player => s.input.selectablePlayers?.includes(player.id));
       return choices.length ? choices.map(player => `<button class="arena-btn ${player.id === s.you ? 'primary' : 'secondary'}" data-pid="${player.id}" data-gen="${s.input.gen}">${esc(player.name)}${player.id === s.you ? ' · Você' : ''}</button>`).join('') : '<button class="arena-btn waiting" disabled>Aguardando a escolha de quem começa…</button>';
+    }
+    // Escolha de um jogador só no retrato (o oponente que decide no Curator of Destinies): um botão por jogador, como no "Quem começa?".
+    const players = choosingPlayer(s) ? s.players.filter(player => s.input.selectablePlayers!.includes(player.id)) : [];
+    if (players.length) {
+      const cancelChoice = s.input.cancel.enabled && s.input.cancel.label ? `<button class="arena-btn secondary" data-act="cancel" data-gen="${s.input.gen}">${optionHTML(s.input.cancel.label)}</button>` : '';
+      return players.map(player => `<button class="arena-btn primary" data-pid="${player.id}" data-gen="${s.input.gen}">${esc(player.name)}${player.id === s.you ? ' · Você' : ''}</button>`).join('') + cancelChoice;
     }
     const decision = cardDecision(s);
     const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;

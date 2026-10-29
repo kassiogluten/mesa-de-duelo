@@ -1,4 +1,9 @@
 {
+  "0.68.2": {
+    "Escolher o oponente que decide": [
+      { "img": "0.68.2/escolher-oponente.webp", "legenda": "Com três oponentes, a caixa de ação diz que o Curator of Destinies pede para escolher quem vai decidir, com um botão para cada oponente." }
+    ]
+  },
   "0.68.1": {
     "Prioridade no início do combate do oponente": [
       { "img": "0.68.1/prioridade-inicio-combate.webp", "legenda": "No turno do oponente, com o combate aceso na trilha de fases, o jogo para antes dos ataques: o Raio fica em destaque na mão e o botão **Passar** espera você agir." }
