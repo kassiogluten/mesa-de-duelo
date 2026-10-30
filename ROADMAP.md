@@ -705,3 +705,95 @@ Na caixa de ação, o botão em destaque (primário) deve ser sempre o que o jog
 - [x] Conferir que o atalho de teclado (Enter/espaço) segue o botão primário.
 
 Decidido em 29/10/2026 (versão 0.70.0): o levantamento mostrou que só o seu turno com a pilha vazia fugia da regra; nos outros momentos o primário já era o mais comum (**Resolver** com a pilha cheia, **Passar** no turno do oponente, **Manter** no mulligan, **Eu jogo**, o pagamento automático, o **Sim** das perguntas, você no "Quem começa?"). No seu turno, **Fim de turno** era sempre o primário; agora, no início do turno (desvirar, manutenção, compra) e na principal 1, o primário é passar a etapa (**Comprar**, **Para a principal 1**, **Para o combate**, sempre, mesmo sem criaturas), e do combate em diante continua **Fim de turno** (`passIsPrimary` em `src/ui/phaseHud.ts`). O Espaço continua apertando só o botão de passar a etapa e nunca **Fim de turno**, para não encerrar o turno sem querer: até a principal 1 ele segue o primário; depois, aperta o secundário. Na caixa de ação do turno (coluna), o primário fica sempre por último, embaixo, na ordem do HTML (para o Tab e o leitor de tela seguirem a tela), também no **Resolver** e no **Pagar 2 de vida**; as caixas com botões lado a lado (abertura, perguntas, escolhas de carta) ficaram como estavam.
+
+## 46. Arrastar cartas na mão para organizar
+
+O jogador arrasta uma carta da mão para outra posição e organiza a mão do jeito que preferir (por exemplo, terrenos de um lado e mágicas do outro), como no Arena.
+
+- [ ] Arrastar uma carta da mão e soltar entre outras duas para mudar a posição dela no leque, com as vizinhas abrindo espaço durante o arrasto.
+- [ ] Não confundir com jogar a carta: arrastar para o campo continua jogando, arrastar dentro da mão só reorganiza.
+- [ ] A ordem escolhida se mantém quando a mão muda (carta comprada entra no fim, carta jogada sai sem embaralhar o resto).
+- [ ] Funcionar no celular sem atrapalhar o tocar e segurar, que hoje abre a carta grande.
+
+## 47. Buscar cartas por função e cartas parecidas
+
+No construtor de decks, a busca de cartas (`src/ui/deckbuilder.ts`, pelo Scryfall) só acha pelo nome, pelo texto e pelos filtros de cor, tipo e custo. Quem procura "mais uma carta como esta" precisa adivinhar as palavras do texto. Exemplo: quem busca Opt (Optar) também quer ver Consider (Considerar), outra mágica barata de comprar e olhar o topo.
+
+O Scryfall já resolve boa parte: as **tags de função** do Tagger (o projeto de etiquetas da comunidade do Scryfall) marcam o que cada carta faz (`cantrip`, `ramp`, `counterspell`, `removal`, `scry`, `draw`…), organizadas em árvore (por exemplo, `removal` reúne 25 tags filhas).
+
+- [ ] Buscar por função: opções com as tags como o Scryfall as chama, sem tradução (`draw`, `removal`, `counterspell`, `ramp`, `cantrip`), e sem o jogador digitar sintaxe. A busca da API já aceita `otag:` e inclui as tags filhas (`otag:removal` trouxe 6.484 cartas; `otag:cantrip t:instant mv=1 c=u` trouxe Opt, Consider, Brainstorm e mais 23). Basta a mesa montar a consulta, como já faz com cor e tipo.
+- [ ] Cartas parecidas: na carta do resultado (ou no inspetor), um botão **Parecidas**. O card da API não diz as tags de uma carta, mas o Scryfall publica todas num arquivo diário (`oracle_tags` em `/bulk-data`, ~6 MB compactado, 4.596 tags com as cartas de cada uma, por `oracle_id`). A ponte pode baixar esse arquivo uma vez por dia e montar o índice carta → tags.
+- [ ] Como medir a semelhança (testado em 29/10/2026 com Opt): só comparar as tags dá resultado ruim, porque entram tags curiosas como "nome de três letras" e Consider nem aparece. Funcionou assim: (1) ignorar as tags de nome, arte, errata e afins; (2) somar a cada tag as tags-mãe, para `scry` e `surveil` se encontrarem em `library-manipulation`; (3) dar mais peso às tags raras; (4) comparar só com cartas das mesmas cores, do mesmo tipo e de custo próximo (busca normal no Scryfall). Resultado para Opt: Serum Visions, Preordain e Deliberate empatados no topo, depois Ponder, Omen, Curate e Consider entre as 10 primeiras.
+- [ ] Respeitar o formato e a identidade de cor do deck, como a busca atual já faz.
+- [ ] Sem resultado na função escolhida: mensagem clara e opção de voltar à busca por texto.
+- [ ] Conferir os termos de uso dos dados do Scryfall e dar crédito ao Tagger na tela.
+
+## 48. Mesa que acompanha os oponentes sozinha
+
+Numa partida com mais de um oponente (Commander), quem concede ou morre continua com o campo inteiro na mesa, só com o selo **Eliminado** no retrato. O espaço fica ocupado por um campo que não joga mais, e os oponentes que ainda estão na partida ficam menores. E quando um oponente ataca, o campo dele divide a tela com os outros: hoje a mesa só traz de volta um oponente oculto que ataca você, sem dar destaque a ele.
+
+- [ ] Quando um oponente conceder ou morrer e ainda houver outro oponente na partida, ocultar o campo dele sozinho, como se o jogador tivesse tocado em **Ocultar** (`src/ui/seatVisibility.ts`): vira a coluna estreita com retrato, vida e o selo **Eliminado**.
+- [ ] **Mostrar campo** continua trazendo o campo de volta, para quem quiser conferir o que ficou nele.
+- [ ] No duelo (um oponente só) nada muda: a mesa nunca fica sem oponente à vista.
+- [ ] Se o jogador tinha escolhido **Só este** no oponente que saiu, voltar a mostrar os que restam.
+- [ ] Focar no oponente que ataca: quando um oponente declara ataque, a mesa mostra o campo dele em destaque, como se o jogador tivesse tocado em **Só este**, para ver os atacantes e escolher os bloqueios.
+- [ ] Voltar no fim do turno dele: quando o turno desse oponente acaba, a mesa volta a mostrar os oponentes como o jogador tinha deixado (os mesmos ocultos e o mesmo **Só este**, se havia).
+- [ ] Se o jogador mexer em **Ocultar**, **Só este** ou **Mostrar campo** durante o ataque, respeitar a escolha dele e não desfazer no fim do turno.
+- [ ] Decidir se o foco vale só para ataques contra você ou para qualquer ataque do oponente (inclusive contra outro jogador).
+
+## 49. Mais destaque no campo de quem é o turno
+
+Hoje o turno de cada jogador aparece só no retrato: um brilho dourado no seu e vermelho no do oponente e, no Commander, a vida e o nome em dourado no cabeçalho do campo. O campo em si fica igual ao dos outros, então, numa mesa com vários oponentes, é fácil perder de vista de quem é a vez.
+
+- [ ] Destacar o campo inteiro do jogador da vez (por exemplo, uma borda ou um brilho suave em volta da área dele, ou o fundo um pouco mais claro), sem tapar as cartas nem competir com os destaques de alvo, ataque e bloqueio.
+- [ ] Usar as mesmas cores do retrato: dourado no seu turno, vermelho no turno de um oponente.
+- [ ] Na troca de turno, passar o destaque de um campo para o outro com uma transição curta, que ajude a perceber a mudança.
+- [ ] Funcionar no duelo e no Commander, incluindo o oponente oculto (a coluna estreita) e o campo em **Só este**.
+- [ ] Anunciar a troca de turno para leitores de tela, se ainda não anuncia.
+
+## 50. Tipo ganho à mostra na carta
+
+Algumas cartas ganham um tipo além do impresso: um artefato que vira criatura (March of the Machines), terrenos que viram criaturas (Kormus Bell, um terreno animado), tudo virando artefato (Mycosynth Lattice), uma permanente que vira terreno (Imprisoned in the Moon), criaturas que ganham um tipo de criatura. Na mesa, a carta continua mostrando a imagem impressa, e o jogador não percebe que ela agora é outra coisa (que pode ser alvo de uma remoção de artefato, atacar ou bloquear). A ponte já manda a linha de tipo atual da carta.
+
+- [ ] Comparar a linha de tipo atual com a impressa e saber o que mudou: tipos ganhos (Criatura, Artefato, Terreno…), subtipos ganhos e, se houver, tipos perdidos.
+- [ ] No campo, um sinal discreto na carta (um ícone pequeno do tipo ganho), sem cobrir a arte, como os outros selos.
+- [ ] No balão (mouse ou toque) e no inspetor, a linha de tipo atual com o que foi ganho em destaque ("Artefato — agora também Criatura 3/3") e, quando der, a carta que causou a mudança.
+- [ ] Conferir que a criatura animada mostra força e resistência, mesmo quando a carta impressa não tem (terreno ou artefato que vira criatura).
+- [ ] Não marcar o que já está impresso (uma criatura artefato impressa não ganha selo), nem a mudança que a própria carta faz e que já está na imagem, como as faces de cartas de duas faces.
+
+## 51. Alerta de turno demorado
+
+A mesa já tem o relógio do turno na trilha de fases, com o tempo que o servidor conta para o turno de agora. Mas nada acontece quando um turno se arrasta, e numa mesa com vários jogadores um turno longo deixa todos esperando.
+
+- [ ] Quando o turno de um jogador passar de 2 minutos, começar um alerta que cresce aos poucos. Por exemplo: o relógio muda de cor (2 min), depois pulsa de leve (3–4 min), depois o retrato e o campo de quem está demorando ganham um aviso "Demorando…" para todos (5 min ou mais).
+- [ ] Para quem está demorando, um aviso próprio e discreto, que não atrapalhe a jogada ("Seu turno já passa de 3 min"), e talvez um som curto numa das etapas, que siga a configuração de som da mesa.
+- [ ] Contar o tempo de quem precisa agir: se, no meu turno, a mesa espera a resposta de um oponente (bloqueio, escolha, prioridade), o alerta vai para ele, e não para mim. Decidir se o relógio do alerta é por turno ou por espera de cada decisão.
+- [ ] Não alertar no turno da IA, nem durante a apresentação de animações; zerar quando o turno passa.
+- [ ] Só avisar, sem punição automática (passar o turno ou conceder sozinho); deixar uma punição, se fizer sentido, para um item próprio.
+- [ ] Leitor de tela: anunciar cada etapa do alerta uma vez só, sem repetir a cada segundo.
+
+## 52. Filtros e ordem por tipo ao buscar no grimório
+
+Ao buscar cartas no grimório (um tutor como Demonic Tutor, uma busca de criatura, de artefato ou de terreno), a escolha mostra todas as opções numa fileira só, ordenadas por custo de mana e depois pelo nome (`choiceOrder` em `src/ui/choiceScreens.ts`). Num deck de Commander, com até 99 cartas, achar a carta certa vira um garimpo, ainda mais quando o jogador não lembra o nome.
+
+- [ ] Filtros por tipo no topo da escolha (Criatura, Terreno, Artefato, Encantamento, Planeswalker, Instantânea, Feitiço, Batalha), com a quantidade de cada um e só os tipos que aparecem nas opções. Uma carta com dois tipos aparece nos dois filtros.
+- [ ] Ordenação escolhida pelo jogador: por tipo (agrupando, com um título em cada grupo), por custo de mana ou por nome. A escolhida fica lembrada para a próxima busca.
+- [ ] Campo de busca pelo nome (em português ou inglês) quando houver muitas opções, por exemplo mais de 15.
+- [ ] Filtros e ordem só mudam o que aparece na tela: a resposta para o Forge continua usando os índices originais, e as cartas já marcadas continuam marcadas ao trocar de filtro.
+- [ ] Valer para as outras escolhas grandes de cartas (cemitério, exílio, revelar), mas não para as escolhas em que a ordem tem significado (topo do grimório, ordem dos gatilhos).
+- [ ] Funcionar no celular, com os filtros numa fileira que rola de lado, e com o modal minimizado (**Ver a mesa**).
+
+## 53. Níveis de passar automaticamente
+
+Hoje passar a prioridade sozinho está espalhado em três controles independentes: **Passar automaticamente** nas Opções (passa quando não há nenhuma ação disponível), **Passar respostas** junto dos botões (passa no turno do oponente e com algo na pilha) e as etapas marcadas na trilha de fases (onde o jogo sempre para). O jogador precisa entender como os três se combinam, e não há um jeito simples de dizer "quero jogar mais rápido" ou "quero parar em tudo".
+
+- [ ] Um seletor único de nível, do mais cuidadoso ao mais rápido. Proposta para decidir:
+  - **Parar sempre**: recebe a prioridade em toda etapa que dá prioridade, mesmo sem ações (para quem está aprendendo ou quer controle total).
+  - **Só com ações** (o padrão de hoje): passa quando não há nada que possa usar.
+  - **Respostas** (o Passar respostas de hoje): passa também no turno do oponente e com a pilha cheia, mas para no seu turno, nos ataques, bloqueios e escolhas.
+  - **Só quando me afeta**: passa tudo até algo mirar você ou suas permanentes, ou até você ser atacado (o Forge já sabe reconhecer esses casos, que ele chama de interrupções).
+- [ ] Um atalho de uma vez só, como no Arena: **Passar até o fim do turno** (ou até o meu turno), que volta ao nível escolhido quando o turno acaba ou quando algo afeta você.
+- [ ] As etapas marcadas na trilha de fases continuam valendo em qualquer nível: nelas o jogo sempre para.
+- [ ] Mostrar o nível atual junto dos botões (um ícone ou selo discreto), com troca rápida, sem abrir as Opções.
+- [ ] Migrar as escolhas atuais (Passar automaticamente e Passar respostas) para o nível equivalente, sem o jogador perder o que tinha; o nível acompanha a conta, como as outras preferências da mesa.
+- [ ] Revisar os textos de ajuda das Opções e do menu da trilha de fases, que hoje citam os controles antigos.
