@@ -10,7 +10,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
     throw error;
   }
 } });
-const { searchCards, cacheGet, fetchByNames, loadCardCache } = await import('../src/scryfall.ts');
+const { searchCards, cacheGet, fetchByNames, loadCardCache, resolveCardNames } = await import('../src/scryfall.ts');
 
 const cached = new Map();
 globalThis.localStorage = {
@@ -68,6 +68,31 @@ test('a prepared spell face never takes the place of the real card with the same
       assert.equal(cacheGet('Prepare Creature').oracle_id, 'oracle:prepare');
     } finally { globalThis.fetch = originalFetch; }
   }
+});
+
+test('importing the real card after its prepared namesake is cached resolves to the real card', async () => {
+  // Stensian Sanguinist já está no cache (deck aberto, busca, mesa); a lista importada traz Exsanguinate.
+  const prepare = apiCard('Import Creature // Import Spell', { oracle_id: 'oracle:import-prepare', layout: 'prepare', oracle_text: undefined, card_faces: [
+    { name: 'Import Creature', mana_cost: '{1}{B}', oracle_text: 'Whenever you attack, prepare.' },
+    { name: 'Import Spell', mana_cost: '{X}{B}{B}', oracle_text: 'Each opponent loses X life.' },
+  ] });
+  const real = apiCard('Import Spell', { oracle_id: 'oracle:import-real', type_line: 'Sorcery' });
+  try {
+    globalThis.fetch = async () => Response.json({ data: [prepare] });
+    await fetchByNames(['Import Creature']);
+    const asked = [];
+    globalThis.fetch = async (url, init) => { asked.push(JSON.parse(init.body).identifiers.map(i => i.name)); return Response.json({ data: [real] }); };
+    const resolved = await resolveCardNames(['Import Creature', 'Import Spell']);
+    assert.equal(resolved.found.get('import creature'), 'Import Creature // Import Spell');
+    assert.equal(resolved.found.get('import spell'), 'Import Spell');
+    assert.deepEqual(asked, [['Import Spell']]);
+    assert.equal(cacheGet('Import Spell').oracle_id, 'oracle:import-real');
+    // Um deck salvo com a carta real também deixa de mostrar a criatura no lugar dela.
+    globalThis.fetch = async () => Response.json({ data: [prepare] });
+    await fetchByNames(['Import Creature']);
+    globalThis.fetch = async () => Response.json({ data: [real] });
+    assert.equal((await fetchByNames(['Import Spell'])).get('import spell').oracle_id, 'oracle:import-real');
+  } finally { globalThis.fetch = originalFetch; }
 });
 
 test('cards remain available in memory when browser storage rejects writes', async () => {

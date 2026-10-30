@@ -1,4 +1,9 @@
 {
+  "0.90.1": {
+    "Importar cartas com o mesmo nome de uma magia preparada": [
+      { "img": "0.90.1/importar-magia-preparada.webp", "legenda": "Um deck importado com Stensian Sanguinist e Exsanguinate: a criatura fica em Criaturas e Dessangrar em Feitiços, cada uma com uma cópia." }
+    ]
+  },
   "0.90.0": {
     "Motivo do ataque não permitido": [
       { "img": "0.90.0/ataque-nao-permitido.webp", "legenda": "Com o Árbitro Silencioso na mesa e duas criaturas atacando, o aviso explica que só uma pode atacar por combate e mostra o Árbitro ao lado." },

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.90.1] - 2026-10-30
+
+### Corrigido
+
+- **Importar cartas com o mesmo nome de uma magia preparada.** Ao importar ou colar uma lista com Exsanguinate (Dessangrar), a carta podia virar Stensian Sanguinist, a criatura que prepara uma Exsanguinate, se ela já tivesse aparecido antes (num deck, numa busca ou na mesa). Só escolhendo a carta na busca dava certo. Agora a importação e a edição como lista reconhecem a carta de verdade, e um deck que já tinha a Exsanguinate volta a mostrar a carta certa. Se um deck foi importado com o erro, troque a Stensian Sanguinist pela Exsanguinate ou importe a lista de novo.
+
 ## [0.90.0] - 2026-10-30
 
 ### Novo

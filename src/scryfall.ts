@@ -237,6 +237,16 @@ function faceView(card: ScryCard, i: number): ScryCard {
 const isFaceAlias = (key: string, c: ScryCard) => c.name.toLowerCase() !== key;
 
 /**
+ * A carta pelo nome, para identificar a carta de um deck. A face preparada de outra carta (a "Exsanguinate" da
+ * Stensian Sanguinist) não conta: o nome pode ser de uma carta real, e só o Scryfall diz qual é.
+ */
+function cachedCard(name: string): ScryCard | null {
+  const c = cacheGet(name);
+  const key = name.toLowerCase();
+  return c && c.layout === 'prepare' && !!c.faceNames?.slice(1).some(face => face.toLowerCase() === key) ? null : c;
+}
+
+/**
  * Guarda a carta pelo nome completo e também pelo nome de cada face ("The Enigma Jewel", "Locus of Enlightenment").
  * A face nunca toma o lugar de uma carta de verdade com o mesmo nome: a magia preparada "Exsanguinate" da
  * Stensian Sanguinist não pode virar a Exsanguinate, senão o deck conta as duas como a mesma carta.
@@ -282,7 +292,7 @@ export async function fetchByNames(names: string[], refreshLegality = false): Pr
   const out = new Map<string, ScryCard>();
   const missing: string[] = [];
   for (const n of new Set(names)) {
-    const c = cacheGet(n);
+    const c = cachedCard(n);
     if (c && (!refreshLegality || legalityFresh(c))) out.set(n.toLowerCase(), c); else missing.push(n);
   }
   for (let i = 0; i < missing.length; i += 75) {
@@ -379,7 +389,7 @@ export async function resolveCardNames(names: string[]): Promise<{ found: Map<st
   const found = new Map<string, string>();
   const todo: string[] = [];
   for (const n of new Set(names)) {
-    const c = cacheGet(n);
+    const c = cachedCard(n);
     if (c) found.set(n.toLowerCase(), c.name); else todo.push(n);
   }
   for (let i = 0; i < todo.length; i += 75) {
