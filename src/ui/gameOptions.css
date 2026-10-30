@@ -12,7 +12,7 @@
 .forge .game-menu .game-menu-version:hover { color: var(--ink); }
 .game-menu-meta .room-tag, .game-menu-meta .series-score { padding: 0; background: none; border: 0; }
 
-.forge .game-options-overlay { z-index: 45; padding: 20px; background: #060b12b8; animation: none; }
+.forge .game-options-overlay { z-index: 45; padding: 20px; background: color-mix(in srgb, var(--azul-060b12, #060b12) 72.2%, transparent); animation: none; }
 .game-options { width: min(440px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: 22px; background: color-mix(in srgb, var(--surface) 50%, var(--bg-deep)); color: var(--ink); box-shadow: 0 0 0 1px #ffffff14, 0 8px 20px #0004, 0 32px 80px #0007; font: 500 15px/1.5 var(--body); }
 .game-options-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
 .game-options h2 { margin: 0; font: 600 24px/1.2 var(--body); letter-spacing: -.025em; }

@@ -33,7 +33,7 @@
   width: 100%; min-height: 120px; box-sizing: border-box; padding: 12px; resize: vertical; border: 1px solid var(--line); border-radius: 12px;
   background: var(--bg-deep); color: var(--ink); font: 400 16px/1.5 var(--body);
 }
-.feedback-form textarea::placeholder { color: #7d889e; }
+.feedback-form textarea::placeholder { color: var(--azul-7d889e, #7d889e); }
 .feedback-form textarea[aria-invalid="true"] { border-color: var(--red); }
 .feedback-under { display: flex; justify-content: space-between; gap: 12px; margin-top: -4px; }
 .feedback-count { margin: 0 0 0 auto; color: var(--muted); font: 400 12px var(--body); font-variant-numeric: tabular-nums; }

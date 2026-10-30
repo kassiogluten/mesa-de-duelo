@@ -29,7 +29,7 @@
 /* Aviso só para quem está demorando: pequeno, sem cobrir botões nem cartas. */
 .wait-nudge {
   position: absolute; z-index: 4; left: 0; bottom: calc(100% + 18px); pointer-events: none; white-space: nowrap;
-  padding: 5px 12px; border-radius: 999px; color: #ffd27a; background: #0a1322f0; box-shadow: inset 0 0 0 1px #f2b54c80, 0 4px 14px #0007;
+  padding: 5px 12px; border-radius: 999px; color: #ffd27a; background: color-mix(in srgb, var(--azul-0a1322, #0a1322) 94.1%, transparent); box-shadow: inset 0 0 0 1px #f2b54c80, 0 4px 14px #0007;
   font: 600 12px/1.2 var(--body); animation: wait-nudge-in .3s ease-out both;
 }
 .wait-nudge.late { color: #ffb4a3; box-shadow: inset 0 0 0 1px #ec5a3f99, 0 4px 14px #0007; }

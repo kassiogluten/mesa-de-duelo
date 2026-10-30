@@ -3,6 +3,9 @@ import './ui/appHeader.css';
 import './novidades.css';
 import './privacidade.css';
 import { WHATSAPP } from './ui/siteFooter';
+import { iniciarTema } from './ui/temas';
+
+iniciarTema();
 
 /**
  * Política de privacidade (/privacidade.html), linkada no rodapé da tela inicial e no menu da conta. É também o

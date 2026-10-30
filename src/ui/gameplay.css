@@ -69,7 +69,7 @@
 .forge.has-exile-shelf .hand:not(.crowded) .hand-slot + .hand-slot { margin-left: var(--shelf-hand-overlap, calc(var(--hcw) * -.34)); }
 .exile-shelf { position: absolute; right: var(--hand-right); bottom: 10px; z-index: 9; width: var(--exile-width); padding-top: 18px; }
 .exile-shelf-label { position: absolute; left: 8px; top: 1px; color: var(--muted); font: 600 11px var(--body); letter-spacing: .02em; }
-.exile-shelf-track { display: flex; gap: 12px; margin-top: calc(var(--exile-card-width) * -.26); padding: calc(15px + var(--exile-card-width) * .26) 8px 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: #cbd2e1 transparent; scroll-padding: 8px; }
+.exile-shelf-track { display: flex; gap: 12px; margin-top: calc(var(--exile-card-width) * -.26); padding: calc(15px + var(--exile-card-width) * .26) 8px 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--azul-cbd2e1, #cbd2e1) transparent; scroll-padding: 8px; }
 /* Up to two cards fit without scrolling, so the hovered card can grow past the track; when it scrolls, the ends grow inwards. */
 .exile-shelf:not(.scrolls) .exile-shelf-track { overflow: visible; }
 .exile-shelf.scrolls .exile-slot:first-child .exile-card { transform-origin: 0 100%; }
@@ -80,25 +80,25 @@
 .exile-card.waiting > .face { filter: brightness(.72) saturate(.75); }
 .exile-card.playable { cursor: grab; touch-action: none; }
 .exile-card.playable > .face, .exile-card.suspend-ready > .face { outline: none; box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, .6); }
-.exile-card.playable .exile-status, .exile-card.suspend-ready .exile-status { color: #cfe8ff; box-shadow: inset 0 0 0 1px #59b5ff66; }
+.exile-card.playable .exile-status, .exile-card.suspend-ready .exile-status { color: var(--azul-cfe8ff, #cfe8ff); box-shadow: inset 0 0 0 1px #59b5ff66; }
 .exile-card.suspend-ready { cursor: pointer; }
 .exile-card.drag-source { opacity: .35; }
-.exile-time { position: absolute; top: -8px; right: -4px; display: flex; align-items: center; gap: 3px; padding: 3px 5px; border-radius: 99px; background: var(--bg-deep); border: 1px solid #dfe6f2; color: var(--ink); font: 600 11px var(--body); }
+.exile-time { position: absolute; top: -8px; right: -4px; display: flex; align-items: center; gap: 3px; padding: 3px 5px; border-radius: 99px; background: var(--bg-deep); border: 1px solid var(--azul-dfe6f2, #dfe6f2); color: var(--ink); font: 600 11px var(--body); }
 .exile-time svg { width: 11px; height: 11px; }
-.exile-status { position: absolute; left: 4px; right: 4px; bottom: 4px; padding: 5px 3px; border-radius: 4px; background: #071020eb; color: #e4e8f2; text-align: center; font: 500 9px/1.25 var(--body); }
+.exile-status { position: absolute; left: 4px; right: 4px; bottom: 4px; padding: 5px 3px; border-radius: 4px; background: color-mix(in srgb, var(--azul-071020, #071020) 92.2%, transparent); color: var(--azul-e4e8f2, #e4e8f2); text-align: center; font: 500 9px/1.25 var(--body); }
 .exile-slot .inspect-card { top: -9px; left: -5px; }
 .exile-slot:hover > .inspect-card, .exile-slot:focus-within > .inspect-card { opacity: 1; }
 .exile-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; transition: none; }
 .forge .bfc.block-candidate { cursor: pointer; }
-.forge .bfc.block-selected > .face { outline: 3px solid #f3f6ff; outline-offset: 3px; box-shadow: 0 0 18px #ffffff55; }
+.forge .bfc.block-selected > .face { outline: 3px solid var(--azul-f3f6ff, #f3f6ff); outline-offset: 3px; box-shadow: 0 0 18px #ffffff55; }
 .forge .bfc.block-target > .face { outline: 3px solid var(--gold); outline-offset: 3px; }
-.forge .tag.untap { background: #e9edf5; color: #101b2f; font-size: 10px; cursor: pointer; }
-.forge .tag.block-pending { background: #e9edf5; color: #101b2f; font-size: 10px; }
+.forge .tag.untap { background: #e9edf5; color: var(--azul-101b2f, #101b2f); font-size: 10px; cursor: pointer; }
+.forge .tag.block-pending { background: #e9edf5; color: var(--azul-101b2f, #101b2f); font-size: 10px; }
 @media (hover: hover) and (pointer: fine) { .exile-slot:hover { z-index: 2; } .exile-card:hover { transform: translateY(-6px) scale(calc(1 / .85)); } }
 
 /* A check and a fixed outline distinguish a chosen cost from hover and eligibility. */
-.forge .choice-selected > .face { outline: 3px solid var(--gold); outline-offset: 3px; box-shadow: 0 0 0 5px #10192ad9, 0 0 16px #f4bf4f55; }
-.choice-check { position: absolute; z-index: 6; top: -8px; right: -8px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #1a2233; background: var(--gold); color: #1a2233; pointer-events: none; }
+.forge .choice-selected > .face { outline: 3px solid var(--gold); outline-offset: 3px; box-shadow: 0 0 0 5px color-mix(in srgb, var(--azul-10192a, #10192a) 85.1%, transparent), 0 0 16px #f4bf4f55; }
+.choice-check { position: absolute; z-index: 6; top: -8px; right: -8px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--azul-1a2233, #1a2233); background: var(--gold); color: var(--azul-1a2233, #1a2233); pointer-events: none; }
 .choice-check svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .slot.tapped .choice-check { transform: rotate(-90deg); }
 .selection-count { display: block; margin-top: 5px; color: var(--gold); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -126,7 +126,7 @@
 .stack-top-label { position: absolute; z-index: 7; left: 50%; bottom: -9px; transform: translateX(-50%); width: max-content; padding: 5px 12px; border: 1px solid var(--gold); border-radius: 999px; background: var(--bg-deep); color: var(--gold); font: 600 12px var(--body); pointer-events: none; }
 .stack-kind { position: absolute; z-index: 7; left: 50%; top: -11px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 5px; width: max-content; padding: 4px 10px 4px 8px; border: 1px solid currentColor; border-radius: 999px; background: var(--bg-deep); font: 600 11px var(--body); letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 3px 8px #0008; pointer-events: none; }
 .stack-kind svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
-.stack-kind.spell { color: #9cc8ff; }
+.stack-kind.spell { color: var(--azul-9cc8ff, #9cc8ff); }
 .stack-kind.ability { color: var(--gold); }
 .stack-kind.trigger { color: #d1b2ff; }
 .stack-open-hint { display: block; margin-top: 20px; text-align: center; color: var(--muted); font: 400 12px var(--body); }
@@ -136,13 +136,13 @@
 .forge.stack-tight .stack-open-hint { display: none; }
 .forge.stack-tight .piles.opp, .forge.stack-tight .phase-rail { right: calc(var(--stack-active-width) + 110px); }
 
-.stack-effect-face { display: flex; flex-direction: column; justify-content: center; gap: 20px; height: 100%; padding: 20px; border-radius: 12px; background: linear-gradient(145deg, #1e3458, #0a1222); border: 2px solid #6e7e9d; box-shadow: 0 8px 18px #0009; text-align: left; overflow-y: auto; }
+.stack-effect-face { display: flex; flex-direction: column; justify-content: center; gap: 20px; height: 100%; padding: 20px; border-radius: 12px; background: linear-gradient(145deg, var(--azul-1e3458, #1e3458), var(--azul-0a1222, #0a1222)); border: 2px solid var(--azul-6e7e9d, #6e7e9d); box-shadow: 0 8px 18px #0009; text-align: left; overflow-y: auto; }
 .stack-effect-face > span { font: 600 16px var(--body); color: var(--gold); }
 .stack-effect-face p { font: 400 16px/1.5 var(--body); color: var(--ink); margin: 0; }
 .forge .avatar.selectable-player .portrait { outline: 3px solid var(--glow); outline-offset: 4px; }
 .stack-targets { font-size: 12px; line-height: 1.45; color: var(--muted); margin-top: 8px; }
 .forge .stack-gallery-overlay { z-index: 42; background: var(--bg-deep); animation: none; }
-.stack-gallery { --gallery-card-width: clamp(210px, min(23vw, (100dvh - 365px) * .716), 300px); display: flex; flex-direction: column; width: 100%; max-width: 100%; min-width: 0; height: 100%; min-height: 0; overflow: hidden; color: var(--ink); background: radial-gradient(ellipse at 50% 45%, #172840, var(--bg-deep) 72%); }
+.stack-gallery { --gallery-card-width: clamp(210px, min(23vw, (100dvh - 365px) * .716), 300px); display: flex; flex-direction: column; width: 100%; max-width: 100%; min-width: 0; height: 100%; min-height: 0; overflow: hidden; color: var(--ink); background: radial-gradient(ellipse at 50% 45%, var(--azul-172840, #172840), var(--bg-deep) 72%); }
 .stack-gallery-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px 32px 4px; flex-shrink: 0; }
 .stack-gallery-heading h2 { display: flex; align-items: center; gap: 12px; margin: 0; font: 500 28px/1.2 var(--body); letter-spacing: -.02em; }
 .stack-gallery-heading h2 span { padding: 3px 9px; border-radius: 999px; color: var(--gold); background: #ffffff08; font-size: 17px; font-variant-numeric: tabular-nums; }
@@ -185,8 +185,8 @@
 .history-row { display: flex; align-items: flex-start; gap: 6px; }
 .history-row > .history-text, .history-details .history-text { flex: 1; }
 .history-inspect { display: flex; align-items: flex-start; gap: 7px; flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; color: inherit; font: inherit; cursor: zoom-in; }
-.history-thumb { flex-shrink: 0; width: 30px; height: 22px; margin-top: 1px; border-radius: 4px; border: 1px solid var(--line); background: #1a2338 center 28% / 140% auto no-repeat; }
-.history-more { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; background: #1a2338; color: var(--muted); font: 600 11px var(--body); cursor: pointer; }
+.history-thumb { flex-shrink: 0; width: 30px; height: 22px; margin-top: 1px; border-radius: 4px; border: 1px solid var(--line); background: var(--azul-1a2338, #1a2338) center 28% / 140% auto no-repeat; }
+.history-more { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--azul-1a2338, #1a2338); color: var(--muted); font: 600 11px var(--body); cursor: pointer; }
 .history-more:hover, .history-turn-head:hover { color: var(--gold-light); }
 .log-drawer .history-details { margin: 5px 0 2px 37px; padding-left: 8px; border-left: 2px solid var(--line); gap: 4px; font-size: 12px; }
 .history-details .history-thumb { width: 24px; height: 18px; }
@@ -206,7 +206,7 @@
 .forge .action .prompt.expanded { display: block; -webkit-line-clamp: unset; line-clamp: none; max-height: 40vh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .forge .action .prompt .prompt-short { font-weight: 600; color: var(--ink); }
 .forge .action .prompt.has-short:not(.expanded) .prompt-forge { display: none; }
-.forge .action .prompt.has-short .prompt-forge { color: #c3cddd; font-size: .92em; }
+.forge .action .prompt.has-short .prompt-forge { color: var(--azul-c3cddd, #c3cddd); font-size: .92em; }
 .prompt-more { display: block; margin: 4px 0 0 auto; padding: 2px 0; border: 0; background: none; color: var(--gold-light); font: 600 13px/1.3 var(--body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .prompt-more[hidden] { display: none; }
 .prompt-more:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; border-radius: 4px; }
@@ -222,7 +222,7 @@
 .forge .action .target-ability { padding: 7px 9px; border-left: 3px solid var(--gold); border-radius: 6px; background: #f2b54c1f; }
 .forge .action .target-ability p { margin: 0; color: var(--ink); font: 500 13px/18px var(--body); text-align: left; overflow-wrap: anywhere; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; }
 .forge .action .target-ability-kind { margin-right: 3px; color: var(--gold); font: 700 10px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; }
-.forge .action .target-status { margin: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 8px; color: #c3cddd; font: 500 12px/17px var(--body); text-align: right; }
+.forge .action .target-status { margin: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 8px; color: var(--azul-c3cddd, #c3cddd); font: 500 12px/17px var(--body); text-align: right; }
 .forge .action .target-status strong { color: var(--gold-light); font-weight: 700; }
 .forge .action .target-source-card:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
 .forge .icon-btn { font-size: 13px; min-height: 36px; }
@@ -233,7 +233,7 @@
 .forge .arena-btn.primary:not(:disabled) { box-shadow: 0 0 14px #f2b54c55, inset 0 1px 0 #ffffff80; }
 .forge .arena-btn.primary:hover:not(:disabled) { box-shadow: 0 0 22px #f2b54c8c, inset 0 1px 0 #ffffff80; }
 .forge .arena-btn.secondary:hover:not(:disabled) { border-color: var(--gold-light); }
-.forge .arena-btn:is(.primary, .secondary):disabled { background: #232a3b; color: var(--muted); border-color: #333c52; box-shadow: none; filter: none; }
+.forge .arena-btn:is(.primary, .secondary):disabled { background: var(--azul-232a3b, #232a3b); color: var(--muted); border-color: var(--azul-333c52, #333c52); box-shadow: none; filter: none; }
 .forge .q-actions .arena-btn { min-width: 120px; }
 .game-settings { position: absolute; z-index: 30; top: 52px; left: 12px; width: min(320px, calc(100vw - 24px)); border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 18px; box-shadow: 0 12px 30px #0005; }
 .game-settings h2 { margin: 0 0 15px; font: 600 18px var(--body); }
@@ -258,7 +258,7 @@
 .ability-callout.right::before, .ability-callout.left::before { content: ''; position: absolute; top: 50%; width: 8px; height: 8px; background: var(--bg-deep); border: solid var(--gold); transform: translateY(-50%) rotate(45deg); }
 .ability-callout.right::before { left: -5px; border-width: 0 0 1px 1px; }
 .ability-callout.left::before { right: -5px; border-width: 1px 1px 0 0; }
-.combat-banner { position: fixed; z-index: 33; left: 50%; top: 46%; transform: translate(-50%, -50%); pointer-events: none; max-width: min(640px, 90%); padding: 10px 22px; border: 1px solid var(--red); border-radius: 12px; background: rgba(6, 9, 18, 0.92); color: #ff8f78; font: 700 clamp(16px, 3.2vh, 24px)/1.25 var(--display); text-align: center; box-shadow: 0 0 22px rgba(236, 90, 63, 0.45); }
+.combat-banner { position: fixed; z-index: 33; left: 50%; top: 46%; transform: translate(-50%, -50%); pointer-events: none; max-width: min(640px, 90%); padding: 10px 22px; border: 1px solid var(--red); border-radius: 12px; background: color-mix(in srgb, var(--azul-060912, #060912) 92%, transparent); color: #ff8f78; font: 700 clamp(16px, 3.2vh, 24px)/1.25 var(--display); text-align: center; box-shadow: 0 0 22px rgba(236, 90, 63, 0.45); }
 .damage-flash .portrait, .bfc.damage-flash .face { outline: 3px solid var(--red); outline-offset: 3px; }
 .damage-flash .life { color: var(--red); box-shadow: 0 0 16px color-mix(in srgb, var(--red) 50%, transparent); }
 /* Dano no estilo do Arena: projétil, golpe, impacto e número flutuante (motion.ts). Nada aqui recebe clique. */
@@ -272,7 +272,7 @@
 .damage-number.loyalty { color: #ffb07a; }
 .damage-number > svg { width: 30px; height: 30px; fill: #e9e2ff; filter: drop-shadow(0 0 6px #a06bff); }
 .damage-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 220px; }
-.damage-badges > span { padding: 2px 8px; border-radius: 999px; background: rgba(6, 9, 18, .9); border: 1px solid currentColor; font: 700 11px/1.4 var(--body); letter-spacing: .02em; text-shadow: none; white-space: nowrap; }
+.damage-badges > span { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--azul-060912, #060912) 90%, transparent); border: 1px solid currentColor; font: 700 11px/1.4 var(--body); letter-spacing: .02em; text-shadow: none; white-space: nowrap; }
 .damage-impact { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0;
   background: radial-gradient(circle, #fff8 0 12%, color-mix(in srgb, var(--red) 75%, transparent) 30%, transparent 68%);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 55%, transparent), 0 0 26px var(--red); }
@@ -363,7 +363,7 @@
 
 /* Marcadores do jogador ao lado do retrato: veneno em verde (com 10 o jogador perde), os outros discretos. */
 .player-counters { position: absolute; z-index: 2; top: -6px; left: calc(100% - 8px); display: flex; flex-direction: column; align-items: flex-start; gap: 3px; pointer-events: auto; }
-.player-counter { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px 2px 5px; border: 1px solid #5a6a92; border-radius: 999px; background: #0c1222f0; color: var(--ink); font: 700 12px/1.2 var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 2px 6px #0008; }
+.player-counter { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px 2px 5px; border: 1px solid var(--azul-5a6a92, #5a6a92); border-radius: 999px; background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 94.1%, transparent); color: var(--ink); font: 700 12px/1.2 var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 2px 6px #0008; }
 .player-counter { position: relative; cursor: help; }
 .player-counter svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
 .player-counter b { font-weight: 800; }
@@ -378,8 +378,8 @@
 .player-counter.experience { border-color: #a98ae6; color: #e2d6ff; }
 .player-counter.experience svg { color: #c4adff; }
 .player-counter.ticket { border-color: #e06aa0; color: #ffd0e5; }
-.player-counter.contract { border-color: #8fa3c4; color: #dbe5f5; }
-.player-counter.other svg { color: #aab6ca; }
+.player-counter.contract { border-color: var(--azul-8fa3c4, #8fa3c4); color: var(--azul-dbe5f5, #dbe5f5); }
+.player-counter.other svg { color: var(--azul-aab6ca, #aab6ca); }
 .player-counter.ring { border-color: #d9a93a; background: linear-gradient(135deg, #2e2208f2, #160f04f2); color: #ffe3a1; }
 .player-counter.ring svg { color: #f2c14e; }
 .player-counter.bump { animation: counter-bump .6s cubic-bezier(.2, .8, .2, 1); }
@@ -429,7 +429,7 @@
  * e o atalho "Passar até o fim do turno" ligado pulsa de leve. O nome vai no title e para o leitor de tela.
  */
 .forge .action:has(> .pass-level) > .btns > :last-child { margin-right: 52px; }
-.forge .action > .pass-level { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 12px; background: #101a2e; color: var(--muted); cursor: pointer; user-select: none; transition: color .15s, background .15s, border-color .15s; }
+.forge .action > .pass-level { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 12px; background: var(--azul-101a2e, #101a2e); color: var(--muted); cursor: pointer; user-select: none; transition: color .15s, background .15s, border-color .15s; }
 .forge .action > .pass-level:hover, .forge .action > .pass-level[aria-expanded="true"] { color: var(--gold-light); border-color: var(--gold); }
 .forge .action > .pass-level .pass-level-icon { display: block; width: 20px; height: 20px; }
 .forge .action > .pass-level[data-level="sempre"] { color: var(--gold-light); border-color: var(--gold); }
@@ -455,7 +455,7 @@
 .pass-level-option[aria-checked="true"] .pass-level-icon, .pass-turn-shortcut.on .pass-level-icon { color: var(--gold); }
 .pass-turn-shortcut:disabled { cursor: default; opacity: .55; }
 .pass-level-option:focus-visible, .pass-turn-shortcut:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
-.pass-menu-divider { height: 1px; margin: 8px 0; background: #b9c7df26; }
+.pass-menu-divider { height: 1px; margin: 8px 0; background: color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 14.9%, transparent); }
 /* Compra: verso de carta voando do grimório para a mão; a carta nova espera escondida até ele chegar. */
 .draw-ghost { z-index: 31; }
 .draw-ghost .back { width: 100%; height: 100%; box-shadow: 0 10px 24px #0008; }
@@ -482,13 +482,13 @@
 .player-counter.speed small { color: #d9a98f; }
 .player-counter.speed.max { background: linear-gradient(135deg, #4a1d0cf2, #1d0b04f2); border-color: #ff7a3a; }
 /* Tempo do último turno: discreto, para não competir com vida e marcadores. */
-.player-counter.last-turn { border-color: #7d8aa5; color: #c8d4f0; font-variant-numeric: tabular-nums; }
-.player-counter.last-turn svg { color: #9fb0d1; }
+.player-counter.last-turn { border-color: var(--azul-7d8aa5, #7d8aa5); color: var(--azul-c8d4f0, #c8d4f0); font-variant-numeric: tabular-nums; }
+.player-counter.last-turn svg { color: var(--azul-9fb0d1, #9fb0d1); }
 /* Virada para baixo, mas você pode olhar (Mosswort Bridge, sua metamorfose): fora do campo, a frente um pouco apagada;
    nos dois casos, um olho pequeno no canto. Qual carta é e por que só você vê ficam na prévia e no inspetor. */
 .face.hidden-known:not(.on-field) > :not(.hidden-eye) { filter: brightness(.72) saturate(.75); }
 .face.hidden-known .hidden-eye {
   position: absolute; z-index: 2; top: 5%; right: 6%; display: grid; place-items: center; width: clamp(14px, 16%, 24px); aspect-ratio: 1; border-radius: 50%;
-  background: #0a1322e6; box-shadow: 0 0 0 1px #b9c7df59; color: #dfe7f7;
+  background: color-mix(in srgb, var(--azul-0a1322, #0a1322) 90.2%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 34.9%, transparent); color: var(--azul-dfe7f7, #dfe7f7);
 }
 .face.hidden-known .hidden-eye svg { width: 70%; height: 70%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

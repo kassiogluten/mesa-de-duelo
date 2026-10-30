@@ -11,17 +11,17 @@
 .trigger-slot.dragging .trigger-card { cursor: grabbing; box-shadow: 0 0 0 3px var(--glow), 0 24px 44px #000b; }
 .trigger-slot.drop-before::before { content: ''; position: absolute; left: -11px; top: 30px; bottom: 0; width: 4px; border-radius: 2px; background: var(--glow); box-shadow: 0 0 12px var(--glow); }
 .trigger-position { display: flex; align-items: center; gap: 7px; min-height: 26px; color: var(--muted); font: 600 12px var(--body); }
-.trigger-position b { display: grid; place-items: center; min-width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ffffff30; background: #0c1222; color: var(--ink); font: 800 14px var(--body); font-variant-numeric: tabular-nums; }
+.trigger-position b { display: grid; place-items: center; min-width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ffffff30; background: var(--azul-0c1222, #0c1222); color: var(--ink); font: 800 14px var(--body); font-variant-numeric: tabular-nums; }
 .trigger-slot:first-child .trigger-position b { border-color: var(--gold); color: var(--gold-light); box-shadow: 0 0 12px #f2b54c66; }
-.trigger-slot.placed .trigger-position b { background: var(--gold); border-color: var(--gold); color: #1a2233; }
-.trigger-card { all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; background: linear-gradient(180deg, #172640f2, #0b1426f5); border: 1px solid #ffffff1f; box-shadow: 0 14px 30px #0009; cursor: grab; touch-action: pan-y; transition: transform .18s, box-shadow .18s; }
+.trigger-slot.placed .trigger-position b { background: var(--gold); border-color: var(--gold); color: var(--azul-1a2233, #1a2233); }
+.trigger-card { all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; background: linear-gradient(180deg, color-mix(in srgb, var(--azul-172640, #172640) 94.9%, transparent), color-mix(in srgb, var(--azul-0b1426, #0b1426) 96.1%, transparent)); border: 1px solid #ffffff1f; box-shadow: 0 14px 30px #0009; cursor: grab; touch-action: pan-y; transition: transform .18s, box-shadow .18s; }
 .trigger-card:hover { transform: translateY(-4px); box-shadow: 0 0 0 2px #59b5ffcc, 0 18px 34px #000a; }
 .trigger-card:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
 .trigger-slot.placed .trigger-card { border-color: #f2b54c88; }
 .trigger-face { position: relative; width: 100%; aspect-ratio: 488 / 680; --fw: calc(var(--tw) - 18px); pointer-events: none; }
 .trigger-text { margin: 0; max-height: 7.2em; overflow: auto; color: var(--ink); font: 500 13px/1.4 var(--body); }
 .trigger-dup { position: absolute; top: -9px; right: -9px; padding: 3px 8px; border-radius: 999px; background: #3b2a10; border: 1px solid var(--gold); color: var(--gold-light); font: 800 12px var(--body); box-shadow: 0 2px 8px #0008; }
-.trigger-inspect { position: absolute; right: 6px; top: 40px; z-index: 2; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ffffff30; background: #0c1222e6; color: var(--ink); cursor: zoom-in; }
+.trigger-inspect { position: absolute; right: 6px; top: 40px; z-index: 2; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ffffff30; background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 90.2%, transparent); color: var(--ink); cursor: zoom-in; }
 .trigger-inspect svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .trigger-inspect:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
 #fQuestion .question.trigger-order .q-actions { gap: 10px; flex-wrap: wrap; }
@@ -40,7 +40,7 @@
 .play-mode-head strong { margin-right: auto; font: 700 17px var(--display, var(--body)); }
 .play-mode-option.recommended .play-mode-head strong { color: var(--gold-light); }
 .play-mode-mana { display: inline-flex; gap: 2px; font-size: 18px; }
-.play-mode-extra, .play-mode-free { padding: 2px 9px; border-radius: 999px; border: 1px solid #ffffff2a; background: #0c1222; font: 600 12px var(--body); color: #ffd7c4; }
+.play-mode-extra, .play-mode-free { padding: 2px 9px; border-radius: 999px; border: 1px solid #ffffff2a; background: var(--azul-0c1222, #0c1222); font: 600 12px var(--body); color: #ffd7c4; }
 .play-mode-free { color: var(--muted); }
 .play-mode-plus { color: var(--muted); font-weight: 700; }
 .play-mode-face { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; font: 600 13px var(--body); color: var(--ink); }

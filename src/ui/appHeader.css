@@ -45,3 +45,13 @@
   .shared-shell-header.home-top > .conta { order: 4; margin-left: 0; }
   .shared-shell-header.home-top:has(> .conta:not([hidden])) nav { width: auto; flex: 1; }
 }
+/* Tema: entre Novidades e a conta; no celular, também na linha das abas. */
+.shared-shell-header.home-top > .tema { margin-left: -32px; }
+.shared-shell-header.home-top > .tema + .conta { margin-left: -32px; }
+@media (min-width: 701px) and (max-width: 960px) {
+  .shared-shell-header.home-top > .tema, .shared-shell-header.home-top > .tema + .conta { margin-left: -12px; }
+}
+@media (max-width: 700px) {
+  .shared-shell-header.home-top > .tema, .shared-shell-header.home-top > .tema + .conta { order: 4; margin-left: 0; }
+  .shared-shell-header.home-top:has(> .tema:not([hidden])) nav { width: auto; flex: 1; }
+}

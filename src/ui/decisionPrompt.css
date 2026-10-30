@@ -2,13 +2,13 @@
 .forge .action.card-decision {
   width: var(--action-reserve); max-width: none; gap: 12px; align-items: stretch;
   padding: 16px; border: 1px solid #f2b54c70; border-radius: 12px;
-  background: linear-gradient(135deg, #16243af5, #091322f5); box-shadow: 0 6px 24px #0005;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--azul-16243a, #16243a) 96.1%, transparent), color-mix(in srgb, var(--azul-091322, #091322) 96.1%, transparent)); box-shadow: 0 6px 24px #0005;
 }
 .decision-heading { margin: 0 0 8px; color: var(--gold); font: 600 14px/1.3 var(--body); }
 .forge .action.card-decision .prompt { -webkit-line-clamp: 6; line-clamp: 6; text-align: left; font: 500 16px/24px var(--body); text-shadow: none; overflow-wrap: anywhere; }
 .decision-progress { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .decision-progress strong { color: var(--gold-light); font: 600 13px/1.4 var(--body); font-variant-numeric: tabular-nums; }
-.decision-progress span { color: #bec9dc; font: 400 13px/1.4 var(--body); }
+.decision-progress span { color: var(--azul-bec9dc, #bec9dc); font: 400 13px/1.4 var(--body); }
 .forge .action.card-decision .btns { flex-direction: row; flex-wrap: wrap; }
 .forge .action.card-decision .btns:empty { display: none; }
 .forge .action.hand-decision {
@@ -39,12 +39,12 @@
 .question-bar {
   pointer-events: auto; display: flex; align-items: center; gap: 14px; max-width: min(620px, calc(100vw - 24px));
   margin-bottom: calc(clamp(144px, 23vh, 215px) + 10px); padding: 10px 12px 10px 16px; border: 1px solid var(--gold); border-radius: 12px;
-  background: linear-gradient(135deg, #16243af7, #091322f7); box-shadow: 0 8px 26px #000a; animation: rise-in .25s cubic-bezier(.2, .8, .2, 1);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--azul-16243a, #16243a) 96.9%, transparent), color-mix(in srgb, var(--azul-091322, #091322) 96.9%, transparent)); box-shadow: 0 8px 26px #000a; animation: rise-in .25s cubic-bezier(.2, .8, .2, 1);
 }
 .question-bar-text { display: flex; flex-direction: column; min-width: 0; }
 .question-bar-text strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--gold); font: 600 14px/1.3 var(--body); }
 .question-bar-text span { color: var(--ink); font: 600 13px/1.3 var(--body); font-variant-numeric: tabular-nums; }
-.question-bar-text small { color: #aab6ca; font: 400 12px/1.3 var(--body); }
+.question-bar-text small { color: var(--azul-aab6ca, #aab6ca); font: 400 12px/1.3 var(--body); }
 .forge .question-bar .arena-btn { flex: none; }
 .forge.multiplayer .question-bar { margin-bottom: calc(22vh + 10px); }
 @media (max-width: 760px), (max-height: 500px) {

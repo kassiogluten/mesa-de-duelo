@@ -32,14 +32,14 @@ body { overflow-y: auto; }
 .vis-tag.changed { background: #59b5ff22; color: var(--glow); }
 .vis-tag.fixed { background: #63d68f22; color: var(--heal); }
 .vis-text h3 { margin: 10px 0 6px; font: 700 19px/1.25 var(--display); }
-.vis-text p { margin: 0; color: #c9d0de; font-size: 14px; line-height: 1.55; }
+.vis-text p { margin: 0; color: var(--azul-c9d0de, #c9d0de); font-size: 14px; line-height: 1.55; }
 .vis-shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
 .vis-shots figure { margin: 0; }
 .vis-zoom { display: block; width: fit-content; max-width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg-deep); cursor: zoom-in; }
 .vis-zoom:hover { border-color: var(--gold); }
 .vis-zoom img { display: block; max-width: 100%; height: auto; }
 .vis-shots figcaption { margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.45; }
-.vis-lightbox { max-width: min(1400px, 96vw); max-height: 94vh; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #0c1220; color: var(--ink); }
+.vis-lightbox { max-width: min(1400px, 96vw); max-height: 94vh; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--azul-0c1220, #0c1220); color: var(--ink); }
 .vis-lightbox::backdrop { background: #000000c0; }
 .vis-lightbox img { display: block; max-width: 100%; max-height: calc(94vh - 90px); margin: 0 auto; border-radius: 8px; }
 .vis-lightbox p { margin: 10px 4px 0; color: var(--muted); font-size: 14px; }

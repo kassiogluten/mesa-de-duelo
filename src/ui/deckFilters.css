@@ -1,6 +1,6 @@
 /* Filtro de cores das listas de decks: um botão por cor, aceso quando marcado. */
 .color-filter { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.color-filter-btn { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid #ffffff26; background: #0c1222; cursor: pointer; opacity: .55; transition: opacity .15s, border-color .15s, box-shadow .15s, transform .12s; }
+.color-filter-btn { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid #ffffff26; background: var(--azul-0c1222, #0c1222); cursor: pointer; opacity: .55; transition: opacity .15s, border-color .15s, box-shadow .15s, transform .12s; }
 .color-filter-btn .pip { width: 22px; height: 22px; font-size: 22px; }
 .color-filter-btn:hover { opacity: .9; }
 .color-filter-btn[aria-pressed="true"] { opacity: 1; border-color: var(--gold); box-shadow: 0 0 0 2px #f2b54c55, 0 0 12px #f2b54c44; }

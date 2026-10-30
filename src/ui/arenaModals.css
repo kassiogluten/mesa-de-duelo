@@ -39,7 +39,7 @@
 .forge .q-opts.cards { gap: 18px; padding: 14px 6px 6px; }
 .forge .q-opt.has-card {
   width: auto; padding: 0; gap: 8px; border: 0; border-radius: 0; background: none;
-  color: #c9d3e4; font: 500 13px/1.3 var(--body); transition: transform .18s cubic-bezier(.2, .8, .2, 1);
+  color: var(--azul-c9d3e4, #c9d3e4); font: 500 13px/1.3 var(--body); transition: transform .18s cubic-bezier(.2, .8, .2, 1);
 }
 .forge .q-opt.has-card .q-face, .forge .zone-view .q-face { width: 168px; --fw: 168px; transition: filter .18s; }
 .forge .q-opt.has-card .q-face .face, .forge .zone-view .q-face .face { box-shadow: 0 14px 30px rgb(0 0 0 / .6); transition: box-shadow .18s; }

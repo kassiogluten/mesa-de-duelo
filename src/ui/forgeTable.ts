@@ -58,6 +58,7 @@ import { bracketTitle } from './deckStats';
 import './commanderTable.css';
 import './arenaModals.css';
 import './cardStyle.css';
+import { escolherTema, lerTema, parseTema, temaOptionsHTML, temasDisponiveis } from './temas';
 import './matchBar.css';
 import { abilityKindLabel, paymentButtonLabels, shortInstruction, targetProgress, voteRequest } from './shortInstruction';
 import { awaitingDecision, waitingOnText } from './awaitingDecision';
@@ -184,6 +185,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
         <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
+        <div class="game-option-pace"${temasDisponiveis() ? '' : ' hidden'}><label for="fTema">Tema da mesa</label><select id="fTema" aria-describedby="fTemaHint">${temaOptionsHTML()}</select><p id="fTemaHint">Muda a cor do fundo da mesa. Vale também na tela inicial e acompanha a sua conta.</p></div>
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
       </section>
     </div>
@@ -546,6 +548,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     ($('#fSoundPack') as HTMLSelectElement).value = settings.pack;
     ($('#fPace') as HTMLSelectElement).value = fast ? 'fast' : 'normal';
     ($('#fCardStyle') as HTMLSelectElement).value = cardStyle;
+    ($('#fTema') as HTMLSelectElement).value = lerTema();
     syncPassLevel();
   }
   function setMenu(open: boolean, restore = false) {
@@ -3031,6 +3034,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       renderTable(false);
     }
     if (t.id === 'fSoundPack') { void audio.setPack(t.value as SoundPack); }
+    if (t.id === 'fTema') escolherTema(parseTema(t.value));
     if (t.id === 'fPassLevel') { if (client?.connected && !disconnected && isPassLevel(t.value)) passLevel.change(t.value); syncPassLevel(); if (client?.state) render(); }
     if (t.id === 'fPace') { fast = t.value === 'fast'; try { localStorage.setItem('mesa:pace', fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
   });

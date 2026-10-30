@@ -2,7 +2,7 @@
 .forge .life-forecast {
   position: absolute; left: calc(50% + 3.2vh); bottom: 0; z-index: 2; display: flex; align-items: center; gap: 4px;
   padding: 2px 8px; border-radius: 999px; white-space: nowrap; pointer-events: none;
-  background: #0c1222f0; border: 1px solid #5a6a92; color: #e6ecf8; box-shadow: 0 2px 8px #0008;
+  background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 94.1%, transparent); border: 1px solid var(--azul-5a6a92, #5a6a92); color: var(--azul-e6ecf8, #e6ecf8); box-shadow: 0 2px 8px #0008;
   font: 700 12px / 1.2 var(--body); font-variant-numeric: tabular-nums;
 }
 .forge .life-forecast .lf-life { display: inline-flex; align-items: baseline; gap: 3px; }
@@ -11,7 +11,7 @@
 .forge .life-forecast .lf-poison { color: #9cf07a; }
 .forge .life-forecast .lf-commander { color: #ffd38a; }
 .forge .life-forecast em { font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
-.forge .life-forecast.safe { color: #a9b6cf; font-weight: 600; }
+.forge .life-forecast.safe { color: var(--azul-a9b6cf, #a9b6cf); font-weight: 600; }
 .forge .life-forecast.low { border-color: #f2b54c; color: #ffe2a6; box-shadow: 0 0 10px #f2b54c55; }
 .forge .life-forecast.lethal { border-color: var(--red); background: #3a0e0af2; color: #ffd0c6; box-shadow: 0 0 14px #ec5a3f99; animation: forecast-lethal 1.2s ease-in-out infinite; }
 .forge .life-forecast.lethal em { color: #fff; }
@@ -20,7 +20,7 @@
 /* Nos assentos do Commander o nome e os marcadores ficam à direita da vida: o selo vai logo abaixo do círculo. */
 .forge.multiplayer .seat-heading .life-forecast { left: 0; top: calc(100% - 6px); bottom: auto; }
 
-.forge .block-forecast { margin: 0; padding: 6px 10px; border-radius: 8px; background: #ffffff0f; border: 1px solid #ffffff22; font: 600 13px / 1.35 var(--body); color: #e6ecf8; }
+.forge .block-forecast { margin: 0; padding: 6px 10px; border-radius: 8px; background: #ffffff0f; border: 1px solid #ffffff22; font: 600 13px / 1.35 var(--body); color: var(--azul-e6ecf8, #e6ecf8); }
 .forge .block-forecast.low { border-color: #f2b54c; color: #ffe2a6; }
 .forge .block-forecast.lethal { border-color: var(--red); background: #3a0e0acc; color: #ffd0c6; }
 

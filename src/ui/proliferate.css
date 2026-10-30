@@ -1,12 +1,12 @@
 /* Proliferar: lista agrupada por efeito para quem escolhe, com seta e cor (nunca só a cor). */
 .forge {
-  --prolif-good: #4fd37a; --prolif-bad: #ff6b6b; --prolif-mixed: #f2b54c; --prolif-neutral: #9aa6b8;
+  --prolif-good: #4fd37a; --prolif-bad: #ff6b6b; --prolif-mixed: #f2b54c; --prolif-neutral: var(--azul-9aa6b8, #9aa6b8);
 }
 .forge .action.card-decision.proliferating { width: min(420px, 36vw); }
 .forge .action.proliferating .decision-copy { display: none; }
 .prolif { display: flex; flex-direction: column; gap: 10px; text-align: left; }
 .prolif h3 { margin: 0; color: var(--gold); font: 600 15px/1.3 var(--body); }
-.prolif-help { margin: 0; color: #bec9dc; font: 400 13px/1.45 var(--body); }
+.prolif-help { margin: 0; color: var(--azul-bec9dc, #bec9dc); font: 400 13px/1.45 var(--body); }
 /* Só a lista rola: os atalhos e o botão de confirmar ficam sempre à vista. */
 .prolif-list { display: flex; flex-direction: column; gap: 10px; max-height: max(120px, calc(100vh - 420px)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 2px; }
 .prolif-group { display: flex; flex-direction: column; gap: 6px; }
@@ -20,7 +20,7 @@
 .prolif-row {
   display: grid; grid-template-columns: 20px minmax(0, 1fr); grid-template-areas: "check who" "check ctrs"; gap: 4px 10px; align-items: center;
   width: 100%; padding: 8px 10px; border: 1px solid #ffffff1f; border-left: 4px solid var(--tone); border-radius: 8px;
-  background: #ffffff0a; color: #e8edf5; text-align: left; cursor: pointer; font: inherit;
+  background: #ffffff0a; color: var(--azul-e8edf5, #e8edf5); text-align: left; cursor: pointer; font: inherit;
   transition: background .15s, border-color .15s;
 }
 .prolif-row.good { --tone: var(--prolif-good); }
@@ -32,12 +32,12 @@
 .prolif-row.on { background: color-mix(in srgb, var(--tone) 16%, transparent); border-color: var(--tone); }
 .prolif-check { grid-area: check; width: 18px; height: 18px; border: 2px solid #ffffff80; border-radius: 4px; display: grid; place-items: center; }
 .prolif-row.on .prolif-check { background: var(--tone); border-color: var(--tone); }
-.prolif-row.on .prolif-check::after { content: "✓"; color: #0b1422; font: 700 13px/1 var(--body); }
+.prolif-row.on .prolif-check::after { content: "✓"; color: var(--azul-0b1422, #0b1422); font: 700 13px/1 var(--body); }
 .prolif-who { grid-area: who; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .prolif-who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/1.3 var(--body); }
-.prolif-who small { flex: none; color: #9aa6b8; font: 400 12px/1.3 var(--body); }
+.prolif-who small { flex: none; color: var(--azul-9aa6b8, #9aa6b8); font: 400 12px/1.3 var(--body); }
 .prolif-ctrs { grid-area: ctrs; display: flex; flex-wrap: wrap; gap: 4px; }
-.prolif-ctr { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 999px; font: 600 12px/1.6 var(--body); font-variant-numeric: tabular-nums; background: #ffffff12; color: #cfd8e6; }
+.prolif-ctr { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 999px; font: 600 12px/1.6 var(--body); font-variant-numeric: tabular-nums; background: #ffffff12; color: var(--azul-cfd8e6, #cfd8e6); }
 .prolif-ctr i { font-style: normal; font-size: 10px; }
 .prolif-ctr.good { background: #4fd37a26; color: #8ff0ae; }
 .prolif-ctr.bad { background: #ff6b6b26; color: #ffadad; }

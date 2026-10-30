@@ -1,4 +1,12 @@
 {
+  "0.86.0": {
+    "Temas da mesa": [
+      { "img": "0.86.0/menu-tema.webp", "legenda": "O botão da paleta no alto da tela inicial, aberto com as seis opções. Cada uma mostra a cor do fundo; aqui está marcada a **Violeta**." },
+      { "img": "0.86.0/fundo-carmesim.webp", "legenda": "A mesa da partida no tema **Carmesim**, com o fundo em vinho escuro." },
+      { "img": "0.86.0/fundo-oceano.webp", "legenda": "O mesmo lado da mesa no tema **Oceano**, com o fundo azul-petróleo." },
+      { "img": "0.86.0/opcoes-tema.webp", "legenda": "Na partida, **Menu → Opções** ganhou a escolha **Tema da mesa**, aqui com a **Esmeralda**." }
+    ]
+  },
   "0.85.0": {
     "Identidade de cor à vista na busca de cartas": [
       { "img": "0.85.0/identidade-linha.webp", "legenda": "No painel de busca de um deck com **Trostani, Voz dos Selesnya**, a linha **Identidade de cor** com os símbolos de branco e verde logo abaixo do campo." },

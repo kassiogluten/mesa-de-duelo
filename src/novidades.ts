@@ -3,6 +3,9 @@ import './ui/appHeader.css';
 import './novidades.css';
 import { RELEASES, VISUALS, inline } from './ui/changelog';
 import { esc } from './ui/cardtext';
+import { iniciarTema } from './ui/temas';
+
+iniciarTema();
 
 /**
  * Novidades em imagens: os itens do CHANGELOG.md que têm figuras em src/novidades.json, com o print de como ficou

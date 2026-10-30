@@ -10,7 +10,7 @@
 .af-head { display: flex; align-items: center; justify-content: space-between; gap: 3cqw; flex: 0 0 auto; padding: 1.6cqw 3cqw; font: 700 7.6cqw/1.15 var(--body); }
 .af-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .af-cost { flex: 0 0 auto; display: inline-flex; font-size: 1em; }
-.af-art { position: relative; flex: 0 0 auto; aspect-ratio: 626 / 457; overflow: hidden; border-radius: 2px; background: #0d1018; box-shadow: inset 0 0 0 1px #0006; }
+.af-art { position: relative; flex: 0 0 auto; aspect-ratio: 626 / 457; overflow: hidden; border-radius: 2px; background: var(--azul-0d1018, #0d1018); box-shadow: inset 0 0 0 1px #0006; }
 .af-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
 .af-type { flex: 0 0 auto; padding: 1.3cqw 3cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 600 6cqw/1.2 var(--body); }
 .af-text {
@@ -39,7 +39,7 @@
  * ficam; as duas usam o mesmo fundo, então o rodapé é parte da moldura.
  */
 .bfc.ar-field { --ar-foot: max(18px, calc(var(--cw) * .24)); }
-.face.arena-face { --ar-frame: linear-gradient(160deg, color-mix(in srgb, var(--c1) 55%, #12141a), color-mix(in srgb, var(--c2) 45%, #0a0b0f)); --ar-w: max(2px, calc(var(--fw, var(--cw)) * .04)); background: linear-gradient(160deg, var(--c1), var(--c2)); }
+.face.arena-face { --ar-frame: linear-gradient(160deg, color-mix(in srgb, var(--c1) 55%, var(--azul-12141a, #12141a)), color-mix(in srgb, var(--c2) 45%, #0a0b0f)); --ar-w: max(2px, calc(var(--fw, var(--cw)) * .04)); background: linear-gradient(160deg, var(--c1), var(--c2)); }
 .face.arena-face img { object-position: 50% 35%; }
 .face.arena-face::after {
   content: ''; position: absolute; inset: 0; z-index: 1; padding: var(--ar-w); border-radius: inherit; pointer-events: none; background: var(--ar-frame);
@@ -86,10 +86,10 @@
 /* Artefato: aço escovado, com chanfro escuro rente à arte. */
 .face.arena-face.ar-artifact {
   --ar-w: max(2px, calc(var(--fw, var(--cw)) * .045));
-  --ar-frame: repeating-linear-gradient(90deg, #ffffff14 0 1px, transparent 1px 3px), linear-gradient(160deg, #e1e5ea, #8b929c 35%, #cfd4da 55%, #646b75 85%, #a9b0b8);
+  --ar-frame: repeating-linear-gradient(90deg, #ffffff14 0 1px, transparent 1px 3px), linear-gradient(160deg, #e1e5ea, var(--azul-8b929c, #8b929c) 35%, #cfd4da 55%, var(--azul-646b75, #646b75) 85%, var(--azul-a9b0b8, #a9b0b8));
 }
-.face.arena-face.ar-artifact::before { content: ''; position: absolute; inset: var(--ar-w); z-index: 1; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 1px #2c3036, inset 0 0 0 1px #0006; }
-.face.arena-face.ar-artifact .ar-foot { box-shadow: 0 -1px 0 #2c3036, inset 0 1px 0 #ffffff70, 0 -4px 8px #0005; }
+.face.arena-face.ar-artifact::before { content: ''; position: absolute; inset: var(--ar-w); z-index: 1; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 1px var(--azul-2c3036, #2c3036), inset 0 0 0 1px #0006; }
+.face.arena-face.ar-artifact .ar-foot { box-shadow: 0 -1px 0 var(--azul-2c3036, #2c3036), inset 0 1px 0 #ffffff70, 0 -4px 8px #0005; }
 /* Terreno: pedra em tons de terra, um pouco mais grossa e com o veio gravado por dentro. */
 .face.arena-face.ar-land {
   --ar-w: max(2px, calc(var(--fw, var(--cw)) * .05));

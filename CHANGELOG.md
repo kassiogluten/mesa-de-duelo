@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.86.0] - 2026-10-30
+
+### Novo
+
+- **Temas da mesa.** Além do Noite azul de sempre, que continua sendo o padrão, a mesa ganhou cinco temas: **Esmeralda**, **Violeta**, **Carmesim**, **Grafite** e **Oceano**. Cada um troca só a cor do fundo e dos painéis, que continuam escuros: verde na Esmeralda, roxo na Violeta, vinho no Carmesim, cinza no Grafite e azul-petróleo no Oceano. Botões e destaques continuam dourados. Escolha no botão da paleta no alto da tela inicial (a mesa muda na hora, e dá para passar por todos antes de fechar) ou, na partida, em **Menu → Opções → Tema da mesa**. O tema vale em todas as telas e acompanha a sua conta nos outros aparelhos.
+
 ## [0.85.0] - 2026-10-30
 
 ### Novo

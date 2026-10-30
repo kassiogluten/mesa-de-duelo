@@ -1,6 +1,6 @@
 .site-footer { position: relative; z-index: 1; width: min(1180px, 100%); margin: 48px auto 0; padding-top: 18px; border-top: 1px solid #ffffff14; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .site-footer p { margin: 0 0 8px; max-width: 90ch; }
-.site-footer strong { color: #d8dfec; font-weight: 600; }
-.site-footer a { color: #d8dfec; text-underline-offset: 2px; }
+.site-footer strong { color: var(--azul-d8dfec, #d8dfec); font-weight: 600; }
+.site-footer a { color: var(--azul-d8dfec, #d8dfec); text-underline-offset: 2px; }
 .site-footer a:hover { color: var(--gold-light); }
 .site-footer .site-contact a { font-weight: 600; }

@@ -4,7 +4,7 @@
 .forge.multiplayer .skip-bar { top: calc(var(--seat-header, 114px) + 6px); }
 .skip-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; border-radius: 12px; border: 1px solid #ec5a3f66; background: #1b0f12f0; box-shadow: 0 8px 24px #0009; color: var(--ink); pointer-events: auto; }
 .skip-row.vote { border-color: #f2b54c88; background: #1b170ef2; }
-.skip-row.approved { border-color: #59b5ff66; background: #0d1828f0; }
+.skip-row.approved { border-color: #59b5ff66; background: color-mix(in srgb, var(--azul-0d1828, #0d1828) 94.1%, transparent); }
 .skip-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; font: 600 13px/1.3 var(--body); }
 .skip-text small { color: var(--muted); font-weight: 500; font-size: 12px; }
 .skip-actions { display: flex; gap: 6px; flex-shrink: 0; }

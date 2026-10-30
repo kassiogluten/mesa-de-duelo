@@ -8,7 +8,7 @@
 /* Brilho atrás da carta: só a parte que passa da borda aparece. */
 .bfc > .fx-glow { inset: 0; z-index: -1; border-radius: 6px; --c: #9fe3ff; box-shadow: 0 0 6px 4px color-mix(in srgb, var(--c) 90%, transparent), 0 0 16px 9px color-mix(in srgb, var(--c) 45%, transparent); opacity: 1; }
 .bfc > .fx-glow.hexproof { --c: #9fe3ff; }
-.bfc > .fx-glow.shroud { --c: #b9bfcc; box-shadow: 0 0 12px 6px #b9bfccaa, 0 0 26px 12px #8d94a466; }
+.bfc > .fx-glow.shroud { --c: var(--azul-b9bfcc, #b9bfcc); box-shadow: 0 0 12px 6px color-mix(in srgb, var(--azul-b9bfcc, #b9bfcc) 66.7%, transparent), 0 0 26px 12px color-mix(in srgb, var(--azul-8d94a4, #8d94a4) 40%, transparent); }
 .bfc > .fx-glow.lifelink { --c: #7dffae; }
 .bfc > .fx-glow.enchanted { --c: var(--aura, var(--gold)); opacity: .65; }
 .bfc > .fx-glow.plus { --c: #7dffae; opacity: .45; }
@@ -18,16 +18,16 @@
 .bfc > .fx-frame { inset: -4px; z-index: 1; border-radius: 8px; border: 2px solid transparent; }
 .bfc > .fx-frame.indestructible { border: 3px solid #f2c75c; box-shadow: 0 0 0 1px #6b4a12, 0 0 10px #f2c75c88, inset 0 0 0 1px #fff3c4aa; }
 .bfc > .fx-frame.ward { border: 2px dashed #b89cff; box-shadow: 0 0 8px #9b7bff99; }
-.bfc > .fx-frame.protection { border: 2px solid #e9edf5; box-shadow: 0 0 0 1px #7b8496, 0 0 9px #ffffff66; }
+.bfc > .fx-frame.protection { border: 2px solid #e9edf5; box-shadow: 0 0 0 1px var(--azul-7b8496, #7b8496), 0 0 9px #ffffff66; }
 .bfc > .fx-frame.menace { border: 2px solid transparent; background: conic-gradient(from 0deg, #e5533c 0 6%, transparent 6% 12%) border-box; -webkit-mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); opacity: .9; }
-.bfc > .fx-frame.defender { inset: auto -5px -6px; height: 8px; border: 0; border-radius: 2px; background: repeating-linear-gradient(90deg, #8d97a8 0 10px, #5c6577 10px 12px); box-shadow: 0 2px 4px #0008; }
-.bfc > .fx-frame.token { border: 2px solid #d9dde6; box-shadow: 0 0 6px #ffffff40; }
+.bfc > .fx-frame.defender { inset: auto -5px -6px; height: 8px; border: 0; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--azul-8d97a8, #8d97a8) 0 10px, var(--azul-5c6577, #5c6577) 10px 12px); box-shadow: 0 2px 4px #0008; }
+.bfc > .fx-frame.token { border: 2px solid var(--azul-d9dde6, #d9dde6); box-shadow: 0 0 6px #ffffff40; }
 
 /* Detalhes na base, abaixo da carta. */
 .bfc > .fx-base { left: 6%; right: 6%; bottom: -12px; height: 14px; z-index: -1; border-radius: 50%; }
 .bfc > .fx-base.deathtouch { background: radial-gradient(ellipse, #2f6b3a 0, #173f22aa 45%, transparent 70%); filter: blur(2px); }
 .bfc > .fx-base.haste { background: radial-gradient(ellipse, #ffb35a 0, #ff6a2a88 40%, transparent 70%); filter: blur(2px); }
-.bfc > .fx-base.chained { bottom: -7px; height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, #a7afbd 0 6px, transparent 6px 9px); filter: none; z-index: 1; opacity: .85; }
+.bfc > .fx-base.chained { bottom: -7px; height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, var(--azul-a7afbd, #a7afbd) 0 6px, transparent 6px 9px); filter: none; z-index: 1; opacity: .85; }
 
 /* Lâminas da iniciativa e do golpe duplo: fora do canto de cima, à direita. */
 
@@ -40,7 +40,7 @@
 
 /* Selos embaixo da carta: custo da proteção contra alvos, proteção, escudo e virada para baixo. */
 .bfc > .fx-seals { left: 50%; bottom: -9px; z-index: 4; transform: translateX(-50%); display: flex; gap: 3px; white-space: nowrap; }
-.fx-seal { display: inline-flex; align-items: center; gap: 2px; padding: 0 5px; border-radius: 999px; background: rgba(9, 13, 24, .94); border: 1px solid currentColor; font: 700 9px/1.5 var(--body); box-shadow: 0 1px 3px #000a; pointer-events: auto; cursor: help; }
+.fx-seal { display: inline-flex; align-items: center; gap: 2px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--azul-090d18, #090d18) 94%, transparent); border: 1px solid currentColor; font: 700 9px/1.5 var(--body); box-shadow: 0 1px 3px #000a; pointer-events: auto; cursor: help; }
 .fx-seal .mana, .fx-seal .pip, .fx-seal svg, .fx-seal img { width: 10px; height: 10px; }
 .fx-seal.ward { color: #cdb9ff; }
 .fx-seal.protection { color: #eef2f8; }
@@ -50,7 +50,7 @@
 
 /* Fora de fase: translúcida e tracejada. Com enjoo de invocação: um pouco apagada e com a imagem levemente borrada
    (o leve zoom esconde a borda esmaecida do blur). */
-.bfc.fx-phased > .face { opacity: .35; outline: 2px dashed #9fd3ff; outline-offset: 2px; filter: grayscale(.5); }
+.bfc.fx-phased > .face { opacity: .35; outline: 2px dashed var(--azul-9fd3ff, #9fd3ff); outline-offset: 2px; filter: grayscale(.5); }
 .bfc.fx-phased > :not(.face) { opacity: .5; }
 .bfc.fx-sick > .face { filter: saturate(.7) brightness(.88); }
 .bfc.fx-sick > .face img { filter: blur(0.7px); transform: scale(1.04); }
@@ -73,7 +73,7 @@
 
 /* Vigilância (olho) e atropelar (pegadas): selos pequenos na borda esquerda, abaixo da lupa de inspecionar. */
 .bfc > .fx-corner { top: 30%; left: -7px; z-index: 3; display: flex; flex-direction: column; gap: 2px; }
-.bfc > .fx-corner i { display: block; width: 14px; height: 14px; border-radius: 50%; background: rgba(9, 13, 24, .9) center / 10px no-repeat; box-shadow: 0 0 0 1px #c7d2e4aa, 0 1px 2px #000a; }
+.bfc > .fx-corner i { display: block; width: 14px; height: 14px; border-radius: 50%; background: color-mix(in srgb, var(--azul-090d18, #090d18) 90%, transparent) center / 10px no-repeat; box-shadow: 0 0 0 1px color-mix(in srgb, var(--azul-c7d2e4, #c7d2e4) 66.7%, transparent), 0 1px 2px #000a; }
 .bfc > .fx-corner i.flying { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cfe6ff'%3E%3Cpath d='M2 12c4-1 7-4 9-9 1 4 0 8-2 10 3-1 6-1 9 1-3 0-6 1-8 3 2 0 4 1 5 3-5 1-10 0-13-8z'/%3E%3C/svg%3E"); }
 .bfc > .fx-corner i.deathtouch { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238fd49b'%3E%3Cpath fill-rule='evenodd' d='M12 2a8 8 0 0 0-8 8c0 3 1.5 5 3 6v4h10v-4c1.5-1 3-3 3-6a8 8 0 0 0-8-8zM8.5 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 17h1v2h-1zm3 0h1v2h-1z'/%3E%3C/svg%3E"); }
 .bfc > .fx-corner i.vigilance { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f4e7b8'%3E%3Cpath d='M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8z'/%3E%3C/svg%3E"); }
@@ -104,15 +104,15 @@
 .fx-seal.control, .fx-seal.goaded { padding: 1px 2px; }
 .fx-chosen { display: inline-block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; }
 /* Estados de uma vez só (monstruosa, suspeita, exaurida...): só o ícone; o nome e o que muda ficam no balão. */
-.fx-seal.state { padding: 1px 2px; color: #d9dfec; }
+.fx-seal.state { padding: 1px 2px; color: var(--azul-d9dfec, #d9dfec); }
 .fx-seal.state.suspected, .fx-seal.state.detained { color: #ff9a6a; }
-.fx-seal.state.exerted { color: #9fb6d8; }
+.fx-seal.state.exerted { color: var(--azul-9fb6d8, #9fb6d8); }
 .fx-seal.state.monstrous, .fx-seal.state.renowned, .fx-seal.state.solved { color: #f2c14e; }
 .fx-seal.protector { color: #f0a868; }
 /* Tipo ganho ou perdido (item 50): só o ícone do tipo; a linha de tipo e a origem ficam no balão e no inspetor. */
-.fx-seal.type { padding: 1px 2px; color: #9fd8ff; }
+.fx-seal.type { padding: 1px 2px; color: var(--azul-9fd8ff, #9fd8ff); }
 .fx-seal.type.creature { color: #f0b37a; }
-.fx-seal.type.artifact { color: #c9d3e2; }
+.fx-seal.type.artifact { color: var(--azul-c9d3e2, #c9d3e2); }
 .fx-seal.type.land { color: #b9d98c; }
 .fx-seal.type.enchantment { color: #e2c8ff; }
 .fx-seal.type.lost { color: #ff9a8a; }

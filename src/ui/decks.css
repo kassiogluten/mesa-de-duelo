@@ -1,10 +1,10 @@
 /* Deck workspaces share the card table's calm palette, with artwork carrying the color. */
 .deck-workspace, .dw-preview {
-  --dw-bg: var(--bg-deep, #080d1a); --dw-surface: var(--panel, #101a2e); --dw-raised: var(--surface, #1a2943); --dw-line: var(--line, #34445e);
-  --dw-ink: var(--ink, #f0f3f9); --dw-muted: var(--muted, #aab9cd); --dw-accent: var(--gold, #f2b54c);
+  --dw-bg: var(--bg-deep, var(--azul-080d1a, #080d1a)); --dw-surface: var(--panel, var(--azul-101a2e, #101a2e)); --dw-raised: var(--surface, var(--azul-1a2943, #1a2943)); --dw-line: var(--line, var(--azul-34445e, #34445e));
+  --dw-ink: var(--ink, #f0f3f9); --dw-muted: var(--muted, var(--azul-aab9cd, #aab9cd)); --dw-accent: var(--gold, #f2b54c);
   color: var(--dw-ink); font: 400 16px/1.5 var(--body, sans-serif);
 }
-.deck-workspace { min-height: 100dvh; padding: 0 32px 64px; background: radial-gradient(ellipse at 60% 12%, #192b47 0%, #101b2e 42%, #080e1b 100%); }
+.deck-workspace { min-height: 100dvh; padding: 0 32px 64px; background: radial-gradient(ellipse at 60% 12%, var(--azul-192b47, #192b47) 0%, var(--azul-101b2e, #101b2e) 42%, var(--azul-080e1b, #080e1b) 100%); }
 .deck-workspace *, .dw-preview * { box-sizing: border-box; }
 .dw-status, #dwContent { max-width: 1180px; margin-inline: auto; }
 #dwContent { padding-top: 24px; }
@@ -35,9 +35,9 @@
 .dw-deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 20px; }
 .dw-deck { min-width: 0; border: 1px solid var(--dw-line); background: var(--dw-surface); border-radius: 12px; }
 /* A capa arredonda os próprios cantos, sem cortar o cartão: a dica do preço pode passar da borda. */
-.dw-cover { border-radius: 11px 11px 0 0; width: 100%; aspect-ratio: 16/9; display: block; position: relative; padding: 0; border: 0; cursor: pointer; background: linear-gradient(130deg, #29466c, #13213a); color: var(--dw-muted); overflow: hidden; }
+.dw-cover { border-radius: 11px 11px 0 0; width: 100%; aspect-ratio: 16/9; display: block; position: relative; padding: 0; border: 0; cursor: pointer; background: linear-gradient(130deg, var(--azul-29466c, #29466c), var(--azul-13213a, #13213a)); color: var(--dw-muted); overflow: hidden; }
 .dw-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dw-cover-tag { position: absolute; top: 10px; left: 12px; background: #081222db; color: #edf2fa; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+.dw-cover-tag { position: absolute; top: 10px; left: 12px; background: color-mix(in srgb, var(--azul-081222, #081222) 85.9%, transparent); color: #edf2fa; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
 /* Cores do deck sobre a arte, no canto inferior esquerdo, num selo com o fundo desfocado (como na tela inicial). */
 .dw-cover-colors { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 3px; padding: 4px 6px; border-radius: 999px; background: rgb(9 13 24 / .45); -webkit-backdrop-filter: blur(6px) saturate(1.2); backdrop-filter: blur(6px) saturate(1.2); box-shadow: 0 2px 8px #0006, inset 0 0 0 1px #ffffff1f; line-height: 0; }
 .dw-cover-colors .pip { font-size: 16px; }
@@ -52,7 +52,7 @@
 .dw-deck-bracket { cursor: help; }
 .dw-deck-bracket::before { content: '·'; margin-right: 4px; color: var(--dw-muted); }
 .dw-deck-valid.invalid { color: #e8b68b; }
-.dw-deck-valid.valid { color: #b7d7f3; }
+.dw-deck-valid.valid { color: var(--azul-b7d7f3, #b7d7f3); }
 .dw-empty { border: 1px dashed var(--dw-line); border-radius: 12px; padding: clamp(24px, 5vw, 56px); margin: 16px 0; max-width: 820px; background: var(--dw-surface); }
 .dw-empty h2, .dw-empty h3 { margin: 0 0 10px; font-family: var(--display, sans-serif); font-size: 22px; font-weight: 600; }
 .dw-empty p { margin: 0 0 20px; max-width: 55ch; color: var(--dw-muted); }
@@ -67,20 +67,20 @@
 .dw-edit-breadcrumb svg, .dw-name-edit-icon, .dw-actions-trigger svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .dw-edit-head { display: grid; grid-template-columns: 80px minmax(0, 1fr) auto; align-items: center; gap: 20px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid #ffffff14; }
 .dw-edit-head:not(:has(.dw-edit-cover)) { grid-template-columns: minmax(0, 1fr) auto; }
-.dw-edit-cover { width: 80px; height: 96px; object-fit: cover; border-radius: 9px; outline: 1px solid #f2b54c44; box-shadow: 0 5px 14px #0006, 3px 3px 0 #18283d, 4px 4px 0 #ffffff24; }
+.dw-edit-cover { width: 80px; height: 96px; object-fit: cover; border-radius: 9px; outline: 1px solid #f2b54c44; box-shadow: 0 5px 14px #0006, 3px 3px 0 var(--azul-18283d, #18283d), 4px 4px 0 #ffffff24; }
 .dw-edit-name { min-width: 0; }
 .dw-edit-head .dw-deck-title { position: relative; margin: 0; font: 600 clamp(26px, 3vw, 36px)/1.2 var(--display, sans-serif); letter-spacing: -.025em; overflow-wrap: anywhere; }
 .dw-deck-title input { display: block; width: 100%; min-width: 0; min-height: 52px; padding: 8px 32px 8px 0; border: 1px solid transparent; border-bottom-color: #ffffff1c; border-radius: 4px; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-overflow: ellipsis; }
-.dw-deck-title input:focus-visible { border-bottom-color: var(--dw-accent); background: #080d1a66; }
+.dw-deck-title input:focus-visible { border-bottom-color: var(--dw-accent); background: color-mix(in srgb, var(--azul-080d1a, #080d1a) 40%, transparent); }
 .dw-name-edit-icon { position: absolute; right: 7px; top: 50%; width: 17px; height: 17px; transform: translateY(-50%); color: var(--dw-muted); pointer-events: none; }
 .dw-edit-controls { display: flex; align-items: flex-end; gap: 12px; }
 .dw-edit-controls > .dw-field { font-size: 12px; gap: 5px; }
-.dw-edit-controls select { height: 44px; min-width: 126px; padding-block: 8px; background-color: #0b1423; }
+.dw-edit-controls select { height: 44px; min-width: 126px; padding-block: 8px; background-color: var(--azul-0b1423, #0b1423); }
 .dw-deck-actions { position: relative; }
-.dw-actions-trigger { min-height: 44px; white-space: nowrap; background: #19283c; border-color: #ffffff24; }
+.dw-actions-trigger { min-height: 44px; white-space: nowrap; background: var(--azul-19283c, #19283c); border-color: #ffffff24; }
 .dw-actions-trigger svg { width: 15px; height: 15px; flex-shrink: 0; }
 .dw-actions-trigger[aria-expanded='true'] { border-color: var(--dw-accent); color: var(--gold-light); }
-.dw-action-menu { position: absolute; z-index: 10; right: 0; top: calc(100% + 8px); width: 228px; max-width: calc(100vw - 32px); padding: 6px; border: 1px solid #b9904c66; border-radius: 12px; background: #142137; box-shadow: 0 12px 32px #0008, inset 0 1px 0 #ffffff10; }
+.dw-action-menu { position: absolute; z-index: 10; right: 0; top: calc(100% + 8px); width: 228px; max-width: calc(100vw - 32px); padding: 6px; border: 1px solid #b9904c66; border-radius: 12px; background: var(--azul-142137, #142137); box-shadow: 0 12px 32px #0008, inset 0 1px 0 #ffffff10; }
 .dw-action-menu .dw-button { width: 100%; min-height: 44px; justify-content: flex-start; border-color: transparent; border-radius: 6px; background: transparent; font-weight: 500; }
 .dw-action-menu .dw-button.danger { border-top: 1px solid #ffffff14; border-radius: 0 0 6px 6px; margin-top: 4px; }
 .dw-template-note { padding: 14px 18px; border-left: 3px solid var(--dw-accent); background: var(--dw-surface); color: var(--dw-muted); }
@@ -203,7 +203,7 @@
 .dw-preview-side > summary { cursor: pointer; min-height: 36px; }
 @media (hover: hover) and (pointer: fine) {
   .dw-deck-title input:hover { border-bottom-color: #f2b54c66; }
-  .dw-button:hover:not(:disabled), .dw-stepper button:hover:not(:disabled), .dw-transfer:hover, .dw-cover-pick:hover { background: #253953; border-color: #627b9b; }
+  .dw-button:hover:not(:disabled), .dw-stepper button:hover:not(:disabled), .dw-transfer:hover, .dw-cover-pick:hover { background: var(--azul-253953, #253953); border-color: var(--azul-627b9b, #627b9b); }
   .dw-button.primary:hover:not(:disabled) { background: linear-gradient(180deg, #ffd27a, var(--gold) 45%, var(--gold-deep)); color: #2b1700; border-color: var(--gold-light); filter: brightness(1.08); box-shadow: 0 3px 16px #f2b54c50, inset 0 1px 0 #ffffff80; }
   .dw-card-name:hover, .dw-preview .dp-card:hover { background: #ffffff06; }
 }
@@ -271,13 +271,13 @@
   .dw-preview[open] { animation: none; }
 }
 
-.dw-commander-zone { display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-bottom: 28px; padding: 26px; border: 1px solid #b9904c66; border-radius: 14px; background: linear-gradient(115deg, #172840, #101a2e); }
+.dw-commander-zone { display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-bottom: 28px; padding: 26px; border: 1px solid #b9904c66; border-radius: 14px; background: linear-gradient(115deg, var(--azul-172840, #172840), var(--azul-101a2e, #101a2e)); }
 .dw-commander-cards { display: flex; align-items: stretch; gap: 24px; flex-wrap: wrap; }
 .dw-commander { display: flex; align-items: center; gap: 20px; max-width: 430px; }
 .dw-commander h2 { margin: 8px 0 20px; font: 600 24px/1.2 var(--display, sans-serif); }
-.dw-commander-portrait { width: 145px; aspect-ratio: 488/680; flex-shrink: 0; border: 1px solid #b9904c99; border-radius: 9px; background: var(--dw-bg); color: var(--dw-ink); padding: 0; cursor: zoom-in; box-shadow: 0 8px 18px #0007, 3px 3px #18283d; overflow: hidden; }
+.dw-commander-portrait { width: 145px; aspect-ratio: 488/680; flex-shrink: 0; border: 1px solid #b9904c99; border-radius: 9px; background: var(--dw-bg); color: var(--dw-ink); padding: 0; cursor: zoom-in; box-shadow: 0 8px 18px #0007, 3px 3px var(--azul-18283d, #18283d); overflow: hidden; }
 .dw-commander-portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.dw-commander-empty { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; min-width: 170px; min-height: 160px; padding: 20px; border: 1px dashed #b9904c99; border-radius: 10px; background: #080d1a55; color: var(--dw-ink); cursor: pointer; font: inherit; }
+.dw-commander-empty { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; min-width: 170px; min-height: 160px; padding: 20px; border: 1px dashed #b9904c99; border-radius: 10px; background: color-mix(in srgb, var(--azul-080d1a, #080d1a) 33.3%, transparent); color: var(--dw-ink); cursor: pointer; font: inherit; }
 .dw-commander-add { align-self: center; color: var(--dw-muted); white-space: nowrap; }
 .dw-commander-empty > span { font-size: 28px; color: var(--dw-accent); }
 .dw-commander-empty small { color: var(--dw-muted); }

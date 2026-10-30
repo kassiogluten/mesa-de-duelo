@@ -12,7 +12,7 @@
 .q-filters::-webkit-scrollbar { display: none; }
 .q-filter, .q-sort-btn {
   flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 12px; border-radius: 999px; cursor: pointer;
-  border: 1px solid rgb(255 255 255 / .14); background: rgb(255 255 255 / .05); color: #c9d3e4; font: 600 13px var(--body); white-space: nowrap;
+  border: 1px solid rgb(255 255 255 / .14); background: rgb(255 255 255 / .05); color: var(--azul-c9d3e4, #c9d3e4); font: 600 13px var(--body); white-space: nowrap;
   transition: border-color .15s, background .15s, color .15s;
 }
 .q-filter:hover, .q-sort-btn:hover { border-color: rgb(89 181 255 / .7); color: var(--ink); }

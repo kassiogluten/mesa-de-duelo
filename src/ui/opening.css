@@ -1,9 +1,9 @@
 /* Opening choices are a game moment: real cards in the center, real engine choices beneath. */
 .forge[data-opening] { --opening-card-width: clamp(90px, min(16vw, 24vh), 190px); }
-.opening-shade { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(ellipse at 50% 46%, #16263b45 0%, #080e1bc9 75%); }
+.opening-shade { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: radial-gradient(ellipse at 50% 46%, color-mix(in srgb, var(--azul-16263b, #16263b) 27.1%, transparent) 0%, color-mix(in srgb, var(--azul-080e1b, #080e1b) 78.8%, transparent) 75%); }
 .opening-copy { position: absolute; top: 12%; left: 24px; right: 24px; z-index: 7; text-align: center; pointer-events: none; }
 .opening-copy h1 { margin: 0; font: 500 clamp(26px, 2.8vw, 36px)/1.2 var(--body); letter-spacing: -.025em; color: #f4f1e9; text-wrap: balance; }
-.opening-copy p { max-width: 520px; margin: 12px auto 0; font: 400 16px/1.5 var(--body); letter-spacing: 0; color: #bcc5d4; text-wrap: balance; }
+.opening-copy p { max-width: 520px; margin: 12px auto 0; font: 400 16px/1.5 var(--body); letter-spacing: 0; color: var(--azul-bcc5d4, #bcc5d4); text-wrap: balance; }
 .opening-copy p:empty { display: none; }
 .forge[data-opening] .field, .forge[data-opening] .divider, .forge[data-opening] .avatar-slot,
 .forge[data-opening] .piles, .forge[data-opening] .opp-hand, .forge[data-opening] .phase-rail { visibility: hidden; }
@@ -32,7 +32,7 @@
   right: auto; left: 50%; bottom: 8%; transform: translateX(-50%); z-index: 10;
   width: min(680px, calc(100vw - 40px)); max-width: none; align-items: center; gap: 16px;
 }
-.forge[data-opening] .action .prompt { text-align: center; max-height: 72px; font: 400 14px/1.5 var(--body); color: #bcc5d4; }
+.forge[data-opening] .action .prompt { text-align: center; max-height: 72px; font: 400 14px/1.5 var(--body); color: var(--azul-bcc5d4, #bcc5d4); }
 .forge[data-opening] .action .prompt:empty { display: none; }
 .forge[data-opening] .action .btns { flex-direction: row; justify-content: center; gap: 14px; width: min(430px, 100%); }
 .forge[data-opening] .action .arena-btn { min-height: 48px; padding: 12px 24px; font: 600 16px/1.25 var(--body); letter-spacing: 0; }

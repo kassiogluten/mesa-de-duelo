@@ -2,12 +2,12 @@
 .forge .topbar { align-items: center; right: auto; max-width: calc(50% - 90px); }
 .forge .match-bar { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 0 4px; padding: 0; list-style: none; overflow: hidden; }
 .forge .match-bar[hidden] { display: none; }
-.match-chip { flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: #0c1222d9; color: var(--muted); font: 600 12px/1.2 var(--body); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.match-chip { flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 85.1%, transparent); color: var(--muted); font: 600 12px/1.2 var(--body); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .match-chip.room { color: var(--gold); border-color: #f2b54c66; }
 .match-chip.series { color: var(--ink); }
 .match-chip.offline { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: #ffb3a3; border-color: #ec5a3f80; background: #3b1d1dd9; }
-.match-chip.spectating { color: #bcd7ff; border-color: #59b5ff66; }
-.match-chip.audience { color: #bcd7ff; }
+.match-chip.spectating { color: var(--azul-bcd7ff, #bcd7ff); border-color: #59b5ff66; }
+.match-chip.audience { color: var(--azul-bcd7ff, #bcd7ff); }
 /* Nomes de quem assiste, no menu: no toque não há o balão do título da barra. */
 .forge .game-menu .game-menu-audience { margin: 0; padding: 2px 4px; color: var(--muted); font: 500 12px/1.4 var(--body); overflow-wrap: anywhere; }
 .game-menu-meta.in-bar { display: none; }

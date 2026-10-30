@@ -1,0 +1,183 @@
+/*
+ * Temas da mesa (src/ui/temas.ts): mudam só o tom do fundo, que continua escuro. Sem tema, vale o Noite azul de
+ * sempre: cada azul do CSS é escrito como var(--azul-RRGGBB, #RRGGBB), e só os outros temas definem essas variáveis,
+ * girando o tom (--tema-h, em graus) com a mesma claridade e saturação. Botões e destaques não mudam. Um azul novo
+ * no CSS precisa da sua linha aqui (tests/temas.test.mjs confere).
+ */
+
+/* Navegadores sem cor relativa ficam no Noite azul (e não mostram a escolha de tema). */
+@supports (color: oklch(from red l c calc(h + 1))) {
+  :root[data-tema]:not([data-tema='noite']) {
+    --azul-03050a: oklch(from #03050a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-04060c: oklch(from #04060c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-060912: oklch(from #060912 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-050a14: oklch(from #050a14 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-060b12: oklch(from #060b12 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-080c18: oklch(from #080c18 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-070d19: oklch(from #070d19 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-090d18: oklch(from #090d18 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-080d1a: oklch(from #080d1a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-070e1b: oklch(from #070e1b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-080e1b: oklch(from #080e1b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-080f1c: oklch(from #080f1c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0a0f1c: oklch(from #0a0f1c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0d1018: oklch(from #0d1018 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-071020: oklch(from #071020 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0a1020: oklch(from #0a1020 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-081222: oklch(from #081222 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0a1222: oklch(from #0a1222 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0c1220: oklch(from #0c1220 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0c1222: oklch(from #0c1222 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-091322: oklch(from #091322 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0a1322: oklch(from #0a1322 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0b1422: oklch(from #0b1422 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0a1424: oklch(from #0a1424 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0b1423: oklch(from #0b1423 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0a1425: oklch(from #0a1425 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-12141a: oklch(from #12141a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0c1424: oklch(from #0c1424 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0b1426: oklch(from #0b1426 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0c1426: oklch(from #0c1426 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0d1426: oklch(from #0d1426 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0b1526: oklch(from #0b1526 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0d1626: oklch(from #0d1626 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0f1628: oklch(from #0f1628 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0d1828: oklch(from #0d1828 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-0c1830: oklch(from #0c1830 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-10192a: oklch(from #10192a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-101a2e: oklch(from #101a2e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-111a2e: oklch(from #111a2e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-121a2e: oklch(from #121a2e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-101b2d: oklch(from #101b2d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-101b2e: oklch(from #101b2e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-101b2f: oklch(from #101b2f l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-121b31: oklch(from #121b31 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-121c2d: oklch(from #121c2d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-111c30: oklch(from #111c30 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-131d30: oklch(from #131d30 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-141d33: oklch(from #141d33 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-13203a: oklch(from #13203a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-142137: oklch(from #142137 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-142138: oklch(from #142138 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-16203a: oklch(from #16203a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-182038: oklch(from #182038 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-13213a: oklch(from #13213a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-13223a: oklch(from #13223a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2233: oklch(from #1a2233 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-18223a: oklch(from #18223a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2338: oklch(from #1a2338 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-18233b: oklch(from #18233b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-16243a: oklch(from #16243a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2438: oklch(from #1a2438 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-16263b: oklch(from #16263b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2440: oklch(from #1a2440 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1b2440: oklch(from #1b2440 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-172640: oklch(from #172640 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-18283d: oklch(from #18283d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-19283c: oklch(from #19283c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2740: oklch(from #1a2740 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-172840: oklch(from #172840 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1c2644: oklch(from #1c2644 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1b293d: oklch(from #1b293d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2940: oklch(from #1a2940 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2943: oklch(from #1a2943 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2944: oklch(from #1a2944 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-232a3b: oklch(from #232a3b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1a2a48: oklch(from #1a2a48 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-182b46: oklch(from #182b46 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-192b47: oklch(from #192b47 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-22294a: oklch(from #22294a l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1d2c47: oklch(from #1d2c47 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1b2c4d: oklch(from #1b2c4d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-2c3036: oklch(from #2c3036 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1d304d: oklch(from #1d304d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1d3050: oklch(from #1d3050 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1e3458: oklch(from #1e3458 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-2a3550: oklch(from #2a3550 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-263850: oklch(from #263850 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-2a3654: oklch(from #2a3654 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-2a3658: oklch(from #2a3658 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-253953: oklch(from #253953 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-2c3754: oklch(from #2c3754 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-263b55: oklch(from #263b55 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-333c52: oklch(from #333c52 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-294163: oklch(from #294163 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-34405e: oklch(from #34405e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-34445e: oklch(from #34445e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-284470: oklch(from #284470 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-39445f: oklch(from #39445f l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-29466c: oklch(from #29466c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-3a4768: oklch(from #3a4768 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-4b566b: oklch(from #4b566b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-3b5689: oklch(from #3b5689 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-4a5a80: oklch(from #4a5a80 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-4a5f8c: oklch(from #4a5f8c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-5c6577: oklch(from #5c6577 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-56668f: oklch(from #56668f l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-596b89: oklch(from #596b89 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-646b75: oklch(from #646b75 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-5a6a92: oklch(from #5a6a92 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-686e78: oklch(from #686e78 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-627b9b: oklch(from #627b9b l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-6e7b93: oklch(from #6e7b93 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-6e7e9d: oklch(from #6e7e9d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-7b8496: oklch(from #7b8496 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-7d889e: oklch(from #7d889e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-7d8aa5: oklch(from #7d8aa5 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-8b929c: oklch(from #8b929c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-8d94a4: oklch(from #8d94a4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-8d97a8: oklch(from #8d97a8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-8fa3c4: oklch(from #8fa3c4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9aa5bb: oklch(from #9aa5bb l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9aa6b8: oklch(from #9aa6b8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-a7afbd: oklch(from #a7afbd l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-a9b0b8: oklch(from #a9b0b8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9fb0d1: oklch(from #9fb0d1 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9fb6d8: oklch(from #9fb6d8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-aab6ca: oklch(from #aab6ca l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-a9b6cf: oklch(from #a9b6cf l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-aab9cd: oklch(from #aab9cd l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-b8bec8: oklch(from #b8bec8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-b9bfcc: oklch(from #b9bfcc l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-bcc5d4: oklch(from #bcc5d4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-a9c4ff: oklch(from #a9c4ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9cc8ff: oklch(from #9cc8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-b9c7df: oklch(from #b9c7df l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-bec9dc: oklch(from #bec9dc l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c0cbe0: oklch(from #c0cbe0 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c3cddd: oklch(from #c3cddd l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9fd3ff: oklch(from #9fd3ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c9d0de: oklch(from #c9d0de l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-9fd8ff: oklch(from #9fd8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c7d2e4: oklch(from #c7d2e4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-cbd2e1: oklch(from #cbd2e1 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c9d3e2: oklch(from #c9d3e2 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c9d3e4: oklch(from #c9d3e4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-b7d7f3: oklch(from #b7d7f3 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c8d4f0: oklch(from #c8d4f0 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-bcd7ff: oklch(from #bcd7ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c9d4ff: oklch(from #c9d4ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-cfd8e6: oklch(from #cfd8e6 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-d5dcea: oklch(from #d5dcea l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-d9dde6: oklch(from #d9dde6 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-d8dfec: oklch(from #d8dfec l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-d9dfec: oklch(from #d9dfec l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-bfe6ff: oklch(from #bfe6ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-cfe6ff: oklch(from #cfe6ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-dbe5f5: oklch(from #dbe5f5 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-cfe8ff: oklch(from #cfe8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-dfe6f2: oklch(from #dfe6f2 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-dfe7f7: oklch(from #dfe7f7 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-e4e8f2: oklch(from #e4e8f2 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-d7ecff: oklch(from #d7ecff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-e6ecf8: oklch(from #e6ecf8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-e8edf5: oklch(from #e8edf5 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-f3f6ff: oklch(from #f3f6ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+  }
+  :root[data-tema='esmeralda'] { --tema-h: -105; }
+  :root[data-tema='violeta'] { --tema-h: 30; }
+  :root[data-tema='carmesim'] { --tema-h: 115; }
+  /* O Grafite é a exceção: em vez de girar o tom, tira a cor. */
+  :root[data-tema='grafite'] { --tema-h: 0; --tema-c: 0.12; }
+  :root[data-tema='oceano'] { --tema-h: -50; }
+}
