@@ -1,6 +1,6 @@
 import type { DeckData, DeckFormat } from '../decks';
 import { cardInfo } from '../cards';
-import { cacheGet, fetchByNames } from '../scryfall';
+import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import {
   History, addCounter, createToken, draw, locate, mill, move, mulligan, newSandbox, parseSandbox, shuffleLibrary,
   toggleFaceDown, toggleTap, untapAll, type Position, type SCard, type Sandbox, type Zone,
@@ -32,9 +32,9 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
   let pressTimer: ReturnType<typeof setTimeout> | undefined;
   let pressed = false;
 
-  const info = (name: string) => { const sc = cacheGet(name); return sc ? cardInfo(sc) : null; };
-  const label = (c: SCard) => c.faceDown ? 'Carta com a face para baixo' : info(c.name)?.label ?? c.name;
-  const isLand = (c: SCard) => !c.custom && info(c.name)?.type === 'land';
+  const info = (c: SCard) => { const sc = cacheGet(c.name, c.print); return sc ? cardInfo(sc) : null; };
+  const label = (c: SCard) => c.faceDown ? 'Carta com a face para baixo' : info(c)?.label ?? c.name;
+  const isLand = (c: SCard) => !c.custom && info(c)?.type === 'land';
 
   function save() {
     try { if (s) localStorage.setItem(FREE_KEY, JSON.stringify(s)); else localStorage.removeItem(FREE_KEY); } catch { /* sem armazenamento */ }
@@ -50,7 +50,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
 
   function face(c: SCard, size: 'small' | 'normal') {
     if (c.faceDown) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
-    const i = c.custom ? null : info(c.name);
+    const i = c.custom ? null : info(c);
     const power = c.custom?.power ?? cacheGet(c.name)?.power;
     const toughness = c.custom?.toughness ?? cacheGet(c.name)?.toughness;
     return faceHTML({
@@ -174,7 +174,8 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
     s = next; viewing = null; menu = null; tokenForm = false; history.clear();
     save(); render();
     const names = [...new Set(Object.values(next.zones).flat().filter(c => !c.custom).map(c => c.name))];
-    void fetchByNames(names).then(() => { if (s === next) render(); }).catch(() => {});
+    void fetchByNames(names).then(() => { if (s === next) render(); })
+      .then(() => fetchPrintings(Object.values(next.zones).flat().flatMap(c => c.print && !c.custom ? [{ name: c.name, ...c.print }] : []))).then(() => { if (s === next) render(); }).catch(() => {});
   }
 
   /** Ação principal (toque): da mão vai para o campo; no campo vira/desvira; nas outras zonas abre o menu. */
@@ -218,7 +219,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
 
   function inspector(c: SCard): InspectorCard {
     return c.custom ? { name: c.name, text: 'Ficha criada na mesa.', typeLine: 'Ficha', power: c.custom.power, toughness: c.custom.toughness, token: true, counters: c.counters }
-      : { name: c.name, counters: c.counters, token: c.token, faceDown: c.faceDown };
+      : { name: c.name, print: c.print, counters: c.counters, token: c.token, faceDown: c.faceDown };
   }
 
   root.addEventListener('click', e => {

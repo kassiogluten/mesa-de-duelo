@@ -12,7 +12,8 @@ function combine(entries: DeckEntry[]): DeckEntry[] {
   const result: DeckEntry[] = [];
   for (const entry of entries) {
     if (!entry.name.trim() || !Number.isSafeInteger(entry.count) || entry.count <= 0) throw new Error('A lista contém uma quantidade inválida.');
-    const previous = result.find(e => (e.oracleId && entry.oracleId && e.oracleId === entry.oracleId) || e.name.toLowerCase() === entry.name.toLowerCase());
+    const previous = result.find(e => ((e.oracleId && entry.oracleId && e.oracleId === entry.oracleId) || e.name.toLowerCase() === entry.name.toLowerCase())
+      && e.set === entry.set && e.cn === entry.cn);
     if (previous) {
       if (!Number.isSafeInteger(previous.count + entry.count)) throw new Error(`Quantidade muito grande para ${entry.name}.`);
       previous.count += entry.count;

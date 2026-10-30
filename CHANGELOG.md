@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.84.0] - 2026-10-30
+
+### Novo
+
+- **A importação guarda a série das cartas.** Ao importar uma lista com a série e o número de cada carta, como `1 Lightning Bolt (M10) 146` (do jeito que o Moxfield, o Archidekt e o Arena exportam), ou pelo link de um deck do Moxfield ou do Archidekt, o deck guarda a impressão escolhida de cada carta. No editor, a série aparece ao lado do nome. A mesma carta em séries diferentes fica em linhas separadas, e as cópias continuam contando juntas no limite do formato.
+- **A mesa mostra a arte da impressão escolhida.** Na partida, as cartas do seu deck aparecem com a arte da série que você escolheu, e todos na mesa veem essa arte: no campo de batalha, na mão, na pilha, no cemitério, no exílio, no histórico e ao ampliar a carta. Vale também na mesa livre, no editor, na visualização do deck e no retrato do comandante. Cartas sem série continuam como antes, com a arte de sempre (e em português, quando existe). Se a mesa não conhecer a impressão pedida, a carta joga normalmente com a arte padrão.
+
+### Mudou
+
+- **Exportar lista leva a série.** As cartas com impressão escolhida saem como `4 Lightning Bolt (M10) 146`, e importar a lista de novo mantém a escolha.
+
 ## [0.83.0] - 2026-10-30
 
 ### Novo

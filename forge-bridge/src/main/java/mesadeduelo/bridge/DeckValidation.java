@@ -12,6 +12,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import forge.StaticData;
+import forge.card.CardEdition;
 import forge.deck.CardPool;
 import forge.deck.Deck;
 import forge.deck.DeckFormat;
@@ -101,8 +102,50 @@ final class DeckValidation {
                 issue(issues, "identity-mismatch", "O identificador da carta não corresponde ao nome informado.", name, section); continue;
             }
             if (card.getRules().isUnsupported()) { issue(issues, "unsupported-card", "Esta carta ainda não é suportada pelo motor de regras.", name, section); continue; }
-            pool.add(card, count);
+            pool.add(printed(card, row), count);
         }
+    }
+
+    /** A impressão pedida na lista (série do Scryfall e número de coleção); sem ela, ou se o Forge não a tem, a padrão. */
+    private static PaperCard printed(PaperCard card, JsonObject row) {
+        JsonElement set = row.get("set"), cn = row.get("cn");
+        if (set == null || !set.isJsonPrimitive() || !set.getAsJsonPrimitive().isString()) return card;
+        CardEdition edition = editionsByScryfall().get(set.getAsString().strip().toLowerCase(Locale.ROOT));
+        if (edition == null) return card;
+        var db = StaticData.instance().getCommonCards();
+        PaperCard found = cn != null && cn.isJsonPrimitive() && cn.getAsJsonPrimitive().isString()
+            ? db.getCard(card.getName(), edition.getCode(), cn.getAsString().strip()) : db.getCard(card.getName(), edition.getCode());
+        return found != null && found.getName().equals(card.getName()) ? found : card;
+    }
+
+    private static volatile Map<String, CardEdition> editionsByScryfall;
+    private static Map<String, CardEdition> editionsByScryfall() {
+        Map<String, CardEdition> out = editionsByScryfall;
+        if (out != null) return out;
+        out = new java.util.HashMap<>();
+        for (CardEdition e : StaticData.instance().getEditions()) out.putIfAbsent(e.getScryfallCode(), e);
+        return editionsByScryfall = out;
+    }
+
+    /**
+     * A impressão escolhida pelo jogador ({set, cn} do Scryfall), para a mesa mostrar a arte dela; null quando a
+     * carta está na impressão padrão, que a mesa já mostra pelo nome.
+     */
+    static JsonObject printing(PaperCard card) {
+        JsonObject cached = PRINTINGS.computeIfAbsent(card, DeckValidation::findPrinting);
+        return cached == STANDARD ? null : cached;
+    }
+    private static final JsonObject STANDARD = new JsonObject();
+    private static final Map<PaperCard, JsonObject> PRINTINGS = new java.util.concurrent.ConcurrentHashMap<>();
+    private static JsonObject findPrinting(PaperCard card) {
+        PaperCard standard = resolve(card.getName());
+        if (standard == null || (standard.getEdition().equals(card.getEdition()) && standard.getCollectorNumber().equals(card.getCollectorNumber()))) return STANDARD;
+        CardEdition edition = StaticData.instance().getEditions().get(card.getEdition());
+        if (edition == null) return STANDARD;
+        JsonObject o = new JsonObject();
+        o.addProperty("set", edition.getScryfallCode());
+        o.addProperty("cn", card.getCollectorNumber());
+        return o;
     }
 
     static PaperCard resolve(String name) {
@@ -221,6 +264,8 @@ final class DeckValidation {
             JsonObject o = new JsonObject(); o.addProperty("name", e.getKey().getDisplayName()); o.addProperty("count", e.getValue());
             String oracleId = oracleId(e.getKey().getDisplayName());
             if (oracleId != null) o.addProperty("oracleId", oracleId);
+            JsonObject print = printing(e.getKey());
+            if (print != null) { o.addProperty("set", print.get("set").getAsString()); o.addProperty("cn", print.get("cn").getAsString()); }
             a.add(o);
         }
         return a;

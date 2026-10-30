@@ -19,6 +19,8 @@ export interface SCard {
   /** Ficha sem carta correspondente: só nome e força/resistência digitados. */
   custom?: { power?: string; toughness?: string };
   commander?: boolean;
+  /** A impressão escolhida no deck (série do Scryfall e número), para a mesa mostrar a arte dela. */
+  print?: { set: string; cn?: string };
 }
 
 export interface Sandbox {
@@ -52,8 +54,9 @@ const card = (id: number, name: string, extra: Partial<SCard> = {}): SCard => ({
 export function newSandbox(deck: DeckData, format: DeckFormat, rng: Rng = Math.random): Sandbox {
   let id = 1;
   const zones = blank();
-  for (const e of deck.cards) for (let i = 0; i < e.count; i++) zones.library.push(card(id++, e.name));
-  for (const e of deck.commanders ?? []) for (let i = 0; i < e.count; i++) zones.command.push(card(id++, e.name, { commander: true }));
+  const print = (e: DeckData['cards'][number]): Partial<SCard> => e.set ? { print: { set: e.set, ...(e.cn ? { cn: e.cn } : {}) } } : {};
+  for (const e of deck.cards) for (let i = 0; i < e.count; i++) zones.library.push(card(id++, e.name, print(e)));
+  for (const e of deck.commanders ?? []) for (let i = 0; i < e.count; i++) zones.command.push(card(id++, e.name, { commander: true, ...print(e) }));
   zones.library = shuffle(zones.library, rng);
   const life = format === 'commander' ? 40 : 20;
   const s: Sandbox = { v: 1, deckName: deck.name, deck: { name: deck.name, cards: deck.cards, commanders: deck.commanders ?? [] }, format, zones, life, oppLife: life, turn: 1, nextId: id };
@@ -136,7 +139,7 @@ export function addCounter(s: Sandbox, id: number, kind: string, delta: number) 
 export function createToken(s: Sandbox, name: string, opts: { copyOf?: number; power?: string; toughness?: string } = {}): SCard {
   const source = opts.copyOf !== undefined ? locate(s, opts.copyOf)?.card : undefined;
   const t = source
-    ? card(s.nextId++, source.name, { token: true, custom: source.custom })
+    ? card(s.nextId++, source.name, { token: true, custom: source.custom, ...(source.print ? { print: source.print } : {}) })
     : card(s.nextId++, name.trim() || 'Ficha', { token: true, custom: { power: opts.power, toughness: opts.toughness } });
   s.zones.battlefield.push(t);
   return t;

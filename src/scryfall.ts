@@ -144,9 +144,59 @@ export function legalityFresh(card: ScryCard): boolean {
 
 const validCard = (c: any): c is ScryCard => !!c && c.v === FORMAT && typeof c.name === 'string' && typeof c.type_line === 'string' && typeof c.layout === 'string';
 
-export function cacheGet(name: string): ScryCard | null {
+/**
+ * A carta pelo nome. Com a impressão escolhida no deck (série e número), a imagem é a dela assim que estiver no cache
+ * (`fetchPrintings`), no lugar da padrão, da arte fixa dos básicos e da impressão em português; nome e texto continuam.
+ */
+export function cacheGet(name: string, print?: Partial<Printing> | null): ScryCard | null {
   const cached = memory.get(name.toLowerCase());
-  return cached ? withBasicArt(cached) : null;
+  if (!cached) return null;
+  const printed = print?.set ? printings.get(printKey(name, { set: print.set, cn: print.cn })) : undefined;
+  return printed?.image_uris ? withPrinting(cached, name, printed) : withBasicArt(cached);
+}
+
+/** Impressão de uma carta no Scryfall: código da série (em minúsculas) e número de coleção. */
+export interface Printing { set: string; cn?: string }
+type PrintImages = { image_uris?: Images; faceNames?: string[]; faceImages?: (Images | undefined)[] };
+const PRINT_PREFIX = 'print:';
+const printings = new Map<string, PrintImages>();
+/** Impressões que o Scryfall não achou nesta visita: não são pedidas de novo. */
+const missingPrintings = new Set<string>();
+const printKey = (name: string, p: Printing) => `${p.set}/${p.cn ?? name}`.toLowerCase();
+
+function withPrinting(card: ScryCard, name: string, p: PrintImages): ScryCard {
+  const face = p.faceNames?.findIndex(f => f.toLowerCase() === name.toLowerCase()) ?? -1;
+  return { ...card, image_uris: (face >= 0 ? p.faceImages?.[face] : undefined) ?? p.image_uris, faceImages: p.faceImages ?? card.faceImages,
+    pt: card.pt && { ...card.pt, image_uris: undefined, faceImages: undefined } };
+}
+
+/** Busca as imagens das impressões escolhidas que ainda não estão no cache. */
+export async function fetchPrintings(entries: { name: string; set?: string; cn?: string }[]): Promise<void> {
+  const todo = new Map<string, { name: string; print: Printing }>();
+  for (const e of entries) {
+    if (!e.set) continue;
+    const print = { set: e.set, cn: e.cn }, key = printKey(e.name, print);
+    if (!printings.has(key) && !missingPrintings.has(key)) todo.set(key, { name: e.name, print });
+  }
+  const list = [...todo.entries()];
+  for (let i = 0; i < list.length; i += 75) {
+    const chunk = list.slice(i, i + 75);
+    const { json } = await request('/cards/collection', { identifiers: chunk.map(([, { name, print }]) =>
+      print.cn ? { set: print.set, collector_number: print.cn } : { set: print.set, name: lookupName(name) }) });
+    const found = new Set<string>();
+    for (const d of json?.data ?? []) {
+      const faces: any[] = Array.isArray(d.card_faces) ? d.card_faces : [];
+      const faceImages = faces.map(f => images(f.image_uris));
+      const p: PrintImages = { image_uris: images(d.image_uris) ?? faceImages[0], faceNames: faces.length ? faces.map(f => f.name) : undefined, faceImages: faceImages.some(Boolean) ? faceImages : undefined };
+      // Pedida pelo número, a impressão volta com o nome da carta; pedida pelo nome, volta com o número.
+      for (const [key, { name, print }] of chunk) {
+        if (String(d.set).toLowerCase() !== print.set.toLowerCase()) continue;
+        if (print.cn ? String(d.collector_number).toLowerCase() !== print.cn.toLowerCase() : lookupName(name).toLowerCase() !== String(d.name).split(' // ')[0].toLowerCase()) continue;
+        printings.set(key, p); found.add(key); void cardStore.write(PRINT_PREFIX + key, p);
+      }
+    }
+    for (const [key] of chunk) if (!found.has(key)) missingPrintings.add(key);
+  }
 }
 
 /**
@@ -168,8 +218,10 @@ export async function loadCardCache() {
   } catch { /* localStorage bloqueado */ }
   // Versões antigas deixavam a magia preparada ocupar o nome de uma carta real (ver cachePut): esses registros
   // são descartados e a carta é buscada de novo pelo nome.
-  for (const [name, c] of await cardStore.readAll<ScryCard>())
+  for (const [name, c] of await cardStore.readAll<ScryCard>()) {
+    if (name.startsWith(PRINT_PREFIX)) { if (c && typeof c === 'object') printings.set(name.slice(PRINT_PREFIX.length), c as PrintImages); continue; }
     if (validCard(c) && !memory.has(name) && !(c.layout === 'prepare' && isFaceAlias(name, c))) memory.set(name, c);
+  }
 }
 
 /** A carta vista por uma das faces: imagem e nome em português daquela face. */

@@ -15,7 +15,12 @@ export const scryfallFormat = (format: DeckFormat | undefined) => format === 'sa
 export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'free' ? d.format !== 'commander' : (d.format ?? 'free') === format;
 /** O Sacola 50 não confere preço: o aviso lembra o limite combinado. */
 export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro custando até R$ 50. A mesa não confere o preço: combine com o oponente.';
-export interface DeckEntry { name: string; count: number; oracleId?: string }
+/** `set` e `cn`: a impressão escolhida (série do Scryfall, em minúsculas, e número de coleção), vinda da lista importada. */
+export interface DeckEntry { name: string; count: number; oracleId?: string; set?: string; cn?: string }
+/** A mesma carta na mesma impressão: cada série da mesma carta fica numa linha própria do deck. */
+export const entryKey = (e: Pick<DeckEntry, 'name' | 'set' | 'cn'>) => e.set ? `${e.name}|${e.set}|${e.cn ?? ''}` : e.name;
+/** "(DMU) 277": a impressão como as listas do Moxfield e do Arena escrevem. */
+export const printLabel = (e: Pick<DeckEntry, 'set' | 'cn'>) => e.set ? `(${e.set.toUpperCase()})${e.cn ? ` ${e.cn}` : ''}` : '';
 export interface DeckData {
   id: string;
   name: string;
@@ -60,7 +65,8 @@ const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v ===
 
 function validEntries(v: unknown): v is DeckEntry[] {
   return Array.isArray(v) && v.every(e => object(e) && typeof e.name === 'string' && !!e.name.trim()
-    && Number.isSafeInteger(e.count) && Number(e.count) > 0 && (e.oracleId === undefined || typeof e.oracleId === 'string'));
+    && Number.isSafeInteger(e.count) && Number(e.count) > 0 && (e.oracleId === undefined || typeof e.oracleId === 'string')
+    && (e.set === undefined || typeof e.set === 'string') && (e.cn === undefined || typeof e.cn === 'string'));
 }
 function validDeck(v: unknown): v is DeckData {
   return object(v) && typeof v.id === 'string' && !!v.id && typeof v.name === 'string' && validEntries(v.cards)
@@ -186,18 +192,21 @@ export function parseDeckList(text: string): ParsedList {
     const count = m[1] ? Number(m[1]) : 1;
     const tag = /\[[^\]]*\b(sideboard|commander|maybeboard|considering|tokens?)\b[^\]]*\]/i.exec(m[2]);
     const isCommander = commanderMarker.test(m[2]);
-    const name = m[2].replace(/\s*\^[^^]*\^/g, '').replace(/\s*\[[^\]]*\]/g, '').replace(/\s*\*[A-Z]+\*/g, '')
-      .replace(/\s+\([A-Za-z0-9]{2,6}\)(\s+[\w★-]+)?\s*$/, '').replace(/\s*\/\/\s*/g, ' // ').trim();
+    const bare = m[2].replace(/\s*\^[^^]*\^/g, '').replace(/\s*\[[^\]]*\]/g, '').replace(/\s*\*[A-Z]+\*/g, '');
+    const printing = bare.match(/\s+\(([A-Za-z0-9]{2,6})\)(?:\s+([\w★-]+))?\s*$/);
+    const name = bare.slice(0, printing?.index ?? bare.length).replace(/\s*\/\/\s*/g, ' // ').trim();
+    const print = printing ? { set: printing[1].toLowerCase(), ...(printing[2] ? { cn: printing[2] } : {}) } : {};
     if (!name || !Number.isSafeInteger(count) || count <= 0) { skipped.push(raw); continue; }
     seenCard = true;
     if ((!sb && section === 'ignored') || (tag && !['sideboard', 'commander'].includes(tag[1].toLowerCase()))) { ignored.push(raw); continue; }
     const pool = sb || section === 'sideboard' || tag?.[1].toLowerCase() === 'sideboard' ? sideboard : section === 'commanders' || isCommander ? commanders : main;
-    const key = name.toLowerCase(), previous = pool.get(key);
+    const key = entryKey({ name, ...print }).toLowerCase(), previous = pool.get(key);
     if (previous && !Number.isSafeInteger(previous.count + count)) { skipped.push(raw); continue; }
-    if (previous) previous.count += count; else pool.set(key, { name, count });
+    if (previous) previous.count += count; else pool.set(key, { name, count, ...print });
   }
   return { main: [...main.values()], sideboard: [...sideboard.values()], commanders: [...commanders.values()], skipped, ignored };
 }
 export function exportDeckList(deck: DeckData): string {
-  return `${deck.commanders?.length ? `Commander\n${deck.commanders.map(e => `${e.count} ${e.name}`).join('\n')}\n\n` : ''}Deck\n${deck.cards.map(e => `${e.count} ${e.name}`).join('\n')}${deck.sideboard?.length ? `\n\nSideboard\n${deck.sideboard.map(e => `${e.count} ${e.name}`).join('\n')}` : ''}\n`;
+  const lines = (entries: DeckEntry[]) => entries.map(e => `${e.count} ${e.name}${e.set ? ` ${printLabel(e)}` : ''}`).join('\n');
+  return `${deck.commanders?.length ? `Commander\n${lines(deck.commanders)}\n\n` : ''}Deck\n${lines(deck.cards)}${deck.sideboard?.length ? `\n\nSideboard\n${lines(deck.sideboard)}` : ''}\n`;
 }

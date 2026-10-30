@@ -1,6 +1,6 @@
 import { allDecks, countEntries, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
-import { cacheGet, fetchByNames } from '../scryfall';
+import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
@@ -504,7 +504,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   refresh();
   fitSidebar();
   // Os comandantes vêm primeiro: são as capas dos decks, e a lista inteira (milhares de cartas) demora a chegar.
-  void fetchByNames(allDecks().flatMap(d => (d.commanders ?? []).map(c => c.name))).then(refresh).catch(() => {})
+  void fetchByNames(allDecks().flatMap(d => (d.commanders ?? []).map(c => c.name))).then(refresh)
+    .then(() => fetchPrintings(allDecks().flatMap(d => d.commanders ?? []))).then(refresh).catch(() => {})
     .then(() => fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name)))).then(refresh).catch(() => {});
   return { refresh, setStatus, setBusy, roomSay: (seat, key) => roomLobby.say(seat, key), openRoomLink(code) {
     if (!ROOM_CODE.test(code)) { setStatus('O link da sala está incompleto. Peça o código para quem convidou você.', true); return; }

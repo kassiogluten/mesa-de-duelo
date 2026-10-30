@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import forge.ImageKeys;
 import forge.StaticData;
 import forge.card.CardEdition;
+import forge.item.PaperCard;
 import forge.card.CardStateName;
 import forge.card.MagicColor;
 import forge.card.mana.ManaAtom;
@@ -318,6 +319,15 @@ final class StateJson {
     }
 
     /** Como a permanente ficou virada para baixo (informação pública): metamorfose, disfarce, manifestada ou encoberta. */
+    /** A impressão que o dono escolheu no deck, enquanto a carta mostra uma das próprias faces (um clone mostra a carta copiada). */
+    static JsonObject printing(Card gc, String shownName) {
+        if (gc == null || !(gc.getPaperCard() instanceof PaperCard pc)) return null;
+        var rules = pc.getRules();
+        boolean own = pc.getName().equals(shownName) || rules.getMainPart().getName().equals(shownName)
+            || (rules.getOtherPart() != null && rules.getOtherPart().getName().equals(shownName));
+        return own ? DeckValidation.printing(pc) : null;
+    }
+
     static String faceDownKind(Card gc) {
         if (gc == null) return null;
         if (gc.isManifested()) return "manifest";
@@ -353,6 +363,10 @@ final class StateJson {
             if (img != null) o.addProperty("image", img);
         }
         o.addProperty("set", s.getSetCode());
+        if (!c.isToken()) {
+            JsonObject print = printing(game == null ? null : game.findByView(c), s.getName());
+            if (print != null) o.add("print", print);
+        }
         String cost = s.getManaCost() == null ? "" : s.getManaCost().toString();
         o.addProperty("manaCost", "no cost".equals(cost) ? "" : cost);
         o.addProperty("typeLine", s.getType() == null ? "" : s.getType().toString());

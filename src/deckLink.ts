@@ -17,39 +17,47 @@ export function parseDeckLink(text: string): DeckLink | null {
 
 import type { Bracket } from './brackets';
 
-type Entry = { name: string; count: number };
-const line = (e: Entry) => `${e.count} ${e.name}`;
+type Entry = { name: string; count: number; set?: string; cn?: string };
+const line = (e: Entry) => `${e.count} ${e.name}${e.set ? ` (${e.set.toUpperCase()})${e.cn ? ` ${e.cn}` : ''}` : ''}`;
 const section = (title: string, entries: Entry[]) => entries.length ? `${title}\n${entries.map(line).join('\n')}` : '';
-function add(list: Entry[], name: unknown, count: unknown) {
+/** A série (código do Scryfall) e o número de coleção, só quando parecem um código de verdade. */
+function printing(set: unknown, cn: unknown): { set?: string; cn?: string } {
+  if (typeof set !== 'string' || !/^[A-Za-z0-9]{2,6}$/.test(set)) return {};
+  return { set: set.toLowerCase(), ...(typeof cn === 'string' && /^[\w★-]+$/.test(cn) ? { cn } : {}) };
+}
+function add(list: Entry[], name: unknown, count: unknown, print: { set?: string; cn?: string } = {}) {
   const n = typeof name === 'string' ? name.trim() : '';
   const c = typeof count === 'number' && Number.isSafeInteger(count) && count > 0 ? count : 0;
   if (!n || !c) return;
-  const same = list.find(e => e.name === n);
-  if (same) same.count += c; else list.push({ name: n, count: c });
+  const same = list.find(e => e.name === n && e.set === print.set && e.cn === print.cn);
+  if (same) same.count += c; else list.push({ name: n, count: c, ...print });
 }
 
-/** Moxfield v3: boards.{commanders, mainboard, sideboard, companions}.cards → { quantity, card.name }. */
+/** Moxfield v3: boards.{commanders, mainboard, sideboard, companions}.cards → { quantity, card.name, card.set, card.cn }. */
 function fromMoxfield(json: any) {
   const commanders: Entry[] = [], main: Entry[] = [], side: Entry[] = [];
   const board = (key: string, into: Entry[]) => {
-    for (const item of Object.values<any>(json?.boards?.[key]?.cards ?? {})) add(into, item?.card?.name, item?.quantity);
+    for (const item of Object.values<any>(json?.boards?.[key]?.cards ?? {})) add(into, item?.card?.name, item?.quantity, printing(item?.card?.set, item?.card?.cn));
   };
   board('commanders', commanders); board('mainboard', main); board('sideboard', side); board('companions', side);
   return { name: typeof json?.name === 'string' ? json.name : '', commanders, main, side };
 }
 
-/** Archidekt: cards[] → { quantity, card.oracleCard.name, categories }; categorias fora do deck (Maybeboard) ficam de fora. */
+/**
+ * Archidekt: cards[] → { quantity, card.oracleCard.name, card.edition.editioncode, card.collectorNumber, categories };
+ * categorias fora do deck (Maybeboard) ficam de fora.
+ */
 function fromArchidekt(json: any) {
   const commanders: Entry[] = [], main: Entry[] = [], side: Entry[] = [];
   const outside = new Set<string>((json?.categories ?? []).filter((c: any) => c?.includedInDeck === false).map((c: any) => String(c.name).toLowerCase()));
   for (const name of ['maybeboard', 'considering']) outside.add(name);
   for (const item of json?.cards ?? []) {
     const categories: string[] = (item?.categories ?? []).map((c: unknown) => String(c).toLowerCase());
-    const name = item?.card?.oracleCard?.name ?? item?.card?.name;
-    if (categories.includes('commander')) add(commanders, name, item?.quantity);
-    else if (categories.includes('sideboard')) add(side, name, item?.quantity);
+    const name = item?.card?.oracleCard?.name ?? item?.card?.name, print = printing(item?.card?.edition?.editioncode, item?.card?.collectorNumber);
+    if (categories.includes('commander')) add(commanders, name, item?.quantity, print);
+    else if (categories.includes('sideboard')) add(side, name, item?.quantity, print);
     else if (categories.length && categories.every(c => outside.has(c))) continue;
-    else add(main, name, item?.quantity);
+    else add(main, name, item?.quantity, print);
   }
   return { name: typeof json?.name === 'string' ? json.name : '', commanders, main, side };
 }

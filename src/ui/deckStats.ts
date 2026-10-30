@@ -11,7 +11,7 @@ export const CARD_GROUPS: [CardType, string][] = [
 ];
 export interface DeckRow extends DeckEntry { info?: CardInfo; cmc?: number }
 export function deckRows(entries: DeckEntry[]): DeckRow[] {
-  return entries.map(e => { const sc = cacheGet(e.name); const info = sc ? cardInfo(sc) : undefined; return { ...e, info, cmc: sc?.cmc ?? info?.cmc }; });
+  return entries.map(e => { const sc = cacheGet(e.name, e); const info = sc ? cardInfo(sc) : undefined; return { ...e, info, cmc: sc?.cmc ?? info?.cmc }; });
 }
 export function groupedRows(entries: DeckEntry[]): { label: string; rows: DeckRow[] }[] {
   const rows = deckRows(entries);

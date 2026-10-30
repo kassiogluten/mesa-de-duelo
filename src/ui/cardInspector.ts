@@ -1,11 +1,13 @@
-import { cacheGet, fetchByNames } from '../scryfall';
+import { cacheGet, fetchByNames, fetchPrintings, type Printing } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
 import { counterName } from './proliferate';
 import './cardInspector.css';
 
 export interface InspectorCard {
-  name?: string; image?: string; text?: string; manaCost?: string; typeLine?: string;
+  name?: string; image?: string; text?: string;
+  /** A impressão escolhida no deck: a imagem e as faces para virar são as dela. */
+  print?: Partial<Printing>; manaCost?: string; typeLine?: string;
   power?: number | string; toughness?: number | string; basePower?: number; baseToughness?: number;
   keywords?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
@@ -41,13 +43,13 @@ function safeImage(value?: string) {
 }
 /** Faces da carta para o botão de virar; na mesa, a face à mostra fica sendo a "frente". */
 function sidesOf(card: InspectorCard) {
-  const sides = card.faceDown || !card.name ? null : cardSides(cacheGet(card.name));
+  const sides = card.faceDown || !card.name ? null : cardSides(cacheGet(card.name, card.print));
   if (sides?.kind === 'dfc' && card.image && card.image === sides.images[1]) sides.images.reverse();
   return sides;
 }
 function content(card: InspectorCard, compact: boolean) {
   const hidden = card.faceDown || !card.name;
-  const sc = hidden ? null : cacheGet(card.name!);
+  const sc = hidden ? null : cacheGet(card.name!, card.print);
   const name = hidden ? 'Carta virada para baixo' : sc?.pt?.name || card.name!;
   const text = hidden ? 'As informações desta carta estão ocultas.' : card.text ?? sc?.pt?.text ?? sc?.oracle_text ?? 'Carregando informações da carta…';
   const image = hidden ? undefined : safeImage(card.image ?? sc?.pt?.image_uris?.normal ?? sc?.image_uris?.normal);
@@ -110,7 +112,8 @@ function resolve(el: HTMLElement, card: InspectorCard, compact: boolean, ticket:
   const parts = (card.merged ?? []).slice(1).flatMap(m => m.faceDown || !m.name || cacheGet(m.name) ? [] : [m.name]);
   const known = card.text !== undefined && card.image;
   if (known && !parts.length) return;
-  void fetchByNames(known ? parts : [card.name, ...parts]).then(() => {
+  const printing = card.print?.set ? fetchPrintings([{ name: card.name, set: card.print.set, cn: card.print.cn }]).catch(() => {}) : undefined;
+  void Promise.all([fetchByNames(known ? parts : [card.name, ...parts]), printing]).then(() => {
     if (ticket !== generation || !el.isConnected) return;
     fill(el, card, compact);
     if (!cacheGet(card.name!) && card.text === undefined) {

@@ -1,5 +1,5 @@
 import type { FCard, FOption, FPlayer, FQuestion, FState, ForgeClient } from '../forge/client';
-import { cacheGet, fetchByNames } from '../scryfall';
+import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import { esc, manaHTML, optionHTML, pip, richText, withoutCardIds } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
@@ -759,9 +759,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   window.addEventListener('pointerup', releaseArtworkPointer, true);
   window.addEventListener('pointercancel', releaseArtworkPointer, true);
   window.addEventListener('blur', () => releaseArtworkPointer());
-  function image(name: string | undefined, size: 'small' | 'normal') {
+  function image(name: string | undefined, size: 'small' | 'normal', print?: FCard['print']) {
     if (!name) return undefined;
-    const sc = cacheGet(name);
+    if (print) askPrinting(name, print);
+    const sc = cacheGet(name, print);
     if (!sc) {
       if (asked.has(name)) return undefined;
       asked.add(name);
@@ -779,6 +780,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return size === 'small' ? u?.small ?? u?.normal : u?.normal ?? u?.small;
   }
 
+  /** A imagem da impressão escolhida chega depois; até lá a carta aparece na impressão padrão. */
+  const askedPrints = new Set<string>(), wantedPrints: { name: string; set: string; cn: string }[] = [];
+  let printTimer: number | undefined;
+  function askPrinting(name: string, print: NonNullable<FCard['print']>) {
+    const key = `${name}|${print.set}|${print.cn}`;
+    if (askedPrints.has(key)) return;
+    askedPrints.add(key); wantedPrints.push({ name, ...print });
+    clearTimeout(printTimer);
+    printTimer = window.setTimeout(() => {
+      const list = wantedPrints.splice(0);
+      fetchPrintings(list).then(renderArtwork).catch(() => setTimeout(() => list.forEach(p => askedPrints.delete(`${p.name}|${p.set}|${p.cn}`)), 30_000));
+    }, 150);
+  }
+
   /** Nome, tipo e texto impressos em português, quando o Scryfall tem a tradução. */
   const ptOf = (name: string | undefined) => (name ? cacheGet(name)?.pt : undefined);
   const label = (c: FCard) => ptOf(c.name)?.name || c.name || (c.hiddenFace?.name ? `${ptOf(c.hiddenFace.name)?.name || c.hiddenFace.name} (virada para baixo)` : 'Carta');
@@ -793,7 +808,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function faceStyle(c: FCard, field: boolean): CardStyle {
     if (c.faceDown || !c.name) return 'full';
     // Os dois precisam da arte recortada; carta sem ela (ficha com imagem própria da ponte) fica com a imagem completa.
-    const sc = cacheGet(c.name);
+    const sc = cacheGet(c.name, c.print);
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
     return cardStyle === 'art' && (art || !c.image) ? 'art' : cardStyle === 'arena' && field && art ? 'arena' : 'full';
   }
@@ -806,13 +821,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return html.replace(/^\s*<div class="face/, `<div class="face hidden-known${field ? ' on-field' : ''}`).replace(/<\/div>\s*$/, `${HIDDEN_EYE}</div>`);
     }
     if (c.faceDown || !c.name) return '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
-    const sc = cacheGet(c.name);
+    const sc = cacheGet(c.name, c.print);
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
     const style = faceStyle(c, field);
-    if (style === 'art' && !sc) image(c.name, size); // pede a carta ao Scryfall, como no modo de imagem completa
+    if (style === 'art' && (!sc || c.print)) image(c.name, size, c.print); // pede a carta ao Scryfall, como no modo de imagem completa
     return faceHTML({
       name: label(c), manaCost: c.manaCost ?? '', typeLine: ptOf(c.name)?.type_line || c.typeLine || '', power: c.power, toughness: c.toughness,
-      creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: style === 'full' ? c.image ?? image(c.name, size) : undefined,
+      creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: style === 'full' ? c.image ?? image(c.name, size, c.print) : undefined,
       style, art, text: ptOf(c.name)?.text || sc?.oracle_text, loyalty: c.planeswalker ? c.counters?.LOYALTY ?? 0 : undefined, token: !!c.token,
     });
   }
@@ -1752,7 +1767,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     describe: event => eventDescription(event, true),
   };
   function historyThumb(card: FCard | undefined) {
-    const art = card && (card.image ?? image(card.name, 'small'));
+    const art = card && (card.image ?? image(card.name, 'small', card.print));
     return `<span class="history-thumb"${art ? ` style="background-image:url('${art}')"` : ''} aria-hidden="true"></span>`;
   }
   function historyItem(item: HistoryItem) {
@@ -2526,7 +2541,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const source = c.emblem ? emblemSource(c) : c.name;
     const changed = permanentTypeChange(c);
     const card = { ...c, name: c.emblem ? emblemLabel(c) : c.name,
-      image: c.image ?? image(source, 'normal'),
+      image: c.image ?? image(source, 'normal', c.emblem ? undefined : c.print),
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.printedType || c.typeLine,
       typeChange: changed ? typeChangeText(changed, c) : undefined,
@@ -2679,7 +2694,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const target = fromMain ? sideboardDraft.sideboard : sideboardDraft.main;
       const index = Number(fromMain ? swap.dataset.sbMain : swap.dataset.sbSide);
       const entry = source[index];
-      if (entry) { const existing = target.find(c => c.name === entry.name); if (existing) existing.count++; else target.push({ name: entry.name, count: 1 }); if (--entry.count === 0) source.splice(index, 1); sideboardError = ''; render(); }
+      if (entry) { const existing = target.find(c => c.name === entry.name && c.set === entry.set && c.cn === entry.cn); if (existing) existing.count++; else target.push({ name: entry.name, count: 1, ...(entry.set ? { set: entry.set, cn: entry.cn } : {}) }); if (--entry.count === 0) source.splice(index, 1); sideboardError = ''; render(); }
       return;
     }
     const sbInspect = t.closest<HTMLElement>('[data-sb-inspect]');

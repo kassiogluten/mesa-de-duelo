@@ -316,7 +316,7 @@ test('Commander tags preserve command designation and do not infer a sideboard f
   for (const marker of ['*CMDR*', '[Commander]']) {
     for (const separator of ['\n', '\n\n']) {
       const parsed = decks.parseDeckList(`1 Marwyn, the Nurturer (DOM) 172 ${marker}${separator}99 Forest`);
-      assert.deepEqual(parsed.commanders, [{ name: 'Marwyn, the Nurturer', count: 1 }]);
+      assert.deepEqual(parsed.commanders, [{ name: 'Marwyn, the Nurturer', count: 1, set: 'dom', cn: '172' }]);
       assert.deepEqual(parsed.main, [{ name: 'Forest', count: 99 }]);
       assert.deepEqual(parsed.sideboard, []);
       assert.deepEqual(parsed.skipped, []);
@@ -350,4 +350,20 @@ test('a chosen cover card wins while it stays in the main deck, never in Command
   const read = decks.readDeckLibrary(store);
   assert.equal(read.decks.length, 1);
   assert.equal(read.decks[0].cover, 'Cover Shock');
+});
+
+test('the printing (set and collector number) survives import and export, one line per printing', () => {
+  const parsed = decks.parseDeckList('3 Plains (DMU) 277\n2 Plains (ONE) 267\n1 Plains (DMU) 277\n1x Lightning Bolt (m10) 146 [Burn]\n1 Llanowar Elves (DOM)\n4 Shock');
+  assert.deepEqual(parsed.main, [
+    { name: 'Plains', count: 4, set: 'dmu', cn: '277' },
+    { name: 'Plains', count: 2, set: 'one', cn: '267' },
+    { name: 'Lightning Bolt', count: 1, set: 'm10', cn: '146' },
+    { name: 'Llanowar Elves', count: 1, set: 'dom' },
+    { name: 'Shock', count: 4 },
+  ]);
+  const deck = { id: 'x', name: 'Séries', cards: parsed.main };
+  assert.equal(decks.exportDeckList(deck), 'Deck\n4 Plains (DMU) 277\n2 Plains (ONE) 267\n1 Lightning Bolt (M10) 146\n1 Llanowar Elves (DOM)\n4 Shock\n');
+  assert.deepEqual(decks.parseDeckList(decks.exportDeckList(deck)).main, parsed.main);
+  assert.equal(decks.entryKey(parsed.main[0]) === decks.entryKey(parsed.main[1]), false);
+  assert.equal(decks.entryKey(parsed.main[4]), 'Shock');
 });

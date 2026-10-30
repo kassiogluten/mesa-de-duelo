@@ -51,3 +51,15 @@ test('Archidekt brings the bracket the owner chose; Moxfield and an empty one do
   assert.equal('bracket' in deckLinkToList('archidekt', JSON.stringify({ name: 'Goblins', edhBracket: 9, cards })), false);
   assert.equal('bracket' in deckLinkToList('moxfield', JSON.stringify({ name: 'x', edhBracket: 3, boards: { mainboard: { cards: { a: { quantity: 1, card: { name: 'Forest' } } } } } })), false);
 });
+
+test('the printing chosen on Moxfield and Archidekt comes along as (SET) number', () => {
+  const moxfield = JSON.stringify({ name: 'Elfos', boards: { mainboard: { cards: {
+    a: { quantity: 2, card: { name: 'Forest', set: 'dmu', cn: '281' } }, b: { quantity: 1, card: { name: 'Forest', set: 'one', cn: '276' } },
+    c: { quantity: 1, card: { name: 'Llanowar Elves', set: '<b>', cn: '1' } },
+  } } } });
+  assert.equal(deckLinkToList('moxfield', moxfield).text, 'Deck\n2 Forest (DMU) 281\n1 Forest (ONE) 276\n1 Llanowar Elves');
+  const archidekt = JSON.stringify({ name: 'Burn', cards: [
+    { quantity: 4, card: { oracleCard: { name: 'Lightning Bolt' }, edition: { editioncode: 'm10' }, collectorNumber: '146' }, categories: [] },
+  ] });
+  assert.equal(deckLinkToList('archidekt', archidekt).text, 'Deck\n4 Lightning Bolt (M10) 146');
+});

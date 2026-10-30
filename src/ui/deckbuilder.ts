@@ -1,7 +1,7 @@
 import './decks.css';
-import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, isBasic, isConstructed, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
+import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, isBasic, isConstructed, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, entryKey, printLabel, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { cardInfo, type Color } from '../cards';
-import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, translateCards, type ScryCard } from '../scryfall';
+import { cacheGet, fetchByNames, fetchPrintings, preloadDeckImages, resolveCardNames, searchCards, translateCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
 import { bracketBadgeHTML, deckArt, deckColors, deckPriceHTML, groupedRows, statsHTML } from './deckStats';
 import { BRACKET_DESCRIPTION, BRACKET_NAME, BRACKETS, bracketLabel, deckBracket, estimateBracket, isBracket, type Bracket } from '../brackets';
@@ -36,6 +36,9 @@ const COLORS: Color[] = ['W', 'U', 'B', 'R', 'G'];
 const COLOR_NAME: Record<Color, string> = { W: 'Branco', U: 'Azul', B: 'Preto', R: 'Vermelho', G: 'Verde' };
 const TYPE_FILTERS = [['Todos os tipos', ''], ['Criatura', 't:creature'], ['Instantânea', 't:instant'], ['Feitiço', 't:sorcery'], ['Artefato', 't:artifact'], ['Encantamento', 't:enchantment'], ['Terreno', 't:land']];
 const formatLabel = (format: DeckFormat) => FORMAT_LABEL[format];
+/** A impressão escolhida vai junto no botão da carta, para a prévia e o inspetor mostrarem a arte dela. */
+const printData = (e: DeckEntry) => e.set ? ` data-set="${esc(e.set)}"${e.cn ? ` data-cn="${esc(e.cn)}"` : ''}` : '';
+const printOf = (ds: DOMStringMap) => ds.set ? { set: ds.set, cn: ds.cn } : undefined;
 const formatOptions = (format: DeckFormat) => (['free', 'standard', 'pauper', 'sacola50', 'commander'] as const).map(f => `<option value="${f}" ${format === f ? 'selected' : ''}>${FORMAT_LABEL[f]}</option>`).join('');
 
 export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
@@ -151,7 +154,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const entries = section === 'main' ? deck.cards : deck.sideboard ?? [];
     return groupedRows(entries).map(group => `<section class="dw-card-group"><h3>${group.label}<span>${countEntries(group.rows)}</span></h3><ul>${group.rows.map(row => {
       const label = row.info?.label ?? row.name;
-      return `<li><button type="button" class="dw-card-name" data-inspect="${esc(row.name)}" data-focus="inspect:${esc(row.name)}"><span class="dw-card-art">${row.info?.artCrop ? `<img src="${esc(row.info.artCrop)}" alt="" loading="lazy">` : ''}</span><span>${esc(label)}</span><span class="dw-mana">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button>${deck.builtin ? `<b class="dw-count">${row.count}</b>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(row.name)}" data-focus="dec:${esc(row.name)}" aria-label="Remover uma cópia de ${esc(label)}">−</button><span>${row.count}</span><button type="button" data-add="${esc(row.name)}" data-focus="add:${esc(row.name)}" aria-label="Adicionar uma cópia de ${esc(label)}">+</button></div>`}<button type="button" class="dw-transfer" data-move="${esc(row.name)}" data-focus="move:${esc(row.name)}" ${deck.builtin || deck.format === 'commander' ? 'hidden' : ''} title="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}" aria-label="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}: ${esc(label)}">${section === 'main' ? '→' : '←'}</button>${coverButtonHTML(deck, row.name, label)}</li>`;
+      return `<li><button type="button" class="dw-card-name" data-inspect="${esc(row.name)}"${printData(row)} data-focus="inspect:${esc(entryKey(row))}"><span class="dw-card-art">${row.info?.artCrop ? `<img src="${esc(row.info.artCrop)}" alt="" loading="lazy">` : ''}</span><span>${esc(label)}${row.set ? ` <small class="dw-print" title="Impressão escolhida">${esc(printLabel(row))}</small>` : ''}</span><span class="dw-mana">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button>${deck.builtin ? `<b class="dw-count">${row.count}</b>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(entryKey(row))}" data-focus="dec:${esc(entryKey(row))}" aria-label="Remover uma cópia de ${esc(label)}">−</button><span>${row.count}</span><button type="button" data-add="${esc(entryKey(row))}" data-focus="add:${esc(entryKey(row))}" aria-label="Adicionar uma cópia de ${esc(label)}">+</button></div>`}<button type="button" class="dw-transfer" data-move="${esc(entryKey(row))}" data-focus="move:${esc(entryKey(row))}" ${deck.builtin || deck.format === 'commander' ? 'hidden' : ''} title="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}" aria-label="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}: ${esc(label)}">${section === 'main' ? '→' : '←'}</button>${coverButtonHTML(deck, row.name, label)}</li>`;
     }).join('')}</ul></section>`).join('') || `<div class="dw-empty compact"><h3>${section === 'main' ? 'Deck vazio.' : 'Sideboard vazio.'}</h3>${!deck.builtin ? `<div class="dw-actions">${!searchOpen ? '<button type="button" class="dw-button primary" data-b="open-search">Adicionar cartas</button>' : ''}<button type="button" class="dw-button" data-b="import-current">Importar lista</button></div>` : ''}</div>`;
   }
   /** Escolher a carta como capa do deck: só no deck principal, sem os básicos e fora do Commander, onde a capa é o comandante. */
@@ -165,8 +168,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const commanders = deck.commanders ?? [];
     const identity = new Set(commanders.flatMap(e => cacheGet(e.name)?.color_identity ?? []));
     return `<section class="dw-commander-zone" aria-label="Comandantes"><div class="dw-commander-cards">${commanders.map((entry, index) => {
-      const sc = cacheGet(entry.name), info = sc ? cardInfo(sc) : null;
-      return `<article class="dw-commander"><button type="button" class="dw-commander-portrait" data-inspect="${esc(entry.name)}" aria-label="Ler ${esc(info?.label ?? entry.name)}">${info?.image ? `<img src="${esc(info.image)}" alt="${esc(info.label)}">` : esc(entry.name)}</button><div><p class="dw-eyebrow">${index ? 'Segundo comandante' : 'Comandante'}</p><h2>${esc(info?.label ?? entry.name)}</h2>${!deck.builtin ? `<div class="dw-actions"><button type="button" class="dw-button" data-commander-slot="${index}" data-focus="commander:${index}">Trocar</button><button type="button" class="dw-button subtle" data-remove-commander="${index}" aria-label="Remover ${esc(info?.label ?? entry.name)}">Remover</button></div>` : ''}</div></article>`;
+      const sc = cacheGet(entry.name, entry), info = sc ? cardInfo(sc) : null;
+      return `<article class="dw-commander"><button type="button" class="dw-commander-portrait" data-inspect="${esc(entry.name)}"${printData(entry)} aria-label="Ler ${esc(info?.label ?? entry.name)}">${info?.image ? `<img src="${esc(info.image)}" alt="${esc(info.label)}">` : esc(entry.name)}</button><div><p class="dw-eyebrow">${index ? 'Segundo comandante' : 'Comandante'}</p><h2>${esc(info?.label ?? entry.name)}</h2>${!deck.builtin ? `<div class="dw-actions"><button type="button" class="dw-button" data-commander-slot="${index}" data-focus="commander:${index}">Trocar</button><button type="button" class="dw-button subtle" data-remove-commander="${index}" aria-label="Remover ${esc(info?.label ?? entry.name)}">Remover</button></div>` : ''}</div></article>`;
     }).join('')}${!deck.builtin && commanders.length < 2 ? `<button type="button" class="${commanders.length ? 'dw-button subtle dw-commander-add' : 'dw-commander-empty'}" data-commander-slot="${commanders.length}" data-focus="commander:${commanders.length}">${commanders.length ? '+ Segundo comandante' : '<span>+</span><strong>Escolher comandante</strong><small>Sua estratégia começa aqui</small>'}</button>` : ''}</div><div class="dw-commander-summary"><p class="dw-eyebrow">Commander</p><strong>${totalDeckSize(deck)} <small>/ 100 cartas</small></strong><p>${COLORS.filter(c => identity.has(c)).map(pip).join('') || 'Identidade incolor'}</p><p class="dw-note">${deckSize(deck)} no deck · ${countEntries(commanders)} na zona de comando</p>${bracketHTML(deck)}</div></section>`;
   }
   /** O bracket do deck: o jogador escolhe a partir do mínimo das cartas, com o porquê do mínimo. */
@@ -200,7 +203,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const canSimilar = commanderSlot === null && !!opts.similarCards;
     el.innerHTML = `${similarHead}<p class="dw-note" role="status">${total} ${similarTo ? (total === 1 ? 'carta parecida' : 'cartas parecidas') : total === 1 ? 'carta encontrada' : 'cartas encontradas'}</p><div class="dw-results">${results.map(sc => {
       const tags = similarTo ? similarTags.get(sc.name) : undefined;
-      const info = cardInfo(sc), count = (section === 'main' ? deck.cards : deck.sideboard ?? []).find(e => e.name === sc.name)?.count ?? 0;
+      const info = cardInfo(sc), count = countEntries((section === 'main' ? deck.cards : deck.sideboard ?? []).filter(e => e.name === sc.name));
       const full = deck.format !== 'free' && copiesInDeck(deck, sc.name) >= cardCopyLimit(sc.name, sc, deck.format);
       return `<article><button type="button" class="dw-result-art" data-inspect="${esc(sc.name)}" aria-label="Ler ${esc(info.label)}">${info.imageSmall ? `<img src="${esc(info.imageSmall)}" alt="" loading="lazy">` : esc(info.label)}</button><p title="${esc(info.label)}">${esc(info.label)}</p>${tags?.length ? `<p class="dw-result-tags" title="Tags em comum no Tagger">${tags.map(esc).join(' · ')}</p>` : ''}${canSimilar && sc.oracle_id ? `<button type="button" class="dw-similar" data-similar="${esc(sc.name)}" data-focus="similar:${esc(sc.name)}" aria-label="Cartas parecidas com ${esc(info.label)}">Parecidas</button>` : ''}${commanderSlot !== null ? `<button type="button" class="dw-button primary" data-set-commander="${esc(sc.name)}" data-focus="set-commander:${esc(sc.name)}">Escolher</button>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(sc.name)}" data-focus="result-dec:${esc(sc.name)}" ${!count ? 'disabled' : ''} aria-label="Remover uma cópia de ${esc(info.label)}">−</button><span>${count}</span><button type="button" data-add="${esc(sc.name)}" data-focus="result-add:${esc(sc.name)}" ${full ? 'disabled' : ''} aria-label="Adicionar uma cópia de ${esc(info.label)}">+</button></div>`}</article>`;
     }).join('')}</div>${hasMore ? `<button type="button" class="dw-button dw-more" data-b="more" ${searching ? 'disabled' : ''}>${searching ? 'Carregando…' : 'Mais resultados'}</button>` : ''}`;
@@ -255,8 +258,9 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const rerender = () => { if (view === requestView && selected === requestSelected) preserveRender(render); };
     try {
       // Na biblioteca, os comandantes (as capas) chegam antes da lista inteira.
-      if (!target) await fetchByNames(decks.flatMap(d => (d.commanders ?? []).map(e => e.name))).then(rerender).catch(() => {});
+      if (!target) await fetchByNames(decks.flatMap(d => (d.commanders ?? []).map(e => e.name))).then(() => fetchPrintings(decks.flatMap(d => d.commanders ?? []))).then(rerender).catch(() => {});
       await fetchByNames(decks.flatMap(d => deckEntries(d).map(e => e.name)), true); rerender();
+      if (target) { await fetchPrintings(deckEntries(target)); rerender(); }
     }
     catch { if (view === 'edit') { notice = 'Alguns dados das cartas não foram carregados. O deck continua disponível.'; renderStatus(); } }
   }
@@ -276,17 +280,20 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const deck: DeckData = { ...rest, id: crypto.randomUUID(), name: `${source.name} (cópia)`, builtin: false, cards: source.cards.map(e => ({ ...e })), commanders: source.commanders?.map(e => ({ ...e })) ?? [], sideboard: source.sideboard?.map(e => ({ ...e })) ?? [], sourceTemplateId: source.builtin ? source.id : source.sourceTemplateId, updatedAt: new Date().toISOString() };
     user.unshift(deck); persist('Cópia criada nos seus decks.'); edit(deck);
   }
-  function change(name: string, delta: number, move = false) {
+  /** `key` é o nome da carta (busca) ou a linha do deck (`entryKey`), que separa as impressões da mesma carta. */
+  function change(key: string, delta: number, move = false) {
     const deck = current(); if (!deck || deck.builtin) return;
     const pool = section === 'main' ? deck.cards : deck.sideboard ?? (deck.sideboard = []);
-    const existing = pool.find(e => e.name === name);
+    // Da busca vem só o nome: soma na linha da carta (na impressão que ela tiver), se houver uma só.
+    const same = pool.filter(e => e.name === key), existing = pool.find(e => entryKey(e) === key) ?? (same.length === 1 ? same[0] : undefined), name = existing?.name ?? key;
+    const print = existing?.set ? { set: existing.set, ...(existing.cn ? { cn: existing.cn } : {}) } : {};
     if (delta > 0 && deck.format !== 'free' && copiesInDeck(deck, name) >= cardCopyLimit(name, cacheGet(name), deck.format)) { notice = deck.format === 'commander' ? 'Você já tem o limite de cópias entre o deck e a zona de comando.' : 'Você já tem o limite de cópias entre o deck e o sideboard.'; renderStatus(); return; }
     if (existing) { existing.count = Math.max(0, existing.count + delta); if (!existing.count) pool.splice(pool.indexOf(existing), 1); }
     else if (delta > 0) pool.push({ name, count: 1, oracleId: cacheGet(name)?.oracle_id });
     else return;
     if (move) {
       const other = section === 'main' ? deck.sideboard ?? (deck.sideboard = []) : deck.cards;
-      const destination = other.find(e => e.name === name); if (destination) destination.count++; else other.push({ name, count: 1, oracleId: cacheGet(name)?.oracle_id });
+      const destination = other.find(e => e.name === name && e.set === existing?.set && e.cn === existing?.cn); if (destination) destination.count++; else other.push({ name, count: 1, oracleId: cacheGet(name)?.oracle_id, ...print });
     }
     deck.unresolved = deck.unresolved?.filter(n => deckEntries(deck).some(e => e.name === n));
     changed(deck); preserveRender(renderEdit);
@@ -368,8 +375,9 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
         const merged = new Map<string, DeckEntry>();
         for (const e of entries) {
           const name = resolved.found.get(e.name.toLowerCase()) ?? e.name, oracleId = cacheGet(name)?.oracle_id;
-          const key = oracleId ?? name.toLowerCase(), previous = merged.get(key);
-          if (previous) { if (!Number.isSafeInteger(previous.count + e.count)) throw new Error(`Quantidade muito grande para ${name}.`); previous.count += e.count; } else merged.set(key, { name, count: e.count, oracleId });
+          const print = e.set ? { set: e.set, ...(e.cn ? { cn: e.cn } : {}) } : {};
+          const key = `${oracleId ?? name.toLowerCase()}|${e.set ?? ''}|${e.cn ?? ''}`, previous = merged.get(key);
+          if (previous) { if (!Number.isSafeInteger(previous.count + e.count)) throw new Error(`Quantidade muito grande para ${name}.`); previous.count += e.count; } else merged.set(key, { name, count: e.count, oracleId, ...print });
         }
         return [...merged.values()];
       };
@@ -431,7 +439,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       root.querySelector<HTMLElement>(`[data-library-color="${color === 'clear' ? 'W' : color}"]`)?.focus();
       return;
     }
-    if (ds.inspect) { hideCardPreview(); inspectCard({ name: ds.inspect }, target); return; }
+    if (ds.inspect) { hideCardPreview(); inspectCard({ name: ds.inspect, print: printOf(ds) }, target); return; }
     if (ds.peek) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.peek); if (deck) openDeckPreview(deck, { selected: false, onPick: () => edit(deck), pickLabel: deck.builtin ? 'Ver deck' : 'Editar deck' }); return; }
     if (ds.select) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.select); if (deck) edit(deck); return; }
     if (ds.copy) { const deck = DEFAULT_DECKS.find(d => d.id === ds.copy); if (deck) duplicate(deck); return; }
@@ -524,7 +532,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   });
   const preview = (e: Event) => {
     const card = (e.target as HTMLElement).closest<HTMLElement>('[data-inspect]');
-    if (card) showCardPreview({ name: card.dataset.inspect! }, card);
+    if (card) showCardPreview({ name: card.dataset.inspect!, print: printOf(card.dataset) }, card);
   };
   root.addEventListener('pointerover', e => { if (e.pointerType === 'mouse') preview(e); });
   root.addEventListener('focusin', preview);

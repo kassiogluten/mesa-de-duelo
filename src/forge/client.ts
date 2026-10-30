@@ -56,6 +56,8 @@ export interface FCard {
   token: boolean;
   /** Imagem da ficha no Scryfall, calculada pela ponte (fichas não são achadas pelo nome). */
   image?: string;
+  /** A impressão que o dono escolheu no deck (série do Scryfall e número): todos veem a arte dela. */
+  print?: { set: string; cn: string };
   faceDown?: boolean;
   /** Como a permanente ficou virada para baixo (só no campo). */
   faceDownKind?: 'morph' | 'disguise' | 'manifest' | 'cloak';

@@ -1,4 +1,15 @@
 {
+  "0.84.0": {
+    "A importação guarda a série das cartas": [
+      { "img": "0.84.0/editor-series.webp", "legenda": "No editor, cada carta com a série e o número ao lado do nome e a arte daquela impressão. O **Raio** da M10 e o da 2X2 ficam em linhas separadas, cada um com a sua arte." }
+    ],
+    "A mesa mostra a arte da impressão escolhida": [
+      { "img": "0.84.0/campo-series.webp", "legenda": "Na partida, a **Lança Veloz do Monastério** da série KTK e a **Montanha** da M10 entram no campo com a arte das impressões escolhidas no deck." }
+    ],
+    "Exportar lista leva a série": [
+      { "img": "0.84.0/exportar-series.webp", "legenda": "A janela **Exportar lista** com cada carta seguida da série e do número, como `2 Lightning Bolt (M10) 146`." }
+    ]
+  },
   "0.83.0": {
     "Exportar a lista do deck em texto": [
       { "img": "0.83.0/janela-exportar.webp", "legenda": "A janela **Exportar lista** do Triunfo das Fichas: o comandante, o deck em inglês, prontos para colar no Moxfield ou no Arena, e o aviso de **Lista copiada** depois de tocar em **Copiar lista**." },
