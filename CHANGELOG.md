@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.83.0] - 2026-10-30
+
+### Novo
+
+- **Exportar a lista do deck em texto.** **Exportar lista** abre uma janela com a lista inteira do deck em texto (comandantes, deck e sideboard), com os nomes em inglês no formato que o Moxfield, o Archidekt, o Arena e o MTGO importam. Toque em **Copiar lista** para levar tudo de uma vez para a área de transferência, ou em **Baixar .txt** para guardar o arquivo, como antes. Ela fica em **Ações do deck**, no editor, e agora também no rodapé da visualização de qualquer deck, inclusive dos decks prontos.
+
 ## [0.82.1] - 2026-10-29
 
 ### Mudou

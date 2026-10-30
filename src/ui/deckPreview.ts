@@ -6,6 +6,7 @@ import { esc, manaHTML, pip, richText } from './cardtext';
 import { deckArt, deckColors, groupedRows, statsHTML } from './deckStats';
 import { inspectCard } from './cardInspector';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
+import { openDeckExport } from './deckExport';
 
 interface DeckPreviewOptions {
   selected: boolean;
@@ -22,7 +23,7 @@ export function openDeckPreview(deck: DeckData, opts: DeckPreviewOptions) {
   dlg.className = 'deck-preview dw-preview'; dlg.setAttribute('aria-label', `Deck ${deck.name}`);
   const art = deckArt(deck);
   let inspected: string | undefined;
-  dlg.innerHTML = `<header class="dp-head"><div class="dw-preview-heading">${art ? `<img src="${esc(art)}" alt="">` : ''}<div><h2>${esc(deck.name)}</h2><p>${deckColors(deck).map(pip).join('')}<span>${totalDeckSize(deck)} cartas · ${countEntries(deck.sideboard ?? [])} no sideboard · ${deck.builtin ? 'Deck pronto' : 'Seu deck'}</span></p></div></div><button type="button" class="dp-close" data-close aria-label="Fechar visualização do deck">×</button></header><div class="dp-main"><div class="dp-body"></div><aside class="dw-preview-card" aria-label="Carta em destaque"><div id="dpCard"></div></aside></div><footer class="dp-foot">${opts.onCopy ? '<button type="button" class="dw-button" data-copy>Criar uma cópia</button>' : ''}${opts.onEdit ? '<button type="button" class="dw-button" data-edit>Editar deck</button>' : ''}<button type="button" class="dw-button" data-close>Fechar</button><button type="button" class="dw-button primary" data-pick ${opts.selected ? 'disabled' : ''}>${opts.selected ? 'Deck escolhido' : esc(opts.pickLabel ?? 'Escolher este deck')}</button></footer>`;
+  dlg.innerHTML = `<header class="dp-head"><div class="dw-preview-heading">${art ? `<img src="${esc(art)}" alt="">` : ''}<div><h2>${esc(deck.name)}</h2><p>${deckColors(deck).map(pip).join('')}<span>${totalDeckSize(deck)} cartas · ${countEntries(deck.sideboard ?? [])} no sideboard · ${deck.builtin ? 'Deck pronto' : 'Seu deck'}</span></p></div></div><button type="button" class="dp-close" data-close aria-label="Fechar visualização do deck">×</button></header><div class="dp-main"><div class="dp-body"></div><aside class="dw-preview-card" aria-label="Carta em destaque"><div id="dpCard"></div></aside></div><footer class="dp-foot"><button type="button" class="dw-button" data-export>Exportar lista</button>${opts.onCopy ? '<button type="button" class="dw-button" data-copy>Criar uma cópia</button>' : ''}${opts.onEdit ? '<button type="button" class="dw-button" data-edit>Editar deck</button>' : ''}<button type="button" class="dw-button" data-close>Fechar</button><button type="button" class="dw-button primary" data-pick ${opts.selected ? 'disabled' : ''}>${opts.selected ? 'Deck escolhido' : esc(opts.pickLabel ?? 'Escolher este deck')}</button></footer>`;
   document.body.append(dlg);
 
   function show(name?: string) {
@@ -53,6 +54,7 @@ export function openDeckPreview(deck: DeckData, opts: DeckPreviewOptions) {
     if (flip) { if (sides) turnCard(dlg.querySelector<HTMLImageElement>('.dw-preview-image img'), flip, sides); return; }
     const card = target.closest<HTMLElement>('[data-card],[data-inspect]');
     if (card) { inspectCard({ name: card.dataset.card ?? card.dataset.inspect! }, card); return; }
+    if (target.closest('[data-export]')) { openDeckExport(deck); return; }
     if (target.closest('[data-pick]')) { dlg.close(); opts.onPick(); }
     if (target.closest('[data-copy]')) { dlg.close(); opts.onCopy?.(); }
     if (target.closest('[data-edit]')) { dlg.close(); opts.onEdit?.(); }

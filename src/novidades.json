@@ -1,4 +1,10 @@
 {
+  "0.83.0": {
+    "Exportar a lista do deck em texto": [
+      { "img": "0.83.0/janela-exportar.webp", "legenda": "A janela **Exportar lista** do Triunfo das Fichas: o comandante, o deck em inglês, prontos para colar no Moxfield ou no Arena, e o aviso de **Lista copiada** depois de tocar em **Copiar lista**." },
+      { "img": "0.83.0/botao-visualizacao.webp", "legenda": "Na visualização de um deck pronto, o botão **Exportar lista** novo no rodapé, ao lado de **Criar uma cópia**." }
+    ]
+  },
   "0.82.1": {
     "Preço em todos os decks prontos de Commander": [
       { "img": "0.82.1/precos-commander.webp", "legenda": "Na escolha do deck, **Primeiro Voo**, **Noite de Y'shtola** e **Banquete de Sangue**, que não tinham preço, agora mostram quanto custam as cartas: US$ 25,91, US$ 636,68 e US$ 594,44." }

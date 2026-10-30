@@ -9,6 +9,7 @@ import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
 import { cardCopyLimit, copiesInDeck, validateDeckLocal, type ServerDeckValidation } from './deckRules';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { openDeckPreview } from './deckPreview';
+import { download, openDeckExport } from './deckExport';
 import { mountAppHeader } from './appHeader';
 import { applyDeckImport, deckImportSnapshot, type DeckImportMode } from './deckImport';
 import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
@@ -36,12 +37,6 @@ const COLOR_NAME: Record<Color, string> = { W: 'Branco', U: 'Azul', B: 'Preto', 
 const TYPE_FILTERS = [['Todos os tipos', ''], ['Criatura', 't:creature'], ['Instantânea', 't:instant'], ['Feitiço', 't:sorcery'], ['Artefato', 't:artifact'], ['Encantamento', 't:enchantment'], ['Terreno', 't:land']];
 const formatLabel = (format: DeckFormat) => FORMAT_LABEL[format];
 const formatOptions = (format: DeckFormat) => (['free', 'standard', 'pauper', 'sacola50', 'commander'] as const).map(f => `<option value="${f}" ${format === f ? 'selected' : ''}>${FORMAT_LABEL[f]}</option>`).join('');
-
-function download(text: string, name: string, type = 'text/plain') {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let user = loadUserDecks();
@@ -470,7 +465,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'dup': { const deck = current(); if (deck) duplicate(deck); break; }
       case 'del': { const deck = current(); if (deck && !deck.builtin) { removed = { deck, index: user.indexOf(deck) }; user = user.filter(d => d.id !== deck.id); selected = null; view = 'library'; persist('Deck excluído.'); render(); } break; }
       case 'undo': if (removed) { user.splice(removed.index, 0, removed.deck); removed = null; persist('Deck restaurado.'); render(); } break;
-      case 'export': { const deck = current(); if (deck) download(exportDeckList(deck), `${deck.name.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 70) || 'deck'}.txt`); break; }
+      case 'export': { const deck = current(); setDeckActions(false, true); if (deck) openDeckExport(deck); break; }
       case 'source': { const deck = current(); if (deck?.importSource) download([...deck.importHistory ?? [], deck.importSource].join('\n\n// Importação seguinte\n\n'), 'listas-originais.txt'); break; }
       case 'export-import': download(importDraft.text, 'lista-original.txt'); break;
       case 'recovery': download(exportDeckRecovery(), 'recuperacao-decks.json', 'application/json'); break;
