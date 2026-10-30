@@ -51,6 +51,11 @@
 .forge .hand:not(.crowded) .inspect-card { top: 35%; }
 .forge .hcard.playable { touch-action: none; cursor: grab; }
 .forge .hcard.drag-source { opacity: .35; }
+/* Arrumar a mão: qualquer carta da mão pode ser arrastada; no leque o toque não rola nada, e na mão longa o deslize para o lado continua rolando. */
+.forge .hand:not(.crowded) .hcard[data-fid] { touch-action: none; }
+.forge .hand.crowded .hcard[data-fid]:not(.playable) { touch-action: pan-x; }
+.forge .hand.reordering .hand-slot { transition: transform .16s ease; }
+.forge .hand.reordering .hand-slot:has(.drag-source) { z-index: 0; }
 .hand-drag-ghost { position: fixed; z-index: 80; aspect-ratio: 488 / 680; pointer-events: none; transform: translate(-50%, -70%); filter: drop-shadow(0 12px 15px #0008); }
 .hand-drag-ghost .face { height: 100%; outline: 2px solid var(--gold); }
 .forge.dragging-hand { user-select: none; cursor: grabbing; }

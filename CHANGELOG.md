@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.75.0] - 2026-10-29
+
+### Novo
+
+- **Arrume a sua mão arrastando as cartas.** Arraste uma carta da mão para os lados e solte entre outras duas: as vizinhas abrem espaço enquanto você arrasta, e a carta fica onde você soltou, como no Arena. Dá para separar terrenos de mágicas, por exemplo, com qualquer carta da mão, mesmo as que não dá para jogar agora. Arrastar para o campo continua jogando a carta; soltar dentro da mão só muda a ordem. A ordem vale até o fim da partida: a carta comprada entra no fim e a jogada sai sem embaralhar o resto. No celular, tocar e segurar continua abrindo a carta grande; com a mão cheia, deslizar para o lado ainda rola a mão, e para mudar uma carta de lugar é só puxar um pouco para cima antes de levar para o lado.
+
 ## [0.74.1] - 2026-10-29
 
 ### Mudou

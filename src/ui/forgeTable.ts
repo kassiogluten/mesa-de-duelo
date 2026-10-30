@@ -19,7 +19,7 @@ import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './m
 import { forcedSeatReason, visibleSeats } from './seatVisibility';
 import { fixPossessives } from './forgeText';
 import { VERSION } from './changelog';
-import { attachHandDrag } from './handDrag';
+import { arrangeHand, attachHandDrag, moveInHand } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
@@ -336,6 +336,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let soloSeat: number | null = null;
   let seatsMatch = '';
   let knownHand = new Set<number>();
+  /** Ordem da mão arrumada pelo jogador (ids), só nesta partida. */
+  let handOrder: number[] = [];
   let handPrimed = false;
   let drawingNow = 0;
   /** Cartas compradas ainda em voo (id → quando chegam): continuam escondidas mesmo se a mão for redesenhada no caminho. */
@@ -494,8 +496,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   syncSettings();
   const handDrag = attachHandDrag(root, {
     state: () => disconnected || questionMinimized() ? null : client?.state,
+    canReorder: () => !disconnected && !!client?.state && !client.state.watching,
     beforeDrag: () => hideCardPreview(true),
     play: action => { stopPresentation(); client?.send(action); },
+    reorder: (id, to) => { const next = moveInHand(handOrder, id, to); if (next) { handOrder = next; renderTable(false); } },
   });
 
   function focusSnapshot() {
@@ -2044,7 +2048,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     $('#fOpponents').hidden = !multiplayer;
     const match = s.matchId ?? s.session?.code ?? '';
-    if (match !== seatsMatch) { seatsMatch = match; hiddenSeats = new Set(); soloSeat = null; }
+    if (match !== seatsMatch) { seatsMatch = match; hiddenSeats = new Set(); soloSeat = null; handOrder = []; }
     if (soloSeat !== null && !opponents.some(p => p.id === soloSeat)) soloSeat = null;
     const shownSeats = visibleSeats(visual, opponents, { hidden: hiddenSeats, solo: soloSeat });
     // Ocultos viram uma coluna estreita; o espaço que sobra vai para os campos à vista.
@@ -2068,7 +2072,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     // Cartas do cemitério utilizáveis continuam na mão; o exílio tem seu próprio espaço.
     const extra = outsideHand(s);
-    const fan = [...me.hand.map(c => ({ c, tag: '' })), ...extra];
+    // A mão segue a ordem que o jogador arrumou: a comprada entra no fim e a jogada sai sem mexer no resto.
+    handOrder = arrangeHand(handOrder, me.hand.map(c => c.id));
+    const inHand = new Map(me.hand.map(c => [c.id, c]));
+    const fan = [...handOrder.map(id => ({ c: inHand.get(id)!, tag: '' })), ...extra];
     const n = fan.length;
     $('#fHand').classList.toggle('crowded', n > 7);
     const drawsAhead = timeline.pendingDraws(s.you) + drawingNow > 0 && handPrimed && !suppressOpeningPreview(s) && timeline.history.some(e => e.type === 'turn');
@@ -2971,7 +2978,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   return {
     attach(c, pics) {
-      autoPass.reset(); passResponses.reset(); opponentStops.reset(); turnNotice.reset(); knownHand = new Set(); handPrimed = false; arriving.clear(); shownLife.clear();
+      autoPass.reset(); passResponses.reset(); opponentStops.reset(); turnNotice.reset(); knownHand = new Set(); handPrimed = false; handOrder = []; arriving.clear(); shownLife.clear();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
       client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);

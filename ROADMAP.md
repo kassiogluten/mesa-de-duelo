@@ -706,14 +706,16 @@ Na caixa de ação, o botão em destaque (primário) deve ser sempre o que o jog
 
 Decidido em 29/10/2026 (versão 0.70.0): o levantamento mostrou que só o seu turno com a pilha vazia fugia da regra; nos outros momentos o primário já era o mais comum (**Resolver** com a pilha cheia, **Passar** no turno do oponente, **Manter** no mulligan, **Eu jogo**, o pagamento automático, o **Sim** das perguntas, você no "Quem começa?"). No seu turno, **Fim de turno** era sempre o primário; agora, no início do turno (desvirar, manutenção, compra) e na principal 1, o primário é passar a etapa (**Comprar**, **Para a principal 1**, **Para o combate**, sempre, mesmo sem criaturas), e do combate em diante continua **Fim de turno** (`passIsPrimary` em `src/ui/phaseHud.ts`). O Espaço continua apertando só o botão de passar a etapa e nunca **Fim de turno**, para não encerrar o turno sem querer: até a principal 1 ele segue o primário; depois, aperta o secundário. Na caixa de ação do turno (coluna), o primário fica sempre por último, embaixo, na ordem do HTML (para o Tab e o leitor de tela seguirem a tela), também no **Resolver** e no **Pagar 2 de vida**; as caixas com botões lado a lado (abertura, perguntas, escolhas de carta) ficaram como estavam.
 
-## 46. Arrastar cartas na mão para organizar
+## 46. Arrastar cartas na mão para organizar ✅
 
 O jogador arrasta uma carta da mão para outra posição e organiza a mão do jeito que preferir (por exemplo, terrenos de um lado e mágicas do outro), como no Arena.
 
-- [ ] Arrastar uma carta da mão e soltar entre outras duas para mudar a posição dela no leque, com as vizinhas abrindo espaço durante o arrasto.
-- [ ] Não confundir com jogar a carta: arrastar para o campo continua jogando, arrastar dentro da mão só reorganiza.
-- [ ] A ordem escolhida se mantém quando a mão muda (carta comprada entra no fim, carta jogada sai sem embaralhar o resto).
-- [ ] Funcionar no celular sem atrapalhar o tocar e segurar, que hoje abre a carta grande.
+- [x] Arrastar uma carta da mão e soltar entre outras duas para mudar a posição dela no leque, com as vizinhas abrindo espaço durante o arrasto.
+- [x] Não confundir com jogar a carta: arrastar para o campo continua jogando, arrastar dentro da mão só reorganiza.
+- [x] A ordem escolhida se mantém quando a mão muda (carta comprada entra no fim, carta jogada sai sem embaralhar o resto).
+- [x] Funcionar no celular sem atrapalhar o tocar e segurar, que hoje abre a carta grande.
+
+Decidido em 29/10/2026 (versão 0.75.0): o arrasto da mão (`src/ui/handDrag.ts`) passou a valer para qualquer carta da mão, não só as que dá para jogar, com o mesmo limiar de 9 px do arrasto para o campo. Soltar dentro da faixa da mão (a caixa de `#fHand`) reorganiza; fora dela, segue a regra de antes (no campo joga, se a carta puder ser jogada; em outro lugar, nada). Durante o arrasto, a carta fantasma segue o ponteiro, a carta de origem fica apagada na posição de destino e as vizinhas entre a origem e o destino andam uma casa (`translateX`), calculado a partir das posições do começo do arrasto. O contorno do campo só aparece quando a carta pode ser jogada. As cartas de fora da mão (cemitério, exílio) continuam no fim e não entram na ordem. A ordem é só da mesa, na memória, e vale até o fim da partida (zera ao trocar de partida); a mão sempre passa por `arrangeHand`, que mantém a ordem conhecida, põe as novas no fim, na ordem do Forge, e tira as que saíram. No celular, o tocar e segurar não mudou (mexer o dedo mais de 10 px desiste dele, e segurar parado cancela o arrasto); no leque, todas as cartas da mão ficam com `touch-action: none`; na mão longa (que rola), as que não dá para jogar ficam com `pan-x`, então deslizar para o lado rola a mão e, para reorganizar, puxa-se um pouco para cima antes. Não há atalho de teclado para reorganizar nem rolagem automática nas pontas da mão longa.
 
 ## 47. Buscar cartas por função e cartas parecidas
 

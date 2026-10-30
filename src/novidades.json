@@ -1,4 +1,10 @@
 {
+  "0.75.0": {
+    "Arrume a sua mão arrastando as cartas": [
+      { "img": "0.75.0/mao-arrastando.webp", "legenda": "Arrastando a Forest para o começo da mão: as outras cartas andam para a direita e abrem o espaço onde ela vai entrar." },
+      { "img": "0.75.0/mao-arrumada.webp", "legenda": "Depois de soltar, a Forest fica em primeiro, e a mão segue nessa ordem até o fim da partida." }
+    ]
+  },
   "0.74.1": {
     "Terrenos do oponente em Só este": [
       { "img": "0.74.1/terrenos-so-este.webp", "legenda": "Com **Só este** no Commander, os 11 terrenos do oponente numa fileira inteira acima das criaturas, sem barra de rolagem." }
