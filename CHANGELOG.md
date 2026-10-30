@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.87.0] - 2026-10-30
+
+### Novo
+
+- **Cada tema com a sua textura.** O campo de batalha agora muda de textura junto com o tema: a Esmeralda tem feltro, como uma mesa de jogo de verdade; a Violeta, um pontilhado; o Carmesim fica liso; o Grafite ganha fibra de carbono; e o Oceano, uma colmeia de hexágonos. O Noite azul continua com a trama de losangos de sempre.
+
 ## [0.86.0] - 2026-10-30
 
 ### Novo

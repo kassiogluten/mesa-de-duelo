@@ -1,6 +1,8 @@
 /* The table stays spatial: cards occupy the mat; the stack only opens for pending effects. */
 .forge { --hand-right: 300px; --exile-card-width: calc(var(--hcw) * .85); --exile-width: calc(var(--exile-visible, 1) * var(--exile-card-width) + (var(--exile-visible, 1) - 1) * 12px + 16px); grid-template-columns: minmax(0, 1fr); --ch: clamp(96px, 17vh, 190px); --cw: calc(var(--ch) * .716); --lch: clamp(62px, 9.5vh, 105px); --lcw: calc(var(--lch) * .716); }
-.forge .mat { background: repeating-linear-gradient(60deg, #ffffff04 0 2px, transparent 2px 26px), repeating-linear-gradient(-60deg, #ffffff04 0 2px, transparent 2px 26px), radial-gradient(ellipse at 50% 50%, var(--mat-center), var(--mat-mid) 45%, var(--bg-deep) 92%); }
+.forge .mat { background: radial-gradient(ellipse at 50% 50%, var(--mat-center), var(--mat-mid) 45%, var(--bg-deep) 92%); }
+/* A textura do campo vem do tema (src/temas.css). */
+.forge .mat::before { content: ''; position: absolute; inset: 0; background: var(--mat-textura); }
 /* Os campos não cortam nada (cada fileira rola na horizontal): cartas que sobem no ataque passam por cima da linha do meio. */
 .forge .field { min-width: 0; padding: 0 58px; gap: 0; overflow: visible; justify-content: safe center; }
 .forge .row { min-width: 0; width: 100%; flex-shrink: 0; justify-content: safe center; overflow-x: auto; overflow-y: hidden; min-height: calc(var(--ch) + 24px); padding: 12px 12px; scrollbar-width: thin; scrollbar-color: var(--muted) transparent; scroll-padding: 20px; }

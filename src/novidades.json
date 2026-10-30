@@ -1,4 +1,13 @@
 {
+  "0.87.0": {
+    "Cada tema com a sua textura": [
+      { "img": "0.87.0/textura-feltro.webp", "legenda": "No tema **Esmeralda**, o campo de batalha com o grão fino de feltro." },
+      { "img": "0.87.0/textura-pontilhado.webp", "legenda": "No tema **Violeta**, o pontilhado espaçado sobre o fundo roxo." },
+      { "img": "0.87.0/textura-lisa.webp", "legenda": "No tema **Carmesim**, o campo liso, só com o degradê vinho." },
+      { "img": "0.87.0/textura-fibra-de-carbono.webp", "legenda": "No tema **Grafite**, a trama de fibra de carbono." },
+      { "img": "0.87.0/textura-hexagonos.webp", "legenda": "No tema **Oceano**, a colmeia de hexágonos em linhas finas." }
+    ]
+  },
   "0.86.0": {
     "Temas da mesa": [
       { "img": "0.86.0/menu-tema.webp", "legenda": "O botão da paleta no alto da tela inicial, aberto com as seis opções. Cada uma mostra a cor do fundo; aqui está marcada a **Violeta**." },

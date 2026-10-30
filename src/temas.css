@@ -2,8 +2,12 @@
  * Temas da mesa (src/ui/temas.ts): mudam só o tom do fundo, que continua escuro. Sem tema, vale o Noite azul de
  * sempre: cada azul do CSS é escrito como var(--azul-RRGGBB, #RRGGBB), e só os outros temas definem essas variáveis,
  * girando o tom (--tema-h, em graus) com a mesma claridade e saturação. Botões e destaques não mudam. Um azul novo
- * no CSS precisa da sua linha aqui (tests/temas.test.mjs confere).
+ * no CSS precisa da sua linha aqui (tests/temas.test.mjs confere). Cada tema traz também a textura do campo de batalha
+ * (--mat-textura); a do Noite azul é a trama de losangos.
  */
+:root {
+  --mat-textura: repeating-linear-gradient(60deg, #ffffff04 0 2px, transparent 2px 26px), repeating-linear-gradient(-60deg, #ffffff04 0 2px, transparent 2px 26px);
+}
 
 /* Navegadores sem cor relativa ficam no Noite azul (e não mostram a escolha de tema). */
 @supports (color: oklch(from red l c calc(h + 1))) {
@@ -174,10 +178,14 @@
     --azul-e8edf5: oklch(from #e8edf5 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-f3f6ff: oklch(from #f3f6ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
   }
-  :root[data-tema='esmeralda'] { --tema-h: -105; }
-  :root[data-tema='violeta'] { --tema-h: 30; }
-  :root[data-tema='carmesim'] { --tema-h: 115; }
-  /* O Grafite é a exceção: em vez de girar o tom, tira a cor. */
-  :root[data-tema='grafite'] { --tema-h: 0; --tema-c: 0.12; }
-  :root[data-tema='oceano'] { --tema-h: -50; }
+  :root[data-tema='esmeralda'] { --tema-h: -105; --mat-textura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / 160px 160px; }
+  :root[data-tema='violeta'] { --tema-h: 30; --mat-textura: radial-gradient(circle, #ffffff05 1.2px, transparent 1.8px) 0 0 / 18px 18px; }
+  :root[data-tema='carmesim'] { --tema-h: 115; --mat-textura: none; }
+  /* Texturas: feltro, pontilhado, lisa, fibra de carbono e hexágonos. O Grafite é a exceção na cor: em vez de girar
+     o tom, tira a cor. */
+  :root[data-tema='grafite'] {
+    --tema-h: 0; --tema-c: 0.12;
+    --mat-textura: linear-gradient(27deg, #0000000c 2px, transparent 2px) 0 2px / 8px 8px, linear-gradient(207deg, #0000000c 2px, transparent 2px) 4px 0 / 8px 8px, linear-gradient(27deg, #ffffff02 2px, transparent 2px) 0 4px / 8px 8px, linear-gradient(207deg, #ffffff02 2px, transparent 2px) 4px 2px / 8px 8px, linear-gradient(90deg, #00000008 4px, transparent 4px) 0 0 / 8px 8px, linear-gradient(#00000008 25%, #0000000a 25% 50%, transparent 50% 75%, #ffffff02 75%) 0 0 / 8px 8px;
+  }
+  :root[data-tema='oceano'] { --tema-h: -50; --mat-textura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66 0 50V16L28 0l28 16v34L28 66v34M28 0v0' fill='none' stroke='white' stroke-opacity='.035' stroke-width='2'/%3E%3C/svg%3E") 0 0 / 28px 50px; }
 }
