@@ -33,7 +33,7 @@ public class MatchJournalRoomsTest {
         Rooms rooms = new Rooms();
         EmbeddedChannel ch = new EmbeddedChannel();
         try {
-            rooms.onMessage(ch, "{\"type\":\"start\",\"config\":{\"format\":\"free\",\"matchLength\":\"bo1\"},\"you\":\"vermelho\",\"opponent\":\"verde\"}");
+            rooms.onMessage(ch, "{\"type\":\"start\",\"config\":{\"format\":\"free\",\"matchLength\":\"bo1\"},\"you\":\"pauper-brasa\",\"opponent\":\"pauper-floresta\"}");
             JsonObject session = session(ch);
             String code = session.get("code").getAsString(), token = session.get("token").getAsString();
             rooms.onMessage(ch, "{\"type\":\"ok\",\"gen\":-5}");

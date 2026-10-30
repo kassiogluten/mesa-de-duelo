@@ -9,6 +9,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import forge.StaticData;
+import forge.card.GamePieceType;
 import forge.game.Game;
 import forge.game.card.Card;
 import forge.game.card.CardFactory;
@@ -23,6 +24,8 @@ public class DungeonsTest {
 
     static Card dungeon(Game game, Player owner, String script) {
         Card d = CardFactory.getCard(StaticData.instance().getAllTokens().getToken(script), owner, game);
+        // Como o VentureEffect do Forge: sem o tipo de peça, a zona de comando não aceita a masmorra.
+        d.setGamePieceType(GamePieceType.DUNGEON);
         game.getAction().moveToCommand(d, null);
         return d;
     }

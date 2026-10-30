@@ -158,7 +158,12 @@ final class Replay {
         return gs.toString();
     }
 
-    private static final Pattern IDS = Pattern.compile("(\\|(?:Id|AttachedTo|ExiledWith|ChosenCards|RememberedCards|Imprinting):)[\\d,]+");
+    private static final Pattern IDS = Pattern.compile("(\\|(?:AttachedTo|ExiledWith|ChosenCards|RememberedCards|Imprinting):)[\\d,]+");
+    /**
+     * O próprio id só sai no retrato quando algo aponta para a carta. Um efeito temporário (como o "pode jogar"
+     * de Impulso Imprudente) aponta para as cartas exiladas, mas não volta do retrato: a mesma carta sai sem o id.
+     */
+    private static final Pattern OWN_ID = Pattern.compile("\\|Id:\\d+");
 
     /** Linhas do retrato que diferem: cartas a mais ou a menos em cada zona e os outros valores. Ids de carta são ignorados. */
     static List<String> diff(String expected, String actual) {
@@ -191,7 +196,7 @@ final class Replay {
         Map<String, String> map = new LinkedHashMap<>();
         for (String line : state.split("\n")) {
             int eq = line.indexOf('=');
-            if (eq > 0) map.put(line.substring(0, eq), IDS.matcher(line.substring(eq + 1)).replaceAll("$1#"));
+            if (eq > 0) map.put(line.substring(0, eq), IDS.matcher(OWN_ID.matcher(line.substring(eq + 1)).replaceAll("")).replaceAll("$1#"));
         }
         return map;
     }

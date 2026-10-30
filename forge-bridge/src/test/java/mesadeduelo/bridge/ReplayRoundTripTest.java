@@ -94,6 +94,15 @@ public class ReplayRoundTripTest {
         assertTrue(String.join("\n", diff), diff.stream().noneMatch(line -> line.contains("faltando") || line.contains("a mais") || line.contains("life")));
     }
 
+    /** Impulso Imprudente exila com um efeito que aponta para as cartas; o efeito não volta, e o id some do retrato. */
+    @Test public void diffIgnoresWhetherACardCarriesItsOwnId() {
+        String want = "p0exile=Rift Bolt|Set:2X2|Art:1|Id:51|ExiledWith:36;Mountain|Set:MDD|Art:1|Id:28|ExiledWith:36\n";
+        String got = "p0exile=Rift Bolt|Set:2X2|Art:1|ExiledWith:56;Mountain|Set:MDD|Art:1|ExiledWith:56\n";
+        assertEquals(List.of(), Replay.diff(want, got));
+        assertEquals(List.of("p0exile faltando: Mountain|Set:MDD|Art:1|ExiledWith:#"),
+            Replay.diff(want, "p0exile=Rift Bolt|Set:2X2|Art:1|ExiledWith:56\n"));
+    }
+
     @Test public void renumberMovesEveryPlayerReference() {
         String state = "turn=3\nactiveplayer=p1\nactivephase=UNTAP\np0life=20\np1life=7\np0battlefield=Aura|Set:M10|EnchantingPlayer:P1;Bear|Owner:P1\np1hand=Shock\n";
         String swapped = Replay.renumber(state, Map.of(0, 1, 1, 0));
