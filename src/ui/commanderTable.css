@@ -250,10 +250,8 @@
 .forge.multiplayer .table-seat .row { min-height: calc(var(--ch) + 10px); padding-block: 5px; }
 .forge.multiplayer .table-seat .lands { min-height: calc(var(--lch) + 10px); }
 /* Menos oponentes à vista, cartas maiores: o espaço liberado vai para quem ficou. */
-/* Um só: campo largo, terrenos ao lado das criaturas, e as criaturas crescem até o tamanho do seu campo. */
+/* Um só: campo largo, terrenos numa fileira embaixo das criaturas, e as criaturas crescem até o tamanho do seu campo. */
 @media (min-width: 761px) and (min-height: 501px) {
   .forge.multiplayer .commander-opponents[data-shown='2'] .table-seat > .field { --ch: clamp(74px, 12.5vh, 140px); }
-  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat > .field { flex-direction: row; align-items: center; overflow: visible; --ch: clamp(80px, 15vh, 170px); --lch: clamp(46px, 9vh, 96px); }
-  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat .seat-row { width: 62%; flex: 1 1 62%; }
-  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat .lands-lane { width: 38%; flex: 0 1 38%; }
+  .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat > .field { overflow: visible; --ch: clamp(56px, calc((41vh - 200px) * .64), 150px); --lch: clamp(36px, calc((41vh - 200px) * .36), 84px); }
 }

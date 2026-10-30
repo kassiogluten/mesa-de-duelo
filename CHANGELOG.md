@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.74.1] - 2026-10-29
+
+### Mudou
+
+- **Terrenos do oponente em Só este.** No Commander, ao ver só um oponente com **Só este** no computador, os terrenos dele ficavam numa fileira estreita ao lado das criaturas, disputando espaço e com barra de rolagem. Agora os terrenos ganham uma fileira inteira, acima das criaturas, e as cartas se ajustam à altura da tela para as duas fileiras caberem no campo dele.
+
 ## [0.74.0] - 2026-10-29
 
 ### Novo

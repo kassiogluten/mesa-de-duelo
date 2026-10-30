@@ -1,4 +1,9 @@
 {
+  "0.74.1": {
+    "Terrenos do oponente em Só este": [
+      { "img": "0.74.1/terrenos-so-este.webp", "legenda": "Com **Só este** no Commander, os 11 terrenos do oponente numa fileira inteira acima das criaturas, sem barra de rolagem." }
+    ]
+  },
   "0.74.0": {
     "Dez decks prontos novos de Pauper": [
       { "img": "0.74.0/pauper-dez-decks.webp", "legenda": "Com o Pauper escolhido, os dez decks novos aparecem depois de Brasa e Relâmpago e Força da Floresta: de **Terror Azul** a **Esquadrão Branco**, cada um com as cores dele." }
