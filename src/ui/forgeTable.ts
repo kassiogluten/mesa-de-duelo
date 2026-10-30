@@ -12,7 +12,7 @@ import { removalNotices, removedByOwner, type RemovalNotice } from './removalNot
 import './removalNotice.css';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import { createGameAudio, SOUND_PACKS, type SoundPack } from './audio';
-import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
+import { PassLevelPreference, PASS_LEVELS, PASS_LEVEL_ALWAYS, isPassLevel, passLevelBadgeHTML, passLevelInfo, passMenuHTML } from './passLevel';
 import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
@@ -77,7 +77,6 @@ const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.
 const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
 const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
-const ICON_PASS = '<svg class="pass-responses-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5v13l8.5-6.5zm9 0v13l8.5-6.5z" fill="currentColor"/></svg>';
 /** Enjoo de invocação: estrelinhas girando em volta, como personagem tonto de desenho animado. */
 const ICON_DIZZY = '<svg class="dizzy" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="2 2.4"/><g class="dizzy-orbit">'
   + [[12, 5, 1], [18.06, 15.5, .75], [5.94, 15.5, .6]].map(([x, y, k]) => `<path transform="translate(${x} ${y}) scale(${k})" d="M0-4.2 1.1-1.1 4.2 0 1.1 1.1 0 4.2-1.1 1.1-4.2 0-1.1-1.1z" fill="#ffd66b"/>`).join('')
@@ -181,7 +180,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <div class="game-option-row"><span id="fSoundLabel">Efeitos sonoros</span><button class="sound-switch" id="fMute" data-ui="mute" role="switch" aria-checked="false" aria-labelledby="fSoundLabel"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fSoundState" aria-hidden="true">Desligados</span></button></div>
         <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%">
           <div class="game-option-pace"><label for="fSoundPack">Pacote de sons</label><select id="fSoundPack" aria-describedby="fSoundPackHint">${SOUND_PACKS.map(pack => `<option value="${pack.id}">${pack.name}</option>`).join('')}</select><p id="fSoundPackHint">Ao trocar, toca uma amostra do pacote escolhido.</p></div></div>
-        <div class="game-option-auto-pass"><div class="game-option-row"><span id="fAutoPassLabel">Passar automaticamente</span><button class="sound-switch" id="fAutoPass" data-ui="auto-pass" role="switch" aria-checked="true" aria-labelledby="fAutoPassLabel" aria-describedby="fAutoPassHint fAutoPassStatus" disabled><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAutoPassState" aria-hidden="true">Ativado</span></button></div><p id="fAutoPassHint">Quando não houver ações disponíveis. As jogadas continuam visíveis.</p><p id="fAutoPassStatus" role="status">Aguardando conexão com o servidor.</p></div>
+        <div class="game-option-pace game-option-auto-pass"><label for="fPassLevel">Passar automaticamente</label><select id="fPassLevel" aria-describedby="fPassLevelHint fPassLevelAlways fPassLevelStatus" disabled>${PASS_LEVELS.map(level => `<option value="${level.id}">${level.name}</option>`).join('')}</select><p id="fPassLevelHint">${passLevelInfo('acoes').hint}</p><p id="fPassLevelAlways">${PASS_LEVEL_ALWAYS} Para trocar durante a partida, toque no selo junto dos botões.</p><p id="fPassLevelStatus" role="status">Aguardando conexão com o servidor.</p></div>
         <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
         <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
         <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
@@ -221,6 +220,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <svg class="target-arrows" id="fTargets" aria-hidden="true"></svg>
     <nav class="phase-rail phase-trail" id="fPhases" aria-label="Fases do turno"></nav>
     <div class="stop-menu" id="fStopMenu" role="dialog" aria-labelledby="fStopMenuTitle" hidden></div>
+    <div class="stop-menu pass-menu" id="fPassMenu" role="dialog" aria-labelledby="fPassMenuTitle" hidden></div>
     <div class="action" id="fAction"></div><div class="sr-only" id="fAnnouncement" aria-live="polite" aria-atomic="true"></div>
     <div class="await-callout" id="fAwait" hidden><span class="await-eyebrow" aria-hidden="true">Sua decisão</span><strong class="await-text"></strong></div>
     <div class="banner" id="fBanner" hidden></div><div class="sr-only" id="fTurnAnnouncement" aria-live="polite" aria-atomic="true"></div>
@@ -396,9 +396,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let sideboardBusy = false;
   const timeline = new PresentationTimeline();
   const audio = createGameAudio();
-  const autoPass = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); });
-  // "Passar respostas", ao lado dos botões: marcado, a ponte passa sozinha no turno do oponente e com algo na pilha.
-  const passResponses = new AutoPassPreference(message => { if (client?.connected && !disconnected) client.send(message); }, undefined, { field: 'passResponses', key: PASS_RESPONSES_KEY, initial: false });
+  // Nível de passar automaticamente (Opções e o selo junto dos botões); quem passa é a ponte.
+  const passLevel = new PassLevelPreference(message => { if (client?.connected && !disconnected) client.send(message); });
+  /** O menu de troca rápida do nível está aberto. */
+  let passMenuOpen = false;
   // Etapas do turno dos oponentes em que a ponte segura a prioridade para você.
   const opponentStops = new OpponentStopsPreference(message => { if (client?.connected && !disconnected) client.send(message); });
   const turnNotice = createTurnNotice();
@@ -439,16 +440,53 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const selectedBadge = (s: FState, c: FCard) => selectedForInput(s, c.id) ? '<span class="choice-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span>' : '';
   const inspectButton = (c: FCard) => (!c.faceDown && c.name) || c.hiddenFace?.name ? `<button class="inspect-card" data-inspect="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${inspectIcon}</button>` : '';
 
-  function syncAutoPass() {
+  function syncPassLevel() {
     const connected = !!client?.connected && !disconnected;
-    const control = $('#fAutoPass') as HTMLButtonElement;
-    control.disabled = !connected || !autoPass.supported;
-    control.setAttribute('aria-checked', String(autoPass.value));
-    $('#fAutoPassState').textContent = autoPass.value ? 'Ativado' : 'Desativado';
-    const status = $('#fAutoPassStatus');
-    status.textContent = !connected ? 'Aguardando conexão com o servidor.' : !autoPass.supported ? 'Este servidor não oferece esta opção.' : autoPass.pending !== null ? 'Aplicando…' : '';
+    const control = $('#fPassLevel') as HTMLSelectElement;
+    control.disabled = !connected || !passLevel.supported;
+    control.value = passLevel.value;
+    $('#fPassLevelHint').textContent = passLevelInfo(passLevel.value).hint;
+    const status = $('#fPassLevelStatus');
+    status.textContent = !connected ? 'Aguardando conexão com o servidor.' : !passLevel.supported ? 'Este servidor não oferece esta opção.' : passLevel.pending !== null ? 'Aplicando…' : '';
     status.hidden = !status.textContent;
+    if (passMenuOpen) syncPassMenu();
   }
+  /** O atalho "Passar até o fim do turno" agora: ligado, disponível (prioridade no turno de outro jogador), no seu turno ou fora da prioridade. */
+  function passTurnShortcut(s: FState): 'on' | 'available' | 'mine' | 'off' {
+    if (passLevel.passingTurn) return 'on';
+    if (!s.input.priority || !s.input.ok.enabled || s.input.paying || s.input.targeting || s.question || s.gameOver || s.spectating) return 'off';
+    return s.activePlayer === s.you ? 'mine' : 'available';
+  }
+  function syncPassMenu() {
+    const s = client?.state;
+    const menu = $('#fPassMenu');
+    if (!passMenuOpen || !s || !passLevelVisible(s)) { if (!menu.hidden) setPassMenu(false); return; }
+    const focused = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>('#fPassMenu [data-pass-level], #fPassMenu [data-ui]');
+    const key = focused?.dataset.passLevel ?? focused?.dataset.ui;
+    setHTML(menu, passMenuHTML(passLevel.value, passTurnShortcut(s)));
+    if (key) menu.querySelector<HTMLElement>(`[data-pass-level="${key}"], [data-ui="${key}"]`)?.focus({ preventScroll: true });
+    placePassMenu();
+  }
+  function setPassMenu(open: boolean, focus = false) {
+    const menu = $('#fPassMenu');
+    passMenuOpen = open;
+    menu.hidden = !open;
+    if (open) { syncPassMenu(); if (focus) menu.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true }); }
+    root.querySelector('[data-ui="pass-level"]')?.setAttribute('aria-expanded', String(open));
+    if (!open && focus) root.querySelector<HTMLElement>('[data-ui="pass-level"]')?.focus({ preventScroll: true });
+  }
+  /** O menu abre acima do selo, alinhado pela direita, sem sair da tela. */
+  function placePassMenu() {
+    const menu = $('#fPassMenu');
+    const anchor = root.querySelector<HTMLElement>('[data-ui="pass-level"]');
+    if (!anchor || menu.hidden) return;
+    const a = anchor.getBoundingClientRect(), m = menu.getBoundingClientRect(), gap = 8;
+    const left = Math.min(Math.max(8, a.right - m.width), window.innerWidth - m.width - 8);
+    const top = a.top - m.height - gap >= 8 ? a.top - m.height - gap : Math.min(a.bottom + gap, window.innerHeight - m.height - 8);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${Math.max(8, top)}px`;
+  }
+  window.addEventListener('resize', placePassMenu);
   /** Grupo da trilha de fases com o menu de paradas aberto. */
   let stopMenu: string | null = null;
   // Dia ou noite do último desenho da trilha: o sol ou a lua pulsa quando vira.
@@ -508,7 +546,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     ($('#fSoundPack') as HTMLSelectElement).value = settings.pack;
     ($('#fPace') as HTMLSelectElement).value = fast ? 'fast' : 'normal';
     ($('#fCardStyle') as HTMLSelectElement).value = cardStyle;
-    syncAutoPass();
+    syncPassLevel();
   }
   function setMenu(open: boolean, restore = false) {
     $('#fMenu').hidden = !open;
@@ -1872,7 +1910,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
       btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && attackAllGen !== null ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${optionHTML(btn.label)}</button>` : '';
     const mine = s.activePlayer === s.you;
-    if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
+    if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (passLevel.passingTurn ? 'Passando até o fim do turno…' : '') || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
     // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
     const extraCombat = mine && (s.extraCombats ?? 0) > 0;
     const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying && !extraCombat;
@@ -1895,12 +1933,26 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return undo + life('secondary') + resolveAll + (passFirst ? passTurn + pass : pass + passTurn);
   }
 
-  /** Fica à vista durante toda a partida, também com o oponente jogando, para dar para desmarcar a qualquer hora. */
-  function passResponsesToggle(s: FState) {
-    if (!passResponses.supported || s.gameOver || s.spectating || s.input.opening || s.input.attacking || s.input.blocking) return '';
+  /** O selo do nível fica à vista durante toda a partida, também com o oponente jogando, para trocar a qualquer hora. */
+  function passLevelVisible(s: FState) {
+    if (!passLevel.supported || s.gameOver || s.spectating || s.watching || s.question || s.input.opening || s.input.attacking || s.input.blocking) return false;
     // Só junto da prioridade ou da espera: numa escolha (descarte, alvo, pagamento) ele só atrapalharia.
-    if (s.input.selection || s.input.targeting || s.input.paying || cardDecision(s) || (!s.input.priority && (s.input.ok.enabled || s.input.cancel.enabled))) return '';
-    return `<label class="pass-responses" title="Passa a prioridade sozinho no turno do oponente e quando há algo na pilha. Seu turno, ataques, bloqueios e escolhas continuam parando."><input type="checkbox" data-ui="pass-responses"${passResponses.value ? ' checked' : ''}${passResponses.pending !== null ? ' aria-busy="true"' : ''}>${ICON_PASS}<span class="pass-responses-text">Passar respostas</span></label>`;
+    return !(s.input.selection || s.input.targeting || s.input.paying || cardDecision(s) || (!s.input.priority && (s.input.ok.enabled || s.input.cancel.enabled)));
+  }
+  function passLevelControl(s: FState) {
+    return passLevelVisible(s) ? passLevelBadgeHTML(passLevel.value, { passingTurn: passLevel.passingTurn, open: passMenuOpen, busy: passLevel.pending !== null }) : '';
+  }
+  /** Liga o atalho "Passar até o fim do turno" no turno de outro jogador (no seu, o botão Fim de turno faz o mesmo). */
+  function startPassingTurn() {
+    const s = client?.state;
+    if (!client || !s || disconnected || passTurnShortcut(s) !== 'available') return;
+    const gen = s.input.gen;
+    if (gen === clickedGen && Date.now() - clickedAt < CLICK_LOCK_MS) return;
+    clickedGen = gen; clickedAt = Date.now();
+    stopPresentation(); hideCardPreview(true);
+    client.send({ type: 'pass-turn', gen });
+    setPassMenu(false);
+    render();
   }
 
   // ---------- Perguntas ----------
@@ -2119,9 +2171,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const s = client?.state;
     if (!s || s.type !== 'state') return;
     fixForgeText(s);
-    autoPass.observe(s.preferences, !!client?.connected && !disconnected); syncAutoPass();
+    passLevel.observe(s.preferences, !!client?.connected && !disconnected);
     opponentStops.observe(s.preferences, !!client?.connected && !disconnected); syncStops();
-    passResponses.observe(s.preferences, !!client?.connected && !disconnected);
     if (s.spectating) turnNotice.reset(); else turnNotice.observe(s);
     const savedFocus = focusSnapshot();
     const scrollPositions = new Map([...root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field')].map(el => [el.id, { left: el.scrollLeft, top: el.scrollTop }]));
@@ -2280,7 +2331,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';
-    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(s)}</div>${passResponsesToggle(s)}`);
+    setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(s)}</div>${passLevelControl(s)}`);
+    syncPassLevel();
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
@@ -2543,6 +2595,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const stop = t.closest<HTMLElement>('#fStopMenu [data-stop]');
     if (stop) { if (stopsEditable()) opponentStops.toggle(stop.dataset.stop!); syncStops(); render(); return; }
     if (stopMenu && !t.closest('#fStopMenu')) setStopMenu(null);
+    // Nível de passar automaticamente: o selo abre a troca rápida; fora do menu, ele fecha.
+    if (ui === 'pass-level') { setPassMenu(!passMenuOpen, e.detail === 0); return; }
+    const level = t.closest<HTMLElement>('#fPassMenu [data-pass-level]')?.dataset.passLevel;
+    if (level) { if (client?.connected && !disconnected && isPassLevel(level)) passLevel.change(level); setPassMenu(false, true); render(); return; }
+    if (ui === 'pass-turn-shortcut') { startPassingTurn(); return; }
+    if (ui === 'pass-turn-stop') { if (client?.connected && !disconnected) client.send({ type: 'pass-turn-stop' }); setPassMenu(false, true); return; }
+    if (passMenuOpen && !t.closest('#fPassMenu')) setPassMenu(false);
     if (ui === 'prompt-more') { expandedPrompt = expandedPrompt === shownInstruction ? '' : shownInstruction; renderTable(false); return; }
     if (ui === 'question-minimize' || ui === 'question-restore') {
       minimizedQuestion = ui === 'question-minimize' ? client?.state?.question?.id ?? null : null;
@@ -2603,8 +2662,6 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (ui === 'settings') { syncTurnNotice(); setSettings(true); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
-    if (ui === 'pass-responses') { if (client?.connected && !disconnected) passResponses.change(!passResponses.value); render(); return; }
-    if (ui === 'auto-pass') { if (client?.connected && !disconnected) autoPass.change(!autoPass.value); syncAutoPass(); return; }
     if (ui === 'turn-notice') { void turnNotice.setEnabled(!turnNotice.enabled).then(syncTurnNotice); return; }
     if (ui === 'mute') { audio.setMuted(!audio.settings.muted); syncSettings(); return; }
     if (ui === 'sideboard-ready' || ui === 'next-game') {
@@ -2959,6 +3016,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       renderTable(false);
     }
     if (t.id === 'fSoundPack') { void audio.setPack(t.value as SoundPack); }
+    if (t.id === 'fPassLevel') { if (client?.connected && !disconnected && isPassLevel(t.value)) passLevel.change(t.value); syncPassLevel(); if (client?.state) render(); }
     if (t.id === 'fPace') { fast = t.value === 'fast'; try { localStorage.setItem('mesa:pace', fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
   });
   const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect],[data-q-card]';
@@ -3090,6 +3148,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if (stopMenu) { e.preventDefault(); setStopMenu(null, true); return; }
+      if (passMenuOpen) { e.preventDefault(); setPassMenu(false, true); return; }
       if (!$('#fRemoval').hidden) { e.preventDefault(); closeRemoval(); return; }
       if (!$('#fSettings').hidden) { e.preventDefault(); setSettings(false); return; }
       if (!$('#fMenu').hidden) { e.preventDefault(); setMenu(false, true); return; }
@@ -3126,7 +3185,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   return {
     attach(c, pics) {
-      autoPass.reset(); passResponses.reset(); opponentStops.reset(); turnNotice.reset(); knownHand = new Set(); handPrimed = false; handOrder = []; arriving.clear(); shownLife.clear();
+      passLevel.reset(); opponentStops.reset(); turnNotice.reset(); knownHand = new Set(); handPrimed = false; handOrder = []; arriving.clear(); shownLife.clear();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
       client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);
@@ -3137,13 +3196,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       $('#fOverlay').hidden = true;
       $('#fQuestion').hidden = true;
       $('#fZone').hidden = true;
-      syncAutoPass(); syncStops(); syncTurnNotice(); syncModal();
+      syncPassLevel(); syncStops(); syncTurnNotice(); syncModal();
     },
     render,
     notice,
     reconnecting(attempt) {
       if (attempt === 1) recordDiagnostic('conexão', 'A conexão caiu; tentando voltar sozinho.');
-      disconnected = true; clearAttackChoice(true); autoPass.reset(); opponentStops.reset(); syncAutoPass(); syncStops();
+      disconnected = true; clearAttackChoice(true); passLevel.reset(); opponentStops.reset(); syncPassLevel(); syncStops();
       if (stackGalleryOpen) closeStackGallery();
       handDrag.cancel(); stopPresentation(); silentNext = true;
       const ov = $('#fOverlay');
@@ -3157,7 +3216,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     diagnostic(d) { recordDiagnostic('ação ignorada', d.text, d.action ? `ação: ${d.action}` : undefined); },
     disconnected(reason) {
       recordDiagnostic('conexão', reason ?? 'Conexão perdida com o servidor da partida.');
-      disconnected = true; clearAttackChoice(true); autoPass.reset(); opponentStops.reset(); syncAutoPass(); syncStops();
+      disconnected = true; clearAttackChoice(true); passLevel.reset(); opponentStops.reset(); syncPassLevel(); syncStops();
       if (stackGalleryOpen) closeStackGallery();
       handDrag.cancel(); stopPresentation(); silentNext = true;
       const room = !!client?.state?.session;

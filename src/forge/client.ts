@@ -3,9 +3,13 @@ import type { DeckData, DeckEntry, DeckFormat } from '../decks';
 /** Cliente da ponte do Forge (forge-bridge). Formato das mensagens descrito em forge-bridge/README.md. */
 
 export interface FPreferences {
+  /** Interruptores antigos, derivados do nível pela ponte (clientes de versões anteriores ainda os mandam). */
   autoPassNoActions: boolean;
-  /** "Só respostas": passes priority on opponents' turns and with something on the stack. Absent on older bridges. */
   passResponses?: boolean;
+  /** Nível de passar automaticamente: 'sempre', 'acoes', 'respostas' ou 'afeta'. Ausente em pontes antigas. */
+  passLevel?: string;
+  /** O atalho "Passar até o fim do turno" está ligado (só no estado; não se envia). */
+  passingTurn?: boolean;
   /** Etapas do turno dos oponentes em que o jogo segura a prioridade (nomes do Forge, como "UPKEEP"). Ausente em pontes antigas. */
   opponentStops?: string[];
 }
@@ -454,6 +458,7 @@ export type ClientMessage =
   | { type: 'select-set'; cards: number[]; players: number[]; gen: number }
   | { type: 'mana'; color: string; gen?: number }
   | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
+  | { type: 'pass-turn-stop' }
   | { type: 'skip-vote'; target: number; value?: boolean }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string };

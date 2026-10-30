@@ -1,4 +1,20 @@
 {
+  "0.82.0": {
+    "Níveis de passar automaticamente": [
+      { "img": "0.82.0/niveis-opcoes.webp", "legenda": "Nas Opções, a lista **Passar automaticamente** no lugar do interruptor, com o que o nível escolhido faz e o que sempre para." }
+    ],
+    "Selo do nível junto dos botões": [
+      { "img": "0.82.0/selo.webp", "legenda": "No seu turno, o selo discreto de **Só com ações** ao lado dos botões." },
+      { "img": "0.82.0/troca-rapida.webp", "legenda": "Tocando no selo (dourado em **Respostas**), a troca rápida com os quatro níveis e o atalho, sem abrir as Opções." }
+    ],
+    "Passar até o fim do turno": [
+      { "img": "0.82.0/passando.webp", "legenda": "Com o atalho ligado no turno do oponente, a caixa mostra **Passando até o fim do turno…** e o selo pulsa." },
+      { "img": "0.82.0/parar-de-passar.webp", "legenda": "Enquanto o atalho vale, o menu do selo oferece **Parar de passar** para voltar ao nível antes do fim do turno." }
+    ],
+    "Passar automaticamente e Passar respostas viraram níveis": [
+      { "img": "0.82.0/trilha-etapas-marcadas.webp", "legenda": "No menu da trilha de fases, o texto novo: as etapas marcadas param em qualquer nível, mesmo com Passar até o fim do turno." }
+    ]
+  },
   "0.81.0": {
     "Filtros e ordem por tipo ao buscar no grimório": [
       { "img": "0.81.0/grupos-por-tipo.webp", "legenda": "Num tutor, as cartas do grimório agrupadas por tipo: **Criaturas** primeiro, cada uma por custo de mana, e depois **Terrenos**, com a quantidade ao lado de cada título." },

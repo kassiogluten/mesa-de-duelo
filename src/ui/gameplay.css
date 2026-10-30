@@ -424,22 +424,38 @@
   .forge > .field .row { scrollbar-width: thin; }
 }
 /*
- * "Passar respostas": um botão só com o ícone, ao lado do último botão da caixa, em vez de uma linha inteira embaixo.
- * Ligado, ele fica dourado; o nome continua para o leitor de tela e ao passar o mouse (title).
+ * Selo do nível de passar automaticamente: um botão só com o ícone do nível, ao lado do último botão da caixa.
+ * "Só com ações" (o padrão) fica discreto; os níveis mais rápidos ficam dourados, "Parar sempre" com borda dourada,
+ * e o atalho "Passar até o fim do turno" ligado pulsa de leve. O nome vai no title e para o leitor de tela.
  */
-.forge .action:has(> .pass-responses) > .btns > :last-child { margin-right: 52px; }
-.forge .action > .pass-responses { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 12px; background: #101a2e; color: var(--muted); cursor: pointer; user-select: none; transition: color .15s, background .15s, border-color .15s; }
-.forge .action > .pass-responses:hover { color: var(--gold-light); border-color: var(--gold); }
-.forge .action > .pass-responses input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.forge .action > .pass-responses .pass-responses-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.forge .action > .pass-responses .pass-responses-icon { display: block; width: 20px; height: 20px; }
-.forge .action > .pass-responses:has(input:checked) { color: #1a1408; background: var(--gold); border-color: var(--gold); }
-.forge .action > .pass-responses:has(input:focus-visible) { outline: 2px solid var(--gold); outline-offset: 2px; }
+.forge .action:has(> .pass-level) > .btns > :last-child { margin-right: 52px; }
+.forge .action > .pass-level { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 12px; background: #101a2e; color: var(--muted); cursor: pointer; user-select: none; transition: color .15s, background .15s, border-color .15s; }
+.forge .action > .pass-level:hover, .forge .action > .pass-level[aria-expanded="true"] { color: var(--gold-light); border-color: var(--gold); }
+.forge .action > .pass-level .pass-level-icon { display: block; width: 20px; height: 20px; }
+.forge .action > .pass-level[data-level="sempre"] { color: var(--gold-light); border-color: var(--gold); }
+.forge .action > .pass-level[data-level="respostas"], .forge .action > .pass-level[data-level="afeta"], .forge .action > .pass-level.passing { color: #1a1408; background: var(--gold); border-color: var(--gold); }
+.forge .action > .pass-level.passing { animation: pass-level-pulse 1.6s ease-in-out infinite; }
+.forge .action > .pass-level:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@keyframes pass-level-pulse { 50% { box-shadow: 0 0 0 4px #f2b54c40; } }
+@media (prefers-reduced-motion: reduce) { .forge .action > .pass-level.passing { animation: none; } }
 @media (max-width: 760px), (max-height: 500px) {
-  .forge .action:has(> .pass-responses) > .btns > :last-child { margin-right: 38px; }
-  .forge .action > .pass-responses { width: 32px; height: 32px; border-radius: 10px; }
-  .forge .action > .pass-responses .pass-responses-icon { width: 18px; height: 18px; }
+  .forge .action:has(> .pass-level) > .btns > :last-child { margin-right: 38px; }
+  .forge .action > .pass-level { width: 32px; height: 32px; border-radius: 10px; }
+  .forge .action > .pass-level .pass-level-icon { width: 18px; height: 18px; }
 }
+/* Troca rápida do nível: o mesmo cartão do menu de paradas da trilha de fases. */
+.pass-menu { max-width: min(340px, calc(100vw - 16px)); }
+.pass-level-options { display: grid; gap: 4px; margin-top: 8px; }
+.pass-level-option, .pass-turn-shortcut { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; width: 100%; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.pass-level-option .pass-level-icon, .pass-turn-shortcut .pass-level-icon { width: 18px; height: 18px; margin-top: 1px; color: var(--muted); }
+.pass-level-option strong, .pass-turn-shortcut strong { display: block; font: 600 13px/1.3 var(--body); }
+.pass-level-option small, .pass-turn-shortcut small { display: block; margin-top: 2px; color: var(--muted); font: 400 12px/1.4 var(--body); }
+.pass-level-option:hover, .pass-turn-shortcut:not(:disabled):hover { background: #ffffff10; }
+.pass-level-option[aria-checked="true"] { border-color: #f2b54c80; background: #f2b54c1a; }
+.pass-level-option[aria-checked="true"] .pass-level-icon, .pass-turn-shortcut.on .pass-level-icon { color: var(--gold); }
+.pass-turn-shortcut:disabled { cursor: default; opacity: .55; }
+.pass-level-option:focus-visible, .pass-turn-shortcut:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.pass-menu-divider { height: 1px; margin: 8px 0; background: #b9c7df26; }
 /* Compra: verso de carta voando do grimório para a mão; a carta nova espera escondida até ele chegar. */
 .draw-ghost { z-index: 31; }
 .draw-ghost .back { width: 100%; height: 100%; box-shadow: 0 10px 24px #0008; }

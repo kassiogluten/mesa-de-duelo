@@ -6,6 +6,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.82.0] - 2026-10-29
+
+### Novo
+
+- **Níveis de passar automaticamente.** Um só seletor diz quanto o jogo passa a prioridade por você, do mais cuidadoso ao mais rápido: **Parar sempre** (para em toda etapa que dá prioridade, nos dois turnos, mesmo sem nada para usar), **Só com ações** (o padrão: passa quando você não tem nada que possa usar), **Respostas** (passa também no turno dos oponentes e com algo na pilha, mas para no seu turno) e **Só quando me afeta** (passa tudo, menos as suas fases principais, até algo mirar você ou suas permanentes, ou até você ser atacado). Em qualquer nível, as etapas marcadas na trilha de fases sempre param, e ataques, bloqueios e escolhas sempre esperam você. Escolha o nível nas Opções, em **Passar automaticamente**; ele acompanha a sua conta, como as outras preferências da mesa.
+- **Selo do nível junto dos botões.** Ao lado dos botões da caixa de ação, um selo com o ícone do nível mostra como o jogo está passando. Toque nele para trocar de nível na hora, sem abrir as Opções.
+- **Passar até o fim do turno.** No turno de um oponente, o selo também oferece um atalho de uma vez só: o jogo passa tudo até o turno acabar e volta sozinho ao seu nível quando o turno termina, quando algo afeta você ou numa etapa marcada. Enquanto ele vale, o selo pulsa e a caixa mostra **Passando até o fim do turno…**; toque no selo e em **Parar de passar** para desligar antes.
+
+### Mudou
+
+- **Passar automaticamente e Passar respostas viraram níveis.** O interruptor **Passar automaticamente** das Opções e a caixa **Passar respostas** junto dos botões deram lugar ao seletor de nível, e a sua escolha foi mantida: com Passar respostas ligado, você está em **Respostas**; com Passar automaticamente desligado, em **Parar sempre**; senão, em **Só com ações**. O texto do menu da trilha de fases agora explica que as etapas marcadas param em qualquer nível.
+- **Fim de turno só volta quando algo afeta você.** No seu turno, depois de tocar em **Fim de turno**, o jogo devolvia a vez a cada mágica do oponente. Agora ele só devolve quando algo mira você ou suas permanentes, quando há uma remoção em massa ou quando você é atacado, como no novo **Passar até o fim do turno**.
+
 ## [0.81.0] - 2026-10-29
 
 ### Novo

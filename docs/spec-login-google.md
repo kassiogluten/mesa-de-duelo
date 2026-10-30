@@ -127,7 +127,7 @@ Estado local de sincronia, em `mesa:conta:sync:v1`:
 
 ### Preferências e apelido (fase 3)
 
-- Chaves sincronizadas: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops`, `mesa:choiceSort` e `mesa:name`, que é o apelido.
+- Chaves sincronizadas: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passLevel` (o nível de passar automaticamente, desde a 0.82.0), `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops`, `mesa:choiceSort` (a ordem das escolhas grandes de cartas, desde a 0.81.0) e `mesa:name`, que é o apelido.
 - Ficam de fora: `mesa:resume`, `mesa:novidades`, `mesa:dev`, o cache de cartas e o rascunho do modo livre (`mesa:livre`), que são deste aparelho.
 - Vale a última gravação de cada chave, sem pergunta. Ao entrar pela primeira vez, se a conta ainda não tiver preferências, as do navegador sobem.
 - As leituras e gravações dessas chaves passam por um único ponto (por exemplo, `src/prefs.ts`), em vez dos `localStorage.setItem` espalhados de hoje.

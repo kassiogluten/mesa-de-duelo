@@ -1,6 +1,7 @@
 import { FORGE_URL } from './forge/client';
 import { RECORDING_FORMAT, fitRecording, gzip, type DeviceInfo, type Recording } from './forge/recording';
 import { STORES, withStore } from './idb';
+import { DEFAULT_PASS_LEVEL, passLevelInfo, savedPassLevel } from './ui/passLevel';
 
 /**
  * Relatos de sugestões e erros (item 28): monta o relato, envia para a ponte (POST /api/relatos, corpo em gzip) e,
@@ -70,8 +71,7 @@ export function localPreferences(): Record<string, unknown> {
     cards: read('mesa:cards') === 'art' ? 'arte e texto' : read('mesa:cards') === 'arena' ? 'arena' : 'imagem completa',
     pace: read('mesa:pace') === 'fast' ? 'rápido sem resposta' : 'normal',
     reducedMotion: media('(prefers-reduced-motion: reduce)'),
-    autoPassNoActions: read('mesa:autoPassNoActions') !== 'false',
-    passResponses: read('mesa:passResponses') === 'true',
+    passLevel: (() => { try { return passLevelInfo(savedPassLevel(localStorage) ?? DEFAULT_PASS_LEVEL).name; } catch { return passLevelInfo(DEFAULT_PASS_LEVEL).name; } })(),
   };
 }
 

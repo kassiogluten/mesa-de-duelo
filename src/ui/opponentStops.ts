@@ -46,7 +46,7 @@ export function stopsOptionsHTML(stops: readonly string[], enabled: boolean, gro
 export function stopMenuHTML(group: string, title: string, stops: readonly string[]): string {
   return `<p class="stop-menu-title" id="fStopMenuTitle">${esc(title)} · turno do oponente</p>
     <div class="stop-steps">${stopsOptionsHTML(stops, true, group)}</div>
-    <p class="stop-menu-hint">Nas etapas marcadas o jogo para e segura a prioridade para você, mesmo sem ações e com Passar respostas ligado. Vale para todos os oponentes.</p>`;
+    <p class="stop-menu-hint">Nas etapas marcadas o jogo para e segura a prioridade para você em qualquer nível de passar automaticamente, mesmo sem ações e com Passar até o fim do turno. Vale para todos os oponentes.</p>`;
 }
 
 interface PreferenceStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }

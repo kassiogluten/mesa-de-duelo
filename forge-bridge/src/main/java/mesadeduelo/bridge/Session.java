@@ -37,7 +37,6 @@ import forge.game.player.RegisteredPlayer;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.StackItemView;
 import forge.gamemodes.match.HostedMatch;
-import forge.gamemodes.match.YieldUpdate;
 import forge.gamemodes.match.input.InputAttack;
 import forge.gamemodes.match.input.InputBlock;
 import forge.gamemodes.match.input.InputConfirm;
@@ -294,7 +293,7 @@ final class Session {
             String name = seat.name;
             for (int n = 2; !names.add(name); n++) name = seat.name + " (" + n + ")";
             seat.name = name;
-            WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.autoPassNoActions, () -> seat.opponentStops, life, m::getGame);
+            WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.passLevel, () -> seat.opponentStops, life, m::getGame);
             seat.gui = g;
             RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name, undo));
             seat.registered = rp;
@@ -650,9 +649,11 @@ final class Session {
             case "pass-turn" -> {
                 if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { markDirty(); break; }
                 seat.consumedGen = genAtClick; seat.consumedAt = System.currentTimeMillis();
+                // "Fim de turno" no seu turno e "Passar até o fim do turno" no dos outros: passa até o turno acabar,
+                // até algo afetar você ou até uma etapa marcada; depois, volta ao nível escolhido.
                 seat.onEdt(genAtClick, c -> {
-                    if (seat.livePriority() && seat.question == null)
-                        c.applyYieldUpdate(new YieldUpdate.SetAutoPassUntilEndOfTurn(seat.me, true));
+                    WebGuiGame g = seat.gui;
+                    if (seat.livePriority() && seat.question == null && g != null) g.passUntilEndOfTurn(c);
                     markDirty();
                 });
                 markDirty();
@@ -663,11 +664,19 @@ final class Session {
                 if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { markDirty(); break; }
                 seat.consumedGen = genAtClick; seat.consumedAt = System.currentTimeMillis();
                 seat.onEdt(genAtClick, c -> {
-                    if (seat.livePriority() && seat.question == null)
-                        c.applyYieldUpdate(new YieldUpdate.StackYield(seat.me, true, true));
+                    WebGuiGame g = seat.gui;
+                    if (seat.livePriority() && seat.question == null && g != null) g.resolveAll(c);
                     markDirty();
                 });
                 markDirty();
+            }
+            case "pass-turn-stop" -> {
+                // Desliga o "Passar até o fim do turno" a qualquer momento, também enquanto o Forge passa sozinho.
+                FThreads.invokeInEdtLater(() -> {
+                    WebGuiGame g = seat.gui;
+                    if (g != null && seat.channel == source) g.stopPassingTurn();
+                    markDirty();
+                });
             }
             case "skip-vote" -> voteSkip(seat, msg);
             case "undo-request" -> requestUndo(seat);
@@ -1796,8 +1805,13 @@ final class Session {
         }
         state.add("config", config.json());
         JsonObject preferences = new JsonObject();
-        preferences.addProperty("autoPassNoActions", seat.autoPassNoActions);
-        preferences.addProperty("passResponses", seat.passResponses);
+        PassLevel level = seat.passLevel;
+        preferences.addProperty("passLevel", level.id);
+        // Os dois interruptores antigos continuam no estado, derivados do nível, para clientes de versões anteriores.
+        preferences.addProperty("autoPassNoActions", level.autoPassNoActions());
+        preferences.addProperty("passResponses", level.passesResponses());
+        WebGuiGame passing = seat.gui;
+        preferences.addProperty("passingTurn", passing != null && passing.passingTurn());
         JsonArray stops = new JsonArray();
         for (PhaseType phase : seat.opponentStops) stops.add(phase.name());
         preferences.add("opponentStops", stops);
@@ -1976,9 +1990,8 @@ final class Session {
         private volatile boolean sideboardReady;
         private volatile long sentEventCursor;
         // A seat preference survives reconnects, the next game, and a rematch.
-        private volatile boolean autoPassNoActions = true;
-        /** "Passar respostas": passa sozinho no turno dos outros e com algo na pilha. O próprio turno e as escolhas continuam parando. */
-        private volatile boolean passResponses;
+        /** Nível de passar automaticamente ({@link PassLevel}); o padrão é "Só com ações". */
+        private volatile PassLevel passLevel = PassLevel.ACOES;
         /** Etapas do turno dos oponentes em que o jogo segura a prioridade para este assento, mesmo sem ações. */
         private volatile Set<PhaseType> opponentStops = Set.of();
 
@@ -2065,26 +2078,26 @@ final class Session {
 
         private void updatePreferences(Channel source, JsonObject message) {
             Boolean autoPass = optionalBoolean(message, "autoPassNoActions"), responses = optionalBoolean(message, "passResponses");
+            PassLevel level = optionalLevel(message);
             Set<PhaseType> stops = optionalStops(message);
-            if (autoPass == null && responses == null && stops == null)
+            if (autoPass == null && responses == null && level == null && stops == null)
                 throw new IllegalArgumentException("Informe um valor booleano para a passagem automática de prioridade.");
             // Settings are independent of a prompt generation, but a replaced or departed socket
             // cannot change this seat. Resolve the controller at execution time across Bo3 games.
             FThreads.invokeInEdtLater(() -> {
                 if (channel != source) return;
                 WebGuiGame current = gui;
-                if (autoPass != null) {
-                    autoPassNoActions = autoPass;
-                    if (current != null) current.syncAutoPass();
+                // O nível vale sobre os interruptores antigos, que só chegam de clientes de versões anteriores.
+                PassLevel next = level != null ? level : PassLevel.fromLegacy(passLevel, autoPass, responses);
+                if (next != passLevel) {
+                    passLevel = next;
+                    if (current != null) current.levelChanged();
                 }
                 if (stops != null) {
                     opponentStops = stops;
                     if (current != null) current.stopsChanged();
                 }
-                if (responses != null) {
-                    passResponses = responses;
-                    passResponseIfAsked();   // marcado com o pedido de resposta já aberto: passa este também
-                }
+                passResponseIfAsked();   // trocou para um nível mais rápido com o pedido já aberto: passa este também
                 markDirty();
             });
         }
@@ -2105,6 +2118,15 @@ final class Session {
             return Collections.unmodifiableSet(stops);
         }
 
+        /** O nível pedido; null quando a mensagem não muda o nível. */
+        private static PassLevel optionalLevel(JsonObject message) {
+            JsonElement value = message.get("passLevel");
+            if (value == null) return null;
+            PassLevel level = value.isJsonPrimitive() && value.getAsJsonPrimitive().isString() ? PassLevel.of(value.getAsString()) : null;
+            if (level == null) throw new IllegalArgumentException("Escolha um nível de passar automaticamente: sempre, acoes, respostas ou afeta.");
+            return level;
+        }
+
         private static Boolean optionalBoolean(JsonObject message, String key) {
             JsonElement value = message.get(key);
             if (value == null) return null;
@@ -2114,21 +2136,28 @@ final class Session {
         }
 
         /**
-         * Com "Passar respostas" marcado, responde OK a um pedido de prioridade no turno de outro jogador
-         * ou com algo na pilha. Só vale para o pedido em que foi agendado: se o jogo pedir outra coisa antes, não passa.
+         * Nos níveis "Respostas" e "Só quando me afeta", responde OK sozinha a um pedido de prioridade quando o nível
+         * manda passar ({@link PassLevel#passes}). Só vale para o pedido em que foi agendado: se o jogo pedir outra coisa
+         * antes, não passa. Ataques, bloqueios e escolhas não são pedidos de prioridade e sempre esperam o jogador.
          */
         private void passResponseIfAsked() {
-            WebGuiGame g = gui;
-            PlayerView p = me;
-            // Numa etapa marcada para segurar a prioridade, a vez fica com o jogador mesmo com "Passar respostas".
-            if (!passResponses || question != null || !okEnabled || g == null || p == null || g.getGameView() == null || g.holding()) return;
-            var view = g.getGameView();
-            boolean othersTurn = !p.equals(view.getPlayerTurn());
-            if (!othersTurn && (view.getStack() == null || view.getStack().isEmpty())) return;
+            if (!shouldPass()) return;
             onEdt(inputGen.get(), c -> {
-                if (passResponses && question == null && okEnabled && livePriority()) c.selectButtonOk();
+                if (shouldPass() && livePriority()) c.selectButtonOk();
                 markDirty();
             });
+        }
+
+        private boolean shouldPass() {
+            WebGuiGame g = gui;
+            PlayerView p = me;
+            PassLevel level = passLevel;
+            if (!level.passesResponses() || question != null || !okEnabled || g == null || p == null) return false;
+            var view = g.getGameView();
+            if (view == null) return false;
+            boolean stackEmpty = view.getStack() == null || view.getStack().isEmpty();
+            // Numa etapa marcada para segurar a prioridade, a vez fica com o jogador em qualquer nível.
+            return level.passes(g.holding(), p.equals(view.getPlayerTurn()), stackEmpty, view.getPhase(), PassLevel.affects(view, p));
         }
 
         private void onEdt(int generation, java.util.function.Consumer<IGameController> action) {

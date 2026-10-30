@@ -2,7 +2,6 @@ package mesadeduelo.bridge;
 
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.concurrent.CountDownLatch;
 import com.google.common.eventbus.Subscribe;
@@ -34,7 +33,7 @@ final class WebGuiGame extends ProtocolGuiGame {
      * Fases do turno do oponente: o início do combate (virar ou remover uma criatura antes que ela ataque),
      * depois dos ataques (remover um atacante, criatura com lampejo para bloquear),
      * depois dos bloqueios e a etapa final, a janela clássica para instantâneas antes do seu turno.
-     * Com "Passar automaticamente" ligado, o Forge só para nelas quando o jogador tem algo que pode usar agora.
+     * No nível "Só com ações" (e nos mais rápidos), o Forge só para nelas quando o jogador tem algo que pode usar agora.
      */
     private static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_BEGIN, PhaseType.COMBAT_DECLARE_ATTACKERS,
         PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.END_OF_TURN);
@@ -50,11 +49,14 @@ final class WebGuiGame extends ProtocolGuiGame {
     private static final long ABILITY_SCAN_MS = 1000;
 
     private volatile PlayerView me;
-    private final BooleanSupplier autoPassNoActions;
-    /** Etapas marcadas pelo jogador no turno dos oponentes: nelas o jogo para mesmo sem ações e com "Passar respostas". */
+    /** Nível de passar automaticamente do jogador ({@link PassLevel}). */
+    private final Supplier<PassLevel> level;
+    /** Etapas marcadas pelo jogador no turno dos oponentes: nelas o jogo para em qualquer nível, mesmo sem ações. */
     private final Supplier<Set<PhaseType>> held;
     /** O jogo está numa etapa marcada: a passagem automática fica desligada até a etapa acabar. */
     private volatile boolean holding;
+    /** Turno em que o jogador pediu "Passar até o fim do turno"; null sem o atalho ligado. */
+    private volatile PlayerView passingTurn;
     /** Etapa do próprio turno aberta porque havia uma habilidade para usar nela; null fora dela. */
     private volatile PhaseType openedForAbility;
     private volatile Game watched;
@@ -76,13 +78,13 @@ final class WebGuiGame extends ProtocolGuiGame {
         super.awaitNextInput();
     }
 
-    WebGuiGame(IRemote remote, BooleanSupplier autoPassNoActions, MatchLifecycle lifecycle, Supplier<Game> game) {
-        this(remote, autoPassNoActions, Set::of, lifecycle, game);
+    WebGuiGame(IRemote remote, Supplier<PassLevel> level, MatchLifecycle lifecycle, Supplier<Game> game) {
+        this(remote, level, Set::of, lifecycle, game);
     }
 
-    WebGuiGame(IRemote remote, BooleanSupplier autoPassNoActions, Supplier<Set<PhaseType>> held, MatchLifecycle lifecycle, Supplier<Game> game) {
+    WebGuiGame(IRemote remote, Supplier<PassLevel> level, Supplier<Set<PhaseType>> held, MatchLifecycle lifecycle, Supplier<Game> game) {
         super(remote);
-        this.autoPassNoActions = autoPassNoActions;
+        this.level = level;
         this.held = held;
         this.lifecycle = lifecycle;
         this.game = game;
@@ -101,7 +103,48 @@ final class WebGuiGame extends ProtocolGuiGame {
         // Presentation timing must never create extra priority confirmations.
         syncAutoPass();
         controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_AUTO_PASS_RESPECTS_INTERRUPTS, "false"));
+        // "Passar até o fim do turno" volta ao nível quando algo afeta o jogador: algo que mira ele ou as permanentes
+        // dele, uma remoção em massa ou um ataque contra ele. Uma mágica qualquer do oponente não interrompe.
+        controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_INTERRUPT_ON_TARGETING, "true"));
+        controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_INTERRUPT_ON_MASS_REMOVAL, "true"));
+        controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_INTERRUPT_ON_ATTACKERS, "true"));
         syncSkips();
+    }
+
+    /**
+     * "Passar até o fim do turno": o Forge passa toda prioridade até o turno acabar, até algo afetar o jogador
+     * (as interrupções acima) ou até uma etapa marcada. Na thread do jogo (EDT), com a prioridade aberta.
+     * Uma mágica do oponente que não afeta o jogador não interrompe; o "Resolver todos" religa essa interrupção.
+     */
+    void passUntilEndOfTurn(IGameController controller) {
+        GameView view = getGameView();
+        if (controller == null || view == null || me == null) return;
+        passingTurn = view.getPlayerTurn();
+        controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_INTERRUPT_ON_OPPONENT_SPELL, "false"));
+        controller.applyYieldUpdate(new YieldUpdate.SetAutoPassUntilEndOfTurn(me, true));
+    }
+
+    /** "Resolver todos" para quando alguém acrescenta algo à pilha, como antes. */
+    void resolveAll(IGameController controller) {
+        if (controller == null || me == null) return;
+        controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_INTERRUPT_ON_OPPONENT_SPELL, "true"));
+        controller.applyYieldUpdate(new YieldUpdate.StackYield(me, true, true));
+    }
+
+    /** Desliga o atalho e volta ao nível escolhido. */
+    void stopPassingTurn() {
+        passingTurn = null;
+        IGameController controller = me == null ? null : getGameController(me);
+        if (controller != null) controller.applyYieldUpdate(new YieldUpdate.SetAutoPassUntilEndOfTurn(me, false));
+    }
+
+    /** O atalho "Passar até o fim do turno" está ligado (o Forge ainda não o desligou por uma interrupção). */
+    boolean passingTurn() {
+        if (passingTurn == null) return false;
+        IGameController controller = me == null ? null : getGameController(me);
+        boolean active = controller instanceof forge.player.PlayerControllerHuman human && human.getYieldController().autoPassUntilEndOfTurn();
+        if (!active) passingTurn = null;
+        return active;
     }
 
     /** O jogo está parado numa etapa que o jogador marcou no turno de um oponente. */
@@ -115,11 +158,17 @@ final class WebGuiGame extends ProtocolGuiGame {
         syncAutoPass();
     }
 
-    /** Envia ao Forge o "Passar automaticamente" do jogador, desligado enquanto o jogo segura a prioridade. */
+    /** O nível mudou: as etapas puladas e a passagem automática do Forge acompanham. */
+    void levelChanged() {
+        syncSkips();
+        syncAutoPass();
+    }
+
+    /** Envia ao Forge a passagem sem ações do nível do jogador, desligada enquanto o jogo segura a prioridade. */
     void syncAutoPass() {
         IGameController controller = me == null ? null : getGameController(me);
         if (controller == null) return;
-        boolean pass = autoPassNoActions.getAsBoolean() && !holding;
+        boolean pass = level.get().autoPassNoActions() && !holding;
         controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_AUTO_PASS_NO_ACTIONS, Boolean.toString(pass)));
     }
 
@@ -147,6 +196,9 @@ final class WebGuiGame extends ProtocolGuiGame {
                 if (watched != next || !(event instanceof GameEventTurnPhase step)) return;
                 openForAbility(next, step.playerTurn(), step.phase());
                 boolean hold = holds(step.playerTurn(), step.phase());
+                // O atalho acaba com o turno em que foi pedido, e uma etapa marcada também o interrompe.
+                PlayerView passing = passingTurn;
+                if (passing != null && (hold || !passing.equals(step.playerTurn()))) stopPassingTurn();
                 if (hold == holding) return;
                 holding = hold;
                 syncAutoPass();
@@ -190,6 +242,8 @@ final class WebGuiGame extends ProtocolGuiGame {
             CombatView combat = getGameView() == null ? null : getGameView().getCombat();
             if (combat == null || combat.getNumAttackers() == 0) return true;
         }
+        // "Parar sempre": toda etapa que dá prioridade para, nos dois turnos.
+        if (level.get() == PassLevel.SEMPRE) return false;
         return !(mine ? STOPS_MINE : STOPS_THEIRS).contains(phase);
     }
 }

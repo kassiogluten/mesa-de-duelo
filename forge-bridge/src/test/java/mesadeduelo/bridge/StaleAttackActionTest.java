@@ -79,7 +79,7 @@ public class StaleAttackActionTest {
                 WebGuiGame gui = new WebGuiGame(new IRemote() {
                     public void send(NetEvent event) { }
                     public Object sendAndWait(IdentifiableNetEvent event) { return null; }
-                }, () -> true, new MatchLifecycle(), () -> game);
+                }, () -> PassLevel.ACOES, new MatchLifecycle(), () -> game);
                 gui.setGameController(player.getView(), human);
                 field("gui").set(seat, gui); field("me").set(seat, player.getView());
                 FThreads.invokeInEdtLater(() -> {

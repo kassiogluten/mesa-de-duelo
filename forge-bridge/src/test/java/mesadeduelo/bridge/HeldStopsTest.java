@@ -34,7 +34,7 @@ public class HeldStopsTest {
         final WebGuiGame gui = new WebGuiGame(new IRemote() {
             public void send(NetEvent event) { }
             public Object sendAndWait(IdentifiableNetEvent event) { return null; }
-        }, () -> true, stops::get, new MatchLifecycle(), () -> game);
+        }, () -> PassLevel.ACOES, stops::get, new MatchLifecycle(), () -> game);
 
         Fixture() {
             gui.setGameView(game.getView());
