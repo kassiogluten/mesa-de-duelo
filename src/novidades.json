@@ -1,4 +1,10 @@
 {
+  "0.88.0": {
+    "Atacantes em leque": [
+      { "img": "0.88.0/atacantes-em-leque.webp", "legenda": "Seis criaturas atacando em leque: cada carta cobre o nome da anterior, mas o P/T e o selo com o número do ataque continuam à vista." },
+      { "img": "0.88.0/atacantes-em-leque-celular.webp", "legenda": "No celular, os atacantes do oponente também ficam em leque, com o selo do ataque acima do P/T." }
+    ]
+  },
   "0.87.0": {
     "Cada tema com a sua textura": [
       { "img": "0.87.0/textura-feltro.webp", "legenda": "No tema **Esmeralda**, o campo de batalha com o grão fino de feltro." },

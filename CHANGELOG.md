@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.88.0] - 2026-10-30
+
+### Mudou
+
+- **Atacantes em leque.** Quando várias criaturas atacam, as cartas viradas agora se sobrepõem em leque em vez de ficarem lado a lado, e a fileira de atacantes ocupa cerca de um terço a menos de largura. O P/T de cada atacante continua à vista, e o selo com o número do ataque passou para a borda de cima da carta, na parte que não fica coberta. Passe o mouse sobre um atacante para trazê-lo para frente.
+
 ## [0.87.0] - 2026-10-30
 
 ### Novo

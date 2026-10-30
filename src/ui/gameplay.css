@@ -21,8 +21,16 @@
 .forge .field.me .row:has(.slot.attacking) { margin-top: calc(-1 * (var(--bleed) + var(--lift))); }
 .forge .field.opp .row:has(.slot.attacking) > * { margin-bottom: calc(var(--bleed) + var(--lift)); }
 .forge .field.opp .row:has(.slot.attacking) { margin-bottom: calc(-1 * (var(--bleed) + var(--lift))); }
+/*
+ * Atacantes virados lado a lado se sobrepõem em leque: cada um cobre 40% do anterior (o topo da carta, com o nome),
+ * e o P/T, na ponta da esquerda, continua à vista. O selo do ataque vai para a borda de cima da carta deitada, na parte que
+ * fica à vista e longe do P/T; passar o mouse traz a carta para frente.
+ */
+.forge .stack:has(> .slot.tapped.attacking) + .stack:has(> .slot.tapped.attacking) { margin-left: calc(var(--ch) * -.4); }
+.forge .slot.tapped.attacking .tag.atk { left: 2px; top: 64%; transform: translate(-50%, -50%) rotate(-90deg); }
+.forge .slot.attacking:is(:hover, :focus-within) { z-index: 4; }
 .forge .row.lands { min-height: calc(var(--lch) + 16px); padding: 8px 12px; }
-.forge .row > *, .forge .perm-group, .forge .slot { flex-shrink: 0; }
+.forge .row > *,.forge .perm-group, .forge .slot { flex-shrink: 0; }
 .forge .slot { transition: none; }
 .forge .row:focus-visible { outline-offset: -3px; }
 .forge .stack-n { pointer-events: auto; cursor: pointer; min-width: 30px; min-height: 28px; top: -16px; }
