@@ -34,7 +34,7 @@ Continua dando para jogar sem conta, como hoje. A conta só serve para guardar e
 ## Como é hoje
 
 - Os decks do jogador ficam no `localStorage`, em `mesa:decks:v2` (`{version: 2, decks, recovery}`), lidos e gravados por `readDeckLibrary` e `writeDeckLibrary` em `src/decks.ts`. Cada deck tem `id` (UUID) e `updatedAt`. Os decks prontos (`builtin`) vêm de `shared/starter-decks.json` e não são do jogador.
-- As preferências também estão em chaves soltas do `localStorage`: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops` e `mesa:name`.
+- As preferências também estão em chaves soltas do `localStorage`: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops`, `mesa:choiceSort` e `mesa:name`.
 - A ponte (Netty) já atende HTTP em `/api/relatos` e `/api/admin/`. O login de admin (`Admin.java`) guarda os tokens só na memória, e o agregador HTTP aceita corpos de até 64 KB.
 - O nginx encaminha `/api/` para a ponte. O service worker não intercepta `/api/` (`navigateFallbackDenylist`).
 
@@ -127,7 +127,7 @@ Estado local de sincronia, em `mesa:conta:sync:v1`:
 
 ### Preferências e apelido (fase 3)
 
-- Chaves sincronizadas: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops` e `mesa:name`, que é o apelido.
+- Chaves sincronizadas: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops`, `mesa:choiceSort` e `mesa:name`, que é o apelido.
 - Ficam de fora: `mesa:resume`, `mesa:novidades`, `mesa:dev`, o cache de cartas e o rascunho do modo livre (`mesa:livre`), que são deste aparelho.
 - Vale a última gravação de cada chave, sem pergunta. Ao entrar pela primeira vez, se a conta ainda não tiver preferências, as do navegador sobem.
 - As leituras e gravações dessas chaves passam por um único ponto (por exemplo, `src/prefs.ts`), em vez dos `localStorage.setItem` espalhados de hoje.

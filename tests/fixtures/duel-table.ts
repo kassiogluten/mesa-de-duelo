@@ -253,6 +253,29 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       : { id: 70 + n, method: 'order', kind: 'choose', purpose: 'library', library, title, min: 0, max: n, options };
     view.render();
   },
+  /**
+   * Tutor (Demonic Tutor) num grimório de Commander: escolha de uma carta entre `n`, na ordem do grimório, como a
+   * ponte manda. `max` acima de 1 é uma busca de várias cartas (as marcadas continuam marcadas ao trocar de filtro).
+   */
+  tutor(n = 24, max = 1) {
+    const pool: [string, string, string][] = [
+      ['Sol Ring', 'Artifact', '{1}'], ['Command Tower', 'Land', ''], ['Llanowar Elves', 'Creature — Elf Druid', '{G}'],
+      ['Lightning Greaves', 'Artifact — Equipment', '{2}'], ['Steel Overseer', 'Artifact Creature — Construct', '{2}'],
+      ['Cultivate', 'Sorcery', '{2}{G}'], ['Counterspell', 'Instant', '{U}{U}'], ['Garruk Wildspeaker', 'Legendary Planeswalker — Garruk', '{2}{G}{G}'],
+      ['Animate Dead', 'Enchantment — Aura', '{1}{B}'], ['Forest', 'Basic Land — Forest', ''], ['Swords to Plowshares', 'Instant', '{W}'],
+      ['Eternal Witness', 'Creature — Human Shaman', '{1}{G}{G}'], ['Rhystic Study', 'Enchantment', '{2}{U}'], ['Demonic Tutor', 'Sorcery', '{1}{B}'],
+      ['Arcane Signet', 'Artifact', '{2}'], ['Birds of Paradise', 'Creature — Bird', '{G}'], ['Island', 'Basic Land — Island', ''],
+      ['Beast Within', 'Instant', '{2}{G}'], ['Solemn Simulacrum', 'Artifact Creature — Golem', '{4}'], ['Kodama\'s Reach', 'Sorcery', '{2}{G}'],
+      ['Smothering Tithe', 'Enchantment', '{3}{W}'], ['Wrath of God', 'Sorcery', '{2}{W}{W}'], ['Reliquary Tower', 'Land', ''], ['Serra Angel', 'Creature — Angel', '{3}{W}{W}'],
+      ['Teferi, Hero of Dominaria', 'Legendary Planeswalker — Teferi', '{3}{W}{U}'], ['Brainstorm', 'Instant', '{U}'], ['Mind Stone', 'Artifact', '{2}'],
+    ];
+    const options = pool.slice(0, n).map(([name, typeLine, manaCost], i) => {
+      const c = card(800 + i, name, 10, { typeLine, manaCost, creature: /Creature/.test(typeLine), land: /Land/.test(typeLine) });
+      return { kind: 'card', card: c, label: name };
+    });
+    state.question = { id: 90 + n + max, method: 'getChoices', kind: 'choose', title: max > 1 ? `Escolha até ${max} cartas` : 'Escolha uma carta do seu grimório', min: 0, max, options };
+    view.render();
+  },
   /** Mão revelada (Telepathy): o oponente tem 5 cartas e você vê todas, ou só `shown` delas. */
   revealedHand(shown = 5) {
     const opp = state.players[1];
@@ -337,3 +360,4 @@ if (cenario === 'proliferar') (window as any).fixture.proliferate();
 if (cenario === 'improvisar') (window as any).fixture.improvise();
 // Alerta de espera demorada: ?cenario=espera&quem=10&ms=185000 (10 é você, 23 o oponente).
 if (cenario === 'espera') { const q = new URLSearchParams(location.search); (window as any).fixture.wait(Number(q.get('quem') ?? 10), Number(q.get('ms') ?? 125000)); }
+if (cenario === 'tutor') { const p = new URLSearchParams(location.search); (window as any).fixture.tutor(Number(p.get('n') ?? 24), Number(p.get('max') ?? 1)); }

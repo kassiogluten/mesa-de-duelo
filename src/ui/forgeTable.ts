@@ -40,6 +40,9 @@ import './combatForecast.css';
 import { dungeonBadgesHTML, dungeonRoomHTML, dungeonText, dungeonViewHTML, isDungeonRoom, withDungeonBadges } from './dungeon';
 import { choiceOrder, isPlayMode, isTriggerOrder, moveTrigger, newTriggerOrder, playModeHTML, positionText, tapTrigger, triggerOrderHTML, undoTrigger, type TriggerOrder } from './choiceScreens';
 import './choiceScreens.css';
+import { CHOICE_SORT_KEY, choiceGroupHTML, choiceLayout, choiceStatus, choiceToolsHTML, isFilterableChoice, newChoiceView, parseChoiceSort, type ChoiceSort, type ChoiceView } from './choiceFilters';
+import './choiceFilters.css';
+import { prefsChanged } from '../conta/sync';
 import { isLibraryChoice, libraryChoiceHTML, libraryHeading, librarySummary, libraryStart, moveLibraryCard, placeLibraryCard } from './libraryChoice';
 import './libraryChoice.css';
 import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
@@ -351,6 +354,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let openCounter: string | null = null;
   /** Seleção em andamento na pergunta aberta. */
   let qState: { id: number; picked: number[]; text: string; amounts: string[] } | null = null;
+  /** Filtro por tipo e busca da escolha grande de cartas aberta (só mudam a tela, não a resposta). */
+  let choiceView: ChoiceView | null = null;
+  const viewFor = (q: FQuestion) => { if (choiceView?.id !== q.id) choiceView = newChoiceView(q.id); return choiceView; };
+  /** Ordem das escolhas grandes de cartas; acompanha a conta, como as outras preferências da mesa. */
+  let choiceSort: ChoiceSort = 'type';
+  const readChoiceSort = () => { try { choiceSort = parseChoiceSort(localStorage.getItem(CHOICE_SORT_KEY)); } catch { /* Storage is optional. */ } };
+  readChoiceSort();
+  addEventListener('mesa:prefs-sincronizadas', readChoiceSort);
   /** Divisão do dano de combate em andamento (bloqueio duplo ou atropelar). */
   let damageSplit: { id: number; amounts: number[] } | null = null;
   const splitFor = (q: FQuestion) => {
@@ -571,7 +582,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-lib-place', 'data-lib-move', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-filter', 'data-q-sort', 'data-lib-place', 'data-lib-move', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -1919,6 +1930,26 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <p class="q-hint">Seu comandante pode ir para a zona de comando ou ficar no ${place}.</p>
       <div class="q-actions"><button class="arena-btn primary" data-q-confirm="true">Zona de comando</button><button class="arena-btn secondary" data-q-confirm="false">${q.zone === 'Exile' ? 'Exílio' : 'Cemitério'}</button></div>`;
   }
+  /** A linha de tipo do Forge (em inglês) decide os filtros; a do Scryfall em português só quando a do Forge não veio. */
+  const choiceTypeLine = (c: FCard) => c.typeLine || ptOf(c.name)?.type_line || '';
+  /**
+   * Busca digitada: esconde e mostra as cartas sem redesenhar a escolha, para não tirar o foco nem quebrar o acento
+   * que ainda está sendo digitado. O próximo desenho já sai com o mesmo texto.
+   */
+  function applyChoiceSearch(q: FQuestion) {
+    const layout = choiceLayout(q, { sort: choiceSort, view: viewFor(q), name: label, typeLine: choiceTypeLine });
+    const box = $('#fQuestion');
+    box.querySelectorAll<HTMLElement>('.q-opts [data-q-opt]').forEach(el => { el.hidden = !layout.visible.has(Number(el.dataset.qOpt)); });
+    for (const g of layout.groups) {
+      const heading = box.querySelector<HTMLElement>(`[data-q-group="${g.key}"]`);
+      if (!heading) continue;
+      const shown = g.indices.filter(i => layout.visible.has(i)).length;
+      heading.hidden = !shown;
+      heading.querySelector('span')!.textContent = String(shown);
+    }
+    const status = box.querySelector<HTMLElement>('#fQStatus');
+    if (status) status.textContent = choiceStatus(layout, qState?.id === q.id ? qState.picked : []);
+  }
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
     if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
@@ -1958,20 +1989,25 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const max = isOrder ? opts.length : q.max ?? 1;
     const single = !isOrder && max === 1;
     const anyCards = opts.some(o => typeof o !== 'string' && o.card);
-    const items = choiceOrder(q, label).map(i => {
+    const item = (i: number, hidden = false) => {
       const o = opts[i], pos = qState!.picked.indexOf(i);
       const on = pos >= 0 ? 'on' : '';
       const badge = isOrder && pos >= 0 ? `<span class="q-badge">${pos + 1}</span>` : on && !single ? '<span class="q-badge">✓</span>' : '';
       const card = typeof o !== 'string' && o.card ? `<div class="q-face">${face(o.card, 'normal')}</div>` : '';
       const peek = typeof o !== 'string' && o.card && !o.card.faceDown && o.card.name ? ` data-q-card="${o.card.id}"` : '';
-      return `<button class="q-opt ${on} ${card ? 'has-card' : ''}" data-q-opt="${i}"${peek}>${card}<span>${optionHTML(optLabel(o))}</span>${badge}</button>`;
-    }).join('');
+      return `<button class="q-opt ${on} ${card ? 'has-card' : ''}" data-q-opt="${i}"${peek}${hidden ? ' hidden' : ''}>${card}<span>${optionHTML(optLabel(o))}</span>${badge}</button>`;
+    };
+    // Escolha grande de cartas (tutor, cemitério, exílio): filtros por tipo, ordem e busca, sem mudar os índices da resposta.
+    const layout = isFilterableChoice(q) ? choiceLayout(q, { sort: choiceSort, view: viewFor(q), name: label, typeLine: choiceTypeLine }) : null;
+    const tools = layout ? choiceToolsHTML(layout, choiceSort, viewFor(q), qState.picked) : '';
+    const items = layout ? layout.groups.map(g => choiceGroupHTML(g, layout) + g.indices.map(i => item(i, !layout.visible.has(i))).join('')).join('')
+      : choiceOrder(q, label).map(i => item(i)).join('');
     const n = qState.picked.length;
     const ready = n >= min && n <= max;
     const hint = isOrder ? 'Toque na ordem desejada (a primeira fica em cima).'
       : single ? '' : `Escolha ${min === max ? min : `de ${min} a ${max}`}.`;
-    return `${head}${hint ? `<p class="q-hint">${hint}</p>` : ''}
-      <div class="q-opts ${anyCards ? 'cards' : ''}">${items}</div>
+    return `${head}${hint ? `<p class="q-hint">${hint}</p>` : ''}${tools}
+      <div class="q-opts ${anyCards ? 'cards' : ''}${layout ? ' filtered' : ''}">${items}</div>
       <div class="q-actions">
         ${(q.min ?? 1) === 0 && !isOrder ? '<button class="arena-btn secondary" data-q-none>Nenhum</button>' : ''}
         ${isOrder ? '<button class="arena-btn secondary" data-q-keep>Manter ordem</button>' : ''}
@@ -2263,7 +2299,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (minimizedQuestion !== null && minimizedQuestion !== s.question.id) minimizedQuestion = null;
       const minimized = questionMinimized();
       qEl.classList.toggle('minimized', minimized);
-      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      // Escolha grande de cartas redesenhada (uma carta marcada, um filtro): continua onde estava, sem entrar de novo.
+      const before = qEl.querySelector<HTMLElement>('.question');
+      const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
+      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      const after = qEl.querySelector<HTMLElement>('.question');
+      if (again !== null && after && after !== before) after.scrollTop = again;
       qEl.hidden = false;
     } else {
       if (!qEl.hidden && !qEl.classList.contains('minimized')) leaveOverlay(qEl);
@@ -2695,6 +2736,22 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       }
       return;
     }
+    const filter = t.closest<HTMLElement>('[data-q-filter]');
+    const sortBy = t.closest<HTMLElement>('[data-q-sort]')?.dataset.qSort;
+    const filtering = client.state?.question;
+    if ((filter || sortBy) && filtering && isFilterableChoice(filtering)) {
+      if (filter) viewFor(filtering).type = filter.dataset.qFilter || null;
+      if (sortBy) {
+        choiceSort = parseChoiceSort(sortBy);
+        try { localStorage.setItem(CHOICE_SORT_KEY, choiceSort); } catch { /* Storage is optional. */ }
+        prefsChanged();
+      }
+      render();
+      const scroller = root.querySelector<HTMLElement>('#fQuestion .question');
+      if (scroller) scroller.scrollTop = 0;
+      announce(root.querySelector('#fQStatus')?.textContent ?? '');
+      return;
+    }
     const opt = t.closest<HTMLElement>('[data-q-opt]');
     if (opt && qState) {
       const q = client.state?.question;
@@ -2880,6 +2937,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('input', e => {
     const t = e.target as HTMLInputElement;
     if (t.id === 'fQInput' && qState) qState.text = t.value;
+    if (t.id === 'fQSearch' && client?.state?.question && isFilterableChoice(client.state.question)) {
+      viewFor(client.state.question).query = t.value;
+      applyChoiceSearch(client.state.question);
+    }
     if (t.hasAttribute('data-q-amount') && qState && client?.state?.question?.kind === 'amount') {
       const q = client.state.question;
       if (Number(t.closest<HTMLElement>('[data-qid]')?.dataset.qid) !== q.id) return;

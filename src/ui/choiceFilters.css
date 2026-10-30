@@ -1,0 +1,67 @@
+/* Escolha grande de cartas: filtros por tipo, ordem e busca presos no alto, grupos com título e o confirmar preso embaixo. */
+.forge .question:has(.q-opts.filtered) { max-height: 94vh; padding-top: 14px; padding-bottom: 0; }
+.forge .question.settled { animation: none; }
+.q-tools {
+  position: sticky; top: -14px; z-index: 4; display: flex; flex-direction: column; gap: 8px; margin: 0 -10px; padding: 10px 10px 8px;
+  background: linear-gradient(180deg, rgb(9 15 29 / .97) 80%, rgb(9 15 29 / 0)); border-radius: 12px;
+}
+.q-filters {
+  display: flex; gap: 6px; justify-content: safe center; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  padding: 2px; scroll-padding-inline: 8px;
+}
+.q-filters::-webkit-scrollbar { display: none; }
+.q-filter, .q-sort-btn {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgb(255 255 255 / .14); background: rgb(255 255 255 / .05); color: #c9d3e4; font: 600 13px var(--body); white-space: nowrap;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.q-filter:hover, .q-sort-btn:hover { border-color: rgb(89 181 255 / .7); color: var(--ink); }
+.q-filter:focus-visible, .q-sort-btn:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+.q-filter[aria-pressed="true"], .q-sort-btn[aria-pressed="true"] { border-color: var(--gold); background: rgb(242 181 76 / .16); color: var(--gold-light); }
+.q-filter-count {
+  min-width: 20px; padding: 1px 6px; border-radius: 999px; background: rgb(0 0 0 / .35); color: var(--muted); font: 700 11px var(--body);
+  font-variant-numeric: tabular-nums; text-align: center;
+}
+.q-filter[aria-pressed="true"] .q-filter-count { background: var(--gold); color: #2b1700; }
+.q-tools-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; }
+.q-sort { display: flex; align-items: center; gap: 4px; }
+.q-sort-label { margin-right: 4px; color: var(--muted); font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; }
+.q-sort-btn { min-height: 30px; padding: 3px 11px; font-size: 12px; }
+.q-search {
+  display: flex; align-items: center; gap: 6px; width: min(280px, 100%); padding: 0 10px; border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / .18); background: rgb(0 0 0 / .35); color: var(--muted);
+}
+.q-search:focus-within { border-color: var(--glow); color: var(--ink); }
+.q-search svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.q-search input { flex: 1; min-width: 0; height: 34px; border: 0; background: none; color: var(--ink); font: 500 14px var(--body); outline: none; }
+.q-search input::placeholder { color: var(--muted); }
+.q-tools-status { margin: 0; color: var(--muted); font: 500 12px var(--body); text-align: center; }
+.q-group {
+  flex: 0 0 100%; display: flex; align-items: center; gap: 8px; margin: 8px 0 -4px; color: var(--gold-light);
+  font: 600 15px var(--display); letter-spacing: .02em;
+}
+.q-group:first-child { margin-top: 0; }
+.q-group::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgb(242 181 76 / .4), transparent); }
+.q-group span { padding: 1px 7px; border-radius: 999px; background: rgb(242 181 76 / .14); color: var(--gold); font: 700 11px var(--body); }
+.forge .q-opts.filtered.cards { justify-content: flex-start; padding-inline: 4px; }
+.forge .question:has(.q-opts.filtered) .q-actions {
+  position: sticky; bottom: 0; z-index: 4; margin: 0 -10px; padding: 14px 10px 14px;
+  background: linear-gradient(0deg, rgb(9 15 29 / .97) 70%, rgb(9 15 29 / 0));
+}
+.forge .question:has(.q-opts.filtered) .q-actions:empty { display: none; }
+
+@media (max-width: 760px), (max-height: 500px) {
+  .q-tools { gap: 6px; padding-block: 6px; }
+  /* No celular os filtros ficam numa fileira só, que rola de lado. */
+  .q-filters { justify-content: flex-start; }
+  .q-filter { min-height: 32px; padding: 4px 10px; font-size: 12px; }
+  .q-tools-row { flex-wrap: nowrap; justify-content: space-between; gap: 8px; }
+  .q-search { width: auto; flex: 1 1 0; min-width: 0; }
+  .q-search input { font-size: 16px; }
+  .q-sort { flex: none; gap: 3px; }
+  .q-sort-label { display: none; }
+  .q-sort-btn { padding: 3px 8px; }
+  .q-group { font-size: 13px; margin-top: 4px; }
+  .forge .q-opts.filtered.cards { justify-content: center; }
+}
+@media (pointer: coarse) { .q-filter, .q-sort-btn { min-height: 38px; } }

@@ -1,4 +1,12 @@
 {
+  "0.81.0": {
+    "Filtros e ordem por tipo ao buscar no grimório": [
+      { "img": "0.81.0/grupos-por-tipo.webp", "legenda": "Num tutor, as cartas do grimório agrupadas por tipo: **Criaturas** primeiro, cada uma por custo de mana, e depois **Terrenos**, com a quantidade ao lado de cada título." },
+      { "img": "0.81.0/filtros-por-tipo.webp", "legenda": "Os filtros no alto, com a quantidade de cada tipo. Com **Artefatos** escolhido aparecem as 5 cartas de artefato, inclusive as duas criaturas artefato, que ficam no grupo das criaturas." },
+      { "img": "0.81.0/busca-pelo-nome.webp", "legenda": "Com mais de 15 cartas, a busca pelo nome: digitar \"anjo\" já deixa só o Anjo de Serra (vale também o nome em inglês)." },
+      { "img": "0.81.0/celular.webp", "legenda": "No celular, os filtros numa fileira que rola de lado, com a busca e a ordem (**Tipo**, **Custo**, **Nome**) logo abaixo." }
+    ]
+  },
   "0.80.0": {
     "Alerta de espera demorada": [
       { "img": "0.80.0/relogio-2min.webp", "legenda": "Aos 2 minutos, o relógio de espera aparece em âmbar na trilha de fases, ao lado do tempo do turno: a mesa espera Ana há 2:09." },

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.81.0] - 2026-10-29
+
+### Novo
+
+- **Filtros e ordem por tipo ao buscar no grimório.** Nas escolhas com 8 cartas ou mais (um tutor, uma busca no grimório, escolher do cemitério, do exílio ou entre cartas reveladas), as cartas agora aparecem agrupadas por tipo, cada grupo com o seu título (Criaturas, Terrenos, Artefatos…) e, dentro dele, por custo de mana e nome. No alto ficam os filtros por tipo, com a quantidade de cada um e só os tipos que aparecem; uma carta de dois tipos, como uma criatura artefato, aparece nos dois filtros. Ao lado, escolha a ordem: **Tipo**, **Custo** ou **Nome**; a escolhida fica lembrada para as próximas buscas (e acompanha a sua conta, se você entrou com o Google). Com mais de 15 cartas aparece também a busca pelo nome, em português ou em inglês. As cartas marcadas continuam marcadas ao trocar de filtro, a mesa avisa quantas ficaram fora dele, e os botões de baixo, como o **Confirmar**, ficam sempre à vista, mesmo rolando a lista. No celular os filtros ficam numa fileira que rola de lado, e tudo continua como estava depois de **Ver a mesa**. A vidência, a ordem dos gatilhos e as outras escolhas em que a ordem importa continuam como antes.
+
 ## [0.80.0] - 2026-10-29
 
 ### Novo
