@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.90.0] - 2026-10-30
+
+### Novo
+
+- **Motivo do ataque não permitido.** Quando a mesa recusa os atacantes que você escolheu, o aviso em inglês ("Attack declaration invalid") deu lugar a um aviso **Ataque não permitido** que explica o motivo e mostra a carta que o causou: o limite de atacantes por combate (como o do Árbitro Silencioso) ou contra um jogador, a criatura que só pode atacar sozinha ou não pode atacar sozinha, a criatura atiçada que precisa atacar outro jogador ou que ficou de fora, e as que precisam atacar se puderem. O mesmo aviso aparece quando você toca num jogador que a criatura escolhida não pode atacar, como quem a atiçou, em vez de a mesa não responder. Toque na miniatura para ver a carta inteira. O aviso fica mais tempo na tela e some ao ser tocado.
+
 ## [0.89.0] - 2026-10-30
 
 ### Novo

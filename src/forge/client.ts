@@ -15,6 +15,8 @@ export interface FPreferences {
 }
 /** undo: a partida foi criada com o Desfazer (pedir para voltar a última decisão, com a aprovação dos outros). */
 export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number; undo?: boolean }
+/** Aviso com título e cartas envolvidas (ataque recusado: o motivo e a carta que o causou). */
+export interface NoticeDetail { title?: string; cards?: { id: number; name: string }[] }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
 export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mainCount?: number; sideboardCount?: number; commanderCount?: number; rulesVersion: string; engineVersion: string }
 export type RoomVisibility = 'private' | 'public';
@@ -501,7 +503,7 @@ export class ForgeClient {
   replaced = false;
   /** A ponte não conhece mais a partida pedida no "rejoin". */
   onGone: (text: string) => void = () => {};
-  onNotice: (text: string, error: boolean) => void = () => {};
+  onNotice: (text: string, error: boolean, detail?: NoticeDetail) => void = () => {};
   onClose: () => void = () => {};
   onValidation: (validation: DeckValidation, target: string) => void = () => {};
   /** Ação recusada pela ponte sem aviso ao jogador (ex.: clique num pedido que já tinha mudado). Vai só para o painel de erros. */
@@ -578,7 +580,7 @@ export class ForgeClient {
         else if (msg.type === 'room-say') this.onRoomSay(msg.seat, msg.key);
         else if (msg.type === 'validation-error') this.onValidation(msg.validation, msg.target);
         else if (msg.type === 'hello') this.onHello(msg);
-        else if (msg.type === 'toast') this.onNotice(msg.text, false);
+        else if (msg.type === 'toast') this.onNotice(msg.text, false, msg.title || Array.isArray(msg.cards) ? { title: msg.title, cards: Array.isArray(msg.cards) ? msg.cards : undefined } : undefined);
         else if (msg.type === 'error') this.onNotice(msg.text, true);
         else if (msg.type === 'diagnostic') this.onDiagnostic({ code: String(msg.code ?? ''), action: msg.action, text: String(msg.text ?? '') });
         else if (msg.type === 'gone') this.onGone(msg.text);

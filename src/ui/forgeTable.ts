@@ -1,4 +1,4 @@
-import type { FCard, FOption, FPlayer, FQuestion, FState, ForgeClient } from '../forge/client';
+import type { FCard, FOption, FPlayer, FQuestion, FState, ForgeClient, NoticeDetail } from '../forge/client';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import { esc, manaHTML, optionHTML, pip, richText, withoutCardIds } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
@@ -136,7 +136,7 @@ export interface ForgeTableOptions {
 export interface ForgeTableView {
   attach(client: ForgeClient, portraits: (string | undefined)[]): void;
   render(): void;
-  notice(text: string, error?: boolean): void;
+  notice(text: string, error?: boolean, detail?: NoticeDetail): void;
   /** Conexão caiu e o navegador está tentando voltar sozinho. */
   reconnecting(attempt: number): void;
   /** reason substitui a explicação padrão (por exemplo, partida aberta em outra janela). */
@@ -1526,8 +1526,28 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function defenderName(s: FState, defender: Defender) {
     return defender.kind === 'player' ? s.players.find(p => p.id === defender.id)?.name ?? 'Jogador' : findCard(defender.id)?.name ?? 'Permanente';
   }
+  /** Alvo que a criatura não pode atacar: o aviso diz por quê (atiçada por esse jogador) e mostra a criatura. */
+  function refuseAttack(s: FState, attacker: number, defender: Defender) {
+    const c = findCard(attacker);
+    if (!c) return;
+    const who = defender.kind === 'player' ? s.players.find(p => p.id === defender.id)?.name ?? 'Jogador' : label(findCard(defender.id) ?? ({ name: 'esse permanente' } as FCard));
+    const goaders = (c.goadedBy ?? []).map(id => s.players.find(p => p.id === id)?.name ?? 'Jogador');
+    const text = defender.kind === 'player' && c.goadedBy?.includes(defender.id)
+      ? `${label(c)} foi atiçada por ${goaders.length > 1 ? `${goaders.slice(0, -1).join(', ')} e ${goaders.at(-1)}` : goaders[0]} e precisa atacar outro jogador, se puder.`
+      : `${label(c)} não pode atacar ${who} neste combate.`;
+    notice(text, false, { title: 'Ataque não permitido', cards: [{ id: c.id, name: c.name ?? '' }] });
+  }
+  /** Tocou num defensor fora da lista: explica com a criatura escolhida (ou a atiçada que mira esse jogador). */
+  function explainRefusedTarget(s: FState, defender: Defender) {
+    if (!s.input.attacking?.defenders.some(target => target.id === defender.id && target.kind === defender.kind)) return;
+    const cannot = (selectedAttackers.size ? [...selectedAttackers] : s.input.attacking.attackers)
+      .filter(attacker => !legalAttackTargets(s, { attacker, gen: s.input.gen }).some(target => target.id === defender.id && target.kind === defender.kind));
+    const attacker = cannot.find(id => findCard(id)?.goadedBy?.includes(defender.id)) ?? (selectedAttackers.size ? cannot[0] : undefined);
+    if (attacker !== undefined) refuseAttack(s, attacker, defender);
+  }
   function chooseAttackDefender(s: FState, defender: Defender, gen: number) {
-    if (!client || disconnected || gen !== s.input.gen || !currentAttackTargets(s).some(target => target.id === defender.id && target.kind === defender.kind)) return;
+    if (!client || disconnected || gen !== s.input.gen) return;
+    if (!currentAttackTargets(s).some(target => target.id === defender.id && target.kind === defender.kind)) { explainRefusedTarget(s, defender); return; }
     if (attackAllGen !== null) {
       if (attackQueue.busy) return;
       const action = attackAllAction(s, defender, gen);
@@ -2552,21 +2572,43 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {
-    if (el.dataset.event) return historyCards.get(el.dataset.event) ?? removalCards.get(el.dataset.event);
+    if (el.dataset.event) return historyCards.get(el.dataset.event) ?? removalCards.get(el.dataset.event) ?? noticeCards.get(el.dataset.event);
     const stackId = el.dataset.stack ?? el.dataset.stackInspect;
     if (stackId !== undefined && client?.state) return (el.closest('#fStackGallery') ? client.state.stack : stackPresentation(client.state, timeline.current?.event).stack).find(item => item.id === Number(stackId))?.source;
     const id = el.dataset.inspect ?? el.dataset.fid ?? el.dataset.peek ?? el.dataset.qCard;
     return id === undefined ? undefined : findCard(Number(id));
   }
 
-  function notice(text: string, error = false) {
+  /** Cartas mostradas nos avisos com detalhe, para o toque na miniatura abrir a carta. */
+  const noticeCards = new Map<string, FCard>();
+  let noticeSeq = 0;
+  function notice(text: string, error = false, detail?: NoticeDetail) {
     text = fixPossessives(text, playerNames());
     if (error) recordDiagnostic('aviso', text);
     if (error && client?.state?.input.attacking && attackQueue.busy) { clearAttackChoice(true); renderTable(false); }
     if (error && client?.state?.sideboarding) { sideboardError = text; sideboardBusy = false; render(); }
     const el = document.createElement('div');
     el.className = `toast ${error ? 'error' : ''}`;
-    el.textContent = text;
+    if (!detail) el.textContent = text;
+    else {
+      // Ataque recusado e afins: o motivo por extenso e a carta que o causou; fica mais tempo e some ao tocar.
+      const keys: string[] = [];
+      const thumbs = (detail.cards ?? []).slice(0, 3).map(ref => {
+        const c = findCard(ref.id) ?? ({ id: ref.id, name: ref.name } as FCard);
+        const key = `nt${++noticeSeq}`;
+        noticeCards.set(key, c); keys.push(key);
+        const art = c.image ?? image(c.name, 'normal', c.print);
+        return `<button class="notice-card" data-event="${key}" aria-label="Ver ${esc(label(c))}"${art ? ` style="background-image:url('${art}')"` : ''}>${art ? '' : `<span>${esc(label(c))}</span>`}</button>`;
+      }).join('');
+      el.classList.add('detailed');
+      el.setAttribute('role', 'alert');
+      setHTML(el, `${thumbs ? `<div class="notice-cards">${thumbs}</div>` : ''}<div class="notice-text">${detail.title ? `<strong>${esc(detail.title)}</strong>` : ''}<span>${esc(text)}</span></div>`);
+      const dismiss = () => { el.classList.add('out'); setTimeout(() => { el.remove(); keys.forEach(key => noticeCards.delete(key)); }, 400); };
+      el.addEventListener('click', e => { if (!(e.target as HTMLElement).closest('[data-event]')) dismiss(); });
+      $('#fToasts').append(el);
+      setTimeout(dismiss, 8000);
+      return;
+    }
     $('#fToasts').append(el);
     setTimeout(() => el.classList.add('out'), 4100);
     setTimeout(() => el.remove(), 4500);
@@ -2944,7 +2986,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
           const assigned = s.combat.some(pair => pair.attacker === id);
           if (pinnedDefender && !assigned) {
             if (targets.some(target => target.id === pinnedDefender!.id && target.kind === pinnedDefender!.kind)) { attackQueue.enqueue([id], pinnedDefender); flushAttacks(s); }
-            else announce('Essa criatura não pode atacar o defensor escolhido.');
+            else refuseAttack(s, id, pinnedDefender);
           } else if (!selectedAttackers.size && targets.length === 1 && !pinnedDefender) {
             attackQueue.enqueue([id], assigned ? null : targets[0]); flushAttacks(s);
           } else { selectedAttackers.add(id); attackSelectionGen = gen; }

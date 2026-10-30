@@ -994,6 +994,13 @@ body[data-screen='lobby'] .credits { display: none; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(-14px) scale(0.95); } }
 .toast { padding: 9px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); max-width: min(560px, 90vw); }
 .toast.error { border-color: var(--red); color: #ffb3a3; }
+/* Aviso com detalhe (ataque recusado): a carta que causou à esquerda, o motivo ao lado; toca para fechar. */
+.toast.detailed { display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-color: var(--red); pointer-events: auto; cursor: pointer; text-align: left; }
+.toast.detailed .notice-cards { display: flex; gap: 6px; flex: none; }
+.toast.detailed .notice-card { width: 60px; aspect-ratio: 63 / 88; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--panel) center / cover no-repeat; color: var(--muted); font: 600 9px/1.2 var(--body, inherit); cursor: zoom-in; overflow: hidden; }
+.toast.detailed .notice-card span { display: block; padding: 4px; }
+.toast.detailed .notice-text { display: grid; gap: 3px; min-width: 0; line-height: 1.35; }
+.toast.detailed .notice-text strong { color: #ffb3a3; font-weight: 700; }
 
 
 @media (max-width: 760px) {

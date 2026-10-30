@@ -1,4 +1,10 @@
 {
+  "0.90.0": {
+    "Motivo do ataque não permitido": [
+      { "img": "0.90.0/ataque-nao-permitido.webp", "legenda": "Com o Árbitro Silencioso na mesa e duas criaturas atacando, o aviso explica que só uma pode atacar por combate e mostra o Árbitro ao lado." },
+      { "img": "0.90.0/atacar-quem-aticou.webp", "legenda": "Numa partida de três, Ana atiçou os Elfos de Llanowar: tocar em Ana para atacá-la mostra o aviso explicando que a criatura precisa atacar outro jogador." }
+    ]
+  },
   "0.89.0": {
     "Editar o deck como lista": [
       { "img": "0.89.0/menu-editar-como-lista.webp", "legenda": "O menu **Ações do deck** com o novo item **Editar como lista**, entre Importar e Exportar lista." },

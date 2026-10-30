@@ -250,11 +250,11 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
     if (screen === 'game') forgeTable.notice(message, true);
     else { lobby.setStatus(message, true); finishStart(message); current = null; }
   };
-  client.onNotice = (text, error) => {
+  client.onNotice = (text, error, detail) => {
     if (error) finishStart(text);
     // Erros na mesa já entram pelo painel de erros (onDiagnostic).
     if (current && (!error || screen !== 'game')) recorder.note(error ? 'erro' : 'aviso', text);
-    if (screen === 'game') forgeTable.notice(text, error);
+    if (screen === 'game') forgeTable.notice(text, error, detail);
     else lobby.setStatus(text, error);
     // Voltando a assistir, a sala pode ter acabado: sem estado nesta conexão, volta ao início com o aviso.
     if (error && watching && !client.state && screen === 'game') { watching = null; show('lobby'); lobby.setStatus(text, true); return; }
