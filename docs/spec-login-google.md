@@ -34,7 +34,7 @@ Continua dando para jogar sem conta, como hoje. A conta só serve para guardar e
 ## Como é hoje
 
 - Os decks do jogador ficam no `localStorage`, em `mesa:decks:v2` (`{version: 2, decks, recovery}`), lidos e gravados por `readDeckLibrary` e `writeDeckLibrary` em `src/decks.ts`. Cada deck tem `id` (UUID) e `updatedAt`. Os decks prontos (`builtin`) vêm de `shared/starter-decks.json` e não são do jogador.
-- As preferências também estão em chaves soltas do `localStorage`: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops`, `mesa:choiceSort` e `mesa:name`.
+- As preferências também estão em chaves soltas do `localStorage`: `mesa:audio:v1`, `mesa:turnNotice`, `mesa:pace`, `mesa:passLevel`, `mesa:passResponses`, `mesa:autoPassNoActions`, `mesa:opponentStops`, `mesa:choiceSort` e `mesa:name`.
 - A ponte (Netty) já atende HTTP em `/api/relatos` e `/api/admin/`. O login de admin (`Admin.java`) guarda os tokens só na memória, e o agregador HTTP aceita corpos de até 64 KB.
 - O nginx encaminha `/api/` para a ponte. O service worker não intercepta `/api/` (`navigateFallbackDenylist`).
 

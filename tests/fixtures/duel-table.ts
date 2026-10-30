@@ -3,7 +3,10 @@ import { createForgeTableView } from '../../src/ui/forgeTable';
 const card = (id: number, name: string, controller: number, extra = {}) => ({ id, name, controller, tapped: false, token: false, manaCost: '{1}{G}', typeLine: 'Creature — Elf', creature: true, power: 2, toughness: 2, ...extra });
 const land = (id: number, controller: number) => card(id, 'Forest', controller, { creature: false, land: true, typeLine: 'Basic Land — Forest', manaCost: '' });
 const players = [10, 23].map((id, seat) => ({ id, seat, name: seat ? 'Oponente' : 'Você', ai: seat === 1, life: 20 - seat * 4, library: 50, handCount: 5,
-  hand: seat === 0 ? ['Llanowar Elves', 'Forest', 'Lightning Bolt', 'Rampant Growth', 'Cultivate'].map((n, i) => card(300 + i, n, id)) : [],
+  hand: seat === 0 ? [card(300, 'Llanowar Elves', id, { manaCost: '{G}', typeLine: 'Creature — Elf Druid', power: 1, toughness: 1 }), land(301, id),
+    card(302, 'Lightning Bolt', id, { creature: false, manaCost: '{R}', typeLine: 'Instant' }),
+    card(303, 'Rampant Growth', id, { creature: false, manaCost: '{1}{G}', typeLine: 'Sorcery' }),
+    card(304, 'Cultivate', id, { creature: false, manaCost: '{2}{G}', typeLine: 'Sorcery' })] : [],
   battlefield: [card(100 + seat, 'Soul Warden', id, { manaCost: '{W}' }), land(200 + seat, id), land(210 + seat, id),
     ...(seat === 0 ? [card(250, 'Druid Class', id, { creature: false, manaCost: '{1}{G}', typeLine: 'Enchantment — Class', classLevel: 2, classMaxLevel: 3 })] : [])],
   graveyard: [], exile: [], pool: {}, counters: seat === 0 ? { RAD: 3, ENERGY: 2 } : { POISON: 4, RAD: 1, EXPERIENCE: 2, CONTRACT: 1 } }));
