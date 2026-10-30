@@ -168,6 +168,15 @@
 .dw-import-counts span { color: var(--dw-muted); }
 .dw-import-counts strong { font-weight: 500; font-variant-numeric: tabular-nums; }
 .dw-import-review input[type='checkbox'] { width: 18px; height: 18px; vertical-align: middle; }
+.dw-list-changes { padding: 6px 0 12px; }
+.dw-list-changes h3 { margin: 12px 0 4px; font-size: 16px; }
+.dw-list-changes h4 { margin: 10px 0 4px; font-size: 13px; font-weight: 600; color: var(--dw-muted); text-transform: uppercase; letter-spacing: .04em; }
+.dw-list-changes ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 14px; }
+.dw-list-changes li b { display: inline-block; min-width: 2.6em; font-variant-numeric: tabular-nums; }
+.dw-list-changes li.add b { color: #8fdca4; }
+.dw-list-changes li.remove { color: var(--dw-muted); }
+.dw-list-changes li.remove b { color: #ffbdac; }
+.dw-list-changes small { color: var(--dw-muted); font-size: 12px; }
 .ds-stats { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px 28px; }
 .ds-counts { display: flex; flex-direction: column; gap: 4px; color: var(--dw-muted); font-size: 13px; }
 .ds-counts b { display: inline-block; min-width: 24px; color: var(--dw-ink); font-variant-numeric: tabular-nums; }

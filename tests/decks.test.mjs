@@ -11,7 +11,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   }
 } });
 const decks = await import('../src/decks.ts');
-const { applyDeckImport, deckImportSnapshot } = await import('../src/ui/deckImport.ts');
+const { applyDeckImport, applyDeckListEdit, deckImportSnapshot, deckListChanges } = await import('../src/ui/deckImport.ts');
 const { cardCopyLimit, copiesInDeck, validateDeckLocal } = await import('../src/ui/deckRules.ts');
 const { deckArt, deckCover, deckPriceHTML, deckStats, statsHTML } = await import('../src/ui/deckStats.ts');
 const { legalityFresh, cachePut } = await import('../src/scryfall.ts');
@@ -242,6 +242,28 @@ test('empty/malformed imports and overflowing merges leave the target intact', (
   assert.throws(() => applyDeckImport(target, { ...example, cards: [{ name: 'Mountain', count: -1 }] }, 'replace'));
   assert.throws(() => applyDeckImport(target, example, null));
   assert.equal(JSON.stringify(target), before);
+});
+
+test('editing as a list replaces every section but keeps the original imported list', () => {
+  const target = { ...example, importSource: 'original list', importHistory: ['earlier list'], bracket: undefined };
+  const incoming = { ...example, cards: [{ name: 'Lightning Bolt', count: 3 }, { name: 'Mountain', count: 20 }], sideboard: [], importSource: 'edited text' };
+  const result = applyDeckListEdit(target, incoming);
+  assert.equal(result.id, target.id); assert.equal(result.name, target.name);
+  assert.deepEqual(result.cards, incoming.cards); assert.deepEqual(result.sideboard, []);
+  assert.equal(result.importSource, 'original list'); assert.deepEqual(result.importHistory, ['earlier list']);
+  assert.equal('importSource' in applyDeckListEdit(example, incoming), false, 'a deck that never imported a list does not gain one');
+});
+
+test('list changes show what enters and leaves each section, one line per printing', () => {
+  const before = { ...example, cards: [{ name: 'Lightning Bolt', count: 4 }, { name: 'Shock', count: 2 }], sideboard: [{ name: 'Duress', count: 2 }] };
+  const after = { ...example, cards: [{ name: 'lightning bolt', count: 3 }, { name: 'Lightning Bolt', count: 1, set: 'm10', cn: '146' }, { name: 'Shock', count: 2 }], sideboard: [{ name: 'Duress', count: 3 }] };
+  assert.deepEqual(deckListChanges(before, after), [
+    { section: 'cards', added: [{ name: 'Lightning Bolt', count: 1, set: 'm10', cn: '146' }], removed: [{ name: 'Lightning Bolt', count: 1 }] },
+    { section: 'sideboard', added: [{ name: 'Duress', count: 1 }], removed: [] },
+  ]);
+  assert.deepEqual(deckListChanges(before, structuredClone(before)), []);
+  const moved = deckListChanges({ ...example, cards: [{ name: 'Elf', count: 1 }], commanders: [] }, { ...example, cards: [], sideboard: example.sideboard, commanders: [{ name: 'Elf', count: 1 }] });
+  assert.deepEqual(moved.map(c => c.section), ['commanders', 'cards']);
 });
 
 test('same-deck imports survive quota failures as recoverable in-memory edits', () => {

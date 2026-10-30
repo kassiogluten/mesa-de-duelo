@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.89.0] - 2026-10-30
+
+### Novo
+
+- **Editar o deck como lista.** Em **Ações do deck**, no editor, **Editar como lista** abre a lista inteira do deck em texto, do mesmo jeito que sai em **Exportar lista**, para mexer em tudo de uma vez: mudar quantidades, apagar ou acrescentar linhas (com nomes em português ou inglês) e passar cartas para baixo de outro título (Commander, Deck ou Sideboard) para trocá-las de seção. Antes de salvar, a revisão mostra o que entra e o que sai em cada seção, com os totais de antes e depois, e avisa sobre cartas não reconhecidas e regras do formato. O nome, o formato e a lista original importada do deck continuam os mesmos.
+
 ## [0.88.0] - 2026-10-30
 
 ### Mudou

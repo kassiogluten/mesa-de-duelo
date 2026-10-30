@@ -1,4 +1,11 @@
 {
+  "0.89.0": {
+    "Editar o deck como lista": [
+      { "img": "0.89.0/menu-editar-como-lista.webp", "legenda": "O menu **Ações do deck** com o novo item **Editar como lista**, entre Importar e Exportar lista." },
+      { "img": "0.89.0/lista-do-deck.webp", "legenda": "A lista do deck já preenchida, pronta para mudar quantidades, acrescentar cartas ou trocá-las de seção." },
+      { "img": "0.89.0/mudancas.webp", "legenda": "A revisão antes de salvar: os totais de antes e depois e, em cada seção, as cartas que entram (+) e as que saem (−)." }
+    ]
+  },
   "0.88.0": {
     "Atacantes em leque": [
       { "img": "0.88.0/atacantes-em-leque.webp", "legenda": "Seis criaturas atacando em leque: cada carta cobre o nome da anterior, mas o P/T e o selo com o número do ataque continuam à vista." },

@@ -44,3 +44,29 @@ export function applyDeckImport(target: DeckData, incoming: DeckData, mode: Deck
     updatedAt: new Date().toISOString(),
   };
 }
+
+/** A lista editada substitui todas as seções, mas não conta como importação: a lista original importada continua a mesma. */
+export function applyDeckListEdit(target: DeckData, incoming: DeckData): DeckData {
+  const { importSource, importHistory, ...deck } = applyDeckImport(target, { ...incoming, importSource: undefined }, 'replace');
+  return { ...deck, ...(target.importSource ? { importSource: target.importSource } : {}), ...(target.importHistory ? { importHistory: target.importHistory } : {}) };
+}
+
+export type DeckSection = 'commanders' | 'cards' | 'sideboard';
+export interface DeckSectionChanges { section: DeckSection; added: DeckEntry[]; removed: DeckEntry[] }
+
+/** O que entra e o que sai em cada seção, carta a carta (cada impressão conta separada). */
+export function deckListChanges(before: DeckData, after: DeckData): DeckSectionChanges[] {
+  const key = (e: DeckEntry) => `${e.name.toLowerCase()}|${e.set ?? ''}|${e.cn ?? ''}`;
+  const counts = (entries: DeckEntry[]) => {
+    const map = new Map<string, DeckEntry>();
+    for (const e of entries) { const previous = map.get(key(e)); map.set(key(e), previous ? { ...previous, count: previous.count + e.count } : { ...e }); }
+    return map;
+  };
+  return (['commanders', 'cards', 'sideboard'] as const).map(section => {
+    const old = counts(before[section] ?? []), now = counts(after[section] ?? []);
+    const added: DeckEntry[] = [], removed: DeckEntry[] = [];
+    for (const [k, e] of now) { const diff = e.count - (old.get(k)?.count ?? 0); if (diff > 0) added.push({ ...e, count: diff }); }
+    for (const [k, e] of old) { const diff = e.count - (now.get(k)?.count ?? 0); if (diff > 0) removed.push({ ...e, count: diff }); }
+    return { section, added, removed };
+  }).filter(c => c.added.length || c.removed.length);
+}
