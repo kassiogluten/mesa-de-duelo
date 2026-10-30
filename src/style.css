@@ -399,6 +399,20 @@ a { color: var(--gold); }
 .field.me { --turn-tint: rgba(242, 181, 76, 0.2); }
 .field.opp { --turn-tint: rgba(236, 90, 63, 0.18); }
 .field.turn::before { opacity: 1; }
+/* Contorno de quem joga o turno: linha fina na cor do retrato (dourado seu, vermelho do oponente) com um brilho leve
+   para dentro. Fica por baixo das cartas e bem mais fraco que os destaques de alvo, ataque e bloqueio. */
+:root {
+  --turn-ring-mine: inset 0 0 0 1px rgba(242, 181, 76, 0.5), inset 0 0 22px rgba(242, 181, 76, 0.13);
+  --turn-ring-theirs: inset 0 0 0 1px rgba(236, 90, 63, 0.5), inset 0 0 22px rgba(236, 90, 63, 0.13);
+}
+.field::after {
+  content: ''; position: absolute; inset: 6px; z-index: -1; pointer-events: none; border-radius: 18px;
+  box-shadow: var(--turn-ring); opacity: 0; transition: opacity 0.35s ease;
+}
+.field.me { --turn-ring: var(--turn-ring-mine); }
+.field.opp { --turn-ring: var(--turn-ring-theirs); }
+.field.turn::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .field::after { transition: none; } }
 .ph { display: flex; align-items: center; gap: 7px; color: var(--muted); letter-spacing: 0.02em; }
 .ph .dot { width: 7px; height: 7px; border-radius: 50%; background: #39445f; }
 .ph.on { color: var(--ink); font-weight: 700; }

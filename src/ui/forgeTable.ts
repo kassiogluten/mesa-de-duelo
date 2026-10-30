@@ -65,6 +65,7 @@ import { oppHandHTML, revealedCards, revealedCountText, seatHandHTML } from './r
 import './revealedHand.css';
 import './upkeepMana.css';
 import './awaitingDecision.css';
+import { seatTurnChange, turnHighlight } from './turnHighlight';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -217,7 +218,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="stop-menu" id="fStopMenu" role="dialog" aria-labelledby="fStopMenuTitle" hidden></div>
     <div class="action" id="fAction"></div><div class="sr-only" id="fAnnouncement" aria-live="polite" aria-atomic="true"></div>
     <div class="await-callout" id="fAwait" hidden><span class="await-eyebrow" aria-hidden="true">Sua decisão</span><strong class="await-text"></strong></div>
-    <div class="banner" id="fBanner" hidden></div>
+    <div class="banner" id="fBanner" hidden></div><div class="sr-only" id="fTurnAnnouncement" aria-live="polite" aria-atomic="true"></div>
     <div class="toasts" id="fToasts" aria-live="polite"></div>
     <div class="overlay" id="fQuestion" hidden></div>
     <div class="overlay" id="fOverlay" hidden></div>
@@ -230,6 +231,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let client: ForgeClient | null = null;
   let portraits: (string | undefined)[] = [undefined, undefined];
   let lastTurn = 0;
+  /** De quem era o turno no último desenho dos assentos, e a troca que o desenho atual mostra (só no desenho em que mudou). */
+  let seatTurnPlayer: number | null | undefined;
+  let seatTurn: { from: number | null; to: number | null } | null = null;
   // Relógio do turno: o servidor diz quanto o turno já durou (como no relógio da partida); numa ponte antiga, começa
   // quando a mesa vê o turno mudar (ou ao abrir a partida). Anda a cada segundo.
   let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
@@ -1329,9 +1333,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ${shown && !solo ? `<button type="button" class="seat-view-btn" data-seat-hide="${p.id}" title="Ocultar o campo de ${esc(p.name)}" aria-label="Ocultar o campo de ${esc(p.name)}">${EYE_OFF}<span>Ocultar</span></button>` : ''}
     </div>`;
   }
+  /** Destaque do assento de quem joga o turno; no desenho em que o turno passa, a classe que anima a troca. */
+  function seatTurnClass(s: FState, p: FPlayer) {
+    const current = turnHighlight(s, p.id) ? ' current-seat' : '';
+    return current + (seatTurn?.to === p.id ? ' turn-arrived' : seatTurn?.from === p.id ? ' turn-left' : '');
+  }
   /** Oponente oculto: faixa compacta com retrato, vida, mão, marcadores e dano de comandante, e um botão para voltar. */
   function collapsedSeat(s: FState, p: FPlayer, index: number) {
-    return `<section class="table-seat collapsed${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)} oculto${p.eliminated ? ', eliminado' : ''}">
+    return `<section class="table-seat collapsed${p.eliminated ? ' eliminated' : ''}${seatTurnClass(s, p)}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)} oculto${p.eliminated ? ', eliminado' : ''}">
       <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}</header>
       <p class="seat-summary">${p.battlefield.filter(c => c.creature).length} criaturas · ${p.battlefield.filter(c => c.land).length} terrenos</p>
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div></div>
@@ -1341,7 +1350,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function opponentSeat(s: FState, p: FPlayer, index: number, count = 1, forced: string | null = null) {
     const chosen = soloSeat !== null ? soloSeat === p.id : !hiddenSeats.has(p.id);
     const focused = focusedByAttack(seatMemory(), p.id);
-    return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
+    return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${seatTurnClass(s, p)}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
       <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}${seatControls(p, true, count)}</header>
       ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : focused ? '<p class="seat-forced focused">Em foco: atacando você</p>' : ''}
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
@@ -2059,6 +2068,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // O aviso do que a mesa mudou sozinha vai junto com o anúncio do pedido atual, no fim da renderização.
     const seatNotice = s.spectating ? '' : followed.notices.join(' ');
     const shownSeats = visibleSeats(visual, opponents, { hidden: hiddenSeats, solo: soloSeat });
+    seatTurn = seatTurnChange(seatTurnPlayer, visual);
+    seatTurnPlayer = visual.gameOver ? null : visual.activePlayer;
     // Ocultos viram uma coluna estreita; o espaço que sobra vai para os campos à vista.
     $('#fOpponents').style.gridTemplateColumns = opponents.map(p => shownSeats.has(p.id) ? 'minmax(0, 1fr)' : 'var(--collapsed-seat)').join(' ');
     $('#fOpponents').dataset.shown = String(shownSeats.size);
@@ -2112,10 +2123,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     renderExileShelf(s);
     renderActivity();
 
-    // De quem é o turno: etiqueta no trilho de fases e brilho na metade da mesa do jogador ativo.
-    const active = s.gameOver ? null : visual.activePlayer === me.id ? 'mine' : visual.activePlayer === opp.id ? 'theirs' : null;
-    root.querySelector('.field.me')!.classList.toggle('turn', active === 'mine');
-    root.querySelector('.field.opp')!.classList.toggle('turn', active === 'theirs');
+    // De quem é o turno: etiqueta no trilho de fases e contorno na metade da mesa do jogador ativo (no Commander,
+    // o assento do oponente da vez ganha o contorno no próprio desenho dos assentos).
+    root.querySelector('.field.me')!.classList.toggle('turn', turnHighlight(visual, me.id) === 'mine');
+    root.querySelector('.field.opp')!.classList.toggle('turn', !multiplayer && turnHighlight(visual, opp.id) === 'theirs');
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stopsEditable(), open: stopMenu }));
@@ -2218,6 +2229,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       void el.offsetWidth;
       el.className = `banner ${s.activePlayer === s.you ? 'mine' : 'theirs'}`;
       el.hidden = false;
+      // A faixa é só visual: o leitor de tela ouve a troca de turno numa região própria, limpa antes para repetir a frase.
+      if (newTurn) {
+        const spoken = $('#fTurnAnnouncement');
+        spoken.textContent = '';
+        window.setTimeout(() => { spoken.textContent = turnBannerText(s); }, 50);
+      }
       clearTimeout(bannerTimer);
       bannerTimer = window.setTimeout(() => { el.hidden = true; }, 1200);
       // Pulso discreto no número do turno da trilha.

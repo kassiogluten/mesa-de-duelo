@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.78.0] - 2026-10-29
+
+### Novo
+
+- **Destaque no campo de quem é o turno.** Além do brilho no retrato, a área de quem joga o turno ganha um contorno fino com um brilho leve para dentro, nas mesmas cores do retrato: dourado em volta do seu campo no seu turno, vermelho em volta do campo do oponente no turno dele. No Commander, o contorno fica em volta do assento do oponente da vez, também quando ele está oculto (a coluna estreita) ou em **Só este**, e fica fácil ver de quem é a vez numa mesa com vários oponentes. Na troca de turno, o contorno passa de um campo para o outro com uma transição curta (sem animação se o seu sistema pede menos movimento). O contorno fica por baixo das cartas e é bem mais discreto que os destaques de alvo, ataque e bloqueio. Quem usa leitor de tela agora ouve a troca de turno ("Seu turno", "Turno de Bruno").
+
 ## [0.77.0] - 2026-10-29
 
 ### Novo

@@ -747,15 +747,17 @@ Numa partida com mais de um oponente (Commander), quem concede ou morre continua
 
 Decidido em 29/10/2026 (versão 0.77.0): o foco vale só para ataques contra você (você, um planeswalker seu ou uma batalha que você protege); ataques entre outros jogadores não mudam a mesa. A memória dos assentos fica em `followSeats` (`src/ui/seatVisibility.ts`), chamada a cada renderização: um eliminado, com outro oponente ainda vivo, entra nos ocultos uma vez só (a mesa lembra quem já ocultou, então **Mostrar campo** não é desfeito) e sai do **Só este**; quem concede já saía da mesa antes. O foco começa quando o oponente da vez tem atacantes declarados contra você, uma vez por turno, guarda a escolha de antes e a devolve quando o turno ou o jogador da vez muda (ou se o atacante sai da partida); um eliminado durante o foco também é ocultado na escolha guardada. Qualquer toque em **Ocultar**, **Só este**/**Ver todos** ou **Mostrar campo** durante o foco descarta a escolha guardada (`manualSeatChoice`), e o foco não volta no mesmo turno. O campo em foco mostra a pílula **Em foco: atacando você** (em vermelho, no lugar da dourada "À vista: …"), e o leitor de tela ouve o que a mesa mudou sozinha junto com o pedido atual. Com um oponente só, nada disso acontece.
 
-## 49. Mais destaque no campo de quem é o turno
+## 49. Mais destaque no campo de quem é o turno ✅
 
 Hoje o turno de cada jogador aparece só no retrato: um brilho dourado no seu e vermelho no do oponente e, no Commander, a vida e o nome em dourado no cabeçalho do campo. O campo em si fica igual ao dos outros, então, numa mesa com vários oponentes, é fácil perder de vista de quem é a vez.
 
-- [ ] Destacar o campo inteiro do jogador da vez (por exemplo, uma borda ou um brilho suave em volta da área dele, ou o fundo um pouco mais claro), sem tapar as cartas nem competir com os destaques de alvo, ataque e bloqueio.
-- [ ] Usar as mesmas cores do retrato: dourado no seu turno, vermelho no turno de um oponente.
-- [ ] Na troca de turno, passar o destaque de um campo para o outro com uma transição curta, que ajude a perceber a mudança.
-- [ ] Funcionar no duelo e no Commander, incluindo o oponente oculto (a coluna estreita) e o campo em **Só este**.
-- [ ] Anunciar a troca de turno para leitores de tela, se ainda não anuncia.
+- [x] Destacar o campo inteiro do jogador da vez (por exemplo, uma borda ou um brilho suave em volta da área dele, ou o fundo um pouco mais claro), sem tapar as cartas nem competir com os destaques de alvo, ataque e bloqueio.
+- [x] Usar as mesmas cores do retrato: dourado no seu turno, vermelho no turno de um oponente.
+- [x] Na troca de turno, passar o destaque de um campo para o outro com uma transição curta, que ajude a perceber a mudança.
+- [x] Funcionar no duelo e no Commander, incluindo o oponente oculto (a coluna estreita) e o campo em **Só este**.
+- [x] Anunciar a troca de turno para leitores de tela, se ainda não anuncia.
+
+Decidido em 29/10/2026 (versão 0.78.0): borda com brilho suave, sem tingir o fundo. A área de quem joga o turno ganha um contorno de 1 px na cor do retrato com um brilho leve para dentro (dourado no seu campo, vermelho no do oponente), com as cores e o brilho em `--turn-ring-mine` e `--turn-ring-theirs` (`src/style.css`). No duelo e no seu campo no Commander, o contorno fica num `::after` do campo, por baixo das cartas, e troca de campo com um esmaecer de 0,35 s. No Commander, o assento do oponente da vez (inteiro, oculto na coluna estreita ou em **Só este**) leva o contorno vermelho no próprio assento, no lugar da antiga linha dourada no topo; como os assentos são redesenhados a cada mudança, a troca anima só no desenho em que o turno passa (`turn-arrived` e `turn-left`, de `seatTurnChange` em `src/ui/turnHighlight.ts`). Com o assento à vista por obrigação (o contorno dourado fino de **À vista**), as duas linhas aparecem juntas, a dourada por fora. Com `prefers-reduced-motion`, a troca é imediata. O contorno é mais fraco que os destaques de alvo, ataque e bloqueio (linha de 1 px a 50% e brilho a 13%, contra 2 px cheios e brilho forte). O leitor de tela não ouvia a troca de turno (a faixa "Seu turno" é só visual); agora uma região própria anuncia a mesma frase da faixa a cada turno novo. A vida e o nome em dourado no cabeçalho do assento ficaram como estavam.
 
 ## 50. Tipo ganho à mostra na carta
 

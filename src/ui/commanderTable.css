@@ -48,7 +48,16 @@
 .forge.multiplayer .commander-opponents { display: grid; grid-row: 2; grid-template-columns: repeat(var(--opponent-count), minmax(0, 1fr)); min-height: 0; padding: 0 16px; gap: 14px; margin-right: 0; z-index: 2; }
 .forge.multiplayer .table-seat { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid #bba47b55; padding: 0 12px 0 8px; background: radial-gradient(ellipse at 50% 0, #26385055, transparent 76%); }
 .forge.multiplayer .table-seat:last-child { border-right: 0; padding-right: 0; }
-.forge.multiplayer .table-seat.current-seat::after { content: ''; position: absolute; inset: 0; border-top: 2px solid var(--gold); pointer-events: none; background: linear-gradient(#f2b54c12, transparent 65%); }
+/* Assento do oponente da vez: o mesmo contorno vermelho do campo no duelo, no próprio assento (por baixo das cartas).
+   Os assentos são redesenhados a cada mudança, então a troca de turno anima só no desenho em que ela acontece. */
+.forge.multiplayer .table-seat { border-radius: 12px; }
+.forge.multiplayer .table-seat.current-seat { box-shadow: var(--turn-ring-theirs); }
+.forge.multiplayer .table-seat > .field::after { display: none; }
+.forge.multiplayer .table-seat.turn-arrived { animation: seat-turn-in 0.35s ease both; }
+.forge.multiplayer .table-seat.turn-left { animation: seat-turn-out 0.35s ease both; }
+@keyframes seat-turn-in { from { box-shadow: inset 0 0 0 1px rgba(236, 90, 63, 0), inset 0 0 22px rgba(236, 90, 63, 0); } }
+@keyframes seat-turn-out { from { box-shadow: var(--turn-ring-theirs); } to { box-shadow: inset 0 0 0 1px rgba(236, 90, 63, 0), inset 0 0 22px rgba(236, 90, 63, 0); } }
+@media (prefers-reduced-motion: reduce) { .forge.multiplayer .table-seat.turn-arrived, .forge.multiplayer .table-seat.turn-left { animation: none; } }
 .forge.multiplayer .table-seat.eliminated .field, .forge.multiplayer .table-seat.eliminated .seat-zones { opacity: .45; filter: saturate(.3); }
 .seat-heading { display: flex; align-items: center; gap: 12px; min-height: 56px; flex: 0 0 auto; border-bottom: 1px solid #bba47b30; }
 .forge.multiplayer .seat-heading .avatar-slot { position: static; flex: 1; min-width: 0; }
@@ -228,6 +237,8 @@
 .seat-forced { position: absolute; z-index: 4; top: 62px; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; margin: 0; padding: 2px 9px; box-shadow: 0 2px 8px #0008; border-radius: 999px; background: #3a2c10; color: var(--gold-light); font: 600 11px var(--body); }
 .seat-forced.focused { background: #4a1a14; color: #ffd8cc; }
 .forge.multiplayer .table-seat.forced { box-shadow: inset 0 0 0 1px #e7b04b55; }
+/* À vista por obrigação e na vez dele: a linha dourada por fora, o contorno do turno logo por dentro. */
+.forge.multiplayer .table-seat.forced.current-seat { box-shadow: inset 0 0 0 1px #e7b04b55, inset 0 0 0 2px rgba(236, 90, 63, 0.5), inset 0 0 22px rgba(236, 90, 63, 0.13); }
 .forge.multiplayer .table-seat.collapsed { align-items: stretch; gap: 8px; padding: 0 6px; background: linear-gradient(#0d1626aa, transparent); }
 .forge.multiplayer .table-seat.collapsed .seat-heading { flex-direction: column; align-items: flex-start; gap: 6px; padding: 6px 0 8px; }
 .forge.multiplayer .table-seat.collapsed .seat-heading .avatar-slot { flex: 0 0 auto; width: 100%; }

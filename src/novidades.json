@@ -1,4 +1,13 @@
 {
+  "0.78.0": {
+    "Destaque no campo de quem é o turno": [
+      { "img": "0.78.0/duelo-seu-turno.webp", "legenda": "No duelo, no seu turno: o contorno dourado em volta do seu campo, na mesma cor do brilho do seu retrato." },
+      { "img": "0.78.0/duelo-turno-oponente.webp", "legenda": "No turno do oponente, o contorno passa para o campo dele, em vermelho como o retrato, e o seu campo fica sem destaque." },
+      { "img": "0.78.0/commander-seu-turno.webp", "legenda": "No Commander, no seu turno: o contorno dourado em volta do seu campo, embaixo dos assentos dos oponentes." },
+      { "img": "0.78.0/commander-turno-oponente.webp", "legenda": "No turno de Bruno, o assento dele ganha o contorno vermelho e o de Ana fica como estava; as cartas continuam à vista, por cima do contorno." },
+      { "img": "0.78.0/commander-oponente-oculto.webp", "legenda": "Com o campo de Diego oculto, a coluna estreita dele também ganha o contorno vermelho no turno dele." }
+    ]
+  },
   "0.77.0": {
     "Foco no oponente que ataca você": [
       { "img": "0.77.0/foco-no-atacante.webp", "legenda": "Diego ataca você: o campo dele fica em destaque com o aviso **Em foco: atacando você** e o botão **Ver todos**, e Ana e Bruno viram colunas estreitas até o fim do turno dele." }
