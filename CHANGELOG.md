@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.82.1] - 2026-10-29
+
+### Mudou
+
+- **Preço em todos os decks prontos de Commander.** Os 58 decks prontos de Commander que ainda não mostravam preço agora mostram quanto custam as cartas em dólar, cotadas em 29/10/2026, do mesmo jeito que os outros 20: pela edição mais barata de cada carta no Scryfall. Vão de US$ 25,91 (**Primeiro Voo**) a US$ 1.357,57 (**Loucura de Kefka**). Os 20 que já tinham preço continuam com a cotação de 23/10/2026.
+
 ## [0.82.0] - 2026-10-29
 
 ### Novo

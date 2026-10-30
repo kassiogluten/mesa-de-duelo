@@ -1,4 +1,9 @@
 {
+  "0.82.1": {
+    "Preço em todos os decks prontos de Commander": [
+      { "img": "0.82.1/precos-commander.webp", "legenda": "Na escolha do deck, **Primeiro Voo**, **Noite de Y'shtola** e **Banquete de Sangue**, que não tinham preço, agora mostram quanto custam as cartas: US$ 25,91, US$ 636,68 e US$ 594,44." }
+    ]
+  },
   "0.82.0": {
     "Níveis de passar automaticamente": [
       { "img": "0.82.0/niveis-opcoes.webp", "legenda": "Nas Opções, a lista **Passar automaticamente** no lugar do interruptor, com o que o nível escolhido faz e o que sempre para." }

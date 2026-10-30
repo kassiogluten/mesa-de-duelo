@@ -5120,7 +5120,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 29.93,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-dragoes",
@@ -5420,7 +5424,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 28.19,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-zumbis",
@@ -5716,7 +5724,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 25.98,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-voadores",
@@ -6016,7 +6028,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 25.91,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-yshtola",
@@ -6392,7 +6408,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 636.68,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-vampiros",
@@ -6756,7 +6776,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 594.44,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-atraxa",
@@ -7132,7 +7156,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 701.08,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-goblins",
@@ -7428,7 +7456,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 279.43,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-vivi",
@@ -7784,7 +7816,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 879.59,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-sauron",
@@ -8124,7 +8160,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 436.39,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-anjos",
@@ -8436,7 +8476,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 464.28,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-dinossauros",
@@ -8796,7 +8840,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 529.31,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-elfos",
@@ -9136,7 +9184,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 376.12,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-bumbleflower",
@@ -9508,7 +9560,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 245.16,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-hope",
@@ -9848,7 +9904,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 384.63,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-splinter",
@@ -10212,7 +10272,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 282,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-satoru",
@@ -10556,7 +10620,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 432.83,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-super-shredder",
@@ -10876,7 +10944,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 817.4,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-ur-dragao",
@@ -11272,7 +11344,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 1203.91,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-kaalia",
@@ -11632,7 +11708,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 774.12,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-teval",
@@ -12008,7 +12088,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 301.54,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-azula",
@@ -12372,7 +12456,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 536.69,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-toph",
@@ -12736,7 +12824,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 623.83,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-mothman",
@@ -13108,7 +13200,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 209.13,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-jodah",
@@ -13492,7 +13588,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 729.72,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-cloud",
@@ -13872,7 +13972,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 276.74,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-hearthhull",
@@ -14236,7 +14340,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 205.25,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-nekusar",
@@ -14596,7 +14704,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 910.69,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-kefka",
@@ -14972,7 +15084,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 1357.57,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-kenrith",
@@ -15360,7 +15476,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 1242.59,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-yuriko",
@@ -15716,7 +15836,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 781.67,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-sephiroth",
@@ -16028,7 +16152,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 598.36,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-isshin",
@@ -16388,7 +16516,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 334.22,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-baylen",
@@ -16668,7 +16800,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 529.94,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-valgavoth",
@@ -17024,7 +17160,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 425.16,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-miirym",
@@ -17384,7 +17524,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 678.79,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-chatterfang",
@@ -17740,7 +17884,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 379.12,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-ulalek",
@@ -18144,7 +18292,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 325.01,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-hashaton",
@@ -18520,7 +18672,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 801.8,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-frodo-sam",
@@ -18888,7 +19044,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 275.09,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-ashling",
@@ -19272,7 +19432,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 163.98,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-esika",
@@ -19668,7 +19832,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 1094.24,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-bello",
@@ -20012,7 +20180,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 153.76,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-hakbal",
@@ -20356,7 +20528,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 154.23,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-muldrotha",
@@ -20720,7 +20896,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 524.19,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-rin-seri",
@@ -21076,7 +21256,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 398.7,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-glarb",
@@ -21448,7 +21632,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 1338.59,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-animar",
@@ -21816,7 +22004,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 842.06,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-arcades",
@@ -22176,7 +22368,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 213.15,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-maralen",
@@ -22540,7 +22736,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 461.11,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-aragorn",
@@ -22916,7 +23116,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 336.01,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-mr-house",
@@ -23280,7 +23484,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 601.35,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-kuja",
@@ -23616,7 +23824,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 328.84,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-ygra",
@@ -23960,7 +24172,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 228.53,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-caesar",
@@ -24328,7 +24544,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 297.07,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-flubs",
@@ -24688,7 +24908,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 571.69,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-necrobloom",
@@ -25080,7 +25304,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 558.39,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-wilhelt",
@@ -25424,7 +25652,11 @@
         "count": 1
       }
     ],
-    "sideboard": []
+    "sideboard": [],
+    "price": {
+      "usd": 222.14,
+      "date": "2026-10-29"
+    }
   },
   {
     "id": "commander-oloro",

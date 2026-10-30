@@ -304,8 +304,10 @@ test('starter deck price shows only when recorded, and not on personal decks', (
   assert.match(deckPriceHTML(urza, 'x', true), /tabindex="0" aria-describedby="price-tip-commander-urza">US\$ 1\.605,93<span class="deck-price-tip" id="price-tip-commander-urza" role="tooltip">/);
   assert.doesNotMatch(deckPriceHTML(urza, 'x', false), /tabindex/);
   assert.equal(deckPriceHTML({ ...urza, builtin: false }, 'x', true), '');
-  assert.equal(decks.deckPriceText(decks.DEFAULT_DECKS.find(d => d.id === 'commander-atraxa')), '');
+  assert.equal(decks.deckPriceText({ ...urza, price: undefined }), '');
   assert.equal(decks.deckPriceText({ ...urza, builtin: false }), '');
+  // Todo deck pronto de Commander tem preço.
+  for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) assert.ok(deck.price, deck.id);
   for (const deck of decks.DEFAULT_DECKS.filter(d => d.price)) assert.ok(deck.price.usd > 0 && /^\d{4}-\d{2}-\d{2}$/.test(deck.price.date), deck.id);
 });
 
