@@ -123,6 +123,12 @@ function matchClockHTML(state: HudState): string {
   return `<span class="phase-match-clock" data-tip="${tip}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.5 1.5M10 3h4"/></svg><span data-match-timer aria-hidden="true">${turnTimeText(elapsed)}</span></span>`;
 }
 
+/**
+ * Relógio de espera: some até a mesa esperar alguém por 2 min. A mesa o preenche a cada segundo com o nome e o tempo
+ * da espera mais longa (ver waitAlert.ts); a cor e o pulso mudam com a etapa.
+ */
+const WAIT_CLOCK = `<span class="phase-wait-clock" data-wait-clock aria-hidden="true" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9"/></svg><span class="phase-wait-name" data-wait-name></span><span data-wait-time>0:00</span></span>`;
+
 /** Paradas no turno dos oponentes na trilha: as etapas marcadas, se dá para mudá-las agora e o grupo com o menu aberto. */
 export interface HudStops { value: readonly string[]; editable?: boolean; open?: string | null }
 
@@ -152,7 +158,7 @@ export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops:
   const summary = [`Turno ${state.turn}`, owner(state), state.gameOver ? '' : dayNightText(state), detail, holding ? 'Parada sua' : '', step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
   return `<span class="sr-only">${esc(summary)}</span>${matchClockHTML(state)}${activePlayerPortrait(state, activePortrait)}
     <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
-    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>`}${dayNightHTML(state)}
+    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>${WAIT_CLOCK}`}${dayNightHTML(state)}
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}${edit ? ' editable' : ''}"${edit ? '' : ' aria-hidden="true"'}>${PHASES.map(([key, label, icon], index) => {
       const current = step?.group === key && !state.gameOver;
       const held = marked.get(key);

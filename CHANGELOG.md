@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.80.0] - 2026-10-29
+
+### Novo
+
+- **Alerta de espera demorada.** Quando a mesa espera muito tempo pela decisão de um jogador (passar a vez, atacar, bloquear, escolher um alvo, responder a uma pergunta), todos ficam sabendo, sem punição nenhuma. O tempo conta cada decisão: começa quando a mesa passa a esperar alguém e zera a cada resposta e quando o turno passa, e o alerta vai para quem precisa agir, mesmo no turno de outro jogador. Aos 2 minutos, um relógio âmbar com o nome de quem a mesa espera aparece na trilha de fases, ao lado do tempo do turno; aos 3 minutos ele pulsa de leve; aos 5, fica vermelho e o retrato e o campo de quem está demorando ganham o selo **Demorando…** para todos. Quem está demorando vê, em cima do próprio retrato, o aviso "Sua vez já passa de 3 min" e ouve um som curto, se o som da mesa estiver ligado. O computador nunca recebe o alerta, e ele espera as animações das jogadas terminarem. Leitores de tela ouvem cada etapa uma vez só.
+
 ## [0.79.0] - 2026-10-29
 
 ### Novo

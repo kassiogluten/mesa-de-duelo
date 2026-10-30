@@ -1,4 +1,13 @@
 {
+  "0.80.0": {
+    "Alerta de espera demorada": [
+      { "img": "0.80.0/relogio-2min.webp", "legenda": "Aos 2 minutos, o relógio de espera aparece em âmbar na trilha de fases, ao lado do tempo do turno: a mesa espera Ana há 2:09." },
+      { "img": "0.80.0/relogio-3min.webp", "legenda": "Aos 3 minutos, o relógio pulsa de leve; aqui a mesa espera você há 3:10." },
+      { "img": "0.80.0/aviso-proprio.webp", "legenda": "Só quem está demorando vê, em cima do próprio retrato, o aviso **Sua vez já passa de 3 min**." },
+      { "img": "0.80.0/relogio-5min.webp", "legenda": "Aos 5 minutos, o relógio fica vermelho: a mesa espera Bruno há 5:17." },
+      { "img": "0.80.0/demorando.webp", "legenda": "No Commander, o retrato e o campo de Bruno ganham o selo **Demorando…**, à vista de todos." }
+    ]
+  },
   "0.79.0": {
     "Tipo ganho à mostra na carta": [
       { "img": "0.79.0/tipo-ganho-campo.webp", "legenda": "Com March of the Machines, o Anel Solar vira criatura: mostra **1/1** e ganha embaixo o ícone das garras, sem cobrir a arte." },

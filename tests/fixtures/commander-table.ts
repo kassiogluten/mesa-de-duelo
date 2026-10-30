@@ -30,5 +30,10 @@ Object.assign((window as any).fixture, {
   stress() {
     const names = ['Llanowar Elves','Elvish Mystic','Fyndhorn Elves','Birds of Paradise','Elvish Visionary','Sakura-Tribe Elder','Wood Elves','Reclamation Sage','Eternal Witness','Solemn Simulacrum','Beast Whisperer','Llanowar Visionary','Ghalta, Primal Hunger','Garruk’s Packleader','Terastodon','Acidic Slime','Avenger of Zendikar','Rampaging Baloths','Scavenging Ooze','Tireless Tracker','Courser of Kruphix','Lotus Cobra'];
     state.players.filter(p=>p.id!==state.you).forEach(p=>{p.battlefield=[...names.map((name,i)=>card(10000+p.id*100+i,name,p.id)),...Array.from({length:12},(_,i)=>card(20000+p.id*100+i,'Saproling',p.id,{token:true,power:1,toughness:1})),...Array.from({length:8},(_,i)=>card(30000+p.id*100+i,'Forest',p.id,{land:true,creature:false,typeLine:'Basic Land — Forest',manaCost:''}))];}); view.render();
-  }
+  },
+  /** Alerta de espera demorada: a mesa espera `player` há `ms`, num estado novo como o da ponte. */
+  wait(player:number, ms:number, kind='priority') { (client as any).state = {...state, waiting:[{player, kind, ms}]}; view.render(); }
 });
+// Alerta de espera demorada: ?cenario=espera&quem=23&ms=310000 (36 é você).
+const q = new URLSearchParams(location.search);
+if (q.get('cenario') === 'espera') (window as any).fixture.wait(Number(q.get('quem') ?? 23), Number(q.get('ms') ?? 310000));

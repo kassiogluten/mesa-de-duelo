@@ -66,6 +66,8 @@ import './revealedHand.css';
 import './upkeepMana.css';
 import './awaitingDecision.css';
 import { seatTurnChange, turnHighlight } from './turnHighlight';
+import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
+import './waitAlert.css';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -239,8 +241,63 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
   // Relógio da partida: o servidor diz quanto o jogo já durou; só se reajusta se o atraso da rede passar de 2 s.
   let gameSince = 0, gameNumber = 0;
+  // Alerta de espera demorada: o relógio de cada espera vem da ponte e só se ressincroniza quando chega um estado novo.
+  const waitClock = new WaitClock(), waitAnnouncer = new WaitAnnouncer();
+  let waitSynced: FState | null = null;
+  /** Retrato e campo de quem está demorando (5 min ou mais) ganham o selo "Demorando…", para todos. */
+  const markSlow = (w: SlowWait | null) => {
+    const targets = new Set<HTMLElement>();
+    if (w && w.stage >= 3) {
+      root.querySelectorAll<HTMLElement>(`.avatar[data-pid="${w.player}"]`).forEach(el => targets.add(el));
+      const field = root.querySelector<HTMLElement>(`#fField-${w.player}`)
+        ?? (w.player === client?.state?.you ? root.querySelector<HTMLElement>('.field.me') : root.querySelector<HTMLElement>('.arena:not(.multiplayer) .field.opp'));
+      if (field) targets.add(field);
+    }
+    root.querySelectorAll<HTMLElement>('.slow-wait').forEach(el => {
+      if (targets.has(el)) return;
+      el.classList.remove('slow-wait'); el.querySelector(':scope > [data-slow-badge]')?.remove();
+    });
+    for (const el of targets) {
+      if (el.classList.contains('slow-wait') && el.querySelector(':scope > [data-slow-badge]')) continue;
+      el.classList.add('slow-wait');
+      el.insertAdjacentHTML('beforeend', `<span class="slow-badge${el.classList.contains('field') ? ' field-slow-badge' : ''}" data-slow-badge aria-hidden="true">Demorando…</span>`);
+    }
+  };
+  const tickWait = () => {
+    const s = client?.state;
+    // Durante a animação de uma jogada o alerta espera: a mesa ainda está mostrando o que aconteceu.
+    const presenting = !!timeline.current;
+    const w = s?.type === 'state' && !presenting && !disconnected ? waitClock.current(s) : null;
+    const shown = w && w.stage >= 1 ? w : null;
+    const clock = root.querySelector<HTMLElement>('[data-wait-clock]');
+    if (clock) {
+      clock.hidden = !shown;
+      if (shown) {
+        clock.className = `phase-wait-clock stage-${shown.stage}${shown.mine ? ' mine' : ''}`;
+        clock.dataset.tip = waitClockTip(shown);
+        clock.querySelector('[data-wait-name]')!.textContent = shown.mine ? 'Você' : shown.name;
+        clock.querySelector('[data-wait-time]')!.textContent = turnTimeText(shown.ms);
+      }
+    }
+    // Aviso só para quem demora, em cima do próprio retrato: longe dos botões e das cartas.
+    const text = waitNudgeText(w), own = root.querySelector<HTMLElement>('#fMeAvatar .avatar');
+    root.querySelectorAll<HTMLElement>('[data-wait-nudge]').forEach(el => { if (!text || el.parentElement !== own) el.remove(); });
+    if (text && own) {
+      const nudge = own.querySelector<HTMLElement>(':scope > [data-wait-nudge]')
+        ?? own.appendChild(Object.assign(document.createElement('span'), { className: 'wait-nudge' }));
+      nudge.dataset.waitNudge = ''; nudge.setAttribute('aria-hidden', 'true');
+      if (nudge.textContent !== text) nudge.textContent = text;
+      nudge.classList.toggle('late', w!.stage >= 3);
+    }
+    markSlow(w);
+    if (presenting) return;
+    const step = waitAnnouncer.next(w);
+    if (step?.text) announce(step.text);
+    if (step?.sound) audio.cue('turn-self', .4);
+  };
   const tickTurnClock = () => {
     const el = root.querySelector<HTMLElement>('[data-turn-timer]');
+    if (root.isConnected) tickWait();
     if (!root.isConnected || !el) { clearInterval(clockTimer); clockTimer = undefined; return; }
     el.textContent = turnTimeText(Date.now() - clockSince);
     const game = root.querySelector<HTMLElement>('[data-match-timer]');
@@ -255,6 +312,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const since = Date.now() - s.turnElapsedMs;
       if (Math.abs(since - clockSince) > 2000) clockSince = since;
     }
+    if (live && live !== waitSynced) { waitSynced = live; waitClock.sync(live); }
     const elapsed = s.match?.elapsedMs;
     if (elapsed == null) gameSince = 0;
     else {

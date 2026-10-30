@@ -391,6 +391,11 @@ export interface FState {
   question?: FQuestion;
   /** Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. */
   deciding?: { player: number; kind: 'choice' | 'attack' | 'block' }[];
+  /**
+   * Jogadores humanos que a mesa espera agora, inclusive quem recebe o estado e a prioridade comum, com quanto tempo
+   * a espera atual já durou quando o estado saiu (ms). Uma resposta abre outra espera. Ausente em pontes antigas.
+   */
+  waiting?: { player: number; kind: 'priority' | 'choice' | 'attack' | 'block'; ms: number }[];
   room?: FRoom;
   /** Em rede: votação para pular o turno de quem caiu e os jogadores com o turno já aprovado para pular. */
   skip?: FSkip;

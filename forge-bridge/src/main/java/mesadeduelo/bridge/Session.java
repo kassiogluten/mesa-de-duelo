@@ -1540,6 +1540,7 @@ final class Session {
             for (String empty : new String[]{"selectable", "selectableStacks", "selectablePlayers", "actionable"}) input.add(empty, new JsonArray());
             state.add("input", input);
             state.add("deciding", deciding(null));
+            state.add("waiting", waiting());
             state.add("castable", new JsonArray());
         } catch (RuntimeException e) {
             return null;
@@ -1637,6 +1638,30 @@ final class Session {
             if (kind == null) continue;
             JsonObject entry = new JsonObject();
             entry.addProperty("player", other.me.getId()); entry.addProperty("kind", kind);
+            list.add(entry);
+        }
+        return list;
+    }
+
+    /**
+     * Jogadores humanos que a mesa espera agora (inclusive na prioridade comum) e há quanto tempo, para o alerta de
+     * espera demorada. Cada pedido novo do Forge (outra prioridade, outra escolha) é uma espera nova: o relógio zera a
+     * cada resposta e quando o turno passa. A IA não tem assento e nunca entra.
+     */
+    private JsonArray waiting() {
+        JsonArray list = new JsonArray();
+        long now = System.currentTimeMillis();
+        for (Seat seat : seats) {
+            if (seat.me == null || seat.eliminated()) continue;
+            Question q = seat.question;
+            Object in = seat.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
+            Object pending = q != null ? q : in;
+            long ms = seat.waited(pending, now);
+            if (pending == null) continue;
+            String kind = q != null ? "choice" : in instanceof InputPassPriority ? "priority"
+                : in instanceof InputAttack ? "attack" : in instanceof InputBlock ? "block" : "choice";
+            JsonObject entry = new JsonObject();
+            entry.addProperty("player", seat.me.getId()); entry.addProperty("kind", kind); entry.addProperty("ms", ms);
             list.add(entry);
         }
         return list;
@@ -1761,6 +1786,7 @@ final class Session {
                 Question q = seat.question;
                 if (q != null && !spectating) state.add("question", q.json());
                 state.add("deciding", deciding(seat));
+                state.add("waiting", waiting());
                 // Phase/zone events can precede the actionable input. Never advertise an early cast.
                 if (!priority || !seat.okEnabled || locked || q != null) state.add("castable", new JsonArray());
                 if (generation != seat.inputGen.get()) return null;
@@ -1984,6 +2010,10 @@ final class Session {
         private volatile long consumedAt;
         private static final long CONSUMED_TIMEOUT_MS = 1500;
         private volatile boolean lockedAtLastFlush;
+        /** Pedido do Forge que a mesa espera deste assento e desde quando (alerta de espera demorada). */
+        private final Object waitLock = new Object();
+        private Object waitingOn;
+        private long waitingSince;
 
         Seat(int index) { this.index = index; }
 
@@ -2017,6 +2047,14 @@ final class Session {
             WebGuiGame g = gui;
             PlayerView p = me;
             return g == null || p == null ? null : g.getGameController(p);
+        }
+
+        /** Há quanto tempo a mesa espera este pedido; um pedido diferente (ou nenhum) recomeça a contagem. */
+        long waited(Object pending, long now) {
+            synchronized (waitLock) {
+                if (pending != waitingOn) { waitingOn = pending; waitingSince = now; }
+                return pending == null ? 0 : now - waitingSince;
+            }
         }
 
         boolean eliminated() { return config.commander() && me != null && me.getHasLost(); }

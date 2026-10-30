@@ -57,6 +57,16 @@ const view = createForgeTableView(document.querySelector('#table')!, { onExit() 
 view.attach(client as any, []); view.render();
 const warden = (id: number) => ({ id, controller: 10, tapped: false, token: false, name: 'Soul Warden', manaCost: '{W}', typeLine: 'Creature — Human Cleric', creature: true, power: 1, toughness: 1 });
 Object.assign(window, { fixture: { state, client, view, messages, render: () => view.render(),
+  /**
+   * Alerta de espera demorada: a mesa espera `player` há `ms` (como a ponte manda em `waiting`). O oponente vira uma
+   * pessoa (Ana), já que a IA nunca recebe o alerta. Um estado novo, como chegaria da ponte, para o relógio ressincronizar.
+   */
+  wait(player: number, ms: number, kind = 'priority') {
+    Object.assign(state.players[1], { ai: false, name: 'Ana' });
+    state.room.players[1].name = 'Ana';
+    (client as any).state = { ...state, activePlayer: 10, waiting: [{ player, kind, ms }] };
+    view.render();
+  },
   proliferate() {
     const [me, opp] = state.players;
     me.battlefield[0].counters = { P1P1: 2 }; opp.battlefield[0].counters = { M1M1: 1 };
@@ -325,3 +335,5 @@ if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (windo
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
 if (cenario === 'improvisar') (window as any).fixture.improvise();
+// Alerta de espera demorada: ?cenario=espera&quem=10&ms=185000 (10 é você, 23 o oponente).
+if (cenario === 'espera') { const q = new URLSearchParams(location.search); (window as any).fixture.wait(Number(q.get('quem') ?? 10), Number(q.get('ms') ?? 125000)); }
