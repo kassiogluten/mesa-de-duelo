@@ -1,4 +1,10 @@
 {
+  "0.85.0": {
+    "Identidade de cor à vista na busca de cartas": [
+      { "img": "0.85.0/identidade-linha.webp", "legenda": "No painel de busca de um deck com **Trostani, Voz dos Selesnya**, a linha **Identidade de cor** com os símbolos de branco e verde logo abaixo do campo." },
+      { "img": "0.85.0/identidade-vazio.webp", "legenda": "Buscando a **Yuriko** nesse deck, nada aparece, e a mesa avisa que as cartas fora de branco e verde ficam de fora por causa da Trostani." }
+    ]
+  },
   "0.84.0": {
     "A importação guarda a série das cartas": [
       { "img": "0.84.0/editor-series.webp", "legenda": "No editor, cada carta com a série e o número ao lado do nome e a arte daquela impressão. O **Raio** da M10 e o da 2X2 ficam em linhas separadas, cada um com a sua arte." }

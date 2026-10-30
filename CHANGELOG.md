@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.85.0] - 2026-10-30
+
+### Novo
+
+- **Identidade de cor à vista na busca de cartas.** Num deck de Commander com comandante, a busca só traz cartas que cabem na identidade de cor dele, e agora isso aparece no painel: logo abaixo do campo de busca, a linha **Identidade de cor** mostra os símbolos de mana e o nome do comandante. Se a busca não achar nada, a mesa lembra que as cartas fora dessas cores não aparecem por causa do comandante.
+
 ## [0.84.0] - 2026-10-30
 
 ### Novo
