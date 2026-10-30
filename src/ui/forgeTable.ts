@@ -16,7 +16,7 @@ import { AutoPassPreference, PASS_RESPONSES_KEY } from './autoPassPreference';
 import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
-import { forcedSeatReason, visibleSeats } from './seatVisibility';
+import { focusedByAttack, followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatFocus, type SeatMemory } from './seatVisibility';
 import { fixPossessives } from './forgeText';
 import { VERSION } from './changelog';
 import { arrangeHand, attachHandDrag, moveInHand } from './handDrag';
@@ -334,6 +334,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Oponentes ocultos e o "só este" (partidas com três ou mais jogadores). Valem até a partida mudar.
   let hiddenSeats = new Set<number>();
   let soloSeat: number | null = null;
+  // O que a mesa fez sozinha: eliminados já ocultados e o foco no oponente que ataca você (ver followSeats).
+  let retiredSeats: ReadonlySet<number> = new Set();
+  let seatFocus: SeatFocus | null = null;
+  const seatMemory = (): SeatMemory => ({ hidden: hiddenSeats, solo: soloSeat, retired: retiredSeats, focus: seatFocus });
   let seatsMatch = '';
   let knownHand = new Set<number>();
   /** Ordem da mão arrumada pelo jogador (ids), só nesta partida. */
@@ -1336,9 +1340,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   function opponentSeat(s: FState, p: FPlayer, index: number, count = 1, forced: string | null = null) {
     const chosen = soloSeat !== null ? soloSeat === p.id : !hiddenSeats.has(p.id);
+    const focused = focusedByAttack(seatMemory(), p.id);
     return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${s.activePlayer === p.id ? ' current-seat' : ''}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
       <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}${seatControls(p, true, count)}</header>
-      ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : ''}
+      ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : focused ? '<p class="seat-forced focused">Em foco: atacando você</p>' : ''}
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
       <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(s, p.battlefield.filter(c => !isBackRow(c))))}</div>
     </section>`;
@@ -2048,8 +2053,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     $('#fOpponents').hidden = !multiplayer;
     const match = s.matchId ?? s.session?.code ?? '';
-    if (match !== seatsMatch) { seatsMatch = match; hiddenSeats = new Set(); soloSeat = null; handOrder = []; }
-    if (soloSeat !== null && !opponents.some(p => p.id === soloSeat)) soloSeat = null;
+    if (match !== seatsMatch) { seatsMatch = match; hiddenSeats = new Set(); soloSeat = null; retiredSeats = new Set(); seatFocus = null; handOrder = []; }
+    const followed = followSeats(visual, opponents, seatMemory());
+    hiddenSeats = new Set(followed.memory.hidden); soloSeat = followed.memory.solo; retiredSeats = followed.memory.retired; seatFocus = followed.memory.focus;
+    // O aviso do que a mesa mudou sozinha vai junto com o anúncio do pedido atual, no fim da renderização.
+    const seatNotice = s.spectating ? '' : followed.notices.join(' ');
     const shownSeats = visibleSeats(visual, opponents, { hidden: hiddenSeats, solo: soloSeat });
     // Ocultos viram uma coluna estreita; o espaço que sobra vai para os campos à vista.
     $('#fOpponents').style.gridTemplateColumns = opponents.map(p => shownSeats.has(p.id) ? 'minmax(0, 1fr)' : 'var(--collapsed-seat)').join(' ');
@@ -2179,7 +2187,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // A previsão do combate vai junto: a cada bloqueio marcado ou desfeito, a frase muda e o leitor de tela lê de novo.
     const forecastSpoken = (s.forecast ?? []).map(f => forecastText(f, f.player === s.you ? null : s.players.find(p => p.id === f.player)?.name ?? 'O defensor', cardName)).join(' ');
     const targetSpoken = targetPanel && targetInfo ? ` ${targetInfoText(targetInfo)}` : '';
-    announce([instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
+    announce([seatNotice, instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
 
     const qEl = $('#fQuestion');
     if (s.question && !s.gameOver) {
@@ -2432,6 +2440,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (seatSolo !== undefined || seatHide !== undefined || seatShow !== undefined) {
       const name = (id: number) => client?.state?.players.find(p => p.id === id)?.name ?? 'Oponente';
       let message: string;
+      // Escolha do jogador durante o foco no atacante: fica valendo depois do turno dele.
+      seatFocus = manualSeatChoice(seatMemory()).focus;
       if (seatSolo !== undefined) {
         const id = Number(seatSolo);
         soloSeat = soloSeat === id ? null : id;

@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.77.0] - 2026-10-29
+
+### Novo
+
+- **Foco no oponente que ataca você.** No Commander, quando um oponente declara ataque contra você (ou contra um planeswalker seu ou uma batalha que você protege), a mesa mostra só o campo dele, como se você tivesse tocado em **Só este**, com o aviso **Em foco: atacando você**, para ver os atacantes e escolher os bloqueios. No fim do turno dele, a mesa volta a mostrar os oponentes como você tinha deixado. Se você mexer em **Ocultar**, **Só este** ou **Mostrar campo** durante o ataque, a sua escolha fica valendo. Ataques entre outros jogadores não mudam a mesa.
+
+### Mudou
+
+- **Quem sai da partida fica oculto.** No Commander, quando um oponente morre e ainda há outro oponente na partida, o campo dele vira a coluna estreita com retrato, vida e o selo **Eliminado**, e os oponentes que continuam jogando ganham o espaço. **Mostrar campo** traz o campo de volta para conferir o que ficou nele. Se você estava vendo só esse oponente, a mesa volta a mostrar os que restam. No duelo nada muda.
+
 ## [0.76.0] - 2026-10-29
 
 ### Novo

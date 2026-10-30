@@ -1,4 +1,12 @@
 {
+  "0.77.0": {
+    "Foco no oponente que ataca você": [
+      { "img": "0.77.0/foco-no-atacante.webp", "legenda": "Diego ataca você: o campo dele fica em destaque com o aviso **Em foco: atacando você** e o botão **Ver todos**, e Ana e Bruno viram colunas estreitas até o fim do turno dele." }
+    ],
+    "Quem sai da partida fica oculto": [
+      { "img": "0.77.0/oponente-eliminado-oculto.webp", "legenda": "Bruno morreu: o campo dele vira a coluna estreita com retrato, vida zerada, o selo **Eliminado** e o botão **Mostrar campo**." }
+    ]
+  },
   "0.76.0": {
     "Buscar cartas por função": [
       { "img": "0.76.0/funcao-cantrip.webp", "legenda": "Na busca de cartas, a escolha **Função** com `cantrip` marcada traz as 659 cartas que compram uma carta além do que fazem, sem digitar nada. Embaixo, o crédito ao Tagger do Scryfall." },
