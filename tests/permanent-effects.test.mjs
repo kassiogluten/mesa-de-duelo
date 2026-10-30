@@ -5,7 +5,7 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
-const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus } = await import(uri(source));
+const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import(uri(source));
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
 
@@ -134,4 +134,65 @@ test('a foretold card explains its foretell cost only in the tooltip', () => {
   assert.equal(seals.length, 1);
   assert.match(seals[0].label, /^Prevista: quem a previu pode conjurá-la do exílio por \{1\}\{U\}/);
   assert.equal(permanentStatus({ id: 6, faceDown: true, foretold: true }).length, 0, 'the back says nothing more');
+});
+
+test('type lines are compared as sets: gained and lost types and subtypes', () => {
+  assert.deepEqual(parseTypeLine('Legendary Artifact Creature - Golem'), { types: ['Legendary', 'Artifact', 'Creature'], subtypes: ['Golem'], all: false });
+  assert.deepEqual(parseTypeLine('Token Creature — Goblin').types, ['Creature']);
+  assert.equal(parseTypeLine('Creature - Shapeshifter (All)').all, true);
+  const march = typeChange('Artifact', 'Artifact Creature');
+  assert.deepEqual([march.gained, march.lost, march.gainedSub, march.replaced], [['Creature'], [], [], false]);
+  assert.equal(typeChange('Artifact Creature - Myr', 'Creature Artifact — Myr'), undefined, 'order does not matter');
+  assert.equal(typeChange('Basic Land - Swamp', 'Basic Land - Swamp'), undefined);
+  const urborg = typeChange('Land', 'Land - Swamp');
+  assert.deepEqual([urborg.gained, urborg.gainedSub], [[], ['Swamp']]);
+  const moon = typeChange('Legendary Creature - Human Wizard', 'Legendary Land');
+  assert.deepEqual([moon.gained, moon.lost, moon.lostSub, moon.replaced], [['Land'], ['Creature'], ['Human', 'Wizard'], true]);
+  assert.equal(typeChangeText(moon), 'agora é Terreno; não é mais Criatura');
+  assert.equal(typeChangeText(typeChange('Creature - Elf', 'Artifact Creature - Elf')), 'agora também Artefato');
+  assert.equal(typeChangeText(urborg), 'agora também Swamp');
+  assert.equal(typeChangeText(typeChange('Creature - Elf', 'Creature - Elf Zombie')), 'agora também Zombie');
+  assert.equal(typeChangeText(typeChange('Land', 'Land Creature - Elemental'), { creature: true, power: 3, toughness: 3 }), 'agora também Criatura — Elemental 3/3');
+  assert.equal(typeChange(undefined, 'Creature'), undefined);
+});
+
+test('double-faced cards compare against the face on the table, never flagging the transformed face', () => {
+  const back = 'Creature — Human Werewolf // Creature — Werewolf';
+  assert.equal(typeChange(back, 'Creature - Werewolf'), undefined);
+  assert.equal(typeChange(back, 'Creature - Human Werewolf'), undefined);
+  assert.equal(typeChange('Legendary Creature — Human Monk // Legendary Planeswalker — Ugin', 'Legendary Planeswalker - Ugin'), undefined);
+  assert.deepEqual(typeChange(back, 'Artifact Creature - Werewolf').gained, ['Artifact']);
+});
+
+test('a gained type becomes a small icon seal, with the type line, P/T and the source in the tooltip', () => {
+  const ring = { id: 7, name: 'Sol Ring', tapped: false, token: false, creature: true, power: 1, toughness: 1, typeLine: 'Artifact Creature', printedType: 'Artifact', typeChangedBy: ['March of the Machines'] };
+  const seal = permanentFx(ring).seals.find(s => s.kind.startsWith('type'));
+  assert.equal(seal.kind, 'type creature');
+  assert.match(seal.html, /^<svg/);
+  assert.doesNotMatch(seal.html, /Criatura/, 'only the icon on the table');
+  assert.equal(seal.label, 'Tipo mudado: Artefato — agora também Criatura 1/1. Efeito de March of the Machines.');
+  assert.equal(typeChangeLine(ring), 'Artefato — agora também Criatura 1/1');
+  assert.match(permanentFxHTML(permanentFx(ring)).html, /class="fx-seal type creature" title="Tipo mudado/);
+  assert.match(permanentFxText(permanentFx(ring)), /agora também Criatura 1\/1/);
+  const lattice = permanentFx(creature({ typeLine: 'Artifact Creature - Bear', printedType: 'Creature - Bear', typeChangedBy: ['Mycosynth Lattice'] })).seals[0];
+  assert.equal(lattice.kind, 'type artifact');
+  assert.equal(lattice.label, 'Tipo mudado: Criatura — agora também Artefato. Efeito de Mycosynth Lattice.');
+  const land = permanentFx({ id: 8, tapped: false, token: false, creature: false, land: true, typeLine: 'Legendary Land', printedType: 'Legendary Creature - Human' }).seals[0];
+  assert.equal(land.kind, 'type land');
+  assert.equal(land.label, 'Tipo mudado: Criatura — agora é Terreno; não é mais Criatura.');
+  assert.equal(permanentFx(creature({ typeLine: 'Legendary Creature', printedType: 'Legendary Artifact Creature' })).seals[0].kind, 'type lost');
+  assert.equal(permanentFx(creature({ typeLine: 'Land - Swamp', printedType: 'Land' })).seals[0].kind, 'type other');
+  assert.match(css, /\.fx-seal\.type \{/);
+});
+
+test('printed types never get a seal: artifact creatures, changelings, gods without devotion, crewed vehicles, face-down cards', () => {
+  assert.equal(permanentFx(creature({ typeLine: 'Artifact Creature - Myr' })).seals.length, 0, 'no printedType: nothing changed');
+  assert.equal(permanentFx(creature({ typeLine: 'Artifact Creature - Myr', printedType: 'Artifact Creature - Myr' })).seals.length, 0);
+  assert.equal(permanentTypeChange(creature({ keywords: ['CHANGELING'], typeLine: 'Creature - Shapeshifter (All)', printedType: 'Creature - Shapeshifter' })), undefined);
+  assert.equal(permanentTypeChange(creature({ typeLine: 'Creature - Elf (All)', printedType: 'Creature - Elf' })).allTypes, true, 'Maskwood Nexus and friends');
+  const god = permanentFx({ id: 9, tapped: false, token: false, typeLine: 'Legendary Enchantment - God', printedType: 'Legendary Enchantment Creature - God', devotion: { colors: ['U'], value: 2, need: 5 } });
+  assert.equal(god.seals.some(s => s.kind.startsWith('type')), false, 'the devotion seal already explains it');
+  const vehicle = permanentFx(creature({ typeLine: 'Artifact Creature - Vehicle', printedType: 'Artifact - Vehicle', states: ['crewed'] }));
+  assert.deepEqual(vehicle.seals.map(s => s.kind), ['state crewed']);
+  assert.equal(permanentFx({ id: 10, tapped: false, token: false, faceDown: true, typeLine: 'Creature', printedType: 'Land' }).seals.some(s => s.kind.startsWith('type')), false);
 });

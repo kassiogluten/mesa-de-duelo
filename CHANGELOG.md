@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.79.0] - 2026-10-29
+
+### Novo
+
+- **Tipo ganho à mostra na carta.** Quando um efeito muda o tipo de uma permanente (um artefato que vira criatura com March of the Machines, um Pântano animado por Kormus Bell, tudo virando artefato com Mycosynth Lattice, uma criatura que vira terreno com Imprisoned in the Moon, um terreno que ganha o tipo Pântano), a carta ganha um ícone pequeno embaixo, com o tipo ganho: garras para criatura, engrenagem para artefato, montanha para terreno, brilho para encantamento. Passe o mouse ou toque na carta para ver a linha de tipo com a mudança ("Artefato — agora também Criatura 1/1") e a carta que causou; no inspetor, a mudança aparece em destaque ao lado do tipo. A criatura animada mostra força e resistência mesmo sem P/T impresso. O que já está impresso não ganha ícone: uma criatura artefato, o verso de uma carta de duas faces, um changeling, um deus de Theros sem devoção ou um veículo tripulado (que já tem o próprio selo).
+
 ## [0.78.0] - 2026-10-29
 
 ### Novo

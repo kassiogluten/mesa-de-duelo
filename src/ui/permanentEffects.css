@@ -109,3 +109,10 @@
 .fx-seal.state.exerted { color: #9fb6d8; }
 .fx-seal.state.monstrous, .fx-seal.state.renowned, .fx-seal.state.solved { color: #f2c14e; }
 .fx-seal.protector { color: #f0a868; }
+/* Tipo ganho ou perdido (item 50): só o ícone do tipo; a linha de tipo e a origem ficam no balão e no inspetor. */
+.fx-seal.type { padding: 1px 2px; color: #9fd8ff; }
+.fx-seal.type.creature { color: #f0b37a; }
+.fx-seal.type.artifact { color: #c9d3e2; }
+.fx-seal.type.land { color: #b9d98c; }
+.fx-seal.type.enchantment { color: #e2c8ff; }
+.fx-seal.type.lost { color: #ff9a8a; }

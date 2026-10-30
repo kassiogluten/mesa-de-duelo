@@ -306,7 +306,22 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     state.turn = 5;
     view.render();
   },
+  /**
+   * Tipo ganho (item 50): March of the Machines faz do Sol Ring uma criatura 1/1; do lado do oponente, Kormus Bell
+   * anima um Pântano e Imprisoned in the Moon faz de uma criatura um terreno. Os campos são os que a ponte manda.
+   */
+  typeChange() {
+    const [me, opp] = state.players;
+    const perm = (id: number, controller: number, name: string, extra: Record<string, unknown>) => ({ id, controller, name, tapped: false, token: false, creature: false, ...extra });
+    me.battlefield.push(perm(270, 10, 'March of the Machines', { manaCost: '{3}{U}', typeLine: 'Enchantment' }),
+      perm(271, 10, 'Sol Ring', { manaCost: '{1}', typeLine: 'Artifact Creature', printedType: 'Artifact', typeChangedBy: ['March of the Machines'], creature: true, power: 1, toughness: 1, basePower: 1, baseToughness: 1, sick: false }));
+    opp.battlefield.push(perm(272, 23, 'Kormus Bell', { manaCost: '{4}', typeLine: 'Artifact' }),
+      perm(273, 23, 'Swamp', { land: true, typeLine: 'Basic Land Creature - Swamp', printedType: 'Basic Land - Swamp', typeChangedBy: ['Kormus Bell'], creature: true, power: 1, toughness: 1, basePower: 1, baseToughness: 1 }),
+      perm(274, 23, 'Serra Angel', { manaCost: '{3}{W}{W}', land: true, typeLine: 'Land', printedType: 'Creature - Angel', typeChangedBy: ['Imprisoned in the Moon'] }));
+    view.render();
+  },
 } });
+if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (window as any).fixture.typeChange();
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
 if (cenario === 'improvisar') (window as any).fixture.improvise();

@@ -4,7 +4,7 @@ import { esc, manaHTML, optionHTML, pip, richText, withoutCardIds } from './card
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { damageDetail } from './damageEffects';
-import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStatus } from './permanentEffects';
+import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStatus, permanentTypeChange, typeChangeText } from './permanentEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPreview } from './cardInspector';
 import { effectParts, historyTurns, listNames, turnSummary, type HistoryItem, type HistoryNames } from './historyLog';
@@ -2373,10 +2373,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (c) c = seenFace(c);
     if (!c || c.faceDown || !c.name) { hideCardPreview(); return; }
     const source = c.emblem ? emblemSource(c) : c.name;
+    const changed = permanentTypeChange(c);
     const card = { ...c, name: c.emblem ? emblemLabel(c) : c.name,
       image: c.image ?? image(source, 'normal'),
       text: ptOf(c.name)?.text || c.text,
-      typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.typeLine,
+      typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.printedType || c.typeLine,
+      typeChange: changed ? typeChangeText(changed, c) : undefined,
       notes: [...(secret ? ['Virada para baixo: só você pode ver qual carta é.'] : []), ...permanentStatus(c, playerName).map(seal => seal.label)] };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }

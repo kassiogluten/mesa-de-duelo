@@ -2,10 +2,12 @@ package mesadeduelo.bridge;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import forge.card.CardTypeView;
 import forge.card.MagicColor;
 import forge.card.mana.ManaAtom;
 import forge.card.mana.ManaCostShard;
 import forge.game.Game;
+import forge.game.StaticEffect;
 import forge.game.card.Card;
 import forge.game.card.CardView.CardStateView;
 import forge.game.card.CardView;
@@ -48,6 +50,7 @@ final class PermanentDetails {
             Card gc = game.findByView(c);
             if (gc != null && !c.isFaceDown()) devotion(o, gc);
             if (gc != null) states(o, gc);
+            if (gc != null && !c.isFaceDown()) typeChange(o, gc, game);
             if (gc == null || !gc.isGoaded()) return;
             JsonArray by = new JsonArray();
             for (Player p : gc.getGoaded()) by.add(p.getId());
@@ -93,6 +96,34 @@ final class PermanentDetails {
             if (compare.matches("LT\\d+")) return Integer.parseInt(compare.substring(2));
         }
         return null;
+    }
+
+    /**
+     * Tipo mudado por um efeito (item 50 do roadmap): a linha de tipo impressa da face à mostra vai em {@code printedType}
+     * só quando difere da atual ({@code typeLine}), e {@code typeChangedBy} diz as cartas cujas habilidades estáticas mudam
+     * o tipo dela (March of the Machines, Kormus Bell, Imprisoned in the Moon). Efeitos de uma vez (animar até o fim do
+     * turno) não guardam a origem: aí só vai a linha impressa. A face transformada de uma carta de duas faces já é a impressa.
+     */
+    static void typeChange(JsonObject o, Card gc, Game game) {
+        CardTypeView printed = gc.getOriginalType(), now = gc.getType();
+        if (printed == null || now == null || printed.toString().equals(now.toString())) return;
+        o.addProperty("printedType", printed.toString());
+        JsonArray by = new JsonArray();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (StaticEffect se : game.getStaticEffects().getEffects()) {
+            if (se.getAffectedCards() == null || !changesType(se) || !se.getAffectedCards().contains(gc)) continue;
+            Card source = se.getSource();
+            // Efeitos criados por mágicas ou habilidades ficam numa carta de efeito: vale a carta que o criou.
+            if (source != null && source.getEffectSource() != null) source = source.getEffectSource();
+            if (source != null && source != gc && !source.isFaceDown() && seen.add(source.getName())) by.add(source.getName());
+        }
+        if (!by.isEmpty()) o.add("typeChangedBy", by);
+    }
+    private static boolean changesType(StaticEffect se) {
+        if (se.getParams() == null) return false;
+        for (String key : se.getParams().keySet())
+            if (key.equals("AddType") || key.equals("RemoveType") || key.equals("AddAllCreatureTypes") || key.startsWith("Remove") && key.endsWith("Types")) return true;
+        return false;
     }
 
     /**

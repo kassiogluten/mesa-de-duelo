@@ -82,6 +82,25 @@ public class TableStatusTest {
         assertFalse(black.has("need"));
     }
 
+    @Test public void gainedTypesCarryThePrintedLineAndTheSource() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
+        Card ring = ExilePermissionsTest.add(game, "Sol Ring", me, ZoneType.Battlefield);
+        Card myr = ExilePermissionsTest.add(game, "Darksteel Myr", me, ZoneType.Battlefield);
+        game.getAction().checkStaticAbilities();
+        assertFalse(StateJson.card(ring.getView(), game).has("printedType"));
+
+        ExilePermissionsTest.add(game, "March of the Machines", me, ZoneType.Battlefield);
+        game.getAction().checkStaticAbilities();
+        JsonObject o = StateJson.card(ring.getView(), game);
+        assertEquals("Artifact", o.get("printedType").getAsString());
+        assertTrue(o.get("typeLine").getAsString(), o.get("typeLine").getAsString().contains("Creature"));
+        assertEquals("March of the Machines", o.getAsJsonArray("typeChangedBy").get(0).getAsString());
+        assertTrue(o.get("creature").getAsBoolean());
+        assertEquals(1, o.get("power").getAsInt());
+        // Criatura artefato impressa: nada mudou, nada vai.
+        assertFalse(StateJson.card(myr.getView(), game).has("printedType"));
+    }
+
     @Test public void spellsCastThisTurnAndCardsThatCountThem() {
         Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
         assertFalse(StateJson.player(me.getView(), true, game).has("spellsCast"));

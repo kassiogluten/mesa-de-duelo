@@ -1,4 +1,12 @@
 {
+  "0.79.0": {
+    "Tipo ganho à mostra na carta": [
+      { "img": "0.79.0/tipo-ganho-campo.webp", "legenda": "Com March of the Machines, o Anel Solar vira criatura: mostra **1/1** e ganha embaixo o ícone das garras, sem cobrir a arte." },
+      { "img": "0.79.0/tipo-ganho-oponente.webp", "legenda": "No campo do oponente, o Pântano animado por Kormus Bell com **1/1** e as garras, e o Anjo de Serra que virou terreno com o ícone da montanha." },
+      { "img": "0.79.0/tipo-ganho-balao.webp", "legenda": "Com o mouse na carta, o balão diz o que mudou e quem causou: \"Tipo mudado: Artefato — agora também Criatura 1/1. Efeito de March of the Machines.\"" },
+      { "img": "0.79.0/tipo-ganho-inspetor.webp", "legenda": "No inspetor, a mudança em destaque ao lado da linha de tipo impressa, com a força e a resistência da criatura." }
+    ]
+  },
   "0.78.0": {
     "Destaque no campo de quem é o turno": [
       { "img": "0.78.0/duelo-seu-turno.webp", "legenda": "No duelo, no seu turno: o contorno dourado em volta do seu campo, na mesma cor do brilho do seu retrato." },

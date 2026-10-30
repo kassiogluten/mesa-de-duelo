@@ -11,6 +11,8 @@ export interface InspectorCard {
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
   classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
   merged?: MergedPart[];
+  /** Tipo mudado por um efeito, em destaque depois da linha de tipo: "agora também Criatura 3/3". */
+  typeChange?: string;
   /** Estados da permanente explicados por extenso (controle trocado, atiçada, regeneração, escolhas). */
   notes?: string[];
 }
@@ -59,7 +61,7 @@ function content(card: InspectorCard, compact: boolean) {
   const notes = hidden ? [] : card.notes ?? [];
   return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div><span class="ci-actions">${sides ? flipButtonHTML(sides, 'ci-control') : ''}${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : '<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta">Fechar</button>'}</span></header>
   <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? `<img class="ci-image" src="${esc(image)}" alt="${esc(name)}" draggable="false">` : ''}<div class="ci-details">
-    ${type ? `<p class="ci-type">${esc(type)}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
+    ${type ? `<p class="ci-type">${esc(type)}${card.typeChange ? ` <mark class="ci-type-change">— ${esc(card.typeChange)}</mark>` : ''}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
     ${card.keywords?.length ? `<ul class="ci-keywords">${card.keywords.map(k => `<li>${esc(keywords[k] ?? k.replaceAll('_', ' ').toLowerCase())}</li>`).join('')}</ul>` : ''}
     ${Object.entries(card.counters ?? {}).length ? `<p>Marcadores: ${Object.entries(card.counters!).map(([k,v]) => `${esc(counterName(k))} × ${v}`).join(', ')}</p>` : ''}

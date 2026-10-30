@@ -21,6 +21,8 @@
 .ci-body { padding: 16px; overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
 .ci-image { display: block; max-height: 190px; max-width: 100%; margin: 0 auto 16px; object-fit: contain; border-radius: 8px; outline: 1px solid #ffffff1a; }
 .ci-type { margin: 0 0 12px; color: #c0cbe0; font-size: 14px; }
+/* Tipo ganho por um efeito (item 50): em destaque depois da linha impressa. */
+.ci-type-change { padding: 0 4px; border-radius: 4px; background: #9fd8ff22; color: #bfe6ff; font-weight: 700; }
 .ci-rules { white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; line-height: 1.55; }
 .ci-rules .pip { font-size: 0.9em; }
 .ci-strength { border-top: 1px solid var(--line); padding-top: 12px; font-variant-numeric: tabular-nums; }

@@ -64,6 +64,12 @@ export interface FCard {
   set?: string;
   manaCost?: string;
   typeLine?: string;
+  /**
+   * Linha de tipo impressa da face à mostra, como o Forge a escreve; a ponte só manda quando um efeito mudou o tipo
+   * (typeLine traz o tipo atual). typeChangedBy: as cartas cujos efeitos mudam o tipo, quando se sabe.
+   */
+  printedType?: string;
+  typeChangedBy?: string[];
   text?: string;
   creature?: boolean;
   land?: boolean;

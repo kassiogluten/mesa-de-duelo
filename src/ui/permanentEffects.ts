@@ -69,7 +69,7 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
-type StatusKind = 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'foretold' | 'devotion' | 'devotion met' | `state ${FCardState}`;
+type StatusKind = `type ${TypeIcon}` | 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'foretold' | 'devotion' | 'devotion met' | `state ${FCardState}`;
 const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
 const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen' | 'protector', string> = {
   control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
@@ -141,6 +141,8 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
     if (ch.mode) { shown.push(esc(ch.mode)); said.push(`modo ${ch.mode}`); }
     if (said.length) seals.push({ kind: 'chosen', html: `${STATUS_ICON.chosen}<span class="fx-chosen">${shown.join(' · ')}</span>`, label: `Escolhido pela carta: ${said.join('; ')}.` });
   }
+  const typed = typeSeal(c);
+  if (typed) seals.push(typed);
   for (const state of c.states ?? []) if (STATE_ICON[state]) seals.push({ kind: `state ${state}`, html: STATE_ICON[state], label: stateLabel(state, c) });
   // Prevista só existe no exílio: não vira selo na mesa, só a frase do balão e do inspetor.
   if (c.foretold && c.name) seals.push({ kind: 'foretold', html: '', label: `Prevista: ${c.foretellCost ? `quem a previu pode conjurá-la do exílio por ${c.foretellCost}` : 'quem a previu pode conjurá-la do exílio pelo custo previsto'}, a partir do turno seguinte ao da previsão. Os outros jogadores só veem o verso.` });
@@ -154,6 +156,112 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
     seals.push({ kind: met ? 'devotion met' : 'devotion', html: `${pips}${dev.value}${dev.need !== undefined ? `/${dev.need}` : ''}`, label });
   }
   return seals;
+}
+
+/*
+ * Tipo ganho ou perdido (item 50 do roadmap): March of the Machines, Kormus Bell, Mycosynth Lattice, Imprisoned in the
+ * Moon, Urborg... A ponte manda a linha impressa da face à mostra (printedType) só quando difere da atual (typeLine).
+ * Os tipos são comparados como conjuntos, então a ordem em que o Forge escreve não conta.
+ */
+const CARD_TYPES = ['Creature', 'Artifact', 'Enchantment', 'Land', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Kindred', 'Tribal', 'Dungeon'];
+const SUPERTYPES = ['Legendary', 'Basic', 'Snow', 'World', 'Ongoing', 'Elite', 'Host'];
+const TYPE_LABEL: Record<string, string> = {
+  Creature: 'Criatura', Artifact: 'Artefato', Enchantment: 'Encantamento', Land: 'Terreno', Planeswalker: 'Planeswalker', Battle: 'Batalha',
+  Instant: 'Mágica Instantânea', Sorcery: 'Feitiço', Kindred: 'Tribal', Tribal: 'Tribal', Dungeon: 'Masmorra',
+  Legendary: 'Lendária', Basic: 'Básica', Snow: 'da Neve', World: 'Mundial', Ongoing: 'Contínua', Elite: 'Elite', Host: 'Anfitriã',
+};
+const typeLabel = (t: string) => TYPE_LABEL[t] ?? t;
+interface ParsedType { types: string[]; subtypes: string[]; all: boolean }
+/** "Legendary Artifact Creature - Golem" (Forge) ou "Artifact Creature — Golem" (Scryfall): tipos, subtipos e o "(All)" dos changelings. */
+export function parseTypeLine(line: string): ParsedType {
+  const all = /\(All\b[^)]*\)/.test(line);
+  const [before, ...after] = line.replace(/\(All\b[^)]*\)/g, ' ').split(/\s+[—–-]\s+/);
+  const words = (text = '') => text.split(/\s+/).filter(Boolean);
+  return { types: words(before).filter(w => w !== 'Token'), subtypes: words(after.join(' ')), all };
+}
+export interface TypeChange {
+  /** Tipos e supertipos ganhos e perdidos, com os nomes do Forge (Creature, Artifact, Legendary...). */
+  gained: string[]; lost: string[];
+  gainedSub: string[]; lostSub: string[];
+  /** Ganhou todos os tipos de criatura. */
+  allTypes: boolean;
+  /** Nenhum dos tipos de carta atuais estava impresso: "agora é Terreno", e não "agora também". */
+  replaced: boolean;
+  /** Tipos de carta impressos (da face usada na comparação). */
+  printed: string[];
+}
+const changeSize = (t: TypeChange) => t.gained.length + t.lost.length + t.gainedSub.length + t.lostSub.length + (t.allTypes ? 1 : 0);
+/**
+ * O que mudou entre a linha de tipo impressa e a atual. Numa carta de duas faces ("A // B"), vale a face mais
+ * parecida com a atual, para a face transformada nunca parecer um tipo ganho. Sem mudança, undefined.
+ */
+export function typeChange(printed?: string, current?: string): TypeChange | undefined {
+  if (!printed || !current) return undefined;
+  const now = parseTypeLine(current);
+  const nowCore = now.types.filter(t => CARD_TYPES.includes(t));
+  const minus = (a: string[], b: string[]) => a.filter(t => !b.includes(t));
+  let best: TypeChange | undefined;
+  for (const face of printed.split(/\s+\/\/\s+/).map(parseTypeLine)) {
+    const allTypes = now.all && !face.all;
+    const gained = minus(now.types, face.types);
+    const change: TypeChange = {
+      gained, lost: minus(face.types, now.types),
+      gainedSub: allTypes ? [] : minus(now.subtypes, face.subtypes), lostSub: now.all ? [] : minus(face.subtypes, now.subtypes), allTypes,
+      replaced: nowCore.length > 0 && nowCore.every(t => gained.includes(t)), printed: face.types.filter(t => CARD_TYPES.includes(t)),
+    };
+    if (!best || changeSize(change) < changeSize(best)) best = change;
+  }
+  return best && changeSize(best) ? best : undefined;
+}
+/** Criatura primeiro, como nas cartas em português ("Criatura Artefato"), e os supertipos depois dos tipos. */
+function typesText(types: string[]) {
+  const core = types.filter(t => !SUPERTYPES.includes(t)).sort((a, b) => Number(b === 'Creature') - Number(a === 'Creature'));
+  return [...core, ...types.filter(t => SUPERTYPES.includes(t))].map(typeLabel).join(' ');
+}
+/** O que a carta ganhou ou perdeu, para ir depois da linha impressa: "agora também Criatura 3/3", "agora é Terreno; não é mais Criatura". */
+export function typeChangeText(change: TypeChange, c: Pick<FCard, 'power' | 'toughness' | 'creature'> = {}) {
+  const pt = change.gained.includes('Creature') && c.creature && c.power !== undefined && c.toughness !== undefined ? ` ${c.power}/${c.toughness}` : '';
+  const sub = [...change.gainedSub, ...(change.allTypes ? ['todos os tipos de criatura'] : [])].join(' ');
+  const types = typesText(change.gained);
+  const gained = types && sub ? `${types} — ${sub}` : types || sub;
+  // Quem perde o tipo de carta perde junto os subtipos dele: basta dizer o tipo.
+  const lost = change.lost.length ? typesText(change.lost) : change.lostSub.join(' ');
+  return [gained ? `agora ${change.replaced ? 'é' : 'também'} ${gained}${pt}` : '', lost ? `não é mais ${lost}` : ''].filter(Boolean).join('; ');
+}
+type TypeIcon = 'creature' | 'artifact' | 'land' | 'enchantment' | 'other' | 'lost';
+const iconEO = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor" fill-rule="evenodd"/></svg>`;
+const TYPE_ICON: Record<TypeIcon, string> = {
+  creature: icon('M4 3.5 6.6 3 9 20.5l-2.6.5zm6.7-.5h2.6v18h-2.6zm6.7.5 2.6.5-2.4 17.5-2.6-.5z'),
+  artifact: iconEO('M10.3 2h3.4l.5 2.6 1.9 1 2.4-1 1.8 2.9-1.9 1.8v2.2l1.9 1.8-1.8 2.9-2.4-1-1.9 1-.5 2.6h-3.4l-.5-2.6-1.9-1-2.4 1-1.8-2.9 1.9-1.8V9.3L3.7 7.5l1.8-2.9 2.4 1 1.9-1zM12 8.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z'),
+  land: icon('M1.5 20 9 7l3.6 6.2L15.5 9 22.5 20z'),
+  enchantment: icon('M12 2l2.1 6.9L21 11l-6.9 2.1L12 20l-2.1-6.9L3 11l6.9-2.1zM19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z'),
+  other: STATUS_ICON.chosen,
+  lost: iconEO('M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2.5a7.5 7.5 0 0 0-5.9 12.1L16.6 6.1A7.5 7.5 0 0 0 12 4.5zm5.9 3.4L7.4 17.9A7.5 7.5 0 0 0 17.9 7.9z'),
+};
+/** O tipo mudado da permanente, sem o que já tem marca própria: o changeling (todos os tipos impressos) e o deus de Theros sem devoção. */
+export function permanentTypeChange(c: FCard): TypeChange | undefined {
+  if (c.faceDown) return undefined;
+  const change = typeChange(c.printedType, c.typeLine);
+  if (!change) return undefined;
+  if (c.keywords?.includes('CHANGELING')) change.allTypes = false;
+  if (c.devotion?.need !== undefined) change.lost = change.lost.filter(t => t !== 'Creature');
+  return changeSize(change) ? change : undefined;
+}
+/** Linha impressa e o que mudou: "Artefato — agora também Criatura 3/3". */
+export function typeChangeLine(c: FCard, change = permanentTypeChange(c)) {
+  if (!change) return undefined;
+  const printed = typesText(change.printed);
+  return `${printed ? `${printed} — ` : ''}${typeChangeText(change, c)}`;
+}
+function typeSeal(c: FCard): PermanentFx['seals'][number] | undefined {
+  const change = permanentTypeChange(c);
+  if (!change) return undefined;
+  // Veículo tripulado: o selo de tripulada já diz que ele é criatura neste turno.
+  if (c.states?.includes('crewed') && change.gained.join() === 'Creature' && changeSize(change) === 1) return undefined;
+  const main = (['Creature', 'Artifact', 'Land', 'Enchantment'] as const).find(t => change.gained.includes(t));
+  const kind: TypeIcon = main ? (main.toLowerCase() as TypeIcon) : change.gained.length || change.gainedSub.length || change.allTypes ? 'other' : 'lost';
+  const by = c.typeChangedBy?.length ? ` Efeito de ${list(c.typeChangedBy)}.` : '';
+  return { kind: `type ${kind}`, html: TYPE_ICON[kind], label: `Tipo mudado: ${typeChangeLine(c, change)}.${by}` };
 }
 
 /** Classes da carta e o HTML dos efeitos (desenhados atrás ou na borda da carta, sem receber clique). */
