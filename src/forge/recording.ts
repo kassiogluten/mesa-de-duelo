@@ -208,8 +208,8 @@ export class MatchRecorder {
   }
 
   sent(msg: ClientMessage) {
-    // Pedidos fora da partida (validar deck, procurar ou listar salas, buscar deck por link) não entram.
-    if (msg.type === 'validate-deck' || msg.type === 'lookup-room' || msg.type === 'list-rooms' || msg.type === 'fetch-deck') return;
+    // Pedidos fora da partida (validar deck, procurar ou listar salas, buscar deck por link, cartas parecidas) não entram.
+    if (msg.type === 'validate-deck' || msg.type === 'lookup-room' || msg.type === 'list-rooms' || msg.type === 'fetch-deck' || msg.type === 'similar-cards') return;
     if (!this.frames.length && !['start', 'host', 'join', 'rejoin'].includes(msg.type)) return;
     const gen = 'gen' in msg && typeof msg.gen === 'number' ? msg.gen : undefined;
     this.sentMessages.push({ at: this.now(), v: this.lastVersion, ...(gen !== undefined ? { gen } : {}), msg: summarize(msg) });

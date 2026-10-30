@@ -428,6 +428,7 @@ export type ClientMessage =
   | { type: 'lookup-room'; requestId: string; code: string }
   | { type: 'list-rooms'; requestId: string }
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
+  | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
   | { type: 'rematch' } | { type: 'leave' }
   | ({ type: 'preferences' } & Partial<FPreferences>)
@@ -459,6 +460,9 @@ function defaultUrl() {
   const host = typeof location === 'undefined' || !location.hostname || location.hostname === 'localhost' ? '127.0.0.1' : location.hostname;
   return `ws://${host.includes(':') ? `[${host}]` : host}:7171/ws`;
 }
+
+/** Carta parecida devolvida pela ponte: a nota (0 a 1) e as tags em comum que mais pesaram. */
+export interface SimilarCard { oracleId: string; score: number; tags: string[] }
 
 /** Erro de uma consulta à ponte; `reason` diz o motivo quando a mesa reage a ele (como 'room-not-found'). */
 export class RequestError extends Error {
@@ -495,7 +499,7 @@ export class ForgeClient {
     this.pending.clear();
   }
 
-  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'list-rooms' } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }, timeoutMs = 12000): Promise<T> {
+  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'list-rooms' } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string } | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number }, timeoutMs = 12000): Promise<T> {
     if (!this.connected) return Promise.reject(new Error('Conecte-se ao servidor para verificar.'));
     const requestId = `request-${++this.requestSequence}`;
     return new Promise((resolve, reject) => {
@@ -517,6 +521,14 @@ export class ForgeClient {
   /** JSON da API pública do Moxfield ou do Archidekt, buscado pela ponte (o navegador esbarra no CORS). */
   fetchDeckSource(site: 'moxfield' | 'archidekt', id: string): Promise<string> { return this.request({type: 'fetch-deck', site, id}, 20000); }
 
+  /**
+   * Ordena as candidatas pela semelhança com a carta, pelas tags de função do Tagger (a ponte baixa o arquivo
+   * do Scryfall uma vez por dia; o primeiro pedido do dia pode demorar).
+   */
+  similarCards(oracleId: string, candidates: string[], limit = 40): Promise<SimilarCard[]> {
+    return this.request({type: 'similar-cards', oracleId, candidates, limit}, 60000);
+  }
+
   connect(url = FORGE_URL, timeoutMs = 3000): Promise<void> {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(url);
@@ -529,12 +541,13 @@ export class ForgeClient {
         try { msg = JSON.parse(ev.data); } catch { return; }
         if (msg.requestId && this.pending.has(msg.requestId)) {
           const request = this.pending.get(msg.requestId)!;
-          if (['validation', 'room-info', 'room-list', 'deck-source', 'request-error', 'error'].includes(msg.type)) {
+          if (['validation', 'room-info', 'room-list', 'deck-source', 'similar-cards', 'request-error', 'error'].includes(msg.type)) {
             clearTimeout(request.timer); this.pending.delete(msg.requestId);
             if (msg.type === 'validation') request.resolve(msg.validation);
             else if (msg.type === 'room-info') request.resolve(msg.room);
             else if (msg.type === 'room-list') request.resolve(Array.isArray(msg.rooms) ? msg.rooms : []);
             else if (msg.type === 'deck-source') request.resolve(msg.body);
+            else if (msg.type === 'similar-cards') request.resolve(Array.isArray(msg.cards) ? msg.cards : []);
             else request.reject(new RequestError(msg.text ?? 'Não foi possível concluir a solicitação.', msg.reason));
             return;
           }

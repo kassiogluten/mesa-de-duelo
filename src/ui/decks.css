@@ -133,6 +133,15 @@
 .dw-result-art img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; outline: 1px solid #ffffff20; }
 .dw-results p { margin: 7px 0 2px; font-size: 13px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dw-results .dw-stepper { width: 100%; justify-content: space-between; }
+.dw-func-field { margin-top: 12px; }
+.dw-tagger { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--dw-muted); }
+.dw-tagger a { color: var(--dw-accent); }
+.dw-results p.dw-result-tags { margin: 0 0 4px; font-size: 11px; color: var(--dw-accent); white-space: normal; overflow-wrap: anywhere; }
+.dw-similar { display: block; width: 100%; min-height: 30px; margin: 2px 0; padding: 4px 6px; border: 1px solid var(--dw-line); border-radius: 7px; background: transparent; color: var(--dw-muted); font: 600 12px/1.2 var(--body, sans-serif); cursor: pointer; }
+.dw-similar:hover, .dw-similar:focus-visible { color: var(--dw-ink); border-color: var(--dw-accent); }
+.dw-similar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 4px 0 2px; padding: 10px 12px; border-left: 3px solid var(--dw-accent); background: var(--dw-raised); border-radius: 6px; }
+.dw-similar-head p { margin: 0; font-size: 15px; }
+.dw-empty code { color: var(--dw-accent); }
 .dw-more { width: 100%; margin-top: 20px; }
 .dw-import { max-width: 800px; margin-inline: auto; }
 .dw-import > .dw-eyebrow { margin-top: 24px; }

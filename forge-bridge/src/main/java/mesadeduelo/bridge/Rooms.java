@@ -209,6 +209,26 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                         BridgeServer.send(ch, response.toString());
                     });
                 }
+                case "similar-cards" -> {
+                    // Cartas parecidas pelas tags do Tagger: o primeiro pedido do dia baixa o arquivo, fora da thread da rede.
+                    String target = MatchConfig.string(msg, "oracleId");
+                    java.util.List<String> candidates = new java.util.ArrayList<>();
+                    if (msg.has("candidates") && msg.get("candidates").isJsonArray())
+                        for (JsonElement c : msg.getAsJsonArray("candidates")) if (c.isJsonPrimitive()) candidates.add(c.getAsString());
+                    int limit = msg.has("limit") && msg.get("limit").isJsonPrimitive() ? Math.max(1, Math.min(100, msg.get("limit").getAsInt())) : 40;
+                    CardTags.similar(target, candidates, limit).whenComplete((matches, error) -> {
+                        JsonObject response = error == null ? CardTags.json(matches) : new JsonObject();
+                        response.addProperty("requestId", requestId);
+                        if (error == null) response.addProperty("type", "similar-cards");
+                        else {
+                            Throwable cause = error instanceof java.util.concurrent.CompletionException && error.getCause() != null ? error.getCause() : error;
+                            response.addProperty("type", "request-error");
+                            response.addProperty("text", cause instanceof IllegalArgumentException && cause.getMessage() != null ? cause.getMessage()
+                                    : "Não foi possível buscar as cartas parecidas agora. Tente de novo mais tarde.");
+                        }
+                        BridgeServer.send(ch, response.toString());
+                    });
+                }
                 case "hello" -> onConnect(ch);
                 case "start" -> {
                     // Modo de repetição: o primeiro "start" vira a partida do relato, com os decks gravados nele.

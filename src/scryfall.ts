@@ -294,13 +294,17 @@ export async function preloadImages(urls: string[], load: (url: string) => Promi
   return todo.length;
 }
 
+/** Acrescenta o nome, o texto e a imagem em português às cartas que ainda não procuraram a tradução. */
+export async function translateCards(cards: ScryCard[]): Promise<void> { await addPortuguese(cards); }
+
 /** Busca os dados (com a tradução) e pré-carrega as imagens das cartas de um deck recém-importado. */
 export async function preloadDeckImages(names: string[], sizes?: (keyof Images)[]): Promise<number> {
   await fetchByNames(names);
   return preloadImages(cardImageUrls(names, sizes));
 }
 
-export async function searchCards(q: string, page = 1, format?: DeckFormat): Promise<{ cards: ScryCard[]; hasMore: boolean; total: number }> {
+/** `translate: false` pula a busca da impressão em português (para listas grandes que a mesa só vai filtrar; veja `translateCards`). */
+export async function searchCards(q: string, page = 1, format?: DeckFormat, { translate = true } = {}): Promise<{ cards: ScryCard[]; hasMore: boolean; total: number }> {
   const legality = scryfallFormat(format);
   if (legality) q = `(${q}) f:${legality}`;
   // Multilíngue para aceitar também o nome em português ("Golpe Relampejante").
@@ -308,7 +312,7 @@ export async function searchCards(q: string, page = 1, format?: DeckFormat): Pro
   if (status === 404) return { cards: [], hasMore: false, total: 0 };
   const cards: ScryCard[] = (json.data ?? []).map(slim);
   cards.forEach(cachePut);
-  await addPortuguese(cards);
+  if (translate) await addPortuguese(cards);
   return { cards: cards.map(withBasicArt), hasMore: !!json.has_more, total: json.total_cards ?? cards.length };
 }
 

@@ -1,7 +1,7 @@
 import './decks.css';
 import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, isBasic, isConstructed, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { cardInfo, type Color } from '../cards';
-import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, type ScryCard } from '../scryfall';
+import { cacheGet, fetchByNames, preloadDeckImages, resolveCardNames, searchCards, translateCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
 import { bracketBadgeHTML, deckArt, deckColors, deckPriceHTML, groupedRows, statsHTML } from './deckStats';
 import { BRACKET_DESCRIPTION, BRACKET_NAME, BRACKETS, bracketLabel, deckBracket, estimateBracket, isBracket, type Bracket } from '../brackets';
@@ -14,6 +14,7 @@ import { applyDeckImport, deckImportSnapshot, type DeckImportMode } from './deck
 import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
 import './deckFilters.css';
 import { avisoContaHTML, montarAvisoConta } from './contaAviso';
+import { buildSearchQuery, FUNCTION_TAGS, similarQuery } from './cardSearch';
 
 interface BuilderOptions {
   onBack(): void;
@@ -24,7 +25,11 @@ interface BuilderOptions {
   validateDeck?(deck: DeckData, format: DeckFormat): Promise<ServerDeckValidation>;
   /** JSON público do deck no Moxfield ou no Archidekt (pela ponte). */
   fetchDeckSource?(site: DeckSite, id: string): Promise<string>;
+  /** Candidatas ordenadas pela semelhança com a carta, pelas tags do Tagger (pela ponte). */
+  similarCards?(oracleId: string, candidates: string[]): Promise<{ oracleId: string; score: number; tags: string[] }[]>;
 }
+/** Páginas do Scryfall (175 cartas cada) lidas para achar as candidatas a "Parecidas". */
+const SIMILAR_PAGES = 5;
 export type DeckBuilderOpen = { action: 'create' | 'import' | 'library'; format?: DeckFormat } | { action: 'edit'; deckId: string; format?: DeckFormat };
 const COLORS: Color[] = ['W', 'U', 'B', 'R', 'G'];
 const COLOR_NAME: Record<Color, string> = { W: 'Branco', U: 'Azul', B: 'Preto', R: 'Vermelho', G: 'Verde' };
@@ -56,6 +61,10 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let deckActionsOpen = false;
   let searchQuery = '';
   let searchType = '';
+  let searchFunc = '';
+  /** Carta das "Parecidas" em exibição; null na busca normal. */
+  let similarTo: ScryCard | null = null;
+  const similarTags = new Map<string, string[]>();
   const searchColors = new Set<Color>();
   let results: ScryCard[] = [];
   let searchSeq = 0;
@@ -175,18 +184,30 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   function renderEdit() {
     const deck = current(); if (!deck) { view = 'library'; renderLibrary(); return; }
     const art = deckArt(deck);
-    $('#dwContent').innerHTML = `<section class="dw-editor"><div class="dw-edit-breadcrumb"><button type="button" class="dw-button subtle" data-b="library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>Meus decks</button></div><div class="dw-edit-head">${art ? `<img class="dw-edit-cover" src="${esc(art)}" alt="">` : ''}<div class="dw-edit-name">${deck.builtin ? `<h1 class="dw-deck-title">${esc(deck.name)}</h1>` : `<h1 class="dw-deck-title" id="dwDeckTitle" aria-label="${esc(deck.name || 'Deck sem nome')}"><input id="dwName" data-focus="deck-name" aria-label="Nome do deck" maxlength="80" value="${esc(deck.name)}"><svg class="dw-name-edit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-4-4L5 15z"/></svg></h1>`}</div><div class="dw-edit-controls"><label class="dw-field">Formato<select id="dwDeckFormat" data-focus="deck-format" ${deck.builtin ? 'disabled' : ''}>${formatOptions(deck.format ?? 'free')}</select></label><div class="dw-deck-actions"><button type="button" class="dw-button dw-actions-trigger" data-b="deck-actions" data-focus="deck-actions" aria-expanded="${deckActionsOpen}" aria-controls="dwDeckActions">Ações do deck<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="dw-action-menu" id="dwDeckActions" ${deckActionsOpen ? '' : 'hidden'}>${!deck.builtin ? '<button type="button" class="dw-button" data-b="import-current" data-focus="action-import">Importar lista</button>' : ''}<button type="button" class="dw-button" data-b="export" data-focus="action-export">Exportar lista</button>${deck.importSource ? '<button type="button" class="dw-button" data-b="source" data-focus="action-source">Lista original</button>' : ''}<button type="button" class="dw-button" data-b="dup" data-focus="action-duplicate">${deck.builtin ? 'Criar uma cópia' : 'Duplicar'}</button>${!deck.builtin ? '<button type="button" class="dw-button danger" data-b="del" data-focus="action-delete">Excluir</button>' : ''}</div></div></div></div>${commanderHTML(deck)}${deck.builtin ? '<p class="dw-template-note">Este deck pronto pode ser usado como está. Crie uma cópia para editar suas cartas.</p>' : ''}<div class="dw-edit-layout ${searchOpen && !deck.builtin ? 'search-open' : ''}"><section class="dw-deck-panel">${totalDeckSize(deck) + countEntries(deck.sideboard ?? []) ? statsHTML(deck) + validationHTML(deck) : ''}<div class="dw-section-tabs" role="group" aria-label="Seção do deck"><button type="button" class="dw-button" data-section="main" data-focus="section-main" aria-pressed="${section === 'main'}">${deck.format === 'commander' ? 'Deck' : 'Principal'} <b>${deckSize(deck)}${deck.format === 'commander' ? `/${100 - countEntries(deck.commanders ?? [])}` : ''}</b></button><button type="button" class="dw-button" ${deck.format === 'commander' && !deck.sideboard?.length ? 'hidden' : ''} data-section="sideboard" data-focus="section-sideboard" aria-pressed="${section === 'sideboard'}">Sideboard <b>${countEntries(deck.sideboard ?? [])}</b></button>${!deck.builtin ? `<button type="button" class="dw-button ${searchOpen ? '' : 'primary'}" data-b="search" data-focus="toggle-search" aria-expanded="${searchOpen}">${searchOpen ? 'Fechar busca' : 'Adicionar cartas'}</button>` : ''}</div><div class="dw-card-list">${entriesHTML(deck)}</div></section>${searchOpen && !deck.builtin ? `<aside class="dw-search-panel" aria-label="Buscar cartas"><h2>${commanderSlot !== null ? 'Escolher comandante' : `Adicionar ao ${section === 'main' ? 'deck principal' : 'sideboard'}`}</h2><form id="dwSearchForm"><label class="dw-field">Nome ou texto da carta<input id="dwCardQuery" data-focus="card-search" type="search" value="${esc(searchQuery)}" placeholder="Busque em português ou inglês" autocomplete="off"></label><button class="dw-button primary" type="submit">Buscar</button></form><details class="dw-filters"><summary>Filtros e busca avançada</summary><div class="dw-colors">${COLORS.map(c => `<button type="button" data-color="${c}" aria-label="Filtrar por ${COLOR_NAME[c].toLowerCase()}" aria-pressed="${searchColors.has(c)}">${pip(c)}</button>`).join('')}</div><label class="dw-field">Tipo<select id="dwSearchType">${TYPE_FILTERS.map(([label, value]) => `<option value="${value}" ${value === searchType ? 'selected' : ''}>${label}</option>`).join('')}</select></label><p>Busca avançada: <code>mv&lt;=2</code> para custo, <code>o:"draw a card"</code> para texto. As cores incluem cartas incolores.</p></details>${isConstructed(deck.format) ? `<p class="dw-note">Cartas legais no ${deck.format === 'sacola50' ? 'Legacy' : FORMAT_LABEL[deck.format]}.</p>` : ''}<div id="dwResults"></div></aside>` : ''}</div></section>`;
+    $('#dwContent').innerHTML = `<section class="dw-editor"><div class="dw-edit-breadcrumb"><button type="button" class="dw-button subtle" data-b="library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>Meus decks</button></div><div class="dw-edit-head">${art ? `<img class="dw-edit-cover" src="${esc(art)}" alt="">` : ''}<div class="dw-edit-name">${deck.builtin ? `<h1 class="dw-deck-title">${esc(deck.name)}</h1>` : `<h1 class="dw-deck-title" id="dwDeckTitle" aria-label="${esc(deck.name || 'Deck sem nome')}"><input id="dwName" data-focus="deck-name" aria-label="Nome do deck" maxlength="80" value="${esc(deck.name)}"><svg class="dw-name-edit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-4-4L5 15z"/></svg></h1>`}</div><div class="dw-edit-controls"><label class="dw-field">Formato<select id="dwDeckFormat" data-focus="deck-format" ${deck.builtin ? 'disabled' : ''}>${formatOptions(deck.format ?? 'free')}</select></label><div class="dw-deck-actions"><button type="button" class="dw-button dw-actions-trigger" data-b="deck-actions" data-focus="deck-actions" aria-expanded="${deckActionsOpen}" aria-controls="dwDeckActions">Ações do deck<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="dw-action-menu" id="dwDeckActions" ${deckActionsOpen ? '' : 'hidden'}>${!deck.builtin ? '<button type="button" class="dw-button" data-b="import-current" data-focus="action-import">Importar lista</button>' : ''}<button type="button" class="dw-button" data-b="export" data-focus="action-export">Exportar lista</button>${deck.importSource ? '<button type="button" class="dw-button" data-b="source" data-focus="action-source">Lista original</button>' : ''}<button type="button" class="dw-button" data-b="dup" data-focus="action-duplicate">${deck.builtin ? 'Criar uma cópia' : 'Duplicar'}</button>${!deck.builtin ? '<button type="button" class="dw-button danger" data-b="del" data-focus="action-delete">Excluir</button>' : ''}</div></div></div></div>${commanderHTML(deck)}${deck.builtin ? '<p class="dw-template-note">Este deck pronto pode ser usado como está. Crie uma cópia para editar suas cartas.</p>' : ''}<div class="dw-edit-layout ${searchOpen && !deck.builtin ? 'search-open' : ''}"><section class="dw-deck-panel">${totalDeckSize(deck) + countEntries(deck.sideboard ?? []) ? statsHTML(deck) + validationHTML(deck) : ''}<div class="dw-section-tabs" role="group" aria-label="Seção do deck"><button type="button" class="dw-button" data-section="main" data-focus="section-main" aria-pressed="${section === 'main'}">${deck.format === 'commander' ? 'Deck' : 'Principal'} <b>${deckSize(deck)}${deck.format === 'commander' ? `/${100 - countEntries(deck.commanders ?? [])}` : ''}</b></button><button type="button" class="dw-button" ${deck.format === 'commander' && !deck.sideboard?.length ? 'hidden' : ''} data-section="sideboard" data-focus="section-sideboard" aria-pressed="${section === 'sideboard'}">Sideboard <b>${countEntries(deck.sideboard ?? [])}</b></button>${!deck.builtin ? `<button type="button" class="dw-button ${searchOpen ? '' : 'primary'}" data-b="search" data-focus="toggle-search" aria-expanded="${searchOpen}">${searchOpen ? 'Fechar busca' : 'Adicionar cartas'}</button>` : ''}</div><div class="dw-card-list">${entriesHTML(deck)}</div></section>${searchOpen && !deck.builtin ? `<aside class="dw-search-panel" aria-label="Buscar cartas"><h2>${commanderSlot !== null ? 'Escolher comandante' : `Adicionar ao ${section === 'main' ? 'deck principal' : 'sideboard'}`}</h2><form id="dwSearchForm"><label class="dw-field">Nome ou texto da carta<input id="dwCardQuery" data-focus="card-search" type="search" value="${esc(searchQuery)}" placeholder="Busque em português ou inglês" autocomplete="off"></label><button class="dw-button primary" type="submit">Buscar</button></form><label class="dw-field dw-func-field">Função<select id="dwSearchFunc" data-focus="card-func"><option value="">Qualquer função</option>${FUNCTION_TAGS.map(tag => `<option value="${tag}" ${tag === searchFunc ? 'selected' : ''}>${tag}</option>`).join('')}</select></label><p class="dw-tagger">Função e <strong>Parecidas</strong> usam as tags do <a href="https://tagger.scryfall.com/" target="_blank" rel="noopener">Tagger</a>, o projeto de etiquetas da comunidade do Scryfall.</p><details class="dw-filters"><summary>Filtros e busca avançada</summary><div class="dw-colors">${COLORS.map(c => `<button type="button" data-color="${c}" aria-label="Filtrar por ${COLOR_NAME[c].toLowerCase()}" aria-pressed="${searchColors.has(c)}">${pip(c)}</button>`).join('')}</div><label class="dw-field">Tipo<select id="dwSearchType">${TYPE_FILTERS.map(([label, value]) => `<option value="${value}" ${value === searchType ? 'selected' : ''}>${label}</option>`).join('')}</select></label><p>Busca avançada: <code>mv&lt;=2</code> para custo, <code>o:"draw a card"</code> para texto. As cores incluem cartas incolores.</p></details>${isConstructed(deck.format) ? `<p class="dw-note">Cartas legais no ${deck.format === 'sacola50' ? 'Legacy' : FORMAT_LABEL[deck.format]}.</p>` : ''}<div id="dwResults"></div></aside>` : ''}</div></section>`;
     if (searchOpen && !deck.builtin) renderResults();
   }
   function renderResults() {
     const el = root.querySelector('#dwResults'), deck = current(); if (!el || !deck) return;
-    if (searchError) { el.innerHTML = `<p class="dw-error" role="alert">${esc(searchError)}</p><button type="button" class="dw-button" data-b="retry-search">Tentar novamente</button>`; return; }
-    if (searching && !results.length) { el.innerHTML = '<p role="status">Buscando cartas…</p>'; return; }
-    if (!results.length) { el.innerHTML = searchQuery || searchType || searchColors.size ? '<p class="dw-note">Nenhuma carta encontrada. Tente outros termos.</p>' : ''; return; }
-    el.innerHTML = `<p class="dw-note" role="status">${total} ${total === 1 ? 'carta encontrada' : 'cartas encontradas'}</p><div class="dw-results">${results.map(sc => {
+    const back = '<button type="button" class="dw-button" data-b="back-to-text" data-focus="back-to-text">Voltar à busca por texto</button>';
+    const similarHead = similarTo ? `<div class="dw-similar-head"><p>Parecidas com <strong>${esc(cardInfo(similarTo).label)}</strong></p><button type="button" class="dw-button subtle" data-b="back-to-text" data-focus="back-to-text-head">Voltar à busca</button></div>` : '';
+    if (searchError) { el.innerHTML = `${similarHead}<p class="dw-error" role="alert">${esc(searchError)}</p><div class="dw-actions"><button type="button" class="dw-button" data-b="retry-search">Tentar novamente</button>${similarTo ? back : ''}</div>`; return; }
+    if (searching && !results.length) { el.innerHTML = `${similarHead}<p role="status">${similarTo ? 'Procurando cartas parecidas… Na primeira vez do dia pode levar alguns segundos.' : 'Buscando cartas…'}</p>`; return; }
+    if (!results.length) {
+      const filters = searchQuery.trim() || searchType || searchColors.size;
+      el.innerHTML = similarTo
+        ? `${similarHead}<div class="dw-empty compact"><h3>Nenhuma carta parecida encontrada.</h3><p>Comparamos ${esc(cardInfo(similarTo).label)} com as cartas das mesmas cores, do mesmo tipo e de custo próximo${isConstructed(deck.format) ? `, legais no ${deck.format === 'sacola50' ? 'Legacy' : FORMAT_LABEL[deck.format]}` : ''}, e nenhuma tem função em comum no Tagger.</p><div class="dw-actions">${back}</div></div>`
+        : searchFunc
+          ? `<div class="dw-empty compact"><h3>Nenhuma carta com a função <code>${esc(searchFunc)}</code>${filters ? ' e esses filtros' : ''}.</h3><p>Tente outra função${filters ? ', limpe os filtros' : ''} ou procure pelo nome e pelo texto da carta.</p><div class="dw-actions">${back}</div></div>`
+          : filters ? '<p class="dw-note">Nenhuma carta encontrada. Tente outros termos.</p>' : '';
+      return;
+    }
+    const canSimilar = commanderSlot === null && !!opts.similarCards;
+    el.innerHTML = `${similarHead}<p class="dw-note" role="status">${total} ${similarTo ? (total === 1 ? 'carta parecida' : 'cartas parecidas') : total === 1 ? 'carta encontrada' : 'cartas encontradas'}</p><div class="dw-results">${results.map(sc => {
+      const tags = similarTo ? similarTags.get(sc.name) : undefined;
       const info = cardInfo(sc), count = (section === 'main' ? deck.cards : deck.sideboard ?? []).find(e => e.name === sc.name)?.count ?? 0;
       const full = deck.format !== 'free' && copiesInDeck(deck, sc.name) >= cardCopyLimit(sc.name, sc, deck.format);
-      return `<article><button type="button" class="dw-result-art" data-inspect="${esc(sc.name)}" aria-label="Ler ${esc(info.label)}">${info.imageSmall ? `<img src="${esc(info.imageSmall)}" alt="" loading="lazy">` : esc(info.label)}</button><p title="${esc(info.label)}">${esc(info.label)}</p>${commanderSlot !== null ? `<button type="button" class="dw-button primary" data-set-commander="${esc(sc.name)}" data-focus="set-commander:${esc(sc.name)}">Escolher</button>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(sc.name)}" data-focus="result-dec:${esc(sc.name)}" ${!count ? 'disabled' : ''} aria-label="Remover uma cópia de ${esc(info.label)}">−</button><span>${count}</span><button type="button" data-add="${esc(sc.name)}" data-focus="result-add:${esc(sc.name)}" ${full ? 'disabled' : ''} aria-label="Adicionar uma cópia de ${esc(info.label)}">+</button></div>`}</article>`;
+      return `<article><button type="button" class="dw-result-art" data-inspect="${esc(sc.name)}" aria-label="Ler ${esc(info.label)}">${info.imageSmall ? `<img src="${esc(info.imageSmall)}" alt="" loading="lazy">` : esc(info.label)}</button><p title="${esc(info.label)}">${esc(info.label)}</p>${tags?.length ? `<p class="dw-result-tags" title="Tags em comum no Tagger">${tags.map(esc).join(' · ')}</p>` : ''}${canSimilar && sc.oracle_id ? `<button type="button" class="dw-similar" data-similar="${esc(sc.name)}" data-focus="similar:${esc(sc.name)}" aria-label="Cartas parecidas com ${esc(info.label)}">Parecidas</button>` : ''}${commanderSlot !== null ? `<button type="button" class="dw-button primary" data-set-commander="${esc(sc.name)}" data-focus="set-commander:${esc(sc.name)}">Escolher</button>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(sc.name)}" data-focus="result-dec:${esc(sc.name)}" ${!count ? 'disabled' : ''} aria-label="Remover uma cópia de ${esc(info.label)}">−</button><span>${count}</span><button type="button" data-add="${esc(sc.name)}" data-focus="result-add:${esc(sc.name)}" ${full ? 'disabled' : ''} aria-label="Adicionar uma cópia de ${esc(info.label)}">+</button></div>`}</article>`;
     }).join('')}</div>${hasMore ? `<button type="button" class="dw-button dw-more" data-b="more" ${searching ? 'disabled' : ''}>${searching ? 'Carregando…' : 'Mais resultados'}</button>` : ''}`;
   }
   function importCanSave() {
@@ -244,7 +265,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     }
     catch { if (view === 'edit') { notice = 'Alguns dados das cartas não foram carregados. O deck continua disponível.'; renderStatus(); } }
   }
-  function resetSearch() { searchSeq++; results = []; searchQuery = ''; searchType = ''; searchColors.clear(); hasMore = false; searching = false; searchError = ''; }
+  function resetSearch() { searchSeq++; results = []; searchQuery = ''; searchType = ''; searchFunc = ''; similarTo = null; similarTags.clear(); searchColors.clear(); hasMore = false; searching = false; searchError = ''; }
   function edit(deck: DeckData) {
     deckActionsOpen = false;
     importSeq++; importBusy = false; validationSeq++; validating = false;
@@ -277,15 +298,49 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   async function runSearch(more = false) {
     const deck = current(); if (!deck) return;
-    const q = [searchQuery, searchColors.size ? `id<=${COLORS.filter(c => searchColors.has(c)).join('').toLowerCase()}` : '', searchType, commanderSlot !== null ? '(is:commander or t:background)' : ''].filter(Boolean).join(' ');
+    if (!more) { similarTo = null; similarTags.clear(); }
+    const asked = !!searchQuery.trim() || searchColors.size > 0 || !!searchType || !!searchFunc || commanderSlot !== null;
+    const q = buildSearchQuery({ text: searchQuery, colors: searchColors, type: searchType, func: searchFunc, identity: commanderSlot === null ? deckIdentity(deck) : null, commanderSlot: commanderSlot !== null });
     const seq = ++searchSeq;
-    if (!q) { results = []; searching = false; renderResults(); return; }
+    if (!asked) { results = []; searching = false; renderResults(); return; }
     searching = true; searchError = ''; if (!more) { results = []; nextPage = 1; } renderResults();
     try {
       const result = await searchCards(q, nextPage, deck.format);
       if (seq !== searchSeq) return;
       results = more ? [...results, ...result.cards] : result.cards; hasMore = result.hasMore; total = result.total; nextPage++;
     } catch (error) { if (seq !== searchSeq) return; searchError = `Não foi possível buscar as cartas: ${(error as Error).message}`; }
+    searching = false; renderResults();
+  }
+  /** Identidade de cor do comandante, para a busca não trazer cartas fora dela (null fora do Commander ou sem comandante). */
+  function deckIdentity(deck: DeckData): string[] | null {
+    const commanders = deck.format === 'commander' ? deck.commanders ?? [] : [];
+    if (!commanders.length || !commanders.every(e => cacheGet(e.name))) return null;
+    return commanders.flatMap(e => cacheGet(e.name)?.color_identity ?? []);
+  }
+  /** "Parecidas": busca no Scryfall as cartas das mesmas cores, tipo e custo próximo, e a ponte ordena pelas tags do Tagger. */
+  async function runSimilar(card: ScryCard) {
+    const deck = current(); if (!deck || !card.oracle_id) return;
+    similarTo = card; similarTags.clear();
+    const seq = ++searchSeq;
+    results = []; hasMore = false; total = 0; searchError = ''; searching = true; renderResults();
+    root.querySelector<HTMLElement>('[data-focus="back-to-text-head"]')?.focus();
+    try {
+      if (!opts.similarCards) throw new Error('Cartas parecidas precisam do servidor de jogo.');
+      const q = similarQuery(card, deckIdentity(deck)), byId = new Map<string, ScryCard>();
+      for (let page = 1; page <= SIMILAR_PAGES; page++) {
+        const result = await searchCards(q, page, deck.format, { translate: false });
+        if (seq !== searchSeq) return;
+        for (const c of result.cards) if (c.oracle_id && !byId.has(c.oracle_id)) byId.set(c.oracle_id, c);
+        if (!result.hasMore) break;
+      }
+      const ranked = byId.size ? await opts.similarCards(card.oracle_id, [...byId.keys()]) : [];
+      if (seq !== searchSeq) return;
+      const found = ranked.flatMap(m => { const c = byId.get(m.oracleId); if (c) similarTags.set(c.name, m.tags); return c ? [c] : []; });
+      // Só as que vão aparecer ganham a tradução (as candidatas podem ser centenas).
+      await translateCards(found);
+      if (seq !== searchSeq) return;
+      results = found.map(c => cacheGet(c.name) ?? c); total = results.length;
+    } catch (error) { if (seq !== searchSeq) return; searchError = `Não foi possível buscar as cartas parecidas: ${(error as Error).message}`; }
     searching = false; renderResults();
   }
   /** Link do Moxfield ou do Archidekt no lugar da lista: busca o deck e troca o link pela lista, que segue para a revisão. */
@@ -403,6 +458,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       if (deck.cover === ds.cover) delete deck.cover; else deck.cover = ds.cover;
       changed(deck); preserveRender(renderEdit); return;
     }
+    if (ds.similar) { const card = results.find(c => c.name === ds.similar); if (card) { hideCardPreview(); void runSimilar(card); } return; }
     if (ds.color) { const color = ds.color as Color; searchColors.has(color) ? searchColors.delete(color) : searchColors.add(color); target.setAttribute('aria-pressed', String(searchColors.has(color))); void runSearch(); return; }
     switch (ds.b) {
       case 'home': goHome(); break;
@@ -423,7 +479,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'search': commanderSlot = null; searchOpen = !searchOpen; hideCardPreview(); renderEdit(); if (searchOpen) $('#dwCardQuery')?.focus(); break;
       case 'open-search': commanderSlot = null; searchOpen = true; renderEdit(); $('#dwCardQuery')?.focus(); break;
       case 'more': void runSearch(true); break;
-      case 'retry-search': void runSearch(); break;
+      case 'retry-search': if (similarTo) void runSimilar(similarTo); else void runSearch(); break;
+      case 'back-to-text': similarTo = null; similarTags.clear(); searchFunc = ''; results = []; renderEdit(); $('#dwCardQuery')?.focus(); void runSearch(); break;
       case 'validate': void validate(); break;
       case 'import-edit': validationSeq++; validating = false; importReview = null; validation = null; importError = ''; renderImport(); $('#dwImportText')?.focus(); break;
       case 'import-save': saveImport(); break;
@@ -461,6 +518,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
     if (input.id === 'dwBracket') { const deck = current(), value = Number(input.value); if (deck && !deck.builtin && isBracket(value)) { deck.bracket = value; changed(deck); preserveRender(renderEdit); } }
     if (input.id === 'dwSearchType') { searchType = input.value; void runSearch(); }
+    if (input.id === 'dwSearchFunc') { searchFunc = input.value; void runSearch(); }
     if (input.name === 'importMode' && importTarget && importReview && (input.value === 'merge' || input.value === 'replace')) {
       importMode = input.value; validationSeq++; validating = false; validation = null; validationError = ''; importError = '';
       try { importReview.deck = applyDeckImport(importTarget, importReview.incoming, importMode); }

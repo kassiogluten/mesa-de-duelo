@@ -1,4 +1,16 @@
 {
+  "0.76.0": {
+    "Buscar cartas por função": [
+      { "img": "0.76.0/funcao-cantrip.webp", "legenda": "Na busca de cartas, a escolha **Função** com `cantrip` marcada traz as 659 cartas que compram uma carta além do que fazem, sem digitar nada. Embaixo, o crédito ao Tagger do Scryfall." },
+      { "img": "0.76.0/funcao-sem-resultado.webp", "legenda": "Quando nenhuma carta tem a função com o que foi digitado, a mesa avisa e oferece **Voltar à busca por texto**." }
+    ],
+    "Cartas parecidas": [
+      { "img": "0.76.0/parecidas-opt.webp", "legenda": "**Parecidas** em Optar: Deliberar, Preordenar e Visões do Soro no topo, cada uma com as funções em comum embaixo (`scry`, `cantrip`)." }
+    ],
+    "Busca do Commander na identidade do comandante": [
+      { "img": "0.76.0/commander-identidade.webp", "legenda": "Com Krenko, Chefe da Turba (vermelho) como comandante, a função `counterspell` traz só as 25 cartas vermelhas ou incolores, como Artifact Blast e Incendiar." }
+    ]
+  },
   "0.75.0": {
     "Arrume a sua mão arrastando as cartas": [
       { "img": "0.75.0/mao-arrastando.webp", "legenda": "Arrastando a Forest para o começo da mão: as outras cartas andam para a direita e abrem o espaço onde ela vai entrar." },

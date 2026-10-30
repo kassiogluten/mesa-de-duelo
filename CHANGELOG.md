@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.76.0] - 2026-10-29
+
+### Novo
+
+- **Buscar cartas por função.** Na busca de cartas do editor de decks, a nova escolha **Função** acha cartas pelo que elas fazem, sem precisar adivinhar as palavras do texto: `draw` (comprar cartas), `removal` (remoção), `counterspell` (anular mágicas), `ramp` (acelerar a mana), `cantrip`, `tutor`, `sweeper` e outras, com os nomes que o Scryfall usa. Ela se soma ao nome, às cores e ao tipo, e segue o formato do deck. Se nenhuma carta tiver a função escolhida, a mesa avisa e oferece **Voltar à busca por texto**.
+- **Cartas parecidas.** Cada carta do resultado da busca ganha o botão **Parecidas**, que mostra as cartas que fazem o mesmo, das mesmas cores, do mesmo tipo e de custo parecido, das mais para as menos parecidas, com as funções em comum embaixo de cada uma. Exemplo: as parecidas com Opt (Optar) começam por Serum Visions, Preordain e Deliberate, e trazem Ponder e Consider logo depois. As funções e as parecidas vêm das tags do Tagger, o projeto de etiquetas da comunidade do Scryfall, com o crédito na própria busca.
+
+### Mudou
+
+- **Busca do Commander na identidade do comandante.** Num deck de Commander com comandante escolhido, a busca de cartas só traz cartas que cabem na identidade de cor dele.
+
 ## [0.75.0] - 2026-10-29
 
 ### Novo
