@@ -178,14 +178,23 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="overlay game-options-overlay" id="fSettings" hidden>
       <section class="game-options" role="dialog" aria-modal="true" aria-labelledby="fSettingsTitle">
         <header class="game-options-heading"><h2 id="fSettingsTitle">Opções</h2><button class="icon-btn game-options-close" data-ui="settings-close" aria-label="Fechar opções"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header>
-        <div class="game-option-row"><span id="fSoundLabel">Efeitos sonoros</span><button class="sound-switch" id="fMute" data-ui="mute" role="switch" aria-checked="false" aria-labelledby="fSoundLabel"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fSoundState" aria-hidden="true">Desligados</span></button></div>
-        <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%">
+        <details class="game-option-group" data-options-group="sound">
+          <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Som</span><span class="game-option-group-value" id="fSoundSummary"></span></summary>
+          <div class="game-option-row"><span id="fSoundLabel">Efeitos sonoros</span><button class="sound-switch" id="fMute" data-ui="mute" role="switch" aria-checked="false" aria-labelledby="fSoundLabel"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fSoundState" aria-hidden="true">Desligados</span></button></div>
+          <div class="game-option-volume"><div class="game-option-row"><label for="fVolume">Volume</label><output id="fVolumeValue" for="fVolume">35%</output></div><input id="fVolume" type="range" min="0" max="100" step="5" value="35" aria-valuetext="35%">
           <div class="game-option-pace"><label for="fSoundPack">Pacote de sons</label><select id="fSoundPack" aria-describedby="fSoundPackHint">${SOUND_PACKS.map(pack => `<option value="${pack.id}">${pack.name}</option>`).join('')}</select><p id="fSoundPackHint">Ao trocar, toca uma amostra do pacote escolhido.</p></div></div>
-        <div class="game-option-pace game-option-auto-pass"><label for="fPassLevel">Passar automaticamente</label><select id="fPassLevel" aria-describedby="fPassLevelHint fPassLevelAlways fPassLevelStatus" disabled>${PASS_LEVELS.map(level => `<option value="${level.id}">${level.name}</option>`).join('')}</select><p id="fPassLevelHint">${passLevelInfo('acoes').hint}</p><p id="fPassLevelAlways">${PASS_LEVEL_ALWAYS} Para trocar durante a partida, toque no selo junto dos botões.</p><p id="fPassLevelStatus" role="status">Aguardando conexão com o servidor.</p></div>
-        <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
-        <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
-        <div class="game-option-pace"><label for="fCardStyle">Aparência das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
-        <div class="game-option-pace"${temasDisponiveis() ? '' : ' hidden'}><label for="fTema">Tema da mesa</label><select id="fTema" aria-describedby="fTemaHint">${temaOptionsHTML()}</select><p id="fTemaHint">Muda a cor do fundo da mesa. Vale também na tela inicial e acompanha a sua conta.</p></div>
+        </details>
+        <details class="game-option-group" data-options-group="play">
+          <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Jogo</span><span class="game-option-group-value" id="fPlaySummary"></span></summary>
+          <div class="game-option-pace game-option-auto-pass"><label for="fPassLevel">Passar automaticamente</label><select id="fPassLevel" aria-describedby="fPassLevelHint fPassLevelAlways fPassLevelStatus" disabled>${PASS_LEVELS.map(level => `<option value="${level.id}">${level.name}</option>`).join('')}</select><p id="fPassLevelHint">${passLevelInfo('acoes').hint}</p><p id="fPassLevelAlways">${PASS_LEVEL_ALWAYS} Para trocar durante a partida, toque no selo junto dos botões.</p><p id="fPassLevelStatus" role="status">Aguardando conexão com o servidor.</p></div>
+          <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
+          <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
+        </details>
+        <details class="game-option-group" data-options-group="look">
+          <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Aparência</span><span class="game-option-group-value" id="fLookSummary"></span></summary>
+          <div class="game-option-pace"><label for="fCardStyle">Estilo das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
+          <div class="game-option-pace"${temasDisponiveis() ? '' : ' hidden'}><label for="fTema">Tema da mesa</label><select id="fTema" aria-describedby="fTemaHint">${temaOptionsHTML()}</select><p id="fTemaHint">Muda a cor do fundo da mesa. Vale também na tela inicial e acompanha a sua conta.</p></div>
+        </details>
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
       </section>
     </div>
@@ -454,7 +463,26 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     status.textContent = !connected ? 'Aguardando conexão com o servidor.' : !passLevel.supported ? 'Este servidor não oferece esta opção.' : passLevel.pending !== null ? 'Aplicando…' : '';
     status.hidden = !status.textContent;
     if (passMenuOpen) syncPassMenu();
+    syncOptionSummaries();
   }
+  /** Cada seção recolhida das Opções mostra, ao lado do título, como ela está agora. */
+  function syncOptionSummaries() {
+    const chosen = (id: string) => ($(id) as HTMLSelectElement).selectedOptions[0]?.textContent ?? '';
+    const settings = audio.settings;
+    $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
+    $('#fPlaySummary').textContent = [chosen('#fPassLevel'), turnNotice.enabled && 'Aviso de turno', fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
+    $('#fLookSummary').textContent = [chosen('#fCardStyle'), temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
+  }
+  /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
+  let openOptionGroups = ['sound'];
+  try { const saved = JSON.parse(localStorage.getItem('mesa:options-open') ?? 'null'); if (Array.isArray(saved)) openOptionGroups = saved; } catch { /* Storage is optional. */ }
+  root.querySelectorAll<HTMLDetailsElement>('[data-options-group]').forEach(group => { group.open = openOptionGroups.includes(group.dataset.optionsGroup!); });
+  // "toggle" não sobe pela árvore: a escuta é na captura.
+  root.addEventListener('toggle', e => {
+    if (!(e.target as HTMLElement).matches?.('[data-options-group]')) return;
+    const open = [...root.querySelectorAll<HTMLDetailsElement>('[data-options-group]')].filter(group => group.open).map(group => group.dataset.optionsGroup!);
+    try { localStorage.setItem('mesa:options-open', JSON.stringify(open)); } catch { /* Storage is optional. */ }
+  }, true);
   /** O atalho "Passar até o fim do turno" agora: ligado, disponível (prioridade no turno de outro jogador), no seu turno ou fora da prioridade. */
   function passTurnShortcut(s: FState): 'on' | 'available' | 'mine' | 'off' {
     if (passLevel.passingTurn) return 'on';
@@ -537,6 +565,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     status.textContent = permission === 'unsupported' ? 'Este navegador não mostra avisos do sistema. A aba continua piscando.'
       : permission === 'denied' ? 'O navegador bloqueou os avisos desta página. Libere nas permissões do site para ligar. A aba continua piscando.' : '';
     status.hidden = !status.textContent;
+    syncOptionSummaries();
   }
   function syncSettings() {
     const settings = audio.settings;
@@ -3083,6 +3112,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (t.id === 'fTema') escolherTema(parseTema(t.value));
     if (t.id === 'fPassLevel') { if (client?.connected && !disconnected && isPassLevel(t.value)) passLevel.change(t.value); syncPassLevel(); if (client?.state) render(); }
     if (t.id === 'fPace') { fast = t.value === 'fast'; try { localStorage.setItem('mesa:pace', fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
+    if (t.closest('[data-options-group]')) syncOptionSummaries();
   });
   const inspectable = '[data-fid],[data-peek],[data-event],[data-stack],[data-stack-inspect],[data-inspect],[data-q-card]';
   root.addEventListener('pointerover', e => {

@@ -1,4 +1,10 @@
 {
+  "0.92.0": {
+    "Opções em seções": [
+      { "img": "0.92.0/opcoes-secoes.webp", "legenda": "O painel Opções com as seções **Som**, **Jogo** e **Aparência** fechadas, cada uma mostrando ao lado como está." },
+      { "img": "0.92.0/opcoes-jogo.webp", "legenda": "A seção **Jogo** aberta, com o nível de passar automaticamente, o aviso de turno e o ritmo das jogadas; as outras seguem fechadas." }
+    ]
+  },
   "0.90.1": {
     "Importar cartas com o mesmo nome de uma magia preparada": [
       { "img": "0.90.1/importar-magia-preparada.webp", "legenda": "Um deck importado com Stensian Sanguinist e Exsanguinate: a criatura fica em Criaturas e Dessangrar em Feitiços, cada uma com uma cópia." }

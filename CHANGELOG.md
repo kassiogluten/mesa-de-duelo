@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.92.0] - 2026-10-31
+
+### Mudou
+
+- **Opções em seções.** O painel Opções da partida agora se divide em **Som**, **Jogo** e **Aparência**, que abrem e fecham com um toque. Fechada, cada seção mostra ao lado do título como está (por exemplo **Clássico · 35%** ou **Só com ações · Ritmo normal**), sem precisar abrir. A mesa lembra quais seções você deixou abertas, e o painel fica preso no alto da tela, sem pular quando uma seção abre ou fecha. A escolha do visual das cartas passou a se chamar **Estilo das cartas**.
+
 ## [0.91.0] - 2026-10-31
 
 ### Novo

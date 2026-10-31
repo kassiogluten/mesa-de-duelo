@@ -12,7 +12,9 @@
 .forge .game-menu .game-menu-version:hover { color: var(--ink); }
 .game-menu-meta .room-tag, .game-menu-meta .series-score { padding: 0; background: none; border: 0; }
 
-.forge .game-options-overlay { z-index: 45; padding: 20px; background: color-mix(in srgb, var(--azul-060b12, #060b12) 72.2%, transparent); animation: none; }
+.forge .game-options-overlay { z-index: 45; padding: 20px; background: color-mix(in srgb, var(--azul-060b12, #060b12) 72.2%, transparent); animation: none; place-items: start center; }
+/* Preso no alto: abrir ou recolher uma seção não faz o painel pular sob o dedo. */
+.forge .game-options-overlay > .game-options { margin-top: min(8vh, 64px); max-height: calc(100dvh - 40px - min(8vh, 64px)); }
 .game-options { width: min(440px, 100%); max-height: calc(100dvh - 40px); overflow-y: auto; box-sizing: border-box; padding: 24px; border-radius: 22px; background: color-mix(in srgb, var(--surface) 50%, var(--bg-deep)); color: var(--ink); box-shadow: 0 0 0 1px #ffffff14, 0 8px 20px #0004, 0 32px 80px #0007; font: 500 15px/1.5 var(--body); }
 .game-options-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
 .game-options h2 { margin: 0; font: 600 24px/1.2 var(--body); letter-spacing: -.025em; }
@@ -37,6 +39,23 @@
 .game-option-pace { display: grid; gap: 10px; margin-top: 24px; }
 .game-option-pace select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-deep); color: var(--ink); font: inherit; }
 .game-option-pace p { margin: 0; color: var(--muted); font: 400 13px/1.55 var(--body); }
+/* Seções recolhíveis: título, como a seção está agora e a seta que gira ao abrir. */
+.game-options .game-options-heading { margin-bottom: 12px; }
+.game-option-group { border-top: 1px solid var(--line); }
+.game-option-group:last-of-type { border-bottom: 1px solid var(--line); }
+.game-option-group > summary { display: flex; align-items: center; gap: 10px; min-height: 56px; margin: 0 -8px; padding: 0 8px; border-radius: 10px; list-style: none; cursor: pointer; transition: background-color 120ms ease; }
+.game-option-group > summary::-webkit-details-marker { display: none; }
+.game-option-group > summary:hover { background: #ffffff08; }
+.game-option-group-chevron { flex-shrink: 0; width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 160ms cubic-bezier(.2, 0, 0, 1); }
+.game-option-group[open] .game-option-group-chevron { transform: rotate(90deg); }
+.game-option-group-title { font: 600 16px var(--body); }
+.game-option-group-value { min-width: 0; margin-left: auto; overflow: hidden; color: var(--muted); font: 500 13px var(--body); text-overflow: ellipsis; white-space: nowrap; }
+.game-option-group[open] .game-option-group-value { visibility: hidden; }
+.game-option-group[open] { padding-bottom: 22px; }
+.game-option-group > :nth-child(2) { margin-top: 4px; }
+.game-option-group .game-option-volume, .game-option-group .game-option-auto-pass { margin-top: 18px; padding-bottom: 0; border-bottom: 0; }
+.game-option-group .game-option-pace { margin-top: 18px; }
+.game-option-group > :nth-child(2).game-option-auto-pass, .game-option-group > :nth-child(2).game-option-pace { margin-top: 4px; }
 .game-options footer { display: flex; justify-content: flex-end; margin-top: 28px; }
 .game-options footer .arena-btn { min-height: 44px; padding: 10px 18px; border-radius: 10px; font: 500 14px var(--body); }
 .game-options :focus-visible, .forge .game-menu :focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
