@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.91.0] - 2026-10-31
+
+### Novo
+
+- **Mais momentos com som.** Com o som da mesa ligado, vários momentos que eram silenciosos agora têm o próprio som, no estilo do tema de sons escolhido: as permanentes desvirando no começo do turno, a criatura que entra no ataque direto da mão (ninjutsu, sneak, Sneak Attack), a permanente que some e volta num blink, a que volta para a mão ou para o grimório, a exilada, a sacrificada, a perda de vida sem dano (pagar vida, drenar), o embaralhar da mão inicial a cada mulligan, e uma fanfarra de vitória ou um som de derrota quando a partida acaba (ou quando você é eliminado no Commander). A perda de vida que vem de um golpe não repete o som: o do dano já basta.
+
 ## [0.90.1] - 2026-10-30
 
 ### Corrigido

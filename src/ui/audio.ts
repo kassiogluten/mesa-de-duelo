@@ -19,6 +19,9 @@ export const SOUND_FILES = {
   'turn-opponent': '09-opponent-turn.wav', ability: '10-ability.wav', resolved: '11-resolved.wav',
   countered: '12-countered.wav', attack: '13-attack.wav', block: '14-block.wav',
   heal: '15-heal.wav', poison: '16-poison.wav', shield: '17-shield.wav', shatter: '18-shatter.wav',
+  untap: '19-untap.wav', sneak: '20-sneak.wav', blink: '21-blink.wav', bounce: '22-bounce.wav', exile: '23-exile.wav',
+  sacrifice: '24-sacrifice.wav', 'life-loss': '25-life-loss.wav', shuffle: '26-shuffle.wav',
+  victory: '27-victory.wav', defeat: '28-defeat.wav',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = 'mesa:audio:v1';
@@ -35,21 +38,64 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     case 'ability-activated': return 'ability';
     case 'resolved': return 'resolved';
     case 'countered': return 'countered';
-    case 'entered': return event.card?.land ? 'land' : event.card?.keywords?.includes('FLYING') ? 'wing' : 'play';
+    case 'entered':
+      // Blink volta do exílio; da mão sem conjurar (ninjutsu, sneak, Sneak Attack) a criatura entra de fininho.
+      if (event.from === 'Exile') return 'blink';
+      if (event.card?.land) return 'land';
+      if (event.from === 'Hand') return 'sneak';
+      return event.card?.keywords?.includes('FLYING') ? 'wing' : 'play';
     case 'attackers': return 'attack';
     case 'blockers': return 'block';
     case 'damage':
       if (event.prevented) return 'shield';
       if (event.wither || (event.infect && event.targets?.players?.length)) return 'poison';
       return event.targets?.players?.length ? 'player-hit' : 'impact';
-    case 'life-changed': return (event.delta ?? 0) > 0 ? 'heal' : null;
-    case 'left': return event.reason === 'destroyed' ? 'shatter' : null;
+    case 'life-changed': return (event.delta ?? 0) > 0 ? 'heal' : (event.delta ?? 0) < 0 ? 'life-loss' : null;
+    case 'left':
+      if (event.reason === 'destroyed') return 'shatter';
+      if (event.reason === 'sacrificed') return 'sacrifice';
+      if (event.to === 'Exile') return 'exile';
+      return event.to === 'Hand' || event.to === 'Library' ? 'bounce' : null;
     case 'turn': {
       const actor = event.actor ?? event.frame?.activePlayer;
       return you === undefined || actor == null ? null : actor === you ? 'turn-self' : 'turn-opponent';
     }
     default: return null;
   }
+}
+
+/** Desvirar no começo do turno: quem começa o turno tinha permanentes viradas na última mesa vista. */
+export class UntapWatch {
+  private matchId = '';
+  private tapped = new Map<number, boolean>();
+  observe(event: PresentationEvent, matchId: string) {
+    if (matchId !== this.matchId) { this.matchId = matchId; this.tapped.clear(); }
+    const players = event.frame?.players;
+    const actor = event.actor ?? event.frame?.activePlayer ?? undefined;
+    const untaps = event.type === 'turn' && actor != null &&
+      (!!this.tapped.get(actor) || !!players?.find(p => p.id === actor)?.battlefield.some(card => card.tapped));
+    for (const player of players ?? []) this.tapped.set(player.id, player.battlefield.some(card => card.tapped));
+    if (untaps) this.tapped.set(actor!, false);
+    return untaps;
+  }
+}
+
+/** Momentos da mesa fora da fila de eventos: embaralhar a mão inicial, vencer, perder ou ser eliminado. */
+export function tableMoment(s: {
+  matchId?: string; gameOver: boolean; watching?: boolean; winner?: string; you: number;
+  match?: { gameNumber: number; abandoned?: boolean }; players: { id: number; name: string; eliminated?: boolean }[];
+  input: { gen: number; opening?: string };
+}): { key: string; cue: SoundCue } | null {
+  const game = `${s.matchId ?? ''}:${s.match?.gameNumber ?? 0}`;
+  const me = s.players.find(p => p.id === s.you);
+  if (s.watching || !me) return null;
+  if (s.gameOver) {
+    if (s.match?.abandoned || !s.winner) return null;
+    return { key: `${game}:result`, cue: s.winner === me.name ? 'victory' : 'defeat' };
+  }
+  if (me.eliminated) return { key: `${game}:result`, cue: 'defeat' };
+  if (s.input.opening === 'mulligan') return { key: `${game}:hand:${s.input.gen}`, cue: 'shuffle' };
+  return null;
 }
 
 /** Small, repeatable variations keep a cue recognizable without sounding like a loop. */
@@ -94,8 +140,15 @@ export class AudioEventMix {
   private matchId = '';
   private outcomes = new Map<number, number>();
   private draw: { seq: number; actor?: number } | null = null;
+  private hits = new Map<number, number>();
   level(event: PresentationEvent, matchId: string) {
-    if (matchId !== this.matchId) { this.matchId = matchId; this.outcomes.clear(); this.draw = null; }
+    if (matchId !== this.matchId) { this.matchId = matchId; this.outcomes.clear(); this.draw = null; this.hits.clear(); }
+    // Perder vida logo depois de levar dano é o próprio dano: o golpe já soou.
+    if (event.type === 'damage' && !event.prevented) for (const player of event.targets?.players ?? []) this.hits.set(player, event.seq);
+    if (event.type === 'life-changed' && (event.delta ?? 0) < 0 && event.actor !== undefined) {
+      const hit = this.hits.get(event.actor);
+      if (hit !== undefined && event.seq > hit && event.seq - hit <= 12) return 0;
+    }
     const source = event.sourceId ?? event.card?.id;
     if (event.type === 'spell-cast' || event.type === 'ability-activated') this.draw = null;
     if (source !== undefined) {
@@ -129,6 +182,8 @@ export function createGameAudio() {
   const voices = new Set<AudioBufferSourceNode>();
   const gate = new AudioEventGate();
   const mix = new AudioEventMix();
+  const untap = new UntapWatch();
+  let untapTimer: ReturnType<typeof setTimeout> | undefined;
 
   function save() {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* Storage is optional. */ }
@@ -198,7 +253,7 @@ export function createGameAudio() {
       await preload();
       this.cue('turn-self', .8);
     },
-    silence,
+    silence() { clearTimeout(untapTimer); silence(); },
     /** Som avulso, fora da fila de eventos (lembrete de decisão parada); respeita o mudo e o volume. */
     cue(cue: SoundCue, level = 1) {
       if (settings.muted || !unlocked || document.hidden || !context || !master) return;
@@ -216,6 +271,8 @@ export function createGameAudio() {
     },
     play(event: PresentationEvent, matchId: string, audible: boolean, you?: number) {
       const allowed = gate.allow(`${matchId}:${event.seq}`, { ...settings, unlocked, visible: !document.hidden, audible });
+      // As permanentes desviram logo depois do aviso do turno, sem cobrir o começo dele.
+      if (untap.observe(event, matchId) && allowed) { clearTimeout(untapTimer); untapTimer = setTimeout(() => this.cue('untap', .7), 420); }
       const cue = soundForEvent(event, you);
       if (!allowed || !cue || !context || !master) return;
       const sample = buffer(cue);

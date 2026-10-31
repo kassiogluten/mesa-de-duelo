@@ -14,7 +14,7 @@ const sourceModule = async (path, imports) => import(await sourceUri(path, impor
 const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
 const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts' });
-const { AudioEventGate, AudioEventMix, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
+const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
   return { type: 'state', you: 1, turn: 3, phase: 'MAIN1', activePlayer: 2, gameOver: false,
@@ -255,7 +255,8 @@ test('trigger callouts outlast the playback step, even when a decision is waitin
 test('damage to player gets its own sound, while life payment and creature damage stay distinct', () => {
   assert.equal(soundForEvent(event(1, 'damage', { delta: -3, targets: { players: [1] } })), 'player-hit');
   assert.equal(soundForEvent(event(2, 'damage', { delta: -3, targets: { cards: [10] } })), 'impact');
-  assert.equal(soundForEvent(event(3, 'life-changed', { actor: 1, delta: -3 })), null);
+  assert.equal(soundForEvent(event(3, 'life-changed', { actor: 1, delta: -3 })), 'life-loss');
+  assert.notEqual(SOUND_FILES['life-loss'], SOUND_FILES['player-hit']);
   assert.equal(soundForEvent(event(4, 'entered', { card: { keywords: ['FLYING'] } })), 'wing');
 });
 
@@ -400,7 +401,8 @@ test('all shipped sound assets are short stereo PCM without clipping', async () 
     const wav = await readFile(new URL(`../public/${soundUrl(pack.id, cue)}`, import.meta.url));
     assert.equal(wav.toString('ascii', 0, 4), 'RIFF'); assert.equal(wav.toString('ascii', 8, 12), 'WAVE');
     assert.equal(wav.readUInt16LE(22), 2); assert.equal(wav.readUInt32LE(24), 44100); assert.equal(wav.readUInt16LE(34), 16);
-    assert.ok((wav.length - 44) / (44100 * 4) <= 1.1);
+    // Só a vitória e a derrota, que tocam uma vez por jogo, podem durar mais.
+    assert.ok((wav.length - 44) / (44100 * 4) <= (['victory', 'defeat'].includes(cue) ? 1.7 : 1.1));
     let maximum = 0;
     for (let i = 44; i < wav.length; i += 2) maximum = Math.max(maximum, Math.abs(wav.readInt16LE(i)));
     const stereoCrossfeed = 1 + Math.sin(.12 * Math.PI / 2);
@@ -558,8 +560,54 @@ test('heal, poison, shield and shatter have their own cues', () => {
   assert.equal(soundForEvent(event(3, 'damage', { wither: true, targets: { cards: [4] } })), 'poison');
   assert.equal(soundForEvent(event(4, 'damage', { prevented: true, targets: { cards: [4] } })), 'shield');
   assert.equal(soundForEvent(event(5, 'left', { reason: 'destroyed' })), 'shatter');
-  assert.equal(soundForEvent(event(6, 'left', { to: 'Exile' })), null);
+  assert.equal(soundForEvent(event(6, 'left', { to: 'Exile' })), 'exile');
   assert.equal(new Set(['heal', 'poison', 'shield', 'shatter'].map(cue => SOUND_FILES[cue])).size, 4);
+});
+
+test('leaving and entering the battlefield sound like how the card moved', () => {
+  assert.equal(soundForEvent(event(1, 'left', { reason: 'sacrificed', to: 'Graveyard' })), 'sacrifice');
+  assert.equal(soundForEvent(event(2, 'left', { to: 'Hand' })), 'bounce');
+  assert.equal(soundForEvent(event(3, 'left', { to: 'Library' })), 'bounce');
+  assert.equal(soundForEvent(event(4, 'left', { to: 'Graveyard' })), null);
+  assert.equal(soundForEvent(event(5, 'entered', { from: 'Exile', card: { creature: true } })), 'blink');
+  assert.equal(soundForEvent(event(6, 'entered', { from: 'Hand', card: { creature: true } })), 'sneak', 'ninjutsu and sneak');
+  assert.equal(soundForEvent(event(7, 'entered', { from: 'Hand', card: { land: true } })), 'land');
+  assert.equal(soundForEvent(event(8, 'entered', { from: 'Stack', card: { creature: true } })), 'play');
+  const cues = ['sacrifice', 'bounce', 'blink', 'sneak', 'exile', 'shatter'];
+  assert.equal(new Set(cues.map(cue => SOUND_FILES[cue])).size, cues.length);
+});
+
+test('life loss after damage to the same player stays silent; paying life sounds', () => {
+  const mix = new AudioEventMix();
+  mix.level(event(1, 'damage', { targets: { players: [1] }, delta: -3 }), 'a');
+  assert.equal(mix.level(event(2, 'life-changed', { actor: 1, delta: -3 }), 'a'), 0);
+  assert.equal(mix.level(event(3, 'life-changed', { actor: 2, delta: -2 }), 'a'), 1, 'another player paying life');
+  assert.equal(mix.level(event(30, 'life-changed', { actor: 1, delta: -2 }), 'a'), 1, 'a later payment is its own action');
+  mix.level(event(31, 'damage', { prevented: true, targets: { players: [2] } }), 'a');
+  assert.equal(mix.level(event(32, 'life-changed', { actor: 2, delta: -1 }), 'a'), 1);
+});
+
+test('permanents untap with a cue when their controller starts a turn', () => {
+  const watch = new UntapWatch();
+  const framed = (seq, type, tapped, extra = {}) => event(seq, type, { ...extra, frame: { activePlayer: 1, players: [{ id: 1, battlefield: [{ id: 5, tapped }] }, { id: 2, battlefield: [{ id: 6, tapped: true }] }] } });
+  assert.equal(watch.observe(framed(1, 'spell-cast', true), 'a'), false);
+  assert.equal(watch.observe(framed(2, 'turn', false, { actor: 1 }), 'a'), true, 'tapped in the last table seen');
+  assert.equal(watch.observe(framed(3, 'turn', false, { actor: 1 }), 'a'), false, 'nothing left to untap');
+  assert.equal(watch.observe(framed(4, 'turn', false, { actor: 2 }), 'a'), true);
+  assert.equal(watch.observe(framed(1, 'turn', false, { actor: 1 }), 'b'), false, 'another match starts clean');
+});
+
+test('table moments: the opening hand shuffles; the result plays victory or defeat once per game', () => {
+  const base = { matchId: 'm', gameOver: false, you: 1, match: { gameNumber: 1 }, players: [{ id: 1, name: 'Ana' }, { id: 2, name: 'Bia' }], input: { gen: 4 } };
+  assert.equal(tableMoment(base), null);
+  assert.deepEqual(tableMoment({ ...base, input: { gen: 4, opening: 'mulligan' } }), { key: 'm:1:hand:4', cue: 'shuffle' });
+  assert.notEqual(tableMoment({ ...base, input: { gen: 6, opening: 'mulligan' } }).key, 'm:1:hand:4', 'each mulligan shuffles again');
+  assert.deepEqual(tableMoment({ ...base, gameOver: true, winner: 'Ana' }), { key: 'm:1:result', cue: 'victory' });
+  assert.deepEqual(tableMoment({ ...base, gameOver: true, winner: 'Bia' }), { key: 'm:1:result', cue: 'defeat' });
+  assert.equal(tableMoment({ ...base, gameOver: true }), null, 'a draw');
+  assert.equal(tableMoment({ ...base, gameOver: true, winner: 'Bia', match: { gameNumber: 1, abandoned: true } }), null);
+  assert.equal(tableMoment({ ...base, gameOver: true, winner: 'Bia', watching: true }), null);
+  assert.deepEqual(tableMoment({ ...base, players: [{ id: 1, name: 'Ana', eliminated: true }, { id: 2, name: 'Bia' }] }), { key: 'm:1:result', cue: 'defeat' });
 });
 
 test('destroyed permanents shatter where they were; exiled ones vanish in place', () => {

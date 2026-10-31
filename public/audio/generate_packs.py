@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Themed sound packs. Standard library only, deterministic, original synthesis.
 
-Each pack renders the same eighteen cues as the classic set (generate.py), with the same
+Each pack renders the same twenty-eight cues as the classic set (generate.py), with the same
 file names, into public/audio/<pack>/, so the game swaps packs by folder. The styles are
 evocations written from scratch: no sound comes from another game (Arena reuses only
 the CC0 damage takes in sources/, as the classic set does).
@@ -926,6 +926,456 @@ def scifi_shatter(buf):
                  lowpass=5000, decay=.02)
 
 
+# Moments added later (untap, sneak, blink, bounce, exile, sacrifice, life loss, shuffle, victory, defeat), pack by pack.
+def bits_untap(buf):
+    add_notes(buf, 0, [76, 79, 84], .05, length=.04, shape='square', duty=.25, amp=.35, release=.006)
+
+
+def bits_sneak(buf):
+    add_noise8(buf, 0, .16, 1500, 4000, amp=.35, seed=8013, attack=.05)
+    add_tone(buf, .15, .1, hz(60), hz(48), shape='tri', amp=.7, decay=.05, frame=FRAME)
+
+
+def bits_blink(buf):
+    add_tone(buf, 0, .16, hz(84), hz(96), shape='square', duty=.125, amp=.3, frame=FRAME / 2)
+    add_tone(buf, .18, .2, hz(96), hz(84), shape='square', duty=.125, amp=.3, frame=FRAME / 2)
+    add_tone(buf, .38, .14, hz(96), shape='square', duty=.25, amp=.25, decay=.06)
+
+
+def bits_bounce(buf):
+    add_tone(buf, 0, .16, hz(60), hz(84), shape='square', duty=.25, amp=.35, frame=FRAME)
+    add_notes(buf, .16, [91], .06, shape='square', duty=.125, amp=.3, decay=.03)
+
+
+def bits_exile(buf):
+    add_tone(buf, 0, .45, hz(84), hz(108), shape='square', duty=.125, amp=.28, decay=.2, frame=FRAME)
+    add_noise8(buf, 0, .4, 4000, 15000, amp=.12, decay=.15, seed=8014)
+
+
+def bits_sacrifice(buf):
+    add_tone(buf, 0, .4, 140, 45, shape='tri', amp=1, decay=.18, frame=FRAME)
+    add_notes(buf, .02, [55, 54], .14, length=.13, shape='square', duty=.25, amp=.22)
+    add_noise8(buf, 0, .2, 1500, 500, amp=.25, decay=.07, seed=8015)
+
+
+def bits_life_loss(buf):
+    add_notes(buf, 0, [72, 67], .1, length=.09, shape='square', duty=.5, amp=.32, decay=.06)
+
+
+def bits_shuffle(buf):
+    rng = random.Random(8016)
+    at = 0.0
+    for i in range(16):
+        add_noise8(buf, at, .02, rng.uniform(7000, 12000), amp=.4, decay=.006, seed=8020 + i)
+        at += .03 * .95 ** i
+    add_noise8(buf, at + .03, .16, 2000, 6000, amp=.35, seed=8017, attack=.04)
+
+
+def bits_victory(buf):
+    add_notes(buf, 0, [72, 76, 79, 84], .1, length=.09, shape='square', amp=.38)
+    add_tone(buf, .4, .7, hz(88), shape='square', amp=.38, decay=.5, vibrato=(7, .01))
+    add_tone(buf, .4, .7, hz(84), shape='square', duty=.25, amp=.25, decay=.5)
+    add_notes(buf, 0, [48, 52, 55, 60], .1, length=.095, shape='tri', amp=.6)
+    add_tone(buf, .4, .7, hz(48), shape='tri', amp=.6, decay=.5)
+
+
+def bits_defeat(buf):
+    add_notes(buf, 0, [67, 66, 65], .22, length=.2, shape='square', duty=.5, amp=.34)
+    add_tone(buf, .66, .55, hz(64), hz(52), shape='square', duty=.5, amp=.34, decay=.4, frame=FRAME * 2)
+    add_notes(buf, 0, [43, 42, 41], .22, length=.21, shape='tri', amp=.6)
+    add_tone(buf, .66, .55, hz(40), shape='tri', amp=.6, decay=.4)
+
+
+def fantasy_untap(buf):
+    for i, note in enumerate([74, 79, 83]):
+        add_pluck(buf, i * .05, hz(note), amp=.25, damping=.995, seed=9140 + i, brightness=.55)
+    add_texture(buf, 0, .18, (900, 4000), .3, 9141, lambda t: bell(t, .06, .04))
+
+
+def fantasy_sneak(buf):
+    add_sweep(buf, 0, .24, (150, 900), (500, 3000), .9, 9142, lambda t: bell(t, .11, .05))
+    add_drum(buf, .2, 85, 20, .06, .45)
+    add_pluck(buf, .2, hz(50), amp=.25, damping=.993, seed=9143, brightness=.4)
+
+
+def fantasy_blink(buf):
+    add_sweep(buf, 0, .2, (2000, 7000), (800, 3000), .5, 9144, lambda t: bell(t, .08, .05))
+    add_fm(buf, .2, .5, hz(91), 3.5, 1.2, amp=.25, decay=.18, index_decay=.06)
+    add_fm(buf, .24, .5, hz(98), 3.5, .9, amp=.15, decay=.15, index_decay=.05)
+
+
+def fantasy_bounce(buf):
+    add_sweep(buf, 0, .22, (400, 1500), (1500, 6000), .7, 9145, lambda t: (t / .22) ** 1.5)
+    add_pluck(buf, .2, hz(79), amp=.3, damping=.994, seed=9146, brightness=.6)
+
+
+def fantasy_exile(buf):
+    add_sweep(buf, 0, .6, (800, 3000), (3000, 9000), .6, 9147, lambda t: bell(t, .2, .14))
+    for i, note in enumerate([86, 93, 98]):
+        add_fm(buf, i * .1, .45, hz(note), 3.5, .7, amp=.12 - i * .025, decay=.18)
+
+
+def fantasy_sacrifice(buf):
+    add_drum(buf, 0, 52, 30, .2, .9)
+    add_tone(buf, 0, .6, hz(38), shape='saw', amp=.25, attack=.04, decay=.4, lowpass=500)
+    add_tone(buf, 0, .6, hz(45), shape='saw', amp=.15, attack=.05, decay=.4, lowpass=450)
+    add_texture(buf, .05, .5, (900, 4500), .25, 9148, lambda t: bell(t, .18, .14))
+
+
+def fantasy_life_loss(buf):
+    for i, note in enumerate([76, 72, 69]):
+        add_pluck(buf, i * .08, hz(note), amp=.3, damping=.994, seed=9149 + i, brightness=.5)
+
+
+def fantasy_shuffle(buf):
+    rng = random.Random(9150)
+    at, gap = 0.0, .03
+    for i in range(20):
+        add_texture(buf, at, .02, (1200, 6800), .5 + .3 * rng.random(), 9151 + i, lambda t: math.exp(-t / .004))
+        at += gap * rng.uniform(.85, 1.1)
+        gap *= .94
+    add_sweep(buf, at, .2, (600, 3000), (1500, 6000), .6, 9172, lambda t: bell(t, .08, .05))
+    add_fm(buf, at + .15, .4, hz(98), 3.5, .8, amp=.1, decay=.12)
+
+
+def fantasy_victory(buf):
+    for start, note, length in [(0, 62, .14), (.15, 66, .14), (.3, 69, .14), (.45, 74, .9)]:
+        add_tone(buf, start, length, hz(note), shape='saw', amp=.32, attack=.025, decay=.8, lowpass=1600)
+        add_tone(buf, start, length, hz(note - 12), shape='saw', amp=.18, attack=.03, decay=.8, lowpass=800)
+    add_tone(buf, .45, .9, hz(66), shape='saw', amp=.16, attack=.04, decay=.8, lowpass=1300)
+    add_drum(buf, .45, 75, 25, .2, .6)
+    for i, note in enumerate([86, 90, 93, 98]):
+        add_fm(buf, .5 + i * .05, .6, hz(note), 3.5, .9, amp=.1, decay=.25)
+
+
+def fantasy_defeat(buf):
+    for start, note, length in [(0, 57, .35), (.38, 53, .35), (.76, 50, .5)]:
+        add_tone(buf, start, length, hz(note), shape='saw', amp=.32, attack=.06, decay=.8, lowpass=700)
+        add_tone(buf, start, length, hz(note + 3), shape='saw', amp=.16, attack=.08, decay=.8, lowpass=600)
+    add_drum(buf, 0, 50, 30, .25, .6)
+    add_drum(buf, .76, 40, 30, .35, .9)
+
+
+def cute_untap(buf):
+    for i, note in enumerate([79, 84]):
+        pop(buf, i * .07, hz(note) * .7, hz(note), .45, .05)
+    mallet(buf, .14, 91, .3, .12)
+
+
+def cute_sneak(buf):
+    for i in range(3):
+        add_tone(buf, i * .07, .05, 380, 300, amp=.35, decay=.02)
+    pop(buf, .22, 300, 700, .5, .06)
+
+
+def cute_blink(buf):
+    add_tone(buf, 0, .18, 1600, 600, amp=.3, decay=.08, vibrato=(25, .03))
+    add_tone(buf, .2, .2, 600, 1800, amp=.32, decay=.1, vibrato=(25, .03))
+    mallet(buf, .38, 100, .3, .15)
+
+
+def cute_bounce(buf):
+    add_tone(buf, 0, .3, 220, 160, amp=.45, decay=.12, vibrato=(16, .2))
+    pop(buf, .12, 500, 1300, .45, .06)
+
+
+def cute_exile(buf):
+    add_tone(buf, 0, .45, 700, 2400, amp=.3, attack=.02, decay=.2, vibrato=(8, .02))
+    rng = random.Random(10110)
+    for i in range(5):
+        add_tone(buf, .1 + i * .06, .08, hz(rng.choice([100, 103, 105, 108])), amp=.08, decay=.03)
+
+
+def cute_sacrifice(buf):
+    add_tone(buf, 0, .3, 400, 110, amp=.6, decay=.12)
+    mallet(buf, 0, 48, .6, .3)
+    pop(buf, .25, 900, 400, .3, .06)
+
+
+def cute_life_loss(buf):
+    for i, note in enumerate([79, 74]):
+        mallet(buf, i * .1, note, .5, .14)
+    add_tone(buf, .05, .2, 900, 700, amp=.1, decay=.08)
+
+
+def cute_shuffle(buf):
+    rng = random.Random(10111)
+    at = 0.0
+    for i in range(14):
+        pop(buf, at, rng.uniform(1100, 1500), rng.uniform(1700, 2300), .25, .025)
+        at += .035 * .94 ** i
+    add_sweep(buf, at, .18, (500, 2500), (1500, 6000), .4, 10112, lambda t: bell(t, .07, .04))
+
+
+def cute_victory(buf):
+    for i, note in enumerate([72, 76, 79, 84, 88]):
+        mallet(buf, i * .08, note, .55, .18)
+    for note in (84, 88, 91):
+        mallet(buf, .42, note, .45, .6)
+    rng = random.Random(10113)
+    for i in range(7):
+        add_fm(buf, .45 + i * .05, .25, hz(rng.choice([100, 103, 105, 108])), 2.0, .8, amp=.08, decay=.07)
+
+
+def cute_defeat(buf):
+    # The cartoon "wah-wah": slow falling notes on a wobbling horn.
+    for start, note, length in [(0, 67, .26), (.28, 66, .26), (.56, 65, .6)]:
+        f0 = hz(note)
+        add_tone(buf, start, length, f0, f0 * (.94 if length > .5 else 1), shape='saw', amp=.35, attack=.03, decay=.5,
+                 vibrato=(6, .02 if length > .5 else .008), lowpass=1500)
+
+
+def arena_untap(buf):
+    for start, seed in [(0, 11121), (.08, 11122)]:
+        add_texture(buf, start, .1, (300, 3000), .9, seed, lambda t: bell(t, .035, .02))
+        add_drum(buf, start + .03, 95, 20, .04, .3)
+
+
+def arena_sneak(buf):
+    add_sweep(buf, 0, .26, (100, 600), (400, 2400), 1.1, 11123, lambda t: bell(t, .12, .05))
+    add_drum(buf, .22, 70, 40, .07, .6)
+    add_modes(buf, .22, [(2300, .08, .1)], attack=.002)
+
+
+def arena_blink(buf):
+    add_sweep(buf, 0, .22, (1500, 7000), (500, 2500), .6, 11124, lambda t: bell(t, .09, .05))
+    add_sweep(buf, .22, .22, (500, 2500), (1500, 8000), .7, 11125, lambda t: bell(t, .08, .05))
+    add_fm(buf, .4, .4, 660, 1.41, 2, amp=.2, decay=.12, index_decay=.04)
+
+
+def arena_bounce(buf):
+    add_sweep(buf, 0, .24, (200, 1200), (1200, 6000), .9, 11126, lambda t: (t / .24) ** 1.6)
+    add_texture(buf, .24, .03, (2500, 8000), .6, 11127, lambda t: math.exp(-t / .004))
+
+
+def arena_exile(buf):
+    add_sweep(buf, 0, .7, (300, 1500), (2500, 9000), .8, 11128, lambda t: bell(t, .22, .16))
+    for note in (62, 69, 74):
+        add_tone(buf, 0, .7, hz(note), shape='saw', amp=.08, attack=.25, release=.3, lowpass=2500)
+
+
+def arena_sacrifice(buf):
+    add_drum(buf, 0, 42, 40, .25, 1)
+    add_modes(buf, 0, [(95, .4, .4), (143, .25, .3), (203, .12, .2)], attack=.004)
+    add_texture(buf, 0, .7, (30, 400), .7, 11129, lambda t: math.exp(-t / .2))
+    add_texture(buf, .1, .5, (1500, 6000), .2, 11130, lambda t: bell(t, .15, .12))
+
+
+def arena_life_loss(buf):
+    add_drum(buf, 0, 60, 30, .12, .6)
+    add_tone(buf, 0, .4, hz(50), hz(45), shape='saw', amp=.25, attack=.03, decay=.25, lowpass=700)
+
+
+def arena_shuffle(buf):
+    rng = random.Random(11131)
+    at, gap = 0.0, .03
+    for i in range(20):
+        add_texture(buf, at, .02, (1000, 7000), .6 + .3 * rng.random(), 11140 + i, lambda t: math.exp(-t / .004))
+        at += gap * rng.uniform(.85, 1.1)
+        gap *= .94
+    add_sweep(buf, at, .22, (300, 1800), (1000, 5000), .8, 11132, lambda t: bell(t, .08, .05))
+    add_drum(buf, at + .18, 80, 30, .06, .5)
+
+
+def arena_victory(buf):
+    for start, amplitude in [(0, .5), (.14, .6), (.28, .75), (.42, 1)]:
+        add_drum(buf, start, 70, 35, .14, amplitude)
+    for note, amplitude in [(50, .3), (57, .24), (62, .18), (66, .12)]:
+        add_tone(buf, .42, 1.0, hz(note), shape='saw', amp=amplitude, attack=.05, decay=.8, lowpass=1300)
+    add_modes(buf, .42, [(1175, .12, .5), (1760, .07, .35)], attack=.004)
+
+
+def arena_defeat(buf):
+    add_modes(buf, 0, [(82, .5, .9), (125, .35, .7), (173, .25, .5), (223, .15, .4), (309, .08, .25)], attack=.004)
+    add_drum(buf, 0, 40, 30, .3, .9)
+    add_drum(buf, .5, 34, 30, .35, .7)
+    add_texture(buf, 0, 1.0, (30, 300), .6, 11133, lambda t: math.exp(-t / .35))
+
+
+def quiet_untap(buf):
+    add_texture(buf, 0, .08, (800, 4000), .7, 12109, lambda t: bell(t, .03, .015))
+    add_modes(buf, .04, [(560, .3, .015)])
+
+
+def quiet_sneak(buf):
+    add_texture(buf, 0, .14, (200, 1600), .8, 12110, lambda t: bell(t, .06, .03))
+    add_modes(buf, .12, [(260, .5, .03)])
+
+
+def quiet_blink(buf):
+    add_tone(buf, 0, .1, hz(88), amp=.35, decay=.04)
+    add_tone(buf, .1, .16, hz(95), amp=.35, decay=.06)
+
+
+def quiet_bounce(buf):
+    add_tone(buf, 0, .14, hz(72), hz(79), amp=.5, decay=.06)
+
+
+def quiet_exile(buf):
+    add_tone(buf, 0, .3, hz(84), hz(96), amp=.35, attack=.02, decay=.1)
+
+
+def quiet_sacrifice(buf):
+    add_drum(buf, 0, 70, 20, .08, .8)
+    add_modes(buf, 0, [(150, .3, .08)])
+
+
+def quiet_life_loss(buf):
+    add_tone(buf, 0, .24, hz(69), hz(62), amp=.5, decay=.1)
+
+
+def quiet_shuffle(buf):
+    for i in range(8):
+        add_texture(buf, i * .028, .015, (1500, 6000), .7, 12111 + i, lambda t: math.exp(-t / .003))
+
+
+def quiet_victory(buf):
+    for i, note in enumerate([76, 81, 88]):
+        add_tone(buf, i * .1, .35, hz(note), amp=.45, decay=.15)
+
+
+def quiet_defeat(buf):
+    for i, note in enumerate([76, 72, 69]):
+        add_tone(buf, i * .13, .35, hz(note), amp=.45, decay=.15)
+
+
+def tavern_untap(buf):
+    # Cards straightened against the table.
+    for start, seed in [(0, 13134), (.06, 13135)]:
+        add_texture(buf, start, .06, (800, 5000), .8, seed, lambda t: bell(t, .025, .012))
+    wood(buf, .1, 260, .35, 13136)
+
+
+def tavern_sneak(buf):
+    # Tiptoes across the floorboards.
+    for start, seed in [(0, 13137), (.08, 13138), (.16, 13139)]:
+        wood(buf, start, 170, .35, seed)
+    add_texture(buf, 0, .25, (200, 1500), .35, 13140, lambda t: bell(t, .12, .06))
+
+
+def tavern_blink(buf):
+    # A sleight of hand: a flourish and a little bell from the bar.
+    add_texture(buf, 0, .14, (900, 6000), .7, 13141, lambda t: bell(t, .06, .03))
+    coin(buf, .16, 3600, .4, .25)
+    coin(buf, .2, 4300, .25, .2)
+
+
+def tavern_bounce(buf):
+    add_texture(buf, 0, .14, (900, 6500), 1, 13142, lambda t: (t / .14) ** 1.3 * min(1, (.14 - t) / .01))
+    add_texture(buf, .14, .03, (2000, 8000), .9, 13143, lambda t: math.exp(-t / .004))
+
+
+def tavern_exile(buf):
+    # A candle snuffed: a puff of air and a hiss of smoke.
+    add_texture(buf, 0, .08, (300, 2500), 1, 13144, lambda t: math.exp(-t / .02))
+    add_texture(buf, .04, .4, (2000, 7000), .3, 13145, lambda t: bell(t, .1, .1))
+    add_pluck(buf, .02, hz(81), amp=.12, damping=.995, seed=13146, brightness=.5)
+
+
+def tavern_sacrifice(buf):
+    # A log thrown on the fire.
+    wood(buf, 0, 90, 1, 13147)
+    add_drum(buf, 0, 60, 30, .1, .6)
+    rng = random.Random(13148)
+    for i in range(7):
+        add_texture(buf, .08 + rng.uniform(0, .4), .01, (1500, 6000), rng.uniform(.3, .7), 13150 + i, lambda t: math.exp(-t / .002))
+    add_texture(buf, .05, .5, (400, 3000), .15, 13149, lambda t: bell(t, .2, .15))
+
+
+def tavern_life_loss(buf):
+    # Two coins paid out on the counter.
+    coin(buf, 0, 3000, .4, .15)
+    coin(buf, .12, 2700, .4, .15)
+
+
+def tavern_shuffle(buf):
+    rng = random.Random(13160)
+    at, gap = 0.0, .03
+    for i in range(22):
+        add_texture(buf, at, .018, (1500, 8000), .6 + .3 * rng.random(), 13161 + i, lambda t: math.exp(-t / .0035))
+        at += gap * rng.uniform(.8, 1.15)
+        gap *= .94
+    add_texture(buf, at + .02, .2, (600, 5000), .8, 13190, lambda t: bell(t, .07, .05))
+    wood(buf, at + .2, 230, .5, 13191)
+
+
+def tavern_victory(buf):
+    # A lively strum, then a cheer of clinking mugs.
+    for strum, start in [(0, 0), (1, .16), (2, .32)]:
+        for i, note in enumerate([55, 59, 62, 67, 71] if strum == 1 else [50, 57, 62, 66, 69]):
+            add_pluck(buf, start + i * .014, hz(note), amp=.26, damping=.996, seed=13192 + strum * 10 + i, brightness=.7)
+    for start, base in [(.5, 2100), (.52, 2350), (.56, 1950)]:
+        glass(buf, start, base, .45, .3)
+
+
+def tavern_defeat(buf):
+    # A sad, slow lute descent.
+    for i, note in enumerate([62, 60, 58, 57]):
+        add_pluck(buf, i * .26, hz(note), amp=.38, damping=.996, seed=13230 + i, brightness=.4)
+        add_pluck(buf, i * .26, hz(note - 12), amp=.2, damping=.996, seed=13240 + i, brightness=.35)
+
+
+def scifi_untap(buf):
+    add_tone(buf, 0, .1, 400, 700, shape='saw', amp=.25, lowpass=1800)
+    add_tone(buf, .1, .06, 1400, amp=.3, decay=.02)
+
+
+def scifi_sneak(buf):
+    add_tone(buf, 0, .22, 900, 200, amp=.3, attack=.03, tremolo=(40, .5))
+    add_noise8(buf, 0, .2, 3000, 800, amp=.15, decay=.08, seed=14111)
+
+
+def scifi_blink(buf):
+    add_tone(buf, 0, .16, 1200, 3600, amp=.3, decay=.08)
+    add_tone(buf, .2, .16, 3600, 1200, amp=.3, decay=.08)
+    add_tone(buf, .36, .1, 1800, amp=.25, decay=.04)
+
+
+def scifi_bounce(buf):
+    add_tone(buf, 0, .18, 300, 1500, amp=.35, decay=.08)
+    add_noise8(buf, .16, .03, 9000, amp=.25, decay=.008, seed=14112)
+
+
+def scifi_exile(buf):
+    # Teleported away.
+    add_tone(buf, 0, .55, 400, 4000, amp=.3, attack=.03, tremolo=(45, .7))
+    add_tone(buf, 0, .55, 600, 6000, shape='tri', amp=.08, attack=.05)
+
+
+def scifi_sacrifice(buf):
+    add_tone(buf, 0, .5, 300, 30, shape='saw', amp=.45, decay=.2, lowpass=900)
+    add_drum(buf, 0, 45, 30, .15, .6)
+    add_noise8(buf, .05, .3, 2000, 500, amp=.18, decay=.12, seed=14113)
+
+
+def scifi_life_loss(buf):
+    add_notes(buf, 0, [79, 74], .1, length=.08, amp=.4, decay=.05)
+
+
+def scifi_shuffle(buf):
+    rng = random.Random(14114)
+    at = 0.0
+    for i in range(16):
+        add_tone(buf, at, .02, rng.uniform(1800, 3200), amp=.2, decay=.008)
+        at += .03 * .95 ** i
+    add_tone(buf, at + .03, .14, 500, 1200, shape='saw', amp=.2, lowpass=2500)
+
+
+def scifi_victory(buf):
+    add_notes(buf, 0, [76, 81, 85, 88], .1, length=.09, amp=.4, decay=.08)
+    for note in (88, 93, 97):
+        for detune in (-.003, .003):
+            add_tone(buf, .4, .8, hz(note) * (1 + detune), amp=.1, attack=.02, decay=.5)
+    add_tone(buf, .4, .8, 55, 110, shape='saw', amp=.2, attack=.05, decay=.5, lowpass=600)
+
+
+def scifi_defeat(buf):
+    # Power down.
+    add_tone(buf, 0, 1.0, 600, 40, shape='saw', amp=.35, decay=.6, lowpass=1500)
+    add_notes(buf, 0, [74, 70, 67], .22, length=.18, shape='square', amp=.15, lowpass=1500)
+    add_noise8(buf, .9, .1, 6000, amp=.15, decay=.03, seed=14115)
+
+
 # Pack folder -> (early reflections, [(file, material, duration, first-pass peak, room, composer)]).
 # Files match the classic set (generate.DESIGNS); a missing cue would fall silent in that pack.
 PACKS = {
@@ -948,6 +1398,16 @@ PACKS = {
         ('16-poison', 'wobbling pulses / three drops', .44, .32, .02, bits_poison),
         ('17-shield', 'tremolo pulses / shimmer', .52, .30, .04, bits_shield),
         ('18-shatter', 'noise and blips / falling bits', .48, .38, .02, bits_shatter),
+        ('19-untap', 'pulse / three quick blips', 0.24, 0.24, 0, bits_untap),
+        ('20-sneak', 'noise rush / triangle thud', 0.3, 0.3, 0.02, bits_sneak),
+        ('21-blink', 'pulse sweeps / out and back', 0.56, 0.28, 0.04, bits_blink),
+        ('22-bounce', 'rising pulse / blip', 0.26, 0.28, 0.01, bits_bounce),
+        ('23-exile', 'pulse climb and hiss / fading', 0.5, 0.26, 0.04, bits_exile),
+        ('24-sacrifice', 'triangle drop / low call', 0.46, 0.4, 0.03, bits_sacrifice),
+        ('25-life-loss', 'pulse / two falling notes', 0.24, 0.26, 0.01, bits_life_loss),
+        ('26-shuffle', 'noise ticks / sweep', 0.72, 0.28, 0.02, bits_shuffle),
+        ('27-victory', 'pulse and triangle / victory jingle', 1.16, 0.42, 0.06, bits_victory),
+        ('28-defeat', 'pulse and triangle / falling lament', 1.26, 0.42, 0.06, bits_defeat),
     ]),
     'fantasia': (((.031, 1), (.067, .7), (.113, .5), (.171, .3)), [
         ('01-card-draw', 'parchment and sparkle', .52, .26, .08, fantasy_draw),
@@ -968,6 +1428,16 @@ PACKS = {
         ('16-poison', 'bubbles and dark drone', .66, .34, .08, fantasy_poison),
         ('17-shield', 'shimmering ward', .74, .30, .12, fantasy_shield),
         ('18-shatter', 'crystal shards and fading magic', .70, .40, .1, fantasy_shatter),
+        ('19-untap', 'harp, three notes and sparkle', 0.55, 0.24, 0.08, fantasy_untap),
+        ('20-sneak', 'cloak sweep and soft drum', 0.5, 0.3, 0.08, fantasy_sneak),
+        ('21-blink', 'vanishing sparkle and bells', 0.8, 0.28, 0.14, fantasy_blink),
+        ('22-bounce', 'rising air and harp', 0.55, 0.28, 0.08, fantasy_bounce),
+        ('23-exile', 'fading choir of bells', 0.85, 0.26, 0.14, fantasy_exile),
+        ('24-sacrifice', 'low drum and dark drone', 0.75, 0.4, 0.12, fantasy_sacrifice),
+        ('25-life-loss', 'harp, three falling notes', 0.6, 0.26, 0.1, fantasy_life_loss),
+        ('26-shuffle', 'riffle and sparkle', 0.95, 0.28, 0.1, fantasy_shuffle),
+        ('27-victory', 'brass fanfare and bells', 1.5, 0.44, 0.16, fantasy_victory),
+        ('28-defeat', 'falling horns and drums', 1.4, 0.44, 0.16, fantasy_defeat),
     ]),
     'aventura': (((.023, 1), (.051, .5)), [
         ('01-card-draw', 'pop and marimba', .26, .26, .03, cute_draw),
@@ -988,6 +1458,16 @@ PACKS = {
         ('16-poison', 'goopy bloops', .42, .32, .02, cute_poison),
         ('17-shield', 'bubble shimmer', .54, .30, .05, cute_shield),
         ('18-shatter', 'glass tinkles and pop', .40, .36, .03, cute_shatter),
+        ('19-untap', 'two pops and marimba', 0.32, 0.24, 0.03, cute_untap),
+        ('20-sneak', 'tiptoes and pop', 0.32, 0.3, 0.02, cute_sneak),
+        ('21-blink', 'slide whistle out and back', 0.56, 0.28, 0.05, cute_blink),
+        ('22-bounce', 'spring and pop', 0.32, 0.28, 0.02, cute_bounce),
+        ('23-exile', 'rising whistle and twinkles', 0.52, 0.26, 0.05, cute_exile),
+        ('24-sacrifice', 'falling bonk and marimba', 0.4, 0.38, 0.04, cute_sacrifice),
+        ('25-life-loss', 'marimba, two falling notes', 0.36, 0.26, 0.03, cute_life_loss),
+        ('26-shuffle', 'popping riffle', 0.72, 0.28, 0.03, cute_shuffle),
+        ('27-victory', 'marimba jingle and glitter', 1.1, 0.42, 0.07, cute_victory),
+        ('28-defeat', 'wah-wah horn', 1.2, 0.4, 0.06, cute_defeat),
     ]),
     'arena': (((.037, 1), (.083, .6), (.139, .35)), [
         ('01-card-draw', 'card snap', .16, .26, .02, arena_draw),
@@ -1008,6 +1488,16 @@ PACKS = {
         ('16-poison', 'venom hiss and gurgle', .54, .34, .03, arena_poison),
         ('17-shield', 'force field', .64, .32, .06, arena_shield),
         ('18-shatter', 'heavy crash and debris', .72, .44, .05, arena_shatter),
+        ('19-untap', 'two heavy swivels', 0.26, 0.26, 0.02, arena_untap),
+        ('20-sneak', 'dark rush and landing', 0.4, 0.34, 0.04, arena_sneak),
+        ('21-blink', 'vanish and return', 0.6, 0.3, 0.06, arena_blink),
+        ('22-bounce', 'rush and snap', 0.3, 0.3, 0.03, arena_bounce),
+        ('23-exile', 'rising power and pad', 0.78, 0.28, 0.08, arena_exile),
+        ('24-sacrifice', 'altar slam and rumble', 0.8, 0.44, 0.06, arena_sacrifice),
+        ('25-life-loss', 'dull drum and low horn', 0.46, 0.3, 0.04, arena_life_loss),
+        ('26-shuffle', 'heavy riffle and thud', 0.95, 0.3, 0.04, arena_shuffle),
+        ('27-victory', 'war drums and horn chord', 1.5, 0.46, 0.1, arena_victory),
+        ('28-defeat', 'low gong and drums', 1.3, 0.46, 0.1, arena_defeat),
     ]),
     'discreto': (((.029, 1),), [
         ('01-card-draw', 'paper tick', .08, .14, 0, quiet_draw),
@@ -1028,6 +1518,16 @@ PACKS = {
         ('16-poison', 'low blop', .17, .18, 0, quiet_poison),
         ('17-shield', 'high ping', .32, .16, 0, quiet_shield),
         ('18-shatter', 'tiny ticks', .16, .16, 0, quiet_shatter),
+        ('19-untap', 'soft turn', 0.1, 0.14, 0, quiet_untap),
+        ('20-sneak', 'soft swish and tap', 0.17, 0.16, 0, quiet_sneak),
+        ('21-blink', 'two high notes', 0.28, 0.14, 0, quiet_blink),
+        ('22-bounce', 'short rising tone', 0.16, 0.16, 0, quiet_bounce),
+        ('23-exile', 'soft rising tone', 0.32, 0.14, 0, quiet_exile),
+        ('24-sacrifice', 'low muted thud', 0.18, 0.22, 0, quiet_sacrifice),
+        ('25-life-loss', 'short falling tone', 0.26, 0.16, 0, quiet_life_loss),
+        ('26-shuffle', 'tiny ticks', 0.25, 0.14, 0, quiet_shuffle),
+        ('27-victory', 'three notes rising', 0.56, 0.22, 0, quiet_victory),
+        ('28-defeat', 'three notes falling', 0.62, 0.22, 0, quiet_defeat),
     ]),
     'taverna': (((.019, 1), (.043, .6)), [
         ('01-card-draw', 'card slide and snap', .14, .26, .03, tavern_draw),
@@ -1048,6 +1548,16 @@ PACKS = {
         ('16-poison', 'bubbling cauldron', .70, .32, .03, tavern_poison),
         ('17-shield', 'spinning coin', .68, .28, .04, tavern_shield),
         ('18-shatter', 'mug breaking', .50, .40, .04, tavern_shatter),
+        ('19-untap', 'cards straightened', 0.22, 0.24, 0.03, tavern_untap),
+        ('20-sneak', 'tiptoes on boards', 0.32, 0.28, 0.03, tavern_sneak),
+        ('21-blink', 'flourish and bar bell', 0.5, 0.28, 0.04, tavern_blink),
+        ('22-bounce', 'card swept back', 0.2, 0.28, 0.03, tavern_bounce),
+        ('23-exile', 'candle snuffed', 0.52, 0.26, 0.04, tavern_exile),
+        ('24-sacrifice', 'log on the fire', 0.62, 0.4, 0.05, tavern_sacrifice),
+        ('25-life-loss', 'two coins paid', 0.32, 0.26, 0.04, tavern_life_loss),
+        ('26-shuffle', 'card riffle and tap', 0.9, 0.28, 0.04, tavern_shuffle),
+        ('27-victory', 'strums and toast', 1.0, 0.42, 0.06, tavern_victory),
+        ('28-defeat', 'slow lute descent', 1.6, 0.4, 0.06, tavern_defeat),
     ]),
     'scifi': (((.041, 1), (.097, .6), (.157, .35)), [
         ('01-card-draw', 'data chirp', .10, .24, .03, scifi_draw),
@@ -1068,6 +1578,16 @@ PACKS = {
         ('16-poison', 'geiger clicks and hum', .62, .30, .04, scifi_poison),
         ('17-shield', 'force field powering up', .62, .32, .06, scifi_shield),
         ('18-shatter', 'glitch breakdown', .38, .38, .05, scifi_shatter),
+        ('19-untap', 'servo up and ping', 0.18, 0.24, 0.03, scifi_untap),
+        ('20-sneak', 'cloaking hum', 0.26, 0.28, 0.04, scifi_sneak),
+        ('21-blink', 'beam out and back', 0.48, 0.28, 0.06, scifi_blink),
+        ('22-bounce', 'rising chirp', 0.22, 0.28, 0.03, scifi_bounce),
+        ('23-exile', 'teleport', 0.58, 0.28, 0.08, scifi_exile),
+        ('24-sacrifice', 'reactor drop', 0.55, 0.4, 0.06, scifi_sacrifice),
+        ('25-life-loss', 'two falling beeps', 0.24, 0.26, 0.04, scifi_life_loss),
+        ('26-shuffle', 'data shuffle', 0.7, 0.26, 0.04, scifi_shuffle),
+        ('27-victory', 'rising beeps and chord', 1.24, 0.42, 0.1, scifi_victory),
+        ('28-defeat', 'power down', 1.06, 0.42, 0.08, scifi_defeat),
     ]),
 }
 

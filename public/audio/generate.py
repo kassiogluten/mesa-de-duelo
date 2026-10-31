@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic game cues. Standard library only; sixteen original physical-model cues.
+"""Deterministic game cues. Standard library only; twenty-six original physical-model cues.
 
 The two damage cues adapt bundled SFXMint-generated CC0 takes. Their checksums,
 licenses and generation provenance are recorded in sources/manifest.json; regeneration needs no network.
@@ -234,6 +234,91 @@ def shatter(buf):
     add_texture(buf, .04, .45, (400, 3000), .22, 1803, lambda t: math.exp(-t / .16))
 
 
+def untap(buf):
+    # Cards turned back upright on felt: three quick leather swivels, the last one settling.
+    for start, amplitude, seed in [(0, .7, 1901), (.07, .85, 1902), (.15, 1, 1903)]:
+        add_texture(buf, start, .09, (500, 3400), amplitude, seed, lambda t: bell(t, .03, .016))
+        add_modes(buf, start + .045, [(260, .16, .022), (430, .06, .014)], amplitude, attack=.002)
+
+
+def sneak(buf):
+    # A low, fast cloak rush and a soft landing: something slips into the fight.
+    add_texture(buf, 0, .22, (120, 1400), 1, 2001, lambda t: bell(t, .1, .045))
+    add_texture(buf, .02, .12, (2500, 6500), .14, 2002, lambda t: bell(t, .06, .025))
+    add_modes(buf, .19, [(150, .5, .04), (262, .16, .025)], attack=.003)
+    add_texture(buf, .19, .07, (180, 1600), .45, 2003, lambda t: math.exp(-t / .018))
+
+
+def blink(buf):
+    # Out and back: a glass shimmer swells away, then returns brighter.
+    add_texture(buf, 0, .2, (1600, 7000), .7, 2101, lambda t: bell(t, .07, .04))
+    add_modes(buf, .02, [(1567.98, .25, .09), (2349.3, .12, .06)], attack=.03)
+    add_texture(buf, .2, .22, (1300, 6500), .7, 2102, lambda t: bell(t, .09, .045))
+    add_modes(buf, .24, [(2093, .3, .2), (3136, .12, .13), (4186, .04, .07)], attack=.01)
+
+
+def bounce(buf):
+    # Swept back up the table and snapped into the hand.
+    add_texture(buf, 0, .2, (300, 2600), 1, 2201,
+                lambda t: (t / .2) ** 1.4 * min(1, (.2 - t) / .02))
+    add_texture(buf, .2, .05, (1600, 7200), .55, 2202, lambda t: math.exp(-t / .008))
+    add_modes(buf, .2, [(520, .1, .02)], attack=.001)
+
+
+def exile(buf):
+    # Drawn away into nothing: rising airy hiss and a pale glass tone that fades upward.
+    add_texture(buf, 0, .55, (900, 6000), .8, 2301, lambda t: bell(t, .14, .1) * math.exp(-t / .3))
+    for start, frequency, amplitude in [(0, 880, .22), (.08, 1318.5, .16), (.16, 1975.5, .1)]:
+        add_modes(buf, start, [(frequency, amplitude, .2), (frequency * 2.01, amplitude * .3, .1)], attack=.05)
+
+
+def sacrifice(buf):
+    # Laid on a stone altar: a heavy dull contact, a low resonance and a breath of ember.
+    add_drum(buf, 0, 62, 26, .12, .9)
+    add_modes(buf, 0, [(118, .35, .22), (171, .18, .16), (247, .07, .09)], attack=.004)
+    add_texture(buf, 0, .1, (80, 1100), .8, 2401, lambda t: math.exp(-t / .03))
+    add_texture(buf, .08, .45, (1200, 5200), .16, 2402, lambda t: bell(t, .14, .12))
+
+
+def life_loss(buf):
+    # Life slipping away: two hollow wooden tones, falling, no impact.
+    for start, note, amplitude in [(0, 330, .8), (.12, 247, 1)]:
+        add_modes(buf, start, [(note, .45, .11), (note * 2.4, .1, .04)], amplitude, attack=.006)
+        add_texture(buf, start, .05, (300, 2400), .18 * amplitude, 2501 + round(start * 100), lambda t: math.exp(-t / .012))
+
+
+def shuffle(buf):
+    # A riffle: paper edges falling ever faster, then the bridge pushing the halves together.
+    rng = random.Random(2601)
+    at, gap = 0.0, .032
+    for i in range(22):
+        add_texture(buf, at, .018, (1400, 7400), .55 + .25 * rng.random(), 2610 + i, lambda t: math.exp(-t / .0035))
+        at += gap * rng.uniform(.8, 1.15)
+        gap *= .94
+    add_texture(buf, at + .03, .22, (500, 4200), .9, 2602, lambda t: bell(t, .08, .05))
+    add_modes(buf, at + .2, [(190, .25, .03)], attack=.002)
+
+
+def victory(buf):
+    # Struck bronze, rising through a major triad to a held chord.
+    for start, note, amplitude in [(0, 392, .6), (.13, 493.88, .7), (.26, 587.33, .8)]:
+        add_drum(buf, start, 90, 30, .07, .35 * amplitude)
+        add_modes(buf, start, [(note, .45, .22), (note * 2.0, .12, .12), (note * 3.01, .05, .06)], amplitude, attack=.003)
+    add_drum(buf, .42, 70, 34, .16, .7)
+    for note, amplitude in [(783.99, .5), (987.77, .35), (1174.66, .3), (392, .3)]:
+        add_modes(buf, .42, [(note, amplitude, .6), (note * 2.01, amplitude * .2, .25)], attack=.006)
+    add_texture(buf, .42, .5, (2000, 7000), .1, 2701, lambda t: bell(t, .12, .12))
+
+
+def defeat(buf):
+    # Two slow, falling drum strokes under a dull bronze minor third that sinks away.
+    for start, note, amplitude in [(0, 70, .8), (.36, 48, 1)]:
+        add_drum(buf, start, note, 30, .2, amplitude)
+        add_texture(buf, start, .14, (60, 900), .5 * amplitude, 2801 + round(start * 10), lambda t: math.exp(-t / .04))
+    add_modes(buf, 0, [(220, .3, .3), (261.63, .2, .26)], attack=.01)
+    add_modes(buf, .36, [(146.83, .35, .55), (174.61, .25, .45), (293.66, .07, .2)], attack=.01)
+
+
 # file, material, duration, peak, reflection amount, composer
 DESIGNS = [
     ('01-card-draw', 'paper / two brushed strokes', .30, .28, 0, draw),
@@ -254,6 +339,16 @@ DESIGNS = [
     ('16-poison', 'wet bubbles / four low drops', .62, .34, .02, poison),
     ('17-shield', 'ringing ward plate / swell without impact', .60, .32, .05, shield),
     ('18-shatter', 'crack and falling shards / crumble', .58, .40, .03, shatter),
+    ('19-untap', 'leather on felt / three swivels', .30, .24, 0, untap),
+    ('20-sneak', 'cloak rush / soft landing', .32, .30, .02, sneak),
+    ('21-blink', 'glass shimmer / out and back', .60, .28, .05, blink),
+    ('22-bounce', 'air sweep / snap into hand', .30, .28, .01, bounce),
+    ('23-exile', 'airy hiss and pale glass / fading up', .66, .26, .06, exile),
+    ('24-sacrifice', 'stone altar / dull contact and ember', .62, .40, .04, sacrifice),
+    ('25-life-loss', 'hollow wood / two falling tones', .40, .26, .02, life_loss),
+    ('26-shuffle', 'paper riffle / bridge', .90, .28, .02, shuffle),
+    ('27-victory', 'struck bronze / rising triad and chord', 1.50, .44, .08, victory),
+    ('28-defeat', 'war drum and dull bronze / falling', 1.30, .44, .07, defeat),
 ]
 
 

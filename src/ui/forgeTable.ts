@@ -11,7 +11,7 @@ import { effectParts, historyTurns, listNames, turnSummary, type HistoryItem, ty
 import { removalNotices, removedByOwner, type RemovalNotice } from './removalNotice';
 import './removalNotice.css';
 import { PresentationTimeline, calloutDuration, presentationDuration, hasLiveDecision, stateWithFrame, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
-import { createGameAudio, SOUND_PACKS, type SoundPack } from './audio';
+import { createGameAudio, SOUND_PACKS, tableMoment, type SoundPack } from './audio';
 import { PassLevelPreference, PASS_LEVELS, PASS_LEVEL_ALWAYS, isPassLevel, passLevelBadgeHTML, passLevelInfo, passMenuHTML } from './passLevel';
 import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
@@ -333,6 +333,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let bannerTimer = 0;
   /** Decisão em espera (prompt e tipo) e o lembrete que reforça o aviso se ela ficar parada. */
   let awaitKey = '';
+  // Momentos que já tocaram (resultado, cada mão inicial): voltar à mesa não repete o som.
+  const playedMoments = new Set<string>();
   let awaitTimer = 0;
   const AWAIT_REMINDER_MS = 8000;
   const motion = createMotion(root);
@@ -2338,6 +2340,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const targetInfo = choosingTargets ? targetInfoOf(s) : null;
     $('#fAction').classList.toggle('target-source', !!promptCard && targetSource);
     const opening = s.input.opening;
+    const moment = tableMoment(s);
+    if (moment && !playedMoments.has(moment.key)) { playedMoments.add(moment.key); audio.cue(moment.cue, .9); }
     const prompt = s.gameOver ? '' : s.input.attacking ? attackAllGen !== null ? 'Atacar com tudo: escolha quem atacar.' : selectedAttackers.size ? `${selectedAttackers.size} ${selectedAttackers.size === 1 ? 'criatura selecionada' : 'criaturas selecionadas'}: escolha quem atacar.` : pinnedDefender ? `Atacar ${defenderName(s, pinnedDefender)}: escolha suas criaturas. Limpe a seleção para escolher as cartas primeiro.` : 'Selecione suas criaturas e escolha quem atacar, ou escolha o defensor primeiro.'
       : s.input.commanderMove ? `${s.input.commanderMove.card ? label(s.input.commanderMove.card) : 'Seu comandante'} ${s.input.commanderMove.stays ? 'está n' : 'iria para '}${zoneWithArticle(s.input.commanderMove.to)}. Para onde vai?`
       : s.input.suspendCast ? 'Suspender: conjure agora sem pagar o custo de mana ou deixe a carta no exílio.'
