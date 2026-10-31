@@ -69,6 +69,7 @@ import { oppHandHTML, revealedCards, revealedCountText, seatHandHTML } from './r
 import './revealedHand.css';
 import './upkeepMana.css';
 import './awaitingDecision.css';
+import { isNameChoice, nameChoiceHTML, nameListHTML, nameMatches, nameStatus } from './nameChoice';
 import { seatTurnChange, turnHighlight } from './turnHighlight';
 import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
 import './waitAlert.css';
@@ -2071,6 +2072,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const status = box.querySelector<HTMLElement>('#fQStatus');
     if (status) status.textContent = choiceStatus(layout, qState?.id === q.id ? qState.picked : []);
   }
+  /** Nomear uma carta: a lista muda sem redesenhar a escolha, para não tirar o foco da busca. */
+  const ptName = (name: string) => ptOf(name)?.name;
+  function applyNameSearch(q: FQuestion) {
+    const m = nameMatches(q, qState?.text ?? '', ptName);
+    const box = $('#fQuestion');
+    const list = box.querySelector<HTMLElement>('#fQNames');
+    if (list) { list.innerHTML = nameListHTML(q, m, ptName); list.scrollTop = 0; }
+    const status = box.querySelector<HTMLElement>('#fQNameStatus');
+    if (status) status.textContent = nameStatus(m, qState?.text ?? '');
+  }
   function questionHTML(q: FQuestion) {
     if (!qState || qState.id !== q.id) qState = { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
     if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
@@ -2081,6 +2092,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const opts = q.options ?? [];
     const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
     if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, client?.state?.players.find(p => p.id === q.dungeonOwner));
+    if (isNameChoice(q)) return nameChoiceHTML(q, head, qState.text, ptName);
     if (q.kind === 'amount') {
       const status = amountStatus(q);
       return `${head}<form data-q-amount-form><div class="q-amounts">${opts.map((o, i) => {
@@ -2424,10 +2436,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       qEl.classList.toggle('minimized', minimized);
       // Escolha grande de cartas redesenhada (uma carta marcada, um filtro): continua onde estava, sem entrar de novo.
       const before = qEl.querySelector<HTMLElement>('.question');
+      const typingName = document.activeElement?.id === 'fQNameSearch';
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
       setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (again !== null && after && after !== before) after.scrollTop = again;
+      // A busca de nomes recebe o foco ao abrir e o mantém quando a escolha é redesenhada no meio da digitação.
+      const nameSearch = after && after !== before ? after.querySelector<HTMLInputElement>('#fQNameSearch') : null;
+      if (nameSearch && (typingName || Number(before?.dataset.qid) !== s.question.id)) {
+        nameSearch.focus({ preventScroll: true });
+        nameSearch.setSelectionRange(nameSearch.value.length, nameSearch.value.length);
+      }
       qEl.hidden = false;
     } else {
       if (!qEl.hidden && !qEl.classList.contains('minimized')) leaveOverlay(qEl);
@@ -3087,6 +3106,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.addEventListener('input', e => {
     const t = e.target as HTMLInputElement;
     if (t.id === 'fQInput' && qState) qState.text = t.value;
+    if (t.id === 'fQNameSearch' && qState && client?.state?.question && isNameChoice(client.state.question)) {
+      qState.text = t.value;
+      applyNameSearch(client.state.question);
+    }
     if (t.id === 'fQSearch' && client?.state?.question && isFilterableChoice(client.state.question)) {
       viewFor(client.state.question).query = t.value;
       applyChoiceSearch(client.state.question);
@@ -3179,6 +3202,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const name = typeof o !== 'string' && o?.card ? label(o.card) : 'Gatilho';
     announce(`${name}: posição ${pos + 1} de ${order.length}, ${positionText(pos, order.length)}.`);
   }
+  root.addEventListener('keydown', e => {
+    // Enter na busca de nomes escolhe o primeiro achado; a seta para baixo desce para a lista.
+    if ((e.target as HTMLElement).id === 'fQNameSearch' && (e.key === 'Enter' || e.key === 'ArrowDown')) {
+      const first = root.querySelector<HTMLElement>('#fQNames [data-q-opt]');
+      if (!first) return;
+      e.preventDefault();
+      if (e.key === 'Enter') first.click(); else first.focus();
+    }
+  });
   root.addEventListener('keydown', e => {
     const card = (e.target as HTMLElement).closest?.<HTMLElement>('[data-trigger]');
     const q = client?.state?.question;

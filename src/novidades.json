@@ -1,4 +1,9 @@
 {
+  "0.92.1": {
+    "Nomear uma carta sem travar a mesa": [
+      { "img": "0.92.1/nomear-carta.webp", "legenda": "A Silverquill Silencer pedindo um nome: com **lightn** digitado, aparecem só as cinco cartas que batem, a Lightning Bolt primeiro, com o nome em português embaixo." }
+    ]
+  },
   "0.92.0": {
     "Opções em seções": [
       { "img": "0.92.0/opcoes-secoes.webp", "legenda": "O painel Opções com as seções **Som**, **Jogo** e **Aparência** fechadas, cada uma mostrando ao lado como está." },

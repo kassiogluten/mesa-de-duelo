@@ -279,6 +279,14 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     state.question = { id: 90 + n + max, method: 'getChoices', kind: 'choose', title: max > 1 ? `Escolha até ${max} cartas` : 'Escolha uma carta do seu grimório', min: 0, max, options };
     view.render();
   },
+  /** Silverquill Silencer: nomear uma carta entre dezenas de milhares de nomes, que a ponte manda só como texto. */
+  nameACard() {
+    const real = ['Lightning Bolt', 'Lightning Helix', 'Chain Lightning', 'Ball Lightning', 'Lightning Greaves', 'Counterspell', 'Llanowar Elves', 'Serra Angel', 'Sol Ring', 'Swords to Plowshares'];
+    const options = [...real, ...Array.from({ length: 34000 - real.length }, (_, i) => `Fixture Card ${i}`)].sort();
+    state.question = { id: 95, method: 'getChoices', kind: 'choose', purpose: 'card-name', title: 'Escolha o nome da carta nonland.', min: 1, max: 1, options,
+      card: card(830, 'Silverquill Silencer', 10, { typeLine: 'Creature — Human Cleric', manaCost: '{W}{B}', power: 3, toughness: 2 }) };
+    view.render();
+  },
   /** Mão revelada (Telepathy): o oponente tem 5 cartas e você vê todas, ou só `shown` delas. */
   revealedHand(shown = 5) {
     const opp = state.players[1];

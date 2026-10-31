@@ -892,6 +892,14 @@ final class Session {
                 q.addProperty("max", (Integer) a[2]);
                 @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
                 options.addAll((Collection<?>) a[3]);
+                if (options.size() >= 30 && seat.controller() instanceof AskingController controller && controller.namingCard()) {
+                    // Nomear uma carta: em geral todos os nomes do jogo. Vão só os textos, e a mesa mostra uma busca em vez da lista.
+                    q.addProperty("purpose", "card-name");
+                    JsonArray names = new JsonArray();
+                    for (Object o : options) names.add(display != null ? display.apply(o) : String.valueOf(o));
+                    q.add("options", names);
+                    break;
+                }
                 JsonArray rows = optionsJson(options, display);
                 Dungeons.roomChoice(hosted.getGame(), options, rows, q);
                 q.add("options", rows);

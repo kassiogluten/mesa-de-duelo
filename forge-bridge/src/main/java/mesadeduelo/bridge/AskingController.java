@@ -53,6 +53,15 @@ final class AskingController extends PlayerControllerHuman {
     }
     private <T> T asking(SpellAbility sa, Supplier<T> choice) { return asking(sa == null ? null : sa.getHostCard(), choice); }
 
+    private volatile boolean namingCard;
+    /** Escolha em curso é nomear uma carta (Pithing Needle, Silverquill Silencer...): a lista traz todos os nomes do jogo. */
+    boolean namingCard() { return namingCard; }
+    private <T> T naming(Supplier<T> choice) {
+        boolean previous = namingCard;
+        namingCard = true;
+        try { return choice.get(); } finally { namingCard = previous; }
+    }
+
     /** Jogador humano da mesa: cria o {@link AskingController} no lugar do controlador padrão. */
     static final class Lobby extends LobbyPlayerHuman {
         private final UndoHistory undo;
@@ -164,6 +173,8 @@ final class AskingController extends PlayerControllerHuman {
         return asking(sa, () -> super.chooseCounterType(options, sa, prompt, params));
     }
     @Override public String chooseProtectionType(SpellAbility sa, List<String> choices) { return asking(sa, () -> super.chooseProtectionType(sa, choices)); }
-    @Override public String chooseCardName(SpellAbility sa, Predicate<ICardFace> cpp, String valid, String message) { return asking(sa, () -> super.chooseCardName(sa, cpp, valid, message)); }
-    @Override public String chooseCardName(SpellAbility sa, List<ICardFace> faces, String message) { return asking(sa, () -> super.chooseCardName(sa, faces, message)); }
+    @Override public String chooseCardName(SpellAbility sa, Predicate<ICardFace> cpp, String valid, String message) { return naming(() -> asking(sa, () -> super.chooseCardName(sa, cpp, valid, message))); }
+    @Override public String chooseCardName(SpellAbility sa, List<ICardFace> faces, String message) { return naming(() -> asking(sa, () -> super.chooseCardName(sa, faces, message))); }
+    @Override public ICardFace chooseSingleCardFace(SpellAbility sa, String message, Predicate<ICardFace> cpp, String name) { return naming(() -> asking(sa, () -> super.chooseSingleCardFace(sa, message, cpp, name))); }
+    @Override public ICardFace chooseSingleCardFace(SpellAbility sa, List<ICardFace> faces, String message) { return naming(() -> asking(sa, () -> super.chooseSingleCardFace(sa, faces, message))); }
 }

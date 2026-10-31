@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.92.1] - 2026-10-31
+
+### Corrigido
+
+- **Nomear uma carta sem travar a mesa.** Cartas que pedem para você escolher o nome de qualquer carta (Silverquill Silencer, Pithing Needle, Meddling Mage, Cabal Therapy e outras) abriam uma lista com todos os nomes do jogo, mais de 30 mil, e a mesa ficava lenta ou travava. Agora a escolha abre com uma busca: digite parte do nome em inglês (as cartas que a mesa já conhece também aparecem pelo nome em português) e aparecem só os primeiros nomes que batem, começando pelos que começam com o que você digitou. **Enter** escolhe o primeiro da lista.
+
 ## [0.92.0] - 2026-10-31
 
 ### Mudou
