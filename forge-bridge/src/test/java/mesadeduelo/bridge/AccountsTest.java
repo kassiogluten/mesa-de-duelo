@@ -293,4 +293,52 @@ public class AccountsTest {
         assertNull("blank name is anonymous", store.entry(sent(feedback.handle(FeedbackTest.gzip(report("   ")), null, null, null, "10.2.0.5"))).author());
         assertEquals("long names are cut", Feedback.MAX_NAME, Feedback.cleanName("x".repeat(80)).length());
     }
+
+    /** Uma partida de dois jogadores no histórico: {@code seat0} e {@code seat1} são as contas (ou null), e quem venceu. */
+    private static JsonObject match(String id, String endedAt, String seat0, String seat1, int winner) {
+        String p0 = "{\"name\":\"Ana\",\"ai\":false," + (seat0 == null ? "" : "\"account\":\"" + seat0 + "\",\"deckId\":\"deck-elfos\",") + "\"deck\":\"Elfos\",\"colors\":\"G\",\"wins\":" + (winner == 0 ? 1 : 0) + "}";
+        String p1 = "{\"name\":\"Bia\",\"ai\":false," + (seat1 == null ? "" : "\"account\":\"" + seat1 + "\",") + "\"deck\":\"Goblins\",\"colors\":\"R\",\"wins\":" + (winner == 1 ? 1 : 0) + "}";
+        return JsonParser.parseString("{\"id\":\"" + id + "\",\"endedAt\":\"" + endedAt + "\",\"ms\":600000,\"format\":\"free\",\"length\":\"bo1\",\"mode\":\"rede\",\"end\":\"concluida\",\"winner\":"
+            + winner + ",\"players\":[" + p0 + "," + p1 + "],\"games\":[{\"turns\":9}]}").getAsJsonObject();
+    }
+
+    private String accountOf(Accounts a, String auth) {
+        return json(a.handle("GET", "eu", auth, new byte[0], "ip")).getAsJsonObject("conta").get("id").getAsString();
+    }
+
+    @Test public void myMatchesListOnlyTheAccountsOwnMatchesAndDeletingTheAccountUnlinksThem() throws IOException {
+        Accounts a = accounts();
+        MatchHistory history = new MatchHistory(tmp.getRoot().toPath().resolve("partidas"));
+        a.history(history);
+        String ana = enter(a, "301"), bia = enter(a, "302");
+        String anaId = accountOf(a, ana), biaId = accountOf(a, bia);
+        assertEquals("the table sends the raw token", anaId, a.accountOfToken(ana.substring(7)));
+        assertNull(a.accountOfToken("inventado"));
+
+        now.set(java.time.Instant.parse("2026-11-01T12:00:00Z").toEpochMilli());
+        history.record(match("m1", "2026-10-01T10:00:00Z", anaId, biaId, 0));
+        history.record(match("m2", "2026-10-02T10:00:00Z", null, biaId, 1));
+        history.record(match("m3", "2026-11-01T10:00:00Z", anaId, null, 1));
+
+        JsonObject mine = json(a.handle("GET", "partidas", ana, new byte[0], "ip"));
+        assertEquals(2, mine.get("total").getAsInt());
+        JsonObject newest = mine.getAsJsonArray("partidas").get(0).getAsJsonObject();
+        assertEquals("m3", newest.get("id").getAsString());
+        assertEquals("derrota", newest.get("resultado").getAsString());
+        assertEquals("Bia", newest.getAsJsonArray("oponentes").get(0).getAsJsonObject().get("nome").getAsString());
+        assertFalse("another player's account never leaves the server", mine.toString().contains(biaId));
+        assertEquals(1, mine.getAsJsonObject("numeros").get("vitorias").getAsInt());
+
+        assertEquals("filters come in the query", 1, json(a.handle("GET", "partidas?formato=free&pagina=0&periodo=7", ana, new byte[0], "ip")).get("total").getAsInt());
+        assertEquals(401, a.handle("GET", "partidas", null, new byte[0], "ip").status());
+
+        assertEquals(200, a.handle("DELETE", "conta", ana, new byte[0], "ip").status());
+        assertEquals("the matches stay, without the link", 3, history.read("2026-10").size() + history.read("2026-11").size());
+        assertEquals(0, history.readFor(anaId).size());
+        assertEquals(2, history.readFor(biaId).size());
+        String october = Files.readString(history.dir().resolve("2026-10.jsonl"));
+        assertFalse(october.contains(anaId));
+        assertFalse("the deck id goes with the account", october.contains("deck-elfos"));
+        assertTrue(october.contains(biaId));
+    }
 }

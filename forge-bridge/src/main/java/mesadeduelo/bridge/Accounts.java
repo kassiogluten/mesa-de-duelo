@@ -53,6 +53,7 @@ import mesadeduelo.bridge.Admin.Response;
  *   POST   sincronizar {mudancas}  {rev, aplicadas, conflitos, recusadas} (ver {@link AccountDecks#sync})
  *   GET    lixeira                 {decks}: os apagados nos últimos 30 dias
  *   POST   lixeira/{id}/restaurar  {id, rev, deck, contaRev}
+ *   GET    partidas?periodo&formato&deck&pagina   as partidas da conta e os números (ver {@link AccountMatches})
  *
  * Só "sincronizar" aceita corpo grande (até {@link #MAX_SYNC_BYTES}, para o primeiro login com muitos decks);
  * o resto passa pelo agregador de 64 KB.
@@ -79,6 +80,8 @@ final class Accounts {
     /** hash do token → conta e fim; espelho de sessoes.json. */
     private final Map<String, Login> sessions = new HashMap<>();
     private int accounts;
+    /** Histórico das partidas, para Minhas partidas; sem ele, a lista vem vazia. */
+    private volatile MatchHistory history;
     private final ThreadPoolExecutor workers = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(64),
         r -> { Thread t = new Thread(r, "Contas"); t.setDaemon(true); return t; });
 
@@ -103,13 +106,20 @@ final class Accounts {
     }
 
     boolean enabled() { return google != null; }
+    void history(MatchHistory history) { this.history = history; }
     Path dir() { return dir; }
     synchronized int count() { return accounts; }
     synchronized int sessionCount() { return sessions.size(); }
 
-    /** Trata um pedido já lido inteiro; path é o que vem depois de /api/conta/. */
+    /** Trata um pedido já lido inteiro; path é o que vem depois de /api/conta/, com a query (?a=b) quando houver. */
     Response handle(String method, String path, String authorization, byte[] body, String ip) {
         if (!enabled()) return Response.error(503, "Contas desligadas: defina MESA_GOOGLE_CLIENT_ID no servidor.");
+        Map<String, String> query = new HashMap<>();
+        int q = path.indexOf('?');
+        if (q >= 0) {
+            new QueryStringDecoder(path.substring(q)).parameters().forEach((k, v) -> { if (!v.isEmpty()) query.put(k, v.get(0)); });
+            path = path.substring(0, q);
+        }
         try {
             if (path.equals("entrar")) return "POST".equals(method) ? login(body, ip) : Response.error(405, "Use POST para entrar.");
             String account = authorized(authorization);
@@ -120,6 +130,7 @@ final class Accounts {
             if ((path.equals("estado") || path.startsWith("estado/")) && "GET".equals(method)) return state(account, path.substring("estado".length()));
             if (path.equals("sincronizar") && "POST".equals(method)) return sync(account, body);
             if (path.equals("lixeira") && "GET".equals(method)) return withDecks(account, false, AccountDecks::trash);
+            if (path.equals("partidas") && "GET".equals(method)) return matches(account, query);
             String[] parts = path.split("/");
             if (parts.length == 3 && parts[0].equals("lixeira") && parts[2].equals("restaurar") && "POST".equals(method)) return restore(account, parts[1]);
             return Response.error(404, "Rota desconhecida das contas.");
@@ -207,6 +218,13 @@ final class Accounts {
         return r;
     }
 
+    /** Minhas partidas: lê o histórico fora do lock das contas (pode levar um tempo com muitos meses). */
+    private Response matches(String account, Map<String, String> query) throws IOException {
+        MatchHistory h = history;
+        List<JsonObject> mine = h == null ? List.of() : h.readFor(account);
+        return Response.json(200, AccountMatches.page(mine, account, AccountMatches.Filter.of(query), clock.getAsLong()));
+    }
+
     private Response restore(String account, String id) throws IOException { return withDecks(account, true, a -> AccountDecks.restore(a, id)); }
 
     /**
@@ -237,6 +255,9 @@ final class Accounts {
         if (Files.deleteIfExists(file(account))) accounts--;
         sessions.values().removeIf(s -> s.account().equals(account));
         saveSessions();
+        // As partidas ficam no histórico, sem a ligação com a conta.
+        MatchHistory h = history;
+        if (h != null) h.forget(account);
         System.out.println("Contas: uma conta foi apagada pelo jogador");
     }
 
@@ -249,6 +270,13 @@ final class Accounts {
         if (s.expires() < now) { sessions.remove(h); saveSessions(); return null; }
         if (s.expires() - now < SESSION_MILLIS - RENEW_AFTER) { sessions.put(h, new Login(s.account(), now + SESSION_MILLIS)); saveSessions(); }
         return s.account();
+    }
+
+    /** A conta do token cru (a mesa o manda ao começar ou entrar numa partida); null sem contas ou sem sessão válida. */
+    String accountOfToken(String token) {
+        if (!enabled() || token == null || token.isBlank()) return null;
+        try { return authorized("Bearer " + token.strip()); }
+        catch (IOException e) { System.err.println("Contas: não deu para conferir a sessão de um assento: " + e); return null; }
     }
 
     /**
@@ -407,7 +435,8 @@ final class Accounts {
                 String auth = req.headers().get(HttpHeaderNames.AUTHORIZATION), ip = req.headers().get("X-Real-IP");
                 if (ip == null || ip.isBlank())
                     ip = ctx.channel().remoteAddress() instanceof InetSocketAddress a && a.getAddress() != null ? a.getAddress().getHostAddress() : "?";
-                String from = ip, rest = path.substring(PREFIX.length());
+                String raw = new QueryStringDecoder(req.uri()).rawQuery();
+                String from = ip, rest = path.substring(PREFIX.length()) + (raw.isEmpty() ? "" : "?" + raw);
                 try { workers.execute(() -> Admin.respond(ctx, handle(method, rest, auth, body, from))); }
                 catch (RejectedExecutionException e) { Admin.respond(ctx, Response.error(503, "O servidor está ocupado. Tente de novo.")); }
             } finally {

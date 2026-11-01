@@ -56,7 +56,7 @@ test('as telas do jogo não falam em "ponte"', async () => {
     const css = (await read(path)).replace(/\/\*[\s\S]*?\*\//g, '');
     found.push(...hits(css.split('\n'), path));
   }
-  for (const path of ['index.html', 'novidades.html', 'privacidade.html']) {
+  for (const path of ['index.html', 'novidades.html', 'privacidade.html', 'partidas.html']) {
     const html = (await read(path)).replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
     found.push(...hits(html.split('\n'), path));
   }

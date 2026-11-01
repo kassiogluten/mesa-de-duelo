@@ -96,6 +96,20 @@ public class MatchHistoryTest {
         return Session.room("ABCD", null, "Ana", new forge.deck.Deck("Elfos"), new MatchConfig("commander", "bo1", 2), false);
     }
 
+    @Test public void aSeatPlayedWithTheAccountCarriesItAndTheSavedDeck() {
+        Game game = CommanderEngineTest.game(2);
+        java.util.List.copyOf(game.getPlayers()).get(1).concede(); game.getAction().checkGameOverCondition();
+        Session session = twoSeats();
+        session.seats[0].registered = game.getMatch().getPlayers().get(0);
+        session.seats[0].owner(new Rooms.Owner("conta-ana", "deck-1"));
+        var players = session.historyJson(game.getMatch()).getAsJsonArray("players");
+        assertEquals("conta-ana", players.get(0).getAsJsonObject().get("account").getAsString());
+        assertEquals("deck-1", players.get(0).getAsJsonObject().get("deckId").getAsString());
+        assertFalse("without the account, nothing links the seat", players.get(1).getAsJsonObject().has("account"));
+        session.seats[0].bind(null, "Ana", new forge.deck.Deck("Elfos"));
+        assertNull("a new player in the seat starts without an account", session.seats[0].account);
+    }
+
     @Test public void aGameDecidedByAConcessionIsMarkedConceded() {
         Game game = CommanderEngineTest.game(2);
         java.util.List.copyOf(game.getPlayers()).get(1).concede(); game.getAction().checkGameOverCondition();

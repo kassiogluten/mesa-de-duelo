@@ -465,10 +465,13 @@ export interface FTargeting extends FTargets {
   valid?: string[]; zones?: string[];
 }
 
+/** Quem joga com a conta conectada: o token da sessão e o deck salvo, para a partida entrar em Minhas partidas. */
+export interface MatchOwner { conta?: string; deckId?: string }
+
 export type ClientMessage =
-  | { type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig }
-  | { type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number }
-  | { type: 'join'; code: string; name: string; deck: unknown; cover?: string; bracket?: number }
+  | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig } & MatchOwner)
+  | ({ type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
+  | ({ type: 'join'; code: string; name: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
   | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number }

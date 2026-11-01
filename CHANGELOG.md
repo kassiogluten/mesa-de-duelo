@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.100.0] - 2026-11-01
+
+### Novo
+
+- **Minhas partidas.** Quem joga com a conta conectada tem agora a página **Minhas partidas**, no menu da conta (a sua foto, no alto da tela). Ela lista cada partida com a data, o formato, o deck que você usou, os oponentes, o resultado, os turnos e quanto durou, e mostra os seus números: partidas, vitórias, taxa de vitória, duração média e a sequência atual, além da taxa por deck, por formato e contra o computador ou contra pessoas. Dá para filtrar pelos últimos 7 dias, 30 dias ou 3 meses, pelo formato e pelo deck. Cada deck conta pelo deck salvo, então editar a lista não começa outra contagem. Entram as partidas jogadas com a conta conectada a partir desta versão, contra o computador e em salas; uma partida que caiu sem ninguém voltar aparece na lista como **Sem vencedor**, mas fica fora dos números. Só você vê a página, e apagar a conta desfaz na hora a ligação com as suas partidas. A política de privacidade foi atualizada para explicar isso.
+
+### Corrigido
+
+- **Nomear entre poucas cartas volta a ser com botões.** Quando a carta pede um nome e as opções são poucas, a escolha volta a mostrar um botão para cada nome, como antes, em vez da busca. A busca só aparece quando a lista é grande demais para caber na tela (100 nomes ou mais), como ao nomear qualquer carta do jogo.
+
 ## [0.99.1] - 2026-10-31
 
 ### Mudou

@@ -98,6 +98,25 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private volatile java.util.function.Consumer<JsonObject> history = ignored -> { };
     void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
 
+    /** Quem joga com a conta conectada: o id da conta e o deck salvo dela (o id do deck no navegador, igual ao da conta). */
+    record Owner(String account, String deckId) { }
+    /** Token da sessão da conta → id da conta, ou null; sem contas ligadas, ninguém tem dono. */
+    private volatile java.util.function.Function<String, String> accountOf = token -> null;
+    void accounts(java.util.function.Function<String, String> resolver) { accountOf = resolver; }
+
+    /** {conta: token, deckId} da mensagem de começar, criar ou entrar; null sem token válido. */
+    private Owner owner(JsonObject msg) {
+        JsonElement token = msg.get("conta");
+        if (token == null || !token.isJsonPrimitive()) return null;
+        String account;
+        try { account = accountOf.apply(token.getAsString()); }
+        catch (RuntimeException e) { System.err.println("Contas: não deu para ligar o assento à conta: " + e); return null; }
+        if (account == null) return null;
+        JsonElement deck = msg.get("deckId");
+        String deckId = deck != null && deck.isJsonPrimitive() ? deck.getAsString() : null;
+        return new Owner(account, deckId != null && deckId.matches("[A-Za-z0-9_.:-]{1,80}") ? deckId : null);
+    }
+
     /** O diário da partida em que o token ocupa um assento, viva ou encerrada há pouco; null se não houver. */
     /** Partidas e salas vivas, para a área de admin (mais recentes primeiro). */
     JsonArray adminSessions() {
@@ -247,14 +266,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                         } else {
                             for (int i = 1; i < config.playerCount(); i++) { Deck d = aiDeck(msg.get("opponent"), config); opponents.add(d); brackets.add(aiBracket(msg.get("opponent"), d)); }
                         }
-                        solo(ch, you, opponents, config, brackets);
+                        solo(ch, you, opponents, config, brackets, owner(msg));
                     }
                 }
                 case "host" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
-                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg), bracket(msg));
+                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg), bracket(msg), owner(msg));
                 }
-                case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg), bracket(msg));
+                case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg), bracket(msg), owner(msg));
                 case "watch" -> watch(ch, code(msg), name(msg));
                 case "watch-player" -> watchPlayer(ch, msg);
                 case "room-say" -> say(ch, MatchConfig.string(msg, "key"));
@@ -418,9 +437,10 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     // ---------- Partidas ----------
 
-    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets) {
+    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets, Owner owner) {
         leave(ch);
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
+        s.seats[0].owner(owner);
         s.seats[0].bracket = config.commander() ? brackets.get(0) : 0;
         if (config.commander()) s.aiBrackets(brackets.subList(1, brackets.size()));
         s.history(history);
@@ -437,10 +457,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         s.start();
     }
 
-    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom, String chosen, String cover, int bracket) {
+    private synchronized void host(Channel ch, String name, Deck deck, MatchConfig config, boolean publicRoom, String chosen, String cover, int bracket, Owner owner) {
         String code = chosen == null ? null : freeCode(ch, chosen);
         leave(ch);
         Session s = Session.room(code != null ? code : newCode(4), ch, name, deck, config, publicRoom);
+        s.seats[0].owner(owner);
         s.seats[0].cover = Session.coverOf(deck, cover);
         s.seats[0].bracket = config.commander() ? bracket : 0;
         s.history(history);
@@ -450,7 +471,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deck.getName());
     }
 
-    private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover, int bracket) {
+    private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover, int bracket, Owner owner) {
         Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
@@ -458,6 +479,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         leave(ch);
         Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> each.deck == null).findFirst().orElseThrow();
         seat.bind(ch, name, deck);
+        seat.owner(owner);
         seat.cover = Session.coverOf(deck, cover);
         seat.bracket = s.config.commander() ? bracket : 0;
         byChannel.put(ch, s);
@@ -558,7 +580,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session.Seat seat = s.seatOf(ch);
         if (!s.isRoom()) { close(s, seat); return; }
         if (seat != null && !s.started() && seat.index != 0) {
-            seat.channel = null; seat.deck = null; seat.departed = true;
+            seat.channel = null; seat.deck = null; seat.departed = true; seat.owner(null);
             for (Session.Seat each : s.seats) if (each.deck != null) s.sendRoom(each);
             s.markDirty(); expireIfAbandoned(s); return;
         }

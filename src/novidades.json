@@ -1,4 +1,14 @@
 {
+  "0.100.0": {
+    "Minhas partidas": [
+      { "img": "0.100.0/minhas-partidas-menu.webp", "legenda": "O menu da conta, aberto pela sua foto no alto da tela, com o item novo **Minhas partidas**." },
+      { "img": "0.100.0/minhas-partidas-numeros.webp", "legenda": "No alto da página, os filtros de período, formato e deck e os seus números: partidas, vitórias, taxa, duração média, sequência atual e a taxa por deck, por formato e por oponente." },
+      { "img": "0.100.0/minhas-partidas-lista.webp", "legenda": "A lista de partidas: o resultado (com o placar da melhor de três ou a desistência), o seu deck, os oponentes e, à direita, quando foi, o formato, os turnos e a duração." }
+    ],
+    "Nomear entre poucas cartas volta a ser com botões": [
+      { "img": "0.100.0/nomear-entre-poucas.webp", "legenda": "A Silverquill Silencer pedindo um nome entre seis cartas: cada nome aparece num botão, sem precisar digitar." }
+    ]
+  },
   "0.99.1": {
     "Pagar automaticamente usa os talismãs": [
       { "img": "0.99.1/talisma-no-automatico.webp", "legenda": "Depois de pagar automaticamente o Coral Merfolk ({1}{U}) com duas Ilhas e o Talismã da Dominação: o talismã pagou o {1} com a mana incolor, sem dano, e uma Ilha ficou desvirada." },

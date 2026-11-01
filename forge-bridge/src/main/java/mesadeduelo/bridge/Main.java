@@ -95,6 +95,8 @@ public final class Main {
             server.accounts(accounts);
             admin.accounts(accounts);
             feedback.authors(accounts::reportAuthor);
+            accounts.history(history);
+            rooms.accounts(accounts::accountOfToken);
             server.start();
             System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
             System.out.printf("Histórico de partidas em %s%n", history.dir());

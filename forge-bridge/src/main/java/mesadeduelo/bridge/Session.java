@@ -395,10 +395,11 @@ final class Session {
     /**
      * Resumo final de uma partida concluída, uma linha do {@link MatchHistory}. Os índices de {@code winner} e dos
      * arrays de cada jogo apontam para {@code players}, na ordem do Forge (humanos antes da IA). O apelido só entra
-     * nas salas em rede: contra a IA o humano não digita nome ("Você").
+     * nas salas em rede: contra a IA o humano não digita nome ("Você"). {@code account} e {@code deckId} só vêm de quem
+     * jogou com a conta conectada (veja {@link AccountMatches}); apagar a conta os tira ({@link MatchHistory#forget}).
      *
      * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, end, winner: índice|null,
-     *  players:[{name?, ai, deck, colors, commander?, wins}],
+     *  players:[{name?, ai, account?, deckId?, deck, colors, commander?, wins}],
      *  games:[{winner: índice|null, turns, ms?, end, result:["win"|"draw"|"playing"|motivo da derrota do Forge], mull:[n]}]}
      */
     JsonObject historyJson(forge.game.Match fm) { return historyJson(fm, null, null, null); }
@@ -483,6 +484,10 @@ final class Session {
             JsonObject p = new JsonObject();
             if (room && seat != null) p.addProperty("name", seat.name);
             p.addProperty("ai", seat == null);
+            if (seat != null && seat.account != null) {
+                p.addProperty("account", seat.account);
+                if (seat.deckId != null) p.addProperty("deckId", seat.deckId);
+            }
             Deck deck = seat != null && seat.deck != null ? seat.deck : rp.getDeck();
             p.addProperty("deck", deck.getName());
             p.addProperty("colors", colors(deck));
@@ -1991,6 +1996,9 @@ final class Session {
         volatile Channel channel;
         volatile String name;
         volatile Deck deck;
+        /** Conta de quem joga neste assento (só com a conta conectada) e o id do deck salvo dela, para o histórico. */
+        volatile String account;
+        volatile String deckId;
         volatile boolean rematch;
         volatile boolean departed;
         /** Carta cuja arte representa o deck no lobby (sem comandante); null sem capa. */
@@ -2054,6 +2062,14 @@ final class Session {
             this.channel = ch;
             this.name = name;
             this.deck = deck;
+            this.account = null;
+            this.deckId = null;
+        }
+
+        /** Liga o assento à conta de quem joga; o deck só vale com a conta. */
+        void owner(Rooms.Owner owner) {
+            account = owner == null ? null : owner.account();
+            deckId = owner == null ? null : owner.deckId();
         }
 
         void send(String json) { BridgeServer.send(channel, json); }

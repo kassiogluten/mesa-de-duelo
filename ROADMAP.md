@@ -996,20 +996,20 @@ Decidido em 31/10/2026 (versão 0.99.0): o relato leva só o apelido, nunca o e-
 
 Decidido em 31/10/2026 (versão 0.97.3): o termo é "servidor", sem citar o Forge. Tela inicial: "Conectando ao servidor…", "Não encontrei o servidor em …", "A conexão com o servidor caiu." e "Não consegui voltar à partida em andamento: o servidor em … não respondeu." Mesa: "A conexão com o servidor caiu. Voltando à partida…", "A partida fica guardada no servidor por alguns minutos." e "O servidor parou de responder." O servidor manda "O servidor está ocupado. Tente de novo." (conta e admin) e "Contas desligadas: defina MESA_GOOGLE_CLIENT_ID no servidor."; o aviso de área de admin desligada, os registros no console do servidor e a área de admin (`src/admin`) ficam como estavam. As três entradas antigas das Novidades (0.5.0 e 0.5.1) passaram a dizer "servidor", sem mudar o sentido. `tests/sem-ponte.test.mjs` procura `ponte`/`pontes` como palavra inteira (não pega "ponteiro") no `CHANGELOG.md`, no `src/novidades.json`, nos textos literais de `src/**/*.ts` fora de `src/admin` (lidos pela árvore do TypeScript, então comentários não contam), no CSS e nas páginas sem comentários, e nas mensagens de `Response.error` do servidor. A mesa de teste (`tests/fixtures/duel-table.html`) ganhou `?cenario=reconectando` e `?cenario=conexao-perdida&sala=1`, usados nos prints das Novidades.
 
-## 65. Histórico e números das minhas partidas
+## 65. Histórico e números das minhas partidas ✅
 
 Quem entra com a conta não tem onde ver as próprias partidas: quantas jogou, quantas venceu, com quais decks e contra quem. Levantamento feito em 01/11/2026:
 
 - O servidor já guarda um resumo de cada partida concluída (`MatchHistory`, uma linha JSON por partida em `<dir>/AAAA-MM.jsonl`: formato, jogadores, decks, quem venceu cada jogo, turnos, duração), mas só a área de admin lê, e a linha não diz qual conta era cada jogador (`Session.historyJson`).
 - A conta (`Accounts`, um arquivo por conta) já guarda os decks e as preferências; o navegador fala com ela com o token da sessão (`src/conta/session.ts`).
 
-- [ ] Ligar cada assento à conta de quem jogou, quando o jogador está conectado (o servidor tira a conta do token, como no relato do item 63), e gravar o id da conta na linha do histórico. Partidas antigas ficam sem dono.
-- [ ] Rota da conta que devolve as partidas do jogador (só as dele), com paginação.
-- [ ] Tela **Minhas partidas** (no menu da conta): lista com data, formato, oponentes, deck usado, resultado, duração e número de turnos.
-- [ ] Números: partidas e vitórias, taxa de vitória por deck, por formato e por oponente (computador ou pessoas), duração média, sequência atual.
-- [ ] Filtros por período, formato e deck.
-- [ ] Privacidade: só o próprio jogador vê os números dele; os nomes dos oponentes aparecem como na partida. Apagar a conta apaga a ligação com as partidas. Atualizar a política de privacidade.
-- [ ] Novidades com prints da tela.
+- [x] Ligar cada assento à conta de quem jogou, quando o jogador está conectado (o servidor tira a conta do token, como no relato do item 63), e gravar o id da conta na linha do histórico. Partidas antigas ficam sem dono.
+- [x] Rota da conta que devolve as partidas do jogador (só as dele), com paginação.
+- [x] Tela **Minhas partidas** (no menu da conta): lista com data, formato, oponentes, deck usado, resultado, duração e número de turnos.
+- [x] Números: partidas e vitórias, taxa de vitória por deck, por formato e por oponente (computador ou pessoas), duração média, sequência atual.
+- [x] Filtros por período, formato e deck.
+- [x] Privacidade: só o próprio jogador vê os números dele; os nomes dos oponentes aparecem como na partida. Apagar a conta apaga a ligação com as partidas. Atualizar a política de privacidade.
+- [x] Novidades com prints da tela.
 
 Decidido em 01/11/2026, antes de começar: partidas contra o computador contam junto com as outras; o deck é identificado pelo deck salvo na conta (o id dele), sem comparar a lista jogada, então o mesmo deck editado continua sendo o mesmo; e o item não espera o banco do item 66: lê os arquivos do histórico por enquanto.
 

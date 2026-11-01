@@ -12,7 +12,7 @@ iniciarTema();
  * endereço cadastrado na tela de consentimento do Google. Precisa acompanhar o código: o que muda no que o jogo guarda
  * ou envia muda aqui também, com a data no topo.
  */
-const UPDATED = '31 de outubro de 2026';
+const UPDATED = '1º de novembro de 2026';
 const ext = (href: string, text: string) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
 const whatsapp = ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`);
 
@@ -60,7 +60,7 @@ app.innerHTML = `
       <ul>
         <li><strong>O deck escolhido e o nome que você digitou na mesa.</strong> O nome aparece para os outros jogadores da sala; numa sala pública, ele também aparece na lista de salas para qualquer pessoa.</li>
         <li><strong>As jogadas da partida.</strong> Elas ficam na memória do servidor enquanto a partida existe e somem pouco depois do fim.</li>
-        <li><strong>O resumo de cada partida concluída:</strong> formato, nomes dos jogadores, nomes dos decks, quem venceu, número de turnos e duração. Esse resumo é usado só para acompanhar o funcionamento do jogo e não é mostrado a outros jogadores.</li>
+        <li><strong>O resumo de cada partida concluída:</strong> formato, nomes dos jogadores, nomes dos decks, quem venceu, número de turnos e duração. Esse resumo é usado para acompanhar o funcionamento do jogo e não é mostrado a outros jogadores. Se você estiver com a conta conectada, ele guarda também o código da sua conta e qual deck salvo você usou, para a partida aparecer em <strong>Minhas partidas</strong>.</li>
         <li><strong>Registros técnicos:</strong> como em qualquer site, o servidor anota o endereço IP, o horário e o que foi pedido. Esses registros servem para segurança e para encontrar erros, e são apagados pela própria hospedagem depois de algum tempo. Para limitar abusos (como tentar muitos códigos de sala), o servidor guarda, só na memória, um resumo do IP que não permite voltar ao endereço.</li>
       </ul>
       <p>As mensagens entre jogadores na sala são frases prontas; o jogo não tem chat livre.</p>
@@ -75,10 +75,11 @@ app.innerHTML = `
         <li>o seu nome na mesa (na primeira vez, o seu primeiro nome, se o campo estiver vazio), que você pode mudar;</li>
         <li>as preferências da mesa: som, aviso de turno, ritmo, passar a vez automaticamente e onde o jogo para no turno do oponente;</li>
         <li>os decks que você salvar enquanto estiver conectado, incluindo os apagados há menos de 30 dias, que ficam numa lixeira para você poder recuperar;</li>
+        <li>a ligação entre a conta e as partidas que você jogar conectado, para mostrar em <strong>Minhas partidas</strong> quantas você jogou e venceu, com quais decks e contra quem. Só você vê essa página; os outros jogadores aparecem nela com o nome que usaram na sala;</li>
         <li>as sessões abertas (uma por aparelho conectado), guardadas de forma que não podem ser usadas por quem lê o arquivo. Uma sessão vale 180 dias e se renova enquanto você usa o jogo.</li>
       </ul>
       <p><strong>O e-mail e o nome completo não são guardados.</strong> A foto não é mostrada aos outros jogadores: ela aparece só no seu cabeçalho.</p>
-      <p>Para ver o que a conta tem, abra o jogo conectado. Para apagar, use <strong>Apagar minha conta</strong> no menu da conta: tudo o que está nela sai do servidor na hora, e os decks do seu aparelho continuam nele. Contas sem uso não são apagadas automaticamente.</p>
+      <p>Para ver o que a conta tem, abra o jogo conectado. Para apagar, use <strong>Apagar minha conta</strong> no menu da conta: tudo o que está nela sai do servidor na hora, e os decks do seu aparelho continuam nele. O resumo das partidas que você jogou continua guardado, como o das partidas sem conta, mas perde na hora o código da conta e o deck, e não há mais como ligá-lo a você. Contas sem uso não são apagadas automaticamente.</p>
       <p>O login é feito pelo Google Identity Services. O Google trata os seus dados de acordo com a ${ext('https://policies.google.com/privacy?hl=pt-BR', 'Política de Privacidade do Google')}, e você pode remover o acesso do Mesa de Duelo a qualquer momento em ${ext('https://myaccount.google.com/connections', 'Apps e serviços conectados à sua Conta do Google')}.</p>
     </section>
 
@@ -114,7 +115,7 @@ app.innerHTML = `
         <li><strong>Sessão de um aparelho:</strong> 180 dias sem usar o jogo, ou até você sair.</li>
         <li><strong>Relatos:</strong> até 90 dias.</li>
         <li><strong>Partida em andamento:</strong> enquanto existir, e pouco tempo depois do fim.</li>
-        <li><strong>Resumo das partidas concluídas:</strong> sem prazo, para acompanhar o funcionamento do jogo ao longo do tempo. Você pode pedir que as partidas com o seu nome sejam apagadas.</li>
+        <li><strong>Resumo das partidas concluídas:</strong> sem prazo, para acompanhar o funcionamento do jogo ao longo do tempo. Ao apagar a conta, a ligação dele com ela some na hora. Você também pode pedir que as partidas com o seu nome sejam apagadas.</li>
       </ul>
     </section>
 
