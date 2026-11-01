@@ -1,6 +1,7 @@
 import type { FCard, FCardState } from '../forge/client';
 import { esc, manaHTML, pip } from './cardtext';
 import { countSeals } from './cardCounts';
+import { FACE_DOWN_LABEL } from './faceDownReminder';
 
 /**
  * Efeitos contínuos de uma permanente no campo (item 17 do roadmap): uma moldura e um brilho no máximo, escolhidos
@@ -27,7 +28,6 @@ const PROTECTION_LABEL: Record<string, string> = {
   creature: 'criaturas', creatures: 'criaturas', multicolored: 'multicoloridas', monocolored: 'monocoloridas', everything: 'tudo',
   colorless: 'incolores', instant: 'instantâneas', sorcery: 'feitiços', enchantment: 'encantamentos', planeswalker: 'planeswalkers',
 };
-const FACE_DOWN_LABEL: Record<string, string> = { morph: 'Metamorfose', disguise: 'Disfarce', manifest: 'Manifestada', cloak: 'Encoberta' };
 const AURA_COLOR: Record<string, string> = { W: '#f4e7b8', U: '#5aa9e6', B: '#a284c9', R: '#ef6a4f', G: '#5cbf74', M: '#f2b54c', C: '#c3c8d2', L: '#c3c8d2' };
 /** Cor do brilho da carta encantada: a cor da aura (dourado se tiver várias cores). */
 export function auraColor(manaCost = '') {

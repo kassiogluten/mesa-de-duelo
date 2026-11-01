@@ -187,6 +187,21 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
     Object.assign(state, { playableExile: [278], castable: [278] });
     view.render();
   },
+  /**
+   * Viradas para baixo no campo, com a carta de lembrete de cada tipo: a sua metamorfose (você vê qual carta é) e o
+   * seu disfarce; do oponente, uma manifestada, uma encoberta e uma sem tipo conhecido (fica o verso). Uma prevista
+   * no exílio continua com o verso. `?cenario=viradas`.
+   */
+  faceDown() {
+    const [me, opp] = state.players;
+    const down = (id: number, controller: number, kind?: string, extra = {}) => ({ id, controller, tapped: false, token: false, faceDown: true, creature: true, power: 2, toughness: 2, typeLine: 'Creature', ...(kind ? { faceDownKind: kind } : {}), ...extra });
+    me.battlefield.push(
+      down(370, 10, 'morph', { hiddenFace: { name: 'Exalted Angel', manaCost: '{4}{W}{W}', typeLine: 'Creature — Angel', creature: true, power: 4, toughness: 5 } }),
+      down(371, 10, 'disguise', { keywords: ['WARD'], ward: '{2}', hiddenFace: { name: 'Fugitive Codebreaker', manaCost: '{1}{R}', typeLine: 'Creature — Goblin Rogue', creature: true, power: 2, toughness: 2 } }));
+    opp.battlefield.push(down(372, 23, 'manifest'), down(373, 23, 'cloak', { keywords: ['WARD'], ward: '{2}', tapped: true }), down(374, 23));
+    opp.exile.push({ id: 375, controller: 23, tapped: false, token: false, faceDown: true, foretold: true });
+    view.render();
+  },
   /** Dia ou noite na trilha de fases, com as mágicas que quem joga o turno já conjurou. */
   dayNight(time: 'day' | 'night' = 'day', spells = 0, active = 10) {
     Object.assign(state, { dayTime: time, activeSpells: spells, activePlayer: active });
@@ -481,6 +496,7 @@ if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (windo
 if (new URLSearchParams(location.search).get('cenario') === 'contagens') (window as any).fixture.counts(Number(new URLSearchParams(location.search).get('licoes') ?? 3));
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
+if (cenario === 'viradas') (window as any).fixture.faceDown();
 if (cenario === 'improvisar') (window as any).fixture.improvise();
 // Pagar mana à mão: ?cenario=pagar (Craw Wurm, {4}{G}{G}); toque nos terrenos e no Sol Ring para descontar.
 if (cenario === 'pagar') (window as any).fixture.payMana();

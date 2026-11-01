@@ -1,4 +1,11 @@
 {
+  "0.98.0": {
+    "Criaturas viradas para baixo com a carta de lembrete": [
+      { "img": "0.98.0/viradas-do-oponente.webp", "legenda": "No campo do oponente, uma criatura manifestada e uma encoberta aparecem com a carta de lembrete de cada uma; a da direita, sem tipo conhecido, continua com o verso." },
+      { "img": "0.98.0/suas-viradas.webp", "legenda": "As suas viradas para baixo, de metamorfose e de disfarce, com a carta de lembrete e o olho no canto, porque você pode olhar qual carta é." },
+      { "img": "0.98.0/previa-da-virada.webp", "legenda": "Passando o mouse na criatura encoberta do oponente: a carta de lembrete ampliada e o aviso de que só quem a controla sabe qual carta é." }
+    ]
+  },
   "0.97.3": {
     "Avisos de conexão mais claros": [
       { "img": "0.97.3/conexao-servidor.webp", "legenda": "Quando a conexão cai no meio da partida, a mesa avisa que a conexão com o servidor caiu e tenta voltar sozinha, contando as tentativas." },

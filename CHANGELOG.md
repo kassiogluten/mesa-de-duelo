@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.98.0] - 2026-10-31
+
+### Novo
+
+- **Criaturas viradas para baixo com a carta de lembrete.** Uma criatura virada para baixo no campo deixa de aparecer com o verso da carta e mostra a carta de lembrete de como ela foi virada: a de metamorfose, a de manifestação (também para manifestar pavor) e a de disfarce, que vale também para as encobertas. Passar o mouse ou tocar nela mostra a carta de lembrete ampliada, com o que ela diz em português; de uma criatura sua, você continua vendo qual carta é, com o olho no canto. No exílio, na mão e no grimório, e quando a mesa não sabe como a carta foi virada, continua o verso, que também volta se a imagem não carregar. Vale nos três estilos de carta.
+
 ## [0.97.3] - 2026-10-31
 
 ### Mudou

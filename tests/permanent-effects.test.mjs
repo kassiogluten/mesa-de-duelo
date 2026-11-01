@@ -5,7 +5,9 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const cardCounts = uri((await readFile(new URL('../src/ui/cardCounts.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./cardCounts'", JSON.stringify(cardCounts));
+const faceDown = uri(await readFile(new URL('../src/ui/faceDownReminder.ts', import.meta.url), 'utf8'));
+const { faceDownReminder } = await import(faceDown);
+const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./cardCounts'", JSON.stringify(cardCounts)).replace("'./faceDownReminder'", JSON.stringify(faceDown));
 const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import(uri(source));
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
@@ -20,6 +22,21 @@ test('one frame and one glow at most, chosen by importance', () => {
   assert.equal(permanentFx(creature({ counters: { P1P1: 2 } })).glow, 'plus');
   assert.equal(permanentFx(creature({ counters: { M1M1: 1 } })).glow, 'minus');
   assert.equal(permanentFx({ id: 2, tapped: false, token: false, keywords: ['MENACE'] }).frame, undefined, 'creature-only keywords stay off other permanents');
+});
+
+test('face-down permanents get the fixed Scryfall reminder card of how they were turned; unknown kinds keep the card back', () => {
+  const ids = { morph: '5430da88-b72e-4d64-bd3c-b21062cac1c2', manifest: '7b010eeb-1304-4e0b-9eff-3e4561b67396', disguise: '241b3b6d-a25f-4a43-b5d6-1d1079e7e498', cloak: '241b3b6d-a25f-4a43-b5d6-1d1079e7e498' };
+  for (const [kind, id] of Object.entries(ids)) {
+    const r = faceDownReminder({ faceDown: true, faceDownKind: kind });
+    assert.equal(r.normal, `https://cards.scryfall.io/normal/front/${id[0]}/${id[1]}/${id}.jpg`, kind);
+    assert.match(r.small, /^https:\/\/cards\.scryfall\.io\/small\//);
+    assert.match(r.art, /^https:\/\/cards\.scryfall\.io\/art_crop\//);
+    assert.ok(r.text.length > 20);
+  }
+  assert.equal(faceDownReminder({ faceDown: true, faceDownKind: 'morph' }).label, 'Metamorfose');
+  assert.equal(faceDownReminder({ faceDown: true }), undefined, 'no kind: the card back');
+  assert.equal(faceDownReminder({ faceDown: false, faceDownKind: 'morph' }), undefined, 'face up: the card itself');
+  assert.equal(faceDownReminder({ faceDown: true, faceDownKind: 'outro' }), undefined, 'kinds from a newer bridge fall back to the back');
 });
 
 test('ward cost, protection, prevention and face-down get readable seals', () => {
