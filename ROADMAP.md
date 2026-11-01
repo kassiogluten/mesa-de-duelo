@@ -936,3 +936,55 @@ Quem manda o endereço da mesa no WhatsApp, no Discord ou numa rede social hoje 
 - [x] Um teste que confere que o nginx acha no `index.html` as linhas que ele troca.
 
 Decidido em 31/10/2026 (versão 0.97.0): a imagem (`public/og-mesa.jpg`, JPEG, que todos os apps mostram) é um print da mesa de teste (`tests/fixtures/duel-table.html`) com criaturas dos dois lados e a mão embaixo. O `index.html` traz `https://__MESA_HOST__/og-mesa.jpg`, e o nginx (`sub_filter` em `deploy/nginx.conf`) troca o marcador pelo esquema (de `X-Forwarded-Proto`, porque o Coolify termina o HTTPS no proxy) e pelo `Host` de quem pediu, então vale em qualquer domínio sem configurar nada. Com `?sala=` de 3 a 12 letras e números, o nginx troca também o título ("Convite para a sala CÓDIGO · Mesa de Duelo") e a descrição; qualquer outro valor fica com a prévia geral, para nada do endereço virar HTML. A prévia do convite não consulta a ponte: o cartão aparece mesmo para uma sala que já acabou. `tests/opengraph.test.mjs` confere que cada `sub_filter` acha a linha dele no `index.html`. Ficou de fora: prévia própria das outras páginas (novidades, privacidade) e uma imagem gerada por sala.
+
+## 62. Pagamento automático usando os talismãs
+
+Ao pagar automaticamente, a mesa vira os terrenos e deixa o Talismã (Talisman of Dominance, Talisman of Progress e afins) sem uso, mesmo quando ele é a única fonte que sobraria e o jogador não tem outro uso para ele no turno. O resultado é o jogador acabar com só o talismã desvirado, sem mana de terreno para responder. Levantamento feito em 31/10/2026:
+
+- O botão de pagar automaticamente é o OK do pagamento do Forge (`canAutoPay` em `Session`), que escolhe as fontes com a lógica da IA (`ComputerUtilMana`). Essa lógica prefere terrenos e evita fontes com desvantagem, como a mana colorida do talismã, que causa 1 de dano a quem a usa (a mana incolor dele não causa dano).
+- A ponte não interfere na escolha das fontes: o que o Forge escolhe é o que é virado.
+
+- [ ] Reproduzir com o motor real em `forge-bridge/src/test`: terrenos e um talismã no campo, pagar automaticamente um custo que dá para pagar com ou sem o talismã, e anotar o que o Forge vira.
+- [ ] No pagamento automático do jogador, usar o talismã antes de deixá-lo como a única fonte desvirada: por exemplo, pagar a parte genérica com a mana incolor do talismã (sem dano) e guardar os terrenos, que servem para mais coisas.
+- [ ] Usar a mana colorida do talismã (com 1 de dano) só quando ela evitar deixar uma cor de que o jogador precisa sem fonte, ou quando não houver outro jeito de pagar.
+- [ ] Valer também para as outras pedras de mana parecidas (Signets, Mind Stone, Arcane Signet), sem mudar o pagamento manual nem o do computador.
+- [ ] Testar casos: custo só genérico, custo com cor que os terrenos e o talismã dão, talismã e uma terra de dor (Battlefield Forge) juntos.
+
+A decidir antes de começar: a regra de prioridade entre terrenos e pedras de mana (sempre pedras primeiro na parte genérica, ou só quando sobra mana parecida); e se vale aceitar 1 de dano do talismã para guardar um terreno de cor.
+
+## 63. Apelido de quem enviou o relato
+
+Os relatos de sugestão e erro (item 28) chegam sem dizer quem os enviou: levam o texto, o aparelho, as preferências da mesa e, se o jogador escolher, a partida anexada (que tem os nomes de todos os jogadores, mas não diz qual deles relatou). Para responder ou entender o contexto, ajuda saber o apelido de quem enviou. Levantamento feito em 31/10/2026:
+
+- O relato é montado em `src/feedback.ts` (`FeedbackReport`) e enviado para a ponte em `/api/relatos` (`Feedback.java`, guardado por `FeedbackStore`); a área de admin (`src/admin/admin.ts`) lista os relatos.
+- A conta (Entrar com Google) guarda o apelido (`apelido` em `ContaPerfil`, `src/conta/session.ts`; `Accounts.java`), e o pedido à ponte já sabe mandar o token da sessão. O nome usado nas salas fica em `mesa:name` (`#netName` em `src/ui/lobby.ts`).
+
+Decidido em 31/10/2026: só o apelido, sem registrar nem pedir e-mail.
+
+- [ ] Com a conta conectada, o relato leva o apelido da conta. A ponte o tira da sessão (pelo token), e não do corpo do relato, para ninguém relatar em nome de outra conta; guarda também o id da conta, para juntar os relatos de um mesmo jogador.
+- [ ] Sem conta, o relato leva o nome usado na partida (o da sala, `mesa:name`), marcado como "nome informado", sem verificação.
+- [ ] Sem conta e sem nome, continua anônimo, como hoje.
+- [ ] O formulário diz, numa linha discreta, com que nome o relato vai ("Enviando como Ana"), para o jogador saber antes de mandar.
+- [ ] A área de admin mostra o apelido em cada relato e permite filtrar por ele.
+- [ ] Relatos na fila do aparelho (enviados sem rede) levam o apelido do momento em que foram escritos.
+- [ ] Atualizar a seção "Relatos de erro e sugestões" da política de privacidade (`src/privacidade.ts`): o relato passa a levar o apelido, que é apagado junto com ele em até 90 dias.
+
+A decidir antes de começar: se o jogador pode escolher enviar sem o apelido (uma caixa "Enviar sem meu nome"), ou se o apelido vai sempre que existir.
+
+## 64. Tirar a palavra "ponte" do que o jogador vê
+
+"Ponte" é o nome interno do servidor que roda o Forge (`forge-bridge`), e o jogador não precisa conhecê-lo. Mesmo assim, ele aparece em mensagens da mesa, principalmente nos erros de conexão. Levantamento feito em 31/10/2026 (só textos que aparecem na tela; comentários e nomes no código ficam como estão):
+
+- Tela inicial (`src/main.ts`): "Conectando à ponte do Forge…", "Não encontrei a ponte do Forge em …", "A conexão com a ponte caiu." e "Não consegui voltar à partida em andamento: a ponte em … não respondeu."
+- Mesa (`src/ui/forgeTable.ts`): "A conexão com a ponte caiu. Voltando à partida…", "A partida fica guardada na ponte por alguns minutos." e "A ponte do Forge parou de responder."
+- Mensagens que o servidor manda e a mesa mostra: "A ponte está ocupada. Tente de novo." (`Admin.java` e o pedido de contas) e o aviso de contas desligadas.
+- `CHANGELOG.md` (o painel Novidades): três entradas antigas falam em "ponte" (o endereço da ponte, rodar a ponte do Forge).
+- A área de admin (`src/admin`) também usa "ponte", mas é só para o responsável; fica de fora.
+
+- [ ] Trocar "ponte" por um termo genérico nos textos da tela inicial e da mesa, por exemplo "servidor" ("Conectando ao servidor…", "A conexão com o servidor caiu.", "O servidor parou de responder."), sem citar o Forge quando ele não ajuda o jogador.
+- [ ] Mesma troca nas mensagens de erro que o servidor manda para a mesa.
+- [ ] Reescrever as entradas antigas do `CHANGELOG.md` que falam em "ponte", ou deixá-las como registro histórico (a decidir).
+- [ ] Um teste que procure "ponte" nos textos visíveis (mensagens de `setStatus`, textos das telas, `CHANGELOG.md`, `src/novidades.json`) para a palavra não voltar.
+- [ ] Ajustar a regra no `CLAUDE.md`: textos para o jogador não usam "ponte".
+
+A decidir antes de começar: o termo ("servidor", "servidor do jogo" ou "motor"); e se as entradas antigas das Novidades também mudam.
