@@ -813,3 +813,99 @@ Hoje passar a prioridade sozinho está espalhado em três controles independente
 - [x] Revisar os textos de ajuda das Opções e do menu da trilha de fases, que hoje citam os controles antigos.
 
 Decidido em 29/10/2026 (versão 0.82.0): ficaram os quatro níveis da proposta, com **Só com ações** como padrão, e quem passa continua sendo a ponte (`PassLevel` em `forge-bridge`, com a decisão em `PassLevel.passes`). **Parar sempre** desliga a passagem sem ações do Forge e não pula nenhuma etapa que dá prioridade, nos dois turnos (só o "depois dos ataques" do oponente que não atacou continua pulado, porque não há a que responder). **Respostas** é o antigo Passar respostas, sem mudança. **Só quando me afeta** passa no turno dos outros, com a pilha cheia e no seu turno fora das fases principais, e para quando algo de outro jogador na pilha mira você ou uma permanente sua, ou quando você é atacado (nas etapas de atacantes e bloqueadores do turno de outro jogador); remoção em massa sem alvo não para este nível, só o atalho. Ataques, bloqueios e escolhas nunca são passados: a ponte só responde a pedidos de prioridade. O atalho **Passar até o fim do turno** usa o "fim de turno" do Forge com as interrupções ligadas para alvo em você, remoção em massa e ataque contra você, e sem a de "qualquer mágica do oponente"; a ponte o desliga quando o turno muda ou numa etapa marcada, e há **Parar de passar** (`pass-turn-stop`). Ele só aparece no turno dos outros, porque no seu ele pularia os seus ataques; no seu turno continua o botão **Fim de turno**, que passou a ter as mesmas interrupções (o **Resolver todos** religa a de qualquer mágica, para continuar parando quando algo novo entra na pilha). O nível fica junto dos botões num selo só com o ícone, no lugar da caixa Passar respostas: discreto em Só com ações, com borda dourada em Parar sempre, dourado em Respostas e Só quando me afeta, pulsando com o atalho ligado; tocar abre a troca rápida com os níveis e o atalho. Nas Opções, o interruptor virou a lista **Passar automaticamente**. Migração: sem o nível guardado, Passar respostas ligado vira **Respostas** (mesmo com Passar automaticamente desligado, por ser a escolha visível que o jogador mudava partida a partida), Passar automaticamente desligado vira **Parar sempre**, e o resto, **Só com ações**; o nível (`mesa:passLevel`) entra nas preferências da conta, e os dois interruptores antigos continuam gravados a partir dele, para outra aba ou aparelho com a versão anterior. A ponte aceita ainda as mensagens antigas e devolve os dois campos derivados do nível.
+
+## 54. Formato e deck incompatíveis: dizer onde o deck serve
+
+Na tela inicial, o jogador pode escolher primeiro o formato e depois o deck, ou o contrário, mas nos dois caminhos a mesa não explica bem o desencontro. Levantamento feito em 31/10/2026 (`src/ui/lobby.ts`):
+
+- Com o formato escolhido, os decks incompatíveis ficam escondidos (`allowed`); com **Mostrar incompatíveis**, eles aparecem com a etiqueta "Incompatível com o formato" e, ao escolher um, o **Jogar** fica desligado e a caixa de status mostra os problemas da validação do servidor, sem dizer em que formato o deck serve.
+- Ao trocar o formato com um deck já escolhido, a mesa troca o deck pelo último usado no novo formato (`rememberedDeck`), ou deixa sem deck, sem avisar que o deck anterior não serve ali.
+
+- [ ] **Formato e depois o deck**: ao clicar num deck incompatível com o formato escolhido, mostrar os formatos em que ele serve (por exemplo "Este deck não serve para Pauper. Serve para: Standard, Livre."), cada um como atalho que troca o formato mantendo o deck escolhido. Se não servir em nenhum além do Livre, dizer isso e oferecer **Editar** (decks do jogador) ou **Ver as cartas**.
+- [ ] **Deck e depois o formato**: ao escolher um formato em que o deck selecionado não serve, mostrar um erro dizendo que o deck não é compatível com esse formato e em quais ele serve, em vez de trocar de deck em silêncio.
+- [ ] Usar a validação local (`validateDeckLocal`) para listar os formatos compatíveis na hora, sem esperar o servidor; a validação do servidor continua valendo para o formato escolhido.
+- [ ] A mensagem fica junto do deck escolhido (ou na caixa de status), é lida pelo leitor de tela e some ao escolher um par compatível.
+- [ ] Valer também ao entrar numa sala pelo código, onde o formato vem da sala e não pode ser trocado: só a lista de formatos do deck, sem atalhos de troca.
+
+A decidir antes de começar: no segundo caminho, se a mesa mantém o deck escolhido (com o erro e o **Jogar** desligado) ou troca pelo último deck do novo formato e avisa; se o Livre entra na lista de formatos compatíveis (todo deck serve no Livre); e se a mensagem é um balão sobre o deck, uma linha no painel do deck escolhido ou a caixa de status de hoje.
+
+## 55. Cemitério e exílio à vista no celular, nas partidas 1x1
+
+No celular, numa partida de dois jogadores, o jogador não consegue ver o próprio cemitério nem o exílio. Levantamento feito em 31/10/2026:
+
+- Na tela estreita ou deitada e baixa (`max-width: 760px` ou `max-height: 500px`), as pilhas do jogador ficam escondidas (`.forge .piles.me { display: none; }` em `src/ui/gameplay.css`, e o mesmo em `src/style.css` abaixo de 760px), e não há outro caminho para abrir o cemitério ou o exílio. Só a prateleira de exílio aparece, e apenas com cartas que dá para jogar dali.
+- As pilhas do oponente continuam no canto de cima (`.piles.opp`), mas pequenas e disputando espaço com a barra da partida; vale conferir num celular de verdade se dá para vê-las e tocá-las.
+- No Commander com mais jogadores, cada lugar mostra as próprias pilhas (`seat-zones`), então o problema é só do 1x1 (Commander de dois jogadores incluído).
+
+- [ ] Mostrar o cemitério e o exílio do jogador no celular, com a contagem, sem tapar a mão, os botões nem a caixa de ação.
+- [ ] Tocar abre a mesma lista de sempre (a de **Ver cemitério**), com o brilho de "dá para usar" (flashback, tramadas) também no celular.
+- [ ] Conferir as pilhas do oponente no celular, em pé e deitado, e deixá-las fáceis de tocar.
+- [ ] Conferir com a mão cheia, a prateleira de exílio aberta e a pilha com várias mágicas.
+
+A decidir antes de começar: se as pilhas do jogador voltam num tamanho menor ao lado do retrato, viram um botão único (ícone com as contagens) que abre um menu com Cemitério e Exílio, ou entram na barra da partida; e se o exílio aparece mesmo vazio, para o jogador saber onde procurar.
+
+## 56. Mostrar o valor que a carta conta
+
+Muitas cartas têm um número que depende do que há na mesa: dano, P/T ou custo igual à quantidade de permanentes, de criaturas, de terrenos de um tipo, de artefatos, ou de cartas de um tipo no cemitério. Ex.: Combustion Technique, que soma as Lições do cemitério ao dano; Craterhoof Behemoth, Ghalta, Scion of the Ur-Dragon, Myr Battlesphere, Overwhelming Stampede. Hoje o jogador precisa contar sozinho, na mão e no campo. Levantamento feito em 31/10/2026:
+
+- O Forge descreve essas contagens nas variáveis da carta (`Count$Valid …`, `Count$TypeInYourYard`, `Count$CardsInYourHand` e afins), que já são lidas para a devoção (`PermanentDetails.devotion`, com o valor e as cores) e para as cartas que contam mágicas (`countsSpells`). O valor calculado sai de `AbilityUtils.calculateAmount` / `CardFactoryUtil.xCount`, do jeito que o motor usa na hora de resolver.
+- P/T que já muda no campo (Tarmogoyf, criaturas com `*/*`) já aparece no P/T da permanente; o que falta é dizer de onde vem o número e mostrar o valor nas cartas da mão e nas mágicas.
+
+- [ ] A ponte manda, para as cartas na mão, no campo, na pilha e na zona de comando, as contagens que a carta usa: o valor atual e o que é contado (por exemplo "Lições no seu cemitério: 3"), só quando a carta tiver uma.
+- [ ] Na carta, o mínimo: um selo pequeno com o número (como o da devoção), sem cobrir custo, arte nem P/T. Na mão, o selo fica na parte descoberta do leque.
+- [ ] No balão e no inspetor, o detalhe: o que é contado, o valor de agora e o resultado ("Causa 5 de dano: 2 + 3 Lições no seu cemitério"), em português.
+- [ ] O número acompanha a mesa ao vivo (entra uma criatura, sai um terreno, uma Lição vai para o cemitério).
+- [ ] Cartas que contam coisas dos oponentes ou de todos os jogadores dizem de quem é a contagem.
+- [ ] Contagens que só ligam um efeito a partir de um mínimo ("se houver três ou mais…") mostram o valor e o mínimo ("2/3"), com destaque quando o efeito já vale.
+- [ ] Testar com o motor real em `forge-bridge/src/test` (Combustion Technique, Accumulate Wisdom, Craterhoof Behemoth, uma carta de custo reduzido como Ghalta) e montar a página de teste.
+
+A decidir antes de começar: se o selo aparece em toda carta que conta algo ou só quando o valor muda o que a carta faz (dano, P/T, custo); se a devoção passa a ser um caso desta mesma marca; e o que fazer com contagens que só têm valor na hora de resolver (alvo escolhido, X pago).
+
+## 57. Escolhas no celular em fileira horizontal, com os botões sempre à vista
+
+No celular, as janelas de escolha com cartas crescem para baixo, e os botões de confirmar ficam no fim da rolagem: o jogador escolhe a carta e não acha como confirmar. Levantamento feito em 31/10/2026:
+
+- As opções com carta quebram em várias linhas (`.q-opts.cards` com `flex-wrap: wrap` em `src/style.css`), e no celular cada carta tem 104px (`src/ui/arenaModals.css`); com 6 ou mais cartas, a janela já passa da altura da tela, principalmente deitado.
+- Os botões só ficam presos embaixo em dois casos: nas escolhas grandes com filtros (item 52, `src/ui/choiceFilters.css`) e na busca do grimório (`src/ui/libraryChoice.css`). Nas outras (descartar, sacrificar, escolher alvos com carta, ver cemitério e exílio, ordenar gatilhos, mulligan) eles rolam junto.
+- A ordem dos gatilhos e o jeito de jogar já têm ajustes próprios para o celular (`src/ui/choiceScreens.css`), mas também ficam altos com muitos itens.
+
+- [ ] No celular (tela estreita ou deitada e baixa), as cartas das escolhas ficam numa fileira só, que rola de lado, com a dica de que há mais cartas para os lados (sombra na borda ou contador).
+- [ ] Os botões de confirmar, cancelar e **Ver a mesa** ficam sempre à vista, presos embaixo, em todas as janelas de escolha.
+- [ ] O título e a instrução ficam curtos no topo, sem empurrar as cartas para fora da tela.
+- [ ] Marcar uma carta não faz a fileira voltar ao começo, e a carta marcada continua visível.
+- [ ] Escolhas que já usam fileira (vidência, ordem do topo do grimório) e as com filtros do item 52 continuam como estão.
+- [ ] Conferir em pé e deitado, com 2, 7 e 20 cartas, e com o teclado e o leitor de tela.
+
+A decidir antes de começar: se a fileira horizontal vale para todo celular ou só deitado (em pé, duas linhas de cartas talvez caibam melhor); e se as janelas sem carta (escolher modo, sim e não, números) também mudam ou só ganham os botões presos.
+
+## 58. Mana que falta pagar, à vista e atualizada a cada terreno virado
+
+Na hora de pagar uma mágica ou habilidade, a caixa de ação diz só "Pague o custo de mana de Jiboia." (`shortInstruction` em `src/ui/shortInstruction.ts`). O custo em si fica no texto do Forge, atrás de **Ver detalhes**, e o jogador que vira os terrenos à mão não sabe quanto ainda falta. Levantamento feito em 31/10/2026:
+
+- O motor guarda o que falta no pagamento (`InputPayMana.manaCost`, um `ManaCostBeingPaid`) e já o desconta a cada mana gerada. A ponte lê esse campo (`InputContext`, `PAY_COST`), mas só para a vida das mana phyrexianas; o custo que falta não vai para a mesa.
+- Para convocar, improvisar e dobrar água, a ponte já manda o que falta (`remaining` em `InputContext`), e a caixa de ação já sabe dizer se ainda há custo (`unpaid` em `src/ui/decisionPrompt.ts`): o mesmo caminho serve aqui.
+
+- [ ] A ponte manda o custo que falta pagar enquanto o pagamento está aberto, atualizado a cada terreno virado ou mana gerada.
+- [ ] A caixa de ação mostra o custo com os símbolos de mana, sempre visível ("Pague {2}{R} para Jiboia"), e o que já foi pago apagado ou riscado, para o jogador ver o total e o que falta.
+- [ ] Ao virar um terreno à mão (ou usar outra fonte de mana), o valor desconta na hora; mana que sobra na reserva aparece separada, sem sumir.
+- [ ] Mana phyrexiana, híbrida e X: mostrar como o motor está contando (por exemplo, a vida que vai custar, o X escolhido).
+- [ ] O mesmo para custos pedidos por efeitos (Mana Leak, Estudo Rístico) e para os anúncios do leitor de tela ("Falta {R}").
+- [ ] Testar com o motor real em `forge-bridge/src/test` (pagar à mão uma carta de custo misto, virar um terreno que dá duas manas) e montar a página de teste.
+
+A decidir antes de começar: se o custo aparece na caixa de ação, junto da carta na pilha ou dos dois jeitos; e se os terrenos que ainda podem pagar o que falta ganham destaque na mesa.
+
+## 59. Desfazer sempre ligado, sem aviso na sala
+
+Hoje o **Desfazer** é uma escolha ao criar a partida (Desligado ou Ligado), e quando está ligado a mesa avisa em vários lugares. Como numa sala cada pedido de desfazer só vale se todos os outros aceitarem, ninguém volta uma jogada sem o consentimento da mesa, e o aviso prévio não protege nada. Levantamento feito em 31/10/2026:
+
+- A escolha fica na tela inicial (`#undoChoice` em `src/ui/lobby.ts`, lembrada em `mesa:undo`, desligada por padrão) e vai na configuração da partida (`undo` em `MatchConfig`); sem ela, a ponte nem guarda o histórico (`Session`, `UndoHistory`).
+- Os avisos: o selo **Desfazer ligado** na lista de salas públicas e no rótulo para leitor de tela (`src/ui/publicRooms.ts`), a linha na sala de espera (`#roomUndo` em `src/ui/roomLobby.ts`) e no resumo da sala ao buscar pelo código (`#roomInfo` em `src/ui/lobby.ts`).
+
+- [ ] Desfazer ligado em toda partida, contra o computador e em sala, sem a escolha na tela inicial.
+- [ ] Tirar o selo e as linhas de aviso da lista de salas, da sala de espera e do resumo da sala.
+- [ ] Na partida, nada muda: o botão **Desfazer** à vista, o pedido com **Aceitar** e **Recusar** para os outros jogadores, e cada volta no histórico.
+- [ ] A ponte passa a guardar o histórico sempre; continuar aceitando o campo `undo` das versões anteriores e das repetições de partidas antigas.
+- [ ] Conferir o custo de memória e de tempo de guardar o histórico em toda partida, principalmente no Commander com quatro jogadores.
+- [ ] Atualizar o texto de ajuda e a entrada antiga das Novidades que explicava a escolha.
+
+A decidir antes de começar: se fica algum jeito de jogar sem desfazer (por exemplo, uma opção da sala para torneios); se contra o computador também fica sempre ligado ou só nas salas; e a versão no `CHANGELOG.md` (Y, por ser um recurso a mais, ou X, já que a escolha Desligado deixa de existir).
