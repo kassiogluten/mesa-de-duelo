@@ -75,21 +75,29 @@ final class AskingController extends PlayerControllerHuman {
     }
 
     /**
-     * Prioridade (o desfazer vale em toda partida): guarda o jogo antes do prompt e, depois, o que o jogador decidiu. Um pedido de
-     * desfazer aprovado volta o jogo aqui, na thread do jogo; a lista vazia faz o Forge abrir a prioridade de novo
-     * (para quem a tinha no retrato).
+     * Prioridade (o desfazer vale em toda partida): guarda o jogo antes do prompt e, depois, o que o jogador decidiu. Só
+     * guarda quando o jogador vai mesmo decidir: o retrato é tirado quando o Forge abre o prompt, e não quando ele passa
+     * sozinho (fase pulada, sem ações, "passar até o fim do turno") nem quando a ponte vai passar pelo jogador (nível de
+     * passar automaticamente, turno pulado). Um pedido de desfazer aprovado volta o jogo aqui, na thread do jogo; a
+     * lista vazia faz o Forge abrir a prioridade de novo (para quem a tinha no retrato).
      */
     @Override public List<SpellAbility> chooseSpellAbilityToPlay() {
         if (undo == null) return super.chooseSpellAbilityToPlay();
-        if (undo.applyPending(getGame()) != null) return java.util.Collections.emptyList();
-        UndoHistory.Step step = undo.capture(getGame(), getPlayer());
+        Game game = getGame();
+        if (undo.applyPending(game) != null) return java.util.Collections.emptyList();
+        UndoHistory.Step[] step = new UndoHistory.Step[1];
         WebGuiGame gui = getGui() instanceof WebGuiGame w ? w : null;
-        if (gui != null) gui.watchSkip();
-        List<SpellAbility> chosen = super.chooseSpellAbilityToPlay();
-        // Sem prompt (passe automático ou fase pulada) não é uma decisão do jogador.
-        boolean skipped = gui != null && gui.skipped();
-        if (undo.applyPending(getGame()) != null) return java.util.Collections.emptyList();
-        if (!skipped) undo.decided(step, chosen);
+        List<SpellAbility> chosen;
+        if (gui == null) {
+            step[0] = undo.capture(game, getPlayer());
+            chosen = super.chooseSpellAbilityToPlay();
+        } else {
+            gui.beforePrompt(() -> step[0] = undo.capture(game, getPlayer()));
+            try { chosen = super.chooseSpellAbilityToPlay(); }
+            finally { gui.beforePrompt(null); }
+        }
+        if (undo.applyPending(game) != null) return java.util.Collections.emptyList();
+        if (step[0] != null) undo.decided(step[0], chosen);
         return chosen;
     }
 

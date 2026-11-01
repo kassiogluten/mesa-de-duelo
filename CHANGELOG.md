@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.97.2] - 2026-10-31
+
+### Mudou
+
+- **Desfazer até o turno anterior.** O **Desfazer** agora volta no máximo até o começo do turno anterior: decisões de turnos mais antigos não podem mais ser desfeitas. Ele também só conta as vezes em que você de fato decidiu algo; as prioridades que a mesa passa sozinha por você (pelo nível de passar automaticamente, pelo **Passar até o fim do turno** ou por não haver nada para fazer) não entram mais, então cada toque no **Desfazer** volta direto para a sua última jogada de verdade. Com isso, as partidas, principalmente as de Commander com várias pessoas, gastam bem menos memória do servidor e andam mais rápido.
+
 ## [0.97.1] - 2026-10-31
 
 ### Mudou

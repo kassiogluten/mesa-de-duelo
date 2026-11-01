@@ -1,6 +1,7 @@
 // Real-engine regression: node forge-bridge/scripts/test-undo.mjs [ws://127.0.0.1:7172/ws]
 // Desfazer (sempre ligado): numa sala, o pedido de Ana só vale quando Bruno aceita; uma recusa derruba o pedido.
 // Contra a IA, o pedido volta na hora. O campo antigo config.undo (de versões anteriores) é aceito e não desliga nada.
+// O histórico guarda só o turno atual e o anterior, e só as prioridades em que o jogador de fato decide.
 import assert from 'node:assert/strict';
 const endpoint = process.argv[2] || 'ws://127.0.0.1:7172/ws';
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -45,15 +46,19 @@ async function until(test, label, timeout = 90000) {
 const mine = p => p.state.players.find(x => x.id === p.state.you);
 const forests = (p, zone) => mine(p)[zone].filter(c => c.name === 'Forest').length;
 
-/** Leva {@code p} até a fase principal do próprio turno, com a prioridade e uma Floresta na mão, e joga a Floresta. */
-async function playForest(p) {
+/**
+ * Leva {@code p} até a fase principal do próprio turno, com a prioridade e uma Floresta na mão, e joga a Floresta.
+ * Em "Parar sempre", para ele continuar com a prioridade depois da Floresta (sem ações, o Forge passaria sozinho).
+ */
+async function playForest(p, level = 'sempre') {
+  p.send({type: 'preferences', passLevel: level});
   p.manual = false;
   await until(() => p.state && p.state.activePlayer === p.state.you && p.state.phase === 'MAIN1' && !p.state.question && p.state.input.ok.enabled && forests(p, 'hand') > 0, `${p.name} na principal 1`, 120000);
   p.manual = true;
   const before = forests(p, 'battlefield');
   const forest = mine(p).hand.find(c => c.name === 'Forest');
   p.send({type: 'card', id: forest.id, gen: p.state.input.gen});
-  await until(() => forests(p, 'battlefield') === before + 1 && p.state.input.ok.enabled, `${p.name} jogou a Floresta`);
+  await until(() => forests(p, 'battlefield') === before + 1 && (level !== 'sempre' || p.state.input.ok.enabled), `${p.name} jogou a Floresta`);
   return before;
 }
 
@@ -129,6 +134,21 @@ try {
   old.send({type: 'undo-request'});
   await until(() => forests(old, 'battlefield') === oldBefore && old.state.input.ok.enabled, 'undo: false antigo não desliga o desfazer');
   console.log('PASS undo: false de versão anterior: desfazer continua valendo');
+  old.ws.close(); peers.length = 0;
+
+  // 4. No nível padrão, o Forge passa sozinho quando não há o que fazer: isso não entra no histórico, e decisões de
+  // antes do turno anterior saem dele.
+  const late = await peer('Late');
+  late.send({type: 'start', config: {format: 'free', matchLength: 'bo1'}, you: deck, opponent: {name: 'Idle', cards: [{name: 'Forest', count: 60}]}});
+  await playForest(late, 'acoes');
+  const landTurn = late.state.turn;
+  await until(() => late.state.undo?.last?.action === 'land', 'a Floresta entra no histórico');
+  late.manual = false;
+  await until(() => late.state.turn >= landTurn + 2 && late.state.activePlayer === late.state.you && late.state.input.ok.enabled && !late.state.question, 'Late no turno seguinte dele', 120000);
+  late.manual = true;
+  assert.notEqual(late.state.undo?.last?.turn, landTurn, `a Floresta de dois turnos atrás saiu do histórico: ${JSON.stringify(late.state.undo)}`);
+  assert.notEqual(late.state.undo?.last?.action, 'pass', `as passadas automáticas não entram: ${JSON.stringify(late.state.undo)}`);
+  console.log('PASS histórico: só o turno atual e o anterior, sem as passadas automáticas');
 } finally {
   for (const p of peers) if (p.ws.readyState === WebSocket.OPEN) p.send({type: 'leave'});
   await wait(300); for (const p of peers) p.ws.close();

@@ -2,6 +2,7 @@ package mesadeduelo.bridge;
 
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.concurrent.CountDownLatch;
 import com.google.common.eventbus.Subscribe;
@@ -18,6 +19,7 @@ import forge.game.player.PlayerView;
 import forge.gamemodes.match.YieldUpdate;
 import forge.gamemodes.net.IRemote;
 import forge.gamemodes.net.ProtocolGuiGame;
+import forge.gui.GuiBase;
 import forge.interfaces.IGameController;
 import forge.localinstance.properties.ForgePreferences.FPref;
 import forge.trackable.TrackableCollection;
@@ -28,14 +30,14 @@ import forge.trackable.TrackableCollection;
  */
 final class WebGuiGame extends ProtocolGuiGame {
     /** Fases do próprio turno em que o jogador recebe prioridade com a pilha vazia. */
-    private static final Set<PhaseType> STOPS_MINE = EnumSet.of(PhaseType.MAIN1, PhaseType.MAIN2, PhaseType.COMBAT_DECLARE_BLOCKERS);
+    static final Set<PhaseType> STOPS_MINE = EnumSet.of(PhaseType.MAIN1, PhaseType.MAIN2, PhaseType.COMBAT_DECLARE_BLOCKERS);
     /**
      * Fases do turno do oponente: o início do combate (virar ou remover uma criatura antes que ela ataque),
      * depois dos ataques (remover um atacante, criatura com lampejo para bloquear),
      * depois dos bloqueios e a etapa final, a janela clássica para instantâneas antes do seu turno.
      * No nível "Só com ações" (e nos mais rápidos), o Forge só para nelas quando o jogador tem algo que pode usar agora.
      */
-    private static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_BEGIN, PhaseType.COMBAT_DECLARE_ATTACKERS,
+    static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_BEGIN, PhaseType.COMBAT_DECLARE_ATTACKERS,
         PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.END_OF_TURN);
     /** Etapas do turno de um oponente que o jogador pode marcar para segurar a prioridade (as que dão prioridade). */
     static final Set<PhaseType> HOLDABLE = EnumSet.of(PhaseType.UPKEEP, PhaseType.DRAW, PhaseType.MAIN1, PhaseType.COMBAT_BEGIN,
@@ -64,18 +66,33 @@ final class WebGuiGame extends ProtocolGuiGame {
     private final MatchLifecycle lifecycle;
     private final Supplier<Game> game;
 
-    /** Thread que está pedindo a prioridade (veja {@link #watchSkip}) e se ela pulou o prompt. */
-    private volatile Thread watching;
-    private volatile boolean skipped;
+    /** Thread do jogo que vai mostrar o prompt de prioridade e o que ela faz logo antes (veja {@link #beforePrompt}). */
+    private volatile Thread prompting;
+    private volatile Runnable beforePrompt;
+    /** A ponte está passando a vez por este jogador (turno pulado por votação, com ele desconectado). */
+    volatile BooleanSupplier autopilot = () -> false;
 
-    /** Thread do jogo, antes de pedir a prioridade: a partir daqui {@link #skipped} diz se o Forge passou sem perguntar. */
-    void watchSkip() { skipped = false; watching = Thread.currentThread(); }
-    boolean skipped() { watching = null; return skipped; }
+    /**
+     * Thread do jogo, antes de pedir a prioridade: {@code action} roda só se o Forge de fato abrir o prompt (não quando
+     * ele passa sozinho, por fase pulada, falta de ações ou atalho) e a ponte não for passar por ele
+     * ({@link #bridgePasses}), logo antes de esperar a resposta e com os cliques da mesa segurados. {@code null} desliga.
+     */
+    void beforePrompt(Runnable action) { prompting = action == null ? null : Thread.currentThread(); beforePrompt = action; }
 
-    /** O Forge chama isto, na thread do jogo, quando passa a prioridade sem abrir o prompt. */
-    @Override public void awaitNextInput() {
-        if (Thread.currentThread() == watching) skipped = true;
-        super.awaitNextInput();
+    /**
+     * A ponte vai responder OK sozinha a este pedido de prioridade: o nível do jogador manda passar
+     * ({@link PassLevel#passes}) ou a ponte joga por ele (turno pulado). Na thread do jogo, o prompt já aberto.
+     */
+    boolean bridgePasses() { return autopilot.getAsBoolean() || levelPasses(); }
+
+    /** O nível do jogador manda a ponte passar este pedido de prioridade ({@link PassLevel#passes}). */
+    boolean levelPasses() {
+        PassLevel l = level.get();
+        GameView view = getGameView();
+        PlayerView p = me;
+        if (!l.passesResponses() || view == null || p == null) return false;
+        boolean stackEmpty = view.getStack() == null || view.getStack().isEmpty();
+        return l.passes(holding, p.equals(view.getPlayerTurn()), stackEmpty, view.getPhase(), PassLevel.affects(view, p));
     }
 
     WebGuiGame(IRemote remote, Supplier<PassLevel> level, MatchLifecycle lifecycle, Supplier<Game> game) {
@@ -229,6 +246,14 @@ final class WebGuiGame extends ProtocolGuiGame {
 
     @Override
     public void awaitInput(CountDownLatch done) throws InterruptedException {
+        Runnable action = beforePrompt;
+        if (action != null && Thread.currentThread() == prompting) {
+            beforePrompt = null; prompting = null;
+            if (!bridgePasses()) {
+                if (GuiBase.getInterface() instanceof HeadlessGui headless) headless.runGameMutation(action);
+                else action.run();
+            }
+        }
         lifecycle.awaitInput(game.get(), me == null ? -1 : me.getId(), done);
     }
 

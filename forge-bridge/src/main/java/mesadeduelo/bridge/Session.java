@@ -295,6 +295,8 @@ final class Session {
             seat.name = name;
             WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.passLevel, () -> seat.opponentStops, life, m::getGame);
             seat.gui = g;
+            // O turno pulado por votação: a ponte passa por ele, então esses prompts não guardam retrato para o Desfazer.
+            g.autopilot = () -> { synchronized (skipApproved) { return skipApproved.contains(seat.index); } };
             RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name, undo));
             seat.registered = rp;
             players.add(rp);
@@ -2161,14 +2163,9 @@ final class Session {
 
         private boolean shouldPass() {
             WebGuiGame g = gui;
-            PlayerView p = me;
-            PassLevel level = passLevel;
-            if (!level.passesResponses() || question != null || !okEnabled || g == null || p == null) return false;
-            var view = g.getGameView();
-            if (view == null) return false;
-            boolean stackEmpty = view.getStack() == null || view.getStack().isEmpty();
+            if (question != null || !okEnabled || g == null) return false;
             // Numa etapa marcada para segurar a prioridade, a vez fica com o jogador em qualquer nível.
-            return level.passes(g.holding(), p.equals(view.getPlayerTurn()), stackEmpty, view.getPhase(), PassLevel.affects(view, p));
+            return g.levelPasses();
         }
 
         private void onEdt(int generation, java.util.function.Consumer<IGameController> action) {
