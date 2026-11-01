@@ -1057,18 +1057,18 @@ Veio da sugestão S26. Atrás do campo de cada jogador, a arte de capa do deck d
 
 Decidido em 01/11/2026: intensidade sutil (cerca de 25% do brilho) e ligado por padrão.
 
-## 69. Focar num oponente em tela cheia
+## 69. Focar num oponente em tela cheia ✅
 
 Pedido em 01/11/2026. Hoje o **Só este** (item 25) mostra só o campo de um oponente, mas dentro da faixa de cima da mesa: o campo dele continua dividindo a tela com o seu, a mão e a caixa de ação. Para ler com calma a mesa de quem preocupa (um combo montando, muitas permanentes, marcadores), falta um jeito de olhar só para ele.
 
-- [ ] Ação **Focar** no cabeçalho de cada oponente (e no retrato dele, pelo inspetor do jogador) que abre o campo daquele oponente em tela cheia: retrato, vida, marcadores, dano de comandante, zona de comando, cemitério, exílio e todas as permanentes em tamanho grande.
-- [ ] Na tela cheia, **Fechar** volta à mesa como estava, e uma fileira com os retratos dos outros oponentes troca o foco para outro sem fechar.
-- [ ] As cartas continuam inspecionáveis (passar o mouse, tocar, inspetor), mas a tela é só para olhar: jogar, atacar e escolher continuam na mesa.
-- [ ] Quando chega uma decisão sua (prioridade com algo na pilha, ser atacado, escolher alvo), avisar na própria tela cheia com um botão para voltar à mesa, ou fechar sozinho; decidir qual antes de começar.
-- [ ] Vale também no 1x1 (o único oponente) e no celular, onde ganha mais: lá cada campo é bem pequeno.
-- [ ] Teclado e leitor de tela: Esc fecha, setas trocam de oponente, a tela anuncia de quem é o campo.
+- [x] Ação **Focar** no cabeçalho de cada oponente (e no retrato dele, pelo inspetor do jogador) que abre o campo daquele oponente em tela cheia: retrato, vida, marcadores, dano de comandante, zona de comando, cemitério, exílio e todas as permanentes em tamanho grande.
+- [x] Na tela cheia, **Fechar** volta à mesa como estava, e uma fileira com os retratos dos outros oponentes troca o foco para outro sem fechar.
+- [x] As cartas continuam inspecionáveis (passar o mouse, tocar, inspetor), mas a tela é só para olhar: jogar, atacar e escolher continuam na mesa.
+- [x] Quando chega uma decisão sua (prioridade com algo na pilha, ser atacado, escolher alvo), avisar na própria tela cheia com um botão para voltar à mesa, ou fechar sozinho; decidir qual antes de começar.
+- [x] Vale também no 1x1 (o único oponente) e no celular, onde ganha mais: lá cada campo é bem pequeno.
+- [x] Teclado e leitor de tela: Esc fecha, setas trocam de oponente, a tela anuncia de quem é o campo.
 
-A decidir antes de começar: se a tela cheia cobre a mesa inteira ou deixa a sua mão e a caixa de ação à vista embaixo; e o que acontece quando chega uma decisão sua (avisar ou fechar sozinho).
+Decidido em 01/11/2026 e feito na 0.102.0: a tela cobre a mesa inteira e é só para olhar; uma decisão sua vira uma faixa dourada com **Voltar à mesa**, sem fechar sozinha; a entrada é um botão ⤢ novo (no Commander, ao lado de Só este e Ocultar; no 1x1, ao lado do retrato), e **Só este** continua como estava. No celular, os botões dos assentos do Commander, que ficavam escondidos atrás das pilhas, foram para o canto de baixo do campo de cada oponente. O ⤢ fica no retrato do oponente, e não no inspetor do jogador como estava no plano.
 
 ## 70. Tela inicial com o deck primeiro ✅
 

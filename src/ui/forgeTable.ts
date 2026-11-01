@@ -35,6 +35,7 @@ import { matchBarHTML } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import { UNDO_ICON, undoBarHTML, undoButtonState } from './undo';
 import './undo.css';
+import './focusView.css';
 import './skipVote.css';
 import { playerCountersHTML, playerCountersText as countersText, ringText, RING_ICON } from './playerCounters';
 import { playerStatusHTML, playerStatusText, turnSpellsTotal } from './playerStatus';
@@ -81,6 +82,7 @@ import './duelPiles.css';
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
+const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
 /** Enjoo de invocação: estrelinhas girando em volta, como personagem tonto de desenho animado. */
@@ -234,6 +236,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="piles me" id="fMePiles"></div>
     <div class="hand" id="fHand"></div>
     <section class="exile-shelf" id="fExileShelf" aria-label="Cartas disponíveis no exílio" hidden></section>
+    <section class="focus-view" id="fFocus" role="dialog" aria-modal="true" aria-labelledby="fFocusTitle" hidden></section>
 
     <aside class="stack-panel" id="fStack" aria-label="Mágicas e habilidades na pilha" hidden></aside>
     <svg class="target-arrows" id="fTargets" aria-hidden="true"></svg>
@@ -429,6 +432,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Oponentes ocultos e o "só este" (partidas com três ou mais jogadores). Valem até a partida mudar.
   let hiddenSeats = new Set<number>();
   let soloSeat: number | null = null;
+  /** Oponente em foco: o campo dele em tela cheia, só para olhar (item 69). */
+  let focusSeat: number | null = null;
+  let focusReturn: HTMLElement | null = null;
   // O que a mesa fez sozinha: eliminados já ocultados e o foco no oponente que ataca você (ver followSeats).
   let retiredSeats: ReadonlySet<number> = new Set();
   let seatFocus: SeatFocus | null = null;
@@ -710,7 +716,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (next instanceof HTMLInputElement && saved.start !== null && saved.end !== null && next.type !== 'number') next.setSelectionRange(saved.start, saved.end);
   }
   function syncModal() {
-    const required = ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval'].map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? null;
+    // Com o foco num oponente, a decisão que chegar espera atrás dele (a tela avisa); só o que se abre dali (cemitério, exílio) vem na frente.
+    const focusOpen = !$('#fFocus').hidden;
+    const required = (focusOpen ? ['#fZone'] : ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval']).map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? (focusOpen ? $('#fFocus') : null);
     if (required && !$('#fSettings').hidden) {
       $('#fSettings').hidden = true;
       root.querySelector('[aria-controls="fSettings"]')?.setAttribute('aria-expanded', 'false');
@@ -1537,11 +1545,62 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   const EYE_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c7 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
   const FOCUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="3"/></svg>';
-  /** Botões de cada oponente: esconder o campo e mostrar só ele. Só existem com dois ou mais oponentes. */
+  const EXPAND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>';
+  /** Abre o campo do oponente em tela cheia. */
+  const focusButton = (p: FPlayer, extra = '') => `<button type="button" class="seat-view-btn focus-open${extra}" data-focus-seat="${p.id}" title="Ver o campo de ${esc(p.name)} em tela cheia" aria-label="Ver o campo de ${esc(p.name)} em tela cheia">${EXPAND}<span>Focar</span></button>`;
+  /** O que a mesa espera de você agora, para avisar na tela de foco sem tirar a vista do oponente. */
+  function focusDecisionText(s: FState) {
+    const input = s.input;
+    if (s.gameOver || s.spectating) return '';
+    if (input.blocking) return 'Você está sendo atacado: declare os bloqueadores.';
+    if (input.attacking) return 'Seu combate: declare os atacantes.';
+    if (s.question || input.paying || awaitingDecision(s)) return 'Sua vez de decidir.';
+    if (input.priority && s.stack.length) return 'Há algo na pilha para você responder.';
+    if (input.priority && s.activePlayer === s.you) return 'É o seu turno.';
+    return '';
+  }
+  /** Campo do oponente em tela cheia: cabeçalho, troca de oponente, as duas fileiras grandes e as zonas, só para olhar. */
+  function focusHTML(s: FState, visual: FState, p: FPlayer, opponents: FPlayer[], idx: number) {
+    const art = matArt(s, p, idx);
+    const decision = focusDecisionText(s);
+    const others = opponents.filter(o => o.id !== p.id);
+    const portrait = portraits[idx];
+    return `${art ? `<div class="playmat" aria-hidden="true" style="${esc(matStyle(art))}"></div>` : ''}
+      <header class="focus-head">
+        <div class="focus-who"><span class="focus-portrait"${portrait ? ` style="background-image:url('${esc(portrait)}')"` : ''} aria-hidden="true"></span><div><h2 id="fFocusTitle">${esc(p.name)}</h2><p class="focus-life"><b>${p.life}</b> de vida · ${p.handCount ?? p.hand.length} na mão</p></div>${playerCounters(p)}${damageButton(p)}</div>
+        ${others.length ? `<div class="focus-switch" role="group" aria-label="Trocar de oponente">${others.map(o => `<button type="button" class="focus-other" data-focus-seat="${o.id}" aria-label="Focar em ${esc(o.name)}, ${o.life} de vida"><span>${esc(o.name)}</span><b>${o.life}</b></button>`).join('')}</div>` : ''}
+        <button type="button" class="arena-btn secondary focus-close" data-ui="focus-close">${ICON_CLOSE}Fechar</button>
+      </header>
+      ${decision ? `<p class="focus-decision" role="status"><span>${esc(decision)}</span><button type="button" class="arena-btn primary" data-ui="focus-close">Voltar à mesa</button></p>` : '<p class="focus-decision" role="status" hidden></p>'}
+      <div class="focus-field" aria-label="Campo de ${esc(p.name)}">
+        <div class="row creatures">${fieldRow(visual, p.battlefield.filter(c => !isBackRow(c)))}</div>
+        <div class="row lands">${backRow(visual, p)}</div>
+      </div>
+      <footer class="focus-zones"><div class="piles">${piles(visual, p)}</div>${p.commandZone?.length ? `<div class="focus-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(visual, p)}</div>` : ''}</footer>`;
+  }
+  function openFocus(id: number) {
+    if (focusSeat === null) focusReturn = document.activeElement as HTMLElement | null;
+    focusSeat = id;
+    hideCardPreview(true);
+    renderTable(false);
+    $('#fFocus').querySelector<HTMLElement>('.focus-close')?.focus({ preventScroll: true });
+  }
+  function closeFocus() {
+    if (focusSeat === null) return;
+    const id = focusSeat;
+    focusSeat = null;
+    hideCardPreview(true);
+    renderTable(false);
+    const back = focusReturn?.isConnected && root.contains(focusReturn) ? focusReturn : root.querySelector<HTMLElement>(`[data-focus-seat="${id}"]`);
+    back?.focus({ preventScroll: true });
+    focusReturn = null;
+  }
+  /** Botões de cada oponente: focar em tela cheia sempre; esconder o campo e mostrar só ele, com dois ou mais oponentes. */
   function seatControls(p: FPlayer, shown: boolean, count: number) {
-    if (count < 2) return '';
+    if (count < 2) return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">${focusButton(p)}</div>`;
     const solo = soloSeat === p.id;
     return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">
+      ${focusButton(p)}
       <button type="button" class="seat-view-btn" data-seat-solo="${p.id}" aria-pressed="${solo}" title="${solo ? 'Voltar a ver todos os oponentes' : `Ver só ${esc(p.name)}`}" aria-label="${solo ? 'Voltar a ver todos os oponentes' : `Ver só o campo de ${esc(p.name)}`}">${FOCUS}<span>${solo ? 'Ver todos' : 'Só este'}</span></button>
       ${shown && !solo ? `<button type="button" class="seat-view-btn" data-seat-hide="${p.id}" title="Ocultar o campo de ${esc(p.name)}" aria-label="Ocultar o campo de ${esc(p.name)}">${EYE_OFF}<span>Ocultar</span></button>` : ''}
     </div>`;
@@ -1557,6 +1616,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}</header>
       <p class="seat-summary">${p.battlefield.filter(c => c.creature).length} criaturas · ${p.battlefield.filter(c => c.land).length} terrenos</p>
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div></div>
+      ${focusButton(p, ' seat-focus')}
       <button type="button" class="seat-show" data-seat-show="${p.id}" aria-label="Mostrar o campo de ${esc(p.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Mostrar campo</span></button>
     </section>`;
   }
@@ -2365,7 +2425,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     setHTML(command, command.hidden ? '' : `<span class="command-heading">Comando</span><div class="command-track">${commandCards(s, me)}</div>${damageButton(me)}`);
     setHTML($('#fOppHand'), multiplayer ? '' : oppHandHTML(opp, c => face(c, 'small'), label));
     $('#fOppHand').classList.toggle('revealed', !multiplayer && revealedCards(opp).length > 0);
-    setHTML($('#fOppAvatar'), multiplayer ? '' : avatar(visual, opp, 1));
+    setHTML($('#fOppAvatar'), multiplayer ? '' : avatar(visual, opp, 1) + focusButton(opp, ' duel-focus'));
     setHTML($('#fMeAvatar'), avatar(visual, me, 0));
     setHTML($('#fOppPiles'), multiplayer ? '' : piles(visual, opp) + (opp.commanders?.length ? `<div class="duel-command">${commandCards(s, opp)}${damageButton(opp)}</div>` : ''));
     setHTML($('#fMePiles'), piles(visual, me));
@@ -2374,6 +2434,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     setHTML($('#fOppCreatures'), multiplayer ? '' : fieldRow(visual, opp.battlefield.filter(c => !isBackRow(c))));
     setHTML($('#fMeCreatures'), fieldRow(visual, me.battlefield.filter(c => !isBackRow(c))));
     syncMat($('#fOppMat'), multiplayer ? undefined : matArt(s, opp, 1));
+    const focusPlayers = visual.players.filter(p => p.id !== visual.you && !p.eliminated);
+    const focused = focusPlayers.find(p => p.id === focusSeat);
+    if (focusSeat !== null && !focused) focusSeat = null;
+    const focusView = $('#fFocus');
+    focusView.hidden = !focused;
+    setHTML(focusView, focused ? focusHTML(s, visual, focused, focusPlayers, visual.players.filter(p => p.id !== visual.you).indexOf(focused) + 1) : '');
     syncMat($('#fMeMat'), matArt(s, me, 0));
     fitLoneRows();
 
@@ -2794,6 +2860,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       hideCardPreview(true); renderTable(false); syncModal();
       root.querySelector<HTMLElement>(ui === 'question-minimize' ? '[data-ui="question-restore"]' : '[data-ui="question-minimize"]')?.focus({ preventScroll: true });
       return;
+    }
+    if (ui === 'focus-close') { closeFocus(); return; }
+    const focusTo = t.closest<HTMLElement>('[data-focus-seat]')?.dataset.focusSeat;
+    if (focusTo !== undefined) { openFocus(Number(focusTo)); return; }
+    // Na tela de foco, tocar numa carta só mostra; cemitério, exílio e dano de comandante abrem a lista para ver.
+    if (t.closest('#fFocus')) {
+      const card = t.closest<HTMLElement>('[data-fid],[data-peek],[data-inspect]');
+      if (card && !t.closest('[data-gy] [data-peek]')) { showPreview(cardFromElement(card), card, true); return; }
+      if (!t.closest('[data-gy]')) return;
     }
     // Com a escolha recolhida, a mesa é só para olhar: inspecionar, ver cemitério e menu, sem jogar nada.
     if (questionMinimized() && !t.closest('#fQuestion, #fMenu, .log-drawer, [data-ui], [data-inspect], [data-peek], [data-gy], [data-stack-inspect]')) return;
@@ -3365,7 +3440,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (stackGalleryOpen) { e.preventDefault(); closeStackGallery(); return; }
       if (zoneOf !== null || groupIds) { closeZone(); return; }
       if (questionMinimized()) { e.preventDefault(); root.querySelector<HTMLElement>('[data-ui="question-restore"]')?.click(); return; }
+      if (focusSeat !== null && !document.querySelector('dialog[open]')) { e.preventDefault(); closeFocus(); return; }
       hideCardPreview(true);
+    }
+    if (focusSeat !== null && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (e.target as HTMLElement).closest('.focus-head')) {
+      const ids = (client?.state?.players ?? []).filter(p => p.id !== client!.state!.you && !p.eliminated).map(p => p.id);
+      const next = ids[(ids.indexOf(focusSeat) + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length];
+      if (next !== undefined && next !== focusSeat) { e.preventDefault(); openFocus(next); }
+      return;
     }
     const target = e.target as HTMLElement;
     if (stackGalleryOpen && target.matches('.stack-gallery-card') && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {

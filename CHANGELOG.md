@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.102.0] - 2026-11-01
+
+### Novo
+
+- **Focar num oponente.** Cada oponente ganhou um botão ⤢ (no Commander, no cabeçalho do campo dele, ao lado de **Só este** e **Ocultar**; no 1x1, ao lado do retrato do oponente) que abre o campo dele em tela cheia: as permanentes em tamanho grande, todas à vista sem precisar rolar, com a vida, as cartas na mão, os marcadores, o dano de comandante, a zona de comando, o grimório, o cemitério e o exílio. Os nomes dos outros oponentes ficam no alto para trocar o foco sem fechar, e **Fechar** (ou Esc) volta à mesa. A tela é só para olhar: tocar numa carta mostra a carta, e o cemitério e o exílio abrem a lista como na mesa. Se chegar uma decisão sua enquanto você olha (ser atacado, responder a uma mágica, o seu turno), uma faixa dourada avisa ali mesmo, com **Voltar à mesa**, sem tirar a vista do oponente.
+
+### Corrigido
+
+- **Botões dos campos dos oponentes no celular.** No Commander pelo celular, os botões de cada oponente (**Só este**, **Ocultar** e o novo ⤢) ficavam escondidos atrás das pilhas no alto do campo. Agora ficam no canto de baixo do campo de cada um.
+
 ## [0.101.0] - 2026-11-01
 
 ### Novo

@@ -1,0 +1,70 @@
+/* Foco num oponente: o campo dele em tela cheia, por cima da mesa, só para olhar. Abaixo das listas que se abrem dali (cemitério, exílio). */
+.focus-view {
+  position: absolute; inset: 0; z-index: 38; isolation: isolate; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px;
+  padding: max(12px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  background: radial-gradient(ellipse at 50% 30%, var(--azul-192b47, #192b47), var(--azul-080e1b, #080e1b) 78%);
+  animation: focus-in .2s ease-out;
+}
+.focus-view[hidden] { display: none; }
+.focus-view > .playmat { border-radius: 0; z-index: -1; }
+@keyframes focus-in { from { opacity: 0; transform: scale(.985); } }
+@media (prefers-reduced-motion: reduce) { .focus-view { animation: none; } }
+
+.focus-head { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; }
+.focus-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.focus-portrait { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--azul-1a2940, #1a2940) center / cover; box-shadow: 0 0 0 2px #ec5a3f99; }
+.focus-who h2 { margin: 0; font: 600 22px/1.15 var(--display); overflow-wrap: anywhere; }
+.focus-life { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+.focus-life b { color: var(--ink); font-size: 16px; }
+.focus-who .player-counters { position: static; flex-direction: row; flex-wrap: wrap; align-items: center; pointer-events: auto; }
+.focus-switch { display: flex; flex-wrap: wrap; gap: 6px; }
+.focus-other {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 12px; border: 1px solid #ffffff1f; border-radius: 999px;
+  background: color-mix(in srgb, var(--azul-070e1b, #070e1b) 70%, transparent); color: var(--ink); cursor: pointer; font: 500 14px var(--body);
+}
+.focus-other b { color: var(--muted); font-variant-numeric: tabular-nums; }
+.focus-other:hover { border-color: #e7b04b80; }
+.focus-view .focus-close { margin-left: auto; min-width: 0; display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; }
+.focus-close svg { width: 16px; height: 16px; }
+.focus-view :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Decisão sua chegando: avisa aqui mesmo e espera; a mesa só volta quando você pedir. */
+.focus-decision {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 8px 8px 8px 16px; border-radius: 12px;
+  background: linear-gradient(90deg, #f2b54c33, #f2b54c14); box-shadow: inset 0 0 0 1px #f2b54c66; color: var(--gold-light); font-weight: 600;
+}
+.focus-decision[hidden] { display: none; }
+.focus-decision .arena-btn { min-width: 0; padding: 8px 16px; }
+
+/* As fileiras quebram em linhas em vez de rolar, para ver tudo de uma vez; cartas grandes, e maiores ainda com uma fileira só. */
+.forge .focus-field {
+  --ch: clamp(110px, 26vh, 250px); --cw: calc(var(--ch) * .716); --lch: clamp(80px, 17vh, 170px); --lcw: calc(var(--lch) * .716);
+  display: flex; flex-direction: column; justify-content: safe center; gap: 14px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0;
+}
+.forge .focus-field:has(> .row:empty) { --ch: clamp(130px, 40vh, 340px); --lch: clamp(110px, 30vh, 250px); }
+.forge .focus-field > .row { flex-wrap: wrap; overflow: visible; min-height: 0; row-gap: 16px; margin: 0; }
+.forge .focus-field > .row:empty { display: none; }
+.forge .focus-field .perm-group { flex-wrap: wrap; justify-content: center; row-gap: 16px; }
+.focus-zones { display: flex; align-items: center; justify-content: center; gap: 24px; min-height: 0; }
+.focus-zones .piles { position: static; }
+.focus-command { display: flex; gap: 10px; }
+.focus-command .command-card { width: 64px; }
+
+/* Entradas: o ícone no cabeçalho de cada assento e, no 1x1, ao lado do retrato do oponente. */
+.seat-view-btn.focus-open span { display: none; }
+.seat-view-btn.focus-open { justify-content: center; min-width: 30px; padding-inline: 6px; }
+.table-seat.collapsed .seat-focus { align-self: center; }
+.avatar-slot .duel-focus { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+/* Celular: o cabeçalho do assento não tem espaço; os botões do assento vão para o canto de baixo do campo dele. */
+@media (max-height: 500px), (max-width: 760px) {
+  .forge.multiplayer .table-seat:not(.collapsed) .seat-view { position: absolute; right: 3px; bottom: 3px; z-index: 4; }
+}
+
+@media (max-width: 700px), (max-height: 500px) {
+  .focus-view { gap: 8px; padding-inline: max(10px, env(safe-area-inset-left)); }
+  .focus-portrait { width: 40px; height: 40px; }
+  .focus-who h2 { font-size: 18px; }
+  .focus-view .focus-close span, .focus-view .focus-close { padding: 6px 12px; }
+  .forge .focus-field { --ch: clamp(96px, 22vh, 180px); --lch: clamp(70px, 14vh, 120px); }
+  .forge .focus-field:has(> .row:empty) { --ch: clamp(110px, 32vh, 240px); --lch: clamp(90px, 24vh, 180px); }
+}
