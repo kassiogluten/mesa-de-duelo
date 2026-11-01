@@ -197,13 +197,13 @@ async function connectForge(url: string, hint: string | null): Promise<ForgeClie
 async function openForge(url: string, hint: string | null, attempt: number): Promise<ForgeClient | null> {
   forge?.close();
   forge = null;
-  if (hint !== null) lobby.setStatus('Conectando à ponte do Forge…');
+  if (hint !== null) lobby.setStatus('Conectando ao servidor…');
   const client = new ForgeClient();
   try {
     await client.connect(url);
   } catch {
     if (hint !== null && attempt === connectionAttempt) {
-      lobby.setStatus(`Não encontrei a ponte do Forge em ${url}. ${hint}`, true);
+      lobby.setStatus(`Não encontrei o servidor em ${url}. ${hint}`, true);
       show('lobby');
     }
     return null;
@@ -279,7 +279,7 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
     else if (current?.token && client.replaced) forgeTable.disconnected('A partida foi aberta em outra janela. Reconecte para trazê-la de volta para cá.');
     else if (current?.token) void autoReconnect();
     else if (screen === 'game') forgeTable.disconnected();
-    else if (current?.net) { current = null; lobby.showRoom(null); lobby.setStatus('A conexão com a ponte caiu.', true); }
+    else if (current?.net) { current = null; lobby.showRoom(null); lobby.setStatus('A conexão com o servidor caiu.', true); }
   };
   return client;
 }
@@ -408,7 +408,7 @@ async function resumeSaved(saved: ForgeMatch) {
   lobby.setStatus('Voltando à partida em andamento…');
   if (await reconnect()) return;
   if (current === saved) {
-    lobby.setStatus(`Não consegui voltar à partida em andamento: a ponte em ${saved.url} não respondeu. Recarregue a página para tentar de novo.`, true);
+    lobby.setStatus(`Não consegui voltar à partida em andamento: o servidor em ${saved.url} não respondeu. Recarregue a página para tentar de novo.`, true);
     current = null;
   }
 }

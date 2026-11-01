@@ -109,7 +109,7 @@ final class Accounts {
 
     /** Trata um pedido já lido inteiro; path é o que vem depois de /api/conta/. */
     Response handle(String method, String path, String authorization, byte[] body, String ip) {
-        if (!enabled()) return Response.error(503, "Contas desligadas: defina MESA_GOOGLE_CLIENT_ID na ponte.");
+        if (!enabled()) return Response.error(503, "Contas desligadas: defina MESA_GOOGLE_CLIENT_ID no servidor.");
         try {
             if (path.equals("entrar")) return "POST".equals(method) ? login(body, ip) : Response.error(405, "Use POST para entrar.");
             String account = authorized(authorization);
@@ -380,7 +380,7 @@ final class Accounts {
                     ip = ctx.channel().remoteAddress() instanceof InetSocketAddress a && a.getAddress() != null ? a.getAddress().getHostAddress() : "?";
                 String from = ip, rest = path.substring(PREFIX.length());
                 try { workers.execute(() -> Admin.respond(ctx, handle(method, rest, auth, body, from))); }
-                catch (RejectedExecutionException e) { Admin.respond(ctx, Response.error(503, "A ponte está ocupada. Tente de novo.")); }
+                catch (RejectedExecutionException e) { Admin.respond(ctx, Response.error(503, "O servidor está ocupado. Tente de novo.")); }
             } finally {
                 req.release();
             }

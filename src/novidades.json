@@ -1,4 +1,10 @@
 {
+  "0.97.3": {
+    "Avisos de conexão mais claros": [
+      { "img": "0.97.3/conexao-servidor.webp", "legenda": "Quando a conexão cai no meio da partida, a mesa avisa que a conexão com o servidor caiu e tenta voltar sozinha, contando as tentativas." },
+      { "img": "0.97.3/partida-guardada-no-servidor.webp", "legenda": "Se não der para voltar sozinha, a partida da sala fica guardada no servidor por alguns minutos, e o botão **Reconectar** tenta de novo." }
+    ]
+  },
   "0.97.1": {
     "Janela de remoção na horizontal no celular": [
       { "img": "0.97.1/remocao-celular.webp", "legenda": "No celular deitado, depois de um Wrath of God do oponente: a carta que causou à esquerda, as 11 permanentes suas numa fileira que rola de lado, as 3 do oponente embaixo e o **OK** à vista." }

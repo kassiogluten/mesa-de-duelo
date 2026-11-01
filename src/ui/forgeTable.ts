@@ -3343,7 +3343,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ov.hidden = false;
       ov.dataset.html = '';
       ov.innerHTML = `<div role="dialog" aria-modal="true" aria-label="Reconectando" class="result draw still"><h2>Reconectando…</h2>
-        <p>A conexão com a ponte caiu. Voltando à partida${attempt > 1 ? ` (tentativa ${attempt})` : ''}.</p>
+        <p>A conexão com o servidor caiu. Voltando à partida${attempt > 1 ? ` (tentativa ${attempt})` : ''}.</p>
         <div class="result-btns"><button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button></div></div>`;
       syncModal();
     },
@@ -3358,7 +3358,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ov.hidden = false;
       ov.dataset.html = '';
       ov.innerHTML = `<div role="dialog" aria-modal="true" aria-label="Conexão perdida" class="result draw"><h2>Conexão perdida</h2>
-        <p>${reason ? esc(reason) : room ? 'Não consegui voltar sozinho. A partida fica guardada na ponte por alguns minutos.' : 'A ponte do Forge parou de responder.'}</p>
+        <p>${reason ? esc(reason) : room ? 'Não consegui voltar sozinho. A partida fica guardada no servidor por alguns minutos.' : 'O servidor parou de responder.'}</p>
         <div class="result-btns"><button class="arena-btn primary" data-ui="rematch">${room ? 'Reconectar' : 'Tentar de novo'}</button><button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button></div></div>`;
       syncModal();
     },

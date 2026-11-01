@@ -246,7 +246,7 @@ final class Admin {
                     ip = ctx.channel().remoteAddress() instanceof InetSocketAddress a && a.getAddress() != null ? a.getAddress().getHostAddress() : "?";
                 String from = ip, rest = path.substring(PREFIX.length());
                 try { workers.execute(() -> respond(ctx, handle(method, rest, auth, body, from))); }
-                catch (RejectedExecutionException e) { respond(ctx, Response.error(503, "A ponte está ocupada. Tente de novo.")); }
+                catch (RejectedExecutionException e) { respond(ctx, Response.error(503, "O servidor está ocupado. Tente de novo.")); }
             } finally {
                 req.release();
             }

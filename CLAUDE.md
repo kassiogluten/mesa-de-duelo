@@ -14,6 +14,7 @@ O painel **Novidades** da tela inicial é gerado do `CHANGELOG.md` (`src/ui/chan
 
 - Toda mudança que o jogador percebe (recurso, deck, regra, tela, correção) entra no `CHANGELOG.md` **na mesma mudança de código**, sem esperar pedido.
 - Escreva em português, para o jogador: o que muda na mesa, não o que mudou no código. Nada de nomes de arquivos, funções ou classes CSS.
+- Nem no `CHANGELOG.md` nem em nenhum texto que o jogador vê (telas, avisos, erros que o servidor manda para a mesa) se usa "ponte", o nome interno do `forge-bridge`: diga "servidor" ("Conectando ao servidor…", "A conexão com o servidor caiu."), sem citar o Forge quando ele não ajuda o jogador. Comentários, nomes no código e a área de admin podem continuar com "ponte"; `tests/sem-ponte.test.mjs` confere o resto.
 - Use as seções `### Novo`, `### Mudou` e `### Corrigido`, com o cabeçalho `## [X.Y.Z] - AAAA-MM-DD`.
 - Versão: **Z** para só correções, **Y** para coisas novas (decks, telas, regras, recursos), **X** quando algo deixa de funcionar como antes. Se a seção do topo ainda não foi publicada (não está na `main`), acrescente nela em vez de abrir outra.
 - Mantenha o `version` do `package.json` (e do `package-lock.json`, via `npm version X.Y.Z --no-git-tag-version`) igual ao do topo do `CHANGELOG.md`.

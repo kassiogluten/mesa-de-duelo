@@ -973,7 +973,7 @@ Decidido em 31/10/2026: só o apelido, sem registrar nem pedir e-mail.
 
 A decidir antes de começar: se o jogador pode escolher enviar sem o apelido (uma caixa "Enviar sem meu nome"), ou se o apelido vai sempre que existir.
 
-## 64. Tirar a palavra "ponte" do que o jogador vê
+## 64. Tirar a palavra "ponte" do que o jogador vê ✅
 
 "Ponte" é o nome interno do servidor que roda o Forge (`forge-bridge`), e o jogador não precisa conhecê-lo. Mesmo assim, ele aparece em mensagens da mesa, principalmente nos erros de conexão. Levantamento feito em 31/10/2026 (só textos que aparecem na tela; comentários e nomes no código ficam como estão):
 
@@ -983,10 +983,10 @@ A decidir antes de começar: se o jogador pode escolher enviar sem o apelido (um
 - `CHANGELOG.md` (o painel Novidades): três entradas antigas falam em "ponte" (o endereço da ponte, rodar a ponte do Forge).
 - A área de admin (`src/admin`) também usa "ponte", mas é só para o responsável; fica de fora.
 
-- [ ] Trocar "ponte" por um termo genérico nos textos da tela inicial e da mesa, por exemplo "servidor" ("Conectando ao servidor…", "A conexão com o servidor caiu.", "O servidor parou de responder."), sem citar o Forge quando ele não ajuda o jogador.
-- [ ] Mesma troca nas mensagens de erro que o servidor manda para a mesa.
-- [ ] Reescrever as entradas antigas do `CHANGELOG.md` que falam em "ponte", ou deixá-las como registro histórico (a decidir).
-- [ ] Um teste que procure "ponte" nos textos visíveis (mensagens de `setStatus`, textos das telas, `CHANGELOG.md`, `src/novidades.json`) para a palavra não voltar.
-- [ ] Ajustar a regra no `CLAUDE.md`: textos para o jogador não usam "ponte".
+- [x] Trocar "ponte" por um termo genérico nos textos da tela inicial e da mesa, por exemplo "servidor" ("Conectando ao servidor…", "A conexão com o servidor caiu.", "O servidor parou de responder."), sem citar o Forge quando ele não ajuda o jogador.
+- [x] Mesma troca nas mensagens de erro que o servidor manda para a mesa.
+- [x] Reescrever as entradas antigas do `CHANGELOG.md` que falam em "ponte", ou deixá-las como registro histórico (a decidir): reescritas.
+- [x] Um teste que procure "ponte" nos textos visíveis (mensagens de `setStatus`, textos das telas, `CHANGELOG.md`, `src/novidades.json`) para a palavra não voltar.
+- [x] Ajustar a regra no `CLAUDE.md`: textos para o jogador não usam "ponte".
 
-A decidir antes de começar: o termo ("servidor", "servidor do jogo" ou "motor"); e se as entradas antigas das Novidades também mudam.
+Decidido em 31/10/2026 (versão 0.97.3): o termo é "servidor", sem citar o Forge. Tela inicial: "Conectando ao servidor…", "Não encontrei o servidor em …", "A conexão com o servidor caiu." e "Não consegui voltar à partida em andamento: o servidor em … não respondeu." Mesa: "A conexão com o servidor caiu. Voltando à partida…", "A partida fica guardada no servidor por alguns minutos." e "O servidor parou de responder." O servidor manda "O servidor está ocupado. Tente de novo." (conta e admin) e "Contas desligadas: defina MESA_GOOGLE_CLIENT_ID no servidor."; o aviso de área de admin desligada, os registros no console do servidor e a área de admin (`src/admin`) ficam como estavam. As três entradas antigas das Novidades (0.5.0 e 0.5.1) passaram a dizer "servidor", sem mudar o sentido. `tests/sem-ponte.test.mjs` procura `ponte`/`pontes` como palavra inteira (não pega "ponteiro") no `CHANGELOG.md`, no `src/novidades.json`, nos textos literais de `src/**/*.ts` fora de `src/admin` (lidos pela árvore do TypeScript, então comentários não contam), no CSS e nas páginas sem comentários, e nas mensagens de `Response.error` do servidor. A mesa de teste (`tests/fixtures/duel-table.html`) ganhou `?cenario=reconectando` e `?cenario=conexao-perdida&sala=1`, usados nos prints das Novidades.

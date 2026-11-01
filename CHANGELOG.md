@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.97.3] - 2026-10-31
+
+### Mudou
+
+- **Avisos de conexão mais claros.** Os avisos de conexão agora falam em **servidor**, no lugar de um nome interno que não dizia nada a quem joga: quando a conexão cai no meio da partida, a mesa mostra "A conexão com o servidor caiu. Voltando à partida."; se não der para voltar sozinha, avisa que a partida fica guardada no servidor por alguns minutos, ou que o servidor parou de responder. O mesmo vale para os avisos da tela inicial, para o "O servidor está ocupado. Tente de novo." da sua conta e para as notas antigas destas Novidades.
+
 ## [0.97.2] - 2026-10-31
 
 ### Mudou
@@ -1105,7 +1111,7 @@ Tudo isso fica parado com "reduzir movimento" do sistema.
 ## [0.5.1] - 2026-10-16
 
 ### Correções
-- Publicada na internet, a mesa encontra a ponte sozinha no mesmo endereço do site (`wss://seu-dominio/ws`), sem precisar abrir a porta 7171.
+- Publicada na internet, a mesa encontra o servidor sozinha no mesmo endereço do site (`wss://seu-dominio/ws`), sem precisar abrir a porta 7171.
 
 ## [0.5.0] - 2026-10-16
 
@@ -1117,7 +1123,7 @@ Tudo isso fica parado com "reduzir movimento" do sistema.
 - Clique duplo num deck começa a partida contra a IA.
 - Botão de olho em cada deck da tela inicial abre uma prévia: as cartas separadas por tipo, com custo de mana, a curva de mana e o custo médio. Passe o mouse numa carta para vê-la ampliada (no celular, toque nela). Dá para escolher o deck direto dali.
 - A tela inicial lembra o último deck e o oponente escolhidos.
-- O endereço da ponte, na partida em rede, fica recolhido em "Endereço da ponte", para não atrapalhar quem só quer entrar numa sala.
+- O endereço do servidor, na partida em rede, fica recolhido em "Endereço do servidor", para não atrapalhar quem só quer entrar numa sala.
 - Ícone novo na aba do navegador: o losango dourado da marca da tela inicial.
 - No celular a Mesa de Duelo é jogada **deitada**: ao começar uma partida, o jogo entra em tela cheia e trava a tela na horizontal (Android). Com o aparelho em pé, aparece um aviso para girar, com um botão para jogar em tela cheia onde o navegador permite.
 - Mesa e tela inicial ajustadas para celular deitado: cartas, mão, retratos, botões e perguntas no tamanho certo para telas baixas; o trilho de fases mostra só o turno e a fase atual; a carta ampliada fica ao lado do texto, em vez de em cima; e na tela inicial o painel da partida fica fixo à direita.
@@ -1189,7 +1195,7 @@ Tudo isso fica parado com "reduzir movimento" do sistema.
 
 ### Mudou
 - Todas as partidas agora usam o motor do Forge, com todas as cartas e a IA melhor. Saiu o motor simplificado do navegador e, com ele, a escolha de motor na tela inicial e o aviso "só no Forge" nos decks.
-- Para jogar é preciso rodar a ponte do Forge junto com o site (veja o README).
+- Para jogar é preciso rodar o servidor do Forge junto com o site (veja o README).
 - O atalho `#forge` no endereço deixou de existir; use `#jogar`.
 
 ## [0.1.0] - 2026-10-15

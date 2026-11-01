@@ -489,3 +489,9 @@ if (cenario === 'remocao') { const q = new URLSearchParams(location.search); (wi
 // Alerta de espera demorada: ?cenario=espera&quem=10&ms=185000 (10 é você, 23 o oponente).
 if (cenario === 'espera') { const q = new URLSearchParams(location.search); (window as any).fixture.wait(Number(q.get('quem') ?? 10), Number(q.get('ms') ?? 125000)); }
 if (cenario === 'tutor') { const p = new URLSearchParams(location.search); (window as any).fixture.tutor(Number(p.get('n') ?? 24), Number(p.get('max') ?? 1)); }
+// Conexão que cai: ?cenario=reconectando&tentativa=2, ou ?cenario=conexao-perdida (&sala=1 para a partida em sala).
+if (cenario === 'reconectando') view.reconnecting(Number(new URLSearchParams(location.search).get('tentativa') ?? 1));
+if (cenario === 'conexao-perdida') {
+  if (new URLSearchParams(location.search).get('sala')) (state as any).session = { code: 'ABCD', token: 't' };
+  view.disconnected();
+}
