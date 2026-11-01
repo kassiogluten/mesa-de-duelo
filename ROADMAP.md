@@ -1011,7 +1011,7 @@ Quem entra com a conta não tem onde ver as próprias partidas: quantas jogou, q
 - [ ] Privacidade: só o próprio jogador vê os números dele; os nomes dos oponentes aparecem como na partida. Apagar a conta apaga a ligação com as partidas. Atualizar a política de privacidade.
 - [ ] Novidades com prints da tela.
 
-A decidir antes de começar: se partidas contra o computador contam junto ou à parte; se um deck é identificado pelo deck salvo na conta ou pela lista jogada (o mesmo deck editado vira outro?); e se vale esperar o banco do item 66 para fazer as contas, ou se ler os arquivos do mês basta por enquanto.
+Decidido em 01/11/2026, antes de começar: partidas contra o computador contam junto com as outras; o deck é identificado pelo deck salvo na conta (o id dele), sem comparar a lista jogada, então o mesmo deck editado continua sendo o mesmo; e o item não espera o banco do item 66: lê os arquivos do histórico por enquanto.
 
 ## 66. Avaliar um banco Postgres
 
