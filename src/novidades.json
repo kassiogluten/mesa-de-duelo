@@ -1,4 +1,12 @@
 {
+  "0.93.0": {
+    "Onde o deck serve": [
+      { "img": "0.93.0/deck-formatos.webp", "legenda": "Com Pauper escolhido, tocar na Fúria Goblin abre a janela com os formatos em que ela serve: **Sacola 50** e **Livre**, cada um um atalho que troca o formato e mantém o deck." },
+      { "img": "0.93.0/onde-o-deck-serve.webp", "legenda": "Embaixo do deck escolhido, a linha diz que ele não serve para Pauper e em que formatos serve, com o atalho **Ver os formatos do deck**." },
+      { "img": "0.93.0/formato-mantem-deck.webp", "legenda": "Com a Fúria Goblin escolhida, tocar em Standard mantém o deck e pergunta: trocar para o Livre, ir para Standard sem este deck ou ficar no Sacola 50." },
+      { "img": "0.93.0/so-no-livre.webp", "legenda": "Um deck de 40 cartas só serve no Livre: a janela diz isso e oferece **Editar** e **Ver as cartas**." }
+    ]
+  },
   "0.92.1": {
     "Nomear uma carta sem travar a mesa": [
       { "img": "0.92.1/nomear-carta.webp", "legenda": "A Silverquill Silencer pedindo um nome: com **lightn** digitado, aparecem só as cinco cartas que batem, a Lightning Bolt primeiro, com o nome em português embaixo." }
