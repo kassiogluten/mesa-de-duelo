@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.97.1] - 2026-10-31
+
+### Mudou
+
+- **Janela de remoção na horizontal no celular.** Quando outro jogador remove várias permanentes de uma vez, a janela que mostra o que saiu agora fica deitada no celular: a carta que causou à esquerda e, ao lado, uma fileira para as suas e outra para as de cada oponente, que rolam de lado. Antes as cartas se empilhavam para baixo e o botão **OK** ficava escondido no fim da rolagem; agora ele fica sempre à vista.
+
 ## [0.97.0] - 2026-10-31
 
 ### Novo

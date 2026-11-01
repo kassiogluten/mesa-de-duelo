@@ -1,4 +1,9 @@
 {
+  "0.97.1": {
+    "Janela de remoção na horizontal no celular": [
+      { "img": "0.97.1/remocao-celular.webp", "legenda": "No celular deitado, depois de um Wrath of God do oponente: a carta que causou à esquerda, as 11 permanentes suas numa fileira que rola de lado, as 3 do oponente embaixo e o **OK** à vista." }
+    ]
+  },
   "0.97.0": {
     "Prévia ao compartilhar o link": [
       { "img": "0.97.0/previa-do-link.webp", "legenda": "A imagem que aparece no cartão do link: uma partida em andamento, com as criaturas dos dois jogadores no campo e a mão de cartas embaixo." }

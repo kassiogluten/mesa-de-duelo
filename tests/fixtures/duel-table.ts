@@ -365,6 +365,30 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     view.render();
   },
   /** Uma partida curta já jogada, para o histórico (Menu → Registro): turnos, mágicas com o que causaram, combate e gatilhos. */
+  /** Janela de remoção: o oponente conjura Wrath of God e leva `mine` permanentes suas e `theirs` dele. */
+  removal(mine = 8, theirs = 3) {
+    const me = 10, opp = 23;
+    const names = ['Llanowar Elves', 'Soul Warden', 'Serra Angel', 'Grizzly Bears', 'Blood Artist', 'Knight of Autumn', 'Elvish Mystic', 'Birds of Paradise', 'Wall of Omens', 'Baneslayer Angel', 'Sakura-Tribe Elder', 'Eternal Witness'];
+    const mineCards = Array.from({ length: mine }, (_, i) => card(600 + i, names[i % names.length], me));
+    const theirCards = Array.from({ length: theirs }, (_, i) => card(700 + i, names[(i + 5) % names.length], opp));
+    const wrath = card(800, 'Wrath of God', opp, { creature: false, typeLine: 'Sorcery', manaCost: '{2}{W}{W}' });
+    let seq = 0;
+    const frame = (stackId?: number) => ({ turn: 2, phase: 'MAIN1', activePlayer: opp, combat: [], stack: stackId ? [{ id: stackId, source: wrath, controller: opp }] : [],
+      players: [{ id: me, life: 20, handCount: 5, library: 50, battlefield: mineCards }, { id: opp, life: 20, handCount: 5, library: 50, battlefield: theirCards }] });
+    const ev = (type: string, extra: any = {}) => ({ seq: ++seq, stateVersion: seq, type, ...extra });
+    state.matchId = 'remocao';
+    state.events = [ev('turn', { actor: opp, turn: 2 })];
+    state.eventCursor = seq;
+    view.render();
+    setTimeout(() => {
+      state.events = [...state.events,
+        ev('spell-cast', { actor: opp, stackId: 9, sourceId: wrath.id, card: wrath, frame: frame(9) }),
+        ...[...mineCards, ...theirCards].map(x => ev('left', { actor: x.controller, sourceId: x.id, card: x, reason: 'destroyed', from: 'Battlefield', to: 'Graveyard', stackId: 9, sourceName: 'Wrath of God', frame: frame(9) })),
+        ev('resolved', { actor: opp, stackId: 9, sourceId: wrath.id, card: wrath, frame: frame(9) })];
+      state.eventCursor = seq;
+      view.render();
+    }, 300);
+  },
   history() {
     const me = 10, opp = 23;
     const c = (id: number, name: string, controller: number) => card(id, name, controller);
@@ -460,6 +484,8 @@ if (cenario === 'proliferar') (window as any).fixture.proliferate();
 if (cenario === 'improvisar') (window as any).fixture.improvise();
 // Pagar mana à mão: ?cenario=pagar (Craw Wurm, {4}{G}{G}); toque nos terrenos e no Sol Ring para descontar.
 if (cenario === 'pagar') (window as any).fixture.payMana();
+// Janela de remoção: ?cenario=remocao&minhas=8&dele=3 (Wrath of God do oponente).
+if (cenario === 'remocao') { const q = new URLSearchParams(location.search); (window as any).fixture.removal(Number(q.get('minhas') ?? 8), Number(q.get('dele') ?? 3)); }
 // Alerta de espera demorada: ?cenario=espera&quem=10&ms=185000 (10 é você, 23 o oponente).
 if (cenario === 'espera') { const q = new URLSearchParams(location.search); (window as any).fixture.wait(Number(q.get('quem') ?? 10), Number(q.get('ms') ?? 125000)); }
 if (cenario === 'tutor') { const p = new URLSearchParams(location.search); (window as any).fixture.tutor(Number(p.get('n') ?? 24), Number(p.get('max') ?? 1)); }

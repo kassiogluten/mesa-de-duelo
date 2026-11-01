@@ -8,11 +8,16 @@
 .forge .removal-notice .removal-group .q-face { width: 132px; --fw: 132px; }
 .forge .removal-notice .removal-group .q-face .face { filter: saturate(.75) brightness(.9); }
 
+/* No celular, tudo na horizontal: a causa à esquerda e cada dono numa fileira que rola de lado, para o OK caber na tela. */
 @media (max-width: 760px), (max-height: 500px) {
-  .forge .removal-notice .removal-body { flex-direction: column; align-items: center; gap: 12px; }
-  .forge .removal-notice .removal-cause { padding-top: 0; }
-  .forge .removal-notice .removal-cause .q-face { width: 112px; --fw: 112px; }
-  .forge .removal-notice .removal-group .q-face { width: 84px; --fw: 84px; }
-  .forge .removal-notice .removal-group h3 { text-align: center; }
-  .forge .removal-notice .removal-group .q-opts.cards { justify-content: center; }
+  .forge .removal-notice h2 { font-size: 16px; }
+  .forge .removal-notice .removal-body { justify-content: flex-start; gap: 12px; max-height: none; overflow: visible; padding: 0; }
+  .forge .removal-notice .removal-cause { padding-top: 20px; }
+  .forge .removal-notice .removal-cause .q-face { width: 80px; --fw: 80px; }
+  .forge .removal-notice .removal-groups { flex: 1; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .forge .removal-notice .removal-group h3 { font-size: 12px; }
+  .forge .removal-notice .removal-group .q-opts.cards { flex-wrap: nowrap; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding: 4px 2px 6px; margin-bottom: 0; }
+  .forge .removal-notice .removal-group .q-face { flex: none; width: 64px; --fw: 64px; }
+  .forge .removal-notice .q-actions { position: sticky; bottom: 0; padding: 6px 0 4px; }
+  .forge .removal-notice .q-actions .arena-btn { padding-block: 8px; }
 }
