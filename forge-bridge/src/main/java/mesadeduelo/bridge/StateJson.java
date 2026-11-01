@@ -374,6 +374,7 @@ final class StateJson {
         o.addProperty("text", c.isEmblem() ? c.getText().replace("\r", "").trim() : s.getOracleText());
         if (c.isEmblem()) o.addProperty("emblem", true);
         PermanentDetails.countsSpells(o, c, game);
+        CardCounts.add(o, c, game);
         if (c.getZone() == ZoneType.Exile) {
             Card gc = game == null ? null : game.findByView(c);
             if (gc != null && gc.isPlotted()) o.addProperty("plotted", true);

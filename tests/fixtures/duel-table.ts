@@ -364,8 +364,40 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       perm(274, 23, 'Serra Angel', { manaCost: '{3}{W}{W}', land: true, typeLine: 'Land', printedType: 'Creature - Angel', typeChangedBy: ['Imprisoned in the Moon'] }));
     view.render();
   },
+  /**
+   * O valor que a carta conta (item 56), com os campos que a ponte manda: na mão, Combustion Technique (3 Lições no
+   * cemitério), Accumulate Wisdom (2 de 3), Ghalta (custa 7 a menos) e Craterhoof (conta a si mesma ao entrar); no campo,
+   * Thassa (devoção 2 de 5) e, do oponente, Scourge of Geier Reach. `lessons` muda as Lições do cemitério, ao vivo.
+   */
+  counts(lessons = 3) {
+    const [me, opp] = state.players;
+    const lessonNames = ['Introduction to Annihilation', 'Expanded Anatomy', 'Introduction to Prophecy', 'Environmental Sciences', 'Academic Probation'];
+    const spell = (id: number, name: string, manaCost: string, typeLine: string, extra = {}) => card(id, name, 10, { creature: false, manaCost, typeLine, ...extra });
+    const lessonsIn = (value: number) => ({ of: 'cards', zone: 'graveyard', whose: 'you', types: ['Lesson'], qualities: [], value });
+    const creatures = me.battlefield.filter((c: any) => c.creature).length;
+    const power = me.battlefield.filter((c: any) => c.creature).reduce((sum: number, c: any) => sum + (c.power ?? 0), 0);
+    me.graveyard = lessonNames.slice(0, lessons).map((n, i) => spell(340 + i, n, '{2}', 'Sorcery — Lesson'));
+    me.hand = [
+      spell(350, 'Combustion Technique', '{1}{R}', 'Instant — Lesson', { counts: [{ ...lessonsIn(lessons), uses: [{ use: 'damage', amount: 2 + lessons, plus: 2 }] }] }),
+      spell(351, 'Accumulate Wisdom', '{1}{U}', 'Instant — Lesson', { counts: [{ ...lessonsIn(lessons), uses: [{ use: 'threshold', min: 3 }] }] }),
+      card(352, 'Ghalta, Primal Hunger', 10, { manaCost: '{10}{G}{G}', typeLine: 'Legendary Creature — Elder Dinosaur', power: 12, toughness: 12,
+        counts: [{ of: 'cards', zone: 'battlefield', whose: 'you', types: ['Creature'], qualities: [], measure: 'power', value: power, uses: [{ use: 'costLess', amount: power }] }] }),
+      card(353, 'Craterhoof Behemoth', 10, { manaCost: '{5}{G}{G}{G}', typeLine: 'Creature — Beast', power: 5, toughness: 5,
+        counts: [{ of: 'cards', zone: 'battlefield', whose: 'you', types: ['Creature'], qualities: [], value: creatures, entering: creatures + 1, uses: [{ use: 'pt', power: `+${creatures + 1}`, toughness: `+${creatures + 1}` }] }] }),
+      land(354, 10),
+    ];
+    me.handCount = me.hand.length;
+    if (!me.battlefield.some((c: any) => c.id === 355)) me.battlefield.push(card(355, 'Thassa, God of the Sea', 10, { creature: false, manaCost: '{2}{U}', typeLine: 'Legendary Enchantment — God', printedType: 'Legendary Enchantment Creature — God',
+      counts: [{ of: 'devotion', colors: ['U'], value: 2, uses: [{ use: 'creature', min: 5 }] }] }));
+    const mine = me.battlefield.filter((c: any) => c.creature).length;
+    if (!opp.battlefield.some((c: any) => c.id === 356)) opp.battlefield.push(card(356, 'Scourge of Geier Reach', 23, { manaCost: '{3}{R}', typeLine: 'Creature — Elemental', power: 3 + mine, toughness: 3 + mine, basePower: 3, baseToughness: 3,
+      counts: [{ of: 'cards', zone: 'battlefield', whose: 'opponents', types: ['Creature'], qualities: [], value: mine, uses: [{ use: 'pt', power: `+${mine}`, toughness: `+${mine}` }] }] }));
+    state.input.actionable = [350, 351, 354];
+    view.render();
+  },
 } });
 if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (window as any).fixture.typeChange();
+if (new URLSearchParams(location.search).get('cenario') === 'contagens') (window as any).fixture.counts(Number(new URLSearchParams(location.search).get('licoes') ?? 3));
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
 if (cenario === 'improvisar') (window as any).fixture.improvise();

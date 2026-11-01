@@ -51,6 +51,31 @@ export interface FMatch {
 }
 export interface FSideboarding { id: number; main: DeckEntry[]; sideboard: DeckEntry[]; ready: boolean }
 
+/**
+ * Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualidades e medida, ou as cores da devoção),
+ * o valor de agora para quem a controla, o valor quando ela mesma entrar no campo (`entering`, de um "quando entra"
+ * visto da mão) e o que o número muda (`uses`).
+ */
+export interface FCount {
+  of: 'cards' | 'devotion' | 'hand' | 'life' | 'domain';
+  value: number;
+  entering?: number;
+  zone?: 'battlefield' | 'graveyard' | 'exile';
+  whose?: 'you' | 'opponents' | 'all';
+  /** Alternativas, com os nomes do Forge: "Lesson", "Creature", "Forest". "Card" e "Permanent" são qualquer carta. */
+  types?: string[];
+  /** other, token, nontoken, tapped, untapped, attacking, cores (white...), legendary, snow, basic, non:Land, with:Flying, powerGE4. */
+  qualities?: string[];
+  measure?: 'power' | 'greatestPower' | 'toughness' | 'greatestToughness' | 'manaValue' | 'greatestManaValue' | 'cardTypes' | 'names' | 'colors';
+  colors?: string[];
+  uses: FCountUse[];
+}
+export type FCountUse =
+  | { use: 'pt'; power?: string; toughness?: string }
+  | { use: 'threshold' | 'creature'; min: number }
+  | { use: 'damage' | 'costLess' | 'costMore' | 'life' | 'lifeGain' | 'lifeLoss' | 'draw' | 'mill' | 'discard' | 'pick' | 'tokens' | 'counters' | 'mana'; amount: number; plus?: number; others?: boolean }
+  | { use: 'other' };
+
 export interface FCard {
   id: number;
   controller?: number;
@@ -112,8 +137,11 @@ export interface FCard {
   shields?: number;
   /** O que a carta escolheu (tipo, cores, carta nomeada, jogador, número, modo), só o que existe. */
   chosen?: FChosen;
-  /** Cartas que contam com devoção: as cores (W, U, B, R, G), o valor para quem controla e, nos deuses de Theros, o mínimo para ser criatura. */
-  devotion?: { colors: string[]; value: number; need?: number };
+  /**
+   * O valor que a carta conta (item 56), só quando o número muda o que ela faz; inclui a devoção. Só na mão, no campo,
+   * na pilha e na zona de comando.
+   */
+  counts?: FCount[];
   /** Estados ligados uma vez por uma mecânica (monstrous, renowned, suspected, saddled, crewed, exerted, detained, harnessed, solved). */
   states?: FCardState[];
   /** Quem selou ou tripulou a permanente neste turno (nomes das cartas). */

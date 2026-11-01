@@ -1,4 +1,12 @@
 {
+  "0.94.0": {
+    "O valor que a carta conta": [
+      { "img": "0.94.0/contagem-mao.webp", "legenda": "Na mão, com três Lições no cemitério: a Combustion Technique com o selo **3**, a Accumulate Wisdom com **3/3** em verde (o efeito extra já vale), o Ghalta e o Craterhoof com o número que contam, na borda esquerda que o leque não cobre." },
+      { "img": "0.94.0/contagem-balao.webp", "legenda": "Passando o mouse na Combustion Technique, o balão diz o que é contado e o resultado: Lições no seu cemitério: 3. Causa 5 de dano (2 + 3)." },
+      { "img": "0.94.0/contagem-devocao.webp", "legenda": "No campo, Thassa com o selo da devoção ao azul: **2/5**, o quanto falta para ela virar criatura." },
+      { "img": "0.94.0/contagem-oponente.webp", "legenda": "O Flagelo da Cordilheira de Geier do oponente com o selo **1**: a criatura que você controla e que ele conta." }
+    ]
+  },
   "0.93.0": {
     "Onde o deck serve": [
       { "img": "0.93.0/deck-formatos.webp", "legenda": "Com Pauper escolhido, tocar na Fúria Goblin abre a janela com os formatos em que ela serve: **Sacola 50** e **Livre**, cada um um atalho que troca o formato e mantém o deck." },

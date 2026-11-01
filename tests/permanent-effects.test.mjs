@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
+const cardCounts = uri((await readFile(new URL('../src/ui/cardCounts.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
+const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./cardCounts'", JSON.stringify(cardCounts));
 const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import(uri(source));
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
@@ -92,7 +93,8 @@ test('engine-only states become small seals with the full sentence in the toolti
 });
 
 test('devotion cards show the count, and gods show how much is missing to become a creature', () => {
-  const seal = devotion => permanentFx(creature({ devotion })).seals.find(s => s.kind.startsWith('devotion'));
+  const devotionCount = d => d && { of: 'devotion', colors: d.colors, value: d.value, uses: [d.need === undefined ? { use: 'other' } : { use: 'creature', min: d.need }] };
+  const seal = devotion => permanentFx(creature({ counts: devotion && [devotionCount(devotion)] })).seals.find(s => s.kind.startsWith('devotion'));
   const god = seal({ colors: ['U'], value: 3, need: 5 });
   assert.equal(god.kind, 'devotion');
   assert.match(god.html, /3\/5$/);
@@ -190,7 +192,7 @@ test('printed types never get a seal: artifact creatures, changelings, gods with
   assert.equal(permanentFx(creature({ typeLine: 'Artifact Creature - Myr', printedType: 'Artifact Creature - Myr' })).seals.length, 0);
   assert.equal(permanentTypeChange(creature({ keywords: ['CHANGELING'], typeLine: 'Creature - Shapeshifter (All)', printedType: 'Creature - Shapeshifter' })), undefined);
   assert.equal(permanentTypeChange(creature({ typeLine: 'Creature - Elf (All)', printedType: 'Creature - Elf' })).allTypes, true, 'Maskwood Nexus and friends');
-  const god = permanentFx({ id: 9, tapped: false, token: false, typeLine: 'Legendary Enchantment - God', printedType: 'Legendary Enchantment Creature - God', devotion: { colors: ['U'], value: 2, need: 5 } });
+  const god = permanentFx({ id: 9, tapped: false, token: false, typeLine: 'Legendary Enchantment - God', printedType: 'Legendary Enchantment Creature - God', counts: [{ of: 'devotion', colors: ['U'], value: 2, uses: [{ use: 'creature', min: 5 }] }] });
   assert.equal(god.seals.some(s => s.kind.startsWith('type')), false, 'the devotion seal already explains it');
   const vehicle = permanentFx(creature({ typeLine: 'Artifact Creature - Vehicle', printedType: 'Artifact - Vehicle', states: ['crewed'] }));
   assert.deepEqual(vehicle.seals.map(s => s.kind), ['state crewed']);

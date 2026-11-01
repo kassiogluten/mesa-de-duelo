@@ -1,5 +1,6 @@
 import type { FCard, FCardState } from '../forge/client';
 import { esc, manaHTML, pip } from './cardtext';
+import { countSeals } from './cardCounts';
 
 /**
  * Efeitos contínuos de uma permanente no campo (item 17 do roadmap): uma moldura e um brilho no máximo, escolhidos
@@ -21,7 +22,6 @@ export interface PermanentFx {
 }
 
 const COLOR_PIP: Record<string, string> = { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' };
-const PIP_COLOR = Object.fromEntries(Object.entries(COLOR_PIP).map(([name, letter]) => [letter, name]));
 const PROTECTION_LABEL: Record<string, string> = {
   white: 'branco', blue: 'azul', black: 'preto', red: 'vermelho', green: 'verde', artifact: 'artefatos', artifacts: 'artefatos',
   creature: 'criaturas', creatures: 'criaturas', multicolored: 'multicoloridas', monocolored: 'monocoloridas', everything: 'tudo',
@@ -36,7 +36,7 @@ export function auraColor(manaCost = '') {
 }
 export const protectionLabel = (from: string) => PROTECTION_LABEL[from] ?? from;
 
-export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean; playerName?: (id: number) => string } = {}): PermanentFx {
+export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean; playerName?: (id: number) => string; you?: number } = {}): PermanentFx {
   const k = new Set(c.keywords ?? []);
   const has = (name: string) => k.has(name);
   const p1 = c.counters?.P1P1 ?? 0, m1 = c.counters?.M1M1 ?? 0;
@@ -64,12 +64,12 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
     const kind = c.faceDownKind && FACE_DOWN_LABEL[c.faceDownKind];
     seals.push({ kind: 'face-down', html: kind ? `${kind} 2/2` : '2/2', label: `Virada para baixo${kind ? ` (${kind})` : ''}, 2/2` });
   }
-  seals.push(...permanentStatus(c, context.playerName));
+  seals.push(...permanentStatus(c, context.playerName, context.you));
   const restricted = c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : undefined;
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 
-type StatusKind = `type ${TypeIcon}` | 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'foretold' | 'devotion' | 'devotion met' | `state ${FCardState}`;
+type StatusKind = `type ${TypeIcon}` | 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'foretold' | 'devotion' | 'devotion met' | 'count' | 'count met' | `state ${FCardState}`;
 const icon = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`;
 const STATUS_ICON: Record<'control' | 'goaded' | 'regen' | 'chosen' | 'protector', string> = {
   control: icon('M7 4 3 8l4 4V9h10V7H7zm10 8v3H7v2h10v3l4-4z'),
@@ -108,10 +108,10 @@ const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(
 
 /**
  * Estados que o motor guarda e a carta impressa não mostra: controle trocado, atiçada, escudos de regeneração, o que a
- * carta escolheu, a devoção das cartas que contam com ela e os estados de uma vez só (monstruosa, suspeita, exaurida...).
+ * carta escolheu, o valor que a carta conta (a devoção entre eles) e os estados de uma vez só (monstruosa, suspeita, exaurida...).
  * Na mesa ficam como selos pequenos (controle, atiçada e os estados só com o ícone); o texto vai no balão e no inspetor.
  */
-export function permanentStatus(c: FCard, playerName: (id: number) => string = id => `Jogador ${id}`): PermanentFx['seals'] {
+export function permanentStatus(c: FCard, playerName: (id: number) => string = id => `Jogador ${id}`, you?: number): PermanentFx['seals'] {
   const seals: PermanentFx['seals'] = [];
   if (c.owner !== undefined && c.controller !== undefined && c.owner !== c.controller) {
     const owner = playerName(c.owner);
@@ -146,15 +146,8 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
   for (const state of c.states ?? []) if (STATE_ICON[state]) seals.push({ kind: `state ${state}`, html: STATE_ICON[state], label: stateLabel(state, c) });
   // Prevista só existe no exílio: não vira selo na mesa, só a frase do balão e do inspetor.
   if (c.foretold && c.name) seals.push({ kind: 'foretold', html: '', label: `Prevista: ${c.foretellCost ? `quem a previu pode conjurá-la do exílio por ${c.foretellCost}` : 'quem a previu pode conjurá-la do exílio pelo custo previsto'}, a partir do turno seguinte ao da previsão. Os outros jogadores só veem o verso.` });
-  const dev = c.devotion;
-  if (dev?.colors.length) {
-    const pips = dev.colors.map(k => pip(k)).join('');
-    const to = `Devoção ao ${list(dev.colors.map(k => protectionLabel(PIP_COLOR[k] ?? k)))}: ${dev.value}`;
-    const met = dev.need !== undefined && dev.value >= dev.need;
-    const label = dev.need === undefined ? `${to}.`
-      : met ? `${to}. Com ${dev.need} ou mais, é criatura.` : `${to}. Só é criatura com ${dev.need} (falta${dev.need - dev.value > 1 ? 'm' : ''} ${dev.need - dev.value}).`;
-    seals.push({ kind: met ? 'devotion met' : 'devotion', html: `${pips}${dev.value}${dev.need !== undefined ? `/${dev.need}` : ''}`, label });
-  }
+  // O valor que a carta conta (item 56), com a devoção entre eles: o número no selo, o que é contado no balão.
+  seals.push(...countSeals(c, playerName, you));
   return seals;
 }
 
@@ -238,13 +231,13 @@ const TYPE_ICON: Record<TypeIcon, string> = {
   other: STATUS_ICON.chosen,
   lost: iconEO('M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2.5a7.5 7.5 0 0 0-5.9 12.1L16.6 6.1A7.5 7.5 0 0 0 12 4.5zm5.9 3.4L7.4 17.9A7.5 7.5 0 0 0 17.9 7.9z'),
 };
-/** O tipo mudado da permanente, sem o que já tem marca própria: o changeling (todos os tipos impressos) e o deus de Theros sem devoção. */
+/** O tipo mudado da permanente, sem o que já tem marca própria: o changeling (todos os tipos impressos) e o deus de Theros sem devoção (o selo da devoção já diz). */
 export function permanentTypeChange(c: FCard): TypeChange | undefined {
   if (c.faceDown) return undefined;
   const change = typeChange(c.printedType, c.typeLine);
   if (!change) return undefined;
   if (c.keywords?.includes('CHANGELING')) change.allTypes = false;
-  if (c.devotion?.need !== undefined) change.lost = change.lost.filter(t => t !== 'Creature');
+  if (c.counts?.some(k => k.uses.some(u => u.use === 'creature'))) change.lost = change.lost.filter(t => t !== 'Creature');
   return changeSize(change) ? change : undefined;
 }
 /** Linha impressa e o que mudou: "Artefato — agora também Criatura 3/3". */

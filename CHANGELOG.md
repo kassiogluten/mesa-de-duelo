@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.94.0] - 2026-10-31
+
+### Novo
+
+- **O valor que a carta conta.** Cartas cujo número depende da mesa ganham um selo pequeno com esse número, na mão, no campo, na pilha e na zona de comando: as Lições no cemitério da Combustion Technique, o poder total das suas criaturas que baixa o custo do Ghalta, as criaturas que o Craterhoof Behemoth conta (já com ele mesmo, quando ainda está na mão), as criaturas dos oponentes do Flagelo da Cordilheira de Geier. Quando o efeito só liga a partir de um mínimo, o selo mostra a conta e o mínimo (**2/3** na Accumulate Wisdom) e fica verde quando já vale. Passe o mouse, toque ou inspecione a carta para ver o que é contado e o resultado, como "Lições no seu cemitério: 3. Causa 5 de dano (2 + 3).", dizendo de quem é a contagem quando é de um oponente. O número acompanha a mesa a cada jogada. O selo só aparece quando o número muda o que a carta faz (dano, P/T, custo, vida, cartas, fichas, mana ou um efeito a partir de um mínimo). A devoção passou a usar o mesmo selo, e os deuses de Theros continuam dizendo quanto falta para virar criatura.
+
 ## [0.93.0] - 2026-10-31
 
 ### Novo

@@ -101,6 +101,16 @@
 .fx-seal.chosen { color: #f4e7b8; }
 .fx-seal.devotion { color: #d9c7f0; }
 .fx-seal.devotion.met { color: #8fe0a2; }
+/* O valor que a carta conta (item 56): o número (e o mínimo, "2/3"), verde quando o efeito já vale; o que é contado fica no balão. */
+.fx-seal.count { color: var(--azul-9fd8ff, #9fd8ff); font-variant-numeric: tabular-nums; }
+.fx-seal.count.met { color: #8fe0a2; }
+/* Fora do campo (mão, pilha, zona de comando) o selo fica na borda esquerda, sem cobrir custo, nome, arte nem P/T. */
+.count-seals { position: absolute; z-index: 4; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; pointer-events: none; }
+.count-seals .fx-seal { font-size: 10px; }
+.hcard > .count-seals { left: -6px; top: 26%; }
+.stack-layer > .count-seals, .stack-gallery-card > .count-seals { left: -6px; bottom: 12%; }
+.command-card > .count-seals { left: -5px; bottom: -3px; }
+.command-card > .count-seals .fx-seal { font-size: 9px; }
 .fx-seal.control, .fx-seal.goaded { padding: 1px 2px; }
 .fx-chosen { display: inline-block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; }
 /* Estados de uma vez só (monstruosa, suspeita, exaurida...): só o ícone; o nome e o que muda ficam no balão. */

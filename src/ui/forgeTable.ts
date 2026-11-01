@@ -4,6 +4,7 @@ import { esc, manaHTML, optionHTML, pip, richText, withoutCardIds } from './card
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { createMotion } from './motion';
 import { damageDetail } from './damageEffects';
+import { countSeals, countSealsHTML } from './cardCounts';
 import { auraColor, permanentFx, permanentFxHTML, permanentFxText, permanentStatus, permanentTypeChange, typeChangeText } from './permanentEffects';
 import { canFullscreen, toggleFullscreen } from './landscape';
 import { followCardPreview, inspectCard, mergedText, showCardPreview, hideCardPreview } from './cardInspector';
@@ -1269,7 +1270,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Efeitos contínuos (item 17): moldura, brilho e selos, na borda ou fora da carta.
     const caster = s.stack.find(item => item.targets?.cards?.includes(c.id))?.controller;
     const aura = attached.find(a => /\bAura\b/.test(a.typeLine ?? ''));
-    const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, playerName });
+    const fx = permanentFx(c, { targeted: caster === undefined ? undefined : caster === s.you ? 'mine' : 'theirs', enchanted: !!aura, playerName, you: s.you });
     const fxView = permanentFxHTML(fx, aura ? auraColor(aura.manaCost) : undefined);
     inner.push(...fxView.classes);
     if (faceStyle(c, true) === 'arena') {
@@ -1458,7 +1459,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return (p.commandZone ?? []).map(c => {
       const commander = p.commanders?.find(item => item.id === c.id);
       const playable = canPlayCommander(s, c.id, s.input.gen);
-      return `<div class="command-slot"><button class="command-card${playable ? ' playable' : ''}" data-fid="${c.id}" data-command-card aria-label="${playable ? 'Conjurar' : 'Inspecionar'} ${esc(label(c))}. Taxa de comandante: ${commander?.tax ?? 0} manas. Conjurado da zona de comando ${commander?.casts ?? 0} vezes.">${face(c, 'normal')}<span class="command-tax">+${commander?.tax ?? 0}</span></button>${inspectButton(c)}</div>`;
+      return `<div class="command-slot"><button class="command-card${playable ? ' playable' : ''}" data-fid="${c.id}" data-command-card aria-label="${playable ? 'Conjurar' : 'Inspecionar'} ${esc(label(c))}. Taxa de comandante: ${commander?.tax ?? 0} manas. Conjurado da zona de comando ${commander?.casts ?? 0} vezes.">${face(c, 'normal')}${countSealsHTML(c, playerName, s.you)}<span class="command-tax">+${commander?.tax ?? 0}</span></button>${inspectButton(c)}</div>`;
     }).join('');
   }
   function damageButton(p: FPlayer) {
@@ -1751,7 +1752,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return `<span class="stack-kind ${si.kind ?? 'spell'}" title="${esc(stackBadgeText(si))}">${kind ? `<svg viewBox="0 0 16 16" aria-hidden="true">${kind.icon}</svg>` : ''}${label}${esc(tag)}</span>`;
   }
   function stackFace(si: FState['stack'][number]) {
-    return si.source ? face(si.source, 'normal') : `<div class="stack-effect-face"><span>Efeito na pilha</span><p>${richText(si.text)}</p></div>`;
+    // O valor que a carta conta (item 56), atualizado enquanto ela espera na pilha.
+    const counted = si.source ? countSealsHTML(si.source, playerName, client?.state?.you) : '';
+    return si.source ? face(si.source, 'normal') + counted : `<div class="stack-effect-face"><span>Efeito na pilha</span><p>${richText(si.text)}</p></div>`;
   }
   function stackPanel(s: FState, replaying = false) {
     const count = s.stack.length;
@@ -2335,8 +2338,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       // Selo do custo acima do canto esquerdo: no leque, a carta seguinte cobre o canto direito, onde fica o custo impresso.
       const cost = !c.faceDown && c.manaCost ? `<div class="hcost" aria-hidden="true">${manaHTML(c.manaCost)}</div>` : '';
       const where = tag ? `<div class="hzone">${esc(tag)}</div>` : '';
-      return `<div class="hand-slot"><div class="hcard ${sel}${incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${tag ? ` (${esc(tag)})` : ''}"
-        style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${face(c, 'normal')}${cost}${where}${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
+      // O valor que a carta conta (item 56): o selo fica na borda esquerda, a parte do leque que a carta seguinte não cobre.
+      const counted = c.faceDown ? '' : countSealsHTML(c, playerName, s.you);
+      const countedText = c.faceDown ? '' : countSeals(c, playerName, s.you).map(seal => seal.label).join(' ');
+      return `<div class="hand-slot"><div class="hcard ${sel}${incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${tag ? ` (${esc(tag)})` : ''}${countedText ? `. ${esc(countedText)}` : ''}"
+        style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${face(c, 'normal')}${cost}${where}${counted}${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
     }).join(''));
     // Quem assiste não vê a mão de ninguém: a de baixo também fica de costas, só com a quantidade.
     if (s.watching) setHTML($('#fHand'), Array.from({ length: me.handCount }, (_, i) => {
@@ -2620,7 +2626,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.printedType || c.typeLine,
       typeChange: changed ? typeChangeText(changed, c) : undefined,
-      notes: [...(secret ? ['Virada para baixo: só você pode ver qual carta é.'] : []), ...permanentStatus(c, playerName).map(seal => seal.label)] };
+      notes: [...(secret ? ['Virada para baixo: só você pode ver qual carta é.'] : []), ...permanentStatus(c, playerName, client?.state?.you).map(seal => seal.label)] };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {
