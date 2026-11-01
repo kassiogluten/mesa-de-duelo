@@ -22,30 +22,29 @@
   .shared-shell-header.home-top nav { order: 3; width: 100%; }
   .shared-shell-header .home-nav { flex: 1; }
   .shared-shell-header .news-btn { padding: 6px 10px; font-size: 13px; }
-  .shared-shell-header .news-ver { display: none; }
 }
 .shared-shell-header .home-news { display: flex; align-items: center; gap: 8px; }
 @media (max-width: 700px) { .shared-shell-header .pwa-install { padding: 6px 10px; font-size: 13px; } }
-.shared-shell-header .feedback-btn .feedback-short { display: none; }
-@media (max-width: 700px) {
-  .shared-shell-header .feedback-btn { padding: 6px 10px; font-size: 13px; }
-  .shared-shell-header .feedback-btn .feedback-long { display: none; }
-  .shared-shell-header .feedback-btn .feedback-short { display: inline; }
-}
-/* Celular deitado e tablet estreito: cabe numa linha só, com o rótulo curto do relato (antes "Meus decks" e "Enviar sugestão ou erro" quebravam em duas linhas). */
+/* Celular deitado e tablet estreito: cabe numa linha só. */
 @media (min-width: 701px) and (max-width: 960px) {
   .shared-shell-header.home-top { gap: 20px; }
   .shared-shell-header .home-nav { padding-inline: 12px; }
-  .shared-shell-header .feedback-btn .feedback-long { display: none; }
-  .shared-shell-header .feedback-btn .feedback-short { display: inline; }
 }
+/* Novidades e o menu ⋯: só o ícone, do mesmo tamanho; o nome fica no aria-label e na dica. */
+.shared-shell-header .news-icon, .shared-shell-header .mais-btn { justify-content: center; width: 40px; min-width: 40px; height: 40px; padding: 0; }
+.news-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.mais-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.mais-menu { min-width: 230px; }
+.mais-menu [data-mais] svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.mais-grupo { margin: 6px 0 2px; padding: 8px 10px 2px; border-top: 1px solid #ffffff14; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.mais-menu [role='group'] { display: flex; flex-direction: column; }
 /* Conta: depois de Novidades; no celular, na linha das abas, para a primeira linha não quebrar. */
 .shared-shell-header.home-top > .conta { margin-left: -32px; }
 @media (max-width: 700px) {
   .shared-shell-header.home-top > .conta { order: 4; margin-left: 0; }
   .shared-shell-header.home-top:has(> .conta:not([hidden])) nav { width: auto; flex: 1; }
 }
-/* Tema: entre Novidades e a conta; no celular, também na linha das abas. */
+/* Menu ⋯ (relatar e tema): entre Novidades e a conta; no celular, também na linha das abas. */
 .shared-shell-header.home-top > .tema { margin-left: -32px; }
 .shared-shell-header.home-top > .tema + .conta { margin-left: -32px; }
 @media (min-width: 701px) and (max-width: 960px) {

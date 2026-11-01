@@ -6,6 +6,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.101.0] - 2026-11-01
+
+### Novo
+
+- **Jogar de novo.** Quem já jogou encontra no alto da tela inicial o deck da última partida em destaque, com a arte dele, o resumo da partida (por exemplo, "Commander · 4 jogadores · computadores aleatórios") e o botão **Jogar de novo**, que começa outra partida igual com um toque. O título "Como jogar:" saiu: quem joga pela primeira vez vai direto para a escolha dos decks.
+- **Tapete com a arte do deck.** Atrás do campo de cada jogador aparece agora a arte de capa do deck dele, bem escura e desfocada, sumindo nas bordas, como um tapete de mesa. Ela dá clima à partida e mostra de quem é cada lado sem tirar o destaque das cartas. Vale no 1x1 e no Commander com vários jogadores; quem não tiver arte de capa conhecida fica com o fundo de sempre. Para desligar, use **Menu → Opções → Aparência → Tapete com a arte do deck**.
+
+### Mudou
+
+- **Escolha de deck primeiro no celular.** No celular, o formato, os oponentes, o número de jogadores e os decks dos computadores ficam resumidos numa linha ("Partida: Commander · 4 jogadores · computadores aleatórios"), e os decks aparecem logo abaixo. Toque em **Mudar** para abrir os ajustes. Contra outra pessoa, os ajustes já vêm abertos, porque é lá que se escolhe a sala.
+- **Cabeçalho mais limpo.** O alto da tela inicial e de Meus decks ficou só com as abas, a conta e dois botões pequenos: **Novidades** virou um ícone, com o ponto dourado quando há versão nova (a versão aparece dentro do painel), e o novo botão **⋯** reúne **Enviar sugestão ou erro** e o **Tema da mesa**.
+- **Cartas maiores quando uma fileira está vazia.** Quando um lado do campo ainda não tem criaturas (só terrenos e outras permanentes), ou só tem criaturas, a fileira que tem cartas passa a usar a altura toda daquele lado: no começo da partida, os terrenos aparecem do tamanho das criaturas, e as criaturas sem nada atrás ficam até 60% maiores. Quando a outra fileira ganha a primeira carta, as duas voltam ao tamanho de sempre.
+
 ## [0.100.0] - 2026-11-01
 
 ### Novo

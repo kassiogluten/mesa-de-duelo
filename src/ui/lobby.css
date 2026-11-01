@@ -4,6 +4,23 @@
 .home-intro { margin: 24px 0 28px; }
 .home-intro h1 { font: 600 clamp(30px, 3vw, 38px)/1.12 var(--display); margin: 0 0 8px; letter-spacing: -.025em; }
 .home-intro p { color: var(--muted); margin: 0; font-size: 15px; }
+/* Jogar de novo: o deck da última partida em destaque, com a arte dele ao fundo e o resumo da partida. */
+.replay {
+  position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; gap: 24px; min-height: 160px; padding: 26px 30px;
+  border-radius: 16px; background: var(--azul-0d1626, #0d1626); box-shadow: inset 0 0 0 1px #f2b54c33, 0 14px 34px #0006;
+}
+.replay[hidden] { display: none; }
+.replay-art { position: absolute; inset: 0; z-index: -1; background: center 30% / cover no-repeat; }
+.replay-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--azul-070d19, #070d19) 96%, transparent) 0%, color-mix(in srgb, var(--azul-070d19, #070d19) 82%, transparent) 40%, color-mix(in srgb, var(--azul-070d19, #070d19) 40%, transparent) 100%); }
+.replay-info { flex: 1; min-width: 0; }
+.home-intro .replay-eyebrow { margin: 0 0 6px; color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.replay h2 { margin: 0 0 8px; font: 600 clamp(26px, 2.8vw, 34px)/1.12 var(--display); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.home-intro .replay-summary { margin: 0; color: var(--azul-d8dfec, #d8dfec); font-size: 15px; }
+.replay-btn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; white-space: nowrap; }
+.replay-btn::before { content: ''; width: .62em; height: .7em; flex: 0 0 .62em; background: currentColor; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.replay-btn:disabled { opacity: .55; cursor: default; }
+/* Resumo dos ajustes: só no celular (no computador a barra lateral fica aberta). */
+.setup-summary { display: none; }
 .play-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; align-items: start; }
 /*
  * A barra lateral nunca passa da altura da tela: as opções rolam dentro dela e o resumo com o botão Jogar fica sempre
@@ -176,8 +193,22 @@
 }
 @media (max-width: 700px) {
   .lobby.library-home { padding: 0 16px 32px; }
-  .home-intro { margin: 24px 0; }
-  .play-layout { display: flex; flex-direction: column; gap: 28px; }
+  .home-intro { margin: 20px 0 24px; }
+  .replay { flex-wrap: wrap; gap: 16px; min-height: 0; padding: 20px; }
+  .replay-btn { width: 100%; }
+  .setup-summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px;
+    border: 1px solid #ffffff1a; border-radius: 12px; background: color-mix(in srgb, var(--azul-070e1b, #070e1b) 70.2%, transparent);
+    color: var(--ink); text-align: left; cursor: pointer; font: inherit;
+  }
+  .setup-summary-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .setup-summary small { color: var(--muted); font-size: 12px; }
+  .setup-summary strong { font-size: 15px; font-weight: 600; }
+  .setup-summary-action { flex: none; color: var(--gold-light); font-size: 14px; font-weight: 600; }
+  .setup-summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .play-layout:not(.setup-open) .match-setup { display: none; }
+  .play-layout:not(.setup-open) .match-sidebar { padding: 0; border-bottom: 0; margin-top: -20px; }
+  .play-layout { display: flex; flex-direction: column; gap: 20px; }
   .match-sidebar { position: static; width: 100%; border-left: 0; padding: 0 0 24px; border-bottom: 1px solid #ffffff14; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
   .match-setup { display: contents; }
   .format-choice, .player-count-choice, .duration-choice, .commander-ai-panel { grid-column: 1/-1; }

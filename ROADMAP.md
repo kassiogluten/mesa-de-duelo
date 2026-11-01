@@ -1036,3 +1036,56 @@ O que custa:
 - [ ] Backup e restauração testados antes de virar a chave.
 
 A decidir: se o primeiro passo é só o histórico de partidas (para o item 65) ou tudo de uma vez; e onde o banco roda (no mesmo servidor, num container, ou um serviço gerenciado).
+
+## 67. Cartas maiores quando uma fileira do campo está vazia ✅
+
+Veio da sugestão S24. Medido em 01/11/2026 na página de teste da mesa (1440×900): o espaço sobrando no campo é só na largura. Na altura, a fileira de criaturas (153 px) e a de terrenos (86 px) já ocupam os 310 px de cada lado, e a carta não muda de proporção. Por isso o ganho ficou no caso em que uma das fileiras está vazia, comum no começo da partida.
+
+- [x] Com uma fileira vazia, a outra usa a altura livre do campo (medida na mesa, também ao redimensionar): criaturas até 1,6 vez o tamanho normal, terrenos e outras permanentes até o tamanho das criaturas, nunca menores que o normal.
+- [x] Vale no 1x1, no Commander 1x1 e no seu campo no Commander com vários jogadores; os assentos dos oponentes no Commander com vários jogadores ficam como estão.
+- [x] Conferido no computador e no celular (390×844).
+
+Decidido em 01/11/2026: a fileira vazia cede espaço, em vez de juntar tudo numa fileira só com poucas cartas (as cartas mudariam de lugar no meio da partida).
+
+## 68. Tapete de mesa com a arte do deck ✅
+
+Veio da sugestão S26. Atrás do campo de cada jogador, a arte de capa do deck dele (a mesma do retrato), escura, desfocada e sumindo nas bordas.
+
+- [x] Arte do deck que veio com a partida; em rede, a capa que a sala mostra de cada jogador. Sem arte conhecida, o fundo de sempre.
+- [x] 1x1 e Commander com vários jogadores (cada assento com o seu tapete).
+- [x] Opção **Tapete com a arte do deck** em Menu → Opções → Aparência, guardada no aparelho como o estilo das cartas.
+
+Decidido em 01/11/2026: intensidade sutil (cerca de 25% do brilho) e ligado por padrão.
+
+## 69. Focar num oponente em tela cheia
+
+Pedido em 01/11/2026. Hoje o **Só este** (item 25) mostra só o campo de um oponente, mas dentro da faixa de cima da mesa: o campo dele continua dividindo a tela com o seu, a mão e a caixa de ação. Para ler com calma a mesa de quem preocupa (um combo montando, muitas permanentes, marcadores), falta um jeito de olhar só para ele.
+
+- [ ] Ação **Focar** no cabeçalho de cada oponente (e no retrato dele, pelo inspetor do jogador) que abre o campo daquele oponente em tela cheia: retrato, vida, marcadores, dano de comandante, zona de comando, cemitério, exílio e todas as permanentes em tamanho grande.
+- [ ] Na tela cheia, **Fechar** volta à mesa como estava, e uma fileira com os retratos dos outros oponentes troca o foco para outro sem fechar.
+- [ ] As cartas continuam inspecionáveis (passar o mouse, tocar, inspetor), mas a tela é só para olhar: jogar, atacar e escolher continuam na mesa.
+- [ ] Quando chega uma decisão sua (prioridade com algo na pilha, ser atacado, escolher alvo), avisar na própria tela cheia com um botão para voltar à mesa, ou fechar sozinho; decidir qual antes de começar.
+- [ ] Vale também no 1x1 (o único oponente) e no celular, onde ganha mais: lá cada campo é bem pequeno.
+- [ ] Teclado e leitor de tela: Esc fecha, setas trocam de oponente, a tela anuncia de quem é o campo.
+
+A decidir antes de começar: se a tela cheia cobre a mesa inteira ou deixa a sua mão e a caixa de ação à vista embaixo; e o que acontece quando chega uma decisão sua (avisar ou fechar sozinho).
+
+## 70. Tela inicial com o deck primeiro ✅
+
+Veio da sugestão S22. A tela abria com "Como jogar:" e uma frase de instrução, e no celular o jogador passava por formato, oponentes, jogadores e decks dos computadores antes de ver os decks.
+
+- [x] Faixa **Jogar de novo** no alto para quem já jogou: arte do último deck, nome, resumo da partida ("Commander · 4 jogadores · computadores aleatórios") e o botão que começa outra partida igual. Fica escondida contra outra pessoa (é preciso escolher a sala) e com o deck inválido no formato.
+- [x] Sem o título "Como jogar:": quem joga pela primeira vez vai direto aos decks (o título continua para leitores de tela).
+- [x] No celular, os ajustes ficam numa linha de resumo com **Mudar**; contra outra pessoa, começam abertos. No computador, a barra lateral continua aberta.
+
+Decidido em 01/11/2026: faixa com a arte do deck; ajustes resumidos só no celular.
+
+## 71. Cabeçalho mais limpo ✅
+
+Veio da sugestão S23. O cabeçalho tinha Enviar sugestão ou erro, Novidades com a versão, o tema e a conta com o mesmo peso das abas.
+
+- [x] **Novidades** virou um ícone com o ponto de versão nova; a versão fica dentro do painel.
+- [x] Novo botão **⋯** com **Enviar sugestão ou erro** e as paletas do **Tema da mesa**; vale para quem entrou com a conta e para quem não entrou.
+- [x] O botão de instalar o jogo continua no cabeçalho quando o navegador oferece.
+
+Decidido em 01/11/2026: Novidades fica como ícone; relatar e tema vão para o ⋯.

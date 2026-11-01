@@ -1,5 +1,6 @@
 import type { FCard, FOption, FPlayer, FQuestion, FState, ForgeClient, NoticeDetail } from '../forge/client';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
+import { cardInfo } from '../cards';
 import { esc, manaHTML, optionHTML, pip, richText, withoutCardIds } from './cardtext';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { faceDownReminder } from './faceDownReminder';
@@ -197,6 +198,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <details class="game-option-group" data-options-group="look">
           <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Aparência</span><span class="game-option-group-value" id="fLookSummary"></span></summary>
           <div class="game-option-pace"><label for="fCardStyle">Estilo das cartas</label><select id="fCardStyle" aria-describedby="fCardStyleHint"><option value="full">Imagem completa</option><option value="art">Arte e texto</option><option value="arena">Arena</option></select><p id="fCardStyleHint">Arte e texto mostra a arte da carta com nome, custo e texto em letras da mesa, mais fáceis de ler em telas pequenas. Arena deixa as permanentes no campo só com a arte e os atributos num rodapé. O texto inteiro continua no inspetor.</p></div>
+          <div class="game-option-auto-pass"><div class="game-option-row"><span id="fPlaymatLabel">Tapete com a arte do deck</span><button class="sound-switch" id="fPlaymat" data-ui="playmat" role="switch" aria-checked="true" aria-labelledby="fPlaymatLabel" aria-describedby="fPlaymatHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fPlaymatState" aria-hidden="true">Ligado</span></button></div><p id="fPlaymatHint">Atrás do campo de cada jogador, a arte de capa do deck dele, escura e desfocada.</p></div>
           <div class="game-option-pace"${temasDisponiveis() ? '' : ' hidden'}><label for="fTema">Tema da mesa</label><select id="fTema" aria-describedby="fTemaHint">${temaOptionsHTML()}</select><p id="fTemaHint">Muda a cor do fundo da mesa. Vale também na tela inicial e acompanha a sua conta.</p></div>
         </details>
         <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
@@ -214,6 +216,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="piles opp" id="fOppPiles"></div>
 
     <section class="field opp" aria-label="Campo do oponente">
+      <div class="playmat" id="fOppMat" aria-hidden="true" hidden></div>
       <div class="row lands" id="fOppLands"></div>
       <div class="row creatures" id="fOppCreatures"></div>
     </section>
@@ -222,6 +225,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="divider" aria-hidden="true"></div>
     <svg class="combat-arrows" id="fArrows" aria-hidden="true"></svg>
     <section class="field me" aria-label="Seu campo">
+      <div class="playmat" id="fMeMat" aria-hidden="true" hidden></div>
       <div class="row creatures" id="fMeCreatures"></div>
       <div class="row lands" id="fMeLands"></div>
     </section>
@@ -447,6 +451,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let cardStyle: CardStyle = 'full';
   const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
   try { cardStyle = parseCardStyle(localStorage.getItem('mesa:cards')); } catch { /* Storage is optional. */ }
+  let playmat = true;
+  try { playmat = localStorage.getItem('mesa:playmat') !== 'off'; } catch { /* Storage is optional. */ }
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();
   const setHTML = (el: HTMLElement, html: string) => {
     const previous = renderedContent.get(el);
@@ -475,7 +481,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const settings = audio.settings;
     $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
     $('#fPlaySummary').textContent = [chosen('#fPassLevel'), turnNotice.enabled && 'Aviso de turno', fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
-    $('#fLookSummary').textContent = [chosen('#fCardStyle'), temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
+    $('#fLookSummary').textContent = [chosen('#fCardStyle'), playmat && 'Tapete', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
   }
   /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
   let openOptionGroups = ['sound'];
@@ -559,6 +565,38 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     menu.style.top = `${above ? a.top - m.height - gap : a.bottom + gap}px`;
   }
   window.addEventListener('resize', placeStopMenu);
+  function syncPlaymat() {
+    $('#fPlaymat').setAttribute('aria-checked', String(playmat));
+    $('#fPlaymatState').textContent = playmat ? 'Ligado' : 'Desligado';
+    syncOptionSummaries();
+  }
+  /** Arte do tapete: a capa do deck que veio com a partida ou, em rede, a capa que a sala mostra de cada um. */
+  function matArt(s: FState, p: FPlayer, idx: number): string | undefined {
+    if (!playmat) return undefined;
+    const cover = s.room?.players.find(rp => rp.playerId === p.id)?.cover, card = cover ? cacheGet(cover) : null;
+    return portraits[idx] ?? (card ? cardInfo(card).artCrop : undefined);
+  }
+  const matStyle = (art: string | undefined) => art ? `--mat:url(${JSON.stringify(art)})` : '';
+  function syncMat(el: HTMLElement, art: string | undefined) {
+    el.hidden = !art;
+    if (el.getAttribute('style') !== matStyle(art)) el.setAttribute('style', matStyle(art));
+  }
+  /** Com uma das fileiras do campo vazia, a outra ganha a altura livre do campo (--lone-h); o CSS limita o tamanho. */
+  function fitLoneRows() {
+    root.querySelectorAll<HTMLElement>('.field').forEach(field => {
+      const rows = [...field.querySelectorAll<HTMLElement>(':scope > .row')];
+      const filled = rows.filter(row => row.childElementCount > 0);
+      const lone = rows.length > 1 && filled.length === 1 ? filled[0] : null;
+      for (const row of rows) {
+        row.classList.toggle('lone', row === lone);
+        if (row !== lone) row.style.removeProperty('--lone-h');
+      }
+      if (!lone) return;
+      const px = (style: CSSStyleDeclaration, ...props: ('paddingTop' | 'paddingBottom')[]) => props.reduce((sum, prop) => sum + (parseFloat(style[prop]) || 0), 0);
+      const free = field.clientHeight - px(getComputedStyle(field), 'paddingTop', 'paddingBottom') - px(getComputedStyle(lone), 'paddingTop', 'paddingBottom');
+      lone.style.setProperty('--lone-h', `${Math.max(0, Math.floor(free))}px`);
+    });
+  }
   function syncTurnNotice() {
     const permission = turnNotice.permission;
     const control = $('#fTurnNotice') as HTMLButtonElement;
@@ -1181,7 +1219,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   document.fonts?.addEventListener('loadingdone', () => { if (!root.hidden) layoutCounters(); });
   window.addEventListener('resize', () => {
     const s = client?.state;
-    if (s?.type === 'state' && !root.hidden) { layoutCounters(); layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
+    if (s?.type === 'state' && !root.hidden) { fitLoneRows(); layoutCounters(); layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
   });
 
   const COUNTER_LABEL: Record<string, string> = { P1P1: '+1/+1', M1M1: '-1/-1', LOYALTY: 'Lealdade', SHIELD: 'Escudo', STUN: 'Atordoar' };
@@ -1526,6 +1564,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const chosen = soloSeat !== null ? soloSeat === p.id : !hiddenSeats.has(p.id);
     const focused = focusedByAttack(seatMemory(), p.id);
     return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${seatTurnClass(s, p)}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
+      ${(art => art ? `<div class="playmat" aria-hidden="true" style="${esc(matStyle(art))}"></div>` : '')(matArt(s, p, index + 1))}
       <header class="seat-heading"><div class="avatar-slot">${avatar(s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(p)}${damageButton(p)}${seatControls(p, true, count)}</header>
       ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : focused ? '<p class="seat-forced focused">Em foco: atacando você</p>' : ''}
       <div class="seat-zones"><div class="piles">${piles(s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(s, p)}</div></div>
@@ -2334,6 +2373,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     setHTML($('#fMeLands'), backRow(visual, me));
     setHTML($('#fOppCreatures'), multiplayer ? '' : fieldRow(visual, opp.battlefield.filter(c => !isBackRow(c))));
     setHTML($('#fMeCreatures'), fieldRow(visual, me.battlefield.filter(c => !isBackRow(c))));
+    syncMat($('#fOppMat'), multiplayer ? undefined : matArt(s, opp, 1));
+    syncMat($('#fMeMat'), matArt(s, me, 0));
+    fitLoneRows();
 
     // Cartas do cemitério utilizáveis continuam na mão; o exílio tem seu próprio espaço.
     const extra = outsideHand(s);
@@ -2804,8 +2846,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       $('#fStackGallery').querySelector<HTMLElement>('.stack-gallery-card.actionable, .stack-gallery-card')?.focus({ preventScroll: true });
       return;
     }
-    if (ui === 'settings') { syncTurnNotice(); setSettings(true); return; }
+    if (ui === 'settings') { syncTurnNotice(); syncPlaymat(); setSettings(true); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
+    if (ui === 'playmat') {
+      playmat = !playmat;
+      try { localStorage.setItem('mesa:playmat', playmat ? 'on' : 'off'); } catch { /* Storage is optional. */ }
+      syncPlaymat(); renderTable(false); return;
+    }
     if (ui === 'turn-notice') { void turnNotice.setEnabled(!turnNotice.enabled).then(syncTurnNotice); return; }
     if (ui === 'mute') { audio.setMuted(!audio.settings.muted); syncSettings(); return; }
     if (ui === 'sideboard-ready' || ui === 'next-game') {

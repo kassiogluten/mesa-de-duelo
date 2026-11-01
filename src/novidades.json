@@ -1,4 +1,25 @@
 {
+  "0.101.0": {
+    "Jogar de novo": [
+      { "img": "0.101.0/jogar-de-novo.webp", "legenda": "No alto da tela inicial, o deck da última partida com a arte dele, o resumo da partida e o botão **Jogar de novo**." }
+    ],
+    "Escolha de deck primeiro no celular": [
+      { "img": "0.101.0/celular-resumo.webp", "legenda": "No celular, os ajustes da partida numa linha só, com **Mudar** para abri-los, e a busca e os decks logo abaixo." }
+    ],
+    "Cabeçalho mais limpo": [
+      { "img": "0.101.0/cabecalho.webp", "legenda": "O cabeçalho só com as abas, o ícone de Novidades (com o ponto dourado de versão nova), o botão ⋯ e a conta." },
+      { "img": "0.101.0/cabecalho-menu.webp", "legenda": "O menu ⋯ aberto: **Enviar sugestão ou erro** e as cores do **Tema da mesa**." }
+    ],
+    "Tapete com a arte do deck": [
+      { "img": "0.101.0/tapete-campo.webp", "legenda": "O campo do oponente com a arte de capa do deck dele atrás das cartas, escura, desfocada e sumindo nas bordas." },
+      { "img": "0.101.0/tapete-commander.webp", "legenda": "No Commander com vários jogadores, cada oponente tem o próprio tapete, com a arte do deck dele." },
+      { "img": "0.101.0/tapete-opcao.webp", "legenda": "Em **Menu → Opções → Aparência**, o botão para ligar ou desligar o tapete." }
+    ],
+    "Cartas maiores quando uma fileira está vazia": [
+      { "img": "0.101.0/fileira-terrenos.webp", "legenda": "Sem criaturas no campo, os terrenos e as outras permanentes aparecem do tamanho de uma criatura." },
+      { "img": "0.101.0/fileira-criatura.webp", "legenda": "Uma criatura sem terrenos atrás dela usa a altura toda do campo e fica bem maior." }
+    ]
+  },
   "0.100.0": {
     "Minhas partidas": [
       { "img": "0.100.0/minhas-partidas-menu.webp", "legenda": "O menu da conta, aberto pela sua foto no alto da tela, com o item novo **Minhas partidas**." },

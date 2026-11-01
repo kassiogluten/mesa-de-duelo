@@ -1,4 +1,4 @@
-/* Escolha de tema: botão no cabeçalho com o menu das paletas. */
+/* Menu ⋯ do cabeçalho (maisMenu.ts), com as paletas do tema. */
 .tema { position: relative; display: flex; align-items: center; }
 .tema-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
 .tema-btn circle { fill: currentColor; stroke: none; }

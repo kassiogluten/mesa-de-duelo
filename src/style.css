@@ -1033,7 +1033,6 @@ body[data-screen='lobby'] .credits { display: none; }
   background: var(--panel); border: 1px solid var(--line); cursor: pointer; font-size: 14px;
 }
 .news-btn:hover, .news-btn[aria-expanded='true'] { border-color: var(--gold); }
-.news-ver { color: var(--gold); font-weight: 700; }
 .news-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
 /* Anel girando em volta do ponto enquanto o jogo procura ou baixa uma versão nova. */
 .news-sync {

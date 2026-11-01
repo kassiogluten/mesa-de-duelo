@@ -80,6 +80,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   // Toda sala nova começa privada: só vira pública se o jogador escolher.
   let visibility: RoomVisibility = 'private';
   let netTab: NetTab = load('mesa:netTab') === 'create' ? 'create' : 'join';
+  // No celular, os ajustes da partida começam resumidos numa linha; contra outra pessoa, abertos (é lá que se escolhe a sala).
+  let setupOpen = mode === 'net';
   let publicRooms: PublicRoomsState = null, roomsHTML = '', roomsRequest = 0;
   let roomsTimer: ReturnType<typeof setInterval> | undefined;
   const validations = new Map<string, DeckValidation>();
@@ -94,10 +96,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const config = (): MatchConfig => ({ format: format!, matchLength: format === 'commander' ? 'bo1' : matchLength, playerCount: format === 'commander' ? playerCount : 2 });
   root.innerHTML = `<div class="lobby library-home"><div class="mat" aria-hidden="true"></div>
     <header class="home-top"></header>
-    <main class="home-content"><div class="home-intro"><h1>Como jogar:</h1><p>Escolha seu deck, o formato de jogo e seu oponente.</p></div>
+    <main class="home-content"><div class="home-intro"><h1 class="sr-only">Jogar</h1><section class="replay" id="replay" aria-labelledby="replayTitle" hidden><span class="replay-art" id="replayArt" aria-hidden="true"></span><div class="replay-info"><p class="replay-eyebrow">Sua última partida</p><h2 id="replayTitle"></h2><p class="replay-summary" id="replaySummary"></p></div><button type="button" class="arena-btn primary big replay-btn" id="replayStart" data-lobby="start">Jogar de novo</button></section></div>
     <div class="play-layout">
+      <button type="button" class="setup-summary" data-lobby="setup-toggle" aria-expanded="false" aria-controls="matchSetup"><span class="setup-summary-text"><small>Partida</small><strong id="setupSummary"></strong></span><span class="setup-summary-action" id="setupSummaryAction" aria-hidden="true">Mudar</span></button>
       <aside class="match-sidebar" aria-label="Configuração da partida">
-        <div class="match-setup">
+        <div class="match-setup" id="matchSetup">
         <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
@@ -241,6 +244,22 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const start = $<HTMLButtonElement>('#startMatch');
     start.disabled = !format || !deck || invalid || busy || !!waitingRoom || (joining && !room);
     start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : joining ? 'Escolha a sala' : 'Criar sala';
+    // Quem já jogou vê o deck escolhido em destaque, com o resumo da partida e o botão de jogar de novo.
+    const summary = matchSummary();
+    const replay = $('#replay');
+    replay.hidden = !deck || !format || invalid || mode === 'net' || !!waitingRoom || !load('mesa:played');
+    if (!replay.hidden) {
+      $('#replayArt').style.backgroundImage = art ? `url("${art}")` : '';
+      $('#replayTitle').textContent = deck!.name;
+      $('#replaySummary').textContent = summary;
+      const again = $<HTMLButtonElement>('#replayStart');
+      again.disabled = start.disabled;
+      again.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : 'Jogar de novo';
+    }
+    $('#setupSummary').textContent = summary || 'Escolha o formato';
+    $('#setupSummaryAction').textContent = setupOpen ? 'Fechar' : 'Mudar';
+    $('[data-lobby=setup-toggle]').setAttribute('aria-expanded', String(setupOpen));
+    $('.play-layout').classList.toggle('setup-open', setupOpen);
     // Onde o deck serve: só muda o texto quando muda, para o leitor de tela não repetir a cada redesenho.
     const fitText = misfit(deck) ? deckFitText(format!, fitFormats(f => fitsIn(deck!, f), format!), f => FORMAT_LABEL[f], !!room) : '';
     if ($('#deckFitText').textContent !== fitText) $('#deckFitText').textContent = fitText;
@@ -250,6 +269,22 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (focusedOpponent !== undefined) root.querySelector<HTMLElement>(`[data-opponent-slot="${CSS.escape(focusedOpponent)}"]`)?.focus({preventScroll: true});
     if (focusId) root.querySelector<HTMLElement>(`[data-${focusAttribute}="${CSS.escape(focusId)}"]`)?.focus({preventScroll: true});
     syncRoomPolling();
+  }
+  /** A partida numa linha: "Commander · 4 jogadores · computadores aleatórios". */
+  function matchSummary() {
+    if (!format) return '';
+    const parts = [FORMAT_LABEL[format]];
+    if (mode === 'free') parts.push('Mesa livre');
+    else if (mode === 'net') parts.push('Contra outras pessoas');
+    else if (format === 'commander') {
+      const random = commanderOpponents.slice(0, playerCount - 1).every(id => id === 'random');
+      parts.push(`${playerCount} jogadores`, random ? (playerCount > 2 ? 'computadores aleatórios' : 'computador aleatório') : playerCount > 2 ? 'contra os computadores' : 'contra o computador');
+    } else {
+      const opponent = oppId === 'random' ? undefined : allDecks().find(d => d.id === oppId);
+      parts.push(opponent ? `contra ${opponent.name}` : 'computador aleatório');
+      if (matchLength === 'bo3') parts.push('melhor de três');
+    }
+    return parts.join(' · ');
   }
   // ---------- Salas públicas ----------
   // Só procura com "Outra pessoa" escolhido, fora de uma sala e com a aba à vista; com a partida na tela, o lobby fica escondido.
@@ -340,6 +375,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const deck = selected();
     if (busy || !format || !deck) return;
     ++preflight;
+    save('mesa:played', '1');
     if (mode === 'free') { setStatus(''); opts.onFreePlay(deck, format); return; }
     const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, roomVisibility = visibility, chosenCode = roomCode(), opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
     if (selectedMode === 'net' && !selectedRoom && chosenCode && !ROOM_CODE.test(chosenCode)) { setStatus('O código da sala precisa ter 4 letras ou números.', true); return; }
@@ -408,6 +444,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const action = target.closest<HTMLElement>('[data-lobby]')?.dataset.lobby;
     if (!busy && !waitingRoom && ['library','create','import'].includes(action ?? '')) opts.onDecks(action as DeckAction, format ?? undefined);
     if (action === 'start') void start();
+    if (action === 'setup-toggle') { setupOpen = !setupOpen; refresh(); }
     if (action === 'clear') { query = ''; colorFilter = new Set(); $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
     if (action === 'fit-formats' && !busy && !waitingRoom && !room) { const deck = selected(); if (deck && misfit(deck)) void pickFormat(deck, format!, false); }

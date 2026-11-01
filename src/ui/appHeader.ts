@@ -3,7 +3,7 @@ import { installButton } from './pwa';
 import { openFeedbackForm } from './feedbackForm';
 import { latestMatch } from '../feedback';
 import { mountContaMenu } from './contaMenu';
-import { mountTemaMenu } from './temas';
+import { mountMaisMenu } from './maisMenu';
 import './appHeader.css';
 
 export interface AppHeaderOptions {
@@ -18,24 +18,22 @@ export interface AppHeaderOptions {
 export function mountAppHeader(root: HTMLElement, options: AppHeaderOptions) {
   let disabled = false;
   root.classList.add('home-top', 'shared-shell-header');
-  root.innerHTML = `<a class="home-brand" href="#" aria-label="Mesa de Duelo — início" data-app-brand><span class="brand-mark" aria-hidden="true"></span><span>Mesa de Duelo</span></a><nav aria-label="Navegação principal"><button type="button" class="home-nav${options.active === 'play' ? ' active' : ''}" ${options.active === 'play' ? 'aria-current="page"' : ''} data-app-nav="play">Jogar</button><button type="button" class="home-nav${options.active === 'decks' ? ' active' : ''}" ${options.active === 'decks' ? 'aria-current="page"' : ''} data-app-nav="decks">Meus decks</button></nav><div class="home-news"><button type="button" class="news-btn feedback-btn" data-app-feedback aria-label="Enviar sugestão ou erro"><span class="feedback-long" aria-hidden="true">Enviar sugestão ou erro</span><span class="feedback-short" aria-hidden="true">Relatar</span></button></div><div data-app-tema></div><div data-app-conta></div>`;
+  root.innerHTML = `<a class="home-brand" href="#" aria-label="Mesa de Duelo — início" data-app-brand><span class="brand-mark" aria-hidden="true"></span><span>Mesa de Duelo</span></a><nav aria-label="Navegação principal"><button type="button" class="home-nav${options.active === 'play' ? ' active' : ''}" ${options.active === 'play' ? 'aria-current="page"' : ''} data-app-nav="play">Jogar</button><button type="button" class="home-nav${options.active === 'decks' ? ' active' : ''}" ${options.active === 'decks' ? 'aria-current="page"' : ''} data-app-nav="decks">Meus decks</button></nav><div class="home-news"></div><div data-app-tema></div><div data-app-conta></div>`;
   mountChangelog(root.querySelector('.home-news')!);
   root.querySelector('.home-news')!.prepend(installButton());
-  // Tema e conta ficam na ponta, depois de Novidades; no celular, ao lado das abas (CSS).
-  mountTemaMenu(root.querySelector<HTMLElement>('[data-app-tema]')!);
-  mountContaMenu(root.querySelector<HTMLElement>('[data-app-conta]')!);
   // Both screens stay mounted: keep disclosure IDs unique for assistive technology.
   const panel = root.querySelector<HTMLElement>('.news-panel')!;
-  // O botão de relatar também usa .news-btn: o que abre o painel é o de dentro de .news.
+  // O botão de instalar também usa .news-btn: o que abre o painel é o de dentro de .news.
   const disclosure = root.querySelector<HTMLButtonElement>('.news > .news-btn')!;
   panel.id = `news-panel-${options.active}`;
   disclosure.setAttribute('aria-controls', panel.id);
+  // O menu ⋯ (relatar e tema) e a conta ficam na ponta, depois de Novidades; no celular, ao lado das abas (CSS).
+  mountMaisMenu(root.querySelector<HTMLElement>('[data-app-tema]')!, () => {
+    panel.hidden = true; disclosure.setAttribute('aria-expanded', 'false');
+    openFeedbackForm({ from: 'inicio', match: latestMatch });
+  });
+  mountContaMenu(root.querySelector<HTMLElement>('[data-app-conta]')!);
   root.addEventListener('click', async event => {
-    if ((event.target as HTMLElement).closest('[data-app-feedback]')) {
-      panel.hidden = true; disclosure.setAttribute('aria-expanded', 'false');
-      openFeedbackForm({ from: 'inicio', match: latestMatch });
-      return;
-    }
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-app-nav], [data-app-brand]');
     if (!target) return;
     event.preventDefault();

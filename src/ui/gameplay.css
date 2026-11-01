@@ -30,6 +30,21 @@
 .forge .slot.tapped.attacking .tag.atk { left: 2px; top: 64%; transform: translate(-50%, -50%) rotate(-90deg); }
 .forge .slot.attacking:is(:hover, :focus-within) { z-index: 4; }
 .forge .row.lands { min-height: calc(var(--lch) + 16px); padding: 8px 12px; }
+/*
+ * Fileira sozinha no campo (a outra está vazia): cresce até a altura livre do campo, medida na mesa (--lone-h), sem nunca ficar menor
+ * que o normal. As criaturas vão até 1,6 vez o tamanho normal; terrenos e outras permanentes, até o tamanho das criaturas.
+ */
+.forge .field { --lone-min: var(--ch); --lone-max: calc(var(--ch) * 1.6); --lone-lands-min: var(--lch); --lone-lands-max: var(--ch); }
+.forge .field:has(> .row.lone) > .row:not(.lone) { display: none; }
+.forge .field > .row.creatures.lone { --ch: max(var(--lone-min), min(var(--lone-h, 0px), var(--lone-max))); --cw: calc(var(--ch) * .716); }
+.forge .field > .row.lands.lone { --lch: max(var(--lone-lands-min), min(var(--lone-h, 0px), var(--lone-lands-max))); --lcw: calc(var(--lch) * .716); }
+/* Tapete: a arte de capa do deck do jogador, escura e desfocada atrás do campo dele, sumindo nas bordas. */
+.playmat {
+  position: absolute; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; border-radius: 18px;
+  -webkit-mask-image: radial-gradient(ellipse 62% 78% at 50% 50%, #000 25%, transparent 100%); mask-image: radial-gradient(ellipse 62% 78% at 50% 50%, #000 25%, transparent 100%);
+}
+.playmat::before { content: ''; position: absolute; inset: -24px; background: var(--mat) center 35% / cover no-repeat; filter: blur(6px) saturate(.9) brightness(.42); opacity: .6; }
+.forge.multiplayer .table-seat { isolation: isolate; }
 .forge .row > *,.forge .perm-group, .forge .slot { flex-shrink: 0; }
 .forge .slot { transition: none; }
 .forge .row:focus-visible { outline-offset: -3px; }
