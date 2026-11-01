@@ -119,6 +119,14 @@ public class BridgeRulesTest {
         assertEquals(3,new MatchConfig("pauper","bo3").rules().getGamesPerMatch());
         assertFalse(new MatchConfig("pauper","bo3").rules().getSideboardForAI());
     }
+    @Test public void undoIsAlwaysOnAndTheOldFieldIsStillAccepted() {
+        // Versões anteriores mandam "undo" (true ou false) e diários antigos o guardam: aceito e ignorado.
+        for (String undo : new String[]{"", ",\"undo\":true", ",\"undo\":false", ",\"undo\":\"sim\""}) {
+            MatchConfig c = MatchConfig.parse(JsonParser.parseString("{\"format\":\"pauper\",\"matchLength\":\"bo1\"" + undo + "}"));
+            // O estado continua dizendo undo: true, para a mesa das versões anteriores mostrar o botão.
+            assertTrue(undo, c.json().get("undo").getAsBoolean());
+        }
+    }
     @Test public void eventHistoryIsImmutableOrderedAndBounded() {
         AtomicLong version=new AtomicLong(); VisibleEvents events=new VisibleEvents(version::incrementAndGet,version::get);
         JsonObject e=new JsonObject(); e.addProperty("type","draw"); events.append(e); e.addProperty("type","tampered");

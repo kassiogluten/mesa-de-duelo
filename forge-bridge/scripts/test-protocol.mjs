@@ -120,7 +120,7 @@ try {
   await until(() => rejoined.state.room.players[1].connected, 'return to completed match');
   rejoined.send({ type: 'rematch' }); b.send({ type: 'rematch' });
   await until(() => rejoined.state?.matchId !== matchId && rejoined.state?.phase === 'MAIN1', 'rematch');
-  assert.deepEqual(rejoined.state.match.wins, [0, 0]); assert.deepEqual(rejoined.state.config, config);
+  assert.deepEqual(rejoined.state.match.wins, [0, 0]); assert.deepEqual(rejoined.state.config, {...config, undo: true});
   b.send({ type: 'concede' });
   await until(() => rejoined.state?.sideboarding && b.state?.sideboarding, 'rematch sideboarding');
   rejoined.send({ type: 'leave' });

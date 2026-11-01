@@ -2,26 +2,21 @@ import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 
 /*
- * Desfazer (opção escolhida ao criar a partida): o selo que avisa que está ligado, o botão de pedir e a faixa do
- * pedido aberto, com Aceitar/Recusar para os outros. A ponte confere tudo de novo; aqui só se mostra e se manda.
+ * Desfazer (vale em toda partida): o botão de pedir e a faixa do pedido aberto, com Aceitar/Recusar para os outros.
+ * A ponte confere tudo de novo; aqui só se mostra e se manda.
  */
 
-export const UNDO_EXPLAINED = 'Desfazer ligado: qualquer jogador pode pedir para voltar a própria última decisão. Só volta se todos os outros aceitarem.';
-export const UNDO_EXPLAINED_SOLO = 'Desfazer ligado: você pode voltar a sua última decisão.';
-
-/** Selo "Desfazer ligado" para a lista de salas, a sala de espera e a barra da partida. */
-export function undoBadgeHTML(): string {
-  return `<span class="undo-badge" title="${esc(UNDO_EXPLAINED)}">${UNDO_ICON}Desfazer ligado</span>`;
-}
+export const UNDO_EXPLAINED = 'Qualquer jogador pode pedir para voltar a própria última decisão. Só volta se todos os outros aceitarem.';
+export const UNDO_EXPLAINED_SOLO = 'Você pode voltar a sua última decisão.';
 
 export const UNDO_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
 
 /**
- * O botão de pedir, na barra do topo de todos os jogadores: é ele que mostra que a partida tem o Desfazer ligado.
+ * O botão de pedir, na barra do topo de todos os jogadores (quem assiste não tem).
  * Desligado (mas à vista) quando não há o que desfazer; a dica sempre explica a regra.
  */
-export function undoButtonState(s: Pick<FState, 'config' | 'undo' | 'spectating' | 'gameOver' | 'room'>): { hidden: boolean; disabled: boolean; title: string } {
-  if (!s.config?.undo || s.spectating) return { hidden: true, disabled: true, title: '' };
+export function undoButtonState(s: Pick<FState, 'undo' | 'spectating' | 'gameOver' | 'room'>): { hidden: boolean; disabled: boolean; title: string } {
+  if (s.spectating) return { hidden: true, disabled: true, title: '' };
   const u = s.undo, rule = s.room ? UNDO_EXPLAINED : UNDO_EXPLAINED_SOLO;
   if (s.gameOver) return { hidden: false, disabled: true, title: `${rule} A partida acabou.` };
   if (u?.request || u?.pending) return { hidden: false, disabled: true, title: `${rule} Já há um pedido em andamento.` };

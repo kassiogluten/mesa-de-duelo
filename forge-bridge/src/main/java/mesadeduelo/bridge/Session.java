@@ -121,7 +121,7 @@ final class Session {
     /** Assentos aprovados cujo turno já começou: quando o turno passar para outro, a aprovação acaba. */
     private final Set<Integer> skipTurnStarted = new java.util.HashSet<>();
 
-    /** Desfazer (opção da partida): os retratos de cada decisão e o pedido aberto; null com a opção desligada. */
+    /** Desfazer (sempre ligado): os retratos de cada decisão e o pedido aberto. */
     private final UndoHistory undo;
     private UndoRequest undoRequest;
     private final Object undoLock = new Object();
@@ -136,8 +136,8 @@ final class Session {
         this.config = config;
         seats = new Seat[humans];
         for (int i = 0; i < humans; i++) seats[i] = new Seat(i);
-        undo = config.undo() ? new UndoHistory() : null;
-        if (undo != null) undo.undone = this::undone;
+        undo = new UndoHistory();
+        undo.undone = this::undone;
     }
 
     static Session solo(String code, Channel ch, Deck you, Deck opponent, MatchConfig config) {
@@ -274,7 +274,7 @@ final class Session {
         events.reset(); stateVersion.set(0);
         matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null; recorded = false;
         gameDurations.clear();
-        if (undo != null) { undo.clear(); synchronized (undoLock) { undoRequest = null; } }
+        undo.clear(); synchronized (undoLock) { undoRequest = null; }
         HostedMatch m = new HostedMatch();
         MatchLifecycle life = new MatchLifecycle(game -> {
             if (match != m) return;
@@ -385,7 +385,7 @@ final class Session {
         else if (abandoned) recordUnfinished(conceder);
         if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
         sideboardId++;
-        if (undo != null) { undo.clear(); synchronized (undoLock) { undoRequest = null; } }
+        undo.clear(); synchronized (undoLock) { undoRequest = null; }
         for (Seat seat : seats) { seat.sideboardReady = false; seat.approvedDeck = null; }
         markDirty();
     }
@@ -1401,7 +1401,7 @@ final class Session {
 
     /** {type:"undo-request"}: pede para voltar à última decisão deste assento. Contra a IA, volta na hora. */
     private void requestUndo(Seat seat) {
-        if (undo == null || !started() || !"playing".equals(matchPhase) || gameOver() || seat.me == null || seat.eliminated()) return;
+        if (!started() || !"playing".equals(matchPhase) || gameOver() || seat.me == null || seat.eliminated()) return;
         synchronized (undoLock) {
             if (undoRequest != null || undo.hasPending()) { seat.send(toast("error", "Já há um pedido de desfazer em andamento. Espere ele terminar.")); return; }
             UndoHistory.Step step = undo.lastOf(seat.me.getId());
@@ -1472,7 +1472,7 @@ final class Session {
 
     /** Para a mesa: o que este assento desfaria agora e o pedido aberto, com o voto dele. */
     private JsonObject undoJson(Seat seat) {
-        if (undo == null || seat.me == null) return null;
+        if (seat.me == null) return null;
         JsonObject o = new JsonObject();
         synchronized (undoLock) {
             UndoHistory.Step last = gameOver() || seat.eliminated() ? null : undo.lastOf(seat.me.getId());
@@ -1506,7 +1506,7 @@ final class Session {
     /** Chamado pelo publicador de {@link Rooms} a cada 50 ms. */
     void tick() {
         tickSkips();
-        if (undo != null) synchronized (undoLock) {
+        synchronized (undoLock) {
             UndoRequest before = undoRequest;
             settleUndo();
             if (undoRequest != before) markDirty();

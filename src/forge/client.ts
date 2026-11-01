@@ -13,8 +13,7 @@ export interface FPreferences {
   /** Etapas do turno dos oponentes em que o jogo segura a prioridade (nomes do Forge, como "UPKEEP"). Ausente em pontes antigas. */
   opponentStops?: string[];
 }
-/** undo: a partida foi criada com o Desfazer (pedir para voltar a última decisão, com a aprovação dos outros). */
-export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number; undo?: boolean }
+export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
 /** Aviso com título e cartas envolvidas (ataque recusado: o motivo e a carta que o causou). */
 export interface NoticeDetail { title?: string; cards?: { id: number; name: string }[] }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
@@ -333,7 +332,7 @@ export interface FSkip { vote?: FSkipVote; skipping: number[] }
 export interface FUndoStep { action: 'pass' | 'land' | 'cast' | 'ability'; card?: string; turn: number; phase?: string; text: string }
 /** Pedido de desfazer aberto: de quem, o que volta, se é o seu, se você vota e quem ainda não aceitou. */
 export interface FUndoRequest { player?: number; name: string; step: FUndoStep; mine: boolean; canVote: boolean; vote?: 'yes' | 'no'; waiting: string[] }
-/** Só nas partidas com o Desfazer: a sua última decisão (o que um pedido desfaria agora) e o pedido aberto. */
+/** Desfazer (em toda partida, para quem joga): a sua última decisão (o que um pedido desfaria agora) e o pedido aberto. */
 export interface FUndo { last?: FUndoStep; pending: boolean; request?: FUndoRequest }
 
 /**

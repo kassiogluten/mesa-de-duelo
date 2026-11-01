@@ -1,6 +1,6 @@
 // Real-engine regression: node forge-bridge/scripts/test-undo.mjs [ws://127.0.0.1:7172/ws]
-// Desfazer (opção da partida): numa sala, o pedido de Ana só vale quando Bruno aceita; uma recusa derruba o pedido.
-// Contra a IA, o pedido volta na hora. Sem a opção, a mesa não recebe nada de desfazer.
+// Desfazer (sempre ligado): numa sala, o pedido de Ana só vale quando Bruno aceita; uma recusa derruba o pedido.
+// Contra a IA, o pedido volta na hora. O campo antigo config.undo (de versões anteriores) é aceito e não desliga nada.
 import assert from 'node:assert/strict';
 const endpoint = process.argv[2] || 'ws://127.0.0.1:7172/ws';
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -58,11 +58,11 @@ async function playForest(p) {
 }
 
 try {
-  // 1. Sala com duas pessoas e o desfazer ligado.
+  // 1. Sala com duas pessoas, sem pedir o desfazer: ele vale assim mesmo.
   const a = await peer('Ana'), b = await peer('Bruno');
-  a.send({type: 'host', name: a.name, config: {format: 'free', matchLength: 'bo1', undo: true}, deck});
+  a.send({type: 'host', name: a.name, config: {format: 'free', matchLength: 'bo1'}, deck});
   await until(() => a.room?.code, 'host');
-  assert.equal(a.room.config?.undo, true, 'a sala anuncia o desfazer ligado');
+  assert.equal(a.room.config?.undo, true, 'a sala continua dizendo undo: true para as versões anteriores');
   b.send({type: 'join', code: a.room.code, name: b.name, deck});
   await until(() => b.room && peers.every(p => p.state?.turn >= 1 && !p.state.input.opening), 'partida começou');
   assert.equal(b.state.config.undo, true, 'quem entra vê o desfazer ligado');
@@ -110,7 +110,7 @@ try {
   await wait(300); for (const p of [a, b]) p.ws.close();
   peers.length = 0;
 
-  // 2. Contra a IA: volta na hora.
+  // 2. Contra a IA (pedido de uma versão anterior, com undo: true): volta na hora.
   const solo = await peer('Solo');
   solo.send({type: 'start', config: {format: 'free', matchLength: 'bo1', undo: true}, you: deck, opponent: {name: 'Idle', cards: [{name: 'Forest', count: 60}]}});
   const soloBefore = await playForest(solo);
@@ -119,17 +119,16 @@ try {
   console.log('PASS contra a IA: desfeito na hora');
   solo.ws.close(); peers.length = 0;
 
-  // 3. Sem a opção: nada de desfazer no estado, e o pedido é ignorado.
-  const off = await peer('Off');
-  off.send({type: 'start', config: {format: 'free', matchLength: 'bo1'}, you: deck, opponent: {name: 'Idle', cards: [{name: 'Forest', count: 60}]}});
-  const offBefore = await playForest(off);
-  assert.equal(off.state.undo, undefined);
-  assert.equal(off.state.config.undo, undefined);
-  assert.notEqual(off.state.input.cancel.label, 'Desfazer', 'o desfazer do Forge fica desligado');
-  off.send({type: 'undo-request'});
-  await wait(800);
-  assert.equal(forests(off, 'battlefield'), offBefore + 1);
-  console.log('PASS sem a opção: nada a desfazer');
+  // 3. Uma versão anterior pedindo sem o desfazer (undo: false): ele vale assim mesmo.
+  const old = await peer('Old');
+  old.send({type: 'start', config: {format: 'free', matchLength: 'bo1', undo: false}, you: deck, opponent: {name: 'Idle', cards: [{name: 'Forest', count: 60}]}});
+  const oldBefore = await playForest(old);
+  assert.equal(old.state.config.undo, true);
+  assert.equal(old.state.undo?.last?.action, 'land', JSON.stringify(old.state.undo));
+  assert.notEqual(old.state.input.cancel.label, 'Desfazer', 'o desfazer do Forge fica desligado');
+  old.send({type: 'undo-request'});
+  await until(() => forests(old, 'battlefield') === oldBefore && old.state.input.ok.enabled, 'undo: false antigo não desliga o desfazer');
+  console.log('PASS undo: false de versão anterior: desfazer continua valendo');
 } finally {
   for (const p of peers) if (p.ws.readyState === WebSocket.OPEN) p.send({type: 'leave'});
   await wait(300); for (const p of peers) p.ws.close();

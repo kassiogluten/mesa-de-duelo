@@ -53,12 +53,10 @@ test('host names are escaped and buttons can be disabled while busy', () => {
   assert.match(html, /data-join-room="WXYZ"[^>]* disabled>Entrar/);
 });
 
-test('a room created with Desfazer says so in the list, also for screen readers', () => {
+test('Desfazer is in every match, so the list does not mention it (not even for rooms that still say undo: true)', () => {
   const html = publicRoomsHTML([room({ config: { format: 'pauper', matchLength: 'bo1', undo: true } }), room({ code: 'KLMN', started: true, players: 2, config: { format: 'pauper', matchLength: 'bo1', undo: true } })]);
-  assert.equal(html.match(/class="undo-badge"/g)?.length, 2);
-  assert.match(html, /aria-label="Entrar na sala de Ana: Pauper, 1 de 2 jogadores, com Desfazer ligado"/);
-  assert.match(html, /em andamento, com Desfazer ligado"/);
-  assert.doesNotMatch(publicRoomsHTML([room()]), /Desfazer/);
+  assert.doesNotMatch(html, /Desfazer|undo-badge/);
+  assert.match(html, /aria-label="Entrar na sala de Ana: Pauper, 1 de 2 jogadores"/);
 });
 
 test('Commander rooms show the brackets of the seated players', () => {

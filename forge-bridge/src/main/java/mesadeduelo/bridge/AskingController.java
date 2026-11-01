@@ -75,7 +75,7 @@ final class AskingController extends PlayerControllerHuman {
     }
 
     /**
-     * Prioridade com o desfazer ligado: guarda o jogo antes do prompt e, depois, o que o jogador decidiu. Um pedido de
+     * Prioridade (o desfazer vale em toda partida): guarda o jogo antes do prompt e, depois, o que o jogador decidiu. Um pedido de
      * desfazer aprovado volta o jogo aqui, na thread do jogo; a lista vazia faz o Forge abrir a prioridade de novo
      * (para quem a tinha no retrato).
      */

@@ -1,4 +1,11 @@
 {
+  "0.96.0": {
+    "Desfazer em toda partida": [
+      { "img": "0.96.0/contra-o-computador.webp", "legenda": "Contra o computador, a tela inicial vai do formato e dos oponentes direto para **Jogar**: não há mais a escolha **Desfazer**." },
+      { "img": "0.96.0/criar-sala.webp", "legenda": "Ao criar uma sala, só ficam jogadores, tipo de sala e código; o Desfazer já vem valendo, sem selo nem aviso." },
+      { "img": "0.96.0/botao-desfazer.webp", "legenda": "Na partida, o botão **Desfazer** continua no alto da mesa, ao lado do Menu, em toda partida." }
+    ]
+  },
   "0.95.0": {
     "Mana que falta pagar, à vista": [
       { "img": "0.95.0/mana-custo.webp", "legenda": "Pagando a Serpente Terrestre de Craw: a caixa de ação mostra o custo inteiro com os símbolos, {4}{G}{G}." },
@@ -231,9 +238,9 @@
   },
   "0.69.0": {
     "Desfazer jogadas": [
-      { "img": "0.69.0/criar-com-desfazer.webp", "legenda": "Ao criar a partida, a escolha **Desfazer** com **Ligado** marcado e a explicação logo abaixo." },
-      { "img": "0.69.0/lista-salas.webp", "legenda": "Na lista de salas públicas, a sala criada com a opção traz o selo **Desfazer ligado** antes de alguém entrar." },
-      { "img": "0.69.0/sala-de-espera.webp", "legenda": "Na sala de espera, o selo **Desfazer ligado** com a regra: só volta se todos aceitarem." },
+      { "img": "0.69.0/criar-com-desfazer.webp", "legenda": "Até a versão 0.95.0: ao criar a partida, a escolha **Desfazer** com **Ligado** marcado e a explicação logo abaixo." },
+      { "img": "0.69.0/lista-salas.webp", "legenda": "Até a versão 0.95.0: na lista de salas públicas, a sala criada com a opção traz o selo **Desfazer ligado** antes de alguém entrar." },
+      { "img": "0.69.0/sala-de-espera.webp", "legenda": "Até a versão 0.95.0: na sala de espera, o selo **Desfazer ligado** com a regra: só volta se todos aceitarem." },
       { "img": "0.69.0/botao-desfazer.webp", "legenda": "Durante a partida, o botão **Desfazer** fica no alto da mesa, ao lado do Menu, à vista de todos os jogadores." },
       { "img": "0.69.0/pedido-desfazer.webp", "legenda": "O pedido chega para os outros com o que vai voltar, \"conjurar Raio\", e os botões **Aceitar** e **Recusar**." }
     ]

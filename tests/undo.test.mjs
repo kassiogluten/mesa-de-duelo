@@ -5,17 +5,18 @@ import ts from 'typescript';
 const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const undoUri = uri((await readFile(new URL('../src/ui/undo.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const { undoButtonState, undoBarHTML, undoBadgeHTML } = await import(undoUri);
+const { undoButtonState, undoBarHTML } = await import(undoUri);
 
 const step = { action: 'land', card: 'Floresta', turn: 3, phase: 'MAIN1', text: 'jogar Floresta' };
-const on = { format: 'pauper', matchLength: 'bo1', undo: true };
+const on = { format: 'pauper', matchLength: 'bo1' };
 
-test('the undo button only exists in matches created with Desfazer, and never for spectators', () => {
-  assert.equal(undoButtonState({ config: { format: 'pauper', matchLength: 'bo1' }, gameOver: false }).hidden, true);
+test('the undo button is in every match (with or without the old undo field), and never for spectators', () => {
+  assert.equal(undoButtonState({ config: on, gameOver: false }).hidden, false);
+  assert.equal(undoButtonState({ config: { ...on, undo: false }, gameOver: false }).hidden, false);
   assert.equal(undoButtonState({ config: on, spectating: true, gameOver: false }).hidden, true);
-  assert.deepEqual(undoButtonState({ config: on, gameOver: false, undo: { pending: false } }), { hidden: false, disabled: true, title: 'Desfazer ligado: você pode voltar a sua última decisão. Ainda não há nada seu para desfazer.' });
+  assert.deepEqual(undoButtonState({ config: on, gameOver: false, undo: { pending: false } }), { hidden: false, disabled: true, title: 'Você pode voltar a sua última decisão. Ainda não há nada seu para desfazer.' });
   // Desligado, o botão continua à vista e a dica explica a regra da sala para todos.
-  assert.match(undoButtonState({ config: on, gameOver: false, room: { code: 'ABCD' }, undo: { pending: false } }).title, /^Desfazer ligado: qualquer jogador pode pedir.*Só volta se todos os outros aceitarem\. Ainda não há/);
+  assert.match(undoButtonState({ config: on, gameOver: false, room: { code: 'ABCD' }, undo: { pending: false } }).title, /^Qualquer jogador pode pedir.*Só volta se todos os outros aceitarem\. Ainda não há/);
 });
 
 test('the button says what it undoes and that the others must accept in a room', () => {
@@ -46,8 +47,4 @@ test('the requester waits for named players and can give up; already-voted playe
 
 test('names are escaped', () => {
   assert.doesNotMatch(undoBarHTML({ undo: { pending: false, request: { name: '<b>x</b>', step: { ...step, text: 'conjurar <i>' }, mine: false, canVote: true, waiting: [] } } }), /<b>x|<i>/);
-});
-
-test('the badge for lists and the waiting room says Desfazer ligado', () => {
-  assert.match(undoBadgeHTML(), /Desfazer ligado/);
 });

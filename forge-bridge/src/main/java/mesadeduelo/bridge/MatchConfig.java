@@ -6,12 +6,11 @@ import forge.game.GameRules;
 import forge.game.GameType;
 
 /** Immutable, room-owned rules. Never mutate global Forge preferences per match. */
-record MatchConfig(String format, String matchLength, int playerCount, boolean undo) {
+record MatchConfig(String format, String matchLength, int playerCount) {
     static final String ENGINE_VERSION = "2.0.16-SNAPSHOT+0b0f7ecc5111.mesa1";
     static final String RULES_VERSION = "standard-pauper-sacola50-commander-2026-10-28";
 
     MatchConfig(String format, String matchLength) { this(format, matchLength, 2); }
-    MatchConfig(String format, String matchLength, int playerCount) { this(format, matchLength, playerCount, false); }
 
     boolean commander() { return "commander".equals(format); }
 
@@ -37,10 +36,9 @@ record MatchConfig(String format, String matchLength, int playerCount, boolean u
             try { count = v.getAsBigDecimal().intValueExact(); }
             catch (ArithmeticException e) { throw new IllegalArgumentException("Número de jogadores inválido."); }
         }
-        // Desfazer: escolhido ao criar a partida e igual para todos na mesa. Sem o campo, desligado.
-        JsonElement undo = o.get("undo");
-        if (undo != null && !(undo.isJsonPrimitive() && undo.getAsJsonPrimitive().isBoolean())) throw new IllegalArgumentException("Opção de desfazer inválida.");
-        return new MatchConfig(string(o, "format"), string(o, "matchLength"), count, undo != null && undo.getAsBoolean());
+        // "undo" (a antiga escolha do Desfazer) ainda vem de versões anteriores e de diários antigos: é ignorado,
+        // porque o Desfazer agora vale em toda partida.
+        return new MatchConfig(string(o, "format"), string(o, "matchLength"), count);
     }
 
     static String string(JsonObject o, String key) {
@@ -66,7 +64,8 @@ record MatchConfig(String format, String matchLength, int playerCount, boolean u
         o.addProperty("format", format);
         o.addProperty("matchLength", matchLength);
         if (commander()) o.addProperty("playerCount", playerCount);
-        if (undo) o.addProperty("undo", true);
+        // Desfazer sempre ligado; o campo continua indo para as versões anteriores da mesa mostrarem o botão.
+        o.addProperty("undo", true);
         return o;
     }
 

@@ -18,7 +18,7 @@ import forge.game.spellability.SpellAbility;
 import forge.game.undo.GameMemento;
 
 /**
- * Desfazer da sala (opção "Desfazer" ao criar a partida): um retrato do jogo antes de cada decisão de prioridade de
+ * Desfazer (sempre ligado, em toda partida): um retrato do jogo antes de cada decisão de prioridade de
  * cada humano, e a volta para o retrato da última decisão de quem pediu, depois que os outros aceitam.
  *
  * Usa só o retrato e a restauração do Forge ({@link GameMemento}). O {@code UndoManager} dele fica desligado: ele só

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.96.0] - 2026-10-31
+
+### Mudou
+
+- **Desfazer em toda partida.** O **Desfazer** agora vale em toda partida, contra o computador e nas salas, sem precisar ligar antes: a escolha **Desfazer** saiu da tela inicial. Na partida, nada muda: o botão **Desfazer**, no alto da mesa, volta para antes da sua última decisão (conjurar, ativar, jogar um terreno ou passar a vez); contra o computador, volta na hora, e numa sala só volta se todos os outros aceitarem, cada volta fica no histórico e quem pediu pode desistir. Como ninguém volta uma jogada sem o consentimento da mesa, os avisos **Desfazer ligado** também saíram da lista de salas públicas, da sala de espera e do resumo da sala ao buscar pelo código.
+
 ## [0.95.0] - 2026-10-31
 
 ### Novo
@@ -218,7 +224,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 ### Novo
 
-- **Desfazer jogadas.** Ao criar uma partida, contra o computador ou numa sala, escolha **Desfazer: Ligado**. Na partida, o botão **Desfazer**, no alto da mesa, volta para antes da sua última decisão: conjurar uma mágica, ativar uma habilidade, jogar um terreno ou passar a vez. Para voltar mais, toque de novo. Contra o computador, volta na hora. Numa sala, os outros recebem o pedido ("Ana pediu para desfazer: conjurar Raio") e escolhem **Aceitar** ou **Recusar**: só volta se todos aceitarem, e quem pediu pode desistir. Todos sabem que a opção está ligada: o selo **Desfazer ligado** aparece na lista de salas públicas e na sala de espera, o botão fica à vista de todos durante a partida e o histórico registra cada volta. Sem a opção, nada muda: ninguém desfaz jogadas.
+- **Desfazer jogadas.** Ao criar uma partida, contra o computador ou numa sala, escolha **Desfazer: Ligado**. Na partida, o botão **Desfazer**, no alto da mesa, volta para antes da sua última decisão: conjurar uma mágica, ativar uma habilidade, jogar um terreno ou passar a vez. Para voltar mais, toque de novo. Contra o computador, volta na hora. Numa sala, os outros recebem o pedido ("Ana pediu para desfazer: conjurar Raio") e escolhem **Aceitar** ou **Recusar**: só volta se todos aceitarem, e quem pediu pode desistir. Todos sabem que a opção está ligada: o selo **Desfazer ligado** aparece na lista de salas públicas e na sala de espera, o botão fica à vista de todos durante a partida e o histórico registra cada volta. Sem a opção, nada muda: ninguém desfaz jogadas. (Desde a versão 0.96.0, o Desfazer vale em toda partida, sem precisar escolher.)
 
 ## [0.68.2] - 2026-10-29
 
