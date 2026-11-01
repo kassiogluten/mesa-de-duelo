@@ -10,11 +10,62 @@ export interface ShortInstructionInput {
   canAutoPay?: boolean;
   /** Mana phyrexiana que ainda dá para pagar com vida: a vida já separada nos cliques anteriores. */
   phyrexianLife?: number;
+  /** Custo que ainda falta, como o motor conta (descontado a cada mana gerada); total só depois de pagar uma parte. */
+  manaCost?: PaymentCost;
+  /** Mana que está na reserva de quem paga ("{G}{C}"), mostrada à parte do que falta. */
+  reserve?: string;
   card?: { name?: string };
   /** valid/zones: o que serve como alvo, quando o pedido do Forge não dá para traduzir. */
   targeting?: { card?: { name?: string }; valid?: string[]; zones?: string[] };
   /** Voto numa permanente: a carta que vota. */
   vote?: { card: { name?: string } };
+}
+
+export interface PaymentCost { remaining: string; total?: string; life?: number; x?: number }
+
+const paid = (cost: string) => /^(\{0\}|0)?$/.test(cost.trim());
+
+/** "Pague {2}{R} para Jiboia", "Falta {R} de {2}{R} para Jiboia", com o X escolhido e a vida já separada. */
+function paymentSentence(cost: PaymentCost, name: string | undefined, effect: boolean, phyrexianPending: boolean) {
+  const target = name ? ` para ${name}` : '';
+  const x = cost.x !== undefined ? ` (X = ${cost.x})` : '';
+  const life = !phyrexianPending && cost.life ? ` Mais ${cost.life} de vida no fim do pagamento.` : '';
+  if (paid(cost.remaining)) return `Custo${name ? ` de ${name}` : ''} pago${x}.${life}`;
+  if (cost.total && cost.total !== cost.remaining) return `Falta ${cost.remaining} de ${cost.total}${target}${x}.${life}`;
+  if (effect) return `${name ?? 'O efeito'} pede ${cost.remaining}${x}.${life}`;
+  return `Pague ${cost.remaining}${target}${x}.${life}`;
+}
+
+const POOL_ORDER = ['W', 'U', 'B', 'R', 'G', 'C'];
+/** Reserva de mana da ponte ({W: 0, G: 2, ...}) como símbolos: "{G}{G}". Vazia, "". */
+export function poolCost(pool: Record<string, number> | undefined): string {
+  if (!pool) return '';
+  const keys = [...POOL_ORDER.filter(k => k in pool), ...Object.keys(pool).filter(k => !POOL_ORDER.includes(k) && /^[A-Z]$/.test(k))];
+  return keys.map(k => `{${k}}`.repeat(Math.max(0, Math.min(99, pool[k] || 0)))).join('');
+}
+
+const SPOKEN: Record<string, [string, string]> = {
+  W: ['branca', 'brancas'], U: ['azul', 'azuis'], B: ['preta', 'pretas'], R: ['vermelha', 'vermelhas'], G: ['verde', 'verdes'],
+  C: ['incolor', 'incolores'], S: ['de neve', 'de neve'],
+};
+function spokenSymbol(sym: string, n: number): string {
+  const plural = n !== 1 ? 1 : 0;
+  if (/^\d+$/.test(sym)) return `${sym} ${Number(sym) === 1 ? 'genérica' : 'genéricas'}`;
+  if (sym === 'X') return 'X';
+  const [a, b] = sym.split('/');
+  const color = (c: string) => SPOKEN[c]?.[plural] ?? c;
+  if (b === 'P') return `${n} ${color(a)} ${plural ? 'phyrexianas' : 'phyrexiana'}`;
+  if (b) return `${n} ${/^\d+$/.test(a) ? `de ${a} genéricas` : color(a)} ou ${color(b)}`;
+  return `${n} ${color(a)}`;
+}
+/** Para o leitor de tela: "{2}{R}{R}" vira "2 genéricas e 2 vermelhas"; o resto do texto fica como está. */
+export function spokenMana(text: string): string {
+  return text.replace(/(?:\{[A-Z0-9/]+\})+/g, run => {
+    const counts = new Map<string, number>();
+    for (const m of run.match(/\{[A-Z0-9/]+\}/g)!) { const sym = m.slice(1, -1); counts.set(sym, (counts.get(sym) ?? 0) + 1); }
+    const parts = [...counts].map(([sym, n]) => /^\d+$/.test(sym) ? spokenSymbol(String(Number(sym) * n), 0) : spokenSymbol(sym, n));
+    return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1]}` : parts[0];
+  });
 }
 
 const WORDS: Record<string, string> = {
@@ -72,6 +123,16 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
     const how = request.upTo ? `até ${request.count} ${request.count === 1 ? 'alvo' : 'alvos'}` : request.count === 1 ? 'um alvo' : `${request.count} alvos`;
     const kind = request.kind || fallback;
     return `Escolha ${how}${name ? ` para ${name}` : ''}${kind ? ` (${kind})` : ''}.`;
+  }
+  // Custo que falta, como a ponte conta: com os símbolos e descontado a cada mana gerada.
+  if (input.paying && input.manaCost) {
+    const effect = input.payingFor === 'effect';
+    const pending = input.phyrexianLife !== undefined;
+    const reserve = input.reserve ? ` Na reserva: ${input.reserve}.` : '';
+    const ask = paymentSentence(input.manaCost, name, effect, pending) + reserve;
+    if (pending) return `${ask} ${phyrexianHint(input.phyrexianLife!)}`;
+    if (!effect) return ask;
+    return input.canAutoPay === false ? `${ask} A sua mana não dá para pagar.` : `${ask} Pague ou recuse.`;
   }
   // Custo pedido por um efeito (Estudo Rístico, Mana Leak): a carta costuma ser de outro jogador, e pagar é opcional.
   if (input.paying && input.payingFor === 'effect') {

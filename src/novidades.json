@@ -1,4 +1,12 @@
 {
+  "0.95.0": {
+    "Mana que falta pagar, à vista": [
+      { "img": "0.95.0/mana-custo.webp", "legenda": "Pagando a Serpente Terrestre de Craw: a caixa de ação mostra o custo inteiro com os símbolos, {4}{G}{G}." },
+      { "img": "0.95.0/mana-desconta.webp", "legenda": "Depois de virar o Sol Ring, que dá duas manas: falta {2}{G}{G} do custo de {4}{G}{G}." },
+      { "img": "0.95.0/mana-reserva.webp", "legenda": "Pagando o Ogro Cinzento com uma Floresta e o Sol Ring: falta só o {R}, e a mana incolor que sobrou aparece à parte, na reserva." },
+      { "img": "0.95.0/mana-efeito.webp", "legenda": "Um custo pedido por um efeito: o Estudo Rístico do oponente pede {1}, e você escolhe pagar ou não." }
+    ]
+  },
   "0.94.0": {
     "O valor que a carta conta": [
       { "img": "0.94.0/contagem-mao.webp", "legenda": "Na mão, com três Lições no cemitério: a Combustion Technique com o selo **3**, a Accumulate Wisdom com **3/3** em verde (o efeito extra já vale), o Ghalta e o Craterhoof com o número que contam, na borda esquerda que o leque não cobre." },

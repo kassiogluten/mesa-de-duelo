@@ -61,7 +61,7 @@ import './arenaModals.css';
 import './cardStyle.css';
 import { escolherTema, lerTema, parseTema, temaOptionsHTML, temasDisponiveis } from './temas';
 import './matchBar.css';
-import { abilityKindLabel, paymentButtonLabels, shortInstruction, targetProgress, voteRequest } from './shortInstruction';
+import { abilityKindLabel, paymentButtonLabels, poolCost, shortInstruction, spokenMana, targetProgress, voteRequest } from './shortInstruction';
 import { awaitingDecision, waitingOnText } from './awaitingDecision';
 import { isVote, voteHTML, voteTallyText } from './cardVote';
 import './cardVote.css';
@@ -2416,7 +2416,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fAction').classList.toggle('attack-choosing', !!attackPanel);
     $('#fAction').classList.toggle('proliferating', !!prolifPanel);
     // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
-    const short = decision || !instruction ? null : shortInstruction(s.input, name => ptOf(name)?.name || name);
+    const short = decision || !instruction ? null : shortInstruction(s.input.paying ? { ...s.input, reserve: poolCost(s.players.find(p => p.id === s.you)?.pool) } : s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';
@@ -2433,7 +2433,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // A previsão do combate vai junto: a cada bloqueio marcado ou desfeito, a frase muda e o leitor de tela lê de novo.
     const forecastSpoken = (s.forecast ?? []).map(f => forecastText(f, f.player === s.you ? null : s.players.find(p => p.id === f.player)?.name ?? 'O defensor', cardName)).join(' ');
     const targetSpoken = targetPanel && targetInfo ? ` ${targetInfoText(targetInfo)}` : '';
-    announce([seatNotice, instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ?? withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
+    announce([seatNotice, instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ? spokenMana(short) : withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
 
     const qEl = $('#fQuestion');
     if (s.question && !s.gameOver) {

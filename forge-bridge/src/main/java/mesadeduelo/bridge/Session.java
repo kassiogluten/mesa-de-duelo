@@ -1785,6 +1785,9 @@ final class Session {
                     if (payingFor != null) input.addProperty("payingFor", payingFor);
                     // Mana phyrexiana: o retrato (ou o botão) paga um símbolo com 2 de vida.
                     if (phyrexianLife != null) input.addProperty("phyrexianLife", phyrexianLife.get("pending").getAsInt());
+                    // O custo que falta, descontado a cada mana gerada, para a caixa de ação mostrar com os símbolos.
+                    JsonObject manaCost = InputContext.manaCost(pay);
+                    if (manaCost != null) input.add("manaCost", manaCost);
                 }
                 JsonObject targeting = targeting(seat);
                 if (targeting != null) input.add("targeting", targeting);

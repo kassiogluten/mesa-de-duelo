@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import ts from 'typescript';
 const code = await readFile(new URL('../src/ui/shortInstruction.ts', import.meta.url), 'utf8');
 const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { abilityKindLabel, paymentButtonLabels, shortInstruction, targetProgress, validTargetKind } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { abilityKindLabel, paymentButtonLabels, poolCost, shortInstruction, spokenMana, targetProgress, validTargetKind } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
 
 const targeting = (message, name) => ({ message, targeting: { card: name ? { name } : undefined } });
 
@@ -99,4 +99,44 @@ test('choosing which opponent decides names the card instead of the bare "Seleto
   assert.equal(shortInstruction({ message: 'Seletor:', card: { name: 'Curator of Destinies' } }), 'Curator of Destinies: escolha o oponente que vai decidir.');
   assert.equal(shortInstruction({ message: 'Chooser:' }), 'Escolha o oponente que vai decidir.');
   assert.equal(shortInstruction({ message: 'Seletor: algo mais' }), null);
+});
+
+test('the mana still owed shows with its symbols and shrinks with each mana made', () => {
+  const pay = (manaCost, extra = {}) => shortInstruction({ message: 'Pagar Custo de Mana: {2}{R}', paying: true, payingFor: 'spell', card: { name: 'Jiboia' }, manaCost, ...extra });
+  assert.equal(pay({ remaining: '{2}{R}' }), 'Pague {2}{R} para Jiboia.');
+  assert.equal(pay({ remaining: '{2}', total: '{2}{R}' }), 'Falta {2} de {2}{R} para Jiboia.');
+  // Uma fonte de duas manas deixa o que não serviu na reserva, à parte do que falta.
+  assert.equal(pay({ remaining: '{R}', total: '{2}{R}' }, { reserve: '{G}' }), 'Falta {R} de {2}{R} para Jiboia. Na reserva: {G}.');
+  assert.equal(pay({ remaining: '0', total: '{2}{R}' }), 'Custo de Jiboia pago.');
+  assert.equal(pay({ remaining: '{3}{R}', x: 3 }), 'Pague {3}{R} para Jiboia (X = 3).');
+  // Híbrida aparece como o motor conta.
+  assert.equal(pay({ remaining: '{R/G}{R/G}' }), 'Pague {R/G}{R/G} para Jiboia.');
+});
+
+test('phyrexian mana keeps the portrait hint and the life set aside goes with the cost', () => {
+  const base = { message: '', paying: true, payingFor: 'spell', card: { name: 'Thundering Tanadon' } };
+  assert.equal(shortInstruction({ ...base, phyrexianLife: 2, manaCost: { remaining: '{4}{G/P}', total: '{4}{G/P}{G/P}', life: 2 } }),
+    'Falta {4}{G/P} de {4}{G/P}{G/P} para Thundering Tanadon. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano. Já são 2 de vida.');
+  // Sem mais vida para pagar, a vida separada continua dita.
+  assert.equal(shortInstruction({ ...base, manaCost: { remaining: '{4}', total: '{4}{G/P}{G/P}', life: 4 } }),
+    'Falta {4} de {4}{G/P}{G/P} para Thundering Tanadon. Mais 4 de vida no fim do pagamento.');
+});
+
+test('a cost asked by an effect uses the cost the engine counts', () => {
+  const leak = (manaCost, extra = {}) => shortInstruction({ message: 'Pagar Custo de Mana: {3}', paying: true, payingFor: 'effect', canAutoPay: true, card: { name: 'Mana Leak' }, manaCost, ...extra }, name => name === 'Mana Leak' ? 'Vazamento de Mana' : name);
+  assert.equal(leak({ remaining: '{3}' }), 'Vazamento de Mana pede {3}. Pague ou recuse.');
+  assert.equal(leak({ remaining: '{1}', total: '{3}' }), 'Falta {1} de {3} para Vazamento de Mana. Pague ou recuse.');
+  assert.equal(leak({ remaining: '{3}' }, { canAutoPay: false }), 'Vazamento de Mana pede {3}. A sua mana não dá para pagar.');
+});
+
+test('the mana pool becomes symbols and mana is spoken in words', () => {
+  assert.equal(poolCost({ W: 0, U: 0, B: 0, R: 1, G: 2, C: 1 }), '{R}{G}{G}{C}');
+  assert.equal(poolCost({ W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 }), '');
+  assert.equal(poolCost(undefined), '');
+  assert.equal(spokenMana('Pague {2}{R}{R} para Jiboia.'), 'Pague 2 genéricas e 2 vermelhas para Jiboia.');
+  assert.equal(spokenMana('Falta {1} de {1}{U}.'), 'Falta 1 genérica de 1 genérica e 1 azul.');
+  assert.equal(spokenMana('{4}{G/P}{G/P}'), '4 genéricas e 2 verdes phyrexianas');
+  assert.equal(spokenMana('{R/G}'), '1 vermelha ou verde');
+  assert.equal(spokenMana('{1}{1}'), '2 genéricas');
+  assert.equal(spokenMana('Na reserva: {C}.'), 'Na reserva: 1 incolor.');
 });

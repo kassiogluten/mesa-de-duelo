@@ -406,6 +406,8 @@ export interface FState {
   /** manaOnly: suas permanentes em que um clique agora só geraria mana. Ausente em pontes antigas. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
   input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number;
+    /** Pagando: o custo que falta como o motor conta ("{1}{R}", "0" pago), descontado a cada mana gerada; total é o custo quando o pagamento abriu (só depois de pagar uma parte); life, a vida já separada para mana phyrexiana; x, o X escolhido. Ausente em pontes antigas. */
+    manaCost?: { remaining: string; total?: string; life?: number; x?: number };
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
     /** players: só quando jogadores também podem ser escolhidos (proliferar). */
     selection?: { cards: number[]; players?: number[]; min: number; max: number };

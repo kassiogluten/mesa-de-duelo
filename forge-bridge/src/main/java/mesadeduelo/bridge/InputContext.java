@@ -97,6 +97,34 @@ final class InputContext {
         return result;
     }
 
+    /** O custo de cada pagamento quando ele abriu, para a mesa dizer "falta {1} de {2}{R}". */
+    private static final java.util.Map<Object, String> PAY_TOTALS = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /**
+     * Custo de mana que ainda falta no pagamento aberto, como o motor conta: {@code remaining} ("{1}{R}", "0" quando
+     * pago), já descontado a cada mana gerada; {@code total}, o custo quando o pagamento abriu, só depois de pagar
+     * uma parte; {@code life}, a vida já separada para símbolos phyrexianos (o Forge só a tira no fim); e {@code x},
+     * o X escolhido, quando o custo tem X. Null fora do pagamento de mana.
+     */
+    static JsonObject manaCost(Object input) {
+        if (!(input instanceof InputPayMana)) return null;
+        ManaCostBeingPaid cost = (ManaCostBeingPaid) value(PAY_COST, input);
+        if (cost == null) return null;
+        String remaining = cost.toString();
+        String total = PAY_TOTALS.computeIfAbsent(input, k -> remaining);
+        JsonObject result = new JsonObject();
+        result.addProperty("remaining", remaining);
+        if (!total.equals(remaining)) result.addProperty("total", total);
+        int life = (Integer) value(PAY_LIFE, input);
+        if (life > 0) result.addProperty("life", life);
+        SpellAbility sa = (SpellAbility) value(PAY_ABILITY, input);
+        if (sa != null && !(Boolean) value(PAY_EFFECT, input) && sa.getPayCosts() != null && sa.getPayCosts().hasXInAnyCostPart()) {
+            Integer x = sa.getXManaCostPaid();
+            if (x != null) result.addProperty("x", x);
+        }
+        return result;
+    }
+
     /**
      * Escolha de alvos antes de ir para a pilha: o que pede o alvo ({@code kind}: "spell", "ability" ou "trigger"),
      * o texto da habilidade como o Forge escreve (já no idioma da mesa, com o nome da carta), quantos alvos este

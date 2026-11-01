@@ -880,21 +880,21 @@ No celular, as janelas de escolha com cartas crescem para baixo, e os botões de
 
 A decidir antes de começar: se a fileira horizontal vale para todo celular ou só deitado (em pé, duas linhas de cartas talvez caibam melhor); e se as janelas sem carta (escolher modo, sim e não, números) também mudam ou só ganham os botões presos.
 
-## 58. Mana que falta pagar, à vista e atualizada a cada terreno virado
+## 58. Mana que falta pagar, à vista e atualizada a cada terreno virado ✅
 
 Na hora de pagar uma mágica ou habilidade, a caixa de ação diz só "Pague o custo de mana de Jiboia." (`shortInstruction` em `src/ui/shortInstruction.ts`). O custo em si fica no texto do Forge, atrás de **Ver detalhes**, e o jogador que vira os terrenos à mão não sabe quanto ainda falta. Levantamento feito em 31/10/2026:
 
 - O motor guarda o que falta no pagamento (`InputPayMana.manaCost`, um `ManaCostBeingPaid`) e já o desconta a cada mana gerada. A ponte lê esse campo (`InputContext`, `PAY_COST`), mas só para a vida das mana phyrexianas; o custo que falta não vai para a mesa.
 - Para convocar, improvisar e dobrar água, a ponte já manda o que falta (`remaining` em `InputContext`), e a caixa de ação já sabe dizer se ainda há custo (`unpaid` em `src/ui/decisionPrompt.ts`): o mesmo caminho serve aqui.
 
-- [ ] A ponte manda o custo que falta pagar enquanto o pagamento está aberto, atualizado a cada terreno virado ou mana gerada.
-- [ ] A caixa de ação mostra o custo com os símbolos de mana, sempre visível ("Pague {2}{R} para Jiboia"), e o que já foi pago apagado ou riscado, para o jogador ver o total e o que falta.
-- [ ] Ao virar um terreno à mão (ou usar outra fonte de mana), o valor desconta na hora; mana que sobra na reserva aparece separada, sem sumir.
-- [ ] Mana phyrexiana, híbrida e X: mostrar como o motor está contando (por exemplo, a vida que vai custar, o X escolhido).
-- [ ] O mesmo para custos pedidos por efeitos (Mana Leak, Estudo Rístico) e para os anúncios do leitor de tela ("Falta {R}").
-- [ ] Testar com o motor real em `forge-bridge/src/test` (pagar à mão uma carta de custo misto, virar um terreno que dá duas manas) e montar a página de teste.
+- [x] A ponte manda o custo que falta pagar enquanto o pagamento está aberto, atualizado a cada terreno virado ou mana gerada.
+- [x] A caixa de ação mostra o custo com os símbolos de mana, sempre visível ("Pague {2}{R} para Jiboia"), e o que já foi pago apagado ou riscado, para o jogador ver o total e o que falta.
+- [x] Ao virar um terreno à mão (ou usar outra fonte de mana), o valor desconta na hora; mana que sobra na reserva aparece separada, sem sumir.
+- [x] Mana phyrexiana, híbrida e X: mostrar como o motor está contando (por exemplo, a vida que vai custar, o X escolhido).
+- [x] O mesmo para custos pedidos por efeitos (Mana Leak, Estudo Rístico) e para os anúncios do leitor de tela ("Falta {R}").
+- [x] Testar com o motor real em `forge-bridge/src/test` (pagar à mão uma carta de custo misto, virar um terreno que dá duas manas) e montar a página de teste.
 
-A decidir antes de começar: se o custo aparece na caixa de ação, junto da carta na pilha ou dos dois jeitos; e se os terrenos que ainda podem pagar o que falta ganham destaque na mesa.
+Decidido em 31/10/2026 (versão 0.95.0): o custo aparece só na caixa de ação, sem destaque nos terrenos e nada na pilha. A ponte manda, enquanto o pagamento de mana está aberto, `input.manaCost` (`InputContext.manaCost`, lido do `InputPayMana.manaCost` do motor): `remaining`, o que falta como o motor conta ("{1}{R}", "0" quando pago, com híbrida e phyrexiana nos símbolos do Forge); `total`, o custo quando o pagamento abriu, só depois de pagar uma parte (guardado por input, na primeira vez que a ponte o vê); `life`, a vida já separada para símbolos phyrexianos, que o Forge só tira no fim; e `x`, o X escolhido, quando a mágica ou habilidade tem X (não nos custos pedidos por efeitos). Cada mana gerada muda a mensagem do Forge, e a mesa recebe o valor novo na hora. A frase curta (`shortInstruction`) virou "Pague {4}{G}{G} para Serpente Terrestre de Craw." e, depois de pagar uma parte, "Falta {2}{G}{G} de {4}{G}{G} para …", com os símbolos de mana desenhados; em vez de riscar o que já foi pago (o genérico pago pela metade não tem como riscar), o total aparece ao lado do que falta. Depois vêm "(X = 3)", "Mais 4 de vida no fim do pagamento." (quando não dá para pagar mais nenhum símbolo com vida; enquanto dá, continua a dica do retrato com "Já são 2 de vida.") e a mana da reserva de quem paga à parte ("Na reserva: {C}."). Custos pedidos por efeitos usam o mesmo valor: "Estudo Rístico pede {1}. Pague ou recuse.", "Falta {1} de {3} para Mana Leak. Pague ou recuse." O leitor de tela lê os símbolos por extenso (`spokenMana`: "Falta 1 vermelha de 2 genéricas e 1 vermelha"). O texto do Forge continua em **Ver detalhes**, e uma ponte antiga, sem `manaCost`, mantém a frase de antes. Testado com o motor em `ManaCostTest` (Hill Giant pago à mão com Montanha e Florestas, Sol Ring pagando {2} de uma vez, vida phyrexiana do Thundering Tanadon, custo de efeito e X); página de teste: cenário `?cenario=pagar` em `tests/fixtures/duel-table.html` (`fixture.payMana()` e `fixture.tapForMana(id)`). Ficou de fora: destacar os terrenos que ainda podem pagar o que falta e mostrar o custo na pilha.
 
 ## 59. Desfazer sempre ligado, sem aviso na sala
 

@@ -15,7 +15,7 @@ const state: any = { type: 'state', config: { format: 'standard', matchLength: '
   you: 10, players, turn: 3, phase: 'MAIN1', activePlayer: 10, gameOver: false, log: [], decks: [], stack: [], combat: [], castable: [],
   input: { gen: 7, priority: true, message: '', ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false }, selectable: [], actionable: [300, 302] }, events: [] };
 const messages: unknown[] = [];
-const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateProliferate(message); simulateImprovise(message); } };
+const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateProliferate(message); simulateImprovise(message); simulatePayMana(message); } };
 /** Cenário de proliferar: a escolha muda como a ponte mudaria, e confirmar dá +1 de cada marcador aos marcados. */
 function simulateProliferate(message: any) {
   const input = state.input;
@@ -52,6 +52,38 @@ function simulateImprovise(message: any) {
     Object.assign(state.input, { gen: input.gen + 1, priority: true, message: '', tapToPay: undefined, selection: undefined, selectable: [], card: undefined,
       ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false } });
   } else return;
+  setTimeout(() => view.render());
+}
+/** O que cada fonte do cenário de pagar mana gera ao ser virada. */
+const MANA_SOURCES: Record<number, string[]> = { 200: ['G'], 210: ['G'], 334: ['R'], 335: ['C', 'C'] };
+/** "{2}{R/G}{G}" → genérico e símbolos; e de volta, na ordem do motor (genérico primeiro). */
+const parseCost = (cost: string) => {
+  const syms = (cost.match(/\{[^}]+\}/g) ?? []).map(m => m.slice(1, -1));
+  return { generic: syms.filter(x => /^\d+$/.test(x)).reduce((a, b) => a + Number(b), 0), shards: syms.filter(x => !/^\d+$/.test(x)) };
+};
+const costText = (c: { generic: number; shards: string[] }) => `${c.generic ? `{${c.generic}}` : ''}${c.shards.map(x => `{${x}}`).join('')}` || '0';
+/** Pagar mana à mão: virar uma fonte paga o símbolo de cor que ela atende, senão o genérico; o que sobra vai para a reserva. */
+function simulatePayMana(message: any) {
+  const input = state.input;
+  if (!input.paying || !input.manaCost || message.gen !== input.gen || message.type !== 'card' || !input.selectable.includes(message.id)) return;
+  const [me] = state.players;
+  const source = me.battlefield.find((c: any) => c.id === message.id);
+  if (!source || source.tapped) return;
+  source.tapped = true;
+  const cost = parseCost(input.manaCost.remaining);
+  for (const color of MANA_SOURCES[message.id] ?? ['C']) {
+    const i = cost.shards.findIndex(x => x.split('/').includes(color));
+    if (i >= 0) cost.shards.splice(i, 1);
+    else if (cost.generic > 0) cost.generic--;
+    else me.pool[color] = (me.pool[color] ?? 0) + 1;
+  }
+  const remaining = costText(cost);
+  input.manaCost = { ...input.manaCost, remaining, total: input.manaCost.total ?? input.manaCost.remaining };
+  input.message = `${input.card?.name ?? ''}
+
+Pagar Custo de Mana: ${remaining}`;
+  input.selectable = input.selectable.filter((id: number) => id !== message.id);
+  input.gen++;
   setTimeout(() => view.render());
 }
 const improviseCost = (generic: number) => `${generic ? `{${generic}}` : ''}{R}`;
@@ -178,6 +210,31 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       ok: { label: 'Automático', enabled: false }, cancel: { label: 'Cancelar', enabled: true } });
     view.render();
   },
+  /**
+   * Pagando o custo de mana à mão: a caixa de ação mostra o que falta com os símbolos, e virar uma fonte desconta.
+   * Florestas (200, 210) dão {G}, a Montanha (334) dá {R} e o Sol Ring (335) dá {C}{C}. cost: o custo da carta;
+   * effect: o custo vem de um efeito (Mana Leak), pago por você; pool: mana já na reserva.
+   */
+  payMana(opts: { name?: string; cost?: string; manaCost?: string; typeLine?: string; effect?: boolean; x?: number; life?: number; pool?: Record<string, number> } = {}) {
+    const [me] = state.players;
+    if (!me.battlefield.some((c: any) => c.id === 334)) me.battlefield.push(
+      { ...land(334, 10), name: 'Mountain', typeLine: 'Basic Land — Mountain' },
+      card(335, 'Sol Ring', 10, { creature: false, manaCost: '{1}', typeLine: 'Artifact' }));
+    for (const c of me.battlefield) if ([200, 210, 334, 335].includes(c.id)) c.tapped = false;
+    me.pool = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0, ...opts.pool };
+    const cost = opts.cost ?? '{4}{G}{G}';
+    const name = opts.name ?? 'Craw Wurm';
+    const source = card(307, name, opts.effect ? 23 : 10, { manaCost: opts.manaCost ?? cost, typeLine: opts.typeLine ?? 'Creature — Wurm', power: 6, toughness: 4 });
+    Object.assign(state.input, { gen: 12, priority: false, actionable: [], selectable: [200, 210, 334, 335], selectablePlayers: [], card: source,
+      message: `${name}
+
+Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' : 'spell', canAutoPay: true, phyrexianLife: undefined,
+      manaCost: { remaining: cost, ...(opts.x !== undefined ? { x: opts.x } : {}), ...(opts.life ? { life: opts.life } : {}) },
+      ok: { label: 'Automático', enabled: true }, cancel: { label: 'Cancelar', enabled: true } });
+    view.render();
+  },
+  /** Vira uma fonte de mana do cenário de pagar mana, como um toque na mesa. */
+  tapForMana(id: number) { client.send({ type: 'card', id, gen: state.input.gen }); },
   /**
    * Gatilho pedindo alvo antes da pilha: Chupacabra Voraz no seu campo (e não fora da mesa) aparece na caixa de ação,
    * com o gatilho em destaque e o que falta marcar. chosen: já marcou o alvo; ability: habilidade ativada.
@@ -401,6 +458,8 @@ if (new URLSearchParams(location.search).get('cenario') === 'contagens') (window
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
 if (cenario === 'improvisar') (window as any).fixture.improvise();
+// Pagar mana à mão: ?cenario=pagar (Craw Wurm, {4}{G}{G}); toque nos terrenos e no Sol Ring para descontar.
+if (cenario === 'pagar') (window as any).fixture.payMana();
 // Alerta de espera demorada: ?cenario=espera&quem=10&ms=185000 (10 é você, 23 o oponente).
 if (cenario === 'espera') { const q = new URLSearchParams(location.search); (window as any).fixture.wait(Number(q.get('quem') ?? 10), Number(q.get('ms') ?? 125000)); }
 if (cenario === 'tutor') { const p = new URLSearchParams(location.search); (window as any).fixture.tutor(Number(p.get('n') ?? 24), Number(p.get('max') ?? 1)); }

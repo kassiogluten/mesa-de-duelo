@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.95.0] - 2026-10-31
+
+### Novo
+
+- **Mana que falta pagar, à vista.** Na hora de pagar uma mágica ou habilidade, a caixa de ação mostra o custo com os símbolos de mana, como em "Pague {4}{G}{G} para Serpente Terrestre de Craw", em vez de só pedir o pagamento. A cada terreno que você vira à mão (ou outra fonte de mana que usa), o valor desconta na hora: "Falta {2}{G}{G} de {4}{G}{G}". Mana que sobra na reserva aparece à parte ("Na reserva: {C}"), a vida já separada para mana phyrexiana e o X escolhido também aparecem, e o mesmo vale para custos pedidos por efeitos, como o do Estudo Rístico ou do Mana Leak. O leitor de tela lê o custo por extenso ("Falta 1 vermelha"). O texto original do pagamento continua em **Ver detalhes**.
+
 ## [0.94.0] - 2026-10-31
 
 ### Novo
