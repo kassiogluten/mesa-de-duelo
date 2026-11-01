@@ -7,7 +7,7 @@ import { normalize } from './choiceFilters';
  * milhares. A mesa não desenha a lista: mostra uma busca e só os primeiros nomes que batem com o que foi digitado.
  */
 
-/** Sem o aviso da ponte, uma lista de uma escolha só, sem cartas e com tantas opções assim, também vira busca. */
+/** A partir de quantos nomes a escolha vira busca; abaixo disso, os botões de sempre (nomear entre poucas cartas). Sem o aviso da ponte, só uma lista de uma escolha, sem cartas. */
 export const NAME_CHOICE_FROM = 100;
 /** Quantos nomes aparecem de cada vez; o resto pede para continuar digitando. */
 export const NAME_RESULTS = 40;
@@ -15,10 +15,10 @@ export const NAME_RESULTS = 40;
 const optionText = (o: NonNullable<FQuestion['options']>[number]) => (typeof o === 'string' ? o : o.label);
 
 export function isNameChoice(q: FQuestion) {
-  if (q.kind !== 'choose' || (q.max ?? 1) !== 1) return false;
-  if (q.purpose === 'card-name') return true;
   const opts = q.options ?? [];
-  return !q.purpose && opts.length >= NAME_CHOICE_FROM && opts.every(o => typeof o === 'string' || !o.card);
+  if (q.kind !== 'choose' || (q.max ?? 1) !== 1 || opts.length < NAME_CHOICE_FROM) return false;
+  if (q.purpose === 'card-name') return true;
+  return !q.purpose && opts.every(o => typeof o === 'string' || !o.card);
 }
 
 /** Texto de busca de cada opção (nome e, quando já conhecida, a tradução), montado uma vez por pergunta. */

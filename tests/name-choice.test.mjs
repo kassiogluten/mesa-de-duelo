@@ -18,6 +18,8 @@ test('nomear uma carta vira busca, e escolhas pequenas ou com cartas não', () =
   assert.equal(names.isNameChoice(question(all)), true);
   assert.equal(names.isNameChoice(question(filler.slice(0, 120), { purpose: undefined })), true, 'lista enorme de textos sem aviso da ponte');
   assert.equal(names.isNameChoice(question(['Sim', 'Não'], { purpose: undefined })), false);
+  assert.equal(names.isNameChoice(question(filler.slice(0, 40))), false, 'poucos nomes, mesmo com o aviso da ponte, continuam em botões');
+  assert.equal(names.isNameChoice(question(filler.slice(0, names.NAME_CHOICE_FROM))), true);
   assert.equal(names.isNameChoice(question(all, { max: 3, purpose: undefined })), false);
   assert.equal(names.isNameChoice(question(filler.slice(0, 120).map((label, id) => ({ label, card: { id, name: label } })), { purpose: undefined })), false);
 });

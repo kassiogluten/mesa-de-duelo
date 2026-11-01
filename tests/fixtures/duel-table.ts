@@ -365,10 +365,10 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     state.question = { id: 90 + n + max, method: 'getChoices', kind: 'choose', title: max > 1 ? `Escolha até ${max} cartas` : 'Escolha uma carta do seu grimório', min: 0, max, options };
     view.render();
   },
-  /** Silverquill Silencer: nomear uma carta entre dezenas de milhares de nomes, que a ponte manda só como texto. */
-  nameACard() {
+  /** Silverquill Silencer: nomear uma carta entre `total` nomes (dezenas de milhares por padrão), que a ponte manda só como texto. */
+  nameACard(total = 34000) {
     const real = ['Lightning Bolt', 'Lightning Helix', 'Chain Lightning', 'Ball Lightning', 'Lightning Greaves', 'Counterspell', 'Llanowar Elves', 'Serra Angel', 'Sol Ring', 'Swords to Plowshares'];
-    const options = [...real, ...Array.from({ length: 34000 - real.length }, (_, i) => `Fixture Card ${i}`)].sort();
+    const options = [...real, ...Array.from({ length: Math.max(0, total - real.length) }, (_, i) => `Fixture Card ${i}`)].slice(0, total).sort();
     state.question = { id: 95, method: 'getChoices', kind: 'choose', purpose: 'card-name', title: 'Escolha o nome da carta nonland.', min: 1, max: 1, options,
       card: card(830, 'Silverquill Silencer', 10, { typeLine: 'Creature — Human Cleric', manaCost: '{W}{B}', power: 3, toughness: 2 }) };
     view.render();
