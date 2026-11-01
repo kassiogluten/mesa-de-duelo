@@ -376,7 +376,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         const next = choice.dataset.value === 'others' ? otherFormat() : DECK_FORMATS.find(f => f === choice.dataset.value) ?? 'free', deck = selected();
         // Formato depois do deck: num formato em que o deck não serve, a mesa mantém o deck e pergunta o formato.
         if (deck && next !== format && mode !== 'free' && !fitsIn(deck, next)) { void pickFormat(deck, next, true); return; }
-        setFormat(next); youId = rememberedDeck(); preflight++; setStatus('');
+        // Num formato em que o deck serve, ele continua escolhido; sem deck, volta o último usado no formato.
+        setFormat(next); preflight++; setStatus('');
+        if (deck && fitsIn(deck, next)) { choose(deck, false); return; }
+        youId = rememberedDeck();
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
       } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private';
