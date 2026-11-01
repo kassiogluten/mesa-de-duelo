@@ -1,4 +1,9 @@
 {
+  "0.97.0": {
+    "Prévia ao compartilhar o link": [
+      { "img": "0.97.0/previa-do-link.webp", "legenda": "A imagem que aparece no cartão do link: uma partida em andamento, com as criaturas dos dois jogadores no campo e a mão de cartas embaixo." }
+    ]
+  },
   "0.96.1": {
     "Cemitério e exílio à vista no celular": [
       { "img": "0.96.1/pilhas-celular.webp", "legenda": "No celular deitado, o seu cemitério (5 cartas) e o seu exílio (2) logo acima do retrato, brilhando porque dá para usar uma carta de cada um, sem tapar a mão." },

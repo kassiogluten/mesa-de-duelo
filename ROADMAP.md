@@ -926,3 +926,13 @@ Uma permanente virada para baixo (metamorfose, manifestada, disfarce, encoberta)
 - [ ] Conferir na mão, no exílio e no grimório: lá a carta continua com o verso, porque não é uma criatura virada.
 
 A decidir antes de começar: se a imagem de lembrete aparece também nas cartas exiladas viradas para baixo (previstas, tramadas), que não são criaturas 2/2.
+## 61. Prévia do link ao compartilhar (Open Graph) ✅
+
+Quem manda o endereço da mesa no WhatsApp, no Discord ou numa rede social hoje vê só o endereço, sem imagem nem descrição. O link de convite (`?sala=CÓDIGO`) também chega sem dizer que é um convite.
+
+- [x] Etiquetas Open Graph e do Twitter no `index.html`: título, descrição (a do manifest), imagem 1200×630 e o texto alternativo dela.
+- [x] Imagem com endereço completo, sem amarrar o domínio no código.
+- [x] Prévia própria para o link de convite, com o código da sala.
+- [x] Um teste que confere que o nginx acha no `index.html` as linhas que ele troca.
+
+Decidido em 31/10/2026 (versão 0.97.0): a imagem (`public/og-mesa.jpg`, JPEG, que todos os apps mostram) é um print da mesa de teste (`tests/fixtures/duel-table.html`) com criaturas dos dois lados e a mão embaixo. O `index.html` traz `https://__MESA_HOST__/og-mesa.jpg`, e o nginx (`sub_filter` em `deploy/nginx.conf`) troca o marcador pelo esquema (de `X-Forwarded-Proto`, porque o Coolify termina o HTTPS no proxy) e pelo `Host` de quem pediu, então vale em qualquer domínio sem configurar nada. Com `?sala=` de 3 a 12 letras e números, o nginx troca também o título ("Convite para a sala CÓDIGO · Mesa de Duelo") e a descrição; qualquer outro valor fica com a prévia geral, para nada do endereço virar HTML. A prévia do convite não consulta a ponte: o cartão aparece mesmo para uma sala que já acabou. `tests/opengraph.test.mjs` confere que cada `sub_filter` acha a linha dele no `index.html`. Ficou de fora: prévia própria das outras páginas (novidades, privacidade) e uma imagem gerada por sala.

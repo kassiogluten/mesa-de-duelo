@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.97.0] - 2026-10-31
+
+### Novo
+
+- **Prévia ao compartilhar o link.** Ao mandar o endereço da Mesa de Duelo no WhatsApp, no Discord ou numa rede social, a mensagem mostra um cartão com uma partida na mesa, o nome do site e uma frase dizendo o que ele é. O link de convite de uma sala ganha um cartão próprio, **Convite para a sala** com o código, para quem recebe saber que é uma partida esperando por ele.
+
 ## [0.96.1] - 2026-10-31
 
 ### Corrigido

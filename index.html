@@ -4,7 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Mesa de Duelo</title>
+    <meta name="description" content="Partidas de Magic contra o computador ou com amigos, direto no navegador.">
     <meta name="theme-color" content="#060912">
+    <!-- Prévia do link (WhatsApp, Discord, redes): o nginx troca https://__MESA_HOST__ pelo domínio e, num convite
+         (?sala=CÓDIGO), o título e a descrição. As linhas trocadas precisam continuar iguais às de deploy/nginx.conf. -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mesa de Duelo">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="Mesa de Duelo">
+    <meta property="og:description" content="Partidas de Magic contra o computador ou com amigos, direto no navegador.">
+    <meta property="og:image" content="https://__MESA_HOST__/og-mesa.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Uma partida na Mesa de Duelo: criaturas dos dois lados do campo e a mão de cartas embaixo.">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="icon" href="/favicon.ico" sizes="48x48">
