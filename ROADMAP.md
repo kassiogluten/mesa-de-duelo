@@ -995,3 +995,44 @@ Decidido em 31/10/2026 (versão 0.99.0): o relato leva só o apelido, nunca o e-
 - [x] Ajustar a regra no `CLAUDE.md`: textos para o jogador não usam "ponte".
 
 Decidido em 31/10/2026 (versão 0.97.3): o termo é "servidor", sem citar o Forge. Tela inicial: "Conectando ao servidor…", "Não encontrei o servidor em …", "A conexão com o servidor caiu." e "Não consegui voltar à partida em andamento: o servidor em … não respondeu." Mesa: "A conexão com o servidor caiu. Voltando à partida…", "A partida fica guardada no servidor por alguns minutos." e "O servidor parou de responder." O servidor manda "O servidor está ocupado. Tente de novo." (conta e admin) e "Contas desligadas: defina MESA_GOOGLE_CLIENT_ID no servidor."; o aviso de área de admin desligada, os registros no console do servidor e a área de admin (`src/admin`) ficam como estavam. As três entradas antigas das Novidades (0.5.0 e 0.5.1) passaram a dizer "servidor", sem mudar o sentido. `tests/sem-ponte.test.mjs` procura `ponte`/`pontes` como palavra inteira (não pega "ponteiro") no `CHANGELOG.md`, no `src/novidades.json`, nos textos literais de `src/**/*.ts` fora de `src/admin` (lidos pela árvore do TypeScript, então comentários não contam), no CSS e nas páginas sem comentários, e nas mensagens de `Response.error` do servidor. A mesa de teste (`tests/fixtures/duel-table.html`) ganhou `?cenario=reconectando` e `?cenario=conexao-perdida&sala=1`, usados nos prints das Novidades.
+
+## 65. Histórico e números das minhas partidas
+
+Quem entra com a conta não tem onde ver as próprias partidas: quantas jogou, quantas venceu, com quais decks e contra quem. Levantamento feito em 01/11/2026:
+
+- O servidor já guarda um resumo de cada partida concluída (`MatchHistory`, uma linha JSON por partida em `<dir>/AAAA-MM.jsonl`: formato, jogadores, decks, quem venceu cada jogo, turnos, duração), mas só a área de admin lê, e a linha não diz qual conta era cada jogador (`Session.historyJson`).
+- A conta (`Accounts`, um arquivo por conta) já guarda os decks e as preferências; o navegador fala com ela com o token da sessão (`src/conta/session.ts`).
+
+- [ ] Ligar cada assento à conta de quem jogou, quando o jogador está conectado (o servidor tira a conta do token, como no relato do item 63), e gravar o id da conta na linha do histórico. Partidas antigas ficam sem dono.
+- [ ] Rota da conta que devolve as partidas do jogador (só as dele), com paginação.
+- [ ] Tela **Minhas partidas** (no menu da conta): lista com data, formato, oponentes, deck usado, resultado, duração e número de turnos.
+- [ ] Números: partidas e vitórias, taxa de vitória por deck, por formato e por oponente (computador ou pessoas), duração média, sequência atual.
+- [ ] Filtros por período, formato e deck.
+- [ ] Privacidade: só o próprio jogador vê os números dele; os nomes dos oponentes aparecem como na partida. Apagar a conta apaga a ligação com as partidas. Atualizar a política de privacidade.
+- [ ] Novidades com prints da tela.
+
+A decidir antes de começar: se partidas contra o computador contam junto ou à parte; se um deck é identificado pelo deck salvo na conta ou pela lista jogada (o mesmo deck editado vira outro?); e se vale esperar o banco do item 66 para fazer as contas, ou se ler os arquivos do mês basta por enquanto.
+
+## 66. Avaliar um banco Postgres
+
+Hoje o servidor guarda tudo em arquivos (`MatchHistory` em `.jsonl` por mês, `FeedbackStore` com um índice `.jsonl` e um `.json.gz` por relato, `Accounts` com um arquivo por conta e as sessões em `sessoes.json`), e os próprios comentários dizem "sem banco de dados: o volume esperado é pequeno". Avaliar quando um Postgres passa a compensar e o que migrar.
+
+Onde ele ajudaria:
+- **Números por jogador (item 65)**: contas por deck, formato, oponente e período viram consultas, em vez de ler todos os meses de `.jsonl` a cada pedido.
+- **Contas e sessões**: atualizar um deck ou uma sessão sem regravar o arquivo da conta inteiro, com transação e sem risco de duas gravações se atropelarem.
+- **Relatos e admin**: filtros e buscas (por apelido, estado, versão, período) direto no banco, sem carregar o índice todo.
+- **Vários servidores**: se um dia houver mais de uma instância do servidor, os arquivos locais deixam de servir; o banco é o lugar comum.
+- **Cópia de segurança**: um `pg_dump` no lugar de copiar pastas, e restauração mais simples.
+
+O que custa:
+- Mais um serviço no `docker-compose.yml` (memória, atualização, backup) e uma dependência nova no servidor (driver JDBC, pool de conexões, migrações de esquema).
+- Testes passam a precisar de um banco (ou de um banco em memória compatível).
+- Os arquivos de hoje são fáceis de ler e de apagar à mão; o banco pede ferramenta.
+
+- [ ] Medir o volume atual: partidas por mês, tamanho do histórico, número de contas e de relatos, tempo das leituras da área de admin.
+- [ ] Definir os gatilhos para migrar, por exemplo: o item 65 em andamento, mais de N contas, leituras do admin acima de X ms, ou a necessidade de mais de uma instância.
+- [ ] Desenhar o esquema mínimo (contas, sessões, decks, partidas e assentos, relatos) e uma camada de acesso que permita trocar arquivo por banco sem mexer no resto.
+- [ ] Plano de migração: importar os `.jsonl` e os arquivos de conta, rodar os dois em paralelo um tempo, conferir, e só então desligar os arquivos. Os relatos grandes (`.json.gz`) podem continuar em arquivo, com o índice no banco.
+- [ ] Backup e restauração testados antes de virar a chave.
+
+A decidir: se o primeiro passo é só o histórico de partidas (para o item 65) ou tudo de uma vez; e onde o banco roda (no mesmo servidor, num container, ou um serviço gerenciado).
