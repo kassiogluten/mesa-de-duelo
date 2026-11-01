@@ -1,4 +1,10 @@
 {
+  "0.99.1": {
+    "Pagar automaticamente usa os talismãs": [
+      { "img": "0.99.1/talisma-no-automatico.webp", "legenda": "Depois de pagar automaticamente o Coral Merfolk ({1}{U}) com duas Ilhas e o Talismã da Dominação: o talismã pagou o {1} com a mana incolor, sem dano, e uma Ilha ficou desvirada." },
+      { "img": "0.99.1/talisma-antes.webp", "legenda": "Como era antes, no mesmo pagamento: as duas Ilhas viradas e o talismã parado ao lado." }
+    ]
+  },
   "0.99.0": {
     "Relato com o seu apelido": [
       { "img": "0.99.0/relato-enviando-como.webp", "legenda": "O formulário de sugestão ou erro com a linha \"Enviando como Ana\" logo acima do que vai junto, e a caixa Enviar sem meu nome ao lado, desmarcada." },

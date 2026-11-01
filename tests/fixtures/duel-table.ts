@@ -138,6 +138,20 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       selection: { cards: [], min: 0, max: 4 }, tapToPay: { kind: 'improvise', remaining: '{4}{R}' } });
     view.render();
   },
+  /**
+   * Pagamento automático do Coral Merfolk ({1}{U}) com duas Ilhas e o Talisman of Dominance: `antes` vira as duas
+   * Ilhas, como o Automático do Forge fazia; senão, o talismã paga o {1} e uma Ilha fica desvirada.
+   */
+  autoPay(antes = false) {
+    const [me] = state.players;
+    const island = (id: number, tapped: boolean) => ({ ...land(id, 10), name: 'Island', typeLine: 'Basic Land — Island', tapped });
+    me.battlefield = [island(340, true), island(341, antes),
+      card(342, 'Talisman of Dominance', 10, { creature: false, manaCost: '{2}', typeLine: 'Artifact', tapped: !antes })];
+    me.hand = me.hand.filter((c: any) => c.id !== 343);
+    state.stack = [{ id: 343, name: 'Coral Merfolk', controller: 10, text: 'Coral Merfolk', manaCost: '{1}{U}' }];
+    Object.assign(state.input, { actionable: [], selectable: [] });
+    view.render();
+  },
   /** Monarca, terrenos do turno, permanente roubada, atiçada, regeneração e escolhas da carta. */
   tableStatus() {
     const [me, opp] = state.players;
@@ -502,6 +516,8 @@ if (cenario === 'improvisar') (window as any).fixture.improvise();
 if (cenario === 'pagar') (window as any).fixture.payMana();
 // Janela de remoção: ?cenario=remocao&minhas=8&dele=3 (Wrath of God do oponente).
 if (cenario === 'remocao') { const q = new URLSearchParams(location.search); (window as any).fixture.removal(Number(q.get('minhas') ?? 8), Number(q.get('dele') ?? 3)); }
+// Pagamento automático com o talismã: ?cenario=automatico (agora) ou ?cenario=automatico&antes=1 (o Forge antes).
+if (cenario === 'automatico') (window as any).fixture.autoPay(new URLSearchParams(location.search).has('antes'));
 // Alerta de espera demorada: ?cenario=espera&quem=10&ms=185000 (10 é você, 23 o oponente).
 if (cenario === 'espera') { const q = new URLSearchParams(location.search); (window as any).fixture.wait(Number(q.get('quem') ?? 10), Number(q.get('ms') ?? 125000)); }
 if (cenario === 'tutor') { const p = new URLSearchParams(location.search); (window as any).fixture.tutor(Number(p.get('n') ?? 24), Number(p.get('max') ?? 1)); }

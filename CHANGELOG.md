@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.99.1] - 2026-10-31
+
+### Mudou
+
+- **Pagar automaticamente usa os talismãs.** Ao tocar em **Pagar automaticamente**, a parte do custo que aceita qualquer mana (o número no custo) agora sai primeiro da mana incolor dos talismãs e de outras pedras de mana que não causam dano, como Mind Stone e Arcane Signet, e os terrenos ficam desvirados para depois. Antes, a mesa virava os terrenos e deixava o talismã parado, e você podia acabar só com ele em campo. A mana colorida do talismã, que causa 1 de dano, continua só para quando a cor não vem de outra fonte. A pedra só entra quando não faz o pagamento virar mais cartas do que viraria antes; os Signets, que pedem {1} para ativar, são usados como antes. Pagar tocando nas cartas não muda.
+
 ## [0.99.0] - 2026-10-31
 
 ### Novo

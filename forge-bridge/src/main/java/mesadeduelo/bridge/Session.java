@@ -646,7 +646,10 @@ final class Session {
                 seat.consumedGen = gen;
                 seat.consumedAt = System.currentTimeMillis();
                 markDirty();
-                seat.onEdt(genAtClick, "ok".equals(type) ? IGameController::selectButtonOk : IGameController::selectButtonCancel);
+                // O OK de um pagamento é o Automático: a parte genérica sai antes das pedras de mana (AutoPay).
+                seat.onEdt(genAtClick, "ok".equals(type)
+                    ? c -> { if (!(c instanceof PlayerControllerHuman human) || !AutoPay.ok(human)) c.selectButtonOk(); }
+                    : IGameController::selectButtonCancel);
             }
             case "pass-turn" -> {
                 if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { markDirty(); break; }
