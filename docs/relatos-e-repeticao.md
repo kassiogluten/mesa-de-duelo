@@ -73,7 +73,7 @@ Dois caminhos complementares, cada um para um tipo de erro:
 
 ### 4. Privacidade
 
-- O formulário diz, antes de enviar, o que vai junto: o texto, a versão e o tipo de aparelho e, se marcado, a partida (seu deck, os apelidos dos jogadores e as jogadas que você viu). Nada de e-mail, conta ou IP.
+- O formulário diz, antes de enviar, o que vai junto: o texto, a versão e o tipo de aparelho e, se marcado, a partida (seu deck, os apelidos dos jogadores e as jogadas que você viu). Nada de e-mail nem IP. Desde a 0.97.0 (ROADMAP, item 62), vai também o apelido de quem relata, com a caixa **Enviar sem meu nome**.
 - O IP só é usado, em memória e como resumo (hash), para o limite de envio. Não fica gravado no relato.
 - O lado da ponte (mãos e grimórios de todos) fica só no servidor e nunca volta para nenhum jogador.
 - Anexar a partida é opção do jogador. Vem marcado num relato de erro durante a partida e desmarcado numa sugestão.
@@ -101,5 +101,6 @@ Dois caminhos complementares, cada um para um tipo de erro:
 - **Gravação** (`src/forge/recording.ts`): cada quadro é a diferença do anterior (os itens das listas casam pelo `id`), com um quadro inteiro a cada 40. O token de volta ao assento sai de `session` e `room` antes de gravar. Uma partida 1×1 de 13 turnos deu 181 quadros, 360 KB em texto e 29 KB comprimidos.
 - **Envio** (`src/feedback.ts`): o corpo é o relato em gzip. Com a partida anexada, os cabeçalhos `X-Mesa-Partida` e `X-Mesa-Token` deixam a ponte achar o diário; o token não é gravado. Sem IndexedDB (navegação privada) não há fila, e o formulário fica aberto para tentar de novo. Um 404 também vai para a fila (ponte ainda sem a rota).
 - **Ponte** (`Feedback`, `FeedbackStore`, `FeedbackRateLimit`, `MatchJournal`, `Replay`): além das respostas do desenho, devolve 503 quando a fila de gravação (16 relatos) está cheia. Ao passar de 1 GB, apaga os mais antigos antes de recusar; 507 só com menos de 50 MB livres no volume. O diário de uma partida fechada fica 30 minutos (até 20 partidas), para o relato feito da tela inicial logo depois de sair.
+- **Quem enviou** (item 62, 0.97.0): o aparelho manda o token da conta em `Authorization` e, no corpo, `name` (o nome da mesa). Com o token válido, a ponte guarda `author: {nickname, account}` tirado da sessão e ignora o `name`; sem token válido, `author: {nickname, informed: true}` com o `name`; sem os dois, nada. O `author` vai no índice e no começo do arquivo; o token não é guardado.
 - **Retrato do turno**: tirado logo depois de desvirar (fase `UNTAP`), não no evento de começo do turno. Restaurado, o turno segue para a manutenção.
 - **Restaurar** (`./scripts/rodar.sh --mode=replay --relato=... [--retrato=N]`): o primeiro "Jogar contra o computador" da página vira a partida do relato. O Forge sempre põe os humanos antes da IA, então a ordem gira para quem relatou ficar em primeiro (a ordem dos turnos não muda), e o retrato é renumerado. `RelatoFixture` (testes) mantém a ordem original.

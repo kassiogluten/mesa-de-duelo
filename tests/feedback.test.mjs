@@ -54,3 +54,28 @@ test('sendReport: code on success, seat headers only with the match attached, qu
   globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Descreva o problema.' }), { status: 400 });
   assert.deepEqual(await sendReport(report(false)), { status: 'rejected', text: 'Descreva o problema.' });
 });
+
+test('item 62: the report carries the informed name and the account token goes as Authorization, never in the body', async () => {
+  const { reportAuthor } = await import('../src/feedbackAuthor.ts');
+  const storage = name => ({ getItem: key => key === 'mesa:name' ? name : null });
+  const sessao = { token: 'tok-conta', expiresAt: '2999-01-01T00:00:00Z', conta: { id: 'abc', apelido: 'Kassio', nome: 'Kassio' } };
+  assert.equal(reportAuthor(storage(null), null), null, 'no account and no name: anonymous');
+  assert.deepEqual(reportAuthor(storage('  Ana  '), null), { name: 'Ana', token: null });
+  assert.deepEqual(reportAuthor(storage('Ana'), sessao), { name: 'Ana', token: 'tok-conta' }, 'the table name follows the account');
+  assert.deepEqual(reportAuthor(storage(''), sessao), { name: 'Kassio', token: 'tok-conta' });
+  assert.equal(reportAuthor(storage('x'.repeat(40)), null).name.length, 24);
+
+  const named = buildReport({ kind: 'sugestao', description: 'oi', from: 'inicio', version: '0.97.0', recording: null, name: ' Ana ' });
+  assert.equal(named.name, 'Ana');
+  assert.equal('name' in buildReport({ kind: 'sugestao', description: 'oi', from: 'inicio', version: '0.97.0', recording: null }), false);
+
+  const calls = [];
+  globalThis.fetch = async (url, init) => { calls.push(init); return new Response(JSON.stringify({ code: 'R-AAAA' }), { status: 201 }); };
+  await sendReport(named, undefined, 'tok-conta');
+  assert.equal(calls[0].headers.Authorization, 'Bearer tok-conta');
+  const body = await readJson(calls[0].body);
+  assert.equal(body.name, 'Ana');
+  assert.ok(!JSON.stringify(body).includes('tok-conta'), 'the token never goes in the report');
+  await sendReport(named);
+  assert.equal(calls[1].headers.Authorization, undefined, 'without the account (or with "Enviar sem meu nome") no token');
+});

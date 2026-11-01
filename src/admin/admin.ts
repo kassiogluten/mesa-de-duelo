@@ -15,6 +15,8 @@ type Status = 'novo' | 'visto' | 'issue' | 'resolvido' | 'descartado';
 interface Item {
   code: string; receivedAt: string; kind: string | null; version: string | null; format: string | null; bytes: number;
   match: boolean; bridge: boolean; summary?: string;
+  /** Quem enviou (item 62): apelido e conta vindos da sessão, ou só o nome informado pelo aparelho. Ausente: anônimo. */
+  author?: { nickname?: string; account?: string; informed?: boolean };
   status: { status: Status; note?: string; issue?: string; updatedAt: string };
 }
 type Stored = Record<string, any>;
@@ -35,7 +37,7 @@ const TEST_PAGES: [string, string, string][] = [
 
 const root = document.querySelector<HTMLElement>('#admin')!;
 let items: Item[] = [];
-let filter = { status: 'pendentes', kind: '', q: '' };
+let filter = { status: 'pendentes', kind: '', author: '', q: '' };
 let selected: string | null = null;
 const details = new Map<string, Stored>();
 let notice = '';
@@ -262,12 +264,18 @@ async function load() {
   } catch { section.innerHTML = '<p class="adm-error">Não consegui falar com a ponte. Ela está no ar?</p>'; }
 }
 
+/** Chave de quem enviou, para o filtro: a conta junta os relatos de um jogador mesmo se o apelido mudou. */
+const authorKey = (item: Item) => item.author?.account ? `c:${item.author.account}` : item.author?.nickname ? `n:${item.author.nickname.toLowerCase()}` : '-';
+const authorName = (item: Item) => item.author?.nickname ?? (item.author?.account ? 'Conta sem apelido' : '');
+const authorLabel = (item: Item) => !item.author ? 'anônimo' : `${authorName(item)} (${item.author.account ? 'conta' : 'nome informado'})`;
+
 let totalBytes = 0;
 function visible() {
   const q = filter.q.trim().toLowerCase();
   return items.filter(item => (filter.status === 'todos' || (filter.status === 'pendentes' ? ['novo', 'visto'].includes(item.status.status) : item.status.status === filter.status))
     && (!filter.kind || item.kind === filter.kind)
-    && (!q || item.code.toLowerCase().includes(q) || (item.summary ?? '').toLowerCase().includes(q) || (item.status.note ?? '').toLowerCase().includes(q) || (item.version ?? '').includes(q)));
+    && (!filter.author || authorKey(item) === filter.author)
+    && (!q || item.code.toLowerCase().includes(q) || authorName(item).toLowerCase().includes(q) || (item.summary ?? '').toLowerCase().includes(q) || (item.status.note ?? '').toLowerCase().includes(q) || (item.version ?? '').includes(q)));
 }
 
 function renderList(total = totalBytes) {
@@ -275,20 +283,29 @@ function renderList(total = totalBytes) {
   const section = root.querySelector<HTMLElement>('#admRelatos')!;
   const count = (status: string) => items.filter(i => i.status.status === status).length;
   const shown = visible();
-  const option = (value: string, text: string, current: string) => `<option value="${value}"${value === current ? ' selected' : ''}>${text}</option>`;
+  const option = (value: string, text: string, current: string) => `<option value="${esc(value)}"${value === current ? ' selected' : ''}>${esc(text)}</option>`;
+  // Quem enviou: cada conta ou nome informado, do que mais relatou para o que menos, e os anônimos no fim.
+  const authors = new Map<string, { label: string; n: number }>();
+  for (const item of items) {
+    const key = authorKey(item), a = authors.get(key);
+    if (a) a.n++; else authors.set(key, { label: key === '-' ? 'Anônimos' : authorLabel(item), n: 1 });
+  }
+  const authorOptions = [...authors].sort(([ka, a], [kb, b]) => Number(ka === '-') - Number(kb === '-') || b.n - a.n || a.label.localeCompare(b.label, 'pt-BR'))
+    .map(([key, a]) => option(key, `${a.label} (${a.n})`, filter.author)).join('');
   section.innerHTML = `<div class="adm-head"><h1>Relatos</h1><p class="adm-muted">${items.length} guardados · ${size(totalBytes)} · ${count('novo')} novos</p>
       <button class="adm-ghost" data-act="reload">Atualizar</button></div>
     <div class="adm-filters">
       <label>Estado<select data-filter="status">${option('pendentes', `Pendentes (${count('novo') + count('visto')})`, filter.status)}${option('todos', `Todos (${items.length})`, filter.status)}
         ${(Object.keys(STATUS) as Status[]).map(s => option(s, `${STATUS[s]} (${count(s)})`, filter.status)).join('')}</select></label>
       <label>Tipo<select data-filter="kind">${option('', 'Todos', filter.kind)}${option('erro', 'Algo deu errado', filter.kind)}${option('sugestao', 'Sugestão', filter.kind)}</select></label>
-      <label class="adm-search">Buscar<input type="search" data-filter="q" value="${esc(filter.q)}" placeholder="Código, texto, nota ou versão"></label>
+      <label>Quem enviou<select data-filter="author">${option('', 'Todos', filter.author)}${authorOptions}</select></label>
+      <label class="adm-search">Buscar<input type="search" data-filter="q" value="${esc(filter.q)}" placeholder="Código, texto, apelido, nota ou versão"></label>
     </div>
     <div class="adm-split${selected ? ' has-detail' : ''}">
       <ul class="adm-list" aria-label="Relatos">${shown.length ? shown.map(item => `<li><button class="adm-row${item.code === selected ? ' on' : ''}" data-code="${esc(item.code)}" aria-current="${item.code === selected}">
         <span class="adm-row-top"><strong>${esc(item.code)}</strong>${kindBadge(item.kind)}${statusBadge(item.status.status)}<time>${when(item.receivedAt)}</time></span>
         <span class="adm-row-text">${esc(item.summary ?? 'Abra para ver a descrição.')}</span>
-        <span class="adm-row-meta">${esc([item.version && `v${item.version}`, item.format && (FORMATS[item.format] ?? item.format), item.match ? (item.bridge ? 'partida + ponte' : 'partida') : null, size(item.bytes), item.status.issue].filter(Boolean).join(' · '))}</span>
+        <span class="adm-row-meta">${esc([item.author ? `${authorName(item)}${item.author.account ? '' : ' (informado)'}` : 'anônimo', item.version && `v${item.version}`, item.format && (FORMATS[item.format] ?? item.format), item.match ? (item.bridge ? 'partida + ponte' : 'partida') : null, size(item.bytes), item.status.issue].filter(Boolean).join(' · '))}</span>
       </button></li>`).join('') : `<li class="adm-empty">${items.length ? 'Nenhum relato com esses filtros.' : 'Nenhum relato ainda.'}</li>`}</ul>
       <section class="adm-detail" id="admDetail" aria-live="polite"></section>
     </div>`;
@@ -339,7 +356,8 @@ async function renderDetail(code: string) {
       <div class="adm-wide adm-form-end"><span class="adm-muted">Atualizado em ${when(item.status.updatedAt)}</span><button class="arena-btn primary" type="submit">Salvar</button></div>
     </form>
     <h3>Detalhes</h3>
-    ${rows([['recebido', when(stored.receivedAt ?? r.createdAt)], ['onde', r.from === 'partida' ? 'durante a partida' : 'tela inicial'], ['versão da mesa', r.app?.version],
+    ${rows([['recebido', when(stored.receivedAt ?? r.createdAt)], ['enviado por', item.author ? `${authorName(item)} (${item.author.account ? 'conta conectada' : 'nome informado, sem verificação'})` : 'anônimo'],
+      ['conta', item.author?.account && `${item.author.account.slice(0, 12)}…`], ['onde', r.from === 'partida' ? 'durante a partida' : 'tela inicial'], ['versão da mesa', r.app?.version],
       ['regras / motor', r.match?.rulesVersion && `${r.match.rulesVersion} / ${r.match.engineVersion ?? '?'}`], ['formato', r.match?.format && `${FORMATS[r.match.format] ?? r.match.format}${r.match.net ? ' em rede' : ''}, ${r.match.playerCount ?? '?'} jogadores`],
       ['jogadores', meta?.players?.map((p: Stored) => `${p.name}${p.ai ? ' (IA)' : ''}`).join(', ')],
       ['aparelho', d && `${d.viewport} (tela ${d.screen}, ${d.pixelRatio}×), ${d.touch ? 'toque' : 'sem toque'}, ${d.installed ? 'instalado' : 'no navegador'}`],

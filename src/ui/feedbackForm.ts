@@ -1,6 +1,7 @@
 import { esc } from './cardtext';
 import { VERSION } from './changelog';
 import { DESCRIPTION_LIMIT, buildReport, recordingSize, sendReport, type FeedbackKind, type MatchAttachment } from '../feedback';
+import { reportAuthor } from '../feedbackAuthor';
 import './feedbackForm.css';
 
 export interface FeedbackFormOptions {
@@ -46,6 +47,10 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
         <label class="feedback-check"><input type="checkbox" id="fbAttach" aria-describedby="fbMatch"><span>Anexar a partida</span></label>
         <p id="fbMatch"></p>
       </div>
+      <div class="feedback-author" hidden>
+        <p id="fbAuthor"></p>
+        <label class="feedback-check feedback-anon"><input type="checkbox" id="fbAnon"><span>Enviar sem meu nome</span></label>
+      </div>
       <p class="feedback-what" id="fbWhat"></p>
       <p class="feedback-status" id="fbStatus" role="status" aria-live="polite"></p>
       <footer class="feedback-actions"><button type="button" class="arena-btn secondary" data-fb="close">Cancelar</button><button type="submit" class="arena-btn primary">Enviar</button></footer>
@@ -55,6 +60,10 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
   open = overlay;
   const $ = <T extends HTMLElement>(sel: string) => overlay.querySelector<T>(sel)!;
   const text = $<HTMLTextAreaElement>('#fbText'), attach = $<HTMLInputElement>('#fbAttach'), status = $('#fbStatus'), error = $('#fbError');
+  const anon = $<HTMLInputElement>('#fbAnon');
+  // Com que nome o relato vai: o da conta ou o das salas, como está agora. Sem nenhum dos dois, vai anônimo e a linha nem aparece.
+  const author = reportAuthor();
+  $('.feedback-author').hidden = !author;
   let kind: FeedbackKind = options.kind ?? 'sugestao';
   let attachTouched = false, sending = false;
   let match: MatchAttachment | null = null;
@@ -70,8 +79,11 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
     text.placeholder = kind === 'erro' ? 'O que você fez e o que aconteceu?' : 'Qual é a sua ideia?';
     const length = text.value.length;
     $('#fbCount').textContent = `${length.toLocaleString('pt-BR')} de ${DESCRIPTION_LIMIT.toLocaleString('pt-BR')}`;
-    $('#fbWhat').innerHTML = `<strong>O que vai junto:</strong> o texto que você escreveu, a versão do jogo e o tipo de aparelho (navegador, tamanho da tela, toque e se o jogo está instalado)${attach.checked && match
-      ? '. Com a partida, também o seu deck, os apelidos dos jogadores e as jogadas que você viu, para conseguirmos repetir o que aconteceu na mesa' : ''}. Nada de e-mail, conta ou IP.`;
+    const named = author && !anon.checked;
+    $('#fbAuthor').innerHTML = !author ? '' : anon.checked ? 'Enviando sem nome'
+      : author.name ? `Enviando como <strong>${esc(author.name)}</strong>` : 'Enviando pela sua conta';
+    $('#fbWhat').innerHTML = `<strong>O que vai junto:</strong> ${named ? `${author.token ? 'o apelido da sua conta' : 'o seu nome'}, ` : ''}o texto que você escreveu, a versão do jogo e o tipo de aparelho (navegador, tamanho da tela, toque e se o jogo está instalado)${attach.checked && match
+      ? '. Com a partida, também o seu deck, os apelidos dos jogadores e as jogadas que você viu, para conseguirmos repetir o que aconteceu na mesa' : ''}. Nada de e-mail nem IP.`;
   }
   function showError(message: string) { error.textContent = message; error.hidden = !message; text.setAttribute('aria-invalid', String(!!message)); }
 
@@ -109,8 +121,9 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
     const attached = attach.checked && match ? match : null;
     let result;
     try {
-      const report = buildReport({ kind, description, from: options.from, version: VERSION, recording: attached?.recording ?? null, diagnostics: options.diagnostics });
-      result = await sendReport(report, attached ?? undefined);
+      const signed = author && !anon.checked ? author : null;
+      const report = buildReport({ kind, description, from: options.from, version: VERSION, recording: attached?.recording ?? null, diagnostics: options.diagnostics, name: signed?.name });
+      result = await sendReport(report, attached ?? undefined, signed?.token);
     } catch {
       result = { status: 'rejected' as const, text: 'Não consegui preparar o relato. Tente de novo.' };
     }

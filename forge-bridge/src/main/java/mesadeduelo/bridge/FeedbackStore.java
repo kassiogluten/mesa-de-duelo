@@ -37,9 +37,35 @@ final class FeedbackStore {
     static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final DateTimeFormatter MONTH = DateTimeFormatter.ofPattern("yyyy-MM").withZone(ZoneOffset.UTC);
 
+    /**
+     * Quem enviou (item 62): o apelido e o id da conta, tirados da sessão pela ponte; ou, sem conta válida, o nome
+     * que o aparelho informou ({@code informed}, sem verificação). Relato anônimo não tem autor.
+     */
+    record Author(String nickname, String account, boolean informed) {
+        JsonObject json() {
+            JsonObject o = new JsonObject();
+            if (nickname != null) o.addProperty("nickname", nickname);
+            if (account != null) o.addProperty("account", account);
+            if (informed) o.addProperty("informed", true);
+            return o;
+        }
+
+        static Author parse(JsonObject o) {
+            if (o == null) return null;
+            String nickname = Entry.text(o, "nickname"), account = Entry.text(o, "account");
+            boolean informed = o.has("informed") && o.get("informed").getAsBoolean();
+            return nickname == null && account == null ? null : new Author(nickname, account, informed);
+        }
+    }
+
     /** Uma linha do índice. {@code path} é relativo a {@code relatos/}. */
     record Entry(String code, Instant receivedAt, String kind, String version, String format, long bytes,
-                 boolean match, boolean bridge, String path, String summary) {
+                 boolean match, boolean bridge, String path, String summary, Author author) {
+        Entry(String code, Instant receivedAt, String kind, String version, String format, long bytes,
+              boolean match, boolean bridge, String path, String summary) {
+            this(code, receivedAt, kind, version, format, bytes, match, bridge, path, summary, null);
+        }
+
         JsonObject json() {
             JsonObject o = new JsonObject();
             o.addProperty("code", code); o.addProperty("receivedAt", receivedAt.toString());
@@ -47,6 +73,7 @@ final class FeedbackStore {
             o.addProperty("bytes", bytes); o.addProperty("match", match); o.addProperty("bridge", bridge);
             o.addProperty("path", path);
             if (summary != null) o.addProperty("summary", summary);
+            if (author != null) o.add("author", author.json());
             return o;
         }
 
@@ -55,7 +82,8 @@ final class FeedbackStore {
             return new Entry(o.get("code").getAsString(), Instant.parse(o.get("receivedAt").getAsString()),
                 text(o, "kind"), text(o, "version"), text(o, "format"), o.get("bytes").getAsLong(),
                 o.has("match") && o.get("match").getAsBoolean(), o.has("bridge") && o.get("bridge").getAsBoolean(),
-                o.get("path").getAsString(), text(o, "summary"));
+                o.get("path").getAsString(), text(o, "summary"),
+                o.has("author") && o.get("author").isJsonObject() ? Author.parse(o.getAsJsonObject("author")) : null);
         }
 
         static String text(JsonObject o, String key) {
@@ -63,9 +91,13 @@ final class FeedbackStore {
         }
     }
 
-    /** Dados lidos do relato para o índice. summary é o começo da descrição, para a lista da área de admin. */
-    record Meta(String kind, String version, String format, boolean recording, String summary) {
-        Meta(String kind, String version, String format, boolean recording) { this(kind, version, format, recording, null); }
+    /**
+     * Dados lidos do relato para o índice. summary é o começo da descrição, para a lista da área de admin; name é o
+     * nome que o aparelho informou (o das salas), só usado quando não há conta válida.
+     */
+    record Meta(String kind, String version, String format, boolean recording, String summary, String name) {
+        Meta(String kind, String version, String format, boolean recording, String summary) { this(kind, version, format, recording, summary, null); }
+        Meta(String kind, String version, String format, boolean recording) { this(kind, version, format, recording, null, null); }
     }
 
     /** Tratamento de um relato na área de admin: novo, visto, issue, resolvido ou descartado, com nota e número da issue. */
@@ -219,10 +251,12 @@ final class FeedbackStore {
     }
 
     /**
-     * Grava {@code {"code","receivedAt","bridge","report"}} comprimido, com o JSON do aparelho copiado byte a byte
+     * Grava {@code {"code","receivedAt","author"?,"bridge","report"}} comprimido, com o JSON do aparelho copiado byte a byte
      * (sem ler de novo), e acrescenta a linha no índice.
      */
-    synchronized Entry store(Meta meta, JsonObject bridge, Source report) throws IOException {
+    synchronized Entry store(Meta meta, JsonObject bridge, Source report) throws IOException { return store(meta, bridge, null, report); }
+
+    synchronized Entry store(Meta meta, JsonObject bridge, Author author, Source report) throws IOException {
         if (Files.getFileStore(dir).getUsableSpace() < minFree) throw new Full("pouco espaço no volume");
         String code = newCode();
         Instant at = Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -234,6 +268,7 @@ final class FeedbackStore {
                  InputStream in = report.open()) {
                 JsonObject head = new JsonObject();
                 head.addProperty("code", code); head.addProperty("receivedAt", at.toString());
+                if (author != null) head.add("author", author.json());
                 String prefix = head.toString();
                 out.write((prefix.substring(0, prefix.length() - 1) + ",\"bridge\":" + (bridge == null ? "null" : bridge.toString())
                     + ",\"report\":").getBytes(StandardCharsets.UTF_8));
@@ -249,7 +284,7 @@ final class FeedbackStore {
             Files.deleteIfExists(tmp);
         }
         Entry e = new Entry(code, at, meta.kind(), meta.version(), meta.format(), Files.size(file), meta.recording(), bridge != null,
-            dir.relativize(file).toString().replace('\\', '/'), meta.summary());
+            dir.relativize(file).toString().replace('\\', '/'), meta.summary(), author);
         add(e);
         Files.writeString(index, e.json() + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         return e;

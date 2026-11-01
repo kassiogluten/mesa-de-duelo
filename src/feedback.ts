@@ -24,6 +24,11 @@ export interface FeedbackReport {
   match?: { matchId?: string; format?: string; rulesVersion?: string; engineVersion?: string; net?: boolean; playerCount?: number };
   /** Texto do painel "Erros da partida", quando relatado de lá. */
   diagnostics?: string;
+  /**
+   * Nome de quem relata, como estava ao escrever (o das salas ou o da conta). Com a conta, a ponte usa o apelido
+   * da sessão e ignora este; sem conta (ou com a sessão vencida), ele fica como "nome informado". Ausente: anônimo.
+   */
+  name?: string;
   recording: Recording | null;
 }
 
@@ -75,13 +80,14 @@ export function localPreferences(): Record<string, unknown> {
   };
 }
 
-export function buildReport(input: { kind: FeedbackKind; description: string; from: FeedbackReport['from']; version: string; recording: Recording | null; diagnostics?: string }): FeedbackReport {
+export function buildReport(input: { kind: FeedbackKind; description: string; from: FeedbackReport['from']; version: string; recording: Recording | null; diagnostics?: string; name?: string }): FeedbackReport {
   const meta = input.recording?.meta;
   return {
     v: 1, kind: input.kind, description: input.description.trim().slice(0, DESCRIPTION_LIMIT), createdAt: new Date().toISOString(), from: input.from,
     app: { version: input.version }, device: deviceInfo(), preferences: { ...localPreferences(), ...meta?.preferences },
     ...(meta ? { match: { matchId: meta.matchId, format: meta.format, rulesVersion: meta.rulesVersion, engineVersion: meta.engineVersion, net: meta.net, playerCount: meta.playerCount } } : {}),
     ...(input.diagnostics ? { diagnostics: input.diagnostics } : {}),
+    ...(input.name?.trim() ? { name: input.name.trim() } : {}),
     recording: input.recording,
   };
 }
@@ -118,8 +124,13 @@ async function post(item: QueuedReport): Promise<{ ok: true; code: string } | { 
 
 const enqueue = (item: QueuedReport) => withStore<IDBValidKey | undefined>(STORES.reports, 'readwrite', store => store.add(item), undefined);
 
-export async function sendReport(report: FeedbackReport, attachment?: Pick<MatchAttachment, 'url' | 'code' | 'token'>): Promise<SendResult> {
+/**
+ * Envia o relato. {@code accountToken} é o token da conta conectada: a ponte tira dele o apelido e o id da conta.
+ * Na fila, o token vai junto; se já não valer quando o relato sair, a ponte fica só com o nome informado do relato.
+ */
+export async function sendReport(report: FeedbackReport, attachment?: Pick<MatchAttachment, 'url' | 'code' | 'token'>, accountToken?: string | null): Promise<SendResult> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' };
+  if (accountToken) headers.Authorization = `Bearer ${accountToken}`;
   // Com a partida anexada, a ponte junta o lado dela (decks de todos, retratos do Forge, diário de ações) pelo assento.
   if (report.recording && attachment?.code && attachment.token) { headers['X-Mesa-Partida'] = attachment.code; headers['X-Mesa-Token'] = attachment.token; }
   const item: QueuedReport = { url: feedbackUrl(attachment?.url), body: await encodeReport(report), headers, createdAt: Date.now() };

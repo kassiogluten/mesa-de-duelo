@@ -1,4 +1,10 @@
 {
+  "0.99.0": {
+    "Relato com o seu apelido": [
+      { "img": "0.99.0/relato-enviando-como.webp", "legenda": "O formulário de sugestão ou erro com a linha \"Enviando como Ana\" logo acima do que vai junto, e a caixa Enviar sem meu nome ao lado, desmarcada." },
+      { "img": "0.99.0/relato-sem-nome.webp", "legenda": "Com Enviar sem meu nome marcada, a linha passa a dizer \"Enviando sem nome\" e o relato vai sem apelido." }
+    ]
+  },
   "0.98.0": {
     "Criaturas viradas para baixo com a carta de lembrete": [
       { "img": "0.98.0/viradas-do-oponente.webp", "legenda": "No campo do oponente, uma criatura manifestada e uma encoberta aparecem com a carta de lembrete de cada uma; a da direita, sem tipo conhecido, continua com o verso." },

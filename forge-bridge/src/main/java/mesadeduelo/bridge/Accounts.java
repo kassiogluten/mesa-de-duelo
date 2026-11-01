@@ -251,6 +251,35 @@ final class Accounts {
         return s.account();
     }
 
+    /**
+     * Quem envia um relato (item 62), pelo token da sessão: o id da conta e o apelido, que é o nome na mesa
+     * sincronizado com a conta ({@code mesa:name}) ou, sem ele, o apelido do perfil (o primeiro nome do Google).
+     * Null sem contas ligadas, sem token ou com um token que já não vale.
+     */
+    FeedbackStore.Author reportAuthor(String authorization) {
+        if (!enabled() || token(authorization).isEmpty()) return null;
+        try {
+            synchronized (this) {
+                String account = authorized(authorization);
+                JsonObject a = account == null ? null : read(account);
+                if (a == null) return null;
+                String nickname = null;
+                JsonObject prefs = a.has("prefs") && a.get("prefs").isJsonObject() ? a.getAsJsonObject("prefs") : null;
+                if (prefs != null && prefs.has("mesa:name") && prefs.get("mesa:name").isJsonObject()) {
+                    JsonElement value = prefs.getAsJsonObject("mesa:name").get("valor");
+                    if (value != null && value.isJsonPrimitive()) nickname = Feedback.cleanName(value.getAsString());
+                }
+                JsonObject profile = a.has("perfil") && a.get("perfil").isJsonObject() ? a.getAsJsonObject("perfil") : new JsonObject();
+                if (nickname == null) nickname = Feedback.cleanName(FeedbackStore.Entry.text(profile, "apelido"));
+                if (nickname == null) nickname = Feedback.cleanName(FeedbackStore.Entry.text(profile, "nome"));
+                return new FeedbackStore.Author(nickname, account, false);
+            }
+        } catch (IOException | RuntimeException e) {
+            System.err.println("Contas: não deu para ler a conta de um relato: " + e);
+            return null;
+        }
+    }
+
     private String newSession(String account, long now) throws IOException {
         sessions.values().removeIf(s -> s.expires() < now);
         List<Map.Entry<String, Login>> mine = new ArrayList<>(sessions.entrySet().stream().filter(e -> e.getValue().account().equals(account)).toList());

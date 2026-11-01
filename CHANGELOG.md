@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.99.0] - 2026-10-31
+
+### Novo
+
+- **Relato com o seu apelido.** Quem envia uma sugestão ou um erro agora aparece no relato pelo apelido, para a gente saber com quem está falando. Com a conta conectada, vai o seu nome na mesa da conta; sem conta, o nome que você usa nas salas; sem nenhum dos dois, o relato continua indo sem nome. O formulário mostra, numa linha discreta, com que nome ele vai ("Enviando como Ana"), e a caixa **Enviar sem meu nome** manda o relato sem apelido. O e-mail nunca vai junto. Um relato guardado sem conexão sai com o nome de quando foi escrito.
+
 ## [0.98.0] - 2026-10-31
 
 ### Novo

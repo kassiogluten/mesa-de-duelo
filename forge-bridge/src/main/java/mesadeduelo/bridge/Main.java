@@ -94,6 +94,7 @@ public final class Main {
             Accounts accounts = Accounts.fromEnvironment(store.dir().getParent());
             server.accounts(accounts);
             admin.accounts(accounts);
+            feedback.authors(accounts::reportAuthor);
             server.start();
             System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
             System.out.printf("Histórico de partidas em %s%n", history.dir());

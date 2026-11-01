@@ -42,6 +42,13 @@
 .feedback-check { display: flex; align-items: center; gap: 10px; min-height: 32px; font-weight: 600; cursor: pointer; }
 .feedback-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--gold); }
 .feedback-attach p { margin: 4px 0 0 30px; color: var(--muted); font: 400 13px/1.45 var(--body); }
+/* Com que nome o relato vai: uma linha discreta, com a caixa para mandar sem nome ao lado. */
+.feedback-author { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; color: var(--muted); font: 400 13px/1.45 var(--body); }
+.feedback-author[hidden] { display: none; }
+.feedback-author p { margin: 0; }
+.feedback-author strong { color: var(--ink); font-weight: 600; }
+.feedback-author .feedback-anon { gap: 8px; min-height: 32px; font-weight: 500; }
+.feedback-author .feedback-anon input { width: 18px; height: 18px; }
 .feedback-what { margin: 0; color: var(--muted); font: 400 13px/1.5 var(--body); }
 .feedback-what strong { color: var(--ink); font-weight: 600; }
 .feedback-status { min-height: 0; margin: 0; color: var(--gold-light); font: 500 13px var(--body); }

@@ -12,7 +12,7 @@ iniciarTema();
  * endereço cadastrado na tela de consentimento do Google. Precisa acompanhar o código: o que muda no que o jogo guarda
  * ou envia muda aqui também, com a data no topo.
  */
-const UPDATED = '28 de outubro de 2026';
+const UPDATED = '31 de outubro de 2026';
 const ext = (href: string, text: string) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
 const whatsapp = ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`);
 
@@ -85,7 +85,8 @@ app.innerHTML = `
     <section id="relatos">
       <h2>Relatos de erro e sugestões</h2>
       <p>Quando você usa <strong>Enviar sugestão ou erro</strong>, o servidor guarda o texto que você escreveu e informações técnicas do aparelho: navegador, tamanho da tela, idioma, se o jogo está instalado e as preferências da mesa. Se você escolher anexar a partida, vão também a gravação dela e o registro do servidor sobre ela, que incluem os decks, as cartas na mão e os nomes de todos os jogadores daquela partida.</p>
-      <p>Os relatos são lidos só pelo responsável, para corrigir erros, e ficam guardados por até 90 dias. Se você mandar um relato e quiser que ele seja apagado antes, peça pelo contato informando o código que aparece depois do envio.</p>
+      <p>O relato também leva o seu apelido, para sabermos quem o enviou. Com a conta conectada, é o seu nome na mesa da conta, que o servidor confere pela sua sessão, junto com o código da conta (para juntar os relatos de um mesmo jogador). Sem conta, é o nome que você usa nas salas, guardado como nome informado. Sem conta e sem nome, o relato vai sem nome. O formulário mostra com que nome o relato vai, e marcando <strong>Enviar sem meu nome</strong> ele vai sem apelido e sem o código da conta. O e-mail nunca vai no relato.</p>
+      <p>Os relatos são lidos só pelo responsável, para corrigir erros, e ficam guardados por até 90 dias, com o apelido apagado junto. Se você mandar um relato e quiser que ele seja apagado antes, peça pelo contato informando o código que aparece depois do envio.</p>
     </section>
 
     <section id="terceiros">

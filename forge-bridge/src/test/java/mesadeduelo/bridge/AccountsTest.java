@@ -222,4 +222,75 @@ public class AccountsTest {
         String other = enter(restarted, "43");
         assertEquals("accounts never see each other's decks", 0, json(restarted.handle("GET", "estado", other, new byte[0], "ip")).getAsJsonArray("decks").size());
     }
+
+    // ---------- Quem enviou o relato (item 62) ----------
+
+    private static String report(String name) {
+        return "{\"v\":1,\"kind\":\"sugestao\",\"description\":\"Mais cores\"" + (name == null ? "" : ",\"name\":" + new com.google.gson.JsonPrimitive(name)) + ",\"recording\":null}";
+    }
+
+    private static String sent(Feedback.Response r) {
+        assertEquals(r.json(), 201, r.status());
+        return JsonParser.parseString(r.json()).getAsJsonObject().get("code").getAsString();
+    }
+
+    private FeedbackStore feedbackStore() throws IOException { return new FeedbackStore(tmp.getRoot().toPath().resolve("fb"), 1L << 30, java.time.Duration.ofDays(90), 0); }
+
+    @Test public void reportTakesTheNicknameAndAccountFromTheSessionNotFromTheBody() throws IOException {
+        Accounts a = accounts();
+        String auth = enter(a, "200");
+        FeedbackStore store = feedbackStore();
+        Feedback feedback = new Feedback(store, (code, token) -> null);
+        feedback.authors(a::reportAuthor);
+
+        // O corpo diz ser outra pessoa: com a sessão válida, vale a conta.
+        String code = sent(feedback.handle(FeedbackTest.gzip(report("Fulano Impostor")), null, null, auth, "10.1.0.1"));
+        FeedbackStore.Author author = store.entry(code).author();
+        assertEquals("Kassio", author.nickname());
+        assertEquals(Accounts.accountId("200"), author.account());
+        assertFalse("verified, not informed", author.informed());
+        JsonObject saved = FeedbackTest.stored(store, code);
+        assertEquals("Kassio", saved.getAsJsonObject("author").get("nickname").getAsString());
+        assertEquals(Accounts.accountId("200"), saved.getAsJsonObject("author").get("account").getAsString());
+        assertFalse("the account token is not stored", saved.toString().contains(auth.substring(7)));
+        assertFalse("no e-mail", saved.toString().contains("k@exemplo.com"));
+
+        // O nome na mesa sincronizado com a conta passa à frente do apelido do Google.
+        JsonObject prefs = new JsonObject(); prefs.addProperty("mesa:name", "Ana das Fadas");
+        JsonObject body = new JsonObject(); body.add("mudancas", new com.google.gson.JsonArray()); body.add("prefs", prefs);
+        assertEquals(200, a.handle("POST", "sincronizar", auth, body.toString().getBytes(StandardCharsets.UTF_8), "ip").status());
+        assertEquals("Ana das Fadas", store.entry(sent(feedback.handle(FeedbackTest.gzip(report(null)), null, null, auth, "10.1.0.2"))).author().nickname());
+
+        // Index survives a restart with the author.
+        assertEquals(Accounts.accountId("200"), feedbackStore().entry(code).author().account());
+    }
+
+    @Test public void withoutAValidSessionTheReportKeepsOnlyTheInformedNameOrNothing() throws IOException {
+        Accounts a = accounts();
+        String auth = enter(a, "201");
+        FeedbackStore store = feedbackStore();
+        Feedback feedback = new Feedback(store, (code, token) -> null);
+        feedback.authors(a::reportAuthor);
+
+        FeedbackStore.Author informed = store.entry(sent(feedback.handle(FeedbackTest.gzip(report("  Ana\n  Maria ")), null, null, null, "10.2.0.1"))).author();
+        assertEquals("Ana Maria", informed.nickname());
+        assertNull(informed.account());
+        assertTrue(informed.informed());
+
+        // Um token inventado não vira conta; o nome do corpo fica como informado.
+        FeedbackStore.Author forged = store.entry(sent(feedback.handle(FeedbackTest.gzip(report("Kassio")), null, null, "Bearer inventado", "10.2.0.2"))).author();
+        assertNull(forged.account());
+        assertTrue(forged.informed());
+
+        // Relato da fila do aparelho com o token já vencido: vale o nome do momento em que foi escrito, sem conta.
+        now.addAndGet(Accounts.SESSION_MILLIS + 1);
+        FeedbackStore.Author expired = store.entry(sent(feedback.handle(FeedbackTest.gzip(report("Kassio")), null, null, auth, "10.2.0.3"))).author();
+        assertEquals("Kassio", expired.nickname());
+        assertNull(expired.account());
+        assertTrue(expired.informed());
+
+        assertNull("anonymous", store.entry(sent(feedback.handle(FeedbackTest.gzip(report(null)), null, null, null, "10.2.0.4"))).author());
+        assertNull("blank name is anonymous", store.entry(sent(feedback.handle(FeedbackTest.gzip(report("   ")), null, null, null, "10.2.0.5"))).author());
+        assertEquals("long names are cut", Feedback.MAX_NAME, Feedback.cleanName("x".repeat(80)).length());
+    }
 }

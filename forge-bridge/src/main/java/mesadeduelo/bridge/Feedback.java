@@ -47,6 +47,11 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  * é guardado como veio. Com X-Mesa-Partida e X-Mesa-Token de um assento e uma gravação anexada, o diário da
  * partida na ponte ({@link MatchJournal}) vai junto. O token não é guardado.
  *
+ * Quem enviou (item 62): com {@code Authorization: Bearer <token da conta>} ainda válido, o apelido e o id da conta
+ * vêm da sessão ({@link Authors}), e o {@code name} do corpo é ignorado, para ninguém relatar em nome de outra conta.
+ * Sem token, ou com um que já não vale (vencido na fila do aparelho, conta apagada), vale o {@code name} do corpo,
+ * marcado como informado. Sem os dois, o relato é anônimo. O token da conta também não é guardado.
+ *
  * Respostas em JSON: 201 {code}, ou {error} com 400, 405, 413, 429 ou 507, sempre com uma frase para o jogador.
  */
 final class Feedback {
@@ -62,11 +67,18 @@ final class Feedback {
     /** De onde vem o diário de uma partida (as salas); null se o código e o token não baterem com nenhum assento. */
     interface Journals { JsonObject journal(String code, String token); }
 
+    /** A conta de um cabeçalho Authorization ainda válido (apelido e id), ou null. */
+    interface Authors { FeedbackStore.Author author(String authorization); }
+
+    /** Tamanho máximo do apelido guardado, o mesmo do campo de nome das salas e do apelido da conta. */
+    static final int MAX_NAME = 24;
+
     record Response(int status, String json) { }
 
     private final FeedbackStore store;
     private final Journals journals;
     private final FeedbackRateLimit limit;
+    private volatile Authors authors;
     private final ThreadPoolExecutor workers = new ThreadPoolExecutor(2, 2, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(16), daemon("Relatos"));
     private final ScheduledExecutorService cleaner = Executors.newSingleThreadScheduledExecutor(daemon("RelatosLimpeza"));
 
@@ -77,6 +89,9 @@ final class Feedback {
     }
 
     Feedback(FeedbackStore store, Journals journals) { this(store, journals, new FeedbackRateLimit(MAX_PER_HOUR, 3_600_000)); }
+
+    /** Liga o apelido das contas; sem isso, só o nome informado conta. */
+    void authors(Authors authors) { this.authors = authors; }
 
     /** Limpeza agora e de hora em hora. */
     void startRetention() {
@@ -107,7 +122,9 @@ final class Feedback {
     }
 
     /** Trata um relato já recebido inteiro. Roda fora da thread da rede. */
-    Response handle(byte[] body, String code, String token, String ip) {
+    Response handle(byte[] body, String code, String token, String ip) { return handle(body, code, token, null, ip); }
+
+    Response handle(byte[] body, String code, String token, String authorization, String ip) {
         String key = limit.key(ip);
         long now = System.currentTimeMillis();
         if (body.length > MAX_COMPRESSED) return reject(413, "grande", TOO_LARGE);
@@ -127,8 +144,9 @@ final class Feedback {
             try { bridge = journals.journal(code.strip().toUpperCase(), token.strip()); }
             catch (RuntimeException e) { System.err.println("Relatos: diário da partida indisponível: " + e); }
         }
+        FeedbackStore.Author author = author(authorization, meta.name());
         try {
-            FeedbackStore.Entry entry = store.store(meta, bridge, () -> open(body));
+            FeedbackStore.Entry entry = store.store(meta, bridge, author, () -> open(body));
             limit.record(key, now);
             Metrics.feedbackReceived(meta.kind(), meta.recording());
             System.out.printf("Relato %s recebido (%s, %d bytes%s)%n", entry.code(), meta.kind(), entry.bytes(), bridge != null ? ", com o diário da ponte" : "");
@@ -143,6 +161,26 @@ final class Feedback {
             e.printStackTrace();
             return reject(500, "erro", "Não foi possível guardar o relato agora. Tente de novo mais tarde.");
         }
+    }
+
+    /** A conta da sessão, se o token ainda vale; senão o nome informado; senão ninguém. */
+    private FeedbackStore.Author author(String authorization, String informed) {
+        Authors a = authors;
+        if (a != null && authorization != null && !authorization.isBlank()) {
+            try {
+                FeedbackStore.Author account = a.author(authorization);
+                if (account != null) return account;
+            } catch (RuntimeException e) { System.err.println("Relatos: conta indisponível: " + e); }
+        }
+        return informed == null ? null : new FeedbackStore.Author(informed, null, true);
+    }
+
+    /** Apelido limpo: sem caracteres de controle nem espaços repetidos, até {@link #MAX_NAME} letras; null se vazio. */
+    static String cleanName(String text) {
+        if (text == null) return null;
+        String t = text.replaceAll("\\s+", " ").replaceAll("\\p{Cntrl}", "").strip();
+        if (t.isEmpty()) return null;
+        return t.codePointCount(0, t.length()) <= MAX_NAME ? t : t.substring(0, t.offsetByCodePoints(0, MAX_NAME)).strip();
     }
 
     static Response reject(int status, String reason, String message) {
@@ -167,7 +205,7 @@ final class Feedback {
         var decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT);
         JsonReader r = new JsonReader(new InputStreamReader(in, decoder));
         r.setStrictness(Strictness.STRICT);
-        String kind = null, description = null, version = null, format = null;
+        String kind = null, description = null, version = null, format = null, name = null;
         boolean recording = false;
         if (r.peek() != JsonToken.BEGIN_OBJECT) throw new Invalid("O relato chegou com defeito. Tente enviar de novo.");
         r.beginObject();
@@ -179,6 +217,7 @@ final class Feedback {
                 }
                 case "kind" -> kind = string(r);
                 case "description" -> description = string(r);
+                case "name" -> name = string(r);
                 case "app" -> version = field(r, "version");
                 case "match" -> format = field(r, "format");
                 case "recording" -> {
@@ -198,7 +237,7 @@ final class Feedback {
         if (text.length() > MAX_DESCRIPTION) throw new Invalid("A descrição passou de 2.000 caracteres. Resuma um pouco e envie de novo.");
         // Começo da descrição no índice, para a lista da área de admin sem abrir cada arquivo.
         String summary = text.replaceAll("\\s+", " ");
-        return new FeedbackStore.Meta(kind, version, format, recording, summary.length() > 160 ? summary.substring(0, 159) + "…" : summary);
+        return new FeedbackStore.Meta(kind, version, format, recording, summary.length() > 160 ? summary.substring(0, 159) + "…" : summary, cleanName(name));
     }
 
     private static String string(JsonReader r) throws IOException {
@@ -282,12 +321,13 @@ final class Feedback {
                 if (req.method() != HttpMethod.POST) { respond(ctx, error(405, "Use POST para enviar um relato.")); return; }
                 byte[] body = ByteBufUtil.getBytes(req.content());
                 String code = req.headers().get("X-Mesa-Partida"), token = req.headers().get("X-Mesa-Token");
+                String authorization = req.headers().get(HttpHeaderNames.AUTHORIZATION);
                 String ip = req.headers().get("X-Real-IP");
                 if (ip == null || ip.isBlank())
                     ip = ctx.channel().remoteAddress() instanceof InetSocketAddress a && a.getAddress() != null ? a.getAddress().getHostAddress() : "?";
                 String from = ip;
                 try {
-                    workers.execute(() -> respond(ctx, handle(body, code, token, from)));
+                    workers.execute(() -> respond(ctx, handle(body, code, token, authorization, from)));
                 } catch (RejectedExecutionException e) {
                     respond(ctx, reject(503, "erro", "O servidor está ocupado agora. Tente de novo em alguns minutos."));
                 }
@@ -304,7 +344,7 @@ final class Feedback {
         res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, body.length);
         res.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         res.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "POST, OPTIONS");
-        res.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "Content-Type, Content-Encoding, X-Mesa-Partida, X-Mesa-Token");
+        res.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "Content-Type, Content-Encoding, Authorization, X-Mesa-Partida, X-Mesa-Token");
         res.headers().set(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "600");
         ctx.writeAndFlush(res).addListener(ChannelFutureListener.CLOSE);
     }

@@ -957,7 +957,7 @@ Ao pagar automaticamente, a mesa vira os terrenos e deixa o Talismã (Talisman o
 
 A decidir antes de começar: a regra de prioridade entre terrenos e pedras de mana (sempre pedras primeiro na parte genérica, ou só quando sobra mana parecida); e se vale aceitar 1 de dano do talismã para guardar um terreno de cor.
 
-## 63. Apelido de quem enviou o relato
+## 63. Apelido de quem enviou o relato ✅
 
 Os relatos de sugestão e erro (item 28) chegam sem dizer quem os enviou: levam o texto, o aparelho, as preferências da mesa e, se o jogador escolher, a partida anexada (que tem os nomes de todos os jogadores, mas não diz qual deles relatou). Para responder ou entender o contexto, ajuda saber o apelido de quem enviou. Levantamento feito em 31/10/2026:
 
@@ -966,15 +966,15 @@ Os relatos de sugestão e erro (item 28) chegam sem dizer quem os enviou: levam 
 
 Decidido em 31/10/2026: só o apelido, sem registrar nem pedir e-mail.
 
-- [ ] Com a conta conectada, o relato leva o apelido da conta. A ponte o tira da sessão (pelo token), e não do corpo do relato, para ninguém relatar em nome de outra conta; guarda também o id da conta, para juntar os relatos de um mesmo jogador.
-- [ ] Sem conta, o relato leva o nome usado na partida (o da sala, `mesa:name`), marcado como "nome informado", sem verificação.
-- [ ] Sem conta e sem nome, continua anônimo, como hoje.
-- [ ] O formulário diz, numa linha discreta, com que nome o relato vai ("Enviando como Ana"), para o jogador saber antes de mandar.
-- [ ] A área de admin mostra o apelido em cada relato e permite filtrar por ele.
-- [ ] Relatos na fila do aparelho (enviados sem rede) levam o apelido do momento em que foram escritos.
-- [ ] Atualizar a seção "Relatos de erro e sugestões" da política de privacidade (`src/privacidade.ts`): o relato passa a levar o apelido, que é apagado junto com ele em até 90 dias.
+- [x] Com a conta conectada, o relato leva o apelido da conta. A ponte o tira da sessão (pelo token), e não do corpo do relato, para ninguém relatar em nome de outra conta; guarda também o id da conta, para juntar os relatos de um mesmo jogador.
+- [x] Sem conta, o relato leva o nome usado na partida (o da sala, `mesa:name`), marcado como "nome informado", sem verificação.
+- [x] Sem conta e sem nome, continua anônimo, como hoje.
+- [x] O formulário diz, numa linha discreta, com que nome o relato vai ("Enviando como Ana"), para o jogador saber antes de mandar.
+- [x] A área de admin mostra o apelido em cada relato e permite filtrar por ele.
+- [x] Relatos na fila do aparelho (enviados sem rede) levam o apelido do momento em que foram escritos.
+- [x] Atualizar a seção "Relatos de erro e sugestões" da política de privacidade (`src/privacidade.ts`): o relato passa a levar o apelido, que é apagado junto com ele em até 90 dias.
 
-A decidir antes de começar: se o jogador pode escolher enviar sem o apelido (uma caixa "Enviar sem meu nome"), ou se o apelido vai sempre que existir.
+Decidido em 31/10/2026 (versão 0.99.0): o relato leva só o apelido, nunca o e-mail, e o jogador pode mandar sem ele. Com a conta conectada, o aparelho manda o token da conta em `Authorization` e a ponte tira dele o id da conta e o apelido (`Accounts.reportAuthor`): o nome na mesa sincronizado com a conta (`mesa:name` nas preferências dela) ou, sem ele, o `apelido` do perfil (o primeiro nome do Google), o mesmo que o menu da conta mostra em "Conectado como"; com a sessão válida, o `name` do corpo é ignorado. Sem conta, o relato leva no corpo o `name` (o `mesa:name` das salas, limpo e cortado em 24 letras), guardado como nome informado. Sem conta e sem nome, vai anônimo. O formulário mostra, entre a descrição e "O que vai junto", a linha "Enviando como Ana" (com conta e sem nome: "Enviando pela sua conta") e a caixa **Enviar sem meu nome**, desmarcada; marcada, a linha vira "Enviando sem nome" e o relato sai sem `name` e sem o token, ou seja, sem apelido nem id da conta. Sem conta e sem nome, a linha nem aparece. O "O que vai junto" passou a citar o nome e terminar em "Nada de e-mail nem IP." O que fica guardado: `author: {nickname, account}` (conta, verificado) ou `author: {nickname, informed: true}` (nome informado), na linha do índice (`indice.jsonl`) e no começo do arquivo do relato, ao lado de `code`, `receivedAt` e `bridge`; relato anônimo não tem `author`, e os relatos antigos continuam sem. O token da conta não é guardado, e o apelido some com o relato na retenção de 90 dias. Fila do aparelho: o relato guardado sem rede leva no corpo o nome do momento em que foi escrito e, no cabeçalho, o token daquele momento (que já ficava no aparelho); com a caixa marcada, não leva nenhum dos dois. Se o token ainda valer quando o relato sair, vale a conta (com o apelido atual dela); se tiver vencido, a pessoa tiver saído ou apagado a conta, a ponte não confia nele e fica com o nome do corpo como nome informado, sem id da conta. Na área de admin, cada relato mostra quem enviou na lista (com "(informado)" quando não veio da conta) e no detalhe ("enviado por" e o começo do id da conta), a busca também acha pelo apelido, e o filtro **Quem enviou** separa por conta (juntando os relatos de um jogador mesmo se o apelido mudou), por nome informado e os anônimos. A issue do GitHub gerada do relato não leva o apelido. A política de privacidade explica o apelido, a caixa e que ele é apagado com o relato. Ficou de fora: mostrar ao jogador a lista dos relatos que ele mandou, e responder a ele pelo jogo.
 
 ## 64. Tirar a palavra "ponte" do que o jogador vê ✅
 
