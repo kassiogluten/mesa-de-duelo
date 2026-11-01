@@ -5,6 +5,10 @@
     ],
     "Vibrar na sua vez": [
       { "img": "0.103.0/vibrar.webp", "legenda": "Logo abaixo, **Vibrar na sua vez**, também ligada, com quando o celular vibra. A opção só aparece nos aparelhos que deixam vibrar." }
+    ],
+    "Escolhas de cartas no celular numa fileira só": [
+      { "img": "0.103.0/fileira-em-pe.webp", "legenda": "No celular em pé, escolhendo até duas cartas: a fileira rolada até o meio, com as duas bordas escurecidas porque há cartas dos dois lados, o Counterspell marcado e os botões logo abaixo." },
+      { "img": "0.103.0/fileira-deitado.webp", "legenda": "Deitado, as sete cartas numa fileira só, com a borda da direita escurecida onde ainda há mais, e **Nenhum** e **Confirmar** à vista embaixo." }
     ]
   },
   "0.102.0": {

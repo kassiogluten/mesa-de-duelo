@@ -20,6 +20,7 @@ import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
 import { createTurnBuzz } from './turnBuzz';
 import { screenWake } from './screenWake';
+import { restoreRowScroll, rowScroll, syncAllRowEdges, watchRowEdges } from './cardRow';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
 import { focusedByAttack, followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatFocus, type SeatMemory } from './seatVisibility';
 import { fixPossessives } from './forgeText';
@@ -261,6 +262,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   </div>`;
 
   const $ = (sel: string) => root.querySelector(sel) as HTMLElement;
+  watchRowEdges(root);
   let client: ForgeClient | null = null;
   let portraits: (string | undefined)[] = [undefined, undefined];
   let lastTurn = 0;
@@ -1775,13 +1777,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`
       : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}${shelf.has(c.id) ? `. ${esc(shelf.get(c.id)!.status)}` : ''}">${face(c, 'normal')}${tags(c)}</button>`}
       <button class="icon-btn" data-inspect="${c.id}">${inspectIcon}Inspecionar</button></div>`;
-    setHTML(el, `<div class="question zone-view" role="dialog" aria-modal="true" aria-label="${title}">
+    const zoneKey = `${zoneKind}:${zoneOf}:${groupIds?.join(',') ?? ''}`;
+    const before = el.hidden ? null : el.querySelector<HTMLElement>('.zone-view');
+    const rows = before?.dataset.zone === zoneKey ? rowScroll(before) : [];
+    setHTML(el, `<div class="question zone-view" data-zone="${esc(zoneKey)}" role="dialog" aria-modal="true" aria-label="${title}">
       <h2>${title}${p ? ` · ${esc(p.name)}` : ''} (${zoneKind === 'hand' && p && !groupIds ? revealedCountText(p) : cards.length})</h2>
       ${zoneKind === 'hand' && p && !groupIds ? `<p class="q-hint">Só para ver: quem joga estas cartas é ${esc(p.name)}.</p>` : ''}
       ${cards.length ? `<div class="q-opts cards">${cards.map(card).join('')}</div>` : '<p class="q-hint">Vazio.</p>'}
       <div class="q-actions"><button class="arena-btn secondary" data-ui="zone-close">Fechar</button></div>
     </div>`);
+    const after = el.querySelector<HTMLElement>('.zone-view');
+    if (after && after !== before) restoreRowScroll(after, rows);
     el.hidden = false;
+    syncAllRowEdges(el);
     syncModal();
   }
 
@@ -1995,6 +2003,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const html = removalHTML(notice, s);
     if (el.hidden || el.dataset.html !== html) { setHTML(el, html); el.dataset.html = html; }
     el.hidden = false;
+    syncAllRowEdges(el);
   }
   function removalHTML(notice: RemovalNotice, s: FState) {
     removalCards.clear();
@@ -2586,9 +2595,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const before = qEl.querySelector<HTMLElement>('.question');
       const typingName = document.activeElement?.id === 'fQNameSearch';
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
+      // Fileira de cartas (celular): marcar uma carta redesenha a escolha, mas a fileira fica onde estava.
+      const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
       setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (again !== null && after && after !== before) after.scrollTop = again;
+      if (after && after !== before) restoreRowScroll(after, rows);
       // A busca de nomes recebe o foco ao abrir e o mantém quando a escolha é redesenhada no meio da digitação.
       const nameSearch = after && after !== before ? after.querySelector<HTMLInputElement>('#fQNameSearch') : null;
       if (nameSearch && (typingName || Number(before?.dataset.qid) !== s.question.id)) {
@@ -2596,6 +2608,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         nameSearch.setSelectionRange(nameSearch.value.length, nameSearch.value.length);
       }
       qEl.hidden = false;
+      syncAllRowEdges(qEl);
     } else {
       if (!qEl.hidden && !qEl.classList.contains('minimized')) leaveOverlay(qEl);
       qEl.hidden = true;
