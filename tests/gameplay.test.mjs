@@ -317,7 +317,9 @@ test('sound gate consumes muted, hidden, locked and catch-up events without repl
     assert.equal(gate.allow('a:1', base), false);
     assert.equal(gate.allow('a:2', base), true);
   }
-  assert.deepEqual(normalizeAudioSettings(null), { muted: true, volume: .35, pack: 'classico' });
+  assert.deepEqual(normalizeAudioSettings(null), { muted: false, volume: .35, pack: 'classico' });
+  assert.equal(normalizeAudioSettings({ volume: .5 }).muted, false);
+  assert.equal(normalizeAudioSettings({ muted: true }).muted, true);
   assert.equal(normalizeAudioSettings({ pack: 'arena' }).pack, 'arena');
   assert.equal(normalizeAudioSettings({ pack: 'inexistente' }).pack, 'classico');
   assert.equal(normalizeAudioSettings({ muted: false, volume: 99 }).volume, 1);
@@ -325,7 +327,8 @@ test('sound gate consumes muted, hidden, locked and catch-up events without repl
 });
 
 test('audio is gesture gated, persisted, capped at four voices and stopped when hidden', async () => {
-  const listeners = new Map(), stored = new Map(), sources = [];
+  // Quem já desligou o som continua sem som até ligar de novo.
+  const listeners = new Map(), stored = new Map([['mesa:audio:v1', JSON.stringify({ muted: true, volume: .35, pack: 'classico' })]]), sources = [];
   let contexts = 0, fetches = 0;
   globalThis.localStorage = { getItem: key => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, value) };
   globalThis.document = { hidden: false, addEventListener: (name, cb) => listeners.set(name, cb) };
@@ -364,6 +367,26 @@ test('audio is gesture gated, persisted, capped at four voices and stopped when 
   assert.equal(sources.length, 6);
   audio.setMuted(true);
   assert.equal(JSON.parse(stored.get('mesa:audio:v1')).muted, true);
+});
+
+test('sound starts on for a player who never chose, loading on the first touch', async () => {
+  const listeners = new Map();
+  let fetches = 0;
+  globalThis.localStorage = { getItem: () => null, setItem() {} };
+  globalThis.document = { hidden: false, addEventListener: (name, cb) => listeners.set(name, cb) };
+  globalThis.fetch = async () => { fetches++; return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) }; };
+  globalThis.AudioContext = class {
+    constructor() { this.state = 'suspended'; this.currentTime = 0; }
+    async resume() { this.state = 'running'; }
+    createGain() { return { gain: { value: 0, setTargetAtTime() {} }, connect() {}, disconnect() {} }; }
+    async decodeAudioData(data) { return data; }
+  };
+  const audio = createGameAudio();
+  assert.equal(audio.settings.muted, false);
+  assert.equal(fetches, 0);
+  listeners.get('pointerdown')({ isTrusted: true });
+  for (let i = 0; i < 12; i++) await Promise.resolve();
+  assert.equal(fetches, Object.keys(SOUND_FILES).length);
 });
 
 test('switching sound pack loads that folder, persists it and plays a sample', async () => {

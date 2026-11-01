@@ -1109,3 +1109,23 @@ Veio da sugestão S19. No celular com o som desligado, só a tela avisava que a 
 - [x] Opção **Vibrar na sua vez** em Menu → Opções → Jogo, guardada no aparelho; some onde o aparelho não vibra (no iPhone, por exemplo).
 
 Feito na 0.103.0: ligado por padrão e com opção própria, em vez de seguir a de **Notificar quando for seu turno** como estava na sugestão, porque aquela depende da permissão de notificações e vale só com a mesa em outra aba; ao entrar ou reconectar, a mesa não vibra.
+
+## 74. Som ligado por padrão ✅
+
+Pedido em 01/11/2026. Hoje os efeitos sonoros começam desligados: quem nunca mexeu em **Menu → Opções → Som** joga em silêncio e nem sabe que a mesa tem som.
+
+- [x] Efeitos sonoros ligados para quem nunca escolheu; quem já desligou continua com o som desligado.
+- [x] O navegador só toca som depois do primeiro toque na página: conferir que o primeiro som não se perde nem atrasa.
+- [x] Decidir o volume inicial e se vale um aviso discreto na primeira partida ("Som ligado · desligar em Opções").
+
+Decidido em 01/11/2026 e feito na 0.104.0: `normalizeAudioSettings` só deixa mudo quem tem `muted: true` gravado. A mesa só grava o som depois de uma escolha (ligar, desligar, volume, pacote), então quem tem "desligado" salvo escolheu isso e continua assim. O volume inicial continua 35% e não há aviso: desligar continua em Opções. A mesa é criada ao abrir a página, então o primeiro toque em qualquer lugar (na escolha de deck, no **Jogar**) já libera o áudio e carrega os sons antes da partida.
+
+## 75. Sala pública por padrão ✅
+
+Pedido em 01/11/2026. Hoje toda sala nova começa privada e só vira pública se o jogador escolher, então a lista de **Salas públicas** fica quase sempre vazia e quem procura partida não acha ninguém.
+
+- [x] Sala nova começa pública; quem quiser jogar só com amigos troca para privada antes de criar.
+- [x] Deixar claro na criação que a sala vai aparecer na lista para todos (e como torná-la privada), sem pegar ninguém de surpresa.
+- [x] Decidir se a escolha do jogador fica lembrada para a próxima sala e se vale também para as salas com computador nos lugares vazios.
+
+Decidido em 01/11/2026 e feito na 0.104.0: o tipo de sala começa em **Pública** (agora o primeiro botão) e a escolha fica lembrada em `mesa:roomVisibility`, então quem escolheu **Privada** continua com ela. A explicação embaixo dos botões ("Aparece na lista de salas públicas para qualquer pessoa entrar.") já existia. As salas não têm computador nos lugares vazios, então essa parte não se aplica. A sala aberta por um link que ainda não existe continua pública, sem mudar a escolha guardada.

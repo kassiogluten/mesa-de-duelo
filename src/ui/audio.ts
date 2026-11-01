@@ -117,7 +117,8 @@ export function soundVariation(event: PresentationEvent, matchId: string, you?: 
 export function normalizeAudioSettings(value: Partial<AudioSettings> | null | undefined): AudioSettings {
   const volume = typeof value?.volume === 'number' && Number.isFinite(value.volume) ? Math.max(0, Math.min(1, value.volume)) : .35;
   const pack = SOUND_PACKS.find(entry => entry.id === value?.pack)?.id ?? 'classico';
-  return { muted: value?.muted !== false, volume, pack };
+  // Som ligado para quem nunca escolheu: só fica mudo quem desligou (a mesa só grava depois de uma escolha).
+  return { muted: value?.muted === true, volume, pack };
 }
 
 export function soundUrl(pack: SoundPack, cue: SoundCue) {

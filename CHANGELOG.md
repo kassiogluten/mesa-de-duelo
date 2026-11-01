@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.104.0] - 2026-11-01
+
+### Novo
+
+- **6 novos decks prontos de Commander das séries mais recentes.** Chegam os dois comandantes mais populares do EDHREC em cada uma das três séries mais novas: de Marvel Super Heroes, **Vilania do Doutor Destino** (Doctor Doom, King of Latveria) e **Exército da Garota Esquilo** (The Unbeatable Squirrel Girl); de O Hobbit, **Reino de Thranduil** (Thranduil, the Elvenking) e **Tesouro de Thorin** (Thorin, King of Durin's Folk); e de Reality Fracture, **Multiverso de Jace** (Jace, Multiverse Architect, um planeswalker que pode ser comandante) e **Possibilidades de Tam** (Tam, the Possibility). Cada lista é o deck médio do EDHREC para o comandante, com as cartas que o oponente controlado pelo computador ainda não sabe jogar trocadas pela carta mais usada do mesmo tipo, então todos servem tanto para você quanto para os oponentes. Eles já vêm com o bracket conferido e com o preço das cartas em dólar, cotado em 01/11/2026: de US$ 172,45 (**Vilania do Doutor Destino**) a US$ 541,88 (**Possibilidades de Tam**).
+
+### Mudou
+
+- **Som ligado desde a primeira partida.** Os efeitos sonoros agora começam ligados: quem nunca mexeu no som ouve a mesa assim que toca em qualquer lugar da página. Quem já tinha desligado continua sem som. Para desligar, use **Menu → Opções → Som**.
+- **Sala nova começa pública.** Ao criar uma sala contra outras pessoas, o tipo vem marcado como **Pública**, e a sala aparece na lista de salas públicas para qualquer pessoa entrar. Quem prefere jogar só com quem recebe o código escolhe **Privada**, e a mesa lembra essa escolha nas próximas salas.
+
 ## [0.103.0] - 2026-11-01
 
 ### Novo

@@ -1,4 +1,15 @@
 {
+  "0.104.0": {
+    "6 novos decks prontos de Commander das séries mais recentes": [
+      { "img": "0.104.0/decks-series-recentes.webp", "legenda": "Os seis decks novos na escolha de deck, com o comandante, as cores, o preço e o bracket de cada um: Doutor Destino e Garota Esquilo, de Marvel; Thranduil e Thorin, de O Hobbit; Jace e Tam, de Reality Fracture." }
+    ],
+    "Som ligado desde a primeira partida": [
+      { "img": "0.104.0/som-ligado.webp", "legenda": "Em **Menu → Opções → Som**, os efeitos sonoros já vêm ligados, no volume de 35%." }
+    ],
+    "Sala nova começa pública": [
+      { "img": "0.104.0/sala-publica.webp", "legenda": "Ao criar uma sala, o tipo já vem como **Pública**, com a explicação de que ela aparece na lista para qualquer pessoa entrar." }
+    ]
+  },
   "0.103.0": {
     "Tela acesa durante a partida": [
       { "img": "0.103.0/tela-acesa.webp", "legenda": "Em Menu → Opções → Jogo, a opção nova **Manter a tela acesa**, que já vem ligada." }

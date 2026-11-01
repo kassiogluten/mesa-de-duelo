@@ -77,8 +77,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   let colorFilter = new Set<ColorFilter>();
   const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
-  // Toda sala nova começa privada: só vira pública se o jogador escolher.
-  let visibility: RoomVisibility = 'private';
+  // Sala nova começa pública, para aparecer na lista; quem escolheu privada continua com privada.
+  let visibility: RoomVisibility = load('mesa:roomVisibility') === 'private' ? 'private' : 'public';
   let netTab: NetTab = load('mesa:netTab') === 'create' ? 'create' : 'join';
   // No celular, os ajustes da partida começam resumidos numa linha; contra outra pessoa, abertos (é lá que se escolhe a sala).
   let setupOpen = mode === 'net';
@@ -118,7 +118,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
             <section class="public-rooms" id="publicRooms" aria-labelledby="publicRoomsTitle"><div class="public-rooms-head"><h4 id="publicRoomsTitle">Salas públicas</h4><button type="button" class="link-btn" data-lobby="rooms-refresh" aria-label="Atualizar a lista de salas públicas">${REFRESH}Atualizar</button></div><div id="publicRoomList" aria-busy="false"></div><p class="sr-only" id="publicRoomsStatus" role="status" aria-live="polite"></p></section>
             <form data-join><label for="netCode">Ou digite o código da sala<span class="network-code"><input id="netCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD"><button type="submit" class="arena-btn secondary">Entrar</button></span></label></form>
           </section>
-          <div class="net-group" id="createGroup" role="tabpanel" aria-labelledby="netTabCreate"><fieldset class="match-choice visibility-choice"><legend>Tipo de sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="private">Privada</button><button type="button" data-setting="visibility" data-value="public">Pública</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset><div class="room-code-choice"><label for="roomCode">Código da sala (opcional)<input id="roomCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD" aria-describedby="roomCodeHelp"></label><p class="setup-explanation" id="roomCodeHelp"></p></div></div>
+          <div class="net-group" id="createGroup" role="tabpanel" aria-labelledby="netTabCreate"><fieldset class="match-choice visibility-choice"><legend>Tipo de sala</legend><div class="choice-segments" aria-describedby="visibilityHelp"><button type="button" data-setting="visibility" data-value="public">Pública</button><button type="button" data-setting="visibility" data-value="private">Privada</button></div><p class="setup-explanation" id="visibilityHelp"></p></fieldset><div class="room-code-choice"><label for="roomCode">Código da sala (opcional)<input id="roomCode" class="input-field" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD" aria-describedby="roomCodeHelp"></label><p class="setup-explanation" id="roomCodeHelp"></p></div></div>
           <details class="net-adv"><summary>Conexão</summary><label for="netUrl">Endereço do servidor</label><input id="netUrl" class="input-field" spellcheck="false" placeholder="${esc(FORGE_URL)}"></details>
           <div id="roomInfo" class="room-info" hidden></div>
         </section>
@@ -418,7 +418,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         youId = rememberedDeck();
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
-      } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private';
+      } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private'; save('mesa:roomVisibility', visibility);
       } else if (choice.dataset.setting === 'players') { playerCount = Number(choice.dataset.value); save('mesa:commanderPlayers', String(playerCount));
       } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
       refresh(); return;
