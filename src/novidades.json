@@ -1,4 +1,12 @@
 {
+  "0.103.0": {
+    "Tela acesa durante a partida": [
+      { "img": "0.103.0/tela-acesa.webp", "legenda": "Em Menu → Opções → Jogo, a opção nova **Manter a tela acesa**, que já vem ligada." }
+    ],
+    "Vibrar na sua vez": [
+      { "img": "0.103.0/vibrar.webp", "legenda": "Logo abaixo, **Vibrar na sua vez**, também ligada, com quando o celular vibra. A opção só aparece nos aparelhos que deixam vibrar." }
+    ]
+  },
   "0.102.0": {
     "Focar num oponente": [
       { "img": "0.102.0/focar-botao.webp", "legenda": "No Commander, o botão ⤢ no cabeçalho do campo de cada oponente, ao lado de **Só este** e **Ocultar**." },

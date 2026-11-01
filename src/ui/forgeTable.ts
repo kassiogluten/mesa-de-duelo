@@ -18,6 +18,8 @@ import { createGameAudio, SOUND_PACKS, tableMoment, type SoundPack } from './aud
 import { PassLevelPreference, PASS_LEVELS, PASS_LEVEL_ALWAYS, isPassLevel, passLevelBadgeHTML, passLevelInfo, passMenuHTML } from './passLevel';
 import { OpponentStopsPreference, stopMenuHTML } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
+import { createTurnBuzz } from './turnBuzz';
+import { screenWake } from './screenWake';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
 import { focusedByAttack, followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatFocus, type SeatMemory } from './seatVisibility';
 import { fixPossessives } from './forgeText';
@@ -158,6 +160,8 @@ function devTools() {
 }
 
 export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions): ForgeTableView {
+  // Vibração na sua vez (S19); criada antes do HTML porque a opção só aparece onde o aparelho vibra.
+  const turnBuzz = createTurnBuzz();
   root.innerHTML = `
   <div class="arena forge">
     <div class="mat" aria-hidden="true"></div>
@@ -195,6 +199,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
           <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Jogo</span><span class="game-option-group-value" id="fPlaySummary"></span></summary>
           <div class="game-option-pace game-option-auto-pass"><label for="fPassLevel">Passar automaticamente</label><select id="fPassLevel" aria-describedby="fPassLevelHint fPassLevelAlways fPassLevelStatus" disabled>${PASS_LEVELS.map(level => `<option value="${level.id}">${level.name}</option>`).join('')}</select><p id="fPassLevelHint">${passLevelInfo('acoes').hint}</p><p id="fPassLevelAlways">${PASS_LEVEL_ALWAYS} Para trocar durante a partida, toque no selo junto dos botões.</p><p id="fPassLevelStatus" role="status">Aguardando conexão com o servidor.</p></div>
           <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
+          ${screenWake.supported ? `<div class="game-option-auto-pass"><div class="game-option-row"><span id="fAwakeLabel">Manter a tela acesa</span><button class="sound-switch" id="fAwake" data-ui="awake" role="switch" aria-checked="true" aria-labelledby="fAwakeLabel" aria-describedby="fAwakeHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAwakeState" aria-hidden="true">Ligado</span></button></div><p id="fAwakeHint">Durante a partida, a tela do aparelho não apaga sozinha enquanto os outros jogam.</p></div>` : ''}
+          ${turnBuzz.supported ? `<div class="game-option-auto-pass"><div class="game-option-row"><span id="fBuzzLabel">Vibrar na sua vez</span><button class="sound-switch" id="fBuzz" data-ui="buzz" role="switch" aria-checked="true" aria-labelledby="fBuzzLabel" aria-describedby="fBuzzHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fBuzzState" aria-hidden="true">Ligado</span></button></div><p id="fBuzzHint">O celular vibra quando o seu turno começa, quando você precisa bloquear e quando chega uma decisão sua no turno de outro jogador.</p></div>` : ''}
           <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
         </details>
         <details class="game-option-group" data-options-group="look">
@@ -486,7 +492,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const chosen = (id: string) => ($(id) as HTMLSelectElement).selectedOptions[0]?.textContent ?? '';
     const settings = audio.settings;
     $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
-    $('#fPlaySummary').textContent = [chosen('#fPassLevel'), turnNotice.enabled && 'Aviso de turno', fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
+    $('#fPlaySummary').textContent = [chosen('#fPassLevel'), turnNotice.enabled && 'Aviso de turno', screenWake.supported && screenWake.enabled && 'Tela acesa', turnBuzz.supported && turnBuzz.enabled && 'Vibrar', fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
     $('#fLookSummary').textContent = [chosen('#fCardStyle'), playmat && 'Tapete', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
   }
   /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
@@ -571,6 +577,17 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     menu.style.top = `${above ? a.top - m.height - gap : a.bottom + gap}px`;
   }
   window.addEventListener('resize', placeStopMenu);
+  /** Interruptores de liga e desliga das Opções: o estado no botão e no texto ao lado. */
+  function syncSwitch(id: string, on: boolean) {
+    const control = root.querySelector<HTMLElement>(`#${id}`);
+    if (!control) return;
+    control.setAttribute('aria-checked', String(on));
+    $(`#${id}State`).textContent = on ? 'Ligado' : 'Desligado';
+  }
+  function syncDevice() {
+    syncSwitch('fAwake', screenWake.enabled); syncSwitch('fBuzz', turnBuzz.enabled);
+    syncOptionSummaries();
+  }
   function syncPlaymat() {
     $('#fPlaymat').setAttribute('aria-checked', String(playmat));
     $('#fPlaymatState').textContent = playmat ? 'Ligado' : 'Desligado';
@@ -2373,7 +2390,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     fixForgeText(s);
     passLevel.observe(s.preferences, !!client?.connected && !disconnected);
     opponentStops.observe(s.preferences, !!client?.connected && !disconnected); syncStops();
-    if (s.spectating) turnNotice.reset(); else turnNotice.observe(s);
+    if (s.spectating) { turnNotice.reset(); turnBuzz.reset(); } else { turnNotice.observe(s); turnBuzz.observe(s); }
     const savedFocus = focusSnapshot();
     const scrollPositions = new Map([...root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field')].map(el => [el.id, { left: el.scrollLeft, top: el.scrollTop }]));
     const silently = silentNext || document.hidden;
@@ -2921,7 +2938,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       $('#fStackGallery').querySelector<HTMLElement>('.stack-gallery-card.actionable, .stack-gallery-card')?.focus({ preventScroll: true });
       return;
     }
-    if (ui === 'settings') { syncTurnNotice(); syncPlaymat(); setSettings(true); return; }
+    if (ui === 'settings') { syncTurnNotice(); syncPlaymat(); syncDevice(); setSettings(true); return; }
+    if (ui === 'awake') { screenWake.setEnabled(!screenWake.enabled); syncDevice(); return; }
+    if (ui === 'buzz') { turnBuzz.setEnabled(!turnBuzz.enabled); syncDevice(); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
     if (ui === 'playmat') {
       playmat = !playmat;
@@ -3473,7 +3492,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   return {
     attach(c, pics) {
-      passLevel.reset(); opponentStops.reset(); turnNotice.reset(); knownHand = new Set(); handPrimed = false; handOrder = []; arriving.clear(); shownLife.clear();
+      passLevel.reset(); opponentStops.reset(); turnNotice.reset(); turnBuzz.reset(); knownHand = new Set(); handPrimed = false; handOrder = []; arriving.clear(); shownLife.clear();
       artworkPointers.clear(); artworkPending = false; clearTimeout(artworkTimer);
       client = c; portraits = pics; lastTurn = 0; disconnected = false; observing = false; qState = null; clickedGen = -1; zoneOf = null;
       lastDamage = new Map(); groupIds = null; selectedBlocker = null; clearAttackChoice(true);
@@ -3484,7 +3503,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       $('#fOverlay').hidden = true;
       $('#fQuestion').hidden = true;
       $('#fZone').hidden = true;
-      syncPassLevel(); syncStops(); syncTurnNotice(); syncModal();
+      syncPassLevel(); syncStops(); syncTurnNotice(); syncDevice(); syncModal();
     },
     render,
     notice,

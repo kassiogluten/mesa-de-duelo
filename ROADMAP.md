@@ -1089,3 +1089,21 @@ Veio da sugestão S23. O cabeçalho tinha Enviar sugestão ou erro, Novidades co
 - [x] O botão de instalar o jogo continua no cabeçalho quando o navegador oferece.
 
 Decidido em 01/11/2026: Novidades fica como ícone; relatar e tema vão para o ⋯.
+
+## 72. Tela acesa durante a partida ✅
+
+Veio da sugestão S18. No celular, a tela apagava sozinha enquanto o oponente pensava, e às vezes o jogador perdia a vez ou a conexão caía ao voltar.
+
+- [x] Pedir ao aparelho para manter a tela acesa enquanto a partida (ou a mesa livre) está aberta, soltar ao sair e pedir de novo quando a aba volta a aparecer.
+- [x] Opção **Manter a tela acesa** em Menu → Opções → Jogo, guardada no aparelho; some onde o navegador não oferece.
+
+Decidido em 01/11/2026 e feito na 0.103.0: ligado por padrão.
+
+## 73. Vibração quando é a sua vez ✅
+
+Veio da sugestão S19. No celular com o som desligado, só a tela avisava que a vez chegou.
+
+- [x] Vibração curta quando o seu turno começa, quando você precisa bloquear e quando chega uma decisão sua no turno de outro jogador (alvo, escolha, pergunta). As decisões no próprio turno não vibram, e duas chegadas seguidas vibram uma vez só.
+- [x] Opção **Vibrar na sua vez** em Menu → Opções → Jogo, guardada no aparelho; some onde o aparelho não vibra (no iPhone, por exemplo).
+
+Feito na 0.103.0: ligado por padrão e com opção própria, em vez de seguir a de **Notificar quando for seu turno** como estava na sugestão, porque aquela depende da permissão de notificações e vale só com a mesa em outra aba; ao entrar ou reconectar, a mesa não vibra.

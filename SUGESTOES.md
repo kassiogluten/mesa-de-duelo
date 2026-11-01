@@ -12,7 +12,7 @@ Agradar quem joga: tudo **intuitivo** (sem precisar de explicação), **limpo** 
 
 1. **Primeira impressão**: S14 (partida rápida); S22 e S23 já feitas.
 2. **Mesa mais limpa**: S25 (menos selos e ícones soltos na mesa); S24 já feita.
-3. **Imersão**: S27 (som ambiente), S18 (tela acesa), S19 (vibração).
+3. **Imersão**: S27 (som ambiente); S18 e S19 já feitas.
 4. **Intuitivo sem tutorial**: S28 (dicas na primeira partida), S11 (atalhos), S13 (ver o deck do oponente).
 5. **Construtor**: S4, S15, S5, S16.
 6. **Fora do foco por enquanto**: S1, S3, S7, S12, S17, S20, S21. São úteis, mas o jogador não sente a diferença no dia a dia (ou o custo é alto para o que muda).
@@ -163,14 +163,18 @@ A mesa tem Livre, Standard, Pauper, Sacola 50 e Commander, e a ponte só usa os 
 
 ## Celular e acessibilidade
 
-### S18. Tela acesa durante a partida · Melhoria · P
+### S18. Tela acesa durante a partida · Melhoria · P · ✅
+
+Aceita e feita na 0.103.0 como item 72 do `ROADMAP.md` (ligada por padrão).
 
 No celular, a tela apaga sozinha enquanto o oponente pensa, e às vezes o jogador perde a vez ou a conexão cai ao voltar. Nada pede ao aparelho para manter a tela acesa.
 
 - [ ] Pedir a trava de tela acesa (Screen Wake Lock) enquanto houver partida aberta, soltando ao sair, e pedindo de novo quando a aba volta a ficar visível.
 - [ ] Opção para desligar no menu de Opções.
 
-### S19. Vibração quando é a sua vez · Melhoria · P
+### S19. Vibração quando é a sua vez · Melhoria · P · ✅
+
+Aceita e feita na 0.103.0 como item 73 do `ROADMAP.md` (ligada por padrão, com opção própria).
 
 O aviso de turno (`turnNotice.ts`) usa título, som e notificação. No celular com o som desligado, só a tela avisa.
 

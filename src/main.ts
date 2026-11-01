@@ -5,6 +5,7 @@ import { deckBracket } from './brackets';
 import { mountDeckBuilder } from './ui/deckbuilder';
 import { ForgeClient, FORGE_URL, type FState, type MatchConfig, type ClientMessage, type MatchOwner } from './forge/client';
 import { createForgeTableView } from './ui/forgeTable';
+import { screenWake } from './ui/screenWake';
 import { deckArt, deckCover, mountLobby } from './ui/lobby';
 import { enterLandscape, mountRotateGate } from './ui/landscape';
 import { hideCardPreview } from './ui/cardInspector';
@@ -33,6 +34,8 @@ function show(name: keyof typeof screens) {
   for (const [k, sel] of Object.entries(screens)) (document.querySelector(sel) as HTMLElement).hidden = k !== name;
   // A mesa livre usa as mesmas regras de tela da partida (tela cheia, girar o celular).
   document.body.dataset.screen = name === 'free' ? 'game' : name;
+  // Tela acesa enquanto há partida ou mesa livre aberta (S18).
+  screenWake.setActive(name === 'game' || name === 'free');
   // One Tap só na tela inicial e em Meus decks: nunca por cima da mesa.
   if (name === 'lobby' || name === 'decks') void mostrarOneTap(); else esconderOneTap();
 }

@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.103.0] - 2026-11-01
+
+### Novo
+
+- **Tela acesa durante a partida.** No celular e no tablet, a tela não apaga mais sozinha enquanto os outros jogadores pensam: a mesa pede ao aparelho para mantê-la acesa enquanto a partida (ou a mesa livre) está aberta e solta ao sair. Para desligar, use **Menu → Opções → Jogo → Manter a tela acesa**.
+- **Vibrar na sua vez.** O celular dá uma vibração curta quando o seu turno começa, quando você precisa bloquear e quando chega uma decisão sua no turno de outro jogador, como escolher um alvo. Assim dá para jogar com o som desligado sem perder a vez. Vale onde o aparelho deixa o navegador vibrar (no iPhone, não). Para desligar, use **Menu → Opções → Jogo → Vibrar na sua vez**.
+
 ## [0.102.0] - 2026-11-01
 
 ### Novo
