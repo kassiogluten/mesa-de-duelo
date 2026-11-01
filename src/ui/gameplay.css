@@ -360,7 +360,6 @@
   .exile-shelf-label { font-size: 10px; }
   .forge .portrait { width: 44px; height: 44px; }
   .forge .avatar-slot.me { left: 8px; }
-  .forge .piles.me { display: none; }
   .forge .piles.opp { top: 8px; right: 10px; }
   .forge .life { min-width: 29px; height: 29px; font-size: 17px; }
   .forge .pt { font-size: 12px; }

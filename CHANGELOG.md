@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.96.1] - 2026-10-31
+
+### Corrigido
+
+- **Cemitério e exílio à vista no celular.** Nas partidas de dois jogadores (Commander de dois incluído), o celular escondia o seu cemitério e o seu exílio, e não havia como abri-los. Agora eles aparecem menores, logo acima do seu retrato, com a quantidade de cartas; tocar abre a lista de sempre, e a pilha brilha quando há uma carta que dá para usar dali (flashback, tramadas e afins). O exílio só aparece quando tem cartas, e o topo do grimório à vista (Future Sight e afins) também volta a aparecer, para jogar dali. As pilhas do oponente ficaram maiores e mais fáceis de tocar, e não fogem mais para cima do nome dele quando há mágicas na pilha.
+
 ## [0.96.0] - 2026-10-31
 
 ### Mudou

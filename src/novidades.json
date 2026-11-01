@@ -1,4 +1,11 @@
 {
+  "0.96.1": {
+    "Cemitério e exílio à vista no celular": [
+      { "img": "0.96.1/pilhas-celular.webp", "legenda": "No celular deitado, o seu cemitério (5 cartas) e o seu exílio (2) logo acima do retrato, brilhando porque dá para usar uma carta de cada um, sem tapar a mão." },
+      { "img": "0.96.1/pilhas-oponente-celular.webp", "legenda": "As pilhas do oponente no canto de cima, maiores: grimório, cemitério e exílio, cada uma com a quantidade." },
+      { "img": "0.96.1/pilhas-commander-celular.webp", "legenda": "No Commander de dois jogadores, as pilhas ficam junto do retrato e o seu comandante logo acima delas." }
+    ]
+  },
   "0.96.0": {
     "Desfazer em toda partida": [
       { "img": "0.96.0/contra-o-computador.webp", "legenda": "Contra o computador, a tela inicial vai do formato e dos oponentes direto para **Jogar**: não há mais a escolha **Desfazer**." },

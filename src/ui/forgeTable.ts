@@ -74,6 +74,7 @@ import { isNameChoice, nameChoiceHTML, nameListHTML, nameMatches, nameStatus } f
 import { seatTurnChange, turnHighlight } from './turnHighlight';
 import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
 import './waitAlert.css';
+import './duelPiles.css';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
