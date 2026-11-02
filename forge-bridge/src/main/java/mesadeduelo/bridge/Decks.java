@@ -40,10 +40,22 @@ final class Decks {
         return 0;
     }
 
-    static Deck random(String format) {
-        var valid = LISTS.values().stream()
+    static Deck random(String format) { return random(format, 0); }
+
+    /**
+     * Um deck pronto do formato, sorteado. Com {@code bracket} (1 a 5), só entre os de bracket mais perto dele, para o
+     * computador que completa uma mesa de Commander jogar no nível dela; 0 sorteia entre todos.
+     */
+    static Deck random(String format, int bracket) {
+        var candidates = LISTS.values().stream()
             .filter(o -> { String of = o.has("format") ? o.get("format").getAsString() : "free"; return "free".equals(format) ? !"commander".equals(of) && !"oathbreaker".equals(of) : format.equals(of); })
-            .map(o -> DeckValidation.validateForAi(o, format)).filter(DeckValidation.Result::valid).toList();
+            .toList();
+        if (bracket > 0) {
+            int nearest = candidates.stream().filter(o -> o.has("bracket")).mapToInt(o -> Math.abs(o.get("bracket").getAsInt() - bracket)).min().orElse(-1);
+            if (nearest >= 0) candidates = candidates.stream().filter(o -> o.has("bracket") && Math.abs(o.get("bracket").getAsInt() - bracket) == nearest).toList();
+        }
+        var valid = candidates.stream().map(o -> DeckValidation.validateForAi(o, format)).filter(DeckValidation.Result::valid).toList();
+        if (valid.isEmpty() && bracket > 0) return random(format, 0);
         if (valid.isEmpty()) throw new IllegalArgumentException("Não há deck pronto válido para este formato.");
         return valid.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(valid.size())).deck();
     }

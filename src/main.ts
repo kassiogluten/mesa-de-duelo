@@ -177,6 +177,7 @@ const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onListRooms: async url => (await requireForge(url)).listRooms(),
   onCancelRoom: () => { leaveForge(); lobby.setStatus(''); },
   onSay: key => forge?.send({ type: 'room-say', key }),
+  onFillWithComputers: () => forge?.send({ type: 'fill-computers' }),
   onDecks: (action = 'library', format) => { builder.open({action, format}); show('decks'); },
   onEditDeck: deckId => { builder.open({action: 'edit', deckId}); show('decks'); },
 });

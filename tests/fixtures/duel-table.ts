@@ -395,6 +395,16 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     if (step === 'sideboard') state.sideboarding = { id: 1, ready: false, main: [{ name: 'Llanowar Elves', count: 4 }, { name: 'Forest', count: 16 }], sideboard: [{ name: 'Naturalize', count: 2 }] };
     view.render();
   },
+  /** O oponente conjurou o Prismari Charm escolhendo um modo (1, 2 ou 3): a pilha mostra qual foi. */
+  charmOnStack(mode: 1 | 2 | 3 = 2) {
+    const [me] = state.players;
+    const charm = { id: 345, controller: 23, tapped: false, token: false, name: 'Prismari Charm', manaCost: '{U}{R}', typeLine: 'Instant' };
+    const text = ['Surveil 2, then draw a card.', 'Prismari Charm deals 1 damage to each of one or two targets.', "Return target nonland permanent to its owner's hand."][mode - 1];
+    state.stack = [{ id: 346, kind: 'spell', controller: 23, source: charm, text: `Prismari Charm - ${text}`, modes: [{ index: mode, text }],
+      ...(mode === 2 ? { targets: { players: [me.id] } } : {}) }];
+    Object.assign(state.input, { priority: true, actionable: [], selectable: [] });
+    view.render();
+  },
   /** O oponente usou uma habilidade de lealdade do Jace Beleren: a pilha diz qual foi ("+2" ou o ultimate "−10"). */
   walkerOnStack(which: '+2' | '-1' | '-10' = '+2') {
     const [me, opp] = state.players;

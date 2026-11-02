@@ -1,4 +1,16 @@
 {
+  "0.119.0": {
+    "Assistir a partidas contra o computador": [
+      { "img": "0.119.0/lista.webp", "legenda": "Em Salas públicas, a partida de Ana contra o computador aparece em andamento, com quantos assistem e o botão Assistir." },
+      { "img": "0.119.0/menu.webp", "legenda": "No Menu de quem joga: quem está assistindo e o botão Tirar da lista de salas." }
+    ],
+    "Modo escolhido na pilha": [
+      { "img": "0.119.0/modo.webp", "legenda": "O oponente conjurou o Prismari Charm escolhendo o 2º modo: a faixa mostra o número e o texto dele." }
+    ],
+    "Completar a sala com computadores": [
+      { "img": "0.119.0/completar.webp", "legenda": "Com dois lugares livres numa mesa de Commander, quem criou a sala vê Completar com 2 computadores e começar." }
+    ]
+  },
   "0.118.0": {
     "Relatar direto do fim do jogo": [
       { "img": "0.118.0/resultado.webp", "legenda": "Na tela de vitória, Relatar um problema fica abaixo de Pedir revanche, Ver campo de batalha e Início." },

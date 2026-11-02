@@ -162,6 +162,11 @@
 .stack-loyalty > span { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .stack-loyalty .loyalty-chip.up { background: #1d4d2f; border-color: var(--heal); }
 .stack-loyalty .loyalty-chip.down { background: #5a1d14; border-color: #ff8f78; }
+/* O modo escolhido de uma mágica modal: a mesma faixa, uma linha por modo, com o número do modo na carta. */
+.stack-mode { flex-direction: column; gap: 4px; }
+.stack-loyalty > .stack-mode-row { display: flex; align-items: flex-start; gap: 7px; overflow: visible; }
+.stack-mode-row > span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mode-chip { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #281a05; font: 800 12px/1 var(--body); font-variant-numeric: tabular-nums; }
 .stack-open-hint { display: block; margin-top: 20px; text-align: center; color: var(--muted); font: 400 12px var(--body); }
 .stack-pile:focus-visible { outline: 2px solid var(--gold); outline-offset: 8px; }
 /* Only when live controls need the space below the pile. */

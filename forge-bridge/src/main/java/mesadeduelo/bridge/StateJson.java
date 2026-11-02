@@ -88,6 +88,8 @@ final class StateJson {
                 if (cast != null) s.add("cast", cast);
                 JsonObject loyalty = Loyalty.stackItem(game, si.getId());
                 if (loyalty != null) s.add("loyalty", loyalty);
+                JsonArray modes = StackModes.of(game, si.getId());
+                if (modes != null) s.add("modes", modes);
                 stack.add(s);
             }
         }

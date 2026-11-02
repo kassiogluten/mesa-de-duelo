@@ -124,3 +124,12 @@ test('the loyalty line is found in the card text by its cost', () => {
   assert.equal(loyaltyLineIn(jace, '+1'), '');
   assert.equal(loyaltyLineIn(undefined, '+2'), '');
 });
+
+test('the chosen mode is found in the card text by its number', async () => {
+  const { modeLineIn } = await load('../src/ui/stackPresentation.ts');
+  const charm = 'Escolha um —\n• Vidência 2, depois compre um card.\n• O Amuleto Prismari causa 1 ponto de dano a cada um de um ou dois alvos.\n• Devolva a permanente alvo que não seja terreno para a mão de seu dono.';
+  assert.equal(modeLineIn(charm, 1), 'Vidência 2, depois compre um card.');
+  assert.equal(modeLineIn(charm, 3), 'Devolva a permanente alvo que não seja terreno para a mão de seu dono.');
+  assert.equal(modeLineIn(charm, 4), '');
+  assert.equal(modeLineIn(undefined, 1), '');
+});

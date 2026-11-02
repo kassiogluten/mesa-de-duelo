@@ -76,8 +76,10 @@ final class Session {
     private final boolean room;
     /** Sala pública: aparece na lista da tela inicial ({type:"list-rooms"}); a privada só se acha pelo código. */
     private volatile boolean publicRoom;
-    final Seat[] seats;
-    private final List<Deck> aiDecks;
+    /** Os assentos humanos; numa sala completada por computadores, só os ocupados ({@link #fillWithComputers}). */
+    volatile Seat[] seats;
+    /** Decks dos computadores: os da partida contra a IA ou os que completaram a sala ({@link #fillWithComputers}). */
+    private volatile List<Deck> aiDecks;
     final MatchConfig config;
     private final AtomicLong stateVersion = new AtomicLong();
     private final VisibleEvents events = new VisibleEvents(this::markDirty, stateVersion::get);
@@ -109,13 +111,18 @@ final class Session {
     private volatile MatchLifecycle lifecycle = new MatchLifecycle();
     /** Diário desta partida (decks, retratos, ações), refeito a cada {@link #start()}; só sai num relato. */
     private volatile MatchJournal journal;
-    /** Só no modo de repetição: nomes da IA e o retrato a aplicar no começo do jogo (veja {@link Replay}). */
+    /** Nomes da IA: os da repetição (veja {@link Replay}) ou "Computador 1", "Computador 2"... numa sala completada. */
     private volatile List<String> aiNames;
     /** Bracket do deck de cada computador, na ordem dos decks (0 sem bracket); vazio fora do Commander. */
     private volatile List<Integer> aiBrackets = List.of();
     private volatile java.util.function.Consumer<forge.game.Game> startHook;
     /** Sala de teste do Laboratório: a mesa montada à mão, aplicada no começo de cada jogo (veja {@link Lab}). */
     private volatile Lab lab;
+    /**
+     * Partida contra a IA na lista de salas, para assistir: ligada ao começar pela tela inicial ({@link Rooms}), e o
+     * jogador pode tirá-la pelo Menu. A repetição de relatos e os testes ficam de fora.
+     */
+    volatile boolean watchable;
 
     /** Votação aberta para pular o turno de quem caiu, e os assentos com o turno já aprovado para pular. */
     private SkipVote skipVote;
@@ -193,6 +200,36 @@ final class Session {
     void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
     void aiBrackets(List<Integer> brackets) { aiBrackets = List.copyOf(brackets); }
 
+    /**
+     * Sala ainda não começada: os lugares vazios viram computadores, com um deck pronto sorteado do formato cada (no
+     * Commander, de bracket perto do maior da mesa), e os assentos ocupados ficam juntos no começo. Quem chamar começa
+     * a partida em seguida. Devolve quantos computadores entraram.
+     */
+    synchronized int fillWithComputers() {
+        if (!room || lab != null || started()) throw new IllegalArgumentException("Só dá para completar com computadores antes de a partida começar.");
+        List<Seat> taken = new ArrayList<>();
+        for (Seat s : seats) if (s.deck != null) taken.add(s);
+        int missing = config.playerCount() - taken.size();
+        if (missing <= 0) return 0;
+        int bracket = 0;
+        if (config.commander()) for (Seat s : taken) bracket = Math.max(bracket, s.bracket);
+        List<Deck> decks = new ArrayList<>();
+        List<Integer> brackets = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < missing; i++) {
+            Deck d = Decks.random(config.format(), bracket);
+            decks.add(d); brackets.add(Decks.bracket(d));
+            names.add(missing == 1 ? "Computador" : "Computador " + (i + 1));
+        }
+        Seat[] compact = taken.toArray(new Seat[0]);
+        for (int i = 0; i < compact.length; i++) compact[i].index = i;
+        seats = compact;
+        aiDecks = List.copyOf(decks);
+        aiNames = List.copyOf(names);
+        if (config.commander()) aiBrackets(brackets);
+        return missing;
+    }
+
     /** O bracket de cada jogador no estado, pela ordem em que entraram no jogo: os assentos e depois os computadores. */
     private void addBrackets(JsonObject state) {
         if (!config.commander() || !state.has("players")) return;
@@ -212,7 +249,9 @@ final class Session {
      * Entra na lista de salas públicas, com alguém conectado: com lugar, para entrar, ou já com a partida
      * começada, para assistir.
      */
-    boolean listed() { return isPublic() && anyoneConnected() && (started() || !full()); }
+    boolean listed() { return (isPublic() || soloWatchable()) && anyoneConnected() && (started() || !full()); }
+    /** Partida contra a IA aberta para assistir (veja {@link #watchable}). */
+    boolean soloWatchable() { return !room && watchable && lab == null; }
     boolean started() { return match != null; }
     boolean full() { for (Seat s : seats) if (s.deck == null) return false; return true; }
 
@@ -247,6 +286,8 @@ final class Session {
     JsonObject adminJson() {
         JsonObject o = new JsonObject();
         o.addProperty("code", code); o.addProperty("room", room);
+        // Dá para assistir: sala já começada (pública ou privada, pelo código) ou partida contra a IA na lista de salas.
+        o.addProperty("watchable", started() && (room || soloWatchable()));
         o.addProperty("format", config.format()); o.addProperty("matchLength", config.matchLength()); o.addProperty("playerCount", config.playerCount());
         o.addProperty("createdAt", java.time.Instant.ofEpochMilli(createdAt).toString());
         if (playingSince > 0) o.addProperty("startedAt", java.time.Instant.ofEpochMilli(playingSince).toString());
@@ -1612,7 +1653,18 @@ final class Session {
         }
         state.add("room", roomJson(-1, null));
         state.add("decks", new JsonArray());
+        if (!room) renameHuman(state);
         return state;
+    }
+
+    /** Contra a IA o humano se chama "Você" no Forge; quem assiste o vê pelo nome que ele usa, ou "Jogador". */
+    private void renameHuman(JsonObject state) {
+        String forgeName = seats[0].name, shown = seats[0].nick != null ? seats[0].nick : "Jogador";
+        if (forgeName == null || !state.has("players")) return;
+        for (JsonElement e : state.getAsJsonArray("players")) {
+            JsonObject p = e.getAsJsonObject();
+            if (p.has("name") && forgeName.equals(p.get("name").getAsString())) p.addProperty("name", shown);
+        }
     }
 
     private static java.lang.reflect.Field selectTargetsSa, payManaSa, payManaEffect, mulliganStartingPlayer, londonReturnCount;
@@ -1877,6 +1929,7 @@ final class Session {
         if ("sideboarding".equals(matchPhase) && seat.registered != null) state.add("sideboarding", sideboardingJson(seat));
         state.add("session", sessionJson(seat));
         if (isRoom()) state.add("room", roomJson(seat));
+        else state.add("audience", audienceJson());
         JsonObject skip = skipJson(seat);
         if (skip != null) state.add("skip", skip);
         JsonObject undoState = undoJson(seat);
@@ -1908,6 +1961,7 @@ final class Session {
         r.addProperty("started", started());
         r.addProperty("public", isPublic());
         if (lab != null) r.addProperty("lab", true);
+        if (!room) r.addProperty("computer", true);
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json());
         MatchConfig.versions(r);
@@ -1938,10 +1992,21 @@ final class Session {
         return r;
     }
 
+    /** Contra a IA: se a partida está na lista de salas e quem assiste. {listed, spectators:[nome]} */
+    JsonObject audienceJson() {
+        JsonObject o = new JsonObject();
+        o.addProperty("listed", soloWatchable());
+        JsonArray spectators = new JsonArray();
+        for (Watcher w : watchers) spectators.add(w.name);
+        o.add("spectators", spectators);
+        return o;
+    }
+
     JsonObject publicRoomJson() {
         JsonObject r = new JsonObject();
         r.addProperty("code", code); r.addProperty("available", !full() && !started()); r.addProperty("started", started());
         if (lab != null) r.addProperty("lab", true);
+        if (!room) r.addProperty("computer", true);
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json()); MatchConfig.versions(r);
         JsonArray players = new JsonArray();
@@ -1958,13 +2023,15 @@ final class Session {
     JsonObject listingJson() {
         JsonObject r = new JsonObject();
         r.addProperty("code", code);
-        r.addProperty("host", seats[0].deck != null ? seats[0].name : "Jogador");
+        // Contra a IA, o nome que o jogador usa (na mesa ele é "Você"); a mesa mostra "Ana contra o computador".
+        r.addProperty("host", room ? seats[0].deck != null ? seats[0].name : "Jogador" : seats[0].nick != null ? seats[0].nick : "Jogador");
+        if (!room) r.addProperty("computer", true);
         r.add("config", config.json());
         r.addProperty("capacity", config.playerCount());
         int players = 0;
         JsonArray brackets = new JsonArray();
         for (Seat seat : seats) if (seat.deck != null) { players++; if (seat.bracket > 0) brackets.add(seat.bracket); }
-        r.addProperty("players", players);
+        r.addProperty("players", room ? players : config.playerCount());
         // No Commander, o bracket de cada lugar ocupado, para quem procura uma mesa de força parecida.
         if (!brackets.isEmpty()) r.add("brackets", brackets);
         r.addProperty("started", started());
@@ -2021,7 +2088,7 @@ final class Session {
     // ---------- Assento de um jogador humano ----------
 
     final class Seat {
-        final int index;
+        volatile int index;
         /** Segredo para voltar ao assento depois de cair a conexão ({type:"rejoin", code, token}). */
         volatile String token = UUID.randomUUID().toString();
         volatile Channel channel;

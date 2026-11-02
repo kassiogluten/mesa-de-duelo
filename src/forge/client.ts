@@ -48,8 +48,8 @@ export interface LabPermanent {
   /** Presa a outra permanente: jogador (0 ou 1) e posição no campo dele. */
   attachedTo?: { player: number; index: number };
 }
-export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean; spectators?: number; brackets?: number[] }
-export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; lab?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
+export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean; spectators?: number; brackets?: number[]; /** Partida de um jogador contra o computador, aberta para assistir. */ computer?: boolean }
+export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; lab?: boolean; computer?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed'
@@ -357,6 +357,8 @@ export interface FRoom {
   public?: boolean;
   /** Sala de teste do Laboratório: a mesa começa como foi montada, com as cartas do cenário. */
   lab?: boolean;
+  /** Assistindo a uma partida contra o computador: não há sala de verdade. */
+  computer?: boolean;
   capacity?: number;
   config: MatchConfig;
   rulesVersion?: string;
@@ -438,7 +440,7 @@ export interface FState {
   playableExile?: number[];
   /** Cartas suspensas e cartas cujo gatilho de suspender ainda está na pilha. */
   suspendedExile?: number[];
-  stack: { id: number; text: string; /** Ausente em pontes antigas. */ kind?: 'spell' | 'ability' | 'trigger'; /** Só quando pago além do custo normal: forma de conjurar (flashback, aventura...), vezes reforçada, outros opcionais e o X. */ cast?: { mode?: string; kicker?: number; extras?: string[]; x?: number }; /** Habilidade de lealdade de um planeswalker: o custo ("+2", "0", "-3"), o texto impresso dela, sem o custo, e se é o ultimate. */ loyalty?: { cost: string; text?: string; ultimate?: boolean }; source?: FCard; controller?: number; targets?: FTargets }[];
+  stack: { id: number; text: string; /** Ausente em pontes antigas. */ kind?: 'spell' | 'ability' | 'trigger'; /** Só quando pago além do custo normal: forma de conjurar (flashback, aventura...), vezes reforçada, outros opcionais e o X. */ cast?: { mode?: string; kicker?: number; extras?: string[]; x?: number }; /** Habilidade de lealdade de um planeswalker: o custo ("+2", "0", "-3"), o texto impresso dela, sem o custo, e se é o ultimate. */ loyalty?: { cost: string; text?: string; ultimate?: boolean }; /** Modos escolhidos de uma mágica modal ("Escolha um —"): o número do modo na carta (1 é o primeiro) e o texto dele. */ modes?: { index: number; text: string }[]; source?: FCard; controller?: number; targets?: FTargets }[];
   combat: { attacker: number; defender?: number; defenderKind?: 'player' | 'card'; blockers: number[] }[];
   /** Só na declaração de bloqueadores: como cada jogador atacado sai do combate com os bloqueios marcados até agora. Ausente em pontes antigas. */
   forecast?: FForecast[];
@@ -482,6 +484,8 @@ export interface FState {
    */
   waiting?: { player: number; kind: 'priority' | 'choice' | 'attack' | 'block'; ms: number }[];
   room?: FRoom;
+  /** Contra o computador: se a partida está na lista de salas (para assistir) e quem assiste. Ausente em pontes antigas. */
+  audience?: { listed: boolean; spectators: string[] };
   /** Em rede: votação para pular o turno de quem caiu e os jogadores com o turno já aprovado para pular. */
   skip?: FSkip;
   undo?: FUndo;
@@ -523,7 +527,7 @@ export type ClientMessage =
   | { type: 'lab-host'; name: string; scenario: LabScenario }
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
-  | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number }
+  | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number } | { type: 'watchable'; on: boolean } | { type: 'fill-computers' }
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
   | { type: 'list-rooms'; requestId: string }

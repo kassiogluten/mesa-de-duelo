@@ -114,6 +114,8 @@ body { min-height: 100%; height: auto; }
 .adm-dot.off { background: var(--red); }
 .adm-dot.ai { background: #59b5ff; }
 .adm-id { font-size: 12px; overflow-wrap: anywhere; }
+.adm-watch { color: var(--gold-light); font-weight: 600; }
+.adm-watch:hover { color: var(--gold); }
 
 /* Partidas concluídas */
 .adm-history { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line); }

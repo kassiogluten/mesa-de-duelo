@@ -102,7 +102,7 @@ function syncTab() {
 // ---------------------------------------------------------------- partidas
 
 interface LiveMatch {
-  code: string; room: boolean; format: string; matchLength: string; playerCount: number; createdAt: string; startedAt?: string; matchId: string;
+  code: string; room: boolean; watchable?: boolean; format: string; matchLength: string; playerCount: number; createdAt: string; startedAt?: string; matchId: string;
   state: string; gameNumber: number; turn?: number; phase?: string; activePlayer?: string;
   players: { name: string; ai: boolean; seat?: number; connected?: boolean; conceded?: boolean; deck?: string; life?: number; lost?: boolean }[];
 }
@@ -133,7 +133,7 @@ async function loadMatches() {
         <ul class="adm-players">${m.players.map(p => `<li class="${p.lost || p.conceded ? 'out' : ''}"><span class="adm-dot ${p.ai ? 'ai' : p.connected ? 'on' : 'off'}" title="${p.ai ? 'Computador' : p.connected ? 'Conectado' : 'Desconectado'}"></span>
           <strong>${esc(p.name)}</strong>${p.ai ? ' <span class="adm-muted">(IA)</span>' : ''}${p.life !== undefined ? ` · ${p.life} de vida` : ''}${p.lost ? ' · perdeu' : p.conceded ? ' · desistiu' : ''}
           ${p.deck ? `<span class="adm-muted"> · ${esc(p.deck)}</span>` : ''}</li>`).join('')}</ul>
-        <p class="adm-muted adm-id">partida ${esc(m.matchId)}${m.room ? '' : ` · código ${esc(m.code)}`}</p></li>`).join('')}</ul>` : '<p class="adm-empty">Nenhuma partida na ponte agora.</p>'}`;
+        <p class="adm-muted adm-id">partida ${esc(m.matchId)}${m.room ? '' : ` · código ${esc(m.code)}`}${m.watchable ? ` · <a class="adm-watch" href="./?sala=${encodeURIComponent(m.code)}" target="_blank" rel="noopener">Assistir</a>` : ''}</p></li>`).join('')}</ul>` : '<p class="adm-empty">Nenhuma partida na ponte agora.</p>'}`;
   } catch { section.innerHTML = '<p class="adm-error">Não consegui falar com a ponte. Ela está no ar?</p>'; }
 }
 addEventListener('hashchange', () => { if (root.querySelector('.adm-top')) syncTab(); });

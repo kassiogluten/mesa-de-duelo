@@ -111,6 +111,12 @@ export function loyaltyLineIn(cardText: string | undefined, cost: string): strin
   return '';
 }
 
+/** O texto do modo de número `index` (1 é o primeiro) no texto da carta, pelas linhas que começam com "•". */
+export function modeLineIn(cardText: string | undefined, index: number): string {
+  const bullets = (cardText ?? '').split('\n').map(line => line.match(/^\s*[•●]\s*(.+)$/)?.[1]?.trim()).filter((line): line is string => !!line);
+  return bullets[index - 1] ?? '';
+}
+
 /** "Habilidade de lealdade +2." para a galeria (o efeito já vem logo abaixo); vazio fora das habilidades de lealdade. */
 export function stackLoyaltyLine(item: StackItem): string {
   const cost = stackLoyaltyCost(item);

@@ -17,6 +17,8 @@ export interface RoomLobby {
 export interface RoomLobbyOptions {
   onSay(key: RoomSaying): void;
   onLeave(): void;
+  /** O anfitrião completa os lugares vazios com computadores e a partida começa. */
+  onFillWithComputers(): void;
 }
 
 export const SAYINGS: [RoomSaying, string][] = [['hello', 'Oi, pessoal!'], ['back', 'Já volto'], ['invite', 'Vou chamar mais gente'], ['glhf', 'Boa partida!']];
@@ -65,7 +67,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
     <ol class="room-seat-grid" id="roomSeatGrid" aria-label="Lugares da mesa"></ol>
     <div class="room-sayings" role="group" aria-labelledby="roomSayingsLabel"><span id="roomSayingsLabel">Mandar para a sala</span>${SAYINGS.map(([key, text]) => `<button type="button" class="ghost-btn" data-say="${key}">${esc(text)}</button>`).join('')}</div>
     <p class="sr-only" id="roomSaid" aria-live="polite"></p>
-    <footer class="room-lobby-foot"><p class="lobby-status" id="roomStatus" role="status" aria-live="polite"></p><button type="button" class="arena-btn secondary" data-room="leave">Sair da sala</button></footer>`;
+    <footer class="room-lobby-foot"><p class="lobby-status" id="roomStatus" role="status" aria-live="polite"></p><button type="button" class="arena-btn secondary" data-room="leave">Sair da sala</button><button type="button" class="arena-btn primary" data-room="fill" hidden></button></footer>`;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => el.querySelector<T>(selector)!;
   $('[data-room=share]').hidden = typeof navigator.share !== 'function';
 
@@ -96,6 +98,11 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
     $<HTMLAnchorElement>('[data-room=open-tab]').href = roomLink(next.code);
     $('#roomLobbyCode').textContent = next.code;
     $('#roomProgress').textContent = full ? 'Mesa completa. A partida vai começar.' : `${next.players.length} de ${capacity} jogadores. A partida começa sozinha quando a mesa encher.`;
+    // Só o anfitrião, e não na sala de teste: os lugares vazios viram computadores com decks prontos do formato.
+    const free = capacity - next.players.length, fill = $<HTMLButtonElement>('[data-room=fill]');
+    fill.hidden = full || next.seat !== 0 || !!next.lab;
+    fill.disabled = false;
+    fill.textContent = free === 1 ? 'Completar com um computador e começar' : `Completar com ${free} computadores e começar`;
     $<HTMLInputElement>('#roomLinkField').value = roomLink(next.code);
     $('#roomShareHelp').textContent = next.lab
       ? `Para jogar pelos dois lados, abra o link numa outra aba: ela entra como Jogador 2. Ou mande o link (ou o código ${next.code}) para outra pessoa. A mesa começa como você montou assim que o Jogador 2 entrar.`
@@ -125,6 +132,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
     // Quem fecha a janela de compartilhar sem escolher não precisa de aviso.
     if (action === 'share' && room) void navigator.share({title: 'Mesa de Duelo', text: `Vem jogar na sala ${room.code}`, url: roomLink(room.code)}).catch(() => {});
     if (action === 'leave') opts.onLeave();
+    if (action === 'fill') { ($('[data-room=fill]') as HTMLButtonElement).disabled = true; setStatus('Completando a mesa com computadores…', false); opts.onFillWithComputers(); }
     const say = target.closest<HTMLButtonElement>('[data-say]');
     if (say && !say.disabled) {
       opts.onSay(say.dataset.say as RoomSaying);

@@ -45,6 +45,8 @@ export interface LobbyOptions {
   onListRooms(url: string): Promise<PublicRoom[]>;
   onCancelRoom(): void;
   onSay(key: RoomSaying): void;
+  /** Na sala de espera, o anfitrião completa os lugares vazios com computadores. */
+  onFillWithComputers(): void;
   onDecks(action?: DeckAction, format?: DeckFormat): void;
   onEditDeck(deckId: string): void;
 }
@@ -59,6 +61,7 @@ const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 
 const ROOMS_EVERY_MS = 10_000;
 /** Os sorteados evitam O/0 e I/1, mas quem escolhe o código pode usar qualquer letra ou número. */
 const ROOM_CODE = /^[A-Z0-9]{4}$/;
+const WATCH_CODE = /^[A-Z0-9]{8}$/;
 // Último lugar da prateleira "Meus decks": um card vazio para começar um deck novo.
 const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-tile new-deck-tile" data-lobby="create"><span class="new-deck-plus" aria-hidden="true">+</span><span>Criar deck</span></button></div>';
 
@@ -136,7 +139,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     </div>
     <section class="room-lobby" id="roomLobby" aria-label="Sala de espera" hidden></section></main>${siteFooterHTML()}</div>`;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
-  const roomLobby = mountRoomLobby($('#roomLobby'), {onSay: key => opts.onSay(key), onLeave: () => { opts.onCancelRoom(); waitingRoom = null; refresh(); }});
+  const roomLobby = mountRoomLobby($('#roomLobby'), {onSay: key => opts.onSay(key), onFillWithComputers: () => opts.onFillWithComputers(), onLeave: () => { opts.onCancelRoom(); waitingRoom = null; refresh(); }});
   $('#netName').setAttribute('value', load('mesa:name') ?? '');
   // O nome veio da conta (outro aparelho, ou o primeiro nome do Google): atualiza o campo, se ninguém estiver digitando.
   addEventListener('mesa:prefs-sincronizadas', () => {
@@ -535,7 +538,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       return true;
     }).catch(error => {
       // Pelo link, a sala que ainda não existe pode ser criada ali: a aba Criar sala já vem com o código.
-      if (fromLink && error instanceof RequestError && error.reason === 'room-not-found') { offerLinkRoom(code); return false; }
+      if (fromLink && ROOM_CODE.test(code) && error instanceof RequestError && error.reason === 'room-not-found') { offerLinkRoom(code); return false; }
       setStatus(error instanceof Error ? error.message : 'Não foi possível encontrar a sala.', true); return false;
     }).then(found => {
       setBusy(false);
@@ -604,7 +607,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   // Os comandantes vêm primeiro: são as capas dos decks, e a lista inteira (milhares de cartas) demora a chegar.
   loadCards();
   return { refresh, setStatus, setBusy, roomSay: (seat, key) => roomLobby.say(seat, key), openRoomLink(code) {
-    if (!ROOM_CODE.test(code)) { setStatus('O link da sala está incompleto. Peça o código para quem convidou você.', true); return; }
+    // 8 caracteres: uma partida contra o computador, que só dá para assistir (o link do admin, por exemplo).
+    if (!ROOM_CODE.test(code) && !WATCH_CODE.test(code)) { setStatus('O link da sala está incompleto. Peça o código para quem convidou você.', true); return; }
     if (busy || waitingRoom) return;
     mode = 'net'; netTab = 'join'; room = null;
     $<HTMLInputElement>('#netCode').value = code;

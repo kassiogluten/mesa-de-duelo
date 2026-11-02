@@ -33,7 +33,7 @@ import { counterName, isProliferating, proliferateBoardClass, proliferateClear, 
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
 import { passIsPrimary, passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
-import { STACK_KINDS, loyaltyLineIn, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackPresentation, stackTag } from './stackPresentation';
+import { STACK_KINDS, loyaltyLineIn, modeLineIn, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackPresentation, stackTag } from './stackPresentation';
 import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import { UNDO_ICON, undoBarHTML, undoButtonState } from './undo';
@@ -193,6 +193,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">Opções</button>
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
+      <button class="btn" data-ui="watchable" id="fMenuWatchable" hidden></button>
       <button class="btn" data-ui="lab-close" id="fMenuLab" hidden>Fechar a sala e voltar ao Laboratório</button>
       <button class="btn" data-ui="exit" id="fMenuExit">Desistir e voltar ao início</button>
       <button type="button" class="game-menu-version" data-ui="version" aria-pressed="false" title="Toque para ver as versões das regras e do motor">Mesa de Duelo ${esc(VERSION)}</button>
@@ -1952,6 +1953,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const text = (si.loyalty && loyaltyLineIn(ptOf(si.source?.name)?.text, si.loyalty.cost)) || si.loyalty?.text;
     return `<span class="stack-loyalty ${tone}${si.loyalty?.ultimate ? ' ultimate' : ''}"><b class="loyalty-chip ${tone}">${esc(cost)}</b>${text ? `<span>${richText(text)}</span>` : ''}</span>`;
   }
+  /** Faixa no pé da carta do topo: o modo escolhido de uma mágica modal (um por linha, na ordem em que resolvem). */
+  function stackModeStrip(si: FState['stack'][number]) {
+    if (!si.modes?.length) return '';
+    // O texto em português da carta, quando a mesa o tem; senão, o que o servidor manda.
+    const pt = ptOf(si.source?.name)?.text;
+    const rows = si.modes.map(m => `<span class="stack-mode-row"><b class="mode-chip" title="Modo ${m.index} da carta" aria-label="Modo ${m.index}:">${m.index}</b><span>${richText(modeLineIn(pt, m.index) || m.text)}</span></span>`).join('');
+    return `<span class="stack-loyalty stack-mode" title="${si.modes.length > 1 ? 'Modos escolhidos' : 'Modo escolhido'}">${rows}</span>`;
+  }
   function stackFace(si: FState['stack'][number]) {
     // O valor que a carta conta (item 56), atualizado enquanto ela espera na pilha.
     const counted = si.source ? countSealsHTML(si.source, playerName, client?.state?.you) : '';
@@ -1963,7 +1972,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!top) return '';
     return `<div class="stack-heading"><h2>Pilha</h2><span class="stack-count">${count}</span>${`<button class="stack-size-toggle" data-ui="stack-size" aria-label="${stackMinimized ? 'Expandir a pilha' : 'Recolher a pilha para ver o campo'}" aria-expanded="${!stackMinimized}">${stackMinimized ? '+' : '−'}</button>`}</div>
       <button class="stack-pile" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${stackGalleryOpen}" aria-controls="fStackGallery"`} aria-label="${stackBadgeText(top) ? `${esc(stackBadgeText(top))}. ` : ''}${replaying ? `Inspecionar ${top.source ? esc(label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(label(top.source)) : 'O efeito do topo'} resolve primeiro.`}">
-        ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(si)}${i ? '' : stackKindBadge(si) + stackLoyaltyStrip(si)}</div>`).join('')}
+        ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(si)}${i ? '' : stackKindBadge(si) + stackLoyaltyStrip(si) + stackModeStrip(si)}</div>`).join('')}
         <span class="stack-top-label">${replaying ? 'Jogada recente' : 'Resolve primeiro'}</span>
       </button><span class="stack-open-hint">${replaying ? 'Clique para inspecionar' : 'Clique para ver a pilha'}</span>`;
   }
@@ -2730,9 +2739,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     const formatName = matchFormatName(s);
     $('#fFormatTag').textContent = formatName; $('#fFormatTag').hidden = !formatName;
-    $('#fRoomTag').textContent = s.room ? `Sala ${s.room.code}` : '';
-    $('#fRoomTag').hidden = !s.room;
-    const audience = s.room?.spectators ?? [];
+    $('#fRoomTag').textContent = s.room && !s.room.computer ? `Sala ${s.room.code}` : '';
+    $('#fRoomTag').hidden = !s.room || !!s.room.computer;
+    const audience = s.room?.spectators ?? s.audience?.spectators ?? [];
+    // Contra o computador a partida entra na lista de salas para assistir; o jogador pode tirá-la (e quem assiste sai).
+    const watchable = $('#fMenuWatchable');
+    watchable.hidden = !s.audience || !!s.watching;
+    watchable.textContent = s.audience?.listed ? 'Tirar da lista de salas' : 'Deixar assistirem (lista de salas)';
     $('#fAudience').textContent = audience.length ? `Assistindo: ${audience.join(', ')}` : '';
     $('#fAudience').hidden = !audience.length;
     $('#fMenuExit').textContent = s.watching ? 'Parar de assistir' : 'Desistir e voltar ao início';
@@ -3199,6 +3212,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'log') { setErrors(false); setLog($('#fLogDrawer').hidden, true); return; }
     if (ui === 'errors') { setErrors($('#fErrorsDrawer').hidden, true); return; }
     if (ui === 'feedback') { setMenu(false); opts.onFeedback?.({ kind: 'sugestao' }); return; }
+    if (ui === 'watchable') { setMenu(false); const listed = !!client?.state?.audience?.listed; client?.send({ type: 'watchable', on: !listed }); return; }
     if (ui === 'result-report') { opts.onFeedback?.({ kind: 'erro' }); return; }
     if (ui === 'errors-report') { opts.onFeedback?.({ kind: 'erro', attach: true, diagnostics: errorReport() }); return; }
     if (ui === 'errors-download') {

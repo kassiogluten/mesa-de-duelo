@@ -46,9 +46,10 @@ export function publicRoomsHTML(state: PublicRoomsState, disabled = false): stri
     return `<li class="public-room"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small>${esc(details)}</small></span><button type="button" class="arena-btn secondary" data-join-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Entrar</button></li>`;
   });
   const playing = live.map(room => {
-    const details = [formatLabel(room), bracketsLabel(room), `${room.players} jogadores`, watchersLabel(room)].filter(Boolean).join(' · ');
-    const label = `Assistir à partida da sala de ${room.host}: ${formatLabel(room)}, em andamento`;
-    return `<li class="public-room live"><span class="public-room-text"><strong>Sala de ${esc(room.host)}</strong><small><span class="public-room-live">Em andamento</span>${esc(details)}</small></span><button type="button" class="arena-btn secondary" data-watch-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Assistir</button></li>`;
+    const details = [formatLabel(room), bracketsLabel(room), room.computer ? '' : `${room.players} jogadores`, watchersLabel(room)].filter(Boolean).join(' · ');
+    const title = room.computer ? `${room.host} contra o computador` : `Sala de ${room.host}`;
+    const label = room.computer ? `Assistir à partida de ${room.host} contra o computador: ${formatLabel(room)}, em andamento` : `Assistir à partida da sala de ${room.host}: ${formatLabel(room)}, em andamento`;
+    return `<li class="public-room live"><span class="public-room-text"><strong>${esc(title)}</strong><small><span class="public-room-live">Em andamento</span>${esc(details)}</small></span><button type="button" class="arena-btn secondary" data-watch-room="${esc(room.code)}" aria-label="${esc(label)}"${disabled ? ' disabled' : ''}>Assistir</button></li>`;
   });
   return `<ul class="public-room-list">${[...open, ...playing].join('')}</ul>`;
 }

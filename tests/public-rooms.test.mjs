@@ -68,3 +68,10 @@ test('Commander rooms show the brackets of the seated players', () => {
   assert.match(publicRoomsHTML([room({ config: commander, started: true, players: 4, brackets: [3, 3] })]), /Commander · Bracket 3 · 4 jogadores/);
   assert.doesNotMatch(publicRoomsHTML([room()]), /Bracket/);
 });
+
+test('a match against the computer is listed only to watch, by the player name', () => {
+  const html = publicRoomsHTML([room({ code: 'ABCDEFGH', host: 'Ana', computer: true, started: true, players: 2, spectators: 1 })]);
+  assert.match(html, /Ana contra o computador<\/strong><small><span class="public-room-live">Em andamento<\/span>Pauper · 1 assistindo<\/small>/);
+  assert.match(html, /data-watch-room="ABCDEFGH" aria-label="Assistir à partida de Ana contra o computador: Pauper, em andamento"/);
+  assert.doesNotMatch(html, /data-join-room/);
+});

@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.119.0] - 2026-11-02
+
+### Novo
+
+- **Assistir a partidas contra o computador.** As partidas contra o computador agora aparecem em **Salas públicas**, como "Ana contra o computador", com o botão **Assistir**: quem assiste vê a mesa sem a mão de ninguém. Quem joga é avisado quando alguém começa a assistir, vê quem está assistindo no **Menu** e pode usar **Tirar da lista de salas**: a partida some da lista e quem assistia volta ao início. Pelo mesmo Menu, ela volta para a lista quando quiser.
+- **Completar a sala com computadores.** Na sala de espera, quem criou a sala (pública ou privada) pode tocar em **Completar com computadores e começar**: os lugares vazios viram computadores, cada um com um deck pronto sorteado do formato (no Commander, de bracket perto do da mesa), e a partida começa na hora.
+- **Modo escolhido na pilha.** Numa mágica de escolha, como o Prismari Charm, uma faixa no pé da carta na pilha mostra o modo escolhido, com o número dele na carta (o 1º, o 2º...) e o texto, para todos na mesa saberem qual foi. Com mais de um modo, aparece um por linha.
+
 ## [0.118.0] - 2026-11-02
 
 ### Novo

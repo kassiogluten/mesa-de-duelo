@@ -278,6 +278,8 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg), bracket(msg), owner(msg));
                 case "watch" -> watch(ch, code(msg), name(msg));
                 case "watch-player" -> watchPlayer(ch, msg);
+                case "watchable" -> watchable(ch, msg.has("on") && msg.get("on").getAsBoolean());
+                case "fill-computers" -> fillWithComputers(ch);
                 case "room-say" -> say(ch, MatchConfig.string(msg, "key"));
                 case "rejoin" -> rejoin(ch, code(msg), msg.has("token") ? MatchConfig.string(msg, "token") : "");
                 case "rematch" -> rematch(ch);
@@ -350,7 +352,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             throw new IllegalArgumentException("Muitas tentativas com códigos que não existem. Espere alguns minutos e tente de novo.");
         }
         Session s = byCode.get(code);
-        if (s == null || !s.isRoom()) {
+        if (s == null || !(s.isRoom() || s.soloWatchable())) {
             codeMisses.record(key, now);
             throw new RoomNotFound(code);
         }
@@ -453,6 +455,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
         s.seats[0].owner(owner);
         s.seats[0].nick = nick;
+        s.watchable = true;
         s.seats[0].bracket = config.commander() ? brackets.get(0) : 0;
         if (config.commander()) s.aiBrackets(brackets.subList(1, brackets.size()));
         s.history(history);
@@ -522,7 +525,10 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         leave(ch);
         s.watchers.add(new Session.Watcher(ch, name, s.eventCursor()));
         byChannel.put(ch, s);
-        System.out.printf("Sala %s: %s está assistindo%n", code, name);
+        System.out.printf("%s: %s está assistindo%n", label(s), name);
+        // Contra a IA o jogador não escolheu abrir a partida: avisa, e o Menu tem como tirá-la da lista.
+        if (!s.isRoom()) for (Session.Seat seat : s.seats) if (seat.channel != null)
+            seat.send(Session.toast("toast", name + " está assistindo à sua partida. Para fechá-la, use Menu › Tirar da lista de salas."));
         s.markDirty();
     }
 
@@ -533,6 +539,40 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (w == null || player == null || !player.isJsonPrimitive()) return;
         w.player = player.getAsInt();
         s.markDirty();
+    }
+
+    /**
+     * Contra a IA, o jogador põe a partida na lista de salas ou a tira dela. Tirando, quem assistia volta ao início:
+     * a partida deixa de estar aberta, não só de aparecer.
+     */
+    private synchronized void watchable(Channel ch, boolean on) {
+        Session s = byChannel.get(ch);
+        if (s == null || s.isRoom() || s.seatOf(ch) == null || s.watchable == on) return;
+        s.watchable = on;
+        if (!on) {
+            for (Session.Watcher w : s.watchers) {
+                byChannel.remove(w.channel, s);
+                BridgeServer.send(w.channel, Session.toast("gone", "Quem jogava fechou a partida para quem assiste."));
+            }
+            s.watchers.clear();
+        }
+        Session.Seat seat = s.seatOf(ch);
+        seat.send(Session.toast("toast", on ? "A partida voltou para a lista de salas: outros jogadores podem assistir." : "A partida saiu da lista de salas: ninguém mais pode assistir."));
+        System.out.printf("%s %s da lista de salas%n", label(s), on ? "voltou para a" : "saiu");
+        s.markDirty();
+    }
+
+    /** O anfitrião completa os lugares vazios da sala com computadores e a partida começa. */
+    private synchronized void fillWithComputers(Channel ch) {
+        Session s = byChannel.get(ch);
+        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        if (seat == null || !s.isRoom()) return;
+        if (seat.index != 0) throw new IllegalArgumentException("Só quem criou a sala pode completar com computadores.");
+        int added = s.fillWithComputers();
+        if (added == 0) return;
+        System.out.printf("Sala %s: completada com %d computador(es)%n", s.code, added);
+        for (Session.Seat each : s.seats) s.sendRoom(each);
+        s.start();
     }
 
     /** Tira o espectador da sala; false se a conexão não era de um espectador. */
@@ -657,7 +697,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         // Quem assiste volta ao início: não há assento para onde voltar.
         for (Session.Watcher w : s.watchers) {
             byChannel.remove(w.channel, s);
-            BridgeServer.send(w.channel, Session.toast("gone", "A partida da sala " + s.code + " terminou."));
+            BridgeServer.send(w.channel, Session.toast("gone", s.isRoom() ? "A partida da sala " + s.code + " terminou." : "A partida terminou."));
         }
         s.watchers.clear();
         if (s.isRoom()) System.out.printf("Sala %s fechada%n", s.code);

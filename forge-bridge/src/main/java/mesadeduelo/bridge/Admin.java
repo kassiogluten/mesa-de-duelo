@@ -56,7 +56,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  */
 final class Admin {
     static final String PREFIX = "/api/admin/";
-    static final long SESSION_MILLIS = 12 * 3_600_000L;
+    /** Quanto vale um login: 24 horas (só em memória, então reiniciar a ponte também pede a senha). */
+    static final long SESSION_MILLIS = 24 * 3_600_000L;
     static final int MAX_FAILURES = 5;
     static final long FAILURE_WINDOW = 15 * 60_000L;
 
