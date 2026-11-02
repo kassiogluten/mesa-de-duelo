@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.106.2] - 2026-11-01
+
+### Corrigido
+
+- **Espaço depois de clicar numa carta.** Ao pagar mana tocando nos terrenos, o Espaço às vezes não confirmava: ele usava de novo o último terreno clicado e abria os detalhes da carta. O mesmo acontecia depois de tocar na mana da reserva. Agora, depois de um clique, o Espaço sempre aperta o botão de confirmar da caixa de ação. Quem navega pela mesa com Tab continua usando o Espaço na carta em que está.
+- **Esc fechando as janelas da mesa.** Depois de fechar uma janela ou clicar num canto vazio da mesa, o Esc às vezes deixava de funcionar: a tela de um oponente em destaque, o cemitério, o exílio, o dano de comandante, as opções, o menu e o registro ficavam abertos. Agora o Esc fecha a janela aberta em qualquer situação.
+
 ## [0.106.1] - 2026-11-01
 
 ### Corrigido

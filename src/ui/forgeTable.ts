@@ -3502,13 +3502,22 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     e.preventDefault();
     openShortcuts(MATCH_SHORTCUTS);
   });
+  // Foco que ficou num elemento por um clique (ou pela mesa redesenhada depois dele), não por Tab. O :focus-visible
+  // não serve: o navegador o liga assim que se aperta uma tecla, inclusive o próprio Espaço.
+  let pointing = false, pointerFocus: EventTarget | null = null;
+  document.addEventListener('pointerdown', () => { pointing = true; }, true);
+  document.addEventListener('keydown', () => { pointing = false; }, true);
+  document.addEventListener('focusin', e => { pointerFocus = pointing ? e.target : null; });
+  const mouseFocused = (el: HTMLElement) => el === pointerFocus;
   // Espaço aperta o botão de passar da caixa de ação (passar, resolver, confirmar), como no Arena.
-  // Fica de fora quando o foco está num controle (o Espaço já é dele) ou quando uma janela está aberta.
+  // Fica de fora quando o foco está num campo de texto, num controle que o teclado alcançou (o Espaço já é dele) ou
+  // quando uma janela está aberta. O foco que sobra de um clique (o terreno virado para pagar) não conta.
   document.addEventListener('keydown', e => {
     if (e.key !== ' ' || e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
     if (!root.isConnected || root.closest('[hidden]') || !client?.state || disconnected) return;
     const target = e.target as HTMLElement;
-    if (target !== document.body && target.closest('input, textarea, select, button, a, [contenteditable], [role="button"], [tabindex]')) return;
+    if (target !== document.body && target.closest('input, textarea, select, [contenteditable]')) return;
+    if (target !== document.body && target.closest('button, a, [role="button"], [tabindex]') && !mouseFocused(target)) return;
     if (currentModal || document.querySelector('dialog[open], .feedback-overlay') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden || !$('#fErrorsDrawer').hidden) return;
     // O botão de passar (OK, Resolver, "Para o combate"...): avança um passo. "Fim de turno" fica só no clique.
     const primary = root.querySelector<HTMLButtonElement>('#fAction .btns [data-act="ok"]:not(:disabled)');
@@ -3516,23 +3525,30 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     e.preventDefault();
     primary.click();
   });
+  function escape(e: KeyboardEvent) {
+    if (stopMenu) { e.preventDefault(); setStopMenu(null, true); return; }
+    if (passMenuOpen) { e.preventDefault(); setPassMenu(false, true); return; }
+    if (!$('#fRemoval').hidden) { e.preventDefault(); closeRemoval(); return; }
+    if (!$('#fSettings').hidden) { e.preventDefault(); setSettings(false); return; }
+    if (!$('#fMenu').hidden) { e.preventDefault(); setMenu(false, true); return; }
+    if (!$('#fLogDrawer').hidden) { e.preventDefault(); setLog(false, true); return; }
+    if (!$('#fErrorsDrawer').hidden) { e.preventDefault(); setErrors(false, true); return; }
+    if (selectedAttackers.size || pinnedDefender || attackAllGen !== null || attackQueue.queuedAttackers.length) { clearAttackChoice(); e.preventDefault(); renderTable(false); return; }
+    if (selectedBlocker) { selectedBlocker = null; e.preventDefault(); renderTable(false); return; }
+    if (stackGalleryOpen) { e.preventDefault(); closeStackGallery(); return; }
+    if (zoneOf !== null || groupIds) { closeZone(); return; }
+    if (questionMinimized()) { e.preventDefault(); root.querySelector<HTMLElement>('[data-ui="question-restore"]')?.click(); return; }
+    if (focusSeat !== null && !document.querySelector('dialog[open]')) { e.preventDefault(); closeFocus(); return; }
+    hideCardPreview(true);
+  }
+  // Sem foco em lugar nenhum (o botão que abriu a janela foi redesenhado, ou o clique foi num canto vazio), a tecla
+  // vai para a página e não passaria pela mesa: o Esc ainda fecha o que estiver aberto.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || e.target !== document.body || !root.isConnected || root.closest('[hidden]') || document.querySelector('dialog[open], .feedback-overlay')) return;
+    escape(e);
+  });
   root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (stopMenu) { e.preventDefault(); setStopMenu(null, true); return; }
-      if (passMenuOpen) { e.preventDefault(); setPassMenu(false, true); return; }
-      if (!$('#fRemoval').hidden) { e.preventDefault(); closeRemoval(); return; }
-      if (!$('#fSettings').hidden) { e.preventDefault(); setSettings(false); return; }
-      if (!$('#fMenu').hidden) { e.preventDefault(); setMenu(false, true); return; }
-      if (!$('#fLogDrawer').hidden) { e.preventDefault(); setLog(false, true); return; }
-      if (!$('#fErrorsDrawer').hidden) { e.preventDefault(); setErrors(false, true); return; }
-      if (selectedAttackers.size || pinnedDefender || attackAllGen !== null || attackQueue.queuedAttackers.length) { clearAttackChoice(); e.preventDefault(); renderTable(false); return; }
-      if (selectedBlocker) { selectedBlocker = null; e.preventDefault(); renderTable(false); return; }
-      if (stackGalleryOpen) { e.preventDefault(); closeStackGallery(); return; }
-      if (zoneOf !== null || groupIds) { closeZone(); return; }
-      if (questionMinimized()) { e.preventDefault(); root.querySelector<HTMLElement>('[data-ui="question-restore"]')?.click(); return; }
-      if (focusSeat !== null && !document.querySelector('dialog[open]')) { e.preventDefault(); closeFocus(); return; }
-      hideCardPreview(true);
-    }
+    if (e.key === 'Escape') escape(e);
     if (focusSeat !== null && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (e.target as HTMLElement).closest('.focus-head')) {
       const ids = (client?.state?.players ?? []).filter(p => p.id !== client!.state!.you && !p.eliminated).map(p => p.id);
       const next = ids[(ids.indexOf(focusSeat) + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length];
@@ -3558,7 +3574,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }
     if (e.repeat) return;
     const el = target.closest<HTMLElement>('[data-mana],[data-ctr],[data-fid],[data-pid],[data-gy],[data-peek]');
-    if (el && !el.matches('button') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); el.click(); }
+    if (el && !el.matches('button') && (e.key === 'Enter' || (e.key === ' ' && !mouseFocused(target)))) { e.preventDefault(); el.click(); }
   });
 
   return {
