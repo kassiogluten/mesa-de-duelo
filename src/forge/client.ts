@@ -285,6 +285,8 @@ export interface FOption {
   cost?: string;
   extra?: string[];
   description?: string;
+  /** Habilidade de planeswalker: o custo de lealdade como está impresso ("+2", "0", "-3", "-X"). */
+  loyalty?: string;
   /** Divisão de dano de combate: dano que já mata este bloqueador; defender marca o jogador ou planeswalker atacado. */
   lethal?: number;
   defender?: boolean;

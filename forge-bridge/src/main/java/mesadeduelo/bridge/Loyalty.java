@@ -38,6 +38,12 @@ final class Loyalty {
         return null;
     }
 
+    /** A parte do custo que põe ou tira marcadores de lealdade. */
+    static boolean isLoyaltyPart(CostPart part) {
+        return part instanceof CostPutCounter put && put.getCounter().is(CounterEnumType.LOYALTY)
+            || part instanceof CostRemoveCounter remove && remove.counter != null && remove.counter.is(CounterEnumType.LOYALTY);
+    }
+
     /** O custo de lealdade como está impresso: "+1", "0", "-3"; no "-X", o X escolhido quando já se sabe. */
     static String cost(SpellAbility sa) {
         if (sa.getPayCosts() == null) return null;

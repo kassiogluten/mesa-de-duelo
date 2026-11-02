@@ -94,6 +94,24 @@ test('the top bar keeps only the series score and who dropped; format and room g
   assert.equal(bar.matchChips({ ...s, spectating: true, watching: true }).find(c => c.kind === 'spectating').label, 'Você está assistindo, sem jogar');
 });
 
+test('planeswalker abilities show the current loyalty and how much is left after each one', () => {
+  const q = { id: 8, method: 'getAbilityToPlay', kind: 'choose', min: 0, max: 1, card: { id: 12, name: 'Jace Beleren', planeswalker: true, counters: { LOYALTY: 4 } }, options: [
+    { label: 'a', mode: 'ability', cost: '', extra: [], loyalty: '+2', description: '+2: Each player draws a card.' },
+    { label: 'b', mode: 'ability', cost: '', extra: [], loyalty: '-4', description: '-4: Target player mills twenty cards.' },
+    { label: 'c', mode: 'ability', cost: '', extra: [], loyalty: '-X', description: '-X: Deal X damage.' },
+  ] };
+  const [plus, minus, x] = screens.playChoices(q);
+  assert.deepEqual([plus.loyalty, minus.loyalty], [{ cost: '+2', tone: 'up', after: 6 }, { cost: '−4', tone: 'down', after: 0 }]);
+  assert.equal(x.loyalty.after, undefined);
+  assert.equal(plus.detail, 'Each player draws a card.');
+  const html = screens.playModeHTML(q, () => '', c => c.name);
+  assert.match(html, /class="pt loyalty play-mode-loyalty"[^>]*>4</);
+  assert.match(html, /→ 6/);
+  assert.match(html, /play-mode-loyalty-after lethal/);
+  assert.doesNotMatch(html, /Sem custo/);
+  assert.match(html, /\+2 de lealdade, fica com 6/);
+});
+
 test('leveling up a Class says which level it reaches', () => {
   const q = { id: 7, method: 'getAbilityToPlay', kind: 'choose', min: 0, max: 1, card: { id: 11, name: 'Druid Class', classLevel: 1, classMaxLevel: 3 }, options: [
     { label: 'a', mode: 'class-level', level: 2, cost: '{2}{G}', extra: [] },

@@ -63,11 +63,14 @@ final class AbilityOptions {
                 if (ability.getApi() == forge.game.ability.ApiType.ClassLevelUp && ability.hasParam("ClassLevel"))
                     try { row.addProperty("level", Integer.parseInt(ability.getParam("ClassLevel").replaceAll("\\D", "")) + 1); } catch (NumberFormatException ignored) { }
                 if (ability.isSpell()) row.addProperty("spell", true);
+                // Habilidade de planeswalker: o custo de lealdade vai à parte ("+2", "0", "-3"), não entre os extras.
+                String loyalty = ability.isPwAbility() ? Loyalty.cost(ability) : null;
+                if (loyalty != null) row.addProperty("loyalty", loyalty);
                 JsonArray extra = new JsonArray();
                 String mana = "";
                 if (ability.getPayCosts() != null) for (var part : ability.getPayCosts().getCostParts()) {
                     if (part instanceof CostPartMana m) { if (!m.getMana().isZero() || ability.getPayCosts().isOnlyManaCost()) mana = m.getMana().toString(); }
-                    else extra.add(part.toString());
+                    else if (loyalty == null || !Loyalty.isLoyaltyPart(part)) extra.add(part.toString());
                 }
                 row.addProperty("cost", mana);
                 row.add("extra", extra);

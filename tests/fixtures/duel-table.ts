@@ -377,6 +377,16 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     ] };
     view.render();
   },
+  /** Habilidades de lealdade do Jace Beleren com 10 de lealdade: o +2, o −1 e o −10, que o deixa sem lealdade. */
+  walkerAbilities() {
+    const jace = { id: 303, controller: 10, tapped: false, token: false, name: 'Jace Beleren', manaCost: '{1}{U}{U}', typeLine: 'Legendary Planeswalker — Jace', planeswalker: true, counters: { LOYALTY: 10 } };
+    state.question = { id: 43, method: 'getAbilityToPlay', kind: 'choose', purpose: 'play-mode', title: 'Qual habilidade usar?', min: 0, max: 1, card: jace, options: [
+      { kind: 'ability', label: '+2: Each player draws a card.', mode: 'ability', cost: '', extra: [], loyalty: '+2', description: '+2: Each player draws a card.' },
+      { kind: 'ability', label: '-1: Target player draws a card.', mode: 'ability', cost: '', extra: [], loyalty: '-1', description: '-1: Target player draws a card.' },
+      { kind: 'ability', label: '-10: Target player mills twenty cards.', mode: 'ability', cost: '', extra: [], loyalty: '-10', description: '-10: Target player mills twenty cards.' },
+    ] };
+    view.render();
+  },
   /**
    * Vidência e vigilância de várias cartas, como a ponte manda (o topo do grimório primeiro). "bottom" é a
    * escolha do fundo (ou do cemitério, na vigilância) e "top" a ordem das que ficam em cima.
@@ -567,6 +577,7 @@ const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
 // Dois montes: ?cenario=montes&passo=split|choose (&steam=1 para a Steam Augury, em que quem conjura separa).
 if (cenario === 'montes') { const q = new URLSearchParams(location.search); (window as any).fixture.piles(q.get('passo') === 'choose' ? 'choose' : 'split', q.has('steam')); }
+if (cenario === 'lealdade') (window as any).fixture.walkerAbilities();
 if (cenario === 'gifts') (window as any).fixture.gifts();
 if (cenario === 'spelunking') (window as any).fixture.spelunking();
 if (cenario === 'viradas') (window as any).fixture.faceDown();

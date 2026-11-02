@@ -164,13 +164,26 @@ export function extraCostText(text: string) {
   return t;
 }
 
-export interface PlayChoice { index: number; name: string; detail: string; cost: string; extra: string[]; face?: FOption['face']; recommended: boolean }
+export interface PlayChoice { index: number; name: string; detail: string; cost: string; extra: string[]; face?: FOption['face']; recommended: boolean; loyalty?: LoyaltyCost }
+
+/** Custo de lealdade de uma habilidade de planeswalker e com quanta lealdade ele fica (sem "after" no "-X"). */
+export interface LoyaltyCost { cost: string; tone: 'up' | 'down' | 'zero'; after?: number }
+
+/** Lealdade atual do planeswalker da escolha; undefined se a carta não é um planeswalker. */
+const currentLoyalty = (q: FQuestion) => q.card?.planeswalker ? q.card.counters?.LOYALTY ?? 0 : undefined;
+
+function loyaltyCost(raw: string, current: number | undefined): LoyaltyCost {
+  const n = Number(raw);
+  const tone = raw.startsWith('-') ? 'down' : raw.startsWith('+') ? 'up' : 'zero';
+  return { cost: raw.replace(/^-/, '−'), tone, after: current !== undefined && Number.isFinite(n) ? Math.max(0, current + n) : undefined };
+}
 
 /** Nome, linha curta e custos de cada opção, a partir do modo que a ponte manda. */
 export function playChoices(q: FQuestion): PlayChoice[] {
   const opts = (q.options ?? []).map((_, i) => opt(q, i));
   const printed = q.card?.manaCost ?? '';
   const casts = opts.filter(o => (o.mode ?? 'cast') === 'cast').length;
+  const loyalty = currentLoyalty(q);
   const choices = opts.map((o, index) => {
     const mode = o.mode ?? (opts.length ? 'ability' : 'cast');
     const known = MODES[mode];
@@ -186,11 +199,20 @@ export function playChoices(q: FQuestion): PlayChoice[] {
       : known?.[0] ?? mode.charAt(0).toUpperCase() + mode.slice(1);
     const detail = alternative ? 'Conjure pagando este custo no lugar do custo de mana.'
       : mode === 'ability' || !known ? (o.description ?? o.label).replace(/\s+—\s+Custo:.*$/, '') : known[1];
+    // O custo de lealdade já aparece no escudo; o texto não repete o "+2:" da frente.
+    if (o.loyalty) return { index, name, detail: detail.replace(/^\s*[+−-]?(\d+|X)\s*:\s*/, ''), cost: o.cost ?? '', extra, face: o.face, recommended: false, loyalty: loyaltyCost(o.loyalty, loyalty) };
     return { index, name, detail, cost: o.cost ?? '', extra, face: o.face, recommended: false };
   });
   const normal = choices.find(c => (opts[c.index].mode ?? 'cast') === 'cast' && c.name === 'Conjurar') ?? choices.find(c => opts[c.index].mode === 'land');
   if (normal) normal.recommended = true;
   return choices;
+}
+
+/** Escudo com o custo de lealdade e, ao lado, com quanta lealdade o planeswalker fica ("+2 → 6"). */
+function loyaltyCostHTML(l: LoyaltyCost) {
+  const after = l.after === undefined ? ''
+    : `<span class="play-mode-loyalty-after${l.after <= 0 ? ' lethal' : ''}" title="${l.after <= 0 ? 'Fica sem lealdade e vai para o cemitério' : `Fica com ${l.after} de lealdade`}">→ ${l.after}</span>`;
+  return `<span class="play-mode-loyalty-cost"><b class="loyalty-chip ${l.tone}">${esc(l.cost)}</b>${after}</span>`;
 }
 
 const costWords = (cost: string) => (cost.match(/\{[^}]+\}/g) ?? []).map(s => s.slice(1, -1)).join(' ');
@@ -199,13 +221,15 @@ export function playModeHTML(q: FQuestion, face: Face, label: Label) {
   const choices = playChoices(q);
   const card = q.card;
   const playing = (q.options ?? []).some(o => typeof o !== 'string' && (o.spell || o.mode === 'land' || (o.mode && o.mode !== 'ability' && o.mode !== 'class-level')));
+  const loyalty = currentLoyalty(q);
   const title = playing ? card ? `Como jogar ${label(card)}?` : 'Como jogar esta carta?' : card ? `Qual habilidade de ${label(card)} usar?` : 'Qual habilidade usar?';
   return `<div class="q-head"><h2>${esc(title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>
     <div class="play-mode-body">
-      ${card ? `<div class="play-mode-card" data-peek="${card.id}" role="img" aria-label="${esc(label(card))}">${face(card)}</div>` : ''}
+      ${card ? `<div class="play-mode-card" data-peek="${card.id}" role="img" aria-label="${esc(`${label(card)}${loyalty !== undefined ? `, lealdade ${loyalty}` : ''}`)}">${face(card)}${loyalty !== undefined ? `<span class="pt loyalty play-mode-loyalty" title="Lealdade atual">${loyalty}</span>` : ''}</div>` : ''}
       <ul class="play-mode-options" aria-label="Jeitos de jogar">${choices.map(c => {
-        const costs = [c.cost ? `<span class="play-mode-mana">${manaHTML(c.cost)}</span>` : '', ...c.extra.map(e => `<span class="play-mode-extra">${esc(e)}</span>`)].filter(Boolean).join('<span class="play-mode-plus" aria-hidden="true">+</span>');
-        const spoken = [c.cost ? `custo ${costWords(c.cost)}` : c.extra.length ? '' : 'sem custo', ...c.extra].filter(Boolean).join(', ');
+        const l = c.loyalty;
+        const costs = [l ? loyaltyCostHTML(l) : '', c.cost ? `<span class="play-mode-mana">${manaHTML(c.cost)}</span>` : '', ...c.extra.map(e => `<span class="play-mode-extra">${esc(e)}</span>`)].filter(Boolean).join('<span class="play-mode-plus" aria-hidden="true">+</span>');
+        const spoken = [l ? `${l.cost} de lealdade${l.after !== undefined ? `, fica com ${l.after}` : ''}` : '', c.cost ? `custo ${costWords(c.cost)}` : c.extra.length || l ? '' : 'sem custo', ...c.extra].filter(Boolean).join(', ');
         return `<li><button type="button" class="play-mode-option${c.recommended ? ' recommended' : ''}" data-q-opt="${c.index}" aria-label="${esc(`${c.name}${c.face ? ` (${c.face.name})` : ''}, ${spoken}. ${c.detail}`)}">
           <span class="play-mode-head"><strong>${esc(c.name)}</strong>${costs || '<span class="play-mode-free">Sem custo</span>'}</span>
           ${c.face ? `<span class="play-mode-face">${esc(c.face.name)}${c.face.manaCost ? ` ${manaHTML(c.face.manaCost)}` : ''}<small>${esc(c.face.typeLine)}</small></span>` : ''}

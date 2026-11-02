@@ -1,4 +1,9 @@
 {
+  "0.109.0": {
+    "Lealdade na escolha da habilidade do planeswalker": [
+      { "img": "0.109.0/lealdade-habilidades.webp", "legenda": "O Jace Beleren com 10 de lealdade: o escudo na carta mostra o 10, e cada habilidade mostra com quanto ele fica: +2 → 12, −1 → 9 e −10 → 0, em vermelho." }
+    ]
+  },
   "0.108.0": {
     "Destaque para os planeswalkers": [
       { "img": "0.108.0/planeswalker-entrada.webp", "legenda": "O Jace Beleren chegando ao campo: a moldura acende em azul, a cor dele, e um anel de luz se abre em volta da carta." },

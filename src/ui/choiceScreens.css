@@ -46,6 +46,14 @@
 .play-mode-face { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; font: 600 13px var(--body); color: var(--ink); }
 .play-mode-face small { color: var(--muted); font-weight: 500; }
 .play-mode-detail { color: var(--muted); font: 400 13px/1.4 var(--body); }
+/* Planeswalker: o escudo com a lealdade atual sobre a carta (cobre o impresso) e, em cada habilidade, o custo e com quanto ele fica. */
+.play-mode-card .af-loyalty { display: none; }
+.play-mode-loyalty { right: 5%; bottom: 2.5%; z-index: 3; min-width: 1.6em; text-align: center; font: 800 calc(var(--fw) * .1)/1.2 var(--display, var(--body)); }
+.play-mode-loyalty-cost { display: inline-flex; align-items: center; gap: 6px; }
+.play-mode-loyalty-cost .loyalty-chip.up { background: #1d4d2f; border-color: var(--heal); }
+.play-mode-loyalty-cost .loyalty-chip.down { background: #5a1d14; border-color: #ff8f78; }
+.play-mode-loyalty-after { font: 700 14px var(--body); color: var(--ink); font-variant-numeric: tabular-nums; }
+.play-mode-loyalty-after.lethal { color: #ff8f78; }
 
 @media (max-height: 500px), (max-width: 760px) {
   #fQuestion .question.trigger-order { padding: 8px 6px; gap: 4px; }

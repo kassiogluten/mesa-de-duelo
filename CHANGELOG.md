@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.109.0] - 2026-11-02
+
+### Novo
+
+- **Lealdade na escolha da habilidade do planeswalker.** Ao escolher qual habilidade de um planeswalker usar, a carta grande mostra o escudo com a lealdade atual (e não mais a impressa), e cada habilidade traz o custo num escudo verde (**+**) ou vermelho (**−**) e com quanta lealdade ele fica depois, como "+2 → 6". Quando a habilidade deixa o planeswalker sem lealdade, o "→ 0" aparece em vermelho.
+
 ## [0.108.0] - 2026-11-02
 
 ### Novo
