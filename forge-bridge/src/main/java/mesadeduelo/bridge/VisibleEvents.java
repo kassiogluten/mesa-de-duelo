@@ -33,6 +33,8 @@ final class VisibleEvents {
     private int turnOwner = -1;
     private long turnSince;
     private final Map<Integer, Long> lastTurnMs = new HashMap<>();
+    /** Quem controla cada permanente, para ver quando o controle troca (o Forge só a passa de um campo para o outro). */
+    private final Map<Integer, Integer> controllers = new HashMap<>();
     /** Vida de cada jogador no fim de cada turno ({@code turn} 0 é a vida inicial), para o gráfico do fim do jogo. */
     private final java.util.List<JsonObject> lifePoints = new java.util.ArrayList<>();
 
@@ -40,7 +42,7 @@ final class VisibleEvents {
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); clearTurns();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); clearTurns();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -48,7 +50,7 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
     private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
 
     /** Começo de turno: fecha o turno anterior na conta de quem o jogou e anota a vida de todos no fim dele. */
@@ -140,6 +142,7 @@ final class VisibleEvents {
 
     @Subscribe public synchronized void receive(GameEvent event) {
         if (event instanceof GameEventGameStarted) { gameStarted = true; changed.run(); }
+        if (event instanceof GameEventGameStarted || event instanceof GameEventSnapshotRestored) seedControllers();
         if (!(event instanceof GameEventPlayerPriority)) prevented();
         JsonObject e = null;
         if (event instanceof GameEventLandPlayed x) {
@@ -168,6 +171,8 @@ final class VisibleEvents {
             if (to == ZoneType.Stack && from != null) origins.put(x.card().getId(), from.name());
             if (from == ZoneType.Library && to == ZoneType.Hand) {
                 e = type("draw"); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
+                // Busca no grimório (tutor): a mesa mostra a carta saindo do grimório como uma busca, sem dizer qual é.
+                if (resolvingApi(ApiType.ChangeZone, ApiType.ChangeZoneAll)) e.addProperty("searched", true);
             } else if (from == ZoneType.Hand && to == ZoneType.Graveyard) {
                 // Descarte (inclusive reciclar e descartar no fim do turno): a carta fica pública no cemitério.
                 e = card("discard", x.card()); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
@@ -178,6 +183,8 @@ final class VisibleEvents {
                 e.addProperty("from", "Library"); e.addProperty("to", "Graveyard");
                 millSource(e);
             } else if (to == ZoneType.Battlefield || from == ZoneType.Battlefield) {
+                if (to == ZoneType.Battlefield && x.card().getController() != null) controllers.put(x.card().getId(), x.card().getController().getId());
+                else controllers.remove(x.card().getId());
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
                 if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
@@ -199,9 +206,11 @@ final class VisibleEvents {
         } else if (event instanceof GameEventPlayerDamaged x) {
             e = card("damage", x.source()); e.addProperty("delta", -x.amount()); e.add("targets", StateJson.targets(java.util.List.of(x.target())));
             damage.player(e, game, x.source(), x.target(), x.amount(), x.combat(), x.infect());
+            fight(e);
         } else if (event instanceof GameEventCardDamaged x) {
             e = card("damage", x.source()); e.addProperty("delta", -x.amount()); e.add("targets", StateJson.targets(java.util.List.of(x.card())));
             damage.card(e, game, x.source(), x.card(), x.type() == GameEventCardDamaged.DamageType.Deathtouch, x.type() == GameEventCardDamaged.DamageType.M1M1Counters);
+            fight(e);
         } else if (event instanceof GameEventCardCounters x && x.card() != null && x.type() != null && x.type().is(CounterEnumType.LOYALTY) && x.newValue() < x.oldValue()) {
             e = damage.loyalty(game, game == null ? null : game.findByView(x.card()), x.oldValue() - x.newValue());
         } else if (event instanceof GameEventCardCounters x && x.card() != null && x.type() != null && x.newValue() > x.oldValue()
@@ -230,9 +239,36 @@ final class VisibleEvents {
             e = type("turn"); actor(e, x.turnOwner().getId()); e.addProperty("turn", x.turnNumber());
         } else if (event instanceof GameEventPlayerPriority x && x.priority() != null) {
             e = type("priority"); actor(e, x.priority().getId());
+        } else if (event instanceof GameEventShuffle x && x.player() != null) {
+            e = type("shuffle"); actor(e, x.player().getId());
+        } else if (event instanceof GameEventScry x && x.player() != null && x.toTop() + x.toBottom() > 0) {
+            // Vidência: quantas ficaram no topo e quantas foram para o fundo (o número é público; as cartas, não).
+            e = type("scry"); actor(e, x.player().getId()); e.addProperty("top", x.toTop()); e.addProperty("bottom", x.toBottom());
+        } else if (event instanceof GameEventFlipCoin x && x.flipper() != null) {
+            e = type("coin"); actor(e, x.flipper().getId()); e.addProperty("heads", x.heads());
+            if (x.startingToss()) e.addProperty("startingToss", true);
+        } else if (event instanceof GameEventRollDie x && x.planar() == null && x.sides() > 0) {
+            // O dado não diz quem rolou: é quem conjurou ou ativou o que está resolvendo.
+            e = type("die"); e.addProperty("sides", x.sides()); e.addProperty("result", x.result()); resolvingActor(e);
+        } else if (event instanceof GameEventCardAttachment x && x.equipment() != null && x.newTarget() != null) {
+            // Equipar, encantar ou trocar de criatura: a carta presa e onde ela foi parar (`moved` quando já estava presa a outra).
+            e = card("attached", x.equipment()); e.add("targets", StateJson.targets(java.util.List.of(x.newTarget())));
+            if (x.oldEntity() != null) e.addProperty("moved", true);
+        } else if (event instanceof GameEventZone x && x.zoneType() == ZoneType.Battlefield && x.mode() == EventValueChangeType.Added
+                && x.card() != null && x.player() != null) {
+            // Troca de controle: a permanente passa do campo de um jogador para o de outro sem sair do campo.
+            Integer before = controllers.put(x.card().getId(), x.player().getId());
+            if (before != null && before != x.player().getId()) {
+                e = card("control-changed", x.card()); actor(e, x.player().getId()); e.addProperty("previous", before); resolvingSource(e);
+            }
         }
-        if (e != null) {
-            if (!java.util.Set.of("draw", "priority").contains(e.get("type").getAsString())) {
+        if (e != null) publish(e);
+    }
+
+    /** Põe o quadro público da mesa no evento (menos na compra, na prioridade e no embaralhar) e o guarda na lista. */
+    private void publish(JsonObject e) {
+        {
+            if (!java.util.Set.of("draw", "priority", "shuffle").contains(e.get("type").getAsString())) {
                 JsonObject frame = publicFrame();
                 if (frame != null) {
                     // Forge announces the outcome before removing the resolving stack item.
@@ -247,6 +283,33 @@ final class VisibleEvents {
             }
             append(e);
         }
+    }
+
+    /** Quem controla cada permanente agora (começo do jogo e depois de desfazer). */
+    private void seedControllers() {
+        controllers.clear();
+        if (game == null) return;
+        try { for (var c : game.getCardsIn(ZoneType.Battlefield)) if (c.getController() != null) controllers.put(c.getId(), c.getController().getId()); }
+        catch (RuntimeException concurrentRead) { controllers.clear(); }
+    }
+
+    /** Se a mágica ou habilidade resolvendo agora tem um destes efeitos (nela ou nas sub-habilidades). */
+    private boolean resolvingApi(ApiType... apis) {
+        if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return false;
+        var set = java.util.Set.of(apis);
+        for (var sa = game.getStack().peekAbility(); sa != null; sa = sa.getSubAbility()) if (set.contains(sa.getApi())) return true;
+        return false;
+    }
+
+    /** Lutar: o dano que as duas criaturas causam uma à outra vem marcado, para a mesa mostrar o choque. */
+    private void fight(JsonObject e) { if (resolvingApi(ApiType.Fight)) e.addProperty("fight", true); }
+
+    /** Quem conjurou ou ativou o que está resolvendo (para o dado, que não diz quem rolou). */
+    private void resolvingActor(JsonObject e) {
+        if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return;
+        var sa = game.getStack().peekAbility();
+        if (sa != null && sa.getActivatingPlayer() != null) actor(e, sa.getActivatingPlayer().getId());
+        if (sa != null && sa.getHostCard() != null) e.addProperty("sourceName", sa.getHostCard().getName());
     }
 
     /**
