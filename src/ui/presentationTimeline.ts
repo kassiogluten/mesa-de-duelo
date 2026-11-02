@@ -54,6 +54,9 @@ export interface PresentationEvent {
   entries?: FCard[];
   /** Só na mesa: gatilho da mesma carta logo depois de outro igual (blink em todos), com um aviso mais curto. */
   repeat?: boolean;
+  /** Marcadores (`counters`): o tipo, como o Forge chama (P1P1, M1M1, LOYALTY, POISON…), e se vieram com a entrada. */
+  counter?: string;
+  entering?: boolean;
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -65,7 +68,7 @@ const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
 const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'mill', 'attackers', 'blockers', 'damage', 'life-changed', 'turn']);
-const AUDIO_ONLY = new Set(['draw']);
+const AUDIO_ONLY = new Set(['draw', 'counters']);
 
 /** Cartas moídas uma depois da outra pelo mesmo jogador (e pelo mesmo motivo) viram um só movimento. */
 function sameMill(a: PresentationEvent | undefined, b: PresentationEvent) {
@@ -89,6 +92,15 @@ function triggerKey(event: PresentationEvent) {
 }
 // O que um gatilho causa ao resolver não interrompe a sequência de gatilhos iguais.
 const TRIGGER_EFFECTS = new Set(['entered', 'left', 'damage', 'life-changed', 'mill', 'discard']);
+
+/** Marcadores que atrapalham quem os recebe: -1/-1 (e os outros que tiram força), veneno e radiação. */
+export function harmfulCounter(counter: string | undefined) {
+  return !!counter && (/^M\d+M\d+$/.test(counter) || counter === 'POISON' || counter === 'RAD');
+}
+function sameAudio(a: PresentationEvent, b: PresentationEvent) {
+  if (a.type !== b.type) return false;
+  return a.type === 'counters' ? harmfulCounter(a.counter) === harmfulCounter(b.counter) : a.actor === b.actor;
+}
 
 /** Compras seguidas do mesmo jogador: no histórico, "Bruno comprou 2 cartas". */
 function sameDraw(a: PresentationEvent | undefined, b: PresentationEvent) {
@@ -129,6 +141,7 @@ export class PresentationTimeline {
       if (event.seq <= this.cursor) continue;
       this.cursor = event.seq;
       if (!PRESENTABLE.has(event.type) && !AUDIO_ONLY.has(event.type)) continue;
+      if (event.type === 'counters' && event.entering) continue;
       const copy = structuredClone(event);
       if (copy.type === 'mill') copy.milled = copy.card ? [copy.card] : [];
       if (sameMill(accepted.at(-1), copy)) accepted[accepted.length - 1] = joinMill(accepted.at(-1)!, copy);
@@ -154,8 +167,9 @@ export class PresentationTimeline {
       }
       const audioOnly = AUDIO_ONLY.has(event.type);
       const previous = this.pending.at(-1);
-      // A batch of draws by one player needs one cue, without adding a visual pause.
-      if (audioOnly && previous?.audioOnly && previous.event.type === event.type && previous.event.actor === event.actor) {
+      // A batch of draws by one player needs one cue, without adding a visual pause; so does a batch of counters of
+      // the same kind (proliferar, um marcador em cada criatura), whoever gets them.
+      if (audioOnly && previous?.audioOnly && sameAudio(previous.event, event)) {
         this.pending[this.pending.length - 1] = { event: { ...event, count: (previous.event.count ?? 1) + 1 }, audible: true, audioOnly: true };
       } else if (previous && sameMill(previous.event, event)) {
         // O resto de um mill que ainda espera a vez entra no mesmo movimento.

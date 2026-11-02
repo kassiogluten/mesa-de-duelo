@@ -119,6 +119,8 @@ Dano (`type: "damage"`) chega um por fonte e alvo, na ordem em que o Forge causa
 
 Saída do campo (`left`) traz `reason: "destroyed"` ou `"sacrificed"` quando é o caso (destruída e sacrificada vão para o cemitério; `to` diz para onde a carta foi: `Graveyard`, `Exile`, `Hand`, `Library`).
 
+Marcador posto (`counters`): numa permanente, traz a carta (`sourceId` é ela) e `actor` (o controlador); num jogador, `actor` e `targets.players` com ele. Os dois trazem `counter` (o tipo, como em `counters` do estado: `P1P1`, `M1M1`, `LOYALTY`, `POISON`…), `delta` (quantos entraram) e `stackId`/`sourceName` quando uma mágica ou habilidade estava resolvendo. Tirar marcadores não gera evento. Os marcadores com que uma permanente entra chegam logo antes do `entered` dela e ficam marcados com `entering: true`.
+
 Permanentes trazem, quando se aplicam: `ward` (custo da proteção contra alvos, como `"{2}"` ou o custo descrito pelo Forge), `protection` (de que a proteção protege: `"red"`, `"artifact"`, `"multicolored"`…, do parâmetro da palavra-chave), `phasedOut`, `cantAttack` / `cantBlock` (proibida por um efeito, pelas regras de combate do Forge; não conta enjoo, estar virada nem defensor) e `preventDamage` (dano que os escudos ainda vão prevenir; também nos jogadores).
 
 No exílio, `foretold: true` marca as cartas previstas (Foretell). Para o dono elas vão de face para cima, com `foretellCost` (o custo previsto, quando vem da palavra-chave), e entram em `playableExile`; para os outros, só o verso.

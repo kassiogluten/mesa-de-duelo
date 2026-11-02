@@ -14,7 +14,7 @@ const sourceModule = async (path, imports) => import(await sourceUri(path, impor
 const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
 const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts' });
-const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts');
+const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts', { './presentationTimeline': '../src/ui/presentationTimeline.ts' });
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
   return { type: 'state', you: 1, turn: 3, phase: 'MAIN1', activePlayer: 2, gameOver: false,
@@ -94,6 +94,39 @@ test('a cast followed by fourteen draws and resolution preserves the full visual
   assert.deepEqual(timeline.history.map(e => [e.type, e.count]), [['spell-cast', undefined], ['draw', 7], ['draw', 7], ['resolved', undefined]]);
   timeline.ingest('a', [event(15, 'draw', { actor: 2 })]);
   assert.equal(timeline.queued, 0, 'coalesced draws remain consumed');
+});
+
+test('counters only sound: good and bad ones each get one cue per batch, and "enters with" counters stay silent', () => {
+  const timeline = new PresentationTimeline(); timeline.ingest('a', []);
+  timeline.ingest('a', [
+    event(1, 'counters', { counter: 'LOYALTY', entering: true, card: { id: 4 } }), event(2, 'entered', { card: { id: 4 } }),
+    event(3, 'counters', { counter: 'P1P1', actor: 1, card: { id: 5 } }), event(4, 'counters', { counter: 'LOYALTY', actor: 2, card: { id: 6 } }),
+    event(5, 'counters', { counter: 'M1M1', actor: 2, card: { id: 7 } }), event(6, 'counters', { counter: 'POISON', actor: 2 }),
+    event(7, 'resolved'),
+  ]);
+  assert.deepEqual(timeline.history.map(e => e.type), ['entered', 'resolved'], 'counters stay out of the history');
+  const entries = []; let entry;
+  while ((entry = timeline.advance())) entries.push(entry);
+  assert.deepEqual(entries.map(e => [e.event.type, e.audioOnly ?? false]), [['entered', false], ['counters', true], ['counters', true], ['resolved', false]]);
+  assert.deepEqual(entries.filter(e => e.audioOnly).map(e => soundForEvent(e.event)), ['counter', 'counter-bad']);
+  assert.equal(soundForEvent(event(1, 'counters', { counter: 'M0M2' })), 'counter-bad');
+  assert.equal(soundForEvent(event(1, 'counters', { counter: 'RAD' })), 'counter-bad');
+  assert.equal(soundForEvent(event(1, 'counters', { counter: 'ENERGY' })), 'counter');
+  assert.equal(soundForEvent(event(1, 'counters', { counter: 'P1P1', entering: true })), null);
+});
+
+test('counters from an infect or wither hit stay silent, and a spell that only put counters skips its resolution sound', () => {
+  const mix = new AudioEventMix();
+  mix.level(event(1, 'damage', { infect: true, targets: { players: [2] } }), 'a');
+  assert.equal(mix.level(event(2, 'counters', { counter: 'POISON', actor: 2 }), 'a'), 0);
+  assert.equal(mix.level(event(3, 'counters', { counter: 'POISON', actor: 1 }), 'a'), 1, 'another player was not hit');
+  mix.level(event(4, 'damage', { wither: true, targets: { cards: [9] } }), 'a');
+  assert.equal(mix.level(event(5, 'counters', { counter: 'M1M1', card: { id: 9 }, sourceId: 9 }), 'a'), 0);
+  assert.equal(mix.level(event(30, 'counters', { counter: 'M1M1', card: { id: 9 }, sourceId: 9 }), 'a'), 1, 'a later counter is its own effect');
+  mix.level(event(31, 'spell-cast', { sourceId: 20, stackId: 50 }), 'a');
+  assert.equal(mix.level(event(32, 'counters', { counter: 'P1P1', card: { id: 5 }, sourceId: 5, stackId: 50 }), 'a'), 1);
+  assert.equal(mix.level(event(33, 'resolved', { sourceId: 20, stackId: 50 }), 'a'), 0);
+  assert.equal(mix.level(event(34, 'resolved', { sourceId: 21, stackId: 51 }), 'a'), .55);
 });
 
 test('draw audio has a separate bound and never evicts pending visual actions', () => {

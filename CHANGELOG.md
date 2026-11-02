@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.106.0] - 2026-11-01
+
+### Novo
+
+- **Som de marcador.** Pôr marcadores numa permanente ou num jogador agora tem som: uma ficha que sobe de tom para os que ajudam (+1/+1, lealdade, carga, energia e os outros) e uma ficha mais grave, que desce, para os que atrapalham (-1/-1, veneno, radiação). Vários marcadores de uma vez, como ao proliferar, tocam um som só. Os marcadores com que uma permanente já entra, e o veneno e os -1/-1 que vêm de um golpe com infectar ou murchar, não tocam de novo, porque a entrada e o golpe já têm o som deles. Tirar marcadores continua em silêncio. Cada pacote de sons tem a sua versão.
+
 ## [0.105.0] - 2026-11-01
 
 ### Novo

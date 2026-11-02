@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Themed sound packs. Standard library only, deterministic, original synthesis.
 
-Each pack renders the same twenty-eight cues as the classic set (generate.py), with the same
+Each pack renders the same thirty cues as the classic set (generate.py), with the same
 file names, into public/audio/<pack>/, so the game swaps packs by folder. The styles are
 evocations written from scratch: no sound comes from another game (Arena reuses only
 the CC0 damage takes in sources/, as the classic set does).
@@ -1376,6 +1376,82 @@ def scifi_defeat(buf):
     add_noise8(buf, .9, .1, 6000, amp=.15, decay=.03, seed=14115)
 
 
+# Counters: added to a permanent or a player. The good one rises; the bad one (-1/-1, poison) is darker and falls.
+def bits_counter(buf):
+    add_notes(buf, 0, [84, 91], .05, length=.04, shape='square', duty=.25, amp=.32, release=.006)
+
+
+def bits_counter_bad(buf):
+    add_notes(buf, 0, [62, 55], .06, length=.05, shape='square', duty=.5, amp=.3, release=.006)
+    add_tone(buf, .06, .08, hz(43), shape='tri', amp=.5, decay=.04)
+
+
+def fantasy_counter(buf):
+    for i, note in enumerate([86, 93]):
+        add_modes(buf, i * .07, [(hz(note), .3, .22), (hz(note) * 2.01, .08, .1)], attack=.003)
+    add_texture(buf, .05, .2, (4000, 9000), .06, 9301, lambda t: bell(t, .05, .04))
+
+
+def fantasy_counter_bad(buf):
+    for i, note in enumerate([63, 62]):
+        add_modes(buf, i * .09, [(hz(note), .35, .2), (hz(note) * 2.4, .08, .08)], attack=.004)
+    add_tone(buf, 0, .3, hz(38), amp=.18, attack=.03, decay=.15)
+
+
+def cute_counter(buf):
+    pop(buf, 0, 500, 1100, .5)
+    mallet(buf, .06, 88, .55, decay=.12)
+
+
+def cute_counter_bad(buf):
+    pop(buf, 0, 700, 300, .5)
+    mallet(buf, .07, 64, .6, decay=.12)
+
+
+def arena_counter(buf):
+    coin(buf, 0, 1320, .6, decay=.1)
+    coin(buf, .07, 1760, .7, decay=.14)
+    add_drum(buf, 0, 85, 25, .05, .35)
+
+
+def arena_counter_bad(buf):
+    coin(buf, 0, 520, .5, decay=.08)
+    add_drum(buf, .06, 55, 30, .12, .8)
+    add_texture(buf, .06, .12, (80, 900), .35, 9302, lambda t: math.exp(-t / .03))
+
+
+def quiet_counter(buf):
+    add_texture(buf, 0, .03, (1500, 6000), .5, 12201, lambda t: math.exp(-t / .004))
+    add_tone(buf, .02, .1, hz(84), hz(88), amp=.35, decay=.04)
+
+
+def quiet_counter_bad(buf):
+    add_texture(buf, 0, .03, (400, 2500), .5, 12202, lambda t: math.exp(-t / .006))
+    add_tone(buf, .02, .12, hz(64), hz(60), amp=.4, decay=.05)
+
+
+def tavern_counter(buf):
+    coin(buf, 0, 2100, .55, decay=.09)
+    wood(buf, 0, 520, .4, seed=13201)
+    coin(buf, .08, 2640, .45, decay=.12)
+
+
+def tavern_counter_bad(buf):
+    # A bone die dropped on the boards: two dull knocks.
+    wood(buf, 0, 300, .8, seed=13202)
+    wood(buf, .07, 240, .6, seed=13203)
+
+
+def scifi_counter(buf):
+    add_notes(buf, 0, [88, 95], .05, length=.04, amp=.35, decay=.03)
+    add_noise8(buf, 0, .02, 9000, amp=.12, decay=.005, seed=14201)
+
+
+def scifi_counter_bad(buf):
+    add_tone(buf, 0, .07, 520, 440, shape='saw', amp=.25, lowpass=1600, decay=.04)
+    add_tone(buf, .08, .1, 330, 260, shape='saw', amp=.28, lowpass=1300, decay=.05)
+
+
 # Pack folder -> (early reflections, [(file, material, duration, first-pass peak, room, composer)]).
 # Files match the classic set (generate.DESIGNS); a missing cue would fall silent in that pack.
 PACKS = {
@@ -1408,6 +1484,8 @@ PACKS = {
         ('26-shuffle', 'noise ticks / sweep', 0.72, 0.28, 0.02, bits_shuffle),
         ('27-victory', 'pulse and triangle / victory jingle', 1.16, 0.42, 0.06, bits_victory),
         ('28-defeat', 'pulse and triangle / falling lament', 1.26, 0.42, 0.06, bits_defeat),
+        ('29-counter', 'pulse / two rising blips', 0.16, 0.24, 0.01, bits_counter),
+        ('30-counter-bad', 'pulse and triangle / two falling blips', 0.2, 0.26, 0.01, bits_counter_bad),
     ]),
     'fantasia': (((.031, 1), (.067, .7), (.113, .5), (.171, .3)), [
         ('01-card-draw', 'parchment and sparkle', .52, .26, .08, fantasy_draw),
@@ -1438,6 +1516,8 @@ PACKS = {
         ('26-shuffle', 'riffle and sparkle', 0.95, 0.28, 0.1, fantasy_shuffle),
         ('27-victory', 'brass fanfare and bells', 1.5, 0.44, 0.16, fantasy_victory),
         ('28-defeat', 'falling horns and drums', 1.4, 0.44, 0.16, fantasy_defeat),
+        ('29-counter', 'two rising rune chimes', 0.42, 0.24, 0.08, fantasy_counter),
+        ('30-counter-bad', 'two dull falling bells', 0.42, 0.26, 0.08, fantasy_counter_bad),
     ]),
     'aventura': (((.023, 1), (.051, .5)), [
         ('01-card-draw', 'pop and marimba', .26, .26, .03, cute_draw),
@@ -1468,6 +1548,8 @@ PACKS = {
         ('26-shuffle', 'popping riffle', 0.72, 0.28, 0.03, cute_shuffle),
         ('27-victory', 'marimba jingle and glitter', 1.1, 0.42, 0.07, cute_victory),
         ('28-defeat', 'wah-wah horn', 1.2, 0.4, 0.06, cute_defeat),
+        ('29-counter', 'rising pop and marimba', 0.24, 0.24, 0.02, cute_counter),
+        ('30-counter-bad', 'falling pop and low marimba', 0.26, 0.26, 0.02, cute_counter_bad),
     ]),
     'arena': (((.037, 1), (.083, .6), (.139, .35)), [
         ('01-card-draw', 'card snap', .16, .26, .02, arena_draw),
@@ -1498,6 +1580,8 @@ PACKS = {
         ('26-shuffle', 'heavy riffle and thud', 0.95, 0.3, 0.04, arena_shuffle),
         ('27-victory', 'war drums and horn chord', 1.5, 0.46, 0.1, arena_victory),
         ('28-defeat', 'low gong and drums', 1.3, 0.46, 0.1, arena_defeat),
+        ('29-counter', 'two metal tokens', 0.3, 0.26, 0.03, arena_counter),
+        ('30-counter-bad', 'dull token and drum', 0.32, 0.3, 0.03, arena_counter_bad),
     ]),
     'discreto': (((.029, 1),), [
         ('01-card-draw', 'paper tick', .08, .14, 0, quiet_draw),
@@ -1528,6 +1612,8 @@ PACKS = {
         ('26-shuffle', 'tiny ticks', 0.25, 0.14, 0, quiet_shuffle),
         ('27-victory', 'three notes rising', 0.56, 0.22, 0, quiet_victory),
         ('28-defeat', 'three notes falling', 0.62, 0.22, 0, quiet_defeat),
+        ('29-counter', 'tick and tiny rising tone', 0.14, 0.14, 0, quiet_counter),
+        ('30-counter-bad', 'tick and tiny falling tone', 0.16, 0.16, 0, quiet_counter_bad),
     ]),
     'taverna': (((.019, 1), (.043, .6)), [
         ('01-card-draw', 'card slide and snap', .14, .26, .03, tavern_draw),
@@ -1558,6 +1644,8 @@ PACKS = {
         ('26-shuffle', 'card riffle and tap', 0.9, 0.28, 0.04, tavern_shuffle),
         ('27-victory', 'strums and toast', 1.0, 0.42, 0.06, tavern_victory),
         ('28-defeat', 'slow lute descent', 1.6, 0.4, 0.06, tavern_defeat),
+        ('29-counter', 'coins on the table', 0.28, 0.24, 0.03, tavern_counter),
+        ('30-counter-bad', 'bone die on the boards', 0.22, 0.28, 0.03, tavern_counter_bad),
     ]),
     'scifi': (((.041, 1), (.097, .6), (.157, .35)), [
         ('01-card-draw', 'data chirp', .10, .24, .03, scifi_draw),
@@ -1588,6 +1676,8 @@ PACKS = {
         ('26-shuffle', 'data shuffle', 0.7, 0.26, 0.04, scifi_shuffle),
         ('27-victory', 'rising beeps and chord', 1.24, 0.42, 0.1, scifi_victory),
         ('28-defeat', 'power down', 1.06, 0.42, 0.08, scifi_defeat),
+        ('29-counter', 'increment beeps', 0.14, 0.24, 0.03, scifi_counter),
+        ('30-counter-bad', 'two falling buzzes', 0.22, 0.26, 0.03, scifi_counter_bad),
     ]),
 }
 

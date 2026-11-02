@@ -170,6 +170,12 @@ final class VisibleEvents {
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
                 if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
                 resolvingSource(e);
+                // Os marcadores de "entra com" chegam logo antes da entrada: o som da entrada já basta para eles.
+                if (to == ZoneType.Battlefield) for (var it = history.descendingIterator(); it.hasNext();) {
+                    JsonObject old = it.next();
+                    if (old.get("seq").getAsLong() < sequence - 8) break;
+                    if ("counters".equals(old.get("type").getAsString()) && old.has("sourceId") && old.get("sourceId").getAsInt() == x.card().getId()) { old.addProperty("entering", true); changed.run(); }
+                }
             }
         } else if (event instanceof GameEventAttackersDeclared x && !x.attackersMap().isEmpty()) {
             e = type("attackers"); actor(e, x.player().getId());
@@ -186,6 +192,16 @@ final class VisibleEvents {
             damage.card(e, game, x.source(), x.card(), x.type() == GameEventCardDamaged.DamageType.Deathtouch, x.type() == GameEventCardDamaged.DamageType.M1M1Counters);
         } else if (event instanceof GameEventCardCounters x && x.card() != null && x.type() != null && x.type().is(CounterEnumType.LOYALTY) && x.newValue() < x.oldValue()) {
             e = damage.loyalty(game, game == null ? null : game.findByView(x.card()), x.oldValue() - x.newValue());
+        } else if (event instanceof GameEventCardCounters x && x.card() != null && x.type() != null && x.newValue() > x.oldValue()
+                && x.card().getZone() == ZoneType.Battlefield) {
+            // Marcador posto numa permanente: a mesa toca um som (tirar marcador fica em silêncio).
+            e = card("counters", x.card()); e.addProperty("counter", x.type().toString()); e.addProperty("delta", x.newValue() - x.oldValue());
+            resolvingSource(e);
+        } else if (event instanceof GameEventPlayerCounters x && x.receiver() != null && x.type() != null && x.amount() > x.oldValue()) {
+            // `amount` é o total novo, não o que entrou.
+            e = type("counters"); actor(e, x.receiver().getId()); e.addProperty("counter", x.type().toString()); e.addProperty("delta", x.amount() - x.oldValue());
+            e.add("targets", StateJson.targets(java.util.List.of(x.receiver())));
+            resolvingSource(e);
         } else if (event instanceof GameEventCardSacrificed x && x.card() != null) {
             // O Forge avisa o sacrifício depois de tirar a carta do campo: marca a saída que acabou de acontecer.
             int id = x.card().getId();

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic game cues. Standard library only; twenty-six original physical-model cues.
+"""Deterministic game cues. Standard library only; twenty-eight original physical-model cues.
 
 The two damage cues adapt bundled SFXMint-generated CC0 takes. Their checksums,
 licenses and generation provenance are recorded in sources/manifest.json; regeneration needs no network.
@@ -319,6 +319,21 @@ def defeat(buf):
     add_modes(buf, .36, [(146.83, .35, .55), (174.61, .25, .45), (293.66, .07, .2)], attack=.01)
 
 
+def counter(buf):
+    # A glass bead set on the card, then a second, higher one: something was added, and it helps.
+    for start, base, amplitude, seed in [(0, 1760, .8, 2901), (.07, 2349, 1, 2902)]:
+        add_texture(buf, start, .03, (1800, 7000), .5 * amplitude, seed, lambda t: math.exp(-t / .004))
+        add_modes(buf, start, [(base, .3, .07), (base * 2.71, .1, .03)], amplitude, attack=.0008)
+
+
+def counter_bad(buf):
+    # The same bead in dull clay, the second one lower: something was added, and it hurts.
+    for start, base, amplitude, seed in [(0, 415, .85, 3001), (.08, 311, 1, 3002)]:
+        add_texture(buf, start, .04, (250, 2200), .6 * amplitude, seed, lambda t: math.exp(-t / .008))
+        add_modes(buf, start, [(base, .35, .06), (base * 2.3, .1, .025)], amplitude, attack=.0015)
+    add_drum(buf, .08, 90, 20, .05, .3)
+
+
 # file, material, duration, peak, reflection amount, composer
 DESIGNS = [
     ('01-card-draw', 'paper / two brushed strokes', .30, .28, 0, draw),
@@ -349,6 +364,8 @@ DESIGNS = [
     ('26-shuffle', 'paper riffle / bridge', .90, .28, .02, shuffle),
     ('27-victory', 'struck bronze / rising triad and chord', 1.50, .44, .08, victory),
     ('28-defeat', 'war drum and dull bronze / falling', 1.30, .44, .07, defeat),
+    ('29-counter', 'glass beads on a card / two rising taps', .26, .24, .01, counter),
+    ('30-counter-bad', 'clay beads on a card / two falling taps', .26, .26, .01, counter_bad),
 ]
 
 

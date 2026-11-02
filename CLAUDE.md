@@ -29,3 +29,7 @@ A página **Novidades em imagens** (link no painel Novidades) mostra prints de c
 - Registre em `src/novidades.json`: versão → título do item exatamente como está em negrito no CHANGELOG (sem o ponto final) → lista de `{ "img": "<versão>/<arquivo>.webp", "legenda": "..." }`. A legenda segue as mesmas regras do CHANGELOG: português, para o jogador, dizendo o que se vê na imagem.
 - Só fica sem imagem o item que não tem nada para ver (por exemplo, uma mudança só de desempenho); nesse caso, diga isso ao entregar a mudança.
 - `tests/novidades.test.mjs` confere que cada entrada aponta para um item do CHANGELOG e para um arquivo que existe.
+
+## Testes
+
+Como rodar os testes da mesa e do servidor, e a lista de falhas que já existem, ficam em `TESTES.md`. Antes de investigar uma falha, veja se ela já está lá: as conhecidas não bloqueiam a entrega, só precisam ser citadas. Mantenha a lista em dia (tire o que for corrigido, acrescente o que comprovadamente já falhava antes da sua mudança).

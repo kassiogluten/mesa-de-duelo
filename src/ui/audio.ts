@@ -1,4 +1,4 @@
-import type { PresentationEvent } from './presentationTimeline';
+import { harmfulCounter, type PresentationEvent } from './presentationTimeline';
 
 /** Same cues, same file names: each themed pack lives in its own folder under audio/. */
 export const SOUND_PACKS = [
@@ -21,12 +21,12 @@ export const SOUND_FILES = {
   heal: '15-heal.wav', poison: '16-poison.wav', shield: '17-shield.wav', shatter: '18-shatter.wav',
   untap: '19-untap.wav', sneak: '20-sneak.wav', blink: '21-blink.wav', bounce: '22-bounce.wav', exile: '23-exile.wav',
   sacrifice: '24-sacrifice.wav', 'life-loss': '25-life-loss.wav', shuffle: '26-shuffle.wav',
-  victory: '27-victory.wav', defeat: '28-defeat.wav',
+  victory: '27-victory.wav', defeat: '28-defeat.wav', counter: '29-counter.wav', 'counter-bad': '30-counter-bad.wav',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = 'mesa:audio:v1';
 const MAX_VOICES = 4;
-const SOUND_REVISION = 'materials-5';
+const SOUND_REVISION = 'materials-6';
 // Includes the StereoPanner's correlated-channel crossfeed at the maximum pan.
 export const MIX_HEADROOM = .40;
 
@@ -56,6 +56,10 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
       if (event.reason === 'sacrificed') return 'sacrifice';
       if (event.to === 'Exile') return 'exile';
       return event.to === 'Hand' || event.to === 'Library' ? 'bounce' : null;
+    case 'counters':
+      // Os de "entra com" já vêm no som da entrada.
+      if (event.entering) return null;
+      return harmfulCounter(event.counter) ? 'counter-bad' : 'counter';
     case 'turn': {
       const actor = event.actor ?? event.frame?.activePlayer;
       return you === undefined || actor == null ? null : actor === you ? 'turn-self' : 'turn-opponent';
@@ -142,8 +146,28 @@ export class AudioEventMix {
   private outcomes = new Map<number, number>();
   private draw: { seq: number; actor?: number } | null = null;
   private hits = new Map<number, number>();
+  private wounds = new Map<string, number>();
+  private stackOutcomes = new Map<number, number>();
   level(event: PresentationEvent, matchId: string) {
-    if (matchId !== this.matchId) { this.matchId = matchId; this.outcomes.clear(); this.draw = null; this.hits.clear(); }
+    if (matchId !== this.matchId) {
+      this.matchId = matchId; this.outcomes.clear(); this.draw = null; this.hits.clear(); this.wounds.clear(); this.stackOutcomes.clear();
+    }
+    // Veneno do infectar e -1/-1 do murchar vêm do golpe, que já soou com o som de veneno.
+    if (event.type === 'damage' && !event.prevented && (event.infect || event.wither)) {
+      for (const player of event.targets?.players ?? []) this.wounds.set(`p${player}`, event.seq);
+      for (const card of event.targets?.cards ?? []) this.wounds.set(`c${card}`, event.seq);
+      if (this.wounds.size > 64) this.wounds.delete(this.wounds.keys().next().value!);
+    }
+    if (event.type === 'counters') {
+      const target = event.card?.id !== undefined ? `c${event.card.id}` : event.actor !== undefined ? `p${event.actor}` : '';
+      const wound = this.wounds.get(target);
+      if (wound !== undefined && event.seq > wound && event.seq - wound <= 12) return 0;
+      // A mágica que só pôs marcadores não toca a resolução por cima.
+      if (event.stackId !== undefined) {
+        this.stackOutcomes.set(event.stackId, event.seq);
+        if (this.stackOutcomes.size > 64) this.stackOutcomes.delete(this.stackOutcomes.keys().next().value!);
+      }
+    }
     // Perder vida logo depois de levar dano é o próprio dano: o golpe já soou.
     if (event.type === 'damage' && !event.prevented) for (const player of event.targets?.players ?? []) this.hits.set(player, event.seq);
     if (event.type === 'life-changed' && (event.delta ?? 0) < 0 && event.actor !== undefined) {
@@ -162,7 +186,8 @@ export class AudioEventMix {
     if (event.type === 'draw') { this.draw = { seq: event.seq, actor: event.actor }; return .85; }
     if (event.type === 'resolved') {
       const outcome = source === undefined ? undefined : this.outcomes.get(source);
-      const ownOutcome = outcome !== undefined && outcome < event.seq && event.seq - outcome <= 24;
+      const counted = event.stackId === undefined ? undefined : this.stackOutcomes.get(event.stackId);
+      const ownOutcome = [outcome, counted].some(seq => seq !== undefined && seq < event.seq && event.seq - seq <= 24);
       const justDrew = this.draw?.actor !== undefined && this.draw.actor === event.actor && event.seq > this.draw.seq && event.seq - this.draw.seq <= 3;
       return ownOutcome || justDrew ? 0 : .55;
     }
