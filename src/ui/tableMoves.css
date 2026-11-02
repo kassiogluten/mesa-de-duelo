@@ -1,0 +1,62 @@
+/* Movimentos da mesa além de jogar e resolver (0.117.0): bloqueio, vidência, moeda e dado, anexar, controle, marcadores,
+   mana, reanimar, busca, embaralhar, mão inicial e fim da partida. As animações ficam em motion.ts; aqui só a aparência. */
+
+/* Bloqueio: a ligação entre o bloqueador e o atacante, no dourado do bloqueio. */
+.ability-beam.block-link { background: linear-gradient(90deg, #fff1b8, var(--gold) 55%, #fff); box-shadow: 0 0 12px var(--gold), 0 0 2px #fff; }
+
+/* Vidência: o rótulo junto ao grimório e as cartas que vão para o topo (douradas) ou para o fundo (apagadas). */
+.mill-count.scry-count { color: var(--azul-cfe6ff, #cfe6ff); font-size: 17px; }
+.scry-ghost.to-top .back { box-shadow: 0 10px 24px #0008, 0 0 0 2px var(--gold); }
+.scry-ghost.to-bottom .back { filter: brightness(.7) saturate(.6); }
+
+/* Moeda e dado, no centro da mesa. */
+.chance-piece { position: fixed; z-index: 36; pointer-events: none; transform: translate(-50%, -50%); display: grid; place-items: center; align-content: center; gap: 2px; border-radius: 50%; font: 800 20px/1 var(--display); color: #2a1d05; opacity: 0; }
+.chance-piece.coin { background: radial-gradient(circle at 35% 30%, #fff6cf, #f2b54c 55%, #a8741c); box-shadow: 0 10px 26px #000a, inset 0 0 0 4px #ffe2a088, inset 0 -6px 10px #7a520f88; }
+.chance-piece.coin.tails { background: radial-gradient(circle at 35% 30%, #f6f6f6, #c2c2c2 55%, #737373); color: #222222; box-shadow: 0 10px 26px #000a, inset 0 0 0 4px #ffffff88, inset 0 -6px 10px #44444488; }
+.chance-piece.die { border-radius: 18%; background: linear-gradient(145deg, #fdfdfd, #dcdcdc); color: #1f1f1f; font-size: 30px; box-shadow: 0 10px 26px #000a, inset 0 0 0 2px #fff, inset 0 -5px 8px #99999966; }
+.chance-piece.die small { font: 700 11px/1 system-ui, sans-serif; color: #5e5e5e; }
+.chance-piece > b { font: inherit; }
+.chance-piece .presentation-caption { position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); white-space: nowrap; }
+
+/* Equipar ou encantar: o anel dourado na criatura que recebe. */
+.attach-ring { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 10px; border: 2px solid #ffe2a0; box-shadow: 0 0 18px #f2b54caa, inset 0 0 12px #f2b54c66; opacity: 0; }
+
+/* Troca de controle: a carta chega na cor de quem controla agora (dourado você, vermelho o oponente). */
+.control-ring { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 10px; border: 2px solid #ff6a4d; box-shadow: 0 0 20px #ff6a4daa; opacity: 0; }
+.control-ring.mine { border-color: var(--gold); box-shadow: 0 0 20px color-mix(in srgb, var(--gold) 70%, transparent); }
+.control-glow.theirs { filter: drop-shadow(0 0 10px #ff6a4d); }
+.control-glow.mine { filter: drop-shadow(0 0 10px var(--gold)); }
+
+/* Marcadores: o número que sobe da carta (verde ajuda, roxo atrapalha, dourado o capítulo da saga). */
+.damage-number.counter-float { color: var(--heal); }
+.damage-number.counter-float > b { font-size: 24px; }
+.damage-number.counter-float.harmful { color: #b48cff; }
+.damage-number.counter-float.lore { color: var(--gold); }
+.damage-number.counter-float.lore > b { font-size: 20px; letter-spacing: .02em; }
+/* A taxa de comandante que sobe ao conjurar da zona de comando. */
+.damage-number.tax { color: var(--gold); }
+.damage-number.tax > b { font-size: 26px; }
+
+/* A mana que sai do terreno virado até o custo. */
+.mana-orb { position: fixed; z-index: 37; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--mana, #dadada) 60%); box-shadow: 0 0 12px var(--mana, #dadada), 0 0 3px #fff; opacity: 0; }
+
+/* Reanimar: o anel roxo que sobe da carta que voltou do cemitério. */
+.reanimate-ring { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #c9a8ff; box-shadow: 0 0 22px #a46bff, inset 0 0 16px #a46bff99; opacity: 0; }
+
+/* Busca no grimório: a lupa de luz no grimório e a carta saindo com brilho dourado. */
+.search-ring { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #ffe2a0; box-shadow: 0 0 18px var(--gold), inset 0 0 14px #f2b54c88; opacity: 0; }
+.search-ghost .back { box-shadow: 0 10px 24px #0008, 0 0 0 2px var(--gold); }
+
+/* Embaralhar e mão inicial: os versos que se abrem e voam (acima da sombra da escolha da mão inicial). */
+.shuffle-ghost { z-index: 31; }
+.shuffle-ghost .back, .deal-ghost .back { width: 100%; height: 100%; box-shadow: 0 8px 18px #0008; }
+.deal-ghost { z-index: 40; }
+
+/* Fim da partida: o retrato de quem perdeu escurece, o de quem ganhou acende. */
+.avatar.finale-lose { filter: grayscale(.85) brightness(.6); transition: filter .5s ease; }
+.avatar.finale-win { filter: drop-shadow(0 0 16px var(--gold)) brightness(1.15); transition: filter .4s ease; }
+.walker-wave.finale-wave { z-index: 36; }
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar.finale-lose, .avatar.finale-win { transition: none; }
+}

@@ -4,7 +4,9 @@ import { createForgeTableView } from '../../src/ui/forgeTable';
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
  * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17), o mill (item 24),
- * a mão revelada do oponente (item 41, Telepathy e afins) e várias fichas de uma vez (item 43).
+ * a mão revelada do oponente (item 41, Telepathy e afins), várias fichas de uma vez (item 43) e os movimentos da 0.117.0
+ * (bloqueio, luta, vidência, moeda, dado, embaralhar, equipar, controle, transformar, marcadores, busca, reanimar, conjurar
+ * de outro monte, comandante, pagar, mão inicial, revelar e fim da partida).
  * Abra /tests/fixtures/effects-lab.html no `npm run dev`. A página mostra o painel e a mesa num quadro do tamanho
  * escolhido (?mesa abre só a mesa, que recebe os comandos do painel). Os eventos têm o mesmo formato que a ponte manda.
  */
@@ -490,6 +492,173 @@ function table() {
       if (select) { select.value = c.value; select.dispatchEvent(new Event('change', { bubbles: true })); }
       return c.value === 'art' ? 'Cartas em arte e texto.' : c.value === 'arena' ? 'Cartas no estilo Arena: só a arte no campo.' : 'Cartas com a imagem inteira.';
     },
+    // Movimentos da 0.117.0: um botão para cada um, como a ponte manda (o selecionado é a permanente escolhida no painel).
+    extra: c => {
+      const me = player(ME), opp = player(OPP);
+      const picked = byId(c.id);
+      const mineFirst = (side: any, test: (x: any) => boolean) => side.battlefield.find(test);
+      switch (c.kind) {
+        case 'block': {
+          const attacker = mineFirst(me, (x: any) => x.creature) ?? add('me', 'big', false);
+          const blocker = mineFirst(opp, (x: any) => x.creature) ?? add('opp', 'small', false);
+          attacker.attacking = true; attacker.tapped = true; blocker.blocking = true;
+          state.phase = 'COMBAT_DECLARE_BLOCKERS'; state.activePlayer = ME;
+          state.combat = [{ attacker: attacker.id, defender: OPP, defenderKind: 'player', blockers: [blocker.id] }];
+          emit('blockers', { actor: OPP, cards: [blocker.id] });
+          setTimeout(() => { attacker.attacking = false; blocker.blocking = false; state.combat = []; state.phase = 'MAIN1'; flush(); }, 2600);
+          return 'Bloqueio: o bloqueador desliza até o atacante e volta, com a ligação acesa.';
+        }
+        case 'fight': {
+          const a = mineFirst(me, (x: any) => x.creature) ?? add('me', 'big', false);
+          const b = mineFirst(opp, (x: any) => x.creature) ?? add('opp', 'small', false);
+          const spell = { id: nextId++, name: 'Prey Upon', controller: ME, manaCost: '{G}', typeLine: 'Sorcery', tapped: false, token: false };
+          state.stack = [{ id: nextId++, text: 'Prey Upon', source: spell, controller: ME }];
+          damage(a, { card: b.id }, a.power, { fight: true });
+          damage(b, { card: a.id }, b.power, { fight: true });
+          state.stack = []; me.graveyard.push(spell);
+          settle();
+          return 'Luta: as duas criaturas avançam juntas e se chocam no meio.';
+        }
+        case 'scry': emit('scry', { actor: c.side === 'opp' ? OPP : ME, top: 1, bottom: 2 }); return 'Vidência 3: as cartas sobem em leque; uma volta por cima e duas passam por baixo.';
+        case 'coin': emit('coin', { actor: ME, heads: Math.random() < .5 }); return 'Moeda: gira no ar e cai no resultado.';
+        case 'die': emit('die', { actor: ME, sides: 20, result: 1 + Math.floor(Math.random() * 20), sourceName: 'Delina, Wild Mage' }); return 'Dado: rola, troca de número e para no resultado.';
+        case 'shuffle': emit('shuffle', { actor: c.side === 'opp' ? OPP : ME }); return 'Embaralhar: o grimório balança e as metades se abrem.';
+        case 'attach': {
+          const host = picked?.creature ? picked : mineFirst(me, (x: any) => x.creature);
+          if (!host) return 'Escolha uma criatura.';
+          let blade = all().find((x: any) => x.name === 'Bonesplitter');
+          const moved = !!blade?.attachedTo;
+          if (!blade) { blade = add(host.controller === ME ? 'me' : 'opp', 'equipment', false); delete blade.attachedTo; flush(); }
+          blade.attachedTo = host.id;
+          emit('attached', { card: structuredClone(blade), sourceId: blade.id, actor: blade.controller, targets: { cards: [host.id], players: [] }, ...(moved ? { moved: true } : {}) });
+          return moved ? 'Equipar: o Bonesplitter passa para a criatura escolhida.' : 'Equipar: o Bonesplitter se prende à criatura escolhida.';
+        }
+        case 'control': {
+          const x = picked ?? mineFirst(opp, (y: any) => y.creature);
+          if (!x) return 'Escolha uma permanente.';
+          const from = player(x.controller), to = x.controller === ME ? opp : me;
+          from.battlefield = from.battlefield.filter((y: any) => y !== x); x.controller = to.id; to.battlefield.push(x);
+          emit('control-changed', { card: structuredClone(x), sourceId: x.id, actor: to.id, previous: from.id });
+          return 'Troca de controle: a carta atravessa a mesa e chega na cor do novo dono.';
+        }
+        case 'transform': {
+          // Uma carta que já estava no campo: a mesa percebe a troca de face pelo nome que muda.
+          const x = picked ?? mineFirst(me, (y: any) => y.creature);
+          if (!x) return 'Ponha uma criatura no campo primeiro.';
+          x.name = x.name === 'Insectile Aberration' ? 'Delver of Secrets' : 'Insectile Aberration';
+          Object.assign(x, x.name === 'Insectile Aberration' ? { power: 3, toughness: 2, keywords: ['FLYING'], manaCost: '' } : { power: 1, toughness: 1, keywords: [], manaCost: '{U}' });
+          return 'Transformar: a carta gira no lugar e mostra a outra face.';
+        }
+        case 'counters': case 'lore': {
+          if (c.kind === 'lore') {
+            let saga = all().find((x: any) => x.name === 'The Eldest Reborn');
+            if (!saga) { saga = card('The Eldest Reborn', { typeLine: 'Enchantment — Saga', manaCost: '{4}{B}', counters: { LORE: 0 } }); saga.id = nextId++; saga.controller = ME; me.battlefield.push(saga); flush(); }
+            saga.counters = { LORE: Math.min(3, (saga.counters?.LORE ?? 0) + 1) };
+            emit('counters', { card: structuredClone(saga), sourceId: saga.id, actor: ME, counter: 'LORE', delta: 1 });
+            return `Saga: capítulo ${['', 'I', 'II', 'III'][saga.counters.LORE]}.`;
+          }
+          const creatures = [...me.battlefield, ...opp.battlefield].filter((x: any) => x.creature).slice(0, 3);
+          for (const x of creatures) {
+            x.counters = { ...x.counters, P1P1: (x.counters?.P1P1 ?? 0) + 1 }; x.power++; x.toughness++;
+            emit('counters', { card: structuredClone(x), sourceId: x.id, actor: x.controller, counter: 'P1P1', delta: 1 });
+          }
+          return 'Marcadores +1/+1: cada criatura cresce e o "+1/+1" sobe dela (um som só).';
+        }
+        case 'search': {
+          const [name, extra] = HAND_POOL[1];
+          me.hand.push({ id: nextId++, controller: ME, ...card(name, extra) }); me.handCount = me.hand.length; me.library--;
+          if (!turnShown) { turnShown = true; emit('turn', { actor: ME, turn: state.turn }); }
+          emit('draw', { actor: ME, searched: true });
+          emit('shuffle', { actor: ME });
+          return 'Busca no grimório: a carta sai dourada, e o grimório embaralha depois.';
+        }
+        case 'reanimate': {
+          const dead = { id: nextId++, controller: ME, ...creature('Serra Angel', 4, 4, '{3}{W}{W}', ['FLYING', 'VIGILANCE']) };
+          me.graveyard.push(dead); flush();
+          setTimeout(() => {
+            me.graveyard = me.graveyard.filter((x: any) => x !== dead);
+            const back = { ...dead, sick: true }; me.battlefield.push(back);
+            emit('entered', { card: structuredClone(back), sourceId: back.id, actor: ME, from: 'Graveyard', to: 'Battlefield' });
+            flush();
+          }, 700);
+          return 'Reanimar: a carta sobe do cemitério em arco e chega com um anel roxo.';
+        }
+        case 'flashback': {
+          const spell = { ...bolt(), name: 'Faithless Looting', manaCost: '{R}', typeLine: 'Sorcery', text: 'Draw two cards, then discard two cards.' };
+          me.graveyard.push(spell); flush();
+          setTimeout(() => {
+            me.graveyard = me.graveyard.filter((x: any) => x !== spell);
+            const stackId = nextId++;
+            state.stack = [{ id: stackId, text: spell.text, source: structuredClone(spell), controller: ME }];
+            emit('spell-cast', { card: structuredClone(spell), sourceId: spell.id, actor: ME, from: 'Graveyard', to: 'Stack', stackId });
+            flush();
+            setTimeout(() => { state.stack = []; me.exile.push(spell); emit('resolved', { card: structuredClone(spell), sourceId: spell.id, actor: ME, stackId, from: 'Stack', to: 'Exile' }); flush(); }, 1200);
+          }, 700);
+          return 'Conjurar do cemitério: a carta sai do cemitério com brilho roxo até a pilha.';
+        }
+        case 'commander': {
+          // O seu comandante: volta à zona de comando ou é conjurado de lá (a taxa sobe 2).
+          const cmd = { id: me.commanderId ?? nextId++, controller: ME, ...creature('Atraxa, Praetors\' Voice', 4, 4, '{G}{W}{U}{B}', ['FLYING', 'VIGILANCE', 'DEATHTOUCH', 'LIFELINK']), commander: true };
+          me.commanderId = cmd.id;
+          const onField = me.battlefield.find((x: any) => x.id === cmd.id);
+          me.commanders = [{ id: cmd.id, name: cmd.name, tax: me.commanderTax ?? 0, casts: (me.commanderTax ?? 0) / 2 }];
+          if (onField) {
+            me.battlefield = me.battlefield.filter((x: any) => x !== onField);
+            me.commandZone = [structuredClone(onField)];
+            emit('left', { card: structuredClone(onField), sourceId: onField.id, actor: ME, from: 'Battlefield', to: 'Command' });
+            return 'Comandante volta à zona de comando: voa em arco e a zona ganha uma onda dourada.';
+          }
+          me.commandZone = [cmd]; flush();
+          setTimeout(() => {
+            me.commandZone = []; me.commanderTax = (me.commanderTax ?? 0) + 2;
+            me.commanders = [{ id: cmd.id, name: cmd.name, tax: me.commanderTax, casts: me.commanderTax / 2 }];
+            const stackId = nextId++;
+            state.stack = [{ id: stackId, text: cmd.name, source: structuredClone(cmd), controller: ME }];
+            emit('spell-cast', { card: structuredClone(cmd), sourceId: cmd.id, actor: ME, from: 'Command', to: 'Stack', stackId });
+            flush();
+            setTimeout(() => {
+              state.stack = []; const arrived = { ...cmd, sick: true }; me.battlefield.push(arrived);
+              emit('entered', { card: structuredClone(arrived), sourceId: arrived.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+              emit('resolved', { card: structuredClone(arrived), sourceId: arrived.id, actor: ME, stackId, from: 'Stack', to: 'Battlefield' });
+              flush();
+            }, 1200);
+          }, 700);
+          return 'Comandante conjurado da zona de comando: sai dourado e a taxa "+2" sobe.';
+        }
+        case 'ability': {
+          const x = picked ?? mineFirst(me, (y: any) => y.creature);
+          if (!x) return 'Escolha uma permanente.';
+          emit('ability-activated', { card: structuredClone(x), sourceId: x.id, actor: x.controller, text: 'Habilidade', targets: { cards: [], players: [] }, stackId: nextId++, to: 'Stack' });
+          return 'Habilidade ativada: a carta se ergue um pouco da mesa e assenta.';
+        }
+        case 'pay': {
+          // Pagando um custo: cada terreno que vira solta a mana até a caixa de ação.
+          const lands = me.battlefield.filter((x: any) => x.land && !x.tapped).slice(0, 3);
+          if (!lands.length) { add('me', 'land', false); add('me', 'land', false); return 'Pus dois terrenos: aperte de novo.'; }
+          state.input = { ...state.input, paying: true, priority: false, message: 'Pague {2}{G}', ok: { label: 'OK', enabled: false }, cancel: { label: 'Cancelar', enabled: true } };
+          lands.forEach((x: any, i: number) => setTimeout(() => { x.tapped = true; flush(); }, 300 + i * 450));
+          setTimeout(() => { state.input = { ...state.input, paying: false, message: 'Laboratório de efeitos: use o painel.', cancel: { label: '', enabled: false } }; flush(); }, 300 + lands.length * 450 + 500);
+          return 'Pagar: a mana sai de cada terreno que vira e voa até o custo.';
+        }
+        case 'opening': case 'mulligan': {
+          const hand = Array.from({ length: 7 }, (_, i) => { const [name, extra] = HAND_POOL[(i + (c.kind === 'mulligan' ? 3 : 0)) % HAND_POOL.length]; return { id: nextId++, controller: ME, ...card(name, extra) }; });
+          me.hand = hand; me.handCount = hand.length;
+          state.input = { ...state.input, opening: 'mulligan', ok: { label: 'Manter', enabled: true }, cancel: { label: 'Mulligan', enabled: true } };
+          setTimeout(() => { if (state.input.opening) { delete state.input.opening; state.input.ok = { label: 'OK', enabled: false }; state.input.cancel = { label: '', enabled: false }; flush(); } }, 9000);
+          return c.kind === 'mulligan' ? 'Mulligan: a mão volta ao grimório, ele embaralha e sai uma nova.' : 'Mão inicial: as cartas saem do grimório uma a uma.';
+        }
+        case 'reveal': {
+          state.question = { id: nextId++, kind: 'reveal', title: 'Oponente revelou', min: -1, max: -1, options: ['Lightning Bolt', 'Serra Angel', 'Island'].map(name => ({ card: { id: nextId++, controller: OPP, ...card(name) } })) };
+          setTimeout(() => { delete state.question; flush(); }, 4000);
+          return 'Revelar: as cartas da janela entram de costas e viram de face.';
+        }
+        case 'win': case 'lose': {
+          state.gameOver = true; state.winner = c.kind === 'win' ? 'Você' : 'Oponente';
+          setTimeout(() => { state.gameOver = false; delete state.winner; flush(); }, 5000);
+          return c.kind === 'win' ? 'Vitória: o retrato do oponente racha e o seu acende antes do resultado.' : 'Derrota: o seu retrato racha e o do oponente acende.';
+        }
+      }
+    },
     reduce: c => { reduce = !!c.value; if (reduce) document.head.append(still); else still.remove(); return reduce ? 'Reduzir movimento ligado nesta página.' : 'Movimento normal.'; },
   };
 
@@ -516,11 +685,14 @@ function table() {
   });
   // Para ver ou fotografar um movimento: ?mesa&jogar=land,creature joga da mão, uma a cada 2,5 s (a primeira leva de eventos
   // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar. Além das jogadas da
-  // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy) e tokens:<quantas>.
+  // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
+  // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
+  // commander, ability, pay, opening, mulligan, reveal, win, lose).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
   const run = (play: string) => {
     const [cmd, arg] = play.split(':');
     if (cmd === 'move') window.postMessage({ cmd, kind: arg, id: player(ME).battlefield.find((x: any) => x.creature)?.id }, '*');
+    else if (cmd === 'x') window.postMessage({ cmd: 'extra', kind: arg, side: 'me' }, '*');
     else if (cmd === 'tokens') window.postMessage({ cmd, side: 'me', n: arg }, '*');
     else window.postMessage({ cmd: 'hand', kind: cmd }, '*');
   };
@@ -578,6 +750,11 @@ function panel() {
     ${[['enter', 'Entrar (Jace)'], ['enter-gold', 'Entrar (multicolor)'], ['plus', '+2'], ['zero', '0'], ['minus', '−1'], ['ult', 'Ultimate (−10)']].map(([k, t]) => `<button data-walker="${k}">${t}</button>`).join('')}
     <h2>Jogar da mão</h2>
     ${[['land', 'Jogar terreno'], ['creature', 'Conjurar criatura'], ['countered', 'Conjurar e anular'], ['bolt', 'Lightning Bolt da mão'], ['draw', 'Comprar'], ['deal', 'Encher a mão']].map(([k, t]) => `<button data-hand="${k}">${t}</button>`).join('')}
+    <h2>Movimentos da 0.117.0 (na selecionada, ou do lado escolhido)</h2>
+    ${[['block', 'Bloquear'], ['fight', 'Lutar'], ['scry', 'Vidência 3'], ['coin', 'Moeda'], ['die', 'Dado d20'], ['shuffle', 'Embaralhar'], ['attach', 'Equipar'], ['control', 'Trocar de controle'],
+       ['transform', 'Transformar'], ['counters', '+1/+1 em três'], ['lore', 'Saga: capítulo'], ['search', 'Buscar no grimório'], ['reanimate', 'Reanimar'], ['flashback', 'Conjurar do cemitério'],
+       ['commander', 'Comandante (ida e volta)'], ['ability', 'Habilidade (se ergue)'], ['pay', 'Pagar com terrenos'], ['opening', 'Mão inicial'], ['mulligan', 'Mulligan'], ['reveal', 'Revelar'], ['win', 'Vitória'], ['lose', 'Derrota']]
+      .map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
@@ -627,6 +804,7 @@ function panel() {
     if (b.dataset.tokens) send({ cmd: 'tokens', side: $<HTMLSelectElement>('side').value, n: b.dataset.tokens, mixed: !!b.dataset.mixed });
     if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
+    if (b.dataset.x) send({ cmd: 'extra', kind: b.dataset.x, id: selectedId(), side: $<HTMLSelectElement>('side').value });
     if (b.dataset.hand) send({ cmd: 'hand', kind: b.dataset.hand });
     if (b.dataset.s) resize(b.dataset.s);
   });

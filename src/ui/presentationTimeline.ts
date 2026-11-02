@@ -62,6 +62,19 @@ export interface PresentationEvent {
   /** Habilidade de lealdade (`ability-activated` com `loyalty`): o custo impresso ("+2", "-3", "0") e se é o ultimate. */
   cost?: string;
   ultimate?: boolean;
+  /** Luta (`damage`), busca no grimório (`draw`), vidência (`scry`), moeda (`coin`), dado (`die`), anexar (`attached`) e troca de controle (`control-changed`). */
+  fight?: boolean;
+  searched?: boolean;
+  top?: number;
+  bottom?: number;
+  heads?: boolean;
+  startingToss?: boolean;
+  sides?: number;
+  result?: number;
+  moved?: boolean;
+  previous?: number;
+  /** Só na mesa: os marcadores seguidos que viraram um som só, para cada carta crescer (`counters`). */
+  grouped?: PresentationEvent[];
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -72,8 +85,10 @@ const QUEUE_LIMIT = 12;
 const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
-const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'mill', 'attackers', 'blockers', 'damage', 'life-changed', 'turn']);
-const AUDIO_ONLY = new Set(['draw', 'counters']);
+const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'mill', 'attackers', 'blockers', 'damage', 'life-changed', 'turn',
+  'scry', 'coin', 'die', 'attached', 'control-changed']);
+// Sem passo próprio: tocam (e animam) junto com o que vier, sem segurar a partida.
+const AUDIO_ONLY = new Set(['draw', 'counters', 'shuffle']);
 
 /** Cartas moídas uma depois da outra pelo mesmo jogador (e pelo mesmo motivo) viram um só movimento. */
 function sameMill(a: PresentationEvent | undefined, b: PresentationEvent) {
@@ -104,12 +119,13 @@ export function harmfulCounter(counter: string | undefined) {
 }
 function sameAudio(a: PresentationEvent, b: PresentationEvent) {
   if (a.type !== b.type) return false;
+  if (a.type === 'draw' && !!a.searched !== !!b.searched) return false;
   return a.type === 'counters' ? harmfulCounter(a.counter) === harmfulCounter(b.counter) : a.actor === b.actor;
 }
 
 /** Compras seguidas do mesmo jogador: no histórico, "Bruno comprou 2 cartas". */
 function sameDraw(a: PresentationEvent | undefined, b: PresentationEvent) {
-  return a?.type === 'draw' && b.type === 'draw' && a.actor === b.actor;
+  return a?.type === 'draw' && b.type === 'draw' && a.actor === b.actor && !!a.searched === !!b.searched;
 }
 function join(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
   return sameDraw(a, b) ? { ...b, count: (a.count ?? 1) + (b.count ?? 1) } : joinMill(a, b);
@@ -175,7 +191,7 @@ export class PresentationTimeline {
       // A batch of draws by one player needs one cue, without adding a visual pause; so does a batch of counters of
       // the same kind (proliferar, um marcador em cada criatura), whoever gets them.
       if (audioOnly && previous?.audioOnly && sameAudio(previous.event, event)) {
-        this.pending[this.pending.length - 1] = { event: { ...event, count: (previous.event.count ?? 1) + 1 }, audible: true, audioOnly: true };
+        this.pending[this.pending.length - 1] = { event: { ...event, count: (previous.event.count ?? 1) + 1, grouped: [...(previous.event.grouped ?? [previous.event]), event] }, audible: true, audioOnly: true };
       } else if (previous && sameMill(previous.event, event)) {
         // O resto de um mill que ainda espera a vez entra no mesmo movimento.
         this.pending[this.pending.length - 1] = { ...previous, event: joinMill(previous.event, event) };
@@ -263,6 +279,9 @@ export function presentationDuration(event: PresentationEvent, fast: boolean) {
   }
   // Planeswalker: a entrada e o ultimate ganham um pouco mais de tempo, sem segurar a partida.
   const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
+    : event.type === 'coin' || event.type === 'die' ? 1250 : event.type === 'scry' ? 900
+    : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
+    : event.type === 'blockers' ? 620
     : event.type === 'entered' && event.card?.planeswalker && event.from !== 'Exile' ? 560
     : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
     : event.type === 'damage' ? (event.combat ? 620 : 760)

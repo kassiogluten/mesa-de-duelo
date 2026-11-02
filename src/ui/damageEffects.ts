@@ -31,9 +31,10 @@ export function damageLook(event: PresentationEvent): DamageLook {
   if (event.trample) badges.push('Atropelar');
   if (event.commander) badges.push('Comandante');
   if (event.lifelink) badges.push('Vínculo com a vida');
+  if (event.fight) badges.push('Luta');
   const lethal = !!event.lethal && !event.prevented;
   return {
-    motion: event.self ? 'self' : event.combat ? 'strike' : 'bolt',
+    motion: event.self ? 'self' : event.combat || event.fight ? 'strike' : 'bolt',
     amount, tone, badges, deathtouch: !!event.deathtouch && !toPlayer, lethal,
     heavy: !event.prevented && (n >= HEAVY_DAMAGE || (lethal && toPlayer)),
   };

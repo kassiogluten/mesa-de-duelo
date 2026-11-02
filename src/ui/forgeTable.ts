@@ -83,6 +83,7 @@ import { seatTurnChange, turnHighlight } from './turnHighlight';
 import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
 import './waitAlert.css';
 import './duelPiles.css';
+import './tableMoves.css';
 import { isShortcutsKey, MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
 import { gameSummaryHTML } from './lifeChart';
 import { loyaltyLook } from './planeswalkerEffects';
@@ -464,6 +465,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   /** Cartas compradas ainda em voo (id → quando chegam): continuam escondidas mesmo se a mão for redesenhada no caminho. */
   const arriving = new Map<number, number>();
   let displayFrame: PresentationFrame | null = null;
+  // Fim da partida (o momento antes do resultado), os nomes das permanentes (para ver quem transformou) e a mão inicial já distribuída.
+  let finaleKey = '', finaleUntil = 0, wasPlaying = false;
+  let fieldNames = new Map<number, string>(), fieldNamesMatch = '';
+  let dealtHand = '', payingBefore = false;
   let silentNext = true;
   let fast = false;
   let previousAnnouncement = '';
@@ -799,16 +804,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (document.hidden || root.hidden || disconnected) { stopPresentation(); return; }
     let entry = timeline.advance();
     const s = client?.state;
-    const draws: PresentationEvent[] = [];
+    const draws: PresentationEvent[] = [], quick: PresentationEvent[] = [];
     while (entry?.audioOnly) {
       if (s) audio.play(entry.event, timeline.matchId, entry.audible, s.you);
       if (entry.event.type === 'draw' && entry.event.actor !== undefined) draws.push(entry.event);
+      else if (entry.audible) quick.push(entry.event);
       entry = timeline.advance();
     }
     displayFrame = s && !hasLiveDecision(s) ? entry?.event.frame ?? null : null;
     drawingNow = s ? draws.filter(d => d.actor === s.you).reduce((n, d) => n + (d.count ?? 1), 0) : 0;
     renderTable(false);
     drawingNow = 0;
+    // Embaralhar e marcadores não têm passo próprio: animam junto com a jogada, na mesa já desenhada.
+    if (s) for (const event of quick) motion.quick(event, { you: s.you });
     // A mão inicial e os mulligans já têm a própria apresentação: sem voos por cima dela.
     const gameBegun = timeline.history.some(e => e.type === 'turn');
     if (s && draws.length && gameBegun && !suppressOpeningPreview(s)) {
@@ -816,7 +824,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       for (const el of incoming) knownHand.add(Number(el.dataset.fid));
       for (const draw of draws) {
         const cards = draw.actor === s.you ? incoming : [];
-        const arrivals = motion.drew(draw.actor!, draw.count ?? 1, { you: s.you, cards, fast: fast || hasLiveDecision(s) });
+        const arrivals = motion.drew(draw.actor!, draw.count ?? 1, { you: s.you, cards, fast: fast || hasLiveDecision(s), searched: !!draw.searched });
         cards.forEach((el, i) => arriving.set(Number(el.dataset.fid), performance.now() + (arrivals[i] ?? 0)));
       }
     }
@@ -826,9 +834,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const first = entry.event;
     const divided = first.type === 'damage' && !first.combat && !first.prevented && first.sourceId !== undefined
       ? timeline.takeWhile(e => e.type === 'damage' && !e.combat && !e.prevented && e.sourceId === first.sourceId) : [];
+    // Luta: o golpe de volta (da criatura atingida na outra) sai junto, e as duas se chocam no meio.
+    const fought = first.type === 'damage' && first.fight && first.targets?.cards?.length
+      ? timeline.takeWhile(e => e.type === 'damage' && !!e.fight && e.sourceId === first.targets!.cards![0]) : [];
     if (first.type === 'mill') motion.milled(first, { you: s.you, fast: fast || hasLiveDecision(s), face: card => face(card, 'normal') });
     else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: fast || hasLiveDecision(s), face: card => face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
-    else for (const part of [entry, ...divided]) {
+    else for (const part of [entry, ...divided, ...fought]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? face(part.event.card, 'normal') : undefined,
         label: eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
@@ -1821,7 +1832,23 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       case 'land-played': return `${who} jogou ${name}${from}.`;
       case 'spell-cast': return `${who} conjurou ${name}${from}${on}.`;
       case 'ability-activated': return event.loyalty && !event.trigger ? loyaltyDescription(event, who, name, on) : event.trigger ?`Gatilho${event.card?.name ? ` de ${name}` : ''}${on}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}${on}.`;
-      case 'draw': return `${who} comprou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`}.`;
+      case 'draw': return event.searched ? `${who} buscou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`} no grimório.`
+        : `${who} comprou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`}.`;
+      case 'scry': {
+        const top = event.top ?? 0, bottom = event.bottom ?? 0, n = top + bottom;
+        const where = top && bottom ? `${top} no topo e ${bottom} no fundo` : top ? `${n === 1 ? 'a carta ficou' : 'todas ficaram'} no topo` : `${n === 1 ? 'a carta foi' : 'todas foram'} para o fundo`;
+        return `${who} fez vidência ${n}: ${where}.`;
+      }
+      case 'coin': return event.startingToss ? `Moeda para ver quem começa: ${who} começa.` : `${who} jogou uma moeda: ${event.heads ? 'cara' : 'coroa'}.`;
+      case 'die': return `${who} rolou um d${event.sides ?? 6}: ${event.result ?? '?'}${event.sourceName ? ` (${ptOf(event.sourceName)?.name || event.sourceName})` : ''}.`;
+      case 'attached': {
+        const hostId = event.targets?.cards?.[0], playerId = event.targets?.players?.[0];
+        const hostCard = hostId === undefined ? undefined : findCard(hostId) ?? frameCard(hostId, event);
+        const host = hostCard ? label(hostCard) : client?.state?.players.find(p => p.id === playerId)?.name ?? 'outra permanente';
+        const kind = /Equipment/.test(event.card?.typeLine ?? '') ? 'Equipar' : /Aura/.test(event.card?.typeLine ?? '') ? 'Encantar' : 'Anexar';
+        return event.moved ? `${kind}: ${name} passou para ${host}.` : `${kind}: ${name} em ${host}.`;
+      }
+      case 'control-changed': return `${who} ganhou o controle de ${name}${detailed && event.previous !== undefined ? ` (era de ${client?.state?.players.find(p => p.id === event.previous)?.name ?? 'outro jogador'})` : ''}.`;
       case 'resolved': return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
       case 'countered': return `Anulado: ${event.card?.name ? name : 'efeito'}.`;
       // "Carta …" concorda com qualquer nome (o Cavaleiro, a Aura).
@@ -2643,6 +2670,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
       setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
+      if (s.question.kind === 'reveal' && !minimized && after && Number(before?.dataset.qid) !== s.question.id) motion.revealIn([...after.querySelectorAll<HTMLElement>('.q-face')]);
       if (again !== null && after && after !== before) after.scrollTop = again;
       if (after && after !== before) restoreRowScroll(after, rows);
       // A busca de nomes recebe o foco ao abrir e o mantém quando a escolha é redesenhada no meio da digitação.
@@ -2721,11 +2749,25 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fMatchBar').hidden = multiplayer || !$('#fMatchBar').hasChildNodes();
 
     if (!s.gameOver) observing = false;
+    // Fim da partida visto ao vivo: antes do resultado, o retrato de quem perdeu racha e o de quem ganhou acende.
+    const overKey = s.gameOver ? `${timeline.matchId}:${s.match?.gameNumber ?? 1}` : '';
+    if (s.gameOver && overKey !== finaleKey) {
+      finaleKey = overKey;
+      if (wasPlaying && !s.match?.abandoned && !disconnected) {
+        const winners = s.players.filter(p => s.winner && p.name === s.winner).map(p => p.id);
+        const losers = s.winner ? s.players.filter(p => p.name !== s.winner).map(p => p.id) : [];
+        const ms = motion.finale(winners, losers);
+        if (ms) { finaleUntil = performance.now() + ms; window.setTimeout(() => render(), ms + 20); }
+      }
+    }
+    wasPlaying = !s.gameOver;
     const ov = $('#fOverlay');
     if (s.sideboarding && !disconnected && !s.match?.over) {
       setHTML(ov, sideboardingHTML(s));
       ov.hidden = false;
     } else if (s.gameOver && !disconnected && observing) {
+      ov.hidden = true; ov.dataset.html = '';
+    } else if (s.gameOver && !disconnected && performance.now() < finaleUntil) {
       ov.hidden = true; ov.dataset.html = '';
     } else if (s.gameOver && !disconnected) {
       const result = gameResult(s);
@@ -2758,9 +2800,42 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     layoutStack();
     syncSeatScroll();
     drawCombatArrows(visual);
-    motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events });
+    motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events, paying: s.input.paying || payingBefore ? manaTone : undefined });
+    // O último terreno do pagamento chega num estado em que o pagamento já acabou: ele também solta a mana.
+    payingBefore = !!s.input.paying;
+    // Mesma permanente com outro nome no campo: transformou (dupla face, dia e noite) ou virou cópia de outra.
+    const names = new Map(visual.players.flatMap(p => p.battlefield.map(c => [c.id, c.faceDown ? '' : c.name ?? ''] as [number, string])));
+    if (!silently && fieldNamesMatch === timeline.matchId) {
+      const turned = [...names].filter(([id, n]) => n && fieldNames.get(id) && fieldNames.get(id) !== n).map(([id]) => id);
+      if (turned.length) motion.transformed(turned);
+    }
+    fieldNames = names; fieldNamesMatch = timeline.matchId;
+    // Mão inicial: as cartas saem do grimório; num mulligan, a mão anterior volta antes.
+    if (s.input.opening === 'mulligan' && !s.gameOver) {
+      const ids = (s.players.find(p => p.id === s.you)?.hand ?? []).map(c => c.id).join(',');
+      if (ids && ids !== dealtHand) {
+        const again = !!dealtHand;
+        dealtHand = ids;
+        if (!silently) motion.deal([...root.querySelectorAll<HTMLElement>('#fHand .hcard')], { returning: again ? 1 : 0 });
+      }
+    } else if (!s.input.opening) dealtHand = '';
     drawTargetArrows(visual);
     lastDamage = new Map(s.players.flatMap(p => p.battlefield.map(c => [c.id, c.damage ?? 0] as [number, number])));
+  }
+
+  /** A cor da mana de um terreno (ou da carta que dá mana), para a mana que voa dele até o custo. */
+  function manaTone(id: number) {
+    const c = findCard(id);
+    if (!c) return undefined;
+    const text = `${c.typeLine ?? ''} ${c.name ?? ''}`;
+    const tones = ([['Plains', '#f4ecc2'], ['Island', '#5cb3ff'], ['Swamp', '#b48ad1'], ['Mountain', '#ff7150'], ['Forest', '#58c878']] as const)
+      .filter(([type]) => text.includes(type)).map(([, tone]): string => tone);
+    if (!tones.length && !c.land) {
+      const pips = new Set((c.manaCost ?? '').match(/[WUBRG]/g) ?? []);
+      const byPip: Record<string, string> = { W: '#f4ecc2', U: '#5cb3ff', B: '#b48ad1', R: '#ff7150', G: '#58c878' };
+      tones.push(...[...pips].map(p => byPip[p]));
+    }
+    return tones.length === 1 ? tones[0] : tones.length > 1 ? '#f2b54c' : '#dadada';
   }
 
   function gameResult(s: FState) {

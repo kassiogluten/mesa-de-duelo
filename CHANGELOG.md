@@ -6,6 +6,28 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.117.0] - 2026-11-02
+
+### Mudou
+
+- **Bloqueio que vai até o atacante.** Ao declarar os bloqueios, cada bloqueador avança um pouco na direção da criatura que bloqueou e volta, com uma linha dourada acesa entre os dois, um bloqueio depois do outro.
+- **Luta com choque.** Quando duas criaturas lutam (Prey Upon, Ravenous Chupacabra e afins), as duas avançam juntas uma contra a outra e se chocam no meio, cada uma com o dano que causou e o selo **Luta**.
+- **A carta se ergue ao ativar uma habilidade.** Ao ativar a habilidade de uma permanente, ela sobe um pouco da mesa, com sombra, enquanto a habilidade sai dela, e assenta de novo.
+- **Reanimar, buscar e conjurar de outros montes.** A criatura que volta do cemitério sobe dele em arco e chega com um anel roxo. A carta buscada no grimório sai dourada, com uma lupa de luz no grimório, e o histórico diz "buscou uma carta no grimório" (sem dizer qual). A mágica conjurada do cemitério ou do exílio (flashback, escape e afins) sai do monte de onde veio, com o brilho dele, e não mais da mão.
+- **Comandante entre o campo e a zona de comando.** O comandante que volta à zona de comando voa em arco até lá, e a zona recebe uma onda dourada. Ao ser conjurado de lá, ele sai da zona de comando com um brilho dourado, e um **+2** com **Taxa de comandante** sobe de onde ele estava.
+- **Troca de controle à vista.** Quando um jogador ganha o controle de uma permanente (Control Magic, Threaten e afins), ela atravessa a mesa até o campo dele e chega com um contorno na cor de quem a controla agora: dourado se for você, vermelho se for um oponente. O histórico diz "Ana ganhou o controle de Serra Angel".
+- **Equipar e encantar com encaixe.** Ao equipar ou prender uma aura, a criatura recebe a carta com um pulso e um anel dourado, e a carta presa acende ao encaixar. O histórico diz "Equipar: Bonesplitter em Grizzly Bears", ou "passou para", quando o equipamento troca de criatura.
+- **Transformar com giro.** A permanente que muda de face no campo (lobisomens, Delver of Secrets, dia e noite) gira no lugar e mostra a face nova, com um brilho no meio do giro.
+- **Embaralhar e vidência.** Ao embaralhar, o grimório balança e as duas metades se abrem para os lados e voltam. Na vidência, as cartas sobem do grimório em leque: as que ficam no topo voltam por cima e as que vão para o fundo passam por baixo do monte, e o grimório mostra quantas foram para cada lado ("1 no topo · 2 no fundo"). O histórico diz "Ana fez vidência 3: 1 no topo e 2 no fundo".
+- **Cartas reveladas viram de face.** Na janela de cartas reveladas, cada carta entra de costas e vira de face para cima, uma depois da outra.
+- **Marcadores que fazem a carta crescer.** A permanente que ganha marcadores +1/+1 cresce um pouco e assenta, e o "+1/+1" sobe dela (em roxo, o "−1/−1"). Ao proliferar ou pôr um marcador em várias criaturas, todas crescem juntas. Numa saga, o capítulo novo sobe da carta, como "Capítulo II".
+- **Mana saindo do terreno.** Enquanto você paga um custo, cada terreno que você vira solta uma bolinha de mana na cor dele, que voa até o custo na caixa de ação.
+- **Moeda e dado na mesa.** A moeda gira no ar, no centro da mesa, e cai em **Cara** ou **Coroa**; o dado rola, trocando de número, e para no resultado, com quantos lados ele tem ("d20"). Os dois dizem quem jogou, e o histórico também.
+- **Mão inicial distribuída.** As cartas da mão inicial saem do grimório uma a uma e viram de face no leque. No mulligan, a mão anterior volta ao grimório, ele embaralha e a nova mão sai do mesmo jeito.
+- **Fim da partida com impacto.** Antes de o resultado aparecer, o retrato de quem perdeu racha e escurece, a mesa treme de leve e o retrato de quem ganhou acende com uma onda dourada.
+
+Com "reduzir movimento" ligado no sistema, nada disso se move: ficam o número, a cor e o destaque no lugar certo, e o resultado aparece direto.
+
 ## [0.116.0] - 2026-11-02
 
 ### Novo

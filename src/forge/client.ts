@@ -52,7 +52,8 @@ export interface PublicRoom { code: string; host: string; config: MatchConfig; c
 export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; lab?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
-  type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed';
+  type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed'
+    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
   text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   /** Só em `damage`; ver forge-bridge/README.md. */
@@ -64,6 +65,14 @@ export interface FEvent {
   reason?: 'destroyed' | 'sacrificed';
   /** `mill`: a mágica ou habilidade que mandou moer, e se foi vidência em vez de moer. */
   sourceName?: string; surveil?: boolean;
+  /** `damage` de uma luta (fight); `draw` de uma busca no grimório (tutor), sem dizer a carta. */
+  fight?: boolean; searched?: boolean;
+  /** `scry`: quantas ficaram no topo e quantas foram para o fundo. */
+  top?: number; bottom?: number;
+  /** `coin`: cara ou coroa, e se é a moeda de quem começa. `die`: quantos lados e o resultado. */
+  heads?: boolean; startingToss?: boolean; sides?: number; result?: number;
+  /** `attached`: já estava presa a outra permanente. `control-changed`: quem controlava antes. */
+  moved?: boolean; previous?: number;
   frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {

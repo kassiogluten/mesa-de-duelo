@@ -14,13 +14,13 @@ npm run build                  # build
 node --experimental-strip-types --test tests/*.test.mjs   # todos os testes
 ```
 
-`npm test` (sem `--experimental-strip-types`) também funciona, mas veja a falha conhecida abaixo.
+`npm test` (sem `--experimental-strip-types`) também funciona, mas veja a falha conhecida abaixo. Se o `node` do terminal for o 18 (que não tem `--experimental-strip-types`), use o 22 do nvm direto: `/c/Users/Kassio/AppData/Local/nvm/v22.19.0/node.exe --experimental-strip-types --test tests/*.test.mjs`.
 
 **Servidor (`forge-bridge`):** precisa do JDK 17 e do Forge em `C:/Users/Kassio/forge`. O `-Dforge.dir` vai duas vezes: como propriedade e dentro do `argLine`.
 
 ```sh
 cd forge-bridge
-JAVA_HOME="/c/Program Files/Microsoft/jdk-17.0.13.11-hotspot" \
+JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" \
   mvn -o test -Dforge.dir=C:/Users/Kassio/forge -DargLine="-Dforge.dir=C:/Users/Kassio/forge"
 ```
 

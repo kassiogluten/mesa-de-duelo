@@ -70,7 +70,7 @@ function units(events: readonly PresentationEvent[]) {
   const list: Unit[] = [];
   for (const event of events) {
     const last = list.at(-1);
-    if (event.type === 'draw' && last && plain(last) && last.head.type === 'draw' && last.head.actor === event.actor) {
+    if (event.type === 'draw' && last && plain(last) && last.head.type === 'draw' && last.head.actor === event.actor && !!last.head.searched === !!event.searched) {
       list[list.length - 1] = { head: { ...last.head, count: (last.head.count ?? 1) + (event.count ?? 1) }, effects: [] };
       continue;
     }
