@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.118.0] - 2026-11-02
+
+### Novo
+
+- **Relatar direto do fim do jogo.** A tela de vitória ou derrota ganhou, abaixo dos botões, **Relatar um problema**: ele abre o relato já em **Algo deu errado**, com a partida que acabou de terminar anexada. Na melhor de três, o mesmo botão aparece em **Prepare o próximo jogo**.
+
+### Mudou
+
+- **Partida anexada por padrão.** Ao enviar uma sugestão ou um erro, **Anexar a partida** já vem marcado sempre que há uma partida para mandar, também numa sugestão e ao relatar da tela inicial. Dá para desmarcar, e **O que vai junto** continua dizendo o que vai.
+
 ## [0.117.0] - 2026-11-02
 
 ### Mudou

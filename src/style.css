@@ -524,6 +524,13 @@ a { color: var(--gold); }
 .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .result-btns .arena-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .result-btns .arena-btn svg { width: 1.2em; height: 1.2em; flex: none; }
+/* Relatar no fim do jogo: discreto, abaixo dos botões, para não disputar atenção com jogar de novo. */
+.result-report { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; padding: 6px 10px; border: 0; border-radius: 8px; background: none; color: var(--muted); font: 500 14px var(--body); cursor: pointer; }
+.result-report svg { width: 15px; height: 15px; flex: none; }
+.result-report:hover, .result-report:focus-visible { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.result-report:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.overlay > .result .result-report { animation: rise-in 0.5s 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.sideboard-panel .result-report { margin-top: 12px; padding-left: 0; }
 
 @keyframes pulse { 50% { filter: brightness(1.25); } }
 @keyframes hit {

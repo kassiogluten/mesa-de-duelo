@@ -1,4 +1,13 @@
 {
+  "0.118.0": {
+    "Relatar direto do fim do jogo": [
+      { "img": "0.118.0/resultado.webp", "legenda": "Na tela de vitória, Relatar um problema fica abaixo de Pedir revanche, Ver campo de batalha e Início." },
+      { "img": "0.118.0/proximo-jogo.webp", "legenda": "Na melhor de três, o mesmo botão aparece entre os jogos, em Prepare o próximo jogo." }
+    ],
+    "Partida anexada por padrão": [
+      { "img": "0.118.0/anexar.webp", "legenda": "Mesmo numa sugestão, Anexar a partida já vem marcado, com a partida e o tamanho dela." }
+    ]
+  },
   "0.116.0": {
     "Habilidade de planeswalker identificada na pilha": [
       { "img": "0.116.0/habilidade-mais.webp", "legenda": "O oponente usou o +2 do Jace Beleren: o selo diz \"Habilidade · +2\" e a faixa mostra o texto dessa habilidade." },

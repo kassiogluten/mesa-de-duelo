@@ -88,10 +88,11 @@ Pagar Custo de Mana: ${remaining}`;
 }
 const improviseCost = (generic: number) => `${generic ? `{${generic}}` : ''}{R}`;
 const improviseMessage = (remaining: string) => `Fireball (306) - Fireball (306) deals 4 damage divided evenly (rounded down) to \nOponente. (X=4)\nChoose artifact to tap for Improvise.\nRemaining mana cost is ${remaining}`;
-const view = createForgeTableView(document.querySelector('#table')!, { onExit() {}, onRematch() {}, onLabClose() {} });
+const feedbackRequests: unknown[] = [];
+const view = createForgeTableView(document.querySelector('#table')!, { onExit() {}, onRematch() {}, onLabClose() {}, onFeedback(request) { feedbackRequests.push(request); } });
 view.attach(client as any, []); view.render();
 const warden = (id: number) => ({ id, controller: 10, tapped: false, token: false, name: 'Soul Warden', manaCost: '{W}', typeLine: 'Creature — Human Cleric', creature: true, power: 1, toughness: 1 });
-Object.assign(window, { fixture: { state, client, view, messages, render: () => view.render(),
+Object.assign(window, { fixture: { state, client, view, messages, feedbackRequests, render: () => view.render(),
   /**
    * Alerta de espera demorada: a mesa espera `player` há `ms` (como a ponte manda em `waiting`). O oponente vira uma
    * pessoa (Ana), já que a IA nunca recebe o alerta. Um estado novo, como chegaria da ponte, para o relógio ressincronizar.
@@ -385,6 +386,13 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       { kind: 'ability', label: '-1: Target player draws a card.', mode: 'ability', cost: '', extra: [], loyalty: '-1', description: '-1: Target player draws a card.' },
       { kind: 'ability', label: '-10: Target player mills twenty cards.', mode: 'ability', cost: '', extra: [], loyalty: '-10', description: '-10: Target player mills twenty cards.' },
     ] };
+    view.render();
+  },
+  /** Fim do jogo: a tela de resultado ou, na melhor de três, "Prepare o próximo jogo" (com "Relatar um problema"). */
+  gameEnd(step: 'result' | 'sideboard' = 'result') {
+    state.gameOver = true; state.winner = 'Você';
+    state.match = { gameNumber: 1, wins: [1, 0], draws: 0, over: step === 'result', phase: step === 'result' ? 'complete' : 'sideboarding', ready: [false, false] };
+    if (step === 'sideboard') state.sideboarding = { id: 1, ready: false, main: [{ name: 'Llanowar Elves', count: 4 }, { name: 'Forest', count: 16 }], sideboard: [{ name: 'Naturalize', count: 2 }] };
     view.render();
   },
   /** O oponente usou uma habilidade de lealdade do Jace Beleren: a pilha diz qual foi ("+2" ou o ultimate "−10"). */

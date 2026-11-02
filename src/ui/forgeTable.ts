@@ -93,6 +93,7 @@ const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.
 const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_FLAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
 /** Enjoo de invocação: estrelinhas girando em volta, como personagem tonto de desenho animado. */
 const ICON_DIZZY = '<svg class="dizzy" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="1.2" stroke-dasharray="2 2.4"/><g class="dizzy-orbit">'
@@ -143,7 +144,7 @@ export interface ForgeTableOptions {
   onRematch(): void;
   /** Sala de teste do Laboratório: fecha a sala para os dois lados e volta ao Laboratório. */
   onLabClose?(): void;
-  /** "Enviar sugestão ou erro" no menu e "Relatar este erro" no painel de erros (com o relatório do painel). */
+  /** "Enviar sugestão ou erro" no menu, "Relatar este erro" no painel de erros (com o relatório do painel) e "Relatar um problema" no fim do jogo. */
   onFeedback?(request: { kind: 'sugestao' | 'erro'; attach?: boolean; diagnostics?: string }): void;
   /** "Baixar gravação" no painel de erros (desenvolvimento): o mesmo arquivo que o relato envia. */
   onDownloadRecording?(): Promise<void>;
@@ -2141,7 +2142,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ${lifeDetails(s)}
       <div class="sideboard-columns"><section><h3>Deck principal · ${count(draft.main)}</h3>${list(draft.main, true)}</section><section><h3>Sideboard · ${count(draft.sideboard)}</h3>${list(draft.sideboard, false)}</section></div>
       <div class="sideboard-actions"><button class="arena-btn secondary" data-ui="exit">Sair da partida</button><button class="arena-btn secondary" data-ui="next-game" ${locked ? 'disabled' : ''}>Continuar sem trocas</button><button class="arena-btn primary" data-ui="sideboard-ready" ${locked ? 'disabled' : ''}>${sb.ready ? 'Aguardando o oponente…' : sideboardBusy ? 'Verificando…' : 'Confirmar e continuar'}</button></div>
+      ${reportButton()}
     </div>`;
+  }
+
+  /** "Relatar um problema" no fim de um jogo: abre o relato já em "Algo deu errado", com a partida que acabou anexada. */
+  function reportButton() {
+    return opts.onFeedback ? `<button class="result-report" data-ui="result-report" aria-haspopup="dialog">${ICON_FLAG}Relatar um problema</button>` : '';
   }
 
   function proliferateNames(s: FState) {
@@ -2777,6 +2784,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         ${summary}
         ${rematchNote(s)}
         <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="observe">${ICON_EYE}Ver campo de batalha</button>${s.room?.lab && opts.onLabClose ? `<button class="arena-btn secondary" data-ui="lab-close">${ICON_HOME}Laboratório</button>` : `<button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button>`}</div>
+        ${reportButton()}
       </div>`;
       if (ov.hidden || ov.dataset.html !== html) { ov.innerHTML = html; ov.dataset.html = html; }
       ov.hidden = false;
@@ -3191,6 +3199,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'log') { setErrors(false); setLog($('#fLogDrawer').hidden, true); return; }
     if (ui === 'errors') { setErrors($('#fErrorsDrawer').hidden, true); return; }
     if (ui === 'feedback') { setMenu(false); opts.onFeedback?.({ kind: 'sugestao' }); return; }
+    if (ui === 'result-report') { opts.onFeedback?.({ kind: 'erro' }); return; }
     if (ui === 'errors-report') { opts.onFeedback?.({ kind: 'erro', attach: true, diagnostics: errorReport() }); return; }
     if (ui === 'errors-download') {
       const status = $('#fErrorsStatus');

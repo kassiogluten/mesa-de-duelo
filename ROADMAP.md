@@ -1188,3 +1188,13 @@ Decidido em 02/11/2026 (versão 0.108.0): estilo marcante sem pausar a partida, 
 - Sons: `31-walker` (entrada) e `32-loyalty` (lealdade) nos 8 pacotes; o ultimate toca o da lealdade a 0,8× e 1,3× mais forte; a entrada do planeswalker não é abaixada como a das outras permanentes.
 - Reduzir movimento: sem anel, onda nem pulos; ficam a moldura acesa, a cor do escudo e o número.
 - Laboratório de efeitos: seção **Planeswalker** com entrar (Jace e um multicolor), +2, 0, −1 e ultimate, dos dois lados.
+
+## 81. Relatar com a partida anexada por padrão e direto da tela de resultado
+
+Hoje **Anexar a partida** só vem marcado num erro relatado durante a partida (ou por **Relatar este erro**); numa sugestão ou ao relatar da tela inicial, vem desmarcado, e muita gente envia sem a partida, que é o que mais ajuda a repetir o problema. E, quando a partida acaba, a tela de vitória ou derrota não tem como relatar: é preciso voltar à tela inicial e abrir o menu.
+
+- [x] **Anexar a partida** vem marcado por padrão sempre que houver uma partida para anexar (erro ou sugestão, da partida ou da tela inicial). O jogador continua podendo desmarcar, e o "o que vai junto" segue dizendo o que vai.
+- [x] Botão de relatar na tela final (vitória ou derrota), abrindo o mesmo formulário já com a partida que acabou de terminar anexada.
+- [x] Na melhor de três, o mesmo botão entre os jogos, em **Prepare o próximo jogo**.
+
+Decidido em 02/11/2026 (versão 0.118.0): o botão se chama **Relatar um problema**, abre o formulário já em **Algo deu errado** e fica discreto, abaixo dos botões da tela de resultado (e abaixo dos botões de **Prepare o próximo jogo**); a partida que vai junto é a que acabou de terminar, ainda na memória. **Anexar a partida** vem marcado sempre que há partida, em erro ou sugestão, e trocar o tipo não mexe mais na caixa. Página de teste: `window.fixture.gameEnd('result' | 'sideboard')` em `tests/fixtures/duel-table.html`.

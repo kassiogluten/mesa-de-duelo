@@ -9,7 +9,7 @@ export interface FeedbackFormOptions {
   from: 'inicio' | 'partida';
   /** A partida que pode ir junto: a que está na mesa ou a última guardada no aparelho. */
   match(): Promise<MatchAttachment | null>;
-  /** Marca "Anexar a partida" de saída (erro durante a partida, "Relatar este erro"). */
+  /** "Anexar a partida" vem marcado sempre que houver uma partida; false o deixa desmarcado de saída. */
   attach?: boolean;
   /** Relatório do painel "Erros da partida", quando relatado de lá. */
   diagnostics?: string;
@@ -65,7 +65,7 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
   const author = reportAuthor();
   $('.feedback-author').hidden = !author;
   let kind: FeedbackKind = options.kind ?? 'sugestao';
-  let attachTouched = false, sending = false;
+  let sending = false;
   let match: MatchAttachment | null = null;
 
   const close = () => {
@@ -91,10 +91,7 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
     const target = e.target as HTMLInputElement;
     if (target.name === 'fbKind') {
       kind = target.value === 'erro' ? 'erro' : 'sugestao';
-      // Um erro durante a partida vai com ela; uma sugestão, não. Só enquanto o jogador não mexeu na caixa.
-      if (!attachTouched && match) attach.checked = kind === 'erro' && (options.attach ?? options.from === 'partida');
     }
-    if (target === attach) attachTouched = true;
     sync();
   });
   text.addEventListener('input', () => { if (text.value.trim()) showError(''); sync(); });
@@ -144,7 +141,8 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
     if (!overlay.isConnected || !found?.recording.frames.length) return;
     match = found;
     const meta = found.recording.meta;
-    attach.checked = kind === 'erro' && (options.attach ?? options.from === 'partida');
+    // A partida é o que mais ajuda a repetir o problema: vai junto por padrão, em erro ou sugestão; o jogador pode desmarcar.
+    attach.checked = options.attach ?? true;
     $('.feedback-attach').hidden = false;
     const label = `Partida${meta.format ? ` de ${FORMATS[meta.format] ?? meta.format}` : ''} ${when(found.recording.startedAt)}`;
     $('#fbMatch').textContent = `${label} · calculando o tamanho…`;
