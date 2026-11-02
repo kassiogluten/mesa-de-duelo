@@ -1,4 +1,16 @@
 {
+  "0.106.3": {
+    "Spelunking e terrenos que entram virados": [
+      { "img": "0.106.3/spelunking-desvirados.webp", "legenda": "Com a Spelunking em campo, Bojuka Bog, Golgari Rot Farm e Stomping Ground entram desvirados, sem a mesa perguntar a ordem dos efeitos." }
+    ],
+    "Fact or Fiction e outras cartas de dois montes": [
+      { "img": "0.106.3/montes-escolher.webp", "legenda": "Ao escolher, os dois montes da Fact or Fiction lado a lado, cada um com as suas cartas e o botão para ficar com ele." },
+      { "img": "0.106.3/montes-separar.webp", "legenda": "Ao separar, as cartas aparecem nos dois montes enquanto você os monta; tocar numa carta a passa para o outro monte." }
+    ],
+    "Gifts Ungiven e Intuition": [
+      { "img": "0.106.3/gifts-titulo.webp", "legenda": "Com a Gifts Ungiven do oponente, o pedido diz em português quantas cartas escolher e para onde vai cada uma." }
+    ]
+  },
   "0.106.1": {
     "Proliferar com slime e outros marcadores que atrapalham": [
       { "img": "0.106.1/proliferar-slime.webp", "legenda": "Com o Toxrill em campo, o slime, o -1/-1 e o atordoamento nas criaturas do oponente aparecem em verde, em Te ajuda, prontos para proliferar." }

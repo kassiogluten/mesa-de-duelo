@@ -912,6 +912,7 @@ final class Session {
                 }
                 JsonArray rows = optionsJson(options, display);
                 Dungeons.roomChoice(hosted.getGame(), options, rows, q);
+                Piles.choose(q, options, hosted.getGame());
                 q.add("options", rows);
                 CoinFlipText.choice(q);
                 voteQuestion(q, hosted.getGame());
@@ -941,6 +942,7 @@ final class Session {
                 options.addAll((Collection<?>) a[1]);
                 q.add("options", optionsJson(options, null));
                 voteQuestion(q, hosted.getGame());
+                ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
             }
             case chooseEntitiesForEffect -> {
                 q.addProperty("kind", "choose");
@@ -949,6 +951,7 @@ final class Session {
                 q.addProperty("max", (Integer) a[3]);
                 options.addAll((Collection<?>) a[1]);
                 q.add("options", optionsJson(options, null));
+                ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
             }
             case order -> {
                 q.addProperty("title", String.valueOf(a[0]));
@@ -967,6 +970,7 @@ final class Session {
                 JsonArray rows = optionsJson(options, null);
                 if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
                 else LibraryChoice.describe(q, String.valueOf(a[0]), options);
+                if (!q.has("purpose")) Piles.split(q, String.valueOf(a[0]), options, hosted.getGame());
                 q.add("options", rows);
             }
             case confirm -> {

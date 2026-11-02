@@ -52,6 +52,8 @@ import './choiceFilters.css';
 import { prefsChanged } from '../conta/sync';
 import { isLibraryChoice, libraryChoiceHTML, libraryHeading, librarySummary, libraryStart, moveLibraryCard, placeLibraryCard } from './libraryChoice';
 import './libraryChoice.css';
+import { isPilesChoice, isPilesSplit, movePileCard, pilesChoiceHTML, pilesHeading, pilesSplitHTML, pilesStart, splitSummary } from './piles';
+import './piles.css';
 import { adjust, autoSplit, combatDamageHTML, isCombatDamage, splitStatus } from './combatDamage';
 import './combatDamage.css';
 import './gameplay.css';
@@ -726,7 +728,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function focusSnapshot() {
     const el = document.activeElement as HTMLElement | null;
     if (!el || !root.contains(el)) return null;
-    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-filter', 'data-q-sort', 'data-lib-place', 'data-lib-move', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
+    const keys = ['data-ui', 'data-act', 'data-inspect', 'data-fid', 'data-pid', 'data-mana', 'data-ctr', 'data-event', 'data-log-toggle', 'data-stack', 'data-stack-inspect', 'data-peek', 'data-q-opt', 'data-q-filter', 'data-q-sort', 'data-lib-place', 'data-lib-move', 'data-pile-move', 'data-pile-pick', 'data-q-confirm', 'data-q-submit', 'data-q-none', 'data-q-keep', 'data-q-amount', 'data-trigger', 'data-trigger-undo', 'data-trigger-confirm', 'data-cd-add', 'data-cd-sub', 'data-cd-lethal', 'data-cd-auto', 'data-cd-confirm', 'data-group', 'data-stop-group', 'data-sb-main', 'data-sb-side'];
     const attr = keys.find(key => el.hasAttribute(key));
     const scope = el.parentElement?.closest('[id]')?.id;
     const selector = el.id ? `#${CSS.escape(el.id)}` : attr ? `${scope ? `#${CSS.escape(scope)} ` : ''}[${attr}="${CSS.escape(el.getAttribute(attr)!)}"]` : null;
@@ -2240,12 +2242,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (status) status.textContent = nameStatus(m, qState?.text ?? '');
   }
   function questionHTML(q: FQuestion) {
-    if (!qState || qState.id !== q.id) qState = { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
+    if (!qState || qState.id !== q.id) qState = { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : isPilesSplit(q) ? pilesStart(q) : [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
     if (isCombatDamage(q)) return combatDamageHTML(q, splitFor(q), c => face(c, 'normal'), label, client?.state?.players ?? []);
     if (isTriggerOrder(q)) return triggerOrderHTML(q, triggersFor(q), c => face(c, 'normal'), label);
     if (isPlayMode(q)) return playModeHTML(q, c => face(c, 'normal'), label);
     if (isLibraryChoice(q)) return libraryChoiceHTML(q, qState.picked, c => face(c, 'normal'), label, c => ptOf(c.name)?.type_line || c.typeLine || '');
     if (isVote(q)) return voteHTML(q, { face: c => face(c, 'normal'), label, rulesText: c => ptOf(c.name)?.text || c.text || '', playerName });
+    if (isPilesSplit(q)) return pilesSplitHTML(q, qState.picked, pilesView());
+    if (isPilesChoice(q)) return pilesChoiceHTML(q, pilesView());
     const opts = q.options ?? [];
     const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${face(q.card, 'normal')}</div>` : ''}`;
     if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, client?.state?.players.find(p => p.id === q.dungeonOwner));
@@ -2305,6 +2309,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       </div>`;
   }
 
+  function pilesView() { return { face: (c: FCard) => face(c, 'normal'), label, playerName, you: client?.state?.you }; }
+
   /** Voto numa permanente: a escolha é no campo, e o painel diz de qual votação ela é. */
   function voteBoardPrompt(vote: NonNullable<FState['input']['vote']>) {
     const tally = vote.votes.length ? `\nVotos até agora: ${voteTallyText(vote.votes, playerName)}` : '';
@@ -2315,7 +2321,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
     const picked = isTriggerOrder(q) ? triggerOrder?.id === q.id ? triggerOrder.t.placed : 0 : qState?.id === q.id ? qState.picked.length : 0;
     const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isVote(q) && q.card ? `Votação: ${label(q.card)}` : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
+    const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isPilesSplit(q) || isPilesChoice(q) ? pilesHeading(q, pilesView()) : isVote(q) && q.card ? `Votação: ${label(q.card)}` : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
     return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
   }
 
@@ -2610,7 +2616,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
       // Fileira de cartas (celular): marcar uma carta redesenha a escolha, mas a fileira fica onde estava.
       const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
-      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      setHTML(qEl, minimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (again !== null && after && after !== before) after.scrollTop = again;
       if (after && after !== before) restoreRowScroll(after, rows);
@@ -3142,6 +3148,21 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         }
       }
       return;
+    }
+    const pileMove = t.closest<HTMLElement>('[data-pile-move]');
+    const pilePick = t.closest<HTMLElement>('[data-pile-pick]');
+    const pileQuestion = client.state?.question;
+    if ((pileMove || pilePick) && qState && pileQuestion && qState.id === pileQuestion.id) {
+      if (pilePick && isPilesChoice(pileQuestion)) { answer({ indices: [Number(pilePick.dataset.pilePick)] }); return; }
+      if (pileMove && isPilesSplit(pileQuestion)) {
+        const option = Number(pileMove.dataset.pileMove);
+        movePileCard(qState.picked, option);
+        render();
+        // O foco segue a carta no outro monte.
+        root.querySelector<HTMLElement>(`[data-pile-move="${option}"]`)?.focus({ preventScroll: true });
+        announce(splitSummary(pileQuestion, qState.picked));
+        return;
+      }
     }
     const filter = t.closest<HTMLElement>('[data-q-filter]');
     const sortBy = t.closest<HTMLElement>('[data-q-sort]')?.dataset.qSort;

@@ -1,0 +1,59 @@
+/* Dois montes (Fact or Fiction e afins): separar ao vivo e escolher, com os montes lado a lado. */
+#fQuestion .question.piles {
+  width: min(1180px, 96vw); max-height: 94vh; padding: 20px 22px 0; display: flex; flex-direction: column; gap: 10px;
+  border: 0; background: none; box-shadow: none;
+}
+#fQuestion .question.piles .q-hint { max-width: 680px; margin: 0 auto; color: var(--muted); text-align: center; }
+#fQuestion .question.piles .pile-summary { color: var(--ink); font-weight: 600; }
+/* Os botões de confirmar ficam sempre à vista, mesmo quando a janela precisa rolar. */
+#fQuestion .question.piles .q-actions { position: sticky; bottom: 0; z-index: 3; padding: 10px 0 16px; background: linear-gradient(180deg, transparent, rgb(2 4 10 / .85) 35%); }
+
+.pile-groups { --pw: 132px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.pile-group {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; padding: 12px 10px 14px; border-radius: 14px;
+  border: 1px solid #ffffff1f; background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 78%, transparent);
+}
+.pile-group h3 { display: flex; align-items: baseline; gap: 8px; margin: 0; font: 600 13px var(--body); color: var(--muted); }
+.pile-group h3 b { color: var(--gold-light); font: 800 16px var(--body); }
+.pile-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0; padding: 0; list-style: none; min-height: calc(var(--pw) * 680 / 488); }
+.pile-slot { flex: 0 0 var(--pw); display: flex; flex-direction: column; gap: 6px; }
+.pile-empty { display: grid; place-items: center; width: var(--pw); aspect-ratio: 488 / 680; border: 2px dashed #ffffff26; border-radius: 10px; color: var(--muted); font: 600 13px var(--body); }
+
+.pile-card { all: unset; box-sizing: border-box; display: block; width: 100%; aspect-ratio: 488 / 680; border-radius: 10px; cursor: pointer; transition: transform .18s cubic-bezier(.2, .8, .2, 1); }
+.pile-card.read { cursor: zoom-in; }
+.pile-face { position: relative; width: 100%; height: 100%; --fw: var(--pw); pointer-events: none; }
+.pile-face .face { box-shadow: 0 12px 26px rgb(0 0 0 / .55); transition: box-shadow .18s; }
+.pile-card:hover { transform: translateY(-4px); }
+.pile-card:hover .face { box-shadow: 0 0 0 2px rgb(89 181 255 / .8), 0 0 22px rgb(89 181 255 / .45), 0 16px 30px rgb(0 0 0 / .6); }
+.pile-card:focus-visible { outline: 3px solid var(--glow); outline-offset: 3px; }
+.pile-back { width: 100%; aspect-ratio: 488 / 680; border-radius: 10px; border: 1px solid #ffffff2a; background: radial-gradient(circle at 50% 50%, #f2b54c44, transparent 30%), linear-gradient(160deg, #3a2410, #1c1208); }
+
+.pile-read {
+  all: unset; box-sizing: border-box; display: grid; place-items: center; min-height: 30px; border-radius: 9px; border: 1px solid #ffffff24;
+  background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 85%, transparent); color: var(--muted); font: 700 12px var(--body); cursor: zoom-in;
+}
+.pile-read:hover { border-color: #59b5ffb3; color: var(--ink); }
+.pile-read:focus-visible { outline: 3px solid var(--glow); outline-offset: 2px; }
+.pile-pick { margin-top: 4px; min-width: 200px; }
+
+@media (pointer: coarse) { .pile-read { min-height: 38px; } }
+
+/* Tela estreita: um monte embaixo do outro, cartas menores. Celular deitado: cartas ainda menores, montes lado a lado. */
+@media (max-width: 760px) {
+  #fQuestion .question.piles { padding: 8px 6px 0; gap: 6px; }
+  #fQuestion .question.piles .q-head h2 { font-size: 16px; }
+  #fQuestion .question.piles .q-hint { font-size: 12px; }
+  .pile-groups { --pw: 92px; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .pile-group { padding: 8px 6px 10px; gap: 6px; }
+  .pile-row { gap: 6px; }
+}
+@media (max-height: 500px) and (min-width: 761px) {
+  #fQuestion .question.piles { padding: 8px 6px 0; gap: 4px; }
+  #fQuestion .question.piles .q-hint { font-size: 11px; }
+  .pile-groups { --pw: 72px; gap: 10px; }
+  .pile-group { padding: 6px; gap: 4px; }
+  .pile-read { min-height: 24px; font-size: 10px; }
+  #fQuestion .question.piles .q-actions { padding: 6px 0 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .pile-card, .pile-face .face { transition: none; } .pile-card:hover { transform: none; } }

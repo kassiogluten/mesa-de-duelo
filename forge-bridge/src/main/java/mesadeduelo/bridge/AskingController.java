@@ -11,6 +11,7 @@ import forge.card.mana.ManaCost;
 import forge.card.mana.ManaCostShard;
 import forge.game.Game;
 import forge.game.GameEntity;
+import forge.game.ability.ApiType;
 import forge.game.card.Card;
 import forge.game.card.CardCollection;
 import forge.game.card.CardCollectionView;
@@ -109,6 +110,22 @@ final class AskingController extends PlayerControllerHuman {
     @Override public boolean chooseTargetsFor(SpellAbility sa) { return asking(sa, () -> super.chooseTargetsFor(sa)); }
     @Override public boolean confirmReplacementEffect(ReplacementEffect effect, SpellAbility effectSA, GameEntity affected, String question) {
         return asking(effect.getHostCard(), () -> super.confirmReplacementEffect(effect, effectSA, affected, question));
+    }
+
+    /**
+     * "Entra desvirado" (Spelunking, Horizon Explorer, Gond Gate) fica por último entre as substituições, sem perguntar:
+     * aplicado antes de um "entra virado", o terreno entraria virado, o que ninguém quer. O Forge perguntaria a ordem a
+     * cada terreno desses.
+     */
+    @Override public ReplacementEffect chooseSingleReplacementEffect(List<ReplacementEffect> possibleReplacers) {
+        List<ReplacementEffect> rest = possibleReplacers.stream().filter(re -> !entersUntapped(re)).toList();
+        if (rest.isEmpty() || rest.size() == possibleReplacers.size()) return super.chooseSingleReplacementEffect(possibleReplacers);
+        return rest.size() == 1 ? rest.get(0) : super.chooseSingleReplacementEffect(rest);
+    }
+
+    static boolean entersUntapped(ReplacementEffect re) {
+        SpellAbility sa = re.ensureAbility();
+        return sa != null && sa.getApi() == ApiType.Untap && sa.hasParam("ETB");
     }
 
     /**

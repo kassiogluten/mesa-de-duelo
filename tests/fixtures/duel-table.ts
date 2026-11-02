@@ -121,6 +121,45 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       ] } });
     view.render();
   },
+  /**
+   * Dois montes. split: você separa (Fact or Fiction do oponente, ou Steam Augury sua com `steam`); choose: você
+   * escolhe (sua Fact or Fiction, ou a Steam Augury do oponente com `steam`). Monte 1: Bolt e Counterspell.
+   */
+  piles(step: 'split' | 'choose', steam = false) {
+    const owner = (step === 'split') === steam ? 10 : 23;
+    const revealed = [['Lightning Bolt', 'Instant', '{R}'], ['Counterspell', 'Instant', '{U}{U}'], ['Forest', 'Basic Land — Forest', ''],
+      ['Island', 'Basic Land — Island', ''], ['Grizzly Bears', 'Creature — Bear', '{1}{G}']]
+      .map(([name, typeLine, manaCost], i) => card(700 + i, name, owner, { typeLine, manaCost, creature: /Creature/.test(typeLine), land: /Land/.test(typeLine) }));
+    const source = steam ? card(699, 'Steam Augury', owner, { creature: false, manaCost: '{2}{U}{R}', typeLine: 'Instant' })
+      : card(699, 'Fact or Fiction', owner, { creature: false, manaCost: '{3}{U}', typeLine: 'Instant' });
+    const about = { pileOwner: owner, ownerChooses: !steam, chosenTo: 'hand', otherTo: 'graveyard', card: source };
+    const opt = (c: any) => ({ kind: 'card', card: c, label: c.name });
+    const marker = (id: number, label: string) => ({ kind: 'card', label, card: { id, name: label, tapped: false, token: false, manaCost: '', typeLine: '' } });
+    state.question = step === 'split'
+      ? { id: 520, method: 'order', kind: 'choose', purpose: 'piles-split', title: 'Divida ss cartas em duas pilhas', min: 0, max: 5, options: revealed.map(opt), ...about }
+      : { id: 521, method: 'getChoices', kind: 'choose', purpose: 'piles-choose', title: 'Escolha uma pilha', min: 1, max: 1, ...about,
+        options: [marker(-2147483648, '-- Pile 1 (2 cards) --'), opt(revealed[0]), opt(revealed[1]), marker(-2147483647, '-- Pile 2 (3 cards) --'), ...revealed.slice(2).map(opt)],
+        piles: [{ option: 0, size: 2, cards: [1, 2] }, { option: 3, size: 3, cards: [4, 5, 6] }] };
+    Object.assign(state.input, { priority: false, actionable: [] });
+    view.render();
+  },
+  /** Gifts Ungiven do oponente: você escolhe 2 das 4 cartas que ele buscou para o cemitério dele, com o título que a ponte escreve. */
+  gifts() {
+    const found = [['Lightning Bolt', 'Instant', '{R}'], ['Counterspell', 'Instant', '{U}{U}'], ['Grizzly Bears', 'Creature — Bear', '{1}{G}'], ['Serra Angel', 'Creature — Angel', '{3}{W}{W}']]
+      .map(([name, typeLine, manaCost], i) => card(720 + i, name, 23, { typeLine, manaCost, creature: /Creature/.test(typeLine) }));
+    state.question = { id: 530, method: 'chooseEntitiesForEffect', kind: 'choose', title: 'Escolha 2 cartas para o cemitério de Oponente. As outras vão para a mão.',
+      min: 2, max: 2, options: found.map(c => ({ kind: 'card', card: c, label: c.name })), card: card(719, 'Gifts Ungiven', 23, { creature: false, manaCost: '{3}{U}', typeLine: 'Instant' }) };
+    Object.assign(state.input, { priority: false, actionable: [] });
+    view.render();
+  },
+  /** Spelunking em campo: terrenos que entram virados (Bojuka Bog, Golgari Rot Farm, Stomping Ground) entram desvirados. */
+  spelunking() {
+    const [me] = state.players;
+    const tappedLand = (id: number, name: string, typeLine = 'Land') => card(id, name, 10, { creature: false, land: true, typeLine, manaCost: '' });
+    me.battlefield = [card(270, 'Spelunking', 10, { creature: false, manaCost: '{2}{G}', typeLine: 'Enchantment' }), land(200, 10), land(210, 10),
+      tappedLand(271, 'Bojuka Bog'), tappedLand(272, 'Golgari Rot Farm'), tappedLand(273, 'Stomping Ground', 'Land — Mountain Forest')];
+    view.render();
+  },
   /** Proliferar com Toxrill: slime, -1/-1 e atordoamento nas criaturas do oponente contam a seu favor. */
   proliferateSlime() {
     const [me, opp] = state.players;
@@ -526,6 +565,10 @@ if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (windo
 if (new URLSearchParams(location.search).get('cenario') === 'contagens') (window as any).fixture.counts(Number(new URLSearchParams(location.search).get('licoes') ?? 3));
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
+// Dois montes: ?cenario=montes&passo=split|choose (&steam=1 para a Steam Augury, em que quem conjura separa).
+if (cenario === 'montes') { const q = new URLSearchParams(location.search); (window as any).fixture.piles(q.get('passo') === 'choose' ? 'choose' : 'split', q.has('steam')); }
+if (cenario === 'gifts') (window as any).fixture.gifts();
+if (cenario === 'spelunking') (window as any).fixture.spelunking();
 if (cenario === 'viradas') (window as any).fixture.faceDown();
 if (cenario === 'improvisar') (window as any).fixture.improvise();
 // Pagar mana à mão: ?cenario=pagar (Craw Wurm, {4}{G}{G}); toque nos terrenos e no Sol Ring para descontar.

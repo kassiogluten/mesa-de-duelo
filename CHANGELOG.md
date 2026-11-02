@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.106.3] - 2026-11-02
+
+### Corrigido
+
+- **Spelunking e terrenos que entram virados.** Com a Spelunking em campo, cada terreno que entra virado (Bojuka Bog, Golgari Rot Farm, Stomping Ground e afins) abria uma pergunta sobre a ordem dos efeitos, e, escolhendo a Spelunking primeiro, o terreno entrava virado. Agora a mesa não pergunta mais: o terreno sempre entra desvirado. Nos terrenos que pedem 2 de vida para entrar desvirados, como o Stomping Ground, você pode recusar o pagamento e ele entra desvirado do mesmo jeito. Vale também para Horizon Explorer e outras cartas que fazem os terrenos entrarem desvirados.
+- **Fact or Fiction e outras cartas de dois montes.** Na hora de escolher um monte, a mesa mostrava dois cartões em branco ("Pile 1", "Pile 2") e as cartas misturadas, fora de ordem: não dava para saber quais cartas estavam em cada monte. Agora os dois montes aparecem lado a lado, cada um com as suas cartas e o botão **Ficar com o monte 1** (ou **Escolher o monte 1**, quando o monte vai para outro jogador), e a mesa diz para onde vai cada um. Quem separa também vê os dois montes enquanto monta: todas as cartas começam no monte 1, e tocar numa carta a passa para o outro; **Ler** abre a carta. Vale para Fact or Fiction, Sphinx of Uthuun, Steam Augury, Epiphany at the Drownyard e outras cartas que dividem em dois montes.
+- **Gifts Ungiven e Intuition.** O oponente que escolhe as cartas buscadas via um pedido em inglês ("Select two cards for the graveyard"), sem dizer de quem eram as cartas. Agora a mesa diz em português quantas escolher, para onde vão e o que acontece com as outras, como "Escolha 2 cartas para o cemitério de Ana. As outras vão para a mão."
+
 ## [0.106.2] - 2026-11-01
 
 ### Corrigido
