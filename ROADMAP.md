@@ -1169,3 +1169,22 @@ Veio da sugestão S2. Sem rede ou com o Scryfall fora, a biblioteca e a tela Jog
 - [x] O aviso do editor ganhou o mesmo **Tentar de novo**.
 
 Feito na 0.105.0.
+
+## 80. Destaque para planeswalkers: entrada e lealdade ✅
+
+Planeswalkers estão no meta e hoje entram na mesa e usam lealdade como qualquer permanente: a carta aparece no campo e o número muda, sem nada que chame a atenção. Dar a eles um momento próprio, para quem joga e para quem assiste.
+
+- [x] Entrada: um efeito quando um planeswalker chega ao campo (brilho na moldura, a carta "pousando" com um pulso na cor dele, o marcador de lealdade surgindo com o valor inicial).
+- [x] Habilidade de lealdade: ao ativar, o marcador reage ao custo (sobe com brilho no **+**, desce no **−**), com o custo em número flutuante e um destaque na habilidade usada; o **−** final (ultimate) ganha um efeito maior.
+- [x] Som próprio para a entrada e para o uso de lealdade, respeitando o som desligado.
+- [x] Respeitar "reduzir movimento" do sistema (só o número e um realce curto) e não atrasar a partida: o efeito acompanha a jogada, sem esperar terminar.
+- [x] Ver o que a ponte já manda (entrada no campo, ativação com custo de lealdade, contador mudando) e o que falta para saber que foi uma habilidade de lealdade e qual delas.
+- [x] Cenários no laboratório de efeitos (item 18) para entrada, **+**, **−** e ultimate.
+
+Decidido em 02/11/2026 (versão 0.108.0): estilo marcante sem pausar a partida, ultimate com efeito maior e o efeito vale para todos os jogadores (inclusive o computador e quem assiste). A ponte passa a mandar, no `ability-activated` de uma habilidade de lealdade, `loyalty`, `cost` ("+2", "0", "-3", com o X escolhido no "-X") e `ultimate` (o `Ultimate$ True` do script da carta), lidos da habilidade real pelo id da pilha (`Loyalty.java`); o marcador de lealdade posto como custo do **+** chega antes, marcado `paid`, e a mesa não toca o som de marcador por cima. Na mesa (`planeswalkerEffects.ts`, `motion.ts`):
+- Entrada: depois do "assentar", a moldura acende na cor do planeswalker (pelo custo de mana: uma cor, a dela; várias, dourado; nenhuma, prata), um anel de luz se abre em volta da carta e o escudo de lealdade surge com um pulo. O passo da entrada vai de 340 para 560 ms. O blink continua com o anel do exílio.
+- Lealdade: o escudo pula e fica verde (+), vermelho (−) ou dourado (0) por 1 s; o custo sobe do topo da carta, como o número de dano (no escudo ele cobria o texto e o aviso); o aviso troca a engrenagem por um escudo com o custo e mostra o texto da habilidade embaixo. A frase é "Ana usou +2 de Jace Beleren." (e no histórico também).
+- Ultimate: onda de luz da carta pela mesa, tremor leve, número maior com o selo **Ultimate**, aviso maior ("usou o ultimate de Jace Beleren (−10)"), passo de 1,3 s e aviso de 2,6 s.
+- Sons: `31-walker` (entrada) e `32-loyalty` (lealdade) nos 8 pacotes; o ultimate toca o da lealdade a 0,8× e 1,3× mais forte; a entrada do planeswalker não é abaixada como a das outras permanentes.
+- Reduzir movimento: sem anel, onda nem pulos; ficam a moldura acesa, a cor do escudo e o número.
+- Laboratório de efeitos: seção **Planeswalker** com entrar (Jace e um multicolor), +2, 0, −1 e ultimate, dos dois lados.

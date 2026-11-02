@@ -1,5 +1,6 @@
 import { entryTiming, millTiming, type PresentationEvent } from './presentationTimeline';
 import { damageLook, type DamageLook } from './damageEffects';
+import { loyaltyLook, walkerArrives, walkerTone, type LoyaltyLook } from './planeswalkerEffects';
 
 const KEYED = '[data-fid],[data-peek]';
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -24,6 +25,13 @@ const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
 function center(el: Element | null | undefined): Point | undefined {
   const r = el?.getBoundingClientRect();
   return r?.width ? { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width, h: r.height } : undefined;
+}
+
+/** O texto da habilidade sem o nome da carta na frente ("Jace Beleren - +2: Each player draws a card." → "+2: Each…"). */
+function abilityText(event: PresentationEvent) {
+  const text = (event.text ?? '').trim();
+  const name = event.card?.name;
+  return name && text.startsWith(`${name} - `) ? text.slice(name.length + 3) : text;
 }
 
 /** Spatial presentation is separate from the board state and can never capture pointer input. */
@@ -68,7 +76,7 @@ export function createMotion(root: HTMLElement): Motion {
     callouts.length = 0;
     for (const el of hiddenCards) { el.style.opacity = ''; el.style.visibility = ''; }
     hiddenCards.clear();
-    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight,.lethal-hit,.heal-flash,.incoming').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash', 'incoming'));
+    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight,.lethal-hit,.heal-flash,.incoming,.walker-glow,.loyalty-up,.loyalty-down,.loyalty-zero').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash', 'incoming', 'walker-glow', 'loyalty-up', 'loyalty-down', 'loyalty-zero'));
   }
   function remove(el: HTMLElement) {
     el.remove(); effects.delete(el);
@@ -182,26 +190,88 @@ export function createMotion(root: HTMLElement): Motion {
     floatNumber(at, `+${event.delta}`, 'heal');
   }
 
+  /** Brilho na cor do planeswalker em volta da carta; com "reduzir movimento", só a moldura acesa por um instante. */
+  function walkerGlow(card: HTMLElement, tone: string, ms: number) {
+    card.style.setProperty('--walker', tone);
+    card.classList.add('walker-glow');
+    later(() => card.classList.remove('walker-glow'), ms);
+  }
+  /**
+   * Planeswalker chegando: a moldura acende na cor dele, um anel de luz se abre por trás da carta e o escudo de
+   * lealdade surge com o valor inicial.
+   */
+  function walkerArrive(card: HTMLElement, event: PresentationEvent) {
+    const tone = walkerTone(event.card);
+    walkerGlow(card, tone, 1100);
+    const at = center(card);
+    if (!at || reduced()) return;
+    const size = Math.max(at.w, at.h) * 1.5;
+    const ring = effect('walker-ring', { ...at, w: size, h: size });
+    ring.style.setProperty('--walker', tone);
+    animate(ring, [{ opacity: 0, scale: '.45' }, { opacity: .95, scale: '.9', offset: .35 }, { opacity: 0, scale: '1.35' }], 760, 'ease-out');
+    later(() => remove(ring), 800);
+    animate(card, [{ filter: `brightness(1.6) drop-shadow(0 0 14px ${tone})` }, { filter: `brightness(1.1) drop-shadow(0 0 8px ${tone})`, offset: .5 }, { filter: 'none' }], 900, 'ease-out');
+    const badge = card.querySelector<HTMLElement>(':scope > .pt.loyalty');
+    if (badge) animate(badge, [{ opacity: 0, scale: '.2' }, { opacity: 1, scale: '1.45', offset: .55 }, { scale: '.95', offset: .8 }, { opacity: 1, scale: '1' }], 520, 'cubic-bezier(.3,.7,.4,1)', 240);
+  }
+  /**
+   * Habilidade de lealdade: o escudo pula (sobe verde no +, desce vermelho no −), o custo flutua acima dele e o ultimate
+   * solta uma onda de luz pela mesa. Com "reduzir movimento", só o número e a cor no escudo.
+   */
+  function loyaltyAbility(look: LoyaltyLook, card: HTMLElement, event: PresentationEvent) {
+    const badge = card.querySelector<HTMLElement>(':scope > .pt.loyalty');
+    // O número sobe do topo da carta, como o do dano: no escudo (embaixo) ele cobriria o texto e o aviso ao lado.
+    const at = center(card);
+    const tone = walkerTone(event.card);
+    walkerGlow(card, tone, look.ultimate ? 1600 : 900);
+    if (badge) {
+      const cls = `loyalty-${look.tone}`;
+      badge.classList.add(cls);
+      later(() => badge.classList.remove(cls), 1000);
+      const lift = look.tone === 'up' ? '-5px' : look.tone === 'down' ? '4px' : '0';
+      animate(badge, [{ scale: '1', translate: '0 0' }, { scale: '1.5', translate: `0 ${lift}`, offset: .35 }, { scale: '.94', translate: '0 0', offset: .7 }, { scale: '1', translate: '0 0' }], 520, 'cubic-bezier(.3,.7,.4,1)');
+    }
+    if (at && look.cost) floatNumber(at, look.cost, `loyalty-cost ${look.tone}${look.ultimate ? ' heavy' : ''}`, look.ultimate ? ['Ultimate'] : []);
+    if (!look.ultimate) return;
+    const from = center(card);
+    if (!from || reduced()) return;
+    const bounds = layer().getBoundingClientRect();
+    const size = Math.max(bounds.width, bounds.height) * .9;
+    const wave = effect('walker-wave', { ...from, w: size, h: size });
+    wave.style.setProperty('--walker', tone);
+    animate(wave, [{ opacity: .9, scale: '.05' }, { opacity: .55, scale: '.6', offset: .5 }, { opacity: 0, scale: '1.1' }], 1100, 'cubic-bezier(.2,.6,.3,1)');
+    later(() => remove(wave), 1150);
+    const arena = root.querySelector<HTMLElement>('.arena');
+    if (arena) animate(arena, [{ translate: '0 0' }, { translate: '-3px 1px', offset: .25 }, { translate: '3px -1px', offset: .5 }, { translate: '0 0' }], 300, 'linear', 120);
+  }
+
   /**
    * Habilidade (gatilho ou ativada) não move a carta: com a fonte no campo, ela brilha e ganha um aviso ao lado;
    * fora do campo, a carta aparece parada no centro. Uma cópia voando parecia a criatura saindo do campo.
    */
   function ability(event: PresentationEvent, card: HTMLElement | null, options: { label: string; html?: string; duration: number; calloutDuration?: number }) {
     const rect = card?.getBoundingClientRect();
+    const look = loyaltyLook(event);
     if (card && rect?.width) {
       pulse(card);
+      if (look) loyaltyAbility(look, card, event);
       // Um aviso por carta, e poucos de uma vez: vários gatilhos seguidos não viram uma pilha de balões.
       for (const old of callouts.filter(c => c.card === card)) remove(old.note);
       while (callouts.length >= MAX_CALLOUTS) remove(callouts[0].note);
       const hold = Math.max(options.duration, options.calloutDuration ?? 0);
       const note = document.createElement('div');
-      note.className = `ability-callout${event.trigger ? ' trigger' : ''}`;
+      note.className = `ability-callout${event.trigger ? ' trigger' : ''}${look ? ` loyalty ${look.tone}` : ''}${look?.ultimate ? ' ultimate' : ''}`;
       note.setAttribute('aria-hidden', 'true');
-      // Raio para gatilho, engrenagem para habilidade ativada; o texto diz qual é.
-      note.innerHTML = event.trigger
+      // Raio para gatilho, engrenagem para habilidade ativada, o escudo com o custo na de lealdade; o texto diz qual é.
+      if (look) {
+        const chip = document.createElement('b'); chip.className = 'loyalty-chip'; chip.textContent = look.cost || '0';
+        note.append(chip);
+      } else note.innerHTML = event.trigger
         ? '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>'
         : '<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 5-.1-3 2-1.6-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L15 2.5h-4l-.4 2.5A8 8 0 0 0 8 6.5l-2.4-1-2 3.4 2 1.6-.1 3-2 1.6 2 3.4 2.4-1A8 8 0 0 0 10.6 19l.4 2.5h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4z"/></svg>';
       const text = document.createElement('span'); text.textContent = options.label;
+      const detail = look ? abilityText(event) : '';
+      if (detail) { const small = document.createElement('small'); small.textContent = detail; text.append(small); }
       note.append(text);
       layer().append(note); effects.add(note); callouts.push({ note, card });
       // Ao lado da carta, do lado que tiver espaço; sem sair da tela.
@@ -413,6 +483,7 @@ export function createMotion(root: HTMLElement): Motion {
           const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
           if (landed) animate(landed, [{ scale: '1.06', translate: '0 -4px' }, { scale: '.97', translate: '0 1px', offset: .55 }, { scale: '1', translate: '0 0' }], 240, 'cubic-bezier(.3,.7,.4,1)');
           if (landed && event.card?.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
+          if (landed && walkerArrives(event)) walkerArrive(landed, event);
         }
       }, options.duration);
     },

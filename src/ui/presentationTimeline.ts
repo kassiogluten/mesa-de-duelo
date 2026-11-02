@@ -57,6 +57,11 @@ export interface PresentationEvent {
   /** Marcadores (`counters`): o tipo, como o Forge chama (P1P1, M1M1, LOYALTY, POISON…), e se vieram com a entrada. */
   counter?: string;
   entering?: boolean;
+  /** Marcador de lealdade posto como custo (`counters`): a habilidade de lealdade que vem logo depois já o mostra. */
+  paid?: boolean;
+  /** Habilidade de lealdade (`ability-activated` com `loyalty`): o custo impresso ("+2", "-3", "0") e se é o ultimate. */
+  cost?: string;
+  ultimate?: boolean;
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -141,7 +146,7 @@ export class PresentationTimeline {
       if (event.seq <= this.cursor) continue;
       this.cursor = event.seq;
       if (!PRESENTABLE.has(event.type) && !AUDIO_ONLY.has(event.type)) continue;
-      if (event.type === 'counters' && event.entering) continue;
+      if (event.type === 'counters' && (event.entering || event.paid)) continue;
       const copy = structuredClone(event);
       if (copy.type === 'mill') copy.milled = copy.card ? [copy.card] : [];
       if (sameMill(accepted.at(-1), copy)) accepted[accepted.length - 1] = joinMill(accepted.at(-1)!, copy);
@@ -256,7 +261,9 @@ export function presentationDuration(event: PresentationEvent, fast: boolean) {
     const m = event.type === 'mill' ? millTiming(event.milled?.length ?? 1, fast) : entryTiming(event.entries!.length, fast || !!event.repeat);
     return m.travel + (m.flights - 1) * m.gap + 160;
   }
-  const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : 1000)
+  // Planeswalker: a entrada e o ultimate ganham um pouco mais de tempo, sem segurar a partida.
+  const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
+    : event.type === 'entered' && event.card?.planeswalker && event.from !== 'Exile' ? 560
     : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
     : event.type === 'damage' ? (event.combat ? 620 : 760)
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
@@ -289,5 +296,6 @@ export function millTiming(count: number, fast: boolean) {
 export function calloutDuration(event: PresentationEvent, fast: boolean) {
   if (event.type !== 'ability-activated') return presentationDuration(event, fast);
   if (event.repeat) return fast ? 1000 : 1400;
+  if (event.ultimate) return fast ? 2000 : 2600;
   return event.trigger ? (fast ? 2000 : 2600) : (fast ? 1600 : 2000);
 }

@@ -22,11 +22,12 @@ export const SOUND_FILES = {
   untap: '19-untap.wav', sneak: '20-sneak.wav', blink: '21-blink.wav', bounce: '22-bounce.wav', exile: '23-exile.wav',
   sacrifice: '24-sacrifice.wav', 'life-loss': '25-life-loss.wav', shuffle: '26-shuffle.wav',
   victory: '27-victory.wav', defeat: '28-defeat.wav', counter: '29-counter.wav', 'counter-bad': '30-counter-bad.wav',
+  walker: '31-walker.wav', loyalty: '32-loyalty.wav',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = 'mesa:audio:v1';
 const MAX_VOICES = 4;
-const SOUND_REVISION = 'materials-6';
+const SOUND_REVISION = 'materials-7';
 // Includes the StereoPanner's correlated-channel crossfeed at the maximum pan.
 export const MIX_HEADROOM = .40;
 
@@ -35,12 +36,13 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     case 'draw': case 'discard': case 'mill': return 'draw';
     case 'land-played': return 'land';
     case 'spell-cast': return 'cast';
-    case 'ability-activated': return 'ability';
+    case 'ability-activated': return event.loyalty ? 'loyalty' : 'ability';
     case 'resolved': return 'resolved';
     case 'countered': return 'countered';
     case 'entered':
       // Blink volta do exílio; da mão sem conjurar (ninjutsu, sneak, Sneak Attack) a criatura entra de fininho.
       if (event.from === 'Exile') return 'blink';
+      if (event.card?.planeswalker) return 'walker';
       if (event.card?.land) return 'land';
       if (event.from === 'Hand') return 'sneak';
       return event.card?.keywords?.includes('FLYING') ? 'wing' : 'play';
@@ -111,9 +113,11 @@ export function soundVariation(event: PresentationEvent, matchId: string, you?: 
   const actor = event.actor ?? event.card?.controller;
   const opponent = you !== undefined && actor !== undefined && actor !== you;
   const directional = you !== undefined && actor !== undefined;
+  // O ultimate usa o som da lealdade mais grave e mais forte.
+  const ultimate = event.type === 'ability-activated' && !!event.ultimate;
   return {
-    rate: 1 + ((hash & 65535) / 65535 - .5) * .06 - (opponent ? .012 : 0),
-    gain: .92 + ((hash >>> 16) & 255) / 255 * .12,
+    rate: (1 + ((hash & 65535) / 65535 - .5) * .06 - (opponent ? .012 : 0)) * (ultimate ? .8 : 1),
+    gain: (.92 + ((hash >>> 16) & 255) / 255 * .12) * (ultimate ? 1.3 : 1),
     pan: (directional ? opponent ? .09 : -.09 : 0) + ((hash >>> 24) / 255 - .5) * .04,
   };
 }
@@ -191,7 +195,7 @@ export class AudioEventMix {
       const justDrew = this.draw?.actor !== undefined && this.draw.actor === event.actor && event.seq > this.draw.seq && event.seq - this.draw.seq <= 3;
       return ownOutcome || justDrew ? 0 : .55;
     }
-    return event.type === 'entered' && !event.card?.land ? .75 : 1;
+    return event.type === 'entered' && !event.card?.land && !event.card?.planeswalker ? .75 : 1;
   }
 }
 

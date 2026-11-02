@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic game cues. Standard library only; twenty-eight original physical-model cues.
+"""Deterministic game cues. Standard library only; thirty original physical-model cues.
 
 The two damage cues adapt bundled SFXMint-generated CC0 takes. Their checksums,
 licenses and generation provenance are recorded in sources/manifest.json; regeneration needs no network.
@@ -334,6 +334,30 @@ def counter_bad(buf):
     add_drum(buf, .08, 90, 20, .05, .3)
 
 
+
+def walker(buf):
+    # A planeswalker arrives: glass dust swells upward over a soft bronze hum, then lands on a bright open chord.
+    add_texture(buf, 0, .42, (2200, 8000), .55, 3101, lambda t: (t / .38) ** 1.5 * bell(t, .36, .14))
+    for start, note, amplitude in [(.05, 1174.66, .35), (.13, 1479.98, .45), (.21, 1760, .55), (.29, 2349.32, .6)]:
+        add_modes(buf, start, [(note, amplitude * .3, .12), (note * 2.01, amplitude * .08, .06)], attack=.004)
+    add_modes(buf, 0, [(110, .22, .5), (164.81, .12, .42)], attack=.18)
+    add_drum(buf, .36, 82, 18, .1, .3)
+    for note, amplitude in [(587.33, .5), (880, .4), (1174.66, .32), (1479.98, .22), (293.66, .3)]:
+        add_modes(buf, .36, [(note, amplitude, .42), (note * 2.01, amplitude * .15, .18)], attack=.005)
+    add_texture(buf, .36, .45, (3000, 9000), .08, 3102, lambda t: bell(t, .1, .1))
+
+
+def loyalty(buf):
+    # A rune seal struck: crystal-bronze plate over a soft thump, then a quick upward glint.
+    add_texture(buf, 0, .03, (1500, 7500), .55, 3201, lambda t: math.exp(-t / .005))
+    add_drum(buf, 0, 140, 30, .04, .35)
+    add_modes(buf, 0, [(783.99, .42, .3), (783.99 * 2.76, .2, .16), (783.99 * 4.07, .1, .08),
+                       (196, .14, .2)], attack=.0012)
+    for start, note, amplitude in [(.06, 2093, .35), (.1, 2637, .4), (.14, 3136, .45), (.18, 4186, .35)]:
+        add_modes(buf, start, [(note, amplitude * .25, .1), (note * 1.5, amplitude * .06, .05)], attack=.002)
+    add_texture(buf, .05, .3, (3000, 9000), .12, 3202, lambda t: bell(t, .12, .07))
+
+
 # file, material, duration, peak, reflection amount, composer
 DESIGNS = [
     ('01-card-draw', 'paper / two brushed strokes', .30, .28, 0, draw),
@@ -366,6 +390,8 @@ DESIGNS = [
     ('28-defeat', 'war drum and dull bronze / falling', 1.30, .44, .07, defeat),
     ('29-counter', 'glass beads on a card / two rising taps', .26, .24, .01, counter),
     ('30-counter-bad', 'clay beads on a card / two falling taps', .26, .26, .01, counter_bad),
+    ('31-walker', 'glass swell and bronze / rising to a bright chord', .92, .34, .07, walker),
+    ('32-loyalty', 'crystal-bronze seal / strike and rising glint', .70, .30, .04, loyalty),
 ]
 
 

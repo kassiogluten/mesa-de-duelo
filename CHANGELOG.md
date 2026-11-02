@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.108.0] - 2026-11-02
+
+### Novo
+
+- **Destaque para os planeswalkers.** Quando um planeswalker entra no campo, a moldura acende na cor dele, um anel de luz se abre em volta da carta e o escudo de lealdade surge com o valor inicial. Ao usar uma habilidade de lealdade, o escudo pula e fica verde no **+** ou vermelho no **−**, o custo sobe da carta ("+2", "−3") e o aviso ao lado mostra o custo e o texto da habilidade, como "Ana usou +2 de Jace Beleren". O ultimate é maior: uma onda de luz atravessa a mesa, a mesa treme de leve e o aviso diz "usou o ultimate". A entrada e a lealdade têm sons próprios em todos os pacotes de som, e o ultimate toca o da lealdade mais grave e mais forte. Vale para os seus planeswalkers e para os dos oponentes. Com "reduzir movimento" ligado no sistema, ficam só o número e a cor no escudo, e a partida não espera o efeito terminar.
+
 ## [0.107.1] - 2026-11-02
 
 ### Corrigido

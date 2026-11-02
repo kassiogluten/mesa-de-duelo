@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Themed sound packs. Standard library only, deterministic, original synthesis.
 
-Each pack renders the same thirty cues as the classic set (generate.py), with the same
+Each pack renders the same thirty-two cues as the classic set (generate.py), with the same
 file names, into public/audio/<pack>/, so the game swaps packs by folder. The styles are
 evocations written from scratch: no sound comes from another game (Arena reuses only
 the CC0 damage takes in sources/, as the classic set does).
@@ -1452,6 +1452,124 @@ def scifi_counter_bad(buf):
     add_tone(buf, .08, .1, 330, 260, shape='saw', amp=.28, lowpass=1300, decay=.05)
 
 
+
+# Planeswalkers: one arrives (a rising swell landing on a bright chord) and one uses loyalty (a struck seal and a glint).
+# The loyalty seal is also played slower and louder for an ultimate, so it keeps a clean, open tail.
+def bits_walker(buf):
+    add_tone(buf, 0, .3, hz(60), hz(84), shape='square', duty=.125, amp=.22, attack=.02, frame=FRAME)
+    add_notes(buf, .08, [72, 76, 79], .07, length=.06, shape='square', duty=.25, amp=.3)
+    for note, duty, amplitude in [(84, .25, .3), (88, .125, .22)]:
+        add_tone(buf, .3, .55, hz(note), shape='square', duty=duty, amp=amplitude, decay=.25, vibrato=(6, .008))
+    add_tone(buf, .3, .55, hz(60), shape='tri', amp=.55, decay=.3)
+    add_noise8(buf, .3, .05, 10000, amp=.15, decay=.012, seed=8301)
+
+
+def bits_loyalty(buf):
+    add_tone(buf, 0, .12, hz(79), shape='square', duty=.5, amp=.3, decay=.05)
+    add_tone(buf, 0, .14, hz(55), hz(43), shape='tri', amp=.6, decay=.06, frame=FRAME)
+    add_noise8(buf, 0, .03, 12000, amp=.2, decay=.008, seed=8302)
+    add_notes(buf, .09, [91, 95, 98, 103], .04, length=.035, shape='square', duty=.125, amp=.2, release=.006)
+
+
+def fantasy_walker(buf):
+    add_sweep(buf, 0, .4, (800, 3000), (3000, 9000), .45, 9401, lambda t: (t / .38) ** 1.6 * bell(t, .36, .14))
+    for i, note in enumerate([69, 74, 78, 81, 86]):
+        add_pluck(buf, .04 + i * .06, hz(note), amp=.22, damping=.996, seed=9402 + i, brightness=.55)
+    add_tone(buf, 0, .9, hz(38), amp=.16, attack=.25, decay=.5)
+    for note, amplitude in [(62, .2), (69, .16), (74, .12)]:
+        add_tone(buf, .34, .55, hz(note), shape='saw', amp=amplitude, attack=.03, decay=.4, lowpass=1500)
+    add_fm(buf, .34, .55, hz(90), 3.5, 1.2, amp=.2, decay=.22, index_decay=.08)
+    add_drum(buf, .34, 75, 25, .12, .35)
+
+
+def fantasy_loyalty(buf):
+    add_fm(buf, 0, .6, hz(79), 2.76, 2.2, amp=.35, decay=.22, index_decay=.04)
+    add_modes(buf, 0, [(hz(55), .25, .2)], attack=.002)
+    add_texture(buf, 0, .03, (2000, 8000), .4, 9411, lambda t: math.exp(-t / .005))
+    for i, note in enumerate([91, 95, 98, 103]):
+        add_fm(buf, .07 + i * .04, .3, hz(note), 3.5, .7, amp=.1, decay=.09)
+
+
+def cute_walker(buf):
+    add_tone(buf, 0, .3, 400, 1400, amp=.2, attack=.1, vibrato=(9, .02))
+    for i, note in enumerate([79, 84, 88]):
+        mallet(buf, .06 + i * .08, note, .4, .15)
+    for note, amplitude in [(91, .45), (96, .3), (67, .4)]:
+        mallet(buf, .3, note, amplitude, .35)
+    add_fm(buf, .3, .5, hz(103), 2.0, .8, amp=.1, decay=.2)
+    rng = random.Random(10301)
+    for i in range(4):
+        add_tone(buf, .38 + i * .06, .08, hz(rng.choice([103, 105, 108])), amp=.07, decay=.03)
+
+
+def cute_loyalty(buf):
+    mallet(buf, 0, 79, .6, .22)
+    add_fm(buf, 0, .4, hz(91), 3.0, 1.2, amp=.25, decay=.12, index_decay=.04)
+    pop(buf, .08, 800, 1800, .35)
+    pop(buf, .14, 1100, 2400, .25)
+
+
+def arena_walker(buf):
+    add_sweep(buf, 0, .4, (300, 1500), (1500, 7500), .7, 11301, lambda t: (t / .4) ** 2)
+    add_tone(buf, 0, .9, 55, shape='saw', amp=.12, attack=.3, decay=.5, lowpass=400)
+    add_drum(buf, .38, 60, 40, .16, .9)
+    for note, amplitude in [(50, .26), (57, .2), (62, .14), (66, .08)]:
+        add_tone(buf, .38, .5, hz(note), shape='saw', amp=amplitude, attack=.03, decay=.45, lowpass=1300)
+    add_modes(buf, .38, [(1760, .1, .3), (2637, .06, .2), (3520, .03, .12)], attack=.004)
+
+
+def arena_loyalty(buf):
+    add_drum(buf, 0, 95, 40, .06, .7)
+    add_modes(buf, 0, [(660, .35, .3), (660 * 2.76, .18, .16), (660 * 5.4, .08, .07)], attack=.001)
+    add_texture(buf, 0, .04, (900, 6000), .6, 11311, lambda t: math.exp(-t / .007))
+    add_sweep(buf, .05, .3, (1500, 5000), (4000, 9000), .3, 11312, lambda t: bell(t, .1, .06))
+
+
+def quiet_walker(buf):
+    add_tone(buf, 0, .3, hz(69), hz(81), amp=.2, attack=.15, release=.05)
+    add_tone(buf, .26, .35, hz(81), amp=.4, decay=.14)
+    add_tone(buf, .26, .35, hz(88), amp=.25, decay=.12)
+
+
+def quiet_loyalty(buf):
+    add_modes(buf, 0, [(1175, .45, .06), (1175 * 2.76, .1, .02)], attack=.001)
+    add_tone(buf, .05, .12, hz(91), hz(96), amp=.25, decay=.04)
+
+
+def tavern_walker(buf):
+    # A slow rolled lute chord rising, then a struck bell over the bar.
+    for i, note in enumerate([50, 57, 62, 66, 69, 74]):
+        add_pluck(buf, i * .055, hz(note), amp=.28, damping=.997, seed=13301 + i, brightness=.6)
+    for note, amplitude in [(62, .3), (74, .22), (78, .14)]:
+        add_pluck(buf, .36, hz(note), amp=amplitude, damping=.997, seed=13310 + note, brightness=.75)
+    glass(buf, .36, 1760, .45, .35)
+    wood(buf, .36, 140, .4, 13320)
+
+
+def tavern_loyalty(buf):
+    # A wax seal pressed onto a letter, then a coin ringing.
+    wood(buf, 0, 260, .8, 13321)
+    coin(buf, .01, 1568, .55, .25)
+    for start, base, amplitude in [(.08, 2637, .2), (.13, 3136, .16)]:
+        glass(buf, start, base, amplitude, .12)
+
+
+def scifi_walker(buf):
+    add_tone(buf, 0, .38, 150, 1200, amp=.3, attack=.05, tremolo=(24, .4))
+    add_tone(buf, 0, .38, 75, 150, shape='saw', amp=.2, attack=.2, lowpass=500)
+    for note, amplitude in [(81, .2), (88, .16), (93, .12)]:
+        for detune in (-.003, .003):
+            add_tone(buf, .36, .55, hz(note) * (1 + detune), amp=amplitude, decay=.25)
+    add_noise8(buf, .36, .04, 11000, amp=.15, decay=.01, seed=14301)
+
+
+def scifi_loyalty(buf):
+    add_tone(buf, 0, .3, 1400, amp=.3, decay=.08, tremolo=(140, 1))
+    add_modes(buf, 0, [(980, .25, .12), (1960 * 1.03, .1, .06)], attack=.001)
+    add_tone(buf, 0, .08, 120, 60, shape='saw', amp=.25, decay=.04, lowpass=600)
+    add_notes(buf, .07, [93, 98, 105], .035, length=.03, amp=.2, decay=.02)
+
+
 # Pack folder -> (early reflections, [(file, material, duration, first-pass peak, room, composer)]).
 # Files match the classic set (generate.DESIGNS); a missing cue would fall silent in that pack.
 PACKS = {
@@ -1486,6 +1604,8 @@ PACKS = {
         ('28-defeat', 'pulse and triangle / falling lament', 1.26, 0.42, 0.06, bits_defeat),
         ('29-counter', 'pulse / two rising blips', 0.16, 0.24, 0.01, bits_counter),
         ('30-counter-bad', 'pulse and triangle / two falling blips', 0.2, 0.26, 0.01, bits_counter_bad),
+        ('31-walker', 'pulse and triangle / rising arpeggio and chord', 0.86, 0.34, 0.06, bits_walker),
+        ('32-loyalty', 'pulse strike and rising blips', 0.3, 0.3, 0.02, bits_loyalty),
     ]),
     'fantasia': (((.031, 1), (.067, .7), (.113, .5), (.171, .3)), [
         ('01-card-draw', 'parchment and sparkle', .52, .26, .08, fantasy_draw),
@@ -1518,6 +1638,8 @@ PACKS = {
         ('28-defeat', 'falling horns and drums', 1.4, 0.44, 0.16, fantasy_defeat),
         ('29-counter', 'two rising rune chimes', 0.42, 0.24, 0.08, fantasy_counter),
         ('30-counter-bad', 'two dull falling bells', 0.42, 0.26, 0.08, fantasy_counter_bad),
+        ('31-walker', 'harp rise and brass chord', 0.92, 0.34, 0.12, fantasy_walker),
+        ('32-loyalty', 'rune bell and rising glints', 0.62, 0.3, 0.08, fantasy_loyalty),
     ]),
     'aventura': (((.023, 1), (.051, .5)), [
         ('01-card-draw', 'pop and marimba', .26, .26, .03, cute_draw),
@@ -1550,6 +1672,8 @@ PACKS = {
         ('28-defeat', 'wah-wah horn', 1.2, 0.4, 0.06, cute_defeat),
         ('29-counter', 'rising pop and marimba', 0.24, 0.24, 0.02, cute_counter),
         ('30-counter-bad', 'falling pop and low marimba', 0.26, 0.26, 0.02, cute_counter_bad),
+        ('31-walker', 'slide whistle and marimba chord', 0.82, 0.34, 0.05, cute_walker),
+        ('32-loyalty', 'marimba seal and two pops', 0.42, 0.3, 0.03, cute_loyalty),
     ]),
     'arena': (((.037, 1), (.083, .6), (.139, .35)), [
         ('01-card-draw', 'card snap', .16, .26, .02, arena_draw),
@@ -1582,6 +1706,8 @@ PACKS = {
         ('28-defeat', 'low gong and drums', 1.3, 0.46, 0.1, arena_defeat),
         ('29-counter', 'two metal tokens', 0.3, 0.26, 0.03, arena_counter),
         ('30-counter-bad', 'dull token and drum', 0.32, 0.3, 0.03, arena_counter_bad),
+        ('31-walker', 'rising power and horn chord', 0.92, 0.36, 0.08, arena_walker),
+        ('32-loyalty', 'struck metal seal and sweep', 0.6, 0.32, 0.05, arena_loyalty),
     ]),
     'discreto': (((.029, 1),), [
         ('01-card-draw', 'paper tick', .08, .14, 0, quiet_draw),
@@ -1614,6 +1740,8 @@ PACKS = {
         ('28-defeat', 'three notes falling', 0.62, 0.22, 0, quiet_defeat),
         ('29-counter', 'tick and tiny rising tone', 0.14, 0.14, 0, quiet_counter),
         ('30-counter-bad', 'tick and tiny falling tone', 0.16, 0.16, 0, quiet_counter_bad),
+        ('31-walker', 'soft rising tone and dyad', 0.62, 0.2, 0, quiet_walker),
+        ('32-loyalty', 'small bell tap and glint', 0.24, 0.18, 0, quiet_loyalty),
     ]),
     'taverna': (((.019, 1), (.043, .6)), [
         ('01-card-draw', 'card slide and snap', .14, .26, .03, tavern_draw),
@@ -1646,6 +1774,8 @@ PACKS = {
         ('28-defeat', 'slow lute descent', 1.6, 0.4, 0.06, tavern_defeat),
         ('29-counter', 'coins on the table', 0.28, 0.24, 0.03, tavern_counter),
         ('30-counter-bad', 'bone die on the boards', 0.22, 0.28, 0.03, tavern_counter_bad),
+        ('31-walker', 'rolled lute chord and bell', 0.95, 0.34, 0.05, tavern_walker),
+        ('32-loyalty', 'wax seal and ringing coin', 0.5, 0.3, 0.03, tavern_loyalty),
     ]),
     'scifi': (((.041, 1), (.097, .6), (.157, .35)), [
         ('01-card-draw', 'data chirp', .10, .24, .03, scifi_draw),
@@ -1678,6 +1808,8 @@ PACKS = {
         ('28-defeat', 'power down', 1.06, 0.42, 0.08, scifi_defeat),
         ('29-counter', 'increment beeps', 0.14, 0.24, 0.03, scifi_counter),
         ('30-counter-bad', 'two falling buzzes', 0.22, 0.26, 0.03, scifi_counter_bad),
+        ('31-walker', 'power-up and synth chord', 0.92, 0.34, 0.08, scifi_walker),
+        ('32-loyalty', 'ring-modulated seal and beeps', 0.36, 0.3, 0.04, scifi_loyalty),
     ]),
 }
 

@@ -13,7 +13,7 @@ async function sourceUri(path, imports = {}) {
 const sourceModule = async (path, imports) => import(await sourceUri(path, imports));
 const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
-const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts' });
+const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts', './planeswalkerEffects': '../src/ui/planeswalkerEffects.ts' });
 const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts', { './presentationTimeline': '../src/ui/presentationTimeline.ts' });
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {

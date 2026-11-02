@@ -519,3 +519,22 @@
   background: color-mix(in srgb, var(--azul-0a1322, #0a1322) 90.2%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 34.9%, transparent); color: var(--azul-dfe7f7, #dfe7f7);
 }
 .face.hidden-known .hidden-eye svg { width: 70%; height: 70%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Planeswalker (item 80): brilho na cor dele ao entrar e ao usar lealdade, o escudo reagindo ao custo e a onda do ultimate (motion.ts). */
+.bfc.walker-glow > .face { box-shadow: 0 0 0 2px var(--walker, var(--gold)), 0 0 18px 2px color-mix(in srgb, var(--walker, var(--gold)) 70%, transparent); }
+.walker-ring, .walker-wave { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0; }
+.walker-ring { border: 3px solid var(--walker, var(--gold)); box-shadow: 0 0 24px var(--walker, var(--gold)), inset 0 0 18px color-mix(in srgb, var(--walker, var(--gold)) 60%, transparent); }
+.walker-wave { border: 4px solid var(--walker, var(--gold)); box-shadow: 0 0 40px 6px var(--walker, var(--gold)), inset 0 0 40px 4px color-mix(in srgb, var(--walker, var(--gold)) 50%, transparent); }
+.pt.loyalty { transition: background-color .2s, color .2s; }
+.pt.loyalty.loyalty-up { background: #1d4d2f; color: #d9ffe6; border-color: var(--heal); }
+.pt.loyalty.loyalty-down { background: #5a1d14; color: #ffd9d1; border-color: #ff8f78; }
+.pt.loyalty.loyalty-zero { background: #4a3a14; color: #fff1cf; border-color: var(--gold); }
+.damage-number.loyalty-cost.up { color: var(--heal); }
+.damage-number.loyalty-cost.down { color: #ff8f78; }
+.damage-number.loyalty-cost.zero { color: var(--gold); }
+.loyalty-chip { flex: none; min-width: 26px; padding: 1px 6px 5px; background: #1b1a17; color: #f3efe4; border: 1px solid #f3efe4; font: 800 13px/1.2 var(--display); text-align: center; font-variant-numeric: tabular-nums; clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%); }
+.ability-callout.loyalty.up .loyalty-chip { background: #1d4d2f; border-color: var(--heal); }
+.ability-callout.loyalty.down .loyalty-chip { background: #5a1d14; border-color: #ff8f78; }
+.ability-callout > span > small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 12px; }
+.ability-callout.ultimate { max-width: min(320px, 46vw); padding: 9px 13px; border-width: 2px; font-size: 14px; box-shadow: 0 4px 14px #0008, 0 0 22px color-mix(in srgb, var(--gold) 55%, transparent); }
+.ability-callout.ultimate .loyalty-chip { font-size: 15px; }
+@media (prefers-reduced-motion: reduce) { .pt.loyalty { transition: none; } }

@@ -346,6 +346,28 @@ function table() {
         }
       }
     },
+    // Planeswalker (item 80): a entrada e as habilidades de lealdade, como a ponte manda (custo, ultimate e o texto da pilha).
+    walker: c => {
+      const owner = sideOf(c.side);
+      if (c.kind === 'enter' || c.kind === 'enter-gold') {
+        const gold = c.kind === 'enter-gold';
+        const w = { id: nextId++, controller: owner.id, ...card(gold ? 'Nicol Bolas, Dragon-God' : 'Jace Beleren', { planeswalker: true,
+          typeLine: gold ? 'Legendary Planeswalker — Bolas' : 'Legendary Planeswalker — Jace', manaCost: gold ? '{U}{B}{B}{B}{R}' : '{1}{U}{U}', counters: { LOYALTY: gold ? 4 : 3 } }) };
+        owner.battlefield.push(w); lastAdded = w.id;
+        emit('entered', { card: structuredClone(w), sourceId: w.id, actor: owner.id, from: 'Stack', to: 'Battlefield' });
+        return `${w.name} entra: moldura na cor dele, anel de luz e o escudo de lealdade surgindo.`;
+      }
+      const picked = byId(c.id);
+      const w: any = picked?.planeswalker ? picked : [...owner.battlefield].reverse().find((x: any) => x.planeswalker);
+      if (!w) return 'Ponha um planeswalker no campo primeiro (Entrar).';
+      const [cost, text] = ({ plus: ['+2', 'Each player draws a card.'], zero: ['0', 'Look at the top card of target player\'s library.'],
+        minus: ['-1', 'Target player draws a card.'], ult: ['-10', 'Target player mills twenty cards.'] } as Record<string, [string, string]>)[c.kind];
+      w.counters = { ...w.counters, LOYALTY: Math.max(0, (w.counters?.LOYALTY ?? 0) + Number(cost)) };
+      const ultimate = c.kind === 'ult';
+      emit('ability-activated', { card: structuredClone(w), sourceId: w.id, actor: w.controller, text: `${w.name} - ${text}`, targets: { cards: [], players: cost === '+2' ? [] : [w.controller === ME ? OPP : ME] },
+        stackId: nextId++, to: 'Stack', loyalty: true, cost, ...(ultimate ? { ultimate: true } : {}) });
+      return ultimate ? 'Ultimate: onda de luz pela mesa, aviso maior e o som da lealdade mais grave.' : `Lealdade ${cost.replace('-', '−')}: o escudo reage e o custo flutua acima dele.`;
+    },
     // Mão revelada (item 41): a ponte manda em revealedHand as cartas que você pode ver; esconder é tirar o campo.
     reveal: c => {
       const opp = sideOf('opp');
@@ -436,6 +458,8 @@ function panel() {
     ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>
     <h2>Fichas (item 43, do lado escolhido em Campo)</h2>
     ${[['1', 'Criar 1'], ['3', 'Criar 3'], ['8', 'Criar 8'], ['20', 'Criar 20']].map(([n, t]) => `<button data-tokens="${n}">${t}</button>`).join('')}<button data-tokens="4" data-mixed="1">4 fichas mistas</button>
+    <h2>Planeswalker (item 80, do lado escolhido em Campo)</h2>
+    ${[['enter', 'Entrar (Jace)'], ['enter-gold', 'Entrar (multicolor)'], ['plus', '+2'], ['zero', '0'], ['minus', '−1'], ['ult', 'Ultimate (−10)']].map(([k, t]) => `<button data-walker="${k}">${t}</button>`).join('')}
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
@@ -483,6 +507,7 @@ function panel() {
     if (b.dataset.m) send({ cmd: 'move', kind: b.dataset.m, id: selectedId(), target: ref($<HTMLSelectElement>('target').value) });
     if (b.dataset.mill) send({ cmd: 'mill', side: $<HTMLSelectElement>('side').value, n: b.dataset.mill, surveil: !!b.dataset.surveil });
     if (b.dataset.tokens) send({ cmd: 'tokens', side: $<HTMLSelectElement>('side').value, n: b.dataset.tokens, mixed: !!b.dataset.mixed });
+    if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.s) resize(b.dataset.s);
   });

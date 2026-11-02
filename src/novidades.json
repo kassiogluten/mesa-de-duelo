@@ -1,4 +1,12 @@
 {
+  "0.108.0": {
+    "Destaque para os planeswalkers": [
+      { "img": "0.108.0/planeswalker-entrada.webp", "legenda": "O Jace Beleren chegando ao campo: a moldura acende em azul, a cor dele, e um anel de luz se abre em volta da carta." },
+      { "img": "0.108.0/planeswalker-mais.webp", "legenda": "Usando o +2: o escudo de lealdade fica verde, o \"+2\" sobe da carta e o aviso ao lado mostra o custo e o texto da habilidade." },
+      { "img": "0.108.0/planeswalker-menos.webp", "legenda": "Usando o −1: o escudo fica vermelho, o \"−1\" sobe da carta e um feixe vai até o jogador alvo." },
+      { "img": "0.108.0/planeswalker-ultimate.webp", "legenda": "O ultimate: uma onda de luz atravessa a mesa, o número vem maior com o selo **Ultimate** e o aviso diz \"Você usou o ultimate de Jace Beleren (−10)\"." }
+    ]
+  },
   "0.107.0": {
     "Laboratório": [
       { "img": "0.107.0/laboratorio-mesa.webp", "legenda": "No Laboratório, cada carta do campo pode ficar virada, ter marcadores e estar presa a outra permanente: aqui, o Bonesplitter preso ao Memnarch, que tem dois marcadores +1/+1." },

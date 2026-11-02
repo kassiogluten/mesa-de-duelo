@@ -128,6 +128,16 @@ final class VisibleEvents {
         while (history.size() > HISTORY_LIMIT) history.removeFirst();
     }
 
+    /** Marca os marcadores de lealdade que a carta acabou de ganhar como custo pago ({@code paid}). */
+    private void paidCounters(int card) {
+        for (var it = history.descendingIterator(); it.hasNext();) {
+            JsonObject old = it.next();
+            if (old.get("seq").getAsLong() < sequence - 8) break;
+            if ("counters".equals(old.get("type").getAsString()) && old.has("sourceId") && old.get("sourceId").getAsInt() == card
+                && old.has("counter") && "LOYALTY".equals(old.get("counter").getAsString())) { old.addProperty("paid", true); changed.run(); }
+        }
+    }
+
     @Subscribe public synchronized void receive(GameEvent event) {
         if (event instanceof GameEventGameStarted) { gameStarted = true; changed.run(); }
         if (!(event instanceof GameEventPlayerPriority)) prevented();
@@ -143,6 +153,8 @@ final class VisibleEvents {
             if (x.si().getActivatingPlayer() != null) actor(e, x.si().getActivatingPlayer().getId());
             e.addProperty("text", CoinFlipText.stack(x.si().getText()));
             e.add("targets", StateJson.stackTargets(x.si()));
+            // O "+N" de lealdade é pago antes da habilidade ir para a pilha: a mesa mostra esse marcador junto com ela.
+            if (Loyalty.describe(e, game, x.si().getId()) && x.si().getSourceCard() != null) paidCounters(x.si().getSourceCard().getId());
             spells.put(x.sa().getId(), e.deepCopy());
             if (spells.size() > HISTORY_LIMIT) spells.keySet().removeIf(id -> id != x.sa().getId() && spells.size() > HISTORY_LIMIT);
         } else if (event instanceof GameEventSpellResolved x) {
