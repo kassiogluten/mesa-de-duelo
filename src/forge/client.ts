@@ -517,7 +517,7 @@ export interface FTargeting extends FTargets {
 export interface MatchOwner { conta?: string; deckId?: string }
 
 export type ClientMessage =
-  | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig } & MatchOwner)
+  | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig; /** O nome que o jogador usa, só para o histórico (na mesa ele é "Você"). */ name?: string } & MatchOwner)
   | ({ type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
   | ({ type: 'join'; code: string; name: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)
   | { type: 'lab-host'; name: string; scenario: LabScenario }

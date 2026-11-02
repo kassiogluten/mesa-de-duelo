@@ -261,10 +261,13 @@ final class Session {
             if (gv.getPlayerTurn() != null) o.addProperty("activePlayer", gv.getPlayerTurn().getName());
         }
         JsonArray players = new JsonArray();
+        // O nome do jogador no Forge, para achar a vida dele; contra a IA, o admin vê o nome que ele usa, não "Você".
+        List<String> forgeNames = new ArrayList<>();
         for (Seat seat : seats) {
             if (seat.deck == null) continue;
             JsonObject p = new JsonObject();
-            p.addProperty("name", seat.name); p.addProperty("ai", false); p.addProperty("seat", seat.index);
+            p.addProperty("name", room || seat.nick == null ? seat.name : seat.nick); p.addProperty("ai", false); p.addProperty("seat", seat.index);
+            forgeNames.add(seat.name);
             p.addProperty("connected", seat.channel != null); p.addProperty("conceded", seat.conceded);
             p.addProperty("deck", seat.deck.getName());
             players.add(p);
@@ -274,10 +277,11 @@ final class Session {
             p.addProperty("name", aiNames != null ? aiNames.get(i) : aiDecks.size() == 1 ? "Oponente" : "Oponente " + (i + 1));
             p.addProperty("ai", true); p.addProperty("deck", aiDecks.get(i).getName());
             players.add(p);
+            forgeNames.add(p.get("name").getAsString());
         }
-        if (gv != null && gv.getPlayers() != null) for (PlayerView pv : gv.getPlayers()) for (JsonElement e : players) {
-            JsonObject p = e.getAsJsonObject();
-            if (p.get("name").getAsString().equals(pv.getName())) { p.addProperty("life", pv.getLife()); p.addProperty("lost", pv.getHasLost()); }
+        if (gv != null && gv.getPlayers() != null) for (PlayerView pv : gv.getPlayers()) for (int i = 0; i < players.size(); i++) {
+            JsonObject p = players.get(i).getAsJsonObject();
+            if (forgeNames.get(i).equals(pv.getName())) { p.addProperty("life", pv.getLife()); p.addProperty("lost", pv.getHasLost()); }
         }
         o.add("players", players);
         return o;
@@ -414,7 +418,7 @@ final class Session {
     /**
      * Resumo final de uma partida concluída, uma linha do {@link MatchHistory}. Os índices de {@code winner} e dos
      * arrays de cada jogo apontam para {@code players}, na ordem do Forge (humanos antes da IA). O apelido só entra
-     * nas salas em rede: contra a IA o humano não digita nome ("Você"). {@code account} e {@code deckId} só vêm de quem
+     * nas salas em rede: contra a IA, o humano vai com o nome que usa ({@link Seat#nick}), quando tem um. {@code account} e {@code deckId} só vêm de quem
      * jogou com a conta conectada (veja {@link AccountMatches}); apagar a conta os tira ({@link MatchHistory#forget}).
      *
      * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, end, winner: índice|null,
@@ -501,7 +505,8 @@ final class Session {
             Seat seat = null;
             for (Seat each : seats) if (each.registered == rp) seat = each;
             JsonObject p = new JsonObject();
-            if (room && seat != null) p.addProperty("name", seat.name);
+            String name = seat == null ? null : room ? seat.name : seat.nick;
+            if (name != null) p.addProperty("name", name);
             p.addProperty("ai", seat == null);
             if (seat != null && seat.account != null) {
                 p.addProperty("account", seat.account);
@@ -2021,6 +2026,11 @@ final class Session {
         volatile String token = UUID.randomUUID().toString();
         volatile Channel channel;
         volatile String name;
+        /**
+         * Contra a IA, o nome é "Você" na mesa; este é o nome que o jogador usa (o das salas ou o apelido da conta), para o
+         * histórico e a lista de partidas da área de admin. Null quando ele não tem nome.
+         */
+        volatile String nick;
         volatile Deck deck;
         /** Conta de quem joga neste assento (só com a conta conectada) e o id do deck salvo dela, para o histórico. */
         volatile String account;

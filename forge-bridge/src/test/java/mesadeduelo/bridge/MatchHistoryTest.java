@@ -110,6 +110,26 @@ public class MatchHistoryTest {
         assertNull("a new player in the seat starts without an account", session.seats[0].account);
     }
 
+    @Test public void againstTheAiTheHumanGoesWithTheNameTheyUse() {
+        Game game = CommanderEngineTest.game(2);
+        java.util.List.copyOf(game.getPlayers()).get(1).concede(); game.getAction().checkGameOverCondition();
+        Session session = Session.solo("ABCDEFGH", null, new forge.deck.Deck("Elfos"), new forge.deck.Deck("Goblins"), new MatchConfig("commander", "bo1", 2));
+        session.seats[0].registered = game.getMatch().getPlayers().get(0);
+        assertFalse("without a name, the seat stays unnamed", session.historyJson(game.getMatch()).getAsJsonArray("players").get(0).getAsJsonObject().has("name"));
+        session.seats[0].nick = "Ana";
+        var players = session.historyJson(game.getMatch()).getAsJsonArray("players");
+        assertEquals("Ana", players.get(0).getAsJsonObject().get("name").getAsString());
+        assertFalse(players.get(1).getAsJsonObject().has("name"));
+        assertEquals("Você", session.seats[0].name);
+    }
+
+    @Test public void theNameSentAtTheStartIsTrimmedAndOptional() {
+        assertEquals("Ana", Rooms.nick(JsonParser.parseString("{\"name\":\"  Ana \"}").getAsJsonObject()));
+        assertNull(Rooms.nick(JsonParser.parseString("{\"name\":\"  \"}").getAsJsonObject()));
+        assertNull(Rooms.nick(new JsonObject()));
+        assertEquals(24, Rooms.nick(JsonParser.parseString("{\"name\":\"" + "x".repeat(40) + "\"}").getAsJsonObject()).length());
+    }
+
     @Test public void aGameDecidedByAConcessionIsMarkedConceded() {
         Game game = CommanderEngineTest.game(2);
         java.util.List.copyOf(game.getPlayers()).get(1).concede(); game.getAction().checkGameOverCondition();

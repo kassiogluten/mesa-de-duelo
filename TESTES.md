@@ -39,3 +39,7 @@ Os arquivos de teste que importam `.ts` direto falham com `ERR_UNKNOWN_FILE_EXTE
 - `InputContextTest.targetSelectionCarriesTheTriggerTextWhatItTargetsAndHowManyAreLeft` (erro com o texto do gatilho de Chupacabra Voraz)
 
 Comprovado que já existiam: falham do mesmo jeito com o código do servidor da 0.105.0 (a mudança desfeita com `git stash`). Parecem depender do idioma que o Forge carregou antes (o `CoinFlipTextTest` passa quando roda sozinho; o `InputContextTest` falha até sozinho). Na 0.105.0 a suíte tinha passado inteira (270 testes), então algo no ambiente mudou desde então (talvez o Forge em `C:/Users/Kassio/forge` ou as preferências em `forge-bridge/target/test-home`). Ainda não investigado.
+
+### Servidor: `AdminTest.listsLiveMatchesWithoutSecrets` falha sozinho (vista em 2026-11-02, na 0.118.0)
+
+Erro `ExceptionInInitializerError` em `UndoHistory.<clinit>`: o teste cria uma sala (`Session.room`) sem ligar o motor do Forge antes (`BridgeRulesTest.engine()`). Comprovado que já existia (falha igual com a mudança desfeita por `git stash`). Rodado com `-Dtest` junto de outras classes, ele pode quebrar a inicialização de `PhaseType` e derrubar as classes seguintes (o `MatchHistoryTest` deu 6 erros assim, e passa inteiro sozinho).

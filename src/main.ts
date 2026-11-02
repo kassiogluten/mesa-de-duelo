@@ -13,6 +13,7 @@ import { createFreeTableView, loadFreeTable } from './ui/freeTable';
 import { MatchRecorder, type RecordingMeta } from './forge/recording';
 import { buildReport, deviceInfo, encodeReport, latestMatch, loadLastMatch, localPreferences, saveLastMatch, setLiveMatch, startFeedbackQueue, type MatchAttachment } from './feedback';
 import { openFeedbackForm } from './ui/feedbackForm';
+import { reportAuthor } from './feedbackAuthor';
 import { VERSION } from './ui/changelog';
 import { atualizarConta, contaSessao } from './conta/session';
 import { esconderOneTap, mostrarOneTap } from './conta/google';
@@ -205,6 +206,8 @@ addEventListener('mesa:laboratorio', () => { labView.open(); show('lab'); scroll
 
 const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [] });
 /** Com a conta conectada, a partida fica ligada a ela e ao deck salvo (Minhas partidas). */
+/** O nome das salas ou o apelido da conta, para o histórico das partidas contra o computador; nada sem nome. */
+const playerName = (): { name?: string } => { const name = reportAuthor()?.name; return name ? { name } : {}; };
 const matchOwner = (d: DeckData): MatchOwner => { const s = contaSessao(); return s ? { conta: s.token, deckId: d.id } : {}; };
 /** Deck escolhido para o computador, com o bracket junto para a mesa mostrar na partida. */
 const aiDeck = (d: DeckData) => ({ ...forgeDeck(d), bracket: deckBracket(d) });
@@ -345,7 +348,7 @@ async function startMatch(you: DeckData, opp: DeckData | null, config: MatchConf
   const client = await requireForge(FORGE_URL);
   lastMatch = [you, opp, config, opponents];
   lobby.setStatus('Preparando a mesa…');
-  await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config, ...matchOwner(you)});
+  await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config, ...playerName(), ...matchOwner(you)});
 }
 async function startNetMatch(you: DeckData, url: string, message: ClientMessage, config?: MatchConfig, lab = false) {
   const client = await requireForge(url);

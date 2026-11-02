@@ -267,7 +267,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                         } else {
                             for (int i = 1; i < config.playerCount(); i++) { Deck d = aiDeck(msg.get("opponent"), config); opponents.add(d); brackets.add(aiBracket(msg.get("opponent"), d)); }
                         }
-                        solo(ch, you, opponents, config, brackets, owner(msg));
+                        solo(ch, you, opponents, config, brackets, owner(msg), nick(msg));
                     }
                 }
                 case "host" -> {
@@ -379,6 +379,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         return n.length() > MAX_NAME ? n.substring(0, MAX_NAME) : n;
     }
 
+    /** O nome que o jogador usa, mandado ao começar contra a IA (só para o histórico); null sem nome. */
+    static String nick(JsonObject msg) {
+        JsonElement e = msg.get("name");
+        String n = e == null || !e.isJsonPrimitive() ? "" : e.getAsString().strip();
+        if (n.isEmpty()) return null;
+        return n.length() > MAX_NAME ? n.substring(0, MAX_NAME) : n;
+    }
+
     private static String cover(JsonObject msg) {
         JsonElement e = msg.get("cover");
         return e == null || !e.isJsonPrimitive() ? null : e.getAsString();
@@ -440,10 +448,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     // ---------- Partidas ----------
 
-    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets, Owner owner) {
+    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets, Owner owner, String nick) {
         leave(ch);
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
         s.seats[0].owner(owner);
+        s.seats[0].nick = nick;
         s.seats[0].bracket = config.commander() ? brackets.get(0) : 0;
         if (config.commander()) s.aiBrackets(brackets.subList(1, brackets.size()));
         s.history(history);
