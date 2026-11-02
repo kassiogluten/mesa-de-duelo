@@ -8,21 +8,27 @@ import forge.game.GameType;
 /** Immutable, room-owned rules. Never mutate global Forge preferences per match. */
 record MatchConfig(String format, String matchLength, int playerCount) {
     static final String ENGINE_VERSION = "2.0.16-SNAPSHOT+0b0f7ecc5111.mesa1";
-    static final String RULES_VERSION = "standard-pauper-sacola50-commander-2026-10-28";
+    static final String RULES_VERSION = "standard-pauper-sacola50-commander-oathbreaker-2026-11-02";
+
+    static final java.util.List<String> FORMATS = java.util.List.of("free", "standard", "pauper", "sacola50", "commander", "oathbreaker");
 
     MatchConfig(String format, String matchLength) { this(format, matchLength, 2); }
 
     boolean commander() { return "commander".equals(format); }
+    boolean oathbreaker() { return "oathbreaker".equals(format); }
+    /** Commander e Oathbreaker: zona de comando, de dois a quatro jogadores e uma partida só. */
+    boolean commandZone() { return commander() || oathbreaker(); }
 
     MatchConfig {
-        if (!"free".equals(format) && !"standard".equals(format) && !"pauper".equals(format) && !"sacola50".equals(format) && !"commander".equals(format))
+        if (!FORMATS.contains(format))
             throw new IllegalArgumentException("Formato não suportado.");
         if (!"bo1".equals(matchLength) && !"bo3".equals(matchLength))
             throw new IllegalArgumentException("Duração da partida não suportada.");
-        if (playerCount < 2 || playerCount > 4 || (!"commander".equals(format) && playerCount != 2))
-            throw new IllegalArgumentException("Escolha de dois a quatro jogadores para Commander; os demais formatos exigem dois.");
-        if ("commander".equals(format) && !"bo1".equals(matchLength))
-            throw new IllegalArgumentException("Commander permite apenas uma partida, sem sideboard.");
+        boolean commandZone = "commander".equals(format) || "oathbreaker".equals(format);
+        if (playerCount < 2 || playerCount > 4 || (!commandZone && playerCount != 2))
+            throw new IllegalArgumentException("Escolha de dois a quatro jogadores para Commander e Oathbreaker; os demais formatos exigem dois.");
+        if (commandZone && !"bo1".equals(matchLength))
+            throw new IllegalArgumentException(("commander".equals(format) ? "Commander" : "Oathbreaker") + " permite apenas uma partida, sem sideboard.");
     }
 
     static MatchConfig parse(JsonElement value) {
@@ -51,6 +57,7 @@ record MatchConfig(String format, String matchLength, int playerCount) {
     GameRules rules() {
         GameRules r = new GameRules(GameType.Constructed);
         if (commander()) r.setAppliedVariants(java.util.Set.of(GameType.Commander));
+        if (oathbreaker()) r.setAppliedVariants(java.util.Set.of(GameType.Oathbreaker));
         r.setGamesPerMatch("bo3".equals(matchLength) ? 3 : 1);
         r.setAISideboardingEnabled(true);
         r.setSideboardForAI(false);
@@ -63,7 +70,7 @@ record MatchConfig(String format, String matchLength, int playerCount) {
         JsonObject o = new JsonObject();
         o.addProperty("format", format);
         o.addProperty("matchLength", matchLength);
-        if (commander()) o.addProperty("playerCount", playerCount);
+        if (commandZone()) o.addProperty("playerCount", playerCount);
         // Desfazer sempre ligado; o campo continua indo para as versões anteriores da mesa mostrarem o botão.
         o.addProperty("undo", true);
         return o;

@@ -348,6 +348,7 @@ final class Session {
     }
 
     private RegisteredPlayer registered(Deck deck) {
+        if (config.oathbreaker()) return RegisteredPlayer.forVariants(config.playerCount(), java.util.Set.of(GameType.Oathbreaker), deck, null, false, null, null);
         return config.commander() ? RegisteredPlayer.forCommander(deck) : new RegisteredPlayer(deck);
     }
 
@@ -509,7 +510,7 @@ final class Session {
             Deck deck = seat != null && seat.deck != null ? seat.deck : rp.getDeck();
             p.addProperty("deck", deck.getName());
             p.addProperty("colors", colors(deck));
-            if (config.commander()) {
+            if (config.commandZone()) {
                 List<String> commanders = new ArrayList<>();
                 for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getDisplayName());
                 if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
@@ -609,7 +610,7 @@ final class Session {
 
     /** Explicit departure ends an unfinished series; a completed result remains intact. */
     synchronized void abandon(Seat seat) {
-        if (!config.commander() && !matchOver()) {
+        if (!config.commandZone() && !matchOver()) {
             // Com o jogo em andamento, a linha sai quando a desistência terminar o jogo (veja ended).
             HostedMatch m = match;
             boolean playing = m != null && m.getGame() != null && !m.getGame().isGameOver();
@@ -632,7 +633,7 @@ final class Session {
         lifecycle.requestConcede(current.getGame(), seat.me.getId());
         // Release answers after publishing the request, so the game thread sees it on wake-up.
         for (Seat each : seats) {
-            if (config.commander() && each != seat) continue;
+            if (config.commandZone() && each != seat) continue;
             Question q = each.question;
             each.question = null;
             each.inputGen.incrementAndGet(); each.clearInput();
@@ -2127,7 +2128,7 @@ final class Session {
             }
         }
 
-        boolean eliminated() { return config.commander() && me != null && me.getHasLost(); }
+        boolean eliminated() { return config.commandZone() && me != null && me.getHasLost(); }
 
         private boolean livePriority() {
             return controller() instanceof PlayerControllerHuman human && human.getInputQueue().getInput() instanceof InputPassPriority;

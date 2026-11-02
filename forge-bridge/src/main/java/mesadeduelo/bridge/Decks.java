@@ -42,7 +42,7 @@ final class Decks {
 
     static Deck random(String format) {
         var valid = LISTS.values().stream()
-            .filter(o -> "free".equals(format) ? !"commander".equals(o.has("format") ? o.get("format").getAsString() : "free") : format.equals(o.has("format") ? o.get("format").getAsString() : "free"))
+            .filter(o -> { String of = o.has("format") ? o.get("format").getAsString() : "free"; return "free".equals(format) ? !"commander".equals(of) && !"oathbreaker".equals(of) : format.equals(of); })
             .map(o -> DeckValidation.validateForAi(o, format)).filter(DeckValidation.Result::valid).toList();
         if (valid.isEmpty()) throw new IllegalArgumentException("Não há deck pronto válido para este formato.");
         return valid.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(valid.size())).deck();

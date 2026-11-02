@@ -10,9 +10,9 @@ import { esc } from './cardtext';
 /** null: ainda carregando a primeira vez; 'error': a ponte não respondeu. */
 export type PublicRoomsState = PublicRoom[] | null | 'error';
 
-const FORMAT = { standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', free: 'Livre' } as const;
+const FORMAT = { standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', free: 'Livre' } as const;
 const formatLabel = (room: PublicRoom) => FORMAT[room.config.format] ?? room.config.format;
-const lengthLabel = (room: PublicRoom) => room.config.format === 'commander' ? '' : room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única';
+const lengthLabel = (room: PublicRoom) => room.config.format === 'commander' || room.config.format === 'oathbreaker' ? '' : room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única';
 const seatsLabel = (room: PublicRoom) => `${room.players}/${room.capacity} jogadores`;
 
 /** Só as que ainda dá para entrar, caso a ponte mande alguma cheia ou começada. */

@@ -19,6 +19,11 @@ test('the Commander identity limits the search, except when choosing the command
   assert.equal(s.buildSearchQuery({ text: 'atraxa', identity: ['G'], commanderSlot: true }), 'atraxa (is:commander or t:background)');
 });
 
+test('in Oathbreaker the oathbreaker is any planeswalker and the signature spell follows its identity', () => {
+  assert.equal(s.buildSearchQuery({ text: 'wrenn', identity: ['R', 'G'], commanderSlot: 'oathbreaker' }), 'wrenn t:planeswalker');
+  assert.equal(s.buildSearchQuery({ identity: ['R', 'G'], commanderSlot: 'signature' }), '(t:instant or t:sorcery) id<=rg');
+});
+
 test('every function is a plain Scryfall tag name', () => {
   for (const tag of s.FUNCTION_TAGS) assert.match(tag, /^[a-z]+(-[a-z]+)*$/);
   for (const tag of ['draw', 'removal', 'counterspell', 'ramp', 'cantrip']) assert.ok(s.FUNCTION_TAGS.includes(tag), tag);

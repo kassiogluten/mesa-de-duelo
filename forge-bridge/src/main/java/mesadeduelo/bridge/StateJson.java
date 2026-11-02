@@ -57,7 +57,7 @@ final class StateJson {
             int seat = 0;
             for (Player registered : game.getRegisteredPlayers()) {
                 PlayerView p = registered.getView();
-                JsonObject row = player(p, viewer == p.getId() && !(game.getRules().hasAppliedVariant(forge.game.GameType.Commander) && p.getHasLost()), game);
+                JsonObject row = player(p, viewer == p.getId() && !((game.getRules().hasAppliedVariant(forge.game.GameType.Commander) || game.getRules().hasAppliedVariant(forge.game.GameType.Oathbreaker)) && p.getHasLost()), game);
                 JsonObject top = libraryTop(p, gv, viewer, game);
                 if (top != null) row.add("libraryTop", top);
                 if (viewer != p.getId()) {
@@ -181,7 +181,8 @@ final class StateJson {
             commander.addProperty("name", c.getName()); commander.addProperty("casts", p.getCommanderCast(c));
             commander.addProperty("tax", p.getCommanderCast(c) * 2); commanders.add(commander);
         }
-        if (game != null) for (Player owner : game.getRegisteredPlayers()) for (Card commander : owner.getCommanders()) {
+        // Dano de comandante (21 elimina) só existe no Commander: no Oathbreaker o oathbreaker não conta.
+        if (game != null && game.getRules().hasAppliedVariant(forge.game.GameType.Commander)) for (Player owner : game.getRegisteredPlayers()) for (Card commander : owner.getCommanders()) {
             JsonObject damage = new JsonObject(); damage.addProperty("commanderId", commander.getId());
             damage.addProperty("damage", p.getCommanderDamage(commander.getView())); commanderDamage.add(damage);
         }

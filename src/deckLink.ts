@@ -33,13 +33,13 @@ function add(list: Entry[], name: unknown, count: unknown, print: { set?: string
   if (same) same.count += c; else list.push({ name: n, count: c, ...print });
 }
 
-/** Moxfield v3: boards.{commanders, mainboard, sideboard, companions}.cards → { quantity, card.name, card.set, card.cn }. */
+/** Moxfield v3: boards.{commanders, signatureSpells, mainboard, sideboard, companions}.cards (a mágica de assinatura do Oathbreaker vai para a zona de comando) → { quantity, card.name, card.set, card.cn }. */
 function fromMoxfield(json: any) {
   const commanders: Entry[] = [], main: Entry[] = [], side: Entry[] = [];
   const board = (key: string, into: Entry[]) => {
     for (const item of Object.values<any>(json?.boards?.[key]?.cards ?? {})) add(into, item?.card?.name, item?.quantity, printing(item?.card?.set, item?.card?.cn));
   };
-  board('commanders', commanders); board('mainboard', main); board('sideboard', side); board('companions', side);
+  board('commanders', commanders); board('signatureSpells', commanders); board('mainboard', main); board('sideboard', side); board('companions', side);
   return { name: typeof json?.name === 'string' ? json.name : '', commanders, main, side };
 }
 
@@ -54,7 +54,7 @@ function fromArchidekt(json: any) {
   for (const item of json?.cards ?? []) {
     const categories: string[] = (item?.categories ?? []).map((c: unknown) => String(c).toLowerCase());
     const name = item?.card?.oracleCard?.name ?? item?.card?.name, print = printing(item?.card?.edition?.editioncode, item?.card?.collectorNumber);
-    if (categories.includes('commander')) add(commanders, name, item?.quantity, print);
+    if (categories.includes('commander') || categories.includes('signature spell')) add(commanders, name, item?.quantity, print);
     else if (categories.includes('sideboard')) add(side, name, item?.quantity, print);
     else if (categories.length && categories.every(c => outside.has(c))) continue;
     else add(main, name, item?.quantity, print);

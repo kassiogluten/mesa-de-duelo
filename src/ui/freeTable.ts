@@ -1,4 +1,4 @@
-import type { DeckData, DeckFormat } from '../decks';
+import { hasCommandZone, type DeckData, type DeckFormat } from '../decks';
 import { cardInfo } from '../cards';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import {
@@ -160,7 +160,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
         <div class="ft-row lands" aria-label="Terrenos">${lands.map(c => cardHTML(c, 'battlefield')).join('')}</div>
       </main>
       <footer class="ft-bottom">
-        <div class="ft-piles">${pile('library', 'Grimório')}${pile('graveyard', 'Cemitério')}${pile('exile', 'Exílio')}${s.zones.command.length || s.format === 'commander' ? pile('command', 'Comando') : ''}</div>
+        <div class="ft-piles">${pile('library', 'Grimório')}${pile('graveyard', 'Cemitério')}${pile('exile', 'Exílio')}${s.zones.command.length || hasCommandZone(s.format) ? pile('command', 'Comando') : ''}</div>
         <div class="ft-hand" data-drop="hand" aria-label="Sua mão: ${s.zones.hand.length} cartas">${s.zones.hand.map(c => cardHTML(c, 'hand', 'normal')).join('')}</div>
       </footer>
       ${viewerHTML()}${tokenHTML()}${menuHTML()}

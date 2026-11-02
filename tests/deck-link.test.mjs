@@ -28,6 +28,15 @@ test('Moxfield boards become Commander, Deck and Sideboard sections', () => {
     text: 'Commander\n1 Lathril, Blade of the Elves\n\nDeck\n30 Forest\n1 Delver of Secrets // Insectile Aberration\n\nSideboard\n2 Duress' });
 });
 
+test('the Oathbreaker signature spell from Moxfield goes to the command zone with the planeswalker', () => {
+  const body = JSON.stringify({ name: 'Wrenn', boards: {
+    commanders: { cards: { a: { quantity: 1, card: { name: 'Wrenn and Six' } } } },
+    signatureSpells: { cards: { b: { quantity: 1, card: { name: 'Crop Rotation' } } } },
+    mainboard: { cards: { c: { quantity: 58, card: { name: 'Forest' } } } },
+  } });
+  assert.equal(deckLinkToList('moxfield', body).text, 'Commander\n1 Wrenn and Six\n1 Crop Rotation\n\nDeck\n58 Forest');
+});
+
 test('Archidekt categories map to sections and Maybeboard stays out', () => {
   const body = JSON.stringify({ name: 'Burn', categories: [{ name: 'Burn', includedInDeck: true }, { name: 'Ideias', includedInDeck: false }], cards: [
     { quantity: 4, card: { oracleCard: { name: 'Lightning Bolt' } }, categories: ['Burn'] },

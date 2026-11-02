@@ -38,7 +38,7 @@
 
   <build>
     <resources>
-      <resource><directory>../shared</directory><includes><include>starter-decks.json</include><include>pauper-legality.json</include><include>commander-legality.json</include></includes></resource>
+      <resource><directory>../shared</directory><includes><include>starter-decks.json</include><include>pauper-legality.json</include><include>commander-legality.json</include><include>oathbreaker-legality.json</include></includes></resource>
     </resources>
     <plugins>
       <plugin>

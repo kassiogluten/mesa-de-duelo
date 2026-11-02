@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.112.0] - 2026-11-02
+
+### Novo
+
+- **Formato Oathbreaker.** Na tela inicial, o **Oathbreaker** fica ao lado do **Commander**: de dois a quatro jogadores, uma partida só e 20 de vida. O deck tem 60 cartas, uma de cada (fora os terrenos básicos), com duas na zona de comando: um planeswalker, o oathbreaker, que dá a identidade de cor do deck, e uma instantânea ou feitiço, a mágica de assinatura, que só pode ser conjurada enquanto o seu oathbreaker estiver no campo. No construtor de decks, escolha o formato Oathbreaker para montar o seu: a zona de comando pede o oathbreaker (a busca traz só planeswalkers) e depois a mágica de assinatura (só instantâneas e feitiços nas cores dele). Ao importar do Moxfield, a mágica de assinatura vai para a zona de comando junto do planeswalker.
+- **10 decks prontos de Oathbreaker.** Os planeswalkers com as listas de Oathbreaker mais vistas no Moxfield, um deck para cada: Raízes de Wrenn (Wrenn and Six), Forja de Dakkon (Dakkon, Shadow Slayer), Elfos de Tyvar (Tyvar, Jubilant Brawler), Faíscas de Rowan (Rowan, Scholar of Sparks), Veneno de Vraska (Vraska, Betrayal's Sting), Arsenal de Elspeth (Archangel Elspeth), Masmorra de Ellywick (Ellywick Tumblestrum), Dragões de Sarkhan (Sarkhan Unbroken), Eldrazi de Ugin (Ugin, Eye of the Storms) e Tempestade de Ral (Ral, Crackling Wit). As poucas cartas que o computador não sabe jogar foram trocadas por outras parecidas, para que ele também jogue com todos.
+
 ## [0.111.0] - 2026-11-02
 
 ### Mudou

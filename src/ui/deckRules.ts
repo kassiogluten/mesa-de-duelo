@@ -1,4 +1,4 @@
-import { countEntries, deckEntries, FORMAT_LABEL, isBasic, isConstructed, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
+import { countEntries, deckEntries, FORMAT_LABEL, hasCommandZone, isBasic, isConstructed, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
 import { cacheGet, legalityFresh, type ScryCard } from '../scryfall';
 
 export interface DeckIssue { code: string; message: string; card?: string; section?: 'main' | 'sideboard' | 'commander' }
@@ -8,7 +8,7 @@ const NUMBERS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, fiv
 export function cardCopyLimit(name: string, card: ScryCard | null = cacheGet(name), format: DeckFormat = 'pauper'): number {
   if (isBasic(name) || /\bBasic\b.*\bLand\b/.test(card?.type_line ?? '')) return Infinity;
   const limit = card?.oracle_text?.match(/A deck can have (any number of|up to (\w+)) cards named/i);
-  return !limit ? (format === 'commander' ? 1 : 4) : !limit[2] ? Infinity : NUMBERS[limit[2].toLowerCase()] ?? (Number(limit[2]) || 4);
+  return !limit ? (hasCommandZone(format) ? 1 : 4) : !limit[2] ? Infinity : NUMBERS[limit[2].toLowerCase()] ?? (Number(limit[2]) || 4);
 }
 export function copiesInDeck(deck: DeckData, name: string): number {
   const card = cacheGet(name), key = card?.oracle_id ?? card?.name.toLowerCase() ?? name.toLowerCase();
@@ -32,7 +32,12 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
     if (side) issues.push({ code: 'sideboard_count', message: 'Commander não usa sideboard nesta mesa.', section: 'sideboard' });
     // Forge validates eligibility and partnership. Never claim local metadata proves this.
     issues.push({ code: 'commander_unverified', message: 'A elegibilidade dos comandantes e a parceria precisam ser conferidas pelo servidor.' });
-  } else if (commanderCount) issues.push({ code: 'commander_format', message: 'Mova os comandantes para o deck principal ou escolha o formato Commander.' });
+  } else if (format === 'oathbreaker') {
+    if (main + commanderCount !== 60) issues.push({ code: 'total_count', message: `Oathbreaker exige 60 cartas, incluindo o oathbreaker e a mágica de assinatura. Total atual: ${main + commanderCount}.` });
+    if (commanderCount !== 2 || commanders.some(e => e.count !== 1)) issues.push({ code: 'commander_count', message: 'Escolha um planeswalker como oathbreaker e uma instantânea ou feitiço como mágica de assinatura.', section: 'commander' });
+    if (side) issues.push({ code: 'sideboard_count', message: 'Oathbreaker não usa sideboard nesta mesa.', section: 'sideboard' });
+    issues.push({ code: 'commander_unverified', message: 'O oathbreaker e a mágica de assinatura precisam ser conferidos pelo servidor.' });
+  } else if (commanderCount) issues.push({ code: 'commander_format', message: 'Mova os comandantes para o deck principal ou escolha o formato Commander ou Oathbreaker.' });
   const copies = new Map<string, { count: number; name: string; card: ScryCard | null }>();
   for (const [section, entries] of [['main', deck.cards], ['sideboard', deck.sideboard ?? []], ['commander', commanders]] as const) {
     for (const entry of entries) {
@@ -43,18 +48,18 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
         if (!card || !legalityFresh(card) || !card.legalities?.[legality]) unknown.add(entry.name);
         else if (card.legalities[legality] !== 'legal') issues.push({ code: card.legalities[legality] === 'banned' ? 'banned' : 'format', card: entry.name, section, message: `${card.pt?.name || entry.name}: ${card.legalities[legality] === 'banned' ? `banida em ${FORMAT_LABEL[format]}` : `não é válida em ${FORMAT_LABEL[format]}`}.` });
       }
-      if (format === 'commander' && card && commanders.every(e => cacheGet(e.name)?.color_identity) && (card.color_identity ?? []).some(c => !identity.has(c)))
-        issues.push({ code: 'color_identity', card: entry.name, section, message: `${card.pt?.name || entry.name}: identidade de cor fora da identidade dos comandantes. Confira eventuais exceções no servidor.` });
+      if (hasCommandZone(format) && card && commanders.every(e => cacheGet(e.name)?.color_identity) && (card.color_identity ?? []).some(c => !identity.has(c)))
+        issues.push({ code: 'color_identity', card: entry.name, section, message: `${card.pt?.name || entry.name}: identidade de cor fora da identidade ${format === 'oathbreaker' ? 'do oathbreaker' : 'dos comandantes'}. Confira eventuais exceções no servidor.` });
       const key = entry.oracleId ?? card?.oracle_id ?? card?.name.toLowerCase() ?? entry.name.toLowerCase();
       const previous = copies.get(key);
       if (previous) previous.count += entry.count; else copies.set(key, { count: entry.count, name: entry.name, card });
     }
   }
-  if (isConstructed(format) || format === 'commander') for (const { count, name, card } of copies.values()) {
+  if (isConstructed(format) || hasCommandZone(format)) for (const { count, name, card } of copies.values()) {
     const limit = cardCopyLimit(name, card, format);
-    if (count > limit && (card || isBasic(name))) issues.push({ code: 'copies', card: name, message: `${name}: ${count} cópias ${format === 'commander' ? 'entre o deck e a zona de comando' : 'entre o deck e o sideboard'}; o limite é ${limit}.` });
+    if (count > limit && (card || isBasic(name))) issues.push({ code: 'copies', card: name, message: `${name}: ${count} cópias ${hasCommandZone(format) ? 'entre o deck e a zona de comando' : 'entre o deck e o sideboard'}; o limite é ${limit}.` });
   }
   for (const name of deck.unresolved ?? []) issues.push({ code: 'unresolved', card: name, message: `Carta não reconhecida na importação: ${name}.` });
   if (unknown.size) issues.push({ code: 'unverified', message: `A legalidade de ${unknown.size} ${unknown.size === 1 ? 'carta ainda não foi verificada' : 'cartas ainda não foi verificada'}.` });
-  return { status: issues.some(i => !['unverified', 'commander_unverified'].includes(i.code)) ? 'invalid' : unknown.size || format === 'commander' ? 'unknown' : 'valid', issues };
+  return { status: issues.some(i => !['unverified', 'commander_unverified'].includes(i.code)) ? 'invalid' : unknown.size || hasCommandZone(format) ? 'unknown' : 'valid', issues };
 }

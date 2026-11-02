@@ -157,7 +157,9 @@ O editor salva cada mudança na hora e só dá para desfazer a exclusão do deck
 - [ ] **Voltar a esta versão** e **Desfazer** a última mudança no editor (Ctrl+Z).
 - [ ] Na conta, as versões viajam junto com o deck (item 44), com um limite de quantas guardar.
 
-### S17. Novos formatos: Brawl, Oathbreaker e Pauper Commander · Funcionalidade · G
+### S17. Novos formatos: Brawl, Oathbreaker e Pauper Commander · Funcionalidade · G · em parte ✅
+
+Oathbreaker feito na 0.112.0 (fora da ordem sugerida abaixo, a pedido): validação no construtor e no servidor, botão ao lado do Commander, de dois a quatro jogadores e 10 decks prontos. Brawl e Pauper Commander continuam em aberto.
 
 A mesa tem Livre, Standard, Pauper, Sacola 50 e Commander, e a ponte só usa os tipos `Constructed` e `Commander` do Forge. O Forge já conhece Brawl e Oathbreaker; Pauper Commander (PDH) é Commander com regras de raridade.
 

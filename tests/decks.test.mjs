@@ -319,6 +319,33 @@ test('Commander local rules enforce 100 total, singleton exceptions, identity in
   assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 84);
 });
 
+test('Oathbreaker local rules: a planeswalker and a signature spell, 60 cards, singleton and identity', () => {
+  cache('Oath Walker', { type_line: 'Legendary Planeswalker — Test', color_identity: ['G'], legalities: { oathbreaker: 'legal' } });
+  cache('Oath Spell', { type_line: 'Instant', color_identity: ['G'], legalities: { oathbreaker: 'legal' } });
+  cache('Oath Forest', { type_line: 'Basic Land — Forest', color_identity: ['G'], legalities: { oathbreaker: 'legal' } });
+  cache('Oath Island', { type_line: 'Basic Land — Island', color_identity: ['U'], legalities: { oathbreaker: 'legal' } });
+  cache('Oath Bolt', { color_identity: ['G'], legalities: { oathbreaker: 'legal' } });
+  cache('Oath Vault', { color_identity: [], legalities: { oathbreaker: 'banned', commander: 'legal' } });
+  const d = { id: 'o', name: 'o', format: 'oathbreaker', commanders: [{ name: 'Oath Walker', count: 1 }, { name: 'Oath Spell', count: 1 }], cards: [{ name: 'Oath Forest', count: 58 }], sideboard: [] };
+  assert.equal(validateDeckLocal(d).status, 'unknown'); // O servidor confere o oathbreaker e a mágica de assinatura.
+  assert.ok(validateDeckLocal({ ...d, cards: [{ name: 'Oath Forest', count: 57 }] }).issues.some(i => i.code === 'total_count'));
+  assert.ok(validateDeckLocal({ ...d, commanders: d.commanders.slice(0, 1), cards: [{ name: 'Oath Forest', count: 59 }] }).issues.some(i => i.code === 'commander_count'));
+  assert.ok(validateDeckLocal({ ...d, cards: [{ name: 'Oath Island', count: 58 }] }).issues.some(i => i.code === 'color_identity'));
+  assert.ok(validateDeckLocal({ ...d, cards: [{ name: 'Oath Forest', count: 56 }, { name: 'Oath Bolt', count: 2 }] }).issues.some(i => i.code === 'copies'));
+  assert.ok(validateDeckLocal({ ...d, cards: [{ name: 'Oath Forest', count: 57 }, { name: 'Oath Vault', count: 1 }] }).issues.some(i => i.code === 'banned'));
+  assert.ok(validateDeckLocal({ ...d, sideboard: [{ name: 'Oath Forest', count: 1 }] }).issues.some(i => i.code === 'sideboard_count'));
+  assert.equal(cardCopyLimit('Oath Bolt', undefined, 'oathbreaker'), 1);
+  // A zona de comando fora do Commander e do Oathbreaker é um problema.
+  assert.ok(validateDeckLocal(d, 'free').issues.some(i => i.code === 'commander_format'));
+  const ready = decks.DEFAULT_DECKS.filter(d => d.format === 'oathbreaker');
+  assert.equal(ready.length, 10);
+  for (const deck of ready) { assert.equal(decks.totalDeckSize(deck), 60, deck.id); assert.equal(deck.commanders.length, 2, deck.id); assert.ok(deck.price, deck.id); }
+  // Os prontos de Oathbreaker só aparecem no Oathbreaker, nem no Livre nem no Commander.
+  assert.ok(ready.every(deck => decks.readyDeckFits(deck, 'oathbreaker') && !decks.readyDeckFits(deck, 'free') && !decks.readyDeckFits(deck, 'commander')));
+  assert.equal(decks.scryfallFormat('oathbreaker'), 'oathbreaker');
+  assert.ok(decks.hasCommandZone('oathbreaker') && decks.hasCommandZone('commander') && !decks.hasCommandZone('pauper'));
+});
+
 test('starter deck price shows only when recorded, and not on personal decks', () => {
   const urza = decks.DEFAULT_DECKS.find(d => d.id === 'commander-urza');
   assert.equal(decks.deckPriceText(urza), 'US$ 1.605,93');

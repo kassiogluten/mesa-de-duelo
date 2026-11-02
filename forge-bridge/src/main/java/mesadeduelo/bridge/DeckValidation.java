@@ -45,7 +45,7 @@ final class DeckValidation {
     }
 
     static Result validate(JsonElement payload, String format) {
-        if (!Set.of("free", "standard", "pauper", "sacola50", "commander").contains(format)) throw new IllegalArgumentException("Formato não suportado.");
+        if (!MatchConfig.FORMATS.contains(format)) throw new IllegalArgumentException("Formato não suportado.");
         JsonArray issues = new JsonArray();
         Deck deck = new Deck("Deck");
         if (payload != null && payload.isJsonPrimitive() && payload.getAsJsonPrimitive().isString()) {
@@ -169,8 +169,9 @@ final class DeckValidation {
         if (main < (constructed ? 60 : 1))
             issue(issues, "main-too-small", constructed ? formatLabel(format) + " exige pelo menos 60 cartas no deck principal." : "Adicione pelo menos uma carta ao deck.", null, "main");
         if ("commander".equals(format)) { checkCommander(deck, issues); return; }
+        if ("oathbreaker".equals(format)) { checkOathbreaker(deck, issues); return; }
         if (deck.getOrCreate(DeckSection.Commander).countAll() > 0)
-            issue(issues, "wrong-section", "A zona de comando exige o formato Commander.", null, "commander");
+            issue(issues, "wrong-section", "A zona de comando exige o formato Commander ou Oathbreaker.", null, "commander");
         if (!constructed) return;
         boolean pauper = "pauper".equals(format);
         String label = formatLabel(format);
@@ -245,6 +246,46 @@ final class DeckValidation {
         if (problem != null) issue(issues, "commander-construction", "Confira os comandantes, a parceria e a construção do deck: " + problem, null, null);
     }
 
+    /** Um planeswalker (o oathbreaker) e uma instantânea ou feitiço (a mágica de assinatura) na zona de comando, mais 58 cartas. */
+    private static void checkOathbreaker(Deck deck, JsonArray issues) {
+        CardPool command = deck.getOrCreate(DeckSection.Commander);
+        PaperCard oathbreaker = null, signature = null;
+        for (var e : command) {
+            var rules = e.getKey().getRules();
+            if (e.getValue() == 1 && rules.canBeOathbreaker() && oathbreaker == null) oathbreaker = e.getKey();
+            else if (e.getValue() == 1 && rules.canBeSignatureSpell() && signature == null) signature = e.getKey();
+            else issue(issues, "invalid-commander", "Na zona de comando do Oathbreaker vão só um planeswalker e uma instantânea ou feitiço.", e.getKey().getDisplayName(), "commander");
+        }
+        if (oathbreaker == null || signature == null)
+            issue(issues, "commander-count", oathbreaker == null ? "Escolha um planeswalker como oathbreaker." : "Escolha uma instantânea ou um feitiço como mágica de assinatura.", null, "commander");
+        if (deck.getMain().countAll() + command.countAll() != 60)
+            issue(issues, "total-count", "Oathbreaker exige exatamente 60 cartas, incluindo o oathbreaker e a mágica de assinatura.", null, "main");
+        if (deck.getOrCreate(DeckSection.Sideboard).countAll() != 0)
+            issue(issues, "sideboard-not-supported", "Oathbreaker não usa sideboard nesta mesa.", null, "sideboard");
+        byte identity = oathbreaker == null ? 0 : oathbreaker.getRules().getColorIdentity().getColor();
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Commander, DeckSection.Sideboard}) {
+            String where = section == DeckSection.Main ? "main" : section == DeckSection.Commander ? "commander" : "sideboard";
+            for (var e : deck.getOrCreate(section)) {
+                PaperCard card = e.getKey();
+                counts.merge(StaticData.instance().getCommonCards().getNormalizedName(card.getName()), e.getValue(), Integer::sum);
+                if (UNIVERSAL_BANS.contains(card.getName()) || FModel.getFormats().get("Oathbreaker").getBannedCardNames().contains(card.getName()))
+                    issue(issues, "banned-card", "Esta carta está banida em Oathbreaker.", card.getDisplayName(), where);
+                else if (card.getRules().isCustom() || !OathbreakerLegality.permits(card.getDisplayName()) || !DeckFormat.Oathbreaker.isLegalCard(card))
+                    issue(issues, "wrong-format", "Esta carta não é permitida em Oathbreaker.", card.getDisplayName(), where);
+                if (oathbreaker != null && !card.getRules().getColorIdentity().hasNoColorsExcept(identity))
+                    issue(issues, "color-identity", "A identidade de cor desta carta está fora da identidade do oathbreaker.", card.getDisplayName(), where);
+            }
+        }
+        for (var e : counts.entrySet()) {
+            PaperCard card = resolve(e.getKey());
+            if (card != null && e.getValue() > DeckFormat.Oathbreaker.getMaxCardCopies(card))
+                issue(issues, "too-many-copies", "Oathbreaker permite uma cópia de cada carta, salvo terrenos básicos e exceções do texto Oracle.", card.getDisplayName(), null);
+        }
+        String problem = issues.isEmpty() ? DeckFormat.Oathbreaker.getDeckConformanceProblem(deck) : null;
+        if (problem != null) issue(issues, "commander-construction", "Confira o oathbreaker, a mágica de assinatura e a construção do deck: " + problem, null, null);
+    }
+
     static Map<String, Integer> poolCounts(Deck deck) {
         Map<String, Integer> out = new LinkedHashMap<>();
         for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Sideboard})
@@ -255,7 +296,8 @@ final class DeckValidation {
 
     private static String oracleId(String name) {
         String id = PauperLegality.oracleId(name);
-        return id != null ? id : CommanderLegality.oracleId(name);
+        if (id == null) id = CommanderLegality.oracleId(name);
+        return id != null ? id : OathbreakerLegality.oracleId(name);
     }
 
     static JsonArray entries(CardPool pool) {

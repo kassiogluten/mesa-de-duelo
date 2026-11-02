@@ -31,8 +31,10 @@ export interface SearchParts {
   func?: string;
   /** Identidade de cor do deck de Commander (do comandante); fica de fora ao escolher o comandante. */
   identity?: Iterable<string> | null;
-  commanderSlot?: boolean;
+  /** Escolhendo a carta da zona de comando: o comandante (true), o oathbreaker ou a mágica de assinatura (que segue a identidade). */
+  commanderSlot?: boolean | 'oathbreaker' | 'signature';
 }
+const SLOT_FILTER = { oathbreaker: 't:planeswalker', signature: '(t:instant or t:sorcery)' };
 
 export function buildSearchQuery(p: SearchParts): string {
   const colors = p.colors ? letters(p.colors) : '';
@@ -42,7 +44,8 @@ export function buildSearchQuery(p: SearchParts): string {
     colors ? `id<=${colors}` : '',
     p.type ?? '',
     func,
-    p.commanderSlot ? '(is:commander or t:background)' : p.identity ? identityFilter(p.identity) : '',
+    p.commanderSlot === true ? '(is:commander or t:background)' : p.commanderSlot ? SLOT_FILTER[p.commanderSlot] : '',
+    p.commanderSlot !== true && p.commanderSlot !== 'oathbreaker' && p.identity ? identityFilter(p.identity) : '',
   ].filter(Boolean).join(' ');
 }
 

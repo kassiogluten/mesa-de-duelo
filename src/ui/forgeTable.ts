@@ -2459,7 +2459,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const multiplayer = visual.players.length > 2;
     const arena = root.querySelector<HTMLElement>('.arena')!;
     arena.classList.toggle('multiplayer', multiplayer);
-    arena.classList.toggle('commander-game', s.config?.format === 'commander');
+    arena.classList.toggle('commander-game', s.config?.format === 'commander' || s.config?.format === 'oathbreaker');
     arena.style.setProperty('--opponent-count', String(opponents.length));
     if (!me || !opp) return;
     if (s.input.attacking || s.input.blocking || s.input.selection) motion.cancelPresentation();

@@ -1,4 +1,4 @@
-import { allDecks, countEntries, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
+import { allDecks, countEntries, hasCommandZone, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import { mountAppHeader } from './appHeader';
@@ -64,9 +64,9 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
-  // Commander é o padrão; os demais ficam em "Outros", que volta ao último deles usado (Pauper na primeira vez).
+  // Commander é o padrão, com o Oathbreaker ao lado; os demais ficam em "Outros", que volta ao último deles usado (Pauper na primeira vez).
   let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
-  const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => f !== 'commander' && f === load('mesa:otherFormat')) ?? 'pauper';
+  const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => !hasCommandZone(f) && f === load('mesa:otherFormat')) ?? 'pauper';
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
@@ -95,7 +95,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const netName = () => (root.querySelector('#netName') as HTMLInputElement).value.trim() || 'Jogador';
   const roomCode = () => (root.querySelector('#roomCode') as HTMLInputElement).value.trim().toUpperCase();
   const roomCodeHelp = () => { $('#roomCodeHelp').textContent = roomCode() && visibility === 'private' ? 'Códigos fáceis podem ser adivinhados por outras pessoas.' : 'Deixe vazio para sortear.'; };
-  const config = (): MatchConfig => ({ format: format!, matchLength: format === 'commander' ? 'bo1' : matchLength, playerCount: format === 'commander' ? playerCount : 2 });
+  const config = (): MatchConfig => ({ format: format!, matchLength: hasCommandZone(format!) ? 'bo1' : matchLength, playerCount: hasCommandZone(format!) ? playerCount : 2 });
   root.innerHTML = `<div class="lobby library-home"><div class="mat" aria-hidden="true"></div>
     <header class="home-top"></header>
     <main class="home-content"><div class="home-intro"><h1 class="sr-only">Jogar</h1><section class="replay" id="replay" aria-labelledby="replayTitle" hidden><span class="replay-art" id="replayArt" aria-hidden="true"></span><div class="replay-info"><p class="replay-eyebrow">Sua última partida</p><h2 id="replayTitle"></h2><p class="replay-summary" id="replaySummary"></p></div><button type="button" class="arena-btn primary big replay-btn" id="replayStart" data-lobby="start">Jogar de novo</button></section></div>
@@ -103,7 +103,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       <button type="button" class="setup-summary" data-lobby="setup-toggle" aria-expanded="false" aria-controls="matchSetup"><span class="setup-summary-text"><small>Partida</small><strong id="setupSummary"></strong></span><span class="setup-summary-action" id="setupSummaryAction" aria-hidden="true">Mudar</span></button>
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <div class="match-setup" id="matchSetup">
-        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
+        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="oathbreaker">Oathbreaker</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
@@ -147,13 +147,13 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   // Na sala de espera a barra lateral some: os avisos (alguém voltou, erro da ponte) aparecem no lobby da sala.
   const setStatus = (message: string, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error', error); roomLobby.setStatus(message, error); };
   function allowed(deck: DeckData) {
-    if (deck.format === 'commander' && format !== 'commander') return false;
+    if (hasCommandZone(deck.format) && format !== deck.format) return false;
     if (deck.builtin && format && !readyDeckFits(deck, format)) return false;
     const local = validateDeckLocal(deck, format ?? 'free');
     return !format || showIncompatible || (validations.get(key(deck))?.valid ?? local.status !== 'invalid');
   }
   /** Se o deck serve no formato, pelos mesmos critérios da lista de decks, sem esperar o servidor. */
-  const fitsIn = (deck: DeckData, f: DeckFormat) => !(deck.format === 'commander' && f !== 'commander') && !(deck.builtin && !readyDeckFits(deck, f)) && validateDeckLocal(deck, f).status !== 'invalid';
+  const fitsIn = (deck: DeckData, f: DeckFormat) => !(hasCommandZone(deck.format) && f !== deck.format) && !(deck.builtin && !readyDeckFits(deck, f)) && validateDeckLocal(deck, f).status !== 'invalid';
   /** O deck escolhido não serve no formato: fora da mesa livre, onde qualquer deck abre. */
   const misfit = (deck: DeckData | undefined) => !!deck && !!format && mode !== 'free' && !fitsIn(deck, format);
   function matches(deck: DeckData) { return matchesQuery(deck, query, ptName) && matchesColors(deckColors(deck), colorFilter); }
@@ -168,9 +168,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   function tiles(decks: DeckData[]) {
     return decks.map(d => {
       // Com o selo do formato, a etiqueta "Livre" (todo deck vale no Livre) só repetiria a informação.
-      const formatTag = d.builtin && d.format && d.format !== 'commander' ? FORMAT_LABEL[d.format] : '';
+      const formatTag = d.builtin && d.format && !hasCommandZone(d.format) ? FORMAT_LABEL[d.format] : '';
       const art = deckArt(d), on = youId === d.id, bracket = deckBracket(d), colors = deckColors(d), validity = validationLabel(d), label = formatTag && validity === 'Livre' ? '' : validity;
-      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}${bracket ? `, ${bracketLabel(bracket)}` : ''}"><span class="tile-cover"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span>${colors.length ? `<span class="tile-colors">${colors.map(pip).join('')}</span>` : ''}</span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span>${commanderLineHTML(d, ptName, 'tile-commander')}<span class="tile-meta"><span>${deckSize(d) + (d.format === 'commander' ? countEntries(d.commanders ?? []) : 0)} cartas</span>${deckPriceHTML(d, 'tile-price', false)}${bracketBadgeHTML(d, 'tile-format')}${formatTag ? `<span class="tile-format">${esc(formatTag)}</span>` : ''}</span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
+      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}${bracket ? `, ${bracketLabel(bracket)}` : ''}"><span class="tile-cover"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span>${colors.length ? `<span class="tile-colors">${colors.map(pip).join('')}</span>` : ''}</span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span>${commanderLineHTML(d, ptName, 'tile-commander')}<span class="tile-meta"><span>${deckSize(d) + (hasCommandZone(d.format) ? countEntries(d.commanders ?? []) : 0)} cartas</span>${deckPriceHTML(d, 'tile-price', false)}${bracketBadgeHTML(d, 'tile-format')}${formatTag ? `<span class="tile-format">${esc(formatTag)}</span>` : ''}</span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
     }).join('');
   }
   function refresh() {
@@ -193,11 +193,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       const setting = button.dataset.setting;
       const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : matchLength;
       const others = setting === 'format' && button.dataset.value === 'others';
-      button.setAttribute('aria-pressed', String(others ? !!format && format !== 'commander' : button.dataset.value === value));
-      if (others) button.setAttribute('aria-expanded', String(!!format && format !== 'commander'));
+      button.setAttribute('aria-pressed', String(others ? !!format && !hasCommandZone(format) : button.dataset.value === value));
+      if (others) button.setAttribute('aria-expanded', String(!!format && !hasCommandZone(format)));
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
-    $('#formatOthers').hidden = !format || format === 'commander';
+    $('#formatOthers').hidden = !format || hasCommandZone(format);
     $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : 'Escolha um formato para começar.';
     $('#formatHelp').hidden = !!format && format !== 'sacola50';
     header.setDisabled(busy);
@@ -215,7 +215,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#publicRooms').hidden = !!room;
     $('#visibilityHelp').textContent = visibility === 'public' ? 'Aparece na lista de salas públicas para qualquer pessoa entrar.' : 'Só entra quem receber o código.';
     roomCodeHelp();
-    const commander = format === 'commander';
+    // Commander e Oathbreaker: de dois a quatro jogadores, com um deck para cada computador.
+    const commander = hasCommandZone(format ?? undefined);
     const free = mode === 'free';
     // Quem entra numa sala joga com as regras dela: duração e número de jogadores são escolhas de quem cria.
     const joining = mode === 'net' && netTab === 'join';
@@ -279,7 +280,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const parts = [FORMAT_LABEL[format]];
     if (mode === 'free') parts.push('Mesa livre');
     else if (mode === 'net') parts.push('Contra outras pessoas');
-    else if (format === 'commander') {
+    else if (hasCommandZone(format ?? undefined)) {
       const random = commanderOpponents.slice(0, playerCount - 1).every(id => id === 'random');
       parts.push(`${playerCount} jogadores`, random ? (playerCount > 2 ? 'computadores aleatórios' : 'computador aleatório') : playerCount > 2 ? 'contra os computadores' : 'contra o computador');
     } else {
@@ -352,7 +353,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   /** Troca o formato mantendo o deck escolhido (atalho do seletor). */
   function setFormat(next: DeckFormat) {
     format = next; save('mesa:format', format);
-    if (format !== 'commander') save('mesa:otherFormat', format);
+    if (!hasCommandZone(format)) save('mesa:otherFormat', format);
   }
   /**
    * Seletor com só os formatos em que o deck serve. `leaving`: o jogador tocou no formato `missing` com o deck já
@@ -393,7 +394,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       } else {
         const opponent = opponentId === 'random' ? null : allDecks().find(d => d.builtin && d.id === opponentId);
         if (opponent === undefined) { setStatus('Não há um deck do computador compatível com este formato.', true); return; }
-        const opponents = matchConfig.format === 'commander' ? selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
+        const opponents = hasCommandZone(matchConfig.format) ? selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
         await opts.onPlay(deck, opponents?.[0] ?? opponent, matchConfig, opponents);
       }
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Não foi possível iniciar a partida.', true); }

@@ -35,7 +35,7 @@ final class DamageDetails {
         Combat fight = game == null ? null : game.getCombat();
         if (attacker != null && fight != null && p != null && fight.isBlocked(attacker) && fight.isAttacking(attacker, p) && has(source, Keyword.TRAMPLE)) e.addProperty("trample", true);
         if (infect) e.addProperty("infect", true);
-        if (combat && source != null && source.isCommander()) e.addProperty("commander", true);
+        if (combat && source != null && source.isCommander() && game != null && game.getRules().hasAppliedVariant(forge.game.GameType.Commander)) e.addProperty("commander", true);
         if (source != null && source.getController() != null && source.getController().getId() == target.getId()) e.addProperty("self", true);
         if (p != null && !infect) {
             int loss = pendingLoss.merge(p.getId(), amount, Integer::sum);

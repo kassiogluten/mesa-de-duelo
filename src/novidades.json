@@ -1,4 +1,13 @@
 {
+  "0.112.0": {
+    "Formato Oathbreaker": [
+      { "img": "0.112.0/oathbreaker-na-tela-inicial.webp", "legenda": "Na escolha de formato, o Oathbreaker fica ao lado do Commander, com Outros embaixo. Como no Commander, dá para jogar de dois a quatro e escolher o deck de cada computador." },
+      { "img": "0.112.0/zona-de-comando-oathbreaker.webp", "legenda": "No construtor, a zona de comando do Oathbreaker mostra o planeswalker, marcado como Oathbreaker, e a Mágica de assinatura, com a conta de 60 cartas e a identidade de cor do oathbreaker." }
+    ],
+    "10 decks prontos de Oathbreaker": [
+      { "img": "0.112.0/decks-prontos-oathbreaker.webp", "legenda": "Os dez decks prontos de Oathbreaker na tela inicial, cada um com o planeswalker e a mágica de assinatura, as cores, as 60 cartas e o preço." }
+    ]
+  },
   "0.111.0": {
     "Editar ou iniciar agora os cenários do Laboratório": [
       { "img": "0.111.0/editar-ou-iniciar.webp", "legenda": "Nos Cenários prontos e nos Cenários salvos, Editar monta a mesa para ajustar, e ▶ Iniciar agora monta e já cria a sala de teste." }
