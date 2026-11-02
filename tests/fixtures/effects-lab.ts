@@ -372,6 +372,17 @@ function table() {
           return 'Blink: some em luz e volta no mesmo lugar.';
         }
         case 'tap': x.tapped = !x.tapped; return x.tapped ? 'Virada, com peso.' : 'Desvirada.';
+        case 'attack': {
+          // Declarar ataque, como a ponte manda: a criatura vira, fica atacando e a mesa mostra "attackers".
+          if (!x.creature) return 'Escolha uma criatura.';
+          const defender = x.controller === ME ? OPP : ME;
+          x.attacking = true; if (!has(x, 'VIGILANCE')) x.tapped = true;
+          state.phase = 'COMBAT_DECLARE_ATTACKERS'; state.activePlayer = x.controller;
+          state.combat = [{ attacker: x.id, defender, defenderKind: 'player', blockers: [] }];
+          emit('attackers', { actor: x.controller, attackers: [x.id] });
+          setTimeout(() => { x.attacking = false; state.combat = []; state.phase = 'MAIN1'; flush(); }, 2500);
+          return 'Ataque: a criatura recua um pouco, avança na direção do oponente e volta.';
+        }
         case 'untap-all': { const side = player(x.controller); side.battlefield.forEach((y: any) => { y.tapped = false; }); return 'Desvirar tudo: em onda.'; }
         case 'tap-all': { const side = player(x.controller); side.battlefield.forEach((y: any) => { if (y.land || y.creature) y.tapped = true; }); return 'Virou tudo.'; }
         case 'trigger': case 'ability': {
@@ -504,9 +515,16 @@ function table() {
     if (note) report(note);
   });
   // Para ver ou fotografar um movimento: ?mesa&jogar=land,creature joga da mão, uma a cada 2,5 s (a primeira leva de eventos
-  // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar.
+  // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar. Além das jogadas da
+  // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy) e tokens:<quantas>.
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
-  if (plays.length > 1) plays.forEach((kind, i) => realTimeout(() => window.postMessage({ cmd: 'hand', kind }, '*'), 600 + i * 2500));
+  const run = (play: string) => {
+    const [cmd, arg] = play.split(':');
+    if (cmd === 'move') window.postMessage({ cmd, kind: arg, id: player(ME).battlefield.find((x: any) => x.creature)?.id }, '*');
+    else if (cmd === 'tokens') window.postMessage({ cmd, side: 'me', n: arg }, '*');
+    else window.postMessage({ cmd: 'hand', kind: cmd }, '*');
+  };
+  if (plays.length > 1) plays.forEach((play, i) => realTimeout(() => run(play), 600 + i * 2500));
 }
 
 // ---------------------------------------------------------------- painel
@@ -550,7 +568,7 @@ function panel() {
     ${[['burn', 'Mágica'], ['combat', 'Combate'], ['trample', 'Atropelar'], ['double', 'Golpe duplo'], ['first', 'Iniciativa'], ['deathtouch', 'Toque mortífero'], ['lifelink', 'Vínculo'], ['infect', 'Infectar'], ['wither', 'Murchar'], ['prevented', 'Prevenido'], ['divided', 'Dividido'], ['pain', 'Dor'], ['lethal', 'Letal']]
       .map(([k, t]) => `<button data-d="${k}">${t}</button>`).join('')}
     <h2>Movimento (item 16, na selecionada)</h2>
-    ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo']]
+    ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['attack', 'Atacar'],['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo']]
       .map(([k, t]) => `<button data-m="${k}">${t}</button>`).join('')}
     <h2>Moer (item 24, do lado escolhido em Campo)</h2>
     ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>

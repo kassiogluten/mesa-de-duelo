@@ -1,6 +1,8 @@
 .forge .game-menu-trigger { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding-inline: 14px; }
 .game-menu-trigger svg, .game-options-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.forge .game-menu { top: max(56px, calc(env(safe-area-inset-top, 0px) + 48px)); width: min(270px, calc(100vw - 24px)); padding: 8px; gap: 3px; border-radius: 16px; box-shadow: 0 4px 8px #0003, 0 16px 40px #0005; animation: none; }
+.forge .game-menu { top: max(56px, calc(env(safe-area-inset-top, 0px) + 48px)); width: min(270px, calc(100vw - 24px)); padding: 8px; gap: 3px; border-radius: 16px; box-shadow: 0 4px 8px #0003, 0 16px 40px #0005; animation: game-menu-in .475s var(--ease-settle) both; transform-origin: top left; }
+/* O menu da partida desce do botão com mola, em vez de aparecer de uma vez. */
+@keyframes game-menu-in { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
 .forge .game-menu .btn { min-height: 44px; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: 500 15px var(--body); transition: background-color 120ms ease, transform 120ms ease; }
 .forge .game-menu .btn:hover { background: var(--surface); transform: none; }
 .forge .game-menu .btn:active, .forge .game-menu-trigger:active, .game-options button:active { transform: scale(.96); }
@@ -74,7 +76,7 @@
   .game-option-row { gap: 10px; }
   .game-options footer .arena-btn { width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .game-options *, .forge .game-menu * { transition: none; } .game-options button:active, .forge .game-menu .btn:active { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .game-options *, .forge .game-menu * { transition: none; } .forge .game-menu { animation: none; } .game-options button:active, .forge .game-menu .btn:active { transform: none; } }
 /* Erros da partida: número de erros novos no menu e a lista na gaveta lateral. */
 .forge .game-menu .menu-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: 999px; background: var(--red); color: #fff; font: 700 12px var(--body); vertical-align: 1px; }
 .forge .game-menu .menu-count[hidden] { display: none; }

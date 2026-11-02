@@ -1,4 +1,10 @@
 {
+  "0.115.0": {
+    "Saídas do campo em arco": [
+      { "img": "0.115.0/destruida-cai-no-cemiterio.webp", "legenda": "Destruída, a Bocarra racha no campo e cai escurecida, em arco, até o cemitério." },
+      { "img": "0.115.0/devolvida-volta-ao-leque.webp", "legenda": "Devolvida à mão, a Bocarra voa do campo até o lugar dela no leque." }
+    ]
+  },
   "0.114.0": {
     "Mágicas saem da pilha": [
       { "img": "0.114.0/anulada-racha-na-pilha.webp", "legenda": "Anulados, os Ursos Cinzentos racham na pilha, no canto, e seguem apagados para o cemitério." }

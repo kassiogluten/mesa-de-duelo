@@ -39,7 +39,7 @@
 .question-bar {
   pointer-events: auto; display: flex; align-items: center; gap: 14px; max-width: min(620px, calc(100vw - 24px));
   margin-bottom: calc(clamp(144px, 23vh, 215px) + 10px); padding: 10px 12px 10px 16px; border: 1px solid var(--gold); border-radius: 12px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--azul-16243a, #16243a) 96.9%, transparent), color-mix(in srgb, var(--azul-091322, #091322) 96.9%, transparent)); box-shadow: 0 8px 26px #000a; animation: rise-in .25s cubic-bezier(.2, .8, .2, 1);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--azul-16243a, #16243a) 96.9%, transparent), color-mix(in srgb, var(--azul-091322, #091322) 96.9%, transparent)); box-shadow: 0 8px 26px #000a; animation: rise-in .475s var(--ease-settle);
 }
 .question-bar-text { display: flex; flex-direction: column; min-width: 0; }
 .question-bar-text strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--gold); font: 600 14px/1.3 var(--body); }

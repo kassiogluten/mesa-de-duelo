@@ -20,7 +20,7 @@
   position: relative; border: 1px solid rgb(242 181 76 / .28); border-radius: 18px;
   background: linear-gradient(180deg, rgb(20 32 54 / .94), rgb(9 15 29 / .96));
   box-shadow: 0 30px 80px rgb(0 0 0 / .65), inset 0 1px 0 rgb(255 255 255 / .05);
-  animation: arena-modal-in .32s cubic-bezier(.2, .8, .2, 1) both;
+  animation: arena-modal-in .475s var(--ease-settle) both;
 }
 .forge .question:not(:has(.q-opts.cards)):not(.zone-view) { width: min(580px, 94vw); }
 @keyframes arena-modal-in { from { opacity: 0; transform: translateY(18px) scale(.97); } }

@@ -366,27 +366,25 @@ export function createMotion(root: HTMLElement): Motion {
     }
   }
   /**
-   * Saída do campo com um movimento por motivo: destruída racha antes de cair no cemitério, sacrificada afunda,
-   * exilada se desfaz em luz, devolvida sobe e voa para a mão. Morrer por dano e o resto voam para a pilha certa.
+   * Saída do campo com um movimento por motivo: destruída racha antes de cair no cemitério, sacrificada vai escurecida,
+   * exilada se desfaz em luz, devolvida voa em arco até o lugar dela no leque. Morrer por dano e o resto voam em arco
+   * para o monte certo, que pulsa ao recebê-la.
    */
-  function leave(event: PresentationEvent, from: Point, to: Point, end: Point, piece: HTMLElement, duration: number) {
-    const go = { translate: `${from.cx - to.cx}px ${from.cy - to.cy}px` };
-    if (event.reason === 'destroyed') {
-      shatter(from);
-      animate(piece, [{ ...go, scale: '1', opacity: 1, filter: 'brightness(1.4)' }, { ...go, scale: '.96', opacity: .85, filter: 'brightness(.7) grayscale(.6)', offset: .3 }, { translate: '0 0', scale: '.85', opacity: .1, filter: 'brightness(.7) grayscale(.6)' }], duration, 'linear');
-    } else if (event.reason === 'sacrificed') {
-      animate(piece, [{ ...go, scale: '1', opacity: 1, filter: 'none' }, { translate: `${from.cx - to.cx}px ${from.cy - to.cy + 16}px`, scale: '.86', opacity: .75, filter: 'brightness(.55) sepia(.4)', offset: .38 }, { translate: '0 0', scale: '.8', opacity: .1, filter: 'brightness(.55) sepia(.4)' }], duration, 'ease-in');
-    } else if (event.to === 'Exile') {
+  function leave(event: PresentationEvent, from: Point, to: Point, end: Point, piece: HTMLElement, duration: number,
+    opts: { caption?: HTMLElement; into?: HTMLElement | null; endRot?: number; fade?: boolean } = {}) {
+    const { caption, into = null, endRot = 0, fade = true } = opts;
+    if (event.to !== 'Exile') {
+      if (event.reason === 'destroyed') shatter(from);
+      const tint = event.reason === 'destroyed' ? 'brightness(.7) grayscale(.6)' : event.reason === 'sacrificed' ? 'brightness(.55) sepia(.4)' : '';
+      fly(piece, from, to, end, duration, { caption, endRot, fade, tint });
+      if (into) later(() => absorb(into), duration * .85);
+    } else {
       // Some no lugar, em luz; não precisa atravessar a mesa até a pilha do exílio.
       piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
       const ring = effect('exile-ring', { ...from, w: end.w * 1.3, h: end.w * 1.3 });
       animate(ring, [{ opacity: 0, scale: '.5' }, { opacity: .9, scale: '1', offset: .4 }, { opacity: 0, scale: '1.3' }], duration);
       later(() => remove(ring), duration);
       animate(piece, [{ opacity: 1, scale: '1', filter: 'brightness(1)' }, { opacity: .9, scale: '1.04', filter: 'brightness(2.2) saturate(.3)', offset: .45 }, { opacity: 0, scale: '1.1', filter: 'brightness(3) blur(3px)' }], duration);
-    } else if (event.to === 'Hand') {
-      animate(piece, [{ ...go, scale: '1', opacity: 1 }, { translate: `${from.cx - to.cx}px ${from.cy - to.cy - 26}px`, scale: '1.08', opacity: 1, offset: .3 }, { translate: '0 0', scale: '.6', opacity: .2 }], duration, 'ease-in-out');
-    } else {
-      animate(piece, [{ ...go, scale: '.92', opacity: .8 }, { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 }, { translate: '0 0', scale: '1', opacity: .1 }], duration);
     }
   }
   /**
@@ -437,13 +435,16 @@ export function createMotion(root: HTMLElement): Motion {
     if (pile) animate(pile, [{ scale: '1.12' }, { scale: '1' }], LANDING.duration, LANDING.easing);
   }
   /** Pouso: a carta bate na mesa, passa um pouco do ponto e assenta (mola), com uma onda curta em volta. */
-  function land(el: HTMLElement) {
+  function land(el: HTMLElement, withRipple = true) {
     animate(el, [{ scale: '1.1', translate: '0 -6px' }, { scale: '1', translate: '0 0' }], LANDING.duration, LANDING.easing);
-    const at = center(el);
+    if (withRipple) ripple(center(el));
+  }
+  /** A onda dourada do pouso, em volta de uma carta ou de um monte. */
+  function ripple(at: Point | undefined) {
     if (!at || reduced()) return;
-    const ripple = effect('land-ripple', { ...at, w: at.w * 1.04, h: at.h * 1.04 });
-    animate(ripple, [{ opacity: .85, scale: '.92' }, { opacity: 0, scale: '1.3' }], 460, 'cubic-bezier(.2,.7,.3,1)');
-    later(() => remove(ripple), 480);
+    const ring = effect('land-ripple', { ...at, w: at.w * 1.04, h: at.h * 1.04 });
+    animate(ring, [{ opacity: .85, scale: '.92' }, { opacity: 0, scale: '1.3' }], 460, 'cubic-bezier(.2,.7,.3,1)');
+    later(() => remove(ring), 480);
   }
 
   return {
@@ -508,7 +509,15 @@ export function createMotion(root: HTMLElement): Motion {
       if (event.type === 'life-changed') { heal(event); return; }
       if (event.type === 'attackers') {
         // Ataque é só vermelho: o dourado fica para seleção e bloqueio.
-        root.querySelectorAll<HTMLElement>('.slot.attacking > .bfc').forEach(el => pulse(el, 'attack-highlight'));
+        // Cada atacante recua um pouco e avança na direção do oponente (para cima, se está na metade de baixo da mesa),
+        // um depois do outro, e volta com mola.
+        const middle = center(layer())?.cy ?? 0;
+        root.querySelectorAll<HTMLElement>('.slot.attacking > .bfc').forEach((el, i) => {
+          pulse(el, 'attack-highlight');
+          const ahead = (center(el)?.cy ?? 0) > middle ? -1 : 1;
+          animate(el, [{ translate: '0 0' }, { translate: `0 ${-7 * ahead}px`, offset: .3 }, { translate: `0 ${16 * ahead}px`, scale: '1.04', offset: .55 }, { translate: '0 0', scale: '1' }],
+            560, 'cubic-bezier(.3,.7,.4,1)', Math.min(i, 8) * 70);
+        });
         const banner = effect('combat-banner', { cx: 0, cy: 0, w: 0, h: 0 });
         banner.removeAttribute('style');
         banner.textContent = options.label;
@@ -540,7 +549,7 @@ export function createMotion(root: HTMLElement): Motion {
       if (pile) to = pile;
       // Resolver e anular saem da pilha, no canto; o monte que recebe a carta pulsa quando ela chega.
       const fromStack = recentStack() ?? stage;
-      let into: HTMLElement | null = null;
+      let into: HTMLElement | null = null, handBack: HTMLElement | null = null;
       if (event.type === 'land-played' || event.type === 'entered') {
         from = event.from === 'Stack' ? fromStack : spot ?? hand;
         to = target ?? center(seat?.querySelector('.lands')) ?? center(root.querySelector(mine ? '#fMeLands' : '#fOppLands')) ?? stage;
@@ -554,12 +563,15 @@ export function createMotion(root: HTMLElement): Motion {
       } else if (event.type === 'left') {
         from = old ?? target ?? stage;
         to = destination(event, mine, seat, hand, stage);
+        into = pileOf(event, mine, seat);
+        // Devolvida à sua mão: voa até o lugar dela no leque, já no giro dele, e a carta da mão aparece quando ela chega.
+        const back = event.to === 'Hand' && mine && id !== undefined ? root.querySelector<HTMLElement>(`#fHand [data-fid="${id}"]`) : null, at = center(back);
+        if (back && at) { to = { ...at, w: back.offsetWidth || at.w, h: back.offsetHeight || at.h }; handBack = back; }
       } else if (event.type === 'discard') {
         // Sai do lugar dela na mão (ou da mão do oponente), já de face para cima, e cai no cemitério.
-        from = old ?? hand;
+        from = spot ?? old ?? hand;
         to = destination({ ...event, to: 'Graveyard' }, mine, seat, hand, stage);
-        const pile = mine ? root.querySelector<HTMLElement>('#fMePiles .gy') : seat?.querySelector<HTMLElement>('.piles .gy') ?? root.querySelector<HTMLElement>('#fOppPiles .gy');
-        later(() => pulse(pile), options.duration * .8);
+        into = pileOf({ ...event, to: 'Graveyard' }, mine, seat);
       } else if (event.type === 'countered') {
         from = fromStack;
         to = destination({ ...event, to: 'Graveyard' }, mine, seat, hand, stage);
@@ -569,15 +581,22 @@ export function createMotion(root: HTMLElement): Motion {
       // Pousa no campo (terreno, ou permanente que entrou vinda da pilha ou da mão): termina no tamanho da carta no campo, sem salto ao trocar.
       const landing = !!card && !!target && (event.type === 'land-played' || (event.type === 'entered' && event.from !== 'Exile'));
       const settled = event.type === 'resolved' || event.type === 'countered';
+      // Em arco até um monte, uma carta ou o leque: termina no tamanho de onde entra.
+      const arcs = settled || event.type === 'discard' || (event.type === 'left' && event.to !== 'Exile');
       // Keep large cards readable while travelling, independent of a tiny hand or pile's dimensions. Saindo da pilha, a carta
       // já começa grande (no tamanho dela) e termina no tamanho de onde entra.
-      const end = landing ? target! : pile ?? (settled && to !== stage ? to : { ...to, w: stage.w, h: stage.h });
+      const end = landing ? target! : pile ?? (arcs && to !== stage && to !== hand ? to : { ...to, w: stage.w, h: stage.h });
       const piece = effect('presentation-piece', end, options.html);
       const caption = document.createElement('span');
       caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
       const disappearing = !landing && ['left', 'countered', 'resolved', 'discard'].includes(event.type);
-      if (event.type === 'left') leave(event, from, to, end, piece, options.duration);
-      else if (landing || event.type === 'spell-cast') {
+      if (event.type === 'left') {
+        leave(event, from, to, end, piece, options.duration, { caption, into, endRot: handBack ? turnOf(handBack) : 0, fade: !handBack });
+        if (handBack && options.hideDestination && !reduced()) { handBack.style.opacity = '0'; hiddenCards.add(handBack); }
+      } else if (event.type === 'discard') {
+        fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, fade: true });
+        if (into) { const pileEl = into; later(() => absorb(pileEl), options.duration * .85); }
+      } else if (landing || event.type === 'spell-cast') {
         if (landing) landedAt.set(String(id), performance.now());
         // Sem o lugar no leque (mão do oponente, mão longa), sai do centro da mão no tamanho de uma carta.
         fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption });
@@ -608,6 +627,7 @@ export function createMotion(root: HTMLElement): Motion {
         remove(piece);
         if (card && hiddenCards.delete(card)) card.style.opacity = '';
         if (pileEl && hiddenCards.delete(pileEl)) pileEl.style.visibility = '';
+        if (handBack && hiddenCards.delete(handBack)) { handBack.style.opacity = ''; animate(handBack, [{ scale: '1.08' }, { scale: '1' }], TAP.duration, TAP.easing); }
         // Terreno ou permanente chegando ao campo: pousa com mola; fichas surgem com um brilho.
         if (id !== undefined && landing) {
           const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
@@ -696,7 +716,7 @@ export function createMotion(root: HTMLElement): Motion {
       const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
       const hand = center(seat?.querySelector('.seat-hand')) ?? center(root.querySelector(mine ? '#fHand' : '#fOppHand')) ?? stage;
       // Fichas (sem origem) e cartas que voltam do exílio surgem no próprio lugar; as outras vêm de onde estavam.
-      const origin = !event.from || event.from === 'Exile' ? null : event.from === 'Stack' ? stage : event.from === 'Hand' ? hand
+      const origin = !event.from || event.from === 'Exile' ? null : event.from === 'Stack' ? recentStack() ?? stage : event.from === 'Hand' ? hand
         : destination({ ...event, to: event.from }, mine, seat, hand, stage);
       const { flights, gap, travel } = entryTiming(cards.length, options.fast || !!event.repeat);
       const total = travel + (flights - 1) * gap;
@@ -713,30 +733,29 @@ export function createMotion(root: HTMLElement): Motion {
         if (slot && options.hideDestination && !reduced()) { slot.style.visibility = 'hidden'; hiddenCards.add(slot); }
         const to = center(el);
         if (i < flights && to && !reduced()) {
-          const w = to.w * 1.15, h = to.h * 1.15;
-          const piece = effect('presentation-piece', { ...to, w, h }, options.face(card));
+          const piece = effect('presentation-piece', to, options.face(card));
+          // Fichas surgem no lugar com uma mola (crescem, passam um pouco e assentam); as outras vêm em arco de onde estavam.
           if (!origin) animate(piece, [
-            { opacity: 0, scale: '.6', filter: event.from === 'Exile' ? 'brightness(3) blur(3px)' : 'brightness(2.4) blur(2px)' },
-            { opacity: 1, scale: '1.06', filter: 'brightness(1.6)', offset: .6 },
-            { opacity: 1, scale: `${1 / 1.15}`, filter: 'none' }], travel, EASE, delay);
-          else animate(piece, [
-            { translate: `${origin.cx - to.cx}px ${origin.cy - to.cy}px`, scale: '.92', opacity: .8 },
-            { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 },
-            { translate: '0 0', scale: `${1 / 1.15}`, opacity: 1 }], travel, EASE, delay);
+            { opacity: 0, scale: '.5', filter: event.from === 'Exile' ? 'brightness(3) blur(3px)' : 'brightness(2.4) blur(2px)' },
+            { opacity: 1, scale: '1', filter: 'none' }], travel, LANDING.easing, delay);
+          // Da mão (a área inteira, sem a carta), sai no tamanho de uma carta.
+          else fly(piece, origin === hand ? { ...hand, w: to.w * .7, h: to.h * .7 } : origin, to, to, travel, { delay });
           later(() => remove(piece), travel + delay);
         }
         later(() => {
           // A mesa pode ter sido redesenhada durante a cascata: a carta é procurada de novo pelo id.
           if (slot && hiddenCards.delete(slot)) slot.style.visibility = '';
           const landed = root.querySelector<HTMLElement>(`.field [data-fid="${card.id}"]`);
+          // Cada uma assenta com mola; a onda dourada fica para o monte inteiro, no fim.
+          if (landed && origin) land(landed, false);
           if (landed && card.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
         }, reduced() ? 0 : travel + delay);
       });
       for (const [pile, n] of piles) {
-        later(() => pulse(pile), reduced() ? 0 : total);
+        later(() => { pulse(pile); ripple(center(pile)); }, reduced() ? 0 : total);
         const at = center(pile);
         if (n < 2 || !at) continue;
-        // Acima do monte e das fichas que ainda estão chegando (elas surgem um pouco maiores que a carta).
+        // Acima do monte e das fichas que ainda estão chegando (a mola as faz passar um pouco do tamanho).
         const count = effect('entry-count', { ...at, cy: at.cy - at.h * .62 - 6, w: 0, h: 0 });
         count.textContent = `+${n}`;
         // Linear: o número fica inteiro durante a cascata e só some depois que a última ficha pousa.

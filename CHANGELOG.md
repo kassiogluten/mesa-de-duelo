@@ -6,6 +6,15 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.115.0] - 2026-11-02
+
+### Mudou
+
+- **Saídas do campo em arco.** A carta que sai do campo voa em arco até onde vai: destruída, racha e cai escurecida no cemitério; sacrificada ou morta em combate, cai no cemitério ou volta ao grimório, e o monte pulsa ao recebê-la. Devolvida à sua mão, ela volta ao lugar dela no leque, já no giro dele. O descarte também cai em arco no cemitério, saindo do lugar da carta no leque.
+- **Fichas com mola.** Fichas criadas juntas surgem no lugar com uma mola, e as que vêm de outro lugar chegam em arco e assentam; quando a última pousa, o monte ganha uma onda dourada.
+- **Ataque com avanço.** Ao declarar o ataque, cada atacante recua um pouco e avança na direção do oponente, um depois do outro.
+- **Janelas e menu com mola.** As escolhas, a barra da escolha recolhida e o aviso de decisão entram com uma mola leve, e o **Menu** da partida desce do botão em vez de aparecer de uma vez.
+
 ## [0.114.0] - 2026-11-02
 
 ### Mudou

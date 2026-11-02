@@ -4,7 +4,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 2px; max-width: min(560px, calc(100vw - 32px));
   padding: 10px 22px; border: 1px solid var(--gold); border-radius: 14px; pointer-events: none; text-align: center;
   background: linear-gradient(135deg, color-mix(in srgb, var(--azul-1a2740, #1a2740) 94.9%, transparent), color-mix(in srgb, var(--azul-0a1424, #0a1424) 94.9%, transparent)); box-shadow: 0 0 0 1px #0008, 0 0 26px #f2b54c55, 0 10px 30px #000b;
-  animation: await-in .35s cubic-bezier(.2, .8, .2, 1) both;
+  animation: await-in .57s var(--ease-spring) both;
 }
 .await-callout[hidden] { display: none; }
 .await-eyebrow { color: var(--gold); font: 700 11px/1.2 var(--display); letter-spacing: .14em; text-transform: uppercase; }
