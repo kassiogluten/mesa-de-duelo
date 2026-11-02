@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.110.1] - 2026-11-02
+
+### Corrigido
+
+- **Espaço confirma e Esc mostra a mesa nas escolhas.** Ao abrir uma escolha, o foco ia para **Ver a mesa**, e o Espaço escondia a janela em vez de confirmar. Agora o foco começa na escolha principal (o modo recomendado, o primeiro gatilho, o botão de confirmar ou o OK; numa lista de cartas, a primeira carta), então o Espaço a aperta, e o **Esc** recolhe a janela para ver a mesa. Outro Esc a traz de volta, com o foco de novo na escolha principal.
+
 ## [0.110.0] - 2026-11-02
 
 ### Novo

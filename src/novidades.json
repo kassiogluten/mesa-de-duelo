@@ -1,4 +1,10 @@
 {
+  "0.110.1": {
+    "Espaço confirma e Esc mostra a mesa nas escolhas": [
+      { "img": "0.110.1/foco-na-escolha.webp", "legenda": "Ao abrir a escolha, o foco já está no OK, e não no Ver a mesa: o Espaço confirma." },
+      { "img": "0.110.1/esc-ver-a-mesa.webp", "legenda": "O Esc recolhe a escolha numa barra para ver a mesa; outro Esc a traz de volta." }
+    ]
+  },
   "0.110.0": {
     "Cenários prontos no Laboratório": [
       { "img": "0.110.0/cenarios-prontos.webp", "legenda": "No alto do Laboratório, a lista de Cenários prontos: aberto o da Spelunking, o quadro O que conferir diz o que fazer na mesa e o que deve acontecer." }

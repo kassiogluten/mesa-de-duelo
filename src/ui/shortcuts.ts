@@ -5,8 +5,8 @@ export interface Shortcut { keys: string[][]; what: string }
 
 /** Atalhos da partida. Cada item de `keys` é uma alternativa; dentro dele, as teclas apertadas juntas. */
 export const MATCH_SHORTCUTS: Shortcut[] = [
-  { keys: [['Espaço']], what: 'Aperta o botão de passar da caixa de ação (OK, Resolver, Para o combate). Fim de turno fica só no clique.' },
-  { keys: [['Esc']], what: 'Fecha o que estiver aberto: menu, janela, escolha de atacantes, tela de foco ou a carta ampliada.' },
+  { keys: [['Espaço']], what: 'Aperta o botão de passar da caixa de ação (OK, Resolver, Para o combate). Fim de turno fica só no clique. Numa escolha, o foco já começa no botão de confirmar, e o Espaço o aperta.' },
+  { keys: [['Esc']], what: 'Fecha o que estiver aberto: menu, janela, escolha de atacantes, tela de foco ou a carta ampliada. Numa escolha, recolhe a janela para ver a mesa; outro Esc a traz de volta.' },
   { keys: [['I']], what: 'Abre de perto a carta em foco.' },
   { keys: [['Enter'], ['Espaço']], what: 'Toca na carta, no jogador, na mana ou no marcador em foco.' },
   { keys: [['Tab'], ['Shift', 'Tab']], what: 'Vai para o próximo controle (ou o anterior). Com uma janela aberta, o foco fica dentro dela.' },

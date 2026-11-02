@@ -762,9 +762,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     root.querySelectorAll<HTMLElement>('.arena > *').forEach(el => { el.inert = !!active && el !== active; });
     if (!active && previousModal && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     if (active && !active.contains(document.activeElement) && !document.querySelector('dialog[open]')) {
-      // A escolha principal da janela vem primeiro (o modo recomendado, o primeiro gatilho); senão, o primeiro controle.
-      (active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]') ?? active.querySelector<HTMLElement>('button:not(:disabled), input, [tabindex="0"]'))?.focus({ preventScroll: true });
+      modalStart(active)?.focus({ preventScroll: true });
     }
+  }
+  /** Onde o foco começa numa janela: a escolha principal (o modo recomendado, o primeiro gatilho, o botão de confirmar
+   *  quando não há opções a marcar), para o Espaço apertá-la; senão, o primeiro controle. Nunca o "Ver a mesa", que fica no Esc. */
+  function modalStart(active: HTMLElement) {
+    return active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]')
+      ?? (active.querySelector('[data-q-opt]') ? null : active.querySelector<HTMLElement>('.q-actions .arena-btn.primary:not(:disabled)'))
+      ?? [...active.querySelectorAll<HTMLElement>('button:not(:disabled), input, [tabindex="0"]')].find(el => !el.matches('[data-ui="question-minimize"]'));
   }
   function closeZone() { zoneOf = null; groupIds = null; $('#fZone').hidden = true; syncModal(); }
   function closeStackGallery() {
@@ -2958,7 +2964,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'question-minimize' || ui === 'question-restore') {
       minimizedQuestion = ui === 'question-minimize' ? client?.state?.question?.id ?? null : null;
       hideCardPreview(true); renderTable(false); syncModal();
-      root.querySelector<HTMLElement>(ui === 'question-minimize' ? '[data-ui="question-restore"]' : '[data-ui="question-minimize"]')?.focus({ preventScroll: true });
+      (ui === 'question-minimize' ? root.querySelector<HTMLElement>('[data-ui="question-restore"]') : modalStart($('#fQuestion')))?.focus({ preventScroll: true });
       return;
     }
     if (ui === 'focus-close') { closeFocus(); return; }
@@ -3575,7 +3581,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (selectedBlocker) { selectedBlocker = null; e.preventDefault(); renderTable(false); return; }
     if (stackGalleryOpen) { e.preventDefault(); closeStackGallery(); return; }
     if (zoneOf !== null || groupIds) { closeZone(); return; }
+    // Esc recolhe a escolha para ver a mesa, e o Esc seguinte a traz de volta.
     if (questionMinimized()) { e.preventDefault(); root.querySelector<HTMLElement>('[data-ui="question-restore"]')?.click(); return; }
+    const minimize = currentModal === $('#fQuestion') ? currentModal.querySelector<HTMLElement>('[data-ui="question-minimize"]') : null;
+    if (minimize) { e.preventDefault(); minimize.click(); return; }
     if (focusSeat !== null && !document.querySelector('dialog[open]')) { e.preventDefault(); closeFocus(); return; }
     hideCardPreview(true);
   }
