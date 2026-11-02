@@ -1,4 +1,10 @@
 {
+  "0.116.0": {
+    "Habilidade de planeswalker identificada na pilha": [
+      { "img": "0.116.0/habilidade-mais.webp", "legenda": "O oponente usou o +2 do Jace Beleren: o selo diz \"Habilidade · +2\" e a faixa mostra o texto dessa habilidade." },
+      { "img": "0.116.0/ultimate.webp", "legenda": "O ultimate (−10) aparece com o custo em vermelho e a faixa com brilho dourado." }
+    ]
+  },
   "0.115.0": {
     "Saídas do campo em arco": [
       { "img": "0.115.0/destruida-cai-no-cemiterio.webp", "legenda": "Destruída, a Bocarra racha no campo e cai escurecida, em arco, até o cemitério." },

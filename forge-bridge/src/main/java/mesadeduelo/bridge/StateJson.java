@@ -86,6 +86,8 @@ final class StateJson {
                 if (t != null) s.add("targets", t);
                 JsonObject cast = StackCast.of(game, si.getId());
                 if (cast != null) s.add("cast", cast);
+                JsonObject loyalty = Loyalty.stackItem(game, si.getId());
+                if (loyalty != null) s.add("loyalty", loyalty);
                 stack.add(s);
             }
         }

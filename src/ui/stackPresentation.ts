@@ -91,10 +91,42 @@ export function stackCastTag(cast?: StackCast): string {
   return cast.x != null ? `X=${cast.x}` : '';
 }
 
-/** "Mágica · Reforçada": o tipo do item com a forma de conjurar, quando houver. */
+/** O custo de lealdade como a carta o imprime ("+2", "0", "−3"), para o oponente achar qual habilidade foi usada. */
+export function stackLoyaltyCost(item: StackItem): string {
+  return item.loyalty?.cost.trim().replace(/^-/, '−') ?? '';
+}
+
+export function stackLoyaltyTone(item: StackItem): 'up' | 'down' | 'zero' {
+  const cost = stackLoyaltyCost(item);
+  return cost.startsWith('−') ? 'down' : cost.startsWith('+') ? 'up' : 'zero';
+}
+
+/** A linha da habilidade com esse custo no texto da carta ("+2: Cada jogador compra um card." → "Cada jogador compra um card."). */
+export function loyaltyLineIn(cardText: string | undefined, cost: string): string {
+  const want = cost.trim().replace(/^[−–]/, '-');
+  for (const line of (cardText ?? '').split('\n')) {
+    const m = line.match(/^\s*\[?([+−–-]?(?:\d+|X))\]?\s*:\s*(.+)$/);
+    if (m && m[1].replace(/^[−–]/, '-') === want) return m[2].trim();
+  }
+  return '';
+}
+
+/** "Habilidade de lealdade +2." para a galeria (o efeito já vem logo abaixo); vazio fora das habilidades de lealdade. */
+export function stackLoyaltyLine(item: StackItem): string {
+  const cost = stackLoyaltyCost(item);
+  if (!cost) return '';
+  return item.loyalty?.ultimate ? `Ultimate, habilidade de lealdade ${cost}.` : `Habilidade de lealdade ${cost}.`;
+}
+
+/** O selo pequeno: na habilidade de lealdade, o custo dela; senão, a forma de conjurar. */
+export function stackTag(item: StackItem): string {
+  return stackLoyaltyCost(item) || stackCastTag(item.cast);
+}
+
+/** "Mágica · Reforçada", "Habilidade · +2": o tipo do item com a forma de conjurar ou o custo de lealdade, quando houver. */
 export function stackBadgeText(item: StackItem): string {
   const kind = item.kind && STACK_KINDS[item.kind];
-  const tag = stackCastTag(item.cast);
+  const tag = stackTag(item);
   return kind && tag ? `${kind.label} · ${tag}` : kind ? kind.label : tag;
 }
 

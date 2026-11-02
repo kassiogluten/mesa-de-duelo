@@ -429,7 +429,7 @@ export interface FState {
   playableExile?: number[];
   /** Cartas suspensas e cartas cujo gatilho de suspender ainda está na pilha. */
   suspendedExile?: number[];
-  stack: { id: number; text: string; /** Ausente em pontes antigas. */ kind?: 'spell' | 'ability' | 'trigger'; /** Só quando pago além do custo normal: forma de conjurar (flashback, aventura...), vezes reforçada, outros opcionais e o X. */ cast?: { mode?: string; kicker?: number; extras?: string[]; x?: number }; source?: FCard; controller?: number; targets?: FTargets }[];
+  stack: { id: number; text: string; /** Ausente em pontes antigas. */ kind?: 'spell' | 'ability' | 'trigger'; /** Só quando pago além do custo normal: forma de conjurar (flashback, aventura...), vezes reforçada, outros opcionais e o X. */ cast?: { mode?: string; kicker?: number; extras?: string[]; x?: number }; /** Habilidade de lealdade de um planeswalker: o custo ("+2", "0", "-3"), o texto impresso dela, sem o custo, e se é o ultimate. */ loyalty?: { cost: string; text?: string; ultimate?: boolean }; source?: FCard; controller?: number; targets?: FTargets }[];
   combat: { attacker: number; defender?: number; defenderKind?: 'player' | 'card'; blockers: number[] }[];
   /** Só na declaração de bloqueadores: como cada jogador atacado sai do combate com os bloqueios marcados até agora. Ausente em pontes antigas. */
   forecast?: FForecast[];

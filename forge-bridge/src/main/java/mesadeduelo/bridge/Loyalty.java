@@ -28,6 +28,30 @@ final class Loyalty {
         return true;
     }
 
+    /**
+     * A habilidade de lealdade como fica na pilha, para o oponente saber qual delas foi usada: o custo ("+2"), o texto
+     * impresso dela e se é o ultimate. null para qualquer outro item.
+     */
+    static JsonObject stackItem(Game game, int stackId) {
+        SpellAbility sa = ability(game, stackId);
+        if (sa == null || !sa.isPwAbility()) return null;
+        String cost = cost(sa);
+        if (cost == null) return null;
+        JsonObject o = new JsonObject();
+        o.addProperty("cost", cost);
+        String text = text(sa);
+        if (!text.isEmpty()) o.addProperty("text", text);
+        if (sa.hasParam("Ultimate")) o.addProperty("ultimate", true);
+        return o;
+    }
+
+    /** O texto impresso da habilidade, sem o custo na frente ("+2: Each player draws a card." → "Each player draws a card."). */
+    static String text(SpellAbility sa) {
+        String text = sa.hasParam("SpellDescription") ? sa.getParam("SpellDescription") : sa.getDescription();
+        if (text == null) return "";
+        return text.replaceFirst("^\\s*\\[?[+\u2212-]?[0-9X]+\\]?\\s*:\\s*", "").trim();
+    }
+
     private static SpellAbility ability(Game game, int stackId) {
         if (game == null) return null;
         try {

@@ -8,7 +8,7 @@ const load = async path => {
   const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
   return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 };
-const { stackPresentation, stackOwnerLine, stackBadgeText, stackCastLine } = await load('../src/ui/stackPresentation.ts');
+const { stackPresentation, stackOwnerLine, stackBadgeText, stackCastLine, stackLoyaltyLine, stackLoyaltyTone, loyaltyLineIn } = await load('../src/ui/stackPresentation.ts');
 const { PresentationTimeline } = await load('../src/ui/presentationTimeline.ts');
 const card = { id: 21, name: 'Raging Goblin', creature: true, controller: 2 };
 const spell = { id: 701, source: card, controller: 2, text: 'Raging Goblin', targets: {} };
@@ -100,4 +100,27 @@ test('the badge and the gallery say how a spell was paid for', () => {
   assert.equal(stackCastLine({ mode: 'flashback', kicker: 2, extras: ['buyback'], x: 3 }), 'Conjurada por flashback, com reforço 2 vezes e com recompra. X = 3.');
   assert.equal(stackCastLine({ mode: 'adventure' }), 'Conjurada como aventura.');
   assert.equal(stackCastLine({ x: 0 }), 'X = 0.');
+});
+
+test('a loyalty ability on the stack says which one was used', () => {
+  const plus = { ...spell, kind: 'ability', loyalty: { cost: '+2', text: 'Each player draws a card.' } };
+  const ultimate = { ...spell, kind: 'ability', loyalty: { cost: '-10', text: 'Target player mills twenty cards.', ultimate: true } };
+  assert.equal(stackBadgeText(plus), 'Habilidade · +2');
+  assert.equal(stackBadgeText(ultimate), 'Habilidade · −10');
+  assert.equal(stackBadgeText({ ...ultimate, cast: { x: 3 } }), 'Habilidade · −10', 'the loyalty cost wins the small badge');
+  assert.equal(stackLoyaltyTone(plus), 'up');
+  assert.equal(stackLoyaltyTone(ultimate), 'down');
+  assert.equal(stackLoyaltyTone({ ...plus, loyalty: { cost: '0' } }), 'zero');
+  assert.equal(stackLoyaltyLine(plus), 'Habilidade de lealdade +2.');
+  assert.equal(stackLoyaltyLine(ultimate), 'Ultimate, habilidade de lealdade −10.');
+  assert.equal(stackLoyaltyLine({ ...spell, kind: 'ability' }), '', 'other abilities stay as they were');
+});
+
+test('the loyalty line is found in the card text by its cost', () => {
+  const jace = '+2: Cada jogador compra um card.\n−1: O jogador alvo compra um card.\n−10: O jogador alvo coloca as vinte cartas do topo.';
+  assert.equal(loyaltyLineIn(jace, '+2'), 'Cada jogador compra um card.');
+  assert.equal(loyaltyLineIn(jace, '-1'), 'O jogador alvo compra um card.');
+  assert.equal(loyaltyLineIn('[−3]: Destrua a criatura alvo.', '-3'), 'Destrua a criatura alvo.');
+  assert.equal(loyaltyLineIn(jace, '+1'), '');
+  assert.equal(loyaltyLineIn(undefined, '+2'), '');
 });

@@ -387,6 +387,18 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     ] };
     view.render();
   },
+  /** O oponente usou uma habilidade de lealdade do Jace Beleren: a pilha diz qual foi ("+2" ou o ultimate "−10"). */
+  walkerOnStack(which: '+2' | '-1' | '-10' = '+2') {
+    const [me, opp] = state.players;
+    const jace = { id: 304, controller: 23, tapped: false, token: false, name: 'Jace Beleren', manaCost: '{1}{U}{U}', typeLine: 'Legendary Planeswalker — Jace', planeswalker: true, counters: { LOYALTY: which === '+2' ? 5 : which === '-1' ? 2 : 1 },
+      text: '+2: Each player draws a card.\n−1: Target player draws a card.\n−10: Target player mills twenty cards.' };
+    if (!opp.battlefield.some((c: any) => c.id === 304)) opp.battlefield.push(jace);
+    const text = { '+2': 'Each player draws a card.', '-1': 'Target player draws a card.', '-10': 'Target player mills twenty cards.' }[which];
+    state.stack = [{ id: 344, kind: 'ability', controller: 23, source: jace, text: `Jace Beleren - ${text}`,
+      loyalty: { cost: which, text, ...(which === '-10' ? { ultimate: true } : {}) }, ...(which === '+2' ? {} : { targets: { players: [me.id] } }) }];
+    Object.assign(state.input, { priority: true, actionable: [], selectable: [] });
+    view.render();
+  },
   /**
    * Vidência e vigilância de várias cartas, como a ponte manda (o topo do grimório primeiro). "bottom" é a
    * escolha do fundo (ou do cemitério, na vigilância) e "top" a ordem das que ficam em cima.

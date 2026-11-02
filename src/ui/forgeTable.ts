@@ -33,7 +33,7 @@ import { counterName, isProliferating, proliferateBoardClass, proliferateClear, 
 import './proliferate.css';
 import type { DeckEntry } from '../decks';
 import { passIsPrimary, passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
-import { STACK_KINDS, stackBadgeText, stackCastLine, stackCastTag, stackOwnerLine, stackPresentation } from './stackPresentation';
+import { STACK_KINDS, loyaltyLineIn, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackPresentation, stackTag } from './stackPresentation';
 import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import { UNDO_ICON, undoBarHTML, undoButtonState } from './undo';
@@ -1906,14 +1906,23 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ...(targets.players ?? []).map(id => client?.state?.players.find(p => p.id === id)?.name).filter(Boolean)];
     return names.length ? `Alvo${names.length > 1 ? 's' : ''}: ${names.join(', ')}` : '';
   }
-  /** Selo que diz por que o item está na pilha (mágica, habilidade ou gatilho) e, se houver, como foi conjurado. */
+  /** Selo que diz por que o item está na pilha (mágica, habilidade ou gatilho) e, se houver, como foi conjurado ou o custo de lealdade. */
   function stackKindBadge(si: FState['stack'][number]) {
     const kind = si.kind && STACK_KINDS[si.kind];
-    const tag = stackCastTag(si.cast);
+    const tag = stackTag(si);
     if (!kind && !tag) return '';
     // No celular, com a forma de conjurar, o ícone já diz o tipo: a palavra sai para o selo caber na pilha estreita.
     const label = kind ? `<span class="stack-kind-label${tag ? ' with-cast' : ''}">${kind.label}${tag ? ' · ' : ''}</span>` : '';
     return `<span class="stack-kind ${si.kind ?? 'spell'}" title="${esc(stackBadgeText(si))}">${kind ? `<svg viewBox="0 0 16 16" aria-hidden="true">${kind.icon}</svg>` : ''}${label}${esc(tag)}</span>`;
+  }
+  /** Faixa no pé da carta do topo: qual habilidade de lealdade foi usada, com o custo e o texto dela. */
+  function stackLoyaltyStrip(si: FState['stack'][number]) {
+    const cost = stackLoyaltyCost(si);
+    if (!cost) return '';
+    const tone = stackLoyaltyTone(si);
+    // O texto em português da carta, quando a mesa o tem; senão, o que o servidor manda.
+    const text = (si.loyalty && loyaltyLineIn(ptOf(si.source?.name)?.text, si.loyalty.cost)) || si.loyalty?.text;
+    return `<span class="stack-loyalty ${tone}${si.loyalty?.ultimate ? ' ultimate' : ''}"><b class="loyalty-chip ${tone}">${esc(cost)}</b>${text ? `<span>${richText(text)}</span>` : ''}</span>`;
   }
   function stackFace(si: FState['stack'][number]) {
     // O valor que a carta conta (item 56), atualizado enquanto ela espera na pilha.
@@ -1926,7 +1935,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (!top) return '';
     return `<div class="stack-heading"><h2>Pilha</h2><span class="stack-count">${count}</span>${`<button class="stack-size-toggle" data-ui="stack-size" aria-label="${stackMinimized ? 'Expandir a pilha' : 'Recolher a pilha para ver o campo'}" aria-expanded="${!stackMinimized}">${stackMinimized ? '+' : '−'}</button>`}</div>
       <button class="stack-pile" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${stackGalleryOpen}" aria-controls="fStackGallery"`} aria-label="${stackBadgeText(top) ? `${esc(stackBadgeText(top))}. ` : ''}${replaying ? `Inspecionar ${top.source ? esc(label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(label(top.source)) : 'O efeito do topo'} resolve primeiro.`}">
-        ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(si)}${i ? '' : stackKindBadge(si)}</div>`).join('')}
+        ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(si)}${i ? '' : stackKindBadge(si) + stackLoyaltyStrip(si)}</div>`).join('')}
         <span class="stack-top-label">${replaying ? 'Jogada recente' : 'Resolve primeiro'}</span>
       </button><span class="stack-open-hint">${replaying ? 'Clique para inspecionar' : 'Clique para ver a pilha'}</span>`;
   }
@@ -1948,7 +1957,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
           <div class="stack-gallery-order"><b>${i + 1}</b><span>${i === 0 ? 'Resolve primeiro' : `${i + 1}º na resolução`}</span></div>
           <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}">${stackFace(si)}${stackKindBadge(si)}</button>
           <div class="stack-gallery-owner">${esc(stackOwnerLine(si, s.you, owner))}</div>
-          <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}"><p>${richText(si.text)}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${targetsDescription(si.targets) ? `<p class="stack-targets">${esc(targetsDescription(si.targets))}</p>` : ''}</div>
+          <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}">${stackLoyaltyLine(si) ? `<p class="stack-cast">${esc(stackLoyaltyLine(si))}</p>` : ''}<p>${richText(si.text)}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${targetsDescription(si.targets) ? `<p class="stack-targets">${esc(targetsDescription(si.targets))}</p>` : ''}</div>
           <div class="stack-gallery-actions">${selectable ? `<button class="arena-btn primary" data-stack="${si.id}" data-gen="${s.input.gen}">Selecionar como alvo</button>` : ''}${si.source ? `<button class="icon-btn" data-stack-inspect="${si.id}" aria-label="Inspecionar ${esc(name)}">Inspecionar</button>` : ''}</div>
         </li>`;
       }).join('')}</ol>

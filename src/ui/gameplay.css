@@ -154,6 +154,14 @@
 .stack-kind.spell { color: var(--azul-9cc8ff, #9cc8ff); }
 .stack-kind.ability { color: var(--gold); }
 .stack-kind.trigger { color: #d1b2ff; }
+/* Qual habilidade de lealdade foi usada: o custo e o texto dela no pé da carta do topo, acima do "Resolve primeiro". */
+.stack-loyalty { position: absolute; z-index: 6; left: 6%; right: 6%; bottom: 22px; display: flex; align-items: flex-start; gap: 7px; padding: 6px 8px; border: 1px solid var(--gold); border-radius: 8px; background: color-mix(in srgb, var(--bg-deep) 92%, transparent); box-shadow: 0 4px 12px #000a; color: var(--ink); font: 500 12px/1.3 var(--body); text-align: left; pointer-events: none; }
+.stack-loyalty.up { border-color: var(--heal); }
+.stack-loyalty.down { border-color: #ff8f78; }
+.stack-loyalty.ultimate { box-shadow: 0 0 0 1px var(--gold), 0 0 14px color-mix(in srgb, var(--gold) 55%, transparent), 0 4px 12px #000a; }
+.stack-loyalty > span { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.stack-loyalty .loyalty-chip.up { background: #1d4d2f; border-color: var(--heal); }
+.stack-loyalty .loyalty-chip.down { background: #5a1d14; border-color: #ff8f78; }
 .stack-open-hint { display: block; margin-top: 20px; text-align: center; color: var(--muted); font: 400 12px var(--body); }
 .stack-pile:focus-visible { outline: 2px solid var(--gold); outline-offset: 8px; }
 /* Only when live controls need the space below the pile. */
@@ -344,6 +352,9 @@
   .stack-kind { top: -9px; padding: 3px 7px 3px 6px; font-size: 9px; gap: 4px; }
   .stack-kind-label.with-cast { display: none; }
   .stack-kind svg { width: 10px; height: 10px; }
+  .stack-loyalty { left: 4%; right: 4%; bottom: 17px; gap: 5px; padding: 4px 5px; font-size: 9.5px; }
+  .stack-loyalty .loyalty-chip { min-width: 20px; padding: 0 4px 4px; font-size: 11px; }
+  .stack-loyalty > span { -webkit-line-clamp: 3; }
   .stack-gallery { --gallery-card-width: clamp(140px, (100dvh - 125px) * .716, 190px); }
   .stack-gallery-heading { padding: 12px 18px 0; gap: 12px; }
   .stack-gallery-heading h2 { font-size: 22px; }

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.116.0] - 2026-11-02
+
+### Novo
+
+- **Habilidade de planeswalker identificada na pilha.** Quando alguém usa uma habilidade de lealdade, o selo da pilha mostra o custo dela (**Habilidade · +2**) e uma faixa no pé da carta traz o custo e o texto da habilidade usada, para todos na mesa saberem qual foi sem abrir a pilha. O ultimate ganha um brilho dourado na faixa, e a galeria da pilha também diz qual habilidade de lealdade é.
+
 ## [0.115.0] - 2026-11-02
 
 ### Mudou
