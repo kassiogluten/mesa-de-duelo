@@ -113,13 +113,15 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     </header>
     <section class="lab-bar" aria-label="Cenários prontos">
       <label class="lab-field lab-ready">Cenários prontos<select class="input-field" id="labReady">${READY_SCENARIOS.map((r, i) => `<option value="${i}">${esc(r.versao)} · ${esc(r.nome)}</option>`).join('')}</select></label>
-      <button type="button" class="ghost-btn" data-lab="ready">Abrir</button>
+      <button type="button" class="ghost-btn" data-lab="ready">Editar</button>
+      <button type="button" class="ghost-btn" data-lab="ready-start">▶ Iniciar agora</button>
       <p class="lab-hint">Mesas montadas para conferir as correções da mesa, uma por correção.</p>
     </section>
     <aside class="lab-guide" id="labGuide" aria-live="polite" hidden></aside>
     <section class="lab-bar" aria-label="Cenários salvos">
       <label class="lab-field">Cenários salvos<select class="input-field" id="labSaved"></select></label>
-      <button type="button" class="ghost-btn" data-lab="load">Abrir</button>
+      <button type="button" class="ghost-btn" data-lab="load">Editar</button>
+      <button type="button" class="ghost-btn" data-lab="load-start">▶ Iniciar agora</button>
       <button type="button" class="ghost-btn danger" data-lab="delete">Apagar</button>
       <span class="lab-sep" aria-hidden="true"></span>
       <label class="lab-field">Nome do cenário<input class="input-field" id="labName" maxlength="60" placeholder="Memnarch contra Jace"></label>
@@ -198,7 +200,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     $<HTMLSelectElement>('#labPhase').value = draft.phase;
     $<HTMLSelectElement>('#labSaved').innerHTML = saved.length ? saved.map((s, i) => `<option value="${i}">${esc(s.name)}</option>`).join('') : '<option value="">Nenhum salvo</option>';
     $<HTMLSelectElement>('#labSaved').disabled = !saved.length;
-    for (const action of ['load', 'delete']) $<HTMLButtonElement>(`[data-lab=${action}]`).disabled = !saved.length;
+    for (const action of ['load', 'load-start', 'delete']) $<HTMLButtonElement>(`[data-lab=${action}]`).disabled = !saved.length;
     // Redesenhar troca os campos: o foco volta para o campo de pôr carta onde estava.
     const focused = document.activeElement?.closest<HTMLElement>('[data-add]');
     const focusKey = focused ? `${focused.closest<HTMLElement>('[data-player]')?.dataset.player}:${focused.dataset.add}` : '';
@@ -211,7 +213,8 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       const [p, zone] = focusKey.split(':');
       root.querySelector<HTMLInputElement>(`[data-player="${p}"] [data-add="${zone}"] input`)?.focus();
     }
-    $<HTMLButtonElement>('[data-lab=host]').disabled = busy;
+    for (const action of ['host', 'ready-start']) $<HTMLButtonElement>(`[data-lab=${action}]`).disabled = busy;
+    if (busy) $<HTMLButtonElement>('[data-lab=load-start]').disabled = true;
     $<HTMLButtonElement>('[data-lab=host]').textContent = busy ? 'Criando a sala…' : 'Criar sala de teste';
   }
   const changed = () => { persist(); render(); };
@@ -318,16 +321,19 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       if (!name) { setStatus('Dê um nome ao cenário para salvar.', true); $('#labName').focus(); return; }
       saved = [{ name, scenario: toScenario(draft) }, ...saved.filter(s => s.name !== name)];
       store(SAVED_KEY, saved); render(); setStatus(`Cenário “${name}” salvo neste aparelho.`);
-    } else if (action === 'load' || action === 'delete') {
+    } else if (action === 'load' || action === 'load-start' || action === 'delete') {
       const s = saved[Number($<HTMLSelectElement>('#labSaved').value)];
       if (!s) return;
-      if (action === 'load') { draft = fromScenario(s.scenario); $<HTMLInputElement>('#labName').value = s.name; changed(); setGuide(); setStatus(`Cenário “${s.name}” aberto.`); }
-      else { saved = saved.filter(o => o !== s); store(SAVED_KEY, saved); render(); setStatus(`Cenário “${s.name}” apagado.`); }
-    } else if (action === 'ready') {
+      if (action !== 'delete') {
+        draft = fromScenario(s.scenario); $<HTMLInputElement>('#labName').value = s.name; changed(); setGuide(); setStatus(`Cenário “${s.name}” aberto.`);
+        if (action === 'load-start') void host();
+      } else { saved = saved.filter(o => o !== s); store(SAVED_KEY, saved); render(); setStatus(`Cenário “${s.name}” apagado.`); }
+    } else if (action === 'ready' || action === 'ready-start') {
       const r = READY_SCENARIOS[Number($<HTMLSelectElement>('#labReady').value)];
       if (!r) return;
       draft = fromScenario(r.cenario); $<HTMLInputElement>('#labName').value = r.nome; changed(); setGuide(r); setStatus(`Cenário “${r.nome}” aberto.`);
-      void resolveCardNames(cardNames()).then(render).catch(() => {});
+      if (action === 'ready-start') void host();
+      else void resolveCardNames(cardNames()).then(render).catch(() => {});
     } else if (action === 'clear') { draft = emptyDraft(); changed(); setGuide(); setStatus('Mesa limpa.'); }
     else if (action === 'export') {
       const text = JSON.stringify(toScenario(draft));

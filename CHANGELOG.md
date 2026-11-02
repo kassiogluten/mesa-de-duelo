@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.111.0] - 2026-11-02
+
+### Mudou
+
+- **Editar ou iniciar agora os cenários do Laboratório.** Nos **Cenários prontos** e nos **Cenários salvos**, o botão **Abrir** deu lugar a dois: **Editar**, que monta a mesa para você ajustar antes de jogar, e **▶ Iniciar agora**, que monta a mesa e já cria a sala de teste, sem passar pelo editor.
+
 ## [0.110.1] - 2026-11-02
 
 ### Corrigido

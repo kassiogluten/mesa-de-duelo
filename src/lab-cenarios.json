@@ -1,5 +1,20 @@
 [
   {
+    "nome": "Memnarch contra Jace",
+    "versao": "0.110.0",
+    "item": "Cenários prontos no Laboratório",
+    "conferir": "Vá para o combate. No começo dele, o Jace do Jogador 2 pede {2}. Se você pagar (com o Sol Ring ou com as Islands), o Memnarch pode atacar o Jace; se não pagar, o Jace não aparece como alvo de ataque, mas o Memnarch ainda ataca o Jogador 2. Nos dois casos, ao atacar, você compra 3 cartas: uma pelo Memnarch, uma pelo Sol Ring e uma pelo Ornithopter.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Memnarch, the Warden" }, { "name": "Sol Ring" }, { "name": "Ornithopter" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Jace, Multiverse Architect", "counters": { "LOYALTY": 4 } }] }
+      ]
+    }
+  },
+  {
     "nome": "Mana phyrexiana sem terrenos",
     "versao": "0.107.1",
     "item": "Passar a vez com mana phyrexiana na mão",
