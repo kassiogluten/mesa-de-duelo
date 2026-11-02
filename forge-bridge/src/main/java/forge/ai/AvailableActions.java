@@ -12,6 +12,7 @@ import forge.game.GameObject;
 import forge.game.card.Card;
 import forge.game.card.CardLists;
 import forge.game.card.CardView;
+import forge.game.mana.ManaCostBeingPaid;
 import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.TargetChoices;
@@ -199,7 +200,19 @@ public final class AvailableActions {
             return true;
         }
         // TODO include RemoveDeck:All when they weren't used
-        return ComputerUtilMana.canPayManaCost(sa, player, 0, false);
+        return ComputerUtilMana.canPayManaCost(sa, player, 0, false) || canAffordWithLife(sa, player);
+    }
+
+    /** Bridge addition: the AI pays Phyrexian symbols with life only when it judges it worth it
+     *  (AIPhyrexianPayment$ Never on Gitaxian Probe and Mental Misstep, life strictly above the cost);
+     *  a person may always pay 2 life per symbol. Paying every symbol with life is the cheapest mana-wise. */
+    private static boolean canAffordWithLife(SpellAbility sa, Player player) {
+        ManaCostBeingPaid cost = ComputerUtilMana.calculateManaCost(sa.getPayCosts(), sa, player, true, 0, false);
+        if (cost == null || !cost.containsPhyrexianMana()) return false;
+        int life = 0;
+        while (cost.payPhyrexian()) life += 2;
+        if (!player.canPayLife(life, false, sa)) return false;
+        return cost.isPaid() || ComputerUtilMana.canPayManaCost(cost, sa, player, false);
     }
 
     private static boolean checkTimeout(long deadlineNanos, long timeoutMs) {

@@ -109,6 +109,27 @@ public class AvailableActionsTest {
         f.assertAvailable(false);
     }
 
+    /** Sem terreno nenhum, só a mana phyrexiana paga com vida torna a carta jogável (Blaze fica sem mana). */
+    private static boolean payableWithLifeOnly(String name, int life) {
+        Fixture f = new Fixture(0);
+        f.add("Grizzly Bears", f.opponent, ZoneType.Battlefield);
+        f.caster.setLife(life, null);
+        Card card = f.add(name, f.caster, ZoneType.Hand);
+        boolean available = AvailableActions.compute(f.caster, BUDGET_MS);
+        assertEquals(available, AvailableActions.collectActionable(f.caster, BUDGET_MS).contains(card.getView()));
+        assertEquals("a conferência não tira vida", life, f.caster.getLife());
+        return available;
+    }
+
+    @Test public void phyrexianManaThatTheAiWouldNotPayWithLifeStillCounts() {
+        // Gitaxian Probe e Gut Shot trazem AIPhyrexianPayment (Never, OnFatalDamage.1), que é só gosto da IA.
+        assertTrue(payableWithLifeOnly("Gitaxian Probe", 20));
+        assertTrue(payableWithLifeOnly("Gut Shot", 20));
+        assertTrue("2 de vida pagam um símbolo mesmo zerando a vida", payableWithLifeOnly("Gut Shot", 2));
+        assertFalse("1 de vida não paga um símbolo", payableWithLifeOnly("Gut Shot", 1));
+        assertFalse("o genérico continua precisando de mana", payableWithLifeOnly("Dismember", 20));
+    }
+
     @Test public void predictiveScanPreservesExistingParentAndChildTargets() {
         Fixture f = new Fixture(3);
         Card bear = f.add("Grizzly Bears", f.opponent, ZoneType.Battlefield);

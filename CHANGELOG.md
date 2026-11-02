@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.107.1] - 2026-11-02
+
+### Corrigido
+
+- **Passar a vez com mana phyrexiana na mão.** Com uma carta que dá para pagar com vida, como Gitaxian Probe, Mental Misstep ou Gut Shot, o jogo às vezes passava a prioridade sozinho, como se você não tivesse nada para fazer, e a carta nem aparecia como jogável. Agora a mesa para quando você tem vida para pagar os símbolos phyrexianos (2 de vida cada) e o resto do custo.
+
 ## [0.107.0] - 2026-11-02
 
 ### Novo
