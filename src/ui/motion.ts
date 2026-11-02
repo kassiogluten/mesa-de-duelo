@@ -6,8 +6,20 @@ const KEYED = '[data-fid],[data-peek]';
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 // Moer: sem a arrancada do EASE, para a virada cair no meio do voo.
 const MILL_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
+/** Mola amortecida (massa 1) como curva CSS `linear()`: passa um pouco do ponto e assenta. Sem `linear()` no navegador, fica o EASE. */
+function spring(stiffness: number, damping: number) {
+  const w = Math.sqrt(stiffness), z = damping / (2 * w), wd = w * Math.sqrt(1 - z * z);
+  const seconds = Math.log(300) / (z * w);
+  const at = (t: number) => 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + z * w / wd * Math.sin(wd * t));
+  const points = Array.from({ length: 41 }, (_, i) => i === 40 ? 1 : +at(seconds * i / 40).toFixed(3));
+  const supported = typeof CSS !== 'undefined' && !!CSS.supports?.('animation-timing-function', 'linear(0, 1)');
+  return { easing: supported ? `linear(${points.join(', ')})` : EASE, duration: Math.round(seconds * 1000) };
+}
+const LANDING = spring(380, 20);
 interface Point { cx: number; cy: number; w: number; h: number }
 interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string }
+/** Onde uma carta da sua mão estava: o tamanho sem o giro do leque, e o giro à parte. */
+interface HandSpot extends Point { rot: number; seen: number }
 export interface Motion {
   capture(): void;
   play(options?: { silent?: boolean; semantic?: boolean }): void;
@@ -37,6 +49,13 @@ function abilityText(event: PresentationEvent) {
 /** Spatial presentation is separate from the board state and can never capture pointer input. */
 export function createMotion(root: HTMLElement): Motion {
   let cards = new Map<string, Snap>();
+  // A mão é redesenhada antes da jogada ser apresentada: o voo sai de onde a carta foi vista por último.
+  const handSpots = new Map<string, HandSpot>();
+  // Permanentes que acabaram de pousar: a resolução da própria mágica não voa outra cópia até elas.
+  const landedAt = new Map<string, number>();
+  // A carta do topo da pilha (no canto), da última vez que estava à vista: a mágica que resolve sai dali, mesmo com a pilha já vazia.
+  let stackSpot: (Point & { seen: number }) | undefined;
+  const stackPile = () => root.querySelector<HTMLElement>('#fStack:not([hidden]) .stack-pile');
   let primed = false;
   const effects = new Set<HTMLElement>();
   // Avisos de habilidade abertos, do mais antigo ao mais novo, com a carta de cada um.
@@ -357,6 +376,47 @@ export function createMotion(root: HTMLElement): Motion {
       animate(piece, [{ ...go, scale: '.92', opacity: .8 }, { translate: '0 -8px', scale: '1.02', opacity: 1, offset: .58 }, { translate: '0 0', scale: '1', opacity: .1 }], duration);
     }
   }
+  /**
+   * Voo com peso: a carta sai do tamanho e do giro de onde estava, sobe em arco (cresce, como se viesse para perto),
+   * inclina para o lado em que vai, deita de volta ao chegar, e a sombra acompanha a altura. `end` é o tamanho da peça.
+   */
+  function fly(piece: HTMLElement, from: Point & { rot?: number }, to: Point, end: Point, duration: number, caption?: HTMLElement) {
+    const dx = from.cx - to.cx, dy = from.cy - to.cy, dist = Math.hypot(dx, dy) || 1;
+    // Num caminho de lado, o arco sobe acima da linha reta; num caminho para cima, a altura fica por conta do tamanho.
+    const bulge = Math.min(140, dist * .3) * (Math.abs(dx) / dist) + 16;
+    const control = { x: dx * .5, y: dy * .5 - bulge };
+    const s0 = Math.max(.4, Math.min(3, from.w / Math.max(1, end.w)));
+    const lean = Math.max(-12, Math.min(12, -dx / 30));
+    const r = (n: number, digits = 1) => +n.toFixed(digits);
+    const frames: Keyframe[] = [], captionFrames: Keyframe[] = [];
+    for (let i = 0, n = 20; i <= n; i++) {
+      const u = i / n, t = (1 - Math.cos(Math.PI * u)) / 2, high = Math.sin(Math.PI * t), back = 1 - t;
+      const x = back * back * dx + 2 * back * t * control.x, y = back * back * dy + 2 * back * t * control.y;
+      const scale = (s0 + (1 - s0) * t) * (1 + .22 * high);
+      // A legenda vai junto, mas sempre no tamanho de leitura.
+      captionFrames.push({ offset: u, scale: String(r(1 / scale, 3)) });
+      frames.push({
+        offset: u,
+        translate: `${r(x)}px ${r(y)}px`,
+        scale: String(r(scale, 3)),
+        rotate: `${r((from.rot ?? 0) * back * back + lean * high, 2)}deg`,
+        transform: `translate(-50%, -50%) perspective(900px) rotateX(${r(18 * high)}deg)`,
+        filter: `drop-shadow(0 ${r(6 + 26 * high)}px ${r(8 + 18 * high)}px rgb(0 0 0 / ${r(.5 - .2 * high, 2)}))`,
+        opacity: i ? 1 : .9,
+      });
+    }
+    animate(piece, frames, duration, 'linear');
+    if (caption) animate(caption, captionFrames, duration, 'linear');
+  }
+  /** Pouso: a carta bate na mesa, passa um pouco do ponto e assenta (mola), com uma onda curta em volta. */
+  function land(el: HTMLElement) {
+    animate(el, [{ scale: '1.1', translate: '0 -6px' }, { scale: '1', translate: '0 0' }], LANDING.duration, LANDING.easing);
+    const at = center(el);
+    if (!at || reduced()) return;
+    const ripple = effect('land-ripple', { ...at, w: at.w * 1.04, h: at.h * 1.04 });
+    animate(ripple, [{ opacity: .85, scale: '.92' }, { opacity: 0, scale: '1.3' }], 460, 'cubic-bezier(.2,.7,.3,1)');
+    later(() => remove(ripple), 480);
+  }
 
   return {
     capture() {
@@ -366,6 +426,17 @@ export function createMotion(root: HTMLElement): Motion {
         if (cards.has(key)) return;
         const at = center(el);
         if (at) cards.set(key, { ...at, el, tapped: !!el.closest('.tapped'), zone: el.parentElement?.closest('[id]')?.id ?? '' });
+      });
+      const now = performance.now();
+      const pile = center(stackPile());
+      if (pile) stackSpot = { ...pile, seen: now };
+      for (const [key, spot] of handSpots) if (now - spot.seen > 5000) handSpots.delete(key);
+      root.querySelectorAll<HTMLElement>('#fHand [data-fid]').forEach(el => {
+        const at = center(el);
+        if (!at) return;
+        const transform = getComputedStyle(el).transform;
+        const m = transform && transform !== 'none' ? new DOMMatrixReadOnly(transform) : null;
+        handSpots.set(el.dataset.fid!, { ...at, w: el.offsetWidth || at.w, h: el.offsetHeight || at.h, rot: m ? Math.atan2(m.b, m.a) * 180 / Math.PI : 0, seen: now });
       });
     },
     play(options = {}) {
@@ -424,6 +495,7 @@ export function createMotion(root: HTMLElement): Motion {
       const id = event.card?.id ?? event.sourceId;
       const card = id === undefined ? null : root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
       if (event.type === 'ability-activated') { ability(event, card, options); return; }
+      if (event.type === 'resolved' && !event.trigger && card && id !== undefined && performance.now() - (landedAt.get(String(id)) ?? -Infinity) < 4000) { pulse(card); return; }
       const old = id === undefined ? undefined : cards.get(String(id));
       const bounds = layer().getBoundingClientRect();
       const stage: Point = { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
@@ -431,9 +503,15 @@ export function createMotion(root: HTMLElement): Motion {
       const seat = !mine && event.actor !== undefined ? root.querySelector(`[data-seat-player="${event.actor}"]`) : null;
       const hand = center(seat?.querySelector('.seat-hand')) ?? center(root.querySelector(mine ? '#fHand' : '#fOppHand')) ?? center(root.querySelector(mine ? '#fMeAvatar' : '#fOppAvatar')) ?? stage;
       const target = center(card);
-      let from: Point = old ?? hand, to: Point = stage;
+      // Saindo da sua mão: do lugar exato da carta no leque, com o tamanho e o giro dela.
+      const spot = id !== undefined && (event.type === 'land-played' || event.from === 'Hand') ? handSpots.get(String(id)) : undefined;
+      let from: Point = spot ?? old ?? hand, to: Point = stage;
+      // Conjurar: a mágica vai até a carta do topo da pilha, no canto; com a pilha recolhida, fica no centro da mesa.
+      const pileEl = event.type === 'spell-cast' ? stackPile() : null, pile = center(pileEl);
+      if (pile) to = pile;
       if (event.type === 'land-played' || event.type === 'entered') {
-        from = event.from === 'Stack' ? stage : hand;
+        const fromStack = stackSpot && performance.now() - stackSpot.seen < 5000 ? stackSpot : stage;
+        from = event.from === 'Stack' ? fromStack : spot ?? hand;
         to = target ?? center(seat?.querySelector('.lands')) ?? center(root.querySelector(mine ? '#fMeLands' : '#fOppLands')) ?? stage;
       } else if (event.type === 'resolved') {
         from = stage;
@@ -454,13 +532,20 @@ export function createMotion(root: HTMLElement): Motion {
         to = destination({ ...event, to: 'Graveyard' }, mine, seat, hand, stage);
       }
       if (event.type === 'entered' && event.from === 'Exile') from = to; // Blink: volta no mesmo lugar, em luz.
+      // Pousa no campo (terreno, ou permanente que entrou vinda da pilha ou da mão): termina no tamanho da carta no campo, sem salto ao trocar.
+      const landing = !!card && !!target && (event.type === 'land-played' || (event.type === 'entered' && event.from !== 'Exile'));
       // Keep large cards readable while travelling, independent of a tiny hand or pile's dimensions.
-      const end = { ...to, w: stage.w, h: stage.h };
+      const end = landing ? target! : pile ?? { ...to, w: stage.w, h: stage.h };
       const piece = effect('presentation-piece', end, options.html);
       const caption = document.createElement('span');
       caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
-      const disappearing = ['left', 'countered', 'resolved', 'discard'].includes(event.type);
+      const disappearing = !landing && ['left', 'countered', 'resolved', 'discard'].includes(event.type);
       if (event.type === 'left') leave(event, from, to, end, piece, options.duration);
+      else if (landing || event.type === 'spell-cast') {
+        if (landing) landedAt.set(String(id), performance.now());
+        // Sem o lugar no leque (mão do oponente, mão longa), sai do centro da mão no tamanho de uma carta.
+        fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, caption);
+      }
       else if (event.type === 'entered' && event.from === 'Exile') {
         const ring = effect('exile-ring', { ...to, w: end.w * 1.3, h: end.w * 1.3 });
         animate(ring, [{ opacity: 0, scale: '1.3' }, { opacity: .9, scale: '1', offset: .5 }, { opacity: 0, scale: '.8' }], options.duration);
@@ -473,15 +558,18 @@ export function createMotion(root: HTMLElement): Motion {
       ], options.duration);
       if (target && card) {
         pulse(card);
-        if (options.hideDestination && !reduced() && ['land-played', 'entered'].includes(event.type)) { card.style.opacity = '0'; hiddenCards.add(card); }
+        if (options.hideDestination && !reduced() && landing) { card.style.opacity = '0'; hiddenCards.add(card); }
       }
+      // A pilha já mostra a mágica: ela some até a carta que voa chegar, para não aparecer duas vezes.
+      if (pileEl && options.hideDestination && !reduced()) { pileEl.style.visibility = 'hidden'; hiddenCards.add(pileEl); }
       later(() => {
         remove(piece);
         if (card && hiddenCards.delete(card)) card.style.opacity = '';
-        // Terreno ou permanente chegando ao campo: um "assentar" curto; fichas surgem com um brilho.
-        if (id !== undefined && ['land-played', 'entered'].includes(event.type) && event.from !== 'Exile') {
+        if (pileEl && hiddenCards.delete(pileEl)) pileEl.style.visibility = '';
+        // Terreno ou permanente chegando ao campo: pousa com mola; fichas surgem com um brilho.
+        if (id !== undefined && landing) {
           const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
-          if (landed) animate(landed, [{ scale: '1.06', translate: '0 -4px' }, { scale: '.97', translate: '0 1px', offset: .55 }, { scale: '1', translate: '0 0' }], 240, 'cubic-bezier(.3,.7,.4,1)');
+          if (landed) land(landed);
           if (landed && event.card?.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
           if (landed && walkerArrives(event)) walkerArrive(landed, event);
         }

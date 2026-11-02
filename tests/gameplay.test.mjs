@@ -515,14 +515,16 @@ function motionFixture(reduce = false) {
   return { motion: createMotion(root), arena, land, avatar, animated, nodes };
 }
 
-test('card travel uses fixed arena bounds and restores the actual card on cancellation', () => {
+test('a land lands at its own size along an arc and restores the actual card on cancellation', () => {
   const f = motionFixture();
   f.motion.present(event(1, 'land-played', { card: { id: 7 }, actor: 2 }), { you: 1, html: '<div class="face"></div>', label: 'Terreno', duration: 540, hideDestination: true });
   const piece = f.nodes.find(n => n.className === 'presentation-piece');
-  assert.ok(piece.style.cssText.includes('width:112px'));
-  assert.ok(piece.style.cssText.includes('height:156px'));
+  assert.ok(piece.style.cssText.includes('width:70px'));
+  assert.ok(piece.style.cssText.includes('height:98px'));
   assert.equal(f.land.style.opacity, '0');
-  assert.equal(f.animated.length, 1);
+  const flight = f.animated.find(a => a.element === piece);
+  assert.ok(flight.frames.length > 10, 'the flight is sampled along an arc');
+  assert.deepEqual([flight.frames.at(-1).translate, flight.frames.at(-1).scale, flight.frames.at(-1).rotate], ['0px 0px', '1', '0deg']);
   f.motion.cancelPresentation();
   assert.equal(f.land.style.opacity, ''); assert.equal(piece.removed, true);
 });

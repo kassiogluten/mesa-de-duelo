@@ -1,4 +1,10 @@
 {
+  "0.113.0": {
+    "Cartas voam da mão com peso": [
+      { "img": "0.113.0/carta-sai-do-leque.webp", "legenda": "Os Ursos Cinzentos saem do leque em arco até a pilha, no canto, maiores e inclinados no meio do voo." },
+      { "img": "0.113.0/carta-pousa-no-campo.webp", "legenda": "No campo, a carta pousa no tamanho certo, com a onda dourada em volta." }
+    ]
+  },
   "0.112.1": {
     "Oathbreaker em Outros": [
       { "img": "0.112.1/oathbreaker-em-outros.webp", "legenda": "Na escolha de formato, o Oathbreaker aparece dentro de Outros, junto de Standard, Pauper, Sacola 50 e Livre." }

@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.113.0] - 2026-11-02
+
+### Mudou
+
+- **Cartas voam da mão com peso.** Ao jogar um terreno ou conjurar uma mágica, a carta sai do lugar dela no leque, com o tamanho e a inclinação que tinha, e sobe em arco: cresce no meio do voo, inclina para o lado em que vai e a sombra acompanha a altura. A mágica conjurada voa até a pilha, no canto da mesa (e não mais para o meio dela), e a permanente que resolve sai da pilha para o campo. No campo, ela chega já no tamanho certo e pousa com um leve quique e uma onda dourada em volta. A criatura que resolve não ganha mais uma segunda cópia voando até ela depois de pousar.
+
 ## [0.112.1] - 2026-11-02
 
 ### Mudou

@@ -53,6 +53,15 @@ const MILL_POOL: [string, Record<string, unknown>][] = [
   ['Island', { land: true, typeLine: 'Basic Land — Island' }], ['Giant Growth', { typeLine: 'Instant', manaCost: '{G}' }],
   ['Serra Angel', { creature: true, typeLine: 'Creature — Angel', manaCost: '{3}{W}{W}' }],
 ];
+/** A mão para jogar: terrenos e criaturas, em rodízio. */
+const HAND_POOL: [string, Record<string, unknown>][] = [
+  ['Forest', { land: true, typeLine: 'Basic Land — Forest' }],
+  ['Grizzly Bears', { creature: true, power: 2, toughness: 2, basePower: 2, baseToughness: 2, damage: 0, typeLine: 'Creature — Bear', manaCost: '{1}{G}' }],
+  ['Island', { land: true, typeLine: 'Basic Land — Island' }],
+  ['Serra Angel', { creature: true, power: 4, toughness: 4, basePower: 4, baseToughness: 4, damage: 0, typeLine: 'Creature — Angel', manaCost: '{3}{W}{W}', keywords: ['FLYING', 'VIGILANCE'] }],
+  ['Llanowar Elves', { creature: true, power: 1, toughness: 1, basePower: 1, baseToughness: 1, damage: 0, typeLine: 'Creature — Elf Druid', manaCost: '{G}' }],
+  ['Mountain', { land: true, typeLine: 'Basic Land — Mountain' }],
+];
 let nextId = 1000;
 function card(name: string, extra: Record<string, unknown> = {}) { return { name, tapped: false, token: false, creature: false, ...extra }; }
 function creature(name: string, power: number, toughness: number, manaCost: string, keywords: string[] = []) {
@@ -63,6 +72,14 @@ if (new URLSearchParams(location.search).has('mesa')) table(); else panel();
 
 // ---------------------------------------------------------------- mesa
 function table() {
+  const params = new URLSearchParams(location.search), slow = Number(params.get('lento')) || 1;
+  const realTimeout = window.setTimeout.bind(window);
+  if (slow > 1) {
+    // Câmera lenta: os temporizadores e as animações da mesa andam juntos, para o voo e o que vem depois dele combinarem.
+    window.setTimeout = ((fn: TimerHandler, ms = 0, ...args: unknown[]) => realTimeout(fn, ms * slow, ...args)) as typeof window.setTimeout;
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) { const a = animate.apply(this, args); a.playbackRate = 1 / slow; return a; };
+  }
   let reduce = false;
   const media = window.matchMedia.bind(window);
   // "Reduzir movimento" só nesta página: a mesa pergunta ao navegador a cada efeito.
@@ -89,6 +106,7 @@ function table() {
       input: { gen: 1, priority: false, message: 'Laboratório de efeitos: use o painel.', ok: { label: 'OK', enabled: false }, cancel: { label: '', enabled: false }, selectable: [], actionable: [] },
     };
     commanderFlag = new Set();
+    deal();
     const start: [Side, string][] = full
       ? [...(['small', 'big', 'tapped', 'hawk', 'blade', 'knight', 'agent', 'ramgang', 'spawn', 'myr', 'token', 'token', 'walker', 'artifact', 'enchantment', 'klass', 'land', 'land', 'land', 'land'] as const).map(t => ['me', t] as [Side, string]),
          ...(['small', 'small', 'big', 'hawk', 'knight', 'spawn', 'myr', 'token', 'token', 'token', 'walker', 'artifact', 'enchantment', 'facedown', 'land', 'land', 'land', 'land'] as const).map(t => ['opp', t] as [Side, string])]
@@ -112,6 +130,22 @@ function table() {
     return c;
   }
   let lastAdded: number | undefined;
+  /** Enche a sua mão até 6 cartas, com terrenos e criaturas. */
+  function deal() {
+    const me = player(ME);
+    for (let i = me.hand.length; i < 6; i++) {
+      const [name, extra] = HAND_POOL[i % HAND_POOL.length];
+      me.hand.push({ id: nextId++, controller: ME, ...card(name, extra) });
+    }
+    me.handCount = me.hand.length;
+  }
+  /** Tira da sua mão a primeira carta que serve (terreno ou não), como a ponte faria ao jogar. */
+  function fromHand(land: boolean) {
+    const me = player(ME), c = me.hand.find((x: any) => !!x.land === land);
+    if (!c) return undefined;
+    me.hand = me.hand.filter((x: any) => x !== c); me.handCount = me.hand.length;
+    return c;
+  }
 
   function frame() {
     return structuredClone({ turn: state.turn, phase: state.phase, activePlayer: state.activePlayer, stack: state.stack, combat: state.combat,
@@ -379,6 +413,31 @@ function table() {
       opp.revealedHand = c.kind === 'one' ? hand.slice(0, 1) : hand;
       return c.kind === 'one' ? 'Uma carta da mão à vista: ela fica de face para cima e as outras de costas.' : 'Mão revelada (Telepathy): o leque do oponente vira de face para cima; toque numa carta para inspecionar.';
     },
+    // Jogar da mão: o terreno vai direto ao campo; a criatura vai à pilha e, depois de um tempo, resolve e entra.
+    hand: c => {
+      const me = player(ME);
+      if (c.kind === 'deal') { deal(); return 'Mão cheia de novo.'; }
+      const picked = fromHand(c.kind === 'land');
+      if (!picked) return c.kind === 'land' ? 'Não há terreno na mão: use "Encher a mão".' : 'Não há criatura na mão: use "Encher a mão".';
+      if (c.kind === 'land') {
+        me.battlefield.push(picked); lastAdded = picked.id;
+        emit('land-played', { card: structuredClone(picked), sourceId: picked.id, actor: ME, to: 'Battlefield' });
+        emit('entered', { card: structuredClone(picked), sourceId: picked.id, actor: ME, from: 'Hand', to: 'Battlefield' });
+        return `${picked.name}: sai do leque, voa em arco e pousa no campo.`;
+      }
+      const stackId = nextId++;
+      state.stack = [{ id: stackId, text: picked.name, source: structuredClone(picked), controller: ME }];
+      emit('spell-cast', { card: structuredClone(picked), sourceId: picked.id, actor: ME, from: 'Hand', to: 'Stack', stackId });
+      setTimeout(() => {
+        state.stack = [];
+        const arrived = { ...picked, sick: true };
+        me.battlefield.push(arrived); lastAdded = arrived.id;
+        emit('entered', { card: structuredClone(arrived), sourceId: arrived.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+        emit('resolved', { card: structuredClone(arrived), sourceId: arrived.id, actor: ME, stackId, from: 'Stack', to: 'Battlefield' });
+        flush();
+      }, 1200);
+      return `${picked.name}: sai do leque para a pilha e, ao resolver, pousa no campo.`;
+    },
     style: c => {
       try { localStorage.setItem('mesa:cards', c.value); } catch { /* opcional */ }
       const select = document.querySelector<HTMLSelectElement>('#fCardStyle');
@@ -409,6 +468,10 @@ function table() {
     flush();
     if (note) report(note);
   });
+  // Para ver ou fotografar um movimento: ?mesa&jogar=land,creature joga da mão, uma a cada 2,5 s (a primeira leva de eventos
+  // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar.
+  const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
+  if (plays.length > 1) plays.forEach((kind, i) => realTimeout(() => window.postMessage({ cmd: 'hand', kind }, '*'), 600 + i * 2500));
 }
 
 // ---------------------------------------------------------------- painel
@@ -460,6 +523,8 @@ function panel() {
     ${[['1', 'Criar 1'], ['3', 'Criar 3'], ['8', 'Criar 8'], ['20', 'Criar 20']].map(([n, t]) => `<button data-tokens="${n}">${t}</button>`).join('')}<button data-tokens="4" data-mixed="1">4 fichas mistas</button>
     <h2>Planeswalker (item 80, do lado escolhido em Campo)</h2>
     ${[['enter', 'Entrar (Jace)'], ['enter-gold', 'Entrar (multicolor)'], ['plus', '+2'], ['zero', '0'], ['minus', '−1'], ['ult', 'Ultimate (−10)']].map(([k, t]) => `<button data-walker="${k}">${t}</button>`).join('')}
+    <h2>Jogar da mão</h2>
+    ${[['land', 'Jogar terreno'], ['creature', 'Conjurar criatura'], ['deal', 'Encher a mão']].map(([k, t]) => `<button data-hand="${k}">${t}</button>`).join('')}
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
@@ -509,6 +574,7 @@ function panel() {
     if (b.dataset.tokens) send({ cmd: 'tokens', side: $<HTMLSelectElement>('side').value, n: b.dataset.tokens, mixed: !!b.dataset.mixed });
     if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
+    if (b.dataset.hand) send({ cmd: 'hand', kind: b.dataset.hand });
     if (b.dataset.s) resize(b.dataset.s);
   });
   lab.addEventListener('change', e => {
