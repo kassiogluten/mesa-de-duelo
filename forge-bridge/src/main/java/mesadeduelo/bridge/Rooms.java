@@ -28,7 +28,8 @@ import io.netty.channel.Channel;
  * {type:"watch", code, name} assiste à partida já começada de uma sala, sem ocupar assento (pública ou privada, com o código);
  * {type:"watch-player", player} troca o jogador de cuja mesa o espectador vê a partida;
  * {type:"rematch"} pede revanche (contra a IA começa na hora, em rede quando os dois pedirem);
- * {type:"leave"} concede e sai.
+ * {type:"leave"} concede e sai;
+ * {type:"lab-close"} fecha a sala de teste do Laboratório para os dois lados (quem fica recebe um "gone").
  *
  * Volta à partida: todo estado traz session:{code, token}. Se a conexão cair, a partida fica guardada e
  * {type:"rejoin", code, token} devolve o jogador ao seu assento, inclusive depois de recarregar a página.
@@ -281,6 +282,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 case "rejoin" -> rejoin(ch, code(msg), msg.has("token") ? MatchConfig.string(msg, "token") : "");
                 case "rematch" -> rematch(ch);
                 case "leave" -> leave(ch);
+                case "lab-close" -> labClose(ch);
                 default -> {
                     Session s = byChannel.get(ch);
                     Session.Seat seat = s == null ? null : s.seatOf(ch);
@@ -605,6 +607,21 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (!s.started() || !s.anyoneConnected()) { close(s, seat); return; }
         notifyOthers(s, seat, (seat == null ? "O oponente" : seat.name) + " saiu da sala.");
         s.markDirty();
+    }
+
+    /** Na sala de teste, qualquer um dos lados fecha a sala: o outro volta ao início com o aviso. */
+    private synchronized void labClose(Channel ch) {
+        Session s = byChannel.get(ch);
+        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        if (seat == null || !s.isLab()) { leave(ch); return; }
+        byChannel.remove(ch);
+        seat.channel = null;
+        for (Session.Seat each : s.seats) if (each.channel != null) {
+            byChannel.remove(each.channel, s);
+            each.send(Session.toast("gone", seat.name + " fechou a sala de teste " + s.code + "."));
+            each.channel = null;
+        }
+        close(s, seat);
     }
 
     /** Fecha a partida; {@code quitter} saiu por vontade própria (sem ele, ninguém voltou a tempo). */

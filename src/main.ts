@@ -138,6 +138,14 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
     forge?.close(); forge = null;
     show('lobby'); lobby.showRoom(null); lobby.refresh();
   },
+  onLabClose() {
+    persistRecording();
+    forge?.send({ type: 'lab-close' });
+    current = null;
+    clearResume();
+    forge?.close(); forge = null;
+    labView.open(); show('lab'); scrollTo({top: 0});
+  },
   onRematch() {
     // Assistindo, o único botão que chega aqui é o Reconectar.
     if (watching) { void autoRewatch(); return; }

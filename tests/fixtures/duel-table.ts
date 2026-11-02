@@ -88,7 +88,7 @@ Pagar Custo de Mana: ${remaining}`;
 }
 const improviseCost = (generic: number) => `${generic ? `{${generic}}` : ''}{R}`;
 const improviseMessage = (remaining: string) => `Fireball (306) - Fireball (306) deals 4 damage divided evenly (rounded down) to \nOponente. (X=4)\nChoose artifact to tap for Improvise.\nRemaining mana cost is ${remaining}`;
-const view = createForgeTableView(document.querySelector('#table')!, { onExit() {}, onRematch() {} });
+const view = createForgeTableView(document.querySelector('#table')!, { onExit() {}, onRematch() {}, onLabClose() {} });
 view.attach(client as any, []); view.render();
 const warden = (id: number) => ({ id, controller: 10, tapped: false, token: false, name: 'Soul Warden', manaCost: '{W}', typeLine: 'Creature — Human Cleric', creature: true, power: 1, toughness: 1 });
 Object.assign(window, { fixture: { state, client, view, messages, render: () => view.render(),

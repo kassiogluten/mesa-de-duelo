@@ -77,6 +77,17 @@ public class LabTest {
         assertRejected("{\"players\": [{\"library\": [" + many + "]}, {}]}", "no máximo");
     }
 
+    /** Os cenários prontos da tela (src/lab-cenarios.json) só têm cartas e marcadores que o servidor aceita. */
+    @Test public void readyScenariosOfTheTableAreAccepted() throws Exception {
+        var ready = JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of("..", "src", "lab-cenarios.json"))).getAsJsonArray();
+        assertFalse(ready.isEmpty());
+        for (var r : ready) {
+            var o = r.getAsJsonObject();
+            try { Lab.parse(o.get("cenario")); }
+            catch (IllegalArgumentException e) { fail(o.get("nome").getAsString() + ": " + e.getMessage()); }
+        }
+    }
+
     private static void assertRejected(String json, String text) {
         try { lab(json); fail("aceitou " + json); }
         catch (IllegalArgumentException e) { assertTrue(e.getMessage(), e.getMessage().contains(text)); }

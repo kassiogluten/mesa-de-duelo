@@ -7,6 +7,9 @@
 .lab-field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
 .lab-field .input-field { color: var(--ink); font-weight: 400; min-width: 150px; }
 .lab-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
+.lab-bar > .lab-hint { margin: 0 0 8px; }
+.lab-guide { padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--gold); line-height: 1.45; }
+.lab-guide p { margin: 4px 0 0; max-width: 90ch; }
 .lab-segments { display: flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--azul-111a2e, #111a2e); border: 1px solid var(--azul-3a4768, #3a4768); }
 .lab-segments button { border: 1px solid transparent; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; padding: 7px 14px; font-size: 14px; font-weight: 600; }
 .lab-segments button[aria-pressed=true] { color: #2a1600; background: var(--gold); }
@@ -44,8 +47,13 @@
 .lab-add { display: flex; gap: 6px; }
 .lab-add .input-field { flex: 1; }
 
-.lab-foot { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 8px 0; }
-.lab-help { margin: 0; color: var(--muted); max-width: 70ch; line-height: 1.45; }
+.lab-help { margin: 0 auto; color: var(--muted); max-width: 70ch; line-height: 1.45; text-align: center; }
+/* Criar sala de teste flutua no canto de baixo, sempre à vista, por longa que seja a mesa montada; o aviso sai num balão acima. */
+.lab { padding-bottom: 120px; }
+.lab-foot { position: fixed; right: max(24px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom)); z-index: 20; display: grid; gap: 10px; justify-items: end; max-width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.lab-foot > * { pointer-events: auto; }
+.lab-foot .lobby-status { margin: 0; padding: 8px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 18px rgb(0 0 0 / 0.4); text-align: right; }
+.lab-foot .arena-btn { box-shadow: 0 10px 28px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(0 0 0 / 0.2); }
 .lab-foot .lobby-status.error { color: var(--red); }
 
 .lab-dialog { max-width: min(560px, calc(100vw - 32px)); border-radius: 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 20px; }
@@ -62,4 +70,5 @@
   .lab-bar > .ghost-btn { flex: 1 1 auto; justify-content: center; }
   .lab-top { flex-direction: column; gap: 8px; }
   .lab-title h1 { font-size: 24px; }
+  .lab-foot { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
 }

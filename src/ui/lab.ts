@@ -1,6 +1,7 @@
 import type { LabPhase, LabPlayer, LabScenario } from '../forge/client';
 import { autocompleteNames, cardImageUrls, resolveCardNames } from '../scryfall';
 import { esc } from './cardtext';
+import READY from '../lab-cenarios.json';
 import './lab.css';
 
 /**
@@ -41,6 +42,9 @@ interface Permanent { uid: number; name: string; tapped: boolean; sick: boolean;
 interface Side { life: number; poison: number; hand: string[]; library: string[]; graveyard: string[]; exile: string[]; battlefield: Permanent[] }
 interface Draft { active: 0 | 1; phase: LabPhase; players: [Side, Side] }
 interface Saved { name: string; scenario: LabScenario }
+/** Cenário pronto para conferir à mão uma correção do CHANGELOG (item é o título em negrito, sem o ponto). */
+export interface Ready { nome: string; versao: string; item: string; conferir: string; cenario: LabScenario }
+export const READY_SCENARIOS = READY as unknown as Ready[];
 
 const DRAFT_KEY = 'mesa:lab:rascunho', SAVED_KEY = 'mesa:lab:cenarios';
 const load = <T>(key: string): T | null => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') as T | null; } catch { return null; } };
@@ -107,6 +111,12 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       <button type="button" class="ghost-btn" data-lab="back">← Voltar</button>
       <div class="lab-title"><h1>Laboratório</h1><p>Monte a mesa do jeito que quiser e jogue de verdade, com as regras do servidor: para achar erros, conferir correções, testar combos e ver até onde as regras aguentam.</p></div>
     </header>
+    <section class="lab-bar" aria-label="Cenários prontos">
+      <label class="lab-field lab-ready">Cenários prontos<select class="input-field" id="labReady">${READY_SCENARIOS.map((r, i) => `<option value="${i}">${esc(r.versao)} · ${esc(r.nome)}</option>`).join('')}</select></label>
+      <button type="button" class="ghost-btn" data-lab="ready">Abrir</button>
+      <p class="lab-hint">Mesas montadas para conferir as correções da mesa, uma por correção.</p>
+    </section>
+    <aside class="lab-guide" id="labGuide" aria-live="polite" hidden></aside>
     <section class="lab-bar" aria-label="Cenários salvos">
       <label class="lab-field">Cenários salvos<select class="input-field" id="labSaved"></select></label>
       <button type="button" class="ghost-btn" data-lab="load">Abrir</button>
@@ -124,8 +134,8 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       <label class="lab-field">Começa em<select class="input-field" id="labPhase">${PHASES.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></label>
     </section>
     <div class="lab-players" id="labPlayers"></div>
+    <p class="lab-help">Você joga como Jogador 1. O Jogador 2 entra pelo link da sala: abra o link numa outra aba para jogar pelos dois lados, ou mande para outra pessoa. A partida não entra no seu histórico.</p>
     <footer class="lab-foot">
-      <p class="lab-help">Você joga como Jogador 1. O Jogador 2 entra pelo link da sala: abra o link numa outra aba para jogar pelos dois lados, ou mande para outra pessoa. A partida não entra no seu histórico.</p>
       <p class="lobby-status" id="labStatus" role="status" aria-live="polite"></p>
       <button type="button" class="arena-btn primary big" data-lab="host">Criar sala de teste</button>
     </footer>
@@ -141,6 +151,12 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
 
   const setStatus = (text: string, error = false) => { const el = $('#labStatus'); el.textContent = text; el.classList.toggle('error', error); };
   const persist = () => store(DRAFT_KEY, toScenario(draft));
+  /** O que conferir no cenário pronto aberto; some quando a mesa troca por outra. */
+  const setGuide = (r?: Ready) => {
+    const el = $('#labGuide');
+    el.hidden = !r;
+    el.innerHTML = r ? `<strong>O que conferir</strong> <span class="lab-pos">(${esc(r.versao)} · ${esc(r.item)})</span><p>${esc(r.conferir)}</p>` : '';
+  };
 
   function art(name: string) {
     const url = cardImageUrls([name], ['small'])[0];
@@ -199,6 +215,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     $<HTMLButtonElement>('[data-lab=host]').textContent = busy ? 'Criando a sala…' : 'Criar sala de teste';
   }
   const changed = () => { persist(); render(); };
+  const cardNames = () => draft.players.flatMap(s => [...s.hand, ...s.library, ...s.graveyard, ...s.exile, ...s.battlefield.map(c => c.name)]);
 
   const sideOf = (el: Element) => Number(el.closest<HTMLElement>('[data-player]')!.dataset.player);
   const zoneOf = (el: Element) => el.closest<HTMLElement>('[data-zone]')!.dataset.zone as Zone;
@@ -304,9 +321,14 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     } else if (action === 'load' || action === 'delete') {
       const s = saved[Number($<HTMLSelectElement>('#labSaved').value)];
       if (!s) return;
-      if (action === 'load') { draft = fromScenario(s.scenario); $<HTMLInputElement>('#labName').value = s.name; changed(); setStatus(`Cenário “${s.name}” aberto.`); }
+      if (action === 'load') { draft = fromScenario(s.scenario); $<HTMLInputElement>('#labName').value = s.name; changed(); setGuide(); setStatus(`Cenário “${s.name}” aberto.`); }
       else { saved = saved.filter(o => o !== s); store(SAVED_KEY, saved); render(); setStatus(`Cenário “${s.name}” apagado.`); }
-    } else if (action === 'clear') { draft = emptyDraft(); changed(); setStatus('Mesa limpa.'); }
+    } else if (action === 'ready') {
+      const r = READY_SCENARIOS[Number($<HTMLSelectElement>('#labReady').value)];
+      if (!r) return;
+      draft = fromScenario(r.cenario); $<HTMLInputElement>('#labName').value = r.nome; changed(); setGuide(r); setStatus(`Cenário “${r.nome}” aberto.`);
+      void resolveCardNames(cardNames()).then(render).catch(() => {});
+    } else if (action === 'clear') { draft = emptyDraft(); changed(); setGuide(); setStatus('Mesa limpa.'); }
     else if (action === 'export') {
       const text = JSON.stringify(toScenario(draft));
       void navigator.clipboard.writeText(text).then(() => setStatus('Cenário copiado. Cole em “Colar cenário” em outro aparelho ou mande para alguém.'),
@@ -317,7 +339,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       try {
         const parsed = JSON.parse($<HTMLTextAreaElement>('#labImportText').value) as Partial<LabScenario>;
         if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.players)) throw new Error();
-        draft = fromScenario(parsed); changed();
+        draft = fromScenario(parsed); changed(); setGuide();
         $<HTMLDialogElement>('#labImport').close(); setStatus('Cenário colado.');
       } catch { setStatus('Esse texto não é um cenário do Laboratório.', true); $<HTMLDialogElement>('#labImport').close(); }
     }
@@ -337,7 +359,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     open() {
       render();
       // As imagens das cartas do cenário (a busca guarda no cache) aparecem quando chegam.
-      const names = draft.players.flatMap(s => [...s.hand, ...s.library, ...s.graveyard, ...s.exile, ...s.battlefield.map(c => c.name)]);
+      const names = cardNames();
       if (names.length) void resolveCardNames(names).then(render).catch(() => {});
     },
   };

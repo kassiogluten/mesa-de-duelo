@@ -521,7 +521,7 @@ export type ClientMessage =
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
-  | { type: 'rematch' } | { type: 'leave' }
+  | { type: 'rematch' } | { type: 'leave' } | { type: 'lab-close' }
   | ({ type: 'preferences' } & Partial<FPreferences>)
   | { type: 'card'; id: number; gen?: number }
   | { type: 'block'; attacker: number; blocker: number; gen: number }

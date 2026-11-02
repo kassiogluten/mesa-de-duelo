@@ -30,6 +30,15 @@ A página **Novidades em imagens** (link no painel Novidades) mostra prints de c
 - Só fica sem imagem o item que não tem nada para ver (por exemplo, uma mudança só de desempenho); nesse caso, diga isso ao entregar a mudança.
 - `tests/novidades.test.mjs` confere que cada entrada aponta para um item do CHANGELOG e para um arquivo que existe.
 
+## Laboratório: um cenário pronto por correção
+
+O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários prontos** (`src/lab-cenarios.json`), para qualquer pessoa conferir à mão, quando precisar, que uma correção continua certa. Ela só serve se for alimentada junto com o código:
+
+- Toda correção de regra ou de carta (item de `### Corrigido` que dá para reproduzir numa mesa montada: carta, regra, gatilho, interação) ganha um cenário pronto **na mesma mudança**. Correções só de tela, de teclado ou de desempenho, que a mesa montada não reproduz, ficam sem; diga isso ao entregar.
+- Cada cenário tem `nome` (o que o jogador vê na lista), `versao` e `item` (o título em negrito do item no CHANGELOG, sem o ponto final), `conferir` (o que fazer na mesa e o que deve acontecer, em português, para o jogador) e `cenario` (o mesmo formato de “Copiar cenário”). Monte a mesa mínima que mostra a correção, com as terras para pagar e cartas no grimório para comprar; o Jogador 1 é quem cria a sala.
+- Os mais novos ficam no começo da lista. Se a correção mudar de novo, atualize o cenário em vez de criar outro.
+- `tests/lab.test.mjs` confere que cada cenário aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
+
 ## Testes
 
 Como rodar os testes da mesa e do servidor, e a lista de falhas que já existem, ficam em `TESTES.md`. Antes de investigar uma falha, veja se ela já está lá: as conhecidas não bloqueiam a entrega, só precisam ser citadas. Mantenha a lista em dia (tire o que for corrigido, acrescente o que comprovadamente já falhava antes da sua mudança).

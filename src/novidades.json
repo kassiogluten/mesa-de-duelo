@@ -1,4 +1,15 @@
 {
+  "0.110.0": {
+    "Cenários prontos no Laboratório": [
+      { "img": "0.110.0/cenarios-prontos.webp", "legenda": "No alto do Laboratório, a lista de Cenários prontos: aberto o da Spelunking, o quadro O que conferir diz o que fazer na mesa e o que deve acontecer." }
+    ],
+    "Fechar a sala de teste e voltar ao Laboratório": [
+      { "img": "0.110.0/laboratorio-fechar-sala.webp", "legenda": "O Menu de uma partida na sala de teste, com Fechar a sala e voltar ao Laboratório no lugar de desistir." }
+    ],
+    "Criar sala de teste sempre à vista": [
+      { "img": "0.110.0/laboratorio-botao-fixo.webp", "legenda": "O botão Criar sala de teste flutuando no canto de baixo, por cima da mesa montada, com o aviso do cenário aberto num balão logo acima." }
+    ]
+  },
   "0.109.0": {
     "Lealdade na escolha da habilidade do planeswalker": [
       { "img": "0.109.0/lealdade-habilidades.webp", "legenda": "O Jace Beleren com 10 de lealdade: o escudo na carta mostra o 10, e cada habilidade mostra com quanto ele fica: +2 → 12, −1 → 9 e −10 → 0, em vermelho." }

@@ -6,8 +6,9 @@ const js = code => `data:text/javascript;base64,${Buffer.from(code).toString('ba
 const uri = code => js(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText);
 const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
 const scryfall = js('export const autocompleteNames = async () => []; export const cardImageUrls = () => []; export const resolveCardNames = async () => ({ found: new Map(), missing: [], ambiguous: [] });');
+const ready = JSON.parse(await readFile(new URL('../src/lab-cenarios.json', import.meta.url), 'utf8'));
 const lab = await import(uri((await readFile(new URL('../src/ui/lab.ts', import.meta.url), 'utf8'))
-  .replace("import './lab.css';", '').replace("'../scryfall'", JSON.stringify(scryfall)).replace("'./cardtext'", JSON.stringify(cardtext))));
+  .replace("import './lab.css';", '').replace("'../lab-cenarios.json'", JSON.stringify(js(`export default ${JSON.stringify(ready)};`))).replace("'../scryfall'", JSON.stringify(scryfall)).replace("'./cardtext'", JSON.stringify(cardtext))));
 
 const scenario = {
   active: 1, phase: 'combat',
@@ -54,4 +55,19 @@ test('"3 Island" e "3x Island" põem várias cópias; o resto é o nome', () => 
   assert.deepEqual(lab.parseEntry(' 12x Relentless Rats '), { count: 12, name: 'Relentless Rats' });
   assert.deepEqual(lab.parseEntry('Lightning Bolt'), { count: 1, name: 'Lightning Bolt' });
   assert.deepEqual(lab.parseEntry('1000 Island').count, 250);
+});
+
+test('cada cenário pronto aponta para uma correção do CHANGELOG e volta do editor igual', async () => {
+  const changelog = await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+  const sections = new Map(changelog.split(/^## /m).slice(1).map(sec => [sec.slice(1, sec.indexOf(']')), sec]));
+  assert.ok(lab.READY_SCENARIOS.length > 0);
+  const names = new Set();
+  for (const r of lab.READY_SCENARIOS) {
+    assert.ok(r.nome && r.conferir, `${r.nome}: falta o nome ou o que conferir`);
+    assert.ok(!names.has(r.nome), `${r.nome}: nome repetido`); names.add(r.nome);
+    const section = sections.get(r.versao);
+    assert.ok(section, `${r.nome}: a versão ${r.versao} não está no CHANGELOG`);
+    assert.ok(section.includes(`- **${r.item}.**`), `${r.nome}: “${r.item}” não é um item da ${r.versao}`);
+    assert.deepEqual(lab.toScenario(lab.fromScenario(r.cenario)), r.cenario, `${r.nome}: o editor não monta o cenário igual`);
+  }
 });

@@ -140,6 +140,8 @@ const KEYWORD_ICON: Record<string, string> = {
 export interface ForgeTableOptions {
   onExit(): void;
   onRematch(): void;
+  /** Sala de teste do Laboratório: fecha a sala para os dois lados e volta ao Laboratório. */
+  onLabClose?(): void;
   /** "Enviar sugestão ou erro" no menu e "Relatar este erro" no painel de erros (com o relatório do painel). */
   onFeedback?(request: { kind: 'sugestao' | 'erro'; attach?: boolean; diagnostics?: string }): void;
   /** "Baixar gravação" no painel de erros (desenvolvimento): o mesmo arquivo que o relato envia. */
@@ -189,6 +191,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">Opções</button>
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
+      <button class="btn" data-ui="lab-close" id="fMenuLab" hidden>Fechar a sala e voltar ao Laboratório</button>
       <button class="btn" data-ui="exit" id="fMenuExit">Desistir e voltar ao início</button>
       <button type="button" class="game-menu-version" data-ui="version" aria-pressed="false" title="Toque para ver as versões das regras e do motor">Mesa de Duelo ${esc(VERSION)}</button>
     </nav>
@@ -2683,6 +2686,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fAudience').textContent = audience.length ? `Assistindo: ${audience.join(', ')}` : '';
     $('#fAudience').hidden = !audience.length;
     $('#fMenuExit').textContent = s.watching ? 'Parar de assistir' : 'Desistir e voltar ao início';
+    // Na sala de teste, a saída é fechar a sala e voltar ao Laboratório, em vez de desistir.
+    const lab = !!s.room?.lab && !s.watching && !!opts.onLabClose;
+    $('#fMenuLab').hidden = !lab; $('#fMenuExit').hidden = lab;
     // Em rede não dá para recomeçar no meio: a revanche só existe no fim da partida, com os dois de acordo.
     $('#fMenuRematch').hidden = !!s.room || (s.config?.matchLength === 'bo3' && !s.match?.over);
     // O placar só existe na melhor de três; numa partida única, "Jogo 1 · 0 × 0" não diz nada.
@@ -2713,7 +2719,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         <h2>${result.title}</h2><p>${result.detail}</p>
         ${summary}
         ${rematchNote(s)}
-        <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="observe">${ICON_EYE}Ver campo de batalha</button><button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button></div>
+        <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="observe">${ICON_EYE}Ver campo de batalha</button>${s.room?.lab && opts.onLabClose ? `<button class="arena-btn secondary" data-ui="lab-close">${ICON_HOME}Laboratório</button>` : `<button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button>`}</div>
       </div>`;
       if (ov.hidden || ov.dataset.html !== html) { ov.innerHTML = html; ov.dataset.html = html; }
       ov.hidden = false;
@@ -3121,6 +3127,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'exit' && client?.state?.watching) { stopPresentation(); hideCardPreview(true); turnNotice.reset(); opts.onExit(); return; }
     if (ui === 'exit') {
       if (client?.state?.gameOver || disconnected || confirm(client?.state?.room ? 'Desistir e sair da sala?' : 'Desistir desta partida?')) { stopPresentation(); hideCardPreview(true); turnNotice.reset(); client?.send({ type: 'concede' }); opts.onExit(); }
+      return;
+    }
+    if (ui === 'lab-close') {
+      if (client?.state?.gameOver || disconnected || confirm('Fechar a sala de teste? A partida acaba para os dois lados.')) { stopPresentation(); hideCardPreview(true); turnNotice.reset(); opts.onLabClose?.(); }
       return;
     }
     if (ui === 'rematch') { setMenu(false); opts.onRematch(); return; }

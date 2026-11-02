@@ -1,0 +1,168 @@
+[
+  {
+    "nome": "Mana phyrexiana sem terrenos",
+    "versao": "0.107.1",
+    "item": "Passar a vez com mana phyrexiana na mão",
+    "conferir": "Na sua fase principal, a mesa para e as três cartas aparecem como jogáveis, mesmo quase sem mana. Gitaxian Probe e Gut Shot saem por 2 de vida cada; Dismember, pelo Swamp e 4 de vida. No turno do Jogador 2, a Gut Shot também faz a mesa parar para você responder.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Gitaxian Probe", "Gut Shot", "Dismember"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Llanowar Elves" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Spelunking com terrenos que entram virados",
+    "versao": "0.106.3",
+    "item": "Spelunking e terrenos que entram virados",
+    "conferir": "Jogue o Bojuka Bog: ele entra desvirado, sem pergunta sobre a ordem dos efeitos. Depois conjure Growth Spiral e ponha o Stomping Ground: recuse pagar 2 de vida, e ele entra desvirado do mesmo jeito.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Bojuka Bog", "Stomping Ground", "Growth Spiral"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Spelunking" }, { "name": "Forest" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": ["Grizzly Bears", "Lightning Bolt"], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Fact or Fiction",
+    "versao": "0.106.3",
+    "item": "Fact or Fiction e outras cartas de dois montes",
+    "conferir": "Conjure Fact or Fiction. Na aba do Jogador 2, quem separa vê os dois montes enquanto monta: todas as cartas começam no monte 1, e tocar numa carta a passa para o outro. De volta à sua aba, os dois montes aparecem lado a lado, cada um com as suas cartas e o botão Ficar com o monte 1 (ou 2).",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Fact or Fiction"], "library": ["Lightning Bolt", "Counterspell", "Llanowar Elves", "Grizzly Bears", "Opt", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Gifts Ungiven e Intuition",
+    "versao": "0.106.3",
+    "item": "Gifts Ungiven e Intuition",
+    "conferir": "Conjure Gifts Ungiven e busque 4 cartas diferentes. Na aba do Jogador 2, o pedido diz em português quantas escolher, para onde vão e o que acontece com as outras, como “Escolha 2 cartas para o cemitério de …. As outras vão para a mão.” Depois, a Intuition faz o mesmo com 3 cartas.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Gifts Ungiven", "Intuition"], "library": ["Lightning Bolt", "Counterspell", "Opt", "Brainstorm", "Ponder", "Grizzly Bears", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Proliferar com slime do Toxrill",
+    "versao": "0.106.1",
+    "item": "Proliferar com slime e outros marcadores que atrapalham",
+    "conferir": "A partida começa na sua etapa final: o Toxrill põe um marcador de slime em cada criatura do Jogador 2. Depois, conjure Volt Charge no Jogador 2 e prolifere: o slime e o −1/−1 nas criaturas dele aparecem em verde, e nenhuma delas cai em “Ajuda e prejudica”.",
+    "cenario": {
+      "active": 0, "phase": "end",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Volt Charge"], "library": ["Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Toxrill, the Corrosive" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Colossal Dreadmaw", "counters": { "M1M1": 1 } }, { "name": "Colossal Dreadmaw" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Nomear uma carta com Pithing Needle",
+    "versao": "0.92.1",
+    "item": "Nomear uma carta sem travar a mesa",
+    "conferir": "Conjure Pithing Needle: a escolha do nome abre com uma busca, sem travar a mesa. Digite parte do nome (em inglês, ou em português para as cartas que a mesa já conhece) e aperte Enter para escolher o primeiro da lista.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Pithing Needle"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Llanowar Elves" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Responder no início do combate do oponente",
+    "versao": "0.68.1",
+    "item": "Prioridade no início do combate do oponente",
+    "conferir": "O turno é do Jogador 2: na aba dele, siga para o combate. Antes de ele declarar os atacantes, a mesa para na sua aba no início do combate, e dá para usar o Lightning Bolt no Grizzly Bears antes que ele ataque.",
+    "cenario": {
+      "active": 1, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Lightning Bolt"], "library": ["Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Forest" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Improvisar e convocar",
+    "versao": "0.64.1",
+    "item": "Improvisar e convocar escolhendo na mesa",
+    "conferir": "Conjure Divination: os artefatos que ajudam a pagar ficam destacados e marcam com um toque, e a caixa de ação diz em português que cada um paga {1} e quanto ainda falta. Desista no pagamento: os artefatos usados desviram. A Stoke the Flames faz o mesmo com as criaturas (convocar).",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Divination", "Stoke the Flames"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Inspiring Statuary" }, { "name": "Ornithopter" }, { "name": "Ornithopter" }, { "name": "Island" },
+                          { "name": "Llanowar Elves" }, { "name": "Grizzly Bears" }, { "name": "Grizzly Bears" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Carta escondida pela Mosswort Bridge",
+    "versao": "0.56.1",
+    "item": "Cartas viradas para baixo que você pode olhar",
+    "conferir": "Jogue a Mosswort Bridge e escolha uma das 4 cartas do topo para esconder. No seu exílio, ela mostra a frente um pouco apagada, com um olho no canto; na aba do Jogador 2, aparece só o verso.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Mosswort Bridge"], "library": ["Colossal Dreadmaw", "Lightning Bolt", "Grizzly Bears", "Llanowar Elves", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Moedas em português",
+    "versao": "0.54.0",
+    "item": "Moeda em português",
+    "conferir": "Conjure Stitch in Time: o pedido diz “Costurado no Tempo: cara ou coroa?”, com os botões Cara e Coroa, e o resultado chega num aviso claro. A Mana Clash, que não pede escolha, avisa “a moeda de … deu coroa.” Com a Krark's Thumb em campo, a escolha entre as duas moedas também vem em português.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Stitch in Time", "Mana Clash", "Krark's Thumb"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Island" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Mana incolor na reserva",
+    "versao": "0.51.0",
+    "item": "Mana incolor na reserva",
+    "conferir": "Vire o Sol Ring: a mana incolor aparece no seu retrato junto das outras cores. Conjure a Mind Stone e toque na mana incolor do retrato para pagar com ela.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Mind Stone"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Sol Ring" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  }
+]

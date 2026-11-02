@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.110.0] - 2026-11-02
+
+### Novo
+
+- **Cenários prontos no Laboratório.** O Laboratório ganhou uma lista de **Cenários prontos**, um para cada correção de regra ou de carta, com a mesa já montada para conferir se ela continua certa: mana phyrexiana sem terrenos, Spelunking com terrenos que entram virados, Fact or Fiction, Gifts Ungiven e Intuition, proliferar com o slime do Toxrill, nomear uma carta com a Pithing Needle, responder no início do combate do oponente, improvisar e convocar, a carta escondida pela Mosswort Bridge, as moedas em português e a mana incolor na reserva. Escolha um, toque em **Abrir**, e a mesa aparece montada com um quadro **O que conferir**, que diz o que fazer e o que deve acontecer. Daqui em diante, cada correção de regra ou de carta chega com o seu cenário.
+- **Fechar a sala de teste e voltar ao Laboratório.** Na partida de uma sala de teste, o **Menu** traz **Fechar a sala e voltar ao Laboratório** no lugar de **Desistir e voltar ao início**, e o fim do jogo mostra **Laboratório** no lugar de **Início**. A sala fecha para os dois lados: quem está do outro lado volta à tela inicial com o aviso de que a sala foi fechada. Você volta ao Laboratório com a mesa montada como estava, para ajustar e testar de novo.
+
+### Mudou
+
+- **Criar sala de teste sempre à vista.** No Laboratório, o botão **Criar sala de teste** flutua no canto de baixo da tela, sempre à vista enquanto você monta a mesa, por mais longa que ela fique. Os avisos (cenário aberto, carta não encontrada, erro ao criar a sala) aparecem num balão logo acima dele.
+
 ## [0.109.0] - 2026-11-02
 
 ### Novo
