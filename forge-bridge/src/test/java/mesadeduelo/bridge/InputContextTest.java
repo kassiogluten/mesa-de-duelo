@@ -166,6 +166,20 @@ public class InputContextTest {
             assertFalse(InputContext.selectExactly(input, java.util.List.of(-5), java.util.List.of()));
         });
     }
+    @Test public void proliferateRatesCountersThatOnlyHurtTheirHolderAsGoodOnOpponents() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        Card theirs = ExilePermissionsTest.add(game, "Grizzly Bears", other, ZoneType.Battlefield);
+        for (String type : java.util.List.of("SLIME", "M1M1", "STUN", "BOUNTY", "PREY", "REJECTION", "ODOR", "ICE"))
+            assertEquals(type, "good", InputContext.counterEffect(theirs, forge.game.card.CounterType.getType(type), other, me));
+        assertEquals("bad", InputContext.counterEffect(theirs, forge.game.card.CounterType.getType("P1P1"), other, me));
+        // Slime num encantamento (Gutter Grime) faz a gosma crescer; gelo no Iceberg é mana.
+        Card grime = ExilePermissionsTest.add(game, "Gutter Grime", me, ZoneType.Battlefield);
+        Card iceberg = ExilePermissionsTest.add(game, "Iceberg", me, ZoneType.Battlefield);
+        Card depths = ExilePermissionsTest.add(game, "Dark Depths", me, ZoneType.Battlefield);
+        assertEquals("good", InputContext.counterEffect(grime, forge.game.card.CounterType.getType("SLIME"), me, me));
+        assertEquals("good", InputContext.counterEffect(iceberg, forge.game.card.CounterType.getType("ICE"), me, me));
+        assertEquals("bad", InputContext.counterEffect(depths, forge.game.card.CounterType.getType("ICE"), me, me));
+    }
     @Test public void targetSelectionCarriesTheTriggerTextWhatItTargetsAndHowManyAreLeft() {
         Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0), opponent = game.getPlayers().get(1);
         Card chupacabra = ExilePermissionsTest.add(game, "Ravenous Chupacabra", me, ZoneType.Battlefield);

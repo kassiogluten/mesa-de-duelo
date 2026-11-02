@@ -1,4 +1,9 @@
 {
+  "0.106.1": {
+    "Proliferar com slime e outros marcadores que atrapalham": [
+      { "img": "0.106.1/proliferar-slime.webp", "legenda": "Com o Toxrill em campo, o slime, o -1/-1 e o atordoamento nas criaturas do oponente aparecem em verde, em Te ajuda, prontos para proliferar." }
+    ]
+  },
   "0.105.0": {
     "Gráfico de vida no fim do jogo": [
       { "img": "0.105.0/grafico-vida.webp", "legenda": "Na tela de Vitória, uma linha por jogador com a vida no fim de cada turno; tocando no turno 5, a caixa mostra a vida de todos naquele momento." },

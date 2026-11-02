@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.106.1] - 2026-11-01
+
+### Corrigido
+
+- **Proliferar com slime e outros marcadores que atrapalham.** Ao proliferar, os marcadores de slime nas criaturas do oponente (os do Toxrill e do Sludge Monster) apareciam em vermelho, como se te prejudicassem, e a criatura caía em **Ajuda e prejudica** mesmo tendo só -1/-1 e slime. Agora o slime numa criatura conta como ruim para quem tem: na criatura do oponente, aparece em verde, como o -1/-1 e o atordoamento. O mesmo vale para o gelo (Dark Depths, Thing in the Ice, criaturas que não desviram) e para as marcas que uma carta põe nas criaturas do oponente para caçá-las, como recompensa, presa, rejeição e odor. O slime no Gutter Grime e o gelo no Iceberg continuam bons para quem tem. Quando todos os jogadores proliferam, cada um vê a lista pelo próprio lado.
+
 ## [0.106.0] - 2026-11-01
 
 ### Novo

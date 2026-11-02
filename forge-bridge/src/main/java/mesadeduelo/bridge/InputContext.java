@@ -299,12 +299,13 @@ final class InputContext {
     /**
      * Proliferar: cada permanente ou jogador que pode receber marcadores, com cada tipo de marcador dito
      * {@code good}, {@code bad} ou {@code neutral} para quem prolifera. A categoria vem da IA do Forge (bom
-     * ou ruim para quem tem o marcador) e se inverte quando é de um oponente: -1/-1 numa criatura dele ajuda.
-     * {@code suggested} marca o que só ajuda.
+     * ou ruim para quem tem o marcador, corrigida em {@link #holderCategory}) e se inverte quando é de um oponente:
+     * -1/-1 numa criatura dele ajuda. {@code suggested} marca o que só ajuda. Quem escolhe é o dono da escolha, que
+     * pode não ser quem ativou (em "cada jogador prolifera").
      */
     static JsonObject proliferate(Object input) {
         if (!(input instanceof InputSelectEntitiesFromList<?> select) || !proliferating(select)) return null;
-        Player chooser = ((SpellAbility) value(SELECT_ABILITY, select)).getActivatingPlayer();
+        Player chooser = select.getController().getPlayer();
         JsonArray candidates = new JsonArray();
         for (GameEntity entity : select.getValidChoices()) {
             Player holder = holder(entity);
@@ -340,12 +341,29 @@ final class InputContext {
     }
 
     static String counterEffect(GameEntity entity, CounterType type, Player holder, Player chooser) {
-        CounterAiCategory category = entity instanceof Card card ? forge.ai.ComputerUtil.getCounterCategory(type, card)
+        CounterAiCategory category = entity instanceof Card card ? holderCategory(type, card)
             // Radiação no jogador: o Forge a deixa neutra, mas ela tira cartas do grimório e vida de quem a tem.
             : type.is(CounterEnumType.RAD) ? CounterAiCategory.Negative : type.getAiCategory();
         if (category == CounterAiCategory.Neutral || holder == null || chooser == null) return "neutral";
         boolean ally = !holder.isOpponentOf(chooser);
         return (category == CounterAiCategory.Positive) == ally ? "good" : "bad";
+    }
+
+    /** Marcadores que uma carta põe nas permanentes dos outros para marcá-las como alvo: só prejudicam quem os tem. */
+    private static final java.util.Set<String> HOSTILE_MARKS = java.util.Set.of("BOUNTY", "PREY", "REJECTION", "ODOR", "CORRUPTION");
+
+    /**
+     * A IA do Forge chama de bom para quem tem todo marcador que ela não conhece, inclusive os que atrapalham:
+     * slime numa criatura (Toxrill: -1/-1 por marcador), gelo (Dark Depths, Thing in the Ice, criaturas que não
+     * desviram), praga numa terra e as marcas de caçador. Uma carta que diz o contrário (AICounterOverride) vence.
+     */
+    static CounterAiCategory holderCategory(CounterType type, Card card) {
+        CounterAiCategory category = forge.ai.ComputerUtil.getCounterCategory(type, card);
+        if (card.hasSVar("AICounterOverride" + type)) return category;
+        String name = type.toString();
+        if (HOSTILE_MARKS.contains(name) || name.equals("ICE")
+            || (name.equals("SLIME") && card.isCreature()) || (name.equals("BLIGHT") && card.isLand())) return CounterAiCategory.Negative;
+        return category;
     }
 
     /**

@@ -121,6 +121,22 @@ Object.assign(window, { fixture: { state, client, view, messages, render: () => 
       ] } });
     view.render();
   },
+  /** Proliferar com Toxrill: slime, -1/-1 e atordoamento nas criaturas do oponente contam a seu favor. */
+  proliferateSlime() {
+    const [me, opp] = state.players;
+    me.battlefield.push({ ...card(262, 'Toxrill, the Corrosive', 10, { manaCost: '{5}{U}{U}{B}{B}', typeLine: 'Legendary Creature — Slug Horror', power: 7, toughness: 7 }), counters: { P1P1: 1 } });
+    opp.battlefield[0].counters = { SLIME: 2, M1M1: 1 };
+    opp.battlefield.push(card(263, 'Serra Angel', 23, { manaCost: '{3}{W}{W}', typeLine: 'Creature — Angel', power: 4, toughness: 4, counters: { SLIME: 1, STUN: 1 } }));
+    Object.assign(state.input, { gen: 8, priority: false, message: 'Escolha qualquer número de permanentes e/ou jogadores para proliferar', actionable: [],
+      ok: { label: 'OK', enabled: true }, cancel: { label: 'TODOS', enabled: true }, selectable: [101, 262, 263], selectablePlayers: [],
+      selection: { cards: [101, 262, 263], players: [], min: 0, max: 3 },
+      proliferate: { candidates: [
+        { kind: 'card', id: 101, holder: 23, effect: 'good', suggested: true, counters: [{ type: 'SLIME', count: 2, effect: 'good' }, { type: 'M1M1', count: 1, effect: 'good' }] },
+        { kind: 'card', id: 263, holder: 23, effect: 'good', suggested: true, counters: [{ type: 'SLIME', count: 1, effect: 'good' }, { type: 'STUN', count: 1, effect: 'good' }] },
+        { kind: 'card', id: 262, holder: 10, effect: 'good', suggested: true, counters: [{ type: 'P1P1', count: 1, effect: 'good' }] },
+      ] } });
+    view.render();
+  },
   /**
    * Improvisar: Bola de Fogo com X=4 e a Inspiring Statuary em campo. Os artefatos (Statuary, Ornithopter,
    * Darksteel Relic, Mind Stone) pagam {1} cada; tocar marca e desmarca, e Confirmar vira os marcados.
