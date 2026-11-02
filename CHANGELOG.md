@@ -6,6 +6,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.107.0] - 2026-11-02
+
+### Novo
+
+- **Laboratório.** Uma tela para montar a mesa do jeito que você quiser e jogar de verdade, com as regras do servidor: para achar erros, conferir se foram corrigidos, testar combos e ver até onde as regras aguentam. Abra pelo menu **⋯** da tela inicial. Para cada um dos dois jogadores, escolha a vida, o veneno e as cartas da mão, do campo, do grimório (na ordem, a primeira é a do topo), do cemitério e do exílio; no campo, marque se a carta está virada ou entrou neste turno, ponha marcadores (+1/+1, lealdade, carga, conhecimento e outros) e prenda equipamentos e auras a outra permanente. Escolha também de quem é o turno e em que etapa a partida começa: no início do combate, por exemplo, os gatilhos de "no começo do combate" acontecem. Digite "3 Island" para pôr três cópias de uma vez. Os cenários ficam salvos no aparelho e podem ser copiados e colados para mandar a alguém. **Criar sala de teste** abre uma sala com a mesa montada: você joga como Jogador 1, e o Jogador 2 entra pelo link, que você pode abrir numa outra aba para jogar pelos dois lados ou mandar para outra pessoa. A partida começa direto como foi montada, sem mulligan, não entra no histórico, e o **Desfazer** não precisa do aceite do outro lado.
+
 ## [0.106.3] - 2026-11-02
 
 ### Corrigido

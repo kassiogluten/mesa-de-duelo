@@ -22,8 +22,34 @@ export type RoomVisibility = 'private' | 'public';
 /** Uma sala pública aberta, como aparece na lista da tela inicial (sem tokens nem decks). */
 /** started: a partida já começou e a sala aparece para assistir; spectators: quantos assistem (ausente em pontes antigas). */
 /** brackets: no Commander, o bracket de cada lugar ocupado que tem um. */
+/** Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem cria a sala. */
+export interface LabScenario {
+  active: 0 | 1;
+  phase: LabPhase;
+  players: [LabPlayer, LabPlayer];
+}
+export type LabPhase = 'upkeep' | 'draw' | 'main1' | 'combat' | 'main2' | 'end';
+export interface LabPlayer {
+  life: number;
+  poison: number;
+  hand: string[];
+  /** A primeira é a do topo. */
+  library: string[];
+  graveyard: string[];
+  exile: string[];
+  battlefield: LabPermanent[];
+}
+export interface LabPermanent {
+  name: string;
+  tapped?: boolean;
+  /** Entrou neste turno (enjoo de invocação). */
+  sick?: boolean;
+  counters?: Record<string, number>;
+  /** Presa a outra permanente: jogador (0 ou 1) e posição no campo dele. */
+  attachedTo?: { player: number; index: number };
+}
 export interface PublicRoom { code: string; host: string; config: MatchConfig; capacity: number; players: number; started: boolean; spectators?: number; brackets?: number[] }
-export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
+export interface RoomInfo { code: string; config: MatchConfig; available: boolean; started?: boolean; lab?: boolean; capacity?: number; players: {name: string; connected: boolean; seat?: number; playerId?: number; eliminated?: boolean}[]; rulesVersion: string; engineVersion: string }
 export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed';
@@ -318,6 +344,8 @@ export interface FRoom {
   started: boolean;
   /** Sala pública, listada na tela inicial. Ausente em pontes antigas (privada). */
   public?: boolean;
+  /** Sala de teste do Laboratório: a mesa começa como foi montada, com as cartas do cenário. */
+  lab?: boolean;
   capacity?: number;
   config: MatchConfig;
   rulesVersion?: string;
@@ -481,6 +509,7 @@ export type ClientMessage =
   | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig } & MatchOwner)
   | ({ type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
   | ({ type: 'join'; code: string; name: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)
+  | { type: 'lab-host'; name: string; scenario: LabScenario }
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
   | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number }

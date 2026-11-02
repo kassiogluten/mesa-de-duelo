@@ -1,4 +1,11 @@
 {
+  "0.107.0": {
+    "Laboratório": [
+      { "img": "0.107.0/laboratorio-mesa.webp", "legenda": "No Laboratório, cada carta do campo pode ficar virada, ter marcadores e estar presa a outra permanente: aqui, o Bonesplitter preso ao Memnarch, que tem dois marcadores +1/+1." },
+      { "img": "0.107.0/laboratorio-sala.webp", "legenda": "A sala de teste espera o Jogador 2: abra o link numa outra aba para jogar pelos dois lados, ou mande para outra pessoa." },
+      { "img": "0.107.0/laboratorio-partida.webp", "legenda": "A partida começa como foi montada: no início do combate, o Jace do oponente pede {2}, e com o Sol Ring virado a mana não dá para pagar." }
+    ]
+  },
   "0.106.3": {
     "Spelunking e terrenos que entram virados": [
       { "img": "0.106.3/spelunking-desvirados.webp", "legenda": "Com a Spelunking em campo, Bojuka Bog, Golgari Rot Farm e Stomping Ground entram desvirados, sem a mesa perguntar a ordem dos efeitos." }

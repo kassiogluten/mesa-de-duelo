@@ -378,6 +378,13 @@ export async function searchCards(q: string, page = 1, format?: DeckFormat, { tr
   return { cards: cards.map(withBasicArt), hasMore: !!json.has_more, total: json.total_cards ?? cards.length };
 }
 
+/** Nomes de carta (em inglês) que começam como o texto digitado, para sugerir enquanto se escreve. */
+export async function autocompleteNames(q: string): Promise<string[]> {
+  if (q.trim().length < 2) return [];
+  const { status, json } = await request(`/cards/autocomplete?q=${encodeURIComponent(q.trim())}`);
+  return status === 404 ? [] : (json?.data ?? []).filter((n: unknown): n is string => typeof n === 'string');
+}
+
 /**
  * Confere nomes digitados ou colados contra o Scryfall e devolve o nome oficial (em inglês) de cada um.
  * Aceita a face da frente de cartas de duas faces e, para o que não achar, tenta o nome impresso

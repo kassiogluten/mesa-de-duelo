@@ -3,7 +3,7 @@ import { setupPwa } from './ui/pwa';
 import { type DeckData } from './decks';
 import { deckBracket } from './brackets';
 import { mountDeckBuilder } from './ui/deckbuilder';
-import { ForgeClient, FORGE_URL, type FState, type MatchConfig, type ClientMessage, type MatchOwner } from './forge/client';
+import { ForgeClient, FORGE_URL, type FState, type MatchConfig, type ClientMessage, type MatchOwner, type LabScenario } from './forge/client';
 import { createForgeTableView } from './ui/forgeTable';
 import { screenWake } from './ui/screenWake';
 import { deckArt, deckCover, mountLobby } from './ui/lobby';
@@ -17,6 +17,7 @@ import { VERSION } from './ui/changelog';
 import { atualizarConta, contaSessao } from './conta/session';
 import { esconderOneTap, mostrarOneTap } from './conta/google';
 import { iniciarSincronia } from './ui/contaMenu';
+import { mountLab } from './ui/lab';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -24,10 +25,11 @@ app.innerHTML = `
   <div class="screen" id="scrGame" hidden></div>
   <div class="screen" id="scrDecks" hidden></div>
   <div class="screen" id="scrFree" hidden></div>
+  <div class="screen" id="scrLab" hidden></div>
   <footer class="credits">Cartas e imagens: <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>.
   Magic: The Gathering é marca da Wizards of the Coast; projeto de fã, sem afiliação.</footer>`;
 
-const screens = { lobby: '#scrLobby', game: '#scrGame', decks: '#scrDecks', free: '#scrFree' } as const;
+const screens = { lobby: '#scrLobby', game: '#scrGame', decks: '#scrDecks', free: '#scrFree', lab: '#scrLab' } as const;
 function show(name: keyof typeof screens) {
   hideCardPreview(true);
   screen = name;
@@ -59,24 +61,33 @@ let screen: keyof typeof screens = 'lobby';
  * Partida no Forge em andamento (ou sala esperando o oponente): o que é preciso para redesenhar a mesa
  * e voltar ao mesmo assento se a conexão cair. code/token chegam da ponte em state.session.
  */
-interface ForgeMatch { url: string; deck: DeckData; opp?: DeckData; opponents?: (DeckData | null)[]; net: boolean; config?: MatchConfig; code?: string; token?: string }
+interface ForgeMatch { url: string; deck: DeckData; opp?: DeckData; opponents?: (DeckData | null)[]; net: boolean; config?: MatchConfig; code?: string; token?: string; lab?: boolean }
 let current: ForgeMatch | null = null;
 /** Assistindo à partida de uma sala: sem deck, sem assento e sem gravação; cair a conexão pede para assistir de novo. */
 let watching: { url: string; code: string; name: string } | null = null;
 
-/** Guardada no localStorage para voltar à partida mesmo depois de recarregar a página ou fechar a aba. */
+/**
+ * Guardada no localStorage para voltar à partida mesmo depois de recarregar a página ou fechar a aba. A sala de teste
+ * do Laboratório fica no sessionStorage, de cada aba: quem joga pelos dois lados tem uma aba em cada assento.
+ */
 const RESUME_KEY = 'mesa:resume';
 function saveResume() {
-  try { localStorage.setItem(RESUME_KEY, JSON.stringify(current)); } catch { /* sem armazenamento */ }
+  try {
+    if (current?.lab) sessionStorage.setItem(RESUME_KEY, JSON.stringify(current));
+    else localStorage.setItem(RESUME_KEY, JSON.stringify(current));
+  } catch { /* sem armazenamento */ }
 }
 function clearResume() {
-  try { localStorage.removeItem(RESUME_KEY); } catch { /* sem armazenamento */ }
+  try { sessionStorage.removeItem(RESUME_KEY); localStorage.removeItem(RESUME_KEY); } catch { /* sem armazenamento */ }
 }
 function loadResume(): ForgeMatch | null {
-  try {
-    const m = JSON.parse(localStorage.getItem(RESUME_KEY) ?? 'null') as ForgeMatch | null;
-    return m?.url && m.code && m.token && m.deck ? m : null;
-  } catch { return null; }
+  const read = (storage: Storage) => {
+    try {
+      const m = JSON.parse(storage.getItem(RESUME_KEY) ?? 'null') as ForgeMatch | null;
+      return m?.url && m.code && m.token && m.deck ? m : null;
+    } catch { return null; }
+  };
+  return read(sessionStorage) ?? read(localStorage);
 }
 
 /**
@@ -150,6 +161,7 @@ const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onFreePlay: (you, format) => { void enterLandscape(); leaveForge(); freeTable.open(you, format); show('free'); },
   onHost: async (you, name, url, config, visibility, code) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), cover: deckCover(you), bracket: deckBracket(you), config, visibility, ...(code ? { code } : {}), ...matchOwner(you) }, config); },
   onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you), cover: deckCover(you), bracket: deckBracket(you), ...matchOwner(you) }); },
+  onJoinLab: async (code, name, url) => { void enterLandscape(); await startNetMatch(LAB_DECK, url, { type: 'join', code, name, deck: null }, undefined, true); },
   onWatch: async (code, name, url) => { void enterLandscape(); await startWatching(url, code, name); },
   onValidate: async (deck, format, url) => (await requireForge(url)).validateDeck(forgeDeck(deck), format),
   onLookup: async (code, url) => (await requireForge(url)).lookupRoom(code),
@@ -174,6 +186,14 @@ const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
 // Decks que chegaram da conta (outro aparelho, junção, lixeira) ou de outra aba: as duas telas se redesenham.
 addEventListener('mesa:decks-sincronizados', () => { lobby.refresh(); builder.refresh(); });
 iniciarSincronia();
+
+/** A sala de teste não tem deck: cada lado joga com as cartas do cenário montado no Laboratório. */
+const LAB_DECK: DeckData = { id: 'laboratorio', name: 'Laboratório', cards: [] };
+const labView = mountLab(document.querySelector('#scrLab')!, {
+  onBack: () => { show('lobby'); lobby.refresh(); },
+  onHost: scenario => startLab(scenario),
+});
+addEventListener('mesa:laboratorio', () => { labView.open(); show('lab'); scrollTo({top: 0}); });
 
 const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [] });
 /** Com a conta conectada, a partida fica ligada a ela e ao deck salvo (Minhas partidas). */
@@ -246,7 +266,9 @@ async function openForge(url: string, hint: string | null, attempt: number): Pro
   client.onRoom = r => {
     if (current?.net && !r.started) {
       current.code = r.code; current.token = r.token; current.config = r.config;
+      // A sala de teste criada no Laboratório espera o outro lado na mesma sala de espera das salas em rede.
       saveResume(); lobby.showRoom(r); lobby.setStatus(''); finishStart();
+      if (screen === 'lab') show('lobby');
     }
   };
   client.onRoomSay = (seat, key) => lobby.roomSay(seat, key);
@@ -317,10 +339,16 @@ async function startMatch(you: DeckData, opp: DeckData | null, config: MatchConf
   lobby.setStatus('Preparando a mesa…');
   await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config, ...matchOwner(you)});
 }
-async function startNetMatch(you: DeckData, url: string, message: ClientMessage, config?: MatchConfig) {
+async function startNetMatch(you: DeckData, url: string, message: ClientMessage, config?: MatchConfig, lab = false) {
   const client = await requireForge(url);
   lobby.setStatus(message.type === 'host' ? 'Criando a sala…' : 'Entrando na sala…');
-  await requestMatch(client, {url, deck: you, config, net: true}, message);
+  await requestMatch(client, {url, deck: you, config, net: true, lab}, message);
+}
+/** Cria a sala de teste do Laboratório; quem cria joga como Jogador 1. */
+async function startLab(scenario: LabScenario) {
+  leaveForge();
+  // Os nomes da mesa são os do editor, para saber de que lado é cada carta (inclusive com as duas abas no mesmo aparelho).
+  await startNetMatch(LAB_DECK, FORGE_URL, { type: 'lab-host', name: 'Jogador 1', scenario }, undefined, true);
 }
 
 /** Assiste à partida de uma sala; resolve no primeiro estado, ou falha com o aviso da ponte. */

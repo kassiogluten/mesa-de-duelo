@@ -114,6 +114,8 @@ final class Session {
     /** Bracket do deck de cada computador, na ordem dos decks (0 sem bracket); vazio fora do Commander. */
     private volatile List<Integer> aiBrackets = List.of();
     private volatile java.util.function.Consumer<forge.game.Game> startHook;
+    /** Sala de teste do Laboratório: a mesa montada à mão, aplicada no começo de cada jogo (veja {@link Lab}). */
+    private volatile Lab lab;
 
     /** Votação aberta para pular o turno de quem caiu, e os assentos com o turno já aprovado para pular. */
     private SkipVote skipVote;
@@ -171,6 +173,22 @@ final class Session {
         s.seats[0].bind(host, name, deck);
         return s;
     }
+
+    /**
+     * Sala de teste do Laboratório: dois assentos, o segundo para outra pessoa ou outra aba de quem criou. Os decks
+     * são os do cenário, a partida fica fora do histórico e o desfazer não precisa do aceite do outro lado.
+     */
+    static Session lab(String code, Channel host, String name, Lab lab) {
+        Session s = new Session(code, true, 2, List.of(), new MatchConfig("free", "bo1"));
+        s.lab = lab;
+        s.startHook = lab::apply;
+        s.seats[0].bind(host, name, lab.decks.get(0));
+        return s;
+    }
+
+    boolean isLab() { return lab != null; }
+    /** Deck do cenário para o assento que entra na sala de teste. */
+    Deck labDeck(int seat) { return lab.decks.get(seat); }
 
     void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
     void aiBrackets(List<Integer> brackets) { aiBrackets = List.copyOf(brackets); }
@@ -321,7 +339,7 @@ final class Session {
             AtomicBoolean applied = new AtomicBoolean();
             m.setStartGameHook(() -> { if (applied.compareAndSet(false, true)) hook.accept(m.getGame()); });
         }
-        m.startMatch(config.rules(), null, players, guis, null);
+        m.startMatch(lab != null ? Lab.rules() : config.rules(), null, players, guis, null);
         startedAt = playingSince = gameSince = System.currentTimeMillis(); gameMs = -1;
         Metrics.matchStarted(config.format(), room, players.size());
         System.out.printf("Nova partida%s: %s%n", room ? " na sala " + code : "",
@@ -368,7 +386,7 @@ final class Session {
             JsonObject line = historyJson(fm, end, quitter, current);
             boolean played = false;
             for (JsonElement g : line.getAsJsonArray("games")) played |= g.getAsJsonObject().get("turns").getAsInt() > 0;
-            if (played) history.accept(line);
+            if (played && history != null) history.accept(line);
         } catch (RuntimeException e) { System.err.println("Histórico: resumo da partida falhou: " + e); }
     }
 
@@ -1409,6 +1427,7 @@ final class Session {
     /** Quem precisa aceitar um pedido de {@code requester}: os outros humanos conectados e ainda no jogo. */
     private Set<Integer> undoVoters(int requester) {
         Set<Integer> voters = new java.util.LinkedHashSet<>();
+        if (lab != null) return voters;
         for (Seat each : seats) if (each.index != requester && each.channel != null && each.me != null && !each.eliminated()) voters.add(each.index);
         return voters;
     }
@@ -1421,7 +1440,7 @@ final class Session {
             UndoHistory.Step step = undo.lastOf(seat.me.getId());
             if (step == null) { seat.send(toast("error", "Ainda não há nada seu para desfazer.")); return; }
             Set<Integer> voters = undoVoters(seat.index);
-            if (isRoom() && voters.isEmpty()) { seat.send(toast("error", "Não há ninguém conectado para aceitar o pedido agora.")); return; }
+            if (isRoom() && lab == null && voters.isEmpty()) { seat.send(toast("error", "Não há ninguém conectado para aceitar o pedido agora.")); return; }
             undoRequest = new UndoRequest(seat.index, step);
             for (Integer v : voters) seats[v].send(toast("toast", seat.name + " pediu para desfazer: " + step.text() + "."));
             settleUndo();
@@ -1882,6 +1901,7 @@ final class Session {
         if (token != null) r.addProperty("token", token);
         r.addProperty("started", started());
         r.addProperty("public", isPublic());
+        if (lab != null) r.addProperty("lab", true);
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json());
         MatchConfig.versions(r);
@@ -1915,6 +1935,7 @@ final class Session {
     JsonObject publicRoomJson() {
         JsonObject r = new JsonObject();
         r.addProperty("code", code); r.addProperty("available", !full() && !started()); r.addProperty("started", started());
+        if (lab != null) r.addProperty("lab", true);
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json()); MatchConfig.versions(r);
         JsonArray players = new JsonArray();

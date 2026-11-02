@@ -35,6 +35,8 @@ export interface LobbyOptions {
   onFreePlay(you: DeckData, format: DeckFormat): void;
   onHost(you: DeckData, name: string, url: string, config: MatchConfig, visibility: RoomVisibility, code: string): Promise<void>;
   onJoin(you: DeckData, name: string, code: string, url: string): Promise<void>;
+  /** Entrar numa sala de teste do Laboratório: sem deck, cada lado joga com as cartas do cenário. */
+  onJoinLab(code: string, name: string, url: string): Promise<void>;
   /** Assistir à partida já começada de uma sala, sem deck e sem assento. */
   onWatch(code: string, name: string, url: string): Promise<void>;
   onValidate(deck: DeckData, format: DeckFormat, url: string): Promise<DeckValidation>;
@@ -522,11 +524,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   /** Busca a sala pelo código e entra nela; pela lista de salas públicas é o mesmo caminho, com as mesmas regras. */
   function findRoom(code: string, fromList: boolean, fromLink = false) {
     preflight++; setBusy(true); setStatus('Buscando sala…');
-    let live = false;
+    let live = false, lab = '';
     void opts.onLookup(code, netURL()).then(info => {
       // Pelo código ou pelo link, a partida já começada abre para assistir.
       if (!info.available && info.started) { live = true; return false; }
       if (!info.available) throw new Error(info.players.length >= (info.capacity ?? info.config.playerCount ?? 2) ? `A sala ${info.code} já está completa.` : `A partida da sala ${info.code} já começou.`);
+      if (info.lab) { lab = info.code; return false; }
       room = info; netTab = 'join'; format = info.config.format; matchLength = info.config.matchLength; playerCount = info.config.playerCount ?? info.capacity ?? 2; youId = rememberedDeck(); setStatus('');
       return true;
     }).catch(error => {
@@ -536,6 +539,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     }).then(found => {
       setBusy(false);
       if (live) { void watch(code, fromList); return; }
+      if (lab) { void joinLab(lab); return; }
       // A sala da lista pode ter enchido ou começado nesse meio-tempo: a lista se atualiza.
       if (!found) { if (fromList) void loadRooms(); return; }
       // Com um deck lembrado que serve para o formato da sala, entra direto; senão pede o deck antes.
@@ -546,6 +550,14 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       else if (unnamed) { setStatus(fits ? `Digite seu nome e toque em Entrar na sala ${room!.code}.` : `Digite seu nome e escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`); $('#netName').focus(); }
       else setStatus(`Escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`);
     });
+  }
+  /** Sala de teste do Laboratório: entra direto, sem deck, como o Jogador 2 do cenário. */
+  async function joinLab(code: string) {
+    if (busy || waitingRoom) return;
+    preflight++; setBusy(true); setStatus(`Entrando na sala de teste ${code}…`);
+    try { await opts.onJoinLab(code, 'Jogador 2', netURL()); setStatus(''); }
+    catch (error) { setStatus(error instanceof Error ? error.message : 'Não foi possível entrar na sala de teste.', true); }
+    finally { setBusy(false); }
   }
   /** Assiste à partida da sala; sem nome digitado, os jogadores veem "Espectador". */
   async function watch(code: string, fromList: boolean) {
@@ -600,7 +612,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     preflight++; waitingRoom = nextRoom;
     // A partida começou (ou a sala acabou) com a pergunta de sair aberta: não há mais de onde sair.
     if (!nextRoom) document.querySelector<HTMLDialogElement>('dialog.room-leave')?.close();
-    if (nextRoom) { mode = 'net'; format = nextRoom.config.format; matchLength = nextRoom.config.matchLength; playerCount = nextRoom.config.playerCount ?? nextRoom.capacity ?? 2; }
+    if (nextRoom && !nextRoom.lab) { mode = 'net'; format = nextRoom.config.format; matchLength = nextRoom.config.matchLength; playerCount = nextRoom.config.playerCount ?? nextRoom.capacity ?? 2; }
     refresh();
   }};
 }

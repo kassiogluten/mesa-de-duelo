@@ -60,7 +60,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
   let copiedTimer: ReturnType<typeof setTimeout> | undefined;
   el.innerHTML = `<header class="room-lobby-head"><p class="room-kicker" id="roomKicker"></p><h1>Sala <strong class="room-lobby-code" id="roomLobbyCode"></strong></h1><p class="room-progress" id="roomProgress"></p></header>
     <section class="room-share" aria-labelledby="roomShareTitle"><h2 id="roomShareTitle">Chame quem falta</h2>
-      <div class="room-link-row"><input id="roomLinkField" class="input-field" readonly aria-label="Link de convite"><button type="button" class="arena-btn primary" data-room="copy">Copiar link</button><button type="button" class="arena-btn secondary" data-room="share" hidden>Compartilhar</button></div>
+      <div class="room-link-row"><input id="roomLinkField" class="input-field" readonly aria-label="Link de convite"><button type="button" class="arena-btn primary" data-room="copy">Copiar link</button><button type="button" class="arena-btn secondary" data-room="share" hidden>Compartilhar</button><a class="arena-btn secondary" data-room="open-tab" target="_blank" rel="noopener" hidden>Abrir em outra aba</a></div>
       <p class="room-share-help" id="roomShareHelp"></p></section>
     <ol class="room-seat-grid" id="roomSeatGrid" aria-label="Lugares da mesa"></ol>
     <div class="room-sayings" role="group" aria-labelledby="roomSayingsLabel"><span id="roomSayingsLabel">Mandar para a sala</span>${SAYINGS.map(([key, text]) => `<button type="button" class="ghost-btn" data-say="${key}">${esc(text)}</button>`).join('')}</div>
@@ -90,11 +90,16 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
       return;
     }
     const capacity = next.capacity ?? next.config.playerCount ?? 2, full = next.players.length >= capacity;
-    $('#roomKicker').textContent = `${next.public ? 'Sala pública' : 'Sala privada'} · ${formatName(next.config.format)} · ${next.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'}`;
+    $('#roomKicker').textContent = next.lab ? 'Sala de teste · Laboratório' : `${next.public ? 'Sala pública' : 'Sala privada'} · ${formatName(next.config.format)} · ${next.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'}`;
+    $('#roomShareTitle').textContent = next.lab ? 'Chame o outro lado' : 'Chame quem falta';
+    $<HTMLAnchorElement>('[data-room=open-tab]').hidden = !next.lab;
+    $<HTMLAnchorElement>('[data-room=open-tab]').href = roomLink(next.code);
     $('#roomLobbyCode').textContent = next.code;
     $('#roomProgress').textContent = full ? 'Mesa completa. A partida vai começar.' : `${next.players.length} de ${capacity} jogadores. A partida começa sozinha quando a mesa encher.`;
     $<HTMLInputElement>('#roomLinkField').value = roomLink(next.code);
-    $('#roomShareHelp').textContent = `Quem abrir o link vai direto para a sala. Ou passe o código ${next.code}, para digitar em Entrar numa sala.${next.public ? ' A sala também aparece na lista de salas públicas.' : ''}`;
+    $('#roomShareHelp').textContent = next.lab
+      ? `Para jogar pelos dois lados, abra o link numa outra aba: ela entra como Jogador 2. Ou mande o link (ou o código ${next.code}) para outra pessoa. A mesa começa como você montou assim que o Jogador 2 entrar.`
+      : `Quem abrir o link vai direto para a sala. Ou passe o código ${next.code}, para digitar em Entrar numa sala.${next.public ? ' A sala também aparece na lista de salas públicas.' : ''}`;
     $('#roomSeatGrid').innerHTML = seatsHTML(next);
     const missing = next.players.map(p => p.cover).filter((name): name is string => !!name && !cacheGet(name) && !requested.has(name));
     if (missing.length) {

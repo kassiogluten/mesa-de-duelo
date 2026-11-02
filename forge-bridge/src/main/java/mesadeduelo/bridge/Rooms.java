@@ -273,6 +273,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
                     host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg), bracket(msg), owner(msg));
                 }
+                case "lab-host" -> labHost(ch, name(msg), Lab.parse(msg.get("scenario")));
                 case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg), bracket(msg), owner(msg));
                 case "watch" -> watch(ch, code(msg), name(msg));
                 case "watch-player" -> watchPlayer(ch, msg);
@@ -471,15 +472,26 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deck.getName());
     }
 
+    /** Sala de teste do Laboratório: privada, fora do histórico, e começa quando o segundo lado entra. */
+    private synchronized void labHost(Channel ch, String name, Lab lab) {
+        leave(ch);
+        Session s = Session.lab(newCode(4), ch, name, lab);
+        byCode.put(s.code, s);
+        byChannel.put(ch, s);
+        s.sendRoom(s.seats[0]);
+        System.out.printf("Sala de teste %s criada por %s%n", s.code, name);
+    }
+
     private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover, int bracket, Owner owner) {
         Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
-        Deck deck = validated(payload, s.config.format(), "deck");
-        leave(ch);
         Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> each.deck == null).findFirst().orElseThrow();
+        // Na sala de teste, cada lado joga com as cartas do cenário: o deck de quem entra não importa.
+        Deck deck = s.isLab() ? s.labDeck(seat.index) : validated(payload, s.config.format(), "deck");
+        leave(ch);
         seat.bind(ch, name, deck);
-        seat.owner(owner);
+        seat.owner(s.isLab() ? null : owner);
         seat.cover = Session.coverOf(deck, cover);
         seat.bracket = s.config.commander() ? bracket : 0;
         byChannel.put(ch, s);
