@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.114.0] - 2026-11-02
+
+### Mudou
+
+- **Mágicas saem da pilha.** Ao resolver, uma mágica como o Lightning Bolt sai da pilha, no canto da mesa (o raio também parte dali), e a carta cai no cemitério em arco; a habilidade de uma permanente volta para a carta que a gerou. A mágica anulada racha na pilha e cai apagada no cemitério. O monte que recebe a carta pulsa quando ela chega.
+- **Mesa com mola.** Tudo o que se mexe na mesa (o campo e a mão abrindo espaço, a carta que muda de lugar ou de tamanho, virar e desvirar) agora assenta com uma mola leve, em vez de parar seco.
+- **Compra em arco.** A carta comprada sobe do grimório em arco, inclinada e com sombra, chega ao lugar dela no leque já no giro dele e vira de face para cima com um leve quique.
+
 ## [0.113.0] - 2026-11-02
 
 ### Mudou

@@ -130,6 +130,7 @@ function table() {
     return c;
   }
   let lastAdded: number | undefined;
+  let turnShown = false;
   /** Enche a sua mão até 6 cartas, com terrenos e criaturas. */
   function deal() {
     const me = player(ME);
@@ -417,6 +418,34 @@ function table() {
     hand: c => {
       const me = player(ME);
       if (c.kind === 'deal') { deal(); return 'Mão cheia de novo.'; }
+      if (c.kind === 'draw') {
+        // Como a ponte: um evento "draw" por carta, só com quem comprou; a carta nova aparece na mão.
+        const [name, extra] = HAND_POOL[nextId % HAND_POOL.length];
+        me.hand.push({ id: nextId++, controller: ME, ...card(name, extra) }); me.handCount = me.hand.length; me.library--;
+        // A mesa só mostra o voo da compra depois que a partida começou (o primeiro turno passou pela mesa).
+        if (!turnShown) { turnShown = true; emit('turn', { actor: ME, turn: state.turn }); }
+        emit('draw', { actor: ME });
+        return 'Compra: sobe do grimório em arco e vira de face para cima no leque.';
+      }
+      if (c.kind === 'bolt') {
+        // Lightning Bolt da mão: entra no leque, vai à pilha, causa 3 ao oponente e cai no cemitério.
+        const spell = { ...bolt(), id: nextId++ };
+        me.hand.push(spell); me.handCount = me.hand.length;
+        setTimeout(() => {
+          me.hand = me.hand.filter((x: any) => x !== spell); me.handCount = me.hand.length;
+          const stackId = nextId++;
+          state.stack = [{ id: stackId, text: spell.text, source: structuredClone(spell), controller: ME }];
+          emit('spell-cast', { card: structuredClone(spell), sourceId: spell.id, actor: ME, from: 'Hand', to: 'Stack', stackId, targets: { players: [OPP], cards: [] } });
+          flush();
+          setTimeout(() => {
+            damage(spell, { player: OPP }, 3); settle();
+            state.stack = []; me.graveyard.push(spell);
+            emit('resolved', { card: structuredClone(spell), sourceId: spell.id, actor: ME, stackId, from: 'Stack', to: 'Graveyard', targets: { players: [OPP], cards: [] } });
+            flush();
+          }, 1200);
+        }, 600);
+        return 'Lightning Bolt: da mão para a pilha; o raio sai da pilha e a carta cai no cemitério.';
+      }
       const picked = fromHand(c.kind === 'land');
       if (!picked) return c.kind === 'land' ? 'Não há terreno na mão: use "Encher a mão".' : 'Não há criatura na mão: use "Encher a mão".';
       if (c.kind === 'land') {
@@ -430,13 +459,19 @@ function table() {
       emit('spell-cast', { card: structuredClone(picked), sourceId: picked.id, actor: ME, from: 'Hand', to: 'Stack', stackId });
       setTimeout(() => {
         state.stack = [];
+        if (c.kind === 'countered') {
+          me.graveyard.push(picked);
+          emit('countered', { card: structuredClone(picked), sourceId: picked.id, actor: ME, stackId, from: 'Stack', to: 'Graveyard' });
+          flush();
+          return;
+        }
         const arrived = { ...picked, sick: true };
         me.battlefield.push(arrived); lastAdded = arrived.id;
         emit('entered', { card: structuredClone(arrived), sourceId: arrived.id, actor: ME, from: 'Stack', to: 'Battlefield' });
         emit('resolved', { card: structuredClone(arrived), sourceId: arrived.id, actor: ME, stackId, from: 'Stack', to: 'Battlefield' });
         flush();
       }, 1200);
-      return `${picked.name}: sai do leque para a pilha e, ao resolver, pousa no campo.`;
+      return c.kind === 'countered' ? `${picked.name}: sai do leque para a pilha, é anulada, racha e cai no cemitério.` : `${picked.name}: sai do leque para a pilha e, ao resolver, pousa no campo.`;
     },
     style: c => {
       try { localStorage.setItem('mesa:cards', c.value); } catch { /* opcional */ }
@@ -524,7 +559,7 @@ function panel() {
     <h2>Planeswalker (item 80, do lado escolhido em Campo)</h2>
     ${[['enter', 'Entrar (Jace)'], ['enter-gold', 'Entrar (multicolor)'], ['plus', '+2'], ['zero', '0'], ['minus', '−1'], ['ult', 'Ultimate (−10)']].map(([k, t]) => `<button data-walker="${k}">${t}</button>`).join('')}
     <h2>Jogar da mão</h2>
-    ${[['land', 'Jogar terreno'], ['creature', 'Conjurar criatura'], ['deal', 'Encher a mão']].map(([k, t]) => `<button data-hand="${k}">${t}</button>`).join('')}
+    ${[['land', 'Jogar terreno'], ['creature', 'Conjurar criatura'], ['countered', 'Conjurar e anular'], ['bolt', 'Lightning Bolt da mão'], ['draw', 'Comprar'], ['deal', 'Encher a mão']].map(([k, t]) => `<button data-hand="${k}">${t}</button>`).join('')}
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
