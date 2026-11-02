@@ -105,6 +105,8 @@
 .format-picker .fit-fix .ghost-btn { min-height: 40px; }
 .deck-collection { min-width: 0; grid-column: 1; grid-row: 1; }
 .deck-shelf { margin: 0 0 28px; }
+.cards-error { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; background: #3a1d1680; border: 1px solid #ffbdac40; color: #ffbdac; font-size: 14px; }
+.cards-error[hidden] { display: none; }
 .shelf-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 16px; min-height: 44px; }
 .shelf-heading h2 { margin: 0; font: 600 22px var(--display); }
 .shelf-heading h2 span { font: 400 15px var(--body); color: var(--muted); margin-left: 7px; }

@@ -80,17 +80,17 @@ test('activated abilities of a permanent ask which ability, not how to play', ()
   assert.deepEqual(screens.playChoices(q).map(c => c.name), ['Habilidade 1', 'Habilidade 2']);
 });
 
-test('the top bar shows format, room, series and who dropped', () => {
+test('the top bar keeps only the series score and who dropped; format and room go to the menu', () => {
   const s = { config: { format: 'pauper', matchLength: 'bo3' }, match: { gameNumber: 2, wins: [1, 0] },
     room: { code: 'K7QM', seat: 0, players: [{ name: 'Ana', connected: true, seat: 0 }, { name: 'Bia', connected: false, seat: 1 }] } };
-  assert.deepEqual(bar.matchChips(s).map(c => c.text), ['Pauper', 'Sala K7QM', 'Jogo 2 · 1 × 0', 'Bia desconectado']);
-  assert.deepEqual(bar.matchChips({ config: { format: 'free', matchLength: 'bo1' } }).map(c => c.kind), ['format']);
-  assert.match(bar.matchBarHTML(s), /<li class="match-chip room"/);
-  // Quem assiste: a contagem na barra, com os nomes no título; e o aviso de quem só assiste.
-  const watched = { ...s, room: { ...s.room, spectators: ['Eva', 'Caio'] } };
-  const audience = bar.matchChips(watched).find(c => c.kind === 'audience');
-  assert.equal(audience.text, '2 assistindo');
-  assert.equal(audience.label, 'Assistindo: Eva, Caio');
+  assert.deepEqual(bar.matchChips(s).map(c => c.text), ['Jogo 2 · 1 × 0', 'Bia desconectado']);
+  assert.equal(bar.matchFormatName(s), 'Pauper');
+  // Partida única: sem placar, e a barra fica vazia.
+  assert.deepEqual(bar.matchChips({ config: { format: 'free', matchLength: 'bo1' }, match: { gameNumber: 1, wins: [0, 0] } }), []);
+  assert.equal(bar.seriesText({ config: { matchLength: 'bo1' }, match: { gameNumber: 1, wins: [0, 0] } }), '');
+  assert.match(bar.matchBarHTML(s), /<li class="match-chip series"/);
+  // Quem assiste fica no menu; quem só assiste continua vendo o aviso na barra.
+  assert.equal(bar.matchChips({ ...s, room: { ...s.room, spectators: ['Eva', 'Caio'] } }).some(c => c.kind === 'audience'), false);
   assert.equal(bar.matchChips({ ...s, spectating: true, watching: true }).find(c => c.kind === 'spectating').label, 'Você está assistindo, sem jogar');
 });
 

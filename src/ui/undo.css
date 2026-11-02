@@ -6,6 +6,6 @@
 .forge .undo-btn:disabled { opacity: .55; cursor: default; }
 .skip-row.undo { border-color: #8fd3a888; background: #0f1d17f2; }
 @media (max-height: 500px), (max-width: 760px) {
-  .forge .undo-btn { min-width: 40px; padding-inline: 10px; justify-content: center; }
+  .forge .undo-btn { min-width: 44px; min-height: 44px; padding-inline: 10px; justify-content: center; }
   .forge .undo-btn .undo-label { display: none; }
 }

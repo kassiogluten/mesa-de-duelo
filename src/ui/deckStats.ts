@@ -45,6 +45,11 @@ function coverRow(deck: DeckData): DeckRow | undefined {
   const rows = deckRows(deck.cards).filter(r => r.info?.artCrop).sort((a, b) => (b.cmc ?? 0) - (a.cmc ?? 0));
   return rows.find(r => r.info?.type === 'creature') ?? rows.find(r => r.info?.type !== 'land');
 }
+/** Algum deck sem os dados de uma carta (sem rede, Scryfall fora): a capa e as cores podem faltar. */
+export function missingCardData(decks: DeckData[]): boolean {
+  return decks.some(d => [...(d.commanders ?? []), ...d.cards].some(e => !cacheGet(e.name)));
+}
+export const CARD_DATA_ERROR = 'Alguns dados das cartas não foram carregados, então alguns decks podem aparecer sem arte e sem cores. Os decks continuam disponíveis.';
 export function deckArt(deck: DeckData): string | undefined { return coverRow(deck)?.info?.artCrop; }
 /** Nome da carta da capa, para os outros verem a mesma arte no lobby da sala. */
 export function deckCover(deck: DeckData): string | undefined { return coverRow(deck)?.name; }

@@ -34,7 +34,7 @@ import './proliferate.css';
 import type { DeckEntry } from '../decks';
 import { passIsPrimary, passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
 import { STACK_KINDS, stackBadgeText, stackCastLine, stackCastTag, stackOwnerLine, stackPresentation } from './stackPresentation';
-import { matchBarHTML } from './matchBar';
+import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import { UNDO_ICON, undoBarHTML, undoButtonState } from './undo';
 import './undo.css';
@@ -81,6 +81,8 @@ import { seatTurnChange, turnHighlight } from './turnHighlight';
 import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
 import './waitAlert.css';
 import './duelPiles.css';
+import { isShortcutsKey, MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
+import { gameSummaryHTML } from './lifeChart';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -176,7 +178,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     </div>
     <div class="skip-bar" id="fSkipBar" aria-live="polite" hidden></div>
     <nav class="menu game-menu" id="fMenu" aria-label="Menu da partida" hidden>
-      <div class="game-menu-meta"><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
+      <div class="game-menu-meta"><span class="format-tag" id="fFormatTag" hidden></span><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
       <p class="game-menu-audience" id="fAudience" hidden></p>
       <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">Registro</button>
       <button class="btn" data-ui="errors" aria-expanded="false" aria-controls="fErrorsDrawer">Erros da partida<span class="menu-count" id="fErrorsCount" hidden></span></button>
@@ -198,7 +200,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         </details>
         <details class="game-option-group" data-options-group="play">
           <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Jogo</span><span class="game-option-group-value" id="fPlaySummary"></span></summary>
-          <div class="game-option-pace game-option-auto-pass"><label for="fPassLevel">Passar automaticamente</label><select id="fPassLevel" aria-describedby="fPassLevelHint fPassLevelAlways fPassLevelStatus" disabled>${PASS_LEVELS.map(level => `<option value="${level.id}">${level.name}</option>`).join('')}</select><p id="fPassLevelHint">${passLevelInfo('acoes').hint}</p><p id="fPassLevelAlways">${PASS_LEVEL_ALWAYS} Para trocar durante a partida, toque no selo junto dos botões.</p><p id="fPassLevelStatus" role="status">Aguardando conexão com o servidor.</p></div>
+          <div class="game-option-pace game-option-auto-pass"><label for="fPassLevel">Passar automaticamente</label><select id="fPassLevel" aria-describedby="fPassLevelHint fPassLevelAlways fPassLevelStatus" disabled>${PASS_LEVELS.map(level => `<option value="${level.id}">${level.name}</option>`).join('')}</select><p id="fPassLevelHint">${passLevelInfo('acoes').hint}</p><p id="fPassLevelAlways">${PASS_LEVEL_ALWAYS} Para trocar durante a partida, toque no nível embaixo dos botões.</p><p id="fPassLevelStatus" role="status">Aguardando conexão com o servidor.</p></div>
           <div class="game-option-auto-pass"><div class="game-option-row"><span id="fTurnNoticeLabel">Notificar quando for seu turno</span><button class="sound-switch" id="fTurnNotice" data-ui="turn-notice" role="switch" aria-checked="false" aria-labelledby="fTurnNoticeLabel" aria-describedby="fTurnNoticeHint fTurnNoticeStatus"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fTurnNoticeState" aria-hidden="true">Desligado</span></button></div><p id="fTurnNoticeHint">Com a mesa em outra aba ou minimizada, o título da aba pisca quando o seu turno começa. Ligado, aparece também um aviso do sistema.</p><p id="fTurnNoticeStatus" role="status" hidden></p></div>
           ${screenWake.supported ? `<div class="game-option-auto-pass"><div class="game-option-row"><span id="fAwakeLabel">Manter a tela acesa</span><button class="sound-switch" id="fAwake" data-ui="awake" role="switch" aria-checked="true" aria-labelledby="fAwakeLabel" aria-describedby="fAwakeHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fAwakeState" aria-hidden="true">Ligado</span></button></div><p id="fAwakeHint">Durante a partida, a tela do aparelho não apaga sozinha enquanto os outros jogam.</p></div>` : ''}
           ${turnBuzz.supported ? `<div class="game-option-auto-pass"><div class="game-option-row"><span id="fBuzzLabel">Vibrar na sua vez</span><button class="sound-switch" id="fBuzz" data-ui="buzz" role="switch" aria-checked="true" aria-labelledby="fBuzzLabel" aria-describedby="fBuzzHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fBuzzState" aria-hidden="true">Ligado</span></button></div><p id="fBuzzHint">O celular vibra quando o seu turno começa, quando você precisa bloquear e quando chega uma decisão sua no turno de outro jogador.</p></div>` : ''}
@@ -210,7 +212,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
           <div class="game-option-auto-pass"><div class="game-option-row"><span id="fPlaymatLabel">Tapete com a arte do deck</span><button class="sound-switch" id="fPlaymat" data-ui="playmat" role="switch" aria-checked="true" aria-labelledby="fPlaymatLabel" aria-describedby="fPlaymatHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fPlaymatState" aria-hidden="true">Ligado</span></button></div><p id="fPlaymatHint">Atrás do campo de cada jogador, a arte de capa do deck dele, escura e desfocada.</p></div>
           <div class="game-option-pace"${temasDisponiveis() ? '' : ' hidden'}><label for="fTema">Tema da mesa</label><select id="fTema" aria-describedby="fTemaHint">${temaOptionsHTML()}</select><p id="fTemaHint">Muda a cor do fundo da mesa. Vale também na tela inicial e acompanha a sua conta.</p></div>
         </details>
-        <footer><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
+        <footer><button type="button" class="game-options-shortcuts" data-ui="shortcuts" aria-haspopup="dialog" aria-keyshortcuts="Shift+?">Atalhos de teclado <kbd>?</kbd></button><button class="arena-btn secondary" data-ui="settings-close">Voltar à partida</button></footer>
       </section>
     </div>
     <aside class="log-drawer errors-drawer" id="fErrorsDrawer" hidden aria-labelledby="fErrorsTitle"><div class="stack-heading"><h2 id="fErrorsTitle">Erros da partida</h2><button class="icon-btn" data-ui="errors" aria-label="Fechar erros da partida">Fechar</button></div>
@@ -473,6 +475,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (previous?.html === html && previous.first === el.firstChild) return;
     el.innerHTML = html; renderedContent.set(el, { html, first: el.firstChild });
   };
+  /** O ícone da trilha com o nome à mostra (pela classe e pela fase, porque a trilha é redesenhada) e até quando. */
+  let trailTip: { key: string; until: number } | null = null, trailTipTimer = 0;
   const inspectIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6m-3-3v6"/></svg>';
   const selectedBadge = (s: FState, c: FCard) => selectedForInput(s, c.id) ? '<span class="choice-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span>' : '';
   const inspectButton = (c: FCard) => (!c.faceDown && c.name) || c.hiddenFace?.name || faceDownReminder(c) ?`<button class="inspect-card" data-inspect="${c.id}" aria-label="Inspecionar ${esc(label(c))}">${inspectIcon}</button>` : '';
@@ -503,6 +507,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.querySelectorAll<HTMLDetailsElement>('[data-options-group]').forEach(group => { group.open = openOptionGroups.includes(group.dataset.optionsGroup!); });
   // "toggle" não sobe pela árvore: a escuta é na captura.
   root.addEventListener('toggle', e => {
+    if ((e.target as HTMLElement).matches?.('[data-life-details]')) { lifeDetailsOpen = (e.target as HTMLDetailsElement).open; return; }
     if (!(e.target as HTMLElement).matches?.('[data-options-group]')) return;
     const open = [...root.querySelectorAll<HTMLDetailsElement>('[data-options-group]')].filter(group => group.open).map(group => group.dataset.optionsGroup!);
     try { localStorage.setItem('mesa:options-open', JSON.stringify(open)); } catch { /* Storage is optional. */ }
@@ -2057,6 +2062,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     }).join('') || '<li class="history-empty">As jogadas aparecerão aqui.</li>');
   }
 
+  /** Entre os jogos, o resumo do jogo que acabou fica recolhido; aberto ou fechado, continua assim ao redesenhar. */
+  let lifeDetailsOpen = false;
+  function lifeDetails(s: FState) {
+    const summary = gameSummaryHTML(s, name => ptOf(name)?.name || name);
+    return summary ? `<details class="life-details" data-life-details${lifeDetailsOpen ? ' open' : ''}><summary>Ver gráfico de vida</summary>${summary}</details>` : '';
+  }
   function sideboardingHTML(s: FState) {
     const sb = s.sideboarding!;
     if (!sideboardDraft || sideboardDraft.id !== sb.id) {
@@ -2073,6 +2084,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       <p>Jogo ${s.match?.gameNumber ?? 1} encerrado${score ? ` · Placar: ${score}` : ''}. Troque cartas entre o deck principal e o sideboard.</p>
       <p>Você só pode usar as cartas que já trouxe para a partida. As trocas precisam manter a lista válida para o formato.</p>
       ${sideboardError ? `<p class="sideboard-error" role="alert">${esc(sideboardError)}</p>` : ''}
+      ${lifeDetails(s)}
       <div class="sideboard-columns"><section><h3>Deck principal · ${count(draft.main)}</h3>${list(draft.main, true)}</section><section><h3>Sideboard · ${count(draft.sideboard)}</h3>${list(draft.sideboard, false)}</section></div>
       <div class="sideboard-actions"><button class="arena-btn secondary" data-ui="exit">Sair da partida</button><button class="arena-btn secondary" data-ui="next-game" ${locked ? 'disabled' : ''}>Continuar sem trocas</button><button class="arena-btn primary" data-ui="sideboard-ready" ${locked ? 'disabled' : ''}>${sb.ready ? 'Aguardando o oponente…' : sideboardBusy ? 'Verificando…' : 'Confirmar e continuar'}</button></div>
     </div>`;
@@ -2513,6 +2525,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stopsEditable(), open: stopMenu }));
+    syncTrailTip();
     if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) root.querySelector('.phase-daynight')?.classList.add('bump');
     lastDayTime = visual.dayTime;
     placeStopMenu();
@@ -2649,6 +2662,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
     countLife();
 
+    const formatName = matchFormatName(s);
+    $('#fFormatTag').textContent = formatName; $('#fFormatTag').hidden = !formatName;
     $('#fRoomTag').textContent = s.room ? `Sala ${s.room.code}` : '';
     $('#fRoomTag').hidden = !s.room;
     const audience = s.room?.spectators ?? [];
@@ -2657,9 +2672,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     $('#fMenuExit').textContent = s.watching ? 'Parar de assistir' : 'Desistir e voltar ao início';
     // Em rede não dá para recomeçar no meio: a revanche só existe no fim da partida, com os dois de acordo.
     $('#fMenuRematch').hidden = !!s.room || (s.config?.matchLength === 'bo3' && !s.match?.over);
-    $('#fSeries').hidden = !s.match;
-    $('#fSeries').textContent = s.match ? `Jogo ${s.match.gameNumber} · ${s.match.wins.join(' × ')}` : '';
-    // Na barra do topo ficam formato, sala, placar e quem caiu; no Commander com vários jogadores a faixa é dos assentos e isso fica no menu.
+    // O placar só existe na melhor de três; numa partida única, "Jogo 1 · 0 × 0" não diz nada.
+    const series = seriesText(s);
+    $('#fSeries').hidden = !series; $('#fSeries').textContent = series;
+    // Na barra do topo ficam o placar e quem caiu; formato e sala ficam no menu. No Commander com vários jogadores a
+    // faixa é dos assentos e o placar também fica só no menu.
     setHTML($('#fMatchBar'), multiplayer ? '' : matchBarHTML(s));
     const undoButton = undoButtonState(s), undoEl = $('#fUndo') as HTMLButtonElement;
     undoEl.hidden = undoButton.hidden; undoEl.disabled = undoButton.disabled;
@@ -2667,8 +2684,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const skipBar = skipBarHTML(s) + undoBarHTML(s);
     setHTML($('#fSkipBar'), skipBar);
     $('#fSkipBar').hidden = !skipBar;
-    $('#fMatchBar').hidden = multiplayer;
-    root.querySelector('.game-menu-meta')!.classList.toggle('in-bar', !multiplayer);
+    $('#fMatchBar').hidden = multiplayer || !$('#fMatchBar').hasChildNodes();
 
     if (!s.gameOver) observing = false;
     const ov = $('#fOverlay');
@@ -2679,8 +2695,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ov.hidden = true; ov.dataset.html = '';
     } else if (s.gameOver && !disconnected) {
       const result = gameResult(s);
-      const html = `<div role="dialog" aria-modal="true" aria-label="Resultado da partida" class="result ${result.tone}${ov.hidden ? '' : ' still'}">
+      const summary = gameSummaryHTML(s, name => ptOf(name)?.name || name);
+      const html = `<div role="dialog" aria-modal="true" aria-label="Resultado da partida" class="result ${result.tone}${summary ? ' has-summary' : ''}${ov.hidden ? '' : ' still'}">
         <h2>${result.title}</h2><p>${result.detail}</p>
+        ${summary}
         ${rematchNote(s)}
         <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="observe">${ICON_EYE}Ver campo de batalha</button><button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button></div>
       </div>`;
@@ -2868,9 +2886,42 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   // ---------- Eventos ----------
+  /** O ícone da trilha mais perto de um toque no espaço entre eles (a trilha tem 44 px de altura no toque). */
+  function nearestTrailItem(x: number): HTMLElement | null {
+    let best: HTMLElement | null = null, dist = Infinity;
+    for (const el of root.querySelectorAll<HTMLElement>('#fPhases [data-tip]')) {
+      const r = el.getBoundingClientRect(), d = Math.abs(x - (r.left + r.width / 2));
+      if (r.width && d < dist) { best = el; dist = d; }
+    }
+    return best;
+  }
+  const trailTipKey = (el: HTMLElement) => `${el.classList[0]}:${el.dataset.phase ?? ''}`;
+  function syncTrailTip() {
+    if (trailTip && trailTip.until < performance.now()) trailTip = null;
+    for (const el of root.querySelectorAll<HTMLElement>('#fPhases [data-tip]')) el.classList.toggle('tip-open', trailTip?.key === trailTipKey(el));
+  }
+  function showTrailTip(el: HTMLElement) {
+    const key = trailTipKey(el);
+    trailTip = trailTip?.key === key ? null : { key, until: performance.now() + 3000 };
+    clearTimeout(trailTipTimer);
+    if (trailTip) trailTipTimer = window.setTimeout(syncTrailTip, 3050);
+    syncTrailTip();
+  }
   root.addEventListener('click', e => {
     const t = e.target as HTMLElement;
     const ui = t.closest<HTMLElement>('[data-ui]')?.dataset.ui;
+    // Na trilha de fases, tocar num ícone sem ação (turno, relógios, dia e noite, fases) mostra o nome dele por um
+    // instante: no toque não existe o passar do mouse.
+    // Gráfico de vida no fim do jogo: no toque, a coluna tocada mostra a vida de todos naquele turno.
+    const lifeCol = t.closest<SVGGElement>('.lc-col');
+    if (lifeCol) { for (const col of root.querySelectorAll('.lc-col.on')) if (col !== lifeCol) col.classList.remove('on'); lifeCol.classList.toggle('on'); return; }
+    let tipped = t.closest<HTMLElement>('#fPhases [data-tip]');
+    if (!tipped && !t.closest('button') && t.closest('#fPhases')) tipped = nearestTrailItem(e.clientX);
+    if (tipped && !t.closest('button')) {
+      const button = tipped.querySelector<HTMLButtonElement>('button');
+      if (button) button.click(); else showTrailTip(tipped);
+      return;
+    }
     // Paradas no turno do oponente: o ícone da trilha abre o menu do grupo; fora dele, o menu fecha.
     const stopGroup = t.closest<HTMLElement>('[data-stop-group]')?.dataset.stopGroup;
     if (stopGroup) { setStopMenu(stopMenu === stopGroup ? null : stopGroup, e.detail === 0); return; }
@@ -2954,6 +3005,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (ui === 'settings') { syncTurnNotice(); syncPlaymat(); syncDevice(); setSettings(true); return; }
     if (ui === 'awake') { screenWake.setEnabled(!screenWake.enabled); syncDevice(); return; }
     if (ui === 'buzz') { turnBuzz.setEnabled(!turnBuzz.enabled); syncDevice(); return; }
+    if (ui === 'shortcuts') { openShortcuts(MATCH_SHORTCUTS); return; }
     if (ui === 'settings-close' || t.id === 'fSettings') { setSettings(false); return; }
     if (ui === 'playmat') {
       playmat = !playmat;
@@ -3443,6 +3495,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       render(); focusTrigger(option); announceTrigger(q, option);
     };
     root.addEventListener('pointermove', move); root.addEventListener('pointerup', up); root.addEventListener('pointercancel', stop);
+  });
+  // "?" abre a lista de atalhos, como no Gmail e no GitHub.
+  document.addEventListener('keydown', e => {
+    if (!isShortcutsKey(e) || !root.isConnected || root.closest('[hidden]')) return;
+    e.preventDefault();
+    openShortcuts(MATCH_SHORTCUTS);
   });
   // Espaço aperta o botão de passar da caixa de ação (passar, resolver, confirmar), como no Arena.
   // Fica de fora quando o foco está num controle (o Espaço já é dele) ou quando uma janela está aberta.

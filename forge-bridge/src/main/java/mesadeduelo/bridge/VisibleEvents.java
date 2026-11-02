@@ -33,6 +33,8 @@ final class VisibleEvents {
     private int turnOwner = -1;
     private long turnSince;
     private final Map<Integer, Long> lastTurnMs = new HashMap<>();
+    /** Vida de cada jogador no fim de cada turno ({@code turn} 0 é a vida inicial), para o gráfico do fim do jogo. */
+    private final java.util.List<JsonObject> lifePoints = new java.util.ArrayList<>();
 
     VisibleEvents(Runnable changed, LongSupplier version) { this.changed = changed; this.version = version; }
 
@@ -47,13 +49,52 @@ final class VisibleEvents {
     }
 
     synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
-    private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); }
+    private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
 
-    /** Começo de turno: fecha o turno anterior na conta de quem o jogou. */
-    private void turnBegan(int owner) {
+    /** Começo de turno: fecha o turno anterior na conta de quem o jogou e anota a vida de todos no fim dele. */
+    private void turnBegan(int owner, int turn) {
         long now = System.currentTimeMillis();
         if (turnOwner >= 0 && turnSince > 0) lastTurnMs.put(turnOwner, now - turnSince);
         turnOwner = owner; turnSince = now;
+        if (game != null) {
+            JsonObject life = new JsonObject();
+            for (forge.game.player.Player p : game.getRegisteredPlayers()) life.addProperty(String.valueOf(p.getId()), p.getLife());
+            addLifePoint(lifePoints, turn - 1, life);
+        }
+    }
+
+    /**
+     * Anota a vida no fim de um turno. Desfazer pode voltar a um turno já anotado: o que veio depois dele sai, e o
+     * turno é anotado de novo.
+     */
+    static void addLifePoint(java.util.List<JsonObject> points, int turn, JsonObject life) {
+        points.removeIf(p -> p.get("turn").getAsInt() >= turn);
+        JsonObject point = new JsonObject();
+        point.addProperty("turn", turn);
+        point.add("life", life);
+        points.add(point);
+    }
+
+    /**
+     * No fim do jogo (e entre os jogos de uma melhor de três), o estado leva {@code lifeHistory}: a vida de cada
+     * jogador no fim de cada turno, terminando com a vida de agora no turno em que o jogo acabou. Durante o jogo não
+     * vai nada, para o estado não crescer a cada turno.
+     */
+    synchronized void addLifeHistory(JsonObject state) {
+        boolean over = state.has("gameOver") && state.get("gameOver").getAsBoolean();
+        if (!over || !state.has("players") || lifePoints.isEmpty()) return;
+        java.util.List<JsonObject> points = new java.util.ArrayList<>();
+        for (JsonObject p : lifePoints) points.add(p.deepCopy());
+        JsonObject life = new JsonObject();
+        for (var e : state.getAsJsonArray("players")) {
+            JsonObject p = e.getAsJsonObject();
+            if (p.has("life")) life.addProperty(p.get("id").getAsString(), p.get("life").getAsInt());
+        }
+        int turn = state.has("turn") ? state.get("turn").getAsInt() : 0;
+        if (turn > 0) addLifePoint(points, turn, life);
+        JsonArray a = new JsonArray();
+        points.forEach(a::add);
+        state.add("lifeHistory", a);
     }
 
     /**
@@ -157,7 +198,7 @@ final class VisibleEvents {
             e = type("life-changed"); actor(e, x.player().getId()); e.addProperty("delta", x.newLives() - x.oldLives());
             damage.lifeChanged(x.player().getId());
         } else if (event instanceof GameEventTurnBegan x) {
-            turnBegan(x.turnOwner().getId());
+            turnBegan(x.turnOwner().getId(), x.turnNumber());
             e = type("turn"); actor(e, x.turnOwner().getId()); e.addProperty("turn", x.turnNumber());
         } else if (event instanceof GameEventPlayerPriority x && x.priority() != null) {
             e = type("priority"); actor(e, x.priority().getId());

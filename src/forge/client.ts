@@ -378,6 +378,8 @@ export interface FState {
   /** Quanto o turno atual já durou quando o estado saiu do servidor, em ms; ausente no fim do jogo e em pontes antigas. */
   turnElapsedMs?: number;
   gameOver: boolean;
+  /** Vida de cada jogador (pelo id) no fim de cada turno; `turn` 0 é a vida inicial. Só no fim do jogo. */
+  lifeHistory?: { turn: number; life: Record<string, number> }[];
   /** Sem decisões a tomar: eliminado no Commander ou, com watching, assistindo sem jogar. */
   spectating?: boolean;
   /** Assistindo à partida de uma sala sem ocupar assento; `you` é o jogador de cuja mesa se vê a partida. */

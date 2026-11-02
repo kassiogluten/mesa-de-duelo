@@ -9,6 +9,7 @@ import { esc } from './cardtext';
 import { colorFromCost, faceHTML } from './face';
 import { hideCardPreview, inspectCard, showCardPreview, type InspectorCard } from './cardInspector';
 import { toggleFullscreen } from './landscape';
+import { FREE_SHORTCUTS, isShortcutsKey, openShortcuts } from './shortcuts';
 import './freeTable.css';
 
 /** Jogo da mesa livre guardado no navegador, para voltar a ele depois de recarregar a página. */
@@ -336,6 +337,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
     if (cardEl && (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10'))) { e.preventDefault(); openMenu(cardEl, { id: Number(cardEl.dataset.id) }); }
   });
   document.addEventListener('keydown', e => {
+    if (s && !root.closest('[hidden]') && isShortcutsKey(e)) { e.preventDefault(); openShortcuts(FREE_SHORTCUTS); return; }
     if (!s || root.closest('[hidden]') || (e.target as HTMLElement).closest('input, textarea, select, dialog')) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); const prev = history.undo(); if (prev) { s = prev; menu = null; save(); render(); } return; }
     if (e.ctrlKey || e.metaKey || e.altKey || menu || viewing || tokenForm) return;

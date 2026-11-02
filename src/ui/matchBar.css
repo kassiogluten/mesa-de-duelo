@@ -1,4 +1,4 @@
-/* Barra do topo da partida: menu, tela cheia e a informação de relance (formato, sala, placar, quem caiu). */
+/* Barra do topo da partida: menu, tela cheia, desfazer e o que muda a partida (placar da melhor de três, quem caiu). */
 .forge .topbar { align-items: center; right: auto; max-width: calc(50% - 90px); }
 .forge .match-bar { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0 0 0 4px; padding: 0; list-style: none; overflow: hidden; }
 .forge .match-bar[hidden] { display: none; }
@@ -10,7 +10,6 @@
 .match-chip.audience { color: var(--azul-bcd7ff, #bcd7ff); }
 /* Nomes de quem assiste, no menu: no toque não há o balão do título da barra. */
 .forge .game-menu .game-menu-audience { margin: 0; padding: 2px 4px; color: var(--muted); font: 500 12px/1.4 var(--body); overflow-wrap: anywhere; }
-.game-menu-meta.in-bar { display: none; }
 
 /*
  * Faixa do topo no 1×1, em qualquer tela: só o menu, a tela cheia, o status e o retrato do oponente deitado
@@ -42,12 +41,17 @@
   .forge:not(.multiplayer):not(.commander-game) > .field { gap: 2px; }
   .forge:not(.multiplayer):not(.commander-game) > .field .row.creatures { min-height: calc(var(--ch) + 10px); padding: 6px 8px 4px; }
   .forge:not(.multiplayer):not(.commander-game) > .field .row.lands { min-height: calc(var(--lch) + 8px); padding: 4px 8px; }
-  .forge .game-menu-trigger { min-width: 40px; min-height: 40px; padding-inline: 10px; justify-content: center; }
+  /* Área de toque de 44 px nos três botões do topo. */
+  .forge .game-menu-trigger { min-width: 44px; min-height: 44px; padding-inline: 10px; justify-content: center; }
+  .forge .topbar .fs-btn { min-width: 44px; min-height: 44px; }
+  /* Os três botões ocupam até ~150 px: o retrato do oponente vai um pouco para a direita, e o ⤢ de focar nele vira um
+     selo no canto de baixo do retrato, em vez de ficar à esquerda, por cima do Desfazer. */
+  .forge:not(.multiplayer) .avatar-slot.opp { left: calc(50% + 16px); }
+  .forge:not(.multiplayer) .avatar-slot .duel-focus { right: auto; left: -10px; top: auto; bottom: -8px; transform: none; z-index: 2; min-width: 26px; min-height: 26px; padding: 2px; border-radius: 50%; background: var(--azul-0d1626, #0d1626); }
+  .forge:not(.multiplayer) .avatar-slot .duel-focus::after { content: ''; position: absolute; inset: -9px; }
   .forge .game-menu-trigger .menu-label { display: none; }
   .forge .topbar { max-width: calc(50% - 80px); }
   .match-chip { padding: 3px 8px; font-size: 11px; }
-  .match-chip.format { display: none; }
-  /* Commander 1×1 no celular usa o canto de cima para as pilhas do oponente: o status volta para o menu. */
+  /* Commander 1×1 no celular usa o canto de cima para as pilhas do oponente: o placar fica só no menu. */
   .forge.commander-game .match-bar { display: none; }
-  .forge.commander-game .game-menu-meta.in-bar { display: flex; }
 }

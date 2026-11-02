@@ -6,6 +6,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.105.0] - 2026-11-01
+
+### Novo
+
+- **Gráfico de vida no fim do jogo.** A tela de Vitória ou Derrota mostra a vida de cada jogador no fim de cada turno, uma linha por jogador, com você em dourado e a vida final na ponta de cada linha. Passe o mouse ou toque num turno para ver a vida de todos naquele momento. No Commander, logo abaixo vem o dano de comandante de cada um: quem recebeu quanto de qual comandante, do maior para o menor, com os 21 que eliminam em vermelho. Na melhor de três, a tela **Prepare o próximo jogo** traz o gráfico do jogo que acabou em **Ver gráfico de vida**. O servidor anota a vida a cada turno, então o gráfico sai completo mesmo depois de uma queda de conexão, de recarregar a página ou para quem só assiste.
+- **Lista de atalhos de teclado.** Na partida, aperte **?** para ver todos os atalhos (Espaço para passar, Esc para fechar, I para ver a carta de perto e os outros). A lista também abre em **Menu → Opções → Atalhos de teclado**. Na mesa livre, o **?** mostra os atalhos dela (C para comprar, D para desvirar tudo, Ctrl+Z para desfazer).
+
+### Mudou
+
+- **Topo da mesa mais limpo.** Durante a partida, o canto de cima fica só com **Menu**, tela cheia, **Desfazer** e o placar, que só aparece na melhor de três. O formato e o código da sala passaram para dentro do **Menu**, no alto, junto do placar. Quem caiu da sala continua avisado no topo. No celular, os três botões do topo ganharam área de toque maior.
+- **Nome do nível de passar automaticamente à vista.** O selo junto dos botões virou uma linha embaixo deles, com o ícone e o nome do nível (**Só com ações**, **Respostas**…), e mostra **Até o fim do turno** quando esse atalho está ligado. Tocar nele continua abrindo a troca rápida.
+- **Nome dos ícones de baixo ao tocar.** Na fileira do canto de baixo (turno, relógios, dia e noite, fases), tocar num ícone mostra o nome dele por alguns segundos, como já acontecia ao passar o mouse. No celular, a fileira ficou mais alta e com mais espaço entre as fases, e um toque entre dois ícones vale para o mais perto.
+
+### Corrigido
+
+- **Aviso quando os dados das cartas não carregam.** Sem internet ou com o site das cartas fora do ar, a tela Jogar e a lista de **Meus decks** mostravam decks sem arte e sem cores, sem dizer por quê. Agora aparece um aviso com **Tentar de novo**, que também passou a existir no editor de deck.
+- **Desfazer encostado no retrato do oponente no celular.** No 1x1 pelo celular, o botão **Desfazer** ficava por baixo do ⤢ de focar no oponente. O retrato do oponente foi um pouco para a direita, e o ⤢ virou um selo no canto do retrato.
+
 ## [0.104.0] - 2026-11-01
 
 ### Novo

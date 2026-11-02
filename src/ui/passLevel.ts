@@ -130,11 +130,11 @@ const ICONS: Record<PassLevel | 'turno', string> = {
   turno: svg('<path d="M4 5.5v13l8.5-6.5zm8.5 0v13L21 12zM20 5h2v14h-2z" fill="currentColor"/>'),
 };
 
-/** O selo junto dos botões: mostra o nível (ou o atalho ligado) e abre a troca rápida. */
+/** O selo embaixo dos botões: o ícone e o nome do nível (ou do atalho ligado); abre a troca rápida. */
 export function passLevelBadgeHTML(level: PassLevel, opts: { passingTurn: boolean; open: boolean; busy: boolean }): string {
   const name = passLevelInfo(level).name;
   const label = opts.passingTurn ? `Passando até o fim do turno. Nível: ${name}. Trocar ou parar` : `Passar automaticamente: ${name}. Trocar nível`;
-  return `<button type="button" class="pass-level${opts.passingTurn ? ' passing' : ''}" data-ui="pass-level" data-level="${level}" aria-haspopup="dialog" aria-expanded="${opts.open}" aria-controls="fPassMenu" aria-label="${esc(label)}" title="${esc(opts.passingTurn ? 'Passando até o fim do turno' : `Passar automaticamente: ${name}`)}"${opts.busy ? ' aria-busy="true"' : ''}>${ICONS[opts.passingTurn ? 'turno' : level]}</button>`;
+  return `<button type="button" class="pass-level${opts.passingTurn ? ' passing' : ''}" data-ui="pass-level" data-level="${level}" aria-haspopup="dialog" aria-expanded="${opts.open}" aria-controls="fPassMenu" aria-label="${esc(label)}" title="${esc(opts.passingTurn ? 'Passando até o fim do turno' : `Passar automaticamente: ${name}`)}"${opts.busy ? ' aria-busy="true"' : ''}>${ICONS[opts.passingTurn ? 'turno' : level]}<span class="pass-level-name" aria-hidden="true">${esc(opts.passingTurn ? 'Até o fim do turno' : name)}</span></button>`;
 }
 
 /**

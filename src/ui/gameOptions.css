@@ -10,7 +10,9 @@
 /* Versão da mesa no fim do menu: discreta, para prints e relatos. Ao tocar, mostra regras e motor da ponte. */
 .forge .game-menu .game-menu-version { align-self: center; margin-top: 2px; padding: 6px 12px; border: 0; border-radius: 6px; background: none; color: var(--muted); font: 500 11px var(--body); letter-spacing: .02em; cursor: pointer; font-variant-numeric: tabular-nums; }
 .forge .game-menu .game-menu-version:hover { color: var(--ink); }
-.game-menu-meta .room-tag, .game-menu-meta .series-score { padding: 0; background: none; border: 0; }
+.game-menu-meta .format-tag, .game-menu-meta .room-tag, .game-menu-meta .series-score { padding: 0; background: none; border: 0; }
+/* Formato · Sala · Placar, separados por um ponto. */
+.game-menu-meta > :not([hidden]) ~ :not([hidden])::before { content: '·'; margin-right: 6px; color: var(--muted); }
 
 .forge .game-options-overlay { z-index: 45; padding: 20px; background: color-mix(in srgb, var(--azul-060b12, #060b12) 72.2%, transparent); animation: none; place-items: start center; }
 /* Preso no alto: abrir ou recolher uma seção não faz o painel pular sob o dedo. */
@@ -56,7 +58,12 @@
 .game-option-group .game-option-volume, .game-option-group .game-option-auto-pass { margin-top: 18px; padding-bottom: 0; border-bottom: 0; }
 .game-option-group .game-option-pace { margin-top: 18px; }
 .game-option-group > :nth-child(2).game-option-auto-pass, .game-option-group > :nth-child(2).game-option-pace { margin-top: 4px; }
-.game-options footer { display: flex; justify-content: flex-end; margin-top: 28px; }
+.game-options footer { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 28px; }
+.game-options .game-options-shortcuts { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-right: auto; padding: 6px 4px; border: 0; background: none; color: var(--gold-light); font: 500 14px var(--body); cursor: pointer; }
+.game-options .game-options-shortcuts:hover { text-decoration: underline; }
+.game-options .game-options-shortcuts kbd { padding: 1px 7px; border: 1px solid #ffffff38; border-bottom-width: 2px; border-radius: 6px; background: #ffffff0f; color: var(--ink); font: 600 12px/1.4 var(--body); }
+/* Sem teclado à vista (celular, tablet), a lista de atalhos não ajuda. */
+@media (hover: none) and (pointer: coarse) { .game-options .game-options-shortcuts { display: none; } }
 .game-options footer .arena-btn { min-height: 44px; padding: 10px 18px; border-radius: 10px; font: 500 14px var(--body); }
 .game-options :focus-visible, .forge .game-menu :focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
 .game-options :focus-visible, .game-options :focus-visible *, .forge .game-menu :focus-visible { transition: none; }

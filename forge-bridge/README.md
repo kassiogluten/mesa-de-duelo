@@ -76,6 +76,8 @@ Turnos e combates extras: `extraTurn: true` quando o turno atual é extra; `extr
 
 Relógio dos turnos, medido pela ponte: `turnElapsedMs` diz quanto o turno atual já durou quando o estado saiu (some no fim do jogo) e cada jogador traz `lastTurnMs`, a duração do turno mais recente que ele terminou, depois do primeiro. Num jogo novo da série, os dois recomeçam.
 
+Gráfico de vida do fim do jogo: com `gameOver`, o estado traz `lifeHistory`, a vida de cada jogador no fim de cada turno, como `[{ "turn": 0, "life": { "10": 20, "23": 20 } }, …]` (o turno 0 é a vida inicial; a chave é o id do jogador, e o último ponto é a vida de agora no turno em que o jogo acabou). Durante o jogo o campo não vai. Desfazer até um turno anterior reescreve os pontos dali em diante, e um jogo novo da série recomeça a lista; entre os jogos, ela continua sendo a do jogo que acabou.
+
 Espera de cada decisão, para o alerta de espera demorada: `waiting` lista os jogadores humanos que a mesa espera agora, inclusive quem recebe o estado e a prioridade comum, como `{ "player": 1, "kind": "priority", "ms": 125000 }` (`kind`: `priority`, `choice`, `attack` ou `block`; `ms`: quanto a espera atual já durou quando o estado saiu). Cada pedido novo do Forge recomeça a contagem, então ela zera a cada resposta e quando o turno passa. A IA nunca aparece.
 
 Dia e noite: `dayTime` (`"day"` ou `"night"`) depois que a partida vira um dos dois, com `activeSpells`, as mágicas que o jogador do turno já conjurou nele (o que decide a troca no turno seguinte). Sem dia nem noite, os dois campos não vêm.

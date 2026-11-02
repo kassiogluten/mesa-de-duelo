@@ -1,4 +1,31 @@
 {
+  "0.105.0": {
+    "Gráfico de vida no fim do jogo": [
+      { "img": "0.105.0/grafico-vida.webp", "legenda": "Na tela de Vitória, uma linha por jogador com a vida no fim de cada turno; tocando no turno 5, a caixa mostra a vida de todos naquele momento." },
+      { "img": "0.105.0/dano-comandante.webp", "legenda": "No Commander, o dano de comandante de cada jogador, do maior para o menor, com o nome do comandante e de quem é." },
+      { "img": "0.105.0/grafico-entre-jogos.webp", "legenda": "Entre os jogos de uma melhor de três, o gráfico do jogo que acabou aparece em **Ver gráfico de vida**, acima das trocas de sideboard." }
+    ],
+    "Lista de atalhos de teclado": [
+      { "img": "0.105.0/atalhos.webp", "legenda": "A lista que abre ao apertar **?** na partida, com cada tecla e o que ela faz." },
+      { "img": "0.105.0/link-atalhos.webp", "legenda": "O link **Atalhos de teclado** no pé de **Menu → Opções**." }
+    ],
+    "Topo da mesa mais limpo": [
+      { "img": "0.105.0/topo-limpo.webp", "legenda": "O topo da partida só com Menu, tela cheia, Desfazer e o placar da melhor de três." },
+      { "img": "0.105.0/menu-formato-sala.webp", "legenda": "O formato, a sala e o placar no alto do Menu." }
+    ],
+    "Nome do nível de passar automaticamente à vista": [
+      { "img": "0.105.0/selo-passar.webp", "legenda": "O nível de passar automaticamente numa linha embaixo dos botões, com o ícone e o nome." }
+    ],
+    "Nome dos ícones de baixo ao tocar": [
+      { "img": "0.105.0/trilha-rotulo.webp", "legenda": "Tocando no número do turno, aparece \"Turno 3 · Seu turno\"." }
+    ],
+    "Aviso quando os dados das cartas não carregam": [
+      { "img": "0.105.0/aviso-cartas.webp", "legenda": "Na tela Jogar, o aviso de que alguns dados das cartas não foram carregados, com **Tentar de novo**." }
+    ],
+    "Desfazer encostado no retrato do oponente no celular": [
+      { "img": "0.105.0/topo-celular.webp", "legenda": "No celular, os botões do topo lado a lado, o retrato do oponente logo depois deles e o ⤢ no canto do retrato." }
+    ]
+  },
   "0.104.0": {
     "6 novos decks prontos de Commander das séries mais recentes": [
       { "img": "0.104.0/decks-series-recentes.webp", "legenda": "Os seis decks novos na escolha de deck, com o comandante, as cores, o preço e o bracket de cada um: Doutor Destino e Garota Esquilo, de Marvel; Thranduil e Thorin, de O Hobbit; Jace e Tam, de Reality Fracture." }

@@ -1550,7 +1550,7 @@ final class Session {
         JsonObject state;
         try {
             state = StateJson.game(gv, -2, m.getGame());
-            events.addTurnTimes(state);
+            events.addTurnTimes(state); events.addLifeHistory(state);
             addBrackets(state);
             // O jogador escolhido; sem escolha (ou se ele não está mais no jogo), o anfitrião.
             int you = -1, host = seats[0].me == null ? -1 : seats[0].me.getId();
@@ -1706,7 +1706,7 @@ final class Session {
             } else {
                 PlayerView p = seat.me;
                 state = StateJson.game(gv, p == null ? -2 : p.getId(), m.getGame());
-                events.addTurnTimes(state);
+                events.addTurnTimes(state); events.addLifeHistory(state);
                 addBrackets(state);
                 state.addProperty("you", p == null ? -1 : p.getId());
                 boolean spectating = seat.eliminated();

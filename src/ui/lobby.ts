@@ -6,7 +6,7 @@ import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
 import { joinableRooms, publicRoomsHTML, watchableRooms, type PublicRoomsState } from './publicRooms';
 import { confirmLeaveRoom, mountRoomLobby } from './roomLobby';
-import { bracketBadgeHTML, deckArt, deckColors, deckPriceHTML } from './deckStats';
+import { bracketBadgeHTML, CARD_DATA_ERROR, deckArt, deckColors, deckPriceHTML, missingCardData } from './deckStats';
 import { bracketLabel, deckBracket } from '../brackets';
 import { validateDeckLocal } from './deckRules';
 import { deckFitText, fitFormats, openFormatPicker } from './deckFit';
@@ -126,6 +126,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <div class="match-ready" aria-label="Resumo da partida"><div class="chosen-deck" id="chosenDeck"></div><div class="deck-fit" id="deckFit"><p class="deck-fit-text" id="deckFitText" role="status" aria-live="polite"></p><button type="button" class="link-btn" data-lobby="fit-formats" hidden>Ver os formatos do deck</button></div><button class="arena-btn primary big" id="startMatch" data-lobby="start" disabled>Jogar</button><p id="status" class="lobby-status" role="status" aria-live="polite"></p></div>
       </aside>
       <div class="deck-collection">
+        <p class="cards-error" id="cardsError" role="alert" hidden><span>${esc(CARD_DATA_ERROR)}</span> <button type="button" class="ghost-btn" data-lobby="retry-cards">Tentar de novo</button></p>
         <div class="library-toolbar"><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="deckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck"></label><div id="lobbyColorFilter"></div><label class="incompatible-toggle" id="incompatibleToggle" hidden><input type="checkbox" id="showIncompatible"> Mostrar incompatíveis</label></div>
         <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="arena-btn secondary" data-lobby="library">Gerenciar decks</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
         <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
@@ -444,6 +445,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const action = target.closest<HTMLElement>('[data-lobby]')?.dataset.lobby;
     if (!busy && !waitingRoom && ['library','create','import'].includes(action ?? '')) opts.onDecks(action as DeckAction, format ?? undefined);
     if (action === 'start') void start();
+    if (action === 'retry-cards') loadCards();
     if (action === 'setup-toggle') { setupOpen = !setupOpen; refresh(); }
     if (action === 'clear') { query = ''; colorFilter = new Set(); $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
@@ -574,10 +576,20 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     }});
   refresh();
   fitSidebar();
+  let loadingCards = false;
+  /** Busca os dados das cartas dos decks; se falhar e faltar a arte ou as cores de algum deck, avisa com Tentar de novo. */
+  function loadCards() {
+    if (loadingCards) return;
+    loadingCards = true; $('#cardsError').hidden = true;
+    let failed = false;
+    const fail = () => { failed = true; };
+    void fetchByNames(allDecks().flatMap(d => (d.commanders ?? []).map(c => c.name))).then(refresh)
+      .then(() => fetchPrintings(allDecks().flatMap(d => d.commanders ?? []))).then(refresh).catch(fail)
+      .then(() => fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name)))).then(refresh).catch(fail)
+      .then(() => { loadingCards = false; $('#cardsError').hidden = !(failed && missingCardData(allDecks())); });
+  }
   // Os comandantes vêm primeiro: são as capas dos decks, e a lista inteira (milhares de cartas) demora a chegar.
-  void fetchByNames(allDecks().flatMap(d => (d.commanders ?? []).map(c => c.name))).then(refresh)
-    .then(() => fetchPrintings(allDecks().flatMap(d => d.commanders ?? []))).then(refresh).catch(() => {})
-    .then(() => fetchByNames(allDecks().flatMap(d => [...d.cards, ...(d.sideboard ?? []), ...(d.commanders ?? [])].map(c => c.name)))).then(refresh).catch(() => {});
+  loadCards();
   return { refresh, setStatus, setBusy, roomSay: (seat, key) => roomLobby.say(seat, key), openRoomLink(code) {
     if (!ROOM_CODE.test(code)) { setStatus('O link da sala está incompleto. Peça o código para quem convidou você.', true); return; }
     if (busy || waitingRoom) return;

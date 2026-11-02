@@ -1129,3 +1129,43 @@ Pedido em 01/11/2026. Hoje toda sala nova começa privada e só vira pública se
 - [x] Decidir se a escolha do jogador fica lembrada para a próxima sala e se vale também para as salas com computador nos lugares vazios.
 
 Decidido em 01/11/2026 e feito na 0.104.0: o tipo de sala começa em **Pública** (agora o primeiro botão) e a escolha fica lembrada em `mesa:roomVisibility`, então quem escolheu **Privada** continua com ela. A explicação embaixo dos botões ("Aparece na lista de salas públicas para qualquer pessoa entrar.") já existia. As salas não têm computador nos lugares vazios, então essa parte não se aplica. A sala aberta por um link que ainda não existe continua pública, sem mudar a escolha guardada.
+
+## 76. Menos selos e ícones soltos na mesa ✅
+
+Veio da sugestão S25. O topo da partida mostrava Menu, tela cheia, Desfazer, o formato, a sala e o placar, e a fileira do canto de baixo era só de ícones sem texto, que só se entendiam passando o mouse.
+
+- [x] No topo, Menu, tela cheia, Desfazer e o placar (só na melhor de três); quem caiu e o aviso de quem só assiste continuam lá. Formato e sala foram para o alto do Menu, junto do placar; quem assiste a partida também fica só no Menu.
+- [x] Tocar num ícone da trilha de fases mostra o nome dele por 3 segundos; no toque, a trilha tem 44 px de altura, mais espaço entre as fases, e o toque entre dois ícones vale para o mais perto.
+- [x] O selo de passar automaticamente virou uma linha embaixo dos botões com o ícone e o nome do nível (44 px de altura no toque).
+- [x] No celular, Menu, tela cheia e Desfazer com 44 px; o retrato do oponente no 1x1 foi 16 px para a direita e o ⤢ de focar nele virou um selo no canto do retrato (antes ficava por baixo do Desfazer).
+
+Decidido em 01/11/2026 e feito na 0.105.0: a tela cheia continua no topo; os ícones de baixo ganham rótulo ao tocar, em vez de irem para um botão de ajustes. Os ícones da trilha não chegam a 44 px de largura cada um (a trilha não caberia no celular): a altura é de 44 px e a largura de cada um vai até a metade do caminho para o vizinho.
+
+## 77. Lista de atalhos de teclado ✅
+
+Veio da sugestão S11. A partida tinha atalhos (Espaço para passar, Esc, I no inspetor, setas na pilha e nos gatilhos), mas eles só se descobriam por acaso.
+
+- [x] A tecla **?** abre a lista dos atalhos da partida; na mesa livre, a lista dela (C, D, Ctrl+Z, Shift+F10).
+- [x] Link **Atalhos de teclado** no pé de Menu → Opções, escondido nos aparelhos só de toque.
+
+Feito na 0.105.0.
+
+## 78. Gráfico de vida no fim da partida ✅
+
+Veio da sugestão S9. Ao fim do jogo, só sobrava o resultado.
+
+- [x] O servidor anota a vida de cada jogador no começo de cada turno (o fim do anterior) e manda a lista em `lifeHistory`, só com o jogo acabado. Desfazer até um turno anterior reescreve os pontos dali em diante.
+- [x] Na tela de resultado, uma linha por jogador, com a vida final na ponta; passar o mouse ou tocar num turno mostra a vida de todos. Tabela escondida para leitores de tela.
+- [x] No Commander, o dano de comandante de cada jogador logo abaixo, do maior para o menor.
+- [x] Na melhor de três, o gráfico do jogo que acabou também em **Prepare o próximo jogo**, recolhido em **Ver gráfico de vida**.
+
+Decidido em 01/11/2026 e feito na 0.105.0: o histórico fica no servidor, para sobreviver a quedas, recarregar a página e valer para quem assiste; o gráfico aparece no resultado final e, recolhido, entre os jogos da melhor de três. Cores conferidas para daltonismo no fundo da mesa; a quarta linha é tracejada e todas levam o nome na ponta.
+
+## 79. Aviso quando os dados das cartas não carregam ✅
+
+Veio da sugestão S2. Sem rede ou com o Scryfall fora, a biblioteca e a tela Jogar engoliam o erro, e o jogador via decks sem arte e sem cores.
+
+- [x] Aviso com **Tentar de novo** na biblioteca de Meus decks e na tela Jogar, só quando falta mesmo o dado de alguma carta (sem rede, uma legalidade vencida também falha a busca, mesmo com as artes guardadas).
+- [x] O aviso do editor ganhou o mesmo **Tentar de novo**.
+
+Feito na 0.105.0.

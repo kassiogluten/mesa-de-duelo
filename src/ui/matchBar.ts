@@ -1,24 +1,27 @@
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 
-export interface MatchChip { kind: 'format' | 'room' | 'series' | 'offline' | 'spectating' | 'audience'; text: string; label: string }
+export interface MatchChip { kind: 'series' | 'offline' | 'spectating'; text: string; label: string }
 
 const FORMAT: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre' };
 
-/** Informação de relance da barra do topo: o que antes só aparecia ao abrir o menu. */
+/** Nome do formato da partida, para o menu. */
+export const matchFormatName = (s: Pick<FState, 'config'>) => s.config?.format ? FORMAT[s.config.format] ?? '' : '';
+
+/** Placar da melhor de três; vazio numa partida única. */
+export function seriesText(s: Pick<FState, 'config' | 'match'>): string {
+  return s.match && s.config?.matchLength === 'bo3' ? `Jogo ${s.match.gameNumber} · ${s.match.wins.join(' × ')}` : '';
+}
+
+/**
+ * A barra do topo fica só com o que muda a partida: o placar da melhor de três, quem caiu e o aviso de quem só
+ * assiste. Formato, sala e quem assiste ficam no menu.
+ */
 export function matchChips(s: FState): MatchChip[] {
   const chips: MatchChip[] = [];
-  const format = s.config?.format ? FORMAT[s.config.format] : undefined;
-  if (format) chips.push({ kind: 'format', text: format, label: `Formato ${format}` });
   if (s.spectating) chips.push({ kind: 'spectating', text: 'Assistindo', label: s.watching ? 'Você está assistindo, sem jogar' : 'Você está assistindo a partida' });
-  if (s.room) chips.push({ kind: 'room', text: `Sala ${s.room.code}`, label: `Sala ${s.room.code}` });
-  // Quem assiste: a contagem na barra e os nomes ao passar o mouse (e no menu, para o toque).
-  const audience = s.room?.spectators ?? [];
-  if (audience.length) chips.push({ kind: 'audience', text: `${audience.length} assistindo`, label: `Assistindo: ${audience.join(', ')}` });
-  if (s.match && s.config?.matchLength === 'bo3') {
-    const score = s.match.wins.join(' × ');
-    chips.push({ kind: 'series', text: `Jogo ${s.match.gameNumber} · ${score}`, label: `Jogo ${s.match.gameNumber} da melhor de três, placar ${score}` });
-  }
+  const series = seriesText(s);
+  if (series) chips.push({ kind: 'series', text: series, label: `Jogo ${s.match!.gameNumber} da melhor de três, placar ${s.match!.wins.join(' × ')}` });
   const me = s.room?.seat;
   const away = (s.room?.players ?? []).filter((p, i) => !p.connected && !p.eliminated && (p.seat ?? i) !== me);
   if (away.length === 1) chips.push({ kind: 'offline', text: `${away[0].name} desconectado`, label: `${away[0].name} está desconectado` });

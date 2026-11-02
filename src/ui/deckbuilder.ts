@@ -3,7 +3,7 @@ import { DEFAULT_DECKS, FORMAT_LABEL, readyDeckFits, SACOLA_HINT, countEntries, 
 import { cardInfo, type Color } from '../cards';
 import { cacheGet, fetchByNames, fetchPrintings, preloadDeckImages, resolveCardNames, searchCards, translateCards, type ScryCard } from '../scryfall';
 import { esc, manaHTML, pip } from './cardtext';
-import { bracketBadgeHTML, deckArt, deckColors, deckPriceHTML, groupedRows, statsHTML } from './deckStats';
+import { bracketBadgeHTML, CARD_DATA_ERROR, deckArt, deckColors, deckPriceHTML, groupedRows, missingCardData, statsHTML } from './deckStats';
 import { BRACKET_DESCRIPTION, BRACKET_NAME, BRACKETS, bracketLabel, deckBracket, estimateBracket, isBracket, type Bracket } from '../brackets';
 import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
 import { cardCopyLimit, copiesInDeck, validateDeckLocal, type ServerDeckValidation } from './deckRules';
@@ -51,6 +51,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let showReady = false;
   let notice = '';
+  /** A busca dos dados das cartas falhou na tela aberta ('library' ou 'edit'); some ao trocar de tela. */
+  let cardsError: 'library' | 'edit' | null = null;
   let saveError = getDeckStorageState().error ?? '';
   let removed: { deck: DeckData; index: number } | null = null;
   let section: 'main' | 'sideboard' = 'main';
@@ -99,7 +101,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
 
   function renderStatus() {
     const recovery = getDeckStorageState().recovery.length;
-    $('#dwStatus').innerHTML = `${saveError ? `<p class="dw-error">${esc(saveError)} <button type="button" class="dw-button" data-b="retry-save">Tentar salvar</button> <button type="button" class="dw-button" data-b="recovery">Exportar recuperação</button></p>` : notice ? `<p>${esc(notice)}</p>` : ''}${recovery && !saveError ? `<p class="dw-error">Há ${recovery} registros preservados para recuperação. <button type="button" class="dw-button" data-b="recovery">Exportar recuperação</button></p>` : ''}${removed ? `<p>Deck excluído. <button type="button" class="dw-button" data-b="undo">Desfazer</button></p>` : ''}`;
+    $('#dwStatus').innerHTML = `${saveError ? `<p class="dw-error">${esc(saveError)} <button type="button" class="dw-button" data-b="retry-save">Tentar salvar</button> <button type="button" class="dw-button" data-b="recovery">Exportar recuperação</button></p>` : notice ? `<p>${esc(notice)}</p>` : ''}${cardsError === view ? `<p class="dw-error">${esc(cardsError === 'edit' ? 'Alguns dados das cartas não foram carregados. O deck continua disponível.' : CARD_DATA_ERROR)} <button type="button" class="dw-button" data-b="retry-cards">Tentar de novo</button></p>` : ''}${recovery && !saveError ? `<p class="dw-error">Há ${recovery} registros preservados para recuperação. <button type="button" class="dw-button" data-b="recovery">Exportar recuperação</button></p>` : ''}${removed ? `<p>Deck excluído. <button type="button" class="dw-button" data-b="undo">Desfazer</button></p>` : ''}`;
     $('#dwStatus').hidden = !$('#dwStatus').hasChildNodes();
   }
   function persist(message = '') {
@@ -272,7 +274,12 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       await fetchByNames(decks.flatMap(d => deckEntries(d).map(e => e.name)), true); rerender();
       if (target) { await fetchPrintings(deckEntries(target)); rerender(); }
     }
-    catch { if (view === 'edit') { notice = 'Alguns dados das cartas não foram carregados. O deck continua disponível.'; renderStatus(); } }
+    catch {
+      // Na biblioteca, só avisa se faltar mesmo algum dado: sem rede, a legalidade vencida também falha a busca.
+      if (view === requestView && selected === requestSelected && (view === 'edit' || missingCardData(decks))) { cardsError = view === 'edit' ? 'edit' : 'library'; renderStatus(); }
+      return;
+    }
+    if (cardsError && view === requestView) { cardsError = null; renderStatus(); }
   }
   function resetSearch() { searchSeq++; results = []; searchQuery = ''; searchType = ''; searchFunc = ''; similarTo = null; similarTags.clear(); searchColors.clear(); hasMore = false; searching = false; searchError = ''; }
   function edit(deck: DeckData) {
@@ -507,6 +514,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'export-import': download(importDraft.text, 'lista-original.txt'); break;
       case 'recovery': download(exportDeckRecovery(), 'recuperacao-decks.json', 'application/json'); break;
       case 'retry-save': persist(); break;
+      case 'retry-cards': cardsError = null; renderStatus(); void loadData(); break;
       case 'clear-search': listQuery = ''; libraryColors = new Set(); renderLibrary(); break;
       case 'search': commanderSlot = null; searchOpen = !searchOpen; hideCardPreview(); renderEdit(); if (searchOpen) $('#dwCardQuery')?.focus(); break;
       case 'open-search': commanderSlot = null; searchOpen = true; renderEdit(); $('#dwCardQuery')?.focus(); break;

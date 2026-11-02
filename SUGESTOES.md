@@ -11,9 +11,9 @@ Agradar quem joga: tudo **intuitivo** (sem precisar de explicação), **limpo** 
 ### Ordem sugerida
 
 1. **Primeira impressão**: S14 (partida rápida); S22 e S23 já feitas.
-2. **Mesa mais limpa**: S25 (menos selos e ícones soltos na mesa); S24 já feita.
+2. **Mesa mais limpa**: S24 e S25 já feitas.
 3. **Imersão**: S27 (som ambiente); S18 e S19 já feitas.
-4. **Intuitivo sem tutorial**: S28 (dicas na primeira partida), S11 (atalhos), S13 (ver o deck do oponente).
+4. **Intuitivo sem tutorial**: S28 (dicas na primeira partida), S13 (ver o deck do oponente); S11 já feita.
 5. **Construtor**: S4, S15, S5, S16.
 6. **Fora do foco por enquanto**: S1, S3, S7, S12, S17, S20, S21. São úteis, mas o jogador não sente a diferença no dia a dia (ou o custo é alto para o que muda).
 
@@ -32,7 +32,9 @@ Aceita em parte e feita na v0.30.0 (registrada no item 10 do `ROADMAP.md`): o ca
 - [ ] Guardar as faces como apelido (só o nome da carta inteira) em vez de cópias completas.
 - [ ] Limpar cartas que não aparecem em nenhum deck há muito tempo.
 
-### S2. Falha ao carregar dados na biblioteca não aparece · Correção · P
+### S2. Falha ao carregar dados na biblioteca não aparece · Correção · P · ✅
+
+Aceita e feita na 0.105.0 como item 79 do `ROADMAP.md` (também na tela Jogar).
 
 Quando a busca de cartas falha (sem rede, Scryfall fora), a biblioteca de decks engole o erro; só o editor mostra o aviso. O jogador vê decks sem arte e sem cores e não sabe por quê.
 
@@ -93,7 +95,9 @@ Ao fim da partida o resultado se perde.
 - [ ] Guardar localmente cada partida: data, formato, deck usado, oponentes (decks e computador ou pessoa), vencedor e número de turnos.
 - [ ] Mostrar vitórias e derrotas no cartão do deck e uma tela simples de histórico.
 
-### S9. Gráfico de vida no fim da partida · Funcionalidade · M
+### S9. Gráfico de vida no fim da partida · Funcionalidade · M · ✅
+
+Aceita e feita na 0.105.0 como item 78 do `ROADMAP.md` (histórico guardado no servidor; também entre os jogos da melhor de três).
 
 - [ ] Registrar a vida de cada jogador no fim de cada turno e mostrar um gráfico no resumo do fim da partida, junto do dano de comandante em Commander.
 
@@ -104,7 +108,9 @@ As salas não têm nenhuma forma de comunicação. Chat livre traz moderação; 
 - [ ] Um conjunto fixo de reações ("Boa jogada", "Pensando…", "Ops", "Bom jogo") que aparecem por alguns segundos ao lado do retrato.
 - [ ] Opção para silenciar as reações dos outros.
 
-### S11. Lista de atalhos de teclado · Melhoria · P
+### S11. Lista de atalhos de teclado · Melhoria · P · ✅
+
+Aceita e feita na 0.105.0 como item 77 do `ROADMAP.md` (também na mesa livre).
 
 A partida já tem atalhos (espaço para passar, teclado no inspetor de cartas, entre outros), mas eles só são descobertos por acaso.
 
@@ -233,7 +239,9 @@ No computador, com poucas permanentes, as cartas do campo ficam pequenas (cerca 
 - [ ] Sem pular de tamanho a cada carta nova: mudar em degraus e com animação curta.
 - [ ] Conferir em Commander com quatro jogadores, onde o espaço de cada um é menor.
 
-### S25. Menos selos e ícones soltos na mesa · Melhoria · P
+### S25. Menos selos e ícones soltos na mesa · Melhoria · P · ✅
+
+Aceita e feita na 0.105.0 como item 76 do `ROADMAP.md` (tela cheia continua no topo; os ícones de baixo ganham rótulo ao tocar).
 
 Durante a partida, o canto de cima mostra **Menu**, tela cheia, **Desfazer**, o formato ("Standard"), a sala ("Sala ABCD") e o placar ("Jogo 2 · 1 × 0"). Embaixo, ao lado dos botões, há uma fileira de ícones pequenos sem texto (relógio, nível de passar automaticamente, e outros) que só se entende passando o mouse. No celular esses ícones ficam ainda menores.
 
