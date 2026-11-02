@@ -1,4 +1,12 @@
 {
+  "0.112.1": {
+    "Oathbreaker em Outros": [
+      { "img": "0.112.1/oathbreaker-em-outros.webp", "legenda": "Na escolha de formato, o Oathbreaker aparece dentro de Outros, junto de Standard, Pauper, Sacola 50 e Livre." }
+    ],
+    "Decks prontos mais recentes primeiro": [
+      { "img": "0.112.1/decks-prontos-mais-recentes.webp", "legenda": "No Commander, os decks prontos começam pelos mais novos: Tam, Jace, Thorin, Thranduil, Garota Esquilo e Doutor Destino." }
+    ]
+  },
   "0.112.0": {
     "Formato Oathbreaker": [
       { "img": "0.112.0/oathbreaker-na-tela-inicial.webp", "legenda": "Na escolha de formato, o Oathbreaker fica ao lado do Commander, com Outros embaixo. Como no Commander, dá para jogar de dois a quatro e escolher o deck de cada computador." },

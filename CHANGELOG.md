@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.112.1] - 2026-11-02
+
+### Mudou
+
+- **Oathbreaker em Outros.** Na escolha de formato da tela inicial, o **Oathbreaker** saiu do lado do **Commander** e foi para **Outros**, junto de Standard, Pauper, Sacola 50 e Livre.
+- **Decks prontos mais recentes primeiro.** Na tela inicial, em **Meus decks** e na escolha dos decks dos computadores, os decks prontos aparecem do mais novo para o mais antigo: no Commander, os seis das séries recentes vêm no topo.
+
 ## [0.112.0] - 2026-11-02
 
 ### Novo

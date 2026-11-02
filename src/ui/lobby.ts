@@ -64,9 +64,9 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
-  // Commander é o padrão, com o Oathbreaker ao lado; os demais ficam em "Outros", que volta ao último deles usado (Pauper na primeira vez).
+  // Commander é o padrão; os demais (Oathbreaker entre eles) ficam em "Outros", que volta ao último deles usado (Pauper na primeira vez).
   let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
-  const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => !hasCommandZone(f) && f === load('mesa:otherFormat')) ?? 'pauper';
+  const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => f !== 'commander' && f === load('mesa:otherFormat')) ?? 'pauper';
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
@@ -103,7 +103,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       <button type="button" class="setup-summary" data-lobby="setup-toggle" aria-expanded="false" aria-controls="matchSetup"><span class="setup-summary-text"><small>Partida</small><strong id="setupSummary"></strong></span><span class="setup-summary-action" id="setupSummaryAction" aria-hidden="true">Mudar</span></button>
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <div class="match-setup" id="matchSetup">
-        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="oathbreaker">Oathbreaker</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
+        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="oathbreaker">Oathbreaker</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
@@ -193,11 +193,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       const setting = button.dataset.setting;
       const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : matchLength;
       const others = setting === 'format' && button.dataset.value === 'others';
-      button.setAttribute('aria-pressed', String(others ? !!format && !hasCommandZone(format) : button.dataset.value === value));
-      if (others) button.setAttribute('aria-expanded', String(!!format && !hasCommandZone(format)));
+      button.setAttribute('aria-pressed', String(others ? !!format && format !== 'commander' : button.dataset.value === value));
+      if (others) button.setAttribute('aria-expanded', String(!!format && format !== 'commander'));
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
-    $('#formatOthers').hidden = !format || hasCommandZone(format);
+    $('#formatOthers').hidden = !format || format === 'commander';
     $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : 'Escolha um formato para começar.';
     $('#formatHelp').hidden = !!format && format !== 'sacola50';
     header.setDisabled(busy);
@@ -353,7 +353,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   /** Troca o formato mantendo o deck escolhido (atalho do seletor). */
   function setFormat(next: DeckFormat) {
     format = next; save('mesa:format', format);
-    if (!hasCommandZone(format)) save('mesa:otherFormat', format);
+    if (format !== 'commander') save('mesa:otherFormat', format);
   }
   /**
    * Seletor com só os formatos em que o deck serve. `leaving`: o jogador tocou no formato `missing` com o deck já

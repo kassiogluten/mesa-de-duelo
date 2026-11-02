@@ -48,11 +48,11 @@
 .choice-segments button[aria-pressed=true], .choice-segments button[aria-selected=true], .opponent-card[aria-pressed=true] { color: var(--on-ink); border-color: var(--on-line); background: var(--on-bg); box-shadow: 0 2px 4px #0003; }
 .choice-segments button:hover:not(:disabled, [aria-pressed=true], [aria-selected=true]), .opponent-card:hover:not(:disabled, [aria-pressed=true]) { color: var(--ink); }
 .choice-segments button:disabled, .opponent-card:disabled { cursor: default; opacity: .55; }
-/* Commander e Oathbreaker lado a lado, com Outros na linha de baixo, de ponta a ponta. */
+/* Quatro formatos: 2×2 na barra lateral, uma linha só quando houver largura. */
 .format-choice .choice-segments { display: grid; grid-template-columns: repeat(2, 1fr); }
-.format-choice .choice-segments > [data-value="others"] { grid-column: 1 / -1; }
-/* Standard, Pauper, Sacola 50 e Livre: dois por linha, que cabem na barra lateral e no celular. */
+/* Standard, Pauper, Sacola 50, Oathbreaker e Livre: dois por linha, que cabem na barra lateral e no celular; o último, sozinho, ocupa a linha. */
 .format-choice .format-others { grid-template-columns: repeat(2, 1fr); margin-top: 6px; }
+.format-choice .format-others > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 .format-choice .format-others[hidden] { display: none; }
 .setup-explanation { font-size: 13px; line-height: 1.5; color: var(--muted); margin: var(--label-gap) 0 0; }
 .opponent-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

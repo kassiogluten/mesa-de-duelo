@@ -45,7 +45,8 @@ export interface DeckData {
   /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander nem em Oathbreaker. */
   cover?: string;
 }
-export const DEFAULT_DECKS = starterDecks as DeckData[];
+/** O arquivo guarda os decks prontos na ordem em que chegaram (os novos no fim); a mesa mostra os mais recentes primeiro. */
+export const DEFAULT_DECKS = [...(starterDecks as DeckData[])].reverse();
 const BASICS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'].map(n => n.toLowerCase()));
 export const isBasic = (name: string) => BASICS.has(name.toLowerCase());
 export const countEntries = (entries: DeckEntry[]) => entries.reduce((s, e) => s + e.count, 0);
