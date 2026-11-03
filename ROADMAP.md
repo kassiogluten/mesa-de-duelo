@@ -1267,6 +1267,14 @@ Hoje a lista de salas fica escondida: só aparece depois de escolher **Outra pes
 
 A decidir: o nome e o endereço da página ("Salas", "Mesas abertas", "Ao vivo"); se a lista da tela de configurar partida continua lá ou dá lugar ao atalho; se a página mostra uma prévia da mesa (vida, turno) das partidas em andamento; e se avisa (som ou notificação) quando uma sala nova do formato preferido abre.
 
+## 88. Botões de exibição do campo dos oponentes só com o ícone
+
+Na faixa de cada oponente, os botões que controlam o que se vê do campo (**Só este**/**Ver todos** e **Ocultar**) ocupam espaço com o texto ao lado do ícone, e com três ou quatro jogadores a faixa fica apertada.
+
+- [x] Deixar só o ícone nesses botões (`seatControls` em `src/ui/forgeTable.ts`), com o texto no balão ao passar o mouse (`title`) e no `aria-label`, como já é hoje.
+- [x] Manter a área de toque confortável no celular, mesmo sem o texto.
+- [x] O estado ligado de **Só este** continua visível pelo ícone (aria-pressed), já que o texto "Ver todos" deixa de aparecer.
+
 Decidido em 02/11/2026 (versão 0.120.0), itens 82 a 87:
 
 - 82: o pedido de desfazer e a votação para pular o turno de quem caiu abrem no centro (`#fVote`, `src/ui/voteDialog.ts`) e bloqueiam a mesa até o voto, com o som de aviso e a vibração (`turnBuzz.nudge`); o foco começa em Aceitar/Sim. Depois do voto, volta a faixa do alto.

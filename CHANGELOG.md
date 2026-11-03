@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.121.0] - 2026-11-03
+
+### Novo
+
+- **Entrar na sala sem deck e escolher lá dentro.** Contra outra pessoa, o deck deixou de ser obrigatório para criar ou entrar numa sala: sem um deck que sirva para o formato da sala, você entra mesmo assim, pelo código, pelo link ou pela lista de salas. Na sala de espera, a seção **Seu deck** mostra só os decks que servem para o formato da sala (os seus e os prontos), com busca, e basta tocar num para sentar com ele. Até a partida começar, dá para tocar em outro e trocar. Os lugares de quem ainda escolhe aparecem como **Escolhendo o deck…**, e a partida começa sozinha quando a mesa enche e todos têm deck. **Completar com computadores** espera todos escolherem.
+
+### Mudou
+
+- **Botões do campo dos oponentes só com o ícone.** Na faixa de cada oponente, os botões de ver só aquele campo e de ocultá-lo ficaram só com o ícone, como o de tela cheia, e a faixa respira melhor com três ou quatro jogadores. Passando o mouse, o balão diz o que cada um faz; com **Só este** ligado, o botão fica com o fundo dourado. No celular, a área de toque continua confortável.
+- **Nova imagem na prévia do link.** Ao mandar o endereço da Mesa de Duelo no WhatsApp, no Discord ou numa rede social, o cartão da mensagem mostra a nova arte: o nome do site com a frase **Sua mesa de Magic, onde você estiver.**, ao lado de uma mesa com terrenos das cinco cores.
+
 ## [0.120.0] - 2026-11-02
 
 ### Novo

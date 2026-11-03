@@ -21,7 +21,8 @@ import io.netty.channel.Channel;
  *
  * Salas: {type:"host", name, deck, visibility, code} cria (privada, a não ser com visibility:"public";
  * com o código pedido em code, ou sorteado sem ele);
- * {type:"join", code, name, deck} entra, e a partida começa quando a sala enche; host e join aceitam cover, a carta
+ * {type:"join", code, name, deck} entra, e a partida começa quando a sala enche e todos têm deck; em host e join o deck
+ * é opcional, e {type:"room-deck", deck} escolhe ou troca o deck dentro da sala até a partida começar; host, join e room-deck aceitam cover, a carta
  * cuja arte representa o deck no lobby, e bracket (1 a 5), a faixa de poder que o jogador deu ao deck de Commander
  * (start também, com o de cada deck escolhido para o computador dentro do próprio deck); {type:"room-say", key} manda uma mensagem pronta aos outros da sala;
  * {type:"list-rooms"} lista as salas públicas abertas e as em andamento;
@@ -90,7 +91,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Metrics.gauge("mesa.players.connected", "Jogadores humanos conectados a uma partida ou sala",
             () -> byCode.values().stream().mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.channel != null).count()).sum());
         Metrics.gauge("mesa.players.reconnecting", "Jogadores que caíram de uma partida em andamento e ainda podem voltar",
-            () -> byCode.values().stream().filter(Session::started).mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.deck != null && seat.channel == null).count()).sum());
+            () -> byCode.values().stream().filter(Session::started).mapToLong(s -> java.util.Arrays.stream(s.seats).filter(seat -> seat.taken && seat.channel == null).count()).sum());
     }
 
     void replay(Replay r) { replay = r; }
@@ -272,10 +273,15 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 }
                 case "host" -> {
                     MatchConfig config = MatchConfig.parse(msg.get("config"));
-                    host(ch, name(msg), validated(msg.get("deck"), config.format(), "deck"), config, publicRoom(msg), chosenCode(msg), cover(msg), bracket(msg), owner(msg));
+                    host(ch, name(msg), optionalDeck(msg.get("deck"), config.format()), config, publicRoom(msg), chosenCode(msg), cover(msg), bracket(msg), owner(msg));
                 }
                 case "lab-host" -> labHost(ch, name(msg), Lab.parse(msg.get("scenario")));
                 case "join" -> join(ch, code(msg), name(msg), msg.get("deck"), cover(msg), bracket(msg), owner(msg));
+                case "room-deck" -> {
+                    roomDeck(ch, msg.get("deck"), cover(msg), bracket(msg), owner(msg));
+                    // Com requestId, a mesa espera a resposta para saber que o deck valeu (os erros voltam com o mesmo id).
+                    if (requestId != null) { JsonObject ok = new JsonObject(); ok.addProperty("type", "room-deck"); ok.addProperty("requestId", requestId); BridgeServer.send(ch, ok.toString()); }
+                }
                 case "watch" -> watch(ch, code(msg), name(msg));
                 case "watch-player" -> watchPlayer(ch, msg);
                 case "watchable" -> watchable(ch, msg.has("on") && msg.get("on").getAsBoolean());
@@ -324,6 +330,13 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (!result.valid()) throw new InvalidDeck(result, target);
         return result.deck();
     }
+
+    /** O deck de quem cria ou entra numa sala: sem deck, o jogador escolhe lá dentro. */
+    private static Deck optionalDeck(JsonElement payload, String format) {
+        return payload == null || payload.isJsonNull() ? null : validated(payload, format, "deck");
+    }
+
+    private static String deckName(Deck deck) { return deck == null ? "sem deck" : deck.getName(); }
 
     private static Deck aiDeck(JsonElement opponent, MatchConfig config) {
         return opponent == null || opponent.isJsonNull()
@@ -477,13 +490,13 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         leave(ch);
         Session s = Session.room(code != null ? code : newCode(4), ch, name, deck, config, publicRoom);
         s.seats[0].owner(owner);
-        s.seats[0].cover = Session.coverOf(deck, cover);
-        s.seats[0].bracket = config.commander() ? bracket : 0;
+        s.seats[0].cover = deck == null ? null : Session.coverOf(deck, cover);
+        s.seats[0].bracket = config.commander() && deck != null ? bracket : 0;
         s.history(history);
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.sendRoom(s.seats[0]);
-        System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deck.getName());
+        System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deckName(deck));
     }
 
     /** Sala de teste do Laboratório: privada, fora do histórico, e começa quando o segundo lado entra. */
@@ -500,18 +513,36 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
-        Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> each.deck == null).findFirst().orElseThrow();
+        Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> !each.taken).findFirst().orElseThrow();
         // Na sala de teste, cada lado joga com as cartas do cenário: o deck de quem entra não importa.
-        Deck deck = s.isLab() ? s.labDeck(seat.index) : validated(payload, s.config.format(), "deck");
+        Deck deck = s.isLab() ? s.labDeck(seat.index) : optionalDeck(payload, s.config.format());
         leave(ch);
         seat.bind(ch, name, deck);
         seat.owner(s.isLab() ? null : owner);
+        seat.cover = deck == null ? null : Session.coverOf(deck, cover);
+        seat.bracket = s.config.commander() && deck != null ? bracket : 0;
+        byChannel.put(ch, s);
+        System.out.printf("Sala %s: %s entrou (%s)%n", code, name, deckName(deck));
+        for (Session.Seat each : s.seats) s.sendRoom(each);
+        if (s.ready()) s.start();
+        else s.markDirty();
+    }
+
+    /** {type:"room-deck", deck}: escolhe ou troca o deck do próprio lugar, na sala que ainda não começou. */
+    private synchronized void roomDeck(Channel ch, JsonElement payload, String cover, int bracket, Owner owner) {
+        Session s = byChannel.get(ch);
+        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        if (seat == null || !s.isRoom() || s.isLab()) return;
+        if (s.started()) throw new IllegalArgumentException("A partida já começou: não dá mais para trocar o deck.");
+        if (payload == null || payload.isJsonNull()) throw new IllegalArgumentException("Escolha um deck.");
+        Deck deck = validated(payload, s.config.format(), "deck");
+        seat.deck = deck;
+        seat.owner(owner);
         seat.cover = Session.coverOf(deck, cover);
         seat.bracket = s.config.commander() ? bracket : 0;
-        byChannel.put(ch, s);
-        System.out.printf("Sala %s: %s entrou (%s)%n", code, name, deck.getName());
-        for (Session.Seat each : s.seats) s.sendRoom(each);
-        if (s.full()) s.start();
+        System.out.printf("Sala %s: %s escolheu o deck %s%n", s.code, seat.name, deck.getName());
+        broadcastRoom(s);
+        if (s.ready()) s.start();
         else s.markDirty();
     }
 
@@ -588,7 +619,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     private synchronized void rejoin(Channel ch, String code, String token) {
         Session s = byCode.get(code);
         Session.Seat seat = null;
-        if (s != null) for (Session.Seat each : s.seats) if (!each.departed && each.deck != null && each.token.equals(token)) seat = each;
+        if (s != null) for (Session.Seat each : s.seats) if (!each.departed && each.taken && each.token.equals(token)) seat = each;
         if (seat == null) {
             // Resposta própria para o navegador esquecer a partida guardada em vez de tentar de novo.
             BridgeServer.send(ch, Session.toast("gone", "A partida " + code + " não existe mais."));
@@ -643,8 +674,8 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session.Seat seat = s.seatOf(ch);
         if (!s.isRoom()) { close(s, seat); return; }
         if (seat != null && !s.started() && seat.index != 0) {
-            seat.channel = null; seat.deck = null; seat.departed = true; seat.owner(null);
-            for (Session.Seat each : s.seats) if (each.deck != null) s.sendRoom(each);
+            seat.channel = null; seat.deck = null; seat.taken = false; seat.departed = true; seat.owner(null);
+            for (Session.Seat each : s.seats) if (each.taken) s.sendRoom(each);
             s.markDirty(); expireIfAbandoned(s); return;
         }
         if (seat != null) {
@@ -718,11 +749,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         seat.saidAt = now;
         JsonObject o = new JsonObject();
         o.addProperty("type", "room-say"); o.addProperty("seat", seat.index); o.addProperty("key", key);
-        for (Session.Seat each : s.seats) if (each.deck != null) each.send(o.toString());
+        for (Session.Seat each : s.seats) if (each.taken) each.send(o.toString());
     }
 
     private static void broadcastRoom(Session s) {
-        for (Session.Seat each : s.seats) if (each.deck != null && each.channel != null) s.sendRoom(each);
+        for (Session.Seat each : s.seats) if (each.taken && each.channel != null) s.sendRoom(each);
     }
 
     private static void notifyOthers(Session s, Session.Seat from, String text) {

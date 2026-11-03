@@ -233,9 +233,11 @@
 /* Escolher quais oponentes ver: botões no cabeçalho de cada campo e o oponente oculto como coluna estreita. */
 .forge.multiplayer { --collapsed-seat: minmax(118px, 150px); }
 .seat-view { display: flex; gap: 4px; margin-left: auto; flex: 0 0 auto; }
-.seat-view-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 8px; border: 1px solid #ffffff1f; border-radius: 8px; background: color-mix(in srgb, var(--azul-0d1626, #0d1626) 80%, transparent); color: var(--muted); font: 600 11.5px var(--body); cursor: pointer; }
+.seat-view-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; min-width: 30px; padding: 4px 6px; border: 1px solid #ffffff1f; border-radius: 8px; background: color-mix(in srgb, var(--azul-0d1626, #0d1626) 80%, transparent); color: var(--muted); font: 600 11.5px var(--body); cursor: pointer; }
 .seat-view-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .seat-view-btn:hover, .seat-view-btn[aria-pressed='true'] { color: var(--gold-light); border-color: #e7b04b80; }
+/* Só o ícone: o "Só este" ligado ganha o fundo dourado, já que não há mais o texto "Ver todos". */
+.seat-view-btn[aria-pressed='true'] { background: #e7b04b2e; }
 .seat-view-btn:focus-visible, .seat-show:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .seat-forced { position: absolute; z-index: 4; top: 62px; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; margin: 0; padding: 2px 9px; box-shadow: 0 2px 8px #0008; border-radius: 999px; background: #3a2c10; color: var(--gold-light); font: 600 11px var(--body); }
 .seat-forced.focused { background: #4a1a14; color: #ffd8cc; }
@@ -251,16 +253,17 @@
 .seat-show:hover { background: #e7b04b33; }
 .seat-show svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; }
 @media (max-height: 500px), (max-width: 760px) {
-  /* Celular: só os ícones, e o oculto vira uma coluna de retrato e botão. */
+  /* Celular: botões menores, e o oculto vira uma coluna de retrato e botão. */
   .forge.multiplayer { --collapsed-seat: minmax(60px, 76px); }
-  .seat-view-btn span { display: none; }
-  .seat-view-btn { min-height: 28px; min-width: 28px; padding: 3px; justify-content: center; }
+  .seat-view-btn { min-height: 28px; min-width: 28px; padding: 3px; }
   .forge.multiplayer .table-seat.collapsed { display: flex; flex-direction: column; }
   .forge.multiplayer .table-seat.collapsed .seat-summary, .forge.multiplayer .table-seat.collapsed .seat-zones,
   .forge.multiplayer .table-seat.collapsed .commander-damage, .forge.multiplayer .table-seat.collapsed .seat-hand, .seat-show span { display: none; }
   .forge.multiplayer .table-seat.collapsed .seat-heading .pname { display: none; }
   .seat-show { min-height: 30px; padding: 4px; }
 }
+/* Toque: sem o texto, a área do botão fica maior que o ícone. */
+@media (pointer: coarse) { .seat-view-btn { min-height: 34px; min-width: 34px; } }
 /* Criaturas maiores nos campos dos oponentes: as fileiras cedem o respiro de cima e de baixo. */
 .forge.multiplayer .table-seat .row { min-height: calc(var(--ch) + 10px); padding-block: 5px; }
 .forge.multiplayer .table-seat .lands { min-height: calc(var(--lch) + 10px); }

@@ -1,4 +1,17 @@
 {
+  "0.121.0": {
+    "Entrar na sala sem deck e escolher lá dentro": [
+      { "img": "0.121.0/escolhendo.webp", "legenda": "Na sala de espera, o seu lugar pede para escolher o deck abaixo, e o de Caio aparece como Escolhendo o deck…, enquanto Ana já está com Atarka." },
+      { "img": "0.121.0/seu-deck.webp", "legenda": "A seção Seu deck, com busca, mostra só os decks que servem para Commander; o escolhido fica marcado e dá para trocar tocando em outro." }
+    ],
+    "Botões do campo dos oponentes só com o ícone": [
+      { "img": "0.121.0/botoes-icone.webp", "legenda": "Na faixa de Diego, os botões de tela cheia, de ver só aquele campo e de ocultar aparecem só com o ícone, ao lado da mão e do dano de comandante." },
+      { "img": "0.121.0/so-este-ligado.webp", "legenda": "Com Só este ligado no campo de Bruno, o botão fica com o fundo dourado; tocar nele de novo volta a mostrar todos os oponentes." }
+    ],
+    "Nova imagem na prévia do link": [
+      { "img": "0.121.0/previa-link.webp", "legenda": "A arte que aparece no cartão do link: o nome Mesa de Duelo, a frase Sua mesa de Magic, onde você estiver, e uma mesa com terrenos das cinco cores." }
+    ]
+  },
   "0.120.0": {
     "Pedido de desfazer no centro da tela": [
       { "img": "0.120.0/desfazer.webp", "legenda": "O oponente pediu para desfazer: o pedido abre no centro, com o que volta e os botões Recusar e Aceitar." }

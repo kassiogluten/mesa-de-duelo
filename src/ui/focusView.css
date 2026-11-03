@@ -51,8 +51,6 @@
 .focus-command .command-card { width: 64px; }
 
 /* Entradas: o ícone no cabeçalho de cada assento e, no 1x1, ao lado do retrato do oponente. */
-.seat-view-btn.focus-open span { display: none; }
-.seat-view-btn.focus-open { justify-content: center; min-width: 30px; padding-inline: 6px; }
 .table-seat.collapsed .seat-focus { align-self: center; }
 .avatar-slot .duel-focus { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
 /* Celular: o cabeçalho do assento não tem espaço; os botões do assento vão para o canto de baixo do campo dele. */

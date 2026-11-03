@@ -1606,7 +1606,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const FOCUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="3"/></svg>';
   const EXPAND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>';
   /** Abre o campo do oponente em tela cheia. */
-  const focusButton = (p: FPlayer, extra = '') => `<button type="button" class="seat-view-btn focus-open${extra}" data-focus-seat="${p.id}" title="Ver o campo de ${esc(p.name)} em tela cheia" aria-label="Ver o campo de ${esc(p.name)} em tela cheia">${EXPAND}<span>Focar</span></button>`;
+  const focusButton = (p: FPlayer, extra = '') => `<button type="button" class="seat-view-btn focus-open${extra}" data-focus-seat="${p.id}" title="Ver o campo de ${esc(p.name)} em tela cheia" aria-label="Ver o campo de ${esc(p.name)} em tela cheia">${EXPAND}</button>`;
   /** O que a mesa espera de você agora, para avisar na tela de foco sem tirar a vista do oponente. */
   function focusDecisionText(s: FState) {
     const input = s.input;
@@ -1654,14 +1654,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     back?.focus({ preventScroll: true });
     focusReturn = null;
   }
-  /** Botões de cada oponente: focar em tela cheia sempre; esconder o campo e mostrar só ele, com dois ou mais oponentes. */
+  /** Botões de cada oponente, só com o ícone (o texto fica no balão e no aria-label): focar em tela cheia sempre; esconder o campo e mostrar só ele, com dois ou mais oponentes. */
   function seatControls(p: FPlayer, shown: boolean, count: number) {
     if (count < 2) return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">${focusButton(p)}</div>`;
     const solo = soloSeat === p.id;
     return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">
       ${focusButton(p)}
-      <button type="button" class="seat-view-btn" data-seat-solo="${p.id}" aria-pressed="${solo}" title="${solo ? 'Voltar a ver todos os oponentes' : `Ver só ${esc(p.name)}`}" aria-label="${solo ? 'Voltar a ver todos os oponentes' : `Ver só o campo de ${esc(p.name)}`}">${FOCUS}<span>${solo ? 'Ver todos' : 'Só este'}</span></button>
-      ${shown && !solo ? `<button type="button" class="seat-view-btn" data-seat-hide="${p.id}" title="Ocultar o campo de ${esc(p.name)}" aria-label="Ocultar o campo de ${esc(p.name)}">${EYE_OFF}<span>Ocultar</span></button>` : ''}
+      <button type="button" class="seat-view-btn" data-seat-solo="${p.id}" aria-pressed="${solo}" title="${solo ? 'Voltar a ver todos os oponentes' : `Ver só ${esc(p.name)}`}" aria-label="${solo ? 'Voltar a ver todos os oponentes' : `Ver só o campo de ${esc(p.name)}`}">${FOCUS}</button>
+      ${shown && !solo ? `<button type="button" class="seat-view-btn" data-seat-hide="${p.id}" title="Ocultar o campo de ${esc(p.name)}" aria-label="Ocultar o campo de ${esc(p.name)}">${EYE_OFF}</button>` : ''}
     </div>`;
   }
   /** Destaque do assento de quem joga o turno; no desenho em que o turno passa, a classe que anima a troca. */

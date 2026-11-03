@@ -125,6 +125,7 @@ function summarize(msg: ClientMessage): Record<string, unknown> {
     case 'start': return { type: msg.type, config: msg.config };
     case 'host': return { type: msg.type, name: msg.name, config: msg.config };
     case 'join': return { type: msg.type, code: msg.code, name: msg.name };
+    case 'room-deck': return { type: msg.type };
     case 'sideboard': return { type: msg.type, id: msg.id };
     default: return { ...msg };
   }

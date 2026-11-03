@@ -168,8 +168,14 @@ const freeTable = createFreeTableView(document.querySelector('#scrFree')!, {
 const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onPlay: async (you, opp, config, opponents) => { void enterLandscape(); await startMatch(you, opp, config, opponents); },
   onFreePlay: (you, format) => { void enterLandscape(); leaveForge(); freeTable.open(you, format); show('free'); },
-  onHost: async (you, name, url, config, visibility, code) => { void enterLandscape(); await startNetMatch(you, url, { type: 'host', name, deck: forgeDeck(you), cover: deckCover(you), bracket: deckBracket(you), config, visibility, ...(code ? { code } : {}), ...matchOwner(you) }, config); },
-  onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you, url, { type: 'join', code, name, deck: forgeDeck(you), cover: deckCover(you), bracket: deckBracket(you), ...matchOwner(you) }); },
+  onHost: async (you, name, url, config, visibility, code) => { void enterLandscape(); await startNetMatch(you ?? NO_DECK, url, { type: 'host', name, ...seatDeck(you), config, visibility, ...(code ? { code } : {}) }, config); },
+  onJoin: async (you, name, code, url) => { void enterLandscape(); await startNetMatch(you ?? NO_DECK, url, { type: 'join', code, name, ...seatDeck(you) }); },
+  onChooseRoomDeck: async deck => {
+    if (!forge?.connected || !current?.net) throw new Error('A conexão com o servidor caiu.');
+    await forge.chooseRoomDeck(seatDeck(deck));
+    // A mesa, a gravação e a volta à partida passam a usar o deck escolhido na sala.
+    if (current?.net) { current.deck = deck; recorder.meta.deck = forgeDeck(deck); saveResume(); }
+  },
   onJoinLab: async (code, name, url) => { void enterLandscape(); await startNetMatch(LAB_DECK, url, { type: 'join', code, name, deck: null }, undefined, true); },
   onWatch: async (code, name, url) => { void enterLandscape(); await startWatching(url, code, name); },
   onValidate: async (deck, format, url) => (await requireForge(url)).validateDeck(forgeDeck(deck), format),
@@ -205,6 +211,10 @@ const labView = mountLab(document.querySelector('#scrLab')!, {
 });
 addEventListener('mesa:laboratorio', () => { labView.open(); show('lab'); scrollTo({top: 0}); });
 
+/** Quem entra numa sala sem deck: escolhe lá dentro, e até lá a mesa guarda este no lugar do deck. */
+const NO_DECK: DeckData = { id: '', name: '', cards: [] };
+/** O deck que acompanha host, join e room-deck: a lista, a capa, o bracket e a conta; sem deck, só deck: null. */
+const seatDeck = (d: DeckData | null) => d ? { deck: forgeDeck(d), cover: deckCover(d), bracket: deckBracket(d), ...matchOwner(d) } : { deck: null };
 const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [] });
 /** Com a conta conectada, a partida fica ligada a ela e ao deck salvo (Minhas partidas). */
 /** O nome das salas ou o apelido da conta, para o histórico das partidas contra o computador; nada sem nome. */

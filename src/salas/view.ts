@@ -5,7 +5,7 @@ import { bracketsLabel } from '../ui/publicRooms';
 /*
  * Página Salas (/salas.html, item 87): as salas públicas esperando jogadores e as partidas em andamento para assistir,
  * com filtros por formato e por situação. Entrar e assistir abrem a mesa pelo link da sala (?sala=CÓDIGO), o mesmo
- * caminho do convite: com um deck lembrado que serve, entra direto; senão, pede o deck.
+ * caminho do convite: entra direto, com o deck lembrado se ele serve; senão sem deck, para escolher dentro da sala.
  */
 
 export type Situacao = '' | 'esperando' | 'andamento';

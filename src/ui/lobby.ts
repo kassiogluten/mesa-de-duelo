@@ -36,8 +36,11 @@ export interface LobbyOptions {
   onPlay(you: DeckData, opp: DeckData | null, config: MatchConfig, opponents?: (DeckData | null)[]): Promise<void>;
   /** Mesa livre: sem servidor e sem regras automáticas. */
   onFreePlay(you: DeckData, format: DeckFormat): void;
-  onHost(you: DeckData, name: string, url: string, config: MatchConfig, visibility: RoomVisibility, code: string): Promise<void>;
-  onJoin(you: DeckData, name: string, code: string, url: string): Promise<void>;
+  /** you null: cria ou entra sem deck, e escolhe lá dentro (onChooseRoomDeck). */
+  onHost(you: DeckData | null, name: string, url: string, config: MatchConfig, visibility: RoomVisibility, code: string): Promise<void>;
+  onJoin(you: DeckData | null, name: string, code: string, url: string): Promise<void>;
+  /** Na sala de espera: escolhe ou troca o deck; recusa com o motivo. */
+  onChooseRoomDeck(deck: DeckData): Promise<void>;
   /** Entrar numa sala de teste do Laboratório: sem deck, cada lado joga com as cartas do cenário. */
   onJoinLab(code: string, name: string, url: string): Promise<void>;
   /** Assistir à partida já começada de uma sala, sem deck e sem assento. */
@@ -84,6 +87,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   let youId = rememberedDeck();
   let oppId = load('mesa:opp') ?? 'random';
   let query = '', showIncompatible = false, busy = false;
+  // Na sala de espera: o deck com que você está sentado ('' enquanto escolhe), a busca da prateleira e o pedido em andamento.
+  let roomDeckId = '', roomQuery = '', choosingDeck = false;
   let colorFilter = new Set<ColorFilter>();
   const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
@@ -173,12 +178,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const local = validateDeckLocal(deck, format);
     return local.status === 'invalid' ? 'Incompatível com o formato' : format && format !== 'free' ? '' : 'Livre';
   }
-  function tiles(decks: DeckData[]) {
+  function tiles(decks: DeckData[], selectedId = youId, inRoom = false) {
     return decks.map(d => {
       // Com o selo do formato, a etiqueta "Livre" (todo deck vale no Livre) só repetiria a informação.
       const formatTag = d.builtin && d.format && !hasCommandZone(d.format) ? FORMAT_LABEL[d.format] : '';
-      const art = deckArt(d), on = youId === d.id, bracket = deckBracket(d), colors = deckColors(d), validity = validationLabel(d), label = formatTag && validity === 'Livre' ? '' : validity;
-      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}${bracket ? `, ${bracketLabel(bracket)}` : ''}"><span class="tile-cover"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span>${colors.length ? `<span class="tile-colors">${colors.map(pip).join('')}</span>` : ''}</span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span>${commanderLineHTML(d, ptName, 'tile-commander')}<span class="tile-meta"><span>${deckSize(d) + (hasCommandZone(d.format) ? countEntries(d.commanders ?? []) : 0)} cartas</span>${deckPriceHTML(d, 'tile-price', false)}${bracketBadgeHTML(d, 'tile-format')}${formatTag ? `<span class="tile-format">${esc(formatTag)}</span>` : ''}</span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
+      const art = deckArt(d), on = selectedId === d.id, bracket = deckBracket(d), colors = deckColors(d), validity = validationLabel(d), label = formatTag && validity === 'Livre' ? '' : validity;
+      return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}${bracket ? `, ${bracketLabel(bracket)}` : ''}"><span class="tile-cover"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span>${colors.length ? `<span class="tile-colors">${colors.map(pip).join('')}</span>` : ''}</span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span>${commanderLineHTML(d, ptName, 'tile-commander')}<span class="tile-meta"><span>${deckSize(d) + (hasCommandZone(d.format) ? countEntries(d.commanders ?? []) : 0)} cartas</span>${deckPriceHTML(d, 'tile-price', false)}${bracketBadgeHTML(d, 'tile-format')}${formatTag ? `<span class="tile-format">${esc(formatTag)}</span>` : ''}</span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin && !inRoom ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
     }).join('');
   }
   function refresh() {
@@ -211,6 +216,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     header.setDisabled(busy);
     $('.home-intro').hidden = $('.play-layout').hidden = !!waitingRoom;
     roomLobby.render(waitingRoom);
+    renderRoomDecks();
     $('#netPanel').hidden = mode !== 'net';
     for (const tab of root.querySelectorAll<HTMLButtonElement>('[data-net-tab]')) {
       const on = tab.dataset.netTab === netTab;
@@ -252,9 +258,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const deck = selected(), result = deck && format ? validations.get(key(deck)) : undefined;
     const invalid = !free && !!deck && !!format && (result ? !result.valid : validateDeckLocal(deck, format).status === 'invalid');
     const art = deck && deckArt(deck);
-    $('#chosenDeck').innerHTML = `${art ? `<span class="chosen-art" style="background-image:url('${esc(art)}')" aria-hidden="true"></span>` : ''}${!deck ? `<span class="chosen-caption">${esc(formatName(format))}</span>` : ''}<strong>${esc(deck?.name ?? 'Escolha um deck para jogar')}</strong>${deck ? `<span>${result ? result.valid ? 'Verificado pelo servidor' : 'Precisa de ajustes' : deck.builtin ? 'Deck pronto' : 'Seu deck'}</span>` : ''}`;
+    $('#chosenDeck').innerHTML = `${art ? `<span class="chosen-art" style="background-image:url('${esc(art)}')" aria-hidden="true"></span>` : ''}${!deck ? `<span class="chosen-caption">${esc(formatName(format))}</span>` : ''}<strong>${esc(deck?.name ?? (mode === 'net' ? 'Sem deck por enquanto' : 'Escolha um deck para jogar'))}</strong>${!deck && mode === 'net' ? '<span>Escolha um aqui ou dentro da sala</span>' : ''}${deck ? `<span>${result ? result.valid ? 'Verificado pelo servidor' : 'Precisa de ajustes' : deck.builtin ? 'Deck pronto' : 'Seu deck'}</span>` : ''}`;
     const start = $<HTMLButtonElement>('#startMatch');
-    start.disabled = !format || !deck || invalid || busy || !!waitingRoom || (joining && !room);
+    // Contra outra pessoa o deck é opcional: sem um que sirva, entra (ou cria a sala) e escolhe lá dentro.
+    const net = mode === 'net';
+    start.disabled = !format || (!net && (!deck || invalid)) || busy || !!waitingRoom || (joining && !room);
     start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : joining ? 'Escolha a sala' : 'Criar sala';
     // Quem já jogou vê o deck escolhido em destaque, com o resumo da partida e o botão de jogar de novo.
     const summary = matchSummary();
@@ -277,7 +285,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if ($('#deckFitText').textContent !== fitText) $('#deckFitText').textContent = fitText;
     $('[data-lobby=fit-formats]').hidden = !fitText || !!room || busy || !!waitingRoom;
     $('#roomInfo').hidden = !room;
-    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível e confirme abaixo.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Escolher outra sala</button>` : '';
+    $('#roomInfo').innerHTML = room ? `<p>Sala <strong>${esc(room.code)}</strong> · ${esc(room.players[0]?.name ?? 'Anfitrião')} · ${formatName(room.config.format)} · ${room.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'} · ${room.players.length}/${room.capacity ?? room.config.playerCount ?? 2} jogadores</p><p>${selected() ? 'Para entrar com outro deck, escolha-o e confirme abaixo.' : 'Escolha um deck compatível ou entre sem deck e escolha lá dentro.'}</p><button class="ghost-btn" data-lobby="cancel-lookup">Escolher outra sala</button>` : '';
     if (focusedOpponent !== undefined) root.querySelector<HTMLElement>(`[data-opponent-slot="${CSS.escape(focusedOpponent)}"]`)?.focus({preventScroll: true});
     if (focusId) root.querySelector<HTMLElement>(`[data-${focusAttribute}="${CSS.escape(focusId)}"]`)?.focus({preventScroll: true});
     syncRoomPolling();
@@ -385,22 +393,27 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     else openDeckPreview(deck, {selected: true, onPick: () => choose(deck)});
   }
   async function start() {
-    const deck = selected();
-    if (busy || !format || !deck) return;
+    const chosen = selected();
+    // Contra outra pessoa, um deck que não serve no formato fica de fora: entra sem deck e escolhe na sala.
+    const deck = mode === 'net' && chosen && !fitsIn(chosen, format!) ? undefined : chosen;
+    if (busy || !format || (!deck && mode !== 'net')) return;
     ++preflight;
     save('mesa:played', '1');
-    if (mode === 'free') { setStatus(''); opts.onFreePlay(deck, format); return; }
+    if (mode === 'free') { setStatus(''); opts.onFreePlay(deck!, format); return; }
     const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, roomVisibility = visibility, chosenCode = roomCode(), opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
     if (selectedMode === 'net' && !selectedRoom && chosenCode && !ROOM_CODE.test(chosenCode)) { setStatus('O código da sala precisa ter 4 letras ou números.', true); return; }
-    setBusy(true); setStatus('Verificando o deck…');
+    setBusy(true); setStatus(deck ? 'Verificando o deck…' : '');
     try {
-      const result = await opts.onValidate(deck, matchConfig.format, endpoint);
-      validations.set(key(deck), result);
-      if (!result.valid) { setStatus(result.issues.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' '), true); return; }
+      if (deck) {
+        const result = await opts.onValidate(deck, matchConfig.format, endpoint);
+        validations.set(key(deck), result);
+        if (!result.valid) { setStatus(result.issues.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' '), true); return; }
+      }
       if (selectedMode === 'net') {
-        if (selectedRoom) await opts.onJoin(deck, playerName, selectedRoom.code, endpoint);
-        else await opts.onHost(deck, playerName, endpoint, matchConfig, roomVisibility, chosenCode);
-      } else {
+        roomDeckId = deck?.id ?? ''; roomQuery = '';
+        if (selectedRoom) await opts.onJoin(deck ?? null, playerName, selectedRoom.code, endpoint);
+        else await opts.onHost(deck ?? null, playerName, endpoint, matchConfig, roomVisibility, chosenCode);
+      } else if (deck) {
         const opponent = opponentId === 'random' ? null : allDecks().find(d => d.builtin && d.id === opponentId);
         if (opponent === undefined) { setStatus('Não há um deck do computador compatível com este formato.', true); return; }
         const opponents = hasCommandZone(matchConfig.format) ? selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
@@ -444,13 +457,14 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const editId = target.closest<HTMLButtonElement>('[data-edit-deck]')?.dataset.editDeck;
     if (editId && !busy && !waitingRoom && loadUserDecks().some(d => d.id === editId)) { preflight++; opts.onEditDeck(editId); return; }
     const picked = target.closest<HTMLElement>('[data-deck]')?.dataset.deck;
-    if (picked && !busy) { const deck = allDecks().find(d => d.id === picked); if (deck) choose(deck); return; }
+    if (picked && !busy) { const deck = allDecks().find(d => d.id === picked); if (deck) { if (waitingRoom) void chooseInRoom(deck); else choose(deck); } return; }
     const peek = target.closest<HTMLElement>('[data-peek]')?.dataset.peek;
-    if (peek && !busy && !waitingRoom) {
+    if (peek && !busy) {
       const deck = allDecks().find(d => d.id === peek); if (!deck) return;
-      openDeckPreview(deck, {selected: deck.id === youId, onPick: () => choose(deck), onCopy: deck.builtin ? () => {
+      const pick = (d: DeckData) => { if (waitingRoom) void chooseInRoom(d); else choose(d); };
+      openDeckPreview(deck, {selected: deck.id === (waitingRoom ? roomDeckId : youId), onPick: () => pick(deck), onCopy: deck.builtin ? () => {
         const copy: DeckData = {...structuredClone(deck), id: crypto.randomUUID(), name: `${deck.name} — minha versão`, builtin: false, sourceTemplateId: deck.id};
-        const result = saveUserDecks([...loadUserDecks(), copy]); choose(copy);
+        const result = saveUserDecks([...loadUserDecks(), copy]); pick(copy);
         if (!result.ok) setStatus(result.error, true);
       } : undefined}); return;
     }
@@ -512,6 +526,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   root.addEventListener('input', e => {
     const target = e.target as HTMLInputElement;
     if (target.id === 'deckSearch') { query = target.value.trim(); refresh(); }
+    if (target.id === 'roomDeckSearch') { roomQuery = target.value.trim(); renderRoomDeckTiles(); }
     // Só letras e números, em maiúsculas: o código fica como os outros vão digitar.
     if (target.id === 'roomCode') { target.value = target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); roomCodeHelp(); }
   });
@@ -552,13 +567,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       if (lab) { void joinLab(lab); return; }
       // A sala da lista pode ter enchido ou começado nesse meio-tempo: a lista se atualiza.
       if (!found) { if (fromList) void loadRooms(); return; }
-      // Com um deck lembrado que serve para o formato da sala, entra direto; senão pede o deck antes.
-      const deck = selected(), fits = !!deck && validateDeckLocal(deck, format!).status !== 'invalid';
+      // Entra direto: com o deck lembrado, se ele serve para o formato da sala; senão sem deck, para escolher lá dentro.
       // Pelo link, quem nunca jogou em rede escolhe o nome antes: senão entraria na sala como "Jogador".
       const unnamed = fromLink && !$<HTMLInputElement>('#netName').value.trim();
-      if (fits && !unnamed) void start();
-      else if (unnamed) { setStatus(fits ? `Digite seu nome e toque em Entrar na sala ${room!.code}.` : `Digite seu nome e escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`); $('#netName').focus(); }
-      else setStatus(`Escolha um deck de ${formatName(format)} para entrar na sala ${room!.code}.`);
+      if (!unnamed) void start();
+      else { setStatus(`Digite seu nome e toque em Entrar na sala ${room!.code}.`); $('#netName').focus(); }
     });
   }
   /** Sala de teste do Laboratório: entra direto, sem deck, como o Jogador 2 do cenário. */
@@ -588,6 +601,55 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const unnamed = !$<HTMLInputElement>('#netName').value.trim();
     setStatus(`A sala ${code} ainda não existe. ${unnamed ? 'Digite seu nome, confira' : 'Confira'} as opções e toque em Criar sala para abri-la com esse código.`);
     if (unnamed) $('#netName').focus();
+  }
+  // ---------- Seu deck, dentro da sala ----------
+  /** O seu lugar na sala de espera, com o deck escolhido ou não. */
+  const mySeat = () => waitingRoom?.players.find((p, i) => (p.seat ?? i) === waitingRoom!.seat);
+  /** Os decks que servem para o formato da sala: os seus primeiro, depois os prontos (os do formato antes dos outros). */
+  function roomDecks() {
+    const f = waitingRoom!.config.format, decks = allDecks().filter(d => fitsIn(d, f) && matchesQuery(d, roomQuery, ptName));
+    return { mine: decks.filter(d => !d.builtin), ready: decks.filter(d => d.builtin).sort((a, b) => Number(b.format === f) - Number(a.format === f)) };
+  }
+  /** A prateleira inteira só é montada ao entrar na sala: digitar na busca redesenha só os cards, sem perder o foco. */
+  function renderRoomDecks() {
+    const el = roomLobby.decks, show = !!waitingRoom && !waitingRoom.lab && !waitingRoom.started;
+    el.hidden = !show;
+    if (!show) { el.innerHTML = ''; return; }
+    if (!el.firstChild) {
+      el.innerHTML = `<header class="shelf-heading"><div><h2 id="roomDecksTitle">Seu deck</h2><p id="roomDecksHelp"></p></div><label class="search room-deck-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="roomDeckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck para esta sala"></label></header><div id="roomDeckTiles"></div>`;
+      $<HTMLInputElement>('#roomDeckSearch').value = roomQuery;
+    }
+    renderRoomDeckTiles();
+  }
+  function renderRoomDeckTiles() {
+    if (!waitingRoom || !$('#roomDeckTiles')) return;
+    const f = waitingRoom.config.format, me = mySeat(), ready = me?.ready !== false;
+    // Pontes antigas não mandam ready: o deck com que se entrou continua marcado.
+    const selectedId = ready ? roomDeckId : '';
+    $('#roomDecksHelp').textContent = choosingDeck ? 'Escolhendo o deck…'
+      : ready ? `Decks que servem para ${formatName(f)}. Toque em outro para trocar até a partida começar.`
+      : `Escolha um deck de ${formatName(f)} para jogar. A partida só começa quando todos tiverem deck.`;
+    const focusedDeck = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>('#roomDeckTiles [data-deck]')?.dataset.deck;
+    const {mine, ready: templates} = roomDecks();
+    const shelf = (title: string, decks: DeckData[]) => decks.length ? `<h3 class="room-decks-group">${title}</h3><div class="deck-tiles">${tiles(decks, selectedId, true)}</div>` : '';
+    $('#roomDeckTiles').innerHTML = mine.length || templates.length
+      ? shelf('Meus decks', mine) + shelf('Decks prontos', templates)
+      : `<p class="shelf-empty">${roomQuery ? 'Nenhum deck corresponde à busca.' : `Nenhum deck serve para ${formatName(f)}.`}</p>`;
+    for (const tile of root.querySelectorAll<HTMLButtonElement>('#roomDeckTiles [data-deck]')) tile.disabled = choosingDeck;
+    if (focusedDeck) root.querySelector<HTMLElement>(`#roomDeckTiles [data-deck="${CSS.escape(focusedDeck)}"]`)?.focus({preventScroll: true});
+  }
+  /** Senta com o deck escolhido na sala (ou troca o de antes); a partida começa sozinha quando todos tiverem deck. */
+  async function chooseInRoom(deck: DeckData) {
+    if (!waitingRoom || choosingDeck || (deck.id === roomDeckId && mySeat()?.ready !== false)) return;
+    choosingDeck = true; setStatus(`Escolhendo ${deck.name}…`); renderRoomDeckTiles();
+    try {
+      await opts.onChooseRoomDeck(deck);
+      roomDeckId = deck.id;
+      // Fica lembrado como o deck do formato, como ao escolher na tela inicial.
+      youId = deck.id; save(`mesa:deck:${waitingRoom?.config.format ?? format}`, deck.id);
+      setStatus('');
+    } catch (error) { setStatus(error instanceof Error ? error.message : 'Não foi possível escolher este deck.', true); }
+    finally { choosingDeck = false; renderRoomDeckTiles(); }
   }
   const header = mountAppHeader($('.home-top'), {active: 'play', onPlay: () => {}, onDecks: () => { if (!busy && !waitingRoom) opts.onDecks('library', format ?? undefined); },
     async beforeNav(to) {
@@ -633,7 +695,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     refresh();
     $('#netName').focus();
   }, showRoom(nextRoom) {
-    preflight++; waitingRoom = nextRoom;
+    preflight++;
+    if (!nextRoom) { roomDeckId = ''; roomQuery = ''; choosingDeck = false; }
+    waitingRoom = nextRoom;
     // A partida começou (ou a sala acabou) com a pergunta de sair aberta: não há mais de onde sair.
     if (!nextRoom) document.querySelector<HTMLDialogElement>('dialog.room-leave')?.close();
     if (nextRoom && !nextRoom.lab) { mode = 'net'; format = nextRoom.config.format; matchLength = nextRoom.config.matchLength; playerCount = nextRoom.config.playerCount ?? nextRoom.capacity ?? 2; }

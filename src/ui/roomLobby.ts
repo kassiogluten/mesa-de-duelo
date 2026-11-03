@@ -13,6 +13,8 @@ export interface RoomLobby {
   /** Balão de mensagem pronta sobre o lugar de quem mandou. */
   say(seat: number, key: RoomSaying): void;
   setStatus(message: string, error: boolean): void;
+  /** Onde a tela inicial desenha a prateleira "Seu deck", para escolher ou trocar o deck sem sair da sala. */
+  readonly decks: HTMLElement;
 }
 export interface RoomLobbyOptions {
   onSay(key: RoomSaying): void;
@@ -67,7 +69,8 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
     <ol class="room-seat-grid" id="roomSeatGrid" aria-label="Lugares da mesa"></ol>
     <div class="room-sayings" role="group" aria-labelledby="roomSayingsLabel"><span id="roomSayingsLabel">Mandar para a sala</span>${SAYINGS.map(([key, text]) => `<button type="button" class="ghost-btn" data-say="${key}">${esc(text)}</button>`).join('')}</div>
     <p class="sr-only" id="roomSaid" aria-live="polite"></p>
-    <footer class="room-lobby-foot"><p class="lobby-status" id="roomStatus" role="status" aria-live="polite"></p><button type="button" class="arena-btn secondary" data-room="leave">Sair da sala</button><button type="button" class="arena-btn primary" data-room="fill" hidden></button></footer>`;
+    <footer class="room-lobby-foot"><p class="lobby-status" id="roomStatus" role="status" aria-live="polite"></p><button type="button" class="arena-btn secondary" data-room="leave">Sair da sala</button><button type="button" class="arena-btn primary" data-room="fill" hidden></button></footer>
+    <section class="room-decks" id="roomDecks" aria-labelledby="roomDecksTitle" hidden></section>`;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => el.querySelector<T>(selector)!;
   $('[data-room=share]').hidden = typeof navigator.share !== 'function';
 
@@ -79,7 +82,10 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
       const art = artOf(player.cover), me = seat === r.seat, bubble = said.get(seat);
       const tags = [seat === 0 ? 'Anfitrião' : '', me ? 'Você' : ''].filter(Boolean);
       const commander = player.commander?.split(' + ').map(ptName).join(' + ');
-      return `<li class="room-seat${me ? ' me' : ''}${player.connected ? '' : ' away'}"><span class="seat-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''} aria-hidden="true"></span><span class="seat-info">${tags.length ? `<span class="seat-tags">${tags.map(t => `<span>${t}</span>`).join('')}</span>` : ''}<strong class="seat-name">${esc(player.name)}</strong>${commander ? `<span class="seat-commander">${esc(commander)}</span>` : ''}${isBracket(player.bracket) ? `<span class="deck-bracket seat-bracket" title="${esc(bracketTitle(player.bracket))}">${bracketLabel(player.bracket)}</span>` : ''}<span class="seat-state">${player.connected ? 'Na sala' : 'Reconectando…'}</span></span>${bubble ? `<span class="seat-bubble">${esc(SAYINGS.find(([k]) => k === bubble.key)?.[1] ?? '')}</span>` : ''}</li>`;
+      // Pontes antigas não mandam ready: lá todo mundo entrava com deck.
+      const choosing = player.ready === false;
+      const state = !player.connected ? 'Reconectando…' : choosing ? (me ? 'Escolha seu deck abaixo' : 'Escolhendo o deck…') : 'Na sala';
+      return `<li class="room-seat${me ? ' me' : ''}${player.connected ? '' : ' away'}${choosing ? ' choosing' : ''}"><span class="seat-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''} aria-hidden="true"></span><span class="seat-info">${tags.length ? `<span class="seat-tags">${tags.map(t => `<span>${t}</span>`).join('')}</span>` : ''}<strong class="seat-name">${esc(player.name)}</strong>${commander ? `<span class="seat-commander">${esc(commander)}</span>` : ''}${isBracket(player.bracket) ? `<span class="deck-bracket seat-bracket" title="${esc(bracketTitle(player.bracket))}">${bracketLabel(player.bracket)}</span>` : ''}<span class="seat-state">${state}</span></span>${bubble ? `<span class="seat-bubble">${esc(SAYINGS.find(([k]) => k === bubble.key)?.[1] ?? '')}</span>` : ''}</li>`;
     }).join('');
   }
   function render(next: FRoom | null) {
@@ -92,16 +98,21 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
       return;
     }
     const capacity = next.capacity ?? next.config.playerCount ?? 2, full = next.players.length >= capacity;
+    const choosing = next.players.filter(p => p.ready === false).length;
     $('#roomKicker').textContent = next.lab ? 'Sala de teste · Laboratório' : `${next.public ? 'Sala pública' : 'Sala privada'} · ${formatName(next.config.format)} · ${next.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única'}`;
     $('#roomShareTitle').textContent = next.lab ? 'Chame o outro lado' : 'Chame quem falta';
     $<HTMLAnchorElement>('[data-room=open-tab]').hidden = !next.lab;
     $<HTMLAnchorElement>('[data-room=open-tab]').href = roomLink(next.code);
     $('#roomLobbyCode').textContent = next.code;
-    $('#roomProgress').textContent = full ? 'Mesa completa. A partida vai começar.' : `${next.players.length} de ${capacity} jogadores. A partida começa sozinha quando a mesa encher.`;
+    $('#roomProgress').textContent = full
+      ? choosing ? `Mesa completa. A partida começa quando ${choosing === 1 ? 'o último jogador escolher o deck' : 'todos escolherem o deck'}.` : 'Mesa completa. A partida vai começar.'
+      : `${next.players.length} de ${capacity} jogadores. A partida começa sozinha quando a mesa encher e todos tiverem deck.`;
     // Só o anfitrião, e não na sala de teste: os lugares vazios viram computadores com decks prontos do formato.
     const free = capacity - next.players.length, fill = $<HTMLButtonElement>('[data-room=fill]');
     fill.hidden = full || next.seat !== 0 || !!next.lab;
-    fill.disabled = false;
+    // Os computadores só entram com todos os humanos já com deck: senão a partida não teria como começar.
+    fill.disabled = choosing > 0;
+    fill.title = choosing ? 'Espere todos escolherem o deck.' : '';
     fill.textContent = free === 1 ? 'Completar com um computador e começar' : `Completar com ${free} computadores e começar`;
     $<HTMLInputElement>('#roomLinkField').value = roomLink(next.code);
     $('#roomShareHelp').textContent = next.lab
@@ -141,7 +152,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
       setTimeout(() => { for (const b of buttons) b.disabled = false; }, SAY_EVERY_MS);
     }
   });
-  return { render, setStatus, say(seat, key) {
+  return { render, setStatus, decks: $('#roomDecks'), say(seat, key) {
     if (!room) return;
     const previous = said.get(seat);
     if (previous) clearTimeout(previous.timer);

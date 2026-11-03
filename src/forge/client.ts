@@ -367,7 +367,7 @@ export interface FRoom {
   engineVersion?: string;
   /** conceded: desistiu (pelo menu ou saindo da sala); a mesa tira o assento de vista. */
   /** commander, cover (carta da arte do deck) e bracket (no Commander) só aparecem para o lobby; o resto do deck fica escondido. */
-  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string; bracket?: number }[];
+  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string; bracket?: number; /** Na sala de espera: false enquanto o jogador escolhe o deck. Ausente em pontes antigas (todos com deck). */ ready?: boolean }[];
   /** Nomes de quem assiste sem jogar. Ausente em pontes antigas. */
   spectators?: string[];
 }
@@ -524,8 +524,9 @@ export interface MatchOwner { conta?: string; deckId?: string }
 
 export type ClientMessage =
   | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig; /** O nome que o jogador usa, só para o histórico (na mesa ele é "Você"). */ name?: string } & MatchOwner)
-  | ({ type: 'host'; name: string; deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
-  | ({ type: 'join'; code: string; name: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)
+  | ({ type: 'host'; name: string; /** null: cria a sala sem deck e escolhe lá dentro (room-deck). */ deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
+  | ({ type: 'join'; code: string; name: string; /** null: entra sem deck e escolhe lá dentro (room-deck). */ deck: unknown; cover?: string; bracket?: number } & MatchOwner)
+  | ({ type: 'room-deck'; requestId: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)
   | { type: 'lab-host'; name: string; scenario: LabScenario }
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
@@ -579,6 +580,10 @@ export class RequestError extends Error {
 
 export const FORGE_URL: string = import.meta.env?.VITE_FORGE_URL ?? defaultUrl();
 
+/** Os problemas de um deck recusado, numa frase só. */
+export const validationText = (v: DeckValidation | undefined) =>
+  v?.issues?.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' ') || 'O deck não vale para o formato da sala.';
+
 export class ForgeClient {
   private ws: WebSocket | null = null;
   state: FState | null = null;
@@ -606,7 +611,7 @@ export class ForgeClient {
     this.pending.clear();
   }
 
-  private request<T>(message: { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'list-rooms' } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string } | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number }, timeoutMs = 12000): Promise<T> {
+  private request<T>(message: Omit<Extract<ClientMessage, { type: 'room-deck' }>, 'requestId'> | { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'list-rooms' } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string } | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number }, timeoutMs = 12000): Promise<T> {
     if (!this.connected) return Promise.reject(new Error('Conecte-se ao servidor para verificar.'));
     const requestId = `request-${++this.requestSequence}`;
     return new Promise((resolve, reject) => {
@@ -618,6 +623,11 @@ export class ForgeClient {
 
   validateDeck(deck: Pick<DeckData, 'name' | 'cards' | 'sideboard' | 'commanders'>, format: DeckFormat): Promise<DeckValidation> {
     return this.request({type: 'validate-deck', format, deck});
+  }
+
+  /** Escolhe ou troca o deck do próprio lugar na sala de espera; recusa com o motivo (deck inválido, partida já começada). */
+  chooseRoomDeck(message: Omit<Extract<ClientMessage, { type: 'room-deck' }>, 'type' | 'requestId'>): Promise<void> {
+    return this.request({type: 'room-deck', ...message});
   }
 
   lookupRoom(code: string): Promise<RoomInfo> { return this.request({type: 'lookup-room', code}); }
@@ -648,13 +658,15 @@ export class ForgeClient {
         try { msg = JSON.parse(ev.data); } catch { return; }
         if (msg.requestId && this.pending.has(msg.requestId)) {
           const request = this.pending.get(msg.requestId)!;
-          if (['validation', 'room-info', 'room-list', 'deck-source', 'similar-cards', 'request-error', 'error'].includes(msg.type)) {
+          if (['validation', 'room-info', 'room-list', 'room-deck', 'deck-source', 'similar-cards', 'request-error', 'error', 'validation-error'].includes(msg.type)) {
             clearTimeout(request.timer); this.pending.delete(msg.requestId);
             if (msg.type === 'validation') request.resolve(msg.validation);
             else if (msg.type === 'room-info') request.resolve(msg.room);
             else if (msg.type === 'room-list') request.resolve(Array.isArray(msg.rooms) ? msg.rooms : []);
             else if (msg.type === 'deck-source') request.resolve(msg.body);
             else if (msg.type === 'similar-cards') request.resolve(Array.isArray(msg.cards) ? msg.cards : []);
+            else if (msg.type === 'room-deck') request.resolve(undefined);
+            else if (msg.type === 'validation-error') request.reject(new RequestError(validationText(msg.validation)));
             else request.reject(new RequestError(msg.text ?? 'Não foi possível concluir a solicitação.', msg.reason));
             return;
           }

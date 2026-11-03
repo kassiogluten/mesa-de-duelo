@@ -45,6 +45,22 @@
 .room-lobby-foot .lobby-status { margin: 0; }
 .room-lobby-foot .arena-btn { flex: none; min-height: 44px; }
 
+/* Quem ainda escolhe o deck: o lugar fica ocupado, mas sem capa, com o aviso piscando como o do lugar livre. */
+.room-seat.choosing .seat-state::before, .room-seat.open .seat-state::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--gold); vertical-align: 1px; animation: pulse 1.2s ease-in-out infinite; }
+.room-seat.choosing.me .seat-state { color: var(--gold-light); font-weight: 600; }
+
+/* Seu deck: a prateleira de decks que servem para o formato da sala, para escolher ou trocar sem sair. */
+.room-decks { padding-top: 8px; }
+.room-decks .shelf-heading { flex-wrap: wrap; }
+.room-deck-search { display: flex; align-items: center; gap: 8px; flex: 0 1 260px; padding: 0 12px; border: 1px solid #ffffff1f; border-radius: 10px; }
+.room-deck-search svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; flex-shrink: 0; }
+.room-deck-search input { width: 100%; min-height: 44px; border: 0; background: transparent; color: var(--ink); font-size: 14px; }
+.room-deck-search input:focus { outline: none; }
+.room-deck-search:focus-within { border-color: #f2b54c80; }
+.room-decks-group { margin: 18px 0 12px; color: var(--muted); font: 600 13px var(--body); letter-spacing: .04em; text-transform: uppercase; }
+.room-decks-group:first-child { margin-top: 0; }
+.room-decks .deck-tile:disabled { opacity: .6; cursor: progress; }
+
 @media (max-width: 700px) {
   .room-lobby { gap: 20px; margin-top: 16px; }
   .room-share { padding: 16px; }
@@ -55,5 +71,6 @@
   .room-seat { min-height: 0; }
   .seat-art { height: 84px; }
   .room-lobby-foot { flex-direction: column-reverse; align-items: stretch; }
+  .room-deck-search { flex-basis: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .seat-bubble, .room-seat.open .seat-state::before { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .seat-bubble, .room-seat.open .seat-state::before, .room-seat.choosing .seat-state::before { animation: none; } }

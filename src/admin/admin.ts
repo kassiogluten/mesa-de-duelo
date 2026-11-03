@@ -27,6 +27,7 @@ const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/replay.html', 'Repetição de partida', 'Abre um relato ou o arquivo de "Baixar gravação" e repete a partida na mesa, quadro a quadro.'],
   ['/tests/fixtures/effects-lab.html', 'Laboratório de efeitos', 'Monta o campo e dispara dano, movimento, efeitos contínuos e moer, sem a ponte.'],
   ['/tests/fixtures/token-burst.html', 'Rajada de fichas', 'Hare Apparent no campo: conjura mais um ou dá blink em todos e mede quanto a mesa leva para mostrar as fichas.'],
+  ['/tests/fixtures/room-lobby.html', 'Sala de espera', 'Sala em rede antes de começar, com a prateleira Seu deck: escolher um deck marca o seu lugar como pronto. window.fixture.room() muda o formato, os lugares e quem já escolheu.'],
   ['/tests/fixtures/duel-table.html','Mesa 1×1', 'Partida fixa contra um oponente, com contadores, Classe e perguntas (gatilhos, jeitos de jogar, dano de combate) pelo console.'],
   ['/tests/fixtures/duel-table.html?cenario=proliferar', 'Proliferar', 'Escolha do proliferar com marcadores bons e ruins dos dois lados (veneno, +1/+1, −1/−1, lealdade, energia). Os cliques marcam e o Proliferar aplica os marcadores.'],
   ['/tests/fixtures/duel-table.html?cenario=improvisar', 'Improvisar', 'Bola de Fogo com X=4 e a Inspiring Statuary em campo: os artefatos ficam destacados, cada toque marca ou desmarca e a caixa mostra quanto falta pagar. Confirmar vira os marcados. Simulado, sem a ponte.'],

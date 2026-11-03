@@ -208,7 +208,10 @@ final class Session {
     synchronized int fillWithComputers() {
         if (!room || lab != null || started()) throw new IllegalArgumentException("Só dá para completar com computadores antes de a partida começar.");
         List<Seat> taken = new ArrayList<>();
-        for (Seat s : seats) if (s.deck != null) taken.add(s);
+        for (Seat s : seats) if (s.taken) {
+            if (s.deck == null) throw new IllegalArgumentException("Espere todos escolherem o deck antes de completar com computadores.");
+            taken.add(s);
+        }
         int missing = config.playerCount() - taken.size();
         if (missing <= 0) return 0;
         int bracket = 0;
@@ -273,7 +276,9 @@ final class Session {
     /** Partida contra a IA aberta para assistir (veja {@link #watchable}). */
     boolean soloWatchable() { return !room && watchable && lab == null; }
     boolean started() { return match != null; }
-    boolean full() { for (Seat s : seats) if (s.deck == null) return false; return true; }
+    boolean full() { for (Seat s : seats) if (!s.taken) return false; return true; }
+    /** Mesa cheia e todos com deck: a sala pode começar. */
+    boolean ready() { for (Seat s : seats) if (!s.taken || s.deck == null) return false; return true; }
 
     Seat seatOf(Channel ch) {
         for (Seat s : seats) if (s.channel == ch) return s;
@@ -325,12 +330,12 @@ final class Session {
         // O nome do jogador no Forge, para achar a vida dele; contra a IA, o admin vê o nome que ele usa, não "Você".
         List<String> forgeNames = new ArrayList<>();
         for (Seat seat : seats) {
-            if (seat.deck == null) continue;
+            if (!seat.taken) continue;
             JsonObject p = new JsonObject();
             p.addProperty("name", room || seat.nick == null ? seat.name : seat.nick); p.addProperty("ai", false); p.addProperty("seat", seat.index);
             forgeNames.add(seat.name);
             p.addProperty("connected", seat.channel != null); p.addProperty("conceded", seat.conceded);
-            p.addProperty("deck", seat.deck.getName());
+            if (seat.deck != null) p.addProperty("deck", seat.deck.getName());
             players.add(p);
         }
         for (int i = 0; i < aiDecks.size(); i++) {
@@ -435,7 +440,7 @@ final class Session {
     /** Numa sala, todos os outros já caíram ou saíram: quem sai agora não está desistindo contra ninguém. */
     private boolean othersGone(Seat seat) {
         if (!room) return false;
-        for (Seat each : seats) if (each != seat && each.deck != null && !each.conceded && each.channel != null) return false;
+        for (Seat each : seats) if (each != seat && each.taken && !each.conceded && each.channel != null) return false;
         return true;
     }
 
@@ -1989,7 +1994,7 @@ final class Session {
         MatchConfig.versions(r);
         JsonArray ps = new JsonArray();
         for (Seat s : seats) {
-            if (s.deck == null) continue;
+            if (!s.taken) continue;
             JsonObject p = new JsonObject();
             p.addProperty("seat", s.index);
             p.addProperty("playerId", s.me == null ? null : s.me.getId());
@@ -1999,10 +2004,12 @@ final class Session {
             p.addProperty("name", s.name);
             p.addProperty("connected", s.channel != null);
             p.addProperty("rematch", s.rematch);
+            // Na sala de espera, quem ainda está escolhendo o deck aparece sem capa e sem comandante.
+            p.addProperty("ready", s.deck != null);
             // O lobby mostra a capa e o comandante (que já é público na partida); o resto do deck fica escondido.
-            List<String> commanders = commanderNames(s.deck);
+            List<String> commanders = s.deck == null ? List.of() : commanderNames(s.deck);
             if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
-            String cover = commanders.isEmpty() ? s.cover : commanders.get(0);
+            String cover = s.deck == null ? null : commanders.isEmpty() ? s.cover : commanders.get(0);
             if (cover != null) p.addProperty("cover", cover);
             if (s.bracket > 0) p.addProperty("bracket", s.bracket);
             ps.add(p);
@@ -2032,7 +2039,7 @@ final class Session {
         r.addProperty("capacity", config.playerCount());
         r.add("config", config.json()); MatchConfig.versions(r);
         JsonArray players = new JsonArray();
-        for (Seat seat : seats) if (seat.deck != null) {
+        for (Seat seat : seats) if (seat.taken) {
             JsonObject p = new JsonObject(); p.addProperty("seat", seat.index); p.addProperty("name", seat.name); p.addProperty("connected", seat.channel != null); players.add(p);
         }
         r.add("players", players); return r;
@@ -2046,13 +2053,13 @@ final class Session {
         JsonObject r = new JsonObject();
         r.addProperty("code", code);
         // Contra a IA, o nome que o jogador usa (na mesa ele é "Você"); a mesa mostra "Ana contra o computador".
-        r.addProperty("host", room ? seats[0].deck != null ? seats[0].name : "Jogador" : seats[0].nick != null ? seats[0].nick : "Jogador");
+        r.addProperty("host", room ? seats[0].taken ? seats[0].name : "Jogador" : seats[0].nick != null ? seats[0].nick : "Jogador");
         if (!room) r.addProperty("computer", true);
         r.add("config", config.json());
         r.addProperty("capacity", config.playerCount());
         int players = 0;
         JsonArray brackets = new JsonArray();
-        for (Seat seat : seats) if (seat.deck != null) { players++; if (seat.bracket > 0) brackets.add(seat.bracket); }
+        for (Seat seat : seats) if (seat.taken) { players++; if (seat.bracket > 0) brackets.add(seat.bracket); }
         r.addProperty("players", room ? players : config.playerCount());
         // No Commander, o bracket de cada lugar ocupado, para quem procura uma mesa de força parecida.
         if (!brackets.isEmpty()) r.add("brackets", brackets);
@@ -2120,7 +2127,10 @@ final class Session {
          * histórico e a lista de partidas da área de admin. Null quando ele não tem nome.
          */
         volatile String nick;
+        /** Deck do assento; numa sala que ainda não começou, null enquanto o jogador escolhe (veja {@link #taken}). */
         volatile Deck deck;
+        /** Alguém está sentado aqui, com ou sem deck escolhido. */
+        volatile boolean taken;
         /** Conta de quem joga neste assento (só com a conta conectada) e o id do deck salvo dela, para o histórico. */
         volatile String account;
         volatile String deckId;
@@ -2187,6 +2197,7 @@ final class Session {
             this.channel = ch;
             this.name = name;
             this.deck = deck;
+            this.taken = true;
             this.account = null;
             this.deckId = null;
         }

@@ -92,3 +92,23 @@ test('explicit close cancels preflight; offline requests do not wait for a timeo
   client.close(); await pending;
   await assert.rejects(client.lookupRoom('ABCD'), /Conecte-se/);
 });
+
+test('choosing the deck inside the room waits for the answer and a refused deck only rejects, without leaving', async () => {
+  const { client, socket } = await connect();
+  let notices = 0, validations = 0;
+  client.onNotice = () => { notices++; };
+  client.onValidation = () => { validations++; };
+  const ok = client.chooseRoomDeck({ deck, cover: 'Mountain' });
+  assert.equal(socket.sent[0].type, 'room-deck');
+  assert.equal(socket.sent[0].cover, 'Mountain');
+  socket.receive({ type: 'room-deck', requestId: socket.sent[0].requestId });
+  await ok;
+  const refused = client.chooseRoomDeck({ deck });
+  socket.receive({ type: 'validation-error', requestId: socket.sent[1].requestId, target: 'deck', validation: { valid: false, issues: [{ card: 'Black Lotus', message: 'Proibida no formato.' }] } });
+  await assert.rejects(refused, /Black Lotus: Proibida no formato\./);
+  const late = client.chooseRoomDeck({ deck });
+  socket.receive({ type: 'request-error', requestId: socket.sent[2].requestId, text: 'A partida já começou: não dá mais para trocar o deck.' });
+  await assert.rejects(late, /já começou/);
+  assert.equal(notices + validations, 0, 'the room stays: nothing goes to the general error path');
+  client.close();
+});

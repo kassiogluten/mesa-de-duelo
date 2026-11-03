@@ -329,6 +329,44 @@ public class PublicRoomsTest {
         }
     }
 
+    @Test public void playersEnterWithoutADeckAndChooseItInsideTheRoom() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel();
+        try {
+            rooms.onMessage(ana, "{\"type\":\"host\",\"name\":\"Ana\",\"config\":" + CONFIG + ",\"visibility\":\"public\"}");
+            JsonObject room = next(ana, "room").getAsJsonObject("room");
+            String code = room.get("code").getAsString();
+            JsonObject host = room.getAsJsonArray("players").get(0).getAsJsonObject();
+            assertFalse("Quem cria sem deck aparece escolhendo", host.get("ready").getAsBoolean());
+            assertFalse(host.has("cover"));
+
+            rooms.onMessage(bia, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\"}");
+            room = next(bia, "room").getAsJsonObject("room");
+            assertEquals(2, room.getAsJsonArray("players").size());
+            assertFalse("Mesa cheia, mas sem decks: não começa", room.get("started").getAsBoolean());
+            assertEquals("A sala cheia sai da lista", 0, list(rooms, new EmbeddedChannel()).size());
+
+            // Completar com computadores espera todos escolherem.
+            rooms.onMessage(ana, "{\"type\":\"fill-computers\"}");
+            assertTrue(next(ana, "error").get("text").getAsString().contains("escolherem o deck"));
+
+            rooms.onMessage(ana, "{\"type\":\"room-deck\",\"deck\":" + GREEN + "}");
+            // Trocar de ideia antes de começar vale.
+            rooms.onMessage(ana, "{\"type\":\"room-deck\",\"deck\":" + RED + "}");
+            room = next(bia, "room").getAsJsonObject("room");
+            assertTrue(room.getAsJsonArray("players").get(0).getAsJsonObject().get("ready").getAsBoolean());
+            assertFalse(room.get("started").getAsBoolean());
+
+            rooms.onMessage(bia, "{\"type\":\"room-deck\",\"deck\":" + GREEN + "}");
+            JsonObject game = state(ana);
+            assertTrue("Todos com deck: a partida começa", game.getAsJsonObject("room").get("started").getAsBoolean());
+            rooms.onMessage(bia, "{\"type\":\"room-deck\",\"deck\":" + RED + "}");
+            assertTrue(next(bia, "error").get("text").getAsString().contains("já começou"));
+        } finally {
+            for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
     @Test public void waitingRoomShowsCoversCommandersAndQuickMessages() throws Exception {
         Rooms rooms = new Rooms();
         EmbeddedChannel ana = new EmbeddedChannel(), bia = new EmbeddedChannel(), caio = new EmbeddedChannel();
