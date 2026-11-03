@@ -289,6 +289,11 @@
 .presentation-piece { position: fixed; z-index: 32; pointer-events: none; transform: translate(-50%, -50%); }
 .presentation-piece > .face { box-shadow: 0 12px 30px #0008, 0 0 0 2px var(--gold); }
 /* Pouso no campo: uma onda dourada curta em volta da carta. */
+/* Dobra (item 86): o rasgo no espaço por cima da carta que chega à pilha ou volta para o exílio. */
+.warp-rift { position: fixed; z-index: 32; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0; mix-blend-mode: screen;
+  background: radial-gradient(circle, transparent 0 34%, #0b0420cc 36% 44%, transparent 46%), conic-gradient(from 0deg, #b48cff, #5ee7ff, #2b0f55, #ff7ae0, #5ee7ff, #b48cff);
+  -webkit-mask: radial-gradient(circle, transparent 0 30%, #000 42% 62%, transparent 72%); mask: radial-gradient(circle, transparent 0 30%, #000 42% 62%, transparent 72%);
+  filter: blur(.5px) drop-shadow(0 0 12px #8f6bffaa); }
 .land-ripple { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 8px; border: 2px solid var(--gold); box-shadow: 0 0 16px color-mix(in srgb, var(--gold) 55%, transparent); opacity: 0; }
 .presentation-caption { display: block; position: absolute; top: calc(100% + 9px); left: 50%; transform: translateX(-50%); width: max-content; max-width: min(310px, 65vw); padding: 7px 12px; background: var(--bg-deep); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font: 500 13px/1.35 var(--body); text-align: center; box-shadow: 0 4px 14px #0006; }
 .semantic-highlight .face { outline: 2px solid var(--gold); outline-offset: 3px; }

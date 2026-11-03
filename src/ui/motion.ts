@@ -1,6 +1,8 @@
 import { entryTiming, millTiming, type PresentationEvent } from './presentationTimeline';
 import { damageLook, type DamageLook } from './damageEffects';
 import { loyaltyLook, walkerArrives, walkerTone, type LoyaltyLook } from './planeswalkerEffects';
+import { copySleeve } from './sleeves';
+import { warpCast, warpReturn } from './warpEffects';
 
 const KEYED = '[data-fid],[data-peek]';
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -428,6 +430,8 @@ export function createMotion(root: HTMLElement): Motion {
       fly(piece, from, to, end, duration, { caption, endRot, fade, tint });
       if (into) later(() => absorb(into), duration * .85);
     } else {
+      // A conjurada por dobra volta para o exílio no fim do turno: um rasgo menor no lugar dela.
+      if (warpReturn(event)) warpRift(from, .7);
       // Some no lugar, em luz; não precisa atravessar a mesa até a pilha do exílio.
       piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
       const ring = effect('exile-ring', { ...from, w: end.w * 1.3, h: end.w * 1.3 });
@@ -489,6 +493,14 @@ export function createMotion(root: HTMLElement): Motion {
     if (withRipple) ripple(center(el));
   }
   /** A onda dourada do pouso, em volta de uma carta ou de um monte. */
+  /** Dobra: um rasgo no espaço (anel girando em violeta e ciano) que se abre e se fecha sobre a carta. */
+  function warpRift(at: Point | undefined, size: number) {
+    if (!at || reduced()) return;
+    const w = Math.min(Math.max(at.w, 60), 150) * 1.45 * size;
+    const rift = effect('warp-rift', { ...at, w, h: w });
+    animate(rift, [{ opacity: 0, scale: '.3', rotate: '0deg' }, { opacity: 1, scale: '1', rotate: '140deg', offset: .35 }, { opacity: .8, scale: '1.08', rotate: '260deg', offset: .7 }, { opacity: 0, scale: '.2', rotate: '420deg' }], 900, 'cubic-bezier(.3,.6,.3,1)');
+    later(() => remove(rift), 920);
+  }
   function ripple(at: Point | undefined) {
     if (!at || reduced()) return;
     const ring = effect('land-ripple', { ...at, w: at.w * 1.04, h: at.h * 1.04 });
@@ -517,6 +529,7 @@ export function createMotion(root: HTMLElement): Motion {
     animate(libEl, [{ rotate: '0deg' }, { rotate: '-5deg', offset: .2 }, { rotate: '4deg', offset: .45 }, { rotate: '-2deg', offset: .7 }, { rotate: '0deg' }], 460, 'ease-in-out');
     for (const side of [-1, 1]) {
       const half = effect('presentation-piece shuffle-ghost', lib, '<div class="back"></div>');
+      copySleeve(half, libEl);
       animate(half, [{ translate: '0 0', rotate: '0deg' }, { translate: `${side * lib.w * .55}px -4px`, rotate: `${side * 8}deg`, offset: .4 }, { translate: `${side * lib.w * .2}px -2px`, rotate: `${side * -4}deg`, offset: .7 }, { translate: '0 0', rotate: '0deg' }], 480, 'cubic-bezier(.4,0,.2,1)');
       later(() => remove(half), 500);
     }
@@ -561,6 +574,7 @@ export function createMotion(root: HTMLElement): Motion {
       const toBottom = i >= topShown;
       const spread = (i - (n - 1) / 2) * w * .6;
       const ghost = effect(`presentation-piece draw-ghost scry-ghost ${toBottom ? 'to-bottom' : 'to-top'}`, { ...lib, w, h }, '<div class="back"></div>');
+      copySleeve(ghost, libEl);
       const shrink = `${lib.w / w} ${lib.h / h}`, lift = inward * (h * .85 + 12);
       animate(ghost, [
         { translate: '0 0', scale: shrink, rotate: '0deg', opacity: .9 },
@@ -845,6 +859,8 @@ export function createMotion(root: HTMLElement): Motion {
         if (landing) landedAt.set(String(id), performance.now());
         // Sem o lugar no leque (mão do oponente, mão longa), sai do centro da mão no tamanho de uma carta.
         fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, tint: zoneGlow(event.from) });
+        // Dobra: a carta chega à pilha rasgando o espaço.
+        if (warpCast(event)) { const at = to; later(() => warpRift(at, 1), options.duration * .7); }
         // Comandante conjurado da zona de comando: a taxa sobe 2 para a próxima vez.
         if (event.type === 'spell-cast' && event.from === 'Command') floatNumber(from, '+2', 'tax', ['Taxa de comandante']);
       } else if (settled) {
@@ -889,6 +905,7 @@ export function createMotion(root: HTMLElement): Motion {
       if (document.hidden || root.hidden || count < 1) return [];
       const mine = actor === options.you;
       const seat = mine ? null : root.querySelector(`[data-seat-player="${actor}"]`);
+      const libEl = seat?.querySelector('.piles .lib') ?? root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} .lib`);
       const library = (seat ? center(seat.querySelector('.piles .lib')) : undefined) ?? center(root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} .lib`));
       const handPoint = center(seat?.querySelector('.seat-hand')) ?? center(root.querySelector(mine ? '#fHand' : '#fOppHand')) ?? center(root.querySelector(mine ? '#fMeAvatar' : '#fOppAvatar'));
       // A mão pode ter sido redesenhada durante o voo: revela a carta que estiver lá agora, pelo id.
@@ -908,6 +925,7 @@ export function createMotion(root: HTMLElement): Motion {
         // O tamanho da carta sem o giro do leque (a caixa de uma carta girada é maior que ela).
         const size = card ? { w: card.offsetWidth || to.w, h: card.offsetHeight || to.h } : { w: library.w, h: library.h };
         const ghost = effect(`presentation-piece draw-ghost${options.searched ? ' search-ghost' : ''}`, { ...to, ...size }, '<div class="back"></div>');
+        copySleeve(ghost, libEl);
         // Sobe do grimório em arco, inclinada e com sombra, e assenta no lugar dela no leque, já no giro dele; a sua carta
         // vira de face para cima ao chegar.
         fly(ghost, library, to, { ...to, ...size }, travel, { delay: i * gap, endRot: card ? turnOf(card) : 0, tint: options.searched ? 'drop-shadow(0 0 10px #f2b54c)' : '' });
@@ -946,6 +964,7 @@ export function createMotion(root: HTMLElement): Motion {
       for (let i = 0; i < flights; i++) {
         const spread = flights >= 6 ? (i - (flights - 1) / 2) * 7 : 0;
         const ghost = effect('presentation-piece mill-ghost', { ...grave, w, h }, `${options.face(cards[i])}<div class="back"></div>`);
+        copySleeve(ghost, libEl);
         const dx = library.cx - grave.cx, dy = library.cy - grave.cy, delay = i * gap;
         // O arco vai para dentro da mesa (o grimório fica junto da borda de cima ou de baixo).
         const lift = Math.min(90, h * .7) * (grave.cy < window.innerHeight / 2 ? -1 : 1);
@@ -1042,6 +1061,7 @@ export function createMotion(root: HTMLElement): Motion {
       back.forEach(([key, spot], i) => {
         handSpots.delete(key);
         const ghost = effect('presentation-piece draw-ghost deal-ghost', library, '<div class="back"></div>');
+        copySleeve(ghost, libEl);
         fly(ghost, spot, library, library, 380, { delay: i * 40, fade: true });
         later(() => remove(ghost), 380 + i * 40);
       });
@@ -1054,6 +1074,7 @@ export function createMotion(root: HTMLElement): Motion {
         const size = { w: card.offsetWidth || to.w, h: card.offsetHeight || to.h };
         card.style.opacity = '0'; hiddenCards.add(card);
         const ghost = effect('presentation-piece draw-ghost deal-ghost', { ...to, ...size }, '<div class="back"></div>');
+        copySleeve(ghost, libEl);
         ghost.style.opacity = '0';
         later(() => { ghost.style.opacity = ''; }, start + i * 90);
         fly(ghost, library, to, { ...to, ...size }, 420, { delay: start + i * 90, endRot: turnOf(card) });

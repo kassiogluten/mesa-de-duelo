@@ -7,8 +7,8 @@
   border-radius: 10px; background: var(--azul-18233b, #18233b); border: 1px solid #ffffff1f; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
 }
 .tema-menu[hidden] { display: none; }
-.tema-menu button { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 7px; background: none; color: var(--ink); font: 500 14px var(--body); text-align: left; cursor: pointer; }
-.tema-menu button:hover, .tema-menu button:focus-visible { background: #ffffff12; outline: none; }
+.tema-menu button, .tema-menu a[role='menuitem'] { text-decoration: none; display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 7px; background: none; color: var(--ink); font: 500 14px var(--body); text-align: left; cursor: pointer; }
+.tema-menu button:hover, .tema-menu button:focus-visible, .tema-menu a[role='menuitem']:hover, .tema-menu a[role='menuitem']:focus-visible { background: #ffffff12; outline: none; }
 .tema-menu button[aria-checked='true'] { color: var(--gold-light); font-weight: 600; }
 .tema-menu button[aria-checked='true']::after { content: '✓'; margin-left: auto; color: var(--gold); }
 /* A amostra: o fundo da mesa no tema. */

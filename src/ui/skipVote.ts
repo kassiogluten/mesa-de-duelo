@@ -16,13 +16,14 @@ export function offlinePlayers(s: Pick<FState, 'room' | 'players' | 'you' | 'gam
     .map(p => ({ id: p.playerId!, name: s.players.find(x => x.id === p.playerId)?.name ?? p.name }));
 }
 
-export function skipBarHTML(s: Pick<FState, 'room' | 'players' | 'you' | 'gameOver' | 'skip' | 'spectating'>): string {
+/** hideVote: a votação está na janela do centro (voteDialog), então a faixa não a repete. */
+export function skipBarHTML(s: Pick<FState, 'room' | 'players' | 'you' | 'gameOver' | 'skip' | 'spectating'>, hideVote = false): string {
   const offline = offlinePlayers(s);
   const vote = s.skip?.vote;
   const skipping = new Set(s.skip?.skipping ?? []);
   if (!offline.length && !vote && !skipping.size) return '';
   const rows: string[] = [];
-  if (vote) {
+  if (vote && !hideVote) {
     const mine = vote.mine;
     rows.push(`<div class="skip-row vote" role="group" aria-label="${esc(`Votação para pular o turno de ${vote.name}`)}">
       <span class="skip-text"><strong>Pular o turno de ${esc(vote.name)}?</strong>

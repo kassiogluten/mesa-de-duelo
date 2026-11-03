@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // Além do jogo: as novidades em imagens (/novidades.html, linkada no painel Novidades e guardada com o app), a política
-// de privacidade (/privacidade.html, linkada no rodapé e no menu da conta), Minhas partidas (/partidas.html, no menu
+// de privacidade (/privacidade.html, linkada no rodapé e no menu da conta), Salas (/salas.html, no cabeçalho e no menu ⋯), Minhas partidas (/partidas.html, no menu
 // da conta), a área
 // de admin (/admin.html) e as páginas de teste da mesa (/tests/fixtures/*.html), linkadas na área de admin. Os
 // scripts das duas últimas saem em ferramentas/ e ficam fora do cache do app instalado.
@@ -12,7 +12,7 @@ const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: { index: 'index.html', novidades: 'novidades.html', privacidade: 'privacidade.html', partidas: 'partidas.html', admin: 'admin.html', ...fixtures },
+      input: { index: 'index.html', novidades: 'novidades.html', privacidade: 'privacidade.html', partidas: 'partidas.html', salas: 'salas.html', admin: 'admin.html', ...fixtures },
       output: { entryFileNames: chunk => chunk.name === 'index' || chunk.name === 'novidades' ? 'assets/[name]-[hash].js' : 'ferramentas/[name]-[hash].js' },
     },
   },

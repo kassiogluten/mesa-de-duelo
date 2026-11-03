@@ -62,7 +62,7 @@ export interface FEvent {
   /** `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). */
   prevented?: boolean;
   /** `left`: por que a carta saiu do campo, quando o Forge diz. */
-  reason?: 'destroyed' | 'sacrificed';
+  reason?: 'destroyed' | 'sacrificed' | 'warped';
   /** `mill`: a mágica ou habilidade que mandou moer, e se foi vidência em vez de moer. */
   sourceName?: string; surveil?: boolean;
   /** `damage` de uma luta (fight); `draw` de uma busca no grimório (tutor), sem dizer a carta. */
@@ -222,6 +222,8 @@ export interface FChosen { types?: string[]; colors?: string[]; names?: string[]
 export interface FPlayer {
   id: number;
   seat?: number;
+  /** Cor do verso das cartas do jogador (0 a 7), sorteada pelo servidor; ausente em pontes antigas. */
+  sleeve?: number;
   name: string;
   ai: boolean;
   eliminated?: boolean;

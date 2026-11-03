@@ -33,14 +33,14 @@ const artOf = (name: string | undefined) => { const sc = name ? cacheGet(name) :
 export const roomLink = (code: string) => `${location.origin}${location.pathname}?sala=${encodeURIComponent(code)}`;
 
 /** Os menus do topo levam para fora da sala: pergunta antes. "Ficar na sala" vem em foco: na dúvida, ninguém sai. */
-export function confirmLeaveRoom(code: string, to: 'play' | 'decks'): Promise<boolean> {
+export function confirmLeaveRoom(code: string, to: 'play' | 'decks' | 'salas'): Promise<boolean> {
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const dlg = document.createElement('dialog');
   dlg.className = 'conta-dialogo room-leave';
   dlg.setAttribute('aria-labelledby', 'roomLeaveTitle'); dlg.setAttribute('aria-describedby', 'roomLeaveText');
   dlg.innerHTML = `<h2 id="roomLeaveTitle">Sair da sala ${esc(code)}?</h2>`
-    + `<p id="roomLeaveText">Você está esperando jogadores. ${to === 'decks' ? 'Para ir a Meus decks, você sai da sala' : 'Para voltar à escolha de formato e deck, você sai da sala'}.</p>`
-    + `<footer><button type="button" class="arena-btn secondary" data-leave="yes">${to === 'decks' ? 'Sair e ir para Meus decks' : 'Sair da sala'}</button><button type="button" class="arena-btn primary" data-leave="no">Ficar na sala</button></footer>`;
+    + `<p id="roomLeaveText">Você está esperando jogadores. ${to === 'decks' ? 'Para ir a Meus decks, você sai da sala' : to === 'salas' ? 'Para ver as outras salas, você sai desta' : 'Para voltar à escolha de formato e deck, você sai da sala'}.</p>`
+    + `<footer><button type="button" class="arena-btn secondary" data-leave="yes">${to === 'decks' ? 'Sair e ir para Meus decks' : to === 'salas' ? 'Sair e ver as salas' : 'Sair da sala'}</button><button type="button" class="arena-btn primary" data-leave="no">Ficar na sala</button></footer>`;
   document.body.append(dlg);
   return new Promise(resolve => {
     let answer = false;

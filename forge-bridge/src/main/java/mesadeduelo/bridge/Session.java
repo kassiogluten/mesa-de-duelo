@@ -230,8 +230,28 @@ final class Session {
         return missing;
     }
 
+    /** Quantas cores de verso a mesa tem (veja {@code .sleeve-N} no CSS). */
+    static final int SLEEVE_COLORS = 8;
+    /** A cor do verso de cada jogador, na ordem do jogo (os assentos e depois os computadores). */
+    private volatile int[] sleeves;
+
+    /** Cores diferentes para cada jogador, sorteadas entre as {@link #SLEEVE_COLORS}. */
+    static int[] drawSleeves(int players) {
+        List<Integer> palette = new ArrayList<>();
+        for (int i = 0; i < SLEEVE_COLORS; i++) palette.add(i);
+        java.util.Collections.shuffle(palette, java.util.concurrent.ThreadLocalRandom.current());
+        int[] out = new int[players];
+        for (int i = 0; i < players; i++) out[i] = palette.get(i % SLEEVE_COLORS);
+        return out;
+    }
+
     /** O bracket de cada jogador no estado, pela ordem em que entraram no jogo: os assentos e depois os computadores. */
     private void addBrackets(JsonObject state) {
+        int[] colors = sleeves;
+        if (colors != null && state.has("players")) for (JsonElement e : state.getAsJsonArray("players")) {
+            JsonObject p = e.getAsJsonObject();
+            if (p.has("seat") && p.get("seat").getAsInt() < colors.length) p.addProperty("sleeve", colors[p.get("seat").getAsInt()]);
+        }
         if (!config.commander() || !state.has("players")) return;
         for (JsonElement e : state.getAsJsonArray("players")) {
             JsonObject p = e.getAsJsonObject();
@@ -369,6 +389,8 @@ final class Session {
             String name = aiNames != null ? aiNames.get(i) : aiDecks.size() == 1 ? "Oponente" : "Oponente " + (i + 1);
             players.add(registered(aiDecks.get(i)).setPlayer(GamePlayerUtil.createAiPlayer(name)));
         }
+        // A cor do verso das cartas de cada jogador, sorteada na primeira partida e mantida nas revanches e entre os jogos.
+        if (sleeves == null || sleeves.length != players.size()) sleeves = drawSleeves(players.size());
         // O Forge põe os humanos antes da IA (HostedMatch), então esta é a ordem dos jogadores no jogo.
         MatchJournal j = new MatchJournal(matchId, code, room, config);
         for (int i = 0; i < players.size(); i++) {

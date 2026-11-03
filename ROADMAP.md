@@ -1189,7 +1189,7 @@ Decidido em 02/11/2026 (versão 0.108.0): estilo marcante sem pausar a partida, 
 - Reduzir movimento: sem anel, onda nem pulos; ficam a moldura acesa, a cor do escudo e o número.
 - Laboratório de efeitos: seção **Planeswalker** com entrar (Jace e um multicolor), +2, 0, −1 e ultimate, dos dois lados.
 
-## 81. Relatar com a partida anexada por padrão e direto da tela de resultado
+## 81. Relatar com a partida anexada por padrão e direto da tela de resultado ✅
 
 Hoje **Anexar a partida** só vem marcado num erro relatado durante a partida (ou por **Relatar este erro**); numa sugestão ou ao relatar da tela inicial, vem desmarcado, e muita gente envia sem a partida, que é o que mais ajuda a repetir o problema. E, quando a partida acaba, a tela de vitória ou derrota não tem como relatar: é preciso voltar à tela inicial e abrir o menu.
 
@@ -1198,3 +1198,80 @@ Hoje **Anexar a partida** só vem marcado num erro relatado durante a partida (o
 - [x] Na melhor de três, o mesmo botão entre os jogos, em **Prepare o próximo jogo**.
 
 Decidido em 02/11/2026 (versão 0.118.0): o botão se chama **Relatar um problema**, abre o formulário já em **Algo deu errado** e fica discreto, abaixo dos botões da tela de resultado (e abaixo dos botões de **Prepare o próximo jogo**); a partida que vai junto é a que acabou de terminar, ainda na memória. **Anexar a partida** vem marcado sempre que há partida, em erro ou sugestão, e trocar o tipo não mexe mais na caixa. Página de teste: `window.fixture.gameEnd('result' | 'sideboard')` em `tests/fixtures/duel-table.html`.
+
+## 82. Pedido de desfazer no centro da tela ✅
+
+Hoje, quando alguém pede para desfazer numa sala, quem precisa aceitar vê o pedido só numa faixa estreita no alto da mesa (a mesma das votações para pular o turno de quem caiu), com **Aceitar** e **Recusar**. Ela passa despercebida no meio da jogada, e a partida fica parada esperando um voto que o jogador nem notou.
+
+- [x] O pedido que o jogador precisa votar aparece no centro da tela, por cima da mesa: quem pediu, o que volta ("desfazer: conjurar Lightning Bolt") e os botões **Aceitar** e **Recusar**.
+- [x] Some assim que o jogador vota, quando quem pediu desiste ou quando o pedido se resolve; quem só espera o voto dos outros (ou quem pediu) continua vendo a faixa do alto, como hoje.
+- [x] Teclado e leitor de tela: o foco vai para o pedido ao aparecer e volta para onde estava ao sumir; o pedido é anunciado.
+
+A decidir: se a janela no centro bloqueia a mesa até o voto (como as escolhas) ou deixa ver e clicar no campo por trás; se toca um som ou vibra ao chegar; e se a votação para pular o turno de quem caiu ganha o mesmo tratamento.
+
+## 83. Ícone no topo do cemitério e do exílio ✅
+
+Hoje o cemitério e o exílio aparecem iguais ao lado do grimório: os dois mostram a carta do topo e a contagem, e só o balão do mouse ("Cemitério", "Exílio") diz qual é qual. No toque, ou de relance no meio da partida, é fácil confundir os dois, principalmente quando o exílio tem uma carta parecida com a do cemitério.
+
+- [x] Um mini ícone no topo de cada monte: um para o cemitério e outro para o exílio, pequeno, sem cobrir a carta do topo nem a contagem (como os outros selos discretos da mesa).
+- [x] Vale para todos os jogadores (o seu lado, o do oponente, os assentos do Commander e a mesa em foco) e também com o cemitério vazio.
+- [x] O nome do monte continua no balão e no leitor de tela; o ícone só ajuda a reconhecer de relance.
+- [x] Funciona nos temas claros e escuros e no celular, onde os montes são menores.
+
+A decidir: o desenho de cada ícone (por exemplo, lápide para o cemitério e um portal ou vórtice para o exílio), o canto em que ele fica, e se o grimório ganha um também para completar o trio.
+
+## 84. Corrigir o texto dos botões "Ver a mesa de" de quem assiste ✅
+
+Assistindo a uma partida de Commander, a fileira **Assistindo. Ver a mesa de:** (acima da barra de baixo) não cabe: os botões com o nome de cada jogador ficam estreitos e o texto sai pela borda. "Alisson" aparece cortado dentro do botão dourado, "Giuseppe Cadura" e "The Powergu…" quebram em duas linhas e vazam para fora, e o último ("MTGomes…") é cortado pela beira da tela. Visto em 02/11/2026 numa mesa de quatro jogadores.
+
+- [x] Cada botão mostra o nome inteiro numa linha só, ou cortado com reticências e o nome completo no balão e no leitor de tela, sem o texto sair do botão.
+- [x] A fileira cabe na largura da tela com quatro jogadores de nomes longos: quebra em mais de uma linha ou rola de lado, sem cortar o último botão na beira.
+- [x] O botão do jogador que se está vendo (o dourado) continua legível, sem o texto encostar na borda.
+- [x] Confere no celular em pé e deitado, e no computador.
+
+A decidir: se os nomes longos são cortados com reticências ou se a fileira quebra em duas linhas; e se a fileira vira uma lista de escolha (como um menu) quando houver nomes demais para caber.
+
+## 85. Verso das cartas (sleeve) na cor de cada jogador ✅
+
+Hoje todas as cartas viradas para baixo têm o mesmo verso: a mão do oponente, os grimórios, as cartas que voam na compra, as viradas para baixo no campo e as escondidas no exílio. Numa mesa com vários jogadores, não dá para saber de relance de quem é um grimório ou uma carta escondida, e a mesa fica sem a cara de "cada um com o seu sleeve" de uma partida de verdade.
+
+- [x] Cada jogador ganha uma cor de sleeve, sorteada no começo da partida entre uma paleta de cores bem diferentes umas das outras; dois jogadores da mesma mesa nunca ficam com a mesma cor.
+- [x] O verso de todas as cartas desse jogador usa a cor dele: a mão (a dele, vista pelos outros), o grimório, a compra e as cartas que voam, as viradas para baixo no campo e as escondidas no exílio.
+- [x] A cor é a mesma para todos na mesa (o servidor sorteia e manda), continua igual na revanche e entre os jogos da melhor de três, e quem assiste vê as mesmas cores.
+- [x] O verso continua reconhecível como verso de carta: a cor tinge a moldura ou o fundo, sem esconder o desenho.
+- [x] Funciona nos temas claros e escuros, com reduzir movimento e no celular; as viradas para baixo com a carta de lembrete no campo continuam com a carta de lembrete.
+
+A decidir: a paleta (quantas cores e quais, pensando em quem não distingue vermelho e verde); se o jogador pode escolher a própria cor nas opções em vez do sorteio (e o que acontece quando dois escolhem a mesma); e se a cor aparece também em outros lugares do jogador, como a borda do retrato ou o nome.
+
+## 86. Efeito de som e de luz ao conjurar por dobra ✅
+
+Hoje uma mágica conjurada por **dobra** (warp) entra na pilha como qualquer outra: só a etiqueta "Conjurada por dobra" diz que foi diferente. É uma mecânica chamativa, já que a carta entra mais barata e no fim do turno volta para o exílio, e merece um momento próprio, para quem joga e para quem assiste.
+
+- [x] Efeito visual ao conjurar por dobra: a carta chega à pilha com uma distorção ou um rasgo no espaço, diferente da conjuração comum.
+- [x] Som próprio da dobra, nos pacotes de som, respeitando o som desligado.
+- [x] Um efeito menor quando a permanente conjurada por dobra volta para o exílio no fim do turno, para o jogador entender por que ela sumiu.
+- [x] Respeitar "reduzir movimento" do sistema e não atrasar a partida: o efeito acompanha a jogada.
+- [x] Ver o que a ponte já manda: a mesa já sabe que a mágica foi conjurada por dobra (a etiqueta da pilha); conferir se dá para reconhecer também a volta ao exílio.
+- [x] Cenário no laboratório de efeitos (item 18).
+
+## 87. Página própria para as salas e partidas em andamento ✅
+
+Hoje a lista de salas fica escondida: só aparece depois de escolher **Outra pessoa** como oponente e a aba **Entrar numa sala**, e mesmo ali divide o espaço com o nome, o código e a escolha do deck. Quem abre o jogo não vê que há gente esperando numa sala ou partidas para assistir (agora também as contra o computador), e as salas públicas acabam vazias.
+
+- [x] Uma página só para isso (por exemplo `salas.html`, ao lado de `partidas.html` e `novidades.html`), com as salas esperando jogadores e as partidas em andamento para assistir, cada uma com formato, bracket, lugares, quem joga e quantos assistem.
+- [x] Um caminho bem visível na tela inicial: um botão ou aviso com a contagem ("2 salas esperando · 3 partidas para assistir"), que leva à página; no menu também.
+- [x] Entrar e assistir direto da página, com as mesmas regras de hoje (deck do formato, nome, sala cheia ou já começada); entrar numa sala pede o deck sem passar pela tela de configurar partida.
+- [x] A lista se atualiza sozinha enquanto a página está aberta, e diz quando não há nada ("Nenhuma sala aberta agora: crie uma") com o atalho para criar uma sala pública.
+- [x] Filtros simples por formato (Commander, Standard, Pauper...) e por "esperando jogadores" ou "em andamento".
+- [x] Celular primeiro: a lista em cartões grandes, fácil de tocar; tema claro e escuro.
+
+A decidir: o nome e o endereço da página ("Salas", "Mesas abertas", "Ao vivo"); se a lista da tela de configurar partida continua lá ou dá lugar ao atalho; se a página mostra uma prévia da mesa (vida, turno) das partidas em andamento; e se avisa (som ou notificação) quando uma sala nova do formato preferido abre.
+
+Decidido em 02/11/2026 (versão 0.120.0), itens 82 a 87:
+
+- 82: o pedido de desfazer e a votação para pular o turno de quem caiu abrem no centro (`#fVote`, `src/ui/voteDialog.ts`) e bloqueiam a mesa até o voto, com o som de aviso e a vibração (`turnBuzz.nudge`); o foco começa em Aceitar/Sim. Depois do voto, volta a faixa do alto.
+- 83: lápide no cemitério e portal no exílio, no canto de cima à esquerda (o oposto da contagem); o grimório ficou sem ícone.
+- 84: dois botões por linha, nome numa linha só com reticências e o completo no balão (`title`).
+- 85: o servidor sorteia uma de 8 cores por jogador na primeira partida da sessão (`Session.drawSleeves`, campo `sleeve` de cada jogador), sem repetir; a mesa tinge o verso pelas variáveis `--sleeve-*` da classe `sleeve-N`, e as cartas que voam copiam a cor do grimório de onde saem. Só sorteada, sem escolha nas opções.
+- 86: o rasgo (`.warp-rift`) aparece na pilha ao conjurar por dobra (a pilha diz `cast.mode: "warp"`) e, menor, quando a permanente volta para o exílio (o servidor marca `reason: "warped"` quando quem resolve é o gatilho da dobra). O som é o de conjurar a 0,72× com um eco a 0,16 s; no exílio, o do exílio a 0,82×. Seção **Dobra** no laboratório de efeitos.
+- 87: página **Salas** em `salas.html`, com link no cabeçalho (com a contagem, atualizada a cada 30 s na tela inicial) e no menu ⋯; a lista da aba Entrar numa sala continua. Entrar e assistir abrem a mesa pelo link da sala (`?sala=`), e "Criar uma sala" pelo `?criar-sala=1`. Ficou de fora: prévia da mesa das partidas em andamento e aviso de sala nova.

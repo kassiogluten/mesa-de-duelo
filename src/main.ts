@@ -466,8 +466,11 @@ const saved = loadResume();
 const savedFree = loadFreeTable();
 // Link de convite (?sala=MESA): sai do endereço para recarregar a página não entrar de novo.
 const roomLink = new URLSearchParams(location.search).get('sala')?.trim().toUpperCase();
-if (roomLink) { const params = new URLSearchParams(location.search); params.delete('sala'); history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : '') + location.hash); }
+// Vindo da página Salas: abre a criação de uma sala pública (?criar-sala=1).
+const createRoomLink = new URLSearchParams(location.search).has('criar-sala');
+if (roomLink || createRoomLink) { const params = new URLSearchParams(location.search); params.delete('sala'); params.delete('criar-sala'); history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : '') + location.hash); }
 // Quem já está numa partida volta para ela; o link fica para depois.
 if (saved) void resumeSaved(saved);
 else if (roomLink) lobby.openRoomLink(roomLink);
+else if (createRoomLink) lobby.openCreateRoom();
 else if (savedFree) { freeTable.resume(savedFree); show('free'); }

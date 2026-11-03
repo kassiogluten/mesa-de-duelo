@@ -54,6 +54,12 @@ export function createTurnBuzz() {
       try { localStorage.setItem(TURN_BUZZ_KEY, saved); } catch { /* Storage is optional. */ }
       if (on && supported) try { navigator.vibrate(PATTERN); } catch { /* Só uma amostra. */ }
     },
+    /** Um aviso avulso (o voto que a mesa espera de você), com as mesmas regras de silêncio. */
+    nudge() {
+      if (!supported || !buzzEnabled(saved) || document.hidden || Date.now() - lastBuzz <= QUIET_MS) return;
+      lastBuzz = Date.now();
+      try { navigator.vibrate(PATTERN); } catch { /* Alguns navegadores só deixam depois do primeiro toque. */ }
+    },
     reset() { lastKey = ''; primed = false; },
   };
 }

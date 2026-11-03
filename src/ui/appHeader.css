@@ -10,6 +10,11 @@
 .shared-shell-header.home-top nav { display: flex; align-items: center; align-self: stretch; gap: 8px; order: 0; width: auto; }
 .shared-shell-header .home-nav { min-height: 44px; padding: 8px 16px; white-space: nowrap; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer; font: 600 15px/1.35 var(--body, sans-serif); }
 .shared-shell-header .home-nav.active { color: var(--gold-light); background: #f2b54c0c; box-shadow: inset 0 -2px var(--gold); }
+.shared-shell-header a.home-nav { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+/* Quantas salas esperam e quantas partidas dá para assistir: dourado com sala esperando jogadores, discreto só com partidas. */
+.shared-shell-header .nav-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #ffffff14; color: var(--ink); font: 700 12px/1 var(--body); font-variant-numeric: tabular-nums; }
+.shared-shell-header .nav-count.open { background: var(--gold); color: #281a05; }
+.shared-shell-header .nav-count[hidden] { display: none; }
 .shared-shell-header .home-nav:disabled, .shared-shell-header [aria-disabled='true'] { opacity: .55; cursor: default; }
 .shared-shell-header .home-news { margin-left: auto; }
 .shared-shell-header .home-news .news { position: relative; inset: auto; }

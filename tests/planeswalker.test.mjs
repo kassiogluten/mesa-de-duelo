@@ -13,8 +13,8 @@ const sourceModule = async (path, imports) => import(await sourceUri(path, impor
 const TIMELINE = '../src/ui/presentationTimeline.ts';
 const { PresentationTimeline, presentationDuration, calloutDuration } = await sourceModule(TIMELINE);
 const { walkerTone, walkerArrives, loyaltyLook } = await sourceModule('../src/ui/planeswalkerEffects.ts');
-const { soundForEvent, soundVariation, AudioEventMix, SOUND_FILES } = await sourceModule('../src/ui/audio.ts', { './presentationTimeline': TIMELINE });
-const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': TIMELINE, './planeswalkerEffects': '../src/ui/planeswalkerEffects.ts' });
+const { soundForEvent, soundVariation, AudioEventMix, SOUND_FILES } = await sourceModule('../src/ui/audio.ts', { './presentationTimeline': TIMELINE, './warpEffects': '../src/ui/warpEffects.ts' });
+const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': TIMELINE, './planeswalkerEffects': '../src/ui/planeswalkerEffects.ts', './sleeves': '../src/ui/sleeves.ts', './warpEffects': '../src/ui/warpEffects.ts' });
 const event = (seq, type, extra = {}) => ({ seq, type, ...extra });
 const jace = { id: 7, name: 'Jace Beleren', planeswalker: true, manaCost: '{1}{U}{U}', counters: { LOYALTY: 5 } };
 const loyalty = (cost, extra = {}) => event(2, 'ability-activated', { card: jace, sourceId: 7, actor: 1, loyalty: true, cost, text: 'Jace Beleren - Each player draws a card.', ...extra });

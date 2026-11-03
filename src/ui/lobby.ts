@@ -5,6 +5,7 @@ import { mountAppHeader } from './appHeader';
 import { esc, pip } from './cardtext';
 import { openDeckPreview } from './deckPreview';
 import { joinableRooms, publicRoomsHTML, watchableRooms, type PublicRoomsState } from './publicRooms';
+import { contagemTexto } from '../salas/view';
 import { confirmLeaveRoom, mountRoomLobby } from './roomLobby';
 import { bracketBadgeHTML, CARD_DATA_ERROR, deckArt, deckColors, deckPriceHTML, missingCardData } from './deckStats';
 import { bracketLabel, deckBracket } from '../brackets';
@@ -28,6 +29,8 @@ export interface Lobby {
   roomSay(seat: number, key: RoomSaying): void;
   /** Link de convite (?sala=CÓDIGO): busca a sala e entra, como pelo código. */
   openRoomLink(code: string): void;
+  /** Vindo da página Salas (?criar-sala=1): Outra pessoa, na aba Criar sala, pública. */
+  openCreateRoom(): void;
 }
 export interface LobbyOptions {
   onPlay(you: DeckData, opp: DeckData | null, config: MatchConfig, opponents?: (DeckData | null)[]): Promise<void>;
@@ -59,6 +62,8 @@ const REFRESH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8
 const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
 /** De quanto em quanto tempo a lista de salas públicas se atualiza sozinha, com a tela à vista. */
 const ROOMS_EVERY_MS = 10_000;
+/** A contagem de Salas no cabeçalho se atualiza com menos pressa que a lista aberta. */
+const ROOM_COUNT_EVERY_MS = 30_000;
 /** Os sorteados evitam O/0 e I/1, mas quem escolhe o código pode usar qualquer letra ou número. */
 const ROOM_CODE = /^[A-Z0-9]{4}$/;
 const WATCH_CODE = /^[A-Z0-9]{8}$/;
@@ -311,6 +316,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (request !== roomsRequest) return;
     list.setAttribute('aria-busy', 'false');
     publicRooms = next;
+    if (Array.isArray(next)) showRoomCount(next);
     renderRooms();
     if (announce) {
       const count = Array.isArray(next) ? joinableRooms(next).length : -1, live = Array.isArray(next) ? watchableRooms(next).length : 0;
@@ -592,6 +598,14 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     }});
   refresh();
   fitSidebar();
+  // Salas no cabeçalho com a contagem (item 87): quantas salas esperam e quantas partidas dá para assistir.
+  async function countRooms() {
+    if (root.hidden || document.visibilityState !== 'visible') return;
+    try { showRoomCount(await opts.onListRooms(netURL())); } catch { /* sem servidor: a contagem fica como estava */ }
+  }
+  function showRoomCount(rooms: PublicRoom[]) { header.setRooms(joinableRooms(rooms).length, watchableRooms(rooms).length, contagemTexto(rooms)); }
+  void countRooms();
+  setInterval(() => void countRooms(), ROOM_COUNT_EVERY_MS);
   let loadingCards = false;
   /** Busca os dados das cartas dos decks; se falhar e faltar a arte ou as cores de algum deck, avisa com Tentar de novo. */
   function loadCards() {
@@ -613,6 +627,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     mode = 'net'; netTab = 'join'; room = null;
     $<HTMLInputElement>('#netCode').value = code;
     findRoom(code, false, true);
+  }, openCreateRoom() {
+    if (busy || waitingRoom) return;
+    mode = 'net'; netTab = 'create'; visibility = 'public'; room = null;
+    refresh();
+    $('#netName').focus();
   }, showRoom(nextRoom) {
     preflight++; waitingRoom = nextRoom;
     // A partida começou (ou a sala acabou) com a pergunta de sair aberta: não há mais de onde sair.

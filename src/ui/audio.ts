@@ -1,4 +1,5 @@
 import { harmfulCounter, type PresentationEvent } from './presentationTimeline';
+import { warpCast, warpReturn } from './warpEffects';
 
 /** Same cues, same file names: each themed pack lives in its own folder under audio/. */
 export const SOUND_PACKS = [
@@ -119,9 +120,13 @@ export function soundVariation(event: PresentationEvent, matchId: string, you?: 
   const directional = you !== undefined && actor !== undefined;
   // O ultimate usa o som da lealdade mais grave e mais forte.
   const ultimate = event.type === 'ability-activated' && !!event.ultimate;
+  // A dobra usa o som de conjurar bem mais grave, com um eco (veja `echo`); a volta ao exílio, o do exílio mais grave.
+  const warp = warpCast(event), warpBack = warpReturn(event);
   return {
-    rate: (1 + ((hash & 65535) / 65535 - .5) * .06 - (opponent ? .012 : 0)) * (ultimate ? .8 : 1),
-    gain: (.92 + ((hash >>> 16) & 255) / 255 * .12) * (ultimate ? 1.3 : 1),
+    rate: (1 + ((hash & 65535) / 65535 - .5) * .06 - (opponent ? .012 : 0)) * (ultimate ? .8 : 1) * (warp ? .72 : warpBack ? .82 : 1),
+    gain: (.92 + ((hash >>> 16) & 255) / 255 * .12) * (ultimate ? 1.3 : 1) * (warp ? 1.15 : 1),
+    /** Segunda voz atrasada e mais baixa, como um eco do espaço se rasgando; 0 sem eco. */
+    echo: warp ? .45 : 0,
     pan: (directional ? opponent ? .09 : -.09 : 0) + ((hash >>> 24) / 255 - .5) * .04,
   };
 }
@@ -328,6 +333,16 @@ export function createGameAudio() {
       source.connect(gain); gain.connect(pan); pan.connect(master);
       voices.add(source);
       source.onended = () => { voices.delete(source); source.disconnect(); gain.disconnect(); pan.disconnect(); };
+      if (variation.echo && voices.size < MAX_VOICES) {
+        const echo = context.createBufferSource(), echoGain = context.createGain();
+        echo.buffer = sample;
+        echo.playbackRate.value = variation.rate * .86;
+        echoGain.gain.value = variation.gain * level * variation.echo;
+        echo.connect(echoGain); echoGain.connect(pan);
+        voices.add(echo);
+        echo.onended = () => { voices.delete(echo); echo.disconnect(); echoGain.disconnect(); };
+        echo.start(context.currentTime + .16);
+      }
       source.start();
     },
   };

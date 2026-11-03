@@ -188,6 +188,7 @@ final class VisibleEvents {
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
                 if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
+                if (from == ZoneType.Battlefield && to == ZoneType.Exile && warpReturn()) e.addProperty("reason", "warped");
                 resolvingSource(e);
                 // Os marcadores de "entra com" chegam logo antes da entrada: o som da entrada já basta para eles.
                 if (to == ZoneType.Battlefield) for (var it = history.descendingIterator(); it.hasNext();) {
@@ -363,6 +364,16 @@ final class VisibleEvents {
      * movimento só as que entram pela mesma resolução (fichas, blink em massa); na saída, mostra quem removeu. Fora de
      * uma resolução (custo, combate, ações baseadas no estado) não vai nada.
      */
+    /** A permanente conjurada por dobra volta para o exílio no fim do turno: quem resolve é o gatilho da dobra. */
+    private boolean warpReturn() {
+        if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return false;
+        try {
+            var resolving = game.getStack().peek();
+            var sa = resolving == null ? null : resolving.getSpellAbility();
+            return sa != null && sa.isTrigger() && sa.getTrigger() != null && sa.getTrigger().isKeyword(forge.game.keyword.Keyword.WARP);
+        } catch (RuntimeException concurrentRead) { return false; }
+    }
+
     private void resolvingSource(JsonObject e) {
         if (game == null || !game.getStack().isResolving() || game.getStack().isEmpty()) return;
         var resolving = game.getStack().peek();

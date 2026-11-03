@@ -37,6 +37,8 @@ import { STACK_KINDS, loyaltyLineIn, modeLineIn, stackBadgeText, stackCastLine, 
 import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
 import { skipBarHTML } from './skipVote';
 import { UNDO_ICON, undoBarHTML, undoButtonState } from './undo';
+import { voteDialog } from './voteDialog';
+import { sleeveClass } from './sleeves';
 import './undo.css';
 import './focusView.css';
 import './skipVote.css';
@@ -93,6 +95,9 @@ const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.
 const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/** Ícones mínimos no canto dos montes, para o cemitério (lápide) e o exílio (portal) não se confundirem de relance. */
+const PILE_ICON_GY = '<span class="pile-icon gy-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 21V10.5a5.5 5.5 0 0 1 11 0V21M4 21h16M12 9.5v6M9.5 12h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+const PILE_ICON_EXILE = '<span class="pile-icon exile-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5A6 6 0 1 0 14.5 18a3.6 3.6 0 1 0-3.5-4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>';
 const ICON_FLAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4m0 0h11l-2 4 2 4H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
 /** Enjoo de invocação: estrelinhas girando em volta, como personagem tonto de desenho animado. */
@@ -172,6 +177,8 @@ function devTools() {
 export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions): ForgeTableView {
   // Vibração na sua vez (S19); criada antes do HTML porque a opção só aparece onde o aparelho vibra.
   const turnBuzz = createTurnBuzz();
+  /** O voto aberto na janela do centro, para avisar (som e vibração) só quando chega um novo. */
+  let lastVoteKey = '';
   root.innerHTML = `
   <div class="arena forge">
     <div class="mat" aria-hidden="true"></div>
@@ -270,6 +277,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="overlay" id="fZone" hidden></div>
     <div class="overlay stack-gallery-overlay" id="fStackGallery" hidden></div>
     <div class="overlay" id="fRemoval" hidden></div>
+    <div class="overlay vote-overlay" id="fVote" hidden></div>
   </div>`;
 
   const $ = (sel: string) => root.querySelector(sel) as HTMLElement;
@@ -755,7 +763,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function syncModal() {
     // Com o foco num oponente, a decisão que chegar espera atrás dele (a tela avisa); só o que se abre dali (cemitério, exílio) vem na frente.
     const focusOpen = !$('#fFocus').hidden;
-    const required = (focusOpen ? ['#fZone'] : ['#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval']).map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? (focusOpen ? $('#fFocus') : null);
+    const required = (focusOpen ? ['#fZone'] : ['#fVote', '#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval']).map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && questionMinimized())) ?? (focusOpen ? $('#fFocus') : null);
     if (required && !$('#fSettings').hidden) {
       $('#fSettings').hidden = true;
       root.querySelector('[aria-controls="fSettings"]')?.setAttribute('aria-expanded', 'false');
@@ -775,7 +783,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   /** Onde o foco começa numa janela: a escolha principal (o modo recomendado, o primeiro gatilho, o botão de confirmar
    *  quando não há opções a marcar), para o Espaço apertá-la; senão, o primeiro controle. Nunca o "Ver a mesa", que fica no Esc. */
   function modalStart(active: HTMLElement) {
-    return active.querySelector<HTMLElement>('.play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]')
+    return active.querySelector<HTMLElement>('[data-vote-start], .play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]')
       ?? (active.querySelector('[data-q-opt]') ? null : active.querySelector<HTMLElement>('.q-actions .arena-btn.primary:not(:disabled)'))
       ?? [...active.querySelectorAll<HTMLElement>('button:not(:disabled), input, [tabindex="0"]')].find(el => !el.matches('[data-ui="question-minimize"]'));
   }
@@ -932,7 +940,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const label = (c: FCard) => ptOf(c.name)?.name || c.name || (c.hiddenFace?.name ? `${ptOf(c.hiddenFace.name)?.name || c.hiddenFace.name} (virada para baixo)` : 'Carta');
   /** A carta virada para baixo como você a vê: com a frente, quando pode olhá-la. */
   const seenFace = (c: FCard): FCard => c.faceDown && c.hiddenFace?.name ? { ...c, ...c.hiddenFace, faceDown: false } : c;
-  const BACK_FACE = '<div class="face"><div class="back" style="width:100%;height:100%"></div></div>';
+  /** O verso de uma carta, na cor do jogador que a controla. */
+  const sleeveOf = (playerId: number | undefined) => client?.state?.players.find(p => p.id === playerId)?.sleeve;
+  const backFace = (c?: FCard) => `<div class="face"><div class="back${sleeveClass(sleeveOf(c?.controller))}" style="width:100%;height:100%"></div></div>`;
   const HIDDEN_EYE ='<span class="hidden-eye" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>';
   /** "Emblem — Kaito, Bane of Nightmares" → "Kaito, Bane of Nightmares" (o planeswalker que gerou o emblema). */
   const emblemSource = (c: FCard) => (c.name ?? '').replace(/^Emblem\s*[—–-]\s*/i, '');
@@ -954,7 +964,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
    */
   function faceDownField(c: FCard, size: 'small' | 'normal'): string {
     const r = faceDownReminder(c);
-    if (!r) return BACK_FACE;
+    if (!r) return backFace(c);
     const style = faceStyle(c, true);
     return faceHTML({ name: r.label, manaCost: '', typeLine: 'Criatura', power: c.power ?? 2, toughness: c.toughness ?? 2, creature: true, color: 'C',
       image: style === 'full' ? size === 'small' ? r.small : r.normal : undefined, style, art: r.art, text: r.text, back: true });
@@ -968,7 +978,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       return html.replace(/^\s*<div class="face/, `<div class="face hidden-known${field ? ' on-field' : ''}`).replace(/<\/div>\s*$/, `${HIDDEN_EYE}</div>`);
     }
     if (c.faceDown && field) return faceDownField(c, size);
-    if (c.faceDown || !c.name) return BACK_FACE;
+    if (c.faceDown || !c.name) return backFace(c);
     const sc = cacheGet(c.name, c.print);
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
     const style = faceStyle(c, field);
@@ -1557,14 +1567,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Exílio só aparece com cartas: é onde ficam as tramadas (plot), as de Aventura e afins, que dá para conjurar dali.
     const ex = p.exile[p.exile.length - 1];
     const exLive = p.exile.some(c => canUse(s, c)) ? ' actionable' : '';
-    const exile = ex ? `<div class="pile gy exile${exLive}" data-gy="${p.id}" data-zone="exile" role="button" tabindex="0" title="Exílio" aria-label="Ver exílio de ${esc(p.name)} (${p.exile.length})"><div class="gy-top" data-peek="${ex.id}">${face(ex, 'small')}</div><span>${p.exile.length}</span></div>` : '';
+    const exile = ex ? `<div class="pile gy exile${exLive}" data-gy="${p.id}" data-zone="exile" role="button" tabindex="0" title="Exílio" aria-label="Ver exílio de ${esc(p.name)} (${p.exile.length})"><div class="gy-top" data-peek="${ex.id}">${face(ex, 'small')}</div>${PILE_ICON_EXILE}<span>${p.exile.length}</span></div>` : '';
     // Topo do grimório à vista (Vizier of the Menagerie, Courser of Kruphix...): tocar joga a carta quando dá, senão mostra.
     const lt = p.libraryTop;
     const library = lt
       ? `<div class="pile lib top-visible${canUse(s, lt) ? ' actionable' : ''}" title="Grimório"><div class="gy-top" data-fid="${lt.id}" data-library-top role="button" tabindex="0" aria-label="${esc(label(lt))}, topo do grimório de ${esc(p.name)}${canUse(s, lt) ? '. Jogar' : ''}">${face(lt, 'small')}</div><span>${p.library}</span></div>`
-      : `<div class="pile lib" title="Grimório"><div class="back"></div><span>${p.library}</span></div>`;
+      : `<div class="pile lib${sleeveClass(p.sleeve)}" title="Grimório"><div class="back"></div><span>${p.library}</span></div>`;
     return `${library}
-      <div class="pile gy${gyLive}" data-gy="${p.id}" data-zone="gy" role="button" tabindex="0" title="Cemitério" aria-label="Ver cemitério de ${esc(p.name)} (${p.graveyard.length})">${top ? `<div class="gy-top" data-peek="${top.id}">${face(top, 'small')}</div>` : '<div class="gy-empty"></div>'}<span>${p.graveyard.length}</span></div>${exile}`;
+      <div class="pile gy${gyLive}" data-gy="${p.id}" data-zone="gy" role="button" tabindex="0" title="Cemitério" aria-label="Ver cemitério de ${esc(p.name)} (${p.graveyard.length})">${top ? `<div class="gy-top" data-peek="${top.id}">${face(top, 'small')}</div>` : '<div class="gy-empty"></div>'}${PILE_ICON_GY}<span>${p.graveyard.length}</span></div>${exile}`;
   }
 
   function commandCards(s: FState, p: FPlayer) {
@@ -2584,7 +2594,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Quem assiste não vê a mão de ninguém: a de baixo também fica de costas, só com a quantidade.
     if (s.watching) setHTML($('#fHand'), Array.from({ length: me.handCount }, (_, i) => {
       const off = i - (me.handCount - 1) / 2;
-      return `<div class="hand-slot"><div class="hcard hidden-card" aria-hidden="true" style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}"><div class="back"></div></div></div>`;
+      return `<div class="hand-slot"><div class="hcard hidden-card" aria-hidden="true" style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}"><div class="back${sleeveClass(me.sleeve)}"></div></div></div>`;
     }).join(''));
     knownHand = new Set(fan.map(({ c }) => c.id).filter(id => !incoming(id) || arriving.has(id)));
     handPrimed = true;
@@ -2763,7 +2773,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const undoButton = undoButtonState(s), undoEl = $('#fUndo') as HTMLButtonElement;
     undoEl.hidden = undoButton.hidden; undoEl.disabled = undoButton.disabled;
     undoEl.title = undoButton.title; undoEl.setAttribute('aria-label', undoButton.title || 'Desfazer');
-    const skipBar = skipBarHTML(s) + undoBarHTML(s);
+    // O voto que a mesa espera de você vai para o centro; a faixa do alto fica com o resto (quem falta, quem caiu).
+    const vote = voteDialog(s);
+    const skipBar = skipBarHTML(s, vote?.kind === 'skip') + (vote?.kind === 'undo' ? '' : undoBarHTML(s));
+    const voteEl = $('#fVote');
+    if (vote) {
+      setHTML(voteEl, vote.html);
+      voteEl.hidden = false;
+      if (vote.key !== lastVoteKey) { audio.cue('turn-self', .45); turnBuzz.nudge(); }
+    } else voteEl.hidden = true;
+    lastVoteKey = vote?.key ?? '';
     setHTML($('#fSkipBar'), skipBar);
     $('#fSkipBar').hidden = !skipBar;
     $('#fMatchBar').hidden = multiplayer || !$('#fMatchBar').hasChildNodes();
@@ -2878,7 +2897,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   /** Quem assiste: o aviso e um botão por jogador, para ver a partida da mesa de cada um. */
   function watchBarHTML(s: FState) {
-    const seats = s.players.map(p => `<button class="arena-btn ${p.id === s.you ? 'primary' : 'secondary'}" data-ui="watch-player" data-player="${p.id}" aria-pressed="${p.id === s.you}">${esc(p.name)}</button>`).join('');
+    const seats = s.players.map(p => `<button class="arena-btn ${p.id === s.you ? 'primary' : 'secondary'}" data-ui="watch-player" data-player="${p.id}" aria-pressed="${p.id === s.you}" title="${esc(p.name)}">${esc(p.name)}</button>`).join('');
     return `<span class="spectating-label">Assistindo. Ver a mesa de:</span><span class="watch-seats" role="group" aria-label="Ver a mesa de">${seats}</span>`;
   }
 

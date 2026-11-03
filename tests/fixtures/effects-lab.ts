@@ -132,6 +132,8 @@ function table() {
     return c;
   }
   let lastAdded: number | undefined;
+  /** A permanente conjurada por dobra, que volta para o exílio no fim do turno (seção Dobra). */
+  let warped = 0;
   let turnShown = false;
   /** Enche a sua mão até 6 cartas, com terrenos e criaturas. */
   function deal() {
@@ -415,6 +417,29 @@ function table() {
       emit('ability-activated', { card: structuredClone(w), sourceId: w.id, actor: w.controller, text: `${w.name} - ${text}`, targets: { cards: [], players: cost === '+2' ? [] : [w.controller === ME ? OPP : ME] },
         stackId: nextId++, to: 'Stack', loyalty: true, cost, ...(ultimate ? { ultimate: true } : {}) });
       return ultimate ? 'Ultimate: onda de luz pela mesa, aviso maior e o som da lealdade mais grave.' : `Lealdade ${cost.replace('-', '−')}: o escudo reage e o custo flutua acima dele.`;
+    },
+    // Dobra (item 86): conjurada pelo custo de dobra (a pilha diz cast.mode "warp") e, no fim do turno, de volta ao exílio.
+    warp: c => {
+      const me = player(ME);
+      if (c.kind === 'cast') {
+        const kite = { id: nextId++, controller: ME, ...card('Nova Hellkite', { creature: true, power: 4, toughness: 5, keywords: ['FLYING', 'HASTE'], typeLine: 'Creature — Dragon', manaCost: '{3}{R}{R}' }) };
+        const stackId = nextId++;
+        state.stack = [{ id: stackId, kind: 'spell', text: 'Nova Hellkite', source: structuredClone(kite), controller: ME, cast: { mode: 'warp' } }];
+        emit('spell-cast', { card: structuredClone(kite), sourceId: kite.id, actor: ME, from: 'Hand', to: 'Stack', stackId });
+        flush();
+        setTimeout(() => {
+          state.stack = []; me.battlefield.push(kite); lastAdded = kite.id; warped = kite.id;
+          emit('resolved', { card: structuredClone(kite), sourceId: kite.id, actor: ME, stackId, from: 'Stack', to: 'Battlefield' });
+          emit('entered', { card: structuredClone(kite), sourceId: kite.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+          flush();
+        }, 1400);
+        return 'Dobra: a carta chega à pilha rasgando o espaço (anel violeta e ciano), com o som de conjurar mais grave e com eco.';
+      }
+      const kite = me.battlefield.find((x: any) => x.id === warped);
+      if (!kite) return 'Conjure por dobra primeiro.';
+      me.battlefield = me.battlefield.filter((x: any) => x !== kite); me.exile = [...(me.exile ?? []), kite]; warped = 0;
+      emit('left', { card: structuredClone(kite), sourceId: kite.id, actor: ME, from: 'Battlefield', to: 'Exile', reason: 'warped' });
+      return 'Fim do turno: a permanente conjurada por dobra volta para o exílio com um rasgo menor no lugar dela.';
     },
     // Mão revelada (item 41): a ponte manda em revealedHand as cartas que você pode ver; esconder é tirar o campo.
     reveal: c => {
@@ -748,6 +773,8 @@ function panel() {
     ${[['1', 'Criar 1'], ['3', 'Criar 3'], ['8', 'Criar 8'], ['20', 'Criar 20']].map(([n, t]) => `<button data-tokens="${n}">${t}</button>`).join('')}<button data-tokens="4" data-mixed="1">4 fichas mistas</button>
     <h2>Planeswalker (item 80, do lado escolhido em Campo)</h2>
     ${[['enter', 'Entrar (Jace)'], ['enter-gold', 'Entrar (multicolor)'], ['plus', '+2'], ['zero', '0'], ['minus', '−1'], ['ult', 'Ultimate (−10)']].map(([k, t]) => `<button data-walker="${k}">${t}</button>`).join('')}
+    <h2>Dobra (item 86)</h2>
+    ${[['cast', 'Conjurar por dobra'], ['back', 'Fim do turno: volta ao exílio']].map(([k, t]) => `<button data-warp="${k}">${t}</button>`).join('')}
     <h2>Jogar da mão</h2>
     ${[['land', 'Jogar terreno'], ['creature', 'Conjurar criatura'], ['countered', 'Conjurar e anular'], ['bolt', 'Lightning Bolt da mão'], ['draw', 'Comprar'], ['deal', 'Encher a mão']].map(([k, t]) => `<button data-hand="${k}">${t}</button>`).join('')}
     <h2>Movimentos da 0.117.0 (na selecionada, ou do lado escolhido)</h2>
@@ -802,6 +829,7 @@ function panel() {
     if (b.dataset.m) send({ cmd: 'move', kind: b.dataset.m, id: selectedId(), target: ref($<HTMLSelectElement>('target').value) });
     if (b.dataset.mill) send({ cmd: 'mill', side: $<HTMLSelectElement>('side').value, n: b.dataset.mill, surveil: !!b.dataset.surveil });
     if (b.dataset.tokens) send({ cmd: 'tokens', side: $<HTMLSelectElement>('side').value, n: b.dataset.tokens, mixed: !!b.dataset.mixed });
+    if (b.dataset.warp) send({ cmd: 'warp', kind: b.dataset.warp });
     if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.x) send({ cmd: 'extra', kind: b.dataset.x, id: selectedId(), side: $<HTMLSelectElement>('side').value });

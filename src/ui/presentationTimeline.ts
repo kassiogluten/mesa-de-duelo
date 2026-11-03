@@ -44,7 +44,7 @@ export interface PresentationEvent {
   count?: number;
   /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
   divided?: number;
-  reason?: 'destroyed' | 'sacrificed';
+  reason?: 'destroyed' | 'sacrificed' | 'warped';
   /** Moer (`mill`): de onde veio a ordem e se foi vidência. */
   sourceName?: string;
   surveil?: boolean;

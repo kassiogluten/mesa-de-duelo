@@ -1,5 +1,6 @@
 import type { FCard, FPlayer } from '../forge/client';
 import { esc } from './cardtext';
+import { sleeveClass } from './sleeves';
 
 /**
  * Mão revelada (Telepathy, Revelation, Seer's Vision): a ponte manda em `revealedHand` as cartas da mão de outro
@@ -29,10 +30,10 @@ const fanStyle = (i: number, n: number, rot = 3, dy = 1.5) => {
 export function oppHandHTML(p: FPlayer, face: (c: FCard) => string, label: (c: FCard) => string) {
   const shown = revealedCards(p);
   const hidden = Math.max(0, p.handCount - shown.length), n = shown.length + hidden;
-  if (!shown.length) return Array.from({ length: p.handCount }, (_, i) => `<div class="back" style="${fanStyle(i, p.handCount)}"></div>`).join('');
+  if (!shown.length) return Array.from({ length: p.handCount }, (_, i) => `<div class="back${sleeveClass(p.sleeve)}" style="${fanStyle(i, p.handCount)}"></div>`).join('');
   const cards = shown.map((c, i) =>
     `<button type="button" class="revealed-card" data-peek="${c.id}" style="${fanStyle(i, n, 2.5, 1)}" aria-label="Inspecionar ${esc(label(c))}, na mão de ${esc(p.name)}">${face(c)}</button>`).join('');
-  const backs = Array.from({ length: hidden }, (_, i) => `<div class="back" style="${fanStyle(shown.length + i, n, 2.5, 1)}"></div>`).join('');
+  const backs = Array.from({ length: hidden }, (_, i) => `<div class="back${sleeveClass(p.sleeve)}" style="${fanStyle(shown.length + i, n, 2.5, 1)}"></div>`).join('');
   return `<div class="revealed-fan" role="group" aria-label="Mão revelada de ${esc(p.name)}: ${revealedCountText(p)}">${cards}${backs}</div>`
     + `<span class="revealed-tag" aria-hidden="true">${EYE_ICON}Mão revelada</span>`;
 }
@@ -42,6 +43,6 @@ export function oppHandHTML(p: FPlayer, face: (c: FCard) => string, label: (c: F
  * "Revelada", e tocar nele abre a galeria com a mão, como a do cemitério.
  */
 export function seatHandHTML(p: FPlayer) {
-  if (!revealedCards(p).length) return `<span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back" aria-hidden="true"></span>${p.handCount}</span>`;
+  if (!revealedCards(p).length) return `<span class="seat-hand" aria-label="${p.handCount} cartas na mão"><span class="back${sleeveClass(p.sleeve)}" aria-hidden="true"></span>${p.handCount}</span>`;
   return `<button type="button" class="seat-hand revealed" data-gy="${p.id}" data-zone="hand" title="Mão revelada" aria-label="Ver a mão revelada de ${esc(p.name)} (${revealedCountText(p)})">${EYE_ICON}<b>${p.handCount}</b><span class="seat-hand-tag">Revelada</span></button>`;
 }

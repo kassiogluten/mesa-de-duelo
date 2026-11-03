@@ -1,5 +1,50 @@
 [
   {
+    "nome": "Nova Hellkite conjurada por dobra",
+    "versao": "0.120.0",
+    "item": "Dobra com efeito e som",
+    "conferir": "Conjure a Nova Hellkite da mão escolhendo a dobra (por {2}{R}, com as três Mountains). Ela chega à pilha com um rasgo no espaço, em violeta e ciano, e o som de conjurar mais grave e com eco; o selo da pilha diz Dobra. Ao entrar, ela causa 1 de dano nos Grizzly Bears do Jogador 2. Passe o turno: no fim dele, a Hellkite volta para o exílio com um rasgo menor no lugar dela.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Nova Hellkite"], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Prismari Charm: modo na pilha",
+    "versao": "0.119.0",
+    "item": "Modo escolhido na pilha",
+    "conferir": "Conjure o Prismari Charm (com a Island e a Mountain) e escolha um modo, por exemplo o 3º, devolvendo os Grizzly Bears do Jogador 2. Enquanto a mágica está na pilha, a faixa no pé da carta mostra o número do modo escolhido e o texto dele; abra a pilha para ver o mesmo efeito na galeria.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Prismari Charm"], "library": ["Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Jace Beleren: habilidade na pilha",
+    "versao": "0.116.0",
+    "item": "Habilidade de planeswalker identificada na pilha",
+    "conferir": "Use uma habilidade de lealdade do Jace Beleren, por exemplo o −1 mirando o Jogador 2. Na pilha, o selo diz Habilidade · −1 e a faixa no pé da carta mostra o custo e o texto da habilidade usada; com o +2, o custo aparece em verde.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Jace Beleren", "counters": {"LOYALTY":  3} }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
     "nome": "Memnarch contra Jace",
     "versao": "0.110.0",
     "item": "Cenários prontos no Laboratório",

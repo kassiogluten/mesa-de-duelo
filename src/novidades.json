@@ -1,4 +1,26 @@
 {
+  "0.120.0": {
+    "Pedido de desfazer no centro da tela": [
+      { "img": "0.120.0/desfazer.webp", "legenda": "O oponente pediu para desfazer: o pedido abre no centro, com o que volta e os botões Recusar e Aceitar." }
+    ],
+    "Ícones no cemitério e no exílio": [
+      { "img": "0.120.0/montes.webp", "legenda": "Ao lado do grimório, a lápide marca o cemitério e o portal marca o exílio." }
+    ],
+    "Sleeve na cor de cada jogador": [
+      { "img": "0.120.0/sleeve.webp", "legenda": "A mão e o grimório do oponente com o verso vermelho dele." },
+      { "img": "0.120.0/montes.webp", "legenda": "O seu grimório com o seu verso, azul." }
+    ],
+    "Dobra com efeito e som": [
+      { "img": "0.120.0/dobra.webp", "legenda": "O rasgo violeta e ciano no canto da pilha, quando a mágica é conjurada por dobra." }
+    ],
+    "Página de Salas": [
+      { "img": "0.120.0/salas.webp", "legenda": "A página Salas, com as salas esperando jogadores, as partidas em andamento e os filtros." },
+      { "img": "0.120.0/salas-atalho.webp", "legenda": "O link Salas no cabeçalho, com quantas salas e partidas estão abertas." }
+    ],
+    "Nomes de quem assiste cabem nos botões": [
+      { "img": "0.120.0/assistir.webp", "legenda": "Quatro jogadores de nomes longos: dois botões por linha, com reticências só nos nomes que não cabem." }
+    ]
+  },
   "0.119.0": {
     "Assistir a partidas contra o computador": [
       { "img": "0.119.0/lista.webp", "legenda": "Em Salas públicas, a partida de Ana contra o computador aparece em andamento, com quantos assistem e o botão Assistir." },

@@ -6,6 +6,20 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.120.0] - 2026-11-02
+
+### Novo
+
+- **Pedido de desfazer no centro da tela.** Quando outro jogador pede para desfazer, o pedido abre no centro da mesa, com quem pediu, o que volta e os botões **Recusar** e **Aceitar**, tocando o aviso e vibrando no celular; a mesa espera o seu voto. A votação para pular o turno de quem caiu abre do mesmo jeito. Depois de votar, a faixa do alto mostra quem ainda falta.
+- **Ícones no cemitério e no exílio.** Cada monte ganhou um ícone pequeno no canto, uma lápide no cemitério e um portal no exílio, para não confundir os dois de relance.
+- **Sleeve na cor de cada jogador.** O verso das cartas de cada jogador tem uma cor própria, sorteada no começo da partida e diferente da dos outros: a mão do oponente, os grimórios, as viradas para baixo e as cartas que voam. A cor continua a mesma na revanche e entre os jogos da melhor de três.
+- **Dobra com efeito e som.** A mágica conjurada por dobra chega à pilha rasgando o espaço, num anel violeta e ciano, com o som de conjurar mais grave e com eco. No fim do turno, quando a permanente volta para o exílio, um rasgo menor aparece no lugar dela.
+- **Página de Salas.** As salas públicas esperando jogadores e as partidas em andamento para assistir ficam numa página só, com filtros por formato e por situação, e se atualizam sozinhas. O link **Salas** fica no cabeçalho, com a contagem do que está aberto, e no menu **⋯**; sem nada aberto, a página leva a criar uma sala pública.
+
+### Corrigido
+
+- **Nomes de quem assiste cabem nos botões.** Assistindo a uma mesa de Commander, os botões de **Ver a mesa de** ficam dois por linha, com o nome numa linha só; o nome longo termina em reticências, e o completo aparece no balão.
+
 ## [0.119.0] - 2026-11-02
 
 ### Novo

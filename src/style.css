@@ -328,12 +328,22 @@ a { color: var(--gold); }
 .opp-hand { position: absolute; top: -3.6vh; left: calc(50% + 7.5vh); z-index: 4; display: flex; }
 .opp-hand .back { width: 5.4vh; height: 7.6vh; margin-left: -3vh; transform: translateY(var(--dy)) rotate(var(--rot)); transform-origin: 50% 0; }
 .back {
-  border-radius: 6% / 4.5%; border: 2px solid #1d1209;
+  border-radius: 6% / 4.5%; border: 2px solid var(--sleeve-edge, #1d1209);
   background:
-    radial-gradient(ellipse 34% 26% at 50% 50%, #e3b363 0 30%, #8c5523 31% 55%, transparent 56%),
-    radial-gradient(ellipse at 50% 50%, #6b3d18, #2b170a 75%);
+    radial-gradient(ellipse 34% 26% at 50% 50%, var(--sleeve-light, #e3b363) 0 30%, var(--sleeve-mid, #8c5523) 31% 55%, transparent 56%),
+    radial-gradient(ellipse at 50% 50%, var(--sleeve-base, #6b3d18), var(--sleeve-dark, #2b170a) 75%);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
+/* Verso na cor de cada jogador (item 85): o servidor sorteia uma das 8, sem repetir na mesa. A 0 é o verso de sempre.
+   Cores bem separadas em claro/escuro e matiz, para continuarem distintas para quem não diferencia vermelho e verde. */
+.sleeve-0 { --sleeve-light: #e3b363; --sleeve-mid: #8c5523; --sleeve-base: #6b3d18; --sleeve-dark: #2b170a; --sleeve-edge: #1d1209; }
+.sleeve-1 { --sleeve-light: #7fb4ff; --sleeve-mid: #2a62d0; --sleeve-base: #1c46a8; --sleeve-dark: #0c2066; --sleeve-edge: #0a1a5e; }
+.sleeve-2 { --sleeve-light: #ff9e8c; --sleeve-mid: #a3322b; --sleeve-base: #741d1d; --sleeve-dark: #2b0a0b; --sleeve-edge: #1d0708; }
+.sleeve-3 { --sleeve-light: #86e6d4; --sleeve-mid: #217e71; --sleeve-base: #14574e; --sleeve-dark: #062420; --sleeve-edge: #041715; }
+.sleeve-4 { --sleeve-light: #d2adff; --sleeve-mid: #6b40aa; --sleeve-base: #482973; --sleeve-dark: #1a0d2c; --sleeve-edge: #12081f; }
+.sleeve-5 { --sleeve-light: #f0f0f0; --sleeve-mid: #838383; --sleeve-base: #505050; --sleeve-dark: #1e1e1e; --sleeve-edge: #141414; }
+.sleeve-6 { --sleeve-light: #ffaedc; --sleeve-mid: #ad3c7e; --sleeve-base: #732354; --sleeve-dark: #2b0b20; --sleeve-edge: #1c0715; }
+.sleeve-7 { --sleeve-light: #fff08f; --sleeve-mid: #9b8a12; --sleeve-base: #5e540b; --sleeve-dark: #211d04; --sleeve-edge: #161303; }
 /* Verso por baixo da carta de lembrete de uma permanente virada para baixo: aparece se a imagem não carregar. */
 .face .face-back { position: absolute; inset: 0; box-sizing: border-box; box-shadow: none; }
 
@@ -350,6 +360,11 @@ a { color: var(--gold); }
 .pile.actionable .gy-top .face, .pile.actionable .gy-top { box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); border-radius: 6% / 4.5%; }
 .pile.actionable.exile .gy-top { filter: none; }
 .pile.lib.actionable .gy-top { cursor: pointer; }
+/* Cemitério e exílio: um ícone mínimo no canto oposto ao da contagem, sem cobrir a carta do topo. */
+.pile-icon { position: absolute; z-index: 2; left: -6px; top: -6px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 2px 5px #0007; pointer-events: none; }
+.pile-icon svg { width: 11px; height: 11px; }
+.pile-icon.gy-icon { color: #d9cfbf; }
+.pile-icon.exile-icon { color: #b9a7ff; border-color: #b9a7ff55; }
 .pile > span {
   position: absolute; right: -6px; bottom: -6px; min-width: 22px; padding: 1px 5px; border-radius: 999px;
   background: var(--panel); border: 1px solid var(--line); font-size: 12px; font-weight: 700; text-align: center;

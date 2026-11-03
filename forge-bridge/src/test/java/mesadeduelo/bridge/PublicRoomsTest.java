@@ -232,6 +232,10 @@ public class PublicRoomsTest {
             boolean computer = false;
             for (var p : game.getAsJsonArray("players")) computer |= "Computador".equals(p.getAsJsonObject().get("name").getAsString());
             assertTrue("O lugar vazio virou o computador", computer);
+            // Cada jogador com a cor do verso dele, diferente da dos outros.
+            var sleeves = new java.util.HashSet<Integer>();
+            for (var p : game.getAsJsonArray("players")) sleeves.add(p.getAsJsonObject().get("sleeve").getAsInt());
+            assertEquals(2, sleeves.size());
             assertTrue(game.getAsJsonObject("room").get("started").getAsBoolean());
 
             // Começou: ninguém mais entra para jogar, só para assistir.
@@ -241,6 +245,14 @@ public class PublicRoomsTest {
             assertTrue(entry.get("started").getAsBoolean());
         } finally {
             for (EmbeddedChannel ch : new EmbeddedChannel[]{ana, bia}) { rooms.onMessage(ch, "{\"type\":\"leave\"}"); ch.finishAndReleaseAll(); }
+        }
+    }
+
+    @Test public void sleevesAreDifferentForEveryPlayerUpToEight() {
+        for (int n = 2; n <= 8; n++) {
+            int[] drawn = Session.drawSleeves(n);
+            assertEquals(n, java.util.Arrays.stream(drawn).distinct().count());
+            for (int c : drawn) assertTrue(c >= 0 && c < Session.SLEEVE_COLORS);
         }
     }
 
