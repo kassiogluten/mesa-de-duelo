@@ -1309,3 +1309,5 @@ button svg { flex-shrink: 0; }
 .zone-tag.foretold { display: inline-flex; align-items: center; gap: 4px; color: var(--azul-c9d4ff, #c9d4ff); border-color: #7f8fd6; }
 .zone-tag.foretold .mana, .zone-tag.foretold .pip { width: 12px; height: 12px; }
 .exile-card .zone-tag.foretold { bottom: 30px; }
+/* Avisos da tela inicial: presos à janela, acima da tela e dos menus. */
+.toasts.lobby-toasts { position: fixed; z-index: 1000; top: 12vh; text-align: center; }

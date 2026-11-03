@@ -27,31 +27,28 @@ export function deckFitText(format: DeckFormat, fitting: readonly DeckFormat[], 
 
 export interface FormatPickerOptions {
   deckName: string;
-  /** O formato em que o deck não serve: o escolhido (deck depois do formato) ou o tocado (formato depois do deck). */
+  /** O formato escolhido, em que o deck não serve. */
   missing: DeckFormat;
-  /** O formato que está valendo agora; com o deck escolhido antes, ele continua se o seletor fechar sem escolha. */
+  /** O formato que está valendo agora. */
   current: DeckFormat;
   fitting: readonly DeckFormat[];
   label: FormatLabel;
   /** Deck do jogador: oferece Editar quando ele só serve no Livre. */
   editable: boolean;
-  /** Formato tocado com um deck que não serve nele: oferece seguir para o formato sem o deck. */
-  leaving: boolean;
 }
-export type FormatPickerAnswer = { format: DeckFormat } | { action: 'edit' | 'peek' | 'leave' } | null;
+export type FormatPickerAnswer = { format: DeckFormat } | { action: 'edit' | 'peek' } | null;
 
 /** O texto do seletor, separado para os testes. */
 export function formatPickerHTML(o: FormatPickerOptions): string {
   const onlyFree = o.fitting.length === 1 && o.fitting[0] === 'free', none = !o.fitting.length;
   const text = none ? `Ele não serve em nenhum formato da mesa. Veja as cartas para achar o que precisa mudar.`
     : onlyFree ? `Ele só serve para o Livre, onde vale qualquer deck. Para jogar em ${esc(o.label(o.missing))}, ajuste o deck.`
-    : o.fitting.length === 1 ? 'Ele serve para este formato:' : 'Ele serve para estes formatos:';
+    : `${o.fitting.length === 1 ? 'Ele serve para este formato.' : 'Ele serve para estes formatos.'} Para usar esse deck, clique abaixo no formato desejado.`;
   const formats = o.fitting.map(f => `<button type="button" data-fit-format="${f}">${esc(o.label(f))}${f === o.current ? '<small>atual</small>' : ''}</button>`).join('');
   const fix = onlyFree || none ? `<div class="fit-fix">${o.editable ? '<button type="button" class="ghost-btn" data-fit-action="edit">Editar</button>' : ''}<button type="button" class="ghost-btn" data-fit-action="peek">Ver as cartas</button></div>` : '';
-  const stay = o.leaving ? `Ficar em ${esc(o.label(o.current))}` : 'Fechar';
   return `<h2 id="fitTitle">${esc(o.deckName)} não serve para ${esc(o.label(o.missing))}</h2>`
     + `<p id="fitText">${text}</p>${formats ? `<div class="fit-formats" role="group" aria-label="Formatos em que o deck serve">${formats}</div>` : ''}${fix}`
-    + `<footer>${o.leaving ? `<button type="button" class="arena-btn secondary" data-fit-action="leave">Ir para ${esc(o.label(o.missing))} sem este deck</button>` : ''}<button type="button" class="arena-btn primary" data-fit-close>${stay}</button></footer>`;
+    + `<footer><button type="button" class="arena-btn primary" data-fit-close>Fechar</button></footer>`;
 }
 
 /** Seletor de formato com só os formatos em que o deck serve. Fechar sem escolher devolve `null`. */
@@ -67,7 +64,7 @@ export function openFormatPicker(o: FormatPickerOptions): Promise<FormatPickerAn
     dlg.addEventListener('click', e => {
       const target = e.target as HTMLElement;
       const format = target.closest<HTMLElement>('[data-fit-format]')?.dataset.fitFormat as DeckFormat | undefined;
-      const action = target.closest<HTMLElement>('[data-fit-action]')?.dataset.fitAction as 'edit' | 'peek' | 'leave' | undefined;
+      const action = target.closest<HTMLElement>('[data-fit-action]')?.dataset.fitAction as 'edit' | 'peek' | undefined;
       if (format) { answer = { format }; dlg.close(); }
       else if (action) { answer = { action }; dlg.close(); }
       else if (target.closest('[data-fit-close]') || target === dlg) dlg.close();

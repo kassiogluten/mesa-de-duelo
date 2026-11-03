@@ -28,21 +28,16 @@ test('the line next to the deck says where it fits, only Livre, nowhere, or the 
   assert.equal(fit.deckFitText('commander', ['standard', 'free'], label, true), 'Este deck não serve para Commander, o formato da sala. Serve para Standard e Livre.');
 });
 
-const picker = extra => fit.formatPickerHTML({ deckName: 'Goblins <3', missing: 'pauper', current: 'pauper', fitting: ['standard', 'free'], label, editable: true, leaving: false, ...extra });
+const picker = extra => fit.formatPickerHTML({ deckName: 'Goblins <3', missing: 'pauper', current: 'pauper', fitting: ['standard', 'free'], label, editable: true, ...extra });
 
 test('the picker lists only the compatible formats as shortcuts', () => {
   const html = picker();
   assert.match(html, /Goblins &lt;3 não serve para Pauper/);
   assert.deepEqual([...html.matchAll(/data-fit-format="(\w+)"/g)].map(m => m[1]), ['standard', 'free']);
-  assert.doesNotMatch(html, /data-fit-action="(edit|peek|leave)"/);
+  assert.doesNotMatch(html, /data-fit-action="(edit|peek)"/);
+  assert.match(html, /Ele serve para estes formatos\. Para usar esse deck, clique abaixo no formato desejado\./);
   assert.match(html, /data-fit-close>Fechar</);
-});
-
-test('format after deck: the current format is marked and the player can leave without the deck', () => {
-  const html = picker({ missing: 'standard', current: 'commander', fitting: ['commander'], leaving: true });
-  assert.match(html, /data-fit-format="commander">Commander<small>atual<\/small>/);
-  assert.match(html, /data-fit-action="leave">Ir para Standard sem este deck/);
-  assert.match(html, /data-fit-close>Ficar em Commander</);
+  assert.match(picker({ fitting: ['standard'] }), /Ele serve para este formato\. Para usar esse deck/);
 });
 
 test('only Livre: offers Edit (own deck) and See the cards', () => {

@@ -1,4 +1,15 @@
 {
+  "0.122.0": {
+    "Formatos do deck explicados": [
+      { "img": "0.122.0/formatos-do-deck.webp", "legenda": "Com Pauper escolhido, tocar na Fúria Goblin abre a janela que explica: para usar esse deck, toque num dos formatos em que ele serve, **Sacola 50** ou **Livre**." }
+    ],
+    "Outros formatos à sua escolha": [
+      { "img": "0.122.0/outros-formatos.webp", "legenda": "Depois de tocar em **Outros**, os cinco formatos aparecem lado a lado, nenhum marcado, com o pedido para escolher um deles." }
+    ],
+    "Formato sem o deck que não serve": [
+      { "img": "0.122.0/deck-sai-do-formato.webp", "legenda": "Com o Esquadrão Branco escolhido em Pauper, tocar em Standard troca o formato e mostra o aviso de que o deck não serve ali e deixou de estar selecionado." }
+    ]
+  },
   "0.121.0": {
     "Entrar na sala sem deck e escolher lá dentro": [
       { "img": "0.121.0/escolhendo.webp", "legenda": "Na sala de espera, o seu lugar pede para escolher o deck abaixo, e o de Caio aparece como Escolhendo o deck…, enquanto Ana já está com Atarka." },

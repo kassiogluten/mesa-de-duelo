@@ -75,9 +75,11 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
-  // Commander é o padrão; os demais (Oathbreaker entre eles) ficam em "Outros", que volta ao último deles usado (Pauper na primeira vez).
+  // Commander é o padrão; os demais (Oathbreaker entre eles) ficam em "Outros", que abre os botões sem escolher nenhum.
   let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
-  const otherFormat = (): DeckFormat => DECK_FORMATS.find(f => f !== 'commander' && f === load('mesa:otherFormat')) ?? 'pauper';
+  /** "Outros" tocado: os botões dos outros formatos ficam à vista enquanto o jogador escolhe um. */
+  let othersOpen = false;
+  const othersShown = () => othersOpen || (!!format && format !== 'commander');
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
@@ -206,12 +208,12 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       const setting = button.dataset.setting;
       const value = setting === 'format' ? format : setting === 'opponent' ? mode : setting === 'players' ? String(playerCount) : setting === 'visibility' ? visibility : matchLength;
       const others = setting === 'format' && button.dataset.value === 'others';
-      button.setAttribute('aria-pressed', String(others ? !!format && format !== 'commander' : button.dataset.value === value));
-      if (others) button.setAttribute('aria-expanded', String(!!format && format !== 'commander'));
+      button.setAttribute('aria-pressed', String(others ? othersShown() : button.dataset.value === value));
+      if (others) button.setAttribute('aria-expanded', String(othersShown()));
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
-    $('#formatOthers').hidden = !format || format === 'commander';
-    $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : 'Escolha um formato para começar.';
+    $('#formatOthers').hidden = !othersShown();
+    $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : othersOpen && !format ? 'Escolha um dos outros formatos para começar.' : 'Escolha um formato para começar.';
     $('#formatHelp').hidden = !!format && format !== 'sacola50';
     header.setDisabled(busy);
     $('.home-intro').hidden = $('.play-layout').hidden = !!waitingRoom;
@@ -349,6 +351,15 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const queueFit = () => { if (!fitFrame) fitFrame = requestAnimationFrame(fitSidebar); };
   addEventListener('scroll', queueFit, {passive: true});
   addEventListener('resize', queueFit);
+  /** Aviso que aparece no alto da tela inicial e some sozinho. */
+  function toast(text: string) {
+    let box = document.querySelector<HTMLElement>('.lobby-toasts');
+    if (!box) { box = document.createElement('div'); box.className = 'toasts lobby-toasts'; box.setAttribute('aria-live', 'polite'); document.body.append(box); }
+    const el = document.createElement('div');
+    el.className = 'toast'; el.textContent = text;
+    box.append(el);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, 4500);
+  }
   const setBusy = (value: boolean) => { busy = value; refresh(); };
   function choose(deck: DeckData, picker = true) {
     if (busy || waitingRoom) return;
@@ -359,7 +370,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (!format) { setStatus('Escolha o formato antes de iniciar a partida.'); return; }
     if (mode === 'free') { setStatus(''); return; }
     // Deck depois do formato: o seletor mostra onde ele serve (numa sala, o formato é dela e a linha junto do deck basta).
-    if (picker && !room && misfit(deck)) void pickFormat(deck, format, false);
+    if (picker && !room && misfit(deck)) void pickFormat(deck, format);
     const currentKey = key(deck);
     void opts.onValidate(deck, format, url()).then(result => {
       if (request !== preflight) return;
@@ -369,26 +380,19 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   /** Troca o formato mantendo o deck escolhido (atalho do seletor). */
   function setFormat(next: DeckFormat) {
-    format = next; save('mesa:format', format);
-    if (format !== 'commander') save('mesa:otherFormat', format);
+    format = next; save('mesa:format', format); othersOpen = false;
   }
-  /**
-   * Seletor com só os formatos em que o deck serve. `leaving`: o jogador tocou no formato `missing` com o deck já
-   * escolhido; fechar sem escolher deixa o formato de antes, e há o caminho de ir para o formato sem o deck.
-   */
-  async function pickFormat(deck: DeckData, missing: DeckFormat, leaving: boolean) {
+  /** Seletor com só os formatos em que o deck serve, para o deck escolhido num formato em que ele não serve. */
+  async function pickFormat(deck: DeckData, missing: DeckFormat) {
     if (document.querySelector('dialog.format-picker')) return;
     const current = format!;
-    const answer = await openFormatPicker({deckName: deck.name, missing, current, fitting: fitFormats(f => fitsIn(deck, f), missing), label: f => FORMAT_LABEL[f], editable: !deck.builtin, leaving});
+    const answer = await openFormatPicker({deckName: deck.name, missing, current, fitting: fitFormats(f => fitsIn(deck, f), missing), label: f => FORMAT_LABEL[f], editable: !deck.builtin});
     if (!answer || busy || waitingRoom || room || format !== current || youId !== deck.id) return;
     if ('format' in answer) {
       if (answer.format === current) return;
       setFormat(answer.format); preflight++; setStatus('');
       choose(deck, false);
       root.querySelector<HTMLElement>(`[data-setting=format][data-value="${answer.format}"]`)?.focus({preventScroll: true});
-    } else if (answer.action === 'leave') {
-      setFormat(missing); youId = rememberedDeck(); preflight++; setStatus(''); refresh();
-      root.querySelector<HTMLElement>(`[data-setting=format][data-value="${missing}"]`)?.focus({preventScroll: true});
     } else if (answer.action === 'edit') { preflight++; opts.onEditDeck(deck.id); }
     else openDeckPreview(deck, {selected: true, onPick: () => choose(deck)});
   }
@@ -435,13 +439,22 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const choice = target.closest<HTMLButtonElement>('[data-setting]');
     if (choice && !choice.disabled) {
       if (choice.dataset.setting === 'format') {
-        const next = choice.dataset.value === 'others' ? otherFormat() : DECK_FORMATS.find(f => f === choice.dataset.value) ?? 'free', deck = selected();
-        // Formato depois do deck: num formato em que o deck não serve, a mesa mantém o deck e pergunta o formato.
-        if (deck && next !== format && mode !== 'free' && !fitsIn(deck, next)) { void pickFormat(deck, next, true); return; }
+        // "Outros" só mostra os botões dos formatos, sem escolher nenhum: o deck continua e é conferido no formato escolhido.
+        if (choice.dataset.value === 'others') {
+          if (!othersShown()) { othersOpen = true; format = null; preflight++; setStatus(''); refresh(); root.querySelector<HTMLElement>('#formatOthers [data-setting=format]')?.focus({preventScroll: true}); }
+          return;
+        }
+        const next = DECK_FORMATS.find(f => f === choice.dataset.value) ?? 'free', deck = selected();
         // Num formato em que o deck serve, ele continua escolhido; sem deck, volta o último usado no formato.
         setFormat(next); preflight++; setStatus('');
         if (deck && fitsIn(deck, next)) { choose(deck, false); return; }
+        // Formato depois do deck: num formato em que o deck não serve, ele deixa de estar escolhido e um aviso diz por quê.
+        const misfitDeck = deck && mode !== 'free' ? deck : null;
         youId = rememberedDeck();
+        if (misfitDeck) {
+          if (youId === misfitDeck.id) youId = '';
+          toast(`${misfitDeck.name} não serve para ${FORMAT_LABEL[next]} e deixou de estar selecionado. Escolha um deck deste formato.`);
+        }
       } else if (choice.dataset.setting === 'opponent') {
         mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
       } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private'; save('mesa:roomVisibility', visibility);
@@ -475,7 +488,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (action === 'setup-toggle') { setupOpen = !setupOpen; refresh(); }
     if (action === 'clear') { query = ''; colorFilter = new Set(); $<HTMLInputElement>('#deckSearch').value = ''; refresh(); }
     if (action === 'incompatible') { showIncompatible = true; refresh(); }
-    if (action === 'fit-formats' && !busy && !waitingRoom && !room) { const deck = selected(); if (deck && misfit(deck)) void pickFormat(deck, format!, false); }
+    if (action === 'fit-formats' && !busy && !waitingRoom && !room) { const deck = selected(); if (deck && misfit(deck)) void pickFormat(deck, format!); }
     if (action === 'cancel-lookup' && !busy) { room = null; refresh(); }
     if (action === 'rooms-refresh' && !busy && !waitingRoom) void loadRooms(true);
     const joinCode = target.closest<HTMLButtonElement>('[data-join-room]')?.dataset.joinRoom;

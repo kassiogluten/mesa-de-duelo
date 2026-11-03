@@ -6,6 +6,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.122.0] - 2026-11-03
+
+### Mudou
+
+- **Formatos do deck explicados.** Ao tocar num deck que não serve para o formato escolhido, a janela agora diz o que fazer: **Para usar esse deck, clique abaixo no formato desejado.**, com os formatos em que ele serve logo abaixo.
+- **Outros formatos à sua escolha.** Tocar em **Outros** abre os botões de Standard, Pauper, Sacola 50, Oathbreaker e Livre sem escolher nenhum deles por você; a partida só fica pronta depois que você toca no formato que quer.
+- **Formato sem o deck que não serve.** Com um deck escolhido, tocar num formato em que ele não serve troca o formato direto, sem abrir janela: o deck deixa de estar selecionado e um aviso no alto da tela diz que ele não serve para aquele formato. Basta escolher outro deck da lista.
+
 ## [0.121.0] - 2026-11-03
 
 ### Novo
