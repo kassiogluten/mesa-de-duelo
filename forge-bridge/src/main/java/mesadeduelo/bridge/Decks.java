@@ -48,16 +48,39 @@ final class Decks {
      */
     static Deck random(String format, int bracket) {
         var candidates = LISTS.values().stream()
-            .filter(o -> { String of = o.has("format") ? o.get("format").getAsString() : "free"; return "free".equals(format) ? !"commander".equals(of) && !"oathbreaker".equals(of) : format.equals(of); })
+            .filter(o -> { String of = o.has("format") ? o.get("format").getAsString() : "free"; return "free".equals(format) ? !"commander".equals(of) && !"oathbreaker".equals(of) : "precon".equals(format) ? o.has("precon") : format.equals(of); })
             .toList();
         if (bracket > 0) {
             int nearest = candidates.stream().filter(o -> o.has("bracket")).mapToInt(o -> Math.abs(o.get("bracket").getAsInt() - bracket)).min().orElse(-1);
             if (nearest >= 0) candidates = candidates.stream().filter(o -> o.has("bracket") && Math.abs(o.get("bracket").getAsInt() - bracket) == nearest).toList();
         }
-        var valid = candidates.stream().map(o -> DeckValidation.validateForAi(o, format)).filter(DeckValidation.Result::valid).toList();
+        // O precon é conferido como o Commander que ele é: o sorteio já escolheu só entre eles.
+        String rules = "precon".equals(format) ? "commander" : format;
+        var valid = candidates.stream().map(o -> DeckValidation.validateForAi(o, rules)).filter(DeckValidation.Result::valid).toList();
         if (valid.isEmpty() && bracket > 0) return random(format, 0);
         if (valid.isEmpty()) throw new IllegalArgumentException("Não há deck pronto válido para este formato.");
         return valid.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(valid.size())).deck();
+    }
+
+    /** As cartas de cada precon (comandantes e deck), com os nomes como o motor os conhece; montado na primeira consulta. */
+    private static volatile java.util.List<Map<String, Integer>> precons;
+
+    /** Se o deck tem exatamente as cartas de um precon oficial, sem nada trocado (a impressão não importa). */
+    static boolean isPrecon(Deck deck) {
+        var lists = precons;
+        if (lists == null) {
+            lists = new java.util.ArrayList<>();
+            for (JsonObject o : LISTS.values()) if (o.has("precon")) lists.add(contents(DeckValidation.validate(o, "commander").deck()));
+            precons = lists = java.util.List.copyOf(lists);
+        }
+        return lists.contains(contents(deck));
+    }
+
+    private static Map<String, Integer> contents(Deck deck) {
+        Map<String, Integer> counts = new java.util.HashMap<>();
+        for (var section : new forge.deck.DeckSection[]{forge.deck.DeckSection.Commander, forge.deck.DeckSection.Main, forge.deck.DeckSection.Sideboard})
+            for (var e : deck.getOrCreate(section)) counts.merge(section + ":" + e.getKey().getName(), e.getValue(), Integer::sum);
+        return counts;
     }
 
     private Decks() { }

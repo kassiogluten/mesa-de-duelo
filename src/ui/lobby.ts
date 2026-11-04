@@ -1,4 +1,4 @@
-import { allDecks, countEntries, hasCommandZone, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
+import { allDecks, commanderRules, countEntries, hasCommandZone, isPrecon, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, PRECON_HINT, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import { mountAppHeader } from './appHeader';
@@ -8,9 +8,9 @@ import { joinableRooms, publicRoomsHTML, watchableRooms, type PublicRoomsState }
 import { contagemTexto } from '../salas/view';
 import { confirmLeaveRoom, mountRoomLobby } from './roomLobby';
 import { bracketBadgeHTML, CARD_DATA_ERROR, deckArt, deckColors, deckPriceHTML, missingCardData } from './deckStats';
-import { bracketLabel, deckBracket } from '../brackets';
+import { BRACKETS, bracketLabel, deckBracket, isBracket, type Bracket } from '../brackets';
 import { validateDeckLocal } from './deckRules';
-import { deckFitText, fitFormats, openFormatPicker } from './deckFit';
+import { deckFitText, fitFormats, listJoin, openFormatPicker } from './deckFit';
 import { siteFooterHTML } from './siteFooter';
 import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
 import './deckFilters.css';
@@ -75,11 +75,11 @@ const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load('mesa:format');
-  // Commander é o padrão; os demais (Oathbreaker entre eles) ficam em "Outros", que abre os botões sem escolher nenhum.
+  // Commander é o padrão, com o Precon ao lado; os demais (Oathbreaker entre eles) ficam em "Outros", que abre os botões sem escolher nenhum.
   let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
   /** "Outros" tocado: os botões dos outros formatos ficam à vista enquanto o jogador escolhe um. */
   let othersOpen = false;
-  const othersShown = () => othersOpen || (!!format && format !== 'commander');
+  const othersShown = () => othersOpen || (!!format && format !== 'commander' && format !== 'precon');
   let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
@@ -88,6 +88,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const rememberedDeck = () => format ? load(`mesa:deck:${format}`) ?? (format === 'free' ? load('mesa:deck') : null) ?? '' : '';
   let youId = rememberedDeck();
   let oppId = load('mesa:opp') ?? 'random';
+  // Bracket máximo dos computadores (Commander e Precon): sem escolha guardada, segue o do deck do jogador.
+  const savedBotBracket = load('mesa:botBracket');
+  let botBracket: 'any' | Bracket | null = savedBotBracket === 'any' ? 'any' : isBracket(Number(savedBotBracket)) ? Number(savedBotBracket) as Bracket : null;
+  /** Precon: sortear os computadores só da série do deck do jogador. */
+  let sameSeries = load('mesa:preconSameSeries') === '1';
   let query = '', showIncompatible = false, busy = false;
   // Na sala de espera: o deck com que você está sentado ('' enquanto escolhe), a busca da prateleira e o pedido em andamento.
   let roomDeckId = '', roomQuery = '', choosingDeck = false;
@@ -118,7 +123,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       <button type="button" class="setup-summary" data-lobby="setup-toggle" aria-expanded="false" aria-controls="matchSetup"><span class="setup-summary-text"><small>Partida</small><strong id="setupSummary"></strong></span><span class="setup-summary-action" id="setupSummaryAction" aria-hidden="true">Mudar</span></button>
       <aside class="match-sidebar" aria-label="Configuração da partida">
         <div class="match-setup" id="matchSetup">
-        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="oathbreaker">Oathbreaker</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
+        <fieldset class="match-choice format-choice"><legend>Formato</legend><div class="choice-segments" aria-describedby="formatHelp"><button type="button" data-setting="format" data-value="commander">Commander</button><button type="button" data-setting="format" data-value="precon">Precon</button><button type="button" data-setting="format" data-value="others" aria-controls="formatOthers">Outros</button></div><div class="choice-segments format-others" id="formatOthers" role="group" aria-label="Outros formatos" hidden><button type="button" data-setting="format" data-value="standard">Standard</button><button type="button" data-setting="format" data-value="pauper">Pauper</button><button type="button" data-setting="format" data-value="sacola50">Sacola 50</button><button type="button" data-setting="format" data-value="oathbreaker">Oathbreaker</button><button type="button" data-setting="format" data-value="free">Livre</button></div><p class="setup-explanation" id="formatHelp"></p></fieldset>
         <fieldset class="match-choice"><legend id="opponentLegend">Oponente</legend><div class="opponent-cards">
           <button type="button" class="opponent-card" data-setting="opponent" data-value="ai"><span><strong id="aiModeLabel">Computador</strong></span></button>
           <button type="button" class="opponent-card" data-setting="opponent" data-value="net"><span><strong id="netModeLabel">Outra pessoa</strong></span></button>
@@ -127,6 +132,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <fieldset class="match-choice duration-choice" id="durationChoice"><legend>Partida</legend><div class="choice-segments"><button type="button" data-setting="length" data-value="bo1">Única</button><button type="button" data-setting="length" data-value="bo3">Melhor de três</button></div></fieldset>
         <fieldset class="match-choice player-count-choice" id="playerCountChoice" hidden><legend>Jogadores</legend><div class="choice-segments"><button type="button" data-setting="players" data-value="2">2</button><button type="button" data-setting="players" data-value="3">3</button><button type="button" data-setting="players" data-value="4">4</button></div></fieldset>
         <div class="opponent-choice" id="aiPanel"><label for="oppSel">Deck do computador</label><select id="oppSel" class="input-field"></select></div>
+        <fieldset class="match-choice bot-bracket-choice" id="botBracketChoice" hidden><legend>Bracket máximo dos bots</legend><div class="choice-segments" id="botBracketButtons"></div><p class="setup-explanation" id="botBracketHelp"></p></fieldset>
+        <label class="same-series-choice" id="sameSeriesChoice" hidden><input type="checkbox" id="sameSeries"> <span id="sameSeriesLabel">Bots só da série do seu deck</span></label>
         <div id="commanderAiPanel" class="commander-ai-panel" hidden></div>
         <section class="network-setup" id="netPanel" aria-label="Jogar com outra pessoa" hidden>
           <label for="netName">Seu nome<input id="netName" class="input-field" maxlength="24" autocomplete="nickname" placeholder="Jogador"></label>
@@ -146,7 +153,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         <p class="cards-error" id="cardsError" role="alert" hidden><span>${esc(CARD_DATA_ERROR)}</span> <button type="button" class="ghost-btn" data-lobby="retry-cards">Tentar de novo</button></p>
         <div class="library-toolbar"><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="deckSearch" type="search" placeholder="Buscar um deck" aria-label="Buscar um deck"></label><div id="lobbyColorFilter"></div><label class="incompatible-toggle" id="incompatibleToggle" hidden><input type="checkbox" id="showIncompatible"> Mostrar incompatíveis</label></div>
         <section class="deck-shelf" aria-labelledby="myDecksTitle"><header class="shelf-heading"><div><h2 id="myDecksTitle">Meus decks <span id="personalCount"></span></h2></div><div class="shelf-actions"><button class="arena-btn secondary" data-lobby="library">Gerenciar decks</button></div></header><div id="personalTiles" class="deck-tiles"></div></section>
-        <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p>Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
+        <section class="deck-shelf ready-shelf" aria-labelledby="readyDecksTitle"><header class="shelf-heading"><div><h2 id="readyDecksTitle">Decks prontos para a mesa</h2><p id="readyDecksHelp">Escolha um para jogar ou faça a sua própria versão.</p></div></header><div id="readyTiles" class="deck-tiles"></div></section>
       </div>
     </div>
     <section class="room-lobby" id="roomLobby" aria-label="Sala de espera" hidden></section></main>${siteFooterHTML()}</div>`;
@@ -162,16 +169,51 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   // Na sala de espera a barra lateral some: os avisos (alguém voltou, erro da ponte) aparecem no lobby da sala.
   const setStatus = (message: string, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error', error); roomLobby.setStatus(message, error); };
   function allowed(deck: DeckData) {
+    if (format === 'precon') return isPrecon(deck);
     if (hasCommandZone(deck.format) && format !== deck.format) return false;
     if (deck.builtin && format && !readyDeckFits(deck, format)) return false;
     const local = validateDeckLocal(deck, format ?? 'free');
     return !format || showIncompatible || (validations.get(key(deck))?.valid ?? local.status !== 'invalid');
   }
   /** Se o deck serve no formato, pelos mesmos critérios da lista de decks, sem esperar o servidor. */
-  const fitsIn = (deck: DeckData, f: DeckFormat) => !(hasCommandZone(deck.format) && f !== deck.format) && !(deck.builtin && !readyDeckFits(deck, f)) && validateDeckLocal(deck, f).status !== 'invalid';
+  const fitsIn = (deck: DeckData, f: DeckFormat) => f === 'precon' ? isPrecon(deck) : !(hasCommandZone(deck.format) && f !== deck.format) && !(deck.builtin && !readyDeckFits(deck, f)) && validateDeckLocal(deck, f).status !== 'invalid';
   /** O deck escolhido não serve no formato: fora da mesa livre, onde qualquer deck abre. */
   const misfit = (deck: DeckData | undefined) => !!deck && !!format && mode !== 'free' && !fitsIn(deck, format);
   function matches(deck: DeckData) { return matchesQuery(deck, query, ptName) && matchesColors(deckColors(deck), colorFilter); }
+  // ---------- Decks dos computadores ----------
+  /** O mesmo critério da lista e do sorteio do servidor: os decks prontos do formato (no Livre, todos os de 60 cartas). */
+  const readyPool = () => allDecks().filter(d => d.builtin && readyDeckFits(d, format ?? 'free') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
+  /** Nos decks prontos o bracket foi conferido à mão; o cálculo pelas cartas fica para quando faltar. */
+  const readyBracket = (d: DeckData) => d.bracket ?? deckBracket(d);
+  /** Os brackets que algum deck pronto tem: o controle só oferece máximos com deck. */
+  const botBrackets = (decks: DeckData[]) => BRACKETS.filter(b => decks.some(d => readyBracket(d) === b));
+  const myBracket = () => { const deck = selected(); return deck && !deck.precon ? deckBracket(deck) : deck?.bracket; };
+  /**
+   * O bracket máximo dos computadores, no Commander e no Precon: o escolhido, ou o do deck do jogador enquanto ninguém
+   * escolheu. Um máximo abaixo de todos os decks prontos sobe até o menor que existe; null é "Qualquer".
+   */
+  function botBracketMax(decks: DeckData[]): Bracket | null {
+    if (!commanderRules(format ?? undefined)) return null;
+    const wanted = botBracket ?? myBracket() ?? 'any';
+    if (wanted === 'any') return null;
+    const offered = botBrackets(decks);
+    return offered.some(b => b <= wanted) ? wanted : offered[0] ?? null;
+  }
+  /** Precon com "só da série" marcado: a série do deck do jogador. */
+  const botSeries = () => format === 'precon' && sameSeries ? selected()?.precon?.series : undefined;
+  function botPool(decks: DeckData[]) {
+    const max = botBracketMax(decks), series = botSeries();
+    return decks.filter(d => (max === null || (readyBracket(d) ?? 0) <= max) && (!series || d.precon?.series === series));
+  }
+  /** Depois de mudar o máximo ou a série: os decks escolhidos que ficaram de fora voltam para "Deck aleatório", com aviso. */
+  function dropOutOfPool() {
+    const pool = botPool(readyPool()), slots = commanderOpponents.slice(0, playerCount - 1);
+    const dropped = slots.filter(id => id !== 'random' && !pool.some(d => d.id === id)).map(id => allDecks().find(d => d.id === id)?.name).filter((n): n is string => !!n);
+    if (!dropped.length) return;
+    commanderOpponents = commanderOpponents.map((id, i) => i < slots.length && id !== 'random' && !pool.some(d => d.id === id) ? 'random' : id);
+    save('mesa:commanderOpponents', JSON.stringify(commanderOpponents));
+    toast(`${listJoin(dropped)} ${dropped.length === 1 ? 'ficou' : 'ficaram'} fora da escolha dos bots e ${dropped.length === 1 ? 'voltou' : 'voltaram'} para Deck aleatório.`);
+  }
   const filtering = () => !!query || colorFilter.size > 0;
   function validationLabel(deck: DeckData) {
     if (!format) return '';
@@ -183,10 +225,33 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   function tiles(decks: DeckData[], selectedId = youId, inRoom = false) {
     return decks.map(d => {
       // Com o selo do formato, a etiqueta "Livre" (todo deck vale no Livre) só repetiria a informação.
-      const formatTag = d.builtin && d.format && !hasCommandZone(d.format) ? FORMAT_LABEL[d.format] : '';
+      const formatTag = d.builtin && d.format && !hasCommandZone(d.format) ? FORMAT_LABEL[d.format] : d.precon && format !== 'precon' && waitingRoom?.config.format !== 'precon' ? 'Precon' : '';
       const art = deckArt(d), on = selectedId === d.id, bracket = deckBracket(d), colors = deckColors(d), validity = validationLabel(d), label = formatTag && validity === 'Livre' ? '' : validity;
       return `<div class="tile-wrap${!d.builtin ? ' personal-tile' : ''}"><button type="button" class="deck-tile${on ? ' on' : ''}" data-deck="${esc(d.id)}" aria-pressed="${on}" aria-label="Escolher ${esc(d.name)}${bracket ? `, ${bracketLabel(bracket)}` : ''}"><span class="tile-cover"><span class="tile-art"${art ? ` style="background-image:url('${esc(art)}')"` : ''}></span>${colors.length ? `<span class="tile-colors">${colors.map(pip).join('')}</span>` : ''}</span><span class="tile-check${on ? '' : ' empty'}" aria-hidden="true">${on ? '✓' : ''}</span><span class="tile-info"><span class="tile-name">${esc(d.name)}</span>${commanderLineHTML(d, ptName, 'tile-commander')}<span class="tile-meta"><span>${deckSize(d) + (hasCommandZone(d.format) ? countEntries(d.commanders ?? []) : 0)} cartas</span>${deckPriceHTML(d, 'tile-price', false)}${bracketBadgeHTML(d, 'tile-format')}${formatTag ? `<span class="tile-format">${esc(formatTag)}</span>` : ''}</span>${label ? `<span class="tile-validity">${esc(label)}</span>` : ''}</span></button><button type="button" class="tile-more" data-tile-menu="${esc(d.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções de ${esc(d.name)}">${MORE}</button><div class="tile-menu" role="menu" hidden><button type="button" role="menuitem" data-peek="${esc(d.id)}">${EYE}Ver as cartas</button>${!d.builtin && !inRoom ? `<button type="button" role="menuitem" data-edit-deck="${esc(d.id)}">${PENCIL}Editar</button>` : ''}</div></div>`;
     }).join('');
+  }
+  /** Precons agrupados por série, a mais recente primeiro, com o ano ao lado do nome. */
+  function preconGroupsHTML(decks: DeckData[]) {
+    const series = [...new Map(decks.map(d => [d.precon!.series, d.precon!])).values()].sort((a, b) => b.year - a.year || a.series.localeCompare(b.series, 'pt'));
+    return series.map(p => `<section class="precon-series" aria-label="${esc(p.series)}"><h3 class="precon-series-title">${esc(p.series)} <span>${p.year}</span></h3><div class="deck-tiles">${tiles(decks.filter(d => d.precon!.series === p.series))}</div></section>`).join('');
+  }
+  /** Bracket máximo e "só da série" dos bots: só contra o computador, no Commander e no Precon. */
+  function renderBotChoices(basePool: DeckData[], pool: DeckData[]) {
+    const show = mode === 'ai' && commanderRules(format ?? undefined), disabled = busy || !!waitingRoom;
+    $('#botBracketChoice').hidden = !show;
+    if (show) {
+      const max = botBracketMax(basePool), mine = myBracket(), focused = (document.activeElement as HTMLElement | null)?.dataset.botBracket;
+      $('#botBracketButtons').innerHTML = (['any', ...botBrackets(basePool)] as const).map(v => `<button type="button" data-bot-bracket="${v}" aria-pressed="${v === 'any' ? max === null : max === v}"${disabled ? ' disabled' : ''}${v === 'any' ? '' : ` aria-label="Até o ${bracketLabel(v)}"`}>${v === 'any' ? 'Qualquer' : v}</button>`).join('');
+      if (focused) root.querySelector<HTMLElement>(`[data-bot-bracket="${focused}"]`)?.focus({preventScroll: true});
+      $('#botBracketHelp').textContent = !pool.length ? `Nenhum deck pronto cabe nessa escolha. Suba o máximo${botSeries() ? ' ou desmarque a série' : ''}.`
+        : max === null ? 'Os bots jogam com decks de qualquer bracket.'
+        : `Os bots jogam com decks até o ${bracketLabel(max)}${botBracket === null && mine === max ? ', o do seu deck' : ''}.`;
+    }
+    const series = format === 'precon' ? selected()?.precon?.series : undefined;
+    $('#sameSeriesChoice').hidden = mode !== 'ai' || format !== 'precon';
+    const box = $<HTMLInputElement>('#sameSeries');
+    box.checked = sameSeries; box.disabled = disabled || !series;
+    $('#sameSeriesLabel').textContent = series ? `Bots só da série do seu deck (${series})` : 'Bots só da série do seu deck';
   }
   function refresh() {
     const focused = document.activeElement as HTMLElement | null;
@@ -200,9 +265,16 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const mine = personal.filter(matches), templates = ready.filter(d => matches(d) && allowed(d)).sort((a, b) => Number(b.format === format) - Number(a.format === format));
     $('#personalCount').textContent = personal.length ? String(personal.length) : '';
     $('#personalTiles').innerHTML = mine.length ? tiles(mine) + NEW_DECK_TILE : !personal.length ? `<div class="personal-empty"><div class="empty-cards" aria-hidden="true"><i></i><i></i><i></i></div><div><h3>Você ainda não tem nenhum deck.</h3><p>Comece com suas cartas favoritas ou importe uma lista que você já gosta de jogar.</p><button class="arena-btn primary" data-lobby="create">Criar meu primeiro deck</button></div></div>` : `<div class="shelf-empty"><p>${filtering() ? 'Nenhum dos seus decks corresponde à busca e às cores.' : `Você ainda não tem um deck válido para ${formatName(format)}.`}</p><button class="ghost-btn" data-lobby="${filtering() ? 'clear' : 'incompatible'}">${filtering() ? 'Limpar filtros' : 'Mostrar decks incompatíveis'}</button></div>`;
-    $('#readyTiles').innerHTML = templates.length ? tiles(templates) : '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>';
+    // No Precon só valem os precons da mesa: a prateleira dos seus decks some e os precons vêm agrupados por série.
+    const precon = format === 'precon';
+    $('.deck-shelf:not(.ready-shelf)').hidden = precon;
+    $('#readyDecksTitle').textContent = precon ? 'Precons de Commander' : 'Decks prontos para a mesa';
+    $('#readyDecksHelp').textContent = precon ? 'Do jeito que saíram da caixa, agrupados por série.' : 'Escolha um para jogar ou faça a sua própria versão.';
+    $('#readyTiles').classList.toggle('deck-tiles', !precon);
+    $('#readyTiles').classList.toggle('precon-series-list', precon);
+    $('#readyTiles').innerHTML = !templates.length ? '<p class="shelf-empty">Nenhum deck pronto corresponde à seleção.</p>' : precon ? preconGroupsHTML(templates) : tiles(templates);
     $('#lobbyColorFilter').innerHTML = colorFilterHTML(colorFilter, 'data-color-filter');
-    $('#incompatibleToggle').hidden = !format || format === 'free';
+    $('#incompatibleToggle').hidden = !format || format === 'free' || format === 'precon';
     $<HTMLInputElement>('#showIncompatible').checked = showIncompatible;
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-setting]')) {
       const setting = button.dataset.setting;
@@ -213,8 +285,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       button.disabled = busy || !!waitingRoom || (!!room && setting !== 'opponent');
     }
     $('#formatOthers').hidden = !othersShown();
-    $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : othersOpen && !format ? 'Escolha um dos outros formatos para começar.' : 'Escolha um formato para começar.';
-    $('#formatHelp').hidden = !!format && format !== 'sacola50';
+    $('#formatHelp').textContent = format === 'sacola50' ? SACOLA_HINT : format === 'precon' ? PRECON_HINT : othersOpen && !format ? 'Escolha um dos outros formatos para começar.' : 'Escolha um formato para começar.';
+    $('#formatHelp').hidden = !!format && format !== 'sacola50' && format !== 'precon';
     header.setDisabled(busy);
     $('.home-intro').hidden = $('.play-layout').hidden = !!waitingRoom;
     roomLobby.render(waitingRoom);
@@ -247,8 +319,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Humanos' : 'Humano';
     $('#aiPanel').hidden = mode !== 'ai' || commander;
     $('#commanderAiPanel').hidden = mode !== 'ai' || !commander;
-    // O mesmo critério da lista e do sorteio da ponte: os decks prontos do formato (no Livre, todos os de 60 cartas).
-    const aiPool = ready.filter(d => readyDeckFits(d, format ?? 'free') && (!format || validateDeckLocal(d, format).status !== 'invalid'));
+    const basePool = readyPool(), aiPool = commander ? botPool(basePool) : basePool;
+    renderBotChoices(basePool, aiPool);
     if (oppId !== 'random' && !aiPool.some(d => d.id === oppId)) oppId = 'random';
     $<HTMLSelectElement>('#oppSel').innerHTML = '<option value="random">Aleatório entre os compatíveis</option>' + aiPool.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
     $<HTMLSelectElement>('#oppSel').value = oppId;
@@ -264,7 +336,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const start = $<HTMLButtonElement>('#startMatch');
     // Contra outra pessoa o deck é opcional: sem um que sirva, entra (ou cria a sala) e escolhe lá dentro.
     const net = mode === 'net';
-    start.disabled = !format || (!net && (!deck || invalid)) || busy || !!waitingRoom || (joining && !room);
+    // Contra o computador, um bot em "Deck aleatório" precisa de algum deck que caiba no máximo e na série.
+    const noBotDeck = mode === 'ai' && commander && !aiPool.length && commanderOpponents.slice(0, playerCount - 1).includes('random');
+    start.disabled = !format || (!net && (!deck || invalid)) || noBotDeck || busy || !!waitingRoom || (joining && !room);
     start.textContent = busy ? 'Preparando…' : free ? 'Abrir mesa livre' : mode === 'ai' ? 'Jogar' : room ? 'Entrar na sala' : joining ? 'Escolha a sala' : 'Criar sala';
     // Quem já jogou vê o deck escolhido em destaque, com o resumo da partida e o botão de jogar de novo.
     const summary = matchSummary();
@@ -301,6 +375,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     else if (hasCommandZone(format ?? undefined)) {
       const random = commanderOpponents.slice(0, playerCount - 1).every(id => id === 'random');
       parts.push(`${playerCount} jogadores`, random ? (playerCount > 2 ? 'computadores aleatórios' : 'computador aleatório') : playerCount > 2 ? 'contra os computadores' : 'contra o computador');
+      const max = botBracketMax(readyPool());
+      if (max !== null) parts.push(`até ${bracketLabel(max)}`);
+      if (botSeries()) parts.push('da mesma série');
     } else {
       const opponent = oppId === 'random' ? undefined : allDecks().find(d => d.id === oppId);
       parts.push(opponent ? `contra ${opponent.name}` : 'computador aleatório');
@@ -365,6 +442,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (busy || waitingRoom) return;
     youId = deck.id;
     if (format) save(`mesa:deck:${format}`, youId);
+    // O máximo dos bots segue o bracket do deck (e a série, no Precon) enquanto o jogador não escolhe outro.
+    if (mode === 'ai') dropOutOfPool();
     refresh();
     const request = ++preflight;
     if (!format) { setStatus('Escolha o formato antes de iniciar a partida.'); return; }
@@ -420,7 +499,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       } else if (deck) {
         const opponent = opponentId === 'random' ? null : allDecks().find(d => d.builtin && d.id === opponentId);
         if (opponent === undefined) { setStatus('Não há um deck do computador compatível com este formato.', true); return; }
-        const opponents = hasCommandZone(matchConfig.format) ? selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
+        // Com bracket máximo ou série, o sorteio dos bots é feito aqui, entre os decks que cabem; sem eles, no servidor.
+        const pool = botPool(readyPool()), filtered = botBracketMax(readyPool()) !== null || !!botSeries();
+        if (hasCommandZone(matchConfig.format) && filtered && !pool.length && selectedOpponents.includes('random')) { setStatus('Nenhum deck pronto cabe no bracket máximo dos bots.', true); return; }
+        const drawn = () => filtered ? pool[Math.floor(Math.random() * pool.length)] : null;
+        const opponents = hasCommandZone(matchConfig.format) ? selectedOpponents.map(id => id === 'random' ? drawn() : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
         await opts.onPlay(deck, opponents?.[0] ?? opponent, matchConfig, opponents);
       }
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Não foi possível iniciar a partida.', true); }
@@ -434,6 +517,14 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       refresh();
       // O foco fica na mesma cor (ou na primeira, depois de limpar) para continuar escolhendo pelo teclado.
       root.querySelector<HTMLElement>(`[data-color-filter="${color === 'clear' ? 'W' : color}"]`)?.focus();
+      return;
+    }
+    const bracketChoice = target.closest<HTMLButtonElement>('[data-bot-bracket]');
+    if (bracketChoice && !bracketChoice.disabled) {
+      const value = bracketChoice.dataset.botBracket!;
+      botBracket = value === 'any' ? 'any' : Number(value) as Bracket; save('mesa:botBracket', String(botBracket));
+      dropOutOfPool(); refresh();
+      root.querySelector<HTMLElement>(`[data-bot-bracket="${value}"]`)?.focus({preventScroll: true});
       return;
     }
     const choice = target.closest<HTMLButtonElement>('[data-setting]');
@@ -475,7 +566,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (peek && !busy) {
       const deck = allDecks().find(d => d.id === peek); if (!deck) return;
       const pick = (d: DeckData) => { if (waitingRoom) void chooseInRoom(d); else choose(d); };
-      openDeckPreview(deck, {selected: deck.id === (waitingRoom ? roomDeckId : youId), onPick: () => pick(deck), onCopy: deck.builtin ? () => {
+      // No Precon o deck vai como saiu da caixa: sem fazer a sua versão.
+      const asBoxed = (waitingRoom?.config.format ?? format) === 'precon';
+      openDeckPreview(deck, {selected: deck.id === (waitingRoom ? roomDeckId : youId), onPick: () => pick(deck), onCopy: deck.builtin && !asBoxed ? () => {
         const copy: DeckData = {...structuredClone(deck), id: crypto.randomUUID(), name: `${deck.name} — minha versão`, builtin: false, sourceTemplateId: deck.id};
         const result = saveUserDecks([...loadUserDecks(), copy]); pick(copy);
         if (!result.ok) setStatus(result.error, true);
@@ -548,6 +641,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (target.id === 'showIncompatible') showIncompatible = target.checked;
     if (target.dataset.opponentSlot !== undefined) { commanderOpponents[Number(target.dataset.opponentSlot)] = target.value; save('mesa:commanderOpponents', JSON.stringify(commanderOpponents)); }
     if (target.id === 'oppSel') { oppId = target.value; save('mesa:opp', oppId); }
+    if (target.id === 'sameSeries') { sameSeries = target.checked; save('mesa:preconSameSeries', sameSeries ? '1' : '0'); dropOutOfPool(); }
     if (target.id === 'netName') { save('mesa:name', target.value.trim()); prefsChanged(); }
     if (target.id === 'netUrl') { save('mesa:forgeUrl', target.value.trim()); room = null; validations.clear(); preflight++; }
     refresh();

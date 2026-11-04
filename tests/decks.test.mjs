@@ -316,7 +316,7 @@ test('Commander local rules enforce 100 total, singleton exceptions, identity in
   assert.equal(cardCopyLimit('Commander Bolt', undefined, 'commander'), 1);
   assert.equal(cardCopyLimit('Test Dwarves', cache('Test Dwarves', { oracle_text: 'A deck can have up to seven cards named Test Dwarves.' }), 'commander'), 7);
   for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) assert.equal(decks.totalDeckSize(deck), 100);
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 84);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 117);
 });
 
 test('Oathbreaker local rules: a planeswalker and a signature spell, 60 cards, singleton and identity', () => {
@@ -344,6 +344,32 @@ test('Oathbreaker local rules: a planeswalker and a signature spell, 60 cards, s
   assert.ok(ready.every(deck => decks.readyDeckFits(deck, 'oathbreaker') && !decks.readyDeckFits(deck, 'free') && !decks.readyDeckFits(deck, 'commander')));
   assert.equal(decks.scryfallFormat('oathbreaker'), 'oathbreaker');
   assert.ok(decks.hasCommandZone('oathbreaker') && decks.hasCommandZone('commander') && !decks.hasCommandZone('pauper'));
+});
+
+test('Precon lists only the 43 official precons as they came in the box, under Commander rules', () => {
+  const precons = decks.DEFAULT_DECKS.filter(d => d.precon);
+  assert.equal(precons.length, 43);
+  assert.equal(new Set(precons.map(d => d.precon.series)).size, 10);
+  for (const deck of precons) {
+    assert.equal(deck.format, 'commander', deck.id);
+    assert.equal(decks.totalDeckSize(deck), 100, deck.id);
+    assert.ok(deck.bracket && deck.price && deck.precon.name && deck.precon.set && deck.precon.year >= 2013, deck.id);
+    assert.ok(decks.readyDeckFits(deck, 'precon') && decks.readyDeckFits(deck, 'commander'), deck.id);
+  }
+  // Os decks prontos adaptados de um precon deram lugar ao original, com o mesmo id; os outros de Commander não são precons.
+  for (const id of ['commander-bello', 'commander-caesar', 'commander-chatterfang', 'commander-cloud', 'commander-frodo-sam', 'commander-mothman', 'commander-sauron', 'commander-terra', 'commander-bumbleflower', 'commander-yshtola'])
+    assert.ok(precons.some(d => d.id === id), id);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, 'precon')).length, 43);
+  const urza = decks.DEFAULT_DECKS.find(d => d.id === 'commander-urza');
+  assert.ok(!decks.isPrecon(urza) && !decks.readyDeckFits(urza, 'precon'));
+  // A cópia do jogador, com as mesmas cartas, não vale no Precon e nunca guarda o precon nem o formato.
+  const mine = decks.normalizeDeck({ ...structuredClone(precons[0]), id: 'copia', format: 'precon' });
+  assert.equal(mine.precon, undefined); assert.equal(mine.format, 'commander'); assert.ok(!decks.isPrecon(mine));
+  assert.ok(validateDeckLocal(mine, 'precon').issues.some(i => i.code === 'precon'));
+  assert.equal(validateDeckLocal(mine, 'precon').status, 'invalid');
+  assert.ok(!validateDeckLocal(precons[0], 'precon').issues.some(i => i.code === 'precon'));
+  assert.equal(decks.scryfallFormat('precon'), 'commander');
+  assert.ok(decks.hasCommandZone('precon') && decks.commanderRules('precon') && !decks.commanderRules('oathbreaker'));
 });
 
 test('starter deck price shows only when recorded, and not on personal decks', () => {

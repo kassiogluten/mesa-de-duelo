@@ -11,7 +11,7 @@ import { bracketsLabel } from '../ui/publicRooms';
 export type Situacao = '' | 'esperando' | 'andamento';
 export interface FiltrosSalas { formato: string; situacao: Situacao }
 
-const FORMATO: Record<string, string> = { standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', free: 'Livre' };
+const FORMATO: Record<string, string> = { standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Precon', free: 'Livre' };
 export const nomeDoFormato = (f: string) => FORMATO[f] ?? f;
 
 export const esperando = (r: PublicRoom) => !r.started && r.players < r.capacity;
@@ -35,7 +35,7 @@ function cartao(r: PublicRoom): string {
   const titulo = r.computer ? `${r.host} contra o computador` : `Sala de ${r.host}`;
   const vivo = emAndamento(r);
   const detalhes = [nomeDoFormato(r.config.format), bracketsLabel(r),
-    r.config.format === 'commander' || r.config.format === 'oathbreaker' ? '' : r.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única',
+    r.config.format === 'commander' || r.config.format === 'oathbreaker' || r.config.format === 'precon' ? '' : r.config.matchLength === 'bo3' ? 'Melhor de três' : 'Partida única',
     vivo ? (r.computer ? '' : `${r.players} jogadores`) : `${r.players}/${r.capacity} jogadores`,
     vivo && r.spectators ? `${r.spectators} assistindo` : ''].filter(Boolean);
   const acao = vivo ? 'Assistir' : 'Entrar';

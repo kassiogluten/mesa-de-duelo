@@ -93,7 +93,7 @@ export function lifeChartHTML(s: ChartState): string {
  * o menor. 21 de um mesmo comandante elimina, e fica marcado.
  */
 export function commanderDamageHTML(s: ChartState, cardName: (name: string) => string = name => name): string {
-  if (s.config?.format !== 'commander') return '';
+  if (s.config?.format !== 'commander' && s.config?.format !== 'precon') return '';
   const owners = new Map<number, { card: string; owner: string }>();
   for (const p of s.players) for (const c of p.commanders ?? []) owners.set(c.id, { card: cardName(c.name), owner: p.id === s.you ? 'você' : p.name });
   const rows = s.players.flatMap(p => (p.commanderDamage ?? []).filter(d => d.damage > 0 && owners.has(d.commanderId))

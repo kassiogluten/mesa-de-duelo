@@ -6,6 +6,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.126.0] - 2026-11-04
+
+### Novo
+
+- **Formato Precon.** Ao lado do Commander, um formato em que cada jogador usa um deck pré-construído oficial de Commander, do jeito que saiu da caixa, com as regras do Commander. São 43 precons de 10 séries (Warhammer 40.000, Fallout, O Senhor dos Anéis, Final Fantasy, Doctor Who, Commander 2013, 2016, 2017, 2020 e Bloomburrow), agrupados por série com o ano, e cada um com o bracket e o preço no card. No Precon os seus decks não aparecem e não dá para fazer a sua versão: só os precons da mesa valem, também nas salas. Contra o computador, os bots jogam com precons, e **Bots só da série do seu deck** sorteia só entre os da mesma série.
+- **Bracket máximo dos bots.** Contra o computador no Commander e no Precon, **Bracket máximo dos bots** escolhe até que bracket vão os decks dos computadores: **Qualquer**, 2, 3 ou 4. Começa no bracket do seu deck, o **Deck aleatório** só sorteia entre os que cabem, a lista de cada computador mostra só esses, e um deck já escolhido acima do máximo volta para **Deck aleatório**, com um aviso. A escolha fica guardada, e o resumo da partida diz o máximo ("até Bracket 3").
+
+### Mudou
+
+- **Precons originais no lugar dos adaptados.** Os dez decks prontos de Commander que eram versões adaptadas de um precon agora são o precon original, com as mesmas cartas da caixa, e ganharam o nome dele: Exército Animado (Bello), Salve, César, Guardado para o Inverno (Hazel, no lugar do Chatterfang), Quebra de Limite (Cloud), Comida e Companhia (Frodo e Sam), Ameaça Mutante (Homem-Mariposa), A Hoste de Mordor (Sauron), Transe do Renascimento (Terra), Oferta de Paz (Bumbleflower) e Herdeiros e Feitiçaria (Y'shtola). Quem tinha um deles escolhido continua com ele. Os precons também aparecem entre os decks prontos do Commander, com o selo **Precon**.
+
 ## [0.125.0] - 2026-11-04
 
 ### Novo

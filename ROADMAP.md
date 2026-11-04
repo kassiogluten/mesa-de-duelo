@@ -1368,34 +1368,36 @@ Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no
 
 Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.
 
-## 95. Bracket máximo dos bots na criação da partida
+## 95. Bracket máximo dos bots na criação da partida ✅
 
 Contra o computador em Commander, o deck de cada bot é um dos decks prontos escolhido à mão ou "Deck aleatório" entre os compatíveis, sem olhar a força. Um deck Bracket 2 pode cair contra um bot com um deck Bracket 4, e o jogador só descobre na mesa (pelo selo "B4"). Os decks prontos já têm o bracket guardado (item 35).
 
-- [ ] Na criação da partida contra o computador, um controle **Bracket máximo dos bots** (1 a 5, mais "Qualquer"), que vale para todos os computadores da mesa.
-- [ ] "Deck aleatório" só sorteia entre os decks prontos com bracket até o máximo escolhido; a lista de decks de cada computador mostra só esses (ou mostra os outros apagados, com o bracket ao lado).
-- [ ] Um deck já escolhido acima do novo máximo volta para "Deck aleatório", com um aviso curto, como já acontece ao trocar de formato.
-- [ ] Sugerir como máximo o bracket do deck do jogador, sem forçar.
-- [ ] Se nenhum deck pronto couber no máximo, avisar e não deixar começar (ou subir o máximo até o menor bracket disponível).
-- [ ] Lembrar a escolha, como o deck e o oponente.
-- [ ] O resumo da partida ("Commander · 4 jogadores · computadores aleatórios") diz o máximo ("até Bracket 3").
-- [ ] Decidir se vale também fora do Commander (hoje o bracket só existe no Commander).
+- [x] Na criação da partida contra o computador, um controle **Bracket máximo dos bots** (1 a 5, mais "Qualquer"), que vale para todos os computadores da mesa.
+- [x] "Deck aleatório" só sorteia entre os decks prontos com bracket até o máximo escolhido; a lista de decks de cada computador mostra só esses (ou mostra os outros apagados, com o bracket ao lado).
+- [x] Um deck já escolhido acima do novo máximo volta para "Deck aleatório", com um aviso curto, como já acontece ao trocar de formato.
+- [x] Sugerir como máximo o bracket do deck do jogador, sem forçar.
+- [x] Se nenhum deck pronto couber no máximo, avisar e não deixar começar (ou subir o máximo até o menor bracket disponível).
+- [x] Lembrar a escolha, como o deck e o oponente.
+- [x] O resumo da partida ("Commander · 4 jogadores · computadores aleatórios") diz o máximo ("até Bracket 3").
+- [x] Decidir se vale também fora do Commander (hoje o bracket só existe no Commander).
 
-## 96. Formato exclusivo de precons de Commander
+Feito na 0.126.0 (decidido em 04/11/2026): botões **Qualquer**, 2, 3 e 4 (só os brackets que têm deck pronto, então nunca falta deck); vale no Commander e no Precon, e fora deles o controle não aparece. Com máximo ou série escolhidos, o sorteio do "Deck aleatório" é feito na mesa, entre os decks que cabem.
+
+## 96. Formato exclusivo de precons de Commander ✅
 
 Um formato à parte, **Precon**, em que cada jogador só joga com um deck pré-construído oficial de Commander, do jeito que saiu da caixa: nada de trocar cartas. As partidas ficam equilibradas sem precisar de bracket, e quem está começando pode jogar sem montar deck. As listas não precisam ser digitadas: o Forge já traz 180 precons em `forge-gui/res/quest/commanderprecons/*.dck` (comandante, cartas e edição), e todos os listados abaixo estão lá (conferido em 04/11/2026).
 
 **Comportamento**
 
-- [ ] Novo formato **Precon** na criação da partida e da sala, com as regras do Commander (40 de vida, dano de comandante, identidade de cor) e só os decks desta lista.
-- [ ] Na escolha de deck, os precons agrupados por série, com a arte do comandante, as cores e o ano. Sem editar: o menu da carta só tem "Ver as cartas".
-- [ ] Contra o computador, os bots também jogam com precons, escolhidos à mão ou "aleatório", com a opção de sortear só da mesma série do jogador.
-- [ ] Na sala, conferir que todos os lugares têm um precon da lista; um deck do jogador, mesmo com as mesmas cartas, não serve.
-- [ ] Importar as listas do Forge por script (gerar o JSON dos precons a partir dos `.dck`), em vez de copiar à mão; guardar a série, o ano e o comandante de cada uma.
-- [ ] Nome em português de cada precon e de cada série (a tradução oficial quando houver).
-- [ ] Bracket de cada precon (item 35), para mostrar no selo como nos outros decks.
-- [ ] Os decks prontos que hoje são precons adaptados (Linhagem do Ur-Dragão, Radiação do Homem-Mariposa, Olho de Sauron…) dão lugar ao precon original, sem nenhuma alteração: as mesmas cartas da caixa, como estão no `.dck` do Forge. Levantar quais decks prontos são adaptações de um dos 44 precons e trocar cada um pelo original (decidido em 04/11/2026).
-- [ ] Item no CHANGELOG e prints na página Novidades em imagens.
+- [x] Novo formato **Precon** na criação da partida e da sala, com as regras do Commander (40 de vida, dano de comandante, identidade de cor) e só os decks desta lista.
+- [x] Na escolha de deck, os precons agrupados por série, com a arte do comandante, as cores e o ano. Sem editar: o menu da carta só tem "Ver as cartas".
+- [x] Contra o computador, os bots também jogam com precons, escolhidos à mão ou "aleatório", com a opção de sortear só da mesma série do jogador.
+- [x] Na sala, conferir que todos os lugares têm um precon da lista; um deck do jogador, mesmo com as mesmas cartas, não serve.
+- [x] Importar as listas do Forge por script (gerar o JSON dos precons a partir dos `.dck`), em vez de copiar à mão; guardar a série, o ano e o comandante de cada uma.
+- [x] Nome em português de cada precon e de cada série (a tradução oficial quando houver).
+- [x] Bracket de cada precon (item 35), para mostrar no selo como nos outros decks.
+- [x] Os decks prontos que hoje são precons adaptados (Linhagem do Ur-Dragão, Radiação do Homem-Mariposa, Olho de Sauron…) dão lugar ao precon original, sem nenhuma alteração: as mesmas cartas da caixa, como estão no `.dck` do Forge. Levantar quais decks prontos são adaptações de um dos 44 precons e trocar cada um pelo original (decidido em 04/11/2026).
+- [x] Item no CHANGELOG e prints na página Novidades em imagens.
 
 **As 10 séries** (escolhidas pela popularidade na comunidade; dá para trocar ou acrescentar outras depois, já que o Forge tem as 180 listas)
 
@@ -1454,3 +1456,5 @@ Um formato à parte, **Precon**, em que cada jogador só joga com um deck pré-c
     - Squirreled Away — Hazel of the Rootbloom
 
 São 44 precons ao todo. Nos `.dck` do Forge, o comandante às vezes vem com um `+` no fim do nome (o cartão de comandante alternativo da caixa) e uma lista vem com espaço a mais no nome do arquivo (`Primal Genesis [C19] [2019] .dck`): o script de importação precisa tratar os dois.
+
+Feito na 0.126.0 (decidido em 04/11/2026): são 43 precons (a lista acima soma 43, não 44), importados por `forge-bridge/scripts/importar-precons.mjs`. Os 10 adaptados (50% ou mais das cartas iguais) deram lugar ao original com o mesmo id e o nome do precon: Bello, César, Chatterfang (agora Hazel), Cloud, Frodo e Sam, Homem-Mariposa, Sauron, Terra, Bumbleflower e Y'shtola; Ur-Dragão, Edgar Markov, Breya, Atraxa e Oloro eram decks montados à parte e ficaram. Os precons aparecem também no Commander, com o selo **Precon**. Os nomes em português são tradução nossa do nome da caixa. Os bots jogam o precon original mesmo com as cartas que a IA do Forge marca como fora do seu alcance (em média 8 por deck): o servidor deixou de recusá-los para o computador. O servidor confere no Precon que as cartas são exatamente as de um precon; quem garante que não é a cópia do jogador é a mesa.

@@ -31,7 +31,7 @@ import { applyOpeningPresentation, suppressOpeningPreview } from './openingPrese
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
 import { counterName, isProliferating, proliferateBoardClass, proliferateClear, proliferateOkLabel, proliferatePanelHTML, proliferateSuggestion, proliferateToggle } from './proliferate';
 import './proliferate.css';
-import type { DeckEntry } from '../decks';
+import { hasCommandZone, type DeckEntry } from '../decks';
 import { passIsPrimary, passLabel, phaseGroupLabel, phaseHudHTML, turnBannerText, turnTimeText } from './phaseHud';
 import { STACK_KINDS, loyaltyLineIn, modeLineIn, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackPresentation, stackTag } from './stackPresentation';
 import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
@@ -2733,7 +2733,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const multiplayer = visual.players.length > 2;
     const arena = root.querySelector<HTMLElement>('.arena')!;
     arena.classList.toggle('multiplayer', multiplayer);
-    arena.classList.toggle('commander-game', s.config?.format === 'commander' || s.config?.format === 'oathbreaker');
+    arena.classList.toggle('commander-game', hasCommandZone(s.config?.format));
     arena.style.setProperty('--opponent-count', String(opponents.length));
     if (!me || !opp) return;
     if (s.input.attacking || s.input.blocking || s.input.selection) motion.cancelPresentation();

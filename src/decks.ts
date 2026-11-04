@@ -1,22 +1,32 @@
 import starterDecks from '../shared/starter-decks.json' with { type: 'json' };
 import { isBracket, type Bracket } from './brackets';
 
-export type DeckFormat = 'free' | 'standard' | 'pauper' | 'sacola50' | 'commander' | 'oathbreaker';
-export const DECK_FORMATS: readonly DeckFormat[] = ['standard', 'pauper', 'sacola50', 'free', 'commander', 'oathbreaker'];
-export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker' };
-/** Commander e Oathbreaker: zona de comando, de dois a quatro jogadores e uma partida só, sem sideboard. */
-export const hasCommandZone = (format: DeckFormat | undefined): format is 'commander' | 'oathbreaker' => format === 'commander' || format === 'oathbreaker';
+/**
+ * Precon é um formato só de partida: as regras do Commander, só com os decks pré-construídos oficiais, sem alterações.
+ * Nenhum deck é guardado com ele: os precons são decks prontos de Commander com o campo `precon`.
+ */
+export type DeckFormat = 'free' | 'standard' | 'pauper' | 'sacola50' | 'commander' | 'oathbreaker' | 'precon';
+export const DECK_FORMATS: readonly DeckFormat[] = ['standard', 'pauper', 'sacola50', 'free', 'commander', 'oathbreaker', 'precon'];
+export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Precon' };
+/** Commander, Oathbreaker e Precon: zona de comando, de dois a quatro jogadores e uma partida só, sem sideboard. */
+export const hasCommandZone = (format: DeckFormat | undefined): format is 'commander' | 'oathbreaker' | 'precon' => format === 'commander' || format === 'oathbreaker' || format === 'precon';
+/** Commander e Precon: as regras do Commander (40 de vida, dano de comandante, bracket). */
+export const commanderRules = (format: string | undefined) => format === 'commander' || format === 'precon';
 /** Tamanho do deck nos formatos com zona de comando, contando as cartas dela. */
-export const COMMAND_DECK_SIZE = { commander: 100, oathbreaker: 60 } as const;
+export const COMMAND_DECK_SIZE = { commander: 100, oathbreaker: 60, precon: 100 } as const;
 /** Formatos de 60 cartas com sideboard de 15 e legalidade conferida. */
 export const isConstructed = (format: DeckFormat | undefined): format is 'standard' | 'pauper' | 'sacola50' => format === 'standard' || format === 'pauper' || format === 'sacola50';
 /** Formato do Scryfall que dá a legalidade das cartas: o Sacola 50 usa as do Legacy. */
-export const scryfallFormat = (format: DeckFormat | undefined) => format === 'sacola50' ? 'legacy' : format === 'standard' || format === 'pauper' || hasCommandZone(format) ? format : undefined;
+export const scryfallFormat = (format: DeckFormat | undefined) => format === 'sacola50' ? 'legacy' : format === 'precon' ? 'commander' : format === 'standard' || format === 'pauper' || hasCommandZone(format) ? format : undefined;
 /**
  * Decks prontos listados num formato: só os montados para ele, mesmo que outros também sejam legais (os de Standard e
- * de Pauper valem no Sacola 50, que usa o Legacy). No Livre entram todos os de 60 cartas.
+ * de Pauper valem no Sacola 50, que usa o Legacy). No Livre entram todos os de 60 cartas; no Precon, só os precons.
  */
-export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'free' ? !hasCommandZone(d.format) : (d.format ?? 'free') === format;
+export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'free' ? !hasCommandZone(d.format) : format === 'precon' ? isPrecon(d) : (d.format ?? 'free') === format;
+/** Deck pré-construído oficial, do jeito que saiu da caixa: só os decks prontos da mesa contam, nunca uma cópia do jogador. */
+export const isPrecon = (d: DeckData) => !!d.builtin && !!d.precon;
+/** O Precon explicado na escolha do formato. */
+export const PRECON_HINT = 'Precon: cada jogador usa um deck pré-construído oficial de Commander, do jeito que saiu da caixa. As regras são as do Commander.';
 /** O Sacola 50 não confere preço: o aviso lembra o limite combinado. */
 export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro custando até R$ 50. A mesa não confere o preço: combine com o oponente.';
 /** `set` e `cn`: a impressão escolhida (série do Scryfall, em minúsculas, e número de coleção), vinda da lista importada. */
@@ -44,7 +54,10 @@ export interface DeckData {
   bracket?: Bracket;
   /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander nem em Oathbreaker. */
   cover?: string;
+  /** Precon oficial (só nos decks prontos): o nome da caixa, a série (código da coleção e nome) e o ano. */
+  precon?: PreconInfo;
 }
+export interface PreconInfo { name: string; set: string; series: string; year: number }
 /** O arquivo guarda os decks prontos na ordem em que chegaram (os novos no fim); a mesa mostra os mais recentes primeiro. */
 export const DEFAULT_DECKS = [...(starterDecks as DeckData[])].reverse();
 const BASICS = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes', 'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest'].map(n => n.toLowerCase()));
@@ -82,7 +95,8 @@ function validDeck(v: unknown): v is DeckData {
 }
 
 /** Como o deck fica ao ser lido do armazenamento: sem formato vira Livre, e todo deck do jogador tem sideboard. */
-export const normalizeDeck = (record: DeckData): DeckData => ({ ...record, builtin: false, format: record.format ?? 'free', sideboard: record.sideboard ?? [] });
+/** Deck do jogador: nunca é um precon, mesmo copiado de um (o Precon não é formato de deck guardado). */
+export const normalizeDeck = ({ precon: _precon, ...record }: DeckData): DeckData => ({ ...record, builtin: false, format: record.format === 'precon' ? 'commander' : record.format ?? 'free', sideboard: record.sideboard ?? [] });
 
 /** Invalid records are retained verbatim for export; migration never rewrites v1. */
 export function readDeckLibrary(storage: DeckStorage): LibraryState {

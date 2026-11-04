@@ -1,4 +1,4 @@
-import { countEntries, deckEntries, FORMAT_LABEL, hasCommandZone, isBasic, isConstructed, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
+import { countEntries, deckEntries, FORMAT_LABEL, hasCommandZone, isBasic, isConstructed, isPrecon, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
 import { cacheGet, legalityFresh, type ScryCard } from '../scryfall';
 
 export interface DeckIssue { code: string; message: string; card?: string; section?: 'main' | 'sideboard' | 'commander' }
@@ -19,6 +19,11 @@ export function copiesInDeck(deck: DeckData, name: string): number {
 }
 /** Provisional feedback only. Match creation is always validated again by the bridge. */
 export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.format ?? 'free'): LocalDeckValidation {
+  // Precon: só os precons da mesa, sem alterações; as cartas seguem as regras do Commander.
+  if (format === 'precon') {
+    if (!isPrecon(deck)) return { status: 'invalid', issues: [{ code: 'precon', message: 'No Precon só valem os decks pré-construídos oficiais da mesa, sem alterações.' }] };
+    format = 'commander';
+  }
   const issues: DeckIssue[] = [], unknown = new Set<string>();
   const main = countEntries(deck.cards), side = countEntries(deck.sideboard ?? []);
   if (!main || (isConstructed(format) && main < 60)) issues.push({ code: 'main_count', message: isConstructed(format) ? `O deck principal precisa de pelo menos 60 cartas. Faltam ${60 - main}.` : 'Adicione cartas ao deck principal.', section: 'main' });
