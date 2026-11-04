@@ -23,11 +23,7 @@ import org.junit.Test;
 public class VisibleEventsTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
     private static Game game() {
-        var a = new RegisteredPlayer(Decks.build("pauper-brasa")).setPlayer(new LobbyPlayerAi("A", null));
-        var b = new RegisteredPlayer(Decks.build("pauper-floresta")).setPlayer(new LobbyPlayerAi("B", null));
-        Game game = new Match(new MatchConfig("pauper","bo1").rules(), List.of(a,b), "Events test").createGame();
-        game.setNoGUIUser(); game.getPhaseHandler().devModeSet(PhaseType.MAIN1, game.getPlayers().get(0));
-        return game;
+        return TestGames.pauper("Events test");
     }
     static SpellAbility spell(Game game, Player player, String name) {
         Card c=Card.fromPaperCard(DeckValidation.resolve(name),player);

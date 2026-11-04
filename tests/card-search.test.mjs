@@ -1,9 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const s = await import(uri(await readFile(new URL('../src/ui/cardSearch.ts', import.meta.url), 'utf8')));
+const s = await import('../src/ui/cardSearch.ts');
 
 test('function search adds otag: next to text, colors and type', () => {
   assert.equal(s.buildSearchQuery({ func: 'cantrip', type: 't:instant', colors: new Set(['U']) }), 'id<=u t:instant otag:cantrip');

@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const { offlinePlayers, skipBarHTML } = await import(uri((await readFile(new URL('../src/ui/skipVote.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const { offlinePlayers, skipBarHTML } = await import('../src/ui/skipVote.ts');
 
 const base = () => ({ you: 36, gameOver: false, players: [{ id: 10, name: 'Ana' }, { id: 23, name: 'Bruno' }, { id: 36, name: 'Carla' }, { id: 49, name: 'Diego' }],
   room: { started: true, players: [

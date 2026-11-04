@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const f = await import(uri((await readFile(new URL('../src/ui/deckFilters.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const f = await import('../src/ui/deckFilters.ts');
 const pt = name => ({ 'Atarka, World Render': 'Atarka, Dissolvedora de Mundos' })[name] ?? name;
 const atarka = { name: 'Destruição Dracônica', commanders: [{ name: 'Atarka, World Render' }] };
 

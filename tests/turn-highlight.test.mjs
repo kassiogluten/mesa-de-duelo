@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const code = await readFile(new URL('../src/ui/turnHighlight.ts', import.meta.url), 'utf8');
-const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { turnHighlight, seatTurnChange } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { turnHighlight, seatTurnChange } = await import('../src/ui/turnHighlight.ts');
 const state = extra => ({ you: 10, activePlayer: 10, gameOver: false, ...extra });
 
 test('only the field of whoever plays the turn is highlighted: gold for you, red for an opponent', () => {

@@ -1,14 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const cardCounts = uri((await readFile(new URL('../src/ui/cardCounts.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const faceDown = uri(await readFile(new URL('../src/ui/faceDownReminder.ts', import.meta.url), 'utf8'));
-const { faceDownReminder } = await import(faceDown);
-const source = (await readFile(new URL('../src/ui/permanentEffects.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./cardCounts'", JSON.stringify(cardCounts)).replace("'./faceDownReminder'", JSON.stringify(faceDown));
-const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import(uri(source));
+const { faceDownReminder } = await import('../src/ui/faceDownReminder.ts');
+const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import('../src/ui/permanentEffects.ts');
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
 

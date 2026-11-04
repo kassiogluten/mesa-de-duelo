@@ -1,16 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
 
-async function load(file) {
-  let code = await readFile(new URL(`../src/ui/${file}`, import.meta.url), 'utf8');
-  return ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-}
-const clock = await load('clock.ts');
-const clockUrl = `data:text/javascript;base64,${Buffer.from(clock).toString('base64')}`;
-const output = (await load('waitAlert.ts')).replace(/from ['"]\.\/clock['"]/, `from '${clockUrl}'`);
-const { WaitClock, WaitAnnouncer, waitStage, waitNudgeText, waitClockTip, waitAnnouncement } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { WaitClock, WaitAnnouncer, waitStage, waitNudgeText, waitClockTip, waitAnnouncement } = await import('../src/ui/waitAlert.ts');
 
 const MIN = 60_000;
 const players = [{ id: 0, name: 'Você' }, { id: 1, name: 'Ana' }, { id: 2, name: 'Bot', ai: true }];

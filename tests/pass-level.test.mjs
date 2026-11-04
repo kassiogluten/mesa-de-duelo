@@ -1,13 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const load = async file => import(uri((await readFile(new URL(file, import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
-const { PassLevelPreference, PASS_LEVELS, PASS_LEVEL_KEY, LEGACY_AUTO_PASS_KEY, LEGACY_PASS_RESPONSES_KEY, PASS_LEVEL_ALWAYS, savedPassLevel, passLevelBadgeHTML, passMenuHTML } = await load('../src/ui/passLevel.ts');
-const { stopMenuHTML } = await load('../src/ui/opponentStops.ts');
-const { SYNCED_PREFS } = await import(uri(await readFile(new URL('../src/conta/prefs.ts', import.meta.url), 'utf8')));
+const { PassLevelPreference, PASS_LEVELS, PASS_LEVEL_KEY, LEGACY_AUTO_PASS_KEY, LEGACY_PASS_RESPONSES_KEY, PASS_LEVEL_ALWAYS, savedPassLevel, passLevelBadgeHTML, passMenuHTML } = await import('../src/ui/passLevel.ts');
+const { stopMenuHTML } = await import('../src/ui/opponentStops.ts');
+const { SYNCED_PREFS } = await import('../src/conta/prefs.ts');
 
 function storage(entries = {}) {
   const data = new Map(Object.entries(entries));

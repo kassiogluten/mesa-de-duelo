@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const clock = uri(await readFile(new URL('../src/ui/clock.ts', import.meta.url), 'utf8'));
-const mod = await import(uri((await readFile(new URL('../src/ui/playerStatus.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./clock'", JSON.stringify(clock))));
+const mod = await import('../src/ui/playerStatus.ts');
 const { playerStatusHTML, playerStatusText, landsText } = mod;
 const player = extra => ({ id: 3, name: 'Ana', landsPlayed: 0, maxLands: 1, ...extra });
 

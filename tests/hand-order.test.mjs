@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const code = await readFile(new URL('../src/ui/handDrag.ts', import.meta.url), 'utf8');
-const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { arrangeHand, moveInHand, handDropIndex, handSlotShift, insideHand } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { arrangeHand, moveInHand, handDropIndex, handSlotShift, insideHand } = await import('../src/ui/handDrag.ts');
 
 test('the first hand follows the order Forge sends', () => {
   assert.deepEqual(arrangeHand([], [5, 3, 9]), [5, 3, 9]);

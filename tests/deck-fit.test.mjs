@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const source = file => readFile(new URL(`../src/ui/${file}`, import.meta.url), 'utf8');
-const cardtext = uri(await source('cardtext.ts'));
-const fit = await import(uri((await source('deckFit.ts')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("import './contaMenu.css';", '')));
+const fit = await import('../src/ui/deckFit.ts');
 const LABEL = { free: 'Livre', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander' };
 const label = f => LABEL[f];
 

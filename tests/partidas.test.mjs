@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const source = file => readFile(new URL(`../src/${file}`, import.meta.url), 'utf8');
-const cardtext = uri(await source('ui/cardtext.ts'));
-const view = await import(uri((await source('partidas/view.ts')).replace("'../ui/cardtext'", JSON.stringify(cardtext))));
+const view = await import('../src/partidas/view.ts');
 const formato = f => ({ commander: 'Commander', free: 'Livre' })[f] ?? f;
 
 const partida = (extra = {}) => ({

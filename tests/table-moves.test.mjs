@@ -1,18 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
 
-async function sourceUri(path, imports = {}) {
-  let source = (await readFile(new URL(path, import.meta.url), 'utf8')).replace('import.meta.env.BASE_URL', "'/'");
-  for (const [from, to] of Object.entries(imports)) source = source.replace(`'${from}'`, JSON.stringify(await sourceUri(to)));
-  const result = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-  return `data:text/javascript;base64,${Buffer.from(result.outputText).toString('base64')}`;
-}
-const sourceModule = async (path, imports) => import(await sourceUri(path, imports));
-const TIMELINE = '../src/ui/presentationTimeline.ts';
-const { PresentationTimeline, presentationDuration } = await sourceModule(TIMELINE);
-const { damageLook } = await sourceModule('../src/ui/damageEffects.ts');
+const { PresentationTimeline, presentationDuration } = await import('../src/ui/presentationTimeline.ts');
+const { damageLook } = await import('../src/ui/damageEffects.ts');
 const event = (seq, type, extra = {}) => ({ seq, type, ...extra });
 const bears = { id: 5, name: 'Grizzly Bears', creature: true };
 

@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const undoUri = uri((await readFile(new URL('../src/ui/undo.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const { undoButtonState, undoBarHTML } = await import(undoUri);
+const { undoButtonState, undoBarHTML } = await import('../src/ui/undo.ts');
 
 const step = { action: 'land', card: 'Floresta', turn: 3, phase: 'MAIN1', text: 'jogar Floresta' };
 const on = { format: 'pauper', matchLength: 'bo1' };

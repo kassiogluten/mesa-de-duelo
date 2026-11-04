@@ -13,7 +13,7 @@ export interface FPreferences {
   /** Etapas do turno dos oponentes em que o jogo segura a prioridade (nomes do Forge, como "UPKEEP"). Ausente em pontes antigas. */
   opponentStops?: string[];
 }
-export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number }
+export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number; /** Sempre true: o Desfazer não é mais uma escolha da sala. */ undo?: boolean }
 /** Aviso com título e cartas envolvidas (ataque recusado: o motivo e a carta que o causou). */
 export interface NoticeDetail { title?: string; cards?: { id: number; name: string }[] }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
@@ -53,7 +53,7 @@ export interface RoomInfo { code: string; config: MatchConfig; available: boolea
 export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed'
-    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed';
+    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed' | 'counters';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
   text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   /** Só em `damage`; ver forge-bridge/README.md. */
@@ -73,6 +73,10 @@ export interface FEvent {
   heads?: boolean; startingToss?: boolean; sides?: number; result?: number;
   /** `attached`: já estava presa a outra permanente. `control-changed`: quem controlava antes. */
   moved?: boolean; previous?: number;
+  /** `counters`: qual marcador (P1P1, LOYALTY...), se veio com a carta entrando e, na lealdade, se foi custo pago. */
+  counter?: string; entering?: boolean; paid?: boolean;
+  /** `turn`: o número do turno que começou. */
+  turn?: number;
   frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {

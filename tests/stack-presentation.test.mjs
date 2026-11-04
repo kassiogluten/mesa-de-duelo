@@ -1,15 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
 
-const load = async path => {
-  const source = await readFile(new URL(path, import.meta.url), 'utf8');
-  const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-  return import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
-};
-const { stackPresentation, stackOwnerLine, stackBadgeText, stackCastLine, stackLoyaltyLine, stackLoyaltyTone, loyaltyLineIn } = await load('../src/ui/stackPresentation.ts');
-const { PresentationTimeline } = await load('../src/ui/presentationTimeline.ts');
+const { stackPresentation, stackOwnerLine, stackBadgeText, stackCastLine, stackLoyaltyLine, stackLoyaltyTone, loyaltyLineIn } = await import('../src/ui/stackPresentation.ts');
+const { PresentationTimeline } = await import('../src/ui/presentationTimeline.ts');
 const card = { id: 21, name: 'Raging Goblin', creature: true, controller: 2 };
 const spell = { id: 701, source: card, controller: 2, text: 'Raging Goblin', targets: {} };
 const input = { gen: 44, priority: true, ok: { enabled: true }, cancel: { enabled: false }, actionable: [19], selectable: [] };
@@ -126,7 +119,7 @@ test('the loyalty line is found in the card text by its cost', () => {
 });
 
 test('the chosen mode is found in the card text by its number', async () => {
-  const { modeLineIn } = await load('../src/ui/stackPresentation.ts');
+  const { modeLineIn } = await import('../src/ui/stackPresentation.ts');
   const charm = 'Escolha um —\n• Vidência 2, depois compre um card.\n• O Amuleto Prismari causa 1 ponto de dano a cada um de um ou dois alvos.\n• Devolva a permanente alvo que não seja terreno para a mão de seu dono.';
   assert.equal(modeLineIn(charm, 1), 'Vidência 2, depois compre um card.');
   assert.equal(modeLineIn(charm, 3), 'Devolva a permanente alvo que não seja terreno para a mão de seu dono.');

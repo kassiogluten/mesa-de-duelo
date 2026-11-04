@@ -1,14 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-async function source(path) {
-  const code = await readFile(new URL(path, import.meta.url), 'utf8');
-  const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-  return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
-}
-const { selectedForInput, canSelectExileCard, canPlayExileCard } = await source('../src/ui/playContext.ts');
-const { stateWithFrame } = await source('../src/ui/presentationTimeline.ts');
+const { selectedForInput, canSelectExileCard, canPlayExileCard } = await import('../src/ui/playContext.ts');
+const { stateWithFrame } = await import('../src/ui/presentationTimeline.ts');
 function state() { return { gameOver: false, input: { gen: 8, priority: false, ok: {enabled:false}, cancel: {enabled:true}, selectable: [11, 12], actionable: [], selection: { cards: [], min: 2, max: 2 } }, players: [{id:0,exile:[{id:11,name:'Mountain',faceDown:false}]}] }; }
 
 test('selected cost feedback follows exact engine IDs, not hover or eligibility', () => {

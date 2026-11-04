@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const read = name => readFile(new URL(`../src/ui/${name}`, import.meta.url), 'utf8');
-const cardtext = uri(await read('cardtext.ts'));
-const { upkeepManaKey } = await import(uri((await read('upkeepMana.ts')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const { upkeepManaKey } = await import('../src/ui/upkeepMana.ts');
 
 const state = (extra = {}, input = {}) => ({ matchId: 'm1', turn: 3, phase: 'UPKEEP', activePlayer: 0, you: 0, stack: [], ...extra, input: { gen: 1, priority: true, manaOnly: [10], ...input } });
 

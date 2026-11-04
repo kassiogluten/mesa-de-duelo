@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const code = await readFile(new URL('../src/ui/decisionPrompt.ts', import.meta.url), 'utf8');
-const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } = await import('../src/ui/decisionPrompt.ts');
 function state() {
   return { you: 0, players: [{ id: 0, hand: [{ id: 11 }, { id: 12 }, { id: 13 }] }], input: {
     priority: false, selectable: [11, 12, 13], selection: { cards: [], min: 2, max: 2 }, ok: { enabled: false },

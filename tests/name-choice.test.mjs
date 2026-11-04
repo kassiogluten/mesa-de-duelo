@@ -1,13 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const source = file => readFile(new URL(`../src/ui/${file}`, import.meta.url), 'utf8');
-const cardtext = uri(await source('cardtext.ts'));
-const screens = uri((await source('choiceScreens.ts')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const filters = uri((await source('choiceFilters.ts')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./choiceScreens'", JSON.stringify(screens)));
-const names = await import(uri((await source('nameChoice.ts')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./choiceFilters'", JSON.stringify(filters))));
+const names = await import('../src/ui/nameChoice.ts');
 
 // Silverquill Silencer: o Forge manda todos os nomes de cartas que não são terreno.
 const filler = Array.from({ length: 30000 }, (_, i) => `Card ${i}`);

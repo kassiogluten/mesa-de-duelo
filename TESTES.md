@@ -2,35 +2,32 @@
 
 Como rodar os testes e quais falhas já são conhecidas. Se uma falha estiver na lista abaixo, ela não foi causada pela mudança que você está fazendo: siga em frente e só diga ao entregar que ela continua. Se aparecer uma falha fora da lista, essa sim precisa ser investigada.
 
-Ao corrigir uma das falhas conhecidas, tire-a desta lista. Ao achar uma nova que comprovadamente já existia antes da sua mudança (rodando de novo sem a mudança, com `git stash`), acrescente-a aqui com a data.
+Ao corrigir uma das falhas conhecidas, tire-a desta lista. Ao achar uma nova que comprovadamente já existia antes da sua mudança (rodando de novo sem a mudança: um commit temporário ou `git stash push -u -m <nome>`, nunca o `git stash` puro, que é compartilhado entre as cópias do repositório), acrescente-a aqui com a data.
 
 ## Como rodar
 
 **Mesa (navegador):**
 
 ```sh
+npm test                       # todos os testes (uns 6 s)
 npx tsc --noEmit -p .          # tipos
 npm run build                  # build
-node --experimental-strip-types --test tests/*.test.mjs   # todos os testes
 ```
 
-`npm test` (sem `--experimental-strip-types`) também funciona, mas veja a falha conhecida abaixo. Se o `node` do terminal for o 18 (que não tem `--experimental-strip-types`), use o 22 do nvm direto: `/c/Users/Kassio/AppData/Local/nvm/v22.19.0/node.exe --experimental-strip-types --test tests/*.test.mjs`.
+O `npm test` carrega o `tests/register.mjs`, que deixa o teste importar o código da mesa direto (`await import('../src/ui/x.ts')`): ele resolve os imports sem extensão, converte o TypeScript, troca CSS por módulo vazio e simula o `import.meta.env`. Teste novo não precisa montar import nenhum à mão. Para rodar um arquivo só: `node --import ./tests/register.mjs --test tests/<nome>.test.mjs`.
 
-**Servidor (`forge-bridge`):** precisa do JDK 17 e do Forge em `C:/Users/Kassio/forge`. O `-Dforge.dir` vai duas vezes: como propriedade e dentro do `argLine`.
+**Servidor (`forge-bridge`):** precisa do JDK 17 e do Forge em `~/forge` (no Windows, `C:/Users/Kassio/forge`). Outro lugar: acrescente `-Dforge.dir=/caminho`.
 
 ```sh
 cd forge-bridge
-JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" \
-  mvn -o test -Dforge.dir=C:/Users/Kassio/forge -DargLine="-Dforge.dir=C:/Users/Kassio/forge"
+JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" mvn -o test
 ```
 
-Para uma classe só: acrescente `-Dtest=NomeDoTest`. A suíte inteira leva uns 4 minutos.
+Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). A suíte inteira leva uns 30 s. O motor do Forge liga sozinho antes do primeiro teste (`EngineListener`); partidas de teste saem de `TestGames` (`empty()`, `pauper(...)`, `add(...)`).
+
+**Contrato do estado:** o `ProtocolContractTest` (servidor) monta uma partida e confere que todo campo do estado está em `tests/protocol/state-keys.txt`; o `tests/protocol.test.mjs` confere que todo campo dessa lista está declarado em `src/forge/client.ts`. Campo novo no estado: rode o `ProtocolContractTest` com `-Dprotocol.update=true`, declare o campo no `client.ts` e rode `npm test`.
 
 ## Falhas conhecidas
-
-### Mesa: 11 arquivos falham com `npm test` no Node 22.15 (desde antes da 0.105.0)
-
-Os arquivos de teste que importam `.ts` direto falham com `ERR_UNKNOWN_FILE_EXTENSION`: esta versão do Node só carrega `.ts` com `--experimental-strip-types`. É do ambiente, não do código. Com `node --experimental-strip-types --test tests/*.test.mjs`, todos passam (420 testes na 0.106.0).
 
 ### Mesa: 2 testes de navegador falham (vista em 2026-11-04, na 0.123.0)
 
@@ -43,14 +40,10 @@ Comprovado que já existiam: com a mudança da 0.124.0 desfeita (`git stash`), f
 
 ### Servidor: 3 testes de texto falham na suíte inteira (vista em 2026-11-01, na 0.106.0)
 
-Em 2026-11-04, na 0.125.0, a suíte inteira passou (335 testes, nenhuma falha, estes três inclusive) rodando no Linux, com o Forge em `~/forge`. Se voltarem a falhar no Windows, é o ambiente de lá.
+Em 2026-11-04, na 0.125.0, a suíte inteira passou (335 testes, nenhuma falha, estes três inclusive) rodando no Linux, com o Forge em `~/forge`. No mesmo dia, no Windows, os três continuam falhando (e só eles, em 336): é o ambiente de lá.
 
 - `CoinFlipTextTest.promptAsksHeadsOrTailsWithCapitalizedButtons`
 - `CoinFlipTextTest.thumbChoiceIsRewrittenOnlyForCoinResults`
 - `InputContextTest.targetSelectionCarriesTheTriggerTextWhatItTargetsAndHowManyAreLeft` (erro com o texto do gatilho de Chupacabra Voraz)
 
 Comprovado que já existiam: falham do mesmo jeito com o código do servidor da 0.105.0 (a mudança desfeita com `git stash`). Parecem depender do idioma que o Forge carregou antes (o `CoinFlipTextTest` passa quando roda sozinho; o `InputContextTest` falha até sozinho). Na 0.105.0 a suíte tinha passado inteira (270 testes), então algo no ambiente mudou desde então (talvez o Forge em `C:/Users/Kassio/forge` ou as preferências em `forge-bridge/target/test-home`). Ainda não investigado.
-
-### Servidor: `AdminTest.listsLiveMatchesWithoutSecrets` falha sozinho (vista em 2026-11-02, na 0.118.0)
-
-Erro `ExceptionInInitializerError` em `UndoHistory.<clinit>`: o teste cria uma sala (`Session.room`) sem ligar o motor do Forge antes (`BridgeRulesTest.engine()`). Comprovado que já existia (falha igual com a mudança desfeita por `git stash`). Rodado com `-Dtest` junto de outras classes, ele pode quebrar a inicialização de `PhaseType` e derrubar as classes seguintes (o `MatchHistoryTest` deu 6 erros assim, e passa inteiro sozinho).

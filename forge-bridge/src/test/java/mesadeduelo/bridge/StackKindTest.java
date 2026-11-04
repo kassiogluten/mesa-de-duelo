@@ -19,11 +19,7 @@ public class StackKindTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
 
     private static Game game() {
-        var a = new RegisteredPlayer(Decks.build("pauper-brasa")).setPlayer(new LobbyPlayerAi("A", null));
-        var b = new RegisteredPlayer(Decks.build("pauper-floresta")).setPlayer(new LobbyPlayerAi("B", null));
-        Game game = new Match(new MatchConfig("pauper", "bo1").rules(), List.of(a, b), "Stack kind test").createGame();
-        game.setNoGUIUser(); game.getPhaseHandler().devModeSet(PhaseType.MAIN1, game.getPlayers().get(0));
-        return game;
+        return TestGames.pauper("Stack kind test");
     }
 
     private static JsonObject top(Game game, Player viewer) {

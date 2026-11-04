@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
 
-const source = await readFile(new URL('../src/forge/client.ts', import.meta.url), 'utf8');
-const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-const { ForgeClient } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputText).toString('base64')}`);
+const { ForgeClient } = await import('../src/forge/client.ts');
 
 class Socket {
   static OPEN = 1;

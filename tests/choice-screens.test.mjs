@@ -1,12 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const load = async file => import(uri((await readFile(new URL(`../src/ui/${file}`, import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
-const screens = await load('choiceScreens.ts');
-const bar = await load('matchBar.ts');
+const screens = await import('../src/ui/choiceScreens.ts');
+const bar = await import('../src/ui/matchBar.ts');
 
 const warden = { id: 7, name: 'Soul Warden', tapped: false, token: false };
 const triggers = { id: 1, method: 'order', kind: 'order', purpose: 'triggers', title: 'Reordenar', options: [

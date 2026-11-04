@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const source = (await readFile(new URL('../src/ui/face.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext));
-const { faceHTML } = await import(uri(source));
+const { faceHTML } = await import('../src/ui/face.ts');
 const base = { name: 'Raio', manaCost: '{R}', typeLine: 'Mágica Instantânea', creature: false, color: 'R', image: 'https://img/full.jpg' };
 
 test('full image stays exactly as before by default', () => {
@@ -51,7 +46,7 @@ test('arena frame follows the permanent type and tokens get their own shape', ()
 });
 
 test('texto do Forge perde o id interno da carta', async () => {
-  const { richText, withoutCardIds } = await import(cardtext);
+  const { richText, withoutCardIds } = await import('../src/ui/cardtext.ts');
   assert.equal(withoutCardIds('Lightning Bolt (123) - Deal 3 damage to Grizzly Bears (45).'), 'Lightning Bolt - Deal 3 damage to Grizzly Bears.');
   assert.equal(richText('Llanowar Elves (7): {T}').includes('(7)'), false);
 });

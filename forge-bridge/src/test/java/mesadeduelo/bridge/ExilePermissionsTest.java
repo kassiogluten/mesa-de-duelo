@@ -21,20 +21,9 @@ import org.junit.Test;
 public class ExilePermissionsTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
 
-    static Game game() {
-        var a = new RegisteredPlayer(new Deck("A")).setPlayer(new LobbyPlayerAi("A", null));
-        var b = new RegisteredPlayer(new Deck("B")).setPlayer(new LobbyPlayerAi("B", null));
-        Game game = new Match(new MatchConfig("free", "bo1").rules(), List.of(a,b), "Exile permissions").createGame();
-        game.setNoGUIUser();
-        game.getPhaseHandler().devModeSet(PhaseType.MAIN1, game.getPlayers().get(0));
-        return game;
-    }
+    static Game game() { return TestGames.empty(); }
 
-    static Card add(Game game, String name, Player owner, ZoneType zone) {
-        Card card = Card.fromPaperCard(DeckValidation.resolve(name), owner);
-        owner.getZone(zone).add(card); card.setZone(owner.getZone(zone));
-        return card;
-    }
+    static Card add(Game game, String name, Player owner, ZoneType zone) { return TestGames.add(game, name, owner, zone); }
 
     private static com.google.gson.JsonObject cardIn(com.google.gson.JsonObject state, Player owner, String zone, int id) {
         for (var row : state.getAsJsonArray("players")) {

@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const { autoSplit, splitStatus, adjust, combatDamageHTML, isCombatDamage } = await import(uri((await readFile(new URL('../src/ui/combatDamage.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const { autoSplit, splitStatus, adjust, combatDamageHTML, isCombatDamage } = await import('../src/ui/combatDamage.ts');
 
 const q = (extra = {}) => ({ id: 1, method: 'assignCombatDamage', kind: 'amount', purpose: 'combat-damage', title: '', total: 7, ordered: false, free: false, trample: true,
   card: { id: 9, name: 'Craw Wurm' }, options: [

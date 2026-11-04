@@ -1168,7 +1168,11 @@ final class Session {
                 }
                 catch (java.util.concurrent.TimeoutException waiting) { /* Pump this game's lifecycle only. */ }
             }
+        } catch (InterruptedException | java.util.concurrent.CancellationException e) {
+            return defaultAnswer(question);
         } catch (Exception e) {
+            // A partida segue com a resposta padrão; o log diz que o jogador não escolheu.
+            System.err.println("Sessão " + code + ": pergunta " + ev.getMethod() + " caiu na resposta padrão: " + e);
             return defaultAnswer(question);
         } finally {
             if (seat.question == question) { seat.question = null; seat.inputGen.incrementAndGet(); }
@@ -1626,19 +1630,33 @@ final class Session {
         // Se o Forge não abriu um prompt novo depois do clique, os botões voltam a funcionar.
         for (Seat seat : seats) if (seat.lockedAtLastFlush && !seat.buttonsLocked()) dirty.set(true);
         if (!dirty.getAndSet(false)) return;
+        boolean failed = false;
         for (Seat seat : seats) {
             if (seat.channel == null) continue;
             JsonObject state = state(seat);
-            if (state == null) { dirty.set(true); return; }
+            // Leitura concorrente falhou: este assento tenta de novo no próximo ciclo, os outros recebem agora.
+            if (state == null) { dirty.set(true); failed = true; continue; }
             seat.send(state.toString());
             if (state.has("eventCursor")) seat.sentEventCursor = state.get("eventCursor").getAsLong();
         }
         for (Watcher w : watchers) {
             JsonObject state = state(w);
-            if (state == null) { dirty.set(true); return; }
+            if (state == null) { dirty.set(true); failed = true; continue; }
             BridgeServer.send(w.channel, state.toString());
             if (state.has("eventCursor")) w.sentEventCursor = state.get("eventCursor").getAsLong();
         }
+        if (!failed) stateFailures = 0;
+    }
+
+    /** Ciclos seguidos (de 50 ms) em que montar o estado deu erro. Uma falha solta é leitura concorrente e se refaz sozinha. */
+    private int stateFailures;
+    private static final int STATE_FAILURES_TO_LOG = 40;
+
+    /** Registra no log quando o estado falha por uns 2 s seguidos, uma vez por sequência, em vez de a mesa parar sem aviso. */
+    private void stateFailed(RuntimeException e) {
+        if (++stateFailures != STATE_FAILURES_TO_LOG) return;
+        System.err.println("Sessão " + code + ": o estado não sai há " + STATE_FAILURES_TO_LOG + " ciclos: " + e);
+        e.printStackTrace();
     }
 
     /**
@@ -1672,6 +1690,7 @@ final class Session {
             state.add("waiting", waiting());
             state.add("castable", new JsonArray());
         } catch (RuntimeException e) {
+            stateFailed(e);
             return null;
         }
         state.add("config", config.json());
@@ -1935,6 +1954,7 @@ final class Session {
                 if (generation != seat.inputGen.get()) return null;
             }
         } catch (RuntimeException e) {
+            stateFailed(e);
             return null;
         }
         state.add("config", config.json());

@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const code = await readFile(new URL('../src/ui/removalNotice.ts', import.meta.url), 'utf8');
-const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { removalCause, removalNotices, removedByOwner } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { removalCause, removalNotices, removedByOwner } = await import('../src/ui/removalNotice.ts');
 
 const YOU = 1, ANA = 2, CAIO = 3;
 let seq = 0;

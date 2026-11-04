@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const source = (await readFile(new URL('../src/ui/dungeon.ts', import.meta.url), 'utf8')).replace("import './dungeon.css';", '').replace("'./cardtext'", JSON.stringify(cardtext));
-const { roomDepths, dungeonProgress, nextRooms, dungeonBadgesHTML, dungeonMapHTML, dungeonRoomHTML, dungeonText, withDungeonBadges } = await import(uri(source));
+const { roomDepths, dungeonProgress, nextRooms, dungeonBadgesHTML, dungeonMapHTML, dungeonRoomHTML, dungeonText, withDungeonBadges } = await import('../src/ui/dungeon.ts');
 
 const room = (name, ...next) => ({ name, text: `${name} effect.`, next });
 const undercity = {

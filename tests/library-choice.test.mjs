@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const lib = await import(uri((await readFile(new URL('../src/ui/libraryChoice.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const lib = await import('../src/ui/libraryChoice.ts');
 
 const card = (id, name, typeLine) => ({ id, name, typeLine, tapped: false, token: false });
 const top = [card(1, 'Lightning Bolt', 'Instant'), card(2, 'Counterspell', 'Instant'), card(3, 'Forest', 'Basic Land — Forest')];

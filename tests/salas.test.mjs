@@ -1,15 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const read = path => readFile(new URL(path, import.meta.url), 'utf8');
-const cardtext = uri(await read('../src/ui/cardtext.ts'));
-const undo = uri((await read('../src/ui/undo.ts')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const publicRooms = uri((await read('../src/ui/publicRooms.ts')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./undo'", JSON.stringify(undo)));
-const salas = await import(uri((await read('../src/salas/view.ts')).replace("'../ui/cardtext'", JSON.stringify(cardtext)).replace("'../ui/publicRooms'", JSON.stringify(publicRooms))));
-const { voteDialog } = await import(uri((await read('../src/ui/voteDialog.ts')).replace("'./cardtext'", JSON.stringify(cardtext))));
-const { sleeveClass } = await import(uri(await read('../src/ui/sleeves.ts')));
+const salas = await import('../src/salas/view.ts');
+const { voteDialog } = await import('../src/ui/voteDialog.ts');
+const { sleeveClass } = await import('../src/ui/sleeves.ts');
 
 const room = (over = {}) => ({ code: 'WXYZ', host: 'Ana', config: { format: 'pauper', matchLength: 'bo1' }, capacity: 2, players: 1, started: false, ...over });
 const rooms = [room(), room({ code: 'KLMN', host: 'Bia', config: { format: 'commander', matchLength: 'bo1', playerCount: 4 }, capacity: 4, players: 2, brackets: [3, 3] }),

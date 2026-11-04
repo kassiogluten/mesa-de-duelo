@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const code = await readFile(new URL('../src/ui/historyLog.ts', import.meta.url), 'utf8');
-const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { historyTurns, effectParts, listNames, turnSummary } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { historyTurns, effectParts, listNames, turnSummary } = await import('../src/ui/historyLog.ts');
 
 const players = { 1: 'Ana', 2: 'Bruno' };
 const names = {

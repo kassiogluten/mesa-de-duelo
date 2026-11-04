@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const source = await readFile(new URL('../src/ui/damageEffects.ts', import.meta.url), 'utf8');
-const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { damageLook, damageDetail } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { damageLook, damageDetail } = await import('../src/ui/damageEffects.ts');
 const hit = extra => ({ seq: 1, type: 'damage', delta: -2, targets: { cards: [5], players: [] }, ...extra });
 const player = extra => hit({ targets: { cards: [], players: [1] }, ...extra });
 

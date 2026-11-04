@@ -1,15 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-async function source(path) {
-  const content = await readFile(new URL(path, import.meta.url), 'utf8');
-  const output = ts.transpileModule(content, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-  return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
-}
-const { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction } = await source('../src/ui/playContext.ts');
-const { canDragHandCard, handDropAction } = await source('../src/ui/handDrag.ts');
-const { hasLiveDecision, stateWithFrame } = await source('../src/ui/presentationTimeline.ts');
+const { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction } = await import('../src/ui/playContext.ts');
+const { canDragHandCard, handDropAction } = await import('../src/ui/handDrag.ts');
+const { hasLiveDecision, stateWithFrame } = await import('../src/ui/presentationTimeline.ts');
 const card = (id, name = 'Raging Goblin') => ({ id, name, controller: 0, tapped: false, token: false });
 function state() {
   return { you: 0, gameOver: false, phase: 'MAIN1', turn: 3, activePlayer: 0, stack: [], combat: [], castable: [30], playableExile: [30], suspendedExile: [31],

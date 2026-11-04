@@ -2,19 +2,11 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import ts from 'typescript';
 
-async function sourceUri(path, imports = {}) {
-  let source = (await readFile(new URL(path, import.meta.url), 'utf8')).replace('import.meta.env.BASE_URL', "'/'");
-  for (const [from, to] of Object.entries(imports)) source = source.replace(`'${from}'`, JSON.stringify(await sourceUri(to)));
-  const result = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-  return `data:text/javascript;base64,${Buffer.from(result.outputText).toString('base64')}`;
-}
-const sourceModule = async (path, imports) => import(await sourceUri(path, imports));
-const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await sourceModule('../src/ui/presentationTimeline.ts');
-const { canDragHandCard, handDropAction } = await sourceModule('../src/ui/handDrag.ts');
-const { createMotion } = await sourceModule('../src/ui/motion.ts', { './damageEffects': '../src/ui/damageEffects.ts', './presentationTimeline': '../src/ui/presentationTimeline.ts', './planeswalkerEffects': '../src/ui/planeswalkerEffects.ts', './sleeves': '../src/ui/sleeves.ts', './warpEffects': '../src/ui/warpEffects.ts' });
-const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await sourceModule('../src/ui/audio.ts', { './presentationTimeline': '../src/ui/presentationTimeline.ts', './warpEffects': '../src/ui/warpEffects.ts' });
+const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await import('../src/ui/presentationTimeline.ts');
+const { canDragHandCard, handDropAction } = await import('../src/ui/handDrag.ts');
+const { createMotion } = await import('../src/ui/motion.ts');
+const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await import('../src/ui/audio.ts');
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
   return { type: 'state', you: 1, turn: 3, phase: 'MAIN1', activePlayer: 2, gameOver: false,

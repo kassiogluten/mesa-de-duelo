@@ -17,6 +17,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Versão instalada no repositório Maven local por "mvn -pl forge-gui -am install" no clone do Forge. -->
     <forge.version>2.0.16-SNAPSHOT</forge.version>
+    <!-- Onde está o clone do Forge (o "npm run forge:instalar" põe em ~/forge). Outro lugar: -Dforge.dir=/caminho. -->
+    <forge.dir>${user.home}/forge</forge.dir>
+    <!-- Vazio para o @{argLine} do surefire; um -DargLine na linha de comando continua somando. -->
+    <argLine></argLine>
   </properties>
 
   <dependencies>
@@ -43,7 +47,14 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.1.2</version>
-        <configuration><systemPropertyVariables><forge.dir>${forge.dir}</forge.dir></systemPropertyVariables></configuration>
+        <configuration>
+          <argLine>@{argLine} -Dforge.dir=${forge.dir}</argLine>
+          <systemPropertyVariables><forge.dir>${forge.dir}</forge.dir></systemPropertyVariables>
+          <!-- Liga o motor do Forge antes de qualquer classe de teste (EngineListener). -->
+          <properties><property><name>listener</name><value>mesadeduelo.bridge.EngineListener</value></property></properties>
+          <!-- Para combinar classes com -Dtest=A,B sem falhar quando um padrão não acha nada. -->
+          <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

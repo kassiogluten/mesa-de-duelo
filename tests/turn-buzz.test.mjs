@@ -1,16 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
 
-async function load(file) {
-  const code = await readFile(new URL(`../src/ui/${file}`, import.meta.url), 'utf8');
-  return ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-}
-const url = code => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`;
-const awaiting = url(await load('awaitingDecision.ts'));
-const { buzzKey, buzzEnabled } = await import(url((await load('turnBuzz.ts')).replace(/from ['"]\.\/awaitingDecision['"]/, `from '${awaiting}'`)));
-const { screenWakeEnabled } = await import(url(await load('screenWake.ts')));
+const { buzzKey, buzzEnabled } = await import('../src/ui/turnBuzz.ts');
+const { screenWakeEnabled } = await import('../src/ui/screenWake.ts');
 
 const input = extra => ({ gen: 7, selectable: [], ok: { enabled: false }, cancel: { enabled: false }, ...extra });
 const state = extra => ({ matchId: 'm1', turn: 3, activePlayer: 1, you: 0, gameOver: false, input: input(), ...extra });

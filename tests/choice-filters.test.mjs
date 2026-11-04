@@ -1,12 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const source = file => readFile(new URL(`../src/ui/${file}`, import.meta.url), 'utf8');
-const cardtext = uri(await source('cardtext.ts'));
-const screens = uri((await source('choiceScreens.ts')).replace("'./cardtext'", JSON.stringify(cardtext)));
-const filters = await import(uri((await source('choiceFilters.ts')).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'./choiceScreens'", JSON.stringify(screens))));
+const filters = await import('../src/ui/choiceFilters.ts');
 
 const card = (id, name, typeLine, manaCost = '') => ({ id, name, typeLine, manaCost, tapped: false, token: false });
 // Um tutor num deck de Commander: as opções vêm na ordem do grimório.

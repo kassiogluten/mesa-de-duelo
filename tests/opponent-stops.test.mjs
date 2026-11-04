@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const { OpponentStopsPreference, OPPONENT_STOPS_KEY, normalizeStops, stopsOptionsHTML, holdingStop } = await import(uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const { OpponentStopsPreference, OPPONENT_STOPS_KEY, normalizeStops, stopsOptionsHTML, holdingStop } = await import('../src/ui/opponentStops.ts');
 
 function fixture(saved) {
   const data = new Map(saved === undefined ? [] : [[OPPONENT_STOPS_KEY, saved]]);
@@ -76,7 +72,7 @@ test('the options buttons say which steps are marked, and holding needs an oppon
 });
 
 test('the track menu lists only the steps of the chosen group', async () => {
-  const { stopMenuHTML } = await import(uri((await readFile(new URL('../src/ui/opponentStops.ts', import.meta.url), 'utf8')).replace("'./cardtext'", JSON.stringify(cardtext))));
+  const { stopMenuHTML } = await import('../src/ui/opponentStops.ts');
   const combat = stopMenuHTML('combat', 'Combate', ['COMBAT_END']);
   assert.equal((combat.match(/data-stop=/g) ?? []).length, 5);
   assert.match(combat, /Combate · turno do oponente/);

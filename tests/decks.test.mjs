@@ -1,15 +1,5 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { registerHooks } from 'node:module';
-
-// The application uses Vite's extensionless TypeScript imports. Keep tests dependency-free on Node 24.
-registerHooks({ resolve(specifier, context, nextResolve) {
-  try { return nextResolve(specifier, context); }
-  catch (error) {
-    if (error.code === 'ERR_MODULE_NOT_FOUND' && specifier.startsWith('.') && !/\.[cm]?[jt]sx?$/.test(specifier)) return nextResolve(`${specifier}.ts`, context);
-    throw error;
-  }
-} });
 const decks = await import('../src/decks.ts');
 const { applyDeckImport, applyDeckListEdit, deckImportSnapshot, deckListChanges } = await import('../src/ui/deckImport.ts');
 const { cardCopyLimit, copiesInDeck, validateDeckLocal } = await import('../src/ui/deckRules.ts');

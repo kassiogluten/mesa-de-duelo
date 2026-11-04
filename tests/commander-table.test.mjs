@@ -1,15 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-async function source(path) {
-  const content = await readFile(new URL(path, import.meta.url), 'utf8');
-  const output = ts.transpileModule(content, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-  return import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
-}
-const { tablePlayers, validAttackSelection, legalAttackTargets, attackPairAction, legalAttackAllTargets, attackAllAction, canPlayCommander, legalAttackGroupTargets, attackGroupAction, AttackQueue } = await source('../src/ui/commanderTable.ts');
-const { hasLiveDecision, stateWithFrame } = await source('../src/ui/presentationTimeline.ts');
-const { blockPairAction } = await source('../src/ui/playContext.ts');
+const { tablePlayers, validAttackSelection, legalAttackTargets, attackPairAction, legalAttackAllTargets, attackAllAction, canPlayCommander, legalAttackGroupTargets, attackGroupAction, AttackQueue } = await import('../src/ui/commanderTable.ts');
+const { hasLiveDecision, stateWithFrame } = await import('../src/ui/presentationTimeline.ts');
+const { blockPairAction } = await import('../src/ui/playContext.ts');
 function state(count = 4, ownSeat = 2) {
   const players = Array.from({ length: count }, (_, seat) => ({ id: 10 + seat * 13, seat, name: `Player ${seat}`, hand: [], commandZone: [{ id: 900 + seat, name: 'Commander' }], battlefield: [{ id: 100 + seat, controller: 10 + seat * 13 }], eliminated: false }));
   return { you: players[ownSeat % count].id, players, gameOver: false, stack: [], combat: [], input: { gen: 91, selectable: [], priority: false, ok: { enabled: true }, attacking: { attackers: [102], defenders: [{ id: 10, kind: 'player' }, { id: 49, kind: 'player' }, { id: 10, kind: 'card' }], legalAssignments: [{ attacker: 102, defenders: [{ id: 49, kind: 'player' }, { id: 10, kind: 'card' }] }] } } };

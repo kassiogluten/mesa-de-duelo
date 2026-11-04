@@ -1,10 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const code = await readFile(new URL('../src/ui/awaitingDecision.ts', import.meta.url), 'utf8');
-const output = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { awaitingDecision, waitingOnText } = await import(`data:text/javascript;base64,${Buffer.from(output).toString('base64')}`);
+const { awaitingDecision, waitingOnText } = await import('../src/ui/awaitingDecision.ts');
 function state(input = {}, extra = {}) {
   return { you: 0, gameOver: false, players: [{ id: 0, name: 'Você' }, { id: 1, name: 'Ana' }, { id: 2, name: 'Bia' }],
     input: { priority: false, selectable: [], selectablePlayers: [], selectableStacks: [], ok: { enabled: false }, cancel: { enabled: false }, ...input }, ...extra };

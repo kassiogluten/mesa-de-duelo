@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const uri = code => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`;
-const read = name => readFile(new URL(`../src/ui/${name}`, import.meta.url), 'utf8');
-const cardtext = uri(await read('cardtext.ts'));
-const { voteSnippets, voteTallyText, voteHTML, isVote } = await import(uri((await read('cardVote.ts')).replace("'./cardtext'", JSON.stringify(cardtext))));
+const { voteSnippets, voteTallyText, voteHTML, isVote } = await import('../src/ui/cardVote.ts');
 
 const EXPROPRIATE = "Council's dilemma — Starting with you, each player votes for time or money. For each time vote, take an extra turn after this one. For each money vote, choose a permanent owned by the voter and gain control of it. Exile Expropriate.";
 const PORTAL = 'Will of the council — At the beginning of your upkeep, starting with you, each player votes for carnage or homage. If carnage gets more votes, sacrifice Coercive Portal and destroy all nonland permanents. If homage gets more votes or the vote is tied, draw a card.';

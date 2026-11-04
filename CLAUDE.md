@@ -24,7 +24,7 @@ O painel **Novidades** da tela inicial é gerado do `CHANGELOG.md` (`src/ui/chan
 
 A página **Novidades em imagens** (link no painel Novidades) mostra prints de cada item do `CHANGELOG.md`. Sempre que um item entrar no `CHANGELOG.md`, ele também ganha imagens nessa página, na mesma mudança:
 
-- Tire prints que mostrem a mudança em si (o selo, o menu, a carta, o balão), recortados no detalhe, não a tela inteira. Use as páginas de teste da mesa (`tests/fixtures/*.html`, com `window.fixture` para montar o estado) e o `npx agent-browser` com `set viewport <L> <A> 2`, recortando pela caixa dos elementos. Capture sempre em 2x: a página mostra cada imagem com metade da largura do arquivo, que é o tamanho real na mesa.
+- Tire prints que mostrem a mudança em si (o selo, o menu, a carta, o balão), recortados no detalhe, não a tela inteira. Use as páginas de teste da mesa (`tests/fixtures/*.html`, com `window.fixture` para montar o estado) e o `npm run print -- <página> "<seletor>" <saída.webp> [--setup js]` (`scripts/print-novidade.mjs`, com o `npm run dev` ligado), que já captura em 2x, recorta pela caixa dos elementos e grava em WebP. Em 2x porque a página mostra cada imagem com metade da largura do arquivo, que é o tamanho real na mesa.
 - Salve em `public/novidades/<versão>/<nome-do-item>.webp` (WebP, qualidade ~88).
 - Registre em `src/novidades.json`: versão → título do item exatamente como está em negrito no CHANGELOG (sem o ponto final) → lista de `{ "img": "<versão>/<arquivo>.webp", "legenda": "..." }`. A legenda segue as mesmas regras do CHANGELOG: português, para o jogador, dizendo o que se vê na imagem.
 - Só fica sem imagem o item que não tem nada para ver (por exemplo, uma mudança só de desempenho); nesse caso, diga isso ao entregar a mudança.
@@ -38,6 +38,15 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 - Cada cenário tem `nome` (o que o jogador vê na lista), `versao` e `item` (o título em negrito do item no CHANGELOG, sem o ponto final), `conferir` (o que fazer na mesa e o que deve acontecer, em português, para o jogador) e `cenario` (o mesmo formato de “Copiar cenário”). Monte a mesa mínima que mostra a correção, com as terras para pagar e cartas no grimório para comprar; o Jogador 1 é quem cria a sala.
 - Os mais novos ficam no começo da lista. Se a correção mudar de novo, atualize o cenário em vez de criar outro.
 - `tests/lab.test.mjs` confere que cada cenário aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
+
+## Entregar
+
+Ao fechar uma mudança, siga a skill `/entregar` (`.claude/skills/entregar/SKILL.md`): CHANGELOG, versão, prints, cenário do Laboratório, testes e roadmap, na ordem.
+
+## Arquivos grandes
+
+- `CHANGELOG.md` (centenas de KB): leia só o topo (`head -40`).
+- `ROADMAP.md` tem só o que falta; os itens concluídos ficam em `docs/roadmap-feito.md`.
 
 ## Testes
 
