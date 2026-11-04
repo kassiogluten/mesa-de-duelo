@@ -1380,3 +1380,77 @@ Contra o computador em Commander, o deck de cada bot é um dos decks prontos esc
 - [ ] Lembrar a escolha, como o deck e o oponente.
 - [ ] O resumo da partida ("Commander · 4 jogadores · computadores aleatórios") diz o máximo ("até Bracket 3").
 - [ ] Decidir se vale também fora do Commander (hoje o bracket só existe no Commander).
+
+## 96. Formato exclusivo de precons de Commander
+
+Um formato à parte, **Precon**, em que cada jogador só joga com um deck pré-construído oficial de Commander, do jeito que saiu da caixa: nada de trocar cartas. As partidas ficam equilibradas sem precisar de bracket, e quem está começando pode jogar sem montar deck. As listas não precisam ser digitadas: o Forge já traz 180 precons em `forge-gui/res/quest/commanderprecons/*.dck` (comandante, cartas e edição), e todos os listados abaixo estão lá (conferido em 04/11/2026).
+
+**Comportamento**
+
+- [ ] Novo formato **Precon** na criação da partida e da sala, com as regras do Commander (40 de vida, dano de comandante, identidade de cor) e só os decks desta lista.
+- [ ] Na escolha de deck, os precons agrupados por série, com a arte do comandante, as cores e o ano. Sem editar: o menu da carta só tem "Ver as cartas".
+- [ ] Contra o computador, os bots também jogam com precons, escolhidos à mão ou "aleatório", com a opção de sortear só da mesma série do jogador.
+- [ ] Na sala, conferir que todos os lugares têm um precon da lista; um deck do jogador, mesmo com as mesmas cartas, não serve.
+- [ ] Importar as listas do Forge por script (gerar o JSON dos precons a partir dos `.dck`), em vez de copiar à mão; guardar a série, o ano e o comandante de cada uma.
+- [ ] Nome em português de cada precon e de cada série (a tradução oficial quando houver).
+- [ ] Bracket de cada precon (item 35), para mostrar no selo como nos outros decks.
+- [ ] Decidir o que fazer com os decks prontos que já são precons adaptados (Linhagem do Ur-Dragão, Radiação do Homem-Mariposa, Olho de Sauron…): manter os dois ou trocar pelo precon original.
+- [ ] Item no CHANGELOG e prints na página Novidades em imagens.
+
+**As 10 séries** (escolhidas pela popularidade na comunidade; dá para trocar ou acrescentar outras depois, já que o Forge tem as 180 listas)
+
+1. **Warhammer 40,000** (40K, 2022)
+   - Forces of the Imperium — Inquisitor Greyfax
+   - Necron Dynasties — Szarekh, the Silent King
+   - The Ruinous Powers — Abaddon the Despoiler
+   - Tyranid Swarm — The Swarmlord
+2. **Fallout** (PIP, 2024)
+   - Hail, Caesar — Caesar, Legion's Emperor
+   - Mutant Menace — The Wise Mothman
+   - Science! — Dr. Madison Li
+   - Scrappy Survivors — Dogmeat, Ever Loyal
+3. **O Senhor dos Anéis: Contos da Terra-média** (LTC, 2023)
+   - Elven Council — Galadriel, Elven-Queen
+   - Food and Fellowship — Frodo, Adventurous Hobbit e Sam, Loyal Attendant
+   - Riders of Rohan — Éowyn, Shieldmaiden
+   - The Host of Mordor — Sauron, Lord of the Rings
+4. **Final Fantasy** (FIC, 2025)
+   - Counter Blitz — Tidus, Yuna's Guardian
+   - Limit Break — Cloud, Ex-SOLDIER
+   - Revival Trance — Terra, Herald of Hope
+   - Scions & Spellcraft — Y'shtola, Night's Blessed
+5. **Doctor Who** (WHO, 2023)
+   - Blast from the Past — The Fourth Doctor e Sarah Jane Smith
+   - Masters of Evil — Davros, Dalek Creator
+   - Paradox Power — The Thirteenth Doctor e Yasmin Khan
+   - Timey-Wimey — The Tenth Doctor e Rose Tyler
+6. **Commander 2013** (C13)
+   - Eternal Bargain — Oloro, Ageless Ascetic
+   - Evasive Maneuvers — Derevi, Empyrial Tactician
+   - Mind Seize — Jeleva, Nephalia's Scourge
+   - Nature of the Beast — Marath, Will of the Wild
+   - Power Hungry — Prossh, Skyraider of Kher
+7. **Commander 2016** (C16)
+   - Breed Lethality — Atraxa, Praetors' Voice
+   - Entropic Uprising — Yidris, Maelstrom Wielder
+   - Invent Superiority — Breya, Etherium Shaper
+   - Open Hostility — Saskia the Unyielding
+   - Stalwart Unity — Kynaios and Tiro of Meletis
+8. **Commander 2017** (C17)
+   - Arcane Wizardry — Inalla, Archmage Ritualist
+   - Draconic Domination — The Ur-Dragon
+   - Feline Ferocity — Arahbo, Roar of the World
+   - Vampiric Bloodlust — Edgar Markov
+9. **Commander 2020 (Ikoria)** (C20)
+   - Arcane Maelstrom — Kalamax, the Stormsire
+   - Enhanced Evolution — Otrova, Deepfathom Horror
+   - Ruthless Regiment — Jirina Kudro
+   - Symbiotic Swarm — Kathril, Aspect Warper
+   - Timeless Wisdom — Gavi, Nest Warden
+10. **Bloomburrow** (BLC, 2024)
+    - Animated Army — Bello, Bard of the Brambles
+    - Family Matters — Zinnia, Valley's Voice
+    - Peace Offering — Ms. Bumbleflower
+    - Squirreled Away — Hazel of the Rootbloom
+
+São 44 precons ao todo. Nos `.dck` do Forge, o comandante às vezes vem com um `+` no fim do nome (o cartão de comandante alternativo da caixa) e uma lista vem com espaço a mais no nome do arquivo (`Primal Genesis [C19] [2019] .dck`): o script de importação precisa tratar os dois.
