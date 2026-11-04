@@ -1367,3 +1367,16 @@ Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.
+
+## 95. Bracket máximo dos bots na criação da partida
+
+Contra o computador em Commander, o deck de cada bot é um dos decks prontos escolhido à mão ou "Deck aleatório" entre os compatíveis, sem olhar a força. Um deck Bracket 2 pode cair contra um bot com um deck Bracket 4, e o jogador só descobre na mesa (pelo selo "B4"). Os decks prontos já têm o bracket guardado (item 35).
+
+- [ ] Na criação da partida contra o computador, um controle **Bracket máximo dos bots** (1 a 5, mais "Qualquer"), que vale para todos os computadores da mesa.
+- [ ] "Deck aleatório" só sorteia entre os decks prontos com bracket até o máximo escolhido; a lista de decks de cada computador mostra só esses (ou mostra os outros apagados, com o bracket ao lado).
+- [ ] Um deck já escolhido acima do novo máximo volta para "Deck aleatório", com um aviso curto, como já acontece ao trocar de formato.
+- [ ] Sugerir como máximo o bracket do deck do jogador, sem forçar.
+- [ ] Se nenhum deck pronto couber no máximo, avisar e não deixar começar (ou subir o máximo até o menor bracket disponível).
+- [ ] Lembrar a escolha, como o deck e o oponente.
+- [ ] O resumo da partida ("Commander · 4 jogadores · computadores aleatórios") diz o máximo ("até Bracket 3").
+- [ ] Decidir se vale também fora do Commander (hoje o bracket só existe no Commander).
