@@ -67,7 +67,8 @@ final class DeckValidation {
 
     static Result validateForAi(JsonElement payload, String format) {
         Result result = validate(payload, format);
-        if (result.valid()) result.deck().getUnplayableAICards().unplayable.forEach((section, cards) -> {
+        // O precon vai como saiu da caixa também para o computador: ele só não usa bem as cartas que a IA do Forge não conhece.
+        if (result.valid() && !Decks.isPrecon(result.deck())) result.deck().getUnplayableAICards().unplayable.forEach((section, cards) -> {
             for (PaperCard card : cards) issue(result.issues(), "unsupported-ai-card", "A IA ainda não consegue jogar esta carta corretamente. Escolha outra carta para o deck do oponente.", card.getDisplayName(), section == DeckSection.Main ? "main" : "sideboard");
         });
         return result;
@@ -169,6 +170,12 @@ final class DeckValidation {
         if (main < (constructed ? 60 : 1))
             issue(issues, "main-too-small", constructed ? formatLabel(format) + " exige pelo menos 60 cartas no deck principal." : "Adicione pelo menos uma carta ao deck.", null, "main");
         if ("commander".equals(format)) { checkCommander(deck, issues); return; }
+        if ("precon".equals(format)) {
+            checkCommander(deck, issues);
+            if (issues.isEmpty() && !Decks.isPrecon(deck))
+                issue(issues, "not-precon", "No Precon só valem os decks pré-construídos oficiais da mesa, sem alterações.", null, null);
+            return;
+        }
         if ("oathbreaker".equals(format)) { checkOathbreaker(deck, issues); return; }
         if (deck.getOrCreate(DeckSection.Commander).countAll() > 0)
             issue(issues, "wrong-section", "A zona de comando exige o formato Commander ou Oathbreaker.", null, "commander");

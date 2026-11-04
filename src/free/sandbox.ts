@@ -58,7 +58,7 @@ export function newSandbox(deck: DeckData, format: DeckFormat, rng: Rng = Math.r
   for (const e of deck.cards) for (let i = 0; i < e.count; i++) zones.library.push(card(id++, e.name, print(e)));
   for (const e of deck.commanders ?? []) for (let i = 0; i < e.count; i++) zones.command.push(card(id++, e.name, { commander: true, ...print(e) }));
   zones.library = shuffle(zones.library, rng);
-  const life = format === 'commander' ? 40 : 20;
+  const life = format === 'commander' || format === 'precon' ? 40 : 20;
   const s: Sandbox = { v: 1, deckName: deck.name, deck: { name: deck.name, cards: deck.cards, commanders: deck.commanders ?? [] }, format, zones, life, oppLife: life, turn: 1, nextId: id };
   draw(s, 7);
   return s;

@@ -1,4 +1,16 @@
 {
+  "0.126.0": {
+    "Formato Precon": [
+      { "img": "0.126.0/formato-precon.webp", "legenda": "O Precon ao lado do Commander na escolha do formato, com a explicação logo abaixo." },
+      { "img": "0.126.0/precons-por-serie.webp", "legenda": "No Precon, só os precons da mesa, agrupados por série com o ano, cada um com o comandante, o preço e o bracket." }
+    ],
+    "Bracket máximo dos bots": [
+      { "img": "0.126.0/bracket-bots.webp", "legenda": "Bracket máximo dos bots no Bracket 2, o do seu deck, acima dos decks dos computadores; no Precon, a opção de sortear os bots só da série do seu deck." }
+    ],
+    "Precons originais no lugar dos adaptados": [
+      { "img": "0.126.0/precon-no-commander.webp", "legenda": "Ameaça Mutante, o precon original do Homem-Mariposa, entre os decks prontos do Commander, com o selo Precon." }
+    ]
+  },
   "0.125.0": {
     "Aviso quando uma jogada é recusada": [
       { "img": "0.125.0/aviso-jogada-recusada.webp", "legenda": "Raio na mão no turno de quem controla a Myrel: em vez de nada acontecer, o aviso explica que a Myrel impede a mágica e mostra a carta dela." }

@@ -8,15 +8,17 @@ import forge.game.GameType;
 /** Immutable, room-owned rules. Never mutate global Forge preferences per match. */
 record MatchConfig(String format, String matchLength, int playerCount) {
     static final String ENGINE_VERSION = "2.0.16-SNAPSHOT+0b0f7ecc5111.mesa1";
-    static final String RULES_VERSION = "standard-pauper-sacola50-commander-oathbreaker-2026-11-02";
+    static final String RULES_VERSION = "standard-pauper-sacola50-commander-oathbreaker-precon-2026-11-04";
 
-    static final java.util.List<String> FORMATS = java.util.List.of("free", "standard", "pauper", "sacola50", "commander", "oathbreaker");
+    static final java.util.List<String> FORMATS = java.util.List.of("free", "standard", "pauper", "sacola50", "commander", "oathbreaker", "precon");
 
     MatchConfig(String format, String matchLength) { this(format, matchLength, 2); }
 
-    boolean commander() { return "commander".equals(format); }
+    /** Commander e Precon: as regras do Commander (o Precon só restringe os decks aos pré-construídos oficiais). */
+    boolean commander() { return "commander".equals(format) || precon(); }
+    boolean precon() { return "precon".equals(format); }
     boolean oathbreaker() { return "oathbreaker".equals(format); }
-    /** Commander e Oathbreaker: zona de comando, de dois a quatro jogadores e uma partida só. */
+    /** Commander, Precon e Oathbreaker: zona de comando, de dois a quatro jogadores e uma partida só. */
     boolean commandZone() { return commander() || oathbreaker(); }
 
     MatchConfig {
@@ -24,11 +26,11 @@ record MatchConfig(String format, String matchLength, int playerCount) {
             throw new IllegalArgumentException("Formato não suportado.");
         if (!"bo1".equals(matchLength) && !"bo3".equals(matchLength))
             throw new IllegalArgumentException("Duração da partida não suportada.");
-        boolean commandZone = "commander".equals(format) || "oathbreaker".equals(format);
+        boolean commandZone = "commander".equals(format) || "oathbreaker".equals(format) || "precon".equals(format);
         if (playerCount < 2 || playerCount > 4 || (!commandZone && playerCount != 2))
-            throw new IllegalArgumentException("Escolha de dois a quatro jogadores para Commander e Oathbreaker; os demais formatos exigem dois.");
+            throw new IllegalArgumentException("Escolha de dois a quatro jogadores para Commander, Precon e Oathbreaker; os demais formatos exigem dois.");
         if (commandZone && !"bo1".equals(matchLength))
-            throw new IllegalArgumentException(("commander".equals(format) ? "Commander" : "Oathbreaker") + " permite apenas uma partida, sem sideboard.");
+            throw new IllegalArgumentException(("commander".equals(format) ? "Commander" : "precon".equals(format) ? "Precon" : "Oathbreaker") + " permite apenas uma partida, sem sideboard.");
     }
 
     static MatchConfig parse(JsonElement value) {

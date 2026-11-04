@@ -28,7 +28,23 @@ public class CommanderDeckTest {
             assertEquals(commanders, r.json().getAsJsonObject("deck").getAsJsonArray("commanders").size());
         }).count();
         assertEquals(errors.toString(), 0, errors.length());
-        assertEquals(84, count); assertNotNull(Decks.random("commander"));
+        assertEquals(117, count); assertNotNull(Decks.random("commander"));
+    }
+    @Test public void preconsGoOnlyAsTheyCameInTheBox() {
+        var precons = Decks.LISTS.values().stream().filter(d -> d.has("precon")).toList();
+        assertEquals(43, precons.size());
+        for (JsonObject p : precons) assertTrue(p.get("name") + ": " + DeckValidation.validate(p, "precon").json(), DeckValidation.validate(p, "precon").valid());
+        // A cópia do jogador, com as mesmas cartas, ainda é o precon; trocar uma carta já não é.
+        JsonObject copy = precons.get(0).deepCopy(); copy.remove("precon"); copy.remove("builtin"); copy.addProperty("name", "Minha versão");
+        assertTrue(DeckValidation.validate(copy, "precon").valid());
+        JsonArray cards = copy.getAsJsonArray("cards"); JsonObject last = cards.get(cards.size() - 1).getAsJsonObject();
+        String basic = java.util.List.of("Plains", "Island", "Swamp", "Mountain", "Forest").stream().filter(b -> !b.equals(last.get("name").getAsString())).findFirst().orElseThrow();
+        cards.remove(cards.size() - 1); cards.add(rows(basic, last.get("count").getAsInt()).get(0));
+        assertFalse(DeckValidation.validate(copy, "precon").valid());
+        assertFalse(DeckValidation.validate(Decks.LISTS.get("commander-urza"), "precon").valid());
+        var names = precons.stream().map(o -> o.get("name").getAsString()).toList();
+        for (int i = 0; i < 10; i++) { String drawn = Decks.random("precon").getName(); assertTrue(drawn, names.contains(drawn)); }
+        assertTrue(new MatchConfig("precon", "bo1", 4).commander());
     }
     @Test public void countsSingletonAndOracleExceptions() {
         assertTrue(check(deck("Marwyn, the Nurturer", "Forest", 99)).valid());
