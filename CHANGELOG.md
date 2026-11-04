@@ -6,6 +6,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.124.0] - 2026-11-04
+
+### Novo
+
+- **Mão recolhida por cima do campo.** No computador, em qualquer tamanho de tela, a mão deixa de ocupar uma faixa só dela: fica recolhida na borda de baixo da mesa, mostrando só o topo das cartas, e sobe inteira quando você passa o mouse por cima. O botão de seta ao lado da mão deixa a mão sempre aberta, ou recolhe de novo, e a mesa lembra a sua escolha. Na hora da mão inicial ou quando um efeito pede cartas da sua mão, ela abre sozinha. Na tela de toque, a mão começa aberta; assistindo a uma partida, começa recolhida.
+
+### Mudou
+
+- **Cartas maiores na mesa.** A altura que a mão ocupava vai para os campos, e as cartas crescem junto. Numa tela de notebook (1366×768), ficam cerca de um terço maiores no duelo; com 3 ou 4 jogadores, as suas crescem uns 40% e as dos oponentes, uns 50%. Em monitores maiores, crescem ainda mais. O cabeçalho de cada oponente (vida, nome, mana, dano, botões e montes) cabe numa linha só, e o comandante dele fica ao lado do campo.
+
 ## [0.123.0] - 2026-11-03
 
 ### Mudou

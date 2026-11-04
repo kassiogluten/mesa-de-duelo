@@ -32,6 +32,15 @@ Para uma classe só: acrescente `-Dtest=NomeDoTest`. A suíte inteira leva uns 4
 
 Os arquivos de teste que importam `.ts` direto falham com `ERR_UNKNOWN_FILE_EXTENSION`: esta versão do Node só carrega `.ts` com `--experimental-strip-types`. É do ambiente, não do código. Com `node --experimental-strip-types --test tests/*.test.mjs`, todos passam (420 testes na 0.106.0).
 
+### Mesa: 2 testes de navegador falham (vista em 2026-11-04, na 0.123.0)
+
+Os `tests/*.browser.mjs` rodam com o `npx vite` ligado. Uns esperam a mesa em `http://localhost:5174`, outros em `http://127.0.0.1:5173`: rode com `TABLE_TEST_URL=http://localhost:5174 node tests/<nome>.browser.mjs` para todos usarem o mesmo endereço.
+
+- `commander-overlays.browser.mjs`: `1440/4: gallery shifted battlefield`.
+- `commander-table.browser.mjs`: na 0.123.0 caía em `1280: creatures clipped`; desde a 0.124.0 passa em 1440×900 e 1280×800 e cai em 844×390 (a janela da carta cobre o botão da pilha, ou `"undefined" is not valid JSON` rodando só esse tamanho).
+
+Comprovado que já existiam: com a mudança da 0.124.0 desfeita (`git stash`), falham igual (o tamanho 844×390 rodado sozinho falha do mesmo jeito). Ainda não investigado.
+
 ### Servidor: 3 testes de texto falham na suíte inteira (vista em 2026-11-01, na 0.106.0)
 
 - `CoinFlipTextTest.promptAsksHeadsOrTailsWithCapitalizedButtons`

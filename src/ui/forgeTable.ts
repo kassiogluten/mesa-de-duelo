@@ -86,6 +86,7 @@ import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } 
 import './waitAlert.css';
 import './duelPiles.css';
 import './tableMoves.css';
+import './handPeek.css';
 import { isShortcutsKey, MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
 import { gameSummaryHTML } from './lifeChart';
 import { loyaltyLook } from './planeswalkerEffects';
@@ -261,6 +262,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="avatar-slot me" id="fMeAvatar"></div>
     <div class="piles me" id="fMePiles"></div>
     <div class="hand" id="fHand"></div>
+    <button type="button" class="hand-toggle" id="fHandToggle" data-ui="hand-toggle" aria-pressed="false" aria-label="Deixar a mão aberta" title="Deixar a mão aberta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     <section class="exile-shelf" id="fExileShelf" aria-label="Cartas disponíveis no exílio" hidden></section>
     <section class="focus-view" id="fFocus" role="dialog" aria-modal="true" aria-labelledby="fFocusTitle" hidden></section>
 
@@ -491,6 +493,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   try { cardStyle = parseCardStyle(localStorage.getItem('mesa:cards')); } catch { /* Storage is optional. */ }
   let playmat = true;
   try { playmat = localStorage.getItem('mesa:playmat') !== 'off'; } catch { /* Storage is optional. */ }
+  // Mão recolhida (só o topo à vista, numa tela baixa): começa recolhida com mouse e aberta no toque, onde não há
+  // como passar por cima para abrir. Quem assiste começa sempre recolhida, e essa escolha não fica guardada.
+  let handPeek = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
+  try { const saved = localStorage.getItem('mesa:hand'); if (saved === 'open' || saved === 'peek') handPeek = saved === 'peek'; } catch { /* Storage is optional. */ }
+  let watchHandPeek = true;
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();
   const setHTML = (el: HTMLElement, html: string) => {
     const previous = renderedContent.get(el);
@@ -2491,6 +2498,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       s.question.options = s.question.options?.map(o => typeof o === 'string' ? fixPossessives(o, names) : o);
     }
   }
+  /** Mão recolhida ou aberta: a classe na mesa e o texto do botão que troca uma pela outra. */
+  function syncHandPeek(watching: boolean) {
+    const peek = watching ? watchHandPeek : handPeek;
+    root.querySelector('.arena')!.classList.toggle('hand-peek', peek);
+    const toggle = $('#fHandToggle'), text = peek ? 'Deixar a mão aberta' : 'Recolher a mão';
+    toggle.setAttribute('aria-pressed', String(!peek));
+    toggle.setAttribute('aria-label', text);
+    toggle.title = text;
+  }
+
   function renderTable(ingest: boolean) {
     const s = client?.state;
     if (!s || s.type !== 'state') return;
@@ -2575,6 +2592,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const fan = [...handOrder.map(id => ({ c: inHand.get(id)!, tag: '' })), ...extra];
     const n = fan.length;
     $('#fHand').classList.toggle('crowded', n > 7);
+    syncHandPeek(!!s.watching);
     const drawsAhead = timeline.pendingDraws(s.you) + drawingNow > 0 && handPrimed && !suppressOpeningPreview(s) && timeline.history.some(e => e.type === 'turn');
     for (const [id, at] of arriving) if (at <= performance.now()) arriving.delete(id);
     const incoming = (id: number) => (drawsAhead && !knownHand.has(id)) || arriving.has(id);
@@ -3131,6 +3149,12 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const seat = seatShow ?? seatSolo ?? seatHide;
       const focus = root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-solo]`) ?? root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-show]`);
       focus?.focus({ preventScroll: true });
+      return;
+    }
+    if (ui === 'hand-toggle') {
+      if (client?.state?.watching) watchHandPeek = !watchHandPeek;
+      else { handPeek = !handPeek; try { localStorage.setItem('mesa:hand', handPeek ? 'peek' : 'open'); } catch { /* Storage is optional. */ } }
+      syncHandPeek(!!client?.state?.watching);
       return;
     }
     if (ui === 'stack-size') { stackMinimized = !stackMinimized; hideCardPreview(true); renderTable(false); return; }

@@ -1,4 +1,13 @@
 {
+  "0.124.0": {
+    "Mão recolhida por cima do campo": [
+      { "img": "0.124.0/mao-recolhida.webp", "legenda": "Recolhida, a mão fica na borda de baixo mostrando só o topo das cartas, com o custo e o nome à vista, e o campo vai até ela. A seta à direita abre a mão." },
+      { "img": "0.124.0/mao-aberta.webp", "legenda": "Aberta, passando o mouse ou depois de tocar na seta, a mão sobe inteira por cima da parte de baixo do campo. A seta, agora para baixo, recolhe a mão de novo." }
+    ],
+    "Cartas maiores na mesa": [
+      { "img": "0.124.0/assento-do-oponente.webp", "legenda": "Com 4 jogadores, o assento de um oponente: vida, nome, mana, dano, botões e montes numa linha só, o comandante ao lado do campo e as criaturas bem maiores." }
+    ]
+  },
   "0.122.0": {
     "Formatos do deck explicados": [
       { "img": "0.122.0/formatos-do-deck.webp", "legenda": "Com Pauper escolhido, tocar na Fúria Goblin abre a janela que explica: para usar esse deck, toque num dos formatos em que ele serve, **Sacola 50** ou **Livre**." }
