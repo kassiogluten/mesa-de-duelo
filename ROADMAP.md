@@ -1394,7 +1394,7 @@ Um formato à parte, **Precon**, em que cada jogador só joga com um deck pré-c
 - [ ] Importar as listas do Forge por script (gerar o JSON dos precons a partir dos `.dck`), em vez de copiar à mão; guardar a série, o ano e o comandante de cada uma.
 - [ ] Nome em português de cada precon e de cada série (a tradução oficial quando houver).
 - [ ] Bracket de cada precon (item 35), para mostrar no selo como nos outros decks.
-- [ ] Decidir o que fazer com os decks prontos que já são precons adaptados (Linhagem do Ur-Dragão, Radiação do Homem-Mariposa, Olho de Sauron…): manter os dois ou trocar pelo precon original.
+- [ ] Os decks prontos que hoje são precons adaptados (Linhagem do Ur-Dragão, Radiação do Homem-Mariposa, Olho de Sauron…) dão lugar ao precon original, sem nenhuma alteração: as mesmas cartas da caixa, como estão no `.dck` do Forge. Levantar quais decks prontos são adaptações de um dos 44 precons e trocar cada um pelo original (decidido em 04/11/2026).
 - [ ] Item no CHANGELOG e prints na página Novidades em imagens.
 
 **As 10 séries** (escolhidas pela popularidade na comunidade; dá para trocar ou acrescentar outras depois, já que o Forge tem as 180 listas)
