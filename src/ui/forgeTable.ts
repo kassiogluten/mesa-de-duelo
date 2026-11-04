@@ -89,6 +89,7 @@ import './tableMoves.css';
 import { isShortcutsKey, MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
 import { gameSummaryHTML } from './lifeChart';
 import { loyaltyLook } from './planeswalkerEffects';
+import { installWheelSideways } from './wheelSideways';
 
 const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -873,6 +874,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     row.addEventListener('scroll', () => { if (client?.state) { const visual = stateWithFrame(client.state, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); } }, { passive: true });
   });
 
+  installWheelSideways(root);
   $('#fOpponents').addEventListener('scroll', () => { syncSeatScroll(); if (client?.state) { const visual = stateWithFrame(client.state, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); } }, true);
 
   // ---------- Imagens do Scryfall, buscadas por nome ----------
@@ -2623,6 +2625,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Em qualquer outra decisão fora da prioridade (pagar, confirmar, escolher cartas ou jogadores para um custo ou para
     // o que um efeito pede ao resolver), a carta que pede também aparece, mesmo no campo ou entre as opções.
     const choosingTargets = !!s.input.targeting && !s.input.paying && !s.input.vote && !s.gameOver;
+    root.querySelector('.arena')!.classList.toggle('choosing-targets', choosingTargets);
     const pc = s.input.vote?.card ?? (choosingTargets ? s.input.targeting!.card : undefined) ?? s.input.card ?? s.input.targeting?.card;
     const decision = cardDecision(s);
     const onLibraryTop = !!pc && s.players.some(p => p.libraryTop?.id === pc.id);

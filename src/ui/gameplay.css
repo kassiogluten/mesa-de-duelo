@@ -128,6 +128,9 @@
 .slot.tapped .choice-check { transform: rotate(-90deg); }
 .selection-count { display: block; margin-top: 5px; color: var(--gold); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .exile-card.selectable { cursor: pointer; }
+/* Escolhendo alvos: a mira aparece só sobre o que pode ser alvo (cartas, jogadores, pilha); o botão de inspecionar continua com a lupa. */
+.forge.choosing-targets :is(.bfc.actionable, .att.actionable, .hcard.playable, .exile-card.selectable, .stack-layer.actionable, .stack-gallery-card.actionable, .avatar.selectable-player),
+.forge.choosing-targets :is(.bfc.actionable, .att.actionable, .hcard.playable, .exile-card.selectable, .stack-layer.actionable, .stack-gallery-card.actionable, .avatar.selectable-player) :not(.inspect-card, .inspect-card *) { cursor: crosshair; }
 
 .hand-slot .hcost { left: auto; right: 2px; font-size: 11px; }
 .forge .hand-slot .hzone { bottom: 3%; font-size: 11px; }

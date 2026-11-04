@@ -6,6 +6,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.123.0] - 2026-11-03
+
+### Mudou
+
+- **Roda do mouse rola as fileiras para o lado.** Na partida, girar a roda sobre a mão, uma fileira do campo, o exílio ou uma escolha de cartas rola as cartas para o lado, sem precisar segurar Shift. Quando a fileira chega ao fim, a roda volta a rolar a mesa normalmente; no touchpad, nada muda.
+- **Mira ao escolher alvos.** Enquanto você escolhe o alvo de uma mágica ou habilidade, o cursor vira uma mira ao passar sobre as cartas e os jogadores que podem ser alvo; no resto da mesa e nos botões, ele continua o de sempre.
+
 ## [0.122.0] - 2026-11-03
 
 ### Mudou
