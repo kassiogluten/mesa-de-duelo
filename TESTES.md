@@ -12,9 +12,10 @@ Ao corrigir uma das falhas conhecidas, tire-a desta lista. Ao achar uma nova que
 npm test                       # todos os testes (uns 6 s)
 npx tsc --noEmit -p .          # tipos
 npm run build                  # build
+npm run test:browser           # testes de navegador (sobe a mesa sozinho; uns 2 min). Um só: npm run test:browser -- graveyard
 ```
 
-O `npm test` carrega o `tests/register.mjs`, que deixa o teste importar o código da mesa direto (`await import('../src/ui/x.ts')`): ele resolve os imports sem extensão, converte o TypeScript, troca CSS por módulo vazio e simula o `import.meta.env`. Teste novo não precisa montar import nenhum à mão. Para rodar um arquivo só: `node --import ./tests/register.mjs --test tests/<nome>.test.mjs`.
+O `npm test` carrega o `tests/register.mjs`, que deixa o teste importar o código da mesa direto (`await import('../src/ui/x.ts')`): ele resolve os imports sem extensão, converte o TypeScript, troca CSS por módulo vazio e simula o `import.meta.env`. Teste novo não precisa montar import nenhum à mão. Teste de navegador novo usa o `browserSession` de `tests/browser-helper.mjs`. Para rodar um arquivo só: `node --import ./tests/register.mjs --test tests/<nome>.test.mjs`.
 
 **Servidor (`forge-bridge`):** precisa do JDK 17 e do Forge em `~/forge` (no Windows, `C:/Users/Kassio/forge`). Outro lugar: acrescente `-Dforge.dir=/caminho`.
 
@@ -27,16 +28,13 @@ Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). 
 
 **Contrato do estado:** o `ProtocolContractTest` (servidor) monta uma partida e confere que todo campo do estado está em `tests/protocol/state-keys.txt`; o `tests/protocol.test.mjs` confere que todo campo dessa lista está declarado em `src/forge/client.ts`. Campo novo no estado: rode o `ProtocolContractTest` com `-Dprotocol.update=true`, declare o campo no `client.ts` e rode `npm test`.
 
+O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm install`) roda `npm test` e `tsc` antes de cada commit que mexe no código da mesa.
+
 ## Falhas conhecidas
 
-### Mesa: 2 testes de navegador falham (vista em 2026-11-04, na 0.123.0)
+### Mesa: 1 teste de navegador falha (vista em 2026-11-04, na 0.123.0)
 
-Os `tests/*.browser.mjs` rodam com o `npx vite` ligado. Uns esperam a mesa em `http://localhost:5174`, outros em `http://127.0.0.1:5173`: rode com `TABLE_TEST_URL=http://localhost:5174 node tests/<nome>.browser.mjs` para todos usarem o mesmo endereço.
-
-- `commander-overlays.browser.mjs`: `1440/4: gallery shifted battlefield`.
-- `commander-table.browser.mjs`: na 0.123.0 caía em `1280: creatures clipped`; desde a 0.124.0 passa em 1440×900 e 1280×800 e cai em 844×390 (a janela da carta cobre o botão da pilha, ou `"undefined" is not valid JSON` rodando só esse tamanho).
-
-Comprovado que já existiam: com a mudança da 0.124.0 desfeita (`git stash`), falham igual (o tamanho 844×390 rodado sozinho falha do mesmo jeito). Ainda não investigado.
+`commander-overlays.browser.mjs`: `1440/4: gallery shifted battlefield` (a galeria da pilha mexe no campo em 1440×900). Comprovado que já existia antes da 0.124.0. Ainda não investigado. (O `commander-table.browser.mjs`, que também estava aqui, passa desde que os testes rodam pelo `npm run test:browser`.)
 
 ### Servidor: 3 testes de texto falham na suíte inteira (vista em 2026-11-01, na 0.106.0)
 

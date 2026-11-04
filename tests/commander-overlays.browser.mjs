@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-const session = 'commander-overlays-check';
-const run = (...args) => execFileSync('npx', ['--yes', 'agent-browser', '--session', session, ...args], {encoding:'utf8'}).trim();
-const evaluate = code => JSON.parse(execFileSync('npx', ['--yes', 'agent-browser', '--session', session, 'eval', '--stdin'], {input:`(async () => {${code}})()`,encoding:'utf8'}).trim());
+import { browserSession, TABLE_URL } from './browser-helper.mjs';
+const { run, evaluate } = browserSession('commander-overlays-check');
 try {
-  run('open', `${process.env.TABLE_TEST_URL ?? 'http://localhost:5174'}/tests/fixtures/commander-table.html`);
+  run('open', `${TABLE_URL}/tests/fixtures/commander-table.html`);
   for (const [width,height] of [[1440,900],[1280,800],[844,390]]) {
     run('set','viewport',String(width),String(height));
     const checks = evaluate(`

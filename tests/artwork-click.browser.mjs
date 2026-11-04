@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-const session='artwork-click-check';
-const run=(...args)=>execFileSync('npx',['--yes','agent-browser','--session',session,...args],{encoding:'utf8'}).trim();
-const evaluate=code=>JSON.parse(execFileSync('npx',['--yes','agent-browser','--session',session,'eval','--stdin'],{input:`(() => {${code}})()`,encoding:'utf8'}).trim());
+import { browserSession, TABLE_URL } from './browser-helper.mjs';
+const { run, evaluate } = browserSession('artwork-click-check');
 try {
   for(const [width,height] of [[1280,800],[844,390]]) {
-    run('open',`${process.env.TABLE_TEST_URL??'http://127.0.0.1:5173'}/tests/fixtures/commander-table.html`);
+    run('open',`${TABLE_URL}/tests/fixtures/commander-table.html`);
     run('set','viewport',String(width),String(height));
     evaluate(`
       const f=window.fixture;f.attack();window.artName='Artwork click '+Date.now();window.artResolvers=[];window.artReleased=false;window.artReady=false;window.artTrace=[];

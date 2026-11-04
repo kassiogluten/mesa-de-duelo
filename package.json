@@ -15,10 +15,13 @@
     "forge:rede": "bash forge-bridge/scripts/rodar.sh --host=0.0.0.0",
     "forge:instalar": "bash forge-bridge/scripts/instalar-forge.sh",
     "icons": "pwa-assets-generator",
-    "print": "node scripts/print-novidade.mjs"
+    "print": "node scripts/print-novidade.mjs",
+    "prepare": "git config core.hooksPath .githooks",
+    "test:browser": "node scripts/test-browser.mjs"
   },
   "devDependencies": {
     "@vite-pwa/assets-generator": "^0.2.6",
+    "agent-browser": "0.27.0",
     "typescript": "~5.6.3",
     "vite": "^6.0.7",
     "vite-plugin-pwa": "^0.21.2",

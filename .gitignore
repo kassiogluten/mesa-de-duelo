@@ -4,3 +4,4 @@ forge-bridge/target
 relatos
 .env
 __pycache__/
+.git-precommit.log

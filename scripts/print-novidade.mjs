@@ -16,7 +16,7 @@
 //
 // Exemplo:
 //   npm run print -- tests/fixtures/duel-table.html ".hand" public/novidades/0.126.0/mao.webp --setup "window.fixture.render()"
-import { execFileSync } from 'node:child_process';
+import { browserSession } from '../tests/browser-helper.mjs';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -35,17 +35,12 @@ if (!page || !selector || !out?.endsWith('.webp')) {
   process.exit(1);
 }
 
-const session = `print-${process.pid}`;
-const browser = (...a) => execFileSync('npx', ['--yes', 'agent-browser', '--session', session, ...a], { encoding: 'utf8', shell: process.platform === 'win32' }).trim();
-const evaluate = code => JSON.parse(execFileSync('npx', ['--yes', 'agent-browser', '--session', session, 'eval', '--stdin'],
-  { input: `(async () => {${code}})()`, encoding: 'utf8', shell: process.platform === 'win32' }).trim());
+const { run: browser, evaluate } = browserSession(`print-${process.pid}`);
 
 const [w, h] = opts.viewport.split('x').map(Number);
 const tmp = mkdtempSync(join(tmpdir(), 'print-novidade-'));
 try {
-  // O primeiro comando de uma sessão sobe o navegador em segundo plano, que herdaria a saída e prenderia o script: sem saída.
-  execFileSync('npx', ['--yes', 'agent-browser', '--session', session, 'open', `${opts.url.replace(/\/$/, '')}/${page.replace(/^\//, '')}`],
-    { stdio: 'ignore', shell: process.platform === 'win32' });
+  browser('open', `${opts.url.replace(/\/$/, '')}/${page.replace(/^\//, '')}`);
   browser('set', 'viewport', String(w), String(h), '2');
   const wait = Number(opts.wait);
   const box = evaluate(`

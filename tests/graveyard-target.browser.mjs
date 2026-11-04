@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { browserSession, TABLE_URL } from './browser-helper.mjs';
 // Alvo que só pode estar num cemitério: a janela abre sozinha, com uma aba por jogador, fecha ao escolher e não volta se fechada à mão.
-const session = 'graveyard-target-check';
-const run = (...args) => execFileSync('npx', ['--yes', 'agent-browser', '--session', session, ...args], { encoding: 'utf8' }).trim();
-const evaluate = code => JSON.parse(execFileSync('npx', ['--yes', 'agent-browser', '--session', session, 'eval', '--stdin'], { input: `(async () => {${code}})()`, encoding: 'utf8' }).trim());
+const { run, evaluate } = browserSession('graveyard-target-check');
 try {
-  run('open', `${process.env.TABLE_TEST_URL ?? 'http://localhost:5173'}/tests/fixtures/duel-table.html?cenario=alvo-cemiterio`);
+  run('open', `${TABLE_URL}/tests/fixtures/duel-table.html?cenario=alvo-cemiterio`);
   run('set', 'viewport', '1366', '768');
   const r = evaluate(`
     const wait = ms => new Promise(res => setTimeout(res, ms)), zone = () => document.querySelector('#fZone'), out = {};

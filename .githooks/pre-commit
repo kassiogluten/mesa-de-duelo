@@ -1,0 +1,10 @@
+#!/bin/sh
+# Antes de cada commit: testes e tipos da mesa (uns 10 s). Commits só de texto (.md, imagens) passam direto.
+# Ligado por "npm install" (script prepare: git config core.hooksPath .githooks).
+# Pular numa emergência: git commit --no-verify (e diga por quê).
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+echo "$staged" | grep -qE '^(src/|tests/|shared/|package(-lock)?\.json|tsconfig\.json|vite\.config\.ts|[a-z]+\.html)' || exit 0
+echo "pre-commit: npm test + tsc"
+npm test --silent > .git-precommit.log 2>&1 || { grep -E '^not ok|^# (pass|fail)' .git-precommit.log | head -20; echo "pre-commit: testes falharam (log em .git-precommit.log)"; exit 1; }
+npx tsc --noEmit -p . || { echo "pre-commit: erro de tipos"; exit 1; }
+rm -f .git-precommit.log

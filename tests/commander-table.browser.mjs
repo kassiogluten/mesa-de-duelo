@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-const session = 'commander-table-check';
-const run = (...args) => execFileSync('npx', ['--yes', 'agent-browser', '--session', session, ...args], {encoding:'utf8'}).trim();
-const evaluate = code => JSON.parse(execFileSync('npx', ['--yes', 'agent-browser', '--session', session, 'eval', '--stdin'], {input:`(() => {${code}})()`,encoding:'utf8'}).trim());
+import { browserSession, TABLE_URL } from './browser-helper.mjs';
+const { run, evaluate } = browserSession('commander-table-check');
 try {
-  run('open', `${process.env.TABLE_TEST_URL ?? 'http://localhost:5174'}/tests/fixtures/commander-table.html`);
+  run('open', `${TABLE_URL}/tests/fixtures/commander-table.html`);
   for (const [width,height] of [[1440,900],[1280,800],[844,390]]) {
     run('set','viewport',String(width),String(height));
     const board = evaluate(`return {players:[...document.querySelectorAll('[data-pid]')].map(el=>Number(el.dataset.pid)),hand:document.querySelectorAll('#fHand [data-fid]').length,leak:document.body.innerHTML.includes('PRIVATE OPPONENT HAND'),creatures:[...document.querySelectorAll('.table-seat .creatures .bfc')].map(el=>{const r=el.getBoundingClientRect(),p=el.closest('.field').getBoundingClientRect();return r.top>=p.top-1&&r.bottom<=p.bottom+1}),seats:[...document.querySelectorAll('[data-seat-player]')].map(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})};`);
@@ -52,7 +50,7 @@ try {
     evaluate(`window.fixture.state.stack=[];window.fixture.state.input.selectable=[];window.fixture.render();return true;`);
 
   }
-  run('open', `${process.env.TABLE_TEST_URL ?? 'http://localhost:5174'}/tests/fixtures/commander-table.html`);
+  run('open', `${TABLE_URL}/tests/fixtures/commander-table.html`);
   for(const [width,height] of [[1280,800],[844,390]]) {
     run('set','viewport',String(width),String(height));
     evaluate(`window.fixture.opening();return true;`);
@@ -61,7 +59,7 @@ try {
     run('click','#fAction [data-pid="49"]');
     assert.deepEqual(evaluate(`return window.fixture.messages.at(-1);`),{type:'player',id:49,gen:91});
   }
-  run('open', `${process.env.TABLE_TEST_URL ?? 'http://localhost:5174'}/tests/fixtures/commander-table.html`);
+  run('open', `${TABLE_URL}/tests/fixtures/commander-table.html`);
   const actions=evaluate(`const f=window.fixture,s=f.state,r={};document.querySelector('[data-command-card][data-fid="502"]').click();r.command=f.messages.at(-1);f.attack();document.querySelector('.field.me [data-fid="102"]').click();document.querySelector('[data-defender="49"]').click();r.attack=f.messages.at(-1);f.view.attach(f.client,[]);s.input.gen++;s.input.attacking.legalAssignments[0].defenders=[{id:23,kind:'player'}];f.render();document.querySelector('.field.me [data-fid="102"]').click();r.single=f.messages.at(-1);delete s.input.attacking;s.input.blocking={selectedAttacker:100,attackers:[100,103],blockers:[102],legalAssignments:[{blocker:102,attackers:[103]}]};f.render();document.querySelector('.field.me [data-fid="102"]').click();document.querySelector('.field [data-fid="103"]').click();r.block=f.messages.at(-1);delete s.input.blocking;s.input.selectablePlayers=[49];f.render();document.querySelector('[data-pid="49"]').click();r.target=f.messages.at(-1);document.querySelector('[data-gy="49"][data-zone="gy"]').click();r.zone=document.querySelector('#fZone h2').textContent;document.querySelector('[data-ui="zone-close"]').click();document.querySelector('[data-gy="49"][data-zone="damage"]').click();r.damageRows=document.querySelectorAll('.commander-ledger li').length;document.querySelector('[data-ui="zone-close"]').click();s.players[3].eliminated=true;f.render();r.eliminated=!!document.querySelector('[data-seat-player="49"].eliminated');return r;`);
   assert.deepEqual(actions.command,{type:'card',id:502,gen:91});
   assert.deepEqual(actions.attack,{type:'attack-group',attackers:[102],defender:49,defenderKind:'player',gen:91});
@@ -71,7 +69,7 @@ try {
   const gallery=evaluate(`const f=window.fixture,s=f.state;s.input.selectablePlayers=[];s.input.actionable=[];s.input.priority=true;s.stack=[{id:95,text:'Compre duas cartas.',source:s.players[0].graveyard[0],controller:10}];f.render();document.querySelector('[data-ui="stack-open"]').click();const open=!document.querySelector('#fStackGallery').hidden;document.querySelector('[data-ui="stack-close"]').click();return open;`);assert.ok(gallery);
   const seats=evaluate(`const f=window.fixture,s=f.state,all=[...s.players],r=[];s.stack=[];for(let n=2;n<=4;n++){s.players=all.slice(0,n);for(const p of s.players){s.you=p.id;f.render();r.push({n,you:p.id,own:Number(document.querySelector('#fMeAvatar [data-pid]').dataset.pid),count:document.querySelectorAll('[data-pid]').length,multi:document.querySelector('.arena').classList.contains('multiplayer')});}}return r;`);
   for(const seat of seats){assert.equal(seat.own,seat.you);assert.equal(seat.count,seat.n);assert.equal(seat.multi,seat.n>2);}
-  run('open', `${process.env.TABLE_TEST_URL ?? 'http://localhost:5174'}/tests/fixtures/commander-table.html`);
+  run('open', `${TABLE_URL}/tests/fixtures/commander-table.html`);
   for(const [width,height] of [[1280,800],[844,390]]) {
     run('set','viewport',String(width),String(height));
     const fixed=evaluate(`const f=window.fixture,s=f.state;s.players=s.players.filter(p=>p.id===10||p.id===36);s.config.format='free';s.stack=[];f.render();const boxes=()=>[...document.querySelectorAll('.field .bfc,#fHand')].map(el=>{const r=el.getBoundingClientRect();return [r.x,r.y,r.width,r.height];});const before=boxes(),stack=[{id:95,text:'Compre duas cartas.',source:s.players[0].graveyard[0],controller:10}];s.stack=stack;f.render();const live=boxes();s.stack=[];s.events=[{seq:(window.stackCheckSeq=(window.stackCheckSeq??0)+1),type:'spell-cast',actor:10,card:stack[0].source,frame:{players:[],stack,turn:s.turn,phase:s.phase,activePlayer:s.activePlayer}}];f.render();const replay=boxes(),replaying=!!document.querySelector('[data-stack-replay]');s.events=[];s.stack=stack;f.render();return {before,live,replay,replaying};`);
