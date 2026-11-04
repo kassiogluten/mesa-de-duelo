@@ -6,6 +6,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 - **Y** muda quando chegam coisas novas: decks, telas, regras, recursos.
 - **Z** muda só com correções.
 
+## [0.125.0] - 2026-11-04
+
+### Novo
+
+- **Aviso quando uma jogada é recusada.** Quando você tenta conjurar uma mágica, ativar uma habilidade ou jogar um terreno e as regras não deixam, a mesa agora explica o motivo, em vez de o clique não fazer nada. Se uma carta em jogo proíbe a jogada (por exemplo, Myrel, Escudo de Argivo, no turno do dono dela), o aviso diz o nome da carta e mostra a miniatura dela, que você toca para ver a carta inteira. Também avisa quando você já jogou o terreno do turno e quando tenta conjurar um feitiço ou uma criatura fora da sua fase principal ou com a pilha cheia.
+- **Mão fixa, oculta ou automática.** No computador, um ícone de mão ao lado do relógio do turno liga e desliga a mão automática: ligada (ícone aceso), a mão fica recolhida, mostrando só o topo das cartas, e sobe quando você passa o mouse. Com ela desligada, aparece uma seta discreta, centralizada logo acima da mão: para baixo, esconde a mão por inteiro, deixando o campo todo à vista; para cima, mostra a mão de novo, aberta o tempo todo. Com a mão escondida, a seta mostra quantas cartas você tem e brilha quando chega uma carta nova. A mesa lembra a sua escolha.
+- **Mão cheia agrupa as cartas iguais.** Com 11 cartas ou mais na mão, as cópias da mesma carta viram uma pilha só, com a contagem (×3, ×4) na borda, no lugar da primeira cópia. Jogar a pilha joga uma das cópias, e arrastar a pilha leva todas juntas. A ordem que você arrumou continua valendo; com 10 cartas ou menos, as pilhas se desfazem. Quando um efeito pede para escolher cartas da mão, elas aparecem separadas.
+- **Cemitério abre sozinho na hora de escolher o alvo.** Quando uma mágica ou habilidade pede um alvo que só pode estar num cemitério (como Reanimar), o cemitério abre sozinho, no seu se ele tiver alvo, senão no do oponente que tiver. No alto aparecem abas com o cemitério de cada jogador, com quantas cartas tem e quantos alvos há em cada um, para passar ao de um oponente sem fechar a janela. O pedido, o Cancelar e o Ver a mesa ficam ali mesmo; escolhido o alvo, a janela fecha. Se você fechar para olhar a mesa, ela não volta a abrir sozinha naquela escolha: toque no cemitério para abrir de novo. As abas também aparecem quando você abre um cemitério a qualquer hora.
+- **Painel "Atacar quem?" pode ser arrastado.** Ao escolher os atacantes, arraste o painel pelo título para qualquer lugar da mesa, quando ele estiver em cima das suas criaturas. A mesa lembra o lugar nos próximos combates, o painel nunca sai da tela, e dois cliques no título o devolvem ao canto de sempre.
+
+### Mudou
+
+- **Planeswalkers e batalhas no fim da fileira.** Na fileira das criaturas, os planeswalkers e as batalhas ficam juntos no fim, separados das criaturas por um traço, em vez de misturados com elas na ordem em que entraram. Vale para o seu campo e para o de cada oponente. Um planeswalker que vira criatura passa para junto das criaturas.
+
+- **Cartas encolhem quando o campo enche.** Quando uma fileira do campo (criaturas ou terrenos, sua ou de um oponente) não cabe na largura, as cartas dela diminuem só o necessário para caberem todas à vista, sem rolar. Elas encolhem até 60% do tamanho cheio; com ainda mais cartas, a fileira volta a rolar para o lado. Quando as cartas saem do campo, as que ficam voltam a crescer.
+
 ## [0.124.0] - 2026-11-04
 
 ### Novo

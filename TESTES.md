@@ -43,6 +43,8 @@ Comprovado que já existiam: com a mudança da 0.124.0 desfeita (`git stash`), f
 
 ### Servidor: 3 testes de texto falham na suíte inteira (vista em 2026-11-01, na 0.106.0)
 
+Em 2026-11-04, na 0.125.0, a suíte inteira passou (335 testes, nenhuma falha, estes três inclusive) rodando no Linux, com o Forge em `~/forge`. Se voltarem a falhar no Windows, é o ambiente de lá.
+
 - `CoinFlipTextTest.promptAsksHeadsOrTailsWithCapitalizedButtons`
 - `CoinFlipTextTest.thumbChoiceIsRewrittenOnlyForCoinResults`
 - `InputContextTest.targetSelectionCarriesTheTriggerTextWhatItTargetsAndHowManyAreLeft` (erro com o texto do gatilho de Chupacabra Voraz)

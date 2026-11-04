@@ -831,8 +831,13 @@ final class Session {
             }
             case "card" -> {
                 CardView cv = findCard(seat, msg.get("id").getAsInt());
-                // Uma carta virada para mana que ainda está na reserva: o clique desvira e devolve a mana.
-                if (cv != null) seat.onEdt(genAtClick, c -> { if (ManaUndo.untap(c, cv.getId())) markDirty(); else c.selectCard(cv, null, null); });
+                // Uma carta virada para mana que ainda está na reserva: o clique desvira e devolve a mana. Uma carta que o
+                // Forge não deixa jogar agora vira um aviso com o motivo, em vez de um clique que não faz nada.
+                if (cv != null) seat.onEdt(genAtClick, c -> {
+                    if (ManaUndo.untap(c, cv.getId())) { markDirty(); return; }
+                    String refusal = PlayRefusal.toast(c, cv.getId());
+                    if (refusal != null) seat.send(refusal); else c.selectCard(cv, null, null);
+                });
             }
             case "stack" -> {
                 int id = exactInt(msg.get("id"));

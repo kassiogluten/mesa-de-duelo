@@ -124,6 +124,8 @@ a { color: var(--gold); }
 }
 .perm-group { display: flex; align-items: center; gap: 1.4vw; min-width: 0; }
 .perm-group + .perm-group { margin-left: 1.6vw; padding-left: 2.2vw; border-left: 1px solid rgba(242, 181, 76, 0.22); }
+/* Fileira das criaturas: planeswalkers e batalhas num grupo no fim, com o mesmo espaço entre cartas da fileira. */
+.row.creatures > .perm-group { gap: inherit; }
 .stack > .slot { flex-shrink: 0; }
 /*
  * Cada cópia mostra uma faixa de 18% (14% virada) da carta de baixo. Acima de 4 cópias a faixa encolhe

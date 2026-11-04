@@ -25,7 +25,7 @@ import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './m
 import { focusedByAttack, followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatFocus, type SeatMemory } from './seatVisibility';
 import { fixPossessives } from './forgeText';
 import { VERSION } from './changelog';
-import { arrangeHand, attachHandDrag, moveInHand } from './handDrag';
+import { HAND_GROUP_FROM, arrangeHand, attachHandDrag, groupHand, moveGroupInHand, moveInHand } from './handDrag';
 import { exileShelfCards, canPlayExileCard, validBlockSelection, legalBlockTargets, blockPairAction, selectedForInput, canSelectExileCard, type BlockSelection } from './playContext';
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
@@ -87,6 +87,7 @@ import './waitAlert.css';
 import './duelPiles.css';
 import './tableMoves.css';
 import './handPeek.css';
+import { savedHandMode, toggleAuto, toggleShown, type HandMode } from './handMode';
 import { isShortcutsKey, MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
 import { gameSummaryHTML } from './lifeChart';
 import { loyaltyLook } from './planeswalkerEffects';
@@ -262,7 +263,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     <div class="avatar-slot me" id="fMeAvatar"></div>
     <div class="piles me" id="fMePiles"></div>
     <div class="hand" id="fHand"></div>
-    <button type="button" class="hand-toggle" id="fHandToggle" data-ui="hand-toggle" aria-pressed="false" aria-label="Deixar a mão aberta" title="Deixar a mão aberta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button type="button" class="phase-hand" id="fHandAuto" data-ui="hand-auto" aria-pressed="false" aria-label="Mão automática" title="Mão automática: recolhida, sobe ao passar o mouse"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V5.5a1.5 1.5 0 0 1 3 0V11M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v6M16 11V8a1.5 1.5 0 0 1 3 0v6.5A6.5 6.5 0 0 1 12.5 21h-.7a6.5 6.5 0 0 1-5.1-2.5L3.6 14.6a1.6 1.6 0 0 1 2.4-2.1L7 13.6"/></svg></button>
+    <div class="hand-mode" id="fHandMode">
+      <button type="button" class="hand-toggle" id="fHandToggle" data-ui="hand-toggle" aria-label="Esconder a mão" title="Esconder a mão"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><b class="hand-count" hidden></b></button>
+    </div>
     <section class="exile-shelf" id="fExileShelf" aria-label="Cartas disponíveis no exílio" hidden></section>
     <section class="focus-view" id="fFocus" role="dialog" aria-modal="true" aria-labelledby="fFocusTitle" hidden></section>
 
@@ -380,6 +384,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let lastCombat = '';
   let zoneOf: number | null = null;
   let zoneKind: 'gy' | 'exile' | 'command' | 'damage' | 'dungeon' | 'hand' = 'gy';
+  /** Alvo no cemitério: a escolha que abriu o cemitério sozinha (fecha junto com ela) e a que o jogador fechou (não reabre). */
+  let gyTargetOpened: string | null = null;
+  let gyTargetDismissed: string | null = null;
   let bannerTimer = 0;
   /** Decisão em espera (prompt e tipo) e o lembrete que reforça o aviso se ela ficar parada. */
   let awaitKey = '';
@@ -493,11 +500,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   try { cardStyle = parseCardStyle(localStorage.getItem('mesa:cards')); } catch { /* Storage is optional. */ }
   let playmat = true;
   try { playmat = localStorage.getItem('mesa:playmat') !== 'off'; } catch { /* Storage is optional. */ }
-  // Mão recolhida (só o topo à vista, numa tela baixa): começa recolhida com mouse e aberta no toque, onde não há
-  // como passar por cima para abrir. Quem assiste começa sempre recolhida, e essa escolha não fica guardada.
-  let handPeek = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
-  try { const saved = localStorage.getItem('mesa:hand'); if (saved === 'open' || saved === 'peek') handPeek = saved === 'peek'; } catch { /* Storage is optional. */ }
-  let watchHandPeek = true;
+  // Mão fixa, oculta ou automática (handMode.ts). Quem assiste começa sempre recolhida, e essa escolha não fica guardada.
+  let handMode: HandMode = (() => {
+    const hover = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
+    try { return savedHandMode(localStorage.getItem('mesa:hand'), hover); } catch { return savedHandMode(null, hover); }
+  })();
+  let watchHandMode: HandMode = 'auto';
+  // Guardado à parte: ele vive dentro da trilha de fases, que é redesenhada (e o tira do documento até voltar).
+  const handAutoButton = root.querySelector<HTMLButtonElement>('#fHandAuto')!;
+  let handCountSeen = -1;
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();
   const setHTML = (el: HTMLElement, html: string) => {
     const previous = renderedContent.get(el);
@@ -656,6 +667,30 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       lone.style.setProperty('--lone-h', `${Math.max(0, Math.floor(free))}px`);
     });
   }
+  /**
+   * Fileira do campo que não cabe na largura: as cartas dela encolhem até caber, no máximo até 60% do tamanho cheio
+   * (e nunca abaixo de 48px, que já é o tamanho do celular); passando disso, a fileira rola para o lado como antes.
+   * O tamanho cheio é o do CSS (e da fileira sozinha no campo): por isso cada desenho começa sem o ajuste anterior.
+   */
+  function fitRowWidths() {
+    const rows = [...root.querySelectorAll<HTMLElement>('.field .row.creatures, .field .row.lands')];
+    for (const row of rows) { row.style.removeProperty('--ch'); row.style.removeProperty('--cw'); }
+    for (const row of rows) {
+      const full = row.querySelector<HTMLElement>('.slot')?.offsetHeight ?? 0;
+      if (!full) continue;
+      const style = getComputedStyle(row), pad = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+      const floor = Math.min(full, Math.max(Math.round(full * .6), 48));
+      let h = full;
+      // Os espaços entre as cartas não encolhem junto: duas ou três medidas acertam o tamanho.
+      for (let i = 0; i < 4 && h > floor; i++) {
+        const room = row.clientWidth - pad, used = row.scrollWidth - pad;
+        if (room <= 0 || used <= room + 1) break;
+        h = Math.max(floor, Math.min(h - 1, Math.floor(h * room / used)));
+        row.style.setProperty('--ch', `${h}px`);
+        row.style.setProperty('--cw', `${(h * .716).toFixed(2)}px`);
+      }
+    }
+  }
   function syncTurnNotice() {
     const permission = turnNotice.permission;
     const control = $('#fTurnNotice') as HTMLButtonElement;
@@ -744,12 +779,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     syncModal();
   }
   syncSettings();
+  /** Pilhas de cópias iguais da mão cheia (handDrag.ts), ou null com a mão sem agrupar. */
+  let handGroups: number[][] | null = null;
   const handDrag = attachHandDrag(root, {
     state: () => disconnected || questionMinimized() ? null : client?.state,
     canReorder: () => !disconnected && !!client?.state && !client.state.watching,
     beforeDrag: () => hideCardPreview(true),
     play: action => { stopPresentation(); client?.send(action); },
-    reorder: (id, to) => { const next = moveInHand(handOrder, id, to); if (next) { handOrder = next; renderTable(false); } },
+    reorder: (id, to) => { const next = handGroups ? moveGroupInHand(handGroups, id, to) : moveInHand(handOrder, id, to); if (next) { handOrder = next; renderTable(false); } },
   });
 
   function focusSnapshot() {
@@ -793,9 +830,39 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function modalStart(active: HTMLElement) {
     return active.querySelector<HTMLElement>('[data-vote-start], .play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]')
       ?? (active.querySelector('[data-q-opt]') ? null : active.querySelector<HTMLElement>('.q-actions .arena-btn.primary:not(:disabled)'))
-      ?? [...active.querySelectorAll<HTMLElement>('button:not(:disabled), input, [tabindex="0"]')].find(el => !el.matches('[data-ui="question-minimize"]'));
+      ?? [...active.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input, [tabindex="0"]')].find(el => !el.matches('[data-ui="question-minimize"]'));
   }
-  function closeZone() { zoneOf = null; groupIds = null; $('#fZone').hidden = true; syncModal(); }
+  function closeZone() {
+    if (gyTargetOpened) { gyTargetDismissed = gyTargetOpened; gyTargetOpened = null; }
+    zoneOf = null; groupIds = null; $('#fZone').hidden = true; syncModal();
+  }
+  /**
+   * Escolha de alvo em que todos os alvos possíveis estão em cemitérios (Reanimar, Regrowth...): a chave da escolha e
+   * o cemitério que abre primeiro, o seu se ele tiver alvo, senão o do primeiro oponente que tiver.
+   */
+  function graveyardTargeting(s: FState) {
+    const t = s.input.targeting;
+    if (!t || s.input.paying || s.input.vote || s.gameOver || s.question || s.watching || s.input.selectablePlayers?.length) return null;
+    const selectable = new Set(s.input.selectable);
+    const owners = s.players.map(p => ({ p, n: p.graveyard.filter(c => selectable.has(c.id)).length })).filter(o => o.n);
+    if (!owners.length || owners.reduce((sum, o) => sum + o.n, 0) < selectable.size) return null;
+    return { key: `${t.source}:${t.kind ?? ''}:${t.ability ?? ''}`, player: (owners.find(o => o.p.id === s.you) ?? owners[0]).p.id };
+  }
+  /** Abre o cemitério sozinho quando o alvo só pode estar nele, e fecha quando a escolha acaba. Fechado à mão, não volta. */
+  function syncGraveyardTargeting(s: FState) {
+    const target = graveyardTargeting(s);
+    if (!target) {
+      const opened = gyTargetOpened;
+      gyTargetOpened = null;
+      if (opened && zoneKind === 'gy' && zoneOf !== null && !groupIds) { zoneOf = null; $('#fZone').hidden = true; syncModal(); }
+      if (!s.input.targeting) gyTargetDismissed = null;
+      return;
+    }
+    if (target.key === gyTargetOpened || target.key === gyTargetDismissed) return;
+    if (groupIds || (zoneOf !== null && zoneKind !== 'gy')) return;
+    gyTargetOpened = target.key;
+    if (zoneOf === null) { zoneKind = 'gy'; zoneOf = target.player; }
+  }
   function closeStackGallery() {
     stackGalleryOpen = false; $('#fStackGallery').hidden = true;
     root.querySelector('[data-ui="stack-open"]')?.setAttribute('aria-expanded', 'false');
@@ -1295,7 +1362,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   document.fonts?.addEventListener('loadingdone', () => { if (!root.hidden) layoutCounters(); });
   window.addEventListener('resize', () => {
     const s = client?.state;
-    if (s?.type === 'state' && !root.hidden) { fitLoneRows(); layoutCounters(); layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
+    syncAttackPanelShift(); placeHandControls();
+    if (s?.type === 'state' && !root.hidden) { fitLoneRows(); fitRowWidths(); layoutCounters(); layoutExileShelf(); layoutCardDecision(); layoutStack(); syncSeatScroll(); const visual = stateWithFrame(s, displayFrame); drawCombatArrows(visual); drawTargetArrows(visual); }
   });
 
   const COUNTER_LABEL: Record<string, string> = { P1P1: '+1/+1', M1M1: '-1/-1', LOYALTY: 'Lealdade', SHIELD: 'Escudo', STUN: 'Atordoar' };
@@ -1420,10 +1488,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
   }
 
-  /** Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). */
+  /**
+   * Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). As criaturas
+   * vêm primeiro; planeswalkers e batalhas (que são atacados, como os jogadores) ficam juntos no fim, num grupo separado.
+   */
   function fieldRow(s: FState, cards: FCard[]) {
     const byId = battlefieldById(s);
-    return stacks(s, cards.filter(c => c.attachedTo == null || !byId.has(c.attachedTo)));
+    const shown = cards.filter(c => c.attachedTo == null || !byId.has(c.attachedTo));
+    const front = stacks(s, shown.filter(c => !isAttackablePermanent(c))), attackable = stacks(s, shown.filter(isAttackablePermanent));
+    if (!attackable) return front;
+    return `${front ? `<div class="perm-group creatures-group">${front}</div>` : ''}<div class="perm-group attackable-group" aria-label="Planeswalkers e batalhas">${attackable}</div>`;
+  }
+  /** Planeswalker ou batalha que não é criatura: um planeswalker que vira criatura volta para junto das criaturas. */
+  function isAttackablePermanent(c: FCard) {
+    return !c.creature && (!!c.planeswalker || /\bBattle\b/i.test(c.typeLine ?? ''));
   }
 
   /** Fileira de trás: terrenos e artefatos/encantamentos que não são criaturas (nem planeswalkers ou batalhas). */
@@ -1777,6 +1855,62 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     } else pinnedDefender = defender;
     hideCardPreview(true); renderTable(false);
   }
+  /**
+   * O painel "Atacar quem?" fica no canto das ações e às vezes cobre as próprias criaturas: o título serve de alça para
+   * arrastar a caixa das ações para outro lugar. O deslocamento vale para os próximos combates (neste aparelho), a caixa
+   * nunca sai da tela, e dois cliques no título a devolvem ao lugar de sempre.
+   */
+  let attackPanelShift: { x: number; y: number } | null = (() => {
+    try { const v = JSON.parse(localStorage.getItem('mesa:attack-panel') ?? 'null'); return v && Number.isFinite(v.x) && Number.isFinite(v.y) ? { x: v.x, y: v.y } : null; } catch { return null; }
+  })();
+  function saveAttackPanelShift() {
+    try { if (attackPanelShift) localStorage.setItem('mesa:attack-panel', JSON.stringify(attackPanelShift)); else localStorage.removeItem('mesa:attack-panel'); } catch {}
+  }
+  function syncAttackPanelShift() {
+    const el = root.querySelector<HTMLElement>('#fAction');
+    if (!el) return;
+    const shift = el.classList.contains('attack-choosing') ? attackPanelShift : null;
+    el.classList.toggle('moved', !!shift);
+    if (!shift) { el.style.removeProperty('--drag-x'); el.style.removeProperty('--drag-y'); return; }
+    const place = (x: number, y: number) => { el.style.setProperty('--drag-x', `${Math.round(x)}px`); el.style.setProperty('--drag-y', `${Math.round(y)}px`); };
+    place(shift.x, shift.y);
+    // Janela menor que a do arraste: a caixa volta para dentro da tela (sem mudar o lugar guardado).
+    const r = el.getBoundingClientRect(), m = 4;
+    const dx = r.left < m ? m - r.left : r.right > innerWidth - m ? Math.max(m - r.left, innerWidth - m - r.right) : 0;
+    const dy = r.top < m ? m - r.top : r.bottom > innerHeight - m ? Math.max(m - r.top, innerHeight - m - r.bottom) : 0;
+    if (dx || dy) place(shift.x + dx, shift.y + dy);
+  }
+  root.addEventListener('pointerdown', e => {
+    const handle = (e.target as HTMLElement).closest<HTMLElement>('#fAction.attack-choosing .attack-choices-title');
+    if (!handle || e.button !== 0) return;
+    const el = root.querySelector<HTMLElement>('#fAction')!;
+    const start = { x: e.clientX, y: e.clientY }, base = attackPanelShift ?? { x: 0, y: 0 };
+    let moved = false;
+    handle.setPointerCapture(e.pointerId);
+    el.classList.add('dragging');
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+      if (!moved && Math.hypot(dx, dy) < 4) return;
+      moved = true;
+      attackPanelShift = { x: base.x + dx, y: base.y + dy };
+      syncAttackPanelShift();
+    };
+    const end = () => {
+      handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', end); handle.removeEventListener('pointercancel', end);
+      el.classList.remove('dragging');
+      if (!moved) return;
+      // Guarda o lugar em que a caixa ficou de fato (já trazida para dentro da tela).
+      const x = parseFloat(el.style.getPropertyValue('--drag-x')), y = parseFloat(el.style.getPropertyValue('--drag-y'));
+      if (Number.isFinite(x) && Number.isFinite(y)) attackPanelShift = { x, y };
+      saveAttackPanelShift();
+    };
+    handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
+    e.preventDefault();
+  });
+  root.addEventListener('dblclick', e => {
+    if (!(e.target as HTMLElement).closest('#fAction.attack-choosing .attack-choices-title')) return;
+    attackPanelShift = null; saveAttackPanelShift(); syncAttackPanelShift();
+  });
   function attackChoices(s: FState) {
     if (attackAllGen === null && !selectedAttackers.size && !pinnedDefender && !attackQueue.queuedAttackers.length) return '';
     const removable = [...selectedAttackers].some(id => s.combat.some(pair => pair.attacker === id));
@@ -1795,7 +1929,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
         + `${coming ? `<span class="attack-target-count" aria-hidden="true">${coming}</span>` : ''}</button>`;
     }).join('');
     const tools = `${removable ? '<button class="icon-btn" data-ui="attack-remove">Retirar do combate</button>' : ''}${attackAllGen === null ? '<button class="icon-btn" data-ui="attack-clear">Limpar seleção</button>' : ''}`;
-    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle">Atacar quem?</h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
+    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle" title="Arraste para mover este painel. Dois cliques o devolvem ao lugar.">Atacar quem?<svg class="drag-grip" viewBox="0 0 12 12" aria-hidden="true"><circle cx="3" cy="3" r="1.1"/><circle cx="9" cy="3" r="1.1"/><circle cx="3" cy="9" r="1.1"/><circle cx="9" cy="9" r="1.1"/><circle cx="3" cy="6" r="1.1"/><circle cx="9" cy="6" r="1.1"/></svg></h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
   }
 
   function zoneView(s: FState) {
@@ -1822,18 +1956,32 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       const caption = shelf.get(c.id);
       return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.foretold ? foretoldTag(c) : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
     };
+    const targeting = zoneKind === 'gy' && !groupIds && !!s.input.targeting && !s.input.paying && !s.gameOver ? s.input.targeting : null;
     const card = (c: FCard) => `<div class="zone-card">${zoneKind !== 'hand' && canUse(s, c)
-      ? `<div class="q-face actionable${selectedForInput(s, c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`
+      ? `<div class="q-face actionable${selectedForInput(s, c.id) || targeting?.cards?.includes(c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : targeting ? 'Escolher como alvo' : 'Usar'} ${esc(label(c))}">${face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`
       : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}${shelf.has(c.id) ? `. ${esc(shelf.get(c.id)!.status)}` : ''}">${face(c, 'normal')}${tags(c)}</button>`}
       <button class="icon-btn" data-inspect="${c.id}">${inspectIcon}Inspecionar</button></div>`;
     const zoneKey = `${zoneKind}:${zoneOf}:${groupIds?.join(',') ?? ''}`;
     const before = el.hidden ? null : el.querySelector<HTMLElement>('.zone-view');
     const rows = before?.dataset.zone === zoneKey ? rowScroll(before) : [];
-    setHTML(el, `<div class="question zone-view" data-zone="${esc(zoneKey)}" role="dialog" aria-modal="true" aria-label="${title}">
+    // Cemitério: uma aba por jogador, para passar ao de cada oponente sem fechar; as que têm alvo mostram quantos.
+    const selectable = new Set(s.input.selectable);
+    const tabs = zoneKind === 'gy' && !groupIds && p && s.players.length > 1 ? `<div class="zone-tabs" role="tablist" aria-label="Cemitério de quem">${s.players.map(pl => {
+      const n = targeting ? pl.graveyard.filter(c => selectable.has(c.id)).length : 0;
+      const who = pl.id === s.you ? 'Você' : pl.name;
+      return `<button type="button" role="tab" class="zone-tab${n ? ' has-targets' : ''}" data-gy="${pl.id}" data-zone="gy" aria-selected="${pl.id === p.id}"${pl.id === p.id ? '' : ' tabindex="-1"'} aria-label="Cemitério ${pl.id === s.you ? 'seu' : `de ${esc(pl.name)}`}, ${pl.graveyard.length} ${pl.graveyard.length === 1 ? 'carta' : 'cartas'}${n ? `, ${n} ${n === 1 ? 'alvo' : 'alvos'}` : ''}">${esc(who)} <span class="zone-tab-count">${pl.graveyard.length}</span>${n ? `<span class="zone-tab-targets" aria-hidden="true">${n} ${n === 1 ? 'alvo' : 'alvos'}</span>` : ''}</button>`;
+    }).join('')}</div>` : '';
+    // Escolhendo alvo: o pedido e os botões da mesa (Cancelar, Concluir) vêm junto, porque o resto da mesa fica atrás da janela.
+    const short = targeting ? shortInstruction(s.input, name => ptOf(name)?.name || name) : null;
+    const info = targeting ? targetInfoOf(s) : null;
+    const targetHead = targeting ? `<div class="zone-target">${short ? `<p class="q-hint zone-target-ask">${richText(short)}</p>` : ''}${info ? targetInfoHTML(info) : ''}</div>` : '';
+    const actions = targeting ? `${buttons(s)}<button class="arena-btn secondary" data-ui="zone-close">Ver a mesa</button>` : '<button class="arena-btn secondary" data-ui="zone-close">Fechar</button>';
+    setHTML(el, `<div class="question zone-view${targeting ? ' zone-targeting' : ''}" data-zone="${esc(zoneKey)}" role="dialog" aria-modal="true" aria-label="${title}">
       <h2>${title}${p ? ` · ${esc(p.name)}` : ''} (${zoneKind === 'hand' && p && !groupIds ? revealedCountText(p) : cards.length})</h2>
+      ${tabs}${targetHead}
       ${zoneKind === 'hand' && p && !groupIds ? `<p class="q-hint">Só para ver: quem joga estas cartas é ${esc(p.name)}.</p>` : ''}
       ${cards.length ? `<div class="q-opts cards">${cards.map(card).join('')}</div>` : '<p class="q-hint">Vazio.</p>'}
-      <div class="q-actions"><button class="arena-btn secondary" data-ui="zone-close">Fechar</button></div>
+      <div class="q-actions">${actions}</div>
     </div>`);
     const after = el.querySelector<HTMLElement>('.zone-view');
     if (after && after !== before) restoreRowScroll(after, rows);
@@ -2498,14 +2646,59 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       s.question.options = s.question.options?.map(o => typeof o === 'string' ? fixPossessives(o, names) : o);
     }
   }
-  /** Mão recolhida ou aberta: a classe na mesa e o texto do botão que troca uma pela outra. */
-  function syncHandPeek(watching: boolean) {
-    const peek = watching ? watchHandPeek : handPeek;
-    root.querySelector('.arena')!.classList.toggle('hand-peek', peek);
-    const toggle = $('#fHandToggle'), text = peek ? 'Deixar a mão aberta' : 'Recolher a mão';
-    toggle.setAttribute('aria-pressed', String(!peek));
-    toggle.setAttribute('aria-label', text);
+  /** Modo da mão: as classes na mesa, o botão Auto, a seta (só com o Auto desligado) e a contagem com a mão oculta. */
+  function syncHandMode(watching: boolean, handCount = handCountSeen) {
+    const mode = watching ? watchHandMode : handMode;
+    const arena = root.querySelector('.arena')!;
+    arena.classList.toggle('hand-peek', mode === 'auto');
+    arena.classList.toggle('hand-hidden', mode === 'oculta');
+    const auto = handAutoButton;
+    auto.setAttribute('aria-pressed', String(mode === 'auto'));
+    auto.title = mode === 'auto' ? 'Mão automática ligada: recolhida, sobe ao passar o mouse. Clique para desligar' : 'Mão automática desligada: clique para ligar';
+    $('#fHandMode').hidden = mode === 'auto';
+    const toggle = $('#fHandToggle'), text = mode === 'fixa' ? 'Esconder a mão' : 'Mostrar a mão';
+    toggle.hidden = mode === 'auto';
+    toggle.setAttribute('aria-label', mode === 'oculta' && handCount >= 0 ? `${text} (${handCount} ${handCount === 1 ? 'carta' : 'cartas'})` : text);
     toggle.title = text;
+    toggle.classList.toggle('shown', mode === 'fixa');
+    const count = toggle.querySelector<HTMLElement>('.hand-count')!;
+    count.hidden = mode !== 'oculta' || handCount < 0;
+    count.textContent = String(Math.max(0, handCount));
+    // Com a mão oculta, carta nova na mão faz a seta brilhar, para a compra não passar despercebida.
+    if (mode === 'oculta' && handCountSeen >= 0 && handCount > handCountSeen) { toggle.classList.remove('arrived'); void toggle.offsetWidth; toggle.classList.add('arrived'); }
+    handCountSeen = handCount;
+    placeHandControls();
+  }
+  /**
+   * Os botões ficam centralizados acima da mão, logo acima do topo das cartas em repouso (sem contar o mouse por cima,
+   * que sobe a mão automática ou uma carta): as medidas sem transformação (offset*) não mudam com isso.
+   */
+  function placeHandControls() {
+    const box = $('#fHandMode'), hand = $('#fHand');
+    if (!box.offsetParent || !hand.offsetParent) return;
+    const mode = client?.state?.watching ? watchHandMode : handMode;
+    const arenaHeight = (box.offsetParent as HTMLElement).clientHeight;
+    const slot = hand.querySelector<HTMLElement>('.hand-slot');
+    const peek = parseFloat(getComputedStyle(hand).getPropertyValue('--peek-visible')) || 50;
+    // Mão fixa: o topo das cartas e dos selos de custo dentro da mão, somado ao lugar da mão sem o deslizar (que pode
+    // estar no meio da animação de abrir).
+    const drawnTop = () => {
+      const handTop = hand.getBoundingClientRect().top;
+      return hand.offsetTop + Math.min(...[...hand.querySelectorAll<HTMLElement>('.hcard, .hcost')].map(el => el.getBoundingClientRect().top - handTop));
+    };
+    const cardsTop = !slot || mode === 'oculta' ? arenaHeight - 6
+      : mode === 'auto' ? arenaHeight - peek - 14
+      : drawnTop();
+    box.style.left = `${Math.round(hand.offsetLeft + hand.offsetWidth / 2)}px`;
+    box.style.top = `${Math.round(Math.max(4, cardsTop - box.offsetHeight - 8))}px`;
+  }
+  function applyHandMode(next: HandMode) {
+    if (client?.state?.watching) watchHandMode = next;
+    else {
+      handMode = next;
+      try { localStorage.setItem('mesa:hand', next); localStorage.removeItem('mesa:hand-hide'); } catch { /* Storage is optional. */ }
+    }
+    syncHandMode(!!client?.state?.watching);
   }
 
   function renderTable(ingest: boolean) {
@@ -2583,20 +2776,29 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     setHTML(focusView, focused ? focusHTML(s, visual, focused, focusPlayers, visual.players.filter(p => p.id !== visual.you).indexOf(focused) + 1) : '');
     syncMat($('#fMeMat'), matArt(s, me, 0));
     fitLoneRows();
+    fitRowWidths();
 
     // Cartas do cemitério utilizáveis continuam na mão; o exílio tem seu próprio espaço.
     const extra = outsideHand(s);
     // A mão segue a ordem que o jogador arrumou: a comprada entra no fim e a jogada sai sem mexer no resto.
     handOrder = arrangeHand(handOrder, me.hand.map(c => c.id));
     const inHand = new Map(me.hand.map(c => [c.id, c]));
-    const fan = [...handOrder.map(id => ({ c: inHand.get(id)!, tag: '' })), ...extra];
+    // Mão cheia: cópias iguais (mesmo nome e custo, sem marcadores, as duas jogáveis ou não) viram uma pilha no lugar da
+    // primeira. Não agrupa quando a mesa pede para escolher cartas da mão nem no começo da partida.
+    const grouping = !s.watching && me.hand.length >= HAND_GROUP_FROM && !s.input.selection && !s.input.opening && !s.question;
+    handGroups = grouping ? groupHand(handOrder, id => {
+      const c = inHand.get(id)!;
+      return c.faceDown || Object.values(c.counters ?? {}).some(Boolean) || selectedForInput(s, id) ? null : `${c.name}|${c.manaCost ?? ''}|${usable(s, id)}`;
+    }) : null;
+    const fan: { c: FCard; tag: string; copies?: number[] }[] = [...(handGroups ?? handOrder.map(id => [id])).map(ids => ({ c: inHand.get(ids[0])!, tag: '', copies: ids })), ...extra];
     const n = fan.length;
     $('#fHand').classList.toggle('crowded', n > 7);
-    syncHandPeek(!!s.watching);
+    syncHandMode(!!s.watching, me.hand.length);
     const drawsAhead = timeline.pendingDraws(s.you) + drawingNow > 0 && handPrimed && !suppressOpeningPreview(s) && timeline.history.some(e => e.type === 'turn');
     for (const [id, at] of arriving) if (at <= performance.now()) arriving.delete(id);
     const incoming = (id: number) => (drawsAhead && !knownHand.has(id)) || arriving.has(id);
-    setHTML($('#fHand'), fan.map(({ c, tag }, i) => {
+    setHTML($('#fHand'), fan.map(({ c, tag, copies }, i) => {
+      const pile = (copies?.length ?? 1) > 1 ? copies!.length : 0;
       const off = i - (n - 1) / 2;
       const sel = tag || usable(s, c.id) ? 'playable' : '';
       const selected = selectedForInput(s, c.id);
@@ -2608,15 +2810,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       // O valor que a carta conta (item 56): o selo fica na borda esquerda, a parte do leque que a carta seguinte não cobre.
       const counted = c.faceDown ? '' : countSealsHTML(c, playerName, s.you);
       const countedText = c.faceDown ? '' : countSeals(c, playerName, s.you).map(seal => seal.label).join(' ');
-      return `<div class="hand-slot"><div class="hcard ${sel}${incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${tag ? ` (${esc(tag)})` : ''}${countedText ? `. ${esc(countedText)}` : ''}"
-        style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${face(c, 'normal')}${cost}${where}${counted}${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
+      return `<div class="hand-slot"><div class="hcard ${sel}${incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${pile ? ' pile' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${pile ? `, ${pile} cópias` : ''}${tag ? ` (${esc(tag)})` : ''}${countedText ? `. ${esc(countedText)}` : ''}"
+        style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${face(c, 'normal')}${cost}${where}${counted}${selectedBadge(s, c)}${pile ? `<span class="hand-copies" aria-hidden="true" title="${pile} cópias de ${esc(label(c))}">×${pile}</span>` : ''}</div>${inspectButton(c)}</div>`;
     }).join(''));
     // Quem assiste não vê a mão de ninguém: a de baixo também fica de costas, só com a quantidade.
     if (s.watching) setHTML($('#fHand'), Array.from({ length: me.handCount }, (_, i) => {
       const off = i - (me.handCount - 1) / 2;
       return `<div class="hand-slot"><div class="hcard hidden-card" aria-hidden="true" style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}"><div class="back${sleeveClass(me.sleeve)}"></div></div></div>`;
     }).join(''));
-    knownHand = new Set(fan.map(({ c }) => c.id).filter(id => !incoming(id) || arriving.has(id)));
+    knownHand = new Set([...handOrder, ...extra.map(({ c }) => c.id)].filter(id => !incoming(id) || arriving.has(id)));
+    placeHandControls();
     handPrimed = true;
 
     renderExileShelf(s);
@@ -2629,6 +2832,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? portraits[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stopsEditable(), open: stopMenu }));
+    // O botão da mão automática mora ao lado do relógio do turno; a trilha é redesenhada, então ele volta para lá.
+    const phases = $('#fPhases'), handAuto = handAutoButton, timer = phases.querySelector('.phase-timer');
+    if (timer && handAuto.previousElementSibling !== timer) timer.after(handAuto);
     syncTrailTip();
     if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) root.querySelector('.phase-daynight')?.classList.add('bump');
     lastDayTime = visual.dayTime;
@@ -2691,6 +2897,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';
     setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(s)}</div>${passLevelControl(s)}`);
     syncPassLevel();
+    syncAttackPanelShift();
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
@@ -2843,6 +3050,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       ov.hidden = false;
     } else if (!disconnected) { ov.hidden = true; ov.dataset.html = ''; }
 
+    syncGraveyardTargeting(s);
     if (zoneOf !== null || groupIds) zoneView(s);
     syncRemoval(s);
     root.querySelectorAll<HTMLElement>('[data-fid],[data-pid],[data-mana]').forEach(el => { el.dataset.gen = String(el.closest('.field,.avatar-slot') ? visual.input.gen : s.input.gen); });
@@ -3151,12 +3359,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       focus?.focus({ preventScroll: true });
       return;
     }
-    if (ui === 'hand-toggle') {
-      if (client?.state?.watching) watchHandPeek = !watchHandPeek;
-      else { handPeek = !handPeek; try { localStorage.setItem('mesa:hand', handPeek ? 'peek' : 'open'); } catch { /* Storage is optional. */ } }
-      syncHandPeek(!!client?.state?.watching);
-      return;
-    }
+    if (ui === 'hand-auto') { applyHandMode(toggleAuto(client?.state?.watching ? watchHandMode : handMode)); return; }
+    if (ui === 'hand-toggle') { applyHandMode(toggleShown(client?.state?.watching ? watchHandMode : handMode)); return; }
     if (ui === 'stack-size') { stackMinimized = !stackMinimized; hideCardPreview(true); renderTable(false); return; }
     if (ui === 'row-scroll') {
       const control = t.closest<HTMLElement>('[data-scroll-row]')!;
@@ -3506,7 +3710,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const theirs = findCard(id)?.controller !== s.you;
     if (compactTable.matches && cd.closest('.field') && theirs && !usable(s, id) && !selectedForInput(s, id)) { showPreview(findCard(id), cd, true); return; }
     // Usar uma carta do cemitério ou do exílio fecha a janela, para a pergunta seguinte aparecer.
-    if (cd.closest('#fZone')) closeZone();
+    // No alvo de cemitério aberto sozinho, a janela fica até a escolha acabar (com vários alvos, marca um de cada vez).
+    if (cd.closest('#fZone') && !(gyTargetOpened && s.input.targeting)) closeZone();
     // Na sua manutenção, virar algo só para mana pede confirmação, uma vez por manutenção.
     const upkeepKey = upkeepManaKey(s, id);
     if (upkeepKey && upkeepKey !== upkeepManaConfirmed) {
@@ -3749,6 +3954,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   });
   root.addEventListener('keydown', e => {
     if (e.key === 'Escape') escape(e);
+    // Abas do cemitério: as setas passam ao cemitério do jogador ao lado, e o foco vai junto.
+    const zoneTab = (e.target as HTMLElement).closest<HTMLElement>('.zone-tab');
+    if (zoneTab && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && client?.state) {
+      const tabs = [...root.querySelectorAll<HTMLElement>('#fZone .zone-tab')];
+      const next = tabs[(tabs.indexOf(zoneTab) + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      e.preventDefault(); zoneOf = +next.dataset.gy!; zoneView(client.state);
+      root.querySelector<HTMLElement>(`#fZone .zone-tab[data-gy="${zoneOf}"]`)?.focus();
+      return;
+    }
     if (focusSeat !== null && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && (e.target as HTMLElement).closest('.focus-head')) {
       const ids = (client?.state?.players ?? []).filter(p => p.id !== client!.state!.you && !p.eliminated).map(p => p.id);
       const next = ids[(ids.indexOf(focusSeat) + (e.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length];

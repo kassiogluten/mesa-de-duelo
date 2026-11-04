@@ -108,3 +108,20 @@
   .forge > .overlay:not(.minimized), .forge .question { animation: none; }
   .forge .q-opt.has-card, .forge .q-opt.has-card .q-face { transition: none; }
 }
+
+/* Cemitério: uma aba por jogador; a que tem alvo ganha um selo azul com quantos. */
+.forge .zone-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 4px auto 0; }
+.forge .zone-tab {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 5px 14px; border: 1px solid rgb(255 255 255 / .14);
+  border-radius: 999px; background: rgb(9 15 29 / .72); color: var(--azul-c9d3e4, #c9d3e4); font: 500 14px/1.2 var(--body); cursor: pointer;
+}
+.forge .zone-tab:hover:not([aria-selected=true]) { border-color: rgb(89 181 255 / .6); color: #fff; }
+.forge .zone-tab[aria-selected=true] { border-color: var(--gold); background: rgb(242 181 76 / .14); color: var(--gold-light); }
+.forge .zone-tab-count { opacity: .7; font-variant-numeric: tabular-nums; }
+.forge .zone-tab-targets { padding: 1px 7px; border-radius: 999px; background: rgb(89 181 255 / .22); box-shadow: 0 0 0 1px var(--glow); color: #fff; font-size: 12px; }
+.forge .zone-target { display: grid; justify-items: center; gap: 6px; margin-top: 8px; }
+.forge .zone-target .q-hint { margin: 0; font-size: 16px; color: #fff; }
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .zone-tab { min-height: 30px; padding: 4px 10px; font-size: 13px; }
+  .forge .zone-target .q-hint { font-size: 14px; }
+}

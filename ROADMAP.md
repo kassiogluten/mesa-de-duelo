@@ -1283,3 +1283,87 @@ Decidido em 02/11/2026 (versão 0.120.0), itens 82 a 87:
 - 85: o servidor sorteia uma de 8 cores por jogador na primeira partida da sessão (`Session.drawSleeves`, campo `sleeve` de cada jogador), sem repetir; a mesa tinge o verso pelas variáveis `--sleeve-*` da classe `sleeve-N`, e as cartas que voam copiam a cor do grimório de onde saem. Só sorteada, sem escolha nas opções.
 - 86: o rasgo (`.warp-rift`) aparece na pilha ao conjurar por dobra (a pilha diz `cast.mode: "warp"`) e, menor, quando a permanente volta para o exílio (o servidor marca `reason: "warped"` quando quem resolve é o gatilho da dobra). O som é o de conjurar a 0,72× com um eco a 0,16 s; no exílio, o do exílio a 0,82×. Seção **Dobra** no laboratório de efeitos.
 - 87: página **Salas** em `salas.html`, com link no cabeçalho (com a contagem, atualizada a cada 30 s na tela inicial) e no menu ⋯; a lista da aba Entrar numa sala continua. Entrar e assistir abrem a mesa pelo link da sala (`?sala=`), e "Criar uma sala" pelo `?criar-sala=1`. Ficou de fora: prévia da mesa das partidas em andamento e aviso de sala nova.
+
+## 89. Avisar por que não deu para conjurar ou ativar
+
+Cartas que proíbem conjurar mágicas ou ativar habilidades (por exemplo **Myrel, Escudo de Argivo**: "Durante o seu turno, seus oponentes não podem conjurar mágicas nem ativar habilidades de artefatos, criaturas ou encantamentos") já funcionam: o Forge não deixa a jogada acontecer. Mas quem tenta jogar não recebe nenhum retorno: clica (ou arrasta) a carta e nada acontece, sem saber por quê.
+
+- [x] Quando a tentativa de conjurar uma mágica ou ativar uma habilidade for recusada, mostrar um alerta na mesa explicando o motivo, citando a carta que impede ("Myrel, Escudo de Argivo impede que você conjure mágicas durante o turno de Ana.").
+- [x] Descobrir no servidor por que a jogada foi recusada: as restrições estáticas do Forge (`CantBeCast`, `CantBeActivated` e parecidas) e a carta de onde vêm; mandar para a mesa o motivo e a carta junto com a recusa.
+- [x] Cobrir também as recusas comuns que hoje ficam mudas, quando o motivo for conhecido: momento errado (feitiço fora da fase principal ou com a pilha cheia) e terreno do turno já jogado.
+- [ ] Mana insuficiente e falta de alvo válido: hoje o Forge entra no pagamento ou na escolha de alvos, então o clique não fica mudo; ver se vale avisar antes.
+- [x] O alerta some sozinho e não bloqueia a mesa; tocar no nome da carta que impede mostra a carta.
+- [x] Texto em português, para o jogador, sem citar o Forge.
+- [x] Cenário pronto no Laboratório com Myrel em jogo, para conferir o alerta à mão.
+
+Feito na 0.125.0 (decidido em 04/11/2026: só depois da tentativa, no aviso com miniatura que o ataque recusado já usava). O servidor (`PlayRefusal`) explica o clique numa carta que o Forge não deixaria jogar e também o caso em que o Forge oferece a mágica mas uma carta como a Myrel a proíbe depois. No campo, só fala de cartas com habilidade ativada; clicar numa criatura sem habilidade continua sem aviso.
+
+## 90. Carta de dupla face modal: conjurar a mágica depois de já ter jogado o terreno do turno
+
+Cartas de dupla face modal com uma face de mágica e outra de terreno (por exemplo, as das coleções de Zendikar Rising e Kaldheim) não podem ser conjuradas como mágica depois que você já jogou um terreno no turno: clicar ou arrastar a carta não faz nada. Pela regra, a face de mágica continua podendo ser conjurada normalmente; só a face de terreno fica bloqueada até o próximo turno.
+
+- [ ] Reproduzir numa mesa montada: carta de dupla face modal na mão, terreno já jogado no turno e mana para pagar a face de mágica.
+- [ ] Descobrir onde a jogada se perde: se a mesa trata a carta como terreno (pela face da frente) e tenta jogá-la como terreno, se o servidor deixa a carta fora das jogadas possíveis quando o terreno do turno já foi usado, ou se a escolha da face nem chega a ser oferecida.
+- [ ] Com o terreno do turno já usado, a carta continua jogável e vai direto para a face de mágica, sem perguntar a face; com o terreno ainda livre, continua a escolha entre as duas faces.
+- [ ] Conferir clicando e arrastando a carta, e também com a carta virada na mão mostrando a face de terreno.
+- [ ] Item em `### Corrigido` no CHANGELOG e cenário pronto no Laboratório com a carta na mão e um terreno já jogado.
+
+Investigado em 04/11/2026, sem reproduzir: no motor e no servidor de verdade, com o terreno do turno já jogado, a face de mágica continua jogável (Kazandu Mammoth, Bala Ged Recovery com alvo no cemitério), e a mesa manda o clique normalmente. Falta saber qual carta e em que situação aconteceu. Desde a 0.125.0, uma jogada recusada mostra o motivo (item 89), o que deve ajudar a descobrir.
+
+## 91. Mão cheia: agrupar cartas iguais (e talvez ordenar sozinha)
+
+Com muitas cartas na mão (mais de 10), cada carta fica estreita demais para ler e achar a que se quer jogar dá trabalho, principalmente quando há várias cópias da mesma carta (terrenos básicos, várias cópias compradas de uma vez).
+
+- [x] A partir de 11 cartas na mão, juntar as cópias da mesma carta numa pilha só, com o contador ×N (como as pilhas do campo), liberando espaço para as outras.
+- [x] Jogar da pilha usa uma das cópias; passar o mouse ou tocar na pilha mostra que há várias.
+- [x] Ao voltar para 10 cartas ou menos, as pilhas se desfazem e cada carta volta ao seu lugar.
+- [x] Não agrupar cartas que parecem iguais mas não são (cartas com marcadores, reveladas, vindas do cemitério ou do exílio, ou com custo diferente por algum efeito).
+- [x] Item no CHANGELOG e prints na página Novidades em imagens.
+
+Feito na 0.125.0 (decidido em 04/11/2026): a partir de 11 cartas, na ordem do jogador, com a pilha no lugar da primeira cópia; sem ordenação automática. Agrupa pelo nome e pelo custo, entre cartas igualmente jogáveis e sem marcadores; não agrupa quando a mesa pede para escolher cartas da mão nem na mão inicial. Quem assiste vê as costas das cartas, então não se aplica.
+
+## 92. Mão fixa, oculta ou automática: botão para mostrar e esconder, menu para o modo
+
+Hoje o botão ao lado da mão (0.124.0) só alterna entre dois jeitos: mão aberta o tempo todo, ou recolhida por cima do campo, com o topo das cartas à vista, subindo ao passar o mouse. A ideia é ter três modos:
+
+- **Fixa:** a mão fica aberta o tempo todo, como o "Deixar a mão aberta" de hoje.
+- **Oculta:** a mão sai da frente do campo e fica só uma faixa fina ou o próprio botão. Passar o mouse não abre a mão; ela só volta pelo botão ou quando a mesa pede uma decisão com cartas da mão (descartar, escolher a mão inicial).
+- **Automática:** o comportamento recolhido de hoje. Só o topo das cartas aparece, e a mão sobe ao passar o mouse ou com o foco do teclado.
+
+Decidido em 04/11/2026: mostrar e esconder não passa pelo modo automático. O clique no botão só mostra ou esconde a mão, e o modo é escolhido num menu ao lado.
+
+- [x] Clique no botão: alterna entre **Fixa** e o último jeito de esconder escolhido (**Oculta** ou **Automática**; na primeira vez, **Automática**). Assim, mostrar e esconder é sempre um clique só.
+- [x] Uma setinha ao lado do botão (e o clique com o botão direito nele) abre um menu com **Fixa**, **Oculta** e **Automática**, com o modo atual marcado. Escolher no menu já aplica o modo e fecha o menu.
+- [x] O ícone do botão e o balão (`title`/`aria-label`) dizem o que o clique vai fazer ("Mostrar a mão" ou "Esconder a mão"); o menu é acessível pelo teclado.
+- [x] Guardar o modo escolhido, como já acontece hoje. Quem guardou "aberta" passa a ter "fixa", e quem guardou "recolhida" passa a ter "automática".
+- [x] Quem assiste a partida continua começando com a mão recolhida, e trocar o modo assistindo não muda o modo guardado do jogador.
+- [x] Mão oculta: avisar de alguma forma quando uma carta nova entra na mão (contador no botão ou um brilho rápido), para o jogador não perder a compra.
+- [x] Item no CHANGELOG e prints dos três modos e do menu na página Novidades em imagens.
+
+Feito na 0.125.0 (decidido em 04/11/2026): no modo oculto, só o botão com a contagem de cartas (e um brilho quando chega carta nova); a faixa da mão fica fina e o campo ganha a altura. No celular nada muda.
+
+Mudado em 04/11/2026, ainda na 0.125.0: no lugar do botão com menu, ficaram dois botões centralizados logo acima da mão. **Auto** liga e desliga a mão automática; com o Auto desligado aparece a seta, que esconde (para baixo) ou mostra (para cima) a mão. Com o Auto ligado, a seta some. Depois, ainda no mesmo dia: o Auto virou um ícone pequeno de mão ao lado do relógio do turno (aceso quando ligado), e a seta ficou mais apagada até o mouse chegar nela.
+
+## 93. Painel "Atacar quem?" que dá para arrastar
+
+Ao escolher os atacantes, o painel **Atacar quem?** (a lista de jogadores e planeswalkers que dá para atacar, com **Retirar do combate** e **Limpar seleção**) abre num lugar fixo da mesa. Às vezes ele fica por cima de criaturas do seu próprio campo, justamente as que você quer escolher para atacar.
+
+- [x] Dar ao painel uma alça (a faixa do título "Atacar quem?") para arrastar com o mouse ou o dedo e soltar em qualquer lugar da mesa.
+- [x] O painel não pode sair da tela: ao soltar fora, ou ao redimensionar a janela, ele volta para dentro.
+- [x] Clicar nos alvos e nos botões continua funcionando normalmente; só arrastar pela alça move o painel.
+- [x] Guardar o lugar escolhido para os próximos combates (no mesmo aparelho), com um jeito de voltar ao lugar padrão (duplo clique na alça, por exemplo).
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.125.0 (decidido em 04/11/2026): o arraste move a caixa das ações inteira (o painel e os botões de confirmar), pelo título com pontinhos; um lugar só para duelo e mesa de 3–4 jogadores; só o painel de ataque, por enquanto.
+
+## 94. Planeswalkers sempre juntos, no fim da fileira das criaturas
+
+Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no campo, misturados com elas. Com muitas permanentes, fica difícil achar um planeswalker (para ativar uma lealdade ou escolher quem atacar) e ver quantos cada jogador tem.
+
+- [x] Na fileira das criaturas, as criaturas vêm primeiro e os planeswalkers depois, todos juntos no fim, separados das criaturas por um respiro e um traço discreto, como já acontece entre artefatos/encantamentos e terrenos na fileira de trás.
+- [x] Vale para o seu campo, para o do oponente no duelo e para os assentos da mesa de 3–4 jogadores (e para a vista ampliada de um assento).
+- [x] Um planeswalker que vira criatura (ou uma criatura que vira planeswalker) muda de grupo na hora.
+- [x] Com a fileira cheia e rolando, o grupo dos planeswalkers continua no fim; ver se é preciso deixá-lo sempre à vista.
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.

@@ -15,7 +15,15 @@ const state: any = { type: 'state', config: { format: 'standard', matchLength: '
   you: 10, players, turn: 3, phase: 'MAIN1', activePlayer: 10, gameOver: false, log: [], decks: [], stack: [], combat: [], castable: [],
   input: { gen: 7, priority: true, message: '', ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false }, selectable: [], actionable: [300, 302] }, events: [] };
 const messages: unknown[] = [];
-const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateProliferate(message); simulateImprovise(message); simulatePayMana(message); } };
+const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateGraveyardTarget(message); simulateProliferate(message); simulateImprovise(message); simulatePayMana(message); } };
+/** Cenário de alvo no cemitério: tocar num alvo encerra a escolha, como a ponte faria (a janela do cemitério fecha junto). */
+function simulateGraveyardTarget(message: any) {
+  const input = state.input;
+  if (!input.targeting || !input.graveyardTarget || message.gen !== input.gen || message.type !== 'card' || !input.selectable.includes(message.id)) return;
+  Object.assign(state.input, { gen: input.gen + 1, priority: true, message: '', targeting: undefined, graveyardTarget: undefined, card: undefined, selectable: [], selectablePlayers: [],
+    ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false } });
+  setTimeout(() => view.render());
+}
 /** Cenário de proliferar: a escolha muda como a ponte mudaria, e confirmar dá +1 de cada marcador aos marcados. */
 function simulateProliferate(message: any) {
   const input = state.input;
@@ -341,6 +349,25 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       targeting: { source: ability.source.id, card: ability.source, kind: ability.kind, ability: ability.text, min: 1, max: 1, count: chosen ? 1 : 0, valid: ability.valid, cards: chosen ? [284] : [] } });
     view.render();
   },
+  /**
+   * Alvo que só pode estar num cemitério: Reanimar escolhe uma carta de criatura em qualquer cemitério. O cemitério abre
+   * sozinho, no seu (que tem alvo), com abas para o do oponente. theirs: só o cemitério do oponente tem alvos.
+   */
+  graveyardTarget(theirs = false) {
+    const [me, opp] = state.players;
+    const spellCard = (id: number, name: string, owner: number, manaCost: string, typeLine: string) => card(id, name, owner, { creature: false, manaCost, typeLine });
+    const reanimate = spellCard(290, 'Reanimate', 10, '{B}', 'Sorcery');
+    me.graveyard = theirs ? [spellCard(291, 'Lightning Bolt', 10, '{R}', 'Instant'), land(292, 10)]
+      : [card(293, 'Grizzly Bears', 10, { manaCost: '{1}{G}', typeLine: 'Creature — Bear' }), spellCard(291, 'Lightning Bolt', 10, '{R}', 'Instant'), land(292, 10)];
+    opp.graveyard = [card(294, 'Serra Angel', 23, { manaCost: '{3}{W}{W}', typeLine: 'Creature — Angel', power: 4, toughness: 4, keywords: ['Flying', 'Vigilance'] }),
+      spellCard(295, 'Counterspell', 23, '{U}{U}', 'Instant'), card(296, 'Hill Giant', 23, { manaCost: '{3}{R}', typeLine: 'Creature — Giant', power: 3, toughness: 3 })];
+    const text = 'Ponha o card de criatura alvo de um cemitério no campo de batalha sob seu controle. Você perde uma quantidade de pontos de vida igual ao valor de mana dele.';
+    Object.assign(state.input, { gen: 20, priority: false, actionable: [], selectable: theirs ? [294, 296] : [293, 294, 296], selectablePlayers: [], graveyardTarget: true,
+      message: `Reanimate (290) - ${text}\n\nSelect target creature card in a graveyard`,
+      ok: { label: 'OK', enabled: false }, cancel: { label: 'Cancelar', enabled: true }, card: reanimate,
+      targeting: { source: 290, card: reanimate, kind: 'spell', ability: text, min: 1, max: 1, count: 0, valid: ['Creature'], zones: ['Graveyard'], cards: [] } });
+    view.render();
+  },
   extras() {
     Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
     view.render();
@@ -607,6 +634,8 @@ const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
 // Dois montes: ?cenario=montes&passo=split|choose (&steam=1 para a Steam Augury, em que quem conjura separa).
 if (cenario === 'montes') { const q = new URLSearchParams(location.search); (window as any).fixture.piles(q.get('passo') === 'choose' ? 'choose' : 'split', q.has('steam')); }
+// Alvo no cemitério: ?cenario=alvo-cemiterio (&dele=1 para só o oponente ter alvos).
+if (cenario === 'alvo-cemiterio') (window as any).fixture.graveyardTarget(new URLSearchParams(location.search).has('dele'));
 if (cenario === 'lealdade') (window as any).fixture.walkerAbilities();
 if (cenario === 'gifts') (window as any).fixture.gifts();
 if (cenario === 'spelunking') (window as any).fixture.spelunking();

@@ -160,3 +160,34 @@ export function attachHandDrag(root: HTMLElement, options: {
   document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
   return { cancel, get active() { return !!drag?.ghost; } };
 }
+
+/*
+ * Mão cheia (mais de 10 cartas): as cópias iguais viram uma pilha só, no lugar da primeira cópia. A ordem continua
+ * sendo a do jogador; arrastar uma pilha leva todas as cópias juntas.
+ */
+export const HAND_GROUP_FROM = 11;
+
+/** As pilhas da mão, na ordem do jogador: cada uma com os ids das cópias (a primeira é a que joga). */
+export function groupHand(order: readonly number[], keyOf: (id: number) => string | null): number[][] {
+  const groups: number[][] = [], byKey = new Map<string, number[]>();
+  for (const id of order) {
+    const key = keyOf(id);
+    const group = key === null ? undefined : byKey.get(key);
+    if (group) { group.push(id); continue; }
+    const fresh = [id];
+    groups.push(fresh);
+    if (key !== null) byKey.set(key, fresh);
+  }
+  return groups;
+}
+
+/** Leva a pilha da carta `id` para a posição `to` (contada entre as pilhas, sem ela); null quando nada muda. */
+export function moveGroupInHand(groups: readonly (readonly number[])[], id: number, to: number): number[] | null {
+  const from = groups.findIndex(g => g.includes(id));
+  if (from < 0) return null;
+  const target = Math.max(0, Math.min(groups.length - 1, Math.round(to)));
+  if (target === from) return null;
+  const next = groups.filter((_, i) => i !== from);
+  next.splice(target, 0, groups[from]);
+  return next.flat();
+}

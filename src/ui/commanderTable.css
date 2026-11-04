@@ -273,3 +273,9 @@
   .forge.multiplayer .commander-opponents[data-shown='2'] .table-seat > .field { --ch: clamp(74px, 12.5vh, 140px); }
   .forge.multiplayer .commander-opponents[data-shown='1'] .table-seat > .field { overflow: visible; --ch: clamp(56px, calc((41vh - 200px) * .64), 150px); --lch: clamp(36px, calc((41vh - 200px) * .36), 84px); }
 }
+/* "Atacar quem?" se arrasta pelo título (o deslocamento vem do script). */
+.forge .action.attack-choosing .attack-choices-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.forge .action.attack-choosing.dragging .attack-choices-title { cursor: grabbing; }
+.forge .action.attack-choosing .drag-grip { width: 12px; height: 12px; flex: none; fill: currentColor; opacity: .7; }
+.forge .action.attack-choosing.moved { translate: var(--drag-x, 0) var(--drag-y, 0); }
+.forge .action.attack-choosing.dragging { transition: none; box-shadow: 0 10px 30px #000a; }

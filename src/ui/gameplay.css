@@ -564,3 +564,9 @@
 .ability-callout.ultimate { max-width: min(320px, 46vw); padding: 9px 13px; border-width: 2px; font-size: 14px; box-shadow: 0 4px 14px #0008, 0 0 22px color-mix(in srgb, var(--gold) 55%, transparent); }
 .ability-callout.ultimate .loyalty-chip { font-size: 15px; }
 @media (prefers-reduced-motion: reduce) { .pt.loyalty { transition: none; } }
+/* Mão cheia: cópias iguais numa pilha, com duas bordas de carta atrás e a contagem na borda esquerda, abaixo da lupa (a parte do leque
+   que a carta seguinte não cobre). */
+/* As bordas são sombras da face (as de baixo pintam primeiro), somadas ao brilho de jogável. */
+.forge .hcard.pile .face { --pile-edges: -5px -6px 0 -1px var(--azul-0b1526, #0b1526), -5px -6px 0 0 #f2b54c99, -10px -12px 0 -1px var(--azul-0b1526, #0b1526), -10px -12px 0 0 #f2b54c66; box-shadow: var(--pile-edges); }
+.forge .hcard.pile.playable .face { box-shadow: 0 0 0 2px var(--glow), var(--pile-edges), 0 0 18px rgba(89, 181, 255, 0.8); }
+.forge .hcard .hand-copies { position: absolute; inset: 40px auto auto -10px; width: auto; height: auto; z-index: 3; min-width: 22px; padding: 1px 6px; box-sizing: border-box; border-radius: 999px; background: color-mix(in srgb, var(--azul-080c18, #080c18) 90%, transparent); border: 1px solid rgba(242, 181, 76, .7); color: var(--ink); font: 700 12px/1.3 var(--display); text-align: center; pointer-events: none; }

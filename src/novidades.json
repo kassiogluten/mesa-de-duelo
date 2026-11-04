@@ -1,4 +1,30 @@
 {
+  "0.125.0": {
+    "Aviso quando uma jogada é recusada": [
+      { "img": "0.125.0/aviso-jogada-recusada.webp", "legenda": "Raio na mão no turno de quem controla a Myrel: em vez de nada acontecer, o aviso explica que a Myrel impede a mágica e mostra a carta dela." }
+    ],
+    "Mão fixa, oculta ou automática": [
+      { "img": "0.125.0/mao-auto.webp", "legenda": "Mão automática ligada: o ícone de mão, aceso ao lado do relógio do turno, e a mão recolhida com só o topo das cartas à vista." },
+      { "img": "0.125.0/mao-fixa.webp", "legenda": "Mão automática desligada e mão à vista: a seta discreta acima das cartas esconde a mão." },
+      { "img": "0.125.0/mao-oculta.webp", "legenda": "Mão escondida: o campo fica livre, e a seta para cima mostra a mão de novo, com a contagem das cartas (5)." }
+    ],
+    "Mão cheia agrupa as cartas iguais": [
+      { "img": "0.125.0/mao-cheia-agrupa.webp", "legenda": "Doze cartas na mão viram cinco pilhas: quatro Elfos de Llanowar e duas cópias de cada uma das outras cartas, com a contagem na borda." }
+    ],
+    "Painel \"Atacar quem?\" pode ser arrastado": [
+      { "img": "0.125.0/atacar-quem-arrastar.webp", "legenda": "O painel arrastado para o meio da mesa, longe das suas criaturas; os pontinhos no título mostram por onde segurar." }
+    ],
+    "Planeswalkers e batalhas no fim da fileira": [
+      { "img": "0.125.0/planeswalkers-no-fim.webp", "legenda": "No assento de Diego, o planeswalker fica no fim da fileira, depois das criaturas e das fichas, separado por um traço." }
+    ],
+    "Cartas encolhem quando o campo enche": [
+      { "img": "0.125.0/cartas-encolhem.webp", "legenda": "Com 4 criaturas, as de Diego ficam um pouco menores para caberem todas no assento; Ana, com 3, continua com as cartas no tamanho cheio." }
+    ],
+    "Cemitério abre sozinho na hora de escolher o alvo": [
+      { "img": "0.125.0/cemiterio-alvo-abre-sozinho.webp", "legenda": "Reanimar pede uma criatura num cemitério: o seu cemitério abre sozinho, com o alvo em destaque, o pedido e o Cancelar ali mesmo." },
+      { "img": "0.125.0/cemiterio-alvo-abas.webp", "legenda": "As abas no alto levam ao cemitério do oponente; cada uma mostra quantas cartas e quantos alvos há." }
+    ]
+  },
   "0.124.0": {
     "Mão recolhida por cima do campo": [
       { "img": "0.124.0/mao-recolhida.webp", "legenda": "Recolhida, a mão fica na borda de baixo mostrando só o topo das cartas, com o custo e o nome à vista, e o campo vai até ela. A seta à direita abre a mão." },

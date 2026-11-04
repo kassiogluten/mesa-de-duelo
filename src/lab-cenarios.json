@@ -1,5 +1,35 @@
 [
   {
+    "nome": "Dupla face modal depois do terreno do turno",
+    "versao": "0.125.0",
+    "item": "Aviso quando uma jogada é recusada",
+    "conferir": "Primeiro jogue a Forest da mão: é o terreno do turno. Depois tente cada carta de dupla face modal, clicando e também arrastando para o campo. A face de mágica tem de continuar jogável: Kazandu Mammoth vira criatura (paga com Forests), Bala Ged Recovery devolve os Grizzly Bears do cemitério para a mão, Agadeem's Awakening pede o X (pague com os Swamps) e Shatterskull Smashing pede o X e o alvo (use as Mountains e mire os Grizzly Bears do Jogador 2). Nenhuma delas deve perguntar a face nem ficar sem fazer nada. Já o Branchloft Pathway (terreno dos dois lados) não pode ser jogado: aparece o aviso de que você já jogou um terreno neste turno.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Forest", "Kazandu Mammoth", "Bala Ged Recovery", "Agadeem's Awakening", "Shatterskull Smashing", "Branchloft Pathway"], "library": ["Forest", "Forest", "Forest", "Forest", "Forest", "Swamp", "Swamp", "Swamp", "Mountain", "Mountain"], "graveyard": ["Grizzly Bears"], "exile": [],
+          "battlefield": [{ "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Myrel impede conjurar e ativar: aviso com o motivo",
+    "versao": "0.125.0",
+    "item": "Aviso quando uma jogada é recusada",
+    "conferir": "É o turno do Jogador 2, que controla a Myrel, Escudo de Argivo. Passe a prioridade com o Jogador 2 e, com o Jogador 1, toque no Raio da mão: em vez de nada acontecer, aparece o aviso \"Não dá para conjurar\", dizendo que a Myrel impede, com a miniatura dela (tocar mostra a carta). Toque no Piromante Pródigo: o aviso diz que a Myrel impede ativar a habilidade dele. Toque na Mountain da mão: o aviso diz que terrenos só podem ser jogados no seu turno. Virar uma Mountain do campo para mana continua funcionando, sem aviso.",
+    "cenario": {
+      "active": 1, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Lightning Bolt", "Mountain"], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }, { "name": "Mountain" }, { "name": "Prodigal Pyromancer" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Myrel, Shield of Argive" }] }
+      ]
+    }
+  },
+  {
     "nome": "Nova Hellkite conjurada por dobra",
     "versao": "0.120.0",
     "item": "Dobra com efeito e som",
