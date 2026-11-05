@@ -141,7 +141,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
   function render() {
     if (!s) return;
     const field = root.querySelector('.ft-field');
-    const scroll = field ? [field.scrollTop, field.scrollLeft] : [0, 0];
+    const scroll: [number, number] = field ? [field.scrollTop, field.scrollLeft] : [0, 0];
     const lands = s.zones.battlefield.filter(isLand), others = s.zones.battlefield.filter(c => !isLand(c));
     root.innerHTML = `<div class="free-table">
       <header class="ft-top">
@@ -215,7 +215,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
       else if (a === 'face') toggleFaceDown(s, id);
       else if (a === 'copy') createToken(s, '', { copyOf: id });
       else if (a === 'facedown') { move(s, id, 'battlefield'); toggleFaceDown(s, id); }
-      else if (a.startsWith('c:')) { const [, kind, d] = a.split(':'); addCounter(s, id, kind, Number(d)); }
+      else if (a.startsWith('c:')) { const [, kind = '', d] = a.split(':'); addCounter(s, id, kind, Number(d)); }
       else if (a.startsWith('to:')) { const [, to, pos] = a.split(':'); move(s, id, to as Zone, (pos as Position) ?? 'top'); }
     });
   }

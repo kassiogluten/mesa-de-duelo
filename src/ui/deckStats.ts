@@ -23,7 +23,7 @@ export function groupedRows(entries: DeckEntry[]): { label: string; rows: DeckRo
 export function deckStats(deck: DeckData) {
   const rows = deckRows(deck.cards), known = rows.filter(r => r.info), spells = known.filter(r => r.info!.type !== 'land');
   const curve = CURVE.map(() => 0);
-  for (const r of spells) curve[Math.min(6, Math.floor(r.cmc ?? 0))] += r.count;
+  for (const r of spells) { const i = Math.min(6, Math.floor(r.cmc ?? 0)), n = curve[i]; if (n !== undefined) curve[i] = n + r.count; }
   const spellCount = countEntries(spells);
   return {
     total: countEntries(rows), sideboard: countEntries(deck.sideboard ?? []), unknown: countEntries(rows.filter(r => !r.info)),

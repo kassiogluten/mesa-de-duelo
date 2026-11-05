@@ -12,7 +12,7 @@ const opt = (q: FQuestion, i: number) => { const o = q.options?.[i]; return type
 
 export const isTriggerOrder = (q: FQuestion) => q.kind === 'order' && q.purpose === 'triggers';
 /** Valor de mana pelo custo impresso ({X} vale 0); numa carta de duas faces, só a primeira conta. */
-export const manaValue = (cost = '') => (cost.split(' // ')[0].match(/\{[^}]+\}/g) ?? [])
+export const manaValue = (cost = '') => (cost.split(' // ')[0]!.match(/\{[^}]+\}/g) ?? [])
   .reduce((sum, raw) => { const x = raw.slice(1, -1); return sum + (/^\d+$/.test(x) ? +x : x === 'X' ? 0 : 1); }, 0);
 
 /**
@@ -25,8 +25,8 @@ export function choiceOrder(q: FQuestion, name: (c: FCard) => string = c => c.na
   const indices = opts.map((_, i) => i);
   const cards = opts.map(o => typeof o === 'string' ? undefined : o.card);
   if (q.kind !== 'choose' || !cards.length || cards.some(c => !c || c.faceDown)) return indices;
-  const key = cards.map(c => ({ mv: manaValue(c!.manaCost), name: name(c!) }));
-  return indices.sort((a, b) => key[a].mv - key[b].mv || key[a].name.localeCompare(key[b].name, 'pt-BR'));
+  const key = cards.map((c, i) => ({ i, mv: manaValue(c!.manaCost), name: name(c!) }));
+  return key.sort((a, b) => a.mv - b.mv || a.name.localeCompare(b.name, 'pt-BR')).map(k => k.i);
 }
 
 export const isPlayMode =(q: FQuestion) => q.method === 'getAbilityToPlay' || q.purpose === 'play-mode';
@@ -54,7 +54,7 @@ export function moveTrigger(t: TriggerOrder, from: number, to: number) {
   to = Math.max(0, Math.min(t.order.length - 1, to));
   if (from === to || from < 0 || from >= t.order.length) return false;
   remember(t);
-  const [option] = t.order.splice(from, 1); t.order.splice(to, 0, option);
+  const [option] = t.order.splice(from, 1); t.order.splice(to, 0, option!); // from está dentro da lista (conferido acima)
   t.placed = Math.max(t.placed, Math.max(from, to) + 1);
   return true;
 }
@@ -87,12 +87,13 @@ export function triggerOrderHTML(q: FQuestion, t: TriggerOrder, face: Face, labe
     const name = o.card ? label(o.card) : 'Gatilho';
     const text = o.ability ?? o.label;
     const marked = pos < t.placed;
+    const copies = dup[option] ?? 1;
     return `<li class="trigger-slot${marked ? ' placed' : ''}" data-trigger-pos="${pos}">
       <div class="trigger-position" aria-hidden="true"><b>${pos + 1}</b><span>${pos === 0 ? 'Resolve primeiro' : pos === total - 1 ? 'Resolve por último' : `${pos + 1}º`}</span></div>
-      <button type="button" class="trigger-card" data-trigger="${option}" aria-label="${esc(`${name}: ${text}. Posição ${pos + 1} de ${total}, ${positionText(pos, total)}.${dup[option] > 1 ? ` Um de ${dup[option]} gatilhos iguais.` : ''}`)}" aria-describedby="fTriggerHelp">
+      <button type="button" class="trigger-card" data-trigger="${option}" aria-label="${esc(`${name}: ${text}. Posição ${pos + 1} de ${total}, ${positionText(pos, total)}.${copies > 1 ? ` Um de ${copies} gatilhos iguais.` : ''}`)}" aria-describedby="fTriggerHelp">
         <div class="trigger-face">${o.card ? face(o.card) : ''}</div>
         <p class="trigger-text">${esc(text)}</p>
-        ${dup[option] > 1 ? `<span class="trigger-dup" title="${dup[option]} gatilhos iguais, cada um vai separado para a pilha">×${dup[option]}</span>` : ''}
+        ${copies > 1 ? `<span class="trigger-dup" title="${copies} gatilhos iguais, cada um vai separado para a pilha">×${copies}</span>` : ''}
       </button>
       ${o.card && !o.card.faceDown && o.card.name ? `<button type="button" class="trigger-inspect" data-inspect="${o.card.id}" aria-label="Inspecionar ${esc(name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6m-3-3v6"/></svg></button>` : ''}
     </li>`;
@@ -203,7 +204,7 @@ export function playChoices(q: FQuestion): PlayChoice[] {
     if (o.loyalty) return { index, name, detail: detail.replace(/^\s*[+−-]?(\d+|X)\s*:\s*/, ''), cost: o.cost ?? '', extra, face: o.face, recommended: false, loyalty: loyaltyCost(o.loyalty, loyalty) };
     return { index, name, detail, cost: o.cost ?? '', extra, face: o.face, recommended: false };
   });
-  const normal = choices.find(c => (opts[c.index].mode ?? 'cast') === 'cast' && c.name === 'Conjurar') ?? choices.find(c => opts[c.index].mode === 'land');
+  const normal = choices.find(c => (opts[c.index]?.mode ?? 'cast') === 'cast' && c.name === 'Conjurar') ?? choices.find(c => opts[c.index]?.mode === 'land');
   if (normal) normal.recommended = true;
   return choices;
 }

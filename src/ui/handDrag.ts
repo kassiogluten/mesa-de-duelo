@@ -52,9 +52,11 @@ export function handDropIndex(centers: readonly number[], from: number, x: numbe
  * vai para o destino e as vizinhas entre a origem e o destino andam uma casa, abrindo o espaço.
  */
 export function handSlotShift(lefts: readonly number[], from: number, to: number, k: number): number {
-  if (k === from) return lefts[to] - lefts[from];
-  if (from < to && k > from && k <= to) return lefts[k - 1] - lefts[k];
-  if (to < from && k >= to && k < from) return lefts[k + 1] - lefts[k];
+  // Fora da lista dá NaN, como a conta com undefined sempre deu.
+  const at = (i: number) => lefts[i] ?? NaN;
+  if (k === from) return at(to) - at(from);
+  if (from < to && k > from && k <= to) return at(k - 1) - at(k);
+  if (to < from && k >= to && k < from) return at(k + 1) - at(k);
   return 0;
 }
 
@@ -184,11 +186,11 @@ export function groupHand(order: readonly number[], keyOf: (id: number) => strin
 
 /** Leva a pilha da carta `id` para a posição `to` (contada entre as pilhas, sem ela); null quando nada muda. */
 export function moveGroupInHand(groups: readonly (readonly number[])[], id: number, to: number): number[] | null {
-  const from = groups.findIndex(g => g.includes(id));
-  if (from < 0) return null;
+  const from = groups.findIndex(g => g.includes(id)), group = groups[from];
+  if (!group) return null;
   const target = Math.max(0, Math.min(groups.length - 1, Math.round(to)));
   if (target === from) return null;
   const next = groups.filter((_, i) => i !== from);
-  next.splice(target, 0, groups[from]);
+  next.splice(target, 0, group);
   return next.flat();
 }

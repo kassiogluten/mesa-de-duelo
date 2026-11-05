@@ -45,7 +45,7 @@ const ENDS: Record<End, [string, string]> = { concluida: ['Concluídas', 'conclu
 const endOf = (m: PastMatch): End => m.end ?? 'concluida';
 const minutes = (ms: number) => ms < 60000 ? `${Math.round(ms / 1000)} s` : ms < 3600000 ? `${Math.round(ms / 60000)} min` : `${Math.floor(ms / 3600000)} h ${Math.round(ms / 60000) % 60} min`;
 const monthName = (month: string) => new Date(`${month}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-const playerName = (p: PastMatch['players'][number], i: number) => p.name ?? (p.ai ? 'IA' : i === 0 ? 'Jogador' : `Jogador ${i + 1}`);
+const playerName = (p: PastMatch['players'][number] | undefined, i: number) => p?.name ?? (p?.ai ? 'IA' : i === 0 ? 'Jogador' : `Jogador ${i + 1}`);
 const average = (values: number[]) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 
 export interface HistoryState { month: string; months: string[]; end: End | ''; past: PastMatch[] }

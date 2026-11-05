@@ -34,7 +34,7 @@ export function placeLibraryCard(picked: number[], option: number, leaves: boole
 export function moveLibraryCard(order: number[], pos: number, dir: -1 | 1) {
   const to = pos + dir;
   if (pos < 0 || pos >= order.length || to < 0 || to >= order.length) return false;
-  [order[pos], order[to]] = [order[to], order[pos]];
+  [order[pos], order[to]] = [order[to]!, order[pos]!]; // as duas posições conferidas acima
   return true;
 }
 

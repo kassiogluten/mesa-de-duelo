@@ -210,16 +210,18 @@ export function parseDeckList(text: string): ParsedList {
     const m = line.match(/^(?:(\d+)\s*x?\s+)?(.+)$/i);
     if (!m || (!m[1] && /^[+\-\d]/.test(line) && /^[+\-]?\d*(?:[.,]\d+|\s*x?\s)/i.test(line))) { skipped.push(raw); continue; }
     const count = m[1] ? Number(m[1]) : 1;
-    const tag = /\[[^\]]*\b(sideboard|commander|maybeboard|considering|tokens?)\b[^\]]*\]/i.exec(m[2]);
-    const isCommander = commanderMarker.test(m[2]);
-    const bare = m[2].replace(/\s*\^[^^]*\^/g, '').replace(/\s*\[[^\]]*\]/g, '').replace(/\s*\*[A-Z]+\*/g, '');
+    const rest = m[2]!; // (.+) sempre casa
+    const tag = /\[[^\]]*\b(sideboard|commander|maybeboard|considering|tokens?)\b[^\]]*\]/i.exec(rest);
+    const tagKind = tag ? tag[1]!.toLowerCase() : undefined;
+    const isCommander = commanderMarker.test(rest);
+    const bare = rest.replace(/\s*\^[^^]*\^/g, '').replace(/\s*\[[^\]]*\]/g, '').replace(/\s*\*[A-Z]+\*/g, '');
     const printing = bare.match(/\s+\(([A-Za-z0-9]{2,6})\)(?:\s+([\w★-]+))?\s*$/);
     const name = bare.slice(0, printing?.index ?? bare.length).replace(/\s*\/\/\s*/g, ' // ').trim();
-    const print = printing ? { set: printing[1].toLowerCase(), ...(printing[2] ? { cn: printing[2] } : {}) } : {};
+    const print = printing ? { set: printing[1]!.toLowerCase(), ...(printing[2] ? { cn: printing[2] } : {}) } : {};
     if (!name || !Number.isSafeInteger(count) || count <= 0) { skipped.push(raw); continue; }
     seenCard = true;
-    if ((!sb && section === 'ignored') || (tag && !['sideboard', 'commander'].includes(tag[1].toLowerCase()))) { ignored.push(raw); continue; }
-    const pool = sb || section === 'sideboard' || tag?.[1].toLowerCase() === 'sideboard' ? sideboard : section === 'commanders' || isCommander ? commanders : main;
+    if ((!sb && section === 'ignored') || (tagKind !== undefined && !['sideboard', 'commander'].includes(tagKind))) { ignored.push(raw); continue; }
+    const pool = sb || section === 'sideboard' || tagKind === 'sideboard' ? sideboard : section === 'commanders' || isCommander ? commanders : main;
     const key = entryKey({ name, ...print }).toLowerCase(), previous = pool.get(key);
     if (previous && !Number.isSafeInteger(previous.count + count)) { skipped.push(raw); continue; }
     if (previous) previous.count += count; else pool.set(key, { name, count, ...print });

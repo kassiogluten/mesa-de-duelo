@@ -16,10 +16,10 @@ export interface RetryStep {
  * mudou no meio; 'exhausted': acabaram as tentativas (a mesa oferece o botão).
  */
 export async function retryWithDelays(delays: readonly number[], step: RetryStep, wait = (ms: number) => new Promise(r => setTimeout(r, ms))): Promise<'done' | 'stopped' | 'exhausted'> {
-  for (let i = 0; i < delays.length; i++) {
+  for (const [i, delay] of delays.entries()) {
     if (!step.alive()) return 'stopped';
     step.onTry(i + 1);
-    await wait(delays[i]);
+    await wait(delay);
     if (!step.alive()) return 'stopped';
     if (await step.attempt()) return 'done';
   }

@@ -22,8 +22,9 @@ export type UiTable = Record<string, UiAction>;
 
 /** Faz a ação do botão `ui` se ele estiver na tabela; false quando não está (o clique segue adiante). */
 export function runUi(table: UiTable, ui: string | undefined, t: HTMLElement, e: MouseEvent) {
-  if (!ui || !Object.hasOwn(table, ui)) return false;
-  table[ui](t, e, ui);
+  const run = ui && Object.hasOwn(table, ui) ? table[ui] : undefined;
+  if (!ui || !run) return false;
+  run(t, e, ui);
   return true;
 }
 
@@ -103,7 +104,7 @@ export function createUiActions(d: UiActionDeps) {
       else client.send({ type: 'sideboard', id: sb.id, deck: { name: 'Deck da partida', cards: match.sideboardDraft.main, sideboard: match.sideboardDraft.sideboard } });
       d.render();
     },
-    'next-game': (t, e, ui) => panel['sideboard-ready'](t, e, ui),
+    'next-game': (t, e, ui) => panel['sideboard-ready']!(t, e, ui), // definida logo acima
   };
   /** As ações: o menu, o histórico e os erros, desfazer, sair, o resultado e as janelas de remoção e de zona. */
   const action: UiTable = {
@@ -143,7 +144,7 @@ export function createUiActions(d: UiActionDeps) {
     'lab-close': () => { if (d.state()?.gameOver || d.match().disconnected || confirm('Fechar a sala de teste? A partida acaba para os dois lados.')) { d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset(); d.opts.onLabClose?.(); } },
     'rematch': () => { d.setMenu(false); d.opts.onRematch(); },
     'observe': (_t, _e, ui) => { const match = d.match(); match.observing = ui === 'observe'; d.render(); if (!d.match().observing) ($('#fOverlay').querySelector('[data-ui="observe"]') as HTMLElement | null)?.focus(); },
-    'result': (t, e, ui) => action['observe'](t, e, ui),
+    'result': (t, e, ui) => action['observe']!(t, e, ui), // definida logo acima
     'zone-close': () => { d.closeZone(); },
   };
   return { pass, prompt, view, panel, action };

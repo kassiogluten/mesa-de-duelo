@@ -29,7 +29,8 @@ export function attackPairAction(state: FState, selected: AttackSelection | null
 export function legalAttackGroupTargets(state: FState, attackers: number[], gen: number): Defender[] {
   if (!attackers.length || gen !== state.input.gen) return [];
   const choices = attackers.map(attacker => legalAttackTargets(state, { attacker, gen }));
-  return choices[0].filter(target => choices.every(list => list.some(other => other.id === target.id && other.kind === target.kind)));
+  const [first = []] = choices;
+  return first.filter(target => choices.every(list => list.some(other => other.id === target.id && other.kind === target.kind)));
 }
 export function attackGroupAction(state: FState, attackers: number[], defender: Defender | null, gen: number) {
   const ids = [...new Set(attackers)];

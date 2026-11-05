@@ -422,7 +422,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         // Com bracket máximo ou série, o sorteio dos bots é feito aqui, entre os decks que cabem; sem eles, no servidor.
         const pool = botPool(readyPool()), filtered = botBracketMax(readyPool()) !== null || !!botSeries();
         if (hasCommandZone(matchConfig.format) && filtered && !pool.length && selectedOpponents.includes('random')) { setStatus('Nenhum deck pronto cabe no bracket máximo dos bots.', true); return; }
-        const drawn = () => filtered ? pool[Math.floor(Math.random() * pool.length)] : null;
+        const drawn = () => filtered ? pool[Math.floor(Math.random() * pool.length)] ?? null : null;
         const opponents = hasCommandZone(matchConfig.format) ? selectedOpponents.map(id => id === 'random' ? drawn() : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
         await opts.onPlay(deck, opponents?.[0] ?? opponent, matchConfig, opponents);
       }

@@ -105,7 +105,9 @@ export function millDescription(v: EventView, event: PresentationEvent, who: str
 }
 /** "8 fichas de Rabbit entraram no campo." — as permanentes que a mesma resolução pôs no campo de uma vez. */
 export function entriesDescription(v: EventView, cards: FCard[], from?: string) {
-  const n = cards.length, same = cards.every(c => c.name === cards[0].name), name = v.label(cards[0]);
+  const [first] = cards;
+  if (!first) return '';
+  const n = cards.length, same = cards.every(c => c.name === first.name), name = v.label(first);
   const list = listNames([...cards.slice(0, 5).map(v.label), ...(n > 5 ? [`mais ${n - 5}`] : [])]);
   if (from === 'Exile') return same ? `${n} × ${name} voltam ao campo.` : `${n} permanentes voltam ao campo: ${list}.`;
   if (cards.every(c => c.token) && !from) return same ? `${n} fichas de ${name} entraram no campo.` : `${n} fichas entraram no campo.`;

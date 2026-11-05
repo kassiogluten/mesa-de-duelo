@@ -65,7 +65,7 @@ export function choiceHint(q: FQuestion, view: PilesView) {
 export const pilesHeading = (q: FQuestion, view: PilesView) => {
   const name = sourceName(q, view);
   const what = isPilesSplit(q) ? 'separe em dois montes' : 'escolha um monte';
-  return name ? `${name}: ${what}` : what[0].toUpperCase() + what.slice(1);
+  return name ? `${name}: ${what}` : what.charAt(0).toUpperCase() + what.slice(1);
 };
 
 const head = (q: FQuestion, view: PilesView) => `<div class="q-head"><h2>${esc(pilesHeading(q, view))}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>`;
@@ -79,11 +79,11 @@ export function splitSummary(q: FQuestion, firstPile: number[]) {
 /** Separar: os dois montes ao vivo; tocar numa carta passa para o outro, "Ler" abre a carta. */
 export function pilesSplitHTML(q: FQuestion, firstPile: number[], view: PilesView) {
   const opts = q.options ?? [];
-  const piles = [opts.map((_, i) => i).filter(i => firstPile.includes(i)), opts.map((_, i) => i).filter(i => !firstPile.includes(i))];
+  const inFirst = opts.map((_, i) => i).filter(i => firstPile.includes(i)), inSecond = opts.map((_, i) => i).filter(i => !firstPile.includes(i));
   const column = (indices: number[], n: 1 | 2) => {
     const cards = indices.map(i => {
       const o = opts[i];
-      const card = typeof o === 'string' ? undefined : o.card;
+      const card = typeof o === 'string' ? undefined : o?.card;
       if (!card) return '';
       const name = view.label(card);
       return `<li class="pile-slot">
@@ -98,7 +98,7 @@ export function pilesSplitHTML(q: FQuestion, firstPile: number[], view: PilesVie
   };
   return `${head(q, view)}
     <p class="q-hint" id="fPilesHelp">Toque numa carta para mudá-la de monte. ${esc(splitHint(q, view))}</p>
-    <div class="pile-groups split" aria-describedby="fPilesHelp">${column(piles[0], 1)}${column(piles[1], 2)}</div>
+    <div class="pile-groups split" aria-describedby="fPilesHelp">${column(inFirst, 1)}${column(inSecond, 2)}</div>
     <p class="q-hint pile-summary" aria-live="polite">${esc(splitSummary(q, firstPile))}</p>
     <div class="q-actions"><button class="arena-btn primary big" data-q-submit>Confirmar montes</button></div>`;
 }

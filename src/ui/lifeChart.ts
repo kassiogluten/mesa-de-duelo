@@ -9,8 +9,7 @@ type ChartState = Pick<FState, 'players' | 'you' | 'lifeHistory' | 'config'>;
  * Cores das linhas: você no dourado da mesa, os oponentes em azul, rosa e verde, nessa ordem (conferidas para
  * daltonismo no fundo escuro da mesa). A quarta linha vem tracejada, e todas levam o nome na ponta.
  */
-const COLORS = ['#c98500', '#3987e5', '#d55181', '#008300'];
-const DASH = ['', '', '', '6 4'];
+const STYLES = [{ color: '#c98500', dash: '' }, { color: '#3987e5', dash: '' }, { color: '#d55181', dash: '' }, { color: '#008300', dash: '6 4' }];
 
 const W = 560, H = 210, LEFT = 30, RIGHT = 118, TOP = 14, BOTTOM = 26;
 
@@ -20,8 +19,8 @@ interface Series { player: FPlayer; name: string; color: string; dash: string; l
 function seriesOf(s: ChartState): Series[] {
   const points = s.lifeHistory ?? [];
   const order = [...s.players].sort((a, b) => Number(b.id === s.you) - Number(a.id === s.you));
-  return order.slice(0, COLORS.length).map((player, i) => ({
-    player, name: player.id === s.you ? 'Você' : player.name, color: COLORS[i], dash: DASH[i],
+  return order.slice(0, STYLES.length).map((player, i) => ({
+    player, name: player.id === s.you ? 'Você' : player.name, ...STYLES[i]!, // i < STYLES.length (slice)
     life: points.map(p => p.life[String(player.id)] ?? NaN),
   }));
 }
@@ -37,8 +36,9 @@ function lifeTicks(min: number, max: number): number[] {
 /** Afasta os nomes na ponta das linhas para não se encostarem (pelo menos 14 px entre eles). */
 function spreadLabels(ys: number[], gap = 14): number[] {
   const order = ys.map((y, i) => ({ y, i })).sort((a, b) => a.y - b.y);
-  for (let k = 1; k < order.length; k++) order[k].y = Math.max(order[k].y, order[k - 1].y + gap);
-  const overflow = order.length ? order[order.length - 1].y - (H - BOTTOM) : 0;
+  let prev: { y: number } | undefined;
+  for (const o of order) { if (prev) o.y = Math.max(o.y, prev.y + gap); prev = o; }
+  const overflow = prev ? prev.y - (H - BOTTOM) : 0;
   if (overflow > 0) for (const o of order) o.y -= overflow;
   const out: number[] = [];
   for (const o of order) out[o.i] = o.y;
@@ -71,14 +71,14 @@ export function lifeChartHTML(s: ChartState): string {
   const lastValue = (sr: Series) => [...sr.life].reverse().find(Number.isFinite) ?? 0;
   const labelY = spreadLabels(series.map(sr => y(lastValue(sr))));
   const ends = series.map((sr, i) => `<circle class="lc-end" cx="${x(last)}" cy="${y(lastValue(sr))}" r="4" fill="${sr.color}"/>`
-    + `<text class="lc-label" x="${x(last) + 10}" y="${labelY[i] + 4}"><tspan class="lc-label-life">${lastValue(sr)}</tspan> ${esc(sr.name.length > 12 ? `${sr.name.slice(0, 11)}…` : sr.name)}</text>`).join('');
+    + `<text class="lc-label" x="${x(last) + 10}" y="${labelY[i]! + 4}"><tspan class="lc-label-life">${lastValue(sr)}</tspan> ${esc(sr.name.length > 12 ? `${sr.name.slice(0, 11)}…` : sr.name)}</text>`).join('');
   // Uma coluna por turno: a área de toque é a coluna inteira; a linha, os pontos e a caixa aparecem no hover e no toque.
   const colW = (W - LEFT - RIGHT) / Math.max(last, 1);
   const cols = turns.map((t, i) => {
     const cx = x(i), boxW = 128, boxH = 22 + series.length * 16;
     const boxX = cx + boxW + 12 > W ? cx - boxW - 10 : cx + 10;
     const rows = series.map((sr, k) => `<circle cx="${boxX + 12}" cy="${TOP + 25 + k * 16}" r="4" fill="${sr.color}"/><text class="lc-tip-row" x="${boxX + 22}" y="${TOP + 29 + k * 16}">${esc(sr.name.length > 10 ? `${sr.name.slice(0, 9)}…` : sr.name)}</text><text class="lc-tip-value" x="${boxX + boxW - 10}" y="${TOP + 29 + k * 16}" text-anchor="end">${Number.isFinite(sr.life[i]) ? sr.life[i] : '–'}</text>`).join('');
-    const dots = series.map(sr => Number.isFinite(sr.life[i]) ? `<circle cx="${cx}" cy="${y(sr.life[i])}" r="4" fill="${sr.color}" class="lc-dot"/>` : '').join('');
+    const dots = series.map(sr => { const life = sr.life[i] ?? NaN; return Number.isFinite(life) ? `<circle cx="${cx}" cy="${y(life)}" r="4" fill="${sr.color}" class="lc-dot"/>` : ''; }).join('');
     return `<g class="lc-col" aria-hidden="true"><rect class="lc-hit" x="${Math.max(LEFT - colW / 2, cx - colW / 2)}" y="${TOP}" width="${colW}" height="${H - TOP - BOTTOM}"/>`
       + `<g class="lc-hover"><line class="lc-cross" x1="${cx}" x2="${cx}" y1="${TOP}" y2="${H - BOTTOM}"/>${dots}<rect class="lc-tip" x="${boxX}" y="${TOP + 2}" width="${boxW}" height="${boxH}" rx="8"/><text class="lc-tip-title" x="${boxX + 10}" y="${TOP + 15}">${t === 0 ? 'Início' : `Fim do turno ${t}`}</text>${rows}</g></g>`;
   }).join('');

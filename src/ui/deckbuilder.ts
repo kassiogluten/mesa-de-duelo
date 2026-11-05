@@ -129,7 +129,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const key = actionFocus ? 'deck-actions' : active?.dataset.focus;
     deckActionsOpen = false;
     const input = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement ? active : null;
-    const range = input && ['text', 'search', 'textarea'].includes(input.type) ? [input.selectionStart, input.selectionEnd] : null;
+    const range = input && ['text', 'search', 'textarea'].includes(input.type) ? [input.selectionStart, input.selectionEnd] as const : null;
     const x = window.scrollX, y = window.scrollY;
     render();
     if (key) {
@@ -173,9 +173,9 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (!importReview || !importCanSave()) return;
     const deck = importReview.deck;
     if (importTarget) {
-      const latest = loadUserDecks(), index = latest.findIndex(d => d.id === importTarget!.id);
+      const latest = loadUserDecks(), index = latest.findIndex(d => d.id === importTarget!.id), current = latest[index];
       user = [...latest];
-      if (index < 0 || deckImportSnapshot(latest[index]) !== deckImportSnapshot(importTarget)) {
+      if (!current || deckImportSnapshot(current) !== deckImportSnapshot(importTarget)) {
         importError = listEdit ? 'Este deck mudou durante a revisão. Volte ao deck e abra Editar como lista de novo; suas cartas não foram alteradas.' : 'Este deck mudou durante a revisão. Volte ao deck e importe a lista novamente; suas cartas não foram alteradas.';
         renderImport(); return;
       }
@@ -435,9 +435,9 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'import-commander-yes': case 'import-commander-no': {
         const name = importCommanderOffer; importCommanderOffer = null;
         if (ds.b === 'import-commander-yes' && name && importReview) {
-          const incoming = importReview.incoming, index = incoming.cards.findIndex(e => e.name === name);
-          if (index >= 0) {
-            const [entry] = incoming.cards.splice(index, 1); incoming.commanders = [entry];
+          const incoming = importReview.incoming, index = incoming.cards.findIndex(e => e.name === name), entry = incoming.cards[index];
+          if (entry) {
+            incoming.cards.splice(index, 1); incoming.commanders = [entry];
             validationSeq++; validating = false; validation = null; validationError = ''; importError = '';
             try { importReview.deck = importTarget ? applyToTarget(importTarget, incoming) : incoming; }
             catch (error) { importError = (error as Error).message; }

@@ -47,7 +47,7 @@ export function proliferateNames(v: ActionView, s: FState) {
   return {
     name: (c: { kind: 'card' | 'player'; id: number }) => c.kind === 'player'
       ? c.id === s.you ? 'Você' : s.players.find(p => p.id === c.id)?.name ?? 'Jogador'
-      : (() => { const card = v.findCard(c.id); return card ? label(card).split(',')[0] : 'Permanente'; })(),
+      : (() => { const card = v.findCard(c.id); return card ? label(card).split(',')[0]! : 'Permanente'; })(),
     whose: (c: { kind: 'card' | 'player'; id: number; holder?: number }) => c.kind === 'player' ? 'Jogador' : who(c.holder),
   };
 }

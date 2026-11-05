@@ -9,9 +9,9 @@ export function parseDeckLink(text: string): DeckLink | null {
   const value = text.trim();
   if (!value || /\s/.test(value)) return null;
   const moxfield = value.match(/^(?:https?:\/\/)?(?:www\.)?moxfield\.com\/decks\/([A-Za-z0-9_-]{4,64})(?:[/?#].*)?$/i);
-  if (moxfield) return { site: 'moxfield', id: moxfield[1] };
+  if (moxfield) return { site: 'moxfield', id: moxfield[1]! };
   const archidekt = value.match(/^(?:https?:\/\/)?(?:www\.)?archidekt\.com\/(?:api\/)?decks\/(\d{1,12})(?:[/?#].*)?$/i);
-  if (archidekt) return { site: 'archidekt', id: archidekt[1] };
+  if (archidekt) return { site: 'archidekt', id: archidekt[1]! };
   return null;
 }
 

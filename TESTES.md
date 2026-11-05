@@ -38,6 +38,6 @@ O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm install`) roda `n
 
 ## Falhas conhecidas
 
-Nenhuma desde 2026-11-05 (0.126.1): a suíte da mesa, a do servidor, os testes de navegador e as partidas (`test:e2e`) passam inteiros. Qualquer falha agora é nova e precisa ser investigada.
+Nenhuma desde 2026-11-04 (0.126.1): a suíte da mesa, a do servidor, os testes de navegador e as partidas (`test:e2e`) passam inteiros. Qualquer falha agora é nova e precisa ser investigada.
 
 Testes que já falharam de vez em quando e passaram ao rodar de novo (máquina carregada, várias mesas e servidores subindo juntos): `attack-groups`, `commander-table` e `artwork-click` (navegador) e `test-end-step-stop` (partidas). Se um deles falhar, rode de novo sozinho antes de investigar; se falhar duas vezes, é de verdade.

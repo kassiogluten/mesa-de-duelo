@@ -101,7 +101,7 @@ export function createTableHand(d: HandDeps) {
       const c = inHand.get(id)!;
       return c.faceDown || Object.values(c.counters ?? {}).some(Boolean) || selectedForInput(s, id) ? null : `${c.name}|${c.manaCost ?? ''}|${usable(s, id)}`;
     }) : null;
-    const fan: HandFanItem[] = [...(handGroups ?? match.handOrder.map(id => [id])).map(ids => ({ c: inHand.get(ids[0])!, tag: '', copies: ids })), ...extra];
+    const fan: HandFanItem[] = [...(handGroups ?? match.handOrder.map(id => [id])).map(ids => ({ c: inHand.get(ids[0]!)!, tag: '', copies: ids })), ...extra];
     $('#fHand').classList.toggle('crowded', fan.length > 7);
     syncMode(!!s.watching, me.hand.length);
     const drawsAhead = d.timeline.pendingDraws(s.you) + d.drawing() > 0 && match.handPrimed && !suppressOpeningPreview(s) && d.timeline.history.some(e => e.type === 'turn');

@@ -24,7 +24,7 @@ export function autoSplit(q: FQuestion): number[] {
     last = i;
     const give = Math.min(left, o.lethal ?? 0); left -= give; return give;
   });
-  if (left > 0) { const d = opts.findIndex(o => o.defender); out[d >= 0 ? d : Math.max(0, last)] += left; }
+  if (left > 0) { const d = opts.findIndex(o => o.defender), at = d >= 0 ? d : Math.max(0, last), now = out[at]; if (now !== undefined) out[at] = now + left; }
   return out;
 }
 
@@ -43,9 +43,10 @@ export function splitStatus(q: FQuestion, amounts: number[]): SplitStatus {
       // Com ordem, o próximo bloqueador só abre depois do letal no anterior; o defensor só depois de todos.
       if ((o.defender || q.ordered) && !allLethal) {
         locked[i] = true;
-        if (amounts[i] > 0) message ||= o.defender ? 'Para passar dano ao defensor, dê dano letal a todos os bloqueadores.' : 'Dê dano letal a cada bloqueador antes de passar ao próximo.';
+        if ((amounts[i] ?? 0) > 0) message ||= o.defender ? 'Para passar dano ao defensor, dê dano letal a todos os bloqueadores.' : 'Dê dano letal a cada bloqueador antes de passar ao próximo.';
       }
-      if (!o.defender) allLethal &&= amounts[i] >= (o.lethal ?? 0);
+      const given = amounts[i];
+      if (!o.defender) allLethal &&= given !== undefined && given >= (o.lethal ?? 0);
     });
   }
   if (!message && remaining < 0) message = `Passou ${-remaining} do total.`;
@@ -56,11 +57,12 @@ export function splitStatus(q: FQuestion, amounts: number[]): SplitStatus {
 export function adjust(q: FQuestion, amounts: number[], index: number, how: 'add' | 'sub' | 'lethal'): number[] {
   const next = [...amounts];
   const st = splitStatus(q, amounts);
-  const o = options(q)[index];
-  if (how === 'sub') { next[index] = Math.max(0, next[index] - 1); return next; }
-  if (st.locked[index] || st.remaining <= 0) return next;
-  const lethal = o.defender ? st.remaining : Math.max(1, (o.lethal ?? 0) - next[index]);
-  next[index] += how === 'add' ? 1 : Math.min(st.remaining, lethal > 0 ? lethal : st.remaining);
+  const o = options(q)[index], current = next[index];
+  if (current === undefined) return next;
+  if (how === 'sub') { next[index] = Math.max(0, current - 1); return next; }
+  if (!o || st.locked[index] || st.remaining <= 0) return next;
+  const lethal = o.defender ? st.remaining : Math.max(1, (o.lethal ?? 0) - current);
+  next[index] = current + (how === 'add' ? 1 : Math.min(st.remaining, lethal > 0 ? lethal : st.remaining));
   return next;
 }
 

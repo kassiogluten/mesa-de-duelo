@@ -51,7 +51,7 @@ export function layoutExileShelf(root: HTMLElement) {
   if (!arena.classList.contains('has-exile-shelf') || hand.classList.contains('crowded')) return;
   const slots = [...hand.querySelectorAll<HTMLElement>('.hand-slot')];
   if (slots.length < 2) return;
-  const width = slots[0].getBoundingClientRect().width;
+  const width = slots[0]!.getBoundingClientRect().width; // há pelo menos 2 (conferido acima)
   const space = Math.max(width, hand.clientWidth - 24);
   const step = Math.max(14, Math.min(width * .66, (space - width) / (slots.length - 1)));
   hand.style.setProperty('--shelf-hand-overlap', `${step - width}px`);
@@ -63,7 +63,7 @@ export function layoutCardDecision(root: HTMLElement) {
   action.style.removeProperty('max-height');
   if (!arena.classList.contains('has-hand-decision') || arena.classList.contains('multiplayer')) return;
   // Keep the whole choice scrollable between the phase track and the actual hand.
-  const header = getComputedStyle(arena).gridTemplateRows.split(' ')[0];
+  const header = getComputedStyle(arena).gridTemplateRows.split(' ')[0]!;
   const hand = q(root, '#fHand').getBoundingClientRect();
   // A trilha de fases fica na linha do meio; o limite de cima é a faixa do oponente no topo da mesa.
   const topBottom = arena.getBoundingClientRect().top + parseFloat(header);
@@ -74,7 +74,8 @@ export function layoutCardDecision(root: HTMLElement) {
 /** Marcadores e palavras-chave que encostam no P/T, um no outro ou cobrem mais de dois terços da carta viram um selo só. */
 export function layoutCounters(root: HTMLElement) {
   root.querySelectorAll<HTMLElement>('.bfc:has(> .ctr-sum)').forEach(card => {
-    const [counters, kws, pt] = ['.counters', '.kws', '.pt'].map(sel => card.querySelector<HTMLElement>(`:scope > ${sel}`));
+    const child = (sel: string) => card.querySelector<HTMLElement>(`:scope > ${sel}`);
+    const counters = child('.counters'), kws = child('.kws'), pt = child('.pt');
     card.classList.remove('crowded');
     counters?.style.removeProperty('max-width');
     // Na carta comum, os marcadores quebram em linhas antes do P/T em vez de passar por baixo dele.
@@ -103,7 +104,7 @@ export function layoutStack(root: HTMLElement) {
   const action = q(root, '#fAction').getBoundingClientRect();
   const natural = panel.getBoundingClientRect();
   const arenaBox = arena.getBoundingClientRect();
-  const topSafe = (parseFloat(getComputedStyle(arena).gridTemplateRows.split(' ')[0]) || 48) + 12;
+  const topSafe = (parseFloat(getComputedStyle(arena).gridTemplateRows.split(' ')[0]!) || 48) + 12;
   const overlapsAction = natural.right > action.left - 12 && natural.left < action.right + 12;
   const bottomSafe = overlapsAction ? action.top - arenaBox.top - 18 : arenaBox.height - 18;
   if (natural.top - arenaBox.top >= topSafe && natural.bottom - arenaBox.top <= bottomSafe) return;

@@ -21,7 +21,7 @@ export function graveyardTargeting(s: FState) {
   const selectable = new Set(s.input.selectable);
   const owners = s.players.map(p => ({ p, n: p.graveyard.filter(c => selectable.has(c.id)).length })).filter(o => o.n);
   if (!owners.length || owners.reduce((sum, o) => sum + o.n, 0) < selectable.size) return null;
-  return { key: `${t.source}:${t.kind ?? ''}:${t.ability ?? ''}`, player: (owners.find(o => o.p.id === s.you) ?? owners[0]).p.id };
+  return { key: `${t.source}:${t.kind ?? ''}:${t.ability ?? ''}`, player: (owners.find(o => o.p.id === s.you) ?? owners[0]!).p.id }; // owners não está vazia (conferido acima)
 }
 
 /** A zona que um botão `data-zone` abre (sem o atributo: o cemitério). */

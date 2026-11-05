@@ -123,9 +123,9 @@ export function createLibraryMotion(kit: MotionKit) {
     if (reduced()) { pulse(gyEl); return; }
     // A carta voa num tamanho legível e encolhe ao cair na pilha; com muitas, os voos se abrem em leque.
     const w = Math.max(grave.w, 64) * 1.25, h = w * 1.4;
-    for (let i = 0; i < flights; i++) {
+    for (const [i, card] of cards.slice(0, flights).entries()) {
       const spread = flights >= 6 ? (i - (flights - 1) / 2) * 7 : 0;
-      const ghost = effect('presentation-piece mill-ghost', { ...grave, w, h }, `${options.face(cards[i])}<div class="back"></div>`);
+      const ghost = effect('presentation-piece mill-ghost', { ...grave, w, h }, `${options.face(card)}<div class="back"></div>`);
       copySleeve(ghost, libEl);
       const dx = library.cx - grave.cx, dy = library.cy - grave.cy, delay = i * gap;
       // O arco vai para dentro da mesa (o grimório fica junto da borda de cima ou de baixo).

@@ -32,7 +32,7 @@ interface Unit {
   /** A resolução (ou anulação) que fechou a mágica ou habilidade desta linha. */
   outcome?: PresentationEvent;
   /** Linhas parecidas e seguidas que viraram uma só. */
-  parts?: Unit[];
+  parts?: [Unit, ...Unit[]];
 }
 
 const plain = (unit: Unit) => !unit.outcome && !unit.effects.length && !unit.parts;
@@ -121,7 +121,7 @@ function merge(list: Unit[]) {
   for (const unit of list) {
     const last = out.at(-1);
     if (last && joins(last, unit)) {
-      const parts = last.parts ?? [last];
+      const parts: [Unit, ...Unit[]] = last.parts ?? [last];
       out[out.length - 1] = { head: parts[0].head, effects: [], parts: [...parts, unit] };
     } else out.push(unit);
   }
@@ -151,7 +151,7 @@ export function effectParts(events: readonly PresentationEvent[], names: History
   const kind = (e: PresentationEvent) => e.reason ?? (leaving.some(([k]) => k === e.to) ? e.to! : '');
   for (const [k, verb] of [...leaving, ['', (list: string) => `tirou ${list} do campo`] as [string, (list: string) => string]]) {
     const group = left.filter(e => kind(e) === k);
-    if (group.length) parts.push(verb(group.length === 1 ? names.card(group[0]) ?? permanents(1) : `${permanents(group.length)}${owners ? ` (${ownersText(group, names)})` : ''}`));
+    if (group.length) parts.push(verb(group.length === 1 ? names.card(group[0]!) ?? permanents(1) : `${permanents(group.length)}${owners ? ` (${ownersText(group, names)})` : ''}`));
   }
   const entered = events.filter(e => e.type === 'entered' && (skip === undefined || e.sourceId !== skip));
   if (entered.length) parts.push(enteredText(entered, names, true));
@@ -173,7 +173,7 @@ export function effectParts(events: readonly PresentationEvent[], names: History
   }
   for (const actor of new Set(events.filter(e => e.type === 'discard').map(e => e.actor))) {
     const discarded = events.filter(e => e.type === 'discard' && e.actor === actor);
-    parts.push(`${names.player(actor)} descartou ${discarded.length === 1 ? names.card(discarded[0]) ?? cards(1) : cards(discarded.length)}`);
+    parts.push(`${names.player(actor)} descartou ${discarded.length === 1 ? names.card(discarded[0]!) ?? cards(1) : cards(discarded.length)}`);
   }
   // A vida perdida pelo dano já está dita no dano.
   const damaged = new Set(damage.flatMap(e => e.targets?.players ?? []));
@@ -185,15 +185,17 @@ export function effectParts(events: readonly PresentationEvent[], names: History
   return parts;
 }
 function enteredText(entered: readonly PresentationEvent[], names: HistoryNames, byEffect = false) {
+  const [first] = entered;
+  if (!first) return '';
   // Fichas criadas pela mágica ou pelo gatilho: "criou 8 fichas de Rabbit".
   if (byEffect && entered.every(e => e.card?.token && !e.from)) {
-    const n = entered.length, same = entered.every(e => cardKey(e) && cardKey(e) === cardKey(entered[0])), name = names.card(entered[0]);
+    const n = entered.length, same = entered.every(e => cardKey(e) && cardKey(e) === cardKey(first)), name = names.card(first);
     if (same && name) return n === 1 ? `criou uma ficha de ${name}` : `criou ${n} fichas de ${name}`;
     return n === 1 ? 'criou uma ficha' : `criou ${n} fichas`;
   }
-  if (entered.length === 1) return `${names.card(entered[0]) ?? 'uma permanente'} entrou no campo`;
-  const same = entered.every(e => cardKey(e) && cardKey(e) === cardKey(entered[0]));
-  return same ? `${entered.length} × ${names.card(entered[0])} entraram no campo` : `${permanents(entered.length)} entraram no campo`;
+  if (entered.length === 1) return `${names.card(first) ?? 'uma permanente'} entrou no campo`;
+  const same = entered.every(e => cardKey(e) && cardKey(e) === cardKey(first));
+  return same ? `${entered.length} × ${names.card(first)} entraram no campo` : `${permanents(entered.length)} entraram no campo`;
 }
 
 /** O que mostrar ao abrir a linha: cada evento com a sua frase, menos a vida que só repete o dano. */
@@ -234,12 +236,13 @@ function blocks(head: PresentationEvent, names: HistoryNames): HistoryItem[] {
   }));
 }
 
-function runLine(parts: Unit[], names: HistoryNames): { text: string; children: HistoryItem[] } {
+function runLine(parts: [Unit, ...Unit[]], names: HistoryNames): { text: string; children: HistoryItem[] } {
+  const first = parts[0].head;
   const key = mergeKey(parts[0])!;
   const heads = parts.map(p => p.head);
   const n = parts.length;
   if (key.startsWith('trigger:')) {
-    const name = names.card(heads[0]) ?? 'uma carta';
+    const name = names.card(first) ?? 'uma carta';
     // O gatilho que entrou na pilha e a resolução dele, quando estão separados, são um gatilho só.
     const count = new Set(heads.map(e => e.stackId ?? e.seq)).size;
     const effects = parts.flatMap(p => p.effects);
@@ -270,12 +273,12 @@ function runLine(parts: Unit[], names: HistoryNames): { text: string; children: 
     return { text: `${n} cartas ${what[key.slice(5)] ?? 'saíram do campo'}: ${list}.`, children };
   }
   if (key === 'entered') return { text: `${enteredText(heads, names).replace(/^./, c => c.toUpperCase())}.`, children };
-  if (key.startsWith('discard:')) return { text: `${names.player(heads[0].actor)} descartou ${n} cartas: ${listNames(heads.map(e => names.card(e) ?? 'uma carta'))}.`, children };
+  if (key.startsWith('discard:')) return { text: `${names.player(first.actor)} descartou ${n} cartas: ${listNames(heads.map(e => names.card(e) ?? 'uma carta'))}.`, children };
   if (key.startsWith('life:')) {
     const delta = heads.reduce((sum, e) => sum + (e.delta ?? 0), 0);
-    return { text: `${names.player(heads[0].actor)}: ${delta > 0 ? '+' : ''}${delta} de vida.`, children };
+    return { text: `${names.player(first.actor)}: ${delta > 0 ? '+' : ''}${delta} de vida.`, children };
   }
-  return { text: names.describe(heads[0]), children };
+  return { text: names.describe(first), children };
 }
 
 /** Quantas jogadas o turno teve, para o cabeçalho de um turno recolhido. */

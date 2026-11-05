@@ -43,7 +43,8 @@ export function createRemovalQueue(root: HTMLElement, d: RemovalDeps) {
     }
     removalSeq = last;
     // Muitas seguidas: ficam as mais recentes; o histórico guarda todas.
-    if (removalQueue.length > REMOVAL_QUEUE_LIMIT) removalQueue = [removalQueue[0], ...removalQueue.slice(-(REMOVAL_QUEUE_LIMIT - 1))];
+    const [oldest] = removalQueue;
+    if (oldest && removalQueue.length > REMOVAL_QUEUE_LIMIT) removalQueue = [oldest, ...removalQueue.slice(-(REMOVAL_QUEUE_LIMIT - 1))];
   }
   /** A janela abre quando a mesa termina de mostrar a jogada, e espera qualquer escolha ou outra janela fechar. */
   function sync(s: FState) {

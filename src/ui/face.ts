@@ -83,6 +83,6 @@ function arenaFaceHTML(f: FaceInfo) {
 export function colorFromCost(manaCost: string, land: boolean): string {
   const cols = new Set((manaCost.match(/[WUBRG]/g) ?? []));
   if (cols.size > 1) return 'M';
-  if (cols.size === 1) return [...cols][0];
+  if (cols.size === 1) return [...cols][0]!;
   return land ? 'L' : 'C';
 }

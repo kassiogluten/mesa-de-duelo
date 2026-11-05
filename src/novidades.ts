@@ -17,7 +17,7 @@ const slug = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCa
 const GROUP_CLASS: Record<string, string> = { Novo: 'new', Mudou: 'changed', Corrigido: 'fixed' };
 
 const PAGE = 5;
-const releases = RELEASES.map(r => ({ ...r, items: r.items.filter(i => VISUALS[r.version]?.[i.title]?.length) })).filter(r => r.items.length);
+const releases = RELEASES.map(r => ({ ...r, items: r.items.flatMap(i => { const shots = VISUALS[r.version]?.[i.title]; return shots?.length ? [{ ...i, shots }] : []; }) })).filter(r => r.items.length);
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -37,7 +37,7 @@ app.innerHTML = `
           <h3>${esc(i.title)}</h3>
           <p>${inline(i.text)}</p>
         </div>
-        <div class="vis-shots">${VISUALS[r.version][i.title].map(s => `<figure>
+        <div class="vis-shots">${i.shots.map(s => `<figure>
           <button type="button" class="vis-zoom" aria-label="Ampliar: ${esc(s.legenda)}"><img src="/novidades/${esc(s.img)}" alt="${esc(s.legenda)}" loading="lazy"></button>
           <figcaption>${inline(s.legenda)}</figcaption>
         </figure>`).join('')}</div>

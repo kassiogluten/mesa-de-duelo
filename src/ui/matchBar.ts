@@ -25,7 +25,8 @@ export function matchChips(s: FState): MatchChip[] {
   if (series) chips.push({ kind: 'series', text: series, label: `Jogo ${s.match!.gameNumber} da melhor de três, placar ${s.match!.wins.join(' × ')}` });
   const me = s.room?.seat;
   const away = (s.room?.players ?? []).filter((p, i) => !p.connected && !p.eliminated && (p.seat ?? i) !== me);
-  if (away.length === 1) chips.push({ kind: 'offline', text: `${away[0].name} desconectado`, label: `${away[0].name} está desconectado` });
+  const [only] = away;
+  if (only && away.length === 1) chips.push({ kind: 'offline', text: `${only.name} desconectado`, label: `${only.name} está desconectado` });
   else if (away.length > 1) chips.push({ kind: 'offline', text: `${away.length} desconectados`, label: `${away.map(p => p.name).join(', ')} estão desconectados` });
   return chips;
 }

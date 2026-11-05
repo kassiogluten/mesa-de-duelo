@@ -52,7 +52,7 @@ function spokenSymbol(sym: string, n: number): string {
   const plural = n !== 1 ? 1 : 0;
   if (/^\d+$/.test(sym)) return `${sym} ${Number(sym) === 1 ? 'genérica' : 'genéricas'}`;
   if (sym === 'X') return 'X';
-  const [a, b] = sym.split('/');
+  const [a = '', b] = sym.split('/');
   const color = (c: string) => SPOKEN[c]?.[plural] ?? c;
   if (b === 'P') return `${n} ${color(a)} ${plural ? 'phyrexianas' : 'phyrexiana'}`;
   if (b) return `${n} ${/^\d+$/.test(a) ? `de ${a} genéricas` : color(a)} ou ${color(b)}`;
@@ -64,7 +64,7 @@ export function spokenMana(text: string): string {
     const counts = new Map<string, number>();
     for (const m of run.match(/\{[A-Z0-9/]+\}/g)!) { const sym = m.slice(1, -1); counts.set(sym, (counts.get(sym) ?? 0) + 1); }
     const parts = [...counts].map(([sym, n]) => /^\d+$/.test(sym) ? spokenSymbol(String(Number(sym) * n), 0) : spokenSymbol(sym, n));
-    return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1]}` : parts[0];
+    return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1]}` : parts[0] ?? run;
   });
 }
 
@@ -101,7 +101,7 @@ function parseTargetRequest(message: string) {
   const upTo = !!m[1];
   const raw = (m[2] ?? '').toLowerCase();
   const count = raw === 'a' || raw === 'an' || raw === '' ? 1 : COUNTS[raw] ?? Number(raw);
-  const kind = /^any/i.test(m[3]) || !m[4] ? '' : targetKind(m[4]);
+  const kind = /^any/i.test(m[3]!) || !m[4] ? '' : targetKind(m[4]);
   return { count, upTo, kind };
 }
 
@@ -166,7 +166,7 @@ export function validTargetKind(valid: readonly string[] | undefined, zones: rea
   if (valid.some(v => v.toLowerCase() === 'any')) return null;
   const kinds: string[] = [];
   for (const entry of valid) {
-    const [base, ...rest] = entry.split('.');
+    const [base = '', ...rest] = entry.split('.');
     const props = rest.join('.').split('+').map(p => p.toLowerCase());
     // "Card.Creature": a carta pelo tipo dela (fora do campo, como no cemitério).
     const typed = base.toLowerCase() === 'card' ? props.find(p => VALID[p] && p !== 'card') : undefined;
@@ -177,7 +177,7 @@ export function validTargetKind(valid: readonly string[] | undefined, zones: rea
     if (!kinds.includes(text)) kinds.push(text);
   }
   const where = zones.map(z => ZONE_NAMES[z]).filter(Boolean);
-  const list = kinds.length > 1 ? `${kinds.slice(0, -1).join(', ')} ou ${kinds[kinds.length - 1]}` : kinds[0];
+  const list = kinds.length > 1 ? `${kinds.slice(0, -1).join(', ')} ou ${kinds[kinds.length - 1]}` : kinds[0] ?? null;
   return where.length ? `${list} ${where.join(' ou ')}` : list;
 }
 

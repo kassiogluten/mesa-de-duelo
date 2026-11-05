@@ -35,7 +35,7 @@ export function manaTone(c: FCard | undefined) {
   if (!tones.length && !c.land) {
     const pips = new Set((c.manaCost ?? '').match(/[WUBRG]/g) ?? []);
     const byPip: Record<string, string> = { W: '#f4ecc2', U: '#5cb3ff', B: '#b48ad1', R: '#ff7150', G: '#58c878' };
-    tones.push(...[...pips].map(p => byPip[p]));
+    tones.push(...[...pips].flatMap(p => { const tone = byPip[p]; return tone ? [tone] : []; }));
   }
   return tones.length === 1 ? tones[0] : tones.length > 1 ? '#f2b54c' : '#dadada';
 }

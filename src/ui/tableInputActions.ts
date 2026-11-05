@@ -49,7 +49,7 @@ export function createInputActions(d: InputActionDeps) {
         attack.clear();
         if (!targets.length) { d.announce('Nenhuma criatura pode atacar um defensor permitido.'); return; }
         attack.allGen = gen;
-        if (targets.length === 1) attack.choose(s, targets[0], gen);
+        if (targets.length === 1) attack.choose(s, targets[0]!, gen);
         else { d.stopPresentation(); hideCardPreview(true); d.renderTable(); }
         return;
       }

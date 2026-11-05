@@ -2,13 +2,14 @@ import type { ScryCard } from '../scryfall';
 import './cardFlip.css';
 
 /** Como a carta mostra o outro lado: outra imagem (dupla face, transformar, modal) ou a mesma de cabeça para baixo (flip). */
-export interface CardSides { kind: 'dfc' | 'flip'; images: string[] }
+export type CardSides = { kind: 'dfc'; images: [string, string] } | { kind: 'flip'; images: [string] };
 
 /** As faces da carta que dá para virar; null para as de uma face só. Cada face usa a imagem em português quando tem. */
 export function cardSides(sc?: ScryCard | null): CardSides | null {
   if (!sc) return null;
   const images = [0, 1].map(i => sc.pt?.faceImages?.[i]?.normal ?? sc.faceImages?.[i]?.normal).filter((u): u is string => !!u);
-  if (images.length === 2) return { kind: 'dfc', images };
+  const [front, back] = images;
+  if (front && back) return { kind: 'dfc', images: [front, back] };
   const image = sc.pt?.image_uris?.normal ?? sc.image_uris?.normal;
   return sc.layout === 'flip' && image ? { kind: 'flip', images: [image] } : null;
 }

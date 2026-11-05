@@ -39,14 +39,14 @@ export function nameMatches(q: FQuestion, query: string, translated: (name: stri
   const wanted = normalize(query);
   if (!wanted) return { indices: [], total: 0, all: opts.length };
   const keys = keysFor(q, translated);
-  const found: { i: number; rank: number }[] = [];
+  const found: { i: number; rank: number; text: string }[] = [];
   keys.forEach((key, i) => {
-    const at = key.indexOf(wanted);
-    if (at < 0) return;
+    const at = key.indexOf(wanted), o = opts[i];
+    if (at < 0 || o === undefined) return;
     const rank = at === 0 || key.includes(`\u0000${wanted}`) ? 0 : key.includes(` ${wanted}`) ? 1 : 2;
-    found.push({ i, rank });
+    found.push({ i, rank, text: optionText(o) });
   });
-  found.sort((a, b) => a.rank - b.rank || optionText(opts[a.i]).localeCompare(optionText(opts[b.i]), 'pt-BR'));
+  found.sort((a, b) => a.rank - b.rank || a.text.localeCompare(b.text, 'pt-BR'));
   return { indices: found.slice(0, limit).map(f => f.i), total: found.length, all: opts.length };
 }
 
@@ -61,7 +61,9 @@ export function nameStatus(m: NameMatches, query: string) {
 export function nameListHTML(q: FQuestion, m: NameMatches, translated: (name: string) => string | undefined = () => undefined) {
   const opts = q.options ?? [];
   return m.indices.map(i => {
-    const name = optionText(opts[i]);
+    const o = opts[i];
+    if (o === undefined) return '';
+    const name = optionText(o);
     const pt = translated(name);
     return `<li><button type="button" class="q-name" data-q-opt="${i}"><strong>${esc(name)}</strong>${pt && pt !== name ? `<small>${esc(pt)}</small>` : ''}</button></li>`;
   }).join('');

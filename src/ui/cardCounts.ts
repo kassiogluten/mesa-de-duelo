@@ -54,7 +54,7 @@ function noun(type: string, onField: boolean): [string, Gender] {
 function qualified(count: FCount): [string, Gender] {
   const onField = count.zone === 'battlefield';
   const nouns = (count.types?.length ? count.types : ['Card']).map(t => noun(t, onField));
-  const gender = nouns[0][1];
+  const gender = nouns[0]![1]; // nouns tem ao menos o 'Card'
   const q = count.qualities ?? [];
   const before = q.includes('other') ? (gender === 'f' ? 'outras ' : 'outros ') : '';
   const after: string[] = [];
@@ -66,7 +66,7 @@ function qualified(count: FCount): [string, Gender] {
     else if (quality === 'nontoken') after.push('que não são fichas');
     else {
       const m = quality.match(/^(power|toughness|cmc)(GE|LE|GT|LT|EQ)(\d+)$/);
-      if (m) after.push(`com ${NUMBER_WORD[m[1]]} ${NUMBER_CMP[m[2]](m[3])}`);
+      if (m) { const [, what = '', cmp = '', n = ''] = m; after.push(`com ${NUMBER_WORD[what]} ${NUMBER_CMP[cmp]?.(n)}`); }
     }
   }
   return [`${before}${list(nouns.map(n => n[0]), 'ou')}${after.length ? ` ${after.join(' ')}` : ''}`, gender];

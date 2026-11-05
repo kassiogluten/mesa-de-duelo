@@ -86,8 +86,8 @@ export function attachTableClicks(d: ClickDeps) {
     if (runUi(tables.view, ui, t, e)) return;
     if (!t.closest('#fMenu') && ui !== 'menu') d.setMenu(false);
     if (runUi(tables.panel, ui, t, e)) return;
-    if (t.id === 'fStackGallery') { tables.panel['stack-close'](t, e, 'stack-close'); return; }
-    if (t.id === 'fSettings') { tables.panel['settings-close'](t, e, 'settings-close'); return; }
+    if (t.id === 'fStackGallery') { runUi(tables.panel, 'stack-close', t, e); return; }
+    if (t.id === 'fSettings') { runUi(tables.panel, 'settings-close', t, e); return; }
     if (d.overlay.click(t)) return;
     const logToggle = t.closest<HTMLElement>('[data-log-toggle]');
     if (logToggle) {
@@ -116,7 +116,7 @@ export function attachTableClicks(d: ClickDeps) {
     const renderedQuestion = t.closest<HTMLElement>('[data-qid]');
     if (renderedQuestion && Number(renderedQuestion.dataset.qid) !== state?.question?.id) return;
     if (runUi(tables.action, ui, t, e)) return;
-    if (t.id === 'fZone') { tables.action['zone-close'](t, e, 'zone-close'); return; }
+    if (t.id === 'fZone') { runUi(tables.action, 'zone-close', t, e); return; }
     const ctr = t.closest<HTMLElement>('[data-ctr]')?.dataset.ctr ?? null;
     const openCounter = seats.openCounter();
     if (ctr || openCounter) {

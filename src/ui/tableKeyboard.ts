@@ -107,6 +107,7 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     if (zoneTab && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && state) {
       const tabs = [...root.querySelectorAll<HTMLElement>('#fZone .zone-tab')];
       const next = tabs[(tabs.indexOf(zoneTab) + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      if (!next) return;
       e.preventDefault(); d.switchZonePlayer(+next.dataset.gy!);
       root.querySelector<HTMLElement>(`#fZone .zone-tab[data-gy="${d.match().zoneOf}"]`)?.focus();
       return;
@@ -133,8 +134,8 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     if (e.key === 'Tab' && currentModal) {
       const focusable = [...currentModal.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select,[tabindex="0"]')].filter(el => !el.closest('[hidden]'));
       const first = focusable[0], last = focusable[focusable.length - 1];
-      if (first && e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (last && !e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      if (first && last && e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (first && last && !e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
     if (e.repeat) return;
     const el = target.closest<HTMLElement>('[data-mana],[data-ctr],[data-fid],[data-pid],[data-gy],[data-peek]');

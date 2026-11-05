@@ -41,8 +41,7 @@ export function removalCause(history: readonly PresentationEvent[], index: numbe
     return { stackId: event.stackId, card: item?.source ?? cast?.card, name: event.sourceName, controller: item?.controller ?? cast?.actor };
   }
   const id = cardId(event);
-  for (let i = index - 1; i >= 0; i--) {
-    const before = history[i];
+  for (const before of history.slice(0, index).reverse()) {
     if (before.type === 'damage' && before.combat && id !== undefined && before.targets?.cards?.includes(id)) return null;
     if (before.type === 'resolved' && before.stackId !== undefined) return { stackId: before.stackId, card: before.card, controller: before.actor };
     if (!AFTERMATH.has(before.type)) return null;
@@ -51,8 +50,8 @@ export function removalCause(history: readonly PresentationEvent[], index: numbe
 }
 
 /** Blink: a carta volta do exílio logo em seguida, então ela não foi removida. */
-function returned(history: readonly PresentationEvent[], index: number) {
-  const event = history[index], id = cardId(event);
+function returned(history: readonly PresentationEvent[], event: PresentationEvent, index: number) {
+  const id = cardId(event);
   if (event.to !== 'Exile' || id === undefined) return false;
   return history.slice(index + 1, index + 30).some(e => e.type === 'entered' && e.from === 'Exile' && cardId(e) === id);
 }
@@ -61,7 +60,7 @@ function returned(history: readonly PresentationEvent[], index: number) {
 export function removalNotices(history: readonly PresentationEvent[], afterSeq: number, you: number | undefined): RemovalNotice[] {
   const notices = new Map<number, RemovalNotice>();
   history.forEach((event, index) => {
-    if (event.seq <= afterSeq || event.type !== 'left' || returned(history, index)) return;
+    if (event.seq <= afterSeq || event.type !== 'left' || returned(history, event, index)) return;
     const cause = removalCause(history, index);
     if (!cause || cause.controller === undefined || cause.controller === you) return;
     const notice = notices.get(cause.stackId);

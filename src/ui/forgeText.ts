@@ -13,7 +13,7 @@ const MERGED: Record<string, Record<'m' | 'f', string>> = {
 };
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const gender = (z: string) => ZONES[z.toLowerCase().replace(/\s+/g, ' ')] ?? 'm';
-const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1);
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** `names`: nomes dos jogadores da partida, para reconhecer nomes com mais de uma palavra ("IA vermelho's mão"). */
 export function fixPossessives(text: string, names: readonly string[] = []): string {
@@ -25,9 +25,10 @@ export function fixPossessives(text: string, names: readonly string[] = []): str
   return text.replace(pattern, (_match, prep: string | undefined, who: string, zone: string, offset: number) => {
     const g = gender(zone), you = who.toLowerCase() === 'você';
     const object = you ? `${g === 'f' ? 'sua' : 'seu'} ${zone}` : `${zone} de ${who}`;
-    let out = prep ? `${MERGED[prep.toLowerCase()][g]} ${object}` : you ? object : `${g === 'f' ? 'a' : 'o'} ${object}`;
+    let out = prep ? `${MERGED[prep.toLowerCase()]?.[g]} ${object}` : you ? object : `${g === 'f' ? 'a' : 'o'} ${object}`;
     // Mantém a maiúscula de começo de frase.
-    if ((prep ?? who)[0] === (prep ?? who)[0].toUpperCase() && (offset === 0 || /[.!?]\s*$/.test(text.slice(0, offset)))) out = capitalize(out);
+    const lead = (prep ?? who).charAt(0);
+    if (lead === lead.toUpperCase() && (offset === 0 || /[.!?]\s*$/.test(text.slice(0, offset)))) out = capitalize(out);
     return out;
   });
 }

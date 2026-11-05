@@ -50,10 +50,11 @@ export function turnBannerText(state: HudState) {
 /** Turnos extras que vêm depois deste, para a dica e os leitores de tela. */
 export function upcomingTurnsText(state: HudState) {
   const queue = state.extraTurns ?? [];
-  if (!queue.length) return '';
+  const [next] = queue;
+  if (next === undefined) return '';
   const who = (id: number) => yours(state, id) ? 'seu' : byName(state) ? `de ${state.players.find(p => p.id === id)?.name ?? 'outro jogador'}` : 'do oponente';
-  const first = who(queue[0]);
-  return queue.length === 1 ? `Depois: turno extra ${first}` : queue.every(id => id === queue[0]) ? `Depois: ${queue.length} turnos extras ${first}` : `Depois: ${queue.length} turnos extras, o próximo ${first}`;
+  const first = who(next);
+  return queue.length === 1 ? `Depois: turno extra ${first}` : queue.every(id => id === next) ? `Depois: ${queue.length} turnos extras ${first}` : `Depois: ${queue.length} turnos extras, o próximo ${first}`;
 }
 
 /** Nome do combate atual e quantos ainda vêm neste turno. */

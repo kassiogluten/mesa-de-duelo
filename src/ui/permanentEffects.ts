@@ -55,7 +55,7 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   const seals: PermanentFx['seals'] = [];
   if (has('WARD')) seals.push({ kind: 'ward', html: `Ward ${c.ward?.startsWith('{') ? manaHTML(c.ward) : esc(c.ward ?? '')}`, label: `Proteção contra alvos${c.ward ? `: ${c.ward}` : ''}` });
   if (c.protection?.length) {
-    const pips = c.protection.filter(p => COLOR_PIP[p]).map(p => pip(COLOR_PIP[p])).join('');
+    const pips = c.protection.flatMap(p => { const sym = COLOR_PIP[p]; return sym ? [pip(sym)] : []; }).join('');
     const words = c.protection.filter(p => !COLOR_PIP[p]).map(protectionLabel).join(', ');
     seals.push({ kind: 'protection', html: `Prot. ${pips}${words ? `${pips ? ' ' : ''}${esc(words)}` : ''}`, label: `Proteção contra ${c.protection.map(protectionLabel).join(', ')}` });
   }
@@ -135,7 +135,7 @@ export function permanentStatus(c: FCard, playerName: (id: number) => string = i
     const colors = ch.colors ?? [];
     if (ch.types?.length) { shown.push(esc(ch.types.join(' / '))); said.push(`tipo ${ch.types.join(' e ')}`); }
     if (colors.length) { shown.push(colors.map(k => COLOR_PIP[k] ? pip(COLOR_PIP[k]) : esc(protectionLabel(k))).join('')); said.push(`${colors.length > 1 ? 'cores' : 'cor'} ${list(colors.map(protectionLabel))}`); }
-    if (ch.names?.length) { shown.push(esc(ch.names[0])); said.push(`${ch.names.length > 1 ? 'cartas nomeadas' : 'carta nomeada'} ${list(ch.names)}`); }
+    if (ch.names?.length) { shown.push(esc(ch.names[0]!)); said.push(`${ch.names.length > 1 ? 'cartas nomeadas' : 'carta nomeada'} ${list(ch.names)}`); }
     if (ch.player !== undefined) { shown.push(esc(playerName(ch.player))); said.push(`jogador ${playerName(ch.player)}`); }
     if (ch.number) { shown.push(esc(ch.number)); said.push(`número ${ch.number}`); }
     if (ch.mode) { shown.push(esc(ch.mode)); said.push(`modo ${ch.mode}`); }

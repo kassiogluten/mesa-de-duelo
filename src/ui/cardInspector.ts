@@ -104,6 +104,7 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
   el.querySelector('[data-ci-pin]')?.addEventListener('click', () => inspectCard(card, origin));
   el.querySelectorAll<HTMLElement>('[data-ci-merged]').forEach(b => b.addEventListener('click', () => {
     const m = card.merged![Number(b.dataset.ciMerged)];
+    if (!m) return;
     inspectCard({ name: m.name, image: m.image }, origin);
   }));
   el.querySelector('[data-ci-close]')?.addEventListener('click', () => modal?.close());

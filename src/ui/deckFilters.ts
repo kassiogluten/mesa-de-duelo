@@ -46,7 +46,7 @@ export function toggleColor(selected: Set<ColorFilter>, color: ColorFilter) {
 /** Botões de cor (cada um liga e desliga) e "Limpar". `attr` identifica os botões na tela que os usa. */
 export function colorFilterHTML(selected: ReadonlySet<ColorFilter>, attr: string) {
   return `<div class="color-filter" role="group" aria-label="Filtrar por cor">
-    ${FILTER_COLORS.map(c => `<button type="button" class="color-filter-btn" ${attr}="${c}" aria-pressed="${selected.has(c)}" aria-label="${c === 'C' ? 'Só decks incolores' : `Decks com ${COLOR_NAME[c]}`}" title="${c === 'C' ? 'Incolor' : COLOR_NAME[c][0].toUpperCase() + COLOR_NAME[c].slice(1)}">${pip(c)}</button>`).join('')}
+    ${FILTER_COLORS.map(c => `<button type="button" class="color-filter-btn" ${attr}="${c}" aria-pressed="${selected.has(c)}" aria-label="${c === 'C' ? 'Só decks incolores' : `Decks com ${COLOR_NAME[c]}`}" title="${c === 'C' ? 'Incolor' : COLOR_NAME[c].charAt(0).toUpperCase() + COLOR_NAME[c].slice(1)}">${pip(c)}</button>`).join('')}
     ${selected.size ? `<button type="button" class="color-filter-clear" ${attr}="clear">Limpar cores</button>` : ''}
   </div>`;
 }

@@ -113,7 +113,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   const attackers = s.combat.map((x, i) => (x.defenderKind !== 'player' && x.defender === c.id ? i + 1 : 0)).filter(Boolean);
   if (attackers.length) slot.push('attacked');
   let tag = '';
-  if (ci.attack) tag = `<span class="tag atk">${ICON_SWORD}${ci.attack}${target ? ` ▸ ${esc(label(target).split(',')[0])}` : defendingPlayer && s.players.length > 2 ? ` ▸ ${esc(defendingPlayer.name)}` : ''}</span>`;
+  if (ci.attack) tag = `<span class="tag atk">${ICON_SWORD}${ci.attack}${target ? ` ▸ ${esc(label(target).split(',')[0]!)}` : defendingPlayer && s.players.length > 2 ? ` ▸ ${esc(defendingPlayer.name)}` : ''}</span>`;
   else if (ci.block) tag = `<span class="tag blk">${ICON_SHIELD}${ci.block}</span>`;
   else if (attackers.length) tag = `<span class="tag atk">Atacado ${ICON_SWORD}${attackers.join(',')}</span>`;
   else if (untappable) tag = '<span class="tag untap" title="A mana ainda não foi gasta: toque para desvirar e devolver a mana" aria-hidden="true">↺</span>';
@@ -130,7 +130,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   const counters = shown.length
     ? `<span class="counters">${shown.map(([k, n]) => chip(v, 'ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${n}`, n)).join('')}</span>` : '';
   const kws = c.creature ? keywordsOf(c) : [];
-  const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip(v, 'ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k])).join('')}</span>` : '';
+  const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip(v, 'ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k] ?? k)).join('')}</span>` : '';
   // Selo único que substitui marcadores e palavras-chave quando eles não cabem na carta (layoutCounters); toca e abre o inspetor.
   const sumText = [shown.length ? `Marcadores: ${shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', ')}.` : '', kws.length ? `Habilidades: ${kws.map(k => KEYWORD_LABEL[k]).join(', ')}.` : ''].filter(Boolean).join(' ');
   const sumHTML = shown.length + kws.length > 1 && !c.faceDown && c.name
@@ -205,9 +205,11 @@ export function stacks(v: BoardView, s: FState, cards: FCard[], tappedPile = fal
     groups.set(k, [...(groups.get(k) ?? []), c]);
   }
   return [...groups.values()].map(cs => {
-    const mixed = cs.some(c => c.name !== cs[0].name);
+    const [first] = cs;
+    if (!first) return '';
+    const mixed = cs.some(c => c.name !== first.name);
     return `<div class="stack" style="--n:${cs.length}">${cs.map(c => bfCard(v, s, c, atts.get(c.id))).join('')}${
-      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="${mixed ? 'Terrenos virados' : 'Cartas do grupo'}" aria-label="${mixed ? `Ver ${cs.length} terrenos virados` : `Ver ${cs.length} cópias de ${esc(label(cs[0]))}`}">×${cs.length}</button>` : ''}</div>`;
+      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="${mixed ? 'Terrenos virados' : 'Cartas do grupo'}" aria-label="${mixed ? `Ver ${cs.length} terrenos virados` : `Ver ${cs.length} cópias de ${esc(label(first))}`}">×${cs.length}</button>` : ''}</div>`;
   }).join('');
 }
 export function backRow(v: BoardView, s: FState, p: FPlayer) {

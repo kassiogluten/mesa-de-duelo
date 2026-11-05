@@ -55,7 +55,7 @@ export function mergeRemote(local: Prefs, synced: Prefs, remote: Prefs): PrefsMe
 export function firstPrefs(local: Prefs, remote: Prefs, nickname: string | undefined): PrefsMerge {
   const apply: Prefs = {}, synced: Prefs = {};
   for (const key of SYNCED_PREFS) {
-    if (key in remote) { synced[key] = remote[key]; if ((local[key] ?? null) !== remote[key]) apply[key] = remote[key]; }
+    if (key in remote) { const value = remote[key] ?? null; synced[key] = value; if ((local[key] ?? null) !== value) apply[key] = value; }
     else synced[key] = null;
   }
   const name = (key: string) => ((key in apply ? apply[key] : local[key]) ?? '').trim();

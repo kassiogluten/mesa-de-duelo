@@ -11,7 +11,7 @@ export function walkerTone(card: Pick<FCard, 'manaCost'> | undefined) {
   const colors = new Set((card?.manaCost ?? '').toUpperCase().match(/[WUBRG]/g) ?? []);
   if (colors.size > 1) return GOLD;
   const [only] = colors;
-  return only ? MANA_TONE[only] : SILVER;
+  return only ? MANA_TONE[only] ?? SILVER : SILVER;
 }
 
 /** Planeswalker chegando ao campo (não a volta do blink, que já tem o anel de luz). */

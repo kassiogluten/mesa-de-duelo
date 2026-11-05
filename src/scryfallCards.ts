@@ -54,7 +54,7 @@ export function withBasicArt(c: ScryCard): ScryCard {
 }
 
 /** O /cards/collection não acha "Frente // Verso" (nem cartas divididas como "Fire // Ice"), só o nome da frente. */
-export const lookupName = (name: string) => name.split(' // ')[0];
+export const lookupName = (name: string) => name.split(' // ')[0]!;
 const noScan = (c: any) => c.image_status === 'placeholder' || c.image_status === 'missing';
 
 /** Nome, tipo, texto e imagem de uma impressão em português (cartas de duas faces juntam as faces). */

@@ -18,8 +18,9 @@ export const INITIATIVE_HINT = 'Dianteira: quem a toma, e quem a tem no começo 
 export function roomDepths(dungeon: FDungeon) {
   const depth = new Map<string, number>();
   const rooms = dungeon.rooms;
-  if (!rooms.length) return depth;
-  depth.set(rooms[0].name, 0);
+  const [entrance] = rooms;
+  if (!entrance) return depth;
+  depth.set(entrance.name, 0);
   // As salas vêm em ordem de caminho no card; repetir garante o maior caminho mesmo fora de ordem.
   for (let pass = 0; pass < rooms.length; pass++) {
     let changed = false;
@@ -43,7 +44,7 @@ export function dungeonProgress(dungeon: FDungeon) {
 
 /** Salas para onde a próxima aventura leva: a entrada quando ainda não entrou, ou as saídas da sala atual. */
 export function nextRooms(dungeon: FDungeon) {
-  if (dungeon.room === undefined) return dungeon.rooms.length ? [dungeon.rooms[0].name] : [];
+  if (dungeon.room === undefined) { const [entrance] = dungeon.rooms; return entrance ? [entrance.name] : []; }
   return dungeon.rooms.find(r => r.name === dungeon.room)?.next ?? [];
 }
 

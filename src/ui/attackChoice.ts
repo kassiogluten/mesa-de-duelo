@@ -185,7 +185,7 @@ export function createAttackChoice(root: HTMLElement, d: AttackDeps) {
         if (targets.some(target => target.id === a.pinned!.id && target.kind === a.pinned!.kind)) { a.queue.enqueue([id], a.pinned); flushAttacks(s); }
         else refuseAttack(s, id, a.pinned);
       } else if (!a.selected.size && targets.length === 1 && !a.pinned) {
-        a.queue.enqueue([id], assigned ? null : targets[0]); flushAttacks(s);
+        a.queue.enqueue([id], assigned ? null : targets[0]!); flushAttacks(s); // targets.length === 1
       } else { a.selected.add(id); a.selectionGen = gen; }
     }
     hideCardPreview(true); d.render();

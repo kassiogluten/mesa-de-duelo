@@ -42,7 +42,7 @@ export function shuffle<T>(items: T[], rng: Rng = Math.random): T[] {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
+    [out[i], out[j]] = [out[j]!, out[i]!]; // 0 <= j <= i < length
   }
   return out;
 }
@@ -66,8 +66,8 @@ export function newSandbox(deck: DeckData, format: DeckFormat, rng: Rng = Math.r
 
 export function locate(s: Sandbox, id: number): { zone: Zone; index: number; card: SCard } | null {
   for (const zone of ZONES) {
-    const index = s.zones[zone].findIndex(c => c.id === id);
-    if (index >= 0) return { zone, index, card: s.zones[zone][index] };
+    const index = s.zones[zone].findIndex(c => c.id === id), card = s.zones[zone][index];
+    if (card) return { zone, index, card };
   }
   return null;
 }

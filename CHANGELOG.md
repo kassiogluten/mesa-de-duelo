@@ -8,7 +8,7 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
-## [0.126.1] - 2026-11-05
+## [0.126.1] - 2026-11-04
 
 ### Corrigido
 

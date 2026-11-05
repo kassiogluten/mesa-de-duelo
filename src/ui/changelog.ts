@@ -26,7 +26,7 @@ export function parse(md: string): Release[] {
     const head = /^## \[(.+?)\](?:\s*-\s*(\d{4})-(\d{2})-(\d{2}))?/.exec(line);
     if (head) {
       close();
-      cur = { version: head[1], date: head[2] ? `${head[4]}/${head[3]}/${head[2]}` : '', html: '', items: [] };
+      cur = { version: head[1]!, date: head[2] ? `${head[4]}/${head[3]}/${head[2]}` : '', html: '', items: [] };
       group = '';
       out.push(cur);
       continue;
@@ -37,7 +37,7 @@ export function parse(md: string): Release[] {
       if (!list) { cur.html += '<ul>'; list = true; }
       cur.html += `<li>${inline(line.slice(2))}</li>`;
       const item = /^\*\*(.+?)\.?\*\*\s*(.*)$/.exec(line.slice(2));
-      if (item) cur.items.push({ group, title: item[1], text: item[2] });
+      if (item) cur.items.push({ group, title: item[1]!, text: item[2]! });
       continue;
     }
     close();

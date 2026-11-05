@@ -28,11 +28,11 @@ export const bracketLabel = (b: Bracket) => `Bracket ${b}`;
 
 const key = (name: string) => name.trim().toLowerCase();
 /** Nome inteiro e nome da face da frente: a lista guarda "Boom // Bust", o deck pode ter só "Boom". */
-const faces = (name: string) => [key(name), key(name.split(' // ')[0])];
+const faces = (name: string) => [key(name), key(name.split(' // ')[0]!)];
 const listIndex = (names: string[]) => new Map(names.flatMap(name => faces(name).map(k => [k, name] as const)));
 const GAME_CHANGERS = listIndex(lists.gameChangers), LAND_DENIAL = listIndex(lists.massLandDenial);
 const EXTRA_TURNS = listIndex(lists.extraTurns), TUTORS = listIndex(lists.tutors);
-const COMBOS = lists.combos.filter(c => COMBO_MIN[c.tag]).map(c => ({ cards: c.cards, min: COMBO_MIN[c.tag] }));
+const COMBOS = lists.combos.flatMap(c => { const min = COMBO_MIN[c.tag]; return min ? [{ cards: c.cards, min }] : []; });
 
 export interface BracketReason { min: Bracket; text: string }
 /** min: a faixa mais baixa que as cartas permitem; reasons: o porquê, da que mais pesa para a que só informa. */

@@ -90,7 +90,7 @@ export function createAbilityMotion(kit: MotionKit) {
         { translate: '0 0', scale: '1', filter: 'none' }], Math.max(600, options.duration), 'cubic-bezier(.3,.7,.4,1)');
       // Um aviso por carta, e poucos de uma vez: vários gatilhos seguidos não viram uma pilha de balões.
       for (const old of callouts.filter(c => c.card === card)) remove(old.note);
-      while (callouts.length >= MAX_CALLOUTS) remove(callouts[0].note);
+      while (callouts.length >= MAX_CALLOUTS) remove(callouts[0]!.note); // MAX_CALLOUTS > 0: a lista não está vazia
       const hold = Math.max(options.duration, options.calloutDuration ?? 0);
       const note = document.createElement('div');
       note.className = `ability-callout${event.trigger ? ' trigger' : ''}${look ? ` loyalty ${look.tone}` : ''}${look?.ultimate ? ' ultimate' : ''}`;

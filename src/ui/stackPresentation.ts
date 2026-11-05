@@ -107,7 +107,7 @@ export function loyaltyLineIn(cardText: string | undefined, cost: string): strin
   const want = cost.trim().replace(/^[−–]/, '-');
   for (const line of (cardText ?? '').split('\n')) {
     const m = line.match(/^\s*\[?([+−–-]?(?:\d+|X))\]?\s*:\s*(.+)$/);
-    if (m && m[1].replace(/^[−–]/, '-') === want) return m[2].trim();
+    if (m && m[1]!.replace(/^[−–]/, '-') === want) return m[2]!.trim();
   }
   return '';
 }

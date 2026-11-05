@@ -37,9 +37,10 @@ export function newQuestionDraft(q: FQuestion): QuestionDraft {
 
 export const optLabel = (o: FOption | string) => (typeof o === 'string' ? o : o.label);
 export function amountStatus(q: FQuestion, draft: QuestionDraft | null) {
-  const amounts = (q.options ?? []).map((_, i) => Number(draft?.amounts[i]));
-  const validValues = amounts.every((n, i) => {
-    const option = q.options![i];
+  const options = q.options ?? [];
+  const amounts = options.map((_, i) => Number(draft?.amounts[i]));
+  const validValues = options.every((option, i) => {
+    const n = Number(draft?.amounts[i]);
     const min = typeof option === 'string' ? 0 : option.min ?? 0;
     const max = typeof option === 'string' ? q.total ?? 0 : option.max ?? q.total ?? 0;
     return /^\d+$/.test(draft?.amounts[i] ?? '') && Number.isSafeInteger(n) && n >= min && n <= max;
@@ -78,7 +79,7 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
     return `${head}<form data-q-amount-form><div class="q-amounts">${opts.map((o, i) => {
       const min = typeof o === 'string' ? 0 : o.min ?? 0;
       const max = typeof o === 'string' ? q.total ?? 0 : o.max ?? q.total ?? 0;
-      return `<label><span>${esc(optLabel(o))}<small>De ${min} a ${max}</small></span><input data-q-amount="${i}" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" value="${esc(draft.amounts[i])}" aria-describedby="fAmountRemaining"></label>`;
+      return `<label><span>${esc(optLabel(o))}<small>De ${min} a ${max}</small></span><input data-q-amount="${i}" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" value="${esc(draft.amounts[i] ?? '')}" aria-describedby="fAmountRemaining"></label>`;
     }).join('')}</div><p class="q-hint" id="fAmountRemaining" aria-live="polite">${status.text}</p><div class="q-actions"><button class="arena-btn primary" data-q-amount-submit ${status.valid ? '' : 'disabled'}>Confirmar distribuição</button></div></form>`;
   }
   if (q.kind === 'confirm' && q.purpose === 'commander-zone') return commanderZoneHTML(v, q);
@@ -104,6 +105,7 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   const anyCards = opts.some(o => typeof o !== 'string' && o.card);
   const item = (i: number, hidden = false) => {
     const o = opts[i], pos = draft.picked.indexOf(i);
+    if (o === undefined) return '';
     const on = pos >= 0 ? 'on' : '';
     const badge = isOrder && pos >= 0 ? `<span class="q-badge">${pos + 1}</span>` : on && !single ? '<span class="q-badge">✓</span>' : '';
     const card = typeof o !== 'string' && o.card ? `<div class="q-face">${v.face(o.card)}</div>` : '';

@@ -75,9 +75,8 @@ export function toScenario(d: Draft): LabScenario {
 export function fromScenario(s: Partial<LabScenario>): Draft {
   const names = (v: unknown) => Array.isArray(v) ? v.filter((n): n is string => typeof n === 'string') : [];
   const num = (v: unknown, def: number) => typeof v === 'number' && Number.isFinite(v) ? Math.trunc(v) : def;
-  const players = (Array.isArray(s.players) ? s.players : []).slice(0, 2);
-  while (players.length < 2) players.push({} as LabPlayer);
-  const sides = players.map(p => {
+  const players = Array.isArray(s.players) ? s.players : [];
+  const toSide = (p: LabPlayer) => {
     const field = Array.isArray(p?.battlefield) ? p.battlefield.filter(c => c && typeof c.name === 'string') : [];
     return {
       life: num(p?.life, 20), poison: num(p?.poison, 0),
@@ -85,10 +84,11 @@ export function fromScenario(s: Partial<LabScenario>): Draft {
       battlefield: field.map(c => ({ uid: nextUid++, name: c.name, tapped: !!c.tapped, sick: !!c.sick, counters: { ...(c.counters ?? {}) }, attachedTo: null as number | null })),
       raw: field,
     };
-  });
+  };
+  const sides = [toSide(players[0] ?? {} as LabPlayer), toSide(players[1] ?? {} as LabPlayer)] as const;
   sides.forEach(side => side.raw.forEach((c, i) => {
-    const to = c.attachedTo;
-    if (to && sides[to.player]?.battlefield[to.index]) side.battlefield[i].attachedTo = sides[to.player].battlefield[to.index].uid;
+    const to = c.attachedTo, target = to && sides[to.player]?.battlefield[to.index], own = side.battlefield[i];
+    if (target && own) own.attachedTo = target.uid;
   }));
   const strip = ({ raw: _raw, ...side }: Side & { raw: unknown }): Side => side;
   return {
@@ -101,7 +101,7 @@ export function fromScenario(s: Partial<LabScenario>): Draft {
 /** "3 Island" ou "3x Island": quantas cópias e o nome. */
 export function parseEntry(text: string): { count: number; name: string } {
   const m = /^\s*(\d{1,4})\s*x?\s+(.+?)\s*$/i.exec(text);
-  return m ? { count: Math.max(1, Math.min(MAX_PER_ZONE, Number(m[1]))), name: m[2] } : { count: 1, name: text.trim() };
+  return m ? { count: Math.max(1, Math.min(MAX_PER_ZONE, Number(m[1]))), name: m[2]! } : { count: 1, name: text.trim() };
 }
 
 export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
@@ -167,31 +167,29 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     return url ? `<img class="lab-art" src="${esc(url)}" alt="" loading="lazy">` : '<span class="lab-art" aria-hidden="true"></span>';
   }
   /** Rótulo de uma permanente para "presa a": o nome e, com repetidas, qual delas. */
-  function permanentLabel(player: number, index: number) {
-    const field = draft.players[player].battlefield, c = field[index];
+  function permanentLabel(field: readonly Permanent[], c: Permanent, player: number, index: number) {
     const same = field.filter(o => o.name === c.name).length;
     return `${c.name}${same > 1 ? ` (${field.slice(0, index + 1).filter(o => o.name === c.name).length})` : ''} · Jogador ${player + 1}`;
   }
-  function permanentHTML(p: number, c: Permanent, i: number) {
-    const options = draft.players.flatMap((side, player) => side.battlefield.map((o, index) => ({ o, player, index }))).filter(x => x.o.uid !== c.uid);
+  function permanentHTML(side: Side, c: Permanent, i: number) {
+    const options = draft.players.flatMap((other, player) => other.battlefield.map((o, index) => ({ o, field: other.battlefield, player, index }))).filter(x => x.o.uid !== c.uid);
     const counters = Object.entries(c.counters);
     return `<li class="lab-card lab-perm" data-uid="${c.uid}">${art(c.name)}<div class="lab-card-body">
-      <div class="lab-card-head"><strong>${esc(c.name)}</strong>${cardTools(p, 'battlefield', i)}</div>
+      <div class="lab-card-head"><strong>${esc(c.name)}</strong>${cardTools(side, 'battlefield', i)}</div>
       <div class="lab-flags"><label><input type="checkbox" data-prop="tapped"${c.tapped ? ' checked' : ''}> Virada</label><label><input type="checkbox" data-prop="sick"${c.sick ? ' checked' : ''}> Entrou neste turno</label>
       ${counters.map(([type, n]) => `<label class="lab-counter">${esc(LAB_COUNTERS.find(([t]) => t === type)?.[1] ?? type)}<input type="number" class="input-field" min="0" max="999" value="${n}" data-counter="${esc(type)}" aria-label="Marcadores de ${esc(LAB_COUNTERS.find(([t]) => t === type)?.[1] ?? type)} em ${esc(c.name)}"></label>`).join('')}
         <select class="input-field lab-add-counter" data-prop="add-counter" aria-label="Pôr marcador em ${esc(c.name)}"><option value="">+ Marcador</option>${LAB_COUNTERS.filter(([t]) => !(t in c.counters)).map(([t, label]) => `<option value="${t}">${label}</option>`).join('')}</select>
-      ${options.length ? `<label class="lab-attach">Presa a<select class="input-field" data-prop="attach"><option value="">nada</option>${options.map(x => `<option value="${x.o.uid}"${c.attachedTo === x.o.uid ? ' selected' : ''}>${esc(permanentLabel(x.player, x.index))}</option>`).join('')}</select></label>` : ''}</div>
+      ${options.length ? `<label class="lab-attach">Presa a<select class="input-field" data-prop="attach"><option value="">nada</option>${options.map(x => `<option value="${x.o.uid}"${c.attachedTo === x.o.uid ? ' selected' : ''}>${esc(permanentLabel(x.field, x.o, x.player, x.index))}</option>`).join('')}</select></label>` : ''}</div>
     </div></li>`;
   }
-  function cardTools(p: number, zone: Zone, i: number) {
-    const size = zone === 'battlefield' ? draft.players[p].battlefield.length : draft.players[p][zone].length;
+  function cardTools(side: Side, zone: Zone, i: number) {
+    const size = zone === 'battlefield' ? side.battlefield.length : side[zone].length;
     return `<span class="lab-tools">${size > 1 ? `<button type="button" class="lab-icon" data-move="-1" data-index="${i}" aria-label="Subir"${i === 0 ? ' disabled' : ''}>↑</button><button type="button" class="lab-icon" data-move="1" data-index="${i}" aria-label="Descer"${i === size - 1 ? ' disabled' : ''}>↓</button>` : ''}<button type="button" class="lab-icon" data-remove="${i}" aria-label="Tirar">×</button></span>`;
   }
-  function zoneHTML(p: number, zone: Zone, title: string, hint: string) {
-    const side = draft.players[p];
+  function zoneHTML(side: Side, p: number, zone: Zone, title: string, hint: string) {
     const list = zone === 'battlefield'
-      ? side.battlefield.map((c, i) => permanentHTML(p, c, i)).join('')
-      : side[zone].map((name, i) => `<li class="lab-card">${art(name)}<div class="lab-card-body"><div class="lab-card-head"><strong>${zone === 'library' ? `<span class="lab-pos">${i + 1}.</span> ` : ''}${esc(name)}</strong>${cardTools(p, zone, i)}</div></div></li>`).join('');
+      ? side.battlefield.map((c, i) => permanentHTML(side, c, i)).join('')
+      : side[zone].map((name, i) => `<li class="lab-card">${art(name)}<div class="lab-card-body"><div class="lab-card-head"><strong>${zone === 'library' ? `<span class="lab-pos">${i + 1}.</span> ` : ''}${esc(name)}</strong>${cardTools(side, zone, i)}</div></div></li>`).join('');
     const count = zone === 'battlefield' ? side.battlefield.length : side[zone].length;
     return `<section class="lab-zone" data-zone="${zone}"><h3>${title} <span class="lab-count">${count}</span></h3>${hint ? `<p class="lab-hint">${hint}</p>` : ''}
       ${list ? `<ul class="lab-list">${list}</ul>` : ''}
@@ -209,7 +207,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     $('#labPlayers').innerHTML = draft.players.map((side, p) => `<section class="lab-player" data-player="${p}" aria-labelledby="labPlayer${p}">
       <h2 id="labPlayer${p}">Jogador ${p + 1} <small>${p === 0 ? 'você' : 'quem entrar pelo link'}</small></h2>
       <div class="lab-stats"><label class="lab-field">Vida<input type="number" class="input-field" data-stat="life" value="${side.life}" min="-999999" max="999999"></label><label class="lab-field">Veneno<input type="number" class="input-field" data-stat="poison" value="${side.poison}" min="0" max="999"></label></div>
-      ${ZONES.map(([zone, title, hint]) => zoneHTML(p, zone, title, hint)).join('')}
+      ${ZONES.map(([zone, title, hint]) => zoneHTML(side, p, zone, title, hint)).join('')}
     </section>`).join('');
     if (focusKey) {
       const [p, zone] = focusKey.split(':');
@@ -223,17 +221,19 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
   const cardNames = () => draft.players.flatMap(s => [...s.hand, ...s.library, ...s.graveyard, ...s.exile, ...s.battlefield.map(c => c.name)]);
 
   const sideOf = (el: Element) => Number(el.closest<HTMLElement>('[data-player]')!.dataset.player);
+  /** O lado do jogador do elemento; o data-player vem do render, então só falta em HTML que não é da tela. */
+  const sideFor = (el: Element): Side | undefined => draft.players[sideOf(el)];
   const zoneOf = (el: Element) => el.closest<HTMLElement>('[data-zone]')!.dataset.zone as Zone;
   const permanentOf = (el: Element) => {
     const uid = Number(el.closest<HTMLElement>('[data-uid]')?.dataset.uid);
-    return draft.players[sideOf(el)].battlefield.find(c => c.uid === uid);
+    return sideFor(el)?.battlefield.find(c => c.uid === uid);
   };
 
   async function add(form: HTMLFormElement) {
-    const input = form.querySelector('input')!, p = sideOf(form), zone = form.dataset.add as Zone;
+    const input = form.querySelector('input')!, side = sideFor(form), zone = form.dataset.add as Zone;
     const { count, name } = parseEntry(input.value);
-    if (!name) return;
-    const side = draft.players[p], size = zone === 'battlefield' ? side.battlefield.length : side[zone].length;
+    if (!name || !side) return;
+    const size = zone === 'battlefield' ? side.battlefield.length : side[zone].length;
     if (size + count > MAX_PER_ZONE) { setStatus(`No máximo ${MAX_PER_ZONE} cartas em cada zona.`, true); return; }
     setStatus('Procurando a carta…');
     let found: string | undefined;
@@ -277,7 +277,8 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
     if (target.id === 'labPhase') { draft.phase = target.value as LabPhase; persist(); return; }
     if (!target.closest('[data-player]')) return;
-    const p = sideOf(target), side = draft.players[p];
+    const side = sideFor(target);
+    if (!side) return;
     if (target.dataset.stat) {
       const n = Math.trunc(Number(target.value));
       if (Number.isFinite(n)) side[target.dataset.stat as 'life' | 'poison'] = target.dataset.stat === 'poison' ? Math.max(0, Math.min(999, n)) : Math.max(-999999, Math.min(999999, n));
@@ -302,7 +303,8 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     if (active) { draft.active = Number(active.dataset.active) as 0 | 1; changed(); return; }
     const move = el.closest<HTMLButtonElement>('[data-move]'), remove = el.closest<HTMLButtonElement>('[data-remove]');
     if (move || remove) {
-      const p = sideOf(el), zone = zoneOf(el), side = draft.players[p];
+      const zone = zoneOf(el), side = sideFor(el);
+      if (!side) return;
       const list: unknown[] = zone === 'battlefield' ? side.battlefield : side[zone];
       if (remove) {
         const [gone] = list.splice(Number(remove.dataset.remove), 1);

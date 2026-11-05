@@ -54,7 +54,7 @@ export async function fetchPrintings(entries: { name: string; set?: string; cn?:
       // Pedida pelo número, a impressão volta com o nome da carta; pedida pelo nome, volta com o número.
       for (const [key, { name, print }] of chunk) {
         if (String(d.set).toLowerCase() !== print.set.toLowerCase()) continue;
-        if (print.cn ? String(d.collector_number).toLowerCase() !== print.cn.toLowerCase() : lookupName(name).toLowerCase() !== String(d.name).split(' // ')[0].toLowerCase()) continue;
+        if (print.cn ? String(d.collector_number).toLowerCase() !== print.cn.toLowerCase() : lookupName(name).toLowerCase() !== String(d.name).split(' // ')[0]!.toLowerCase()) continue;
         printings.set(key, p); found.add(key); void cardStore.write(PRINT_PREFIX + key, p);
       }
     }
@@ -238,7 +238,7 @@ export async function resolveCardNames(names: string[]): Promise<{ found: Map<st
     try {
       const r = await searchCards(`!"${n.replace(/"/g, '')}"`);
       const options = [...new Set(r.cards.map(c => c.name))];
-      if (options.length === 1) found.set(n.toLowerCase(), options[0]);
+      if (options.length === 1) found.set(n.toLowerCase(), options[0]!);
       else if (options.length) ambiguous.push({ name: n, options });
       else missing.push(n);
     } catch { missing.push(n); }

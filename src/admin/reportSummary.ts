@@ -12,7 +12,7 @@ const kindName = (kind: unknown) => kind === 'erro' ? 'Algo deu errado' : 'Suges
 export function reportOf(stored: Stored): Stored { return stored.report ?? stored; }
 
 export function issueTitle(stored: Stored) {
-  const first = String(reportOf(stored).description ?? '').split('\n')[0].slice(0, 70);
+  const first = String(reportOf(stored).description ?? '').split('\n')[0]!.slice(0, 70);
   return `[Relato ${stored.code ?? ''}] ${first}`;
 }
 

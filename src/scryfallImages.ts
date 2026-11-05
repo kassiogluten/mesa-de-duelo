@@ -21,7 +21,7 @@ export async function preloadImages(urls: string[], load: (url: string) => Promi
   let next = 0;
   const worker = async () => {
     while (next < todo.length) {
-      const url = todo[next++];
+      const url = todo[next++]!; // next < todo.length
       try { await load(url); } catch { preloaded.delete(url); }
     }
   };

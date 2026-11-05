@@ -34,7 +34,7 @@ export const parseChoiceSort = (value: string | null | undefined): ChoiceSort =>
 
 /** Tipos da carta pela linha de tipo (só a parte antes do travessão, e só a face da frente). */
 export function cardTypes(typeLine = ''): string[] {
-  const main = typeLine.split(' // ')[0].split(/\s[—-]\s/)[0];
+  const main = typeLine.split(' // ')[0]!.split(/\s[—-]\s/)[0]!;
   const keys = CARD_TYPES.filter(t => t.re.test(main)).map(t => t.key as string);
   return keys.length ? keys : [OTHER_TYPE.key];
 }
@@ -86,19 +86,20 @@ export interface ChoiceLayout {
 /** Monta a tela: grupos e ordem, filtros com a contagem e o que fica à vista. Devolve sempre os índices originais. */
 export function choiceLayout(q: FQuestion, { sort, view, name, typeLine }: ChoiceLayoutOptions): ChoiceLayout {
   const cards = cardsOf(q) as FCard[];
-  const info = cards.map(c => {
+  const info = cards.map((c, i) => {
     const types = cardTypes(typeLine(c));
     const shown = name(c);
-    return { types, group: types[0], mv: manaValue(c.manaCost), name: shown, search: normalize(`${shown}\u0000${c.name ?? ''}`) };
+    return { i, types, group: types[0] ?? OTHER_TYPE.key, mv: manaValue(c.manaCost), name: shown, search: normalize(`${shown}\u0000${c.name ?? ''}`) };
   });
-  const indices = cards.map((_, i) => i);
-  const byName = (a: number, b: number) => info[a].name.localeCompare(info[b].name, 'pt-BR');
-  const byCost = (a: number, b: number) => info[a].mv - info[b].mv || byName(a, b);
-  indices.sort(sort === 'name' ? (a, b) => byName(a, b) || a - b : (a, b) => byCost(a, b) || a - b);
+  type Info = (typeof info)[number];
+  const byName = (a: Info, b: Info) => a.name.localeCompare(b.name, 'pt-BR');
+  const byCost = (a: Info, b: Info) => a.mv - b.mv || byName(a, b);
+  const sorted = [...info].sort(sort === 'name' ? (a, b) => byName(a, b) || a.i - b.i : (a, b) => byCost(a, b) || a.i - b.i);
+  const indices = sorted.map(x => x.i);
   let groups: ChoiceGroup[];
   if (sort === 'type') {
     const keys = [...new Set(info.map(i => i.group))].sort((a, b) => typeRank(a) - typeRank(b));
-    groups = keys.map(key => ({ key, label: typeLabel(key), indices: indices.filter(i => info[i].group === key) }));
+    groups = keys.map(key => ({ key, label: typeLabel(key), indices: sorted.filter(x => x.group === key).map(x => x.i) }));
   } else groups = [{ key: 'all', label: '', indices }];
 
   const present = [...new Set(info.flatMap(i => i.types))].sort((a, b) => typeRank(a) - typeRank(b));
@@ -107,7 +108,7 @@ export function choiceLayout(q: FQuestion, { sort, view, name, typeLine }: Choic
   const type = view.type && present.includes(view.type) ? view.type : null;
   const search = cards.length >= SEARCH_FROM;
   const query = search ? normalize(view.query) : '';
-  const visible = new Set(indices.filter(i => (!type || info[i].types.includes(type)) && (!query || info[i].search.includes(query))));
+  const visible = new Set(sorted.filter(x => (!type || x.types.includes(type)) && (!query || x.search.includes(query))).map(x => x.i));
   return { groups, chips, visible, search, total: cards.length };
 }
 

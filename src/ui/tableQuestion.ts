@@ -158,13 +158,13 @@ export function createTableQuestion(d: QuestionDeps) {
         const [to, option] = libPlace.dataset.libPlace!.split(':');
         if (placeLibraryCard(match.qState.picked, Number(option), to === 'away')) { d.render(); d.announce(librarySummary(libQuestion, match.qState.picked)); }
       } else {
-        const [pos, dir] = libMove!.dataset.libMove!.split(':').map(Number);
+        const [pos = NaN, dir = NaN] = libMove!.dataset.libMove!.split(':').map(Number);
         if (moveLibraryCard(match.qState.picked, pos, dir < 0 ? -1 : 1)) {
           d.render();
           // O foco acompanha a carta na nova posição (ou fica na outra seta, se esta acabou na ponta).
           const at = pos + dir;
           (root.querySelector<HTMLButtonElement>(`[data-lib-move="${at}:${dir}"]:not(:disabled)`) ?? root.querySelector<HTMLElement>(`[data-lib-move="${at}:${-dir}"]`))?.focus({ preventScroll: true });
-          const moved = libQuestion.options?.[match.qState.picked[at]];
+          const option = match.qState.picked[at], moved = option === undefined ? undefined : libQuestion.options?.[option];
           if (moved && typeof moved !== 'string' && moved.card) d.announce(`${label(moved.card)}: ${at + 1}ª de ${match.qState.picked.length}${at === 0 ? ', no topo' : ''}.`);
         }
       }

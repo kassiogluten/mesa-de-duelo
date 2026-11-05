@@ -17,8 +17,8 @@ const glyph = (sym: string) => glyphs[sym] ? `<svg viewBox="0 0 24 24" aria-hidd
 /** Distinct shapes preserve mana identity without relying on color. */
 export const pip = (sym: string) => {
   const safe = /^[A-Z0-9/]+$/.test(sym) ? sym : '?';
-  const [a, b] = safe.split('/');
-  const label = b ? `Mana ${NAMES[a] ?? a} ou ${NAMES[b] ?? b}` : /^\d+$/.test(a) ? `${a} de mana genérica` : ['T','Q','E'].includes(a) ? NAMES[a] : `Mana ${NAMES[a] ?? a}`;
+  const [a = '', b] = safe.split('/');
+  const label = b ? `Mana ${NAMES[a] ?? a} ou ${NAMES[b] ?? b}` : /^\d+$/.test(a) ? `${a} de mana genérica` : ['T','Q','E'].includes(a) ? NAMES[a] ?? a : `Mana ${NAMES[a] ?? a}`;
   const style = b ? ` style="background:linear-gradient(135deg, ${COLORS[a] ?? '#cbc5b8'} 50%, ${COLORS[b] ?? COLORS[a] ?? '#cbc5b8'} 50%)"` : '';
   return `<span class="pip pip-${a}" role="img" aria-label="${esc(label)}"${style}>${b ? `<span class="hybrid-glyph" aria-hidden="true">${esc(safe)}</span>` : glyph(a)}</span>`;
 };

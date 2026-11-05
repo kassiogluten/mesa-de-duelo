@@ -166,7 +166,7 @@ export class MatchRecorder {
     this.last = frameAt(recording, this.frames.length - 1);
     this.lastVersion = this.frames.at(-1)!.v;
     let key = this.frames.length - 1;
-    while (key > 0 && this.frames[key].k === undefined) key--;
+    while (key > 0 && this.frames[key]?.k === undefined) key--;
     this.sinceKey = this.frames.length - 1 - key;
   }
   get matchId() { return this.meta.matchId; }
@@ -254,10 +254,15 @@ export function* decodeFrames(recording: Pick<Recording, 'frames'>): Generator<{
 
 /** Remonta o quadro `index` a partir do quadro inteiro anterior mais próximo. */
 export function frameAt(recording: Pick<Recording, 'frames'>, index: number): FState {
+  const frame = (i: number) => {
+    const f = recording.frames[i];
+    if (!f) throw new RangeError(`Quadro ${i} fora da gravação.`);
+    return f;
+  };
   let start = index;
-  while (start > 0 && recording.frames[start].k === undefined) start--;
-  let state: unknown = JSON.parse(recording.frames[start].k!);
-  for (let i = start + 1; i <= index; i++) state = applyPatch(state, JSON.parse(recording.frames[i].d!));
+  while (start > 0 && frame(start).k === undefined) start--;
+  let state: unknown = JSON.parse(frame(start).k!);
+  for (let i = start + 1; i <= index; i++) state = applyPatch(state, JSON.parse(frame(i).d!));
   return state as FState;
 }
 
@@ -290,12 +295,13 @@ export async function fitRecording(recording: Recording, limit = RECORDING_LIMIT
     // Quanto do fim manter, pela proporção que passou do limite, com folga.
     const keep = Math.max(1, Math.floor((current.frames.length - 1) * (limit / bytes) * .9));
     let cut = current.frames.length - keep;
-    while (cut < current.frames.length && current.frames[cut].k === undefined) cut++;
+    while (cut < current.frames.length && current.frames[cut]!.k === undefined) cut++;
     if (cut >= current.frames.length) cut = current.frames.length - 1;
     // O quadro onde o corte cai precisa ser inteiro; se não houver, remonta-o.
-    const frames = current.frames.slice(cut);
-    if (frames[0].k === undefined) frames[0] = { at: frames[0].at, v: frames[0].v, k: JSON.stringify(frameAt(current, cut)) };
-    current = { ...current, frames: [current.frames[0], ...frames], droppedFrames: current.droppedFrames + cut - 1 };
+    const [first] = current.frames, [atCut, ...after] = current.frames.slice(cut);
+    if (!first || !atCut) break; // não acontece: há mais de 2 quadros e o corte fica antes do fim
+    const kept = atCut.k === undefined ? { at: atCut.at, v: atCut.v, k: JSON.stringify(frameAt(current, cut)) } : atCut;
+    current = { ...current, frames: [first, kept, ...after], droppedFrames: current.droppedFrames + cut - 1 };
   }
   return { recording: current, bytes: (await gzip(JSON.stringify(current))).length };
 }
