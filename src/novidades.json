@@ -1,4 +1,9 @@
 {
+  "0.129.1": {
+    "Cartas da mão inicial voando para o lugar certo": [
+      { "img": "0.129.1/mulligan-voo.webp", "legenda": "A mão inicial chegando: as cartas saem do grimório, embaixo à esquerda, e vão direto para o leque no centro da mesa." }
+    ]
+  },
   "0.129.0": {
     "Passar automaticamente num botão pequeno ao lado do principal": [
       { "img": "0.129.0/passar-mini-botao.webp", "legenda": "O botão pequeno de passar automaticamente, dourado em Respostas, na mesma linha de Para o combate." },

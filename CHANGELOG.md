@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.129.1] - 2026-11-05
+
+### Corrigido
+
+- **Cartas da mão inicial voando para o lugar certo.** Ao receber a mão inicial, as cartas às vezes saíam do grimório rumo a pontos sem sentido, à direita da mesa ou abaixo da borda da tela (com a mão oculta), e só depois apareciam no centro. Agora elas voam direto para o lugar em que ficam, no duelo e na mesa de 3–4 jogadores, com a mão fixa, oculta ou automática. No mulligan, a mão anterior continua voltando ao grimório antes de a nova sair.
+
 ## [0.129.0] - 2026-11-05
 
 ### Mudou

@@ -146,6 +146,9 @@ export function createLibraryMotion(kit: MotionKit) {
     const libEl = root.querySelector<HTMLElement>('#fMePiles .lib'), library = center(libEl);
     if (!library) return;
     const { handSpots } = state;
+    // A mão pode estar no meio da troca de arranjo (recolhida ou oculta embaixo, mão inicial no centro): a transição
+    // termina antes de medir, senão as cartas voam para onde a mão estava, às vezes fora da tela.
+    root.querySelector('#fHand')?.getAnimations({ subtree: true }).forEach(a => { if (typeof CSSTransition !== 'undefined' && a instanceof CSSTransition) a.finish(); });
     // Mulligan: a mão anterior volta ao grimório (de onde as cartas estavam no leque), e ele embaralha.
     const back = [...handSpots.entries()].filter(([key]) => !dealt.some(el => el.dataset.fid === key)).slice(0, options.returning ? 7 : 0);
     back.forEach(([key, spot], i) => {

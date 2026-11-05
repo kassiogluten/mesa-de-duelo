@@ -478,17 +478,6 @@ O combate já tem animação própria (faixa de ataque, atacantes recuando e ava
 - [ ] Manter o ritmo: nada segura a vez do jogador; respeitar "reduzir movimento" e conferir o desempenho no celular.
 - [ ] Item no CHANGELOG e print na página Novidades em imagens.
 
-## 98. Animação do mulligan aparece em lugares sem sentido
-
-No mulligan, as cartas da mão anterior voltam ao grimório e a nova mão sai dele, carta a carta. Na prática, as cartas aparecem voando de (ou para) pontos da mesa que não têm a ver com a mão nem com o grimório.
-
-- [ ] Reproduzir em duelo e na mesa de 3–4 jogadores, com a mão fixa, oculta e automática, e anotar de onde as cartas saem e para onde vão.
-- [ ] Ver se a volta usa os lugares guardados da mão de antes (que podem ser de outro arranjo da tela, com a mão inicial aberta no centro, recolhida ou oculta) e se a chegada mede as cartas antes de a mão terminar de se arrumar.
-- [ ] A mão anterior sai do lugar onde estava de fato na tela e entra no grimório do jogador; a nova sai do grimório e chega ao lugar final de cada carta.
-- [ ] Mulligan do oponente: só as costas, do lado dele, sem passar pelo seu lado da mesa.
-- [ ] Respeitar "reduzir movimento" e o modo acelerado.
-- [ ] Item no CHANGELOG (Corrigido) e print na página Novidades em imagens.
-
 ## 99. Mesa de 3–4 jogadores: cabeçalhos mais limpos
 
 Com três ou quatro jogadores, a mesa espalha informação pelos cantos: o relógio, o número do turno e a duração da partida ficam na trilha de fases, embaixo à direita; a zona de comando de cada oponente fica à esquerda do campo dele; e o cabeçalho de cada assento junta vida, nome, bracket, dano de comandante e três botões de foco, mesmo quando parte disso não diz nada (dano 0/21, por exemplo).

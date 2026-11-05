@@ -1009,3 +1009,16 @@ Hoje o nível de passar automaticamente é uma linha embaixo dos botões de aç�
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.129.0 (05/11/2026): o mini botão entra na grade dos botões, ao lado do primeiro botão principal; sem botão principal, fica sozinho à direita. O menu continua com 300 px, alinhado pela direita do botão.
+
+## 98. Animação do mulligan aparece em lugares sem sentido ✅
+
+No mulligan, as cartas da mão anterior voltam ao grimório e a nova mão sai dele, carta a carta. Na prática, as cartas aparecem voando de (ou para) pontos da mesa que não têm a ver com a mão nem com o grimório.
+
+- [x] Reproduzir em duelo e na mesa de 3–4 jogadores, com a mão fixa, oculta e automática, e anotar de onde as cartas saem e para onde vão.
+- [x] Ver se a volta usa os lugares guardados da mão de antes (que podem ser de outro arranjo da tela, com a mão inicial aberta no centro, recolhida ou oculta) e se a chegada mede as cartas antes de a mão terminar de se arrumar.
+- [x] A mão anterior sai do lugar onde estava de fato na tela e entra no grimório do jogador; a nova sai do grimório e chega ao lugar final de cada carta.
+- [x] Mulligan do oponente: só as costas, do lado dele, sem passar pelo seu lado da mesa.
+- [x] Respeitar "reduzir movimento" e o modo acelerado.
+- [x] Item no CHANGELOG (Corrigido) e print na página Novidades em imagens.
+
+Feito na 0.129.1 (05/11/2026): a causa era a transição da mão (0,2 s, com 0,12 s de espera, da mão recolhida): a mão inicial vai para o centro com `translate(-50%, -50%)`, e a animação media as cartas antes de a transição andar, no lugar antigo. O `deal` termina as transições da mão antes de medir. A volta da mão anterior no mulligan já usava os lugares certos. O mulligan dos oponentes não tem animação, então nada passa pelo seu lado da mesa.
