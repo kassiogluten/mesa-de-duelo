@@ -54,6 +54,7 @@ Ao fechar uma mudança, siga a skill `/entregar` (`.claude/skills/entregar/SKILL
 
 - `CHANGELOG.md` (centenas de KB): leia só o topo (`head -40`).
 - `ROADMAP.md` tem só o que falta; os itens concluídos ficam em `docs/roadmap-feito.md`.
+- Melhorias internas (estrutura, testes, ferramentas) ficam em `docs/roadmap-manutencao.md`: consulte antes de refatorar e marque o que concluir.
 
 ## Testes
 
