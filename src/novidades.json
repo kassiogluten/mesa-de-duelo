@@ -1,4 +1,9 @@
 {
+  "0.127.0": {
+    "Mão fixa com faixa própria, e cartas na medida em telas grandes": [
+      { "img": "0.127.0/mao-fixa-faixa.webp", "legenda": "Num monitor Full HD, a mão fixa na faixa dela, logo abaixo do seu campo: os terrenos ficam inteiros à vista, acima das cartas da mão." }
+    ]
+  },
   "0.126.0": {
     "Formato Precon": [
       { "img": "0.126.0/formato-precon.webp", "legenda": "O Precon ao lado do Commander na escolha do formato, com a explicação logo abaixo." },

@@ -4,7 +4,7 @@
 import type { FPlayer, FState } from '../forge/client';
 import { KEYS } from '../storage';
 import { HAND_GROUP_FROM, arrangeHand, groupHand } from './handDrag';
-import { savedHandMode, toggleAuto, toggleShown, type HandMode } from './handMode';
+import { TALL_TABLE, savedHandMode, toggleAuto, toggleShown, type HandMode } from './handMode';
 import { handHTML, hiddenHandHTML, outsideHand, type HandFanItem } from './handView';
 import { usable } from './permanentView';
 import { selectedForInput } from './playContext';
@@ -21,7 +21,8 @@ export function createTableHand(d: HandDeps) {
   // Mão fixa, oculta ou automática (handMode.ts). Quem assiste começa sempre recolhida, e essa escolha não fica guardada.
   let handMode: HandMode = (() => {
     const hover = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
-    try { return savedHandMode(localStorage.getItem(KEYS.hand), hover); } catch { return savedHandMode(null, hover); }
+    const tall = typeof matchMedia === 'function' && matchMedia(`(min-height: ${TALL_TABLE}px)`).matches;
+    try { return savedHandMode(localStorage.getItem(KEYS.hand), hover, tall); } catch { return savedHandMode(null, hover, tall); }
   })();
   let watchHandMode: HandMode = 'auto';
   // Guardado à parte: ele vive dentro da trilha de fases, que é redesenhada (e o tira do documento até voltar).
@@ -36,6 +37,7 @@ export function createTableHand(d: HandDeps) {
     const arena = root.querySelector('.arena')!;
     arena.classList.toggle('hand-peek', mode === 'auto');
     arena.classList.toggle('hand-hidden', mode === 'oculta');
+    arena.classList.toggle('hand-fixed', mode === 'fixa');
     const auto = handAutoButton;
     auto.setAttribute('aria-pressed', String(mode === 'auto'));
     auto.title = mode === 'auto' ? 'Mão automática ligada: recolhida, sobe ao passar o mouse. Clique para desligar' : 'Mão automática desligada: clique para ligar';

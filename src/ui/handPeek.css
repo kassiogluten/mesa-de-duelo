@@ -11,7 +11,7 @@
     /* Quanto do topo das cartas fica à vista com a mão recolhida. */
     --peek-visible: 50px;
     /* Cada campo do duelo tem ~(92vh - faixa) / 2; criaturas + terrenos (56% da altura) + respiros cabem nele. */
-    --ch: clamp(96px, calc(28vh - 40px), 280px); --cw: calc(var(--ch) * .716);
+    --ch: clamp(96px, calc(28vh - 40px), 200px); --cw: calc(var(--ch) * .716);
     --lch: calc(var(--ch) * .56); --lcw: calc(var(--lch) * .716);
   }
   .forge:not(.multiplayer) { grid-template-rows: calc(var(--top-band) + env(safe-area-inset-top, 0px)) minmax(0, 1fr) 2px minmax(0, 1fr) var(--peek-strip); }
@@ -61,7 +61,7 @@
     --seat-header: 62px;
     grid-template-rows: var(--seat-header) minmax(0, 1.12fr) 2px minmax(0, 1fr) var(--peek-strip);
     /* Seu campo: ~47% de (100vh - cabeçalho - faixa). */
-    --ch: clamp(84px, calc(30vh - 62px), 280px); --cw: calc(var(--ch) * .716);
+    --ch: clamp(84px, calc(30vh - 62px), 200px); --cw: calc(var(--ch) * .716);
     --lch: calc(var(--ch) * .52); --lcw: calc(var(--lch) * .716);
   }
   .forge.multiplayer > .field.me > .row.lands { padding-left: 0; }
@@ -72,8 +72,23 @@
   .forge.multiplayer .table-seat:not(.collapsed) .seat-command { grid-area: 2 / 1; align-self: center; display: flex; flex-direction: column; gap: 8px; padding-right: 6px; }
   .forge.multiplayer .seat-command .command-card { width: 36px; --fw: 36px; }
   /* Cada assento tem ~53% de (100vh - cabeçalho - faixa); as cartas param antes de ocupar tudo, para caberem mais lado a lado. */
-  .forge.multiplayer .table-seat > .field { grid-area: 2 / 2 / 3 / -1; --ch: clamp(72px, calc(29vh - 82px), 240px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .52); --lcw: calc(var(--lch) * .716); }
+  .forge.multiplayer .table-seat > .field { grid-area: 2 / 2 / 3 / -1; --ch: clamp(72px, calc(29vh - 82px), 180px); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .52); --lcw: calc(var(--lch) * .716); }
   /* Com um ou dois oponentes à vista o assento fica largo: as cartas usam toda a altura. */
-  .forge.multiplayer .commander-opponents:is([data-shown='1'], [data-shown='2']) .table-seat > .field { --ch: clamp(72px, calc(34vh - 90px), 300px); --lch: calc(var(--ch) * .52); }
+  .forge.multiplayer .commander-opponents:is([data-shown='1'], [data-shown='2']) .table-seat > .field { --ch: clamp(72px, calc(34vh - 90px), 200px); --lch: calc(var(--ch) * .52); }
   .forge.multiplayer .own-command { bottom: calc(var(--peek-strip) + 14vh); }
+
+  /*
+   * Fixa: a mão volta a ter uma faixa só dela, sem cobrir os terrenos, e os campos dividem o resto da altura.
+   * A faixa tem a altura da parte das cartas que fica à vista no leque (66%, o resto fica abaixo da borda), com folga
+   * para os selos de custo; as cartas do campo seguem a altura que sobra (mesma conta da recolhida, com a faixa no lugar
+   * dos 64px). Telas altas começam assim (handMode.ts).
+   */
+  .forge.hand-fixed {
+    --peek-strip: calc(var(--hch) * .66 + 26px);
+    --ch: clamp(84px, calc((100vh - var(--top-band, 62px) - var(--peek-strip)) * .32 - 32px), 200px);
+  }
+  .forge.hand-fixed .action.hand-decision, .forge.multiplayer.hand-fixed .action.hand-decision { bottom: calc(var(--peek-strip) + 8px); }
+  .forge.multiplayer.hand-fixed { --ch: clamp(72px, calc((100vh - 62px - var(--peek-strip)) * .282 - 12px), 200px); }
+  .forge.multiplayer.hand-fixed .table-seat > .field { --ch: clamp(64px, calc((100vh - 62px - var(--peek-strip)) * .287 - 43px), 180px); }
+  .forge.multiplayer.hand-fixed .commander-opponents:is([data-shown='1'], [data-shown='2']) .table-seat > .field { --ch: clamp(64px, calc((100vh - 62px - var(--peek-strip)) * .339 - 47px), 200px); }
 }

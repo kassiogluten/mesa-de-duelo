@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.127.0] - 2026-11-05
+
+### Mudou
+
+- **Mão fixa com faixa própria, e cartas na medida em telas grandes.** Com a mão fixa (a seta para cima, com a mão automática desligada), a mão volta a ter uma faixa só dela na borda de baixo da mesa e não cobre mais os seus terrenos: os campos dividem o resto da altura. Em telas altas, como um monitor Full HD, a mesa começa com a mão fixa; num notebook, continua começando na automática. Se você já escolheu um modo, a escolha continua valendo. As cartas do campo também param de crescer num tamanho que cabe bem num monitor grande, em vez de ocupar a tela toda.
+
 ## [0.126.1] - 2026-11-04
 
 ### Corrigido

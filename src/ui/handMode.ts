@@ -5,15 +5,19 @@
  */
 export type HandMode = 'fixa' | 'oculta' | 'auto';
 
+/** A partir desta altura da janela (px), sobra espaço para a mão fixa ter a faixa dela sem apertar o campo. */
+export const TALL_TABLE = 850;
+
 /**
  * O que ficou guardado. "open" e "peek" são da versão com dois jeitos (aberta e recolhida). Sem nada guardado, a mão
- * começa no automático com mouse e fixa no toque, onde não há como passar por cima para abrir.
+ * começa fixa no toque, onde não há como passar por cima para abrir, e nas telas altas (tall), onde a faixa dela cabe;
+ * nas outras, com mouse, começa no automático.
  */
-export function savedHandMode(saved: string | null, hover: boolean): HandMode {
+export function savedHandMode(saved: string | null, hover: boolean, tall = false): HandMode {
   if (saved === 'fixa' || saved === 'open') return 'fixa';
   if (saved === 'oculta') return 'oculta';
   if (saved === 'auto' || saved === 'peek') return 'auto';
-  return hover ? 'auto' : 'fixa';
+  return hover && !tall ? 'auto' : 'fixa';
 }
 
 /** Botão Auto: liga o automático; desligado, a mão fica à vista. */
