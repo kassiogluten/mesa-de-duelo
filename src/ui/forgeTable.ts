@@ -1,4 +1,5 @@
 import type { FCard, FPlayer, FQuestion, FState, ForgeClient, NoticeDetail } from '../forge/client';
+import { EVENTS, KEYS } from '../storage';
 import { cacheGet } from '../scryfall';
 import { cardInfo } from '../cards';
 import { esc, richText, withoutCardIds } from './cardtext';
@@ -130,9 +131,9 @@ export interface ForgeTableView {
   diagnostic(d: { code: string; action?: string; text: string }): void;
 }
 
-/** Ferramentas de desenvolvimento na mesa: no `npm run dev` ou com localStorage "mesa:dev" = "1". */
+/** Ferramentas de desenvolvimento na mesa: no `npm run dev` ou com localStorage `KEYS.dev` = "1". */
 function devTools() {
-  try { return import.meta.env?.DEV === true || localStorage.getItem('mesa:dev') === '1'; } catch { return false; }
+  try { return import.meta.env?.DEV === true || localStorage.getItem(KEYS.dev) === '1'; } catch { return false; }
 }
 
 export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions): ForgeTableView {
@@ -180,7 +181,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   let choiceSort: ChoiceSort = 'type';
   const readChoiceSort = () => { try { choiceSort = parseChoiceSort(localStorage.getItem(CHOICE_SORT_KEY)); } catch { /* Storage is optional. */ } };
   readChoiceSort();
-  addEventListener('mesa:prefs-sincronizadas', readChoiceSort);
+  addEventListener(EVENTS.prefsSincronizadas, readChoiceSort);
   /** Divisão do dano de combate em andamento (bloqueio duplo ou atropelar). */
   let damageSplit: { id: number; amounts: number[] } | null = null;
   const splitFor = (q: FQuestion) => {
@@ -230,7 +231,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Mão fixa, oculta ou automática (handMode.ts). Quem assiste começa sempre recolhida, e essa escolha não fica guardada.
   let handMode: HandMode = (() => {
     const hover = typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
-    try { return savedHandMode(localStorage.getItem('mesa:hand'), hover); } catch { return savedHandMode(null, hover); }
+    try { return savedHandMode(localStorage.getItem(KEYS.hand), hover); } catch { return savedHandMode(null, hover); }
   })();
   let watchHandMode: HandMode = 'auto';
   // Guardado à parte: ele vive dentro da trilha de fases, que é redesenhada (e o tira do documento até voltar).
@@ -818,7 +819,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     if (client?.state?.watching) watchHandMode = next;
     else {
       handMode = next;
-      try { localStorage.setItem('mesa:hand', next); localStorage.removeItem('mesa:hand-hide'); } catch { /* Storage is optional. */ }
+      try { localStorage.setItem(KEYS.hand, next); localStorage.removeItem(KEYS.handHide); } catch { /* Storage is optional. */ }
     }
     syncHandMode(!!client?.state?.watching);
   }

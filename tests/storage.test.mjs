@@ -5,10 +5,8 @@ import ts from 'typescript';
 
 const { KEYS, PREFIXES, load, save, loadJSON, saveJSON } = await import('../src/storage.ts');
 
-// Arquivos que ainda escrevem as chaves 'mesa:…' à mão.
-const ALLOW = new Set([
-  'src/ui/forgeTable.ts', // migrar depois do refactor
-]);
+// Arquivos que ainda escrevem as chaves 'mesa:…' à mão (nenhum: toda chave nova entra em src/storage.ts).
+const ALLOW = new Set([]);
 
 test('every storage key is unique and none can be taken for a dynamic key', () => {
   const values = Object.values(KEYS);
