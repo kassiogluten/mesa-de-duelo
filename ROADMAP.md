@@ -488,3 +488,26 @@ No mulligan, as cartas da mão anterior voltam ao grimório e a nova mão sai de
 - [ ] Mulligan do oponente: só as costas, do lado dele, sem passar pelo seu lado da mesa.
 - [ ] Respeitar "reduzir movimento" e o modo acelerado.
 - [ ] Item no CHANGELOG (Corrigido) e print na página Novidades em imagens.
+
+## 99. Mesa de 3–4 jogadores: cabeçalhos mais limpos
+
+Com três ou quatro jogadores, a mesa espalha informação pelos cantos: o relógio, o número do turno e a duração da partida ficam na trilha de fases, embaixo à direita; a zona de comando de cada oponente fica à esquerda do campo dele; e o cabeçalho de cada assento junta vida, nome, bracket, dano de comandante e três botões de foco, mesmo quando parte disso não diz nada (dano 0/21, por exemplo).
+
+- [ ] Relógios, turno e duração da partida no topo geral da mesa, numa faixa só, em vez de junto da trilha de fases.
+- [ ] Zona de comando de cada oponente no topo do assento dele (no cabeçalho), liberando a coluna à esquerda do campo para as cartas.
+- [ ] Os três botões de foco de cada assento (**Só este**/**Ver todos**, ampliar e **Ocultar**; item 88) num menu só, aberto por um botão no cabeçalho, com o modo atual marcado; acessível pelo teclado.
+- [ ] Dano de comandante escondido enquanto for zero; aparece no primeiro dano e continua pulsando como hoje (item 15).
+- [ ] Contador de cartas na sua própria mão, como o dos oponentes, visível também com a mão recolhida ou oculta.
+- [ ] Bracket de cada jogador só ao passar o mouse ou tocar na vida dele (balão), em vez do selo B1–B5 sempre à vista ao lado do nome; o leitor de tela continua dizendo o bracket.
+- [ ] Ver se o duelo deve seguir as mesmas mudanças (relógio no topo, contador da sua mão).
+- [ ] Item no CHANGELOG e prints na página Novidades em imagens.
+
+## 100. Passar automaticamente num mini botão ao lado do botão principal
+
+Hoje o nível de passar automaticamente é uma linha embaixo dos botões de ação, com o ícone e o nome do nível (**Só com ações**, **Respostas**…), e tocar nela abre a troca rápida. A linha ocupa altura na caixa de ação o tempo todo. Antes (versão 0.82.0) era um selo pequeno, só com o ícone, junto dos botões.
+
+- [ ] Voltar a um mini botão só com o ícone do nível, ao lado do botão principal (o dourado: **Passar**, **Para o combate**, **Fim de turno**…), na mesma linha, sem empurrar os outros botões para baixo.
+- [ ] O mini botão mantém os estados de hoje: discreto em **Só com ações**, borda dourada em **Parar sempre**, dourado em **Respostas** e **Só quando me afeta**, pulsando com **Até o fim do turno** ligado. O nome do nível fica no balão (`title`) e no `aria-label`.
+- [ ] Tocar no mini botão abre a mesma troca rápida (níveis e o atalho **Passar até o fim do turno**), com a mesma largura do menu que abre hoje, alinhada à caixa de ação.
+- [ ] Área de toque confortável no celular (44 px), mesmo com o botão pequeno.
+- [ ] Item no CHANGELOG e print na página Novidades em imagens.

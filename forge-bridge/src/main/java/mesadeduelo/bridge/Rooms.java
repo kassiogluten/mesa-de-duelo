@@ -222,12 +222,16 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                         java.util.List<Deck> opponents = new java.util.ArrayList<>();
                         java.util.List<Integer> brackets = new java.util.ArrayList<>();
                         brackets.add(bracket(msg));
+                        // Os escolhidos primeiro, para o sorteio dos outros não repetir nenhum deles nem o seu.
+                        var taken = new java.util.HashSet<>(Decks.tableKeys(you));
                         if (msg.has("opponents")) {
                             if (!msg.get("opponents").isJsonArray() || msg.getAsJsonArray("opponents").size() != config.playerCount() - 1)
                                 throw new IllegalArgumentException("Escolha um deck para cada oponente.");
-                            for (JsonElement opponent : msg.getAsJsonArray("opponents")) { Deck d = aiDeck(opponent, config); opponents.add(d); brackets.add(aiBracket(opponent, d)); }
+                            var list = msg.getAsJsonArray("opponents");
+                            for (JsonElement opponent : list) if (opponent.isJsonObject()) taken.addAll(Decks.tableKeys(validated(opponent, config.format(), "opponent")));
+                            for (JsonElement opponent : list) { Deck d = aiDeck(opponent, config, taken); opponents.add(d); brackets.add(aiBracket(opponent, d)); }
                         } else {
-                            for (int i = 1; i < config.playerCount(); i++) { Deck d = aiDeck(msg.get("opponent"), config); opponents.add(d); brackets.add(aiBracket(msg.get("opponent"), d)); }
+                            for (int i = 1; i < config.playerCount(); i++) { Deck d = aiDeck(msg.get("opponent"), config, taken); opponents.add(d); brackets.add(aiBracket(msg.get("opponent"), d)); }
                         }
                         solo(ch, you, opponents, config, brackets, owner(msg), nick(msg));
                     }

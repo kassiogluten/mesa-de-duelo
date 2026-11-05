@@ -180,8 +180,12 @@ final class Session {
         List<Deck> decks = new ArrayList<>();
         List<Integer> brackets = new ArrayList<>();
         List<String> names = new ArrayList<>();
+        // Nenhum computador repete o comandante (ou o deck) de alguém da mesa enquanto houver outro.
+        var tableDecks = new java.util.HashSet<String>();
+        for (Seat s : taken) tableDecks.addAll(Decks.tableKeys(s.deck));
         for (int i = 0; i < missing; i++) {
-            Deck d = Decks.random(config.format(), bracket);
+            Deck d = Decks.random(config.format(), bracket, tableDecks);
+            tableDecks.addAll(Decks.tableKeys(d));
             decks.add(d); brackets.add(Decks.bracket(d));
             names.add(missing == 1 ? "Computador" : "Computador " + (i + 1));
         }

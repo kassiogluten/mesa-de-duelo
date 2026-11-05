@@ -46,6 +46,18 @@ public class CommanderDeckTest {
         for (int i = 0; i < 10; i++) { String drawn = Decks.random("precon").getName(); assertTrue(drawn, names.contains(drawn)); }
         assertTrue(new MatchConfig("precon", "bo1", 4).commander());
     }
+    @Test public void computersAvoidCommandersAlreadyAtTheTable() {
+        var taken = new java.util.HashSet<String>();
+        for (int i = 0; i < 4; i++) {
+            var keys = Decks.tableKeys(Decks.random("precon", 3, taken));
+            assertTrue(keys + " já estava em " + taken, java.util.Collections.disjoint(keys, taken));
+            taken.addAll(keys);
+        }
+        // Com todos os comandantes já na mesa, ainda sorteia: repete só quando não sobra outro.
+        var all = new java.util.HashSet<String>();
+        for (JsonObject p : Decks.LISTS.values()) if (p.has("precon")) all.addAll(Decks.tableKeys(DeckValidation.validate(p, "precon").deck()));
+        assertNotNull(Decks.random("precon", 3, all));
+    }
     @Test public void countsSingletonAndOracleExceptions() {
         assertTrue(check(deck("Marwyn, the Nurturer", "Forest", 99)).valid());
         rejects(deck("Marwyn, the Nurturer", "Forest", 98), "total-count");

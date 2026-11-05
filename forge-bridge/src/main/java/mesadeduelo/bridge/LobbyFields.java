@@ -29,10 +29,13 @@ final class LobbyFields {
 
     static String deckName(Deck deck) { return deck == null ? "sem deck" : deck.getName(); }
 
-    static Deck aiDeck(JsonElement opponent, MatchConfig config) {
-        return opponent == null || opponent.isJsonNull()
+    /** O deck de um computador: o escolhido, ou um pronto sorteado sem repetir o que já está na mesa (taken, que ganha este). */
+    static Deck aiDeck(JsonElement opponent, MatchConfig config, java.util.Set<String> taken) {
+        Deck d = opponent == null || opponent.isJsonNull()
             || (opponent.isJsonPrimitive() && "random".equals(opponent.getAsString()))
-            ? Decks.random(config.format()) : validated(opponent, config.format(), "opponent");
+            ? Decks.random(config.format(), 0, taken) : validated(opponent, config.format(), "opponent");
+        taken.addAll(Decks.tableKeys(d));
+        return d;
     }
 
     /** Bracket do deck do computador: o que a mesa mandou junto do deck escolhido, ou o do deck pronto sorteado aqui. */

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { botBracketMax, botPool, botBrackets, matchSummary } = await import('../src/ui/lobbyBots.ts');
+const { botBracketMax, botPool, botBrackets, drawBots, matchSummary } = await import('../src/ui/lobbyBots.ts');
 const { botBracketButtonsHTML, botBracketHelp, chosenDeckHTML, publicRoomsStatusText, roomDeckTilesHTML, roomDecksHelp, roomInfoHTML, startLabel, lobbyHTML } = await import('../src/ui/lobbyView.ts');
 
 const deck = (id, bracket, series) => ({ id, name: id, cards: [], builtin: true, bracket, ...(series ? { precon: { series, year: 2024 } } : {}) });
@@ -42,4 +42,17 @@ test('lobby texts and pieces', () => {
   assert.equal(roomDecksHelp(true, true, 'pauper'), 'Escolhendo o deck…');
   const ctx = { selectedId: '', inRoom: true, format: null, validity: () => '', ptName: n => n };
   assert.equal(roomDeckTilesHTML([], [], ctx, { query: 'zz', roomFormat: 'pauper' }), '<p class="shelf-empty">Nenhum deck corresponde à busca.</p>');
+});
+
+test('random bots do not repeat a commander already at the table while another deck is left', () => {
+  const cmd = (id, ...names) => ({ id, name: id, cards: [], commanders: names.map(name => ({ name, count: 1 })), builtin: true });
+  const mine = cmd('mine', 'Atraxa'), picked = cmd('picked', 'Krenko'), pool = [cmd('a', 'Atraxa'), cmd('k', 'Krenko'), cmd('m', 'Meren'), cmd('y', 'Yuriko')];
+  for (let i = 0; i < 20; i++) {
+    const drawn = drawBots([null, picked, null], pool, [mine]);
+    assert.equal(drawn[1], picked, 'a chosen deck stays');
+    assert.deepEqual(drawn.map(d => d.commanders[0].name).sort(), ['Krenko', 'Meren', 'Yuriko']);
+  }
+  // Sem outro deck, repete só o necessário.
+  assert.deepEqual(drawBots([null, null], [pool[0]], [mine]).map(d => d.id), ['a', 'a']);
+  assert.deepEqual(drawBots([null], [], [mine]), [null], 'empty pool: the server draws');
 });

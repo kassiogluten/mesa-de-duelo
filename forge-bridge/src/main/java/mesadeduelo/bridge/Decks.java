@@ -40,26 +40,45 @@ final class Decks {
         return 0;
     }
 
-    static Deck random(String format) { return random(format, 0); }
+    static Deck random(String format) { return random(format, 0, java.util.Set.of()); }
+    static Deck random(String format, int bracket) { return random(format, bracket, java.util.Set.of()); }
 
     /**
-     * Um deck pronto do formato, sorteado. Com {@code bracket} (1 a 5), só entre os de bracket mais perto dele, para o
-     * computador que completa uma mesa de Commander jogar no nível dela; 0 sorteia entre todos.
+     * Um deck pronto do formato, sorteado. Com {@code bracket} (1 a 5), entre os de bracket mais perto dele, para o
+     * computador que completa uma mesa de Commander jogar no nível dela; 0 sorteia entre todos. Evita os decks com algo
+     * de {@code taken} (veja {@link #tableKeys}): passa para o bracket seguinte antes de repetir, e só repete quando
+     * não sobra nenhum.
      */
-    static Deck random(String format, int bracket) {
-        var candidates = LISTS.values().stream()
-            .filter(o -> { String of = o.has("format") ? o.get("format").getAsString() : "free"; return "free".equals(format) ? !"commander".equals(of) && !"oathbreaker".equals(of) : "precon".equals(format) ? o.has("precon") : format.equals(of); })
-            .toList();
-        if (bracket > 0) {
-            int nearest = candidates.stream().filter(o -> o.has("bracket")).mapToInt(o -> Math.abs(o.get("bracket").getAsInt() - bracket)).min().orElse(-1);
-            if (nearest >= 0) candidates = candidates.stream().filter(o -> o.has("bracket") && Math.abs(o.get("bracket").getAsInt() - bracket) == nearest).toList();
+    static Deck random(String format, int bracket, java.util.Set<String> taken) {
+        var groups = new java.util.TreeMap<Integer, java.util.List<JsonObject>>();
+        for (JsonObject o : LISTS.values()) {
+            String of = o.has("format") ? o.get("format").getAsString() : "free";
+            boolean fits = "free".equals(format) ? !"commander".equals(of) && !"oathbreaker".equals(of) : "precon".equals(format) ? o.has("precon") : format.equals(of);
+            int distance = bracket <= 0 ? 0 : o.has("bracket") ? Math.abs(o.get("bracket").getAsInt() - bracket) : Integer.MAX_VALUE;
+            if (fits) groups.computeIfAbsent(distance, k -> new java.util.ArrayList<>()).add(o);
         }
         // O precon é conferido como o Commander que ele é: o sorteio já escolheu só entre eles.
         String rules = "precon".equals(format) ? "commander" : format;
-        var valid = candidates.stream().map(o -> DeckValidation.validateForAi(o, rules)).filter(DeckValidation.Result::valid).toList();
-        if (valid.isEmpty() && bracket > 0) return random(format, 0);
-        if (valid.isEmpty()) throw new IllegalArgumentException("Não há deck pronto válido para este formato.");
-        return valid.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(valid.size())).deck();
+        var random = java.util.concurrent.ThreadLocalRandom.current();
+        Deck repeat = null;
+        for (var group : groups.values()) {
+            var valid = group.stream().map(o -> DeckValidation.validateForAi(o, rules)).filter(DeckValidation.Result::valid).map(DeckValidation.Result::deck).toList();
+            if (valid.isEmpty()) continue;
+            var fresh = valid.stream().filter(d -> java.util.Collections.disjoint(tableKeys(d), taken)).toList();
+            if (!fresh.isEmpty()) return fresh.get(random.nextInt(fresh.size()));
+            if (repeat == null) repeat = valid.get(random.nextInt(valid.size()));
+        }
+        if (repeat == null) throw new IllegalArgumentException("Não há deck pronto válido para este formato.");
+        return repeat;
+    }
+
+    /** O que conta como o mesmo deck na mesa: os comandantes, cada um pelo nome; sem comandante, o nome do deck. */
+    static java.util.Set<String> tableKeys(Deck deck) {
+        var keys = new java.util.HashSet<String>();
+        var commanders = deck.get(forge.deck.DeckSection.Commander);
+        if (commanders != null) for (var e : commanders) keys.add(e.getKey().getName());
+        if (keys.isEmpty()) keys.add("deck:" + deck.getName());
+        return keys;
     }
 
     /** As cartas de cada precon (comandantes e deck), com os nomes como o motor os conhece; montado na primeira consulta. */

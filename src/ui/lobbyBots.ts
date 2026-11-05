@@ -33,6 +33,23 @@ export function botPool(decks: DeckData[], choice: BotChoice) {
   return decks.filter(d => (max === null || (readyBracket(d) ?? 0) <= max) && (!series || d.precon?.series === series));
 }
 
+/** O que conta como o mesmo deck na mesa: os comandantes, cada um pelo nome; sem comandante, o nome do deck. */
+export const tableKeys = (d: DeckData) => d.commanders?.length ? d.commanders.map(c => c.name) : [`deck:${d.name}`];
+/**
+ * Os decks dos computadores: os escolhidos ficam, e cada aleatório (null) sai do pool sem repetir o comandante de
+ * ninguém da mesa (table, os escolhidos e os já sorteados) enquanto houver outro; só repete quando o pool acaba.
+ */
+export function drawBots<T extends DeckData>(picks: (T | null)[], pool: T[], table: DeckData[], rnd = Math.random): (T | null)[] {
+  const taken = new Set([...table, ...picks.filter((d): d is T => !!d)].flatMap(tableKeys));
+  return picks.map(pick => {
+    if (pick || !pool.length) return pick;
+    const fresh = pool.filter(d => tableKeys(d).every(k => !taken.has(k)));
+    const from = fresh.length ? fresh : pool, drawn = from[Math.floor(rnd() * from.length)]!;
+    tableKeys(drawn).forEach(k => taken.add(k));
+    return drawn;
+  });
+}
+
 export interface SummaryChoice extends BotChoice {
   mode: 'ai' | 'net' | 'free';
   playerCount: number;

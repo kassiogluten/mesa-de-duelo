@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.128.0] - 2026-11-05
+
+### Mudou
+
+- **Computadores sem comandante repetido.** Os decks sorteados para os computadores não repetem mais o comandante de ninguém da mesa: nem o seu, nem o de outro jogador, nem o de outro computador. Vale contra o computador e ao completar uma sala com computadores, com ou sem bracket máximo e série. Se o bracket ou a série escolhidos não tiverem decks diferentes que bastem, a mesa repete só o necessário. O deck que você escolhe à mão para um computador continua valendo, mesmo que repita.
+
 ## [0.127.0] - 2026-11-05
 
 ### Mudou

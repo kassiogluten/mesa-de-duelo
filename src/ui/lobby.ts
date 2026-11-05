@@ -13,7 +13,7 @@ import { deckBracket, isBracket, type Bracket } from '../brackets';
 import { validateDeckLocal } from './deckRules';
 import { deckFitText, fitFormats, listJoin, openFormatPicker } from './deckFit';
 import { colorFilterHTML, matchesColors, matchesQuery, toggleColor, type ColorFilter } from './deckFilters';
-import { botBracketMax as bracketMaxFor, botBrackets, botPool as poolFor, matchSummary, readyPool as readyBotPool, type BotChoice } from './lobbyBots';
+import { botBracketMax as bracketMaxFor, botBrackets, botPool as poolFor, drawBots, matchSummary, readyPool as readyBotPool, type BotChoice } from './lobbyBots';
 import { botBracketButtonsHTML, botBracketHelp, chosenDeckHTML, commanderAiPanelHTML, deckTilesHTML, formatName, lobbyHTML, opponentOptionsHTML, personalShelfHTML, preconGroupsHTML, ROOM_DECKS_SHELF, roomDeckTilesHTML, roomDecksHelp, roomInfoHTML, startLabel, type TileContext } from './lobbyView';
 import { createRoomsPoller } from './lobbyRooms';
 import { attachTileMenus } from './tileMenus';
@@ -422,8 +422,9 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         // Com bracket máximo ou série, o sorteio dos bots é feito aqui, entre os decks que cabem; sem eles, no servidor.
         const pool = botPool(readyPool()), filtered = botBracketMax(readyPool()) !== null || !!botSeries();
         if (hasCommandZone(matchConfig.format) && filtered && !pool.length && selectedOpponents.includes('random')) { setStatus('Nenhum deck pronto cabe no bracket máximo dos bots.', true); return; }
-        const drawn = () => filtered ? pool[Math.floor(Math.random() * pool.length)] ?? null : null;
-        const opponents = hasCommandZone(matchConfig.format) ? selectedOpponents.map(id => id === 'random' ? drawn() : allDecks().find(d => d.builtin && d.id === id) ?? null) : undefined;
+        // Sem filtro, os aleatórios vão como null e o servidor sorteia, também sem repetir comandante.
+        const chosen = selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.builtin && d.id === id) ?? null);
+        const opponents = hasCommandZone(matchConfig.format) ? filtered ? drawBots(chosen, pool, [deck]) : chosen : undefined;
         await opts.onPlay(deck, opponents?.[0] ?? opponent, matchConfig, opponents);
       }
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Não foi possível iniciar a partida.', true); }
