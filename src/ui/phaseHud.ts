@@ -191,31 +191,38 @@ const NEXT_LABEL: Record<string, string> = {
   COMBAT_BEGIN: 'Para o combate extra', MAIN2: 'Para a principal 2', END_OF_TURN: 'Para o fim do turno', CLEANUP: 'Para o fim do turno',
 };
 
-/**
- * Texto do botão de passar a prioridade: diz para onde o jogo vai, como no Arena. Só o rótulo muda; a ação
- * continua a mesma. Com algo na pilha, passar deixa o topo resolver.
- */
-export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' | 'stack' | 'extraCombatAfter' | 'extraPhaseAfter'>): string {
-  if (state.stack.length) return 'Resolver';
-  if (state.activePlayer !== state.you) return 'Passar';
-  const group = STEPS[state.phase ?? '']?.group;
-  // Uma etapa extra muda o que vem depois: a manutenção extra depois do combate volta para a principal 2, não para a compra.
-  const next = state.extraPhaseAfter?.[group === 'combat' ? 'COMBAT_END' : state.phase ?? ''];
-  if (next && NEXT_LABEL[next]) return NEXT_LABEL[next];
-  // Na sua manutenção, passar leva à compra.
-  if (state.phase === 'UPKEEP') return 'Comprar';
-  const after = state.extraCombatAfter ?? [];
-  // Um combate extra pode vir logo depois do combate (Combat Celebrant) ou depois de uma principal (Relentless Assault).
-  if ((group === 'combat' && after.includes('COMBAT_END')) || (group === 'main1' && after.includes('MAIN1')) || (group === 'main2' && after.includes('MAIN2'))) return 'Para o combate extra';
-  return group === 'start' ? 'Para a principal 1' : group === 'main1' ? 'Para o combate' : group === 'combat' ? 'Para a principal 2'
-    : group === 'main2' ? 'Para o fim do turno' : 'Passar';
+/** Etapas do combate depois das quais o que vem é o fim do combate (e um combate extra, se houver). */
+const COMBAT_CLOSING = ['COMBAT_FIRST_STRIKE_DAMAGE', 'COMBAT_DAMAGE', 'COMBAT_END'];
+
+/** Alguma criatura sua pode atacar: desvirada e sem enjoo de invocação. Sem os jogadores, supõe que sim. */
+function canAttack(state: Partial<Pick<FState, 'players' | 'you'>>) {
+  const me = state.players?.find(player => player.id === state.you);
+  return !me || me.battlefield.some(card => card.creature && !card.tapped && !card.sick);
 }
 
 /**
- * No seu turno, com a pilha vazia, qual botão fica em destaque: passar a etapa ou "Fim de turno". Até a principal 1
- * o comum é seguir (comprar, ir para o combate); do combate em diante, encerrar o turno.
+ * Texto do botão de passar a prioridade: diz para onde o jogo vai, como no Arena. Só o rótulo muda; a ação
+ * continua a mesma. Com algo na pilha, passar deixa o topo resolver. No combate, cada etapa diz o passo seguinte:
+ * no início do combate ainda vem o ataque, não a principal 2.
  */
-export function passIsPrimary(state: Pick<FState, 'phase'>): boolean {
-  const group = STEPS[state.phase ?? '']?.group;
-  return group === 'start' || group === 'main1';
+export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' | 'stack' | 'extraCombatAfter' | 'extraPhaseAfter'> & Partial<Pick<FState, 'players' | 'combat'>>): string {
+  if (state.stack.length) return 'Resolver';
+  if (state.activePlayer !== state.you) return 'Passar';
+  const phase = state.phase ?? '';
+  const group = STEPS[phase]?.group;
+  const closing = COMBAT_CLOSING.includes(phase);
+  // Uma etapa extra muda o que vem depois: a manutenção extra depois do combate volta para a principal 2, não para a compra.
+  const next = group === 'combat' ? closing ? state.extraPhaseAfter?.COMBAT_END : undefined : state.extraPhaseAfter?.[phase];
+  if (next && NEXT_LABEL[next]) return NEXT_LABEL[next];
+  // Na sua manutenção, passar leva à compra.
+  if (phase === 'UPKEEP') return 'Comprar';
+  const after = state.extraCombatAfter ?? [];
+  // Um combate extra pode vir logo depois do combate (Combat Celebrant) ou depois de uma principal (Relentless Assault).
+  if ((closing && after.includes('COMBAT_END')) || (group === 'main1' && after.includes('MAIN1')) || (group === 'main2' && after.includes('MAIN2'))) return 'Para o combate extra';
+  const attacking = (state.combat?.length ?? 1) > 0;
+  if (phase === 'COMBAT_BEGIN') return canAttack(state) ? 'Para o ataque' : 'Para a principal 2';
+  if (phase === 'COMBAT_DECLARE_ATTACKERS' && attacking) return 'Para os bloqueios';
+  if (phase === 'COMBAT_DECLARE_BLOCKERS' && attacking) return 'Para o dano';
+  return group === 'start' ? 'Para a principal 1' : group === 'main1' ? 'Para o combate' : group === 'combat' ? 'Para a principal 2'
+    : group === 'main2' ? 'Para o fim do turno' : 'Passar';
 }

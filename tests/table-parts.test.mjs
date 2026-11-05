@@ -64,6 +64,8 @@ test('the action box prompt: attack, blocking, vote, priority and the opening', 
   assert.equal(boardPrompt(state({ priority: false, message: 'Escolha.' }), choices()), 'Escolha.');
   assert.equal(boardPrompt(state({ priority: false, opening: 'mulligan-bottom', message: 'Devolva 1 carta(s).' }), choices()), 'Devolva 1 carta.');
   assert.equal(boardPrompt(state({ priority: false, opening: 'mulligan' }), choices()), '');
+  // Esperando o oponente na abertura: a mensagem da sua escolha anterior ("você ganhou na moeda") não volta.
+  assert.equal(boardPrompt(state({ priority: false, openingWait: { player: 2, step: 'hand' }, message: 'Kassio, você ganhou na moeda.' }), choices()), '');
   assert.equal(boardPrompt(state({}, { gameOver: true }), choices({ vote: () => assert.fail('only read when voting') })), '');
 });
 

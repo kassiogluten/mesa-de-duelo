@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { phaseHudHTML, turnInfoHTML, passIsPrimary, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import('../src/ui/phaseHud.ts');
+const { phaseHudHTML, turnInfoHTML, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import('../src/ui/phaseHud.ts');
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
 
@@ -50,15 +50,27 @@ test('the pass button names where the game goes next', () => {
   assert.equal(passLabel(s('UPKEEP', { activePlayer: 2 })), 'Passar');
   assert.equal(passLabel(s('UPKEEP', { stack: [{ id: 1 }] })), 'Resolver');
   assert.equal(passLabel(s('MAIN1')), 'Para o combate');
-  assert.equal(passLabel(s('COMBAT_DECLARE_BLOCKERS')), 'Para a principal 2');
+  assert.equal(passLabel(s('COMBAT_DECLARE_BLOCKERS', { combat: [{ attacker: 5, blockers: [] }] })), 'Para o dano');
+  assert.equal(passLabel(s('COMBAT_DAMAGE')), 'Para a principal 2');
   assert.equal(passLabel(s('MAIN2')), 'Para o fim do turno');
   assert.equal(passLabel(s('END_OF_TURN')), 'Passar');
   assert.equal(passLabel(s('MAIN1', { activePlayer: 2 })), 'Passar');
   assert.equal(passLabel(s('MAIN1', { stack: [{ id: 1 }] })), 'Resolver');
 });
-test('on your turn the pass button leads until main 1, then "Fim de turno" takes the highlight', () => {
-  for (const phase of ['UNTAP', 'UPKEEP', 'DRAW', 'MAIN1']) assert.equal(passIsPrimary({ phase }), true, phase);
-  for (const phase of ['COMBAT_BEGIN', 'COMBAT_DAMAGE', 'COMBAT_END', 'MAIN2', 'END_OF_TURN', 'CLEANUP']) assert.equal(passIsPrimary({ phase }), false, phase);
+test('combat names the real next step: before attacking it is the attack, not main 2', () => {
+  const me = (battlefield) => [{ id: 1, battlefield }];
+  const bear = { id: 5, creature: true, tapped: false };
+  const s = (phase, extra = {}) => ({ phase, activePlayer: 1, you: 1, stack: [], players: me([bear]), combat: [], ...extra });
+  assert.equal(passLabel(s('COMBAT_BEGIN')), 'Para o ataque');
+  assert.equal(passLabel(s('COMBAT_BEGIN', { players: me([{ ...bear, tapped: true }, { ...bear, id: 6, sick: true }, { id: 7, land: true }]) })), 'Para a principal 2');
+  assert.equal(passLabel(s('COMBAT_DECLARE_ATTACKERS', { combat: [{ attacker: 5, blockers: [] }] })), 'Para os bloqueios');
+  assert.equal(passLabel(s('COMBAT_DECLARE_ATTACKERS')), 'Para a principal 2');
+  assert.equal(passLabel(s('COMBAT_DECLARE_BLOCKERS', { combat: [{ attacker: 5, blockers: [9] }] })), 'Para o dano');
+  assert.equal(passLabel(s('COMBAT_END')), 'Para a principal 2');
+  // O combate extra e as etapas extras depois do combate só valem quando o combate acaba, não antes do ataque.
+  assert.equal(passLabel(s('COMBAT_BEGIN', { extraCombatAfter: ['COMBAT_END'] })), 'Para o ataque');
+  assert.equal(passLabel(s('COMBAT_END', { extraCombatAfter: ['COMBAT_END'] })), 'Para o combate extra');
+  assert.equal(passLabel(s('COMBAT_BEGIN', { extraPhaseAfter: { COMBAT_END: 'UPKEEP' } })), 'Para o ataque');
 });
 test('in multiplayer Commander the active player portrait sits by the turn clocks, colored by owner, with the escaped name in the tip', () => {
   const players = [{ id: 1, name: 'Você' }, { id: 2, name: 'Ana' }, { id: 3, name: '<b>"Bia"</b>' }, { id: 4, name: 'Caio' }];

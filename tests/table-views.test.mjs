@@ -89,6 +89,13 @@ test('action box: confirm labels, the result button when observing, and the targ
     passLevel: 'acoes', passLevelSupported: true, passingTurn: false, passPending: false, passMenuOpen: false, attackAll: false, attackSelecting: 0, attackBusy: false };
   assert.match(buttons(view, state({}, { gameOver: true, winner: 'Você' })), /Vitória · Jogo encerrado[\s\S]*data-ui="result"/);
   assert.match(buttons(view, state({}, { spectating: true })), /Você foi eliminado/);
+  // O destaque (o último, embaixo) é sempre o próximo passo; "Fim de turno" fica secundário em qualquer fase.
+  const playing = { ...view, observing: false };
+  for (const phase of ['MAIN1', 'COMBAT_END', 'MAIN2']) {
+    const html = buttons(playing, state({ priority: true, ok: { enabled: true, label: 'OK' }, cancel: { enabled: true, label: 'Fim de turno' } }, { phase }));
+    assert.match(html, /arena-btn secondary" data-act="pass-turn"[\s\S]*arena-btn primary" data-act="ok"/, phase);
+    assert.doesNotMatch(html, /arena-btn primary" data-act="pass-turn"/, phase);
+  }
   const info = { source: 'Shock', kind: 'Mágica', ability: 'Causa 2 de dano', progress: '1 de 2 alvos', chosen: ['Ana'] };
   assert.match(targetInfoHTML(info), /Marcado: Ana/);
   assert.equal(targetInfoText(info), 'Mágica de Shock: Causa 2 de dano. 1 de 2 alvos. Marcado: Ana.');

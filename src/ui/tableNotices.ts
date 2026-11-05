@@ -22,7 +22,8 @@ export function createAwaitingCallout(root: HTMLElement, cue: () => void) {
     const arena = root.querySelector<HTMLElement>('.arena')!;
     const action = q(root, '#fAction');
     const callout = q(root, '#fAwait');
-    const waitingOn = awaiting ? '' : waitingOnText(s);
+    // Na abertura, o título no centro já diz quem está decidindo; o aviso cairia em cima da mão.
+    const waitingOn = awaiting || s.input.openingWait ? '' : waitingOnText(s);
     arena.classList.toggle('awaiting-decision', !!awaiting);
     // Só esmaece quando há cartas para escolher; numa pergunta de sim/não a mesa continua normal.
     arena.classList.toggle('focus-choices', !!awaiting && awaiting.kind !== 'confirm' && s.input.selectable.length > 0);

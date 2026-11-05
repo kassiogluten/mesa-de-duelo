@@ -1,4 +1,18 @@
 {
+  "0.132.2": {
+    "O botão de passar diz o próximo passo de verdade no combate": [
+      { "img": "0.132.2/inicio-do-combate.webp", "legenda": "No início do combate, antes de declarar atacantes, o botão de destaque leva \"Para o ataque\", não mais para a principal 2." }
+    ],
+    "\"Fim de turno\" nunca é o botão de destaque": [
+      { "img": "0.132.2/fim-de-turno-secundario.webp", "legenda": "Na principal 2, o destaque embaixo é o próximo passo, e o \"Fim de turno\" fica em cima, como botão secundário." }
+    ]
+  },
+  "0.132.1": {
+    "Esperando o oponente decidir a mão, a mesa diz que o mulligan ainda vem": [
+      { "img": "0.132.1/espera-mao.webp", "legenda": "Enquanto a Ana decide a mão dela, a sua fica no centro com o aviso de que em seguida é a sua vez de manter ou fazer mulligan." },
+      { "img": "0.132.1/espera-quem-comeca.webp", "legenda": "Antes disso, enquanto a Ana escolhe quem começa, a mesa já avisa que cada um ainda vai decidir a própria mão." }
+    ]
+  },
   "0.132.0": {
     "Sideboard entre os jogos com as cartas à vista": [
       { "img": "0.132.0/sideboard-miniaturas.webp", "legenda": "O deck principal e o sideboard lado a lado em miniaturas, com a busca e os tipos em cima, a contagem e a curva do deck, e embaixo as duas cartas que saem e as duas que entram." },

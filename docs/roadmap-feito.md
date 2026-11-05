@@ -1052,3 +1052,13 @@ O combate já tem animação própria (faixa de ataque, atacantes recuando e ava
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.131.0 (05/11/2026): a pose fica em variáveis de CSS nos slots (`combatPose.ts`: `--atk-tilt` até 7°, `--blk-x`/`--blk-y` até 48 px ou 30% do caminho), aplicada antes das setas a cada desenho; a ida usa uma transição com mola e a volta, a transição de sempre da carta. Os golpes da mesma etapa de dano saem da fila juntos (`takeWhile` por `combat` e `step`), e quem revida o próprio atacante se choca no meio (`clash`, o mesmo alcance da luta). Tremor no alvo de 1,5 a 6 px pelo dano. Setas de ataque com a cor do jogador atacado (pela ordem da mesa) com 3 ou 4 jogadores. Ficou em aberto: conferir o desempenho no celular com muitos atacantes.
+
+## 101. Botões de ação: "Principal 2" antes do combate e "Fim de turno" como destaque ✅
+
+Em algumas situações os botões de ação mostram "Principal 2" (por exemplo "Para a principal 2") mesmo quando a partida ainda está antes do combate. E o botão principal, o de destaque que fica embaixo, às vezes é o "Fim de turno": apertar o botão de sempre por hábito pula o resto do turno.
+
+- [x] Descobrir em que situações o rótulo fala da principal 2 antes do combate (fase principal 1 sem atacantes possíveis, combate pulado, combate extra, passar automaticamente ligado...) e corrigir para dizer o próximo passo de verdade.
+- [x] O botão de destaque de baixo nunca pode ser "Fim de turno": ele fica sempre como botão secundário, e o destaque é o próximo passo (ir para o combate, para a principal 2, passar).
+- [x] Item no CHANGELOG e print na página Novidades em imagens. Sem cenário no Laboratório: é só o texto e o destaque dos botões.
+
+Feito na 0.132.2 (05/11/2026): o rótulo tratava o combate inteiro como um grupo e dizia "Para a principal 2" já no início do combate (a mesa para ali com gatilhos de início do combate e paradas marcadas). Agora cada etapa diz o passo seguinte: início → "Para o ataque" (ou principal 2 sem criatura desvirada e sem enjoo), atacantes → "Para os bloqueios", bloqueadores → "Para o dano"; combate extra e etapas extras só contam do dano em diante. O `passIsPrimary` saiu: o passar é sempre o destaque. Ficou para ver: na principal 2 os dois botões dizem "Fim de turno" e "Para o fim do turno", parecidos demais.

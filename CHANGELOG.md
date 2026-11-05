@@ -8,6 +8,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.132.2] - 2026-11-05
+
+### Corrigido
+
+- **O botão de passar diz o próximo passo de verdade no combate.** No início do combate, antes de declarar atacantes, ele dizia "Para a principal 2", como se o ataque fosse ser pulado. Agora diz "Para o ataque" (ou "Para a principal 2" quando nenhuma criatura sua pode atacar), "Para os bloqueios" depois de declarar os atacantes, "Para o dano" depois dos bloqueios e "Para a principal 2" só quando o combate acaba.
+- **"Fim de turno" nunca é o botão de destaque.** Do combate em diante, o "Fim de turno" ocupava o botão principal, embaixo, e apertá-lo por hábito pulava o resto do turno. Agora o destaque é sempre o próximo passo, e o "Fim de turno" fica acima dele, como botão secundário.
+
+## [0.132.1] - 2026-11-05
+
+### Corrigido
+
+- **Esperando o oponente decidir a mão, a mesa diz que o mulligan ainda vem.** As mãos iniciais são decididas uma de cada vez, começando por quem joga primeiro. Enquanto o oponente escolhe quem começa ou se mantém a mão, o centro da mesa agora mostra a sua mão com "Fulano está escolhendo quem começa" ou "Fulano está decidindo a mão", e embaixo que em seguida é a sua vez de manter ou fazer mulligan (ou que você já manteve a sua). A mensagem antiga da moeda também não fica mais na caixa de ação.
+
 ## [0.132.0] - 2026-11-05
 
 ### Mudou

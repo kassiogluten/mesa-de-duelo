@@ -44,6 +44,8 @@ export function boardPrompt(s: FState, c: PromptChoices): string {
   }
   if (s.input.vote) return c.vote();
   if (s.input.priority && !s.input.paying && !s.input.targeting) return '';
+  // Esperando o oponente na abertura: o centro já explica, e a mensagem que sobrou é a da sua escolha anterior.
+  if (s.input.openingWait) return '';
   if (opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined)) return '';
   if (opening === 'mulligan-bottom') return s.input.message.replace(/(\d+)\s+carta\(s\)/g, (_, n: string) => `${n} ${Number(n) === 1 ? 'carta' : 'cartas'}`);
   return s.input.tapToPay ? tapToPayMessage(s.input.tapToPay, s.input.card ? label(s.input.card) : undefined) : s.input.message;

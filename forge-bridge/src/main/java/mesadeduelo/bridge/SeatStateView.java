@@ -182,6 +182,35 @@ final class SeatStateView {
         return list;
     }
 
+    /** A decisão de abertura que o pedido do Forge representa (quem começa, manter a mão, devolver cartas), ou null. */
+    private String opening(Object in, forge.game.Game game) {
+        if (in instanceof InputLondonMulligan) return "mulligan-bottom";
+        if (in instanceof InputConfirmMulligan) return "mulligan";
+        if (game.getAge() != GameStage.BeforeMulligan || session.events.gameStarted()) return null;
+        if (in instanceof InputConfirm) return "play-draw";
+        return InputContext.playerChoices(in).isEmpty() ? null : "starting-player";
+    }
+
+    /**
+     * Outro jogador numa decisão de abertura enquanto este espera: o Forge decide as mãos uma de cada vez, e sem isso a
+     * mesa parece ter pulado o mulligan. step "start" (quem começa) ou "hand" (manter ou devolver); kept quando este
+     * assento já manteve a mão.
+     */
+    private JsonObject openingWait(Seat viewer, forge.game.Game game) {
+        for (Seat other : session.seats) {
+            if (other == viewer || other.me == null || other.eliminated()) continue;
+            Object in = other.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
+            String kind = opening(in, game);
+            if (kind == null) continue;
+            JsonObject wait = new JsonObject();
+            wait.addProperty("player", other.me.getId());
+            wait.addProperty("step", kind.startsWith("mulligan") ? "hand" : "start");
+            if (viewer.keptHand) wait.addProperty("kept", true);
+            return wait;
+        }
+        return null;
+    }
+
     /**
      * Jogadores humanos que a mesa espera agora (inclusive na prioridade comum) e há quanto tempo, para o alerta de
      * espera demorada. Cada pedido novo do Forge (outra prioridade, outra escolha) é uma espera nova: o relógio zera a
@@ -241,12 +270,12 @@ final class SeatStateView {
                 JsonObject proliferate = InputContext.proliferate(currentInput);
                 if (proliferate != null) input.add("proliferate", proliferate);
                 Set<Integer> playerChoices = InputContext.playerChoices(currentInput);
-                if (currentInput instanceof InputLondonMulligan) input.addProperty("opening", "mulligan-bottom");
-                else if (currentInput instanceof InputConfirmMulligan) input.addProperty("opening", "mulligan");
-                else if (currentInput instanceof InputConfirm && m.getGame().getAge() == GameStage.BeforeMulligan && !session.events.gameStarted())
-                    input.addProperty("opening", "play-draw");
-                else if (!playerChoices.isEmpty() && m.getGame().getAge() == GameStage.BeforeMulligan && !session.events.gameStarted())
-                    input.addProperty("opening", "starting-player");
+                String opening = opening(currentInput, m.getGame());
+                if (opening != null) input.addProperty("opening", opening);
+                else if (!spectating) {
+                    JsonObject wait = openingWait(seat, m.getGame());
+                    if (wait != null) input.add("openingWait", wait);
+                }
                 if (input.has("opening")) {
                     if (currentInput instanceof InputConfirmMulligan mulligan) {
                         forge.game.player.Player first = InputContext.mulliganStartingPlayer(mulligan);

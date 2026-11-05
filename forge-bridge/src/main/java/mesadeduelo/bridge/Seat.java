@@ -79,6 +79,8 @@ final class Seat {
     // Estado do "input" atual do Forge (prompt, botões e cartas selecionáveis).
     volatile String message = "";
     volatile int openingStartingPlayer = -1;
+    /** Já manteve a mão inicial (OK no mulligan): enquanto o oponente decide a dele, a mesa diz isso. */
+    volatile boolean keptHand;
     /** Carta citada pelo prompt (ex.: a do topo na vidência de 1); pode estar numa zona oculta. */
     volatile CardView promptCard;
     volatile String okLabel = "", cancelLabel = "";
@@ -132,7 +134,7 @@ final class Seat {
     }
 
     void clearInput() {
-        openingStartingPlayer = -1; message = ""; promptCard = null; okLabel = cancelLabel = ""; okEnabled = cancelEnabled = false;
+        openingStartingPlayer = -1; keptHand = false; message = ""; promptCard = null; okLabel = cancelLabel = ""; okEnabled = cancelEnabled = false;
         selectable = Set.of(); selectableStacks = Set.of(); selectablePlayers = Set.of(); actionable = Set.of();
     }
 

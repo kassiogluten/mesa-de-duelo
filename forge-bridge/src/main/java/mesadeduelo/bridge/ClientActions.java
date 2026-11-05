@@ -15,6 +15,7 @@ import forge.game.player.PlayerView;
 import forge.game.spellability.StackItemView;
 import forge.gui.FThreads;
 import forge.interfaces.IGameController;
+import forge.gamemodes.match.input.InputConfirmMulligan;
 import forge.player.PlayerControllerHuman;
 import io.netty.channel.Channel;
 
@@ -50,6 +51,8 @@ final class ClientActions {
                 if (gen != seat.inputGen.get() || seat.buttonsLocked()) { session.markDirty(); break; }
                 seat.consumedGen = gen;
                 seat.consumedAt = System.currentTimeMillis();
+                if ("ok".equals(type) && seat.controller() instanceof PlayerControllerHuman human
+                    && human.getInputQueue().getInput() instanceof InputConfirmMulligan) seat.keptHand = true;
                 session.markDirty();
                 // O OK de um pagamento é o Automático: a parte genérica sai antes das pedras de mana (AutoPay).
                 seat.onEdt(genAtClick, "ok".equals(type)

@@ -6,7 +6,7 @@ import { label } from './cardFaces';
 import { voteTallyText } from './cardVote';
 import { cardDecision } from './decisionPrompt';
 import { isProliferating, proliferateOkLabel } from './proliferate';
-import { passIsPrimary, passLabel } from './phaseHud';
+import { passLabel } from './phaseHud';
 import { passLevelBadgeHTML, type PassLevel } from './passLevel';
 import { abilityKindLabel, paymentButtonLabels, targetProgress, voteRequest } from './shortInstruction';
 import { waitingOnText } from './awaitingDecision';
@@ -102,12 +102,11 @@ export function buttons(v: ActionView, s: FState) {
   // Sem mana para o automático, a vida vira o destaque; sem ela, só sobra desistir ou não pagar.
   if (s.input.paying && s.input.canAutoPay === false && cancel.enabled)
     return lifeEnabled ? b('ok', ok, 'secondary') + b('cancel', cancel, 'secondary') + life('primary') : b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
-  // Em destaque, o que se aperta mais: comprar e ir para o combate no começo do turno, "Fim de turno" depois.
-  // O destaque fica sempre por último (embaixo), para a mão achar o botão no mesmo lugar.
-  const passFirst = !endTurn || passIsPrimary(s);
-  const pass = b('ok', priority, passFirst ? 'primary' : 'secondary');
-  const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, passFirst ? 'secondary' : 'primary') : '';
-  return undo + life('secondary') + resolveAll + (passFirst ? passTurn + pass : pass + passTurn);
+  // O destaque, sempre por último (embaixo, onde a mão já espera), é o próximo passo. Nunca o "Fim de turno": apertado
+  // por hábito, ele pularia o resto do turno.
+  const pass = b('ok', priority, 'primary');
+  const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'secondary') : '';
+  return undo + life('secondary') + resolveAll + passTurn + pass;
 }
 /** O selo do nível fica à vista durante toda a partida, também com o oponente jogando, para trocar a qualquer hora. */
 export function passLevelVisible(v: ActionView, s: FState) {
