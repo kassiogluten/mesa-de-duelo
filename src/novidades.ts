@@ -1,3 +1,4 @@
+// Página Novidades em imagens: os itens do CHANGELOG com os prints de src/novidades.json.
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';

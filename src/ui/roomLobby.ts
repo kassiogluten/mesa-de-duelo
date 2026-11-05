@@ -6,6 +6,7 @@ import { esc } from './cardtext';
 import { bracketLabel, isBracket } from '../brackets';
 import { bracketTitle } from './deckStats';
 import './roomLobby.css';
+import { finder } from './dom';
 
 /** Lobby da sala em rede: o que se vê depois de criar ou entrar, até a mesa encher e a partida começar. */
 export interface RoomLobby {
@@ -71,7 +72,7 @@ export function mountRoomLobby(el: HTMLElement, opts: RoomLobbyOptions): RoomLob
     <p class="sr-only" id="roomSaid" aria-live="polite"></p>
     <footer class="room-lobby-foot"><p class="lobby-status" id="roomStatus" role="status" aria-live="polite"></p><button type="button" class="arena-btn secondary" data-room="leave">Sair da sala</button><button type="button" class="arena-btn primary" data-room="fill" hidden></button></footer>
     <section class="room-decks" id="roomDecks" aria-labelledby="roomDecksTitle" hidden></section>`;
-  const $ = <T extends HTMLElement = HTMLElement>(selector: string) => el.querySelector<T>(selector)!;
+  const $ = finder(el);
   $('[data-room=share]').hidden = typeof navigator.share !== 'function';
 
   function seatsHTML(r: FRoom) {

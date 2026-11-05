@@ -124,10 +124,10 @@ public class MatchHistoryTest {
     }
 
     @Test public void theNameSentAtTheStartIsTrimmedAndOptional() {
-        assertEquals("Ana", Rooms.nick(JsonParser.parseString("{\"name\":\"  Ana \"}").getAsJsonObject()));
-        assertNull(Rooms.nick(JsonParser.parseString("{\"name\":\"  \"}").getAsJsonObject()));
-        assertNull(Rooms.nick(new JsonObject()));
-        assertEquals(24, Rooms.nick(JsonParser.parseString("{\"name\":\"" + "x".repeat(40) + "\"}").getAsJsonObject()).length());
+        assertEquals("Ana", LobbyFields.nick(JsonParser.parseString("{\"name\":\"  Ana \"}").getAsJsonObject()));
+        assertNull(LobbyFields.nick(JsonParser.parseString("{\"name\":\"  \"}").getAsJsonObject()));
+        assertNull(LobbyFields.nick(new JsonObject()));
+        assertEquals(24, LobbyFields.nick(JsonParser.parseString("{\"name\":\"" + "x".repeat(40) + "\"}").getAsJsonObject()).length());
     }
 
     @Test public void aGameDecidedByAConcessionIsMarkedConceded() {

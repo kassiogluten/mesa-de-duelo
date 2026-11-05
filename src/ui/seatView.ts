@@ -19,7 +19,7 @@ import { bracketLabel, isBracket } from '../brackets';
 import { bracketTitle } from './deckStats';
 import { backRow, canUse, fieldRow, inspectButton, isBackRow, type BoardView } from './permanentView';
 import type { SeatState } from './tableState';
-import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, PILE_ICON_EXILE, PILE_ICON_GY } from './tableIcons';
+import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
 
 /** O que os assentos precisam da mesa, além das peças do campo. */
 export interface SeatView extends BoardView {

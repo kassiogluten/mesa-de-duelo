@@ -1,7 +1,7 @@
 {
   "name": "mesa-de-duelo",
   "private": true,
-  "version": "0.126.0",
+  "version": "0.126.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,7 +21,10 @@
     "unused": "node scripts/unused-exports.mjs",
     "test:e2e": "node scripts/test-e2e.mjs",
     "visual": "node scripts/visual-diff.mjs",
-    "css-why": "node scripts/css-why.mjs"
+    "css-why": "node scripts/css-why.mjs",
+    "mapa": "node scripts/mapa.mjs",
+    "relatos": "node --import ./tests/register.mjs deploy/relatos.mjs",
+    "protocol-doc": "node scripts/protocol-doc.mjs"
   },
   "devDependencies": {
     "@vite-pwa/assets-generator": "^0.2.6",

@@ -29,8 +29,9 @@ async function until(test, label, advance, timeout = 15000) {
 const own = p => p.state?.players.find(player => player.id === p.state.you);
 const priority = p => p.state?.input.priority && p.state.input.ok.enabled && !p.state.question;
 const main = p => priority(p) && p.state.activePlayer === p.state.you && p.state.phase === 'MAIN1';
-// A manual seat also stops in the opponent's end step; passing those stops reaches its own main.
-const mainPassingTheirTurn = p => { if (priority(p) && p.state.activePlayer !== p.state.you) p.send({type:'ok',gen:p.state.input.gen}); return main(p); };
+// A manual seat stops at every priority (its own upkeep and draw, the opponent's steps); passing every stop that is
+// not its own first main reaches it.
+const mainPassingTheirTurn = p => { if (priority(p) && !main(p)) p.send({type:'ok',gen:p.state.input.gen}); return main(p); };
 const landDeck = (name, land) => ({name,cards:[{name:land,count:60}]});
 async function room(a,b,deckA,deckB,length='bo1') {
   a.send({type:'host',name:'Preferences A',deck:deckA,config:{format:'free',matchLength:length}});
@@ -81,7 +82,8 @@ try {
   b.send({type:'concede'}); await until(()=>a.state?.sideboarding&&b.state?.sideboarding,'game one end');
   const side = a.state.sideboarding.id;
   a.send({type:'next-game',id:side}); b.send({type:'next-game',id:side});
-  await until(()=>a.state?.match.gameNumber===2&&(main(a)||main(b)),'Bo3 next game');
+  // A estÃ¡ no modo manual e para tambÃ©m no turno de B (manutenÃ§Ã£o): passar essas paradas atÃ© alguÃ©m chegar Ã  fase principal.
+  await until(()=>a.state?.match.gameNumber===2&&(mainPassingTheirTurn(a)||main(b)),'Bo3 next game');
   assert.equal(a.state.preferences.autoPassNoActions,false); assert.equal(b.state.preferences.autoPassNoActions,true);
   if (main(b)) {playLand(b); await until(()=>mainPassingTheirTurn(a),'A main in game two');}
   playLand(a); await until(()=>priority(a)&&a.state.input.actionable.length===0,'new controller retained manual preference');
@@ -89,7 +91,7 @@ try {
   b.send({type:'concede'}); await until(()=>a.state?.match.over&&b.state?.match.over,'match end');
   const matchId = a.state.matchId;
   a.send({type:'rematch'}); b.send({type:'rematch'});
-  await until(()=>a.state?.matchId!==matchId&&(main(a)||main(b)),'rematch');
+  await until(()=>a.state?.matchId!==matchId&&(mainPassingTheirTurn(a)||main(b)),'rematch');
   assert.equal(a.state.preferences.autoPassNoActions,false); assert.equal(b.state.preferences.autoPassNoActions,true);
   if (main(b)) {playLand(b); await until(()=>mainPassingTheirTurn(a),'A main in rematch');}
   playLand(a); await until(()=>priority(a)&&a.state.input.actionable.length===0,'rematch controller retained manual preference');

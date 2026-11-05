@@ -1,6 +1,5 @@
 package mesadeduelo.bridge;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Stack;
 
@@ -20,13 +19,8 @@ import forge.game.player.Player;
  */
 final class TurnExtras {
     private TurnExtras() { }
-    private static final Field TURNS, PHASES;
-    static {
-        try {
-            TURNS = PhaseHandler.class.getDeclaredField("extraTurns"); TURNS.setAccessible(true);
-            PHASES = PhaseHandler.class.getDeclaredField("extraPhases"); PHASES.setAccessible(true);
-        } catch (ReflectiveOperationException e) { throw new ExceptionInInitializerError(e); }
-    }
+    private static final ForgeReflection.FieldRef TURNS = ForgeReflection.field(PhaseHandler.class, "extraTurns"),
+        PHASES = ForgeReflection.field(PhaseHandler.class, "extraPhases");
 
     static void add(JsonObject o, Game game) {
         if (game == null) return;
@@ -47,13 +41,13 @@ final class TurnExtras {
             }
             JsonObject next = extraPhaseLinks(ph);
             if (next.size() > 0) o.add("extraPhaseAfter", next);
-        } catch (IllegalAccessException | RuntimeException e) {
+        } catch (RuntimeException e) {
             // Lido fora da thread do jogo: se a pilha mudar no meio, o próximo estado traz o valor certo.
         }
     }
 
     /** Jogadores dos turnos extras na ordem em que vão acontecer. O fundo da pilha é o turno normal seguinte. */
-    static JsonArray upcomingExtraTurns(PhaseHandler ph) throws IllegalAccessException {
+    static JsonArray upcomingExtraTurns(PhaseHandler ph) {
         @SuppressWarnings("unchecked") Stack<ExtraTurn> turns = (Stack<ExtraTurn>) TURNS.get(ph);
         Object[] items = turns.toArray();
         JsonArray out = new JsonArray();
@@ -68,7 +62,7 @@ final class TurnExtras {
      * Fases depois das quais o jogo não segue a ordem normal por causa de uma etapa extra, e para onde ele vai.
      * Assim o botão de passar não diz "Comprar" numa manutenção extra que leva de volta à principal 2.
      */
-    static JsonObject extraPhaseLinks(PhaseHandler ph) throws IllegalAccessException {
+    static JsonObject extraPhaseLinks(PhaseHandler ph) {
         @SuppressWarnings("unchecked") Map<PhaseType, Stack<ExtraPhase>> phases = (Map<PhaseType, Stack<ExtraPhase>>) PHASES.get(ph);
         boolean reversed = ph.getPlayerTurn().isPhasesReversed();
         JsonObject out = new JsonObject();
@@ -81,7 +75,7 @@ final class TurnExtras {
         return out;
     }
 
-    static int pendingCombats(PhaseHandler ph) throws IllegalAccessException {
+    static int pendingCombats(PhaseHandler ph) {
         @SuppressWarnings("unchecked") Map<PhaseType, Stack<ExtraPhase>> phases = (Map<PhaseType, Stack<ExtraPhase>>) PHASES.get(ph);
         int count = 0;
         for (Object stack : phases.values().toArray()) {

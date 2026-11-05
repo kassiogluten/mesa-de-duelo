@@ -36,6 +36,8 @@ O `rodar.sh` carrega o `.env` da raiz, se existir (fora do git; modelo em `.env.
 
 ## Protocolo
 
+A referência completa, campo por campo, é o `docs/protocolo.md`, gerado de `src/forge/protocol.ts` (`npm run protocol-doc`) e conferido contra o servidor pelo `ProtocolContractTest`. Os exemplos abaixo são ilustrativos: na dúvida, vale o gerado.
+
 ### Servidor → navegador
 
 ```jsonc

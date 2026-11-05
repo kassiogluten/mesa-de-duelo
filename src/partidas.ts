@@ -1,3 +1,4 @@
+// Página Minhas partidas: as partidas da conta conectada, com filtros e números.
 import { KEYS } from './storage';
 import './style.css';
 import './ui/appHeader.css';

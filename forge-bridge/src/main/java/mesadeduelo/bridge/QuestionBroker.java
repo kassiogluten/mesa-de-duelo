@@ -62,160 +62,24 @@ final class QuestionBroker {
         q.addProperty("id", id);
         q.addProperty("method", ev.getMethod().name());
 
-        switch (ev.getMethod()) {
-            case sideboard -> {
-                Deck approved = seat.approvedDeck;
-                if (approved == null) throw new IllegalStateException("Confirme o sideboard antes de continuar.");
-                return approved.getMain().toFlatList();
-            }
-            case getChoices -> {
-                // min/max -1: é um reveal() do Forge (Explore, revelar o topo...), só para mostrar as cartas.
-                q.addProperty("kind", (Integer) a[1] < 0 ? "reveal" : "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", (Integer) a[1]);
-                q.addProperty("max", (Integer) a[2]);
-                @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
-                options.addAll((Collection<?>) a[3]);
-                if (options.size() >= 30 && seat.controller() instanceof AskingController controller && controller.namingCard()) {
-                    // Nomear uma carta: em geral todos os nomes do jogo. Vão só os textos, e a mesa mostra uma busca em vez da lista.
-                    q.addProperty("purpose", "card-name");
-                    JsonArray names = new JsonArray();
-                    for (Object o : options) names.add(display != null ? display.apply(o) : String.valueOf(o));
-                    q.add("options", names);
-                    break;
-                }
-                JsonArray rows = optionsJson(options, display);
-                Dungeons.roomChoice(hosted.getGame(), options, rows, q);
-                Piles.choose(q, options, hosted.getGame());
-                q.add("options", rows);
-                CoinFlipText.choice(q);
-                voteQuestion(q, hosted.getGame());
-            }
-            case getAbilityToPlay -> {
-                Collection<?> abilities = (Collection<?>) a[1];
-                if (abilities.size() == 1) return abilities.iterator().next();
-                q.addProperty("kind", "choose");
-                q.addProperty("title", "Qual habilidade usar?");
-                q.addProperty("min", 0);
-                q.addProperty("max", 1);
-                if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
-                options.addAll((Collection<?>) a[1]);
-                JsonArray rows = optionsJson(options, null);
-                if (seat.controller() instanceof PlayerControllerHuman human) {
-                    AbilityOptions.describe(human, options, rows);
-                    AbilityOptions.addCosts(human, options, rows);
-                }
-                q.addProperty("purpose", "play-mode");
-                q.add("options", rows);
-            }
-            case chooseSingleEntityForEffect -> {
-                q.addProperty("kind", "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", Boolean.TRUE.equals(a[3]) ? 0 : 1);
-                q.addProperty("max", 1);
-                options.addAll((Collection<?>) a[1]);
-                q.add("options", optionsJson(options, null));
-                voteQuestion(q, hosted.getGame());
-                ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
-            }
-            case chooseEntitiesForEffect -> {
-                q.addProperty("kind", "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", (Integer) a[2]);
-                q.addProperty("max", (Integer) a[3]);
-                options.addAll((Collection<?>) a[1]);
-                q.add("options", optionsJson(options, null));
-                ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
-            }
-            case order -> {
-                q.addProperty("title", String.valueOf(a[0]));
-                options.addAll((Collection<?>) a[4]);
-                int remMin = (Integer) a[2], remMax = (Integer) a[3];
-                if (remMin == 0 && remMax == 0) {
-                    // Uma ordem já escolhida antes (os mesmos gatilhos de novo) chega pronta na lista de destino.
-                    if (a[5] instanceof Collection<?> placed) options.addAll(placed);
-                    q.addProperty("kind", "order");
-                } else {
-                    // many(): escolher um subconjunto (ex.: vidência "quais vão para o fundo"); os que sobram ficam de fora.
-                    q.addProperty("kind", "choose");
-                    q.addProperty("min", remMax < 0 ? 0 : Math.max(0, options.size() - remMax));
-                    q.addProperty("max", remMin < 0 ? options.size() : options.size() - remMin);
-                }
-                JsonArray rows = optionsJson(options, null);
-                if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
-                else LibraryChoice.describe(q, String.valueOf(a[0]), options);
-                if (!q.has("purpose")) Piles.split(q, String.valueOf(a[0]), options, hosted.getGame());
-                q.add("options", rows);
-            }
-            case confirm -> {
-                q.addProperty("kind", "confirm");
-                q.addProperty("title", String.valueOf(a[1]));
-                if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
-                @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
-                q.add("options", labelsJson(labels == null || labels.size() < 2 ? List.of("Sim", "Não") : labels));
-                commanderZone(q, a[0] instanceof CardView cv ? cv : null, String.valueOf(a[1]));
-            }
-            case showConfirmDialog -> {
-                q.addProperty("kind", "confirm");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.add("options", labelsJson(List.of(String.valueOf(a[2]), String.valueOf(a[3]))));
-            }
-            case showOptionDialog -> {
-                q.addProperty("kind", "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", 1);
-                q.addProperty("max", 1);
-                @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
-                options.addAll(labels);
-                q.add("options", optionsJson(options, null));
-            }
-            case showInputDialog -> {
-                @SuppressWarnings("unchecked") List<String> choices = (List<String>) a[4];
-                q.addProperty("title", String.valueOf(a[0]));
-                if (choices != null && !choices.isEmpty()) {
-                    q.addProperty("kind", "choose");
-                    q.addProperty("min", 1);
-                    q.addProperty("max", 1);
-                    options.addAll(choices);
-                    q.add("options", optionsJson(options, null));
-                } else {
-                    q.addProperty("kind", "text");
-                    q.addProperty("initial", a[3] == null ? "" : String.valueOf(a[3]));
-                    q.addProperty("numeric", Boolean.TRUE.equals(a[5]));
-                }
-            }
-            case assignGenericAmount -> {
-                @SuppressWarnings("unchecked") Map<Object, Integer> limits = (Map<Object, Integer>) a[1];
-                int total = (Integer) a[2], min = Boolean.TRUE.equals(a[3]) ? 1 : 0;
-                if (total <= 0) return Map.of();
-                options.addAll(limits.keySet());
-                q.addProperty("kind", "amount"); q.addProperty("total", total);
-                q.addProperty("title", "Distribua o total entre as opções");
-                if (a[0] instanceof CardView card) q.add("card", StateJson.card(card));
-                JsonArray rows = optionsJson(options, null);
-                for (int i = 0; i < options.size(); i++) {
-                    JsonObject row = rows.get(i).getAsJsonObject();
-                    row.addProperty("min", min); row.addProperty("max", Math.min(total, limits.get(options.get(i))));
-                }
-                q.add("options", rows);
-            }
-            case assignCombatDamage -> {
-                // Bloqueio duplo (ou atropelar): o jogador escolhe como dividir o dano, com a divisão automática pronta.
-                @SuppressWarnings("unchecked") List<CardView> blockers = (List<CardView>) a[1];
-                if (blockers == null || blockers.isEmpty() || (Integer) a[2] <= 0) return autoCombatDamage(a);
-                CombatDamage.describe(q, options, a);
-            }
-            case manipulateCardList -> {
-                List<CardView> out = new ArrayList<>();
-                ((Iterable<?>) a[1]).forEach(o -> out.add((CardView) o));
-                return out;
-            }
-            default -> {
-                seat.send(Session.toast("error", "Esta decisão ainda não é suportada: " + ev.getMethod() + "."));
-                if (Boolean.getBoolean("mesa.strictPrompts")) throw new IllegalStateException("Unsupported prompt: " + ev.getMethod());
-                return null;
-            }
-        }
+        Prompt p = new Prompt(seat, a, q, options, hosted);
+        Object immediate = switch (ev.getMethod()) {
+            case sideboard -> sideboard(p);
+            case getChoices -> choices(p);
+            case getAbilityToPlay -> abilityToPlay(p);
+            case chooseSingleEntityForEffect -> singleEntity(p);
+            case chooseEntitiesForEffect -> entities(p);
+            case order -> order(p);
+            case confirm -> confirm(p);
+            case showConfirmDialog -> confirmDialog(p);
+            case showOptionDialog -> optionDialog(p);
+            case showInputDialog -> inputDialog(p);
+            case assignGenericAmount -> genericAmount(p);
+            case assignCombatDamage -> combatDamage(p);
+            case manipulateCardList -> cardList(p);
+            default -> unsupported(seat, ev.getMethod());
+        };
+        if (immediate != ASK) return immediate;
 
         // Toda pergunta mostra a carta que a fez, mesmo quando o Forge não a cita.
         if (!q.has("card")) {
@@ -249,12 +113,208 @@ final class QuestionBroker {
             return defaultAnswer(question);
         } catch (Exception e) {
             // A partida segue com a resposta padrão; o log diz que o jogador não escolheu.
-            System.err.println("Sessão " + session.code + ": pergunta " + ev.getMethod() + " caiu na resposta padrão: " + e);
+            Log.of(session).warn("Sessão " + session.code + ": pergunta " + ev.getMethod() + " caiu na resposta padrão: " + e);
             return defaultAnswer(question);
         } finally {
             if (seat.question == question) { seat.question = null; seat.inputGen.incrementAndGet(); }
             session.markDirty();
         }
+    }
+
+    /** Devolvido por um tratador quando a pergunta vai para o navegador; qualquer outro valor é a resposta na hora. */
+    private static final Object ASK = new Object();
+
+    /** O que cada tratador de pergunta recebe: o assento, os argumentos do Forge, a pergunta e as opções na ordem do JSON. */
+    private record Prompt(Seat seat, Object[] a, JsonObject q, List<Object> options, HostedMatch hosted) { }
+
+    private Object sideboard(Prompt p) {
+        Seat seat = p.seat();
+        Deck approved = seat.approvedDeck;
+        if (approved == null) throw new IllegalStateException("Confirme o sideboard antes de continuar.");
+        return approved.getMain().toFlatList();
+    }
+
+    private Object choices(Prompt p) {
+        Seat seat = p.seat(); Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options(); HostedMatch hosted = p.hosted();
+        // min/max -1: é um reveal() do Forge (Explore, revelar o topo...), só para mostrar as cartas.
+        q.addProperty("kind", (Integer) a[1] < 0 ? "reveal" : "choose");
+        q.addProperty("title", String.valueOf(a[0]));
+        q.addProperty("min", (Integer) a[1]);
+        q.addProperty("max", (Integer) a[2]);
+        @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
+        options.addAll((Collection<?>) a[3]);
+        if (options.size() >= 30 && seat.controller() instanceof AskingController controller && controller.namingCard()) {
+            // Nomear uma carta: em geral todos os nomes do jogo. Vão só os textos, e a mesa mostra uma busca em vez da lista.
+            q.addProperty("purpose", "card-name");
+            JsonArray names = new JsonArray();
+            for (Object o : options) names.add(display != null ? display.apply(o) : String.valueOf(o));
+            q.add("options", names);
+            return ASK;
+        }
+        JsonArray rows = optionsJson(options, display);
+        Dungeons.roomChoice(hosted.getGame(), options, rows, q);
+        Piles.choose(q, options, hosted.getGame());
+        q.add("options", rows);
+        CoinFlipText.choice(q);
+        voteQuestion(q, hosted.getGame());
+        return ASK;
+    }
+
+    private Object abilityToPlay(Prompt p) {
+        Seat seat = p.seat(); Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options();
+        Collection<?> abilities = (Collection<?>) a[1];
+        if (abilities.size() == 1) return abilities.iterator().next();
+        q.addProperty("kind", "choose");
+        q.addProperty("title", "Qual habilidade usar?");
+        q.addProperty("min", 0);
+        q.addProperty("max", 1);
+        if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
+        options.addAll((Collection<?>) a[1]);
+        JsonArray rows = optionsJson(options, null);
+        if (seat.controller() instanceof PlayerControllerHuman human) {
+            AbilityOptions.describe(human, options, rows);
+            AbilityOptions.addCosts(human, options, rows);
+        }
+        q.addProperty("purpose", "play-mode");
+        q.add("options", rows);
+        return ASK;
+    }
+
+    private Object singleEntity(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options(); HostedMatch hosted = p.hosted();
+        q.addProperty("kind", "choose");
+        q.addProperty("title", String.valueOf(a[0]));
+        q.addProperty("min", Boolean.TRUE.equals(a[3]) ? 0 : 1);
+        q.addProperty("max", 1);
+        options.addAll((Collection<?>) a[1]);
+        q.add("options", optionsJson(options, null));
+        voteQuestion(q, hosted.getGame());
+        ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
+        return ASK;
+    }
+
+    private Object entities(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options(); HostedMatch hosted = p.hosted();
+        q.addProperty("kind", "choose");
+        q.addProperty("title", String.valueOf(a[0]));
+        q.addProperty("min", (Integer) a[2]);
+        q.addProperty("max", (Integer) a[3]);
+        options.addAll((Collection<?>) a[1]);
+        q.add("options", optionsJson(options, null));
+        ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
+        return ASK;
+    }
+
+    private Object order(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options(); HostedMatch hosted = p.hosted();
+        q.addProperty("title", String.valueOf(a[0]));
+        options.addAll((Collection<?>) a[4]);
+        int remMin = (Integer) a[2], remMax = (Integer) a[3];
+        if (remMin == 0 && remMax == 0) {
+            // Uma ordem já escolhida antes (os mesmos gatilhos de novo) chega pronta na lista de destino.
+            if (a[5] instanceof Collection<?> placed) options.addAll(placed);
+            q.addProperty("kind", "order");
+        } else {
+            // many(): escolher um subconjunto (ex.: vidência "quais vão para o fundo"); os que sobram ficam de fora.
+            q.addProperty("kind", "choose");
+            q.addProperty("min", remMax < 0 ? 0 : Math.max(0, options.size() - remMax));
+            q.addProperty("max", remMin < 0 ? options.size() : options.size() - remMin);
+        }
+        JsonArray rows = optionsJson(options, null);
+        if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
+        else LibraryChoice.describe(q, String.valueOf(a[0]), options);
+        if (!q.has("purpose")) Piles.split(q, String.valueOf(a[0]), options, hosted.getGame());
+        q.add("options", rows);
+        return ASK;
+    }
+
+    private Object confirm(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q();
+        q.addProperty("kind", "confirm");
+        q.addProperty("title", String.valueOf(a[1]));
+        if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
+        @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
+        q.add("options", labelsJson(labels == null || labels.size() < 2 ? List.of("Sim", "Não") : labels));
+        commanderZone(q, a[0] instanceof CardView cv ? cv : null, String.valueOf(a[1]));
+        return ASK;
+    }
+
+    private Object confirmDialog(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q();
+        q.addProperty("kind", "confirm");
+        q.addProperty("title", String.valueOf(a[0]));
+        q.add("options", labelsJson(List.of(String.valueOf(a[2]), String.valueOf(a[3]))));
+        return ASK;
+    }
+
+    private Object optionDialog(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options();
+        q.addProperty("kind", "choose");
+        q.addProperty("title", String.valueOf(a[0]));
+        q.addProperty("min", 1);
+        q.addProperty("max", 1);
+        @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
+        options.addAll(labels);
+        q.add("options", optionsJson(options, null));
+        return ASK;
+    }
+
+    private Object inputDialog(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options();
+        @SuppressWarnings("unchecked") List<String> choices = (List<String>) a[4];
+        q.addProperty("title", String.valueOf(a[0]));
+        if (choices != null && !choices.isEmpty()) {
+            q.addProperty("kind", "choose");
+            q.addProperty("min", 1);
+            q.addProperty("max", 1);
+            options.addAll(choices);
+            q.add("options", optionsJson(options, null));
+        } else {
+            q.addProperty("kind", "text");
+            q.addProperty("initial", a[3] == null ? "" : String.valueOf(a[3]));
+            q.addProperty("numeric", Boolean.TRUE.equals(a[5]));
+        }
+        return ASK;
+    }
+
+    private Object genericAmount(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options();
+        @SuppressWarnings("unchecked") Map<Object, Integer> limits = (Map<Object, Integer>) a[1];
+        int total = (Integer) a[2], min = Boolean.TRUE.equals(a[3]) ? 1 : 0;
+        if (total <= 0) return Map.of();
+        options.addAll(limits.keySet());
+        q.addProperty("kind", "amount"); q.addProperty("total", total);
+        q.addProperty("title", "Distribua o total entre as opções");
+        if (a[0] instanceof CardView card) q.add("card", StateJson.card(card));
+        JsonArray rows = optionsJson(options, null);
+        for (int i = 0; i < options.size(); i++) {
+            JsonObject row = rows.get(i).getAsJsonObject();
+            row.addProperty("min", min); row.addProperty("max", Math.min(total, limits.get(options.get(i))));
+        }
+        q.add("options", rows);
+        return ASK;
+    }
+
+    private Object combatDamage(Prompt p) {
+        Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options();
+        // Bloqueio duplo (ou atropelar): o jogador escolhe como dividir o dano, com a divisão automática pronta.
+        @SuppressWarnings("unchecked") List<CardView> blockers = (List<CardView>) a[1];
+        if (blockers == null || blockers.isEmpty() || (Integer) a[2] <= 0) return autoCombatDamage(a);
+        CombatDamage.describe(q, options, a);
+        return ASK;
+    }
+
+    private Object cardList(Prompt p) {
+        Object[] a = p.a();
+        List<CardView> out = new ArrayList<>();
+        ((Iterable<?>) a[1]).forEach(o -> out.add((CardView) o));
+        return out;
+    }
+
+    private static Object unsupported(Seat seat, ProtocolMethod method) {
+        seat.send(Session.toast("error", "Esta decisão ainda não é suportada: " + method + "."));
+        if (Boolean.getBoolean("mesa.strictPrompts")) throw new IllegalStateException("Unsupported prompt: " + method);
+        return null;
     }
 
     void answer(Seat seat, JsonObject msg) {

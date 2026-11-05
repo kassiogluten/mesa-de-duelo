@@ -101,9 +101,9 @@ final class Feedback {
     private void cleanup() {
         try {
             int removed = store.cleanup(Instant.now());
-            if (removed > 0) System.out.printf("Relatos: %d apagados pela retenção%n", removed);
+            if (removed > 0) Log.bridge().info("Relatos: %d apagados pela retenção", removed);
         } catch (IOException | RuntimeException e) {
-            System.err.println("Relatos: falha na limpeza: " + e);
+            Log.bridge().error("Relatos: falha na limpeza: " + e);
         }
     }
 
@@ -142,18 +142,18 @@ final class Feedback {
         JsonObject bridge = null;
         if (meta.recording() && code != null && token != null) {
             try { bridge = journals.journal(code.strip().toUpperCase(), token.strip()); }
-            catch (RuntimeException e) { System.err.println("Relatos: diário da partida indisponível: " + e); }
+            catch (RuntimeException e) { Log.bridge().warn("Relatos: diário da partida indisponível: " + e); }
         }
         FeedbackStore.Author author = author(authorization, meta.name());
         try {
             FeedbackStore.Entry entry = store.store(meta, bridge, author, () -> open(body));
             limit.record(key, now);
             Metrics.feedbackReceived(meta.kind(), meta.recording());
-            System.out.printf("Relato %s recebido (%s, %d bytes%s)%n", entry.code(), meta.kind(), entry.bytes(), bridge != null ? ", com o diário da ponte" : "");
+            Log.bridge().info("Relato %s recebido (%s, %d bytes%s)", entry.code(), meta.kind(), entry.bytes(), bridge != null ? ", com o diário da ponte" : "");
             JsonObject o = new JsonObject(); o.addProperty("code", entry.code());
             return new Response(201, o.toString());
         } catch (FeedbackStore.Full e) {
-            System.err.println("Relatos: sem espaço (" + e.getMessage() + ")");
+            Log.bridge().warn("Relatos: sem espaço (" + e.getMessage() + ")");
             return reject(507, "disco", NO_SPACE);
         } catch (TooLarge e) {
             return reject(413, "grande", TOO_LARGE);
@@ -170,7 +170,7 @@ final class Feedback {
             try {
                 FeedbackStore.Author account = a.author(authorization);
                 if (account != null) return account;
-            } catch (RuntimeException e) { System.err.println("Relatos: conta indisponível: " + e); }
+            } catch (RuntimeException e) { Log.bridge().warn("Relatos: conta indisponível: " + e); }
         }
         return informed == null ? null : new FeedbackStore.Author(informed, null, true);
     }

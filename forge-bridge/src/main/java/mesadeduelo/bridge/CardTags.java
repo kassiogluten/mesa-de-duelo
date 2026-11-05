@@ -77,7 +77,7 @@ final class CardTags {
         loading = CompletableFuture.supplyAsync(() -> {
             try { return load(); }
             catch (Exception e) {
-                System.out.println("Tags do Tagger: não foi possível atualizar (" + e + ")");
+                Log.bridge().warn("Tags do Tagger: não foi possível atualizar (" + e + ")");
                 if (stale != null) return stale;
                 throw new IllegalArgumentException("Não foi possível baixar as tags de função do Scryfall agora. Tente de novo mais tarde.");
             }
@@ -236,12 +236,12 @@ final class CardTags {
             try { download(file); }
             catch (IOException | InterruptedException | RuntimeException e) {
                 if (!Files.exists(file)) throw e;
-                System.out.println("Tags do Tagger: usando o arquivo de antes (" + e + ")");
+                Log.bridge().warn("Tags do Tagger: usando o arquivo de antes (" + e + ")");
             }
         }
         try (InputStream raw = Files.newInputStream(file); InputStream gz = new GZIPInputStream(raw)) {
             Index idx = parse(new InputStreamReader(gz, StandardCharsets.UTF_8));
-            System.out.printf("Tags do Tagger: %d cartas com tags%n", idx.cards().size());
+            Log.bridge().info("Tags do Tagger: %d cartas com tags", idx.cards().size());
             return idx;
         }
     }

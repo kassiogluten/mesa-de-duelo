@@ -1,7 +1,5 @@
 package mesadeduelo.bridge;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,38 +32,29 @@ import forge.player.PlayerControllerHuman;
 final class AutoPay {
     private AutoPay() {}
 
-    private static final Field PLAYER = field("player"), COST = field("manaCost"), PAID_FOR = field("saPaidFor"),
+    private static final ForgeReflection.FieldRef PLAYER = field("player"), COST = field("manaCost"), PAID_FOR = field("saPaidFor"),
         EFFECT = field("effect"), LOCKED = field("locked");
-    private static final Method RUN_AS_AI = method("runAsAi", Runnable.class), STATE_CHANGED = method("onStateChanged"),
-        SUPPORTS_AUTO = method("supportAutoPay"), FINISHED = finished();
+    private static final ForgeReflection.MethodRef RUN_AS_AI = method("runAsAi", Runnable.class), STATE_CHANGED = method("onStateChanged"),
+        SUPPORTS_AUTO = method("supportAutoPay"), FINISHED = ForgeReflection.method(InputBase.class, "isFinished");
 
-    private static Field field(String name) {
-        try { Field f = InputPayMana.class.getDeclaredField(name); f.setAccessible(true); return f; }
-        catch (ReflectiveOperationException e) { throw new IllegalStateException("InputPayMana." + name, e); }
-    }
+    private static ForgeReflection.FieldRef field(String name) { return ForgeReflection.field(InputPayMana.class, name); }
 
-    private static Method finished() {
-        try { Method m = InputBase.class.getDeclaredMethod("isFinished"); m.setAccessible(true); return m; }
-        catch (ReflectiveOperationException e) { throw new IllegalStateException("InputBase.isFinished", e); }
-    }
-
-    private static Method method(String name, Class<?>... args) {
-        try { Method m = InputPayMana.class.getDeclaredMethod(name, args); m.setAccessible(true); return m; }
-        catch (ReflectiveOperationException e) { throw new IllegalStateException("InputPayMana." + name, e); }
-    }
+    private static ForgeReflection.MethodRef method(String name, Class<?>... args) { return ForgeReflection.method(InputPayMana.class, name, args); }
 
     /**
      * O OK do jogador num pagamento de mana. Devolve false se o pedido atual não é um pagamento (o chamador segue
-     * com o OK de sempre). Roda na thread da interface, como o OK do Forge.
+     * com o OK de sempre, que no pagamento é o Automático do Forge: também quando falta ao Forge algum campo daqui).
+     * Roda na thread da interface, como o OK do Forge.
      */
     static boolean ok(PlayerControllerHuman human) {
-        if (!(human.getInputQueue().getInput() instanceof InputPayMana pay)) return false;
+        if (!(human.getInputQueue().getInput() instanceof InputPayMana pay)
+            || !ForgeReflection.present(PLAYER, COST, PAID_FOR, EFFECT, LOCKED, RUN_AS_AI, STATE_CHANGED, SUPPORTS_AUTO, FINISHED)) return false;
         try {
             // Fora do caso comum, o OK de sempre (que também não faz nada num pedido já encerrado ou travado).
-            if ((boolean) FINISHED.invoke(pay) || !(boolean) SUPPORTS_AUTO.invoke(pay) || LOCKED.getBoolean(pay)) { human.selectButtonOk(); return true; }
+            if ((boolean) FINISHED.invoke(pay) || !(boolean) SUPPORTS_AUTO.invoke(pay) || (boolean) LOCKED.get(pay)) { human.selectButtonOk(); return true; }
             Player player = (Player) PLAYER.get(pay);
             if (!player.getManaPool().isEmpty()) { human.selectButtonOk(); return true; }
-            LOCKED.setBoolean(pay, true); // como no OK do Forge: um segundo clique não paga de novo
+            LOCKED.set(pay, true); // como no OK do Forge: um segundo clique não paga de novo
             Game game = player.getGame();
             game.getAction().invoke(() -> {
                 try {
@@ -79,19 +68,17 @@ final class AutoPay {
 
     /** Na thread do jogo, com a IA no controle (como o Automático do Forge): vira as pedras escolhidas e paga o resto. */
     private static void pay(InputPayMana pay, Player player) {
-        try {
-            ManaCostBeingPaid cost = (ManaCostBeingPaid) COST.get(pay);
-            SpellAbility paidFor = (SpellAbility) PAID_FOR.get(pay);
-            boolean effect = EFFECT.getBoolean(pay);
-            for (SpellAbility stone : stones(player, cost, paidFor, effect)) {
-                if (cost.isPaid()) break;
-                CostPayment payment = new CostPayment(stone.getPayCosts(), stone);
-                if (!payment.payComputerCosts(new AiCostDecision(player, stone, effect, true))) continue;
-                player.getGame().getStack().addAndUnfreeze(stone);
-                player.getManaPool().payManaFromAbility(paidFor, cost, stone);
-            }
-            if (!cost.isPaid()) ComputerUtilMana.payManaCost(cost, paidFor, player, effect);
-        } catch (ReflectiveOperationException e) { throw new IllegalStateException(e); }
+        ManaCostBeingPaid cost = (ManaCostBeingPaid) COST.get(pay);
+        SpellAbility paidFor = (SpellAbility) PAID_FOR.get(pay);
+        boolean effect = (boolean) EFFECT.get(pay);
+        for (SpellAbility stone : stones(player, cost, paidFor, effect)) {
+            if (cost.isPaid()) break;
+            CostPayment payment = new CostPayment(stone.getPayCosts(), stone);
+            if (!payment.payComputerCosts(new AiCostDecision(player, stone, effect, true))) continue;
+            player.getGame().getStack().addAndUnfreeze(stone);
+            player.getManaPool().payManaFromAbility(paidFor, cost, stone);
+        }
+        if (!cost.isPaid()) ComputerUtilMana.payManaCost(cost, paidFor, player, effect);
     }
 
     /**

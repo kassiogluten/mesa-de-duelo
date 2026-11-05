@@ -1,3 +1,4 @@
+// Texto de carta em HTML: escape, símbolos de mana como ícones e rótulos de opções.
 export const esc = (s: string) =>
   s.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]!));
 

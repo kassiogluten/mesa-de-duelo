@@ -1,3 +1,4 @@
+// Decisões do começo da partida (quem começa, mulligan) mostradas no centro da mesa.
 import type { FState } from '../forge/client';
 import { hideCardPreview } from './cardInspector';
 import './opening.css';

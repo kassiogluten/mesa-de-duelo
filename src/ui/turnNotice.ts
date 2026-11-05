@@ -1,3 +1,4 @@
+// Aviso de "Seu turno" com a mesa em outra aba: título piscando e notificação do sistema.
 import { KEYS, NAMES } from '../storage';
 import type { FState } from '../forge/client';
 

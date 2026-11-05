@@ -1,3 +1,4 @@
+// Prévia e inspetor de carta: imagem, texto, marcadores, estados da permanente e o botão de virar.
 import { cacheGet, fetchByNames, fetchPrintings, type Printing } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';

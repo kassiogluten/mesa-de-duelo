@@ -4,25 +4,16 @@ import { esc } from '../ui/cardtext';
 import { readJson } from '../forge/recording';
 import { cacheGet, fetchByNames, loadCardCache } from '../scryfall';
 import { adminError, adminFetch, adminSession, saveAdminSession } from './session';
-import { issueBody, issueTitle, newIssueUrl, reportOf } from './reportSummary';
+import { issueBody, issueTitle } from './reportSummary';
+import type { Item, Status, Stored } from './adminShared';
+import { historyHTML, liveMatchesHTML, type End, type LiveMatch, type PastMatch } from './adminMatches';
+import { reportDetailHTML, reportListHTML, type ReportFilter } from './adminReports';
 
 /*
  * Área de admin (/admin.html): os relatos guardados na ponte, com estado, nota e issue, as partidas vivas e as
  * concluídas (histórico por mês) e os links das páginas de teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
  */
 
-type Status = 'novo' | 'visto' | 'issue' | 'resolvido' | 'descartado';
-interface Item {
-  code: string; receivedAt: string; kind: string | null; version: string | null; format: string | null; bytes: number;
-  match: boolean; bridge: boolean; summary?: string;
-  /** Quem enviou (item 62): apelido e conta vindos da sessão, ou só o nome informado pelo aparelho. Ausente: anônimo. */
-  author?: { nickname?: string; account?: string; informed?: boolean };
-  status: { status: Status; note?: string; issue?: string; updatedAt: string };
-}
-type Stored = Record<string, any>;
-
-const STATUS: Record<Status, string> = { novo: 'Novo', visto: 'Visto', issue: 'Virou issue', resolvido: 'Resolvido', descartado: 'Descartado' };
-const FORMATS: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre', oathbreaker: 'Oathbreaker', precon: 'Precon' };
 const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/replay.html', 'Repetição de partida', 'Abre um relato ou o arquivo de "Baixar gravação" e repete a partida na mesa, quadro a quadro.'],
   ['/tests/fixtures/effects-lab.html', 'Laboratório de efeitos', 'Monta o campo e dispara dano, movimento, efeitos contínuos e moer, sem a ponte.'],
@@ -38,15 +29,11 @@ const TEST_PAGES: [string, string, string][] = [
 
 const root = document.querySelector<HTMLElement>('#admin')!;
 let items: Item[] = [];
-let filter = { status: 'pendentes', kind: '', author: '', q: '' };
+let filter: ReportFilter = { status: 'pendentes', kind: '', author: '', q: '' };
 let selected: string | null = null;
 const details = new Map<string, Stored>();
 let notice = '';
 
-const when = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-const size = (bytes: number) => bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
-const kindBadge = (kind: string | null) => `<span class="adm-kind ${kind === 'erro' ? 'erro' : ''}">${kind === 'erro' ? 'Erro' : kind === 'sugestao' ? 'Sugestão' : '?'}</span>`;
-const statusBadge = (status: Status) => `<span class="adm-status s-${status}">${STATUS[status] ?? status}</span>`;
 const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : 'relatos';
 
 // ---------------------------------------------------------------- entrar
@@ -100,18 +87,7 @@ function syncTab() {
   if (current === 'partidas') { void loadMatches(); void loadHistory(historyMonth); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
 }
 
-// ---------------------------------------------------------------- partidas
-
-interface LiveMatch {
-  code: string; room: boolean; watchable?: boolean; format: string; matchLength: string; playerCount: number; createdAt: string; startedAt?: string; matchId: string;
-  state: string; gameNumber: number; turn?: number; phase?: string; activePlayer?: string;
-  players: { name: string; ai: boolean; seat?: number; connected?: boolean; conceded?: boolean; deck?: string; life?: number; lost?: boolean }[];
-}
 let matchesTimer = 0;
-const ago = (iso: string) => {
-  const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
-  return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${Math.floor(s / 60) % 60} min`;
-};
 
 async function loadMatches() {
   const section = root.querySelector<HTMLElement>('#admVivas');
@@ -121,47 +97,17 @@ async function loadMatches() {
     if (response.status === 401) { clearInterval(matchesTimer); login('A sessão acabou. Entre de novo.'); return; }
     if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
     const { partidas: matches, contas } = await response.json() as { partidas: LiveMatch[]; contas?: { total: number; aparelhos: number } };
-    const playing = matches.filter(m => m.state === 'jogando').length;
-    const online = matches.reduce((n, m) => n + m.players.filter(p => !p.ai && p.connected).length, 0);
-    section.innerHTML = `<div class="adm-head"><h1>Partidas</h1><p class="adm-muted">${[`${playing} jogando`, matches.length > playing ? `${matches.length - playing} esperando ou encerrando` : null, `${online} ${online === 1 ? 'jogador conectado' : 'jogadores conectados'}`,
-      contas && `${contas.total} ${contas.total === 1 ? 'conta' : 'contas'} (${contas.aparelhos} ${contas.aparelhos === 1 ? 'aparelho conectado' : 'aparelhos conectados'})`, `atualizado às ${new Date().toLocaleTimeString('pt-BR')}`].filter(Boolean).join(' · ')}</p>
-        <button class="adm-ghost" data-act="matches">Atualizar</button></div>
-      ${matches.length ? `<ul class="adm-matches">${matches.map(m => `<li class="adm-card adm-match">
-        <div class="adm-row-top"><strong>${esc(m.room ? `Sala ${m.code}` : 'Contra o computador')}</strong><span class="adm-status s-${m.state === 'jogando' ? 'resolvido' : m.state === 'aguardando' ? 'novo' : 'visto'}">${esc(m.state)}</span>
-          <time>${m.startedAt ? `há ${ago(m.startedAt)}` : `criada há ${ago(m.createdAt)}`}</time></div>
-        <p class="adm-muted">${esc([FORMATS[m.format] ?? m.format, m.matchLength === 'bo3' ? `melhor de três, jogo ${m.gameNumber}` : null, `${m.playerCount} jogadores`,
-          m.turn ? `turno ${m.turn}` : null, m.phase, m.activePlayer && `vez de ${m.activePlayer}`].filter(Boolean).join(' · '))}</p>
-        <ul class="adm-players">${m.players.map(p => `<li class="${p.lost || p.conceded ? 'out' : ''}"><span class="adm-dot ${p.ai ? 'ai' : p.connected ? 'on' : 'off'}" title="${p.ai ? 'Computador' : p.connected ? 'Conectado' : 'Desconectado'}"></span>
-          <strong>${esc(p.name)}</strong>${p.ai ? ' <span class="adm-muted">(IA)</span>' : ''}${p.life !== undefined ? ` · ${p.life} de vida` : ''}${p.lost ? ' · perdeu' : p.conceded ? ' · desistiu' : ''}
-          ${p.deck ? `<span class="adm-muted"> · ${esc(p.deck)}</span>` : ''}</li>`).join('')}</ul>
-        <p class="adm-muted adm-id">partida ${esc(m.matchId)}${m.room ? '' : ` · código ${esc(m.code)}`}${m.watchable ? ` · <a class="adm-watch" href="./?sala=${encodeURIComponent(m.code)}" target="_blank" rel="noopener">Assistir</a>` : ''}</p></li>`).join('')}</ul>` : '<p class="adm-empty">Nenhuma partida na ponte agora.</p>'}`;
+    section.innerHTML = liveMatchesHTML(matches, contas);
   } catch { section.innerHTML = '<p class="adm-error">Não consegui falar com a ponte. Ela está no ar?</p>'; }
 }
 addEventListener('hashchange', () => { if (root.querySelector('.adm-top')) syncTab(); });
 
 // ---------------------------------------------------------------- histórico
 
-/** Uma partida gravada, como a ponte grava (veja MatchHistory.java): os índices apontam para players. */
-interface PastMatch {
-  id: string; startedAt: string; endedAt: string; ms: number; format: string; length: string; mode: 'ia' | 'rede'; public?: boolean;
-  /** Como acabou; as linhas gravadas antes do campo existir são todas concluídas. */
-  end?: End;
-  winner: number | null;
-  players: { name?: string; ai: boolean; deck: string; colors: string; commander?: string; wins: number }[];
-  games: { winner: number | null; turns: number; ms?: number; end?: string; result: string[]; mull: number[] }[];
-}
-const LOSS: Record<string, string> = { LifeReachedZero: 'vida', Conceded: 'desistência', Milled: 'grimório vazio', Poisoned: 'veneno', CommanderDamage: 'dano de comandante', SpellEffect: 'efeito de carta', OpponentWon: 'vitória de outro' };
-type End = 'concluida' | 'concedida' | 'queda';
-const ENDS: Record<End, [string, string]> = { concluida: ['Concluídas', 'concluída'], concedida: ['Concedidas', 'concedida'], queda: ['Quedas', 'queda'] };
-const endOf = (m: PastMatch): End => m.end ?? 'concluida';
 let historyMonth = '';
 let historyMonths: string[] = [];
 let historyEnd: End | '' = '';
 let past: PastMatch[] = [];
-const minutes = (ms: number) => ms < 60000 ? `${Math.round(ms / 1000)} s` : ms < 3600000 ? `${Math.round(ms / 60000)} min` : `${Math.floor(ms / 3600000)} h ${Math.round(ms / 60000) % 60} min`;
-const monthName = (month: string) => new Date(`${month}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-const playerName = (p: PastMatch['players'][number], i: number) => p.name ?? (p.ai ? 'IA' : i === 0 ? 'Jogador' : `Jogador ${i + 1}`);
-const average = (values: number[]) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 
 async function loadHistory(month = '') {
   const section = root.querySelector<HTMLElement>('#admHistorico');
@@ -178,46 +124,7 @@ async function loadHistory(month = '') {
 }
 
 function renderHistory() {
-  const section = root.querySelector<HTMLElement>('#admHistorico')!;
-  const months = historyMonths;
-  // Os totais seguem o filtro de como a partida acabou.
-  const shown = historyEnd ? past.filter(m => endOf(m) === historyEnd) : past;
-  const count = (test: (m: PastMatch) => boolean) => shown.filter(test).length;
-  const formats = Object.entries(FORMATS).map(([key, label]) => [label, count(m => m.format === key)] as const).filter(([, n]) => n);
-  const games = shown.flatMap(m => m.games);
-  // Decks humanos e da IA juntos: quantas partidas cada um jogou e quantas venceu.
-  const decks = new Map<string, { played: number; won: number }>();
-  for (const m of shown) m.players.forEach((p, i) => {
-    const d = decks.get(p.deck) ?? { played: 0, won: 0 };
-    d.played++; if (m.winner === i) d.won++;
-    decks.set(p.deck, d);
-  });
-  const topDecks = [...decks].sort((a, b) => b[1].played - a[1].played || b[1].won - a[1].won).slice(0, 5);
-  const tile = (label: string, value: string, detail = '') => `<div class="adm-card adm-tile${value.length > 12 ? ' long' : ''}"><span>${esc(label)}</span><strong>${esc(value)}</strong>${detail ? `<small>${esc(detail)}</small>` : ''}</div>`;
-  const ending = (m: PastMatch, g: PastMatch['games'][number]) => {
-    const losses = g.result.map((r, i) => LOSS[r] ? `${playerName(m.players[i], i)} por ${LOSS[r]}` : null).filter(Boolean).join(', ');
-    if (g.end === 'Interrupted') return losses ? `interrompido (${losses})` : 'interrompido';
-    return losses || (g.winner === null ? 'empate' : '');
-  };
-  const total = (end: End | '') => end ? past.filter(m => endOf(m) === end).length : past.length;
-  section.innerHTML = `<div class="adm-head"><h2>Histórico</h2><p class="adm-muted">${historyMonth ? `${shown.length} ${shown.length === 1 ? 'partida' : 'partidas'} em ${esc(monthName(historyMonth))}` : 'Nenhuma partida gravada ainda.'}</p>
-      ${months.length ? `<label class="adm-month">Mês<select data-history-month>${months.map(m => `<option value="${m}"${m === historyMonth ? ' selected' : ''}>${esc(monthName(m))}</option>`).join('')}</select></label>` : ''}
-      ${historyMonth ? `<label class="adm-month">Fim<select data-history-end>${(['', 'concluida', 'concedida', 'queda'] as const).map(e => `<option value="${e}"${e === historyEnd ? ' selected' : ''}>${e ? ENDS[e][0] : 'Todas'} (${total(e)})</option>`).join('')}</select></label>` : ''}
-      <button class="adm-ghost" data-act="history">Atualizar</button>${historyMonth ? '<button class="adm-ghost" data-act="history-download">Baixar .jsonl</button>' : ''}</div>
-    ${shown.length ? `<div class="adm-tiles">
-      ${tile('Partidas', String(shown.length), `${count(m => m.mode === 'ia')} contra a IA · ${count(m => m.mode === 'rede')} em rede`)}
-      ${tile('Formatos', formats.map(([label, n]) => `${label} ${n}`).join(' · '))}
-      ${tile('Duração média', minutes(average(shown.map(m => m.ms))), `${games.length} ${games.length === 1 ? 'jogo' : 'jogos'} no total`)}
-      ${tile('Turnos por jogo', average(games.map(g => g.turns)).toFixed(1).replace('.', ','), `${games.flatMap(g => g.mull).reduce((a, b) => a + b, 0)} mulligans`)}
-      <div class="adm-card adm-tile adm-decks"><span>Decks mais jogados</span><ol>${topDecks.map(([deck, d]) => `<li><strong>${esc(deck)}</strong> <small>${d.played} ${d.played === 1 ? 'partida' : 'partidas'} · ${Math.round(100 * d.won / d.played)}% de vitórias</small></li>`).join('')}</ol></div>
-    </div>
-    <ul class="adm-past">${shown.map(m => `<li class="adm-card adm-past-row">
-      <div class="adm-row-top"><strong>${esc([FORMATS[m.format] ?? m.format, m.length === 'bo3' ? 'melhor de três' : null].filter(Boolean).join(' · '))}</strong>
-        <span class="adm-status">${m.mode === 'ia' ? 'contra a IA' : m.public ? 'sala pública' : 'sala privada'}</span>${endOf(m) !== 'concluida' ? `<span class="adm-status e-${endOf(m)}">${ENDS[endOf(m)][1]}</span>` : ''}<time>${when(m.endedAt)}</time></div>
-      <ul class="adm-players">${m.players.map((p, i) => `<li class="${m.winner === i ? 'won' : ''}"><span class="adm-dot ${p.ai ? 'ai' : 'on'}"></span>${commanderThumbs(p.commander)}<strong>${esc(playerName(p, i))}</strong>
-        <span class="adm-muted"> · ${esc(p.commander ?? p.deck)} (${esc(p.colors)})</span>${m.length === 'bo3' ? ` · ${p.wins} ${p.wins === 1 ? 'vitória' : 'vitórias'}` : ''}${m.winner === i ? ' · venceu' : ''}</li>`).join('')}</ul>
-      <p class="adm-muted">${esc([minutes(m.ms), ...m.games.map((g, n) => `${m.games.length > 1 ? `jogo ${n + 1}: ` : ''}${g.turns} turnos${ending(m, g) ? `, ${ending(m, g)}` : ''}`)].join(' · '))}</p></li>`).join('')}</ul>`
-    : historyMonth ? `<p class="adm-empty">${historyEnd ? `Nenhuma partida ${ENDS[historyEnd][1]} neste mês.` : 'Nenhuma partida neste mês.'}</p>` : ''}`;
+  root.querySelector<HTMLElement>('#admHistorico')!.innerHTML = historyHTML({ month: historyMonth, months: historyMonths, end: historyEnd, past }, commanderThumbs);
 }
 
 /** Miniaturas (arte recortada) dos comandantes de um jogador; "A + B" são dois parceiros. */
@@ -265,51 +172,10 @@ async function load() {
   } catch { section.innerHTML = '<p class="adm-error">Não consegui falar com a ponte. Ela está no ar?</p>'; }
 }
 
-/** Chave de quem enviou, para o filtro: a conta junta os relatos de um jogador mesmo se o apelido mudou. */
-const authorKey = (item: Item) => item.author?.account ? `c:${item.author.account}` : item.author?.nickname ? `n:${item.author.nickname.toLowerCase()}` : '-';
-const authorName = (item: Item) => item.author?.nickname ?? (item.author?.account ? 'Conta sem apelido' : '');
-const authorLabel = (item: Item) => !item.author ? 'anônimo' : `${authorName(item)} (${item.author.account ? 'conta' : 'nome informado'})`;
-
 let totalBytes = 0;
-function visible() {
-  const q = filter.q.trim().toLowerCase();
-  return items.filter(item => (filter.status === 'todos' || (filter.status === 'pendentes' ? ['novo', 'visto'].includes(item.status.status) : item.status.status === filter.status))
-    && (!filter.kind || item.kind === filter.kind)
-    && (!filter.author || authorKey(item) === filter.author)
-    && (!q || item.code.toLowerCase().includes(q) || authorName(item).toLowerCase().includes(q) || (item.summary ?? '').toLowerCase().includes(q) || (item.status.note ?? '').toLowerCase().includes(q) || (item.version ?? '').includes(q)));
-}
-
 function renderList(total = totalBytes) {
   totalBytes = total;
-  const section = root.querySelector<HTMLElement>('#admRelatos')!;
-  const count = (status: string) => items.filter(i => i.status.status === status).length;
-  const shown = visible();
-  const option = (value: string, text: string, current: string) => `<option value="${esc(value)}"${value === current ? ' selected' : ''}>${esc(text)}</option>`;
-  // Quem enviou: cada conta ou nome informado, do que mais relatou para o que menos, e os anônimos no fim.
-  const authors = new Map<string, { label: string; n: number }>();
-  for (const item of items) {
-    const key = authorKey(item), a = authors.get(key);
-    if (a) a.n++; else authors.set(key, { label: key === '-' ? 'Anônimos' : authorLabel(item), n: 1 });
-  }
-  const authorOptions = [...authors].sort(([ka, a], [kb, b]) => Number(ka === '-') - Number(kb === '-') || b.n - a.n || a.label.localeCompare(b.label, 'pt-BR'))
-    .map(([key, a]) => option(key, `${a.label} (${a.n})`, filter.author)).join('');
-  section.innerHTML = `<div class="adm-head"><h1>Relatos</h1><p class="adm-muted">${items.length} guardados · ${size(totalBytes)} · ${count('novo')} novos</p>
-      <button class="adm-ghost" data-act="reload">Atualizar</button></div>
-    <div class="adm-filters">
-      <label>Estado<select data-filter="status">${option('pendentes', `Pendentes (${count('novo') + count('visto')})`, filter.status)}${option('todos', `Todos (${items.length})`, filter.status)}
-        ${(Object.keys(STATUS) as Status[]).map(s => option(s, `${STATUS[s]} (${count(s)})`, filter.status)).join('')}</select></label>
-      <label>Tipo<select data-filter="kind">${option('', 'Todos', filter.kind)}${option('erro', 'Algo deu errado', filter.kind)}${option('sugestao', 'Sugestão', filter.kind)}</select></label>
-      <label>Quem enviou<select data-filter="author">${option('', 'Todos', filter.author)}${authorOptions}</select></label>
-      <label class="adm-search">Buscar<input type="search" data-filter="q" value="${esc(filter.q)}" placeholder="Código, texto, apelido, nota ou versão"></label>
-    </div>
-    <div class="adm-split${selected ? ' has-detail' : ''}">
-      <ul class="adm-list" aria-label="Relatos">${shown.length ? shown.map(item => `<li><button class="adm-row${item.code === selected ? ' on' : ''}" data-code="${esc(item.code)}" aria-current="${item.code === selected}">
-        <span class="adm-row-top"><strong>${esc(item.code)}</strong>${kindBadge(item.kind)}${statusBadge(item.status.status)}<time>${when(item.receivedAt)}</time></span>
-        <span class="adm-row-text">${esc(item.summary ?? 'Abra para ver a descrição.')}</span>
-        <span class="adm-row-meta">${esc([item.author ? `${authorName(item)}${item.author.account ? '' : ' (informado)'}` : 'anônimo', item.version && `v${item.version}`, item.format && (FORMATS[item.format] ?? item.format), item.match ? (item.bridge ? 'partida + ponte' : 'partida') : null, size(item.bytes), item.status.issue].filter(Boolean).join(' · '))}</span>
-      </button></li>`).join('') : `<li class="adm-empty">${items.length ? 'Nenhum relato com esses filtros.' : 'Nenhum relato ainda.'}</li>`}</ul>
-      <section class="adm-detail" id="admDetail" aria-live="polite"></section>
-    </div>`;
+  root.querySelector<HTMLElement>('#admRelatos')!.innerHTML = reportListHTML(items, { filter, selected, totalBytes });
   if (selected) void renderDetail(selected);
 }
 
@@ -334,42 +200,7 @@ async function renderDetail(code: string) {
   if (selected !== code) return;
   // Abrir um relato novo já o marca como visto.
   if (item.status.status === 'novo') void saveStatus(item, { ...item.status, status: 'visto' }, false);
-  const r = reportOf(stored), rec = r.recording, meta = rec?.meta, d = r.device ?? meta?.device, bridge = stored.bridge;
-  const rows = (pairs: [string, unknown][]) => `<dl class="adm-dl">${pairs.filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>`;
-  const errors = (rec?.notes ?? []).filter((n: Stored) => n.kind !== 'aviso');
-  const duration = rec ? Math.round((rec.endedAt - rec.startedAt) / 1000) : 0;
-  panel.innerHTML = `<div class="adm-detail-head"><button class="adm-ghost adm-back" data-act="back">← Lista</button>
-      <h2>${esc(code)}</h2>${kindBadge(item.kind)}${statusBadge(item.status.status)}</div>
-    <blockquote class="adm-quote">${esc(r.description ?? '')}</blockquote>
-    <div class="adm-actions">
-      ${rec ? `<a class="arena-btn primary" href="/tests/fixtures/replay.html?relato=${encodeURIComponent(code)}" target="_blank" rel="noopener">Repetir na mesa</a>` : ''}
-      <a class="arena-btn secondary" data-act="issue" href="${esc(newIssueUrl(stored))}" target="_blank" rel="noopener">Criar issue no GitHub</a>
-      <button class="adm-ghost" data-act="copy">Copiar texto da issue</button>
-      <button class="adm-ghost" data-act="download">Baixar arquivo</button>
-      <button class="adm-ghost adm-danger" data-act="delete">Excluir</button>
-    </div>
-    <p class="adm-notice" role="status">${esc(notice)}</p>
-    <form class="adm-card adm-status-form" id="admStatus">
-      <h3>Tratamento</h3>
-      <label>Estado<select name="status">${(Object.keys(STATUS) as Status[]).map(s => `<option value="${s}"${s === item.status.status ? ' selected' : ''}>${STATUS[s]}</option>`).join('')}</select></label>
-      <label>Issue<input name="issue" value="${esc(item.status.issue ?? '')}" placeholder="#42 ou o link" maxlength="200"></label>
-      <label class="adm-wide">Nota<textarea name="note" rows="3" maxlength="2000" placeholder="O que foi visto, o que falta, em que versão foi corrigido…">${esc(item.status.note ?? '')}</textarea></label>
-      <div class="adm-wide adm-form-end"><span class="adm-muted">Atualizado em ${when(item.status.updatedAt)}</span><button class="arena-btn primary" type="submit">Salvar</button></div>
-    </form>
-    <h3>Detalhes</h3>
-    ${rows([['recebido', when(stored.receivedAt ?? r.createdAt)], ['enviado por', item.author ? `${authorName(item)} (${item.author.account ? 'conta conectada' : 'nome informado, sem verificação'})` : 'anônimo'],
-      ['conta', item.author?.account && `${item.author.account.slice(0, 12)}…`], ['onde', r.from === 'partida' ? 'durante a partida' : 'tela inicial'], ['versão da mesa', r.app?.version],
-      ['regras / motor', r.match?.rulesVersion && `${r.match.rulesVersion} / ${r.match.engineVersion ?? '?'}`], ['formato', r.match?.format && `${FORMATS[r.match.format] ?? r.match.format}${r.match.net ? ' em rede' : ''}, ${r.match.playerCount ?? '?'} jogadores`],
-      ['jogadores', meta?.players?.map((p: Stored) => `${p.name}${p.ai ? ' (IA)' : ''}`).join(', ')],
-      ['aparelho', d && `${d.viewport} (tela ${d.screen}, ${d.pixelRatio}×), ${d.touch ? 'toque' : 'sem toque'}, ${d.installed ? 'instalado' : 'no navegador'}`],
-      ['navegador', d?.userAgent], ['preferências', r.preferences && Object.entries(r.preferences).map(([k, v]) => `${k}: ${v}`).join(', ')],
-      ['partida', rec ? `${rec.frames.length} quadros${rec.droppedFrames ? ` (${rec.droppedFrames} cortados)` : ''}, ${Math.floor(duration / 60)} min ${duration % 60} s, ${rec.sent.length} ações` : 'não anexada'],
-      ['diário da ponte', bridge ? `${bridge.snapshots?.length ?? 0} retratos, ${bridge.actions?.length ?? 0} ações` : rec ? 'não veio (partida já encerrada na ponte)' : null],
-      ['tamanho', size(item.bytes)]])}
-    ${errors.length ? `<h3>Erros registrados (${errors.length})</h3><ul class="adm-errors">${errors.slice(-40).map((n: Stored) => `<li><time>${new Date(n.at).toLocaleTimeString('pt-BR')}</time> <strong>${esc(n.kind)}</strong> ${esc(n.text)}${n.detail ? `<code>${esc(n.detail)}</code>` : ''}</li>`).join('')}</ul>` : ''}
-    ${r.diagnostics ? `<details><summary>Relatório do painel de erros</summary><pre>${esc(r.diagnostics)}</pre></details>` : ''}
-    ${bridge?.snapshots?.length ? `<details><summary>Retratos do Forge (${bridge.snapshots.length})</summary>${bridge.snapshots.map((s: Stored, i: number) => `<p class="adm-muted">Retrato ${i}: jogo ${s.gameNumber}, turno ${s.turn}, ${esc(s.phase)} (${s.reason === 'relato' ? 'no relato' : 'começo do turno'})</p>`).join('')}
-      <p class="adm-muted">Para restaurar no Forge: <code>./scripts/rodar.sh --mode=replay --relato=${esc(code)}.json.gz --retrato=N</code> com o arquivo baixado.</p></details>` : ''}`;
+  panel.innerHTML = reportDetailHTML(code, item, stored, notice);
 }
 
 async function saveStatus(item: Item, next: Item['status'], announce = true) {

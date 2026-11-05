@@ -91,7 +91,7 @@ final class MatchRecorder {
             boolean played = false;
             for (JsonElement g : line.getAsJsonArray("games")) played |= g.getAsJsonObject().get("turns").getAsInt() > 0;
             if (played && history != null) history.accept(line);
-        } catch (RuntimeException e) { System.err.println("Histórico: resumo da partida falhou: " + e); }
+        } catch (RuntimeException e) { Log.of(session).warn("Histórico: resumo da partida falhou: " + e); }
     }
 
     /**

@@ -11,8 +11,8 @@ try {
       for(const n of [2,3,4]) {
         s.players=n===2?all.filter(p=>p.id===10||p.id===36):all.slice(0,n);
         s.stack=[{id:95,text:'Compre duas cartas.',source:s.players[0].graveyard[0],controller:10}];f.render();
-        // Changing fixture seat count triggers the table's240ms card movement; measure its settled layout.
-        await new Promise(resolve=>setTimeout(resolve,300));
+        // Changing the seat count moves and resizes the cards (animated); measure only once the layout stops changing.
+        for(let last='',i=0;i<40;i++){await new Promise(resolve=>setTimeout(resolve,100));const now=JSON.stringify(boxes());if(now===last)break;last=now;}
         const before=boxes();document.querySelector('[data-ui="stack-open"]').click();
         const gallery=boxes(),galleryOpen=!document.querySelector('#fStackGallery').hidden;
         document.querySelector('[data-ui="stack-close"]').click();document.querySelector('[data-zone="damage"]').click();

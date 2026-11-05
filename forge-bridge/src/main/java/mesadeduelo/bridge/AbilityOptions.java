@@ -1,6 +1,5 @@
 package mesadeduelo.bridge;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,27 +18,26 @@ final class AbilityOptions {
     private AbilityOptions() { }
     private static final Map<String, String> BASIC_LANDS = Map.of(
         "Mountain", "Montanha", "Island", "Ilha", "Forest", "Floresta", "Swamp", "Pântano", "Plains", "Planície");
-    private static final Field CACHE;
-    static {
-        try { CACHE = PlayerControllerHuman.class.getDeclaredField("spellViewCache"); CACHE.setAccessible(true); }
-        catch (ReflectiveOperationException e) { throw new ExceptionInInitializerError(e); }
+    private static final ForgeReflection.FieldRef CACHE = ForgeReflection.field(PlayerControllerHuman.class, "spellViewCache");
+
+    /** As habilidades por trás de cada opção, que o Forge só guarda num campo privado; null se ele não tiver o campo. */
+    @SuppressWarnings("unchecked")
+    private static Map<SpellAbilityView, SpellAbility> abilities(PlayerControllerHuman controller) {
+        return CACHE.present() ? (Map<SpellAbilityView, SpellAbility>) CACHE.get(controller) : null;
     }
 
     static void addCosts(PlayerControllerHuman controller, List<Object> options, JsonArray rows) {
-        try {
-            @SuppressWarnings("unchecked") Map<SpellAbilityView, SpellAbility> abilities =
-                (Map<SpellAbilityView, SpellAbility>) CACHE.get(controller);
-            if (abilities == null) return;
-            for (int i = 0; i < options.size(); i++) {
-                SpellAbility ability = abilities.get(options.get(i));
-                if (ability == null) continue;
-                String cost = cost(ability);
-                if (!cost.isBlank()) {
-                    var row = rows.get(i).getAsJsonObject();
-                    row.addProperty("label", row.get("label").getAsString().trim() + " — Custo: " + cost);
-                }
+        Map<SpellAbilityView, SpellAbility> abilities = abilities(controller);
+        if (abilities == null) return;
+        for (int i = 0; i < options.size(); i++) {
+            SpellAbility ability = abilities.get(options.get(i));
+            if (ability == null) continue;
+            String cost = cost(ability);
+            if (!cost.isBlank()) {
+                var row = rows.get(i).getAsJsonObject();
+                row.addProperty("label", row.get("label").getAsString().trim() + " — Custo: " + cost);
             }
-        } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
+        }
     }
 
     /**
@@ -48,43 +46,40 @@ final class AbilityOptions {
      * usa outra face ou metade (aventura, carta dividida), manda nome, custo e tipo dessa face.
      */
     static void describe(PlayerControllerHuman controller, List<Object> options, JsonArray rows) {
-        try {
-            @SuppressWarnings("unchecked") Map<SpellAbilityView, SpellAbility> abilities =
-                (Map<SpellAbilityView, SpellAbility>) CACHE.get(controller);
-            if (abilities == null) return;
-            for (int i = 0; i < options.size(); i++) {
-                SpellAbility ability = abilities.get(options.get(i));
-                if (ability == null) continue;
-                var row = rows.get(i).getAsJsonObject();
-                row.addProperty("kind", "ability");
-                row.addProperty("description", row.get("label").getAsString().trim());
-                row.addProperty("mode", mode(ability));
-                // Subir de nível numa Classe: o nível que a opção alcança ("ClassLevel$ EQ1" leva ao nível 2).
-                if (ability.getApi() == forge.game.ability.ApiType.ClassLevelUp && ability.hasParam("ClassLevel"))
-                    try { row.addProperty("level", Integer.parseInt(ability.getParam("ClassLevel").replaceAll("\\D", "")) + 1); } catch (NumberFormatException ignored) { }
-                if (ability.isSpell()) row.addProperty("spell", true);
-                // Habilidade de planeswalker: o custo de lealdade vai à parte ("+2", "0", "-3"), não entre os extras.
-                String loyalty = ability.isPwAbility() ? Loyalty.cost(ability) : null;
-                if (loyalty != null) row.addProperty("loyalty", loyalty);
-                JsonArray extra = new JsonArray();
-                String mana = "";
-                if (ability.getPayCosts() != null) for (var part : ability.getPayCosts().getCostParts()) {
-                    if (part instanceof CostPartMana m) { if (!m.getMana().isZero() || ability.getPayCosts().isOnlyManaCost()) mana = m.getMana().toString(); }
-                    else if (loyalty == null || !Loyalty.isLoyaltyPart(part)) extra.add(part.toString());
-                }
-                row.addProperty("cost", mana);
-                row.add("extra", extra);
-                var state = ability.getCardState();
-                var host = ability.getHostCard();
-                if (state != null && host != null && state != host.getCurrentState()) {
-                    JsonObject face = new JsonObject();
-                    face.addProperty("name", state.getName());
-                    face.addProperty("manaCost", state.getManaCost() == null ? "" : state.getManaCost().toString());
-                    face.addProperty("typeLine", state.getType() == null ? "" : state.getType().toString());
-                    row.add("face", face);
-                }
+        Map<SpellAbilityView, SpellAbility> abilities = abilities(controller);
+        if (abilities == null) return;
+        for (int i = 0; i < options.size(); i++) {
+            SpellAbility ability = abilities.get(options.get(i));
+            if (ability == null) continue;
+            var row = rows.get(i).getAsJsonObject();
+            row.addProperty("kind", "ability");
+            row.addProperty("description", row.get("label").getAsString().trim());
+            row.addProperty("mode", mode(ability));
+            // Subir de nível numa Classe: o nível que a opção alcança ("ClassLevel$ EQ1" leva ao nível 2).
+            if (ability.getApi() == forge.game.ability.ApiType.ClassLevelUp && ability.hasParam("ClassLevel"))
+                try { row.addProperty("level", Integer.parseInt(ability.getParam("ClassLevel").replaceAll("\\D", "")) + 1); } catch (NumberFormatException ignored) { }
+            if (ability.isSpell()) row.addProperty("spell", true);
+            // Habilidade de planeswalker: o custo de lealdade vai à parte ("+2", "0", "-3"), não entre os extras.
+            String loyalty = ability.isPwAbility() ? Loyalty.cost(ability) : null;
+            if (loyalty != null) row.addProperty("loyalty", loyalty);
+            JsonArray extra = new JsonArray();
+            String mana = "";
+            if (ability.getPayCosts() != null) for (var part : ability.getPayCosts().getCostParts()) {
+                if (part instanceof CostPartMana m) { if (!m.getMana().isZero() || ability.getPayCosts().isOnlyManaCost()) mana = m.getMana().toString(); }
+                else if (loyalty == null || !Loyalty.isLoyaltyPart(part)) extra.add(part.toString());
             }
-        } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
+            row.addProperty("cost", mana);
+            row.add("extra", extra);
+            var state = ability.getCardState();
+            var host = ability.getHostCard();
+            if (state != null && host != null && state != host.getCurrentState()) {
+                JsonObject face = new JsonObject();
+                face.addProperty("name", state.getName());
+                face.addProperty("manaCost", state.getManaCost() == null ? "" : state.getManaCost().toString());
+                face.addProperty("typeLine", state.getType() == null ? "" : state.getType().toString());
+                row.add("face", face);
+            }
+        }
     }
 
     static String mode(SpellAbility a) {

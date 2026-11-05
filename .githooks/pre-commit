@@ -1,10 +1,23 @@
 #!/bin/sh
-# Antes de cada commit: testes e tipos da mesa (uns 10 s). Commits só de texto (.md, imagens) passam direto.
-# Ligado por "npm install" (script prepare: git config core.hooksPath .githooks).
+# Antes de cada commit: testes e tipos da mesa (uns 10 s) e, se o commit mexe no servidor, os testes dele (uns 30 s).
+# Commits só de texto (.md, imagens) passam direto. Ligado por "npm install" (prepare: git config core.hooksPath .githooks).
 # Pular numa emergência: git commit --no-verify (e diga por quê).
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
-echo "$staged" | grep -qE '^(src/|tests/|shared/|package(-lock)?\.json|tsconfig\.json|vite\.config\.ts|[a-z]+\.html)' || exit 0
-echo "pre-commit: npm test + tsc"
-npm test --silent > .git-precommit.log 2>&1 || { grep -E '^not ok|^# (pass|fail)' .git-precommit.log | head -20; echo "pre-commit: testes falharam (log em .git-precommit.log)"; exit 1; }
-npx tsc --noEmit -p . || { echo "pre-commit: erro de tipos"; exit 1; }
-rm -f .git-precommit.log
+
+if echo "$staged" | grep -qE '^(src/|tests/|shared/|package(-lock)?\.json|tsconfig\.json|vite\.config\.ts|[a-z]+\.html)'; then
+  echo "pre-commit: npm test + tsc"
+  npm test --silent > .git-precommit.log 2>&1 || { grep -E '^not ok|^# (pass|fail)' .git-precommit.log | head -20; echo "pre-commit: testes da mesa falharam (log em .git-precommit.log)"; exit 1; }
+  npx tsc --noEmit -p . || { echo "pre-commit: erro de tipos"; exit 1; }
+  rm -f .git-precommit.log
+fi
+
+if echo "$staged" | grep -qE '^(forge-bridge/(src|pom\.xml)|shared/)'; then
+  if [ -z "$JAVA_HOME" ] && [ -d "/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" ]; then JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot"; export JAVA_HOME; fi
+  if ! command -v mvn >/dev/null 2>&1; then echo "pre-commit: mvn não encontrado; testes do servidor pulados"; exit 0; fi
+  echo "pre-commit: testes do servidor"
+  if ! (cd forge-bridge && mvn -o -q test > ../.git-precommit-server.log 2>&1); then
+    grep -aE '^\[ERROR\]   |COMPILATION ERROR' .git-precommit-server.log | head -20
+    echo "pre-commit: testes do servidor falharam (log em .git-precommit-server.log)"; exit 1
+  fi
+  rm -f .git-precommit-server.log
+fi

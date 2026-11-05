@@ -1,3 +1,4 @@
+// Destaque do campo de quem joga o turno (dourado no seu, vermelho no do oponente).
 import type { FState } from '../forge/client';
 
 type TurnState = Pick<FState, 'activePlayer' | 'you' | 'gameOver'>;

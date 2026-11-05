@@ -9,6 +9,7 @@ import { screenWake } from './screenWake';
 import { escolherTema, lerTema, parseTema, temasDisponiveis } from './temas';
 import type { createTurnBuzz } from './turnBuzz';
 import type { createTurnNotice } from './turnNotice';
+import { finder } from './dom';
 
 const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
 
@@ -31,7 +32,7 @@ export interface SettingsDeps {
 }
 
 export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
-  const $ = (sel: string) => root.querySelector(sel) as HTMLElement;
+  const $ = finder(root);
   /** O que o jogador escolheu nas Opções; a mesa lê daqui a cada desenho. */
   const prefs = { fast: false, cardStyle: 'full' as CardStyle, playmat: true };
   try { prefs.fast = localStorage.getItem(KEYS.pace) === 'fast'; } catch { /* Storage is optional. */ }

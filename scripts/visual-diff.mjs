@@ -22,7 +22,20 @@ const PAGES = [
   // Telas fora da mesa (sem servidor: mostram o estado desconectado, que já basta para o layout).
   ['inicio', 'index.html'], ['salas', 'salas.html'], ['partidas', 'partidas.html'], ['novidades', 'novidades.html'],
   ['privacidade', 'privacidade.html'], ['admin', 'admin.html'],
+  // Telas da página inicial que só aparecem depois de um clique: o terceiro item é o que fazer antes do print.
+  ['meus-decks', 'index.html', `document.querySelector('[data-app-nav="decks"]').click();`],
+  ['construtor', 'index.html', `document.querySelector('[data-app-nav="decks"]').click(); await pause(400); document.querySelector('#scrDecks [data-b="new"]').click();`],
+  ['menu-mais', 'index.html', `document.querySelector('.mais-btn').click();`],
+  ['laboratorio', 'index.html', `document.querySelector('.mais-btn').click(); await pause(100); document.querySelector('[data-mais="lab"]').click();`],
+  ['formatos-outros', 'index.html', `document.querySelector('[data-setting="format"][data-value="others"]').click();`],
+  ['mesa-livre', 'index.html', `document.querySelector('[data-setting="opponent"][data-value="free"]').click(); await pause(200); document.querySelector('#scrLobby [data-deck]').click(); await pause(200); document.querySelector('#startMatch').click();`],
 ];
+/** Telas que mudam sozinhas entre duas rodadas do mesmo código (até este tanto, em %): aparecem na saída, mas não contam. */
+const NOISE = {
+  'duel-espera': [0.3, 'relógio da espera'], 'commander-espera': [0.3, 'relógio da espera'],
+  'mesa-livre': [2, 'a mão é embaralhada'], 'duel-tutor': [2, 'nomes das cartas chegam do Scryfall em tempos diferentes'],
+  'inicio': [0.5, 'sugestões e decks prontos'],
+};
 const VITE_BIN = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
 const VIEWPORTS = [[1366, 768], [844, 390]];
 const FREEZE = `const st=document.createElement('style');st.textContent='*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}.card-inspector-preview{display:none!important}img{visibility:hidden!important}*{background-image:none!important}';document.head.append(st);`;
@@ -42,9 +55,12 @@ async function snap(out) {
   try {
     for (const [w, h] of VIEWPORTS) {
       run('set', 'viewport', String(w), String(h), '1');
-      for (const [name, page] of PAGES) {
+      for (const [name, page, setup] of PAGES) {
+        // Cada tela começa do zero: o que uma tela grava no navegador (um deck novo, uma escolha) não vaza para a próxima.
         run('open', `${url}/${page}`);
-        evaluate(`${FREEZE} ${SETTLE} return true;`);
+        evaluate('try { localStorage.clear(); sessionStorage.clear(); } catch {} return true;');
+        run('open', `${url}/${page}`);
+        evaluate(`${FREEZE} const pause = ms => new Promise(r => setTimeout(r, ms)); await pause(800); ${setup ?? ''} ${SETTLE} return true;`);
         run('screenshot', join(out, `${name}@${w}x${h}.png`));
       }
       console.log(`${PAGES.length} telas em ${w}×${h}`);
@@ -70,6 +86,8 @@ async function compare(a, b) {
     }
     const pct = (100 * px) / (x.info.width * x.info.height);
     if (pct < 0.02) { if (px) console.log(`ruído     ${f}: ${px} px`); continue; }
+    const noise = NOISE[f.split('@')[0]];
+    if (noise && pct <= noise[0]) { console.log(`ruído     ${f}: ${pct.toFixed(3)}% (${noise[1]})`); continue; }
     if (px) {
       changed++;
       await sharp(diff, { raw: x.info }).png().toFile(join(b, `diff-${f}`));

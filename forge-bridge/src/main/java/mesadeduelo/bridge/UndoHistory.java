@@ -125,7 +125,7 @@ final class UndoHistory {
     /** O jogador respondeu ao prompt: {@code chosen} null é passar; vazio é um prompt reaberto, que não conta. */
     synchronized void decided(Step step, List<SpellAbility> chosen) {
         GameMemento m = step.picture().full;
-        if (!m.problems.isEmpty()) System.err.println("Desfazer: retrato com problemas: " + m.problems);
+        if (!m.problems.isEmpty()) Log.bridge().warn("Desfazer: retrato com problemas: " + m.problems);
         if (chosen != null && chosen.isEmpty()) return;
         String action = "pass", card = null;
         if (chosen != null) {
@@ -187,7 +187,7 @@ final class UndoHistory {
         g.fireEvent(new GameEventSnapshotRestored(true));
         memento.restore();
         g.getGameLog().truncateTo(target.logSize());
-        if (!memento.problems.isEmpty()) System.err.println("Desfazer: problemas ao restaurar: " + memento.problems);
+        if (!memento.problems.isEmpty()) Log.bridge().warn("Desfazer: problemas ao restaurar: " + memento.problems);
         refreshViews(g);
         g.fireEvent(new GameEventSnapshotRestored(false));
         g.getGameLog().add(GameLogEntryType.INFORMATION, target.player().getName() + " desfez: " + target.text() + (note == null ? "." : " (" + note + ")."));

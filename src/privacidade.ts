@@ -1,3 +1,4 @@
+// Página da política de privacidade, linkada no rodapé e no menu da conta.
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';

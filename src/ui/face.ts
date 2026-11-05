@@ -1,3 +1,4 @@
+// Desenho da carta na mesa (imagem, arte e texto ou Arena) e a cor da moldura pelo custo.
 import { esc, manaHTML, richText } from './cardtext';
 
 export interface FaceInfo {

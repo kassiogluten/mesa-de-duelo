@@ -80,6 +80,7 @@ Pelo terminal, com os arquivos copiados do servidor:
 
 ```bash
 node deploy/relatos.mjs baixar             # copia os relatos do container da ponte para ./relatos
+npm run relatos -- baixar-api              # o mesmo pela Ã¡rea de admin, sÃ³ com MESA_ADMIN_URL e MESA_ADMIN_PASSWORD (no .env)
 node deploy/relatos.mjs listar             # código, data, tipo, versão, formato e tamanho
 node deploy/relatos.mjs abrir R-7K2Q       # endereço da página de repetição com o relato aberto
 node deploy/relatos.mjs issue R-7K2Q       # monta uma issue só com o texto e o resumo técnico (--criar para publicar)

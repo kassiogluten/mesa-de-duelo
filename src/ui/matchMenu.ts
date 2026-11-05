@@ -3,10 +3,11 @@
 import type { FState } from '../forge/client';
 import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
 import { undoButtonState } from './undo';
+import { finder } from './dom';
 
 /** `labClose`: a mesa sabe voltar ao Laboratório (sala de teste). */
 export function syncMatchMenu(root: HTMLElement, s: FState, o: { multiplayer: boolean; labClose: boolean; setHTML(el: HTMLElement, html: string): void }) {
-  const $ = (sel: string) => root.querySelector(sel) as HTMLElement;
+  const $ = finder(root);
   const formatName = matchFormatName(s);
   $('#fFormatTag').textContent = formatName; $('#fFormatTag').hidden = !formatName;
   $('#fRoomTag').textContent = s.room && !s.room.computer ? `Sala ${s.room.code}` : '';

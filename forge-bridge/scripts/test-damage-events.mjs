@@ -42,7 +42,10 @@ function advance() {
     else if (input.ok.enabled) once({type: 'ok', gen: input.gen});
   } else if (input.paying && input.ok.enabled) once({type: 'ok', gen: input.gen});
   else if (input.attacking) {
-    const ready = input.attacking.attackers.find(id => !state.combat.some(pair => pair.attacker === id));
+    // O combate jÃ¡ mostrou o que precisava (dano normal, golpe duplo, vÃ­nculo com a vida): parar de atacar, para a
+    // partida nÃ£o acabar antes do Raio e do Assassinar (o deck Ã© embaralhado e Ã s vezes eles demoram a vir).
+    const combatSeen = damage().some(e => mine(e) && e.combat && e.step === 'regular') && doubled() && lifelinked();
+    const ready = !combatSeen && input.attacking.attackers.find(id => !state.combat.some(pair => pair.attacker === id));
     if (ready) once({type: 'card', id: ready, gen: input.gen});
     else once({type: 'ok', gen: input.gen});
   } else if (input.priority && input.ok.enabled) {
@@ -77,7 +80,7 @@ try {
   const deadline = Date.now() + 420000;
   while (!done()) {
     if (failure) throw failure;
-    if (Date.now() > deadline || state?.gameOver) throw new Error(`damage events: ${JSON.stringify({turn: state?.turn, phase: state?.phase, damage: damage().map(({frame, card, ...e}) => ({...e, card: card?.name}))})}`);
+    if (Date.now() > deadline || state?.gameOver) throw new Error(`damage events: ${JSON.stringify({turn: state?.turn, phase: state?.phase, gameOver: state?.gameOver, checks: {destroyed: !!destroyed(), direct: damage().some(e => mine(e) && !e.combat), regular: damage().some(e => mine(e) && e.combat && e.step === 'regular'), doubled: doubled(), lifelinked: lifelinked()}, left: [...events.values()].filter(e => e.type === 'left').map(e => ({card: e.card?.name, to: e.to, reason: e.reason})), damage: damage().map(({frame, card, ...e}) => ({...e, card: card?.name}))})}`);
     if (state) advance();
     await wait(60);
   }

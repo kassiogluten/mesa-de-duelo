@@ -1,3 +1,4 @@
+// Gráfico de vida da partida, dano de comandante e o resumo do fim de jogo.
 import type { FPlayer, FState } from '../forge/client';
 import { esc } from './cardtext';
 import './lifeChart.css';

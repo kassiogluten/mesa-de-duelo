@@ -1,8 +1,10 @@
+// Formulário de sugestão ou erro, com a partida anexada quando houver.
 import { esc } from './cardtext';
 import { VERSION } from './changelog';
 import { DESCRIPTION_LIMIT, buildReport, recordingSize, sendReport, type FeedbackKind, type MatchAttachment } from '../feedback';
 import { reportAuthor } from '../feedbackAuthor';
 import './feedbackForm.css';
+import { finder } from './dom';
 
 export interface FeedbackFormOptions {
   kind?: FeedbackKind;
@@ -58,7 +60,7 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
   </section>`;
   document.body.append(overlay);
   open = overlay;
-  const $ = <T extends HTMLElement>(sel: string) => overlay.querySelector<T>(sel)!;
+  const $ = finder(overlay);
   const text = $<HTMLTextAreaElement>('#fbText'), attach = $<HTMLInputElement>('#fbAttach'), status = $('#fbStatus'), error = $('#fbError');
   const anon = $<HTMLInputElement>('#fbAnon');
   // Com que nome o relato vai: o da conta ou o das salas, como está agora. Sem nenhum dos dois, vai anônimo e a linha nem aparece.

@@ -6,7 +6,7 @@ import { label } from './cardFaces';
 import { canSelectExileCard, exileShelfCards, selectedForInput } from './playContext';
 import { revealedCards, revealedCountText } from './revealedHand';
 import { canUse, exileCaption, foretoldTag, inspectButton, selectedBadge } from './permanentView';
-import { COUNTER_ICON, inspectIcon } from './tableIcons';
+import { COUNTER_ICON, inspectIcon } from './icons';
 
 export type ZoneKind = 'gy' | 'exile' | 'command' | 'damage' | 'dungeon' | 'hand';
 

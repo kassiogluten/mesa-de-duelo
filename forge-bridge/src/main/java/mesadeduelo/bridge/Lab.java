@@ -123,7 +123,8 @@ final class Lab {
                     if ("battlefield".equals(zone)) text.append(battlefield(card, pc, ids, p, i, who));
                     texts.add(text.toString());
                 }
-                if (!texts.isEmpty()) sb.append('p').append(p).append(zone).append('=').append(String.join(";", texts)).append('\n');
+                // Zona vazia também vai: sem a linha, o Forge deixa nela o que já havia (a mão inicial de 7 cartas).
+                sb.append('p').append(p).append(zone).append('=').append(String.join(";", texts)).append('\n');
             }
             int size = deck.getMain().countAll();
             if (size < 60) deck.getMain().add(DeckValidation.resolve(FILLER), 60 - size);

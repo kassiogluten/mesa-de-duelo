@@ -1,3 +1,4 @@
+// Selos de estado do jogador: monarca, terrenos jogados, velocidade, bênção da cidade e mágicas do turno.
 import type { FPlayer } from '../forge/client';
 import { esc } from './cardtext';
 import { turnTimeText } from './clock';

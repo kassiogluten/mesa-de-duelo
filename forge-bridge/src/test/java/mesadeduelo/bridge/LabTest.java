@@ -59,6 +59,13 @@ public class LabTest {
         assertEquals(PhaseType.MAIN2, game.getPhaseHandler().getPhase());
     }
 
+    /** Zona vazia no cenário vai como linha vazia: sem ela, o Forge deixava a mão inicial (7 cartas) do outro jogador. */
+    @Test public void emptyZonesAreWrittenSoTheOpeningHandIsCleared() {
+        Lab lab = Lab.parse(JsonParser.parseString("{\"players\":[{\"hand\":[\"Island\"]},{\"library\":[\"Forest\"]}]}"));
+        for (String line : new String[]{"p1hand=", "p1battlefield=", "p1graveyard=", "p1exile=", "p0exile="})
+            assertTrue(line + " em:\n" + lab.state, lab.state.lines().anyMatch(line::equals));
+    }
+
     @Test public void decksCarryTheScenarioCardsAndFillUpTo60() {
         Lab lab = lab("{\"players\": [{\"hand\": [\"Lightning Bolt\"]}, {}]}");
         assertEquals(60, lab.decks.get(0).getMain().countAll());

@@ -22,9 +22,12 @@ public class CoinFlipTextTest {
         assertEquals("Ana votou em Time.", CoinFlipText.notice("Ana votou em Time.", "Expropriar (3)"));
     }
 
+    // O nome sai traduzido quando o Forge já carregou as traduções (depende dos testes que rodaram antes): o que se confere é a frase.
+    private static final String STITCH = forge.util.CardTranslation.getTranslatedName("Stitch in Time");
+
     @Test public void promptAsksHeadsOrTailsWithCapitalizedButtons() {
-        assertEquals("Stitch in Time: cara ou coroa?", CoinFlipText.prompt("Stitch in Time - Lança moeda"));
-        assertEquals("Stitch in Time: cara ou coroa? (2/3)", CoinFlipText.prompt("Stitch in Time - Lança moeda 2/3"));
+        assertEquals(STITCH + ": cara ou coroa?", CoinFlipText.prompt("Stitch in Time - Lança moeda"));
+        assertEquals(STITCH + ": cara ou coroa? (2/3)", CoinFlipText.prompt("Stitch in Time - Lança moeda 2/3"));
         assertEquals("Prioridade", CoinFlipText.prompt("Prioridade"));
         assertEquals("Cara", CoinFlipText.label("cara"));
         assertEquals("Coroa", CoinFlipText.label("coroa"));
@@ -34,7 +37,7 @@ public class CoinFlipTextTest {
     @Test public void thumbChoiceIsRewrittenOnlyForCoinResults() {
         JsonObject q = JsonParser.parseString("{\"title\":\"Stitch in Time - Escolha um resultado\",\"options\":[{\"label\":\"cara\"},{\"label\":\"coroa\"}]}").getAsJsonObject();
         CoinFlipText.choice(q);
-        assertEquals("Stitch in Time: escolha o resultado da moeda", q.get("title").getAsString());
+        assertEquals(STITCH + ": escolha o resultado da moeda", q.get("title").getAsString());
         assertEquals("Cara", q.getAsJsonArray("options").get(0).getAsJsonObject().get("label").getAsString());
         JsonObject dice = JsonParser.parseString("{\"title\":\"Dado - Escolha um resultado\",\"options\":[{\"label\":\"3\"},{\"label\":\"5\"}]}").getAsJsonObject();
         CoinFlipText.choice(dice);

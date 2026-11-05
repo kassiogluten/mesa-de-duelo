@@ -225,7 +225,7 @@ final class FeedbackStore {
                     o.has("updatedAt") ? Instant.parse(o.get("updatedAt").getAsString()) : Instant.EPOCH));
             }
         } catch (RuntimeException e) {
-            System.err.println("Relatos: estado.json ilegível, começando sem estados: " + e);
+            Log.bridge().warn("Relatos: estado.json ilegível, começando sem estados: " + e);
         }
     }
 

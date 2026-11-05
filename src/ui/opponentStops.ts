@@ -1,3 +1,4 @@
+// Paradas no turno do oponente: as etapas marcadas em que o jogo segura a prioridade para você.
 import { KEYS } from '../storage';
 import type { FPreferences } from '../forge/client';
 import { esc } from './cardtext';

@@ -5,6 +5,10 @@
  *
  *   node deploy/relatos.mjs baixar [--container NOME] [--destino ./relatos]
  *       copia os relatos do container da ponte (docker cp). Para um servidor remoto: DOCKER_HOST=ssh://usuario@servidor.
+ *   node deploy/relatos.mjs baixar-api [--destino ./relatos] [--todos]
+ *       baixa pela Ã¡rea de admin, sÃ³ com a senha (sem acesso ao servidor): os relatos "novo" que ainda nÃ£o estÃ£o na
+ *       pasta (--todos: todos). Servidor e senha em MESA_ADMIN_URL (padrÃ£o http://127.0.0.1:7171) e
+ *       MESA_ADMIN_PASSWORD, do ambiente ou do .env. Grava no mesmo formato do "baixar".
  *   node deploy/relatos.mjs listar [--pasta ./relatos] [--tipo erro|sugestao]
  *   node deploy/relatos.mjs mostrar <código ou arquivo> [--pasta ./relatos]
  *   node deploy/relatos.mjs abrir <código ou arquivo> [--pasta ./relatos]
@@ -13,7 +17,7 @@
  *       monta uma issue só com o texto e o resumo técnico, sem a partida. Sem --criar, só mostra; com --criar, usa o gh.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { issueBody, issueTitle } from '../src/admin/reportSummary.ts';
@@ -49,7 +53,47 @@ function find(ref) {
 
 const read = file => { const bytes = readFileSync(file); return JSON.parse((bytes[0] === 0x1f && bytes[1] === 0x8b ? gunzipSync(bytes) : bytes).toString('utf8')); };
 
+function dotEnv() {
+  if (!existsSync('.env')) return {};
+  return Object.fromEntries(readFileSync('.env', 'utf8').split(/\r?\n/).map(l => /^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/.exec(l)).filter(Boolean).map(m => [m[1], m[2].replace(/^["']|["']$/g, '')]));
+}
+
+/** Baixa pela API de admin (POST login, GET relatos, GET relatos/{cÃ³digo}) e grava como o docker cp deixaria. */
+async function downloadApi() {
+  const env = { ...dotEnv(), ...process.env };
+  const base = (env.MESA_ADMIN_URL || 'http://127.0.0.1:7171').replace(/\/$/, '') + '/api/admin/';
+  if (!env.MESA_ADMIN_PASSWORD) fail('Defina MESA_ADMIN_PASSWORD (no ambiente ou no .env).');
+  const login = await fetch(base + 'login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: env.MESA_ADMIN_PASSWORD }) });
+  if (!login.ok) fail(`Login recusado (${login.status}): ${await login.text()}`);
+  const { token } = await login.json();
+  const auth = { Authorization: `Bearer ${token}` };
+  try {
+    const list = await fetch(base + 'relatos', { headers: auth });
+    if (!list.ok) fail(`Lista de relatos: ${list.status} ${await list.text()}`);
+    const { relatos } = await list.json();
+    const dir = join(folder, 'relatos'), indexFile = join(dir, 'indice.jsonl');
+    mkdirSync(dir, { recursive: true });
+    if (!existsSync(indexFile)) writeFileSync(indexFile, '');
+    const known = new Set(existsSync(indexFile) ? readFileSync(indexFile, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).code) : []);
+    const wanted = relatos.filter(e => !known.has(e.code) && (flags.todos || (e.status?.status ?? 'novo') === 'novo'));
+    for (const e of wanted) {
+      const r = await fetch(base + `relatos/${encodeURIComponent(e.code)}`, { headers: auth });
+      if (!r.ok) { console.error(`${e.code}: ${r.status}`); continue; }
+      const month = e.receivedAt.slice(0, 7), path = `${month}/${e.code}.json.gz`;
+      mkdirSync(join(dir, month), { recursive: true });
+      writeFileSync(join(dir, path), Buffer.from(await r.arrayBuffer()));
+      const { status, ...entry } = e;
+      appendFileSync(indexFile, JSON.stringify({ ...entry, path }) + '\n');
+      console.log(`${e.code}  ${e.kind}  ${e.version ?? ''}  ${(e.summary ?? '').replace(/\s+/g, ' ').slice(0, 80)}`);
+    }
+    console.log(`${wanted.length} relato(s) baixado(s) para ${dir} (de ${relatos.length} no servidor).`);
+  } finally {
+    await fetch(base + 'logout', { method: 'POST', headers: auth }).catch(() => {});
+  }
+}
+
 switch (command) {
+  case 'baixar-api': await downloadApi(); break;
   case 'baixar': {
     const container = flags.container ?? execFileSync('docker', ['ps', '--filter', 'label=com.docker.compose.service=bridge', '--format', '{{.Names}}'], { encoding: 'utf8' }).trim().split('\n')[0];
     if (!container) fail('Não achei o container da ponte. Use --container NOME (docker ps).');

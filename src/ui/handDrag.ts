@@ -1,3 +1,4 @@
+// Arrastar cartas da mão: soltar no campo para jogar e reordenar a mão.
 import type { FState } from '../forge/client';
 
 export interface HandDragIntent { id: number; gen: number; x: number; y: number }

@@ -1,3 +1,4 @@
+// Importar lista para um deck: juntar ou substituir, e o que entra e sai em cada seção.
 import { countEntries, type DeckData, type DeckEntry } from '../decks';
 
 export type DeckImportMode = 'merge' | 'replace';

@@ -1,6 +1,5 @@
 package mesadeduelo.bridge;
 
-import java.lang.reflect.Field;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import forge.game.ability.ApiType;
@@ -32,45 +31,40 @@ import forge.gamemodes.match.input.MassSelectMode;
 /** Typed context for the pinned Forge inputs whose public API omits their selection state. */
 final class InputContext {
     private InputContext() { }
-    private static final Field ATTACK_COMBAT = field(InputAttack.class, "combat");
-    private static final Field ATTACK_PLAYER = field(InputAttack.class, "playerAttacks");
-    private static final java.lang.reflect.Method ATTACK_CLEAR_BAND = clearBandMethod();
+    private static final ForgeReflection.FieldRef ATTACK_COMBAT = field(InputAttack.class, "combat");
+    private static final ForgeReflection.FieldRef ATTACK_PLAYER = field(InputAttack.class, "playerAttacks");
+    private static final ForgeReflection.MethodRef ATTACK_CLEAR_BAND =
+        ForgeReflection.method(InputAttack.class, "activateBand", forge.game.combat.AttackingBand.class);
     private static final forge.util.ITriggerEvent REMOVE_ATTACKER = new forge.util.ITriggerEvent() {
         public int getButton() { return 3; }
         public int getX() { return 0; }
         public int getY() { return 0; }
     };
 
-    private static java.lang.reflect.Method clearBandMethod() {
-        try {
-            var method = InputAttack.class.getDeclaredMethod("activateBand", forge.game.combat.AttackingBand.class);
-            method.setAccessible(true); return method;
-        } catch (ReflectiveOperationException e) { throw new ExceptionInInitializerError(e); }
-    }
-    private static final Field ATTACKER = field(InputBlock.class, "currentAttacker");
-    private static final Field COMBAT = field(InputBlock.class, "combat");
-    private static final Field DEFENDER = field(InputBlock.class, "defender");
-    private static final Field CONFIRM_ABILITY = field(InputConfirm.class, "sa");
-    private static final Field CONFIRM_CARD = field(InputConfirm.class, "card");
-    private static final Field CONFIRM_MESSAGE = field(InputConfirm.class, "message");
-    private static final Field SELECT_MIN = field(InputSelectManyBase.class, "min");
-    private static final Field SELECT_MAX = field(InputSelectManyBase.class, "max");
-    private static final Field SELECT_ABILITY = field(InputSelectManyBase.class, "sa");
-    private static final Field TAP_AVAILABLE = field(InputSelectCardsForConvokeOrImprovise.class, "availableCards");
-    private static final Field TAP_REMAINING = field(InputSelectCardsForConvokeOrImprovise.class, "remainingCost");
-    private static final Field TAP_ARTIFACTS = field(InputSelectCardsForConvokeOrImprovise.class, "artifacts");
-    private static final Field TAP_CREATURES = field(InputSelectCardsForConvokeOrImprovise.class, "creatures");
-    private static final Field MASS_SELECT = field(InputSelectEntitiesFromList.class, "massSelectMode");
-    private static final Field PAY_PLAYER = field(InputPayMana.class, "player");
-    private static final Field PAY_COST = field(InputPayMana.class, "manaCost");
-    private static final Field PAY_ABILITY = field(InputPayMana.class, "saPaidFor");
-    private static final Field PAY_EFFECT = field(InputPayMana.class, "effect");
-    private static final Field PAY_LIFE = field(InputPayMana.class, "phyLifeToLose");
-    private static final Field TARGETS_ABILITY = field(InputSelectTargets.class, "sa");
-    private static final Field TARGETS_NUM = field(InputSelectTargets.class, "numTargets");
+    private static final ForgeReflection.FieldRef ATTACKER = field(InputBlock.class, "currentAttacker");
+    private static final ForgeReflection.FieldRef COMBAT = field(InputBlock.class, "combat");
+    private static final ForgeReflection.FieldRef DEFENDER = field(InputBlock.class, "defender");
+    private static final ForgeReflection.FieldRef CONFIRM_ABILITY = field(InputConfirm.class, "sa");
+    private static final ForgeReflection.FieldRef CONFIRM_CARD = field(InputConfirm.class, "card");
+    private static final ForgeReflection.FieldRef CONFIRM_MESSAGE = field(InputConfirm.class, "message");
+    private static final ForgeReflection.FieldRef SELECT_MIN = field(InputSelectManyBase.class, "min");
+    private static final ForgeReflection.FieldRef SELECT_MAX = field(InputSelectManyBase.class, "max");
+    private static final ForgeReflection.FieldRef SELECT_ABILITY = field(InputSelectManyBase.class, "sa");
+    private static final ForgeReflection.FieldRef TAP_AVAILABLE = field(InputSelectCardsForConvokeOrImprovise.class, "availableCards");
+    private static final ForgeReflection.FieldRef TAP_REMAINING = field(InputSelectCardsForConvokeOrImprovise.class, "remainingCost");
+    private static final ForgeReflection.FieldRef TAP_ARTIFACTS = field(InputSelectCardsForConvokeOrImprovise.class, "artifacts");
+    private static final ForgeReflection.FieldRef TAP_CREATURES = field(InputSelectCardsForConvokeOrImprovise.class, "creatures");
+    private static final ForgeReflection.FieldRef MASS_SELECT = field(InputSelectEntitiesFromList.class, "massSelectMode");
+    private static final ForgeReflection.FieldRef PAY_PLAYER = field(InputPayMana.class, "player");
+    private static final ForgeReflection.FieldRef PAY_COST = field(InputPayMana.class, "manaCost");
+    private static final ForgeReflection.FieldRef PAY_ABILITY = field(InputPayMana.class, "saPaidFor");
+    private static final ForgeReflection.FieldRef PAY_EFFECT = field(InputPayMana.class, "effect");
+    private static final ForgeReflection.FieldRef PAY_LIFE = field(InputPayMana.class, "phyLifeToLose");
+    private static final ForgeReflection.FieldRef TARGETS_ABILITY = field(InputSelectTargets.class, "sa");
+    private static final ForgeReflection.FieldRef TARGETS_NUM = field(InputSelectTargets.class, "numTargets");
 
-    private static final Field MULLIGAN_STARTING = field(forge.gamemodes.match.input.InputConfirmMulligan.class, "startingPlayer");
-    private static final Field LONDON_RETURN = field(forge.gamemodes.match.input.InputLondonMulligan.class, "toReturn");
+    private static final ForgeReflection.FieldRef MULLIGAN_STARTING = field(forge.gamemodes.match.input.InputConfirmMulligan.class, "startingPlayer");
+    private static final ForgeReflection.FieldRef LONDON_RETURN = field(forge.gamemodes.match.input.InputLondonMulligan.class, "toReturn");
 
     /**
      * O que o pagamento de mana paga, para a mesa dizer o que o Cancelar desfaz: "spell" (a conjuração volta atrás),
@@ -89,25 +83,24 @@ final class InputContext {
 
     /** A mágica ou habilidade que escolhe alvos ({@link InputSelectTargets}) ou que está sendo paga ({@link InputPayMana}); null nos outros. */
     static SpellAbility casting(Object input) {
-        if (input instanceof InputSelectTargets) return (SpellAbility) value(TARGETS_ABILITY, input);
-        if (input instanceof InputPayMana) return (SpellAbility) value(PAY_ABILITY, input);
+        if (input instanceof InputSelectTargets) return present(TARGETS_ABILITY) ? (SpellAbility) value(TARGETS_ABILITY, input) : null;
+        if (input instanceof InputPayMana) return present(PAY_ABILITY) ? (SpellAbility) value(PAY_ABILITY, input) : null;
         return null;
     }
 
     /** Quem começa a partida, na pergunta do mulligan. */
-    static Player mulliganStartingPlayer(forge.gamemodes.match.input.InputConfirmMulligan input) { return (Player) value(MULLIGAN_STARTING, input); }
-
-    /** Quantas cartas o mulligan de Londres manda para o fundo. */
-    static int londonReturnCount(forge.gamemodes.match.input.InputLondonMulligan input) { return (Integer) value(LONDON_RETURN, input); }
-
-    private static Field field(Class<?> type, String name) {
-        try { Field field = type.getDeclaredField(name); field.setAccessible(true); return field; }
-        catch (ReflectiveOperationException e) { throw new ExceptionInInitializerError(e); }
+    static Player mulliganStartingPlayer(forge.gamemodes.match.input.InputConfirmMulligan input) {
+        return present(MULLIGAN_STARTING) ? (Player) value(MULLIGAN_STARTING, input) : null;
     }
-    private static Object value(Field field, Object input) {
-        try { return field.get(input); }
-        catch (IllegalAccessException e) { throw new IllegalStateException(e); }
+
+    /** Quantas cartas o mulligan de Londres manda para o fundo; null se o Forge não disser. */
+    static Integer londonReturnCount(forge.gamemodes.match.input.InputLondonMulligan input) {
+        return present(LONDON_RETURN) ? (Integer) value(LONDON_RETURN, input) : null;
     }
+
+    private static ForgeReflection.FieldRef field(Class<?> type, String name) { return ForgeReflection.field(type, name); }
+    private static Object value(ForgeReflection.FieldRef field, Object input) { return field.get(input); }
+    private static boolean present(ForgeReflection.Ref... refs) { return ForgeReflection.present(refs); }
 
     /**
      * Mana phyrexiana: o Forge paga um símbolo com 2 de vida quando quem paga clica em si mesmo
@@ -116,7 +109,7 @@ final class InputContext {
      * só tira no fim do pagamento; ou null.
      */
     static JsonObject phyrexianLife(Object input) {
-        if (!(input instanceof InputPayManaOfCostPayment)) return null;
+        if (!(input instanceof InputPayManaOfCostPayment) || !present(PAY_PLAYER, PAY_COST, PAY_LIFE, PAY_EFFECT, PAY_ABILITY)) return null;
         Player player = (Player) value(PAY_PLAYER, input);
         ManaCostBeingPaid cost = (ManaCostBeingPaid) value(PAY_COST, input);
         int pending = (Integer) value(PAY_LIFE, input);
@@ -138,7 +131,7 @@ final class InputContext {
      * o X escolhido, quando o custo tem X. Null fora do pagamento de mana.
      */
     static JsonObject manaCost(Object input) {
-        if (!(input instanceof InputPayMana)) return null;
+        if (!(input instanceof InputPayMana) || !present(PAY_COST, PAY_LIFE, PAY_ABILITY, PAY_EFFECT)) return null;
         ManaCostBeingPaid cost = (ManaCostBeingPaid) value(PAY_COST, input);
         if (cost == null) return null;
         String remaining = cost.toString();
@@ -164,7 +157,7 @@ final class InputContext {
      * Para mágicas o texto fica de fora: a carta inteira é a mágica.
      */
     static JsonObject targetDetails(Object input) {
-        if (!(input instanceof InputSelectTargets)) return null;
+        if (!(input instanceof InputSelectTargets) || !present(TARGETS_ABILITY, TARGETS_NUM)) return null;
         SpellAbility sa = (SpellAbility) value(TARGETS_ABILITY, input);
         if (sa == null) return null;
         SpellAbility root = sa.getRootAbility();
@@ -197,7 +190,7 @@ final class InputContext {
     }
 
     static JsonObject suspendCast(Object input) {
-        if (!(input instanceof InputConfirm)) return null;
+        if (!(input instanceof InputConfirm) || !present(CONFIRM_ABILITY, CONFIRM_CARD)) return null;
         SpellAbility ability = (SpellAbility) value(CONFIRM_ABILITY, input);
         CardView card = (CardView) value(CONFIRM_CARD, input);
         if (ability == null || card == null || ability.getApi() != ApiType.Play
@@ -211,7 +204,7 @@ final class InputContext {
      * guardados na habilidade da substituição, para a mesa nomear os botões ("Zona de comando" ou "Mão").
      */
     static JsonObject commanderMove(Object input) {
-        if (!(input instanceof InputConfirm)) return null;
+        if (!(input instanceof InputConfirm) || !present(CONFIRM_ABILITY, CONFIRM_MESSAGE)) return null;
         SpellAbility ability = (SpellAbility) value(CONFIRM_ABILITY, input);
         JsonObject stays = commanderStays(ability, (String) value(CONFIRM_MESSAGE, input));
         if (stays != null) return stays;
@@ -262,6 +255,7 @@ final class InputContext {
      * have different counting semantics. Players only appear in {@code players} when they can be chosen.
      */
     static JsonObject selection(Object input) {
+        if (!present(SELECT_MIN, SELECT_MAX)) return null;
         if (input instanceof InputSelectCardsForConvokeOrImprovise tap) {
             JsonObject result = new JsonObject(); JsonArray cards = new JsonArray();
             for (Card card : tap.getSelected()) cards.add(card.getId());
@@ -295,7 +289,7 @@ final class InputContext {
      * como selecionáveis. kind diz qual das três (improvise, convoke, waterbend) e remaining, o custo que ainda falta.
      */
     static JsonObject tapToPay(Object input) {
-        if (!(input instanceof InputSelectCardsForConvokeOrImprovise tap)) return null;
+        if (!(input instanceof InputSelectCardsForConvokeOrImprovise tap) || !present(TAP_ARTIFACTS, TAP_CREATURES, TAP_REMAINING)) return null;
         boolean artifacts = (Boolean) value(TAP_ARTIFACTS, input), creatures = (Boolean) value(TAP_CREATURES, input);
         JsonObject result = new JsonObject();
         result.addProperty("kind", artifacts && creatures ? "waterbend" : artifacts ? "improvise" : "convoke");
@@ -305,7 +299,7 @@ final class InputContext {
 
     /** As permanentes que ainda podem ser viradas no improvisar, convocar ou dobrar água (as já escolhidas inclusive). */
     static java.util.Set<Integer> tapToPayChoices(Object input) {
-        if (!(input instanceof InputSelectCardsForConvokeOrImprovise)) return java.util.Set.of();
+        if (!(input instanceof InputSelectCardsForConvokeOrImprovise) || !present(TAP_AVAILABLE)) return java.util.Set.of();
         java.util.Set<Integer> ids = new java.util.LinkedHashSet<>();
         for (Object card : (Iterable<?>) value(TAP_AVAILABLE, input)) ids.add(((Card) card).getId());
         return ids;
@@ -323,6 +317,7 @@ final class InputContext {
     }
 
     private static boolean proliferating(InputSelectEntitiesFromList<?> select) {
+        if (!present(SELECT_ABILITY)) return false;
         SpellAbility ability = (SpellAbility) value(SELECT_ABILITY, select);
         return ability != null && ability.getApi() == ApiType.Proliferate;
     }
@@ -402,14 +397,14 @@ final class InputContext {
      * modo de seleção em massa sai de NONE, senão o Forge confirma sozinho ao marcar o último: quem confirma é o jogador.
      */
     static boolean selectExactly(Object input, java.util.Collection<Integer> cardIds, java.util.Collection<Integer> playerIds) {
-        if (!(input instanceof InputSelectEntitiesFromList<?> select) || !proliferating(select)) return false;
+        if (!(input instanceof InputSelectEntitiesFromList<?> select) || !present(MASS_SELECT) || !proliferating(select)) return false;
         java.util.Set<Integer> validCards = new java.util.HashSet<>(), validPlayers = new java.util.HashSet<>();
         for (GameEntity entity : select.getValidChoices()) (entity instanceof Player ? validPlayers : validCards).add(entity.getId());
         if (!validCards.containsAll(cardIds) || !validPlayers.containsAll(playerIds)) return false;
         for (GameEntity entity : java.util.List.copyOf(select.getValidChoices())) {
             boolean wanted = entity instanceof Player ? playerIds.contains(entity.getId()) : cardIds.contains(entity.getId());
             if (wanted == select.getSelected().contains(entity)) continue;
-            try { MASS_SELECT.set(select, MassSelectMode.ALL); } catch (IllegalAccessException e) { throw new IllegalStateException(e); }
+            MASS_SELECT.set(select, MassSelectMode.ALL);
             if (entity instanceof Card card) select.selectCard(card, null, null);
             else select.selectPlayer((Player) entity, null);
         }
@@ -417,7 +412,7 @@ final class InputContext {
     }
 
     static JsonObject attacking(Object input) {
-        if (!(input instanceof InputAttack)) return null;
+        if (!(input instanceof InputAttack) || !present(ATTACK_COMBAT, ATTACK_PLAYER)) return null;
         Combat combat = (Combat) value(ATTACK_COMBAT, input);
         Player player = (Player) value(ATTACK_PLAYER, input);
         JsonObject result = new JsonObject();
@@ -442,7 +437,8 @@ final class InputContext {
     }
 
     static boolean assignAttack(Object input, int attackerId, int defenderId, String kind) {
-        if (!(input instanceof InputAttack attack) || !("player".equals(kind) || "card".equals(kind))) return false;
+        if (!(input instanceof InputAttack attack) || !("player".equals(kind) || "card".equals(kind))
+            || !present(ATTACK_COMBAT, ATTACK_PLAYER)) return false;
         Combat combat = (Combat) value(ATTACK_COMBAT, input);
         Player player = (Player) value(ATTACK_PLAYER, input);
         Card attacker = null; GameEntity defender = null;
@@ -457,7 +453,8 @@ final class InputContext {
 
     /** Bulk selection is explicit: never redirect an ineligible creature to a different defender. */
     static boolean assignAllAttackers(Object input, int defenderId, String kind) {
-        if (!(input instanceof InputAttack attack) || !("player".equals(kind) || "card".equals(kind))) return false;
+        if (!(input instanceof InputAttack attack) || !("player".equals(kind) || "card".equals(kind))
+            || !present(ATTACK_COMBAT, ATTACK_PLAYER)) return false;
         Combat combat = (Combat) value(ATTACK_COMBAT, input);
         if (!combat.getAttackers().isEmpty()) return false;
         Player player = (Player) value(ATTACK_PLAYER, input);
@@ -477,7 +474,8 @@ final class InputContext {
     /** Validate the whole group before touching combat; assignment is idempotent, never a toggle. */
     static boolean assignAttackGroup(Object input, java.util.List<Integer> attackerIds, Integer defenderId, String kind) {
         if (!(input instanceof InputAttack attack) || attackerIds == null || attackerIds.isEmpty()
-            || (defenderId != null && !("player".equals(kind) || "card".equals(kind)))) return false;
+            || (defenderId != null && !("player".equals(kind) || "card".equals(kind)))
+            || !present(ATTACK_COMBAT, ATTACK_PLAYER, ATTACK_CLEAR_BAND)) return false;
         Combat combat = (Combat) value(ATTACK_COMBAT, input);
         Player player = (Player) value(ATTACK_PLAYER, input);
         GameEntity defender = null;
@@ -510,7 +508,7 @@ final class InputContext {
     }
 
     static JsonObject blocking(Object input) {
-        if (!(input instanceof InputBlock)) return null;
+        if (!(input instanceof InputBlock) || !present(COMBAT, DEFENDER, ATTACKER)) return null;
         Combat combat = (Combat) value(COMBAT, input);
         Player defender = (Player) value(DEFENDER, input);
         Card selected = (Card) value(ATTACKER, input);
@@ -543,7 +541,7 @@ final class InputContext {
 
     /** Select and toggle the exact pair together on the dispatcher, after the Session generation guard. */
     static boolean assignBlock(Object input, int attackerId, int blockerId) {
-        if (!(input instanceof InputBlock block)) return false;
+        if (!(input instanceof InputBlock block) || !present(COMBAT, DEFENDER)) return false;
         Combat combat = (Combat) value(COMBAT, input); Player defender = (Player) value(DEFENDER, input);
         Card attacker = null, blocker = null;
         for (Card card : combat.getAttackers()) if (card.getId() == attackerId) attacker = card;

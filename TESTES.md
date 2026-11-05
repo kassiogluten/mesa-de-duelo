@@ -28,30 +28,16 @@ Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). 
 
 **Partidas de verdade:** `npm run test:e2e` sobe o servidor numa porta própria (7199) e roda os `forge-bridge/scripts/test-*.mjs` contra ele (uns 4 min; um só: `npm run test:e2e -- undo`).
 
-**Refatoração sem mudar a tela:** `npm run visual -- snap <pasta>` tira prints de 24 telas das páginas de teste em dois tamanhos (sem animações e sem as imagens das cartas, que carregam em tempos diferentes). Tire antes e depois da mudança e rode `npm run visual -- compare <antes> <depois>`: grava `diff-*.png` onde mudou. Ruído conhecido: `duel-tutor@844x390` varia um pouco entre duas rodadas iguais.
+**Refatoração sem mudar a tela:** `npm run visual -- snap <pasta>` tira prints de 36 telas (páginas de teste da mesa e telas do site) em dois tamanhos (sem animações e sem as imagens das cartas, que carregam em tempos diferentes). Tire antes e depois da mudança e rode `npm run visual -- compare <antes> <depois>`: grava `diff-*.png` onde mudou. O ruído conhecido (relógios, mesa livre embaralhada, nomes que chegam do Scryfall) fica em `NOISE`, no script: aparece na saída e não conta. A partir da 0.126.1 cobre 36 telas, inclusive Meus decks, construtor, Laboratório, menu ⋯ e mesa livre.
 
 **Código morto:** `npm run unused` lista exports que ninguém usa ("morto" pode apagar).
 
-**Contrato do estado:** o `ProtocolContractTest` (servidor) monta uma partida e confere que todo campo do estado está em `tests/protocol/state-keys.txt`; o `tests/protocol.test.mjs` confere que todo campo dessa lista está declarado em `src/forge/client.ts`. Campo novo no estado: rode o `ProtocolContractTest` com `-Dprotocol.update=true`, declare o campo no `client.ts` e rode `npm test`.
+**Contrato do estado:** o `ProtocolContractTest` (servidor) monta uma partida e confere que todo campo do estado está em `tests/protocol/state-keys.txt`; o `tests/protocol.test.mjs` confere que todo campo dessa lista está declarado em `src/forge/protocol.ts`. Campo novo no estado: rode o `ProtocolContractTest` com `-Dprotocol.update=true`, declare o campo no `protocol.ts` e rode `npm test`.
 
 O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm install`) roda `npm test` e `tsc` antes de cada commit que mexe no código da mesa.
 
 ## Falhas conhecidas
 
-### Mesa: 1 teste de navegador falha (vista em 2026-11-04, na 0.123.0)
+Nenhuma desde 2026-11-05 (0.126.1): a suíte da mesa, a do servidor, os testes de navegador e as partidas (`test:e2e`) passam inteiros. Qualquer falha agora é nova e precisa ser investigada.
 
-`commander-overlays.browser.mjs`: `1440/4: gallery shifted battlefield` (a galeria da pilha mexe no campo em 1440×900). Comprovado que já existia antes da 0.124.0. Ainda não investigado. (O `commander-table.browser.mjs`, que também estava aqui, passa desde que os testes rodam pelo `npm run test:browser`.)
-
-### Partidas: 3 scripts falham no `npm run test:e2e` (vista em 2026-11-04, na 0.126.0)
-
-`test-damage-events.mjs` e `test-preferences.mjs` falham sempre; `test-end-step-stop.mjs` às vezes (passou numa rodada e falhou na outra). Comprovado que já falhavam antes da divisão do servidor em classes (rodados no commit 56fd478). Ainda não investigados.
-
-### Servidor: 3 testes de texto falham na suíte inteira (vista em 2026-11-01, na 0.106.0)
-
-Em 2026-11-04, na 0.125.0, a suíte inteira passou (335 testes, nenhuma falha, estes três inclusive) rodando no Linux, com o Forge em `~/forge`. No mesmo dia, no Windows, os três continuam falhando (e só eles, em 336): é o ambiente de lá.
-
-- `CoinFlipTextTest.promptAsksHeadsOrTailsWithCapitalizedButtons`
-- `CoinFlipTextTest.thumbChoiceIsRewrittenOnlyForCoinResults`
-- `InputContextTest.targetSelectionCarriesTheTriggerTextWhatItTargetsAndHowManyAreLeft` (erro com o texto do gatilho de Chupacabra Voraz)
-
-Comprovado que já existiam: falham do mesmo jeito com o código do servidor da 0.105.0 (a mudança desfeita com `git stash`). Parecem depender do idioma que o Forge carregou antes (o `CoinFlipTextTest` passa quando roda sozinho; o `InputContextTest` falha até sozinho). Na 0.105.0 a suíte tinha passado inteira (270 testes), então algo no ambiente mudou desde então (talvez o Forge em `C:/Users/Kassio/forge` ou as preferências em `forge-bridge/target/test-home`). Ainda não investigado.
+Testes que já falharam de vez em quando e passaram ao rodar de novo (máquina carregada, várias mesas e servidores subindo juntos): `attack-groups`, `commander-table` e `artwork-click` (navegador) e `test-end-step-stop` (partidas). Se um deles falhar, rode de novo sozinho antes de investigar; se falhar duas vezes, é de verdade.

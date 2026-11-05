@@ -141,7 +141,7 @@ final class Admin {
         catch (RuntimeException e) { given = ""; }
         if (!MessageDigest.isEqual(sha(given), password)) {
             failures.record(key, now);
-            System.out.println("Admin: senha errada");
+            Log.bridge().warn("Admin: senha errada");
             return Response.error(401, "Senha errada.");
         }
         sessions.values().removeIf(end -> end < now);

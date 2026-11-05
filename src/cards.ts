@@ -1,3 +1,4 @@
+// O que as telas mostram de uma carta (nome, tipo, cores, valor de mana), tirado dos dados do Scryfall.
 import type { ScryCard } from './scryfall';
 
 export type Color = 'W' | 'U' | 'B' | 'R' | 'G';

@@ -1,3 +1,4 @@
+// Votações de carta: o trecho do texto de cada opção, o placar dos votos e a tela de votar.
 import type { FCard, FQuestion, FVote } from '../forge/client';
 import { esc, optionHTML, richText } from './cardtext';
 

@@ -47,12 +47,22 @@ Ao fechar uma mudança, siga a skill `/entregar` (`.claude/skills/entregar/SKILL
 
 - `npm run css-why -- <página> "<seletor>" [--props a,b]`: quais regras de CSS se aplicam a um elemento e qual vence em cada propriedade. Use antes de subir a especificidade de um seletor. O `style.css` é a base; uma regra de tela que perde para ele precisa de seletor mais forte (não há `@layer`).
 - `npm run visual -- snap <pasta>` e `compare <antes> <depois>`: confere que uma refatoração não mudou nenhuma tela.
+- `npm run mapa [-- texto]`: cada arquivo do código com o que ele faz e o tamanho. Comece por aqui para achar onde mexer.
+- `npm run relatos -- baixar-api` (e `listar`, `mostrar`, `abrir`, `issue`): os relatos dos jogadores, pela área de admin.
+- `npm run protocol-doc`: regrava `docs/protocolo.md` (referência dos campos) depois de mudar `src/forge/protocol.ts`.
 - `npm run print`, `npm run test:browser`, `npm run test:e2e`, `npm run unused`: ver `TESTES.md` e a skill `/entregar`.
 - Chaves do navegador (`localStorage`): só em `src/storage.ts` (`KEYS`); `tests/storage.test.mjs` recusa chave solta.
 
+## Nomes e organização do código
+
+- Arquivo e identificador novos: em inglês, como a maior parte do código (`handView.ts`, `SeatStateView`). Texto que o jogador vê: em português. Comentários: em português. Não renomeie o que já existe só por isso (`salas.ts`, `conta/`, `temas.ts` ficam).
+- Todo arquivo de `src/` e do servidor começa com um comentário de uma frase dizendo o que ele faz: é o que o `npm run mapa` mostra (e o `tests/mapa.test.mjs` confere).
+- Tipos das mensagens com o servidor: `src/forge/protocol.ts`. Chaves do navegador: `src/storage.ts`. Ícones da interface: `src/ui/icons.ts` (os de um efeito usado num módulo só podem ficar nele). `$` de uma tela: `finder(raiz)` de `src/ui/dom.ts`. Módulo falso num teste: `mock()` de `tests/register.mjs`.
+- Arquivo passando de ~600 linhas: divida antes de acrescentar (padrões em `docs/roadmap-manutencao.md`).
+
 ## Arquivos grandes
 
-- `CHANGELOG.md` (centenas de KB): leia só o topo (`head -40`).
+- `CHANGELOG.md` tem as versões desde a 0.100.0 (leia só o topo, `head -40`); as anteriores ficam em `docs/changelog-antigo.md`, que o painel Novidades também lê. Quando o `CHANGELOG.md` passar de ~80 KB, mova as versões mais antigas para o começo das seções de lá.
 - `ROADMAP.md` tem só o que falta; os itens concluídos ficam em `docs/roadmap-feito.md`.
 - Melhorias internas (estrutura, testes, ferramentas) ficam em `docs/roadmap-manutencao.md`: consulte antes de refatorar e marque o que concluir.
 

@@ -77,7 +77,7 @@ final class MatchJournal {
             pendingSnapshot = false;
             if (!hasGame(gameNumber)) startedGame(source);
             try { snapshot(source, "turno", PhaseType.UNTAP); }
-            catch (RuntimeException e) { System.err.println("Diário: retrato do turno falhou: " + e); }
+            catch (RuntimeException e) { Log.match(code, matchId).warn("Diário: retrato do turno falhou: " + e); }
         }
     }
 
@@ -169,7 +169,7 @@ final class MatchJournal {
                 s.addProperty("bestEffort", true);
                 shots.add(s);
             } catch (RuntimeException e) {
-                System.err.println("Diário: retrato do relato falhou: " + e);
+                Log.match(code, matchId).warn("Diário: retrato do relato falhou: " + e);
             }
         }
         o.add("snapshots", shots);

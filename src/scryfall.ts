@@ -1,149 +1,21 @@
+// Cache das cartas do Scryfall (memória e IndexedDB) e a busca por nome e por impressão.
 import { PREFIXES } from './storage';
 import * as cardStore from './cardStore';
 import { scryfallFormat, type DeckFormat } from './decks';
-
-type Images = { small?: string; normal?: string; art_crop?: string };
+import { request } from './scryfallApi';
+import { faceView, images, isFaceAlias, legalityFresh, lookupName, printKey, slim, slimPt, validCard, withBasicArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
+import { preloadImages } from './scryfallImages';
+export { legalityFresh, type Printing, type ScryCard } from './scryfallCards';
+export { preloadImages } from './scryfallImages';
 
 /**
- * Versão do formato guardado no cache. Cartas de duas faces salvas antes da v2 ficaram sem imagem
- * (o Scryfall põe as imagens dentro de cada face) e são buscadas de novo.
+ * As cartas do Scryfall que a página já conhece: na memória (`cacheGet` é síncrono) e no IndexedDB (`cardStore`),
+ * com as imagens das impressões escolhidas nos decks. A forma de cada carta fica em `scryfallCards`; a fila de
+ * pedidos, em `scryfallApi`.
  */
-const FORMAT = 3;
-const LEGALITY_TTL = 24 * 60 * 60 * 1000;
 const memory = new Map<string, ScryCard>();
-
-/** Subconjunto dos campos do Scryfall que o jogo usa. */
-export interface ScryCard {
-  name: string;
-  oracle_id?: string;
-  cmc?: number;
-  rarity?: string;
-  legalities?: Record<string, 'legal' | 'not_legal' | 'restricted' | 'banned'>;
-  fetchedAt?: number;
-  layout: string;
-  mana_cost?: string;
-  type_line: string;
-  oracle_text?: string;
-  power?: string;
-  toughness?: string;
-  colors?: string[];
-  color_identity?: string[];
-  image_uris?: { small?: string; normal?: string; art_crop?: string };
-  faces?: boolean;
-  /** Nome e imagem de cada face (cartas de duas faces: o Forge chama a carta pelo nome da face visível). */
-  faceNames?: string[];
-  faceImages?: (Images | undefined)[];
-  /** Impressão em português, quando existe. */
-  pt?: { name?: string; type_line?: string; text?: string; image_uris?: Images; faceNames?: string[]; faceImages?: (Images | undefined)[] };
-  /** Já procuramos a impressão em português (achando ou não). */
-  ptChecked?: boolean;
-  v?: number;
-}
-
-/**
- * Cliente mínimo da API do Scryfall (https://scryfall.com/docs/api).
- * Respeita o intervalo pedido pela API entre requisições e guarda as cartas no IndexedDB (`cardStore`).
- */
-const API = 'https://api.scryfall.com';
 /** Chave antiga das cartas no localStorage: movidas para o IndexedDB ao abrir o jogo. */
 const LEGACY_PREFIX = PREFIXES.scryfallLegacy;
-const MIN_INTERVAL = 110;
-
-let queue: Promise<unknown> = Promise.resolve();
-let lastAt = 0;
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-function throttled<T>(fn: () => Promise<T>): Promise<T> {
-  const run = queue.then(async () => {
-    const wait = lastAt + MIN_INTERVAL - Date.now();
-    if (wait > 0) await sleep(wait);
-    lastAt = Date.now();
-    return fn();
-  });
-  queue = run.catch(() => undefined);
-  return run;
-}
-
-async function request(path: string, body?: unknown): Promise<{ status: number; json: any }> {
-  return throttled(async () => {
-    const res = await fetch(API + path, body === undefined
-      ? { headers: { Accept: 'application/json' } }
-      : { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const json = await res.json().catch(() => null);
-    if (!res.ok && res.status !== 404) throw new Error(json?.details ?? `Scryfall respondeu ${res.status}`);
-    return { status: res.status, json };
-  });
-}
-
-const images = (u: any): Images | undefined => u && { small: u.small, normal: u.normal, art_crop: u.art_crop };
-/**
- * Arte fixa dos terrenos básicos: série de Magali Villeneuve em Dominaria United (DMU 277–281, arte cheia).
- * Vale em todas as telas, inclusive no lugar da impressão em português.
- */
-const BASIC_ART: Record<string, string> = { plains: '277', island: '278', swamp: '279', mountain: '280', forest: '281' };
-const basicImages = (num: string): Images => {
-  const url = (version: string) => `${API}/cards/dmu/${num}?format=image&version=${version}`;
-  return { small: url('small'), normal: url('normal'), art_crop: url('art_crop') };
-};
-function withBasicArt(c: ScryCard): ScryCard {
-  const num = BASIC_ART[c.name.toLowerCase()];
-  return num ? { ...c, image_uris: basicImages(num), pt: c.pt && { ...c.pt, image_uris: undefined } } : c;
-}
-
-/** O /cards/collection não acha "Frente // Verso" (nem cartas divididas como "Fire // Ice"), só o nome da frente. */
-const lookupName = (name: string) => name.split(' // ')[0];
-const noScan = (c: any) => c.image_status === 'placeholder' || c.image_status === 'missing';
-
-/** Nome, tipo, texto e imagem de uma impressão em português (cartas de duas faces juntam as faces). */
-function slimPt(c: any): ScryCard['pt'] {
-  const faces: any[] = Array.isArray(c.card_faces) ? c.card_faces : [];
-  const join = (k: string, sep: string) => faces.map(f => f[k]).filter(Boolean).join(sep) || undefined;
-  // Sem scan da impressão traduzida o Scryfall devolve um aviso no lugar da arte; aí vale a imagem em inglês.
-  const faceImages = noScan(c) ? undefined : faces.map(f => images(f.image_uris));
-  return {
-    name: c.printed_name ?? join('printed_name', ' // '),
-    type_line: c.printed_type_line ?? join('printed_type_line', ' // '),
-    text: c.printed_text ?? join('printed_text', '\n—\n'),
-    image_uris: noScan(c) ? undefined : images(c.image_uris) ?? faceImages?.[0],
-    faceNames: faces.length ? faces.map(f => f.printed_name) : undefined,
-    faceImages: faceImages?.length ? faceImages : undefined,
-  };
-}
-
-function slim(c: any): ScryCard {
-  const pt = c.lang === 'pt';
-  const faces: any[] = Array.isArray(c.card_faces) ? c.card_faces : [];
-  const faceImages = noScan(c) ? [] : faces.map(f => images(f.image_uris));
-  return {
-    v: FORMAT,
-    name: c.name,
-    oracle_id: c.oracle_id,
-    cmc: c.cmc,
-    rarity: c.rarity,
-    legalities: c.legalities,
-    fetchedAt: Date.now(),
-    layout: c.layout,
-    mana_cost: c.mana_cost ?? faces[0]?.mana_cost,
-    type_line: c.type_line,
-    oracle_text: c.oracle_text ?? (faces.length ? faces.map(f => `${f.name}\n${f.oracle_text ?? ''}`).join('\n—\n') : undefined),
-    power: c.power,
-    toughness: c.toughness,
-    colors: c.colors,
-    color_identity: c.color_identity,
-    image_uris: noScan(c) ? undefined : images(c.image_uris) ?? faceImages[0],
-    faces: faces.length > 0 || undefined,
-    faceNames: faces.length ? faces.map(f => f.name) : undefined,
-    faceImages: faceImages.some(Boolean) ? faceImages : undefined,
-    pt: pt ? slimPt(c) : undefined,
-    ptChecked: pt || undefined,
-  };
-}
-
-export function legalityFresh(card: ScryCard): boolean {
-  return !!card.legalities && !!card.fetchedAt && Date.now() - card.fetchedAt < LEGALITY_TTL;
-}
-
-const validCard = (c: any): c is ScryCard => !!c && c.v === FORMAT && typeof c.name === 'string' && typeof c.type_line === 'string' && typeof c.layout === 'string';
 
 /**
  * A carta pelo nome. Com a impressão escolhida no deck (série e número), a imagem é a dela assim que estiver no cache
@@ -156,20 +28,10 @@ export function cacheGet(name: string, print?: Partial<Printing> | null): ScryCa
   return printed?.image_uris ? withPrinting(cached, name, printed) : withBasicArt(cached);
 }
 
-/** Impressão de uma carta no Scryfall: código da série (em minúsculas) e número de coleção. */
-export interface Printing { set: string; cn?: string }
-type PrintImages = { image_uris?: Images; faceNames?: string[]; faceImages?: (Images | undefined)[] };
 const PRINT_PREFIX = 'print:';
 const printings = new Map<string, PrintImages>();
 /** Impressões que o Scryfall não achou nesta visita: não são pedidas de novo. */
 const missingPrintings = new Set<string>();
-const printKey = (name: string, p: Printing) => `${p.set}/${p.cn ?? name}`.toLowerCase();
-
-function withPrinting(card: ScryCard, name: string, p: PrintImages): ScryCard {
-  const face = p.faceNames?.findIndex(f => f.toLowerCase() === name.toLowerCase()) ?? -1;
-  return { ...card, image_uris: (face >= 0 ? p.faceImages?.[face] : undefined) ?? p.image_uris, faceImages: p.faceImages ?? card.faceImages,
-    pt: card.pt && { ...card.pt, image_uris: undefined, faceImages: undefined } };
-}
 
 /** Busca as imagens das impressões escolhidas que ainda não estão no cache. */
 export async function fetchPrintings(entries: { name: string; set?: string; cn?: string }[]): Promise<void> {
@@ -224,18 +86,6 @@ export async function loadCardCache() {
     if (validCard(c) && !memory.has(name) && !(c.layout === 'prepare' && isFaceAlias(name, c))) memory.set(name, c);
   }
 }
-
-/** A carta vista por uma das faces: imagem e nome em português daquela face. */
-function faceView(card: ScryCard, i: number): ScryCard {
-  return {
-    ...card,
-    image_uris: card.faceImages?.[i] ?? card.image_uris,
-    pt: card.pt && { ...card.pt, name: card.pt.faceNames?.[i] ?? card.pt.name, image_uris: card.pt.faceImages?.[i] ?? card.pt.image_uris },
-  };
-}
-
-/** Registro guardado pelo nome de uma face, e não pelo nome da própria carta. */
-const isFaceAlias = (key: string, c: ScryCard) => c.name.toLowerCase() !== key;
 
 /**
  * A carta pelo nome, para identificar a carta de um deck. A face preparada de outra carta (a "Exsanguinate" da
@@ -325,36 +175,6 @@ export function cardImageUrls(names: string[], sizes: (keyof Images)[] = ['small
     }
   }
   return [...urls];
-}
-
-const preloaded = new Set<string>();
-function loadImage(url: string): Promise<void> {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.decoding = 'async';
-    (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'low';
-    img.onload = img.onerror = () => resolve();
-    img.src = url;
-  });
-}
-
-/**
- * Baixa as imagens aos poucos (poucas de cada vez, com prioridade baixa) para que fiquem no cache
- * do navegador antes da partida. Cada endereço é pedido uma vez por sessão; falhas são ignoradas.
- * Devolve quantas imagens foram pedidas.
- */
-export async function preloadImages(urls: string[], load: (url: string) => Promise<void> = loadImage, parallel = 4): Promise<number> {
-  const todo = [...new Set(urls)].filter(u => !preloaded.has(u));
-  todo.forEach(u => preloaded.add(u));
-  let next = 0;
-  const worker = async () => {
-    while (next < todo.length) {
-      const url = todo[next++];
-      try { await load(url); } catch { preloaded.delete(url); }
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(parallel, todo.length) }, worker));
-  return todo.length;
 }
 
 /** Acrescenta o nome, o texto e a imagem em português às cartas que ainda não procuraram a tradução. */

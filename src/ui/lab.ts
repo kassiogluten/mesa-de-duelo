@@ -4,6 +4,7 @@ import { autocompleteNames, cardImageUrls, resolveCardNames } from '../scryfall'
 import { esc } from './cardtext';
 import READY from '../lab-cenarios.json';
 import './lab.css';
+import { finder } from './dom';
 
 /**
  * Laboratório: monta a mesa à mão (vida, veneno e as cartas de cada zona dos dois jogadores, de quem é o turno e em
@@ -150,7 +151,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       <footer><button type="button" class="arena-btn secondary" data-lab="import-cancel">Cancelar</button><button type="button" class="arena-btn primary" data-lab="import-ok">Usar este cenário</button></footer>
     </dialog>
   </div>`;
-  const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
+  const $ = finder(root);
 
   const setStatus = (text: string, error = false) => { const el = $('#labStatus'); el.textContent = text; el.classList.toggle('error', error); };
   const persist = () => store(DRAFT_KEY, toScenario(draft));

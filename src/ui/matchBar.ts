@@ -1,3 +1,4 @@
+// Barra do topo da partida: placar da melhor de três, quem caiu e o aviso de quem assiste.
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 

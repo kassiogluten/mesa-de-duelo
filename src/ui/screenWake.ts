@@ -1,3 +1,4 @@
+// Tela acesa durante a partida (trava de tela do navegador) e a opção de desligar.
 import { KEYS } from '../storage';
 export const SCREEN_WAKE_KEY = KEYS.awake;
 

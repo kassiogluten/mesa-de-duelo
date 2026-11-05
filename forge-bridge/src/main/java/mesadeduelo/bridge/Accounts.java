@@ -153,11 +153,11 @@ final class Accounts {
         GoogleIdToken.Claims claims;
         try { claims = google.verify(credential); }
         catch (IllegalArgumentException e) {
-            System.out.println("Contas: login recusado (" + e.getMessage() + ")");
+            Log.bridge().warn("Contas: login recusado (" + e.getMessage() + ")");
             loginCounter("recusado").increment();
             return Response.error(401, "O Google não confirmou o login. Tente entrar de novo.");
         } catch (IllegalStateException e) {
-            System.out.println("Contas: " + e.getMessage());
+            Log.bridge().warn("Contas: " + e.getMessage());
             loginCounter("erro").increment();
             return Response.error(503, "Não foi possível falar com o Google agora. Tente de novo em instantes.");
         }
@@ -258,7 +258,7 @@ final class Accounts {
         // As partidas ficam no histórico, sem a ligação com a conta.
         MatchHistory h = history;
         if (h != null) h.forget(account);
-        System.out.println("Contas: uma conta foi apagada pelo jogador");
+        Log.bridge().info("Contas: uma conta foi apagada pelo jogador");
     }
 
     /** A conta do token, renovando a sessão; null se não houver sessão válida. */
@@ -276,7 +276,7 @@ final class Accounts {
     String accountOfToken(String token) {
         if (!enabled() || token == null || token.isBlank()) return null;
         try { return authorized("Bearer " + token.strip()); }
-        catch (IOException e) { System.err.println("Contas: não deu para conferir a sessão de um assento: " + e); return null; }
+        catch (IOException e) { Log.bridge().warn("Contas: não deu para conferir a sessão de um assento: " + e); return null; }
     }
 
     /**
@@ -303,7 +303,7 @@ final class Accounts {
                 return new FeedbackStore.Author(nickname, account, false);
             }
         } catch (IOException | RuntimeException e) {
-            System.err.println("Contas: não deu para ler a conta de um relato: " + e);
+            Log.bridge().warn("Contas: não deu para ler a conta de um relato: " + e);
             return null;
         }
     }

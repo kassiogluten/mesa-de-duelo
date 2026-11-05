@@ -69,18 +69,18 @@ public final class Main {
             prefs.setPref(FPref.UI_UNDO_MODE, forge.localinstance.properties.ForgeConstants.UNDO_MODE_OFF);
             return null;
         });
-        System.out.printf("Forge inicializado em %d ms%n", System.currentTimeMillis() - t0);
+        Log.bridge().info("Forge inicializado em %d ms", System.currentTimeMillis() - t0);
 
         if (!"watch".equals(mode)) {
             Rooms rooms = new Rooms();
             if ("replay".equals(mode)) {
                 if (!opt.containsKey("relato")) throw new IllegalArgumentException("Informe o relato: --relato=/caminho/R-XXXX.json.gz");
                 JsonObject journal = Replay.journalOf(Path.of(opt.get("relato")));
-                System.out.println("Retratos do relato:");
+                Log.bridge().info("Retratos do relato:");
                 System.out.print(Replay.list(journal));
                 Replay replay = new Replay(journal, opt.containsKey("retrato") ? Integer.valueOf(opt.get("retrato")) : null);
                 rooms.replay(replay);
-                System.out.printf("Modo replay: abra a mesa e comece uma partida contra a IA (qualquer deck); ela vira a do relato com o retrato %d.%n", replay.snapshotIndex);
+                Log.bridge().info("Modo replay: abra a mesa e comece uma partida contra a IA (qualquer deck); ela vira a do relato com o retrato %d.", replay.snapshotIndex);
             }
             BridgeServer server = new BridgeServer(host, port, rooms);
             FeedbackStore store = FeedbackStore.fromSystem();
@@ -98,12 +98,12 @@ public final class Main {
             accounts.history(history);
             rooms.accounts(accounts::accountOfToken);
             server.start();
-            System.out.printf("Relatos em %s (%d guardados)%n", store.dir(), store.files());
-            System.out.printf("Histórico de partidas em %s%n", history.dir());
-            System.out.println(accounts.enabled() ? "Contas ligadas em /api/conta/ (" + accounts.count() + " em " + accounts.dir() + ")." : "Contas desligadas (defina MESA_GOOGLE_CLIENT_ID).");
-            System.out.println(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");
-            System.out.printf("Modo %s: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)%n", mode, host, port);
-            if (!"127.0.0.1".equals(host)) System.out.println("Aceitando conexões de outras máquinas: partidas em rede liberadas.");
+            Log.bridge().info("Relatos em %s (%d guardados)", store.dir(), store.files());
+            Log.bridge().info("Histórico de partidas em %s", history.dir());
+            Log.bridge().info(accounts.enabled() ? "Contas ligadas em /api/conta/ (" + accounts.count() + " em " + accounts.dir() + ")." : "Contas desligadas (defina MESA_GOOGLE_CLIENT_ID).");
+            Log.bridge().info(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");
+            Log.bridge().info("Modo %s: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)", mode, host, port);
+            if (!"127.0.0.1".equals(host)) Log.bridge().info("Aceitando conexões de outras máquinas: partidas em rede liberadas.");
             Thread.currentThread().join();
             return;
         }
@@ -114,7 +114,7 @@ public final class Main {
             @Override public void onDisconnect(io.netty.channel.Channel ch) { }
         });
         server.start();
-        System.out.printf("Modo watch: WebSocket em ws://%s:%d/ws%n", host, port);
+        Log.bridge().info("Modo watch: WebSocket em ws://%s:%d/ws", host, port);
 
         for (int i = 0; i < games; i++) {
             RegisteredPlayer a = new RegisteredPlayer(Decks.build(deckA));
@@ -133,12 +133,12 @@ public final class Main {
             long start = System.currentTimeMillis();
             match.startGame(game);
             streamer.publish();
-            System.out.printf("Partida %d: %s venceu no turno %d (%d eventos, %d ms)%n", i + 1,
+            Log.bridge().info("Partida %d: %s venceu no turno %d (%d eventos, %d ms)", i + 1,
                 game.getView().getWinningPlayerName(), game.getView().getTurn(), streamer.events, System.currentTimeMillis() - start);
         }
 
         if (opt.containsKey("exit")) System.exit(0);
-        System.out.println("Partidas encerradas. O servidor continua no ar com o último estado (Ctrl+C para sair).");
+        Log.bridge().info("Partidas encerradas. O servidor continua no ar com o último estado (Ctrl+C para sair).");
         Thread.currentThread().join();
     }
 

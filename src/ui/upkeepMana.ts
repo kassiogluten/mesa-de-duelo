@@ -1,3 +1,4 @@
+// Confirmação ao gerar mana na manutenção, quando provavelmente é engano.
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 

@@ -5,3 +5,4 @@ relatos
 .env
 __pycache__/
 .git-precommit.log
+.git-precommit-server.log

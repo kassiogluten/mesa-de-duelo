@@ -5,7 +5,7 @@ import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
 import { colorFromCost, faceHTML, type CardStyle } from './face';
 import { faceDownReminder } from './faceDownReminder';
 import { sleeveClass } from './sleeves';
-import { HIDDEN_EYE } from './tableIcons';
+import { HIDDEN_EYE } from './icons';
 
 /** Nome, tipo e texto impressos em português, quando o Scryfall tem a tradução. */
 export const ptOf = (name: string | undefined) => (name ? cacheGet(name)?.pt : undefined);

@@ -1,3 +1,4 @@
+// Visualização de um deck: as cartas agrupadas, para conferir antes de escolher ou copiar.
 import './decks.css';
 import { countEntries, deckEntries, totalDeckSize, type DeckData } from '../decks';
 import { cardInfo } from '../cards';

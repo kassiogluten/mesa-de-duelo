@@ -72,7 +72,7 @@ final class SeatStateView {
     /** Registra no log quando o estado falha por uns 2 s seguidos, uma vez por sequência, em vez de a mesa parar sem aviso. */
     private void stateFailed(RuntimeException e) {
         if (++stateFailures != STATE_FAILURES_TO_LOG) return;
-        System.err.println("Sessão " + session.code + ": o estado não sai há " + STATE_FAILURES_TO_LOG + " ciclos: " + e);
+        Log.of(session).error("Sessão " + session.code + ": o estado não sai há " + STATE_FAILURES_TO_LOG + " ciclos: " + e);
         e.printStackTrace();
     }
 
@@ -253,8 +253,8 @@ final class SeatStateView {
                         if (first != null) seat.openingStartingPlayer = first.getId();
                     }
                     if (seat.openingStartingPlayer >= 0) input.addProperty("openingStartingPlayer", seat.openingStartingPlayer);
-                    if (currentInput instanceof InputLondonMulligan london) {
-                        int total = InputContext.londonReturnCount(london);
+                    Integer total;
+                    if (currentInput instanceof InputLondonMulligan london && (total = InputContext.londonReturnCount(london)) != null) {
                         input.addProperty("openingReturnCount", total);
                         input.addProperty("openingReturnRemaining", total - london.getSelectedCards().size());
                         JsonArray selected = new JsonArray(); london.getSelectedCards().forEach(card -> selected.add(card.getId()));

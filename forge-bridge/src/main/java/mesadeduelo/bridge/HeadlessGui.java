@@ -82,7 +82,7 @@ final class HeadlessGui implements IGuiBase {
     @Override public void browseToUrl(String url) { }
     @Override public void showCardList(String title, String message, List<PaperCard> list) { }
     @Override public boolean showBoxedProduct(String title, String message, List<PaperCard> list) { return false; }
-    @Override public void showBugReportDialog(String title, String text, boolean showExitAppBtn) { System.err.println(title + ": " + text); }
+    @Override public void showBugReportDialog(String title, String text, boolean showExitAppBtn) { Log.bridge().error(title + ": " + text); }
     @Override public void showImageDialog(ISkinImage image, String message, String title) { }
     @Override public int showOptionDialog(String message, String title, FSkinProp icon, List<String> options, int defaultOption) { return defaultOption; }
     @Override public String showInputDialog(String message, String title, FSkinProp icon, String initialInput, List<String> inputOptions, boolean isNumeric) { return initialInput; }

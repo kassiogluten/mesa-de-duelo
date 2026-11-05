@@ -1,14 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import ts from 'typescript';
-const js = code => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`;
-const uri = code => js(ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText);
-const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta.url), 'utf8'));
-const scryfall = js('export const autocompleteNames = async () => []; export const cardImageUrls = () => []; export const resolveCardNames = async () => ({ found: new Map(), missing: [], ambiguous: [] });');
-const ready = JSON.parse(await readFile(new URL('../src/lab-cenarios.json', import.meta.url), 'utf8'));
-const lab = await import(uri((await readFile(new URL('../src/ui/lab.ts', import.meta.url), 'utf8'))
-  .replace("import './lab.css';", '').replace("'../lab-cenarios.json'", JSON.stringify(js(`export default ${JSON.stringify(ready)};`))).replace("'../scryfall'", JSON.stringify(scryfall)).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'../storage'", JSON.stringify(new URL('../src/storage.ts', import.meta.url).href))));
+import { mock } from './register.mjs';
+// O Scryfall de verdade iria à rede: no teste, um falso que não acha nada.
+mock('../src/scryfall.ts', 'export const autocompleteNames = async () => []; export const cardImageUrls = () => []; export const resolveCardNames = async () => ({ found: new Map(), missing: [], ambiguous: [] });', import.meta.url);
+const lab = await import('../src/ui/lab.ts');
 
 const scenario = {
   active: 1, phase: 'combat',
@@ -58,7 +54,7 @@ test('"3 Island" e "3x Island" põem várias cópias; o resto é o nome', () => 
 });
 
 test('cada cenário pronto aponta para uma correção do CHANGELOG e volta do editor igual', async () => {
-  const changelog = await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+  const changelog = (await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8')) + '\n' + (await readFile(new URL('../docs/changelog-antigo.md', import.meta.url), 'utf8'));
   const sections = new Map(changelog.split(/^## /m).slice(1).map(sec => [sec.slice(1, sec.indexOf(']')), sec]));
   assert.ok(lab.READY_SCENARIOS.length > 0);
   const names = new Set();

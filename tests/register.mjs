@@ -12,9 +12,18 @@ import ts from 'typescript';
 const ENV = "import.meta.env = { BASE_URL: '/', DEV: false, PROD: true, MODE: 'test' };\n";
 const CODE = /\.[cm]?[jt]sx?$/;
 
+// Módulo falso num teste: `const { mock } = await import('./register.mjs'); mock('../src/scryfall.ts', 'export const x = 1;', import.meta.url)`
+// antes de importar o código; todo import que chegar nesse arquivo recebe o falso.
+const MOCKS = new Map();
+export function mock(path, source, base) { MOCKS.set(new URL(path, base).href, source); }
+
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier.startsWith('virtual:')) return { url: `data:text/javascript,export const registerSW = () => () => {};`, shortCircuit: true };
+    if (MOCKS.size && !specifier.startsWith('data:')) {
+      let resolved; try { resolved = nextResolve(specifier, context).url; } catch { try { resolved = nextResolve(`${specifier}.ts`, context).url; } catch { /* segue */ } }
+      if (resolved && MOCKS.has(resolved)) return { url: `data:text/javascript;base64,${Buffer.from(MOCKS.get(resolved)).toString('base64')}`, shortCircuit: true };
+    }
     const [path, query] = specifier.split('?');
     if (query === 'raw') {
       const { url } = nextResolve(path, context);

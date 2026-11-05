@@ -1,3 +1,4 @@
+// Números do deck (curva, tipos, cores) e a capa e as cores mostradas na lista de decks.
 import { cardInfo, type CardInfo, type CardType, type Color } from '../cards';
 import { cacheGet } from '../scryfall';
 import { countEntries, deckPriceDescription, deckPriceText, hasCommandZone, type DeckData, type DeckEntry } from '../decks';

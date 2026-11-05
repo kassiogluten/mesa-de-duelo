@@ -1,3 +1,4 @@
+// Conferência local do deck pelo formato (cópias, tamanho, comandante); o servidor confere de novo.
 import { countEntries, deckEntries, FORMAT_LABEL, hasCommandZone, isBasic, isConstructed, isPrecon, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
 import { cacheGet, legalityFresh, type ScryCard } from '../scryfall';
 

@@ -41,6 +41,7 @@ final class MementoDelta {
         }
         TARGETS = t; SNAPS = s; NEW = c; SNAP = snap;
         AVAILABLE = t != null;
+        if (!AVAILABLE) Log.bridge().warn("Forge sem GameMemento.targets/snaps como esperado; o desfazer guarda os retratos inteiros.");
     }
 
     /** Objetos com retrato diferente do mais novo (ou ausentes nele), com o retrato deles, e os que só o mais novo tem. */

@@ -66,7 +66,7 @@ try {
     const r = await run(file);
     const ok = r.status === 0;
     console.log(`${ok ? 'ok    ' : 'FALHOU'} ${file} (${((Date.now() - started) / 1000).toFixed(1)} s)`);
-    if (!ok) { failed.push(file); console.log(r.out.trim().split('\n').slice(-15).map(l => `       ${l}`).join('\n')); }
+    if (!ok) { failed.push(file); console.log(r.out.trim().split('\n').slice(-40).map(l => `       ${l}`).join('\n')); }
   }
 } finally {
   stop();

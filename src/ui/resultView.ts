@@ -6,7 +6,7 @@ import { esc } from './cardtext';
 import { tablePlayers } from './commanderTable';
 import { gameSummaryHTML } from './lifeChart';
 import { turnTimeText } from './phaseHud';
-import { ICON_FLAG, ICON_EYE, ICON_HOME } from './tableIcons';
+import { ICON_FLAG, ICON_EYE, ICON_HOME } from './icons';
 import type { MatchState } from './tableState';
 
 type SideboardDraft = NonNullable<MatchState['sideboardDraft']>;

@@ -1,5 +1,6 @@
 import { KEYS, load, save } from '../storage';
 import changelog from '../../CHANGELOG.md?raw';
+import older from '../../docs/changelog-antigo.md?raw';
 import visuals from '../novidades.json';
 import { esc } from './cardtext';
 
@@ -46,7 +47,8 @@ export function parse(md: string): Release[] {
   return out;
 }
 
-export const RELEASES = parse(changelog);
+/** As versÃµes recentes (CHANGELOG.md) e, depois, as anteriores Ã  0.100.0 (docs/changelog-antigo.md). */
+export const RELEASES = [...parse(changelog), ...parse(older)];
 export const VERSION = RELEASES[0]?.version ?? '';
 
 const SEEN_KEY = KEYS.novidades;

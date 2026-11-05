@@ -1,3 +1,4 @@
+// Atalhos de teclado da partida e da mesa livre, e a janela que os lista (tecla ?).
 import { esc } from './cardtext';
 import './shortcuts.css';
 

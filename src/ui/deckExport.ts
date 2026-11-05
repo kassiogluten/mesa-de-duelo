@@ -1,3 +1,4 @@
+// Exportar deck: a lista em texto para copiar ou baixar.
 import './decks.css';
 import { exportDeckList, totalDeckSize, countEntries, type DeckData } from '../decks';
 import { esc } from './cardtext';

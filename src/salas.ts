@@ -1,3 +1,4 @@
+// Página Salas: as salas públicas esperando jogadores e as partidas para assistir.
 import { KEYS } from './storage';
 import './style.css';
 import './ui/appHeader.css';

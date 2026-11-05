@@ -1,3 +1,4 @@
+// Mesa livre: o jogo sem servidor nem regras, com as zonas, os menus de carta e desfazer.
 import { KEYS, save as store } from '../storage';
 import { hasCommandZone, type DeckData, type DeckFormat } from '../decks';
 import { cardInfo } from '../cards';

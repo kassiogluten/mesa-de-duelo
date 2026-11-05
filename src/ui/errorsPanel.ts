@@ -4,6 +4,7 @@ import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 import { VERSION } from './changelog';
 import { MatchDiagnostics, type DiagnosticEntry, type DiagnosticKind } from './matchDiagnostics';
+import { finder } from './dom';
 
 export interface ErrorsDeps {
   state(): FState | null | undefined;
@@ -16,7 +17,7 @@ export interface ErrorsDeps {
 }
 
 export function createErrorsPanel(root: HTMLElement, d: ErrorsDeps) {
-  const $ = (sel: string) => root.querySelector(sel) as HTMLElement;
+  const $ = finder(root);
   const diagnostics = new MatchDiagnostics();
   function record(kind: DiagnosticKind, text: string, detail?: string) {
     const s = d.state();

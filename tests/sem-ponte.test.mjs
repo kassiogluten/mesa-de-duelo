@@ -43,6 +43,7 @@ test('ignora comentários e palavras como "ponteiro"', () => {
 test('o painel Novidades não fala em "ponte"', async () => {
   const changelog = (await read('CHANGELOG.md')).split('\n');
   assert.deepEqual(hits(changelog, 'CHANGELOG.md'), []);
+  assert.deepEqual(hits((await read('docs/changelog-antigo.md')).split('\n'), 'docs/changelog-antigo.md'), []);
   assert.deepEqual(hits([await read('src/novidades.json')], 'src/novidades.json'), []);
 });
 

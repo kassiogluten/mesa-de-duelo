@@ -1,3 +1,4 @@
+// Vibração no celular quando chega o turno ou uma decisão para o jogador.
 import { KEYS } from '../storage';
 import type { FState } from '../forge/client';
 import { awaitingDecision } from './awaitingDecision';

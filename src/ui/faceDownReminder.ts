@@ -1,3 +1,4 @@
+// Permanentes viradas para baixo: o nome do jeito (metamorfose, disfarce...) e a carta de lembrete.
 import type { FCard } from '../forge/client';
 
 export type FaceDownKind = NonNullable<FCard['faceDownKind']>;

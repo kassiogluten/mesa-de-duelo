@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 
 // Cada figura de src/novidades.json aponta para um item que existe no CHANGELOG.md e para um arquivo em public/novidades/.
-const changelog = await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+const changelog = (await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8')) + '\n' + (await readFile(new URL('../docs/changelog-antigo.md', import.meta.url), 'utf8'));
 const visuals = JSON.parse(await readFile(new URL('../src/novidades.json', import.meta.url), 'utf8'));
 const items = new Map();
 let version = '';

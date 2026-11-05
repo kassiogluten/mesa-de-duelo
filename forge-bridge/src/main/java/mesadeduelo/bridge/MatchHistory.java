@@ -42,7 +42,7 @@ final class MatchHistory {
             Files.writeString(dir.resolve(month + ".jsonl"), match + "\n", StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (IOException | RuntimeException e) {
-            System.err.println("Histórico: não gravei a partida: " + e);
+            Log.bridge().error("Histórico: não gravei a partida: " + e);
         }
     }
 

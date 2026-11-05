@@ -1,9 +1,13 @@
 # Campos do estado (mensagem "state") que o servidor manda à mesa. Gerado e conferido pelo
-# ProtocolContractTest (servidor) e conferido contra src/forge/client.ts pelo tests/protocol.test.mjs.
+# ProtocolContractTest (servidor) e conferido contra src/forge/protocol.ts pelo tests/protocol.test.mjs.
 # Acrescentar: rode o ProtocolContractTest com -Dprotocol.update=true. Tirar um campo: apague a linha.
 activePlayer
 castable
 combat
+combat[].attacker
+combat[].blockers
+combat[].defender
+combat[].defenderKind
 config
 config.format
 config.matchLength
@@ -88,6 +92,10 @@ events[].targets.players
 events[].to
 events[].turn
 events[].type
+forecast
+forecast[].life
+forecast[].lifeAfter
+forecast[].player
 gameOver
 input
 input.actionable
@@ -223,6 +231,7 @@ players[].pool.U
 players[].pool.W
 players[].seat
 players[].sleeve
+players[].spellsCast
 preferences
 preferences.autoPassNoActions
 preferences.opponentStops
@@ -259,6 +268,25 @@ session.room
 session.token
 spectating
 stack
+stack[].controller
+stack[].id
+stack[].kind
+stack[].source
+stack[].source.controller
+stack[].source.creature
+stack[].source.id
+stack[].source.land
+stack[].source.manaCost
+stack[].source.name
+stack[].source.set
+stack[].source.tapped
+stack[].source.text
+stack[].source.token
+stack[].source.typeLine
+stack[].targets
+stack[].targets.cards
+stack[].targets.players
+stack[].text
 stateVersion
 suspendedExile
 turn

@@ -26,7 +26,7 @@ Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entre
 ## 4. Testes
 - Mesa: `npm test` e `npx tsc --noEmit -p .` (segundos).
 - Mexeu no servidor: `cd forge-bridge && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" mvn -o -q test -Dtest=<Classes>`; a suíte inteira leva ~30 s.
-- Mudou um campo do estado (Java ou `src/forge/client.ts`): rode o `ProtocolContractTest` (com `-Dprotocol.update=true` se o campo é novo) e o `npm test`.
+- Mudou um campo do estado (Java ou `src/forge/protocol.ts`): rode o `ProtocolContractTest` (com `-Dprotocol.update=true` se o campo é novo) e o `npm test`.
 - Mexeu na tela: `npm run test:browser`. Mexeu nas regras ou no servidor: `npm run test:e2e` (partidas de verdade).
 - Refatoração que não pode mudar a tela: `npm run visual -- snap` antes e depois, e `compare`.
 - Falhou? Veja `TESTES.md` antes de investigar; as conhecidas só precisam ser citadas.

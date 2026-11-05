@@ -1,5 +1,7 @@
 package mesadeduelo.bridge;
 
+import static mesadeduelo.bridge.LobbyFields.*;
+
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +41,6 @@ import io.netty.channel.Channel;
 final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** Sem letras e números fáceis de confundir (O/0, I/1). */
     private static final String CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final int MAX_NAME = 24;
     private static final long GRACE_SECONDS = Long.getLong("mesa.grace", 300);
     /** Quantas salas públicas a lista mostra de uma vez (as que esperam há mais tempo primeiro). */
     private static final int MAX_LISTED = 30;
@@ -112,7 +113,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (token == null || !token.isJsonPrimitive()) return null;
         String account;
         try { account = accountOf.apply(token.getAsString()); }
-        catch (RuntimeException e) { System.err.println("Contas: não deu para ligar o assento à conta: " + e); return null; }
+        catch (RuntimeException e) { Log.bridge().warn("Contas: não deu para ligar o assento à conta: " + e); return null; }
         if (account == null) return null;
         JsonElement deck = msg.get("deckId");
         String deckId = deck != null && deck.isJsonPrimitive() ? deck.getAsString() : null;
@@ -168,7 +169,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Seat seat = s.seatOf(ch);
         if (seat == null) return;
         seat.channel = null;
-        System.out.printf("%s: %s desconectou%n", label(s), seat.name);
+        Log.of(s).info("%s: %s desconectou", label(s), seat.name);
         if (!s.isRoom() || !s.started()) {
             if (s.isRoom()) broadcastRoom(s);
             expireIfAbandoned(s);
@@ -186,7 +187,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         publisher.schedule(() -> {
             synchronized (this) {
                 if (byCode.get(s.code) == s && !s.anyoneConnected()) {
-                    System.out.printf("%s: ninguém voltou em %d s%n", label(s), GRACE_SECONDS);
+                    Log.of(s).info("%s: ninguém voltou em %d s", label(s), GRACE_SECONDS);
                     close(s, null);
                 }
             }
@@ -203,52 +204,12 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         try {
             String type = MatchConfig.string(msg, "type");
             switch (type) {
-                case "validate-deck" -> {
-                    var result = DeckValidation.validate(msg.get("deck"), MatchConfig.string(msg, "format"));
-                    JsonObject response = new JsonObject(); response.addProperty("type", "validation");
-                    response.addProperty("requestId", requestId); response.add("validation", result.json());
-                    BridgeServer.send(ch, response.toString());
-                }
+                case "validate-deck", "fetch-deck", "similar-cards" -> LobbyRequests.handle(ch, type, msg, requestId);
                 case "lookup-room" -> lookup(ch, code(msg), requestId);
                 case "list-rooms" -> {
                     JsonObject response = new JsonObject(); response.addProperty("type", "room-list");
                     response.addProperty("requestId", requestId); response.add("rooms", publicRooms());
                     BridgeServer.send(ch, response.toString());
-                }
-                case "fetch-deck" -> {
-                    // A busca roda fora da thread da rede; a resposta volta com o mesmo requestId.
-                    String site = MatchConfig.string(msg, "site"), id = MatchConfig.string(msg, "id");
-                    DeckLinks.fetch(site, id).whenComplete((body, error) -> {
-                        JsonObject response = new JsonObject(); response.addProperty("requestId", requestId);
-                        if (error == null) { response.addProperty("type", "deck-source"); response.addProperty("body", body); }
-                        else {
-                            Throwable cause = error instanceof java.util.concurrent.CompletionException && error.getCause() != null ? error.getCause() : error;
-                            response.addProperty("type", "request-error");
-                            response.addProperty("text", cause instanceof IllegalArgumentException && cause.getMessage() != null ? cause.getMessage()
-                                    : "Não foi possível falar com o site do deck. Confira a conexão ou cole a lista em texto.");
-                        }
-                        BridgeServer.send(ch, response.toString());
-                    });
-                }
-                case "similar-cards" -> {
-                    // Cartas parecidas pelas tags do Tagger: o primeiro pedido do dia baixa o arquivo, fora da thread da rede.
-                    String target = MatchConfig.string(msg, "oracleId");
-                    java.util.List<String> candidates = new java.util.ArrayList<>();
-                    if (msg.has("candidates") && msg.get("candidates").isJsonArray())
-                        for (JsonElement c : msg.getAsJsonArray("candidates")) if (c.isJsonPrimitive()) candidates.add(c.getAsString());
-                    int limit = msg.has("limit") && msg.get("limit").isJsonPrimitive() ? Math.max(1, Math.min(100, msg.get("limit").getAsInt())) : 40;
-                    CardTags.similar(target, candidates, limit).whenComplete((matches, error) -> {
-                        JsonObject response = error == null ? CardTags.json(matches) : new JsonObject();
-                        response.addProperty("requestId", requestId);
-                        if (error == null) response.addProperty("type", "similar-cards");
-                        else {
-                            Throwable cause = error instanceof java.util.concurrent.CompletionException && error.getCause() != null ? error.getCause() : error;
-                            response.addProperty("type", "request-error");
-                            response.addProperty("text", cause instanceof IllegalArgumentException && cause.getMessage() != null ? cause.getMessage()
-                                    : "Não foi possível buscar as cartas parecidas agora. Tente de novo mais tarde.");
-                        }
-                        BridgeServer.send(ch, response.toString());
-                    });
                 }
                 case "hello" -> onConnect(ch);
                 case "start" -> {
@@ -319,36 +280,6 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         RoomNotFound(String code) { super("Não existe sala com o código " + code + "."); }
     }
 
-    private static final class InvalidDeck extends IllegalArgumentException {
-        final DeckValidation.Result result;
-        final String target;
-        InvalidDeck(DeckValidation.Result result, String target) { this.result = result; this.target = target; }
-    }
-
-    private static Deck validated(JsonElement payload, String format, String target) {
-        var result = "opponent".equals(target) ? DeckValidation.validateForAi(payload, format) : DeckValidation.validate(payload, format);
-        if (!result.valid()) throw new InvalidDeck(result, target);
-        return result.deck();
-    }
-
-    /** O deck de quem cria ou entra numa sala: sem deck, o jogador escolhe lá dentro. */
-    private static Deck optionalDeck(JsonElement payload, String format) {
-        return payload == null || payload.isJsonNull() ? null : validated(payload, format, "deck");
-    }
-
-    private static String deckName(Deck deck) { return deck == null ? "sem deck" : deck.getName(); }
-
-    private static Deck aiDeck(JsonElement opponent, MatchConfig config) {
-        return opponent == null || opponent.isJsonNull()
-            || (opponent.isJsonPrimitive() && "random".equals(opponent.getAsString()))
-            ? Decks.random(config.format()) : validated(opponent, config.format(), "opponent");
-    }
-
-    /** Bracket do deck do computador: o que a mesa mandou junto do deck escolhido, ou o do deck pronto sorteado aqui. */
-    private static int aiBracket(JsonElement opponent, Deck deck) {
-        return opponent != null && opponent.isJsonObject() ? bracket(opponent.getAsJsonObject()) : Decks.bracket(deck);
-    }
-
     private synchronized void lookup(Channel ch, String code, String requestId) {
         Session s = room(ch, code);
         JsonObject response = new JsonObject(); response.addProperty("type", "room-info");
@@ -379,53 +310,6 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             .sorted(java.util.Comparator.comparingLong(Session::createdAt)).limit(MAX_LISTED)
             .map(Session::listingJson).forEach(rooms::add);
         return rooms;
-    }
-
-    /** Sem o campo, ou com qualquer outro valor, a sala é privada, como sempre foi. */
-    private static boolean publicRoom(JsonObject msg) {
-        JsonElement e = msg.get("visibility");
-        return e != null && e.isJsonPrimitive() && "public".equals(e.getAsString());
-    }
-
-    private static String name(JsonObject msg) {
-        JsonElement e = msg.get("name");
-        String n = e == null || e.isJsonNull() ? "" : e.getAsString().strip();
-        if (n.isEmpty()) n = "Jogador";
-        return n.length() > MAX_NAME ? n.substring(0, MAX_NAME) : n;
-    }
-
-    /** O nome que o jogador usa, mandado ao começar contra a IA (só para o histórico); null sem nome. */
-    static String nick(JsonObject msg) {
-        JsonElement e = msg.get("name");
-        String n = e == null || !e.isJsonPrimitive() ? "" : e.getAsString().strip();
-        if (n.isEmpty()) return null;
-        return n.length() > MAX_NAME ? n.substring(0, MAX_NAME) : n;
-    }
-
-    private static String cover(JsonObject msg) {
-        JsonElement e = msg.get("cover");
-        return e == null || !e.isJsonPrimitive() ? null : e.getAsString();
-    }
-
-    /** Bracket declarado pelo jogador (1 a 5); 0 sem bracket ou com qualquer outro valor. */
-    private static int bracket(JsonObject msg) {
-        JsonElement e = msg.get("bracket");
-        if (e == null || !e.isJsonPrimitive() || !e.getAsJsonPrimitive().isNumber()) return 0;
-        double b = e.getAsDouble();
-        return b >= 1 && b <= 5 && b == Math.floor(b) ? (int) b : 0;
-    }
-
-    private static String code(JsonObject msg) {
-        JsonElement e = msg.get("code");
-        return e == null || e.isJsonNull() ? "" : e.getAsString().strip().toUpperCase();
-    }
-
-    /** Código escolhido por quem cria a sala: 4 letras ou números, ou null para a ponte sortear. */
-    private static String chosenCode(JsonObject msg) {
-        String c = code(msg);
-        if (c.isEmpty()) return null;
-        if (!c.matches("[A-Z0-9]{4}")) throw new IllegalArgumentException("O código da sala precisa ter 4 letras ou números.");
-        return c;
     }
 
     /**
@@ -496,7 +380,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.sendRoom(s.seats[0]);
-        System.out.printf("Sala %s %s criada por %s (%s)%n", s.code, publicRoom ? "pública" : "privada", name, deckName(deck));
+        Log.of(s).info("Sala %s %s criada por %s (%s)", s.code, publicRoom ? "pública" : "privada", name, deckName(deck));
     }
 
     /** Sala de teste do Laboratório: privada, fora do histórico, e começa quando o segundo lado entra. */
@@ -506,7 +390,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         byCode.put(s.code, s);
         byChannel.put(ch, s);
         s.sendRoom(s.seats[0]);
-        System.out.printf("Sala de teste %s criada por %s%n", s.code, name);
+        Log.of(s).info("Sala de teste %s criada por %s", s.code, name);
     }
 
     private synchronized void join(Channel ch, String code, String name, JsonElement payload, String cover, int bracket, Owner owner) {
@@ -522,7 +406,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         seat.cover = deck == null ? null : Session.coverOf(deck, cover);
         seat.bracket = s.config.commander() && deck != null ? bracket : 0;
         byChannel.put(ch, s);
-        System.out.printf("Sala %s: %s entrou (%s)%n", code, name, deckName(deck));
+        Log.of(s).info("Sala %s: %s entrou (%s)", code, name, deckName(deck));
         for (Seat each : s.seats) s.sendRoom(each);
         if (s.ready()) s.start();
         else s.markDirty();
@@ -540,7 +424,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         seat.owner(owner);
         seat.cover = Session.coverOf(deck, cover);
         seat.bracket = s.config.commander() ? bracket : 0;
-        System.out.printf("Sala %s: %s escolheu o deck %s%n", s.code, seat.name, deck.getName());
+        Log.of(s).info("Sala %s: %s escolheu o deck %s", s.code, seat.name, deck.getName());
         broadcastRoom(s);
         if (s.ready()) s.start();
         else s.markDirty();
@@ -556,7 +440,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         leave(ch);
         s.watchers.add(new Session.Watcher(ch, name, s.eventCursor()));
         byChannel.put(ch, s);
-        System.out.printf("%s: %s está assistindo%n", label(s), name);
+        Log.of(s).info("%s: %s está assistindo", label(s), name);
         // Contra a IA o jogador não escolheu abrir a partida: avisa, e o Menu tem como tirá-la da lista.
         if (!s.isRoom()) for (Seat seat : s.seats) if (seat.channel != null)
             seat.send(Session.toast("toast", name + " está assistindo à sua partida. Para fechá-la, use Menu › Tirar da lista de salas."));
@@ -589,7 +473,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         }
         Seat seat = s.seatOf(ch);
         seat.send(Session.toast("toast", on ? "A partida voltou para a lista de salas: outros jogadores podem assistir." : "A partida saiu da lista de salas: ninguém mais pode assistir."));
-        System.out.printf("%s %s da lista de salas%n", label(s), on ? "voltou para a" : "saiu");
+        Log.of(s).info("%s %s da lista de salas", label(s), on ? "voltou para a" : "saiu");
         s.markDirty();
     }
 
@@ -601,7 +485,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (seat.index != 0) throw new IllegalArgumentException("Só quem criou a sala pode completar com computadores.");
         int added = s.fillWithComputers();
         if (added == 0) return;
-        System.out.printf("Sala %s: completada com %d computador(es)%n", s.code, added);
+        Log.of(s).info("Sala %s: completada com %d computador(es)", s.code, added);
         for (Seat each : s.seats) s.sendRoom(each);
         s.start();
     }
@@ -611,7 +495,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session.Watcher w = s.watcherOf(ch);
         if (w == null) return false;
         s.watchers.remove(w);
-        System.out.printf("%s: %s parou de assistir%n", label(s), w.name);
+        Log.of(s).info("%s: %s parou de assistir", label(s), w.name);
         s.markDirty();
         return true;
     }
@@ -639,7 +523,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (byChannel.get(ch) != s) leave(ch);
         seat.channel = ch;
         byChannel.put(ch, s);
-        System.out.printf("%s: %s voltou%n", label(s), seat.name);
+        Log.of(s).info("%s: %s voltou", label(s), seat.name);
         if (s.isRoom()) {
             if (s.started()) s.sendRoom(seat);
             else broadcastRoom(s);
@@ -731,7 +615,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             BridgeServer.send(w.channel, Session.toast("gone", s.isRoom() ? "A partida da sala " + s.code + " terminou." : "A partida terminou."));
         }
         s.watchers.clear();
-        if (s.isRoom()) System.out.printf("Sala %s fechada%n", s.code);
+        if (s.isRoom()) Log.of(s).info("Sala %s fechada", s.code);
     }
 
     /** Mensagens prontas do lobby: sem texto livre, não há o que moderar. */

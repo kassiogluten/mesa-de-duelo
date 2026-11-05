@@ -12,7 +12,8 @@ import { ringText, RING_ICON } from './playerCounters';
 import { walkerForecast } from './combatForecast';
 import type { Defender } from './commanderTable';
 import { label } from './cardFaces';
-import { COUNTER_DISC, COUNTER_ICON, ICON_CLIP, ICON_CROWN, ICON_DIZZY, ICON_LAYERS, ICON_SHIELD, ICON_SWORD, KEYWORD_ICON, KEYWORD_LABEL, counterLabel, inspectIcon, keywordsOf } from './tableIcons';
+import { COUNTER_DISC, COUNTER_ICON, ICON_CLIP, ICON_CROWN, ICON_DIZZY, ICON_LAYERS, ICON_SHIELD, ICON_SWORD, KEYWORD_ICON, inspectIcon } from './icons';
+import { KEYWORD_LABEL, counterLabel, keywordsOf } from './cardLabels';
 
 /** O que as peças do campo precisam da mesa. */
 export interface BoardView {

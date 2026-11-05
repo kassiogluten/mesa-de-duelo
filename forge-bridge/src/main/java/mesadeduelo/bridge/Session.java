@@ -357,7 +357,7 @@ final class Session {
         }
         m.startMatch(lab != null ? Lab.rules() : config.rules(), null, players, guis, null);
         recorder.started(players.size());
-        System.out.printf("Nova partida%s: %s%n", room ? " na sala " + code : "",
+        Log.of(this).info("Nova partida%s: %s", room ? " na sala " + code : "",
             String.join(" x ", players.stream().map(p -> p.getDeck().getName()).toList()));
         markDirty();
     }

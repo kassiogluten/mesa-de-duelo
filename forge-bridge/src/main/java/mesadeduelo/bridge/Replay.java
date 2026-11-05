@@ -87,7 +87,7 @@ final class Replay {
 
     static Deck deck(JsonObject player, String format) {
         var result = DeckValidation.validate(player.get("deck"), format);
-        if (!result.valid()) System.out.println("Aviso: o deck de " + player.get("name").getAsString() + " não passa mais na validação: " + result.json().get("issues"));
+        if (!result.valid()) Log.bridge().warn("O deck de " + player.get("name").getAsString() + " não passa mais na validação: " + result.json().get("issues"));
         return result.deck();
     }
 
@@ -123,9 +123,9 @@ final class Replay {
             names.add(p.get("name").getAsString());
         }
         String state = state();
-        System.out.printf("Repetição: %s (humano) x %s; retrato %d, turno %s, %s%n", reporter.get("name").getAsString(),
+        Log.bridge().info("Repetição: %s (humano) x %s; retrato %d, turno %s, %s", reporter.get("name").getAsString(),
             String.join(", ", names), snapshotIndex, snapshot.get("turn"), snapshot.get("reason").getAsString());
-        System.out.println("Responda ao mulligan normalmente: o retrato é aplicado logo depois e substitui mãos, grimórios e campo.");
+        Log.bridge().info("Responda ao mulligan normalmente: o retrato é aplicado logo depois e substitui mãos, grimórios e campo.");
         return Session.replay(code, ch, reporter.get("name").getAsString(), deck(reporter, config.format()), decks, names, config,
             game -> apply(game, state));
     }
@@ -140,13 +140,13 @@ final class Replay {
             game.updateTurnForView();
             game.updatePhaseForView();
             List<String> diff = diff(state, snapshotOf(game));
-            if (diff.isEmpty()) System.out.println("Retrato aplicado: o jogo voltou igual.");
+            if (diff.isEmpty()) Log.bridge().info("Retrato aplicado: o jogo voltou igual.");
             else {
-                System.out.println("Retrato aplicado, mas não voltou igual:");
-                diff.forEach(line -> System.out.println("  " + line));
+                Log.bridge().info("Retrato aplicado, mas não voltou igual:");
+                diff.forEach(line -> Log.bridge().info("  " + line));
             }
         } catch (RuntimeException e) {
-            System.out.println("Não foi possível aplicar o retrato: " + e);
+            Log.bridge().warn("Não foi possível aplicar o retrato: " + e);
             e.printStackTrace();
         }
         System.out.println(script(journal, snapshot.get("at").getAsString(), players));

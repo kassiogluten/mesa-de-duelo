@@ -191,7 +191,9 @@ public class InputContextTest {
             var details = InputContext.targetDetails(input);
             assertEquals("trigger", details.get("kind").getAsString());
             String text = details.get("ability").getAsString();
-            assertTrue(text, text.contains("Ravenous Chupacabra") && text.toLowerCase().contains("destroy target creature"));
+            // Em inglês ou em português, conforme o Forge já carregou as traduções nesta JVM.
+            String name = forge.util.CardTranslation.getTranslatedName("Ravenous Chupacabra"), lower = text.toLowerCase();
+            assertTrue(text, (text.contains("Ravenous Chupacabra") || text.contains(name)) && (lower.contains("destroy target creature") || lower.contains("destrua a criatura alvo")));
             assertFalse(text, text.contains("CARDNAME"));
             assertEquals(1, details.get("min").getAsInt()); assertEquals(1, details.get("max").getAsInt());
             assertEquals(0, details.get("count").getAsInt());

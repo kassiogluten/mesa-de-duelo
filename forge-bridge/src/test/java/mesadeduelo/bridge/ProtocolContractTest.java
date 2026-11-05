@@ -21,11 +21,11 @@ import org.junit.Test;
 /**
  * Contrato do estado com a mesa: todo campo que o servidor manda no estado de uma partida precisa estar em
  * {@code tests/protocol/state-keys.txt}, e o {@code tests/protocol.test.mjs} confere que cada campo dessa lista
- * existe nos tipos de {@code src/forge/client.ts} (FState). Assim, renomear um campo de um lado só quebra um teste
+ * existe nos tipos de {@code src/forge/protocol.ts} (FState). Assim, renomear um campo de um lado só quebra um teste
  * em vez de a mesa ler {@code undefined} calada.
  *
  * Campo novo de propósito: rode este teste com {@code -Dprotocol.update=true} (acrescenta os campos à lista),
- * declare o campo no client.ts e rode {@code npm test}.
+ * declare o campo no protocol.ts e rode {@code npm test}.
  */
 public class ProtocolContractTest {
     private static final Path KEYS = Path.of("..", "tests", "protocol", "state-keys.txt");
@@ -87,9 +87,25 @@ public class ProtocolContractTest {
         }
     }
 
+    /** A partida da sala começa sem pilha e sem combate: este estado tem uma mágica na pilha e um ataque bloqueado. */
+    private static JsonObject stackAndCombat() {
+        forge.game.Game game = TestGames.empty();
+        forge.game.player.Player me = game.getPlayers().get(0), them = game.getPlayers().get(1);
+        forge.game.card.Card bolt = TestGames.add(game, "Lightning Bolt", me, forge.game.zone.ZoneType.Hand);
+        forge.game.spellability.SpellAbility sa = bolt.getFirstSpellAbility(); sa.setActivatingPlayer(me); sa.getTargets().add(them);
+        game.getStack().add(sa);
+        forge.game.card.Card bears = TestGames.add(game, "Grizzly Bears", me, forge.game.zone.ZoneType.Battlefield); bears.setSickness(false);
+        forge.game.card.Card wall = TestGames.add(game, "Wall of Omens", them, forge.game.zone.ZoneType.Battlefield);
+        game.getAction().checkStaticAbilities();
+        game.getPhaseHandler().devModeSet(forge.game.phase.PhaseType.COMBAT_DECLARE_BLOCKERS, me);
+        forge.game.combat.Combat combat = new forge.game.combat.Combat(me); game.getPhaseHandler().setCombat(combat);
+        combat.addAttacker(bears, them); combat.addBlocker(bears, wall);
+        return StateJson.game(game.getView(), me.getId(), game);
+    }
+
     @Test public void everyStateFieldIsInTheContractList() throws Exception {
         Rooms rooms = new Rooms();
-        EmbeddedChannel host = new EmbeddedChannel(), guest = new EmbeddedChannel();
+        EmbeddedChannel host = new EmbeddedChannel(), guest = new EmbeddedChannel(), asker = new EmbeddedChannel();
         List<JsonObject> seen = new ArrayList<>();
         try {
             rooms.onMessage(host, "{\"type\":\"lab-host\",\"name\":\"Jogador 1\",\"scenario\":" + SCENARIO + "}");
@@ -97,20 +113,46 @@ public class ProtocolContractTest {
             rooms.onMessage(guest, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Jogador 2\"}");
             until(host, seen, ProtocolContractTest::scenarioOnTable);
             until(guest, seen, ProtocolContractTest::scenarioOnTable);
-            Thread.sleep(300); // mais um ciclo de publicação, com os eventos da montagem
-            seen.addAll(drain(host)); seen.addAll(drain(guest));
+            // Pedidos com resposta (requestId) e erros, numa terceira conexão fora da sala.
+            rooms.onMessage(asker, "{\"type\":\"list-rooms\",\"requestId\":\"r1\"}");
+            rooms.onMessage(asker, "{\"type\":\"lookup-room\",\"code\":\"" + code + "\",\"requestId\":\"r2\"}");
+            rooms.onMessage(asker, "{\"type\":\"lookup-room\",\"code\":\"ZZZZ\",\"requestId\":\"r3\"}");
+            rooms.onMessage(asker, "{\"type\":\"validate-deck\",\"format\":\"pauper\",\"requestId\":\"r4\",\"deck\":{\"name\":\"T\",\"cards\":[{\"name\":\"Mountain\",\"count\":60}]}}");
+            rooms.onMessage(asker, "{\"type\":\"validate-deck\",\"format\":\"pauper\",\"requestId\":\"r5\",\"deck\":{\"name\":\"T\",\"cards\":[{\"name\":\"Mountain\",\"count\":3}]}}");
+            rooms.onMessage(asker, "{\"type\":\"join\",\"code\":\"ZZZZ\",\"name\":\"X\"}");
+            Thread.sleep(3000); // as respostas (validar deck é assíncrono) e mais ciclos de publicação
+            seen.addAll(drain(host)); seen.addAll(drain(guest)); seen.addAll(drain(asker));
         } finally {
             rooms.onMessage(host, "{\"type\":\"leave\"}");
             rooms.onMessage(guest, "{\"type\":\"leave\"}");
-            host.finishAndReleaseAll(); guest.finishAndReleaseAll();
+            host.finishAndReleaseAll(); guest.finishAndReleaseAll(); asker.finishAndReleaseAll();
         }
 
         Set<String> sent = new TreeSet<>();
         for (JsonObject j : seen) if (gameState(j)) paths("", j, sent);
+        paths("", stackAndCombat(), sent);
         assertTrue("o estado chegou sem campos: " + sent, sent.contains("players[].battlefield[].name"));
+        check(KEYS, sent, "Campos do estado (mensagem \"state\") que o servidor manda à mesa.");
 
+        // As outras mensagens: "tipo campo", conferidas contra o ServerMessage pelo tests/protocol.test.mjs.
+        Set<String> messages = new TreeSet<>();
+        for (JsonObject j : seen) {
+            if (!j.has("type") || "state".equals(j.get("type").getAsString())) continue;
+            String type = j.get("type").getAsString();
+            Set<String> fields = new TreeSet<>();
+            paths("", j, fields);
+            for (String f : fields) messages.add(type + " " + f);
+        }
+        assertTrue("faltou alguma resposta: " + messages, messages.stream().anyMatch(m -> m.startsWith("room-list ")) && messages.stream().anyMatch(m -> m.startsWith("validation ")));
+        check(MESSAGE_KEYS, messages, "Campos das outras mensagens do servidor à mesa, uma por linha: \"tipo campo\".");
+    }
+
+    private static final Path MESSAGE_KEYS = Path.of("..", "tests", "protocol", "message-keys.txt");
+
+    /** Todo campo mandado precisa estar na lista; com -Dprotocol.update=true os novos entram nela. */
+    private static void check(Path file, Set<String> sent, String what) throws Exception {
         Set<String> listed = new TreeSet<>();
-        if (Files.exists(KEYS)) for (String line : Files.readAllLines(KEYS, StandardCharsets.UTF_8)) {
+        if (Files.exists(file)) for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
             line = line.strip();
             if (!line.isEmpty() && !line.startsWith("#")) listed.add(line);
         }
@@ -119,15 +161,15 @@ public class ProtocolContractTest {
         if (!missing.isEmpty() && Boolean.getBoolean("protocol.update")) {
             listed.addAll(missing);
             List<String> lines = new ArrayList<>();
-            lines.add("# Campos do estado (mensagem \"state\") que o servidor manda à mesa. Gerado e conferido pelo");
-            lines.add("# ProtocolContractTest (servidor) e conferido contra src/forge/client.ts pelo tests/protocol.test.mjs.");
+            lines.add("# " + what + " Gerado e conferido pelo");
+            lines.add("# ProtocolContractTest (servidor) e conferido contra src/forge/protocol.ts pelo tests/protocol.test.mjs.");
             lines.add("# Acrescentar: rode o ProtocolContractTest com -Dprotocol.update=true. Tirar um campo: apague a linha.");
             lines.addAll(listed);
-            Files.createDirectories(KEYS.getParent());
-            Files.write(KEYS, lines, StandardCharsets.UTF_8);
+            Files.createDirectories(file.getParent());
+            Files.write(file, lines, StandardCharsets.UTF_8);
             return;
         }
-        assertTrue("Campos novos no estado, fora de tests/protocol/state-keys.txt (declare no client.ts e rode com"
+        assertTrue("Campos novos fora de " + file.getFileName() + " (declare no protocol.ts e rode com"
             + " -Dprotocol.update=true): " + missing, missing.isEmpty());
     }
 }

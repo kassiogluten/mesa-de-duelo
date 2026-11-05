@@ -1,3 +1,4 @@
+// Cabeçalho da tela inicial e de Meus decks: abas, Novidades, instalar, menu ⋯ e conta.
 import { mountChangelog } from './changelog';
 import { installButton } from './pwa';
 import { openFeedbackForm } from './feedbackForm';

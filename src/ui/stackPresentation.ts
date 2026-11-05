@@ -1,3 +1,4 @@
+// Como a pilha aparece na mesa: dono, tipo do item, forma de conjurar e custo de lealdade.
 import type { FState } from '../forge/client';
 import type { PresentationEvent } from './presentationTimeline';
 
