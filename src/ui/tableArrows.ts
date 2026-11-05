@@ -21,6 +21,8 @@ export function arrowRect(root: HTMLElement, selector: string): DOMRect | undefi
   }
   return rect;
 }
+/** Cor da ponta da seta de ataque por defensor (a mesma do traço em combatPose.css); a primeira é a do duelo. */
+const ATTACK_COLORS = ['var(--red)', '#f08a2c', '#e0457b', '#b46cf0'];
 export function drawCombatArrows(root: HTMLElement, s: FState) {
   const svg = root.querySelector<SVGSVGElement>('#fArrows')!;
   const box = svg.getBoundingClientRect();
@@ -46,8 +48,11 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
         const len = Math.hypot(ex - sx, ey - sy) || 1, bend = Math.min(80, len * 0.15);
         const cx = (sx + ex) / 2 - ((ey - sy) / len) * bend, cy = (sy + ey) / 2 + ((ex - sx) / len) * bend;
         const d = `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
-        const cls = `attack${blockers.length ? ' blocked' : ''}`;
-        paths.push(`<path class="arrow-under ${cls}" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fAttackHead)"/>`);
+        // Com 3 ou 4 jogadores, cada defensor tem a sua cor (a de quem é atacado, pela ordem da mesa).
+        const owner = toPlayer ? defender : s.players.find(p => p.battlefield.some(c => c.id === defender))?.id;
+        const color = multiplayer ? Math.max(0, s.players.findIndex(p => p.id === owner)) % 4 : 0;
+        const cls = `attack${color ? ` def-${color}` : ''}${blockers.length ? ' blocked' : ''}`;
+        paths.push(`<path class="arrow-under ${cls}" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fAttackHead${color ? `-${color}` : ''})"/>`);
       }
     }
     blockers.forEach((id, j) => {
@@ -67,8 +72,8 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
   }
   const html = paths.length ? `<defs><marker id="fArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
     <path d="M0 0 10 5 0 10z" fill="var(--gold)" stroke="#2a1600" stroke-width="1"/></marker>
-    <marker id="fAttackHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-    <path d="M0 0 10 5 0 10z" fill="var(--red)" stroke="#2a0800" stroke-width="1"/></marker></defs>${paths.join('')}` : '';
+    ${ATTACK_COLORS.map((fill, i) => `<marker id="fAttackHead${i ? `-${i}` : ''}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+    <path d="M0 0 10 5 0 10z" fill="${fill}" stroke="#2a0800" stroke-width="1"/></marker>`).join('')}</defs>${paths.join('')}` : '';
   // O estado chega várias vezes no mesmo combate: só redesenha (e reanima) quando as setas mudam.
   if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
 }

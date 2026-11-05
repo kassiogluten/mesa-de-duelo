@@ -18,8 +18,8 @@ A mesa já segue a ideia do Arena, mas os modais e painéis ainda parecem de sit
 Hoje as animações mostram o que aconteceu, mas são discretas e parecidas entre si: uma cópia da carta desliza, a carta pisca e some. No Arena, cada tipo de jogada tem um movimento próprio, com peso e impacto, sem atrasar o jogo.
 
 - [ ] Conjurar: a carta sai da mão, cresce no centro da mesa por um instante e vai para a pilha; ao resolver, desce até o campo (ou vai para o cemitério) com um leve impacto.
-- [ ] Ataque: criaturas avançam inclinadas na direção do defensor; no dano, um golpe rápido com tremor e o número de dano saltando no alvo.
-- [ ] Bloqueio: o bloqueador desliza até a frente do atacante, com a ligação entre os dois bem visível.
+- [x] Ataque: criaturas avançam inclinadas na direção do defensor; no dano, um golpe rápido com tremor e o número de dano saltando no alvo. (Feito no item 97.)
+- [x] Bloqueio: o bloqueador desliza até a frente do atacante, com a ligação entre os dois bem visível. (Feito no item 97.)
 - [x] Dano e morte: carta treme e escurece ao receber dano letal, depois se desfaz em direção ao cemitério. (Feito no item 15, letal, e no item 16, destruída.)
 - [x] Vida do jogador: o número conta para cima ou para baixo, com cor e um pulso no retrato.
 - [x] Terreno e fichas: entram com um "assentar" curto no campo; fichas aparecem com brilho.
@@ -464,16 +464,3 @@ Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.
-
-## 97. Modernizar a animação de combate
-
-O combate já tem animação própria (faixa de ataque, atacantes recuando e avançando, bloqueador deslizando até o atacante, golpe de ida e volta no dano, item 15), mas ainda parece um conjunto de efeitos soltos: cada parte acontece no seu canto, com o mesmo peso, e não conta a história do combate de uma vez. No Arena, o combate é um momento da partida: dá para ver quem ataca quem, quem bloqueia quem e o que vai acontecer antes do dano, e o dano vem com impacto.
-
-- [ ] Declarar atacantes: as criaturas avançam de verdade para a frente do campo, inclinadas na direção de quem atacam (jogador ou planeswalker), e ficam nessa posição até o fim do combate, em vez de recuar e voltar ao lugar. (Item 8, "Ataque".)
-- [ ] Setas de ataque claras e persistentes do atacante até o alvo, com cor por defensor na mesa de 3–4 jogadores.
-- [ ] Bloqueio: o bloqueador vai para a frente do atacante e fica ali, com a ligação entre os dois visível até o dano; vários bloqueadores em leque diante do mesmo atacante. (Item 8, "Bloqueio".)
-- [ ] Dano: golpe com antecipação (o atacante recua um instante), impacto com tremor curto proporcional ao dano e o revide do bloqueador saindo junto, não depois.
-- [ ] Fim do combate: as criaturas voltam juntas aos seus lugares, as mortas seguem para o cemitério com o efeito de destruída.
-- [ ] Combates grandes (muitos atacantes): agrupar os golpes para o combate não ficar longo; no modo acelerado, encurtar tudo.
-- [ ] Manter o ritmo: nada segura a vez do jogador; respeitar "reduzir movimento" e conferir o desempenho no celular.
-- [ ] Item no CHANGELOG e print na página Novidades em imagens.

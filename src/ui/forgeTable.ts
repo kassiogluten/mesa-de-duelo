@@ -49,6 +49,7 @@ import './duelPiles.css';
 import './tableMoves.css';
 import './handPeek.css';
 import './tableHeaders.css';
+import './combatPose.css';
 import { installWheelSideways } from './wheelSideways';
 import { newMatchState } from './tableState';
 import { tableShellHTML } from './tableShell';
@@ -56,6 +57,7 @@ import { eventDescription as describeEvent, frameCard, targetsDescription as des
 import { createCardFaces, ptOf, label } from './cardFaces';
 import { fitLoneRows, fitRowWidths, layoutExileShelf, layoutCardDecision, layoutCounters, layoutStack, syncSeatScroll } from './tableLayout';
 import { drawCombatArrows } from './tableArrows';
+import { applyCombatPose } from './combatPose';
 import { exileShelfHTML } from './zoneView';
 import { passLevelVisible, type ActionView } from './actionPanel';
 import { createAttackChoice } from './attackChoice';
@@ -242,7 +244,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // A fila de apresentação (tablePresentation.ts): cada jogada nova mostrada um passo de cada vez.
   const presentation = createPresentationQueue(ctx);
   /** As setas de combate e de alvo, na mesa como a apresentação a mostra agora. */
-  function drawArrows(s: FState) { const visual = stateWithFrame(s, presentation.frame()); drawCombatArrows(root, visual); stack.drawTargetArrows(visual); }
+  function drawArrows(s: FState) { const visual = stateWithFrame(s, presentation.frame()); applyCombatPose(root, visual); drawCombatArrows(root, visual); stack.drawTargetArrows(visual); }
   root.querySelectorAll<HTMLElement>('.row').forEach(row => {
     row.tabIndex = 0;
     row.setAttribute('aria-label', `${row.closest('.opp') ? 'Campo do oponente' : 'Seu campo'}: ${row.classList.contains('lands') ? 'terrenos e outros permanentes' : 'criaturas'}. Role para ver todas as cartas.`);
@@ -398,6 +400,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     layoutCardDecision(root);
     layoutStack(root);
     syncSeatScroll(root);
+    applyCombatPose(root, visual);
     drawCombatArrows(root, visual);
     playMotion(s, visual, silently);
     stack.drawTargetArrows(visual);

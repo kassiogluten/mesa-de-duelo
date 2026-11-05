@@ -29,7 +29,10 @@ export function createBoardMotion(kit: MotionKit) {
     if (!reduced()) animate(banner, [{ opacity: 0, scale: '.96' }, { opacity: 1, scale: '1', offset: .15 }, { opacity: 1, offset: .8 }, { opacity: 0 }], duration);
     later(() => remove(banner), duration);
   }
-  /** Bloqueio: cada bloqueador desliza um pouco na direção do atacante que bloqueou e volta, com a ligação acesa entre os dois. */
+  /**
+   * Bloqueio: a pose do combate (combatPose.ts) já leva cada bloqueador até a frente do atacante e o deixa lá; aqui o
+   * bloqueador acende e a ligação entre os dois corre do bloqueador ao atacante.
+   */
   function blocks(event: PresentationEvent) {
     let order = 0;
     const blocked = new Set<string>();
@@ -43,9 +46,8 @@ export function createBoardMotion(kit: MotionKit) {
         const b = center(el);
         if (!a || !b || reduced()) continue;
         const dx = a.cx - b.cx, dy = a.cy - b.cy, dist = Math.hypot(dx, dy) || 1;
-        const reach = Math.min(dist * .3, 48) / dist, delay = Math.min(order++, 8) * 70;
-        animate(el, [{ translate: '0 0', scale: '1' }, { translate: `${dx * reach}px ${dy * reach}px`, scale: '1.05', offset: .45 }, { translate: `${dx * reach}px ${dy * reach}px`, scale: '1.05', offset: .6 }, { translate: '0 0', scale: '1' }],
-          560, 'cubic-bezier(.3,.7,.4,1)', delay);
+        const delay = Math.min(order++, 8) * 70;
+        animate(el, [{ scale: '1' }, { scale: '1.06', offset: .45 }, { scale: '1' }], 420, 'cubic-bezier(.3,.7,.4,1)', delay);
         const link = effect('ability-beam block-link', { cx: b.cx, cy: b.cy, w: dist, h: 3 });
         link.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;
         animate(link, [{ scale: '0 1', opacity: .9 }, { scale: '1 1', opacity: 1, offset: .45 }, { scale: '1 1', opacity: 0 }], 720, 'ease-out', delay);

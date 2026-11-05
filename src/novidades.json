@@ -1,4 +1,9 @@
 {
+  "0.131.0": {
+    "Combate com cara de combate": [
+      { "img": "0.131.0/pose-combate.webp", "legenda": "Dois atacantes à frente do campo, inclinados na direção do oponente, e o bloqueador dele parado à frente do atacante que bloqueia." }
+    ]
+  },
   "0.130.0": {
     "Quantas cartas há na sua mão": [
       { "img": "0.130.0/sua-mao.webp", "legenda": "A contagem das cartas da sua mão no canto do seu retrato." }

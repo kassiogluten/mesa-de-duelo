@@ -1037,3 +1037,18 @@ Com três ou quatro jogadores, a mesa espalha informação pelos cantos: o reló
 - [x] Item no CHANGELOG e prints na página Novidades em imagens.
 
 Feito na 0.130.0 (05/11/2026, decidido no mesmo dia): o duelo também mudou (relógios no topo, contagem da sua mão, dano de comandante só depois do primeiro, bracket no balão). Os relógios ficam numa pílula (`#fTurnInfo`) na barra do topo, depois do Desfazer; a trilha guarda o resumo para o leitor de tela, o dia e a noite, o botão da mão automática e as fases. O menu de exibição abre por um botão com olho e seta (`seats.menu` guarda o aberto, que sobrevive aos redesenhos; Esc e clique fora fecham). Com um oponente só, fica o botão de tela cheia. O bracket abre no balão da vida pelo mesmo aberto-fechado dos marcadores, menos quando o retrato é um alvo possível. A pilha recolhida no duelo foi para baixo da barra do topo, que ficou mais larga.
+
+## 97. Modernizar a animação de combate ✅
+
+O combate já tem animação própria (faixa de ataque, atacantes recuando e avançando, bloqueador deslizando até o atacante, golpe de ida e volta no dano, item 15), mas ainda parece um conjunto de efeitos soltos: cada parte acontece no seu canto, com o mesmo peso, e não conta a história do combate de uma vez. No Arena, o combate é um momento da partida: dá para ver quem ataca quem, quem bloqueia quem e o que vai acontecer antes do dano, e o dano vem com impacto.
+
+- [x] Declarar atacantes: as criaturas avançam de verdade para a frente do campo, inclinadas na direção de quem atacam (jogador ou planeswalker), e ficam nessa posição até o fim do combate, em vez de recuar e voltar ao lugar. (Item 8, "Ataque".)
+- [x] Setas de ataque claras e persistentes do atacante até o alvo, com cor por defensor na mesa de 3–4 jogadores.
+- [x] Bloqueio: o bloqueador vai para a frente do atacante e fica ali, com a ligação entre os dois visível até o dano; vários bloqueadores em leque diante do mesmo atacante. (Item 8, "Bloqueio".)
+- [x] Dano: golpe com antecipação (o atacante recua um instante), impacto com tremor curto proporcional ao dano e o revide do bloqueador saindo junto, não depois.
+- [x] Fim do combate: as criaturas voltam juntas aos seus lugares, as mortas seguem para o cemitério com o efeito de destruída.
+- [x] Combates grandes (muitos atacantes): agrupar os golpes para o combate não ficar longo; no modo acelerado, encurtar tudo.
+- [ ] Manter o ritmo: nada segura a vez do jogador; respeitar "reduzir movimento" e conferir o desempenho no celular.
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.131.0 (05/11/2026): a pose fica em variáveis de CSS nos slots (`combatPose.ts`: `--atk-tilt` até 7°, `--blk-x`/`--blk-y` até 48 px ou 30% do caminho), aplicada antes das setas a cada desenho; a ida usa uma transição com mola e a volta, a transição de sempre da carta. Os golpes da mesma etapa de dano saem da fila juntos (`takeWhile` por `combat` e `step`), e quem revida o próprio atacante se choca no meio (`clash`, o mesmo alcance da luta). Tremor no alvo de 1,5 a 6 px pelo dano. Setas de ataque com a cor do jogador atacado (pela ordem da mesa) com 3 ou 4 jogadores. Ficou em aberto: conferir o desempenho no celular com muitos atacantes.

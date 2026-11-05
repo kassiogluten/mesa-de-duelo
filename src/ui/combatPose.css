@@ -1,0 +1,19 @@
+/*
+ * Pose do combate (combatPose.ts): o atacante, já à frente do campo, inclina na direção de quem ataca; o bloqueador
+ * anda até a frente do atacante e fica lá até o dano. A transição leva cada carta para a pose e de volta no fim.
+ */
+.field.me .slot.attacking > .bfc { transform: translate(-50%, -78%) rotate(var(--atk-tilt, 0deg)); }
+.field.me .slot.tapped.attacking > .bfc { transform: translate(-50%, -78%) rotate(calc(90deg + var(--atk-tilt, 0deg))); }
+.field.opp .slot.attacking > .bfc { transform: translate(-50%, -22%) rotate(var(--atk-tilt, 0deg)); }
+.field.opp .slot.tapped.attacking > .bfc { transform: translate(-50%, -22%) rotate(calc(90deg + var(--atk-tilt, 0deg))); }
+.field .slot.blocking > .bfc { transform: translate(calc(-50% + var(--blk-x, 0px)), calc(-50% + var(--blk-y, 0px))); }
+.field .slot.tapped.blocking > .bfc { transform: translate(calc(-50% + var(--blk-x, 0px)), calc(-50% + var(--blk-y, 0px))) rotate(90deg); }
+.field .slot.blocking { z-index: 4; }
+/* Ida para a pose com um pouco de mola; a volta usa a transição de sempre da carta. */
+.field .slot.attacking > .bfc, .field .slot.blocking > .bfc { transition: transform .38s cubic-bezier(.3, 1.35, .5, 1), filter .2s; }
+@media (prefers-reduced-motion: reduce) { .field .slot.attacking > .bfc, .field .slot.blocking > .bfc { transition: none; } }
+
+/* Mesa de 3–4 jogadores: a seta de ataque tem a cor de quem é atacado. */
+.combat-arrows .arrow.attack.def-1 { stroke: #f08a2c; }
+.combat-arrows .arrow.attack.def-2 { stroke: #e0457b; }
+.combat-arrows .arrow.attack.def-3 { stroke: #b46cf0; }

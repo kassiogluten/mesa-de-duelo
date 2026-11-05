@@ -42,6 +42,11 @@ export function createDamageMotion(kit: MotionKit) {
       animate(card, [{ translate: '0 0' }, { translate: '-4px 0', offset: .2 }, { translate: '4px 0', offset: .4 }, { translate: '-3px 0', offset: .6 }, { translate: '0 0' }], 380);
       later(() => card.classList.remove('lethal-hit'), 1100);
     }
+    else if (event.combat && (event.delta ?? 0) > 0 && target.el && !reduced()) {
+      // Golpe de combate: um tremor curto no alvo, mais forte quanto maior o dano.
+      const a = Math.min(6, 1.5 + (event.delta ?? 0) * .6);
+      animate(target.el, [{ translate: '0 0' }, { translate: `${-a}px 0`, offset: .25 }, { translate: `${(a * .6).toFixed(1)}px 0`, offset: .55 }, { translate: '0 0' }], 260);
+    }
     if (event.commander && target.player !== undefined) pulse(root.querySelector<HTMLElement>(`[data-zone="damage"][data-gy="${target.player}"]`));
     const arena = look.heavy ? root.querySelector<HTMLElement>('.arena') : null;
     if (arena) animate(arena, [{ translate: '0 0' }, { translate: '-5px 2px', offset: .2 }, { translate: '4px -2px', offset: .45 }, { translate: '-2px 1px', offset: .7 }, { translate: '0 0' }], 320);
@@ -59,13 +64,13 @@ export function createDamageMotion(kit: MotionKit) {
     const dx = to.cx - from.cx, dy = to.cy - from.cy;
     if (reduced() || look.motion === 'self' || Math.hypot(dx, dy) < 8) { impact(event, look, target); return; }
     if (look.motion === 'strike' && source.el && html) {
-      // Luta: as duas avançam juntas uma contra a outra e se chocam no meio, em vez de chegar até o alvo.
+      // Luta (e atacante contra bloqueador que revida): as duas avançam juntas e se chocam no meio, em vez de chegar até o alvo.
       // O atacante avança quase até o alvo e volta; o impacto acontece no ponto mais à frente. Uma cópia faz o
       // trajeto porque as fileiras do campo cortam o que sai delas; a carta de verdade some enquanto isso.
       const tapped = !!source.el.closest('.tapped');
       const ghost = effect('presentation-piece strike-ghost', { ...from, w: tapped ? from.h : from.w, h: tapped ? from.w : from.h }, html);
       const turn = tapped ? '90deg' : '0deg';
-      const reach = event.fight ? .42 : Math.max(0, 1 - (Math.min(to.w, to.h) * .55 + Math.min(from.w, from.h) * .4) / Math.hypot(dx, dy));
+      const reach = event.fight || event.clash ? .42 : Math.max(0, 1 - (Math.min(to.w, to.h) * .55 + Math.min(from.w, from.h) * .4) / Math.hypot(dx, dy));
       const travel = Math.round(duration * .9);
       source.el.style.opacity = '0'; hiddenCards.add(source.el);
       animate(ghost, [

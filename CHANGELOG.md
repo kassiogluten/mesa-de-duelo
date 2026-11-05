@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.131.0] - 2026-11-05
+
+### Mudou
+
+- **Combate com cara de combate.** Os atacantes, já à frente do campo, ficam inclinados na direção de quem atacam, e cada bloqueador anda até a frente do atacante que bloqueia e fica lá até o dano. No fim do combate, todos voltam juntos ao lugar. No dano, os golpes da mesma etapa saem juntos, mesmo num combate grande, e o atacante e o bloqueador que se atingem se chocam no meio. A carta ou o retrato atingido treme, mais forte quanto maior o dano. Na mesa de 3–4 jogadores, a seta de ataque tem uma cor para cada jogador atacado. Com "reduzir movimento" ligado no sistema, as cartas vão direto para o lugar, sem o movimento.
+
 ## [0.130.0] - 2026-11-05
 
 ### Novo

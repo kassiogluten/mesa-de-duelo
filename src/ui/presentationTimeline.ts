@@ -75,6 +75,8 @@ export interface PresentationEvent {
   previous?: number;
   /** Só na mesa: os marcadores seguidos que viraram um som só, para cada carta crescer (`counters`). */
   grouped?: PresentationEvent[];
+  /** Só na mesa: golpe de combate que sai junto com o revide do alvo; os dois se chocam no meio. */
+  clash?: boolean;
   stateVersion?: number;
   frame?: PresentationFrame;
 }

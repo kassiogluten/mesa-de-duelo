@@ -57,9 +57,17 @@ export function createPresentationQueue(d: PresentationDeps) {
     // Luta: o golpe de volta (da criatura atingida na outra) sai junto, e as duas se chocam no meio.
     const fought = first.type === 'damage' && first.fight && first.targets?.cards?.length
       ? timeline.takeWhile(e => e.type === 'damage' && !!e.fight && e.sourceId === first.targets!.cards![0]) : [];
+    // Combate: os golpes da mesma etapa de dano (iniciativa ou normal) saem juntos, mesmo num combate grande, e o
+    // atacante e o bloqueador que se atingem se chocam no meio, em vez de um golpe esperar o outro.
+    const clashing = first.type === 'damage' && first.combat
+      ? timeline.takeWhile(e => e.type === 'damage' && !!e.combat && (e.step ?? 'regular') === (first.step ?? 'regular')) : [];
+    if (clashing.length) {
+      const all = [first, ...clashing.map(part => part.event)];
+      for (const e of all) e.clash = all.some(o => o !== e && o.sourceId !== undefined && o.sourceId === e.targets?.cards?.[0] && o.targets?.cards?.[0] === e.sourceId);
+    }
     if (first.type === 'mill') motion.milled(first, { you: s.you, fast: d.prefs.fast || hasLiveDecision(s), face: card => d.face(card, 'normal') });
     else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: d.prefs.fast || hasLiveDecision(s), face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
-    else for (const part of [entry, ...divided, ...fought]) {
+    else for (const part of [entry, ...divided, ...fought, ...clashing]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? d.face(part.event.card, 'normal') : undefined,
         label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
