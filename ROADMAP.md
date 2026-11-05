@@ -455,13 +455,3 @@ Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.
-
-## 102. Quantidade de cartas na mão no ícone da mão automática
-
-Hoje a quantidade de cartas na sua mão aparece num selo junto do seu retrato (a costa da carta e o número), e o ícone de mão ao lado do relógio do turno só liga e desliga a mão automática. A ideia é juntar os dois: o número vai para o ícone da mão, e o selo do retrato sai.
-
-- [ ] O ícone da mão (ao lado do relógio do turno) mostra quantas cartas você tem na mão, e continua ligando e desligando a mão automática ao tocar, aceso quando ligada.
-- [ ] O selo de cartas na mão junto do seu retrato deixa de aparecer, no duelo e no Commander, no computador e no celular.
-- [ ] O balão e o leitor de tela do ícone dizem as duas coisas: quantas cartas há na mão e se a mão automática está ligada.
-- [ ] Conferir se o brilho de carta nova da mão oculta (0.125.0) continua fazendo sentido com o número no ícone.
-- [ ] Item no CHANGELOG e print na página Novidades em imagens.

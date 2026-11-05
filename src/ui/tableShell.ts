@@ -93,9 +93,9 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
     <div class="avatar-slot me" id="fMeAvatar"></div>
     <div class="piles me" id="fMePiles"></div>
     <div class="hand" id="fHand"></div>
-    <button type="button" class="phase-hand" id="fHandAuto" data-ui="hand-auto" aria-pressed="false" aria-label="Mão automática" title="Mão automática: recolhida, sobe ao passar o mouse"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V5.5a1.5 1.5 0 0 1 3 0V11M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v6M16 11V8a1.5 1.5 0 0 1 3 0v6.5A6.5 6.5 0 0 1 12.5 21h-.7a6.5 6.5 0 0 1-5.1-2.5L3.6 14.6a1.6 1.6 0 0 1 2.4-2.1L7 13.6"/></svg></button>
+    <button type="button" class="phase-hand" id="fHandAuto" data-ui="hand-auto" aria-pressed="false" aria-label="Mão automática" title="Mão automática: recolhida, sobe ao passar o mouse"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V5.5a1.5 1.5 0 0 1 3 0V11M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v6M16 11V8a1.5 1.5 0 0 1 3 0v6.5A6.5 6.5 0 0 1 12.5 21h-.7a6.5 6.5 0 0 1-5.1-2.5L3.6 14.6a1.6 1.6 0 0 1 2.4-2.1L7 13.6"/></svg><b class="phase-hand-count" hidden></b></button>
     <div class="hand-mode" id="fHandMode">
-      <button type="button" class="hand-toggle" id="fHandToggle" data-ui="hand-toggle" aria-label="Esconder a mão" title="Esconder a mão"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><b class="hand-count" hidden></b></button>
+      <button type="button" class="hand-toggle" id="fHandToggle" data-ui="hand-toggle" aria-label="Esconder a mão" title="Esconder a mão"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     </div>
     <section class="exile-shelf" id="fExileShelf" aria-label="Cartas disponíveis no exílio" hidden></section>
     <section class="focus-view" id="fFocus" role="dialog" aria-modal="true" aria-labelledby="fFocusTitle" hidden></section>

@@ -38,11 +38,6 @@ export function oppHandHTML(p: FPlayer, face: (c: FCard) => string, label: (c: F
     + `<span class="revealed-tag" aria-hidden="true">${EYE_ICON}Mão revelada</span>`;
 }
 
-/** Quantas cartas há na sua mão, junto do seu retrato: à vista mesmo com a mão recolhida ou oculta. */
-export function ownHandHTML(p: FPlayer) {
-  const n = p.handCount ?? p.hand.length;
-  return `<span class="seat-hand own-hand" title="Cartas na sua mão" aria-label="${n} ${n === 1 ? 'carta' : 'cartas'} na sua mão"><span class="back${sleeveClass(p.sleeve)}" aria-hidden="true"></span>${n}</span>`;
-}
 /**
  * Número de cartas na mão no cabeçalho do assento (Commander). Com a mão revelada, o selo ganha um olho e a etiqueta
  * "Revelada", e tocar nele abre a galeria com a mão, como a do cemitério.

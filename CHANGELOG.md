@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.136.0] - 2026-11-05
+
+### Mudou
+
+- **Cartas na mão no ícone da mão.** A quantidade de cartas na sua mão saiu do selo junto do seu retrato e foi para o ícone de mão ao lado do relógio do turno. No computador, o ícone continua ligando e desligando a mão automática (aceso quando ligada) e, com a mão oculta, é ele que brilha quando chega carta nova; a seta acima da mão ficou só para mostrar e esconder. No celular, onde não há mão automática, o ícone aparece só com a quantidade.
+
 ## [0.135.0] - 2026-11-05
 
 ### Mudou

@@ -28,30 +28,38 @@ export function createTableHand(d: HandDeps) {
   // Guardado à parte: ele vive dentro da trilha de fases, que é redesenhada (e o tira do documento até voltar).
   const handAutoButton = root.querySelector<HTMLButtonElement>('#fHandAuto')!;
   let handCountSeen = -1;
+  /** Mesa do computador: só nela há mão automática (handPeek.css); no celular o ícone é só a contagem. */
+  const desktop = () => typeof matchMedia !== 'function' || matchMedia('(min-width: 761px) and (min-height: 501px)').matches;
   /** Pilhas de cópias iguais da mão cheia (handDrag.ts), ou null com a mão sem agrupar. */
   let handGroups: number[][] | null = null;
 
-  /** Modo da mão: as classes na mesa, o botão Auto, a seta (só com o Auto desligado) e a contagem com a mão oculta. */
+  /**
+   * Modo da mão: as classes na mesa, o ícone da mão (com a quantidade de cartas na mão, que no celular é só contador:
+   * lá não há mão automática) e a seta (só com a mão automática desligada).
+   */
   function syncMode(watching: boolean, handCount = handCountSeen) {
     const mode = watching ? watchHandMode : handMode;
     const arena = root.querySelector('.arena')!;
     arena.classList.toggle('hand-peek', mode === 'auto');
     arena.classList.toggle('hand-hidden', mode === 'oculta');
     arena.classList.toggle('hand-fixed', mode === 'fixa');
-    const auto = handAutoButton;
-    auto.setAttribute('aria-pressed', String(mode === 'auto'));
-    auto.title = mode === 'auto' ? 'Mão automática ligada: recolhida, sobe ao passar o mouse. Clique para desligar' : 'Mão automática desligada: clique para ligar';
+    const auto = handAutoButton, desk = desktop();
+    const cards = handCount < 0 ? '' : `${handCount} ${handCount === 1 ? 'carta' : 'cartas'} na mão`;
+    auto.setAttribute('aria-pressed', String(desk && mode === 'auto'));
+    const state = mode === 'auto' ? 'Mão automática ligada: recolhida, sobe ao passar o mouse. Clique para desligar' : 'Mão automática desligada: clique para ligar';
+    auto.title = desk ? (cards ? `${cards}. ${state}` : state) : cards;
+    auto.setAttribute('aria-label', desk ? (cards ? `${cards}. Mão automática` : 'Mão automática') : cards || 'Cartas na mão');
+    const count = auto.querySelector<HTMLElement>('.phase-hand-count')!;
+    count.hidden = handCount < 0;
+    count.textContent = String(Math.max(0, handCount));
     $('#fHandMode').hidden = mode === 'auto';
     const toggle = $('#fHandToggle'), text = mode === 'fixa' ? 'Esconder a mão' : 'Mostrar a mão';
     toggle.hidden = mode === 'auto';
-    toggle.setAttribute('aria-label', mode === 'oculta' && handCount >= 0 ? `${text} (${handCount} ${handCount === 1 ? 'carta' : 'cartas'})` : text);
+    toggle.setAttribute('aria-label', text);
     toggle.title = text;
     toggle.classList.toggle('shown', mode === 'fixa');
-    const count = toggle.querySelector<HTMLElement>('.hand-count')!;
-    count.hidden = mode !== 'oculta' || handCount < 0;
-    count.textContent = String(Math.max(0, handCount));
-    // Com a mão oculta, carta nova na mão faz a seta brilhar, para a compra não passar despercebida.
-    if (mode === 'oculta' && handCountSeen >= 0 && handCount > handCountSeen) { toggle.classList.remove('arrived'); void toggle.offsetWidth; toggle.classList.add('arrived'); }
+    // Com a mão oculta, carta nova na mão faz o ícone da mão brilhar, para a compra não passar despercebida.
+    if (mode === 'oculta' && handCountSeen >= 0 && handCount > handCountSeen) { auto.classList.remove('arrived'); void auto.offsetWidth; auto.classList.add('arrived'); }
     handCountSeen = handCount;
     placeControls();
   }
@@ -105,7 +113,7 @@ export function createTableHand(d: HandDeps) {
     }) : null;
     const fan: HandFanItem[] = [...(handGroups ?? match.handOrder.map(id => [id])).map(ids => ({ c: inHand.get(ids[0]!)!, tag: '', copies: ids })), ...extra];
     $('#fHand').classList.toggle('crowded', fan.length > 7);
-    syncMode(!!s.watching, me.hand.length);
+    syncMode(!!s.watching, s.watching ? me.handCount : me.hand.length);
     const drawsAhead = d.timeline.pendingDraws(s.you) + d.drawing() > 0 && match.handPrimed && !suppressOpeningPreview(s) && d.timeline.history.some(e => e.type === 'turn');
     for (const [id, at] of match.arriving) if (at <= performance.now()) match.arriving.delete(id);
     const incoming = (id: number) => (drawsAhead && !match.knownHand.has(id)) || match.arriving.has(id);
@@ -120,7 +128,7 @@ export function createTableHand(d: HandDeps) {
   return {
     render, syncMode, placeControls,
     /** Botões "Auto" e da seta. */
-    toggleAuto() { apply(toggleAuto(current())); },
+    toggleAuto() { if (desktop()) apply(toggleAuto(current())); },
     toggleShown() { apply(toggleShown(current())); },
     /** Pilhas de cópias iguais do último desenho (null: mão sem agrupar). */
     groups: () => handGroups,

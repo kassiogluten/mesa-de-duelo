@@ -1,4 +1,10 @@
 {
+  "0.136.0": {
+    "Cartas na mão no ícone da mão": [
+      { "img": "0.136.0/mao-no-icone.webp", "legenda": "No computador, o ícone da mão ao lado do relógio do turno, aceso (mão automática ligada) e com o 5 das cartas na mão." },
+      { "img": "0.136.0/mao-no-icone-celular.webp", "legenda": "No celular, o mesmo ícone só com a quantidade de cartas na mão." }
+    ]
+  },
   "0.135.0": {
     "Selo de exílio no alto da permanente": [
       { "img": "0.135.0/selo-exilio.webp", "legenda": "A Jornada a Lugar Nenhum no campo com o selo de exílio e o número 1 no alto, e o Anjo de Serra exilado saindo por baixo dela, sem etiqueta por cima." },

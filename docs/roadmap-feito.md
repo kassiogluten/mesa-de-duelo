@@ -1073,3 +1073,15 @@ Cartas que uma permanente exila "sob si" ou "com ela" (Banisher Priest, Hostage 
 - [x] Quando a permanente sai do campo, as cartas voltam a aparecer só no exílio.
 
 Feito na 0.133.0 (05/11/2026): o servidor manda `exiling` na permanente, com as cartas de `getExiledCards()` e `getImprintedCards()` que continuam no exílio como o mesmo objeto (fora as do Delve e as exiladas pela própria mágica). A mesa desenha até 3 atrás da permanente, descendo, com o nome numa etiqueta (a borda de cima, com o nome impresso, fica escondida), o número abre a lista, e o inspetor diz "Exilando: …" e "Exilada por …" (`exiledUnder.ts`).
+
+## 102. Quantidade de cartas na mão no ícone da mão automática ✅
+
+Hoje a quantidade de cartas na sua mão aparece num selo junto do seu retrato (a costa da carta e o número), e o ícone de mão ao lado do relógio do turno só liga e desliga a mão automática. A ideia é juntar os dois: o número vai para o ícone da mão, e o selo do retrato sai.
+
+- [x] O ícone da mão (ao lado do relógio do turno) mostra quantas cartas você tem na mão, e continua ligando e desligando a mão automática ao tocar, aceso quando ligada.
+- [x] O selo de cartas na mão junto do seu retrato deixa de aparecer, no duelo e no Commander, no computador e no celular.
+- [x] O balão e o leitor de tela do ícone dizem as duas coisas: quantas cartas há na mão e se a mão automática está ligada.
+- [x] Conferir se o brilho de carta nova da mão oculta (0.125.0) continua fazendo sentido com o número no ícone.
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.136.0 (decidido em 05/11/2026): no celular, onde não há mão automática, o ícone aparece só como contador; com a mão oculta, a seta perdeu o número e quem brilha com carta nova é o ícone.

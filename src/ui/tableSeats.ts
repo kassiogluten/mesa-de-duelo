@@ -9,7 +9,7 @@ import type { createAttackChoice } from './attackChoice';
 import type { OpponentFocus } from './opponentFocus';
 import { backRow, fieldRow, isBackRow, type BoardView } from './permanentView';
 import { turnSpellsTotal } from './playerStatus';
-import { oppHandHTML, ownHandHTML, revealedCards } from './revealedHand';
+import { oppHandHTML, revealedCards } from './revealedHand';
 import { avatar, collapsedSeat, commandCards, damageButton, focusButton, focusHTML, matStyle, opponentSeat, piles, type SeatView } from './seatView';
 import { followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatMemory } from './seatVisibility';
 import { trackCounterBumps } from './tableCards';
@@ -91,7 +91,8 @@ export function createTableSeats(d: SeatsDeps) {
     d.setHTML($('#fOppHand'), multiplayer ? '' : oppHandHTML(opp, c => d.face(c, 'small'), label));
     $('#fOppHand').classList.toggle('revealed', !multiplayer && revealedCards(opp).length > 0);
     d.setHTML($('#fOppAvatar'), multiplayer ? '' : avatar(seatView(), visual, opp, 1) + focusButton(opp, ' duel-focus'));
-    d.setHTML($('#fMeAvatar'), avatar(seatView(), visual, me, 0) + (visual.watching ? '' : ownHandHTML(me)));
+    // A quantidade de cartas na sua mão fica no ícone da mão, ao lado do relógio do turno (tableHand.ts).
+    d.setHTML($('#fMeAvatar'), avatar(seatView(), visual, me, 0));
     d.setHTML($('#fOppPiles'), multiplayer ? '' : piles(seatView(), visual, opp) + (opp.commanders?.length ? `<div class="duel-command">${commandCards(seatView(), s, opp)}${damageButton(opp)}</div>` : ''));
     d.setHTML($('#fMePiles'), piles(seatView(), visual, me));
     d.setHTML($('#fOppLands'), multiplayer ? '' : backRow(boardView(), visual, opp));

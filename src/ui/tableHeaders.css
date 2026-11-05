@@ -1,6 +1,6 @@
 /*
  * Cabeçalhos da mesa (item 99): os relógios e o turno no topo, ao lado do menu; a zona de comando de cada oponente no
- * cabeçalho dele; o menu de exibição do campo (olho com seta); o bracket no balão da vida; a contagem da sua mão.
+ * cabeçalho dele; o menu de exibição do campo (olho com seta); o bracket no balão da vida.
  */
 
 /* Relógios e turno: a mesma pílula da trilha de fases, no topo, com as dicas abrindo para baixo. */
@@ -46,12 +46,6 @@
 @media (max-width: 760px), (max-height: 500px) {
   .forge.multiplayer .seat-heading .pname, .forge.multiplayer .seat-heading .player-counter.last-turn { display: none; }
 }
-
-/* Sua mão: a contagem junto do seu retrato, como a dos oponentes. */
-.forge .avatar-slot.me .own-hand { position: absolute; left: -8px; top: -8px; z-index: 3; padding: 2px 6px 2px 3px; border: 1px solid #ffffff1f; border-radius: 999px; background: color-mix(in srgb, var(--azul-0d1626, #0d1626) 88%, transparent); color: var(--ink); font: 600 12px var(--body); font-variant-numeric: tabular-nums; }
-.forge .avatar-slot.me .own-hand .back { width: 12px; height: 17px; border-width: 1px; }
-/* No celular os montes ficam por cima do retrato: a contagem vai para a direita dele. */
-@media (max-width: 760px), (max-height: 500px) { .forge .avatar-slot.me .own-hand { left: auto; right: -22px; top: auto; bottom: 30px; font-size: 11px; } }
 
 /* Zona de comando de cada oponente no cabeçalho: o campo fica com a largura toda. */
 .forge.multiplayer .seat-heading .seat-command { grid-area: auto; flex: 0 0 auto; flex-direction: row; gap: 5px; padding: 0; }

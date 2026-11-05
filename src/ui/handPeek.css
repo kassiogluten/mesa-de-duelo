@@ -4,7 +4,12 @@
  * a mão inteira; desligado, a seta deixa a mão fixa (aberta) ou oculta (fora da tela).
  * A altura que a faixa ocupava vai para os campos, e as cartas crescem com ela.
  */
-.hand-mode, .phase-hand { display: none; }
+.hand-mode { display: none; }
+/* O ícone da mão, ao lado do relógio do turno, com quantas cartas há na sua mão. No celular é só a contagem (lá não há mão automática). */
+.forge .phase-hand { display: inline-flex; align-items: center; gap: 2px; flex: none; height: 24px; margin: 0 2px; padding: 0 6px 0 4px; border: 1px solid transparent; border-radius: 999px; background: none; color: var(--muted); font: inherit; cursor: default; }
+.forge .phase-hand svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.forge .phase-hand-count { font: 700 12px/1 var(--body); font-variant-numeric: tabular-nums; color: var(--ink); }
+.forge[data-opening] .phase-hand, .forge .phase-hand:has(.phase-hand-count[hidden]) { display: none; }
 @media (min-width: 761px) and (min-height: 501px) {
   .forge {
     --peek-strip: 64px;
@@ -29,10 +34,9 @@
 
   /* Seta da mão, centralizada acima dela (o lugar exato vem do script): mostra ou esconde a mão. */
   /* Mão automática: um ícone pequeno de mão ao lado do relógio do turno, aceso quando ligado. */
-  .forge:not([data-opening]) .phase-hand { display: grid; place-items: center; flex: none; width: 24px; height: 24px; margin: 0 2px; padding: 0; border: 1px solid transparent; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
-  .forge .phase-hand svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .forge .phase-hand { cursor: pointer; }
   .forge .phase-hand:hover { color: var(--ink); border-color: var(--line); }
-  .forge .phase-hand[aria-pressed="true"] { color: var(--azul-101b2f, #101b2f); background: var(--gold); }
+  .forge .phase-hand[aria-pressed="true"], .forge .phase-hand[aria-pressed="true"] .phase-hand-count { color: var(--azul-101b2f, #101b2f); background: var(--gold); }
   .forge .phase-hand:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
   .forge.has-hand-decision .phase-hand { visibility: hidden; }
   /* A seta (só com a mão automática desligada) fica centralizada acima da mão, discreta até o mouse chegar nela. */
@@ -50,10 +54,10 @@
   .forge .hand-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s ease; }
   /* Seta para cima mostra a mão oculta; para baixo, esconde a que está à vista. */
   .forge .hand-toggle:not(.shown) svg { transform: rotate(180deg); }
-  .forge .hand-count { position: absolute; top: -7px; right: -9px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: var(--gold); color: var(--azul-101b2f, #101b2f); font: 700 11px/18px var(--body); text-align: center; }
-  .forge .hand-toggle.arrived { animation: hand-arrived 1.2s ease-out; }
-  @keyframes hand-arrived { 0%, 100% { box-shadow: 0 3px 10px #0008; } 30% { box-shadow: 0 0 0 4px #f2b54c88, 0 0 18px var(--gold); } }
-  @media (prefers-reduced-motion: reduce) { .forge .hand-toggle.arrived { animation: none; border-color: var(--gold); } }
+  /* Mão oculta: carta nova na mão faz o ícone da mão brilhar. */
+  .forge .phase-hand.arrived { animation: hand-arrived 1.2s ease-out; }
+  @keyframes hand-arrived { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 4px #f2b54c88, 0 0 18px var(--gold); } }
+  @media (prefers-reduced-motion: reduce) { .forge .phase-hand.arrived { animation: none; border-color: var(--gold); } }
   .forge[data-opening] .hand-mode, .forge.has-hand-decision .hand-mode { display: none; }
 
   /* Três ou quatro jogadores: o cabeçalho de cima e o de cada assento ficam numa linha só. */
