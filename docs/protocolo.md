@@ -286,6 +286,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `cantAttack?` | `boolean` | Proibida de atacar ou de bloquear por um efeito (não conta enjoo, estar virada nem defensor). |
 | `cantBlock?` | `boolean` |  |
 | `preventDamage?` | `number` | Dano que os escudos de prevenção ainda vão prevenir. |
+| `exiling?` | `number[]` | Cartas no exílio que esta permanente exilou com ela (Journey to Nowhere, Oblivion Ring, imprint, Hideaway), por id. |
 | `attachedTo?` | `number` | Id da carta a que esta aura ou equipamento está preso. |
 | `attachedToPlayer?` | `number` |  |
 | `copyOf?` | `string` | Nome original de uma carta que está copiando outra (Clone, por exemplo). |

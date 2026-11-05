@@ -1,5 +1,6 @@
 // As permanentes no campo: cada carta (marcadores, palavras-chave, selos de combate, anexos e efeitos), as pilhas de cópias
 // iguais, as duas fileiras de cada jogador e as etiquetas das cartas do exílio que dá para jogar.
+import { exiledAria, exiledUnder } from './exiledUnder';
 import type { FCard, FPlayer, FState } from '../forge/client';
 import { esc, manaHTML } from './cardtext';
 import type { CardStyle } from './face';
@@ -82,6 +83,10 @@ export function attachmentsOf(s: FState) {
   }
   return m;
 }
+/** Ícone do exílio na etiqueta da carta exilada por uma permanente. */
+const ICON_EXILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.5 17.5 11-11"/></svg>';
+/** Nome curto na etiqueta: virada para baixo, sem revelar qual é. */
+const exiledLabel = (c: FCard) => c.faceDown && !c.hiddenFace?.name ? 'Virada para baixo' : label(c).split(',')[0]!;
 export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []) {
   const ci = combatIndex(s, c.id);
   const byId = battlefieldById(s);
@@ -157,15 +162,22 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
     if (c.creature || c.token) slot.push('ar-square');
   }
   const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.ringBearer ? 'Portador do Anel' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
-    kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : ''].filter(Boolean).join(', ');
+    kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : '', exiledAria(exiledUnder(s, c.id))].filter(Boolean).join(', ');
   const atts = attached.map((a, i) =>
     `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${v.face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');
   // Com dois ou mais anexos o leque fica estreito: o selo abre todos eles, junto da carta, em tamanho normal.
   const attsN = attached.length > 1
     ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
-  const style = attached.length ? ` style="--atts:${attached.length}"` : '';
+  // Cartas que ela exilou (Journey to Nowhere, Oblivion Ring...): atrás dela, saindo por baixo, com o nome à vista.
+  const exiled = exiledUnder(s, c.id);
+  const exu = exiled.slice(0, 3).map((x, i) =>
+    `<div class="exu${usable(s, x.id) ? ' actionable' : ''}" data-fid="${x.id}" role="button" tabindex="0" style="--j:${i + 1}" aria-label="${esc(label(x))}, exilada por ${esc(label(c))}">${v.face(x, 'small', true)}${i === Math.min(exiled.length, 3) - 1 ? `<span class="exu-name">${ICON_EXILE}${esc(exiled.length > 1 ? `${exiled.length} exiladas` : exiledLabel(x))}</span>` : ''}</div>`).join('');
+  const exuN = exiled.length > 1
+    ? `<button class="exu-n" data-group="${exiled.map(x => x.id).join(',')}" data-group-title="Exiladas por ${esc(label(c))}" aria-label="Ver as ${exiled.length} cartas exiladas por ${esc(label(c))}">${exiled.length}</button>` : '';
+  if (exiled.length) slot.push('has-exu');
+  const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');
-  return `<div class="${slot.join(' ')}"${style}>${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${inspectButton(c)}</div>`;
+  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}${inspectButton(c)}</div>`;
 }
 /**
  * Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). As criaturas
@@ -199,7 +211,7 @@ export function stacks(v: BoardView, s: FState, cards: FCard[], tappedPile = fal
   for (const c of cards) {
     const ctr = Object.entries(c.counters ?? {}).filter(([, v]) => v).sort().join(',');
     const ci = combatIndex(s, c.id);
-    const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || !!c.merged?.length || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
+    const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || exiledUnder(s, c.id).length > 0 || !!c.merged?.length || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
     const body = c.creature ? `|${c.power}/${c.toughness}|${c.damage ?? 0}|${[...(c.keywords ?? [])].sort()}|${!!c.sick}` : '';
     const k = alone ? `#${c.id}` : tappedPile && c.land && c.tapped && !ctr && !usable(s, c.id) && !s.input.untappable?.includes(c.id) ? 'tapped-lands' : `${c.name}|${c.tapped}|${usable(s, c.id)}|${c.token}|${!!c.prepared}|${c.copyOf ?? ''}|${ctr}${body}`;
     groups.set(k, [...(groups.get(k) ?? []), c]);

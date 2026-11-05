@@ -211,6 +211,8 @@ export interface FCard {
   cantBlock?: boolean;
   /** Dano que os escudos de prevenção ainda vão prevenir. */
   preventDamage?: number;
+  /** Cartas no exílio que esta permanente exilou com ela (Journey to Nowhere, Oblivion Ring, imprint, Hideaway), por id. */
+  exiling?: number[];
   /** Id da carta a que esta aura ou equipamento está preso. */
   attachedTo?: number;
   attachedToPlayer?: number;

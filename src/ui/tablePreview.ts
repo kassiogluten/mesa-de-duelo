@@ -4,6 +4,7 @@
 import type { FCard } from '../forge/client';
 import { emblemLabel, emblemSource, seenFace } from './cardFaces';
 import { followCardPreview, hideCardPreview, inspectCard, showCardPreview } from './cardInspector';
+import { exiledNotes } from './exiledUnder';
 import { faceDownReminder } from './faceDownReminder';
 import { suppressOpeningPreview } from './openingPresentation';
 import { permanentStatus, permanentTypeChange, typeChangeText } from './permanentEffects';
@@ -29,7 +30,7 @@ export function createCardPreview(d: PreviewDeps) {
     if (c && reminder && !secret) {
       const card = { name: reminder.label, image: reminder.normal, text: reminder.text, typeLine: 'Criatura', power: c.power, toughness: c.toughness,
         basePower: c.basePower, baseToughness: c.baseToughness, counters: c.counters, damage: c.damage, keywords: c.keywords,
-        notes: [`Virada para baixo (${reminder.label}): só quem a controla sabe qual carta é.`, ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label)] };
+        notes: [`Virada para baixo (${reminder.label}): só quem a controla sabe qual carta é.`, ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)] };
       if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
       return;
     }
@@ -42,7 +43,7 @@ export function createCardPreview(d: PreviewDeps) {
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.printedType || c.typeLine,
       typeChange: changed ? typeChangeText(changed, c) : undefined,
-      notes: [...(secret ? [`Virada para baixo${reminder ? ` (${reminder.label})` : ''}: só você pode ver qual carta é.`] : []), ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label)] };
+      notes: [...(secret ? [`Virada para baixo${reminder ? ` (${reminder.label})` : ''}: só você pode ver qual carta é.`] : []), ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)] };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {

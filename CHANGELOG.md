@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.133.0] - 2026-11-05
+
+### Novo
+
+- **Carta exilada aparece embaixo de quem a exilou.** A carta que um Journey to Nowhere (Jornada a Lugar Nenhum), um Oblivion Ring ou um Banisher Priest exilou agora aparece atrás dele, saindo pela borda de baixo, com o nome numa etiqueta. Vale para o imprint e para a carta escondida por esconder (virada para baixo, sem revelar qual é a quem não pode ver). Tocar na carta mostra ela grande; com várias, um número abre a lista de todas. Nos detalhes, a permanente diz "Exilando: …" e a carta exilada diz por quem foi exilada. Quando a permanente sai do campo, a carta volta a aparecer só no exílio. As cartas exiladas para pagar Delve não entram.
+
 ## [0.132.2] - 2026-11-05
 
 ### Corrigido

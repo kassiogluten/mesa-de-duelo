@@ -258,6 +258,29 @@ a { color: var(--gold); }
 }
 .att-n svg { width: 13px; height: 13px; }
 .att-n.actionable { border-color: var(--glow); box-shadow: 0 0 10px rgba(89, 181, 255, 0.75); }
+/*
+ * Cartas que a permanente exilou (Journey to Nowhere, Oblivion Ring...): atrás dela, saindo pela borda de baixo,
+ * esmaecidas e azuladas, com o nome numa etiqueta (a borda de cima, onde fica o nome impresso, fica escondida).
+ * A margem de baixo reserva a descida, como a de cima reserva a subida dos anexos.
+ */
+.slot.has-exu { --exu-drop: calc(var(--ch) * 0.2 * min(1, 1.5 / var(--exus))); margin-bottom: max(0px, var(--exu-drop) * var(--exus) - 6px); }
+.slot > .exu {
+  position: absolute; left: 50%; top: 50%; width: var(--cw); height: var(--ch); --fw: var(--cw); z-index: 0; cursor: pointer;
+  transform: translate(calc(-50% - var(--cw) * 0.06 * var(--j)), calc(-50% + var(--exu-drop) * var(--j)));
+}
+.slot > .exu .face { filter: grayscale(0.6) brightness(0.62); box-shadow: 0 0 0 1px #8fa6ff66; }
+.slot > .exu.actionable .face { filter: none; box-shadow: 0 0 0 2px var(--glow), 0 0 14px rgba(89, 181, 255, 0.75); }
+.exu-name {
+  /* Pode passar da largura da carta (as da fileira de trás são pequenas), centrada nela. */
+  position: absolute; left: 50%; bottom: 3%; translate: -50% 0; width: max-content; max-width: calc(var(--cw) * 1.9); z-index: 1; display: flex; align-items: center; gap: 3px; overflow: hidden;
+  padding: 1px 5px; border-radius: 4px; background: color-mix(in srgb, var(--azul-1c2644, #1c2644) 88%, transparent); border: 1px solid #8fa6ff88;
+  color: var(--ink); font: 600 max(10px, calc(var(--cw) * 0.11)) / 1.3 var(--body); white-space: nowrap; text-overflow: ellipsis; pointer-events: none;
+}
+.exu-name svg { flex: none; width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.exu-n {
+  position: absolute; z-index: 5; right: -8px; bottom: calc(-8px - var(--exu-drop) * var(--exus)); min-width: 22px; min-height: 22px; padding: 1px 6px; border-radius: 999px; cursor: pointer;
+  background: var(--azul-1c2644, #1c2644); border: 1px solid #8fa6ffaa; color: var(--ink); font: 700 11px var(--display);
+}
 .preview-note { color: var(--gold-light); }
 .pt .down { color: #c62f17; }
 

@@ -1062,3 +1062,14 @@ Em algumas situações os botões de ação mostram "Principal 2" (por exemplo "
 - [x] Item no CHANGELOG e print na página Novidades em imagens. Sem cenário no Laboratório: é só o texto e o destaque dos botões.
 
 Feito na 0.132.2 (05/11/2026): o rótulo tratava o combate inteiro como um grupo e dizia "Para a principal 2" já no início do combate (a mesa para ali com gatilhos de início do combate e paradas marcadas). Agora cada etapa diz o passo seguinte: início → "Para o ataque" (ou principal 2 sem criatura desvirada e sem enjoo), atacantes → "Para os bloqueios", bloqueadores → "Para o dano"; combate extra e etapas extras só contam do dano em diante. O `passIsPrimary` saiu: o passar é sempre o destaque. Ficou para ver: na principal 2 os dois botões dizem "Fim de turno" e "Para o fim do turno", parecidos demais.
+
+## 29. Cartas exiladas sob uma criatura aparecem abaixo dela ✅
+
+Cartas que uma permanente exila "sob si" ou "com ela" (Banisher Priest, Hostage Taker, cartas com imprint como Isochron Scepter etc.) hoje só aparecem no exílio comum, sem ligação visível com quem as exilou. A ideia é mostrá-las presas à permanente, saindo por baixo dela, como os anexos.
+
+- [x] Descobrir como o Forge liga a carta exilada à fonte (`ExiledWith`, `Imprinted`, `encoded`) e mandar essa ligação pela ponte.
+- [x] Desenhar as cartas exiladas atrás da permanente, aparecendo pela borda de baixo (como o leque de auras e equipamentos, mas para baixo e com aparência de exílio).
+- [x] Contador e janela para ver todas quando forem várias, e a mesma lista no inspetor da permanente.
+- [x] Quando a permanente sai do campo, as cartas voltam a aparecer só no exílio.
+
+Feito na 0.133.0 (05/11/2026): o servidor manda `exiling` na permanente, com as cartas de `getExiledCards()` e `getImprintedCards()` que continuam no exílio como o mesmo objeto (fora as do Delve e as exiladas pela própria mágica). A mesa desenha até 3 atrás da permanente, descendo, com o nome numa etiqueta (a borda de cima, com o nome impresso, fica escondida), o número abre a lista, e o inspetor diz "Exilando: …" e "Exilada por …" (`exiledUnder.ts`).

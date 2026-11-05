@@ -1,4 +1,9 @@
 {
+  "0.133.0": {
+    "Carta exilada aparece embaixo de quem a exilou": [
+      { "img": "0.133.0/exilada-sob-a-permanente.webp", "legenda": "A Jornada a Lugar Nenhum no campo, com a criatura que ele exilou saindo por baixo e o nome dela na etiqueta: Ursos Cinzentos." }
+    ]
+  },
   "0.132.2": {
     "O botão de passar diz o próximo passo de verdade no combate": [
       { "img": "0.132.2/inicio-do-combate.webp", "legenda": "No início do combate, antes de declarar atacantes, o botão de destaque leva \"Para o ataque\", não mais para a principal 2." }

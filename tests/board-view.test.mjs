@@ -68,3 +68,36 @@ test('an opponent seat hidden by "only this one" is marked when the table forces
   assert.match(html, /table-seat[^"]* forced/);
   assert.match(html, /À vista: atacando você/);
 });
+
+test('cards exiled by a permanent (Journey to Nowhere) peek out under it with the name, and the inspector names the link', async () => {
+  const { exiledNotes, exiledUnder } = await import('../src/ui/exiledUnder.ts');
+  const journey = card(40, 'Journey to Nowhere', { typeLine: 'Enchantment', exiling: [80, 99] });
+  const s = state([journey, forest(41), forest(42)]);
+  // A carta exilada é do oponente: fica no exílio dele. O 99 já saiu do exílio e não aparece.
+  s.players[1].exile = [bear(80, { controller: 1 })];
+  assert.deepEqual(exiledUnder(s, 40).map(c => c.id), [80]);
+  const html = bfCard(view, s, journey);
+  assert.match(html, /class="slot has-exu"/);
+  assert.match(html, /class="exu" data-fid="80"[^>]*aria-label="Grizzly Bears, exilada por Journey to Nowhere"/);
+  assert.match(html, /class="exu-name">.*Grizzly Bears<\/span>/);
+  assert.match(html, /aria-label="Journey to Nowhere[^"]*exilando Grizzly Bears"/);
+  assert.doesNotMatch(html, /class="exu-n"/, 'one card needs no counter');
+  assert.deepEqual(exiledNotes(s, journey), ['Exilando: Grizzly Bears.']);
+  assert.deepEqual(exiledNotes(s, s.players[1].exile[0]), ['Exilada por Journey to Nowhere, que está no campo.']);
+  // Com a permanente ao lado de uma cópia igual, ela fica sozinha na pilha (cada uma exilou uma carta diferente).
+  const twin = card(43, 'Journey to Nowhere', { typeLine: 'Enchantment' });
+  const both = state([journey, twin]); both.players[1].exile = s.players[1].exile;
+  assert.equal((backRow(view, both, both.players[0]).match(/class="stack"/g) ?? []).length, 2);
+});
+
+test('several exiled cards: up to three peek out, with the count and a list of all; face-down ones keep the secret', async () => {
+  const bridge = card(50, 'Mosswort Bridge', { land: true, typeLine: 'Land', exiling: [81, 82, 83, 84] });
+  const s = state([bridge]);
+  s.players[0].exile = [card(81, '', { faceDown: true }), bear(82), bear(83), bear(84)];
+  const html = bfCard(view, s, bridge);
+  assert.equal((html.match(/class="exu[" ]/g) ?? []).length, 3);
+  assert.match(html, /class="exu-n" data-group="81,82,83,84" data-group-title="Exiladas por Mosswort Bridge"/);
+  assert.match(html, /exu-name">.*4 exiladas</);
+  const { exiledNotes } = await import('../src/ui/exiledUnder.ts');
+  assert.deepEqual(exiledNotes(s, bridge), ['Exilando: uma carta virada para baixo, Grizzly Bears, Grizzly Bears e Grizzly Bears.']);
+});

@@ -183,15 +183,6 @@ Etapa 6: triagem e manutenção
 - [x] Métricas no Grafana: relatos recebidos por tipo e com ou sem partida, recusados por motivo e espaço ocupado.
 - [x] Novidades (`CHANGELOG.md`) a cada etapa que o jogador perceber (a 3 principalmente).
 
-## 29. Cartas exiladas sob uma criatura aparecem abaixo dela
-
-Cartas que uma permanente exila "sob si" ou "com ela" (Banisher Priest, Hostage Taker, cartas com imprint como Isochron Scepter etc.) hoje só aparecem no exílio comum, sem ligação visível com quem as exilou. A ideia é mostrá-las presas à permanente, saindo por baixo dela, como os anexos.
-
-- [ ] Descobrir como o Forge liga a carta exilada à fonte (`ExiledWith`, `Imprinted`, `encoded`) e mandar essa ligação pela ponte.
-- [ ] Desenhar as cartas exiladas atrás da permanente, aparecendo pela borda de baixo (como o leque de auras e equipamentos, mas para baixo e com aparência de exílio).
-- [ ] Contador e janela para ver todas quando forem várias, e a mesma lista no inspetor da permanente.
-- [ ] Quando a permanente sai do campo, as cartas voltam a aparecer só no exílio.
-
 ## 30. Mostrar na mesa o que o Forge já acompanha
 
 Como aconteceu com mutação, preparar, o Anel e as masmorras: o motor já aplica a regra, mas a mesa não diz nada, e o jogador só percebe pelo efeito (ou não percebe). Levantamento feito em 24/10/2026 comparando o que a ponte manda (`StateJson`, `PermanentDetails`, `TurnExtras`) com o que o Forge guarda em `Game`, `Player` e `CardView`. Nada disto aparece hoje na mesa.

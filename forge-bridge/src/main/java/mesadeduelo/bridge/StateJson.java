@@ -412,7 +412,12 @@ final class StateJson {
         if (c.isCloned() && c.getBackup() != null && !s.getName().equals(c.getBackup().getName())) {
             o.addProperty("copyOf", c.getBackup().getName());
         }
-        if (c.getZone() == ZoneType.Battlefield) addMerged(o, game == null ? null : game.findByView(c));
+        if (c.getZone() == ZoneType.Battlefield) {
+            Card onField = game == null ? null : game.findByView(c);
+            addMerged(o, onField);
+            // Cartas exiladas por ela (Journey to Nowhere, Oblivion Ring...), para a mesa mostrar por baixo.
+            ExiledUnder.add(o, onField, game);
+        }
         if (s.isCreature()) {
             o.addProperty("power", s.getPower());
             o.addProperty("toughness", s.getToughness());
