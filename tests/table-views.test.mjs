@@ -3,7 +3,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 const { stackPanel, stackGalleryHTML } = await import('../src/ui/stackView.ts');
 const { amountStatus, newQuestionDraft, questionHTML, questionBar, zoneName, zoneWithArticle } = await import('../src/ui/questionView.ts');
-const { gameResult, rematchButton, reconnectingHTML, disconnectedHTML, sideboardHTML } = await import('../src/ui/resultView.ts');
+const { gameResult, rematchButton, reconnectingHTML, disconnectedHTML } = await import('../src/ui/resultView.ts');
+const { sideboardHTML } = await import('../src/ui/sideboardView.ts');
 const { attackConfirmLabel, blockConfirmLabel, buttons, targetInfoHTML, targetInfoText } = await import('../src/ui/actionPanel.ts');
 const { commanderLedgerHTML, zoneHTML, zoneKey } = await import('../src/ui/zoneView.ts');
 const { tableShellHTML } = await import('../src/ui/tableShell.ts');
@@ -70,10 +71,12 @@ test('game result: winner, loser, watchers and the rematch button', () => {
 test('sideboard panel locks the moves while the server checks the list', () => {
   const s = state({}, { gameOver: true, sideboarding: { id: 1, ready: false, main: [], sideboard: [] }, match: { gameNumber: 1, wins: [1, 0] } });
   const draft = { id: 1, main: [{ name: 'Forest', count: 2 }], sideboard: [] };
-  const html = sideboardHTML(s, draft, { error: '', busy: true, details: '', ptName: n => n, feedback: false });
-  assert.match(html, /Deck principal · 2/);
+  const html = sideboardHTML(s, draft, { error: '', busy: true, details: '', filter: { text: '', type: '' }, ptName: n => n, feedback: false });
+  assert.match(html, /Deck principal <b>2<\/b>/);
   assert.match(html, /Verificando…/);
-  assert.match(html, /data-sb-main="0" disabled/);
+  assert.match(html, /data-sb-move="main" data-sb-key="Forest"[^>]*disabled/);
+  assert.match(html, /Entram 2/);
+  assert.match(html, /data-sb-reset disabled/);
 });
 
 test('action box: confirm labels, the result button when observing, and the target panel', () => {

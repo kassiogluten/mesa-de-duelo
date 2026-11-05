@@ -1,4 +1,10 @@
 {
+  "0.132.0": {
+    "Sideboard entre os jogos com as cartas à vista": [
+      { "img": "0.132.0/sideboard-miniaturas.webp", "legenda": "O deck principal e o sideboard lado a lado em miniaturas, com a busca e os tipos em cima, a contagem e a curva do deck, e embaixo as duas cartas que saem e as duas que entram." },
+      { "img": "0.132.0/sideboard-troca.webp", "legenda": "Uma carta do sideboard arrastada por cima de uma do deck: a coluna de destino fica tracejada e a carta de baixo mostra \"Trocar\"." }
+    ]
+  },
   "0.131.0": {
     "Combate com cara de combate": [
       { "img": "0.131.0/pose-combate.webp", "legenda": "Dois atacantes à frente do campo, inclinados na direção do oponente, e o bloqueador dele parado à frente do atacante que bloqueia." }

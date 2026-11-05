@@ -546,7 +546,6 @@ a { color: var(--gold); }
 .result-report:hover, .result-report:focus-visible { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .result-report:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .overlay > .result .result-report { animation: rise-in 0.5s 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.sideboard-panel .result-report { margin-top: 12px; padding-left: 0; }
 
 @keyframes pulse { 50% { filter: brightness(1.25); } }
 @keyframes hit {

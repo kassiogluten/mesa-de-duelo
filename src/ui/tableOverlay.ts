@@ -2,9 +2,9 @@
 // antes do resultado, em que o retrato de quem perdeu racha) e o resultado, e os avisos de conexão caída.
 import type { FState } from '../forge/client';
 import { ptOf } from './cardFaces';
-import { inspectCard } from './cardInspector';
 import { gameSummaryHTML } from './lifeChart';
-import { disconnectedHTML, gameResult, lifeDetails, reconnectingHTML, resultHTML, sideboardHTML } from './resultView';
+import { disconnectedHTML, gameResult, lifeDetails, reconnectingHTML, resultHTML } from './resultView';
+import { createSideboardPanel } from './sideboardPanel';
 import type { TableCtx } from './tableContext';
 
 export type OverlayDeps = Pick<TableCtx, 'root' | '$' | 'setHTML' | 'opts' | 'state' | 'match' | 'timeline' | 'motion' | 'render' | 'syncModal'>;
@@ -20,16 +20,7 @@ export function createTableOverlay(d: OverlayDeps) {
     if ((e.target as HTMLElement).matches?.('[data-life-details]')) lifeDetailsOpen = (e.target as HTMLDetailsElement).open;
   }, true);
   const lifeDetailsHTML = (s: FState) => lifeDetails(s, lifeDetailsOpen, name => ptOf(name)?.name || name);
-  function sideboardingHTML(s: FState) {
-    const match = d.match();
-    const sb = s.sideboarding!;
-    if (!match.sideboardDraft || match.sideboardDraft.id !== sb.id) {
-      match.sideboardDraft = { id: sb.id, main: structuredClone(sb.main), sideboard: structuredClone(sb.sideboard) };
-      match.sideboardError = ''; match.sideboardBusy = false;
-    }
-    if (sb.ready) match.sideboardBusy = false;
-    return sideboardHTML(s, match.sideboardDraft, { error: match.sideboardError, busy: match.sideboardBusy, details: lifeDetailsHTML(s), ptName: name => ptOf(name)?.name || name, feedback: !!d.opts.onFeedback });
-  }
+  const sideboard = createSideboardPanel(d, lifeDetailsHTML);
 
   function render(s: FState) {
     const match = d.match();
@@ -48,7 +39,7 @@ export function createTableOverlay(d: OverlayDeps) {
     wasPlaying = !s.gameOver;
     const ov = $('#fOverlay');
     if (s.sideboarding && !match.disconnected && !s.match?.over) {
-      d.setHTML(ov, sideboardingHTML(s));
+      sideboard.paint(ov, s);
       ov.hidden = false;
     } else if (s.gameOver && !match.disconnected && match.observing) {
       ov.hidden = true; ov.dataset.html = '';
@@ -63,23 +54,8 @@ export function createTableOverlay(d: OverlayDeps) {
     } else if (!match.disconnected) { ov.hidden = true; ov.dataset.html = ''; }
   }
 
-  /** Cliques na troca com o sideboard: passar uma carta de um lado para o outro e ver uma carta. True quando tratou. */
-  function click(t: HTMLElement) {
-    const match = d.match();
-    const swap = t.closest<HTMLElement>('[data-sb-main],[data-sb-side]');
-    if (swap && match.sideboardDraft && !match.sideboardBusy && !d.state()?.sideboarding?.ready) {
-      const fromMain = swap.hasAttribute('data-sb-main');
-      const source = fromMain ? match.sideboardDraft.main : match.sideboardDraft.sideboard;
-      const target = fromMain ? match.sideboardDraft.sideboard : match.sideboardDraft.main;
-      const index = Number(fromMain ? swap.dataset.sbMain : swap.dataset.sbSide);
-      const entry = source[index];
-      if (entry) { const existing = target.find(c => c.name === entry.name && c.set === entry.set && c.cn === entry.cn); if (existing) existing.count++; else target.push({ name: entry.name, count: 1, ...(entry.set ? { set: entry.set, cn: entry.cn } : {}) }); if (--entry.count === 0) source.splice(index, 1); match.sideboardError = ''; d.render(); }
-      return true;
-    }
-    const sbInspect = t.closest<HTMLElement>('[data-sb-inspect]');
-    if (sbInspect) { inspectCard({ name: sbInspect.dataset.sbInspect }, sbInspect); return true; }
-    return false;
-  }
+  /** Cliques na troca com o sideboard (sideboardPanel.ts). True quando tratou. */
+  const click = (t: HTMLElement) => sideboard.click(t);
 
   /** Aviso de conexão caída: tentando voltar (`attempt`) ou de vez (`reason`, com sala ou não). */
   function connection(html: string) {

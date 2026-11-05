@@ -419,7 +419,10 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
   gameEnd(step: 'result' | 'sideboard' = 'result') {
     state.gameOver = true; state.winner = 'Você';
     state.match = { gameNumber: 1, wins: [1, 0], draws: 0, over: step === 'result', phase: step === 'result' ? 'complete' : 'sideboarding', ready: [false, false] };
-    if (step === 'sideboard') state.sideboarding = { id: 1, ready: false, main: [{ name: 'Llanowar Elves', count: 4 }, { name: 'Forest', count: 16 }], sideboard: [{ name: 'Naturalize', count: 2 }] };
+    if (step === 'sideboard') state.sideboarding = { id: 1, ready: false,
+      main: [{ name: 'Llanowar Elves', count: 4 }, { name: 'Elvish Mystic', count: 4 }, { name: 'Lightning Bolt', count: 4 }, { name: 'Rampant Growth', count: 3 }, { name: 'Cultivate', count: 2 },
+        { name: 'Soul Warden', count: 2 }, { name: 'Llanowar Wastes', count: 1 }, { name: 'Forest', count: 16 }, { name: 'Mountain', count: 6 }],
+      sideboard: [{ name: 'Naturalize', count: 2 }, { name: 'Pyroblast', count: 3 }, { name: 'Duress', count: 2 }, { name: 'Fog', count: 1 }] };
     view.render();
   },
   /** O oponente conjurou o Prismari Charm escolhendo um modo (1, 2 ou 3): a pilha mostra qual foi. */

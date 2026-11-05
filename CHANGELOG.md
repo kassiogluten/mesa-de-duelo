@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.132.0] - 2026-11-05
+
+### Mudou
+
+- **Sideboard entre os jogos com as cartas à vista.** Em "Prepare o próximo jogo", o deck principal e o sideboard aparecem lado a lado em miniaturas das cartas, separadas por tipo e em ordem de custo, com a quantidade de cada uma. Toque numa carta para passar uma cópia para o outro lado, ou arraste; soltando sobre uma carta do outro lado, as duas trocam de lugar de uma vez. A lupa da miniatura, o clique direito ou segurar o dedo na carta mostram ela grande. Em cima, uma busca pelo nome (em português ou inglês) e botões para ver só criaturas, outras mágicas ou terrenos. O deck principal mostra quantos terrenos, criaturas e outras mágicas tem e a curva de mana, e avisa quando fica abaixo das 60 cartas. Embaixo, o que sai e o que entra em relação ao jogo anterior, com "Desfazer tudo"; sem trocas, o botão vira "Continuar sem trocas".
+
+### Corrigido
+
+- **A lista do sideboard não volta mais para o topo.** Passar uma carta de um lado para o outro mantém as duas colunas onde estavam, sem precisar rolar de novo até a carta seguinte.
+
 ## [0.131.0] - 2026-11-05
 
 ### Mudou

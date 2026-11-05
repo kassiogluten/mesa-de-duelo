@@ -1,15 +1,11 @@
-// O fim de cada jogo: a janela de resultado (com o resumo, a revanche e as saídas), o painel de sideboard entre os jogos
-// de uma melhor de três, a barra de quem assiste e as janelas de conexão caída.
+// O fim de cada jogo: a janela de resultado (com o resumo, a revanche e as saídas), a barra de quem assiste e as janelas
+// de conexão caída. O painel de sideboard entre os jogos fica em sideboardView.ts.
 import type { FState } from '../forge/client';
-import type { DeckEntry } from '../decks';
 import { esc } from './cardtext';
 import { tablePlayers } from './commanderTable';
 import { gameSummaryHTML } from './lifeChart';
 import { turnTimeText } from './phaseHud';
 import { ICON_FLAG, ICON_EYE, ICON_HOME } from './icons';
-import type { MatchState } from './tableState';
-
-type SideboardDraft = NonNullable<MatchState['sideboardDraft']>;
 
 export function gameResult(s: FState) {
   const abandoned = !!s.match?.abandoned;
@@ -60,24 +56,6 @@ export function lifeDetails(s: FState, open: boolean, ptName: (name: string) => 
   const summary = gameSummaryHTML(s, ptName);
   return summary ? `<details class="life-details" data-life-details${open ? ' open' : ''}><summary>Ver gráfico de vida</summary>${summary}</details>` : '';
 }
-/** Entre os jogos de uma melhor de três: trocar cartas entre o deck e o sideboard. `details` é o resumo do jogo que acabou. */
-export function sideboardHTML(s: FState, draft: SideboardDraft, o: { error: string; busy: boolean; details: string; ptName(name: string): string; feedback: boolean }) {
-  const sb = s.sideboarding!;
-  const count = (entries: DeckEntry[]) => entries.reduce((n, e) => n + e.count, 0);
-  const locked = sb.ready || o.busy;
-  const list = (entries: DeckEntry[], main: boolean) => `<ul class="sideboard-list">${entries.map((entry, i) => `<li><span class="sb-count">${entry.count}×</span><button class="sb-name" data-sb-inspect="${esc(entry.name)}">${esc(o.ptName(entry.name))}</button><button class="sb-move" ${main ? 'data-sb-main' : 'data-sb-side'}="${i}" ${locked ? 'disabled' : ''} aria-label="Mover uma cópia de ${esc(entry.name)} para ${main ? 'o sideboard' : 'o deck principal'}">${main ? '→' : '←'}</button></li>`).join('') || '<li>Nenhuma carta.</li>'}</ul>`;
-  const score = s.match ? s.match.wins.join(' × ') : '';
-  return `<div class="sideboard-panel" role="dialog" aria-modal="true" aria-labelledby="fSideboardTitle"><h2 id="fSideboardTitle">Prepare o próximo jogo</h2>
-    <p>Jogo ${s.match?.gameNumber ?? 1} encerrado${score ? ` · Placar: ${score}` : ''}. Troque cartas entre o deck principal e o sideboard.</p>
-    <p>Você só pode usar as cartas que já trouxe para a partida. As trocas precisam manter a lista válida para o formato.</p>
-    ${o.error ? `<p class="sideboard-error" role="alert">${esc(o.error)}</p>` : ''}
-    ${o.details}
-    <div class="sideboard-columns"><section><h3>Deck principal · ${count(draft.main)}</h3>${list(draft.main, true)}</section><section><h3>Sideboard · ${count(draft.sideboard)}</h3>${list(draft.sideboard, false)}</section></div>
-    <div class="sideboard-actions"><button class="arena-btn secondary" data-ui="exit">Sair da partida</button><button class="arena-btn secondary" data-ui="next-game" ${locked ? 'disabled' : ''}>Continuar sem trocas</button><button class="arena-btn primary" data-ui="sideboard-ready" ${locked ? 'disabled' : ''}>${sb.ready ? 'Aguardando o oponente…' : o.busy ? 'Verificando…' : 'Confirmar e continuar'}</button></div>
-    ${reportButton(o.feedback)}
-  </div>`;
-}
-
 /** A janela do fim do jogo: quem venceu, o resumo (gráfico de vida), a revanche e as saídas. */
 export function resultHTML(s: FState, o: { result: ReturnType<typeof gameResult>; summary: string; still: boolean; lab: boolean; feedback: boolean }) {
   return `<div role="dialog" aria-modal="true" aria-label="Resultado da partida" class="result ${o.result.tone}${o.summary ? ' has-summary' : ''}${o.still ? ' still' : ''}">
