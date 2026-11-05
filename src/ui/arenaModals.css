@@ -104,6 +104,18 @@
   .forge :is(.q-opts.cards, .trigger-row).more-start.more-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(to right, transparent, #000 44px, #000 calc(100% - 44px), transparent); }
 }
 
+/* Celular deitado (uns 340 px de altura): cartas um pouco menores e menos folga, para a fileira inteira caber acima dos botões. */
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .q-opt.has-card .q-face, .forge .zone-view .q-face { width: 84px; --fw: 84px; }
+  .forge .q-opt.has-card > span:not(.q-badge) { max-width: 84px; }
+  .forge .question:not(.removal-notice) .q-opts.cards:not(.filtered):not(.vote-opts) { padding-top: 10px; margin-bottom: 0; }
+  .forge .question:not(.library-choice, .play-mode, .combat-damage, .removal-notice):not(:has(.q-opts.filtered)) .q-actions { padding-top: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+  .forge .question.scrolls:not(.library-choice, .play-mode, .combat-damage, .removal-notice):not(:has(.q-opts.filtered)) .q-actions { padding-top: 12px; }
+  .forge .question:has(.q-opts.cards) .q-actions .arena-btn, .forge .question.zone-view .q-actions .arena-btn { padding-block: 8px; }
+  .forge .zone-target { margin-top: 4px; }
+  .forge .zone-target .target-status { margin-block: 4px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .forge > .overlay:not(.minimized), .forge .question { animation: none; }
   .forge .q-opt.has-card, .forge .q-opt.has-card .q-face { transition: none; }

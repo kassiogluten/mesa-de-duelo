@@ -52,6 +52,15 @@
   .forge .game-menu-trigger .menu-label { display: none; }
   .forge .topbar { max-width: calc(50% - 80px); }
   .match-chip { padding: 3px 8px; font-size: 11px; }
+  /* Selo que não cabe inteiro some (desce para uma segunda linha que fica escondida), em vez de aparecer cortado: o placar continua no menu. */
+  .forge .match-bar { flex-wrap: wrap; align-content: flex-start; max-height: 24px; }
+  /* Primeiro item vazio da linha: sem ele, o primeiro selo nunca desceria, mesmo sem caber. */
+  .forge .match-bar::before { content: ''; flex: none; width: 0; height: 24px; margin-right: -6px; }
   /* Commander 1×1 no celular usa o canto de cima para as pilhas do oponente: o placar fica só no menu. */
   .forge.commander-game .match-bar { display: none; }
+}
+
+/* Celular em pé: os marcadores do oponente quebram em duas linhas ao lado do nome, em vez de passar da borda direita. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .forge:not(.multiplayer) .avatar.opp .player-counters { flex-wrap: wrap; width: max-content; max-width: max(52px, calc(100vw - 280px)); }
 }

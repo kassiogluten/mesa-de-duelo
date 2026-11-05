@@ -21,6 +21,8 @@ export function createTableClocks(root: HTMLElement, d: ClockDeps) {
   let clockTurn = '', clockSince = 0, clockTimer: ReturnType<typeof setInterval> | undefined;
   // Relógio da partida: o servidor diz quanto o jogo já durou; só se reajusta se o atraso da rede passar de 2 s.
   let gameSince = 0, gameNumber = 0;
+  /** O estado cujo tempo de turno já ajustou o relógio. */
+  let elapsedSynced: FState | null = null, matchSynced: FState | null = null;
   // Alerta de espera demorada: o relógio de cada espera vem da ponte e só se ressincroniza quando chega um estado novo.
   const waitClock = new WaitClock(), waitAnnouncer = new WaitAnnouncer();
   let waitSynced: FState | null = null;
@@ -79,7 +81,9 @@ export function createTableClocks(root: HTMLElement, d: ClockDeps) {
     const el = root.querySelector<HTMLElement>('[data-turn-timer]');
     if (root.isConnected) tickWait();
     if (!root.isConnected || !el) { clearInterval(clockTimer); clockTimer = undefined; return; }
-    el.textContent = turnTimeText(Date.now() - clockSince);
+    const turnTime = turnTimeText(Date.now() - clockSince);
+    // O relógio da trilha e o do cartão da vida de quem está jogando.
+    root.querySelectorAll<HTMLElement>('[data-turn-timer]').forEach(timer => { timer.textContent = turnTime; });
     const game = root.querySelector<HTMLElement>('[data-match-timer]');
     if (game && gameSince) game.textContent = turnTimeText(Date.now() - gameSince);
   };
@@ -88,14 +92,17 @@ export function createTableClocks(root: HTMLElement, d: ClockDeps) {
     if (key !== clockTurn) { clockTurn = key; clockSince = Date.now(); }
     // Durante a animação de um evento antigo a mesa mostra outro turno; o tempo do servidor é o do turno de agora.
     const live = d.state();
-    if (s.turnElapsedMs != null && live?.turn === s.turn && live.activePlayer === s.activePlayer) {
+    // Só com um estado novo: redesenhar com o mesmo estado (um toque, um menu) faria o relógio voltar o tempo que passou desde ele.
+    if (s.turnElapsedMs != null && live !== elapsedSynced && live?.turn === s.turn && live.activePlayer === s.activePlayer) {
+      elapsedSynced = live;
       const since = Date.now() - s.turnElapsedMs;
       if (Math.abs(since - clockSince) > 2000) clockSince = since;
     }
     if (live && live !== waitSynced) { waitSynced = live; waitClock.sync(live); }
     const elapsed = s.match?.elapsedMs;
     if (elapsed == null) gameSince = 0;
-    else {
+    else if (s.match!.gameNumber !== gameNumber || live !== matchSynced) {
+      matchSynced = live ?? null;
       const since = Date.now() - elapsed;
       if (s.match!.gameNumber !== gameNumber || Math.abs(since - gameSince) > 2000) { gameNumber = s.match!.gameNumber; gameSince = since; }
     }

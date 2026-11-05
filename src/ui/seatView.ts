@@ -17,6 +17,7 @@ import { sleeveClass } from './sleeves';
 import { turnHighlight } from './turnHighlight';
 import { bracketLabel, isBracket } from '../brackets';
 import { bracketTitle } from './deckStats';
+import { turnTimeText } from './clock';
 import { backRow, canUse, fieldRow, inspectButton, isBackRow, type BoardView } from './permanentView';
 import type { SeatState } from './tableState';
 import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, ICON_EYE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
@@ -62,7 +63,7 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const forecast = s.forecast?.find(f => f.player === p.id);
   return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
     <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
-    ${lifeHTML(v, p, cls)}
+    ${idx === 0 ? lifeHTML(v, p, cls) : opponentLifeHTML(v, s, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
     ${playerCounters(v, p)}
     <div class="pname">${esc(p.name)}</div>
@@ -80,6 +81,31 @@ function lifeHTML(v: SeatView, p: FPlayer, cls: string[]) {
   const key = `bracket-${p.id}`, choosing = cls.includes('selectable-player') || cls.some(c => c.startsWith('prolif'));
   const open = v.openCounter === key;
   return `<div class="life has-bracket${open ? ' open' : ''}"${choosing ? '' : ` data-ctr="${key}"`}>${p.life}</div><span class="life-tip" aria-hidden="true">${esc(bracketTitle(p.bracket))}</span>`;
+}
+/**
+ * A vida do oponente abre um cartão (ao passar o mouse ou ao tocar): nome inteiro, bracket, tempo do turno (correndo, no
+ * turno dele; senão, quanto durou o último), mão e dano de comandante recebido. No celular o cabeçalho do Commander deixa o
+ * nome e a ampulheta só aqui. Quando o retrato é um alvo possível, tocar nele escolhe o jogador e o cartão fica só no mouse.
+ */
+function opponentLifeHTML(v: SeatView, s: FState, p: FPlayer, cls: string[]) {
+  const key = `life-${p.id}`, choosing = cls.includes('selectable-player') || cls.some(c => c.startsWith('prolif'));
+  const open = v.openCounter === key;
+  return `<div class="life has-card${open ? ' open' : ''}"${choosing ? '' : ` data-ctr="${key}"`}>${p.life}</div><span class="life-tip life-card" aria-hidden="true">${lifeCardLines(v, s, p).map(line => `<span>${line}</span>`).join('')}</span>`;
+}
+export function lifeCardLines(v: Pick<SeatView, 'cardName'>, s: Pick<FState, 'activePlayer' | 'gameOver' | 'turnElapsedMs' | 'players' | 'you'>, p: FPlayer) {
+  const lines = [`<b>${esc(p.name)}</b>`];
+  if (isBracket(p.bracket)) lines.push(esc(bracketTitle(p.bracket)));
+  // O tempo do turno anda junto com o relógio do topo (tableClocks atualiza todo [data-turn-timer]).
+  if (s.activePlayer === p.id && !s.gameOver) lines.push(`Turno atual: <span data-turn-timer>${turnTimeText(s.turnElapsedMs ?? 0)}</span>`);
+  else if (p.lastTurnMs != null) lines.push(`Último turno: ${turnTimeText(p.lastTurnMs)}`);
+  lines.push(p.handCount === 1 ? '1 carta na mão' : `${p.handCount} cartas na mão`);
+  // Dano de comandante recebido, uma linha por comandante, com o dono: dois jogadores podem ter o mesmo comandante.
+  for (const d of (p.commanderDamage ?? []).filter(d => d.damage > 0)) {
+    const owner = s.players.find(o => o.commanders?.some(c => c.id === d.commanderId));
+    const whose = owner ? ` (${owner.id === s.you ? 'seu' : `de ${esc(owner.name)}`})` : '';
+    lines.push(`Dano de ${esc(v.cardName(d.commanderId))}${whose}: <b class="life-card-damage">${d.damage}/21</b>`);
+  }
+  return lines;
 }
 export const playerCountersText = (v: SeatView, p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, v.activePlayer, v.spellsTotal) + dungeonText(p);
 export const playerCounters = (v: SeatView, p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, v.counterBumps.get(p.id), v.openCounter, p.ringTempted),

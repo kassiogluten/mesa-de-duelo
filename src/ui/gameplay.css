@@ -180,6 +180,11 @@
 .stack-effect-face { display: flex; flex-direction: column; justify-content: center; gap: 20px; height: 100%; padding: 20px; border-radius: 12px; background: linear-gradient(145deg, var(--azul-1e3458, #1e3458), var(--azul-0a1222, #0a1222)); border: 2px solid var(--azul-6e7e9d, #6e7e9d); box-shadow: 0 8px 18px #0009; text-align: left; overflow-y: auto; }
 .stack-effect-face > span { font: 600 16px var(--body); color: var(--gold); }
 .stack-effect-face p { font: 400 16px/1.5 var(--body); color: var(--ink); margin: 0; }
+/* Celular: a pilha fica estreita (uns 100 px) e o texto do efeito encolhe com ela, em vez de virar uma coluna que rola. */
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .stack-panel .stack-effect-face { gap: 6px; padding: clamp(8px, calc(var(--stack-width) * .08), 20px); border-radius: 8px; }
+  .forge .stack-panel .stack-effect-face > span, .forge .stack-panel .stack-effect-face p { font-size: clamp(10px, calc(var(--stack-width) * .1), 16px); line-height: 1.3; overflow-wrap: anywhere; }
+}
 .forge .avatar.selectable-player .portrait { outline: 3px solid var(--glow); outline-offset: 4px; }
 .stack-targets { font-size: 12px; line-height: 1.45; color: var(--muted); margin-top: 8px; }
 .forge .stack-gallery-overlay { z-index: 42; background: var(--bg-deep); animation: none; }
@@ -486,7 +491,7 @@
 /* No toque, 44 px. */
 @media (pointer: coarse) { .forge .action .btns > .pass-level { width: 44px; min-height: 44px; } }
 /* Troca rápida do nível: o mesmo cartão do menu de paradas da trilha de fases. */
-.pass-menu { max-width: min(340px, calc(100vw - 16px)); }
+.stop-menu.pass-menu { max-width: min(340px, calc(100vw - 16px)); }
 .pass-level-options { display: grid; gap: 4px; margin-top: 8px; }
 .pass-level-option, .pass-turn-shortcut { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; width: 100%; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
 .pass-level-option .pass-level-icon, .pass-turn-shortcut .pass-level-icon { width: 18px; height: 18px; margin-top: 1px; color: var(--muted); }
@@ -497,6 +502,11 @@
 .pass-level-option[aria-checked="true"] .pass-level-icon, .pass-turn-shortcut.on .pass-level-icon { color: var(--gold); }
 .pass-turn-shortcut:disabled { cursor: default; opacity: .55; }
 .pass-level-option:focus-visible, .pass-turn-shortcut:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+/* Deitado e baixo: os quatro níveis em duas colunas, para o menu caber na altura. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .stop-menu.pass-menu { max-width: min(560px, calc(100vw - 16px)); }
+  .pass-level-options { grid-template-columns: 1fr 1fr; }
+}
 .pass-menu-divider { height: 1px; margin: 8px 0; background: color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 14.9%, transparent); }
 /* Compra: verso de carta voando do grimório para a mão; a carta nova espera escondida até ele chegar. */
 .draw-ghost { z-index: 31; }

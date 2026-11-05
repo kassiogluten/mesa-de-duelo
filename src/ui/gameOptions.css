@@ -2,6 +2,8 @@
 .game-menu-trigger svg, .game-options-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
 .forge .game-menu { top: max(56px, calc(env(safe-area-inset-top, 0px) + 48px)); width: min(270px, calc(100vw - 24px)); padding: 8px; gap: 3px; border-radius: 16px; box-shadow: 0 4px 8px #0003, 0 16px 40px #0005; animation: game-menu-in .475s var(--ease-settle) both; transform-origin: top left; }
 /* O menu da partida desce do botão com mola, em vez de aparecer de uma vez. */
+/* Celular deitado: o menu nunca passa do pé da tela; o que não couber rola dentro dele. */
+.forge .game-menu { max-height: calc(100dvh - max(56px, calc(env(safe-area-inset-top, 0px) + 48px)) - max(8px, env(safe-area-inset-bottom, 0px))); overflow-y: auto; overscroll-behavior: contain; }
 @keyframes game-menu-in { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
 .forge .game-menu .btn { min-height: 44px; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: 500 15px var(--body); transition: background-color 120ms ease, transform 120ms ease; }
 .forge .game-menu .btn:hover { background: var(--surface); transform: none; }

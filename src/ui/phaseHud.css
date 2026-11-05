@@ -89,6 +89,8 @@
   border: 1px solid color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 20%, transparent); border-radius: 14px; background: color-mix(in srgb, var(--azul-0a1322, #0a1322) 96.1%, transparent); box-shadow: 0 8px 24px #0009; color: var(--ink); font: 500 13px/1.4 var(--body);
 }
 .stop-menu[hidden] { display: none; }
+/* Celular deitado: o menu nunca passa da altura da tela; o que não couber rola dentro dele. */
+.stop-menu { max-height: calc(100dvh - 16px); overflow-y: auto; overscroll-behavior: contain; }
 .stop-menu-title { margin: 0; font: 600 13px/1.3 var(--body); }
 .stop-menu-hint { margin: 10px 0 0; color: var(--muted); font: 400 12px/1.45 var(--body); }
 .stop-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }

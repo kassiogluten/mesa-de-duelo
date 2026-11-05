@@ -65,6 +65,15 @@
   .forge .q-opts.filtered.cards { justify-content: center; }
 }
 @media (pointer: coarse) { .q-filter, .q-sort-btn { min-height: 38px; } }
+/* Celular deitado: filtros, busca e ordem numa linha só, para sobrar altura para as cartas. */
+@media (orientation: landscape) and (max-height: 420px) {
+  .q-tools { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+  .q-filters { flex: 1 1 0; min-width: 0; }
+  .q-tools-row { flex: 0 1 auto; min-width: 0; }
+  .q-search { flex: 0 1 150px; }
+  .q-tools-status { flex: 0 0 100%; font-size: 11px; }
+  .forge .question:has(.q-opts.filtered) .q-actions { padding-block: 8px; }
+}
 
 /* Nomear uma carta: a busca e só os primeiros nomes achados, numa lista. */
 .q-name-search { width: min(360px, 100%); margin: 4px auto 0; }

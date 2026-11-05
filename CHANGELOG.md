@@ -8,6 +8,26 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.134.0] - 2026-11-05
+
+### Novo
+
+- **Cartão do oponente ao tocar na vida.** Tocar na vida de um oponente (ou passar o mouse nela, no computador) abre um cartão com o nome inteiro dele, o bracket do deck, o tempo do turno (correndo, se for a vez dele; senão, quanto durou o último turno dele), quantas cartas ele tem na mão e o dano de comandante que já recebeu, uma linha por comandante, com o dono. No Commander pelo celular, o cabeçalho de cada oponente fica mais limpo: o nome, que aparecia cortado, e a ampulheta do último turno ficam só no cartão.
+
+### Mudou
+
+- **Seu grimório à vista no celular.** Nas partidas de dois jogadores (Commander de dois incluído), o celular só mostrava o seu grimório quando o topo estava revelado. Agora ele fica sempre ao lado do cemitério, com a quantidade de cartas, como o do oponente; o exílio, quando tem cartas, fica logo acima.
+- **Janelas de escolha com mais espaço no celular deitado.** Ao escolher cartas (um alvo no cemitério, um descarte, uma busca no grimório), as cartas ficam um pouco menores e a janela tem menos folga, para a fileira inteira caber acima dos botões. Na busca no grimório, os filtros por tipo, a busca pelo nome e a ordem ficam numa linha só.
+
+### Corrigido
+
+- **Menus inteiros na tela do celular.** Com o celular deitado, o menu da partida, o menu de passar automaticamente, o das paradas no turno do oponente e o menu ⋯ da tela inicial passavam do pé da tela, e as últimas opções ficavam fora de alcance. Agora eles nunca passam da altura da tela e, se não couberem, rolam por dentro. O menu de passar automaticamente mostra os quatro níveis em duas colunas.
+- **Pilha legível no celular.** Com o celular deitado, o efeito no topo da pilha aparecia numa coluna estreita, uma palavra por linha, com barra de rolagem. Agora o texto encolhe junto com a pilha e aparece inteiro.
+- **Topo do site sem cortar no celular deitado.** O botão de entrar com o Google não cabia no topo e a página rolava de lado; agora, no celular deitado, ele aparece só com o ícone do Google, como no celular em pé.
+- **Relógio do turno e marcadores do oponente no celular em pé.** O relógio do turno ficava por cima da vida do oponente, e os marcadores dele passavam da borda direita da tela. Agora o relógio fica logo abaixo dos botões do topo, e os marcadores quebram em duas linhas ao lado do nome.
+- **O relógio do turno não volta mais o tempo.** Tocar na mesa ou abrir um menu fazia o relógio do turno e o da partida voltarem alguns segundos quando o servidor passava um tempo sem mandar novidades.
+- **Placar do topo sem aparecer cortado.** Em celulares mais estreitos, o selo "Jogo 2 · 1 × 0" aparecia pela metade. Agora ele só aparece quando cabe inteiro; o placar continua no menu da partida.
+
 ## [0.133.0] - 2026-11-05
 
 ### Novo

@@ -1,4 +1,33 @@
 {
+  "0.134.0": {
+    "Cartão do oponente ao tocar na vida": [
+      { "img": "0.134.0/cartao-vida-celular.webp", "legenda": "No Commander pelo celular, o cabeçalho do Diego sem o nome e, aberto pela vida dele, o cartão com o nome, o bracket, o tempo do turno correndo, a mão e o dano de cada comandante." },
+      { "img": "0.134.0/cartao-vida-computador.webp", "legenda": "No computador, o cartão da Ana ao passar o mouse na vida: quanto durou o último turno dela, a mão e o dano de comandante recebido." }
+    ],
+    "Seu grimório à vista no celular": [
+      { "img": "0.134.0/grimorio-celular.webp", "legenda": "Acima do seu retrato, o grimório com 50 cartas ao lado do cemitério, e o exílio com uma carta logo acima." }
+    ],
+    "Janelas de escolha com mais espaço no celular deitado": [
+      { "img": "0.134.0/escolha-deitado.webp", "legenda": "Escolhendo um alvo no cemitério com o celular deitado: as três cartas aparecem inteiras acima dos botões." },
+      { "img": "0.134.0/busca-deitado.webp", "legenda": "Na busca no grimório, os filtros por tipo, a busca pelo nome e a ordem numa linha só, com a fileira de criaturas à vista embaixo." }
+    ],
+    "Menus inteiros na tela do celular": [
+      { "img": "0.134.0/passar-duas-colunas.webp", "legenda": "O menu de passar automaticamente com o celular deitado: os quatro níveis em duas colunas, inteiros na tela." },
+      { "img": "0.134.0/menu-partida-deitado.webp", "legenda": "O menu da partida para no pé da tela e rola por dentro, com a barra de rolagem à direita." }
+    ],
+    "Pilha legível no celular": [
+      { "img": "0.134.0/pilha-celular.webp", "legenda": "A pilha estreita do celular deitado, com \"Efeito na pilha\" e o nome da carta inteiros no cartão." }
+    ],
+    "Topo do site sem cortar no celular deitado": [
+      { "img": "0.134.0/topo-deitado.webp", "legenda": "O topo da tela inicial com o celular deitado: Jogar, Meus decks e Salas, e o botão de entrar só com o ícone do Google." }
+    ],
+    "Relógio do turno e marcadores do oponente no celular em pé": [
+      { "img": "0.134.0/topo-em-pe.webp", "legenda": "No celular em pé, o relógio do turno logo abaixo dos botões do topo, e os quatro marcadores do oponente em duas linhas ao lado do nome." }
+    ],
+    "Placar do topo sem aparecer cortado": [
+      { "img": "0.134.0/placar-escondido.webp", "legenda": "Num celular estreito, o topo mostra só os botões e o relógio do turno, sem o selo do placar pela metade." }
+    ]
+  },
   "0.133.0": {
     "Carta exilada aparece embaixo de quem a exilou": [
       { "img": "0.133.0/exilada-sob-a-permanente.webp", "legenda": "A Jornada a Lugar Nenhum no campo, com a criatura que ele exilou saindo por baixo e o nome dela na etiqueta: Ursos Cinzentos." }

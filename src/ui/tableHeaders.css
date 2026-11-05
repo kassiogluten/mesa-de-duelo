@@ -18,6 +18,10 @@
   .forge .turn-info { gap: 4px; padding: 3px 6px 3px 3px; }
   .forge .turn-info .phase-match-clock { display: none; }
 }
+/* Celular em pé, no 1×1: ao lado dos três botões não sobra lugar (a pílula ficava por cima da vida do oponente); ela desce para logo abaixo deles. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .forge:not(.multiplayer) .topbar .turn-info { position: absolute; left: 0; top: calc(100% + 6px); }
+}
 
 /* Bracket: só no balão, ao passar o mouse na vida ou ao tocar nela. */
 .avatar { position: relative; }
@@ -29,6 +33,19 @@
 }
 .avatar .life.has-bracket:hover + .life-tip, .avatar .life.has-bracket.open + .life-tip { display: block; }
 .avatar.opp .life-tip, .seat-heading .life-tip { top: calc(100% + 6px); bottom: auto; }
+/* Cartão da vida do oponente: nome, bracket, tempo do turno, mão e dano de comandante, uma linha cada. */
+.avatar .life.has-card { cursor: pointer; }
+.avatar .life.has-card:hover + .life-tip, .avatar .life.has-card.open + .life-tip { display: flex; }
+.avatar .life-card { flex-direction: column; gap: 3px; min-width: 150px; padding: 8px 11px; border-color: color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 25%, transparent); color: var(--muted); }
+.avatar .life-card b { color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.avatar .life-card b.life-card-damage { font-size: 12px; font-variant-numeric: tabular-nums; }
+.avatar .life-card [data-turn-timer] { color: var(--gold-light); font-variant-numeric: tabular-nums; }
+/* Com o cartão aberto, a faixa dos oponentes passa por cima da sua zona de comando e das suas pilhas. */
+.forge.multiplayer .commander-opponents:has(.life.has-card.open, .life.has-card:hover) { z-index: 20; }
+/* Commander pelo celular: o nome (que não cabia) e a ampulheta do último turno ficam só no cartão da vida. */
+@media (max-width: 760px), (max-height: 500px) {
+  .forge.multiplayer .seat-heading .pname, .forge.multiplayer .seat-heading .player-counter.last-turn { display: none; }
+}
 
 /* Sua mão: a contagem junto do seu retrato, como a dos oponentes. */
 .forge .avatar-slot.me .own-hand { position: absolute; left: -8px; top: -8px; z-index: 3; padding: 2px 6px 2px 3px; border: 1px solid #ffffff1f; border-radius: 999px; background: color-mix(in srgb, var(--azul-0d1626, #0d1626) 88%, transparent); color: var(--ink); font: 600 12px var(--body); font-variant-numeric: tabular-nums; }

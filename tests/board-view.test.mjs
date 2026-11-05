@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { backRow, bfCard, fieldRow, isBackRow, loyaltyHTML } = await import('../src/ui/permanentView.ts');
-const { avatar, damageButton, focusDecisionText, opponentSeat, piles, seatRow } = await import('../src/ui/seatView.ts');
+const { avatar, damageButton, focusDecisionText, lifeCardLines, opponentSeat, piles, seatRow } = await import('../src/ui/seatView.ts');
 
 const card = (id, name, extra = {}) => ({ id, name, controller: 0, tapped: false, token: false, ...extra });
 const bear = (id, extra) => card(id, 'Grizzly Bears', { creature: true, power: 2, toughness: 2, typeLine: 'Creature — Bear', ...extra });
@@ -100,4 +100,27 @@ test('several exiled cards: up to three peek out, with the count and a list of a
   assert.match(html, /exu-name">.*4 exiladas</);
   const { exiledNotes } = await import('../src/ui/exiledUnder.ts');
   assert.deepEqual(exiledNotes(s, bridge), ['Exilando: uma carta virada para baixo, Grizzly Bears, Grizzly Bears e Grizzly Bears.']);
+});
+
+test('cartão da vida do oponente: nome, tempo do turno, mão e dano de cada comandante com o dono', () => {
+  const s = state();
+  s.players[0].commanders = [{ id: 90, name: 'Ghalta', casts: 1, tax: 2 }];
+  const ana = { ...s.players[1], bracket: 3, lastTurnMs: 72000, commanderDamage: [{ commanderId: 90, damage: 8 }, { commanderId: 91, damage: 0 }] };
+  const lines = lifeCardLines({ cardName: id => (id === 90 ? 'Ghalta' : '?') }, s, ana).join('\n');
+  assert.match(lines, /<b>Ana<\/b>/);
+  assert.match(lines, /Bracket 3/);
+  assert.match(lines, /Último turno: 1:12/);
+  assert.match(lines, /4 cartas na mão/);
+  assert.match(lines, /Dano de Ghalta \(seu\): <b class="life-card-damage">8\/21<\/b>/);
+  assert.doesNotMatch(lines, /\?/);
+  // No turno dela, o tempo corre junto com o relógio do topo.
+  assert.match(lifeCardLines(view, { ...s, activePlayer: 1, turnElapsedMs: 95000 }, ana).join(''), /Turno atual: <span data-turn-timer>1:35<\/span>/);
+});
+
+test('a vida do oponente abre o cartão ao tocar; a sua continua só com o bracket', () => {
+  const s = state();
+  const opp = avatar(view, s, s.players[1], 1);
+  assert.match(opp, /class="life has-card" data-ctr="life-1"/);
+  assert.match(opp, /life-tip life-card/);
+  assert.doesNotMatch(avatar(view, s, s.players[0], 0), /has-card/);
 });

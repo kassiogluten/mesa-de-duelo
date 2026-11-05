@@ -6,6 +6,8 @@
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 6; display: flex; flex-direction: column; min-width: 190px; padding: 6px;
   border-radius: 10px; background: var(--azul-18233b, #18233b); border: 1px solid #ffffff1f; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
 }
+/* Celular deitado: a lista de temas rola dentro do menu, em vez de passar do pé da tela. */
+.tema-menu { max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; }
 .tema-menu[hidden] { display: none; }
 .tema-menu button, .tema-menu a[role='menuitem'] { text-decoration: none; display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 7px; background: none; color: var(--ink); font: 500 14px var(--body); text-align: left; cursor: pointer; }
 .tema-menu button:hover, .tema-menu button:focus-visible, .tema-menu a[role='menuitem']:hover, .tema-menu a[role='menuitem']:focus-visible { background: #ffffff12; outline: none; }

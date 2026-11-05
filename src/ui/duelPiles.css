@@ -2,13 +2,13 @@
  * Pilhas no celular, no 1×1 (Commander de dois incluído). No Commander com mais jogadores cada assento mostra as
  * próprias pilhas (commanderTable.css).
  *
- * As suas: cemitério e exílio menores, logo acima do retrato, com a contagem; tocar abre a lista de sempre, com o
- * brilho de "dá para usar". O exílio só aparece com cartas, e o grimório só com o topo à vista, para jogar dali
- * (Future Sight e afins); ele sobe para uma segunda linha, sem empurrar a mão.
+ * As suas: grimório, cemitério e exílio menores, logo acima do retrato, com a contagem; tocar no cemitério ou no exílio
+ * abre a lista de sempre, com o brilho de "dá para usar". O grimório fica sempre (com o topo à vista, dá para jogar dali:
+ * Future Sight e afins); o exílio só aparece com cartas e sobe para uma segunda linha, sem empurrar a mão.
  */
 @media (max-width: 760px), (max-height: 500px) {
   .forge:not(.multiplayer) { --mobile-pile-w: 30px; --mobile-pile-h: 42px; --me-piles-bottom: calc(3vh + 84px); --me-piles-height: var(--mobile-pile-h); }
-  .forge:not(.multiplayer):has(#fMePiles .lib.top-visible) { --me-piles-height: calc(var(--mobile-pile-h) * 2 + 10px); }
+  .forge:not(.multiplayer):has(#fMePiles .exile) { --me-piles-height: calc(var(--mobile-pile-h) * 2 + 10px); }
   .forge:not(.multiplayer) .piles .pile { width: var(--mobile-pile-w); height: var(--mobile-pile-h); --fw: var(--mobile-pile-w); }
   .forge:not(.multiplayer) .piles .pile > span { right: -5px; bottom: -5px; min-width: 18px; padding: 0 4px; font-size: 11px; line-height: 16px; }
   .forge:not(.multiplayer) .piles .pile.actionable .gy-top { box-shadow: 0 0 0 2px var(--glow), 0 0 10px rgba(89, 181, 255, .8); }
@@ -16,8 +16,7 @@
   .forge:not(.multiplayer) .piles .pile.gy::after { content: ''; position: absolute; inset: -4px; }
 
   .forge:not(.multiplayer) .piles.me { display: flex; flex-wrap: wrap-reverse; align-content: flex-start; gap: 10px 6px; width: calc(var(--mobile-pile-w) * 2 + 6px); left: max(8px, env(safe-area-inset-left, 0px)); bottom: var(--me-piles-bottom); }
-  .forge:not(.multiplayer) .piles.me .pile.lib { order: 1; }
-  .forge:not(.multiplayer) .piles.me .pile.lib:not(.top-visible) { display: none; }
+  .forge:not(.multiplayer) .piles.me .pile.lib { order: -1; }
   /* Commander 1×1: as pilhas ficam junto do retrato e a zona de comando sobe um pouco. */
   .forge.commander-game:not(.multiplayer) .own-command { bottom: calc(var(--me-piles-bottom) + var(--me-piles-height) + 12px); }
 
