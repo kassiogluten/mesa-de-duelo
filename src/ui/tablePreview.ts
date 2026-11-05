@@ -4,7 +4,7 @@
 import type { FCard } from '../forge/client';
 import { emblemLabel, emblemSource, seenFace } from './cardFaces';
 import { followCardPreview, hideCardPreview, inspectCard, showCardPreview } from './cardInspector';
-import { exiledNotes } from './exiledUnder';
+import { exiledNotes, exiledUnder } from './exiledUnder';
 import { faceDownReminder } from './faceDownReminder';
 import { suppressOpeningPreview } from './openingPresentation';
 import { permanentStatus, permanentTypeChange, typeChangeText } from './permanentEffects';
@@ -43,7 +43,12 @@ export function createCardPreview(d: PreviewDeps) {
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.printedType || c.typeLine,
       typeChange: changed ? typeChangeText(changed, c) : undefined,
-      notes: [...(secret ? [`Virada para baixo${reminder ? ` (${reminder.label})` : ''}: só você pode ver qual carta é.`] : []), ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)] };
+      notes: [...(secret ? [`Virada para baixo${reminder ? ` (${reminder.label})` : ''}: só você pode ver qual carta é.`] : []), ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)],
+      // O que ela exilou, embaixo dela no inspetor (a virada para baixo só mostra qual é a quem pode ver).
+      exiled: state ? exiledUnder(state, c.id).map(x => {
+        const name = x.faceDown ? x.hiddenFace?.name : x.name;
+        return name ? { name, image: d.image(name, 'normal', x.faceDown ? undefined : x.print) } : { faceDown: true };
+      }) : undefined };
     if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
   }
   function cardFromElement(el: HTMLElement): FCard | undefined {

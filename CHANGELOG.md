@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.135.0] - 2026-11-05
+
+### Mudou
+
+- **Selo de exílio no alto da permanente.** A carta exilada por um Journey to Nowhere (Jornada a Lugar Nenhum), um Oblivion Ring ou afins continua atrás de quem a exilou, saindo pela borda de baixo, mas sem a etiqueta com o nome, que cobria a própria carta. No lugar, a permanente ganha no alto um selo com o ícone de exílio e quantas cartas ela exilou, como o selo das cartas presas a ela. Tocar no selo abre os detalhes da permanente, com a imagem dela em cima e, embaixo, cada carta exilada com a miniatura e o texto, como as cartas de uma mutação; tocar na miniatura mostra a carta exilada grande. Uma carta exilada virada para baixo continua sem dizer qual é a quem não pode ver.
+
 ## [0.134.0] - 2026-11-05
 
 ### Novo

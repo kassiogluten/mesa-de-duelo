@@ -1,4 +1,10 @@
 {
+  "0.135.0": {
+    "Selo de exílio no alto da permanente": [
+      { "img": "0.135.0/selo-exilio.webp", "legenda": "A Jornada a Lugar Nenhum no campo com o selo de exílio e o número 1 no alto, e o Anjo de Serra exilado saindo por baixo dela, sem etiqueta por cima." },
+      { "img": "0.135.0/selo-exilio-detalhes.webp", "legenda": "Tocando no selo: os detalhes da Jornada a Lugar Nenhum, com a imagem dela e, embaixo, o Anjo de Serra exilado com a miniatura e o texto." }
+    ]
+  },
   "0.134.0": {
     "Cartão do oponente ao tocar na vida": [
       { "img": "0.134.0/cartao-vida-celular.webp", "legenda": "No Commander pelo celular, o cabeçalho do Diego sem o nome e, aberto pela vida dele, o cartão com o nome, o bracket, o tempo do turno correndo, a mão e o dano de cada comandante." },

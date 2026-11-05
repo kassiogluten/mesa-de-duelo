@@ -14,6 +14,8 @@ export interface InspectorCard {
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
   classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
   merged?: MergedPart[];
+  /** Cartas que a permanente exilou (Journey to Nowhere, Oblivion Ring...): listadas embaixo dela, como as de uma mutação. */
+  exiled?: MergedPart[];
   /** Tipo mudado por um efeito, em destaque depois da linha de tipo: "agora também Criatura 3/3". */
   typeChange?: string;
   /** Estados da permanente explicados por extenso (controle trocado, atiçada, regeneração, escolhas). */
@@ -72,6 +74,7 @@ function content(card: InspectorCard, compact: boolean) {
     ${card.token ? '<p class="ci-note">Ficha</p>' : ''}${card.copyOf ? `<p class="ci-note">Cópia de ${esc(card.copyOf)}</p>` : ''}
     ${(card.merged?.length ?? 0) > 1 ? `<p class="ci-note">${esc(mergedText(card.merged!))}. Nome, tipo e força vêm da carta de cima; a criatura tem as habilidades de todas.</p>${mergedRules(card.merged!)}` : ''}
     ${compact ? '' : notes.map(note => `<p class="ci-note">${esc(note)}</p>`).join('')}
+    ${compact ? '' : exiledRules(card.exiled ?? [])}
     ${card.ringBearer ? '<p class="ci-note">Portador do Anel de quem a controla. O que o Anel já faz por ele aparece no selo do Anel, ao lado do retrato do jogador.</p>' : ''}
     ${card.prepared ? `<p class="ci-note">Preparada${card.preparedSpell ? `: quem a controla pode conjurar uma cópia de ${esc(card.preparedSpell)}. Conjurar a cópia tira a preparação.` : ''}</p>` : ''}
     ${card.preparedFrom ? `<p class="ci-note">Feitiço preparado de ${esc(card.preparedFrom)}: pode ser conjurado enquanto a criatura estiver preparada.</p>` : ''}
@@ -84,6 +87,15 @@ function mergedRules(merged: MergedPart[]) {
     const sc = cacheGet(m.name!), name = sc?.pt?.name || m.name!;
     const thumb = safeImage(m.image ?? sc?.pt?.image_uris?.normal ?? sc?.image_uris?.normal);
     return `<section class="ci-merged">${thumb ? `<button type="button" class="ci-merged-thumb" data-ci-merged="${i}" aria-label="Ver ${esc(name)}"><img src="${esc(thumb)}" alt="" draggable="false"></button>` : ''}<div><h3>${esc(name)}</h3><div class="ci-rules">${richText(sc?.pt?.text ?? sc?.oracle_text ?? 'Carregando informações da carta…')}</div></div></section>`;
+  }).join('');
+}
+/** Cartas exiladas pela permanente, cada uma com miniatura e texto; a virada para baixo não diz qual é. */
+function exiledRules(exiled: MergedPart[]) {
+  return exiled.map((m, i) => {
+    if (m.faceDown || !m.name) return `<section class="ci-merged ci-exiled"><div><h3>Carta virada para baixo</h3><div class="ci-rules">Só quem a controla sabe qual carta é.</div></div></section>`;
+    const sc = cacheGet(m.name), name = sc?.pt?.name || m.name;
+    const thumb = safeImage(m.image ?? sc?.pt?.image_uris?.normal ?? sc?.image_uris?.normal);
+    return `<section class="ci-merged ci-exiled">${thumb ? `<button type="button" class="ci-merged-thumb" data-ci-exiled="${i}" aria-label="Ver ${esc(name)}"><img src="${esc(thumb)}" alt="" draggable="false"></button>` : ''}<div><h3>${esc(name)}</h3><div class="ci-rules">${richText(sc?.pt?.text ?? sc?.oracle_text ?? 'Carregando informações da carta…')}</div></div></section>`;
   }).join('');
 }
 function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
@@ -107,11 +119,15 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
     if (!m) return;
     inspectCard({ name: m.name, image: m.image }, origin);
   }));
+  el.querySelectorAll<HTMLElement>('[data-ci-exiled]').forEach(b => b.addEventListener('click', () => {
+    const m = card.exiled![Number(b.dataset.ciExiled)];
+    if (m) inspectCard({ name: m.name, image: m.image }, origin);
+  }));
   el.querySelector('[data-ci-close]')?.addEventListener('click', () => modal?.close());
 }
 function resolve(el: HTMLElement, card: InspectorCard, compact: boolean, ticket: number) {
   if (card.faceDown || !card.name) return;
-  const parts = (card.merged ?? []).slice(1).flatMap(m => m.faceDown || !m.name || cacheGet(m.name) ? [] : [m.name]);
+  const parts = [...(card.merged ?? []).slice(1), ...(card.exiled ?? [])].flatMap(m => m.faceDown || !m.name || cacheGet(m.name) ? [] : [m.name]);
   const known = card.text !== undefined && card.image;
   if (known && !parts.length) return;
   const printing = card.print?.set ? fetchPrintings([{ name: card.name, set: card.print.set, cn: card.print.cn }]).catch(() => {}) : undefined;

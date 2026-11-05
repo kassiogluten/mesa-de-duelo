@@ -31,6 +31,9 @@ Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entre
 - Refatoração que não pode mudar a tela: `npm run visual -- snap` antes e depois, e `compare`.
 - Falhou? Veja `TESTES.md` antes de investigar; as conhecidas só precisam ser citadas.
 
+## 4b. Servidor local
+- Mexeu no `forge-bridge/` (ou um pull trouxe mudança nele): reinicie o servidor da 7171 (`npm run forge` em segundo plano, depois de parar o processo da porta) e diga ao entregar que a mesa precisa ser recarregada. Detalhes no `CLAUDE.md`, "Servidor local".
+
 ## 5. Roadmap
 - Item do `ROADMAP.md` concluído: marque ✅ e mova a seção para `docs/roadmap-feito.md`.
 

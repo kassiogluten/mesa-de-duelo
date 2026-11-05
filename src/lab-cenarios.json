@@ -1,5 +1,21 @@
 [
   {
+    "nome": "Encantamentos que exilam: carta embaixo de quem a exilou",
+    "versao": "0.133.0",
+    "item": "Carta exilada aparece embaixo de quem a exilou",
+    "conferir": "O Jogador 1 já tem no campo a Parallax Wave com 5 marcadores de desvanecimento: ative-a (tire um marcador) mirando criaturas do Jogador 2, e cada criatura exilada aparece atrás da Wave, saindo pela borda de baixo, e o selo no alto da Wave conta quantas são. Da mão, conjure Journey to Nowhere, Oblivion Ring, Banishing Light, Detention Sphere (mire um dos Grizzly Bears: os dois saem, e os dois ficam embaixo dela), Ixalan's Binding, Cast Out e Banisher Priest, mirando as criaturas, o Jace Beleren ou o Sol Ring do Jogador 2: cada carta exilada aparece atrás de quem a exilou, saindo pela borda de baixo, e um selo com o ícone de exílio e a quantidade aparece no alto da permanente; tocar no selo abre os detalhes da permanente, com cada carta exilada embaixo (miniatura e texto), como numa mutação. Nos detalhes, a permanente diz \"Exilando: …\" e a carta exilada diz por quem foi exilada. Jogue o Isochron Scepter imprimindo o Opt, e a Mosswort Bridge (esconder: a carta fica embaixo virada para baixo, sem revelar qual é ao Jogador 2). Por fim, use o Disenchant num dos encantamentos: a carta volta ao campo do Jogador 2 e some de baixo dele. Os Plains e as Islands pagam tudo em dois ou três turnos; o grimório tem mais terrenos para comprar.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Journey to Nowhere", "Oblivion Ring", "Banishing Light", "Detention Sphere", "Ixalan's Binding", "Cast Out", "Banisher Priest", "Isochron Scepter", "Opt", "Mosswort Bridge", "Disenchant"],
+          "library": ["Plains", "Plains", "Island", "Plains", "Forest", "Plains", "Island", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Parallax Wave", "counters": { "FADE": 5 } }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Grizzly Bears" }, { "name": "Serra Angel" }, { "name": "Llanowar Elves" }, { "name": "Craw Wurm" }, { "name": "Jace Beleren", "counters": { "LOYALTY": 3 } }, { "name": "Sol Ring" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Dupla face modal depois do terreno do turno",
     "versao": "0.125.0",
     "item": "Aviso quando uma jogada é recusada",

@@ -86,7 +86,6 @@ export function attachmentsOf(s: FState) {
 /** Ícone do exílio na etiqueta da carta exilada por uma permanente. */
 const ICON_EXILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.5 17.5 11-11"/></svg>';
 /** Nome curto na etiqueta: virada para baixo, sem revelar qual é. */
-const exiledLabel = (c: FCard) => c.faceDown && !c.hiddenFace?.name ? 'Virada para baixo' : label(c).split(',')[0]!;
 export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []) {
   const ci = combatIndex(s, c.id);
   const byId = battlefieldById(s);
@@ -168,12 +167,13 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   // Com dois ou mais anexos o leque fica estreito: o selo abre todos eles, junto da carta, em tamanho normal.
   const attsN = attached.length > 1
     ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
-  // Cartas que ela exilou (Journey to Nowhere, Oblivion Ring...): atrás dela, saindo por baixo, com o nome à vista.
+  // Cartas que ela exilou (Journey to Nowhere, Oblivion Ring...): atrás dela, saindo por baixo, esmaecidas. O selo no
+  // alto da permanente (como o dos anexos) abre o inspetor dela, com as exiladas embaixo, como numa mutação.
   const exiled = exiledUnder(s, c.id);
   const exu = exiled.slice(0, 3).map((x, i) =>
-    `<div class="exu${usable(s, x.id) ? ' actionable' : ''}" data-fid="${x.id}" role="button" tabindex="0" style="--j:${i + 1}" aria-label="${esc(label(x))}, exilada por ${esc(label(c))}">${v.face(x, 'small', true)}${i === Math.min(exiled.length, 3) - 1 ? `<span class="exu-name">${ICON_EXILE}${esc(exiled.length > 1 ? `${exiled.length} exiladas` : exiledLabel(x))}</span>` : ''}</div>`).join('');
-  const exuN = exiled.length > 1
-    ? `<button class="exu-n" data-group="${exiled.map(x => x.id).join(',')}" data-group-title="Exiladas por ${esc(label(c))}" aria-label="Ver as ${exiled.length} cartas exiladas por ${esc(label(c))}">${exiled.length}</button>` : '';
+    `<div class="exu${usable(s, x.id) ? ' actionable' : ''}" data-fid="${x.id}" role="button" tabindex="0" style="--j:${i + 1}" aria-label="${esc(label(x))}, exilada por ${esc(label(c))}">${v.face(x, 'small', true)}</div>`).join('');
+  const exuN = exiled.length
+    ? `<button class="exu-n${exiled.some(x => usable(s, x.id)) ? ' actionable' : ''}" data-inspect="${c.id}" aria-label="${esc(exiled.length > 1 ? `Ver ${label(c)} e as ${exiled.length} cartas que exilou` : `Ver ${label(c)} e a carta que exilou`)}">${ICON_EXILE}${exiled.length}</button>` : '';
   if (exiled.length) slot.push('has-exu');
   const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');

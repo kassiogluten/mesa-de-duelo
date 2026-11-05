@@ -43,6 +43,16 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 
 Ao fechar uma mudança, siga a skill `/entregar` (`.claude/skills/entregar/SKILL.md`): CHANGELOG, versão, prints, cenário do Laboratório, testes e roadmap, na ordem.
 
+## Servidor local: reiniciar quando o servidor muda
+
+A mesa em `localhost:5173` conversa com o servidor local na porta 7171 (`npm run forge`), que só compila o `forge-bridge` ao subir. A mesa (`src/`) se atualiza sozinha; o servidor, não: uma mudança no `forge-bridge/` só vale depois de reiniciá-lo, e testar sem isso parece que a mudança não funciona.
+
+- Reinicie o servidor da 7171 sempre que o `forge-bridge/` mudar (`src/`, `pom.xml`, recursos), seja por uma mudança sua, seja por um `git pull`, merge ou troca de branch que traga mudança nele, antes de dizer que dá para testar. Não espere o pedido.
+- Antes de pedir um teste na mesa local, ou quando o jogador disser que algo do servidor não funcionou, confira se o servidor está atrasado: compare a hora em que o processo da 7171 subiu (`Get-NetTCPConnection -LocalPort 7171 -State Listen` e `Get-Process -Id <OwningProcess>` → `StartTime`) com a última mudança no `forge-bridge/` (`git log -1 --format=%ci -- forge-bridge` e o que ainda não foi commitado). Subiu antes: reinicie.
+- Como: pare o processo que ouve na 7171 e rode `npm run forge` em segundo plano (`run_in_background`); espere `ws://127.0.0.1:7171/ws` aceitar conexão (a compilação leva até um ou dois minutos) e só então diga que está pronto. Se nada ouve na 7171, suba do mesmo jeito.
+- Reiniciar derruba as partidas e salas abertas na mesa local: ao entregar, diga que reiniciou e que é preciso recarregar a mesa e começar a partida de novo.
+- Mudança só na mesa (`src/`, `public/`, CSS) não precisa reiniciar.
+
 ## Ferramentas
 
 - `npm run css-why -- <página> "<seletor>" [--props a,b]`: quais regras de CSS se aplicam a um elemento e qual vence em cada propriedade. Use antes de subir a especificidade de um seletor. O `style.css` é a base; uma regra de tela que perde para ele precisa de seletor mais forte (não há `@layer`).
