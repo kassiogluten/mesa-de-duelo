@@ -12,6 +12,6 @@ export function browserSession(session) {
   // O primeiro comando sobe o navegador em segundo plano; com a saída presa num pipe o processo travaria.
   execFileSync(process.execPath, args(['open', 'about:blank']), { stdio: 'ignore' });
   const run = (...a) => execFileSync(process.execPath, args(a), { encoding: 'utf8' }).trim();
-  const evaluate = code => JSON.parse(execFileSync(process.execPath, args(['eval', '--stdin']), { input: `(async () => {${code}})()`, encoding: 'utf8' }).trim());
+  const evaluate = code => JSON.parse(execFileSync(process.execPath, args(['eval', '--stdin']), { input: `(async () => {${code}})()`, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim());
   return { run, evaluate };
 }

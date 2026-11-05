@@ -43,6 +43,13 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 
 Ao fechar uma mudança, siga a skill `/entregar` (`.claude/skills/entregar/SKILL.md`): CHANGELOG, versão, prints, cenário do Laboratório, testes e roadmap, na ordem.
 
+## Ferramentas
+
+- `npm run css-why -- <página> "<seletor>" [--props a,b]`: quais regras de CSS se aplicam a um elemento e qual vence em cada propriedade. Use antes de subir a especificidade de um seletor. O `style.css` é a base; uma regra de tela que perde para ele precisa de seletor mais forte (não há `@layer`).
+- `npm run visual -- snap <pasta>` e `compare <antes> <depois>`: confere que uma refatoração não mudou nenhuma tela.
+- `npm run print`, `npm run test:browser`, `npm run test:e2e`, `npm run unused`: ver `TESTES.md` e a skill `/entregar`.
+- Chaves do navegador (`localStorage`): só em `src/storage.ts` (`KEYS`); `tests/storage.test.mjs` recusa chave solta.
+
 ## Arquivos grandes
 
 - `CHANGELOG.md` (centenas de KB): leia só o topo (`head -40`).

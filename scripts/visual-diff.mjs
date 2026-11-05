@@ -19,6 +19,9 @@ const PAGES = [
   ['commander', 'tests/fixtures/commander-table.html'], ['commander-espera', 'tests/fixtures/commander-table.html?cenario=espera'],
   ['commander-endgame', 'tests/fixtures/commander-endgame.html'], ['extra-turn', 'tests/fixtures/extra-turn.html'],
   ['replay', 'tests/fixtures/replay.html'], ['room-lobby', 'tests/fixtures/room-lobby.html'],
+  // Telas fora da mesa (sem servidor: mostram o estado desconectado, que já basta para o layout).
+  ['inicio', 'index.html'], ['salas', 'salas.html'], ['partidas', 'partidas.html'], ['novidades', 'novidades.html'],
+  ['privacidade', 'privacidade.html'], ['admin', 'admin.html'],
 ];
 const VITE_BIN = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
 const VIEWPORTS = [[1366, 768], [844, 390]];

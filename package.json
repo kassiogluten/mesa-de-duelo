@@ -20,7 +20,8 @@
     "test:browser": "node scripts/test-browser.mjs",
     "unused": "node scripts/unused-exports.mjs",
     "test:e2e": "node scripts/test-e2e.mjs",
-    "visual": "node scripts/visual-diff.mjs"
+    "visual": "node scripts/visual-diff.mjs",
+    "css-why": "node scripts/css-why.mjs"
   },
   "devDependencies": {
     "@vite-pwa/assets-generator": "^0.2.6",
