@@ -1,6 +1,7 @@
+import { KEYS, NAMES } from '../storage';
 import type { FState } from '../forge/client';
 
-export const TURN_NOTICE_KEY = 'mesa:turnNotice';
+export const TURN_NOTICE_KEY = KEYS.turnNotice;
 const FLASH_MS = 1000;
 const ICON = `${import.meta.env?.BASE_URL ?? '/'}pwa-192x192.png`;
 
@@ -57,7 +58,7 @@ export function createTurnNotice() {
   }
   function notify(turn: number) {
     if (!noticeEnabled(saved, permission())) return;
-    const options: NotificationOptions = { body: `Turno ${turn}: a mesa está esperando a sua jogada.`, icon: ICON, tag: 'mesa-seu-turno' };
+    const options: NotificationOptions = { body: `Turno ${turn}: a mesa está esperando a sua jogada.`, icon: ICON, tag: NAMES.seuTurnoTag };
     try {
       shown?.close();
       shown = new Notification('Seu turno', options);

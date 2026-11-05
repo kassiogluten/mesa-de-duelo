@@ -135,7 +135,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         boolean live = false;
         synchronized (this) {
             Session s = byCode.get(code);
-            if (s != null) for (Session.Seat each : s.seats) if (sameToken(each.token, token)) { journal = s.journal(); seat = each.index; live = true; }
+            if (s != null) for (Seat each : s.seats) if (sameToken(each.token, token)) { journal = s.journal(); seat = each.index; live = true; }
             if (journal == null) {
                 long now = System.currentTimeMillis();
                 closed.values().removeIf(c -> c.until < now);
@@ -165,7 +165,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = byChannel.remove(ch);
         if (s == null) return;
         if (dropWatcher(s, ch)) return;
-        Session.Seat seat = s.seatOf(ch);
+        Seat seat = s.seatOf(ch);
         if (seat == null) return;
         seat.channel = null;
         System.out.printf("%s: %s desconectou%n", label(s), seat.name);
@@ -293,7 +293,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 case "lab-close" -> labClose(ch);
                 default -> {
                     Session s = byChannel.get(ch);
-                    Session.Seat seat = s == null ? null : s.seatOf(ch);
+                    Seat seat = s == null ? null : s.seatOf(ch);
                     if (seat != null) s.onClientMessage(seat, ch, type, msg);
                 }
             }
@@ -513,7 +513,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = room(ch, code);
         if (s.seatOf(ch) != null) return;
         if (s.full() || s.started()) throw new IllegalArgumentException("A sala " + code + " já está cheia.");
-        Session.Seat seat = java.util.Arrays.stream(s.seats).filter(each -> !each.taken).findFirst().orElseThrow();
+        Seat seat = java.util.Arrays.stream(s.seats).filter(each -> !each.taken).findFirst().orElseThrow();
         // Na sala de teste, cada lado joga com as cartas do cenário: o deck de quem entra não importa.
         Deck deck = s.isLab() ? s.labDeck(seat.index) : optionalDeck(payload, s.config.format());
         leave(ch);
@@ -523,7 +523,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         seat.bracket = s.config.commander() && deck != null ? bracket : 0;
         byChannel.put(ch, s);
         System.out.printf("Sala %s: %s entrou (%s)%n", code, name, deckName(deck));
-        for (Session.Seat each : s.seats) s.sendRoom(each);
+        for (Seat each : s.seats) s.sendRoom(each);
         if (s.ready()) s.start();
         else s.markDirty();
     }
@@ -531,7 +531,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** {type:"room-deck", deck}: escolhe ou troca o deck do próprio lugar, na sala que ainda não começou. */
     private synchronized void roomDeck(Channel ch, JsonElement payload, String cover, int bracket, Owner owner) {
         Session s = byChannel.get(ch);
-        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
         if (seat == null || !s.isRoom() || s.isLab()) return;
         if (s.started()) throw new IllegalArgumentException("A partida já começou: não dá mais para trocar o deck.");
         if (payload == null || payload.isJsonNull()) throw new IllegalArgumentException("Escolha um deck.");
@@ -558,7 +558,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         byChannel.put(ch, s);
         System.out.printf("%s: %s está assistindo%n", label(s), name);
         // Contra a IA o jogador não escolheu abrir a partida: avisa, e o Menu tem como tirá-la da lista.
-        if (!s.isRoom()) for (Session.Seat seat : s.seats) if (seat.channel != null)
+        if (!s.isRoom()) for (Seat seat : s.seats) if (seat.channel != null)
             seat.send(Session.toast("toast", name + " está assistindo à sua partida. Para fechá-la, use Menu › Tirar da lista de salas."));
         s.markDirty();
     }
@@ -587,7 +587,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             }
             s.watchers.clear();
         }
-        Session.Seat seat = s.seatOf(ch);
+        Seat seat = s.seatOf(ch);
         seat.send(Session.toast("toast", on ? "A partida voltou para a lista de salas: outros jogadores podem assistir." : "A partida saiu da lista de salas: ninguém mais pode assistir."));
         System.out.printf("%s %s da lista de salas%n", label(s), on ? "voltou para a" : "saiu");
         s.markDirty();
@@ -596,13 +596,13 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** O anfitrião completa os lugares vazios da sala com computadores e a partida começa. */
     private synchronized void fillWithComputers(Channel ch) {
         Session s = byChannel.get(ch);
-        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
         if (seat == null || !s.isRoom()) return;
         if (seat.index != 0) throw new IllegalArgumentException("Só quem criou a sala pode completar com computadores.");
         int added = s.fillWithComputers();
         if (added == 0) return;
         System.out.printf("Sala %s: completada com %d computador(es)%n", s.code, added);
-        for (Session.Seat each : s.seats) s.sendRoom(each);
+        for (Seat each : s.seats) s.sendRoom(each);
         s.start();
     }
 
@@ -618,14 +618,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     private synchronized void rejoin(Channel ch, String code, String token) {
         Session s = byCode.get(code);
-        Session.Seat seat = null;
-        if (s != null) for (Session.Seat each : s.seats) if (!each.departed && each.taken && each.token.equals(token)) seat = each;
+        Seat seat = null;
+        if (s != null) for (Seat each : s.seats) if (!each.departed && each.taken && each.token.equals(token)) seat = each;
         if (seat == null) {
             // Resposta própria para o navegador esquecer a partida guardada em vez de tentar de novo.
             BridgeServer.send(ch, Session.toast("gone", "A partida " + code + " não existe mais."));
             return;
         }
-        Session.Seat currentSeat = s.seatOf(ch);
+        Seat currentSeat = s.seatOf(ch);
         if (currentSeat != null && currentSeat != seat)
             throw new IllegalArgumentException("Saia do seu assento antes de voltar a outro assento nesta sala.");
         if (seat.channel != null && seat.channel != ch) {
@@ -650,17 +650,17 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     private synchronized void rematch(Channel ch) {
         Session s = byChannel.get(ch);
-        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
         if (seat == null) return;
         if (!s.matchOver()) throw new IllegalArgumentException("Conclua a partida antes de pedir uma revanche.");
         if (!s.isRoom()) { s.start(); return; }
         if (!s.full()) return;
-        for (Session.Seat each : s.seats) {
+        for (Seat each : s.seats) {
             if (each.channel == null) throw new IllegalArgumentException(each.name + " não está conectado.");
         }
         seat.rematch = true;
         boolean all = true;
-        for (Session.Seat each : s.seats) all &= each.rematch;
+        for (Seat each : s.seats) all &= each.rematch;
         if (all) s.start();
         else notifyOthers(s, seat, seat.name + " quer jogar de novo.");
         s.markDirty();
@@ -671,11 +671,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Session s = byChannel.remove(ch);
         if (s == null) return;
         if (dropWatcher(s, ch)) return;
-        Session.Seat seat = s.seatOf(ch);
+        Seat seat = s.seatOf(ch);
         if (!s.isRoom()) { close(s, seat); return; }
         if (seat != null && !s.started() && seat.index != 0) {
             seat.channel = null; seat.deck = null; seat.taken = false; seat.departed = true; seat.owner(null);
-            for (Session.Seat each : s.seats) if (each.taken) s.sendRoom(each);
+            for (Seat each : s.seats) if (each.taken) s.sendRoom(each);
             s.markDirty(); expireIfAbandoned(s); return;
         }
         if (seat != null) {
@@ -692,11 +692,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** Na sala de teste, qualquer um dos lados fecha a sala: o outro volta ao início com o aviso. */
     private synchronized void labClose(Channel ch) {
         Session s = byChannel.get(ch);
-        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
         if (seat == null || !s.isLab()) { leave(ch); return; }
         byChannel.remove(ch);
         seat.channel = null;
-        for (Session.Seat each : s.seats) if (each.channel != null) {
+        for (Seat each : s.seats) if (each.channel != null) {
             byChannel.remove(each.channel, s);
             each.send(Session.toast("gone", seat.name + " fechou a sala de teste " + s.code + "."));
             each.channel = null;
@@ -705,12 +705,12 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     }
 
     /** Fecha a partida; {@code quitter} saiu por vontade própria (sem ele, ninguém voltou a tempo). */
-    private void close(Session s, Session.Seat quitter) {
+    private void close(Session s, Seat quitter) {
         MatchJournal journal = s.journal();
         if (journal != null) {
             journal.detach();
             Map<String, Integer> tokens = new java.util.HashMap<>();
-            for (Session.Seat seat : s.seats) if (seat.token != null) tokens.put(seat.token, seat.index);
+            for (Seat seat : s.seats) if (seat.token != null) tokens.put(seat.token, seat.index);
             closed.remove(s.code);
             closed.put(s.code, new Closed(journal, tokens, System.currentTimeMillis() + CLOSED_KEEP_MS));
             for (var it = closed.keySet().iterator(); closed.size() > MAX_CLOSED && it.hasNext(); ) { it.next(); it.remove(); }
@@ -718,7 +718,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         s.recordAbandoned(quitter);
         s.stop();
         byCode.remove(s.code, s);
-        for (Session.Seat seat : s.seats) {
+        for (Seat seat : s.seats) {
             if (seat.channel != null) {
                 byChannel.remove(seat.channel, s);
                 if (s.isRoom()) seat.send(Session.toast("error", "A sala " + s.code + " foi fechada."));
@@ -741,7 +741,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
     /** {type:"room-say", key}: o balão vai para todos da sala, enquanto a partida não começa. */
     private synchronized void say(Channel ch, String key) {
         Session s = byChannel.get(ch);
-        Session.Seat seat = s == null ? null : s.seatOf(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
         if (seat == null || !s.isRoom() || s.started()) return;
         if (!SAYINGS.contains(key)) throw new IllegalArgumentException("Mensagem desconhecida.");
         long now = System.currentTimeMillis();
@@ -749,14 +749,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         seat.saidAt = now;
         JsonObject o = new JsonObject();
         o.addProperty("type", "room-say"); o.addProperty("seat", seat.index); o.addProperty("key", key);
-        for (Session.Seat each : s.seats) if (each.taken) each.send(o.toString());
+        for (Seat each : s.seats) if (each.taken) each.send(o.toString());
     }
 
     private static void broadcastRoom(Session s) {
-        for (Session.Seat each : s.seats) if (each.taken && each.channel != null) s.sendRoom(each);
+        for (Seat each : s.seats) if (each.taken && each.channel != null) s.sendRoom(each);
     }
 
-    private static void notifyOthers(Session s, Session.Seat from, String text) {
-        for (Session.Seat each : s.seats) if (each != from) each.send(Session.toast("toast", text));
+    private static void notifyOthers(Session s, Seat from, String text) {
+        for (Seat each : s.seats) if (each != from) each.send(Session.toast("toast", text));
     }
 }

@@ -1,3 +1,4 @@
+import { KEYS, PREFIXES } from './storage';
 import starterDecks from '../shared/starter-decks.json' with { type: 'json' };
 import { isBracket, type Bracket } from './brackets';
 
@@ -72,8 +73,8 @@ export const deckPriceText = (d: DeckData) => d.builtin && d.price ? `US$ ${d.pr
 export const deckPriceDescription = (d: DeckData) => d.price ? `Quanto custam as ${totalDeckSize(d)} cartas em dólar, pela edição mais barata de cada uma, no Scryfall em ${d.price.date.split('-').reverse().join('/')}. É uma referência: o preço muda com o tempo.` : '';
 export const allDecks = (): DeckData[] => [...loadUserDecks(), ...DEFAULT_DECKS];
 
-export const DECK_STORAGE_KEY = 'mesa:decks:v2';
-export const LEGACY_DECK_KEY = 'mesa:decks:v1';
+export const DECK_STORAGE_KEY = KEYS.decks;
+export const LEGACY_DECK_KEY = KEYS.decksV1;
 export interface DeckStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
 export interface LibraryState { decks: DeckData[]; recovery: unknown[]; error?: string; backup?: string }
 export type SaveResult = { ok: true } | { ok: false; error: string };
@@ -123,7 +124,7 @@ export function readDeckLibrary(storage: DeckStorage): LibraryState {
     const result: LibraryState = { decks, recovery };
     if (recovery.length) result.error = 'Alguns registros precisam de recuperação. Exporte os dados originais; seus decks reconhecidos continuam disponíveis.';
     if (legacy) {
-      const backup = 'mesa:decks:v1:backup';
+      const backup = KEYS.decksV1Backup;
       try {
         if (storage.getItem(backup) === null) storage.setItem(backup, raw);
         storage.setItem(DECK_STORAGE_KEY, JSON.stringify({ version: 2, decks, recovery }));
@@ -142,12 +143,12 @@ export function loadUserDecks(): DeckData[] {
 }
 export function getDeckStorageState(): LibraryState { return state; }
 /** Os decks deste navegador guardados quando o jogador escolheu "Usar só os da conta" (um por troca). */
-export const ACCOUNT_BACKUP_PREFIX = 'mesa:decks:antes-da-conta:';
+export const ACCOUNT_BACKUP_PREFIX = PREFIXES.decksAntesDaConta;
 export function exportDeckRecovery(): string {
   const original: Record<string, string | null> = {};
   try {
     const backups = Object.keys(localStorage).filter(key => key.startsWith(ACCOUNT_BACKUP_PREFIX));
-    for (const key of [LEGACY_DECK_KEY, DECK_STORAGE_KEY, 'mesa:decks:v1:backup', ...backups]) original[key] = localStorage.getItem(key);
+    for (const key of [LEGACY_DECK_KEY, DECK_STORAGE_KEY, KEYS.decksV1Backup, ...backups]) original[key] = localStorage.getItem(key);
   } catch { /* Include in-memory drafts even without storage. */ }
   return JSON.stringify({ exportedAt: new Date().toISOString(), decks: volatileDecks ?? state.decks, recovery: state.recovery, original }, null, 2);
 }
@@ -162,7 +163,7 @@ export function writeDeckLibrary(storage: DeckStorage, decks: DeckData[], recove
         const parsed: unknown = JSON.parse(raw);
         needsBackup = !object(parsed) || parsed.version !== 2 || !Array.isArray(parsed.decks) || parsed.decks.some(d => !validDeck(d));
       } catch { needsBackup = true; }
-      if (needsBackup) storage.setItem(`mesa:decks:recovery:${Date.now()}`, raw);
+      if (needsBackup) storage.setItem(PREFIXES.decksRecovery + Date.now(), raw);
     }
     storage.setItem(DECK_STORAGE_KEY, JSON.stringify({ version: 2, decks, recovery }));
     return { ok: true };

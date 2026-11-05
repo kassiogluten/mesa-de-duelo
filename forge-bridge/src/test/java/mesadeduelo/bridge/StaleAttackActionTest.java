@@ -47,7 +47,7 @@ public class StaleAttackActionTest {
     }
 
     private static java.lang.reflect.Field field(String name) throws Exception {
-        var field = Session.Seat.class.getDeclaredField(name); field.setAccessible(true); return field;
+        var field = Seat.class.getDeclaredField(name); field.setAccessible(true); return field;
     }
 
     @Test public void staleAndMissingGenerationsReturnAnErrorOnlyForQueuedAttackCommands() {
@@ -73,7 +73,7 @@ public class StaleAttackActionTest {
             CountDownLatch entered = new CountDownLatch(1), release = new CountDownLatch(1);
             try {
                 Session session = Session.room("TEST", channel, "Test", new Deck("Test"), new MatchConfig("commander", "bo1", 4));
-                Session.Seat seat = session.seats[0];
+                Seat seat = session.seats[0];
                 var game = CommanderEngineTest.game(4); var player = game.getPlayers().get(0);
                 var human = new PlayerControllerHuman(game, player, new LobbyPlayerHuman("Test"));
                 WebGuiGame gui = new WebGuiGame(new IRemote() {

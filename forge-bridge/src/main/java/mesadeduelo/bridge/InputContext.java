@@ -69,6 +69,37 @@ final class InputContext {
     private static final Field TARGETS_ABILITY = field(InputSelectTargets.class, "sa");
     private static final Field TARGETS_NUM = field(InputSelectTargets.class, "numTargets");
 
+    private static final Field MULLIGAN_STARTING = field(forge.gamemodes.match.input.InputConfirmMulligan.class, "startingPlayer");
+    private static final Field LONDON_RETURN = field(forge.gamemodes.match.input.InputLondonMulligan.class, "toReturn");
+
+    /**
+     * O que o pagamento de mana paga, para a mesa dizer o que o Cancelar desfaz: "spell" (a conjuração volta atrás),
+     * "ability" (a ativação volta atrás) ou "effect" (um custo pedido no meio de um efeito, como "a menos que pague
+     * {3}"; cancelar é só não pagar). O Forge guarda isso em campos protegidos do input.
+     */
+    static String payingFor(InputPayMana in) {
+        try {
+            if ((Boolean) value(PAY_EFFECT, in)) return "effect";
+            SpellAbility sa = (SpellAbility) value(PAY_ABILITY, in);
+            return sa == null ? null : sa.isSpell() ? "spell" : "ability";
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    /** A mágica ou habilidade que escolhe alvos ({@link InputSelectTargets}) ou que está sendo paga ({@link InputPayMana}); null nos outros. */
+    static SpellAbility casting(Object input) {
+        if (input instanceof InputSelectTargets) return (SpellAbility) value(TARGETS_ABILITY, input);
+        if (input instanceof InputPayMana) return (SpellAbility) value(PAY_ABILITY, input);
+        return null;
+    }
+
+    /** Quem começa a partida, na pergunta do mulligan. */
+    static Player mulliganStartingPlayer(forge.gamemodes.match.input.InputConfirmMulligan input) { return (Player) value(MULLIGAN_STARTING, input); }
+
+    /** Quantas cartas o mulligan de Londres manda para o fundo. */
+    static int londonReturnCount(forge.gamemodes.match.input.InputLondonMulligan input) { return (Integer) value(LONDON_RETURN, input); }
+
     private static Field field(Class<?> type, String name) {
         try { Field field = type.getDeclaredField(name); field.setAccessible(true); return field; }
         catch (ReflectiveOperationException e) { throw new ExceptionInInitializerError(e); }

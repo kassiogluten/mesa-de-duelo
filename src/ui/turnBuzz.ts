@@ -1,7 +1,8 @@
+import { KEYS } from '../storage';
 import type { FState } from '../forge/client';
 import { awaitingDecision } from './awaitingDecision';
 
-export const TURN_BUZZ_KEY = 'mesa:vibrate';
+export const TURN_BUZZ_KEY = KEYS.vibrate;
 /** Duas chegadas seguidas (o turno começa e já pede uma escolha) vibram uma vez só. */
 const QUIET_MS = 4000;
 const PATTERN = [120, 80, 120];

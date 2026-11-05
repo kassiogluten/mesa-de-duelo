@@ -1,3 +1,4 @@
+import { KEYS } from './storage';
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';
@@ -16,7 +17,7 @@ iniciarTema();
  * delas. Os dados vêm de GET /api/conta/partidas (AccountMatches na ponte); só a própria conta os vê.
  */
 const nomeDoFormato = (f: string) => FORMAT_LABEL[f as DeckFormat] ?? f;
-const FILTROS_KEY = 'mesa:partidas:filtros';
+const FILTROS_KEY = KEYS.partidasFiltros;
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `

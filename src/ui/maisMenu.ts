@@ -1,3 +1,4 @@
+import { EVENTS } from '../storage';
 import { ligarTemaItens, temaItemsHTML, temasDisponiveis } from './temas';
 
 const DOTS = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
@@ -42,7 +43,7 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     if (item !== 'feedback' && item !== 'lab') return;
     fechar();
     // O Laboratório é uma tela própria; quem a abre é o main.ts.
-    if (item === 'lab') dispatchEvent(new CustomEvent('mesa:laboratorio'));
+    if (item === 'lab') dispatchEvent(new CustomEvent(EVENTS.laboratorio));
     else onFeedback();
   });
 }

@@ -1,3 +1,4 @@
+import { PREFIXES } from './storage';
 import * as cardStore from './cardStore';
 import { scryfallFormat, type DeckFormat } from './decks';
 
@@ -45,7 +46,7 @@ export interface ScryCard {
  */
 const API = 'https://api.scryfall.com';
 /** Chave antiga das cartas no localStorage: movidas para o IndexedDB ao abrir o jogo. */
-const LEGACY_PREFIX = 'scry:v1:';
+const LEGACY_PREFIX = PREFIXES.scryfallLegacy;
 const MIN_INTERVAL = 110;
 
 let queue: Promise<unknown> = Promise.resolve();

@@ -1,3 +1,4 @@
+import { KEYS } from './storage';
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';
@@ -14,7 +15,7 @@ iniciarTema();
  * lugar só, atualizadas sozinhas. A lista vem do servidor de jogo (a mesma da aba Entrar numa sala); entrar e assistir
  * voltam para a mesa pelo link da sala.
  */
-const FILTROS_KEY = 'mesa:salas:filtros';
+const FILTROS_KEY = KEYS.salasFiltros;
 const A_CADA_MS = 10_000;
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -42,7 +43,7 @@ let ultimaLista = '', ultimosFiltros = '';
 
 /** O endereço do servidor que a tela inicial usa (o campo avançado de Outra pessoa), ou o padrão. */
 function enderecoDoServidor() {
-  try { return localStorage.getItem('mesa:forgeUrl')?.trim() || FORGE_URL; } catch { return FORGE_URL; }
+  try { return localStorage.getItem(KEYS.forgeUrl)?.trim() || FORGE_URL; } catch { return FORGE_URL; }
 }
 
 async function conectar(): Promise<ForgeClient> {

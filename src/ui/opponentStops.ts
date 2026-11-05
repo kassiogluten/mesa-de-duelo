@@ -1,7 +1,8 @@
+import { KEYS } from '../storage';
 import type { FPreferences } from '../forge/client';
 import { esc } from './cardtext';
 
-export const OPPONENT_STOPS_KEY = 'mesa:opponentStops';
+export const OPPONENT_STOPS_KEY = KEYS.opponentStops;
 /** Etapas do turno de um oponente que dão prioridade, na ordem do turno, com o grupo da trilha de fases. */
 export const STOP_STEPS = [
   ['UPKEEP', 'Manutenção', 'start'],

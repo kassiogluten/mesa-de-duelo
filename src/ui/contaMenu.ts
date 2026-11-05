@@ -1,3 +1,4 @@
+import { EVENTS } from '../storage';
 import { apagarConta, contaErro, contaSessao, contasLigadas, onContaChange, sair } from '../conta/session';
 import { desenharBotao, esquecerLoginAutomatico } from '../conta/google';
 import { clearSyncNotice, flush, forgetAccount, onSyncChange, restore, startSync, syncNotice, syncStatus, trash, type FirstLoginAnswer } from '../conta/sync';
@@ -81,7 +82,7 @@ export function mountContaMenu(slot: HTMLElement) {
 
   render();
   onContaChange(render);
-  addEventListener('mesa:prefs-sincronizadas', render);
+  addEventListener(EVENTS.prefsSincronizadas, render);
   // Só atualiza a linha da sincronia, sem fechar o menu aberto.
   onSyncChange(() => {
     const line = slot.querySelector<HTMLElement>('.conta-sync');

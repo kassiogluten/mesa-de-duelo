@@ -35,7 +35,7 @@ public class PayingForTest {
 
     private String payingFor(SpellAbility sa, boolean effect) {
         sa.setActivatingPlayer(player);
-        return Session.payingFor(new InputPayManaOfCostPayment(human, new ManaCostBeingPaid(ManaCost.get(1)), sa, player, null, effect));
+        return InputContext.payingFor(new InputPayManaOfCostPayment(human, new ManaCostBeingPaid(ManaCost.get(1)), sa, player, null, effect));
     }
 
     @Test public void castingASpellPaysForTheSpell() {

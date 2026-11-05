@@ -1,3 +1,4 @@
+import { KEYS, load, save } from '../storage';
 import { contaSessao, contasLigadas } from '../conta/session';
 import { desenharBotao } from '../conta/google';
 import './contaMenu.css';
@@ -6,8 +7,8 @@ import './contaMenu.css';
  * Faixa em Meus decks para quem tem decks e ainda não entrou: os decks ficam só neste navegador. O × esconde a
  * faixa neste aparelho; entrar também a tira (a tela se redesenha quando a conta muda).
  */
-const DISMISSED = 'mesa:conta:aviso-fechado';
-const dismissed = () => { try { return localStorage.getItem(DISMISSED) === '1'; } catch { return false; } };
+const DISMISSED = KEYS.contaAvisoFechado;
+const dismissed = () => load(DISMISSED) === '1';
 
 export function avisoContaHTML(hasDecks: boolean): string {
   if (!hasDecks || !contasLigadas() || contaSessao() || dismissed()) return '';
@@ -24,7 +25,7 @@ export function montarAvisoConta(root: ParentNode) {
   if (!faixa) return;
   void desenharBotao(faixa.querySelector<HTMLElement>('[data-conta-faixa-google]')!, false);
   faixa.querySelector('[data-conta-faixa-fechar]')!.addEventListener('click', () => {
-    try { localStorage.setItem(DISMISSED, '1'); } catch { /* some só agora */ }
+    save(DISMISSED, '1'); // sem armazenamento, some só agora
     faixa.remove();
   });
 }

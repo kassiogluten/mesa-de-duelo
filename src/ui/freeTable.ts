@@ -1,3 +1,4 @@
+import { KEYS, save as store } from '../storage';
 import { hasCommandZone, type DeckData, type DeckFormat } from '../decks';
 import { cardInfo } from '../cards';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
@@ -13,7 +14,7 @@ import { FREE_SHORTCUTS, isShortcutsKey, openShortcuts } from './shortcuts';
 import './freeTable.css';
 
 /** Jogo da mesa livre guardado no navegador, para voltar a ele depois de recarregar a página. */
-export const FREE_KEY = 'mesa:livre';
+export const FREE_KEY = KEYS.livre;
 export function loadFreeTable(): Sandbox | null {
   try { return parseSandbox(localStorage.getItem(FREE_KEY)); } catch { return null; }
 }
@@ -38,7 +39,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
   const isLand = (c: SCard) => !c.custom && info(c)?.type === 'land';
 
   function save() {
-    try { if (s) localStorage.setItem(FREE_KEY, JSON.stringify(s)); else localStorage.removeItem(FREE_KEY); } catch { /* sem armazenamento */ }
+    store(FREE_KEY, s ? JSON.stringify(s) : null);
   }
   /** Toda ação passa por aqui: guarda o estado anterior para desfazer, salva e redesenha. */
   function act(fn: (s: Sandbox) => void) {

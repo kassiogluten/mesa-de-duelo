@@ -1,3 +1,4 @@
+import { EVENTS, KEYS, PREFIXES, load, save } from '../storage';
 import { allDecks, commanderRules, countEntries, hasCommandZone, isPrecon, readyDeckFits, DECK_FORMATS, deckSize, FORMAT_LABEL, loadUserDecks, PRECON_HINT, SACOLA_HINT, saveUserDecks, type DeckData, type DeckFormat } from '../decks';
 import { FORGE_URL, RequestError, type MatchConfig, type DeckValidation, type RoomInfo, type FRoom, type PublicRoom, type RoomSaying, type RoomVisibility } from '../forge/client';
 import { cacheGet, fetchByNames, fetchPrintings } from '../scryfall';
@@ -56,8 +57,6 @@ export interface LobbyOptions {
   onDecks(action?: DeckAction, format?: DeckFormat): void;
   onEditDeck(deckId: string): void;
 }
-const load = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
-const save = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* Browser-local preferences are optional. */ } };
 const formatName = (f: DeckFormat | null) => f ? FORMAT_LABEL[f] : 'Escolha o formato';
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
 const MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
@@ -74,25 +73,25 @@ const WATCH_CODE = /^[A-Z0-9]{8}$/;
 const NEW_DECK_TILE = '<div class="tile-wrap"><button type="button" class="deck-tile new-deck-tile" data-lobby="create"><span class="new-deck-plus" aria-hidden="true">+</span><span>Criar deck</span></button></div>';
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
-  const remembered = load('mesa:format');
+  const remembered = load(KEYS.format);
   // Commander é o padrão, com o Precon ao lado; os demais (Oathbreaker entre eles) ficam em "Outros", que abre os botões sem escolher nenhum.
   let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
   /** "Outros" tocado: os botões dos outros formatos ficam à vista enquanto o jogador escolhe um. */
   let othersOpen = false;
   const othersShown = () => othersOpen || (!!format && format !== 'commander' && format !== 'precon');
-  let mode: Mode = load('mesa:mode') === 'net' ? 'net' : load('mesa:mode') === 'free' ? 'free' : 'ai';
-  let matchLength: MatchConfig['matchLength'] = load('mesa:matchLength') === 'bo3' ? 'bo3' : 'bo1';
-  let playerCount = [2, 3, 4].includes(Number(load('mesa:commanderPlayers'))) ? Number(load('mesa:commanderPlayers')) : 4;
+  let mode: Mode = load(KEYS.mode) === 'net' ? 'net' : load(KEYS.mode) === 'free' ? 'free' : 'ai';
+  let matchLength: MatchConfig['matchLength'] = load(KEYS.matchLength) === 'bo3' ? 'bo3' : 'bo1';
+  let playerCount = [2, 3, 4].includes(Number(load(KEYS.commanderPlayers))) ? Number(load(KEYS.commanderPlayers)) : 4;
   let commanderOpponents = ['random', 'random', 'random'];
-  try { const saved = JSON.parse(load('mesa:commanderOpponents') ?? 'null'); if (Array.isArray(saved)) commanderOpponents = commanderOpponents.map((fallback, i) => typeof saved[i] === 'string' ? saved[i] : fallback); } catch { /* Ignore invalid optional preferences. */ }
-  const rememberedDeck = () => format ? load(`mesa:deck:${format}`) ?? (format === 'free' ? load('mesa:deck') : null) ?? '' : '';
+  try { const saved = JSON.parse(load(KEYS.commanderOpponents) ?? 'null'); if (Array.isArray(saved)) commanderOpponents = commanderOpponents.map((fallback, i) => typeof saved[i] === 'string' ? saved[i] : fallback); } catch { /* Ignore invalid optional preferences. */ }
+  const rememberedDeck = () => format ? load(PREFIXES.deck + format) ?? (format === 'free' ? load(KEYS.deckLegacy) : null) ?? '' : '';
   let youId = rememberedDeck();
-  let oppId = load('mesa:opp') ?? 'random';
+  let oppId = load(KEYS.opp) ?? 'random';
   // Bracket máximo dos computadores (Commander e Precon): sem escolha guardada, segue o do deck do jogador.
-  const savedBotBracket = load('mesa:botBracket');
+  const savedBotBracket = load(KEYS.botBracket);
   let botBracket: 'any' | Bracket | null = savedBotBracket === 'any' ? 'any' : isBracket(Number(savedBotBracket)) ? Number(savedBotBracket) as Bracket : null;
   /** Precon: sortear os computadores só da série do deck do jogador. */
-  let sameSeries = load('mesa:preconSameSeries') === '1';
+  let sameSeries = load(KEYS.preconSameSeries) === '1';
   let query = '', showIncompatible = false, busy = false;
   // Na sala de espera: o deck com que você está sentado ('' enquanto escolhe), a busca da prateleira e o pedido em andamento.
   let roomDeckId = '', roomQuery = '', choosingDeck = false;
@@ -100,8 +99,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
   let room: RoomInfo | null = null, waitingRoom: FRoom | null = null;
   // Sala nova começa pública, para aparecer na lista; quem escolheu privada continua com privada.
-  let visibility: RoomVisibility = load('mesa:roomVisibility') === 'private' ? 'private' : 'public';
-  let netTab: NetTab = load('mesa:netTab') === 'create' ? 'create' : 'join';
+  let visibility: RoomVisibility = load(KEYS.roomVisibility) === 'private' ? 'private' : 'public';
+  let netTab: NetTab = load(KEYS.netTab) === 'create' ? 'create' : 'join';
   // No celular, os ajustes da partida começam resumidos numa linha; contra outra pessoa, abertos (é lá que se escolhe a sala).
   let setupOpen = mode === 'net';
   let publicRooms: PublicRoomsState = null, roomsHTML = '', roomsRequest = 0;
@@ -159,13 +158,13 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     <section class="room-lobby" id="roomLobby" aria-label="Sala de espera" hidden></section></main>${siteFooterHTML()}</div>`;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const roomLobby = mountRoomLobby($('#roomLobby'), {onSay: key => opts.onSay(key), onFillWithComputers: () => opts.onFillWithComputers(), onLeave: () => { opts.onCancelRoom(); waitingRoom = null; refresh(); }});
-  $('#netName').setAttribute('value', load('mesa:name') ?? '');
+  $('#netName').setAttribute('value', load(KEYS.name) ?? '');
   // O nome veio da conta (outro aparelho, ou o primeiro nome do Google): atualiza o campo, se ninguém estiver digitando.
-  addEventListener('mesa:prefs-sincronizadas', () => {
+  addEventListener(EVENTS.prefsSincronizadas, () => {
     const input = $<HTMLInputElement>('#netName');
-    if (document.activeElement !== input) input.value = load('mesa:name') ?? '';
+    if (document.activeElement !== input) input.value = load(KEYS.name) ?? '';
   });
-  $('#netUrl').setAttribute('value', load('mesa:forgeUrl') ?? '');
+  $('#netUrl').setAttribute('value', load(KEYS.forgeUrl) ?? '');
   // Na sala de espera a barra lateral some: os avisos (alguém voltou, erro da ponte) aparecem no lobby da sala.
   const setStatus = (message: string, error = false) => { $('#status').textContent = message; $('#status').classList.toggle('error', error); roomLobby.setStatus(message, error); };
   function allowed(deck: DeckData) {
@@ -211,7 +210,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const dropped = slots.filter(id => id !== 'random' && !pool.some(d => d.id === id)).map(id => allDecks().find(d => d.id === id)?.name).filter((n): n is string => !!n);
     if (!dropped.length) return;
     commanderOpponents = commanderOpponents.map((id, i) => i < slots.length && id !== 'random' && !pool.some(d => d.id === id) ? 'random' : id);
-    save('mesa:commanderOpponents', JSON.stringify(commanderOpponents));
+    save(KEYS.commanderOpponents, JSON.stringify(commanderOpponents));
     toast(`${listJoin(dropped)} ${dropped.length === 1 ? 'ficou' : 'ficaram'} fora da escolha dos bots e ${dropped.length === 1 ? 'voltou' : 'voltaram'} para Deck aleatório.`);
   }
   const filtering = () => !!query || colorFilter.size > 0;
@@ -343,7 +342,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     // Quem já jogou vê o deck escolhido em destaque, com o resumo da partida e o botão de jogar de novo.
     const summary = matchSummary();
     const replay = $('#replay');
-    replay.hidden = !deck || !format || invalid || mode === 'net' || !!waitingRoom || !load('mesa:played');
+    replay.hidden = !deck || !format || invalid || mode === 'net' || !!waitingRoom || !load(KEYS.played);
     if (!replay.hidden) {
       $('#replayArt').style.backgroundImage = art ? `url("${art}")` : '';
       $('#replayTitle').textContent = deck!.name;
@@ -441,7 +440,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   function choose(deck: DeckData, picker = true) {
     if (busy || waitingRoom) return;
     youId = deck.id;
-    if (format) save(`mesa:deck:${format}`, youId);
+    if (format) save(PREFIXES.deck + format, youId);
     // O máximo dos bots segue o bracket do deck (e a série, no Precon) enquanto o jogador não escolhe outro.
     if (mode === 'ai') dropOutOfPool();
     refresh();
@@ -459,7 +458,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   /** Troca o formato mantendo o deck escolhido (atalho do seletor). */
   function setFormat(next: DeckFormat) {
-    format = next; save('mesa:format', format); othersOpen = false;
+    format = next; save(KEYS.format, format); othersOpen = false;
   }
   /** Seletor com só os formatos em que o deck serve, para o deck escolhido num formato em que ele não serve. */
   async function pickFormat(deck: DeckData, missing: DeckFormat) {
@@ -481,7 +480,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const deck = mode === 'net' && chosen && !fitsIn(chosen, format!) ? undefined : chosen;
     if (busy || !format || (!deck && mode !== 'net')) return;
     ++preflight;
-    save('mesa:played', '1');
+    save(KEYS.played, '1');
     if (mode === 'free') { setStatus(''); opts.onFreePlay(deck!, format); return; }
     const matchConfig = config(), endpoint = url(), playerName = netName(), selectedRoom = room, selectedMode = mode, roomVisibility = visibility, chosenCode = roomCode(), opponentId = oppId, selectedOpponents = commanderOpponents.slice(0, (config().playerCount ?? 2) - 1);
     if (selectedMode === 'net' && !selectedRoom && chosenCode && !ROOM_CODE.test(chosenCode)) { setStatus('O código da sala precisa ter 4 letras ou números.', true); return; }
@@ -522,7 +521,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const bracketChoice = target.closest<HTMLButtonElement>('[data-bot-bracket]');
     if (bracketChoice && !bracketChoice.disabled) {
       const value = bracketChoice.dataset.botBracket!;
-      botBracket = value === 'any' ? 'any' : Number(value) as Bracket; save('mesa:botBracket', String(botBracket));
+      botBracket = value === 'any' ? 'any' : Number(value) as Bracket; save(KEYS.botBracket, String(botBracket));
       dropOutOfPool(); refresh();
       root.querySelector<HTMLElement>(`[data-bot-bracket="${value}"]`)?.focus({preventScroll: true});
       return;
@@ -547,10 +546,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
           toast(`${misfitDeck.name} não serve para ${FORMAT_LABEL[next]} e deixou de estar selecionado. Escolha um deck deste formato.`);
         }
       } else if (choice.dataset.setting === 'opponent') {
-        mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save('mesa:mode', mode); room = null; preflight++; setStatus('');
-      } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private'; save('mesa:roomVisibility', visibility);
-      } else if (choice.dataset.setting === 'players') { playerCount = Number(choice.dataset.value); save('mesa:commanderPlayers', String(playerCount));
-      } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save('mesa:matchLength', matchLength); }
+        mode = choice.dataset.value === 'net' ? 'net' : choice.dataset.value === 'free' ? 'free' : 'ai'; save(KEYS.mode, mode); room = null; preflight++; setStatus('');
+      } else if (choice.dataset.setting === 'visibility') { visibility = choice.dataset.value === 'public' ? 'public' : 'private'; save(KEYS.roomVisibility, visibility);
+      } else if (choice.dataset.setting === 'players') { playerCount = Number(choice.dataset.value); save(KEYS.commanderPlayers, String(playerCount));
+      } else { matchLength = choice.dataset.value === 'bo3' ? 'bo3' : 'bo1'; save(KEYS.matchLength, matchLength); }
       refresh(); return;
     }
     const tab = target.closest<HTMLButtonElement>('[data-net-tab]');
@@ -592,7 +591,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   });
   /** Trocar de aba desfaz a sala encontrada pelo código: cada aba tem o seu caminho até o botão de baixo. */
   function selectNetTab(next: NetTab, focus = false) {
-    if (next !== netTab) { netTab = next; save('mesa:netTab', netTab); room = null; preflight++; setStatus(''); refresh(); }
+    if (next !== netTab) { netTab = next; save(KEYS.netTab, netTab); room = null; preflight++; setStatus(''); refresh(); }
     if (focus) root.querySelector<HTMLElement>(`[data-net-tab="${next}"]`)?.focus();
   }
   function closeTileMenus(except?: HTMLButtonElement) {
@@ -639,11 +638,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   root.addEventListener('change', e => {
     const target = e.target as HTMLInputElement;
     if (target.id === 'showIncompatible') showIncompatible = target.checked;
-    if (target.dataset.opponentSlot !== undefined) { commanderOpponents[Number(target.dataset.opponentSlot)] = target.value; save('mesa:commanderOpponents', JSON.stringify(commanderOpponents)); }
-    if (target.id === 'oppSel') { oppId = target.value; save('mesa:opp', oppId); }
-    if (target.id === 'sameSeries') { sameSeries = target.checked; save('mesa:preconSameSeries', sameSeries ? '1' : '0'); dropOutOfPool(); }
-    if (target.id === 'netName') { save('mesa:name', target.value.trim()); prefsChanged(); }
-    if (target.id === 'netUrl') { save('mesa:forgeUrl', target.value.trim()); room = null; validations.clear(); preflight++; }
+    if (target.dataset.opponentSlot !== undefined) { commanderOpponents[Number(target.dataset.opponentSlot)] = target.value; save(KEYS.commanderOpponents, JSON.stringify(commanderOpponents)); }
+    if (target.id === 'oppSel') { oppId = target.value; save(KEYS.opp, oppId); }
+    if (target.id === 'sameSeries') { sameSeries = target.checked; save(KEYS.preconSameSeries, sameSeries ? '1' : '0'); dropOutOfPool(); }
+    if (target.id === 'netName') { save(KEYS.name, target.value.trim()); prefsChanged(); }
+    if (target.id === 'netUrl') { save(KEYS.forgeUrl, target.value.trim()); room = null; validations.clear(); preflight++; }
     refresh();
   });
   root.addEventListener('submit', e => {
@@ -753,7 +752,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       await opts.onChooseRoomDeck(deck);
       roomDeckId = deck.id;
       // Fica lembrado como o deck do formato, como ao escolher na tela inicial.
-      youId = deck.id; save(`mesa:deck:${waitingRoom?.config.format ?? format}`, deck.id);
+      youId = deck.id; save(PREFIXES.deck + (waitingRoom?.config.format ?? format), deck.id);
       setStatus('');
     } catch (error) { setStatus(error instanceof Error ? error.message : 'Não foi possível escolher este deck.', true); }
     finally { choosingDeck = false; renderRoomDeckTiles(); }

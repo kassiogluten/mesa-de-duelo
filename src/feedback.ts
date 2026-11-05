@@ -1,3 +1,4 @@
+import { KEYS, load } from './storage';
 import { FORGE_URL } from './forge/client';
 import { RECORDING_FORMAT, fitRecording, gzip, type DeviceInfo, type Recording } from './forge/recording';
 import { STORES, withStore } from './idb';
@@ -71,10 +72,9 @@ export function deviceInfo(): DeviceInfo {
 
 /** As preferências que mudam o que a mesa mostra e quando ela passa a vez. Nada além delas sai do localStorage. */
 export function localPreferences(): Record<string, unknown> {
-  const read = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
   return {
-    cards: read('mesa:cards') === 'art' ? 'arte e texto' : read('mesa:cards') === 'arena' ? 'arena' : 'imagem completa',
-    pace: read('mesa:pace') === 'fast' ? 'rápido sem resposta' : 'normal',
+    cards: load(KEYS.cards) === 'art' ? 'arte e texto' : load(KEYS.cards) === 'arena' ? 'arena' : 'imagem completa',
+    pace: load(KEYS.pace) === 'fast' ? 'rápido sem resposta' : 'normal',
     reducedMotion: media('(prefers-reduced-motion: reduce)'),
     passLevel: (() => { try { return passLevelInfo(savedPassLevel(localStorage) ?? DEFAULT_PASS_LEVEL).name; } catch { return passLevelInfo(DEFAULT_PASS_LEVEL).name; } })(),
   };

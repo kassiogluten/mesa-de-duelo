@@ -108,3 +108,19 @@ test('choosing the deck inside the room waits for the answer and a refused deck 
   assert.equal(notices + validations, 0, 'the room stays: nothing goes to the general error path');
   client.close();
 });
+
+test('malformed or unknown server messages are ignored; an error for no pending request is a notice', async () => {
+  const { client, socket } = await connect();
+  const notices = [], states = [];
+  client.onNotice = (text, error) => notices.push([text, error]);
+  client.onState = s => states.push(s.turn);
+  socket.onmessage({ data: 'not json' });
+  socket.onmessage({ data: '42' });
+  socket.receive({ noType: true });
+  socket.receive({ type: 'something-new', text: 'x' });
+  socket.receive({ type: 'error', requestId: 'request-999', text: 'Sala cheia.' });
+  socket.receive({ type: 'state', turn: 3, players: [] });
+  assert.deepEqual(notices, [['Sala cheia.', true]]);
+  assert.deepEqual(states, [3]);
+  client.close();
+});

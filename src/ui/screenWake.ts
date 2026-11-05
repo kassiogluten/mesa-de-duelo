@@ -1,4 +1,5 @@
-export const SCREEN_WAKE_KEY = 'mesa:awake';
+import { KEYS } from '../storage';
+export const SCREEN_WAKE_KEY = KEYS.awake;
 
 /** Sem escolha guardada, a tela fica acesa: só "off" desliga. */
 export function screenWakeEnabled(saved: string | null): boolean {

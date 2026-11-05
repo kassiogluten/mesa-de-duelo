@@ -1,3 +1,4 @@
+import { EVENTS, KEYS, NAMES, loadJSON, save } from '../storage';
 import { ACCOUNT_BACKUP_PREFIX, loadUserDecks, normalizeDeck, onUserDecksSaved, saveUserDecks, type DeckData } from '../decks';
 import { applyRemote, decksToAsk, joinAccount, planFirstLogin, resolveConflict, type RemoteChange } from './merge';
 import { firstPrefs, localChanges, mergeRemote, readPrefs, writePrefs, SYNCED_PREFS, type Prefs } from './prefs';
@@ -10,7 +11,7 @@ import { contaFetch, contaSessao, contasLigadas, onContaChange } from './session
  * mudou em outros aparelhos. As regras de junção e de conflito ficam em merge.ts. As preferências da mesa (prefs.ts)
  * vão na mesma troca: o que mudou aqui desde a última sincronia sobe, e vale a última gravação.
  */
-const KEY = 'mesa:conta:sync:v1';
+const KEY = KEYS.contaSync;
 const PULL_EVERY = 5 * 60_000;
 
 export interface SyncState {
@@ -49,10 +50,10 @@ const notify = () => listeners.forEach(l => l());
 const setStatus = (s: SyncStatus) => { status = s; notify(); };
 
 function readState(): SyncState | null {
-  try { return JSON.parse(localStorage.getItem(KEY) ?? 'null') as SyncState | null; } catch { return null; }
+  return loadJSON<SyncState | null>(KEY, null);
 }
 function writeState(s: SyncState | null) {
-  try { if (s) localStorage.setItem(KEY, JSON.stringify(s)); else localStorage.removeItem(KEY); } catch { /* sem armazenamento: a fila fica só nesta aba */ }
+  save(KEY, s ? JSON.stringify(s) : null); // sem armazenamento: a fila fica só nesta aba
 }
 
 /** Comparado como fica depois de lido: um deck da conta sem sideboard é o mesmo que o daqui com sideboard vazio. */
@@ -64,7 +65,7 @@ function saveFromAccount(decks: DeckData[]) {
   applying = true;
   try { saveUserDecks(decks); } finally { applying = false; }
   takeSnapshot(decks);
-  dispatchEvent(new CustomEvent('mesa:decks-sincronizados'));
+  dispatchEvent(new CustomEvent(EVENTS.decksSincronizados));
 }
 
 /** Cada gravação de Meus decks: o que mudou entra na fila, se este navegador estiver ligado a uma conta. */
@@ -89,7 +90,7 @@ function run(): Promise<void> {
   running ??= (async () => {
     try {
       const locks = (navigator as Navigator & { locks?: LockManager }).locks;
-      if (locks) await locks.request('mesa-conta-sync', () => cycle());
+      if (locks) await locks.request(NAMES.contaSyncLock, () => cycle());
       else await cycle();
     } finally { running = null; }
   })();
@@ -173,7 +174,7 @@ async function startPrefs(s: SyncState): Promise<SyncState> {
 function applyPrefs(values: Prefs) {
   if (!Object.keys(values).length) return;
   writePrefs(values);
-  dispatchEvent(new CustomEvent('mesa:prefs-sincronizadas'));
+  dispatchEvent(new CustomEvent(EVENTS.prefsSincronizadas));
 }
 
 interface SyncResponse {
@@ -295,6 +296,6 @@ export function startSync(askFirstLogin: AskFirstLogin, signOut: () => Promise<v
   document.addEventListener('visibilitychange', () => { if (contaSessao()) void run(); });
   setInterval(() => { if (!document.hidden && contaSessao()) void run(); }, PULL_EVERY);
   // Outra aba gravou decks: atualiza a foto do que esta aba conhece e redesenha a lista.
-  addEventListener('storage', e => { if (e.key === 'mesa:decks:v2') { takeSnapshot(loadUserDecks()); dispatchEvent(new CustomEvent('mesa:decks-sincronizados')); } });
+  addEventListener('storage', e => { if (e.key === KEYS.decks) { takeSnapshot(loadUserDecks()); dispatchEvent(new CustomEvent(EVENTS.decksSincronizados)); } });
   if (contaSessao()) void run();
 }

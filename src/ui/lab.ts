@@ -1,3 +1,4 @@
+import { KEYS, loadJSON, saveJSON } from '../storage';
 import type { LabPhase, LabPlayer, LabScenario } from '../forge/client';
 import { autocompleteNames, cardImageUrls, resolveCardNames } from '../scryfall';
 import { esc } from './cardtext';
@@ -46,9 +47,9 @@ interface Saved { name: string; scenario: LabScenario }
 export interface Ready { nome: string; versao: string; item: string; conferir: string; cenario: LabScenario }
 export const READY_SCENARIOS = READY as unknown as Ready[];
 
-const DRAFT_KEY = 'mesa:lab:rascunho', SAVED_KEY = 'mesa:lab:cenarios';
-const load = <T>(key: string): T | null => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') as T | null; } catch { return null; } };
-const store = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* sem armazenamento */ } };
+const DRAFT_KEY = KEYS.labRascunho, SAVED_KEY = KEYS.labCenarios;
+const load = <T>(key: string): T | null => loadJSON<T | null>(key, null);
+const store = (key: string, value: unknown) => { saveJSON(key, value); };
 
 let nextUid = 1;
 const emptySide = (): Side => ({ life: 20, poison: 0, hand: [], library: [], graveyard: [], exile: [], battlefield: [] });

@@ -8,7 +8,7 @@ const cardtext = uri(await readFile(new URL('../src/ui/cardtext.ts', import.meta
 const scryfall = js('export const autocompleteNames = async () => []; export const cardImageUrls = () => []; export const resolveCardNames = async () => ({ found: new Map(), missing: [], ambiguous: [] });');
 const ready = JSON.parse(await readFile(new URL('../src/lab-cenarios.json', import.meta.url), 'utf8'));
 const lab = await import(uri((await readFile(new URL('../src/ui/lab.ts', import.meta.url), 'utf8'))
-  .replace("import './lab.css';", '').replace("'../lab-cenarios.json'", JSON.stringify(js(`export default ${JSON.stringify(ready)};`))).replace("'../scryfall'", JSON.stringify(scryfall)).replace("'./cardtext'", JSON.stringify(cardtext))));
+  .replace("import './lab.css';", '').replace("'../lab-cenarios.json'", JSON.stringify(js(`export default ${JSON.stringify(ready)};`))).replace("'../scryfall'", JSON.stringify(scryfall)).replace("'./cardtext'", JSON.stringify(cardtext)).replace("'../storage'", JSON.stringify(new URL('../src/storage.ts', import.meta.url).href))));
 
 const scenario = {
   active: 1, phase: 'combat',

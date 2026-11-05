@@ -1,3 +1,4 @@
+import { KEYS } from '../storage';
 import type { FPreferences } from '../forge/client';
 import { esc } from './cardtext';
 
@@ -7,9 +8,9 @@ import { esc } from './cardtext';
  * interruptores antigos ("Passar automaticamente" nas Opções e "Passar respostas" junto dos botões).
  */
 export type PassLevel = 'sempre' | 'acoes' | 'respostas' | 'afeta';
-export const PASS_LEVEL_KEY = 'mesa:passLevel';
-export const LEGACY_AUTO_PASS_KEY = 'mesa:autoPassNoActions';
-export const LEGACY_PASS_RESPONSES_KEY = 'mesa:passResponses';
+export const PASS_LEVEL_KEY = KEYS.passLevel;
+export const LEGACY_AUTO_PASS_KEY = KEYS.autoPassNoActions;
+export const LEGACY_PASS_RESPONSES_KEY = KEYS.passResponses;
 export const DEFAULT_PASS_LEVEL: PassLevel = 'acoes';
 
 export interface PassLevelInfo { id: PassLevel; name: string; hint: string }

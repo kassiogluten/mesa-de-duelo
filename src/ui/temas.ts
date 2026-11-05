@@ -1,3 +1,4 @@
+import { EVENTS, KEYS, save } from '../storage';
 import { esc } from './cardtext';
 import './temas.css';
 
@@ -11,7 +12,7 @@ export const TEMAS = [
   { id: 'oceano', nome: 'Oceano', fundo: '#0d2633' },
 ] as const;
 export type Tema = typeof TEMAS[number]['id'];
-export const TEMA_KEY = 'mesa:tema';
+export const TEMA_KEY = KEYS.tema;
 
 export const parseTema = (value: string | null | undefined): Tema => TEMAS.find(t => t.id === value)?.id ?? 'noite';
 
@@ -25,12 +26,12 @@ export function lerTema(): Tema {
 function aplicar(tema: Tema) {
   if (tema === 'noite') document.documentElement.removeAttribute('data-tema');
   else document.documentElement.dataset.tema = tema;
-  dispatchEvent(new CustomEvent('mesa:tema'));
+  dispatchEvent(new CustomEvent(EVENTS.tema));
 }
 
 /** Grava a escolha (ela acompanha a conta) e pinta a página na hora. */
 export function escolherTema(tema: Tema) {
-  try { if (tema === 'noite') localStorage.removeItem(TEMA_KEY); else localStorage.setItem(TEMA_KEY, tema); } catch { /* sem armazenamento */ }
+  save(TEMA_KEY, tema === 'noite' ? null : tema);
   aplicar(tema);
 }
 
@@ -40,7 +41,7 @@ export function iniciarTema() {
   aplicar(lerTema());
   if (ligado) return;
   ligado = true;
-  addEventListener('mesa:prefs-sincronizadas', () => aplicar(lerTema()));
+  addEventListener(EVENTS.prefsSincronizadas, () => aplicar(lerTema()));
   addEventListener('storage', e => { if (e.key === TEMA_KEY || e.key === null) aplicar(lerTema()); });
 }
 
@@ -64,7 +65,7 @@ export function ligarTemaItens(menu: HTMLElement) {
     escolherTema(parseTema(item.dataset.tema));
     marcar();
   });
-  addEventListener('mesa:tema', marcar);
+  addEventListener(EVENTS.tema, marcar);
   marcar();
   return marcar;
 }

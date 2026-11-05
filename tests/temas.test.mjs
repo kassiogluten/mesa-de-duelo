@@ -52,6 +52,6 @@ test('each theme in the menu turns the background hue, and the choice follows th
     assert.ok(block, `tema ${id} sem bloco em temas.css`);
     assert.match(block, /--tema-h: -?\d+;/, `${id}: --tema-h`);
   }
-  assert.match(await read('conta/prefs.ts'), /'mesa:tema'/);
+  assert.ok((await import('../src/conta/prefs.ts')).SYNCED_PREFS.includes('mesa:tema'));
   assert.match(await readFile(new URL('../forge-bridge/src/main/java/mesadeduelo/bridge/AccountDecks.java', import.meta.url), 'utf8'), /"mesa:tema"/);
 });

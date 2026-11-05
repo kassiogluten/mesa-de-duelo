@@ -252,11 +252,6 @@ export function* decodeFrames(recording: Pick<Recording, 'frames'>): Generator<{
   }
 }
 
-/** Índices dos quadros inteiros: para pular direto a um ponto sem remontar desde o começo. */
-export function keyFrames(recording: Pick<Recording, 'frames'>) {
-  return recording.frames.flatMap((f, i) => f.k !== undefined ? [i] : []);
-}
-
 /** Remonta o quadro `index` a partir do quadro inteiro anterior mais próximo. */
 export function frameAt(recording: Pick<Recording, 'frames'>, index: number): FState {
   let start = index;

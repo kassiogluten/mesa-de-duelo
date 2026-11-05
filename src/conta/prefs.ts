@@ -1,10 +1,11 @@
+import { KEYS } from '../storage';
 /**
  * Preferências da mesa que acompanham a conta (docs/spec-login-google.md, fase 3). Cada tela continua lendo e
  * gravando a sua chave no localStorage como antes; a sincronia compara os valores com os da última vez que
  * sincronizou e envia só o que mudou aqui. Vale a última gravação, sem pergunta.
  */
-export const SYNCED_PREFS = ['mesa:audio:v1', 'mesa:turnNotice', 'mesa:pace', 'mesa:passLevel', 'mesa:passResponses', 'mesa:autoPassNoActions', 'mesa:opponentStops', 'mesa:choiceSort', 'mesa:name', 'mesa:tema'] as const;
-export const NAME_KEY = 'mesa:name';
+export const SYNCED_PREFS = [KEYS.audio, KEYS.turnNotice, KEYS.pace, KEYS.passLevel, KEYS.passResponses, KEYS.autoPassNoActions, KEYS.opponentStops, KEYS.choiceSort, KEYS.name, KEYS.tema] as const;
+export const NAME_KEY = KEYS.name;
 
 /** Valor de cada chave; null quando ela não existe. */
 export type Prefs = Record<string, string | null>;

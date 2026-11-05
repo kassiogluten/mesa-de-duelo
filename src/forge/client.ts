@@ -588,6 +588,75 @@ export const FORGE_URL: string = import.meta.env?.VITE_FORGE_URL ?? defaultUrl()
 export const validationText = (v: DeckValidation | undefined) =>
   v?.issues?.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' ') || 'O deck não vale para o formato da sala.';
 
+/** O que cada pedido (com requestId) devolve quando dá certo. */
+export interface RequestReplies {
+  'validate-deck': DeckValidation;
+  'room-deck': void;
+  'lookup-room': RoomInfo;
+  'list-rooms': PublicRoom[];
+  'fetch-deck': string;
+  'similar-cards': SimilarCard[];
+}
+type RoomDeckRequest = Omit<Extract<ClientMessage, { type: 'room-deck' }>, 'requestId'>;
+export type RequestMessage =
+  | RoomDeckRequest
+  | { type: 'validate-deck'; format: DeckFormat; deck: unknown }
+  | { type: 'lookup-room'; code: string }
+  | { type: 'list-rooms' }
+  | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }
+  | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number };
+
+/** Respostas a um pedido; `requestId` diz a qual. */
+export type ReplyMessage = { requestId: string } & (
+  | { type: 'validation'; validation: DeckValidation }
+  | { type: 'room-info'; room: RoomInfo }
+  | { type: 'room-list'; rooms?: PublicRoom[] }
+  | { type: 'room-deck' }
+  | { type: 'deck-source'; body: string }
+  | { type: 'similar-cards'; cards?: SimilarCard[] }
+  | { type: 'validation-error'; validation: DeckValidation; target?: string }
+  | { type: 'request-error' | 'error'; text?: string; reason?: string });
+
+/** Tudo o que o servidor manda à mesa. Campo novo numa mensagem: declare aqui (o estado tem o próprio contrato, FState). */
+export type ServerMessage =
+  | FState
+  | { type: 'room'; room: FRoom }
+  | { type: 'room-say'; seat: number; key: RoomSaying }
+  | { type: 'validation-error'; validation: DeckValidation; target: string; requestId?: string }
+  | { type: 'hello'; supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string }
+  | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[] }
+  | { type: 'error'; text: string; requestId?: string; reason?: string }
+  | { type: 'diagnostic'; code?: string; action?: string; text?: string }
+  | { type: 'gone'; text: string }
+  | { type: 'replaced'; text: string }
+  | ReplyMessage;
+
+const REPLY_TYPES = new Set<string>(['validation', 'room-info', 'room-list', 'room-deck', 'deck-source', 'similar-cards', 'request-error', 'error', 'validation-error']);
+const isReply = (msg: ServerMessage): msg is ReplyMessage => 'requestId' in msg && typeof msg.requestId === 'string' && REPLY_TYPES.has(msg.type);
+
+/** Lê uma mensagem do servidor; null se não for JSON com `type`. */
+export function parseServerMessage(data: unknown): ServerMessage | null {
+  if (typeof data !== 'string') return null;
+  try {
+    const msg: unknown = JSON.parse(data);
+    return msg && typeof msg === 'object' && typeof (msg as { type?: unknown }).type === 'string' ? msg as ServerMessage : null;
+  } catch { return null; }
+}
+
+/** O valor que a resposta entrega ao pedido, ou o erro que o recusa. */
+function settleReply(msg: ReplyMessage): { value: unknown } | { error: RequestError } {
+  switch (msg.type) {
+    case 'validation': return { value: msg.validation };
+    case 'room-info': return { value: msg.room };
+    case 'room-list': return { value: Array.isArray(msg.rooms) ? msg.rooms : [] };
+    case 'deck-source': return { value: msg.body };
+    case 'similar-cards': return { value: Array.isArray(msg.cards) ? msg.cards : [] };
+    case 'room-deck': return { value: undefined };
+    case 'validation-error': return { error: new RequestError(validationText(msg.validation)) };
+    default: return { error: new RequestError(msg.text ?? 'Não foi possível concluir a solicitação.', msg.reason) };
+  }
+}
+
 export class ForgeClient {
   private ws: WebSocket | null = null;
   state: FState | null = null;
@@ -608,20 +677,20 @@ export class ForgeClient {
   /** Cada mensagem enviada (para a gravação da partida); delivered false quando a conexão já estava fechada. */
   onSend: (msg: ClientMessage, delivered: boolean) => void = () => {};
   private requestSequence = 0;
-  private pending = new Map<string, {resolve: (value: any) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout>}>();
+  private pending = new Map<string, {resolve: (value: unknown) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout>}>();
 
   private rejectPending(reason: string) {
     for (const request of this.pending.values()) { clearTimeout(request.timer); request.reject(new Error(reason)); }
     this.pending.clear();
   }
 
-  private request<T>(message: Omit<Extract<ClientMessage, { type: 'room-deck' }>, 'requestId'> | { type: 'validate-deck'; format: DeckFormat; deck: unknown } | { type: 'lookup-room'; code: string } | { type: 'list-rooms' } | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string } | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number }, timeoutMs = 12000): Promise<T> {
+  private request<M extends RequestMessage>(message: M, timeoutMs = 12000): Promise<RequestReplies[M['type']]> {
     if (!this.connected) return Promise.reject(new Error('Conecte-se ao servidor para verificar.'));
     const requestId = `request-${++this.requestSequence}`;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { this.pending.delete(requestId); reject(new Error('O servidor demorou para responder. Tente novamente.')); }, timeoutMs);
-      this.pending.set(requestId, {resolve, reject, timer});
-      this.send({...message, requestId});
+      this.pending.set(requestId, {resolve: resolve as (value: unknown) => void, reject, timer});
+      this.send({...message, requestId} as ClientMessage);
     });
   }
 
@@ -658,36 +727,31 @@ export class ForgeClient {
       ws.onerror = () => { clearTimeout(timer); reject(new Error('conexão recusada')); };
       ws.onclose = () => { if (this.ws === ws) { this.ws = null; this.rejectPending('A conexão foi interrompida.'); this.onClose(); } };
       ws.onmessage = ev => {
-        let msg: any;
-        try { msg = JSON.parse(ev.data); } catch { return; }
-        if (msg.requestId && this.pending.has(msg.requestId)) {
+        const msg = parseServerMessage(ev.data);
+        if (!msg) return;
+        if (isReply(msg) && this.pending.has(msg.requestId)) {
           const request = this.pending.get(msg.requestId)!;
-          if (['validation', 'room-info', 'room-list', 'room-deck', 'deck-source', 'similar-cards', 'request-error', 'error', 'validation-error'].includes(msg.type)) {
-            clearTimeout(request.timer); this.pending.delete(msg.requestId);
-            if (msg.type === 'validation') request.resolve(msg.validation);
-            else if (msg.type === 'room-info') request.resolve(msg.room);
-            else if (msg.type === 'room-list') request.resolve(Array.isArray(msg.rooms) ? msg.rooms : []);
-            else if (msg.type === 'deck-source') request.resolve(msg.body);
-            else if (msg.type === 'similar-cards') request.resolve(Array.isArray(msg.cards) ? msg.cards : []);
-            else if (msg.type === 'room-deck') request.resolve(undefined);
-            else if (msg.type === 'validation-error') request.reject(new RequestError(validationText(msg.validation)));
-            else request.reject(new RequestError(msg.text ?? 'Não foi possível concluir a solicitação.', msg.reason));
-            return;
-          }
+          clearTimeout(request.timer); this.pending.delete(msg.requestId);
+          const settled = settleReply(msg);
+          if ('error' in settled) request.reject(settled.error); else request.resolve(settled.value);
+          return;
         }
-        if (msg.type === 'state') {
-          this.state = msg;
-          if (msg.room) this.room = msg.room;
-          this.onState(msg);
-        } else if (msg.type === 'room') { this.room = msg.room; this.onRoom(msg.room); }
-        else if (msg.type === 'room-say') this.onRoomSay(msg.seat, msg.key);
-        else if (msg.type === 'validation-error') this.onValidation(msg.validation, msg.target);
-        else if (msg.type === 'hello') this.onHello(msg);
-        else if (msg.type === 'toast') this.onNotice(msg.text, false, msg.title || Array.isArray(msg.cards) ? { title: msg.title, cards: Array.isArray(msg.cards) ? msg.cards : undefined } : undefined);
-        else if (msg.type === 'error') this.onNotice(msg.text, true);
-        else if (msg.type === 'diagnostic') this.onDiagnostic({ code: String(msg.code ?? ''), action: msg.action, text: String(msg.text ?? '') });
-        else if (msg.type === 'gone') this.onGone(msg.text);
-        else if (msg.type === 'replaced') { this.replaced = true; this.onNotice(msg.text, true); }
+        switch (msg.type) {
+          case 'state':
+            this.state = msg;
+            if (msg.room) this.room = msg.room;
+            this.onState(msg);
+            break;
+          case 'room': this.room = msg.room; this.onRoom(msg.room); break;
+          case 'room-say': this.onRoomSay(msg.seat, msg.key); break;
+          case 'validation-error': this.onValidation(msg.validation, msg.target ?? ''); break;
+          case 'hello': this.onHello(msg); break;
+          case 'toast': this.onNotice(msg.text, false, msg.title || Array.isArray(msg.cards) ? { title: msg.title, cards: Array.isArray(msg.cards) ? msg.cards : undefined } : undefined); break;
+          case 'error': this.onNotice(msg.text ?? '', true); break;
+          case 'diagnostic': this.onDiagnostic({ code: String(msg.code ?? ''), action: msg.action, text: String(msg.text ?? '') }); break;
+          case 'gone': this.onGone(msg.text); break;
+          case 'replaced': this.replaced = true; this.onNotice(msg.text, true); break;
+        }
       };
     });
   }

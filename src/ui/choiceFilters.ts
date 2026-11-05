@@ -1,3 +1,4 @@
+import { KEYS } from '../storage';
 import type { FCard, FQuestion } from '../forge/client';
 import { esc } from './cardtext';
 import { manaValue } from './choiceScreens';
@@ -9,7 +10,7 @@ import { manaValue } from './choiceScreens';
  */
 
 export type ChoiceSort = 'type' | 'cost' | 'name';
-export const CHOICE_SORT_KEY = 'mesa:choiceSort';
+export const CHOICE_SORT_KEY = KEYS.choiceSort;
 export const CHOICE_SORTS: [ChoiceSort, string][] = [['type', 'Tipo'], ['cost', 'Custo'], ['name', 'Nome']];
 /** A partir de quantas cartas a escolha ganha os filtros e a ordem por tipo. */
 export const LARGE_CHOICE = 8;

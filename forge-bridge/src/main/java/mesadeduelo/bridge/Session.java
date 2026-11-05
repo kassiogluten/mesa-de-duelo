@@ -1,64 +1,28 @@
 package mesadeduelo.bridge;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import forge.card.MagicColor;
-import forge.card.mana.ManaAtom;
 import forge.deck.Deck;
 import forge.deck.DeckSection;
-import forge.game.GameEntityView;
 import forge.game.GameType;
-import forge.game.GameStage;
 import forge.game.GameView;
-import forge.game.card.CardView;
-import forge.game.phase.PhaseType;
-import forge.game.zone.ZoneType;
 import forge.game.player.PlayerView;
 import forge.game.player.RegisteredPlayer;
-import forge.game.spellability.SpellAbility;
-import forge.game.spellability.StackItemView;
 import forge.gamemodes.match.HostedMatch;
-import forge.gamemodes.match.input.InputAttack;
-import forge.gamemodes.match.input.InputBlock;
-import forge.gamemodes.match.input.InputConfirm;
-import forge.gamemodes.match.input.InputConfirmMulligan;
-import forge.gamemodes.match.input.InputLondonMulligan;
-import forge.gamemodes.match.input.InputPayMana;
-import forge.gamemodes.match.input.InputPassPriority;
-import forge.gamemodes.match.input.InputSelectTargets;
-import forge.gamemodes.match.input.TargetingProgress;
-import forge.gamemodes.net.IRemote;
-import forge.gamemodes.net.ProtocolMethod;
-import forge.gamemodes.net.event.GuiGameEvent;
-import forge.gamemodes.net.event.IdentifiableNetEvent;
-import forge.gamemodes.net.event.NetEvent;
 import forge.gui.FThreads;
-import forge.gui.GuiBase;
 import forge.gui.interfaces.IGuiGame;
-import forge.interfaces.IGameController;
 import forge.player.GamePlayerUtil;
-import forge.player.PlayerControllerHuman;
-import forge.trackable.TrackableCollection;
-import forge.util.FSerializableFunction;
 import io.netty.channel.Channel;
 
 /**
@@ -69,6 +33,20 @@ import io.netty.channel.Channel;
  * Cliente → servidor: {type:"card", id} | {type:"player", id} | {type:"ok"} | {type:"cancel"}
  *                     | {type:"concede"} | {type:"answer", id, indices|value|text}
  * As mensagens de sala (host, join, rejoin, rematch, leave) e o "start" contra a IA ficam em {@link Rooms}.
+ *
+ * Esta classe guarda o ciclo da partida (começar, fim de jogo, sideboard, desistir, abandonar) e a publicação a cada
+ * tick; cada assunto tem o seu arquivo:
+ * <ul>
+ *   <li>{@link Seat}: o assento, o prompt atual do Forge e o {@code IRemote} que o recebe;</li>
+ *   <li>{@link ClientActions}: as mensagens do navegador ({@link #onClientMessage});</li>
+ *   <li>{@link QuestionBroker}: as perguntas que seguram a thread do jogo e as respostas;</li>
+ *   <li>{@link SeatStateView}: o estado de cada assento e de quem assiste, e o JSON da sala;</li>
+ *   <li>{@link MatchRecorder}: relógios, métricas e a linha do histórico;</li>
+ *   <li>{@link SkipVoteController} e {@link UndoController}: pular o turno de quem caiu e o Desfazer.</li>
+ * </ul>
+ *
+ * Ordem dos locks: Rooms → Session (o monitor desta classe) → o lock do {@link UndoController} ou do
+ * {@link SkipVoteController}. Nunca pegue o monitor da Session (nem o de Rooms) segurando um desses dois.
  */
 final class Session {
     /** Código para voltar à partida ({type:"rejoin", code, token}); numa sala em rede é o código que os jogadores digitam. */
@@ -81,40 +59,34 @@ final class Session {
     /** Decks dos computadores: os da partida contra a IA ou os que completaram a sala ({@link #fillWithComputers}). */
     private volatile List<Deck> aiDecks;
     final MatchConfig config;
-    private final AtomicLong stateVersion = new AtomicLong();
-    private final VisibleEvents events = new VisibleEvents(this::markDirty, stateVersion::get);
-    private volatile String matchId = UUID.randomUUID().toString();
-    private volatile String matchPhase = "playing";
-    private volatile int gameNumber = 1;
+    final AtomicLong stateVersion = new AtomicLong();
+    final VisibleEvents events = new VisibleEvents(this::markDirty, stateVersion::get);
+    volatile String matchId = UUID.randomUUID().toString();
+    volatile String matchPhase = "playing";
+    volatile int gameNumber = 1;
     private volatile int sideboardId;
-    private volatile boolean abandoned;
-    /** Quem desistiu primeiro da partida atual (o humano contra a IA sai por aqui), e se a linha do histórico já foi gravada. */
-    private volatile Seat conceder;
-    private volatile boolean recorded;
-    /** Início da partida em andamento para as métricas; 0 quando já foi contada como encerrada. */
-    private volatile long startedAt;
-    /** Quando a sala ou partida foi criada e quando começou a partida atual (para a área de admin). */
+    volatile boolean abandoned;
+    /** Quem desistiu primeiro da partida atual (o humano contra a IA sai por aqui). */
+    volatile Seat conceder;
+    /** Quando a sala ou partida foi criada (para a área de admin). */
     private final long createdAt = System.currentTimeMillis();
-    private volatile long playingSince;
-    /** Início do jogo atual (cada jogo de uma melhor de três conta do zero) e quanto ele durou, -1 enquanto não termina. */
-    private volatile long gameSince;
-    private volatile long gameMs = -1;
-    /** Duração de cada jogo já terminado da partida atual, na ordem, para o histórico. */
-    private final List<Long> gameDurations = new ArrayList<>();
-    /** Onde vai o resumo de cada partida concluída (veja {@link MatchHistory}); a repetição de relatos não grava. */
-    private volatile java.util.function.Consumer<JsonObject> history = ignored -> { };
+    /** Relógios da partida, métricas e a linha do histórico. */
+    final MatchRecorder recorder = new MatchRecorder(this);
+    /** Os cliques e comandos do navegador. */
+    final ClientActions actions = new ClientActions(this);
+    /** As perguntas que seguram a thread do jogo até o navegador responder. */
+    final QuestionBroker questions = new QuestionBroker(this);
+    /** O estado que cada assento e cada espectador recebem. */
+    private final SeatStateView view = new SeatStateView(this);
     private final AtomicBoolean dirty = new AtomicBoolean();
-    private final AtomicInteger questionSeq = new AtomicInteger();
-    /** Votos já anunciados na votação do conselho em andamento. */
-    private final Votes.Tally voteTally = new Votes.Tally();
-    private volatile HostedMatch match;
+    volatile HostedMatch match;
     private volatile MatchLifecycle lifecycle = new MatchLifecycle();
     /** Diário desta partida (decks, retratos, ações), refeito a cada {@link #start()}; só sai num relato. */
-    private volatile MatchJournal journal;
+    volatile MatchJournal journal;
     /** Nomes da IA: os da repetição (veja {@link Replay}) ou "Computador 1", "Computador 2"... numa sala completada. */
     private volatile List<String> aiNames;
     /** Bracket do deck de cada computador, na ordem dos decks (0 sem bracket); vazio fora do Commander. */
-    private volatile List<Integer> aiBrackets = List.of();
+    volatile List<Integer> aiBrackets = List.of();
     private volatile java.util.function.Consumer<forge.game.Game> startHook;
     /** Sala de teste do Laboratório: a mesa montada à mão, aplicada no começo de cada jogo (veja {@link Lab}). */
     private volatile Lab lab;
@@ -124,19 +96,9 @@ final class Session {
      */
     volatile boolean watchable;
 
-    /** Votação aberta para pular o turno de quem caiu, e os assentos com o turno já aprovado para pular. */
-    private SkipVote skipVote;
-    private final Set<Integer> skipApproved = new java.util.HashSet<>();
-    /** Assentos aprovados cujo turno já começou: quando o turno passar para outro, a aprovação acaba. */
-    private final Set<Integer> skipTurnStarted = new java.util.HashSet<>();
-
-    /** Desfazer (sempre ligado): os retratos de cada decisão e o pedido aberto. */
-    private final UndoHistory undo;
-    private UndoRequest undoRequest;
-    private final Object undoLock = new Object();
-
-    private record Question(int id, ProtocolMethod method, Object[] args, List<Object> options,
-                            CompletableFuture<Object> answer, JsonObject json) { }
+    /** Pular o turno de quem caiu e o Desfazer, cada um com o seu lock (veja a ordem dos locks acima). */
+    final SkipVoteController skips = new SkipVoteController(this);
+    final UndoController undo;
 
     private Session(String code, boolean room, int humans, List<Deck> aiDecks, MatchConfig config) {
         this.code = code;
@@ -144,9 +106,8 @@ final class Session {
         this.aiDecks = List.copyOf(aiDecks);
         this.config = config;
         seats = new Seat[humans];
-        for (int i = 0; i < humans; i++) seats[i] = new Seat(i);
-        undo = new UndoHistory();
-        undo.undone = this::undone;
+        for (int i = 0; i < humans; i++) seats[i] = new Seat(this, i);
+        undo = new UndoController(this);
     }
 
     static Session solo(String code, Channel ch, Deck you, Deck opponent, MatchConfig config) {
@@ -197,7 +158,7 @@ final class Session {
     /** Deck do cenário para o assento que entra na sala de teste. */
     Deck labDeck(int seat) { return lab.decks.get(seat); }
 
-    void history(java.util.function.Consumer<JsonObject> sink) { history = sink; }
+    void history(java.util.function.Consumer<JsonObject> sink) { recorder.history = sink; }
     void aiBrackets(List<Integer> brackets) { aiBrackets = List.copyOf(brackets); }
 
     /**
@@ -236,7 +197,7 @@ final class Session {
     /** Quantas cores de verso a mesa tem (veja {@code .sleeve-N} no CSS). */
     static final int SLEEVE_COLORS = 8;
     /** A cor do verso de cada jogador, na ordem do jogo (os assentos e depois os computadores). */
-    private volatile int[] sleeves;
+    volatile int[] sleeves;
 
     /** Cores diferentes para cada jogador, sorteadas entre as {@link #SLEEVE_COLORS}. */
     static int[] drawSleeves(int players) {
@@ -246,23 +207,6 @@ final class Session {
         int[] out = new int[players];
         for (int i = 0; i < players; i++) out[i] = palette.get(i % SLEEVE_COLORS);
         return out;
-    }
-
-    /** O bracket de cada jogador no estado, pela ordem em que entraram no jogo: os assentos e depois os computadores. */
-    private void addBrackets(JsonObject state) {
-        int[] colors = sleeves;
-        if (colors != null && state.has("players")) for (JsonElement e : state.getAsJsonArray("players")) {
-            JsonObject p = e.getAsJsonObject();
-            if (p.has("seat") && p.get("seat").getAsInt() < colors.length) p.addProperty("sleeve", colors[p.get("seat").getAsInt()]);
-        }
-        if (!config.commander() || !state.has("players")) return;
-        for (JsonElement e : state.getAsJsonArray("players")) {
-            JsonObject p = e.getAsJsonObject();
-            if (!p.has("seat")) continue;
-            int i = p.get("seat").getAsInt(), ai = i - seats.length;
-            int bracket = i < seats.length ? seats[i].bracket : ai < aiBrackets.size() ? aiBrackets.get(ai) : 0;
-            if (bracket > 0) p.addProperty("bracket", bracket);
-        }
     }
 
     boolean isRoom() { return room; }
@@ -315,7 +259,7 @@ final class Session {
         o.addProperty("watchable", started() && (room || soloWatchable()));
         o.addProperty("format", config.format()); o.addProperty("matchLength", config.matchLength()); o.addProperty("playerCount", config.playerCount());
         o.addProperty("createdAt", java.time.Instant.ofEpochMilli(createdAt).toString());
-        if (playingSince > 0) o.addProperty("startedAt", java.time.Instant.ofEpochMilli(playingSince).toString());
+        if (recorder.playingSince > 0) o.addProperty("startedAt", java.time.Instant.ofEpochMilli(recorder.playingSince).toString());
         o.addProperty("matchId", matchId);
         o.addProperty("state", !started() ? "aguardando" : matchOver() ? "encerrada" : "sideboarding".equals(matchPhase) ? "entre jogos" : gameOver() ? "jogo encerrado" : "jogando");
         o.addProperty("gameNumber", gameNumber);
@@ -360,9 +304,9 @@ final class Session {
         stop();
         matchId = UUID.randomUUID().toString();
         events.reset(); stateVersion.set(0);
-        matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null; recorded = false;
-        gameDurations.clear();
-        undo.clear(); synchronized (undoLock) { undoRequest = null; }
+        matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null;
+        recorder.reset();
+        undo.clear();
         HostedMatch m = new HostedMatch();
         MatchLifecycle life = new MatchLifecycle(game -> {
             if (match != m) return;
@@ -381,11 +325,11 @@ final class Session {
             String name = seat.name;
             for (int n = 2; !names.add(name); n++) name = seat.name + " (" + n + ")";
             seat.name = name;
-            WebGuiGame g = new WebGuiGame(seat.new Remote(m, life), () -> seat.passLevel, () -> seat.opponentStops, life, m::getGame);
+            WebGuiGame g = new WebGuiGame(seat.remote(m, life), () -> seat.passLevel, () -> seat.opponentStops, life, m::getGame);
             seat.gui = g;
             // O turno pulado por votação: a ponte passa por ele, então esses prompts não guardam retrato para o Desfazer.
-            g.autopilot = () -> { synchronized (skipApproved) { return skipApproved.contains(seat.index); } };
-            RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name, undo));
+            g.autopilot = () -> skips.approved(seat.index);
+            RegisteredPlayer rp = registered(seat.deck).setPlayer(new AskingController.Lobby(name, undo.history));
             seat.registered = rp;
             players.add(rp);
             guis.put(rp, g);
@@ -412,8 +356,7 @@ final class Session {
             m.setStartGameHook(() -> { if (applied.compareAndSet(false, true)) hook.accept(m.getGame()); });
         }
         m.startMatch(lab != null ? Lab.rules() : config.rules(), null, players, guis, null);
-        startedAt = playingSince = gameSince = System.currentTimeMillis(); gameMs = -1;
-        Metrics.matchStarted(config.format(), room, players.size());
+        recorder.started(players.size());
         System.out.printf("Nova partida%s: %s%n", room ? " na sala " + code : "",
             String.join(" x ", players.stream().map(p -> p.getDeck().getName()).toList()));
         markDirty();
@@ -432,9 +375,8 @@ final class Session {
         // Não usa matchOver(): sair no meio também marca a série como encerrada, mas ela não foi concluída.
         HostedMatch m = match;
         boolean finished = m != null && m.getMatch() != null && m.getMatch().isMatchOver();
-        if (startedAt > 0 && !finished) Metrics.matchEnded(config.format(), room, "abandonada", startedAt);
-        startedAt = 0;
-        recordUnfinished(quitter != null ? (othersGone(quitter) ? null : quitter) : room ? null : conceder);
+        recorder.abandoned(finished);
+        recorder.unfinished(quitter != null ? (othersGone(quitter) ? null : quitter) : room ? null : conceder);
     }
 
     /** Numa sala, todos os outros já caíram ou saíram: quem sai agora não está desistindo contra ninguém. */
@@ -442,25 +384,6 @@ final class Session {
         if (!room) return false;
         for (Seat each : seats) if (each != seat && each.taken && !each.conceded && each.channel != null) return false;
         return true;
-    }
-
-    /** Grava a série que acabou antes da hora, com o jogo em andamento: {@code quitter} concede, sem ele é queda. */
-    private void recordUnfinished(Seat quitter) {
-        HostedMatch m = match;
-        if (recorded || m == null || m.getMatch() == null || m.getMatch().isMatchOver()) return;
-        record(m.getMatch(), quitter == null ? "queda" : "concedida", quitter, m.getGame());
-    }
-
-    /** Uma linha por partida; a que não chegou ao primeiro turno (mulligan, sala recém-começada) não é gravada. */
-    private void record(forge.game.Match fm, String end, Seat quitter, forge.game.Game current) {
-        if (recorded) return;
-        recorded = true;
-        try {
-            JsonObject line = historyJson(fm, end, quitter, current);
-            boolean played = false;
-            for (JsonElement g : line.getAsJsonArray("games")) played |= g.getAsJsonObject().get("turns").getAsInt() > 0;
-            if (played && history != null) history.accept(line);
-        } catch (RuntimeException e) { System.err.println("Histórico: resumo da partida falhou: " + e); }
     }
 
     boolean matchOver() {
@@ -471,149 +394,16 @@ final class Session {
     private synchronized void ended(HostedMatch ended) {
         if (match != ended) return;
         matchPhase = matchOver() ? "complete" : "sideboarding";
-        if (gameSince > 0) gameMs = System.currentTimeMillis() - gameSince;
-        Metrics.gameFinished(config.format(), room);
-        gameDurations.add(gameMs);
-        if (ended.getMatch() != null && ended.getMatch().isMatchOver()) record(ended.getMatch(), null, null, null);
-        else if (abandoned) recordUnfinished(conceder);
-        if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(config.format(), room, "concluida", startedAt); startedAt = 0; }
+        recorder.gameEnded(ended);
         sideboardId++;
-        undo.clear(); synchronized (undoLock) { undoRequest = null; }
+        undo.clear();
         for (Seat seat : seats) { seat.sideboardReady = false; seat.approvedDeck = null; }
         markDirty();
     }
 
-    /**
-     * Resumo final de uma partida concluída, uma linha do {@link MatchHistory}. Os índices de {@code winner} e dos
-     * arrays de cada jogo apontam para {@code players}, na ordem do Forge (humanos antes da IA). O apelido só entra
-     * nas salas em rede: contra a IA, o humano vai com o nome que usa ({@link Seat#nick}), quando tem um. {@code account} e {@code deckId} só vêm de quem
-     * jogou com a conta conectada (veja {@link AccountMatches}); apagar a conta os tira ({@link MatchHistory#forget}).
-     *
-     * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, end, winner: índice|null,
-     *  players:[{name?, ai, account?, deckId?, deck, colors, commander?, wins}],
-     *  games:[{winner: índice|null, turns, ms?, end, result:["win"|"draw"|"playing"|motivo da derrota do Forge], mull:[n]}]}
-     */
-    JsonObject historyJson(forge.game.Match fm) { return historyJson(fm, null, null, null); }
-
-    /**
-     * {@code end}: "concluida" (jogada até o fim), "concedida" (decidida por desistência ou saída) ou "queda" (ninguém
-     * voltou; a série fica sem vencedor). Null deduz do último jogo: concedida quando todos os que perderam desistiram.
-     * {@code quitter} é quem saiu antes de a série acabar: a série vai para o outro (só com dois jogadores). O jogo
-     * {@code current} ainda em andamento entra no fim, com o motivo "Conceded" de quem saiu ou "Interrupted" na queda.
-     */
-    JsonObject historyJson(forge.game.Match fm, String end, Seat quitter, forge.game.Game current) {
-        long now = System.currentTimeMillis();
-        JsonObject o = new JsonObject();
-        o.addProperty("id", matchId);
-        o.addProperty("startedAt", java.time.Instant.ofEpochMilli(playingSince).truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString());
-        o.addProperty("endedAt", java.time.Instant.ofEpochMilli(now).truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString());
-        o.addProperty("ms", now - playingSince);
-        o.addProperty("format", config.format()); o.addProperty("length", config.matchLength());
-        o.addProperty("mode", Metrics.mode(room));
-        if (room) o.addProperty("public", publicRoom);
-        List<RegisteredPlayer> order = fm.getPlayers();
-        int quit = quitter == null ? -1 : order.indexOf(quitter.registered);
-        JsonArray games = new JsonArray();
-        int n = 0;
-        for (forge.game.GameOutcome outcome : fm.getOutcomes()) {
-            JsonObject g = new JsonObject();
-            int winner = outcome.getWinningPlayer() == null ? -1 : order.indexOf(outcome.getWinningPlayer());
-            if (winner >= 0) g.addProperty("winner", winner); else g.add("winner", com.google.gson.JsonNull.INSTANCE);
-            g.addProperty("turns", outcome.getLastTurnNumber());
-            if (n < gameDurations.size() && gameDurations.get(n) >= 0) g.addProperty("ms", gameDurations.get(n));
-            if (outcome.getWinCondition() != null) g.addProperty("end", outcome.getWinCondition().name());
-            JsonArray result = new JsonArray(), mull = new JsonArray();
-            for (RegisteredPlayer rp : order) {
-                forge.game.player.PlayerStatistics stats = null;
-                for (var e : outcome) if (e.getKey() == rp) stats = e.getValue();
-                var po = stats == null ? null : stats.getOutcome();
-                result.add(po == null ? "draw" : po.hasWon() ? "win" : po.lossState != null ? po.lossState.name() : "draw");
-                mull.add(stats == null ? 0 : stats.getMulliganCount());
-            }
-            g.add("result", result); g.add("mull", mull);
-            games.add(g);
-            n++;
-        }
-        // O jogo interrompido: quem saiu concede (com dois jogadores, o outro vence); na queda, ninguém vence.
-        int unfinishedWinner = -1;
-        if (current != null && !current.isGameOver() && current.getMatch() == fm) {
-            unfinishedWinner = quit >= 0 && order.size() == 2 ? 1 - quit : -1;
-            JsonObject g = new JsonObject();
-            if (unfinishedWinner >= 0) g.addProperty("winner", unfinishedWinner); else g.add("winner", com.google.gson.JsonNull.INSTANCE);
-            g.addProperty("turns", current.getPhaseHandler().getTurn());
-            if (gameSince > 0) g.addProperty("ms", now - gameSince);
-            g.addProperty("end", quit >= 0 ? "Conceded" : "Interrupted");
-            JsonArray result = new JsonArray(), mull = new JsonArray();
-            for (int i = 0; i < order.size(); i++) {
-                forge.game.player.Player p = null;
-                for (var each : current.getRegisteredPlayers()) if (each.getRegisteredPlayer() == order.get(i)) p = each;
-                var po = p == null ? null : p.getOutcome();
-                result.add(i == quit ? "Conceded" : i == unfinishedWinner ? "win"
-                    : p != null && p.hasLost() && po != null && po.lossState != null ? po.lossState.name() : "playing");
-                mull.add(p == null ? 0 : p.getStats().getMulliganCount());
-            }
-            g.add("result", result); g.add("mull", mull);
-            games.add(g);
-        }
-        if (end == null) {
-            // Decidida por desistência quando todos os que perderam o último jogo desistiram.
-            boolean conceded = false, other = false;
-            if (!games.isEmpty()) for (JsonElement r : games.get(games.size() - 1).getAsJsonObject().getAsJsonArray("result")) {
-                String why = r.getAsString();
-                if ("Conceded".equals(why)) conceded = true; else if (!"win".equals(why) && !"draw".equals(why)) other = true;
-            }
-            end = conceded && !other ? "concedida" : "concluida";
-        }
-        o.addProperty("end", end);
-        JsonArray players = new JsonArray();
-        int best = -1, bestWins = -1;
-        boolean tie = false;
-        for (int i = 0; i < order.size(); i++) {
-            RegisteredPlayer rp = order.get(i);
-            Seat seat = null;
-            for (Seat each : seats) if (each.registered == rp) seat = each;
-            JsonObject p = new JsonObject();
-            String name = seat == null ? null : room ? seat.name : seat.nick;
-            if (name != null) p.addProperty("name", name);
-            p.addProperty("ai", seat == null);
-            if (seat != null && seat.account != null) {
-                p.addProperty("account", seat.account);
-                if (seat.deckId != null) p.addProperty("deckId", seat.deckId);
-            }
-            Deck deck = seat != null && seat.deck != null ? seat.deck : rp.getDeck();
-            p.addProperty("deck", deck.getName());
-            p.addProperty("colors", colors(deck));
-            if (config.commandZone()) {
-                List<String> commanders = new ArrayList<>();
-                for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getDisplayName());
-                if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
-            }
-            int wins = fm.getGamesWonBy(rp.getPlayer()) + (i == unfinishedWinner ? 1 : 0);
-            p.addProperty("wins", wins);
-            if (wins > bestWins) { best = i; bestWins = wins; tie = false; } else if (wins == bestWins) tie = true;
-            players.add(p);
-        }
-        // Quem sai entrega a série a quem ficou; na queda, ela fica sem vencedor.
-        int winner = "queda".equals(end) ? -1 : quit >= 0 && order.size() == 2 ? 1 - quit : bestWins > 0 && !tie ? best : -1;
-        if (winner >= 0) o.addProperty("winner", winner); else o.add("winner", com.google.gson.JsonNull.INSTANCE);
-        o.add("players", players);
-        o.add("games", games);
-        return o;
-    }
-
-    /** Cores do deck (comandantes e grimório) em WUBRG; "C" para incolor. */
-    static String colors(Deck deck) {
-        int mask = 0;
-        for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Commander})
-            for (var e : deck.getOrCreate(section)) mask |= e.getKey().getRules().getColor().getColor();
-        StringBuilder sb = new StringBuilder();
-        for (byte c : MagicColor.WUBRG) if ((mask & c) != 0) sb.append(MagicColor.toShortString(c));
-        return sb.length() == 0 ? "C" : sb.toString();
-    }
-
-    private synchronized void submitSideboard(Seat seat, JsonObject msg, boolean unchanged) {
+    synchronized void submitSideboard(Seat seat, JsonObject msg, boolean unchanged) {
         if (!"sideboarding".equals(matchPhase) || match == null) return;
-        if (!msg.has("id") || exactInt(msg.get("id")) != sideboardId) { markDirty(); return; }
+        if (!msg.has("id") || ClientActions.exactInt(msg.get("id")) != sideboardId) { markDirty(); return; }
         if (seat.sideboardReady) return;
         Deck current = seat.registered.getDeck();
         var validation = DeckValidation.validate(unchanged ? DeckValidation.deckJson(current) : msg.get("deck"), config.format());
@@ -627,7 +417,7 @@ final class Session {
         seat.approvedDeck = validation.deck(); seat.sideboardReady = true; markDirty();
         for (Seat each : seats) if (!each.sideboardReady) return;
         HostedMatch continuing = match;
-        matchPhase = "playing"; gameNumber++; gameSince = System.currentTimeMillis(); gameMs = -1;
+        matchPhase = "playing"; gameNumber++; recorder.nextGame();
         for (Seat each : seats) { each.inputGen.incrementAndGet(); each.clearInput(); }
         FThreads.invokeInEdtLater(() -> {
             if (match != continuing || abandoned) return;
@@ -636,13 +426,11 @@ final class Session {
         });
     }
 
-    private JsonObject matchJson() {
+    JsonObject matchJson() {
         JsonObject o = new JsonObject();
         o.addProperty("gameNumber", gameNumber); o.addProperty("over", matchOver()); o.addProperty("phase", matchPhase);
         o.addProperty("abandoned", abandoned);
-        if (gameMs >= 0) o.addProperty("gameMs", gameMs);
-        // Enquanto o jogo corre, quanto tempo já passou (não a hora de início, para o relógio do navegador não importar).
-        else if (gameSince > 0 && "playing".equals(matchPhase)) o.addProperty("elapsedMs", System.currentTimeMillis() - gameSince);
+        recorder.gameClock(o, "playing".equals(matchPhase));
         JsonArray wins = new JsonArray(), ready = new JsonArray();
         int draws = 0;
         HostedMatch m = match;
@@ -656,7 +444,7 @@ final class Session {
         return o;
     }
 
-    private JsonObject sideboardingJson(Seat seat) {
+    JsonObject sideboardingJson(Seat seat) {
         Deck d = seat.approvedDeck == null ? seat.registered.getDeck() : seat.approvedDeck;
         JsonObject o = new JsonObject(); o.addProperty("id", sideboardId); o.addProperty("ready", seat.sideboardReady);
         o.add("main", DeckValidation.entries(d.getMain()));
@@ -675,9 +463,9 @@ final class Session {
     private void releaseQuestions() {
         for (Seat seat : seats) {
             seat.inputGen.incrementAndGet();
-            Question q = seat.question;
+            QuestionBroker.Question q = seat.question;
             seat.question = null;
-            if (q != null) q.answer().complete(defaultAnswer(q));
+            if (q != null) q.answer().complete(QuestionBroker.defaultAnswer(q));
         }
     }
 
@@ -687,8 +475,8 @@ final class Session {
             // Com o jogo em andamento, a linha sai quando a desistência terminar o jogo (veja ended).
             HostedMatch m = match;
             boolean playing = m != null && m.getGame() != null && !m.getGame().isGameOver();
-            if (othersGone(seat)) recordUnfinished(null);
-            else if (!playing) recordUnfinished(seat);
+            if (othersGone(seat)) recorder.unfinished(null);
+            else if (!playing) recorder.unfinished(seat);
             if (conceder == null) conceder = seat;
             abandoned = true;
             matchPhase = "complete";
@@ -700,17 +488,17 @@ final class Session {
     /** Concede o jogo atual; entre jogos, encerra a partida sem inventar vitórias. */
     synchronized void concede(Seat seat) {
         if (conceder == null && !matchOver()) conceder = seat;
-        if ("sideboarding".equals(matchPhase)) { recordUnfinished(seat); abandoned = true; matchPhase = "complete"; markDirty(); }
+        if ("sideboarding".equals(matchPhase)) { recorder.unfinished(seat); abandoned = true; matchPhase = "complete"; markDirty(); }
         HostedMatch current = match;
         if (current == null || current.getGame() == null || gameOver() || seat.me == null) return;
         lifecycle.requestConcede(current.getGame(), seat.me.getId());
         // Release answers after publishing the request, so the game thread sees it on wake-up.
         for (Seat each : seats) {
             if (config.commandZone() && each != seat) continue;
-            Question q = each.question;
+            QuestionBroker.Question q = each.question;
             each.question = null;
             each.inputGen.incrementAndGet(); each.clearInput();
-            if (q != null) q.answer().complete(defaultAnswer(q));
+            if (q != null) q.answer().complete(QuestionBroker.defaultAnswer(q));
         }
         markDirty();
     }
@@ -720,900 +508,11 @@ final class Session {
     /** Diário atual (null antes de a partida começar). */
     MatchJournal journal() { return journal; }
 
-    void onClientMessage(Seat seat, Channel source, String type, JsonObject msg) {
-        if (seat.eliminated() && !Set.of("preferences", "hello").contains(type)) { rejectStaleAction(seat, type); return; }
-        int actionGen = -1;
-        if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn", "resolve-all", "select-set").contains(type)) {
-            if (!msg.has("gen") || !msg.get("gen").isJsonPrimitive() || !msg.get("gen").getAsJsonPrimitive().isNumber()) { rejectStaleAction(seat, type); return; }
-            actionGen = exactInt(msg.get("gen"));
-            if (actionGen != seat.inputGen.get() || seat.question != null || !"playing".equals(matchPhase)) { rejectStaleAction(seat, type, actionGen); return; }
-        }
-        final int genAtClick = actionGen;
-        log(seat, type, genAtClick, "recebida", actionDetail(seat, type, msg));
-        switch (type) {
-            case "preferences" -> seat.updatePreferences(source, msg);
-            case "sideboard" -> submitSideboard(seat, msg, false);
-            case "next-game" -> submitSideboard(seat, msg, true);
-            case "hello" -> markDirty();
-            case "ok", "cancel" -> {
-                int gen = genAtClick;
-                // Clique repetido no mesmo prompt só vale depois da trava: se o Forge recusou a ação (bloqueio
-                // inválido, por exemplo), o prompt continua o mesmo e o jogador precisa poder tentar de novo.
-                if (gen != seat.inputGen.get() || seat.buttonsLocked()) { markDirty(); break; }
-                seat.consumedGen = gen;
-                seat.consumedAt = System.currentTimeMillis();
-                markDirty();
-                // O OK de um pagamento é o Automático: a parte genérica sai antes das pedras de mana (AutoPay).
-                seat.onEdt(genAtClick, "ok".equals(type)
-                    ? c -> { if (!(c instanceof PlayerControllerHuman human) || !AutoPay.ok(human)) c.selectButtonOk(); }
-                    : IGameController::selectButtonCancel);
-            }
-            case "pass-turn" -> {
-                if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { markDirty(); break; }
-                seat.consumedGen = genAtClick; seat.consumedAt = System.currentTimeMillis();
-                // "Fim de turno" no seu turno e "Passar até o fim do turno" no dos outros: passa até o turno acabar,
-                // até algo afetar você ou até uma etapa marcada; depois, volta ao nível escolhido.
-                seat.onEdt(genAtClick, c -> {
-                    WebGuiGame g = seat.gui;
-                    if (seat.livePriority() && seat.question == null && g != null) g.passUntilEndOfTurn(c);
-                    markDirty();
-                });
-                markDirty();
-            }
-            case "resolve-all" -> {
-                // Passa até a pilha esvaziar, como o "Resolver tudo" do Forge. Respeita interrupções: se alguém
-                // acrescentar algo à pilha ou o jogo pedir uma decisão sua, a vez volta para você.
-                if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { markDirty(); break; }
-                seat.consumedGen = genAtClick; seat.consumedAt = System.currentTimeMillis();
-                seat.onEdt(genAtClick, c -> {
-                    WebGuiGame g = seat.gui;
-                    if (seat.livePriority() && seat.question == null && g != null) g.resolveAll(c);
-                    markDirty();
-                });
-                markDirty();
-            }
-            case "pass-turn-stop" -> {
-                // Desliga o "Passar até o fim do turno" a qualquer momento, também enquanto o Forge passa sozinho.
-                FThreads.invokeInEdtLater(() -> {
-                    WebGuiGame g = seat.gui;
-                    if (g != null && seat.channel == source) g.stopPassingTurn();
-                    markDirty();
-                });
-            }
-            case "skip-vote" -> voteSkip(seat, msg);
-            case "undo-request" -> requestUndo(seat);
-            case "undo-vote" -> voteUndo(seat, !msg.has("value") || msg.get("value").getAsBoolean());
-            case "undo-cancel" -> cancelUndo(seat);
-            case "concede" -> { if (isRoom()) seat.conceded = true; concede(seat); }
-            case "attack" -> {
-                int attacker = exactInt(msg.get("attacker")), defender = exactInt(msg.get("defender"));
-                String kind = MatchConfig.string(msg, "defenderKind");
-                seat.onEdt(genAtClick, c -> {
-                    if (!(c instanceof PlayerControllerHuman human)
-                        || !InputContext.assignAttack(human.getInputQueue().getInput(), attacker, defender, kind))
-                        seat.send(toast("error", "Esse ataque não é válido. Escolha um defensor permitido."));
-                    markDirty();
-                });
-            }
-            case "attack-all" -> {
-                int defender = exactInt(msg.get("defender"));
-                String kind = MatchConfig.string(msg, "defenderKind");
-                seat.onEdt(genAtClick, type, c -> {
-                    if (!(c instanceof PlayerControllerHuman human)
-                        || !InputContext.assignAllAttackers(human.getInputQueue().getInput(), defender, kind))
-                        seat.send(toast("error", "Não foi possível atacar com todas as criaturas. Escolha um defensor permitido antes de declarar atacantes."));
-                    markDirty();
-                });
-            }
-            case "attack-group" -> {
-                if (!msg.has("defender")) throw new IllegalArgumentException("Informe o defensor ou retire o grupo do combate.");
-                Integer defender = msg.get("defender").isJsonNull() ? null : exactInt(msg.get("defender"));
-                String kind = defender == null ? null : MatchConfig.string(msg, "defenderKind");
-                if (!msg.has("attackers") || !msg.get("attackers").isJsonArray())
-                    throw new IllegalArgumentException("Escolha um grupo de criaturas para atacar.");
-                List<Integer> attackers = new ArrayList<>();
-                for (JsonElement id : msg.getAsJsonArray("attackers")) attackers.add(exactInt(id));
-                seat.onEdt(genAtClick, type, c -> {
-                    if (!(c instanceof PlayerControllerHuman human)
-                        || !InputContext.assignAttackGroup(human.getInputQueue().getInput(), attackers, defender, kind))
-                        seat.send(toast("error", "Não foi possível atualizar os ataques desse grupo. Revise as criaturas selecionadas."));
-                    markDirty();
-                });
-            }
-            case "block" -> {
-                int attacker = exactInt(msg.get("attacker")), blocker = exactInt(msg.get("blocker"));
-                seat.onEdt(genAtClick, c -> {
-                    if (!(c instanceof PlayerControllerHuman human)
-                        || !InputContext.assignBlock(human.getInputQueue().getInput(), attacker, blocker))
-                        seat.send(toast("error", "Esse bloqueio não é válido. Escolha um atacante permitido."));
-                    markDirty();
-                });
-            }
-            case "card" -> {
-                CardView cv = findCard(seat, msg.get("id").getAsInt());
-                // Uma carta virada para mana que ainda está na reserva: o clique desvira e devolve a mana. Uma carta que o
-                // Forge não deixa jogar agora vira um aviso com o motivo, em vez de um clique que não faz nada.
-                if (cv != null) seat.onEdt(genAtClick, c -> {
-                    if (ManaUndo.untap(c, cv.getId())) { markDirty(); return; }
-                    String refusal = PlayRefusal.toast(c, cv.getId());
-                    if (refusal != null) seat.send(refusal); else c.selectCard(cv, null, null);
-                });
-            }
-            case "stack" -> {
-                int id = exactInt(msg.get("id"));
-                if (!seat.selectableStacks.contains(id)) { markDirty(); break; }
-                GameView view = match == null ? null : match.getGameView();
-                if (view != null && view.getStack() != null) for (StackItemView item : view.getStack())
-                    if (item.getId() == id) { seat.onEdt(genAtClick, c -> c.selectStackItem(item)); break; }
-            }
-            case "mana" -> {
-                // Gastar a mana da reserva no pagamento (o Forge não a usa sozinho, só no Automático).
-                byte color = switch (str(msg, "color", "")) {
-                    case "W" -> MagicColor.WHITE; case "U" -> MagicColor.BLUE; case "B" -> MagicColor.BLACK;
-                    case "R" -> MagicColor.RED; case "G" -> MagicColor.GREEN; case "C" -> (byte) ManaAtom.COLORLESS;
-                    default -> -1;
-                };
-                if (color >= 0) seat.onEdt(genAtClick, c -> c.useMana(color));
-            }
-            case "select-set" -> {
-                List<Integer> cards = new ArrayList<>(), players = new ArrayList<>();
-                if (msg.has("cards") && msg.get("cards").isJsonArray()) for (JsonElement id : msg.getAsJsonArray("cards")) cards.add(exactInt(id));
-                if (msg.has("players") && msg.get("players").isJsonArray()) for (JsonElement id : msg.getAsJsonArray("players")) players.add(exactInt(id));
-                seat.onEdt(genAtClick, type, c -> {
-                    if (!(c instanceof PlayerControllerHuman human)
-                        || !InputContext.selectExactly(human.getInputQueue().getInput(), cards, players))
-                        seat.send(toast("error", "Não foi possível marcar essa escolha. Toque de novo nas permanentes e jogadores."));
-                    markDirty();
-                });
-            }
-            case "player" -> {
-                PlayerView pv = findPlayer(msg.get("id").getAsInt());
-                if (pv != null) seat.onEdt(genAtClick, c -> c.selectPlayer(pv, null));
-            }
-            case "answer" -> answer(seat, msg);
-            default -> { }
-        }
-    }
+    /** Uma mensagem do navegador deste assento (veja {@link ClientActions}). */
+    void onClientMessage(Seat seat, Channel source, String type, JsonObject msg) { actions.onClientMessage(seat, source, type, msg); }
 
-    private void log(Seat seat, String type, int gen, String result, String detail) {
-        MatchJournal j = journal;
-        if (j != null && type != null) j.action(seat.index, type, gen, stateVersion.get(), result, detail);
-    }
-
-    /** Resumo curto da ação para o diário: ids de cartas e jogadores e as respostas, nunca o que o jogador não vê. */
-    private static String actionDetail(Seat seat, String type, JsonObject msg) {
-        try {
-            return switch (type) {
-                case "card", "player", "stack" -> type + " " + msg.get("id");
-                case "attack" -> "atacante " + msg.get("attacker") + " → " + msg.get("defenderKind") + " " + msg.get("defender");
-                case "attack-all" -> "todos → " + msg.get("defenderKind") + " " + msg.get("defender");
-                case "attack-group" -> "grupo " + msg.get("attackers") + " → " + msg.get("defender");
-                case "block" -> "bloqueador " + msg.get("blocker") + " → atacante " + msg.get("attacker");
-                case "mana" -> "cor " + msg.get("color");
-                case "select-set" -> "cartas " + msg.get("cards") + " jogadores " + msg.get("players");
-                case "skip-vote" -> "alvo " + msg.get("target") + " voto " + (msg.has("value") ? msg.get("value") : "true");
-                case "undo-vote" -> "voto " + (msg.has("value") ? msg.get("value") : "true");
-                case "answer" -> {
-                    Question q = seat.question;
-                    String asked = q == null ? "pergunta já respondida" : q.method() + (q.json().has("title") ? " \"" + q.json().get("title").getAsString() + "\"" : "");
-                    StringBuilder answer = new StringBuilder(asked).append(":");
-                    for (String key : List.of("indices", "value", "text", "amounts")) if (msg.has(key)) answer.append(' ').append(key).append('=').append(msg.get(key));
-                    yield answer.toString();
-                }
-                default -> null;
-            };
-        } catch (RuntimeException e) {
-            return null;
-        }
-    }
-
-    private void rejectStaleAction(Seat seat, String type) { rejectStaleAction(seat, type, -1); }
-
-    private void rejectStaleAction(Seat seat, String type, int gen) {
-        log(seat, type, gen, "recusada", null);
-        // Só para o painel de erros da mesa: o jogador não vê aviso, mas fica registrado que a ação foi ignorada.
-        if (type != null) {
-            JsonObject diagnostic = new JsonObject();
-            diagnostic.addProperty("type", "diagnostic"); diagnostic.addProperty("code", "stale-action"); diagnostic.addProperty("action", type);
-            diagnostic.addProperty("text", "Ação ignorada: a tela estava desatualizada ou a vez já tinha mudado.");
-            seat.send(diagnostic.toString());
-        }
-        if ("attack-group".equals(type) || "attack-all".equals(type)) {
-            JsonObject error = new JsonObject();
-            error.addProperty("type", "error"); error.addProperty("code", "stale-action"); error.addProperty("action", type);
-            error.addProperty("text", "A etapa de ataque mudou. Revise a seleção e tente novamente.");
-            seat.send(error.toString());
-        }
-        markDirty();
-    }
-
-    private static int exactInt(JsonElement value) {
-        if (value == null || !value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber())
-            throw new IllegalArgumentException("Identificador inválido.");
-        try { return value.getAsBigDecimal().intValueExact(); }
-        catch (ArithmeticException e) { throw new IllegalArgumentException("Identificador inválido."); }
-    }
-
-    private static String str(JsonObject o, String key, String def) {
-        return o.has(key) && !o.get(key).isJsonNull() ? o.get(key).getAsString() : def;
-    }
-
-    /** Procura a carta só nas zonas que este jogador pode ver: a mão do oponente fica de fora. */
-    private CardView findCard(Seat seat, int id) {
-        GameView gv = match == null ? null : match.getGameView();
-        if (gv == null) return null;
-        for (PlayerView p : gv.getPlayers()) {
-            List<Iterable<CardView>> zones = new ArrayList<>(List.of(nz(p.getBattlefield()), nz(p.getGraveyard()), nz(p.getExile()), nz(p.getCommand())));
-            if (p.equals(seat.me)) zones.add(nz(p.getHand()));
-            // Topo do grimório que o jogador pode ver: dá para jogá-lo com Future Sight e afins.
-            for (CardView top : nz(p.getLibrary())) { if (top.canBeShownTo(seat.me)) zones.add(List.of(top)); break; }
-            for (Iterable<CardView> zone : zones) {
-                for (CardView c : zone) if (c.getId() == id) return c;
-            }
-        }
-        if (gv.getStack() != null) {
-            for (StackItemView si : gv.getStack()) if (si.getSourceCard() != null && si.getSourceCard().getId() == id) return si.getSourceCard();
-        }
-        return null;
-    }
-
-    private PlayerView findPlayer(int id) {
-        GameView gv = match == null ? null : match.getGameView();
-        if (gv == null) return null;
-        for (PlayerView p : gv.getPlayers()) if (p.getId() == id) return p;
-        return null;
-    }
-
-    private static Iterable<CardView> nz(Iterable<CardView> it) { return it == null ? List.of() : it; }
-
-    // ---------- Perguntas que bloqueiam a thread do jogo ----------
-
-    /**
-     * A carta que pede a decisão em curso: a que o controlador marcou ao chamar a escolha (conjurar, ativar, gatilho,
-     * efeito) ou, numa escolha durante a resolução, a da mágica ou habilidade que está resolvendo.
-     */
-    private static CardView asking(Seat seat, Object input, forge.game.Game game) {
-        if (seat.controller() instanceof AskingController controller && controller.asking() != null) return controller.asking();
-        return input == null ? InputContext.resolvingSource(game) : InputContext.resolvingSource(input, game);
-    }
-
-    private Object ask(Seat seat, GuiGameEvent ev, HostedMatch hosted, MatchLifecycle life) {
-        Object[] a = ev.getObjects();
-        JsonObject q = new JsonObject();
-        List<Object> options = new ArrayList<>();
-        int id = questionSeq.incrementAndGet();
-        q.addProperty("id", id);
-        q.addProperty("method", ev.getMethod().name());
-
-        switch (ev.getMethod()) {
-            case sideboard -> {
-                Deck approved = seat.approvedDeck;
-                if (approved == null) throw new IllegalStateException("Confirme o sideboard antes de continuar.");
-                return approved.getMain().toFlatList();
-            }
-            case getChoices -> {
-                // min/max -1: é um reveal() do Forge (Explore, revelar o topo...), só para mostrar as cartas.
-                q.addProperty("kind", (Integer) a[1] < 0 ? "reveal" : "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", (Integer) a[1]);
-                q.addProperty("max", (Integer) a[2]);
-                @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
-                options.addAll((Collection<?>) a[3]);
-                if (options.size() >= 30 && seat.controller() instanceof AskingController controller && controller.namingCard()) {
-                    // Nomear uma carta: em geral todos os nomes do jogo. Vão só os textos, e a mesa mostra uma busca em vez da lista.
-                    q.addProperty("purpose", "card-name");
-                    JsonArray names = new JsonArray();
-                    for (Object o : options) names.add(display != null ? display.apply(o) : String.valueOf(o));
-                    q.add("options", names);
-                    break;
-                }
-                JsonArray rows = optionsJson(options, display);
-                Dungeons.roomChoice(hosted.getGame(), options, rows, q);
-                Piles.choose(q, options, hosted.getGame());
-                q.add("options", rows);
-                CoinFlipText.choice(q);
-                voteQuestion(q, hosted.getGame());
-            }
-            case getAbilityToPlay -> {
-                Collection<?> abilities = (Collection<?>) a[1];
-                if (abilities.size() == 1) return abilities.iterator().next();
-                q.addProperty("kind", "choose");
-                q.addProperty("title", "Qual habilidade usar?");
-                q.addProperty("min", 0);
-                q.addProperty("max", 1);
-                if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
-                options.addAll((Collection<?>) a[1]);
-                JsonArray rows = optionsJson(options, null);
-                if (seat.controller() instanceof PlayerControllerHuman human) {
-                    AbilityOptions.describe(human, options, rows);
-                    AbilityOptions.addCosts(human, options, rows);
-                }
-                q.addProperty("purpose", "play-mode");
-                q.add("options", rows);
-            }
-            case chooseSingleEntityForEffect -> {
-                q.addProperty("kind", "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", Boolean.TRUE.equals(a[3]) ? 0 : 1);
-                q.addProperty("max", 1);
-                options.addAll((Collection<?>) a[1]);
-                q.add("options", optionsJson(options, null));
-                voteQuestion(q, hosted.getGame());
-                ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
-            }
-            case chooseEntitiesForEffect -> {
-                q.addProperty("kind", "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", (Integer) a[2]);
-                q.addProperty("max", (Integer) a[3]);
-                options.addAll((Collection<?>) a[1]);
-                q.add("options", optionsJson(options, null));
-                ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
-            }
-            case order -> {
-                q.addProperty("title", String.valueOf(a[0]));
-                options.addAll((Collection<?>) a[4]);
-                int remMin = (Integer) a[2], remMax = (Integer) a[3];
-                if (remMin == 0 && remMax == 0) {
-                    // Uma ordem já escolhida antes (os mesmos gatilhos de novo) chega pronta na lista de destino.
-                    if (a[5] instanceof Collection<?> placed) options.addAll(placed);
-                    q.addProperty("kind", "order");
-                } else {
-                    // many(): escolher um subconjunto (ex.: vidência "quais vão para o fundo"); os que sobram ficam de fora.
-                    q.addProperty("kind", "choose");
-                    q.addProperty("min", remMax < 0 ? 0 : Math.max(0, options.size() - remMax));
-                    q.addProperty("max", remMin < 0 ? options.size() : options.size() - remMin);
-                }
-                JsonArray rows = optionsJson(options, null);
-                if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
-                else LibraryChoice.describe(q, String.valueOf(a[0]), options);
-                if (!q.has("purpose")) Piles.split(q, String.valueOf(a[0]), options, hosted.getGame());
-                q.add("options", rows);
-            }
-            case confirm -> {
-                q.addProperty("kind", "confirm");
-                q.addProperty("title", String.valueOf(a[1]));
-                if (a[0] != null) q.add("card", StateJson.card((CardView) a[0]));
-                @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
-                q.add("options", labelsJson(labels == null || labels.size() < 2 ? List.of("Sim", "Não") : labels));
-                commanderZone(q, a[0] instanceof CardView cv ? cv : null, String.valueOf(a[1]));
-            }
-            case showConfirmDialog -> {
-                q.addProperty("kind", "confirm");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.add("options", labelsJson(List.of(String.valueOf(a[2]), String.valueOf(a[3]))));
-            }
-            case showOptionDialog -> {
-                q.addProperty("kind", "choose");
-                q.addProperty("title", String.valueOf(a[0]));
-                q.addProperty("min", 1);
-                q.addProperty("max", 1);
-                @SuppressWarnings("unchecked") List<String> labels = (List<String>) a[3];
-                options.addAll(labels);
-                q.add("options", optionsJson(options, null));
-            }
-            case showInputDialog -> {
-                @SuppressWarnings("unchecked") List<String> choices = (List<String>) a[4];
-                q.addProperty("title", String.valueOf(a[0]));
-                if (choices != null && !choices.isEmpty()) {
-                    q.addProperty("kind", "choose");
-                    q.addProperty("min", 1);
-                    q.addProperty("max", 1);
-                    options.addAll(choices);
-                    q.add("options", optionsJson(options, null));
-                } else {
-                    q.addProperty("kind", "text");
-                    q.addProperty("initial", a[3] == null ? "" : String.valueOf(a[3]));
-                    q.addProperty("numeric", Boolean.TRUE.equals(a[5]));
-                }
-            }
-            case assignGenericAmount -> {
-                @SuppressWarnings("unchecked") Map<Object, Integer> limits = (Map<Object, Integer>) a[1];
-                int total = (Integer) a[2], min = Boolean.TRUE.equals(a[3]) ? 1 : 0;
-                if (total <= 0) return Map.of();
-                options.addAll(limits.keySet());
-                q.addProperty("kind", "amount"); q.addProperty("total", total);
-                q.addProperty("title", "Distribua o total entre as opções");
-                if (a[0] instanceof CardView card) q.add("card", StateJson.card(card));
-                JsonArray rows = optionsJson(options, null);
-                for (int i = 0; i < options.size(); i++) {
-                    JsonObject row = rows.get(i).getAsJsonObject();
-                    row.addProperty("min", min); row.addProperty("max", Math.min(total, limits.get(options.get(i))));
-                }
-                q.add("options", rows);
-            }
-            case assignCombatDamage -> {
-                // Bloqueio duplo (ou atropelar): o jogador escolhe como dividir o dano, com a divisão automática pronta.
-                @SuppressWarnings("unchecked") List<CardView> blockers = (List<CardView>) a[1];
-                if (blockers == null || blockers.isEmpty() || (Integer) a[2] <= 0) return autoCombatDamage(a);
-                CombatDamage.describe(q, options, a);
-            }
-            case manipulateCardList -> {
-                List<CardView> out = new ArrayList<>();
-                ((Iterable<?>) a[1]).forEach(o -> out.add((CardView) o));
-                return out;
-            }
-            default -> {
-                seat.send(toast("error", "Esta decisão ainda não é suportada: " + ev.getMethod() + "."));
-                if (Boolean.getBoolean("mesa.strictPrompts")) throw new IllegalStateException("Unsupported prompt: " + ev.getMethod());
-                return null;
-            }
-        }
-
-        // Toda pergunta mostra a carta que a fez, mesmo quando o Forge não a cita.
-        if (!q.has("card")) {
-            CardView source = asking(seat, null, hosted.getGame());
-            if (source != null) q.add("card", StateJson.card(source));
-        }
-        Question question = new Question(id, ev.getMethod(), a, options, new CompletableFuture<>(), q);
-        var game = hosted.getGame();
-        int playerId = seat.me == null ? -1 : seat.me.getId();
-        if (life.cancelled() || life.isConceding(game, playerId) || seat.eliminated()) return defaultAnswer(question);
-        seat.question = question;
-        // A close can race the precheck: publish first, then observe its cancellation flag again.
-        if (life.cancelled() || life.isConceding(game, playerId) || seat.eliminated() || (game != null && game.isGameOver()))
-            question.answer().complete(defaultAnswer(question));
-        markDirty();
-        try {
-            if (FThreads.isGuiThread() && GuiBase.getInterface() instanceof HeadlessGui headless)
-                return headless.awaitBrowserAnswer(question.answer());
-            while (true) {
-                life.pump(game);
-                if (life.cancelled() || game.isGameOver() || life.isConceding(game, playerId))
-                    question.answer().complete(defaultAnswer(question));
-                try {
-                    return GuiBase.getInterface() instanceof HeadlessGui headless
-                        ? headless.awaitGameAnswer(question.answer(), 50)
-                        : question.answer().get(50, java.util.concurrent.TimeUnit.MILLISECONDS);
-                }
-                catch (java.util.concurrent.TimeoutException waiting) { /* Pump this game's lifecycle only. */ }
-            }
-        } catch (InterruptedException | java.util.concurrent.CancellationException e) {
-            return defaultAnswer(question);
-        } catch (Exception e) {
-            // A partida segue com a resposta padrão; o log diz que o jogador não escolheu.
-            System.err.println("Sessão " + code + ": pergunta " + ev.getMethod() + " caiu na resposta padrão: " + e);
-            return defaultAnswer(question);
-        } finally {
-            if (seat.question == question) { seat.question = null; seat.inputGen.incrementAndGet(); }
-            markDirty();
-        }
-    }
-
-    private void answer(Seat seat, JsonObject msg) {
-        Question q = seat.question;
-        if (q == null || !msg.has("id") || exactInt(msg.get("id")) != q.id()) return;
-        validateAnswer(q, msg);
-        Object result;
-        switch (q.method()) {
-            case confirm, showConfirmDialog -> result = msg.get("value").getAsBoolean();
-            case showOptionDialog -> result = firstIndex(msg);
-            case showInputDialog -> result = q.options().isEmpty() ? str(msg, "text", "") : pick(q, msg).stream().findFirst().orElse(null);
-            case getAbilityToPlay, chooseSingleEntityForEffect -> result = pick(q, msg).stream().findFirst().orElse(null);
-            case order -> result = new IGuiGame.OrderResult<>(pick(q, msg), false);
-            case assignCombatDamage -> result = CombatDamage.result(q.options(), CombatDamage.validate(q.json(), msg.get("amounts")));
-            case assignGenericAmount -> {
-                int[] values = AmountAllocation.validate(q.json(), msg.get("amounts"));
-                Map<Object, Integer> allocation = new LinkedHashMap<>();
-                for (int i = 0; i < values.length; i++) allocation.put(q.options().get(i), values[i]);
-                result = allocation;
-            }
-            default -> result = pick(q, msg);
-        }
-        q.answer().complete(result);
-    }
-
-    /**
-     * Regra 903.9a: o comandante foi para o cemitério ou o exílio e o dono pode mandá-lo para a zona de comando.
-     * O Forge só manda o texto da regra em inglês; a pergunta ganha onde o comandante está, e a mesa nomeia os
-     * botões ("Enviar à zona de comando" ou "Manter no cemitério"). "Sim" continua sendo enviar.
-     */
-    private static void commanderZone(JsonObject q, CardView commander, String text) {
-        if (commander == null || !text.contains("its owner may put it into the command zone")) return;
-        q.addProperty("purpose", "commander-zone");
-        // Título curto em português para a barra da pergunta minimizada e mesas antigas.
-        q.addProperty("title", "Enviar o comandante para a zona de comando?");
-        ZoneType zone = commander.getZone();
-        q.addProperty("zone", zone == null ? "Graveyard" : zone.name());
-    }
-
-    private static void validateAnswer(Question q, JsonObject msg) {
-        if (q.method() == ProtocolMethod.confirm || q.method() == ProtocolMethod.showConfirmDialog) {
-            if (!msg.has("value") || !msg.get("value").isJsonPrimitive() || !msg.get("value").getAsJsonPrimitive().isBoolean())
-                throw new IllegalArgumentException("Escolha uma resposta válida.");
-            return;
-        }
-        if (q.method() == ProtocolMethod.assignGenericAmount) { AmountAllocation.validate(q.json(), msg.get("amounts")); return; }
-        if (q.method() == ProtocolMethod.assignCombatDamage) { CombatDamage.validate(q.json(), msg.get("amounts")); return; }
-        if (q.method() == ProtocolMethod.showInputDialog && q.options().isEmpty()) {
-            String text = MatchConfig.string(msg, "text");
-            if (text.length() > 1000) throw new IllegalArgumentException("A resposta é longa demais.");
-            if (Boolean.TRUE.equals(q.args()[5])) try { Integer.parseInt(text); }
-                catch (NumberFormatException e) { throw new IllegalArgumentException("Informe um número inteiro."); }
-            return;
-        }
-        JsonArray indices = msg.has("indices") && msg.get("indices").isJsonArray() ? msg.getAsJsonArray("indices") : new JsonArray();
-        Set<Integer> unique = new java.util.HashSet<>();
-        for (JsonElement e : indices) {
-            int i;
-            try { i = exactInt(e); } catch (RuntimeException ex) { throw new IllegalArgumentException("Seleção inválida."); }
-            if (i < 0 || i >= q.options().size() || !unique.add(i)) throw new IllegalArgumentException("Seleção inválida.");
-        }
-        String kind = q.json().get("kind").getAsString();
-        if ("order".equals(kind) && unique.size() != q.options().size()) throw new IllegalArgumentException("Ordene todas as opções.");
-        if ("choose".equals(kind)) {
-            int min = q.json().has("min") ? q.json().get("min").getAsInt() : 0;
-            int max = q.json().has("max") ? q.json().get("max").getAsInt() : q.options().size();
-            if (unique.size() < min || (max >= 0 && unique.size() > max)) throw new IllegalArgumentException("A quantidade de opções selecionadas é inválida.");
-        }
-    }
-
-    private static int firstIndex(JsonObject msg) {
-        JsonArray idx = msg.getAsJsonArray("indices");
-        return idx == null || idx.isEmpty() ? 0 : idx.get(0).getAsInt();
-    }
-
-    private static List<Object> pick(Question q, JsonObject msg) {
-        List<Object> out = new ArrayList<>();
-        JsonArray idx = msg.getAsJsonArray("indices");
-        if (idx != null) for (JsonElement e : idx) {
-            int i = e.getAsInt();
-            if (i >= 0 && i < q.options().size()) out.add(q.options().get(i));
-        }
-        return out;
-    }
-
-    private static Object defaultAnswer(Question q) {
-        return switch (q.method()) {
-            case confirm -> q.args()[2];
-            case showConfirmDialog -> q.args()[4];
-            case showOptionDialog -> q.args()[4];
-            case showInputDialog -> q.args()[3];
-            case order -> new IGuiGame.OrderResult<>(isSubset(q) ? new ArrayList<>() : new ArrayList<>(q.options()), false);
-            // Only used while a game is being abandoned, to release the blocked engine safely.
-            case assignGenericAmount -> {
-                Map<Object, Integer> allocation = new LinkedHashMap<>();
-                int remaining = q.json().get("total").getAsInt();
-                JsonArray bounds = q.json().getAsJsonArray("options");
-                for (int i = 0; i < q.options().size(); i++) {
-                    int min = bounds.get(i).getAsJsonObject().get("min").getAsInt();
-                    allocation.put(q.options().get(i), min); remaining -= min;
-                }
-                for (int i = 0; i < q.options().size() && remaining > 0; i++) {
-                    Object target = q.options().get(i);
-                    int extra = Math.min(remaining, bounds.get(i).getAsJsonObject().get("max").getAsInt() - allocation.get(target));
-                    allocation.merge(target, extra, Integer::sum); remaining -= extra;
-                }
-                yield allocation;
-            }
-            case assignCombatDamage -> autoCombatDamage(q.args());
-            case getChoices, chooseEntitiesForEffect -> new ArrayList<>(q.options().subList(0, Math.max(0, Math.min(q.options().size(), (Integer) (q.method() == ProtocolMethod.getChoices ? q.args()[1] : q.args()[2])))));
-            default -> null;
-        };
-    }
-
-    private static boolean isSubset(Question q) {
-        return (Integer) q.args()[2] != 0 || (Integer) q.args()[3] != 0;
-    }
-
-    /** Dano letal em cada bloqueador, na ordem; o resto vai para o defensor (atropelar) ou para o último bloqueador. */
-    private static Map<CardView, Integer> autoCombatDamage(Object[] a) {
-        @SuppressWarnings("unchecked") List<CardView> blockers = (List<CardView>) a[1];
-        int damage = (Integer) a[2];
-        GameEntityView defender = (GameEntityView) a[3];
-        Map<CardView, Integer> map = new HashMap<>();
-        for (int i = 0; i < blockers.size() && damage > 0; i++) {
-            CardView b = blockers.get(i);
-            int lethal = Math.max(1, b.getLethalDamage());
-            int amt = Math.min(damage, lethal);
-            map.merge(b, amt, Integer::sum);
-            damage -= amt;
-        }
-        if (damage > 0) {
-            if (defender != null) map.put(null, damage);
-            else if (!blockers.isEmpty()) map.merge(blockers.get(blockers.size() - 1), damage, Integer::sum);
-        }
-        return map;
-    }
-
-    private static JsonArray optionsJson(List<Object> options, FSerializableFunction<Object, String> display) {
-        JsonArray arr = new JsonArray();
-        for (Object o : options) {
-            JsonObject j = new JsonObject();
-            if (o instanceof CardView cv) { j.addProperty("kind", "card"); j.add("card", StateJson.card(cv)); }
-            else if (o instanceof PlayerView pv) { j.addProperty("kind", "player"); j.addProperty("id", pv.getId()); }
-            j.addProperty("label", display != null ? display.apply(o) : String.valueOf(o));
-            arr.add(j);
-        }
-        return arr;
-    }
-
-    /** Pedido de voto: a carta que vota e os votos já dados, para a mesa explicar cada opção. */
-    private void voteQuestion(JsonObject q, forge.game.Game game) {
-        SpellAbility vote = Votes.current(game);
-        if (vote == null || vote.getHostCard() == null || !Votes.isVotePrompt(q.get("title").getAsString())) return;
-        q.addProperty("purpose", "vote");
-        q.addProperty("title", "Votação: " + vote.getHostCard().getName());
-        q.add("card", StateJson.card(vote.getHostCard().getView()));
-        q.add("votes", votesJson(game, voteTally.of(vote)));
-    }
-
-    private static JsonArray votesJson(forge.game.Game game, List<String[]> votes) {
-        JsonArray arr = new JsonArray();
-        for (String[] v : votes) {
-            for (forge.game.player.Player p : game.getRegisteredPlayers()) if (p.getName().equals(v[0])) {
-                JsonObject j = new JsonObject(); j.addProperty("player", p.getId()); j.addProperty("label", v[1]); arr.add(j); break;
-            }
-        }
-        return arr;
-    }
-
-    /** Anúncio de voto do Forge (em inglês, com a contagem crua): guarda a contagem e vira um aviso curto. */
-    private String voteNotice(forge.game.Game game, String text) {
-        SpellAbility vote = Votes.current(game);
-        if (vote == null) return text;
-        List<String> names = game.getRegisteredPlayers().stream().map(forge.game.player.Player::getName).toList();
-        List<String[]> votes = Votes.parse(text, names);
-        if (votes == null) return text;
-        voteTally.observe(vote, votes);
-        String notice = Votes.notice(text, names);
-        return notice != null ? notice : text;
-    }
-
-    private static JsonArray labelsJson(List<String> labels) {
-        JsonArray arr = new JsonArray();
-        labels.forEach(arr::add);
-        return arr;
-    }
-
-    // ---------- Pular o turno de quem caiu ----------
-
-    /** Assentos que podem votar agora: conectados, ainda no jogo e diferentes do alvo. */
-    private Set<Integer> skipVoters(int target) {
-        Set<Integer> voters = new java.util.LinkedHashSet<>();
-        for (Seat each : seats) if (each.index != target && each.channel != null && each.me != null && !each.eliminated()) voters.add(each.index);
-        return voters;
-    }
-
-    private Seat seatOfPlayer(int playerId) {
-        for (Seat each : seats) if (each.me != null && each.me.getId() == playerId) return each;
-        return null;
-    }
-
-    /** {type:"skip-vote", target: id do jogador, value: true|false}. Abre a votação ou registra o voto. */
-    private void voteSkip(Seat voter, JsonObject msg) {
-        if (!isRoom() || !started() || !"playing".equals(matchPhase) || voter.channel == null || voter.eliminated()) return;
-        if (!msg.has("target")) return;
-        Seat target = seatOfPlayer(exactInt(msg.get("target")));
-        if (target == null || target == voter || target.channel != null || target.eliminated() || target.departed) {
-            voter.send(toast("error", "Só dá para votar para pular o turno de um jogador desconectado.")); return;
-        }
-        boolean value = !msg.has("value") || msg.get("value").getAsBoolean();
-        synchronized (skipApproved) {
-            if (skipApproved.contains(target.index)) return;
-            if (skipVote != null && skipVote.target != target.index) {
-                voter.send(toast("error", "Já há uma votação aberta. Espere ela terminar.")); return;
-            }
-            boolean opened = skipVote == null;
-            if (opened) skipVote = new SkipVote(target.index);
-            skipVote.vote(voter.index, value);
-            if (opened) for (Seat each : seats) if (each != voter && each != target)
-                each.send(toast("toast", voter.name + " abriu uma votação para pular o turno de " + target.name + "."));
-            settleSkipVote();
-        }
-        markDirty();
-    }
-
-    /** Fecha a votação se já há maioria (ou se ela ficou impossível). Chamado com o lock de skipApproved. */
-    private void settleSkipVote() {
-        if (skipVote == null) return;
-        Seat target = seats[skipVote.target];
-        if (target.channel != null) { skipVote = null; return; }
-        SkipVote.Result r = skipVote.result(skipVoters(skipVote.target));
-        if (r == SkipVote.Result.OPEN) return;
-        skipVote = null;
-        if (r == SkipVote.Result.APPROVED) {
-            skipApproved.add(target.index);
-            broadcast(toast("toast", "Aprovado: o turno de " + target.name + " será pulado."));
-        } else broadcast(toast("toast", "A votação para pular o turno de " + target.name + " não passou."));
-    }
-
-    private void broadcast(String message) { for (Seat each : seats) each.send(message); }
-
-    /** A cada tick: quem voltou cancela tudo; quem foi aprovado tem o turno passado pela ponte. */
-    private void tickSkips() {
-        if (!isRoom()) return;
-        boolean changed = false;
-        synchronized (skipApproved) {
-            if (skipVote != null) {
-                SkipVote before = skipVote;
-                settleSkipVote();
-                changed |= skipVote != before;
-            }
-            if (skipApproved.isEmpty()) { if (changed) markDirty(); return; }
-            HostedMatch m = match;
-            GameView gv = m == null ? null : m.getGameView();
-            PlayerView active = gv == null ? null : gv.getPlayerTurn();
-            for (Integer index : List.copyOf(skipApproved)) {
-                Seat seat = seats[index];
-                boolean back = seat.channel != null, gone = seat.eliminated() || gv == null || gv.isGameOver();
-                boolean theirTurn = active != null && seat.me != null && active.getId() == seat.me.getId();
-                if (theirTurn) skipTurnStarted.add(index);
-                boolean turnOver = skipTurnStarted.contains(index) && !theirTurn;
-                if (back || gone || turnOver) {
-                    skipApproved.remove(index); skipTurnStarted.remove(index); changed = true;
-                    if (turnOver && !back && !gone) broadcast(toast("toast", "O turno de " + seat.name + " foi pulado."));
-                    if (back) broadcast(toast("toast", seat.name + " voltou e joga normalmente."));
-                    continue;
-                }
-                autopilot(seat);
-            }
-        }
-        if (changed) markDirty();
-    }
-
-    /**
-     * Passa a vez pelo jogador desconectado, sem jogar nada: responde perguntas com a escolha padrão, passa a
-     * prioridade, não ataca nem bloqueia e, na limpeza, descarta as primeiras cartas que o Forge oferecer.
-     */
-    private void autopilot(Seat seat) {
-        Question q = seat.question;
-        if (q != null) { if (!q.answer().isDone()) q.answer().complete(defaultAnswer(q)); return; }
-        if (!(seat.controller() instanceof PlayerControllerHuman human)) return;
-        Object input = human.getInputQueue().getInput();
-        if (input == null) return;
-        int gen = seat.inputGen.get();
-        long now = System.currentTimeMillis();
-        if (seat.autopilotGen == gen && now - seat.autopilotAt < 1200) return;
-        seat.autopilotGen = gen; seat.autopilotAt = now;
-        if (input instanceof InputPayMana) { if (seat.cancelEnabled) seat.onEdt(gen, IGameController::selectButtonCancel); return; }
-        boolean passes = input instanceof InputPassPriority || input instanceof InputAttack || input instanceof InputBlock
-            || input instanceof InputConfirm || input instanceof InputConfirmMulligan;
-        if (!passes && !seat.okEnabled && !seat.selectable.isEmpty()) {
-            CardView cv = findCard(seat, seat.selectable.iterator().next());
-            if (cv != null) { seat.onEdt(gen, c -> c.selectCard(cv, null, null)); return; }
-        }
-        if (seat.okEnabled) seat.onEdt(gen, IGameController::selectButtonOk);
-        else if (seat.cancelEnabled) seat.onEdt(gen, IGameController::selectButtonCancel);
-    }
-
-    /** Para a mesa: a votação aberta, como está e o voto deste assento; e quem já tem o turno aprovado para pular. */
-    private JsonObject skipJson(Seat seat) {
-        if (!isRoom()) return null;
-        synchronized (skipApproved) {
-            if (skipVote == null && skipApproved.isEmpty()) return null;
-            JsonObject o = new JsonObject();
-            if (skipVote != null) {
-                Seat target = seats[skipVote.target];
-                Set<Integer> voters = skipVoters(skipVote.target);
-                JsonObject v = new JsonObject();
-                if (target.me != null) v.addProperty("target", target.me.getId());
-                v.addProperty("name", target.name);
-                v.addProperty("yes", skipVote.yes.size());
-                v.addProperty("no", skipVote.no.size());
-                v.addProperty("voters", voters.size());
-                v.addProperty("needed", SkipVote.needed(voters.size()));
-                v.addProperty("canVote", voters.contains(seat.index));
-                if (skipVote.yes.contains(seat.index)) v.addProperty("mine", "yes");
-                else if (skipVote.no.contains(seat.index)) v.addProperty("mine", "no");
-                o.add("vote", v);
-            }
-            JsonArray skipping = new JsonArray();
-            for (Integer index : skipApproved) if (seats[index].me != null) skipping.add(seats[index].me.getId());
-            o.add("skipping", skipping);
-            return o;
-        }
-    }
-
-    // ---------- Desfazer ----------
-
-    /** Quem precisa aceitar um pedido de {@code requester}: os outros humanos conectados e ainda no jogo. */
-    private Set<Integer> undoVoters(int requester) {
-        Set<Integer> voters = new java.util.LinkedHashSet<>();
-        if (lab != null) return voters;
-        for (Seat each : seats) if (each.index != requester && each.channel != null && each.me != null && !each.eliminated()) voters.add(each.index);
-        return voters;
-    }
-
-    /** {type:"undo-request"}: pede para voltar à última decisão deste assento. Contra a IA, volta na hora. */
-    private void requestUndo(Seat seat) {
-        if (!started() || !"playing".equals(matchPhase) || gameOver() || seat.me == null || seat.eliminated()) return;
-        synchronized (undoLock) {
-            if (undoRequest != null || undo.hasPending()) { seat.send(toast("error", "Já há um pedido de desfazer em andamento. Espere ele terminar.")); return; }
-            UndoHistory.Step step = undo.lastOf(seat.me.getId());
-            if (step == null) { seat.send(toast("error", "Ainda não há nada seu para desfazer.")); return; }
-            Set<Integer> voters = undoVoters(seat.index);
-            if (isRoom() && lab == null && voters.isEmpty()) { seat.send(toast("error", "Não há ninguém conectado para aceitar o pedido agora.")); return; }
-            undoRequest = new UndoRequest(seat.index, step);
-            for (Integer v : voters) seats[v].send(toast("toast", seat.name + " pediu para desfazer: " + step.text() + "."));
-            settleUndo();
-        }
-        markDirty();
-    }
-
-    /** {type:"undo-vote", value}: aceitar (true) ou recusar o pedido aberto. */
-    private void voteUndo(Seat seat, boolean value) {
-        synchronized (undoLock) {
-            if (undoRequest == null || undoRequest.requester == seat.index || !undoVoters(undoRequest.requester).contains(seat.index)) return;
-            undoRequest.vote(seat.index, value);
-            settleUndo();
-        }
-        markDirty();
-    }
-
-    /** {type:"undo-cancel"}: quem pediu desiste antes de os outros responderem. */
-    private void cancelUndo(Seat seat) {
-        synchronized (undoLock) {
-            if (undoRequest == null || undoRequest.requester != seat.index) return;
-            undoRequest = null;
-            for (Seat each : seats) if (each != seat) each.send(toast("toast", seat.name + " desistiu de desfazer."));
-        }
-        markDirty();
-    }
-
-    /** Fecha o pedido quando todos aceitaram ou alguém recusou. Chamado com o undoLock. */
-    private void settleUndo() {
-        UndoRequest r = undoRequest;
-        if (r == null) return;
-        Seat requester = seats[r.requester];
-        if (gameOver() || requester.channel == null || requester.eliminated()) { undoRequest = null; return; }
-        Set<Integer> voters = undoVoters(r.requester);
-        UndoRequest.Result result = r.result(voters);
-        if (result == UndoRequest.Result.OPEN) return;
-        undoRequest = null;
-        if (result == UndoRequest.Result.REJECTED) {
-            List<String> refused = r.no.stream().map(i -> seats[i].name).toList();
-            requester.send(toast("toast", String.join(" e ", refused) + (refused.size() > 1 ? " recusaram" : " recusou") + " desfazer: " + r.step.text() + "."));
-            for (Seat each : seats) if (each != requester && !r.no.contains(each.index)) each.send(toast("toast", "O pedido de " + requester.name + " para desfazer foi recusado."));
-            return;
-        }
-        List<String> accepted = r.yes.stream().map(i -> seats[i].name).toList();
-        undo.approve(r.step, accepted.isEmpty() ? null : (accepted.size() > 1 ? "aceito por " + String.join(" e ", accepted) : "aceito por " + accepted.get(0)));
-        // Quem está com a prioridade aberta tem o prompt reaberto: o Forge volta para a thread do jogo, que restaura.
-        // Em outra escolha (bloqueio, alvo, pergunta), o jogo volta assim que ela terminar e alguém tiver a prioridade.
-        for (Seat each : seats) if (each.controller() instanceof PlayerControllerHuman human && human.getInputQueue().getInput() instanceof InputPassPriority priority)
-            FThreads.invokeInEdtLater(priority::restartPrompt);
-    }
-
-    /** Thread do jogo, logo depois de voltar: avisa todo mundo e registra no diário. */
-    private void undone(UndoHistory.Step step) {
-        Seat requester = null;
-        for (Seat each : seats) if (each.me != null && each.me.getId() == step.player().getId()) requester = each;
-        if (requester != null) log(requester, "undo", -1, "aplicada", step.text());
-        String who = requester == null ? step.player().getName() : requester.name;
-        for (Seat each : seats) each.send(toast("toast", each == requester ? "Desfeito: " + step.text() + "." : who + " desfez: " + step.text() + "."));
-        for (Seat each : seats) each.inputGen.incrementAndGet();
-        markDirty();
-    }
-
-    /** Para a mesa: o que este assento desfaria agora e o pedido aberto, com o voto dele. */
-    private JsonObject undoJson(Seat seat) {
-        if (seat.me == null) return null;
-        JsonObject o = new JsonObject();
-        synchronized (undoLock) {
-            UndoHistory.Step last = gameOver() || seat.eliminated() ? null : undo.lastOf(seat.me.getId());
-            if (last != null) o.add("last", last.json());
-            o.addProperty("pending", undo.hasPending());
-            UndoRequest r = undoRequest;
-            if (r != null) {
-                Seat requester = seats[r.requester];
-                Set<Integer> voters = undoVoters(r.requester);
-                JsonObject req = new JsonObject();
-                if (requester.me != null) req.addProperty("player", requester.me.getId());
-                req.addProperty("name", requester.name);
-                req.add("step", r.step.json());
-                req.addProperty("mine", requester == seat);
-                req.addProperty("canVote", voters.contains(seat.index));
-                if (r.yes.contains(seat.index)) req.addProperty("vote", "yes");
-                else if (r.no.contains(seat.index)) req.addProperty("vote", "no");
-                JsonArray waiting = new JsonArray();
-                for (Integer v : voters) if (!r.yes.contains(v)) waiting.add(seats[v].name);
-                req.add("waiting", waiting);
-                o.add("request", req);
-            }
-        }
-        return o;
-    }
+    /** Manda a mesma mensagem a todos os assentos. */
+    void broadcast(String message) { for (Seat each : seats) each.send(message); }
 
     // ---------- Publicação do estado ----------
 
@@ -1621,440 +520,31 @@ final class Session {
 
     /** Chamado pelo publicador de {@link Rooms} a cada 50 ms. */
     void tick() {
-        tickSkips();
-        synchronized (undoLock) {
-            UndoRequest before = undoRequest;
-            settleUndo();
-            if (undoRequest != before) markDirty();
-        }
+        skips.tick();
+        undo.tick();
         // Se o Forge não abriu um prompt novo depois do clique, os botões voltam a funcionar.
         for (Seat seat : seats) if (seat.lockedAtLastFlush && !seat.buttonsLocked()) dirty.set(true);
         if (!dirty.getAndSet(false)) return;
         boolean failed = false;
         for (Seat seat : seats) {
             if (seat.channel == null) continue;
-            JsonObject state = state(seat);
+            JsonObject state = view.state(seat);
             // Leitura concorrente falhou: este assento tenta de novo no próximo ciclo, os outros recebem agora.
             if (state == null) { dirty.set(true); failed = true; continue; }
             seat.send(state.toString());
             if (state.has("eventCursor")) seat.sentEventCursor = state.get("eventCursor").getAsLong();
         }
         for (Watcher w : watchers) {
-            JsonObject state = state(w);
+            JsonObject state = view.state(w);
             if (state == null) { dirty.set(true); failed = true; continue; }
             BridgeServer.send(w.channel, state.toString());
             if (state.has("eventCursor")) w.sentEventCursor = state.get("eventCursor").getAsLong();
         }
-        if (!failed) stateFailures = 0;
-    }
-
-    /** Ciclos seguidos (de 50 ms) em que montar o estado deu erro. Uma falha solta é leitura concorrente e se refaz sozinha. */
-    private int stateFailures;
-    private static final int STATE_FAILURES_TO_LOG = 40;
-
-    /** Registra no log quando o estado falha por uns 2 s seguidos, uma vez por sequência, em vez de a mesa parar sem aviso. */
-    private void stateFailed(RuntimeException e) {
-        if (++stateFailures != STATE_FAILURES_TO_LOG) return;
-        System.err.println("Sessão " + code + ": o estado não sai há " + STATE_FAILURES_TO_LOG + " ciclos: " + e);
-        e.printStackTrace();
-    }
-
-    /**
-     * O estado visto por quem assiste: a mesa do jogador escolhido, sem a mão de ninguém (como um oponente veria),
-     * sem botões, perguntas nem preferências, e sem token para voltar a um assento.
-     */
-    private JsonObject state(Watcher w) {
-        HostedMatch m = match;
-        GameView gv = m == null ? null : m.getGameView();
-        if (gv == null) return null;
-        JsonObject state;
-        try {
-            state = StateJson.game(gv, -2, m.getGame());
-            events.addTurnTimes(state); events.addLifeHistory(state);
-            addBrackets(state);
-            // O jogador escolhido; sem escolha (ou se ele não está mais no jogo), o anfitrião.
-            int you = -1, host = seats[0].me == null ? -1 : seats[0].me.getId();
-            for (PlayerView p : gv.getPlayers()) if (p.getId() == w.player) you = p.getId();
-            if (you < 0) for (PlayerView p : gv.getPlayers()) if (p.getId() == host || you < 0) you = p.getId();
-            state.addProperty("you", you);
-            state.addProperty("spectating", true);
-            state.addProperty("watching", true);
-            JsonObject input = new JsonObject();
-            input.addProperty("gen", 0);
-            input.addProperty("message", "");
-            input.add("ok", button("", false));
-            input.add("cancel", button("", false));
-            for (String empty : new String[]{"selectable", "selectableStacks", "selectablePlayers", "actionable"}) input.add(empty, new JsonArray());
-            state.add("input", input);
-            state.add("deciding", deciding(null));
-            state.add("waiting", waiting());
-            state.add("castable", new JsonArray());
-        } catch (RuntimeException e) {
-            stateFailed(e);
-            return null;
-        }
-        state.add("config", config.json());
-        state.add("match", matchJson());
-        state.addProperty("matchId", matchId);
-        MatchConfig.versions(state);
-        synchronized (events) {
-            state.add("events", events.json(w.sentEventCursor));
-            state.addProperty("eventCursor", events.cursor());
-            state.addProperty("stateVersion", stateVersion.get());
-        }
-        state.add("room", roomJson(-1, null));
-        state.add("decks", new JsonArray());
-        if (!room) renameHuman(state);
-        return state;
-    }
-
-    /** Contra a IA o humano se chama "Você" no Forge; quem assiste o vê pelo nome que ele usa, ou "Jogador". */
-    private void renameHuman(JsonObject state) {
-        String forgeName = seats[0].name, shown = seats[0].nick != null ? seats[0].nick : "Jogador";
-        if (forgeName == null || !state.has("players")) return;
-        for (JsonElement e : state.getAsJsonArray("players")) {
-            JsonObject p = e.getAsJsonObject();
-            if (p.has("name") && forgeName.equals(p.get("name").getAsString())) p.addProperty("name", shown);
-        }
-    }
-
-    private static java.lang.reflect.Field selectTargetsSa, payManaSa, payManaEffect, mulliganStartingPlayer, londonReturnCount;
-
-    /**
-     * O que o pagamento de mana paga, para a mesa dizer o que o Cancelar desfaz: "spell" (a conjuração volta atrás),
-     * "ability" (a ativação volta atrás) ou "effect" (um custo pedido no meio de um efeito, como "a menos que pague
-     * {3}"; cancelar é só não pagar). O Forge guarda isso em campos protegidos do input.
-     */
-    static String payingFor(InputPayMana in) {
-        try {
-            if (payManaEffect == null) payManaEffect = accessible(InputPayMana.class, "effect");
-            if (payManaEffect.getBoolean(in)) return "effect";
-            if (payManaSa == null) payManaSa = accessible(InputPayMana.class, "saPaidFor");
-            SpellAbility sa = (SpellAbility) payManaSa.get(in);
-            return sa == null ? null : sa.isSpell() ? "spell" : "ability";
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Mágica sendo conjurada (escolhendo alvos ou pagando o custo): a carta que alveja ({@code source}) e os alvos
-     * já escolhidos, para a mesa desenhar as setas. O Forge não expõe a habilidade desses inputs, então ela é lida
-     * por reflexão. No pagamento só vale para o que ainda não está na pilha (lá os alvos vão com o item).
-     */
-    private static JsonObject targeting(Seat seat) {
-        if (!(seat.controller() instanceof PlayerControllerHuman pch)) return null;
-        Object in = pch.getInputQueue().getInput();
-        try {
-            SpellAbility sa;
-            if (in instanceof InputSelectTargets) {
-                if (selectTargetsSa == null) selectTargetsSa = accessible(InputSelectTargets.class, "sa");
-                sa = (SpellAbility) selectTargetsSa.get(in);
-            } else if (in instanceof InputPayMana) {
-                if (payManaSa == null) payManaSa = accessible(InputPayMana.class, "saPaidFor");
-                sa = (SpellAbility) payManaSa.get(in);
-                if (sa != null && sa.getHostCard() != null
-                    && sa.getHostCard().getGame().getStack().getInstanceMatchingSpellAbilityID(sa.getRootAbility()) != null) return null;
-            } else {
-                return null;
-            }
-            if (sa == null || sa.getHostCard() == null) return null;
-            JsonObject o = StateJson.targets(TargetingProgress.chosenTargets(sa));
-            if (o == null) {
-                if (in instanceof InputPayMana) return null;
-                o = new JsonObject();
-            }
-            o.addProperty("source", sa.getHostCard().getId());
-            // Ao conjurar, a carta já saiu da mão: vai junto para a mesa mostrar de onde sai a seta.
-            o.add("card", StateJson.card(CardView.get(sa.getHostCard())));
-            // Na escolha de alvos: a habilidade que pede o alvo, o que serve e quantos faltam.
-            JsonObject details = InputContext.targetDetails(in);
-            if (details != null) for (var entry : details.entrySet()) o.add(entry.getKey(), entry.getValue());
-            return o;
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            return null;
-        }
-    }
-
-    private static java.lang.reflect.Field accessible(Class<?> c, String name) throws NoSuchFieldException {
-        java.lang.reflect.Field f = c.getDeclaredField(name);
-        f.setAccessible(true);
-        return f;
-    }
-
-    /**
-     * Outros jogadores humanos com uma decisão aberta (alvo, sacrifício, pergunta, ataque ou bloqueio), para a mesa
-     * avisar "Aguardando Fulano escolher" em vez de parecer travada. Prioridade comum fica de fora.
-     */
-    private JsonArray deciding(Seat viewer) {
-        JsonArray list = new JsonArray();
-        for (Seat other : seats) {
-            if (other == viewer || other.me == null || other.eliminated()) continue;
-            Object in = other.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
-            String kind = other.question != null ? "choice"
-                : in instanceof InputAttack ? "attack" : in instanceof InputBlock ? "block"
-                : in != null && !(in instanceof InputPassPriority) ? "choice" : null;
-            if (kind == null) continue;
-            JsonObject entry = new JsonObject();
-            entry.addProperty("player", other.me.getId()); entry.addProperty("kind", kind);
-            list.add(entry);
-        }
-        return list;
-    }
-
-    /**
-     * Jogadores humanos que a mesa espera agora (inclusive na prioridade comum) e há quanto tempo, para o alerta de
-     * espera demorada. Cada pedido novo do Forge (outra prioridade, outra escolha) é uma espera nova: o relógio zera a
-     * cada resposta e quando o turno passa. A IA não tem assento e nunca entra.
-     */
-    private JsonArray waiting() {
-        JsonArray list = new JsonArray();
-        long now = System.currentTimeMillis();
-        for (Seat seat : seats) {
-            if (seat.me == null || seat.eliminated()) continue;
-            Question q = seat.question;
-            Object in = seat.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
-            Object pending = q != null ? q : in;
-            long ms = seat.waited(pending, now);
-            if (pending == null) continue;
-            String kind = q != null ? "choice" : in instanceof InputPassPriority ? "priority"
-                : in instanceof InputAttack ? "attack" : in instanceof InputBlock ? "block" : "choice";
-            JsonObject entry = new JsonObject();
-            entry.addProperty("player", seat.me.getId()); entry.addProperty("kind", kind); entry.addProperty("ms", ms);
-            list.add(entry);
-        }
-        return list;
-    }
-
-    /** Monta o estado visto por um jogador; null se uma leitura concorrente falhar (refeita no próximo ciclo). */
-    private JsonObject state(Seat seat) {
-        HostedMatch m = match;
-        GameView gv = m == null ? null : m.getGameView();
-        JsonObject state;
-        try {
-            if (gv == null) {
-                state = new JsonObject();
-                state.addProperty("type", "lobby");
-            } else {
-                PlayerView p = seat.me;
-                state = StateJson.game(gv, p == null ? -2 : p.getId(), m.getGame());
-                events.addTurnTimes(state); events.addLifeHistory(state);
-                addBrackets(state);
-                state.addProperty("you", p == null ? -1 : p.getId());
-                boolean spectating = seat.eliminated();
-                state.addProperty("spectating", spectating);
-                JsonObject input = new JsonObject();
-                int generation = seat.inputGen.get();
-                Object currentInput = !spectating && seat.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
-                boolean priority = currentInput instanceof InputPassPriority;
-                input.addProperty("priority", priority);
-                JsonObject attacking = InputContext.attacking(currentInput);
-                if (attacking != null) input.add("attacking", attacking);
-                JsonObject blocking = InputContext.blocking(currentInput);
-                if (blocking != null) input.add("blocking", blocking);
-                JsonObject suspendCast = InputContext.suspendCast(currentInput);
-                if (suspendCast != null) input.add("suspendCast", suspendCast);
-                JsonObject commanderMove = InputContext.commanderMove(currentInput);
-                if (commanderMove != null) input.add("commanderMove", commanderMove);
-                JsonObject selection = InputContext.selection(currentInput);
-                if (selection != null) input.add("selection", selection);
-                JsonObject tapToPay = InputContext.tapToPay(currentInput);
-                if (tapToPay != null) input.add("tapToPay", tapToPay);
-                JsonObject proliferate = InputContext.proliferate(currentInput);
-                if (proliferate != null) input.add("proliferate", proliferate);
-                Set<Integer> playerChoices = InputContext.playerChoices(currentInput);
-                if (currentInput instanceof InputLondonMulligan) input.addProperty("opening", "mulligan-bottom");
-                else if (currentInput instanceof InputConfirmMulligan) input.addProperty("opening", "mulligan");
-                else if (currentInput instanceof InputConfirm && m.getGame().getAge() == GameStage.BeforeMulligan && !events.gameStarted())
-                    input.addProperty("opening", "play-draw");
-                else if (!playerChoices.isEmpty() && m.getGame().getAge() == GameStage.BeforeMulligan && !events.gameStarted())
-                    input.addProperty("opening", "starting-player");
-                if (input.has("opening")) {
-                    try {
-                        if (currentInput instanceof InputConfirmMulligan) {
-                            if (mulliganStartingPlayer == null) mulliganStartingPlayer = accessible(InputConfirmMulligan.class, "startingPlayer");
-                            forge.game.player.Player first = (forge.game.player.Player) mulliganStartingPlayer.get(currentInput);
-                            if (first != null) seat.openingStartingPlayer = first.getId();
-                        }
-                        if (seat.openingStartingPlayer >= 0) input.addProperty("openingStartingPlayer", seat.openingStartingPlayer);
-                        if (currentInput instanceof InputLondonMulligan london) {
-                            if (londonReturnCount == null) londonReturnCount = accessible(InputLondonMulligan.class, "toReturn");
-                            int total = londonReturnCount.getInt(london);
-                            input.addProperty("openingReturnCount", total);
-                            input.addProperty("openingReturnRemaining", total - london.getSelectedCards().size());
-                            JsonArray selected = new JsonArray(); london.getSelectedCards().forEach(card -> selected.add(card.getId()));
-                            input.add("openingSelected", selected);
-                        }
-                    } catch (ReflectiveOperationException ignored) { /* Optional metadata; keep the actual input usable. */ }
-                }
-                boolean locked = seat.buttonsLocked();
-                seat.lockedAtLastFlush = locked;
-                // Sem input aberto (outro jogador com prioridade), os botões do último prompt ficam velhos: nada a confirmar.
-                if (currentInput == null) locked = true;
-                input.addProperty("gen", generation);
-                input.addProperty("message", seat.message);
-                input.add("ok", button(priority && "OK".equalsIgnoreCase(seat.okLabel) ? "Passar prioridade" : seat.okLabel, seat.okEnabled && !locked && !spectating));
-                input.add("cancel", button(seat.cancelLabel, seat.cancelEnabled && !locked && !spectating));
-                JsonArray sel = new JsonArray();
-                Set<Integer> selectableIds = new LinkedHashSet<>(seat.selectable);
-                selectableIds.addAll(InputContext.tapToPayChoices(currentInput));
-                selectableIds.forEach(sel::add);
-                input.add("selectable", sel);
-                JsonArray stackTargets = new JsonArray(); seat.selectableStacks.forEach(stackTargets::add);
-                input.add("selectableStacks", stackTargets);
-                Set<Integer> playerIds = new LinkedHashSet<>(seat.selectablePlayers); playerIds.addAll(playerChoices);
-                JsonObject phyrexianLife = InputContext.phyrexianLife(currentInput);
-                if (phyrexianLife != null) playerIds.add(phyrexianLife.get("player").getAsInt());
-                JsonArray playerTargets = new JsonArray(); playerIds.forEach(playerTargets::add);
-                input.add("selectablePlayers", playerTargets);
-                JsonArray act = new JsonArray();
-                seat.actionable.forEach(act::add);
-                input.add("actionable", act);
-                if (priority && !locked) {
-                    JsonArray untap = new JsonArray();
-                    ManaUndo.untappable(seat.controller()).forEach(untap::add);
-                    if (!untap.isEmpty()) input.add("untappable", untap);
-                    JsonArray manaOnly = new JsonArray();
-                    ManaOnly.ids(seat.controller()).forEach(manaOnly::add);
-                    if (!manaOnly.isEmpty()) input.add("manaOnly", manaOnly);
-                }
-                // Pagando um custo de mana: a reserva fica clicável no retrato.
-                if (seat.controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana pay) {
-                    input.addProperty("paying", true);
-                    // O OK é o Automático; ele vem desligado também na trava curta depois de um clique, e só aqui quer dizer falta de mana.
-                    input.addProperty("canAutoPay", seat.okEnabled && !seat.okLabel.isEmpty());
-                    String payingFor = payingFor(pay);
-                    if (payingFor != null) input.addProperty("payingFor", payingFor);
-                    // Mana phyrexiana: o retrato (ou o botão) paga um símbolo com 2 de vida.
-                    if (phyrexianLife != null) input.addProperty("phyrexianLife", phyrexianLife.get("pending").getAsInt());
-                    // O custo que falta, descontado a cada mana gerada, para a caixa de ação mostrar com os símbolos.
-                    JsonObject manaCost = InputContext.manaCost(pay);
-                    if (manaCost != null) input.add("manaCost", manaCost);
-                }
-                JsonObject targeting = targeting(seat);
-                if (targeting != null) input.add("targeting", targeting);
-                CardView promptCard = seat.promptCard;
-                if (promptCard == null) promptCard = asking(seat, currentInput, m.getGame());
-                if (promptCard != null) input.add("card", StateJson.card(promptCard));
-                // Voto numa permanente (Council's Judgment): escolhido tocando no campo, com a carta que vota à vista.
-                SpellAbility voting = Votes.isVotePrompt(seat.message) ? Votes.current(m.getGame()) : null;
-                if (voting != null && voting.getHostCard() != null) {
-                    JsonObject vote = new JsonObject();
-                    vote.add("card", StateJson.card(voting.getHostCard().getView()));
-                    vote.add("votes", votesJson(m.getGame(), voteTally.of(voting)));
-                    input.add("vote", vote);
-                }
-                state.add("input", input);
-                Question q = seat.question;
-                if (q != null && !spectating) state.add("question", q.json());
-                state.add("deciding", deciding(seat));
-                state.add("waiting", waiting());
-                // Phase/zone events can precede the actionable input. Never advertise an early cast.
-                if (!priority || !seat.okEnabled || locked || q != null) state.add("castable", new JsonArray());
-                if (generation != seat.inputGen.get()) return null;
-            }
-        } catch (RuntimeException e) {
-            stateFailed(e);
-            return null;
-        }
-        state.add("config", config.json());
-        JsonObject preferences = new JsonObject();
-        PassLevel level = seat.passLevel;
-        preferences.addProperty("passLevel", level.id);
-        // Os dois interruptores antigos continuam no estado, derivados do nível, para clientes de versões anteriores.
-        preferences.addProperty("autoPassNoActions", level.autoPassNoActions());
-        preferences.addProperty("passResponses", level.passesResponses());
-        WebGuiGame passing = seat.gui;
-        preferences.addProperty("passingTurn", passing != null && passing.passingTurn());
-        JsonArray stops = new JsonArray();
-        for (PhaseType phase : seat.opponentStops) stops.add(phase.name());
-        preferences.add("opponentStops", stops);
-        state.add("preferences", preferences);
-        state.add("match", matchJson());
-        state.addProperty("matchId", matchId);
-        MatchConfig.versions(state);
-        synchronized (events) {
-            state.add("events", events.json(seat.sentEventCursor));
-            state.addProperty("eventCursor", events.cursor());
-            state.addProperty("stateVersion", stateVersion.get());
-        }
-        if ("sideboarding".equals(matchPhase) && seat.registered != null) state.add("sideboarding", sideboardingJson(seat));
-        state.add("session", sessionJson(seat));
-        if (isRoom()) state.add("room", roomJson(seat));
-        else state.add("audience", audienceJson());
-        JsonObject skip = skipJson(seat);
-        if (skip != null) state.add("skip", skip);
-        JsonObject undoState = undoJson(seat);
-        if (undoState != null) state.add("undo", undoState);
-        JsonArray decks = new JsonArray();
-        Decks.LISTS.keySet().forEach(decks::add);
-        state.add("decks", decks);
-        return state;
-    }
-
-    /** {code, token, room}: o que o navegador guarda para voltar a esta partida se a conexão cair. */
-    JsonObject sessionJson(Seat seat) {
-        JsonObject o = new JsonObject();
-        o.addProperty("code", code);
-        o.addProperty("token", seat.token);
-        o.addProperty("room", room);
-        return o;
+        if (!failed) view.stateRecovered();
     }
 
     /** {code, seat, token, started, players:[{name, connected, rematch}], spectators:[nome]} */
-    JsonObject roomJson(Seat seat) { return roomJson(seat.index, seat.token); }
-
-    /** Para quem assiste: assento -1 e sem token. */
-    private JsonObject roomJson(int seatIndex, String token) {
-        JsonObject r = new JsonObject();
-        r.addProperty("code", code);
-        r.addProperty("seat", seatIndex);
-        if (token != null) r.addProperty("token", token);
-        r.addProperty("started", started());
-        r.addProperty("public", isPublic());
-        if (lab != null) r.addProperty("lab", true);
-        if (!room) r.addProperty("computer", true);
-        r.addProperty("capacity", config.playerCount());
-        r.add("config", config.json());
-        MatchConfig.versions(r);
-        JsonArray ps = new JsonArray();
-        for (Seat s : seats) {
-            if (!s.taken) continue;
-            JsonObject p = new JsonObject();
-            p.addProperty("seat", s.index);
-            p.addProperty("playerId", s.me == null ? null : s.me.getId());
-            p.addProperty("eliminated", s.eliminated());
-            // Desistiu (pelo menu ou saindo da sala): a mesa tira o jogador de vista, em vez de mostrar o assento eliminado.
-            if (s.conceded && s.eliminated()) p.addProperty("conceded", true);
-            p.addProperty("name", s.name);
-            p.addProperty("connected", s.channel != null);
-            p.addProperty("rematch", s.rematch);
-            // Na sala de espera, quem ainda está escolhendo o deck aparece sem capa e sem comandante.
-            p.addProperty("ready", s.deck != null);
-            // O lobby mostra a capa e o comandante (que já é público na partida); o resto do deck fica escondido.
-            List<String> commanders = s.deck == null ? List.of() : commanderNames(s.deck);
-            if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
-            String cover = s.deck == null ? null : commanders.isEmpty() ? s.cover : commanders.get(0);
-            if (cover != null) p.addProperty("cover", cover);
-            if (s.bracket > 0) p.addProperty("bracket", s.bracket);
-            ps.add(p);
-        }
-        r.add("players", ps);
-        JsonArray spectators = new JsonArray();
-        for (Watcher w : watchers) spectators.add(w.name);
-        r.add("spectators", spectators);
-        return r;
-    }
-
-    /** Contra a IA: se a partida está na lista de salas e quem assiste. {listed, spectators:[nome]} */
-    JsonObject audienceJson() {
-        JsonObject o = new JsonObject();
-        o.addProperty("listed", soloWatchable());
-        JsonArray spectators = new JsonArray();
-        for (Watcher w : watchers) spectators.add(w.name);
-        o.add("spectators", spectators);
-        return o;
-    }
+    JsonObject roomJson(Seat seat) { return view.roomJson(seat.index, seat.token); }
 
     JsonObject publicRoomJson() {
         JsonObject r = new JsonObject();
@@ -2113,13 +603,6 @@ final class Session {
         seat.send(o.toString());
     }
 
-    private static JsonObject button(String label, boolean enabled) {
-        JsonObject b = new JsonObject();
-        b.addProperty("label", label == null ? "" : label);
-        b.addProperty("enabled", enabled);
-        return b;
-    }
-
     static String toast(String type, String text) {
         JsonObject o = new JsonObject();
         o.addProperty("type", type);
@@ -2138,290 +621,4 @@ final class Session {
     }
 
     long eventCursor() { return events.cursor(); }
-
-    // ---------- Assento de um jogador humano ----------
-
-    final class Seat {
-        volatile int index;
-        /** Segredo para voltar ao assento depois de cair a conexão ({type:"rejoin", code, token}). */
-        volatile String token = UUID.randomUUID().toString();
-        volatile Channel channel;
-        volatile String name;
-        /**
-         * Contra a IA, o nome é "Você" na mesa; este é o nome que o jogador usa (o das salas ou o apelido da conta), para o
-         * histórico e a lista de partidas da área de admin. Null quando ele não tem nome.
-         */
-        volatile String nick;
-        /** Deck do assento; numa sala que ainda não começou, null enquanto o jogador escolhe (veja {@link #taken}). */
-        volatile Deck deck;
-        /** Alguém está sentado aqui, com ou sem deck escolhido. */
-        volatile boolean taken;
-        /** Conta de quem joga neste assento (só com a conta conectada) e o id do deck salvo dela, para o histórico. */
-        volatile String account;
-        volatile String deckId;
-        volatile boolean rematch;
-        volatile boolean departed;
-        /** Carta cuja arte representa o deck no lobby (sem comandante); null sem capa. */
-        volatile String cover;
-        /** Bracket que o jogador deu ao deck de Commander (1 a 5); 0 sem bracket. */
-        volatile int bracket;
-        /** Última mensagem pronta no lobby, para ninguém encher a sala de balões. */
-        volatile long saidAt;
-        /** Desistiu deste jogo (no Commander com vários jogadores, a mesa tira o assento de vista). */
-        volatile boolean conceded;
-        volatile RegisteredPlayer registered;
-        private volatile Deck approvedDeck;
-        private volatile boolean sideboardReady;
-        private volatile long sentEventCursor;
-        // A seat preference survives reconnects, the next game, and a rematch.
-        /** Nível de passar automaticamente ({@link PassLevel}); o padrão é "Só com ações". */
-        private volatile PassLevel passLevel = PassLevel.ACOES;
-        /** Etapas do turno dos oponentes em que o jogo segura a prioridade para este assento, mesmo sem ações. */
-        private volatile Set<PhaseType> opponentStops = Set.of();
-
-        private volatile WebGuiGame gui;
-        private volatile PlayerView me;
-        private volatile Question question;
-
-        // Estado do "input" atual do Forge (prompt, botões e cartas selecionáveis).
-        private volatile String message = "";
-        private volatile int openingStartingPlayer = -1;
-        /** Carta citada pelo prompt (ex.: a do topo na vidência de 1); pode estar numa zona oculta. */
-        private volatile CardView promptCard;
-        private volatile String okLabel = "", cancelLabel = "";
-        private volatile boolean okEnabled, cancelEnabled;
-        private volatile Set<Integer> selectable = Set.of();
-        private volatile Set<Integer> selectableStacks = Set.of(), selectablePlayers = Set.of();
-        /** Cartas que o Forge marca como utilizáveis agora: jogáveis, atacantes ou bloqueadores possíveis. */
-        private volatile Set<Integer> actionable = Set.of();
-        /**
-         * Versão do prompt atual. Um clique em OK/Cancelar só vale para a versão que o jogador estava vendo:
-         * sem isso, um clique duplo (ou um clique feito enquanto a tela ainda mostrava o prompt anterior)
-         * cai no prompt seguinte e passa a prioridade, pulando uma fase.
-         */
-        private final AtomicInteger inputGen = new AtomicInteger();
-        private volatile int consumedGen = -1;
-        /** Última ação da ponte por este assento quando o turno dele está sendo pulado (uma por versão do prompt). */
-        private volatile int autopilotGen = -1;
-        private volatile long autopilotAt;
-        private volatile long consumedAt;
-        private static final long CONSUMED_TIMEOUT_MS = 1500;
-        private volatile boolean lockedAtLastFlush;
-        /** Pedido do Forge que a mesa espera deste assento e desde quando (alerta de espera demorada). */
-        private final Object waitLock = new Object();
-        private Object waitingOn;
-        private long waitingSince;
-
-        Seat(int index) { this.index = index; }
-
-        Session session() { return Session.this; }
-
-        void bind(Channel ch, String name, Deck deck) {
-            this.token = UUID.randomUUID().toString();
-            this.departed = false;
-            this.channel = ch;
-            this.name = name;
-            this.deck = deck;
-            this.taken = true;
-            this.account = null;
-            this.deckId = null;
-        }
-
-        /** Liga o assento à conta de quem joga; o deck só vale com a conta. */
-        void owner(Rooms.Owner owner) {
-            account = owner == null ? null : owner.account();
-            deckId = owner == null ? null : owner.deckId();
-        }
-
-        void send(String json) { BridgeServer.send(channel, json); }
-
-        private void reset() {
-            clearInput(); rematch = false; conceded = false; question = null; approvedDeck = null; sideboardReady = false; sentEventCursor = 0;
-            inputGen.incrementAndGet(); consumedGen = -1;
-        }
-
-        private void clearInput() {
-            openingStartingPlayer = -1; message = ""; promptCard = null; okLabel = cancelLabel = ""; okEnabled = cancelEnabled = false;
-            selectable = Set.of(); selectableStacks = Set.of(); selectablePlayers = Set.of(); actionable = Set.of();
-        }
-
-        private boolean buttonsLocked() {
-            return consumedGen == inputGen.get() && System.currentTimeMillis() - consumedAt < CONSUMED_TIMEOUT_MS;
-        }
-
-        private IGameController controller() {
-            WebGuiGame g = gui;
-            PlayerView p = me;
-            return g == null || p == null ? null : g.getGameController(p);
-        }
-
-        /** Há quanto tempo a mesa espera este pedido; um pedido diferente (ou nenhum) recomeça a contagem. */
-        long waited(Object pending, long now) {
-            synchronized (waitLock) {
-                if (pending != waitingOn) { waitingOn = pending; waitingSince = now; }
-                return pending == null ? 0 : now - waitingSince;
-            }
-        }
-
-        boolean eliminated() { return config.commandZone() && me != null && me.getHasLost(); }
-
-        private boolean livePriority() {
-            return controller() instanceof PlayerControllerHuman human && human.getInputQueue().getInput() instanceof InputPassPriority;
-        }
-
-        private void updatePreferences(Channel source, JsonObject message) {
-            Boolean autoPass = optionalBoolean(message, "autoPassNoActions"), responses = optionalBoolean(message, "passResponses");
-            PassLevel level = optionalLevel(message);
-            Set<PhaseType> stops = optionalStops(message);
-            if (autoPass == null && responses == null && level == null && stops == null)
-                throw new IllegalArgumentException("Informe um valor booleano para a passagem automática de prioridade.");
-            // Settings are independent of a prompt generation, but a replaced or departed socket
-            // cannot change this seat. Resolve the controller at execution time across Bo3 games.
-            FThreads.invokeInEdtLater(() -> {
-                if (channel != source) return;
-                WebGuiGame current = gui;
-                // O nível vale sobre os interruptores antigos, que só chegam de clientes de versões anteriores.
-                PassLevel next = level != null ? level : PassLevel.fromLegacy(passLevel, autoPass, responses);
-                if (next != passLevel) {
-                    passLevel = next;
-                    if (current != null) current.levelChanged();
-                }
-                if (stops != null) {
-                    opponentStops = stops;
-                    if (current != null) current.stopsChanged();
-                }
-                passResponseIfAsked();   // trocou para um nível mais rápido com o pedido já aberto: passa este também
-                markDirty();
-            });
-        }
-
-        /** As etapas marcadas, na ordem do turno; null quando a mensagem não muda as paradas. */
-        private static Set<PhaseType> optionalStops(JsonObject message) {
-            JsonElement value = message.get("opponentStops");
-            if (value == null) return null;
-            if (!value.isJsonArray()) throw new IllegalArgumentException("Escolha as etapas do turno do oponente em que o jogo para.");
-            EnumSet<PhaseType> stops = EnumSet.noneOf(PhaseType.class);
-            for (JsonElement each : value.getAsJsonArray()) {
-                PhaseType phase = each.isJsonPrimitive() && each.getAsJsonPrimitive().isString()
-                    ? Arrays.stream(PhaseType.values()).filter(p -> p.name().equals(each.getAsString())).findFirst().orElse(null) : null;
-                if (phase == null || !WebGuiGame.HOLDABLE.contains(phase))
-                    throw new IllegalArgumentException("Essa etapa do turno do oponente não dá prioridade. Escolha outra.");
-                stops.add(phase);
-            }
-            return Collections.unmodifiableSet(stops);
-        }
-
-        /** O nível pedido; null quando a mensagem não muda o nível. */
-        private static PassLevel optionalLevel(JsonObject message) {
-            JsonElement value = message.get("passLevel");
-            if (value == null) return null;
-            PassLevel level = value.isJsonPrimitive() && value.getAsJsonPrimitive().isString() ? PassLevel.of(value.getAsString()) : null;
-            if (level == null) throw new IllegalArgumentException("Escolha um nível de passar automaticamente: sempre, acoes, respostas ou afeta.");
-            return level;
-        }
-
-        private static Boolean optionalBoolean(JsonObject message, String key) {
-            JsonElement value = message.get(key);
-            if (value == null) return null;
-            if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isBoolean())
-                throw new IllegalArgumentException("Informe um valor booleano para a passagem automática de prioridade.");
-            return value.getAsBoolean();
-        }
-
-        /**
-         * Nos níveis "Respostas" e "Só quando me afeta", responde OK sozinha a um pedido de prioridade quando o nível
-         * manda passar ({@link PassLevel#passes}). Só vale para o pedido em que foi agendado: se o jogo pedir outra coisa
-         * antes, não passa. Ataques, bloqueios e escolhas não são pedidos de prioridade e sempre esperam o jogador.
-         */
-        private void passResponseIfAsked() {
-            if (!shouldPass()) return;
-            onEdt(inputGen.get(), c -> {
-                if (shouldPass() && livePriority()) c.selectButtonOk();
-                markDirty();
-            });
-        }
-
-        private boolean shouldPass() {
-            WebGuiGame g = gui;
-            if (question != null || !okEnabled || g == null) return false;
-            // Numa etapa marcada para segurar a prioridade, a vez fica com o jogador em qualquer nível.
-            return g.levelPasses();
-        }
-
-        private void onEdt(int generation, java.util.function.Consumer<IGameController> action) {
-            onEdt(generation, null, action);
-        }
-
-        private void onEdt(int generation, String type, java.util.function.Consumer<IGameController> action) {
-            IGameController c = controller();
-            if (c == null) { rejectStaleAction(this, type); return; }
-            FThreads.invokeInEdtLater(() -> {
-                if (generation == inputGen.get() && question == null && "playing".equals(matchPhase) && c == controller()) action.accept(c);
-                else rejectStaleAction(this, type);
-            });
-        }
-
-        /** Recebe as chamadas do ProtocolGuiGame deste jogador. */
-        private final class Remote implements IRemote {
-            private final String belongsToMatch = matchId;
-            private final HostedMatch hosted;
-            private final MatchLifecycle life;
-            Remote(HostedMatch hosted, MatchLifecycle life) { this.hosted = hosted; this.life = life; }
-            @Override
-            public void send(NetEvent event) {
-                if (life.cancelled() || !belongsToMatch.equals(matchId) || !(event instanceof GuiGameEvent ev)) return;
-                Object[] a = ev.getObjects();
-                switch (ev.getMethod()) {
-                    case openView -> {
-                        @SuppressWarnings("unchecked") TrackableCollection<PlayerView> mine = (TrackableCollection<PlayerView>) a[0];
-                        me = mine.iterator().next();
-                        if (match != null) events.attach(match.getGame());
-                        MatchJournal j = journal;
-                        if (match != null && j != null && j.matchId.equals(belongsToMatch)) j.attach(match.getGame(), gameNumber);
-                    }
-                    case showPromptMessage -> {
-                        message = a[1] == null ? "" : CoinFlipText.prompt(String.valueOf(a[1]));
-                        promptCard = a.length > 2 && a[2] instanceof CardView cv ? cv : null;
-                        inputGen.incrementAndGet();
-                    }
-                    case updateButtons -> {
-                        inputGen.incrementAndGet();
-                        okLabel = CoinFlipText.label(String.valueOf(a[1])); cancelLabel = CoinFlipText.label(String.valueOf(a[2]));
-                        okEnabled = Boolean.TRUE.equals(a[3]); cancelEnabled = Boolean.TRUE.equals(a[4]);
-                        passResponseIfAsked();
-                    }
-                    case setSelectables -> {
-                        Set<Integer> ids = new LinkedHashSet<>();
-                        if (a[0] != null) for (Object o : (Iterable<?>) a[0]) ids.add(((CardView) o).getId());
-                        selectable = ids;
-                    }
-                    case setSelectableTargets -> {
-                        Set<Integer> stackIds = new LinkedHashSet<>(), playerIds = new LinkedHashSet<>();
-                        if (a[0] != null) for (Object target : (Iterable<?>) a[0]) {
-                            if (target instanceof StackItemView item) stackIds.add(item.getId());
-                            else if (target instanceof PlayerView player) playerIds.add(player.getId());
-                        }
-                        selectableStacks = stackIds; selectablePlayers = playerIds;
-                    }
-                    case clearSelectables -> { selectable = Set.of(); selectableStacks = Set.of(); selectablePlayers = Set.of(); }
-                    case setWeaklySelectable -> {
-                        Set<Integer> ids = new LinkedHashSet<>();
-                        if (a[0] != null) for (Object o : (Iterable<?>) a[0]) ids.add(((CardView) o).getId());
-                        actionable = ids;
-                    }
-                    case clearWeaklySelectable -> actionable = Set.of();
-                    // Chega na thread do jogo, com a declaração recusada ainda no combate.
-                    case message -> Seat.this.send(AttackExplain.FORGE_MESSAGE.equals(a[0]) ? AttackExplain.toast(hosted.getGame().getCombat()) : toast("toast", CoinFlipText.notice(voteNotice(hosted.getGame(), String.valueOf(a[0])), a.length > 1 && a[1] != null ? String.valueOf(a[1]) : null)));
-                    case showErrorDialog -> Seat.this.send(toast("toast", String.valueOf(a[0])));
-                    default -> { }
-                }
-                markDirty();
-            }
-
-            @Override
-            public Object sendAndWait(IdentifiableNetEvent event) {
-                return ask(Seat.this, (GuiGameEvent) event, hosted, life);
-            }
-        }
-    }
 }

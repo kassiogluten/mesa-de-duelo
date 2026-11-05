@@ -1,9 +1,10 @@
+import { NAMES } from './storage';
 /**
  * Banco do jogo no IndexedDB, separado do localStorage onde ficam os decks. Guarda as cartas do Scryfall (scryfall),
  * a gravação da última partida (gravacao) e os relatos esperando conexão para sair (relatos). Sem IndexedDB
  * (navegação privada, testes), open() devolve null e quem usa segue só com a memória da página.
  */
-const DB_NAME = 'mesa-de-duelo';
+const DB_NAME = NAMES.idb;
 export const STORES = { cards: 'scryfall', recording: 'gravacao', reports: 'relatos' } as const;
 
 let opening: Promise<IDBDatabase | null> | null = null;

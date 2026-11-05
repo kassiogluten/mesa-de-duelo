@@ -1,3 +1,4 @@
+import { KEYS, loadJSON, saveJSON } from '../storage';
 import { harmfulCounter, type PresentationEvent } from './presentationTimeline';
 import { warpCast, warpReturn } from './warpEffects';
 
@@ -26,7 +27,7 @@ export const SOUND_FILES = {
   walker: '31-walker.wav', loyalty: '32-loyalty.wav',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
-const SETTINGS_KEY = 'mesa:audio:v1';
+const SETTINGS_KEY = KEYS.audio;
 const MAX_VOICES = 4;
 const SOUND_REVISION = 'materials-7';
 // Includes the StereoPanner's correlated-channel crossfeed at the maximum pan.
@@ -209,8 +210,7 @@ export class AudioEventMix {
 }
 
 export function createGameAudio() {
-  let stored: Partial<AudioSettings> | null = null;
-  try { stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null'); } catch { /* Storage is optional. */ }
+  const stored = loadJSON<Partial<AudioSettings> | null>(SETTINGS_KEY, null);
   let settings = normalizeAudioSettings(stored);
   let context: AudioContext | null = null;
   let master: GainNode | null = null;
@@ -225,7 +225,7 @@ export function createGameAudio() {
   let untapTimer: ReturnType<typeof setTimeout> | undefined;
 
   function save() {
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* Storage is optional. */ }
+    saveJSON(SETTINGS_KEY, settings);
   }
   function silence() {
     for (const source of voices) { try { source.stop(); } catch { /* Already ended. */ } }

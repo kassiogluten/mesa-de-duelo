@@ -1,10 +1,11 @@
+import { KEYS, loadJSON, save } from '../storage';
 import { bridgeHttpUrl } from '../feedback';
 
 /**
  * Conta do jogador (Entrar com Google): o token que a ponte devolve em /api/conta/entrar, guardado no localStorage
  * para valer em todas as abas e depois de fechar o jogo. Spec em docs/spec-login-google.md.
  */
-const KEY = 'mesa:conta:v1';
+const KEY = KEYS.conta;
 export const CONTA_API = bridgeHttpUrl('/api/conta/');
 export const GOOGLE_CLIENT_ID: string = import.meta.env?.VITE_GOOGLE_CLIENT_ID ?? '';
 
@@ -22,7 +23,7 @@ const listeners = new Set<() => void>();
 
 export function contaSessao(): ContaSessao | null {
   let s = memory;
-  try { s = JSON.parse(localStorage.getItem(KEY) ?? 'null') as ContaSessao | null ?? memory; } catch { /* fica a da memória */ }
+  s = loadJSON<ContaSessao | null>(KEY, null) ?? memory;
   return s?.token && Date.parse(s.expiresAt) > Date.now() ? s : null;
 }
 
@@ -39,7 +40,7 @@ try { addEventListener('storage', e => { if (e.key === KEY) notify(); }); } catc
 
 function salvar(s: ContaSessao | null) {
   memory = s;
-  try { if (s) localStorage.setItem(KEY, JSON.stringify(s)); else localStorage.removeItem(KEY); } catch { /* fica na memória */ }
+  save(KEY, s ? JSON.stringify(s) : null); // sem armazenamento, fica na memória
   notify();
 }
 

@@ -1,3 +1,4 @@
+import { KEYS, load, save } from '../storage';
 import changelog from '../../CHANGELOG.md?raw';
 import visuals from '../novidades.json';
 import { esc } from './cardtext';
@@ -48,12 +49,12 @@ export function parse(md: string): Release[] {
 export const RELEASES = parse(changelog);
 export const VERSION = RELEASES[0]?.version ?? '';
 
-const SEEN_KEY = 'mesa:novidades';
+const SEEN_KEY = KEYS.novidades;
 function seen() {
-  try { return localStorage.getItem(SEEN_KEY); } catch { return null; }
+  return load(SEEN_KEY);
 }
 function markSeen() {
-  try { localStorage.setItem(SEEN_KEY, VERSION); } catch { /* sem armazenamento */ }
+  save(SEEN_KEY, VERSION);
 }
 
 /** Quantas versões o painel mostra de cada vez: as mais recentes primeiro, e o resto pelo botão no fim. */

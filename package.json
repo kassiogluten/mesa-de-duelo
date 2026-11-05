@@ -17,7 +17,10 @@
     "icons": "pwa-assets-generator",
     "print": "node scripts/print-novidade.mjs",
     "prepare": "git config core.hooksPath .githooks",
-    "test:browser": "node scripts/test-browser.mjs"
+    "test:browser": "node scripts/test-browser.mjs",
+    "unused": "node scripts/unused-exports.mjs",
+    "test:e2e": "node scripts/test-e2e.mjs",
+    "visual": "node scripts/visual-diff.mjs"
   },
   "devDependencies": {
     "@vite-pwa/assets-generator": "^0.2.6",

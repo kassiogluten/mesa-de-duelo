@@ -26,6 +26,12 @@ JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" mvn -o tes
 
 Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). A suíte inteira leva uns 30 s. O motor do Forge liga sozinho antes do primeiro teste (`EngineListener`); partidas de teste saem de `TestGames` (`empty()`, `pauper(...)`, `add(...)`).
 
+**Partidas de verdade:** `npm run test:e2e` sobe o servidor numa porta própria (7199) e roda os `forge-bridge/scripts/test-*.mjs` contra ele (uns 4 min; um só: `npm run test:e2e -- undo`).
+
+**Refatoração sem mudar a tela:** `npm run visual -- snap <pasta>` tira prints de 24 telas das páginas de teste em dois tamanhos (sem animações e sem as imagens das cartas, que carregam em tempos diferentes). Tire antes e depois da mudança e rode `npm run visual -- compare <antes> <depois>`: grava `diff-*.png` onde mudou. Ruído conhecido: `duel-tutor@844x390` varia um pouco entre duas rodadas iguais.
+
+**Código morto:** `npm run unused` lista exports que ninguém usa ("morto" pode apagar).
+
 **Contrato do estado:** o `ProtocolContractTest` (servidor) monta uma partida e confere que todo campo do estado está em `tests/protocol/state-keys.txt`; o `tests/protocol.test.mjs` confere que todo campo dessa lista está declarado em `src/forge/client.ts`. Campo novo no estado: rode o `ProtocolContractTest` com `-Dprotocol.update=true`, declare o campo no `client.ts` e rode `npm test`.
 
 O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm install`) roda `npm test` e `tsc` antes de cada commit que mexe no código da mesa.
@@ -35,6 +41,10 @@ O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm install`) roda `n
 ### Mesa: 1 teste de navegador falha (vista em 2026-11-04, na 0.123.0)
 
 `commander-overlays.browser.mjs`: `1440/4: gallery shifted battlefield` (a galeria da pilha mexe no campo em 1440×900). Comprovado que já existia antes da 0.124.0. Ainda não investigado. (O `commander-table.browser.mjs`, que também estava aqui, passa desde que os testes rodam pelo `npm run test:browser`.)
+
+### Partidas: 3 scripts falham no `npm run test:e2e` (vista em 2026-11-04, na 0.126.0)
+
+`test-damage-events.mjs` e `test-preferences.mjs` falham sempre; `test-end-step-stop.mjs` às vezes (passou numa rodada e falhou na outra). Comprovado que já falhavam antes da divisão do servidor em classes (rodados no commit 56fd478). Ainda não investigados.
 
 ### Servidor: 3 testes de texto falham na suíte inteira (vista em 2026-11-01, na 0.106.0)
 

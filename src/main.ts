@@ -1,3 +1,4 @@
+import { EVENTS, KEYS, NAMES } from './storage';
 import './style.css';
 import { setupPwa } from './ui/pwa';
 import { type DeckData } from './decks';
@@ -71,7 +72,7 @@ let watching: { url: string; code: string; name: string } | null = null;
  * Guardada no localStorage para voltar à partida mesmo depois de recarregar a página ou fechar a aba. A sala de teste
  * do Laboratório fica no sessionStorage, de cada aba: quem joga pelos dois lados tem uma aba em cada assento.
  */
-const RESUME_KEY = 'mesa:resume';
+const RESUME_KEY = KEYS.resume;
 function saveResume() {
   try {
     if (current?.lab) sessionStorage.setItem(RESUME_KEY, JSON.stringify(current));
@@ -128,7 +129,7 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
     if (!match) throw new Error('Nenhuma partida gravada.');
     const report = buildReport({ kind: 'erro', description: 'Gravação baixada do painel de erros.', from: 'partida', version: VERSION, recording: match.recording });
     const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
-    download(await encodeReport(report), `mesa-gravacao-${stamp}.json.gz`);
+    download(await encodeReport(report), `${NAMES.gravacaoArquivo}${stamp}.json.gz`);
   },
   onDiagnostic(entry) { recorder.note(entry.kind, entry.text, entry.detail); },
   onExit() {
@@ -200,7 +201,7 @@ const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
 });
 
 // Decks que chegaram da conta (outro aparelho, junção, lixeira) ou de outra aba: as duas telas se redesenham.
-addEventListener('mesa:decks-sincronizados', () => { lobby.refresh(); builder.refresh(); });
+addEventListener(EVENTS.decksSincronizados, () => { lobby.refresh(); builder.refresh(); });
 iniciarSincronia();
 
 /** A sala de teste não tem deck: cada lado joga com as cartas do cenário montado no Laboratório. */
@@ -209,7 +210,7 @@ const labView = mountLab(document.querySelector('#scrLab')!, {
   onBack: () => { show('lobby'); lobby.refresh(); },
   onHost: scenario => startLab(scenario),
 });
-addEventListener('mesa:laboratorio', () => { labView.open(); show('lab'); scrollTo({top: 0}); });
+addEventListener(EVENTS.laboratorio, () => { labView.open(); show('lab'); scrollTo({top: 0}); });
 
 /** Quem entra numa sala sem deck: escolhe lá dentro, e até lá a mesa guarda este no lugar do deck. */
 const NO_DECK: DeckData = { id: '', name: '', cards: [] };

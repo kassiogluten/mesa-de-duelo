@@ -70,7 +70,7 @@ public class MatchHistoryTest {
         seats.get(2).setLife(0, null); game.getAction().checkGameOverCondition();
         assertTrue(game.isGameOver());
         Session session = Session.room("ABCD", null, "Ana", new forge.deck.Deck("Elfos"), new MatchConfig("commander", "bo1", 3), true);
-        JsonObject o = session.historyJson(game.getMatch());
+        JsonObject o = session.recorder.historyJson(game.getMatch());
 
         assertEquals("commander", o.get("format").getAsString());
         assertEquals("rede", o.get("mode").getAsString());
@@ -102,7 +102,7 @@ public class MatchHistoryTest {
         Session session = twoSeats();
         session.seats[0].registered = game.getMatch().getPlayers().get(0);
         session.seats[0].owner(new Rooms.Owner("conta-ana", "deck-1"));
-        var players = session.historyJson(game.getMatch()).getAsJsonArray("players");
+        var players = session.recorder.historyJson(game.getMatch()).getAsJsonArray("players");
         assertEquals("conta-ana", players.get(0).getAsJsonObject().get("account").getAsString());
         assertEquals("deck-1", players.get(0).getAsJsonObject().get("deckId").getAsString());
         assertFalse("without the account, nothing links the seat", players.get(1).getAsJsonObject().has("account"));
@@ -115,9 +115,9 @@ public class MatchHistoryTest {
         java.util.List.copyOf(game.getPlayers()).get(1).concede(); game.getAction().checkGameOverCondition();
         Session session = Session.solo("ABCDEFGH", null, new forge.deck.Deck("Elfos"), new forge.deck.Deck("Goblins"), new MatchConfig("commander", "bo1", 2));
         session.seats[0].registered = game.getMatch().getPlayers().get(0);
-        assertFalse("without a name, the seat stays unnamed", session.historyJson(game.getMatch()).getAsJsonArray("players").get(0).getAsJsonObject().has("name"));
+        assertFalse("without a name, the seat stays unnamed", session.recorder.historyJson(game.getMatch()).getAsJsonArray("players").get(0).getAsJsonObject().has("name"));
         session.seats[0].nick = "Ana";
-        var players = session.historyJson(game.getMatch()).getAsJsonArray("players");
+        var players = session.recorder.historyJson(game.getMatch()).getAsJsonArray("players");
         assertEquals("Ana", players.get(0).getAsJsonObject().get("name").getAsString());
         assertFalse(players.get(1).getAsJsonObject().has("name"));
         assertEquals("Você", session.seats[0].name);
@@ -134,7 +134,7 @@ public class MatchHistoryTest {
         Game game = CommanderEngineTest.game(2);
         java.util.List.copyOf(game.getPlayers()).get(1).concede(); game.getAction().checkGameOverCondition();
         assertTrue(game.isGameOver());
-        JsonObject o = twoSeats().historyJson(game.getMatch());
+        JsonObject o = twoSeats().recorder.historyJson(game.getMatch());
         assertEquals("concedida", o.get("end").getAsString());
         assertEquals(0, o.get("winner").getAsInt());
     }
@@ -143,7 +143,7 @@ public class MatchHistoryTest {
         Game game = CommanderEngineTest.game(2);
         Session session = twoSeats();
         session.seats[0].registered = game.getMatch().getPlayers().get(0);
-        JsonObject o = session.historyJson(game.getMatch(), "concedida", session.seats[0], game);
+        JsonObject o = session.recorder.historyJson(game.getMatch(), "concedida", session.seats[0], game);
 
         assertEquals("concedida", o.get("end").getAsString());
         assertEquals(1, o.get("winner").getAsInt());
@@ -156,7 +156,7 @@ public class MatchHistoryTest {
 
     @Test public void aDropWithoutReturnHasNoWinner() {
         Game game = CommanderEngineTest.game(2);
-        JsonObject o = twoSeats().historyJson(game.getMatch(), "queda", null, game);
+        JsonObject o = twoSeats().recorder.historyJson(game.getMatch(), "queda", null, game);
 
         assertEquals("queda", o.get("end").getAsString());
         assertTrue(o.get("winner").isJsonNull());

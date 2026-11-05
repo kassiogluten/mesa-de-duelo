@@ -1,3 +1,4 @@
+import { KEYS } from '../storage';
 import './decks.css';
 import { COMMAND_DECK_SIZE, DEFAULT_DECKS, FORMAT_LABEL, hasCommandZone, readyDeckFits, SACOLA_HINT, countEntries, isBasic, isConstructed, deckEntries, deckSize, totalDeckSize, exportDeckList, exportDeckRecovery, entryKey, printLabel, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { cardInfo, type Color } from '../cards';
@@ -264,7 +265,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   /** Deixa as imagens do deck no cache do navegador, para a primeira partida não abrir com cartas em branco. */
   function preloadImages(deck: DeckData) {
     let art = false;
-    try { art = localStorage.getItem('mesa:cards') === 'art'; } catch { /* Storage is optional. */ }
+    try { art = localStorage.getItem(KEYS.cards) === 'art'; } catch { /* Storage is optional. */ }
     void preloadDeckImages(deckEntries(deck).map(e => e.name), art ? ['small', 'normal', 'art_crop'] : ['small', 'normal']).catch(() => {});
   }
   function render() { renderStatus(); if (view === 'library') renderLibrary(); else if (view === 'import') renderImport(); else renderEdit(); }
