@@ -8,7 +8,9 @@ export const TABLE_URL = (process.env.TABLE_TEST_URL ?? 'http://localhost:5173')
 const CLI = fileURLToPath(new URL('../node_modules/agent-browser/bin/agent-browser.js', import.meta.url));
 
 export function browserSession(session) {
-  const args = a => [CLI, '--session', session, ...a];
+  // Com o número do processo: dois testes iguais rodando ao mesmo tempo (outra sessão, outro agente) não se cruzam.
+  const name = `${session}-${process.pid}`;
+  const args = a => [CLI, '--session', name, ...a];
   // O primeiro comando sobe o navegador em segundo plano; com a saída presa num pipe o processo travaria.
   execFileSync(process.execPath, args(['open', 'about:blank']), { stdio: 'ignore' });
   const run = (...a) => execFileSync(process.execPath, args(a), { encoding: 'utf8' }).trim();
