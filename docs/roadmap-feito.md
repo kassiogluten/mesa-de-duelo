@@ -997,3 +997,15 @@ Um formato à parte, **Precon**, em que cada jogador só joga com um deck pré-c
 São 44 precons ao todo. Nos `.dck` do Forge, o comandante às vezes vem com um `+` no fim do nome (o cartão de comandante alternativo da caixa) e uma lista vem com espaço a mais no nome do arquivo (`Primal Genesis [C19] [2019] .dck`): o script de importação precisa tratar os dois.
 
 Feito na 0.126.0 (decidido em 04/11/2026): são 43 precons (a lista acima soma 43, não 44), importados por `forge-bridge/scripts/importar-precons.mjs`. Os 10 adaptados (50% ou mais das cartas iguais) deram lugar ao original com o mesmo id e o nome do precon: Bello, César, Chatterfang (agora Hazel), Cloud, Frodo e Sam, Homem-Mariposa, Sauron, Terra, Bumbleflower e Y'shtola; Ur-Dragão, Edgar Markov, Breya, Atraxa e Oloro eram decks montados à parte e ficaram. Os precons aparecem também no Commander, com o selo **Precon**. Os nomes em português são tradução nossa do nome da caixa. Os bots jogam o precon original mesmo com as cartas que a IA do Forge marca como fora do seu alcance (em média 8 por deck): o servidor deixou de recusá-los para o computador. O servidor confere no Precon que as cartas são exatamente as de um precon; quem garante que não é a cópia do jogador é a mesa.
+
+## 100. Passar automaticamente num mini botão ao lado do botão principal ✅
+
+Hoje o nível de passar automaticamente é uma linha embaixo dos botões de ação, com o ícone e o nome do nível (**Só com ações**, **Respostas**…), e tocar nela abre a troca rápida. A linha ocupa altura na caixa de ação o tempo todo. Antes (versão 0.82.0) era um selo pequeno, só com o ícone, junto dos botões.
+
+- [x] Voltar a um mini botão só com o ícone do nível, ao lado do botão principal (o dourado: **Passar**, **Para o combate**, **Fim de turno**…), na mesma linha, sem empurrar os outros botões para baixo.
+- [x] O mini botão mantém os estados de hoje: discreto em **Só com ações**, borda dourada em **Parar sempre**, dourado em **Respostas** e **Só quando me afeta**, pulsando com **Até o fim do turno** ligado. O nome do nível fica no balão (`title`) e no `aria-label`.
+- [x] Tocar no mini botão abre a mesma troca rápida (níveis e o atalho **Passar até o fim do turno**), com a mesma largura do menu que abre hoje, alinhada à caixa de ação.
+- [x] Área de toque confortável no celular (44 px), mesmo com o botão pequeno.
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.129.0 (05/11/2026): o mini botão entra na grade dos botões, ao lado do primeiro botão principal; sem botão principal, fica sozinho à direita. O menu continua com 300 px, alinhado pela direita do botão.

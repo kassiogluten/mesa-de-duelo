@@ -474,28 +474,30 @@
   .forge > .field .row { scrollbar-width: thin; }
 }
 /*
- * Selo do nível de passar automaticamente: uma linha embaixo dos botões da caixa, com o ícone e o nome do nível.
+ * Nível de passar automaticamente: um mini botão só com o ícone, ao lado do primeiro botão principal (a grade dos
+ * botões ganha uma coluna estreita, e o "dense" o encaixa no buraco da linha do principal); o nome fica no balão.
  * "Só com ações" (o padrão) fica discreto; os níveis mais rápidos ficam dourados, "Parar sempre" com borda dourada,
  * e o atalho "Passar até o fim do turno" ligado pulsa de leve.
  */
-.forge .action > .pass-level { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 36px; margin: 0; padding: 4px 12px; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 10px; background: var(--azul-101a2e, #101a2e); color: var(--muted); font: 500 13px/1.2 var(--body); cursor: pointer; user-select: none; transition: color .15s, background .15s, border-color .15s; }
-.forge .action > .pass-level:hover, .forge .action > .pass-level[aria-expanded="true"] { color: var(--gold-light); border-color: var(--gold); }
-.forge .action > .pass-level .pass-level-icon { display: block; flex: 0 0 auto; width: 16px; height: 16px; }
-.forge .action > .pass-level .pass-level-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.forge .action > .pass-level[data-level="sempre"] { color: var(--gold-light); border-color: var(--gold); }
-.forge .action > .pass-level[data-level="respostas"], .forge .action > .pass-level[data-level="afeta"], .forge .action > .pass-level.passing { color: #1a1408; background: var(--gold); border-color: var(--gold); }
-.forge .action > .pass-level.passing { animation: pass-level-pulse 1.6s ease-in-out infinite; }
-.forge .action > .pass-level:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.forge .action .btns:has(> .pass-level) { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-auto-flow: row dense; }
+.forge .action .btns:has(> .pass-level) > * { grid-column: 1 / -1; }
+.forge .action .btns:has(> .pass-level) > .primary:not(.primary ~ .primary) { grid-column: 1; }
+.forge .action .btns > .pass-level { grid-column: 2; display: grid; place-items: center; width: 40px; min-height: 36px; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #bba47b80; border-radius: 10px; background: var(--azul-101a2e, #101a2e); color: var(--muted); cursor: pointer; user-select: none; transition: color .15s, background .15s, border-color .15s; }
+.forge .action .btns > .pass-level:hover, .forge .action .btns > .pass-level[aria-expanded="true"] { color: var(--gold-light); border-color: var(--gold); }
+.forge .action .btns > .pass-level .pass-level-icon { display: block; width: 18px; height: 18px; }
+.forge .action .btns > .pass-level .pass-level-name { display: none; }
+.forge .action .btns > .pass-level[data-level="sempre"] { color: var(--gold-light); border-color: var(--gold); }
+.forge .action .btns > .pass-level[data-level="respostas"], .forge .action .btns > .pass-level[data-level="afeta"], .forge .action .btns > .pass-level.passing { color: #1a1408; background: var(--gold); border-color: var(--gold); }
+.forge .action .btns > .pass-level.passing { animation: pass-level-pulse 1.6s ease-in-out infinite; }
+.forge .action .btns > .pass-level:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @keyframes pass-level-pulse { 50% { box-shadow: 0 0 0 4px #f2b54c40; } }
-@media (prefers-reduced-motion: reduce) { .forge .action > .pass-level.passing { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .forge .action .btns > .pass-level.passing { animation: none; } }
 @media (max-width: 760px), (max-height: 500px) {
-  /* A caixa é estreita: o nome quebra em duas linhas em vez de cortar. */
-  .forge .action > .pass-level { min-height: 30px; padding: 3px 6px; gap: 5px; font-size: 11px; }
-  .forge .action > .pass-level .pass-level-icon { width: 13px; height: 13px; }
-  .forge .action > .pass-level .pass-level-name { white-space: normal; text-align: left; line-height: 1.15; }
+  .forge .action .btns > .pass-level { width: 32px; min-height: 30px; }
+  .forge .action .btns > .pass-level .pass-level-icon { width: 14px; height: 14px; }
 }
-/* No toque, 44 px de altura. */
-@media (pointer: coarse) { .forge .action > .pass-level { min-height: 44px; } }
+/* No toque, 44 px. */
+@media (pointer: coarse) { .forge .action .btns > .pass-level { width: 44px; min-height: 44px; } }
 /* Troca rápida do nível: o mesmo cartão do menu de paradas da trilha de fases. */
 .pass-menu { max-width: min(340px, calc(100vw - 16px)); }
 .pass-level-options { display: grid; gap: 4px; margin-top: 8px; }

@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.129.0] - 2026-11-05
+
+### Mudou
+
+- **Passar automaticamente num botão pequeno ao lado do principal.** O nível de passar automaticamente deixou de ser uma linha embaixo dos botões de ação: virou um botão pequeno, só com o ícone do nível, na mesma linha do botão principal (o dourado, como Passar ou Para o combate), e a caixa de ação fica mais baixa. As cores continuam dizendo o nível (dourado em Respostas e Só quando me afeta, borda dourada em Parar sempre, pulsando com Até o fim do turno ligado), e o nome aparece ao passar o mouse. Tocar nele abre a mesma troca rápida, do mesmo tamanho de antes.
+
 ## [0.128.0] - 2026-11-05
 
 ### Mudou

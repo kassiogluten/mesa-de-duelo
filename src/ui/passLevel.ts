@@ -131,7 +131,7 @@ const ICONS: Record<PassLevel | 'turno', string> = {
   turno: svg('<path d="M4 5.5v13l8.5-6.5zm8.5 0v13L21 12zM20 5h2v14h-2z" fill="currentColor"/>'),
 };
 
-/** O selo embaixo dos botões: o ícone e o nome do nível (ou do atalho ligado); abre a troca rápida. */
+/** O mini botão ao lado do botão principal: o ícone do nível (ou do atalho ligado), com o nome no balão; abre a troca rápida. */
 export function passLevelBadgeHTML(level: PassLevel, opts: { passingTurn: boolean; open: boolean; busy: boolean }): string {
   const name = passLevelInfo(level).name;
   const label = opts.passingTurn ? `Passando até o fim do turno. Nível: ${name}. Trocar ou parar` : `Passar automaticamente: ${name}. Trocar nível`;

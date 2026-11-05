@@ -1,4 +1,10 @@
 {
+  "0.129.0": {
+    "Passar automaticamente num botão pequeno ao lado do principal": [
+      { "img": "0.129.0/passar-mini-botao.webp", "legenda": "O botão pequeno de passar automaticamente, dourado em Respostas, na mesma linha de Para o combate." },
+      { "img": "0.129.0/passar-menu.webp", "legenda": "Tocar no botão pequeno abre a troca rápida dos níveis, do mesmo tamanho de antes." }
+    ]
+  },
   "0.127.0": {
     "Mão fixa com faixa própria, e cartas na medida em telas grandes": [
       { "img": "0.127.0/mao-fixa-faixa.webp", "legenda": "Num monitor Full HD, a mão fixa na faixa dela, logo abaixo do seu campo: os terrenos ficam inteiros à vista, acima das cartas da mão." }

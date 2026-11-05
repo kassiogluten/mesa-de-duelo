@@ -14,7 +14,7 @@ export function passTurnShortcut(passingTurn: boolean, s: FState): 'on' | 'avail
   return s.activePlayer === s.you ? 'mine' : 'available';
 }
 
-/** O menu de troca rápida do nível, aberto pelo selo embaixo dos botões. */
+/** O menu de troca rápida do nível, aberto pelo mini botão ao lado do botão principal. */
 export function createPassMenu(root: HTMLElement, d: { state(): FState | null | undefined; visible(s: FState): boolean; passLevel: PassLevelPreference; setHTML(el: HTMLElement, html: string): void }) {
   let open = false;
   const shortcut = (s: FState) => passTurnShortcut(d.passLevel.passingTurn, s);
