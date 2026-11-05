@@ -1022,3 +1022,18 @@ No mulligan, as cartas da mão anterior voltam ao grimório e a nova mão sai de
 - [x] Item no CHANGELOG (Corrigido) e print na página Novidades em imagens.
 
 Feito na 0.129.1 (05/11/2026): a causa era a transição da mão (0,2 s, com 0,12 s de espera, da mão recolhida): a mão inicial vai para o centro com `translate(-50%, -50%)`, e a animação media as cartas antes de a transição andar, no lugar antigo. O `deal` termina as transições da mão antes de medir. A volta da mão anterior no mulligan já usava os lugares certos. O mulligan dos oponentes não tem animação, então nada passa pelo seu lado da mesa.
+
+## 99. Mesa de 3–4 jogadores: cabeçalhos mais limpos ✅
+
+Com três ou quatro jogadores, a mesa espalha informação pelos cantos: o relógio, o número do turno e a duração da partida ficam na trilha de fases, embaixo à direita; a zona de comando de cada oponente fica à esquerda do campo dele; e o cabeçalho de cada assento junta vida, nome, bracket, dano de comandante e três botões de foco, mesmo quando parte disso não diz nada (dano 0/21, por exemplo).
+
+- [x] Relógios, turno e duração da partida no topo geral da mesa, numa faixa só, em vez de junto da trilha de fases.
+- [x] Zona de comando de cada oponente no topo do assento dele (no cabeçalho), liberando a coluna à esquerda do campo para as cartas.
+- [x] Os três botões de foco de cada assento (**Só este**/**Ver todos**, ampliar e **Ocultar**; item 88) num menu só, aberto por um botão no cabeçalho, com o modo atual marcado; acessível pelo teclado.
+- [x] Dano de comandante escondido enquanto for zero; aparece no primeiro dano e continua pulsando como hoje (item 15).
+- [x] Contador de cartas na sua própria mão, como o dos oponentes, visível também com a mão recolhida ou oculta.
+- [x] Bracket de cada jogador só ao passar o mouse ou tocar na vida dele (balão), em vez do selo B1–B5 sempre à vista ao lado do nome; o leitor de tela continua dizendo o bracket.
+- [x] Ver se o duelo deve seguir as mesmas mudanças (relógio no topo, contador da sua mão).
+- [x] Item no CHANGELOG e prints na página Novidades em imagens.
+
+Feito na 0.130.0 (05/11/2026, decidido no mesmo dia): o duelo também mudou (relógios no topo, contagem da sua mão, dano de comandante só depois do primeiro, bracket no balão). Os relógios ficam numa pílula (`#fTurnInfo`) na barra do topo, depois do Desfazer; a trilha guarda o resumo para o leitor de tela, o dia e a noite, o botão da mão automática e as fases. O menu de exibição abre por um botão com olho e seta (`seats.menu` guarda o aberto, que sobrevive aos redesenhos; Esc e clique fora fecham). Com um oponente só, fica o botão de tela cheia. O bracket abre no balão da vida pelo mesmo aberto-fechado dos marcadores, menos quando o retrato é um alvo possível. A pilha recolhida no duelo foi para baixo da barra do topo, que ficou mais larga.

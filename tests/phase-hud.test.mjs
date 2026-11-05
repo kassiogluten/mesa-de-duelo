@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { phaseHudHTML, passIsPrimary, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import('../src/ui/phaseHud.ts');
+const { phaseHudHTML, turnInfoHTML, passIsPrimary, passLabel, turnBannerText, turnTimeText, upcomingTurnsText, dayNightText } = await import('../src/ui/phaseHud.ts');
 const state = { turn: 4, phase: 'MAIN1', activePlayer: 1, you: 1, players: [{ id: 1, name: 'Você' }, { id: 2, name: 'Oponente' }], gameOver: false };
 const current = html => html.match(/<li class="phase-step current"[^>]*data-phase="([^"]+)"/)?.[1];
 
@@ -60,27 +60,27 @@ test('on your turn the pass button leads until main 1, then "Fim de turno" takes
   for (const phase of ['UNTAP', 'UPKEEP', 'DRAW', 'MAIN1']) assert.equal(passIsPrimary({ phase }), true, phase);
   for (const phase of ['COMBAT_BEGIN', 'COMBAT_DAMAGE', 'COMBAT_END', 'MAIN2', 'END_OF_TURN', 'CLEANUP']) assert.equal(passIsPrimary({ phase }), false, phase);
 });
-test('in multiplayer Commander the active player portrait sits by the track, colored by owner, with the escaped name in the tip', () => {
+test('in multiplayer Commander the active player portrait sits by the turn clocks, colored by owner, with the escaped name in the tip', () => {
   const players = [{ id: 1, name: 'Você' }, { id: 2, name: 'Ana' }, { id: 3, name: '<b>"Bia"</b>' }, { id: 4, name: 'Caio' }];
   const multi = { ...state, players };
   const art = 'https://cards.scryfall.io/art_crop/front/a/b/ab.jpg?1700000000';
-  const theirs = phaseHudHTML({ ...multi, activePlayer: 3 }, art);
+  const theirs = turnInfoHTML({ ...multi, activePlayer: 3 }, art);
   assert.match(theirs, /<span class="phase-active-portrait theirs" aria-hidden="true" data-tip="Turno de &lt;b&gt;&quot;Bia&quot;&lt;\/b&gt;"/);
   assert.ok(theirs.includes(`background-image:url('${art}')`));
   assert.doesNotMatch(theirs, /<b>/);
-  const mine = phaseHudHTML(multi, art);
+  const mine = turnInfoHTML(multi, art);
   assert.match(mine, /phase-active-portrait mine[^>]*data-tip="Seu turno"/);
-  const fallback = phaseHudHTML({ ...multi, activePlayer: 4 });
+  const fallback = turnInfoHTML({ ...multi, activePlayer: 4 });
   assert.match(fallback, /<span class="phase-active-portrait theirs"[^>]*>C<\/span>/);
   assert.doesNotMatch(fallback, /background-image/);
-  assert.doesNotMatch(phaseHudHTML({ ...multi, gameOver: true }, art), /phase-active-portrait/);
+  assert.doesNotMatch(turnInfoHTML({ ...multi, gameOver: true }, art), /phase-active-portrait/);
 });
 test('the portrait never shows in a 1x1 game and unsafe image addresses never reach the style attribute', () => {
-  assert.doesNotMatch(phaseHudHTML(state, 'https://example.com/a.jpg'), /phase-active-portrait/);
-  assert.doesNotMatch(phaseHudHTML({ ...state, activePlayer: 2 }, 'https://example.com/a.jpg'), /phase-active-portrait/);
+  assert.doesNotMatch(turnInfoHTML(state, 'https://example.com/a.jpg'), /phase-active-portrait/);
+  assert.doesNotMatch(turnInfoHTML({ ...state, activePlayer: 2 }, 'https://example.com/a.jpg'), /phase-active-portrait/);
   const players = [{ id: 1, name: 'Você' }, { id: 2, name: 'Ana' }, { id: 3, name: 'Bia' }];
   for (const bad of ["x');background:url('//evil", 'javascript:alert(1)', 'https://a.b/c d.jpg', 'https://a.b/"><img src=x>']) {
-    const html = phaseHudHTML({ ...state, players, activePlayer: 2 }, bad);
+    const html = turnInfoHTML({ ...state, players, activePlayer: 2 }, bad);
     assert.doesNotMatch(html, /background-image|<img|javascript/);
     assert.match(html, /phase-active-portrait theirs[^>]*>A<\/span>/);
   }
@@ -103,8 +103,8 @@ test('extra turns and extra combats are named on the trail, the banner and the p
   assert.equal(passLabel({ ...state, stack: [], phase: 'UPKEEP', ...upkeeps }), 'Para a principal 2');
   assert.equal(passLabel({ ...state, stack: [], phase: 'UPKEEP', extraPhaseAfter: { UPKEEP: 'UPKEEP' } }), 'Para a manutenção extra');
   assert.equal(passLabel({ ...state, stack: [], phase: 'UPKEEP', extraPhaseAfter: { UPKEEP: 'UPKEEP' }, activePlayer: 2 }), 'Passar');
+  assert.match(turnInfoHTML(extra), /phase-turn-badge mine extra/);
   const html = phaseHudHTML(extra);
-  assert.match(html, /phase-turn-badge mine extra/);
   assert.match(html, /phase-combat-count">×2</);
   assert.match(html, /Seu turno extra/);
   const second = phaseHudHTML({ ...state, phase: 'COMBAT_DECLARE_ATTACKERS', combatNumber: 2 });
@@ -118,42 +118,42 @@ test('the turn clock shows minutes and seconds, and hours only past one hour', (
   assert.equal(turnTimeText(750_000), '12:30');
   assert.equal(turnTimeText(3_725_000), '1:02:05');
   assert.equal(turnTimeText(-500), '0:00');
-  assert.match(phaseHudHTML(state), /data-turn-timer/);
-  assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }), /data-turn-timer/);
+  assert.match(turnInfoHTML(state), /data-turn-timer/);
+  assert.doesNotMatch(turnInfoHTML({ ...state, gameOver: true }), /data-turn-timer/);
 });
 
 test('marked opponent steps show a dot on their group, and the held step gets a ring only during an opponent turn', () => {
   const theirs = { ...state, activePlayer: 2, phase: 'UPKEEP', stack: [] };
   const stops = ['UPKEEP', 'DRAW', 'COMBAT_DECLARE_ATTACKERS'];
-  const html = phaseHudHTML(theirs, undefined, stops);
+  const html = phaseHudHTML(theirs, stops);
   assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
   assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada no turno do oponente: Manutenção, Compra"/);
   assert.match(html, /Combate · Parada no turno do oponente: Atacantes/);
   assert.match(html, /phase-step current held/);
   assert.match(html, /Parada sua/);
   assert.doesNotMatch(html, /<button|data-act|role="button"|tabindex=/);
-  assert.doesNotMatch(phaseHudHTML({ ...theirs, stack: [{ id: 1 }] }, undefined, stops), /held/);
-  assert.doesNotMatch(phaseHudHTML({ ...theirs, phase: 'MAIN1' }, undefined, stops), /held/);
-  const mine = phaseHudHTML({ ...state, phase: 'UPKEEP', stack: [] }, undefined, stops);
+  assert.doesNotMatch(phaseHudHTML({ ...theirs, stack: [{ id: 1 }] }, stops), /held/);
+  assert.doesNotMatch(phaseHudHTML({ ...theirs, phase: 'MAIN1' }, stops), /held/);
+  const mine = phaseHudHTML({ ...state, phase: 'UPKEEP', stack: [] }, stops);
   assert.equal((mine.match(/phase-stop-dot/g) ?? []).length, 2);
   assert.doesNotMatch(mine, /current held|Parada sua/);
 });
 
 test('the match clock shows how long the current game has run, only while it runs', () => {
   const match = { gameNumber: 1, wins: [0, 0], draws: 0, over: false, phase: 'playing', ready: [], elapsedMs: 754_000 };
-  const html = phaseHudHTML({ ...state, match });
+  const html = turnInfoHTML({ ...state, match });
   assert.match(html, /class="phase-match-clock" data-tip="Duração da partida"/);
   assert.match(html, /<span data-match-timer aria-hidden="true">12:34<\/span>/);
-  assert.match(phaseHudHTML({ ...state, match: { ...match, gameNumber: 2 } }), /data-tip="Duração do jogo 2"/);
-  assert.doesNotMatch(phaseHudHTML({ ...state, match: { ...match, elapsedMs: undefined, gameMs: 754_000 } }), /data-match-timer/);
-  assert.doesNotMatch(phaseHudHTML({ ...state, match, gameOver: true }), /data-match-timer/);
-  assert.doesNotMatch(phaseHudHTML(state), /data-match-timer/);
+  assert.match(turnInfoHTML({ ...state, match: { ...match, gameNumber: 2 } }), /data-tip="Duração do jogo 2"/);
+  assert.doesNotMatch(turnInfoHTML({ ...state, match: { ...match, elapsedMs: undefined, gameMs: 754_000 } }), /data-match-timer/);
+  assert.doesNotMatch(turnInfoHTML({ ...state, match, gameOver: true }), /data-match-timer/);
+  assert.doesNotMatch(turnInfoHTML(state), /data-match-timer/);
 });
 
 test('with editable stops every track icon is a button that opens the menu of its group, for opponents and on your own turn', () => {
   const stops = ['UPKEEP', 'COMBAT_DAMAGE'];
   for (const s of [{ ...state, stack: [] }, { ...state, activePlayer: 2, stack: [] }]) {
-    const html = phaseHudHTML(s, undefined, { value: stops, editable: true, open: 'combat' });
+    const html = phaseHudHTML(s, { value: stops, editable: true, open: 'combat' });
     assert.equal((html.match(/<button type="button" class="phase-step-btn"/g) ?? []).length, 5);
     assert.doesNotMatch(html, /<ol[^>]*aria-hidden/);
     assert.match(html, /data-stop-group="start" aria-label="Início: paradas no turno do oponente \(Manutenção\)" aria-haspopup="true" aria-expanded="false"/);
@@ -161,7 +161,7 @@ test('with editable stops every track icon is a button that opens the menu of it
     assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
     assert.doesNotMatch(html, /data-phase="combat" data-tip/);
   }
-  assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }, undefined, { value: stops, editable: true }), /<button/);
+  assert.doesNotMatch(phaseHudHTML({ ...state, gameOver: true }, { value: stops, editable: true }), /<button/);
 });
 
 test('day and night show a sun or a moon with the switching rule, and nothing while the game has neither', () => {

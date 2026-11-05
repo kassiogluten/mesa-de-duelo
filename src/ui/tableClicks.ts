@@ -72,8 +72,9 @@ export function attachTableClicks(d: ClickDeps) {
     if (level) { const client = d.client(); if (client?.connected && !d.match().disconnected && isPassLevel(level)) d.passLevel.change(level); passMenu.set(false, true); d.render(); return; }
     if (passMenu.open && !t.closest('#fPassMenu')) passMenu.set(false);
     if (runUi(tables.prompt, ui, t, e)) return;
+    if (!t.closest('.seat-menu')) seats.closeMenu();
     const focusTo = t.closest<HTMLElement>('[data-focus-seat]')?.dataset.focusSeat;
-    if (focusTo !== undefined) { d.focus.open(Number(focusTo)); return; }
+    if (focusTo !== undefined) { seats.closeMenu(); d.focus.open(Number(focusTo)); return; }
     // Na tela de foco, tocar numa carta só mostra; cemitério, exílio e dano de comandante abrem a lista para ver.
     if (t.closest('#fFocus')) {
       const card = t.closest<HTMLElement>('[data-fid],[data-peek],[data-inspect]');

@@ -76,6 +76,9 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     const { stops, passMenu, attack } = d, match = d.match();
     if (stops.group) { e.preventDefault(); stops.set(null, true); return; }
     if (passMenu.open) { e.preventDefault(); passMenu.set(false, true); return; }
+    // Menu de exibição de um assento aberto: o próprio botão fecha (e o foco volta para ele).
+    const seatMenu = root.querySelector<HTMLElement>('.seat-menu.open [data-seat-menu]');
+    if (seatMenu) { e.preventDefault(); seatMenu.click(); return; }
     if (!$('#fRemoval').hidden) { e.preventDefault(); d.removals.close(); return; }
     if (!$('#fSettings').hidden) { e.preventDefault(); d.settings.set(false); return; }
     if (!$('#fMenu').hidden) { e.preventDefault(); d.setMenu(false, true); return; }

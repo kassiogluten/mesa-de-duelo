@@ -49,6 +49,6 @@ export type MatchState = ReturnType<typeof newMatchState>;
  * ocultados e o foco no oponente que ataca você (ver followSeats). Valem até a partida mudar.
  */
 export function newSeatState(match: string) {
-  return { match, hidden: new Set<number>(), solo: null as number | null, retired: new Set<number>() as ReadonlySet<number>, focus: null as SeatFocus | null };
+  return { match, hidden: new Set<number>(), solo: null as number | null, retired: new Set<number>() as ReadonlySet<number>, focus: null as SeatFocus | null, menu: null as number | null };
 }
 export type SeatState = ReturnType<typeof newSeatState>;

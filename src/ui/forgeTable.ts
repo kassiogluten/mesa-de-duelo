@@ -48,6 +48,7 @@ import './waitAlert.css';
 import './duelPiles.css';
 import './tableMoves.css';
 import './handPeek.css';
+import './tableHeaders.css';
 import { installWheelSideways } from './wheelSideways';
 import { newMatchState } from './tableState';
 import { tableShellHTML } from './tableShell';

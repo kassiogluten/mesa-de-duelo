@@ -8,6 +8,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.130.0] - 2026-11-05
+
+### Novo
+
+- **Quantas cartas há na sua mão.** Junto do seu retrato aparece a contagem das cartas da sua mão, como a dos oponentes. Ela fica à vista mesmo com a mão recolhida ou oculta.
+
+### Mudou
+
+- **Relógios e turno no topo da mesa.** A duração da partida, o número do turno e o tempo do turno saíram da trilha de fases e foram para o topo, ao lado do Menu e do Desfazer. Na mesa de 3–4 jogadores, o retrato de quem joga o turno vai junto. Embaixo à direita fica só a trilha com as fases. Quando a pilha é recolhida no duelo, ela aparece logo abaixo do topo.
+- **Cabeçalho dos oponentes mais enxuto.** Na mesa de 3–4 jogadores, a zona de comando de cada oponente passou para o cabeçalho dele, e o campo ganha a largura toda. Os três botões de exibição do campo (tela cheia, ver só este, ocultar) viraram um botão só, com um olho e uma seta, que abre um menu com as três opções. O dano de comandante só aparece depois do primeiro dano, nas duas mesas.
+- **Bracket no balão da vida.** O selo do bracket ao lado do nome de cada jogador saiu. Para ver o bracket, passe o mouse sobre a vida do jogador ou toque nela.
+
 ## [0.129.1] - 2026-11-05
 
 ### Corrigido

@@ -3,7 +3,7 @@
 import type { FPlayer, FState } from '../forge/client';
 import type { OpponentStopsPreference } from './opponentStops';
 import type { createStopMenu } from './passMenus';
-import { phaseHudHTML } from './phaseHud';
+import { phaseHudHTML, turnInfoHTML } from './phaseHud';
 import type { createTableClocks } from './tableClocks';
 import type { TableCtx } from './tableContext';
 import { turnHighlight } from './turnHighlight';
@@ -23,10 +23,10 @@ export function createTablePhases(d: PhasesDeps) {
   // Dia ou noite do último desenho da trilha: o sol ou a lua pulsa quando vira.
   let lastDayTime: FState['dayTime'];
 
-  /** O ícone da trilha mais perto de um toque no espaço entre eles (a trilha tem 44 px de altura no toque). */
-  function nearestTrailItem(x: number): HTMLElement | null {
+  /** O ícone da trilha (ou dos relógios) mais perto de um toque no espaço entre eles (44 px de altura no toque). */
+  function nearestTrailItem(box: Element, x: number): HTMLElement | null {
     let best: HTMLElement | null = null, dist = Infinity;
-    for (const el of root.querySelectorAll<HTMLElement>('#fPhases [data-tip]')) {
+    for (const el of box.querySelectorAll<HTMLElement>('[data-tip]')) {
       const r = el.getBoundingClientRect(), dd = Math.abs(x - (r.left + r.width / 2));
       if (r.width && dd < dist) { best = el; dist = dd; }
     }
@@ -35,7 +35,7 @@ export function createTablePhases(d: PhasesDeps) {
   const trailTipKey = (el: HTMLElement) => `${el.classList[0]}:${el.dataset.phase ?? ''}`;
   function syncTrailTip() {
     if (trailTip && trailTip.until < performance.now()) trailTip = null;
-    for (const el of root.querySelectorAll<HTMLElement>('#fPhases [data-tip]')) el.classList.toggle('tip-open', trailTip?.key === trailTipKey(el));
+    for (const el of root.querySelectorAll<HTMLElement>('#fPhases [data-tip], #fTurnInfo [data-tip]')) el.classList.toggle('tip-open', trailTip?.key === trailTipKey(el));
   }
   function showTrailTip(el: HTMLElement) {
     const key = trailTipKey(el);
@@ -49,8 +49,9 @@ export function createTablePhases(d: PhasesDeps) {
    * instante: no toque não existe o passar do mouse. True quando o clique foi na trilha e já foi tratado.
    */
   function click(t: HTMLElement, e: MouseEvent) {
-    let tipped = t.closest<HTMLElement>('#fPhases [data-tip]');
-    if (!tipped && !t.closest('button') && t.closest('#fPhases')) tipped = nearestTrailItem(e.clientX);
+    let tipped = t.closest<HTMLElement>('#fPhases [data-tip], #fTurnInfo [data-tip]');
+    const box = t.closest('#fPhases, #fTurnInfo');
+    if (!tipped && !t.closest('button') && box) tipped = nearestTrailItem(box, e.clientX);
     if (tipped && !t.closest('button')) {
       const button = tipped.querySelector<HTMLButtonElement>('button');
       if (button) button.click(); else showTrailTip(tipped);
@@ -68,10 +69,11 @@ export function createTablePhases(d: PhasesDeps) {
     // Com vários jogadores, o retrato de quem joga o turno vai junto da trilha (mesmo índice dos retratos dos assentos).
     const activeSeat = !multiplayer ? -1 : visual.activePlayer === me.id ? 0 : opponents.findIndex(p => p.id === visual.activePlayer) + 1;
     const { opponentStops, stops } = d;
-    d.setHTML($('#fPhases'), phaseHudHTML(visual, activeSeat >= 0 ? d.portraits()[activeSeat] : undefined, { value: opponentStops.supported ? opponentStops.value : [], editable: stops.editable(), open: stops.group }));
-    // O botão da mão automática mora ao lado do relógio do turno; a trilha é redesenhada, então ele volta para lá.
-    const phases = $('#fPhases'), handAuto = d.handAutoButton, timer = phases.querySelector('.phase-timer');
-    if (timer && handAuto.previousElementSibling !== timer) timer.after(handAuto);
+    d.setHTML($('#fTurnInfo'), turnInfoHTML(visual, activeSeat >= 0 ? d.portraits()[activeSeat] : undefined));
+    d.setHTML($('#fPhases'), phaseHudHTML(visual, { value: opponentStops.supported ? opponentStops.value : [], editable: stops.editable(), open: stops.group }));
+    // O botão da mão automática abre a trilha; ela é redesenhada, então ele volta para lá.
+    const phases = $('#fPhases'), handAuto = d.handAutoButton;
+    if (phases.firstElementChild?.nextElementSibling !== handAuto) phases.firstElementChild?.after(handAuto);
     syncTrailTip();
     if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) root.querySelector('.phase-daynight')?.classList.add('bump');
     lastDayTime = visual.dayTime;

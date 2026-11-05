@@ -20,6 +20,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
         <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-enter" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="fs-exit" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
       </button>
       <button class="icon-btn undo-btn" id="fUndo" data-ui="undo" hidden>${UNDO_ICON}<span class="undo-label">Desfazer</span></button>
+      <div class="turn-info" id="fTurnInfo"></div>
       <ul class="match-bar" id="fMatchBar" aria-label="Partida"></ul>
     </div>
     <div class="skip-bar" id="fSkipBar" aria-live="polite" hidden></div>

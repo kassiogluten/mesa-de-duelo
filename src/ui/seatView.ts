@@ -19,7 +19,7 @@ import { bracketLabel, isBracket } from '../brackets';
 import { bracketTitle } from './deckStats';
 import { backRow, canUse, fieldRow, inspectButton, isBackRow, type BoardView } from './permanentView';
 import type { SeatState } from './tableState';
-import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
+import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, ICON_EYE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
 
 /** O que os assentos precisam da mesa, além das peças do campo. */
 export interface SeatView extends BoardView {
@@ -62,14 +62,24 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const forecast = s.forecast?.find(f => f.player === p.id);
   return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
     <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
-    <div class="life">${p.life}</div>
+    ${lifeHTML(v, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
     ${playerCounters(v, p)}
-    <div class="pname">${esc(p.name)}${isBracket(p.bracket) ? `<span class="pbracket" title="${esc(bracketTitle(p.bracket))}" aria-hidden="true">B${p.bracket}</span>` : ''}</div>
+    <div class="pname">${esc(p.name)}</div>
     ${emblems(v, p)}
     ${p.eliminated ? '<span class="seat-eliminated">Eliminado</span>' : ''}
     ${offline ? '<div class="offline">desconectado</div>' : ''}
   </div>`;
+}
+/**
+ * A vida. Com bracket, o balão dele abre ao passar o mouse ou ao tocar na vida (o mesmo aberto-fechado dos marcadores);
+ * quando o retrato é um alvo possível, tocar nele escolhe o jogador, e o bracket fica só no mouse e no leitor de tela.
+ */
+function lifeHTML(v: SeatView, p: FPlayer, cls: string[]) {
+  if (!isBracket(p.bracket)) return `<div class="life">${p.life}</div>`;
+  const key = `bracket-${p.id}`, choosing = cls.includes('selectable-player') || cls.some(c => c.startsWith('prolif'));
+  const open = v.openCounter === key;
+  return `<div class="life has-bracket${open ? ' open' : ''}"${choosing ? '' : ` data-ctr="${key}"`}>${p.life}</div><span class="life-tip" aria-hidden="true">${esc(bracketTitle(p.bracket))}</span>`;
 }
 export const playerCountersText = (v: SeatView, p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, v.activePlayer, v.spellsTotal) + dungeonText(p);
 export const playerCounters = (v: SeatView, p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, v.counterBumps.get(p.id), v.openCounter, p.ringTempted),
@@ -106,8 +116,9 @@ export function commandCards(v: SeatView, s: FState, p: FPlayer) {
   }).join('');
 }
 export function damageButton(p: FPlayer) {
-  if (!p.commanderDamage?.length) return '';
-  const highest = Math.max(...p.commanderDamage.map(item => item.damage));
+  // Só aparece depois do primeiro dano de comandante: "Dano 0/21" não diz nada.
+  const highest = Math.max(0, ...(p.commanderDamage ?? []).map(item => item.damage));
+  if (highest <= 0) return '';
   return `<button class="commander-damage${highest >= 15 ? ' danger' : ''}" data-gy="${p.id}" data-zone="damage" aria-label="Ver dano de comandante recebido por ${esc(p.name)}">Dano <b>${highest}/21</b></button>`;
 }
 export function seatRow(id: string, kind: 'lands' | 'creatures', name: string, content: string) {
@@ -146,16 +157,24 @@ export function focusHTML(v: SeatView, s: FState, visual: FState, p: FPlayer, op
     </div>
     <footer class="focus-zones"><div class="piles">${piles(v, visual, p)}</div>${p.commandZone?.length ? `<div class="focus-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(v, visual, p)}</div>` : ''}</footer>`;
 }
-/** Botões de cada oponente, só com o ícone (o texto fica no balão e no aria-label): focar em tela cheia sempre; esconder o campo e mostrar só ele, com dois ou mais oponentes. */
+/**
+ * Exibição do campo de cada oponente: com um oponente só, o botão de tela cheia; com dois ou mais, um botão (olho com
+ * seta) que abre o menu com tela cheia, "Ver só" (ou "Ver todos") e "Ocultar". O menu aberto fica em v.seats.menu.
+ */
 export function seatControls(v: SeatView, p: FPlayer, shown: boolean, count: number) {
   if (count < 2) return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">${focusButton(p)}</div>`;
-  const solo = v.seats.solo === p.id;
-  return `<div class="seat-view" role="group" aria-label="Exibição do campo de ${esc(p.name)}">
-    ${focusButton(p)}
-    <button type="button" class="seat-view-btn" data-seat-solo="${p.id}" aria-pressed="${solo}" title="${solo ? 'Voltar a ver todos os oponentes' : `Ver só ${esc(p.name)}`}" aria-label="${solo ? 'Voltar a ver todos os oponentes' : `Ver só o campo de ${esc(p.name)}`}">${FOCUS}</button>
-    ${shown && !solo ? `<button type="button" class="seat-view-btn" data-seat-hide="${p.id}" title="Ocultar o campo de ${esc(p.name)}" aria-label="Ocultar o campo de ${esc(p.name)}">${EYE_OFF}</button>` : ''}
+  const solo = v.seats.solo === p.id, open = v.seats.menu === p.id;
+  const item = (attrs: string, icon: string, text: string) => `<button type="button" role="menuitem" class="seat-menu-item" ${attrs}>${icon}<span>${text}</span></button>`;
+  return `<div class="seat-view seat-menu${open ? ' open' : ''}">
+    <button type="button" class="seat-view-btn seat-menu-btn" data-seat-menu="${p.id}" aria-haspopup="menu" aria-expanded="${open}" aria-controls="fSeatMenu-${p.id}" title="Exibição do campo de ${esc(p.name)}" aria-label="Exibição do campo de ${esc(p.name)}">${ICON_EYE}${CARET}</button>
+    ${open ? `<div class="seat-menu-list" id="fSeatMenu-${p.id}" role="menu" aria-label="Exibição do campo de ${esc(p.name)}">
+      ${item(`data-focus-seat="${p.id}"`, EXPAND, 'Tela cheia')}
+      ${item(`data-seat-solo="${p.id}" aria-pressed="${solo}"`, FOCUS, solo ? 'Ver todos os oponentes' : `Ver só ${esc(p.name)}`)}
+      ${shown && !solo ? item(`data-seat-hide="${p.id}"`, EYE_OFF, 'Ocultar campo') : ''}
+    </div>` : ''}
   </div>`;
 }
+const CARET = '<svg class="seat-menu-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>';
 /** Destaque do assento de quem joga o turno; no desenho em que o turno passa, a classe que anima a troca. */
 export function seatTurnClass(v: SeatView, s: FState, p: FPlayer) {
   const current = turnHighlight(s, p.id) ? ' current-seat' : '';
@@ -176,9 +195,9 @@ export function opponentSeat(v: SeatView, s: FState, p: FPlayer, index: number, 
   const focused = focusedByAttack(v.seatMemory, p.id);
   return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${seatTurnClass(v, s, p)}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
     ${(art => art ? `<div class="playmat" aria-hidden="true" style="${esc(matStyle(art))}"></div>` : '')(v.matArt(s, p, index + 1))}
-    <header class="seat-heading"><div class="avatar-slot">${avatar(v, s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(v, p)}${damageButton(p)}${seatControls(v, p, true, count)}</header>
+    <header class="seat-heading"><div class="avatar-slot">${avatar(v, s, p, index + 1)}</div>${seatHandHTML(p)}${p.commandZone?.length ? `<div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(v, s, p)}</div>` : ''}${playerCounters(v, p)}${damageButton(p)}${seatControls(v, p, true, count)}</header>
     ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : focused ? '<p class="seat-forced focused">Em foco: atacando você</p>' : ''}
-    <div class="seat-zones"><div class="piles">${piles(v, s, p)}</div><div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(v, s, p)}</div></div>
+    <div class="seat-zones"><div class="piles">${piles(v, s, p)}</div></div>
     <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(v, s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(v, s, p.battlefield.filter(c => !isBackRow(c))))}</div>
   </section>`;
 }

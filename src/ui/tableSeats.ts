@@ -9,7 +9,7 @@ import type { createAttackChoice } from './attackChoice';
 import type { OpponentFocus } from './opponentFocus';
 import { backRow, fieldRow, isBackRow, type BoardView } from './permanentView';
 import { turnSpellsTotal } from './playerStatus';
-import { oppHandHTML, revealedCards } from './revealedHand';
+import { oppHandHTML, ownHandHTML, revealedCards } from './revealedHand';
 import { avatar, collapsedSeat, commandCards, damageButton, focusButton, focusHTML, matStyle, opponentSeat, piles, type SeatView } from './seatView';
 import { followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatMemory } from './seatVisibility';
 import { trackCounterBumps } from './tableCards';
@@ -91,7 +91,7 @@ export function createTableSeats(d: SeatsDeps) {
     d.setHTML($('#fOppHand'), multiplayer ? '' : oppHandHTML(opp, c => d.face(c, 'small'), label));
     $('#fOppHand').classList.toggle('revealed', !multiplayer && revealedCards(opp).length > 0);
     d.setHTML($('#fOppAvatar'), multiplayer ? '' : avatar(seatView(), visual, opp, 1) + focusButton(opp, ' duel-focus'));
-    d.setHTML($('#fMeAvatar'), avatar(seatView(), visual, me, 0));
+    d.setHTML($('#fMeAvatar'), avatar(seatView(), visual, me, 0) + (visual.watching ? '' : ownHandHTML(me)));
     d.setHTML($('#fOppPiles'), multiplayer ? '' : piles(seatView(), visual, opp) + (opp.commanders?.length ? `<div class="duel-command">${commandCards(seatView(), s, opp)}${damageButton(opp)}</div>` : ''));
     d.setHTML($('#fMePiles'), piles(seatView(), visual, me));
     d.setHTML($('#fOppLands'), multiplayer ? '' : backRow(boardView(), visual, opp));
@@ -114,10 +114,18 @@ export function createTableSeats(d: SeatsDeps) {
 
   /** "Só este", "Ocultar" e "Mostrar" nos assentos com vários jogadores. True quando o clique foi num deles. */
   function click(t: HTMLElement) {
+    const menu = t.closest<HTMLElement>('[data-seat-menu]')?.dataset.seatMenu;
+    if (menu !== undefined) {
+      seats.menu = seats.menu === Number(menu) ? null : Number(menu);
+      d.renderTable();
+      root.querySelector<HTMLElement>(seats.menu === null ? `[data-seat-menu="${menu}"]` : `#fSeatMenu-${menu} [role="menuitem"]`)?.focus({ preventScroll: true });
+      return true;
+    }
     const seatSolo = t.closest<HTMLElement>('[data-seat-solo]')?.dataset.seatSolo;
     const seatHide = t.closest<HTMLElement>('[data-seat-hide]')?.dataset.seatHide;
     const seatShow = t.closest<HTMLElement>('[data-seat-show]')?.dataset.seatShow;
     if (seatSolo === undefined && seatHide === undefined && seatShow === undefined) return false;
+    seats.menu = null;
     const state = d.state();
     const name = (id: number) => state?.players.find(p => p.id === id)?.name ?? 'Oponente';
     let message: string;
@@ -139,7 +147,7 @@ export function createTableSeats(d: SeatsDeps) {
     // A renderização anuncia o pedido atual; o aviso da troca vem depois para não ser apagado.
     d.announce(message);
     const seat = seatShow ?? seatSolo ?? seatHide;
-    const focus = root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-solo]`) ?? root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-show]`);
+    const focus = root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-menu]`) ?? root.querySelector<HTMLElement>(`[data-seat-player="${seat}"] [data-seat-show]`);
     focus?.focus({ preventScroll: true });
     return true;
   }
@@ -175,5 +183,7 @@ export function createTableSeats(d: SeatsDeps) {
     /** Marcador com o balão aberto (id da carta e tipo). */
     openCounter: () => openCounter,
     setOpenCounter(v: string | null) { openCounter = v; },
+    /** Fecha o menu de exibição de um assento (clique fora dele, Esc, tela cheia); true se havia um aberto. */
+    closeMenu() { if (seats.menu === null) return false; seats.menu = null; d.renderTable(); return true; },
   };
 }

@@ -139,12 +139,24 @@ export function phaseGroupLabel(group: string): string {
 }
 
 /**
+ * Relógios e turno, no topo da mesa: a duração da partida, o retrato de quem joga o turno (só com mais de dois
+ * jogadores), o número do turno (na cor do dono), o tempo do turno e o relógio de espera. O resumo para o leitor de
+ * tela continua na trilha de fases.
+ */
+export function turnInfoHTML(state: HudState, activePortrait?: string): string {
+  const mine = state.activePlayer === state.you;
+  const upcoming = state.gameOver ? '' : upcomingTurnsText(state);
+  return `${matchClockHTML(state)}${activePlayerPortrait(state, activePortrait)}
+    <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
+    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>${WAIT_CLOCK}`}`;
+}
+
+/**
  * Trilha compacta de fases. Ela nunca avança o motor: os nomes aparecem ao passar o mouse e o resumo completo vai
- * para leitores de tela. A cor diz de quem é o turno. `activePortrait` é a arte do retrato de quem joga o turno,
- * mostrada só com mais de dois jogadores. Com `stops.editable`, cada ícone abre o menu das etapas daquele grupo
+ * para leitores de tela. A cor diz de quem é o turno. Com `stops.editable`, cada ícone abre o menu das etapas daquele grupo
  * em que o jogo para no turno dos oponentes; os grupos com etapa marcada ganham um ponto.
  */
-export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops: HudStops | readonly string[] = []): string {
+export function phaseHudHTML(state: HudState, hudStops: HudStops | readonly string[] = []): string {
   const { value: stops, editable = false, open = null }: HudStops = Array.isArray(hudStops) ? { value: hudStops as readonly string[] } : hudStops as HudStops;
   const edit = editable && !state.gameOver;
   const step = STEPS[state.phase ?? ''];
@@ -157,9 +169,7 @@ export function phaseHudHTML(state: HudState, activePortrait?: string, hudStops:
   const marked = state.gameOver ? new Map<string, string[]>() : stopsByGroup(stops);
   const holding = !state.gameOver && holdingStop({ ...state, stack: state.stack ?? [] }, stops);
   const summary = [`Turno ${state.turn}`, owner(state), state.gameOver ? '' : dayNightText(state), detail, holding ? 'Parada sua' : '', step?.group === 'combat' ? '' : combat, upcoming].filter(Boolean).join(' · ');
-  return `<span class="sr-only">${esc(summary)}</span>${matchClockHTML(state)}${activePlayerPortrait(state, activePortrait)}
-    <span class="phase-turn-badge ${mine ? 'mine' : 'theirs'}${state.extraTurn && !state.gameOver ? ' extra' : ''}" aria-hidden="true" data-tip="${esc([`Turno ${state.turn} · ${owner(state)}`, upcoming].filter(Boolean).join(' · '))}">${state.turn}</span>${state.gameOver ? '' : `
-    <span class="phase-timer" data-turn-timer aria-hidden="true" data-tip="Tempo deste turno">0:00</span>${WAIT_CLOCK}`}${dayNightHTML(state)}
+  return `<span class="sr-only">${esc(summary)}</span>${dayNightHTML(state)}
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}${edit ? ' editable' : ''}"${edit ? '' : ' aria-hidden="true"'}>${PHASES.map(([key, label, icon], index) => {
       const current = step?.group === key && !state.gameOver;
       const held = marked.get(key);

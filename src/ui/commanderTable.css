@@ -71,7 +71,6 @@
 .forge.multiplayer .seat-heading .seat-eliminated { grid-column: 2; grid-row: 2; }
 /* O nome já disputa espaço com a mão, o dano e os botões: o bracket fica preso à borda do círculo de vida. */
 .forge.multiplayer .seat-heading .avatar { position: relative; }
-.forge.multiplayer .seat-heading .pbracket { position: absolute; left: 28px; top: -7px; z-index: 2; margin: 0; padding: 0 4px; border-color: #ad947099; background: var(--azul-0a1425, #0a1425); font-size: 10px; text-shadow: none; }
 .forge.multiplayer .seat-heading .avatar.active .life { border-color: var(--gold); box-shadow: 0 0 0 3px #201c15, 0 0 18px #f2b54c45; color: #ffe5ac; }
 .forge.multiplayer .seat-heading .avatar.active .pname { color: #ffe5ac; }
 .forge.multiplayer .seat-heading .avatar.selectable-player .life { border-color: var(--glow); outline: 2px solid var(--glow); outline-offset: 3px; }
@@ -135,7 +134,6 @@
   .forge.multiplayer .seat-heading .portrait, .forge.multiplayer .seat-heading .life { width: 30px; height: 30px; min-width: 30px; }
   .forge.multiplayer .seat-heading .life { font-size: 16px; border-width: 1.5px; box-shadow: 0 0 0 2px var(--azul-080f1c, #080f1c), 0 2px 5px #0006; }
   .forge.multiplayer .seat-heading .pname { font-size: 12px; letter-spacing: 0; }
-  .forge.multiplayer .seat-heading .pbracket { left: 14px; top: auto; bottom: -8px; font-size: 9px; }
   .seat-hand { font-size: 11px; gap: 3px; }
   .seat-hand .back { width: 11px; height: 16px; }
   .seat-heading .commander-damage { font-size: 10px; }
@@ -212,8 +210,9 @@
 .seat-scroll:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
 .forge.multiplayer .seat-row .row { overscroll-behavior-x: contain; scroll-padding-inline: 30px; }
 
-.forge:not(.multiplayer) .stack-panel.minimized { left: 160px; right: auto; }
-@media (max-height: 500px), (max-width: 760px) { .forge:not(.multiplayer) .stack-panel.minimized { left: 148px; } }
+/* No duelo, a pilha recolhida fica logo abaixo da barra do topo (menu, relógios e placar), ainda na faixa de cima. */
+.forge:not(.multiplayer) .stack-panel.minimized { top: 58px; left: max(1vw, env(safe-area-inset-left, 0px)); right: auto; }
+@media (max-height: 500px), (max-width: 760px) { .forge:not(.multiplayer) .stack-panel.minimized { top: 52px; left: 8px; } }
 
 /* On a phone the panel takes the width of the action column and grows upward; rows stay tall enough to tap. */
 @media (max-height: 500px), (max-width: 760px) {

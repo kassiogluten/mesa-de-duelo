@@ -1,4 +1,19 @@
 {
+  "0.130.0": {
+    "Quantas cartas há na sua mão": [
+      { "img": "0.130.0/sua-mao.webp", "legenda": "A contagem das cartas da sua mão no canto do seu retrato." }
+    ],
+    "Relógios e turno no topo da mesa": [
+      { "img": "0.130.0/relogios-topo.webp", "legenda": "No topo, ao lado do Menu e do Desfazer: a duração da partida, o número do turno e o tempo do turno." }
+    ],
+    "Cabeçalho dos oponentes mais enxuto": [
+      { "img": "0.130.0/cabecalho-oponente.webp", "legenda": "O cabeçalho de um oponente: vida, nome, mão, o comandante com a taxa e o botão de exibição. Sem dano de comandante recebido, o Dano não aparece." },
+      { "img": "0.130.0/menu-exibicao.webp", "legenda": "O botão com o olho abre o menu: tela cheia, ver só este oponente e ocultar o campo dele." }
+    ],
+    "Bracket no balão da vida": [
+      { "img": "0.130.0/bracket-vida.webp", "legenda": "Tocar na vida de um jogador mostra o bracket do deck dele." }
+    ]
+  },
   "0.129.1": {
     "Cartas da mão inicial voando para o lugar certo": [
       { "img": "0.129.1/mulligan-voo.webp", "legenda": "A mão inicial chegando: as cartas saem do grimório, embaixo à esquerda, e vão direto para o leque no centro da mesa." }
