@@ -1,4 +1,10 @@
 {
+  "0.137.0": {
+    "Ícones novos para habilidades e marcadores": [
+      { "img": "0.137.0/habilidades.webp", "legenda": "Criatura com Voar (par de asas), Ímpeto (bota com rastro), Atropelar (pegada de três dedos) e Salvaguarda (campo de força hexagonal); as asas e a pegada também aparecem nos selos da borda esquerda." },
+      { "img": "0.137.0/marcadores.webp", "legenda": "Marcador de atordoamento (espiral) e marcadores de carga (bateria) no pé da carta." }
+    ]
+  },
   "0.136.0": {
     "Cartas na mão no ícone da mão": [
       { "img": "0.136.0/mao-no-icone.webp", "legenda": "No computador, o ícone da mão ao lado do relógio do turno, aceso (mão automática ligada) e com o 5 das cartas na mão." },

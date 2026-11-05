@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.137.0] - 2026-11-05
+
+### Mudou
+
+- **Ícones novos para habilidades e marcadores.** Ícones que se repetiam ou se confundiam ganharam desenhos próprios. Voar agora é um par de asas; Ímpeto, uma bota com rastro de velocidade (o raio ficou só para a energia do jogador); Atropelar, uma pegada de três dedos (as asas e a pegada mudaram também nos selos da borda da carta); e Salvaguarda, um campo de força hexagonal, separado dos escudos de Resistência a magia e Proteção. Entre os marcadores, o de atordoamento virou uma espiral, que não se confunde mais com a estrela da experiência, e o de carga virou uma bateria.
+
 ## [0.136.0] - 2026-11-05
 
 ### Mudou
