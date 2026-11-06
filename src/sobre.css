@@ -72,3 +72,7 @@ p { margin: 0 0 14px; }
   .top .btn-small { padding: 7px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Duas imagens de um mesmo recurso, uma embaixo da outra. */
+.duo { display: grid; gap: 16px; }
+.wide { color: var(--azul-c9d0de, #c9d0de); max-width: 70ch; margin-bottom: 22px; }

@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.1] - 2026-11-06
+
+### Mudou
+
+- **Mais recursos na página de apresentação.** A página /sobre agora mostra também o editor de decks, o Laboratório, as partidas para assistir ao vivo e as gravadas para rever, os temas da mesa, o Desfazer e os votos, cada um com um print da mesa e o que dá para fazer.
+
 ## [0.141.0] - 2026-11-06
 
 ### Novo

@@ -6,7 +6,7 @@
     <!-- Página de apresentação (/sobre): o conteúdo está todo aqui, sem JavaScript, para os buscadores lerem. O nginx
          troca https://__MESA_HOST__ pelo domínio, como no index.html. -->
     <title>Mesa de Duelo · Jogar Magic online no navegador, grátis</title>
-    <meta name="description" content="Jogue Magic: The Gathering no navegador, sem instalar: Commander online grátis contra o computador ou com amigos, decks prontos e precons oficiais, em português.">
+    <meta name="description" content="Jogue Magic: The Gathering no navegador, sem instalar: Commander online grátis contra o computador ou com amigos, decks prontos, editor de decks, Laboratório e partidas para assistir, em português.">
     <link rel="canonical" href="https://__MESA_HOST__/sobre">
     <meta name="theme-color" content="#060912">
     <meta property="og:type" content="website">
@@ -95,12 +95,82 @@
       </section>
 
       <section class="block">
+        <h2>Monte o seu deck</h2>
+        <div class="split">
+          <div>
+            <p>No editor de decks você busca as cartas pelo nome em português ou em inglês, escolhe a série e a arte de cada uma, a capa do deck e a série das fichas que ele cria.</p>
+            <p>As estatísticas acompanham cada mudança: curva de mana, criaturas, mágicas e terrenos, os símbolos de cada cor contra as fontes que a geram e o bracket que as cartas indicam, com o porquê. Prefere digitar? Edite o deck como lista de texto, e exporte a lista quando quiser.</p>
+          </div>
+          <figure class="shot">
+            <img src="/sobre/editor.webp" width="1600" height="1567" loading="lazy" alt="Editor de decks com um deck de Commander: o comandante, 100 de 100 cartas, o bracket, a curva de mana, os símbolos e as fontes de cada cor e a lista de criaturas.">
+          </figure>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Laboratório: monte a mesa e teste</h2>
+        <div class="split reverse">
+          <div>
+            <p>Quer saber como uma interação funciona? No Laboratório você monta a mesa do jeito que quiser, para os dois jogadores: vida, veneno, mão, campo, grimório, cemitério e exílio, com cartas viradas, marcadores e equipamentos presos às criaturas, e escolhe de quem é o turno e em que etapa a partida começa.</p>
+            <p>Depois é só criar a sala de teste e jogar de verdade, com todas as regras, sozinho pelos dois lados ou com alguém pelo link. Os cenários ficam salvos e podem ser copiados para mandar a outra pessoa.</p>
+          </div>
+          <figure class="shot">
+            <img src="/sobre/laboratorio.webp" width="1130" height="792" loading="lazy" alt="O campo de um jogador no Laboratório: Memnarch com dois marcadores +1/+1, o Bonesplitter preso a ele e um Sol Ring virado.">
+          </figure>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Assista ao vivo ou reveja depois</h2>
+        <div class="split">
+          <div>
+            <p><strong>Ao vivo:</strong> na página de Salas ficam as partidas em andamento, inclusive as contra o computador. Toque em Assistir, ou abra o link ou o código de uma sala, para ver o campo, a pilha e a vida de todos, sem a mão de ninguém, escolhendo de qual jogador ver a mesa.</p>
+            <p><strong>Gravadas:</strong> as suas últimas 10 partidas ficam guardadas no aparelho. Reveja cada uma na própria mesa: tocar e pausar, avançar e voltar lance a lance, arrastar pela linha do tempo, pular para um turno e acelerar até 8×.</p>
+          </div>
+          <div class="duo">
+            <figure class="shot">
+              <img src="/sobre/salas.webp" width="1800" height="1340" loading="lazy" alt="Página de Salas: salas esperando jogadores, com o botão Entrar, e partidas em andamento, com o botão Assistir, inclusive Ana contra o computador.">
+            </figure>
+            <figure class="shot">
+              <img src="/sobre/rever.webp" width="1600" height="960" loading="lazy" alt="Uma partida gravada sendo revista na mesa, com os botões de tocar, avançar e voltar, a linha do tempo e o turno embaixo.">
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Temas da mesa</h2>
+        <p class="wide">Escolha a cor da sua mesa: Noite azul, Esmeralda, Violeta, Carmesim, Grafite ou Oceano, cada uma com a sua textura. Se quiser, o campo ainda ganha um tapete com a arte do seu deck.</p>
+        <figure class="shot">
+          <img src="/sobre/temas.webp" width="1600" height="586" loading="lazy" alt="A mesma partida em três temas lado a lado: Esmeralda, Violeta e Carmesim.">
+        </figure>
+      </section>
+
+      <section class="block">
+        <h2>Desfazer e votos</h2>
+        <div class="split reverse">
+          <div>
+            <p><strong>Desfazer:</strong> clicou errado? O Desfazer, no alto da mesa, volta para antes da sua última decisão, até o começo do turno anterior. Contra o computador volta na hora; numa sala, os outros jogadores aceitam ou recusam o pedido.</p>
+            <p><strong>Votos:</strong> se alguém cai da sala, os jogadores online votam para pular o turno dele e o jogo não trava. E nas cartas de votação, como Expropriate e Council's Judgment, cada um vota vendo a carta, o que cada opção faz e os votos que já foram dados.</p>
+          </div>
+          <div class="duo">
+            <figure class="shot">
+              <img src="/sobre/desfazer.webp" width="924" height="576" loading="lazy" alt="Pedido de desfazer no centro da mesa: Oponente pediu para desfazer Conjurar Raio, com os botões Recusar e Aceitar.">
+            </figure>
+            <figure class="shot">
+              <img src="/sobre/votacao.webp" width="1208" height="1073" loading="lazy" alt="Votação da Expropriate: a carta à vista, os votos até agora e as opções Time e Money com o que cada uma faz.">
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="block">
         <h2>Uma mesa de Magic no navegador, feita para jogar</h2>
         <ul class="features">
           <li><h3>Contra o computador</h3><p>Bots com estilos diferentes (equilibrado, cauteloso, agressivo) e o bracket que você escolher.</p></li>
           <li><h3>Com amigos</h3><p>Crie uma sala, mande o link e jogue junto, ou entre numa sala aberta.</p></li>
           <li><h3>Regras completas</h3><p>Pilha, gatilhos, combate e habilidades resolvidos pela mesa, com as cartas em português.</p></li>
-          <li><h3>No celular também</h3><p>Instale como aplicativo, jogue em tela cheia e reveja as suas últimas partidas.</p></li>
+          <li><h3>No celular também</h3><p>Instale como aplicativo e jogue em tela cheia, no celular ou no computador.</p></li>
         </ul>
       </section>
 

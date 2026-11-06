@@ -1,4 +1,10 @@
 {
+  "0.141.1": {
+    "Mais recursos na página de apresentação": [
+      { "img": "0.141.1/assistir-e-rever.webp", "legenda": "Na página /sobre, a parte de assistir ao vivo e rever depois: o texto de cada um ao lado da página de Salas e de uma partida gravada sendo revista." },
+      { "img": "0.141.1/desfazer-e-votos.webp", "legenda": "A parte de Desfazer e votos: o pedido de desfazer com Recusar e Aceitar e a votação da Expropriate, com o que cada um faz ao lado." }
+    ]
+  },
   "0.141.0": {
     "Página de apresentação": [
       { "img": "0.141.0/apresentacao.webp", "legenda": "O começo da página /sobre: o que é a Mesa de Duelo, o botão Jogar agora e uma partida na mesa ao lado." }
