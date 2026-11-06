@@ -41,6 +41,7 @@ final class StateJson {
      * @param game a partida por trás das views, para ler o poder/resistência base; pode ser null.
      */
     static JsonObject game(GameView gv, int viewer, Game game) {
+        if (game != null) LIVE.put(game, Boolean.TRUE);
         JsonObject o = new JsonObject();
         o.addProperty("type", "state");
         o.addProperty("turn", gv.getTurn());
@@ -287,6 +288,27 @@ final class StateJson {
         return card(c, null);
     }
 
+    /**
+     * Partidas que já mandaram estado (enquanto existirem): a pilha, os eventos e as perguntas montam cartas só com a
+     * view, e a série escolhida no deck (print) e a arte das fichas precisam da carta da partida.
+     */
+    private static final Map<Game, Boolean> LIVE = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /**
+     * A carta da partida por trás da view. Sem a partida, procura nas partidas vivas: o id se repete entre partidas,
+     * então só vale a carta cuja view é esta mesma.
+     */
+    static Card cardOf(CardView c, Game game) {
+        if (game != null) return game.findByView(c);
+        Game[] games;
+        synchronized (LIVE) { games = LIVE.keySet().toArray(new Game[0]); }
+        for (Game g : games) {
+            Card found = g.findByView(c);
+            if (found != null && found.getView() == c) return found;
+        }
+        return null;
+    }
+
     /** Imagens de ficha já resolvidas, por chave de imagem do Forge (null = sem imagem conhecida). */
     private static final Map<String, String> TOKEN_IMAGES = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -365,14 +387,15 @@ final class StateJson {
         }
         CardStateView s = c.getCurrentState();
         o.addProperty("name", s.getName());
+        Card source = cardOf(c, game);
         if (c.isToken()) {
-            String img = TokenPrints.image(game == null ? null : game.findByView(c));
+            String img = TokenPrints.image(source);
             if (img == null) img = tokenImage(s);
             if (img != null) o.addProperty("image", img);
         }
         o.addProperty("set", s.getSetCode());
         if (!c.isToken()) {
-            JsonObject print = printing(game == null ? null : game.findByView(c), s.getName());
+            JsonObject print = printing(source, s.getName());
             if (print != null) o.add("print", print);
         }
         String cost = s.getManaCost() == null ? "" : s.getManaCost().toString();

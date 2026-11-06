@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.142.1] - 2026-11-06
+
+### Corrigido
+
+- **Série escolhida também na pilha.** Uma carta com a série escolhida no deck aparecia com a arte padrão ao ir para a pilha, e também nas janelas de escolha, nas votações e na carta que voa ao ser conjurada. Agora ela mostra a arte da série escolhida em todo lugar, para todos os jogadores.
+
 ## [0.142.0] - 2026-11-06
 
 ### Novo

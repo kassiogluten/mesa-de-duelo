@@ -1,4 +1,9 @@
 {
+  "0.142.1": {
+    "Série escolhida também na pilha": [
+      { "img": "0.142.1/pilha-com-serie.webp", "legenda": "Um Lightning Bolt da série 2X2, escolhida no deck, na pilha com a arte dessa série em vez da padrão." }
+    ]
+  },
   "0.142.0": {
     "Maldições mostram quem elas encantam": [
       { "img": "0.142.0/seta-da-maldicao.webp", "legenda": "Duas maldições no campo, com o selo de quem cada uma encanta (Oponente e você); com o mouse sobre a Maldição do Coração Perfurado, a seta lilás vai até o retrato do Oponente." },
