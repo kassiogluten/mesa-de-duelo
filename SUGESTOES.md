@@ -10,14 +10,14 @@ Agradar quem joga: tudo **intuitivo** (sem precisar de explicação), **limpo** 
 
 ### Ordem sugerida
 
-Revista em 06/11/2026 (versão 0.139.0).
+Revista em 06/11/2026 (versão 0.140.0).
 
-1. **Intuitivo sem tutorial**: S29 (botões de passar com nomes distintos), S30 (terrenos na mão do mulligan), S28 (dicas na primeira partida), S31 (como jogar cada deck pronto).
+1. **Intuitivo sem tutorial**: S28 (dicas na primeira partida), S31 (como jogar cada deck pronto).
 2. **Primeira impressão**: S14 (partida rápida), S13 (ver o deck do oponente).
 3. **Commander com mais gente**: S32 (o que aconteceu desde a sua última vez), S33 (mesa leve no celular).
 4. **Imersão**: S27 (som ambiente), S10 (reações rápidas).
-5. **Construtor**: S4, S15, S5, S16, S7.
-6. **Fora do foco por enquanto**: S3, S12, S17, S20, S21, S34. São úteis, mas o jogador não sente a diferença no dia a dia (ou o custo é alto para o que muda).
+5. **Construtor**: S4, S15, S16, S7.
+6. **Fora do foco por enquanto**: S3, S17, S20, S34. São úteis, mas o jogador não sente a diferença no dia a dia (ou o custo é alto para o que muda).
 
 ---
 
@@ -41,20 +41,6 @@ O `TESTES.md` lista cinco testes intermitentes (`attack-groups`, `commander-tabl
 ---
 
 ## Partida
-
-### S29. Botões de passar com nomes que não se confundem · Melhoria · P
-
-Desde a 0.132.2 o botão de destaque diz o próximo passo e **Fim de turno** fica ao lado, secundário. Na principal 2, os dois ficam quase iguais: **Fim de turno** e **Para o fim do turno**. O primeiro passa até o próximo turno, sem parar; o segundo para na etapa final, onde quase nunca há o que fazer. O jogador não sabe qual apertar.
-
-- [ ] Na principal 2, renomear um dos dois (por exemplo, o secundário vira **Passar o turno**, ou o destaque vira **Para a etapa final**), ou esconder o secundário quando os dois levariam ao mesmo lugar na prática.
-- [ ] Conferir as outras fases com o mesmo olhar: dois botões nunca devem soar como a mesma coisa.
-
-### S30. Contagem de terrenos na mão do mulligan · Melhoria · P
-
-Decidir o mulligan é a primeira decisão da partida, e o jogador novo não sabe se a mão é boa. A pergunta que todo mundo faz é "quantos terrenos?".
-
-- [ ] Na tela de abertura, ao lado de **Manter** e **Mulligan**, uma linha discreta: "3 terrenos, 4 mágicas" (no Commander, contando as que entram como terreno, como as cartas de dupla face modais).
-- [ ] Sem conselho nem cor de alerta: a mesa conta, o jogador decide.
 
 ### S13. Ver o deck do oponente no fim da partida · Funcionalidade · P
 
@@ -83,22 +69,6 @@ As salas não têm nenhuma forma de comunicação. Chat livre traz moderação; 
 
 - [ ] Um conjunto fixo de reações ("Boa jogada", "Pensando…", "Ops", "Bom jogo") que aparecem por alguns segundos ao lado do retrato.
 - [ ] Opção para silenciar as reações dos outros.
-
-### S12. Dificuldade do computador · Funcionalidade · M
-
-O computador joga sempre com o perfil padrão do Forge (`createAiPlayer` em `Session.java`, sem perfil). O Forge já traz outros perfis de IA (cauteloso, arriscado, experimental), e hoje quem quer um treino mais fácil ou mais duro não tem escolha.
-
-- [ ] Opção **Computador: Fácil / Normal / Difícil** ao começar contra a IA, ligada aos perfis do Forge (conferir antes quais existem na versão usada e o que cada um muda de verdade).
-- [ ] Guardar a última escolha nas preferências (e na conta, quando conectado).
-- [ ] Mostrar a dificuldade no retrato do computador e no histórico de **Minhas partidas**.
-
-### S21. Rever as minhas partidas · Funcionalidade · G
-
-A gravação da partida no aparelho (item 28) já permite repetir a mesa sem o servidor, mas só na página de desenvolvimento e na área de admin. Quem joga também ganharia com isso: rever a jogada que decidiu a partida.
-
-- [ ] Em **Minhas partidas**, botão **Rever** nas partidas gravadas neste aparelho, abrindo a repetição com avançar, voltar e pular para um turno.
-- [ ] Mostrar só o que o jogador viu na hora (a mão dele, não a dos outros).
-- [ ] Limite de quantas gravações guardar e opção de apagar.
 
 ---
 
@@ -158,17 +128,10 @@ Não há como ver uma mão inicial do deck sem começar uma partida. A Mesa livr
 
 ### S15. Completar os terrenos básicos · Funcionalidade · P
 
-Montar um deck novo sempre termina com a conta de quantas Florestas e Ilhas pôr. Combina com a S5.
+Montar um deck novo sempre termina com a conta de quantas Florestas e Ilhas pôr. Combina com as cores de mana do editor (S5, 0.140.0).
 
 - [ ] Botão **Completar terrenos** no editor: adiciona básicos até o número que o jogador escolher (sugestão: 17 em 60 cartas, 37 em Commander), divididos pela proporção de símbolos de cada cor nos custos.
 - [ ] Mostrar a divisão antes de aplicar, para ajustar à mão.
-
-### S5. Cores de mana: símbolos contra fontes · Funcionalidade · M
-
-As estatísticas do editor mostram curva, tipos e cores, mas não se a base de mana sustenta as cores do deck.
-
-- [ ] Contar os símbolos de cada cor nos custos e as fontes de cada cor nos terrenos (e mana rocks), lado a lado.
-- [ ] Aviso quando uma cor tem muitos símbolos e poucas fontes.
 
 ### S16. Histórico de mudanças do deck · Funcionalidade · M
 
@@ -200,16 +163,21 @@ Oathbreaker feito na 0.112.0 (validação no construtor e no servidor, de dois a
 | --- | --- |
 | S1. Cache de cartas no localStorage perto do limite | 0.30.0, item 10 do `ROADMAP.md`: o cache foi para o IndexedDB. |
 | S2. Falha ao carregar dados na biblioteca não aparece | 0.105.0, item 79. |
+| S5. Cores de mana: símbolos contra fontes | 0.140.0: bloco Cores de mana nas estatísticas do deck. |
 | S8. Histórico de partidas e vitórias por deck | 0.100.0, item 65 (**Minhas partidas**, na conta). |
 | S9. Gráfico de vida no fim da partida | 0.105.0, item 78. |
 | S11. Lista de atalhos de teclado | 0.105.0, item 77. |
+| S12. Dificuldade do computador | 0.140.0: Estilo do computador (Equilibrado, Cauteloso, Agressivo, Experimental), os perfis do Forge com nomes honestos, já que nenhum é mais fácil ou mais difícil de verdade. |
 | S18. Tela acesa durante a partida | 0.103.0, item 72. |
 | S19. Vibração quando é a sua vez | 0.103.0, item 73. |
+| S21. Rever as minhas partidas | 0.140.0: as últimas 10 partidas gravadas no aparelho, em Minhas partidas e no menu ⋯, com a página Rever partida. |
 | S22. Tela inicial com o deck primeiro | 0.101.0, item 70. |
 | S23. Cabeçalho mais limpo | 0.101.0, item 71. |
 | S24. Cartas maiores quando há espaço na mesa | 0.101.0, item 67 (só com uma fileira vazia). |
 | S25. Menos selos e ícones soltos na mesa | 0.105.0, item 76. |
 | S26. Tapete de mesa com a arte do deck | 0.101.0, item 68; a conferência no celular passou para a S33. |
+| S29. Botões de passar com nomes que não se confundem | 0.140.0: na principal 2 o destaque virou "Para a etapa final"; nas outras fases os nomes já não se confundiam. |
+| S30. Contagem de terrenos na mão do mulligan | 0.140.0: "3 terrenos · 4 mágicas" na mão inicial. |
 
 ## Descartadas
 

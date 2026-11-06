@@ -187,6 +187,7 @@ final class MatchRecorder {
             String name = seat == null ? null : session.isRoom() ? seat.name : seat.nick;
             if (name != null) p.addProperty("name", name);
             p.addProperty("ai", seat == null);
+            if (seat == null && !session.isRoom()) p.addProperty("aiStyle", session.aiStyle);
             if (seat != null && seat.account != null) {
                 p.addProperty("account", seat.account);
                 if (seat.deckId != null) p.addProperty("deckId", seat.deckId);

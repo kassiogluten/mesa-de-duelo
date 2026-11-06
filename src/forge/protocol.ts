@@ -1,4 +1,5 @@
 import type { DeckEntry, DeckFormat } from '../decks';
+import type { AiStyle } from '../aiStyle';
 
 // Mensagens trocadas com o servidor (forge-bridge): o estado da mesa, as perguntas, os pedidos e as respostas.
 // O estado (FState) é conferido contra o servidor por tests/protocol.test.mjs; campo novo entra aqui.
@@ -235,6 +236,8 @@ export interface FPlayer {
   sleeve?: number;
   name: string;
   ai: boolean;
+  /** Estilo do computador (só nos jogadores da IA). */
+  aiStyle?: AiStyle;
   eliminated?: boolean;
   life: number;
   /** Dano que os escudos de prevenção do jogador ainda vão prevenir. */
@@ -532,7 +535,7 @@ export interface FTargeting extends FTargets {
 export interface MatchOwner { conta?: string; deckId?: string }
 
 export type ClientMessage =
-  | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig; /** O nome que o jogador usa, só para o histórico (na mesa ele é "Você"). */ name?: string } & MatchOwner)
+  | ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig; /** O nome que o jogador usa, só para o histórico (na mesa ele é "Você"). */ name?: string; /** Estilo do computador (src/aiStyle.ts); sem ele, o equilibrado. */ aiStyle?: AiStyle } & MatchOwner)
   | ({ type: 'host'; name: string; /** null: cria a sala sem deck e escolhe lá dentro (room-deck). */ deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
   | ({ type: 'join'; code: string; name: string; /** null: entra sem deck e escolhe lá dentro (room-deck). */ deck: unknown; cover?: string; bracket?: number } & MatchOwner)
   | ({ type: 'room-deck'; requestId: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)

@@ -158,6 +158,8 @@ final class StateJson {
         }
         Player engine = game == null ? null : game.getPlayer(p.getId());
         if (engine != null) {
+            // Estilo do computador (AiStyle), para o retrato dizer como ele joga.
+            if (p.isAI() && engine.getLobbyPlayer() instanceof forge.ai.LobbyPlayerAi ai) o.addProperty("aiStyle", AiStyle.of(ai.getAiProfile()));
             // O Anel te tenta: quantas vezes já tentou o jogador (o Anel ganha uma habilidade a cada vez, até a quarta).
             if (engine.getNumRingTemptedYou() > 0) o.addProperty("ringTempted", engine.getNumRingTemptedYou());
             if (engine.isMonarch()) o.addProperty("monarch", true);

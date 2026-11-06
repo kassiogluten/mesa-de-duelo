@@ -1,6 +1,6 @@
 import { EVENTS } from '../storage';
 import { ligarTemaItens, temaItemsHTML, temasDisponiveis } from './temas';
-import { ICON_DOTS, ICON_BALLOON, ICON_TABLE, ICON_FLASK } from './icons';
+import { ICON_DOTS, ICON_BALLOON, ICON_TABLE, ICON_FLASK, ICON_REPLAY } from './icons';
 
 
 /** Botão ⋯ do cabeçalho: o que se usa de vez em quando (relatar, Laboratório, tema da mesa), fora da linha das abas. */
@@ -11,6 +11,7 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     + `<button type="button" role="menuitem" data-mais="feedback">${ICON_BALLOON}<span>Enviar sugestão ou erro</span></button>`
     + `<button type="button" role="menuitem" data-mais="lab">${ICON_FLASK}<span>Laboratório</span></button>`
     + `<a role="menuitem" href="/salas.html" data-mais="salas">${ICON_TABLE}<span>Salas e partidas ao vivo</span></a>`
+    + `<a role="menuitem" href="/partidas.html#gravadas" data-mais="rever">${ICON_REPLAY}<span>Rever partidas</span></a>`
     + (temasDisponiveis() ? `<p class="mais-grupo" role="presentation">Tema da mesa</p><div role="group" aria-label="Tema da mesa">${temaItemsHTML()}</div>` : '')
     + `</div>`;
   const button = slot.querySelector<HTMLButtonElement>('.mais-btn')!, menu = slot.querySelector<HTMLElement>('.mais-menu')!;

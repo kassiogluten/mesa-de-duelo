@@ -1,4 +1,6 @@
 import { esc, manaHTML } from '../ui/cardtext';
+import { aiStyleName, DEFAULT_AI_STYLE } from '../aiStyle';
+import type { ReplaySummary } from '../replays';
 
 /*
  * Minhas partidas (/partidas.html): o que a rota partidas da conta devolve, em HTML. Sem DOM, para os testes.
@@ -7,7 +9,7 @@ import { esc, manaHTML } from '../ui/cardtext';
 
 export type Resultado = 'vitoria' | 'derrota' | 'empate' | 'queda';
 export interface DeckDaPartida { id?: string; nome?: string; comandante?: string; cores?: string }
-export interface Oponente { nome?: string; ia: boolean; deck?: string; comandante?: string; cores?: string }
+export interface Oponente { nome?: string; ia: boolean; /** Estilo do computador (src/aiStyle.ts). */ estilo?: string; deck?: string; comandante?: string; cores?: string }
 export interface Partida {
   id: string; quando: string; formato?: string; melhorDe?: 'bo1' | 'bo3'; modo?: 'ia' | 'rede'; ms?: number; fim?: string;
   resultado: Resultado; turnos: number; jogos: number; placar: number[]; deck: DeckDaPartida; oponentes: Oponente[];
@@ -50,7 +52,7 @@ export const coresHTML = (cores?: string) => cores ? manaHTML([...cores].map(c =
 const RESULTADO: Record<Resultado, string> = { vitoria: 'Vitória', derrota: 'Derrota', empate: 'Empate', queda: 'Sem vencedor' };
 
 /** Quem estava do outro lado: "Computador" ou o nome digitado na sala. */
-export const nomeDoOponente = (o: Oponente) => o.ia ? 'Computador' : o.nome || 'Jogador';
+export const nomeDoOponente = (o: Oponente) => o.ia ? `Computador${o.estilo && o.estilo !== DEFAULT_AI_STYLE && aiStyleName(o.estilo) ? ` ${aiStyleName(o.estilo).toLowerCase()}` : ''}` : o.nome || 'Jogador';
 const deckDoOponente = (o: Oponente) => o.comandante || o.deck || '';
 
 export function sequenciaTexto(s?: Numeros['sequencia']) {
@@ -68,7 +70,11 @@ function detalhe(p: Partida) {
   return extra.join(', ');
 }
 
-export function partidaHTML(p: Partida, nomeDoFormato: NomeDoFormato) {
+/** O link da repetição, para a partida guardada neste aparelho. */
+const reverHTML = (id: string) => `<a class="pt-rever" href="/rever.html?id=${encodeURIComponent(id)}">Rever</a>`;
+
+/** `rever`: a partida está guardada neste aparelho e dá para rever. */
+export function partidaHTML(p: Partida, nomeDoFormato: NomeDoFormato, rever = false) {
   const meu = p.deck.comandante || p.deck.nome || 'Deck sem nome';
   const contra = p.oponentes.map(o => {
     const deck = deckDoOponente(o);
@@ -84,8 +90,33 @@ export function partidaHTML(p: Partida, nomeDoFormato: NomeDoFormato) {
       <p class="pt-contra">contra</p>
       <ul class="pt-oponentes">${contra}</ul>
     </div>
-    <p class="pt-sobre"><time datetime="${esc(p.quando)}">${esc(quando(p.quando))}</time>${sobre.length ? `<span>${esc(sobre.join(' · '))}</span>` : ''}</p>
+    <p class="pt-sobre"><time datetime="${esc(p.quando)}">${esc(quando(p.quando))}</time>${sobre.length ? `<span>${esc(sobre.join(' · '))}</span>` : ''}${rever ? reverHTML(p.id) : ''}</p>
   </li>`;
+}
+
+/** O resultado de uma partida guardada, pelo último jogo: a gravação só sabe quem venceu o jogo em que parou. */
+export function resultadoGravado(g: Pick<ReplaySummary, 'finished' | 'winner' | 'players' | 'you'>) {
+  if (!g.finished) return 'Não terminou';
+  const eu = g.players.find(p => p.id === g.you)?.name;
+  return !g.winner ? 'Empate' : g.winner === eu ? 'Vitória' : 'Derrota';
+}
+
+/** As partidas guardadas neste aparelho (as últimas, com ou sem conta), cada uma com Rever e Apagar. */
+export function gravadasHTML(lista: ReplaySummary[], nomeDoFormato: NomeDoFormato, limite: number) {
+  const itens = lista.map(g => {
+    const outros = g.players.filter(p => p.id !== g.you).map(p => p.ai ? 'Computador' : p.name || 'Jogador');
+    const sobre = [g.format ? nomeDoFormato(g.format) : '', g.turns ? `${g.turns} ${g.turns === 1 ? 'turno' : 'turnos'}` : ''].filter(Boolean).join(' · ');
+    const iso = new Date(g.startedAt).toISOString();
+    const classe = ({ 'Vitória': 'r-vitoria', 'Derrota': 'r-derrota' } as Record<string, string>)[resultadoGravado(g)] ?? 'r-queda';
+    return `<li class="pt-gravada ${classe}">
+      <div class="pt-resultado"><strong>${esc(resultadoGravado(g))}</strong></div>
+      <p class="pt-gravada-quem">contra <strong>${esc(outros.join(', ') || 'ninguém')}</strong>${sobre ? ` <small>${esc(sobre)}</small>` : ''}</p>
+      <p class="pt-sobre"><time datetime="${esc(iso)}">${esc(quando(iso))}</time><span class="pt-acoes">${reverHTML(g.id)}<button type="button" class="pt-apagar" data-apagar="${esc(g.id)}" aria-label="Apagar a partida de ${esc(quando(iso))}">Apagar</button></span></p>
+    </li>`;
+  }).join('');
+  return `<h2 class="pt-titulo" id="gravadas" tabindex="-1">Gravadas neste aparelho <small>${lista.length}</small></h2>
+    <p class="pt-nota">As últimas ${limite} partidas que você jogou neste aparelho, com ou sem conta, para rever lance a lance. Só aparece o que você viu na hora. A mais antiga sai quando entra outra.</p>
+    ${lista.length ? `<ol class="pt-lista">${itens}</ol>` : '<p class="vis-empty">Nenhuma partida gravada ainda. A próxima que você jogar aparece aqui.</p>'}`;
 }
 
 function grupoHTML(titulo: string, linhas: { nome: string; g: Grupo }[]) {

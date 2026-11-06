@@ -233,7 +233,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                         } else {
                             for (int i = 1; i < config.playerCount(); i++) { Deck d = aiDeck(msg.get("opponent"), config, taken); opponents.add(d); brackets.add(aiBracket(msg.get("opponent"), d)); }
                         }
-                        solo(ch, you, opponents, config, brackets, owner(msg), nick(msg));
+                        solo(ch, you, opponents, config, brackets, owner(msg), nick(msg), AiStyle.parse(msg.get("aiStyle")));
                     }
                 }
                 case "host" -> {
@@ -351,9 +351,10 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     // ---------- Partidas ----------
 
-    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets, Owner owner, String nick) {
+    private synchronized void solo(Channel ch, Deck you, java.util.List<Deck> opponents, MatchConfig config, java.util.List<Integer> brackets, Owner owner, String nick, String aiStyle) {
         leave(ch);
         Session s = Session.solo(newCode(8), ch, you, opponents, config);
+        s.aiStyle = aiStyle;
         s.seats[0].owner(owner);
         s.seats[0].nick = nick;
         s.watchable = true;

@@ -127,6 +127,7 @@ phase
 playableExile
 players
 players[].ai
+players[].aiStyle
 players[].battlefield
 players[].battlefield[].attachedTo
 players[].battlefield[].attacking

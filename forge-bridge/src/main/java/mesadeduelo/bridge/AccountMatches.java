@@ -104,6 +104,7 @@ final class AccountMatches {
             JsonObject p = players.get(i).getAsJsonObject(), op = new JsonObject();
             copy(p, "name", op, "nome");
             op.addProperty("ia", p.has("ai") && p.get("ai").getAsBoolean());
+            copy(p, "aiStyle", op, "estilo");
             copy(p, "deck", op, "deck");
             copy(p, "commander", op, "comandante");
             copy(p, "colors", op, "cores");

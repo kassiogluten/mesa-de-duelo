@@ -8,6 +8,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.140.0] - 2026-11-06
+
+### Novo
+
+- **Rever as minhas partidas.** As últimas 10 partidas que você jogou neste aparelho ficam guardadas, com ou sem conta, e dá para rever cada uma na própria mesa: tocar e pausar, avançar e voltar lance a lance, arrastar pela linha do tempo, pular para um turno e acelerar até 8×. Aparece só o que você viu na hora, com a mão do oponente virada para baixo. A lista fica em Minhas partidas, em "Gravadas neste aparelho" (também pelo menu ⋯, em Rever partidas), com Rever e Apagar; as partidas da conta guardadas aqui ganham o botão Rever na própria linha.
+- **Estilo do computador.** Ao jogar contra o computador, escolha como ele joga: Equilibrado (o de sempre), Cauteloso, Agressivo ou Experimental, com uma linha explicando cada um. A escolha fica guardada (e acompanha a conta), aparece ao lado do nome do computador na mesa, quando não é o Equilibrado, e em Minhas partidas ("Computador agressivo").
+- **Cores de mana no deck.** As estatísticas do deck mostram, para cada cor, quantos símbolos dela há nos custos e quantas fontes a geram (terrenos, terrenos de busca e cartas baratas que geram mana, como Llanowar Elves e Arcane Signet), lado a lado, com um aviso quando uma cor tem muitos símbolos e poucas fontes.
+- **Terrenos na mão inicial.** Na hora de manter ou fazer mulligan, uma linha discreta conta a mão: "3 terrenos · 4 mágicas". As cartas de dupla face com um terreno atrás contam como terreno. Sem conselho: a mesa conta, você decide.
+
+### Mudou
+
+- **Para a etapa final.** Na principal 2, o botão de destaque agora diz "Para a etapa final" em vez de "Para o fim do turno", que se confundia com o "Fim de turno" logo acima. O destaque para na etapa final do seu turno; o "Fim de turno" passa direto para o próximo.
+
 ## [0.139.1] - 2026-11-06
 
 ### Corrigido

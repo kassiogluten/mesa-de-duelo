@@ -64,3 +64,4 @@
 @media (max-width: 760px) and (orientation: portrait) {
   .forge:not(.multiplayer) .avatar.opp .player-counters { flex-wrap: wrap; width: max-content; max-width: max(52px, calc(100vw - 280px)); }
 }
+.pname .pstyle { font-size: .78em; font-weight: 400; opacity: .72; letter-spacing: .01em; }

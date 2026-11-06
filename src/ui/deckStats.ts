@@ -3,6 +3,7 @@ import { cardInfo, type CardInfo, type CardType, type Color } from '../cards';
 import { cacheGet } from '../scryfall';
 import { countEntries, deckPriceDescription, deckPriceText, hasCommandZone, type DeckData, type DeckEntry } from '../decks';
 import { esc } from './cardtext';
+import { manaBaseHTML } from './manaBase';
 import { BRACKET_DESCRIPTION, BRACKET_NAME, bracketLabel, deckBracket, type Bracket } from '../brackets';
 
 export const CURVE = ['0', '1', '2', '3', '4', '5', '6+'];
@@ -61,6 +62,7 @@ export function statsHTML(deck: DeckData): string {
     <div class="ds-counts"><span><b>${stats.creatures}</b> criaturas</span><span><b>${stats.spells}</b> outras mágicas</span><span><b>${stats.lands}</b> terrenos</span></div>
     <div class="ds-curve" role="img" aria-label="${esc(`Curva de mana${partial ? ' parcial' : ''}: ${stats.curve.map((n, i) => `custo ${CURVE[i]}, ${n} cartas`).join('; ')}`)}">${stats.curve.map((n, i) => `<span class="ds-bar"><b>${n || '–'}</b><i style="height:${n / peak * 52}px"></i><small>${CURVE[i]}</small></span>`).join('')}</div>
     <p class="ds-average">Custo médio${partial ? ' parcial' : ''}<b>${stats.average === null ? '–' : stats.average.toFixed(1).replace('.', ',')}</b><small>Sem terrenos</small></p>
+    ${manaBaseHTML(deck)}
     ${partial ? `<p class="ds-incomplete" role="status">Dados pendentes de ${stats.unknown} ${stats.unknown === 1 ? 'carta' : 'cartas'}. As estatísticas estão incompletas.</p>` : ''}
   </div>`;
 }

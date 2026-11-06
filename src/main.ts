@@ -1,5 +1,6 @@
 // Entrada da página do jogo: monta a tela inicial, a mesa, os decks e a mesa livre e troca entre elas.
-import { EVENTS, NAMES } from './storage';
+import { EVENTS, KEYS, NAMES, load } from './storage';
+import { DEFAULT_AI_STYLE, isAiStyle } from './aiStyle';
 import './style.css';
 import { setupPwa } from './ui/pwa';
 import { type DeckData } from './decks';
@@ -203,8 +204,10 @@ async function startMatch(you: DeckData, opp: DeckData | null, config: MatchConf
   const client = await requireForge(FORGE_URL);
   lastMatch = [you, opp, config, opponents];
   lobby.setStatus('Preparando a mesa…');
-  await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config, ...playerName(), ...matchOwner(you)});
+  await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config, aiStyle: chosenAiStyle(), ...playerName(), ...matchOwner(you)});
 }
+/** O estilo do computador escolhido na tela inicial (ou vindo da conta). */
+function chosenAiStyle() { const v = load(KEYS.aiStyle); return isAiStyle(v) ? v : DEFAULT_AI_STYLE; }
 async function startNetMatch(you: DeckData, url: string, message: ClientMessage, config?: MatchConfig, lab = false) {
   const client = await requireForge(url);
   lobby.setStatus(message.type === 'host' ? 'Criando a sala…' : 'Entrando na sala…');

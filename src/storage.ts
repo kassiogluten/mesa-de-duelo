@@ -82,6 +82,8 @@ export const KEYS = {
   commanderOpponents: 'mesa:commanderOpponents',
   /** Deck do computador no 1 contra 1. Tela inicial. */
   opp: 'mesa:opp',
+  /** Estilo do computador ('equilibrado', 'cauteloso', 'agressivo', 'experimental'). Tela inicial. */
+  aiStyle: 'mesa:aiStyle',
   /** Bracket máximo dos computadores ('any' ou o número). Tela inicial. */
   botBracket: 'mesa:botBracket',
   /** Precon: '1' sorteia os computadores só da série do deck do jogador. Tela inicial. */

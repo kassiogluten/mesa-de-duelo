@@ -455,3 +455,34 @@ Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.
+
+## 103. Mão automática desligada por padrão
+
+Hoje, sem nada guardado, a mão começa no automático no computador com tela baixa (recolhida por cima do campo, subindo ao passar o mouse) e fixa no toque e nas telas altas (`savedHandMode`). Quem joga pela primeira vez no notebook vê só o topo das cartas e não entende que a mão sobe com o mouse.
+
+- [ ] Sem nada guardado, a mão começa **fixa** (Auto desligado) em todo aparelho; o automático passa a ser só escolha do jogador, pelo ícone de mão ao lado do relógio do turno.
+- [ ] Quem já escolheu um modo (guardado no aparelho ou na conta) continua com o dele.
+- [ ] Conferir que a mão fixa não aperta demais o campo nas telas baixas (notebook de 768 px de altura); se apertar, decidir antes de entregar.
+- [ ] Item no CHANGELOG e print na página Novidades em imagens.
+
+## 104. Página de apresentação com SEO
+
+Hoje quem chega ao site cai direto na tela do jogo, que é feita para quem já joga e não diz a quem procura no Google o que a Mesa de Duelo é. Uma página de apresentação (promopage) serve para divulgar e para os buscadores indexarem.
+
+- [ ] Página própria (por exemplo, `/sobre` ou a raiz para quem chega de fora) que explica em poucas telas o que é a mesa: jogar Magic no navegador, contra o computador ou com amigos, Commander, decks prontos, sem instalar; com prints da mesa e um botão **Jogar agora** que leva ao jogo.
+- [ ] HTML pronto no servidor (gerado no build, sem depender de JavaScript para o conteúdo), com `<title>`, `meta description`, títulos `h1`/`h2` com as palavras que as pessoas buscam ("jogar Magic online", "Commander online grátis", "mesa de Magic no navegador"), textos alternativos nas imagens e `lang="pt-BR"`.
+- [ ] Open Graph e Twitter Card (título, descrição, imagem) para o link ficar bonito no WhatsApp e nas redes; dados estruturados (`schema.org`, tipo `WebApplication`/`VideoGame`) e URL canônica.
+- [ ] `robots.txt` e `sitemap.xml` com as páginas públicas (apresentação, Novidades em imagens, Salas, privacidade), fora a área de admin e as páginas de teste.
+- [ ] Desempenho de página leve (imagens em WebP com tamanho certo, fontes carregadas sem bloquear) e conferência no Lighthouse (SEO e desempenho) e no Google Search Console.
+- [ ] Decidir antes de fazer: se a raiz continua sendo o jogo (e a apresentação fica em outra rota) ou se a raiz vira a apresentação para quem não tem decks nem partida em andamento; o texto e os prints da página.
+
+## 105. Precon dentro de Outros, com o nome Commander Precon
+
+Na tela inicial, a escolha do formato tem três botões: **Commander**, **Precon** e **Outros** (que abre Standard, Pauper, Sacola 50, Oathbreaker e Livre). O Precon é uma variação do Commander, só com os decks pré-construídos oficiais, e não precisa de um botão próprio na primeira linha.
+
+- [ ] Tirar o botão **Precon** da primeira linha, que fica com **Commander** e **Outros**.
+- [ ] Pôr o Precon dentro de **Outros**, com o nome **Commander Precon**, e decidir a posição dele na lista (perto do Oathbreaker, que também é de zona de comando, ou no começo).
+- [ ] Quem tinha o Precon escolhido continua com ele: ao abrir a tela, **Outros** já vem aberto e com o Commander Precon marcado.
+- [ ] O nome do formato muda também onde mais aparece para o jogador (resumo da partida, selo da sala, Minhas partidas, editor de decks, avisos de deck incompatível), conferindo se fica "Commander Precon" em todos ou se algum lugar pede o nome curto.
+- [ ] Conferir que "Commander Precon" cabe no botão sem quebrar nem cortar o texto: no computador (1366 × 768 e janelas estreitas), no celular deitado e com a lista de **Outros** aberta. Se não couber, decidir antes de entregar (fonte menor, botão em duas linhas ou a lista em mais de uma fileira).
+- [ ] Item no CHANGELOG e print na página Novidades em imagens.

@@ -329,6 +329,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `sleeve?` | `number` | Cor do verso das cartas do jogador (0 a 7), sorteada pelo servidor; ausente em pontes antigas. |
 | `name` | `string` |  |
 | `ai` | `boolean` |  |
+| `aiStyle?` | `AiStyle` | Estilo do computador (só nos jogadores da IA). |
 | `eliminated?` | `boolean` |  |
 | `life` | `number` |  |
 | `preventDamage?` | `number` | Dano que os escudos de prevenção do jogador ainda vão prevenir. |
@@ -646,7 +647,7 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
 ## ClientMessage
 
 ```ts
-| ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig; /** O nome que o jogador usa, só para o histórico (na mesa ele é "Você"). */ name?: string } & MatchOwner)
+| ({ type: 'start'; you: unknown; bracket?: number; opponent: unknown; opponents?: unknown[]; config: MatchConfig; /** O nome que o jogador usa, só para o histórico (na mesa ele é "Você"). */ name?: string; /** Estilo do computador (src/aiStyle.ts); sem ele, o equilibrado. */ aiStyle?: AiStyle } & MatchOwner)
   | ({ type: 'host'; name: string; /** null: cria a sala sem deck e escolhe lá dentro (room-deck). */ deck: unknown; config: MatchConfig; visibility?: RoomVisibility; code?: string; cover?: string; bracket?: number } & MatchOwner)
   | ({ type: 'join'; code: string; name: string; /** null: entra sem deck e escolhe lá dentro (room-deck). */ deck: unknown; cover?: string; bracket?: number } & MatchOwner)
   | ({ type: 'room-deck'; requestId: string; deck: unknown; cover?: string; bracket?: number } & MatchOwner)

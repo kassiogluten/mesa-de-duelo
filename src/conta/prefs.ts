@@ -4,7 +4,7 @@ import { KEYS } from '../storage';
  * gravando a sua chave no localStorage como antes; a sincronia compara os valores com os da última vez que
  * sincronizou e envia só o que mudou aqui. Vale a última gravação, sem pergunta.
  */
-export const SYNCED_PREFS = [KEYS.audio, KEYS.turnNotice, KEYS.pace, KEYS.passLevel, KEYS.passResponses, KEYS.autoPassNoActions, KEYS.opponentStops, KEYS.choiceSort, KEYS.name, KEYS.tema] as const;
+export const SYNCED_PREFS = [KEYS.audio, KEYS.turnNotice, KEYS.pace, KEYS.passLevel, KEYS.passResponses, KEYS.autoPassNoActions, KEYS.opponentStops, KEYS.choiceSort, KEYS.name, KEYS.tema, KEYS.aiStyle] as const;
 export const NAME_KEY = KEYS.name;
 
 /** Valor de cada chave; null quando ela não existe. */

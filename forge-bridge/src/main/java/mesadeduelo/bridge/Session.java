@@ -85,6 +85,8 @@ final class Session {
     volatile MatchJournal journal;
     /** Nomes da IA: os da repetição (veja {@link Replay}) ou "Computador 1", "Computador 2"... numa sala completada. */
     private volatile List<String> aiNames;
+    /** Estilo do computador nas partidas contra a IA ({@link AiStyle}); nas salas, as IAs ficam no equilibrado. */
+    volatile String aiStyle = AiStyle.DEFAULT;
     /** Bracket do deck de cada computador, na ordem dos decks (0 sem bracket); vazio fora do Commander. */
     volatile List<Integer> aiBrackets = List.of();
     private volatile java.util.function.Consumer<forge.game.Game> startHook;
@@ -340,7 +342,7 @@ final class Session {
         }
         for (int i = 0; i < aiDecks.size(); i++) {
             String name = aiNames != null ? aiNames.get(i) : aiDecks.size() == 1 ? "Oponente" : "Oponente " + (i + 1);
-            players.add(registered(aiDecks.get(i)).setPlayer(GamePlayerUtil.createAiPlayer(name)));
+            players.add(registered(aiDecks.get(i)).setPlayer(GamePlayerUtil.createAiPlayer(name, AiStyle.profile(aiStyle))));
         }
         // A cor do verso das cartas de cada jogador, sorteada na primeira partida e mantida nas revanches e entre os jogos.
         if (sleeves == null || sleeves.length != players.size()) sleeves = drawSleeves(players.size());

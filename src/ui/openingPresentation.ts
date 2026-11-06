@@ -1,5 +1,7 @@
 // Decisões do começo da partida (quem começa, mulligan) mostradas no centro da mesa.
 import type { FState } from '../forge/client';
+import type { FCard } from '../forge/protocol';
+import { cacheGet } from '../scryfall';
 import { hideCardPreview } from './cardInspector';
 import './opening.css';
 
@@ -18,6 +20,22 @@ function waitingCopy(state: FState, wait: NonNullable<FState['input']['openingWa
   const name = state.players.find(p => p.id === wait.player)?.name ?? 'O oponente';
   if (wait.step === 'start') return [`${name} está escolhendo quem começa`, 'Depois cada um decide se mantém a mão ou faz mulligan.'];
   return [`${name} está decidindo a mão`, wait.kept ? 'Você manteve a sua mão.' : 'Em seguida é a sua vez de manter ou fazer mulligan.'];
+}
+
+/**
+ * Conta como terreno o que pode entrar como terreno: os terrenos e as cartas de dupla face modais com um terreno atrás
+ * (Emeria's Call, as Pathways), que na mão mostram a face da mágica.
+ */
+function landLike(card: Pick<FCard, 'land' | 'name'>) {
+  if (card.land) return true;
+  const sc = card.name ? cacheGet(card.name) : null;
+  return sc?.layout === 'modal_dfc' && /\bLand\b/.test(sc.type_line);
+}
+
+/** "3 terrenos · 4 mágicas": a mesa conta, o jogador decide (sem conselho nem cor de alerta). */
+export function openingHandCount(hand: Pick<FCard, 'land' | 'name'>[]) {
+  const lands = hand.filter(landLike).length, spells = hand.length - lands;
+  return `${lands} ${lands === 1 ? 'terreno' : 'terrenos'} · ${spells} ${spells === 1 ? 'mágica' : 'mágicas'}`;
 }
 
 /** Present the engine's opening decisions in the center, without changing their actions. */
@@ -43,10 +61,13 @@ export function applyOpeningPresentation(root: HTMLElement, state: FState) {
   if (!heading) {
     heading = document.createElement('div');
     heading.className = 'opening-copy';
-    heading.innerHTML = '<h1></h1><p></p>';
+    heading.innerHTML = '<h1></h1><p></p><p class="opening-count"></p>';
     arena.append(heading);
   }
   const { openingStartingPlayer, openingReturnCount, openingWait } = state.input;
+  const count = heading.querySelector<HTMLElement>('.opening-count')!;
+  const hand = state.players.find(p => p.id === state.you)?.hand ?? [];
+  count.textContent = opening === 'mulligan' && hand.length ? openingHandCount(hand) : '';
   if (opening === 'waiting' && openingWait) {
     const [title, line] = waitingCopy(state, openingWait);
     heading.querySelector('h1')!.textContent = title!;

@@ -21,6 +21,7 @@ import './deckFilters.css';
 import './lobby.css';
 import { prefsChanged } from '../conta/sync';
 import { finder } from './dom';
+import { AI_STYLES, DEFAULT_AI_STYLE, isAiStyle } from '../aiStyle';
 export { deckArt, deckColors, deckCover } from './deckStats';
 
 type Mode = 'ai' | 'net' | 'free';
@@ -262,6 +263,11 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     $('#netModeLabel').textContent = commander && playerCount > 2 ? 'Humanos' : 'Humano';
     $('#aiPanel').hidden = mode !== 'ai' || commander;
     $('#commanderAiPanel').hidden = mode !== 'ai' || !commander;
+    $('#aiStylePanel').hidden = mode !== 'ai';
+    // Lido a cada desenho: a conta pode trazer o estilo escolhido em outro aparelho.
+    const style = load(KEYS.aiStyle), aiStyle = isAiStyle(style) ? style : DEFAULT_AI_STYLE;
+    $<HTMLSelectElement>('#aiStyleSel').value = aiStyle;
+    $('#aiStyleHelp').textContent = AI_STYLES.find(s => s.id === aiStyle)!.hint;
     const basePool = readyPool(), aiPool = commander ? botPool(basePool) : basePool;
     renderBotChoices(basePool, aiPool);
     if (oppId !== 'random' && !aiPool.some(d => d.id === oppId)) oppId = 'random';
@@ -271,7 +277,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
       commanderOpponents = commanderOpponents.map(id => id === 'random' || aiPool.some(d => d.id === id) ? id : 'random');
       $('#commanderAiPanel').innerHTML = commanderAiPanelHTML(commanderOpponents.slice(0, playerCount - 1), aiPool);
     }
-    for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, [data-opponent-slot], #netName, #netCode, #roomCode, #netUrl, [data-join] button, [data-join-room], [data-watch-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
+    for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, #aiStyleSel, [data-opponent-slot], #netName, #netCode, #roomCode, #netUrl, [data-join] button, [data-join-room], [data-watch-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
     return aiPool;
   }
   /** O deck escolhido, o botão Jogar, o "Jogar de novo", o resumo da partida e onde o deck serve. */
@@ -522,6 +528,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     if (target.id === 'showIncompatible') showIncompatible = target.checked;
     if (target.dataset.opponentSlot !== undefined) { commanderOpponents[Number(target.dataset.opponentSlot)] = target.value; save(KEYS.commanderOpponents, JSON.stringify(commanderOpponents)); }
     if (target.id === 'oppSel') { oppId = target.value; save(KEYS.opp, oppId); }
+    if (target.id === 'aiStyleSel' && isAiStyle(target.value)) { save(KEYS.aiStyle, target.value); prefsChanged(); }
     if (target.id === 'sameSeries') { sameSeries = target.checked; save(KEYS.preconSameSeries, sameSeries ? '1' : '0'); dropOutOfPool(); }
     if (target.id === 'netName') { save(KEYS.name, target.value.trim()); prefsChanged(); }
     if (target.id === 'netUrl') { save(KEYS.forgeUrl, target.value.trim()); room = null; validations.clear(); preflight++; }

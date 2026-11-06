@@ -5,6 +5,7 @@
 .opening-copy h1 { margin: 0; font: 500 clamp(26px, 2.8vw, 36px)/1.2 var(--body); letter-spacing: -.025em; color: #f4f1e9; text-wrap: balance; }
 .opening-copy p { max-width: 520px; margin: 12px auto 0; font: 400 16px/1.5 var(--body); letter-spacing: 0; color: var(--azul-bcc5d4, #bcc5d4); text-wrap: balance; }
 .opening-copy p:empty { display: none; }
+.opening-copy .opening-count { margin-top: 6px; font-size: 14px; letter-spacing: .02em; color: var(--azul-bcc5d4, #bcc5d4); opacity: .85; font-variant-numeric: tabular-nums; }
 .forge[data-opening] .field, .forge[data-opening] .divider, .forge[data-opening] .avatar-slot,
 .forge[data-opening] .piles, .forge[data-opening] .opp-hand, .forge[data-opening] .phase-rail { visibility: hidden; }
 .forge[data-opening] .hand, .forge[data-opening] .hand:not(.crowded) {

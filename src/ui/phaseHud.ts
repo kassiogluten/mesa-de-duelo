@@ -188,7 +188,7 @@ export function phaseHudHTML(state: HudState, hudStops: HudStops | readonly stri
 /** Para onde vai o botão de passar quando uma etapa extra muda a fase seguinte. */
 const NEXT_LABEL: Record<string, string> = {
   UNTAP: 'Para o início extra', UPKEEP: 'Para a manutenção extra', DRAW: 'Comprar', MAIN1: 'Para a principal 1',
-  COMBAT_BEGIN: 'Para o combate extra', MAIN2: 'Para a principal 2', END_OF_TURN: 'Para o fim do turno', CLEANUP: 'Para o fim do turno',
+  COMBAT_BEGIN: 'Para o combate extra', MAIN2: 'Para a principal 2', END_OF_TURN: 'Para a etapa final', CLEANUP: 'Para a etapa final',
 };
 
 /** Etapas do combate depois das quais o que vem é o fim do combate (e um combate extra, se houver). */
@@ -224,5 +224,5 @@ export function passLabel(state: Pick<FState, 'phase' | 'activePlayer' | 'you' |
   if (phase === 'COMBAT_DECLARE_ATTACKERS' && attacking) return 'Para os bloqueios';
   if (phase === 'COMBAT_DECLARE_BLOCKERS' && attacking) return 'Para o dano';
   return group === 'start' ? 'Para a principal 1' : group === 'main1' ? 'Para o combate' : group === 'combat' ? 'Para a principal 2'
-    : group === 'main2' ? 'Para o fim do turno' : 'Passar';
+    : group === 'main2' ? 'Para a etapa final' : 'Passar';
 }

@@ -52,7 +52,7 @@ test('the pass button names where the game goes next', () => {
   assert.equal(passLabel(s('MAIN1')), 'Para o combate');
   assert.equal(passLabel(s('COMBAT_DECLARE_BLOCKERS', { combat: [{ attacker: 5, blockers: [] }] })), 'Para o dano');
   assert.equal(passLabel(s('COMBAT_DAMAGE')), 'Para a principal 2');
-  assert.equal(passLabel(s('MAIN2')), 'Para o fim do turno');
+  assert.equal(passLabel(s('MAIN2')), 'Para a etapa final');
   assert.equal(passLabel(s('END_OF_TURN')), 'Passar');
   assert.equal(passLabel(s('MAIN1', { activePlayer: 2 })), 'Passar');
   assert.equal(passLabel(s('MAIN1', { stack: [{ id: 1 }] })), 'Resolver');

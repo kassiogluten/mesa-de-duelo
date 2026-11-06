@@ -6,6 +6,7 @@ import { bracketLabel, deckBracket, type Bracket } from '../brackets';
 import { commanderLineHTML } from './deckFilters';
 import { siteFooterHTML } from './siteFooter';
 import { ICON_EYE_LOBBY, ICON_MORE, ICON_REFRESH, ICON_PENCIL } from './icons';
+import { AI_STYLES } from '../aiStyle';
 
 /** O que a tela inicial desenha a partir do estado: o esqueleto, os cards dos decks e os textos de cada painel. */
 export const formatName = (f: DeckFormat | null) => f ? FORMAT_LABEL[f] : 'Escolha o formato';
@@ -30,6 +31,7 @@ export function lobbyHTML() {
         <fieldset class="match-choice duration-choice" id="durationChoice"><legend>Partida</legend><div class="choice-segments"><button type="button" data-setting="length" data-value="bo1">Única</button><button type="button" data-setting="length" data-value="bo3">Melhor de três</button></div></fieldset>
         <fieldset class="match-choice player-count-choice" id="playerCountChoice" hidden><legend>Jogadores</legend><div class="choice-segments"><button type="button" data-setting="players" data-value="2">2</button><button type="button" data-setting="players" data-value="3">3</button><button type="button" data-setting="players" data-value="4">4</button></div></fieldset>
         <div class="opponent-choice" id="aiPanel"><label for="oppSel">Deck do computador</label><select id="oppSel" class="input-field"></select></div>
+        <div class="opponent-choice ai-style-choice" id="aiStylePanel"><label for="aiStyleSel">Estilo do computador</label><select id="aiStyleSel" class="input-field" aria-describedby="aiStyleHelp">${AI_STYLES.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select><p class="setup-explanation" id="aiStyleHelp"></p></div>
         <fieldset class="match-choice bot-bracket-choice" id="botBracketChoice" hidden><legend>Bracket máximo dos bots</legend><div class="choice-segments" id="botBracketButtons"></div><p class="setup-explanation" id="botBracketHelp"></p></fieldset>
         <label class="same-series-choice" id="sameSeriesChoice" hidden><input type="checkbox" id="sameSeries"> <span id="sameSeriesLabel">Bots só da série do seu deck</span></label>
         <div id="commanderAiPanel" class="commander-ai-panel" hidden></div>

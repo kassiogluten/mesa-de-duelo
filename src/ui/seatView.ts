@@ -1,5 +1,6 @@
 // Os jogadores na mesa: o retrato (vida, mana na reserva, marcadores, emblemas), os montes (grimório, cemitério, exílio), a
 // zona de comando, o assento de cada oponente com três ou mais jogadores (à vista ou oculto) e a tela de foco num oponente.
+import { aiStyleName, DEFAULT_AI_STYLE } from '../aiStyle';
 import type { FCard, FPlayer, FState } from '../forge/client';
 import { esc, pip } from './cardtext';
 import { countSealsHTML } from './cardCounts';
@@ -23,6 +24,9 @@ import type { SeatState } from './tableState';
 import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, ICON_EYE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
 
 /** O que os assentos precisam da mesa, além das peças do campo. */
+/** Estilo do computador no retrato; o equilibrado, que é o padrão, não aparece. */
+const shownStyle = (p: FPlayer) => p.ai && p.aiStyle && p.aiStyle !== DEFAULT_AI_STYLE ? aiStyleName(p.aiStyle) : '';
+
 export interface SeatView extends BoardView {
   image(name: string | undefined, size: 'small' | 'normal', print?: FCard['print']): string | undefined;
   /** Retrato de cada jogador (0 é você), quando veio com a partida. */
@@ -61,12 +65,12 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const art = v.portraits[idx];
   const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
   const forecast = s.forecast?.find(f => f.player === p.id);
-  return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
+  return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${shownStyle(p) ? `, computador ${shownStyle(p).toLowerCase()}` : ''}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
     <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
     ${idx === 0 ? lifeHTML(v, p, cls) : opponentLifeHTML(v, s, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
     ${playerCounters(v, p)}
-    <div class="pname">${esc(p.name)}</div>
+    <div class="pname">${esc(p.name)}${shownStyle(p) ? ` <small class="pstyle" title="Estilo do computador">${shownStyle(p)}</small>` : ''}</div>
     ${emblems(v, p)}
     ${p.eliminated ? '<span class="seat-eliminated">Eliminado</span>' : ''}
     ${offline ? '<div class="offline">desconectado</div>' : ''}

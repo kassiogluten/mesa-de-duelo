@@ -10,6 +10,7 @@ import { forecastLineHTML, forecastText } from './combatForecast';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
 import { isProliferating, proliferatePanelHTML } from './proliferate';
 import { zoneWithArticle } from './questionView';
+import { openingHandCount } from './openingPresentation';
 import { poolCost, shortInstruction, spokenMana } from './shortInstruction';
 import type { createTableSettings } from './tableSettings';
 import type { TableCtx } from './tableContext';
@@ -137,7 +138,7 @@ export function createActionBox(d: ActionBoxDeps) {
     // A previsão do combate vai junto: a cada bloqueio marcado ou desfeito, a frase muda e o leitor de tela lê de novo.
     const forecastSpoken = (s.forecast ?? []).map(f => forecastText(f, f.player === s.you ? null : s.players.find(p => p.id === f.player)?.name ?? 'O defensor', d.cardName)).join(' ');
     const targetSpoken = targetPanel && targetInfo ? ` ${targetInfoText(targetInfo)}` : '';
-    d.announce([seatNotice, instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ? spokenMana(short) : withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
+    d.announce([seatNotice, instruction ? `${awaiting ? 'Sua decisão. ' : ''}${short ? spokenMana(short) : withoutCardIds(instruction)}${targetSpoken}${decision ? ` ${decision.progress}. ${decision.instruction}` : ''}` : (opening === 'play-draw' || opening === 'starting-player' ? 'Escolha quem joga primeiro.' : opening === 'mulligan' ? `Mão inicial: ${me.hand.length} cartas, ${openingHandCount(me.hand).replace(' · ', ' e ')}.` : opening === 'mulligan-bottom' ? `Cartas a devolver: ${s.input.openingReturnRemaining ?? s.input.openingReturnCount ?? 0}.` : ''), forecastSpoken].filter(Boolean).join(' '));
   }
   return {
     render,

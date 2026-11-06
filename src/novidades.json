@@ -1,4 +1,23 @@
 {
+  "0.140.0": {
+    "Rever as minhas partidas": [
+      { "img": "0.140.0/gravadas.webp", "legenda": "Em Minhas partidas, a lista \"Gravadas neste aparelho\", com o resultado, contra quem, o formato, os turnos e os botões Rever e Apagar." },
+      { "img": "0.140.0/rever.webp", "legenda": "A partida revista na mesa, com tocar, avançar e voltar, a linha do tempo, o lance atual, o turno para pular e a velocidade na barra de baixo." }
+    ],
+    "Estilo do computador": [
+      { "img": "0.140.0/estilo-escolha.webp", "legenda": "Na tela inicial, contra o computador, a escolha do estilo (aqui, Cauteloso) com a explicação logo abaixo." },
+      { "img": "0.140.0/estilo-retrato.webp", "legenda": "Na mesa, o estilo aparece ao lado do nome do computador: \"Oponente Agressivo\"." }
+    ],
+    "Cores de mana no deck": [
+      { "img": "0.140.0/cores-de-mana.webp", "legenda": "Um deck com 60% dos símbolos em azul e só 3 das 21 fontes azuis: o número fica em destaque e o aviso diz que faltam fontes de azul." }
+    ],
+    "Terrenos na mão inicial": [
+      { "img": "0.140.0/mao-inicial.webp", "legenda": "Na mão inicial, abaixo de \"Você joga primeiro.\", a contagem \"3 terrenos · 4 mágicas\"." }
+    ],
+    "Para a etapa final": [
+      { "img": "0.140.0/etapa-final.webp", "legenda": "Na principal 2, \"Fim de turno\" em cima e o destaque \"Para a etapa final\" embaixo: dois nomes que não se confundem." }
+    ]
+  },
   "0.139.1": {
     "Resistência à magia nos planeswalkers": [
       { "img": "0.139.1/resistencia-planeswalker.webp", "legenda": "Jace Beleren com 4 de lealdade e o escudo de Resistência à magia logo acima da lealdade." }
