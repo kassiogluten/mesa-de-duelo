@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.142.3] - 2026-11-06
+
+### Corrigido
+
+- **Selo de exílio só com as cartas que têm a ver com a permanente.** Uma permanente que exila cemitérios ou o topo do grimório sem voltar a falar dessas cartas, como o Ashiok, Dream Render, ganhava o selo de exílio e a lista "Exilando" com o cemitério inteiro, que não tem mais nada a ver com ela. Agora o selo fica só para o que importa: o que ela tirou do campo ou da mão (Oblivion Ring, Journey to Nowhere), o que ela guardou (Hideaway, imprint) e as cartas de que o texto dela volta a falar, como as "exiladas com" o Ashiok, Nightmare Weaver.
+- **Selo de exílio também para o que as auras e os equipamentos exilam.** Uma aura presa à sua criatura que exila uma permanente do oponente, como o Sheltered by Ghosts, não mostrava nada no campo: a carta exilada só aparecia abrindo a aura. Agora a criatura ganha o selo de exílio no alto, com a carta saindo por baixo dela e "exilada por Sheltered by Ghosts", e o inspetor da criatura diz o que a aura presa a ela está exilando.
+
 ## [0.142.2] - 2026-11-06
 
 ### Mudou

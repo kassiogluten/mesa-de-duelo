@@ -90,6 +90,22 @@ test('cards exiled by a permanent (Journey to Nowhere) peek out under it, with a
   assert.equal((backRow(view, both, both.players[0]).match(/class="stack"/g) ?? []).length, 2);
 });
 
+test('a card exiled by an aura on a creature (Sheltered by Ghosts) peeks out under the creature, with the aura named', async () => {
+  const { exiledNotes, slotExiled } = await import('../src/ui/exiledUnder.ts');
+  const creature = bear(60);
+  const aura = card(61, 'Sheltered by Ghosts', { typeLine: 'Enchantment — Aura', attachedTo: 60, exiling: [90] });
+  const s = state([creature, aura]);
+  s.players[1].exile = [card(90, 'Sol Ring', { controller: 1, typeLine: 'Artifact' })];
+  assert.deepEqual(slotExiled(s, creature).map(x => [x.card.id, x.by.id]), [[90, 61]]);
+  const html = bfCard(view, s, creature, [aura]);
+  assert.match(html, /class="slot[^"]*\bhas-exu\b/);
+  assert.match(html, /class="exu" data-fid="90"[^>]*aria-label="Sol Ring, exilada por Sheltered by Ghosts"/);
+  assert.match(html, /class="exu-n" data-inspect="60" aria-label="Ver Grizzly Bears e a carta exilada pelo que está preso a ela">.*1<\/button>/);
+  assert.deepEqual(exiledNotes(s, creature), ['Sheltered by Ghosts, presa a ela, exilando: Sol Ring.']);
+  // O inspetor da própria aura continua dizendo o que ela exilou.
+  assert.deepEqual(exiledNotes(s, aura), ['Exilando: Sol Ring.']);
+});
+
 test('several exiled cards: up to three peek out, and the badge counts them and opens the inspector; face-down ones keep the secret', async () => {
   const bridge = card(50, 'Mosswort Bridge', { land: true, typeLine: 'Land', exiling: [81, 82, 83, 84] });
   const s = state([bridge]);

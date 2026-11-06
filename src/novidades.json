@@ -1,4 +1,12 @@
 {
+  "0.142.3": {
+    "Selo de exílio só com as cartas que têm a ver com a permanente": [
+      { "img": "0.142.3/selo-de-exilio.webp", "legenda": "O Oblivion Ring com o selo de exílio e o urso que ele exilou saindo por baixo; ao lado, o Ashiok, Dream Render sem selo, mesmo depois de exilar o cemitério do oponente." }
+    ],
+    "Selo de exílio também para o que as auras e os equipamentos exilam": [
+      { "img": "0.142.3/exilio-por-aura.webp", "legenda": "O Grizzly Bears com o Sheltered by Ghosts preso: o selo de exílio no alto da criatura conta o Sol Ring que a aura exilou, que aparece atrás dela." }
+    ]
+  },
   "0.142.2": {
     "Escolha o formato ao importar um deck": [
       { "img": "0.142.2/escolha-o-formato.webp", "legenda": "Importar deck abre só com o campo Formato, em \"Escolha o formato\"; o nome e a lista aparecem depois da escolha." },

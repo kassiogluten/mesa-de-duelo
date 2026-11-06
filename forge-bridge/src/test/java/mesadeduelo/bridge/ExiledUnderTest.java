@@ -50,6 +50,36 @@ public class ExiledUnderTest {
         assertFalse(onField(game, me, journey).has("exiling"));
     }
 
+    /** Ativa a habilidade de lealdade cuja descrição tem {@code text}, com o alvo dado, e a resolve direto. */
+    private static void loyalty(Game game, Card walker, Player me, String text, Player target) {
+        var ability = walker.getSpellAbilities().stream().filter(sa -> sa.getDescription().contains(text)).findFirst().orElseThrow();
+        ability.setActivatingPlayer(me);
+        if (target != null) ability.getTargets().add(target);
+        AbilityUtils.resolve(ability);
+        game.getAction().checkStaticAbilities();
+    }
+
+    @Test public void graveyardsExiledByAshiokDreamRenderAreNotUnderIt() {
+        Game game = TestGames.empty(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        for (String name : List.of("Grizzly Bears", "Lightning Bolt", "Mountain")) TestGames.add(game, name, other, ZoneType.Graveyard);
+        for (String name : List.of("Forest", "Forest", "Forest", "Forest", "Forest")) TestGames.add(game, name, other, ZoneType.Library);
+        Card ashiok = TestGames.add(game, "Ashiok, Dream Render", me, ZoneType.Battlefield);
+        loyalty(game, ashiok, me, "mills four", other);
+        assertTrue("o cemitério do oponente foi exilado", other.getCardsIn(ZoneType.Exile).size() >= 3);
+        // Exilar cemitérios não liga as cartas ao Ashiok: o texto dele não volta a falar delas.
+        assertFalse(onField(game, me, ashiok).has("exiling"));
+    }
+
+    @Test public void cardsExiledFromTheLibraryStayUnderAshiokNightmareWeaver() {
+        Game game = TestGames.empty(); Player me = game.getPlayers().get(0), other = game.getPlayers().get(1);
+        for (String name : List.of("Grizzly Bears", "Hill Giant", "Mountain")) TestGames.add(game, name, other, ZoneType.Library);
+        Card ashiok = TestGames.add(game, "Ashiok, Nightmare Weaver", me, ZoneType.Battlefield);
+        loyalty(game, ashiok, me, "Exile the top three", other);
+        // Ele põe no campo as criaturas "exiled with Ashiok": as cartas exiladas continuam embaixo dele.
+        var list = onField(game, me, ashiok).getAsJsonArray("exiling");
+        assertNotNull(list); assertEquals(3, list.size());
+    }
+
     @Test public void hideawayCardIsListedFaceDown() {
         Game game = TestGames.empty(); Player me = game.getPlayers().get(0);
         for (String name : List.of("Forest", "Llanowar Elves", "Giant Growth", "Lightning Bolt", "Mountain")) TestGames.add(game, name, me, ZoneType.Library);

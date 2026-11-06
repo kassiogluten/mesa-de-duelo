@@ -1,6 +1,6 @@
 // As permanentes no campo: cada carta (marcadores, palavras-chave, selos de combate, anexos e efeitos), as pilhas de cópias
 // iguais, as duas fileiras de cada jogador e as etiquetas das cartas do exílio que dá para jogar.
-import { exiledAria, exiledUnder } from './exiledUnder';
+import { exiledAria, slotExiled } from './exiledUnder';
 import type { FCard, FPlayer, FState } from '../forge/client';
 import { esc, manaHTML } from './cardtext';
 import type { CardStyle } from './face';
@@ -161,19 +161,23 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
     if (c.creature || c.token) slot.push('ar-square');
   }
   const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.ringBearer ? 'Portador do Anel' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
-    kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : '', exiledAria(exiledUnder(s, c.id))].filter(Boolean).join(', ');
+    kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : '', exiledAria(slotExiled(s, c).map(x => x.card))].filter(Boolean).join(', ');
   const atts = attached.map((a, i) =>
     `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${v.face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');
   // Com dois ou mais anexos o leque fica estreito: o selo abre todos eles, junto da carta, em tamanho normal.
   const attsN = attached.length > 1
     ? `<button class="att-n${attached.some(a => usable(s, a.id)) ? ' actionable' : ''}" data-group="${[c.id, ...attached.map(a => a.id)].join(',')}" data-group-title="Presas a ${esc(label(c))}" aria-label="Ver ${attached.length} cartas presas a ${esc(label(c))}">${ICON_CLIP}${attached.length}</button>` : '';
-  // Cartas que ela exilou (Journey to Nowhere, Oblivion Ring...): atrás dela, saindo por baixo, esmaecidas. O selo no
-  // alto da permanente (como o dos anexos) abre o inspetor dela, com as exiladas embaixo, como numa mutação.
-  const exiled = exiledUnder(s, c.id);
-  const exu = exiled.slice(0, 3).map((x, i) =>
-    `<div class="exu${usable(s, x.id) ? ' actionable' : ''}" data-fid="${x.id}" role="button" tabindex="0" style="--j:${i + 1}" aria-label="${esc(label(x))}, exilada por ${esc(label(c))}">${v.face(x, 'small', true)}</div>`).join('');
+  // Cartas que ela exilou (Journey to Nowhere, Oblivion Ring...) e as que as auras e equipamentos presos a ela exilaram
+  // (Sheltered by Ghosts): atrás dela, saindo por baixo, esmaecidas. O selo no alto da permanente (como o dos anexos)
+  // abre o inspetor dela, com as exiladas embaixo, como numa mutação.
+  const exiledSlot = slotExiled(s, c), exiled = exiledSlot.map(x => x.card);
+  const byAttached = exiledSlot.some(x => x.by.id !== c.id);
+  const exu = exiledSlot.slice(0, 3).map(({ card: x, by }, i) =>
+    `<div class="exu${usable(s, x.id) ? ' actionable' : ''}" data-fid="${x.id}" role="button" tabindex="0" style="--j:${i + 1}" aria-label="${esc(label(x))}, exilada por ${esc(label(by))}">${v.face(x, 'small', true)}</div>`).join('');
   const exuN = exiled.length
-    ? `<button class="exu-n${exiled.some(x => usable(s, x.id)) ? ' actionable' : ''}" data-inspect="${c.id}" aria-label="${esc(exiled.length > 1 ? `Ver ${label(c)} e as ${exiled.length} cartas que exilou` : `Ver ${label(c)} e a carta que exilou`)}">${ICON_EXILE}${exiled.length}</button>` : '';
+    ? `<button class="exu-n${exiled.some(x => usable(s, x.id)) ? ' actionable' : ''}" data-inspect="${c.id}" aria-label="${esc(byAttached
+      ? `Ver ${label(c)} e ${exiled.length > 1 ? `as ${exiled.length} cartas exiladas por ela e pelo que está preso a ela` : 'a carta exilada pelo que está preso a ela'}`
+      : exiled.length > 1 ? `Ver ${label(c)} e as ${exiled.length} cartas que exilou` : `Ver ${label(c)} e a carta que exilou`)}">${ICON_EXILE}${exiled.length}</button>` : '';
   if (exiled.length) slot.push('has-exu');
   const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');
@@ -211,7 +215,7 @@ export function stacks(v: BoardView, s: FState, cards: FCard[], tappedPile = fal
   for (const c of cards) {
     const ctr = Object.entries(c.counters ?? {}).filter(([, v]) => v).sort().join(',');
     const ci = combatIndex(s, c.id);
-    const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || exiledUnder(s, c.id).length > 0 || !!c.merged?.length || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
+    const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || slotExiled(s, c).length > 0 || !!c.merged?.length || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
     const body = (c.creature ? `|${c.power}/${c.toughness}|${c.damage ?? 0}|${!!c.sick}` : '') + `|${fieldKeywordsOf(c).sort()}`;
     const k = alone ? `#${c.id}` : tappedPile && c.land && c.tapped && !ctr && !usable(s, c.id) && !s.input.untappable?.includes(c.id) ? 'tapped-lands' : `${c.name}|${c.tapped}|${usable(s, c.id)}|${c.token}|${!!c.prepared}|${c.copyOf ?? ''}|${ctr}${body}`;
     groups.set(k, [...(groups.get(k) ?? []), c]);

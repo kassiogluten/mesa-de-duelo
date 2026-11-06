@@ -1,5 +1,35 @@
 [
   {
+    "nome": "Várias formas de exílio: do campo, por aura, escondida e do cemitério",
+    "versao": "0.142.3",
+    "item": "Selo de exílio também para o que as auras e os equipamentos exilam",
+    "conferir": "O Jogador 1 tem nove Plains, um Grizzly Bears e o Ashiok, Dream Render no campo, e na mão Oblivion Ring, Seam Rip, Sheltered by Ghosts, Banisher Priest e Mosswort Bridge. O Jogador 2 tem Llanowar Elves, Sol Ring, Serra Angel, Hill Giant e Shivan Dragon no campo, e cartas no cemitério. Faça cada exílio e confira o selo de exílio (o número no alto, com a carta saindo por baixo): Oblivion Ring na Serra Angel, Seam Rip na Llanowar Elves e Banisher Priest no Hill Giant ganham o selo, cada um com a sua carta; Sheltered by Ghosts, preso ao Grizzly Bears e mirando o Shivan Dragon, põe o selo no urso, com o dragão por baixo e \"exilada por Sheltered by Ghosts\"; o Mosswort Bridge, jogado como terreno, guarda uma carta virada para baixo sob ele. Ative o −1 do Ashiok no Jogador 2: o cemitério dele vai para o exílio e o Ashiok fica sem selo. No inspetor de cada uma, \"Exilando: …\"; no do urso, \"Sheltered by Ghosts, presa a ela, exilando: …\".",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Oblivion Ring", "Seam Rip", "Sheltered by Ghosts", "Banisher Priest", "Mosswort Bridge"], "library": ["Forest", "Llanowar Elves", "Giant Growth", "Forest", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Ashiok, Dream Render", "counters": { "LOYALTY": 5 } }, { "name": "Grizzly Bears" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Mountain", "Mountain", "Lightning Bolt", "Mountain", "Mountain", "Mountain"], "graveyard": ["Lightning Bolt", "Shock", "Mountain"], "exile": [],
+          "battlefield": [{ "name": "Llanowar Elves" }, { "name": "Sol Ring" }, { "name": "Serra Angel" }, { "name": "Hill Giant" }, { "name": "Shivan Dragon" }, { "name": "Mountain" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Ashiok exila cemitérios sem ganhar o selo de exílio",
+    "versao": "0.142.3",
+    "item": "Selo de exílio só com as cartas que têm a ver com a permanente",
+    "conferir": "O Jogador 1 tem no campo o Ashiok, Dream Render, com 5 de lealdade, e três Plains; o Jogador 2 tem cartas no cemitério e um Grizzly Bears no campo. Ative o −1 do Ashiok escolhendo o Jogador 2: ele moe quatro cartas e o cemitério dele vai todo para o exílio, mas o Ashiok não ganha o selo de exílio no alto, nem cartas saindo por baixo, nem a lista \"Exilando\" no inspetor. Depois conjure o Oblivion Ring da mão no Grizzly Bears: o Oblivion Ring ganha o selo, com o urso saindo por baixo dele, como antes.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Oblivion Ring"], "library": ["Plains", "Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Ashiok, Dream Render", "counters": { "LOYALTY": 5 } }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Lightning Bolt", "Mountain", "Hill Giant", "Forest", "Forest"], "graveyard": ["Llanowar Elves", "Giant Growth", "Forest"], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Maldições mostram quem elas encantam",
     "versao": "0.142.0",
     "item": "Maldições mostram quem elas encantam",

@@ -24,6 +24,17 @@ export function exiledUnder(s: FState, permanentId: number): FCard[] {
   return links(s).under.get(permanentId) ?? [];
 }
 
+/** Auras e equipamentos presos à permanente. */
+const attachedTo = (s: FState, id: number) => s.players.flatMap(p => p.battlefield).filter(a => a.attachedTo === id);
+
+/**
+ * O que sai por baixo da permanente na mesa: as cartas que ela exilou e as que as auras e os equipamentos presos a ela
+ * exilaram (Sheltered by Ghosts exila com a aura presa à sua criatura), cada uma com quem a exilou.
+ */
+export function slotExiled(s: FState, c: FCard): { card: FCard; by: FCard }[] {
+  return [c, ...attachedTo(s, c.id)].flatMap(host => exiledUnder(s, host.id).map(card => ({ card, by: host })));
+}
+
 /** Nome de uma carta exilada: virada para baixo, só quem pode ver sabe qual é. */
 function exiledName(c: FCard) {
   return c.faceDown && !c.hiddenFace?.name ? 'uma carta virada para baixo' : label(c);
@@ -37,7 +48,12 @@ export function exiledNotes(s: FState | null | undefined, c: FCard): string[] {
   if (!s) return [];
   const { under, by } = links(s);
   const cards = under.get(c.id);
-  if (cards) return [`Exilando: ${list(cards.map(exiledName))}.`];
+  const lines = cards ? [`Exilando: ${list(cards.map(exiledName))}.`] : [];
+  for (const a of attachedTo(s, c.id)) {
+    const its = under.get(a.id);
+    if (its) lines.push(`${label(a)}, presa a ela, exilando: ${list(its.map(exiledName))}.`);
+  }
+  if (lines.length) return lines;
   const source = by.get(c.id);
   return source ? [`Exilada por ${label(source)}, que está no campo.`] : [];
 }
