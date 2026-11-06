@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.5] - 2026-11-06
+
+### Corrigido
+
+- **Rever partida abria a tela inicial.** Em Minhas partidas, o botão Rever de uma partida gravada levava à tela inicial no navegador que já tinha aberto a mesa antes (e no aplicativo instalado). Agora ele abre a partida para rever, também sem internet.
+
 ## [0.141.4] - 2026-11-06
 
 ### Corrigido

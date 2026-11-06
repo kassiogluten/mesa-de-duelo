@@ -48,6 +48,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
         globIgnores: ['sobre.html', 'sobre/**', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
         navigateFallback: 'index.html',
+        // Páginas guardadas abertas com parâmetros (/rever.html?id=… e ?mesa) acham a cópia guardada; sem isso, o endereço
+        // não batia com nenhuma e caía na tela inicial. utm_ e fbclid são os que o Workbox já ignora por padrão.
+        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^id$/, /^mesa$/],
         navigateFallbackDenylist: [/^\/sobre/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
