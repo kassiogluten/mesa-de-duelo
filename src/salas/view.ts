@@ -11,7 +11,7 @@ import { bracketsLabel } from '../ui/publicRooms';
 export type Situacao = '' | 'esperando' | 'andamento';
 export interface FiltrosSalas { formato: string; situacao: Situacao }
 
-const FORMATO: Record<string, string> = { standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Precon', free: 'Livre' };
+const FORMATO: Record<string, string> = { standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Commander Precon', free: 'Livre' };
 export const nomeDoFormato = (f: string) => FORMATO[f] ?? f;
 
 export const esperando = (r: PublicRoom) => !r.started && r.players < r.capacity;

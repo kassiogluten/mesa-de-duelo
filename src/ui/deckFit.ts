@@ -2,8 +2,8 @@ import type { DeckFormat } from '../decks';
 import { esc } from './cardtext';
 import './contaMenu.css';
 
-/** A ordem dos botões da tela inicial (Commander, Precon, depois Outros), com o Livre, onde vale quase tudo, no fim. */
-export const FIT_ORDER: readonly DeckFormat[] = ['commander', 'precon', 'standard', 'pauper', 'sacola50', 'oathbreaker', 'free'];
+/** A ordem dos botões da tela inicial (Commander, depois Outros, com o Commander Precon junto do Oathbreaker), com o Livre, onde vale quase tudo, no fim. */
+export const FIT_ORDER: readonly DeckFormat[] = ['commander', 'standard', 'pauper', 'sacola50', 'oathbreaker', 'precon', 'free'];
 export type FormatLabel = (format: DeckFormat) => string;
 
 /** Os formatos em que o deck serve, na ordem da tela, sem o formato `except` (o que ele não serve). */

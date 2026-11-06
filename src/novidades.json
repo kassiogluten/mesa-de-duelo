@@ -1,4 +1,15 @@
 {
+  "0.141.0": {
+    "Página de apresentação": [
+      { "img": "0.141.0/apresentacao.webp", "legenda": "O começo da página /sobre: o que é a Mesa de Duelo, o botão Jogar agora e uma partida na mesa ao lado." }
+    ],
+    "Mão fixa para quem começa": [
+      { "img": "0.141.0/mao-fixa.webp", "legenda": "A mão fixa, com as cartas inteiras embaixo da mesa; o ícone da mão, ao lado do relógio, liga a mão automática." }
+    ],
+    "Commander Precon dentro de Outros": [
+      { "img": "0.141.0/commander-precon.webp", "legenda": "Commander e Outros na primeira linha; em Outros, o Commander Precon ao lado do Oathbreaker, com a explicação embaixo." }
+    ]
+  },
   "0.140.0": {
     "Rever as minhas partidas": [
       { "img": "0.140.0/gravadas.webp", "legenda": "Em Minhas partidas, a lista \"Gravadas neste aparelho\", com o resultado, contra quem, o formato, os turnos e os botões Rever e Apagar." },

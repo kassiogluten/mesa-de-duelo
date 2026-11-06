@@ -4,7 +4,7 @@ import { esc } from './cardtext';
 
 export interface MatchChip { kind: 'series' | 'offline' | 'spectating'; text: string; label: string }
 
-const FORMAT: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre', oathbreaker: 'Oathbreaker', precon: 'Precon' };
+const FORMAT: Record<string, string> = { commander: 'Commander', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', free: 'Livre', oathbreaker: 'Oathbreaker', precon: 'Commander Precon' };
 
 /** Nome do formato da partida, para o menu. */
 export const matchFormatName = (s: Pick<FState, 'config'>) => s.config?.format ? FORMAT[s.config.format] ?? '' : '';

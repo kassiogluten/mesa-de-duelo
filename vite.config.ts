@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // Além do jogo: as novidades em imagens (/novidades.html, linkada no painel Novidades e guardada com o app), a política
-// de privacidade (/privacidade.html, linkada no rodapé e no menu da conta), Salas (/salas.html, no cabeçalho e no menu ⋯), Minhas partidas (/partidas.html, no menu da conta e no menu ⋯), Rever partida (/rever.html, aberta de Minhas partidas)
+// de privacidade (/privacidade.html, linkada no rodapé e no menu da conta), Salas (/salas.html, no cabeçalho e no menu ⋯), Minhas partidas (/partidas.html, no menu da conta e no menu ⋯), Rever partida (/rever.html, aberta de Minhas partidas), a apresentação (/sobre, em sobre.html, para quem chega de fora e os buscadores)
 // a área
 // de admin (/admin.html) e as páginas de teste da mesa (/tests/fixtures/*.html), linkadas na área de admin. Os
 // scripts das duas últimas saem em ferramentas/ e ficam fora do cache do app instalado.
@@ -12,7 +12,7 @@ const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: { index: 'index.html', novidades: 'novidades.html', privacidade: 'privacidade.html', partidas: 'partidas.html', rever: 'rever.html', salas: 'salas.html', admin: 'admin.html', ...fixtures },
+      input: { index: 'index.html', novidades: 'novidades.html', privacidade: 'privacidade.html', sobre: 'sobre.html', partidas: 'partidas.html', rever: 'rever.html', salas: 'salas.html', admin: 'admin.html', ...fixtures },
       output: { entryFileNames: chunk => chunk.name === 'index' || chunk.name === 'novidades' ? 'assets/[name]-[hash].js' : 'ferramentas/[name]-[hash].js' },
     },
   },
@@ -46,9 +46,9 @@ export default defineConfig({
       workbox: {
         // O visual e os sons ficam guardados: o jogo abre rápido e, sem servidor, ainda mostra a tela inicial.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
-        globIgnores: ['audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
+        globIgnores: ['sobre/**', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
+        navigateFallbackDenylist: [/^\/sobre$/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {

@@ -8,7 +8,7 @@ import { isBracket, type Bracket } from './brackets';
  */
 export type DeckFormat = 'free' | 'standard' | 'pauper' | 'sacola50' | 'commander' | 'oathbreaker' | 'precon';
 export const DECK_FORMATS: readonly DeckFormat[] = ['standard', 'pauper', 'sacola50', 'free', 'commander', 'oathbreaker', 'precon'];
-export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Precon' };
+export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Commander Precon' };
 /** Commander, Oathbreaker e Precon: zona de comando, de dois a quatro jogadores e uma partida só, sem sideboard. */
 export const hasCommandZone = (format: DeckFormat | undefined): format is 'commander' | 'oathbreaker' | 'precon' => format === 'commander' || format === 'oathbreaker' || format === 'precon';
 /** Commander e Precon: as regras do Commander (40 de vida, dano de comandante, bracket). */
@@ -27,7 +27,7 @@ export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'fr
 /** Deck pré-construído oficial, do jeito que saiu da caixa: só os decks prontos da mesa contam, nunca uma cópia do jogador. */
 export const isPrecon = (d: DeckData) => !!d.builtin && !!d.precon;
 /** O Precon explicado na escolha do formato. */
-export const PRECON_HINT = 'Precon: cada jogador usa um deck pré-construído oficial de Commander, do jeito que saiu da caixa. As regras são as do Commander.';
+export const PRECON_HINT = 'Commander Precon: cada jogador usa um deck pré-construído oficial de Commander, do jeito que saiu da caixa. As regras são as do Commander.';
 /** O Sacola 50 não confere preço: o aviso lembra o limite combinado. */
 export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro custando até R$ 50. A mesa não confere o preço: combine com o oponente.';
 /** `set` e `cn`: a impressão escolhida (série do Scryfall, em minúsculas, e número de coleção), vinda da lista importada. */

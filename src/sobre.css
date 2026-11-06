@@ -1,0 +1,74 @@
+/* Página de apresentação (sobre.html): estilo próprio e leve, com as cores da mesa, sem depender do CSS do jogo. */
+:root {
+  --bg: var(--azul-060912, #060912); --surface: var(--azul-0c1424, #0c1424); --line: rgba(255, 255, 255, .12); --ink: #eef1f8; --muted: var(--azul-9aa5bb, #9aa5bb);
+  --gold: #f2b54c; --gold-deep: #cf7d1c; --gold-light: #ffe2a0;
+  --display: 'Outfit', 'Segoe UI', system-ui, sans-serif; --body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; color: var(--ink); font: 16px/1.6 var(--body);
+  background: radial-gradient(ellipse 90% 60% at 50% 0, var(--azul-1b2c4d, #1b2c4d), transparent 70%), var(--bg);
+}
+a { color: var(--gold-light); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+img { display: block; max-width: 100%; height: auto; }
+
+.top, main, .foot { width: min(1180px, 100%); margin: 0 auto; padding-inline: 16px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px; }
+.brand { display: flex; align-items: center; gap: 12px; color: var(--gold-light); font: 800 22px var(--display); text-decoration: none; }
+.brand-mark {
+  width: 24px; height: 24px; border-radius: 6px; transform: rotate(45deg); flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold) 45%, var(--gold-deep)); box-shadow: 0 0 18px #f2b54c55;
+}
+
+.btn {
+  display: inline-block; padding: 14px 30px; border-radius: 999px; text-decoration: none; white-space: nowrap;
+  font: 700 18px var(--display); color: #2a1702; background: linear-gradient(180deg, #ffd27a, var(--gold) 55%, var(--gold-deep));
+  box-shadow: 0 6px 22px #f2b54c40, inset 0 1px 0 #ffffff80;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn-small { padding: 8px 18px; font-size: 15px; }
+
+h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; color: var(--gold-light); }
+h2 { font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; color: var(--gold-light); margin-bottom: 18px; }
+h3 { font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+p { margin: 0 0 14px; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; padding-block: 32px 56px; }
+.lead { font-size: 18px; color: var(--azul-c9d0de, #c9d0de); margin-top: 18px; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 24px; }
+.cta-note { color: var(--muted); font-size: 14px; }
+
+.shot { margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 24px 60px #0009; background: var(--surface); }
+.hero-shot { transform: perspective(1400px) rotateY(-6deg); }
+
+.block { padding-block: 48px; border-top: 1px solid var(--line); }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; }
+.split.reverse > :first-child { order: 2; }
+.split p { color: var(--azul-c9d0de, #c9d0de); }
+
+.features { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.features li { padding: 20px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.features p { margin: 0; color: var(--muted); font-size: 15px; }
+
+.final { text-align: center; padding-block: 56px 72px; border-top: 1px solid var(--line); }
+.final p { color: var(--azul-c9d0de, #c9d0de); }
+
+.foot { padding-block: 24px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+.foot nav { margin-bottom: 10px; font-size: 14px; }
+.foot a { color: var(--muted); }
+
+@media (max-width: 900px) {
+  .hero, .split { grid-template-columns: 1fr; gap: 24px; }
+  .split.reverse > :first-child { order: 0; }
+  .hero-shot { transform: none; }
+  .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .features { grid-template-columns: 1fr; }
+  .top .btn-small { padding: 7px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

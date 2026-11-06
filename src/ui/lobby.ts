@@ -70,11 +70,12 @@ const WATCH_CODE = /^[A-Z0-9]{8}$/;
 
 export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const remembered = load(KEYS.format);
-  // Commander é o padrão, com o Precon ao lado; os demais (Oathbreaker entre eles) ficam em "Outros", que abre os botões sem escolher nenhum.
+  // Commander é o padrão; os demais (Oathbreaker e Commander Precon entre eles) ficam em "Outros", que abre os botões sem escolher nenhum.
+  // Quem tinha o Precon escolhido abre a tela com Outros já aberto e ele marcado.
   let format: DeckFormat | null = DECK_FORMATS.find(f => f === remembered) ?? 'commander';
   /** "Outros" tocado: os botões dos outros formatos ficam à vista enquanto o jogador escolhe um. */
   let othersOpen = false;
-  const othersShown = () => othersOpen || (!!format && format !== 'commander' && format !== 'precon');
+  const othersShown = () => othersOpen || (!!format && format !== 'commander');
   let mode: Mode = load(KEYS.mode) === 'net' ? 'net' : load(KEYS.mode) === 'free' ? 'free' : 'ai';
   let matchLength: MatchConfig['matchLength'] = load(KEYS.matchLength) === 'bo3' ? 'bo3' : 'bo1';
   let playerCount = [2, 3, 4].includes(Number(load(KEYS.commanderPlayers))) ? Number(load(KEYS.commanderPlayers)) : 4;

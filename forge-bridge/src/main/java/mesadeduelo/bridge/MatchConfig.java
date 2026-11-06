@@ -28,9 +28,9 @@ record MatchConfig(String format, String matchLength, int playerCount) {
             throw new IllegalArgumentException("Duração da partida não suportada.");
         boolean commandZone = "commander".equals(format) || "oathbreaker".equals(format) || "precon".equals(format);
         if (playerCount < 2 || playerCount > 4 || (!commandZone && playerCount != 2))
-            throw new IllegalArgumentException("Escolha de dois a quatro jogadores para Commander, Precon e Oathbreaker; os demais formatos exigem dois.");
+            throw new IllegalArgumentException("Escolha de dois a quatro jogadores para Commander, Commander Precon e Oathbreaker; os demais formatos exigem dois.");
         if (commandZone && !"bo1".equals(matchLength))
-            throw new IllegalArgumentException(("commander".equals(format) ? "Commander" : "precon".equals(format) ? "Precon" : "Oathbreaker") + " permite apenas uma partida, sem sideboard.");
+            throw new IllegalArgumentException(("commander".equals(format) ? "Commander" : "precon".equals(format) ? "Commander Precon" : "Oathbreaker") + " permite apenas uma partida, sem sideboard.");
     }
 
     static MatchConfig parse(JsonElement value) {

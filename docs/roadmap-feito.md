@@ -1085,3 +1085,27 @@ Hoje a quantidade de cartas na sua mão aparece num selo junto do seu retrato (a
 - [x] Item no CHANGELOG e print na página Novidades em imagens.
 
 Feito na 0.136.0 (decidido em 05/11/2026): no celular, onde não há mão automática, o ícone aparece só como contador; com a mão oculta, a seta perdeu o número e quem brilha com carta nova é o ícone.
+
+## 103. Mão automática desligada por padrão ✅
+
+Hoje, sem nada guardado, a mão começa no automático no computador com tela baixa (recolhida por cima do campo, subindo ao passar o mouse) e fixa no toque e nas telas altas (`savedHandMode`). Quem joga pela primeira vez no notebook vê só o topo das cartas e não entende que a mão sobe com o mouse.
+
+- [x] Sem nada guardado, a mão começa **fixa** (Auto desligado) em todo aparelho; o automático passa a ser só escolha do jogador, pelo ícone de mão ao lado do relógio do turno.
+- [x] Quem já escolheu um modo (guardado no aparelho ou na conta) continua com o dele.
+- [x] Conferir que a mão fixa não aperta demais o campo nas telas baixas (notebook de 768 px de altura); se apertar, decidir antes de entregar.
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.141.0: sem nada guardado a mão começa fixa em todo aparelho. Conferido em 1366 × 768, no 1×1 e no Commander com quatro jogadores: a faixa da mão não aperta o campo.
+
+## 105. Precon dentro de Outros, com o nome Commander Precon ✅
+
+Na tela inicial, a escolha do formato tem três botões: **Commander**, **Precon** e **Outros** (que abre Standard, Pauper, Sacola 50, Oathbreaker e Livre). O Precon é uma variação do Commander, só com os decks pré-construídos oficiais, e não precisa de um botão próprio na primeira linha.
+
+- [x] Tirar o botão **Precon** da primeira linha, que fica com **Commander** e **Outros**.
+- [x] Pôr o Precon dentro de **Outros**, com o nome **Commander Precon**, e decidir a posição dele na lista (perto do Oathbreaker, que também é de zona de comando, ou no começo).
+- [x] Quem tinha o Precon escolhido continua com ele: ao abrir a tela, **Outros** já vem aberto e com o Commander Precon marcado.
+- [x] O nome do formato muda também onde mais aparece para o jogador (resumo da partida, selo da sala, Minhas partidas, editor de decks, avisos de deck incompatível), conferindo se fica "Commander Precon" em todos ou se algum lugar pede o nome curto.
+- [x] Conferir que "Commander Precon" cabe no botão sem quebrar nem cortar o texto: no computador (1366 × 768 e janelas estreitas), no celular deitado e com a lista de **Outros** aberta. Se não couber, decidir antes de entregar (fonte menor, botão em duas linhas ou a lista em mais de uma fileira).
+- [x] Item no CHANGELOG e print na página Novidades em imagens.
+
+Feito na 0.141.0 (decidido em 06/11/2026): o Commander Precon fica em Outros, logo depois do Oathbreaker; o nome completo vale em todos os lugares do formato, e o selo "Precon" no bloco de um deck pronto continua curto, porque diz o tipo do deck. Cabe no botão em 1366, 800 e 740 de largura.

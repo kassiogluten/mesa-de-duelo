@@ -3,13 +3,11 @@ import { test } from 'node:test';
 import { savedHandMode, toggleAuto, toggleShown } from '../src/ui/handMode.ts';
 
 test('what was saved by the two-mode hand keeps meaning the same thing', () => {
-  assert.equal(savedHandMode('open', true), 'fixa');
-  assert.equal(savedHandMode('peek', false), 'auto');
-  assert.equal(savedHandMode('oculta', true), 'oculta');
-  assert.equal(savedHandMode(null, true), 'auto', 'mouse starts automatic');
-  assert.equal(savedHandMode(null, false), 'fixa', 'touch starts open');
-  assert.equal(savedHandMode(null, true, true), 'fixa', 'tall screen with mouse starts fixed, with its own strip');
-  assert.equal(savedHandMode('auto', true, true), 'auto', 'a saved choice wins over the screen height');
+  assert.equal(savedHandMode('open'), 'fixa');
+  assert.equal(savedHandMode('peek'), 'auto');
+  assert.equal(savedHandMode('oculta'), 'oculta');
+  assert.equal(savedHandMode('auto'), 'auto', 'a saved choice is kept');
+  assert.equal(savedHandMode(null), 'fixa', 'nothing saved starts fixed on every device');
 });
 
 test('Auto turns on and off; off leaves the hand in view', () => {

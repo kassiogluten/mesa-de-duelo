@@ -174,7 +174,7 @@ final class DeckValidation {
         if ("precon".equals(format)) {
             checkCommander(deck, issues);
             if (issues.isEmpty() && !Decks.isPrecon(deck))
-                issue(issues, "not-precon", "No Precon só valem os decks pré-construídos oficiais da mesa, sem alterações.", null, null);
+                issue(issues, "not-precon", "No Commander Precon só valem os decks pré-construídos oficiais da mesa, sem alterações.", null, null);
             return;
         }
         if ("oathbreaker".equals(format)) { checkOathbreaker(deck, issues); return; }

@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.0] - 2026-11-06
+
+### Novo
+
+- **Página de apresentação.** A Mesa de Duelo ganhou uma página que conta, para quem ainda não conhece, o que dá para fazer nela: jogar Magic no navegador, Commander com até quatro jogadores, decks prontos e precons oficiais, contra o computador ou com amigos, com prints da mesa e o botão Jogar agora. Ela fica em /sobre e tem link no rodapé da tela inicial; o link dela mostra uma prévia caprichada no WhatsApp e nas redes.
+
+### Mudou
+
+- **Mão fixa para quem começa.** Sem nenhuma escolha guardada, a mão agora começa fixa em todo aparelho, com as cartas inteiras à vista embaixo da mesa. A mão automática (recolhida, subindo ao passar o mouse) continua no ícone da mão, ao lado do relógio do turno; quem já tinha escolhido um jeito continua com o dele.
+- **Commander Precon dentro de Outros.** A escolha do formato agora tem só Commander e Outros na primeira linha. O Precon passou para Outros, ao lado do Oathbreaker, com o nome Commander Precon, que aparece também no resumo da partida, nas salas, em Minhas partidas e nos avisos. Quem estava com o Precon escolhido abre a tela com Outros aberto e ele marcado.
+
 ## [0.140.0] - 2026-11-06
 
 ### Novo
