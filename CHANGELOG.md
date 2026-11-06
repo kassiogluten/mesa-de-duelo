@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.4] - 2026-11-06
+
+### Corrigido
+
+- **Versões novas chegando ao aplicativo instalado.** Desde a página de apresentação, o navegador deixava de preparar as versões novas da mesa para o aplicativo instalado e para o uso sem internet, com um erro no console. Agora elas voltam a chegar normalmente, e a apresentação abre sempre direto do servidor.
+
 ## [0.141.3] - 2026-11-06
 
 ### Mudou

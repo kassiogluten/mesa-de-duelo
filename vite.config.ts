@@ -46,9 +46,9 @@ export default defineConfig({
       workbox: {
         // O visual e os sons ficam guardados: o jogo abre rápido e, sem servidor, ainda mostra a tela inicial.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
-        globIgnores: ['sobre/**', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
+        globIgnores: ['sobre.html', 'sobre/**', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
         navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/sobre$/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
+        navigateFallbackDenylist: [/^\/sobre/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
