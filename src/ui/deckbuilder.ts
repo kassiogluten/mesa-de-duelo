@@ -19,6 +19,8 @@ import { montarAvisoConta } from './contaAviso';
 import { buildSearchQuery, similarQuery } from './cardSearch';
 import { deckIdentity, editHTML, importHTML, libraryHTML, printOf, resultsHTML, slotRole, statusHTML, type BuilderState } from './deckbuilderView';
 import { finder } from './dom';
+import { chooseToken, deckTokens, type TokenKind } from '../deckTokens';
+import { openTokenPicker } from './deckTokensView';
 
 interface BuilderOptions {
   onBack(): void;
@@ -50,7 +52,10 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let cardsError: 'library' | 'edit' | null = null;
   let saveError = getDeckStorageState().error ?? '';
   let removed: { deck: DeckData; index: number } | null = null;
-  let section: 'main' | 'sideboard' = 'main';
+  let section: 'main' | 'sideboard' | 'tokens' = 'main';
+  let tokenKinds: TokenKind[] | null = null;
+  let tokensError = false;
+  let tokensSeq = 0;
   let searchOpen = false;
   let commanderSlot: number | null = null;
   let deckActionsOpen = false;
@@ -90,7 +95,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   const $ = finder(root);
   /** O que as telas desenham (deckbuilderView), lido na hora de cada desenho. */
   const state = (): BuilderState => ({
-    format, ptName, user, view, listQuery, libraryColors, showReady, notice, cardsError, saveError, removed, section, searchOpen, commanderSlot,
+    format, ptName, user, view, listQuery, libraryColors, showReady, notice, cardsError, saveError, removed, section, tokenKinds, tokensError, searchOpen, commanderSlot,
     deckActionsOpen, searchQuery, searchType, searchFunc, similarTo, similarTags, searchColors, results, hasMore, total, searching, searchError,
     validation, validating, validationError, canValidate: !!opts.validateDeck, canSimilar: !!opts.similarCards,
     importDraft, importBusy, importError, importTarget, importMode, importReview, importAcknowledged, listEdit, importCommanderOffer,
@@ -211,11 +216,19 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     }
     if (cardsError && view === requestView) { cardsError = null; renderStatus(); }
   }
+  /** As fichas que as cartas do deck criam, para a aba Fichas (o Scryfall só é consultado pelo que ainda não se conhece). */
+  async function loadTokens() {
+    const deck = current(); if (!deck) return;
+    const seq = ++tokensSeq; tokensError = false;
+    try { const kinds = await deckTokens(deck); if (seq === tokensSeq) tokenKinds = kinds; }
+    catch { if (seq === tokensSeq) { tokensError = true; tokenKinds = null; } }
+    if (seq === tokensSeq && view === 'edit' && selected === deck.id) preserveRender(renderEdit);
+  }
   function resetSearch() { searchSeq++; results = []; searchQuery = ''; searchType = ''; searchFunc = ''; similarTo = null; similarTags.clear(); searchColors.clear(); hasMore = false; searching = false; searchError = ''; }
   function edit(deck: DeckData) {
     deckActionsOpen = false;
     importSeq++; importBusy = false; validationSeq++; validating = false;
-    selected = deck.id; view = 'edit'; section = 'main'; commanderSlot = null; searchOpen = !deck.cards.length && !deck.builtin && !hasCommandZone(deck.format);
+    selected = deck.id; view = 'edit'; section = 'main'; tokenKinds = null; tokensError = false; tokensSeq++; commanderSlot = null; searchOpen = !deck.cards.length && !deck.builtin && !hasCommandZone(deck.format);
     validation = null; validationError = ''; resetSearch(); hideCardPreview(); render(); void loadData();
   }
   function create() {
@@ -224,12 +237,12 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   function duplicate(source: DeckData) {
     const { price: _price, ...rest } = source;
-    const deck: DeckData = { ...rest, id: crypto.randomUUID(), name: `${source.name} (cópia)`, builtin: false, cards: source.cards.map(e => ({ ...e })), commanders: source.commanders?.map(e => ({ ...e })) ?? [], sideboard: source.sideboard?.map(e => ({ ...e })) ?? [], sourceTemplateId: source.builtin ? source.id : source.sourceTemplateId, updatedAt: new Date().toISOString() };
+    const deck: DeckData = { ...rest, id: crypto.randomUUID(), name: `${source.name} (cópia)`, builtin: false, cards: source.cards.map(e => ({ ...e })), commanders: source.commanders?.map(e => ({ ...e })) ?? [], sideboard: source.sideboard?.map(e => ({ ...e })) ?? [], ...(source.tokens ? { tokens: source.tokens.map(t => ({ ...t })) } : {}), sourceTemplateId: source.builtin ? source.id : source.sourceTemplateId, updatedAt: new Date().toISOString() };
     user.unshift(deck); persist('Cópia criada nos seus decks.'); edit(deck);
   }
   /** `key` é o nome da carta (busca) ou a linha do deck (`entryKey`), que separa as impressões da mesma carta. */
   function change(key: string, delta: number, move = false) {
-    const deck = current(); if (!deck || deck.builtin) return;
+    const deck = current(); if (!deck || deck.builtin || section === 'tokens') return;
     const pool = section === 'main' ? deck.cards : deck.sideboard ?? (deck.sideboard = []);
     // Da busca vem só o nome: soma na linha da carta (na impressão que ela tiver), se houver uma só.
     const same = pool.filter(e => e.name === key), existing = pool.find(e => entryKey(e) === key) ?? (same.length === 1 ? same[0] : undefined), name = existing?.name ?? key;
@@ -395,7 +408,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       root.querySelector<HTMLElement>(`[data-focus="commander:${focusSlot}"]`)?.focus(); return;
     }
     if (ds.removeCommander !== undefined) { const deck = current(); if (deck && !deck.builtin) { deck.commanders?.splice(Number(ds.removeCommander), 1); commanderSlot = null; searchOpen = false; resetSearch(); changed(deck); preserveRender(renderEdit); } return; }
-    if (ds.section) { commanderSlot = null; section = ds.section as 'main' | 'sideboard'; preserveRender(renderEdit); return; }
+    if (ds.section) { commanderSlot = null; section = ds.section as typeof section; if (section === 'tokens') { searchOpen = false; void loadTokens(); } preserveRender(renderEdit); return; }
+    if (ds.token) { const deck = current(), kind = tokenKinds?.find(k => k.oracleId === ds.token); if (deck && kind) openTokenPicker(deck, kind, print => { if (deck.builtin) return; chooseToken(deck, kind, print); deck.updatedAt = new Date().toISOString(); persist(); preserveRender(renderEdit); }); return; }
     if (ds.add) { change(ds.add, 1); return; }
     if (ds.dec) { change(ds.dec, -1); return; }
     if (ds.move) { change(ds.move, -1, true); return; }
@@ -408,6 +422,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (ds.color) { const color = ds.color as Color; searchColors.has(color) ? searchColors.delete(color) : searchColors.add(color); target.setAttribute('aria-pressed', String(searchColors.has(color))); void runSearch(); return; }
     switch (ds.b) {
       case 'home': goHome(); break;
+      case 'retry-tokens': void loadTokens(); break;
       case 'library': goLibrary(); break;
       case 'new': create(); break;
       case 'import': beginImport(); break;

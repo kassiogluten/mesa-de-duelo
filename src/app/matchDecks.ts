@@ -12,7 +12,7 @@ export const LAB_DECK: DeckData = { id: 'laboratorio', name: 'Laboratório', car
 /** Quem entra numa sala sem deck: escolhe lá dentro, e até lá a mesa guarda este no lugar do deck. */
 export const NO_DECK: DeckData = { id: '', name: '', cards: [] };
 
-export const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [] });
+export const forgeDeck = (d: DeckData) => ({ name: d.name, cards: d.cards, sideboard: d.sideboard ?? [], commanders: d.commanders ?? [], ...(d.tokens?.length ? { tokens: d.tokens } : {}) });
 /** Com a conta conectada, a partida fica ligada a ela e ao deck salvo (Minhas partidas). */
 export const matchOwner = (d: DeckData, session = contaSessao()): MatchOwner => session ? { conta: session.token, deckId: d.id } : {};
 /** O deck que acompanha host, join e room-deck: a lista, a capa, o bracket e a conta; sem deck, só deck: null. */

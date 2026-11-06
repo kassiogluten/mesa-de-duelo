@@ -36,6 +36,11 @@ export interface DeckEntry { name: string; count: number; oracleId?: string; set
 export const entryKey = (e: Pick<DeckEntry, 'name' | 'set' | 'cn'>) => e.set ? `${e.name}|${e.set}|${e.cn ?? ''}` : e.name;
 /** "(DMU) 277": a impressão como as listas do Moxfield e do Arena escrevem. */
 export const printLabel = (e: Pick<DeckEntry, 'set' | 'cn'>) => e.set ? `(${e.set.toUpperCase()})${e.cn ? ` ${e.cn}` : ''}` : '';
+/**
+ * A série escolhida para uma ficha que as cartas do deck criam. `oracleId` é o da ficha no Scryfall (o que a tela
+ * usa); nome, cores (WUBRG, vazio se incolor) e força/resistência são como o servidor reconhece a ficha na partida.
+ */
+export interface DeckToken { oracleId: string; name: string; colors: string; power?: string; toughness?: string; set: string; cn: string }
 export interface DeckData {
   id: string;
   name: string;
@@ -55,6 +60,8 @@ export interface DeckData {
   bracket?: Bracket;
   /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander nem em Oathbreaker. */
   cover?: string;
+  /** Séries escolhidas para as fichas (aba Fichas do editor); a ficha sem escolha segue a carta que a criou. */
+  tokens?: DeckToken[];
   /** Precon oficial (só nos decks prontos): o nome da caixa, a série (código da coleção e nome) e o ano. */
   precon?: PreconInfo;
 }
@@ -87,11 +94,16 @@ function validEntries(v: unknown): v is DeckEntry[] {
     && Number.isSafeInteger(e.count) && Number(e.count) > 0 && (e.oracleId === undefined || typeof e.oracleId === 'string')
     && (e.set === undefined || typeof e.set === 'string') && (e.cn === undefined || typeof e.cn === 'string'));
 }
+const optionalText = (v: unknown) => v === undefined || typeof v === 'string';
+function validTokens(v: unknown): v is DeckToken[] {
+  return Array.isArray(v) && v.every(t => object(t) && ['oracleId', 'name', 'colors', 'set', 'cn'].every(k => typeof t[k] === 'string')
+    && optionalText(t.power) && optionalText(t.toughness));
+}
 function validDeck(v: unknown): v is DeckData {
   return object(v) && typeof v.id === 'string' && !!v.id && typeof v.name === 'string' && validEntries(v.cards)
     && (v.sideboard === undefined || validEntries(v.sideboard)) && (v.format === undefined || DECK_FORMATS.includes(v.format as DeckFormat))
     && (v.commanders === undefined || validEntries(v.commanders)) && (v.bracket === undefined || isBracket(v.bracket))
-    && (v.cover === undefined || typeof v.cover === 'string')
+    && (v.cover === undefined || typeof v.cover === 'string') && (v.tokens === undefined || validTokens(v.tokens))
     && (v.unresolved === undefined || (Array.isArray(v.unresolved) && v.unresolved.every(n => typeof n === 'string')));
 }
 

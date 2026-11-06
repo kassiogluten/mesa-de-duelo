@@ -61,6 +61,7 @@ final class DeckValidation {
         readSection(o.get("cards"), deck.getMain(), "main", issues, true);
         readSection(o.get("sideboard"), deck.getOrCreate(DeckSection.Sideboard), "sideboard", issues, false);
         readSection(o.get("commanders"), deck.getOrCreate(DeckSection.Commander), "commander", issues, false);
+        TokenPrints.read(o.get("tokens"), deck);
         checkRules(deck, format, issues);
         return new Result(deck, issues);
     }
@@ -324,6 +325,8 @@ final class DeckValidation {
         JsonObject o = new JsonObject(); o.addProperty("name", deck.getName());
         o.add("cards", entries(deck.getMain())); o.add("sideboard", entries(deck.getOrCreate(DeckSection.Sideboard)));
         o.add("commanders", entries(deck.getOrCreate(DeckSection.Commander)));
+        JsonArray tokens = TokenPrints.json(deck);
+        if (!tokens.isEmpty()) o.add("tokens", tokens);
         return o;
     }
 

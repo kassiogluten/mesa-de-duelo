@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.138.0] - 2026-11-05
+
+### Novo
+
+- **Escolha a série das fichas do seu deck.** O editor do deck ganhou a aba Fichas, ao lado de Principal e Sideboard, com as fichas que as cartas do deck criam (Coelho, Tesouro, Comida…) e de qual carta cada uma vem. Em "Trocar série" abre a ficha em todas as séries, lado a lado, para escolher a arte; na partida, as fichas que você cria aparecem nessa série, para você e para quem joga contra você. Em "Automática", a ficha segue a série da carta que a criou, como antes. A visualização do deck também mostra as fichas, com a série escolhida de cada uma.
+
 ## [0.137.0] - 2026-11-05
 
 ### Mudou

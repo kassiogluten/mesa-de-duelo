@@ -311,3 +311,26 @@
 .dw-export .dp-head p span:last-child { margin-left: 0; }
 .dw-export-status { margin: 0; min-height: 1.5em; color: var(--dw-accent); font-size: 14px; }
 @media (max-width: 760px) { .dw-export textarea { min-height: 220px; } }
+/* Fichas: a aba do editor, a faixa da visualização e a janela das séries. */
+.dw-tokens .dw-card-name { cursor: pointer; }
+.dw-token-what { display: block; color: var(--dw-muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+.dw-tokens .dw-print { flex: none; padding: 1px 7px; border: 1px solid #f2b54c55; border-radius: 6px; color: var(--dw-accent); font-size: 12px; white-space: nowrap; }
+.dw-tokens .dw-print-auto { border-color: var(--dw-line); color: var(--dw-muted); }
+.dw-tokens .dw-note { margin: 10px 0 0; font-size: 13px; }
+.dw-token-strip { display: flex; flex-wrap: wrap; gap: 14px; padding-top: 8px; }
+.dw-token-strip figure { width: 112px; margin: 0; text-align: center; font-size: 13px; }
+.dw-token-strip img { width: 100%; aspect-ratio: 488/680; border-radius: 6px; display: block; outline: 1px solid #ffffff1a; }
+.dw-token-strip figcaption { margin-top: 6px; line-height: 1.3; }
+.dw-token-strip small { display: block; color: var(--dw-muted); font-size: 12px; }
+.dw-token-picker { width: min(860px, calc(100vw - 32px)); }
+.dw-token-picker .dp-body { overflow-y: auto; }
+.dw-token-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+.dw-token-choice { padding: 3px; border: 2px solid transparent; border-radius: 9px; background: transparent; color: var(--dw-ink); cursor: pointer; text-align: center; font: inherit; }
+.dw-token-choice img { width: 100%; aspect-ratio: 488/680; border-radius: 6px; display: block; }
+.dw-token-choice small { display: block; margin-top: 4px; color: var(--dw-muted); font-size: 12px; line-height: 1.3; }
+.dw-token-choice[aria-pressed="true"] { border-color: var(--dw-accent); background: #f2b54c1a; }
+.dw-token-choice:disabled { cursor: default; }
+.dw-token-choice:disabled:not([aria-pressed="true"]) { opacity: .7; }
+.dw-token-choice.auto { display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 488/680; border: 2px dashed var(--dw-line); }
+.dw-token-choice.auto[aria-pressed="true"] { border-style: solid; border-color: var(--dw-accent); }
+@media (hover: hover) and (pointer: fine) { .dw-token-choice:hover:not(:disabled) { background: #ffffff0d; } }

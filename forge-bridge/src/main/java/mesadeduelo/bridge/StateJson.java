@@ -364,7 +364,8 @@ final class StateJson {
         CardStateView s = c.getCurrentState();
         o.addProperty("name", s.getName());
         if (c.isToken()) {
-            String img = tokenImage(s);
+            String img = TokenPrints.image(game == null ? null : game.findByView(c));
+            if (img == null) img = tokenImage(s);
             if (img != null) o.addProperty("image", img);
         }
         o.addProperty("set", s.getSetCode());
@@ -467,7 +468,8 @@ final class StateJson {
                 forge.game.card.CardState printed = part.getOriginalState(part.getCurrentStateName());
                 m.addProperty("name", printed.getName());
                 m.addProperty("set", printed.getSetCode());
-                String img = tokenImage(printed.getView());
+                String img = part.isToken() ? TokenPrints.image(part) : null;
+                if (img == null) img = tokenImage(printed.getView());
                 if (img != null) { m.addProperty("token", true); m.addProperty("image", img); }
             }
             merged.add(m);

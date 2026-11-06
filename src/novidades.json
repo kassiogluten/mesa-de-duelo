@@ -1,4 +1,10 @@
 {
+  "0.138.0": {
+    "Escolha a série das fichas do seu deck": [
+      { "img": "0.138.0/aba-fichas.webp", "legenda": "A aba Fichas do editor: as fichas que as cartas do deck criam, de qual carta cada uma vem e a série de cada uma (o Coelho em Foundations; as outras na Automática)." },
+      { "img": "0.138.0/series-da-ficha.webp", "legenda": "Trocar série: o Coelho em todas as séries, com a Automática no começo e a escolhida em destaque." }
+    ]
+  },
   "0.137.0": {
     "Ícones novos para habilidades e marcadores": [
       { "img": "0.137.0/habilidades.webp", "legenda": "Criatura com Voar (par de asas), Ímpeto (bota com rastro), Atropelar (pegada de três dedos) e Salvaguarda (campo de força hexagonal); as asas e a pegada também aparecem nos selos da borda esquerda." },

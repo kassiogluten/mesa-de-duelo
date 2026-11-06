@@ -418,6 +418,8 @@ final class Session {
             error.addProperty("target", "sideboard"); error.add("validation", validation.json());
             seat.send(error.toString()); return;
         }
+        // As séries das fichas são do deck registrado: a troca de sideboard não as manda de novo.
+        validation.deck().setDraftNotes(current.getDraftNotes());
         seat.approvedDeck = validation.deck(); seat.sideboardReady = true; markDirty();
         for (Seat each : seats) if (!each.sideboardReady) return;
         HostedMatch continuing = match;
