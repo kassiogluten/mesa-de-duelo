@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.3] - 2026-11-06
+
+### Mudou
+
+- **Partida de verdade na abertura da apresentação.** A imagem do alto da página /sobre agora mostra uma partida no meio do jogo: dos dois lados, criaturas, terrenos, artefatos, encantamentos e um planeswalker, uma espada equipada, marcadores, criaturas viradas, a arte de cada deck nos retratos e uma mão de seis cartas prontas para jogar.
+
 ## [0.141.2] - 2026-11-06
 
 ### Mudou

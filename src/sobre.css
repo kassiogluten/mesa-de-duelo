@@ -40,14 +40,14 @@ section[id] { scroll-margin-top: 72px; }
 .btn-ghost:hover { border-color: var(--gold); filter: none; }
 
 h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; }
-h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; color: var(--gold-light); }
+h1 { font-size: clamp(32px, 4.2vw, 50px); font-weight: 800; color: var(--gold-light); }
 h2 { font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; color: var(--gold-light); margin-bottom: 18px; }
 h3 { font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 p { margin: 0 0 14px; }
 
-/* Imagem presa ao alto: centralizada, ela pulava quando a fonte dos títulos chegava e mudava a altura do texto. */
-.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start; padding-block: 32px 56px; }
-.hero-shot { margin-top: 36px; }
+/* Imagem centralizada na altura do texto. Não pula quando as fontes chegam porque elas vêm com display=optional
+   (sobre.html): ou chegam logo, ou a página fica com a do sistema. */
+.hero { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 36px; align-items: center; padding-block: 32px 56px; }
 .lead { font-size: 18px; color: var(--azul-c9d0de, #c9d0de); margin-top: 18px; }
 .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 24px; }
 .eyebrow { margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }

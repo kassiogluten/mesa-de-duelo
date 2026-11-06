@@ -1,4 +1,9 @@
 {
+  "0.141.3": {
+    "Partida de verdade na abertura da apresentação": [
+      { "img": "0.141.3/mesa-da-abertura.webp", "legenda": "O alto da página /sobre com a partida no 7º turno: Questing Beast com a Sword of Fire and Ice e Nissa de um lado, Sheoldred, Glorybringer e Liliana do outro." }
+    ]
+  },
   "0.141.2": {
     "Por que jogar na Mesa de Duelo": [
       { "img": "0.141.2/por-que-jogar.webp", "legenda": "Na página /sobre, os seis motivos numerados para jogar na Mesa de Duelo, cada um com um título curto e o que ele quer dizer na mesa." }
