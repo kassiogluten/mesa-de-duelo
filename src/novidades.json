@@ -1,4 +1,9 @@
 {
+  "0.139.1": {
+    "Resistência à magia nos planeswalkers": [
+      { "img": "0.139.1/resistencia-planeswalker.webp", "legenda": "Jace Beleren com 4 de lealdade e o escudo de Resistência à magia logo acima da lealdade." }
+    ]
+  },
   "0.139.0": {
     "Bracket abaixo do indicado": [
       { "img": "0.139.0/bracket-abaixo.webp", "legenda": "No editor, um deck com Armageddon e Rhystic Study no Bracket 2, com o aviso de que as cartas indicam Bracket 4 e o porquê logo abaixo." }

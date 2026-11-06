@@ -123,3 +123,15 @@ test('a vida do oponente abre o cartão ao tocar; a sua continua só com o brack
   assert.match(opp, /life-tip life-card/);
   assert.doesNotMatch(avatar(view, s, s.players[0], 0), /has-card/);
 });
+
+test('protective keywords (hexproof, indestructible) show on any permanent; combat ones only on creatures', () => {
+  const jace = card(60, 'Jace', { planeswalker: true, typeLine: 'Legendary Planeswalker — Jace', counters: { LOYALTY: 4 }, keywords: ['HEXPROOF', 'FLYING'] });
+  const forge = card(61, 'Darksteel Forge', { typeLine: 'Artifact', keywords: ['INDESTRUCTIBLE'] });
+  const s = state([jace, forge, card(62, 'Darksteel Forge', { typeLine: 'Artifact' })]);
+  const pw = bfCard(view, s, jace);
+  assert.match(pw, /aria-label="Resistência à magia"/);
+  assert.doesNotMatch(pw, /aria-label="Voar"/);
+  assert.match(bfCard(view, s, forge), /aria-label="Indestrutível"/);
+  // A cópia sem a habilidade não entra na mesma pilha.
+  assert.equal((backRow(view, s, s.players[0]).match(/class="stack"/g) ?? []).length, 2);
+});

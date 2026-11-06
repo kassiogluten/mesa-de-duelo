@@ -13,3 +13,7 @@ export const KEYWORD_LABEL: Record<string, string> = {
   INDESTRUCTIBLE: 'Indestrutível', PROTECTION: 'Proteção',
 };
 export const keywordsOf = (c: FCard) => (c.keywords ?? []).filter(k => KEYWORD_LABEL[k]);
+/** As que protegem a permanente: valem em qualquer uma (planeswalker, artefato), não só nas criaturas. */
+const PROTECTIVE = new Set(['HEXPROOF', 'SHROUD', 'WARD', 'INDESTRUCTIBLE', 'PROTECTION']);
+/** Palavras-chave mostradas no campo: todas numa criatura; nas outras permanentes, só as de proteção (Voar não muda nada nelas). */
+export const fieldKeywordsOf = (c: FCard) => c.creature ? keywordsOf(c) : keywordsOf(c).filter(k => PROTECTIVE.has(k));

@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.139.1] - 2026-11-06
+
+### Corrigido
+
+- **Resistência à magia nos planeswalkers.** As habilidades que protegem a permanente (Resistência à magia, Manto, Salvaguarda, Indestrutível e Proteção) só ganhavam selo nas criaturas. Agora o selo aparece também nos planeswalkers e nas outras permanentes, como um Sol Ring indestrutível pela Darksteel Forge. Voar, Atropelar e as outras de combate continuam só nas criaturas, onde fazem diferença.
+
 ## [0.139.0] - 2026-11-05
 
 ### Mudou

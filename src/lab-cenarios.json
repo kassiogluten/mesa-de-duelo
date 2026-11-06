@@ -1,5 +1,19 @@
 [
   {
+    "nome": "Resistência à magia e Indestrutível em planeswalker e artefato",
+    "versao": "0.139.1",
+    "item": "Resistência à magia nos planeswalkers",
+    "conferir": "O Jogador 1 já tem no campo a Darksteel Forge: ela e o Sol Ring mostram o selo de Indestrutível; o Jace Beleren, ainda sem selo. Conjure Heroic Intervention (as duas Forests pagam): até o fim do turno, o Jace Beleren ganha os selos de Resistência à magia e de Indestrutível acima da lealdade, e as permanentes indestrutíveis continuam com o seu. Passe o turno: o Jace perde os selos, e a Darksteel Forge e o Sol Ring continuam indestrutíveis.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Heroic Intervention"], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Jace Beleren", "counters": { "LOYALTY": 3 } }, { "name": "Darksteel Forge" }, { "name": "Sol Ring" }, { "name": "Forest" }, { "name": "Forest" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [], "battlefield": [{ "name": "Mountain" }] }
+      ]
+    }
+  },
+  {
     "nome": "Encantamentos que exilam: carta embaixo de quem a exilou",
     "versao": "0.133.0",
     "item": "Carta exilada aparece embaixo de quem a exilou",
