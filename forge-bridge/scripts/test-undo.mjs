@@ -65,10 +65,10 @@ async function playForest(p, level = 'sempre') {
 try {
   // 1. Sala com duas pessoas, sem pedir o desfazer: ele vale assim mesmo.
   const a = await peer('Ana'), b = await peer('Bruno');
-  a.send({type: 'host', name: a.name, config: {format: 'free', matchLength: 'bo1'}, deck});
+  a.send({type: 'host', name: a.name, config: {format: 'free', matchLength: 'bo1'}, deck}); a.send({type: 'room-ready'});
   await until(() => a.room?.code, 'host');
   assert.equal(a.room.config?.undo, true, 'a sala continua dizendo undo: true para as versões anteriores');
-  b.send({type: 'join', code: a.room.code, name: b.name, deck});
+  b.send({type: 'join', code: a.room.code, name: b.name, deck}); b.send({type: 'room-ready'});
   await until(() => b.room && peers.every(p => p.state?.turn >= 1 && !p.state.input.opening), 'partida começou');
   assert.equal(b.state.config.undo, true, 'quem entra vê o desfazer ligado');
 

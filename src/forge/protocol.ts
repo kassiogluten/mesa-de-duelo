@@ -379,7 +379,7 @@ export interface FRoom {
   engineVersion?: string;
   /** conceded: desistiu (pelo menu ou saindo da sala); a mesa tira o assento de vista. */
   /** commander, cover (carta da arte do deck) e bracket (no Commander) só aparecem para o lobby; o resto do deck fica escondido. */
-  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string; bracket?: number; /** Na sala de espera: false enquanto o jogador escolhe o deck. Ausente em pontes antigas (todos com deck). */ ready?: boolean }[];
+  players: { name: string; connected: boolean; rematch: boolean; seat?: number; playerId?: number; eliminated?: boolean; conceded?: boolean; commander?: string; cover?: string; bracket?: number; /** Na sala de espera: false enquanto o jogador escolhe o deck. Ausente em pontes antigas (todos com deck). */ ready?: boolean; /** Tocou em Pronto na sala de espera; a partida só começa com todos prontos. Ausente em pontes antigas. */ confirmed?: boolean }[];
   /** Nomes de quem assiste sem jogar. Ausente em pontes antigas. */
   spectators?: string[];
 }
@@ -542,7 +542,7 @@ export type ClientMessage =
   | { type: 'lab-host'; name: string; scenario: LabScenario }
   | { type: 'room-say'; key: RoomSaying }
   | { type: 'rejoin'; code: string; token: string }
-  | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number } | { type: 'watchable'; on: boolean } | { type: 'fill-computers' }
+  | { type: 'watch'; code: string; name: string } | { type: 'watch-player'; player: number } | { type: 'watchable'; on: boolean } | { type: 'fill-computers' } | { type: 'room-ready'; on: boolean }
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
   | { type: 'list-rooms'; requestId: string }

@@ -46,9 +46,9 @@ async function until(test, label, timeout = 90000) {
 }
 try {
   const a = await peer('Ana'), b = await peer('Bruno'), c = await peer('Carla');
-  a.send({type: 'host', name: a.name, config, deck});
+  a.send({type: 'host', name: a.name, config, deck}); a.send({type: 'room-ready'});
   await until(() => a.room?.code, 'host');
-  for (const p of [b, c]) { p.send({type: 'join', code: a.room.code, name: p.name, deck}); await until(() => p.room, 'join'); }
+  for (const p of [b, c]) { p.send({type: 'join', code: a.room.code, name: p.name, deck}); p.send({type: 'room-ready'}); await until(() => p.room, 'join'); }
   await until(() => peers.every(p => p.state?.turn >= 1 && !p.state.input.opening), 'game under way');
   const carla = c.state.you;
   c.online = false; c.send({type: 'leave'}); await wait(400); c.ws.close();

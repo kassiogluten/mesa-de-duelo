@@ -445,6 +445,7 @@ final class SeatStateView {
             p.addProperty("rematch", s.rematch);
             // Na sala de espera, quem ainda está escolhendo o deck aparece sem capa e sem comandante.
             p.addProperty("ready", s.deck != null);
+            p.addProperty("confirmed", s.confirmed);
             // O lobby mostra a capa e o comandante (que já é público na partida); o resto do deck fica escondido.
             List<String> commanders = s.deck == null ? List.of() : Session.commanderNames(s.deck);
             if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));

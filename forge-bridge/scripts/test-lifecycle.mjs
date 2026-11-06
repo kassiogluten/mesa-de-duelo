@@ -24,9 +24,9 @@ try {
     const p=await peer();p.exitOnFirstState=true;p.send({type:'start',config,you:deck,opponents:[deck,deck,deck]});
     await until(()=>p.state,'rapid game initial state');await until(()=>!p.exitOnFirstState,'rapid leave sent');
   }
-  const room=[await peer(),await peer(),await peer(),await peer()];room[0].send({type:'host',name:'Lifecycle 0',config,deck});
+  const room=[await peer(),await peer(),await peer(),await peer()];room[0].send({type:'host',name:'Lifecycle 0',config,deck}); room[0].send({type: 'room-ready'});
   await until(()=>room[0].room,'host');
-  for(let i=1;i<4;i++){room[i].send({type:'join',code:room[0].room.code,name:`Lifecycle ${i}`,deck});await until(()=>room[i].room,'join');}
+  for(let i=1;i<4;i++){room[i].send({type:'join',code:room[0].room.code,name:`Lifecycle ${i}`,deck}); room[i].send({type: 'room-ready'});await until(()=>room[i].room,'join');}
   await until(()=>room.some(p=>p.state?.input.opening==='starting-player'&&p.state.input.selectablePlayers.length),'starting player question');
   const departed=room.find(p=>p.state?.input.opening==='starting-player'&&p.state.input.selectablePlayers.length);
   departed.send({type:'concede'});

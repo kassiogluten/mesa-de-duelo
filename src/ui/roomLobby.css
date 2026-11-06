@@ -48,6 +48,9 @@
 /* Quem ainda escolhe o deck: o lugar fica ocupado, mas sem capa, com o aviso piscando como o do lugar livre. */
 .room-seat.choosing .seat-state::before, .room-seat.open .seat-state::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: var(--gold); vertical-align: 1px; animation: pulse 1.2s ease-in-out infinite; }
 .room-seat.choosing.me .seat-state { color: var(--gold-light); font-weight: 600; }
+.room-seat.confirmed .seat-state { color: #8fd49b; font-weight: 600; }
+.room-seat.confirmed { box-shadow: inset 0 0 0 1px #8fd49b55; }
+.room-ready-btn[aria-pressed='true'] { background: #1f4a2c; border-color: #8fd49b; color: #d8f5dd; }
 
 /* Seu deck: a prateleira de decks que servem para o formato da sala, para escolher ou trocar sem sair. */
 .room-decks { padding-top: 8px; }

@@ -432,3 +432,16 @@ test('the printing (set and collector number) survives import and export, one li
   assert.equal(decks.entryKey(parsed.main[0]) === decks.entryKey(parsed.main[1]), false);
   assert.equal(decks.entryKey(parsed.main[4]), 'Shock');
 });
+
+test('promoting a legendary creature swaps it with the current commander, keeping the card total', () => {
+  const { promoteToCommander } = decks;
+  const deck = { id: 'p', name: 'P', format: 'commander', commanders: [{ name: 'Krenko, Mob Boss', count: 1 }], cards: [{ name: 'Goblin Guide', count: 1 }, { name: 'Zada, Hedron Grinder', count: 1, set: 'bfz', cn: '162' }, { name: 'Mountain', count: 30 }] };
+  assert.equal(promoteToCommander(deck, 'Zada, Hedron Grinder|bfz|162'), true);
+  assert.deepEqual(deck.commanders, [{ name: 'Zada, Hedron Grinder', count: 1, set: 'bfz', cn: '162' }]);
+  assert.deepEqual(deck.cards.map(e => e.name), ['Goblin Guide', 'Mountain', 'Krenko, Mob Boss']);
+  const empty = { id: 'e', name: 'E', format: 'commander', cards: [{ name: 'Krenko, Mob Boss', count: 2 }] };
+  assert.equal(promoteToCommander(empty, 'Krenko, Mob Boss'), true);
+  assert.deepEqual(empty.commanders, [{ name: 'Krenko, Mob Boss', count: 1 }]);
+  assert.deepEqual(empty.cards, [{ name: 'Krenko, Mob Boss', count: 1 }]);
+  assert.equal(promoteToCommander(empty, 'Nada'), false);
+});

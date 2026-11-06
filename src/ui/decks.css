@@ -127,6 +127,9 @@
 .dw-cover-pick { display: grid; place-items: center; min-width: 32px; min-height: 40px; padding: 0; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--dw-muted); cursor: pointer; }
 .dw-cover-pick svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .dw-cover-pick[aria-pressed='true'] { color: var(--dw-accent); border-color: var(--dw-accent); }
+.dw-promote svg { fill: currentColor; stroke: none; }
+.dw-promote-slot { flex: none; min-width: 32px; }
+.dw-promote:hover { color: var(--dw-accent); }
 .dw-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 18px 14px; }
 .dw-results article { min-width: 0; }
 .dw-result-art { display: block; width: 100%; aspect-ratio: 488/680; padding: 0; border: 0; border-radius: 6px; background: var(--dw-raised); color: var(--dw-ink); cursor: zoom-in; }
@@ -286,7 +289,7 @@
   .dw-mana { font-size: 12px; }
   .dw-stepper { gap: 0; }
   .dw-stepper button { min-width: 32px; }
-  .dw-transfer, .dw-cover-pick { min-width: 28px; }
+  .dw-transfer, .dw-cover-pick, .dw-promote-slot { min-width: 28px; }
   .dw-import form, .dw-import-review { padding: 16px; }
   .dw-import-fields { flex-direction: column; }
   .ds-stats { gap: 14px; }

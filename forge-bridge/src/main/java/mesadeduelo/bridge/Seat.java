@@ -53,6 +53,8 @@ final class Seat {
     volatile String account;
     volatile String deckId;
     volatile boolean rematch;
+    /** Tocou em Pronto na sala de espera; trocar de deck desfaz. A sala só começa com todos prontos. */
+    volatile boolean confirmed;
     volatile boolean departed;
     /** Carta cuja arte representa o deck no lobby (sem comandante); null sem capa. */
     volatile String cover;
@@ -116,6 +118,7 @@ final class Seat {
         this.name = name;
         this.deck = deck;
         this.taken = true;
+        this.confirmed = false;
         this.account = null;
         this.deckId = null;
     }

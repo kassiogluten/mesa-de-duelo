@@ -50,11 +50,11 @@ async function advanceAiRound(p) {
 }
 try {
   const roomPeers = [await peer(), await peer(), await peer(), await peer()];
-  const host = roomPeers[0]; host.send({type:'host', name:'Host', config:config(4), deck});
+  const host = roomPeers[0]; host.send({type:'host', name:'Host', config:config(4), deck}); host.send({type: 'room-ready'});
   await until(()=>host.room, 'host room'); const code = host.room.code;
   assert.equal(host.room.capacity,4);
   for (let i=1;i<4;i++) {
-    roomPeers[i].send({type:'join',code,name:`Player ${i}`,deck});
+    roomPeers[i].send({type:'join',code,name:`Player ${i}`,deck}); roomPeers[i].send({type: 'room-ready'});
     await until(()=>roomPeers[i].room?.players.length===i+1, `join seat ${i}`);
     assert.equal(roomPeers[i].room.seat,i);
     if(i<3) assert.equal(roomPeers[i].room.started,false);
@@ -189,10 +189,10 @@ try {
   }
   for (const count of [2,3]) {
     const table = []; for (let i=0;i<count;i++) table.push(await peer());
-    table[0].send({type:'host',config:config(count),deck});
+    table[0].send({type:'host',config:config(count),deck}); table[0].send({type: 'room-ready'});
     await until(()=>table[0].room,`${count}-human room created`);
     for (let i=1;i<count;i++) {
-      table[i].send({type:'join',code:table[0].room.code,deck});
+      table[i].send({type:'join',code:table[0].room.code,deck}); table[i].send({type: 'room-ready'});
       await until(()=>table[i].room,`${count}-human seat ${i} joined`);
     }
     await until(()=>table.every(p=>p.state?.players.length===count) && table.some(priority),`${count}-human opening`);

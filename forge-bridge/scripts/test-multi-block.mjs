@@ -72,9 +72,9 @@ function advance() {
 try {
   const a = await connect('Bears'), b = await connect('Guard');
   attacker = a; defender = b;
-  a.send({type: 'host', name: a.name, deck: {name: 'Bears', cards: [{name: 'Forest', count: 8}, {name: 'Grizzly Bears', count: 8}]}, config: {format: 'free', matchLength: 'bo1'}});
+  a.send({type: 'host', name: a.name, deck: {name: 'Bears', cards: [{name: 'Forest', count: 8}, {name: 'Grizzly Bears', count: 8}]}, config: {format: 'free', matchLength: 'bo1'}}); a.send({type: 'room-ready'});
   await until(() => a.room?.code, 'room');
-  b.send({type: 'join', code: a.room.code, name: b.name, deck: {name: 'Guard', cards: [{name: 'Wastes', count: 9}, {name: GUARD, count: 7}]}});
+  b.send({type: 'join', code: a.room.code, name: b.name, deck: {name: 'Guard', cards: [{name: 'Wastes', count: 9}, {name: GUARD, count: 7}]}}); b.send({type: 'room-ready'});
   await until(() => defender.state?.input.blocking && defender.state.combat.length === 2, 'two attackers, one guard', advance);
   const blocking = defender.state.input.blocking;
   const guard = mine(defender.state).battlefield.find(c => c.name === GUARD && blocking.blockers.includes(c.id));

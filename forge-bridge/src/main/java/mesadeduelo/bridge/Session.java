@@ -175,6 +175,7 @@ final class Session {
             if (s.deck == null) throw new IllegalArgumentException("Espere todos escolherem o deck antes de completar com computadores.");
             taken.add(s);
         }
+        if (!allConfirmed()) throw new IllegalArgumentException("Espere todos na sala tocarem em Pronto antes de completar com computadores.");
         int missing = config.playerCount() - taken.size();
         if (missing <= 0) return 0;
         int bracket = 0;
@@ -229,6 +230,10 @@ final class Session {
     boolean full() { for (Seat s : seats) if (!s.taken) return false; return true; }
     /** Mesa cheia e todos com deck: a sala pode começar. */
     boolean ready() { for (Seat s : seats) if (!s.taken || s.deck == null) return false; return true; }
+    /** Todos os lugares ocupados tocaram em Pronto (na sala de teste, os decks vêm do cenário: não há o que confirmar). */
+    boolean allConfirmed() { for (Seat s : seats) if (s.taken && !s.confirmed && lab == null) return false; return true; }
+    /** Mesa cheia, todos com deck e prontos: a partida começa. */
+    boolean startable() { return ready() && allConfirmed(); }
 
     Seat seatOf(Channel ch) {
         for (Seat s : seats) if (s.channel == ch) return s;

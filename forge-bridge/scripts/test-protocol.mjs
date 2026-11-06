@@ -71,7 +71,7 @@ const config = { format: 'pauper', matchLength: 'bo3' };
 const deck = (name, land) => ({ name, cards: [{ name: land, count: 60 }], sideboard: [{ name: 'Lightning Bolt', count: 4 }] });
 try {
   const a = await peer(true), b = await peer(), spectator = await peer();
-  a.send({ type: 'host', name: 'Protocol A', deck: deck('A', 'Mountain'), config });
+  a.send({ type: 'host', name: 'Protocol A', deck: deck('A', 'Mountain'), config }); a.send({type: 'room-ready'});
   await until(() => a.messages.some(m => m.type === 'room'), 'room');
   const code = a.messages.find(m => m.type === 'room').room.code;
   spectator.send({ type: 'lookup-room', code, requestId: 'room-check' });
@@ -79,7 +79,7 @@ try {
   const lookup = spectator.messages.find(m => m.requestId === 'room-check');
   assert.equal(lookup.type, 'room-info'); assert.equal(lookup.room.config.matchLength, 'bo3');
   assert.ok(!JSON.stringify(lookup).includes('token'));
-  b.send({ type: 'join', code, name: 'Protocol B', deck: deck('B', 'Forest') });
+  b.send({ type: 'join', code, name: 'Protocol B', deck: deck('B', 'Forest') }); b.send({type: 'room-ready'});
   await until(() => a.state?.phase === 'MAIN1' && b.state?.phase === 'MAIN1', 'first main phase');
   assert.ok(a.openings.has('mulligan') && a.openings.has('mulligan-bottom'));
   assert.ok(a.openings.has('play-draw') || b.openings.has('play-draw'));
@@ -128,10 +128,10 @@ try {
   assert.equal(b.state.match.over, true); assert.equal(b.state.match.phase, 'complete');
   assert.deepEqual(b.state.match.wins, [1, 0], 'abandonment must not invent game wins');
   const remaining = await peer(), departing = await peer();
-  remaining.send({type: 'host', name: 'Remaining', deck: deck('Remaining', 'Mountain'), config});
+  remaining.send({type: 'host', name: 'Remaining', deck: deck('Remaining', 'Mountain'), config}); remaining.send({type: 'room-ready'});
   await until(() => remaining.messages.some(message => message.type === 'room'), 'leave-test room');
   const leaveCode = remaining.messages.find(message => message.type === 'room').room.code;
-  departing.send({type: 'join', code: leaveCode, name: 'Departing', deck: deck('Departing', 'Forest')});
+  departing.send({type: 'join', code: leaveCode, name: 'Departing', deck: deck('Departing', 'Forest')}); departing.send({type: 'room-ready'});
   await until(() => remaining.state?.phase === 'MAIN1' && departing.state?.phase === 'MAIN1', 'leave-test first game');
   departing.send({type: 'leave'});
   await until(() => remaining.state?.match.abandoned && remaining.state.gameOver, 'leave during first game ends series');

@@ -72,10 +72,10 @@ const host = connect('Host'), peer = connect('Peer');
 try {
   await Promise.all(clients.map(c => c.ready));
   host.send({type: 'host', name: 'Exile regression', config: {format: 'free', matchLength: 'bo1'},
-    deck: {name: 'Impulse regression', cards: [{name: 'Mountain', count: 6}, {name: 'Reckless Impulse', count: 6}]}});
+    deck: {name: 'Impulse regression', cards: [{name: 'Mountain', count: 6}, {name: 'Reckless Impulse', count: 6}]}}); host.send({type: 'room-ready'});
   await until(() => host.room?.code, 'room');
   peer.send({type: 'join', name: 'Peer', code: host.room.code,
-    deck: {name: 'Forest regression', cards: [{name: 'Forest', count: 60}]}});
+    deck: {name: 'Forest regression', cards: [{name: 'Forest', count: 60}]}}); peer.send({type: 'room-ready'});
 
   for (let count = 1; count <= 2; count++) {
     await until(() => ownMain(host) && host.state.input.actionable.some(id => player(host).hand.some(c => c.id === id && c.land)),

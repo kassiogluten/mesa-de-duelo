@@ -67,9 +67,9 @@ function advance() {
 try {
   const a = await connect('Damage A'), b = await connect('Damage B');
   const deck = {name: 'Double block', cards: [{name: 'Forest', count: 8}, {name: 'Grizzly Bears', count: 8}]};
-  a.send({type: 'host', name: a.name, deck, config: {format: 'free', matchLength: 'bo1'}});
+  a.send({type: 'host', name: a.name, deck, config: {format: 'free', matchLength: 'bo1'}}); a.send({type: 'room-ready'});
   await until(() => a.room?.code, 'room');
-  b.send({type: 'join', code: a.room.code, name: b.name, deck});
+  b.send({type: 'join', code: a.room.code, name: b.name, deck}); b.send({type: 'room-ready'});
   await until(() => defender?.state?.input.blocking && defender.state.combat.length === 1, 'one attacker, two possible blockers', advance);
   const blocking = defender.state.input.blocking;
   const target = blocking.attackers[0];

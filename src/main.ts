@@ -153,6 +153,7 @@ const lobby = mountLobby(document.querySelector('#scrLobby')!, {
   onCancelRoom: () => { leaveForge(); lobby.setStatus(''); },
   onSay: key => connection.client?.send({ type: 'room-say', key }),
   onFillWithComputers: () => connection.client?.send({ type: 'fill-computers' }),
+  onReady: on => connection.client?.send({ type: 'room-ready', on }),
   onDecks: (action = 'library', format) => { builder.open({action, format}); show('decks'); },
   onEditDeck: deckId => { builder.open({action: 'edit', deckId}); show('decks'); },
 });

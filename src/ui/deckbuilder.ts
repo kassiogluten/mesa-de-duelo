@@ -1,7 +1,7 @@
 // Meus decks: a biblioteca, criar, importar e editar decks, com busca de cartas e "Parecidas".
 import { KEYS } from '../storage';
 import './decks.css';
-import { DEFAULT_DECKS, hasCommandZone, countEntries, deckEntries, exportDeckList, exportDeckRecovery, entryKey, getDeckStorageState, loadUserDecks, parseDeckList, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
+import { DEFAULT_DECKS, hasCommandZone, countEntries, deckEntries, exportDeckList, exportDeckRecovery, entryKey, getDeckStorageState, loadUserDecks, parseDeckList, promoteToCommander, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { type Color } from '../cards';
 import { cacheGet, fetchByNames, fetchPrintings, preloadDeckImages, resolveCardNames, searchCards, translateCards, type ScryCard } from '../scryfall';
 import { missingCardData } from './deckStats';
@@ -344,7 +344,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       importReview = { deck: importTarget ? applyToTarget(importTarget, incoming) : incoming, incoming, parsed, missing: resolved.missing, ambiguous: resolved.ambiguous };
       const first = incoming.cards[0], firstType = first ? cacheGet(first.name)?.type_line.split('//')[0] ?? '' : '';
       importCommanderOffer = deckFormat === 'commander' && !incoming.commanders?.length && countEntries(incoming.cards) === 100
-        && first?.count === 1 && /Legendary/.test(firstType) && /Creature/.test(firstType) ? first.name : null;
+        && first?.count === 1 && /\bLegendary\b/.test(firstType) && /\bCreature\b/.test(firstType) ? first.name : null;
       importAcknowledged = false; validation = null;
     } catch (error) { if (seq === importSeq) importError = `Não foi possível conferir as cartas. Sua lista foi preservada. ${(error as Error).message}`; }
     if (seq === importSeq) { importBusy = false; renderImport(); $('#dwImportHeading')?.focus(); }
@@ -419,6 +419,10 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       const deck = current(); if (!deck || deck.builtin || hasCommandZone(deck.format)) return;
       if (deck.cover === ds.cover) delete deck.cover; else deck.cover = ds.cover;
       changed(deck); preserveRender(renderEdit); return;
+    }
+    if (ds.promote) {
+      const deck = current(); if (!deck || deck.builtin || deck.format !== 'commander' || !promoteToCommander(deck, ds.promote)) return;
+      changed(deck); renderEdit(); root.querySelector<HTMLElement>('[data-focus="commander:0"]')?.focus(); return;
     }
     if (ds.similar) { const card = results.find(c => c.name === ds.similar); if (card) { hideCardPreview(); void runSimilar(card); } return; }
     if (ds.color) { const color = ds.color as Color; searchColors.has(color) ? searchColors.delete(color) : searchColors.add(color); target.setAttribute('aria-pressed', String(searchColors.has(color))); void runSearch(); return; }

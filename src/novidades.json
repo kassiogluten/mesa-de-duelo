@@ -1,4 +1,16 @@
 {
+  "0.144.0": {
+    "Botão Pronto na sala de espera": [
+      { "img": "0.144.0/sala-pronto.webp", "legenda": "Na sala de espera, Ana e Caio com ✓ Pronto e o seu lugar pedindo para tocar em Pronto." },
+      { "img": "0.144.0/botao-pronto.webp", "legenda": "O botão Pronto no pé da sala, ao lado de Sair da sala." }
+    ],
+    "Promover a comandante": [
+      { "img": "0.144.0/promover-comandante.webp", "legenda": "No editor de um deck de Commander, a coroa no fim da linha da Zada, a única criatura lendária da lista, para promovê-la a comandante." }
+    ],
+    "Sugestão de comandante ao importar": [
+      { "img": "0.144.0/sugestao-ao-importar.webp", "legenda": "Na revisão da lista importada, a pergunta se a Zada, a criatura lendária que abre a lista de 100 cartas, deve ser a comandante." }
+    ]
+  },
   "0.143.0": {
     "Ícones novos para as habilidades": [
       { "img": "0.143.0/icones-habilidades.webp", "legenda": "Anjo com Voar (asa) e Toque mortífero (caveira), Goblin com Ameaçar (máscara de chifres) e Atropelar (garra), Cavaleiro com Iniciativa (espada com o risco do golpe) e um com Golpe duplo (duas espadas); a asa, a caveira e a garra também nos selos da borda." },

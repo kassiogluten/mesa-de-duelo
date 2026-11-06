@@ -34,6 +34,22 @@ export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro cust
 export interface DeckEntry { name: string; count: number; oracleId?: string; set?: string; cn?: string }
 /** A mesma carta na mesma impressão: cada série da mesma carta fica numa linha própria do deck. */
 export const entryKey = (e: Pick<DeckEntry, 'name' | 'set' | 'cn'>) => e.set ? `${e.name}|${e.set}|${e.cn ?? ''}` : e.name;
+/**
+ * Promove uma cópia da linha `key` do deck principal a comandante. O comandante que estava no primeiro lugar volta para o
+ * deck principal, então o total de cartas não muda; um segundo comandante fica onde está.
+ */
+export function promoteToCommander(deck: DeckData, key: string): boolean {
+  const index = deck.cards.findIndex(e => entryKey(e) === key), entry = deck.cards[index];
+  if (!entry) return false;
+  if (entry.count > 1) entry.count--; else deck.cards.splice(index, 1);
+  const commanders = deck.commanders ?? (deck.commanders = []), previous = commanders[0];
+  commanders[0] = { ...entry, count: 1 };
+  if (previous) {
+    const same = deck.cards.find(e => entryKey(e) === entryKey(previous));
+    if (same) same.count += previous.count; else deck.cards.push({ ...previous });
+  }
+  return true;
+}
 /** "(DMU) 277": a impressão como as listas do Moxfield e do Arena escrevem. */
 export const printLabel = (e: Pick<DeckEntry, 'set' | 'cn'>) => e.set ? `(${e.set.toUpperCase()})${e.cn ? ` ${e.cn}` : ''}` : '';
 /**

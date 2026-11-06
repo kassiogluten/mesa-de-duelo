@@ -29,9 +29,9 @@ const ready = (peer, opening) => peer.state?.input.opening === opening && peer.s
 try {
   const a = await connect('Opening A'), b = await connect('Opening B');
   const deck = {name: 'Opening wait', cards: [{name: 'Mountain', count: 20}, {name: 'Raging Goblin', count: 20}]};
-  a.send({type: 'host', name: a.name, deck, config: {format: 'free', matchLength: 'bo1'}});
+  a.send({type: 'host', name: a.name, deck, config: {format: 'free', matchLength: 'bo1'}}); a.send({type: 'room-ready'});
   await until(() => a.room?.code, 'room');
-  b.send({type: 'join', code: a.room.code, name: b.name, deck});
+  b.send({type: 'join', code: a.room.code, name: b.name, deck}); b.send({type: 'room-ready'});
 
   // Quem começa: um escolhe, o outro vê que ele está escolhendo.
   await until(() => peers.some(p => ready(p, 'play-draw')), 'play-draw');

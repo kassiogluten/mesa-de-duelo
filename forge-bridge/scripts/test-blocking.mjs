@@ -67,9 +67,9 @@ const assigned = (attackerId, blockerId) => defender.state.combat.find(pair => p
 try {
   const a = await connect('Blocking A'), b = await connect('Blocking B');
   const deck = {name: 'Blocking regression', cards: [{name: 'Mountain', count: 6}, {name: 'Raging Goblin', count: 6}]};
-  a.send({type: 'host', name: a.name, deck, config: {format: 'free', matchLength: 'bo1'}});
+  a.send({type: 'host', name: a.name, deck, config: {format: 'free', matchLength: 'bo1'}}); a.send({type: 'room-ready'});
   await until(() => a.room?.code, 'room');
-  b.send({type: 'join', code: a.room.code, name: b.name, deck});
+  b.send({type: 'join', code: a.room.code, name: b.name, deck}); b.send({type: 'room-ready'});
   await until(() => defender?.state?.input.blocking, 'two attackers and two blockers', advance);
   // The attacker's table names who it is waiting on instead of looking stuck.
   await until(() => attacker.state.deciding?.some(d => d.player === defender.state.you && d.kind === 'block'), 'attacker sees the defender blocking');

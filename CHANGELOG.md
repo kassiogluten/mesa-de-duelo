@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.144.0] - 2026-11-06
+
+### Novo
+
+- **Botão Pronto na sala de espera.** Numa sala com outros jogadores, a partida não começa mais sozinha quando a mesa enche: cada um escolhe o deck e toca em **Pronto**, e ela começa quando o último ficar pronto. O lugar de cada jogador mostra quem já está pronto, tocar de novo desfaz, e trocar de deck também desfaz. Quem criou a sala só pode completar com computadores depois que todos na sala tocarem em Pronto; tocar em completar já conta como o Pronto dele.
+- **Promover a comandante.** No editor de um deck de Commander, cada criatura lendária do deck ganha uma coroa no fim da linha. Tocar nela leva a carta para a zona de comando; se o deck já tinha comandante, ele volta para o deck, e o total de cartas não muda.
+
+### Corrigido
+
+- **Sugestão de comandante ao importar.** Ao importar uma lista de 100 cartas sem comandante que começa por uma criatura lendária, a revisão volta a perguntar se você quer usá-la como comandante.
+
 ## [0.143.0] - 2026-11-06
 
 ### Mudou

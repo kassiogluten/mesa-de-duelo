@@ -34,10 +34,10 @@ const main = p => priority(p) && p.state.activePlayer === p.state.you && p.state
 const mainPassingTheirTurn = p => { if (priority(p) && !main(p)) p.send({type:'ok',gen:p.state.input.gen}); return main(p); };
 const landDeck = (name, land) => ({name,cards:[{name:land,count:60}]});
 async function room(a,b,deckA,deckB,length='bo1') {
-  a.send({type:'host',name:'Preferences A',deck:deckA,config:{format:'free',matchLength:length}});
+  a.send({type:'host',name:'Preferences A',deck:deckA,config:{format:'free',matchLength:length}}); a.send({type: 'room-ready'});
   await until(()=>a.messages.some(m=>m.type==='room'),'host');
   const code = a.messages.find(m=>m.type==='room').room.code;
-  b.send({type:'join',code,name:'Preferences B',deck:deckB});
+  b.send({type:'join',code,name:'Preferences B',deck:deckB}); b.send({type: 'room-ready'});
   await until(()=>main(a)||main(b),'opening');
   return code;
 }

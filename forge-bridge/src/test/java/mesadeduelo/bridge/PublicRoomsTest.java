@@ -43,11 +43,29 @@ public class PublicRoomsTest {
         return response.getAsJsonArray("rooms");
     }
 
+    /** A última sala que a conexão recebeu até agora (as mensagens chegam na hora: nada fica para depois). */
+    private static JsonObject lastRoom(EmbeddedChannel ch) {
+        JsonObject last = null;
+        Object message;
+        while ((message = ch.readOutbound()) != null) if (message instanceof TextWebSocketFrame frame) {
+            try {
+                JsonObject json = JsonParser.parseString(frame.text()).getAsJsonObject();
+                if ("room".equals(json.get("type").getAsString())) last = json.getAsJsonObject("room");
+            } finally { frame.release(); }
+        }
+        assertNotNull("A ponte não mandou a sala", last);
+        return last;
+    }
+
+    /** O Pronto da sala de espera: a partida só começa com todos prontos. */
+    private static final String READY = "{\"type\":\"room-ready\",\"on\":true}";
+
     private static String host(Rooms rooms, EmbeddedChannel ch, String name, String visibility) throws InterruptedException {
         rooms.onMessage(ch, "{\"type\":\"host\",\"name\":\"" + name + "\",\"deck\":" + RED + ",\"config\":" + CONFIG
             + (visibility == null ? "" : ",\"visibility\":\"" + visibility + "\"") + "}");
         JsonObject room = next(ch, "room").getAsJsonObject("room");
         assertEquals("public".equals(visibility), room.get("public").getAsBoolean());
+        rooms.onMessage(ch, READY);
         return room.get("code").getAsString();
     }
 
@@ -85,6 +103,7 @@ public class PublicRoomsTest {
             // Cheia, a partida começa e a sala continua na lista, agora para assistir.
             rooms.onMessage(visitor, "{\"type\":\"join\",\"code\":\"" + open + "\",\"name\":\"Dora\",\"deck\":" + GREEN + "}");
             next(visitor, "room");
+            rooms.onMessage(visitor, READY);
             JsonArray playing = list(rooms, caio);
             assertEquals(1, playing.size());
             assertTrue(playing.get(0).getAsJsonObject().get("started").getAsBoolean());
@@ -129,6 +148,7 @@ public class PublicRoomsTest {
             assertTrue(next(eva, "error").get("text").getAsString().contains("ainda não começou"));
 
             rooms.onMessage(bia, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":" + GREEN + "}");
+            rooms.onMessage(bia, READY);
             JsonObject first = state(ana);
             // Sala privada: quem tem o código pode assistir.
             rooms.onMessage(eva, "{\"type\":\"watch\",\"code\":\"" + code.toLowerCase() + "\",\"name\":\"Eva\"}");
@@ -272,6 +292,7 @@ public class PublicRoomsTest {
         try {
             String code = host(rooms, ana, "Ana", "public");
             rooms.onMessage(bia, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Bia\",\"deck\":" + GREEN + "}");
+            rooms.onMessage(bia, READY);
             state(ana);
             rooms.onMessage(eva, "{\"type\":\"watch\",\"code\":\"" + code + "\",\"name\":\"Eva\"}");
             state(eva);
@@ -358,8 +379,22 @@ public class PublicRoomsTest {
             assertFalse(room.get("started").getAsBoolean());
 
             rooms.onMessage(bia, "{\"type\":\"room-deck\",\"deck\":" + GREEN + "}");
+            room = lastRoom(ana);
+            assertFalse("Todos com deck, mas ninguém pronto: não começa", room.get("started").getAsBoolean());
+            rooms.onMessage(bia, READY);
+            room = lastRoom(ana);
+            assertTrue(room.getAsJsonArray("players").get(1).getAsJsonObject().get("confirmed").getAsBoolean());
+            // Trocar de deck desfaz o Pronto.
+            rooms.onMessage(bia, "{\"type\":\"room-deck\",\"deck\":" + RED + "}");
+            room = lastRoom(ana);
+            assertFalse(room.getAsJsonArray("players").get(1).getAsJsonObject().get("confirmed").getAsBoolean());
+            // Completar com computadores espera os outros tocarem em Pronto.
+            rooms.onMessage(ana, "{\"type\":\"fill-computers\"}");
+            assertTrue(next(ana, "error").get("text").getAsString().contains("Pronto"));
+            rooms.onMessage(bia, READY);
+            rooms.onMessage(ana, READY);
             JsonObject game = state(ana);
-            assertTrue("Todos com deck: a partida começa", game.getAsJsonObject("room").get("started").getAsBoolean());
+            assertTrue("Todos prontos: a partida começa", game.getAsJsonObject("room").get("started").getAsBoolean());
             rooms.onMessage(bia, "{\"type\":\"room-deck\",\"deck\":" + RED + "}");
             assertTrue(next(bia, "error").get("text").getAsString().contains("já começou"));
         } finally {

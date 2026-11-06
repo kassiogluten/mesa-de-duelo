@@ -18,6 +18,7 @@ room room.config.undo
 room room.engineVersion
 room room.lab
 room room.players
+room room.players[].confirmed
 room room.players[].connected
 room room.players[].eliminated
 room room.players[].name

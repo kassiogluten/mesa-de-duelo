@@ -9,6 +9,7 @@ import { deckListChanges, type DeckImportMode } from './deckImport';
 import { avisoContaHTML } from './contaAviso';
 import { colorFilterHTML, commanderLineHTML, matchesColors, matchesQuery, type ColorFilter } from './deckFilters';
 import { parseDeckLink } from '../deckLink';
+import { ICON_CROWN } from './icons';
 import { FUNCTION_TAGS } from './cardSearch';
 import { tokensTabHTML } from './deckTokensView';
 import type { TokenKind } from '../deckTokens';
@@ -110,7 +111,7 @@ function entriesHTML(deck: DeckData, s: BuilderState) {
     const entries = section === 'main' ? deck.cards : deck.sideboard ?? [];
     return groupedRows(entries).map(group => `<section class="dw-card-group"><h3>${group.label}<span>${countEntries(group.rows)}</span></h3><ul>${group.rows.map(row => {
       const label = row.info?.label ?? row.name;
-      return `<li><button type="button" class="dw-card-name" data-inspect="${esc(row.name)}"${printData(row)} data-focus="inspect:${esc(entryKey(row))}"><span class="dw-card-art">${row.info?.artCrop ? `<img src="${esc(row.info.artCrop)}" alt="" loading="lazy">` : ''}</span><span>${esc(label)}${row.set ? ` <small class="dw-print" title="Impressão escolhida">${esc(printLabel(row))}</small>` : ''}</span><span class="dw-mana">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button>${deck.builtin ? `<b class="dw-count">${row.count}</b>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(entryKey(row))}" data-focus="dec:${esc(entryKey(row))}" aria-label="Remover uma cópia de ${esc(label)}">−</button><span>${row.count}</span><button type="button" data-add="${esc(entryKey(row))}" data-focus="add:${esc(entryKey(row))}" aria-label="Adicionar uma cópia de ${esc(label)}">+</button></div>`}<button type="button" class="dw-transfer" data-move="${esc(entryKey(row))}" data-focus="move:${esc(entryKey(row))}" ${deck.builtin || hasCommandZone(deck.format) ? 'hidden' : ''} title="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}" aria-label="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}: ${esc(label)}">${section === 'main' ? '→' : '←'}</button>${coverButtonHTML(deck, row.name, label, section)}</li>`;
+      return `<li><button type="button" class="dw-card-name" data-inspect="${esc(row.name)}"${printData(row)} data-focus="inspect:${esc(entryKey(row))}"><span class="dw-card-art">${row.info?.artCrop ? `<img src="${esc(row.info.artCrop)}" alt="" loading="lazy">` : ''}</span><span>${esc(label)}${row.set ? ` <small class="dw-print" title="Impressão escolhida">${esc(printLabel(row))}</small>` : ''}</span><span class="dw-mana">${row.info ? manaHTML(row.info.manaCost) : ''}</span></button>${deck.builtin ? `<b class="dw-count">${row.count}</b>` : `<div class="dw-stepper"><button type="button" data-dec="${esc(entryKey(row))}" data-focus="dec:${esc(entryKey(row))}" aria-label="Remover uma cópia de ${esc(label)}">−</button><span>${row.count}</span><button type="button" data-add="${esc(entryKey(row))}" data-focus="add:${esc(entryKey(row))}" aria-label="Adicionar uma cópia de ${esc(label)}">+</button></div>`}<button type="button" class="dw-transfer" data-move="${esc(entryKey(row))}" data-focus="move:${esc(entryKey(row))}" ${deck.builtin || hasCommandZone(deck.format) ? 'hidden' : ''} title="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}" aria-label="${section === 'main' ? 'Mover uma cópia para o sideboard' : 'Mover uma cópia para o deck principal'}: ${esc(label)}">${section === 'main' ? '→' : '←'}</button>${coverButtonHTML(deck, row.name, label, section)}${promoteButtonHTML(deck, row, label, section)}</li>`;
     }).join('')}</ul></section>`).join('') || `<div class="dw-empty compact"><h3>${section === 'main' ? 'Deck vazio.' : 'Sideboard vazio.'}</h3>${!deck.builtin ? `<div class="dw-actions">${!searchOpen ? '<button type="button" class="dw-button primary" data-b="open-search">Adicionar cartas</button>' : ''}<button type="button" class="dw-button" data-b="import-current">Importar lista</button></div>` : ''}</div>`;
 }
   /** Escolher a carta como capa do deck: só no deck principal, sem os básicos e fora do Commander e do Oathbreaker, onde a capa é o comandante. */
@@ -119,6 +120,15 @@ function coverButtonHTML(deck: DeckData, name: string, label: string, section: B
     const chosen = deck.cover === name, text = chosen ? `Capa do deck: ${label}. Toque para voltar à capa automática` : `Usar ${label} como capa do deck`;
     return `<button type="button" class="dw-cover-pick" data-cover="${esc(name)}" data-focus="cover:${esc(name)}" aria-pressed="${chosen}" title="${chosen ? 'Capa do deck (toque para voltar à automática)' : 'Usar como capa do deck'}" aria-label="${esc(text)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg></button>`;
   }
+/** Promover a criatura lendária do deck principal a comandante (só no Commander); troca de lugar com o comandante atual. */
+function promoteButtonHTML(deck: DeckData, row: DeckEntry, label: string, section: BuilderState['section']) {
+  if (deck.builtin || deck.format !== 'commander' || section !== 'main') return '';
+  const front = cacheGet(row.name, row)?.type_line.split('//')[0] ?? '';
+  // As outras linhas guardam o lugar da coroa, para os contadores ficarem alinhados.
+  if (!/\bLegendary\b/.test(front) || !/\bCreature\b/.test(front)) return '<span class="dw-promote-slot" aria-hidden="true"></span>';
+  const text = deck.commanders?.length ? `Promover ${label} a comandante, no lugar do comandante atual, que volta para o deck` : `Promover ${label} a comandante`;
+  return `<button type="button" class="dw-cover-pick dw-promote" data-promote="${esc(entryKey(row))}" data-focus="promote:${esc(entryKey(row))}" title="Promover a comandante" aria-label="${esc(text)}">${ICON_CROWN}</button>`;
+}
 function commanderHTML(deck: DeckData) {
     if (!hasCommandZone(deck.format)) return '';
     const commanders = deck.commanders ?? [], oath = deck.format === 'oathbreaker';

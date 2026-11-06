@@ -251,6 +251,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 case "watch-player" -> watchPlayer(ch, msg);
                 case "watchable" -> watchable(ch, msg.has("on") && msg.get("on").getAsBoolean());
                 case "fill-computers" -> fillWithComputers(ch);
+                case "room-ready" -> roomReady(ch, !msg.has("on") || msg.get("on").getAsBoolean());
                 case "room-say" -> say(ch, MatchConfig.string(msg, "key"));
                 case "rejoin" -> rejoin(ch, code(msg), msg.has("token") ? MatchConfig.string(msg, "token") : "");
                 case "rematch" -> rematch(ch);
@@ -413,7 +414,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         byChannel.put(ch, s);
         Log.of(s).info("Sala %s: %s entrou (%s)", code, name, deckName(deck));
         for (Seat each : s.seats) s.sendRoom(each);
-        if (s.ready()) s.start();
+        if (s.startable()) s.start();
         else s.markDirty();
     }
 
@@ -426,12 +427,26 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         if (payload == null || payload.isJsonNull()) throw new IllegalArgumentException("Escolha um deck.");
         Deck deck = validated(payload, s.config.format(), "deck");
         seat.deck = deck;
+        seat.confirmed = false;
         seat.owner(owner);
         seat.cover = Session.coverOf(deck, cover);
         seat.bracket = s.config.commander() ? bracket : 0;
         Log.of(s).info("Sala %s: %s escolheu o deck %s", s.code, seat.name, deck.getName());
         broadcastRoom(s);
-        if (s.ready()) s.start();
+        if (s.startable()) s.start();
+        else s.markDirty();
+    }
+
+    /** {type:"room-ready", on}: Pronto (ou não) no próprio lugar; com a mesa cheia e todos prontos, a partida começa. */
+    private synchronized void roomReady(Channel ch, boolean on) {
+        Session s = byChannel.get(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
+        if (seat == null || !s.isRoom() || s.isLab() || s.started() || seat.confirmed == on) return;
+        if (on && seat.deck == null) throw new IllegalArgumentException("Escolha um deck antes de ficar pronto.");
+        seat.confirmed = on;
+        Log.of(s).info("Sala %s: %s %s", s.code, seat.name, on ? "está pronto" : "não está mais pronto");
+        broadcastRoom(s);
+        if (s.startable()) s.start();
         else s.markDirty();
     }
 
@@ -488,6 +503,8 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         Seat seat = s == null ? null : s.seatOf(ch);
         if (seat == null || !s.isRoom()) return;
         if (seat.index != 0) throw new IllegalArgumentException("Só quem criou a sala pode completar com computadores.");
+        // Tocar em completar já é o Pronto de quem criou a sala; os outros precisam ter tocado no deles.
+        if (seat.deck != null) seat.confirmed = true;
         int added = s.fillWithComputers();
         if (added == 0) return;
         Log.of(s).info("Sala %s: completada com %d computador(es)", s.code, added);
