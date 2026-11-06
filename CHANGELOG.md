@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.143.0] - 2026-11-06
+
+### Mudou
+
+- **Ícones novos para as habilidades.** Os selos das habilidades na carta ganharam desenhos novos: Voar é uma asa de penas; Ameaçar, uma máscara de chifres com olhos bravos; Toque mortífero, uma caveira de cara fechada; Atropelar, uma garra de três dedos; Iniciativa, uma espada com o risco do golpe; Golpe duplo, duas espadas com o mesmo risco; Resistência à magia, um triângulo dentro de um anel; e Proteção contra alvos, um anel com três círculos entrelaçados. A asa, a caveira e a garra mudaram também nos selos da borda da carta. Alcance e Ímpeto continuam como estavam.
+
 ## [0.142.3] - 2026-11-06
 
 ### Corrigido

@@ -1,4 +1,10 @@
 {
+  "0.143.0": {
+    "Ícones novos para as habilidades": [
+      { "img": "0.143.0/icones-habilidades.webp", "legenda": "Anjo com Voar (asa) e Toque mortífero (caveira), Goblin com Ameaçar (máscara de chifres) e Atropelar (garra), Cavaleiro com Iniciativa (espada com o risco do golpe) e um com Golpe duplo (duas espadas); a asa, a caveira e a garra também nos selos da borda." },
+      { "img": "0.143.0/icones-protecao.webp", "legenda": "Batedor com Resistência à magia (triângulo no anel) e Felino com Proteção contra alvos (anel com três círculos)." }
+    ]
+  },
   "0.142.3": {
     "Selo de exílio só com as cartas que têm a ver com a permanente": [
       { "img": "0.142.3/selo-de-exilio.webp", "legenda": "O Oblivion Ring com o selo de exílio e o urso que ele exilou saindo por baixo; ao lado, o Ashiok, Dream Render sem selo, mesmo depois de exilar o cemitério do oponente." }

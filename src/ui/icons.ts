@@ -31,22 +31,27 @@ export const COUNTER_ICON: Record<string, string> = {
 export const ICON_LAYERS = svg('M12 2 2 7l10 5 10-5z', 'm2 12 2.4-1.2L12 14.6l7.6-3.8L22 12l-10 5z', 'm2 17 2.4-1.2L12 19.6l7.6-3.8L22 17l-10 5z');
 export const COUNTER_DISC = svg('M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10z');
 
+/** Com recortes (olhos da caveira, penas da asa): os furos saem pelo evenodd. */
+const svgEo = (...ds: string[]) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ds.map(d => `<path d="${d}" fill="currentColor" fill-rule="evenodd"/>`).join('')}</svg>`;
+/** Espada apontando para cima e à direita, e o risco do golpe ao lado: Iniciativa e Golpe duplo. */
+const SWORD = 'M21 3l-.9 4.6-8.6 8.6-3.7-3.7 8.6-8.6zM5.2 12.2l1.3-1.3 6.6 6.6-1.3 1.3zM7.6 16.4l-1.3-1.3-3 3 1.3 1.3zM3.2 19a1.3 1.3 0 1 0 1.8 1.8 1.3 1.3 0 0 0-1.8-1.8z';
+const SLASH = 'M21.5 9.5c.2 6.3-4 11.6-10.5 13 4.5-3 8-7.5 10.5-13z';
 /** Ícone de cada palavra-chave mostrada na carta do campo. */
 export const KEYWORD_ICON: Record<string, string> = {
-  FLYING: `<svg viewBox="0 0 24 24" aria-hidden="true">${[[.5, .55], [23.5, -.55]].map(([x, k]) => `<path transform="translate(${x} 4) scale(${k} .55)" d="M21 3C14 3 6 5 2 10l6 .5L4 15l6-1-3 5.5 6-2.5-1 4.5 5-4c2.5-2.5 4-7 4-14.5z" fill="currentColor"/>`).join('')}</svg>`,
+  FLYING: svgEo('M2.5 21C3 13 8.5 5 21.5 2.5 20.5 6 17.5 8 13 9 9 10 5.5 14 2.5 21z', 'M5.6 19.4C8 14.5 11 11.3 15 10.6c2-.3 4-.8 5.6-1.8-1.4 3-4.1 4.5-7.6 4.9-2.5.3-5 2-7.4 5.7z', 'M8 20c2-2.6 4-4 6.5-4.4 1.5-.2 2.8-.4 4-.8-1.8 3-5.5 5-10.5 5.2z'),
   REACH: svg('M14.85 19.05Q15.5 8.5 4.95 9.15 12.7 11.3 14.85 19.05z', 'M4.95 9.15 14.85 19.05 14.28 19.62 4.38 9.72z', 'M3 20 17 6 18 7 4 21z', 'M21 3 19 9 15 5z', 'M5.5 18.5 2 17.5 3.5 16zM5.5 18.5 6.5 22 8 20.5z'),
-  TRAMPLE: svg('M12 11c2.5 0 4 2.5 4 5.5S14.5 22 12 22s-4-2.5-4-5.5S9.5 11 12 11z', 'M10.3 3.5a1.7 1.7 0 0 1 3.4 0V12h-3.4z', 'M9 14.2 2.8 7.8c-.6-.8.3-1.8 1.2-1.3l7.4 5.2z', 'M15 14.2l6.2-6.4c.6-.8-.3-1.8-1.2-1.3l-7.4 5.2z'),
-  MENACE: svg('M3 3l5 6h8l5-6-1 9a8 8 0 0 1-16 0zm6 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z'),
-  FIRST_STRIKE: ICON_SWORD,
-  DOUBLE_STRIKE: svg('M10 3h5v5L7 16l-2 .5.5-2L13 7V5h-2zM17 8h4v4l-7 7-2 .5.5-2L19 11V10h-1z'),
-  DEATHTOUCH: svg('M12 2a8 8 0 0 0-8 8c0 3 1.5 5 3 6v4h10v-4c1.5-1 3-3 3-6a8 8 0 0 0-8-8zM8.5 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 17h1v2h-1zm3 0h1v2h-1z'),
+  TRAMPLE: svgEo('M12 23c-3.8 0-6-2.6-5.4-6.2L3.2 9.5 3 4.2l3.6 4.4 2.6 5 1.3-.9.3-7.3L12 1l1.2 4.4.3 7.3 1.3.9 2.6-5L21 4.2l-.2 5.3-3.4 7.3c.6 3.6-1.6 6.2-5.4 6.2z'),
+  MENACE: svgEo('M12 22.5 5.2 15 1.5 12.2l3.8-1.6L3 2.5l6.2 3.6L12 1.5l2.8 4.6L21 2.5l-2.3 8.1 3.8 1.6-3.7 2.8zM6.8 10.6l4.4 2.2-.9 2c-2-.2-3.2-1.9-3.5-4.2zm10.4 0-4.4 2.2.9 2c2-.2 3.2-1.9 3.5-4.2z'),
+  FIRST_STRIKE: svgEo(SWORD, SLASH),
+  DOUBLE_STRIKE: `<svg viewBox="0 0 24 24" aria-hidden="true">${[[-1.6, 1.4], [3.4, 2.4]].map(([x, y]) => `<path transform="translate(${x} ${y}) scale(.78)" d="${SWORD}" fill="currentColor" fill-rule="evenodd"/>`).join('')}<path d="${SLASH}" fill="currentColor"/></svg>`,
+  DEATHTOUCH: svgEo('M12 1.5c-5.2 0-9 3.6-9 8.6 0 3 1.4 5.3 3.6 6.5l.4 2.9 1.9-1.2.9 3 1.6-2 1.6 2 .9-3 1.9 1.2.4-2.9c2.2-1.2 3.6-3.5 3.6-6.5 0-5-3.8-8.6-9-8.6zM5.8 9.4l5.2 2-1 3c-2.6 0-4.3-2.1-4.2-5zm12.4 0-5.2 2 1 3c2.6 0 4.3-2.1 4.2-5zM12 14.6l1.3 2.6h-2.6z'),
   LIFELINK: svg('M12 21 3.5 12.5A5 5 0 0 1 12 6a5 5 0 0 1 8.5 6.5z'),
   VIGILANCE: svg('M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8z'),
   HASTE: '<svg viewBox="0 0 24 24" aria-hidden="true"><path transform="translate(1.5 0) scale(.94)" d="M5.5 2h8.5v2.5h-.5v6.7c3.3 1 6 2.4 7.1 3.6.6.7.9 1.5.9 2.4V19H6.5V4.5h-1zM5.5 20h16.5v2H5.5z" fill="currentColor"/><path d="M1 8h5.5v2H1zm1 4h4.5v2H2zm1 4h3.5v2H3z" fill="currentColor"/></svg>',
   DEFENDER: svg('M2 5h9v4H2zm11 0h9v4h-9zM2 11h5v4H2zm7 0h6v4H9zm8 0h5v4h-5zM2 17h9v4H2zm11 0h9v4h-9z'),
-  HEXPROOF: svg('M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5zm-3 6 3 3 3-3 1.4 1.4-3 3 3 3L15 16.8l-3-3-3 3-1.4-1.4 3-3-3-3z'),
+  HEXPROOF: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><circle cx="12" cy="12" r="7" stroke-width="1.2" stroke-dasharray="9.5 1.5"/><path d="M7.3 9.2h9.4L12 17.2z" stroke-width="1.9" stroke-linejoin="round"/></svg>',
   SHROUD: svg('M12 2a9 9 0 0 0-9 9v11l3-2 3 2 3-2 3 2 3-2 3 2V11a9 9 0 0 0-9-9z'),
-  WARD: svg('M12 2l8.66 5v10L12 22l-8.66-5V7zm0 3.5-5.6 3.25v6.5L12 18.5l5.6-3.25v-6.5z', 'M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z'),
+  WARD: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" stroke-width="2"/><circle cx="12.0" cy="8.6" r="4.6"/><circle cx="14.9" cy="13.7" r="4.6"/><circle cx="9.1" cy="13.7" r="4.6"/></svg>',
   INDESTRUCTIBLE: svg('M6 3h12l4 6-10 12L2 9z'),
   PROTECTION: svg('M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5zm0 2.2 6 2.2V11c0 4-2.6 7.6-6 8.9-3.4-1.3-6-4.9-6-8.9V6.4z'),
 };

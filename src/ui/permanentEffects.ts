@@ -12,7 +12,7 @@ export interface PermanentFx {
   frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'defender' | 'token';
   glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'plus' | 'minus';
   base: ('deathtouch' | 'haste' | 'chained')[];
-  /** Detalhes na borda esquerda: asa (voar), olho (vigilância), pegadas (atropelar), caveira (toque mortífero) e espada/escudo riscados (não pode atacar/bloquear). */
+  /** Detalhes na borda esquerda: asa (voar), olho (vigilância), garra (atropelar), caveira (toque mortífero) e espada/escudo riscados (não pode atacar/bloquear). */
   corner: ('flying' | 'vigilance' | 'trample' | 'deathtouch' | 'no-attack' | 'no-block')[];
   seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down' | StatusKind; html: string; label: string }[];
   phased: boolean;
