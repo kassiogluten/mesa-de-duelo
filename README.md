@@ -66,7 +66,7 @@ O `docker-compose.yml` sobe dois serviços: `web` (o site no nginx, que repassa 
 1. No Coolify, crie um recurso a partir deste repositório no GitHub e escolha o build pack **Docker Compose** (arquivo `docker-compose.yml`).
 2. Coloque o domínio (ex.: `https://mesa.seudominio.com`) só no serviço **web**. A ponte não precisa de domínio nem de porta aberta.
 3. Defina `ADMIN_PASSWORD` nas variáveis do recurso para ligar a área de admin em `https://seu-dominio/admin` (relatos dos jogadores e partidas em andamento).
-4. Faça o deploy. O primeiro build da ponte demora (clona e compila o Forge); o servidor precisa de uns 3 GB de RAM livres para compilar e 2 GB para rodar. `JAVA_OPTS` muda a memória da ponte (padrão `-Xmx2g`).
+4. Faça o deploy. O primeiro build da ponte demora (clona e compila o Forge); o servidor precisa de uns 3 GB de RAM livres para compilar e 4 GB para rodar. `JAVA_OPTS` muda a memória da ponte (padrão `-Xmx4g`; com menos memória no servidor, use `-Xmx2g`).
 
 A página publicada conecta em `wss://seu-dominio/ws` sozinha. Para atualizar o Forge, troque `FORGE_COMMIT` no `forge-bridge/Dockerfile` (e `forge.version` no `pom.xml`, se a versão mudar).
 

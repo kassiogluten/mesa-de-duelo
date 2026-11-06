@@ -18,7 +18,7 @@ services:
       context: .
       dockerfile: forge-bridge/Dockerfile
     environment:
-      - JAVA_OPTS=${JAVA_OPTS:--Xmx2g}
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx4g}
       # Senha da área de admin (/admin), em ADMIN_PASSWORD ou MESA_ADMIN_PASSWORD no Coolify: sem ela, a área fica desligada.
       - MESA_ADMIN_PASSWORD=${MESA_ADMIN_PASSWORD:-${ADMIN_PASSWORD:-}}
       # Contas dos jogadores (Entrar com Google): sem o client ID, ficam desligadas. Guardadas em /data/contas.
