@@ -46,6 +46,11 @@ export function createTurnNotice() {
   function clear() {
     stopFlash();
     shown?.close(); shown = null;
+    // O aviso mostrado pelo service worker (celular) também sai da bandeja quando a mesa volta a ter foco.
+    void globalThis.navigator?.serviceWorker?.getRegistration()
+      .then(r => r?.getNotifications({ tag: NAMES.seuTurnoTag }))
+      .then(list => list?.forEach(n => n.close()))
+      .catch(() => {});
   }
   function flash() {
     if (flashTimer) return;

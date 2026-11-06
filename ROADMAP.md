@@ -490,3 +490,32 @@ Itens em ordem de ganho por esforço. Os quatro primeiros são rápidos e de bai
 - [ ] Fontes sem bloquear a primeira pintura: servir Inter e Outfit (woff2, só os pesos usados) do nosso servidor, com `preload` e `font-display: swap`, em vez do CSS do Google Fonts (290 a 850 ms de bloqueio). Conferir o aviso de créditos do rodapé e a política de privacidade, que citam o Google Fonts.
 - [ ] Página do jogo (`/`): imagens fora do WebP (cerca de 2,2 MB economizáveis), peso total de quase 8 MB, erros no console, links que o buscador não segue (botões que fingem ser link), árvore da página com 6.111 elementos, JavaScript e CSS sem uso na primeira tela (208 KB e 69 KB) e nomes acessíveis diferentes do texto visível. É o trabalho mais longo; para o buscador, a porta de entrada é a `/sobre`.
 - [ ] Depois de publicar: cadastrar o site e o `sitemap.xml` no Google Search Console e no Bing Webmaster Tools, e rodar o PageSpeed Insights no endereço real (é onde gzip, cache e CDN aparecem). Junto com o último item pendente do 104.
+
+## 107. Sons mais leves no aplicativo instalado
+
+Os sons do pacote clássico (`public/audio/*.wav`, 32 arquivos) são guardados pelo service worker na instalação e somam cerca de 2,5 MB dos 5,1 MB que o aplicativo baixa (conferido na 0.141.6); os outros pacotes, em `public/audio/<pacote>/`, também são WAV. Em Opus ou MP3 ficariam com perto de um décimo do tamanho, sem diferença que se ouça na mesa.
+
+- [ ] Converter os sons para Opus (`.webm`/`.ogg`) e MP3 (para o Safari antigo), mantendo o volume e o corte de cada um; guardar os originais fora de `public/` para reconverter.
+- [ ] `src/ui/audio.ts`: escolher o formato que o navegador toca (`canPlayType`) e trocar os nomes dos arquivos.
+- [ ] `vite.config.ts`: as extensões novas no `globPatterns` do service worker (hoje `wav`) e na regra dos pacotes temáticos.
+- [ ] Conferir no celular que nenhum som ficou atrasado ou cortado, e medir o tamanho do que o aplicativo baixa antes e depois.
+
+## 108. Atualizar o Forge depois do lançamento de Star Trek
+
+O Forge do servidor está fixado no commit `0b0f7ecc` (15/10/2026), que só tem as cartas de Star Trek (TRK, 13/11/2026) e Star Trek Commander (TRC) reveladas até aquela data: 92 e 42. Cartas reveladas depois não são reconhecidas na validação do deck ("Carta não encontrada no motor de regras.").
+
+- [ ] Uma ou duas semanas depois de 13/11/2026, quando o Forge terminar a série: escolher o commit novo do Forge.
+- [ ] Produção: trocar `ARG FORGE_COMMIT` em `forge-bridge/Dockerfile`.
+- [ ] Local: `git pull` em `~/forge`, `mvn -pl forge-gui -am install -DskipTests` e reiniciar o servidor da 7171.
+- [ ] Rodar os testes do servidor e o `npm run test:e2e` (o commit novo traz mudanças no motor, não só cartas).
+- [ ] Decidir se os precons de Star Trek Commander entram nos decks prontos (Commander Precon).
+- [ ] Item no CHANGELOG ("cartas de Star Trek").
+
+## 109. Medir quantos visitantes começam a jogar
+
+A página de apresentação (/sobre) e o Search Console mostram quem chega, mas não quantos clicam em Jogar, escolhem um deck e começam uma partida. Sugestão da revisão de SEO de 06/11/2026.
+
+- [ ] Decidir antes de fazer: contar no nosso servidor (sem terceiros, só números agregados) ou usar uma ferramenta de estatística (Plausible, Umami ou Google Analytics), e o que muda na política de privacidade.
+- [ ] Eventos: clique em Jogar na /sobre, deck escolhido, partida iniciada (contra o computador ou em sala).
+- [ ] Sem guardar nada que identifique o jogador; atualizar a política de privacidade junto.
+- [ ] Um painel simples com os números por semana (na área de admin ou no Grafana).

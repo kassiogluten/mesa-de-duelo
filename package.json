@@ -1,7 +1,7 @@
 {
   "name": "mesa-de-duelo",
   "private": true,
-  "version": "0.141.5",
+  "version": "0.141.6",
   "type": "module",
   "scripts": {
     "dev": "vite",

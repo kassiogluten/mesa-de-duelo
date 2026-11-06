@@ -3,17 +3,22 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // Além do jogo: as novidades em imagens (/novidades.html, linkada no painel Novidades e guardada com o app), a política
-// de privacidade (/privacidade.html, linkada no rodapé e no menu da conta), Salas (/salas.html, no cabeçalho e no menu ⋯), Minhas partidas (/partidas.html, no menu da conta e no menu ⋯), Rever partida (/rever.html, aberta de Minhas partidas), a apresentação (/sobre, em sobre.html, para quem chega de fora e os buscadores)
-// a área
-// de admin (/admin.html) e as páginas de teste da mesa (/tests/fixtures/*.html), linkadas na área de admin. Os
-// scripts das duas últimas saem em ferramentas/ e ficam fora do cache do app instalado.
+// de privacidade (/privacidade.html, no rodapé e no menu da conta), Salas (/salas.html, no cabeçalho e no menu ⋯), Minhas
+// partidas (/partidas.html, no menu da conta e no menu ⋯), Rever partida (/rever.html, aberta de Minhas partidas), a
+// apresentação (/sobre, em sobre.html, para quem chega de fora e os buscadores), a área de admin (/admin.html) e as
+// páginas de teste da mesa (/tests/fixtures/*.html), linkadas na área de admin. Os scripts das duas últimas saem em
+// ferramentas/ e ficam fora do cache do app instalado; os das outras páginas vão em assets/ e são guardados com o app.
 const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.endsWith('.html')).map(f => [f.replace('.html', ''), `tests/fixtures/${f}`]));
+const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'rever', 'salas', 'admin'] as const;
+const TOOLS = new Set<string>(['admin', ...Object.keys(fixtures)]);
 
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: { index: 'index.html', novidades: 'novidades.html', privacidade: 'privacidade.html', sobre: 'sobre.html', partidas: 'partidas.html', rever: 'rever.html', salas: 'salas.html', admin: 'admin.html', ...fixtures },
-      output: { entryFileNames: chunk => chunk.name === 'index' || chunk.name === 'novidades' ? 'assets/[name]-[hash].js' : 'ferramentas/[name]-[hash].js' },
+      input: { index: 'index.html', ...Object.fromEntries(PAGES.map(p => [p, `${p}.html`])), ...fixtures },
+      // Antes, só index e novidades iam em assets/: o HTML de Partidas, Rever, Salas e Privacidade ficava guardado no app,
+      // mas o script deles não, e a página abria em branco sem internet ou logo depois de uma versão nova.
+      output: { entryFileNames: chunk => TOOLS.has(chunk.name) ? 'ferramentas/[name]-[hash].js' : 'assets/[name]-[hash].js' },
     },
   },
   plugins: [
@@ -46,7 +51,9 @@ export default defineConfig({
       workbox: {
         // O visual e os sons ficam guardados: o jogo abre rápido e, sem servidor, ainda mostra a tela inicial.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
-        globIgnores: ['sobre.html', 'sobre/**', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
+        globIgnores: ['sobre.html', 'sobre/**', 'sw-avisos.js', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
+        // Toque no aviso "Seu turno" que o service worker mostra no celular (public/sw-avisos.js).
+        importScripts: ['sw-avisos.js'],
         navigateFallback: 'index.html',
         // Páginas guardadas abertas com parâmetros (/rever.html?id=… e ?mesa) acham a cópia guardada; sem isso, o endereço
         // não batia com nenhuma e caía na tela inicial. utm_ e fbclid são os que o Workbox já ignora por padrão.

@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.6] - 2026-11-06
+
+### Corrigido
+
+- **Minhas partidas, Rever partida, Salas e Privacidade em branco.** Sem internet, ou logo depois de sair uma versão nova da mesa, essas páginas podiam abrir em branco no navegador que já conhecia a mesa e no aplicativo instalado. Agora elas ficam guardadas inteiras com o aplicativo.
+- **Toque no aviso "Seu turno" no celular.** Tocar no aviso não levava a lugar nenhum; agora volta para a mesa (ou a abre). E o aviso sai da bandeja quando você volta para a mesa.
+
 ## [0.141.5] - 2026-11-06
 
 ### Corrigido

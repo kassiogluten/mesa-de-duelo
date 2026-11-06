@@ -7,7 +7,7 @@ import { readFile, readdir } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const config = await readFile(new URL('vite.config.ts', root), 'utf8');
 const ignored = [...(/ignoreURLParametersMatching:\s*\[([^\]]*)\]/.exec(config)?.[1] ?? '').matchAll(/\/(.+?)\/(?=[,\s]|$)/g)].map(m => new RegExp(m[1]));
-const pages = new Set([...config.matchAll(/(\w+): '(\w+)\.html'/g)].map(m => m[2]));
+const pages = new Set([...(/const PAGES = \[([^\]]*)\]/.exec(config)?.[1] ?? '').matchAll(/'(\w+)'/g)].map(m => m[1]));
 
 async function sources(dir) {
   const out = [];
@@ -21,6 +21,7 @@ async function sources(dir) {
 
 test('links to a cached page with parameters keep finding the cached copy', async () => {
   assert.ok(ignored.length, 'vite.config.ts precisa de ignoreURLParametersMatching');
+  assert.ok(pages.has('rever'), 'as páginas do site vêm de PAGES em vite.config.ts');
   const found = [];
   for (const file of await sources(new URL('src/', root))) {
     const text = await readFile(file, 'utf8');
