@@ -16,7 +16,13 @@ a { color: var(--gold-light); }
 img { display: block; max-width: 100%; height: auto; }
 
 .top, main, .foot { width: min(1180px, 100%); margin: 0 auto; padding-inline: 16px; }
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px; }
+/* Menu do alto, preso ao rolar: os atalhos para as seções somem nas telas estreitas, o Jogar grátis fica. */
+.top { position: sticky; top: 0; z-index: 10; width: 100%; max-width: none; padding-inline: 0; background: color-mix(in srgb, var(--bg) 88%, transparent); border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); }
+.nav { width: min(1180px, 100%); margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 24px; }
+.nav .brand { margin-right: auto; }
+.navlink { color: var(--muted); text-decoration: none; font-size: 15px; }
+.navlink:hover { color: var(--ink); }
+section[id] { scroll-margin-top: 72px; }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--gold-light); font: 800 22px var(--display); text-decoration: none; }
 .brand-mark {
   width: 24px; height: 24px; border-radius: 6px; transform: rotate(45deg); flex-shrink: 0;
@@ -30,6 +36,8 @@ img { display: block; max-width: 100%; height: auto; }
 }
 .btn:hover { filter: brightness(1.08); }
 .btn-small { padding: 8px 18px; font-size: 15px; }
+.btn-ghost { color: var(--ink); background: none; border: 1px solid var(--line); box-shadow: none; }
+.btn-ghost:hover { border-color: var(--gold); filter: none; }
 
 h1, h2, h3 { font-family: var(--display); line-height: 1.15; margin: 0; }
 h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; color: var(--gold-light); }
@@ -37,10 +45,37 @@ h2 { font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; color: var(--gold-li
 h3 { font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 p { margin: 0 0 14px; }
 
-.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: center; padding-block: 32px 56px; }
+/* Imagem presa ao alto: centralizada, ela pulava quando a fonte dos títulos chegava e mudava a altura do texto. */
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start; padding-block: 32px 56px; }
+.hero-shot { margin-top: 36px; }
 .lead { font-size: 18px; color: var(--azul-c9d0de, #c9d0de); margin-top: 18px; }
 .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 24px; }
-.cta-note { color: var(--muted); font-size: 14px; }
+.eyebrow { margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+h1 em { font-style: normal; color: var(--gold); }
+.checks { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 18px 0 0; padding: 0; color: var(--muted); font-size: 14px; }
+.checks li::before { content: '✓'; margin-right: 6px; color: var(--gold); font-weight: 700; }
+
+/* Faixa com os três benefícios principais, logo abaixo da abertura. */
+.stats { list-style: none; margin: 0; padding: 24px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; border-top: 1px solid var(--line); text-align: center; color: var(--muted); font-size: 15px; }
+.stats strong { display: block; color: var(--ink); font: 800 22px var(--display); }
+
+/* Como jogar: três passos numerados. */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; counter-reset: passo; }
+.steps li { border-top: 2px solid var(--gold-deep); padding-top: 16px; counter-increment: passo; }
+.steps li::before { content: 'Passo ' counter(passo); font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.steps h3 { margin: 8px 0 6px; }
+.steps p { margin: 0; color: var(--muted); }
+
+/* Formatos em etiquetas. */
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; padding: 0; }
+.chips li { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; }
+
+/* Perguntas frequentes: cada uma abre a resposta. */
+.faq { max-width: 780px; }
+.faq details { border-bottom: 1px solid var(--line); padding: 16px 0; }
+.faq summary { cursor: pointer; font-weight: 600; font-size: 17px; }
+.faq summary:hover { color: var(--gold-light); }
+.faq details p { margin: 10px 0 0; color: var(--azul-c9d0de, #c9d0de); }
 
 .shot { margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 24px 60px #0009; background: var(--surface); }
 .hero-shot { transform: perspective(1400px) rotateY(-6deg); }
@@ -50,12 +85,17 @@ p { margin: 0 0 14px; }
 .split.reverse > :first-child { order: 2; }
 .split p { color: var(--azul-c9d0de, #c9d0de); }
 
-.features { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-.features li { padding: 20px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
-.features p { margin: 0; color: var(--muted); font-size: 15px; }
+/* Por que jogar aqui: seis motivos numerados, três por linha. */
+.reasons { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: motivo; }
+.reasons li { position: relative; padding: 22px 20px 20px 64px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); counter-increment: motivo; }
+.reasons li::before {
+  content: counter(motivo); position: absolute; left: 18px; top: 20px; width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center; font: 800 16px var(--display); color: #2a1702; background: linear-gradient(180deg, #ffd27a, var(--gold) 55%, var(--gold-deep));
+}
+.reasons p { margin: 0; color: var(--muted); font-size: 15px; }
 
-.final { text-align: center; padding-block: 56px 72px; border-top: 1px solid var(--line); }
-.final p { color: var(--azul-c9d0de, #c9d0de); }
+.final { text-align: center; margin-block: 24px 72px; padding: 56px 24px; border: 1px solid #f2b54c40; border-radius: 22px; background: radial-gradient(ellipse at 50% 0, #f2b54c26, transparent 70%), var(--surface); }
+.final p:not(.eyebrow) { color: var(--azul-c9d0de, #c9d0de); }
 
 .foot { padding-block: 24px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .foot nav { margin-bottom: 10px; font-size: 14px; }
@@ -65,14 +105,43 @@ p { margin: 0 0 14px; }
   .hero, .split { grid-template-columns: 1fr; gap: 24px; }
   .split.reverse > :first-child { order: 0; }
   .hero-shot { transform: none; }
-  .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .navlink { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .reasons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
-  .features { grid-template-columns: 1fr; }
+  .reasons { grid-template-columns: 1fr; }
   .top .btn-small { padding: 7px 14px; }
+  .stats { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 /* Duas imagens de um mesmo recurso, uma embaixo da outra. */
 .duo { display: grid; gap: 16px; }
 .wide { color: var(--azul-c9d0de, #c9d0de); max-width: 70ch; margin-bottom: 22px; }
+
+/* Aparelhos: as quatro telas numa cena só (monitor ao fundo, tablet, notebook e celular na frente). Tudo em
+   porcentagem da largura da cena, para ela crescer e encolher inteira; no celular, vira uma grade 2 × 2. */
+.devices { position: relative; aspect-ratio: 100 / 47; margin: 8px 0 28px; }
+.dev { position: absolute; margin: 0; filter: drop-shadow(0 18px 30px #000a); }
+.dev .screen { background: var(--azul-04060c, #04060c); border: 1px solid #ffffff1f; overflow: hidden; }
+.dev img { width: 100%; height: auto; border-radius: 4px; }
+.dev-monitor { left: 22%; top: 0; width: 56%; z-index: 1; }
+.dev-monitor .screen { padding: 1.4%; border-radius: 12px; }
+.dev-monitor::after { content: ''; display: block; width: 22%; aspect-ratio: 5 / 1; margin: 0 auto; background: linear-gradient(var(--azul-2a3550, #2a3550), var(--azul-0d1018, #0d1018)); clip-path: polygon(32% 0, 68% 0, 100% 100%, 0 100%); }
+.dev-laptop { right: 3%; bottom: 2%; width: 38%; z-index: 2; }
+.dev-laptop .screen { padding: 2.2% 2.2% 3%; border-radius: 12px 12px 0 0; }
+.dev-laptop::after { content: ''; display: block; width: 116%; margin-left: -8%; aspect-ratio: 34 / 1; background: linear-gradient(var(--azul-39445f, #39445f), var(--azul-12141a, #12141a)); border-radius: 0 0 14px 14px; }
+.dev-tablet { left: 0; bottom: 0; width: 29%; z-index: 2; }
+.dev-tablet .screen { padding: 4%; border-radius: 20px; }
+.dev-phone { left: 25%; bottom: 0; width: 23%; z-index: 3; }
+.dev-phone .screen { padding: 2.4% 6%; border-radius: 26px; }
+.device-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; color: var(--muted); font-size: 15px; }
+.device-list strong { display: block; color: var(--ink); font: 700 18px var(--display); margin-bottom: 4px; }
+@media (max-width: 700px) {
+  .devices { aspect-ratio: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 14px; align-items: end; }
+  .dev { position: static; width: auto; }
+  .dev-monitor { grid-column: 1 / -1; }
+  .dev-phone { grid-column: 1 / -1; justify-self: center; width: 62%; }
+  .device-list { grid-template-columns: 1fr 1fr; }
+}

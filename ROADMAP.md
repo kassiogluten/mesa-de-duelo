@@ -469,3 +469,24 @@ Hoje quem chega ao site cai direto na tela do jogo, que é feita para quem já j
 - [x] Decidir antes de fazer: se a raiz continua sendo o jogo (e a apresentação fica em outra rota) ou se a raiz vira a apresentação para quem não tem decks nem partida em andamento; o texto e os prints da página.
 
 Parte feita na 0.141.0 (decidido em 06/11/2026): a apresentação fica em `/sobre` (`sobre.html`, só HTML e CSS) e a raiz continua sendo o jogo; link no rodapé da tela inicial. Falta conferir no Lighthouse e cadastrar o site e o `sitemap.xml` no Google Search Console, depois de publicar.
+
+## 106. SEO e desempenho das páginas públicas (Lighthouse e PageSpeed)
+
+Medição local do Lighthouse em 06/11/2026, no build (`npx vite preview`), perfil de celular:
+
+| Página | Desempenho | Acessibilidade | Boas práticas | SEO |
+|---|---|---|---|---|
+| `/sobre` (celular e computador) | 100 | 100 | 100 | 100 |
+| `/` (o jogo) | 76 | 100 | 96 | 91 |
+| `/novidades.html` | 87 | 100 | 100 | 92 |
+| `/salas.html` | 97 | 100 | 96 | 100 |
+
+Itens em ordem de ganho por esforço. Os quatro primeiros são rápidos e de baixo risco.
+
+- [ ] nginx: ligar `gzip` (HTML, CSS, JS, JSON, XML, SVG, `text/plain`) e cache longo para as imagens de `/sobre/` e `/novidades/` (`expires` de alguns meses; elas não mudam de nome, então não dá para usar `immutable`). Vale para todas as páginas; o Lighthouse local não mede.
+- [ ] Imagens no tamanho certo: gerar versões de 800 px das imagens da `/sobre` e servir com `srcset`/`sizes` (o Lighthouse aponta de 325 a 470 KB de sobra no celular), com `imagesrcset` no preload da primeira.
+- [ ] Novidades em imagens: `meta description`; a primeira imagem sem `loading="lazy"` (é o maior elemento da tela); `width` e `height` em todas as imagens, que hoje fazem a página pular (CLS 0,156); e o mesmo `srcset` (690 KB de sobra).
+- [ ] Indexação: páginas que não existem respondem 200 com a tela do jogo (o Google pode tratá-las como "soft 404"; responder 404 para endereços que não são do app); `<noscript>` no `/` com um texto curto e o link para a `/sobre`; `lastmod` no `sitemap.xml`.
+- [ ] Fontes sem bloquear a primeira pintura: servir Inter e Outfit (woff2, só os pesos usados) do nosso servidor, com `preload` e `font-display: swap`, em vez do CSS do Google Fonts (290 a 850 ms de bloqueio). Conferir o aviso de créditos do rodapé e a política de privacidade, que citam o Google Fonts.
+- [ ] Página do jogo (`/`): imagens fora do WebP (cerca de 2,2 MB economizáveis), peso total de quase 8 MB, erros no console, links que o buscador não segue (botões que fingem ser link), árvore da página com 6.111 elementos, JavaScript e CSS sem uso na primeira tela (208 KB e 69 KB) e nomes acessíveis diferentes do texto visível. É o trabalho mais longo; para o buscador, a porta de entrada é a `/sobre`.
+- [ ] Depois de publicar: cadastrar o site e o `sitemap.xml` no Google Search Console e no Bing Webmaster Tools, e rodar o PageSpeed Insights no endereço real (é onde gzip, cache e CDN aparecem). Junto com o último item pendente do 104.

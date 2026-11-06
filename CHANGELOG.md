@@ -8,6 +8,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.141.2] - 2026-11-06
+
+### Mudou
+
+- **Por que jogar na Mesa de Duelo.** Logo depois da abertura, a página /sobre ganhou seis motivos para jogar aqui: sem instalar e sem coleção, testar o seu deck contra bots em um minuto, as regras resolvidas pela mesa, jogar com o grupo de qualquer lugar, precons para quem está começando e o Laboratório para quem quer ir fundo. Os quatro quadros do fim da página entraram nesses motivos.
+- **Apresentação mais direta.** A página /sobre ganhou um menu no alto, preso ao rolar, com atalhos para Recursos, Formatos, Como jogar e Dúvidas e o botão Jogar grátis. A abertura agora diz logo o principal ("Jogue Magic online, grátis e sem instalar nada"), com o botão Começar a jogar grátis, um Como funciona e a faixa 100% grátis, 2 a 4 jogadores e sem download. Chegaram também os três passos para começar, os formatos em etiquetas, perguntas frequentes (é grátis? dá para jogar com amigos ou contra o computador? preciso instalar? posso usar o meu deck?) e uma chamada final para jogar. A página também abre mais rápido e não pula enquanto carrega.
+- **Jogue em qualquer tela.** A página /sobre ganhou uma seção com a mesa em quatro aparelhos ao mesmo tempo: o Commander com quatro jogadores no monitor do computador, uma partida no notebook, a tela inicial no tablet e a partida no celular deitado, com uma linha sobre cada um.
+
 ## [0.141.1] - 2026-11-06
 
 ### Mudou

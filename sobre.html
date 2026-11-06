@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- Página de apresentação (/sobre): o conteúdo está todo aqui, sem JavaScript, para os buscadores lerem. O nginx
          troca https://__MESA_HOST__ pelo domínio, como no index.html. -->
-    <title>Mesa de Duelo · Jogar Magic online no navegador, grátis</title>
-    <meta name="description" content="Jogue Magic: The Gathering no navegador, sem instalar: Commander online grátis contra o computador ou com amigos, decks prontos, editor de decks, Laboratório e partidas para assistir, em português.">
+    <title>Jogar Magic online grátis | Commander e bots · Mesa de Duelo</title>
+    <meta name="description" content="Jogue Magic: The Gathering online grátis, em português e sem cadastro: Commander com até 4 jogadores, partidas contra bots, decks prontos, precons oficiais e editor de decks.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://__MESA_HOST__/sobre">
     <meta name="theme-color" content="#060912">
     <meta property="og:type" content="website">
@@ -30,7 +31,7 @@
     <link rel="preload" as="image" href="/sobre/mesa-1x1.webp" type="image/webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@700;800&display=optional">
     <link rel="stylesheet" href="/src/sobre.css">
     <script type="application/ld+json">
       {
@@ -46,34 +47,149 @@
         "genre": "Jogo de cartas",
         "gamePlatform": ["Navegador", "Celular", "Computador"],
         "playMode": ["SinglePlayer", "MultiPlayer"],
+        "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
       }
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "É grátis jogar Magic na Mesa de Duelo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. A Mesa de Duelo é gratuita, abre no navegador e não pede cadastro. Entrar com o Google é opcional e serve para guardar os seus decks e partidas em todos os aparelhos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso jogar Commander online com amigos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. Crie uma sala, mande o link e jogue Commander com dois a quatro jogadores, cada um com o seu deck. Quem criou a sala pode completar os lugares vazios com computadores."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Dá para jogar Magic sozinho contra o computador?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. Os bots jogam qualquer formato, com estilos diferentes (equilibrado, cauteloso, agressivo ou experimental) e, no Commander, o bracket máximo que você escolher."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Preciso instalar alguma coisa?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Não. A mesa funciona no navegador do computador e do celular. Se quiser, instale como aplicativo para abrir em tela cheia."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso usar o meu deck?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. Importe pelo link do Moxfield ou do Archidekt, cole a lista de cartas ou monte o deck no editor, com busca de cartas em português."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "As regras são aplicadas automaticamente?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. Pilha, gatilhos, combate e habilidades são resolvidos pela mesa, com as cartas em português. Se você clicar errado, o Desfazer volta a sua última decisão."
+      }
+    }
+  ]
+}
     </script>
   </head>
   <body>
     <header class="top">
-      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
-      <a class="btn btn-small" href="/">Jogar agora</a>
+      <nav class="nav" aria-label="Navegação principal">
+        <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
+        <a class="navlink" href="#recursos">Recursos</a>
+        <a class="navlink" href="#formatos">Formatos</a>
+        <a class="navlink" href="#como-jogar">Como jogar</a>
+        <a class="navlink" href="#perguntas">Dúvidas</a>
+        <a class="btn btn-small" href="/">Jogar grátis</a>
+      </nav>
     </header>
 
     <main>
       <section class="hero">
         <div class="hero-text">
-          <h1>Jogue Magic online no navegador, grátis</h1>
-          <p class="lead">A Mesa de Duelo é uma mesa de Magic: The Gathering que abre direto no navegador, no computador ou no celular. Jogue contra o computador ou com amigos, monte seus decks ou pegue um pronto, sem instalar nada e em português.</p>
-          <p class="cta"><a class="btn" href="/">Jogar agora</a> <span class="cta-note">Sem cadastro: entre e jogue.</span></p>
+          <p class="eyebrow">Sua mesa de Magic está pronta</p>
+          <h1>Jogue <em>Magic online</em>, grátis e sem instalar nada</h1>
+          <p class="lead">Jogue Commander com amigos ou contra bots, direto no navegador, no computador ou no celular. Escolha um deck pronto ou monte o seu, entre na mesa e jogue, tudo em português.</p>
+          <p class="cta"><a class="btn" href="/">Começar a jogar grátis</a> <a class="btn btn-ghost" href="#como-jogar">Como funciona</a></p>
+          <ul class="checks" aria-label="Em resumo">
+            <li>Sem cadastro</li><li>No computador e no celular</li><li>Até 4 jogadores no Commander</li>
+          </ul>
         </div>
         <figure class="shot hero-shot">
           <img src="/sobre/mesa-1x1.webp" width="1600" height="900" fetchpriority="high" alt="Partida de Magic na Mesa de Duelo: as cartas na mão embaixo, as criaturas e os terrenos no campo, a vida dos dois jogadores e o botão Para o combate.">
         </figure>
       </section>
 
-      <section class="block">
+      <ul class="stats" aria-label="Benefícios principais">
+        <li><strong>100% grátis</strong>sem assinatura nem pacotes</li>
+        <li><strong>2 a 4 jogadores</strong>Commander com bots ou amigos</li>
+        <li><strong>Sem download</strong>direto no navegador</li>
+      </ul>
+
+      <section class="block" id="recursos" aria-labelledby="porque">
+        <h2 id="porque">Por que jogar na Mesa de Duelo</h2>
+        <ul class="reasons">
+          <li><h3>Sem instalar e sem coleção</h3><p>Abre no navegador, no celular ou no computador. Todas as cartas estão liberadas, sem comprar pacotes nem juntar coleção, e é grátis.</p></li>
+          <li><h3>Teste o seu deck em um minuto</h3><p>Cole o link do Moxfield ou do Archidekt e jogue contra até três bots, escolhendo o estilo deles e o bracket. Sem esperar ninguém.</p></li>
+          <li><h3>As regras ficam com a mesa</h3><p>Pilha, gatilhos, combate e habilidades são resolvidos pela mesa. Ninguém precisa saber tudo de cabeça nem discutir o que acontece.</p></li>
+          <li><h3>O seu grupo, de qualquer lugar</h3><p>Mande o link da sala no WhatsApp e cada um entra com o seu deck. O Desfazer pede o aceite de todos, e quem cai não trava o jogo.</p></li>
+          <li><h3>Para quem está começando</h3><p>Precons oficiais do jeito que saíram da caixa e cartas em português: escolha um deck e aprenda jogando.</p></li>
+          <li><h3>Para quem quer ir fundo</h3><p>Monte qualquer situação no Laboratório para ver como uma interação funciona, e reveja as suas partidas lance a lance.</p></li>
+        </ul>
+      </section>
+
+      <section class="block" id="como-jogar">
+        <h2>Como jogar Magic online</h2>
+        <ol class="steps">
+          <li><h3>Escolha o formato</h3><p>Commander, Commander Precon, Standard, Pauper, Oathbreaker, Sacola 50 ou Livre.</p></li>
+          <li><h3>Escolha um deck</h3><p>Use um deck pronto ou um precon, importe a sua lista ou monte um no editor.</p></li>
+          <li><h3>Entre na partida</h3><p>Jogue contra bots na hora, ou crie uma sala e mande o link para os amigos.</p></li>
+        </ol>
+      </section>
+
+      <section class="block" id="aparelhos">
+        <h2>Jogue em qualquer tela</h2>
+        <p class="wide">A mesa se ajusta ao tamanho da tela: no monitor grande cabe uma mesa de Commander com quatro jogadores, e no celular a partida se reorganiza para a tela deitada. Entre com o Google e os seus decks vão junto para todos os aparelhos. Se quiser, instale como aplicativo e jogue em tela cheia.</p>
+        <div class="devices" role="group" aria-label="A Mesa de Duelo no computador, no notebook, no tablet e no celular">
+          <figure class="dev dev-monitor"><div class="screen"><img src="/sobre/aparelho-computador.webp" width="1280" height="720" loading="lazy" alt="No monitor do computador, uma partida de Commander com quatro jogadores: os três oponentes no alto e a sua mão embaixo."></div></figure>
+          <figure class="dev dev-tablet"><div class="screen"><img src="/sobre/aparelho-tablet.webp" width="800" height="563" loading="lazy" alt="No tablet, a tela inicial com os decks prontos e a escolha do formato e dos oponentes."></div></figure>
+          <figure class="dev dev-laptop"><div class="screen"><img src="/sobre/aparelho-notebook.webp" width="1000" height="562" loading="lazy" alt="No notebook, uma partida 1 contra 1 com o campo dos dois jogadores e a mão embaixo."></div></figure>
+          <figure class="dev dev-phone"><div class="screen"><img src="/sobre/aparelho-celular.webp" width="760" height="351" loading="lazy" alt="No celular deitado, a mesma partida com a mão e os botões ajustados à tela pequena."></div></figure>
+        </div>
+        <ul class="device-list">
+          <li><strong>Computador</strong>Commander com quatro jogadores e espaço para todos os campos.</li>
+          <li><strong>Notebook</strong>A mesa inteira numa tela de 1366 × 768, com a mão à vista.</li>
+          <li><strong>Tablet</strong>Decks, formatos e salas no toque.</li>
+          <li><strong>Celular</strong>A partida na tela deitada, em tela cheia.</li>
+        </ul>
+      </section>
+
+      <section class="block" id="formatos">
         <h2>Commander online grátis, com até quatro jogadores</h2>
         <div class="split">
           <div>
             <p>O Commander é o formato principal da mesa: 40 de vida, zona de comando, dano de comandante e bracket. Jogue de dois a quatro, com bots ou com pessoas, e veja o campo de cada oponente lado a lado.</p>
-            <p>Prefere algo mais curto? Também dá para jogar <strong>Standard</strong>, <strong>Pauper</strong>, <strong>Oathbreaker</strong>, <strong>Sacola 50</strong>, <strong>Commander Precon</strong> e o <strong>Livre</strong>, onde vale quase tudo, em partida única ou melhor de três.</p>
+            <p>Prefere variar? Os outros formatos valem em partida única ou melhor de três, e no Livre vale quase tudo:</p>
+            <ul class="chips" aria-label="Formatos">
+              <li>Commander</li><li>Commander Precon</li><li>Standard</li><li>Pauper</li><li>Oathbreaker</li><li>Sacola 50</li><li>Livre</li>
+            </ul>
+            <p><a class="btn" href="/">Escolher um formato</a></p>
           </div>
           <figure class="shot">
             <img src="/sobre/commander.webp" width="1600" height="900" loading="lazy" alt="Mesa de Commander com quatro jogadores: os três oponentes no alto, cada um com sua vida e o dano de comandante, e o seu comandante na zona de comando.">
@@ -164,20 +280,24 @@
         </div>
       </section>
 
-      <section class="block">
-        <h2>Uma mesa de Magic no navegador, feita para jogar</h2>
-        <ul class="features">
-          <li><h3>Contra o computador</h3><p>Bots com estilos diferentes (equilibrado, cauteloso, agressivo) e o bracket que você escolher.</p></li>
-          <li><h3>Com amigos</h3><p>Crie uma sala, mande o link e jogue junto, ou entre numa sala aberta.</p></li>
-          <li><h3>Regras completas</h3><p>Pilha, gatilhos, combate e habilidades resolvidos pela mesa, com as cartas em português.</p></li>
-          <li><h3>No celular também</h3><p>Instale como aplicativo e jogue em tela cheia, no celular ou no computador.</p></li>
-        </ul>
+
+      <section class="block" id="perguntas">
+        <h2>Perguntas frequentes</h2>
+        <div class="faq">
+          <details><summary>É grátis jogar Magic na Mesa de Duelo?</summary><p>Sim. A Mesa de Duelo é gratuita, abre no navegador e não pede cadastro. Entrar com o Google é opcional e serve para guardar os seus decks e partidas em todos os aparelhos.</p></details>
+          <details><summary>Posso jogar Commander online com amigos?</summary><p>Sim. Crie uma sala, mande o link e jogue Commander com dois a quatro jogadores, cada um com o seu deck. Quem criou a sala pode completar os lugares vazios com computadores.</p></details>
+          <details><summary>Dá para jogar Magic sozinho contra o computador?</summary><p>Sim. Os bots jogam qualquer formato, com estilos diferentes (equilibrado, cauteloso, agressivo ou experimental) e, no Commander, o bracket máximo que você escolher.</p></details>
+          <details><summary>Preciso instalar alguma coisa?</summary><p>Não. A mesa funciona no navegador do computador e do celular. Se quiser, instale como aplicativo para abrir em tela cheia.</p></details>
+          <details><summary>Posso usar o meu deck?</summary><p>Sim. Importe pelo link do Moxfield ou do Archidekt, cole a lista de cartas ou monte o deck no editor, com busca de cartas em português.</p></details>
+          <details><summary>As regras são aplicadas automaticamente?</summary><p>Sim. Pilha, gatilhos, combate e habilidades são resolvidos pela mesa, com as cartas em português. Se você clicar errado, o Desfazer volta a sua última decisão.</p></details>
+        </div>
       </section>
 
       <section class="final">
-        <h2>Sua mesa está pronta</h2>
-        <p>Escolha um deck e comece a primeira partida em menos de um minuto.</p>
-        <p><a class="btn" href="/">Jogar agora</a></p>
+        <p class="eyebrow">Pronto para jogar?</p>
+        <h2>Sua próxima partida começa agora</h2>
+        <p>Escolha um deck e comece a primeira partida em menos de um minuto, sem cadastro e sem download.</p>
+        <p><a class="btn" href="/">Jogar Magic grátis</a></p>
       </section>
     </main>
 

@@ -1,4 +1,16 @@
 {
+  "0.141.2": {
+    "Por que jogar na Mesa de Duelo": [
+      { "img": "0.141.2/por-que-jogar.webp", "legenda": "Na página /sobre, os seis motivos numerados para jogar na Mesa de Duelo, cada um com um título curto e o que ele quer dizer na mesa." }
+    ],
+    "Apresentação mais direta": [
+      { "img": "0.141.2/abertura.webp", "legenda": "O alto da página /sobre: o menu com os atalhos e o Jogar grátis, a frase principal, os botões Começar a jogar grátis e Como funciona e a partida na mesa ao lado." },
+      { "img": "0.141.2/perguntas.webp", "legenda": "As perguntas frequentes, com a primeira aberta: é grátis, abre no navegador e não pede cadastro." }
+    ],
+    "Jogue em qualquer tela": [
+      { "img": "0.141.2/aparelhos.webp", "legenda": "A seção Jogue em qualquer tela: o Commander no monitor, a tela inicial no tablet, a partida no celular deitado e no notebook, com uma linha sobre cada aparelho embaixo." }
+    ]
+  },
   "0.141.1": {
     "Mais recursos na página de apresentação": [
       { "img": "0.141.1/assistir-e-rever.webp", "legenda": "Na página /sobre, a parte de assistir ao vivo e rever depois: o texto de cada um ao lado da página de Salas e de uma partida gravada sendo revista." },
