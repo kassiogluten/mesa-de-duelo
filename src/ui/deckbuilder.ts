@@ -78,6 +78,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let validationSeq = 0;
   let validationError = '';
   let importDraft = { name: '', text: '' };
+  /** Formato do deck novo que está sendo importado: começa vazio a cada importação, e o jogador precisa escolher antes de conferir a lista. */
+  let importFormat: DeckFormat | null = null;
   /** Bracket que veio com o deck do link (Archidekt); vale só para Commander. */
   let importBracket: Bracket | undefined;
   let importBusy = false;
@@ -98,7 +100,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     format, ptName, user, view, listQuery, libraryColors, showReady, notice, cardsError, saveError, removed, section, tokenKinds, tokensError, searchOpen, commanderSlot,
     deckActionsOpen, searchQuery, searchType, searchFunc, similarTo, similarTags, searchColors, results, hasMore, total, searching, searchError,
     validation, validating, validationError, canValidate: !!opts.validateDeck, canSimilar: !!opts.similarCards,
-    importDraft, importBusy, importError, importTarget, importMode, importReview, importAcknowledged, listEdit, importCommanderOffer,
+    importDraft, importFormat, importBusy, importError, importTarget, importMode, importReview, importAcknowledged, listEdit, importCommanderOffer,
     importCanSave: importCanSave(),
   });
 
@@ -169,8 +171,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     importTarget = target ? structuredClone(target) : null;
     listEdit = asList && !!target;
     importMode = target && (listEdit || !deckEntries(target).length) ? 'replace' : null;
-    importDraft = { name: target?.name ?? '', text: listEdit ? exportDeckList(target!) : '' }; importBracket = undefined; importReview = null; importError = ''; importAcknowledged = false; importCommanderOffer = null;
-    view = 'import'; hideCardPreview(); render(); $('#dwImportText')?.focus();
+    importDraft = { name: target?.name ?? '', text: listEdit ? exportDeckList(target!) : '' }; importFormat = null; importBracket = undefined; importReview = null; importError = ''; importAcknowledged = false; importCommanderOffer = null;
+    view = 'import'; hideCardPreview(); render(); (root.querySelector<HTMLElement>('#dwImportText') ?? root.querySelector<HTMLElement>('#dwImportFormat'))?.focus();
   }
   function saveImport() {
     if (!importReview || !importCanSave()) return;
@@ -317,8 +319,10 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   const applyToTarget = (target: DeckData, incoming: DeckData) => listEdit ? applyDeckListEdit(target, incoming) : applyDeckImport(target, incoming, importMode ?? 'replace');
   async function reviewImport() {
+    const deckFormat = importTarget?.format ?? importFormat;
+    if (!deckFormat) { importError = 'Escolha o formato do deck antes de importar.'; renderImport(); $('#dwImportFormat')?.focus(); return; }
     if (!(await resolveImportLink())) return;
-    const source = { ...importDraft }, importFormat = importTarget?.format ?? format;
+    const source = { ...importDraft };
     const parsed = parseDeckList(source.text);
     if (!parsed.main.length && !parsed.commanders.length && (!importTarget || !parsed.sideboard.length)) { importError = 'Nenhuma carta reconhecida no deck principal. Confira a lista.'; renderImport(); return; }
     const seq = ++importSeq; importBusy = true; importError = ''; renderImport();
@@ -335,11 +339,11 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
         }
         return [...merged.values()];
       };
-      const incoming: DeckData = { id: crypto.randomUUID(), name: source.name.trim() || 'Deck importado', format: importFormat, cards: normalize(parsed.main), sideboard: normalize(parsed.sideboard), commanders: normalize(parsed.commanders), importSource: source.text, unresolved: [...resolved.missing, ...resolved.ambiguous.map(a => a.name)], updatedAt: new Date().toISOString() };
-      if (importBracket && importFormat === 'commander') incoming.bracket = importBracket;
+      const incoming: DeckData = { id: crypto.randomUUID(), name: source.name.trim() || 'Deck importado', format: deckFormat, cards: normalize(parsed.main), sideboard: normalize(parsed.sideboard), commanders: normalize(parsed.commanders), importSource: source.text, unresolved: [...resolved.missing, ...resolved.ambiguous.map(a => a.name)], updatedAt: new Date().toISOString() };
+      if (importBracket && deckFormat === 'commander') incoming.bracket = importBracket;
       importReview = { deck: importTarget ? applyToTarget(importTarget, incoming) : incoming, incoming, parsed, missing: resolved.missing, ambiguous: resolved.ambiguous };
       const first = incoming.cards[0], firstType = first ? cacheGet(first.name)?.type_line.split('//')[0] ?? '' : '';
-      importCommanderOffer = importFormat === 'commander' && !incoming.commanders?.length && countEntries(incoming.cards) === 100
+      importCommanderOffer = deckFormat === 'commander' && !incoming.commanders?.length && countEntries(incoming.cards) === 100
         && first?.count === 1 && /Legendary/.test(firstType) && /Creature/.test(firstType) ? first.name : null;
       importAcknowledged = false; validation = null;
     } catch (error) { if (seq === importSeq) importError = `Não foi possível conferir as cartas. Sua lista foi preservada. ${(error as Error).message}`; }
@@ -475,6 +479,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   });
   root.addEventListener('change', e => {
     const input = e.target as HTMLInputElement;
+    if (input.id === 'dwImportFormat') { importFormat = input.value as DeckFormat; if (importError) importError = ''; }
     if (input.id === 'dwFormat' || input.id === 'dwImportFormat') { format = input.value as DeckFormat; opts.onFormatChange?.(format); if (view === 'library') renderLibrary(); else if (view === 'import' && !importReview) preserveRender(renderImport); }
     if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
     if (input.id === 'dwBracket') { const deck = current(), value = Number(input.value); if (deck && !deck.builtin && isBracket(value)) { deck.bracket = value; changed(deck); preserveRender(renderEdit); } }

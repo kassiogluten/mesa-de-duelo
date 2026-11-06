@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.142.2] - 2026-11-06
+
+### Mudou
+
+- **Escolha o formato ao importar um deck.** Importar deck agora começa só com o formato, em "Escolha o formato", em vez de vir preenchido com o filtro de Meus decks. O nome do deck e o campo da lista (ou do link) aparecem depois de escolher, com o botão Continuar (antes, "Revisar importação"), que leva à revisão da lista. Assim o deck não entra sem querer no formato errado.
+
 ## [0.142.1] - 2026-11-06
 
 ### Corrigido

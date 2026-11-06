@@ -1,4 +1,10 @@
 {
+  "0.142.2": {
+    "Escolha o formato ao importar um deck": [
+      { "img": "0.142.2/escolha-o-formato.webp", "legenda": "Importar deck abre só com o campo Formato, em \"Escolha o formato\"; o nome e a lista aparecem depois da escolha." },
+      { "img": "0.142.2/continuar.webp", "legenda": "Com o Commander escolhido, aparecem o nome do deck, a lista de cartas ou o link e o botão Continuar." }
+    ]
+  },
   "0.142.1": {
     "Série escolhida também na pilha": [
       { "img": "0.142.1/pilha-com-serie.webp", "legenda": "Um Lightning Bolt da série 2X2, escolhida no deck, na pilha com a arte dessa série em vez da padrão." }
