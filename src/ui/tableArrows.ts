@@ -1,5 +1,5 @@
-// As setas desenhadas por cima da mesa: as do combate (atacante até quem ele ataca, bloqueador até o atacante) e as de alvo
-// (da carta ou do item da pilha até cada alvo). Medem a mesa já desenhada e só trocam o SVG quando as setas mudam.
+// As setas desenhadas por cima da mesa: as do combate (atacante até quem ele ataca, bloqueador até o atacante), as de alvo
+// (da carta ou do item da pilha até cada alvo) e as das auras que encantam um jogador (da aura até o retrato dele). Medem a mesa já desenhada e só trocam o SVG quando as setas mudam.
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 import { label } from './cardFaces';
@@ -80,9 +80,10 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
 /**
  * Setas de alvo: da carta que alveja até cada carta ou jogador escolhido. Enquanto você escolhe os alvos, a seta
  * sai da carta que está sendo conjurada (azul); depois, de cada item da pilha (dourado se for seu, vermelho se
- * for do oponente). Com um item da pilha em foco, só as setas dele ficam fortes.
+ * for do oponente). Com um item da pilha em foco, só as setas dele ficam fortes. `auras`: auras que encantam um jogador
+ * (maldições e afins) em foco, cada uma com a seta lilás até o retrato de quem ela encanta.
  */
-export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['stack'], stackFocus: number | null) {
+export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['stack'], stackFocus: number | null, auras: number[] = []) {
   const svg = root.querySelector<SVGSVGElement>('#fTargets')!;
   const box = svg.getBoundingClientRect();
   const q = (selector: string) => arrowRect(root, selector);
@@ -109,6 +110,12 @@ export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['st
     const from = q(`.field [data-fid="${tg.source}"]`) ?? q(`#fAction [data-peek="${tg.source}"]`) ?? q(`#fHand [data-fid="${tg.source}"]`);
     add(from, tg, 'choosing');
   }
+  for (const id of auras) {
+    const card = s.players.flatMap(p => p.battlefield).find(c => c.id === id);
+    if (card?.attachedToPlayer === undefined) continue;
+    const from = q(`.field [data-fid="${id}"]`), to = targetRect('p', card.attachedToPlayer);
+    if (from && to) links.push({ from, to, cls: 'aura focused', tag: `Encantado por ${label(card)}` });
+  }
   const paths = links.map(({ from, to, cls, tag }) => {
     const fx = from.left + from.width / 2 - box.left, fy = from.top + from.height / 2 - box.top;
     const ex = to.left + to.width / 2 - box.left, ey = to.top + to.height / 2 - box.top;
@@ -130,7 +137,7 @@ export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['st
   });
   const head = (cls: string) => `<marker id="fTargetHead-${cls}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
     <path class="head ${cls}" d="M0 0 10 5 0 10z" stroke="#120800" stroke-width="1"/></marker>`;
-  const html = paths.length ? `<defs>${['mine', 'theirs', 'choosing'].map(head).join('')}</defs>${paths.join('')}` : '';
+  const html = paths.length ? `<defs>${['mine', 'theirs', 'choosing', 'aura'].map(head).join('')}</defs>${paths.join('')}` : '';
   if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
   root.querySelectorAll('.stack-focus').forEach(el => el.classList.remove('stack-focus'));
   if (focused !== null) root.querySelectorAll(`#fStack [data-stack="${focused}"], #fStackGallery [data-stack="${focused}"]`).forEach(el => el.classList.add('stack-focus'));

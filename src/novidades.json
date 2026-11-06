@@ -1,4 +1,10 @@
 {
+  "0.142.0": {
+    "Maldições mostram quem elas encantam": [
+      { "img": "0.142.0/seta-da-maldicao.webp", "legenda": "Duas maldições no campo, com o selo de quem cada uma encanta (Oponente e você); com o mouse sobre a Maldição do Coração Perfurado, a seta lilás vai até o retrato do Oponente." },
+      { "img": "0.142.0/retrato-encantado.webp", "legenda": "Com o mouse sobre o seu retrato, a seta sai da Maldição da Opulência, a aura que encanta você." }
+    ]
+  },
   "0.141.3": {
     "Partida de verdade na abertura da apresentação": [
       { "img": "0.141.3/mesa-da-abertura.webp", "legenda": "O alto da página /sobre com a partida no 7º turno: Questing Beast com a Sword of Fire and Ice e Nissa de um lado, Sheoldred, Glorybringer e Liliana do outro." }

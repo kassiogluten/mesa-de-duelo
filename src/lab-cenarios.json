@@ -1,5 +1,19 @@
 [
   {
+    "nome": "Maldições mostram quem elas encantam",
+    "versao": "0.142.0",
+    "item": "Maldições mostram quem elas encantam",
+    "conferir": "O Jogador 1 tem na mão duas maldições (Curse of the Pierced Heart e Curse of Opulence) e a Paradox Haze, uma aura de jogador que não é maldição, com três Mountains e três Islands no campo. Conjure a Curse of the Pierced Heart escolhendo o Jogador 2: ela entra no seu campo com o selo do nome do Jogador 2 embaixo; com o mouse sobre ela, uma seta lilás vai até o retrato do Jogador 2, com \"Encantado por\" e o nome da carta. Conjure a Curse of Opulence e a Paradox Haze escolhendo você mesmo: o selo das duas diz \"você\". Passe o mouse no retrato de cada jogador: aparecem as setas das auras que o encantam (as duas suas, no seu). Passe o turno: no começo do turno do Jogador 2, a Curse of the Pierced Heart causa 1 de dano a ele, o que confirma em quem ela está.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Curse of the Pierced Heart", "Curse of Opulence", "Paradox Haze"], "library": ["Mountain", "Island", "Mountain", "Island", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [], "battlefield": [{ "name": "Swamp" }] }
+      ]
+    }
+  },
+  {
     "nome": "Resistência à magia e Indestrutível em planeswalker e artefato",
     "versao": "0.139.1",
     "item": "Resistência à magia nos planeswalkers",

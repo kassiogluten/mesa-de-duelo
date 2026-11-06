@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.142.0] - 2026-11-06
+
+### Novo
+
+- **Maldições mostram quem elas encantam.** As auras que encantam um jogador, como as maldições e a Paradox Haze, ganham um selo embaixo com o nome de quem elas encantam ("você", quando é você). Passe o mouse sobre a aura e uma seta lilás vai dela até o retrato do jogador, com "Encantado por" e o nome da carta; passe o mouse no retrato de um jogador e aparecem as setas de todas as auras que o encantam. Assim não há dúvida mesmo quando dois jogadores têm o mesmo nome. Há um cenário pronto no Laboratório para conferir.
+
 ## [0.141.6] - 2026-11-06
 
 ### Corrigido

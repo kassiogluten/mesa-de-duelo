@@ -142,6 +142,17 @@ test('a battle shows who protects it, with the defense left in the tooltip', () 
   assert.equal(permanentFx(creature({})).seals.some(s => s.kind === 'protector'), false);
 });
 
+test('an aura that enchants a player shows who it enchants, and only then', () => {
+  const names = { 1: 'Ana', 2: 'Bruno' };
+  const curse = { id: 7, name: 'Curse of the Pierced Heart', controller: 1, attachedToPlayer: 2, typeLine: 'Enchantment — Aura Curse' };
+  const seal = permanentFx(curse, { playerName: id => names[id] }).seals.find(s => s.kind === 'enchants');
+  assert.match(seal.html, /Bruno/);
+  assert.match(seal.label, /^Encanta Bruno: /);
+  assert.match(permanentFxHTML(permanentFx(curse, { playerName: id => names[id] })).html, /class="fx-seal enchants"/);
+  const onCreature = { ...curse, attachedToPlayer: undefined, attachedTo: 9, name: 'Pacifism', typeLine: 'Enchantment — Aura' };
+  assert.equal(permanentFx(onCreature).seals.some(s => s.kind === 'enchants'), false);
+});
+
 test('a foretold card explains its foretell cost only in the tooltip', () => {
   const seals = permanentStatus({ id: 5, name: 'Saw It Coming', foretold: true, foretellCost: '{1}{U}' });
   assert.equal(seals.length, 1);

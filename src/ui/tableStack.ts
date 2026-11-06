@@ -1,6 +1,6 @@
 // A pilha na mesa: o painel ao lado (como a apresentação a mostra agora, com o item que está sendo jogado), a galeria
 // em tela cheia e as setas de alvo, com o item sob o mouse ou com o foco em destaque.
-import type { FState } from '../forge/client';
+import type { FCard, FState } from '../forge/client';
 import { label, ptOf } from './cardFaces';
 import { hideCardPreview } from './cardInspector';
 import { stackPresentation } from './stackPresentation';
@@ -66,8 +66,21 @@ export function createTableStack(d: StackDeps) {
 
   /** Item da pilha cujas setas estão em destaque: o que está sob o mouse ou com o foco, ou o que mira a carta ou o jogador apontado. */
   let stackFocus: number | null = null;
-  /** Setas de alvo (tableArrows.ts): da pilha que a mesa mostra agora, com o item em foco em destaque. */
-  const drawTargetArrows = (s: FState) => { const now = d.state(); drawTargets(root, s, now ? stackPresentation(now, d.timeline.current?.event).stack : s.stack, stackFocus); };
+  /** Auras que encantam um jogador em foco: a que está sob o mouse ou com o foco, ou as presas ao jogador apontado. */
+  let auraFocus: number[] = [];
+  /** Setas de alvo (tableArrows.ts): da pilha que a mesa mostra agora, com o item em foco em destaque, e as das auras em foco. */
+  const drawTargetArrows = (s: FState) => { const now = d.state(); drawTargets(root, s, now ? stackPresentation(now, d.timeline.current?.event).stack : s.stack, stackFocus, auraFocus); };
+  function aurasFrom(el: HTMLElement | null): number[] {
+    const s = d.state();
+    if (!el || !s) return [];
+    const onPlayer = (c: FCard) => c.attachedToPlayer !== undefined;
+    const field = s.players.flatMap(p => p.battlefield);
+    const card = el.closest<HTMLElement>('.field [data-fid]');
+    if (card) { const c = field.find(f => f.id === Number(card.dataset.fid)); return c && onPlayer(c) ? [c.id] : []; }
+    const player = el.closest<HTMLElement>('.avatar[data-pid]');
+    if (player) return field.filter(c => c.attachedToPlayer === Number(player.dataset.pid)).map(c => c.id);
+    return [];
+  }
   function focusFrom(el: HTMLElement | null): number | null {
     const s = d.state();
     if (!el || !s?.stack.length) return null;
@@ -79,11 +92,11 @@ export function createTableStack(d: StackDeps) {
     if (player) return s.stack.find(si => si.targets?.players?.includes(Number(player.dataset.pid)))?.id ?? null;
     return null;
   }
-  /** O mouse ou o foco foi para `el`: as setas do item da pilha ligado a ele ficam em destaque. */
+  /** O mouse ou o foco foi para `el`: as setas do item da pilha ligado a ele ficam em destaque, e as das auras ligadas a ele aparecem. */
   function focusOn(el: HTMLElement | null) {
-    const id = focusFrom(el);
-    if (id === stackFocus) return;
-    stackFocus = id;
+    const id = focusFrom(el), auras = aurasFrom(el);
+    if (id === stackFocus && auras.join() === auraFocus.join()) return;
+    stackFocus = id; auraFocus = auras;
     const s = d.state();
     if (s) drawTargetArrows(stateWithFrame(s, d.frame()));
   }

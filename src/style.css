@@ -186,6 +186,9 @@ a { color: var(--gold); }
 .target-arrows .head.mine { fill: var(--gold); }
 .target-arrows .head.theirs { fill: var(--red); }
 .target-arrows .head.choosing { fill: #6cc4ff; }
+/* Aura que encanta um jogador: seta lilás da aura até o retrato dele, ao passar o mouse na aura ou no retrato. */
+.target-arrows .aura { stroke: #c9a2ff; }
+.target-arrows .head.aura { fill: #c9a2ff; }
 @keyframes target-flow { to { stroke-dashoffset: -18; } }
 @media (prefers-reduced-motion: reduce) { .target-arrows .arrow { animation: fade-in 0.25s ease both; } }
 .pt {
@@ -1322,6 +1325,7 @@ button svg { flex-shrink: 0; }
 .target-arrows .target-tag rect { fill: rgba(10, 8, 4, .92); stroke-width: 1.5px; }
 .target-arrows .target-tag.mine rect { stroke: var(--gold); }
 .target-arrows .target-tag.theirs rect { stroke: var(--red); }
+.target-arrows .target-tag.aura rect { stroke: #c9a2ff; }
 .target-arrows .target-tag text { fill: var(--ink); font: 600 12px var(--body); text-anchor: middle; }
 .stack-pile.stack-focus, .stack-layer.stack-focus { outline: 2px solid var(--gold); outline-offset: 2px; }
 /* Prevista (foretell): a etiqueta leva o custo previsto quando quem vê é o dono. */
