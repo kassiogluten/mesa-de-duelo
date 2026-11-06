@@ -1,4 +1,9 @@
 {
+  "0.139.0": {
+    "Bracket abaixo do indicado": [
+      { "img": "0.139.0/bracket-abaixo.webp", "legenda": "No editor, um deck com Armageddon e Rhystic Study no Bracket 2, com o aviso de que as cartas indicam Bracket 4 e o porquê logo abaixo." }
+    ]
+  },
   "0.138.0": {
     "Escolha a série das fichas do seu deck": [
       { "img": "0.138.0/aba-fichas.webp", "legenda": "A aba Fichas do editor: as fichas que as cartas do deck criam, de qual carta cada uma vem e a série de cada uma (o Coelho em Foundations; as outras na Automática)." },

@@ -2,9 +2,9 @@ import lists from '../shared/commander-brackets.json' with { type: 'json' };
 import type { DeckData } from './decks';
 
 /**
- * Bracket do Commander (a faixa de poder oficial). O mínimo sai das cartas, com as listas de
- * shared/commander-brackets.json (update-commander-brackets.py); o resto é intenção de quem montou o deck, que escolhe
- * a partir do mínimo. Tudo local: nada de consultar sites ao abrir a biblioteca ou escolher deck.
+ * Bracket do Commander (a faixa de poder oficial). O indicado sai das cartas, com as listas de
+ * shared/commander-brackets.json (update-commander-brackets.py); o resto é intenção de quem montou o deck, que pode
+ * escolher qualquer um, também abaixo do indicado. Tudo local: nada de consultar sites ao abrir a biblioteca ou escolher deck.
  */
 export type Bracket = 1 | 2 | 3 | 4 | 5;
 export const BRACKETS: readonly Bracket[] = [1, 2, 3, 4, 5];
@@ -66,11 +66,12 @@ export function estimateBracket(deck: Pick<DeckData, 'cards' | 'commanders'>): B
 }
 
 /**
- * Bracket do deck de Commander: o escolhido (ou o padrão, se ninguém escolheu), nunca abaixo do mínimo das cartas.
- * Fora do Commander, não há bracket.
+ * Bracket do deck de Commander: o escolhido, mesmo abaixo do mínimo das cartas; sem escolha, o padrão, nunca abaixo do
+ * mínimo. Fora do Commander, não há bracket.
  */
 export function deckBracket(deck: DeckData): Bracket | undefined {
   if (deck.format !== 'commander') return undefined;
-  const min = estimateBracket(deck).min, chosen = deck.bracket ?? (DEFAULT_BRACKET > min ? DEFAULT_BRACKET : min);
-  return chosen > min ? chosen : min;
+  if (deck.bracket) return deck.bracket;
+  const min = estimateBracket(deck).min;
+  return DEFAULT_BRACKET > min ? DEFAULT_BRACKET : min;
 }

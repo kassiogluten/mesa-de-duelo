@@ -5,7 +5,7 @@ import { DEFAULT_DECKS, hasCommandZone, countEntries, deckEntries, exportDeckLis
 import { type Color } from '../cards';
 import { cacheGet, fetchByNames, fetchPrintings, preloadDeckImages, resolveCardNames, searchCards, translateCards, type ScryCard } from '../scryfall';
 import { missingCardData } from './deckStats';
-import { estimateBracket, isBracket, type Bracket } from '../brackets';
+import { isBracket, type Bracket } from '../brackets';
 import { deckLinkToList, parseDeckLink, type DeckSite } from '../deckLink';
 import { cardCopyLimit, copiesInDeck, type ServerDeckValidation } from './deckRules';
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
@@ -78,7 +78,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let validationSeq = 0;
   let validationError = '';
   let importDraft = { name: '', text: '' };
-  /** Bracket que veio com o deck do link (Archidekt); vale só para Commander e nunca abaixo do mínimo. */
+  /** Bracket que veio com o deck do link (Archidekt); vale só para Commander. */
   let importBracket: Bracket | undefined;
   let importBusy = false;
   let importError = '';
@@ -119,8 +119,6 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     renderStatus(); opts.onChange();
   }
   function changed(deck: DeckData) {
-    // Uma carta que sobe o mínimo leva o bracket escolhido junto.
-    if (deck.bracket && deck.format === 'commander') { const min = estimateBracket(deck).min; if (min > deck.bracket) deck.bracket = min; }
     deck.unresolved = deck.unresolved?.filter(name => deckEntries(deck).some(entry => entry.name === name));
     // A capa escolhida sai junto com a carta do deck principal; a capa volta a ser automática.
     if (deck.cover && !deck.cards.some(entry => entry.name === deck.cover)) delete deck.cover;
@@ -338,7 +336,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
         return [...merged.values()];
       };
       const incoming: DeckData = { id: crypto.randomUUID(), name: source.name.trim() || 'Deck importado', format: importFormat, cards: normalize(parsed.main), sideboard: normalize(parsed.sideboard), commanders: normalize(parsed.commanders), importSource: source.text, unresolved: [...resolved.missing, ...resolved.ambiguous.map(a => a.name)], updatedAt: new Date().toISOString() };
-      if (importBracket && importFormat === 'commander') { const min = estimateBracket(incoming).min; incoming.bracket = importBracket > min ? importBracket : min; }
+      if (importBracket && importFormat === 'commander') incoming.bracket = importBracket;
       importReview = { deck: importTarget ? applyToTarget(importTarget, incoming) : incoming, incoming, parsed, missing: resolved.missing, ambiguous: resolved.ambiguous };
       const first = incoming.cards[0], firstType = first ? cacheGet(first.name)?.type_line.split('//')[0] ?? '' : '';
       importCommanderOffer = importFormat === 'commander' && !incoming.commanders?.length && countEntries(incoming.cards) === 100

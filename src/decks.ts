@@ -56,7 +56,7 @@ export interface DeckData {
   unresolved?: string[];
   /** Soma do preço das cartas em dólar na data registrada (só nos decks prontos). */
   price?: { usd: number; date: string };
-  /** Bracket escolhido para o deck de Commander (nos prontos, conferido à mão); deckBracket o mantém acima do mínimo. */
+  /** Bracket escolhido para o deck de Commander (nos prontos, conferido à mão); pode ficar abaixo do mínimo das cartas. */
   bracket?: Bracket;
   /** Carta do deck principal escolhida como capa; sem ela, ou fora do deck, a capa é automática. Não vale em Commander nem em Oathbreaker. */
   cover?: string;

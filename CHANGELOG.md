@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.139.0] - 2026-11-05
+
+### Mudou
+
+- **Bracket abaixo do indicado.** No editor do deck de Commander, dá para escolher qualquer bracket, também abaixo do que as cartas indicam: o indicado aparece marcado na lista, com o porquê logo abaixo, e um aviso lembra quando o escolhido está abaixo dele. A escolha fica como você deixou, mesmo depois de acrescentar cartas, e é esse bracket que a mesa mostra e usa. O bracket que vem com um deck importado por link também fica como veio.
+
 ## [0.138.0] - 2026-11-05
 
 ### Novo

@@ -302,6 +302,7 @@
 .dw-bracket-why li + li { margin-top: 4px; }
 .dw-bracket-why b { margin-right: 4px; white-space: nowrap; }
 .dw-bracket-info { color: var(--dw-muted); }
+.dw-bracket .dw-bracket-below { color: var(--dw-accent); }
 @media (max-width: 520px) { .dw-commander-zone { padding: 16px; gap: 20px; } .dw-commander-portrait { width: 98px; } .dw-commander h2 { font-size: 19px; } .dw-commander-empty { min-height: 100px; width: 100%; } }
 /* Exportar lista: o texto do deck para copiar ou baixar. */
 .dw-export { width: min(620px, calc(100vw - 32px)); }

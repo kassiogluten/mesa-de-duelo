@@ -39,9 +39,10 @@ test('mass land denial, chained extra turns and combos raise the minimum; tutors
   assert.deepEqual(tutor, { min: 1, reasons: [{ min: 1, text: '1 tutor eficiente: Entomb' }] });
 });
 
-test('the chosen bracket never shows below the minimum; sideboard does not count', () => {
-  const deck = commander(['Armageddon'], { bracket: 2 });
-  assert.equal(deckBracket(deck), 4);
+test('the player may choose below the minimum; without a choice it follows the minimum; sideboard does not count', () => {
+  assert.equal(deckBracket(commander(['Armageddon'], { bracket: 2 })), 2);
+  assert.equal(deckBracket(commander(['Armageddon'], { bracket: 1 })), 1);
+  assert.equal(deckBracket(commander(['Armageddon'])), 4);
   assert.equal(deckBracket(commander([], { sideboard: [{ name: 'Armageddon', count: 1 }] })), 2);
 });
 
