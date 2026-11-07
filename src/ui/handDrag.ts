@@ -5,12 +5,13 @@ export interface HandDragIntent { id: number; gen: number; x: number; y: number 
 export interface DropBounds { left: number; right: number; top: number; bottom: number }
 export const DRAG_THRESHOLD = 9;
 
-/** A drag begins only a currently legal hand or permitted exile play; Forge owns payment and targets. */
+/** A drag begins only a currently legal hand, exile, graveyard or library-top play; Forge owns payment and targets. */
 export function canDragHandCard(state: FState | null | undefined, id: number, gen: number) {
   return !!state && !!state.input.priority && state.input.ok.enabled && state.input.gen === gen && !state.gameOver && !state.question && !state.sideboarding &&
     !state.input.paying && !state.input.targeting && !state.input.suspendCast &&
     (!!state.players.find(p => p.id === state.you)?.hand.some(card => card.id === id) ||
-      (!!state.playableExile?.includes(id) && state.players.some(p => p.exile.some(card => card.id === id && !card.faceDown)))) &&
+      (!!state.playableExile?.includes(id) && state.players.some(p => p.exile.some(card => card.id === id && !card.faceDown))) ||
+      state.players.some(p => p.graveyard.some(card => card.id === id) || p.libraryTop?.id === id)) &&
     (!!state.input.actionable?.includes(id) || !!state.castable?.includes(id));
 }
 export function handDropAction(state: FState | null | undefined, intent: HandDragIntent, x: number, y: number, bounds: DropBounds | null) {

@@ -46,3 +46,18 @@ test('hand fan: playable cards, copies piled together, cards from outside the ha
   assert.match(html, /<div class="hzone">Cemitério<\/div>/);
   assert.equal((hiddenHandHTML({ handCount: 3 }).match(/hidden-card/g) ?? []).length, 3);
 });
+
+test('graveyard and library shelves: cards usable from there sit beside the exile, out of the hand', async () => {
+  const { exileShelfHTML } = await import('../src/ui/zoneView.ts');
+  const s = state({}, { castable: [20, 21, 22], playableExile: [] });
+  s.players[0].graveyard = [{ id: 20, name: 'Faithless Looting' }];
+  s.players[1].graveyard = [{ id: 21, name: 'Lingering Souls' }];
+  s.players[0].libraryTop = { id: 22, name: 'Lightning Bolt' };
+  const html = exileShelfHTML(s, c => `<i>${c.name}</i>`, []);
+  assert.match(html, /shelf-group library" [^>]*><span class="exile-shelf-label">Grimório<\/span>[^]*data-fid="22" data-library-top/);
+  assert.match(html, /shelf-group gy" [^>]*><span class="exile-shelf-label">Cemitério<\/span>/);
+  assert.ok(html.indexOf('Grimório') < html.indexOf('Cemitério'));
+  assert.match(html, /title="Cemitério de Ana">Ana</);
+  assert.doesNotMatch(html, /Exílio/);
+  assert.equal(exileShelfHTML(state(), c => c.name, []), '');
+});

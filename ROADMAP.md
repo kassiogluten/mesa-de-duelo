@@ -519,3 +519,12 @@ A página de apresentação (/sobre) e o Search Console mostram quem chega, mas 
 - [ ] Eventos: clique em Jogar na /sobre, deck escolhido, partida iniciada (contra o computador ou em sala).
 - [ ] Sem guardar nada que identifique o jogador; atualizar a política de privacidade junto.
 - [ ] Um painel simples com os números por semana (na área de admin ou no Grafana).
+
+## 110. Contradição Arcana com o custo reduzido pelo Baral
+
+Conferir se a mesa deixa responder com uma mágica que só fica pagável graças a um redutor de custo. Arcane Denial (Contradição Arcana) custa {1}{U}; com Baral, Chief of Compliance no campo, as mágicas instantâneas custam {1} a menos, e uma Island basta.
+
+- [ ] Montar no Laboratório: Arcane Denial na mão, uma Island e o Baral no campo do jogador, e o oponente conjurando uma mágica.
+- [ ] Conferir se o jogador recebe a prioridade com a mágica do oponente na pilha (e não passa direto).
+- [ ] Conferir se a Contradição Arcana aparece como jogável e se dá para conjurá-la pagando só a Island, anulando a mágica.
+- [ ] Se falhar: achar se o problema está em o servidor não oferecer a jogada (custo reduzido não contado como pagável) ou em pular a prioridade, corrigir e deixar um cenário pronto no Laboratório.

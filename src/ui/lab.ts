@@ -1,5 +1,5 @@
 import { KEYS, loadJSON, saveJSON } from '../storage';
-import type { LabPhase, LabPlayer, LabScenario } from '../forge/client';
+import type { LabExileCard, LabPhase, LabPlayer, LabScenario } from '../forge/client';
 import { autocompleteNames, cardImageUrls, resolveCardNames } from '../scryfall';
 import { esc } from './cardtext';
 import READY from '../lab-cenarios.json';
@@ -41,7 +41,13 @@ const MAX_PER_ZONE = 250;
 
 /** No editor, a permanente tem um id para "presa a" continuar certo quando outras cartas saem ou mudam de lugar. */
 interface Permanent { uid: number; name: string; tapped: boolean; sick: boolean; counters: Record<string, number>; attachedTo: number | null }
-interface Side { life: number; poison: number; hand: string[]; library: string[]; graveyard: string[]; exile: string[]; battlefield: Permanent[] }
+/** No exílio, a carta pode estar em aventura ou prevista: é o que deixa jogá-la de lá. */
+type ExileMode = '' | 'adventure' | 'foretold';
+interface Exiled { name: string; mode: ExileMode }
+const EXILE_MODES: [ExileMode, string][] = [['', 'Só exilada'], ['adventure', 'Em aventura'], ['foretold', 'Prevista']];
+interface Side { life: number; poison: number; hand: string[]; library: string[]; graveyard: string[]; exile: Exiled[]; battlefield: Permanent[] }
+/** O nome de uma carta de qualquer zona fora do campo. */
+const nameOf = (entry: string | Exiled) => typeof entry === 'string' ? entry : entry.name;
 interface Draft { active: 0 | 1; phase: LabPhase; players: [Side, Side] }
 interface Saved { name: string; scenario: LabScenario }
 /** Cenário pronto para conferir à mão uma correção do CHANGELOG (item é o título em negrito, sem o ponto). */
@@ -61,7 +67,8 @@ export function toScenario(d: Draft): LabScenario {
   const where = new Map<number, { player: number; index: number }>();
   d.players.forEach((p, player) => p.battlefield.forEach((c, index) => where.set(c.uid, { player, index })));
   const side = (p: Side): LabPlayer => ({
-    life: p.life, poison: p.poison, hand: [...p.hand], library: [...p.library], graveyard: [...p.graveyard], exile: [...p.exile],
+    life: p.life, poison: p.poison, hand: [...p.hand], library: [...p.library], graveyard: [...p.graveyard],
+    exile: p.exile.map(c => c.mode ? { name: c.name, [c.mode]: true } : c.name),
     battlefield: p.battlefield.map(c => {
       const counters = Object.fromEntries(Object.entries(c.counters).filter(([, n]) => n > 0));
       const to = c.attachedTo === null ? undefined : where.get(c.attachedTo);
@@ -74,13 +81,16 @@ export function toScenario(d: Draft): LabScenario {
 /** O contrário de toScenario, aceitando o que vier de um cenário colado (o servidor confere o resto). */
 export function fromScenario(s: Partial<LabScenario>): Draft {
   const names = (v: unknown) => Array.isArray(v) ? v.filter((n): n is string => typeof n === 'string') : [];
+  const exiled = (v: unknown): Exiled[] => Array.isArray(v) ? v.flatMap((c: string | LabExileCard) =>
+    typeof c === 'string' ? [{ name: c, mode: '' as ExileMode }]
+      : c && typeof c.name === 'string' ? [{ name: c.name, mode: (c.adventure ? 'adventure' : c.foretold ? 'foretold' : '') as ExileMode }] : []) : [];
   const num = (v: unknown, def: number) => typeof v === 'number' && Number.isFinite(v) ? Math.trunc(v) : def;
   const players = Array.isArray(s.players) ? s.players : [];
   const toSide = (p: LabPlayer) => {
     const field = Array.isArray(p?.battlefield) ? p.battlefield.filter(c => c && typeof c.name === 'string') : [];
     return {
       life: num(p?.life, 20), poison: num(p?.poison, 0),
-      hand: names(p?.hand), library: names(p?.library), graveyard: names(p?.graveyard), exile: names(p?.exile),
+      hand: names(p?.hand), library: names(p?.library), graveyard: names(p?.graveyard), exile: exiled(p?.exile),
       battlefield: field.map(c => ({ uid: nextUid++, name: c.name, tapped: !!c.tapped, sick: !!c.sick, counters: { ...(c.counters ?? {}) }, attachedTo: null as number | null })),
       raw: field,
     };
@@ -189,7 +199,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
   function zoneHTML(side: Side, p: number, zone: Zone, title: string, hint: string) {
     const list = zone === 'battlefield'
       ? side.battlefield.map((c, i) => permanentHTML(side, c, i)).join('')
-      : side[zone].map((name, i) => `<li class="lab-card">${art(name)}<div class="lab-card-body"><div class="lab-card-head"><strong>${zone === 'library' ? `<span class="lab-pos">${i + 1}.</span> ` : ''}${esc(name)}</strong>${cardTools(side, zone, i)}</div></div></li>`).join('');
+      : side[zone].map((entry: string | Exiled, i) => `<li class="lab-card" data-index="${i}">${art(nameOf(entry))}<div class="lab-card-body"><div class="lab-card-head"><strong>${zone === 'library' ? `<span class="lab-pos">${i + 1}.</span> ` : ''}${esc(nameOf(entry))}</strong>${cardTools(side, zone, i)}</div>${typeof entry === 'string' ? '' : `<div class="lab-flags"><select class="input-field" data-prop="exile-mode" aria-label="Como ${esc(entry.name)} está no exílio">${EXILE_MODES.map(([mode, label]) => `<option value="${mode}"${entry.mode === mode ? ' selected' : ''}>${label}</option>`).join('')}</select></div>`}</div></li>`).join('');
     const count = zone === 'battlefield' ? side.battlefield.length : side[zone].length;
     return `<section class="lab-zone" data-zone="${zone}"><h3>${title} <span class="lab-count">${count}</span></h3>${hint ? `<p class="lab-hint">${hint}</p>` : ''}
       ${list ? `<ul class="lab-list">${list}</ul>` : ''}
@@ -218,7 +228,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     $<HTMLButtonElement>('[data-lab=host]').textContent = busy ? 'Criando a sala…' : 'Criar sala de teste';
   }
   const changed = () => { persist(); render(); };
-  const cardNames = () => draft.players.flatMap(s => [...s.hand, ...s.library, ...s.graveyard, ...s.exile, ...s.battlefield.map(c => c.name)]);
+  const cardNames = () => draft.players.flatMap(s => [...s.hand, ...s.library, ...s.graveyard, ...s.exile.map(nameOf), ...s.battlefield.map(c => c.name)]);
 
   const sideOf = (el: Element) => Number(el.closest<HTMLElement>('[data-player]')!.dataset.player);
   /** O lado do jogador do elemento; o data-player vem do render, então só falta em HTML que não é da tela. */
@@ -242,6 +252,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     if (!found) { setStatus(`Não encontrei a carta “${name}”. Confira o nome (em inglês ou português).`, true); return; }
     for (let i = 0; i < count; i++) {
       if (zone === 'battlefield') side.battlefield.push({ uid: nextUid++, name: found, tapped: false, sick: false, counters: {}, attachedTo: null });
+      else if (zone === 'exile') side.exile.push({ name: found, mode: '' });
       else side[zone].push(found);
     }
     input.value = '';
@@ -283,6 +294,11 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       const n = Math.trunc(Number(target.value));
       if (Number.isFinite(n)) side[target.dataset.stat as 'life' | 'poison'] = target.dataset.stat === 'poison' ? Math.max(0, Math.min(999, n)) : Math.max(-999999, Math.min(999999, n));
       persist(); return;
+    }
+    if (target.dataset.prop === 'exile-mode') {
+      const entry = side.exile[Number(target.closest<HTMLElement>('[data-index]')?.dataset.index)];
+      if (entry) { entry.mode = target.value as ExileMode; persist(); }
+      return;
     }
     const c = permanentOf(target);
     if (!c) return;

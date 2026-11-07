@@ -9,7 +9,7 @@ const lab = await import('../src/ui/lab.ts');
 const scenario = {
   active: 1, phase: 'combat',
   players: [
-    { life: 7, poison: 2, hand: ['Lightning Bolt'], library: ['Island', 'Forest'], graveyard: [], exile: ['Opt'],
+    { life: 7, poison: 2, hand: ['Lightning Bolt'], library: ['Island', 'Forest'], graveyard: [], exile: ['Opt', { name: 'Bonecrusher Giant', adventure: true }, { name: 'Saw It Coming', foretold: true }],
       battlefield: [{ name: 'Memnarch, the Warden', tapped: true }, { name: 'Bonesplitter', attachedTo: { player: 1, index: 0 } }] },
     { life: 20, poison: 0, hand: [], library: [], graveyard: ['Grizzly Bears'], exile: [],
       battlefield: [{ name: 'Grizzly Bears', sick: true, counters: { P1P1: 2 } }] },

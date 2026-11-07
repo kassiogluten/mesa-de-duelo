@@ -11,7 +11,7 @@ import { sleeveClass } from './sleeves';
 /** Uma posição do leque: a carta, a etiqueta de onde ela vem (vazia na mão) e as cópias empilhadas nela. */
 export type HandFanItem = { c: FCard; tag: string; copies?: number[] };
 
-/** Cartas de fora da mão que dá para usar agora, com a etiqueta de onde vêm; aparecem na ponta da mão. */
+/** Cartas de fora da mão que dá para usar agora, com a etiqueta de onde vêm; aparecem nas prateleiras do grimório e do cemitério. */
 export function outsideHand(s: FState) {
   if (s.question || !s.input.priority || !s.input.ok.enabled || !s.castable?.length) return [];
   const out: { c: FCard; tag: string }[] = [];

@@ -5,7 +5,7 @@ import type { FPlayer, FState } from '../forge/client';
 import { KEYS } from '../storage';
 import { HAND_GROUP_FROM, arrangeHand, groupHand } from './handDrag';
 import { savedHandMode, toggleAuto, toggleShown, type HandMode } from './handMode';
-import { handHTML, hiddenHandHTML, outsideHand, type HandFanItem } from './handView';
+import { handHTML, hiddenHandHTML, type HandFanItem } from './handView';
 import { usable } from './permanentView';
 import { selectedForInput } from './playContext';
 import { suppressOpeningPreview } from './openingPresentation';
@@ -97,8 +97,6 @@ export function createTableHand(d: HandDeps) {
   /** Desenha a mão (a sua, ou as costas para quem assiste). */
   function render(s: FState, me: FPlayer) {
     const match = d.match();
-    // Cartas do cemitério utilizáveis continuam na mão; o exílio tem seu próprio espaço.
-    const extra = outsideHand(s);
     // A mão segue a ordem que o jogador arrumou: a comprada entra no fim e a jogada sai sem mexer no resto.
     match.handOrder = arrangeHand(match.handOrder, me.hand.map(c => c.id));
     const inHand = new Map(me.hand.map(c => [c.id, c]));
@@ -109,7 +107,7 @@ export function createTableHand(d: HandDeps) {
       const c = inHand.get(id)!;
       return c.faceDown || Object.values(c.counters ?? {}).some(Boolean) || selectedForInput(s, id) ? null : `${c.name}|${c.manaCost ?? ''}|${usable(s, id)}`;
     }) : null;
-    const fan: HandFanItem[] = [...(handGroups ?? match.handOrder.map(id => [id])).map(ids => ({ c: inHand.get(ids[0]!)!, tag: '', copies: ids })), ...extra];
+    const fan: HandFanItem[] = [...(handGroups ?? match.handOrder.map(id => [id])).map(ids => ({ c: inHand.get(ids[0]!)!, tag: '', copies: ids }))];
     $('#fHand').classList.toggle('crowded', fan.length > 7);
     syncMode(!!s.watching, s.watching ? me.handCount : me.hand.length);
     const drawsAhead = d.timeline.pendingDraws(s.you) + d.drawing() > 0 && match.handPrimed && !suppressOpeningPreview(s) && d.timeline.history.some(e => e.type === 'turn');
@@ -118,7 +116,7 @@ export function createTableHand(d: HandDeps) {
     d.setHTML($('#fHand'), handHTML(s, fan, { face: c => d.face(c, 'normal'), incoming, playerName: d.playerName }));
     // Quem assiste não vê a mão de ninguém: a de baixo também fica de costas, só com a quantidade.
     if (s.watching) d.setHTML($('#fHand'), hiddenHandHTML(me));
-    match.knownHand = new Set([...match.handOrder, ...extra.map(({ c }) => c.id)].filter(id => !incoming(id) || match.arriving.has(id)));
+    match.knownHand = new Set(match.handOrder.filter(id => !incoming(id) || match.arriving.has(id)));
     placeControls();
     match.handPrimed = true;
   }

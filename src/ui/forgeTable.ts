@@ -59,6 +59,7 @@ import { fitLoneRows, fitRowWidths, layoutExileShelf, layoutCardDecision, layout
 import { drawCombatArrows } from './tableArrows';
 import { applyCombatPose } from './combatPose';
 import { exileShelfHTML } from './zoneView';
+import { outsideHand } from './handView';
 import { passLevelVisible, type ActionView } from './actionPanel';
 import { createAttackChoice } from './attackChoice';
 import { createTableClocks } from './tableClocks';
@@ -258,15 +259,18 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const faces = createCardFaces(root, { cardStyle: () => prefs.cardStyle, sleeve: playerId => client?.state?.players.find(p => p.id === playerId)?.sleeve, rerender: () => renderTable(false) });
   const { image, face } = faces;
 
+  /** As prateleiras do grimório, do cemitério e do exílio ao lado da mão, cada uma com até duas cartas à vista. */
   function renderExileShelf(s: FState) {
-    const cards = exileShelfCards(s);
+    const cards = exileShelfCards(s), outside = outsideHand(s);
+    const top = outside.filter(o => s.players.some(p => p.libraryTop?.id === o.c.id)).length, gy = outside.length - top;
     const shelf = $('#fExileShelf');
     const arena = root.querySelector<HTMLElement>('.forge')!;
-    shelf.hidden = !cards.length;
-    arena.classList.toggle('has-exile-shelf', !!cards.length);
-    arena.style.setProperty('--exile-visible', String(Math.min(2, cards.length)));
-    shelf.classList.toggle('scrolls', cards.length > 2);
-    setHTML(shelf, exileShelfHTML(s, c => face(c, 'normal'), cards));
+    const any = cards.length + outside.length > 0;
+    shelf.hidden = !any;
+    arena.classList.toggle('has-exile-shelf', any);
+    arena.style.setProperty('--exile-visible', String(Math.min(2, cards.length) + Math.min(2, gy) + Math.min(2, top)));
+    arena.style.setProperty('--shelf-groups', String(Number(!!cards.length) + Number(!!gy) + Number(!!top)));
+    setHTML(shelf, exileShelfHTML(s, c => face(c, 'normal'), cards, outside));
   }
 
   // A largura dos selos muda quando a fonte termina de carregar.

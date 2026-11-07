@@ -97,7 +97,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
     <div class="hand-mode" id="fHandMode">
       <button type="button" class="hand-toggle" id="fHandToggle" data-ui="hand-toggle" aria-label="Esconder a mão" title="Esconder a mão"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     </div>
-    <section class="exile-shelf" id="fExileShelf" aria-label="Cartas disponíveis no exílio" hidden></section>
+    <section class="exile-shelf" id="fExileShelf" aria-label="Cartas que dá para jogar do grimório, do cemitério e do exílio" hidden></section>
     <section class="focus-view" id="fFocus" role="dialog" aria-modal="true" aria-labelledby="fFocusTitle" hidden></section>
 
     <aside class="stack-panel" id="fStack" aria-label="Mágicas e habilidades na pilha" hidden></aside>

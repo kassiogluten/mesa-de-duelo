@@ -66,6 +66,13 @@ public class LabTest {
             assertTrue(line + " em:\n" + lab.state, lab.state.lines().anyMatch(line::equals));
     }
 
+    @Test public void exiledCardsCanBeOnAnAdventureOrForetold() {
+        Lab lab = lab("{\"players\": [{\"exile\": [{\"name\": \"Bonecrusher Giant\", \"adventure\": true}, {\"name\": \"Saw It Coming\", \"foretold\": true}, \"Opt\"]}, {}]}");
+        assertTrue(lab.state, lab.state.lines().anyMatch("p0exile=Bonecrusher Giant|OnAdventure;Saw It Coming|Foretold;Opt"::equals));
+        assertRejected("{\"players\": [{\"exile\": [{\"name\": \"Opt\", \"adventure\": true}]}, {}]}", "não tem aventura");
+        assertRejected("{\"players\": [{\"exile\": [{\"name\": \"Opt\", \"foretold\": true}]}, {}]}", "não pode ser prevista");
+    }
+
     @Test public void decksCarryTheScenarioCardsAndFillUpTo60() {
         Lab lab = lab("{\"players\": [{\"hand\": [\"Lightning Bolt\"]}, {}]}");
         assertEquals(60, lab.decks.get(0).getMain().countAll());

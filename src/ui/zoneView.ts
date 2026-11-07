@@ -1,10 +1,11 @@
 // As janelas de zona (cemitério com uma aba por jogador, exílio, zona de comando, mão revelada, cartas iguais agrupadas e
-// o dano de comandante) e a prateleira do exílio ao lado da mão, com as cartas que dá para jogar de lá.
+// o dano de comandante) e as prateleiras ao lado da mão, com as cartas que dá para jogar do grimório, do cemitério e do exílio.
 import type { FCard, FPlayer, FState } from '../forge/client';
 import { esc } from './cardtext';
 import { label } from './cardFaces';
 import { canSelectExileCard, exileShelfCards, selectedForInput } from './playContext';
 import { revealedCards, revealedCountText } from './revealedHand';
+import { outsideHand } from './handView';
 import { canUse, exileCaption, foretoldTag, inspectButton, selectedBadge } from './permanentView';
 import { COUNTER_ICON, inspectIcon } from './icons';
 
@@ -19,9 +20,26 @@ export interface ZoneView {
   buttons(s: FState): string;
 }
 
-/** A prateleira do exílio: as cartas que dá para jogar de lá (ou suspensas), com a etiqueta de cada uma. */
-export function exileShelfHTML(s: FState, face: (c: FCard) => string, cards = exileShelfCards(s)) {
-  return `<span class="exile-shelf-label">Exílio</span><div class="exile-shelf-track" tabindex="0" aria-label="Cartas no exílio. Role para ver todas.">${cards.map(entry => {
+/** Um grupo da prateleira, com o título e a fileira; com mais de duas cartas, a fileira rola. */
+const shelfGroup = (kind: 'library' | 'gy' | 'exile', title: string, items: string[]) =>
+  `<div class="shelf-group ${kind}${items.length > 2 ? ' scrolls' : ''}" style="--group-visible:${Math.min(2, items.length)}"><span class="exile-shelf-label">${title}</span><div class="exile-shelf-track" tabindex="0" aria-label="${title}: cartas que dá para jogar. Role para ver todas.">${items.join('')}</div></div>`;
+
+/** Uma carta de fora da mão que dá para jogar; a de outro jogador leva o nome dele. */
+function outsideCardHTML(s: FState, face: (c: FCard) => string, c: FCard, tag: string, top: boolean) {
+  const owner = s.players.find(p => p.id !== s.you && (top ? p.libraryTop?.id === c.id : p.graveyard.some(g => g.id === c.id)))?.name;
+  return `<div class="exile-slot"><div class="exile-card playable" data-fid="${c.id}"${top ? ' data-library-top' : ''} role="button" tabindex="0" aria-label="${esc(label(c))}, ${esc(tag.charAt(0).toLowerCase() + tag.slice(1))}. Jogar">${face(c)}${owner ? `<div class="zone-tag" title="${esc(tag)}">${esc(owner)}</div>` : ''}<span class="exile-status">Jogar</span>${selectedBadge(s, c)}</div>${inspectButton(c)}</div>`;
+}
+
+/**
+ * As prateleiras ao lado da mão: a do grimório (a carta do topo que dá para jogar, como com Future Sight), a do
+ * cemitério (Flashback e afins) e a do exílio (as cartas que dá para jogar de lá, ou suspensas).
+ */
+export function exileShelfHTML(s: FState, face: (c: FCard) => string, cards = exileShelfCards(s), outside = outsideHand(s)) {
+  const isTop = (c: FCard) => s.players.some(p => p.libraryTop?.id === c.id);
+  const library = outside.filter(o => isTop(o.c)).map(o => outsideCardHTML(s, face, o.c, o.tag, true));
+  const gy = outside.filter(o => !isTop(o.c)).map(o => outsideCardHTML(s, face, o.c, o.tag, false));
+  return (library.length ? shelfGroup('library', 'Grimório', library) : '') + (gy.length ? shelfGroup('gy', 'Cemitério', gy) : '')
+    + (cards.length ? shelfGroup('exile', 'Exílio', cards.map(entry => {
     const { card, suspended, permission, choosing } = entry;
     const { playable, time, status, caption } = exileCaption(s, entry);
     const selecting = canSelectExileCard(s, card.id, s.input.gen);
@@ -30,7 +48,7 @@ export function exileShelfHTML(s: FState, face: (c: FCard) => string, cards = ex
       ${card.foretold ? foretoldTag(card) : ''}
       ${suspended ? `<span class="exile-time" title="${time} ${time === 1 ? 'marcador de tempo' : 'marcadores de tempo'}">${COUNTER_ICON.TIME}<b>${time}</b></span>` : ''}
       <span class="exile-status" title="${esc(status)}">${caption}</span>${selectedBadge(s, card)}</div>${inspectButton(card)}</div>`;
-  }).join('')}</div>`;
+  })) : '');
 }
 
 /** Dano de combate recebido de cada comandante, contra o limite de 21. */

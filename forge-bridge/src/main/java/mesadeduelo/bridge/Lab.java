@@ -72,6 +72,9 @@ final class Lab {
         // O GameState muda o turno sem avisar a vista do jogo, que é o que a mesa recebe.
         game.updateTurnForView();
         game.updatePhaseForView();
+        // A carta prevista vira de face para baixo sem avisar a vista: sem isto, nem o dono a veria como prevista.
+        for (forge.game.player.Player p : game.getPlayers())
+            for (forge.game.card.Card c : p.getCardsIn(forge.game.zone.ZoneType.Exile)) c.updateStateForView();
     }
 
     static Lab parse(JsonElement value) {
@@ -121,6 +124,7 @@ final class Lab {
                     deck.getOrCreate(DeckSection.Main).add(pc);
                     StringBuilder text = new StringBuilder(pc.getName());
                     if ("battlefield".equals(zone)) text.append(battlefield(card, pc, ids, p, i, who));
+                    if ("exile".equals(zone)) text.append(exiled(card, pc, who));
                     texts.add(text.toString());
                 }
                 // Zona vazia também vai: sem a linha, o Forge deixa nela o que já havia (a mão inicial de 7 cartas).
@@ -131,6 +135,19 @@ final class Lab {
             decks.add(deck);
         }
         return new Lab(sb.toString(), List.copyOf(decks));
+    }
+
+    /** No exílio, a carta pode estar em aventura ou prevista: é o que deixa jogá-la de lá. */
+    private static String exiled(JsonObject card, PaperCard pc, String who) {
+        if (bool(card, "adventure")) {
+            if (pc.getRules().getSplitType() != forge.card.CardSplitType.Adventure) throw new IllegalArgumentException(who + ": " + pc.getName() + " não tem aventura.");
+            return "|OnAdventure";
+        }
+        if (bool(card, "foretold")) {
+            if (!pc.getRules().getOracleText().contains("Foretell")) throw new IllegalArgumentException(who + ": " + pc.getName() + " não pode ser prevista.");
+            return "|Foretold";
+        }
+        return "";
     }
 
     private static String battlefield(JsonObject card, PaperCard pc, Map<String, Integer> ids, int player, int index, String who) {

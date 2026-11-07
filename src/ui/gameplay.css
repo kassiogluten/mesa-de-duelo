@@ -1,5 +1,5 @@
 /* The table stays spatial: cards occupy the mat; the stack only opens for pending effects. */
-.forge { --hand-right: 300px; --exile-card-width: calc(var(--hcw) * .85); --exile-width: calc(var(--exile-visible, 1) * var(--exile-card-width) + (var(--exile-visible, 1) - 1) * 12px + 16px); grid-template-columns: minmax(0, 1fr); --ch: clamp(96px, 17vh, 190px); --cw: calc(var(--ch) * .716); --lch: clamp(62px, 9.5vh, 105px); --lcw: calc(var(--lch) * .716); }
+.forge { --hand-right: 300px; --exile-card-width: calc(var(--hcw) * .85); --exile-width: calc(var(--exile-visible, 1) * var(--exile-card-width) + (var(--exile-visible, 1) - var(--shelf-groups, 1)) * 12px + var(--shelf-groups, 1) * 16px + (var(--shelf-groups, 1) - 1) * 14px); grid-template-columns: minmax(0, 1fr); --ch: clamp(96px, 17vh, 190px); --cw: calc(var(--ch) * .716); --lch: clamp(62px, 9.5vh, 105px); --lcw: calc(var(--lch) * .716); }
 .forge .mat { background: radial-gradient(ellipse at 50% 50%, var(--mat-center), var(--mat-mid) 45%, var(--bg-deep) 92%); }
 /* A textura do campo vem do tema (src/temas.css). */
 .forge .mat::before { content: ''; position: absolute; inset: 0; background: var(--mat-textura); }
@@ -92,13 +92,15 @@
    At rest it is a bit smaller than the hand; only what can be played now gets the hand's blue outline, and hover grows it to hand size. */
 .forge.has-exile-shelf .hand { right: calc(var(--hand-right) + var(--exile-width) + 20px); }
 .forge.has-exile-shelf .hand:not(.crowded) .hand-slot + .hand-slot { margin-left: var(--shelf-hand-overlap, calc(var(--hcw) * -.34)); }
-.exile-shelf { position: absolute; right: var(--hand-right); bottom: 10px; z-index: 9; width: var(--exile-width); padding-top: 18px; }
-.exile-shelf-label { position: absolute; left: 8px; top: 1px; color: var(--muted); font: 600 11px var(--body); letter-spacing: .02em; }
+.exile-shelf { position: absolute; right: var(--hand-right); bottom: 10px; z-index: 9; display: flex; gap: 14px; align-items: flex-end; width: var(--exile-width); padding-top: 18px; }
+.shelf-group { position: relative; flex: 0 0 auto; width: calc(var(--group-visible) * var(--exile-card-width) + (var(--group-visible) - 1) * 12px + 16px); }
+.exile-shelf-label { position: absolute; left: 8px; top: -17px; color: var(--muted); font: 600 11px var(--body); letter-spacing: .02em; }
 .exile-shelf-track { display: flex; gap: 12px; margin-top: calc(var(--exile-card-width) * -.26); padding: calc(15px + var(--exile-card-width) * .26) 8px 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--azul-cbd2e1, #cbd2e1) transparent; scroll-padding: 8px; }
 /* Up to two cards fit without scrolling, so the hovered card can grow past the track; when it scrolls, the ends grow inwards. */
-.exile-shelf:not(.scrolls) .exile-shelf-track { overflow: visible; }
-.exile-shelf.scrolls .exile-slot:first-child .exile-card { transform-origin: 0 100%; }
-.exile-shelf.scrolls .exile-slot:last-child .exile-card { transform-origin: 100% 100%; }
+.shelf-group:not(.scrolls) .exile-shelf-track { overflow: visible; }
+.shelf-group.scrolls .exile-slot:first-child .exile-card { transform-origin: 0 100%; }
+.shelf-group.scrolls .exile-slot:last-child .exile-card { transform-origin: 100% 100%; }
+.exile-card .zone-tag { bottom: 30px; max-width: calc(100% - 8px); overflow: hidden; text-overflow: ellipsis; }
 .exile-slot { position: relative; flex: 0 0 var(--exile-card-width); width: var(--exile-card-width); }
 .exile-card { position: relative; width: 100%; aspect-ratio: 488 / 680; --fw: var(--exile-card-width); cursor: zoom-in; transform-origin: 50% 100%; transition: transform 150ms cubic-bezier(.2, 0, 0, 1); }
 .exile-card > .face { outline: 1px solid #e5eaf166; outline-offset: 2px; box-shadow: 0 4px 10px #0007; }
@@ -392,6 +394,7 @@
   .exile-status { font-size: 8px; padding: 2px 1px; }
   .exile-time { font-size: 10px; padding: 2px 4px; }
   .exile-shelf-label { font-size: 10px; }
+  .exile-card .zone-tag { bottom: 16px; padding: 1px 4px; font-size: 8px; }
   .forge .portrait { width: 44px; height: 44px; }
   .forge .avatar-slot.me { left: 8px; }
   .forge .piles.opp { top: 8px; right: 10px; }

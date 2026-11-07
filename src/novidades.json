@@ -1,4 +1,15 @@
 {
+  "0.145.0": {
+    "Cartas em aventura e previstas no exílio do Laboratório": [
+      { "img": "0.145.0/exilio-laboratorio.webp", "legenda": "No editor do Laboratório, o exílio do Jogador 1 com o Bonecrusher Giant em aventura e a Saw It Coming prevista, cada um com a escolha de como está no exílio." }
+    ],
+    "Cenário pronto de Recompra no Laboratório": [
+      { "img": "0.145.0/cenario-recompra.webp", "legenda": "No Laboratório, o cenário pronto de Recompra escolhido, com o que conferir: pagando a recompra, a Whispers of the Muse volta para a mão; sem pagar, vai para o cemitério." }
+    ],
+    "Cartas do cemitério e do grimório em prateleiras próprias": [
+      { "img": "0.145.0/prateleira-cemiterio.webp", "legenda": "Ao lado da mão, as prateleiras Grimório, com o Raio do topo, Cemitério, com Pilhagem Infiel (Recapitular), e Exílio, com o Gigante Esmaga-ossos em aventura." }
+    ]
+  },
   "0.144.0": {
     "Botão Pronto na sala de espera": [
       { "img": "0.144.0/sala-pronto.webp", "legenda": "Na sala de espera, Ana e Caio com ✓ Pronto e o seu lugar pedindo para tocar em Pronto." },

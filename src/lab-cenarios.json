@@ -1,5 +1,36 @@
 [
   {
+    "nome": "Mão, grimório, cemitério e exílio, com Future Sight",
+    "versao": "0.145.0",
+    "item": "Cartas do cemitério e do grimório em prateleiras próprias",
+    "conferir": "O Jogador 1 tem Future Sight, cinco Islands e quatro Mountains no campo; na mão, Opt, Reckless Impulse, Counterspell e uma Island; no cemitério, Think Twice, Faithless Looting e Deep Analysis (todas com Recapitular) e um Grizzly Bears; no exílio, Bonecrusher Giant e Brazen Borrower em aventura, Saw It Coming prevista e um Lightning Bolt só exilado. A mão fica só com as quatro cartas dela. Ao lado, três prateleiras: Grimório, com o Lightning Bolt do topo; Cemitério, com Think Twice, Faithless Looting e Deep Analysis, sem o Grizzly Bears (que não dá para jogar de lá); e Exílio, com Bonecrusher Giant, Brazen Borrower e Saw It Coming, sem o Lightning Bolt exilado (que nada deixa jogar). Com mais de duas cartas, a prateleira rola para o lado. Conjure o Reckless Impulse: as duas cartas do topo vão para o exílio e entram na prateleira Exílio. Jogue uma carta de cada prateleira (toque ou arraste para o campo) e confira que ela sai da prateleira certa: o Bonecrusher Giant entra no campo como criatura, e a Saw It Coming pede o custo previsto.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Opt", "Reckless Impulse", "Counterspell", "Island"], "library": ["Lightning Bolt", "Mountain", "Shock", "Island", "Island", "Island", "Island", "Island"], "graveyard": ["Think Twice", "Faithless Looting", "Deep Analysis", "Grizzly Bears"],
+          "exile": [{ "name": "Bonecrusher Giant", "adventure": true }, { "name": "Brazen Borrower", "adventure": true }, { "name": "Saw It Coming", "foretold": true }, "Lightning Bolt"],
+          "battlefield": [{ "name": "Future Sight" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Recompra: a mágica volta para a mão",
+    "versao": "0.145.0",
+    "item": "Cenário pronto de Recompra no Laboratório",
+    "conferir": "O Jogador 1 tem sete Islands no campo e Whispers of the Muse na mão. Conjure-a: a mesa pergunta se você quer pagar a recompra ({5} a mais). Pague: você compra uma carta e a Whispers of the Muse volta para a sua mão, em vez de ir para o cemitério. Conjure de novo com a Island que sobrou, agora sem pagar a recompra: você compra outra carta e ela vai para o cemitério.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Whispers of the Muse"], "library": ["Island", "Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Várias formas de exílio: do campo, por aura, escondida e do cemitério",
     "versao": "0.142.3",
     "item": "Selo de exílio também para o que as auras e os equipamentos exilam",

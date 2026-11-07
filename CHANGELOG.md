@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.145.0] - 2026-11-06
+
+### Novo
+
+- **Cartas em aventura e previstas no exílio do Laboratório.** No editor do Laboratório, cada carta posta no exílio tem a escolha Só exilada, Em aventura ou Prevista, para a mesa já começar com cartas que dá para jogar do exílio, como uma criatura de aventura ou uma carta de Prever.
+- **Cenário pronto de Recompra no Laboratório.** Em Laboratório › Cenários prontos, uma mesa para conferir a Recompra (buyback): conjurada pagando a recompra, a mágica volta para a mão; sem pagar, vai para o cemitério.
+
+### Mudou
+
+- **Cartas do cemitério e do grimório em prateleiras próprias.** As cartas que dá para jogar do cemitério (Flashback, Recapitular, Escavar e afins) e a do topo do grimório (Future Sight e afins) não entram mais na ponta da mão: ficam nas prateleiras Cemitério e Grimório, no canto, ao lado da do exílio, com o mesmo jeito de jogar (toque ou arraste para o campo). A carta do cemitério ou do grimório de outro jogador leva o nome dele.
+
 ## [0.144.0] - 2026-11-06
 
 ### Novo

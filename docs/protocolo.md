@@ -85,8 +85,16 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `hand` | `string[]` |  |
 | `library` | `string[]` | A primeira é a do topo. |
 | `graveyard` | `string[]` |  |
-| `exile` | `string[]` |  |
+| `exile` | `(string \| LabExileCard)[]` | O nome, ou a carta com o jeito de estar no exílio (em aventura ou prevista), que deixa jogá-la de lá. |
 | `battlefield` | `LabPermanent[]` |  |
+
+## LabExileCard
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `name` | `string` |  |
+| `adventure?` | `boolean` | Em aventura: a mágica de aventura já foi conjurada, e a criatura pode ser conjurada do exílio. |
+| `foretold?` | `boolean` | Prevista (Foretell): pode ser conjurada do exílio pelo custo previsto. |
 
 ## LabPermanent
 

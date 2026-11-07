@@ -38,7 +38,7 @@ for (const s of scenarios) {
       for (const [player, sp, label] of [[me, s.cenario.players[0], 'Jogador 1'], [them, s.cenario.players[1], 'Jogador 2']]) {
         assert.deepEqual(names(player.battlefield), expected(sp.battlefield.map(c => c.name)), `${s.nome}: campo do ${label}`);
         assert.deepEqual(names(player.graveyard), expected(sp.graveyard), `${s.nome}: cemitério do ${label}`);
-        assert.deepEqual(names(player.exile), expected(sp.exile), `${s.nome}: exílio do ${label}`);
+        assert.deepEqual(names(player.exile), expected(sp.exile.map(c => typeof c === 'string' ? c : c.name)), `${s.nome}: exílio do ${label}`);
         assert.equal(player.library, sp.library.length, `${s.nome}: grimório do ${label}`);
         assert.equal(player.life, sp.life, `${s.nome}: vida do ${label}`);
       }

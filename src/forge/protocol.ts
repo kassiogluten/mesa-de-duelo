@@ -40,8 +40,16 @@ export interface LabPlayer {
   /** A primeira é a do topo. */
   library: string[];
   graveyard: string[];
-  exile: string[];
+  /** O nome, ou a carta com o jeito de estar no exílio (em aventura ou prevista), que deixa jogá-la de lá. */
+  exile: (string | LabExileCard)[];
   battlefield: LabPermanent[];
+}
+export interface LabExileCard {
+  name: string;
+  /** Em aventura: a mágica de aventura já foi conjurada, e a criatura pode ser conjurada do exílio. */
+  adventure?: boolean;
+  /** Prevista (Foretell): pode ser conjurada do exílio pelo custo previsto. */
+  foretold?: boolean;
 }
 export interface LabPermanent {
   name: string;
