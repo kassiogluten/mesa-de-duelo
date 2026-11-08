@@ -140,6 +140,13 @@ public class DamageEventsTest {
         JsonObject pacified = StateJson.card(bears.getView(), game);
         assertTrue(flag(pacified, "cantAttack")); assertTrue(flag(pacified, "cantBlock"));
         assertFalse(StateJson.card(knight.getView(), game).has("cantAttack"));
+        Card blade = add(game, "Slither Blade", a), delney = add(game, "Delney, Streetwise Lookout", a), tetsuko = add(game, "Tetsuko Umezawa, Fugitive", b), giant = add(game, "Hill Giant", b);
+        game.getAction().checkStateEffects(true);
+        assertTrue(flag(StateJson.card(blade.getView(), game), "unblockable"));
+        assertTrue("Tetsuko é 1/3: ela mesma não pode ser bloqueada", flag(StateJson.card(tetsuko.getView(), game), "unblockable"));
+        JsonObject limited = StateJson.card(delney.getView(), game);
+        assertFalse("Delney depende do poder de quem bloqueia", limited.has("unblockable")); assertTrue(flag(limited, "blockLimited"));
+        assertFalse(StateJson.card(giant.getView(), game).has("unblockable")); assertFalse(StateJson.card(giant.getView(), game).has("blockLimited"));
         assertEquals("Pay 3 life", PermanentDetails.wardCost("Ward:PayLife<3>"));
         assertEquals("multicolored", PermanentDetails.protectionFrom("Protection:Card.MultiColor:multicolored"));
     }

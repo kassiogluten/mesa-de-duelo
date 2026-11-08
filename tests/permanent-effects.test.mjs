@@ -87,6 +87,19 @@ test('creatures that cannot attack or block show a crossed sword or shield on th
   assert.match(css, /\.fx-corner i\.no-block \{ background-image/);
 });
 
+test('creatures that cannot be blocked show a shield with an exclamation mark on the left edge', () => {
+  const fx = permanentFx(creature({ keywords: ['FLYING'], unblockable: true }));
+  assert.deepEqual(fx.corner, ['flying', 'unblockable']);
+  assert.equal(fx.restricted, 'não pode ser bloqueada');
+  assert.equal(permanentFx(creature({ cantBlock: true, unblockable: true })).restricted, 'não pode bloquear, não pode ser bloqueada');
+  assert.match(css, /\.fx-corner i\.unblockable \{ background-image/);
+  const limited = permanentFx(creature({ blockLimited: true }));
+  assert.deepEqual(limited.corner, ['block-limited'], 'Delney: hollow shield');
+  assert.equal(limited.restricted, 'algumas criaturas não podem bloqueá-la');
+  assert.deepEqual(permanentFx(creature({ unblockable: true, blockLimited: true })).corner, ['unblockable'], 'the full shield wins');
+  assert.match(css, /\.fx-corner i\.block-limited \{ background-image/);
+});
+
 test('engine-only states become small seals with the full sentence in the tooltip', () => {
   const names = { 1: 'Ana', 2: 'Bruno' };
   const fx = permanentFx(creature({ controller: 2, owner: 1, goadedBy: [1], shields: 2, chosen: { types: ['Elf'], colors: ['green'], names: ['Lightning Bolt'], player: 1 } }), { playerName: id => names[id] });

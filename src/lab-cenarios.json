@@ -1,5 +1,20 @@
 [
   {
+    "nome": "Não pode ser bloqueada: Tetsuko, Slither Blade, Splinter, Delney e um Ninja",
+    "versao": "0.151.0",
+    "item": "Ícone de criatura que não pode ser bloqueada",
+    "conferir": "O Jogador 1 tem Tetsuko Umezawa, Fugitive (1/3), Slither Blade (1/2), Splinter, Radical Rat (2/4, Ninja), Delney, Streetwise Lookout (2/2), Mistblade Shinobi (1/1, Ninja) e Grizzly Bears (2/2), com quatro Islands, três Plains e duas Forests; na mão, dois Giant Growth e Swords to Plowshares. O Jogador 2 tem Hill Giant (3/3) e Grizzly Bears. Tetsuko, Slither Blade e Mistblade Shinobi (pela Tetsuko) mostram o escudo dourado com exclamação na borda esquerda; a Delney mostra o escudo vazado, só o contorno, porque só criaturas de poder 3 ou mais não podem bloqueá-la; Splinter e Grizzly Bears, nada. 1) Ative o Splinter ({1}{U}) mirando ele mesmo: o escudo aparece nele até o fim do turno (dá para mirar o Mistblade Shinobi também, que é Ninja). 2) Conjure Giant Growth na Slither Blade: ela continua com o escudo, porque não pode ser bloqueada de qualquer jeito. 3) Conjure o outro Giant Growth na Tetsuko: ela fica 4/6 e o escudo some dela, porque deixa de ter poder ou resistência 1 ou menos; o Mistblade Shinobi continua com o escudo. 4) Conjure Swords to Plowshares na Tetsuko: ela sai do campo e o escudo some do Mistblade Shinobi, mas fica na Slither Blade e no Splinter. Ataque com tudo: o Jogador 2 não consegue bloquear quem tem o escudo cheio, e a Delney só pode ser bloqueada pelo Grizzly Bears dele, não pelo Hill Giant.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Giant Growth", "Giant Growth", "Swords to Plowshares"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Tetsuko Umezawa, Fugitive" }, { "name": "Slither Blade" }, { "name": "Splinter, Radical Rat" }, { "name": "Delney, Streetwise Lookout" }, { "name": "Mistblade Shinobi" }, { "name": "Grizzly Bears" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Forest" }, { "name": "Forest" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Hill Giant" }, { "name": "Grizzly Bears" }, { "name": "Mountain" }] }
+      ]
+    }
+  },
+  {
     "nome": "Leonardo com Corpsejack Menace e Hardened Scales",
     "versao": "0.148.0",
     "item": "Ordem dos efeitos que mudam os marcadores",

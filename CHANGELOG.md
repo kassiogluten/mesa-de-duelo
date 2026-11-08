@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.151.0] - 2026-11-08
+
+### Novo
+
+- **Ícone de criatura que não pode ser bloqueada.** Uma criatura que não pode ser bloqueada mostra um pequeno escudo dourado com uma exclamação na borda esquerda, junto dos ícones de voar e atropelar. Vale tanto para quem já nasce assim (Slither Blade) quanto para quem ganha isso de outra carta (Tetsuko Umezawa) ou de um efeito até o fim do turno (Splinter, Radical Rat). Quando só algumas criaturas não podem bloqueá-la, como com a Delney (criaturas de poder 3 ou mais) ou "exceto por criaturas com voar", o escudo aparece vazado, só com o contorno. Voar, medo, intimidar e travessia não ganham o escudo: a palavra-chave já diz quem pode bloquear.
+
 ## [0.150.0] - 2026-11-08
 
 ### Mudou

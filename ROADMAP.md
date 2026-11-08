@@ -562,3 +562,28 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
 
 - [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
+
+## 115. Efeitos de ninjutsu e sneak
+
+Pedido em 08/11/2026. Ninjutsu (45 cartas no Forge) e sneak (27, das Tartarugas Ninja) trocam um atacante não bloqueado por uma criatura da mão, que entra virada e atacando. Hoje a mesa mostra isso como dois movimentos soltos: o atacante volta para a mão como qualquer devolução e o ninja aparece no campo com o som de "entrar de fininho" (o mesmo do Sneak Attack). Não fica claro que um tomou o lugar do outro, nem contra quem o ninja está atacando. Na mão, o ninjutsu já aparece como opção ("Troque por um atacante não bloqueado seu."); o sneak, que é uma forma de conjurar, ainda não tem um texto próprio.
+
+**Usar.**
+
+- [ ] Depois dos bloqueios, as cartas com ninjutsu ou sneak na mão ganham um brilho discreto quando dá para usar (há um atacante não bloqueado e mana para pagar).
+- [ ] Ao escolher a troca, só os atacantes não bloqueados ficam escolhíveis, com o defensor de cada um à vista.
+- [ ] Sneak com nome e explicação próprios no menu de como conjurar, como o ninjutsu.
+
+**Ver a troca.**
+
+- [ ] Uma fumaça curta no lugar do atacante, que volta para a mão de quem o controla; o ninja surge da mesma fumaça, no mesmo lugar da fila de ataque, já virado e com a seta para o mesmo defensor.
+- [ ] Ninjutsu: a carta vem da mão sem passar pela pilha (é uma habilidade). Sneak: passa pela pilha como mágica e, ao resolver, entra direto na fumaça.
+- [ ] Ninjutsu do comandante: o ninja sai da zona de comando, com o mesmo efeito.
+- [ ] Registro numa linha só ("Ninjutsu: Ninja of the Deep Hours entra atacando no lugar de Slither Blade"), e o mesmo para o sneak.
+- [ ] Quem assiste e o oponente veem o mesmo efeito; respeitar "reduzir movimento" (só uma troca rápida, sem fumaça).
+
+**Conferir.**
+
+- [ ] Cenário no Laboratório com um ninjutsu, um sneak e o Splinter, Radical Rat (gatilho dobrado do ninja).
+- [ ] Item no CHANGELOG e prints em Novidades em imagens.
+
+- [ ] Decidir antes de fazer: o desenho da troca (fumaça, rastro de sombra ou só um deslize entre a mão e o campo); se o brilho na mão aparece sempre ou só quando você para na etapa de bloqueios (hoje a mesa pode passar direto por ela); se o computador também ganha o efeito completo (recomendado, para o jogador entender o que aconteceu).

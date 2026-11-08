@@ -227,6 +227,10 @@ export interface FCard {
   /** Proibida de atacar ou de bloquear por um efeito (não conta enjoo, estar virada nem defensor). */
   cantAttack?: boolean;
   cantBlock?: boolean;
+  /** Não pode ser bloqueada, sem depender de quem bloqueia ("exceto por criaturas com voar" não conta). */
+  unblockable?: boolean;
+  /** Algumas criaturas não podem bloqueá-la, por efeito de uma carta (Delney, "exceto por criaturas com voar"); palavras-chave como voar não contam. */
+  blockLimited?: boolean;
   /** Dano que os escudos de prevenção ainda vão prevenir. */
   preventDamage?: number;
   /** Cartas no exílio que esta permanente exilou com ela (Journey to Nowhere, Oblivion Ring, imprint, Hideaway), por id. */

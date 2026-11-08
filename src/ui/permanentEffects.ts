@@ -12,13 +12,13 @@ export interface PermanentFx {
   frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'defender' | 'token';
   glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'plus' | 'minus';
   base: ('deathtouch' | 'haste' | 'chained')[];
-  /** Detalhes na borda esquerda: asa (voar), olho (vigilância), garra (atropelar), caveira (toque mortífero) e espada/escudo riscados (não pode atacar/bloquear). */
-  corner: ('flying' | 'vigilance' | 'trample' | 'deathtouch' | 'no-attack' | 'no-block')[];
+  /** Detalhes na borda esquerda: asa (voar), olho (vigilância), garra (atropelar), caveira (toque mortífero), escudo com exclamação, cheio ou vazado (não pode ser bloqueada por ninguém ou por algumas criaturas) e espada/escudo riscados (não pode atacar/bloquear). */
+  corner: ('flying' | 'vigilance' | 'trample' | 'deathtouch' | 'unblockable' | 'block-limited' | 'no-attack' | 'no-block')[];
   seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down' | StatusKind; html: string; label: string }[];
   phased: boolean;
   targeted?: 'mine' | 'theirs';
   sick: boolean;
-  /** "não pode atacar", "não pode bloquear" ou os dois. */
+  /** "não pode atacar", "não pode bloquear" ou os dois, e "não pode ser bloqueada" (por ninguém ou por algumas). */
   restricted?: string;
 }
 
@@ -50,6 +50,8 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   if (c.creature && (c.cantAttack || c.cantBlock)) base.push('chained');
   const CORNER = { FLYING: 'flying', VIGILANCE: 'vigilance', TRAMPLE: 'trample', DEATHTOUCH: 'deathtouch' } as const;
   const corner: PermanentFx['corner'] = c.creature ? (Object.keys(CORNER) as (keyof typeof CORNER)[]).filter(has).map(k => CORNER[k]) : [];
+  if (c.creature && c.unblockable) corner.push('unblockable');
+  else if (c.creature && c.blockLimited) corner.push('block-limited');
   if (c.creature && c.cantAttack) corner.push('no-attack');
   if (c.creature && c.cantBlock) corner.push('no-block');
   const seals: PermanentFx['seals'] = [];
@@ -65,7 +67,8 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
     seals.push({ kind: 'face-down', html: kind ? `${kind} 2/2` : '2/2', label: `Virada para baixo${kind ? ` (${kind})` : ''}, 2/2` });
   }
   seals.push(...permanentStatus(c, context.playerName, context.you));
-  const restricted = c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : undefined;
+  const restricted = [c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : '',
+    c.creature && c.unblockable ? 'não pode ser bloqueada' : c.creature && c.blockLimited ? 'algumas criaturas não podem bloqueá-la' : ''].filter(Boolean).join(', ') || undefined;
   return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
 }
 

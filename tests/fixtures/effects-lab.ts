@@ -24,7 +24,7 @@ const KEYWORDS: [string, string][] = [
 ];
 const STATES: [string, string][] = [
   ['tapped', 'Virada'], ['sick', 'Enjoo de invocação'], ['token', 'Ficha'], ['faceDown', 'Virada para baixo'], ['phasedOut', 'Fora de fase'],
-  ['cantAttack', 'Não pode atacar'], ['cantBlock', 'Não pode bloquear'], ['targeted', 'Alvo de algo na pilha'], ['preventDamage', 'Escudo (prevenir 3)'],
+  ['cantAttack', 'Não pode atacar'], ['cantBlock', 'Não pode bloquear'], ['unblockable', 'Não pode ser bloqueada'], ['blockLimited', 'Bloqueio limitado'], ['targeted', 'Alvo de algo na pilha'], ['preventDamage', 'Escudo (prevenir 3)'],
   ['P1P1', 'Marcador +1/+1'], ['M1M1', 'Marcador −1/−1'], ['copyOf', 'Cópia'], ['commander', 'Comandante (selo no dano)'],
 ];
 const TEMPLATES: Record<string, [string, () => Record<string, unknown>]> = {
@@ -691,7 +691,7 @@ function table() {
     const kind = (c: any) => c.faceDown ? 'virada para baixo' : c.planeswalker ? 'planeswalker' : c.creature ? 'criatura' : c.land ? 'terreno' : c.attachedTo ? 'presa' : 'permanente';
     parent.postMessage({ lab: 'board', note, selected: lastAdded, players: players.map(p => ({ id: p.id, name: p.name, life: p.life })),
       cards: all().map((c: any) => ({ id: c.id, name: c.faceDown ? 'Carta virada para baixo' : c.name, side: c.controller === ME ? 'me' : 'opp', kind: kind(c), creature: !!c.creature,
-        keywords: c.keywords ?? [], tapped: !!c.tapped, sick: !!c.sick, token: !!c.token, faceDown: !!c.faceDown, phasedOut: !!c.phasedOut, cantAttack: !!c.cantAttack, cantBlock: !!c.cantBlock,
+        keywords: c.keywords ?? [], tapped: !!c.tapped, sick: !!c.sick, token: !!c.token, faceDown: !!c.faceDown, phasedOut: !!c.phasedOut, cantAttack: !!c.cantAttack, cantBlock: !!c.cantBlock, unblockable: !!c.unblockable, blockLimited: !!c.blockLimited,
         targeted: state.stack.some((s: any) => s.labTarget === c.id), preventDamage: !!c.preventDamage, P1P1: !!c.counters?.P1P1, M1M1: !!c.counters?.M1M1, copyOf: !!c.copyOf, commander: commanderFlag.has(c.id) })) }, '*');
   }
 

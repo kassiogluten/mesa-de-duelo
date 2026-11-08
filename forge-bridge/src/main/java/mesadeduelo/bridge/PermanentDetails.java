@@ -6,6 +6,7 @@ import forge.card.CardTypeView;
 import forge.game.Game;
 import forge.game.StaticEffect;
 import forge.game.card.Card;
+import forge.game.card.CardCollection;
 import forge.game.card.CardView.CardStateView;
 import forge.game.card.CardView;
 import forge.game.combat.CombatUtil;
@@ -14,12 +15,13 @@ import forge.game.keyword.Keyword;
 import forge.game.keyword.KeywordView;
 import forge.game.player.Player;
 import forge.game.staticability.StaticAbility;
+import forge.game.staticability.StaticAbilityMode;
 import forge.game.trigger.Trigger;
 import forge.game.zone.ZoneType;
 
 /**
  * Estados de uma permanente que a mesa desenha como efeito contínuo e que as palavras-chave sozinhas não dizem: o custo
- * da proteção contra alvos (ward), de que a proteção protege, fases fora, "não pode atacar/bloquear" e os escudos de
+ * da proteção contra alvos (ward), de que a proteção protege, fases fora, "não pode atacar/bloquear", "não pode ser bloqueada" (por ninguém ou por algumas) e os escudos de
  * prevenção, além de dono, atiçamento, regeneração e escolhas (em {@link #status}; a devoção é uma das contagens de {@link CardCounts}). Tudo vem do Forge (parâmetro da palavra-chave, regras de combate, escudos), nunca do texto da carta.
  */
 final class PermanentDetails {
@@ -173,7 +175,30 @@ final class PermanentDetails {
             for (Player opponent : gc.getController().getOpponents()) if (CombatUtil.canAttackNextTurn(gc, opponent)) { attack = true; break; }
             if (!attack && !gc.hasKeyword(Keyword.DEFENDER)) o.addProperty("cantAttack", true);
             if (!CombatUtil.canBlock(gc, true)) o.addProperty("cantBlock", true);
+            int unblockable = unblockable(gc);
+            if (unblockable == 2) o.addProperty("unblockable", true);
+            else if (unblockable == 1) o.addProperty("blockLimited", true);
         } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
+    }
+
+    /**
+     * "Não pode ser bloqueada" vinda de uma carta: 2 se ninguém pode bloquear, 1 se só algumas criaturas não podem (Delney,
+     * "exceto por criaturas com voar", "por Paredes", "enquanto o defensor controla..."), 0 se nenhuma. O CombatUtil.canBeBlocked
+     * do Forge sem bloqueador sempre diz que pode, então aqui se olha a habilidade direto. As que vêm de palavra-chave (voar,
+     * medo, intimidar, travessia, sombra, proteção) ficam de fora: a palavra-chave já diz.
+     */
+    static int unblockable(Card attacker) {
+        CardCollection sources = new CardCollection(attacker);
+        sources.addAll(attacker.getGame().getCardsIn(ZoneType.STATIC_ABILITIES_SOURCE_ZONES));
+        int found = 0;
+        for (Card source : sources)
+            for (StaticAbility st : source.getStaticAbilities()) {
+                if (st.getKeyword() != null || !st.checkConditions(StaticAbilityMode.CantBlockBy) || !st.matchesValidParam("ValidAttacker", attacker)) continue;
+                if (!st.hasParam("ValidBlocker") && !st.hasParam("ValidBlockerRelative") && !st.hasParam("ValidAttackerRelative")
+                        && !st.hasParam("ValidDefender")) return 2;
+                found = 1;
+            }
+        return found;
     }
 
     /** "Ward:2" → "{2}"; outros custos ("Ward:PayLife<3>") como o Forge os descreve. */

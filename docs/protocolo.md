@@ -295,6 +295,8 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `phasedOut?` | `boolean` | Fora de fase (phasing): continua no campo, mas como se não existisse. |
 | `cantAttack?` | `boolean` | Proibida de atacar ou de bloquear por um efeito (não conta enjoo, estar virada nem defensor). |
 | `cantBlock?` | `boolean` |  |
+| `unblockable?` | `boolean` | Não pode ser bloqueada, sem depender de quem bloqueia ("exceto por criaturas com voar" não conta). |
+| `blockLimited?` | `boolean` | Algumas criaturas não podem bloqueá-la, por efeito de uma carta (Delney, "exceto por criaturas com voar"); palavras-chave como voar não contam. |
 | `preventDamage?` | `number` | Dano que os escudos de prevenção ainda vão prevenir. |
 | `exiling?` | `number[]` | Cartas no exílio que esta permanente exilou com ela (Journey to Nowhere, Oblivion Ring, imprint, Hideaway), por id. |
 | `attachedTo?` | `number` | Id da carta a que esta aura ou equipamento está preso. |
