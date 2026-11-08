@@ -6,11 +6,12 @@ import { turnTimeText } from './clock';
  * jogador (prioridade, ataque, bloqueio, escolha), medido pela ponte. Zera a cada resposta e quando o turno passa,
  * e o alerta vai para quem precisa agir. A IA nunca entra: a ponte só lista jogadores humanos.
  *
- * Etapas: 1 (2 min) o relógio de espera aparece em âmbar; 2 (3 min) pulsa de leve e quem demora recebe um aviso
- * próprio, com um som curto; 3 (5 min) o retrato e o campo de quem demora ganham "Demorando…" para todos.
+ * Etapas: 1 (1 min) o relógio de espera aparece em âmbar; 2 (1 min 30 s) pulsa de leve e quem demora recebe um aviso
+ * próprio, com um som curto; 3 (2 min) o retrato e o campo de quem demora ganham "Demorando…" para todos, e numa sala
+ * os outros podem votar para pular a vez dessa pessoa (SkipVoteController.SLOW_MS, na ponte, usa os mesmos 2 min).
  */
 export type WaitStage = 0 | 1 | 2 | 3;
-export const WAIT_STAGE_MS = [0, 2 * 60_000, 3 * 60_000, 5 * 60_000] as const;
+export const WAIT_STAGE_MS = [0, 60_000, 90_000, 120_000] as const;
 /** Diferença de relógio que conta como uma espera nova (o atraso da rede fica abaixo disso). */
 const RESYNC_MS = 2000;
 
@@ -66,20 +67,20 @@ export function waitClockTip(w: SlowWait): string {
   return `A mesa espera ${w.mine ? 'você' : w.name} há ${turnTimeText(w.ms)}`;
 }
 
-/** Aviso discreto para quem está demorando, a partir de 3 min. */
+/** Aviso para quem está demorando, a partir de 1 min 30 s. */
 export function waitNudgeText(w: SlowWait | null): string {
   if (!w?.mine || w.stage < 2) return '';
-  return `Sua vez já passa de ${w.stage >= 3 ? 5 : 3} min`;
+  return w.stage >= 3 ? 'Sua vez já passa de 2 min: a mesa pode votar para pulá-la' : 'Sua vez já passa de 1 min 30 s';
 }
 
 /** Frase do leitor de tela para cada etapa. */
 export function waitAnnouncement(w: SlowWait): string {
-  if (w.mine) return w.stage === 1 ? 'A mesa espera você há 2 minutos.'
-    : w.stage === 2 ? 'Sua vez já passa de 3 minutos.'
-    : w.stage === 3 ? 'Sua vez já passa de 5 minutos. Todos veem que você está demorando.' : '';
-  return w.stage === 1 ? `A mesa espera ${w.name} há 2 minutos.`
-    : w.stage === 2 ? `A mesa espera ${w.name} há 3 minutos.`
-    : w.stage === 3 ? `${w.name} está demorando: a mesa espera há 5 minutos.` : '';
+  if (w.mine) return w.stage === 1 ? 'A mesa espera você há 1 minuto.'
+    : w.stage === 2 ? 'Sua vez já passa de 1 minuto e meio.'
+    : w.stage === 3 ? 'Sua vez já passa de 2 minutos. Todos veem que você está demorando e podem votar para pular a sua vez.' : '';
+  return w.stage === 1 ? `A mesa espera ${w.name} há 1 minuto.`
+    : w.stage === 2 ? `A mesa espera ${w.name} há 1 minuto e meio.`
+    : w.stage === 3 ? `${w.name} está demorando: a mesa espera há 2 minutos.` : '';
 }
 
 /**
@@ -97,8 +98,8 @@ export class WaitAnnouncer {
     if (!w || w.stage <= this.stage) return null;
     const from = this.stage;
     this.stage = w.stage;
-    // O som toca só para quem demora, ao chegar aos 3 min (não ao abrir a mesa já nos 5).
-    return { stage: w.stage, text: waitAnnouncement(w), sound: w.mine && w.stage === 2 && from < 2 };
+    // O som toca só para quem demora: ao chegar a 1 min 30 s e de novo aos 2 min (não ao abrir a mesa já nos 2 min).
+    return { stage: w.stage, text: waitAnnouncement(w), sound: w.mine && ((w.stage === 2 && from < 2) || (w.stage === 3 && from === 2)) };
   }
 
   reset() { this.key = ''; this.stage = 0; }

@@ -159,6 +159,16 @@ final class Seat {
         }
     }
 
+    /** O pedido que a mesa espera deste assento agora (uma pergunta ou o input do Forge), ou null. */
+    Object pending() {
+        QuestionBroker.Question q = question;
+        if (q != null) return q;
+        return controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
+    }
+
+    /** Há quanto tempo a mesa espera este assento decidir (0 se não espera nada). */
+    long waitedNow(long now) { return waited(pending(), now); }
+
     boolean eliminated() { return session.config.commandZone() && me != null && me.getHasLost(); }
 
     boolean livePriority() {

@@ -477,6 +477,8 @@ Mensagens prontas do lobby; a ponte recusa qualquer outra.
 
 ## FSkipVote
 
+`slow`: a votação é para pular a vez de quem está demorando (conectado), não o turno de quem caiu.
+
 | Campo | Tipo | O que é |
 |---|---|---|
 | `target` | `number` |  |
@@ -487,13 +489,17 @@ Mensagens prontas do lobby; a ponte recusa qualquer outra.
 | `needed` | `number` |  |
 | `canVote` | `boolean` |  |
 | `mine?` | `'yes' \| 'no'` |  |
+| `slow?` | `boolean` |  |
 
 ## FSkip
+
+`slow`: jogadores conectados que a mesa espera há mais de 2 minutos (dá para votar para pular a vez deles).
 
 | Campo | Tipo | O que é |
 |---|---|---|
 | `vote?` | `FSkipVote` |  |
 | `skipping` | `number[]` |  |
+| `slow?` | `number[]` |  |
 
 ## FUndoStep
 

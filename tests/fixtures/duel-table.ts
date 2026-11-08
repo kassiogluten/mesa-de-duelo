@@ -104,11 +104,13 @@ Object.assign(window, { fixture: { state, client, view, messages, feedbackReques
   /**
    * Alerta de espera demorada: a mesa espera `player` há `ms` (como a ponte manda em `waiting`). O oponente vira uma
    * pessoa (Ana), já que a IA nunca recebe o alerta. Um estado novo, como chegaria da ponte, para o relógio ressincronizar.
+   * Com 2 min ou mais de espera de outro jogador, a ponte o lista em `skip.slow` (dá para votar para pular a vez).
    */
   wait(player: number, ms: number, kind = 'priority') {
     Object.assign(state.players[1], { ai: false, name: 'Ana' });
-    state.room.players[1].name = 'Ana';
-    (client as any).state = { ...state, activePlayer: 10, waiting: [{ player, kind, ms }] };
+    Object.assign(state.room.players[1], { name: 'Ana', playerId: 23 });
+    const skip = player !== state.you && ms >= 120_000 ? { skipping: [], slow: [player] } : undefined;
+    (client as any).state = { ...state, activePlayer: 10, waiting: [{ player, kind, ms }], skip };
     view.render();
   },
   proliferate() {

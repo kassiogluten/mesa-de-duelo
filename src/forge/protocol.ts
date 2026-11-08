@@ -399,8 +399,10 @@ export interface FRoom {
 /** Mensagens prontas do lobby; a ponte recusa qualquer outra. */
 export type RoomSaying = 'hello' | 'back' | 'invite' | 'glhf';
 
-export interface FSkipVote { target: number; name: string; yes: number; no: number; voters: number; needed: number; canVote: boolean; mine?: 'yes' | 'no' }
-export interface FSkip { vote?: FSkipVote; skipping: number[] }
+/** `slow`: a votação é para pular a vez de quem está demorando (conectado), não o turno de quem caiu. */
+export interface FSkipVote { target: number; name: string; yes: number; no: number; voters: number; needed: number; canVote: boolean; mine?: 'yes' | 'no'; slow?: boolean }
+/** `slow`: jogadores conectados que a mesa espera há mais de 2 minutos (dá para votar para pular a vez deles). */
+export interface FSkip { vote?: FSkipVote; skipping: number[]; slow?: number[] }
 
 /** Uma decisão que dá para desfazer: o que o jogador fez e quando; text é a frase pronta ("jogar Floresta"). */
 export interface FUndoStep { action: 'pass' | 'land' | 'cast' | 'ability'; card?: string; turn: number; phase?: string; text: string }

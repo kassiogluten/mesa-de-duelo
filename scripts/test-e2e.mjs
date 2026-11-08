@@ -23,7 +23,7 @@ const forgeDir = process.env.FORGE_DIR ?? join(homedir(), 'forge');
 const log = [];
 const server = spawn('mvn', ['-o', '-q', '-B', `-Dforge.dir=${forgeDir}`, 'compile', 'exec:java', `-Dexec.args=--port=${port}`], {
   cwd: 'forge-bridge', shell: windows,
-  env: { ...process.env, ...(javaHome ? { JAVA_HOME: javaHome } : {}), MAVEN_OPTS: process.env.MAVEN_OPTS ?? '-Xmx2g' },
+  env: { ...process.env, ...(javaHome ? { JAVA_HOME: javaHome } : {}), MAVEN_OPTS: process.env.MAVEN_OPTS ?? '-Xmx2g', MESA_SLOW_MS: '4000' },
 });
 server.stdout.on('data', d => log.push(String(d))); server.stderr.on('data', d => log.push(String(d)));
 const stop = () => {

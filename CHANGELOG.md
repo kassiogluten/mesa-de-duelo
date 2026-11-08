@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.147.0] - 2026-11-07
+
+### Novo
+
+- **Votar para pular a vez de quem está demorando.** Numa sala, quando a mesa espera a decisão de alguém há mais de 2 minutos, os outros jogadores veem a faixa "Ana está demorando." com o botão Votar para pular a vez. Aprovada pela maioria de quem está online, a mesa passa a vez no lugar dessa pessoa até o fim daquele turno, sem jogar nada; se ela decidir antes, a votação acaba. Quem está demorando vê a votação e o aviso de que a mesa está passando a sua vez. Contra o computador, nada muda.
+
+### Mudou
+
+- **Alerta de demora mais cedo.** O relógio de espera aparece com 1 minuto (antes, 2), o aviso para quem está demorando chega com 1 minuto e meio (antes, 3), com som, e o selo Demorando… aparece para todos com 2 minutos (antes, 5), quando o som toca de novo e o aviso lembra que a mesa pode votar para pular a vez.
+
 ## [0.146.0] - 2026-11-07
 
 ### Novo

@@ -1,8 +1,10 @@
 package mesadeduelo.bridge;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.JsonArray;
@@ -22,8 +24,8 @@ import forge.interfaces.IGameController;
 import forge.player.PlayerControllerHuman;
 
 /**
- * Pular o turno de quem caiu numa sala em rede: a votação ({type:"skip-vote"}), os assentos aprovados e o piloto
- * automático que passa a vez por eles. Tudo sob o lock {@link #approved}; ordem dos locks: Rooms → Session → este.
+ * Pular o turno de quem caiu numa sala em rede, ou a vez de quem a mesa espera há mais de 2 minutos: a votação
+ * ({type:"skip-vote"}), os assentos aprovados e o piloto automático que passa a vez por eles. Tudo sob o lock {@link #approved}; ordem dos locks: Rooms → Session → este.
  */
 final class SkipVoteController {
     private final Session session;
@@ -32,6 +34,20 @@ final class SkipVoteController {
     private final Set<Integer> approved = new HashSet<>();
     /** Assentos aprovados cujo turno já começou: quando o turno passar para outro, a aprovação acaba. */
     private final Set<Integer> turnStarted = new HashSet<>();
+    /**
+     * Quanto a mesa espera uma decisão antes de dar para votar para pular a vez de quem demora: os 2 min do "Demorando…"
+     * da mesa (waitAlert.ts). MESA_SLOW_MS muda o prazo, só para os testes de partida não esperarem 2 min.
+     */
+    static final long SLOW_MS = slowMs();
+
+    private static long slowMs() {
+        try { String v = System.getenv("MESA_SLOW_MS"); return v == null || v.isBlank() ? 120_000 : Long.parseLong(v.trim()); }
+        catch (NumberFormatException e) { return 120_000; }
+    }
+    /** Aprovados por demora (conectados): a vez é pulada só até o fim do turno em que a votação passou, guardado aqui. */
+    private final Map<Integer, Integer> slowUntilTurn = new HashMap<>();
+    /** Quem já passou de {@link #SLOW_MS}, para publicar o estado quando alguém entra ou sai da lista. */
+    private Set<Integer> slowSeats = Set.of();
 
     SkipVoteController(Session session) { this.session = session; }
 
@@ -45,6 +61,17 @@ final class SkipVoteController {
         return voters;
     }
 
+    /** Conectado, ainda no jogo, e a mesa espera a decisão dele há mais de {@link #SLOW_MS}. */
+    private static boolean slow(Seat seat, long now) {
+        return seat.channel != null && seat.me != null && !seat.eliminated() && seat.waitedNow(now) >= SLOW_MS;
+    }
+
+    /** Dá para votar contra este assento pelo motivo da votação: caiu (desconectado) ou está demorando. */
+    private static boolean eligible(Seat target, boolean slow, long now) {
+        if (target.eliminated() || target.departed) return false;
+        return slow ? slow(target, now) : target.channel == null;
+    }
+
     private Seat seatOfPlayer(int playerId) {
         for (Seat each : session.seats) if (each.me != null && each.me.getId() == playerId) return each;
         return null;
@@ -55,8 +82,10 @@ final class SkipVoteController {
         if (!session.isRoom() || !session.started() || !"playing".equals(session.matchPhase) || voter.channel == null || voter.eliminated()) return;
         if (!msg.has("target")) return;
         Seat target = seatOfPlayer(ClientActions.exactInt(msg.get("target")));
-        if (target == null || target == voter || target.channel != null || target.eliminated() || target.departed) {
-            voter.send(Session.toast("error", "Só dá para votar para pular o turno de um jogador desconectado.")); return;
+        long now = System.currentTimeMillis();
+        boolean slow = target != null && target.channel != null;
+        if (target == null || target == voter || !eligible(target, slow, now)) {
+            voter.send(Session.toast("error", "Só dá para votar para pular a vez de quem caiu ou de quem a mesa espera há mais de 2 minutos.")); return;
         }
         boolean value = !msg.has("value") || msg.get("value").getAsBoolean();
         synchronized (approved) {
@@ -65,10 +94,11 @@ final class SkipVoteController {
                 voter.send(Session.toast("error", "Já há uma votação aberta. Espere ela terminar.")); return;
             }
             boolean opened = vote == null;
-            if (opened) vote = new SkipVote(target.index);
+            if (opened) vote = new SkipVote(target.index, slow);
             vote.vote(voter.index, value);
-            if (opened) for (Seat each : session.seats) if (each != voter && each != target)
-                each.send(Session.toast("toast", voter.name + " abriu uma votação para pular o turno de " + target.name + "."));
+            if (opened) for (Seat each : session.seats) if (each != voter)
+                each.send(Session.toast("toast", each == target ? voter.name + " abriu uma votação para pular a sua vez: a mesa espera você há mais de 2 minutos."
+                    : voter.name + " abriu uma votação para pular " + (slow ? "a vez" : "o turno") + " de " + target.name + "."));
             settle();
         }
         session.markDirty();
@@ -78,21 +108,36 @@ final class SkipVoteController {
     private void settle() {
         if (vote == null) return;
         Seat target = session.seats[vote.target];
-        if (target.channel != null) { vote = null; return; }
+        boolean slow = vote.slow;
+        // Quem voltou (ou, demorando, decidiu) derruba a votação.
+        if (!eligible(target, slow, System.currentTimeMillis())) {
+            vote = null;
+            if (slow && !target.eliminated()) session.broadcast(Session.toast("toast", target.name + " jogou, e a votação para pular a vez foi encerrada."));
+            return;
+        }
         SkipVote.Result r = vote.result(voters(vote.target));
         if (r == SkipVote.Result.OPEN) return;
         vote = null;
         if (r == SkipVote.Result.APPROVED) {
             approved.add(target.index);
-            session.broadcast(Session.toast("toast", "Aprovado: o turno de " + target.name + " será pulado."));
-        } else session.broadcast(Session.toast("toast", "A votação para pular o turno de " + target.name + " não passou."));
+            if (slow) {
+                HostedMatch m = session.match;
+                GameView gv = m == null ? null : m.getGameView();
+                slowUntilTurn.put(target.index, gv == null ? -1 : gv.getTurn());
+                session.broadcast(Session.toast("toast", "Aprovado: a mesa passa a vez de " + target.name + " até o fim deste turno."));
+            } else session.broadcast(Session.toast("toast", "Aprovado: o turno de " + target.name + " será pulado."));
+        } else session.broadcast(Session.toast("toast", "A votação para pular " + (slow ? "a vez" : "o turno") + " de " + target.name + " não passou."));
     }
 
     /** A cada tick: quem voltou cancela tudo; quem foi aprovado tem o turno passado pela ponte. */
     void tick() {
         if (!session.isRoom()) return;
         boolean changed = false;
+        long now = System.currentTimeMillis();
+        Set<Integer> slowNow = new HashSet<>();
+        if (session.started() && "playing".equals(session.matchPhase)) for (Seat each : session.seats) if (slow(each, now)) slowNow.add(each.index);
         synchronized (approved) {
+            if (!slowNow.equals(slowSeats)) { slowSeats = Set.copyOf(slowNow); changed = true; }
             if (vote != null) {
                 SkipVote before = vote;
                 settle();
@@ -104,7 +149,20 @@ final class SkipVoteController {
             PlayerView active = gv == null ? null : gv.getPlayerTurn();
             for (Integer index : List.copyOf(approved)) {
                 Seat seat = session.seats[index];
-                boolean back = seat.channel != null, gone = seat.eliminated() || gv == null || gv.isGameOver();
+                boolean gone = seat.eliminated() || gv == null || gv.isGameOver();
+                Integer slowTurn = slowUntilTurn.get(index);
+                if (slowTurn != null) {
+                    // Demorando: a mesa passa a vez até o turno da votação acabar, mesmo com a pessoa conectada.
+                    boolean over = gv != null && gv.getTurn() != slowTurn;
+                    if (gone || over) {
+                        approved.remove(index); slowUntilTurn.remove(index); changed = true;
+                        if (over && !gone) session.broadcast(Session.toast("toast", seat.name + " volta a jogar normalmente."));
+                        continue;
+                    }
+                    autopilot(seat);
+                    continue;
+                }
+                boolean back = seat.channel != null;
                 boolean theirTurn = active != null && seat.me != null && active.getId() == seat.me.getId();
                 if (theirTurn) turnStarted.add(index);
                 boolean turnOver = turnStarted.contains(index) && !theirTurn;
@@ -149,7 +207,7 @@ final class SkipVoteController {
     JsonObject json(Seat seat) {
         if (!session.isRoom()) return null;
         synchronized (approved) {
-            if (vote == null && approved.isEmpty()) return null;
+            if (vote == null && approved.isEmpty() && slowSeats.isEmpty()) return null;
             JsonObject o = new JsonObject();
             if (vote != null) {
                 Seat target = session.seats[vote.target];
@@ -157,6 +215,7 @@ final class SkipVoteController {
                 JsonObject v = new JsonObject();
                 if (target.me != null) v.addProperty("target", target.me.getId());
                 v.addProperty("name", target.name);
+                if (vote.slow) v.addProperty("slow", true);
                 v.addProperty("yes", vote.yes.size());
                 v.addProperty("no", vote.no.size());
                 v.addProperty("voters", voters.size());
@@ -169,6 +228,9 @@ final class SkipVoteController {
             JsonArray skipping = new JsonArray();
             for (Integer index : approved) if (session.seats[index].me != null) skipping.add(session.seats[index].me.getId());
             o.add("skipping", skipping);
+            JsonArray slowList = new JsonArray();
+            for (Integer index : slowSeats) if (session.seats[index].me != null && !approved.contains(index)) slowList.add(session.seats[index].me.getId());
+            if (!slowList.isEmpty()) o.add("slow", slowList);
             return o;
         }
     }

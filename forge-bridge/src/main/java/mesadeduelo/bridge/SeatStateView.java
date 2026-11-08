@@ -221,12 +221,11 @@ final class SeatStateView {
         long now = System.currentTimeMillis();
         for (Seat seat : session.seats) {
             if (seat.me == null || seat.eliminated()) continue;
-            QuestionBroker.Question q = seat.question;
-            Object in = seat.controller() instanceof PlayerControllerHuman human ? human.getInputQueue().getInput() : null;
-            Object pending = q != null ? q : in;
+            Object pending = seat.pending();
             long ms = seat.waited(pending, now);
             if (pending == null) continue;
-            String kind = q != null ? "choice" : in instanceof InputPassPriority ? "priority"
+            Object in = pending instanceof QuestionBroker.Question ? null : pending;
+            String kind = in == null ? "choice" : in instanceof InputPassPriority ? "priority"
                 : in instanceof InputAttack ? "attack" : in instanceof InputBlock ? "block" : "choice";
             JsonObject entry = new JsonObject();
             entry.addProperty("player", seat.me.getId()); entry.addProperty("kind", kind); entry.addProperty("ms", ms);

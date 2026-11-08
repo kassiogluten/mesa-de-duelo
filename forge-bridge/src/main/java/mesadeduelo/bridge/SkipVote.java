@@ -4,17 +4,19 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Votação para pular o turno de um jogador que caiu numa sala. Só votam os jogadores conectados (menos o
+ * Votação para pular o turno de um jogador que caiu numa sala, ou a vez de quem a mesa espera há tempo demais. Só votam os jogadores conectados (menos o
  * próprio alvo); passa com a maioria deles e cai quando a maioria já não é mais possível.
  */
 final class SkipVote {
     enum Result { OPEN, APPROVED, REJECTED }
 
-    /** Assento do jogador desconectado. */
+    /** Assento do jogador desconectado (ou demorando). */
     final int target;
+    /** O alvo está conectado, mas a mesa o espera há mais de {@link SkipVoteController#SLOW_MS}. */
+    final boolean slow;
     final Set<Integer> yes = new LinkedHashSet<>(), no = new LinkedHashSet<>();
 
-    SkipVote(int target) { this.target = target; }
+    SkipVote(int target, boolean slow) { this.target = target; this.slow = slow; }
 
     /** Mais da metade dos que podem votar. */
     static int needed(int voters) { return voters / 2 + 1; }

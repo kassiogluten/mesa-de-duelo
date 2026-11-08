@@ -34,8 +34,10 @@ export function voteDialog(s: VoteState): VoteDialog | null {
     key: `skip:${v.target}`, kind: 'skip',
     html: `<section class="vote-dialog" role="alertdialog" aria-modal="true" aria-labelledby="fVoteTitle" aria-describedby="fVoteText">
       <p class="vote-kicker">Votação</p>
-      <h2 id="fVoteTitle">Pular o turno de ${esc(v.name)}?</h2>
-      <p class="vote-help" id="fVoteText">${esc(v.name)} caiu e a partida está esperando. Com o turno pulado, a mesa passa a vez no lugar dessa pessoa, sem jogar nada. Precisa de ${v.needed} ${v.needed === 1 ? 'voto' : 'votos'} entre ${v.voters} online.</p>
+      <h2 id="fVoteTitle">Pular ${v.slow ? 'a vez' : 'o turno'} de ${esc(v.name)}?</h2>
+      <p class="vote-help" id="fVoteText">${v.slow
+        ? `${esc(v.name)} está demorando: a mesa espera há mais de 2 minutos. Com a vez pulada, a mesa passa a vez no lugar dessa pessoa até o fim deste turno, sem jogar nada.`
+        : `${esc(v.name)} caiu e a partida está esperando. Com o turno pulado, a mesa passa a vez no lugar dessa pessoa, sem jogar nada.`} Precisa de ${v.needed} ${v.needed === 1 ? 'voto' : 'votos'} entre ${v.voters} online.</p>
       <div class="vote-actions"><button type="button" class="arena-btn secondary" data-skip-vote="${v.target}" data-value="false">Não</button><button type="button" class="arena-btn primary" data-skip-vote="${v.target}" data-value="true" data-vote-start>Sim, pular</button></div>
     </section>`,
   };

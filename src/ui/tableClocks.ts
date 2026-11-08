@@ -1,5 +1,5 @@
 // Os relógios da trilha de fases (quanto dura o turno e a partida) e o alerta de espera demorada: o relógio de quem a mesa
-// espera, o aviso em cima do próprio retrato e o selo "Demorando…" no retrato e no campo de quem passou de 5 minutos.
+// espera, o aviso em cima do próprio retrato e o selo "Demorando…" no retrato e no campo de quem passou de 2 minutos.
 import type { FState } from '../forge/client';
 import { turnTimeText } from './phaseHud';
 import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
@@ -26,7 +26,7 @@ export function createTableClocks(root: HTMLElement, d: ClockDeps) {
   // Alerta de espera demorada: o relógio de cada espera vem da ponte e só se ressincroniza quando chega um estado novo.
   const waitClock = new WaitClock(), waitAnnouncer = new WaitAnnouncer();
   let waitSynced: FState | null = null;
-  /** Retrato e campo de quem está demorando (5 min ou mais) ganham o selo "Demorando…", para todos. */
+  /** Retrato e campo de quem está demorando (2 min ou mais) ganham o selo "Demorando…", para todos. */
   const markSlow = (w: SlowWait | null) => {
     const targets = new Set<HTMLElement>();
     if (w && w.stage >= 3) {

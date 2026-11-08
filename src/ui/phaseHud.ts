@@ -125,7 +125,7 @@ function matchClockHTML(state: HudState): string {
 }
 
 /**
- * Relógio de espera: some até a mesa esperar alguém por 2 min. A mesa o preenche a cada segundo com o nome e o tempo
+ * Relógio de espera: some até a mesa esperar alguém por 1 min. A mesa o preenche a cada segundo com o nome e o tempo
  * da espera mais longa (ver waitAlert.ts); a cor e o pulso mudam com a etapa.
  */
 const WAIT_CLOCK = `<span class="phase-wait-clock" data-wait-clock aria-hidden="true" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9"/></svg><span class="phase-wait-name" data-wait-name></span><span data-wait-time>0:00</span></span>`;

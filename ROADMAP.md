@@ -528,3 +528,16 @@ Conferir se a mesa deixa responder com uma mágica que só fica pagável graças
 - [ ] Conferir se o jogador recebe a prioridade com a mágica do oponente na pilha (e não passa direto).
 - [ ] Conferir se a Contradição Arcana aparece como jogável e se dá para conjurá-la pagando só a Island, anulando a mágica.
 - [ ] Se falhar: achar se o problema está em o servidor não oferecer a jogada (custo reduzido não contado como pagável) ou em pular a prioridade, corrigir e deixar um cenário pronto no Laboratório.
+
+## 112. Decidir no d6 quem começa a partida
+
+Hoje o servidor sorteia em silêncio quem escolhe quem começa, e a mesa só mostra "X está escolhendo quem começa". A ideia é mostrar o sorteio: no começo da partida, cada jogador rola um d6 na mesa, e quem tirar o maior número escolhe quem joga o primeiro turno.
+
+- [ ] Servidor: trocar o sorteio do Forge por uma rolagem de d6 por jogador. Em caso de empate no maior número, só os empatados rolam de novo, até sobrar um.
+- [ ] Mandar as rolagens para a mesa (quem tirou quanto, e as rolagens de desempate), também para os espectadores.
+- [ ] Mesa: animação dos dados no centro, um por jogador com o nome, destacando o vencedor antes da escolha "Quem começa?".
+- [ ] Decidir antes de fazer: cada jogador toca para rolar o próprio dado, ou todos rolam sozinhos ao mesmo tempo (mais rápido, sem esperar quem demora); e se o vencedor escolhe quem começa, como na regra, ou começa direto.
+- [ ] Melhor de três: a partir do segundo jogo continua valendo a regra (quem perdeu o jogo anterior escolhe), sem dado.
+- [ ] Commander com 3 ou 4 jogadores e partidas contra o computador: o computador também rola o seu dado.
+- [ ] Registrar as rolagens no histórico de jogadas.
+- [ ] Item no CHANGELOG e prints da animação nas Novidades em imagens.
