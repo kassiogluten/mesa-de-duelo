@@ -21,6 +21,7 @@ import './deckFilters.css';
 import './lobby.css';
 import { prefsChanged } from '../conta/sync';
 import { finder } from './dom';
+import { countFunnel } from '../funnel';
 import { AI_STYLES, DEFAULT_AI_STYLE, isAiStyle } from '../aiStyle';
 export { deckArt, deckColors, deckCover } from './deckStats';
 
@@ -347,6 +348,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const setBusy = (value: boolean) => { busy = value; refresh(); };
   function choose(deck: DeckData, picker = true) {
     if (busy || waitingRoom) return;
+    if (picker) countFunnel('deck');
     youId = deck.id;
     if (format) save(PREFIXES.deck + format, youId);
     // O máximo dos bots segue o bracket do deck (e a série, no Precon) enquanto o jogador não escolhe outro.
@@ -635,6 +637,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   async function chooseInRoom(deck: DeckData) {
     if (!waitingRoom || choosingDeck || (deck.id === roomDeckId && mySeat()?.ready !== false)) return;
     choosingDeck = true; setStatus(`Escolhendo ${deck.name}…`); renderRoomDeckTiles();
+    countFunnel('deck');
     try {
       await opts.onChooseRoomDeck(deck);
       roomDeckId = deck.id;

@@ -245,6 +245,10 @@ final class VisibleEvents {
         } else if (event instanceof GameEventScry x && x.player() != null && x.toTop() + x.toBottom() > 0) {
             // Vidência: quantas ficaram no topo e quantas foram para o fundo (o número é público; as cartas, não).
             e = type("scry"); actor(e, x.player().getId()); e.addProperty("top", x.toTop()); e.addProperty("bottom", x.toBottom());
+        } else if (event instanceof GameEventFlipCoin x && x.flipper() != null && x.startingToss() && game != null) {
+            // Quem escolhe quem começa: no lugar da moeda do Forge, os d6 de todos os jogadores (StartingRoll).
+            java.util.List<Integer> players = game.getPlayers().stream().map(p -> p.getId()).toList();
+            e = StartingRoll.event(players, x.flipper().getId(), java.util.concurrent.ThreadLocalRandom.current());
         } else if (event instanceof GameEventFlipCoin x && x.flipper() != null) {
             e = type("coin"); actor(e, x.flipper().getId()); e.addProperty("heads", x.heads());
             if (x.startingToss()) e.addProperty("startingToss", true);

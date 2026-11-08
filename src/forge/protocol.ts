@@ -65,7 +65,7 @@ export interface RoomInfo { code: string; config: MatchConfig; available: boolea
 export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed'
-    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed' | 'counters';
+    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed' | 'counters' | 'starting-roll';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
   text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   /** Só em `damage`; ver forge-bridge/README.md. */
@@ -83,6 +83,11 @@ export interface FEvent {
   top?: number; bottom?: number;
   /** `coin`: cara ou coroa, e se é a moeda de quem começa. `die`: quantos lados e o resultado. */
   heads?: boolean; startingToss?: boolean; sides?: number; result?: number;
+  /**
+   * `starting-roll` (d6 de quem começa, no primeiro jogo): as rodadas, cada uma com o que cada jogador tirou; da segunda
+   * em diante, só os empatados no maior número da anterior. `actor` é quem ganhou e escolhe quem começa.
+   */
+  rolls?: { player: number; roll: number }[][];
   /** `attached`: já estava presa a outra permanente. `control-changed`: quem controlava antes. */
   moved?: boolean; previous?: number;
   /** `counters`: qual marcador (P1P1, LOYALTY...), se veio com a carta entrando e, na lealdade, se foi custo pago. */

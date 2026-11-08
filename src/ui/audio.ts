@@ -39,7 +39,7 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     // Embaralhar e vidência mexem no grimório; anexar assenta como um terreno; moeda, dado e troca de controle soam como uma habilidade.
     case 'shuffle': case 'scry': return 'draw';
     case 'attached': return 'land';
-    case 'coin': case 'die': case 'control-changed': return 'ability';
+    case 'coin': case 'die': case 'starting-roll': case 'control-changed': return 'ability';
     case 'land-played': return 'land';
     case 'spell-cast': return 'cast';
     case 'ability-activated': return event.loyalty ? 'loyalty' : 'ability';

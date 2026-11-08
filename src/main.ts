@@ -27,6 +27,7 @@ import { createForgeConnection } from './app/connection';
 import { bindMatchClient, type MatchSession, type Screen } from './app/matchWiring';
 import { RECONNECT_DELAYS, retryWithDelays, REWATCH_DELAYS } from './app/retry';
 import { startupLinks } from './app/startupLinks';
+import { countFunnel } from './funnel';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -181,6 +182,8 @@ addEventListener(EVENTS.laboratorio, () => { labView.open(); show('lab'); scroll
 
 function enterForgeTable(client: ForgeClient, m: ForgeMatch | null) {
   forgeTable.attach(client, m ? [deckArt(m.deck), ...(m.opponents ?? [m.opp ?? null]).map(d => d ? deckArt(d) : undefined)] : []);
+  // A partida começou (ou voltou depois de recarregar, que a aba já contou); assistir e o Laboratório não contam.
+  if (m && !m.lab) countFunnel(m.net ? 'partida-sala' : 'partida-ia');
   lobby.setStatus('');
   lobby.showRoom(null);
   show('game');

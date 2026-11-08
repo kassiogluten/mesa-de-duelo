@@ -141,7 +141,7 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 |---|---|---|
 | `seq` | `number` |  |
 | `stateVersion` | `number` |  |
-| `type` | `'land-played' \| 'spell-cast' \| 'ability-activated' \| 'resolved' \| 'countered' \| 'entered' \| 'left' \| 'attackers' \| 'blockers' \| 'damage' \| 'life-changed' \| 'turn' \| 'priority' \| 'draw' \| 'discard' \| 'mill' \| 'stack-removed' \| 'shuffle' \| 'scry' \| 'coin' \| 'die' \| 'attached' \| 'control-changed' \| 'counters'` |  |
+| `type` | `'land-played' \| 'spell-cast' \| 'ability-activated' \| 'resolved' \| 'countered' \| 'entered' \| 'left' \| 'attackers' \| 'blockers' \| 'damage' \| 'life-changed' \| 'turn' \| 'priority' \| 'draw' \| 'discard' \| 'mill' \| 'stack-removed' \| 'shuffle' \| 'scry' \| 'coin' \| 'die' \| 'attached' \| 'control-changed' \| 'counters' \| 'starting-roll'` |  |
 | `actor?` | `number` |  |
 | `cards?` | `number[]` |  |
 | `card?` | `FCard` |  |
@@ -177,6 +177,7 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `startingToss?` | `boolean` |  |
 | `sides?` | `number` |  |
 | `result?` | `number` |  |
+| `rolls?` | `{ player: number; roll: number }[][]` | `starting-roll` (d6 de quem começa, no primeiro jogo): as rodadas, cada uma com o que cada jogador tirou; da segunda em diante, só os empatados no maior número da anterior. `actor` é quem ganhou e escolhe quem começa. |
 | `moved?` | `boolean` | `attached`: já estava presa a outra permanente. `control-changed`: quem controlava antes. |
 | `previous?` | `number` |  |
 | `counter?` | `string` | `counters`: qual marcador (P1P1, LOYALTY...), se veio com a carta entrando e, na lealdade, se foi custo pago. |

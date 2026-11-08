@@ -138,3 +138,10 @@ body { min-height: 100%; height: auto; }
 .adm-thumb + .adm-thumb { margin-left: -2px; }
 .adm-past .adm-dot { vertical-align: middle; }
 @media (max-width: 860px) { .adm-decks { grid-column: auto; } #admin .adm-month { margin-left: 0; } }
+/* Começar a jogar (item 109): contadores por semana. */
+.adm-funnel-wrap { margin-top: 14px; padding: 0; overflow-x: auto; }
+.adm-funnel { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.adm-funnel th, .adm-funnel td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.adm-funnel thead th { color: var(--muted); font: 600 13px var(--body); }
+.adm-funnel th:first-child { text-align: left; }
+.adm-funnel tbody tr:last-child > * { border-bottom: 0; }

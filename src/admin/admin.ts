@@ -8,6 +8,7 @@ import { issueBody, issueTitle } from './reportSummary';
 import type { Item, Status, Stored } from './adminShared';
 import { historyHTML, liveMatchesHTML, type End, type LiveMatch, type PastMatch } from './adminMatches';
 import { reportDetailHTML, reportListHTML, type ReportFilter } from './adminReports';
+import { funnelHTML, type FunnelWeek } from './adminFunnel';
 
 /*
  * Área de admin (/admin.html): os relatos guardados na ponte, com estado, nota e issue, as partidas vivas e as
@@ -70,7 +71,7 @@ function shell() {
   root.innerHTML = `<header class="adm-top"><a class="adm-brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
     <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
     <button class="adm-ghost" data-act="logout">Sair</button></header>
-    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admHistorico" class="adm-history"></div></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
+    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
   root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova.</p>
     <ul class="adm-pages">${TEST_PAGES.map(([href, title, text]) => `<li><a class="adm-card adm-page" href="${href}" target="_blank" rel="noopener"><strong>${esc(title)}</strong><span>${esc(text)}</span><code>${esc(href)}</code></a></li>`).join('')}</ul>`;
   syncTab();
@@ -84,7 +85,7 @@ function syncTab() {
   root.querySelector<HTMLElement>('#admPartidas')!.hidden = current !== 'partidas';
   clearInterval(matchesTimer);
   // Na aba de partidas, a lista se atualiza sozinha a cada 10 s.
-  if (current === 'partidas') { void loadMatches(); void loadHistory(historyMonth); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
+  if (current === 'partidas') { void loadMatches(); void loadFunnel(); void loadHistory(historyMonth); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
 }
 
 let matchesTimer = 0;
@@ -101,6 +102,17 @@ async function loadMatches() {
   } catch { section.innerHTML = '<p class="adm-error">Não consegui falar com a ponte. Ela está no ar?</p>'; }
 }
 addEventListener('hashchange', () => { if (root.querySelector('.adm-top')) syncTab(); });
+
+async function loadFunnel() {
+  const section = root.querySelector<HTMLElement>('#admFunil');
+  if (!section) return;
+  try {
+    const response = await adminFetch('funil');
+    if (response.status === 401) return;
+    if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
+    section.innerHTML = funnelHTML((await response.json() as { semanas: FunnelWeek[] }).semanas);
+  } catch { section.innerHTML = '<p class="adm-error">Não consegui ler a contagem de visitantes na ponte.</p>'; }
+}
 
 // ---------------------------------------------------------------- histórico
 
@@ -232,6 +244,7 @@ root.addEventListener('click', async e => {
       break;
     case 'reload': details.clear(); await load(); break;
     case 'matches': await loadMatches(); break;
+    case 'funnel': await loadFunnel(); break;
     case 'history': await loadHistory(historyMonth); break;
     case 'history-download': await downloadHistory(); break;
     case 'back': selected = null; renderList(); break;

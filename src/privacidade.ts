@@ -13,7 +13,7 @@ iniciarTema();
  * endereço cadastrado na tela de consentimento do Google. Precisa acompanhar o código: o que muda no que o jogo guarda
  * ou envia muda aqui também, com a data no topo.
  */
-const UPDATED = '1º de novembro de 2026';
+const UPDATED = '8 de novembro de 2026';
 const ext = (href: string, text: string) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
 const whatsapp = ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`);
 
@@ -29,7 +29,7 @@ app.innerHTML = `
 
     <section class="priv-resumo" aria-label="Resumo">
       <ul>
-        <li><strong>Sem anúncios, sem rastreadores, sem venda de dados.</strong> O jogo não usa ferramentas de análise nem de publicidade.</li>
+        <li><strong>Sem anúncios, sem rastreadores, sem venda de dados.</strong> O jogo não usa ferramentas de análise nem de publicidade de outras empresas. O próprio servidor só conta, por semana, quantas visitas chegam a escolher um deck e começar uma partida, sem saber de quem.</li>
         <li><strong>A conta é opcional.</strong> Dá para jogar sem entrar; nesse caso, seus decks ficam só no seu aparelho.</li>
         <li><strong>Com a conta Google,</strong> guardamos só o seu primeiro nome, a foto, o nome que você usa na mesa e o que você salva no jogo (decks e preferências). Não guardamos seu e-mail.</li>
         <li><strong>Você apaga a conta quando quiser,</strong> no menu da conta, sem precisar pedir a ninguém.</li>
@@ -50,7 +50,8 @@ app.innerHTML = `
         <li>o nome que você usa na mesa e as preferências (som, avisos, passar a vez automaticamente e outras);</li>
         <li>a partida em andamento, para voltar a ela depois de recarregar a página;</li>
         <li>a gravação da última partida, que só sai do aparelho se você anexá-la a um relato;</li>
-        <li>uma cópia das cartas e imagens já vistas, para o jogo abrir mais rápido.</li>
+        <li>uma cópia das cartas e imagens já vistas, para o jogo abrir mais rápido;</li>
+        <li>só enquanto a aba está aberta (sessionStorage), quais passos da contagem de visitas a aba já contou, para cada um contar uma vez só.</li>
       </ul>
       <p>Para apagar tudo isso, basta limpar os dados do site nas configurações do navegador. Se você não tiver conta, o que for apagado assim não volta.</p>
     </section>
@@ -62,6 +63,7 @@ app.innerHTML = `
         <li><strong>O deck escolhido e o nome que você digitou na mesa.</strong> O nome aparece para os outros jogadores da sala; numa sala pública, ele também aparece na lista de salas para qualquer pessoa.</li>
         <li><strong>As jogadas da partida.</strong> Elas ficam na memória do servidor enquanto a partida existe e somem pouco depois do fim.</li>
         <li><strong>O resumo de cada partida concluída:</strong> formato, nomes dos jogadores, nomes dos decks, quem venceu, número de turnos e duração. Esse resumo é usado para acompanhar o funcionamento do jogo e não é mostrado a outros jogadores. Se você estiver com a conta conectada, ele guarda também o código da sua conta e qual deck salvo você usou, para a partida aparecer em <strong>Minhas partidas</strong>.</li>
+        <li><strong>Contagem de visitas:</strong> quando você toca em Jogar na página de apresentação, escolhe um deck ou começa uma partida (contra o computador ou numa sala), o jogo avisa o servidor só qual desses passos aconteceu, uma vez por aba. O servidor soma um no número da semana e não guarda mais nada: nem IP, nem nome, nem deck, nem identificador do aparelho (para limitar abusos, só o resumo do IP descrito abaixo fica na memória por alguns minutos). Não há cookies nem ferramentas de outras empresas nisso. Os números servem para saber quantos visitantes conseguem começar a jogar.</li>
         <li><strong>Registros técnicos:</strong> como em qualquer site, o servidor anota o endereço IP, o horário e o que foi pedido. Esses registros servem para segurança e para encontrar erros, e são apagados pela própria hospedagem depois de algum tempo. Para limitar abusos (como tentar muitos códigos de sala), o servidor guarda, só na memória, um resumo do IP que não permite voltar ao endereço.</li>
       </ul>
       <p>As mensagens entre jogadores na sala são frases prontas; o jogo não tem chat livre.</p>
@@ -116,6 +118,7 @@ app.innerHTML = `
         <li><strong>Sessão de um aparelho:</strong> 180 dias sem usar o jogo, ou até você sair.</li>
         <li><strong>Relatos:</strong> até 90 dias.</li>
         <li><strong>Partida em andamento:</strong> enquanto existir, e pouco tempo depois do fim.</li>
+        <li><strong>Contagem de visitas por semana:</strong> sem prazo; são só números, sem nada que leve a você.</li>
         <li><strong>Resumo das partidas concluídas:</strong> sem prazo, para acompanhar o funcionamento do jogo ao longo do tempo. Ao apagar a conta, a ligação dele com ela some na hora. Você também pode pedir que as partidas com o seu nome sejam apagadas.</li>
       </ul>
     </section>

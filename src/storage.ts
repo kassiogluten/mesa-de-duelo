@@ -110,6 +110,8 @@ export const KEYS = {
   partidasFiltros: 'mesa:partidas:filtros',
   /** Filtros da lista de salas, só desta aba (sessionStorage). Salas. */
   salasFiltros: 'mesa:salas:filtros',
+  /** Eventos de começar a jogar já contados nesta aba (sessionStorage), para cada um contar uma vez só. Funil. */
+  funil: 'mesa:funil',
 } as const;
 
 export type StorageKey = typeof KEYS[keyof typeof KEYS];
