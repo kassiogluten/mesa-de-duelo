@@ -562,13 +562,3 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
 
 - [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
-
-## 116. Novo ícone de alcance: arco com flecha
-
-Pedido em 08/11/2026. O ícone de alcance (`KEYWORD_ICON.REACH`, na carta do campo) hoje é só uma flecha inclinada com uma pena curva ao lado, que no tamanho da mesa se confunde com o de voar (a asa) e não diz "alcançar quem voa". A ideia é trocar por um arco com flecha.
-
-- [ ] Desenhar variações de arco com flecha e mostrá-las lado a lado numa página, grandes e no tamanho real da carta, ao lado da asa de voar e dos outros ícones de palavra-chave. Por exemplo: arco de perfil com a flecha armada apontando para cima; arco e flecha na diagonal, como o atual; só a flecha subindo com um arco curto atrás; arco com uma flecha que sobe até uma asa pequena.
-- [ ] Trocar o ícone escolhido em todos os lugares que mostram as palavras-chave (carta do campo, inspetor e balões).
-- [ ] Item no CHANGELOG e print em Novidades em imagens, com o ícone novo ao lado do de voar.
-
-- [ ] Decidir antes de fazer: qual variação; se o arco aponta para cima (contra quem voa) ou na diagonal, como os outros ícones.

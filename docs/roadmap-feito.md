@@ -1180,3 +1180,13 @@ Pedido em 08/11/2026. Ninjutsu (45 cartas no Forge) e sneak (27, das Tartarugas 
 - [x] Decidir antes de fazer: o desenho da troca (fumaça, rastro de sombra ou só um deslize entre a mão e o campo); se o brilho na mão aparece sempre ou só quando você para na etapa de bloqueios (hoje a mesa pode passar direto por ela); se o computador também ganha o efeito completo (recomendado, para o jogador entender o que aconteceu).
 
 Feito em 08/11/2026 (versão 0.152.0): fumaça com shuriken, igual para todos; a mão já destacava o ninjutsu quando o motor o oferece. O ninjutsu passa pela pilha (é uma habilidade), então a fumaça espera no lugar do atacante até ele resolver. O Registro ficou com duas linhas, a saída do atacante e a entrada do ninja. Página de teste: botões Ninjutsu e Sneak em `tests/fixtures/effects-lab.html`.
+
+## 116. Novo ícone de alcance: arco com flecha ✅
+
+Pedido em 08/11/2026. O ícone de alcance (`KEYWORD_ICON.REACH`, na carta do campo) hoje é só uma flecha inclinada com uma pena curva ao lado, que no tamanho da mesa se confunde com o de voar (a asa) e não diz "alcançar quem voa". A ideia é trocar por um arco com flecha.
+
+- [x] Desenhar variações de arco com flecha e mostrá-las lado a lado numa página, grandes e no tamanho real da carta, ao lado da asa de voar e dos outros ícones de palavra-chave. Por exemplo: arco de perfil com a flecha armada apontando para cima; arco e flecha na diagonal, como o atual; só a flecha subindo com um arco curto atrás; arco com uma flecha que sobe até uma asa pequena.
+- [x] Trocar o ícone escolhido em todos os lugares que mostram as palavras-chave (carta do campo, inspetor e balões).
+- [x] ~~Item no CHANGELOG e print em Novidades em imagens~~: dispensado a pedido (08/11/2026).
+
+- [x] Decidido: arco armado com a flecha, na diagonal como os outros ícones (`KEYWORD_ICON.REACH`). Também foram desenhadas alternativas para o ícone de voar (par de asas, pássaro, leque de penas, asa de pontas, asa com fendas), mas nenhuma agradou e o de hoje ficou.
