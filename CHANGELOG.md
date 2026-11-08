@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.150.0] - 2026-11-08
+
+### Mudou
+
+- **Anel Solar, Torre de Comando e Sinete Arcano com arte em estilo anime.** As três cartas que mais aparecem nos decks prontos ganharam a carta inteira na mesma série dos terrenos básicos, em português, com o texto oficial. Vale em todas as telas; quem escolheu outra impressão no deck continua vendo a escolhida.
+
 ## [0.149.0] - 2026-11-08
 
 ### Mudou

@@ -1,3 +1,5 @@
+import ownArt from './own-art.json' with { type: 'json' };
+
 /** Como as cartas do Scryfall ficam guardadas: só os campos que o jogo usa, com as faces e a impressão em português. */
 export type Images = { small?: string; normal?: string; art_crop?: string };
 
@@ -38,17 +40,17 @@ export interface ScryCard {
 
 export const images = (u: any): Images | undefined => u && { small: u.small, normal: u.normal, art_crop: u.art_crop };
 /**
- * Arte fixa dos terrenos básicos: a série em estilo anime da própria mesa (public/terrenos, já com o nome em português).
- * Vale em todas as telas, inclusive no lugar da impressão em português.
+ * Cartas com arte própria da mesa: a carta inteira de uma série em estilo anime, já em português (public/cartas, gerada
+ * por npm run arte). Começou pelos terrenos básicos e vale em todas as telas, inclusive no lugar da impressão em português.
  */
-const BASICS = new Set(['plains', 'island', 'swamp', 'mountain', 'forest']);
-const basicImages = (name: string): Images => {
-  const url = (size: string) => `/terrenos/${name}-${size}.webp`;
+const OWN_ART = new Set((ownArt as string[]).map(n => n.toLowerCase()));
+const ownImages = (name: string): Images => {
+  const url = (size: string) => `/cartas/${name.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${size}.webp`;
   return { small: url('small'), normal: url('normal'), art_crop: url('art') };
 };
-export function withBasicArt(c: ScryCard): ScryCard {
+export function withOwnArt(c: ScryCard): ScryCard {
   const name = c.name.toLowerCase();
-  return BASICS.has(name) ? { ...c, image_uris: basicImages(name), pt: c.pt && { ...c.pt, image_uris: undefined } } : c;
+  return OWN_ART.has(name) ? { ...c, image_uris: ownImages(name), pt: c.pt && { ...c.pt, image_uris: undefined } } : c;
 }
 
 /** O /cards/collection não acha "Frente // Verso" (nem cartas divididas como "Fire // Ice"), só o nome da frente. */
