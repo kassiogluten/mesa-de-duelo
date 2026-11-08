@@ -1122,3 +1122,34 @@ No painel **Prepare o próximo jogo** de uma melhor de três, o jogador só sabi
 - [x] Página de teste: `fixture.gameEnd('sideboard')` em `tests/fixtures/duel-table.html`, com o oponente pronto e não pronto.
 
 Feito na 0.146.0 (decidido em 07/11/2026): uma linha acima dos botões, com o nome do oponente, diz "ainda está trocando cartas" ou "já confirmou o deck" (texto sem gênero); contra o computador, ele aparece sempre pronto. A melhor de três é sempre entre dois jogadores, então não há caso com mais oponentes. O botão **Voltar a editar** manda `sideboard-cancel` (com o id da troca, como o `sideboard`), que desfaz o pronto e o deck aprovado do assento, e as trocas feitas continuam no rascunho; o oponente vê a linha voltar para "trocando cartas". **Desistir da série** pede confirmação e manda `concede` sem sair; o servidor passou a mandar `match.concededBy` (quem encerrou a série, saindo ou desistindo entre os jogos), e a tela de resultado mostra Derrota para quem desistiu e Vitória para o outro, com o placar e Pedir revanche. A mesma tela vale quando o oponente sai da sala antes do fim (em partida de um jogo, sem "da série"). Pedido junto na entrega: o painel perdeu o **Sair da partida** (sair fica só com o jogo em andamento), e o menu da partida trocou o "Desistir e voltar ao início" por **Conceder**, que abre uma confirmação com **Conceder e sair**, **Conceder e continuar na mesa** e **Voltar ao jogo** (em foco); continuando, o jogador vai para o sideboard do próximo jogo, para o resultado ou, no Commander com vários jogadores, assiste. Fora do jogo em andamento (eliminado no Commander ou no resultado), o menu mostra **Sair da partida**; entre os jogos, nada. O servidor tira a marca de desistente dos assentos quando o próximo jogo da série começa. Página de teste: `fixture.gameEnd('sideboard', { ready, opponentReady })` e `fixture.gameEnd('result', { concededBy })`; o `test-protocol.mjs` cobre o voltar a editar, o id antigo e o `concededBy`.
+
+## 109. Medir quantos visitantes começam a jogar ✅
+
+A página de apresentação (/sobre) e o Search Console mostram quem chega, mas não quantos clicam em Jogar, escolhem um deck e começam uma partida. Sugestão da revisão de SEO de 06/11/2026. Feito na 0.148.0.
+
+- [x] Decidido: contar no nosso servidor, só números agregados por semana, sem terceiros e sem cookies.
+- [x] Eventos (`src/funnel.ts`, POST `/api/funil` com `{evento}`): `jogar` (botões de jogar e o Jogar do rodapé da /sobre, `src/sobre.ts`), `deck` (deck escolhido na tela inicial ou na sala), `partida-ia` e `partida-sala` (a mesa abriu a partida; assistir e o Laboratório não contam). Cada evento conta uma vez por aba (sessionStorage, `KEYS.funil`).
+- [x] Sem nada que identifique o jogador: o servidor (`Funnel.java`) só soma no `funil.json` (semana → evento → quantos); o IP serve só, como resumo em memória, para limitar 30 eventos por 10 min (o nginx limita de novo). Política de privacidade atualizada.
+- [x] Painel na área de admin: bloco Começar a jogar na aba Partidas (GET `/api/admin/funil`), com as semanas e a parte dos decks escolhidos que viraram partida.
+
+## 110. Contradição Arcana com o custo reduzido pelo Baral ✅ (conferido, sem erro)
+
+Conferir se a mesa deixa responder com uma mágica que só fica pagável graças a um redutor de custo. Arcane Denial (Contradição Arcana) custa {1}{U}; com Baral, Chief of Compliance no campo, as mágicas instantâneas custam {1} a menos, e uma Island basta.
+
+- [x] Montado no servidor (`CostReductionResponseTest`): Arcane Denial na mão, uma Island e o Baral no campo do jogador, e a Divination do oponente na pilha, com a prioridade no jogador.
+- [x] O jogador recebe a prioridade: a conta da passagem automática sem ações (`AvailableActions.compute`, a que o Forge usa com "passar quando não há ações") encontra a resposta. Sem o Baral, a mesma mesa com uma Island passa direto (controle).
+- [x] A Contradição Arcana aparece como jogável (`collectActionable`, o destaque da mão), o custo ajustado pelo Forge cai para {U} e uma Island paga (`ComputerUtilMana.canPayManaCost`).
+- [x] Nada a corrigir; sem cenário pronto no Laboratório (só correções ganham um). O teste fica para não regredir.
+
+## 112. Decidir no d6 quem começa a partida ✅
+
+No começo da partida, cada jogador rola um d6 na mesa, e quem tirar o maior número escolhe quem joga o primeiro turno. Feito na 0.148.0.
+
+- [x] Servidor (`StartingRoll.java`): no lugar da moeda de quem começa do Forge, um d6 por jogador; empate no maior número, só os empatados rolam de novo, até sobrar um. O Forge já sorteou quem escolhe (cada um com a mesma chance) quando a moeda sai; os dados são rolados condicionados a esse vencedor (a disputa se repete até dar ele), o que dá exatamente a distribuição de uma rolagem de verdade (`StartingRollTest` confere).
+- [x] Evento público `starting-roll` (`actor` = quem escolhe, `rolls` = as rodadas), que vai para todos, inclusive quem assiste.
+- [x] Mesa (`src/ui/startingRoll.ts`): os dados no centro, um por jogador com o nome, rolando juntos; no empate os outros apagam e os empatados rolam de novo; o vencedor fica em destaque e só então aparece "Quem começa?" (com "Você tirou o maior número no dado") ou "Ana está escolhendo quem começa".
+- [x] Decidido: todos rolam sozinhos ao mesmo tempo, e o vencedor escolhe quem começa, como na regra.
+- [x] Melhor de três: do segundo jogo em diante o Forge não tira a moeda, e quem perdeu escolhe, sem dado.
+- [x] Commander com 3 ou 4 jogadores e contra o computador: o computador também rola.
+- [x] Rolagens no Registro, em Início da partida ("Dados para ver quem começa: Ana 3, Bruno 6, Você 6, Diego 2; desempate: Bruno 2, Você 5. Você escolhe quem começa.").
+- [x] Item no CHANGELOG e prints nas Novidades em imagens (página de teste: `fixture.startingRoll()` na mesa de Commander).

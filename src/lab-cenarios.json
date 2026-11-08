@@ -1,7 +1,7 @@
 [
   {
     "nome": "Leonardo com Corpsejack Menace e Hardened Scales",
-    "versao": "0.147.1",
+    "versao": "0.148.0",
     "item": "Ordem dos efeitos que mudam os marcadores",
     "conferir": "O Jogador 1 tem Leonardo, the Balance, Grizzly Bears, Savannah Lions, Llanowar Elves e Corpsejack Menace no campo, com sete Plains e três Forests; na mão, Raise the Alarm, Secure the Wastes e Hardened Scales. Conjure o Hardened Scales e depois o Raise the Alarm (ou o Secure the Wastes, para mais fichas) e responda Sim ao Leonardo. A mesa pergunta “Qual efeito aplicar primeiro?” com as duas cartas, Corpsejack Menace e Hardened Scales, e o texto de cada uma, e “Usar a mesma escolha no resto deste efeito” marcado. Toque no Hardened Scales: a pergunta não volta, e cada criatura ganha 4 marcadores (um a mais, depois o dobro). Repita desmarcando a opção: a mesa pergunta uma vez por criatura, e tocando no Corpsejack Menace primeiro cada uma ganha 3. Sem o Hardened Scales, só com o Corpsejack, não pergunta nada e cada criatura ganha 2.",
     "cenario": {

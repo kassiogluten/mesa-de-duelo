@@ -1,6 +1,7 @@
 // Decisões do começo da partida (quem começa, mulligan) mostradas no centro da mesa.
 import type { FState } from '../forge/client';
 import type { FCard } from '../forge/protocol';
+import type { PresentationEvent } from './presentationTimeline';
 import { cacheGet } from '../scryfall';
 import { hideCardPreview } from './cardInspector';
 import './opening.css';
@@ -16,9 +17,10 @@ export function suppressOpeningPreview(state: FState) {
 }
 
 /** Título e linha de baixo enquanto outro jogador decide: o Forge decide as mãos uma de cada vez. */
-function waitingCopy(state: FState, wait: NonNullable<FState['input']['openingWait']>) {
+function waitingCopy(state: FState, wait: NonNullable<FState['input']['openingWait']>, roll?: PresentationEvent) {
   const name = state.players.find(p => p.id === wait.player)?.name ?? 'O oponente';
-  if (wait.step === 'start') return [`${name} está escolhendo quem começa`, 'Depois cada um decide se mantém a mão ou faz mulligan.'];
+  const won = roll?.actor === wait.player ? `${name} tirou o maior número no dado. ` : '';
+  if (wait.step === 'start') return [`${name} está escolhendo quem começa`, `${won}Depois cada um decide se mantém a mão ou faz mulligan.`];
   return [`${name} está decidindo a mão`, wait.kept ? 'Você manteve a sua mão.' : 'Em seguida é a sua vez de manter ou fazer mulligan.'];
 }
 
@@ -39,7 +41,7 @@ export function openingHandCount(hand: Pick<FCard, 'land' | 'name'>[]) {
 }
 
 /** Present the engine's opening decisions in the center, without changing their actions. */
-export function applyOpeningPresentation(root: HTMLElement, state: FState) {
+export function applyOpeningPresentation(root: HTMLElement, state: FState, roll?: PresentationEvent) {
   const arena = root.querySelector<HTMLElement>('.arena.forge');
   if (!arena) return;
   const opening = openingOf(state);
@@ -69,7 +71,7 @@ export function applyOpeningPresentation(root: HTMLElement, state: FState) {
   const hand = state.players.find(p => p.id === state.you)?.hand ?? [];
   count.textContent = opening === 'mulligan' && hand.length ? openingHandCount(hand) : '';
   if (opening === 'waiting' && openingWait) {
-    const [title, line] = waitingCopy(state, openingWait);
+    const [title, line] = waitingCopy(state, openingWait, roll);
     heading.querySelector('h1')!.textContent = title!;
     heading.querySelector('p')!.textContent = line!;
     return;
@@ -79,7 +81,8 @@ export function applyOpeningPresentation(root: HTMLElement, state: FState) {
       ? openingReturnCount == null ? 'Escolha as cartas para devolver'
         : openingReturnCount === 1 ? 'Devolva 1 carta' : `Devolva ${openingReturnCount} cartas`
       : 'Sua mão inicial';
-  heading.querySelector('p')!.textContent = (opening === 'play-draw' || opening === 'starting-player') ? 'Escolha quem joga o primeiro turno.'
+  heading.querySelector('p')!.textContent = (opening === 'play-draw' || opening === 'starting-player')
+    ? `${roll?.actor === state.you ? 'Você tirou o maior número no dado. ' : ''}Escolha quem joga o primeiro turno.`
     : opening === 'mulligan-bottom' ? 'As cartas escolhidas vão para o fundo do grimório.'
       : openingStartingPlayer == null ? 'Mantenha estas cartas ou tente uma nova mão.'
         : openingStartingPlayer === state.you ? 'Você joga primeiro.' : 'O oponente joga primeiro.';

@@ -1,5 +1,5 @@
 import { KEYS, load } from './storage';
-import { FORGE_URL } from './forge/client';
+import { FORGE_URL, bridgeHttpUrl } from './forge/client';
 import { RECORDING_FORMAT, fitRecording, gzip, type DeviceInfo, type Recording } from './forge/recording';
 import { STORES, withStore } from './idb';
 import { DEFAULT_PASS_LEVEL, passLevelInfo, savedPassLevel } from './ui/passLevel';
@@ -41,16 +41,7 @@ export type SendResult =
   | { status: 'queued'; text: string }
   | { status: 'rejected'; text: string };
 
-/** Uma rota HTTP no mesmo servidor da ponte (ws://host:7171/ws → http://host:7171/api/...). */
-export function bridgeHttpUrl(path: string, forgeUrl = FORGE_URL) {
-  try {
-    const url = new URL(forgeUrl);
-    url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
-    url.pathname = url.pathname.replace(/\/ws\/?$/, '') + path;
-    url.search = ''; url.hash = '';
-    return url.toString();
-  } catch { return path; }
-}
+export { bridgeHttpUrl };
 
 /** Endereço da rota de relatos. */
 export const feedbackUrl = (forgeUrl = FORGE_URL) => bridgeHttpUrl('/api/relatos', forgeUrl);

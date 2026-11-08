@@ -8,7 +8,15 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
-## [0.147.1] - 2026-11-08
+## [0.148.0] - 2026-11-08
+
+### Novo
+
+- **Dados para decidir quem começa.** No primeiro jogo de cada partida, cada jogador rola um d6 no centro da mesa, todos ao mesmo tempo e o computador também, com o nome embaixo de cada dado. Quem tira o maior número fica em destaque e escolhe quem joga o primeiro turno, na tela Quem começa?. Se o maior número empatar, só os empatados rolam de novo, até sobrar um. Quem assiste vê os mesmos dados, e as rolagens ficam no Registro, em Início da partida. Na melhor de três, do segundo jogo em diante continua escolhendo quem perdeu o jogo anterior, sem dado.
+
+### Mudou
+
+- **Política de privacidade: contagem de visitas.** Para saber quantos visitantes conseguem começar a jogar, o jogo passa a avisar o próprio servidor quando alguém toca em Jogar na página de apresentação, escolhe um deck ou começa uma partida, uma vez por aba. O servidor só soma um no número da semana: nada de nome, deck, IP, cookies ou ferramentas de outras empresas. A política de privacidade explica isso.
 
 ### Corrigido
 

@@ -27,6 +27,15 @@ Object.assign((window as any).fixture, {
   /** Curator of Destinies com três oponentes: escolher qual deles decide a pilha (só jogadores na mesa). */
   chooser() { Object.assign(state.input, {priority:false,message:'Seletor:',card:card(600,'Curator of Destinies',36,{manaCost:'{4}{U}{U}',typeLine:'Creature — Sphinx',power:5,toughness:5}),selectablePlayers:ids.filter(id=>id!==36),actionable:[],ok:{label:'OK',enabled:false},cancel:{label:'',enabled:false}}); view.render(); },
   opening() { Object.assign(state.input, {opening:'starting-player',priority:false,selectablePlayers:ids,actionable:[],ok:{label:'',enabled:false},cancel:{label:'',enabled:false}}); view.render(); },
+  /** O d6 de quem começa (item 112): Bruno e Carla (você) empatam no 6, desempatam e Carla escolhe quem começa. */
+  startingRoll() {
+    const s = state as any;
+    s.matchId = 'dados'; s.turn = 0; s.activePlayer = null; s.phase = null;
+    s.events = [{ seq: 1, stateVersion: 1, type: 'starting-roll', actor: 36, rolls: [
+      [{player:10,roll:3},{player:23,roll:6},{player:36,roll:6},{player:49,roll:2}], [{player:23,roll:2},{player:36,roll:5}]] }];
+    s.eventCursor = 1;
+    (window as any).fixture.opening();
+  },
   stress() {
     const names = ['Llanowar Elves','Elvish Mystic','Fyndhorn Elves','Birds of Paradise','Elvish Visionary','Sakura-Tribe Elder','Wood Elves','Reclamation Sage','Eternal Witness','Solemn Simulacrum','Beast Whisperer','Llanowar Visionary','Ghalta, Primal Hunger','Garruk’s Packleader','Terastodon','Acidic Slime','Avenger of Zendikar','Rampaging Baloths','Scavenging Ooze','Tireless Tracker','Courser of Kruphix','Lotus Cobra'];
     state.players.filter(p=>p.id!==state.you).forEach(p=>{p.battlefield=[...names.map((name,i)=>card(10000+p.id*100+i,name,p.id)),...Array.from({length:12},(_,i)=>card(20000+p.id*100+i,'Saproling',p.id,{token:true,power:1,toughness:1})),...Array.from({length:8},(_,i)=>card(30000+p.id*100+i,'Forest',p.id,{land:true,creature:false,typeLine:'Basic Land — Forest',manaCost:''}))];}); view.render();

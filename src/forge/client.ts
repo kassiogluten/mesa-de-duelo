@@ -28,6 +28,17 @@ export class RequestError extends Error {
 
 export const FORGE_URL: string = import.meta.env?.VITE_FORGE_URL ?? defaultUrl();
 
+/** Uma rota HTTP no mesmo servidor da ponte (ws://host:7171/ws → http://host:7171/api/...). */
+export function bridgeHttpUrl(path: string, forgeUrl = FORGE_URL) {
+  try {
+    const url = new URL(forgeUrl);
+    url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+    url.pathname = url.pathname.replace(/\/ws\/?$/, '') + path;
+    url.search = ''; url.hash = '';
+    return url.toString();
+  } catch { return path; }
+}
+
 /** Os problemas de um deck recusado, numa frase só. */
 export const validationText = (v: DeckValidation | undefined) =>
   v?.issues?.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' ') || 'O deck não vale para o formato da sala.';

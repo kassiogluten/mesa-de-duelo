@@ -33,7 +33,7 @@ import java.net.InetSocketAddress;
 /**
  * Servidor WebSocket em ws://HOST:PORTA/ws. No modo watch, quem conecta recebe na hora o último estado publicado
  * por {@link #broadcast}; no modo play cada conexão recebe só o que é endereçado a ela ({@link #send(Channel, String)}).
- * Na mesma porta: GET /metrics, GET /health e, no modo play, POST /api/relatos ({@link Feedback}) e a área de admin ({@link Admin}).
+ * Na mesma porta: GET /metrics, GET /health e, no modo play, POST /api/relatos ({@link Feedback}), POST /api/funil ({@link Funnel}) e a área de admin ({@link Admin}).
  */
 final class BridgeServer {
     private final String host;
@@ -49,6 +49,8 @@ final class BridgeServer {
     private volatile Admin admin;
     /** Rotas /api/conta/; null no modo watch. */
     private volatile Accounts accounts;
+    /** Rota POST /api/funil; null no modo watch. */
+    private volatile Funnel funnel;
 
     interface Listener {
         void onConnect(Channel ch);
@@ -66,6 +68,7 @@ final class BridgeServer {
     void feedback(Feedback f) { feedback = f; }
     void admin(Admin a) { admin = a; }
     void accounts(Accounts a) { accounts = a; }
+    void funnel(Funnel f) { funnel = f; }
 
     void start() throws InterruptedException {
         EventLoopGroup boss = new NioEventLoopGroup(1);
@@ -87,6 +90,8 @@ final class BridgeServer {
                     if (a != null) ch.pipeline().addLast(a.new Handler());
                     Accounts c = accounts;
                     if (c != null) ch.pipeline().addLast(c.new Handler());
+                    Funnel n = funnel;
+                    if (n != null) ch.pipeline().addLast(n.new Handler());
                     ch.pipeline()
                         .addLast(new HttpEndpoints())
                         .addLast(new WebSocketServerProtocolHandler("/ws", null, true, 1 << 20))

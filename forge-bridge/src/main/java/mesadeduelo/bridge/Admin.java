@@ -46,6 +46,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  *
  *   GET    partidas                partidas e salas vivas na ponte (quem joga, conectado ou não, turno) e, com as contas
  *                                  ligadas, {contas: {total, aparelhos}}
+ *   GET    funil                   {semanas: [{semana, jogar, deck, partida-ia, partida-sala}]}: quem começa a jogar ({@link Funnel})
  *   GET    historico[/AAAA-MM]     {meses, mes, partidas}: as partidas concluídas do mês (o mais recente sem mês)
  *   GET    historico/AAAA-MM.jsonl o arquivo do mês, para baixar
  *   GET    relatos                 índice com o estado de cada relato
@@ -73,6 +74,8 @@ final class Admin {
     private final MatchHistory history;
     /** Resumo das contas dos jogadores; null com as contas desligadas. */
     private volatile Accounts accounts;
+    /** Contadores de quem começa a jogar; null nos testes que não os usam. */
+    private volatile Funnel funnel;
     private final byte[] password;
     private final FeedbackRateLimit failures = new FeedbackRateLimit(MAX_FAILURES, FAILURE_WINDOW);
     /** Sessões abertas: token → fim. Só em memória: reiniciar a ponte pede login de novo. */
@@ -100,6 +103,7 @@ final class Admin {
 
     boolean enabled() { return password != null; }
     void accounts(Accounts a) { accounts = a; }
+    void funnel(Funnel f) { funnel = f; }
 
     private static byte[] sha(String text) {
         try { return MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)); }
@@ -115,6 +119,10 @@ final class Admin {
             if (path.equals("logout") && "POST".equals(method)) { sessions.remove(token(authorization)); return Response.json(200, new JsonObject()); }
             if (path.equals("relatos") && "GET".equals(method)) return list();
             if (path.equals("partidas") && "GET".equals(method)) return liveMatches();
+            if (path.equals("funil") && "GET".equals(method)) {
+                Funnel f = funnel;
+                return f == null ? Response.error(404, "Contagem de visitantes desligada.") : Response.json(200, f.json());
+            }
             if ((path.equals("historico") || path.startsWith("historico/")) && "GET".equals(method)) return history(path.substring("historico".length()));
             String[] parts = path.split("/");
             if (parts.length >= 2 && parts[0].equals("relatos")) {

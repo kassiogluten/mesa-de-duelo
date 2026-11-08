@@ -91,6 +91,9 @@ public final class Main {
             rooms.history(history::record);
             Admin admin = Admin.fromEnvironment(store, rooms::adminSessions, history);
             server.admin(admin);
+            Funnel funnel = Funnel.inDir(store.dir().getParent());
+            server.funnel(funnel);
+            admin.funnel(funnel);
             Accounts accounts = Accounts.fromEnvironment(store.dir().getParent());
             server.accounts(accounts);
             admin.accounts(accounts);

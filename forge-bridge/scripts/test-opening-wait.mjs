@@ -5,12 +5,12 @@ const url = process.argv[2] || 'ws://127.0.0.1:7171/ws';
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const peers = [];
 async function connect(name) {
-  const peer = { name, ws: new WebSocket(url), state: null, room: null };
+  const peer = { name, ws: new WebSocket(url), state: null, room: null, events: [] };
   peers.push(peer);
   peer.send = message => peer.ws.send(JSON.stringify(message));
   peer.ws.addEventListener('message', ({data}) => {
     const message = JSON.parse(data);
-    if (message.type === 'state') peer.state = message;
+    if (message.type === 'state') { peer.state = message; peer.events.push(...(message.events ?? [])); }
     if (message.type === 'room') peer.room = message.room;
   });
   await new Promise((resolve, reject) => {
@@ -40,6 +40,15 @@ try {
   assert.equal(other.state.input.openingWait.player, chooser.state.you);
   assert.equal(other.state.input.openingWait.kept, undefined);
   assert.equal(chooser.state.input.openingWait, undefined, 'own decision is not a wait');
+  // O d6 de quem começa (item 112): os dois recebem as mesmas rolagens, e quem escolhe é quem tirou o maior número.
+  await until(() => peers.every(p => p.events.some(e => e.type === 'starting-roll')), 'both tables get the starting roll');
+  const rolls = peers.map(p => p.events.find(e => e.type === 'starting-roll'));
+  assert.deepEqual(rolls[0].rolls, rolls[1].rolls);
+  assert.equal(rolls[0].actor, chooser.state.you);
+  assert.equal(rolls[0].rolls[0].length, 2, 'everyone rolls in the first round');
+  const last = rolls[0].rolls.at(-1), best = Math.max(...last.map(r => r.roll));
+  assert.deepEqual(last.filter(r => r.roll === best).map(r => r.player), [chooser.state.you]);
+  assert.ok(peers.every(p => !p.events.some(e => e.type === 'coin')), 'no starting coin any more');
   chooser.send({type: 'ok', gen: chooser.state.input.gen});
 
   // Mãos: quem joga primeiro decide antes; o outro espera sabendo que a vez dele vem.

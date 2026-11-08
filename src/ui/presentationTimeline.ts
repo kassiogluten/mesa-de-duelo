@@ -71,6 +71,8 @@ export interface PresentationEvent {
   startingToss?: boolean;
   sides?: number;
   result?: number;
+  /** O d6 de quem começa (`starting-roll`): as rodadas, e `actor` é quem escolhe. */
+  rolls?: { player: number; roll: number }[][];
   moved?: boolean;
   previous?: number;
   /** Só na mesa: os marcadores seguidos que viraram um som só, para cada carta crescer (`counters`). */
@@ -88,7 +90,7 @@ const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
 const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'mill', 'attackers', 'blockers', 'damage', 'life-changed', 'turn',
-  'scry', 'coin', 'die', 'attached', 'control-changed']);
+  'scry', 'coin', 'die', 'attached', 'control-changed', 'starting-roll']);
 // Sem passo próprio: tocam (e animam) junto com o que vier, sem segurar a partida.
 const AUDIO_ONLY = new Set(['draw', 'counters', 'shuffle']);
 

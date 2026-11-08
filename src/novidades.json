@@ -1,7 +1,15 @@
 {
-  "0.147.1": {
+  "0.148.0": {
+    "Dados para decidir quem começa": [
+      { "img": "0.148.0/dados-empate.webp", "legenda": "Numa mesa de quatro, Bruno e você empatam no 6: os outros dados apagam e só os dois rolam de novo." },
+      { "img": "0.148.0/dados-quem-comeca.webp", "legenda": "No desempate você tira 5, e o seu dado fica em destaque: você escolhe quem começa." },
+      { "img": "0.148.0/quem-comeca.webp", "legenda": "Depois dos dados, a tela Quem começa? lembra que você tirou o maior número, com um botão para cada jogador." }
+    ],
+    "Política de privacidade: contagem de visitas": [
+      { "img": "0.148.0/privacidade-contagem.webp", "legenda": "O trecho novo da política de privacidade: o servidor só soma, por semana, quem toca em Jogar, escolhe um deck ou começa uma partida, sem guardar nada de quem foi." }
+    ],
     "Ordem dos efeitos que mudam os marcadores": [
-      { "img": "0.147.1/ordem-substituicoes.webp", "legenda": "Com Corpsejack Menace e Hardened Scales, a mesa pergunta qual efeito vem primeiro, com a carta e o texto de cada um, e a opção de usar a mesma escolha em todas as criaturas que recebem marcadores." }
+      { "img": "0.148.0/ordem-substituicoes.webp", "legenda": "Com Corpsejack Menace e Hardened Scales, a mesa pergunta qual efeito vem primeiro, com a carta e o texto de cada um, e a opção de usar a mesma escolha em todas as criaturas que recebem marcadores." }
     ]
   },
   "0.147.0": {

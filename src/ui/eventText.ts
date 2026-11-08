@@ -5,6 +5,7 @@ import { damageDetail } from './damageEffects';
 import { listNames } from './historyLog';
 import { loyaltyLook } from './planeswalkerEffects';
 import type { PresentationEvent } from './presentationTimeline';
+import { startingRollText } from './startingRoll';
 
 /** O que as frases precisam da mesa: o estado ao vivo (jogadores e você), o nome das cartas e a carta por id. */
 export interface EventView {
@@ -37,6 +38,7 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
       return `${who} fez vidência ${n}: ${where}.`;
     }
     case 'coin': return event.startingToss ? `Moeda para ver quem começa: ${who} começa.` : `${who} jogou uma moeda: ${event.heads ? 'cara' : 'coroa'}.`;
+    case 'starting-roll': return startingRollText(event, id => id === v.state()?.you ? 'Você' : v.state()?.players.find(p => p.id === id)?.name ?? 'Jogador');
     case 'die': return `${who} rolou um d${event.sides ?? 6}: ${event.result ?? '?'}${event.sourceName ? ` (${v.ptName(event.sourceName) || event.sourceName})` : ''}.`;
     case 'attached': {
       const hostId = event.targets?.cards?.[0], playerId = event.targets?.players?.[0];

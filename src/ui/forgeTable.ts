@@ -89,6 +89,7 @@ import { createInputActions } from './tableInputActions';
 import { createUiActions } from './tableUiActions';
 import { attachTableClicks } from './tableClicks';
 import { finder } from './dom';
+import { applyStartingRoll, currentStartingRoll } from './startingRoll';
 
 export interface ForgeTableOptions {
   onExit(): void;
@@ -396,7 +397,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       slots.slice(0, -1).forEach(slot => slot.querySelectorAll<HTMLElement>('[tabindex],.inspect-card').forEach(el => { el.tabIndex = -1; }));
     });
     root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field').forEach(el => { const position = scrollPositions.get(el.id); el.scrollLeft = position?.left ?? 0; el.scrollTop = position?.top ?? 0; });
-    applyOpeningPresentation(root, s);
+    applyOpeningPresentation(root, s, currentStartingRoll(timeline.history));
+    applyStartingRoll(root, s, timeline.history, timeline.matchId);
     modal.restore(savedFocus);
     syncModal();
     layoutCounters(root);
