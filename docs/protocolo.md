@@ -197,7 +197,8 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `gameMs?` | `number` | Duração do jogo que acabou de terminar, em ms (medida pelo servidor); ausente enquanto ele não termina. |
 | `elapsedMs?` | `number` | Quanto o jogo em andamento já durou quando o estado saiu do servidor, em ms; ausente depois que ele termina. |
 | `phase` | `'playing' \| 'sideboarding' \| 'complete'` |  |
-| `ready` | `boolean[]` |  |
+| `ready` | `boolean[]` | Quem está pronto para o próximo jogo: os assentos na ordem da sala e depois os computadores (sempre prontos). |
+| `concededBy?` | `string` | Nome (no jogo) de quem desistiu da série; só com `abandoned`. Ausente em servidores antigos. |
 
 ## FSideboarding
 
@@ -668,7 +669,7 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'list-rooms'; requestId: string }
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
-  | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
+  | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number } | { type: 'sideboard-cancel'; id: number }
   | { type: 'rematch' } | { type: 'leave' } | { type: 'lab-close' }
   | ({ type: 'preferences' } & Partial<FPreferences>)
   | { type: 'card'; id: number; gen?: number }

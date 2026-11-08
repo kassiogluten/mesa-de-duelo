@@ -7,6 +7,11 @@
 @keyframes game-menu-in { from { opacity: 0; transform: translateY(-8px) scale(.96); } }
 .forge .game-menu .btn { min-height: 44px; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: 500 15px var(--body); transition: background-color 120ms ease, transform 120ms ease; }
 .forge .game-menu .btn:hover { background: var(--surface); transform: none; }
+.forge .game-menu .btn:not(.game-menu-version) { display: flex; align-items: center; gap: 12px; text-align: left; }
+.forge .game-menu .btn > svg { flex: none; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; color: var(--muted); }
+.forge .game-menu .btn:hover > svg { color: var(--ink); }
+.forge .game-menu .btn.menu-danger, .forge .game-menu .btn.menu-danger > svg { color: var(--red); }
+.forge .game-menu .btn.menu-danger:hover { background: color-mix(in srgb, var(--red) 14%, transparent); }
 .forge .game-menu .btn:active, .forge .game-menu-trigger:active, .game-options button:active { transform: scale(.96); }
 .game-menu-divider { height: 1px; margin: 4px 12px; background: var(--line); }
 .game-menu-meta { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; color: var(--muted); font: 500 12px var(--body); }

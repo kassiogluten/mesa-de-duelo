@@ -277,7 +277,7 @@ O histórico de partidas da área de admin só grava a série que termina de ver
 - Quem sai da sala no meio, fecha a aba e não volta no prazo de reconexão, ou abandona a partida contra a IA, some do histórico: a partida só vira o contador "abandonada" nas métricas, sem jogadores, decks nem vencedor.
 - Na sala em rede, sair já conta como conceder o jogo atual, e o oponente vê a partida encerrada; mas a série não chega a ser concluída, então nada é gravado.
 - Com isso, as estatísticas por deck e por jogador contam só quem jogou até o fim, e quem costuma desistir de partidas perdidas não aparece.
-- O botão "Desistir e voltar ao início" passa pelo mesmo caminho: numa partida de 1 jogo, ou no jogo que decide a série, ele encerra a série e a linha é gravada (motivo "desistência"); numa melhor de 3 antes do jogo decisivo, ou entre jogos, nada é gravado.
+- O "Conceder e sair" do menu (antes "Desistir e voltar ao início") passa pelo mesmo caminho: numa partida de 1 jogo, ou no jogo que decide a série, ele encerra a série e a linha é gravada (motivo "desistência"); numa melhor de 3 antes do jogo decisivo, ou entre jogos, nada é gravado.
 
 Alternativas (recomendado: A + B):
 

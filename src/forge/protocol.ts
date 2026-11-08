@@ -97,7 +97,11 @@ export interface FMatch {
   gameMs?: number;
   /** Quanto o jogo em andamento já durou quando o estado saiu do servidor, em ms; ausente depois que ele termina. */
   elapsedMs?: number;
-  phase: 'playing' | 'sideboarding' | 'complete'; ready: boolean[];
+  phase: 'playing' | 'sideboarding' | 'complete';
+  /** Quem está pronto para o próximo jogo: os assentos na ordem da sala e depois os computadores (sempre prontos). */
+  ready: boolean[];
+  /** Nome (no jogo) de quem desistiu da série; só com `abandoned`. Ausente em servidores antigos. */
+  concededBy?: string;
 }
 export interface FSideboarding { id: number; main: DeckEntry[]; sideboard: DeckEntry[]; ready: boolean }
 
@@ -556,7 +560,7 @@ export type ClientMessage =
   | { type: 'list-rooms'; requestId: string }
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
-  | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number }
+  | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number } | { type: 'sideboard-cancel'; id: number }
   | { type: 'rematch' } | { type: 'leave' } | { type: 'lab-close' }
   | ({ type: 'preferences' } & Partial<FPreferences>)
   | { type: 'card'; id: number; gen?: number }

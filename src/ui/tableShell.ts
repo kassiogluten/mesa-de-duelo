@@ -8,6 +8,14 @@ import { SOUND_PACKS } from './audio';
 import { PASS_LEVELS, PASS_LEVEL_ALWAYS, passLevelInfo } from './passLevel';
 import { screenWake } from './screenWake';
 import { temaOptionsHTML, temasDisponiveis } from './temas';
+import { ICON_BALLOON, ICON_EYE, ICON_FLAG, ICON_FLASK, ICON_HOME, ICON_REFRESH } from './icons';
+
+// Ícones que só o menu da partida usa.
+const ICON_LIST = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const ICON_WARNING = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19zM12 10v4.5M12 17.5h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+/** O texto de um item do menu, ao lado do ícone; matchMenu.ts troca só o texto. */
+const label = (text: string) => `<span class="game-menu-label">${text}</span>`;
 
 /** feedback: há "Enviar sugestão ou erro"; download: "Baixar gravação" (desenvolvimento); buzz: o aparelho vibra. */
 export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: boolean }) {
@@ -27,15 +35,16 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
     <nav class="menu game-menu" id="fMenu" aria-label="Menu da partida" hidden>
       <div class="game-menu-meta"><span class="format-tag" id="fFormatTag" hidden></span><span class="room-tag" id="fRoomTag" hidden></span><span class="series-score" id="fSeries" hidden></span></div>
       <p class="game-menu-audience" id="fAudience" hidden></p>
-      <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">Registro</button>
-      <button class="btn" data-ui="errors" aria-expanded="false" aria-controls="fErrorsDrawer">Erros da partida<span class="menu-count" id="fErrorsCount" hidden></span></button>
-      <button class="btn" data-ui="feedback" aria-haspopup="dialog"${o.feedback ? '' : ' hidden'}>Enviar sugestão ou erro</button>
-      <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">Opções</button>
+      <button class="btn" data-ui="log" aria-expanded="false" aria-controls="fLogDrawer">${ICON_LIST}${label('Registro')}</button>
+      <button class="btn" data-ui="errors" aria-expanded="false" aria-controls="fErrorsDrawer">${ICON_WARNING}${label('Erros da partida')}<span class="menu-count" id="fErrorsCount" hidden></span></button>
+      <button class="btn" data-ui="feedback" aria-haspopup="dialog"${o.feedback ? '' : ' hidden'}>${ICON_BALLOON}${label('Enviar sugestão ou erro')}</button>
+      <button class="btn" data-ui="settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="fSettings">${ICON_GEAR}${label('Opções')}</button>
       <div class="game-menu-divider" aria-hidden="true"></div>
-      <button class="btn" data-ui="rematch" id="fMenuRematch">Recomeçar partida</button>
-      <button class="btn" data-ui="watchable" id="fMenuWatchable" hidden></button>
-      <button class="btn" data-ui="lab-close" id="fMenuLab" hidden>Fechar a sala e voltar ao Laboratório</button>
-      <button class="btn" data-ui="exit" id="fMenuExit">Desistir e voltar ao início</button>
+      <button class="btn" data-ui="rematch" id="fMenuRematch">${ICON_REFRESH}${label('Recomeçar partida')}</button>
+      <button class="btn" data-ui="watchable" id="fMenuWatchable" hidden>${ICON_EYE}${label('')}</button>
+      <button class="btn" data-ui="lab-close" id="fMenuLab" hidden>${ICON_FLASK}${label('Fechar a sala e voltar ao Laboratório')}</button>
+      <button class="btn menu-danger" data-ui="concede" id="fMenuConcede" aria-haspopup="dialog" hidden>${ICON_FLAG}${label('Conceder')}</button>
+      <button class="btn" data-ui="exit" id="fMenuExit" hidden>${ICON_HOME}${label('Sair da partida')}</button>
       <button type="button" class="game-menu-version" data-ui="version" aria-pressed="false" title="Toque para ver as versões das regras e do motor">Mesa de Duelo ${esc(VERSION)}</button>
     </nav>
     <div class="overlay game-options-overlay" id="fSettings" hidden>

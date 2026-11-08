@@ -8,6 +8,21 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.146.0] - 2026-11-07
+
+### Novo
+
+- **Ver se o oponente já trocou as cartas.** No painel Prepare o próximo jogo de uma melhor de três, uma linha diz se o oponente ainda está trocando cartas ou já confirmou o deck, e muda na hora em que ele confirma.
+- **Voltar a editar as trocas do sideboard.** Depois de confirmar as trocas, o botão Voltar a editar destrava o deck enquanto o próximo jogo não começa, para mudar de ideia sem esperar.
+- **Desistir da série sem sair da sala.** No painel Prepare o próximo jogo, Desistir da série encerra a melhor de três ali mesmo: quem desiste vê a Derrota, o oponente vê a Vitória com o placar, e os dois continuam na sala para pedir revanche.
+- **Conceder e continuar na mesa.** No menu da partida, Conceder pergunta se você quer continuar na mesa ou sair. Continuando, na melhor de três você segue para a troca de cartas do próximo jogo; numa partida só, vai para o resultado, com Jogar de novo ou Pedir revanche; no Commander com vários jogadores, continua assistindo. Conceder e sair volta ao início, como o antigo Desistir e voltar ao início.
+
+### Mudou
+
+- **Ícones no menu da partida.** Cada opção do menu ganhou um ícone ao lado do nome: lista no Registro, alerta nos Erros da partida, balão no Enviar sugestão ou erro, engrenagem nas Opções, casa no Sair da partida, e o Conceder vem em vermelho, com uma bandeira.
+- **Sem Sair da partida entre os jogos.** O painel Prepare o próximo jogo não tem mais Sair da partida: para encerrar ali, use Desistir da série, e a tela de resultado leva ao início. Sair no meio de um jogo fica no Conceder do menu.
+- **Vitória quando o oponente sai da sala.** Se o oponente sai de uma partida em sala antes do fim, a tela de resultado mostra Vitória, com quem desistiu e o placar, em vez de Partida encerrada.
+
 ## [0.145.0] - 2026-11-06
 
 ### Novo

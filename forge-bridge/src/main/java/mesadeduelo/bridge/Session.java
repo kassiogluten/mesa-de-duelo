@@ -68,6 +68,8 @@ final class Session {
     volatile boolean abandoned;
     /** Quem desistiu primeiro da partida atual (o humano contra a IA sai por aqui). */
     volatile Seat conceder;
+    /** Quem encerrou a série antes do fim (saindo ou desistindo entre os jogos): a mesa mostra a vitória do outro. */
+    volatile Seat seriesQuitter;
     /** Quando a sala ou partida foi criada (para a área de admin). */
     private final long createdAt = System.currentTimeMillis();
     /** Relógios da partida, métricas e a linha do histórico. */
@@ -315,7 +317,7 @@ final class Session {
         stop();
         matchId = UUID.randomUUID().toString();
         events.reset(); stateVersion.set(0);
-        matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null;
+        matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null; seriesQuitter = null;
         recorder.reset();
         undo.clear();
         HostedMatch m = new HostedMatch();
@@ -431,7 +433,8 @@ final class Session {
         for (Seat each : seats) if (!each.sideboardReady) return;
         HostedMatch continuing = match;
         matchPhase = "playing"; gameNumber++; recorder.nextGame();
-        for (Seat each : seats) { each.inputGen.incrementAndGet(); each.clearInput(); }
+        // Quem desistiu do jogo anterior sem sair volta a jogar: o assento não fica mais marcado como desistente.
+        for (Seat each : seats) { each.inputGen.incrementAndGet(); each.clearInput(); each.conceded = false; }
         FThreads.invokeInEdtLater(() -> {
             if (match != continuing || abandoned) return;
             continuing.continueMatch();
@@ -439,10 +442,19 @@ final class Session {
         });
     }
 
+    /** Desfaz o pronto do assento entre os jogos, para voltar a mexer nas trocas; depois que o próximo jogo começou, não faz nada. */
+    synchronized void cancelSideboard(Seat seat, JsonObject msg) {
+        if (!"sideboarding".equals(matchPhase) || match == null || !seat.sideboardReady) return;
+        if (!msg.has("id") || ClientActions.exactInt(msg.get("id")) != sideboardId) { markDirty(); return; }
+        seat.sideboardReady = false; seat.approvedDeck = null; markDirty();
+    }
+
     JsonObject matchJson() {
         JsonObject o = new JsonObject();
         o.addProperty("gameNumber", gameNumber); o.addProperty("over", matchOver()); o.addProperty("phase", matchPhase);
         o.addProperty("abandoned", abandoned);
+        Seat quitter = seriesQuitter;
+        if (abandoned && quitter != null) o.addProperty("concededBy", quitter.name);
         recorder.gameClock(o, "playing".equals(matchPhase));
         JsonArray wins = new JsonArray(), ready = new JsonArray();
         int draws = 0;
@@ -491,6 +503,7 @@ final class Session {
             if (othersGone(seat)) recorder.unfinished(null);
             else if (!playing) recorder.unfinished(seat);
             if (conceder == null) conceder = seat;
+            seriesQuitter = seat;
             abandoned = true;
             matchPhase = "complete";
             markDirty();
@@ -501,7 +514,7 @@ final class Session {
     /** Concede o jogo atual; entre jogos, encerra a partida sem inventar vitórias. */
     synchronized void concede(Seat seat) {
         if (conceder == null && !matchOver()) conceder = seat;
-        if ("sideboarding".equals(matchPhase)) { recorder.unfinished(seat); abandoned = true; matchPhase = "complete"; markDirty(); }
+        if ("sideboarding".equals(matchPhase)) { recorder.unfinished(seat); seriesQuitter = seat; abandoned = true; matchPhase = "complete"; markDirty(); }
         HostedMatch current = match;
         if (current == null || current.getGame() == null || gameOver() || seat.me == null) return;
         lifecycle.requestConcede(current.getGame(), seat.me.getId());

@@ -1,4 +1,29 @@
 {
+  "0.146.0": {
+    "Ver se o oponente já trocou as cartas": [
+      { "img": "0.146.0/oponente-pronto.webp", "legenda": "No painel Prepare o próximo jogo, a linha com a bolinha verde avisa que o oponente já confirmou o deck, acima de Desistir da série e Continuar sem trocas." }
+    ],
+    "Voltar a editar as trocas do sideboard": [
+      { "img": "0.146.0/voltar-a-editar.webp", "legenda": "Depois de confirmar as trocas, enquanto o oponente ainda está trocando cartas, o botão Voltar a editar aparece ao lado de Aguardando o oponente." }
+    ],
+    "Desistir da série sem sair da sala": [
+      { "img": "0.146.0/botao-desistir.webp", "legenda": "No painel Prepare o próximo jogo, o botão Desistir da série, ao lado de Continuar sem trocas." },
+      { "img": "0.146.0/desistir-da-serie.webp", "legenda": "Quando o oponente desiste da série no painel do sideboard, a tela mostra Vitória com o placar e o botão Pedir revanche." }
+    ],
+    "Conceder e continuar na mesa": [
+      { "img": "0.146.0/menu-conceder.webp", "legenda": "No menu da partida, com o jogo em andamento, o botão Conceder em vermelho, com a bandeira." },
+      { "img": "0.146.0/conceder-confirmar.webp", "legenda": "A confirmação do Conceder numa melhor de três: Conceder e sair, Conceder e continuar na mesa, ou Voltar ao jogo, que já vem em foco." }
+    ],
+    "Ícones no menu da partida": [
+      { "img": "0.146.0/menu-conceder.webp", "legenda": "O menu da partida com um ícone em cada opção: lista, alerta, balão e engrenagem, e o Conceder em vermelho no fim." }
+    ],
+    "Sem Sair da partida entre os jogos": [
+      { "img": "0.146.0/voltar-a-editar.webp", "legenda": "O painel Prepare o próximo jogo só com Desistir da série, Voltar a editar e Aguardando o oponente, sem Sair da partida." }
+    ],
+    "Vitória quando o oponente sai da sala": [
+      { "img": "0.146.0/desistir-da-serie.webp", "legenda": "A mesma tela de Vitória aparece quando o oponente sai da sala antes do fim: diz quem desistiu e mostra o placar." }
+    ]
+  },
   "0.145.0": {
     "Cartas em aventura e previstas no exílio do Laboratório": [
       { "img": "0.145.0/exilio-laboratorio.webp", "legenda": "No editor do Laboratório, o exílio do Jogador 1 com o Bonecrusher Giant em aventura e a Saw It Coming prevista, cada um com a escolha de como está no exílio." }

@@ -102,6 +102,14 @@ try {
   rejoined.send({ type: 'sideboard', id: sideId, deck: swapped });
   await until(() => rejoined.state?.sideboarding?.ready, 'private sideboard accepted');
   assert.equal(b.state.sideboarding.ready, false);
+  await until(() => b.state?.match.ready[0] === true, 'opponent sees sideboard ready');
+  rejoined.send({ type: 'sideboard-cancel', id: sideId - 1 }); await wait(150);
+  assert.equal(rejoined.state.sideboarding.ready, true, 'stale sideboard cancel undid ready');
+  rejoined.send({ type: 'sideboard-cancel', id: sideId });
+  await until(() => rejoined.state?.sideboarding?.ready === false && b.state?.match.ready[0] === false, 'sideboard cancel');
+  assert.ok(!rejoined.state.sideboarding.main.some(c => c.name === 'Lightning Bolt'), 'cancel keeps the registered deck as the original');
+  rejoined.send({ type: 'sideboard', id: sideId, deck: swapped });
+  await until(() => rejoined.state?.sideboarding?.ready, 'sideboard accepted again');
   b.send({ type: 'next-game', id: sideId - 1 }); await wait(150);
   assert.equal(b.state.match.gameNumber, 1, 'stale sideboard command progressed game');
   b.send({ type: 'next-game', id: sideId });
@@ -123,8 +131,12 @@ try {
   assert.deepEqual(rejoined.state.match.wins, [0, 0]); assert.deepEqual(rejoined.state.config, {...config, undo: true});
   b.send({ type: 'concede' });
   await until(() => rejoined.state?.sideboarding && b.state?.sideboarding, 'rematch sideboarding');
+  rejoined.send({ type: 'concede' });
+  await until(() => b.state?.match.abandoned && rejoined.state?.match.abandoned, 'series conceded while sideboarding');
+  assert.equal(b.state.match.concededBy, 'Protocol A'); assert.equal(rejoined.state.match.concededBy, 'Protocol A');
+  assert.ok(b.state.room.players[0].connected, 'conceding the series left the room');
   rejoined.send({ type: 'leave' });
-  await until(() => b.state?.match.abandoned, 'abandoned match');
+  await until(() => !b.state.room.players[0].connected, 'leave after conceding');
   assert.equal(b.state.match.over, true); assert.equal(b.state.match.phase, 'complete');
   assert.deepEqual(b.state.match.wins, [1, 0], 'abandonment must not invent game wins');
   const remaining = await peer(), departing = await peer();
@@ -137,6 +149,7 @@ try {
   await until(() => remaining.state?.match.abandoned && remaining.state.gameOver, 'leave during first game ends series');
   assert.equal(remaining.state.match.phase, 'complete'); assert.equal(remaining.state.match.over, true);
   assert.deepEqual(remaining.state.match.wins, [1, 0], 'only the conceded game should be scored');
+  assert.equal(remaining.state.match.concededBy, 'Departing');
   assert.ok(!remaining.state.sideboarding, 'departed opponent stranded survivor in sideboarding');
   remaining.send({type: 'next-game', id: 0}); await wait(150);
   assert.equal(remaining.state.match.gameNumber, 1); assert.equal(remaining.state.match.phase, 'complete');

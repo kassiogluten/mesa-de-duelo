@@ -43,6 +43,7 @@ final class ClientActions {
             case "preferences" -> seat.updatePreferences(source, msg);
             case "sideboard" -> session.submitSideboard(seat, msg, false);
             case "next-game" -> session.submitSideboard(seat, msg, true);
+            case "sideboard-cancel" -> session.cancelSideboard(seat, msg);
             case "hello" -> session.markDirty();
             case "ok", "cancel" -> {
                 int gen = genAtClick;

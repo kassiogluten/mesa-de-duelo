@@ -415,11 +415,15 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     ] };
     view.render();
   },
-  /** Fim do jogo: a tela de resultado ou, na melhor de três, "Prepare o próximo jogo" (com "Relatar um problema"). */
-  gameEnd(step: 'result' | 'sideboard' = 'result') {
+  /**
+   * Fim do jogo: a tela de resultado ou, na melhor de três, "Prepare o próximo jogo" (com "Relatar um problema").
+   * `ready`: eu já confirmei as trocas; `opponentReady`: o oponente já confirmou; `concededBy`: quem desistiu da série.
+   */
+  gameEnd(step: 'result' | 'sideboard' = 'result', o: { ready?: boolean; opponentReady?: boolean; concededBy?: string } = {}) {
     state.gameOver = true; state.winner = 'Você';
-    state.match = { gameNumber: 1, wins: [1, 0], draws: 0, over: step === 'result', phase: step === 'result' ? 'complete' : 'sideboarding', ready: [false, false] };
-    if (step === 'sideboard') state.sideboarding = { id: 1, ready: false,
+    state.match = { gameNumber: 1, wins: [1, 0], draws: 0, over: step === 'result', phase: step === 'result' ? 'complete' : 'sideboarding', ready: [!!o.ready, !!o.opponentReady],
+      ...(o.concededBy ? { abandoned: true, concededBy: o.concededBy } : {}) };
+    if (step === 'sideboard') state.sideboarding = { id: 1, ready: !!o.ready,
       main: [{ name: 'Llanowar Elves', count: 4 }, { name: 'Elvish Mystic', count: 4 }, { name: 'Lightning Bolt', count: 4 }, { name: 'Rampant Growth', count: 3 }, { name: 'Cultivate', count: 2 },
         { name: 'Soul Warden', count: 2 }, { name: 'Llanowar Wastes', count: 1 }, { name: 'Forest', count: 16 }, { name: 'Mountain', count: 6 }],
       sideboard: [{ name: 'Naturalize', count: 2 }, { name: 'Pyroblast', count: 3 }, { name: 'Duress', count: 2 }, { name: 'Fog', count: 1 }] };

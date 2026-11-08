@@ -8,8 +8,17 @@ import { turnTimeText } from './phaseHud';
 import { ICON_FLAG, ICON_EYE, ICON_HOME } from './icons';
 
 export function gameResult(s: FState) {
-  const abandoned = !!s.match?.abandoned;
   const played = s.match?.gameMs != null ? ` · ${turnTimeText(s.match.gameMs)} de jogo` : '';
+  const quitter = s.match?.abandoned ? s.match.concededBy : undefined;
+  // Desistência (entre os jogos ou saindo da sala): quem desistiu perde e o outro vence, com o placar dos jogos.
+  if (quitter) {
+    const mine = !s.watching && quitter === tablePlayers(s).me?.name;
+    const series = s.config?.matchLength === 'bo3' ? ' da série' : '';
+    const score = `Placar: ${s.match!.wins.join(' × ')}`;
+    if (s.watching) return { tone: 'draw', title: `${esc(quitter)} desistiu${series}`, detail: score };
+    return { tone: mine ? 'lose' : 'win', title: mine ? 'Derrota' : 'Vitória', detail: `${mine ? 'Você desistiu' : `${esc(quitter)} desistiu`}${series} · ${score}` };
+  }
+  const abandoned = !!s.match?.abandoned;
   // Quem assiste não vence nem perde: o título diz quem venceu.
   if (s.watching) return {
     tone: 'draw',

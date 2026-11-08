@@ -2,6 +2,7 @@
 // ponto do clique em que esses botões eram testados: a ordem entre os grupos e os outros cliques importa.
 import { VERSION } from './changelog';
 import { hideCardPreview } from './cardInspector';
+import { confirmConcede } from './concedeDialog';
 import type { createAttackChoice } from './attackChoice';
 import type { createErrorsPanel } from './errorsPanel';
 import { toggleFullscreen } from './landscape';
@@ -49,6 +50,8 @@ export interface UiActionDeps extends Pick<TableCtx, '$' | 'opts' | 'client' | '
 
 export function createUiActions(d: UiActionDeps) {
   const { $ } = d;
+  /** Desiste (se o jogo ainda corre) e volta ao início. */
+  const leaveTable = () => { d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset(); d.client()?.send({ type: 'concede' }); d.opts.onExit(); };
   /** O nível de passar e o "Passar até o fim do turno". */
   const pass: UiTable = {
     // Nível de passar automaticamente: o selo abre a troca rápida; fora do menu, ele fecha.
@@ -105,6 +108,16 @@ export function createUiActions(d: UiActionDeps) {
       d.render();
     },
     'next-game': (t, e, ui) => panel['sideboard-ready']!(t, e, ui), // definida logo acima
+    'sideboard-cancel': () => {
+      const client = d.client(), sb = client?.state?.sideboarding;
+      if (!client || !sb?.ready) return;
+      client.send({ type: 'sideboard-cancel', id: sb.id });
+    },
+    // Desiste da série sem sair: a mesa vai para o resultado, com a revanche.
+    'sideboard-concede': () => {
+      const client = d.client();
+      if (client?.state?.sideboarding && confirm('Desistir da série? O oponente vence a melhor de três.')) client.send({ type: 'concede' });
+    },
   };
   /** As ações: o menu, o histórico e os erros, desfazer, sair, o resultado e as janelas de remoção e de zona. */
   const action: UiTable = {
@@ -139,7 +152,20 @@ export function createUiActions(d: UiActionDeps) {
     'exit': () => {
       const client = d.client();
       if (client?.state?.watching) { d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset(); d.opts.onExit(); return; }
-      if (client?.state?.gameOver || d.match().disconnected || confirm(client?.state?.room ? 'Desistir e sair da sala?' : 'Desistir desta partida?')) { d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset(); client?.send({ type: 'concede' }); d.opts.onExit(); }
+      if (client?.state?.gameOver || d.match().disconnected || confirm(client?.state?.room ? 'Sair da sala?' : 'Sair desta partida?')) leaveTable();
+    },
+    // Conceder com o jogo em andamento: continuar na mesa (o resultado, o sideboard do próximo jogo ou, com vários
+    // jogadores, assistindo) ou sair para o início.
+    'concede': () => {
+      const s = d.client()?.state;
+      if (!s || s.gameOver || s.watching) return;
+      d.setMenu(false);
+      void confirmConcede(s).then(choice => {
+        const client = d.client(), now = client?.state;
+        if (!choice || !client || !now || now.gameOver || d.match().disconnected) return;
+        if (choice === 'leave') { leaveTable(); return; }
+        client.send({ type: 'concede' });
+      });
     },
     'lab-close': () => { if (d.state()?.gameOver || d.match().disconnected || confirm('Fechar a sala de teste? A partida acaba para os dois lados.')) { d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset(); d.opts.onLabClose?.(); } },
     'rematch': () => { d.setMenu(false); d.opts.onRematch(); },

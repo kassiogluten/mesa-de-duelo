@@ -2,6 +2,7 @@
 import type { FState } from '../forge/client';
 import { entryKey, isConstructed, type DeckEntry } from '../decks';
 import { esc } from './cardtext';
+import { tablePlayers } from './commanderTable';
 import { CURVE, type DeckRow } from './deckStats';
 import { reportButton } from './resultView';
 import { copyDelta, sideboardChanges, sideboardGroups, sideboardStats, TYPE_FILTERS, type SideboardFilter, type SideboardSide } from './sideboardDraft';
@@ -62,6 +63,16 @@ function changesHTML(s: FState, draft: SideboardDraft, o: SideboardViewOptions, 
     + `<button type="button" class="sb-reset" data-sb-reset ${locked ? 'disabled' : ''}>${ICON_UNDO}Desfazer tudo</button></div>`;
 }
 
+/** Se o oponente já confirmou o deck do próximo jogo. A melhor de três é sempre entre dois: um assento meu, o outro dele. */
+function opponentHTML(s: FState) {
+  const ready = s.match?.ready, name = tablePlayers(s).opponents[0]?.name;
+  const mine = s.room?.seat ?? 0;
+  const theirs = ready?.filter((_, index) => index !== mine);
+  if (!name || theirs?.length !== 1) return '';
+  return theirs[0] ? `<p class="sb-opponent is-ready" role="status"><i aria-hidden="true"></i>${esc(name)} já confirmou o deck</p>`
+    : `<p class="sb-opponent" role="status"><i aria-hidden="true"></i>${esc(name)} ainda está trocando cartas</p>`;
+}
+
 /** Entre os jogos de uma melhor de três: trocar cartas entre o deck e o sideboard. `details` é o resumo do jogo que acabou. */
 export function sideboardHTML(s: FState, draft: SideboardDraft, o: SideboardViewOptions) {
   const sb = s.sideboarding!;
@@ -79,8 +90,8 @@ export function sideboardHTML(s: FState, draft: SideboardDraft, o: SideboardView
     <div class="sb-toolbar"><label class="sb-search">${ICON_SEARCH}<input type="search" data-sb-filter data-focus="sb:filter" value="${esc(o.filter.text)}" placeholder="Buscar carta" aria-label="Buscar carta pelo nome" autocomplete="off" spellcheck="false"></label>
     <div class="sb-types" role="group" aria-label="Mostrar só">${TYPE_FILTERS.map(([value, label]) => `<button type="button" data-sb-type="${value}" data-focus="sb:type:${value}" aria-pressed="${o.filter.type === value}">${label}</button>`).join('')}</div></div>
     <div class="sb-board">${columnHTML('main', s, draft, o, locked)}${columnHTML('sideboard', s, draft, o, locked)}</div>
-    <footer class="sb-foot">${changesHTML(s, draft, o, locked)}
-    <div class="sideboard-actions"><button class="arena-btn secondary" data-ui="exit">Sair da partida</button><button class="arena-btn primary" data-ui="${changed ? 'sideboard-ready' : 'next-game'}" ${locked ? 'disabled' : ''}>${primary}</button></div></footer>
+    <footer class="sb-foot">${changesHTML(s, draft, o, locked)}${opponentHTML(s)}
+    <div class="sideboard-actions"><button class="arena-btn secondary" data-ui="sideboard-concede">Desistir da série</button>${sb.ready ? '<button class="arena-btn secondary" data-ui="sideboard-cancel">Voltar a editar</button>' : ''}<button class="arena-btn primary" data-ui="${changed ? 'sideboard-ready' : 'next-game'}" ${locked ? 'disabled' : ''}>${primary}</button></div></footer>
     ${reportButton(o.feedback)}
   </div>`;
 }

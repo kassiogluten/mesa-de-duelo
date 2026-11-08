@@ -73,6 +73,10 @@
 .sb-reset { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: none; color: var(--muted); font: 500 13px var(--body); cursor: pointer; }
 .sb-reset svg { width: 15px; height: 15px; }
 .sb-reset:hover:not(:disabled) { color: var(--ink); }
+.sb-opponent { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; color: var(--muted); }
+.sb-opponent i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--muted); }
+.sb-opponent.is-ready { color: var(--ink); }
+.sb-opponent.is-ready i { border-color: var(--heal); background: var(--heal); box-shadow: 0 0 6px var(--heal); }
 .sideboard-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-left: auto; }
 .sideboard-panel .result-report { margin-top: 0; padding-left: 0; align-self: flex-start; }
 
