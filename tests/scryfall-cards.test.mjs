@@ -28,7 +28,8 @@ test('a Portuguese print without a scan keeps the English image', () => {
 
 test('basic lands use the fixed art and the chosen print replaces the default image', () => {
   const forest = withBasicArt({ name: 'Forest', layout: 'normal', type_line: 'Land', image_uris: uris('f'), pt: { name: 'Floresta', image_uris: uris('fp') } });
-  assert.match(forest.image_uris.normal, /\/cards\/dmu\/281\?format=image&version=normal$/);
+  assert.equal(forest.image_uris.normal, '/terrenos/forest-normal.webp');
+  assert.equal(forest.image_uris.art_crop, '/terrenos/forest-art.webp');
   assert.equal(forest.pt.image_uris, undefined);
   assert.equal(printKey('Forest', { set: 'DMU' }), 'dmu/forest');
   assert.equal(printKey('Forest', { set: 'dmu', cn: '281' }), 'dmu/281');

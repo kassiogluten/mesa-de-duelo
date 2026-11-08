@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.149.0] - 2026-11-08
+
+### Mudou
+
+- **Terrenos básicos com arte em estilo anime.** Planície, Ilha, Pântano, Montanha e Floresta ganharam uma série própria da mesa, em estilo anime e com o nome em português na carta, no lugar das artes de Dominaria United. Vale em todas as telas: mesa, mão, deck e biblioteca. Quem escolheu outra impressão para um terreno no deck continua vendo a escolhida.
+
 ## [0.148.0] - 2026-11-08
 
 ### Novo

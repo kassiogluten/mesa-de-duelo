@@ -1,4 +1,9 @@
 {
+  "0.149.0": {
+    "Terrenos básicos com arte em estilo anime": [
+      { "img": "0.149.0/terrenos-anime.webp", "legenda": "Os cinco terrenos básicos da nova série: Planície, Ilha, Pântano, Montanha e Floresta, com o nome em português." }
+    ]
+  },
   "0.148.0": {
     "Dados para decidir quem começa": [
       { "img": "0.148.0/dados-empate.webp", "legenda": "Numa mesa de quatro, Bruno e você empatam no 6: os outros dados apagam e só os dois rolam de novo." },

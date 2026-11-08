@@ -510,3 +510,55 @@ O Forge do servidor está fixado no commit `0b0f7ecc` (15/10/2026), que só tem 
 - [ ] Rodar os testes do servidor e o `npm run test:e2e` (o commit novo traz mudanças no motor, não só cartas).
 - [ ] Decidir se os precons de Star Trek Commander entram nos decks prontos (Commander Precon).
 - [ ] Item no CHANGELOG ("cartas de Star Trek").
+
+## 113. Combos infinitos e loops, do jogador e do computador
+
+Pedido em 08/11/2026. Hoje nada na mesa nem no servidor trata loop: um loop obrigatório deixa o servidor girando e a sala travada, um combo infinito opcional precisa ser clicado volta por volta, e o computador às vezes repete a mesma jogada centenas de vezes, enchendo o Registro e a fila de animações. São três casos, com respostas diferentes.
+
+**Loop obrigatório (ninguém consegue parar).** Pela regra 104.4b, a partida empata.
+
+- [ ] Conferir se o Forge já tem alguma trava de loop ou de pilha (para não duplicar).
+- [ ] Vigia no servidor: conta resoluções e gatilhos desde a última decisão de verdade de algum jogador; passando de um limite (por exemplo, 300 sem ninguém escolher nada, ou o mesmo estado da mesa repetido), encerra o jogo como empate. Numa série, o jogo seguinte segue normal.
+- [ ] Mesa: o motivo na tela de fim e no Registro ("Loop sem fim que ninguém pode parar: empate.").
+- [ ] Teste do servidor com um loop obrigatório montado e cenário no Laboratório.
+
+**Computador repetindo jogadas.**
+
+- [ ] Teto por turno: depois de N ações iguais no mesmo turno (ou X segundos de turno), o servidor faz o computador passar a prioridade.
+- [ ] Registro agrupando repetições ("Ativou Ashnod's Altar ×150"), junto com o item 36.
+- [ ] Animações aceleradas ou puladas quando a fila passa de um tamanho, com aviso "O computador está repetindo uma jogada…" e um botão para acelerar.
+
+**Combo infinito opcional de um jogador.** A regra permite o atalho: mostrar o loop, dizer quantas vezes repete, e os oponentes aceitam ou dizem em qual volta querem responder.
+
+- [ ] A. "Tenho um combo infinito": abre uma votação (aproveitando a de pular a vez, `SkipVote`) em que os oponentes respondem "Concedo" ou "Quero ver jogado".
+- [ ] C. Aliviar o clique: "Repetir esta ativação" com contador, e escolhas repetidas lembradas (como o "Usar a mesma escolha" da ordem dos efeitos).
+- [ ] B. (só se A e C não bastarem) Repetir N vezes a sequência gravada de uma volta, com cada oponente podendo parar numa volta específica para responder. Difícil no Forge: cada volta pode pedir alvos e escolhas diferentes, e a legalidade precisa ser conferida a cada uma.
+
+Ordem sugerida: vigia do loop obrigatório, depois o teto do computador com Registro e animações, depois a votação do combo (A) e o alívio do clique (C).
+
+- [ ] Decidir antes de fazer: loop obrigatório com empate automático (recomendado, não depende de ninguém responder) ou perguntando à mesa; combo de jogador só com a votação (A) ou já com o "Repetir N vezes" (B); quando o computador bate o teto, só passar a prioridade ou também avisar a mesa (recomendado avisar, para quem assiste entender a pausa); os limites (quantas resoluções, quantas ações iguais).
+
+## 114. Melhorar o desempenho em aparelhos fracos
+
+Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muitas cartas no campo, combates grandes, desfoques (`backdrop-filter` em 15 regras de CSS), brilhos, sombras e animações de dano e de cartas voando. Hoje a mesa só respeita o "reduzir movimento" do sistema (`prefers-reduced-motion`); não há uma opção própria nem detecção de aparelho fraco. Itens 7 e 8 já pediam "conferir desempenho no celular"; este junta tudo.
+
+**Medir primeiro.**
+
+- [ ] Partida de referência gravada (Commander com 4 jogadores, mesa cheia, combate grande) para repetir sempre igual na página de repetição.
+- [ ] Medir no Chrome com a CPU 4× e 6× mais lenta e num celular de entrada de verdade: quadros por segundo, tarefas longas, tempo de cada `state` até a mesa pintar, memória e tamanho da árvore da página (o Lighthouse contou 6.111 elementos, item 106).
+- [ ] Lista dos maiores culpados, em ordem, antes de mexer.
+
+**Mesa mais leve (sem mudar o que se vê).**
+
+- [ ] Atualizar só o que mudou a cada `state`, em vez de redesenhar zonas inteiras (ou casar com o item 20, Preact).
+- [ ] Cartas fora da tela e zonas fechadas sem montar elementos; imagens das cartas no tamanho em que aparecem (miniatura no campo, grande só no zoom), com `decoding="async"`.
+- [ ] Animações só com `transform` e `opacity`; nada animando `box-shadow`, `filter` ou tamanho; `will-change` só durante a animação.
+- [ ] Fila de animações com limite: quando acumula (combate grande, muitos gatilhos), acelerar ou pular para o fim.
+
+**Modo leve.**
+
+- [ ] Opção "Modo leve" nas Opções: sem desfoque (fundo escuro chapado), sem brilhos e sombras animadas, sem tremor nem efeitos de dano, animações curtas, arte em resolução menor.
+- [ ] Ligado sozinho na primeira vez em aparelho fraco (`navigator.deviceMemory`, `hardwareConcurrency`, ou quadros lentos medidos nos primeiros segundos), com aviso e como desligar; também quando o sistema pede para reduzir movimento.
+- [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
+
+- [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
