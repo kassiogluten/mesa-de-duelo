@@ -166,7 +166,10 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `self?` | `boolean` |  |
 | `lethal?` | `boolean` |  |
 | `prevented?` | `boolean` | `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). |
-| `reason?` | `'destroyed' \| 'sacrificed' \| 'warped'` | `left`: por que a carta saiu do campo, quando o Forge diz. |
+| `reason?` | `'destroyed' \| 'sacrificed' \| 'warped' \| 'ninjutsu' \| 'sneak'` | `left`: por que a carta saiu do campo, quando o Forge diz. |
+| `swapFor?` | `number` | Ninjutsu e sneak: no `left` do atacante, a carta do ninja; no `entered` do ninja, o atacante que voltou para a mão. |
+| `swapWith?` | `number` |  |
+| `swapName?` | `string` |  |
 | `sourceName?` | `string` | `mill`: a mágica ou habilidade que mandou moer, e se foi vidência em vez de moer. |
 | `surveil?` | `boolean` |  |
 | `fight?` | `boolean` | `damage` de uma luta (fight); `draw` de uma busca no grimório (tutor), sem dizer a carta. |

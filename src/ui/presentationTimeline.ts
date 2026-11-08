@@ -44,7 +44,11 @@ export interface PresentationEvent {
   count?: number;
   /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
   divided?: number;
-  reason?: 'destroyed' | 'sacrificed' | 'warped';
+  reason?: 'destroyed' | 'sacrificed' | 'warped' | 'ninjutsu' | 'sneak';
+  /** Ninjutsu e sneak: no `left` do atacante, a carta do ninja; no `entered` do ninja, o atacante que voltou para a mão. */
+  swapFor?: number;
+  swapWith?: number;
+  swapName?: string;
   /** Moer (`mill`): de onde veio a ordem e se foi vidência. */
   sourceName?: string;
   surveil?: boolean;
@@ -287,6 +291,8 @@ export function presentationDuration(event: PresentationEvent, fast: boolean) {
     : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
     : event.type === 'blockers' ? 620
     : event.type === 'entered' && event.card?.planeswalker && event.from !== 'Exile' ? 560
+    // Ninjutsu e sneak: o shuriken precisa ser visto cruzando a mesa até a fumaça.
+    : event.reason === 'ninjutsu' || event.reason === 'sneak' ? (event.type === 'entered' ? 1100 : 560)
     : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
     : event.type === 'damage' ? (event.combat ? 620 : 760)
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)

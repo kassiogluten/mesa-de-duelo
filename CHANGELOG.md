@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.152.0] - 2026-11-08
+
+### Novo
+
+- **Ninjutsu e sneak com fumaça e shuriken.** Quando alguém usa ninjutsu ou sneak, o atacante que volta para a mão some numa nuvem de fumaça, que fica no lugar dele enquanto a habilidade (ou a mágica, no sneak) está na pilha. Quando ela resolve, um shuriken gira da mão de quem usou até a fumaça, que estoura, e o ninja aparece nela, já virado e atacando. Todo mundo na mesa vê a mesma troca. O Registro diz qual atacante voltou para a mão e no lugar de quem o ninja entrou, e o sneak ganhou nome e explicação no menu de como conjurar.
+
+### Mudou
+
+- **Intimidar, sombra e outras evasões com o escudo vazado.** Criaturas com intimidar, sombra, medo, travessia, sorrateiro ou equitação também mostram o escudo vazado na borda esquerda, como a Delney: só algumas criaturas podem bloqueá-las. Voar continua com a asa, e proteção, com o selo dela.
+
 ## [0.151.0] - 2026-11-08
 
 ### Novo

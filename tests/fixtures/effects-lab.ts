@@ -387,6 +387,35 @@ function table() {
           setTimeout(() => { x.attacking = false; state.combat = []; state.phase = 'MAIN1'; flush(); }, 2500);
           return 'Ataque: a criatura recua um pouco, avança na direção do oponente e volta.';
         }
+        case 'ninjutsu': case 'sneak': {
+          // Ninjutsu ou sneak (item 115), como a ponte manda: o atacante volta para a mão (custo) com `swapFor`; a habilidade
+          // (ou a mágica) fica na pilha; ao resolver, o ninja entra virado e atacando com `swapWith`.
+          if (!x.creature) return 'Escolha uma criatura.';
+          const owner = player(x.controller), defender = x.controller === ME ? OPP : ME, sneak = c.kind === 'sneak';
+          const ninja = { id: nextId++, controller: x.controller, ...card(sneak ? 'Donatello, Gadget Master' : 'Ninja of the Deep Hours', { creature: true, power: 2, toughness: 2, basePower: 2, baseToughness: 2, damage: 0, manaCost: sneak ? '{2}{U}' : '{3}{U}', typeLine: sneak ? 'Legendary Creature — Mutant Ninja Turtle' : 'Creature — Human Ninja' }) };
+          x.attacking = true; x.tapped = true;
+          state.phase = 'COMBAT_DECLARE_BLOCKERS'; state.activePlayer = x.controller;
+          state.combat = [{ attacker: x.id, defender, defenderKind: 'player', blockers: [] }];
+          const stackId = nextId++;
+          setTimeout(() => {
+            owner.battlefield = owner.battlefield.filter((y: any) => y !== x); owner.hand.push({ ...x, tapped: false, attacking: false }); owner.handCount = owner.hand.length;
+            state.combat = [];
+            emit('left', { card: structuredClone(x), sourceId: x.id, actor: x.controller, from: 'Battlefield', to: 'Hand', reason: c.kind, swapFor: ninja.id });
+            state.stack = [{ id: stackId, text: sneak ? `${ninja.name} (Sneak)` : 'Ninjutsu', source: ninja, controller: x.controller }];
+            emit(sneak ? 'spell-cast' : 'ability-activated', { card: structuredClone(ninja), sourceId: ninja.id, actor: x.controller, stackId, to: 'Stack', ...(sneak ? { from: 'Hand' } : { text: 'Ninjutsu' }) });
+            flush();
+          }, 900);
+          setTimeout(() => {
+            state.stack = [];
+            const entered = { ...ninja, tapped: true, attacking: true, sick: true };
+            owner.battlefield.push(entered);
+            state.combat = [{ attacker: entered.id, defender, defenderKind: 'player', blockers: [] }];
+            emit('entered', { card: structuredClone(entered), sourceId: entered.id, actor: x.controller, from: sneak ? 'Stack' : 'Hand', to: 'Battlefield', reason: c.kind, swapWith: x.id, swapName: x.name, stackId });
+            flush();
+          }, 3200);
+          setTimeout(() => { owner.battlefield.forEach((y: any) => { y.attacking = false; }); state.combat = []; state.phase = 'MAIN1'; flush(); }, 6500);
+          return sneak ? 'Sneak: o atacante some na fumaça; a mágica resolve e o ninja surge dela com o shuriken.' : 'Ninjutsu: o atacante some na fumaça; a habilidade resolve e o ninja surge dela com o shuriken.';
+        }
         case 'untap-all': { const side = player(x.controller); side.battlefield.forEach((y: any) => { y.tapped = false; }); return 'Desvirar tudo: em onda.'; }
         case 'tap-all': { const side = player(x.controller); side.battlefield.forEach((y: any) => { if (y.land || y.creature) y.tapped = true; }); return 'Virou tudo.'; }
         case 'trigger': case 'ability': {
@@ -765,7 +794,7 @@ function panel() {
     ${[['burn', 'Mágica'], ['combat', 'Combate'], ['trample', 'Atropelar'], ['double', 'Golpe duplo'], ['first', 'Iniciativa'], ['deathtouch', 'Toque mortífero'], ['lifelink', 'Vínculo'], ['infect', 'Infectar'], ['wither', 'Murchar'], ['prevented', 'Prevenido'], ['divided', 'Dividido'], ['pain', 'Dor'], ['lethal', 'Letal']]
       .map(([k, t]) => `<button data-d="${k}">${t}</button>`).join('')}
     <h2>Movimento (item 16, na selecionada)</h2>
-    ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['attack', 'Atacar'],['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo']]
+    ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['attack', 'Atacar'],['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo'], ['ninjutsu', 'Ninjutsu'], ['sneak', 'Sneak']]
       .map(([k, t]) => `<button data-m="${k}">${t}</button>`).join('')}
     <h2>Moer (item 24, do lado escolhido em Campo)</h2>
     ${[['1', 'Moer 1'], ['3', 'Moer 3'], ['10', 'Moer 10']].map(([n, t]) => `<button data-mill="${n}">${t}</button>`).join('')}<button data-mill="2" data-surveil="1">Vidência 2 (cemitério)</button>

@@ -130,6 +130,28 @@ public class DamageEventsTest {
         assertEquals("destroyed", left.get("reason").getAsString()); assertEquals("Graveyard", left.get("to").getAsString());
     }
 
+    @Test public void ninjutsuLinksTheAttackerThatLeftToTheNinjaThatEnters() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        Card blade = add(game, "Slither Blade", a);
+        Card ninja = ExilePermissionsTest.add(game, "Ninja of the Deep Hours", a, ZoneType.Hand);
+        VisibleEvents events = fight(game, a, PhaseType.COMBAT_DECLARE_BLOCKERS);
+        Combat combat = new Combat(a); game.getPhaseHandler().setCombat(combat); combat.addAttacker(blade, b);
+        var ninjutsu = ninja.getSpellAbilities().stream().filter(sa -> sa.isNinjutsu()).findFirst().orElseThrow();
+        ninjutsu.setActivatingPlayer(a);
+        // O custo: o atacante volta para a mão enquanto o ninjutsu está sendo pago.
+        game.costPaymentStack.push(ninjutsu.getPayCosts().getCostParts().get(0), new forge.game.cost.CostPayment(ninjutsu.getPayCosts(), ninjutsu));
+        ninjutsu.addCostToHashList(blade, "Returned", true);
+        game.getAction().moveToHand(blade, null);
+        game.costPaymentStack.pop();
+        game.getStack().add(ninjutsu); game.getStack().resolveStack();
+        List<JsonObject> all = events.json(0).asList().stream().map(e -> e.getAsJsonObject()).toList();
+        JsonObject left = all.stream().filter(e -> "left".equals(e.get("type").getAsString())).findFirst().orElseThrow();
+        JsonObject entered = all.stream().filter(e -> "entered".equals(e.get("type").getAsString())).findFirst().orElseThrow();
+        assertEquals("ninjutsu", left.get("reason").getAsString()); assertEquals(ninja.getId(), left.get("swapFor").getAsInt());
+        assertEquals("ninjutsu", entered.get("reason").getAsString()); assertEquals(blade.getId(), entered.get("swapWith").getAsInt());
+        assertEquals("Slither Blade", entered.get("swapName").getAsString());
+    }
+
     @Test public void permanentDetailsComeFromKeywordsAndCombatRules() {
         Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
         Card spawn = add(game, "Aboleth Spawn", a), knight = add(game, "White Knight", a), bears = add(game, "Grizzly Bears", a);
@@ -141,8 +163,11 @@ public class DamageEventsTest {
         assertTrue(flag(pacified, "cantAttack")); assertTrue(flag(pacified, "cantBlock"));
         assertFalse(StateJson.card(knight.getView(), game).has("cantAttack"));
         Card blade = add(game, "Slither Blade", a), delney = add(game, "Delney, Streetwise Lookout", a), tetsuko = add(game, "Tetsuko Umezawa, Fugitive", b), giant = add(game, "Hill Giant", b);
+        Card boar = add(game, "Bladetusk Boar", a), dauthi = add(game, "Dauthi Slayer", a);
         game.getAction().checkStateEffects(true);
         assertTrue(flag(StateJson.card(blade.getView(), game), "unblockable"));
+        assertTrue("intimidar", flag(StateJson.card(boar.getView(), game), "blockLimited"));
+        assertTrue("sombra", flag(StateJson.card(dauthi.getView(), game), "blockLimited"));
         assertTrue("Tetsuko é 1/3: ela mesma não pode ser bloqueada", flag(StateJson.card(tetsuko.getView(), game), "unblockable"));
         JsonObject limited = StateJson.card(delney.getView(), game);
         assertFalse("Delney depende do poder de quem bloqueia", limited.has("unblockable")); assertTrue(flag(limited, "blockLimited"));

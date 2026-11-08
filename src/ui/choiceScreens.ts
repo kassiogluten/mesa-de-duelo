@@ -141,6 +141,7 @@ const MODES: Record<string, [string, string]> = {
   awaken: ['Despertar', 'Também transforma um terreno seu em criatura.'],
   warp: ['Dobra', 'Custo menor; volta ao exílio no fim do turno e pode ser conjurada depois.'],
   ninjutsu: ['Ninjutsu', 'Troque por um atacante não bloqueado seu.'],
+  sneak: ['Sneak', 'Conjure devolvendo à mão um atacante não bloqueado seu; entra atacando no lugar dele.'],
   equip: ['Equipar', 'Prenda a uma criatura sua.'],
   crew: ['Tripular', 'Vire criaturas para transformar o veículo em criatura.'],
   ability: ['Habilidade', ''],

@@ -35,3 +35,11 @@ test('targets of a stack item and cards that already left the battlefield', () =
   const gone = { id: 99, name: 'Llanowar Elves' };
   assert.equal(frameCard(99, { frame: { players: [{ battlefield: [gone] }], stack: [] } }), gone);
 });
+
+test('ninjutsu and sneak say the attacker went back as a cost and whose place the ninja took', () => {
+  const left = eventDescription(view, { type: 'left', actor: 1, card: { name: 'Slither Blade' }, from: 'Battlefield', to: 'Hand', reason: 'ninjutsu', swapFor: 12 });
+  assert.match(left, /^Ninjutsu: Slither Blade volta para a mão/);
+  const entered = eventDescription(view, { type: 'entered', actor: 1, card: { name: 'Ninja of the Deep Hours' }, from: 'Hand', to: 'Battlefield', reason: 'ninjutsu', swapWith: 10, swapName: 'Slither Blade' });
+  assert.match(entered, /^Ninjutsu: Ninja of the Deep Hours entra atacando no lugar de Slither Blade/);
+  assert.match(eventDescription(view, { type: 'entered', actor: 1, card: { name: 'Donatello, Gadget Master' }, from: 'Stack', reason: 'sneak', swapName: 'Shock' }), /^Sneak: .* no lugar de Choque/);
+});

@@ -181,11 +181,15 @@ final class PermanentDetails {
         } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
     }
 
+    /** Palavras-chave de evasão sem ícone próprio na mesa: ganham o escudo vazado. Voar tem a asa; proteção, o selo. */
+    private static final java.util.Set<Keyword> EVASION = java.util.EnumSet.of(Keyword.INTIMIDATE, Keyword.SHADOW, Keyword.FEAR,
+            Keyword.LANDWALK, Keyword.SKULK, Keyword.HORSEMANSHIP);
+
     /**
-     * "Não pode ser bloqueada" vinda de uma carta: 2 se ninguém pode bloquear, 1 se só algumas criaturas não podem (Delney,
-     * "exceto por criaturas com voar", "por Paredes", "enquanto o defensor controla..."), 0 se nenhuma. O CombatUtil.canBeBlocked
-     * do Forge sem bloqueador sempre diz que pode, então aqui se olha a habilidade direto. As que vêm de palavra-chave (voar,
-     * medo, intimidar, travessia, sombra, proteção) ficam de fora: a palavra-chave já diz.
+     * "Não pode ser bloqueada": 2 se ninguém pode bloquear, 1 se só algumas criaturas não podem (Delney, "exceto por
+     * criaturas com voar", "enquanto o defensor controla...", intimidar, sombra, medo, travessia, sorrateiro, equitação),
+     * 0 se nenhuma. O CombatUtil.canBeBlocked do Forge sem bloqueador sempre diz que pode, então aqui se olha a habilidade
+     * direto. Voar e proteção ficam de fora: já têm marca própria na mesa.
      */
     static int unblockable(Card attacker) {
         CardCollection sources = new CardCollection(attacker);
@@ -193,7 +197,12 @@ final class PermanentDetails {
         int found = 0;
         for (Card source : sources)
             for (StaticAbility st : source.getStaticAbilities()) {
-                if (st.getKeyword() != null || !st.checkConditions(StaticAbilityMode.CantBlockBy) || !st.matchesValidParam("ValidAttacker", attacker)) continue;
+                if (!st.checkConditions(StaticAbilityMode.CantBlockBy) || !st.matchesValidParam("ValidAttacker", attacker)) continue;
+                if (st.getKeyword() != null) {
+                    // Só a palavra-chave da própria criatura (a sombra de outra só limita quem ela bloqueia).
+                    if (source == attacker && EVASION.contains(st.getKeyword().getKeyword())) found = 1;
+                    continue;
+                }
                 if (!st.hasParam("ValidBlocker") && !st.hasParam("ValidBlockerRelative") && !st.hasParam("ValidAttackerRelative")
                         && !st.hasParam("ValidDefender")) return 2;
                 found = 1;

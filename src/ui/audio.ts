@@ -50,7 +50,7 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
       if (event.from === 'Exile') return 'blink';
       if (event.card?.planeswalker) return 'walker';
       if (event.card?.land) return 'land';
-      if (event.from === 'Hand') return 'sneak';
+      if (event.from === 'Hand' || event.reason === 'sneak') return 'sneak';
       return event.card?.keywords?.includes('FLYING') ? 'wing' : 'play';
     case 'attackers': return 'attack';
     case 'blockers': return 'block';
@@ -62,6 +62,7 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     case 'left':
       if (event.reason === 'destroyed') return 'shatter';
       if (event.reason === 'sacrificed') return 'sacrifice';
+      if (event.reason === 'ninjutsu' || event.reason === 'sneak') return 'sneak';
       if (event.to === 'Exile') return 'exile';
       return event.to === 'Hand' || event.to === 'Library' ? 'bounce' : null;
     case 'counters':

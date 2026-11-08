@@ -2,6 +2,7 @@
 import { entryTiming, type PresentationEvent } from './presentationTimeline';
 import { walkerArrives } from './planeswalkerEffects';
 import { warpCast } from './warpEffects';
+import { createNinjaMotion, ninjaSwap } from './ninjutsuEffects';
 import { center, LANDING, reduced, TAP, turnOf, type MotionKit, type Point } from './motionKit';
 import { zoneGlow, type createZoneMotion } from './motionZones';
 
@@ -14,6 +15,7 @@ type Face = (card: NonNullable<PresentationEvent['card']>) => string;
 export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof createZoneMotion>, walkerArrive: (card: HTMLElement, event: PresentationEvent) => void) {
   const { root, state, later, animate, effect, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, hiddenCards, recentStack, stackPile } = kit;
   const { destination, pileOf, zonePoint, reanimate, leave } = zones;
+  const ninja = createNinjaMotion(kit);
   function cardFlight(event: PresentationEvent, card: HTMLElement | null, id: number | undefined, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }) {
     if (event.type === 'resolved' && !event.trigger && card && id !== undefined && performance.now() - (state.landedAt.get(String(id)) ?? -Infinity) < 4000) { pulse(card); return; }
     const old = id === undefined ? undefined : state.cards.get(String(id));
@@ -75,6 +77,8 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
     caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
     const disappearing = !landing && ['left', 'countered', 'resolved', 'discard'].includes(event.type);
     if (event.type === 'left') {
+      // Ninjutsu e sneak: o atacante some numa fumaça, que espera o ninja no lugar dele.
+      if (ninjaSwap(event)) ninja.vanish(event, from, options.duration);
       leave(event, from, to, end, piece, options.duration, { caption, into, endRot: handBack ? turnOf(handBack) : 0, fade: !handBack });
       // Comandante voltando à zona de comando: chega com uma onda dourada.
       if (event.to === 'Command' && into) { const zone = into; later(() => ripple(center(zone)), options.duration * .85); }
@@ -84,8 +88,10 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       if (into) { const pileEl = into; later(() => absorb(pileEl), options.duration * .85); }
     } else if (landing || event.type === 'spell-cast') {
       if (landing) state.landedAt.set(String(id), performance.now());
+      // Ninja de ninjutsu ou sneak: surge da fumaça, com o shuriken vindo da mão de quem usou.
+      if (landing && ninjaSwap(event) && ninja.appear(event, piece, hand, to, options.duration, turnOf(card))) { /* já animado */ }
       // Sem o lugar no leque (mão do oponente, mão longa), sai do centro da mão no tamanho de uma carta.
-      fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, tint: zoneGlow(event.from) });
+      else fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, tint: zoneGlow(event.from) });
       // Dobra: a carta chega à pilha rasgando o espaço.
       if (warpCast(event)) { const at = to; later(() => warpRift(at, 1), options.duration * .7); }
       // Comandante conjurado da zona de comando: a taxa sobe 2 para a próxima vez.

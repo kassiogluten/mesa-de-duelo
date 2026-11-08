@@ -35,6 +35,8 @@ final class VisibleEvents {
     private final Map<Integer, Long> lastTurnMs = new HashMap<>();
     /** Quem controla cada permanente, para ver quando o controle troca (o Forge só a passa de um campo para o outro). */
     private final Map<Integer, Integer> controllers = new HashMap<>();
+    /** Ninjutsu e sneak pagos e ainda sem resolver: a carta do ninja → o atacante que voltou para a mão (id e nome). */
+    private final Map<Integer, JsonObject> swaps = new HashMap<>();
     /** Vida de cada jogador no fim de cada turno ({@code turn} 0 é a vida inicial), para o gráfico do fim do jogo. */
     private final java.util.List<JsonObject> lifePoints = new java.util.ArrayList<>();
 
@@ -42,7 +44,7 @@ final class VisibleEvents {
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); clearTurns();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); clearTurns();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -50,7 +52,7 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
     private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
 
     /** Começo de turno: fecha o turno anterior na conta de quem o jogou e anota a vida de todos no fim dele. */
@@ -58,6 +60,7 @@ final class VisibleEvents {
         long now = System.currentTimeMillis();
         if (turnOwner >= 0 && turnSince > 0) lastTurnMs.put(turnOwner, now - turnSince);
         turnOwner = owner; turnSince = now;
+        swaps.clear(); // ninjutsu anulado num turno não marca o ninja conjurado depois
         if (game != null) {
             JsonObject life = new JsonObject();
             for (forge.game.player.Player p : game.getRegisteredPlayers()) life.addProperty(String.valueOf(p.getId()), p.getLife());
@@ -189,6 +192,8 @@ final class VisibleEvents {
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
                 if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
                 if (from == ZoneType.Battlefield && to == ZoneType.Exile && warpReturn()) e.addProperty("reason", "warped");
+                if (from == ZoneType.Battlefield && to == ZoneType.Hand) swapCost(e, x.card());
+                if (to == ZoneType.Battlefield) swapEntry(e, x.card().getId());
                 resolvingSource(e);
                 // Os marcadores de "entra com" chegam logo antes da entrada: o som da entrada já basta para eles.
                 if (to == ZoneType.Battlefield) for (var it = history.descendingIterator(); it.hasNext();) {
@@ -376,6 +381,32 @@ final class VisibleEvents {
             var sa = resolving == null ? null : resolving.getSpellAbility();
             return sa != null && sa.isTrigger() && sa.getTrigger() != null && sa.getTrigger().isKeyword(forge.game.keyword.Keyword.WARP);
         } catch (RuntimeException concurrentRead) { return false; }
+    }
+
+    /**
+     * Ninjutsu e sneak: o atacante não bloqueado volta para a mão como custo, e o ninja entra atacando quando a habilidade
+     * (ou a mágica, no sneak) resolve. A saída leva `reason` e `swapFor` (o ninja); a entrada, `reason`, `swapWith` e
+     * `swapName` (o atacante), para a mesa mostrar uma troca só.
+     */
+    private void swapCost(JsonObject e, CardView attacker) {
+        if (game == null) return;
+        try {
+            var paying = game.costPaymentStack.peek();
+            var sa = paying == null || paying.payment() == null ? null : paying.payment().getAbility();
+            String kind = sa == null ? null : sa.isNinjutsu() ? "ninjutsu" : sa.isSneak() ? "sneak" : null;
+            if (kind == null || sa.getHostCard() == null) return;
+            int ninja = sa.getHostCard().getId();
+            e.addProperty("reason", kind); e.addProperty("swapFor", ninja);
+            JsonObject swap = new JsonObject();
+            swap.addProperty("reason", kind); swap.addProperty("id", attacker.getId()); swap.addProperty("name", attacker.getName());
+            swaps.put(ninja, swap);
+        } catch (RuntimeException concurrentRead) { /* sem a troca desta vez: a saída fica como uma devolução comum */ }
+    }
+    private void swapEntry(JsonObject e, int id) {
+        JsonObject swap = swaps.remove(id);
+        if (swap == null) return;
+        e.addProperty("reason", swap.get("reason").getAsString());
+        e.addProperty("swapWith", swap.get("id").getAsInt()); e.addProperty("swapName", swap.get("name").getAsString());
     }
 
     private void resolvingSource(JsonObject e) {

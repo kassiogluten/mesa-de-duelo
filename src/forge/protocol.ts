@@ -74,7 +74,9 @@ export interface FEvent {
   /** `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). */
   prevented?: boolean;
   /** `left`: por que a carta saiu do campo, quando o Forge diz. */
-  reason?: 'destroyed' | 'sacrificed' | 'warped';
+  reason?: 'destroyed' | 'sacrificed' | 'warped' | 'ninjutsu' | 'sneak';
+  /** Ninjutsu e sneak: no `left` do atacante, a carta do ninja; no `entered` do ninja, o atacante que voltou para a mão. */
+  swapFor?: number; swapWith?: number; swapName?: string;
   /** `mill`: a mágica ou habilidade que mandou moer, e se foi vidência em vez de moer. */
   sourceName?: string; surveil?: boolean;
   /** `damage` de uma luta (fight); `draw` de uma busca no grimório (tutor), sem dizer a carta. */

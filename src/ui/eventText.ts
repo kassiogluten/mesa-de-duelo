@@ -17,6 +17,7 @@ export interface EventView {
 }
 
 /** De onde veio a carta conjurada, no histórico (da mão não precisa dizer). */
+const SWAP = { ninjutsu: 'Ninjutsu', sneak: 'Sneak' };
 const ZONE_FROM: Record<string, string> = { Graveyard: 'do cemitério', Exile: 'do exílio', Command: 'da zona de comando', Library: 'do grimório' };
 
 /** A frase de um evento. `detailed` (no histórico) acrescenta alvos, de quem era a carta e de onde ela veio. */
@@ -51,12 +52,14 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
     case 'resolved': return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
     case 'countered': return `Anulado: ${event.card?.name ? name : 'efeito'}.`;
     // "Carta …" concorda com qualquer nome (o Cavaleiro, a Aura).
-    case 'left': return event.reason === 'destroyed' ? `Carta destruída: ${name}${owner}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}${owner}.`
+    case 'left': return event.reason === 'ninjutsu' || event.reason === 'sneak' ? `${SWAP[event.reason]}: ${name} volta para a mão${owner}.`
+      : event.reason === 'destroyed' ? `Carta destruída: ${name}${owner}.` : event.reason === 'sacrificed' ? `Carta sacrificada: ${name}${owner}.`
       : event.to === 'Exile' ? `Carta exilada: ${name}${owner}.` : event.to === 'Hand' ? `Volta para a mão: ${name}${owner}.` : event.to === 'Library' ? `Volta para o grimório: ${name}${owner}.`
       : detailed && event.to === 'Graveyard' ? `Para o cemitério: ${name}${owner}.` : `${name}${owner} saiu do campo.`;
     case 'discard': return `${who} descartou ${name}.`;
     case 'mill': return millDescription(v, event, who);
     case 'entered': if ((event.entries?.length ?? 0) > 1) return entriesDescription(v, event.entries!, event.from);
+      if (event.reason === 'ninjutsu' || event.reason === 'sneak') return `${SWAP[event.reason]}: ${name} entra atacando${event.swapName ? ` no lugar de ${v.ptName(event.swapName) || event.swapName}` : ''}${owner}.`;
       return event.from === 'Exile' ? `Volta ao campo: ${name}${owner}.` : detailed && event.from === 'Graveyard' ? `Volta do cemitério ao campo: ${name}${owner}.`
       : detailed && event.card?.token && !event.from ? `Ficha criada: ${name}${owner}.` : `${name} entrou no campo${owner}.`;
     case 'attackers': return attackDescription(v, event);

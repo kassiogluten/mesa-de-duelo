@@ -1,4 +1,14 @@
 {
+  "0.152.0": {
+    "Ninjutsu e sneak com fumaça e shuriken": [
+      { "img": "0.152.0/ninjutsu-fumaca.webp", "legenda": "O ninjutsu na pilha e, no campo, a fumaça no lugar do atacante que voltou para a mão." },
+      { "img": "0.152.0/ninjutsu-shuriken.webp", "legenda": "Quando a habilidade resolve, o shuriken chega girando à fumaça, onde o ninja vai aparecer." },
+      { "img": "0.152.0/ninjutsu-entra.webp", "legenda": "O Ninja das Horas Tardias surge da fumaça já virado e atacando." }
+    ],
+    "Intimidar, sombra e outras evasões com o escudo vazado": [
+      { "img": "0.152.0/evasao-escudo-vazado.webp", "legenda": "Javali Presa de Navalha (intimidar) e Assassino de Dauth (sombra) com o escudo vazado na borda esquerda." }
+    ]
+  },
   "0.151.0": {
     "Ícone de criatura que não pode ser bloqueada": [
       { "img": "0.151.0/nao-pode-ser-bloqueada.webp", "legenda": "Lâmina Sinuosa e Tetsuko Umezawa com o escudo dourado de exclamação na borda esquerda: ninguém pode bloqueá-las. A Delney tem o escudo vazado, só o contorno: só criaturas de poder 3 ou mais não podem bloqueá-la." }

@@ -1,5 +1,20 @@
 [
   {
+    "nome": "Ninjutsu e sneak: Ninja of the Deep Hours, Donatello e Splinter",
+    "versao": "0.152.0",
+    "item": "Ninjutsu e sneak com fumaça e shuriken",
+    "conferir": "O Jogador 1 tem Slither Blade, Grizzly Bears e Splinter, Radical Rat no campo, com seis Islands; na mão, Ninja of the Deep Hours (ninjutsu {1}{U}) e Donatello, Gadget Master (sneak {1}{U}). O Jogador 2 tem só terrenos. Ataque com Slither Blade e Grizzly Bears. Depois dos bloqueios, use o ninjutsu do Ninja of the Deep Hours devolvendo a Slither Blade: ela some numa fumaça, que fica no lugar dela enquanto o ninjutsu está na pilha; quando resolve, um shuriken gira da sua mão até a fumaça e o ninja aparece nela, virado e atacando. Depois conjure o Donatello pelo sneak devolvendo o Grizzly Bears: a mesma troca, com a mágica passando pela pilha. O Registro diz qual atacante voltou para a mão e no lugar de quem o ninja entrou. Com o Splinter no campo, o gatilho de dano de combate do Ninja of the Deep Hours acontece duas vezes.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Ninja of the Deep Hours", "Donatello, Gadget Master"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Slither Blade" }, { "name": "Grizzly Bears" }, { "name": "Splinter, Radical Rat" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Não pode ser bloqueada: Tetsuko, Slither Blade, Splinter, Delney e um Ninja",
     "versao": "0.151.0",
     "item": "Ícone de criatura que não pode ser bloqueada",
