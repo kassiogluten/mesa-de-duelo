@@ -1,4 +1,9 @@
 {
+  "0.147.1": {
+    "Ordem dos efeitos que mudam os marcadores": [
+      { "img": "0.147.1/ordem-substituicoes.webp", "legenda": "Com Corpsejack Menace e Hardened Scales, a mesa pergunta qual efeito vem primeiro, com a carta e o texto de cada um, e a opção de usar a mesma escolha em todas as criaturas que recebem marcadores." }
+    ]
+  },
   "0.147.0": {
     "Votar para pular a vez de quem está demorando": [
       { "img": "0.147.0/votar-pular-vez.webp", "legenda": "A faixa no alto da mesa quando Ana passa de 2 minutos para decidir: Ana está demorando, com o botão Votar para pular a vez." }

@@ -389,6 +389,17 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       card: c(800, 'Craw Wurm', 7, 4, 10), options, suggested: trample ? [2, 3, 2] : [2, 5] };
     view.render();
   },
+  /** Leonardo pondo marcadores com Corpsejack Menace e Hardened Scales: qual efeito vem primeiro, com "usar em todas". */
+  replacementOrder() {
+    const card = (id: number, name: string, manaCost: string, typeLine: string, power: number, toughness: number) =>
+      ({ id, controller: 10, tapped: false, token: false, name, manaCost, typeLine, creature: power > 0, power: power || undefined, toughness: toughness || undefined });
+    state.question = { id: 44, method: 'order', kind: 'choose', purpose: 'replacement-order', title: 'Qual efeito aplicar primeiro?', min: 1, max: 1, applyToAll: true,
+      card: card(128, 'Leonardo, the Balance', '{3}{W}', 'Legendary Creature — Mutant Ninja Turtle', 3, 3), options: [
+        { kind: 'ability', card: card(131, 'Corpsejack Menace', '{2}{B}{G}', 'Creature — Fungus', 4, 4), label: 'Corpsejack Menace', ability: 'If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on it instead.' },
+        { kind: 'ability', card: { ...card(132, 'Hardened Scales', '{G}', 'Enchantment', 0, 0) }, label: 'Hardened Scales', ability: 'Se um ou mais marcadores +1/+1 seriam colocados em uma criatura que você controla, em vez disso, será colocado aquele número de marcadores +1/+1 mais um.' },
+      ] };
+    view.render();
+  },
   triggers() {
     state.question = { id: 41, method: 'order', kind: 'order', purpose: 'triggers', title: 'Reordenar habilidades simultâneas', options: [
       { kind: 'ability', card: warden(100), label: 'Soul Warden - Whenever another creature enters, you gain 1 life.', ability: 'Whenever another creature enters, you gain 1 life.' },

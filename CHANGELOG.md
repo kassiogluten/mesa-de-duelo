@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.147.1] - 2026-11-08
+
+### Corrigido
+
+- **Ordem dos efeitos que mudam os marcadores.** Com dois efeitos que mudam quantos marcadores uma criatura recebe (Corpsejack Menace e Hardened Scales, por exemplo), a mesa abria uma janela "Escolha 0." sem opções, uma vez para cada criatura. Agora a pergunta é "Qual efeito aplicar primeiro?", com a carta e o texto de cada efeito, e a opção "Usar a mesma escolha no resto deste efeito" (já marcada): quando o Leonardo, the Balance põe marcadores em todas as suas criaturas, você escolhe uma vez e vale para todas.
+
 ## [0.147.0] - 2026-11-07
 
 ### Novo

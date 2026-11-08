@@ -37,7 +37,8 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 - Toda correção de regra ou de carta (item de `### Corrigido` que dá para reproduzir numa mesa montada: carta, regra, gatilho, interação) ganha um cenário pronto **na mesma mudança**. Correções só de tela, de teclado ou de desempenho, que a mesa montada não reproduz, ficam sem; diga isso ao entregar.
 - Cada cenário tem `nome` (o que o jogador vê na lista), `versao` e `item` (o título em negrito do item no CHANGELOG, sem o ponto final), `conferir` (o que fazer na mesa e o que deve acontecer, em português, para o jogador) e `cenario` (o mesmo formato de “Copiar cenário”). Monte a mesa mínima que mostra a correção, com as terras para pagar e cartas no grimório para comprar; o Jogador 1 é quem cria a sala.
 - Os mais novos ficam no começo da lista. Se a correção mudar de novo, atualize o cenário em vez de criar outro.
-- `tests/lab.test.mjs` confere que cada cenário aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
+- Problema reproduzido que ainda não tem correção pode entrar como **para investigar**: sem `versao` nem `item` (a lista mostra "Para investigar"), com o `conferir` dizendo o que acontece hoje e o que deveria acontecer. Quando a correção sair, ele ganha `versao` e `item` em vez de virar outro cenário.
+- `tests/lab.test.mjs` confere que cada cenário (fora os para investigar) aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
 
 ## Entregar
 

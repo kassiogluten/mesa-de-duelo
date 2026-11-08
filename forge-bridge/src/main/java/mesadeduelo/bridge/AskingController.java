@@ -119,8 +119,35 @@ final class AskingController extends PlayerControllerHuman {
      */
     @Override public ReplacementEffect chooseSingleReplacementEffect(List<ReplacementEffect> possibleReplacers) {
         List<ReplacementEffect> rest = possibleReplacers.stream().filter(re -> !entersUntapped(re)).toList();
-        if (rest.isEmpty() || rest.size() == possibleReplacers.size()) return super.chooseSingleReplacementEffect(possibleReplacers);
-        return rest.size() == 1 ? rest.get(0) : super.chooseSingleReplacementEffect(rest);
+        if (rest.isEmpty()) rest = possibleReplacers;
+        return rest.size() == 1 ? rest.get(0) : chooseReplacement(rest);
+    }
+
+    /** O efeito em resolução em que o jogador marcou "usar em todas", e o efeito escolhido para cada conjunto de substituições. */
+    private Object replacementBatch;
+    private final Map<String, Integer> replacementChoices = new java.util.HashMap<>();
+    private volatile boolean replacementToAll;
+
+    /** A resposta da mesa marcou "usar em todas": a escolha vale para o resto do efeito que está resolvendo. */
+    void applyReplacementToAll() { replacementToAll = true; }
+
+    /**
+     * Pergunta qual substituição vem primeiro, a não ser que o jogador já tenha escolhido para estes mesmos efeitos
+     * com "usar em todas" no efeito que ainda está resolvendo (Leonardo pondo marcadores em cada criatura com
+     * Corpsejack Menace e Hardened Scales: sem isso, uma pergunta por criatura).
+     */
+    private ReplacementEffect chooseReplacement(List<ReplacementEffect> replacers) {
+        var stack = getGame().getStack();
+        Object batch = stack.isResolving() && !stack.isEmpty() ? stack.peek() : null;
+        if (batch != replacementBatch) { replacementBatch = batch; replacementChoices.clear(); }
+        String key = replacers.stream().map(re -> re.getId()).sorted().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+        Integer chosenId = batch == null ? null : replacementChoices.get(key);
+        if (chosenId != null) for (ReplacementEffect re : replacers) if (re.getId() == chosenId) return re;
+        replacementToAll = false;
+        ReplacementEffect chosen = super.chooseSingleReplacementEffect(replacers);
+        if (replacementToAll && batch != null && chosen != null) replacementChoices.put(key, chosen.getId());
+        replacementToAll = false;
+        return chosen;
     }
 
     static boolean entersUntapped(ReplacementEffect re) {

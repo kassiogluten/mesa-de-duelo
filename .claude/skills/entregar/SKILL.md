@@ -21,7 +21,7 @@ Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entre
 
 ## 3. Cenário do Laboratório (só correções de regra ou carta)
 - Acrescente no começo de `src/lab-cenarios.json`: `nome`, `versao`, `item`, `conferir`, `cenario` (o formato de "Copiar cenário": `active`, `phase`, `players[2]` com `life`, `poison`, `hand`, `library`, `graveyard`, `exile`, `battlefield`).
-- Correção que já tem cenário: atualize em vez de criar outro.
+- Correção que já tem cenário: atualize em vez de criar outro. Se ele estava como para investigar (sem `versao` e `item`), acrescente os dois.
 
 ## 4. Testes
 - Mesa: `npm test` e `npx tsc --noEmit -p .` (segundos).

@@ -51,6 +51,10 @@
 .forge .q-opt.has-card:hover { transform: translateY(-6px); border: 0; }
 .forge .q-opt.has-card:hover .q-face .face { box-shadow: 0 0 0 2px rgb(89 181 255 / .8), 0 0 22px rgb(89 181 255 / .45), 0 18px 34px rgb(0 0 0 / .65); }
 .forge .q-opt.has-card:focus-visible { outline: none; }
+/* "Usar em todas" na ordem das substituições, embaixo das cartas. */
+.forge .question .q-apply-all { display: flex; gap: 10px; align-items: flex-start; justify-content: center; margin: 14px auto 0; max-width: 520px; color: #fff; font-size: 15px; cursor: pointer; }
+.forge .question .q-apply-all input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--gold); flex: none; }
+.forge .question .q-apply-all small { display: block; color: var(--muted); font-size: 13px; }
 .forge .q-opt.has-card:focus-visible .q-face .face { box-shadow: 0 0 0 3px var(--glow), 0 18px 34px rgb(0 0 0 / .65); }
 /* Escolhida: sobe e brilha em dourado, como no Arena. */
 .forge .q-opt.has-card.on { transform: translateY(-12px); background: none; }

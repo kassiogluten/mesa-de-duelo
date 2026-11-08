@@ -207,6 +207,10 @@ final class QuestionBroker {
 
     private Object order(Prompt p) {
         Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options(); HostedMatch hosted = p.hosted();
+        if (ReplacementOrder.is(a)) {
+            ReplacementOrder.describe(q, options, a, InputContext.resolvingSource(hosted.getGame()) != null);
+            return ASK;
+        }
         q.addProperty("title", String.valueOf(a[0]));
         options.addAll((Collection<?>) a[4]);
         int remMin = (Integer) a[2], remMax = (Integer) a[3];
@@ -327,7 +331,12 @@ final class QuestionBroker {
             case showOptionDialog -> result = firstIndex(msg);
             case showInputDialog -> result = q.options().isEmpty() ? ClientActions.str(msg, "text", "") : pick(q, msg).stream().findFirst().orElse(null);
             case getAbilityToPlay, chooseSingleEntityForEffect -> result = pick(q, msg).stream().findFirst().orElse(null);
-            case order -> result = new IGuiGame.OrderResult<>(pick(q, msg), false);
+            case order -> {
+                result = new IGuiGame.OrderResult<>(pick(q, msg), false);
+                if (msg.has("all") && msg.get("all").isJsonPrimitive() && msg.get("all").getAsBoolean()
+                        && q.json().has("applyToAll") && q.json().get("applyToAll").getAsBoolean()
+                        && seat.controller() instanceof AskingController controller) controller.applyReplacementToAll();
+            }
             case assignCombatDamage -> result = CombatDamage.result(q.options(), CombatDamage.validate(q.json(), msg.get("amounts")));
             case assignGenericAmount -> {
                 int[] values = AmountAllocation.validate(q.json(), msg.get("amounts"));

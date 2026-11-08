@@ -53,7 +53,7 @@ test('"3 Island" e "3x Island" põem várias cópias; o resto é o nome', () => 
   assert.deepEqual(lab.parseEntry('1000 Island').count, 250);
 });
 
-test('cada cenário pronto aponta para uma correção do CHANGELOG e volta do editor igual', async () => {
+test('cada cenário pronto aponta para uma correção do CHANGELOG (ou fica para investigar) e volta do editor igual', async () => {
   const changelog = (await readFile(new URL('../CHANGELOG.md', import.meta.url), 'utf8')) + '\n' + (await readFile(new URL('../docs/changelog-antigo.md', import.meta.url), 'utf8'));
   const sections = new Map(changelog.split(/^## /m).slice(1).map(sec => [sec.slice(1, sec.indexOf(']')), sec]));
   assert.ok(lab.READY_SCENARIOS.length > 0);
@@ -61,9 +61,12 @@ test('cada cenário pronto aponta para uma correção do CHANGELOG e volta do ed
   for (const r of lab.READY_SCENARIOS) {
     assert.ok(r.nome && r.conferir, `${r.nome}: falta o nome ou o que conferir`);
     assert.ok(!names.has(r.nome), `${r.nome}: nome repetido`); names.add(r.nome);
-    const section = sections.get(r.versao);
-    assert.ok(section, `${r.nome}: a versão ${r.versao} não está no CHANGELOG`);
-    assert.ok(section.includes(`- **${r.item}.**`), `${r.nome}: “${r.item}” não é um item da ${r.versao}`);
+    assert.equal(!r.versao, !r.item, `${r.nome}: versão e item vêm juntos, ou nenhum dos dois (para investigar)`);
+    if (r.versao) {
+      const section = sections.get(r.versao);
+      assert.ok(section, `${r.nome}: a versão ${r.versao} não está no CHANGELOG`);
+      assert.ok(section.includes(`- **${r.item}.**`), `${r.nome}: “${r.item}” não é um item da ${r.versao}`);
+    }
     assert.deepEqual(lab.toScenario(lab.fromScenario(r.cenario)), r.cenario, `${r.nome}: o editor não monta o cenário igual`);
   }
 });

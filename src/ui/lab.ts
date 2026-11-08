@@ -50,8 +50,13 @@ interface Side { life: number; poison: number; hand: string[]; library: string[]
 const nameOf = (entry: string | Exiled) => typeof entry === 'string' ? entry : entry.name;
 interface Draft { active: 0 | 1; phase: LabPhase; players: [Side, Side] }
 interface Saved { name: string; scenario: LabScenario }
-/** Cenário pronto para conferir à mão uma correção do CHANGELOG (item é o título em negrito, sem o ponto). */
-export interface Ready { nome: string; versao: string; item: string; conferir: string; cenario: LabScenario }
+/**
+ * Cenário pronto para conferir à mão uma correção do CHANGELOG (item é o título em negrito, sem o ponto). Sem versão
+ * e item, é um problema ainda sem correção, deixado para investigar; ganha os dois quando a correção sair.
+ */
+export interface Ready { nome: string; versao?: string; item?: string; conferir: string; cenario: LabScenario }
+/** "0.145.0" numa correção; "Para investigar" num problema ainda sem correção. */
+const readyTag = (r: Ready) => r.versao ?? 'Para investigar';
 export const READY_SCENARIOS = READY as unknown as Ready[];
 
 const DRAFT_KEY = KEYS.labRascunho, SAVED_KEY = KEYS.labCenarios;
@@ -124,10 +129,10 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
       <div class="lab-title"><h1>Laboratório</h1><p>Monte a mesa do jeito que quiser e jogue de verdade, com as regras do servidor: para achar erros, conferir correções, testar combos e ver até onde as regras aguentam.</p></div>
     </header>
     <section class="lab-bar" aria-label="Cenários prontos">
-      <label class="lab-field lab-ready">Cenários prontos<select class="input-field" id="labReady">${READY_SCENARIOS.map((r, i) => `<option value="${i}">${esc(r.versao)} · ${esc(r.nome)}</option>`).join('')}</select></label>
+      <label class="lab-field lab-ready">Cenários prontos<select class="input-field" id="labReady">${READY_SCENARIOS.map((r, i) => `<option value="${i}">${esc(readyTag(r))} · ${esc(r.nome)}</option>`).join('')}</select></label>
       <button type="button" class="ghost-btn" data-lab="ready">Editar</button>
       <button type="button" class="ghost-btn" data-lab="ready-start">▶ Iniciar agora</button>
-      <p class="lab-hint">Mesas montadas para conferir as correções da mesa, uma por correção.</p>
+      <p class="lab-hint">Mesas montadas para conferir as correções da mesa, uma por correção, e os problemas ainda para investigar.</p>
     </section>
     <aside class="lab-guide" id="labGuide" aria-live="polite" hidden></aside>
     <section class="lab-bar" aria-label="Cenários salvos">
@@ -169,7 +174,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
   const setGuide = (r?: Ready) => {
     const el = $('#labGuide');
     el.hidden = !r;
-    el.innerHTML = r ? `<strong>O que conferir</strong> <span class="lab-pos">(${esc(r.versao)} · ${esc(r.item)})</span><p>${esc(r.conferir)}</p>` : '';
+    el.innerHTML = r ? `<strong>O que conferir</strong> <span class="lab-pos">(${r.item ? `${esc(readyTag(r))} · ${esc(r.item)}` : 'para investigar, ainda sem correção'})</span><p>${esc(r.conferir)}</p>` : '';
   };
 
   function art(name: string) {

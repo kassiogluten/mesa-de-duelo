@@ -337,7 +337,9 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
   /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order';
+  /** replacement-order (qual efeito de substituição vem primeiro): dá para usar a mesma escolha no resto do efeito que está resolvendo (a resposta leva all). */
+  applyToAll?: boolean;
   /** library (vidência e vigilância): o que sai do topo vai para o fundo ou o cemitério, ou "top", a ordem das que ficam. Cartas na ordem do grimório. */
   library?: 'bottom' | 'graveyard' | 'top';
   /** piles-split e piles-choose (dois montes): de quem são as cartas, se o dono escolhe o monte e para onde vai cada um ("hand", "graveyard"...), quando o efeito só move as cartas. */
@@ -579,7 +581,7 @@ export type ClientMessage =
   | { type: 'pass-turn-stop' }
   | { type: 'skip-vote'; target: number; value?: boolean }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
-  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string };
+  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean };
 
 /** Carta parecida devolvida pela ponte: a nota (0 a 1) e as tags em comum que mais pesaram. */
 export interface SimilarCard { oracleId: string; score: number; tags: string[] }

@@ -12,6 +12,7 @@ import { restoreRowScroll, rowScroll, syncAllRowEdges } from './cardRow';
 import { isLibraryChoice, librarySummary, moveLibraryCard, placeLibraryCard } from './libraryChoice';
 import { isNameChoice, nameListHTML, nameMatches, nameStatus } from './nameChoice';
 import { isPilesChoice, isPilesSplit, movePileCard, splitSummary } from './piles';
+import { isReplacementOrder } from './replacementOrder';
 import { amountStatus, choiceTypeLine, newQuestionDraft, questionBar as renderQuestionBar, questionHTML as renderQuestion, type QuestionView } from './questionView';
 import { attachTriggerOrder } from './triggerOrderInput';
 import { prefsChanged } from '../conta/sync';
@@ -94,7 +95,7 @@ export function createTableQuestion(d: QuestionDeps) {
     if (status) status.textContent = nameStatus(found, match.qState?.text ?? '');
   }
 
-  function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[] }) {
+  function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[]; all?: boolean }) {
     const client = d.client();
     const q = client?.state?.question;
     if (!q || !client) return;
@@ -185,6 +186,7 @@ export function createTableQuestion(d: QuestionDeps) {
         return true;
       }
     }
+    if (t instanceof HTMLInputElement && t.id === 'fQApplyAll' && match.qState) { match.qState.all = t.checked; return true; }
     const filter = t.closest<HTMLElement>('[data-q-filter]');
     const sortBy = t.closest<HTMLElement>('[data-q-sort]')?.dataset.qSort;
     const filtering = state?.question;
@@ -207,6 +209,7 @@ export function createTableQuestion(d: QuestionDeps) {
       if (!q) return true;
       const i = +opt.dataset.qOpt!;
       const isOrder = q.kind === 'order';
+      if (isReplacementOrder(q)) { answer({ indices: [i], ...(q.applyToAll ? { all: match.qState.all !== false } : {}) }); return true; }
       if (!isOrder && (q.max ?? 1) === 1) { answer({ indices: [i] }); return true; }
       const at = match.qState.picked.indexOf(i);
       if (at >= 0) match.qState.picked.splice(at, 1);

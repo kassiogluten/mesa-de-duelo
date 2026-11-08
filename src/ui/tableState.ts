@@ -3,7 +3,8 @@ import type { BlockSelection } from './playContext';
 import type { SeatFocus } from './seatVisibility';
 
 /** Seleção em andamento na pergunta aberta. */
-export type QuestionDraft = { id: number; picked: number[]; text: string; amounts: string[] };
+/** all: "usar em todas" na ordem das substituições (marcado até o jogador desmarcar). */
+export type QuestionDraft = { id: number; picked: number[]; text: string; amounts: string[]; all?: boolean };
 
 /**
  * O que a mesa guarda de uma partida aberta: `attach()` troca o objeto inteiro por um novo, então tudo que entra aqui

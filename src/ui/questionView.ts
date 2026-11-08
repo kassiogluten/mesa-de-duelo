@@ -10,6 +10,7 @@ import { combatDamageHTML, isCombatDamage } from './combatDamage';
 import { isVote, voteHTML } from './cardVote';
 import { isNameChoice, nameChoiceHTML } from './nameChoice';
 import { dungeonRoomHTML, isDungeonRoom } from './dungeon';
+import { isReplacementOrder, replacementOrderHTML } from './replacementOrder';
 import type { QuestionDraft } from './tableState';
 
 /** O que as perguntas precisam da mesa. */
@@ -70,6 +71,7 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   if (isVote(q)) return voteHTML(q, { face: v.face, label: v.label, rulesText: c => v.ptText(c.name) || c.text || '', playerName: v.playerName });
   if (isPilesSplit(q)) return pilesSplitHTML(q, draft.picked, v.piles);
   if (isPilesChoice(q)) return pilesChoiceHTML(q, v.piles);
+  if (isReplacementOrder(q)) return replacementOrderHTML(q, draft.all !== false, v.face, v.label);
   const opts = q.options ?? [];
   const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
   if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
@@ -132,6 +134,6 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
 export function questionBar(v: QuestionView, q: FQuestion, picked: number) {
   const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
   const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-  const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isPilesSplit(q) || isPilesChoice(q) ? pilesHeading(q, v.piles) : isVote(q) && q.card ? `Votação: ${v.label(q.card)}` : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
+  const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isPilesSplit(q) || isPilesChoice(q) ? pilesHeading(q, v.piles) : isVote(q) && q.card ? `Votação: ${v.label(q.card)}` : isReplacementOrder(q) ? 'Qual efeito aplicar primeiro?' : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
   return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
 }
