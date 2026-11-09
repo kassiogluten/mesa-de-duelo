@@ -8,9 +8,11 @@
  */
 package forge.ai;
 
+import forge.card.MagicColor;
 import forge.card.mana.ManaAtom;
 import forge.card.mana.ManaCostShard;
 import forge.game.GameObject;
+import forge.game.ability.ApiType;
 import forge.game.card.Card;
 import forge.game.card.CardLists;
 import forge.game.card.CardView;
@@ -19,6 +21,8 @@ import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.TargetChoices;
 import forge.game.spellability.TargetRestrictions;
+import forge.game.trigger.Trigger;
+import forge.game.trigger.TriggerType;
 import forge.game.zone.ZoneType;
 import org.tinylog.Logger;
 
@@ -202,7 +206,47 @@ public final class AvailableActions {
             return true;
         }
         // TODO include RemoveDeck:All when they weren't used
-        return ComputerUtilMana.canPayManaCost(sa, player, 0, false) || canAffordWithLife(sa, player);
+        return ComputerUtilMana.canPayManaCost(sa, player, 0, false) || canAffordWithLife(sa, player)
+            || !landBonusColors(player).isEmpty()
+                && canAffordWithLandBonus(ComputerUtilMana.calculateManaCost(sa.getPayCosts(), sa, player, true, 0, false), sa, player, false);
+    }
+
+    /** Bridge addition: Caged Sun ("Whenever a land's ability causes you to add one or more mana of the chosen color, add
+     *  one additional mana of that color") is a ManaAdded trigger, and the AI payment test only predicts TapsForMana
+     *  triggers. Each untapped land that can tap for the chosen color pays one more of it; the rest goes to the usual test.
+     *  The real payment already gets the extra mana from the pool. */
+    public static boolean canAffordWithLandBonus(ManaCostBeingPaid cost, SpellAbility sa, Player player, boolean effect) {
+        if (cost == null || cost.isPaid()) return false;
+        List<String> colors = landBonusColors(player);
+        if (colors.isEmpty()) return false;
+        ManaCostBeingPaid rest = new ManaCostBeingPaid(cost);
+        int bonus = 0;
+        for (String color : colors) {
+            for (Card land : player.getCardsIn(ZoneType.Battlefield)) {
+                if (!land.isLand() || land.isTapped() || rest.isPaid()) continue;
+                boolean taps = land.getManaAbilities().stream().anyMatch(ma -> {
+                    ma.setActivatingPlayer(player);
+                    return ma.getManaPart() != null && ma.canPlay() && ma.getManaPart().canProduce(color, ma);
+                });
+                if (taps && rest.ai_payMana(color, player.getManaPool())) bonus++;
+            }
+        }
+        return bonus > 0 && (rest.isPaid() || ComputerUtilMana.canPayManaCost(rest, sa, player, effect));
+    }
+
+    /** The color of each Caged Sun the player controls (one entry per copy). */
+    private static List<String> landBonusColors(Player player) {
+        List<String> colors = new ArrayList<>();
+        for (Card host : player.getCardsIn(ZoneType.Battlefield)) {
+            if (!host.hasChosenColor()) continue;
+            for (Trigger t : host.getTriggers()) {
+                if (t.getMode() != TriggerType.ManaAdded || !t.isStatic()) continue;
+                SpellAbility extra = t.ensureAbility();
+                if (extra != null && extra.getApi() == ApiType.Mana && "Chosen".equals(extra.getParam("Produced")))
+                    colors.add(MagicColor.toShortString(host.getChosenColor()));
+            }
+        }
+        return colors;
     }
 
     /** Bridge addition: the AI pays Phyrexian symbols with life only when it judges it worth it

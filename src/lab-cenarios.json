@@ -1,5 +1,20 @@
 [
   {
+    "nome": "Caged Sun: Automático com a mana extra",
+    "versao": "0.155.1",
+    "item": "Caged Sun conta a mana extra para conjurar e no Automático",
+    "conferir": "O Jogador 1 tem Caged Sun e Hill Giant na mão e oito Mountains no campo. Conjure o Caged Sun pagando com seis Mountains e escolha vermelho. Com só duas Mountains desviradas, o Hill Giant ({3}{R}) aparece disponível para conjurar; ao conjurar, Pagar automaticamente fica aceso e paga tudo com as duas Mountains, que dão duas manas vermelhas cada.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Caged Sun", "Hill Giant"], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": ["Island", "Island", "Island"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
     "nome": "K'rrik: pagar {B} com vida",
     "versao": "0.155.0",
     "item": "K'rrik deixa pagar {B} com vida",

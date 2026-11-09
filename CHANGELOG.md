@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.155.1] - 2026-11-09
+
+### Corrigido
+
+- **Caged Sun conta a mana extra para conjurar e no Automático.** Com Caged Sun no campo, cada terreno que gera mana da cor escolhida dá uma mana a mais dessa cor, e a mesa agora conta isso antes de pagar: cartas que só dá para pagar com essa mana extra aparecem disponíveis para conjurar, e o botão **Pagar automaticamente** fica aceso para pagar. Antes, só dava para pagar virando os terrenos um a um.
+
 ## [0.155.0] - 2026-11-09
 
 ### Novo

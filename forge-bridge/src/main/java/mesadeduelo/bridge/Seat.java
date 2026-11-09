@@ -19,6 +19,7 @@ import forge.game.player.RegisteredPlayer;
 import forge.game.spellability.StackItemView;
 import forge.gamemodes.match.HostedMatch;
 import forge.gamemodes.match.input.InputPassPriority;
+import forge.gamemodes.match.input.InputPayMana;
 import forge.gamemodes.net.IRemote;
 import forge.gamemodes.net.event.GuiGameEvent;
 import forge.gamemodes.net.event.IdentifiableNetEvent;
@@ -297,6 +298,9 @@ final class Seat {
                     inputGen.incrementAndGet();
                     okLabel = CoinFlipText.label(String.valueOf(a[1])); cancelLabel = CoinFlipText.label(String.valueOf(a[2]));
                     okEnabled = Boolean.TRUE.equals(a[3]); cancelEnabled = Boolean.TRUE.equals(a[4]);
+                    // O Automático que só fecha com a mana extra do Caged Sun: o Forge o deixa desligado (AutoPay).
+                    if (!okEnabled && controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana pay
+                        && AutoPay.payableWithLandBonus(pay)) okEnabled = true;
                     passResponseIfAsked();
                 }
                 case setSelectables -> {

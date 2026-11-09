@@ -1,4 +1,9 @@
 {
+  "0.155.1": {
+    "Caged Sun conta a mana extra para conjurar e no Automático": [
+      { "img": "0.155.1/caged-sun-automatico.webp", "legenda": "Com Caged Sun no vermelho e só duas Montanhas desviradas, o Gigante da Colina ({3}{R}) já pode ser conjurado, e Pagar automaticamente fica aceso: cada Montanha dá duas manas vermelhas." }
+    ]
+  },
   "0.155.0": {
     "Aviso de quando a carta volta do exílio": [
       { "img": "0.155.0/volta-exilio-etiqueta.webp", "legenda": "Na janela do Exílio, as cartas que a Necropotência exilou viradas para baixo, cada uma com a etiqueta **Volta na etapa final**." },

@@ -7,6 +7,7 @@ import java.util.Set;
 import forge.ai.AiCardMemory;
 import forge.ai.AiCardMemory.MemorySet;
 import forge.ai.AiCostDecision;
+import forge.ai.AvailableActions;
 import forge.ai.ComputerUtilMana;
 import forge.game.Game;
 import forge.game.card.Card;
@@ -64,6 +65,19 @@ final class AutoPay {
             });
         } catch (ReflectiveOperationException e) { throw new IllegalStateException(e); }
         return true;
+    }
+
+    /**
+     * O Automático do Forge fica desligado quando só fecha com a mana extra do Caged Sun, que o teste dele não conta
+     * (AvailableActions.canAffordWithLandBonus); o pagamento de verdade usa essa mana.
+     */
+    static boolean payableWithLandBonus(InputPayMana pay) {
+        if (!ForgeReflection.present(PLAYER, COST, PAID_FOR, EFFECT, SUPPORTS_AUTO)) return false;
+        try {
+            if (!(boolean) SUPPORTS_AUTO.invoke(pay)) return false;
+            return AvailableActions.canAffordWithLandBonus((ManaCostBeingPaid) COST.get(pay), (SpellAbility) PAID_FOR.get(pay),
+                (Player) PLAYER.get(pay), (boolean) EFFECT.get(pay));
+        } catch (ReflectiveOperationException | RuntimeException e) { return false; }
     }
 
     /** Na thread do jogo, com a IA no controle (como o Automático do Forge): vira as pedras escolhidas e paga o resto. */
