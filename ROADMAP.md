@@ -562,13 +562,3 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
 
 - [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
-
-## 118. Revelar e escolher uma carta numa janela só
-
-Pedido em 09/11/2026. Quando um efeito revela cartas e o jogador escolhe uma delas, a mesa mostra duas janelas seguidas (uma para ver as cartas reveladas e outra para escolher). Verificar se dá para mostrar uma só: as cartas reveladas já escolhíveis, com o texto do efeito, e um botão para confirmar.
-
-- [ ] Reproduzir com cartas de exemplo (revelar o topo e escolher uma para a mão, como Impulse ou Dig Through Time; revelar a mão do oponente e escolher uma, como Thoughtseize) e listar as janelas que aparecem e de onde vem cada uma (o motor pede "revelar" e depois "escolher", ou a mesa abre as duas).
-- [ ] Juntar as duas quando a escolha vem logo depois da revelação das mesmas cartas: uma janela com as cartas e a escolha; as não escolhidas continuam visíveis, para o jogador saber o que foi revelado.
-- [ ] Manter a janela de só revelar quando não há escolha depois (ou quando quem escolhe é outro jogador).
-- [ ] Conferir com o oponente vendo a revelação (ele não escolhe, só vê) e em partida contra o computador.
-- [ ] Item no CHANGELOG, prints em Novidades em imagens e cenário no Laboratório com uma carta que revela e escolhe.

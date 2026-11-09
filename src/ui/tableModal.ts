@@ -36,7 +36,7 @@ export function createModalFocus(d: ModalDeps) {
   function sync() {
     // Com o foco num oponente, a decisão que chegar espera atrás dele (a tela avisa); só o que se abre dali (cemitério, exílio) vem na frente.
     const focusOpen = !$('#fFocus').hidden;
-    const required = (focusOpen ? ['#fZone'] : ['#fVote', '#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval']).map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && d.questionMinimized())) ?? (focusOpen ? $('#fFocus') : null);
+    const required = (focusOpen ? ['#fZone'] : ['#fVote', '#fOverlay', '#fQuestion', '#fZone', '#fStackGallery', '#fRemoval', '#fReveal']).map(id => $(id)).find(el => !el.hidden && !(el.id === 'fQuestion' && d.questionMinimized())) ?? (focusOpen ? $('#fFocus') : null);
     if (required && !$('#fSettings').hidden) {
       $('#fSettings').hidden = true;
       root.querySelector('[aria-controls="fSettings"]')?.setAttribute('aria-expanded', 'false');
@@ -56,7 +56,7 @@ export function createModalFocus(d: ModalDeps) {
   /** Onde o foco começa numa janela: a escolha principal (o modo recomendado, o primeiro gatilho, o botão de confirmar
    *  quando não há opções a marcar), para o Espaço apertá-la; senão, o primeiro controle. Nunca o "Ver a mesa", que fica no Esc. */
   function start(active: HTMLElement) {
-    return active.querySelector<HTMLElement>('[data-vote-start], .play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"]')
+    return active.querySelector<HTMLElement>('[data-vote-start], .play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"], [data-ui="reveal-ok"]')
       ?? (active.querySelector('[data-q-opt]') ? null : active.querySelector<HTMLElement>('.q-actions .arena-btn.primary:not(:disabled)'))
       ?? [...active.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input, [tabindex="0"]')].find(el => !el.matches('[data-ui="question-minimize"]'));
   }

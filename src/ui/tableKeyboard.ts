@@ -7,6 +7,7 @@ import type { createErrorsPanel } from './errorsPanel';
 import type { OpponentFocus } from './opponentFocus';
 import type { createPassMenu, createStopMenu } from './passMenus';
 import type { createRemovalQueue } from './removalQueue';
+import type { createRevealWindow } from './revealWindow';
 import { isShortcutsKey, MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
 import type { TableCtx } from './tableContext';
 import type { ModalFocus } from './tableModal';
@@ -19,6 +20,7 @@ export interface KeyboardDeps extends Pick<TableCtx, 'root' | '$' | 'state' | 'm
   stops: ReturnType<typeof createStopMenu>;
   passMenu: ReturnType<typeof createPassMenu>;
   removals: ReturnType<typeof createRemovalQueue>;
+  reveals: ReturnType<typeof createRevealWindow>;
   settings: ReturnType<typeof createTableSettings>;
   errors: ReturnType<typeof createErrorsPanel>;
   attack: ReturnType<typeof createAttackChoice>;
@@ -79,6 +81,7 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     // Menu de exibição de um assento aberto: o próprio botão fecha (e o foco volta para ele).
     const seatMenu = root.querySelector<HTMLElement>('.seat-menu.open [data-seat-menu]');
     if (seatMenu) { e.preventDefault(); seatMenu.click(); return; }
+    if (!$('#fReveal').hidden) { e.preventDefault(); d.reveals.close(); return; }
     if (!$('#fRemoval').hidden) { e.preventDefault(); d.removals.close(); return; }
     if (!$('#fSettings').hidden) { e.preventDefault(); d.settings.set(false); return; }
     if (!$('#fMenu').hidden) { e.preventDefault(); d.setMenu(false, true); return; }

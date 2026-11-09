@@ -344,6 +344,19 @@ export interface FOption {
   room?: string;
 }
 
+/** A janela das cartas reveladas do topo de um grimório (Grisly Salvage): quem escolhe, as cartas e as escolhidas. */
+export interface FRevealView {
+  seq: number;
+  chooser?: string;
+  source?: FCard;
+  cards: FCard[];
+  /** As escolhidas (ids); ausente enquanto escolhe ou se não escolheu nenhuma. */
+  chosen?: number[];
+  /** Quem escolhe ainda não escolheu (o efeito continua resolvendo). */
+  waiting: boolean;
+  /** O revelar foi do próprio jogador, sem escolha depois. */
+  mine?: boolean;
+}
 export interface FQuestion {
   id: number;
   method: string;
@@ -351,6 +364,9 @@ export interface FQuestion {
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
   /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). */
   purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order';
+  /** Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). */
+  revealed?: FCard[];
+  revealedNote?: string;
   /** replacement-order (qual efeito de substituição vem primeiro): dá para usar a mesma escolha no resto do efeito que está resolvendo (a resposta leva all). */
   applyToAll?: boolean;
   /** library (vidência e vigilância): o que sai do topo vai para o fundo ou o cemitério, ou "top", a ordem das que ficam. Cartas na ordem do grimório. */
@@ -519,6 +535,8 @@ export interface FState {
     /** Voto numa permanente, escolhido tocando no campo: a carta que vota e os votos já dados. */
     vote?: { card: FCard; votes: FVote[] } };
   question?: FQuestion;
+  /** Cartas reveladas do topo de um grimório por outro jogador (ou pelo próprio, sem escolha depois): janela que não segura o jogo e se atualiza com a escolha. */
+  revealView?: FRevealView;
   /** Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. */
   deciding?: { player: number; kind: 'choice' | 'attack' | 'block' }[];
   /**
@@ -594,7 +612,9 @@ export type ClientMessage =
   | { type: 'pass-turn-stop' }
   | { type: 'skip-vote'; target: number; value?: boolean }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
-  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean };
+  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean }
+  /** OK na janela das cartas reveladas do topo de um grimório (revealView). */
+  | { type: 'reveal-seen'; seq: number };
 
 /** Carta parecida devolvida pela ponte: a nota (0 a 1) e as tags em comum que mais pesaram. */
 export interface SimilarCard { oracleId: string; score: number; tags: string[] }

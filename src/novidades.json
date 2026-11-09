@@ -1,5 +1,13 @@
 {
   "0.154.0": {
+    "Revelar o topo do grimório e escolher numa janela só": [
+      { "img": "0.154.0/revelar-grimorio-escolha.webp", "legenda": "Quem joga Grisly Salvage vê só a escolha, com as cinco cartas reveladas; o Raio aparece apagado, porque não é criatura nem terreno." },
+      { "img": "0.154.0/revelar-grimorio-escolhendo.webp", "legenda": "Quem assiste vê as cartas reveladas enquanto o oponente escolhe, sem o jogo esperar pelo OK." },
+      { "img": "0.154.0/revelar-grimorio-escolheu.webp", "legenda": "A mesma janela, quando ele termina: a carta escolhida em destaque e as outras apagadas." }
+    ],
+    "Revelar a mão e escolher numa janela só": [
+      { "img": "0.154.0/revelar-escolher.webp", "legenda": "Thoughtseize: a mão inteira do oponente numa janela só; Raio, Contramágica e Ursos Cinzentos para escolher, e a Floresta apagada, porque não pode ser escolhida." }
+    ],
     "O computador joga com os seus decks": [
       { "img": "0.154.0/oponente-meus-decks.webp", "legenda": "A lista do deck do computador, aberta: depois dos decks prontos, o grupo Meus decks com um deck do jogador." }
     ],

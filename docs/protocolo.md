@@ -409,6 +409,20 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `face?` | `{ name: string; manaCost: string; typeLine: string }` | Outra face ou metade usada pela opção (aventura, carta dividida). |
 | `room?` | `string` | dungeon-room: nome da sala da masmorra que a opção escolhe. |
 
+## FRevealView
+
+A janela das cartas reveladas do topo de um grimório (Grisly Salvage): quem escolhe, as cartas e as escolhidas.
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `seq` | `number` |  |
+| `chooser?` | `string` |  |
+| `source?` | `FCard` |  |
+| `cards` | `FCard[]` |  |
+| `chosen?` | `number[]` | As escolhidas (ids); ausente enquanto escolhe ou se não escolheu nenhuma. |
+| `waiting` | `boolean` | Quem escolhe ainda não escolheu (o efeito continua resolvendo). |
+| `mine?` | `boolean` | O revelar foi do próprio jogador, sem escolha depois. |
+
 ## FQuestion
 
 | Campo | Tipo | O que é |
@@ -417,6 +431,8 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `method` | `string` |  |
 | `kind` | `'choose' \| 'confirm' \| 'order' \| 'text' \| 'reveal' \| 'amount'` | reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. |
 | `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). |
+| `revealed?` | `FCard[]` | Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). |
+| `revealedNote?` | `string` |  |
 | `applyToAll?` | `boolean` | replacement-order (qual efeito de substituição vem primeiro): dá para usar a mesma escolha no resto do efeito que está resolvendo (a resposta leva all). |
 | `library?` | `'bottom' \| 'graveyard' \| 'top'` | library (vidência e vigilância): o que sai do topo vai para o fundo ou o cemitério, ou "top", a ordem das que ficam. Cartas na ordem do grimório. |
 | `pileOwner?` | `number` | piles-split e piles-choose (dois montes): de quem são as cartas, se o dono escolhe o monte e para onde vai cada um ("hand", "graveyard"...), quando o efeito só move as cartas. |
@@ -603,6 +619,7 @@ Previsão do combate de um jogador atacado, com as regras do Forge (prevenção,
 | `you` | `number` |  |
 | `input` | `{ gen: number; priority?: boolean; opening?: 'starting-player' \| 'play-draw' \| 'mulligan' \| 'mulligan-bottom'; openingStartingPlayer?: number; /** Outro jogador na abertura enquanto você espera: quem, se decide quem começa ou a mão, e se você já manteve a sua. */ openingWait?: { player: number; step: 'start' \| 'hand'; kept?: boolean }; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' \| 'ability' \| 'effect'; canAutoPay?: boolean; phyrexianLife?: number; /** Pagando: o custo que falta como o motor conta ("{1}{R}", "0" pago), descontado a cada mana gerada; total é o custo quando o pagamento abriu (só depois de pagar uma parte); life, a vida já separada para mana phyrexiana; x, o X escolhido. Ausente em pontes antigas. */ manaCost?: { remaining: string; total?: string; life?: number; x?: number }; /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */ /** players: só quando jogadores também podem ser escolhidos (proliferar). */ selection?: { cards: number[]; players?: number[]; min: number; max: number }; /** Improvisar, convocar ou dobrar água: virar permanentes antes da mana (selection traz as já viradas); remaining é o custo que falta. */ tapToPay?: { kind: 'improvise' \| 'convoke' \| 'waterbend'; remaining: string }; /** Proliferar: o que pode ganhar marcadores e se cada marcador ajuda ou prejudica quem escolhe. */ proliferate?: { candidates: ProliferateCandidate[] }; /** Escolha de conjurar durante a resolução do gatilho de suspender; usa OK/Cancelar. */ suspendCast?: { card: FCard }; /** Regra 903.9b: o comandante iria para a mão ou o grimório (to) e pode ir à zona de comando no lugar. */ /** Comandante iria para `to` (903.9b) ou, com `stays`, já está em `to` (903.9a, cemitério ou exílio). */ commanderMove?: { to: 'Hand' \| 'Library' \| 'Graveyard' \| 'Exile' \| string; stays?: boolean; card?: FCard }; /** Atacantes e bloqueadores da declaração atual, identificados pela instância da carta. */ blocking?: { selectedAttacker: number \| null; attackers: number[]; blockers: number[]; legalAssignments: { blocker: number; attackers: number[] }[] }; attacking?: { attackers: number[]; defenders: { id: number; kind: 'player' \| 'card' }[]; legalAssignments: { attacker: number; defenders: { id: number; kind: 'player' \| 'card' }[] }[] }; targeting?: FTargeting; /** Voto numa permanente, escolhido tocando no campo: a carta que vota e os votos já dados. */ vote?: { card: FCard; votes: FVote[] } }` | targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. |
 | `question?` | `FQuestion` |  |
+| `revealView?` | `FRevealView` | Cartas reveladas do topo de um grimório por outro jogador (ou pelo próprio, sem escolha depois): janela que não segura o jogo e se atualiza com a escolha. |
 | `deciding?` | `{ player: number; kind: 'choice' \| 'attack' \| 'block' }[]` | Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. |
 | `waiting?` | `{ player: number; kind: 'priority' \| 'choice' \| 'attack' \| 'block'; ms: number }[]` | Jogadores humanos que a mesa espera agora, inclusive quem recebe o estado e a prioridade comum, com quanto tempo a espera atual já durou quando o estado saiu (ms). Uma resposta abre outra espera. Ausente em pontes antigas. |
 | `room?` | `FRoom` |  |
@@ -701,6 +718,8 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'skip-vote'; target: number; value?: boolean }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean }
+  /** OK na janela das cartas reveladas do topo de um grimório (revealView). */
+  | { type: 'reveal-seen'; seq: number }
 ```
 
 ## SimilarCard

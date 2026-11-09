@@ -121,10 +121,14 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
     : choiceOrder(q, v.label).map(i => item(i)).join('');
   const n = draft.picked.length;
   const ready = n >= min && n <= max;
+  // Mão revelada (Thoughtseize): as cartas que não podem ser escolhidas aparecem apagadas, para ver a mão inteira numa janela só.
+  const revealed = q.revealed ?? [];
+  const unavailable = revealed.map(c => `<div class="q-opt has-card unavailable" data-q-card="${c.id}" aria-disabled="true"><div class="q-face">${v.face(c)}</div><span>${esc(v.label(c))}</span></div>`).join('');
+  const revealedHint = revealed.length ? `${q.revealedNote ? `${esc(q.revealedNote)} ` : ''}As cartas apagadas não podem ser escolhidas.` : '';
   const hint = isOrder ? 'Toque na ordem desejada (a primeira fica em cima).'
-    : single ? '' : `Escolha ${min === max ? min : `de ${min} a ${max}`}.`;
+    : [single ? '' : `Escolha ${min === max ? min : `de ${min} a ${max}`}.`, revealedHint].filter(Boolean).join(' ');
   return `${head}${hint ? `<p class="q-hint">${hint}</p>` : ''}${tools}
-    <div class="q-opts ${anyCards ? 'cards' : ''}${layout ? ' filtered' : ''}">${items}</div>
+    <div class="q-opts ${anyCards || revealed.length ? 'cards' : ''}${layout ? ' filtered' : ''}">${items}${unavailable}</div>
     <div class="q-actions">
       ${(q.min ?? 1) === 0 && !isOrder ? '<button class="arena-btn secondary" data-q-none>Nenhum</button>' : ''}
       ${isOrder ? '<button class="arena-btn secondary" data-q-keep>Manter ordem</button>' : ''}

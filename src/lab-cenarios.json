@@ -1,5 +1,35 @@
 [
   {
+    "nome": "Grisly Salvage: revelar o topo do grimório e escolher numa janela só",
+    "versao": "0.154.0",
+    "item": "Revelar o topo do grimório e escolher numa janela só",
+    "conferir": "O Jogador 1 tem Grisly Salvage na mão, com um Swamp e uma Forest no campo; o topo do grimório dele é Grizzly Bears, Island, Llanowar Elves, Forest e Lightning Bolt. Conjure Grisly Salvage: o Jogador 1 vê uma janela só, a de escolher, com as cinco cartas; o Lightning Bolt aparece apagado (não é criatura nem terreno). Antes de escolher, olhe a mesa do Jogador 2: abre a janela com as cinco cartas e \"Jogador 1 está escolhendo…\", e o jogo não espera o OK dele. Escolha Grizzly Bears: a janela do Jogador 2 marca o Grizzly Bears em destaque e apaga as outras, e o título vira \"Jogador 1 escolheu Ursos Cinzentos\". As outras quatro vão para o cemitério. Repita sem escolher nada (Nenhum): a janela do Jogador 2 diz que ele não escolheu nenhuma carta.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Grisly Salvage"], "library": ["Grizzly Bears", "Island", "Llanowar Elves", "Forest", "Lightning Bolt", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Swamp" }, { "name": "Forest" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Thoughtseize: mão revelada e escolha numa janela só",
+    "versao": "0.154.0",
+    "item": "Revelar a mão e escolher numa janela só",
+    "conferir": "O Jogador 1 tem Thoughtseize na mão e um Swamp no campo. O Jogador 2 tem na mão Lightning Bolt, Grizzly Bears, Counterspell e Forest. Conjure Thoughtseize mirando o Jogador 2: abre uma janela só, com as quatro cartas; a Forest aparece apagada (não pode ser escolhida) e as outras três podem. Escolha uma: ela vai para o cemitério do Jogador 2, que vê qual carta foi escolhida, e o Jogador 1 perde 2 de vida. Não aparece antes uma janela só para ver a mão revelada.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Thoughtseize"], "library": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": ["Lightning Bolt", "Grizzly Bears", "Counterspell", "Forest"], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Ninjutsu e sneak: Ninja of the Deep Hours, Donatello e Splinter",
     "versao": "0.152.0",
     "item": "Ninjutsu e sneak com fumaça e shuriken",

@@ -183,6 +183,10 @@ final class ClientActions {
                 if (pv != null) seat.onEdt(genAtClick, c -> c.selectPlayer(pv, null));
             }
             case "answer" -> session.questions.answer(seat, msg);
+            case "reveal-seen" -> {
+                if (seat.controller() instanceof AskingController asking && msg.has("seq")) asking.libraryViewSeen(msg.get("seq").getAsInt());
+                session.markDirty();
+            }
             default -> { }
         }
     }

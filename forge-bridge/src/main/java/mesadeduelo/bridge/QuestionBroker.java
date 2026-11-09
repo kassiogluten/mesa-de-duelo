@@ -152,12 +152,36 @@ final class QuestionBroker {
             return ASK;
         }
         JsonArray rows = optionsJson(options, display);
+        revealedAlongside(seat, options, q);
         Dungeons.roomChoice(hosted.getGame(), options, rows, q);
         Piles.choose(q, options, hosted.getGame());
         q.add("options", rows);
         CoinFlipText.choice(q);
         voteQuestion(q, hosted.getGame());
         return ASK;
+    }
+
+    /**
+     * Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as reveladas
+     * que não estão entre as opções vão em {@code revealed}, para a mesa mostrar todas numa janela só, e
+     * {@code revealedNote} diz de onde vieram.
+     */
+    private static void revealedAlongside(Seat seat, List<Object> options, JsonObject q) {
+        if (!(seat.controller() instanceof AskingController controller)) return;
+        java.util.Set<Integer> offered = new java.util.HashSet<>();
+        for (Object o : options) if (o instanceof CardView card) offered.add(card.getId());
+        Iterable<forge.game.card.Card> shown;
+        String note;
+        if (controller.revealedHand() != null) { shown = controller.revealedHand(); note = controller.revealedOwner(); }
+        else if (controller.pendingLibraryReveal() != null && !offered.isEmpty()
+                && controller.pendingLibraryReveal().stream().map(forge.game.card.Card::getId).toList().containsAll(offered)) {
+            shown = controller.pendingLibraryReveal(); note = "Cartas reveladas do topo do seu grimório.";
+            controller.libraryRevealChosen();
+        } else return;
+        JsonArray revealed = new JsonArray();
+        for (var card : shown) if (!offered.contains(card.getId())) revealed.add(StateJson.card(card.getView()));
+        q.add("revealed", revealed);
+        q.addProperty("revealedNote", note);
     }
 
     private Object abilityToPlay(Prompt p) {
@@ -187,6 +211,7 @@ final class QuestionBroker {
         q.addProperty("min", Boolean.TRUE.equals(a[3]) ? 0 : 1);
         q.addProperty("max", 1);
         options.addAll((Collection<?>) a[1]);
+        revealedAlongside(p.seat(), options, q);
         q.add("options", optionsJson(options, null));
         voteQuestion(q, hosted.getGame());
         ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
@@ -200,6 +225,7 @@ final class QuestionBroker {
         q.addProperty("min", (Integer) a[2]);
         q.addProperty("max", (Integer) a[3]);
         options.addAll((Collection<?>) a[1]);
+        revealedAlongside(p.seat(), options, q);
         q.add("options", optionsJson(options, null));
         ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
         return ASK;

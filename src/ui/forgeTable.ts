@@ -4,6 +4,7 @@ import { createMotion } from './motion';
 import { hideCardPreview } from './cardInspector';
 import { type HistoryNames } from './historyLog';
 import './removalNotice.css';
+import './revealWindow.css';
 import { PresentationTimeline, stateWithFrame } from './presentationTimeline';
 import { createGameAudio, tableMoment } from './audio';
 import { PassLevelPreference } from './passLevel';
@@ -66,6 +67,7 @@ import { createTableClocks } from './tableClocks';
 import { createPassMenu, createStopMenu } from './passMenus';
 import { createHistoryPanel } from './historyPanel';
 import { createRemovalQueue } from './removalQueue';
+import { createRevealWindow } from './revealWindow';
 import { createTableSettings } from './tableSettings';
 import { createErrorsPanel } from './errorsPanel';
 import { createAwaitingCallout, createToasts, createTurnBanner } from './tableNotices';
@@ -325,6 +327,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Histórico (historyPanel.ts) e as janelas de remoção feitas por outro jogador (removalQueue.ts).
   const historyLog = createHistoryPanel(root, { timeline, names: historyNames, you: () => client?.state?.you, image, setHTML });
   const removals = createRemovalQueue(root, { timeline, names: historyNames, face, state: () => client?.state, setHTML, leave: leaveOverlay, syncModal,
+    blocked: s => s.gameOver || match.disconnected || (!!s.question && !question.minimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || match.stackGalleryOpen || !$('#fReveal').hidden });
+  // Cartas reveladas do topo de um grimório (revealWindow.ts): janela que não segura o jogo, como a das remoções.
+  const reveals = createRevealWindow(root, { face, setHTML, leave: leaveOverlay, syncModal, seen: seq => client?.send({ type: 'reveal-seen', seq }),
     blocked: s => s.gameOver || match.disconnected || (!!s.question && !question.minimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || match.stackGalleryOpen });
   /** Histórico agrupado (Menu → Registro): só é montado com a gaveta aberta. */
   function renderLog() { historyLog.render(); }
@@ -389,6 +394,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     overlay.render(s);
 
     zone.sync(s);
+    reveals.sync(s);
     removals.sync(s);
     root.querySelectorAll<HTMLElement>('[data-fid],[data-pid],[data-mana]').forEach(el => { el.dataset.gen = String(el.closest('.field,.avatar-slot') ? visual.input.gen : s.input.gen); });
     // Covered identical copies stay reachable through the group chooser, without dozens of duplicate Tab stops.
@@ -437,7 +443,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   const toasts = createToasts(root, { findCard: id => findCard(id), image, setHTML });
-  const preview = createCardPreview({ ...ctx, eventCard: key => historyLog.card(key) ?? removals.card(key) ?? toasts.card(key) });
+  const preview = createCardPreview({ ...ctx, eventCard: key => historyLog.card(key) ?? removals.card(key) ?? reveals.card(key) ?? toasts.card(key) });
   function notice(text: string, error = false, detail?: NoticeDetail) {
     text = fixPossessives(text, playerNames());
     if (error) errors.record('aviso', text);
@@ -447,7 +453,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   // ---------- Eventos ----------
-  const ui = createUiActions({ ...ctx, attack, passMenu, settings, errors, removals, turnNotice, turnBuzz, hand, focus, setMenu, setLog,
+  const ui = createUiActions({ ...ctx, attack, passMenu, settings, errors, removals, reveals, turnNotice, turnBuzz, hand, focus, setMenu, setLog,
     startPassingTurn: () => inputs.startPassingTurn(), toggleDetails: () => actionBox.toggleDetails(), minimizeQuestion: id => question.minimize(id),
     closeStackGallery: () => stack.closeGallery(), closeZone: () => zone.close() });
   attachTableClicks({ ...ctx, ui, phases, seats, question, zone, overlay, inputs, attack, historyLog, focus, stops, opponentStops, passMenu, passLevel, setMenu,
@@ -460,7 +466,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   attachPreviewInput({ ...ctx, handDrag, stackFocusOn: el => stack.focusOn(el) });
   // ---------- Ordem dos gatilhos: teclado e arrastar ----------
   question.attachTriggerInput();
-  attachTableKeyboard({ ...ctx, modal, focus, stops, passMenu, removals, settings, errors, attack, setMenu, setLog,
+  attachTableKeyboard({ ...ctx, modal, focus, stops, passMenu, removals, reveals, settings, errors, attack, setMenu, setLog,
     closeStackGallery: () => stack.closeGallery(), closeZone: () => zone.close(), questionMinimized: () => question.minimized(),
     switchZonePlayer: player => { if (client?.state) zone.switchPlayer(client.state, player); } });
 

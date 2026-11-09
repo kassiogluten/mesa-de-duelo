@@ -1,0 +1,13 @@
+/* Cartas reveladas do topo de um grimório: a escolhida em destaque, as outras apagadas depois da escolha. */
+.forge .reveal-view .q-opts.cards { max-height: 62vh; overflow-y: auto; padding: 8px 6px; }
+.forge .reveal-view .reveal-card { position: relative; transition: opacity .25s, filter .25s, transform .25s; }
+.forge .reveal-view .reveal-card .q-face { width: 132px; --fw: 132px; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.forge .reveal-view .reveal-card.chosen { transform: translateY(-6px); }
+.forge .reveal-view .reveal-card.chosen .face { box-shadow: 0 0 0 3px var(--gold), 0 0 18px #f2b54c88; border-radius: 6px; }
+.forge .reveal-view .reveal-card.passed { opacity: .45; filter: grayscale(.6); }
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .reveal-view h2 { font-size: 16px; }
+  .forge .reveal-view .q-opts.cards { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-height: none; }
+  .forge .reveal-view .reveal-card { flex: none; }
+  .forge .reveal-view .reveal-card .q-face { width: 72px; --fw: 72px; }
+}

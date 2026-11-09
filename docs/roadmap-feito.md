@@ -1202,3 +1202,15 @@ Pedido em 09/11/2026. Ao escolher mulligan, a mesa mostra mais passos do que pre
 - [x] Item no CHANGELOG (0.154.0) e prints em Novidades em imagens. Sem cenário no Laboratório: a abertura não se monta numa mesa pronta.
 
 Feito em 09/11/2026 (0.154.0): o motor pedia as cartas a devolver antes de perguntar se o jogador mantinha; o servidor agora pergunta antes, com as 7 cartas novas, e só pede as cartas depois de manter.
+
+## 118. ✅ Revelar e escolher uma carta numa janela só
+
+Pedido em 09/11/2026. Quando um efeito revela cartas e o jogador escolhe uma delas, a mesa mostra duas janelas seguidas (uma para ver as cartas reveladas e outra para escolher). Verificar se dá para mostrar uma só: as cartas reveladas já escolhíveis, com o texto do efeito, e um botão para confirmar.
+
+- [x] Reproduzir com cartas de exemplo (revelar o topo e escolher uma para a mão, como Impulse ou Dig Through Time; revelar a mão do oponente e escolher uma, como Thoughtseize) e listar as janelas que aparecem e de onde vem cada uma (o motor pede "revelar" e depois "escolher", ou a mesa abre as duas).
+- [x] Juntar as duas quando a escolha vem logo depois da revelação das mesmas cartas: uma janela com as cartas e a escolha; as não escolhidas continuam visíveis, para o jogador saber o que foi revelado.
+- [x] Manter a janela de só revelar quando não há escolha depois (ou quando quem escolhe é outro jogador).
+- [x] Conferir com o oponente vendo a revelação (ele não escolhe, só vê) e em partida contra o computador.
+- [x] Item no CHANGELOG, prints em Novidades em imagens e cenário no Laboratório com uma carta que revela e escolhe.
+
+Feito em 09/11/2026 (0.154.0): as duas janelas vinham do motor (revelar a mão e, em seguida, escolher só entre as válidas) no descarte "revela e você escolhe" (Thoughtseize, Duress, Inquisition). O servidor pula o revelar quando a escolha vem com certeza e manda na escolha as cartas reveladas que não podem ser escolhidas, que a mesa mostra apagadas. Commune with Nature e Impulse já usavam uma janela só para escolher. O revelar continua sozinho quando nada pode ser escolhido (`test-reveal-choose`).

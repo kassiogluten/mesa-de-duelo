@@ -9,6 +9,7 @@ import { toggleFullscreen } from './landscape';
 import type { OpponentFocus } from './opponentFocus';
 import type { createPassMenu } from './passMenus';
 import type { createRemovalQueue } from './removalQueue';
+import type { createRevealWindow } from './revealWindow';
 import { screenWake } from './screenWake';
 import { MATCH_SHORTCUTS, openShortcuts } from './shortcuts';
 import type { TableCtx } from './tableContext';
@@ -35,6 +36,7 @@ export interface UiActionDeps extends Pick<TableCtx, '$' | 'opts' | 'client' | '
   settings: ReturnType<typeof createTableSettings>;
   errors: ReturnType<typeof createErrorsPanel>;
   removals: ReturnType<typeof createRemovalQueue>;
+  reveals: ReturnType<typeof createRevealWindow>;
   turnNotice: ReturnType<typeof createTurnNotice>;
   turnBuzz: ReturnType<typeof createTurnBuzz>;
   hand: TableHand;
@@ -122,6 +124,7 @@ export function createUiActions(d: UiActionDeps) {
   /** As ações: o menu, o histórico e os erros, desfazer, sair, o resultado e as janelas de remoção e de zona. */
   const action: UiTable = {
     'removal-ok': () => { d.removals.close(); },
+    'reveal-ok': () => { d.reveals.close(); },
     'attack-clear': () => { d.attack.clear(); d.renderTable(); },
     'attack-remove': () => { const s = d.state(); if (s) d.attack.removeSelected(s); },
     'menu': () => { d.setMenu($('#fMenu').hidden); },

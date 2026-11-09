@@ -1037,6 +1037,8 @@ body[data-screen='lobby'] .credits { display: none; }
 .q-opt.on { border-color: var(--gold); background: var(--azul-22294a, #22294a); }
 .q-opt.has-card { flex-direction: column; width: 150px; padding: 6px; font-size: 12px; text-align: center; }
 .q-face { width: 136px; aspect-ratio: 488 / 680; --fw: 136px; }
+.q-opt.unavailable { cursor: zoom-in; opacity: 0.45; filter: grayscale(0.6); }
+.q-opt.unavailable:hover { border-color: var(--azul-34405e, #34405e); transform: none; }
 .q-badge { position: absolute; top: -8px; right: -8px; min-width: 24px; height: 24px; display: grid; place-items: center; border-radius: 999px; background: var(--gold); color: #2b1700; font-weight: 800; }
 .q-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
 .q-actions .arena-btn { min-width: 140px; }

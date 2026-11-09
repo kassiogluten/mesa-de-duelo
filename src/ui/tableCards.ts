@@ -23,6 +23,8 @@ export function findCard(s: FState | null | undefined, frame: PresentationFrame 
   if (s.input.suspendCast?.card.id === id) return s.input.suspendCast.card;
   if (s.input.targeting?.card?.id === id) return s.input.targeting.card;
   for (const o of s.question?.options ?? []) if (typeof o !== 'string' && o.card?.id === id) return o.card;
+  for (const c of s.question?.revealed ?? []) if (c.id === id) return c;
+  for (const c of s.revealView?.cards ?? []) if (c.id === id) return c;
   return undefined;
 }
 

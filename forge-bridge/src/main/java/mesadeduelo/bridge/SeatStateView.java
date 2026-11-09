@@ -352,6 +352,11 @@ final class SeatStateView {
                 state.add("input", input);
                 QuestionBroker.Question q = seat.question;
                 if (q != null && !spectating) state.add("question", q.json());
+                // Cartas reveladas do topo de um grimório, numa janela que não segura o jogo (LibraryReveal).
+                if (!spectating && seat.controller() instanceof AskingController asking && asking.libraryView() != null) {
+                    JsonObject revealView = LibraryReveal.json(asking.libraryView(), m.getGame());
+                    if (revealView != null) state.add("revealView", revealView);
+                }
                 state.add("deciding", deciding(seat));
                 state.add("waiting", waiting());
                 // Phase/zone events can precede the actionable input. Never advertise an early cast.

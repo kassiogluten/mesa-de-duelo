@@ -126,6 +126,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
     <div class="overlay" id="fZone" hidden></div>
     <div class="overlay stack-gallery-overlay" id="fStackGallery" hidden></div>
     <div class="overlay" id="fRemoval" hidden></div>
+    <div class="overlay" id="fReveal" hidden></div>
     <div class="overlay vote-overlay" id="fVote" hidden></div>
   </div>`;
 }
