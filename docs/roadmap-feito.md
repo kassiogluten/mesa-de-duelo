@@ -1190,3 +1190,15 @@ Pedido em 08/11/2026. O ícone de alcance (`KEYWORD_ICON.REACH`, na carta do cam
 - [x] ~~Item no CHANGELOG e print em Novidades em imagens~~: dispensado a pedido (08/11/2026).
 
 - [x] Decidido: arco armado com a flecha, na diagonal como os outros ícones (`KEYWORD_ICON.REACH`). Também foram desenhadas alternativas para o ícone de voar (par de asas, pássaro, leque de penas, asa de pontas, asa com fendas), mas nenhuma agradou e o de hoje ficou.
+
+## 117. ✅ Mulligan mais simples, sem telas repetidas
+
+Pedido em 09/11/2026. Ao escolher mulligan, a mesa mostra mais passos do que precisa: aparece um botão de escolha automática e um OK, e depois de escolher volta a mostrar a lista de cartas. O jogador deveria ver só a nova mão e, quando houver cartas a devolver, escolher direto nela e confirmar uma vez.
+
+- [x] Reproduzir na mesa local e listar cada tela/pergunta que aparece do "Mulligan" até a mão final (de onde vem o botão automático, o OK e a lista repetida: mesa ou perguntas do servidor).
+- [x] Um passo só para devolver cartas ao fundo: tocar nas cartas da própria mão e confirmar, sem caixa extra de "automático"/"OK" e sem reabrir a lista depois de escolher.
+- [x] Manter um atalho para "escolher por mim" só se ele couber no mesmo passo (botão secundário), sem tela própria. (Ficou "Escolher por mim", que some com a escolha completa.)
+- [x] Conferir em partida com bots (servidor de verdade e `test-protocol`). O mulligan grátis do Commander não tem carta a devolver e segue como antes.
+- [x] Item no CHANGELOG (0.154.0) e prints em Novidades em imagens. Sem cenário no Laboratório: a abertura não se monta numa mesa pronta.
+
+Feito em 09/11/2026 (0.154.0): o motor pedia as cartas a devolver antes de perguntar se o jogador mantinha; o servidor agora pergunta antes, com as 7 cartas novas, e só pede as cartas depois de manter.

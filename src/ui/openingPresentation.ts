@@ -80,10 +80,12 @@ export function applyOpeningPresentation(root: HTMLElement, state: FState, roll?
     : opening === 'mulligan-bottom'
       ? openingReturnCount == null ? 'Escolha as cartas para devolver'
         : openingReturnCount === 1 ? 'Devolva 1 carta' : `Devolva ${openingReturnCount} cartas`
+      : opening === 'mulligan' && openingReturnCount ? 'Sua nova mão'
       : 'Sua mão inicial';
   heading.querySelector('p')!.textContent = (opening === 'play-draw' || opening === 'starting-player')
     ? `${roll?.actor === state.you ? 'Você tirou o maior número no dado. ' : ''}Escolha quem joga o primeiro turno.`
-    : opening === 'mulligan-bottom' ? 'As cartas escolhidas vão para o fundo do grimório.'
+    : opening === 'mulligan-bottom' ? 'Toque nas cartas que vão para o fundo do grimório.'
+      : opening === 'mulligan' && openingReturnCount ? `Se mantiver, você escolhe ${openingReturnCount === 1 ? '1 carta' : `${openingReturnCount} cartas`} para o fundo do grimório.`
       : openingStartingPlayer == null ? 'Mantenha estas cartas ou tente uma nova mão.'
         : openingStartingPlayer === state.you ? 'Você joga primeiro.' : 'O oponente joga primeiro.';
 }

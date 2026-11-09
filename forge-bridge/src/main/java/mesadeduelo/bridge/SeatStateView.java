@@ -281,6 +281,9 @@ final class SeatStateView {
                         if (first != null) seat.openingStartingPlayer = first.getId();
                     }
                     if (seat.openingStartingPlayer >= 0) input.addProperty("openingStartingPlayer", seat.openingStartingPlayer);
+                    // Mão nova do mulligan, antes de decidir: quantas cartas vão para o fundo se ele mantiver.
+                    if (currentInput instanceof InputConfirmMulligan && seat.controller() instanceof AskingController asking && asking.mulliganReturn() > 0)
+                        input.addProperty("openingReturnCount", asking.mulliganReturn());
                     Integer total;
                     if (currentInput instanceof InputLondonMulligan london && (total = InputContext.londonReturnCount(london)) != null) {
                         input.addProperty("openingReturnCount", total);

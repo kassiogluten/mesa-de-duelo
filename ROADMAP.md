@@ -562,13 +562,3 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
 
 - [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
-
-## 117. Mulligan mais simples, sem telas repetidas
-
-Pedido em 09/11/2026. Ao escolher mulligan, a mesa mostra mais passos do que precisa: aparece um botão de escolha automática e um OK, e depois de escolher volta a mostrar a lista de cartas. O jogador deveria ver só a nova mão e, quando houver cartas a devolver, escolher direto nela e confirmar uma vez.
-
-- [ ] Reproduzir na mesa local e listar cada tela/pergunta que aparece do "Mulligan" até a mão final (de onde vem o botão automático, o OK e a lista repetida: mesa ou perguntas do servidor).
-- [ ] Um passo só para devolver cartas ao fundo: tocar nas cartas da própria mão e confirmar, sem caixa extra de "automático"/"OK" e sem reabrir a lista depois de escolher.
-- [ ] Manter um atalho para "escolher por mim" só se ele couber no mesmo passo (botão secundário), sem tela própria.
-- [ ] Conferir em Commander (mulligan grátis) e em partida com bots, no celular e no computador.
-- [ ] Item no CHANGELOG, prints em Novidades em imagens e, se for correção de fluxo do servidor, cenário no Laboratório.

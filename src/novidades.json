@@ -1,5 +1,11 @@
 {
   "0.154.0": {
+    "Mulligan mais simples": [
+      { "img": "0.154.0/mulligan-1-mao.webp", "legenda": "A mão inicial, com Mulligan e Manter 7." },
+      { "img": "0.154.0/mulligan-2-nova-mao.webp", "legenda": "Depois de um mulligan: as 7 cartas novas, o aviso de que 1 vai para o fundo se mantiver, e o botão Manter 6." },
+      { "img": "0.154.0/mulligan-3-escolher.webp", "legenda": "Ao manter, as cartas da mão ficam prontas para escolher; Escolher por mim fica ao lado, e Devolver acende quando a escolha está completa." },
+      { "img": "0.154.0/mulligan-4-devolver.webp", "legenda": "Com a carta escolhida (borda dourada), sobra só o botão Devolver 1 carta." }
+    ],
     "Aviso único e discreto das cartas que o computador não joga bem": [
       { "img": "0.154.0/aviso.webp", "legenda": "O aviso no alto da mesa: quantas cartas do deck do computador ele pode usar mal, com o botão Ver detalhes." },
       { "img": "0.154.0/detalhes.webp", "legenda": "Em Ver detalhes, as cartas aparecem por oponente; tocar num nome abre a carta, e Fechar tira o aviso." }

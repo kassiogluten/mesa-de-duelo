@@ -44,6 +44,42 @@ final class AskingController extends PlayerControllerHuman {
     AskingController(Game game, Player player, LobbyPlayerHuman lobby) { this(game, player, lobby, null); }
     AskingController(Game game, Player player, LobbyPlayerHuman lobby, UndoHistory undo) { super(game, player, lobby); this.undo = undo; }
 
+    /** Quem joga primeiro, como o Forge passou na primeira pergunta de manter a mão (a pergunta antecipada precisa dele). */
+    private volatile Player mulliganFirst;
+    /** Resposta já dada à próxima pergunta de manter a mão (perguntada antes de devolver as cartas); null: perguntar. */
+    private volatile Boolean keepAnswered;
+    /** Cartas a devolver se o jogador mantiver a mão que está vendo; 0 fora de um mulligan com cartas a devolver. */
+    private volatile int mulliganReturn;
+
+    /** Na pergunta de manter a mão: quantas cartas vão para o fundo do grimório se ele mantiver (a mesa mostra "Manter 6"). */
+    int mulliganReturn() { return mulliganReturn; }
+
+    @Override public boolean mulliganKeepHand(Player firstPlayer, int cardsToReturn) {
+        Boolean answered = keepAnswered;
+        keepAnswered = null;
+        if (answered != null) return answered;
+        mulliganFirst = firstPlayer;
+        return super.mulliganKeepHand(firstPlayer, cardsToReturn);
+    }
+
+    /**
+     * Mulligan de Londres na ordem da regra: o Forge compra as 7 e pede as cartas a devolver antes de perguntar se o
+     * jogador mantém. Aqui a pergunta vem antes, com as 7 na mão: manteve, escolhe o que devolve; pediu outro mulligan,
+     * não devolve nada (a mão volta inteira para o grimório) e o Forge já recebe a resposta pronta.
+     */
+    @Override public CardCollectionView tuckCardsViaMulligan(CardCollectionView hand, int cardsToReturn) {
+        // Sem cartas a devolver, ou sem outro mulligan possível depois deste (o Forge mantém sem perguntar): como antes.
+        if (cardsToReturn <= 0 || mulliganFirst == null || cardsToReturn + 1 > getPlayer().getMaxHandSize())
+            return super.tuckCardsViaMulligan(hand, cardsToReturn);
+        boolean keep;
+        mulliganReturn = cardsToReturn;
+        try { keep = super.mulliganKeepHand(mulliganFirst, cardsToReturn); }
+        finally { mulliganReturn = 0; }
+        keepAnswered = keep;
+        if (!keep || getGame().isGameOver()) return new CardCollection();
+        return super.tuckCardsViaMulligan(hand, cardsToReturn);
+    }
+
     /** Cartas que a IA não joga bem: um aviso só na mesa, em vez de uma janela de revelar por oponente. */
     @Override public void revealAISkipCards(String message, Map<Player, Map<forge.deck.DeckSection, List<? extends forge.item.PaperCard>>> unplayable) {
         String toast = AiCardsNotice.toast(unplayable);

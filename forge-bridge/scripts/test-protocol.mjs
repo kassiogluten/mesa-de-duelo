@@ -29,6 +29,12 @@ async function peer(mulliganOnce = false) {
     const opening = message.input?.opening;
     if (opening) p.openings.add(opening);
     if (opening === 'mulligan') assert.ok(message.players.some(player => player.id === message.input.openingStartingPlayer));
+    // Mulligan de Londres na ordem da regra: a mão nova (7 cartas) vem com a pergunta de manter e quantas devolver; nunca de novo depois de devolver.
+    if (opening === 'mulligan' && message.input.openingReturnCount) {
+      assert.equal(message.players.find(player => player.id === message.you).hand.length, 7, 'new hand shows all 7 cards before the keep decision');
+      p.openings.add('mulligan-keep-before-bottom');
+    }
+    if (opening === 'mulligan' && p.openings.has('mulligan-bottom')) assert.fail('keep asked again after putting cards on the bottom');
     if (opening === 'mulligan-bottom') {
       assert.equal(message.input.openingReturnCount, 1);
       assert.equal(message.input.openingReturnRemaining, 1 - message.input.openingSelected.length);
@@ -81,7 +87,7 @@ try {
   assert.ok(!JSON.stringify(lookup).includes('token'));
   b.send({ type: 'join', code, name: 'Protocol B', deck: deck('B', 'Forest') }); b.send({type: 'room-ready'});
   await until(() => a.state?.phase === 'MAIN1' && b.state?.phase === 'MAIN1', 'first main phase');
-  assert.ok(a.openings.has('mulligan') && a.openings.has('mulligan-bottom'));
+  assert.ok(a.openings.has('mulligan') && a.openings.has('mulligan-bottom') && a.openings.has('mulligan-keep-before-bottom'));
   assert.ok(a.openings.has('play-draw') || b.openings.has('play-draw'));
   const matchId = a.state.matchId;
   b.send({ type: 'concede' });
