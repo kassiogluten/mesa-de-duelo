@@ -40,8 +40,8 @@ export interface ScryCard {
 
 export const images = (u: any): Images | undefined => u && { small: u.small, normal: u.normal, art_crop: u.art_crop };
 /**
- * Cartas com arte própria da mesa: a carta inteira de uma série em estilo anime, já em português (public/cartas, gerada
- * por npm run arte). Começou pelos terrenos básicos e vale em todas as telas, inclusive no lugar da impressão em português.
+ * Cartas com arte própria da mesa: a carta inteira de uma série da mesa (public/cartas, gerada por npm run arte): os
+ * terrenos básicos e algumas cartas em estilo anime, em português. Vale em todas as telas, inclusive no lugar da impressão em português.
  */
 const OWN_ART = new Set((ownArt as string[]).map(n => n.toLowerCase()));
 const ownImages = (name: string): Images => {

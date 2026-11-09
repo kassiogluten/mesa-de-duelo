@@ -20,8 +20,8 @@
     ]
   },
   "0.149.0": {
-    "Terrenos básicos com arte em estilo anime": [
-      { "img": "0.149.0/terrenos-anime.webp", "legenda": "Os cinco terrenos básicos da nova série: Planície, Ilha, Pântano, Montanha e Floresta, com o nome em português." }
+    "Terrenos básicos com arte própria": [
+      { "img": "0.149.0/terrenos.webp", "legenda": "Os cinco terrenos básicos da nova série: Planície, Ilha, Pântano, Montanha e Floresta, cada um com o símbolo da cor brilhando sobre a paisagem." }
     ]
   },
   "0.148.0": {

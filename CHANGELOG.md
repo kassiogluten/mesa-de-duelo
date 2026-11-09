@@ -28,13 +28,13 @@ As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/chan
 
 ### Mudou
 
-- **Anel Solar, Torre de Comando e Sinete Arcano com arte em estilo anime.** As três cartas que mais aparecem nos decks prontos ganharam a carta inteira na mesma série dos terrenos básicos, em português, com o texto oficial. Vale em todas as telas; quem escolheu outra impressão no deck continua vendo a escolhida.
+- **Anel Solar, Torre de Comando e Sinete Arcano com arte em estilo anime.** As três cartas que mais aparecem nos decks prontos ganharam a carta inteira numa série própria da mesa, em estilo anime e em português, com o texto oficial. Vale em todas as telas; quem escolheu outra impressão no deck continua vendo a escolhida.
 
 ## [0.149.0] - 2026-11-08
 
 ### Mudou
 
-- **Terrenos básicos com arte em estilo anime.** Planície, Ilha, Pântano, Montanha e Floresta ganharam uma série própria da mesa, em estilo anime e com o nome em português na carta, no lugar das artes de Dominaria United. Vale em todas as telas: mesa, mão, deck e biblioteca. Quem escolheu outra impressão para um terreno no deck continua vendo a escolhida.
+- **Terrenos básicos com arte própria.** Planície, Ilha, Pântano, Montanha e Floresta ganharam uma série própria da mesa, com o símbolo da cor brilhando sobre a paisagem e a arte ocupando a carta inteira, no lugar das artes de Dominaria United. Vale em todas as telas: mesa, mão, deck e biblioteca. Quem escolheu outra impressão para um terreno no deck continua vendo a escolhida.
 
 ## [0.148.0] - 2026-11-08
 
