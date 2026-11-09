@@ -90,6 +90,20 @@ test('cards exiled by a permanent (Journey to Nowhere) peek out under it, with a
   assert.equal((backRow(view, both, both.players[0]).match(/class="stack"/g) ?? []).length, 2);
 });
 
+test('cards Necropotence exiled face down say when they come back, on Necropotence and on each card', async () => {
+  const { exiledNotes, returnNote, returnTag } = await import('../src/ui/exiledUnder.ts');
+  const necro = card(40, 'Necropotence', { typeLine: 'Enchantment', exiling: [80, 81] });
+  const s = state([necro]);
+  const back = { to: 'hand', step: 'end', player: 0, source: 40 };
+  s.players[0].exile = [card(80, '', { faceDown: true, returns: back }), card(81, '', { faceDown: true, returns: back })];
+  assert.deepEqual(exiledNotes(s, necro), ['Exilando: 2 cartas viradas para baixo.', 'As 2 cartas exiladas voltam para a sua mão na sua próxima etapa final.']);
+  assert.deepEqual(exiledNotes(s, s.players[0].exile[0]), ['Exilada por Necropotence, que está no campo.', 'Volta para a sua mão na sua próxima etapa final.']);
+  assert.equal(returnTag(s.players[0].exile[0]), 'Volta na etapa final');
+  // Visto pelo oponente: a mão e a etapa são de quem ativou.
+  assert.equal(returnNote({ ...s, you: 1 }, s.players[0].exile[0]), `Volta para a mão de ${s.players[0].name} na próxima etapa final de ${s.players[0].name}.`);
+  assert.equal(returnTag(bear(5)), null);
+});
+
 test('a card exiled by an aura on a creature (Sheltered by Ghosts) peeks out under the creature, with the aura named', async () => {
   const { exiledNotes, slotExiled } = await import('../src/ui/exiledUnder.ts');
   const creature = bear(60);

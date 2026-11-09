@@ -14,7 +14,8 @@ import forge.game.zone.ZoneType;
  * Cartas que uma permanente exilou "com ela" ou "sob ela" (Journey to Nowhere, Oblivion Ring, Banisher Priest, Hostage
  * Taker, imprint, Hideaway) e que continuam no exílio: vão em {@code exiling} na permanente, para a mesa desenhá-las
  * saindo por baixo dela. Ficam de fora as que ela tirou só do cemitério ou do grimório sem voltar a falar delas
- * (Ashiok, Dream Render exila cemitérios inteiros, que não têm mais nada a ver com ele).
+ * (Ashiok, Dream Render exila cemitérios inteiros, que não têm mais nada a ver com ele), a não ser que um gatilho atrasado
+ * dela ainda vá devolvê-las (Necropotência).
  */
 final class ExiledUnder {
     private ExiledUnder() {}
@@ -23,7 +24,7 @@ final class ExiledUnder {
         if (permanent == null || game == null || !permanent.isInPlay()) return;
         Set<Integer> ids = new LinkedHashSet<>();
         try {
-            for (Card x : permanent.getExiledCards()) if (stillExiled(x, permanent, game) && related(x, permanent)) ids.add(x.getId());
+            for (Card x : permanent.getExiledCards()) if (stillExiled(x, permanent, game) && (related(x, permanent) || DelayedReturns.pendingFrom(x, permanent, game))) ids.add(x.getId());
             for (Card x : permanent.getImprintedCards()) if (stillExiled(x, null, game)) ids.add(x.getId());
         } catch (RuntimeException concurrentRead) {
             return; // leitura durante a jogada do motor: fica para o próximo estado

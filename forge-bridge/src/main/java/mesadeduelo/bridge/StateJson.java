@@ -377,6 +377,8 @@ final class StateJson {
         PermanentDetails.visible(o, c);
         PermanentDetails.status(o, c, game);
         if (c.getZone() == ZoneType.Exile && c.isForeTold()) o.addProperty("foretold", true);
+        // Exilada até uma etapa (Necropotência): para onde volta e quando, também virada para baixo.
+        if (c.getZone() == ZoneType.Exile) DelayedReturns.add(o, c.getId(), game);
         if (c.isFaceDown()) {
             o.addProperty("faceDown", true);
             if (c.getZone() == ZoneType.Battlefield) {

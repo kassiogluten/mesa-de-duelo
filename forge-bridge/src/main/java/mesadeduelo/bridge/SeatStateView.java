@@ -330,8 +330,11 @@ final class SeatStateView {
                     input.addProperty("canAutoPay", seat.okEnabled && !seat.okLabel.isEmpty());
                     String payingFor = InputContext.payingFor(pay);
                     if (payingFor != null) input.addProperty("payingFor", payingFor);
-                    // Mana phyrexiana: o retrato (ou o botão) paga um símbolo com 2 de vida.
-                    if (phyrexianLife != null) input.addProperty("phyrexianLife", phyrexianLife.get("pending").getAsInt());
+                    // Mana phyrexiana (ou {B} com K'rrik): o retrato (ou o botão) paga um símbolo com 2 de vida.
+                    if (phyrexianLife != null) {
+                        input.addProperty("phyrexianLife", phyrexianLife.get("pending").getAsInt());
+                        if (phyrexianLife.has("black")) input.addProperty("phyrexianLifeBlack", true);
+                    }
                     // O custo que falta, descontado a cada mana gerada, para a caixa de ação mostrar com os símbolos.
                     JsonObject manaCost = InputContext.manaCost(pay);
                     if (manaCost != null) input.add("manaCost", manaCost);

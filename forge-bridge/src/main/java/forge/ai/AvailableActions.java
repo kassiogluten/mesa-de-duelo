@@ -8,6 +8,8 @@
  */
 package forge.ai;
 
+import forge.card.mana.ManaAtom;
+import forge.card.mana.ManaCostShard;
 import forge.game.GameObject;
 import forge.game.card.Card;
 import forge.game.card.CardLists;
@@ -205,12 +207,21 @@ public final class AvailableActions {
 
     /** Bridge addition: the AI pays Phyrexian symbols with life only when it judges it worth it
      *  (AIPhyrexianPayment$ Never on Gitaxian Probe and Mental Misstep, life strictly above the cost);
-     *  a person may always pay 2 life per symbol. Paying every symbol with life is the cheapest mana-wise. */
+     *  a person may always pay 2 life per symbol. Paying every symbol with life is the cheapest mana-wise.
+     *  With K'rrik (PayLifeInsteadOf:B) each {B} may be paid with 2 life too. */
     private static boolean canAffordWithLife(SpellAbility sa, Player player) {
         ManaCostBeingPaid cost = ComputerUtilMana.calculateManaCost(sa.getPayCosts(), sa, player, true, 0, false);
-        if (cost == null || !cost.containsPhyrexianMana()) return false;
+        if (cost == null) return false;
+        boolean krrik = player.hasKeyword("PayLifeInsteadOf:B");
+        if (!cost.containsPhyrexianMana() && !(krrik && cost.hasAnyKind(ManaAtom.BLACK))) return false;
         int life = 0;
         while (cost.payPhyrexian()) life += 2;
+        while (krrik && cost.hasAnyKind(ManaAtom.BLACK)) {
+            String before = cost.toString();
+            cost.decreaseShard(ManaCostShard.BLACK, 1);
+            if (before.equals(cost.toString())) break;
+            life += 2;
+        }
         if (!player.canPayLife(life, false, sa)) return false;
         return cost.isPaid() || ComputerUtilMana.canPayManaCost(cost, sa, player, false);
     }

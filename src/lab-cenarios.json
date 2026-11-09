@@ -1,5 +1,35 @@
 [
   {
+    "nome": "K'rrik: pagar {B} com vida",
+    "versao": "0.155.0",
+    "item": "K'rrik deixa pagar {B} com vida",
+    "conferir": "O Jogador 1 tem K'rrik, Son of Yawgmoth e um Swamp no campo; na mão, Hymn to Tourach ({B}{B}) e Dark Ritual ({B}). Os dois aparecem para conjurar. Conjure Hymn to Tourach: o botão Pagar 2 de vida aparece, e tocar nele (ou no seu retrato) paga um {B} com 2 de vida. Pague os dois com vida (você fica com 16) ou um com vida e outro com o Swamp. Sem K'rrik no campo, um {B} comum não deixaria pagar com vida.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Hymn to Tourach", "Dark Ritual"], "library": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "K'rrik, Son of Yawgmoth" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": ["Island", "Island", "Island"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Necropotência: quando as cartas voltam",
+    "versao": "0.155.0",
+    "item": "Aviso de quando a carta volta do exílio",
+    "conferir": "O Jogador 1 tem Necropotence e três Swamps no campo. Na fase principal, pague 1 de vida duas vezes: as duas cartas do topo do grimório vão para o exílio viradas para baixo e aparecem por baixo da Necropotência. O inspetor dela diz que as 2 cartas voltam para a sua mão na sua próxima etapa final, e na janela do Exílio cada uma tem a etiqueta Volta na etapa final. Passe o turno: no começo da sua etapa final, as duas vão para a sua mão. Se pagar vida já na etapa final, elas só voltam no fim do seu próximo turno, e o aviso continua dizendo isso.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Dark Ritual", "Hymn to Tourach", "Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Necropotence" }, { "name": "Swamp" }, { "name": "Swamp" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": ["Island", "Island", "Island"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
     "nome": "Grisly Salvage: revelar o topo do grimório e escolher numa janela só",
     "versao": "0.154.0",
     "item": "Revelar o topo do grimório e escolher numa janela só",

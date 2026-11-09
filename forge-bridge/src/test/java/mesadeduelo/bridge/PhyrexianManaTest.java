@@ -128,4 +128,36 @@ public class PhyrexianManaTest {
         assertEquals("null", offer[0]);
         assertEquals(1, player.getLife());
     }
+
+    /** K'rrik: cada {B} pode ser pago com 2 de vida, pelo mesmo clique no retrato. */
+    @Test(timeout = 20000) public void krrikPaysBlackManaWithLife() throws Exception {
+        setup();
+        ExilePermissionsTest.add(game, "K'rrik, Son of Yawgmoth", player, ZoneType.Battlefield);
+        game.getAction().checkStaticAbilities();
+        Card hymn = ExilePermissionsTest.add(game, "Hymn to Tourach", player, ZoneType.Hand);
+        List<String> offers = new java.util.ArrayList<>();
+        assertTrue(play(hymn.getFirstSpellAbility(), pay -> {
+            offers.add(String.valueOf(InputContext.phyrexianLife(pay)));
+            human.selectPlayer(player.getView(), null);
+            offers.add(String.valueOf(InputContext.phyrexianLife(pay)));
+            human.selectPlayer(player.getView(), null);
+        }));
+        String me = "{\"player\":" + player.getId();
+        assertEquals(List.of(me + ",\"pending\":0,\"black\":true}", me + ",\"pending\":2,\"black\":true}"), offers);
+        assertEquals(36, player.getLife());
+        assertTrue(hymn.isInZone(ZoneType.Stack));
+    }
+
+    /** Sem K'rrik, um {B} comum não se paga com vida. */
+    @Test(timeout = 20000) public void withoutKrrikBlackManaHasNoLifeOffer() throws Exception {
+        setup();
+        Card ritual = ExilePermissionsTest.add(game, "Dark Ritual", player, ZoneType.Hand);
+        String[] offer = new String[1];
+        assertFalse(play(ritual.getFirstSpellAbility(), pay -> {
+            offer[0] = String.valueOf(InputContext.phyrexianLife(pay));
+            human.selectButtonCancel();
+        }));
+        assertEquals("null", offer[0]);
+        assertEquals(40, player.getLife());
+    }
 }

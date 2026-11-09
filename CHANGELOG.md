@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.155.0] - 2026-11-09
+
+### Novo
+
+- **Aviso de quando a carta volta do exílio.** Cartas exiladas que voltam numa etapa marcada, como as da Necropotência, dizem quando voltam: na janela do Exílio elas ganham a etiqueta "Volta na etapa final", e o inspetor da carta e o da Necropotência contam para onde e quando ("As 2 cartas exiladas voltam para a sua mão na sua próxima etapa final"). As cartas que a Necropotência exila também passam a aparecer por baixo dela no campo. Pela regra da carta, pagar vida durante a etapa final, sua ou do oponente, só traz as cartas no fim do seu próximo turno.
+
+### Corrigido
+
+- **K'rrik deixa pagar {B} com vida.** Com K'rrik, Son of Yawgmoth no campo, cada {B} de um custo pode ser pago com 2 de vida, como a carta diz: o botão "Pagar 2 de vida" e o toque no seu retrato aparecem também em custos sem mana phyrexiana, e cartas que só dá para pagar assim ficam disponíveis para conjurar.
+
 ## [0.154.0] - 2026-11-09
 
 ### Novo

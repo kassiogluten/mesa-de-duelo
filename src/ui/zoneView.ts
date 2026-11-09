@@ -6,6 +6,7 @@ import { label } from './cardFaces';
 import { canSelectExileCard, exileShelfCards, selectedForInput } from './playContext';
 import { revealedCards, revealedCountText } from './revealedHand';
 import { outsideHand } from './handView';
+import { returnNote, returnTag } from './exiledUnder';
 import { canUse, exileCaption, foretoldTag, inspectButton, selectedBadge } from './permanentView';
 import { COUNTER_ICON, inspectIcon } from './icons';
 
@@ -73,7 +74,8 @@ export function zoneHTML(v: ZoneView, s: FState, z: { kind: ZoneKind; player: FP
   const shelf = new Map(kind === 'exile' && !groupIds ? exileShelfCards(s).map(entry => [entry.card.id, exileCaption(s, entry)]) : []);
   const tags = (c: FCard) => {
     const caption = shelf.get(c.id);
-    return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.foretold ? foretoldTag(c) : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
+    const back = returnTag(c);
+    return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.foretold ? foretoldTag(c) : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : back ? `<div class="zone-tag" title="${esc(returnNote(s, c) ?? '')}">${back}</div>` : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
   };
   const targeting = kind === 'gy' && !groupIds && !!s.input.targeting && !s.input.paying && !s.gameOver ? s.input.targeting : null;
   const card = (c: FCard) => `<div class="zone-card">${kind !== 'hand' && canUse(s, c)

@@ -10,6 +10,8 @@ export interface ShortInstructionInput {
   canAutoPay?: boolean;
   /** Mana phyrexiana que ainda dá para pagar com vida: a vida já separada nos cliques anteriores. */
   phyrexianLife?: number;
+  /** Com K'rrik, a vida paga um {B} (não há símbolo phyrexiano no custo). */
+  phyrexianLifeBlack?: boolean;
   /** Custo que ainda falta, como o motor conta (descontado a cada mana gerada); total só depois de pagar uma parte. */
   manaCost?: PaymentCost;
   /** Mana que está na reserva de quem paga ("{G}{C}"), mostrada à parte do que falta. */
@@ -130,7 +132,7 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
     const pending = input.phyrexianLife !== undefined;
     const reserve = input.reserve ? ` Na reserva: ${input.reserve}.` : '';
     const ask = paymentSentence(input.manaCost, name, effect, pending) + reserve;
-    if (pending) return `${ask} ${phyrexianHint(input.phyrexianLife!)}`;
+    if (pending) return `${ask} ${phyrexianHint(input.phyrexianLife!, input.phyrexianLifeBlack)}`;
     if (!effect) return ask;
     return input.canAutoPay === false ? `${ask} A sua mana não dá para pagar.` : `${ask} Pague ou recuse.`;
   }
@@ -138,12 +140,12 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
   if (input.paying && input.payingFor === 'effect') {
     const cost = input.message.match(/(?:Custo de Mana|Mana Cost):\s*((?:\{[A-Z0-9/]+\})+)/i)?.[1];
     const asks = `${name ?? 'O efeito'} pede ${cost ?? 'um pagamento de mana'}`;
-    if (input.phyrexianLife !== undefined) return `${asks}. ${phyrexianHint(input.phyrexianLife)}`;
+    if (input.phyrexianLife !== undefined) return `${asks}. ${phyrexianHint(input.phyrexianLife, input.phyrexianLifeBlack)}`;
     return input.canAutoPay === false ? `${asks}, e a sua mana não dá para pagar.` : name ? `${asks}. Pague ou recuse.` : 'Pague o custo pedido ou recuse.';
   }
   if (input.paying) {
     const ask = name ? `Pague o custo de mana de ${name}.` : 'Pague o custo de mana.';
-    return input.phyrexianLife === undefined ? ask : `${ask} ${phyrexianHint(input.phyrexianLife)}`;
+    return input.phyrexianLife === undefined ? ask : `${ask} ${phyrexianHint(input.phyrexianLife, input.phyrexianLifeBlack)}`;
   }
   return null;
 }
@@ -201,8 +203,8 @@ export function voteRequest(name: string | undefined): string {
 }
 
 /** O Forge só tira a vida no fim do pagamento: a frase diz quanto já ficou separado. */
-function phyrexianHint(pending: number): string {
-  const hint = 'Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano.';
+function phyrexianHint(pending: number, black?: boolean): string {
+  const hint = `Toque no seu retrato para pagar 2 de vida por ${black ? 'um {B}' : 'um símbolo phyrexiano'}.`;
   return pending > 0 ? `${hint} Já são ${pending} de vida.` : hint;
 }
 

@@ -109,6 +109,11 @@ test('the mana still owed shows with its symbols and shrinks with each mana made
   assert.equal(pay({ remaining: '{R/G}{R/G}' }), 'Pague {R/G}{R/G} para Jiboia.');
 });
 
+test("with K'rrik the portrait pays a {B} with life", () => {
+  assert.equal(shortInstruction({ message: '', paying: true, payingFor: 'spell', phyrexianLife: 2, phyrexianLifeBlack: true, card: { name: 'Dark Ritual' } }),
+    'Pague o custo de mana de Dark Ritual. Toque no seu retrato para pagar 2 de vida por um {B}. Já são 2 de vida.');
+});
+
 test('phyrexian mana keeps the portrait hint and the life set aside goes with the cost', () => {
   const base = { message: '', paying: true, payingFor: 'spell', card: { name: 'Thundering Tanadon' } };
   assert.equal(shortInstruction({ ...base, phyrexianLife: 2, manaCost: { remaining: '{4}{G/P}', total: '{4}{G/P}{G/P}', life: 2 } }),

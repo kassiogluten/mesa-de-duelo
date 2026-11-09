@@ -297,6 +297,16 @@ Object.assign(window, { fixture: { state, client, view, messages, feedbackReques
     state.castable = [290];
     view.render();
   },
+  /** Necropotência com duas cartas exiladas viradas para baixo, que voltam para a sua mão na sua próxima etapa final. */
+  delayedReturn() {
+    const [me] = state.players;
+    me.battlefield.push(card(380, 'Necropotence', 10, { creature: false, power: undefined, toughness: undefined, manaCost: '{B}{B}{B}', typeLine: 'Enchantment', exiling: [381, 382] }));
+    const returns = { to: 'hand', step: 'end', player: 10, source: 380 };
+    me.exile.push({ id: 381, controller: 10, tapped: false, token: false, faceDown: true, returns }, { id: 382, controller: 10, tapped: false, token: false, faceDown: true, returns });
+    // Estado novo, como a mesa recebe: as ligações do exílio ficam guardadas por estado.
+    (client as any).state = { ...state };
+    view.render();
+  },
   /** Pagando Gitaxian Probe ({U/P}) sem mana azul: o retrato e o botão pagam com vida. */
   phyrexian(pending = 0) {
     Object.assign(state.input, { gen: 9, priority: false, message: 'Gitaxian Probe\n\nPagar Custo de Mana: {U/P}', actionable: [], selectable: [200, 210], selectablePlayers: [10],

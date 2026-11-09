@@ -1,4 +1,13 @@
 {
+  "0.155.0": {
+    "Aviso de quando a carta volta do exílio": [
+      { "img": "0.155.0/volta-exilio-etiqueta.webp", "legenda": "Na janela do Exílio, as cartas que a Necropotência exilou viradas para baixo, cada uma com a etiqueta **Volta na etapa final**." },
+      { "img": "0.155.0/volta-exilio-inspetor.webp", "legenda": "O inspetor da Necropotência conta quantas cartas ela exilou e que elas voltam para a sua mão na sua próxima etapa final." }
+    ],
+    "K'rrik deixa pagar {B} com vida": [
+      { "img": "0.155.0/krrik-vida-por-preto.webp", "legenda": "Com K'rrik no campo, pagando Hymn to Tourach sem mana preta: o botão **Pagar 2 de vida** paga cada {B}, e a instrução lembra que dá para tocar no seu retrato." }
+    ]
+  },
   "0.154.0": {
     "Revelar o topo do grimório e escolher numa janela só": [
       { "img": "0.154.0/revelar-grimorio-escolha.webp", "legenda": "Quem joga Grisly Salvage vê só a escolha, com as cinco cartas reveladas; o Raio aparece apagado, porque não é criatura nem terreno." },

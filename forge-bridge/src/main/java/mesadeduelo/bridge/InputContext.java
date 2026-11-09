@@ -2,6 +2,7 @@ package mesadeduelo.bridge;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import forge.card.mana.ManaAtom;
 import forge.game.ability.ApiType;
 import forge.game.GameEntity;
 import forge.game.card.Card;
@@ -104,20 +105,25 @@ final class InputContext {
 
     /**
      * Mana phyrexiana: o Forge paga um símbolo com 2 de vida quando quem paga clica em si mesmo
-     * ({@code InputPayManaOfCostPayment.onPlayerSelected}), mas não marca o jogador como clicável.
-     * Devolve quem pode pagar mais um símbolo com vida e a vida já separada ({@code pending}), que o Forge
-     * só tira no fim do pagamento; ou null.
+     * ({@code InputPayManaOfCostPayment.onPlayerSelected}), mas não marca o jogador como clicável. Com K'rrik
+     * ({@code PayLifeInsteadOf:B}) o mesmo clique paga um {B}, depois dos símbolos phyrexianos.
+     * Devolve quem pode pagar mais um símbolo com vida, a vida já separada ({@code pending}), que o Forge
+     * só tira no fim do pagamento, e {@code black} quando o clique paga um {B}; ou null.
      */
     static JsonObject phyrexianLife(Object input) {
         if (!(input instanceof InputPayManaOfCostPayment) || !present(PAY_PLAYER, PAY_COST, PAY_LIFE, PAY_EFFECT, PAY_ABILITY)) return null;
         Player player = (Player) value(PAY_PLAYER, input);
         ManaCostBeingPaid cost = (ManaCostBeingPaid) value(PAY_COST, input);
         int pending = (Integer) value(PAY_LIFE, input);
-        if (player == null || cost == null || !cost.containsPhyrexianMana()
+        if (player == null || cost == null) return null;
+        boolean phyrexian = cost.containsPhyrexianMana();
+        boolean black = !phyrexian && player.hasKeyword("PayLifeInsteadOf:B") && cost.hasAnyKind(ManaAtom.BLACK);
+        if (!phyrexian && !black
             || !player.canPayLife(pending + 2, (Boolean) value(PAY_EFFECT, input), (SpellAbility) value(PAY_ABILITY, input))) return null;
         JsonObject result = new JsonObject();
         result.addProperty("player", player.getId());
         result.addProperty("pending", pending);
+        if (black) result.addProperty("black", true);
         return result;
     }
 

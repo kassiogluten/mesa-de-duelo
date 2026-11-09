@@ -110,9 +110,12 @@ public class AvailableActionsTest {
     }
 
     /** Sem terreno nenhum, só a mana phyrexiana paga com vida torna a carta jogável (Blaze fica sem mana). */
-    private static boolean payableWithLifeOnly(String name, int life) {
+    private static boolean payableWithLifeOnly(String name, int life) { return payableWithLifeOnly(name, life, false); }
+
+    private static boolean payableWithLifeOnly(String name, int life, boolean krrik) {
         Fixture f = new Fixture(0);
         f.add("Grizzly Bears", f.opponent, ZoneType.Battlefield);
+        if (krrik) { f.add("K'rrik, Son of Yawgmoth", f.caster, ZoneType.Battlefield); f.game.getAction().checkStaticAbilities(); }
         f.caster.setLife(life, null);
         Card card = f.add(name, f.caster, ZoneType.Hand);
         boolean available = AvailableActions.compute(f.caster, BUDGET_MS);
@@ -128,6 +131,14 @@ public class AvailableActionsTest {
         assertTrue("2 de vida pagam um símbolo mesmo zerando a vida", payableWithLifeOnly("Gut Shot", 2));
         assertFalse("1 de vida não paga um símbolo", payableWithLifeOnly("Gut Shot", 1));
         assertFalse("o genérico continua precisando de mana", payableWithLifeOnly("Dismember", 20));
+    }
+
+    @Test public void krrikLetsLifePayEachBlackSymbol() {
+        assertFalse("sem K'rrik, {B} precisa de mana", payableWithLifeOnly("Dark Ritual", 20));
+        assertTrue(payableWithLifeOnly("Dark Ritual", 20, true));
+        assertTrue("{B}{B}: 4 de vida", payableWithLifeOnly("Hymn to Tourach", 20, true));
+        assertFalse("1 de vida não paga um {B}", payableWithLifeOnly("Dark Ritual", 1, true));
+        assertFalse("o genérico continua precisando de mana", payableWithLifeOnly("Doom Blade", 20, true));
     }
 
     @Test public void predictiveScanPreservesExistingParentAndChildTargets() {

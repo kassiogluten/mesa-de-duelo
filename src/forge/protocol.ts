@@ -237,6 +237,11 @@ export interface FCard {
   blockLimited?: boolean;
   /** Dano que os escudos de prevenção ainda vão prevenir. */
   preventDamage?: number;
+  /**
+   * No exílio, o gatilho atrasado que ainda vai tirá-la de lá (Necropotência): o destino ("hand", "battlefield"…), a etapa
+   * ("end", "upkeep"; ausente se for outra), de quem é o turno (player, quando o gatilho diz) e a carta que o criou.
+   */
+  returns?: { to: string; step?: 'end' | 'upkeep'; player?: number; source: number };
   /** Cartas no exílio que esta permanente exilou com ela (Journey to Nowhere, Oblivion Ring, imprint, Hideaway), por id. */
   exiling?: number[];
   /** Id da carta a que esta aura ou equipamento está preso. */
@@ -513,7 +518,7 @@ export interface FState {
   /** untappable: permanentes viradas para mana com a mana ainda na reserva; clicar ({type:"card"}) desvira e devolve a mana. */
   /** manaOnly: suas permanentes em que um clique agora só geraria mana. Ausente em pontes antigas. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
-  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; /** Outro jogador na abertura enquanto você espera: quem, se decide quem começa ou a mão, e se você já manteve a sua. */ openingWait?: { player: number; step: 'start' | 'hand'; kept?: boolean }; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number;
+  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; /** Outro jogador na abertura enquanto você espera: quem, se decide quem começa ou a mão, e se você já manteve a sua. */ openingWait?: { player: number; step: 'start' | 'hand'; kept?: boolean }; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number; /** O retrato paga um {B} com 2 de vida (K'rrik), não um símbolo phyrexiano. */ phyrexianLifeBlack?: boolean;
     /** Pagando: o custo que falta como o motor conta ("{1}{R}", "0" pago), descontado a cada mana gerada; total é o custo quando o pagamento abriu (só depois de pagar uma parte); life, a vida já separada para mana phyrexiana; x, o X escolhido. Ausente em pontes antigas. */
     manaCost?: { remaining: string; total?: string; life?: number; x?: number };
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
