@@ -1,5 +1,5 @@
 // Liga os eventos do cliente do servidor à mesa e à tela inicial: partida nova, revanche, assistir e retomar.
-import type { ForgeClient, FState } from '../forge/client';
+import type { ForgeClient, FState, NoticeDetail } from '../forge/client';
 import type { ForgeTableView } from '../ui/forgeTable';
 import type { Lobby } from '../ui/lobby';
 import type { ForgeConnection } from './connection';
@@ -41,6 +41,8 @@ export function bindMatchClient(client: ForgeClient, w: MatchWiring) {
   const { recorder } = recording;
   const mine = () => w.connection.isCurrent(client);
   let prev: FState | null = null;
+  /** Aviso com lista (cartas que o computador não joga bem): chega antes do primeiro estado e espera a mesa abrir. */
+  let heldNotice: [string, NoticeDetail] | null = null;
   client.onSend = msg => { if (mine() && session.current) recorder.sent(msg); };
   client.onState = s => {
     if (!mine()) return;
@@ -66,6 +68,7 @@ export function bindMatchClient(client: ForgeClient, w: MatchWiring) {
     prev = s;
     w.finishStart();
     table.render();
+    if (heldNotice && session.screen === 'game') { table.notice(heldNotice[0], false, heldNotice[1]); heldNotice = null; }
   };
   client.onRoom = r => {
     const current = session.current;
@@ -83,6 +86,7 @@ export function bindMatchClient(client: ForgeClient, w: MatchWiring) {
     else { lobby.setStatus(message, true); w.finishStart(message); session.current = null; }
   };
   client.onNotice = (text, error, detail) => {
+    if (detail?.groups && mine()) { heldNotice = [text, detail]; if (session.current) recorder.note('aviso', text); return; }
     if (error) w.finishStart(text);
     // Erros na mesa já entram pelo painel de erros (onDiagnostic).
     if (session.current && (!error || session.screen !== 'game')) recorder.note(error ? 'erro' : 'aviso', text);

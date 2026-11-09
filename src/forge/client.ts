@@ -157,7 +157,7 @@ export class ForgeClient {
           case 'room-say': this.onRoomSay(msg.seat, msg.key); break;
           case 'validation-error': this.onValidation(msg.validation, msg.target ?? ''); break;
           case 'hello': this.onHello(msg); break;
-          case 'toast': this.onNotice(msg.text, false, msg.title || Array.isArray(msg.cards) ? { title: msg.title, cards: Array.isArray(msg.cards) ? msg.cards : undefined } : undefined); break;
+          case 'toast': this.onNotice(msg.text, false, msg.title || Array.isArray(msg.cards) || Array.isArray(msg.groups) ? { title: msg.title, cards: Array.isArray(msg.cards) ? msg.cards : undefined, groups: Array.isArray(msg.groups) ? msg.groups : undefined } : undefined); break;
           case 'error': this.onNotice(msg.text ?? '', true); break;
           case 'diagnostic': this.onDiagnostic({ code: String(msg.code ?? ''), action: msg.action, text: String(msg.text ?? '') }); break;
           case 'gone': this.onGone(msg.text); break;

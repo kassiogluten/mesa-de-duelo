@@ -320,7 +320,7 @@ final class Seat {
                 }
                 case clearWeaklySelectable -> actionable = Set.of();
                 // Chega na thread do jogo, com a declaração recusada ainda no combate.
-                case message -> Seat.this.send(AttackExplain.FORGE_MESSAGE.equals(a[0]) ? AttackExplain.toast(hosted.getGame().getCombat()) : Session.toast("toast", CoinFlipText.notice(session.questions.voteNotice(hosted.getGame(), String.valueOf(a[0])), a.length > 1 && a[1] != null ? String.valueOf(a[1]) : null)));
+                case message -> Seat.this.send(a.length > 1 && AiCardsNotice.TITLE.equals(a[1]) ? String.valueOf(a[0]) : AttackExplain.FORGE_MESSAGE.equals(a[0]) ? AttackExplain.toast(hosted.getGame().getCombat()) : Session.toast("toast", CoinFlipText.notice(session.questions.voteNotice(hosted.getGame(), String.valueOf(a[0])), a.length > 1 && a[1] != null ? String.valueOf(a[1]) : null)));
                 case showErrorDialog -> Seat.this.send(Session.toast("toast", String.valueOf(a[0])));
                 default -> { }
             }

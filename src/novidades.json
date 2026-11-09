@@ -1,4 +1,10 @@
 {
+  "0.154.0": {
+    "Aviso único e discreto das cartas que o computador não joga bem": [
+      { "img": "0.154.0/aviso.webp", "legenda": "O aviso no alto da mesa: quantas cartas do deck do computador ele pode usar mal, com o botão Ver detalhes." },
+      { "img": "0.154.0/detalhes.webp", "legenda": "Em Ver detalhes, as cartas aparecem por oponente; tocar num nome abre a carta, e Fechar tira o aviso." }
+    ]
+  },
   "0.153.0": {
     "Botão do histórico no topo da mesa": [
       { "img": "0.153.0/botao-historico.webp", "legenda": "No topo da mesa, o botão do histórico logo antes do turno e do relógio." }

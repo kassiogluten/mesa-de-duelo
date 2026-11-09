@@ -87,6 +87,7 @@ export function createToasts(root: HTMLElement, d: { findCard(id: number): FCard
     const el = document.createElement('div');
     el.className = `toast ${error ? 'error' : ''}`;
     if (!detail) el.textContent = text;
+    else if (detail.groups?.length) { groupsNotice(el, text, detail); return; }
     else {
       // Ataque recusado e afins: o motivo por extenso e a carta que o causou; fica mais tempo e some ao tocar.
       const keys: string[] = [];
@@ -109,6 +110,35 @@ export function createToasts(root: HTMLElement, d: { findCard(id: number): FCard
     q(root, '#fToasts').append(el);
     setTimeout(() => el.classList.add('out'), 4100);
     setTimeout(() => el.remove(), 4500);
+  }
+  /**
+   * Aviso discreto com lista para abrir (cartas que o computador não joga bem): uma linha e "Ver detalhes"; aberto,
+   * mostra os nomes por oponente (cada um abre a carta) e só some no "Fechar".
+   */
+  function groupsNotice(el: HTMLElement, text: string, detail: NoticeDetail) {
+    const keys: string[] = [];
+    const lists = detail.groups!.map(g => `<div class="notice-group"><strong>${esc(g.player)}</strong><ul>${g.cards.map(name => {
+      const key = `nt${++noticeSeq}`;
+      noticeCards.set(key, { id: -1, name } as FCard); keys.push(key);
+      return `<li><button type="button" class="notice-name" data-event="${key}">${esc(label({ name } as FCard))}</button></li>`;
+    }).join('')}</ul></div>`).join('');
+    el.classList.add('info', 'expandable');
+    el.setAttribute('role', 'status');
+    d.setHTML(el, `<div class="notice-line"><span>${detail.title ? `<strong>${esc(detail.title)}.</strong> ` : ''}${esc(text)}</span>`
+      + `<button type="button" class="notice-more" aria-expanded="false">Ver detalhes</button></div><div class="notice-groups" hidden>${lists}</div>`);
+    let timer = 0;
+    const dismiss = () => { clearTimeout(timer); el.classList.add('out'); setTimeout(() => { el.remove(); keys.forEach(key => noticeCards.delete(key)); }, 400); };
+    const more = el.querySelector<HTMLButtonElement>('.notice-more')!;
+    more.addEventListener('click', () => {
+      const groups = el.querySelector<HTMLElement>('.notice-groups')!;
+      if (!groups.hidden) { dismiss(); return; }
+      clearTimeout(timer);
+      groups.hidden = false;
+      more.textContent = 'Fechar';
+      more.setAttribute('aria-expanded', 'true');
+    });
+    q(root, '#fToasts').append(el);
+    timer = window.setTimeout(dismiss, 8000);
   }
   return { show, card: (key: string) => noticeCards.get(key) };
 }

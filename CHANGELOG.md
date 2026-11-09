@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.154.0] - 2026-11-09
+
+### Mudou
+
+- **Aviso único e discreto das cartas que o computador não joga bem.** Ao começar uma partida contra o computador com um deck pronto que tem cartas que ele não sabe usar direito, a mesa não abre mais uma janela de cartas para cada oponente: aparece um aviso só, no alto da mesa, dizendo quantas cartas são, que some sozinho. Em **Ver detalhes**, ele mostra os nomes das cartas por oponente (tocar num nome abre a carta) e fica até você fechar.
+
 ## [0.153.0] - 2026-11-08
 
 ### Novo

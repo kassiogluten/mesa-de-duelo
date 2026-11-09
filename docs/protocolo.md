@@ -31,6 +31,7 @@ Aviso com título e cartas envolvidas (ataque recusado: o motivo e a carta que o
 |---|---|---|
 | `title?` | `string` |  |
 | `cards?` | `{ id: number; name: string }[]` |  |
+| `groups?` | `{ player: string; cards: string[] }[]` | Listas para "Ver detalhes" (cartas que o computador não joga bem, por oponente): nomes em inglês, que a mesa traduz. |
 
 ## ValidationIssue
 
@@ -762,7 +763,7 @@ Tudo o que o servidor manda à mesa. Campo novo numa mensagem: declare aqui (o e
   | { type: 'room-say'; seat: number; key: RoomSaying }
   | { type: 'validation-error'; validation: DeckValidation; target: string; requestId?: string }
   | { type: 'hello'; supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string }
-  | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[] }
+  | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[]; groups?: { player: string; cards: string[] }[] }
   | { type: 'error'; text: string; requestId?: string; reason?: string }
   | { type: 'diagnostic'; code?: string; action?: string; text?: string }
   | { type: 'gone'; text: string }

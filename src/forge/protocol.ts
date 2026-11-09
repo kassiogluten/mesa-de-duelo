@@ -17,7 +17,9 @@ export interface FPreferences {
 }
 export interface MatchConfig { format: DeckFormat; matchLength: 'bo1' | 'bo3'; playerCount?: number; /** Sempre true: o Desfazer não é mais uma escolha da sala. */ undo?: boolean }
 /** Aviso com título e cartas envolvidas (ataque recusado: o motivo e a carta que o causou). */
-export interface NoticeDetail { title?: string; cards?: { id: number; name: string }[] }
+export interface NoticeDetail { title?: string; cards?: { id: number; name: string }[];
+  /** Listas para "Ver detalhes" (cartas que o computador não joga bem, por oponente): nomes em inglês, que a mesa traduz. */
+  groups?: { player: string; cards: string[] }[] }
 export interface ValidationIssue { code: string; message: string; card?: string; section?: string }
 export interface DeckValidation { valid: boolean; issues: ValidationIssue[]; mainCount?: number; sideboardCount?: number; commanderCount?: number; rulesVersion: string; engineVersion: string;
   /** Só num deck válido: o deck como o servidor leu (nomes corrigidos, com o oracleId). A mesa ainda não usa. */
@@ -634,7 +636,7 @@ export type ServerMessage =
   | { type: 'room-say'; seat: number; key: RoomSaying }
   | { type: 'validation-error'; validation: DeckValidation; target: string; requestId?: string }
   | { type: 'hello'; supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string }
-  | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[] }
+  | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[]; groups?: { player: string; cards: string[] }[] }
   | { type: 'error'; text: string; requestId?: string; reason?: string }
   | { type: 'diagnostic'; code?: string; action?: string; text?: string }
   | { type: 'gone'; text: string }

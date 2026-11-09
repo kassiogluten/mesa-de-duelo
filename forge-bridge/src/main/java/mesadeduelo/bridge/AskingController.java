@@ -44,6 +44,12 @@ final class AskingController extends PlayerControllerHuman {
     AskingController(Game game, Player player, LobbyPlayerHuman lobby) { this(game, player, lobby, null); }
     AskingController(Game game, Player player, LobbyPlayerHuman lobby, UndoHistory undo) { super(game, player, lobby); this.undo = undo; }
 
+    /** Cartas que a IA não joga bem: um aviso só na mesa, em vez de uma janela de revelar por oponente. */
+    @Override public void revealAISkipCards(String message, Map<Player, Map<forge.deck.DeckSection, List<? extends forge.item.PaperCard>>> unplayable) {
+        String toast = AiCardsNotice.toast(unplayable);
+        if (toast != null) getGui().message(toast, AiCardsNotice.TITLE);
+    }
+
     /** A carta da decisão em curso, ou {@code null} fora de uma (prioridade comum). */
     CardView asking() { return asking; }
 
