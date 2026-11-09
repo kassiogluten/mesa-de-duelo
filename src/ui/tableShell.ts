@@ -12,6 +12,8 @@ import { ICON_BALLOON, ICON_EYE, ICON_FLAG, ICON_FLASK, ICON_HOME, ICON_REFRESH 
 
 // Ícones que só o menu da partida usa.
 const ICON_LIST = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+/** Histórico da partida, no topo ao lado do relógio: um relógio com a seta voltando. */
+const ICON_HISTORY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4.2h4.2M12 8v4.3l2.8 1.7"/></svg>';
 const ICON_WARNING = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19zM12 10v4.5M12 17.5h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_GEAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
 /** O texto de um item do menu, ao lado do ícone; matchMenu.ts troca só o texto. */
@@ -28,6 +30,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
         <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-enter" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="fs-exit" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
       </button>
       <button class="icon-btn undo-btn" id="fUndo" data-ui="undo" hidden>${UNDO_ICON}<span class="undo-label">Desfazer</span></button>
+      <button class="icon-btn log-btn" data-ui="log" aria-label="Histórico da partida" title="Histórico da partida" aria-expanded="false" aria-controls="fLogDrawer">${ICON_HISTORY}</button>
       <div class="turn-info" id="fTurnInfo"></div>
       <ul class="match-bar" id="fMatchBar" aria-label="Partida"></ul>
     </div>

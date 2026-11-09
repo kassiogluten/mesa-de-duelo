@@ -5,6 +5,9 @@
 
 /* Relógios e turno: a mesma pílula da trilha de fases, no topo, com as dicas abrindo para baixo. */
 .forge .turn-info { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; padding: 4px 8px 4px 4px; border: 1px solid color-mix(in srgb, var(--azul-b9c7df, #b9c7df) 14.9%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--azul-0a1322, #0a1322) 90.2%, transparent); box-shadow: 0 4px 14px #0007; font: 400 12px/1.2 var(--body); }
+/* Botão do histórico da partida, logo antes da pílula do relógio. */
+.forge .topbar .log-btn { display: inline-grid; place-items: center; padding: 5px 9px; }
+.forge .topbar .log-btn svg { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .forge .turn-info:empty, .forge[data-opening] .turn-info { display: none; }
 .forge .turn-info [data-tip]::after {
   content: attr(data-tip); position: absolute; left: 0; top: calc(100% + 8px); z-index: 20; transform: translateY(-4px); opacity: 0; pointer-events: none;

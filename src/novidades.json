@@ -1,4 +1,9 @@
 {
+  "0.153.0": {
+    "Botão do histórico no topo da mesa": [
+      { "img": "0.153.0/botao-historico.webp", "legenda": "No topo da mesa, o botão do histórico logo antes do turno e do relógio." }
+    ]
+  },
   "0.152.0": {
     "Ninjutsu e sneak com fumaça e shuriken": [
       { "img": "0.152.0/ninjutsu-fumaca.webp", "legenda": "O ninjutsu na pilha e, no campo, a fumaça no lugar do atacante que voltou para a mão." },

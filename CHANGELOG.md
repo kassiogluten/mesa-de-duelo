@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.153.0] - 2026-11-08
+
+### Novo
+
+- **Botão do histórico no topo da mesa.** Ao lado do relógio da partida, um botão com um relógio e uma seta abre o histórico da partida direto, sem passar pelo menu. Tocar de novo fecha.
+
 ## [0.152.0] - 2026-11-08
 
 ### Novo

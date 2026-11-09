@@ -43,7 +43,7 @@
   .forge:not(.multiplayer):not(.commander-game) > .field .row.lands { min-height: calc(var(--lch) + 8px); padding: 4px 8px; }
   /* Área de toque de 44 px nos três botões do topo. */
   .forge .game-menu-trigger { min-width: 44px; min-height: 44px; padding-inline: 10px; justify-content: center; }
-  .forge .topbar .fs-btn { min-width: 44px; min-height: 44px; }
+  .forge .topbar .fs-btn, .forge .topbar .log-btn { min-width: 44px; min-height: 44px; }
   /* Os três botões ocupam até ~150 px: o retrato do oponente vai um pouco para a direita, e o ⤢ de focar nele vira um
      selo no canto de baixo do retrato, em vez de ficar à esquerda, por cima do Desfazer. */
   .forge:not(.multiplayer) .avatar-slot.opp { left: calc(50% + 16px); }

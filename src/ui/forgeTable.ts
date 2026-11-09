@@ -216,7 +216,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
   function setLog(open: boolean, restore = false) {
     $('#fLogDrawer').hidden = !open;
-    root.querySelector('[aria-controls="fLogDrawer"]')?.setAttribute('aria-expanded', String(open));
+    root.querySelectorAll('[aria-controls="fLogDrawer"]').forEach(b => b.setAttribute('aria-expanded', String(open)));
     if (open) { renderLog(); setMenu(false); errors.set(false); $('#fLogDrawer').querySelector<HTMLElement>('button')?.focus({ preventScroll: true }); }
     else if (restore) root.querySelector<HTMLElement>('[data-ui="menu"]')?.focus({ preventScroll: true });
   }
