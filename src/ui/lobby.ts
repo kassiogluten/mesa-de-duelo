@@ -139,6 +139,8 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   function matches(deck: DeckData) { return matchesQuery(deck, query, ptName) && matchesColors(deckColors(deck), colorFilter); }
   // ---------- Decks dos computadores (as regras ficam em lobbyBots) ----------
   const readyPool = () => readyBotPool(allDecks(), format);
+  /** Os decks do jogador que o computador pode usar neste formato (escolhidos à mão; o aleatório sorteia só entre os prontos). */
+  const myBotDecks = () => allDecks().filter(d => !d.builtin && fitsIn(d, format ?? 'free'));
   const myBracket = () => { const deck = selected(); return deck && !deck.precon ? deckBracket(deck) : deck?.bracket; };
   /** Precon com "só da série" marcado: a série do deck do jogador. */
   const botSeries = () => format === 'precon' && sameSeries ? selected()?.precon?.series : undefined;
@@ -272,14 +274,15 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     const style = load(KEYS.aiStyle), aiStyle = isAiStyle(style) ? style : DEFAULT_AI_STYLE;
     $<HTMLSelectElement>('#aiStyleSel').value = aiStyle;
     $('#aiStyleHelp').textContent = AI_STYLES.find(s => s.id === aiStyle)!.hint;
-    const basePool = readyPool(), aiPool = commander ? botPool(basePool) : basePool;
+    const basePool = readyPool(), aiPool = commander ? botPool(basePool) : basePool, mine = myBotDecks();
     renderBotChoices(basePool, aiPool);
-    if (oppId !== 'random' && !aiPool.some(d => d.id === oppId)) oppId = 'random';
-    $<HTMLSelectElement>('#oppSel').innerHTML = opponentOptionsHTML(aiPool);
+    const offered = (id: string) => id === 'random' || aiPool.some(d => d.id === id) || mine.some(d => d.id === id);
+    if (!offered(oppId)) oppId = 'random';
+    $<HTMLSelectElement>('#oppSel').innerHTML = opponentOptionsHTML(aiPool, mine);
     $<HTMLSelectElement>('#oppSel').value = oppId;
     if (commander) {
-      commanderOpponents = commanderOpponents.map(id => id === 'random' || aiPool.some(d => d.id === id) ? id : 'random');
-      $('#commanderAiPanel').innerHTML = commanderAiPanelHTML(commanderOpponents.slice(0, playerCount - 1), aiPool);
+      commanderOpponents = commanderOpponents.map(id => offered(id) ? id : 'random');
+      $('#commanderAiPanel').innerHTML = commanderAiPanelHTML(commanderOpponents.slice(0, playerCount - 1), aiPool, mine);
     }
     for (const control of root.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#oppSel, #aiStyleSel, [data-opponent-slot], #netName, #netCode, #roomCode, #netUrl, [data-join] button, [data-join-room], [data-watch-room], [data-lobby=rooms-refresh], [data-lobby=library], [data-lobby=create], [data-lobby=import], [data-edit-deck]')) control.disabled = busy || !!waitingRoom;
     return aiPool;
@@ -428,13 +431,13 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
         if (selectedRoom) await opts.onJoin(deck ?? null, playerName, selectedRoom.code, endpoint);
         else await opts.onHost(deck ?? null, playerName, endpoint, matchConfig, roomVisibility, chosenCode);
       } else if (deck) {
-        const opponent = opponentId === 'random' ? null : allDecks().find(d => d.builtin && d.id === opponentId);
+        const opponent = opponentId === 'random' ? null : allDecks().find(d => d.id === opponentId);
         if (opponent === undefined) { setStatus('Não há um deck do computador compatível com este formato.', true); return; }
         // Com bracket máximo ou série, o sorteio dos bots é feito aqui, entre os decks que cabem; sem eles, no servidor.
         const pool = botPool(readyPool()), filtered = botBracketMax(readyPool()) !== null || !!botSeries();
         if (hasCommandZone(matchConfig.format) && filtered && !pool.length && selectedOpponents.includes('random')) { setStatus('Nenhum deck pronto cabe no bracket máximo dos bots.', true); return; }
         // Sem filtro, os aleatórios vão como null e o servidor sorteia, também sem repetir comandante.
-        const chosen = selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.builtin && d.id === id) ?? null);
+        const chosen = selectedOpponents.map(id => id === 'random' ? null : allDecks().find(d => d.id === id) ?? null);
         const opponents = hasCommandZone(matchConfig.format) ? filtered ? drawBots(chosen, pool, [deck]) : chosen : undefined;
         await opts.onPlay(deck, opponents?.[0] ?? opponent, matchConfig, opponents);
       }

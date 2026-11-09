@@ -16,7 +16,7 @@ public class AiCardsNoticeTest {
         byPlayer.put("Bot 2", List.of("Chaos Orb"));
         JsonObject o = JsonParser.parseString(AiCardsNotice.toastByName(byPlayer)).getAsJsonObject();
         assertEquals("toast", o.get("type").getAsString());
-        assertEquals("3 cartas nos decks dos oponentes podem ser mal usadas.", o.get("text").getAsString());
+        assertEquals("3 cartas dos decks dos oponentes ficam paradas na mão deles.", o.get("text").getAsString());
         assertEquals(2, o.getAsJsonArray("groups").size());
         assertEquals("Chaos Orb", o.getAsJsonArray("groups").get(1).getAsJsonObject().getAsJsonArray("cards").get(0).getAsString());
     }
@@ -26,7 +26,7 @@ public class AiCardsNoticeTest {
         byPlayer.put("Bot 1", List.of());
         byPlayer.put("Bot 2", List.of("Mindslaver"));
         JsonObject o = JsonParser.parseString(AiCardsNotice.toastByName(byPlayer)).getAsJsonObject();
-        assertEquals("1 carta do deck de Bot 2 pode ser mal usada.", o.get("text").getAsString());
+        assertEquals("1 carta do deck de Bot 2 fica parada na mão dele.", o.get("text").getAsString());
         assertEquals(1, o.getAsJsonArray("groups").size());
         assertNull(AiCardsNotice.toastByName(Map.of("Bot 1", List.of())));
     }

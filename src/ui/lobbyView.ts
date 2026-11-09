@@ -97,10 +97,15 @@ export function botBracketHelp(o: { empty: boolean; series: boolean; max: Bracke
     : `Os bots jogam com decks até o ${bracketLabel(o.max)}${!o.chosen && o.mine === o.max ? ', o do seu deck' : ''}.`;
 }
 /** Um seletor de deck para cada computador do Commander. */
-export function commanderAiPanelHTML(slots: string[], pool: DeckData[]) {
-  return '<p class="commander-ai-heading side-label">Decks dos computadores</p>' + slots.map((id, i) => `<label class="opponent-choice" for="commanderOpp${i}"><span class="computer-seat-number" aria-hidden="true">${i + 1}</span><select id="commanderOpp${i}" aria-label="Deck do computador ${i + 1}" class="input-field" data-opponent-slot="${i}"><option value="random">Deck aleatório</option>${pool.map(d => `<option value="${esc(d.id)}" ${id === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></label>`).join('');
+/** As opções de deck de um computador: os prontos e, se houver, os do jogador num grupo próprio ("Meus decks"). */
+function botDeckOptionsHTML(pool: DeckData[], mine: DeckData[], selected?: string) {
+  const options = (decks: DeckData[]) => decks.map(d => `<option value="${esc(d.id)}"${selected === d.id ? ' selected' : ''}>${esc(d.name)}</option>`).join('');
+  return mine.length ? `<optgroup label="Decks prontos">${options(pool)}</optgroup><optgroup label="Meus decks">${options(mine)}</optgroup>` : options(pool);
 }
-export const opponentOptionsHTML = (pool: DeckData[]) => '<option value="random">Aleatório entre os compatíveis</option>' + pool.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
+export function commanderAiPanelHTML(slots: string[], pool: DeckData[], mine: DeckData[] = []) {
+  return '<p class="commander-ai-heading side-label">Decks dos computadores</p>' + slots.map((id, i) => `<label class="opponent-choice" for="commanderOpp${i}"><span class="computer-seat-number" aria-hidden="true">${i + 1}</span><select id="commanderOpp${i}" aria-label="Deck do computador ${i + 1}" class="input-field" data-opponent-slot="${i}"><option value="random">Deck aleatório</option>${botDeckOptionsHTML(pool, mine, id)}</select></label>`).join('');
+}
+export const opponentOptionsHTML = (pool: DeckData[], mine: DeckData[] = []) => '<option value="random">Aleatório entre os compatíveis</option>' + botDeckOptionsHTML(pool, mine);
 /** O deck escolhido, junto do botão Jogar. `result`: o que o servidor disse dele, se já disse. */
 export function chosenDeckHTML(deck: DeckData | undefined, o: { format: DeckFormat | null; net: boolean; result?: { valid: boolean } }) {
   const art = deck && deckArt(deck);

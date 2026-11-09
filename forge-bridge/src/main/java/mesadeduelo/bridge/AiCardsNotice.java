@@ -1,4 +1,4 @@
-// Um aviso só, discreto, com as cartas que o computador não joga bem, no lugar da janela de revelar por oponente.
+// Um aviso só, discreto, com as cartas que o computador não joga, no lugar da janela de revelar por oponente.
 package mesadeduelo.bridge;
 
 import java.util.Collection;
@@ -15,7 +15,7 @@ import forge.item.PaperCard;
 
 /**
  * No começo da partida contra o computador, o Forge abre uma janela de revelar para cada oponente com cartas que a IA
- * não sabe jogar. A mesa junta tudo num aviso de canto: quantas cartas e de quem, com a lista por oponente para quem
+ * não joga (nunca as conjura nem ativa). A mesa junta tudo num aviso de canto: quantas cartas e de quem, com a lista por oponente para quem
  * quiser ver. O reserva fica de fora (não entra em jogo na partida).
  */
 final class AiCardsNotice {
@@ -52,10 +52,11 @@ final class AiCardsNotice {
         if (total == 0) return null;
         JsonObject o = new JsonObject();
         o.addProperty("type", "toast");
-        o.addProperty("title", "O computador não joga bem algumas cartas");
+        // A IA do Forge nunca joga essas cartas (tira da lista do que pode fazer): elas ficam paradas na mão dela.
+        o.addProperty("title", "O computador não joga algumas cartas");
         o.addProperty("text", groups.size() == 1
-            ? (total == 1 ? "1 carta do deck de " + only + " pode ser mal usada." : total + " cartas do deck de " + only + " podem ser mal usadas.")
-            : total + " cartas nos decks dos oponentes podem ser mal usadas.");
+            ? (total == 1 ? "1 carta do deck de " + only + " fica parada na mão dele." : total + " cartas do deck de " + only + " ficam paradas na mão dele.")
+            : total + " cartas dos decks dos oponentes ficam paradas na mão deles.");
         o.add("groups", groups);
         return o.toString();
     }

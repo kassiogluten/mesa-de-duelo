@@ -66,6 +66,7 @@ final class DeckValidation {
         return new Result(deck, issues);
     }
 
+    /** Para o sorteio de deck pronto do computador: recusa carta que a IA não joga bem (fora do precon, que vai como saiu da caixa). */
     static Result validateForAi(JsonElement payload, String format) {
         Result result = validate(payload, format);
         // O precon vai como saiu da caixa também para o computador: ele só não usa bem as cartas que a IA do Forge não conhece.

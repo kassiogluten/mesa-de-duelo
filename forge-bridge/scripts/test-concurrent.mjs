@@ -49,11 +49,12 @@ try {
   rejoined.send({type: 'rejoin', code: session.code, token: session.token});
   await until(() => rejoined.state?.input.opening === 'mulligan' && rejoined.state.input.ok.enabled, 'opening reconnect');
   rejoined.send({type: 'cancel', gen: rejoined.state.input.gen});
+  // Mulligan de Londres na ordem da regra: a mão nova primeiro (manter devolvendo 1), depois a escolha do fundo.
+  await until(() => rejoined.state.input.opening === 'mulligan' && rejoined.state.input.openingReturnCount === 1 && rejoined.state.input.ok.enabled, 'keep the new hand');
+  rejoined.send({type: 'ok', gen: rejoined.state.input.gen});
   await until(() => rejoined.state.input.opening === 'mulligan-bottom', 'London bottom selection');
   rejoined.send({type: 'card', id: own(rejoined).hand[0].id, gen: rejoined.state.input.gen});
   await until(() => rejoined.state.input.openingSelected?.length === 1 && rejoined.state.input.ok.enabled, 'bottom choice accepted');
-  rejoined.send({type: 'ok', gen: rejoined.state.input.gen});
-  await until(() => rejoined.state.input.opening === 'mulligan' && rejoined.state.input.ok.enabled, 'keep smaller hand');
   rejoined.send({type: 'ok', gen: rejoined.state.input.gen});
   await until(() => priority(rejoined), 'other session priority');
   const turn = rejoined.state.turn;

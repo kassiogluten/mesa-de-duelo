@@ -16,8 +16,12 @@ final class LobbyFields {
         InvalidDeck(DeckValidation.Result result, String target) { this.result = result; this.target = target; }
     }
 
+    /**
+     * O deck já validado. O do computador segue as mesmas regras do jogador: carta que a IA não joga bem não barra
+     * o deck (a mesa avisa no começo da partida); só o sorteio de deck pronto evita essas cartas.
+     */
     static Deck validated(JsonElement payload, String format, String target) {
-        var result = "opponent".equals(target) ? DeckValidation.validateForAi(payload, format) : DeckValidation.validate(payload, format);
+        var result = DeckValidation.validate(payload, format);
         if (!result.valid()) throw new InvalidDeck(result, target);
         return result.deck();
     }

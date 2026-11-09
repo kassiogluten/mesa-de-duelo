@@ -122,5 +122,7 @@ public class VisibleEventsTest {
         template.getAsJsonArray("cards").get(1).getAsJsonObject().addProperty("name","Quirion Ranger");
         assertFalse(DeckValidation.validateForAi(template,"pauper").valid());
         assertTrue(DeckValidation.validate(template,"pauper").valid());
+        // Escolhido em "Meus decks" para o computador, o mesmo deck entra: a mesa só avisa no começo da partida.
+        assertNotNull(LobbyFields.validated(template,"pauper","opponent"));
     }
 }
