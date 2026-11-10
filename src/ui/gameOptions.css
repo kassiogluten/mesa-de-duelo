@@ -96,3 +96,4 @@
 .errors-drawer .errors-empty { color: var(--muted); }
 .errors-drawer .errors-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .errors-drawer .errors-status { min-height: 1.2em; margin: 8px 0 0; color: var(--gold-light); font-size: 12.5px; }
+.game-option-gallery { margin-top: 12px; }

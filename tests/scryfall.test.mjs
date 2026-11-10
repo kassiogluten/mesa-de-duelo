@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-const { searchCards, cacheGet, fetchByNames, loadCardCache, resolveCardNames } = await import('../src/scryfall.ts');
+const { searchCards, cacheGet, fetchByNames, fetchPrintings, loadCardCache, resolveCardNames } = await import('../src/scryfall.ts');
+const { setOwnArtEnabled } = await import('../src/scryfallCards.ts');
 
 const cached = new Map();
 globalThis.localStorage = {
@@ -24,6 +25,23 @@ test('format search uses format legality rather than current printing rarity', a
     assert.ok(result.cards[0].fetchedAt);
     assert.equal(cacheGet('Search Test').oracle_id, 'oracle:Search Test');
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test('the print chosen in the deck shows over the table cards, with the option on or off', async () => {
+  const uris = n => ({ small: `${n}-s`, normal: `${n}-n`, art_crop: `${n}-a` });
+  globalThis.fetch = async url => String(url).includes('/cards/collection')
+    ? Response.json({ data: [{ name: 'Forest', set: 'one', collector_number: '276', image_uris: uris('one276') }] })
+    : Response.json({ data: [apiCard('Forest', { type_line: 'Basic Land — Forest', lang: 'en', image_uris: uris('forest') })], total_cards: 1, has_more: false });
+  try {
+    await searchCards('forest', 1, undefined, { translate: false });
+    const print = { set: 'one', cn: '276' };
+    assert.equal(cacheGet('Forest', print).image_uris.normal, '/cartas/forest-normal.webp', 'antes de a impressão chegar, vale a padrão');
+    await fetchPrintings([{ name: 'Forest', ...print }]);
+    assert.equal(cacheGet('Forest', print).image_uris.normal, 'one276-n');
+    setOwnArtEnabled(false);
+    assert.equal(cacheGet('Forest', print).image_uris.normal, 'one276-n');
+    assert.match(cacheGet('Forest').image_uris.normal, /cards\/thb\/254/);
+  } finally { setOwnArtEnabled(true); globalThis.fetch = originalFetch; }
 });
 
 test('two-face rules and images survive slim cache and remain readable by either face', async () => {

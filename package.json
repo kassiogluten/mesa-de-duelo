@@ -16,6 +16,7 @@
     "forge:instalar": "bash forge-bridge/scripts/instalar-forge.sh",
     "icons": "pwa-assets-generator",
     "print": "node scripts/print-novidade.mjs",
+    "arte": "node scripts/arte-propria.mjs",
     "prepare": "node -e \"try { require('child_process').execSync('git config core.hooksPath .githooks', { stdio: 'ignore' }) } catch {}\"",
     "test:browser": "node scripts/test-browser.mjs",
     "unused": "node scripts/unused-exports.mjs",

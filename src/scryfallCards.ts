@@ -1,3 +1,5 @@
+import ownArt from './own-art.json' with { type: 'json' };
+import { EVENTS, KEYS } from './storage';
 import { API } from './scryfallApi';
 
 /** Como as cartas do Scryfall ficam guardadas: só os campos que o jogo usa, com as faces e a impressão em português. */
@@ -40,7 +42,7 @@ export interface ScryCard {
 
 export const images = (u: any): Images | undefined => u && { small: u.small, normal: u.normal, art_crop: u.art_crop };
 /**
- * Arte fixa dos terrenos básicos: a série Nyx de arte cheia de Sam Burley, de Theros Beyond Death (THB 250–254).
+ * Arte padrão dos terrenos básicos: a série Nyx de arte cheia de Sam Burley, de Theros Beyond Death (THB 250–254).
  * Vale em todas as telas, inclusive no lugar da impressão em português.
  */
 const BASIC_ART: Record<string, string> = { plains: '250', island: '251', swamp: '252', mountain: '253', forest: '254' };
@@ -48,9 +50,32 @@ const basicImages = (num: string): Images => {
   const url = (version: string) => `${API}/cards/thb/${num}?format=image&version=${version}`;
   return { small: url('small'), normal: url('normal'), art_crop: url('art_crop') };
 };
-export function withBasicArt(c: ScryCard): ScryCard {
-  const num = BASIC_ART[c.name.toLowerCase()];
-  return num ? { ...c, image_uris: basicImages(num), pt: c.pt && { ...c.pt, image_uris: undefined } } : c;
+/**
+ * Cartas com arte própria da mesa: a carta inteira de uma série da mesa (public/cartas, gerada por npm run arte), em
+ * português. Ligada por padrão; desligada nas Opções, os terrenos
+ * voltam à série Nyx e as outras à imagem do Scryfall.
+ */
+const OWN_ART = new Set((ownArt as string[]).map(n => n.toLowerCase()));
+const ownImages = (name: string): Images => {
+  const url = (size: string) => `/cartas/${name.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${size}.webp`;
+  return { small: url('small'), normal: url('normal'), art_crop: url('art') };
+};
+/** As cartas da mesa na ordem da série (a de src/own-art.json), com as imagens de cada uma, para a galeria. */
+export const ownArtCards = () => (ownArt as string[]).map(name => ({ name, images: ownImages(name.toLowerCase()) }));
+let ownArtOn = true;
+try { ownArtOn = localStorage.getItem(KEYS.ownArt) !== 'off'; } catch { /* Storage is optional. */ }
+export const ownArtEnabled = () => ownArtOn;
+export function setOwnArtEnabled(on: boolean) {
+  ownArtOn = on;
+  try { localStorage.setItem(KEYS.ownArt, on ? 'on' : 'off'); } catch { /* Storage is optional. */ }
+  if (typeof dispatchEvent === 'function') dispatchEvent(new CustomEvent(EVENTS.ownArt));
+}
+/** A imagem padrão da mesa: a arte própria (se ligada), senão a série Nyx nos terrenos básicos; as demais, a do Scryfall. */
+export function withDefaultArt(c: ScryCard): ScryCard {
+  const name = c.name.toLowerCase();
+  const own = ownArtOn && OWN_ART.has(name), num = BASIC_ART[name];
+  if (!own && !num) return c;
+  return { ...c, image_uris: own ? ownImages(name) : basicImages(num!), pt: c.pt && { ...c.pt, image_uris: undefined } };
 }
 
 /** O /cards/collection não acha "Frente // Verso" (nem cartas divididas como "Fire // Ice"), só o nome da frente. */

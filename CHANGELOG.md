@@ -10,9 +10,9 @@ As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/chan
 
 ## [0.156.0] - 2026-11-10
 
-### Mudou
+### Novo
 
-- **Terrenos básicos com a série Nyx.** Planície, Ilha, Pântano, Montanha e Floresta passam a usar a série Nyx de arte cheia de Sam Burley, de Theros Beyond Death, com o símbolo da cor desenhado no céu estrelado, no lugar da série própria da mesa. Anel Solar, Torre de Comando e Sinete Arcano também deixam a arte própria e voltam à imagem normal da carta, em português quando houver. Vale em todas as telas; quem escolheu outra impressão no deck continua vendo a escolhida.
+- **Opção para desligar as cartas da mesa, e terrenos básicos com a série Nyx.** O interruptor **Cartas da mesa** (ligado no começo), no menu **⋯** da tela inicial e em **Opções › Aparência** na partida, mostra ou esconde os terrenos e as staples com arte feita para a mesa. Desligado, cada uma volta à imagem padrão: os terrenos básicos passam a usar a série Nyx de arte cheia de Sam Burley, de Theros Beyond Death, com o símbolo da cor desenhado no céu estrelado, e as staples, a imagem normal da carta. Vale na hora e em todas as telas; quem escolheu outra impressão no deck continua vendo a escolhida. Logo abaixo, **Ver a série** abre a galeria com todas as cartas da mesa, e tocar numa delas abre a carta grande.
 
 ## [0.155.1] - 2026-11-09
 

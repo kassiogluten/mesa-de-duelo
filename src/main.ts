@@ -172,6 +172,8 @@ const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
 
 // Decks que chegaram da conta (outro aparelho, junção, lixeira) ou de outra aba: as duas telas se redesenham.
 addEventListener(EVENTS.decksSincronizados, () => { lobby.refresh(); builder.refresh(); });
+// Cartas da mesa ligada ou desligada: as telas redesenham com a outra imagem.
+addEventListener(EVENTS.ownArt, () => { lobby.refresh(); builder.refresh(); });
 iniciarSincronia();
 
 const labView = mountLab(document.querySelector('#scrLab')!, {

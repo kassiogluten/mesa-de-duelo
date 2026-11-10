@@ -1,7 +1,12 @@
 {
   "0.156.0": {
-    "Terrenos básicos com a série Nyx": [
-      { "img": "0.156.0/terrenos-nyx.webp", "legenda": "Os cinco terrenos básicos da série Nyx: Planície, Ilha, Pântano, Montanha e Floresta, cada um com o símbolo da cor desenhado no céu estrelado." }
+    "Opção para desligar as cartas da mesa, e terrenos básicos com a série Nyx": [
+      { "img": "0.156.0/cartas-da-mesa-menu.webp", "legenda": "Na tela inicial, **Cartas da mesa** no menu ⋯, marcada no começo (tocar liga e desliga sem fechar o menu), e logo abaixo **Ver a série**." },
+      { "img": "0.156.0/cartas-da-mesa-serie.webp", "legenda": "**Ver a série**: a galeria com todas as cartas da mesa, terrenos e staples, cada uma com o nome embaixo." },
+      { "img": "0.156.0/arte-propria-opcao.webp", "legenda": "Na partida, o mesmo interruptor em Opções › Aparência." },
+      { "img": "0.156.0/arte-propria-ligada.webp", "legenda": "Ligado: a Floresta no campo com a arte feita para a mesa." },
+      { "img": "0.156.0/arte-propria-desligada.webp", "legenda": "Desligado: a mesma Floresta com a arte da série Nyx." },
+      { "img": "0.156.0/terrenos-nyx.webp", "legenda": "Os cinco terrenos básicos da série Nyx, que aparecem com a opção desligada: Planície, Ilha, Pântano, Montanha e Floresta, cada um com o símbolo da cor desenhado no céu estrelado." }
     ]
   },
   "0.155.1": {

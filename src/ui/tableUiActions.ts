@@ -1,5 +1,6 @@
 // O que cada botão com `data-ui` faz na mesa, por grupo. O tratador de cliques (tableClicks.ts) consulta cada grupo no
 // ponto do clique em que esses botões eram testados: a ordem entre os grupos e os outros cliques importa.
+import { openOwnArtGallery } from './ownArtGallery';
 import { VERSION } from './changelog';
 import { hideCardPreview } from './cardInspector';
 import { confirmConcede } from './concedeDialog';
@@ -98,6 +99,8 @@ export function createUiActions(d: UiActionDeps) {
     'shortcuts': () => { openShortcuts(MATCH_SHORTCUTS); },
     'settings-close': () => { d.settings.set(false); },
     'playmat': () => { d.settings.togglePlaymat(); },
+    'own-art': () => { d.settings.toggleOwnArt(); },
+    'own-art-gallery': () => { openOwnArtGallery(); },
     'turn-notice': () => { void d.turnNotice.setEnabled(!d.turnNotice.enabled).then(d.settings.syncTurnNotice); },
     'mute': () => { d.audio.setMuted(!d.audio.settings.muted); d.settings.sync(); },
     'sideboard-ready': (_t, _e, ui) => {

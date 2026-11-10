@@ -50,6 +50,8 @@ export const KEYS = {
   // Mesa
   /** Estilo das cartas: imagem completa, 'art' (arte e texto) ou 'arena'. Opções da mesa. */
   cards: 'mesa:cards',
+  /** Arte própria da mesa nas cartas que a têm ('on'/'off'; sem a chave, ligada). Opções da mesa. */
+  ownArt: 'mesa:ownArt',
   /** Fundo de tapete na mesa ('on'/'off'). Opções da mesa. */
   playmat: 'mesa:playmat',
   /** Como a mão aparece. Mesa. */
@@ -136,6 +138,8 @@ export const EVENTS = {
   prefsSincronizadas: 'mesa:prefs-sincronizadas',
   /** Meus decks mudaram pela conta ou por outra aba. */
   decksSincronizados: 'mesa:decks-sincronizados',
+  /** A opção Cartas da mesa mudou (menu ⋯ ou Opções da partida). */
+  ownArt: 'mesa:own-art',
   /** Abrir o Laboratório (menu ⋯). */
   laboratorio: 'mesa:laboratorio',
 } as const;

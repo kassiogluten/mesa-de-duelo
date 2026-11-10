@@ -1,0 +1,9 @@
+/* Galeria das cartas da mesa: a grade de cartas, com o nome embaixo de cada uma. */
+.own-art-gallery { width: min(980px, calc(100vw - 32px)); }
+.own-art-gallery .oag-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+.own-art-gallery .oag-card { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 0; border: 0; background: none; color: var(--dw-ink); font: inherit; font-size: 13px; text-align: center; cursor: pointer; }
+.own-art-gallery .oag-card img { width: 100%; aspect-ratio: 488 / 680; border-radius: 4.5%; box-shadow: 0 6px 18px #0007; transition: transform .15s ease; }
+.own-art-gallery .oag-card:hover img, .own-art-gallery .oag-card:focus-visible img { transform: translateY(-3px); }
+.own-art-gallery .oag-card:focus-visible { outline: none; }
+.own-art-gallery .oag-card:focus-visible img { outline: 2px solid var(--gold); outline-offset: 3px; }
+@media (max-width: 560px) { .own-art-gallery .oag-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }

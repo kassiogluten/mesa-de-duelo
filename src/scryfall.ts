@@ -3,7 +3,7 @@ import { PREFIXES } from './storage';
 import * as cardStore from './cardStore';
 import { scryfallFormat, type DeckFormat } from './decks';
 import { request } from './scryfallApi';
-import { faceView, images, isFaceAlias, legalityFresh, lookupName, printKey, slim, slimPt, validCard, withBasicArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
+import { faceView, images, isFaceAlias, legalityFresh, lookupName, printKey, slim, slimPt, validCard, withDefaultArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
 import { preloadImages } from './scryfallImages';
 export { legalityFresh, type Printing, type ScryCard } from './scryfallCards';
 export { preloadImages } from './scryfallImages';
@@ -25,7 +25,7 @@ export function cacheGet(name: string, print?: Partial<Printing> | null): ScryCa
   const cached = memory.get(name.toLowerCase());
   if (!cached) return null;
   const printed = print?.set ? printings.get(printKey(name, { set: print.set, cn: print.cn })) : undefined;
-  return printed?.image_uris ? withPrinting(cached, name, printed) : withBasicArt(cached);
+  return printed?.image_uris ? withPrinting(cached, name, printed) : withDefaultArt(cached);
 }
 
 const PRINT_PREFIX = 'print:';
@@ -196,7 +196,7 @@ export async function searchCards(q: string, page = 1, format?: DeckFormat, { tr
   const cards: ScryCard[] = (json.data ?? []).map(slim);
   cards.forEach(cachePut);
   if (translate) await addPortuguese(cards);
-  return { cards: cards.map(withBasicArt), hasMore: !!json.has_more, total: json.total_cards ?? cards.length };
+  return { cards: cards.map(withDefaultArt), hasMore: !!json.has_more, total: json.total_cards ?? cards.length };
 }
 
 /** Nomes de carta (em inglês) que começam como o texto digitado, para sugerir enquanto se escreve. */
