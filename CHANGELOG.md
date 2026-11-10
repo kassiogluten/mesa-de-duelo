@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.156.0] - 2026-11-10
+
+### Mudou
+
+- **Terrenos básicos com a série Nyx.** Planície, Ilha, Pântano, Montanha e Floresta passam a usar a série Nyx de arte cheia de Sam Burley, de Theros Beyond Death, com o símbolo da cor desenhado no céu estrelado, no lugar da série própria da mesa. Anel Solar, Torre de Comando e Sinete Arcano também deixam a arte própria e voltam à imagem normal da carta, em português quando houver. Vale em todas as telas; quem escolheu outra impressão no deck continua vendo a escolhida.
+
 ## [0.155.1] - 2026-11-09
 
 ### Corrigido

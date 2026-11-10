@@ -1,4 +1,9 @@
 {
+  "0.156.0": {
+    "Terrenos básicos com a série Nyx": [
+      { "img": "0.156.0/terrenos-nyx.webp", "legenda": "Os cinco terrenos básicos da série Nyx: Planície, Ilha, Pântano, Montanha e Floresta, cada um com o símbolo da cor desenhado no céu estrelado." }
+    ]
+  },
   "0.155.1": {
     "Caged Sun conta a mana extra para conjurar e no Automático": [
       { "img": "0.155.1/caged-sun-automatico.webp", "legenda": "Com Caged Sun no vermelho e só duas Montanhas desviradas, o Gigante da Colina ({3}{R}) já pode ser conjurado, e Pagar automaticamente fica aceso: cada Montanha dá duas manas vermelhas." }

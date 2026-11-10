@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { slim, slimPt, withOwnArt, withPrinting, faceView, printKey, validCard, lookupName, FORMAT } = await import('../src/scryfallCards.ts');
+const { slim, slimPt, withBasicArt, withPrinting, faceView, printKey, validCard, lookupName, FORMAT } = await import('../src/scryfallCards.ts');
 
 const uris = name => ({ small: `${name}-s`, normal: `${name}-n`, art_crop: `${name}-a` });
 
@@ -26,12 +26,11 @@ test('a Portuguese print without a scan keeps the English image', () => {
   assert.equal(slim({ name: 'Bolt', lang: 'pt', layout: 'normal', type_line: 'Instant', image_uris: uris('pt') }).pt.image_uris.normal, 'pt-n');
 });
 
-test('cards with their own art (basic lands first) use it and the chosen print replaces the default image', () => {
-  const forest = withOwnArt({ name: 'Forest', layout: 'normal', type_line: 'Land', image_uris: uris('f'), pt: { name: 'Floresta', image_uris: uris('fp') } });
-  assert.equal(forest.image_uris.normal, '/cartas/forest-normal.webp');
-  assert.equal(forest.image_uris.art_crop, '/cartas/forest-art.webp');
-  assert.equal(withOwnArt({ name: 'Sol Ring', layout: 'normal', type_line: 'Artifact', image_uris: uris('s') }).image_uris.small, '/cartas/sol-ring-small.webp');
-  assert.equal(withOwnArt({ name: 'Mana Crypt', layout: 'normal', type_line: 'Artifact', image_uris: uris('m') }).image_uris.normal, 'm-n');
+test('basic lands use the THB Nyx full-art series by default and the chosen print replaces it', () => {
+  const forest = withBasicArt({ name: 'Forest', layout: 'normal', type_line: 'Land', image_uris: uris('f'), pt: { name: 'Floresta', image_uris: uris('fp') } });
+  assert.equal(forest.image_uris.normal, 'https://api.scryfall.com/cards/thb/254?format=image&version=normal');
+  assert.equal(forest.image_uris.art_crop, 'https://api.scryfall.com/cards/thb/254?format=image&version=art_crop');
+  assert.equal(withBasicArt({ name: 'Sol Ring', layout: 'normal', type_line: 'Artifact', image_uris: uris('s') }).image_uris.small, 's-s');
   assert.equal(forest.pt.image_uris, undefined);
   assert.equal(printKey('Forest', { set: 'DMU' }), 'dmu/forest');
   assert.equal(printKey('Forest', { set: 'dmu', cn: '281' }), 'dmu/281');
