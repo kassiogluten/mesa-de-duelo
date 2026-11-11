@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.157.0] - 2026-11-11
+
+### Novo
+
+- **Custo de agora no topo das cartas da mão.** Quando alguma coisa muda o custo de uma carta da mão, o selo de mana em cima dela mostra quanto ela custa agora, não o impresso: com borda verde quando ficou mais barata (Goblin Electromancer, afinidade, Baral) e vermelha quando ficou mais cara (Thalia, Esfera da Resistência). Cartas com X no custo continuam mostrando o impresso.
+
 ## [0.156.3] - 2026-11-10
 
 ### Corrigido

@@ -34,7 +34,7 @@ export function handHTML(s: FState, fan: HandFanItem[], o: { face(c: FCard): str
     const openingSelected = !!s.input.openingSelected?.includes(c.id);
     const openingSelection = s.input.opening === 'mulligan-bottom' ? ` aria-pressed="${openingSelected}"` : s.input.selection && (usable(s, c.id) || selected) ? ` aria-pressed="${selected}"` : '';
     // Selo do custo acima do canto esquerdo: no leque, a carta seguinte cobre o canto direito, onde fica o custo impresso.
-    const cost = !c.faceDown && c.manaCost ? `<div class="hcost" aria-hidden="true">${manaHTML(c.manaCost)}</div>` : '';
+    const cost = !c.faceDown && c.manaCost ? costChip(c) : '';
     const where = tag ? `<div class="hzone">${esc(tag)}</div>` : '';
     // O valor que a carta conta (item 56): o selo fica na borda esquerda, a parte do leque que a carta seguinte não cobre.
     const counted = c.faceDown ? '' : countSealsHTML(c, o.playerName, s.you);
@@ -42,6 +42,14 @@ export function handHTML(s: FState, fan: HandFanItem[], o: { face(c: FCard): str
     return `<div class="hand-slot"><div class="hcard ${sel}${o.incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${pile ? ' pile' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${pile ? `, ${pile} cópias` : ''}${tag ? ` (${esc(tag)})` : ''}${countedText ? `. ${esc(countedText)}` : ''}"
       style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${o.face(c)}${cost}${where}${counted}${selectedBadge(s, c)}${pile ? `<span class="hand-copies" aria-hidden="true" title="${pile} cópias de ${esc(label(c))}">×${pile}</span>` : ''}</div>${inspectButton(c)}</div>`;
   }).join('');
+}
+
+/** Selo de custo: o impresso, ou o de agora quando uma redução ou aumento o mudou (verde mais barato, vermelho mais caro). */
+function costChip(c: FCard) {
+  const now = c.castCost;
+  if (!now) return `<div class="hcost" aria-hidden="true">${manaHTML(c.manaCost!)}</div>`;
+  const kind = now.delta < 0 ? 'cheaper' : now.delta > 0 ? 'pricier' : '';
+  return `<div class="hcost ${kind}" aria-hidden="true">${now.cost.match(/\{[^}]+\}/) ? manaHTML(now.cost) : '<span class="hcost-zero">0</span>'}</div>`;
 }
 
 /** Quem assiste não vê a mão de ninguém: a de baixo também fica de costas, só com a quantidade. */

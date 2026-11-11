@@ -2,6 +2,7 @@ package mesadeduelo.bridge;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,12 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import forge.ai.ComputerUtilMana;
+import forge.game.mana.ManaCostBeingPaid;
+import forge.game.zone.Zone;
 
 import forge.game.Game;
 import forge.game.card.Card;
@@ -37,6 +44,11 @@ final class Castable {
 
     private static final Map<Game, Map<Integer, Snapshot>> SNAPSHOTS = Collections.synchronizedMap(new WeakHashMap<>());
 
+    /** Custo atual de conjurar cada carta da mão, só das que mudaram do impresso; o último calculado vale até o próximo. */
+    record HandCost(String cost, int delta) { }
+
+    private static final Map<Game, Map<Integer, Map<Integer, HandCost>>> HAND_COSTS = Collections.synchronizedMap(new WeakHashMap<>());
+
     /** Thread do jogo, com o pedido {@code input} já aberto para {@code who}. */
     static void refresh(Player who, Object input) {
         Map<Integer, Snapshot> byPlayer = SNAPSHOTS.computeIfAbsent(who.getGame(), g -> new ConcurrentHashMap<>());
@@ -44,6 +56,8 @@ final class Castable {
             byPlayer.remove(who.getId());
             return;
         }
+        try { HAND_COSTS.computeIfAbsent(who.getGame(), g -> new ConcurrentHashMap<>()).put(who.getId(), handCosts(who)); }
+        catch (RuntimeException e) { /* sem custo atual desta vez: a mão mostra o impresso */ }
         List<Integer> ids;
         try { ids = compute(who); }
         catch (RuntimeException e) { ids = List.of(); }
@@ -78,5 +92,48 @@ final class Castable {
     private static boolean castableNow(Card c, Player who) {
         for (SpellAbility sa : c.getAllPossibleAbilities(who, true)) if (!sa.isManaAbility()) return true;
         return false;
+    }
+
+    /**
+     * Reduções e aumentos de custo (Goblin Electromancer, Thalia, afinidade, Sphere of Resistance): o custo de mana
+     * de conjurar cada carta da mão agora, como o motor conta antes de pagar, quando ele não é o impresso. Fica de
+     * fora quem tem X no custo, que só se sabe ao conjurar.
+     */
+    static Map<Integer, HandCost> handCosts(Player me) {
+        Map<Integer, HandCost> out = new HashMap<>();
+        for (Card c : me.getCardsIn(ZoneType.Hand)) {
+            if (c.isLand() || c.getManaCost() == null || c.getManaCost().isNoCost() || c.getManaCost().countX() > 0) continue;
+            SpellAbility sa = c.getFirstSpellAbility();
+            if (sa == null || !sa.isSpell() || sa.getPayCosts() == null) continue;
+            Player before = sa.getActivatingPlayer();
+            Zone castFrom = c.getCastFrom();
+            sa.setActivatingPlayer(me);
+            try {
+                ManaCostBeingPaid now = ComputerUtilMana.calculateManaCost(sa.getPayCosts(), sa, me, true, 0, false);
+                if (now == null) continue;
+                String printed = new ManaCostBeingPaid(c.getManaCost()).toString(), current = now.toString();
+                if (!printed.equals(current)) out.put(c.getId(), new HandCost(current, now.toManaCost().getCMC() - c.getManaCost().getCMC()));
+            } finally {
+                sa.setActivatingPlayer(before);
+                c.setCastFrom(castFrom);
+            }
+        }
+        return out;
+    }
+
+    /** Põe {@code castCost} nas cartas da mão de {@code playerId} (só a mão do dono chega com as cartas). */
+    static void addHandCosts(JsonArray hand, Game game, int playerId) {
+        Map<Integer, Map<Integer, HandCost>> byPlayer = HAND_COSTS.get(game);
+        Map<Integer, HandCost> costs = byPlayer == null ? null : byPlayer.get(playerId);
+        if (costs == null || costs.isEmpty()) return;
+        for (JsonElement e : hand) {
+            JsonObject card = e.getAsJsonObject();
+            HandCost cost = card.has("id") ? costs.get(card.get("id").getAsInt()) : null;
+            if (cost == null) continue;
+            JsonObject o = new JsonObject();
+            o.addProperty("cost", cost.cost());
+            o.addProperty("delta", cost.delta());
+            card.add("castCost", o);
+        }
     }
 }

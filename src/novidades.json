@@ -1,4 +1,9 @@
 {
+  "0.157.0": {
+    "Custo de agora no topo das cartas da mão": [
+      { "img": "0.157.0/custo-na-mao.webp", "legenda": "Com uma redução e um aumento de custo na mesa, o selo de cada carta mostra quanto ela custa agora: borda verde na que ficou mais barata (a Adivinhação por {1}{U}, o Frogmite por {0}), vermelha na que ficou mais cara (o Raio por {1}{R}) e o selo de sempre na que não mudou." }
+    ]
+  },
   "0.156.1": {
     "Reordenar o cemitério diz qual carta fica no fundo": [
       { "img": "0.156.1/reordenar-cemiterio.webp", "legenda": "Reordenando o cemitério com Fossil Find: a dica diz que a primeira carta tocada fica embaixo, e o Choque, tocado primeiro, leva o número 1." }

@@ -177,7 +177,10 @@ final class StateJson {
         o.addProperty("eliminated", p.getHasLost());
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));
-        o.add("hand", showHand ? cards(p.getHand(), game) : new JsonArray());
+        JsonArray hand = showHand ? cards(p.getHand(), game) : new JsonArray();
+        // Custo atual de conjurar, quando uma redução ou aumento o tira do impresso.
+        if (showHand && game != null) Castable.addHandCosts(hand, game, p.getId());
+        o.add("hand", hand);
         o.add("battlefield", cards(p.getBattlefield(), game));
         o.add("graveyard", cards(p.getGraveyard(), game));
         o.add("exile", showHand ? Foretold.forOwner(p.getExile(), game) : cards(p.getExile(), game));

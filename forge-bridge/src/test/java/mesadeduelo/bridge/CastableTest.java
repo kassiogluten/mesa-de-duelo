@@ -68,4 +68,23 @@ public class CastableTest {
         Castable.refresh(me, Castable.currentInput(me));
         assertEquals("only with priority", 0, StateJson.castable(game, me.getId()).size());
     }
+
+    /** Reductions show on the hand: Goblin Electromancer makes Divination {1}{U}; Bolt has nothing generic to reduce. */
+    @Test public void handCardsCarryTheirCurrentCostWhenItChanged() {
+        Game game = TestGames.empty(); Player me = game.getPlayers().get(0);
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN1, me);
+        Card divination = TestGames.add(game, "Divination", me, ZoneType.Hand);
+        Card bolt = TestGames.add(game, "Lightning Bolt", me, ZoneType.Hand);
+        Card bears = TestGames.add(game, "Grizzly Bears", me, ZoneType.Hand);
+        Card fireball = TestGames.add(game, "Fireball", me, ZoneType.Hand);
+        assertTrue("nothing changes the printed cost", Castable.handCosts(me).isEmpty());
+        TestGames.add(game, "Goblin Electromancer", me, ZoneType.Battlefield);
+        game.getAction().checkStaticAbilities(false);
+        var costs = Castable.handCosts(me);
+        assertEquals("{1}{U}", costs.get(divination.getId()).cost());
+        assertEquals(-1, costs.get(divination.getId()).delta());
+        assertNull("{R} has no generic part", costs.get(bolt.getId()));
+        assertNull("creatures are not reduced", costs.get(bears.getId()));
+        assertNull("X costs are only known when cast", costs.get(fireball.getId()));
+    }
 }

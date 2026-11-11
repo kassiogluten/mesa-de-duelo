@@ -215,6 +215,8 @@ export interface FCard {
   /** Prevista (foretell) no exílio; para o dono vem de face para cima, com o custo previsto em foretellCost. */
   foretold?: boolean;
   foretellCost?: string;
+  /** Na mão do dono: o custo de mana de conjurar agora, quando uma redução ou aumento o tira do impresso; delta é quanto o valor de mana mudou. */
+  castCost?: { cost: string; delta: number };
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */

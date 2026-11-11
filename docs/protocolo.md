@@ -290,6 +290,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `countsSpells?` | `boolean` | Conta as mágicas conjuradas no turno (Tempestade e afins); só no campo, na mão, na pilha e na zona de comando. |
 | `foretold?` | `boolean` | Prevista (foretell) no exílio; para o dono vem de face para cima, com o custo previsto em foretellCost. |
 | `foretellCost?` | `string` |  |
+| `castCost?` | `{ cost: string; delta: number }` | Na mão do dono: o custo de mana de conjurar agora, quando uma redução ou aumento o tira do impresso; delta é quanto o valor de mana mudou. |
 | `plotted?` | `boolean` | Tramada (plot) no exílio. |
 | `prepared?` | `boolean` | Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. |
 | `preparedSpell?` | `string` |  |

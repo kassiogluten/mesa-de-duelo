@@ -562,3 +562,12 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
 
 - [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
+
+## 120. Testar Shorikai, Genesis Engine: habilidade e Tripular
+
+Pedido em 11/11/2026. Shorikai, Motor da Gênese é veículo e comandante; conferir numa partida de verdade, e no Laboratório, as duas partes dela.
+
+- [ ] Habilidade ({1}, {T}): compra duas, descarta uma (a janela de descartar aparece certa) e cria a ficha Piloto 1/1 incolor, com a imagem da ficha e o texto "tripula Veículos como se o seu poder fosse 2 pontos maior".
+- [ ] Tripular 8: escolher criaturas com poder total 8 ou mais vira a Shorikai criatura artefato 8/8 até o fim do turno; o Piloto conta como 3; não deixa confirmar com menos de 8; a Shorikai tripulada ataca e bloqueia e volta a ser só veículo no fim do turno.
+- [ ] Como comandante: conjurar da zona de comando (com o imposto) e o dano de comandante contar quando ela ataca tripulada.
+- [ ] O que não funcionar vira correção no CHANGELOG com cenário no Laboratório; o que funcionar, um cenário pronto para conferir.
