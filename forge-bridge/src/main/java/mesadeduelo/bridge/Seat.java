@@ -63,6 +63,8 @@ final class Seat {
     volatile int bracket;
     /** Última mensagem pronta no lobby, para ninguém encher a sala de balões. */
     volatile long saidAt;
+    /** Última carta apontada para a mesa ({@link CardPointer}). */
+    volatile long pointedAt;
     /** Desistiu deste jogo (no Commander com vários jogadores, a mesa tira o assento de vista). */
     volatile boolean conceded;
     volatile RegisteredPlayer registered;

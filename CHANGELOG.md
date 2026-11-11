@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.160.0] - 2026-11-11
+
+### Novo
+
+- **Apontar uma carta para a mesa.** Para mostrar aos outros jogadores de qual carta você está falando, abra a carta (botão direito do mouse, ou segurar a carta no toque) e toque em **Apontar**. Na mesa de todos, ela pulsa por alguns segundos com um anel na cor do seu verso e um balão "Ana apontou"; se ela estiver fora da tela, a mesa rola até ela. Vale para cartas que todos veem: no campo de qualquer jogador, na pilha, no cemitério, no exílio e na zona de comando. Se a carta não está à vista (no meio do cemitério, por exemplo), o monte pulsa e o balão diz qual carta é. Quem só assiste à partida vê os destaques, mas não aponta.
+
 ## [0.159.0] - 2026-11-11
 
 ### Novo

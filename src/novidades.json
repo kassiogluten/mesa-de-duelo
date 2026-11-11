@@ -1,4 +1,11 @@
 {
+  "0.160.0": {
+    "Apontar uma carta para a mesa": [
+      { "img": "0.160.0/botao.webp", "legenda": "O botão Apontar na carta aberta, ao lado do Fechar." },
+      { "img": "0.160.0/anel.webp", "legenda": "Na mesa de todos, a carta apontada pulsa na cor do verso de quem apontou, com o balão \"Ana apontou\"." },
+      { "img": "0.160.0/cemiterio.webp", "legenda": "Carta que não está à vista, no meio do cemitério: o monte pulsa e o balão diz qual é." }
+    ]
+  },
   "0.159.0": {
     "Motivo da eliminação": [
       { "img": "0.159.0/aviso.webp", "legenda": "O aviso na hora em que alguém sai da partida, com o motivo e o comandante que deu o dano." },

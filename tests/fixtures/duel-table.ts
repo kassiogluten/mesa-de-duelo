@@ -15,7 +15,11 @@ const state: any = { type: 'state', config: { format: 'standard', matchLength: '
   you: 10, players, turn: 3, phase: 'MAIN1', activePlayer: 10, gameOver: false, log: [], decks: [], stack: [], combat: [], castable: [],
   input: { gen: 7, priority: true, message: '', ok: { label: 'OK', enabled: true }, cancel: { label: '', enabled: false }, selectable: [], actionable: [300, 302] }, events: [] };
 const messages: unknown[] = [];
-const client = { state, connected: true, send: (message: any) => { messages.push(message); simulateGraveyardTarget(message); simulateProliferate(message); simulateImprovise(message); simulatePayMana(message); } };
+const client = { state, connected: true, send: (message: any) => { messages.push(message); simulatePoint(message); simulateGraveyardTarget(message); simulateProliferate(message); simulateImprovise(message); simulatePayMana(message); } };
+/** Apontar uma carta: o servidor devolve o aviso para todos, também para quem apontou. */
+function simulatePoint(message: any) {
+  if (message.type === 'point') setTimeout(() => view.pointed(state.you, message.card));
+}
 /** Cenário de alvo no cemitério: tocar num alvo encerra a escolha, como a ponte faria (a janela do cemitério fecha junto). */
 function simulateGraveyardTarget(message: any) {
   const input = state.input;
@@ -101,6 +105,12 @@ const view = createForgeTableView(document.querySelector('#table')!, { onExit() 
 view.attach(client as any, []); view.render();
 const warden = (id: number) => ({ id, controller: 10, tapped: false, token: false, name: 'Soul Warden', manaCost: '{W}', typeLine: 'Creature — Human Cleric', creature: true, power: 1, toughness: 1 });
 Object.assign(window, { fixture: { state, client, view, messages, feedbackRequests, render: () => view.render(),
+  /** Apontar uma carta (cardPointer.ts): o oponente vira uma pessoa (Ana, verso azul) e, com `card`, Ana aponta essa carta. */
+  pointing(card?: number) {
+    Object.assign(state.players[1], { ai: false, name: 'Ana', sleeve: 1 }); state.players[0].sleeve = 0;
+    (client as any).state = { ...state }; view.render();
+    if (card !== undefined) view.pointed(23, card);
+  },
   /**
    * Alerta de espera demorada: a mesa espera `player` há `ms` (como a ponte manda em `waiting`). O oponente vira uma
    * pessoa (Ana), já que a IA nunca recebe o alerta. Um estado novo, como chegaria da ponte, para o relógio ressincronizar.

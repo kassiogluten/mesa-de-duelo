@@ -75,6 +75,7 @@ export class ForgeClient {
   onState: (s: FState) => void = () => {};
   onRoom: (r: FRoom) => void = () => {};
   onRoomSay: (seat: number, key: RoomSaying) => void = () => {};
+  onPoint: (player: number, card: number) => void = () => {};
   /** A partida foi aberta em outra janela, que assumiu o assento: não adianta reconectar sozinho. */
   replaced = false;
   /** A ponte não conhece mais a partida pedida no "rejoin". */
@@ -155,6 +156,7 @@ export class ForgeClient {
             break;
           case 'room': this.room = msg.room; this.onRoom(msg.room); break;
           case 'room-say': this.onRoomSay(msg.seat, msg.key); break;
+          case 'point': this.onPoint(msg.player, msg.card); break;
           case 'validation-error': this.onValidation(msg.validation, msg.target ?? ''); break;
           case 'hello': this.onHello(msg); break;
           case 'toast': this.onNotice(msg.text, false, msg.title || Array.isArray(msg.cards) || Array.isArray(msg.groups) ? { title: msg.title, cards: Array.isArray(msg.cards) ? msg.cards : undefined, groups: Array.isArray(msg.groups) ? msg.groups : undefined } : undefined); break;

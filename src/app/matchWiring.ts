@@ -24,7 +24,7 @@ export interface MatchWiring {
   session: MatchSession;
   connection: Pick<ForgeConnection, 'isCurrent' | 'forget'>;
   recording: RecordingSession;
-  table: Pick<ForgeTableView, 'render' | 'notice' | 'diagnostic' | 'disconnected'>;
+  table: Pick<ForgeTableView, 'render' | 'notice' | 'diagnostic' | 'disconnected' | 'pointed'>;
   lobby: Pick<Lobby, 'showRoom' | 'setStatus' | 'roomSay'>;
   show(screen: Screen): void;
   /** Abre a mesa da partida (ou da assistida, com m null). */
@@ -80,6 +80,7 @@ export function bindMatchClient(client: ForgeClient, w: MatchWiring) {
     }
   };
   client.onRoomSay = (seat, key) => lobby.roomSay(seat, key);
+  client.onPoint = (player, card) => { if (session.screen === 'game') table.pointed(player, card); };
   client.onValidation = (validation, target) => {
     const message = `${target === 'opponent' ? 'Deck do computador: ' : ''}${validation.issues.map(issue => `${issue.card ? `${issue.card}: ` : ''}${issue.message}`).join(' ')}`;
     if (session.screen === 'game') table.notice(message, true);

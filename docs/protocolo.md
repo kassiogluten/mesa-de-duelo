@@ -722,6 +722,8 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
   | { type: 'pass-turn-stop' }
   | { type: 'skip-vote'; target: number; value?: boolean }
+  /** Aponta uma carta que todos veem (campo, pilha, cemitério, exílio, zona de comando) para os outros jogadores. */
+  | { type: 'point'; card: number }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean }
   /** OK na janela das cartas reveladas do topo de um grimório (revealView). */
@@ -786,6 +788,8 @@ Tudo o que o servidor manda à mesa. Campo novo numa mensagem: declare aqui (o e
 | FState
   | { type: 'room'; room: FRoom }
   | { type: 'room-say'; seat: number; key: RoomSaying }
+  /** Alguém (player: o id do jogador) apontou uma carta da mesa; vem também para quem apontou. */
+  | { type: 'point'; player: number; card: number }
   | { type: 'validation-error'; validation: DeckValidation; target: string; requestId?: string }
   | { type: 'hello'; supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string }
   | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[]; groups?: { player: string; cards: string[] }[] }

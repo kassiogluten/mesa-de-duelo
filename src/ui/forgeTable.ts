@@ -87,6 +87,7 @@ import { createTableZone } from './tableZone';
 import { createTableOverlay } from './tableOverlay';
 import { createTableTopBar } from './tableTopBar';
 import { attachPreviewInput, createCardPreview } from './tablePreview';
+import { createCardPointer } from './cardPointer';
 import { attachTableKeyboard } from './tableKeyboard';
 import { createInputActions } from './tableInputActions';
 import { createUiActions } from './tableUiActions';
@@ -117,6 +118,8 @@ export interface ForgeTableView {
   disconnected(reason?: string): void;
   /** Ação recusada pela ponte sem aviso: só vai para o painel "Erros da partida". */
   diagnostic(d: { code: string; action?: string; text: string }): void;
+  /** Alguém apontou uma carta da mesa: ela pulsa com o nome de quem apontou. */
+  pointed(player: number, card: number): void;
 }
 
 /** Ferramentas de desenvolvimento na mesa: no `npm run dev` ou com localStorage `KEYS.dev` = "1". */
@@ -447,7 +450,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   }
 
   const toasts = createToasts(root, { findCard: id => findCard(id), image, setHTML });
-  const preview = createCardPreview({ ...ctx, eventCard: key => historyLog.card(key) ?? removals.card(key) ?? reveals.card(key) ?? toasts.card(key) });
+  // Apontar uma carta para os outros jogadores (botão "Apontar" da carta aberta) e o destaque de quem apontou.
+  const pointer = createCardPointer(ctx);
+  const preview = createCardPreview({ ...ctx, eventCard: key => historyLog.card(key) ?? removals.card(key) ?? reveals.card(key) ?? toasts.card(key), pointAction: c => pointer.action(c) });
   function notice(text: string, error = false, detail?: NoticeDetail) {
     text = fixPossessives(text, playerNames());
     if (error) errors.record('aviso', text);
@@ -488,7 +493,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       faces.reset();
       client = c; portraits = pics; attack.clear(true);
       $('#fStackGallery').hidden = true;
-      handDrag.cancel(); presentation.stop(); timeline.reset(); presentation.muteNext(); hideCardPreview(true);
+      handDrag.cancel(); presentation.stop(); timeline.reset(); presentation.muteNext(); hideCardPreview(true); pointer.clear();
       motion.reset();
       $('#fOverlay').hidden = true;
       $('#fQuestion').hidden = true;
@@ -502,6 +507,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       connectionLost();
       overlay.reconnecting(attempt);
     },
+    pointed(player, card) { pointer.show(player, card); },
     diagnostic(d) { errors.record('ação ignorada', d.text, d.action ? `ação: ${d.action}` : undefined); },
     disconnected(reason) {
       errors.record('conexão', reason ?? 'Conexão perdida com o servidor da partida.');

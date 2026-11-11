@@ -18,6 +18,8 @@ export const INSPECTABLE = '[data-fid],[data-peek],[data-event],[data-stack],[da
 export interface PreviewDeps extends Pick<TableCtx, 'state' | 'match' | 'timeline' | 'image' | 'playerName' | 'findCard'> {
   /** As cartas do histórico, das janelas de remoção e dos avisos, pela chave do evento. */
   eventCard(key: string): FCard | undefined;
+  /** O botão "Apontar" da carta aberta, quando dá para apontá-la para os outros jogadores (cardPointer.ts). */
+  pointAction?(c: FCard): (() => void) | undefined;
 }
 
 export function createCardPreview(d: PreviewDeps) {
@@ -26,11 +28,12 @@ export function createCardPreview(d: PreviewDeps) {
     if (!pinned && (d.match().stackGalleryOpen || trigger?.closest('#fStack') || (state && suppressOpeningPreview(state)))) return;
     const secret = !!c?.faceDown && !!c.hiddenFace?.name;
     const reminder = c ? faceDownReminder(c) : undefined;
+    const onPoint = pinned && c ? d.pointAction?.(c) : undefined;
     // Virada para baixo de outro jogador: a carta de lembrete, que só diz como ela foi virada (isso é público).
     if (c && reminder && !secret) {
       const card = { name: reminder.label, image: reminder.normal, text: reminder.text, typeLine: 'Criatura', power: c.power, toughness: c.toughness,
         basePower: c.basePower, baseToughness: c.baseToughness, counters: c.counters, damage: c.damage, keywords: c.keywords,
-        notes: [`Virada para baixo (${reminder.label}): só quem a controla sabe qual carta é.`, ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)] };
+        notes: [`Virada para baixo (${reminder.label}): só quem a controla sabe qual carta é.`, ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)], onPoint };
       if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
       return;
     }
@@ -38,7 +41,7 @@ export function createCardPreview(d: PreviewDeps) {
     if (!c || c.faceDown || !c.name) { hideCardPreview(); return; }
     const source = c.emblem ? emblemSource(c) : c.name;
     const changed = permanentTypeChange(c);
-    const card = { ...c, name: c.emblem ? emblemLabel(c) : c.name,
+    const card = { ...c, onPoint, name: c.emblem ? emblemLabel(c) : c.name,
       image: c.image ?? d.image(source, 'normal', c.emblem ? undefined : c.print),
       text: ptOf(c.name)?.text || c.text,
       typeLine: c.emblem ? 'Emblema' : ptOf(c.name)?.type_line || c.printedType || c.typeLine,

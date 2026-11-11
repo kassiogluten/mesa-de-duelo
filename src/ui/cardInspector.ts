@@ -20,6 +20,8 @@ export interface InspectorCard {
   typeChange?: string;
   /** Estados da permanente explicados por extenso (controle trocado, atiçada, regeneração, escolhas). */
   notes?: string[];
+  /** Na mesa de partida, o botão "Apontar" da carta aberta: destaca a carta para os outros jogadores (cardPointer.ts). */
+  onPoint?: () => void;
 }
 type MergedPart = { name?: string; image?: string; faceDown?: boolean };
 /** Mutação: quais cartas formam a permanente, a de cima primeiro (nomes em português quando já carregados). */
@@ -64,7 +66,7 @@ function content(card: InspectorCard, compact: boolean) {
   const sides = image ? sidesOf(card) : null;
   // Na prévia, os estados da permanente ficam numa faixa abaixo da imagem; no inspetor, junto do texto.
   const notes = hidden ? [] : card.notes ?? [];
-  return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div><span class="ci-actions">${sides ? flipButtonHTML(sides, 'ci-control') : ''}${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : '<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta">Fechar</button>'}</span></header>
+  return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div><span class="ci-actions">${sides ? flipButtonHTML(sides, 'ci-control') : ''}${!compact && card.onPoint ? '<button type="button" class="ci-control ci-point" data-ci-point aria-label="Apontar esta carta para os outros jogadores" title="Destaca a carta na mesa dos outros jogadores">Apontar</button>' : ''}${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : `<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta"${card.onPoint ? ' autofocus' : ''}>Fechar</button>`}</span></header>
   <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? `<img class="ci-image" src="${esc(image)}" alt="${esc(name)}" draggable="false">` : ''}<div class="ci-details">
     ${type ? `<p class="ci-type">${esc(type)}${card.typeChange ? ` <mark class="ci-type-change">— ${esc(card.typeChange)}</mark>` : ''}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
@@ -124,6 +126,7 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
     if (m) inspectCard({ name: m.name, image: m.image }, origin);
   }));
   el.querySelector('[data-ci-close]')?.addEventListener('click', () => modal?.close());
+  el.querySelector('[data-ci-point]')?.addEventListener('click', () => { card.onPoint?.(); modal?.close(); });
 }
 function resolve(el: HTMLElement, card: InspectorCard, compact: boolean, ticket: number) {
   if (card.faceDown || !card.name) return;

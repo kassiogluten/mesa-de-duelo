@@ -471,3 +471,21 @@ Pedido em 11/11/2026. Shorikai, Motor da Gênese é veículo e comandante; confe
 - [x] O que não funcionar vira correção no CHANGELOG com cenário no Laboratório; o que funcionar, um cenário pronto para conferir.
 
 Conferido em 11/11/2026 (`forge-bridge/scripts/test-crew.mjs` e o cenário "Shorikai: habilidade e Tripular 8"): a habilidade e o Tripular funcionavam, mas o OK do Tripular ficava ligado com qualquer poder e, abaixo de 8, desistia em silêncio, e a contagem vinha em inglês ("Crewing"); corrigido na 0.157.1. Falta a parte de comandante, que o Laboratório não monta (não tem zona de comando): conferir numa sala de Commander de verdade.
+
+## 121. Agrupar criaturas atacantes iguais que atacam o mesmo alvo
+
+Pedido em 11/11/2026. O campo já junta cartas iguais num monte com "×N", mas no combate cada atacante aparece separado: com muitas fichas iguais atacando (10 Soldados, 20 Zumbis), a mesa se enche e fica difícil ver quem ataca quem.
+
+- [ ] Criaturas iguais (mesma carta, mesmo poder e resistência, mesmos marcadores e estados) que atacam o mesmo jogador ou planeswalker ficam num monte só com "×N", com a seta até o alvo saindo do monte.
+- [ ] As que atacam alvos diferentes, ou que ficaram diferentes (um marcador, um bloqueio, dano marcado), saem do monte e aparecem à parte.
+- [ ] Bloquear continua possível criatura por criatura: dá para escolher um atacante dentro do monte (abrir o monte ou bloquear "um deles"), e o bloqueado sai do monte.
+- [ ] O defensor vê no monte quantas atacam e o dano total que ele vai receber se não bloquear.
+
+## 122. Avaliar tirar a lupa das cartas
+
+Pedido em 11/11/2026. Toda carta da mesa (campo, mão, exílio, zona de comando) tem um botão de lupa para abrir os detalhes. Hoje o botão direito do mouse e segurar a carta no toque já abrem a carta em detalhe; avaliar se a lupa ainda é necessária.
+
+- [ ] Conferir se o botão direito e o segurar abrem os detalhes em todas as cartas que hoje têm lupa: permanentes, mão, exílio jogável, zona de comando, topo do grimório visível, cartas presas embaixo de outras.
+- [ ] Ver quem depende da lupa: o teclado (a lupa recebe foco; o "i" já abre a carta com o foco nela?), leitores de tela (o rótulo "Inspecionar …") e o clique numa carta que, sem ação, já abre os detalhes.
+- [ ] No toque, o segurar precisa ser fácil de descobrir sem a lupa: uma dica na primeira partida, ou no tutorial.
+- [ ] Decidir: tirar de todas, tirar só das permanentes (onde ela mais ocupa espaço) ou deixar como opção nas Opções da partida.

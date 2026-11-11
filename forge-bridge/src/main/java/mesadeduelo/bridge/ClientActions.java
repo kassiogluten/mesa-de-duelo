@@ -30,7 +30,7 @@ final class ClientActions {
     ClientActions(Session session) { this.session = session; }
 
     void onClientMessage(Seat seat, Channel source, String type, JsonObject msg) {
-        if (seat.eliminated() && !Set.of("preferences", "hello").contains(type)) { rejectStaleAction(seat, type); return; }
+        if (seat.eliminated() && !Set.of("preferences", "hello", "point").contains(type)) { rejectStaleAction(seat, type); return; }
         int actionGen = -1;
         if (Set.of("card", "attack", "attack-all", "attack-group", "block", "player", "stack", "mana", "ok", "cancel", "pass-turn", "resolve-all", "select-set").contains(type)) {
             if (!msg.has("gen") || !msg.get("gen").isJsonPrimitive() || !msg.get("gen").getAsJsonPrimitive().isNumber()) { rejectStaleAction(seat, type); return; }
@@ -95,6 +95,7 @@ final class ClientActions {
                     session.markDirty();
                 });
             }
+            case "point" -> CardPointer.point(session, seat, msg);
             case "skip-vote" -> session.skips.vote(seat, msg);
             case "undo-request" -> session.undo.request(seat);
             case "undo-vote" -> session.undo.vote(seat, !msg.has("value") || msg.get("value").getAsBoolean());
