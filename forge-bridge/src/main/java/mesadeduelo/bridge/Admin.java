@@ -49,6 +49,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  *   GET    funil                   {semanas: [{semana, jogar, deck, partida-ia, partida-sala}]}: quem começa a jogar ({@link Funnel})
  *   GET    historico[/AAAA-MM]     {meses, mes, partidas}: as partidas concluídas do mês (o mais recente sem mês)
  *   GET    historico/AAAA-MM.jsonl o arquivo do mês, para baixar
+ *   GET    ranking[/AAAA-MM]       {meses, mes, partidas, jogadores}: o ranking dos jogadores no mês, ou desde o começo sem mês
  *   GET    relatos                 índice com o estado de cada relato
  *   GET    relatos/{código}        o arquivo .json.gz guardado
  *   PUT    relatos/{código}/estado {status, note?, issue?}
@@ -124,6 +125,7 @@ final class Admin {
                 return f == null ? Response.error(404, "Contagem de visitantes desligada.") : Response.json(200, f.json());
             }
             if ((path.equals("historico") || path.startsWith("historico/")) && "GET".equals(method)) return history(path.substring("historico".length()));
+            if ((path.equals("ranking") || path.startsWith("ranking/")) && "GET".equals(method)) return ranking(path.substring("ranking".length()));
             String[] parts = path.split("/");
             if (parts.length >= 2 && parts[0].equals("relatos")) {
                 String code = parts[1].toUpperCase();
@@ -216,6 +218,24 @@ final class Admin {
         months.forEach(list::add);
         o.add("meses", list); o.addProperty("mes", month);
         o.add("partidas", month.isEmpty() ? new JsonArray() : history.read(month));
+        return Response.json(200, o);
+    }
+
+    /** {@code rest} é "" (desde o começo) ou "/AAAA-MM". */
+    private Response ranking(String rest) throws IOException {
+        if (history == null) return Response.error(404, "Histórico de partidas desligado.");
+        String month = rest.startsWith("/") ? rest.substring(1) : "";
+        if (!month.isEmpty() && !month.matches("\\d{4}-\\d{2}")) throw new IllegalArgumentException("Mês inválido: use AAAA-MM.");
+        java.util.List<String> months = history.months();
+        java.util.List<JsonObject> matches = new java.util.ArrayList<>();
+        for (String m : month.isEmpty() ? months : java.util.List.of(month))
+            for (var e : history.read(m)) if (e.isJsonObject()) matches.add(e.getAsJsonObject());
+        JsonObject o = new JsonObject();
+        JsonArray list = new JsonArray();
+        months.forEach(list::add);
+        o.add("meses", list); o.addProperty("mes", month);
+        o.addProperty("partidas", matches.size());
+        o.add("jogadores", PlayerRanking.rank(matches));
         return Response.json(200, o);
     }
 

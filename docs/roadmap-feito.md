@@ -1214,3 +1214,21 @@ Pedido em 09/11/2026. Quando um efeito revela cartas e o jogador escolhe uma del
 - [x] Item no CHANGELOG, prints em Novidades em imagens e cenário no Laboratório com uma carta que revela e escolhe.
 
 Feito em 09/11/2026 (0.154.0): as duas janelas vinham do motor (revelar a mão e, em seguida, escolher só entre as válidas) no descarte "revela e você escolhe" (Thoughtseize, Duress, Inquisition). O servidor pula o revelar quando a escolha vem com certeza e manda na escolha as cartas reveladas que não podem ser escolhidas, que a mesa mostra apagadas. Commune with Nature e Impulse já usavam uma janela só para escolher. O revelar continua sozinho quando nada pode ser escolhido (`test-reveal-choose`).
+
+## 119. ✅ Ranking de jogadores na área de admin
+
+Pedido em 10/11/2026. A área de admin já mostra as partidas ao vivo e o **Histórico** do mês (jogadores, decks, comandantes, vencedor, selo "concedida" ou "queda"), mas não junta os resultados por jogador. Cada linha do histórico já traz o necessário: o nome de cada jogador, se é a IA, a conta (quem entrou com Google, item 44), o deck e as vitórias na série.
+
+- [x] Seção **Ranking** na área de admin, ao lado do Histórico: uma linha por jogador com partidas, vitórias, derrotas, porcentagem de vitória, concessões e quedas, e a última partida.
+- [x] Filtros como os do Histórico: mês (ou período), formato, modo (sala em rede ou contra a IA) e o jeito que acabou; ordenar por qualquer coluna.
+- [x] Ao abrir um jogador: as partidas dele (o Histórico filtrado), os decks e comandantes mais usados e contra quem mais jogou.
+- [x] Contar no servidor, a partir do histórico gravado, para não baixar todos os meses na página; a conta junta o mesmo jogador em apelidos diferentes, e quem joga sem conta é agrupado pelo apelido.
+
+- [x] Decidir antes de fazer:
+  - **Quem entra**: só partidas em rede entre pessoas (recomendado: é o que mede um jogador contra outro), ou também as partidas contra a IA, numa coluna à parte.
+  - **Como ordenar**: vitórias e porcentagem de vitória com um mínimo de partidas (recomendado: simples de entender), ou uma nota tipo Elo, que pesa a força do oponente mas precisa de histórico e explicação.
+  - **Commander com 3 ou 4 jogadores**: vitória para quem venceu e derrota para os demais (recomendado), ou contar a colocação.
+  - **Concessão e queda**: concessão conta como derrota (recomendado); queda sem vencedor fica fora da porcentagem, só no contador.
+  - **Só no admin ou também para os jogadores**: este item é só a área de admin; um ranking público na tela inicial seria outro item, com a questão de privacidade dos apelidos.
+
+Feito em 10/11/2026: aba **Ranking** na área de admin, ao lado de Relatos, Partidas e Páginas de teste. Decidido: partidas em rede e contra a IA contam juntas (a IA só aparece como oponente); a ordem padrão é por vitórias, com a porcentagem ao lado, e qualquer coluna reordena; o período é um mês ou "Desde o começo"; em Commander, quem venceu ganha e os demais perdem; concessão conta como derrota e a queda sem vencedor fica fora da porcentagem. A contagem é feita no servidor a partir do histórico gravado. Sem item no CHANGELOG: a área de admin não é vista pelos jogadores.

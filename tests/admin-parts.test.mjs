@@ -31,3 +31,25 @@ test('matches tab: live matches and the month history', () => {
   assert.match(html, /7 turnos, IA por desistência/);
   assert.match(historyHTML({ month: '2026-11', months: ['2026-11'], end: 'queda', past }, () => ''), /Nenhuma partida queda neste mês/);
 });
+
+test('ranking tab: order, win rate, period and the open player', async () => {
+  const { rankingHTML, sortedPlayers, winRate } = await import('../src/admin/adminRanking.ts');
+  const player = (key, name, played, won, lost, extra = {}) => ({ key, name, account: false, played, won, lost, tied: 0, conceded: 0, dropped: 0, last: '2026-11-02T10:00:00Z', decks: [], opponents: [], recent: [], ...extra });
+  const players = [player('c:1', 'Ana', 5, 3, 2, { account: true, decks: [{ name: 'Elfos', played: 5, won: 3 }], recent: [{ id: 'x', endedAt: '2026-11-02T10:00:00Z', format: 'pauper', mode: 'rede', deck: 'Elfos', against: 'Bia', result: 'concedeu' }] }),
+    player('n:bia', 'Bia', 2, 2, 0), player('-', undefined, 1, 0, 0, { dropped: 1 })];
+  assert.equal(winRate(players[0]), 0.6);
+  assert.equal(winRate(players[2]), null, 'só queda: sem porcentagem');
+  assert.deepEqual(sortedPlayers(players, 'rate', true).map(p => p.key), ['n:bia', 'c:1', '-']);
+  assert.deepEqual(sortedPlayers(players, 'name', false).map(p => p.key), ['c:1', 'n:bia', '-']);
+  const state = { month: '', months: ['2026-11'], matches: 6, players, sort: 'won', desc: true, open: null };
+  const html = rankingHTML(state);
+  assert.match(html, /3 jogadores · 6 partidas desde o começo/);
+  assert.match(html, /Sem apelido/);
+  assert.match(html, /aria-sort="descending"><button type="button" data-rank-sort="won"[^>]*>Vitórias ▼/);
+  assert.match(html, />60%</);
+  assert.doesNotMatch(html, /Decks mais usados/);
+  const open = rankingHTML({ ...state, open: 'c:1', month: '2026-11' });
+  assert.match(open, /aria-expanded="true">Ana/);
+  assert.match(open, /Decks mais usados[\s\S]*Elfos[\s\S]*concedeu/);
+  assert.match(rankingHTML({ ...state, players: [], matches: 0, month: '2026-11' }), /Nenhuma partida em novembro de 2026/);
+});

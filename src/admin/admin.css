@@ -145,3 +145,35 @@ body { min-height: 100%; height: auto; }
 .adm-funnel thead th { color: var(--muted); font: 600 13px var(--body); }
 .adm-funnel th:first-child { text-align: left; }
 .adm-funnel tbody tr:last-child > * { border-bottom: 0; }
+/* Ranking dos jogadores (item 119): tabela que rola de lado no celular, com o detalhe aberto embaixo da linha. */
+.adm-rank-note { margin: 8px 0 16px; }
+.adm-rank-wrap { padding: 0; overflow-x: auto; }
+.adm-rank { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.adm-rank th, .adm-rank td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.adm-rank thead th { color: var(--muted); font: 600 13px var(--body); }
+.adm-rank th[scope="row"], .adm-rank thead th:nth-child(2) { text-align: left; }
+.adm-rank td:first-child { color: var(--muted); }
+.adm-rank button { padding: 4px 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.adm-rank thead button:hover, .adm-rank thead th[aria-sort] button { color: var(--gold-light); }
+.adm-rank th[scope="row"] button { font-weight: 600; color: var(--ink); }
+.adm-rank th[scope="row"] button:hover, .adm-rank tr.on th[scope="row"] button { color: var(--gold-light); }
+.adm-rank tbody tr:first-child th[scope="row"] button { color: var(--gold-light); }
+.adm-rank tr.on > * { background: #f2b54c10; }
+.adm-rank tbody tr:last-child > * { border-bottom: 0; }
+.adm-rank-open > td { padding: 12px 14px 16px; text-align: left; white-space: normal; background: #f2b54c08; }
+.adm-rank-detail { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 2fr); gap: 20px; }
+.adm-rank-detail h3 { margin: 0 0 6px; color: var(--muted); font: 600 13px var(--body); }
+.adm-rank-detail ol { display: grid; gap: 2px; margin: 0; padding-left: 20px; }
+.adm-rank-detail small { color: var(--muted); }
+.adm-rank-recent ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.adm-rank-recent li { display: flex; align-items: baseline; gap: 8px; }
+.adm-rank-recent time { margin-left: auto; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.adm-rank-result { min-width: 72px; padding: 0 8px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font: 600 12px/1.6 var(--body); text-align: center; }
+.adm-rank-result.r-vitoria { border-color: #63d68f88; color: var(--heal); }
+.adm-rank-result.r-derrota, .adm-rank-result.r-concedeu { border-color: #ff7a7a88; color: #ffb3b3; }
+@media (max-width: 860px) {
+  /* A tabela rola de lado; o detalhe fica do tamanho da tela, preso à esquerda. */
+  .adm-rank-detail { position: sticky; left: 14px; width: calc(100vw - 62px); grid-template-columns: 1fr; }
+  .adm-rank-recent li { flex-wrap: wrap; }
+  .adm-rank-recent time { margin-left: 0; }
+}

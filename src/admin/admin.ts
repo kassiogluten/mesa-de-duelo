@@ -9,10 +9,11 @@ import type { Item, Status, Stored } from './adminShared';
 import { historyHTML, liveMatchesHTML, type End, type LiveMatch, type PastMatch } from './adminMatches';
 import { reportDetailHTML, reportListHTML, type ReportFilter } from './adminReports';
 import { funnelHTML, type FunnelWeek } from './adminFunnel';
+import { rankingHTML, type RankingState, type SortKey } from './adminRanking';
 
 /*
  * Área de admin (/admin.html): os relatos guardados na ponte, com estado, nota e issue, as partidas vivas e as
- * concluídas (histórico por mês) e os links das páginas de teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
+ * concluídas (histórico por mês), o ranking dos jogadores e os links das páginas de teste da mesa. A senha fica na ponte (MESA_ADMIN_PASSWORD); a página só guarda o token da sessão.
  */
 
 const TEST_PAGES: [string, string, string][] = [
@@ -35,7 +36,7 @@ let selected: string | null = null;
 const details = new Map<string, Stored>();
 let notice = '';
 
-const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : 'relatos';
+const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : location.hash === '#ranking' ? 'ranking' : 'relatos';
 
 // ---------------------------------------------------------------- entrar
 
@@ -69,9 +70,9 @@ async function start() {
 
 function shell() {
   root.innerHTML = `<header class="adm-top"><a class="adm-brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
-    <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
+    <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#ranking" data-tab="ranking">Ranking</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
     <button class="adm-ghost" data-act="logout">Sair</button></header>
-    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
+    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admRanking" aria-label="Ranking" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
   root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova.</p>
     <ul class="adm-pages">${TEST_PAGES.map(([href, title, text]) => `<li><a class="adm-card adm-page" href="${href}" target="_blank" rel="noopener"><strong>${esc(title)}</strong><span>${esc(text)}</span><code>${esc(href)}</code></a></li>`).join('')}</ul>`;
   syncTab();
@@ -83,6 +84,8 @@ function syncTab() {
   root.querySelector<HTMLElement>('#admRelatos')!.hidden = current !== 'relatos';
   root.querySelector<HTMLElement>('#admPaginas')!.hidden = current !== 'paginas';
   root.querySelector<HTMLElement>('#admPartidas')!.hidden = current !== 'partidas';
+  root.querySelector<HTMLElement>('#admRanking')!.hidden = current !== 'ranking';
+  if (current === 'ranking') void loadRanking(ranking.month);
   clearInterval(matchesTimer);
   // Na aba de partidas, a lista se atualiza sozinha a cada 10 s.
   if (current === 'partidas') { void loadMatches(); void loadFunnel(); void loadHistory(historyMonth); matchesTimer = window.setInterval(() => { if (!document.hidden) void loadMatches(); }, 10000); }
@@ -169,6 +172,28 @@ async function downloadHistory() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// ---------------------------------------------------------------- ranking
+
+const ranking: RankingState = { month: '', months: [], matches: 0, players: [], sort: 'won', desc: true, open: null };
+
+async function loadRanking(month = '') {
+  const section = root.querySelector<HTMLElement>('#admRanking');
+  if (!section) return;
+  try {
+    const response = await adminFetch(month ? `ranking/${month}` : 'ranking');
+    if (response.status === 401) { login('A sessão acabou. Entre de novo.'); return; }
+    if (!response.ok) { section.innerHTML = `<p class="adm-error">${esc(await adminError(response))}</p>`; return; }
+    const json = await response.json() as { meses: string[]; mes: string; partidas: number; jogadores: RankingState['players'] };
+    Object.assign(ranking, { month: json.mes, months: json.meses, matches: json.partidas, players: json.jogadores });
+    renderRanking();
+  } catch { section.innerHTML = '<p class="adm-error">Não consegui ler o ranking na ponte.</p>'; }
+}
+
+function renderRanking() {
+  const section = root.querySelector<HTMLElement>('#admRanking');
+  if (section) section.innerHTML = rankingHTML(ranking);
+}
+
 // ---------------------------------------------------------------- relatos
 
 async function load() {
@@ -233,6 +258,11 @@ function download(code: string, stored: Stored) {
 
 root.addEventListener('click', async e => {
   const target = e.target as HTMLElement;
+  const sort = target.closest<HTMLElement>('[data-rank-sort]')?.dataset.rankSort as SortKey | undefined;
+  // Mesma coluna inverte; outra começa do maior (o nome, de A a Z).
+  if (sort) { ranking.desc = sort === ranking.sort ? !ranking.desc : sort !== 'name'; ranking.sort = sort; renderRanking(); return; }
+  const player = target.closest<HTMLElement>('[data-rank-player]')?.dataset.rankPlayer;
+  if (player !== undefined) { ranking.open = ranking.open === player ? null : player; renderRanking(); root.querySelector<HTMLElement>(`[data-rank-player="${CSS.escape(player)}"]`)?.focus(); return; }
   const row = target.closest<HTMLElement>('[data-code]');
   if (row) { selected = row.dataset.code!; notice = ''; renderList(); root.querySelector('#admDetail')?.scrollIntoView({ block: 'nearest' }); return; }
   const act = target.closest<HTMLElement>('[data-act]')?.dataset.act;
@@ -247,6 +277,7 @@ root.addEventListener('click', async e => {
     case 'funnel': await loadFunnel(); break;
     case 'history': await loadHistory(historyMonth); break;
     case 'history-download': await downloadHistory(); break;
+    case 'ranking': await loadRanking(ranking.month); break;
     case 'back': selected = null; renderList(); break;
     case 'issue':
       // A issue abre no GitHub; aqui o relato já fica como "Virou issue", esperando o número.
@@ -284,6 +315,7 @@ root.addEventListener('submit', e => {
 root.addEventListener('input', e => {
   const t = e.target as HTMLInputElement | HTMLSelectElement;
   if (t.hasAttribute('data-history-month')) { void loadHistory(t.value); return; }
+  if (t.hasAttribute('data-rank-month')) { ranking.open = null; void loadRanking(t.value); return; }
   if (t.hasAttribute('data-history-end')) { historyEnd = t.value as End | ''; renderHistory(); return; }
   if (!t.dataset.filter) return;
   filter = { ...filter, [t.dataset.filter]: t.value };
