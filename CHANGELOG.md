@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.156.3] - 2026-11-10
+
+### Corrigido
+
+- **Arte das cartas com nome alternativo na partida.** Vibranium Dynamo, Panther Idol e outras impressões com outro nome na carta apareciam sem imagem, sem texto e sem tradução durante a partida. Agora a mesa as reconhece pelo nome original e mostra a arte da impressão escolhida no deck.
+
 ## [0.156.2] - 2026-11-10
 
 ### Corrigido

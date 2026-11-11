@@ -562,3 +562,19 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
 
 - [ ] Decidir antes de fazer: se o modo leve liga sozinho ou só sugere ("A mesa está lenta neste aparelho. Ligar o modo leve?"); o que ele desliga; qual celular de entrada usar como referência.
+
+## 119. Ranking de jogadores na área de admin
+
+Pedido em 10/11/2026. A área de admin já mostra as partidas ao vivo e o **Histórico** do mês (jogadores, decks, comandantes, vencedor, selo "concedida" ou "queda"), mas não junta os resultados por jogador. Cada linha do histórico já traz o necessário: o nome de cada jogador, se é a IA, a conta (quem entrou com Google, item 44), o deck e as vitórias na série.
+
+- [ ] Seção **Ranking** na área de admin, ao lado do Histórico: uma linha por jogador com partidas, vitórias, derrotas, porcentagem de vitória, concessões e quedas, e a última partida.
+- [ ] Filtros como os do Histórico: mês (ou período), formato, modo (sala em rede ou contra a IA) e o jeito que acabou; ordenar por qualquer coluna.
+- [ ] Ao abrir um jogador: as partidas dele (o Histórico filtrado), os decks e comandantes mais usados e contra quem mais jogou.
+- [ ] Contar no servidor, a partir do histórico gravado, para não baixar todos os meses na página; a conta junta o mesmo jogador em apelidos diferentes, e quem joga sem conta é agrupado pelo apelido.
+
+- [ ] Decidir antes de fazer:
+  - **Quem entra**: só partidas em rede entre pessoas (recomendado: é o que mede um jogador contra outro), ou também as partidas contra a IA, numa coluna à parte.
+  - **Como ordenar**: vitórias e porcentagem de vitória com um mínimo de partidas (recomendado: simples de entender), ou uma nota tipo Elo, que pesa a força do oponente mas precisa de histórico e explicação.
+  - **Commander com 3 ou 4 jogadores**: vitória para quem venceu e derrota para os demais (recomendado), ou contar a colocação.
+  - **Concessão e queda**: concessão conta como derrota (recomendado); queda sem vencedor fica fora da porcentagem, só no contador.
+  - **Só no admin ou também para os jogadores**: este item é só a área de admin; um ranking público na tela inicial seria outro item, com a questão de privacidade dos apelidos.

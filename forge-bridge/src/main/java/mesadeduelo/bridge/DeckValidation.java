@@ -118,7 +118,7 @@ final class DeckValidation {
         var db = StaticData.instance().getCommonCards();
         PaperCard found = cn != null && cn.isJsonPrimitive() && cn.getAsJsonPrimitive().isString()
             ? db.getCard(card.getName(), edition.getCode(), cn.getAsString().strip()) : db.getCard(card.getName(), edition.getCode());
-        return found != null && found.getName().equals(card.getName()) ? found : card;
+        return found != null && found.getName().equals(card.getName()) ? FlavorNames.oracle(found) : card;
     }
 
     private static volatile Map<String, CardEdition> editionsByScryfall;

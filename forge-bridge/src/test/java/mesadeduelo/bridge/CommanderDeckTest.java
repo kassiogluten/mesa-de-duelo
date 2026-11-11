@@ -2,6 +2,7 @@ package mesadeduelo.bridge;
 
 import static org.junit.Assert.*;
 import com.google.gson.*;
+import forge.item.PaperCard;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -102,8 +103,13 @@ public class CommanderDeckTest {
             JsonObject row = rows(c[0], 1).get(0).getAsJsonObject(); row.addProperty("set", "msc"); row.addProperty("cn", c[1]); cards.add(row);
         }
         var r = check(d); assertTrue(r.json().toString(), r.valid());
-        var names = r.json().getAsJsonObject("deck").getAsJsonArray("cards").toString();
-        assertTrue(names, names.contains("Vibranium Dynamo") && names.contains("Panther Idol"));
+        // Na partida a carta usa o nome Oracle (a mesa acha a carta no Scryfall por ele) e manda a impressão Marvel para a imagem.
+        PaperCard dynamo = r.deck().getMain().toFlatList().stream().filter(c -> c.getName().equals("Thran Dynamo")).findFirst().orElseThrow();
+        var game = CommanderEngineTest.game(2); var owner = game.getPlayers().get(0);
+        var card = forge.game.card.CardFactory.getCard(dynamo, owner, owner.getId(), game);
+        assertEquals("Thran Dynamo", card.getView().getCurrentState().getName());
+        assertEquals("{\"set\":\"msc\",\"cn\":\"290\"}", String.valueOf(StateJson.printing(card, "Thran Dynamo")));
+        assertEquals("Thran Dynamo", DeckValidation.resolve("Thran Dynamo").getDisplayName());
         var o = DeckValidation.validate(d, "oathbreaker");
         assertFalse(o.json().toString(), o.issues().asList().stream().anyMatch(i -> "wrong-format".equals(i.getAsJsonObject().get("code").getAsString())));
     }
