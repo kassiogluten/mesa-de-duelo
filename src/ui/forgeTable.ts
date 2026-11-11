@@ -7,6 +7,7 @@ import './removalNotice.css';
 import './revealWindow.css';
 import { PresentationTimeline, stateWithFrame } from './presentationTimeline';
 import { createGameAudio, tableMoment } from './audio';
+import { eliminationNotices } from './lossReason';
 import { PassLevelPreference } from './passLevel';
 import { OpponentStopsPreference } from './opponentStops';
 import { createTurnNotice } from './turnNotice';
@@ -143,6 +144,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const showBanner = createTurnBanner(root);
   // Momentos que já tocaram (resultado, cada mão inicial): voltar à mesa não repete o som.
   const playedMoments = new Set<string>();
+  // Eliminados já avisados em cada jogo, para o aviso "Fulano foi eliminado: ..." sair uma vez só.
+  const knownLosses = new Map<string, Set<number>>();
   const motion = createMotion(root);
   const timeline = new PresentationTimeline();
   const audio = createGameAudio();
@@ -386,6 +389,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     phases.render(visual, me, opp, opponents, multiplayer);
     const moment = tableMoment(s);
     if (moment && !playedMoments.has(moment.key)) { playedMoments.add(moment.key); audio.cue(moment.cue, .9); }
+    for (const text of eliminationNotices(s, `${s.matchId ?? ''}:${s.match?.gameNumber ?? 0}`, knownLosses, ctx.cardName)) notice(text);
     actionBox.render(s, me, seatNotice);
     question.render();
     topBar.banner(s);

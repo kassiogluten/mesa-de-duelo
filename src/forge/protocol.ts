@@ -271,6 +271,12 @@ export interface FPlayer {
   /** Estilo do computador (só nos jogadores da IA). */
   aiStyle?: AiStyle;
   eliminated?: boolean;
+  /** Por que o jogador perdeu (o GameLossReason do Forge), só em quem já perdeu. Ausente em pontes antigas. */
+  lossReason?: 'LifeReachedZero' | 'CommanderDamage' | 'Poisoned' | 'Milled' | 'SpellEffect' | 'OpponentWon' | 'Conceded' | 'IntentionalDraw';
+  /** A carta que causou a derrota: a do efeito (Door to Nothingness) ou a da vitória do outro jogador (Thassa's Oracle). */
+  lossCard?: string;
+  /** Com lossReason OpponentWon: quem venceu. */
+  lossWinner?: string;
   life: number;
   /** Dano que os escudos de prevenção do jogador ainda vão prevenir. */
   preventDamage?: number;

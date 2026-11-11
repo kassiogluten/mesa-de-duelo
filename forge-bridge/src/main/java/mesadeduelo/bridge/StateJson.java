@@ -175,6 +175,9 @@ final class StateJson {
             catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem contagem desta vez */ }
         }
         o.addProperty("eliminated", p.getHasLost());
+        // Por que perdeu (GameLossReason do Forge), para a mesa dizer o motivo: a carta do efeito (Door to Nothingness)
+        // ou, quando outro jogador venceu por uma carta (Thassa's Oracle), a carta dele.
+        if (engine != null && p.getHasLost()) LossReason.add(o, engine, game);
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));
         JsonArray hand = showHand ? cards(p.getHand(), game) : new JsonArray();

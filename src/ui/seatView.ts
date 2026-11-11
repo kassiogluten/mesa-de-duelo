@@ -21,6 +21,7 @@ import { bracketTitle } from './deckStats';
 import { turnTimeText } from './clock';
 import { backRow, canUse, fieldRow, inspectButton, isBackRow, type BoardView } from './permanentView';
 import type { SeatState } from './tableState';
+import { lossReasonText } from './lossReason';
 import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, ICON_EYE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
 
 /** O que os assentos precisam da mesa, além das peças do campo. */
@@ -65,14 +66,14 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const art = v.portraits[idx];
   const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
   const forecast = s.forecast?.find(f => f.player === p.id);
-  return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${shownStyle(p) ? `, computador ${shownStyle(p).toLowerCase()}` : ''}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? ', eliminado' : ''}">
+  return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${shownStyle(p) ? `, computador ${shownStyle(p).toLowerCase()}` : ''}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? `, eliminado${eliminatedWhy(v, s, p, ': ')}` : ''}">
     <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
     ${idx === 0 ? lifeHTML(v, p, cls) : opponentLifeHTML(v, s, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
     ${playerCounters(v, p)}
     <div class="pname">${esc(p.name)}${shownStyle(p) ? ` <small class="pstyle" title="Estilo do computador">${shownStyle(p)}</small>` : ''}</div>
     ${emblems(v, p)}
-    ${p.eliminated ? '<span class="seat-eliminated">Eliminado</span>' : ''}
+    ${p.eliminated ? `<span class="seat-eliminated"${eliminatedWhy(v, s, p) ? ` title="Eliminado: ${eliminatedWhy(v, s, p)}"` : ''}>Eliminado</span>` : ''}
     ${offline ? '<div class="offline">desconectado</div>' : ''}
   </div>`;
 }
@@ -98,6 +99,8 @@ function opponentLifeHTML(v: SeatView, s: FState, p: FPlayer, cls: string[]) {
 }
 export function lifeCardLines(v: Pick<SeatView, 'cardName'>, s: Pick<FState, 'activePlayer' | 'gameOver' | 'turnElapsedMs' | 'players' | 'you'>, p: FPlayer) {
   const lines = [`<b>${esc(p.name)}</b>`];
+  // Quem já perdeu: o motivo logo abaixo do nome (vida a 0, dano de comandante, veneno...).
+  if (p.eliminated && eliminatedWhy(v, s, p)) lines.push(`<b class="life-card-damage">Eliminado: ${eliminatedWhy(v, s, p)}</b>`);
   if (isBracket(p.bracket)) lines.push(esc(bracketTitle(p.bracket)));
   // O tempo do turno anda junto com o relógio do topo (tableClocks atualiza todo [data-turn-timer]).
   if (s.activePlayer === p.id && !s.gameOver) lines.push(`Turno atual: <span data-turn-timer>${turnTimeText(s.turnElapsedMs ?? 0)}</span>`);
@@ -110,6 +113,11 @@ export function lifeCardLines(v: Pick<SeatView, 'cardName'>, s: Pick<FState, 'ac
     lines.push(`Dano de ${esc(v.cardName(d.commanderId))}${whose}: <b class="life-card-damage">${d.damage}/21</b>`);
   }
   return lines;
+}
+/** O motivo da eliminação, já escapado, com `prefix` na frente; vazio sem motivo conhecido. */
+function eliminatedWhy(v: Pick<SeatView, 'cardName'>, s: Pick<FState, 'players' | 'you'>, p: FPlayer, prefix = '') {
+  const reason = lossReasonText(s, p, p.id === s.you, v.cardName);
+  return reason ? prefix + esc(reason) : '';
 }
 export const playerCountersText = (v: SeatView, p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, v.activePlayer, v.spellsTotal) + dungeonText(p);
 export const playerCounters = (v: SeatView, p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, v.counterBumps.get(p.id), v.openCounter, p.ringTempted),

@@ -1,5 +1,6 @@
 // A caixa de ação: os botões de cada momento (passar, fim de turno, resolver tudo, pagar, confirmar ataque ou bloqueio,
 // mulligan, quem começa), o selo do nível de passar, o painel do alvo sendo escolhido e os nomes da lista de proliferar.
+import { lossReasonText } from './lossReason';
 import type { FCard, FState } from '../forge/client';
 import { esc, optionHTML, richText, withoutCardIds } from './cardtext';
 import { label } from './cardFaces';
@@ -64,7 +65,10 @@ export function buttons(v: ActionView, s: FState) {
   }
   if (s.gameOver || s.question) return '';
   if (s.watching) return watchBarHTML(s);
-  if (s.spectating) return '<span class="spectating-label">Você foi eliminado. Acompanhando a partida.</span>';
+  if (s.spectating) {
+    const me = s.players.find(p => p.id === s.you), reason = me ? lossReasonText(s, me, true) : null;
+    return `<span class="spectating-label">Você foi eliminado${reason ? `: ${esc(reason)}` : ''}. Acompanhando a partida.</span>`;
+  }
   if (s.input.opening === 'starting-player') {
     const choices = s.players.filter(player => s.input.selectablePlayers?.includes(player.id));
     return choices.length ? choices.map(player => `<button class="arena-btn ${player.id === s.you ? 'primary' : 'secondary'}" data-pid="${player.id}" data-gen="${s.input.gen}">${esc(player.name)}${player.id === s.you ? ' · Você' : ''}</button>`).join('') : '<button class="arena-btn waiting" disabled>Aguardando a escolha de quem começa…</button>';

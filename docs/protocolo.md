@@ -349,6 +349,9 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `ai` | `boolean` |  |
 | `aiStyle?` | `AiStyle` | Estilo do computador (só nos jogadores da IA). |
 | `eliminated?` | `boolean` |  |
+| `lossReason?` | `'LifeReachedZero' \| 'CommanderDamage' \| 'Poisoned' \| 'Milled' \| 'SpellEffect' \| 'OpponentWon' \| 'Conceded' \| 'IntentionalDraw'` | Por que o jogador perdeu (o GameLossReason do Forge), só em quem já perdeu. Ausente em pontes antigas. |
+| `lossCard?` | `string` | A carta que causou a derrota: a do efeito (Door to Nothingness) ou a da vitória do outro jogador (Thassa's Oracle). |
+| `lossWinner?` | `string` | Com lossReason OpponentWon: quem venceu. |
 | `life` | `number` |  |
 | `preventDamage?` | `number` | Dano que os escudos de prevenção do jogador ainda vão prevenir. |
 | `counters?` | `Record<string, number>` | Marcadores do jogador (POISON, ENERGY, EXPERIENCE, RAD, TICKET...), só os que existem. |

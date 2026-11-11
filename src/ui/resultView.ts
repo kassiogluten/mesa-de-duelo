@@ -3,6 +3,7 @@
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 import { tablePlayers } from './commanderTable';
+import { lossReasonText } from './lossReason';
 import { gameSummaryHTML } from './lifeChart';
 import { turnTimeText } from './phaseHud';
 import { ICON_FLAG, ICON_EYE, ICON_HOME } from './icons';
@@ -25,11 +26,14 @@ export function gameResult(s: FState) {
     title: abandoned ? 'Partida encerrada' : s.winner ? `${esc(s.winner)} venceu` : 'Empate',
     detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}${played}` : `Turno ${s.turn}${played}`,
   };
-  const won = !abandoned && s.winner === tablePlayers(s).me?.name;
+  const me = tablePlayers(s).me;
+  const won = !abandoned && s.winner === me?.name;
+  // Na derrota, o motivo numa linha própria: "Eliminado: sua vida chegou a 0."
+  const reason = !abandoned && !won && s.winner && me ? lossReasonText(s, me, true) : null;
   return {
     tone: won ? 'win' : !abandoned && s.winner ? 'lose' : 'draw',
     title: abandoned ? 'Partida encerrada' : won ? 'Vitória' : s.winner ? 'Derrota' : 'Empate',
-    detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}${played}` : `Turno ${s.turn}${played}${s.winner ? ` · ${esc(s.winner)} venceu` : ''}`,
+    detail: abandoned ? `Placar: ${s.match!.wins.join(' × ')}${played}` : `Turno ${s.turn}${played}${s.winner ? ` · ${esc(s.winner)} venceu` : ''}${reason ? `<br>Eliminado: ${esc(reason)}.` : ''}`,
   };
 }
 

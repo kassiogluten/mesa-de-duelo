@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.159.0] - 2026-11-11
+
+### Novo
+
+- **Motivo da eliminação.** Quando alguém perde, a mesa diz por quê: vida a 0, 21 de dano de comandante (e de qual comandante), 10 marcadores de veneno, comprar sem cartas no grimório, efeito de uma carta (Door to Nothingness), vitória de outro jogador por uma carta (Thassa's Oracle) ou desistência. Aparece num aviso na hora ("Bruno foi eliminado: a vida chegou a 0."), na faixa "Você foi eliminado", no selo **Eliminado** do retrato (ao passar o mouse) e no balão da vida, e numa linha própria na tela de Derrota. O balão da vida também deixou de ser cortado na coluna estreita de quem saiu da partida.
+
 ## [0.158.0] - 2026-11-11
 
 ### Mudou

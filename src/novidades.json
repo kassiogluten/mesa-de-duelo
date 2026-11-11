@@ -1,4 +1,12 @@
 {
+  "0.159.0": {
+    "Motivo da eliminação": [
+      { "img": "0.159.0/aviso.webp", "legenda": "O aviso na hora em que alguém sai da partida, com o motivo e o comandante que deu o dano." },
+      { "img": "0.159.0/faixa.webp", "legenda": "Quem foi eliminado vê o motivo na faixa enquanto acompanha a partida." },
+      { "img": "0.159.0/balao.webp", "legenda": "No balão da vida do jogador eliminado, o motivo logo abaixo do nome; o balão agora cabe na coluna estreita." },
+      { "img": "0.159.0/derrota.webp", "legenda": "Na tela de Derrota, o motivo numa linha própria." }
+    ]
+  },
   "0.158.0": {
     "Arte nova em cinco cartas da mesa": [
       { "img": "0.158.0/staples-novas.webp", "legenda": "Na galeria **Ver a série**, as cinco cartas com a arte nova: Anel Solar, Torre de Comando, Sinete Arcano, Botas Pé-ligeiro e Grevas Faiscantes." }
