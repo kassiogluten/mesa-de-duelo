@@ -94,4 +94,17 @@ public class CommanderDeckTest {
         assertEquals("Wernog, Rider's Chaplain", r.json().getAsJsonObject("deck").getAsJsonArray("commanders").get(0).getAsJsonObject().get("name").getAsString());
         assertEquals("Wernog, Rider's Chaplain", Session.commanderNames(r.deck()).get(0));
     }
+    @Test public void flavorNamesUseTheOracleCardLegality() {
+        // Marvel Super Heroes Commander: Vibranium Dynamo é uma Thran Dynamo e Panther Idol um Mind's Eye, com outro nome impresso.
+        JsonObject d = deck("Marwyn, the Nurturer", "Forest", 97);
+        JsonArray cards = d.getAsJsonArray("cards");
+        for (String[] c : new String[][]{{"Thran Dynamo", "290"}, {"Mind's Eye", "288"}}) {
+            JsonObject row = rows(c[0], 1).get(0).getAsJsonObject(); row.addProperty("set", "msc"); row.addProperty("cn", c[1]); cards.add(row);
+        }
+        var r = check(d); assertTrue(r.json().toString(), r.valid());
+        var names = r.json().getAsJsonObject("deck").getAsJsonArray("cards").toString();
+        assertTrue(names, names.contains("Vibranium Dynamo") && names.contains("Panther Idol"));
+        var o = DeckValidation.validate(d, "oathbreaker");
+        assertFalse(o.json().toString(), o.issues().asList().stream().anyMatch(i -> "wrong-format".equals(i.getAsJsonObject().get("code").getAsString())));
+    }
 }

@@ -240,7 +240,7 @@ final class DeckValidation {
                 counts.merge(StaticData.instance().getCommonCards().getNormalizedName(card.getName()), e.getValue(), Integer::sum);
                 if (UNIVERSAL_BANS.contains(card.getName()) || FModel.getFormats().get("Commander").getBannedCardNames().contains(card.getName()))
                     issue(issues, "banned-card", "Esta carta está banida em Commander.", card.getDisplayName(), where);
-                else if (card.getRules().isCustom() || !CommanderLegality.permits(card.getDisplayName()) || !DeckFormat.Commander.isLegalCard(card))
+                else if (card.getRules().isCustom() || !permitted(card, CommanderLegality::permits) || !DeckFormat.Commander.isLegalCard(card))
                     issue(issues, "wrong-format", "Esta carta não é permitida em Commander.", card.getDisplayName(), where);
                 if (!card.getRules().getColorIdentity().hasNoColorsExcept(identity))
                     issue(issues, "color-identity", "A identidade de cor desta carta está fora da identidade dos comandantes.", card.getDisplayName(), where);
@@ -280,7 +280,7 @@ final class DeckValidation {
                 counts.merge(StaticData.instance().getCommonCards().getNormalizedName(card.getName()), e.getValue(), Integer::sum);
                 if (UNIVERSAL_BANS.contains(card.getName()) || FModel.getFormats().get("Oathbreaker").getBannedCardNames().contains(card.getName()))
                     issue(issues, "banned-card", "Esta carta está banida em Oathbreaker.", card.getDisplayName(), where);
-                else if (card.getRules().isCustom() || !OathbreakerLegality.permits(card.getDisplayName()) || !DeckFormat.Oathbreaker.isLegalCard(card))
+                else if (card.getRules().isCustom() || !permitted(card, OathbreakerLegality::permits) || !DeckFormat.Oathbreaker.isLegalCard(card))
                     issue(issues, "wrong-format", "Esta carta não é permitida em Oathbreaker.", card.getDisplayName(), where);
                 if (oathbreaker != null && !card.getRules().getColorIdentity().hasNoColorsExcept(identity))
                     issue(issues, "color-identity", "A identidade de cor desta carta está fora da identidade do oathbreaker.", card.getDisplayName(), where);
@@ -303,6 +303,11 @@ final class DeckValidation {
         return out;
     }
 
+    /** Vale o nome impresso (Universes Within, como Rick, Steadfast Leader) ou o nome Oracle (Vibranium Dynamo é uma Thran Dynamo). */
+    private static boolean permitted(PaperCard card, java.util.function.Predicate<String> list) {
+        return list.test(card.getDisplayName()) || list.test(card.getName());
+    }
+
     private static String oracleId(String name) {
         String id = PauperLegality.oracleId(name);
         if (id == null) id = CommanderLegality.oracleId(name);
@@ -314,6 +319,7 @@ final class DeckValidation {
         for (var e : pool) {
             JsonObject o = new JsonObject(); o.addProperty("name", e.getKey().getDisplayName()); o.addProperty("count", e.getValue());
             String oracleId = oracleId(e.getKey().getDisplayName());
+            if (oracleId == null) oracleId = oracleId(e.getKey().getName());
             if (oracleId != null) o.addProperty("oracleId", oracleId);
             JsonObject print = printing(e.getKey());
             if (print != null) { o.addProperty("set", print.get("set").getAsString()); o.addProperty("cn", print.get("cn").getAsString()); }

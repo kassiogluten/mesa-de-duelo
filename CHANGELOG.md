@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.156.2] - 2026-11-10
+
+### Corrigido
+
+- **Cartas com nome alternativo aceitas no Commander e no Oathbreaker.** Impressões que trazem outro nome na carta, como Vibranium Dynamo (Thran Dynamo) e Panther Idol (Mind's Eye), da coleção Marvel, eram recusadas com "Esta carta não é permitida em Commander". Agora valem como a carta original, em qualquer coleção com nome alternativo.
+
 ## [0.156.1] - 2026-11-10
 
 ### Corrigido
