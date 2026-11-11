@@ -1,5 +1,35 @@
 [
   {
+    "nome": "Convocar e Delve na mão não travam a partida",
+    "versao": "0.157.1",
+    "item": "A partida não trava mais com Convocar ou Delve na mão",
+    "conferir": "O Jogador 1 tem na mão Stoke the Flames (Convocar) e Treasure Cruise (Delve), com Grizzly Bears e Goblin Electromancer no campo e três cartas no cemitério. A partida segue normalmente, com os botões da caixa de ação (antes da correção, ela parava sem botões e nada respondia). As duas cartas mostram o custo impresso no selo da mão. Conjure Stoke the Flames: o pagamento deixa virar as criaturas para Convocar.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Stoke the Flames", "Treasure Cruise"], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": ["Island", "Island", "Island"], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Goblin Electromancer" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Shorikai: habilidade e Tripular 8",
+    "versao": "0.157.1",
+    "item": "Tripular só confirma com o poder necessário",
+    "conferir": "O Jogador 1 tem Shorikai, Genesis Engine, Grizzly Bears (2), Hill Giant (3), Plains e Island no campo. Use a habilidade da Shorikai ({1}, virar): ela compra duas, pede um descarte e cria uma ficha Piloto 1/1. Na fase principal seguinte (passe o combate sem atacar), toque a Shorikai para Tripular: a caixa diz \"Tripulando: 0 / 8\" e o OK fica apagado. Escolha os Ursos (2 / 8) e o Gigante (5 / 8): o OK continua apagado. Escolha o Piloto, que conta como 3: a Shorikai vira criatura 8/8, tripulada pelos três. O Cancelar desiste a qualquer momento, sem virar ninguém.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Plains"], "library": ["Opt", "Shock", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Shorikai, Genesis Engine" }, { "name": "Grizzly Bears" }, { "name": "Hill Giant" }, { "name": "Plains" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
     "nome": "Fossil Find: só do seu cemitério",
     "versao": "0.156.1",
     "item": "Fossil Find devolve só do seu cemitério",

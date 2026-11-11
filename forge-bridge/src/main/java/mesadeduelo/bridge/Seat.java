@@ -290,7 +290,7 @@ final class Seat {
                     if (session.match != null && j != null && j.matchId.equals(belongsToMatch)) j.attach(session.match.getGame(), session.gameNumber);
                 }
                 case showPromptMessage -> {
-                    message = a[1] == null ? "" : CoinFlipText.prompt(String.valueOf(a[1]));
+                    message = a[1] == null ? "" : CrewSelection.prompt(CoinFlipText.prompt(String.valueOf(a[1])));
                     promptCard = a.length > 2 && a[2] instanceof CardView cv ? cv : null;
                     inputGen.incrementAndGet();
                 }
@@ -301,6 +301,8 @@ final class Seat {
                     // O Automático que só fecha com a mana extra do Caged Sun: o Forge o deixa desligado (AutoPay).
                     if (!okEnabled && controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana pay
                         && AutoPay.payableWithLandBonus(pay)) okEnabled = true;
+                    // Tripular/Selar abaixo do poder necessário: o OK do Forge só desistiria; fica o Cancelar para isso.
+                    if (okEnabled && controller() instanceof PlayerControllerHuman pch && CrewSelection.shortOfPower(pch.getInputQueue().getInput())) okEnabled = false;
                     passResponseIfAsked();
                 }
                 case setSelectables -> {

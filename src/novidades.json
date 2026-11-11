@@ -1,4 +1,9 @@
 {
+  "0.157.1": {
+    "Tripular só confirma com o poder necessário": [
+      { "img": "0.157.1/tripular.webp", "legenda": "Tripulando a Shorikai com 5 de 8 de poder escolhidos: a contagem aparece no topo da caixa de ação e o OK fica apagado até chegar a 8; o Cancelar desiste." }
+    ]
+  },
   "0.157.0": {
     "Custo de agora no topo das cartas da mão": [
       { "img": "0.157.0/custo-na-mao.webp", "legenda": "Com uma redução e um aumento de custo na mesa, o selo de cada carta mostra quanto ela custa agora: borda verde na que ficou mais barata (a Adivinhação por {1}{U}, o Frogmite por {0}), vermelha na que ficou mais cara (o Raio por {1}{R}) e o selo de sempre na que não mudou." }

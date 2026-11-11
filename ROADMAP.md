@@ -270,24 +270,6 @@ Alternativas (recomendado: A + B + C, e D junto com o item 32):
 
 Feito em 28/10/2026 (0.57.0): A + B + C + E. Decidido: o turno atual e o anterior ficam abertos, os mais antigos recolhidos; sem custo pago nem fase nas linhas; as compras de todos aparecem só com a quantidade. Sem mexer na ponte (D), a mesa liga à mágica o que acontece enquanto ela é o topo da pilha, logo antes de resolver (a remoção em massa já aparece como "Cólera de Deus: destruiu 4 permanentes"); o que morre depois, por ação de estado, continua numa linha à parte. Ficaram para depois: D (junto com o item 32) e F.
 
-## 37. Registrar partidas abandonadas como concedidas
-
-O histórico de partidas da área de admin só grava a série que termina de verdade (o Forge dá a partida por encerrada). Levantamento feito em 27/10/2026:
-
-- Quem sai da sala no meio, fecha a aba e não volta no prazo de reconexão, ou abandona a partida contra a IA, some do histórico: a partida só vira o contador "abandonada" nas métricas, sem jogadores, decks nem vencedor.
-- Na sala em rede, sair já conta como conceder o jogo atual, e o oponente vê a partida encerrada; mas a série não chega a ser concluída, então nada é gravado.
-- Com isso, as estatísticas por deck e por jogador contam só quem jogou até o fim, e quem costuma desistir de partidas perdidas não aparece.
-- O "Conceder e sair" do menu (antes "Desistir e voltar ao início") passa pelo mesmo caminho: numa partida de 1 jogo, ou no jogo que decide a série, ele encerra a série e a linha é gravada (motivo "desistência"); numa melhor de 3 antes do jogo decisivo, ou entre jogos, nada é gravado.
-
-Alternativas (recomendado: A + B):
-
-- [x] **A. Gravar como concessão**: ao encerrar uma partida abandonada, gravar a linha do histórico com os jogos já disputados, o jogo atual como derrota de quem saiu (motivo "concedeu") e a vitória da série para quem ficou.
-- [x] **B. Marcar o jeito que acabou**: um campo novo na linha (concluída, concedida, abandonada por queda) para filtrar na área de admin e não misturar com as partidas jogadas até o fim.
-- [x] **C. Abandono antes do primeiro turno**: não gravar nada quando ninguém chegou a jogar (mulligan, sala que nem começou), para não encher o histórico.
-- [x] **D. Contra a IA**: gravar também as partidas abandonadas contra a IA, ou deixar só as salas em rede.
-
-Decidido em 28/10/2026 e feito: a queda sem volta (ninguém voltou no prazo, ou quem ficou sai depois que o outro caiu) é gravada como "queda", com o jogo interrompido e sem vencedor da série; as abandonadas contra a IA também são gravadas; a partida que não chegou ao turno 1 não é gravada. Em Commander, a saída de um jogador entra só no fim da partida, como já acontecia. Na área de admin, a seção virou "Histórico", com selo "concedida" ou "queda" em cada linha e o filtro "Fim" (os totais seguem o filtro).
-
 ## 43. Várias fichas de uma vez
 
 Quando uma mágica ou um gatilho cria várias fichas, elas entram no campo uma por uma, e a jogada demora. Com Hare Apparent, cada Hare novo cria uma ficha de Coelho para cada outro Hare: com 8 no campo, são 8 fichas, cada uma com a sua animação de entrada.
@@ -321,16 +303,6 @@ Decidido em 28/10/2026 (versão 0.61.0): a ponte manda, em cada `entered` que ac
 
 Medido depois (mesmas condições): conjurar com 2, 4 e 8 Hares: 3,4 s, 3,7 s e 3,8 s; blink em 3 Hares (6 fichas): 4,0 s; blink em 5 (20 fichas): 6,7 s, sem pular nenhuma. Ficou aberto o lado da ponte numa partida real (a prioridade entre os gatilhos).
 
-## 44. Entrar com Google e sincronizar Meus decks
-
-O jogador entra com a conta Google e encontra os mesmos decks em qualquer aparelho. Se entrar num navegador que já tem decks, o jogo pergunta se junta esses decks à conta ou se usa só os da conta. A conta também guarda as preferências da mesa e o apelido. Login opcional, pelo cabeçalho.
-
-Spec completa, com as decisões, a arquitetura, o protocolo de sincronia e as fases: [`docs/spec-login-google.md`](docs/spec-login-google.md).
-
-- [x] Fase 1: conta na ponte (`/api/conta/`), botão Entrar com Google, One Tap, sair e apagar conta.
-- [x] Fase 2: sincronizar Meus decks, com a pergunta ao entrar, a lixeira de 30 dias e o envio sem rede (0.63.0, junto com a fase 1).
-- [x] Fase 3: preferências, apelido e foto (0.64.0).
-
 ## 66. Avaliar um banco Postgres
 
 Hoje o servidor guarda tudo em arquivos (`MatchHistory` em `.jsonl` por mês, `FeedbackStore` com um índice `.jsonl` e um `.json.gz` por relato, `Accounts` com um arquivo por conta e as sessões em `sessoes.json`), e os próprios comentários dizem "sem banco de dados: o volume esperado é pequeno". Avaliar quando um Postgres passa a compensar e o que migrar.
@@ -354,23 +326,6 @@ O que custa:
 - [ ] Backup e restauração testados antes de virar a chave.
 
 A decidir: se o primeiro passo é só o histórico de partidas (para o item 65) ou tudo de uma vez; e onde o banco roda (no mesmo servidor, num container, ou um serviço gerenciado).
-
-## 88. Botões de exibição do campo dos oponentes só com o ícone
-
-Na faixa de cada oponente, os botões que controlam o que se vê do campo (**Só este**/**Ver todos** e **Ocultar**) ocupam espaço com o texto ao lado do ícone, e com três ou quatro jogadores a faixa fica apertada.
-
-- [x] Deixar só o ícone nesses botões (`seatControls` em `src/ui/forgeTable.ts`), com o texto no balão ao passar o mouse (`title`) e no `aria-label`, como já é hoje.
-- [x] Manter a área de toque confortável no celular, mesmo sem o texto.
-- [x] O estado ligado de **Só este** continua visível pelo ícone (aria-pressed), já que o texto "Ver todos" deixa de aparecer.
-
-Decidido em 02/11/2026 (versão 0.120.0), itens 82 a 87:
-
-- 82: o pedido de desfazer e a votação para pular o turno de quem caiu abrem no centro (`#fVote`, `src/ui/voteDialog.ts`) e bloqueiam a mesa até o voto, com o som de aviso e a vibração (`turnBuzz.nudge`); o foco começa em Aceitar/Sim. Depois do voto, volta a faixa do alto.
-- 83: lápide no cemitério e portal no exílio, no canto de cima à esquerda (o oposto da contagem); o grimório ficou sem ícone.
-- 84: dois botões por linha, nome numa linha só com reticências e o completo no balão (`title`).
-- 85: o servidor sorteia uma de 8 cores por jogador na primeira partida da sessão (`Session.drawSleeves`, campo `sleeve` de cada jogador), sem repetir; a mesa tinge o verso pelas variáveis `--sleeve-*` da classe `sleeve-N`, e as cartas que voam copiam a cor do grimório de onde saem. Só sorteada, sem escolha nas opções.
-- 86: o rasgo (`.warp-rift`) aparece na pilha ao conjurar por dobra (a pilha diz `cast.mode: "warp"`) e, menor, quando a permanente volta para o exílio (o servidor marca `reason: "warped"` quando quem resolve é o gatilho da dobra). O som é o de conjurar a 0,72× com um eco a 0,16 s; no exílio, o do exílio a 0,82×. Seção **Dobra** no laboratório de efeitos.
-- 87: página **Salas** em `salas.html`, com link no cabeçalho (com a contagem, atualizada a cada 30 s na tela inicial) e no menu ⋯; a lista da aba Entrar numa sala continua. Entrar e assistir abrem a mesa pelo link da sala (`?sala=`), e "Criar uma sala" pelo `?criar-sala=1`. Ficou de fora: prévia da mesa das partidas em andamento e aviso de sala nova.
 
 ## 89. Avisar por que não deu para conjurar ou ativar
 
@@ -397,64 +352,6 @@ Cartas de dupla face modal com uma face de mágica e outra de terreno (por exemp
 - [ ] Item em `### Corrigido` no CHANGELOG e cenário pronto no Laboratório com a carta na mão e um terreno já jogado.
 
 Investigado em 04/11/2026, sem reproduzir: no motor e no servidor de verdade, com o terreno do turno já jogado, a face de mágica continua jogável (Kazandu Mammoth, Bala Ged Recovery com alvo no cemitério), e a mesa manda o clique normalmente. Falta saber qual carta e em que situação aconteceu. Desde a 0.125.0, uma jogada recusada mostra o motivo (item 89), o que deve ajudar a descobrir.
-
-## 91. Mão cheia: agrupar cartas iguais (e talvez ordenar sozinha)
-
-Com muitas cartas na mão (mais de 10), cada carta fica estreita demais para ler e achar a que se quer jogar dá trabalho, principalmente quando há várias cópias da mesma carta (terrenos básicos, várias cópias compradas de uma vez).
-
-- [x] A partir de 11 cartas na mão, juntar as cópias da mesma carta numa pilha só, com o contador ×N (como as pilhas do campo), liberando espaço para as outras.
-- [x] Jogar da pilha usa uma das cópias; passar o mouse ou tocar na pilha mostra que há várias.
-- [x] Ao voltar para 10 cartas ou menos, as pilhas se desfazem e cada carta volta ao seu lugar.
-- [x] Não agrupar cartas que parecem iguais mas não são (cartas com marcadores, reveladas, vindas do cemitério ou do exílio, ou com custo diferente por algum efeito).
-- [x] Item no CHANGELOG e prints na página Novidades em imagens.
-
-Feito na 0.125.0 (decidido em 04/11/2026): a partir de 11 cartas, na ordem do jogador, com a pilha no lugar da primeira cópia; sem ordenação automática. Agrupa pelo nome e pelo custo, entre cartas igualmente jogáveis e sem marcadores; não agrupa quando a mesa pede para escolher cartas da mão nem na mão inicial. Quem assiste vê as costas das cartas, então não se aplica.
-
-## 92. Mão fixa, oculta ou automática: botão para mostrar e esconder, menu para o modo
-
-Hoje o botão ao lado da mão (0.124.0) só alterna entre dois jeitos: mão aberta o tempo todo, ou recolhida por cima do campo, com o topo das cartas à vista, subindo ao passar o mouse. A ideia é ter três modos:
-
-- **Fixa:** a mão fica aberta o tempo todo, como o "Deixar a mão aberta" de hoje.
-- **Oculta:** a mão sai da frente do campo e fica só uma faixa fina ou o próprio botão. Passar o mouse não abre a mão; ela só volta pelo botão ou quando a mesa pede uma decisão com cartas da mão (descartar, escolher a mão inicial).
-- **Automática:** o comportamento recolhido de hoje. Só o topo das cartas aparece, e a mão sobe ao passar o mouse ou com o foco do teclado.
-
-Decidido em 04/11/2026: mostrar e esconder não passa pelo modo automático. O clique no botão só mostra ou esconde a mão, e o modo é escolhido num menu ao lado.
-
-- [x] Clique no botão: alterna entre **Fixa** e o último jeito de esconder escolhido (**Oculta** ou **Automática**; na primeira vez, **Automática**). Assim, mostrar e esconder é sempre um clique só.
-- [x] Uma setinha ao lado do botão (e o clique com o botão direito nele) abre um menu com **Fixa**, **Oculta** e **Automática**, com o modo atual marcado. Escolher no menu já aplica o modo e fecha o menu.
-- [x] O ícone do botão e o balão (`title`/`aria-label`) dizem o que o clique vai fazer ("Mostrar a mão" ou "Esconder a mão"); o menu é acessível pelo teclado.
-- [x] Guardar o modo escolhido, como já acontece hoje. Quem guardou "aberta" passa a ter "fixa", e quem guardou "recolhida" passa a ter "automática".
-- [x] Quem assiste a partida continua começando com a mão recolhida, e trocar o modo assistindo não muda o modo guardado do jogador.
-- [x] Mão oculta: avisar de alguma forma quando uma carta nova entra na mão (contador no botão ou um brilho rápido), para o jogador não perder a compra.
-- [x] Item no CHANGELOG e prints dos três modos e do menu na página Novidades em imagens.
-
-Feito na 0.125.0 (decidido em 04/11/2026): no modo oculto, só o botão com a contagem de cartas (e um brilho quando chega carta nova); a faixa da mão fica fina e o campo ganha a altura. No celular nada muda.
-
-Mudado em 04/11/2026, ainda na 0.125.0: no lugar do botão com menu, ficaram dois botões centralizados logo acima da mão. **Auto** liga e desliga a mão automática; com o Auto desligado aparece a seta, que esconde (para baixo) ou mostra (para cima) a mão. Com o Auto ligado, a seta some. Depois, ainda no mesmo dia: o Auto virou um ícone pequeno de mão ao lado do relógio do turno (aceso quando ligado), e a seta ficou mais apagada até o mouse chegar nela.
-
-## 93. Painel "Atacar quem?" que dá para arrastar
-
-Ao escolher os atacantes, o painel **Atacar quem?** (a lista de jogadores e planeswalkers que dá para atacar, com **Retirar do combate** e **Limpar seleção**) abre num lugar fixo da mesa. Às vezes ele fica por cima de criaturas do seu próprio campo, justamente as que você quer escolher para atacar.
-
-- [x] Dar ao painel uma alça (a faixa do título "Atacar quem?") para arrastar com o mouse ou o dedo e soltar em qualquer lugar da mesa.
-- [x] O painel não pode sair da tela: ao soltar fora, ou ao redimensionar a janela, ele volta para dentro.
-- [x] Clicar nos alvos e nos botões continua funcionando normalmente; só arrastar pela alça move o painel.
-- [x] Guardar o lugar escolhido para os próximos combates (no mesmo aparelho), com um jeito de voltar ao lugar padrão (duplo clique na alça, por exemplo).
-- [x] Item no CHANGELOG e print na página Novidades em imagens.
-
-Feito na 0.125.0 (decidido em 04/11/2026): o arraste move a caixa das ações inteira (o painel e os botões de confirmar), pelo título com pontinhos; um lugar só para duelo e mesa de 3–4 jogadores; só o painel de ataque, por enquanto.
-
-## 94. Planeswalkers sempre juntos, no fim da fileira das criaturas
-
-Hoje os planeswalkers ficam na fileira das criaturas na ordem em que entraram no campo, misturados com elas. Com muitas permanentes, fica difícil achar um planeswalker (para ativar uma lealdade ou escolher quem atacar) e ver quantos cada jogador tem.
-
-- [x] Na fileira das criaturas, as criaturas vêm primeiro e os planeswalkers depois, todos juntos no fim, separados das criaturas por um respiro e um traço discreto, como já acontece entre artefatos/encantamentos e terrenos na fileira de trás.
-- [x] Vale para o seu campo, para o do oponente no duelo e para os assentos da mesa de 3–4 jogadores (e para a vista ampliada de um assento).
-- [x] Um planeswalker que vira criatura (ou uma criatura que vira planeswalker) muda de grupo na hora.
-- [x] Com a fileira cheia e rolando, o grupo dos planeswalkers continua no fim; ver se é preciso deixá-lo sempre à vista.
-- [x] Item no CHANGELOG e print na página Novidades em imagens.
-
-Feito na 0.125.0 (decidido em 04/11/2026): batalhas junto dos planeswalkers; o grupo rola com a fileira, sem ficar preso na ponta.
 
 ## 104. Página de apresentação com SEO
 
@@ -567,7 +464,10 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 
 Pedido em 11/11/2026. Shorikai, Motor da Gênese é veículo e comandante; conferir numa partida de verdade, e no Laboratório, as duas partes dela.
 
-- [ ] Habilidade ({1}, {T}): compra duas, descarta uma (a janela de descartar aparece certa) e cria a ficha Piloto 1/1 incolor, com a imagem da ficha e o texto "tripula Veículos como se o seu poder fosse 2 pontos maior".
-- [ ] Tripular 8: escolher criaturas com poder total 8 ou mais vira a Shorikai criatura artefato 8/8 até o fim do turno; o Piloto conta como 3; não deixa confirmar com menos de 8; a Shorikai tripulada ataca e bloqueia e volta a ser só veículo no fim do turno.
+- [x] Habilidade ({1}, {T}): compra duas, descarta uma (a janela de descartar aparece certa) e cria a ficha Piloto 1/1 incolor, com a imagem da ficha e o texto "tripula Veículos como se o seu poder fosse 2 pontos maior".
+- [x] Tripular 8: escolher criaturas com poder total 8 ou mais vira a Shorikai criatura artefato 8/8 até o fim do turno; o Piloto conta como 3; não deixa confirmar com menos de 8.
+- [ ] A Shorikai tripulada ataca e bloqueia, e volta a ser só veículo no fim do turno.
 - [ ] Como comandante: conjurar da zona de comando (com o imposto) e o dano de comandante contar quando ela ataca tripulada.
-- [ ] O que não funcionar vira correção no CHANGELOG com cenário no Laboratório; o que funcionar, um cenário pronto para conferir.
+- [x] O que não funcionar vira correção no CHANGELOG com cenário no Laboratório; o que funcionar, um cenário pronto para conferir.
+
+Conferido em 11/11/2026 (`forge-bridge/scripts/test-crew.mjs` e o cenário "Shorikai: habilidade e Tripular 8"): a habilidade e o Tripular funcionavam, mas o OK do Tripular ficava ligado com qualquer poder e, abaixo de 8, desistia em silêncio, e a contagem vinha em inglês ("Crewing"); corrigido na 0.157.1. Falta a parte de comandante, que o Laboratório não monta (não tem zona de comando): conferir numa sala de Commander de verdade.

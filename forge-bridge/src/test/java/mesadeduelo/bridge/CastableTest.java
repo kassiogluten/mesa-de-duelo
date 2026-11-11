@@ -87,4 +87,21 @@ public class CastableTest {
         assertNull("creatures are not reduced", costs.get(bears.getId()));
         assertNull("X costs are only known when cast", costs.get(fireball.getId()));
     }
+
+    /** Convoke and delve ask the controller which cards to use, even in a test: a person never answers that one. */
+    @Test(timeout = 20000) public void handCostsNeverAskThePlayer() {
+        Game game = TestGames.empty(); Player me = game.getPlayers().get(0);
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN1, me);
+        me.dangerouslySetController(new PlayerControllerHuman(game, me, new LobbyPlayerHuman("Test")));
+        Card stoke = TestGames.add(game, "Stoke the Flames", me, ZoneType.Hand);
+        Card cruise = TestGames.add(game, "Treasure Cruise", me, ZoneType.Hand);
+        TestGames.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        for (int i = 0; i < 3; i++) TestGames.add(game, "Island", me, ZoneType.Graveyard);
+        TestGames.add(game, "Goblin Electromancer", me, ZoneType.Battlefield);
+        game.getAction().checkStaticAbilities(false);
+        var costs = Castable.handCosts(me);
+        assertNull("convoke depends on the creatures chosen", costs.get(stoke.getId()));
+        assertNull("delve depends on the cards exiled", costs.get(cruise.getId()));
+        assertTrue("the person keeps their own controller", me.getController() instanceof PlayerControllerHuman);
+    }
 }

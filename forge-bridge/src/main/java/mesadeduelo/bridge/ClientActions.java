@@ -50,6 +50,9 @@ final class ClientActions {
                 // Clique repetido no mesmo prompt só vale depois da trava: se o Forge recusou a ação (bloqueio
                 // inválido, por exemplo), o prompt continua o mesmo e o jogador precisa poder tentar de novo.
                 if (gen != seat.inputGen.get() || seat.buttonsLocked()) { session.markDirty(); break; }
+                // Tripular abaixo do poder necessário: o OK do Forge desistiria em silêncio (CrewSelection).
+                if ("ok".equals(type) && seat.controller() instanceof PlayerControllerHuman crew
+                    && CrewSelection.shortOfPower(crew.getInputQueue().getInput())) { session.markDirty(); break; }
                 seat.consumedGen = gen;
                 seat.consumedAt = System.currentTimeMillis();
                 if ("ok".equals(type) && seat.controller() instanceof PlayerControllerHuman human

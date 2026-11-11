@@ -15,6 +15,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import forge.ai.ComputerUtilMana;
+import forge.ai.PlayerControllerAi;
+import forge.game.keyword.Keyword;
 import forge.game.mana.ManaCostBeingPaid;
 import forge.game.zone.Zone;
 
@@ -96,29 +98,41 @@ final class Castable {
 
     /**
      * Reduções e aumentos de custo (Goblin Electromancer, Thalia, afinidade, Sphere of Resistance): o custo de mana
-     * de conjurar cada carta da mão agora, como o motor conta antes de pagar, quando ele não é o impresso. Fica de
-     * fora quem tem X no custo, que só se sabe ao conjurar.
+     * de conjurar cada carta da mão agora, como o motor conta antes de pagar, quando ele não é o impresso. Ficam de
+     * fora quem tem X no custo, que só se sabe ao conjurar, e quem paga parte do custo com uma escolha (Convocar,
+     * Delve, Improvisar, Assist). A conta roda sob um controlador da IA: mesmo em teste, o ajuste de custo do Forge
+     * pergunta essas escolhas ao controlador, e um humano nunca responderia (a thread do jogo ficaria parada).
      */
     static Map<Integer, HandCost> handCosts(Player me) {
         Map<Integer, HandCost> out = new HashMap<>();
-        for (Card c : me.getCardsIn(ZoneType.Hand)) {
-            if (c.isLand() || c.getManaCost() == null || c.getManaCost().isNoCost() || c.getManaCost().countX() > 0) continue;
-            SpellAbility sa = c.getFirstSpellAbility();
-            if (sa == null || !sa.isSpell() || sa.getPayCosts() == null) continue;
-            Player before = sa.getActivatingPlayer();
-            Zone castFrom = c.getCastFrom();
-            sa.setActivatingPlayer(me);
-            try {
-                ManaCostBeingPaid now = ComputerUtilMana.calculateManaCost(sa.getPayCosts(), sa, me, true, 0, false);
-                if (now == null) continue;
-                String printed = new ManaCostBeingPaid(c.getManaCost()).toString(), current = now.toString();
-                if (!printed.equals(current)) out.put(c.getId(), new HandCost(current, now.toManaCost().getCMC() - c.getManaCost().getCMC()));
-            } finally {
-                sa.setActivatingPlayer(before);
-                c.setCastFrom(castFrom);
+        me.runWithController(() -> {
+            for (Card c : me.getCardsIn(ZoneType.Hand)) {
+                HandCost cost = handCost(c, me);
+                if (cost != null) out.put(c.getId(), cost);
             }
-        }
+        }, new PlayerControllerAi(me.getGame(), me, me.getOriginalLobbyPlayer()));
         return out;
+    }
+
+    private static final Keyword[] CHOSEN_PAYMENT = { Keyword.CONVOKE, Keyword.DELVE, Keyword.IMPROVISE, Keyword.ASSIST };
+
+    private static HandCost handCost(Card c, Player me) {
+        if (c.isLand() || c.getManaCost() == null || c.getManaCost().isNoCost() || c.getManaCost().countX() > 0) return null;
+        for (Keyword k : CHOSEN_PAYMENT) if (c.hasKeyword(k)) return null;
+        SpellAbility sa = c.getFirstSpellAbility();
+        if (sa == null || !sa.isSpell() || sa.getPayCosts() == null || sa.hasParam("TapCreaturesForMana")) return null;
+        Player before = sa.getActivatingPlayer();
+        Zone castFrom = c.getCastFrom();
+        sa.setActivatingPlayer(me);
+        try {
+            ManaCostBeingPaid now = ComputerUtilMana.calculateManaCost(sa.getPayCosts(), sa, me, true, 0, false);
+            if (now == null) return null;
+            String printed = new ManaCostBeingPaid(c.getManaCost()).toString(), current = now.toString();
+            return printed.equals(current) ? null : new HandCost(current, now.toManaCost().getCMC() - c.getManaCost().getCMC());
+        } finally {
+            sa.setActivatingPlayer(before);
+            c.setCastFrom(castFrom);
+        }
     }
 
     /** Põe {@code castCost} nas cartas da mão de {@code playerId} (só a mão do dono chega com as cartas). */

@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.157.1] - 2026-11-11
+
+### Corrigido
+
+- **A partida não trava mais com Convocar ou Delve na mão.** Desde a 0.157.0, ter na mão uma carta com Convocar, Delve, Improvisar ou Assist (Stoke the Flames, Treasure Cruise) podia parar a partida no começo da sua vez, e com ela as outras mesas do servidor. Agora essas cartas mostram o custo impresso no selo da mão, já que o quanto elas custam depende do que você escolher ao pagar.
+- **Tripular só confirma com o poder necessário.** Ao tripular um veículo (Shorikai, Genesis Engine, com Tripular 8), o OK ficava ligado com qualquer poder escolhido e, abaixo do necessário, só desistia em silêncio, deixando as criaturas desviradas. Agora o OK fica apagado até as criaturas escolhidas somarem o poder do Tripular, e o Cancelar continua para desistir. A contagem aparece em português ("Tripulando: 5 / 8") e conta o Piloto da Shorikai como 3. Vale também para Selar.
+
 ## [0.157.0] - 2026-11-11
 
 ### Novo
