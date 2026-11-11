@@ -125,7 +125,7 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   const revealed = q.revealed ?? [];
   const unavailable = revealed.map(c => `<div class="q-opt has-card unavailable" data-q-card="${c.id}" aria-disabled="true"><div class="q-face">${v.face(c)}</div><span>${esc(v.label(c))}</span></div>`).join('');
   const revealedHint = revealed.length ? `${q.revealedNote ? `${esc(q.revealedNote)} ` : ''}As cartas apagadas não podem ser escolhidas.` : '';
-  const hint = isOrder ? 'Toque na ordem desejada (a primeira fica em cima).'
+  const hint = isOrder ? `Toque na ordem desejada (a primeira fica ${q.firstAt === 'bottom' ? 'embaixo' : 'em cima'}).`
     : [single ? '' : `Escolha ${min === max ? min : `de ${min} a ${max}`}.`, revealedHint].filter(Boolean).join(' ');
   return `${head}${hint ? `<p class="q-hint">${hint}</p>` : ''}${tools}
     <div class="q-opts ${anyCards || revealed.length ? 'cards' : ''}${layout ? ' filtered' : ''}">${items}${unavailable}</div>

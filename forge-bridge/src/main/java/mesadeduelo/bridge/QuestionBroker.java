@@ -244,6 +244,8 @@ final class QuestionBroker {
             // Uma ordem já escolhida antes (os mesmos gatilhos de novo) chega pronta na lista de destino.
             if (a[5] instanceof Collection<?> placed) options.addAll(placed);
             q.addProperty("kind", "order");
+            // Cemitério (Fossil Find) e fundo do grimório: a primeira da lista fica no fundo, não em cima.
+            if (forge.util.Localizer.getInstance().getMessage("lblClosestToBottom").equals(String.valueOf(a[1]))) q.addProperty("firstAt", "bottom");
         } else {
             // many(): escolher um subconjunto (ex.: vidência "quais vão para o fundo"); os que sobram ficam de fora.
             q.addProperty("kind", "choose");

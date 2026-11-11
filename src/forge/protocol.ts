@@ -372,6 +372,8 @@ export interface FQuestion {
   /** Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). */
   revealed?: FCard[];
   revealedNote?: string;
+  /** order: a primeira da resposta fica no fundo (reordenar o cemitério, cartas para o fundo do grimório); sem ele, fica em cima. */
+  firstAt?: 'bottom';
   /** replacement-order (qual efeito de substituição vem primeiro): dá para usar a mesma escolha no resto do efeito que está resolvendo (a resposta leva all). */
   applyToAll?: boolean;
   /** library (vidência e vigilância): o que sai do topo vai para o fundo ou o cemitério, ou "top", a ordem das que ficam. Cartas na ordem do grimório. */

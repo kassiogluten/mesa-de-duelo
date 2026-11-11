@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.156.1] - 2026-11-10
+
+### Corrigido
+
+- **Fossil Find devolve só do seu cemitério.** A carta sorteada podia sair do cemitério do oponente e ir para a mão dele. Agora ela sai sempre do cemitério de quem conjurou, e o oponente vê qual carta voltou, como em Make a Wish.
+- **Reordenar o cemitério diz qual carta fica no fundo.** Na janela de reordenar o cemitério (Fossil Find), a dica dizia que a primeira carta tocada ficava em cima, mas ela vai para o fundo. A dica agora diz "a primeira fica embaixo", e vale também para cartas colocadas no fundo do grimório.
+
 ## [0.156.0] - 2026-11-10
 
 ### Novo

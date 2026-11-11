@@ -434,6 +434,7 @@ A janela das cartas reveladas do topo de um grimório (Grisly Salvage): quem esc
 | `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). |
 | `revealed?` | `FCard[]` | Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). |
 | `revealedNote?` | `string` |  |
+| `firstAt?` | `'bottom'` | order: a primeira da resposta fica no fundo (reordenar o cemitério, cartas para o fundo do grimório); sem ele, fica em cima. |
 | `applyToAll?` | `boolean` | replacement-order (qual efeito de substituição vem primeiro): dá para usar a mesma escolha no resto do efeito que está resolvendo (a resposta leva all). |
 | `library?` | `'bottom' \| 'graveyard' \| 'top'` | library (vidência e vigilância): o que sai do topo vai para o fundo ou o cemitério, ou "top", a ordem das que ficam. Cartas na ordem do grimório. |
 | `pileOwner?` | `number` | piles-split e piles-choose (dois montes): de quem são as cartas, se o dono escolhe o monte e para onde vai cada um ("hand", "graveyard"...), quando o efeito só move as cartas. |

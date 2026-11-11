@@ -53,6 +53,11 @@ test('yes/no questions get one button each, and the minimized bar shows how many
   const choose = { id: 2, kind: 'choose', title: 'Escolha', min: 1, max: 3, options: ['A', 'B', 'C', 'D'] };
   assert.match(questionBar(view, choose, 2), /2 de 3 escolhidas/);
   assert.match(questionBar(view, choose, 2), /data-ui="question-restore"/);
+  // Reordenar o cemitério (Fossil Find): a primeira escolhida vai para o fundo, e a dica diz isso.
+  const order = { id: 3, kind: 'order', title: 'Escolha a ordem', options: ['A', 'B'] };
+  assert.match(questionHTML(view, order, newQuestionDraft(order)), /a primeira fica em cima/);
+  const graveyard = { ...order, firstAt: 'bottom' };
+  assert.match(questionHTML(view, graveyard, newQuestionDraft(graveyard)), /a primeira fica embaixo/);
 });
 
 test('game result: winner, loser, watchers and the rematch button', () => {

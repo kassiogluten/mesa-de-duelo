@@ -70,6 +70,7 @@ public final class Main {
             return null;
         });
         Log.bridge().info("Forge inicializado em %d ms", System.currentTimeMillis() - t0);
+        CardScriptFixes.apply();
 
         if (!"watch".equals(mode)) {
             Rooms rooms = new Rooms();

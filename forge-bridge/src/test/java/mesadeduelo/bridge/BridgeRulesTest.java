@@ -22,6 +22,7 @@ public class BridgeRulesTest {
         if (root == null || root.startsWith("${")) throw new IllegalStateException("Run tests with -Dforge.dir=/path/to/pinned/forge");
         GuiBase.setInterface(new HeadlessGui(Path.of(root, "forge-gui")));
         FModel.initialize(null, prefs -> { prefs.setPref(FPref.LOAD_CARD_SCRIPTS_LAZILY, "true"); return null; });
+        CardScriptFixes.apply();
         initialized = true;
     }
     private static JsonObject deck(Object... pairs) {

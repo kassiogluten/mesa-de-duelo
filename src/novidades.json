@@ -1,4 +1,9 @@
 {
+  "0.156.1": {
+    "Reordenar o cemitério diz qual carta fica no fundo": [
+      { "img": "0.156.1/reordenar-cemiterio.webp", "legenda": "Reordenando o cemitério com Fossil Find: a dica diz que a primeira carta tocada fica embaixo, e o Choque, tocado primeiro, leva o número 1." }
+    ]
+  },
   "0.156.0": {
     "Opção para desligar as cartas da mesa, e terrenos básicos com a série Nyx": [
       { "img": "0.156.0/cartas-da-mesa-menu.webp", "legenda": "Na tela inicial, **Cartas da mesa** no menu ⋯, marcada no começo (tocar liga e desliga sem fechar o menu), e logo abaixo **Ver a série**." },
