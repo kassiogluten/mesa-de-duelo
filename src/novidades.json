@@ -1,4 +1,12 @@
 {
+  "0.161.0": {
+    "Atacantes iguais num monte só": [
+      { "img": "0.161.0/atacantes-em-monte.webp", "legenda": "Cinco Zumbis atacando juntos num monte com ×5 e o selo de 10 de dano; o Urso, sozinho, fica à parte." }
+    ],
+    "Sem lupa nas cartas do campo": [
+      { "img": "0.161.0/aviso-segurar.webp", "legenda": "O aviso da primeira partida num aparelho de toque: segure uma carta para ver os detalhes." }
+    ]
+  },
   "0.160.0": {
     "Apontar uma carta para a mesa": [
       { "img": "0.160.0/botao.webp", "legenda": "O botão Apontar na carta aberta, ao lado do Fechar." },

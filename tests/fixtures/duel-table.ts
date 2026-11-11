@@ -394,6 +394,18 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     Object.assign(state, { turn: 6, extraTurn: true, extraTurns: [10], phase: 'MAIN2', combatNumber: undefined, extraCombats: 1, extraCombatAfter: ['MAIN2'] });
     view.render();
   },
+  /** Ataque em monte (item 121): o oponente ataca com 5 Zumbis iguais e um Urso; você declara os bloqueadores. */
+  groupedAttack() {
+    const opp = state.players[1];
+    const zombies = [400, 401, 402, 403, 404].map(id => card(id, 'Zombie', 23, { manaCost: '', typeLine: 'Token Creature — Zombie', token: true, tapped: true, attacking: true }));
+    const bear = card(405, 'Grizzly Bears', 23, { manaCost: '{1}{G}', typeLine: 'Creature — Bear', tapped: true, attacking: true });
+    opp.battlefield = [...opp.battlefield.filter((c: any) => !c.creature), ...zombies, bear];
+    const attackers = [...zombies, bear].map(c => c.id);
+    Object.assign(state, { phase: 'COMBAT_DECLARE_BLOCKERS', activePlayer: 23, combat: attackers.map(attacker => ({ attacker, defender: 10, defenderKind: 'player', blockers: [] })) });
+    Object.assign(state.input, { gen: state.input.gen + 1, actionable: [], blocking: { selectedAttacker: null, attackers, blockers: [100], legalAssignments: [{ blocker: 100, attackers }] },
+      ok: { label: 'OK', enabled: true } });
+    view.render();
+  },
   extraCombat() {
     Object.assign(state, { phase: 'COMBAT_DECLARE_ATTACKERS', combatNumber: 2, extraCombats: 0, extraCombatAfter: undefined });
     view.render();
@@ -672,6 +684,7 @@ if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (windo
 if (new URLSearchParams(location.search).get('cenario') === 'contagens') (window as any).fixture.counts(Number(new URLSearchParams(location.search).get('licoes') ?? 3));
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
+if (cenario === 'ataque-monte') (window as any).fixture.groupedAttack();
 // Dois montes: ?cenario=montes&passo=split|choose (&steam=1 para a Steam Augury, em que quem conjura separa).
 if (cenario === 'montes') { const q = new URLSearchParams(location.search); (window as any).fixture.piles(q.get('passo') === 'choose' ? 'choose' : 'split', q.has('steam')); }
 // Alvo no cemitério: ?cenario=alvo-cemiterio (&dele=1 para só o oponente ter alvos).

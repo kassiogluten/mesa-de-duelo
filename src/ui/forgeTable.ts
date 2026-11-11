@@ -1,5 +1,5 @@
 import type { FState, ForgeClient, NoticeDetail } from '../forge/client';
-import { KEYS } from '../storage';
+import { KEYS, load, save } from '../storage';
 import { createMotion } from './motion';
 import { hideCardPreview } from './cardInspector';
 import { type HistoryNames } from './historyLog';
@@ -392,6 +392,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     phases.render(visual, me, opp, opponents, multiplayer);
     const moment = tableMoment(s);
     if (moment && !playedMoments.has(moment.key)) { playedMoments.add(moment.key); audio.cue(moment.cue, .9); }
+    // As permanentes não têm lupa: no toque, um aviso só, na primeira partida, ensina a segurar a carta para ver os detalhes.
+    if (!s.input.opening && !s.gameOver && matchMedia('(hover: none)').matches && load(KEYS.holdHint) !== '1') {
+      save(KEYS.holdHint, '1'); notice('Segure uma carta para ver os detalhes.');
+    }
     for (const text of eliminationNotices(s, `${s.matchId ?? ''}:${s.match?.gameNumber ?? 0}`, knownLosses, ctx.cardName)) notice(text);
     actionBox.render(s, me, seatNotice);
     question.render();
@@ -407,7 +411,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     // Covered identical copies stay reachable through the group chooser, without dozens of duplicate Tab stops.
     root.querySelectorAll<HTMLElement>('.field .stack').forEach(pile => {
       const slots = [...pile.querySelectorAll<HTMLElement>(':scope > .slot')];
-      slots.slice(0, -1).forEach(slot => slot.querySelectorAll<HTMLElement>('[tabindex],.inspect-card').forEach(el => { el.tabIndex = -1; }));
+      slots.slice(0, -1).forEach(slot => slot.querySelectorAll<HTMLElement>('[tabindex]').forEach(el => { el.tabIndex = -1; }));
     });
     root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field').forEach(el => { const position = scrollPositions.get(el.id); el.scrollLeft = position?.left ?? 0; el.scrollTop = position?.top ?? 0; });
     applyOpeningPresentation(root, s, currentStartingRoll(timeline.history));

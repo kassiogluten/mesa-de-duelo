@@ -87,7 +87,6 @@
 .forge.multiplayer .seat-zones .pile > span { bottom: -3px; right: -5px; min-width: 18px; font-size: 11px; padding: 0 3px; }
 .forge.multiplayer .seat-command .command-card { width: 29px; --fw: 29px; }
 .forge.multiplayer .seat-command .command-tax { font-size: 10px; padding: 1px 4px; }
-.forge.multiplayer .seat-command .inspect-card { display: none; }
 /* Sem corte: uma carta que passa da altura do assento fica por cima da linha que divide a mesa (as fileiras rolam na horizontal). */
 .forge.multiplayer .table-seat > .field { padding: 0; min-height: 0; flex: 1; overflow: visible; justify-content: flex-start; --ch: clamp(72px, 12vh, 130px); --cw: calc(var(--ch) * .716); --lch: clamp(40px, 6.5vh, 65px); --lcw: calc(var(--lch) * .716); }
 .forge.multiplayer .table-seat .row { min-height: calc(var(--ch) + 18px); padding: 9px 6px; gap: 8px; }

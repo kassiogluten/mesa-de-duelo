@@ -30,8 +30,13 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
   const paths: string[] = [];
   // Contra um jogador, só com mais de um oponente: no duelo, o defensor é sempre o mesmo.
   const multiplayer = s.players.length > 2;
+  // Atacantes iguais num monte (item 121): uma seta só, saindo do monte.
+  const groups = new Set<string>();
   for (const { attacker, defender, defenderKind, blockers } of s.combat) {
-    const a = rectOf(attacker);
+    const group = root.querySelector<HTMLElement>(`.field [data-fid="${attacker}"]`)?.closest<HTMLElement>('[data-atk-group]')?.dataset.atkGroup;
+    if (group && groups.has(group)) continue;
+    if (group) groups.add(group);
+    const a = group ? arrowRect(root, `.field [data-atk-group="${group}"]`) : rectOf(attacker);
     if (!a) continue;
     const toPlayer = (defenderKind ?? 'player') === 'player';
     const t = toPlayer ? multiplayer ? arrowRect(root, `.avatar-slot [data-pid="${defender}"]`) : undefined : defender === undefined ? undefined : rectOf(defender);

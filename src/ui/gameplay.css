@@ -49,6 +49,18 @@
 .forge .slot { transition: none; }
 .forge .row:focus-visible { outline-offset: -3px; }
 .forge .stack-n { pointer-events: auto; cursor: pointer; min-width: 30px; min-height: 28px; top: -16px; }
+/* Atacantes iguais num monte (item 121): o dano somado, embaixo do monte, para quem defende ver o que vem se não bloquear. */
+.forge .stack-atk { position: absolute; z-index: 6; left: 50%; bottom: -11px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px 2px 6px; border-radius: 999px; pointer-events: none; white-space: nowrap;
+  background: color-mix(in srgb, var(--red) 82%, #000); border: 1px solid color-mix(in srgb, var(--red) 55%, #fff); color: #fff; font: 700 12px var(--display); box-shadow: 0 2px 6px #0008; }
+.forge .stack-atk svg { width: 13px; height: 13px; }
+/* Os atacantes avançam 28% da altura na direção de quem é atacado (combatPose.css): o ×N e o selo vão junto, nas bordas da carta virada ou não. */
+.forge .field.opp .attack-group { --atk-dy: calc(var(--ch) * .28); }
+.forge .field.me .attack-group { --atk-dy: calc(var(--ch) * -.28); }
+.forge .attack-group { --atk-half: calc(var(--ch) / 2); }
+.forge .attack-group:has(> .slot.tapped:last-of-type) { --atk-half: calc(var(--cw) / 2); }
+/* À esquerda: o monte virado seguinte (gameplay.css, margem de -.4) cobre o canto direito. */
+.forge .attack-group > .stack-n { top: calc(50% + var(--atk-dy, 0px) - var(--atk-half) - 14px); right: auto; left: -10px; }
+.forge .attack-group > .stack-atk { bottom: auto; top: calc(50% + var(--atk-dy, 0px) + var(--atk-half) - 12px); }
 .forge .pt { font-size: max(14px, calc(var(--cw) * .15)); }
 .forge .ctr.kw { min-width: 21px; min-height: 21px; justify-content: center; }
 .forge .ctr.kw svg { width: 15px; height: 15px; }
@@ -356,7 +368,7 @@
   .forge .row { min-height: calc(var(--ch) + 22px); padding: 12px 8px 10px; }
   .forge .row.lands { min-height: calc(var(--lch) + 16px); padding: 8px; }
   /* Cartas pequenas demais para a lupa: ela cobriria a carta. Tocar numa carta que não faz nada agora (ou segurar) mostra a carta. */
-  .forge .field .inspect-card, .forge .own-command .inspect-card, .forge .duel-command .inspect-card, .forge:not([data-opening]) .hand .inspect-card { display: none; }
+  .forge:not([data-opening]) .hand .inspect-card { display: none; }
   .forge .stack-panel { --stack-width: clamp(112px, 16vw, 165px); right: 12px; padding: 0; max-height: none; }
   .forge .stack-panel .stack-heading { margin-bottom: 36px; }
   .stack-layer { transform: translate(calc(var(--depth) * -5px), calc(var(--depth) * -10px)) rotate(calc(var(--depth) * -2deg)); }

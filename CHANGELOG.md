@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.161.0] - 2026-11-11
+
+### Novo
+
+- **Atacantes iguais num monte só.** Quando várias criaturas iguais (mesma carta, mesmo poder e resistência, mesmos marcadores) atacam o mesmo jogador ou planeswalker, elas ficam num monte com "×N", como no resto do campo, e uma seta só sai do monte até o alvo. Embaixo do monte, um selo vermelho mostra o dano somado que vem se ninguém bloquear (contando golpe duplo). Para bloquear, escolha o seu bloqueador e toque no monte: a criatura bloqueada sai do monte e aparece à parte, assim como as que atacam outro alvo ou ficam diferentes das outras.
+
+### Mudou
+
+- **Sem lupa nas cartas do campo.** As permanentes e a zona de comando não têm mais o botão de lupa por cima da carta: para ver os detalhes, use o botão direito do mouse, segure a carta no toque ou aperte "i" com a carta em foco. A mão, o exílio e as janelas continuam com a lupa. Na primeira partida num aparelho de toque, um aviso lembra: "Segure uma carta para ver os detalhes."
+
 ## [0.160.0] - 2026-11-11
 
 ### Novo

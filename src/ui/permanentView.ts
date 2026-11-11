@@ -181,7 +181,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   if (exiled.length) slot.push('has-exu');
   const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');
-  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}${inspectButton(c)}</div>`;
+  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
 }
 /**
  * Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). As criaturas
@@ -206,7 +206,8 @@ export function isBackRow(c: FCard) {
 /**
  * Empilha cópias iguais: mesmo nome, estado, marcadores e, nas criaturas, mesmo P/T, dano, palavras-chave
  * e enjoo. Cartas com algo preso ou envolvidas no combate ficam sozinhas (ao declarar ataque, todas menos os
- * terrenos, que não atacam nem são atacados). Com `tappedPile`, os terrenos virados
+ * terrenos, que não atacam nem são atacados); a exceção são os atacantes iguais sem bloqueio que atacam o mesmo
+ * jogador ou planeswalker, que ficam num monte com o dano somado (item 121). Com `tappedPile`, os terrenos virados
  * sem marcadores formam um monte só, de nomes diferentes.
  */
 export function stacks(v: BoardView, s: FState, cards: FCard[], tappedPile = false) {
@@ -215,18 +216,30 @@ export function stacks(v: BoardView, s: FState, cards: FCard[], tappedPile = fal
   for (const c of cards) {
     const ctr = Object.entries(c.counters ?? {}).filter(([, v]) => v).sort().join(',');
     const ci = combatIndex(s, c.id);
-    const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || slotExiled(s, c).length > 0 || !!c.merged?.length || c.faceDown || c.attacking || c.blocking || ci.attack || ci.block || s.combat.some(x => x.defender === c.id);
+    // Atacante que pode ir num monte: sem bloqueio e fora da sua declaração de ataque; o alvo entra na chave.
+    const atk = ci.attack ? s.combat[ci.attack - 1] : undefined;
+    const groupedAttack = !!atk && !atk.blockers.length && !c.blocking;
+    const alone = (!!s.input.attacking && !c.land) || !!s.input.selection || (!!s.input.blocking && c.creature && c.controller === s.you) || atts.has(c.id) || slotExiled(s, c).length > 0 || !!c.merged?.length || c.faceDown || (c.attacking && !groupedAttack) || (!!ci.attack && !groupedAttack) || c.blocking || ci.block || s.combat.some(x => x.defender === c.id);
     const body = (c.creature ? `|${c.power}/${c.toughness}|${c.damage ?? 0}|${!!c.sick}` : '') + `|${fieldKeywordsOf(c).sort()}`;
-    const k = alone ? `#${c.id}` : tappedPile && c.land && c.tapped && !ctr && !usable(s, c.id) && !s.input.untappable?.includes(c.id) ? 'tapped-lands' : `${c.name}|${c.tapped}|${usable(s, c.id)}|${c.token}|${!!c.prepared}|${c.copyOf ?? ''}|${ctr}${body}`;
+    const attack = groupedAttack ? `|atk:${atk!.defenderKind ?? 'player'}:${atk!.defender ?? ''}|${legalBlockTargets(s, v.selectedBlocker).includes(c.id)}` : '';
+    const k = alone ? `#${c.id}` : tappedPile && c.land && c.tapped && !ctr && !usable(s, c.id) && !s.input.untappable?.includes(c.id) ? 'tapped-lands' : `${c.name}|${c.tapped}|${usable(s, c.id)}|${c.token}|${!!c.prepared}|${c.copyOf ?? ''}|${ctr}${body}${attack}`;
     groups.set(k, [...(groups.get(k) ?? []), c]);
   }
   return [...groups.values()].map(cs => {
     const [first] = cs;
     if (!first) return '';
     const mixed = cs.some(c => c.name !== first.name);
-    return `<div class="stack" style="--n:${cs.length}">${cs.map(c => bfCard(v, s, c, atts.get(c.id))).join('')}${
-      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="${mixed ? 'Terrenos virados' : 'Cartas do grupo'}" aria-label="${mixed ? `Ver ${cs.length} terrenos virados` : `Ver ${cs.length} cópias de ${esc(label(first))}`}">×${cs.length}</button>` : ''}</div>`;
+    const attacking = cs.length > 1 && combatIndex(s, first.id).attack !== undefined;
+    const damage = attacking ? cs.reduce((sum, c) => sum + groupAttackDamage(c), 0) : 0;
+    const attackText = attacking ? `${cs.length} atacam juntas: ${damage} de dano se não houver bloqueio` : '';
+    return `<div class="stack${attacking ? ' attack-group' : ''}" style="--n:${cs.length}"${attacking ? ` data-atk-group="${first.id}"` : ''}>${cs.map(c => bfCard(v, s, c, atts.get(c.id))).join('')}${
+      cs.length > 1 ? `<button class="stack-n" data-group="${cs.map(c => c.id).join(',')}" data-group-title="${mixed ? 'Terrenos virados' : attacking ? 'Atacando juntas' : 'Cartas do grupo'}" aria-label="${mixed ? `Ver ${cs.length} terrenos virados` : `Ver ${cs.length} cópias de ${esc(label(first))}${attacking ? `. ${attackText}` : ''}`}">×${cs.length}</button>` : ''}${
+      attacking ? `<span class="stack-atk" title="${attackText}" aria-hidden="true">${ICON_SWORD}${damage}</span>` : ''}</div>`;
   }).join('');
+}
+/** Dano de combate que um atacante do monte causa se não for bloqueado: o poder, dobrado com golpe duplo. */
+export function groupAttackDamage(c: FCard) {
+  return Math.max(0, c.power ?? 0) * (c.keywords?.includes('DOUBLE_STRIKE') ? 2 : 1);
 }
 export function backRow(v: BoardView, s: FState, p: FPlayer) {
   const byId = battlefieldById(s);

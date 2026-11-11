@@ -1335,3 +1335,25 @@ Pedido em 10/11/2026. A área de admin já mostra as partidas ao vivo e o **Hist
   - **Só no admin ou também para os jogadores**: este item é só a área de admin; um ranking público na tela inicial seria outro item, com a questão de privacidade dos apelidos.
 
 Feito em 10/11/2026: aba **Ranking** na área de admin, ao lado de Relatos, Partidas e Páginas de teste. Decidido: partidas em rede e contra a IA contam juntas (a IA só aparece como oponente); a ordem padrão é por vitórias, com a porcentagem ao lado, e qualquer coluna reordena; o período é um mês ou "Desde o começo"; em Commander, quem venceu ganha e os demais perdem; concessão conta como derrota e a queda sem vencedor fica fora da porcentagem. A contagem é feita no servidor a partir do histórico gravado. Sem item no CHANGELOG: a área de admin não é vista pelos jogadores.
+
+## 121. ✅ Agrupar criaturas atacantes iguais que atacam o mesmo alvo
+
+Pedido em 11/11/2026. O campo já junta cartas iguais num monte com "×N", mas no combate cada atacante aparece separado: com muitas fichas iguais atacando (10 Soldados, 20 Zumbis), a mesa se enche e fica difícil ver quem ataca quem.
+
+- [x] Criaturas iguais (mesma carta, mesmo poder e resistência, mesmos marcadores e estados) que atacam o mesmo jogador ou planeswalker ficam num monte só com "×N", com a seta até o alvo saindo do monte.
+- [x] As que atacam alvos diferentes, ou que ficaram diferentes (um marcador, um bloqueio, dano marcado), saem do monte e aparecem à parte.
+- [x] Bloquear continua possível criatura por criatura: dá para escolher um atacante dentro do monte (abrir o monte ou bloquear "um deles"), e o bloqueado sai do monte.
+- [x] O defensor vê no monte quantas atacam e o dano total que ele vai receber se não bloquear.
+
+Feito em 11/11/2026 (0.161.0): atacantes iguais sem bloqueio e com o mesmo alvo ficam num monte com "×N", uma seta só e o selo do dano somado (com golpe duplo) embaixo. Bloquear é tocar no monte com o bloqueador escolhido: a criatura bloqueada sai do monte. Na sua própria declaração de ataque cada criatura continua à parte.
+
+## 122. ✅ Avaliar tirar a lupa das cartas
+
+Pedido em 11/11/2026. Toda carta da mesa (campo, mão, exílio, zona de comando) tem um botão de lupa para abrir os detalhes. Hoje o botão direito do mouse e segurar a carta no toque já abrem a carta em detalhe; avaliar se a lupa ainda é necessária.
+
+- [x] Conferir se o botão direito e o segurar abrem os detalhes em todas as cartas que hoje têm lupa: permanentes, mão, exílio jogável, zona de comando, topo do grimório visível, cartas presas embaixo de outras.
+- [x] Ver quem depende da lupa: o teclado (a lupa recebe foco; o "i" já abre a carta com o foco nela?), leitores de tela (o rótulo "Inspecionar …") e o clique numa carta que, sem ação, já abre os detalhes.
+- [x] No toque, o segurar precisa ser fácil de descobrir sem a lupa: uma dica na primeira partida, ou no tutorial.
+- [x] Decidir: tirar de todas, tirar só das permanentes (onde ela mais ocupa espaço) ou deixar como opção nas Opções da partida.
+
+Feito em 11/11/2026 (0.161.0): o botão direito, o segurar, o "i" e o foco do teclado já abriam os detalhes de todas as cartas com lupa (mesmo seletor). Decidido: tirar a lupa só das permanentes e da zona de comando; a mão, o exílio jogável e as janelas continuam com ela. Leitores de tela seguem com o rótulo de cada carta. No toque, um aviso único na primeira partida: "Segure uma carta para ver os detalhes."

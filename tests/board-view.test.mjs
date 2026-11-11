@@ -38,6 +38,29 @@ test('identical copies stack with a counter, and a tapped land stays apart from 
   assert.match(backRow({ ...view, compact: true }, mixed, mixed.players[0]), /Terrenos virados/);
 });
 
+test('the field has no magnifier: right click, holding or "i" opens the card', () => {
+  const s = state([bear(5)]);
+  assert.doesNotMatch(bfCard(view, s, s.players[0].battlefield[0]), /inspect-card/);
+});
+
+test('identical attackers against the same target share a pile with the total damage, and a blocked one leaves it', () => {
+  const zombie = (id, extra) => card(id, 'Zombie', { creature: true, token: true, tapped: true, attacking: true, power: 2, toughness: 2, controller: 1, ...extra });
+  const field = [zombie(11), zombie(12), zombie(13), zombie(14, { keywords: ['DOUBLE_STRIKE'] })];
+  const combat = [11, 12, 13].map(attacker => ({ attacker, defender: 0, defenderKind: 'player', blockers: [] }));
+  const s = state(field, {}, { combat: [...combat, { attacker: 14, defender: 0, defenderKind: 'player', blockers: [] }] });
+  const html = fieldRow(view, s, field);
+  assert.match(html, /class="stack attack-group"[^>]*data-atk-group="11"/);
+  assert.match(html, /data-group="11,12,13"[^>]*aria-label="Ver 3 cópias de Zombie\. 3 atacam juntas: 6 de dano se não houver bloqueio">×3</);
+  assert.match(html, /class="stack-atk"[^>]*>.*6<\/span>/);
+  // Bloqueado sai do monte; com outro alvo também.
+  const blocked = state(field, {}, { combat: [{ ...combat[0], blockers: [50] }, combat[1], { ...combat[2], defender: 9, defenderKind: 'card' }] });
+  const split = fieldRow(view, blocked, field.slice(0, 3));
+  assert.doesNotMatch(split, /attack-group/);
+  assert.equal((split.match(/class="stack"/g) ?? []).length, 3);
+  // Na sua própria declaração de ataque, cada criatura fica à parte.
+  assert.doesNotMatch(fieldRow(view, state(field, { attacking: {} }, { combat }), field), /attack-group/);
+});
+
 test('a creature shows power and toughness with damage, summoning sickness and its keywords', () => {
   const s = state([bear(5, { damage: 1, sick: true, keywords: ['FLYING'] })]);
   const html = bfCard(view, s, s.players[0].battlefield[0]);

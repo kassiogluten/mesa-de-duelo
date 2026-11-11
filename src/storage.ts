@@ -68,6 +68,8 @@ export const KEYS = {
   vibrate: 'mesa:vibrate',
   /** Manter a tela acesa durante a partida. Opções da mesa. */
   awake: 'mesa:awake',
+  /** '1' depois do aviso "Segure uma carta para ver os detalhes", mostrado uma vez nos aparelhos de toque. Mesa. */
+  holdHint: 'mesa:hold-hint',
   /** Partida em andamento, para voltar a ela depois de recarregar (a do Laboratório fica no sessionStorage). Mesa. */
   resume: 'mesa:resume',
 

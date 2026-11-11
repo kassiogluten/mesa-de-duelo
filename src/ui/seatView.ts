@@ -19,7 +19,7 @@ import { turnHighlight } from './turnHighlight';
 import { bracketLabel, isBracket } from '../brackets';
 import { bracketTitle } from './deckStats';
 import { turnTimeText } from './clock';
-import { backRow, canUse, fieldRow, inspectButton, isBackRow, type BoardView } from './permanentView';
+import { backRow, canUse, fieldRow, isBackRow, type BoardView } from './permanentView';
 import type { SeatState } from './tableState';
 import { lossReasonText } from './lossReason';
 import { EXPAND, EYE_OFF, FOCUS, ICON_CLOSE, ICON_EYE, PILE_ICON_EXILE, PILE_ICON_GY } from './icons';
@@ -150,7 +150,7 @@ export function commandCards(v: SeatView, s: FState, p: FPlayer) {
   return (p.commandZone ?? []).map(c => {
     const commander = p.commanders?.find(item => item.id === c.id);
     const playable = canPlayCommander(s, c.id, s.input.gen);
-    return `<div class="command-slot"><button class="command-card${playable ? ' playable' : ''}" data-fid="${c.id}" data-command-card aria-label="${playable ? 'Conjurar' : 'Inspecionar'} ${esc(label(c))}. Taxa de comandante: ${commander?.tax ?? 0} manas. Conjurado da zona de comando ${commander?.casts ?? 0} vezes.">${v.face(c, 'normal')}${countSealsHTML(c, v.playerName, s.you)}<span class="command-tax">+${commander?.tax ?? 0}</span></button>${inspectButton(c)}</div>`;
+    return `<div class="command-slot"><button class="command-card${playable ? ' playable' : ''}" data-fid="${c.id}" data-command-card aria-label="${playable ? 'Conjurar' : 'Inspecionar'} ${esc(label(c))}. Taxa de comandante: ${commander?.tax ?? 0} manas. Conjurado da zona de comando ${commander?.casts ?? 0} vezes.">${v.face(c, 'normal')}${countSealsHTML(c, v.playerName, s.you)}<span class="command-tax">+${commander?.tax ?? 0}</span></button></div>`;
   }).join('');
 }
 export function damageButton(p: FPlayer) {
