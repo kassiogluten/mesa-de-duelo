@@ -1,4 +1,9 @@
 {
+  "0.158.0": {
+    "Arte nova em cinco cartas da mesa": [
+      { "img": "0.158.0/staples-novas.webp", "legenda": "Na galeria **Ver a série**, as cinco cartas com a arte nova: Anel Solar, Torre de Comando, Sinete Arcano, Botas Pé-ligeiro e Grevas Faiscantes." }
+    ]
+  },
   "0.157.1": {
     "Tripular só confirma com o poder necessário": [
       { "img": "0.157.1/tripular.webp", "legenda": "Tripulando a Shorikai com 5 de 8 de poder escolhidos: a contagem aparece no topo da caixa de ação e o OK fica apagado até chegar a 8; o Cancelar desiste." }

@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.158.0] - 2026-11-11
+
+### Mudou
+
+- **Arte nova em cinco cartas da mesa.** Anel Solar, Torre de Comando, Sinete Arcano, Botas Pé-ligeiro e Grevas Faiscantes trocaram de arte: agora cada uma tem a moldura normal da carta, com uma ilustração nova (o anel dourado no céu estrelado, a torre sob a aurora, o sinete na mão, as botas em chamas e as grevas com raios). Vale em todas as telas, com **Cartas da mesa** ligada; quem escolheu outra impressão no deck continua vendo a escolhida.
+
 ## [0.157.1] - 2026-11-11
 
 ### Corrigido
