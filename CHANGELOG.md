@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.161.1] - 2026-11-12
+
+### Corrigido
+
+- **Cartas em português e buscas sem falhar em decks grandes.** Ao abrir um deck com muitas cartas, a mesa pedia os nomes em português ao Scryfall rápido demais, ele recusava, e parte das cartas ficava em inglês (e às vezes a busca de cartas falhava logo em seguida). Agora os pedidos vão no ritmo que o Scryfall aceita.
+
 ## [0.161.0] - 2026-11-11
 
 ### Novo
