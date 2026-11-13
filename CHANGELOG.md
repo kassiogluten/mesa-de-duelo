@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.164.0] - 2026-11-13
+
+### Mudou
+
+- **Formato em cards ao importar uma lista.** Ao importar um deck novo, o primeiro passo mostra os formatos em cards, cada um com um ícone e uma linha sobre o que vale nele (a coroa do Commander, a sacola do Sacola 50, o infinito do Livre…), no lugar da caixa de seleção. Um toque no card já leva para o nome e a lista.
+
 ## [0.163.2] - 2026-11-13
 
 ### Mudou

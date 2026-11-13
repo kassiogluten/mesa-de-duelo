@@ -172,7 +172,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     listEdit = asList && !!target;
     importMode = target && (listEdit || !deckEntries(target).length) ? 'replace' : null;
     importDraft = { name: target?.name ?? '', text: listEdit ? exportDeckList(target!) : '' }; importFormat = null; importBracket = undefined; importReview = null; importError = ''; importAcknowledged = false; importCommanderOffer = null;
-    view = 'import'; hideCardPreview(); render(); (root.querySelector<HTMLElement>('#dwImportText') ?? root.querySelector<HTMLElement>('#dwImportFormat'))?.focus();
+    view = 'import'; hideCardPreview(); render(); (root.querySelector<HTMLElement>('#dwImportText') ?? root.querySelector<HTMLElement>('[data-import-format]'))?.focus();
   }
   function saveImport() {
     if (!importReview || !importCanSave()) return;
@@ -320,7 +320,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   const applyToTarget = (target: DeckData, incoming: DeckData) => listEdit ? applyDeckListEdit(target, incoming) : applyDeckImport(target, incoming, importMode ?? 'replace');
   async function reviewImport() {
     const deckFormat = importTarget?.format ?? importFormat;
-    if (!deckFormat) { importError = 'Escolha o formato do deck antes de importar.'; renderImport(); $('#dwImportFormat')?.focus(); return; }
+    if (!deckFormat) { importError = 'Escolha o formato do deck antes de importar.'; renderImport(); root.querySelector<HTMLElement>('[data-import-format]')?.focus(); return; }
     if (!(await resolveImportLink())) return;
     const source = { ...importDraft };
     const parsed = parseDeckList(source.text);
@@ -395,6 +395,11 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       libraryColors = color === 'clear' ? new Set() : toggleColor(libraryColors, color as ColorFilter);
       renderLibrary();
       root.querySelector<HTMLElement>(`[data-library-color="${color === 'clear' ? 'W' : color}"]`)?.focus();
+      return;
+    }
+    if (ds.importFormat) {
+      importFormat = format = ds.importFormat as DeckFormat; importError = ''; opts.onFormatChange?.(format);
+      renderImport(); root.querySelector<HTMLElement>('#dwImportName')?.focus();
       return;
     }
     if (ds.inspect) { hideCardPreview(); inspectCard({ name: ds.inspect, print: printOf(ds) }, target); return; }

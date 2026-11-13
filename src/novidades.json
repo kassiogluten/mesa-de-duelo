@@ -1,4 +1,9 @@
 {
+  "0.164.0": {
+    "Formato em cards ao importar uma lista": [
+      { "img": "0.164.0/formatos-importar.webp", "legenda": "Os seis formatos em cards ao importar um deck: Commander, Standard, Pauper, Sacola 50, Oathbreaker e Livre, cada um com seu ícone e o que vale nele." }
+    ]
+  },
   "0.163.2": {
     "Precons só no Commander Precon": [
       { "img": "0.163.2/filtro-precon.webp", "legenda": "Meus decks com o filtro Commander Precon: os decks prontos mostram os precons, a começar pelos de Star Trek." }
