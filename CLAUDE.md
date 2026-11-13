@@ -40,6 +40,14 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 - Problema reproduzido que ainda não tem correção pode entrar como **para investigar**: sem `versao` nem `item` (a lista mostra "Para investigar"), com o `conferir` dizendo o que acontece hoje e o que deveria acontecer. Quando a correção sair, ele ganha `versao` e `item` em vez de virar outro cenário.
 - `tests/lab.test.mjs` confere que cada cenário (fora os para investigar) aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
 
+## Coleções novas
+
+Quando uma coleção nova passa a valer na mesa (lista de legalidade atualizada, Forge com as cartas dela), ela ganha **5 decks prontos** com os decks mais populares dela, na mesma mudança ou num item do `ROADMAP.md` se as cartas ainda não estão no Forge:
+
+- No Commander, os 5 comandantes da coleção mais jogados no EDHREC, cada um com a lista média de lá; nos outros formatos, os 5 decks da coleção mais jogados no formato.
+- Ficam em `shared/starter-decks.json`, como os outros decks prontos (nome em português, bracket e preço), e passam na validação do servidor, inclusive para o computador.
+- Entram no `CHANGELOG.md` (`### Novo`) e na página Novidades em imagens.
+
 ## Entregar
 
 Ao fechar uma mudança, siga a skill `/entregar` (`.claude/skills/entregar/SKILL.md`): CHANGELOG, versão, prints, cenário do Laboratório, testes e roadmap, na ordem.

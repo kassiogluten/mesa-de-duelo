@@ -17,7 +17,7 @@ import { toggleColor, type ColorFilter } from './deckFilters';
 import './deckFilters.css';
 import { montarAvisoConta } from './contaAviso';
 import { buildSearchQuery, similarQuery } from './cardSearch';
-import { deckIdentity, editHTML, importHTML, libraryHTML, printOf, resultsHTML, slotRole, statusHTML, type BuilderState } from './deckbuilderView';
+import { deckIdentity, identityExempt, editHTML, importHTML, libraryHTML, printOf, resultsHTML, slotRole, statusHTML, type BuilderState } from './deckbuilderView';
 import { finder } from './dom';
 import { chooseToken, deckTokens, type TokenKind } from '../deckTokens';
 import { openTokenPicker } from './deckTokensView';
@@ -263,7 +263,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (!more) { similarTo = null; similarTags.clear(); }
     const asked = !!searchQuery.trim() || searchColors.size > 0 || !!searchType || !!searchFunc || commanderSlot !== null;
     const role = commanderSlot === null ? null : slotRole(deck, commanderSlot);
-    const q = buildSearchQuery({ text: searchQuery, colors: searchColors, type: searchType, func: searchFunc, identity: role === null || role === 'signature' ? deckIdentity(deck) : null, commanderSlot: role === null ? false : role === 'commander' || role });
+    const q = buildSearchQuery({ text: searchQuery, colors: searchColors, type: searchType, func: searchFunc, identity: role === null || role === 'signature' ? deckIdentity(deck) : null, identityExempt: identityExempt(deck), commanderSlot: role === null ? false : role === 'commander' || role });
     const seq = ++searchSeq;
     if (!asked) { results = []; searching = false; renderResults(); return; }
     searching = true; searchError = ''; if (!more) { results = []; nextPage = 1; } renderResults();
@@ -283,7 +283,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     root.querySelector<HTMLElement>('[data-focus="back-to-text-head"]')?.focus();
     try {
       if (!opts.similarCards) throw new Error('Cartas parecidas precisam do servidor de jogo.');
-      const q = similarQuery(card, deckIdentity(deck)), byId = new Map<string, ScryCard>();
+      const q = similarQuery(card, deckIdentity(deck), identityExempt(deck)), byId = new Map<string, ScryCard>();
       for (let page = 1; page <= SIMILAR_PAGES; page++) {
         const result = await searchCards(q, page, deck.format, { translate: false });
         if (seq !== searchSeq) return;
@@ -486,6 +486,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (input.id === 'dwImportFormat') { importFormat = input.value as DeckFormat; if (importError) importError = ''; }
     if (input.id === 'dwFormat' || input.id === 'dwImportFormat') { format = input.value as DeckFormat; opts.onFormatChange?.(format); if (view === 'library') renderLibrary(); else if (view === 'import' && !importReview) preserveRender(renderImport); }
     if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
+    if (input.dataset.commanderColor !== undefined) { const deck = current(), entry = deck?.commanders?.[Number(input.dataset.commanderColor)]; if (deck && !deck.builtin && entry) { if (/^[WBRG]$/.test(input.value)) entry.chosenColors = input.value; else delete entry.chosenColors; changed(deck); resetSearch(); preserveRender(renderEdit); } }
     if (input.id === 'dwBracket') { const deck = current(), value = Number(input.value); if (deck && !deck.builtin && isBracket(value)) { deck.bracket = value; changed(deck); preserveRender(renderEdit); } }
     if (input.id === 'dwSearchType') { searchType = input.value; void runSearch(); }
     if (input.id === 'dwSearchFunc') { searchFunc = input.value; void runSearch(); }

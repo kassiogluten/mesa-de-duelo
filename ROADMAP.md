@@ -408,6 +408,8 @@ O Forge do servidor está fixado no commit `0b0f7ecc` (15/10/2026), que só tem 
 - [ ] Decidir se os precons de Star Trek Commander entram nos decks prontos (Commander Precon).
 - [ ] Item no CHANGELOG ("cartas de Star Trek").
 
+Consultado em 13/11/2026, sem atualizar: a lista de legalidade do Commander (0.162.0) já aceita as cartas de Star Trek, mas 353 delas não existem no commit fixado. O `master` do Forge do mesmo dia (`a264364`) tem todas as 353, com as edições Star Trek e Star Trek Commander. Basta atualizar o commit; os testes e o e2e continuam necessários, porque o motor também muda.
+
 ## 113. Combos infinitos e loops, do jogador e do computador
 
 Pedido em 08/11/2026. Hoje nada na mesa nem no servidor trata loop: um loop obrigatório deixa o servidor girando e a sala travada, um combo infinito opcional precisa ser clicado volta por volta, e o computador às vezes repete a mesma jogada centenas de vezes, enchendo o Registro e a fila de animações. São três casos, com respostas diferentes.
@@ -471,3 +473,12 @@ Pedido em 11/11/2026. Shorikai, Motor da Gênese é veículo e comandante; confe
 - [x] O que não funcionar vira correção no CHANGELOG com cenário no Laboratório; o que funcionar, um cenário pronto para conferir.
 
 Conferido em 11/11/2026 (`forge-bridge/scripts/test-crew.mjs` e o cenário "Shorikai: habilidade e Tripular 8"): a habilidade e o Tripular funcionavam, mas o OK do Tripular ficava ligado com qualquer poder e, abaixo de 8, desistia em silêncio, e a contagem vinha em inglês ("Crewing"); corrigido na 0.157.1. Falta a parte de comandante, que o Laboratório não monta (não tem zona de comando): conferir numa sala de Commander de verdade.
+
+## 123. Decks prontos das coleções novas
+
+Pedido em 13/11/2026: sempre que uma coleção nova entra na mesa, ela ganha 5 decks prontos com os decks mais populares dela (regra em `CLAUDE.md`, "Coleções novas").
+
+- [x] Mystery Booster Commander Edition (0.162.0): Whtz, Homer, Uugguu, Ekthi e Massimo, os 5 mais jogados no EDHREC em 13/11/2026, importados por `forge-bridge/scripts/importar-edhrec.mjs`; 15 cartas que a IA do Forge não joga foram trocadas por outras da mesma função.
+- [ ] Star Trek e Star Trek Commander: depois de atualizar o Forge (item 108), os 5 mais populares entre os comandantes e os precons da coleção.
+- [x] Cada deck passa na validação do servidor e pelo computador (`DeckValidation.validateForAi`), com bracket e preço como os outros decks prontos.
+

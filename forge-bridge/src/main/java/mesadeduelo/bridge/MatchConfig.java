@@ -8,7 +8,7 @@ import forge.game.GameType;
 /** Immutable, room-owned rules. Never mutate global Forge preferences per match. */
 record MatchConfig(String format, String matchLength, int playerCount) {
     static final String ENGINE_VERSION = "2.0.16-SNAPSHOT+0b0f7ecc5111.mesa1";
-    static final String RULES_VERSION = "standard-pauper-sacola50-commander-oathbreaker-precon-2026-11-04";
+    static final String RULES_VERSION = "standard-pauper-sacola50-commander-oathbreaker-precon-2026-11-12";
 
     static final java.util.List<String> FORMATS = java.util.List.of("free", "standard", "pauper", "sacola50", "commander", "oathbreaker", "precon");
 

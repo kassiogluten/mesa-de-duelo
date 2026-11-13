@@ -31,7 +31,11 @@ export const PRECON_HINT = 'Commander Precon: cada jogador usa um deck pré-cons
 /** O Sacola 50 não confere preço: o aviso lembra o limite combinado. */
 export const SACOLA_HINT = 'Sacola 50: cartas do Legacy, com o deck inteiro custando até R$ 50. A mesa não confere o preço: combine com o oponente.';
 /** `set` e `cn`: a impressão escolhida (série do Scryfall, em minúsculas, e número de coleção), vinda da lista importada. */
-export interface DeckEntry { name: string; count: number; oracleId?: string; set?: string; cn?: string }
+export interface DeckEntry {
+  name: string; count: number; oracleId?: string; set?: string; cn?: string;
+  /** Cor extra escolhida para o Rulebreaker do comandante (Tolabow, Loch Rascal): uma letra de WUBRG. */
+  chosenColors?: string;
+}
 /** A mesma carta na mesma impressão: cada série da mesma carta fica numa linha própria do deck. */
 export const entryKey = (e: Pick<DeckEntry, 'name' | 'set' | 'cn'>) => e.set ? `${e.name}|${e.set}|${e.cn ?? ''}` : e.name;
 /**

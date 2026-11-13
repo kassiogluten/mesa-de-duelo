@@ -22,7 +22,7 @@ while url:
             raise ValueError('Search returned a nonlegal card: ' + card['name'])
         cards[card['oracle_id']] = {'name': card['name'], 'oracleId': card['oracle_id']}
     url = page.get('next_page')
-    time.sleep(0.15)
+    time.sleep(0.55)  # a busca do Scryfall aceita 2 por segundo
 if len(cards) < 30000:
     raise ValueError('Unexpectedly small snapshot; previous file preserved')
 snapshot = {

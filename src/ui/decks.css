@@ -140,6 +140,8 @@
 .dw-identity { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 10px 0 0; font-size: 14px; }
 .dw-identity .pip { font-size: 15px; }
 .dw-identity span { color: var(--dw-muted); }
+.dw-identity .dw-identity-extra { flex-basis: 100%; }
+.dw-color-choice { margin: 4px 0 10px; }
 .dw-tagger { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--dw-muted); }
 .dw-tagger a { color: var(--dw-accent); }
 .dw-results p.dw-result-tags { margin: 0 0 4px; font-size: 11px; color: var(--dw-accent); white-space: normal; overflow-wrap: anywhere; }

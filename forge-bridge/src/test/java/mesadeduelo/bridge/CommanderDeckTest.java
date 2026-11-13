@@ -25,11 +25,14 @@ public class CommanderDeckTest {
             var r = DeckValidation.validateForAi(d, "commander");
             if (!r.valid()) { errors.append(d.get("name")).append(": ").append(r.json()).append("\n"); return; }
             int commanders = d.getAsJsonArray("commanders").size();
-            assertEquals(100 - commanders, r.deck().getMain().countAll()); assertEquals(commanders, r.deck().getCommanders().size());
+            // O Whtz (Rulebreaker) não tem tamanho máximo: o deck médio dele tem mais de 100 cartas.
+            if (d.getAsJsonArray("commanders").get(0).getAsJsonObject().get("name").getAsString().equals("Whtz, the Bibliophile")) assertTrue(r.deck().getMain().countAll() >= 100 - commanders);
+            else assertEquals(100 - commanders, r.deck().getMain().countAll());
+            assertEquals(commanders, r.deck().getCommanders().size());
             assertEquals(commanders, r.json().getAsJsonObject("deck").getAsJsonArray("commanders").size());
         }).count();
         assertEquals(errors.toString(), 0, errors.length());
-        assertEquals(117, count); assertNotNull(Decks.random("commander"));
+        assertEquals(122, count); assertNotNull(Decks.random("commander"));
     }
     @Test public void preconsGoOnlyAsTheyCameInTheBox() {
         var precons = Decks.LISTS.values().stream().filter(d -> d.has("precon")).toList();
@@ -94,6 +97,45 @@ public class CommanderDeckTest {
         var r = check(deck("Wernog, Rider's Chaplain", "Plains", 99)); assertTrue(r.json().toString(), r.valid());
         assertEquals("Wernog, Rider's Chaplain", r.json().getAsJsonObject("deck").getAsJsonArray("commanders").get(0).getAsJsonObject().get("name").getAsString());
         assertEquals("Wernog, Rider's Chaplain", Session.commanderNames(r.deck()).get(0));
+    }
+    private JsonObject deck(String commander, Object... cards) {
+        JsonObject d = deck(commander, (String) cards[0], (Integer) cards[1]);
+        for (int i = 2; i < cards.length; i += 2) d.getAsJsonArray("cards").add(rows((String) cards[i], (Integer) cards[i + 1]).get(0));
+        return d;
+    }
+    private boolean has(DeckValidation.Result r, String code) {
+        return r.issues().asList().stream().anyMatch(i -> code.equals(i.getAsJsonObject().get("code").getAsString()));
+    }
+    @Test public void rulebreakerCommandersFollowTheirOwnConstruction() {
+        // Mystery Booster Commander Edition (2026-10-19): passou a valer no Commander depois do retrato de outubro.
+        // Valko: cartas Phyrexian e terrenos básicos de qualquer identidade.
+        var valko = check(deck("Valko Indorian", "Swamp", 90, "Plains", 8, "Elesh Norn, Mother of Machines", 1));
+        assertTrue(valko.json().toString(), valko.valid());
+        var offColor = check(deck("Valko Indorian", "Swamp", 98, "Swords to Plowshares", 1));
+        assertTrue(offColor.json().toString(), has(offColor, "color-identity") && !has(offColor, "unsupported-commander-choice"));
+        // Grizzlegom: qualquer terreno.
+        assertTrue(check(deck("Grizzlegom, Hurloon Hero", "Forest", 98, "Watery Grave", 1)).valid());
+        // Whtz: sem tamanho máximo, mas ainda com pelo menos 100 cartas.
+        var whtz = check(deck("Whtz, the Bibliophile", "Plains", 100, "Island", 99));
+        assertTrue(whtz.json().toString(), whtz.valid());
+        assertTrue(has(check(deck("Whtz, the Bibliophile", "Plains", 98)), "total-count"));
+        assertTrue(has(check(deck("Valko Indorian", "Swamp", 120)), "total-count"));
+        // Comandante comum da coleção, sem Rulebreaker.
+        var uramon = check(deck("Boss Uramon, Shadow's Reach", "Swamp", 99));
+        assertTrue(uramon.json().toString(), uramon.valid());
+        // Tolabow: instantâneas e feitiços podem ter uma cor a mais, escolhida pelo jogador no editor.
+        assertTrue(has(check(deck("Tolabow, Loch Rascal", "Island", 99)), "commander-color-choice"));
+        JsonObject tolabow = deck("Tolabow, Loch Rascal", "Island", 97, "Lightning Bolt", 1, "Mountain", 1);
+        tolabow.getAsJsonArray("commanders").get(0).getAsJsonObject().addProperty("chosenColors", "R");
+        var red = check(tolabow);
+        assertTrue(red.json().toString(), red.valid());
+        tolabow.getAsJsonArray("cards").add(rows("Goblin Guide", 1).get(0)); tolabow.getAsJsonArray("cards").get(0).getAsJsonObject().addProperty("count", 96);
+        var creature = check(tolabow);
+        assertTrue(creature.json().toString(), has(creature, "color-identity"));
+        tolabow.getAsJsonArray("commanders").get(0).getAsJsonObject().addProperty("chosenColors", "U");
+        assertTrue(has(check(tolabow), "commander-color-choice"));
+        tolabow.getAsJsonArray("commanders").get(0).getAsJsonObject().addProperty("chosenColors", "RG");
+        assertTrue(has(check(tolabow), "commander-color-choice"));
     }
     @Test public void flavorNamesUseTheOracleCardLegality() {
         // Marvel Super Heroes Commander: Vibranium Dynamo é uma Thran Dynamo e Panther Idol um Mind's Eye, com outro nome impresso.

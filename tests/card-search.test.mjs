@@ -39,3 +39,9 @@ test('similar cards: same colors, same type group and mana value one away', () =
   // Terrenos: pela identidade de cor, sem custo.
   assert.equal(s.similarQuery({ type_line: 'Land', cmc: 0, colors: [], color_identity: ['U', 'B'] }), 'id=ub t:land');
 });
+
+test('Rulebreaker: a busca do deck também traz as cartas liberadas da identidade', () => {
+  assert.equal(s.identityFilter(['B'], ['(t:phyrexian or t:basic)']), '(id<=b or (t:phyrexian or t:basic))');
+  assert.equal(s.buildSearchQuery({ text: 'norn', identity: ['B'], identityExempt: ['(t:phyrexian or t:basic)'] }), 'norn (id<=b or (t:phyrexian or t:basic))');
+  assert.equal(s.identityFilter(['B']), 'id<=b');
+});

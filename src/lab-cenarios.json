@@ -1,5 +1,125 @@
 [
   {
+    "nome": "Valko Indorian: Phyrexians com ameaça e vínculo com a vida",
+    "versao": "0.162.0",
+    "item": "Comandantes com Rulebreaker",
+    "conferir": "O Jogador 1 tem Valko Indorian, Phyrexian Rager (Phyrexian) e Grizzly Bears; o Jogador 2 tem um Grizzly Bears só. Ataque com o Phyrexian Rager e o Grizzly Bears: o Rager tem ameaça (um bloqueador sozinho não pode bloqueá-lo) e vínculo com a vida (o Jogador 1 ganha 3 de vida com o dano); o Grizzly Bears, que não é Phyrexian, não ganha nada.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Valko Indorian" }, { "name": "Phyrexian Rager" }, { "name": "Grizzly Bears" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Forest" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Tolabow, Loch Rascal: Lontra a cada instantânea ou feitiço",
+    "versao": "0.162.0",
+    "item": "Comandantes com Rulebreaker",
+    "conferir": "O Jogador 1 tem Tolabow, Loch Rascal, uma Island e duas Mountains, com Lightning Bolt e Opt na mão. Conjure a Lightning Bolt: a Tolabow cria uma ficha de Lontra 1/1 azul e vermelha com destreza. Depois conjure o Opt: nasce outra Lontra, e a primeira ganha +1/+1 até o fim do turno pela destreza.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Lightning Bolt", "Opt"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Tolabow, Loch Rascal" }, { "name": "Island" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Whtz, the Bibliophile: comprar e ganhar 1 de vida",
+    "versao": "0.162.0",
+    "item": "Comandantes com Rulebreaker",
+    "conferir": "O Jogador 1 tem Whtz, the Bibliophile e três Islands, com cartas no grimório. Ative a habilidade do Whtz: como o deck começou com menos de 200 cartas, ela custa {3} (as três Islands) e vira o Whtz; o Jogador 1 compra uma carta e vai a 21 de vida.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Whtz, the Bibliophile" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Homer, the Hermit: Landfall faz moer",
+    "versao": "0.162.0",
+    "item": "Cinco decks prontos da Mystery Booster Commander",
+    "conferir": "O Jogador 1 tem Homer, the Hermit (um Caranguejo) e uma Forest na mão. Jogue a Forest: o Homer pede os jogadores alvo; escolha o Jogador 2, e ele mói 2 cartas (duas vezes o número de Caranguejos do Jogador 1, que é 1).",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Forest"], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Homer, the Hermit" }, { "name": "Forest" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Uugguu, the Omniplasm: Gosma que morre vira duas cópias",
+    "versao": "0.162.0",
+    "item": "Cinco decks prontos da Mystery Booster Commander",
+    "conferir": "O Jogador 1 tem Uugguu, the Omniplasm, Acidic Slime (uma Gosma) e um Swamp, com Village Rites na mão. Conjure Village Rites sacrificando o Acidic Slime: o Jogador 1 compra duas cartas e o Uugguu cria duas cópias 2/2 do Acidic Slime, não lendárias; cada uma, ao entrar, destrói um terreno do Jogador 2.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Village Rites"], "library": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Uugguu, the Omniplasm" }, { "name": "Acidic Slime" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Island" }, { "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Ekthi, Contaminator Priest: Equipamento com arma viva",
+    "versao": "0.162.0",
+    "item": "Cinco decks prontos da Mystery Booster Commander",
+    "conferir": "O Jogador 1 tem Ekthi, Contaminator Priest e uma Plains, com Bonesplitter na mão. Conjure o Bonesplitter: ele ganha arma viva e entra equipado numa ficha de Germe Phyrexiano 0/0, que o Ekthi deixa 1/1; com o Bonesplitter, o Germe fica 3/1.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Bonesplitter"], "library": ["Plains", "Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Ekthi, Contaminator Priest" }, { "name": "Plains" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Massimo, the Magician: a criatura que entra copia uma mágica do cemitério",
+    "versao": "0.162.0",
+    "item": "Cinco decks prontos da Mystery Booster Commander",
+    "conferir": "O Jogador 1 tem Massimo, the Magician e uma Mountain, com Raging Goblin (ímpeto) na mão e Lightning Bolt no cemitério. Conjure o Raging Goblin: o Massimo exila a Lightning Bolt do cemitério. Ataque com o Raging Goblin: quando ele causa dano ao Jogador 2, a mesa oferece conjurar uma cópia da Lightning Bolt sem pagar.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Raging Goblin"], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": ["Lightning Bolt"], "exile": [],
+          "battlefield": [{ "name": "Massimo, the Magician" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Boss Uramon, Shadow's Reach: sombra, toque mortífero e Rato",
+    "versao": "0.162.0",
+    "item": "Cartas novas valem no Commander",
+    "conferir": "O Jogador 1 tem Boss Uramon, Shadow's Reach (um Rogue com sombra); o Jogador 2 tem Grizzly Bears. Ataque com o Boss Uramon: o Grizzly Bears não pode bloqueá-lo (sombra), o Uramon tem toque mortífero ao atacar e, quando causa dano ao Jogador 2, cria uma ficha de Rato Rogue 1/1 preta.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Swamp", "Swamp", "Swamp", "Swamp", "Swamp"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Boss Uramon, Shadow's Reach" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Convocar e Delve na mão não travam a partida",
     "versao": "0.157.1",
     "item": "A partida não trava mais com Convocar ou Delve na mão",

@@ -1,4 +1,14 @@
 {
+  "0.162.0": {
+    "Cinco decks prontos da Mystery Booster Commander": [
+      { "img": "0.162.0/decks-mystery-booster.webp", "legenda": "Os cinco decks novos entre os decks prontos de Commander: Mágicas de Massimo, Germes de Ekthi, Gosmas de Uugguu, Caranguejos de Homer e Biblioteca sem Fim, este com 254 cartas." }
+    ],
+    "Comandantes com Rulebreaker": [
+      { "img": "0.162.0/busca-valko.webp", "legenda": "A busca de um deck do Valko Indorian, preto: a linha Rulebreaker diz que também entram cartas Phyrexian e terrenos básicos de qualquer cor, e a busca por pretor traz Atraxa e Gix." },
+      { "img": "0.162.0/whtz-sem-limite.webp", "legenda": "O resumo de um deck do Whtz, the Bibliophile com 150 cartas: \"de no mínimo 100 cartas\", sem tamanho máximo." },
+      { "img": "0.162.0/tolabow-cor-extra.webp", "legenda": "O Tolabow, Loch Rascal como comandante, com a cor extra das instantâneas e feitiços escolhida: Vermelho." }
+    ]
+  },
   "0.161.0": {
     "Atacantes iguais num monte só": [
       { "img": "0.161.0/atacantes-em-monte.webp", "legenda": "Cinco Zumbis atacando juntos num monte com ×5 e o selo de 10 de dano; o Urso, sozinho, fica à parte." }

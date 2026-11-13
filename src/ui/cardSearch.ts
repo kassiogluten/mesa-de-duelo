@@ -15,10 +15,10 @@ export const FUNCTION_TAGS = [
 const ORDER = ['W', 'U', 'B', 'R', 'G'];
 const letters = (colors: Iterable<string>) => ORDER.filter(c => new Set(colors).has(c)).join('').toLowerCase();
 
-/** Filtro de identidade de cor (`id<=wu`, `id:c` para incolor). */
-export function identityFilter(identity: Iterable<string>): string {
-  const l = letters(identity);
-  return l ? `id<=${l}` : 'id:c';
+/** Filtro de identidade de cor (`id<=wu`, `id:c` para incolor), mais as cartas que um Rulebreaker libera dela. */
+export function identityFilter(identity: Iterable<string>, exempt: string[] = []): string {
+  const l = letters(identity), base = l ? `id<=${l}` : 'id:c';
+  return exempt.length ? `(${[base, ...exempt].join(' or ')})` : base;
 }
 
 export interface SearchParts {
@@ -31,6 +31,8 @@ export interface SearchParts {
   func?: string;
   /** Identidade de cor do deck de Commander (do comandante); fica de fora ao escolher o comandante. */
   identity?: Iterable<string> | null;
+  /** Cartas liberadas da identidade pelo Rulebreaker do comandante, na sintaxe do Scryfall. */
+  identityExempt?: string[];
   /** Escolhendo a carta da zona de comando: o comandante (true), o oathbreaker ou a mágica de assinatura (que segue a identidade). */
   commanderSlot?: boolean | 'oathbreaker' | 'signature';
 }
@@ -45,7 +47,7 @@ export function buildSearchQuery(p: SearchParts): string {
     p.type ?? '',
     func,
     p.commanderSlot === true ? '(is:commander or t:background)' : p.commanderSlot ? SLOT_FILTER[p.commanderSlot] : '',
-    p.commanderSlot !== true && p.commanderSlot !== 'oathbreaker' && p.identity ? identityFilter(p.identity) : '',
+    p.commanderSlot !== true && p.commanderSlot !== 'oathbreaker' && p.identity ? identityFilter(p.identity, p.identityExempt) : '',
   ].filter(Boolean).join(' ');
 }
 
@@ -68,7 +70,7 @@ export interface SimilarSource { type_line: string; cmc?: number; colors?: strin
  * Candidatas a "Parecidas": mesmas cores, mesmo tipo e custo de mana a um de distância. Terrenos não têm cor
  * nem custo: comparam pela identidade de cor. No Commander, só o que cabe na identidade do comandante.
  */
-export function similarQuery(card: SimilarSource, identity?: Iterable<string> | null): string {
+export function similarQuery(card: SimilarSource, identity?: Iterable<string> | null, identityExempt: string[] = []): string {
   const group = typeGroup(card.type_line);
   const land = group === 't:land';
   const colors = letters(land ? card.color_identity ?? [] : card.colors ?? card.color_identity ?? []);
@@ -77,6 +79,6 @@ export function similarQuery(card: SimilarSource, identity?: Iterable<string> | 
     land ? `id=${colors || 'c'}` : `c=${colors || 'c'}`,
     group,
     land ? '' : `mv>=${Math.max(0, mv - 1)} mv<=${mv + 1}`,
-    identity ? identityFilter(identity) : '',
+    identity ? identityFilter(identity, identityExempt) : '',
   ].filter(Boolean).join(' ');
 }

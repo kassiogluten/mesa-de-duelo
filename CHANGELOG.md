@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.162.0] - 2026-11-13
+
+### Novo
+
+- **Cinco decks prontos da Mystery Booster Commander.** Os cinco comandantes da coleção mais jogados no EDHREC viram decks prontos de Commander, com a lista média de cada um (trocando as poucas cartas que o computador ainda não sabe jogar por outras da mesma função): Biblioteca sem Fim (Whtz, the Bibliophile, com 254 cartas, porque ele não tem tamanho máximo e fica melhor com 200 ou mais), Caranguejos de Homer (Homer, the Hermit), Gosmas de Uugguu (Uugguu, the Omniplasm), Germes de Ekthi (Ekthi, Contaminator Priest) e Mágicas de Massimo (Massimo, the Magician). Eles aparecem na escolha de deck, para você e para o computador.
+- **Comandantes com Rulebreaker.** Valko Indorian, Whtz, the Bibliophile, Seluma, Light of Aysen, The Everforger, Maular, the Next Evolution, Grizzlegom, Hurloon Hero, The Unluckiest Planeswalker e Tolabow, Loch Rascal podem comandar o seu deck seguindo a própria regra: o Valko aceita cartas Phyrexian e terrenos básicos de qualquer cor, a Seluma aceita Anjos, a Unluckiest Planeswalker aceita Auras, e assim por diante; o deck do Whtz não tem tamanho máximo (mas continua com pelo menos 100 cartas). A busca do editor também traz essas cartas, e a identidade de cor mostra o que o comandante libera. No Tolabow, você escolhe embaixo do nome dele a cor extra que as instantâneas e os feitiços do deck podem ter.
+
+### Mudou
+
+- **Cartas novas valem no Commander.** As cartas da Mystery Booster Commander Edition (como Valko Indorian, Whtz, the Bibliophile e Boss Uramon, Shadow's Reach) passam a ser aceitas nos decks de Commander, junto com as outras cartas liberadas no formato até 12 de novembro. No Oathbreaker elas continuam fora, como na lista oficial do formato.
+
 ## [0.161.1] - 2026-11-12
 
 ### Corrigido

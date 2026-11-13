@@ -84,7 +84,7 @@ def scryfall_names(query):
         page = fetch(url)
         names.update(card['name'] for card in page['data'])
         url = page.get('next_page')
-        time.sleep(0.15)
+        time.sleep(0.55)  # a busca do Scryfall aceita 2 por segundo
     return sorted(names)
 
 

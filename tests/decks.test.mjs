@@ -305,8 +305,39 @@ test('Commander local rules enforce 100 total, singleton exceptions, identity in
   assert.ok(validateDeckLocal({ ...d, sideboard: [{ name: 'Commander Forest', count: 1 }] }).issues.some(i => i.code === 'sideboard_count'));
   assert.equal(cardCopyLimit('Commander Bolt', undefined, 'commander'), 1);
   assert.equal(cardCopyLimit('Test Dwarves', cache('Test Dwarves', { oracle_text: 'A deck can have up to seven cards named Test Dwarves.' }), 'commander'), 7);
-  for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) assert.equal(decks.totalDeckSize(deck), 100);
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 117);
+  // O deck do Whtz (Rulebreaker, sem tamanho máximo) passa de 100; os outros têm 100 exatas.
+  for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) {
+    if (deck.commanders?.[0]?.name === 'Whtz, the Bibliophile') assert.ok(decks.totalDeckSize(deck) >= 100); else assert.equal(decks.totalDeckSize(deck), 100, deck.name);
+  }
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 122);
+});
+
+test('Rulebreaker commanders free their cards from the identity and Whtz has no maximum size', () => {
+  cache('Valko Indorian', { type_line: 'Legendary Creature — Human Wizard', color_identity: ['B'], legalities: { commander: 'legal' } });
+  cache('Whtz, the Bibliophile', { type_line: 'Legendary Creature — Homunculus', color_identity: ['W', 'U'], legalities: { commander: 'legal' } });
+  cache('Rb Swamp', { type_line: 'Basic Land — Swamp', color_identity: ['B'], legalities: { commander: 'legal' } });
+  cache('Rb Plains', { type_line: 'Basic Land — Plains', color_identity: ['W'], legalities: { commander: 'legal' } });
+  cache('Rb Phyrexian', { type_line: 'Legendary Creature — Phyrexian Praetor', color_identity: ['W'], legalities: { commander: 'legal' } });
+  cache('Rb Human', { type_line: 'Creature — Human', color_identity: ['W'], legalities: { commander: 'legal' } });
+  const valko = { id: 'v', name: 'v', format: 'commander', commanders: [{ name: 'Valko Indorian', count: 1 }], sideboard: [] };
+  const codes = cards => validateDeckLocal({ ...valko, cards }).issues.map(i => i.code);
+  assert.ok(!codes([{ name: 'Rb Swamp', count: 90 }, { name: 'Rb Plains', count: 8 }, { name: 'Rb Phyrexian', count: 1 }]).includes('color_identity'));
+  assert.ok(codes([{ name: 'Rb Swamp', count: 98 }, { name: 'Rb Human', count: 1 }]).includes('color_identity'));
+  assert.ok(codes([{ name: 'Rb Swamp', count: 120 }]).includes('total_count'));
+  const whtz = { id: 'w', name: 'w', format: 'commander', commanders: [{ name: 'Whtz, the Bibliophile', count: 1 }], cards: [{ name: 'Rb Plains', count: 150 }], sideboard: [] };
+  assert.ok(!validateDeckLocal(whtz).issues.some(i => i.code === 'total_count'));
+  assert.ok(validateDeckLocal({ ...whtz, cards: [{ name: 'Rb Plains', count: 98 }] }).issues.some(i => i.code === 'total_count'));
+  // Tolabow: instantâneas e feitiços com a cor extra escolhida no editor.
+  cache('Tolabow, Loch Rascal', { type_line: 'Legendary Creature — Otter Wizard', color_identity: ['U'], legalities: { commander: 'legal' } });
+  cache('Rb Island', { type_line: 'Basic Land — Island', color_identity: ['U'], legalities: { commander: 'legal' } });
+  cache('Rb Bolt', { type_line: 'Instant', color_identity: ['R'], legalities: { commander: 'legal' } });
+  cache('Rb Goblin', { type_line: 'Creature — Goblin', color_identity: ['R'], legalities: { commander: 'legal' } });
+  const tolabow = (chosenColors, extra = 'Rb Bolt') => validateDeckLocal({ id: 't', name: 't', format: 'commander', commanders: [{ name: 'Tolabow, Loch Rascal', count: 1, ...(chosenColors ? { chosenColors } : {}) }], cards: [{ name: 'Rb Island', count: 98 }, { name: extra, count: 1 }], sideboard: [] }).issues.map(i => i.code);
+  assert.ok(tolabow(undefined).includes('commander_color_choice'));
+  assert.ok(tolabow(undefined).includes('color_identity'));
+  assert.ok(!tolabow('R').includes('color_identity') && !tolabow('R').includes('commander_color_choice'));
+  assert.ok(tolabow('G').includes('color_identity'));
+  assert.ok(tolabow('R', 'Rb Goblin').includes('color_identity'));
 });
 
 test('Oathbreaker local rules: a planeswalker and a signature spell, 60 cards, singleton and identity', () => {

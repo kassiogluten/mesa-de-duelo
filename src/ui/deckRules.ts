@@ -1,6 +1,7 @@
 // Conferência local do deck pelo formato (cópias, tamanho, comandante); o servidor confere de novo.
 import { countEntries, deckEntries, FORMAT_LABEL, hasCommandZone, isBasic, isConstructed, isPrecon, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
 import { cacheGet, legalityFresh, type ScryCard } from '../scryfall';
+import { rulebreakersOf } from '../rulebreaker';
 
 export interface DeckIssue { code: string; message: string; card?: string; section?: 'main' | 'sideboard' | 'commander' }
 export interface ServerDeckValidation { valid: boolean; issues: DeckIssue[]; rulesVersion?: string; engineVersion?: string }
@@ -32,8 +33,12 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
   const commanders = deck.commanders ?? [];
   const commanderCount = countEntries(commanders);
   const identity = new Set(commanders.flatMap(e => cacheGet(e.name)?.color_identity ?? []));
+  // Rulebreaker: cartas liberadas da identidade e deck sem tamanho máximo (só no Commander, como no servidor).
+  const rulebreakers = format === 'commander' ? rulebreakersOf(commanders) : [];
+  const unlimitedSize = rulebreakers.some(r => r.unlimitedSize);
+  if (rulebreakers.some(r => r.missingChoice)) issues.push({ code: 'commander_color_choice', section: 'commander', message: 'Escolha a cor extra do Tolabow, Loch Rascal, para as instantâneas e os feitiços.' });
   if (format === 'commander') {
-    if (main + commanderCount !== 100) issues.push({ code: 'total_count', message: `Commander exige 100 cartas, incluindo os comandantes. Total atual: ${main + commanderCount}.` });
+    if (unlimitedSize ? main + commanderCount < 100 : main + commanderCount !== 100) issues.push({ code: 'total_count', message: unlimitedSize ? `Este comandante permite um deck sem tamanho máximo, mas com pelo menos 100 cartas, incluindo os comandantes. Total atual: ${main + commanderCount}.` : `Commander exige 100 cartas, incluindo os comandantes. Total atual: ${main + commanderCount}.` });
     if (commanderCount < 1 || commanderCount > 2 || commanders.some(e => e.count !== 1)) issues.push({ code: 'commander_count', message: 'Escolha um comandante ou dois comandantes com uma parceria válida.', section: 'commander' });
     if (side) issues.push({ code: 'sideboard_count', message: 'Commander não usa sideboard nesta mesa.', section: 'sideboard' });
     // Forge validates eligibility and partnership. Never claim local metadata proves this.
@@ -54,7 +59,8 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
         if (!card || !legalityFresh(card) || !card.legalities?.[legality]) unknown.add(entry.name);
         else if (card.legalities[legality] !== 'legal') issues.push({ code: card.legalities[legality] === 'banned' ? 'banned' : 'format', card: entry.name, section, message: `${card.pt?.name || entry.name}: ${card.legalities[legality] === 'banned' ? `banida em ${FORMAT_LABEL[format]}` : `não é válida em ${FORMAT_LABEL[format]}`}.` });
       }
-      if (hasCommandZone(format) && card && commanders.every(e => cacheGet(e.name)?.color_identity) && (card.color_identity ?? []).some(c => !identity.has(c)))
+      if (hasCommandZone(format) && card && commanders.every(e => cacheGet(e.name)?.color_identity) && (card.color_identity ?? []).some(c => !identity.has(c))
+        && (section === 'commander' || !rulebreakers.some(r => r.exempt?.(card))))
         issues.push({ code: 'color_identity', card: entry.name, section, message: `${card.pt?.name || entry.name}: identidade de cor fora da identidade ${format === 'oathbreaker' ? 'do oathbreaker' : 'dos comandantes'}. Confira eventuais exceções no servidor.` });
       const key = entry.oracleId ?? card?.oracle_id ?? card?.name.toLowerCase() ?? entry.name.toLowerCase();
       const previous = copies.get(key);

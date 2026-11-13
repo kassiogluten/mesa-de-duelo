@@ -1,7 +1,9 @@
 package mesadeduelo.bridge;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.nio.file.Files;
@@ -12,10 +14,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import forge.StaticData;
+import forge.card.ColorSet;
 import forge.card.CardEdition;
 import forge.deck.CardPool;
 import forge.deck.Deck;
 import forge.deck.DeckFormat;
+import forge.deck.DeckRule;
+import forge.deck.DeckRuleColorIdentity;
+import forge.deck.DeckRuleSize;
 import forge.deck.DeckSection;
 import forge.game.GameFormat;
 import forge.item.PaperCard;
@@ -105,7 +111,13 @@ final class DeckValidation {
                 issue(issues, "identity-mismatch", "O identificador da carta não corresponde ao nome informado.", name, section); continue;
             }
             if (card.getRules().isUnsupported()) { issue(issues, "unsupported-card", "Esta carta ainda não é suportada pelo motor de regras.", name, section); continue; }
-            pool.add(printed(card, row), count);
+            PaperCard chosen = printed(card, row);
+            // Cor extra escolhida para o Rulebreaker do comandante (Tolabow): o Forge a guarda na própria carta.
+            JsonElement c = row.get("chosenColors");
+            if ("commander".equals(section) && c != null && c.isJsonPrimitive() && c.getAsJsonPrimitive().isString()
+                && c.getAsString().matches("[WUBRG]{1,5}"))
+                chosen = chosen.copyWithMarkedColors(ColorSet.fromNames(c.getAsString().split("")));
+            pool.add(chosen, count);
         }
     }
 
@@ -219,8 +231,17 @@ final class DeckValidation {
         int commanderCount = commanders.countAll();
         if (commanderCount < 1 || commanderCount > 2)
             issue(issues, "commander-count", "Escolha um comandante ou dois com uma parceria válida.", null, "commander");
-        if (deck.getMain().countAll() + commanderCount != 100)
-            issue(issues, "total-count", "Commander exige exatamente 100 cartas, incluindo os comandantes.", null, "main");
+        // Rulebreaker (Mystery Booster Commander): as regras de construção do próprio comandante, lidas pelo Forge.
+        List<DeckRuleColorIdentity> identityRules = new ArrayList<>();
+        boolean unlimitedSize = false;
+        for (var e : commanders) for (DeckRule rule : DeckRule.parseAll(e.getKey())) {
+            if (!rule.isActiveFor(DeckSection.Commander)) continue;
+            if (rule instanceof DeckRuleColorIdentity ci) identityRules.add(ci);
+            else if (rule instanceof DeckRuleSize size && size.removesMaxDeckSize()) unlimitedSize = true;
+        }
+        int total = deck.getMain().countAll() + commanderCount;
+        if (unlimitedSize ? total < 100 : total != 100)
+            issue(issues, "total-count", unlimitedSize ? "Este comandante permite um deck sem tamanho máximo, mas com pelo menos 100 cartas, incluindo os comandantes." : "Commander exige exatamente 100 cartas, incluindo os comandantes.", null, "main");
         if (deck.getOrCreate(DeckSection.Sideboard).countAll() != 0)
             issue(issues, "sideboard-not-supported", "Commander não usa sideboard nesta mesa. Companheiros ainda não são suportados.", null, "sideboard");
         byte identity = 0;
@@ -229,8 +250,14 @@ final class DeckValidation {
             identity |= rules.getColorIdentity().getColor();
             if (e.getValue() != 1 || !DeckFormat.Commander.isLegalCommander(rules) || (commanderCount == 1 && rules.canBeBackground()))
                 issue(issues, "invalid-commander", "Esta carta não pode ocupar esta posição de comandante.", e.getKey().getDisplayName(), "commander");
-            if (rules.getAddsWildCardColor() || rules.getDeckRules().iterator().hasNext())
+            if (rules.getAddsWildCardColor() || !supportedDeckRules(e.getKey()))
                 issue(issues, "unsupported-commander-choice", "Comandantes com escolhas extras de cor ou regras especiais de construção ainda não são suportados nesta mesa.", e.getKey().getDisplayName(), "commander");
+            for (DeckRule rule : DeckRule.parseAll(e.getKey()))
+                if (rule instanceof DeckRuleColorIdentity ci && ci.hasAllowedAdditionalColorBudget()) {
+                    byte chosen = ci.getAllowedAdditionalColors();
+                    if (ColorSet.fromMask(chosen).countColors() != ci.getAdditionalColorCount() || (chosen & rules.getColorIdentity().getColor()) != 0)
+                        issue(issues, "commander-color-choice", "Escolha a cor extra deste comandante, fora da identidade de cor dele.", e.getKey().getDisplayName(), "commander");
+                }
         }
         Map<String, Integer> counts = new LinkedHashMap<>();
         for (var section : new DeckSection[]{DeckSection.Main, DeckSection.Commander, DeckSection.Sideboard}) {
@@ -242,7 +269,7 @@ final class DeckValidation {
                     issue(issues, "banned-card", "Esta carta está banida em Commander.", card.getDisplayName(), where);
                 else if (card.getRules().isCustom() || !permitted(card, CommanderLegality::permits) || !DeckFormat.Commander.isLegalCard(card))
                     issue(issues, "wrong-format", "Esta carta não é permitida em Commander.", card.getDisplayName(), where);
-                if (!card.getRules().getColorIdentity().hasNoColorsExcept(identity))
+                if (!card.getRules().getColorIdentity().hasNoColorsExcept(identity) && (section == DeckSection.Commander || !(DeckFormat.allowsOffColorIdentity(identityRules, card.getRules()) || DeckFormat.approvesAdditionalColor(identityRules, card.getRules(), identity))))
                     issue(issues, "color-identity", "A identidade de cor desta carta está fora da identidade dos comandantes.", card.getDisplayName(), where);
             }
         }
@@ -253,6 +280,19 @@ final class DeckValidation {
         }
         String problem = DeckFormat.Commander.getDeckConformanceProblem(deck);
         if (problem != null) issue(issues, "commander-construction", "Confira os comandantes, a parceria e a construção do deck: " + problem, null, null);
+    }
+
+    /**
+     * Regras de construção do comandante que a mesa sabe conferir: cartas liberadas da identidade de cor e deck sem tamanho
+     * máximo, mais a cor extra que o jogador escolhe no editor (Tolabow).
+     */
+    static boolean supportedDeckRules(PaperCard commander) {
+        for (DeckRule rule : DeckRule.parseAll(commander)) {
+            if (rule instanceof DeckRuleColorIdentity ci && !ci.disablesColorIdentityCheck()) continue;
+            if (rule instanceof DeckRuleSize size && size.removesMaxDeckSize()) continue;
+            return false;
+        }
+        return true;
     }
 
     /** Um planeswalker (o oathbreaker) e uma instantânea ou feitiço (a mágica de assinatura) na zona de comando, mais 58 cartas. */
