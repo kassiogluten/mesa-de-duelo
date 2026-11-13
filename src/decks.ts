@@ -23,7 +23,8 @@ export const scryfallFormat = (format: DeckFormat | undefined) => format === 'sa
  * Decks prontos listados num formato: só os montados para ele, mesmo que outros também sejam legais (os de Standard e
  * de Pauper valem no Sacola 50, que usa o Legacy). No Livre entram todos os de 60 cartas; no Precon, só os precons.
  */
-export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'free' ? !hasCommandZone(d.format) : format === 'precon' ? isPrecon(d) : (d.format ?? 'free') === format;
+/** Decks prontos de cada formato: os precons só aparecem no Commander Precon, não no Commander. */
+export const readyDeckFits = (d: DeckData, format: DeckFormat) => format === 'free' ? !hasCommandZone(d.format) : format === 'precon' ? isPrecon(d) : format === 'commander' ? d.format === 'commander' && !d.precon : (d.format ?? 'free') === format;
 /** Deck pré-construído oficial, do jeito que saiu da caixa: só os decks prontos da mesa contam, nunca uma cópia do jogador. */
 export const isPrecon = (d: DeckData) => !!d.builtin && !!d.precon;
 /** O Precon explicado na escolha do formato. */

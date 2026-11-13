@@ -1,4 +1,9 @@
 {
+  "0.163.2": {
+    "Precons só no Commander Precon": [
+      { "img": "0.163.2/filtro-precon.webp", "legenda": "Meus decks com o filtro Commander Precon: os decks prontos mostram os precons, a começar pelos de Star Trek." }
+    ]
+  },
   "0.163.1": {
     "Sino no botão de Novidades": [
       { "img": "0.163.1/sino-novidades.webp", "legenda": "O botão de Novidades com o sino, e o ponto dourado de versão nova ainda não vista." }

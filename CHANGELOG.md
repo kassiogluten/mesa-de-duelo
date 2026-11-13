@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.163.2] - 2026-11-13
+
+### Mudou
+
+- **Precons só no Commander Precon.** Com o Commander escolhido, a lista de decks prontos (na tela inicial, em Meus decks e para os computadores) não mostra mais os precons; eles ficam no formato Commander Precon. Em Meus decks, o filtro de formato ganhou a opção Commander Precon para encontrá-los.
+
 ## [0.163.1] - 2026-11-13
 
 ### Mudou

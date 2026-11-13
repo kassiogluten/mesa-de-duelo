@@ -375,7 +375,8 @@ test('Precon lists only the 47 official precons as they came in the box, under C
     assert.equal(deck.format, 'commander', deck.id);
     assert.equal(decks.totalDeckSize(deck), 100, deck.id);
     assert.ok(deck.bracket && deck.price && deck.precon.name && deck.precon.set && deck.precon.year >= 2013, deck.id);
-    assert.ok(decks.readyDeckFits(deck, 'precon') && decks.readyDeckFits(deck, 'commander'), deck.id);
+    // Os precons ficam só no Commander Precon: no Commander, a lista de decks prontos não os mostra.
+    assert.ok(decks.readyDeckFits(deck, 'precon') && !decks.readyDeckFits(deck, 'commander'), deck.id);
   }
   // Os decks prontos adaptados de um precon deram lugar ao original, com o mesmo id; os outros de Commander não são precons.
   for (const id of ['commander-bello', 'commander-caesar', 'commander-chatterfang', 'commander-cloud', 'commander-frodo-sam', 'commander-mothman', 'commander-sauron', 'commander-terra', 'commander-bumbleflower', 'commander-yshtola'])
@@ -429,7 +430,7 @@ test('each format lists only the ready decks built for it; Livre lists every 60-
   assert.equal(count('pauper'), 12);
   assert.equal(count('sacola50'), 17, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
   assert.equal(count('free'), 45);
-  assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length);
+  assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander' && !d.precon).length, 'os precons ficam no Commander Precon');
 });
 
 test('a chosen cover card wins while it stays in the main deck, never in Commander', () => {
