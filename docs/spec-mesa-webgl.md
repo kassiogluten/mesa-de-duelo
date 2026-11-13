@@ -60,7 +60,7 @@ A pergunta de partida foi migrar o jogo para uma linguagem "mais apropriada" par
 O item 114 do `ROADMAP.md` ("Melhorar o desempenho em aparelhos fracos") se sobrepõe a esta spec em dois pontos:
 
 - **Medir primeiro:** a fase 0 daqui cumpre a parte de efeitos do "Medir primeiro" de lá (CPU 4× e 6×, tarefas longas, celular de verdade). Marque lá também o que for feito.
-- **Modo leve:** o 114 prevê uma opção "Modo leve" (sem desfoque, sem brilhos e sombras animadas, sem efeitos de dano, animações curtas). Não pode haver duas opções que brigam. **Decisão pendente, a confirmar com o usuário antes da fase 1:** a recomendação é uma opção só, "Efeitos: completos / leves", em que "leves" já é o modo leve do 114 (efeitos de hoje em CSS nesta spec; os cortes de desfoque e brilho do 114 entram no mesmo "leves" quando aquele item for feito). As alternativas são manter duas opções separadas ou ter três níveis (completos / normais / leves).
+- **Modo leve:** o 114 prevê uma opção "Modo leve" (sem desfoque, sem brilhos e sombras animadas, sem efeitos de dano, animações curtas). Não pode haver duas opções que brigam. **Decidido em 13/11/2026: uma opção só.** A recomendação era uma opção só, "Efeitos: completos / leves", em que "leves" já é o modo leve do 114 (efeitos de hoje em CSS nesta spec; os cortes de desfoque e brilho do 114 entram no mesmo "leves" quando aquele item for feito). As alternativas são manter duas opções separadas ou ter três níveis (completos / normais / leves).
 
 ## Como a mesa desenha hoje
 
@@ -141,7 +141,7 @@ O que já se sabe para escrever o script (descoberto em 13/11/2026):
 
 Entra nas novidades: a opção nova em Opções → Aparência (`### Novo`, com print da opção).
 
-- [ ] Confirmar com o usuário a decisão pendente do [item 114](#relação-com-o-item-114) (uma opção só ou duas).
+- [x] Confirmar com o usuário a decisão pendente do [item 114](#relação-com-o-item-114) (uma opção só ou duas): uma opção só, decidido em 13/11/2026.
 - [ ] `pixi.js` `8.22.0` (exata, sem `^`) no `package.json`.
 - [ ] `src/ui/gpu/gpuSupport.ts`, `gpuLayer.ts` e `gpuEffects.ts` (ainda vazio), como descrito em [Peças](#peças).
 - [ ] Porta `gpu` na `motionKit.ts`; `clear()` limpando a GPU; canvas criado pela mesa (`tableShell.ts` ou `forgeTable.ts`) e destruído ao sair.
@@ -198,7 +198,7 @@ Só se as medições mostrarem que o DOM é o gargalo no Commander com muitas pe
 | Imagens do Scryfall como textura | Já vêm com CORS e ficam no cache do service worker; voo em DOM como reserva |
 | Estilos de carta montados em DOM (arte e texto, Arena) | Decisão na fase 3 |
 | Duas formas de desenhar se desencontram (posição, tamanho) | Coordenadas sempre lidas do DOM na hora do efeito; conferência visual no `effects-lab` |
-| Opção que briga com o "Modo leve" do item 114 | Decisão pendente, antes da fase 1 |
+| Opção que briga com o "Modo leve" do item 114 | Decidido: uma opção só, "Efeitos: completos / leves" |
 | Contextos WebGL acumulando (sair e voltar da partida, Rever partida) | Destruir o `Application` junto com a mesa; teste de navegador abrindo e fechando a mesa várias vezes |
 | Testes de navegador sem GPU de verdade | WebGL2 por software já funciona no `agent-browser`; números sem tela só para comparar, e o celular de verdade para aceitar |
 

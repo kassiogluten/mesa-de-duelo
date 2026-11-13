@@ -426,7 +426,7 @@ Ordem sugerida: vigia do loop obrigatório, depois o teto do computador com Regi
 
 ## 114. Melhorar o desempenho em aparelhos fracos
 
-> Os efeitos em WebGL do item 125 (`docs/spec-mesa-webgl.md`) cumprem parte da medição daqui, e a opção "leves" de lá deve ser a mesma do "Modo leve" daqui (decisão pendente no 125).
+> Os efeitos em WebGL do item 125 (`docs/spec-mesa-webgl.md`) cumprem parte da medição daqui, e a opção "leves" de lá é a mesma do "Modo leve" daqui: uma opção só, "Efeitos: completos / leves" (decidido em 13/11/2026).
 
 Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muitas cartas no campo, combates grandes, desfoques (`backdrop-filter` em 15 regras de CSS), brilhos, sombras e animações de dano e de cartas voando. Hoje a mesa só respeita o "reduzir movimento" do sistema (`prefers-reduced-motion`); não há uma opção própria nem detecção de aparelho fraco. Itens 7 e 8 já pediam "conferir desempenho no celular"; este junta tudo.
 
@@ -513,7 +513,7 @@ depois, as cartas em voo), com as cartas, os menus e os textos no DOM como hoje.
 Opções → Aparência volta aos efeitos de hoje em CSS. Spec completa, com decisões, critérios de sucesso, o que já foi
 descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao item 114 (medição e "Modo leve").
 
-- [ ] Decidir antes da fase 1: uma opção só ("Efeitos: completos / leves", em que "leves" é o modo leve do 114) ou duas opções separadas.
+- [x] Decidir antes da fase 1: uma opção só ("Efeitos: completos / leves", em que "leves" é o modo leve do 114) ou duas opções separadas. Decidido em 13/11/2026: uma opção só.
 - [ ] Fase 0: medir os efeitos de hoje (`scripts/medir-efeitos.mjs`, CPU 1×, 4× e 6×) e fixar os números dos critérios de sucesso.
 - [ ] Fase 1: a camada GPU (carregada só na partida), a opção para o jogador e a troca automática para leves, sem efeito novo.
 - [ ] Fase 2: dano e projétil, pouso, estilhaços e ultimate na GPU; medir de novo e conferir num celular de entrada.
