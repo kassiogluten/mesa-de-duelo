@@ -426,6 +426,8 @@ Ordem sugerida: vigia do loop obrigatório, depois o teto do computador com Regi
 
 ## 114. Melhorar o desempenho em aparelhos fracos
 
+> Os efeitos em WebGL do item 125 (`docs/spec-mesa-webgl.md`) cumprem parte da medição daqui, e a opção "leves" de lá deve ser a mesma do "Modo leve" daqui (decisão pendente no 125).
+
 Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muitas cartas no campo, combates grandes, desfoques (`backdrop-filter` em 15 regras de CSS), brilhos, sombras e animações de dano e de cartas voando. Hoje a mesa só respeita o "reduzir movimento" do sistema (`prefers-reduced-motion`); não há uma opção própria nem detecção de aparelho fraco. Itens 7 e 8 já pediam "conferir desempenho no celular"; este junta tudo.
 
 **Medir primeiro.**
@@ -503,3 +505,17 @@ As decisões A, B e C (no fim do item) são perguntadas ao usuário, com as alte
 - [ ] Os itens "Atualizar só o que mudou a cada `state`" e "Cartas fora da tela... sem montar elementos" do 114, medidos com `scripts/medir-desenho.mjs` (hoje: 9 ms com o campo vazio, ~55 ms com 100–160 permanentes, ~80 ms com 240, num computador rápido).
 
 - [ ] Decidir antes de fazer: (A) a pausa do Forge: tirar do servidor e deixar o ritmo com a fila da mesa (recomendado: a mesa já tem fila e modo rápido, e o servidor deixa de perder ~0,8 s por turno de bot e muito mais com campo cheio), só encurtar, ou manter; (B) o Monte Carlo: modo de celular nos estilos atuais e a força máxima num estilo à parte (recomendado), manter a força máxima para todos, ou desligar (bots mais fracos); (C) o teto de tempo do turno do bot com campo cheio, e de quanto.
+
+## 125. Efeitos da mesa em WebGL
+
+Pedido em 13/11/2026. Uma camada WebGL (PixiJS v8) por cima da mesa, só para os efeitos (partículas, luz, ondas, rastros e,
+depois, as cartas em voo), com as cartas, os menus e os textos no DOM como hoje. A opção "Efeitos: completos / leves" em
+Opções → Aparência volta aos efeitos de hoje em CSS. Spec completa, com decisões, critérios de sucesso, o que já foi
+descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao item 114 (medição e "Modo leve").
+
+- [ ] Decidir antes da fase 1: uma opção só ("Efeitos: completos / leves", em que "leves" é o modo leve do 114) ou duas opções separadas.
+- [ ] Fase 0: medir os efeitos de hoje (`scripts/medir-efeitos.mjs`, CPU 1×, 4× e 6×) e fixar os números dos critérios de sucesso.
+- [ ] Fase 1: a camada GPU (carregada só na partida), a opção para o jogador e a troca automática para leves, sem efeito novo.
+- [ ] Fase 2: dano e projétil, pouso, estilhaços e ultimate na GPU; medir de novo e conferir num celular de entrada.
+- [ ] Fase 3: cartas em voo na GPU (textura da imagem do Scryfall, perspectiva, sombra).
+- [ ] Fase 4, só se os números pedirem depois do 114: o campo inteiro em WebGL (spec própria).
