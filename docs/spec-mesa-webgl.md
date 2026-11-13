@@ -121,7 +121,7 @@ Um `<canvas>` WebGL transparente, `position: fixed; inset: 0`, sem receber cliqu
 
 Mudança só interna: não entra nas novidades.
 
-- [ ] Opção `cheio` no `?jogar` do `tests/fixtures/effects-lab.ts`, que manda `{ cmd: 'full' }` (o "Campo cheio" do painel), e comentário do `?jogar` atualizado.
+- [x] Opção `cheio` no `?jogar` do `tests/fixtures/effects-lab.ts`, que manda `{ cmd: 'full' }` (o "Campo cheio" do painel), e comentário do `?jogar` atualizado.
 - [ ] `scripts/medir-efeitos.mjs`, no estilo dos `scripts/medir-*.mjs` (rodado com `node`, precisa do `npm run dev` ligado). Abre `effects-lab.html?mesa&jogar=…` para cada cena e grava os quadros enquanto as jogadas acontecem. Cenas sugeridas:
   - `dano`: `land,bolt,bolt,move:attack,x:fight,move:destroy`
   - `voos`: `land,x:opening,land,creature,countered,move:bounce,x:reanimate`
@@ -129,6 +129,15 @@ Mudança só interna: não entra nas novidades.
   - Opções: `--cpu 4` (freio de CPU), `--viewport 1366x768`, `--escala 1|2`, `--query gpu=0` (comparar versões), `--json saida.json`.
 - [ ] Registrar os números de hoje nesta spec (seção [Medições](#medições)), com a CPU 1×, 4× e 6×.
 - [ ] Marcar no item 114 o que esta medição cumpre.
+
+**Onde a fase 0 parou (13/11/2026).** O `cheio` e o `scripts/medir-efeitos.mjs` estão escritos e commitados, e o script roda (`node scripts/medir-efeitos.mjs --cenas dano --cpu 1,4`), mas **os números ainda não valem como base**: falta conferir o script antes de registrar a tabela de [Medições](#medições). O que a primeira rodada mostrou (cena `dano`, 1366×768, escala 1):
+
+| CPU | Quadros longos | p95 / pior (ms) | Bloqueio (ms) | Tarefas longas | Intervalos > 34 ms |
+| --- | --- | --- | --- | --- | --- |
+| 1× | 4 | 322 / 322 | 0 | 0 | 4 |
+| 4× | 3 | 224 / 224 | 175 | 1 | 2 |
+
+O que conferir: (1) o quadro de 322 ms sem bloqueio na CPU 1× parece ser o carregamento da página, que entra pelo `buffered: true`; descartar o que começa antes da primeira jogada (cerca de 600 ms depois de carregar) ou medir só a partir dela; (2) a CPU 4× deu menos quadros longos que a 1×, então confirmar que o freio está valendo durante a cena inteira (o bloqueio de 175 ms e a tarefa longa de 219 ms dizem que valeu em parte; conferir com um laço de CPU cronometrado dentro da página, com e sem freio); (3) rodar cada cena 3 vezes e ver a variação antes de fixar os critérios; (4) com poucos quadros longos por cena, o p95 é quase o pior caso: registrar também a contagem e o tempo de bloqueio. Depois disso: as três cenas com a CPU 1×, 4× e 6×, a tabela de Medições e o que marcar no item 114.
 
 O que já se sabe para escrever o script (descoberto em 13/11/2026):
 

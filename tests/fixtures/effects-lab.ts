@@ -741,13 +741,15 @@ function table() {
   // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar. Além das jogadas da
   // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
   // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
-  // commander, ability, pay, opening, mulligan, reveal, win, lose).
+  // commander, ability, pay, opening, mulligan, reveal, win, lose) e cheio (o "Campo cheio" do painel, para medir com a mesa
+  // lotada: scripts/medir-efeitos.mjs).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
   const run = (play: string) => {
     const [cmd, arg] = play.split(':');
     if (cmd === 'move') window.postMessage({ cmd, kind: arg, id: player(ME).battlefield.find((x: any) => x.creature)?.id }, '*');
     else if (cmd === 'x') window.postMessage({ cmd: 'extra', kind: arg, side: 'me' }, '*');
     else if (cmd === 'tokens') window.postMessage({ cmd, side: 'me', n: arg }, '*');
+    else if (cmd === 'cheio') window.postMessage({ cmd: 'full' }, '*');
     else window.postMessage({ cmd: 'hand', kind: cmd }, '*');
   };
   if (plays.length > 1) plays.forEach((play, i) => realTimeout(() => run(play), 600 + i * 2500));

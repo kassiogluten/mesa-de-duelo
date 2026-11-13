@@ -514,7 +514,7 @@ Opções → Aparência volta aos efeitos de hoje em CSS. Spec completa, com dec
 descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao item 114 (medição e "Modo leve").
 
 - [x] Decidir antes da fase 1: uma opção só ("Efeitos: completos / leves", em que "leves" é o modo leve do 114) ou duas opções separadas. Decidido em 13/11/2026: uma opção só.
-- [ ] Fase 0: medir os efeitos de hoje (`scripts/medir-efeitos.mjs`, CPU 1×, 4× e 6×) e fixar os números dos critérios de sucesso.
+- [ ] Fase 0: medir os efeitos de hoje (`scripts/medir-efeitos.mjs`, CPU 1×, 4× e 6×) e fixar os números dos critérios de sucesso. Começada em 13/11/2026: o script e a jogada `cheio` do laboratório de efeitos existem; falta conferir o script e registrar os números (ver "Onde a fase 0 parou" na spec).
 - [ ] Fase 1: a camada GPU (carregada só na partida), a opção para o jogador e a troca automática para leves, sem efeito novo.
 - [ ] Fase 2: dano e projétil, pouso, estilhaços e ultimate na GPU; medir de novo e conferir num celular de entrada.
 - [ ] Fase 3: cartas em voo na GPU (textura da imagem do Scryfall, perspectiva, sombra).
