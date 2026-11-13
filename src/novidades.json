@@ -1,4 +1,11 @@
 {
+  "0.165.0": {
+    "Decks em lista ou em grade com as colunas que você quiser": [
+      { "img": "0.165.0/lista-tela-inicial.webp", "legenda": "Na tela inicial, os botões ao lado das cores trocam para a lista: uma linha por deck, com a arte, o comandante, as cartas, o preço e o bracket." },
+      { "img": "0.165.0/colunas.webp", "legenda": "Em Meus decks, o botão da grade abre o menu das colunas: com 4 escolhidas, os decks prontos ficam em 4 colunas." },
+      { "img": "0.165.0/lista-meus-decks.webp", "legenda": "Meus decks em lista: a capa à esquerda, os dados no meio e os botões Ver deck e Criar cópia à direita." }
+    ]
+  },
   "0.164.0": {
     "Formato em cards ao importar uma lista": [
       { "img": "0.164.0/formatos-importar.webp", "legenda": "Os seis formatos em cards ao importar um deck: Commander, Standard, Pauper, Sacola 50, Oathbreaker e Livre, cada um com seu ícone e o que vale nele." }

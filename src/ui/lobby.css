@@ -193,6 +193,28 @@
 .room-info { padding: 12px; border-radius: var(--control-radius); border: 1px solid var(--on-line); background: #f2b54c08; font-size: 13px; }
 .room-info p { margin: 0 0 8px; }
 .room-info .ghost-btn { padding: 8px 0; font-size: 13px; white-space: normal; }
+/*
+ * Exibição escolhida acima das prateleiras. Grade com N colunas: no máximo N, e menos quando cada card ficaria
+ * estreito demais. Lista: uma linha por deck, com a miniatura da arte, os dados ao lado e o check e o menu ⋮ à direita.
+ */
+.deck-collection[data-deck-cols] .deck-tiles { grid-template-columns: repeat(auto-fill, minmax(max(150px, calc((100% - (var(--deck-cols) - 1) * 18px) / var(--deck-cols))), 1fr)); }
+.deck-collection[data-deck-layout="list"] .deck-tiles { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.deck-collection[data-deck-layout="list"] .deck-tile { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: stretch; min-height: 76px; }
+.deck-collection[data-deck-layout="list"] .tile-art { aspect-ratio: auto; height: 100%; }
+.deck-collection[data-deck-layout="list"] .tile-colors { left: 6px; bottom: 6px; padding: 3px 5px; }
+.deck-collection[data-deck-layout="list"] .tile-colors .pip { font-size: 13px; }
+.deck-collection[data-deck-layout="list"] .tile-info { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; align-items: center; align-content: center; column-gap: 16px; row-gap: 2px; padding: 10px 96px 10px 14px; }
+.deck-collection[data-deck-layout="list"] .tile-name { grid-column: 1; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 0; }
+.deck-collection[data-deck-layout="list"] .tile-commander { grid-column: 1; }
+.deck-collection[data-deck-layout="list"] .tile-meta { grid-column: 2; grid-row: 1 / span 2; flex-wrap: wrap; row-gap: 4px; }
+.deck-collection[data-deck-layout="list"] .tile-validity { grid-column: 3; grid-row: 1 / span 2; margin: 0; white-space: nowrap; }
+.deck-collection[data-deck-layout="list"] .tile-check { top: 50%; right: 56px; transform: translateY(-50%); }
+.deck-collection[data-deck-layout="list"] .tile-more { top: 50%; bottom: auto; margin-top: -19px; }
+.deck-collection[data-deck-layout="list"] .tile-menu { top: calc(50% + 22px); }
+.deck-collection[data-deck-layout="list"] .tile-wrap:hover .deck-tile, .deck-collection[data-deck-layout="list"] .tile-wrap:hover .tile-more { transform: none; }
+.deck-collection[data-deck-layout="list"] .tile-wrap:hover .tile-art { transform: none; }
+.deck-collection[data-deck-layout="list"] .new-deck-tile { display: flex; flex-direction: row; min-height: 64px; }
+.deck-collection[data-deck-layout="list"] .new-deck-plus { width: 32px; height: 32px; font-size: 20px; }
 @media (max-width: 1050px) {
   .play-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; }
   .match-sidebar { padding-left: 22px; }
@@ -245,6 +267,12 @@
   .library-home .tile-info { padding: 12px 50px 12px 12px; }
   .library-home .tile-name { font-size: 17px; }
   .library-home .tile-more { width: 44px; height: 44px; right: 4px; bottom: 6px; }
+  .deck-collection[data-deck-layout="list"] .deck-tile { grid-template-columns: 96px minmax(0, 1fr); }
+  .deck-collection[data-deck-layout="list"] .tile-info { display: flex; align-items: stretch; padding: 10px 84px 10px 12px; gap: 4px; }
+  .deck-collection[data-deck-layout="list"] .tile-validity { align-self: flex-start; margin-top: 2px; }
+  .deck-collection[data-deck-layout="list"] .tile-name { white-space: normal; }
+  .deck-collection[data-deck-layout="list"] .tile-check { right: 52px; }
+  .deck-collection[data-deck-layout="list"] .tile-more { margin-top: -22px; }
 }
 /*
  * Celular (em pé ou deitado): o deck é escolhido na lista lá embaixo, então o resumo com o deck escolhido e o botão

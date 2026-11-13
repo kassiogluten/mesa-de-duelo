@@ -22,6 +22,8 @@ export const KEYS = {
   decksV1: 'mesa:decks:v1',
   /** Cópia intacta da biblioteca antiga, feita ao migrar para o formato 2. Meus decks. */
   decksV1Backup: 'mesa:decks:v1:backup',
+  /** Exibição de Meus decks: grade (com as colunas) ou lista (JSON). Meus decks. */
+  deckLayoutLibrary: 'mesa:deckLayout:library',
   /** Deck escolhido antes de existir um por formato (só o formato livre ainda o lê). Tela inicial. */
   deckLegacy: 'mesa:deck',
 
@@ -100,6 +102,8 @@ export const KEYS = {
   forgeUrl: 'mesa:forgeUrl',
   /** '1' depois da primeira partida: mostra o atalho de jogar de novo. Tela inicial. */
   played: 'mesa:played',
+  /** Exibição dos decks da tela inicial: grade (com as colunas) ou lista (JSON). Tela inicial. */
+  deckLayoutHome: 'mesa:deckLayout:home',
   /** Última versão do painel Novidades que o jogador viu. Tela inicial. */
   novidades: 'mesa:novidades',
 

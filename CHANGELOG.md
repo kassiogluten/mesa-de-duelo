@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.165.0] - 2026-11-13
+
+### Novo
+
+- **Decks em lista ou em grade com as colunas que você quiser.** Na escolha de deck da tela inicial e em Meus decks, dois botões ao lado dos filtros trocam a exibição: em **lista**, uma linha por deck, com a miniatura da arte, o comandante, as cartas, o preço, o bracket e os botões ao lado; em **grade**, o próprio botão da grade abre um menu para escolher de 2 a 5 colunas, com 4 de início. Em telas estreitas a grade usa menos colunas, para os decks não ficarem apertados. Cada tela lembra a sua escolha.
+
 ## [0.164.0] - 2026-11-13
 
 ### Mudou

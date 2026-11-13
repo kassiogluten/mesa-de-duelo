@@ -15,6 +15,7 @@ import { mountAppHeader } from './appHeader';
 import { applyDeckImport, applyDeckListEdit, deckImportSnapshot, deckListChanges, type DeckImportMode } from './deckImport';
 import { toggleColor, type ColorFilter } from './deckFilters';
 import './deckFilters.css';
+import { mountDeckLayout } from './deckLayout';
 import { montarAvisoConta } from './contaAviso';
 import { buildSearchQuery, similarQuery } from './cardSearch';
 import { deckIdentity, identityExempt, editHTML, importHTML, libraryHTML, printOf, resultsHTML, slotRole, statusHTML, type BuilderState } from './deckbuilderView';
@@ -146,6 +147,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   }
   function renderLibrary() {
     $('#dwContent').innerHTML = libraryHTML(state());
+    mountDeckLayout($('.dw-layout-host'), $('.dw-library'), KEYS.deckLayoutLibrary);
     montarAvisoConta(root);
     root.querySelector('.dw-ready')?.addEventListener('toggle', e => { const next = (e.target as HTMLDetailsElement).open; if (next !== showReady) { showReady = next; if (next) void loadData(); } });
   }

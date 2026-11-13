@@ -1,0 +1,18 @@
+/* Controle da exibição das listas de decks: Grade (com o menu das colunas) ou Lista. */
+.deck-layout { position: relative; display: flex; align-items: center; margin-left: auto; }
+.deck-layout-modes { display: flex; padding: 3px; gap: 2px; border: 1px solid #ffffff1f; border-radius: 10px; background: var(--azul-0c1222, #0c1222); }
+.deck-layout-modes button { display: flex; align-items: center; justify-content: center; gap: 2px; min-width: 34px; height: 30px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
+.deck-layout-modes button svg { width: 18px; height: 18px; }
+.deck-layout-modes button .deck-layout-caret { width: 12px; height: 12px; margin-right: -2px; transition: transform .15s; }
+.deck-layout-modes button[aria-expanded="true"] .deck-layout-caret { transform: rotate(180deg); }
+.deck-layout-modes button:hover { color: var(--ink); }
+.deck-layout-modes button[aria-pressed="true"] { background: #ffffff1a; color: var(--gold-light, var(--gold)); }
+.deck-layout-modes button:focus-visible, .deck-layout-menu button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+/* O menu das colunas, aberto pelo botão Grade. */
+.deck-layout-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; display: flex; flex-direction: column; min-width: 160px; padding: 6px; border-radius: 10px; background: var(--azul-18233b, #18233b); border: 1px solid #ffffff1f; box-shadow: 0 12px 28px rgba(0, 0, 0, .5); }
+.deck-layout-menu[hidden] { display: none; }
+.deck-layout-menu button { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 6px 10px 6px 30px; position: relative; border: 0; border-radius: 7px; background: none; color: var(--ink); font: 500 14px var(--body, inherit); text-align: left; cursor: pointer; }
+.deck-layout-menu button:hover { background: #ffffff12; }
+.deck-layout-menu button[aria-checked="true"] { color: var(--gold-light, var(--gold)); }
+.deck-layout-menu button[aria-checked="true"]::before { content: '✓'; position: absolute; left: 10px; font-weight: 700; }
+@media (pointer: coarse) { .deck-layout-modes button { min-width: 44px; height: 38px; } .deck-layout-menu button { min-height: 44px; } }

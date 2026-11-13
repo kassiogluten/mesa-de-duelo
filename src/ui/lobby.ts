@@ -17,6 +17,7 @@ import { botBracketMax as bracketMaxFor, botBrackets, botPool as poolFor, drawBo
 import { botBracketButtonsHTML, botBracketHelp, chosenDeckHTML, commanderAiPanelHTML, deckTilesHTML, formatName, lobbyHTML, opponentOptionsHTML, personalShelfHTML, preconGroupsHTML, ROOM_DECKS_SHELF, roomDeckTilesHTML, roomDecksHelp, roomInfoHTML, startLabel, type TileContext } from './lobbyView';
 import { createRoomsPoller } from './lobbyRooms';
 import { attachTileMenus } from './tileMenus';
+import { mountDeckLayout } from './deckLayout';
 import './deckFilters.css';
 import './lobby.css';
 import { prefsChanged } from '../conta/sync';
@@ -115,6 +116,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   const config = (): MatchConfig => ({ format: format!, matchLength: hasCommandZone(format!) ? 'bo1' : matchLength, playerCount: hasCommandZone(format!) ? playerCount : 2 });
   root.innerHTML = lobbyHTML();
   const $ = finder(root);
+  mountDeckLayout($('#deckLayoutControl'), $('.deck-collection'), KEYS.deckLayoutHome);
   const roomLobby = mountRoomLobby($('#roomLobby'), {onSay: key => opts.onSay(key), onFillWithComputers: () => opts.onFillWithComputers(), onReady: on => opts.onReady(on), onLeave: () => { opts.onCancelRoom(); waitingRoom = null; refresh(); }});
   $('#netName').setAttribute('value', load(KEYS.name) ?? '');
   // O nome veio da conta (outro aparelho, ou o primeiro nome do Google): atualiza o campo, se ninguém estiver digitando.
