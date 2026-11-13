@@ -460,3 +460,46 @@ Pedido em 11/11/2026. Shorikai, Motor da Gênese é veículo e comandante; confe
 - [x] O que não funcionar vira correção no CHANGELOG com cenário no Laboratório; o que funcionar, um cenário pronto para conferir.
 
 Conferido em 11/11/2026 (`forge-bridge/scripts/test-crew.mjs` e o cenário "Shorikai: habilidade e Tripular 8"): a habilidade e o Tripular funcionavam, mas o OK do Tripular ficava ligado com qualquer poder e, abaixo de 8, desistia em silêncio, e a contagem vinha em inglês ("Crewing"); corrigido na 0.157.1. Falta a parte de comandante, que o Laboratório não monta (não tem zona de comando): conferir numa sala de Commander de verdade.
+
+## 124. Bots mais rápidos com a mesa cheia
+
+Pedido em 13/11/2026. No Commander com 4, cada turno de bot leva em mediana ~2,3 s, e com o campo cheio 12 s (40
+permanentes na mesa), 27 s (100) e 65 s (160). Estudo completo, números e como medir de novo em
+`docs/velocidade-bots-2026-11-13.md` (sonda `AiSpeedProbe`, `scripts/medir-apresentacao.mjs`, `scripts/medir-desenho.mjs`).
+Causas: a pausa do Forge quando o humano passa sozinho (200 ms por fase, 400 ms por item da pilha), o Monte Carlo da IA na
+força máxima de computador de mesa (até 6 s por turno de cada bot), um trecho do servidor com custo quadrático no tamanho
+do campo (`VisibleEvents.prevented()`), a IA e as regras do Forge com muitas cartas, e a mesa redesenhando tudo a cada
+estado.
+
+**Meta (combinada em 13/11/2026; o item só fecha quando a sonda mostrar isto, na mesma máquina em que o estudo foi medido):**
+
+- Partida normal (`AiSpeedProbe#realSession`, Commander com 1 humano e 3 bots, 16 turnos, as duas mesas): turno de bot com mediana de até **1 s** (hoje 2,3 s).
+- Campo cheio com 100 permanentes na mesa (`AiSpeedProbe#boardSize -Dmesa.campo=25`): mediana de até **5 s** (hoje 27 s). Pela conta do estudo, só a parte 1 e a força da IA não bastam: vai precisar do teto de tempo do turno do bot (decisão C).
+- Sem a mesa pular jogadas: na simulação da fila (`scripts/medir-apresentacao.mjs`, modo normal) no máximo 1 vez por partida em que a fila passa do limite e pula para o fim (hoje 1–3; sem a pausa e sem Monte Carlo, sem mexer na mesa, seria 7–9).
+- Medir antes e depois de cada parte e anotar os números aqui.
+
+As decisões A, B e C (no fim do item) são perguntadas ao usuário, com as alternativas e a recomendação, quando o plano for executado, antes das partes 2 e 3.
+
+**1. Servidor sem custo quadrático (sem decisão pendente).**
+
+- [ ] `VisibleEvents.prevented()`: juntar uma vez por evento os escudos de prevenção da partida, em vez de chamar `getPreventNextDamageTotalShields()` por permanente (cada chamada percorre todas as cartas da partida). Mesmo resultado na mesa.
+- [ ] Teste do servidor de que o dano prevenido continua saindo igual (escudo em jogador e em criatura, gasto em parte e por inteiro), e medir de novo com `AiSpeedProbe#boardSize` (esperado: ~20% a menos com 100–160 permanentes).
+- [ ] Conferir se o log em INFO do Forge (`ProtocolGuiGame: Sending batch...`, `DeltaSyncManager`) vai para o log de produção e, se for, baixar o nível.
+
+**2. Ritmo: o servidor não dorme, a mesa segura (depende da decisão A).**
+
+- [ ] Ligar `YIELD_SKIP_PHASE_DELAY` e `YIELD_SKIP_RESOLVE_DELAY` no `Main` (e no `BridgeRulesTest.engine()`), para o Forge não dormir quando o humano passa sozinho.
+- [ ] Na mesa, a fila de animações acompanhar sem pular jogadas: com a fila crescendo, encurtar os passos (como o "Rápido sem resposta") antes de chegar ao limite de 12, e só pular para o fim em último caso. Casa com o item de fila de animações do 114 e com as animações do computador repetindo jogadas do 113.
+- [ ] Medir com `-Dmesa.semPausa=true` e `scripts/medir-apresentacao.mjs` que a mesa mostra as jogadas (quase) todas e termina perto do servidor.
+
+**3. Força da IA (depende da decisão B).**
+
+- [ ] Escolher o modo do Monte Carlo por estilo do computador (`AiStyle`, S12): por exemplo, equilibrado/cauteloso/agressivo no modo de celular do Forge (até 600 ms por decisão e 2,5 s por turno) e um estilo "forte" na força máxima. O `HostedMatch` decide pela tela (`GuiBase.isMobile()`), então a ponte precisa acertar o `Game` depois de criado (`AI_FLAT_MONTE_CARLO_MAX`/`_LITE`) ou um override por jogador (`flatMcMaxOverride` do `AiController`).
+- [ ] Com o campo cheio, um teto para o turno do bot (tempo de IA por turno), para nenhum turno passar de alguns segundos; junto com o teto por turno do item 113.
+- [ ] Item nas novidades se o jogador perceber (bots mais rápidos, estilo novo) e, se mudar a lista de estilos, print do menu.
+
+**4. Mesa com campo cheio.**
+
+- [ ] Os itens "Atualizar só o que mudou a cada `state`" e "Cartas fora da tela... sem montar elementos" do 114, medidos com `scripts/medir-desenho.mjs` (hoje: 9 ms com o campo vazio, ~55 ms com 100–160 permanentes, ~80 ms com 240, num computador rápido).
+
+- [ ] Decidir antes de fazer: (A) a pausa do Forge: tirar do servidor e deixar o ritmo com a fila da mesa (recomendado: a mesa já tem fila e modo rápido, e o servidor deixa de perder ~0,8 s por turno de bot e muito mais com campo cheio), só encurtar, ou manter; (B) o Monte Carlo: modo de celular nos estilos atuais e a força máxima num estilo à parte (recomendado), manter a força máxima para todos, ou desligar (bots mais fracos); (C) o teto de tempo do turno do bot com campo cheio, e de quanto.
