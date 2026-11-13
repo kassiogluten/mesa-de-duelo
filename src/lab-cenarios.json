@@ -1,5 +1,18 @@
 [
   {
+    "nome": "Nylea, Keen-Eyed: revelar o topo por {2}{G}",
+    "conferir": "O Jogador 1 tem Nylea, Keen-Eyed e seis Forests; o grimório começa com Lightning Bolt e Grizzly Bears. A Nylea não é criatura (devoção ao verde menor que cinco), mas a habilidade pode ser ativada. Ative {2}{G}: três Forests viram, o Lightning Bolt é revelado e a mesa pergunta se ele vai para o cemitério; com Sim ele vai, com Não fica no topo. Ative de novo: com o Grizzly Bears no topo, ele vai direto para a mão, sem pergunta. Hoje funciona assim; o cenário fica para conferir a carta.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Lightning Bolt", "Grizzly Bears", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Nylea, Keen-Eyed" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }] }
+      ]
+    }
+  },
+  {
     "nome": "Intimidar, medo, sombra e travessia: selos e bloqueio",
     "versao": "0.199.0",
     "item": "Ícones para intimidar, medo, sombra, sorrateiro, equitação e travessia",
