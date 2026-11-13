@@ -45,6 +45,8 @@ test('o painel Novidades não fala em "ponte"', async () => {
   assert.deepEqual(hits(changelog, 'CHANGELOG.md'), []);
   assert.deepEqual(hits((await read('docs/changelog-antigo.md')).split('\n'), 'docs/changelog-antigo.md'), []);
   assert.deepEqual(hits([await read('src/novidades.json')], 'src/novidades.json'), []);
+  const pending = (await files('novidades-pendentes', ['.md', '.json'])).filter(f => !f.endsWith('README.md'));
+  for (const f of pending) assert.deepEqual(hits((await read(f)).split('\n'), f), []);
 });
 
 test('as telas do jogo não falam em "ponte"', async () => {

@@ -3,13 +3,28 @@
 // - imports sem extensão ('./cardtext') viram '.ts';
 // - TypeScript é convertido com o `typescript` do projeto;
 // - CSS vira módulo vazio, `?raw` vira o texto do arquivo, JSON vira `export default`;
-// - `import.meta.env` existe (BASE_URL '/', DEV false) e `virtual:pwa-register` é um módulo vazio.
+// - `import.meta.env` existe (BASE_URL '/', DEV false) e `virtual:pwa-register` é um módulo vazio;
+// - `import.meta.glob(..., { eager: true })` lê os arquivos do disco (`?raw` vira texto, `?url` o endereço, JSON o objeto).
 import { registerHooks } from 'node:module';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { globSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 const ENV = "import.meta.env = { BASE_URL: '/', DEV: false, PROD: true, MODE: 'test' };\n";
+const GLOB = file => `import.meta.glob = (pattern, options) => globalThis.__testGlob(${JSON.stringify(file)}, pattern, options);\n`;
+
+/** O `import.meta.glob` do Vite, só no modo eager (o único que a mesa usa): chave é o caminho como no padrão. */
+globalThis.__testGlob = (file, pattern, { eager, query, import: name } = {}) => {
+  if (!eager) throw new Error(`import.meta.glob sem eager não existe nos testes (${file})`);
+  const dir = dirname(file), out = {};
+  for (const rel of globSync(pattern, { cwd: dir }).sort()) {
+    const abs = resolve(dir, rel);
+    const value = query === '?raw' ? readFileSync(abs, 'utf8') : query === '?url' ? pathToFileURL(abs).href : JSON.parse(readFileSync(abs, 'utf8'));
+    out[rel.startsWith('.') ? rel : `./${rel}`] = name === 'default' ? value : { default: value };
+  }
+  return out;
+};
 const CODE = /\.[cm]?[jt]sx?$/;
 
 // Módulo falso num teste: `const { mock } = await import('./register.mjs'); mock('../src/scryfall.ts', 'export const x = 1;', import.meta.url)`
@@ -43,7 +58,7 @@ registerHooks({
     if (file.endsWith('.json') && context.importAttributes?.type !== 'json') return { format: 'module', source: `export default ${readFileSync(file, 'utf8')};`, shortCircuit: true };
     if (file.endsWith('.ts')) {
       const out = ts.transpileModule(readFileSync(file, 'utf8'), { fileName: file, compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-      return { format: 'module', source: ENV + out.outputText, shortCircuit: true };
+      return { format: 'module', source: ENV + GLOB(file) + out.outputText, shortCircuit: true };
     }
     return nextLoad(url, context);
   },

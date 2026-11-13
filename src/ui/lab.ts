@@ -3,6 +3,7 @@ import type { LabExileCard, LabPhase, LabPlayer, LabScenario } from '../forge/cl
 import { autocompleteNames, cardImageUrls, resolveCardNames } from '../scryfall';
 import { esc } from './cardtext';
 import READY from '../lab-cenarios.json';
+import { PENDING, PENDING_SCENARIOS } from '../pendingNews';
 import './lab.css';
 import { finder } from './dom';
 
@@ -55,9 +56,10 @@ interface Saved { name: string; scenario: LabScenario }
  * e item, é um problema ainda sem correção, deixado para investigar; ganha os dois quando a correção sair.
  */
 export interface Ready { nome: string; versao?: string; item?: string; conferir: string; cenario: LabScenario }
-/** "0.145.0" numa correção; "Para investigar" num problema ainda sem correção. */
-const readyTag = (r: Ready) => r.versao ?? 'Para investigar';
-export const READY_SCENARIOS = READY as unknown as Ready[];
+/** "0.145.0" numa correção; "Próxima versão" numa que ainda não subiu; "Para investigar" num problema ainda sem correção. */
+const readyTag = (r: Ready) => r.versao === PENDING ? 'Próxima versão' : r.versao ?? 'Para investigar';
+/** Os das correções que ainda não ganharam número vêm primeiro: são os mais novos. */
+export const READY_SCENARIOS = [...PENDING_SCENARIOS, ...READY as unknown as Ready[]];
 
 const DRAFT_KEY = KEYS.labRascunho, SAVED_KEY = KEYS.labCenarios;
 const load = <T>(key: string): T | null => loadJSON<T | null>(key, null);

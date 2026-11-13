@@ -2,6 +2,7 @@ import { KEYS, load, save } from '../storage';
 import changelog from '../../CHANGELOG.md?raw';
 import older from '../../docs/changelog-antigo.md?raw';
 import visuals from '../novidades.json';
+import { PENDING, PENDING_CHANGELOG, PENDING_VISUALS } from '../pendingNews';
 import { esc } from './cardtext';
 
 /** Um item da lista: o título em negrito do começo ("Relógio da partida") e o grupo em que está (Novo, Mudou...). */
@@ -9,7 +10,11 @@ export interface ReleaseItem { group: string; title: string; text: string }
 export interface Release { version: string; date: string; html: string; items: ReleaseItem[] }
 /** Imagens de cada item em src/novidades.json: versão → título do item → figuras (arquivo em public/novidades/). */
 export interface Shot { img: string; legenda: string }
-export const VISUALS = visuals as Record<string, Record<string, Shot[]>>;
+export const VISUALS: Record<string, Record<string, Shot[]>> = { ...(PENDING_CHANGELOG ? { [PENDING]: PENDING_VISUALS } : {}), ...visuals };
+/** Endereço de um print: os publicados ficam em public/novidades/; os pendentes já vêm com o endereço completo. */
+export const shotSrc = (img: string) => img.startsWith('/') || img.includes(':') ? img : `/novidades/${img}`;
+/** "Versão 0.150.0", ou "Próxima versão" para as novidades que ainda não ganharam número. */
+export const releaseTitle = (r: Release) => r.version === PENDING ? 'Próxima versão' : `Versão ${r.version}`;
 
 /** Negrito e código, o pouco de Markdown inline que o CHANGELOG usa. */
 export const inline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>');
@@ -47,9 +52,12 @@ export function parse(md: string): Release[] {
   return out;
 }
 
-/** As versÃµes recentes (CHANGELOG.md) e, depois, as anteriores Ã  0.100.0 (docs/changelog-antigo.md). */
-export const RELEASES = [...parse(changelog), ...parse(older)];
-export const VERSION = RELEASES[0]?.version ?? '';
+/**
+ * As novidades ainda sem número (só aparecem na branch da mudança), as versões recentes (CHANGELOG.md) e, depois, as
+ * anteriores à 0.100.0 (docs/changelog-antigo.md).
+ */
+export const RELEASES = [...parse(PENDING_CHANGELOG), ...parse(changelog), ...parse(older)];
+export const VERSION = RELEASES.find(r => r.version !== PENDING)?.version ?? '';
 
 const SEEN_KEY = KEYS.novidades;
 function seen() {
@@ -62,7 +70,7 @@ function markSeen() {
 /** Quantas versões o painel mostra de cada vez: as mais recentes primeiro, e o resto pelo botão no fim. */
 const PAGE = 5;
 const releaseHTML = (r: Release) => `<section class="news-rel">
-        <h3 tabindex="-1">Versão ${esc(r.version)}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
+        <h3 tabindex="-1">${esc(releaseTitle(r))}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
       </section>`;
 
 /** Botão "Novidades" com a versão atual; abre um painel com o histórico. Um ponto marca versão ainda não vista. */

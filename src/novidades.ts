@@ -2,7 +2,7 @@
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';
-import { RELEASES, VISUALS, inline } from './ui/changelog';
+import { RELEASES, VISUALS, inline, releaseTitle, shotSrc } from './ui/changelog';
 import { esc } from './ui/cardtext';
 import { iniciarTema } from './ui/temas';
 
@@ -30,7 +30,7 @@ app.innerHTML = `
     <p class="vis-lead">Como cada mudança aparece na mesa. O texto completo de cada versão continua no botão <b>Novidades</b> da tela inicial.</p>
     ${releases.length ? '' : '<p class="vis-empty">Ainda não há imagens das novidades.</p>'}
     ${releases.map((r, index) => `<section class="vis-rel" id="v${esc(r.version)}"${index < PAGE ? '' : ' hidden'}>
-      <h2 tabindex="-1">Versão ${esc(r.version)}${r.date ? ` <small>${r.date}</small>` : ''}</h2>
+      <h2 tabindex="-1">${esc(releaseTitle(r))}${r.date ? ` <small>${r.date}</small>` : ''}</h2>
       ${r.items.map(i => `<article class="vis-item" id="v${esc(r.version)}-${slug(i.title)}">
         <div class="vis-text">
           <span class="vis-tag ${GROUP_CLASS[i.group] ?? ''}">${esc(i.group)}</span>
@@ -38,7 +38,7 @@ app.innerHTML = `
           <p>${inline(i.text)}</p>
         </div>
         <div class="vis-shots">${i.shots.map(s => `<figure>
-          <button type="button" class="vis-zoom" aria-label="Ampliar: ${esc(s.legenda)}"><img src="/novidades/${esc(s.img)}" alt="${esc(s.legenda)}" loading="lazy"></button>
+          <button type="button" class="vis-zoom" aria-label="Ampliar: ${esc(s.legenda)}"><img src="${esc(shotSrc(s.img))}" alt="${esc(s.legenda)}" loading="lazy"></button>
           <figcaption>${inline(s.legenda)}</figcaption>
         </figure>`).join('')}</div>
       </article>`).join('')}

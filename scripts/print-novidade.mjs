@@ -5,7 +5,7 @@
 //
 //   página   caminho de uma página de teste, com query se quiser: tests/fixtures/duel-table.html?cenario=alvo-cemiterio
 //   seletor  CSS do que mostrar; vários separados por vírgula recortam a caixa que envolve todos
-//   saída    public/novidades/<versão>/<nome>.webp
+//   saída    novidades-pendentes/<pasta-da-mudança>/<nome>.webp (o publicar-versao leva para public/novidades/<versão>/)
 //
 //   --viewport 1366x768   tamanho da janela (CSS px); a captura sai em 2x
 //   --setup "<js>"        roda na página antes do print (pode usar await e window.fixture)
@@ -15,7 +15,7 @@
 //   --url http://localhost:5173   onde a mesa está rodando (ou TABLE_TEST_URL); precisa do `npm run dev` ligado
 //
 // Exemplo:
-//   npm run print -- tests/fixtures/duel-table.html ".hand" public/novidades/0.126.0/mao.webp --setup "window.fixture.render()"
+//   npm run print -- tests/fixtures/duel-table.html ".hand" novidades-pendentes/mao-nova/mao.webp --setup "window.fixture.render()"
 import { browserSession } from '../tests/browser-helper.mjs';
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';

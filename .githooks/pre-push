@@ -1,0 +1,16 @@
+#!/bin/sh
+# Antes de cada push: a main não recebe novidades sem número. As pendentes (novidades-pendentes/<pasta>/) ganham a
+# versão com "npm run publicar-versao" na hora de subir (o /cp faz isso); branches de trabalho podem levá-las.
+# Ligado por "npm install" (prepare: git config core.hooksPath .githooks).
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  case "$local_sha" in *[!0]*) ;; *) continue ;; esac
+  pend=$(git ls-tree -d --name-only "$local_sha" novidades-pendentes/ 2>/dev/null)
+  if [ -n "$pend" ]; then
+    echo "pre-push: a main não pode receber novidades sem número:"
+    echo "$pend" | sed 's/^/  /'
+    echo "rode \"npm run publicar-versao\" (em cima da origin/main atualizada), confira e faça o commit; depois o push."
+    exit 1
+  fi
+done
+exit 0

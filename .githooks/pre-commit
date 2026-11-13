@@ -4,7 +4,7 @@
 # Pular numa emergência: git commit --no-verify (e diga por quê).
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
-if echo "$staged" | grep -qE '^(src/|tests/|shared/|package(-lock)?\.json|tsconfig\.json|vite\.config\.ts|[a-z]+\.html)'; then
+if echo "$staged" | grep -qE '^(src/|tests/|shared/|novidades-pendentes/|package(-lock)?\.json|tsconfig\.json|vite\.config\.ts|[a-z]+\.html)'; then
   echo "pre-commit: npm test + tsc"
   npm test --silent > .git-precommit.log 2>&1 || { grep -E '^not ok|^# (pass|fail)' .git-precommit.log | head -20; echo "pre-commit: testes da mesa falharam (log em .git-precommit.log)"; exit 1; }
   npx tsc --noEmit -p . || { echo "pre-commit: erro de tipos"; exit 1; }

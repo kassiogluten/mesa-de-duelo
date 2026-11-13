@@ -91,10 +91,20 @@ public class LabTest {
         assertRejected("{\"players\": [{\"library\": [" + many + "]}, {}]}", "no máximo");
     }
 
-    /** Os cenários prontos da tela (src/lab-cenarios.json) só têm cartas e marcadores que o servidor aceita. */
+    /**
+     * Os cenários prontos da tela (src/lab-cenarios.json e os das correções que ainda não ganharam número, em
+     * novidades-pendentes/<pasta>/cenarios.json) só têm cartas e marcadores que o servidor aceita.
+     */
     @Test public void readyScenariosOfTheTableAreAccepted() throws Exception {
         var ready = JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of("..", "src", "lab-cenarios.json"))).getAsJsonArray();
         assertFalse(ready.isEmpty());
+        var pending = java.nio.file.Path.of("..", "novidades-pendentes");
+        if (java.nio.file.Files.isDirectory(pending)) {
+            try (var folders = java.nio.file.Files.list(pending)) {
+                for (var f : (Iterable<java.nio.file.Path>) folders.map(d -> d.resolve("cenarios.json")).filter(java.nio.file.Files::exists)::iterator)
+                    ready.addAll(JsonParser.parseString(java.nio.file.Files.readString(f)).getAsJsonArray());
+            }
+        }
         for (var r : ready) {
             var o = r.getAsJsonObject();
             try { Lab.parse(o.get("cenario")); }
