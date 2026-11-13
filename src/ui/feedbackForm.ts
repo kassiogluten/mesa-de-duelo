@@ -132,7 +132,7 @@ export function openFeedbackForm(options: FeedbackFormOptions) {
     }
     $('.feedback-form').innerHTML = `<div class="feedback-done">
       <p class="feedback-done-title">${result.status === 'sent' ? `Relato <strong>${esc(result.code)}</strong> enviado. Obrigado!` : 'Guardado; envio quando a conexão voltar.'}</p>
-      <p>${result.status === 'sent' ? 'Se quiser falar com a gente sobre ele, cite o código.' : esc(result.text)}</p>
+      <p>${result.status === 'sent' ? 'A resposta aparece em <strong>Meus relatos</strong>, no menu ⋯.' : `${esc(result.text)} Depois de enviado, ele aparece em <strong>Meus relatos</strong>, no menu ⋯.`}</p>
       <footer class="feedback-actions"><button type="button" class="arena-btn primary" data-fb="close">Fechar</button></footer></div>`;
     $('.feedback-done [data-fb="close"]').focus();
   });

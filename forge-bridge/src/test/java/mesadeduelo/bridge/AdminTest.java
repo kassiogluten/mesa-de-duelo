@@ -88,6 +88,9 @@ public class AdminTest {
         assertEquals("A carta sumiu da mão", one.get("summary").getAsString());
         assertEquals("novo", one.getAsJsonObject("status").get("status").getAsString());
         assertFalse("paths stay on the server", one.has("path"));
+        assertFalse("the key hash stays on the server", one.has("key"));
+        assertFalse(list.toString().contains(store.entry(first).keyHash()));
+        assertTrue("sent with a key: the reply reaches the player", one.get("reachable").getAsBoolean());
         assertEquals(160, items.get(1).getAsJsonObject().get("summary").getAsString().length());
 
         Admin.Response file = admin.handle("GET", "relatos/" + first.toLowerCase(), auth, new byte[0], "ip");
@@ -103,6 +106,24 @@ public class AdminTest {
         FeedbackStore reopened = store();
         assertEquals("#42", reopened.status(first).issue());
         assertEquals("repete no turno 3", reopened.status(first).note());
+
+        // A resposta ao jogador: sobrevive a reiniciar, um PUT sem reply a mantém, vazia apaga e passa de 2.000 não entra.
+        Admin.Response replied = admin.handle("PUT", "relatos/" + first + "/estado", auth, body("{\"status\":\"resolvido\",\"reply\":\" Corrigido na 0.170.0. \"}"), "ip");
+        assertEquals(200, replied.status());
+        assertEquals("Corrigido na 0.170.0.", json(replied).get("reply").getAsString());
+        String repliedAt = json(replied).get("repliedAt").getAsString();
+        assertEquals("Corrigido na 0.170.0.", store().status(first).reply());
+        assertEquals(repliedAt, store().status(first).repliedAt().toString());
+        Admin.Response seen = admin.handle("PUT", "relatos/" + first + "/estado", auth, body("{\"status\":\"visto\",\"note\":\"de novo\"}"), "ip");
+        assertEquals("Corrigido na 0.170.0.", json(seen).get("reply").getAsString());
+        assertEquals(repliedAt, json(seen).get("repliedAt").getAsString());
+        JsonObject listed = json(admin.handle("GET", "relatos", auth, new byte[0], "ip")).getAsJsonArray("relatos").get(0).getAsJsonObject();
+        assertEquals("Corrigido na 0.170.0.", listed.getAsJsonObject("status").get("reply").getAsString());
+        assertEquals(400, admin.handle("PUT", "relatos/" + first + "/estado", auth, body("{\"status\":\"visto\",\"reply\":\"" + "x".repeat(2001) + "\"}"), "ip").status());
+        assertEquals("Corrigido na 0.170.0.", store().status(first).reply());
+        Admin.Response cleared = admin.handle("PUT", "relatos/" + first + "/estado", auth, body("{\"status\":\"visto\",\"reply\":\"\"}"), "ip");
+        assertFalse(json(cleared).has("reply"));
+        assertNull(store().status(first).reply());
 
         assertEquals(200, admin.handle("DELETE", "relatos/" + first, auth, new byte[0], "ip").status());
         assertEquals(404, admin.handle("GET", "relatos/" + first, auth, new byte[0], "ip").status());

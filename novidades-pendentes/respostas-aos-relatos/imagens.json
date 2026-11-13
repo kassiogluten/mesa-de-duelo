@@ -1,0 +1,13 @@
+{
+  "Meus relatos": [
+    { "img": "meus-relatos.webp", "legenda": "A lista dos relatos enviados: o primeiro, resolvido, com a resposta em destaque; os outros dois, em análise e recebido." },
+    { "img": "menu-meus-relatos.webp", "legenda": "O item Meus relatos no menu ⋯, logo depois de Enviar sugestão ou erro." }
+  ],
+  "Aviso de resposta num relato": [
+    { "img": "aviso-resposta.webp", "legenda": "O aviso na tela inicial: o código do relato que tem resposta, com Depois e Ver." },
+    { "img": "menu-meus-relatos.webp", "legenda": "O ponto dourado no botão ⋯ e no item Meus relatos enquanto a resposta não foi vista (o do sino é o das Novidades)." }
+  ],
+  "Depois de enviar um relato": [
+    { "img": "relato-enviado.webp", "legenda": "A tela de relato enviado, com o código e onde a resposta vai aparecer." }
+  ]
+}

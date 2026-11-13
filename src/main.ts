@@ -15,6 +15,7 @@ import { hideCardPreview } from './ui/cardInspector';
 import { createFreeTableView, loadFreeTable } from './ui/freeTable';
 import { buildReport, encodeReport, latestMatch, loadLastMatch, startFeedbackQueue } from './feedback';
 import { openFeedbackForm } from './ui/feedbackForm';
+import { checkMyReports, hideMyReportsNotice } from './ui/myReportsNotice';
 import { VERSION } from './ui/changelog';
 import { atualizarConta } from './conta/session';
 import { esconderOneTap, mostrarOneTap } from './conta/google';
@@ -50,6 +51,8 @@ function show(name: Screen) {
   screenWake.setActive(name === 'game' || name === 'free');
   // One Tap só na tela inicial e em Meus decks: nunca por cima da mesa.
   if (name === 'lobby' || name === 'decks') void mostrarOneTap(); else esconderOneTap();
+  // O aviso de resposta num relato também não fica por cima da mesa.
+  if (name !== 'lobby' && name !== 'decks') hideMyReportsNotice();
 }
 
 /** A partida do assento (ou a sala esperando o oponente), a assistida e a tela à vista. */
@@ -66,6 +69,9 @@ function finishStart(error?: string) {
 const recording = createRecordingSession();
 const { recorder } = recording;
 startFeedbackQueue();
+// Resposta nova num relato: o ponto do menu ⋯ e, uma vez, o aviso. Nunca na partida: quem volta direto para uma
+// partida em andamento fica sem o aviso desta vez (não é marcado como avisado) e o vê na próxima.
+void checkMyReports(() => session.screen === 'lobby' || session.screen === 'decks');
 
 function download(bytes: Uint8Array, name: string) {
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/gzip' }));

@@ -69,3 +69,23 @@ test('item 62: the report carries the informed name and the account token goes a
   await sendReport(named);
   assert.equal(calls[1].headers.Authorization, undefined, 'without the account (or with "Enviar sem meu nome") no token');
 });
+
+test('item 126: a sent report leaves its code and key on the device for Meus relatos; an old server leaves nothing', async () => {
+  const data = new Map();
+  globalThis.localStorage = { getItem: k => data.has(k) ? data.get(k) : null, setItem: (k, v) => data.set(k, String(v)), removeItem: k => data.delete(k) };
+  globalThis.dispatchEvent = () => true;
+  const { savedReports } = await import('../src/myReports.ts');
+  globalThis.fetch = async () => new Response(JSON.stringify({ code: 'R-7K2Q', key: 'segredo-do-relato' }), { status: 201 });
+  const sent = await sendReport(buildReport({ kind: 'erro', description: '  A carta\n sumiu  ', from: 'inicio', version: '0.167.0', recording: null }), { url: 'ws://h:7171/ws' });
+  assert.deepEqual(sent, { status: 'sent', code: 'R-7K2Q' }, 'the key never reaches the screen');
+  const [saved] = savedReports();
+  assert.equal(saved.code, 'R-7K2Q'); assert.equal(saved.key, 'segredo-do-relato');
+  assert.equal(saved.url, 'http://h:7171/api/relatos'); assert.equal(saved.kind, 'erro'); assert.equal(saved.summary, 'A carta sumiu');
+  globalThis.fetch = async () => new Response(JSON.stringify({ code: 'R-OLD1' }), { status: 201 });
+  await sendReport(buildReport({ kind: 'sugestao', description: 'oi', from: 'inicio', version: '0.167.0', recording: null }));
+  assert.deepEqual(savedReports().map(r => r.code), ['R-7K2Q']);
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: 'x' }), { status: 400 });
+  await sendReport(buildReport({ kind: 'sugestao', description: 'oi', from: 'inicio', version: '0.167.0', recording: null }));
+  assert.equal(savedReports().length, 1, 'a refused report is not remembered');
+  delete globalThis.localStorage;
+});

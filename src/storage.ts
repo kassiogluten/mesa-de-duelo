@@ -106,6 +106,10 @@ export const KEYS = {
   deckLayoutHome: 'mesa:deckLayout:home',
   /** Última versão do painel Novidades que o jogador viu. Tela inicial. */
   novidades: 'mesa:novidades',
+  /** Relatos enviados por este aparelho: código, chave para ver a resposta e servidor (JSON, até 50). Meus relatos. */
+  meusRelatos: 'mesa:relatos:meus',
+  /** Novidades dos relatos já vistas em Meus relatos e já avisadas na tela inicial (JSON). Meus relatos. */
+  relatosLidos: 'mesa:relatos:lidos',
 
   // Outras telas
   /** Mesa livre em andamento (JSON). Mesa livre. */
@@ -148,6 +152,8 @@ export const EVENTS = {
   ownArt: 'mesa:own-art',
   /** Abrir o Laboratório (menu ⋯). */
   laboratorio: 'mesa:laboratorio',
+  /** Os relatos do jogador mudaram: um foi enviado, a situação chegou do servidor ou as novidades foram vistas. */
+  meusRelatos: 'mesa:meus-relatos',
 } as const;
 
 /** Outros nomes do navegador: banco, trava entre abas, avisos, arquivos baixados. */

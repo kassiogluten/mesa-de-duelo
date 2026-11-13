@@ -105,6 +105,125 @@ public class FeedbackTest {
         assertEquals(4, store.files());
     }
 
+    private static JsonObject sent(Feedback.Response r) {
+        assertEquals(r.json(), 201, r.status());
+        return JsonParser.parseString(r.json()).getAsJsonObject();
+    }
+
+    private static String query(String... codeAndKey) {
+        JsonObject o = new JsonObject();
+        var list = new com.google.gson.JsonArray();
+        for (int i = 0; i < codeAndKey.length; i += 2) {
+            JsonObject r = new JsonObject(); r.addProperty("code", codeAndKey[i]); r.addProperty("key", codeAndKey[i + 1]); list.add(r);
+        }
+        o.add("relatos", list);
+        return o.toString();
+    }
+
+    private static List<JsonObject> situation(Feedback feedback, String body, String authorization) {
+        Feedback.Response r = feedback.status(body.getBytes(StandardCharsets.UTF_8), authorization);
+        assertEquals(r.json(), 200, r.status());
+        return JsonParser.parseString(r.json()).getAsJsonObject().getAsJsonArray("relatos").asList().stream().map(e -> e.getAsJsonObject()).toList();
+    }
+
+    @Test public void theKeyGoesBackToTheDeviceAndOnlyItsHashIsKept() throws IOException {
+        FeedbackStore store = store();
+        Feedback feedback = new Feedback(store, (c, t) -> null);
+        JsonObject first = sent(feedback.handle(gzip(report("erro", "A carta sumiu", null)), null, null, "1"));
+        JsonObject second = sent(feedback.handle(gzip(report("erro", "Outra", null)), null, null, "2"));
+        String code = first.get("code").getAsString(), key = first.get("key").getAsString();
+        assertTrue(key, key.matches("[A-Za-z0-9_-]{32}"));
+        assertNotEquals(key, second.get("key").getAsString());
+
+        String index = Files.readString(store.dir().resolve("indice.jsonl"));
+        assertFalse("a chave não fica no índice", index.contains(key));
+        assertTrue("só o resumo dela", index.contains(FeedbackStore.hash(key)));
+        assertFalse("nem no arquivo do relato", stored(store, code).toString().contains(key));
+        assertFalse(stored(store, code).toString().contains(FeedbackStore.hash(key)));
+        assertEquals(FeedbackStore.hash(key), store.entry(code).keyHash());
+        assertTrue(store.entry(code).reachable());
+        // Reabrindo, o resumo continua lá.
+        assertEquals(FeedbackStore.hash(key), store().entry(code).keyHash());
+    }
+
+    @Test public void playerSeesOnlyTheirOwnReportsWithTheSimplifiedStatusAndTheReply() throws IOException {
+        FeedbackStore store = store();
+        Feedback feedback = new Feedback(store, (c, t) -> null);
+        feedback.authors(auth -> "Bearer ana".equals(auth) ? new FeedbackStore.Author("Ana", "conta-ana", false)
+            : "Bearer bia".equals(auth) ? new FeedbackStore.Author("Bia", "conta-bia", false) : null);
+        JsonObject mine = sent(feedback.handle(gzip(report("erro", "A carta sumiu", null)), null, null, "1"));
+        JsonObject other = sent(feedback.handle(gzip(report("sugestao", "Mais decks", null)), null, null, "2"));
+        JsonObject account = sent(feedback.handle(gzip(report("erro", "Com a conta", null)), null, null, "Bearer ana", "3"));
+        // Um relato de antes das respostas: sem chave e sem conta.
+        String old = store.store(new FeedbackStore.Meta("erro", "0.1.0", null, false, "Antigo"), null, () -> FeedbackStore.class.getResourceAsStream("FeedbackStore.class")).code();
+        assertFalse(store.entry(old).reachable());
+        String code = mine.get("code").getAsString(), key = mine.get("key").getAsString();
+        String otherCode = other.get("code").getAsString(), otherKey = other.get("key").getAsString();
+        String accountCode = account.get("code").getAsString();
+
+        // Só a chave certa do relato certo.
+        var seen = situation(feedback, query(code, key), null);
+        assertEquals(1, seen.size());
+        assertEquals(code, seen.get(0).get("code").getAsString());
+        assertEquals("recebido", seen.get(0).get("status").getAsString());
+        assertEquals("erro", seen.get(0).get("kind").getAsString());
+        assertEquals("A carta sumiu", seen.get(0).get("summary").getAsString());
+        Instant.parse(seen.get(0).get("receivedAt").getAsString());
+        assertFalse(seen.get(0).has("reply"));
+        assertEquals(java.util.Set.of("code", "kind", "summary", "receivedAt", "status"), seen.get(0).keySet());
+        assertTrue(situation(feedback, query(code, "chave-errada"), null).isEmpty());
+        assertTrue("a chave de um relato não abre outro", situation(feedback, query(otherCode, key), null).isEmpty());
+        assertTrue(situation(feedback, query(old, ""), null).isEmpty());
+        assertTrue(situation(feedback, query(old, key), null).isEmpty());
+        assertTrue(situation(feedback, "{}", null).isEmpty());
+        assertTrue(situation(feedback, query("R-NADA", key), null).isEmpty());
+        // O código aceita minúsculas, como o resto.
+        assertEquals(1, situation(feedback, query(code.toLowerCase(), key), null).size());
+
+        // Com a conta, os dela vêm sem chave, em qualquer aparelho; os de outra conta, não.
+        var ana = situation(feedback, "{}", "Bearer ana");
+        assertEquals(1, ana.size());
+        assertEquals(accountCode, ana.get(0).get("code").getAsString());
+        assertTrue(situation(feedback, "{}", "Bearer bia").isEmpty());
+        assertTrue(situation(feedback, "{}", "Bearer vencido").isEmpty());
+        // Conta e chaves juntas, do mais novo ao mais antigo, sem repetir.
+        var both = situation(feedback, query(code, key, otherCode, otherKey), "Bearer ana");
+        assertEquals(List.of(accountCode, otherCode, code), both.stream().map(o -> o.get("code").getAsString()).toList());
+
+        // Estado simplificado e resposta; a nota e a issue ficam só no admin.
+        store.setStatus(code, "issue", "nota interna secreta", "#42", "Corrigimos na próxima versão.");
+        JsonObject answered = situation(feedback, query(code, key), null).get(0);
+        assertEquals("analise", answered.get("status").getAsString());
+        assertEquals("Corrigimos na próxima versão.", answered.get("reply").getAsString());
+        String repliedAt = answered.get("repliedAt").getAsString();
+        Instant.parse(repliedAt);
+        assertFalse(answered.toString().contains("secreta"));
+        assertFalse(answered.toString().contains("#42"));
+        assertFalse(answered.has("note")); assertFalse(answered.has("issue")); assertFalse(answered.has("author"));
+
+        // A hora da resposta só muda com o texto: trocar o estado, a nota, ou salvar o mesmo texto, não.
+        store.setStatus(code, "resolvido", "outra nota", "#42", null);
+        assertEquals(repliedAt, situation(feedback, query(code, key), null).get(0).get("repliedAt").getAsString());
+        assertEquals("resolvido", situation(feedback, query(code, key), null).get(0).get("status").getAsString());
+        store.setStatus(code, "resolvido", null, null, "Corrigimos na próxima versão.");
+        assertEquals(repliedAt, store.status(code).repliedAt().toString());
+        assertEquals(repliedAt, store().status(code).repliedAt().toString());
+        // Vazia apaga.
+        store.setStatus(code, "descartado", null, null, "");
+        JsonObject closed = situation(feedback, query(code, key), null).get(0);
+        assertEquals("encerrado", closed.get("status").getAsString());
+        assertFalse(closed.has("reply")); assertFalse(closed.has("repliedAt"));
+        store.setStatus(otherCode, "visto", null, null);
+        assertEquals("analise", situation(feedback, query(otherCode, otherKey), null).get(0).get("status").getAsString());
+
+        // Corpo com defeito ou relatos demais: 400.
+        error(feedback.status("[1]".getBytes(StandardCharsets.UTF_8), null), 400);
+        error(feedback.status("{\"relatos\":".getBytes(StandardCharsets.UTF_8), null), 400);
+        String[] many = new String[2 * (Feedback.MAX_STATUS_ITEMS + 1)];
+        for (int i = 0; i < many.length; i += 2) { many[i] = "R-" + i; many[i + 1] = "k"; }
+        error(feedback.status(query(many).getBytes(StandardCharsets.UTF_8), null), 400);
+    }
+
     @Test public void rejectsInvalidReportsWith400() throws IOException {
         Feedback feedback = new Feedback(store(), (c, t) -> null);
         error(feedback.handle(gzip("{\"kind\":"), null, null, "1"), 400);
@@ -241,6 +360,24 @@ public class FeedbackTest {
 
         HttpResponse<String> get = http.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(405, get.statusCode());
+
+        // A situação dos relatos (Meus relatos): POST em JSON, com OPTIONS para o navegador e 405 para o resto.
+        URI situation = URI.create("http://127.0.0.1:" + port + Feedback.STATUS_PATH);
+        JsonObject sent = JsonParser.parseString(ok.body()).getAsJsonObject();
+        HttpResponse<String> mine = http.send(HttpRequest.newBuilder(situation)
+            .POST(HttpRequest.BodyPublishers.ofString(query(sent.get("code").getAsString(), sent.get("key").getAsString())))
+            .header("Content-Type", "application/json").build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(mine.body(), 200, mine.statusCode());
+        assertEquals("*", mine.headers().firstValue("Access-Control-Allow-Origin").orElse(null));
+        var list = JsonParser.parseString(mine.body()).getAsJsonObject().getAsJsonArray("relatos");
+        assertEquals(1, list.size());
+        assertEquals("Travou no combate", list.get(0).getAsJsonObject().get("summary").getAsString());
+        HttpResponse<String> statusPreflight = http.send(HttpRequest.newBuilder(situation).method("OPTIONS", HttpRequest.BodyPublishers.noBody())
+            .header("Origin", "http://localhost:5173").header("Access-Control-Request-Method", "POST").build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(204, statusPreflight.statusCode());
+        assertTrue(statusPreflight.headers().firstValue("Access-Control-Allow-Headers").orElse("").contains("Authorization"));
+        assertEquals(405, http.send(HttpRequest.newBuilder(situation).GET().build(), HttpResponse.BodyHandlers.ofString()).statusCode());
+        assertEquals(1, store.files());
 
         HttpResponse<String> huge = http.send(HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.ofByteArray(new byte[Feedback.MAX_COMPRESSED + 10])).build(),
             HttpResponse.BodyHandlers.ofString());

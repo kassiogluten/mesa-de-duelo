@@ -16,7 +16,7 @@ export function visibleReports(items: Item[], filter: ReportFilter) {
   return items.filter(item => (filter.status === 'todos' || (filter.status === 'pendentes' ? ['novo', 'visto'].includes(item.status.status) : item.status.status === filter.status))
     && (!filter.kind || item.kind === filter.kind)
     && (!filter.author || authorKey(item) === filter.author)
-    && (!q || item.code.toLowerCase().includes(q) || authorName(item).toLowerCase().includes(q) || (item.summary ?? '').toLowerCase().includes(q) || (item.status.note ?? '').toLowerCase().includes(q) || (item.version ?? '').includes(q)));
+    && (!q || item.code.toLowerCase().includes(q) || authorName(item).toLowerCase().includes(q) || (item.summary ?? '').toLowerCase().includes(q) || (item.status.note ?? '').toLowerCase().includes(q) || (item.status.reply ?? '').toLowerCase().includes(q) || (item.version ?? '').includes(q)));
 }
 
 export function reportListHTML(items: Item[], o: { filter: ReportFilter; selected: string | null; totalBytes: number }) {
@@ -39,16 +39,16 @@ export function reportListHTML(items: Item[], o: { filter: ReportFilter; selecte
         ${(Object.keys(STATUS) as Status[]).map(s => option(s, `${STATUS[s]} (${count(s)})`, filter.status)).join('')}</select></label>
       <label>Tipo<select data-filter="kind">${option('', 'Todos', filter.kind)}${option('erro', 'Algo deu errado', filter.kind)}${option('sugestao', 'Sugestão', filter.kind)}</select></label>
       <label>Quem enviou<select data-filter="author">${option('', 'Todos', filter.author)}${authorOptions}</select></label>
-      <label class="adm-search">Buscar<input type="search" data-filter="q" value="${esc(filter.q)}" placeholder="Código, texto, apelido, nota ou versão"></label>
+      <label class="adm-search">Buscar<input type="search" data-filter="q" value="${esc(filter.q)}" placeholder="Código, texto, apelido, nota, resposta ou versão"></label>
     </div>
     <div class="adm-split${selected ? ' has-detail' : ''}">
       <ul class="adm-list" aria-label="Relatos">${shown.length ? shown.map(item => `<li><button class="adm-row${item.code === selected ? ' on' : ''}" data-code="${esc(item.code)}" aria-current="${item.code === selected}">
         <span class="adm-row-top"><strong>${esc(item.code)}</strong>${kindBadge(item.kind)}${statusBadge(item.status.status)}<time>${when(item.receivedAt)}</time></span>
         <span class="adm-row-text">${esc(item.summary ?? 'Abra para ver a descrição.')}</span>
-        <span class="adm-row-meta">${esc([item.author ? `${authorName(item)}${item.author.account ? '' : ' (informado)'}` : 'anônimo', item.version && `v${item.version}`, item.format && (FORMATS[item.format] ?? item.format), item.match ? (item.bridge ? 'partida + ponte' : 'partida') : null, size(item.bytes), item.status.issue].filter(Boolean).join(' · '))}</span>
+        <span class="adm-row-meta">${esc([item.author ? `${authorName(item)}${item.author.account ? '' : ' (informado)'}` : 'anônimo', item.version && `v${item.version}`, item.format && (FORMATS[item.format] ?? item.format), item.match ? (item.bridge ? 'partida + ponte' : 'partida') : null, size(item.bytes), item.status.issue, item.status.reply ? 'respondido' : null].filter(Boolean).join(' · '))}</span>
       </button></li>`).join('') : `<li class="adm-empty">${items.length ? 'Nenhum relato com esses filtros.' : 'Nenhum relato ainda.'}</li>`}</ul>
       <section class="adm-detail" id="admDetail" aria-live="polite"></section>
-    </div>`;;
+    </div>`;;
 }
 
 /** O relato aberto: descrição, ações, tratamento e os detalhes da partida e do aparelho. */
@@ -73,6 +73,10 @@ export function reportDetailHTML(code: string, item: Item, stored: Stored, notic
       <label>Estado<select name="status">${(Object.keys(STATUS) as Status[]).map(s => `<option value="${s}"${s === item.status.status ? ' selected' : ''}>${STATUS[s]}</option>`).join('')}</select></label>
       <label>Issue<input name="issue" value="${esc(item.status.issue ?? '')}" placeholder="#42 ou o link" maxlength="200"></label>
       <label class="adm-wide">Nota<textarea name="note" rows="3" maxlength="2000" placeholder="O que foi visto, o que falta, em que versão foi corrigido…">${esc(item.status.note ?? '')}</textarea></label>
+      <label class="adm-wide">Resposta ao jogador<textarea name="reply" rows="3" maxlength="2000" aria-describedby="admReplyHint" placeholder="O que o jogador vai ler em Meus relatos."${item.reachable === false ? ' disabled' : ''}>${esc(item.status.reply ?? '')}</textarea></label>
+      <p class="adm-wide adm-muted" id="admReplyHint">${item.reachable === false
+        ? 'Este relato não tem como chegar ao jogador: foi enviado antes das respostas e sem conta.'
+        : `O jogador vê esta resposta e o estado em Meus relatos.${item.status.repliedAt ? ` Respondido em ${when(item.status.repliedAt)}.` : ''}`}</p>
       <div class="adm-wide adm-form-end"><span class="adm-muted">Atualizado em ${when(item.status.updatedAt)}</span><button class="arena-btn primary" type="submit">Salvar</button></div>
     </form>
     <h3>Detalhes</h3>
@@ -88,5 +92,5 @@ export function reportDetailHTML(code: string, item: Item, stored: Stored, notic
     ${errors.length ? `<h3>Erros registrados (${errors.length})</h3><ul class="adm-errors">${errors.slice(-40).map((n: Stored) => `<li><time>${new Date(n.at).toLocaleTimeString('pt-BR')}</time> <strong>${esc(n.kind)}</strong> ${esc(n.text)}${n.detail ? `<code>${esc(n.detail)}</code>` : ''}</li>`).join('')}</ul>` : ''}
     ${r.diagnostics ? `<details><summary>Relatório do painel de erros</summary><pre>${esc(r.diagnostics)}</pre></details>` : ''}
     ${bridge?.snapshots?.length ? `<details><summary>Retratos do Forge (${bridge.snapshots.length})</summary>${bridge.snapshots.map((s: Stored, i: number) => `<p class="adm-muted">Retrato ${i}: jogo ${s.gameNumber}, turno ${s.turn}, ${esc(s.phase)} (${s.reason === 'relato' ? 'no relato' : 'começo do turno'})</p>`).join('')}
-      <p class="adm-muted">Para restaurar no Forge: <code>./scripts/rodar.sh --mode=replay --relato=${esc(code)}.json.gz --retrato=N</code> com o arquivo baixado.</p></details>` : ''}`;;
+      <p class="adm-muted">Para restaurar no Forge: <code>./scripts/rodar.sh --mode=replay --relato=${esc(code)}.json.gz --retrato=N</code> com o arquivo baixado.</p></details>` : ''}`;;
 }

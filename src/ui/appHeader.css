@@ -40,6 +40,10 @@
 .news-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
 .mais-btn svg { width: 18px; height: 18px; fill: currentColor; }
 .mais-menu { min-width: 230px; }
+/* Resposta nova num relato: o ponto do botão ⋯ (o mesmo do sino das Novidades) e o do item Meus relatos. */
+.mais-btn { position: relative; }
+.mais-item-dot { flex-shrink: 0; width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.mais-item-dot[hidden], .mais-dot[hidden] { display: none; }
 .mais-menu [data-mais] svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
 .mais-grupo { margin: 6px 0 2px; padding: 8px 10px 2px; border-top: 1px solid #ffffff14; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 .mais-menu [role='group'] { display: flex; flex-direction: column; }

@@ -241,7 +241,8 @@ async function renderDetail(code: string) {
 }
 
 async function saveStatus(item: Item, next: Item['status'], announce = true) {
-  const response = await adminFetch(`relatos/${encodeURIComponent(item.code)}/estado`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: next.status, note: next.note ?? '', issue: next.issue ?? '' }) });
+  const response = await adminFetch(`relatos/${encodeURIComponent(item.code)}/estado`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, // A resposta ao jogador vai sempre junto (inclusive ao marcar como visto sozinho), para o servidor nunca a apagar por engano.
+    body: JSON.stringify({ status: next.status, note: next.note ?? '', issue: next.issue ?? '', reply: next.reply ?? '' }) });
   if (response.status === 401) { login('A sessão acabou. Entre de novo.'); return; }
   if (!response.ok) { notice = await adminError(response); renderList(); return; }
   item.status = await response.json();
@@ -309,7 +310,9 @@ root.addEventListener('submit', e => {
   e.preventDefault();
   const item = items.find(i => i.code === selected);
   const data = new FormData(form);
-  if (item) void saveStatus(item, { ...item.status, status: data.get('status') as Status, note: String(data.get('note') ?? ''), issue: String(data.get('issue') ?? '') });
+  // O campo da resposta fica desligado quando ela não tem como chegar ao jogador: aí vale a que já estava guardada.
+  if (item) void saveStatus(item, { ...item.status, status: data.get('status') as Status, note: String(data.get('note') ?? ''), issue: String(data.get('issue') ?? ''),
+    reply: data.has('reply') ? String(data.get('reply') ?? '') : item.status.reply });
 });
 
 root.addEventListener('input', e => {

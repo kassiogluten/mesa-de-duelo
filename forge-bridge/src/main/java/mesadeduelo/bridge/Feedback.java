@@ -52,10 +52,19 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  * Sem token, ou com um que já não vale (vencido na fila do aparelho, conta apagada), vale o {@code name} do corpo,
  * marcado como informado. Sem os dois, o relato é anônimo. O token da conta também não é guardado.
  *
- * Respostas em JSON: 201 {code}, ou {error} com 400, 405, 413, 429 ou 507, sempre com uma frase para o jogador.
+ * Respostas em JSON: 201 {code, key}, ou {error} com 400, 405, 413, 429 ou 507, sempre com uma frase para o jogador.
+ * {@code key} é a chave do relato, que só o aparelho guarda (aqui fica o resumo dela): com ela o jogador vê a resposta.
+ *
+ * POST /api/relatos/situacao: o estado e a resposta dos relatos do jogador (Meus relatos). Corpo em JSON, sem gzip:
+ * {@code {relatos: [{code, key}]}}, com até {@link #MAX_STATUS_ITEMS}; com o {@code Authorization} da conta, vêm também
+ * os relatos enviados com ela, de qualquer aparelho. Resposta: 200 {@code {relatos: [{code, kind, summary, receivedAt,
+ * status, reply?, repliedAt?}]}}, do mais novo ao mais antigo, com {@code status} em recebido, analise, resolvido ou
+ * encerrado. Chave errada ou relato apagado simplesmente não aparecem.
  */
 final class Feedback {
     static final String PATH = "/api/relatos";
+    static final String STATUS_PATH = "/api/relatos/situacao";
+    static final int MAX_STATUS_ITEMS = 100;
     static final int MAX_COMPRESSED = 3 << 20;
     static final long MAX_UNCOMPRESSED = 64L << 20;
     static final int MAX_DESCRIPTION = 2000, MAX_PER_HOUR = 10;
@@ -146,11 +155,12 @@ final class Feedback {
         }
         FeedbackStore.Author author = author(authorization, meta.name());
         try {
-            FeedbackStore.Entry entry = store.store(meta, bridge, author, () -> open(body));
+            String secret = store.newKey();
+            FeedbackStore.Entry entry = store.store(meta, bridge, author, FeedbackStore.hash(secret), () -> open(body));
             limit.record(key, now);
             Metrics.feedbackReceived(meta.kind(), meta.recording());
             Log.bridge().info("Relato %s recebido (%s, %d bytes%s)", entry.code(), meta.kind(), entry.bytes(), bridge != null ? ", com o diário da ponte" : "");
-            JsonObject o = new JsonObject(); o.addProperty("code", entry.code());
+            JsonObject o = new JsonObject(); o.addProperty("code", entry.code()); o.addProperty("key", secret);
             return new Response(201, o.toString());
         } catch (FeedbackStore.Full e) {
             Log.bridge().warn("Relatos: sem espaço (" + e.getMessage() + ")");
@@ -161,6 +171,31 @@ final class Feedback {
             e.printStackTrace();
             return reject(500, "erro", "Não foi possível guardar o relato agora. Tente de novo mais tarde.");
         }
+    }
+
+    /** A situação dos relatos do jogador: os das chaves do corpo e, com a conta, os dela. */
+    Response status(byte[] body, String authorization) {
+        java.util.Map<String, String> keys = new java.util.HashMap<>();
+        try {
+            JsonObject o = com.google.gson.JsonParser.parseString(new String(body, StandardCharsets.UTF_8)).getAsJsonObject();
+            if (o.has("relatos")) {
+                var list = o.getAsJsonArray("relatos");
+                if (list.size() > MAX_STATUS_ITEMS) return error(400, "Relatos demais numa consulta só.");
+                for (var item : list) {
+                    JsonObject r = item.getAsJsonObject();
+                    String code = FeedbackStore.Entry.text(r, "code"), key = FeedbackStore.Entry.text(r, "key");
+                    if (code != null && key != null && key.length() <= 200) keys.put(code.strip().toUpperCase(), key);
+                }
+            }
+        } catch (RuntimeException e) {
+            return error(400, "A consulta dos relatos chegou com defeito.");
+        }
+        FeedbackStore.Author account = author(authorization, null);
+        JsonObject out = new JsonObject();
+        var list = new com.google.gson.JsonArray();
+        store.forPlayer(keys, account == null ? null : account.account()).forEach(list::add);
+        out.add("relatos", list);
+        return new Response(200, out.toString());
     }
 
     /** A conta da sessão, se o token ainda vale; senão o nome informado; senão ninguém. */
@@ -309,15 +344,27 @@ final class Feedback {
         }
     }
 
-    /** Depois do agregador: OPTIONS (CORS), POST e 405 para o resto em /api/relatos. */
+    /** Depois do agregador: OPTIONS (CORS), POST e 405 para o resto em /api/relatos e em /api/relatos/situacao. */
     final class Handler extends ChannelInboundHandlerAdapter {
         @Override public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            if (!(msg instanceof FullHttpRequest req) || !PATH.equals(new QueryStringDecoder(req.uri()).path())) {
+            String path = msg instanceof FullHttpRequest r ? new QueryStringDecoder(r.uri()).path() : "";
+            if (!(msg instanceof FullHttpRequest req) || !(PATH.equals(path) || STATUS_PATH.equals(path))) {
                 ctx.fireChannelRead(msg);
                 return;
             }
             try {
                 if (req.method() == HttpMethod.OPTIONS) { respond(ctx, new Response(204, null)); return; }
+                if (STATUS_PATH.equals(path)) {
+                    if (req.method() != HttpMethod.POST) { respond(ctx, error(405, "Use POST para consultar os relatos.")); return; }
+                    byte[] query = ByteBufUtil.getBytes(req.content());
+                    String account = req.headers().get(HttpHeaderNames.AUTHORIZATION);
+                    try {
+                        workers.execute(() -> respond(ctx, status(query, account)));
+                    } catch (RejectedExecutionException e) {
+                        respond(ctx, error(503, "O servidor está ocupado agora. Tente de novo em alguns minutos."));
+                    }
+                    return;
+                }
                 if (req.method() != HttpMethod.POST) { respond(ctx, error(405, "Use POST para enviar um relato.")); return; }
                 byte[] body = ByteBufUtil.getBytes(req.content());
                 String code = req.headers().get("X-Mesa-Partida"), token = req.headers().get("X-Mesa-Token");

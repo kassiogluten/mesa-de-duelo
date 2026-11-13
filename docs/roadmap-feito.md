@@ -1380,3 +1380,102 @@ Pedido em 13/11/2026: sempre que uma coleção nova entra na mesa, ela ganha 5 d
 - [x] Mystery Booster Commander Edition (0.162.0): Whtz, Homer, Uugguu, Ekthi e Massimo, os 5 mais jogados no EDHREC em 13/11/2026, importados por `forge-bridge/scripts/importar-edhrec.mjs`; 15 cartas que a IA do Forge não joga foram trocadas por outras da mesma função.
 - [x] Star Trek e Star Trek Commander (0.163.0): The Borg Queen, Q, Stacking the Deck, Jean-Luc Picard, Luminary, Commander Spock e Locutus of Borg, os 5 mais jogados no EDHREC em 13/11/2026; 13 cartas que a IA não joga trocadas por outras da mesma função.
 - [x] Cada deck passa na validação do servidor e pelo computador (`DeckValidation.validateForAi`), com bracket e preço como os outros decks prontos.
+
+## 126. ✅ Responder os relatos: Meus relatos
+
+Pedido em 13/11/2026. Hoje o relato não tem volta: o jogador vê "Relato R-XXXX enviado" e só. O aparelho não guarda o
+código (a fila apaga o relato depois de enviado), e o estado e a nota da área de admin (`FeedbackStore.Status`, em
+`relatos/estado.json`) não saem dela. O item 63 deixou isso de fora ("mostrar ao jogador a lista dos relatos que ele
+mandou, e responder a ele pelo jogo"). Responder por e-mail está fora de questão, porque o servidor não guarda e-mail
+(política de privacidade). Relatos públicos foram avaliados e descartados: o consentimento é para leitura só do
+responsável, o relato traz partida, aparelho e diário do servidor, e o texto livre e anônimo pediria moderação.
+
+Decidido em 13/11/2026:
+- **Quem recebe:** todo mundo. Quem relata com a conta recebe pela conta, em qualquer aparelho. Quem relata sem conta,
+  ou com **Enviar sem meu nome**, recebe no aparelho que enviou, por uma chave secreta do relato guardada nele. O
+  código sozinho não basta, porque tem só 4 letras e daria para adivinhar.
+- **O que o jogador vê:** a resposta escrita pelo admin e o estado simplificado: **Recebido** (novo), **Em análise**
+  (visto ou virou issue), **Resolvido** e **Encerrado** (descartado). A nota e a issue continuam só no admin.
+- **Uma resposta só por relato**, que o admin pode editar. Não há conversa: para continuar o assunto, o jogador manda
+  outro relato e cita o código.
+- **Onde:** item **Meus relatos** no menu ⋯ (`src/ui/maisMenu.ts`), logo depois de "Enviar sugestão ou erro", com um
+  ponto no botão ⋯ e no item enquanto houver novidade não vista.
+- **Aviso:** além do ponto, um aviso curto aparece uma vez por novidade, só na tela inicial ou em Meus decks e nunca
+  na partida: "Seu relato R-7K2Q tem resposta", com "Depois" e "Ver"; com mais de uma, "Seus relatos têm resposta (2)".
+  Usar o mesmo molde do `banner()` de `src/ui/pwa.ts` (`.pwa-banner`). Contam como novidade uma resposta nova ou
+  editada e a passagem para Resolvido ou Encerrado. Passar para "Em análise" não avisa.
+
+Plano:
+
+**Servidor** (`forge-bridge`; reiniciar a 7171 ao testar):
+- [x] `FeedbackStore.Entry` ganha `keyHash` (SHA-256 em hex da chave, campo `key` na linha do `indice.jsonl`; a chave
+  em si nunca é guardada) e `reachable()` (tem `keyHash` ou `author.account`). Manter os construtores de 10 e 11
+  campos para os testes e o `load()`.
+- [x] `FeedbackStore.Status` ganha `reply` e `repliedAt`, com o construtor de 4 campos mantido, e `playerStatus()`
+  (novo → `recebido`; visto/issue → `analise`; resolvido → `resolvido`; descartado → `encerrado`). `loadStatuses`
+  lê os dois campos novos. `setStatus(code, status, note, issue, reply)`: `reply` null mantém a resposta que havia,
+  vazia a apaga; `repliedAt` só muda quando o texto muda.
+- [x] `FeedbackStore.store(..., keyHash, source)`, `newKey()` (24 bytes aleatórios em base64url) e `hash(key)`.
+- [x] `FeedbackStore.forPlayer(Map<código, chave>, account)`: os relatos cuja chave confere (comparação com
+  `MessageDigest.isEqual`) ou cujo `author.account` é a conta, do mais novo ao mais antigo, só com `code`, `kind`,
+  `summary`, `receivedAt`, `status` (o do jogador), `reply` e `repliedAt`. Nada de nota, issue, aparelho, partida ou
+  autor.
+- [x] `Feedback.handle` gera a chave, guarda o hash e responde `201 {code, key}`.
+- [x] Rota nova `POST /api/relatos/situacao` (`Feedback.STATUS_PATH`) no mesmo `Feedback.Handler`, com OPTIONS
+  (CORS, que já aceita `Authorization`), 405 para outros métodos e o pool `workers`. O corpo é
+  `{relatos: [{code, key}]}`, com até 100 relatos, e a conta vem do `Authorization`, pelo mesmo `Authors` do
+  `author()`. Cabe no agregador de 64 KB, então não precisa mexer no `Feedback.Route`. Atualizar o comentário do
+  topo do arquivo.
+- [x] `Admin`: `PUT relatos/{código}/estado` aceita `reply` (até 2.000 caracteres; ausente mantém a resposta). A lista
+  tira `key` (como já tira `path`) e acrescenta `reachable`.
+- [x] Testes: em `FeedbackTest`, a chave volta no 201 e não aparece no índice nem no arquivo; a situação devolve os
+  relatos da chave certa e os da conta, mas não os de chave errada, de outro relato, sem chave ou de antes das
+  respostas; não vaza nota nem issue; `repliedAt` estável ao salvar o mesmo texto; rota HTTP com OPTIONS e 405. Em
+  `AdminTest`, a resposta sobrevive a reiniciar e o PUT sem `reply` a mantém.
+
+**Área de admin** (`src/admin`):
+- [x] `Item.status` ganha `reply?` e `repliedAt?`, e `Item` ganha `reachable`. No formulário Tratamento
+  (`reportDetailHTML`), o campo "Resposta ao jogador" (textarea, até 2.000), com a linha "O jogador vê esta resposta
+  e o estado em Meus relatos." ou, sem `reachable`, "Este relato não tem como chegar ao jogador: foi enviado antes
+  das respostas e sem conta."
+- [x] `saveStatus` (`src/admin/admin.ts`) manda `reply` sempre, inclusive na marcação automática de "visto" ao abrir
+  o relato, para não apagar a resposta. A busca também procura na resposta, e a linha da lista mostra "respondido".
+
+**Mesa:**
+- [x] `src/storage.ts`: `KEYS.meusRelatos` (lista `{code, key, url, at, kind, summary}`, a mais nova primeiro, até 50)
+  e `KEYS.relatosLidos` (`{vistos: {código: assinatura}, avisados: {código: assinatura}}`), mais `EVENTS.meusRelatos`.
+  A assinatura é `"<status se resolvido/encerrado>|<repliedAt>"`: muda só com o que conta como novidade.
+- [x] Módulo novo `src/myReports.ts`: guardar o relato enviado; consultar a situação agrupando por `url` (o servidor
+  para onde o relato foi), com o token da conta (`contaSessao()`) no grupo do servidor padrão (`FORGE_URL`); juntar
+  os resultados por código; tirar da lista do aparelho os códigos que o servidor deixou de devolver (apagados pela
+  retenção de 90 dias); calcular os não vistos e os não avisados; marcar como vistos e como avisados.
+- [x] `src/feedback.ts`: `post()` devolve também `key`; `sendReport` e `flushQueue` guardam `{code, key}` ao dar certo.
+  `QueuedReport` ganha `kind` e `summary`; os itens antigos da fila, sem eles, usam "sugestao" e "".
+- [x] `src/ui/feedbackForm.ts`, tela de enviado: "Relato **R-XXXX** enviado. Obrigado! A resposta aparece em **Meus
+  relatos**, no menu ⋯." Na fila: "…depois de enviado, ele aparece em Meus relatos."
+- [x] Tela `src/ui/myReportsDialog.ts` (e CSS próprio), reaproveitando `.feedback-overlay` e `.feedback-dialog`: um
+  cartão por relato, com código, tipo, data, começo do texto, selo do estado e, se houver, a resposta em destaque.
+  Abrir consulta o servidor e marca tudo como visto. Sem relatos: "Você ainda não mandou relatos." Sem conexão: a
+  lista do aparelho sem os estados, com "Não consegui falar com o servidor agora." Foco preso e Esc, como no
+  formulário.
+- [x] Menu ⋯: item **Meus relatos** e o ponto (no botão ⋯ e no item), atualizado pelo `EVENTS.meusRelatos`.
+- [x] `src/main.ts`: depois de `startFeedbackQueue()`, consultar a situação uma vez e mostrar o aviso se a tela for
+  `lobby` ou `decks`. Se a mesa abrir direto na partida (voltando a uma em andamento), não marcar como avisado e
+  deixar para a próxima vez.
+- [x] Política de privacidade (`src/privacidade.ts`, seção "Relatos"): o aparelho guarda o código e uma chave do
+  relato para ver a resposta; a resposta fica com o relato e some junto, em até 90 dias. Com a conta, os relatos
+  dela aparecem em qualquer aparelho conectado.
+- [x] Testes: `tests/feedback.test.mjs` ou um teste novo do módulo (guardar, juntar, podar, não vistos, assinatura),
+  `tests/storage.test.mjs` (chaves novas) e uma página de teste em `tests/fixtures/` para a tela Meus relatos, usada
+  também nos prints.
+
+**Entregar** (skill `/entregar`):
+- [x] Novidade em `novidades-pendentes/respostas-aos-relatos/`, em `### Novo`: **Meus relatos** (estado e resposta,
+  no menu ⋯) e o aviso de resposta na tela inicial, com prints da tela Meus relatos, do ponto no menu ⋯ e do aviso.
+  Não precisa de cenário do Laboratório (não é correção de regra).
+- [x] Ao terminar, mover este item para `docs/roadmap-feito.md`.
+
+Ficou de fora: conversa nos dois sentidos, notificação do navegador, votos e relatos públicos. Os relatos enviados
+antes desta mudança e sem conta não têm chave, então a resposta não chega a eles; os enviados com a conta aparecem.
+
+Feito em 13/11/2026 (novidade em `novidades-pendentes/respostas-aos-relatos/`; a versão sai na publicação). Como ficou, onde saiu do plano: o aviso diz "tem resposta" quando há resposta e "foi resolvido" ou "foi encerrado" quando o relato só mudou de estado, e com vários "Seus relatos têm resposta (N)" ou "têm novidades (N)"; ele some ao entrar na partida. O módulo da mesa recebe o token da conta de quem chama (`refreshMyReports(token)`), em vez de ler a sessão, para não fechar um ciclo de imports com `conta/session.ts`. Na área de admin, o campo da resposta fica desligado nos relatos que não têm como chegar ao jogador. A página de teste é `tests/fixtures/my-reports.html` (com `window.fixture`), usada nos prints e em `tests/my-reports.browser.mjs`.

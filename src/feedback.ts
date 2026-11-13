@@ -3,11 +3,13 @@ import { FORGE_URL, bridgeHttpUrl } from './forge/client';
 import { RECORDING_FORMAT, fitRecording, gzip, type DeviceInfo, type Recording } from './forge/recording';
 import { STORES, withStore } from './idb';
 import { DEFAULT_PASS_LEVEL, passLevelInfo, savedPassLevel } from './ui/passLevel';
+import { rememberReport, summaryOf } from './myReports';
 
 /**
  * Relatos de sugestões e erros (item 28): monta o relato, envia para a ponte (POST /api/relatos, corpo em gzip) e,
  * sem rede ou com o servidor fora, guarda numa fila no IndexedDB que sai sozinha depois. Também guarda a gravação
- * da última partida, para relatar da tela inicial depois que ela acabou ou depois de recarregar a página.
+ * da última partida, para relatar da tela inicial depois que ela acabou ou depois de recarregar a página. O servidor
+ * devolve o código e uma chave do relato, que ficam no aparelho (myReports.ts) para o jogador ver a resposta depois.
  */
 export const DESCRIPTION_LIMIT = 2000;
 export type FeedbackKind = 'sugestao' | 'erro';
@@ -94,23 +96,29 @@ export async function recordingSize(recording: Recording) { return (await fitRec
 
 // ---------------------------------------------------------------- envio e fila
 
-interface QueuedReport { url: string; body: Uint8Array; headers: Record<string, string>; createdAt: number }
+/** {@code kind} e {@code summary} vão junto para Meus relatos mostrar o relato quando ele sair da fila (os antigos não têm). */
+interface QueuedReport { url: string; body: Uint8Array; headers: Record<string, string>; createdAt: number; kind?: FeedbackKind; summary?: string }
 const OFFLINE = 'Sem conexão com o servidor. O relato ficou guardado e sai sozinho quando a conexão voltar.';
 const LIMIT = 'Muitos relatos seguidos, tente de novo em alguns minutos. O relato ficou guardado e sai sozinho depois.';
 
-async function post(item: QueuedReport): Promise<{ ok: true; code: string } | { ok: false; retry: boolean; status: number; text?: string }> {
+async function post(item: QueuedReport): Promise<{ ok: true; code: string; key?: string } | { ok: false; retry: boolean; status: number; text?: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const response = await fetch(item.url, { method: 'POST', body: item.body as BodyInit, headers: item.headers, signal: controller.signal });
-    const json = await response.json().catch(() => ({})) as { code?: string; error?: string };
-    if (response.ok && json.code) return { ok: true, code: json.code };
+    const json = await response.json().catch(() => ({})) as { code?: string; key?: string; error?: string };
+    if (response.ok && json.code) return { ok: true, code: json.code, key: json.key };
     // Limite de envio, servidor fora, sem espaço ou ainda sem a rota (404): tenta de novo depois. O resto (relato inválido) não adianta repetir.
     const retry = [404, 408, 429].includes(response.status) || response.status >= 500;
     return { ok: false, retry, status: response.status, text: json.error };
   } catch {
     return { ok: false, retry: true, status: 0 };
   } finally { clearTimeout(timer); }
+}
+
+/** O relato saiu: guarda o código e a chave para Meus relatos. Um servidor antigo, sem chave, não deixa nada. */
+function remember(item: QueuedReport, sent: { code: string; key?: string }) {
+  if (sent.key) rememberReport({ code: sent.code, key: sent.key, url: item.url, kind: item.kind ?? 'sugestao', summary: item.summary ?? '' });
 }
 
 const enqueue = (item: QueuedReport) => withStore<IDBValidKey | undefined>(STORES.reports, 'readwrite', store => store.add(item), undefined);
@@ -124,9 +132,9 @@ export async function sendReport(report: FeedbackReport, attachment?: Pick<Match
   if (accountToken) headers.Authorization = `Bearer ${accountToken}`;
   // Com a partida anexada, a ponte junta o lado dela (decks de todos, retratos do Forge, diário de ações) pelo assento.
   if (report.recording && attachment?.code && attachment.token) { headers['X-Mesa-Partida'] = attachment.code; headers['X-Mesa-Token'] = attachment.token; }
-  const item: QueuedReport = { url: feedbackUrl(attachment?.url), body: await encodeReport(report), headers, createdAt: Date.now() };
+  const item: QueuedReport = { url: feedbackUrl(attachment?.url), body: await encodeReport(report), headers, createdAt: Date.now(), kind: report.kind, summary: summaryOf(report.description) };
   const result = await post(item);
-  if (result.ok) return { status: 'sent', code: result.code };
+  if (result.ok) { remember(item, result); return { status: 'sent', code: result.code }; }
   if (!result.retry) return { status: 'rejected', text: result.text ?? 'O servidor recusou o relato.' };
   // Sem IndexedDB (navegação privada) não há fila: o formulário continua aberto para tentar de novo.
   if (await enqueue(item) === undefined) return { status: 'rejected', text: result.status === 429 ? 'Muitos relatos seguidos, tente de novo em alguns minutos.' : 'Sem conexão com o servidor. Tente de novo daqui a pouco.' };
@@ -145,6 +153,7 @@ export function flushQueue() {
         if (!item) continue;
         const result = await post(item);
         if (!result.ok && result.retry) { scheduleFlush(); return; }
+        if (result.ok) remember(item, result);
         await withStore(STORES.reports, 'readwrite', store => store.delete(key), undefined);
       }
     } finally { flushing = null; }

@@ -52,7 +52,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  *   GET    ranking[/AAAA-MM]       {meses, mes, partidas, jogadores}: o ranking dos jogadores no mês, ou desde o começo sem mês
  *   GET    relatos                 índice com o estado de cada relato
  *   GET    relatos/{código}        o arquivo .json.gz guardado
- *   PUT    relatos/{código}/estado {status, note?, issue?}
+ *   PUT    relatos/{código}/estado {status, note?, issue?, reply?}: reply é a resposta que o jogador vê em Meus relatos
+ *                                  (até 2.000 caracteres; ausente mantém a que havia, vazia apaga)
  *   DELETE relatos/{código}
  *   POST   logout
  */
@@ -192,7 +193,8 @@ final class Admin {
         JsonArray items = new JsonArray();
         for (FeedbackStore.Entry e : store.entries()) {
             JsonObject o = e.json();
-            o.remove("path");
+            o.remove("path"); o.remove("key");
+            o.addProperty("reachable", e.reachable());
             FeedbackStore.Status s = store.status(e.code());
             o.add("status", s == null ? new FeedbackStore.Status("novo", null, null, e.receivedAt()).json() : s.json());
             items.add(o);
@@ -253,7 +255,10 @@ final class Admin {
         String note = FeedbackStore.Entry.text(o, "note"), issue = FeedbackStore.Entry.text(o, "issue");
         if (note != null && note.length() > 2000) throw new IllegalArgumentException("A nota passou de 2.000 caracteres.");
         if (issue != null && issue.length() > 200) throw new IllegalArgumentException("Issue longa demais.");
-        FeedbackStore.Status saved = store.setStatus(code, status, note == null ? null : note.strip(), issue == null ? null : issue.strip());
+        String reply = FeedbackStore.Entry.text(o, "reply");
+        if (reply != null && reply.strip().length() > 2000) throw new IllegalArgumentException("A resposta passou de 2.000 caracteres.");
+        FeedbackStore.Status saved = store.setStatus(code, status, note == null ? null : note.strip(), issue == null ? null : issue.strip(),
+            reply == null ? null : reply.strip());
         return saved == null ? notFound(code) : Response.json(200, saved.json());
     }
 

@@ -5,7 +5,10 @@ export interface Item {
   match: boolean; bridge: boolean; summary?: string;
   /** Quem enviou (item 62): apelido e conta vindos da sessão, ou só o nome informado pelo aparelho. Ausente: anônimo. */
   author?: { nickname?: string; account?: string; informed?: boolean };
-  status: { status: Status; note?: string; issue?: string; updatedAt: string };
+  /** A resposta que o jogador vê em Meus relatos ({@code reply}) fica junto do tratamento; a nota e a issue, só aqui. */
+  status: { status: Status; note?: string; issue?: string; updatedAt: string; reply?: string; repliedAt?: string };
+  /** A resposta tem como chegar ao jogador: o relato foi enviado com a conta ou já com a chave do aparelho. */
+  reachable?: boolean;
 }
 export type Stored = Record<string, any>;
 

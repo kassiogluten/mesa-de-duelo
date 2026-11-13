@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -16,8 +18,10 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -58,13 +62,24 @@ final class FeedbackStore {
         }
     }
 
-    /** Uma linha do índice. {@code path} é relativo a {@code relatos/}. */
+    /**
+     * Uma linha do índice. {@code path} é relativo a {@code relatos/}. {@code keyHash} é o SHA-256 (em hex) da chave
+     * que o aparelho guarda para ver a resposta (campo {@code key} da linha); a chave em si nunca é guardada.
+     */
     record Entry(String code, Instant receivedAt, String kind, String version, String format, long bytes,
-                 boolean match, boolean bridge, String path, String summary, Author author) {
+                 boolean match, boolean bridge, String path, String summary, Author author, String keyHash) {
+        Entry(String code, Instant receivedAt, String kind, String version, String format, long bytes,
+              boolean match, boolean bridge, String path, String summary, Author author) {
+            this(code, receivedAt, kind, version, format, bytes, match, bridge, path, summary, author, null);
+        }
+
         Entry(String code, Instant receivedAt, String kind, String version, String format, long bytes,
               boolean match, boolean bridge, String path, String summary) {
-            this(code, receivedAt, kind, version, format, bytes, match, bridge, path, summary, null);
+            this(code, receivedAt, kind, version, format, bytes, match, bridge, path, summary, null, null);
         }
+
+        /** Dá para a resposta chegar ao jogador: pelo aparelho (chave) ou pela conta. Os relatos antigos e sem conta, não. */
+        boolean reachable() { return keyHash != null || (author != null && author.account() != null); }
 
         JsonObject json() {
             JsonObject o = new JsonObject();
@@ -74,6 +89,7 @@ final class FeedbackStore {
             o.addProperty("path", path);
             if (summary != null) o.addProperty("summary", summary);
             if (author != null) o.add("author", author.json());
+            if (keyHash != null) o.addProperty("key", keyHash);
             return o;
         }
 
@@ -83,7 +99,7 @@ final class FeedbackStore {
                 text(o, "kind"), text(o, "version"), text(o, "format"), o.get("bytes").getAsLong(),
                 o.has("match") && o.get("match").getAsBoolean(), o.has("bridge") && o.get("bridge").getAsBoolean(),
                 o.get("path").getAsString(), text(o, "summary"),
-                o.has("author") && o.get("author").isJsonObject() ? Author.parse(o.getAsJsonObject("author")) : null);
+                o.has("author") && o.get("author").isJsonObject() ? Author.parse(o.getAsJsonObject("author")) : null, text(o, "key"));
         }
 
         static String text(JsonObject o, String key) {
@@ -100,16 +116,37 @@ final class FeedbackStore {
         Meta(String kind, String version, String format, boolean recording) { this(kind, version, format, recording, null, null); }
     }
 
-    /** Tratamento de um relato na área de admin: novo, visto, issue, resolvido ou descartado, com nota e número da issue. */
-    record Status(String status, String note, String issue, Instant updatedAt) {
+    /**
+     * Tratamento de um relato na área de admin: novo, visto, issue, resolvido ou descartado, com nota e número da issue,
+     * que ficam só no admin, e a resposta ao jogador ({@code reply}, com a hora em que o texto mudou), que ele vê em
+     * Meus relatos junto com o estado simplificado ({@link #playerStatus}).
+     */
+    record Status(String status, String note, String issue, Instant updatedAt, String reply, Instant repliedAt) {
         static final Set<String> VALUES = Set.of("novo", "visto", "issue", "resolvido", "descartado");
+
+        Status(String status, String note, String issue, Instant updatedAt) { this(status, note, issue, updatedAt, null, null); }
+
         JsonObject json() {
             JsonObject o = new JsonObject();
             o.addProperty("status", status);
             if (note != null && !note.isEmpty()) o.addProperty("note", note);
             if (issue != null && !issue.isEmpty()) o.addProperty("issue", issue);
             o.addProperty("updatedAt", updatedAt.toString());
+            if (reply != null && !reply.isEmpty()) {
+                o.addProperty("reply", reply);
+                if (repliedAt != null) o.addProperty("repliedAt", repliedAt.toString());
+            }
             return o;
+        }
+
+        /** O estado que o jogador vê: recebido, analise, resolvido ou encerrado. */
+        static String playerStatus(String status) {
+            return switch (status == null ? "novo" : status) {
+                case "visto", "issue" -> "analise";
+                case "resolvido" -> "resolvido";
+                case "descartado" -> "encerrado";
+                default -> "recebido";
+            };
         }
     }
 
@@ -195,12 +232,69 @@ final class FeedbackStore {
     synchronized Status status(String code) { return statuses.get(code); }
 
     synchronized Status setStatus(String code, String status, String note, String issue) throws IOException {
+        return setStatus(code, status, note, issue, null);
+    }
+
+    /**
+     * {@code reply} null mantém a resposta que havia; vazia apaga. A hora da resposta só muda quando o texto muda,
+     * para o jogador não ser avisado de novo por uma troca de estado ou de nota.
+     */
+    synchronized Status setStatus(String code, String status, String note, String issue, String reply) throws IOException {
         if (entry(code) == null) return null;
         if (!Status.VALUES.contains(status)) throw new IllegalArgumentException("Estado inválido.");
-        Status s = new Status(status, note, issue, Instant.now().truncatedTo(ChronoUnit.SECONDS));
+        Status before = statuses.get(code);
+        String oldReply = before == null ? null : before.reply();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS), repliedAt = before == null ? null : before.repliedAt();
+        String newReply = reply == null ? oldReply : reply.isEmpty() ? null : reply;
+        if (newReply == null) repliedAt = null;
+        else if (!newReply.equals(oldReply) || repliedAt == null) repliedAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        Status s = new Status(status, note, issue, now, newReply, repliedAt);
         statuses.put(code, s);
         writeStatuses();
         return s;
+    }
+
+    /**
+     * O que o jogador vê dos relatos dele: os que têm a chave certa ({@code keys}: código → chave guardada no aparelho)
+     * e os enviados com a conta {@code account}, do mais novo ao mais antigo. Só código, tipo, começo do texto, data,
+     * estado simplificado e resposta: nada de nota, issue, aparelho, partida ou autor.
+     */
+    synchronized List<JsonObject> forPlayer(java.util.Map<String, String> keys, String account) {
+        List<JsonObject> found = new ArrayList<>();
+        for (int i = entries.size() - 1; i >= 0; i--) {
+            Entry e = entries.get(i);
+            String key = keys == null ? null : keys.get(e.code());
+            boolean byKey = key != null && e.keyHash() != null
+                && MessageDigest.isEqual(hash(key).getBytes(StandardCharsets.US_ASCII), e.keyHash().getBytes(StandardCharsets.US_ASCII));
+            boolean byAccount = account != null && e.author() != null && account.equals(e.author().account());
+            if (!byKey && !byAccount) continue;
+            Status s = statuses.get(e.code());
+            JsonObject o = new JsonObject();
+            o.addProperty("code", e.code());
+            if (e.kind() != null) o.addProperty("kind", e.kind());
+            if (e.summary() != null) o.addProperty("summary", e.summary());
+            o.addProperty("receivedAt", e.receivedAt().toString());
+            o.addProperty("status", Status.playerStatus(s == null ? null : s.status()));
+            if (s != null && s.reply() != null && !s.reply().isEmpty()) {
+                o.addProperty("reply", s.reply());
+                if (s.repliedAt() != null) o.addProperty("repliedAt", s.repliedAt().toString());
+            }
+            found.add(o);
+        }
+        return found;
+    }
+
+    /** Chave nova de um relato: 24 bytes aleatórios em base64url. Vai só para o aparelho que enviou. */
+    synchronized String newKey() {
+        byte[] raw = new byte[24];
+        random.nextBytes(raw);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+    }
+
+    /** SHA-256 da chave, em hex: é o que fica no índice. */
+    static String hash(String key) {
+        try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8))); }
+        catch (NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
     }
 
     /** Apaga o relato, a linha do índice e o estado dele. */
@@ -221,8 +315,10 @@ final class FeedbackStore {
             for (var item : all.entrySet()) {
                 JsonObject o = item.getValue().getAsJsonObject();
                 if (!codes.contains(item.getKey())) continue;
+                String reply = Entry.text(o, "reply"), repliedAt = Entry.text(o, "repliedAt");
                 statuses.put(item.getKey(), new Status(o.get("status").getAsString(), Entry.text(o, "note"), Entry.text(o, "issue"),
-                    o.has("updatedAt") ? Instant.parse(o.get("updatedAt").getAsString()) : Instant.EPOCH));
+                    o.has("updatedAt") ? Instant.parse(o.get("updatedAt").getAsString()) : Instant.EPOCH,
+                    reply, reply == null || repliedAt == null ? null : Instant.parse(repliedAt)));
             }
         } catch (RuntimeException e) {
             Log.bridge().warn("Relatos: estado.json ilegível, começando sem estados: " + e);
@@ -256,7 +352,10 @@ final class FeedbackStore {
      */
     synchronized Entry store(Meta meta, JsonObject bridge, Source report) throws IOException { return store(meta, bridge, null, report); }
 
-    synchronized Entry store(Meta meta, JsonObject bridge, Author author, Source report) throws IOException {
+    synchronized Entry store(Meta meta, JsonObject bridge, Author author, Source report) throws IOException { return store(meta, bridge, author, null, report); }
+
+    /** {@code keyHash}: o {@link #hash} da chave que o aparelho guarda para ver a resposta, ou null. */
+    synchronized Entry store(Meta meta, JsonObject bridge, Author author, String keyHash, Source report) throws IOException {
         if (Files.getFileStore(dir).getUsableSpace() < minFree) throw new Full("pouco espaço no volume");
         String code = newCode();
         Instant at = Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -284,7 +383,7 @@ final class FeedbackStore {
             Files.deleteIfExists(tmp);
         }
         Entry e = new Entry(code, at, meta.kind(), meta.version(), meta.format(), Files.size(file), meta.recording(), bridge != null,
-            dir.relativize(file).toString().replace('\\', '/'), meta.summary(), author);
+            dir.relativize(file).toString().replace('\\', '/'), meta.summary(), author, keyHash);
         add(e);
         Files.writeString(index, e.json() + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         return e;
