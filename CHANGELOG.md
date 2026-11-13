@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.166.0] - 2026-11-13
+
+### Novo
+
+- **Prévia da mesa no Laboratório.** Ao lado do editor, um esboço da mesa montada mostra como a partida vai começar: o Jogador 2 em cima e você embaixo, com os terrenos numa fileira e as outras permanentes em outra, as viradas deitadas, os marcadores, o que está preso a cada carta, as mãos e as pilhas de grimório (com a carta do topo), cemitério e exílio. Ela muda a cada edição e fica à vista enquanto a página rola; Criar sala de teste fica logo embaixo dela. O editor mostra um jogador de cada vez, em abas, e clicar na metade de um jogador na prévia abre o editor dele. No celular, o botão Ver a mesa abre a prévia.
+
+### Mudou
+
+- **Laboratório mais simples de montar.** A tela de montar a mesa ficou bem mais curta e com menos botões. No alto, uma linha só: Cenários abre uma janela com os prontos e os seus salvos, com busca e, em cada um, Abrir ou Jogar agora; Salvar pede o nome numa janelinha; Copiar, Colar e Limpar a mesa ficam no ⋯. Cada jogador tem uma caixa só para pôr cartas, com a zona escolhida embaixo (Campo, Mão, Grimório, Cemitério ou Exílio), e as zonas vazias viram uma linha. Cartas iguais em sequência ficam juntas, como “4× Island”, com − e + para mudar a quantidade. Virada, marcadores e “presa a” ficam atrás de Ajustar, e o que estiver ligado aparece em selos ao lado do nome.
+
 ## [0.165.0] - 2026-11-13
 
 ### Novo

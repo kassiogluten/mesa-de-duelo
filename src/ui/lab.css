@@ -1,58 +1,151 @@
 /* Laboratório: editor da mesa de teste. */
-.lab { max-width: 1240px; margin: 0 auto; padding: 20px 16px 40px; display: grid; gap: 16px; }
+.lab { max-width: 1240px; margin: 0 auto; padding: 20px 16px 120px; display: grid; gap: 16px; }
 .lab-top { display: flex; align-items: flex-start; gap: 16px; }
 .lab-title h1 { margin: 0; font: 700 28px var(--display); }
 .lab-title p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; line-height: 1.45; }
-.lab-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
 .lab-field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
 .lab-field .input-field { color: var(--ink); font-weight: 400; min-width: 150px; }
-.lab-sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
-.lab-bar > .lab-hint { margin: 0 0 8px; }
-.lab-guide { padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--gold); line-height: 1.45; }
-.lab-guide p { margin: 4px 0 0; max-width: 90ch; }
+.lab-hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+.lab-pos { color: var(--muted); font-weight: 500; }
+.lab-count { font: 600 12px var(--body); color: var(--muted); padding: 1px 8px; border-radius: 999px; background: var(--azul-111a2e, #111a2e); }
+.lab-small, .lab .input-field.lab-small { font-size: 13px; padding: 4px 10px; min-height: 0; height: 32px; width: auto; min-width: 0; }
+.lab select.input-field.lab-small { padding-right: 32px; }
+
+/* A barra de cima: o cenário aberto e o que fazer com ele à esquerda; quem começa e em que etapa à direita. */
+.lab-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; padding: 14px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
+.lab-scenario { display: grid; gap: 8px; min-width: 0; }
+.lab-current { margin: 0; font: 700 17px var(--display); overflow-wrap: anywhere; }
+.lab-current-label { display: block; font: 600 12px var(--body); color: var(--muted); }
+.lab-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lab-start { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
 .lab-segments { display: flex; gap: 3px; padding: 3px; border-radius: 10px; background: var(--azul-111a2e, #111a2e); border: 1px solid var(--azul-3a4768, #3a4768); }
 .lab-segments button { border: 1px solid transparent; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; padding: 7px 14px; font-size: 14px; font-weight: 600; }
 .lab-segments button[aria-pressed=true] { color: #2a1600; background: var(--gold); }
 
-.lab-players { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
-.lab-player { display: grid; gap: 12px; padding: 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
-.lab-player h2 { margin: 0; font: 700 19px var(--display); }
-.lab-player h2 small { font: 500 13px var(--body); color: var(--muted); margin-left: 6px; }
-.lab-stats { display: flex; gap: 10px; }
-.lab-stats .input-field { min-width: 0; width: 110px; }
+.lab-more { position: relative; }
+.lab-more-btn { display: grid; place-items: center; width: 40px; height: 40px; }
+.lab-more-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.lab-menu { position: absolute; left: 0; top: calc(100% + 6px); z-index: 30; min-width: 200px; display: grid; padding: 6px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); }
+.lab-menu[hidden] { display: none; }
+.lab-menu button { text-align: left; padding: 9px 12px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: 500 14px var(--body); cursor: pointer; }
+.lab-menu button:hover, .lab-menu button:focus-visible { background: var(--panel); }
+.lab-menu button.danger { color: var(--red); }
 
-.lab-zone { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
-.lab-zone h3 { margin: 0; font: 700 15px var(--display); display: flex; align-items: center; gap: 8px; }
-.lab-count { font: 600 12px var(--body); color: var(--muted); padding: 1px 8px; border-radius: 999px; background: var(--azul-111a2e, #111a2e); }
-.lab-hint { margin: -4px 0 0; font-size: 12px; color: var(--muted); }
-.lab-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 420px; overflow-y: auto; }
-.lab-card { display: flex; gap: 10px; align-items: flex-start; padding: 6px; border-radius: 10px; background: var(--azul-0d1426, #0d1426); border: 1px solid var(--line); }
-.lab-art { width: 40px; aspect-ratio: 488 / 680; flex: none; border-radius: 4px; background: var(--azul-182038, #182038); object-fit: cover; }
-.lab-card-body { flex: 1; min-width: 0; display: grid; gap: 6px; }
-.lab-card-head { display: flex; align-items: center; gap: 6px; }
-.lab-card-head strong { flex: 1; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
-.lab-pos { color: var(--muted); font-weight: 500; }
-.lab-tools { display: flex; gap: 2px; flex: none; }
+.lab-guide { padding: 12px 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--gold); line-height: 1.45; }
+.lab-guide p { margin: 4px 0 0; max-width: 90ch; }
+
+/* O editor de um jogador por vez à esquerda; a prévia da mesa à direita, parada enquanto a página rola. */
+.lab { max-width: 1480px; }
+.lab-work { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; align-items: start; }
+.lab-editor { display: grid; min-width: 0; }
+.lab-player-tabs { display: flex; gap: 4px; padding: 0 6px; }
+.lab-player-tabs button { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid transparent; border-bottom: 0; border-radius: 12px 12px 0 0; background: none; color: var(--muted); font: 700 16px var(--display); cursor: pointer; }
+.lab-player-tabs button[aria-selected=true] { color: var(--ink); background: var(--panel); border-color: var(--line); position: relative; top: 1px; }
+.lab-player { display: grid; gap: 14px; padding: 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+.lab-player-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.lab-player-who { flex: 1; margin: 0; font-size: 13px; color: var(--muted); }
+.lab-stat { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.lab-stat .input-field { width: 76px; min-width: 0; height: 34px; padding: 4px 8px; color: var(--ink); }
+
+/* Pôr carta: uma caixa por jogador, com a zona escolhida embaixo. */
+.lab-add { display: grid; gap: 8px; }
+.lab-add-row { display: flex; gap: 6px; }
+.lab-add-row .input-field { flex: 1; min-width: 0; }
+.lab-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.lab-pick legend { float: left; margin-right: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.lab-pick label { position: relative; cursor: pointer; }
+.lab-pick input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.lab-pick span { display: block; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 13px; font-weight: 600; }
+.lab-pick label:hover span { color: var(--ink); }
+.lab-pick input:checked + span { color: #2a1600; background: var(--gold); border-color: var(--gold); }
+.lab-pick input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* As zonas que têm cartas; as vazias viram uma linha só. */
+.lab-zone { display: grid; gap: 6px; }
+.lab-zone h3 { margin: 0; font: 700 14px var(--display); display: flex; align-items: center; gap: 8px; }
+.lab-zone h3 .lab-hint { font-family: var(--body); }
+.lab-empty { margin: 0; font-size: 13px; color: var(--muted); }
+.lab-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 460px; overflow-y: auto; }
+.lab-card { border-radius: 10px; background: var(--azul-0d1426, #0d1426); border: 1px solid var(--line); }
+.lab-card.open { border-color: var(--gold); }
+.lab-card-row { display: flex; align-items: center; gap: 10px; padding: 4px 6px 4px 4px; min-height: 44px; }
+.lab-art { width: 28px; aspect-ratio: 488 / 680; flex: none; border-radius: 3px; background: var(--azul-182038, #182038); object-fit: cover; }
+.lab-card-name { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; }
+.lab-card-name strong { overflow-wrap: anywhere; }
+.lab-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.lab-chip { padding: 1px 8px; border-radius: 999px; font-size: 12px; color: var(--ink); background: var(--azul-182038, #182038); border: 1px solid var(--line); }
+.lab-tools { display: flex; align-items: center; gap: 3px; flex: none; }
+.lab-qty { min-width: 20px; text-align: center; font-size: 13px; font-weight: 700; }
 .lab-icon { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; }
 .lab-icon:hover:not(:disabled) { color: var(--ink); border-color: var(--gold); }
 .lab-icon:disabled { opacity: .35; cursor: default; }
-.lab-flags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 13px; }
-.lab-flags label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-.lab-flags input { accent-color: var(--gold); width: 16px; height: 16px; }
-.lab-counter { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-.lab-counter .input-field { width: 64px; height: 32px; padding: 2px 8px; }
-.lab-add-counter.input-field, .lab-attach .input-field { width: auto; padding-top: 4px; padding-bottom: 4px; font-size: 13px; }
-.lab-attach { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-.lab-attach .input-field { max-width: 100%; }
-.lab-add { display: flex; gap: 6px; }
-.lab-add .input-field { flex: 1; }
+.lab-adjust-btn[aria-expanded=true] { color: #2a1600; background: var(--gold); border-color: var(--gold); }
+
+/* "Ajustar": as opções de uma carta, embaixo dela. */
+.lab-adjust { display: grid; gap: 10px; padding: 10px 12px 12px 44px; border-top: 1px solid var(--line); font-size: 13px; }
+.lab-adjust-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.lab-adjust-label { min-width: 92px; color: var(--muted); font-weight: 600; }
+.lab-adjust label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.lab-adjust input[type=checkbox] { accent-color: var(--gold); width: 16px; height: 16px; }
+.lab-counter { color: var(--muted); }
+.lab-counter .input-field { width: 64px; min-width: 0; height: 32px; padding: 2px 8px; color: var(--ink); }
+.lab-adjust select.input-field { max-width: 100%; }
+
+/* Prévia: esboço da mesa, oponente em cima, você embaixo. */
+.lab-preview { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 24px); padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+.lab-preview .lab-preview-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.lab-preview-title { margin: 0; font: 700 15px var(--display); color: var(--muted); }
+.lab-preview-btn { display: none; }
+.lp-table { --lp-w: 64px; display: grid; gap: 0; border-radius: 12px; overflow: hidden; background: radial-gradient(ellipse at center, var(--azul-182038, #182038) 0%, var(--azul-0d1426, #0d1426) 75%); border: 1px solid var(--line); }
+.lp-half { display: grid; gap: 8px; padding: 10px; cursor: pointer; border: 1px solid transparent; }
+.lp-half + .lp-half { border-top: 1px dashed color-mix(in srgb, var(--line) 80%, white 10%); }
+.lp-half.current { border-color: color-mix(in srgb, var(--gold) 60%, transparent); border-radius: 12px; }
+.lab-preview-dialog .lp-half { cursor: default; }
+.lp-edge { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 14px; }
+.lp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 13px; align-self: center; }
+.lp-head strong { font: 700 14px var(--display); }
+.lp-head small { color: var(--muted); }
+.lp-life { color: var(--ink); font-weight: 700; }
+.lp-poison { color: #8fd18b; font-weight: 700; }
+.lp-turn { padding: 1px 8px; border-radius: 999px; background: var(--gold); color: #2a1600; font-size: 12px; font-weight: 700; }
+.lp-field { display: grid; gap: 8px; align-content: center; }
+.lp-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; min-height: calc(var(--lp-w) * 1.4); }
+.lp-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 0; padding-left: 14px; min-height: calc(var(--lp-w) * 1.1); }
+.lp-hand .lp-card { width: calc(var(--lp-w) * 0.8); margin-left: -14px; box-shadow: -2px 0 4px rgb(0 0 0 / 0.5); }
+.lp-none { font-size: 12px; color: var(--muted); align-self: center; }
+.lp-card { position: relative; display: block; flex: none; width: var(--lp-w); aspect-ratio: 488 / 680; border-radius: 4px; overflow: hidden; background: var(--azul-182038, #182038); border: 1px solid rgb(255 255 255 / 0.08); }
+.lp-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lp-name { position: absolute; inset: 3px; font-size: 9px; line-height: 1.15; overflow: hidden; color: var(--ink); }
+.lp-slot { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+/* Virada: deitada, e o lugar dela fica largo como a carta deitada. */
+.lp-slot-tapped { width: calc(var(--lp-w) * 1.4); height: var(--lp-w); }
+.lp-tapped { transform: rotate(90deg); }
+.lp-host { padding-top: 14px; }
+.lp-host .lp-attached { position: absolute; top: 0; left: 50%; translate: -50% 0; opacity: .9; }
+.lp-host .lp-attached + .lp-attached { top: 7px; }
+.lp-host > .lp-card:last-child { position: relative; }
+.lp-badges { position: absolute; left: 2px; right: 2px; bottom: 2px; display: grid; gap: 1px; }
+.lp-host .lp-badges { left: 50%; right: auto; translate: -50% 0; width: calc(var(--lp-w) - 4px); }
+.lp-badge { display: block; padding: 0 3px; border-radius: 4px; background: rgb(0 0 0 / 0.78); color: #fff; font-size: 9px; font-weight: 700; line-height: 1.5; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-qty { position: absolute; bottom: auto; top: 2px; right: 2px; background: var(--gold); color: #2a1600; }
+.lp-host .lp-qty { top: 16px; }
+.lp-piles { display: flex; gap: 10px; align-items: flex-start; }
+.lp-pile { display: grid; justify-items: center; gap: 2px; font-size: 11px; color: var(--muted); text-align: center; }
+.lp-pile .lp-card { width: calc(var(--lp-w) * 0.6); }
+.lp-pile-label { white-space: nowrap; }
+.lp-pile-label b { color: var(--ink); }
+.lp-pile small { max-width: calc(var(--lp-w) * 1.3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.lp-back { background: repeating-linear-gradient(45deg, #3a2a14 0 6px, #2a1e0e 6px 12px); border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
+.lp-empty { background: none; border: 1px dashed var(--line); }
+.lab-preview-dialog { width: min(720px, calc(100vw - 16px)); max-width: none; padding: 14px; }
+.lab-preview-dialog[open] { display: grid; gap: 10px; }
 
 .lab-help { margin: 0 auto; color: var(--muted); max-width: 70ch; line-height: 1.45; text-align: center; }
 /* Criar sala de teste flutua no canto de baixo, sempre à vista, por longa que seja a mesa montada; o aviso sai num balão acima. */
-.lab { padding-bottom: 120px; }
 .lab-foot { position: fixed; right: max(24px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom)); z-index: 20; display: grid; gap: 10px; justify-items: end; max-width: min(420px, calc(100vw - 32px)); pointer-events: none; }
 .lab-foot > * { pointer-events: auto; }
 .lab-foot .lobby-status { margin: 0; padding: 8px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 18px rgb(0 0 0 / 0.4); text-align: right; }
+.lab-foot .lobby-status:empty { display: none; }
 .lab-foot .arena-btn { box-shadow: 0 10px 28px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(0 0 0 / 0.2); }
 .lab-foot .lobby-status.error { color: var(--red); }
 
@@ -61,14 +154,54 @@
 .lab-dialog h2 { margin: 0 0 6px; font: 700 20px var(--display); }
 .lab-dialog p { margin: 0 0 10px; color: var(--muted); }
 .lab-dialog textarea { font: 13px ui-monospace, monospace; resize: vertical; }
-.lab-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.lab-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.lab-dialog .lab-field .input-field { width: 100%; }
 
+/* Janela de cenários: abas, busca e a lista. */
+.lab-scenarios { width: min(760px, calc(100vw - 32px)); max-width: none; padding: 18px 20px 20px; }
+.lab-scenarios[open] { display: grid; gap: 10px; }
+.lab-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lab-dialog-head h2 { margin: 0; }
+.lab-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.lab-tabs button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: 600 15px var(--body); cursor: pointer; }
+.lab-tabs button[aria-selected=true] { color: var(--ink); border-bottom-color: var(--gold); }
+.lab-scenarios > .lab-hint { margin: 0; }
+.lab-scn-list { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 6px; max-height: min(60vh, 560px); overflow-y: auto; }
+.lab-scn-list li { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.lab-scn-list li.lab-scn-empty { display: block; color: var(--muted); text-align: center; padding: 20px; }
+.lab-scn-text { flex: 1; min-width: 0; display: grid; gap: 3px; justify-items: start; }
+.lab-scn-text strong { font-size: 15px; }
+.lab-scn-text p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lab-tag { font-size: 12px; font-weight: 700; color: var(--muted); }
+.lab-tag.next { color: var(--gold); }
+.lab-tag.investigate { color: #f0a35e; }
+.lab-scn-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; flex: none; }
+.lab-scn-actions .lab-play { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 55%, transparent); }
+
+/* Em tela larga, Criar sala de teste fica no pé da prévia, que já acompanha a rolagem; na estreita, ele flutua no canto. */
+@media (min-width: 1101px) {
+  .lab { padding-bottom: 40px; }
+  .lab-preview .lab-foot { position: static; max-width: none; justify-items: stretch; pointer-events: auto; }
+  .lab-preview .lab-foot .arena-btn { width: 100%; box-shadow: none; }
+  .lab-preview .lab-foot .lobby-status { text-align: left; box-shadow: none; }
+}
+@media (max-width: 1100px) {
+  .lab-work { grid-template-columns: minmax(0, 1fr); }
+  .lab-preview { display: contents; }
+  .lab-preview-title, .lab-preview > .lab-preview-body { display: none; }
+  .lab-preview-btn { display: inline-flex; }
+}
 @media (max-width: 860px) {
-  .lab-players { grid-template-columns: minmax(0, 1fr); }
-  .lab-sep { display: none; }
-  .lab-bar > .lab-field { flex: 1 1 100%; }
-  .lab-bar > .ghost-btn { flex: 1 1 auto; justify-content: center; }
   .lab-top { flex-direction: column; gap: 8px; }
   .lab-title h1 { font-size: 24px; }
+  .lab-bar { align-items: stretch; }
+  .lab-start { width: 100%; }
+  .lab-start .lab-field:last-child { flex: 1; }
   .lab-foot { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
+  .lab-scn-list li { flex-direction: column; align-items: stretch; }
+  .lab-adjust { padding-left: 12px; }
+}
+@media (max-width: 520px) {
+  .lab-player-who { flex-basis: 100%; }
+  .lp-table { --lp-w: 40px; }
 }

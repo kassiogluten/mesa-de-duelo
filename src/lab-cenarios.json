@@ -1,5 +1,18 @@
 [
   {
+    "nome": "Shared Fate: a carta exilada do grimório do oponente",
+    "conferir": "O Jogador 1 tem Shared Fate e duas Mountains, e começa na etapa de compra: em vez de comprar, ele exila virada para baixo a carta do topo do grimório do Jogador 2, uma Lightning Bolt, que aparece embaixo do Shared Fate. O Jogador 1 a vê apagada, com o olho no canto; na aba do Jogador 2, ela é só uma carta virada para baixo, e nem o registro da partida diz qual é. Clique na Bolt embaixo do Shared Fate: o Jogador 1 a conjura com uma Mountain e, na pilha, ela fica visível para os dois. Passe o turno: na compra do Jogador 2, ele exila o Grizzly Bears do topo do grimório do Jogador 1, que agora é quem vê só uma carta virada para baixo; o Jogador 2 pode conjurá-lo com as Forests. A carta não aparece na faixa de exílio jogável perto da mão: joga-se pela carta embaixo do encantamento.",
+    "cenario": {
+      "active": 0, "phase": "draw",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Grizzly Bears", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Shared Fate" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Lightning Bolt", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }] }
+      ]
+    }
+  },
+  {
     "nome": "Beam me up: conjurar do cemitério devolvendo uma criatura",
     "versao": "0.163.0",
     "item": "Star Trek na mesa",

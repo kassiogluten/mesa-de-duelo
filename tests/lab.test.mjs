@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { mock } from './register.mjs';
 // O Scryfall de verdade iria à rede: no teste, um falso que não acha nada.
-mock('../src/scryfall.ts', 'export const autocompleteNames = async () => []; export const cardImageUrls = () => []; export const resolveCardNames = async () => ({ found: new Map(), missing: [], ambiguous: [] });', import.meta.url);
+mock('../src/scryfall.ts', 'export const autocompleteNames = async () => []; export const cacheGet = () => null; export const cardImageUrls = () => []; export const resolveCardNames = async () => ({ found: new Map(), missing: [], ambiguous: [] });', import.meta.url);
 const lab = await import('../src/ui/lab.ts');
 
 const scenario = {

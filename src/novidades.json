@@ -1,4 +1,14 @@
 {
+  "0.166.0": {
+    "Prévia da mesa no Laboratório": [
+      { "img": "0.166.0/previa.webp", "legenda": "A prévia ao lado do editor: o Jogador 2 em cima e você embaixo, com o Grizzly Bears virado e com dois marcadores +1/+1, o Pacifism preso ao Llanowar Elves, as mãos, as pilhas e Criar sala de teste logo embaixo." }
+    ],
+    "Laboratório mais simples de montar": [
+      { "img": "0.166.0/barra.webp", "legenda": "No alto, o cenário aberto, os botões Cenários, Salvar e ⋯, e de quem é o turno e em que etapa a partida começa." },
+      { "img": "0.166.0/cenarios.webp", "legenda": "A janela Cenários: os prontos e os salvos em abas, com busca e, em cada um, Abrir ou Jogar agora." },
+      { "img": "0.166.0/jogador.webp", "legenda": "O editor de um jogador, com a caixa de pôr cartas, as iguais juntas (2× Mountain, 4× Island) e o Ajustar aberto no Shared Fate, com os selos Virada e Carga." }
+    ]
+  },
   "0.165.0": {
     "Decks em lista ou em grade com as colunas que você quiser": [
       { "img": "0.165.0/lista-tela-inicial.webp", "legenda": "Na tela inicial, os botões ao lado das cores trocam para a lista: uma linha por deck, com a arte, o comandante, as cartas, o preço e o bracket." },
