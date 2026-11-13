@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.163.1] - 2026-11-13
+
+### Mudou
+
+- **Sino no botão de Novidades.** O botão que abre as Novidades na tela inicial agora é um sino de notificações, no lugar do brilho; o ponto dourado continua avisando quando há versão nova que você ainda não viu.
+
 ## [0.163.0] - 2026-11-13
 
 ### Novo

@@ -71,7 +71,7 @@ export function mountChangelog(host: HTMLElement) {
   el.className = 'news';
   el.innerHTML = `
     <button class="news-btn news-icon" aria-expanded="false" aria-controls="newsPanel" aria-label="Novidades" title="Novidades">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3.5 12.9 9l5.6 2-5.6 2L11 18.5 9.1 13l-5.6-2 5.6-2L11 3.5Z"/><path d="M18.5 3v4M16.5 5h4"/></svg><span class="news-dot" ${seen() === VERSION ? 'hidden' : ''}></span><span class="news-sync" aria-hidden="true"></span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4.5 1.5 6 2 6.5H4c.5-.5 2-2 2-6.5Z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg><span class="news-dot" ${seen() === VERSION ? 'hidden' : ''}></span><span class="news-sync" aria-hidden="true"></span>
     </button>
     <div class="news-panel" id="newsPanel" role="dialog" aria-label="Novidades" hidden>
       <a class="news-visual-all" href="/novidades.html">Ver as novidades em imagens</a>
