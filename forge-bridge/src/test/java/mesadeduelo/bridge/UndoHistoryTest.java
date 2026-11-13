@@ -26,22 +26,23 @@ public class UndoHistoryTest {
         if (round > 1) game.getAction().moveTo(ZoneType.Graveyard, bear, null, null);
     }
 
-    @Test public void olderPicturesRebuiltFromDifferencesMatchTheOriginals() {
-        assertTrue("o Forge ainda tem os campos que a diferença usa", MementoDelta.AVAILABLE);
+    @Test public void olderPicturesKeepOnlyTheDifferenceAndRestoreExactly() {
         Game game = CommanderEngineTest.game(2);
         // Um jogo de verdade tem bibliotecas cheias: é isso que não muda de uma decisão para outra.
         for (Player p : game.getPlayers()) for (int i = 0; i < 60; i++) ExilePermissionsTest.add(game, "Plains", p, ZoneType.Library);
         GameMemento.Recorder recorder = new GameMemento.Recorder();
         GameMemento[] m = new GameMemento[4];
-        for (int i = 0; i < m.length; i++) { m[i] = recorder.capture(game); play(game, i + 1); }
-        MementoDelta.Builder b = new MementoDelta.Builder(m[3]);
-        for (int i = m.length - 2; i >= 0; i--) {
-            MementoDelta d = MementoDelta.of(m[i], m[i + 1]);
-            assertTrue("a diferença guarda bem menos que o retrato inteiro: " + d.size() + " de " + m[i].objectCount(), d.size() < m[i].objectCount() / 4);
-            GameMemento rebuilt = b.apply(d).build();
-            assertEquals(m[i].objectCount(), rebuilt.objectCount());
-            assertEquals(java.util.List.of(), rebuilt.diff(m[i]));
-            assertEquals(java.util.List.of(), m[i].diff(rebuilt));
+        GameMemento[] copy = new GameMemento[4];
+        for (int i = 0; i < m.length; i++) {
+            copy[i] = new GameMemento.Recorder().captureStandalone(game);
+            m[i] = recorder.capture(game); play(game, i + 1);
+        }
+        recorder.capture(game);
+        for (int i = 0; i < m.length; i++)
+            assertTrue("o retrato mais velho guarda bem menos que o inteiro: " + m[i].deltaSize() + " de " + copy[i].objectCount(), m[i].deltaSize() < copy[i].objectCount() / 4);
+        for (int i = m.length - 1; i >= 0; i--) {
+            assertTrue(recorder.restoreTo(m[i]));
+            assertEquals(java.util.List.of(), new GameMemento.Recorder().captureStandalone(game).diff(copy[i]));
         }
     }
 
@@ -87,7 +88,7 @@ public class UndoHistoryTest {
         h.capture(game, me);   // liga o histórico a este jogo
         for (int turn = 1; turn <= 3; turn++)
             for (int k = 0; k < 2; k++)
-                h.decided(new UndoHistory.Step(new UndoHistory.Picture(recorder.capture(game)), 0, me, turn, PhaseType.MAIN1, null, null), null);
+                h.decided(new UndoHistory.Step(recorder.capture(game), 0, me, turn, PhaseType.MAIN1, null, null), null);
         assertEquals("os do turno 1 saíram quando o 3 teve uma decisão", 4, h.size());
         assertEquals(3, h.lastOf(me.getId()).turn());
         game.fireEvent(new GameEventTurnBegan(me.getView(), 4));

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { slim, slimPt, withDefaultArt, setOwnArtEnabled, withPrinting, faceView, printKey, validCard, lookupName, FORMAT } = await import('../src/scryfallCards.ts');
+const { slim, slimPt, withDefaultArt, setOwnArtEnabled, withPrinting, faceView, printKey, validCard, lookupName, forgeSpelling, FORMAT } = await import('../src/scryfallCards.ts');
 
 const uris = name => ({ small: `${name}-s`, normal: `${name}-n`, art_crop: `${name}-a` });
 
@@ -45,4 +45,12 @@ test('own art is the default; turned off, basic lands use the Nyx series and oth
   assert.equal(printKey('Forest', { set: 'dmu', cn: '281' }), 'dmu/281');
   const printed = withPrinting({ name: 'A // B', layout: 'transform', type_line: 'x', image_uris: uris('a') }, 'B', { image_uris: uris('pa'), faceNames: ['A', 'B'], faceImages: [uris('pa'), uris('pb')] });
   assert.equal(printed.image_uris.normal, 'pb-n');
+});
+
+test('reticências: o Forge escreve "All Good Things . . .", o Scryfall "All Good Things..."', () => {
+  assert.equal(lookupName('All Good Things . . .'), 'All Good Things...');
+  // Estas o Scryfall também escreve com os pontos separados.
+  assert.equal(lookupName("I'm a Doctor, Not a . . ."), "I'm a Doctor, Not a . . .");
+  assert.equal(forgeSpelling('All Good Things...'), 'all good things . . .');
+  assert.equal(forgeSpelling('Lightning Bolt'), null);
 });

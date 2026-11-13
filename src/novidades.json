@@ -1,4 +1,15 @@
 {
+  "0.163.0": {
+    "Star Trek na mesa": [
+      { "img": "0.163.0/beam-me-up.webp", "legenda": "A Energize na pilha, conjurada do cemitério pela mecânica nova de Star Trek: o selo diz Mágica · Beam me up." }
+    ],
+    "Precons de Star Trek Commander": [
+      { "img": "0.163.0/precons-star-trek.webp", "legenda": "A série Star Trek 2026 entre os precons: Nós Somos os Borg, Grupo de Desembarque, Fúria Klingon e Frota da Federação." }
+    ],
+    "Cinco decks prontos de Star Trek": [
+      { "img": "0.163.0/decks-star-trek.webp", "legenda": "Os cinco decks de Star Trek entre os decks prontos de Commander: Assimilação de Locutus, Lógica de Spock, Diplomacia de Picard, Cartas Marcadas de Q e Coletivo da Rainha Borg." }
+    ]
+  },
   "0.162.0": {
     "Cinco decks prontos da Mystery Booster Commander": [
       { "img": "0.162.0/decks-mystery-booster.webp", "legenda": "Os cinco decks novos entre os decks prontos de Commander: Mágicas de Massimo, Germes de Ekthi, Gosmas de Uugguu, Caranguejos de Homer e Biblioteca sem Fim, este com 254 cartas." }

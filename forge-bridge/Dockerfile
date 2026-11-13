@@ -1,6 +1,6 @@
 # Ponte do Forge. O build clona o Forge na versão fixada, instala no ~/.m2 e compila a ponte.
 FROM maven:3.9-eclipse-temurin-17 AS build
-ARG FORGE_COMMIT=0b0f7ecc51119bf9f9a2d1e777fcd299721c9f53
+ARG FORGE_COMMIT=a2643644cd1a4bf06d06813d82e89533fbebd7ec
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 WORKDIR /forge
 RUN git init -q . && git remote add origin https://github.com/Card-Forge/forge.git \

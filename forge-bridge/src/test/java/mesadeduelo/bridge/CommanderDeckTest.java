@@ -32,11 +32,11 @@ public class CommanderDeckTest {
             assertEquals(commanders, r.json().getAsJsonObject("deck").getAsJsonArray("commanders").size());
         }).count();
         assertEquals(errors.toString(), 0, errors.length());
-        assertEquals(122, count); assertNotNull(Decks.random("commander"));
+        assertEquals(131, count); assertNotNull(Decks.random("commander"));
     }
     @Test public void preconsGoOnlyAsTheyCameInTheBox() {
         var precons = Decks.LISTS.values().stream().filter(d -> d.has("precon")).toList();
-        assertEquals(43, precons.size());
+        assertEquals(47, precons.size());
         for (JsonObject p : precons) assertTrue(p.get("name") + ": " + DeckValidation.validate(p, "precon").json(), DeckValidation.validate(p, "precon").valid());
         // A cópia do jogador, com as mesmas cartas, ainda é o precon; trocar uma carta já não é.
         JsonObject copy = precons.get(0).deepCopy(); copy.remove("precon"); copy.remove("builtin"); copy.addProperty("name", "Minha versão");
@@ -136,6 +136,11 @@ public class CommanderDeckTest {
         assertTrue(has(check(tolabow), "commander-color-choice"));
         tolabow.getAsJsonArray("commanders").get(0).getAsJsonObject().addProperty("chosenColors", "RG");
         assertTrue(has(check(tolabow), "commander-color-choice"));
+    }
+    @Test public void starTrekCardsAreKnownAndLegal() {
+        // Star Trek (TRK e TRC, 13/11/2026), com o Forge 2.0.17; o Scryfall escreve "All Good Things..." e o Forge "All Good Things . . .".
+        var r = check(deck("Commander Spock", "Island", 96, "All Good Things...", 1, "Captain Jean-Luc Picard", 1, "U.S.S. Enterprise-D, Galaxy-Class", 1));
+        assertTrue(r.json().toString(), r.valid());
     }
     @Test public void flavorNamesUseTheOracleCardLegality() {
         // Marvel Super Heroes Commander: Vibranium Dynamo é uma Thran Dynamo e Panther Idol um Mind's Eye, com outro nome impresso.

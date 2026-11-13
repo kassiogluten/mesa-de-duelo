@@ -2,7 +2,6 @@ package mesadeduelo.bridge;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +24,8 @@ import forge.game.undo.GameMemento;
  * cada humano, e a volta para o retrato da última decisão de quem pediu, depois que os outros aceitam.
  *
  * Memória: só ficam as decisões do turno atual e do anterior ({@link #TURNS}); só há retrato quando o jogador de fato
- * vai decidir ({@link AskingController#chooseSpellAbilityToPlay}); e só o retrato mais novo fica inteiro, os outros
- * guardam o que muda em relação ao seguinte ({@link MementoDelta}).
+ * vai decidir ({@link AskingController#chooseSpellAbilityToPlay}); e os retratos ficam encadeados no {@code Recorder} do
+ * Forge, que guarda inteiro só o estado atual e, em cada retrato mais velho, só o que muda para voltar a ele.
  *
  * Usa só o retrato e a restauração do Forge ({@link GameMemento}). O {@code UndoManager} dele fica desligado: ele só
  * deixa o próprio jogador voltar enquanto ninguém mais agiu, e trava com qualquer sorteio do servidor inteiro
@@ -41,19 +40,9 @@ final class UndoHistory {
     /** Turnos guardados: o atual e o anterior. O Desfazer volta no máximo até o começo do turno anterior. */
     static final int TURNS = 2;
 
-    /**
-     * O retrato de uma decisão: inteiro ({@code full}) no passo mais novo do histórico; nos outros, só a diferença
-     * ({@code delta}) para o passo seguinte, mais novo. Mexido só com o lock do histórico.
-     */
-    static final class Picture {
-        GameMemento full;
-        MementoDelta delta;
-        Picture(GameMemento full) { this.full = full; }
-    }
-
     /** Uma decisão: o jogo logo antes do prompt, quem decidiu e o que fez ("pass", "land", "cast" ou "ability"). */
-    record Step(Picture picture, int logSize, Player player, int turn, PhaseType phase, String action, String card) {
-        Step decided(String action, String card) { return new Step(picture, logSize, player, turn, phase, action, card); }
+    record Step(GameMemento memento, int logSize, Player player, int turn, PhaseType phase, String action, String card) {
+        Step decided(String action, String card) { return new Step(memento, logSize, player, turn, phase, action, card); }
 
         /** "conjurar Raio", "passar a vez na fase principal 1"... para o aviso, o pedido e o histórico. */
         String text() {
@@ -110,7 +99,7 @@ final class UndoHistory {
             r = recorder;
         }
         var ph = g.getPhaseHandler();
-        return new Step(new Picture(r.capture(g)), g.getGameLog().size(), who, ph.getTurn(), ph.getPhase(), null, null);
+        return new Step(r.capture(g), g.getGameLog().size(), who, ph.getTurn(), ph.getPhase(), null, null);
     }
 
     /** Começou o turno {@code turn}: as decisões de antes do turno anterior saem do histórico. */
@@ -124,7 +113,7 @@ final class UndoHistory {
 
     /** O jogador respondeu ao prompt: {@code chosen} null é passar; vazio é um prompt reaberto, que não conta. */
     synchronized void decided(Step step, List<SpellAbility> chosen) {
-        GameMemento m = step.picture().full;
+        GameMemento m = step.memento();
         if (!m.problems.isEmpty()) Log.bridge().warn("Desfazer: retrato com problemas: " + m.problems);
         if (chosen != null && chosen.isEmpty()) return;
         String action = "pass", card = null;
@@ -134,13 +123,8 @@ final class UndoHistory {
             action = sa.isLandAbility() ? "land" : sa.isSpell() ? "cast" : "ability";
             card = host == null ? "uma carta" : host.isFaceDown() ? "uma carta virada para baixo" : host.getName();
         }
-        Step newer = step.decided(action, card), older = steps.peek();
+        Step newer = step.decided(action, card);
         steps.push(newer);
-        // O passo de antes passa a guardar só o que muda em relação a este.
-        if (older != null && MementoDelta.AVAILABLE) {
-            older.picture().delta = MementoDelta.of(older.picture().full, m);
-            older.picture().full = null;
-        }
         while (steps.size() > MAX || steps.peekLast().turn() <= newer.turn() - TURNS) steps.removeLast();
     }
 
@@ -153,10 +137,10 @@ final class UndoHistory {
     /** Quantos passos estão guardados (testes e medição). */
     synchronized int size() { return steps.size(); }
 
-    /** Quantos pares objeto/retrato o histórico guarda, somando os inteiros e as diferenças (medição). */
-    synchronized long entries() {
-        long n = 0;
-        for (Step s : steps) n += s.picture().full != null ? s.picture().full.objectCount() : s.picture().delta.size();
+    /** Quanto o histórico ocupa, estimado pelo Forge: o estado atual mais as diferenças dos retratos (medição). */
+    synchronized long bytes() {
+        long n = recorder.liveBytes();
+        for (Step s : steps) n += s.memento().retainedBytes();
         return n;
     }
 
@@ -176,16 +160,17 @@ final class UndoHistory {
      * com o passo já fora do histórico), null. Os passos depois dele saem do histórico junto.
      */
     Step applyPending(Game g) {
-        Step target; String note; GameMemento memento;
+        Step target; String note; GameMemento.Recorder r;
         synchronized (this) {
             target = pending; note = pendingNote; pending = null;
             if (target == null || g != game || !steps.contains(target)) return null;
-            memento = rebuild(target);
             while (steps.peek() != target) steps.pop();
             steps.pop();
+            r = recorder;
         }
+        GameMemento memento = target.memento();
         g.fireEvent(new GameEventSnapshotRestored(true));
-        memento.restore();
+        if (!r.restoreTo(memento)) Log.bridge().warn("Desfazer: o Forge recusou voltar ao retrato: " + memento.problems);
         g.getGameLog().truncateTo(target.logSize());
         if (!memento.problems.isEmpty()) Log.bridge().warn("Desfazer: problemas ao restaurar: " + memento.problems);
         refreshViews(g);
@@ -193,34 +178,6 @@ final class UndoHistory {
         g.getGameLog().add(GameLogEntryType.INFORMATION, target.player().getName() + " desfez: " + target.text() + (note == null ? "." : " (" + note + ")."));
         undone.accept(target);
         return target;
-    }
-
-    /**
-     * O memento inteiro de {@code target}, remontado do passo mais novo para trás. O passo logo antes dele, que vira o
-     * mais novo quando ele e os seguintes saem, volta a ficar inteiro. Com o lock.
-     */
-    private GameMemento rebuild(Step target) {
-        Iterator<Step> it = steps.iterator();
-        Step s = it.next();
-        GameMemento full = s.picture().full;   // o mais novo está sempre inteiro
-        MementoDelta.Builder b = null;          // não nulo quando full é null
-        while (s != target) {
-            Picture p = (s = it.next()).picture();
-            if (p.full != null) { full = p.full; b = null; continue; }
-            if (b == null) b = new MementoDelta.Builder(full);
-            b.apply(p.delta);
-            full = null;
-        }
-        GameMemento found = full != null ? full : b.build();
-        if (it.hasNext()) {
-            Picture before = it.next().picture();
-            if (before.full == null) {
-                if (b == null) b = new MementoDelta.Builder(found);
-                before.full = b.apply(before.delta).build();
-                before.delta = null;
-            }
-        }
-        return found;
     }
 
     /** Igual ao UndoManager do Forge: as views e os gatilhos ativos seguem o jogo restaurado. */

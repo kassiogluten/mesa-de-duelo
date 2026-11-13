@@ -35,6 +35,7 @@ final class OathbreakerLegality {
     }
     static String oracleId(String name) { return ADDED.get(key(name)); }
     static boolean permits(String name) { return ADDED.containsKey(key(name)) || (CommanderLegality.permits(name) && !REMOVED.contains(key(name))); }
-    private static String key(String value) { return value.strip().toLowerCase(Locale.ROOT); }
+    /** Nome em minúsculas, com as reticências do Forge ("All Good Things . . .") iguais às do Scryfall ("..."). */
+    private static String key(String value) { return value.strip().toLowerCase(Locale.ROOT).replace(" . . .", "..."); }
     private OathbreakerLegality() { }
 }

@@ -484,6 +484,15 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     Object.assign(state.input, { priority: true, actionable: [], selectable: [] });
     view.render();
   },
+  /** O oponente conjurou a Energize do cemitério por Beam me up (Star Trek): a pilha diz a forma. */
+  beamOnStack() {
+    const [me] = state.players;
+    const energize = { id: 347, controller: 23, tapped: false, token: false, name: 'Energize', manaCost: '{1}{U}', typeLine: 'Sorcery' };
+    state.stack = [{ id: 348, kind: 'spell', controller: 23, source: energize, text: "Energize - Return target creature an opponent controls to its owner's hand.",
+      cast: { mode: 'beammeup' }, targets: { cards: [me.battlefield[0]] } }];
+    Object.assign(state.input, { priority: true, actionable: [], selectable: [] });
+    view.render();
+  },
   /** O oponente usou uma habilidade de lealdade do Jace Beleren: a pilha diz qual foi ("+2" ou o ultimate "−10"). */
   walkerOnStack(which: '+2' | '-1' | '-10' = '+2') {
     const [me, opp] = state.players;

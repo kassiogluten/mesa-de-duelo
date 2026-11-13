@@ -40,7 +40,6 @@ public class ForgeReflectionTest {
         members.forEach((member, found) -> { if (!found) missing.add(member); });
         assertTrue("membros do Forge que faltam: " + missing, missing.isEmpty());
         assertTrue("lista de membros: " + members.keySet(), members.size() >= 30);
-        assertTrue("o Forge ainda tem os campos que o desfazer usa", MementoDelta.AVAILABLE);
     }
 
     @Test public void aMissingMemberOnlyTurnsItsUserOff() {

@@ -38,6 +38,7 @@ final class HeadlessGui implements IGuiBase {
     @Override public boolean isRunningOnDesktop() { return true; }
     @Override public boolean isLibgdxPort() { return false; }
     @Override public String getCurrentVersion() { return "mesa-de-duelo-bridge"; }
+    @Override public String getUserAgent() { return "MesaDeDuelo (forge-bridge)"; }
 
     @Override public void invokeInEdtNow(Runnable r) { if (isGuiThread()) r.run(); else invokeInEdtAndWait(r); }
     @Override public void invokeInEdtLater(Runnable r) { edt.execute(r); }

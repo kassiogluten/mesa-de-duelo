@@ -167,6 +167,8 @@ final class DeckValidation {
         var db = StaticData.instance().getCommonCards();
         PaperCard card = db.getCard(TRANSLATED_NAMES.getOrDefault(name.strip().toLowerCase(Locale.ROOT), name));
         if (card == null && name.contains(" // ")) card = db.getCard(name.substring(0, name.indexOf(" // ")));
+        // O Forge escreve as reticências separadas ("All Good Things . . ."); o Scryfall, juntas ("All Good Things...").
+        if (card == null && name.contains("...")) card = db.getCard(name.replace("...", " . . ."));
         if (card == null) return null;
         // O Forge guarda as cartas do Universes Within com o nome da Secret Lair (Will the Wise), que o Scryfall e a
         // lista de legalidade não conhecem: quem pediu pelo nome do Oracle (Wernog, Rider's Chaplain) fica com ele.

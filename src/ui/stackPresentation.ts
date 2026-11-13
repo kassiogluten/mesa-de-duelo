@@ -45,6 +45,7 @@ const CAST_MODES: Record<string, [string, string]> = {
   flashback: ['Flashback', 'Conjurada por flashback'],
   escape: ['Fuga', 'Conjurada por fuga'],
   harmonize: ['Harmonizar', 'Conjurada por harmonizar'],
+  beammeup: ['Beam me up', 'Conjurada por Beam me up'],
   retrace: ['Retraçar', 'Conjurada por retraçar'],
   jumpstart: ['Jump-start', 'Conjurada por jump-start'],
   evoke: ['Evocar', 'Conjurada por evocar'],

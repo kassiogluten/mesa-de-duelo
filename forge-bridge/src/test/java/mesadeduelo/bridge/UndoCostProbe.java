@@ -115,8 +115,8 @@ public class UndoCostProbe {
                 long t2 = System.nanoTime();
                 times.add(t2 - t0);
                 shrink.add(t2 - t1);
-                objects[0] = Math.max(objects[0], step.picture().full.objectCount());
-                if (h.size() > 1) { deltas[0] += h.entries() - step.picture().full.objectCount(); deltas[1] += h.size() - 1; }
+                objects[0] = Math.max(objects[0], step.memento().objectCount());
+                if (h.size() > 1) { deltas[0] += h.bytes(); deltas[1] += h.size() - 1; }
                 keptMax[0] = Math.max(keptMax[0], h.size());
             }
         });
@@ -128,7 +128,7 @@ public class UndoCostProbe {
         if (error.get() != null) throw new AssertionError(error.get());
         long withHistory = used();
         int n = now ? history.get().size() : kept.size();
-        long entries = now ? history.get().entries() : 0;
+        long entries = now ? history.get().bytes() : 0;
         kept.clear();
         // O registro do Recorder segura o último retrato de cada objeto: soltá-lo também.
         recorder.set(null);
@@ -139,7 +139,7 @@ public class UndoCostProbe {
         if (sorted.length == 0) sorted = new long[]{0};
         long total = Arrays.stream(sorted).sum();
         double shrinkMs = shrink.stream().mapToLong(Long::longValue).average().orElse(0) / 1e6;
-        System.out.printf("UNDO-COST %s humanos=%d decks=%s turnos=%d prioridades=%d capturas=%d | média=%.2f ms (diferença %.2f) p50=%.2f p95=%.2f max=%.2f | total=%.0f ms de %.0f ms de partida (%.1f%%) | objetos(max)=%d, diferença média=%d pares | memória: %d retratos (máx %d, %d pares) + registro = %.1f MB (partida sem histórico: %.1f MB)%n",
+        System.out.printf("UNDO-COST %s humanos=%d decks=%s turnos=%d prioridades=%d capturas=%d | média=%.2f ms (diferença %.2f) p50=%.2f p95=%.2f max=%.2f | total=%.0f ms de %.0f ms de partida (%.1f%%) | objetos(max)=%d, histórico médio=%d bytes | memória: %d retratos (máx %d, %d bytes) + registro = %.1f MB (partida sem histórico: %.1f MB)%n",
             now ? "agora" : "antes", humans, String.join(",", ids), game.getPhaseHandler().getTurn(), priorities[0], times.size(),
             total / 1e6 / sorted.length, shrinkMs, sorted[sorted.length / 2] / 1e6, sorted[(int) (sorted.length * .95)] / 1e6, sorted[sorted.length - 1] / 1e6,
             total / 1e6, gameNs / 1e6, 100.0 * total / gameNs, objects[0], deltas[1] == 0 ? 0 : deltas[0] / deltas[1], n, now ? keptMax[0] : n, entries, (withHistory - without) / 1048576.0, gameMb);

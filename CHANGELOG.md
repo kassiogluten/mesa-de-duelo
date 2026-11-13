@@ -8,6 +8,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.163.0] - 2026-11-13
+
+### Novo
+
+- **Star Trek na mesa.** As cartas de Star Trek e Star Trek Commander (lançadas hoje) funcionam nas partidas: o servidor passou a usar a versão mais nova do motor de regras, que tem todas elas. Valem no Commander, no Standard e no Sacola 50, e as comuns também no Pauper. A mecânica nova **Beam me up** aparece como as outras formas de conjurar: a carta fica marcada no cemitério e, ao conjurá-la de lá, você devolve uma criatura sua para a mão. Os Borg **assimilam** cartas: elas entram no seu campo como criaturas artefato Borg com um marcador +1/+1.
+- **Precons de Star Trek Commander.** Os quatro decks da caixa entram nos decks prontos, com o selo Precon: Frota da Federação (Jean-Luc Picard, Luminary), Fúria Klingon (Worf, Defiant Commander), Grupo de Desembarque (Commander Spock) e Nós Somos os Borg (The Borg Queen).
+- **Cinco decks prontos de Star Trek.** Os cinco comandantes de Star Trek mais jogados no EDHREC viram decks prontos de Commander, com a lista média de cada um (trocando as poucas cartas que o computador ainda não sabe jogar por outras da mesma função): Coletivo da Rainha Borg, Cartas Marcadas de Q, Diplomacia de Picard, Lógica de Spock e Assimilação de Locutus.
+
 ## [0.162.0] - 2026-11-13
 
 ### Novo

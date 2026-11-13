@@ -78,8 +78,12 @@ export function withDefaultArt(c: ScryCard): ScryCard {
   return { ...c, image_uris: own ? ownImages(name) : basicImages(num!), pt: c.pt && { ...c.pt, image_uris: undefined } };
 }
 
+/** Cartas que o Forge escreve diferente do Scryfall: nome do Forge (minúsculas) → nome do Scryfall. */
+const FORGE_NAMES: Record<string, string> = { 'all good things . . .': 'All Good Things...' };
 /** O /cards/collection não acha "Frente // Verso" (nem cartas divididas como "Fire // Ice"), só o nome da frente. */
-export const lookupName = (name: string) => name.split(' // ')[0]!;
+export const lookupName = (name: string) => FORGE_NAMES[name.toLowerCase()] ?? name.split(' // ')[0]!;
+/** O nome como o Forge o escreve, quando é diferente do do Scryfall ("All Good Things..." → "All Good Things . . ."). */
+export const forgeSpelling = (name: string) => Object.keys(FORGE_NAMES).find(k => FORGE_NAMES[k] === name) ?? null;
 const noScan = (c: any) => c.image_status === 'placeholder' || c.image_status === 'missing';
 
 /** Nome, tipo, texto e imagem de uma impressão em português (cartas de duas faces juntam as faces). */

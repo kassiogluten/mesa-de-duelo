@@ -34,8 +34,8 @@ final class InputContext {
     private InputContext() { }
     private static final ForgeReflection.FieldRef ATTACK_COMBAT = field(InputAttack.class, "combat");
     private static final ForgeReflection.FieldRef ATTACK_PLAYER = field(InputAttack.class, "playerAttacks");
-    private static final ForgeReflection.MethodRef ATTACK_CLEAR_BAND =
-        ForgeReflection.method(InputAttack.class, "activateBand", forge.game.combat.AttackingBand.class);
+    /** Bando ativo do InputAttack (o Forge 2.0.17 tirou o activateBand(), que só fazia isso e redesenhava). */
+    private static final ForgeReflection.FieldRef ATTACK_ACTIVE_BAND = field(InputAttack.class, "activeBand");
     private static final forge.util.ITriggerEvent REMOVE_ATTACKER = new forge.util.ITriggerEvent() {
         public int getButton() { return 3; }
         public int getX() { return 0; }
@@ -481,7 +481,7 @@ final class InputContext {
     static boolean assignAttackGroup(Object input, java.util.List<Integer> attackerIds, Integer defenderId, String kind) {
         if (!(input instanceof InputAttack attack) || attackerIds == null || attackerIds.isEmpty()
             || (defenderId != null && !("player".equals(kind) || "card".equals(kind)))
-            || !present(ATTACK_COMBAT, ATTACK_PLAYER, ATTACK_CLEAR_BAND)) return false;
+            || !present(ATTACK_COMBAT, ATTACK_PLAYER, ATTACK_ACTIVE_BAND)) return false;
         Combat combat = (Combat) value(ATTACK_COMBAT, input);
         Player player = (Player) value(ATTACK_PLAYER, input);
         GameEntity defender = null;
@@ -505,8 +505,7 @@ final class InputContext {
             return true;
         }
         // Native band selection is UI state, not part of the explicit group being assigned.
-        try { ATTACK_CLEAR_BAND.invoke(attack, new Object[]{null}); }
-        catch (ReflectiveOperationException e) { throw new IllegalStateException(e); }
+        ATTACK_ACTIVE_BAND.set(attack, null);
         if (defender instanceof Player target) attack.selectPlayer(target, null);
         else if (!attack.selectCard((Card) defender, null, null)) return false;
         for (Card card : selected) if (!combat.isAttacking(card, defender)) attack.selectCard(card, null, null);

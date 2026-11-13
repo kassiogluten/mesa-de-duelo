@@ -1,10 +1,14 @@
 {
-  "asOf": "2026-10-16",
+  "asOf": "2026-11-13",
   "source": "https://api.scryfall.com/cards/search?q=f%3Apauper&unique=cards",
   "cards": [
     {
       "name": "+2 Mace",
       "oracleId": "629fe1be-272d-465f-b9b1-2ce177410f13"
+    },
+    {
+      "name": "A Good Day to Die",
+      "oracleId": "4c4559a5-a7a4-4a40-8a8f-e7375c741748"
     },
     {
       "name": "A Good Day to Pie",
@@ -1119,6 +1123,14 @@
       "oracleId": "82f18e7d-5c42-47c4-8e74-3fccc9b7b1f0"
     },
     {
+      "name": "Andoria",
+      "oracleId": "79134f5e-94db-4a40-ba75-2569b839cf35"
+    },
+    {
+      "name": "Andromedan Automatons",
+      "oracleId": "2da322e6-a8e2-4d7a-bd34-54a3dfa85940"
+    },
+    {
       "name": "Angel of Mercy",
       "oracleId": "a2daaf32-dbfe-4618-892e-0da24f63a44a"
     },
@@ -1907,6 +1919,10 @@
       "oracleId": "ce979f36-84f2-4419-b400-971263494cc6"
     },
     {
+      "name": "Assault Drone",
+      "oracleId": "18832d7a-9a1f-45f1-a0f9-8e768a36af07"
+    },
+    {
       "name": "Assault Griffin",
       "oracleId": "802b9333-c256-410a-a635-a22bfeda679f"
     },
@@ -1941,6 +1957,10 @@
     {
       "name": "Astrolabe",
       "oracleId": "d19567ac-1f52-40eb-b2cf-4c791823ec92"
+    },
+    {
+      "name": "Astute Terraformer",
+      "oracleId": "c5a7a82e-3c13-4fa1-8bf5-bb85b2890f75"
     },
     {
       "name": "Atarka Beastbreaker",
@@ -2101,6 +2121,10 @@
     {
       "name": "Automated Artificer",
       "oracleId": "600e1093-5619-49b3-b193-bd263e4fde33"
+    },
+    {
+      "name": "Automated Warfare System",
+      "oracleId": "b28b4fe9-1a35-48c1-8818-f6f786b04e3e"
     },
     {
       "name": "Automatic Librarian",
@@ -2401,6 +2425,10 @@
     {
       "name": "Baithook Angler // Hook-Haunt Drifter",
       "oracleId": "c6bb4b41-8dae-429a-b928-ae9d39c74711"
+    },
+    {
+      "name": "Bajor",
+      "oracleId": "93d7f6e7-b6b0-48f3-891a-73970826af3b"
     },
     {
       "name": "Bake into a Pie",
@@ -2853,6 +2881,10 @@
     {
       "name": "Battle-Scarred Goblin",
       "oracleId": "3e765710-e567-4af0-b5f5-7c182649b757"
+    },
+    {
+      "name": "Battle-Scarred Survivalist",
+      "oracleId": "0e0e15d9-bd29-495a-9975-d1bd2ebb4bff"
     },
     {
       "name": "Battlefield Improvisation",
@@ -3949,6 +3981,10 @@
     {
       "name": "Boar-q-pine",
       "oracleId": "551e4356-5b1f-475c-a64b-9c50ea9b0368"
+    },
+    {
+      "name": "Boarding Action",
+      "oracleId": "f9f70fb6-953e-40e8-a15d-ea3ee62d09e3"
     },
     {
       "name": "Boarding Party",
@@ -5339,6 +5375,10 @@
       "oracleId": "37f3733e-cc4e-4d84-b29b-d474f6e254a2"
     },
     {
+      "name": "Cantankerous Captain",
+      "oracleId": "2375e6e4-bea2-4fa2-b0d5-467e3076962c"
+    },
+    {
       "name": "Canyon Crawler",
       "oracleId": "bac94fc9-808b-4dc9-b405-408dd2aa6194"
     },
@@ -5399,6 +5439,10 @@
       "oracleId": "c3f83115-398f-4738-9bf2-b37bd363e9f6"
     },
     {
+      "name": "Captain's Tutelage",
+      "oracleId": "1d41aacf-e15d-4457-b12a-c71bcdb7b5de"
+    },
+    {
       "name": "Captivating Cave",
       "oracleId": "4c77767a-8133-43bc-b7a5-09a73259d354"
     },
@@ -5441,6 +5485,10 @@
     {
       "name": "Carbonize",
       "oracleId": "a32795a2-a965-4a85-9944-fd9eed464e65"
+    },
+    {
+      "name": "Cardassia Prime",
+      "oracleId": "aff720b4-b8ef-46ea-9a3d-e101999e6526"
     },
     {
       "name": "Carefree Swinemaster",
@@ -5877,6 +5925,18 @@
     {
       "name": "Ceta Disciple",
       "oracleId": "1f085c2d-bd1b-4889-882f-367e0e970f44"
+    },
+    {
+      "name": "Cetacean Ops",
+      "oracleId": "64e39ec9-358a-4aa0-a7e9-164e8aa0b236"
+    },
+    {
+      "name": "Ceti Eel",
+      "oracleId": "b1914241-6b2b-4b3e-8626-aeb0b8cbc12d"
+    },
+    {
+      "name": "Cha'DIch Investigator",
+      "oracleId": "cfdef803-6f7a-4055-8d51-8e8c60953928"
     },
     {
       "name": "Chain Devil",
@@ -6435,6 +6495,10 @@
       "oracleId": "193f9b12-ee34-40c2-9315-6794416a4f62"
     },
     {
+      "name": "Class-F Shuttlecraft",
+      "oracleId": "4ccc91f2-4d6e-4d64-b438-3d8b4361040a"
+    },
+    {
       "name": "Clattering Skeletons",
       "oracleId": "9e107382-f683-44ed-ada1-775d3ac79dd0"
     },
@@ -6609,6 +6673,10 @@
     {
       "name": "Clockwork Swarm",
       "oracleId": "a6091c3e-b227-4e84-b75d-69512a0bddfb"
+    },
+    {
+      "name": "Cloistered Telepath",
+      "oracleId": "8656291d-8de7-4341-b1ee-0fcd65d629a4"
     },
     {
       "name": "Clot Sliver",
@@ -6815,6 +6883,10 @@
       "oracleId": "2e18ee5b-cda3-428b-be91-939c410256ac"
     },
     {
+      "name": "Cold-Blooded Crew",
+      "oracleId": "d5e9b04f-4a97-4da1-bf86-3715fc75ab23"
+    },
+    {
       "name": "Cold-Water Snapper",
       "oracleId": "457e4a49-c8fe-4e1d-a4b4-7a880a47f58d"
     },
@@ -6911,6 +6983,10 @@
       "oracleId": "87c8e1ed-258a-4a89-bcc6-211405e49692"
     },
     {
+      "name": "Command Decision",
+      "oracleId": "1c4afb0d-6d6e-4d21-9fe0-5621cd2fd27c"
+    },
+    {
       "name": "Command Tower",
       "oracleId": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25"
     },
@@ -6933,6 +7009,10 @@
     {
       "name": "Common Crook",
       "oracleId": "ebcbfdba-34c7-40eb-91a9-d306ff5ae8b9"
+    },
+    {
+      "name": "Common Goal",
+      "oracleId": "d4030d30-4c24-458c-87a9-c2f80bb68d27"
     },
     {
       "name": "Commune with Beavers",
@@ -7089,6 +7169,10 @@
     {
       "name": "Consider",
       "oracleId": "4c9bcba6-87b5-4fb3-97ee-6fe5b739337d"
+    },
+    {
+      "name": "Consider the Prime Directive",
+      "oracleId": "9f1d416c-60de-4796-a513-097d1d9a2305"
     },
     {
       "name": "Consign to Dream",
@@ -7871,6 +7955,10 @@
       "oracleId": "106e9c0d-67a2-4db7-97d9-03e1ea1b40b5"
     },
     {
+      "name": "Cryogenic Stasis",
+      "oracleId": "846ba66c-a4eb-4d00-a0f1-d9f9524b9695"
+    },
+    {
       "name": "Cryoshatter",
       "oracleId": "865715e9-6759-4e01-803d-702c959e386e"
     },
@@ -8103,6 +8191,10 @@
       "oracleId": "c70526a6-9071-4f34-b5fb-9d075021f667"
     },
     {
+      "name": "Cybernetic Specialist",
+      "oracleId": "9fc49a69-f80c-478f-b237-66f155c0c09a"
+    },
+    {
       "name": "Cycle of Renewal",
       "oracleId": "77eda626-5cef-496d-b291-cfa1ee6fc1fb"
     },
@@ -8155,6 +8247,10 @@
       "oracleId": "745d37dd-d18e-47cc-81d0-8e61a07342f2"
     },
     {
+      "name": "DOT-7 Repair Squad",
+      "oracleId": "b860f64c-e830-49ea-a478-5dc87e8a3be1"
+    },
+    {
       "name": "Daggerback Basilisk",
       "oracleId": "ea4d30c7-7c39-46d5-9b71-a7ebc3e219a1"
     },
@@ -8173,6 +8269,10 @@
     {
       "name": "Daggersail Aeronaut",
       "oracleId": "7c0ef3b7-b368-4a5b-8cbe-bf1f47610f74"
+    },
+    {
+      "name": "Dahar Master",
+      "oracleId": "c9bc1a28-8d3c-4d9f-a67d-b044cfe9d6c1"
     },
     {
       "name": "Dai Li Censor",
@@ -8369,6 +8469,10 @@
     {
       "name": "Dash Hopes",
       "oracleId": "6a4ace6b-ef3a-4d11-89d7-958f98dcc445"
+    },
+    {
+      "name": "Dathon and Picard at El-Adrel",
+      "oracleId": "76b7e1ee-43f0-4b56-822a-71b064c9201b"
     },
     {
       "name": "Daunting Defender",
@@ -8873,6 +8977,10 @@
     {
       "name": "Defenestrated Phantom",
       "oracleId": "e73addfa-d18a-46f7-882e-7bc2f292230b"
+    },
+    {
+      "name": "Defense Force Aggressor",
+      "oracleId": "8f1a39bf-7597-4655-b7af-4b1332edf529"
     },
     {
       "name": "Defensive Maneuvers",
@@ -9427,6 +9535,10 @@
       "oracleId": "54e34440-c890-4a07-83c6-63a2f7a65639"
     },
     {
+      "name": "Direct Hit",
+      "oracleId": "f6b0adcb-4676-4d9f-83ae-a2ff3cdfd84b"
+    },
+    {
       "name": "Diregraf Escort",
       "oracleId": "f28a67d8-05ec-4d72-aa17-670ce1136f5c"
     },
@@ -9615,6 +9727,10 @@
       "oracleId": "74315869-46e3-43a2-abc0-d86d0a70d343"
     },
     {
+      "name": "Disruptor Pistol",
+      "oracleId": "bb8c2c0f-fc63-40c6-98c6-691e42b3b8c9"
+    },
+    {
       "name": "Disruptor Wanderglyph",
       "oracleId": "81dda1a8-72ac-4e69-8367-4f72c445197c"
     },
@@ -9777,6 +9893,14 @@
     {
       "name": "Dominator Drone",
       "oracleId": "3c98c925-f380-4520-970d-4c1abbebefe3"
+    },
+    {
+      "name": "Dominion Assault Force",
+      "oracleId": "b093916c-cc0a-4b3b-9de6-8a2db53cdfe0"
+    },
+    {
+      "name": "Dominion Supervisor",
+      "oracleId": "d151c8ed-58bf-4b82-a993-1d81f789aa0e"
     },
     {
       "name": "Don't Make a Sound",
@@ -10703,6 +10827,10 @@
       "oracleId": "0380e99c-18f9-4472-8223-bb208e5f0963"
     },
     {
+      "name": "Earth, Sector 001",
+      "oracleId": "c75d87b0-7de9-4c50-b781-9749d67c1e07"
+    },
+    {
       "name": "Earth-Cult Elemental",
       "oracleId": "043d8dee-379f-4706-ad47-0bb562717007"
     },
@@ -10865,6 +10993,10 @@
     {
       "name": "Eiganjo Exemplar",
       "oracleId": "8e0f4e22-0677-4246-a4c5-6fcc74cb54a3"
+    },
+    {
+      "name": "Eject the Warp Core",
+      "oracleId": "c06c17c2-203c-4b4a-8564-f29bc41c9eb5"
     },
     {
       "name": "Ekundu Cyclops",
@@ -11249,6 +11381,14 @@
     {
       "name": "Emerge from the Cocoon",
       "oracleId": "fed2127c-7174-4863-ad6a-1847c96bbd3f"
+    },
+    {
+      "name": "Emergency Holographic Crew",
+      "oracleId": "0b74d7de-8b9e-4a75-870e-230536fa8d79"
+    },
+    {
+      "name": "Emergency Medical Hologram",
+      "oracleId": "8170dcbb-9879-414c-819d-ea2658ff770c"
     },
     {
       "name": "Emergency Phytomedic // Seed Suture",
@@ -11731,6 +11871,10 @@
       "oracleId": "e766b774-eaf3-41ce-bc23-fd29fd22bc39"
     },
     {
+      "name": "Evasive Maneuvers",
+      "oracleId": "3b2f1364-56e7-461a-b03f-0e14d83b0f5e"
+    },
+    {
       "name": "Everbark Shaman",
       "oracleId": "cf319bc8-2aed-4c2c-8ae0-b669d2cf613e"
     },
@@ -11837,6 +11981,10 @@
     {
       "name": "Exiled Boggart",
       "oracleId": "8c07878f-348c-4fd9-955f-87e975ed61fa"
+    },
+    {
+      "name": "Exocomp",
+      "oracleId": "fb208157-67e5-45e2-bf08-7671f65cf520"
     },
     {
       "name": "Exosuit Savior",
@@ -12491,6 +12639,14 @@
       "oracleId": "2038f505-7b03-4c63-bc44-c5139729dd05"
     },
     {
+      "name": "Federation Field Medic",
+      "oracleId": "3759f1de-eda1-4f09-b12b-ea5f5fc731d7"
+    },
+    {
+      "name": "Federation Probe",
+      "oracleId": "6fc7401f-66fe-4d17-be2f-afcf892be740"
+    },
+    {
       "name": "Feebleness",
       "oracleId": "a1a7757f-7e9b-4b5b-b9df-e98d8918caac"
     },
@@ -12657,6 +12813,10 @@
     {
       "name": "Feral Thallid",
       "oracleId": "3953fd17-03f4-4431-99b5-87dcac5a279d"
+    },
+    {
+      "name": "Ferenginar",
+      "oracleId": "2e0753ad-7f76-4d26-8e87-6f201378f333"
     },
     {
       "name": "Ferocious Charge",
@@ -12903,6 +13063,10 @@
       "oracleId": "63a85361-56bc-4209-aea8-b49319bc7b92"
     },
     {
+      "name": "Final Frontier",
+      "oracleId": "26f7e903-2a00-4878-b8b7-d5abe35c9526"
+    },
+    {
       "name": "Final Payment",
       "oracleId": "e47d57dc-2e69-4939-8aec-077595f2ae05"
     },
@@ -13081,6 +13245,10 @@
     {
       "name": "Firewild Borderpost",
       "oracleId": "312a5a75-9b68-4e4b-97fe-3ab644e3e493"
+    },
+    {
+      "name": "First Contact",
+      "oracleId": "81229e0a-8413-40cf-8087-9d580cbb21c3"
     },
     {
       "name": "First Day of Class",
@@ -13927,6 +14095,10 @@
       "oracleId": "5dbe4648-f4c9-4d26-98f5-58a7e53b149d"
     },
     {
+      "name": "Free Borg Revolutionaries",
+      "oracleId": "28914782-92f4-407f-beb6-5e290a49000c"
+    },
+    {
       "name": "Free from Flesh",
       "oracleId": "e4a96cc7-8a4f-4007-8477-e1f30720db7b"
     },
@@ -14161,6 +14333,10 @@
     {
       "name": "Fuel for the Cause",
       "oracleId": "667cffdd-8951-4223-8895-fa46e9f14b96"
+    },
+    {
+      "name": "Fugitive Listener",
+      "oracleId": "e6939d1e-6ff8-4559-8526-0e4d0e749e20"
     },
     {
       "name": "Fugitive Wizard",
@@ -14603,6 +14779,10 @@
       "oracleId": "5722a13f-7d70-438c-94ba-97a3f53fbc5c"
     },
     {
+      "name": "Genesis Effect",
+      "oracleId": "ec763f36-3504-4bfe-8481-1a7d0bff8d8e"
+    },
+    {
       "name": "Geomancer's Gambit",
       "oracleId": "33bb4aff-6476-4787-b3fe-028b1b1bd1bc"
     },
@@ -15033,6 +15213,10 @@
     {
       "name": "Gimli's Fury",
       "oracleId": "1b550c27-14b0-45fb-b17e-fcb061dc6ad0"
+    },
+    {
+      "name": "Gin'tak Charge",
+      "oracleId": "286213a8-ae53-4f97-9f81-e13bed462d0a"
     },
     {
       "name": "Gingerbread Cabin",
@@ -16031,6 +16215,10 @@
       "oracleId": "02457c7f-eced-4bf3-9b61-309b4ceab2d5"
     },
     {
+      "name": "Gorn Captain",
+      "oracleId": "60ff591d-170d-410a-9710-510e811f9827"
+    },
+    {
       "name": "Gossamer Chains",
       "oracleId": "af3936ab-0156-438d-9fef-a924d2fcffc3"
     },
@@ -16743,6 +16931,10 @@
       "oracleId": "65ad90f5-4dae-494b-83fb-8052e77e0b12"
     },
     {
+      "name": "Guidance Failure",
+      "oracleId": "6c18f853-684b-42f6-8bc6-e86596131ab1"
+    },
+    {
       "name": "Guided Strike",
       "oracleId": "a215e813-df7e-4f21-9718-eb264eb62813"
     },
@@ -17221,6 +17413,14 @@
     {
       "name": "Hazy Homunculus",
       "oracleId": "1af26f29-627c-48e5-a19d-deb43a11a846"
+    },
+    {
+      "name": "He's Dead, Jim",
+      "oracleId": "ee7150d1-8b38-4387-9b9c-a40180430170"
+    },
+    {
+      "name": "Head of Security",
+      "oracleId": "fb42bade-4bbc-4119-b6cc-71695fe43dd9"
     },
     {
       "name": "Head of the Homestead",
@@ -18055,6 +18255,10 @@
       "oracleId": "793f29ac-8a5d-49bf-91e8-a32f771268f3"
     },
     {
+      "name": "Horta",
+      "oracleId": "e8ac0742-15f5-4cf0-888f-f1c2c97fc144"
+    },
+    {
       "name": "Hostile Minotaur",
       "oracleId": "e050a0a3-f48e-4cba-9cd4-692a92261c9f"
     },
@@ -18185,6 +18389,10 @@
     {
       "name": "Humongulus",
       "oracleId": "395922cc-d524-4241-a7d8-9c7959f0b9db"
+    },
+    {
+      "name": "Humpback Whales",
+      "oracleId": "a7285536-6cc1-448e-839a-606d585fbd9d"
     },
     {
       "name": "Hundred-Talon Kami",
@@ -18353,6 +18561,10 @@
     {
       "name": "I Am Iron Man",
       "oracleId": "deb16a9a-2fa9-4ad3-bb20-7c16066e3d14"
+    },
+    {
+      "name": "I'm a Doctor, Not a . . .",
+      "oracleId": "ad1d8eca-e3bf-479f-a442-bcd8c31bfe7f"
     },
     {
       "name": "Icatian Crier",
@@ -19121,6 +19333,10 @@
     {
       "name": "Interjection",
       "oracleId": "47bbadcf-11c6-4a4d-9575-1eb8284a174c"
+    },
+    {
+      "name": "Interstellar Effigy",
+      "oracleId": "76f52fad-8db2-42f0-8e12-f4341e4c8680"
     },
     {
       "name": "Intervene",
@@ -20561,6 +20777,10 @@
     {
       "name": "Kolaghan Stormsinger",
       "oracleId": "0790c8bd-a094-49b5-8843-e8b02cba145b"
+    },
+    {
+      "name": "Kolinahr Priest",
+      "oracleId": "b03c6720-b899-4eba-b28d-54ded03e086d"
     },
     {
       "name": "Koma's Faithful",
@@ -22283,6 +22503,10 @@
       "oracleId": "5f12f665-f083-48ae-b61a-541051c996ec"
     },
     {
+      "name": "Make It So",
+      "oracleId": "a9368972-4697-4a10-97e3-324149a26fba"
+    },
+    {
       "name": "Make Mischief",
       "oracleId": "5de50aa5-3b30-4d7d-9203-bc8fc0f8fb34"
     },
@@ -22377,6 +22601,10 @@
     {
       "name": "Malfunction",
       "oracleId": "d2f98983-f395-4166-aa5a-309b4769baab"
+    },
+    {
+      "name": "Malfunctioning Holodeck",
+      "oracleId": "3f04c38b-d6bd-405f-b69c-009df87801dd"
     },
     {
       "name": "Malicious Advice",
@@ -22651,6 +22879,10 @@
       "oracleId": "d56602f3-64df-4c68-a4a3-95c37c021e72"
     },
     {
+      "name": "Marooned",
+      "oracleId": "74e02bdf-a074-4356-9d06-0df01dd2df66"
+    },
+    {
       "name": "Marsh Boa",
       "oracleId": "246f7446-036d-469c-9583-5699ebdcec6d"
     },
@@ -22923,6 +23155,10 @@
       "oracleId": "3b91dc3e-46ef-4a68-829f-ef7d79598cf7"
     },
     {
+      "name": "Mek'leth Berserker",
+      "oracleId": "7063eb2b-81a4-4599-b1db-edf861e39bfb"
+    },
+    {
       "name": "Melancholic Poet",
       "oracleId": "37731c49-1238-4e0e-8993-204e36c1f4ee"
     },
@@ -22941,6 +23177,10 @@
     {
       "name": "Meldweb Strider",
       "oracleId": "b66dd751-fef7-4310-9c09-8d1b1fc78fef"
+    },
+    {
+      "name": "Melkotian Adjudicator",
+      "oracleId": "1fdcdb1c-a140-40ee-b711-5ea539eb1084"
     },
     {
       "name": "Melt Terrain",
@@ -24109,6 +24349,10 @@
     {
       "name": "Moonwing Moth",
       "oracleId": "6501b3c7-fd21-4668-b647-db12f0cc23f7"
+    },
+    {
+      "name": "Moopsy",
+      "oracleId": "89b9efc8-d1cd-4b2a-acf3-4f0dd1629167"
     },
     {
       "name": "Moor Fiend",
@@ -25599,6 +25843,10 @@
       "oracleId": "02e81bb8-ba80-4483-9b9f-973dcae0fc9d"
     },
     {
+      "name": "Oberth-Class Starship",
+      "oracleId": "fb5e53cf-e12e-469b-b9ea-9debc967e77e"
+    },
+    {
       "name": "Oblivion Crown",
       "oracleId": "e690461b-2925-4484-b6fa-69ca1166f5a2"
     },
@@ -25641,6 +25889,10 @@
     {
       "name": "Obsidian Acolyte",
       "oracleId": "dd1e7e89-72d7-44d7-922c-f08f0b7d5166"
+    },
+    {
+      "name": "Obsidian Order Operative",
+      "oracleId": "7145e1b7-b991-4651-b21d-0620cb017090"
     },
     {
       "name": "Obstinate Gargoyle",
@@ -25963,6 +26215,10 @@
       "oracleId": "ca5ca2c9-2ddd-4e70-b738-8de61aa82570"
     },
     {
+      "name": "Open Communications",
+      "oracleId": "b08c5b86-4f84-46a3-877f-bbf71ec17adb"
+    },
+    {
       "name": "Open Fire",
       "oracleId": "8b218023-50b8-4d9d-b17b-9647479d3675"
     },
@@ -26173,6 +26429,10 @@
     {
       "name": "Orim's Touch",
       "oracleId": "cc22c210-efd0-494c-8560-448b038b3c5f"
+    },
+    {
+      "name": "Orion",
+      "oracleId": "47e3aa22-8806-408f-b93e-0d0b800866f6"
     },
     {
       "name": "Ornamental Courage",
@@ -26667,6 +26927,10 @@
       "oracleId": "7ba8ae5b-8025-40eb-969d-38a85eefe7d6"
     },
     {
+      "name": "Pattern Buffer Preservation",
+      "oracleId": "690d0d8f-48b9-40a6-b881-6f17ac19bf3b"
+    },
+    {
       "name": "Pause for Reflection",
       "oracleId": "a7f266b5-7258-4eaa-b447-66460ec38505"
     },
@@ -26807,6 +27071,10 @@
       "oracleId": "3ba3405d-8c9a-4a80-811d-529cd3cb657f"
     },
     {
+      "name": "Perils of the Past",
+      "oracleId": "f1f77fb4-2c83-4cbf-894e-624abe6cd95f"
+    },
+    {
       "name": "Perimeter Patrol",
       "oracleId": "ef625caf-c5d3-47f4-b1fb-bd040c5d864c"
     },
@@ -26873,6 +27141,10 @@
     {
       "name": "Pet Avengers",
       "oracleId": "bbee7921-19c9-4c70-8462-f16e7e9c25db"
+    },
+    {
+      "name": "Pet Sehlat",
+      "oracleId": "509f255f-c3ee-4836-a583-d018060d0c4d"
     },
     {
       "name": "Petalmane Baku",
@@ -27013,6 +27285,10 @@
     {
       "name": "Pheres-Band Tromper",
       "oracleId": "41b2876f-0217-4552-9fad-f12f1824d06f"
+    },
+    {
+      "name": "Photosynthetic Physician",
+      "oracleId": "08787942-456f-4c71-a821-1c90b5639ca1"
     },
     {
       "name": "Phyresis",
@@ -27419,8 +27695,20 @@
       "oracleId": "a959a91a-3e1d-4bd4-9e14-5ee977540146"
     },
     {
+      "name": "Planetary Bombardment",
+      "oracleId": "2c2fdeff-a0c6-44cb-9603-4a9865f62985"
+    },
+    {
+      "name": "Planetary Patrol",
+      "oracleId": "fba54c2d-a664-4e4c-b9d4-e24cf2523ab9"
+    },
+    {
       "name": "Plasma Bolt",
       "oracleId": "ac5258c1-5b46-4892-a445-bfd56875f039"
+    },
+    {
+      "name": "Plasma Cascade",
+      "oracleId": "46ce40e9-b7fb-4f40-a7ab-f8a2234d1d63"
     },
     {
       "name": "Plasma Jockey",
@@ -28207,6 +28495,10 @@
       "oracleId": "dfb13eca-55fd-4ac6-aee3-2bdbfe9e1c4e"
     },
     {
+      "name": "Pure Energy",
+      "oracleId": "f4831eee-fef6-4fef-a174-400a25d0837d"
+    },
+    {
       "name": "Purge the Profane",
       "oracleId": "a0f29566-bca8-4fe8-86ce-4a051ece6d5a"
     },
@@ -28361,6 +28653,10 @@
     {
       "name": "Qiqirn Merchant",
       "oracleId": "560cb970-1c1b-4ba7-8352-bc67b4ea7843"
+    },
+    {
+      "name": "Qo'noS",
+      "oracleId": "cab718af-8e6f-4766-856e-3a61ba98f94d"
     },
     {
       "name": "Quag Sickness",
@@ -29507,6 +29803,10 @@
       "oracleId": "f54573d1-9950-46c3-b8f1-cd6f081d62ad"
     },
     {
+      "name": "Relentless Drednok",
+      "oracleId": "98cbac1d-7896-4c63-a265-03bc5d670fa6"
+    },
+    {
       "name": "Relentless Pursuit",
       "oracleId": "d39c378b-f0a2-400f-af40-a632e24b6d72"
     },
@@ -30199,6 +30499,10 @@
       "oracleId": "cb7e076c-a695-4c79-9f20-498370c81380"
     },
     {
+      "name": "Risa",
+      "oracleId": "365a4644-74f4-4af9-81ab-0d328ca5edce"
+    },
+    {
       "name": "Rise Again",
       "oracleId": "4600e968-fe3a-446a-a306-bd10e6763e0d"
     },
@@ -30395,6 +30699,10 @@
       "oracleId": "7c309759-e607-4bad-b615-f7c673e508ac"
     },
     {
+      "name": "Rogue Artificial Intelligence",
+      "oracleId": "4849f2f8-0c0e-470d-a4f5-76547a9570a0"
+    },
+    {
       "name": "Rogue Elephant",
       "oracleId": "bed7ac55-fe40-46d0-bc22-1c8d11f41459"
     },
@@ -30425,6 +30733,10 @@
     {
       "name": "Romantic Rendezvous",
       "oracleId": "8ca585b5-25c4-41cc-a0b9-dc66ae803d04"
+    },
+    {
+      "name": "Romulus",
+      "oracleId": "14c4ad24-7f38-409b-8ef0-341f233982da"
     },
     {
       "name": "Ronin Cavekeeper",
@@ -31439,6 +31751,10 @@
       "oracleId": "46fd9b9e-ef8f-41d6-9f1d-040bb7fe74c1"
     },
     {
+      "name": "Saurian Explorer",
+      "oracleId": "00f4cab8-b135-4118-8e3a-92097178abb6"
+    },
+    {
       "name": "Saurian Symbiote",
       "oracleId": "14b180d2-5701-452d-8deb-cf0845c95df5"
     },
@@ -31521,6 +31837,10 @@
     {
       "name": "Savor",
       "oracleId": "dfc1dc36-0cc2-47cc-b0dd-1cc7c31057aa"
+    },
+    {
+      "name": "Savvy Profiteer",
+      "oracleId": "e96a9f9a-9326-4f0b-98ad-23210c97299f"
     },
     {
       "name": "Sawblade Scamp",
@@ -32595,6 +32915,10 @@
       "oracleId": "7d404420-e3de-47a8-a159-2f634a73f2c9"
     },
     {
+      "name": "Set Phasers to . . .",
+      "oracleId": "4da9b548-898d-431b-8aa5-9cb7bf579219"
+    },
+    {
       "name": "Setessan Battle Priest",
       "oracleId": "e2886098-0309-4da5-b2e5-a06af5cfe5b8"
     },
@@ -32987,6 +33311,10 @@
       "oracleId": "4ed55e9c-84ea-42a3-a32f-469da56b3eb5"
     },
     {
+      "name": "Shields Up!",
+      "oracleId": "0e14940b-87e1-4139-8f30-3629b3ad3a59"
+    },
+    {
       "name": "Shields of Velis Vel",
       "oracleId": "7ad6be4e-5c3c-4633-a641-beb06e4129b9"
     },
@@ -33287,6 +33615,10 @@
       "oracleId": "174cf7cd-3e8c-4f90-abc1-a78a0ce832d2"
     },
     {
+      "name": "Shuttle Ace",
+      "oracleId": "4b5b0864-7ddd-497d-a7d6-a31c49bb9c7b"
+    },
+    {
       "name": "Shyft",
       "oracleId": "40c3007a-be6c-4400-9139-12b9ca098ac4"
     },
@@ -33309,6 +33641,10 @@
     {
       "name": "Sick and Tired",
       "oracleId": "070d82db-0851-4f6d-8bf7-1a79c4c2cfee"
+    },
+    {
+      "name": "Sickbay Orderly",
+      "oracleId": "94688e62-f39f-41fd-9309-f16b715ef724"
     },
     {
       "name": "Sicken",
@@ -33469,6 +33805,10 @@
     {
       "name": "Silhana Starfletcher",
       "oracleId": "3b4b6af2-f929-4082-a5ae-61a4e074bf14"
+    },
+    {
+      "name": "Silicate Surveyor",
+      "oracleId": "1b248ef5-ec57-481d-b47a-357d3867054f"
     },
     {
       "name": "Silk Net",
@@ -35875,6 +36215,18 @@
       "oracleId": "fd6afb5e-d99a-44a7-9af4-9f064da95d63"
     },
     {
+      "name": "Starfleet Crew",
+      "oracleId": "83b31215-ea9b-4ad9-a39e-3fe6cdb9b7de"
+    },
+    {
+      "name": "Starfleet Security",
+      "oracleId": "896077f9-b26e-4964-9279-03ee284a3e89"
+    },
+    {
+      "name": "Starfleet Spanner Jockey",
+      "oracleId": "d41ff489-7d74-4b06-b3a1-638f3e3303d1"
+    },
+    {
       "name": "Stark Industries",
       "oracleId": "52401cb4-1bce-4191-9220-0d93ea4108b8"
     },
@@ -36441,6 +36793,10 @@
     {
       "name": "Straw Soldiers",
       "oracleId": "8138a9d7-63cb-4d40-ac9e-1a9b10766113"
+    },
+    {
+      "name": "Stray from History",
+      "oracleId": "adbbb968-5721-427c-a15a-320d49ab4c3e"
     },
     {
       "name": "Streaking Oilgorger",
@@ -37051,6 +37407,14 @@
       "oracleId": "c4d36522-3ace-4bfb-bf2d-1a366f458698"
     },
     {
+      "name": "Suurok-Class Science Vessel",
+      "oracleId": "5d2016ed-3ea0-4938-b95e-ee582307e475"
+    },
+    {
+      "name": "Suus Mahna Practitioner",
+      "oracleId": "e7d22ef6-a926-4964-bfd6-f7345b20e74e"
+    },
+    {
       "name": "Swab Goblin",
       "oracleId": "343ecf2f-0bbc-4840-8fb3-f5f61b26e76f"
     },
@@ -37291,6 +37655,10 @@
       "oracleId": "2e80d632-cf84-4562-8c93-5850cceb5bec"
     },
     {
+      "name": "Tactical Officer",
+      "oracleId": "1397e7d5-4aa4-4c8d-8957-845579b775f7"
+    },
+    {
       "name": "Tah-Crop Elite",
       "oracleId": "9af1750e-90cc-446a-9ba2-d44e03c9d01b"
     },
@@ -37383,8 +37751,20 @@
       "oracleId": "ee397a87-6933-4d2d-aac6-8dc4e96d524b"
     },
     {
+      "name": "Tal Shiar Analyst",
+      "oracleId": "bca4d45d-cae4-46f3-b5ac-22fbac59fe56"
+    },
+    {
+      "name": "Tal Shiar Operative",
+      "oracleId": "53641cda-7093-4fed-97f1-380f771e00b0"
+    },
+    {
       "name": "Talara's Bane",
       "oracleId": "2a573cc3-0a2f-4f06-bbac-c762adb9bae4"
+    },
+    {
+      "name": "Talarian Hook Spider",
+      "oracleId": "369f086f-3497-496a-94a8-0faccd1d5931"
     },
     {
       "name": "Talas Air Ship",
@@ -37611,6 +37991,10 @@
       "oracleId": "55a277b4-575f-463b-913c-7857acad20be"
     },
     {
+      "name": "Tea, Earl Grey, Hot",
+      "oracleId": "6f2e8083-29af-4cdb-a2cb-216b2f3f5616"
+    },
+    {
       "name": "Teach by Example",
       "oracleId": "d85ba214-fa05-44ca-a7f9-ab2c5dc07962"
     },
@@ -37735,6 +38119,10 @@
       "oracleId": "5f67698a-28db-43cd-aaf1-52371b0b47eb"
     },
     {
+      "name": "Temporal Conqueror",
+      "oracleId": "306002e6-d68d-47ad-879b-e6060efebeff"
+    },
+    {
       "name": "Temporal Eddy",
       "oracleId": "3a35e772-2547-41a3-a2a2-125b48c23aa5"
     },
@@ -37777,6 +38165,10 @@
     {
       "name": "Temur Tawnyback",
       "oracleId": "889d26d6-9e6c-4cc0-8e8e-dd932f705a20"
+    },
+    {
+      "name": "Tenacious Drone",
+      "oracleId": "af6351a9-ac01-4fed-9ea9-a352d21a8312"
     },
     {
       "name": "Tend the Sprigs",
@@ -39371,6 +39763,10 @@
       "oracleId": "6441456a-cc20-48bb-95e9-c981fea8ea98"
     },
     {
+      "name": "Tricorder",
+      "oracleId": "1385679f-bdcd-4d7e-8266-1df0e36cc2da"
+    },
+    {
       "name": "Trinket Mage",
       "oracleId": "ffc95093-24a2-4616-a44a-24788e8df9c8"
     },
@@ -39957,6 +40353,10 @@
     {
       "name": "Unexplained Vision",
       "oracleId": "9f693483-f4df-497a-a6c7-fc269fc60ea8"
+    },
+    {
+      "name": "Unexplored Territory",
+      "oracleId": "6e5d4bbd-4999-4acd-8775-25e02d901035"
     },
     {
       "name": "Unfathomable Truths",
@@ -40795,6 +41195,10 @@
       "oracleId": "fd6ba826-e7b1-4375-8aaf-c3cd3dc7ba07"
     },
     {
+      "name": "Vexing Drone",
+      "oracleId": "8e90e417-65ca-48bc-a32d-b93976519fe9"
+    },
+    {
       "name": "Vexing Gull",
       "oracleId": "1a36d2a8-6117-4828-bbe2-bc63212d29d8"
     },
@@ -41403,6 +41807,10 @@
       "oracleId": "5df16529-6f1d-4978-b364-97d91abac441"
     },
     {
+      "name": "Vulcan",
+      "oracleId": "c7b6bc1f-9161-415e-a097-d9c8cd81d4ae"
+    },
+    {
       "name": "Vulpikeet",
       "oracleId": "11d0c8a4-1dd0-4707-9c1d-19ed27d1934e"
     },
@@ -41827,6 +42235,10 @@
       "oracleId": "f4b18451-1f40-48bd-8ca9-eec784ad5dd7"
     },
     {
+      "name": "Warp Core",
+      "oracleId": "6a2df97a-341d-4bc4-9f5c-661b6ca78fd0"
+    },
+    {
       "name": "Warpath Ghoul",
       "oracleId": "17ae652c-b1c7-4dde-ae9e-50b9e286776c"
     },
@@ -41869,6 +42281,10 @@
     {
       "name": "Warriors of Wakanda",
       "oracleId": "7abbbe18-a2e5-47ce-9c65-8008e5153a4d"
+    },
+    {
+      "name": "Warship Flight Crew",
+      "oracleId": "d55977f8-1655-4d97-adbf-ef6cb979ea55"
     },
     {
       "name": "Warship Scout",
@@ -43139,8 +43555,16 @@
       "oracleId": "fad2d14f-8825-4b08-8804-010d9659f6dc"
     },
     {
+      "name": "Xenobotanist",
+      "oracleId": "a9df60bf-f327-4d50-ab4d-99324fc2dcfe"
+    },
+    {
       "name": "Xenosquirrels",
       "oracleId": "d5c54df9-437e-46e1-94cf-91d9f1d343b6"
+    },
+    {
+      "name": "Xindi Surveyors",
+      "oracleId": "5fdff691-686d-4ce0-bd12-eea676a648b4"
     },
     {
       "name": "Yamabushi's Flame",

@@ -31,6 +31,7 @@ const SERIES = {
   C17: { name: 'Commander 2017', year: 2017 },
   C20: { name: 'Commander 2020 (Ikoria)', year: 2020 },
   BLC: { name: 'Bloomburrow', year: 2024 },
+  TRC: { name: 'Star Trek', year: 2026 },
 };
 
 /** Nome da caixa → nome em português e, quando substitui um deck pronto adaptado, o id dele. */
@@ -78,6 +79,10 @@ const PRECONS = {
   'Family Matters': { pt: 'Assuntos de Família' },
   'Peace Offering': { pt: 'Oferta de Paz', id: 'commander-bumbleflower' },
   'Squirreled Away': { pt: 'Guardado para o Inverno', id: 'commander-chatterfang' },
+  'Federation Fleet': { pt: 'Frota da Federação' },
+  'Klingon Fury': { pt: 'Fúria Klingon' },
+  'Landing Party': { pt: 'Grupo de Desembarque' },
+  'We Are the Borg': { pt: 'Nós Somos os Borg' },
 };
 
 const slug = text => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

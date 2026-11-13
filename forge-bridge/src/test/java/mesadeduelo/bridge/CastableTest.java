@@ -88,6 +88,19 @@ public class CastableTest {
         assertNull("X costs are only known when cast", costs.get(fireball.getId()));
     }
 
+    /** Beam me up (Star Trek): conjurar do cemitério, como o Flashback, com a forma "beammeup" para a mesa. */
+    @Test public void beamMeUpCastsFromTheGraveyard() {
+        Game game = TestGames.empty(); Player me = game.getPlayers().get(0), them = game.getPlayers().get(1);
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN1, me);
+        Card energize = TestGames.add(game, "Energize", me, ZoneType.Graveyard);
+        TestGames.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
+        TestGames.add(game, "Grizzly Bears", them, ZoneType.Battlefield);
+        for (int i = 0; i < 4; i++) TestGames.add(game, "Island", me, ZoneType.Battlefield);
+        assertTrue("dá para conjurar do cemitério", Castable.compute(me).contains(energize.getId()));
+        var beam = energize.getAllPossibleAbilities(me, true).stream().filter(sa -> !sa.isManaAbility()).findFirst().orElseThrow();
+        assertEquals("beammeup", AbilityOptions.mode(beam));
+    }
+
     /** Convoke and delve ask the controller which cards to use, even in a test: a person never answers that one. */
     @Test(timeout = 20000) public void handCostsNeverAskThePlayer() {
         Game game = TestGames.empty(); Player me = game.getPlayers().get(0);

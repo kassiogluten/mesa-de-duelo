@@ -1357,3 +1357,26 @@ Pedido em 11/11/2026. Toda carta da mesa (campo, mão, exílio, zona de comando)
 - [x] Decidir: tirar de todas, tirar só das permanentes (onde ela mais ocupa espaço) ou deixar como opção nas Opções da partida.
 
 Feito em 11/11/2026 (0.161.0): o botão direito, o segurar, o "i" e o foco do teclado já abriam os detalhes de todas as cartas com lupa (mesmo seletor). Decidido: tirar a lupa só das permanentes e da zona de comando; a mão, o exílio jogável e as janelas continuam com ela. Leitores de tela seguem com o rótulo de cada carta. No toque, um aviso único na primeira partida: "Segure uma carta para ver os detalhes."
+
+## 108. ✅ Atualizar o Forge depois do lançamento de Star Trek
+
+O Forge do servidor está fixado no commit `0b0f7ecc` (15/10/2026), que só tem as cartas de Star Trek (TRK, 13/11/2026) e Star Trek Commander (TRC) reveladas até aquela data: 92 e 42. Cartas reveladas depois não são reconhecidas na validação do deck ("Carta não encontrada no motor de regras.").
+
+- [x] Uma ou duas semanas depois de 13/11/2026, quando o Forge terminar a série: escolher o commit novo do Forge.
+- [x] Produção: trocar `ARG FORGE_COMMIT` em `forge-bridge/Dockerfile`.
+- [x] Local: `git pull` em `~/forge`, `mvn -pl forge-gui -am install -DskipTests` e reiniciar o servidor da 7171.
+- [x] Rodar os testes do servidor e o `npm run test:e2e` (o commit novo traz mudanças no motor, não só cartas).
+- [x] Decidir se os precons de Star Trek Commander entram nos decks prontos (Commander Precon).
+- [x] Item no CHANGELOG ("cartas de Star Trek").
+
+Consultado em 13/11/2026, sem atualizar: a lista de legalidade do Commander (0.162.0) já aceita as cartas de Star Trek, mas 353 delas não existem no commit fixado. O `master` do Forge do mesmo dia (`a264364`) tem todas as 353, com as edições Star Trek e Star Trek Commander. Basta atualizar o commit; os testes e o e2e continuam necessários, porque o motor também muda.
+
+Feito na 0.163.0 (13/11/2026): Forge 2.0.17-SNAPSHOT no commit `a2643644` (13/11), com as 647 cartas de Star Trek válidas no Commander. A API mudou em três pontos (seleção num `Selection` só, `wasDestroyed` virou o evento `GameEventCardDestroyed`, `getUserAgent` no `IGuiBase`), o `activateBand` saiu (o bando ativo agora é só o campo) e o desfazer passou a usar o histórico de diferenças reversas do próprio Forge, no lugar do nosso `MementoDelta`. Os 4 precons de Star Trek Commander entraram nos decks prontos.
+
+## 123. ✅ Decks prontos das coleções novas
+
+Pedido em 13/11/2026: sempre que uma coleção nova entra na mesa, ela ganha 5 decks prontos com os decks mais populares dela (regra em `CLAUDE.md`, "Coleções novas").
+
+- [x] Mystery Booster Commander Edition (0.162.0): Whtz, Homer, Uugguu, Ekthi e Massimo, os 5 mais jogados no EDHREC em 13/11/2026, importados por `forge-bridge/scripts/importar-edhrec.mjs`; 15 cartas que a IA do Forge não joga foram trocadas por outras da mesma função.
+- [x] Star Trek e Star Trek Commander (0.163.0): The Borg Queen, Q, Stacking the Deck, Jean-Luc Picard, Luminary, Commander Spock e Locutus of Borg, os 5 mais jogados no EDHREC em 13/11/2026; 13 cartas que a IA não joga trocadas por outras da mesma função.
+- [x] Cada deck passa na validação do servidor e pelo computador (`DeckValidation.validateForAi`), com bracket e preço como os outros decks prontos.

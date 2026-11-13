@@ -27,6 +27,7 @@ final class CommanderLegality {
     }
     static String oracleId(String name) { return ORACLE_IDS.get(key(name)); }
     static boolean permits(String name) { return oracleId(name) != null; }
-    private static String key(String value) { return value.strip().toLowerCase(Locale.ROOT); }
+    /** Nome em minúsculas, com as reticências do Forge ("All Good Things . . .") iguais às do Scryfall ("..."). */
+    private static String key(String value) { return value.strip().toLowerCase(Locale.ROOT).replace(" . . .", "..."); }
     private CommanderLegality() { }
 }

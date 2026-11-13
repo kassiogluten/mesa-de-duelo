@@ -17,6 +17,8 @@ import forge.game.zone.ZoneType;
 
 /** Capture immutable public events on the engine thread, before any snapshot coalescing. */
 final class VisibleEvents {
+    /** Houve um GameEventCardDestroyed e a carta ainda não saiu do campo. */
+    private boolean destroyPending;
     private static final int HISTORY_LIMIT = 512;
     private final ArrayDeque<JsonObject> history = new ArrayDeque<>();
     private final Map<Integer, JsonObject> spells = new HashMap<>();
@@ -148,6 +150,10 @@ final class VisibleEvents {
         if (event instanceof GameEventGameStarted || event instanceof GameEventSnapshotRestored) seedControllers();
         if (!(event instanceof GameEventPlayerPriority)) prevented();
         JsonObject e = null;
+        // O Forge avisa a destruição sem dizer a carta, logo antes de ela sair do campo: vale para a próxima troca de zona.
+        if (event instanceof GameEventCardDestroyed) { destroyPending = true; return; }
+        boolean destroyed = destroyPending && event instanceof GameEventCardChangeZone;
+        if (event instanceof GameEventCardChangeZone || event instanceof GameEventPlayerPriority || event instanceof GameEventSpellResolved) destroyPending = false;
         if (event instanceof GameEventLandPlayed x) {
             e = card("land-played", x.land()); actor(e, x.player().getId()); e.addProperty("to", "Battlefield");
         } else if (event instanceof GameEventSpellAbilityCast x) {
@@ -190,7 +196,7 @@ final class VisibleEvents {
                 else controllers.remove(x.card().getId());
                 e = card(to == ZoneType.Battlefield ? "entered" : "left", x.card());
                 e.addProperty("from", from == null ? null : from.name()); e.addProperty("to", to == null ? null : to.name());
-                if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && x.card().wasDestroyed()) e.addProperty("reason", "destroyed");
+                if (from == ZoneType.Battlefield && to != ZoneType.Battlefield && destroyed) e.addProperty("reason", "destroyed");
                 if (from == ZoneType.Battlefield && to == ZoneType.Exile && warpReturn()) e.addProperty("reason", "warped");
                 if (from == ZoneType.Battlefield && to == ZoneType.Hand) swapCost(e, x.card());
                 if (to == ZoneType.Battlefield) swapEntry(e, x.card().getId());

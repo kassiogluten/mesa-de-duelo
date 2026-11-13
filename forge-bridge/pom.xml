@@ -16,7 +16,7 @@
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Versão instalada no repositório Maven local por "mvn -pl forge-gui -am install" no clone do Forge. -->
-    <forge.version>2.0.16-SNAPSHOT</forge.version>
+    <forge.version>2.0.17-SNAPSHOT</forge.version>
     <!-- Onde está o clone do Forge (o "npm run forge:instalar" põe em ~/forge). Outro lugar: -Dforge.dir=/caminho. -->
     <forge.dir>${user.home}/forge</forge.dir>
     <!-- Vazio para o @{argLine} do surefire; um -DargLine na linha de comando continua somando. -->

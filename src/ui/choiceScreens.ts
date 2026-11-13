@@ -122,6 +122,7 @@ const MODES: Record<string, [string, string]> = {
   flashback: ['Flashback', 'Conjure do cemitério. Depois a carta é exilada.'],
   escape: ['Fuga', 'Conjure do cemitério exilando outras cartas de lá.'],
   harmonize: ['Harmonizar', 'Conjure do cemitério. Depois a carta é exilada.'],
+  beammeup: ['Beam me up', 'Conjure do cemitério devolvendo uma criatura sua para a mão. Depois a carta é exilada.'],
   evoke: ['Evocar', 'Custo menor, mas a criatura é sacrificada ao entrar.'],
   dash: ['Dash', 'Entra com ímpeto e volta para a mão no fim do turno.'],
   blitz: ['Blitz', 'Entra com ímpeto, compra uma carta ao morrer e é sacrificada no fim do turno.'],

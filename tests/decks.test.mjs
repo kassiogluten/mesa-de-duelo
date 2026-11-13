@@ -309,7 +309,7 @@ test('Commander local rules enforce 100 total, singleton exceptions, identity in
   for (const deck of decks.DEFAULT_DECKS.filter(d => d.format === 'commander')) {
     if (deck.commanders?.[0]?.name === 'Whtz, the Bibliophile') assert.ok(decks.totalDeckSize(deck) >= 100); else assert.equal(decks.totalDeckSize(deck), 100, deck.name);
   }
-  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 122);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => d.format === 'commander').length, 131);
 });
 
 test('Rulebreaker commanders free their cards from the identity and Whtz has no maximum size', () => {
@@ -367,10 +367,10 @@ test('Oathbreaker local rules: a planeswalker and a signature spell, 60 cards, s
   assert.ok(decks.hasCommandZone('oathbreaker') && decks.hasCommandZone('commander') && !decks.hasCommandZone('pauper'));
 });
 
-test('Precon lists only the 43 official precons as they came in the box, under Commander rules', () => {
+test('Precon lists only the 47 official precons as they came in the box, under Commander rules', () => {
   const precons = decks.DEFAULT_DECKS.filter(d => d.precon);
-  assert.equal(precons.length, 43);
-  assert.equal(new Set(precons.map(d => d.precon.series)).size, 10);
+  assert.equal(precons.length, 47);
+  assert.equal(new Set(precons.map(d => d.precon.series)).size, 11);
   for (const deck of precons) {
     assert.equal(deck.format, 'commander', deck.id);
     assert.equal(decks.totalDeckSize(deck), 100, deck.id);
@@ -380,7 +380,7 @@ test('Precon lists only the 43 official precons as they came in the box, under C
   // Os decks prontos adaptados de um precon deram lugar ao original, com o mesmo id; os outros de Commander não são precons.
   for (const id of ['commander-bello', 'commander-caesar', 'commander-chatterfang', 'commander-cloud', 'commander-frodo-sam', 'commander-mothman', 'commander-sauron', 'commander-terra', 'commander-bumbleflower', 'commander-yshtola'])
     assert.ok(precons.some(d => d.id === id), id);
-  assert.equal(decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, 'precon')).length, 43);
+  assert.equal(decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, 'precon')).length, 47);
   const urza = decks.DEFAULT_DECKS.find(d => d.id === 'commander-urza');
   assert.ok(!decks.isPrecon(urza) && !decks.readyDeckFits(urza, 'precon'));
   // A cópia do jogador, com as mesmas cartas, não vale no Precon e nunca guarda o precon nem o formato.

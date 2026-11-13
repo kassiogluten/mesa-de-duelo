@@ -1,8 +1,8 @@
 /*
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Compatibility override of Card-Forge AvailableActions, revision
- * 0b0f7ecc51119bf9f9a2d1e777fcd299721c9f53 (Forge Team).
- * Upstream: https://github.com/Card-Forge/forge/blob/0b0f7ecc51119bf9f9a2d1e777fcd299721c9f53/forge-ai/src/main/java/forge/ai/AvailableActions.java
+ * a2643644cd1a4bf06d06813d82e89533fbebd7ec (Forge Team).
+ * Upstream: https://github.com/Card-Forge/forge/blob/a2643644cd1a4bf06d06813d82e89533fbebd7ec/forge-ai/src/main/java/forge/ai/AvailableActions.java
  * Preserve the pinned scan/affordability behavior; evaluate dependent targets on copied chains.
  * The bridge classes/jar MUST precede Forge dependencies on the runtime classpath.
  */

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the exact engine revision supported by this bridge. Existing clones are never reset.
 set -euo pipefail
-FORGE_COMMIT=0b0f7ecc51119bf9f9a2d1e777fcd299721c9f53
+FORGE_COMMIT=a2643644cd1a4bf06d06813d82e89533fbebd7ec
 FORGE_DIR="${FORGE_DIR:-$HOME/forge}"
 M2="${M2_REPO:-$HOME/.m2/repository}"
 MVN="${MVN:-mvn}"
@@ -17,7 +17,7 @@ if [ "$(git -C "$FORGE_DIR" rev-parse HEAD)" != "$FORGE_COMMIT" ]; then
   exit 1
 fi
 cd "$FORGE_DIR"
-VERSION=2.0.16-SNAPSHOT
+VERSION=2.0.17-SNAPSHOT
 "$MVN" -B -ntp "-Dmaven.repo.local=$M2" -pl forge-gui -am install -DskipTests -Dcheckstyle.skip
 for pom in "$M2"/forge/*/"$VERSION"/*.pom; do
   [ -f "$pom" ] || continue

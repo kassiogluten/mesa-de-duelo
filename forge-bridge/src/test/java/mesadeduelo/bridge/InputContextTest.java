@@ -101,6 +101,13 @@ public class InputContextTest {
             assertNull(InputContext.selection(new InputSelectEntitiesFromList<>(human, 1, 1, game.getPlayers())));
         });
     }
+    /** A mágica que a pilha está resolvendo (o Forge 2.0.17 guarda só ela, em curResolving, sem o setResolving antigo). */
+    private static void resolving(Game game, forge.game.spellability.SpellAbility sa) {
+        try {
+            var field = forge.game.zone.MagicStack.class.getDeclaredField("curResolving");
+            field.setAccessible(true); field.set(game.getStack(), sa);
+        } catch (ReflectiveOperationException e) { throw new IllegalStateException(e); }
+    }
     @Test public void choicesDuringResolutionCarryTheCardThatIsResolving() {
         Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
         Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", me, ZoneType.Battlefield);
@@ -109,12 +116,12 @@ public class InputContextTest {
             var human = human(game, me);
             var choose = new InputSelectCardsFromList(human, 1, 1, new CardCollection(java.util.List.of(bears)));
             assertNull("fora da resolução não há de onde vir o pedido", InputContext.resolvingSource(choose, game));
-            game.getStack().setResolving(true);
+            resolving(game, alarm);
             try {
                 assertEquals("Raise the Alarm", InputContext.resolvingSource(choose, game).getName());
                 assertEquals("Raise the Alarm", InputContext.resolvingSource(new InputSelectEntitiesFromList<>(human, 1, 1, game.getPlayers()), game).getName());
                 assertNull(InputContext.resolvingSource(null, game));
-            } finally { game.getStack().setResolving(false); }
+            } finally { resolving(game, null); }
         });
     }
     @Test public void everyQuestionKnowsWhichCardIsAskingAndForgetsItAfterwards() {

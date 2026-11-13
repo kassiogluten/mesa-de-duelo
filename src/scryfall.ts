@@ -3,7 +3,7 @@ import { PREFIXES } from './storage';
 import * as cardStore from './cardStore';
 import { scryfallFormat, type DeckFormat } from './decks';
 import { request } from './scryfallApi';
-import { faceView, images, isFaceAlias, legalityFresh, lookupName, printKey, slim, slimPt, validCard, withDefaultArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
+import { faceView, images, isFaceAlias, legalityFresh, forgeSpelling, lookupName, printKey, slim, slimPt, validCard, withDefaultArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
 import { preloadImages } from './scryfallImages';
 export { legalityFresh, type Printing, type ScryCard } from './scryfallCards';
 export { preloadImages } from './scryfallImages';
@@ -105,6 +105,9 @@ function cachedCard(name: string): ScryCard | null {
 export function cachePut(card: ScryCard) {
   memory.set(card.name.toLowerCase(), card);
   void cardStore.write(card.name.toLowerCase(), card);
+  // A mesma carta com o nome que vem do servidor (as reticências do Forge).
+  const forge = forgeSpelling(card.name);
+  if (forge) memory.set(forge.toLowerCase(), card);
   card.faceNames?.forEach((fn, i) => {
     if (!fn || fn.toLowerCase() === card.name.toLowerCase()) return;
     const existing = memory.get(fn.toLowerCase());

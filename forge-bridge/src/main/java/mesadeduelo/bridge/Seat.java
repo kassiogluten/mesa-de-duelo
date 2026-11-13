@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 
 import forge.deck.Deck;
 import forge.game.card.CardView;
+import forge.gamemodes.match.Selection;
 import forge.game.phase.PhaseType;
 import forge.game.player.PlayerView;
 import forge.game.player.RegisteredPlayer;
@@ -307,26 +308,19 @@ final class Seat {
                     if (okEnabled && controller() instanceof PlayerControllerHuman pch && CrewSelection.shortOfPower(pch.getInputQueue().getInput())) okEnabled = false;
                     passResponseIfAsked();
                 }
-                case setSelectables -> {
-                    Set<Integer> ids = new LinkedHashSet<>();
-                    if (a[0] != null) for (Object o : (Iterable<?>) a[0]) ids.add(((CardView) o).getId());
-                    selectable = ids;
-                }
-                case setSelectableTargets -> {
-                    Set<Integer> stackIds = new LinkedHashSet<>(), playerIds = new LinkedHashSet<>();
-                    if (a[0] != null) for (Object target : (Iterable<?>) a[0]) {
+                // O que a escolha em andamento marca: cartas, jogadores e itens da pilha que ela aceita e as cartas que valem ação.
+                case setSelection -> {
+                    Selection sel = a[0] instanceof Selection x ? x : Selection.NONE;
+                    Set<Integer> ids = new LinkedHashSet<>(), stackIds = new LinkedHashSet<>(), playerIds = new LinkedHashSet<>(), weak = new LinkedHashSet<>();
+                    for (CardView c : sel.cards()) ids.add(c.getId());
+                    for (Object target : sel.targets()) {
                         if (target instanceof StackItemView item) stackIds.add(item.getId());
                         else if (target instanceof PlayerView player) playerIds.add(player.getId());
+                        else if (target instanceof CardView card) ids.add(card.getId());
                     }
-                    selectableStacks = stackIds; selectablePlayers = playerIds;
+                    for (CardView c : sel.actionable()) weak.add(c.getId());
+                    selectable = ids; selectableStacks = stackIds; selectablePlayers = playerIds; actionable = weak;
                 }
-                case clearSelectables -> { selectable = Set.of(); selectableStacks = Set.of(); selectablePlayers = Set.of(); }
-                case setWeaklySelectable -> {
-                    Set<Integer> ids = new LinkedHashSet<>();
-                    if (a[0] != null) for (Object o : (Iterable<?>) a[0]) ids.add(((CardView) o).getId());
-                    actionable = ids;
-                }
-                case clearWeaklySelectable -> actionable = Set.of();
                 // Chega na thread do jogo, com a declaração recusada ainda no combate.
                 case message -> Seat.this.send(a.length > 1 && AiCardsNotice.TITLE.equals(a[1]) ? String.valueOf(a[0]) : AttackExplain.FORGE_MESSAGE.equals(a[0]) ? AttackExplain.toast(hosted.getGame().getCombat()) : Session.toast("toast", CoinFlipText.notice(session.questions.voteNotice(hosted.getGame(), String.valueOf(a[0])), a.length > 1 && a[1] != null ? String.valueOf(a[1]) : null)));
                 case showErrorDialog -> Seat.this.send(Session.toast("toast", String.valueOf(a[0])));

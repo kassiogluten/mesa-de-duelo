@@ -1,5 +1,95 @@
 [
   {
+    "nome": "Beam me up: conjurar do cemitério devolvendo uma criatura",
+    "versao": "0.163.0",
+    "item": "Star Trek na mesa",
+    "conferir": "O Jogador 1 tem Energize no cemitério, Grizzly Bears e quatro Islands; o Jogador 2 tem Hill Giant. A Energize aparece marcada no cemitério. Toque nela e escolha Beam me up: o custo é {3}{U} mais devolver uma criatura sua para a mão; devolva o Grizzly Bears e mire o Hill Giant. O Hill Giant volta para a mão do Jogador 2, e a Energize vai para o exílio. Na pilha, ela aparece como \"Conjurada por Beam me up\".",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": ["Energize"], "exile": [],
+          "battlefield": [{ "name": "Grizzly Bears" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Hill Giant" }, { "name": "Mountain" }] }
+      ]
+    }
+  },
+  {
+    "nome": "The Borg Queen: assimilar a primeira criatura do grimório",
+    "versao": "0.163.0",
+    "item": "Star Trek na mesa",
+    "conferir": "O Jogador 1 tem The Borg Queen; o grimório do Jogador 2 começa com duas Mountains e um Hill Giant. Ataque com a Borg Queen e escolha o Jogador 2 como alvo: ele exila as Mountains até achar o Hill Giant, que entra no campo do Jogador 1 com um marcador +1/+1, como criatura artefato Borg (5/4 com o marcador, 7/6 com o bônus da Rainha para criaturas artefato). As Mountains vão para o fundo do grimório do Jogador 2.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "The Borg Queen" }, { "name": "Plains" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Mountain", "Mountain", "Hill Giant", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Forest" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Q, Stacking the Deck: a carta exilada vira cópias",
+    "versao": "0.163.0",
+    "item": "Cinco decks prontos de Star Trek",
+    "conferir": "O Jogador 1 tem Q, Stacking the Deck na mão, quatro Mountains e um Shock na mão; o grimório tem terrenos e uma Lightning Bolt. Conjure o Q: ele embaralha o grimório e exila cartas até achar uma que não seja terreno (a Lightning Bolt). Na sua vez, a Lightning Bolt exilada ganha \"Exile um card da sua mão: crie uma cópia deste card e você pode conjurá-la\": abra o exílio, use a habilidade exilando o Shock e conjure a cópia da Bolt.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Q, Stacking the Deck", "Shock"], "library": ["Mountain", "Mountain", "Lightning Bolt", "Mountain", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Jean-Luc Picard, Luminary: Seek out na segunda compra do turno",
+    "versao": "0.163.0",
+    "item": "Cinco decks prontos de Star Trek",
+    "conferir": "O Jogador 1 tem Jean-Luc Picard, Luminary, Grizzly Bears e três Islands, com Divination na mão. Conjure a Divination: ela compra duas cartas, e na segunda compra do turno o Seek out pede um alvo; escolha o Grizzly Bears, que ganha um marcador +1/+1.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Divination"], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Jean-Luc Picard, Luminary" }, { "name": "Grizzly Bears" }, { "name": "Island" }, { "name": "Island" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Commander Spock: Strange new worlds conjura o topo do grimório",
+    "versao": "0.163.0",
+    "item": "Cinco decks prontos de Star Trek",
+    "conferir": "O Jogador 1 tem Commander Spock com Forest, Plains e Island (três terrenos de nomes diferentes); o topo do grimório é um Grizzly Bears. Ataque com o Spock: ele revela o Grizzly Bears (valor de mana 2, até 3) e oferece conjurá-lo sem pagar. Se você conjurar, ele entra no campo; se recusar, o Grizzly Bears continua no topo e o Jogador 1 o compra.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Grizzly Bears", "Forest", "Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Commander Spock" }, { "name": "Forest" }, { "name": "Plains" }, { "name": "Island" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
+    "nome": "Locutus of Borg: dano de combate cria um Borg",
+    "versao": "0.163.0",
+    "item": "Cinco decks prontos de Star Trek",
+    "conferir": "O Jogador 1 tem Locutus of Borg, uma criatura artefato com vínculo com a vida. Ataque com ele: ao causar 3 de dano ao Jogador 2, o Jogador 1 ganha 3 de vida e cria uma ficha de criatura artefato Borg 1/1 incolor.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Locutus of Borg" }, { "name": "Plains" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Island", "Island", "Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }] }
+      ]
+    }
+  },
+  {
     "nome": "Valko Indorian: Phyrexians com ameaça e vínculo com a vida",
     "versao": "0.162.0",
     "item": "Comandantes com Rulebreaker",
