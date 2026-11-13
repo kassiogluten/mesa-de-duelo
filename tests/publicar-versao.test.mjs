@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 // O npm run publicar-versao num projeto de mentira: as pastas de novidades-pendentes/ viram uma versão nova.
 const SCRIPT = fileURLToPath(new URL('../scripts/publicar-versao.mjs', import.meta.url));
-const REGISTER = fileURLToPath(new URL('./register.mjs', import.meta.url));
+// Como URL (file://): no Windows, o --import de um caminho com letra de unidade falha no Node 22.
+const REGISTER = new URL('./register.mjs', import.meta.url).href;
 const scenario = { active: 0, phase: 'main1', players: [{ hand: ['Shock'] }, {}] };
 
 function project(pending) {
