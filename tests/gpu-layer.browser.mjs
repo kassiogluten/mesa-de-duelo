@@ -27,7 +27,12 @@ try {
     const canvas = document.querySelector('canvas.gpu-layer');
     out.canvas = !!canvas && canvas.getAttribute('aria-hidden') === 'true' && getComputedStyle(canvas).pointerEvents === 'none';
     out.inArena = !!canvas?.closest('.arena');
+    // Mesa viva: no fundo da mesa, sem clique, a uns 30 quadros por segundo, enquanto a camada dos efeitos fica parada.
+    const backdrop = document.querySelector('canvas.table-ambience');
+    out.ambienceInMat = !!backdrop?.parentElement?.classList.contains('mat') && getComputedStyle(backdrop).pointerEvents === 'none';
+    const ambience0 = gpu.ambienceStats()?.frames ?? 0;
     const idle0 = gpu.stats().frames; await wait(1000);
+    out.ambienceFrames = (gpu.ambienceStats()?.frames ?? 0) - ambience0;
     out.idleFrames = gpu.stats().frames - idle0;
     out.cssRipplesWithGpu = await landRipples();
     const afterLand = gpu.stats();
@@ -48,6 +53,8 @@ try {
   assert.ok(r.canvas, 'canvas missing, clickable or visible to screen readers');
   assert.ok(r.inArena, 'canvas outside the table');
   assert.equal(r.idleFrames, 0, 'the idle table drew GPU frames');
+  assert.ok(r.ambienceInMat, 'the living table is missing from the table background, or takes clicks');
+  assert.ok(r.ambienceFrames >= 12 && r.ambienceFrames <= 40, `the living table drew ${r.ambienceFrames} frames in 1 s (about 30 expected)`);
   assert.equal(r.cssRipplesWithGpu, 0, 'the landing ripple was drawn in CSS with the GPU layer ready');
   assert.ok(r.drewLand, 'the GPU layer drew nothing for the landing');
   assert.equal(r.liveAfter, 0, 'effects still alive after they should have ended');
@@ -56,6 +63,46 @@ try {
   assert.equal(r.readyAfterLoss, false);
   assert.ok(r.cssRipplesAfterLoss >= 1, 'no CSS fallback after the context was lost');
   assert.deepEqual(r.errors, []);
+
+  // O grimório na GPU (item 131): embaralhar, vidência e moer não montam as peças de CSS, e a camada desenha; a seta de
+  // alvo nova nasce na camada; a lendária escurece a mesa em volta e aproxima a câmera.
+  run('open', lab('&gpu=1'));
+  const piles = evaluate(`
+    const wait = ms => new Promise(res => setTimeout(res, ms));
+    for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
+    // A primeira leva de eventos da página é alcançada em silêncio.
+    window.postMessage({ cmd: 'hand', kind: 'land' }, '*'); await wait(1500);
+    let ghosts = 0;
+    const seen = new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.classList?.contains('shuffle-ghost') || n.classList?.contains('scry-ghost') || n.classList?.contains('mill-ghost')) ghosts++; });
+    seen.observe(document.body, { childList: true, subtree: true });
+    const drew = async cmd => { const before = gpu.stats().frames; window.postMessage(cmd, '*'); await wait(1400); return gpu.stats().frames > before; };
+    const out = {
+      shuffle: await drew({ cmd: 'extra', kind: 'shuffle', side: 'me' }),
+      scry: await drew({ cmd: 'extra', kind: 'scry', side: 'me' }),
+      mill: await drew({ cmd: 'mill', side: 'me', n: 3 }),
+    };
+    seen.disconnect();
+    out.ghosts = ghosts;
+    // A seta do Bolt: nasce na camada no instante em que aparece.
+    window.postMessage({ cmd: 'hand', kind: 'bolt' }, '*');
+    let arrowLive = 0;
+    for (let i = 0; i < 40 && !document.querySelector('#fTargets path.arrow'); i++) await wait(25);
+    out.arrow = !!document.querySelector('#fTargets path.arrow');
+    await wait(60); arrowLive = gpu.stats().live;
+    out.arrowLive = arrowLive;
+    await wait(2500);
+    // A mágica de valor 6: a câmera chega um pouco mais perto (a lendária é só um toque, sem câmera).
+    window.postMessage({ cmd: 'moment', kind: 'big' }, '*');
+    let pushed = false;
+    for (let i = 0; i < 40 && !pushed; i++) { await wait(100); pushed = document.querySelector('.arena').getAnimations().some(a => a.effect.getKeyframes().some(k => Number(k.scale) > 1)); }
+    out.pushed = pushed;
+    return out;
+  `);
+  assert.ok(piles.shuffle && piles.scry && piles.mill, `the library effects did not draw on the GPU: ${JSON.stringify(piles)}`);
+  assert.equal(piles.ghosts, 0, 'shuffle, scry or mill still built CSS pieces with the GPU layer ready');
+  assert.ok(piles.arrow, 'the Bolt target arrow did not appear');
+  assert.ok(piles.arrowLive >= 1, 'the new target arrow was not born on the GPU');
+  assert.ok(piles.pushed, 'the big spell did not push the camera in');
 
   // Voo da carta na GPU (fase 3): com a textura da mão carregada, a carta conjurada voa no canvas, e a peça em CSS
   // faz o mesmo caminho invisível, só com a legenda à vista.
@@ -126,9 +173,10 @@ try {
   run('open', lab('&gpu=0'));
   const off = evaluate(`${LAND}
     await wait(2500);
-    return { canvas: !!document.querySelector('canvas.gpu-layer'), ripples: await landRipples() };
+    return { canvas: !!document.querySelector('canvas.gpu-layer'), ambience: !!document.querySelector('canvas.table-ambience'), ripples: await landRipples() };
   `);
   assert.equal(off.canvas, false, '?gpu=0 created the GPU layer');
+  assert.equal(off.ambience, false, '?gpu=0 created the living table');
   assert.ok(off.ripples >= 1, '?gpu=0 lost the CSS effects');
 
   // A opção "Efeitos": leves desfaz a camada e grava a escolha; completos traz de volta.
@@ -143,14 +191,14 @@ try {
     select.value = 'light'; select.dispatchEvent(new Event('change', { bubbles: true }));
     await wait(100);
     out.saved = localStorage.getItem('mesa:effects');
-    out.canvasLight = !!document.querySelector('canvas.gpu-layer');
+    out.canvasLight = !!document.querySelector('canvas.gpu-layer, canvas.table-ambience');
     out.summary = document.querySelector('#fLookSummary').textContent;
     select.value = 'full'; select.dispatchEvent(new Event('change', { bubbles: true }));
     for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
     out.backToFull = gpu.ready() && !!document.querySelector('canvas.gpu-layer');
     // Sair da mesa (a tela escondida) desfaz o canvas.
     document.querySelector('#table').hidden = true; await wait(50);
-    out.canvasHidden = !!document.querySelector('canvas.gpu-layer');
+    out.canvasHidden = !!document.querySelector('canvas.gpu-layer, canvas.table-ambience');
     localStorage.removeItem('mesa:effects');
     return out;
   `);

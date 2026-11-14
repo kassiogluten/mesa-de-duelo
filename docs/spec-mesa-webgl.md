@@ -26,13 +26,14 @@ Os valores abaixo foram fixados com a medição da fase 0 (13/11/2026, [Mediçõ
 | # | Critério | Como conferir |
 | --- | --- | --- |
 | 1 | Com "leves", a mesa fica idêntica à de hoje (pixel a pixel, nos mesmos testes) | `npm run visual -- snap` antes e `compare` depois, com `?gpu=0`; `npm test` sem mudança nos testes de efeitos |
-| 2 | Mesa parada não gasta GPU: nenhum quadro desenhado no canvas sem efeito vivo | Contador de quadros da camada GPU exposto para teste (`gpuLayer.stats()`) |
+| 2 | Mesa parada não gasta GPU: nenhum quadro desenhado no canvas dos efeitos sem efeito vivo (a mesa viva tem canvas e critério próprios, o 9) | Contador de quadros da camada GPU exposto para teste (`gpuLayer.stats()`) |
 | 3 | Durante a cena de dano, a camada GPU não piora a fluidez em relação ao CSS: mediana (de 3 medições) do p95 dos quadros longos (LoAF) igual ou menor que a do CSS medido em seguida, com a CPU 1×, 4× e 6× mais lenta (CSS: 0, 74 e 181 ms) | `scripts/medir-efeitos.mjs`, base (fase 0) contra fase 2 |
 | 4 | Nenhuma tarefa longa (> 50 ms) causada por carregar ou iniciar o PixiJS no meio de uma jogada | Mesma medição; o pacote é carregado com a mesa aberta e ociosa (`requestIdleCallback`), e um efeito pedido antes de ele estar pronto sai em CSS |
 | 5 | Tela inicial sem crescer nada; pacote da GPU com até 150 KB gzip (medido: ~131 KB na fase 1 e 145 KB na fase 3, carregado só na partida) | Tamanho dos chunks no `npm run build` |
 | 6 | Nenhum efeito segura a vez do jogador: a duração de cada passo continua a de `presentationDuration()` | Testes da fila de apresentação continuam passando; o efeito em GPU termina dentro do tempo do passo |
 | 7 | Sem WebGL2, contexto perdido ou falha ao carregar o pacote, a mesa continua com os efeitos em CSS, sem erro na tela | Testes da decisão GPU/CSS; `webglcontextlost` forçado com `WEBGL_lose_context` no teste de navegador |
 | 8 | Conferido num celular de entrada de verdade (Chrome com depuração remota) antes de publicar a fase 2 | Registrar aparelho e números nesta spec |
+| 9 | Mesa viva: no máximo 30 quadros por segundo, parada com a aba escondida, com "leves" e com reduzir movimento; com ela ligada, a mesa parada não passa a ter quadros longos e a cena de dano não piora além da faixa das três medições | `gpu-layer.browser.mjs` (quadros por segundo, some com leves e ao sair); `scripts/medir-efeitos.mjs` com `gpu=1` antes e depois (pendente) |
 
 ## Por que não trocar de linguagem
 
@@ -208,7 +209,18 @@ Pedido depois da fase 3: levantar o que ainda animava em CSS e levar à camada o
 - [x] Botões novos na seção Efeitos na GPU do laboratório e testes no `gpu-layer.browser.mjs` (compra de costas, mana e moeda na GPU).
 - [x] Voar e vínculo com a vida (escolhidos numa página de comparação, 14/11/2026): a voadora flutua (o `.slot` inteiro sobe e desce, a sombra em `::before` faz o movimento contrário e fica na mesa) com três riscos de vento por baixo (`.fly-wind`, no `.slot`, para não girarem com a carta virada); o vínculo troca o halo por um fio verde e quatro grãos subindo pelas bordas (`<i>` dentro do `.fx-glow.lifelink`). As animações contínuas seguem um relógio só (`syncLoops` em `motion.ts`, `startTime = 0` antes de medir): sem isso, a voadora recomeçaria a flutuar a cada desenho, dando um pulo, e o passo de cada carta acharia que ela mudou de lugar.
 - [x] Mana até a reserva (14/11/2026): virando um terreno sem pagar nada, com a reserva daquele jogador crescendo entre um desenho e outro (`poolTotals`/`poolsThatGrew` em `tableCards.ts`, opção `pooled` do `motion.play`), o mesmo orbe da mana voa até o retrato dele, e a reserva pulsa na chegada. Botão "Gerar mana (reserva)" no laboratório.
-- [ ] Ficaram em CSS: moer, embaralhar, vidência, o shuriken do ninja, o sorteio de quem começa (`startingRoll`) e o fluxo das setas de alvo (SVG).
+- [x] Ficaram em CSS: moer, embaralhar, vidência, o shuriken do ninja, o sorteio de quem começa (`startingRoll`) e o fluxo das setas de alvo (SVG). Levados à camada em 14/11/2026 (item 131): embaralhar e vidência em `gpuPiles.ts` (verso pintado com `backTexture`), moer com o voo de costas que vira no ar (`flight` com `flipTo`, quando a face carregou) e rastro roxo, o shuriken e o nascimento das setas em `gpuMoments.ts`, e o dado do sorteio com o `die` de `gpuStage.ts` rolando no lugar (`travel: 0`). A seta parada continua em SVG (decidido nesse dia), para a camada não desenhar sem parar.
+
+### Mesa viva (feita em 14/11/2026)
+
+Pedido em 14/11/2026: mais ambientação e imersão. Decidido nesse dia: animação contínua (e não só nos momentos), junto com a opção "Efeitos" (sem chave própria), e o critério 2 passa a valer só para a camada dos efeitos; a mesa viva ganhou o critério 9.
+
+- [x] `src/ui/gpu/tableAmbience.ts`: WebGL2 puro (sem PixiJS), um triângulo que cobre a tela e um shader só, num canvas dentro do `.mat` (por baixo dos campos), em meia resolução (um terço no celular), a 30 quadros por segundo, parado com a aba escondida. Contexto próprio: se cair, só ela some. Carrega junto com a camada dos efeitos (`gpuPort.ts`) e some com ela.
+- [x] O que mostra (`src/ui/ambienceScene.ts`, a cada desenho, no quadro da jogada mostrada): a luz no campo de quem joga o turno, na cor clara da capa dele (`--sleeve-light`, sem capa o `--gold` do tema), deslizando em cerca de um segundo; névoa e pouca poeira subindo (deixada mais sutil a pedido, no mesmo dia); no combate, a luz fecha e esquenta; com a sua vida em um quarto da inicial ou menos, as bordas escurecem e pulsam em vermelho.
+- [x] Botões Passar o turno, Vida baixa e Vida cheia no laboratório de efeitos; `gpu.ambienceStats()` e checagens no `gpu-layer.browser.mjs`.
+- [x] Toques do jogo (14/11/2026, item 131): `pulse` com clarão na cor da mágica que resolve (reduzido no mesmo dia a 6% só no meio da mesa, subindo suave: a 30% na mesa inteira, parecia um relâmpago branco quando a mágica chegava ao campo), tremor no golpe pesado e escurecer nos momentos grandes (`motionImpact.ts`), e a poeira com relógio próprio (`drift`), que acelera no combate sem saltar. A cor da luz vem da arte do tapete de quem joga (`vividAverage` em `ambienceScene.ts`, a média pesada pela saturação), e a da capa fica de reserva.
+- [x] Momentos grandes na camada dos efeitos (`gpuMoments.ts`): `spotlight` (a mesa escurece em volta do foco, um sprite com o furo e um retângulo com `cut()` cobrindo o resto) e `legend` (raios, anel e brasas); a câmera aproxima 1,2% com a animação de `scale` na `.arena`, com a origem no foco. Reduzidos no mesmo dia (escurecer 0,22 em vez de 0,5, câmera 1,2% em vez de 3%), e a lendária ficou só com o `legend` fraco, sem escurecer nem câmera.
+- [ ] Medir o custo (critério 9) com `scripts/medir-efeitos.mjs` e no celular de entrada, junto com o critério 8.
 
 ### Fase 4 (decidir com números): o campo inteiro em WebGL
 

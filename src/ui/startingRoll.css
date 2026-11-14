@@ -21,6 +21,8 @@
 .starting-roll .sr-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/1.3 var(--body); color: var(--azul-bcc5d4, #bcc5d4); }
 .starting-roll .sr-seat.you .sr-name { color: #f4f1e9; }
 .starting-roll .sr-seat.rolling .sr-die { animation: sr-roll 330ms linear infinite; }
+/* Rolando na camada GPU: o dado de CSS some até assentar no resultado. */
+.starting-roll .sr-seat.gpu-rolling .sr-die { visibility: hidden; }
 .starting-roll .sr-seat.top .sr-die { transform: translateY(-3px); }
 .starting-roll .sr-seat.out { opacity: .38; filter: grayscale(.6); }
 .starting-roll .sr-seat.winner .sr-die { transform: translateY(-4px) scale(1.12); box-shadow: 0 0 0 3px var(--gold, #f2b54c), 0 0 26px color-mix(in srgb, var(--gold, #f2b54c) 70%, transparent), 0 8px 20px #0009; }

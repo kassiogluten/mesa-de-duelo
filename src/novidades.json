@@ -1,4 +1,23 @@
 {
+  "0.174.0": {
+    "Mesa viva": [
+      { "img": "0.174.0/luz-de-quem-joga.webp", "legenda": "No turno do oponente, a luz vai para o campo dele." },
+      { "img": "0.174.0/vida-baixa.webp", "legenda": "Com 3 de vida, as bordas da mesa escurecem e pulsam em vermelho." }
+    ],
+    "Momentos grandes": [
+      { "img": "0.174.0/lendaria.webp", "legenda": "Uma criatura lendária chegando: um brilho dourado leve e raios fracos no lugar dela." }
+    ],
+    "Mostrando a jogada": [
+      { "img": "0.174.0/mostrando-a-jogada.webp", "legenda": "O botão enquanto a mesa mostra o Raio do oponente, antes de liberar a sua resposta." }
+    ],
+    "Grimório, ninja e sorteio com mais vida": [
+      { "img": "0.174.0/videncia.webp", "legenda": "Vidência: as cartas sobem em leque do grimório, com o verso na cor da capa." }
+    ],
+    "Setas novas": [
+      { "img": "0.174.0/seta-alvo.webp", "legenda": "A seta do Raio até o oponente: o feixe com o pulso de luz e a mira perto do alvo." },
+      { "img": "0.174.0/setas-combate.webp", "legenda": "Combate no Commander: o escudo no bloqueio, a espada no ataque que vai até a Carla e o losango no ataque já bloqueado." }
+    ]
+  },
   "0.173.0": {
     "Torneios presenciais no sistema suíço": [
       { "img": "0.173.0/rodada.webp", "legenda": "As mesas da rodada 2, com o bye para quem tem menos pontos e os placares já lançados recolhidos em Corrigir." }

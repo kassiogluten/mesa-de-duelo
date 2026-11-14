@@ -10,7 +10,7 @@ import { stateWithFrame } from './presentationTimeline';
 import type { ModalFocus } from './tableModal';
 import type { TableCtx } from './tableContext';
 
-export interface StackDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' | 'state' | 'match' | 'timeline' | 'frame' | 'face' | 'playerName' | 'targetsDescription' | 'syncModal'> {
+export interface StackDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' | 'state' | 'match' | 'timeline' | 'frame' | 'face' | 'playerName' | 'targetsDescription' | 'syncModal' | 'motion'> {
   modal: ModalFocus;
   /** O histórico da gaveta, redesenhado junto com a pilha. */
   renderLog(): void;
@@ -69,7 +69,8 @@ export function createTableStack(d: StackDeps) {
   /** Auras que encantam um jogador em foco: a que está sob o mouse ou com o foco, ou as presas ao jogador apontado. */
   let auraFocus: number[] = [];
   /** Setas de alvo (tableArrows.ts): da pilha que a mesa mostra agora, com o item em foco em destaque, e as das auras em foco. */
-  const drawTargetArrows = (s: FState) => { const now = d.state(); drawTargets(root, s, now ? stackPresentation(now, d.timeline.current?.event).stack : s.stack, stackFocus, auraFocus); };
+  // As setas que acabaram de aparecer nascem num traço de luz na camada GPU.
+  const drawTargetArrows = (s: FState) => { const now = d.state(); const born = drawTargets(root, s, now ? stackPresentation(now, d.timeline.current?.event).stack : s.stack, stackFocus, auraFocus); if (born.length) d.motion.arrowsBorn(born); };
   function aurasFrom(el: HTMLElement | null): number[] {
     const s = d.state();
     if (!el || !s) return [];

@@ -32,6 +32,8 @@ export interface ActionView {
   attackAll: boolean;
   attackSelecting: number;
   attackBusy: boolean;
+  /** A sua decisão espera a mesa mostrar as jogadas da fila: o que o botão diz enquanto isso ("Mostrando a jogada de Bruno…"). */
+  showing?: string;
 }
 
 /** Sem nenhum bloqueador seu declarado, o botão diz que você não vai bloquear (como o "Não atacar" do ataque). */
@@ -95,7 +97,7 @@ export function buttons(v: ActionView, s: FState) {
   const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
     btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && v.attackAll ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${optionHTML(btn.label)}</button>` : '';
   const mine = s.activePlayer === s.you;
-  if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting" disabled>${s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (v.passingTurn ? 'Passando até o fim do turno…' : '') || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
+  if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting${v.showing ? ' showing' : ''}" disabled>${v.showing ? esc(v.showing) : s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (v.passingTurn ? 'Passando até o fim do turno…' : '') || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
   // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
   const extraCombat = mine && (s.extraCombats ?? 0) > 0;
   const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying && !extraCombat;

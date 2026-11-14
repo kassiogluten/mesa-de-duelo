@@ -61,13 +61,14 @@ export function createNinjaMotion(kit: MotionKit) {
     }
     // E estoura de novo quando o shuriken chega, com o ninja surgindo dela.
     kit.gpu.play('puff', { at: to, size: size * 1.2, delay: duration * .4 });
-    const star = effect('ninja-shuriken', { ...from, w: 34, h: 34 }, SHURIKEN);
-    animate(star, [
+    // Na camada GPU, o shuriken gira com um rastro prateado e estoura ao chegar; sem ela, a peça em SVG.
+    const star = kit.gpu.play('shuriken', { from, to, duration: duration * .45 }) ? null : effect('ninja-shuriken', { ...from, w: 34, h: 34 }, SHURIKEN);
+    if (star) animate(star, [
       { translate: '0 0', rotate: '0turn', opacity: 1 },
       { translate: `${to.cx - from.cx}px ${to.cy - from.cy}px`, rotate: '2turn', opacity: 1, offset: .9 },
       { translate: `${to.cx - from.cx}px ${to.cy - from.cy}px`, rotate: '2.2turn', opacity: 0 },
     ], duration * .45, 'cubic-bezier(.4, 0, .6, 1)');
-    star.style.opacity = '0';
+    if (star) star.style.opacity = '0';
     animate(cloud, [{ opacity: .55, scale: '1' }, { opacity: 1, scale: '1.25', offset: .3 }, { opacity: 0, scale: '1.6' }], duration * .6, 'linear', duration * .4);
     cloud.style.opacity = '0';
     // Já no giro da carta no campo (virada, atacando): só a face gira, para a legenda continuar na horizontal; a caixa da
@@ -76,7 +77,7 @@ export function createNinjaMotion(kit: MotionKit) {
     if (face && Math.abs(Math.abs(rot) - 90) < 1) Object.assign(face.style, { position: 'absolute', left: '50%', top: '50%',
       width: piece.style.height, height: piece.style.width, translate: '-50% -50%', rotate: `${rot}deg` });
     animate(piece, [{ opacity: 0, scale: '.7' }, { opacity: 0, scale: '.7', offset: .45 }, { opacity: 1, scale: '1.04', offset: .8 }, { opacity: 1, scale: '1' }], duration, 'linear');
-    later(() => { remove(star); remove(cloud); remove(hide); }, duration);
+    later(() => { if (star) remove(star); remove(cloud); remove(hide); }, duration);
     return true;
   }
   return { vanish, appear };

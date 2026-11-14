@@ -1,11 +1,12 @@
-// A porta da mesa para a camada GPU: carrega o PixiJS com a mesa ociosa, pede cada efeito e, sem a camada, deixa quem pediu usar o CSS.
+// A porta da mesa para a camada GPU: carrega o PixiJS e a mesa viva com a mesa ociosa, pede cada efeito e, sem a camada, deixa quem pediu usar o CSS.
 import type { GpuLayer } from './gpuLayer';
+import type { Ambience, AmbiencePulse, AmbienceScene } from './tableAmbience';
 import type { GpuEffectName, GpuEffectParams } from './gpuEffects';
 import { autoLight, createFrameWatch, effectsLevel, forcedGpu, gpuDecision, hasWebGL2 } from './gpuSupport';
 
 export const AUTO_LIGHT_NOTICE = 'Os efeitos ficaram leves neste aparelho. Dá para mudar em Opções.';
 
-type Runtime = { layer: GpuLayer; effects: typeof import('./gpuEffects') };
+type Runtime = { layer: GpuLayer; effects: typeof import('./gpuEffects'); ambience: Ambience | null };
 
 // O contexto caiu nesta página: os efeitos ficam em CSS até recarregar (não tenta de novo nesta partida).
 let contextLost = false;
@@ -24,21 +25,27 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   let idle: number | null = null;
   // Cada pedido de carga ganha um número: sair da mesa no meio da carga desfaz o que chegar atrasado.
   let generation = 0;
+  // A cena mais recente da mesa viva: quem chega depois (a camada carregou agora) já começa nela.
+  let scene: AmbienceScene | null = null;
   const watch = createFrameWatch();
   const coarse = () => globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
   const decision = () => gpuDecision({ level: effectsLevel(), forced: forcedGpu(), reduced: o.reduced(), webgl2: hasWebGL2(), lost: contextLost });
 
   async function load(gen: number) {
-    const [layerModule, effects] = await Promise.all([import('./gpuLayer'), import('./gpuEffects')]);
+    const [layerModule, effects, ambienceModule] = await Promise.all([import('./gpuLayer'), import('./gpuEffects'), import('./tableAmbience')]);
     if (gen !== generation) return;
     const layer = await layerModule.createGpuLayer(o.host(), {
       coarse: coarse(),
-      onLost() { contextLost = true; runtime = null; },
+      onLost() { contextLost = true; runtime?.ambience?.destroy(); runtime = null; },
       onEffectDone(average, frames) { if (watch.effect(average, frames) && forcedGpu() === undefined && autoLight()) switchToLightNow(); },
     });
     if (gen !== generation) { layer.destroy(); return; }
     effects.prepare(layer);
-    runtime = { layer, effects };
+    // A mesa viva tem o próprio contexto: se ele cair, só ela some, e os efeitos continuam.
+    const backdrop = o.host().querySelector<HTMLElement>(':scope > .mat');
+    const ambience = backdrop ? ambienceModule.createAmbience(backdrop, { coarse: coarse(), onLost() { if (runtime) runtime.ambience = null; } }) : null;
+    if (ambience && scene) ambience.set(scene);
+    runtime = { layer, effects, ambience };
     preloadTable();
     // As imagens do Scryfall chegam depois do desenho (e a mesa redesenha sozinha): de tempos em tempos, com o navegador
     // ocioso, as cartas novas da mão, da pilha e do campo também carregam a textura.
@@ -75,7 +82,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   function release() {
     generation++;
     if (idle !== null) { (globalThis.cancelIdleCallback ?? clearTimeout)(idle); idle = null; }
-    runtime?.layer.destroy(); runtime = null;
+    runtime?.ambience?.destroy(); runtime?.layer.destroy(); runtime = null;
     watch.reset();
   }
   // A mesa escondida (voltou à tela inicial, ao Laboratório) libera a camada; à mostra de novo (a partida abre depois
@@ -95,6 +102,12 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
       return runtime.effects.play(runtime.layer, name, params);
     },
     clear() { runtime?.layer.clear(); },
+    /** A mesa viva vai para esta cena (quem joga, a cor dele, a sua vida, o combate). */
+    ambience(next: AmbienceScene) { scene = next; runtime?.ambience?.set(next); },
+    /** Um toque do jogo na mesa viva (clarão, tremor, escurecer); sem ela, nada. */
+    ambiencePulse(pulse: AmbiencePulse) { if (decision().use === 'gpu') runtime?.ambience?.pulse(pulse); },
+    /** Para os testes: quadros da mesa viva e se ela está rodando (sem ela, nada). */
+    ambienceStats: () => runtime?.ambience?.stats() ?? null,
     /** Se a textura de uma carta já carregou (a carta de costas só vira no ar com a face pronta); sem ela, começa a carregar. */
     textureReady(url: string) { return !!runtime && !runtime.layer.destroyed && runtime.effects.textureReady(runtime.layer, url); },
     preloadTable,

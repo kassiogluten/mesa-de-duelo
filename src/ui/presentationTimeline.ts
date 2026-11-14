@@ -1,4 +1,5 @@
 import type { FCard, FState, FTargets } from '../forge/client';
+import { bigSpell, legendaryEntry } from './impactRules';
 
 /** Public, immutable board view at an engine event boundary. Never contains a hand or prompt. */
 export interface PresentationFrame {
@@ -89,7 +90,9 @@ export interface PresentationEvent {
 export interface PresentationEntry { event: PresentationEvent; audible: boolean; audioOnly?: boolean }
 // O histórico agrupa os eventos por turno e jogada; guardar a partida inteira não enche a lista.
 const HISTORY_LIMIT = 3000;
-const QUEUE_LIMIT = 12;
+// A fila não descarta jogadas: com ela crescendo, os passos encurtam (presentationPace). Só um acúmulo que nenhum ritmo
+// alcança (o computador repetindo uma jogada em loop) pula para o fim.
+const QUEUE_LIMIT = 60;
 const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
@@ -159,6 +162,8 @@ export class PresentationTimeline {
   /** Os gatilhos iguais da sequência atual: quantos foram para a pilha. */
   private triggers: { key: string; count: number } | null = null;
   get queued() { return this.pending.length; }
+  /** Passos com imagem que ainda esperam a vez (os só de som e os gatilhos repetidos não contam). */
+  get queuedSteps() { return this.pending.filter(entry => !entry.audioOnly && !entry.event.repeat).length; }
 
   ingest(matchId: string, events: readonly PresentationEvent[], options: { silent?: boolean; cursor?: number } = {}) {
     const fresh = !this.initialized || matchId !== this.matchId;
@@ -271,6 +276,20 @@ export function hasLiveDecision(state: FState) {
   return !!(state.gameOver || state.sideboarding || state.question || state.input.ok.enabled || state.input.cancel.enabled ||
     state.input.paying || state.input.targeting || state.input.attacking || state.input.blocking || state.input.suspendCast || state.input.selection || state.input.selectable.length || state.input.selectableStacks?.length || state.input.selectablePlayers?.length || state.input.actionable?.length || state.castable?.length);
 }
+/**
+ * O estado com a sua decisão guardada, enquanto a mesa termina de mostrar as jogadas que vieram antes dela: sem
+ * pergunta, botões, alvos, pagamento, ataque ou bloqueio, e com a geração -1 (um clique na mesa desenhada assim não vale).
+ * O fim da partida e o sideboard não esperam.
+ */
+export function holdDecision(state: FState): FState {
+  if (state.gameOver || state.sideboarding || !hasLiveDecision(state)) return state;
+  const { input } = state;
+  return { ...state, question: undefined, castable: [],
+    input: { ...input, gen: -1, message: '', priority: false, ok: { ...input.ok, enabled: false }, cancel: { ...input.cancel, enabled: false },
+      selectable: [], selectableStacks: [], selectablePlayers: [], actionable: [], untappable: [], manaOnly: [], paying: false, payingFor: undefined,
+      manaCost: undefined, selection: undefined, tapToPay: undefined, proliferate: undefined, suspendCast: undefined, commanderMove: undefined,
+      blocking: undefined, attacking: undefined, targeting: undefined, vote: undefined, card: undefined } };
+}
 export function stateWithFrame(state: FState, frame: PresentationFrame | null): FState {
   if (!frame || hasLiveDecision(state)) return state;
   return { ...state, turn: frame.turn, phase: frame.phase, activePlayer: frame.activePlayer,
@@ -279,14 +298,25 @@ export function stateWithFrame(state: FState, frame: PresentationFrame | null): 
     input: { ...state.input, gen: -1, actionable: [], selectable: [], selectableStacks: [], selectablePlayers: [], paying: false, targeting: undefined }, castable: [],
   };
 }
-export function presentationDuration(event: PresentationEvent, fast: boolean) {
+/**
+ * Quanto do tempo cheio cada passo leva: 1 no Normal com a fila curta; o Rápido começa em 0,6, e a fila crescendo
+ * encurta os passos até 0,35, para a mesa alcançar o jogo sem descartar nenhuma jogada.
+ */
+export function presentationPace(waiting: number, fast: boolean) {
+  const crowd = waiting <= 3 ? 1 : waiting <= 6 ? .8 : waiting <= 12 ? .6 : waiting <= 24 ? .45 : .35;
+  return Math.min(fast ? .6 : 1, crowd);
+}
+/** `pace`: true é o Rápido (0,6); um número é a fração do tempo cheio (presentationPace). */
+export function presentationDuration(event: PresentationEvent, pace: boolean | number) {
+  const scale = typeof pace === 'number' ? pace : pace ? .6 : 1, fast = scale < 1;
   // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
   if (event.type === 'mill' || (event.entries?.length ?? 0) > 1) {
     const m = event.type === 'mill' ? millTiming(event.milled?.length ?? 1, fast) : entryTiming(event.entries!.length, fast || !!event.repeat);
     return m.travel + (m.flights - 1) * m.gap + 160;
   }
   // Planeswalker: a entrada e o ultimate ganham um pouco mais de tempo, sem segurar a partida.
-  const duration = event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
+  // Momentos grandes (impactRules.ts): a lendária chegando e a mágica grande ganham tempo para a cena.
+  const duration = legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
     : event.type === 'coin' || event.type === 'die' ? 1250 : event.type === 'scry' ? 900
     : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
     : event.type === 'blockers' ? 620
@@ -298,7 +328,8 @@ export function presentationDuration(event: PresentationEvent, fast: boolean) {
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
     : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
-  return Math.round(duration * (fast ? .6 : 1));
+  // Encurtado pela fila, nenhum passo fica rápido demais para ser visto.
+  return Math.round(Math.max(duration * scale, Math.min(duration, 200)));
 }
 /**
  * Ritmo das permanentes que entram juntas (fichas, blink em massa): uma cascata curta, de 60 a 110 ms entre elas, e só

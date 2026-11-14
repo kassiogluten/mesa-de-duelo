@@ -441,7 +441,7 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 - [ ] Atualizar só o que mudou a cada `state`, em vez de redesenhar zonas inteiras (ou casar com o item 20, Preact).
 - [ ] Cartas fora da tela e zonas fechadas sem montar elementos; imagens das cartas no tamanho em que aparecem (miniatura no campo, grande só no zoom), com `decoding="async"`.
 - [ ] Animações só com `transform` e `opacity`; nada animando `box-shadow`, `filter` ou tamanho; `will-change` só durante a animação.
-- [ ] Fila de animações com limite: quando acumula (combate grande, muitos gatilhos), acelerar ou pular para o fim.
+- [x] Fila de animações com limite: quando acumula (combate grande, muitos gatilhos), acelerar ou pular para o fim. Feito em 14/11/2026 (`novidades-pendentes/animacoes-sem-pular`): os passos encurtam com a fila crescendo (`presentationPace`, até 35% do tempo, nunca abaixo de 200 ms) e só uma fila de mais de 60 passos (loop do computador) pula para o fim; a sua decisão espera a fila acabar (`holdDecision`).
 
 **Modo leve.**
 
@@ -492,7 +492,7 @@ As decisões A, B e C (no fim do item) são perguntadas ao usuário, com as alte
 **2. Ritmo: o servidor não dorme, a mesa segura (depende da decisão A).**
 
 - [ ] Ligar `YIELD_SKIP_PHASE_DELAY` e `YIELD_SKIP_RESOLVE_DELAY` no `Main` (e no `BridgeRulesTest.engine()`), para o Forge não dormir quando o humano passa sozinho.
-- [ ] Na mesa, a fila de animações acompanhar sem pular jogadas: com a fila crescendo, encurtar os passos (como o "Rápido sem resposta") antes de chegar ao limite de 12, e só pular para o fim em último caso. Casa com o item de fila de animações do 114 e com as animações do computador repetindo jogadas do 113.
+- [x] Na mesa, a fila de animações acompanhar sem pular jogadas: com a fila crescendo, encurtar os passos (como o "Rápido sem resposta") antes de chegar ao limite de 12, e só pular para o fim em último caso. Feito em 14/11/2026 (o limite passou a 60, para o loop do computador; ver o item 114). Casa com o item de fila de animações do 114 e com as animações do computador repetindo jogadas do 113.
 - [ ] Medir com `-Dmesa.semPausa=true` e `scripts/medir-apresentacao.mjs` que a mesa mostra as jogadas (quase) todas e termina perto do servidor.
 
 **3. Força da IA (depende da decisão B).**
@@ -521,7 +521,8 @@ descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao it
 - [x] Fase 2b: efeitos de movimento na GPU (exilar, blink, sacrificar, rastros do voo, ataque, habilidades, ninjutsu, virar), com a carta ainda no DOM. Feita em 13/11/2026 (`novidades-pendentes/efeitos-webgl-movimentos`).
 - [x] Fase 3: cartas em voo na GPU (textura da imagem do Scryfall, perspectiva, sombra). Feita em 13/11/2026 (`novidades-pendentes/efeitos-webgl-fase-3`), com os estilos Arte e texto e Arena voando com a imagem completa (decidido nesse dia); versos e compra continuam em CSS. Medida em 14/11/2026 (números na spec): voos mais leves na GPU, campo cheio empatado, pacote com 145 KB gzip; a cena de dano ficou mais pesada na GPU com a CPU 4× e 6× (critério 3), com o voo da carta como suspeito.
 - [ ] Conferir num celular de entrada de verdade (critério 8, junto com a fase 2), incluindo a cena de dano: decidido em 14/11/2026 que é o celular quem diz se o voo da carta na GPU precisa ficar mais leve. Sem aparelho disponível nesse dia.
-- [x] Fase 3b: o que sobrou em CSS. Feita em 14/11/2026 (detalhes na spec): animações de estado refeitas para a placa de vídeo animar sozinha (a mesa parada com o campo cheio gastava um terço da CPU; caiu para cerca de um sétimo), compra e mão inicial de costas na GPU com a sua carta virando no ar, mana em orbes, moeda, dado, fim da partida, dobra, vida, marcadores e os brilhos de chegada. Ficaram em CSS: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo.
+- [x] Fase 3b: o que sobrou em CSS. Feita em 14/11/2026 (detalhes na spec): animações de estado refeitas para a placa de vídeo animar sozinha (a mesa parada com o campo cheio gastava um terço da CPU; caiu para cerca de um sétimo), compra e mão inicial de costas na GPU com a sua carta virando no ar, mana em orbes, moeda, dado, fim da partida, dobra, vida, marcadores e os brilhos de chegada. Ficaram em CSS: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo (foram para a GPU em 14/11/2026, item 131).
+- [x] Mesa viva (14/11/2026, `novidades-pendentes/mesa-viva`): um shader por baixo das cartas, com a luz no campo de quem joga, poeira, combate e vinheta da vida baixa, a 30 quadros por segundo em meia resolução (decidido nesse dia: contínua, junto com "Efeitos"; o critério 2 vale só para a camada dos efeitos, e entrou o critério 9). Falta medir o custo com `scripts/medir-efeitos.mjs` e no celular de entrada (critério 9).
 - [ ] Fase 4, só se os números pedirem depois do 114: o campo inteiro em WebGL (spec própria).
 
 ## 129. Torneios suíços dentro do sistema
@@ -536,3 +537,42 @@ Pedido em 14/11/2026. O objetivo final é a mesa organizar torneios com as parti
 - [ ] Top 8 eliminatório depois das rodadas suíças.
 - [ ] Pontos acumulados de quem vence entre torneios (ranking de temporada).
 
+## 130. Arrastar qualquer aviso que pede uma decisão
+
+Hoje só o painel "Atacar quem?" pode ser arrastado (o título serve de alça, o lugar fica guardado no aparelho e dois cliques o devolvem ao lugar; `attackChoice.ts`, chave `attackPanel`). Os outros avisos que pedem uma ação do jogador ficam parados e muitas vezes cobrem permanentes que ele precisa tocar para responder, e aí não dá para escolher a carta.
+
+- [ ] Tirar o arraste de `attackChoice.ts` para um módulo comum (alça, captura do ponteiro, limite de 4 px antes de mover, sempre dentro da tela, dois cliques para voltar, a alça com o ícone de pontinhos), para cada aviso só dizer qual é a alça e onde guarda o lugar.
+- [ ] Usar em toda a caixa de ação: escolher alvo, pagar custo, confirmar bloqueio, proliferar, mulligan, quem começa e o pedido com "Ver detalhes", não só no "Atacar quem?".
+- [ ] Usar também na barra recolhida de uma escolha ("Ver a mesa") e nos outros painéis flutuantes que aparecem enquanto a mesa espera uma resposta (votos, ordem dos gatilhos, aviso no retrato).
+- [ ] Decidir se cada tipo de aviso guarda o próprio lugar ou se todos dividem um só (uma chave em `KEYS` para cada um, ou uma para a caixa de ação inteira).
+- [ ] Ao arrastar, o aviso fica um pouco transparente por cima das cartas; e, se ele abrir em cima de uma carta que pode ser escolhida, sair sozinho para o lado, quando houver espaço.
+- [ ] No celular: alça grande o bastante para o dedo e o arraste não pode rolar a página nem ser confundido com tocar no botão.
+- [ ] Teste no navegador: o aviso arrastado continua respondendo, não sai da tela ao girar o celular ou redimensionar, e a carta que estava embaixo pode ser tocada.
+
+## 131. Animações e imersão: próximos passos
+
+Sugestões de 14/11/2026, depois da fila sem pular jogadas e da mesa viva (itens 114 e 125). Cada uma vira item próprio, ou decisão, quando for escolhida.
+
+**Animações que não se perdem**
+
+- [x] Mostrar quem está agindo durante a espera: enquanto a sua decisão espera a fila (`holdDecision`), um selo discreto "Mostrando a jogada do oponente…" no lugar dos botões, para a espera não parecer travamento. Feito em 14/11/2026: o botão diz "Mostrando a jogada de Ana…" (decidido nesse dia: com o nome), em dourado, respirando.
+- [ ] Ver a jogada de novo: tocar numa linha do Histórico repete aquela animação na mesa (a fila já guarda o quadro de cada jogada).
+- [ ] Resumo do turno do oponente: se a aba ficou escondida e a mesa alcançou o jogo em silêncio, um painel curto com as jogadas perdidas, em miniaturas.
+- [ ] Ritmo por tipo de jogada: com a fila cheia, encurtar mais gatilhos e compras e manter inteiras mágicas, dano letal e ultimate (`presentationPace` hoje encurta tudo por igual).
+
+**Imersão e ambientação**
+
+- [x] Momentos de impacto: a mesa escurece e a câmera aproxima um pouco em ultimate, mágica grande e golpe letal; mítica e lendária entram com uma cena própria. Feito em 14/11/2026 (`novidades-pendentes/momentos-e-mesa-reagindo`). Decidido nesse dia: mágica de valor 6 ou mais, golpe que derruba um jogador, e cena para criatura ou planeswalker lendário (o estado não traz raridade; mítica pediria mudar o servidor). Regras em `impactRules.ts`, cena em `motionImpact.ts` e `gpuMoments.ts`.
+- [ ] Som ambiente por mesa: um fundo bem baixo (vento, brasa, floresta) que combina com a superfície, com volume próprio em Som.
+- [x] Mesa viva reagindo ao jogo: clarão breve no fundo quando uma mágica resolve, luz tremendo num golpe pesado, poeira acelerando no combate (valores novos no shader de `tableAmbience.ts`). Feito em 14/11/2026 (`novidades-pendentes/momentos-e-mesa-reagindo`).
+- [x] Luz na cor do deck: tirar a cor média da arte do tapete, em vez da cor da capa, para cada deck ter a sua luz. Feito em 14/11/2026 (`novidades-pendentes/momentos-e-mesa-reagindo`). Sem tapete, fica a cor da capa.
+
+**WebGL**
+
+- [x] O que ainda anima em CSS na GPU: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo (as setas com fluxo de energia são o ganho mais visível). Feito em 14/11/2026 (`novidades-pendentes/momentos-e-mesa-reagindo`). Decidido nesse dia: a seta nasce na GPU (um traço de luz até o alvo) e a seta parada continua em SVG, para a camada dos efeitos continuar parando.
+- [ ] Medir a mesa viva (critério 9 da `docs/spec-mesa-webgl.md`): `scripts/medir-efeitos.mjs` com e sem ela e, quando houver aparelho, o celular de entrada (junto com o critério 8).
+- [ ] Brilho de raridade no voo: míticas e foils voando com um reflexo que corre pela carta, na textura que a fase 3 já carrega.
+
+**Acabamento**
+
+- [x] Tour no laboratório de efeitos: um botão que roda todos os efeitos em sequência, para conferir depois de cada mudança e tirar os prints das novidades. Feito em 14/11/2026 (seção "Momentos e mesa viva" do `effects-lab.html`).

@@ -42,17 +42,20 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
  * Mostra a rolagem uma vez por jogo (inclusive para quem assiste). Enquanto os dados rolam, a escolha "Quem começa?"
  * e a mão inicial ficam escondidas (`data-rolling`), e aparecem quando o vencedor está em destaque.
  */
-export function applyStartingRoll(root: HTMLElement, state: FState, history: readonly PresentationEvent[], matchId: string) {
+/** O que a camada GPU faz no sorteio: o dado rolando no lugar e o anel do vencedor (sem ela, os dados em CSS). */
+export interface RollEffects { rollDie(el: Element, result: number, hold: number): boolean; glow(el: Element, color: string): void }
+
+export function applyStartingRoll(root: HTMLElement, state: FState, history: readonly PresentationEvent[], matchId: string, fx?: RollEffects) {
   const arena = root.querySelector<HTMLElement>('.arena.forge');
   if (!arena) return;
   const event = state.gameOver ? undefined : currentStartingRoll(history);
   const key = event && `${matchId}:${state.match?.gameNumber ?? 1}:${event.seq}`;
   if (!event || !key || shown.has(key)) return;
   shown.add(key);
-  play(arena, state, event);
+  play(arena, state, event, fx);
 }
 
-function play(arena: HTMLElement, state: FState, event: PresentationEvent) {
+function play(arena: HTMLElement, state: FState, event: PresentationEvent, fx?: RollEffects) {
   arena.querySelector('.starting-roll')?.remove();
   const rounds = event.rolls!, reduced = reducedMotion();
   const players = rounds[0]!.map(r => r.player);
@@ -81,13 +84,15 @@ function play(arena: HTMLElement, state: FState, event: PresentationEvent) {
     const max = Math.max(...round.map(r => r.roll));
     for (const r of round) {
       const seat = dice.get(r.player)!;
-      seat.classList.remove('rolling');
+      seat.classList.remove('rolling', 'gpu-rolling');
       seat.querySelector('b')!.textContent = String(r.roll);
       seat.classList.toggle('top', r.roll === max);
     }
   };
   const finish = () => {
     for (const [id, seat] of dice) { seat.classList.toggle('winner', id === event.actor); seat.classList.toggle('out', id !== event.actor); }
+    const winner = event.actor === undefined ? undefined : dice.get(event.actor)?.querySelector('.sr-die');
+    if (winner) fx?.glow(winner, '#f2b54c');
     result.textContent = finalText;
   };
   if (reduced) {
@@ -106,7 +111,12 @@ function play(arena: HTMLElement, state: FState, event: PresentationEvent) {
         at += TIE_MS;
       }
       later(() => {
-        for (const r of round) dice.get(r.player)!.classList.add('rolling');
+        for (const r of round) {
+          const seat = dice.get(r.player)!;
+          seat.classList.add('rolling');
+          // Na camada GPU, o dado rola em perspectiva no lugar do de CSS e para no resultado na hora em que ele assentaria.
+          if (fx?.rollDie(seat.querySelector('.sr-die')!, r.roll, (ROLL_MS - 160) * 2)) seat.classList.add('gpu-rolling');
+        }
         // O número troca enquanto o dado rola e para no resultado.
         for (let step = 0; step < 7; step++) later(() => {
           for (const r of round) dice.get(r.player)!.querySelector('b')!.textContent = String(1 + ((r.roll + step * 5 + r.player) % 6));

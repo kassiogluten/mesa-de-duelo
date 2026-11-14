@@ -11,7 +11,7 @@ export interface StageParams {
    */
   coin: { at: Point; heads: boolean; label: string; hold: number; font: string };
   /** Dado: entra rolando, trocando de número a cada volta, quica e para em `result`. `sides` vai no canto (d6, d20). */
-  die: { at: Point; result: string; sides: number; hold: number; font: string };
+  die: { at: Point; result: string; sides: number; hold: number; font: string; travel?: number };
   /** Quem venceu: raios dourados girando atrás do retrato, uma onda de luz e confete. */
   victory: { at: Point; delay?: number };
   /** Quem perdeu: o retrato racha, solta cinzas que caem e fumaça escura. */
@@ -69,7 +69,7 @@ function dieFace(layer: GpuLayer, value: string, sides: number, font: string) {
   });
 }
 /** Raios saindo do meio, para trás do retrato de quem venceu. */
-function sunburst(layer: GpuLayer) {
+export function sunburst(layer: GpuLayer) {
   return paintOnce(layer, 'sunburst', 256, 256, g => {
     g.translate(128, 128);
     for (let i = 0; i < 16; i++) {
@@ -143,7 +143,7 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
       };
     });
   },
-  die(layer, s, { at, result, sides, hold, font }) {
+  die(layer, s, { at, result, sides, hold, font, travel = 130 }) {
     const { x, y } = layer.local(at.cx, at.cy);
     const size = at.w, n = Math.max(2, sides);
     // Os números que passam enquanto ele rola (como no dado em CSS) e, por último, o resultado.
@@ -159,8 +159,9 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
       return t => {
         // Rola de baixo à esquerda até o meio (até .5), quica (até .6), fica e some (de .88 até o fim).
         const roll = Math.min(1, t / .5), k = easeOut(roll);
-        const px = x - 130 * (1 - k), hop = Math.abs(Math.sin(roll * Math.PI * 2.5)) * 46 * (1 - roll);
-        const py = y + 30 * (1 - k) - hop;
+        // `travel`: de quanto mais à esquerda ele vem rolando (0 no sorteio de quem começa, com os dados lado a lado).
+        const px = x - travel * (1 - k), hop = Math.abs(Math.sin(roll * Math.PI * 2.5)) * 46 * (1 - roll);
+        const py = y + 30 * (travel / 130) * (1 - k) - hop;
         const tumble = halfTurns * Math.PI * (1 - (1 - roll) ** 2);
         // A cada meia volta o número muda; ao parar, é o resultado.
         mesh.texture = faces[Math.min(halfTurns, Math.round(tumble / Math.PI))]!;

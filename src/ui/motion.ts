@@ -1,5 +1,6 @@
 // Animações da mesa: compara o antes e o depois de cada jogada e anima o que mudou.
 import type { PresentationEvent } from './presentationTimeline';
+import type { AmbienceScene } from './gpu/tableAmbience';
 import { center, createMotionKit, LANDING, reduced, SETTLE, TAP, turnOf } from './motionKit';
 import { createDamageMotion } from './motionDamage';
 import { createAbilityMotion } from './motionAbility';
@@ -8,6 +9,7 @@ import { createLibraryMotion } from './motionLibrary';
 import { createBoardMotion } from './motionBoard';
 import { createStageMotion } from './motionStage';
 import { createFlightMotion } from './motionFlights';
+import { createImpactMotion } from './motionImpact';
 
 const KEYED = '[data-fid],[data-peek]';
 export interface Motion {
@@ -44,6 +46,14 @@ export interface Motion {
   reset(): void;
   /** A opção "Efeitos" mudou: carrega ou desfaz a camada GPU. */
   effectsChanged(): void;
+  /** A mesa viva acompanha a mesa desenhada: quem joga, a cor dele, a sua vida e o combate. */
+  ambience(scene: AmbienceScene): void;
+  /** Sorteio de quem começa: o dado de `el` rola na camada GPU, no lugar, e para em `result` na metade de `hold`. Devolve se rolou na GPU. */
+  rollDie(el: Element, result: number, hold: number): boolean;
+  /** Um anel de luz na cor pedida em volta de `el` (o dado do vencedor do sorteio). */
+  glow(el: Element, color: string): void;
+  /** Setas de alvo que acabaram de aparecer: cada uma nasce num traço de luz até o alvo. */
+  arrowsBorn(arrows: { from: { x: number; y: number }; via: { x: number; y: number }; to: { x: number; y: number }; color: string }[]): void;
 }
 
 /**
@@ -61,6 +71,7 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
   const board = createBoardMotion(kit);
   const stage = createStageMotion(kit);
   const flights = createFlightMotion(kit, zones, abilities.walkerArrive);
+  const impact = createImpactMotion(kit);
   /**
    * As animações contínuas de estado (voar, vínculo, enjoo, alvo possível) seguem um relógio só, o da página: a carta
    * redesenhada continua do ponto em que estava, em vez de recomeçar (a voadora não dá um pulo a cada jogada, nem
@@ -141,6 +152,7 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
     present(event, options) {
       // Nothing here mutates card state, waits on a network reply, or creates a priority stop.
       if (document.hidden || root.hidden) return;
+      impact.observe(event, options.duration);
       if (event.type === 'damage') { damage.damage(event, options.duration, options.html); return; }
       // Perder vida já aparece no dano (e pagar vida não é dano); só o ganho tem número próprio.
       if (event.type === 'life-changed') { damage.heal(event); return; }
@@ -179,5 +191,17 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
     cancelPresentation: kit.clear,
     reset() { kit.clear(); state.cards = new Map(); state.primed = false; kit.gpu.prepare(); },
     effectsChanged() { kit.gpu.refresh(); },
+    ambience(scene) { kit.gpu.ambience(scene); },
+    rollDie(el, result, hold) {
+      const at = center(el);
+      if (!at || reduced()) return false;
+      const font = getComputedStyle(el).fontFamily || 'sans-serif';
+      return kit.gpu.play('die', { at: { ...at, w: at.w * 1.05, h: at.h * 1.05 }, result: String(result), sides: 6, hold, font, travel: 0 });
+    },
+    glow(el, color) { const at = center(el); if (at) kit.gpu.play('arrive', { at, color, size: Math.max(at.w, at.h) * 1.8 }); },
+    arrowsBorn(arrows) {
+      if (document.hidden || root.hidden) return;
+      arrows.forEach((arrow, i) => kit.gpu.play('arrowBirth', { ...arrow, delay: i * 70 }));
+    },
   };
 }

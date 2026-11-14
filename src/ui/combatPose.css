@@ -14,6 +14,6 @@
 @media (prefers-reduced-motion: reduce) { .field .slot.attacking > .bfc, .field .slot.blocking > .bfc { transition: none; } }
 
 /* Mesa de 3–4 jogadores: a seta de ataque tem a cor de quem é atacado. */
-.combat-arrows .arrow.attack.def-1 { stroke: #f08a2c; }
-.combat-arrows .arrow.attack.def-2 { stroke: #e0457b; }
-.combat-arrows .arrow.attack.def-3 { stroke: #b46cf0; }
+.combat-arrows .beam.attack.def-1 { color: #f08a2c; }
+.combat-arrows .beam.attack.def-2 { color: #e0457b; }
+.combat-arrows .beam.attack.def-3 { color: #b46cf0; }

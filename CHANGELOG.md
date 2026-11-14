@@ -8,6 +8,23 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.174.0] - 2026-11-14
+
+### Novo
+
+- **Mesa viva.** Com os efeitos completos, a mesa ganha luz e ar: o campo de quem joga o turno fica iluminado na cor das cartas dele, e a luz desliza para o outro lado quando o turno passa; alguns grãos de poeira sobem devagar, quase sem aparecer; no combate, a luz fecha e esquenta; e, com a sua vida baixa, as bordas da mesa escurecem e pulsam em vermelho. Some com os efeitos leves e com o "reduzir movimento" do aparelho. No laboratório de efeitos, os botões Passar o turno, Vida baixa e Vida cheia mostram cada momento.
+- **Momentos grandes.** Com os efeitos completos, uma mágica de valor de mana 6 ou mais, o ultimate de um planeswalker e o golpe que derruba um jogador escurecem a mesa de leve em volta do que está acontecendo, e a câmera chega só um pouco mais perto. Uma criatura ou um planeswalker lendário entra no campo com um brilho dourado leve e raios fracos atrás dele, sem parar a mesa.
+- **Mesa viva reagindo ao jogo.** Quando uma mágica resolve, um brilho leve na cor dela acende no meio da mesa; um golpe pesado faz a luz tremer; e, no combate, a poeira sobe mais depressa.
+- **Luz na cor do deck.** A luz no campo de quem joga o turno toma a cor da arte do tapete dele; sem tapete, continua na cor da capa das cartas.
+- **Mostrando a jogada.** Enquanto a sua decisão espera a mesa terminar de mostrar o que aconteceu, o botão diz de quem é a jogada ("Mostrando a jogada de Ana…"), em vez de parecer travado.
+
+### Mudou
+
+- **Nenhuma jogada some da mesa.** Quando muitas jogadas chegam juntas (um combate grande, uma sequência de gatilhos, o computador jogando rápido), a mesa mostra todas, com os passos um pouco mais curtos, em vez de pular para o fim. Só um computador repetindo a mesma jogada sem parar ainda faz a mesa pular.
+- **A sua decisão espera as animações.** Quando chega a hora de você escolher (alvo, bloqueio, pagar, responder), a mesa termina de mostrar o que o oponente acabou de fazer antes de liberar os botões e a mão, para você nunca decidir sem ter visto a jogada.
+- **Grimório, ninja e sorteio com mais vida.** Com os efeitos completos, embaralhar abre o grimório em duas metades e as cartas caem intercaladas na volta; na vidência, as cartas sobem em leque com o verso na cor da capa, as do topo brilhando em dourado; ao moer, as cartas voam com um rastro roxo e viram no ar quando a imagem já carregou; o shuriken do ninja gira com um rastro prateado e estoura ao chegar; e, no sorteio de quem começa, os dados rolam em perspectiva e o do vencedor ganha um anel de luz.
+- **Setas novas.** As setas de ataque, de bloqueio, de alvo e da aura num jogador viram um feixe de luz contínuo, com um pulso correndo até o alvo, e perto da ponta um símbolo diz o que a seta é: espada no ataque, escudo no bloqueio, mira no alvo e estrela na aura. Quando várias setas chegam ao mesmo alvo, só uma leva o símbolo (a que vale, e não um ataque já bloqueado) e as outras terminam num losango aceso. No combate, o pulso corre três vezes e para. E quando uma mágica ou habilidade escolhe um alvo, com os efeitos completos, um traço de luz percorre a seta e estoura no alvo.
+
 ## [0.173.0] - 2026-11-14
 
 ### Novo

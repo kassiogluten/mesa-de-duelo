@@ -6,7 +6,7 @@ import { hideCardPreview } from './cardInspector';
 import { type HistoryNames } from './historyLog';
 import './removalNotice.css';
 import './revealWindow.css';
-import { PresentationTimeline, stateWithFrame } from './presentationTimeline';
+import { PresentationTimeline, holdDecision, stateWithFrame } from './presentationTimeline';
 import { createGameAudio, tableMoment } from './audio';
 import { eliminationNotices } from './lossReason';
 import { PassLevelPreference } from './passLevel';
@@ -22,6 +22,7 @@ import { exileShelfCards, validBlockSelection } from './playContext';
 import { applyOpeningPresentation, suppressOpeningPreview } from './openingPresentation';
 import './proliferate.css';
 import { hasCommandZone } from '../decks';
+import { ambienceScene } from './ambienceScene';
 import './undo.css';
 import './focusView.css';
 import './skipVote.css';
@@ -178,11 +179,19 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     el.innerHTML = html; renderedContent.set(el, { html, first: el.firstChild });
   };
 
+  /** O estado que a mesa desenha: enquanto a fila mostra jogadas, a sua decisão espera por ela (holdDecision). */
+  let held: { from: FState; shown: FState } | null = null;
+  function shownState() {
+    const s = client?.state;
+    if (!s || s.type !== 'state' || (!timeline.current && !timeline.queued)) return s;
+    if (held?.from !== s) held = { from: s, shown: holdDecision(s) };
+    return held.shown;
+  }
   /** O que as partes da mesa compartilham (tableContext.ts); as partes criadas mais abaixo são lidas na hora do uso. */
   const ctx: TableCtx = {
     root, $, setHTML, opts, timeline, motion, audio, prefs,
     client: () => client,
-    state: () => client?.state,
+    state: () => shownState(),
     match: () => match,
     portraits: () => portraits,
     frame: () => presentation.frame(),
@@ -240,7 +249,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // A mão (tableHand.ts) e o arraste para jogar ou arrumar as cartas (handDrag.ts).
   const hand = createTableHand({ ...ctx, drawing: () => presentation.drawing() });
   const handDrag = attachHandDrag(root, {
-    state: () => match.disconnected || question.minimized() ? null : client?.state,
+    state: () => match.disconnected || question.minimized() ? null : shownState(),
     canReorder: () => !match.disconnected && !!client?.state && !client.state.watching,
     beforeDrag: () => hideCardPreview(true),
     play: action => { presentation.stop(); client?.send(action); },
@@ -263,11 +272,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   root.querySelectorAll<HTMLElement>('.row').forEach(row => {
     row.tabIndex = 0;
     row.setAttribute('aria-label', `${row.closest('.opp') ? 'Campo do oponente' : 'Seu campo'}: ${row.classList.contains('lands') ? 'terrenos e outros permanentes' : 'criaturas'}. Role para ver todas as cartas.`);
-    row.addEventListener('scroll', () => { if (client?.state) drawArrows(client.state); }, { passive: true });
+    row.addEventListener('scroll', () => { const s = shownState(); if (s) drawArrows(s); }, { passive: true });
   });
 
   installWheelSideways(root);
-  $('#fOpponents').addEventListener('scroll', () => { syncSeatScroll(root); if (client?.state) drawArrows(client.state); }, true);
+  $('#fOpponents').addEventListener('scroll', () => { syncSeatScroll(root); const s = shownState(); if (s) drawArrows(s); }, true);
 
   // ---------- Rostos das cartas e imagens do Scryfall (cardFaces.ts) ----------
   const faces = createCardFaces(root, { cardStyle: () => prefs.cardStyle, sleeve: playerId => client?.state?.players.find(p => p.id === playerId)?.sleeve, rerender: () => renderTable(false) });
@@ -290,7 +299,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // A largura dos selos muda quando a fonte termina de carregar.
   document.fonts?.addEventListener('loadingdone', () => { if (!root.hidden) layoutCounters(root); });
   window.addEventListener('resize', () => {
-    const s = client?.state;
+    const s = shownState();
     attack.syncPanelShift(); hand.placeControls();
     if (s?.type === 'state' && !root.hidden) { fitLoneRows(root); fitRowWidths(root); layoutCounters(root); layoutExileShelf(root); layoutCardDecision(root); layoutStack(root); syncSeatScroll(root); drawArrows(s); }
   });
@@ -319,7 +328,14 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const actionView = (): ActionView => ({ findCard, playerName, observing: match.observing, disconnected: match.disconnected,
     clickLocked: gen => inputs.locked(gen),
     passLevel: passLevel.value, passLevelSupported: passLevel.supported, passingTurn: passLevel.passingTurn, passPending: passLevel.pending !== null, passMenuOpen: passMenu.open,
-    attackAll: attack.allGen !== null, attackSelecting: attack.selected.size, attackBusy: attack.queue.busy });
+    attackAll: attack.allGen !== null, attackSelecting: attack.selected.size, attackBusy: attack.queue.busy, showing: showingText() });
+  /** Enquanto a sua decisão espera a fila: de quem é a jogada que a mesa está mostrando. */
+  function showingText() {
+    const live = client?.state;
+    if (!live || shownState() === live) return undefined;
+    const actor = (timeline.current ?? null)?.event.actor;
+    return actor === undefined ? 'Mostrando a jogada…' : actor === live.you ? 'Mostrando a sua jogada…' : `Mostrando a jogada de ${playerName(actor)}…`;
+  }
   // Escolha de ataque (attackChoice.ts): criaturas marcadas, defensor fixado, "atacar com tudo", a fila e o painel "Atacar quem?".
   const attack = createAttackChoice(root, { client: () => client, disconnected: () => match.disconnected, findCard: id => findCard(id), notice, stopPresentation: () => presentation.stop(), render: () => renderTable(false) });
   const seats = createTableSeats({ ...ctx, attack, focus, compact: () => compactTable.matches });
@@ -361,16 +377,18 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   /** Desenha a mesa inteira, região por região; `ingest` lê antes os eventos novos do estado (e pode começar um passo da apresentação). */
   function renderTable(ingest: boolean) {
-    const s = client?.state;
-    if (!s || s.type !== 'state') return;
-    fixForgeText(s);
-    passLevel.observe(s.preferences, !!client?.connected && !match.disconnected);
-    opponentStops.observe(s.preferences, !!client?.connected && !match.disconnected); stops.sync();
-    if (s.spectating) { turnNotice.reset(); turnBuzz.reset(); } else { turnNotice.observe(s); turnBuzz.observe(s); }
+    const live = client?.state;
+    if (!live || live.type !== 'state') return;
+    fixForgeText(live);
+    passLevel.observe(live.preferences, !!client?.connected && !match.disconnected);
+    opponentStops.observe(live.preferences, !!client?.connected && !match.disconnected); stops.sync();
     const savedFocus = modal.snapshot();
     const scrollPositions = new Map([...root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field')].map(el => [el.id, { left: el.scrollLeft, top: el.scrollTop }]));
     const silently = presentation.silent();
-    if (ingest && presentation.ingest(s, silently, st => removals.collect(st))) return;
+    if (ingest && presentation.ingest(live, silently, st => removals.collect(st))) return;
+    // Daqui em diante, com jogadas ainda na fila, a sua decisão fica guardada até a mesa mostrá-las.
+    const s = shownState() ?? live;
+    if (s.spectating) { turnNotice.reset(); turnBuzz.reset(); } else { turnNotice.observe(s); turnBuzz.observe(s); }
     if (!validBlockSelection(s, match.selectedBlocker)) match.selectedBlocker = null;
     const visual = stateWithFrame(s, presentation.frame());
     seats.trackCounters(visual.players);
@@ -420,7 +438,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     });
     root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field').forEach(el => { const position = scrollPositions.get(el.id); el.scrollLeft = position?.left ?? 0; el.scrollTop = position?.top ?? 0; });
     applyOpeningPresentation(root, s, currentStartingRoll(timeline.history));
-    applyStartingRoll(root, s, timeline.history, timeline.matchId);
+    applyStartingRoll(root, s, timeline.history, timeline.matchId, motion);
     modal.restore(savedFocus);
     syncModal();
     layoutCounters(root);
@@ -432,6 +450,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     drawCombatArrows(root, visual);
     playMotion(s, visual, silently);
     stack.drawTargetArrows(visual);
+    motion.ambience(ambienceScene(root, visual, hasCommandZone(s.config?.format)));
     match.lastDamage = new Map(s.players.flatMap(p => p.battlefield.map(c => [c.id, c.damage ?? 0] as [number, number])));
   }
 

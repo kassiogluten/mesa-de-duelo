@@ -364,6 +364,9 @@
 .damage-badges > span { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--azul-060912, #060912) 90%, transparent); border: 1px solid currentColor; font: 700 11px/1.4 var(--body); letter-spacing: .02em; text-shadow: none; white-space: nowrap; }
 /* Camada GPU dos efeitos (item 125): cobre a janela, não recebe clique e fica abaixo dos números de dano (36) e das janelas (42+). */
 .gpu-layer { position: fixed; inset: 0; z-index: 35; pointer-events: none; }
+/* Mesa viva: o canvas da luz e da poeira, no fundo da mesa (por baixo dos campos), esticado da meia resolução. */
+.table-ambience { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; animation: ambience-in 1.6s ease-out; }
+@keyframes ambience-in { from { opacity: 0; } }
 /* Carta voando na camada GPU: a peça em CSS faz o mesmo caminho só para levar a legenda, por cima do canvas. */
 .presentation-piece.gpu-flying { z-index: 36; }
 .presentation-piece.gpu-flying > :not(.presentation-caption) { visibility: hidden; }

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
-const { PresentationTimeline, hasLiveDecision, stateWithFrame, presentationDuration, calloutDuration } = await import('../src/ui/presentationTimeline.ts');
+const { PresentationTimeline, hasLiveDecision, holdDecision, stateWithFrame, presentationDuration, presentationPace, calloutDuration } = await import('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await import('../src/ui/handDrag.ts');
 const { createMotion } = await import('../src/ui/motion.ts');
 const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await import('../src/ui/audio.ts');
@@ -46,17 +46,21 @@ test('new match and silent reconnection seed history without replaying it', () =
   assert.equal(timeline.cursor, 1); assert.equal(timeline.history.length, 1); assert.equal(timeline.queued, 0);
 });
 
-test('backlog catches up with bounded silent presentation, retaining meaningful history', () => {
+test('a long backlog is shown whole, faster; only a loop-sized one catches up silently', () => {
   const timeline = new PresentationTimeline(); timeline.ingest('a', []);
   timeline.ingest('a', Array.from({ length: 25 }, (_, i) => event(i + 1)));
-  assert.equal(timeline.queued, 4); assert.equal(timeline.history.length, 25);
+  assert.equal(timeline.queued, 25, 'a big combat keeps every play'); assert.equal(timeline.queuedSteps, 25);
+  assert.ok(presentationPace(timeline.queuedSteps, false) < presentationPace(3, false), 'the steps get shorter');
+  while (timeline.advance());
+  timeline.ingest('a', Array.from({ length: 61 }, (_, i) => event(i + 26)));
+  assert.equal(timeline.queued, 4); assert.equal(timeline.history.length, 86);
   let entry; const ids = [];
   while ((entry = timeline.advance())) { ids.push(entry.event.seq); assert.equal(entry.audible, false); }
-  assert.deepEqual(ids, [22, 23, 24, 25]);
-  timeline.ingest('a', Array.from({ length: 100 }, (_, i) => event(i + 26)), { silent: true });
-  assert.equal(timeline.history.length, 125, 'the whole match stays in the history'); assert.equal(timeline.queued, 0);
-  timeline.ingest('a', Array.from({ length: 4000 }, (_, i) => event(i + 126)), { silent: true });
-  assert.equal(timeline.history.length, 3000); assert.equal(timeline.history.at(-1).seq, 4125);
+  assert.deepEqual(ids, [83, 84, 85, 86]);
+  timeline.ingest('a', Array.from({ length: 100 }, (_, i) => event(i + 87)), { silent: true });
+  assert.equal(timeline.history.length, 186, 'the whole match stays in the history'); assert.equal(timeline.queued, 0);
+  timeline.ingest('a', Array.from({ length: 4000 }, (_, i) => event(i + 187)), { silent: true });
+  assert.equal(timeline.history.length, 3000); assert.equal(timeline.history.at(-1).seq, 4186);
 });
 
 test('draw and priority events advance cursor without filling stack presentation; draws are counted in the history', () => {
@@ -130,7 +134,7 @@ test('draw audio has a separate bound and never evicts pending visual actions', 
   assert.deepEqual(entries.map(e => e.event.seq), [1, 98, 99, 100, 101, 102]);
   assert.equal(entries.filter(e => e.audioOnly).length, 4);
   assert.ok(entries.every(e => e.audible));
-  timeline.ingest('a', [...Array.from({ length: 13 }, (_, i) => event(i + 103)), event(116, 'draw')]);
+  timeline.ingest('a', [...Array.from({ length: 61 }, (_, i) => event(i + 103)), event(164, 'draw')]);
   assert.equal(timeline.queued, 4);
   while ((entry = timeline.advance())) {
     assert.equal(entry.audioOnly, undefined, 'visual catch-up drops incidental audio');
@@ -256,6 +260,30 @@ test('every genuine choice bypasses old frames, preserving current generation an
     assert.equal(hasLiveDecision(authoritative), true);
     assert.equal(stateWithFrame(authoritative, frame), authoritative);
     assert.equal(authoritative.input.gen, 42);
+  }
+});
+
+test('a decision waits for the plays still being shown: no prompt, buttons or clicks until the queue ends', () => {
+  const s = state(); s.castable = [9]; s.input.ok.enabled = true; s.input.selectable = [7]; s.question = { id: 4, kind: 'confirm' };
+  s.input.attacking = { attackers: [7], defenders: [], legalAssignments: [] };
+  const held = holdDecision(s);
+  assert.equal(hasLiveDecision(held), false);
+  assert.equal(held.input.gen, -1); assert.equal(held.question, undefined); assert.deepEqual(held.castable, []);
+  assert.equal(held.input.attacking, undefined); assert.equal(held.input.ok.enabled, false);
+  assert.equal(s.input.gen, 42, 'the real state is untouched'); assert.equal(s.input.ok.enabled, true);
+  assert.equal(stateWithFrame(held, frame).players[0].life, 18, 'the board shows the play being presented');
+  for (const end of [s2 => { s2.gameOver = true; }, s2 => { s2.sideboarding = { id: 5 }; }]) {
+    const other = state(); other.castable = [9]; end(other);
+    assert.equal(holdDecision(other), other, 'game over and sideboarding do not wait');
+  }
+});
+
+test('a crowded queue shortens the steps, never below what can be seen', () => {
+  assert.equal(presentationPace(1, false), 1); assert.equal(presentationPace(1, true), .6);
+  assert.ok(presentationPace(30, false) < presentationPace(10, false));
+  for (const type of ['land-played', 'spell-cast', 'damage', 'turn', 'life-changed']) {
+    assert.ok(presentationDuration(event(1, type), presentationPace(40, false)) >= 200);
+    assert.ok(presentationDuration(event(1, type), presentationPace(40, false)) <= presentationDuration(event(1, type), true));
   }
 });
 

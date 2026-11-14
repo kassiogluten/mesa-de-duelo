@@ -91,7 +91,7 @@ function table() {
   // A camada GPU para os testes e a medição: ?gpu=1 tenta desenhar nela mesmo com efeitos leves, ?gpu=0 fica no CSS.
   // `gpu.load()` carrega na hora (sem esperar a mesa ociosa), `gpu.stats()` conta os quadros desenhados e os efeitos vivos,
   // `gpu.play(nome, parâmetros)` desenha um efeito e `gpu.timeScale(0)` congela a camada (para o print pegar o efeito no meio).
-  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, timeScale: (n: number) => { gpuClock.timeScale = n; } };
+  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ambienceStats: () => latestGpuPort()?.ambienceStats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, timeScale: (n: number) => { gpuClock.timeScale = n; } };
   let reduce = false;
   const media = window.matchMedia.bind(window);
   // "Reduzir movimento" só nesta página: a mesa pergunta ao navegador a cada efeito.
@@ -284,6 +284,40 @@ function table() {
     clear: () => { for (const p of players) p.battlefield = []; return 'Campo limpo.'; },
     reset: () => { setup(); return 'Mesa de volta ao começo.'; },
     full: () => { setup(true); return 'Campo cheio: confira sobreposição e desempenho.'; },
+    // Mesa viva (item 125): a luz vai para o campo de quem joga, e a vida baixa pesa a vinheta.
+    turn: () => {
+      state.activePlayer = state.activePlayer === ME ? OPP : ME; state.turn++; state.phase = 'MAIN1';
+      emit('turn', { actor: state.activePlayer, turn: state.turn });
+      return `Turno ${state.activePlayer === ME ? 'seu' : 'do oponente'}: a luz da mesa desliza para o campo de quem joga.`;
+    },
+    'life-low': () => { player(ME).life = 3; return 'Sua vida em 3: as bordas da mesa escurecem e pulsam em vermelho.'; },
+    'life-full': () => { player(ME).life = 20; return 'Sua vida em 20: a vinheta volta ao normal.'; },
+    // A sua decisão esperando a fila (item 131): o oponente conjura um Bolt em você e, no mesmo estado, você ganha a
+    // prioridade; o botão diz "Mostrando a jogada de Oponente…" até o passo acabar, e só então vira OK.
+    hold: () => {
+      const spell = { ...bolt(), controller: OPP }, stackId = nextId++, targets = { players: [ME], cards: [] };
+      state.stack = [{ id: stackId, text: spell.text, source: structuredClone(spell), controller: OPP, targets }];
+      emit('spell-cast', { card: structuredClone(spell), sourceId: spell.id, actor: OPP, from: 'Hand', to: 'Stack', stackId, targets });
+      state.input = { ...state.input, priority: true, ok: { label: 'OK', enabled: true } };
+      setTimeout(() => { state.input = { ...state.input, priority: false, ok: { label: 'OK', enabled: false } }; state.stack = []; flush(); }, 4000);
+      return 'Decisão esperando: o botão mostra de quem é a jogada até a mesa terminar de mostrá-la.';
+    },
+    // Momentos grandes (item 131): uma lendária ou uma mágica de valor 6 conjurada da mão, que resolve e entra no campo.
+    moment: c => {
+      const me = player(ME), legend = c.kind === 'legend';
+      const made: any = { id: nextId++, controller: ME, ...(legend ? { ...creature('Isamaru, Hound of Konda', 2, 2, '{W}'), typeLine: 'Legendary Creature — Dog' } : creature('Colossal Dreadmaw', 6, 6, '{4}{G}{G}', ['TRAMPLE'])) };
+      const stackId = nextId++;
+      state.stack = [{ id: stackId, kind: 'spell', text: made.name, source: structuredClone(made), controller: ME }];
+      emit('spell-cast', { card: structuredClone(made), sourceId: made.id, actor: ME, from: 'Hand', to: 'Stack', stackId });
+      flush();
+      setTimeout(() => {
+        state.stack = []; me.battlefield.push(made); lastAdded = made.id;
+        emit('resolved', { card: structuredClone(made), sourceId: made.id, actor: ME, stackId, from: 'Stack', to: 'Battlefield' });
+        emit('entered', { card: structuredClone(made), sourceId: made.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+        flush();
+      }, 1500);
+      return legend ? 'Lendária: ela entra com um brilho dourado leve e raios fracos atrás dela.' : 'Mágica de valor 6: a mesa escurece em volta da pilha e a câmera chega perto; ao resolver, a mesa acende na cor dela.';
+    },
     mill: c => {
       // Como a ponte: um evento por carta, do topo do grimório para o cemitério, com a mágica que mandou moer.
       const owner = sideOf(c.side), n = Math.min(Number(c.n), owner.library);
@@ -511,7 +545,8 @@ function table() {
         setTimeout(() => {
           me.hand = me.hand.filter((x: any) => x !== spell); me.handCount = me.hand.length;
           const stackId = nextId++;
-          state.stack = [{ id: stackId, text: spell.text, source: structuredClone(spell), controller: ME }];
+          // Com o alvo na pilha, a seta até o oponente aparece (e nasce num traço de luz na camada GPU).
+          state.stack = [{ id: stackId, text: spell.text, source: structuredClone(spell), controller: ME, targets: { players: [OPP], cards: [] } }];
           emit('spell-cast', { card: structuredClone(spell), sourceId: spell.id, actor: ME, from: 'Hand', to: 'Stack', stackId, targets: { players: [OPP], cards: [] } });
           flush();
           setTimeout(() => {
@@ -927,6 +962,11 @@ function panel() {
       .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="glint">Conjurar (redemoinho)</button><button data-gpu="arrive">Chegada (anel)</button><button data-gpu="arrive" data-color="#9b7bff">Chegada no cemitério</button><button data-gpu="streak">Golpe (riscos)</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
     <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta. Ligar e desligar "Enjoo de invocação" na permanente selecionada mostra a aberração de cor e solta as estrelinhas ao ligar e ao desligar.</p>
     <div>Câmera lenta só da camada: ${[['1', '1×'], ['4', '4×'], ['10', '10×']].map(([k, t]) => `<button data-gpu-slow="${k}">${t}</button>`).join('')}<button data-gpu="freeze">Congelar</button></div>
+    <h2>Momentos e mesa viva (itens 125 e 131)</h2>
+    <p>A mesa viva só aparece com a camada GPU. O Tour roda os efeitos em sequência (toque de novo para parar).</p>
+    <button data-tour>Tour: todos os efeitos</button>
+    <div><button data-c="turn">Passar o turno</button><button data-c="life-low">Vida baixa</button><button data-c="life-full">Vida cheia</button></div>
+    <div><button data-moment="legend">Lendária entrando</button><button data-moment="big">Mágica de valor 6</button><button data-walker="ult">Ultimate</button><button data-hand="bolt">Seta de alvo (Bolt)</button><button data-c="hold">Decisão esperando</button></div>
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
@@ -966,9 +1006,32 @@ function panel() {
     syncToggles();
   });
   $('selected').addEventListener('change', syncToggles);
+  // Tour (item 131): toca os botões do painel um depois do outro, com tempo para cada efeito terminar.
+  const TOUR: [string, number][] = [
+    ['[data-c="reset"]', 1500], ['[data-hand="land"]', 2600], ['[data-hand="creature"]', 3000], ['[data-hand="bolt"]', 3200],
+    ['[data-x="scry"]', 2400], ['[data-x="shuffle"]', 1800], ['[data-mill="3"]', 2800], ['[data-tokens="3"]', 2600],
+    ['[data-x="coin"]', 2400], ['[data-x="die"]', 2400], ['[data-moment="legend"]', 3600], ['[data-moment="big"]', 3800],
+    ['[data-walker="enter"]', 2400], ['[data-walker="ult"]', 3400], ['[data-c="turn"]', 2800], ['[data-c="life-low"]', 3400],
+    ['[data-c="life-full"]', 1600], ['[data-x="win"]', 3200],
+  ];
+  let touring = 0;
+  function tour(button: HTMLButtonElement) {
+    clearTimeout(touring);
+    if (button.classList.toggle('on')) {
+      const step = (i: number) => {
+        if (i >= TOUR.length) { button.classList.remove('on'); return; }
+        const [selector, wait] = TOUR[i]!;
+        lab.querySelector<HTMLButtonElement>(selector)?.click();
+        touring = window.setTimeout(() => step(i + 1), wait);
+      };
+      step(0);
+    }
+  }
   lab.addEventListener('click', e => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
     if (!b) return;
+    if (b.dataset.tour !== undefined) { tour(b); return; }
+    if (b.dataset.moment) send({ cmd: 'moment', kind: b.dataset.moment });
     if (b.dataset.c) send({ cmd: b.dataset.c, side: $<HTMLSelectElement>('side').value, template: $<HTMLSelectElement>('template').value, id: selectedId(), attachTo: selectedId() });
     if (b.dataset.d) send({ cmd: 'damage', kind: b.dataset.d, source: ref($<HTMLSelectElement>('source').value), target: ref($<HTMLSelectElement>('target').value), amount: $<HTMLInputElement>('amount').value });
     if (b.dataset.m) send({ cmd: 'move', kind: b.dataset.m, id: selectedId(), target: ref($<HTMLSelectElement>('target').value) });

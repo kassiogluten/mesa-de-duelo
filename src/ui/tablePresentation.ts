@@ -3,7 +3,7 @@
 // animam junto com o passo seguinte.
 import type { FState } from '../forge/client';
 import { suppressOpeningPreview } from './openingPresentation';
-import { calloutDuration, presentationDuration, hasLiveDecision, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
+import { calloutDuration, presentationDuration, presentationPace, hasLiveDecision, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import type { TableCtx } from './tableContext';
 
 export type PresentationDeps = Pick<TableCtx, 'root' | 'timeline' | 'motion' | 'audio' | 'prefs' | 'state' | 'match' | 'face' | 'eventDescription' | 'announce' | 'render' | 'renderTable'>;
@@ -30,6 +30,7 @@ export function createPresentationQueue(d: PresentationDeps) {
       else if (entry.audible) quick.push(entry.event);
       entry = timeline.advance();
     }
+    // `s` já vem com a sua decisão guardada enquanto houver passo (holdDecision): a mesa mostra o quadro da jogada.
     displayFrame = s && !hasLiveDecision(s) ? entry?.event.frame ?? null : null;
     drawingNow = s ? draws.filter(dr => dr.actor === s.you).reduce((n, dr) => n + (dr.count ?? 1), 0) : 0;
     d.renderTable();
@@ -48,10 +49,10 @@ export function createPresentationQueue(d: PresentationDeps) {
       }
     }
     if (!entry || !s) return;
-    // O ritmo é só o das Opções: no Normal, tudo no tempo cheio, mesmo com uma decisão sua esperando (os botões já ficam
-    // liberados na hora); só o Rápido acelera.
-    const fast = d.prefs.fast;
-    const duration = presentationDuration(entry.event, fast);
+    // O ritmo é o das Opções; com a fila crescendo, os passos encurtam em vez de serem pulados. A sua decisão espera
+    // a fila acabar.
+    const pace = presentationPace(timeline.queuedSteps + 1, d.prefs.fast), shortened = pace < 1;
+    const duration = presentationDuration(entry.event, pace);
     // Dano dividido: os próximos danos da mesma mágica ou habilidade saem juntos, cada um para o seu alvo.
     const first = entry.event;
     const divided = first.type === 'damage' && !first.combat && !first.prevented && first.sourceId !== undefined
@@ -67,8 +68,8 @@ export function createPresentationQueue(d: PresentationDeps) {
       const all = [first, ...clashing.map(part => part.event)];
       for (const e of all) e.clash = all.some(o => o !== e && o.sourceId !== undefined && o.sourceId === e.targets?.cards?.[0] && o.targets?.cards?.[0] === e.sourceId);
     }
-    if (first.type === 'mill') motion.milled(first, { you: s.you, fast: d.prefs.fast, face: card => d.face(card, 'normal') });
-    else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: d.prefs.fast, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
+    if (first.type === 'mill') motion.milled(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal') });
+    else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
     else for (const part of [entry, ...divided, ...fought, ...clashing]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? d.face(part.event.card, 'normal') : undefined,
@@ -93,7 +94,7 @@ export function createPresentationQueue(d: PresentationDeps) {
     silentNext = false;
     collect(s);
     if (beforeCurrent && !timeline.current) { clearTimeout(presentationTimer); motion.cancelPresentation(); }
-    if (silently || hasLiveDecision(s)) displayFrame = null;
+    if (silently) displayFrame = null;
     if (!timeline.current && timeline.queued) { advance(); return true; }
     return false;
   }

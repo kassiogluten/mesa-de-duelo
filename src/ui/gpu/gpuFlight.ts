@@ -59,7 +59,7 @@ const backs = new WeakMap<GpuLayer, Map<string, Texture>>();
  * O verso na cor da capa, no desenho do `.back` (o medalhão claro no meio de um fundo que escurece para a borda), com
  * um brilho em diagonal e um fio claro na borda de dentro, para ler como uma carta de verdade quando ela gira.
  */
-function backTexture(layer: GpuLayer, colors: readonly string[]) {
+export function backTexture(layer: GpuLayer, colors: readonly string[]) {
   let cache = backs.get(layer);
   if (!cache) {
     cache = new Map();

@@ -1,5 +1,5 @@
 import { millTiming, type PresentationEvent } from './presentationTimeline';
-import { copySleeve } from './sleeves';
+import { copySleeve, SLEEVE_VARS } from './sleeves';
 import { center, MILL_EASE, reduced, TAP, turnOf, type MotionKit, type Point } from './motionKit';
 
 /** O rótulo da vidência junto ao grimório: quantas ficaram no topo e quantas foram para o fundo. */
@@ -20,6 +20,10 @@ export function createLibraryMotion(kit: MotionKit) {
     if (flipped) animate(el, [{ scale: '1.05' }, { scale: '1' }], TAP.duration, TAP.easing);
     else animate(el, [{ rotate: 'y 90deg', scale: '1.06' }, { rotate: 'y 0deg', scale: '1' }], TAP.duration, TAP.easing);
   }
+  /** As cinco cores da capa de um monte (para o verso pintado na camada GPU). */
+  const sleeveOf = (el: HTMLElement) => { const style = getComputedStyle(el); return SLEEVE_VARS.map(name => style.getPropertyValue(name).trim()); };
+  /** A imagem completa de uma carta, tirada do HTML da face (`data-full`). */
+  const fullOf = (html: string) => /data-full="([^"]+)"/.exec(html)?.[1]?.replace(/&amp;/g, '&');
   /** O grimório de um jogador (o seu, o do oponente no duelo, ou o do assento no Commander). */
   function libraryOf(actor: number | undefined, you: number) {
     const mine = actor === you;
@@ -39,6 +43,8 @@ export function createLibraryMotion(kit: MotionKit) {
     const lib = center(libEl);
     if (!libEl || !lib || reduced()) return;
     animate(libEl, [{ rotate: '0deg' }, { rotate: '-5deg', offset: .2 }, { rotate: '4deg', offset: .45 }, { rotate: '-2deg', offset: .7 }, { rotate: '0deg' }], 460, 'ease-in-out');
+    // Na camada GPU, as metades com o verso pintado e as cartas caindo intercaladas na volta.
+    if (kit.gpu.play('shuffle', { at: lib, back: sleeveOf(libEl) })) return;
     for (const side of [-1, 1]) {
       const half = effect('presentation-piece shuffle-ghost', lib, '<div class="back"></div>');
       copySleeve(half, libEl);
@@ -55,6 +61,8 @@ export function createLibraryMotion(kit: MotionKit) {
     if (reduced() || !n) { pulse(libEl); return; }
     const w = Math.max(lib.w, 56) * 1.15, h = w * 1.4;
     const inward = lib.cy < innerHeight / 2 ? 1 : -1;
+    // Na camada GPU: o mesmo leque, com o verso pintado e o brilho dourado nas do topo.
+    if (libEl && kit.gpu.play('scry', { at: lib, back: sleeveOf(libEl), top, bottom, inward })) { later(() => absorb(libEl), 900 + (n - 1) * 45); return; }
     const topShown = Math.min(top, n);
     for (let i = 0; i < n; i++) {
       const toBottom = i >= topShown;
@@ -138,6 +146,18 @@ export function createLibraryMotion(kit: MotionKit) {
     if (reduced()) { pulse(gyEl); return; }
     // A carta voa num tamanho legível e encolhe ao cair na pilha; com muitas, os voos se abrem em leque.
     const w = Math.max(grave.w, 64) * 1.25, h = w * 1.4;
+    // Na camada GPU: cada carta voa de costas e vira no ar, se a imagem dela já carregou (senão cai de costas e some no
+    // monte), com um rastro roxo.
+    if (libEl && kit.gpu.ready()) {
+      const back = sleeveOf(libEl);
+      const flew = cards.slice(0, flights).map((card, i) => {
+        const url = fullOf(options.face(card)), delay = i * gap;
+        const flipTo = url && kit.gpu.textureReady(url) ? url : undefined;
+        kit.gpu.play('trail', { from: library, to: grave, duration: travel, delay, style: 'sparkle', color: '#a98bd8' });
+        return kit.gpu.play('flight', { back, flipTo, from: library, to: grave, end: { ...grave, w: grave.w * 1.1, h: grave.h * 1.1 }, duration: travel, delay, fade: !flipTo });
+      });
+      if (flew.every(Boolean)) { later(() => pulse(pile()), total); return; }
+    }
     for (const [i, card] of cards.slice(0, flights).entries()) {
       const spread = flights >= 6 ? (i - (flights - 1) / 2) * 7 : 0;
       const ghost = effect('presentation-piece mill-ghost', { ...grave, w, h }, `${options.face(card)}<div class="back"></div>`);

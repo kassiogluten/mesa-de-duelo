@@ -1,8 +1,22 @@
 // As setas desenhadas por cima da mesa: as do combate (atacante até quem ele ataca, bloqueador até o atacante), as de alvo
-// (da carta ou do item da pilha até cada alvo) e as das auras que encantam um jogador (da aura até o retrato dele). Medem a mesa já desenhada e só trocam o SVG quando as setas mudam.
+// (da carta ou do item da pilha até cada alvo) e as das auras que encantam um jogador (da aura até o retrato dele). Medem a mesa já desenhada, só trocam o SVG quando as setas mudam e dizem quais setas de alvo são novas.
 import type { FState } from '../forge/client';
 import { esc } from './cardtext';
 import { label } from './cardFaces';
+import { beamDefs, beamHTML, crowdedTargets, curveLength, type ArrowGlyph } from './arrowBeam';
+
+type Pt = { x: number; y: number };
+/** Uma seta já medida, antes de virar SVG: `target` diz aonde ela chega (para achar os alvos com várias setas). */
+interface Beam { d: string; cls: string; glyph: ArrowGlyph; s: Pt; c: Pt; e: Pt; c2?: Pt; target: string; extra?: string }
+/**
+ * As setas em SVG, com o losango no lugar do símbolo onde várias chegam ao mesmo alvo. O símbolo fica com a seta que
+ * vale: a apagada (ataque já bloqueado, item da pilha fora de foco) só o leva se não houver outra.
+ */
+function beamsHTML(beams: Beam[], glow: string, pulses?: number) {
+  const faded = (b: Beam) => /\b(blocked|dimmed)\b/.test(b.cls) ? 1e6 : 0;
+  const crowded = crowdedTargets(beams.map(b => ({ target: b.target, length: curveLength(b.s, b.c, b.e, b.c2) + faded(b) })));
+  return beams.map((b, i) => beamHTML({ ...b, glow, pulses, diamond: crowded[i] }) + (b.extra ?? '')).join('');
+}
 
 /**
  * Setas do combate: de cada atacante até quem ele ataca (vermelhas) e de cada bloqueador até a criatura que ele
@@ -21,13 +35,17 @@ export function arrowRect(root: HTMLElement, selector: string): DOMRect | undefi
   }
   return rect;
 }
-/** Cor da ponta da seta de ataque por defensor (a mesma do traço em combatPose.css); a primeira é a do duelo. */
-const ATTACK_COLORS = ['var(--red)', '#f08a2c', '#e0457b', '#b46cf0'];
+/** Uma seta que acabou de aparecer, em coordenadas da janela: sai de `from`, curva por `via` (o ponto de controle) e chega em `to`. */
+export interface BornArrow { from: { x: number; y: number }; via: { x: number; y: number }; to: { x: number; y: number }; color: string }
+// As setas de alvo do último desenho, por SVG: só as que não estavam lá nascem.
+const drawnTargets = new WeakMap<SVGSVGElement, Set<string>>();
+const BIRTH_COLORS: Record<string, string> = { mine: '#f2b54c', theirs: '#ec5a3f', choosing: '#6cc4ff', aura: '#c79bff' };
+
 export function drawCombatArrows(root: HTMLElement, s: FState) {
   const svg = root.querySelector<SVGSVGElement>('#fArrows')!;
   const box = svg.getBoundingClientRect();
   const rectOf = (id: number) => arrowRect(root, `.field [data-fid="${id}"]`);
-  const paths: string[] = [];
+  const beams: Beam[] = [];
   // Contra um jogador, só com mais de um oponente: no duelo, o defensor é sempre o mesmo.
   const multiplayer = s.players.length > 2;
   // Atacantes iguais num monte (item 121): uma seta só, saindo do monte.
@@ -57,7 +75,7 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
         const owner = toPlayer ? defender : s.players.find(p => p.battlefield.some(c => c.id === defender))?.id;
         const color = multiplayer ? Math.max(0, s.players.findIndex(p => p.id === owner)) % 4 : 0;
         const cls = `attack${color ? ` def-${color}` : ''}${blockers.length ? ' blocked' : ''}`;
-        paths.push(`<path class="arrow-under ${cls}" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fAttackHead${color ? `-${color}` : ''})"/>`);
+        beams.push({ d, cls, glyph: 'sword', s: { x: sx, y: sy }, c: { x: cx, y: cy }, e: { x: ex, y: ey }, target: `${toPlayer ? 'p' : 'c'}${defender}` });
       }
     }
     blockers.forEach((id, j) => {
@@ -72,13 +90,11 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
       const ey = a.top + a.height / 2 - box.top;
       const my = (sy + ey) / 2;
       const d = `M${sx.toFixed(1)} ${sy.toFixed(1)} C${sx.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${my.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
-      paths.push(`<path class="arrow-under" d="${d}"/><path class="arrow" d="${d}" marker-end="url(#fArrowHead)"/>`);
+      beams.push({ d, cls: 'block', glyph: 'shield', s: { x: sx, y: sy }, c: { x: sx, y: my }, c2: { x: ex, y: my }, e: { x: ex, y: ey }, target: `c${attacker}` });
     });
   }
-  const html = paths.length ? `<defs><marker id="fArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-    <path d="M0 0 10 5 0 10z" fill="var(--gold)" stroke="#2a1600" stroke-width="1"/></marker>
-    ${ATTACK_COLORS.map((fill, i) => `<marker id="fAttackHead${i ? `-${i}` : ''}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-    <path d="M0 0 10 5 0 10z" fill="${fill}" stroke="#2a0800" stroke-width="1"/></marker>`).join('')}</defs>${paths.join('')}` : '';
+  // No combate a mesa fica parada esperando bloqueios: o pulso corre três vezes e para.
+  const html = beams.length ? `<defs>${beamDefs('fCombatGlow')}</defs>${beamsHTML(beams, 'fCombatGlow', 3)}` : '';
   // O estado chega várias vezes no mesmo combate: só redesenha (e reanima) quando as setas mudam.
   if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
 }
@@ -88,40 +104,42 @@ export function drawCombatArrows(root: HTMLElement, s: FState) {
  * for do oponente). Com um item da pilha em foco, só as setas dele ficam fortes. `auras`: auras que encantam um jogador
  * (maldições e afins) em foco, cada uma com a seta lilás até o retrato de quem ela encanta.
  */
-export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['stack'], stackFocus: number | null, auras: number[] = []) {
+export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['stack'], stackFocus: number | null, auras: number[] = []): BornArrow[] {
   const svg = root.querySelector<SVGSVGElement>('#fTargets')!;
   const box = svg.getBoundingClientRect();
   const q = (selector: string) => arrowRect(root, selector);
   const targetRect = (kind: 'c' | 'p', id: number) =>
     kind === 'p' ? q(`.avatar-slot [data-pid="${id}"]`) : q(`.field [data-fid="${id}"]`) ?? q(`#fHand [data-fid="${id}"]`);
-  const links: { from: DOMRect; to: DOMRect; cls: string; tag?: string }[] = [];
-  const add = (from: DOMRect | undefined, t: { cards?: number[]; players?: number[] } | undefined, cls: string, tag?: string) => {
+  // `key` diz quem aponta para quem (o item da pilha, a escolha de alvo ou a aura), para saber quais setas são novas.
+  const links: { from: DOMRect; to: DOMRect; cls: string; tag?: string; key: string }[] = [];
+  const add = (from: DOMRect | undefined, t: { cards?: number[]; players?: number[] } | undefined, cls: string, tag: string | undefined, key: string) => {
     if (!from || !t) return;
-    for (const id of t.cards ?? []) { const to = targetRect('c', id); if (to) links.push({ from, to, cls, tag }); }
-    for (const id of t.players ?? []) { const to = targetRect('p', id); if (to) links.push({ from, to, cls, tag }); }
+    for (const id of t.cards ?? []) { const to = targetRect('c', id); if (to) links.push({ from, to, cls, tag, key: `${key}>c${id}` }); }
+    for (const id of t.players ?? []) { const to = targetRect('p', id); if (to) links.push({ from, to, cls, tag, key: `${key}>p${id}` }); }
   };
   // Com um item da pilha em foco (mouse ou teclado), só as setas dele ficam fortes e cada alvo ganha "Alvo de …".
   const focused = stack.some(si => si.id === stackFocus) ? stackFocus : null;
   stack.forEach(si => {
     const from = q(`#fStack [data-stack="${si.id}"]`) ?? (si.source ? q(`.field [data-fid="${si.source.id}"]`) : undefined);
     const owner = si.controller === s.you ? 'mine' : 'theirs';
-    if (focused === null) add(from, si.targets, owner);
-    else if (si.id === focused) add(from, si.targets, `${owner} focused`, `Alvo de ${si.source?.name ? label(si.source) : 'efeito na pilha'}`);
-    else add(from, si.targets, `${owner} dimmed`);
+    if (focused === null) add(from, si.targets, owner, undefined, `s${si.id}`);
+    else if (si.id === focused) add(from, si.targets, `${owner} focused`, `Alvo de ${si.source?.name ? label(si.source) : 'efeito na pilha'}`, `s${si.id}`);
+    else add(from, si.targets, `${owner} dimmed`, undefined, `s${si.id}`);
   });
   const tg = s.input.targeting;
   if (tg && !s.gameOver) {
     // A seta sai da carta no campo quando ela está lá; senão, da carta na caixa de ação ou na mão.
     const from = q(`.field [data-fid="${tg.source}"]`) ?? q(`#fAction [data-peek="${tg.source}"]`) ?? q(`#fHand [data-fid="${tg.source}"]`);
-    add(from, tg, 'choosing');
+    add(from, tg, 'choosing', undefined, `t${tg.source}`);
   }
   for (const id of auras) {
     const card = s.players.flatMap(p => p.battlefield).find(c => c.id === id);
     if (card?.attachedToPlayer === undefined) continue;
     const from = q(`.field [data-fid="${id}"]`), to = targetRect('p', card.attachedToPlayer);
-    if (from && to) links.push({ from, to, cls: 'aura focused', tag: `Encantado por ${label(card)}` });
+    if (from && to) links.push({ from, to, cls: 'aura focused', tag: `Encantado por ${label(card)}`, key: `a${id}>p${card.attachedToPlayer}` });
   }
-  const paths = links.map(({ from, to, cls, tag }) => {
+  const before = drawnTargets.get(svg) ?? new Set<string>(), born: BornArrow[] = [];
+  const beams = links.map(({ from, to, cls, tag, key }): Beam => {
     const fx = from.left + from.width / 2 - box.left, fy = from.top + from.height / 2 - box.top;
     const ex = to.left + to.width / 2 - box.left, ey = to.top + to.height / 2 - box.top;
     // Sai da borda da carta de origem, para não cobrir a arte dela.
@@ -132,18 +150,18 @@ export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['st
     const cx = (sx + ex) / 2 - (dy / len) * bend, cy = (sy + ey) / 2 + (dx / len) * bend;
     const d = `M${sx.toFixed(1)} ${sy.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
     const head = cls.split(' ')[0];
+    if (!before.has(key)) born.push({ from: { x: sx + box.left, y: sy + box.top }, via: { x: cx + box.left, y: cy + box.top }, to: { x: ex + box.left, y: ey + box.top }, color: BIRTH_COLORS[head ?? ''] ?? '#f2b54c' });
     // Etiqueta acima do alvo (abaixo, se não couber no topo da tela); a largura é estimada pelo texto.
     const width = tag ? Math.round(tag.length * 6.4 + 18) : 0, above = to.top - box.top > 30;
     const ty = above ? to.top - box.top - 26 : to.bottom - box.top + 6;
     const tx = Math.max(4, Math.min(box.width - width - 4, ex - width / 2));
     const label = tag ? `<g class="target-tag ${head}"><rect x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" width="${width}" height="20" rx="10"/><text x="${(tx + width / 2).toFixed(1)}" y="${(ty + 14).toFixed(1)}">${esc(tag)}</text></g>` : '';
-    return `<path class="arrow-under ${cls}" d="${d}"/><path class="arrow ${cls}" d="${d}" marker-end="url(#fTargetHead-${head})"/>` +
-      `<circle class="ring ${cls}" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="${(Math.min(to.width, to.height) * 0.32).toFixed(1)}"/>` + label;
+    return { d, cls, glyph: head === 'aura' ? 'star' : 'aim', s: { x: sx, y: sy }, c: { x: cx, y: cy }, e: { x: ex, y: ey }, target: key.split('>')[1] ?? key, extra: label };
   });
-  const head = (cls: string) => `<marker id="fTargetHead-${cls}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-    <path class="head ${cls}" d="M0 0 10 5 0 10z" stroke="#120800" stroke-width="1"/></marker>`;
-  const html = paths.length ? `<defs>${['mine', 'theirs', 'choosing', 'aura'].map(head).join('')}</defs>${paths.join('')}` : '';
+  const html = beams.length ? `<defs>${beamDefs('fTargetGlow')}</defs>${beamsHTML(beams, 'fTargetGlow')}` : '';
   if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
   root.querySelectorAll('.stack-focus').forEach(el => el.classList.remove('stack-focus'));
   if (focused !== null) root.querySelectorAll(`#fStack [data-stack="${focused}"], #fStackGallery [data-stack="${focused}"]`).forEach(el => el.classList.add('stack-focus'));
+  drawnTargets.set(svg, new Set(links.map(link => link.key)));
+  return born;
 }
