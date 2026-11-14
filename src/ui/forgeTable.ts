@@ -239,7 +239,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     canReorder: () => !match.disconnected && !!client?.state && !client.state.watching,
     beforeDrag: () => hideCardPreview(true),
     play: action => { presentation.stop(); client?.send(action); },
-    reorder: (id, to) => { const groups = hand.groups(); const next = groups ? moveGroupInHand(groups, id, to) : moveInHand(match.handOrder, id, to); if (next) { match.handOrder = next; renderTable(false); } },
+    reorder: (id, to) => { const groups = hand.groups(); const next = groups ? moveGroupInHand(groups, id, to) : moveInHand(match.handOrder, id, to); if (next) { match.handOrder = next; renderTable(false); motion.settled(id); } },
   });
 
   // A janela da frente e o foco que sobrevive ao redesenho (tableModal.ts).

@@ -188,11 +188,11 @@ Pedido depois da fase 2: os movimentos da seção Movimento (item 16) do laborat
 
 Entra nas novidades (`### Mudou`), com prints.
 
-- [ ] Decidir com o usuário o que fazer com os estilos de carta "arte e texto" e "Arena" (voar com a imagem completa ou manter o voo em DOM).
-- [ ] Textura da carta por `fetch(url, { mode: 'cors' })` + `createImageBitmap`, com o voo em DOM se a textura não estiver pronta a tempo. Carta virada para baixo: o verso na cor do jogador (`sleeves.ts`).
-- [ ] `fly()` na GPU: carta com perspectiva real (`PerspectiveMesh`), sombra que acompanha a altura, brilho de borda pela cor da carta e rastro opcional. A carta do DOM fica escondida durante o voo, como hoje. O mesmo `spring()` vira função de tempo na GPU.
-- [ ] Compra, conjurar até a pilha, resolver, saídas do campo, fichas.
-- [ ] Medir de novo (critérios 3 a 6) e conferir no celular.
+- [x] Decidir com o usuário o que fazer com os estilos de carta "arte e texto" e "Arena": decidido em 13/11/2026, voam com a imagem completa (a face leva `data-full` em todo estilo). Rastro só nos voos especiais: os da fase 2b e a carta que sai do cemitério (roxo) ou do exílio (branco).
+- [x] Textura da carta por `fetch(url, { mode: 'cors' })` + `createImageBitmap`, com os cantos arredondados recortados num canvas, e o voo em DOM se a textura não estiver pronta a tempo (`src/ui/gpu/gpuFlight.ts`). Pré-carga com a mesa ociosa das cartas da mão, da pilha, do campo, do topo dos montes e da zona de comando (a cada desenho e a cada 1,5 s); guarda até 24 normais e 96 pequenas, e o campo usa a pequena se a normal não chegou. Carta virada para baixo e versos (compra, moer, embaralhar, mão inicial) continuam em DOM: o verso é desenhado em CSS e não vira textura direto.
+- [x] `fly()` na GPU: carta com perspectiva real (`PerspectiveMesh`, os mesmos números do voo em CSS: arco de `flightPath.ts`, crescer, inclinar e girar), sombra na mesa que desce e se espalha com a altura e brilho de borda pela cor da carta (ou do monte), as duas também em perspectiva. A peça em CSS faz o mesmo caminho, invisível, levando a legenda por cima do canvas (`.gpu-flying`).
+- [x] Conjurar até a pilha, resolver, anular, descartar, saídas do campo, troca de controle e a cascata de fichas e de várias permanentes; a compra fica em DOM (versos).
+- [ ] Medir de novo (critérios 3 a 6) e conferir no celular. Não medido nesta etapa, a pedido do usuário; o celular continua pendente (critério 8).
 
 ### Fase 4 (decidir com números): o campo inteiro em WebGL
 

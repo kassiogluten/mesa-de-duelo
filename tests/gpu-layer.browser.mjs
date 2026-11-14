@@ -57,6 +57,27 @@ try {
   assert.ok(r.cssRipplesAfterLoss >= 1, 'no CSS fallback after the context was lost');
   assert.deepEqual(r.errors, []);
 
+  // Voo da carta na GPU (fase 3): com a textura da mão carregada, a carta conjurada voa no canvas, e a peça em CSS
+  // faz o mesmo caminho invisível, só com a legenda à vista.
+  run('open', lab('&gpu=1'));
+  const flight = evaluate(`
+    const wait = ms => new Promise(res => setTimeout(res, ms));
+    for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
+    // As texturas da mão carregam com a mesa ociosa (as imagens vêm do Scryfall).
+    await wait(9000);
+    window.postMessage({ cmd: 'hand', kind: 'creature' }, '*');
+    await wait(250);
+    const piece = document.querySelector('.presentation-piece.gpu-flying');
+    const out = { flying: !!piece, live: gpu.stats().live };
+    out.faceHidden = !!piece && getComputedStyle(piece.querySelector('.face')).visibility === 'hidden';
+    out.caption = !!piece && getComputedStyle(piece.querySelector('.presentation-caption')).visibility === 'visible';
+    return out;
+  `);
+  assert.ok(flight.flying, 'the cast card did not fly on the GPU');
+  assert.ok(flight.live >= 1, 'no GPU effect alive during the flight');
+  assert.ok(flight.faceHidden, 'the CSS card is still visible under the GPU flight');
+  assert.ok(flight.caption, 'the caption disappeared with the GPU flight');
+
   run('open', lab('&gpu=0'));
   const off = evaluate(`${LAND}
     await wait(2500);

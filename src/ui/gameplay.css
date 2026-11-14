@@ -94,7 +94,9 @@
 .forge .hand.reordering .hand-slot { transition: transform .16s ease; }
 .forge .hand.reordering .hand-slot:has(.drag-source) { z-index: 0; }
 .hand-drag-ghost { position: fixed; z-index: 80; aspect-ratio: 488 / 680; pointer-events: none; transform: translate(-50%, -70%); filter: drop-shadow(0 12px 15px #0008); }
-.hand-drag-ghost .face { height: 100%; outline: 2px solid var(--gold); }
+.hand-drag-ghost .face { height: 100%; outline: 2px solid var(--gold); will-change: transform; }
+/* Sobre um campo, com a carta jogável: soltar ali conjura. */
+.hand-drag-ghost.over-field .face { box-shadow: 0 0 0 2px var(--gold), 0 0 26px color-mix(in srgb, var(--gold) 70%, transparent); transition: box-shadow .15s; }
 .forge.dragging-hand { user-select: none; cursor: grabbing; }
 /* Segurar uma carta abre a carta: sem o menu do sistema nem seleção de texto por cima. */
 .forge [data-fid] { -webkit-touch-callout: none; user-select: none; }
@@ -347,6 +349,9 @@
 .damage-badges > span { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--azul-060912, #060912) 90%, transparent); border: 1px solid currentColor; font: 700 11px/1.4 var(--body); letter-spacing: .02em; text-shadow: none; white-space: nowrap; }
 /* Camada GPU dos efeitos (item 125): cobre a janela, não recebe clique e fica abaixo dos números de dano (36) e das janelas (42+). */
 .gpu-layer { position: fixed; inset: 0; z-index: 35; pointer-events: none; }
+/* Carta voando na camada GPU: a peça em CSS faz o mesmo caminho só para levar a legenda, por cima do canvas. */
+.presentation-piece.gpu-flying { z-index: 36; }
+.presentation-piece.gpu-flying > :not(.presentation-caption) { visibility: hidden; }
 .damage-impact { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0;
   background: radial-gradient(circle, #fff8 0 12%, color-mix(in srgb, var(--red) 75%, transparent) 30%, transparent 68%);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 55%, transparent), 0 0 26px var(--red); }

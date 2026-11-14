@@ -1,9 +1,13 @@
-// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, e os de movimento de gpuMoves.ts), com as cores do tema.
-import { Color, Container, Graphics, Sprite, Texture } from 'pixi.js';
+// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts e o voo de gpuFlight.ts), com as cores do tema.
+import { Color, Container, Graphics, PerspectiveMesh, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
 import { easeOut, MAX_PARTICLES, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
 import { MOVE_EFFECTS, type MoveParams } from './gpuMoves';
+import { flight, preload, type FlightParams } from './gpuFlight';
+import { PLAY_EFFECTS, type PlayParams } from './gpuPlays';
+
+export { preload };
 
 /** O tom do golpe, o mesmo de `damageLook` (dano, murchar, veneno, lealdade, escudo). */
 type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield';
@@ -19,7 +23,7 @@ interface DamageParams {
   /** Ultimate do planeswalker: onda de luz na cor dele atravessando a mesa. `reach` é o diâmetro final. */
   shockwave: { at: Point; color: string; reach: number };
 }
-export type GpuEffectParams = DamageParams & MoveParams;
+export type GpuEffectParams = DamageParams & MoveParams & PlayParams & { flight: FlightParams };
 export type GpuEffectName = keyof GpuEffectParams;
 
 const shared = new WeakMap<GpuLayer, Shared>();
@@ -48,6 +52,12 @@ export function prepare(layer: GpuLayer) {
       fill.addColorStop(0, '#fff'); fill.addColorStop(1, '#9a9a9a');
       g.fillStyle = fill; g.beginPath(); g.moveTo(16, 1); g.lineTo(31, 22); g.lineTo(6, 31); g.closePath(); g.fill();
     }),
+    // Retângulo de carta desfocado: a sombra (em preto) e o brilho de borda (na cor da carta) do voo.
+    // O retângulo tem 100×140 (a proporção da carta) no meio de 200×200, com o desfoque em volta.
+    cardGlow: painted(200, g => {
+      g.shadowColor = '#fff'; g.shadowBlur = 24; g.fillStyle = '#fff';
+      g.beginPath(); g.roundRect(50, 30, 100, 140, 8); g.fill();
+    }),
     max: layer.coarse ? MAX_PARTICLES / 2 : MAX_PARTICLES,
   });
   warmUp(layer);
@@ -61,10 +71,12 @@ export function prepare(layer: GpuLayer) {
 function warmUp(layer: GpuLayer) {
   const s = shared.get(layer)!;
   const view = new Container({ alpha: .004 });
-  for (const texture of [s.spark, s.glow, s.ring, s.shard]) {
+  for (const texture of [s.spark, s.glow, s.ring, s.shard, s.cardGlow]) {
     view.addChild(new Sprite({ texture, x: 4, y: 4, blendMode: 'add' }), new Sprite({ texture, x: 4, y: 4 }));
   }
   view.addChild(new Graphics().roundRect(0, 0, 20, 28, 4).stroke({ width: 2, color: 0xffffff }));
+  // O voo da carta usa outro shader (malha em perspectiva).
+  view.addChild(new PerspectiveMesh({ texture: s.shard, verticesX: 2, verticesY: 2 }));
   layer.app.stage.addChild(view);
   layer.app.render();
   view.destroy({ children: true });
@@ -200,7 +212,10 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
 export function play<N extends GpuEffectName>(layer: GpuLayer, name: N, params: GpuEffectParams[N]): boolean {
   const s = shared.get(layer);
   if (!s || layer.destroyed) return false;
-  const make = (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name];
-  layer.add(make(layer, s, params));
+  const make = name === 'flight' ? flight : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name];
+  // O voo da carta pode recusar (textura ainda não carregada): quem pediu voa em CSS.
+  const effect = make(layer, s, params);
+  if (!effect) return false;
+  layer.add(effect);
   return true;
 }

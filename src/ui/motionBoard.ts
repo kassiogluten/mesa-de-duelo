@@ -21,7 +21,11 @@ export function createBoardMotion(kit: MotionKit) {
       pulse(el, 'attack-highlight');
       const at = center(el), ahead = (at?.cy ?? 0) > middle ? -1 : 1;
       // Na camada GPU, riscos de velocidade e poeira saem de trás do atacante no bote.
-      if (at && !reduced()) gpu.play('charge', { at, ahead, delay: Math.min(i, 8) * 70 });
+      if (at && !reduced()) {
+        gpu.play('charge', { at, ahead, delay: Math.min(i, 8) * 70 });
+        // E um anel vermelho no chão, no bote.
+        gpu.play('arrive', { at, color: '#ec5a3f', size: Math.max(at.w, at.h) * 1.05, delay: Math.min(i, 8) * 70 + 560 * .3 });
+      }
       animate(el, [{ translate: '0 0' }, { translate: `0 ${-7 * ahead}px`, offset: .3 }, { translate: `0 ${16 * ahead}px`, scale: '1.04', offset: .55 }, { translate: '0 0', scale: '1' }],
         560, 'cubic-bezier(.3,.7,.4,1)', Math.min(i, 8) * 70);
     });
@@ -50,6 +54,8 @@ export function createBoardMotion(kit: MotionKit) {
         const dx = a.cx - b.cx, dy = a.cy - b.cy, dist = Math.hypot(dx, dy) || 1;
         const delay = Math.min(order++, 8) * 70;
         animate(el, [{ scale: '1' }, { scale: '1.06', offset: .45 }, { scale: '1' }], 420, 'cubic-bezier(.3,.7,.4,1)', delay);
+        // Na camada GPU, o bloqueador ergue um escudo dourado e a ligação vira um feixe.
+        gpu.play('arrive', { at: b, color: '#f2b54c', size: Math.max(b.w, b.h) * 1.15, delay });
         if (gpu.play('beam', { from: b, to: a, color: '#f2b54c', delay })) continue;
         const link = effect('ability-beam block-link', { cx: b.cx, cy: b.cy, w: dist, h: 3 });
         link.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;

@@ -118,9 +118,11 @@ export function createCardFaces(root: HTMLElement, o: { cardStyle(): CardStyle; 
     const art = (sc?.pt?.image_uris ?? sc?.image_uris)?.art_crop;
     const style = faceStyle(c, field);
     if (style === 'art' && (!sc || c.print)) image(c.name, size, c.print); // pede a carta ao Scryfall, como no modo de imagem completa
+    // A imagem completa vai junto em todo estilo: é ela que voa na camada GPU (Arte e texto e Arena voam como a carta impressa).
+    const full = c.image ?? image(c.name, size, c.print);
     return faceHTML({
       name: label(c), manaCost: c.manaCost ?? '', typeLine: ptOf(c.name)?.type_line || c.typeLine || '', power: c.power, toughness: c.toughness,
-      creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: style === 'full' ? c.image ?? image(c.name, size, c.print) : undefined,
+      creature: !!c.creature, color: colorFromCost(c.manaCost ?? '', !!c.land), image: style === 'full' ? full : undefined, full,
       style, art, text: ptOf(c.name)?.text || sc?.oracle_text, loyalty: c.planeswalker ? c.counters?.LOYALTY ?? 0 : undefined, token: !!c.token,
     });
   }

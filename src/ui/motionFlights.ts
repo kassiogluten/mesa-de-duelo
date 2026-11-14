@@ -84,6 +84,9 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       if (event.to === 'Command' && into) { const zone = into; later(() => ripple(center(zone)), options.duration * .85); }
       if (handBack && options.hideDestination && !reduced()) { handBack.style.opacity = '0'; hiddenCards.add(handBack); }
     } else if (event.type === 'discard') {
+      // Na camada GPU, um rastro violeta até o cemitério, que acende de leve ao recebê-la.
+      kit.gpu.play('trail', { from, to, duration: options.duration, style: 'sparkle', color: '#9b7bff' });
+      kit.gpu.play('arrive', { at: to, color: '#9b7bff', delay: options.duration * .85 });
       fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, fade: true });
       if (into) { const pileEl = into; later(() => absorb(pileEl), options.duration * .85); }
     } else if (landing || event.type === 'spell-cast') {
@@ -91,7 +94,18 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       // Ninja de ninjutsu ou sneak: surge da fumaça, com o shuriken vindo da mão de quem usou.
       if (landing && ninjaSwap(event) && ninja.appear(event, piece, hand, to, options.duration, turnOf(card))) { /* já animado */ }
       // Sem o lugar no leque (mão do oponente, mão longa), sai do centro da mão no tamanho de uma carta.
-      else fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, tint: zoneGlow(event.from) });
+      else {
+        // Vinda do cemitério ou do exílio: na camada GPU, um rastro de brilho na cor do monte (pedido antes, para ficar atrás da carta).
+        const zoneTrail = event.from === 'Graveyard' ? '#b98cff' : event.from === 'Exile' ? '#ffffff' : undefined;
+        // Conjurar: grãos na cor da carta se juntam onde ela sai, e um anel na mesma cor quando ela chega à pilha.
+        if (event.type === 'spell-cast') {
+          const tone = kit.toneOf(piece);
+          kit.gpu.play('glint', { at: from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, color: tone });
+          kit.gpu.play('arrive', { at: to, color: tone, delay: options.duration * .9 });
+        }
+        if (zoneTrail) kit.gpu.play('trail', { from, to, duration: options.duration, style: 'sparkle', color: zoneTrail });
+        fly(piece, from === hand ? { ...hand, w: end.w * .7, h: end.h * .7 } : from, to, end, options.duration, { caption, tint: zoneGlow(event.from) });
+      }
       // Dobra: a carta chega à pilha rasgando o espaço.
       if (warpCast(event)) { const at = to; later(() => warpRift(at, 1), options.duration * .7); }
       // Comandante conjurado da zona de comando: a taxa sobe 2 para a próxima vez.

@@ -41,6 +41,8 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
   host.append(canvas);
 
   const live = new Map<GpuEffect, { frames: number; elapsed: number }>();
+  // O que precisa ser desfeito junto com a camada (as texturas das cartas).
+  const cleanups: (() => void)[] = [];
   let frames = 0, destroyed = false, stopAfterRender = false;
   function tick() {
     const real = app.ticker.elapsedMS, ms = real * gpuClock.timeScale;
@@ -87,6 +89,7 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
     removeEventListener('resize', resized);
     live.clear();
     app.ticker.stop();
+    for (const fn of cleanups.splice(0)) { try { fn(); } catch { /* A limpeza de uma parte não segura as outras. */ } }
     // Desfaz o contexto WebGL junto (o navegador limita quantos uma página pode ter abertos).
     app.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
   }
@@ -100,6 +103,8 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
   }
   return {
     canvas, app, add, clear, destroy, local, coarse: opts.coarse,
+    /** Roda `fn` quando a camada for desfeita. */
+    onDestroy(fn: () => void) { cleanups.push(fn); },
     get destroyed() { return destroyed; },
     stats: (): GpuLayerStats => ({ frames, live: live.size }),
     size: () => ({ width: app.screen.width, height: app.screen.height }),

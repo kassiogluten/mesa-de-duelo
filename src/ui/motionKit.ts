@@ -23,6 +23,8 @@ export const SETTLE = spring(300, 24);
 export const TAP = spring(420, 26);
 
 export interface Point { cx: number; cy: number; w: number; h: number }
+/** O brilho de borda do voo na GPU, pela cor da moldura da carta (a mesma do `planeswalkerEffects`, dourado no multicolor). */
+const EDGE: Record<string, string> = { W: '#fff3c4', U: '#6fb8ff', B: '#b07cff', R: '#ff7a4d', G: '#63d68f', M: '#f2b54c', L: '#c8b48a', C: '#dfe6ee' };
 export interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string }
 /** Onde uma carta da sua mão estava: o tamanho sem o giro do leque, e o giro à parte. */
 export interface HandSpot extends Point { rot: number; seen: number }
@@ -153,8 +155,31 @@ export function createMotionKit(root: HTMLElement, opts: { notice?(text: string)
     opts: { caption?: HTMLElement; delay?: number; endRot?: number; fade?: boolean; tint?: string } = {}) {
     const { caption, delay = 0 } = opts;
     const { frames, captionFrames } = flightFrames(from, to, end, opts);
+    // Na camada GPU, a carta voa com perspectiva de verdade; a peça em CSS continua o mesmo caminho, invisível, levando a legenda.
+    if (gpuFly(piece, from, to, end, duration, opts)) piece.classList.add('gpu-flying');
     animate(piece, frames, duration, 'linear', delay);
     if (caption) animate(caption, captionFrames, duration, 'linear', delay);
+  }
+  /**
+   * O voo de uma carta de face para cima na camada GPU, com a imagem completa dela (`data-full`), o brilho de borda na
+   * cor da carta (ou na do monte de onde ela vem, pelo `tint`) e escurecida como no CSS (anulada, destruída, sacrificada).
+   * Os versos (compra, moer, embaralhar) e as cópias do golpe continuam em CSS. Devolve se voou na GPU.
+   */
+  function gpuFly(piece: HTMLElement, from: Point & { rot?: number }, to: Point, end: Point, duration: number, opts: { delay?: number; endRot?: number; fade?: boolean; tint?: string }) {
+    if (!gpu.ready() || !piece.matches?.('.presentation-piece:not(.draw-ghost, .mill-ghost, .shuffle-ghost, .strike-ghost)')) return false;
+    const face = piece.querySelector<HTMLElement>('.face[data-full]');
+    const url = face?.dataset.full;
+    if (!face || !url) return false;
+    const tint = opts.tint ?? '';
+    const zone = /drop-shadow\([^)]*?(#[0-9a-f]{3,8})\)/i.exec(tint)?.[1];
+    const edge = zone ?? EDGE[/\bcol-(\w)/.exec(face.className)?.[1] ?? ''] ?? EDGE.C;
+    const shade = /grayscale\(\.8/.test(tint) ? 0x6e6e6e : /grayscale/.test(tint) ? 0x9a9a9a : /sepia/.test(tint) ? 0x8c735a : undefined;
+    return gpu.play('flight', { url, from, to, end, duration, delay: opts.delay, endRot: opts.endRot, fade: opts.fade, edge, shade });
+  }
+  /** A cor da moldura de uma carta (pela classe `col-X` da face), para os efeitos na cor dela. */
+  function toneOf(el: Element | null | undefined) {
+    const face = el?.matches?.('.face') ? el : el?.querySelector?.('.face');
+    return EDGE[/\bcol-(\w)/.exec(face?.className ?? '')?.[1] ?? ''] ?? EDGE.C!;
   }
   /** Uma carta caindo numa pilha (cemitério, exílio, grimório): a pilha a recebe com um pulso de mola. */
   function absorb(pile: HTMLElement | null) {
@@ -194,7 +219,7 @@ export function createMotionKit(root: HTMLElement, opts: { notice?(text: string)
     later(() => remove(rift), 920);
   }
   return {
-    root, state, layer, later, stage, gpu, stackPile, recentStack, callouts, hiddenCards,
+    root, state, layer, later, stage, gpu, toneOf, stackPile, recentStack, callouts, hiddenCards,
     animate, effect, track, clear, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift,
   };
 }

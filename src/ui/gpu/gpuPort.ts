@@ -39,6 +39,17 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     if (gen !== generation) { layer.destroy(); return; }
     effects.prepare(layer);
     runtime = { layer, effects };
+    preloadTable();
+    // As imagens do Scryfall chegam depois do desenho (e a mesa redesenha sozinha): de tempos em tempos, com o navegador
+    // ocioso, as cartas novas da mão, da pilha e do campo também carregam a textura.
+    const again = () => { if (runtime?.layer !== layer || layer.destroyed) return; const ric = globalThis.requestIdleCallback; if (ric) ric(preloadTable, { timeout: 1000 }); else preloadTable(); setTimeout(again, 1500); };
+    setTimeout(again, 1500);
+  }
+  /** As cartas que podem voar logo (mão, pilha, campo, topo dos montes e zona de comando) carregam a textura delas: ao ficar pronta, de tempos em tempos e a cada desenho da mesa. */
+  function preloadTable() {
+    if (!runtime || runtime.layer.destroyed) return;
+    const { layer, effects } = runtime;
+    root.querySelectorAll<HTMLElement>('#fHand .face[data-full], #fStack .face[data-full], .field .face[data-full], .piles .face[data-full], #fCommand .face[data-full]').forEach(el => effects.preload(layer, el.dataset.full!));
   }
   // A troca automática acontece no meio de um quadro da camada: desfaz no próximo giro, fora do laço dela.
   function switchToLightNow() { setTimeout(() => { release(); o.notice?.(AUTO_LIGHT_NOTICE); }, 0); }
@@ -84,6 +95,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
       return runtime.effects.play(runtime.layer, name, params);
     },
     clear() { runtime?.layer.clear(); },
+    preloadTable,
     /** Para os testes e a medição: quadros desenhados e efeitos vivos (sem a camada, nada). */
     stats: () => runtime?.layer.stats() ?? null,
     ready: () => !!runtime,

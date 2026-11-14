@@ -43,12 +43,14 @@ export function createPresentationQueue(d: PresentationDeps) {
       for (const el of incoming) match.knownHand.add(Number(el.dataset.fid));
       for (const draw of draws) {
         const cards = draw.actor === s.you ? incoming : [];
-        const arrivals = motion.drew(draw.actor!, draw.count ?? 1, { you: s.you, cards, fast: d.prefs.fast || hasLiveDecision(s), searched: !!draw.searched });
+        const arrivals = motion.drew(draw.actor!, draw.count ?? 1, { you: s.you, cards, fast: d.prefs.fast, searched: !!draw.searched });
         cards.forEach((el, i) => match.arriving.set(Number(el.dataset.fid), performance.now() + (arrivals[i] ?? 0)));
       }
     }
     if (!entry || !s) return;
-    const fast = d.prefs.fast || hasLiveDecision(s);
+    // O ritmo é só o das Opções: no Normal, tudo no tempo cheio, mesmo com uma decisão sua esperando (os botões já ficam
+    // liberados na hora); só o Rápido acelera.
+    const fast = d.prefs.fast;
     const duration = presentationDuration(entry.event, fast);
     // Dano dividido: os próximos danos da mesma mágica ou habilidade saem juntos, cada um para o seu alvo.
     const first = entry.event;
@@ -65,12 +67,12 @@ export function createPresentationQueue(d: PresentationDeps) {
       const all = [first, ...clashing.map(part => part.event)];
       for (const e of all) e.clash = all.some(o => o !== e && o.sourceId !== undefined && o.sourceId === e.targets?.cards?.[0] && o.targets?.cards?.[0] === e.sourceId);
     }
-    if (first.type === 'mill') motion.milled(first, { you: s.you, fast: d.prefs.fast || hasLiveDecision(s), face: card => d.face(card, 'normal') });
-    else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: d.prefs.fast || hasLiveDecision(s), face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
+    if (first.type === 'mill') motion.milled(first, { you: s.you, fast: d.prefs.fast, face: card => d.face(card, 'normal') });
+    else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: d.prefs.fast, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
     else for (const part of [entry, ...divided, ...fought, ...clashing]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? d.face(part.event.card, 'normal') : undefined,
-        label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast || hasLiveDecision(s)), hideDestination: !hasLiveDecision(s) });
+        label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast), hideDestination: !hasLiveDecision(s) });
     }
     audio.play(entry.event, timeline.matchId, entry.audible, s.you);
     if (entry.event.type === 'damage' && entry.event.targets?.players?.length) d.announce(d.eventDescription(entry.event));

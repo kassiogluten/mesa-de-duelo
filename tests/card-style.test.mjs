@@ -50,3 +50,9 @@ test('texto do Forge perde o id interno da carta', async () => {
   assert.equal(withoutCardIds('Lightning Bolt (123) - Deal 3 damage to Grizzly Bears (45).'), 'Lightning Bolt - Deal 3 damage to Grizzly Bears.');
   assert.equal(richText('Llanowar Elves (7): {T}').includes('(7)'), false);
 });
+
+test('every style carries the full image for the GPU flight, and the back without an image carries none', () => {
+  const full = 'https://cards.scryfall.io/normal/front/a/b/ab.jpg';
+  for (const style of ['full', 'art', 'arena']) assert.match(faceHTML({ ...base, style, art: 'https://img/art.jpg', full }), /class="face[^"]*" data-full="https:\/\/cards\.scryfall\.io\/normal\/front\/a\/b\/ab\.jpg"/);
+  assert.doesNotMatch(faceHTML({ ...base, back: true }), /data-full/);
+});

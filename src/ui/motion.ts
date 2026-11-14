@@ -1,6 +1,6 @@
 // Animações da mesa: compara o antes e o depois de cada jogada e anima o que mudou.
 import type { PresentationEvent } from './presentationTimeline';
-import { center, createMotionKit, reduced, SETTLE, TAP, turnOf } from './motionKit';
+import { center, createMotionKit, LANDING, reduced, SETTLE, TAP, turnOf } from './motionKit';
 import { createDamageMotion } from './motionDamage';
 import { createAbilityMotion } from './motionAbility';
 import { createZoneMotion } from './motionZones';
@@ -31,6 +31,8 @@ export interface Motion {
   milled(event: PresentationEvent, options: { you: number; fast: boolean; face: (card: NonNullable<PresentationEvent['card']>) => string }): void;
   /** Várias permanentes da mesma resolução (fichas, blink em massa): chegam em cascata curta, e cada monte mostra quantas ganhou ("+8"). */
   entered(event: PresentationEvent, options: { you: number; fast: boolean; face: (card: NonNullable<PresentationEvent['card']>) => string; hideDestination?: boolean }): void;
+  /** Carta reorganizada na mão: assenta com mola no lugar novo, com um anel dourado pequeno (na camada GPU). */
+  settled(id: number): void;
   cancelPresentation(): void;
   /** Mesa nova: limpa os efeitos e, com efeitos completos, prepara a camada GPU (carregada com a mesa ociosa). */
   reset(): void;
@@ -63,6 +65,8 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
         const at = center(el);
         if (at) cards.set(key, { ...at, el, tapped: !!el.closest('.tapped'), zone: el.parentElement?.closest('[id]')?.id ?? '' });
       });
+      // As cartas que podem voar logo já carregam a textura delas na camada GPU.
+      kit.gpu.preloadTable();
       const now = performance.now();
       const pile = center(kit.stackPile());
       if (pile) state.stackSpot = { ...pile, seen: now };
@@ -142,6 +146,13 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
     deal: library.deal,
     revealIn: stage.revealIn,
     finale: stage.finale,
+    settled(id) {
+      const el = root.querySelector<HTMLElement>(`#fHand [data-fid="${id}"]`);
+      const at = center(el);
+      if (!el || !at || reduced()) return;
+      animate(el, [{ scale: '1.08', translate: '0 -8px' }, { scale: '1', translate: '0 0' }], LANDING.duration, LANDING.easing);
+      kit.gpu.play('arrive', { at, color: '#f2b54c', size: Math.max(at.w, at.h) * .95 });
+    },
     cancelPresentation: kit.clear,
     reset() { kit.clear(); state.cards = new Map(); state.primed = false; kit.gpu.prepare(); },
     effectsChanged() { kit.gpu.refresh(); },

@@ -3,7 +3,7 @@ import { Color, Container, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect } from './gpuLayer';
 
 /** As texturas da mesa (criadas uma vez em `prepare`) e o teto de partículas do aparelho. */
-export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: Texture; max: number }
+export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: Texture; cardGlow: Texture; max: number }
 
 // Teto de faíscas vivas na camada (no celular, metade): um combate grande não vira uma nuvem que derruba os quadros.
 export const MAX_PARTICLES = 400;

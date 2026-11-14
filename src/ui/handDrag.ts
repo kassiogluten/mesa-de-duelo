@@ -1,4 +1,4 @@
-// Arrastar cartas da mão: soltar no campo para jogar e reordenar a mão.
+// Arrastar cartas da mão: soltar no campo para jogar e reordenar a mão, com a carta em perspectiva (deita ao chegar no campo e inclina para onde vai).
 import type { FState } from '../forge/client';
 
 export interface HandDragIntent { id: number; gen: number; x: number; y: number }
@@ -18,6 +18,18 @@ export function handDropAction(state: FState | null | undefined, intent: HandDra
   if (!bounds || !canDragHandCard(state, intent.id, intent.gen) || Math.hypot(x - intent.x, y - intent.y) < DRAG_THRESHOLD ||
     x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return null;
   return { type: 'card' as const, id: intent.id, gen: intent.gen };
+}
+
+/**
+ * A pose da carta arrastada. Pela posição: `rise` vai de 0 (na mão) a 1 (no meio do seu campo), e ela deita para trás
+ * conforme chega ao campo, como se fosse pousar, e encolhe um pouco. Pela velocidade do ponteiro (px por ms): por cima
+ * disso, inclina para o lado em que vai, como se tivesse peso (para a direita, a borda direita afunda; para cima, a de
+ * cima), com teto para não virar de lado.
+ */
+export function dragTilt(vx: number, vy: number, rise = 0) {
+  const clamp = (v: number, max: number) => Math.max(-max, Math.min(max, v));
+  const lay = 40 * Math.max(0, Math.min(1, rise));
+  return { rx: lay + clamp(-vy * 14, 15), ry: clamp(vx * 17, 18), scale: 1.08 - .08 * Math.max(0, Math.min(1, rise)) };
 }
 
 /*
@@ -66,6 +78,12 @@ export function insideHand(bounds: DropBounds | null, x: number, y: number) {
   return !!bounds && x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom;
 }
 
+/** A inclinação da carta arrastada: a face dela, o último ponto e a velocidade do ponteiro, a pose atual e o quadro pedido. */
+interface Tilt {
+  face: HTMLElement; ghost: HTMLElement; x: number; y: number; at: number; vx: number; vy: number; rx: number; ry: number; scale: number; frame: number;
+  /** Altura (y) de onde a carta saiu e do meio do seu campo: a régua do `rise`. */
+  fromY: number; fieldY: number;
+}
 interface Reorder { slots: HTMLElement[]; from: number; lefts: number[]; centers: number[]; to: number; bounds: DropBounds }
 
 export function attachHandDrag(root: HTMLElement, options: {
@@ -76,11 +94,12 @@ export function attachHandDrag(root: HTMLElement, options: {
   play(action: { type: 'card'; id: number; gen: number }): void;
   reorder(id: number, to: number): void;
 }) {
-  let drag: (HandDragIntent & { pointer: number; source: HTMLElement; ghost: HTMLElement | null; sortable: boolean; order: Reorder | null }) | null = null;
+  let drag: (HandDragIntent & { pointer: number; source: HTMLElement; ghost: HTMLElement | null; sortable: boolean; order: Reorder | null; tilt: Tilt | null }) | null = null;
   let suppressUntil = 0;
   const hand = () => root.querySelector<HTMLElement>('#fHand');
   function cancel() {
     if (!drag) return;
+    if (drag.tilt) cancelAnimationFrame(drag.tilt.frame);
     if (drag.ghost) suppressUntil = performance.now() + 500;
     drag.ghost?.remove(); drag.source.classList.remove('drag-source');
     drag.order?.slots.forEach(slot => { slot.style.transform = ''; });
@@ -115,7 +134,7 @@ export function attachHandDrag(root: HTMLElement, options: {
     const id = Number(source.dataset.fid), gen = Number(source.dataset.gen);
     const sortable = source.matches('#fHand .hcard:not(.outside)') && options.canReorder();
     if (!sortable && !canDragHandCard(options.state(), id, gen)) return;
-    drag = { id, gen, x: e.clientX, y: e.clientY, pointer: e.pointerId, source, ghost: null, sortable, order: null };
+    drag = { id, gen, x: e.clientX, y: e.clientY, pointer: e.pointerId, source, ghost: null, sortable, order: null, tilt: null };
   });
   root.addEventListener('pointermove', e => {
     if (!drag || e.pointerId !== drag.pointer) return;
@@ -134,6 +153,24 @@ export function attachHandDrag(root: HTMLElement, options: {
       root.querySelector('.arena')?.append(ghost);
       if (drag.sortable) drag.order = startReorder(drag.source);
       drag.source.classList.add('drag-source'); drag.ghost = ghost;
+      // Com "reduzir movimento", a carta fica reta, como antes.
+      const face = ghost.querySelector<HTMLElement>('.face');
+      if (face && !globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        const field = root.querySelector('.field.me')?.getBoundingClientRect();
+        const fromY = bounds.top + bounds.height / 2;
+        drag.tilt = { face, ghost, x: e.clientX, y: e.clientY, at: performance.now(), vx: 0, vy: 0, rx: 0, ry: 0, scale: 1.08, frame: 0,
+          fromY, fieldY: field?.height ? field.top + field.height / 2 : fromY - 300 };
+        drag.tilt.frame = requestAnimationFrame(tick);
+      }
+    }
+    const tilt = drag.tilt;
+    if (tilt) {
+      // Velocidade suavizada, para a inclinação não tremer com o ponteiro.
+      const now = performance.now(), dt = Math.max(8, now - tilt.at);
+      tilt.vx = tilt.vx * .7 + (e.clientX - tilt.x) / dt * .3; tilt.vy = tilt.vy * .7 + (e.clientY - tilt.y) / dt * .3;
+      tilt.x = e.clientX; tilt.y = e.clientY; tilt.at = now;
+      // Sobre um campo, com a carta jogável: acende, mostrando que soltar ali conjura.
+      tilt.ghost.classList.toggle('over-field', playable && !!document.elementFromPoint(e.clientX, e.clientY)?.closest('.field'));
     }
     // O contorno do campo só aparece quando a carta pode ser jogada; sem isso, o arrasto só reorganiza a mão.
     root.querySelector('.arena')?.classList.toggle('dragging-hand', playable);
@@ -142,6 +179,17 @@ export function attachHandDrag(root: HTMLElement, options: {
     const order = drag.order;
     if (order) preview(order, insideHand(order.bounds, e.clientX, e.clientY) ? handDropIndex(order.centers, order.from, e.clientX) : order.from);
   });
+  /** A pose da carta a cada quadro: deita conforme chega ao campo e segue a velocidade; com o ponteiro parado, a inclinação de lado volta com mola. */
+  function tick() {
+    const tilt = drag?.tilt;
+    if (!tilt) return;
+    if (performance.now() - tilt.at > 40) { tilt.vx *= .82; tilt.vy *= .82; }
+    const rise = (tilt.fromY - tilt.y) / Math.max(1, tilt.fromY - tilt.fieldY);
+    const target = dragTilt(tilt.vx, tilt.vy, rise);
+    tilt.rx += (target.rx - tilt.rx) * .25; tilt.ry += (target.ry - tilt.ry) * .25; tilt.scale += (target.scale - tilt.scale) * .25;
+    tilt.face.style.transform = `perspective(700px) rotateX(${tilt.rx.toFixed(2)}deg) rotateY(${tilt.ry.toFixed(2)}deg) scale(${tilt.scale.toFixed(3)})`;
+    tilt.frame = requestAnimationFrame(tick);
+  }
   root.addEventListener('pointerup', e => {
     if (!drag || e.pointerId !== drag.pointer) return;
     const { id, order } = drag;

@@ -76,6 +76,8 @@ export function createDamageMotion(kit: MotionKit) {
       const reach = event.fight || event.clash ? .42 : Math.max(0, 1 - (Math.min(to.w, to.h) * .55 + Math.min(from.w, from.h) * .4) / Math.hypot(dx, dy));
       const travel = Math.round(duration * .9);
       source.el.style.opacity = '0'; hiddenCards.add(source.el);
+      // Na camada GPU, riscos de velocidade acompanham o avanço até o ponto do choque.
+      gpu.play('streak', { from, to: { ...from, cx: from.cx + dx * reach, cy: from.cy + dy * reach }, duration: travel * .27, delay: travel * .18 });
       animate(ghost, [
         { translate: '0 0', scale: '1', rotate: turn, easing: 'ease-out' },
         { translate: `${-dx * .06}px ${-dy * .06}px`, scale: '1.05', rotate: turn, offset: .18, easing: 'cubic-bezier(.55, 0, .9, .45)' },

@@ -14,7 +14,7 @@ export interface MoveParams {
    * Rastro de uma carta voando no mesmo arco do voo (`flightArc`), no mesmo tempo: brilho claro (devolvida à mão),
    * brasas (sacrificada) ou poeira (destruída).
    */
-  trail: { from: Point; to: Point; duration: number; delay?: number; style: 'sparkle' | 'ember' | 'dust' };
+  trail: { from: Point; to: Point; duration: number; delay?: number; style: 'sparkle' | 'ember' | 'dust'; color?: string };
   /** Sacrificada: brasas e fumaça escura subindo do lugar em que estava. */
   ash: { at: Point };
   /** Fumaça de ninja: nuvem cinza que cresce e se desfaz. `size` é o diâmetro da nuvem. */
@@ -72,9 +72,11 @@ export const MOVE_EFFECTS: { [N in keyof MoveParams]: (layer: GpuLayer, s: Share
       };
     });
   },
-  trail(layer, s, { from, to, duration, delay = 0, style }) {
+  trail(layer, s, { from, to, duration, delay = 0, style, color }) {
     const end = layer.local(to.cx, to.cy), arc = flightArc(from, to);
-    const colors = style === 'sparkle' ? [0xffffff, 0xcdefff, 0x9fd4ff] : style === 'ember' ? [0xff6a3d, 0xffb07a, 0xd8432a] : [0xbdb5a6, 0x8c8478, 0xe0d8c8];
+    // Com cor (a carta que sai do cemitério ou do exílio), o brilho na cor do monte.
+    const tint = color ? colorOf(color, 0xffffff) : undefined;
+    const colors = tint !== undefined ? [tint, 0xffffff, tint] : style === 'sparkle' ? [0xffffff, 0xcdefff, 0x9fd4ff] : style === 'ember' ? [0xff6a3d, 0xffb07a, 0xd8432a] : [0xbdb5a6, 0x8c8478, 0xe0d8c8];
     let last: { x: number; y: number } | null = null;
     return timed(duration * .92, (_view, sparks) => (t, ms) => {
       // `t` vai até 92% do voo (no fim a carta já entra no monte): a posição é a do voo no mesmo instante.

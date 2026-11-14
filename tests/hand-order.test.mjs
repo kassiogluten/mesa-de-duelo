@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { arrangeHand, moveInHand, handDropIndex, handSlotShift, insideHand } = await import('../src/ui/handDrag.ts');
+const { arrangeHand, moveInHand, handDropIndex, handSlotShift, insideHand, dragTilt } = await import('../src/ui/handDrag.ts');
 
 test('the first hand follows the order Forge sends', () => {
   assert.deepEqual(arrangeHand([], [5, 3, 9]), [5, 3, 9]);
@@ -47,4 +47,18 @@ test('dropping inside the hand area reorders; above it, on the field, it plays',
   assert.equal(insideHand(hand, 300, 590), false);
   assert.equal(insideHand(hand, 90, 700), false);
   assert.equal(insideHand(null, 300, 700), false);
+});
+
+test('the dragged card lays back as it reaches the field and leans toward where it is going, within limits', () => {
+  assert.deepEqual(dragTilt(0, 0), { rx: 0, ry: 0, scale: 1.08 });
+  const right = dragTilt(.5, 0), up = dragTilt(0, -.5);
+  assert.ok(right.ry > 0 && right.rx === 0, 'moving right turns the card to the right');
+  assert.ok(up.rx > 0 && up.ry === 0, 'moving up tips the top edge away');
+  assert.deepEqual(dragTilt(10, -10), { rx: 15, ry: 18, scale: 1.08 });
+  assert.deepEqual(dragTilt(-10, 10), { rx: -15, ry: -18, scale: 1.08 });
+  // Na mão fica de pé; no meio do campo, deitada 40° e um pouco menor; passar do campo não deita mais.
+  assert.deepEqual(dragTilt(0, 0, .5), { rx: 20, ry: 0, scale: 1.04 });
+  assert.deepEqual(dragTilt(0, 0, 1), { rx: 40, ry: 0, scale: 1 });
+  assert.deepEqual(dragTilt(0, 0, 3), dragTilt(0, 0, 1));
+  assert.deepEqual(dragTilt(0, 0, -1), dragTilt(0, 0, 0));
 });

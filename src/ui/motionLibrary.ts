@@ -90,6 +90,10 @@ export function createLibraryMotion(kit: MotionKit) {
       copySleeve(ghost, libEl);
       // Sobe do grimório em arco, inclinada e com sombra, e assenta no lugar dela no leque, já no giro dele; a sua carta
       // vira de face para cima ao chegar.
+      // Na camada GPU, um rastro de brilho (dourado na busca) e um brilho pequeno quando a carta chega à mão.
+      const glow = options.searched ? '#f2b54c' : '#bfe3ff';
+      kit.gpu.play('trail', { from: library, to, duration: travel, delay: i * gap, style: 'sparkle', color: glow });
+      kit.gpu.play('arrive', { at: to, color: glow, size: Math.max(size.w, size.h) * .9, delay: travel + i * gap });
       fly(ghost, library, to, { ...to, ...size }, travel, { delay: i * gap, endRot: card ? turnOf(card) : 0, tint: options.searched ? 'drop-shadow(0 0 10px #f2b54c)' : '' });
       later(() => {
         remove(ghost);

@@ -780,6 +780,9 @@ function table() {
           port.play('trail', { from: selected, to: end, duration: 760, style });
           return style === 'sparkle' ? 'Rastro da devolvida à mão (só o rastro; a carta fica no campo).' : style === 'ember' ? 'Rastro de brasas da sacrificada até o cemitério.' : 'Rastro de poeira da destruída até o cemitério.';
         }
+        case 'glint': if (!selected) return needSelected; port.play('glint', { at: selected, color: c.color || '#63d68f' }); return 'Conjurar: grãos na cor da carta se juntam onde ela sai.';
+        case 'arrive': if (!selected) return needSelected; port.play('arrive', { at: selected, color: c.color || '#f2b54c' }); return 'Chegada: anel e faíscas (pilha, compra, cemitério, bloqueio, mão reorganizada).';
+        case 'streak': if (!from || !to) return 'Escolha a fonte e o alvo.'; port.play('streak', { from, to, duration: 300 }); return 'Golpe: riscos de velocidade da fonte até o alvo.';
         case 'shockwave': {
           if (!selected) return needSelected;
           const table = document.querySelector('.arena')!.getBoundingClientRect();
@@ -899,7 +902,7 @@ function panel() {
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['dissolve', 'Exilar'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
        ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)']]
-      .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
+      .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="glint">Conjurar (redemoinho)</button><button data-gpu="arrive">Chegada (anel)</button><button data-gpu="arrive" data-color="#9b7bff">Chegada no cemitério</button><button data-gpu="streak">Golpe (riscos)</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
     <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta.</p>
     <div>Câmera lenta só da camada: ${[['1', '1×'], ['4', '4×'], ['10', '10×']].map(([k, t]) => `<button data-gpu-slow="${k}">${t}</button>`).join('')}<button data-gpu="freeze">Congelar</button></div>
     <h2>Mão revelada (item 41)</h2>

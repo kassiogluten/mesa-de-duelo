@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.168.0] - 2026-11-13
+
+### Mudou
+
+- **Carta arrastada em perspectiva.** Ao arrastar uma carta da mão para conjurar, ela deita para trás conforme chega ao campo, como se fosse pousar, e acende em dourado quando soltar ali conjura; enquanto você move, ela também inclina para o lado em que vai, como se tivesse peso, e volta a ficar reta quando você para. Com "reduzir movimento" do sistema, ela continua reta.
+- **Conjurar, comprar e descartar com efeitos.** Com os efeitos completos, a carta conjurada sai da mão num redemoinho de grãos na cor dela e chega à pilha com um anel na mesma cor; a carta comprada vem do grimório com um rastro de brilho e acende ao chegar à mão (dourado numa busca); a descartada deixa um rastro violeta até o cemitério, que acende ao recebê-la; e a carta reorganizada na mão assenta com mola e um anel dourado pequeno.
+- **Batalha com mais impacto.** Com os efeitos completos, o atacante ganha um anel vermelho no chão no bote, o bloqueador ergue um escudo dourado, e o golpe de combate deixa riscos de velocidade até o ponto do choque.
+- **Cartas voando com perspectiva.** Com os efeitos completos, a carta conjurada, resolvida, anulada, descartada ou saindo do campo voa inclinando para trás de verdade enquanto sobe, com uma sombra na mesa que se afasta e se espalha conforme ela ganha altura e um brilho de borda na cor dela. Nos estilos Arte e texto e Arena, a carta voa com a imagem completa e volta ao estilo escolhido ao pousar. A que sai do cemitério ou do exílio deixa um rastro de brilho na cor do monte. Os versos (compra, moer) continuam como antes.
+- **Ritmo Normal no tempo cheio.** Com o ritmo das jogadas em Normal, as animações agora sempre têm o tempo cheio, também quando você tem a prioridade ou outra decisão esperando (antes, nesses momentos, tudo saía bem mais rápido). Os botões continuam liberados na hora; para acelerar, escolha Rápido em Opções → Jogo.
+
 ## [0.167.0] - 2026-11-13
 
 ### Novo

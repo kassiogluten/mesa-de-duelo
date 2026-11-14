@@ -1,4 +1,22 @@
 {
+  "0.168.0": {
+    "Carta arrastada em perspectiva": [
+      { "img": "0.168.0/arrastar.webp", "legenda": "Raio sendo arrastado da mão: sobre o campo, a carta deita para trás e acende em dourado." }
+    ],
+    "Conjurar, comprar e descartar com efeitos": [
+      { "img": "0.168.0/conjurar.webp", "legenda": "Uma criatura verde sendo conjurada: grãos verdes e brancos giram e se juntam onde ela sai." },
+      { "img": "0.168.0/chegada-pilha.webp", "legenda": "Uma mágica vermelha chegando à pilha, com o anel na cor dela." }
+    ],
+    "Batalha com mais impacto": [
+      { "img": "0.168.0/bloqueio.webp", "legenda": "O bloqueador ergue um escudo dourado." },
+      { "img": "0.168.0/golpe.webp", "legenda": "No golpe de combate, riscos vermelhos de velocidade acompanham o avanço até o alvo." }
+    ],
+    "Cartas voando com perspectiva": [
+      { "img": "0.168.0/voo-conjurar.webp", "legenda": "Uma criatura conjurada voa da mão para a pilha, inclinada, com a sombra na mesa e o brilho verde na borda." },
+      { "img": "0.168.0/voo-arte-e-texto.webp", "legenda": "No estilo Arte e texto, a carta voa com a imagem completa por cima da mesa nesse estilo." },
+      { "img": "0.168.0/voo-cemiterio.webp", "legenda": "Uma mágica conjurada do cemitério deixa um rastro roxo e voa com o brilho roxo do monte." }
+    ]
+  },
   "0.167.0": {
     "Efeitos completos ou leves": [
       { "img": "0.167.0/opcao-efeitos.webp", "legenda": "A opção Efeitos em Opções → Aparência, começando em Completos." }

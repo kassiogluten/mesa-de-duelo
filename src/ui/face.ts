@@ -20,7 +20,11 @@ export interface FaceInfo {
   token?: boolean;
   /** Carta de lembrete de uma permanente virada para baixo: sem a imagem (ou se ela não carregar), fica o verso. */
   back?: boolean;
+  /** A imagem completa, em qualquer estilo: é ela que voa na camada GPU (`data-full`). */
+  full?: string;
 }
+
+const fullAttr = (f: FaceInfo) => f.full ? ` data-full="${esc(f.full)}"` : '';
 
 const BACK_LAYER = '<div class="back face-back" aria-hidden="true"></div>';
 
@@ -34,8 +38,8 @@ export type CardStyle = 'full' | 'art' | 'arena';
 export function faceHTML(f: FaceInfo) {
   if (f.style === 'art') return artFaceHTML(f);
   if (f.style === 'arena') return arenaFaceHTML(f);
-  if (f.back) return `<div class="face col-${f.color}">${BACK_LAYER}${f.image ? `<img src="${f.image}" alt="${esc(f.name)}" draggable="false" loading="lazy" onerror="this.remove()">` : ''}</div>`;
-  return `<div class="face col-${f.color}">
+  if (f.back) return `<div class="face col-${f.color}"${fullAttr(f)}>${BACK_LAYER}${f.image ? `<img src="${f.image}" alt="${esc(f.name)}" draggable="false" loading="lazy" onerror="this.remove()">` : ''}</div>`;
+  return `<div class="face col-${f.color}"${fullAttr(f)}>
     <div class="fb">
       <div class="fb-head"><span class="fb-name">${esc(f.name)}</span><span class="fb-cost">${manaHTML(f.manaCost)}</span></div>
       <div class="fb-type">${esc(f.typeLine)}</div>
@@ -54,7 +58,7 @@ function artFaceHTML(f: FaceInfo) {
   const basic = /\b(basic|básico)\b/i.test(f.typeLine) && /\b(land|terreno)\b/i.test(f.typeLine);
   const stat = f.loyalty !== undefined ? `<div class="af-stat af-loyalty">${f.loyalty}</div>`
     : f.creature ? `<div class="af-stat">${f.power ?? 0}/${f.toughness ?? 0}</div>` : '';
-  return `<div class="face art-face col-${f.color}${basic ? ' basic' : ''}">
+  return `<div class="face art-face col-${f.color}${basic ? ' basic' : ''}"${fullAttr(f)}>
     <div class="af-head"><span class="af-name">${esc(f.name)}</span><span class="af-cost">${manaHTML(f.manaCost)}</span></div>
     <div class="af-art">${f.back ? BACK_LAYER : ''}${f.art ? `<img src="${f.art}" alt="" draggable="false" loading="lazy" onerror="this.remove()">` : ''}</div>
     ${basic ? '' : `<div class="af-type">${esc(f.typeLine)}</div>${f.text ? `<div class="af-text">${richText(f.text).replace(/\n/g, '<br>')}</div>` : ''}`}
@@ -74,7 +78,7 @@ function arenaKind(f: Pick<FaceInfo, 'typeLine' | 'creature' | 'loyalty'>) {
 
 /** Permanente no estilo Arena: a arte ocupa a carta inteira; P/R, lealdade e marcadores vêm da mesa, no rodapé. */
 function arenaFaceHTML(f: FaceInfo) {
-  return `<div class="face arena-face col-${f.color} ar-${arenaKind(f)}${f.token ? ' ar-token' : ''}">${f.back ? BACK_LAYER : ''}
+  return `<div class="face arena-face col-${f.color} ar-${arenaKind(f)}${f.token ? ' ar-token' : ''}"${fullAttr(f)}>${f.back ? BACK_LAYER : ''}
     ${f.art ? `<img src="${f.art}" alt="" draggable="false" loading="lazy" onerror="this.remove()">` : ''}
     <div class="ar-foot"></div>
   </div>`;
