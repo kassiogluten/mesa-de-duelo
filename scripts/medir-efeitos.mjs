@@ -109,6 +109,8 @@ async function measure(name, rate) {
         loaf: supported.includes('long-animation-frame'), gpu: !!document.querySelector('canvas.gpu-layer'), elements: document.querySelectorAll('*').length,
         probeBefore, probeAfter, late: performance.now() > until + 1500,
         worst: lf.length ? (({ startTime, duration, blockingDuration, renderStart, styleAndLayoutStart, scripts }) => ({ at: Math.round(startTime), duration: Math.round(duration), blocking: Math.round(blockingDuration), render: Math.round(renderStart - startTime), layout: Math.round(styleAndLayoutStart - startTime), scripts: scripts.map(x => x.invoker + " " + Math.round(x.duration)) }))(lf.reduce((a, b) => b.duration > a.duration ? b : a)) : null,
+        // Todos os quadros longos (só no --json): o momento diz qual jogada pesou (a jogada n sai aos 600 + n × 2500 ms).
+        frames: lf.map(({ startTime, duration, blockingDuration, scripts }) => ({ at: Math.round(startTime), duration: Math.round(duration), blocking: Math.round(blockingDuration), scripts: scripts.filter(x => x.duration >= 5).map(x => (x.sourceFunctionName || x.invoker) + " " + Math.round(x.duration)) })),
         longFrames: lf.length, longFrameP95: p(durations, .95), longFrameMax: Math.max(0, ...durations),
         blocking: lf.reduce((n, f) => n + (f.blockingDuration ?? 0), 0), style: lf.reduce((n, f) => n + (f.styleAndLayoutStart ? f.startTime + f.duration - f.styleAndLayoutStart : 0), 0),
         longTasks: lt.length, longTaskMax: Math.max(0, ...lt.map(t => t.duration)),

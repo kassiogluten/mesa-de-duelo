@@ -29,7 +29,7 @@ Os valores abaixo foram fixados com a medição da fase 0 (13/11/2026, [Mediçõ
 | 2 | Mesa parada não gasta GPU: nenhum quadro desenhado no canvas sem efeito vivo | Contador de quadros da camada GPU exposto para teste (`gpuLayer.stats()`) |
 | 3 | Durante a cena de dano, a camada GPU não piora a fluidez em relação ao CSS: mediana (de 3 medições) do p95 dos quadros longos (LoAF) igual ou menor que a do CSS medido em seguida, com a CPU 1×, 4× e 6× mais lenta (CSS: 0, 74 e 181 ms) | `scripts/medir-efeitos.mjs`, base (fase 0) contra fase 2 |
 | 4 | Nenhuma tarefa longa (> 50 ms) causada por carregar ou iniciar o PixiJS no meio de uma jogada | Mesma medição; o pacote é carregado com a mesa aberta e ociosa (`requestIdleCallback`), e um efeito pedido antes de ele estar pronto sai em CSS |
-| 5 | Tela inicial sem crescer nada; pacote da GPU com até 150 KB gzip (medido: ~131 KB, carregado só na partida) | Tamanho dos chunks no `npm run build` |
+| 5 | Tela inicial sem crescer nada; pacote da GPU com até 150 KB gzip (medido: ~131 KB na fase 1 e 145 KB na fase 3, carregado só na partida) | Tamanho dos chunks no `npm run build` |
 | 6 | Nenhum efeito segura a vez do jogador: a duração de cada passo continua a de `presentationDuration()` | Testes da fila de apresentação continuam passando; o efeito em GPU termina dentro do tempo do passo |
 | 7 | Sem WebGL2, contexto perdido ou falha ao carregar o pacote, a mesa continua com os efeitos em CSS, sem erro na tela | Testes da decisão GPU/CSS; `webglcontextlost` forçado com `WEBGL_lose_context` no teste de navegador |
 | 8 | Conferido num celular de entrada de verdade (Chrome com depuração remota) antes de publicar a fase 2 | Registrar aparelho e números nesta spec |
@@ -192,7 +192,9 @@ Entra nas novidades (`### Mudou`), com prints.
 - [x] Textura da carta por `fetch(url, { mode: 'cors' })` + `createImageBitmap`, com os cantos arredondados recortados num canvas, e o voo em DOM se a textura não estiver pronta a tempo (`src/ui/gpu/gpuFlight.ts`). Pré-carga com a mesa ociosa das cartas da mão, da pilha, do campo, do topo dos montes e da zona de comando (a cada desenho e a cada 1,5 s); guarda até 24 normais e 96 pequenas, e o campo usa a pequena se a normal não chegou. Carta virada para baixo e versos (compra, moer, embaralhar, mão inicial) continuam em DOM: o verso é desenhado em CSS e não vira textura direto.
 - [x] `fly()` na GPU: carta com perspectiva real (`PerspectiveMesh`, os mesmos números do voo em CSS: arco de `flightPath.ts`, crescer, inclinar e girar), sombra na mesa que desce e se espalha com a altura e brilho de borda pela cor da carta (ou do monte), as duas também em perspectiva. A peça em CSS faz o mesmo caminho, invisível, levando a legenda por cima do canvas (`.gpu-flying`).
 - [x] Conjurar até a pilha, resolver, anular, descartar, saídas do campo, troca de controle e a cascata de fichas e de várias permanentes; a compra fica em DOM (versos).
-- [ ] Medir de novo (critérios 3 a 6) e conferir no celular. Não medido nesta etapa, a pedido do usuário; o celular continua pendente (critério 8).
+- [x] Medir de novo (critérios 3 a 6). Feito em 14/11/2026, números em [Medições](#medições): os voos ficaram mais leves na GPU, o campo cheio empatou, o pacote cresceu para 145 KB gzip (dentro dos 150) e os testes da fila de apresentação passam; o critério 3 **não** foi cumprido na cena `dano` com a CPU 4× e 6×, e as medições apontam o voo da carta como o que pesa a mais.
+- [x] Decidir o que fazer com o dano mais pesado na GPU com a CPU freada (ver [Medições](#medições), fase 3): decidido em 14/11/2026, o celular de verdade decide. Só se ele também mostrar o peso, o voo da carta na GPU fica mais leve (começar por um trace do Chrome na cena `dano`: malha em perspectiva, textura e a peça invisível em CSS).
+- [ ] Conferir no celular de entrada de verdade (critério 8), junto com o da fase 2, incluindo a cena `dano`. Em 14/11/2026 não havia aparelho disponível: fica pendente até haver um Android de entrada para ligar por USB (adb, depuração USB e o Chrome com depuração remota).
 
 ### Fase 4 (decidir com números): o campo inteiro em WebGL
 
@@ -260,5 +262,36 @@ O que a base diz: os efeitos de hoje passam bem na CPU normal; o que pesa é o c
 | campo-cheio | 6× | GPU | 12 (11–13) | 491 (476–517) | 3467 (3367–3502) | 26 (26–29) |
 
 As linhas GPU da cena `dano` com a CPU 1× e 4× são da segunda rodada, já com o aquecimento dos shaders; as outras linhas GPU são da primeira (antes dele, o que só pode ter pesado contra a GPU). Critério 3: cumprido nas três velocidades (p95 0, 65 e 160 ms contra 0, 74 e 181 ms). Critério 4: com o aquecimento, nenhuma tarefa longa a mais na CPU 1×. Critério 6: os efeitos na GPU duram o mesmo que os de CSS que substituem (impacto 540 ms, pouso 470 ms, estilhaços até ~680 ms, ultimate 1100 ms) e o impacto do projétil sai no mesmo temporizador de antes; os testes da fila de apresentação continuam passando. Critério 8: falta (celular de verdade).
+
+**Fase 3, CSS contra GPU no mesmo código (`--query gpu=0` e `gpu=1`, rodados em seguida por cena, 14/11/2026, código da 0.169.0):**
+
+| Cena | CPU | Versão | Quadros longos | p95 (ms) | Bloqueio (ms) | Tarefas longas |
+| --- | --- | --- | --- | --- | --- | --- |
+| voos | 1× | CSS | 0 (0–4) | 0 (0–140) | 0 | 0 |
+| voos | 1× | GPU | 0 (0–5) | 0 (0–118) | 0 | 0 |
+| voos | 4× | CSS | 9 (7–9) | 95 (93–104) | 133 (119–134) | 5 (4–5) |
+| voos | 4× | GPU | 7 (7–8) | 86 (72–110) | 73 (66–88) | 4 (3–4) |
+| voos | 6× | CSS | 12 | 189 (159–245) | 551 (516–597) | 10 (9–12) |
+| voos | 6× | GPU | 12 (11–14) | 129 (125–144) | 413 (407–487) | 9 (9–10) |
+| dano | 1× | CSS | 0 (0–3) | 0 (0–341) | 0 | 0 |
+| dano | 1× | GPU | 0 (0–3) | 0 (0–334) | 0 | 0 |
+| dano | 4× | CSS | 2 (2–3) | 56 (53–93) | 5 (0–10) | 0 (0–1) |
+| dano | 4× | GPU | 2 (1–3) | 101 (52–115) | 2 (0–4) | 0 |
+| dano | 6× | CSS | 7 (6–9) | 93 (85–111) | 115 (109–148) | 6 (6–9) |
+| dano | 6× | GPU | 11 (11–12) | 151 (85–155) | 139 (133–175) | 7 (6–8) |
+| campo-cheio | 1× | CSS | 4 (1–7) | 64 (57–132) | 0 (0–10) | 0 (0–1) |
+| campo-cheio | 1× | GPU | 3 (2–4) | 93 (65–173) | 0 | 0 |
+| campo-cheio | 4× | CSS | 11 (11–12) | 224 (216–263) | 1306 (1267–1311) | 15 (14–16) |
+| campo-cheio | 4× | GPU | 12 | 229 (223–230) | 1301 (1261–1336) | 13 (13–15) |
+| campo-cheio | 6× | CSS | 14 (14–15) | 398 (365–411) | 2597 (2442–2600) | 27 (27–31) |
+| campo-cheio | 6× | GPU | 14 (12–14) | 381 (365–485) | 2554 (2452–2848) | 30 (29–33) |
+
+O que a fase 3 diz:
+
+- **Voos:** a GPU ganha nas três velocidades (p95 0, 86 e 129 ms contra 0, 95 e 189 ms, e quase metade do bloqueio com a CPU 4×). É a cena que a fase 3 mudou. Critério 3 cumprido.
+- **Campo cheio:** empate dentro da faixa (o peso é o redesenho, item 114). Com a GPU, os intervalos entre quadros acima de 34 ms sobem (117 contra 16 com a CPU 4×, 143 contra 63 com 6×) porque a camada desenha a cada quadro enquanto há efeito vivo e, freada, cada quadro passa um pouco dos 34 ms (p95 35,8 contra 33,4 ms); não são quadros longos.
+- **Dano:** o critério 3 **não** foi cumprido com a CPU 4× (101 contra 56 ms; com só 2 quadros longos por cena o p95 é o pior quadro, e as faixas se cruzam) nem com 6× (151 contra 93 ms). Na fase 2 ele passava (65 e 160 contra 74 e 181), mas o CSS daquela rodada saiu bem mais pesado que o desta, então a comparação entre rodadas não serve. Repetindo só o dano com a CPU 6× (8 medições de cada, alternando as versões), a mediana do p95 deu 134 ms na GPU contra 109 no CSS, o tempo somado dos quadros longos 728 contra 614 ms e o bloqueio 150 contra 106 ms. Os quadros a mais aparecem no terreno, nos Bolts, na luta e na destruída, e os piores (~150 ms) não têm script nem bloqueio: são desenho ou espera pela GPU emulada. Num teste rápido (4 medições de cada, máquina com ruído), a GPU **sem o voo da carta** (fase 3) ficou com p95 86 ms e soma 662 ms, perto do CSS; tirar a sombra animada da peça invisível que leva a legenda não mudou nada (121 ms, 773 ms). A suspeita é o voo da carta na GPU (malha em perspectiva com a textura inteira, mais a peça em CSS fazendo o mesmo caminho), e o celular de verdade (critério 8) é o que diz se isso pesa fora da GPU emulada.
+- **Critério 4:** nenhuma tarefa longa com a CPU 1× em nenhuma cena, com a GPU. **Critério 5:** 145,1 KB gzip baixados na partida com a camada ligada (conferido no `vite preview`, somando os arquivos que a página pediu; o renderizador WebGPU e o de canvas não são pedidos), e a tela inicial sem nenhum deles. **Critério 6:** os 614 testes do `npm test`, com os da fila de apresentação, passam.
+- O `scripts/medir-efeitos.mjs` passou a gravar no `--json` todos os quadros longos de cada medição (`frames`, com o momento, a duração, o bloqueio e os scripts acima de 5 ms), para achar qual jogada pesou.
 
 **Troca automática para leves:** um efeito é lento quando a média entre quadros na vida dele passa de 40 ms (menos de 25 quadros por segundo); três lentos entre os oito primeiros da partida trocam para leves (`SLOW_FRAME_MS`, `SLOW_EFFECTS` e `WATCHED_EFFECTS` em `gpuSupport.ts`). Na medição sem tela, nem a CPU 6× chegou perto disso.
