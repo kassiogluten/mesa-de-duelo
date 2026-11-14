@@ -2,7 +2,7 @@
 // mudaram, o pedido da caixa de ação, o cemitério que abre sozinho no alvo e os botões do pedido.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { findCard, manaTone, fixForgeText, trackCounterBumps } = await import('../src/ui/tableCards.ts');
+const { findCard, manaTone, fixForgeText, trackCounterBumps, poolTotals, poolsThatGrew } = await import('../src/ui/tableCards.ts');
 const { boardPrompt, instructionLines } = await import('../src/ui/tableActionBox.ts');
 const { graveyardTargeting, zoneKindOf } = await import('../src/ui/tableZone.ts');
 const { inputActionAllowed } = await import('../src/ui/tableInputActions.ts');
@@ -34,6 +34,13 @@ test('the mana flying from a land takes its colour; several colours are gold and
   assert.equal(manaTone({ id: 3, name: 'Llanowar Elves', manaCost: '{G}' }), '#58c878');
   assert.equal(manaTone({ id: 4, name: 'Sol Ring', manaCost: '{1}' }), '#dadada');
   assert.equal(manaTone(undefined), undefined);
+});
+
+test('only the players whose mana pool grew since the last drawing send mana to their portrait', () => {
+  const before = poolTotals([{ id: 1, pool: { G: 1 } }, { id: 2, pool: {} }, { id: 3, pool: { R: 2 } }]);
+  const now = poolTotals([{ id: 1, pool: { G: 1, U: 1 } }, { id: 2 }, { id: 3, pool: { R: 1 } }, { id: 4, pool: { W: 1 } }]);
+  assert.deepEqual([...now], [[1, 2], [2, 0], [3, 1], [4, 1]]);
+  assert.deepEqual([...poolsThatGrew(before, now)], [1, 4], 'spent mana (3) and an empty pool (2) send nothing');
 });
 
 test('Forge possessives become Portuguese in the prompt, the question and its options', () => {

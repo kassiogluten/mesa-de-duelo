@@ -704,6 +704,15 @@ function table() {
           setTimeout(() => { state.input = { ...state.input, paying: false, message: 'Laboratório de efeitos: use o painel.', cancel: { label: '', enabled: false } }; flush(); }, 300 + lands.length * 450 + 500);
           return 'Pagar: a mana sai de cada terreno que vira e voa até o custo.';
         }
+        case 'float': {
+          // Gerar mana sem pagar nada: cada terreno que vira põe a mana na reserva, e ela voa até o seu retrato.
+          const lands = me.battlefield.filter((x: any) => x.land && !x.tapped).slice(0, 3);
+          if (!lands.length) { add('me', 'land', false); add('me', 'land', false); return 'Pus dois terrenos: aperte de novo.'; }
+          const color = (x: any) => /Island/.test(x.name) ? 'U' : /Mountain/.test(x.name) ? 'R' : /Swamp/.test(x.name) ? 'B' : /Plains/.test(x.name) ? 'W' : 'G';
+          lands.forEach((x: any, i: number) => setTimeout(() => { x.tapped = true; me.pool = { ...me.pool, [color(x)]: (me.pool?.[color(x)] ?? 0) + 1 }; flush(); }, 300 + i * 450));
+          setTimeout(() => { me.pool = {}; flush(); }, 300 + lands.length * 450 + 2500);
+          return 'Gerar mana: a mana sai de cada terreno que vira e voa até a reserva, no seu retrato, que pulsa quando ela chega.';
+        }
         case 'opening': case 'mulligan': {
           const hand = Array.from({ length: 7 }, (_, i) => { const [name, extra] = HAND_POOL[(i + (c.kind === 'mulligan' ? 3 : 0)) % HAND_POOL.length]; return { id: nextId++, controller: ME, ...card(name, extra) }; });
           me.hand = hand; me.handCount = hand.length;
@@ -831,7 +840,7 @@ function table() {
   // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar (a camada GPU junto), e &gpu=0 ou &gpu=1 escolhe os efeitos em CSS ou na GPU. Além das jogadas da
   // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
   // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
-  // commander, ability, pay, opening, mulligan, reveal, win, lose) e cheio (o "Campo cheio" do painel, para medir com a mesa
+  // commander, ability, pay, float, opening, mulligan, reveal, win, lose) e cheio (o "Campo cheio" do painel, para medir com a mesa
   // lotada: scripts/medir-efeitos.mjs).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
   const run = (play: string) => {
@@ -901,7 +910,7 @@ function panel() {
     <h2>Movimentos da 0.117.0 (na selecionada, ou do lado escolhido)</h2>
     ${[['block', 'Bloquear'], ['fight', 'Lutar'], ['scry', 'Vidência 3'], ['coin', 'Moeda'], ['die', 'Dado d20'], ['shuffle', 'Embaralhar'], ['attach', 'Equipar'], ['control', 'Trocar de controle'],
        ['transform', 'Transformar'], ['counters', '+1/+1 em três'], ['lore', 'Saga: capítulo'], ['search', 'Buscar no grimório'], ['reanimate', 'Reanimar'], ['flashback', 'Conjurar do cemitério'],
-       ['commander', 'Comandante (ida e volta)'], ['ability', 'Habilidade (se ergue)'], ['pay', 'Pagar com terrenos'], ['opening', 'Mão inicial'], ['mulligan', 'Mulligan'], ['reveal', 'Revelar'], ['win', 'Vitória'], ['lose', 'Derrota']]
+       ['commander', 'Comandante (ida e volta)'], ['ability', 'Habilidade (se ergue)'], ['pay', 'Pagar com terrenos'], ['float', 'Gerar mana (reserva)'], ['opening', 'Mão inicial'], ['mulligan', 'Mulligan'], ['reveal', 'Revelar'], ['win', 'Vitória'], ['lose', 'Derrota']]
       .map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}
     <h2>Efeitos na GPU (item 125)</h2>
     <p>Desenhados direto na camada GPU, sem mudar a partida. Impactos e projétil usam Fonte e Alvo da seção Dano; pouso, estilhaços e ultimate, a permanente selecionada.</p>

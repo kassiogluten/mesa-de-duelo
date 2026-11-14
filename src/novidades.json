@@ -1,4 +1,9 @@
 {
+  "0.171.0": {
+    "Mana voando até a reserva": [
+      { "img": "0.171.0/mana-reserva.webp", "legenda": "Duas Florestas viradas soltam orbes verdes que voam em curva até o seu retrato, onde a reserva mostra a mana verde ×2." }
+    ]
+  },
   "0.170.0": {
     "Voar e vínculo com a vida mais vivos": [
       { "img": "0.170.0/voar-vinculo.webp", "legenda": "Vampiro Falcão-da-noite flutuando, com grãos verdes de vida subindo pelas bordas e um risco de vento passando por baixo." }

@@ -74,7 +74,7 @@ import { createTableSettings } from './tableSettings';
 import { createErrorsPanel } from './errorsPanel';
 import { createAwaitingCallout, createToasts, createTurnBanner } from './tableNotices';
 import type { TableCtx } from './tableContext';
-import { findCard as findCardIn, fixForgeText, manaTone } from './tableCards';
+import { findCard as findCardIn, fixForgeText, manaTone, poolsThatGrew, poolTotals } from './tableCards';
 import { createPresentationQueue } from './tablePresentation';
 import { createModalFocus } from './tableModal';
 import { createOpponentFocus } from './opponentFocus';
@@ -163,6 +163,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // As criaturas tontas no desenho anterior, para as estrelinhas do enjoo chegarem ou voarem embora.
   let dizzyBefore = new Set<number>(), dizzyMatch = '';
   let dealtHand = '', payingBefore = false;
+  // A reserva de mana de cada jogador no desenho anterior: cresceu, a mana do terreno que virou voa até o retrato.
+  let poolBefore = new Map<number, number>(), poolMatch = '';
   // Opções da partida (tableSettings.ts): som, jogo e aparência, com as preferências deste aparelho.
   const settings = createTableSettings(root, { audio, passLevel, turnNotice, turnBuzz, connected: () => !!client?.connected && !match.disconnected,
     passLevelChanged: () => { if (passMenu.open) passMenu.sync(); }, closeMenus: () => { setMenu(false, true); setLog(false); }, syncModal,
@@ -435,7 +437,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
 
   /** O que anima depois do desenho: as cartas que mudaram de lugar, a mana do pagamento, quem transformou e a mão inicial. */
   function playMotion(s: FState, visual: FState, silently: boolean) {
-    motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events, paying: s.input.paying || payingBefore ? id => manaTone(findCard(id)) : undefined });
+    const pools = poolTotals(visual.players);
+    const grew = poolMatch === timeline.matchId ? poolsThatGrew(poolBefore, pools) : new Set<number>();
+    poolBefore = pools; poolMatch = timeline.matchId;
+    const pooled = grew.size ? (id: number) => { const c = findCard(id), player = c?.controller; return player !== undefined && grew.has(player) ? { tone: manaTone(c) ?? '#dfe6ee', player } : undefined; } : undefined;
+    motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events, paying: s.input.paying || payingBefore ? id => manaTone(findCard(id)) : undefined, pooled });
     // O último terreno do pagamento chega num estado em que o pagamento já acabou: ele também solta a mana.
     payingBefore = !!s.input.paying;
     // Mesma permanente com outro nome no campo: transformou (dupla face, dia e noite) ou virou cópia de outra.

@@ -100,6 +100,17 @@ try {
     window.postMessage({ cmd: 'extra', kind: 'coin', side: 'me' }, '*'); await wait(300);
     const coin = document.querySelector('.chance-piece.gpu-drawn');
     out.coinOnGpu = !!coin && getComputedStyle(coin.querySelector('b')).visibility === 'hidden' && getComputedStyle(coin.querySelector('.presentation-caption')).visibility === 'visible';
+    // Gerar mana sem pagar: a mana voa até a reserva no retrato (na GPU, sem a bolinha de CSS), que pulsa na chegada.
+    await wait(1500);
+    // O "Pagar" de antes deixou os terrenos virados: a primeira vez põe dois terrenos novos.
+    window.postMessage({ cmd: 'extra', kind: 'float', side: 'me' }, '*'); await wait(1500);
+    orbs = 0; seen.observe(document.body, { childList: true, subtree: true });
+    const beforePool = gpu.stats().frames;
+    window.postMessage({ cmd: 'extra', kind: 'float', side: 'me' }, '*');
+    let pulsed = false;
+    for (let i = 0; i < 25 && !pulsed; i++) { await wait(80); pulsed = !!document.querySelector('#fMeAvatar .pool')?.getAnimations().length; }
+    seen.disconnect();
+    out.poolOrbs = orbs; out.drewPool = gpu.stats().frames > beforePool; out.poolPulsed = pulsed;
     return out;
   `);
   assert.ok(back.flying, 'the drawn card did not fly face down on the GPU');
@@ -108,6 +119,9 @@ try {
   assert.equal(back.cssOrbs, 0, 'the mana orb was drawn in CSS with the GPU layer ready');
   assert.ok(back.drewMana, 'the GPU layer drew nothing for the mana');
   assert.ok(back.coinOnGpu, 'the coin was not drawn on the GPU (or the caption was hidden with it)');
+  assert.equal(back.poolOrbs, 0, 'the mana going to the pool was drawn in CSS with the GPU layer ready');
+  assert.ok(back.drewPool, 'the GPU layer drew nothing for the mana going to the pool');
+  assert.ok(back.poolPulsed, 'the mana pool did not pulse when the mana arrived');
 
   run('open', lab('&gpu=0'));
   const off = evaluate(`${LAND}

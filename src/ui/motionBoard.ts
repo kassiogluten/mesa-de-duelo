@@ -132,11 +132,20 @@ export function createBoardMotion(kit: MotionKit) {
       if (text && !lore && !reduced()) gpu.play('counter', { at, harmful: /^M\d+M\d+$/.test(kind) });
     }
   }
-  /** A mana sai do terreno que acabou de virar e voa até o custo que falta pagar, na caixa de ação. */
-  function manaOrb(card: HTMLElement, tone: string, delay: number) {
-    const from = center(card), to = center(root.querySelector('#fAction .prompt-short') ?? root.querySelector('#fAction'));
+  /**
+   * A mana sai do terreno que acabou de virar e voa até o custo que falta pagar, na caixa de ação; com `player`, ela foi
+   * para a reserva, e voa até o retrato dele, que pulsa quando ela chega.
+   */
+  function manaOrb(card: HTMLElement, tone: string, delay: number, player?: number) {
+    const portrait = player === undefined ? null : root.querySelector<HTMLElement>(`.avatar[data-pid="${player}"] .portrait`);
+    const from = center(card), to = center(player === undefined ? root.querySelector('#fAction .prompt-short') ?? root.querySelector('#fAction') : portrait);
     if (!from || !to || reduced()) return;
-    // Na camada GPU: um orbe de luz com rastro de grãos, que estoura ao chegar no custo.
+    if (player !== undefined) later(() => {
+      // A mesa pode ter sido redesenhada no meio do voo: a reserva é procurada de novo na chegada.
+      const pool = root.querySelector<HTMLElement>(`.avatar[data-pid="${player}"] .pool`) ?? root.querySelector<HTMLElement>(`.avatar[data-pid="${player}"] .portrait`);
+      if (pool) animate(pool, [{ transform: 'scale(1)' }, { transform: 'scale(1.16)', offset: .35 }, { transform: 'scale(1)' }], LANDING.duration, LANDING.easing);
+    }, delay + 600);
+    // Na camada GPU: um orbe de luz com rastro de grãos, que estoura ao chegar no custo ou no retrato.
     if (gpu.play('mana', { from, to, color: tone, duration: 620, delay })) return;
     const orb = effect('mana-orb', { ...from, w: 18, h: 18 });
     orb.style.setProperty('--mana', tone);

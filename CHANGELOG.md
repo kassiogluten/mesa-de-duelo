@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.171.0] - 2026-11-14
+
+### Novo
+
+- **Mana voando até a reserva.** Virar um terreno só para gerar mana, sem estar pagando nada, agora mostra a mana saindo dele e voando até a reserva, no retrato de quem a gerou (o seu ou o de um oponente), que dá um pulso quando ela chega. Com os efeitos completos, é o orbe de luz com rastro de grãos; com os leves, uma bolinha na cor da mana. Pagando um custo, a mana continua voando até o custo, como antes.
+
 ## [0.170.0] - 2026-11-14
 
 ### Mudou

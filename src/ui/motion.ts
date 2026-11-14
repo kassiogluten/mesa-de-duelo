@@ -13,7 +13,11 @@ const KEYED = '[data-fid],[data-peek]';
 export interface Motion {
   capture(): void;
   /** `paying`: a cor da mana de cada terreno, enquanto você paga um custo (o terreno que vira solta a mana até o custo). */
-  play(options?: { silent?: boolean; semantic?: boolean; paying?: (id: number) => string | undefined }): void;
+  /**
+   * `paying`: a cor da mana do terreno que virou pagando um custo (ela voa até a caixa de ação). `pooled`: a cor e o
+   * dono da mana do terreno que virou sem pagar nada, com a reserva dele crescendo (ela voa até o retrato).
+   */
+  play(options?: { silent?: boolean; semantic?: boolean; paying?: (id: number) => string | undefined; pooled?: (id: number) => { tone: string; player: number } | undefined }): void;
   present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean }): void;
   /** Compra: versos de carta saem do grimório e vão para a mão. `cards` são as cartas novas da sua mão, mostradas ao chegar. */
   drew(actor: number, count: number, options: { you: number; cards: HTMLElement[]; fast: boolean; searched?: boolean }): number[];
@@ -113,7 +117,10 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
             // Virar tem peso: a mola passa um pouco do ponto e assenta. Desvirar em lote vai em onda, uma carta depois da outra.
             const untapping = before.tapped;
             const tone = !untapping ? options.paying?.(Number(key)) : undefined;
+            const pooled = !untapping && !tone && !el.closest('.attacking') ? options.pooled?.(Number(key)) : undefined;
             if (tone) board.manaOrb(el, tone, 90);
+            // Gerou mana sem pagar nada: a mana voa até a reserva, no retrato de quem a gerou.
+            else if (pooled) board.manaOrb(el, pooled.tone, 90, pooled.player);
             // Virar sem pagar nada: um pouco de poeira na base, na camada GPU (pagando, a mana já sai da carta).
             else if (!untapping) kit.gpu.play('dust', { at });
             animate(slot, [{ translate: `${dx}px ${dy}px`, rotate: untapping ? '90deg' : '-90deg' }, { translate: '0 0', rotate: '0deg' }],

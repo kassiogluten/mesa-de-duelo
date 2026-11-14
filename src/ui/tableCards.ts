@@ -28,7 +28,17 @@ export function findCard(s: FState | null | undefined, frame: PresentationFrame 
   return undefined;
 }
 
-/** A cor da mana de um terreno (ou da carta que dá mana), para a mana que voa dele até o custo. */
+/** Quanto há na reserva de mana de cada jogador (para ver, entre um desenho e outro, quem gerou mana). */
+export function poolTotals(players: readonly { id: number; pool?: Record<string, number> }[]) {
+  return new Map(players.map(p => [p.id, Object.values(p.pool ?? {}).reduce((sum, n) => sum + n, 0)] as [number, number]));
+}
+
+/** Quem tem mais mana na reserva agora do que no desenho anterior. */
+export function poolsThatGrew(before: ReadonlyMap<number, number>, now: ReadonlyMap<number, number>) {
+  return new Set([...now].filter(([id, n]) => n > (before.get(id) ?? 0)).map(([id]) => id));
+}
+
+/** A cor da mana de um terreno (ou da carta que dá mana), para a mana que voa dele até o custo ou até a reserva. */
 export function manaTone(c: FCard | undefined) {
   if (!c) return undefined;
   const text = `${c.typeLine ?? ''} ${c.name ?? ''}`;
