@@ -1,5 +1,5 @@
 // A janela Opções da partida (som, jogo, aparência) e as preferências que ela guarda neste aparelho: o ritmo das jogadas,
-// o estilo das cartas, o tapete com a arte do deck e a arte própria da mesa. As seções abertas ficam como o jogador deixou.
+// o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa e os efeitos (completos ou leves). As seções abertas ficam como o jogador deixou.
 import { EVENTS, KEYS } from '../storage';
 import type { CardStyle } from './face';
 import type { createGameAudio, SoundPack } from './audio';
@@ -11,6 +11,7 @@ import type { createTurnBuzz } from './turnBuzz';
 import type { createTurnNotice } from './turnNotice';
 import { finder } from './dom';
 import { ownArtEnabled, setOwnArtEnabled } from '../scryfallCards';
+import { effectsLevel, setEffectsLevel } from './gpu/gpuSupport';
 
 const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
 
@@ -30,6 +31,8 @@ export interface SettingsDeps {
   render(): void;
   /** Redesenho só da mesa, sem ler eventos novos (o estilo das cartas mudou). */
   rerender(): void;
+  /** "Efeitos" mudou entre completos e leves. */
+  effectsChanged(): void;
 }
 
 export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
@@ -58,7 +61,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     const settings = d.audio.settings, turnBuzz = d.turnBuzz;
     $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
     $('#fPlaySummary').textContent = [chosen('#fPassLevel'), d.turnNotice.enabled && 'Aviso de turno', screenWake.supported && screenWake.enabled && 'Tela acesa', turnBuzz.supported && turnBuzz.enabled && 'Vibrar', prefs.fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
-    $('#fLookSummary').textContent = [chosen('#fCardStyle'), prefs.playmat && 'Tapete', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
+    $('#fLookSummary').textContent = [chosen('#fCardStyle'), `Efeitos ${chosen('#fEffects').toLowerCase()}`, prefs.playmat && 'Tapete', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
   }
   /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
   let openOptionGroups = ['sound'];
@@ -109,6 +112,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     ($('#fSoundPack') as HTMLSelectElement).value = settings.pack;
     ($('#fPace') as HTMLSelectElement).value = prefs.fast ? 'fast' : 'normal';
     ($('#fCardStyle') as HTMLSelectElement).value = prefs.cardStyle;
+    ($('#fEffects') as HTMLSelectElement).value = effectsLevel();
     ($('#fTema') as HTMLSelectElement).value = lerTema();
     syncPassLevel();
   }
@@ -136,6 +140,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
       try { localStorage.setItem(KEYS.cards, prefs.cardStyle); } catch { /* Storage is optional. */ }
       d.rerender();
     }
+    if (t.id === 'fEffects') { setEffectsLevel(t.value === 'light' ? 'light' : 'full'); d.effectsChanged(); }
     if (t.id === 'fSoundPack') { void d.audio.setPack(t.value as SoundPack); }
     if (t.id === 'fTema') escolherTema(parseTema(t.value));
     if (t.id === 'fPassLevel') { if (d.connected() && isPassLevel(t.value)) d.passLevel.change(t.value); syncPassLevel(); if (d.hasState()) d.render(); }

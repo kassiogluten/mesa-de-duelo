@@ -32,7 +32,10 @@ export interface Motion {
   /** Várias permanentes da mesma resolução (fichas, blink em massa): chegam em cascata curta, e cada monte mostra quantas ganhou ("+8"). */
   entered(event: PresentationEvent, options: { you: number; fast: boolean; face: (card: NonNullable<PresentationEvent['card']>) => string; hideDestination?: boolean }): void;
   cancelPresentation(): void;
+  /** Mesa nova: limpa os efeitos e, com efeitos completos, prepara a camada GPU (carregada com a mesa ociosa). */
   reset(): void;
+  /** A opção "Efeitos" mudou: carrega ou desfaz a camada GPU. */
+  effectsChanged(): void;
 }
 
 /**
@@ -40,8 +43,8 @@ export interface Motion {
  * fica no seu módulo (dano, habilidades, montes, grimório, campo, centro da mesa, voos de carta); aqui ficam a foto da
  * mesa antes de cada desenho, o passo de cada carta que mudou de lugar e a escolha de quem apresenta cada evento.
  */
-export function createMotion(root: HTMLElement): Motion {
-  const kit = createMotionKit(root);
+export function createMotion(root: HTMLElement, opts: { notice?(text: string): void } = {}): Motion {
+  const kit = createMotionKit(root, opts);
   const { state, animate } = kit;
   const damage = createDamageMotion(kit);
   const abilities = createAbilityMotion(kit);
@@ -92,6 +95,8 @@ export function createMotion(root: HTMLElement): Motion {
             const untapping = before.tapped;
             const tone = !untapping ? options.paying?.(Number(key)) : undefined;
             if (tone) board.manaOrb(el, tone, 90);
+            // Virar sem pagar nada: um pouco de poeira na base, na camada GPU (pagando, a mana já sai da carta).
+            else if (!untapping) kit.gpu.play('dust', { at });
             animate(slot, [{ translate: `${dx}px ${dy}px`, rotate: untapping ? '90deg' : '-90deg' }, { translate: '0 0', rotate: '0deg' }],
               TAP.duration, TAP.easing, untapping ? Math.min(untapWave++, 12) * 45 : 0);
           } else {
@@ -138,6 +143,7 @@ export function createMotion(root: HTMLElement): Motion {
     revealIn: stage.revealIn,
     finale: stage.finale,
     cancelPresentation: kit.clear,
-    reset() { kit.clear(); state.cards = new Map(); state.primed = false; },
+    reset() { kit.clear(); state.cards = new Map(); state.primed = false; kit.gpu.prepare(); },
+    effectsChanged() { kit.gpu.refresh(); },
   };
 }

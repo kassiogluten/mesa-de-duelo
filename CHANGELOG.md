@@ -8,6 +8,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.167.0] - 2026-11-13
+
+### Novo
+
+- **Efeitos completos ou leves.** Em Opções → Aparência, a opção Efeitos escolhe entre completos e leves. Leves mantém os efeitos mais simples de antes, para aparelhos mais fracos. Num aparelho que não dá conta dos completos, a mesa troca sozinha para leves e avisa uma vez; dá para voltar nas Opções.
+- **Meus relatos.** As sugestões e os erros que você envia agora têm volta: o item **Meus relatos**, no menu ⋯ da tela inicial, mostra cada relato com o código, a data, o andamento (Recebido, Em análise, Resolvido ou Encerrado) e a resposta que escrevemos para você. Quem envia com a conta vê os relatos dela em qualquer aparelho; sem conta, ou com **Enviar sem meu nome**, eles aparecem no aparelho que enviou. Os relatos enviados antes desta versão e sem conta não aparecem na lista.
+- **Aviso de resposta num relato.** Quando um relato seu ganha resposta, ou é resolvido ou encerrado, um ponto dourado aparece no botão ⋯ e em Meus relatos até você abrir a lista, e um aviso curto aparece uma vez na tela inicial ou em Meus decks, com **Ver** para ir direto à resposta. Durante a partida, nada interrompe.
+
+### Mudou
+
+- **Dano com mais impacto.** Com os efeitos completos, golpes e mágicas de dano explodem em faíscas na cor do dano (vermelho, roxo no veneno e nos marcadores −1/−1, laranja na lealdade, azul no dano prevenido), e o projétil deixa um rastro de brasas até o alvo.
+- **Pouso, quebra e ultimate mais vivos.** Com os efeitos completos, a carta que chega ao campo levanta uma onda dourada com poeira, a que é destruída se parte em estilhaços que caem girando, e o ultimate de um planeswalker solta uma onda de luz na cor dele que atravessa a mesa.
+- **Cartas saindo do campo com mais vida.** Com os efeitos completos, a carta exilada se desfaz em grãos de luz que sobem, e a que volta de um blink se forma no meio deles. A sacrificada solta brasas e fumaça escura e deixa um rastro de brasas até o cemitério, a destruída deixa um rastro de poeira, e a devolvida à mão, um rastro de brilho.
+- **Ataque, habilidades e ninjas com mais impacto.** Com os efeitos completos, o atacante solta riscos de velocidade e poeira no bote. A habilidade ativada e o gatilho soltam grãos de luz em volta da carta (dourados e violeta) e um feixe de luz que estoura em faíscas no alvo. A fumaça do ninjutsu e do sneak ganha volume, e a carta que vira levanta um pouco de poeira.
+- **Depois de enviar um relato.** A tela de enviado agora diz onde a resposta vai aparecer: em Meus relatos, no menu ⋯.
+
 ## [0.166.0] - 2026-11-13
 
 ### Novo

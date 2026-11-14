@@ -7,7 +7,7 @@ const SKULL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a8 8 0 
 
 /** Dano e ganho de vida: o golpe ou o projétil até o alvo, o número que sobe e o retrato que acende. */
 export function createDamageMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, remove, pulse, floatNumber, hiddenCards, recentStack } = kit;
+  const { root, layer, later, animate, effect, remove, pulse, floatNumber, hiddenCards, recentStack, gpu } = kit;
   function damageTarget(event: PresentationEvent) {
     const player = event.targets?.players?.[0];
     if (player !== undefined) {
@@ -31,9 +31,12 @@ export function createDamageMotion(kit: MotionKit) {
     const at = target.at!;
     pulse(target.el, look.tone !== 'shield');
     const size = Math.max(64, Math.min(150, (target.player === undefined ? at.w : 90) * (look.heavy ? 1.5 : 1.15)));
-    const burst = effect(`damage-impact ${look.tone}${look.heavy ? ' heavy' : ''}`, { ...at, w: size, h: size });
-    animate(burst, [{ opacity: .95, scale: '.3' }, { opacity: .8, scale: '1', offset: .45 }, { opacity: 0, scale: '1.35' }], 520);
-    later(() => remove(burst), 560);
+    // Na camada GPU, o impacto explode em faíscas na cor do dano; em CSS, o clarão redondo de sempre.
+    if (reduced() || !gpu.play('burst', { at, tone: look.tone, size, heavy: look.heavy, lethal: look.lethal })) {
+      const burst = effect(`damage-impact ${look.tone}${look.heavy ? ' heavy' : ''}`, { ...at, w: size, h: size });
+      animate(burst, [{ opacity: .95, scale: '.3' }, { opacity: .8, scale: '1', offset: .45 }, { opacity: 0, scale: '1.35' }], 520);
+      later(() => remove(burst), 560);
+    }
     floatNumber(at, look.amount, `${look.tone}${look.heavy ? ' heavy' : ''}${look.lethal ? ' lethal' : ''}`, look.badges, look.deathtouch ? SKULL : '');
     const card = target.player === undefined ? target.el : null;
     if (look.lethal && card) {
@@ -83,10 +86,12 @@ export function createDamageMotion(kit: MotionKit) {
       return;
     }
     const travel = Math.round(duration * .55);
+    if (source.el) pulse(source.el);
+    // Na camada GPU, o projétil deixa um rastro de brasas; o impacto sai no mesmo tempo que o de CSS.
+    if (gpu.play('bolt', { from, to, tone: look.tone, duration: travel })) { later(() => impact(event, look, target), travel); return; }
     const bolt = effect(`damage-bolt ${look.tone}`, { ...from, w: 22, h: 22 });
     bolt.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;
     animate(bolt, [{ translate: '0 0', scale: '.6', opacity: .6 }, { translate: `${dx * .4}px ${dy * .4}px`, scale: '1.1', opacity: 1, offset: .5 }, { translate: `${dx}px ${dy}px`, scale: '1', opacity: 1 }], travel, 'cubic-bezier(.45, 0, .85, .55)');
-    if (source.el) pulse(source.el);
     later(() => { remove(bolt); impact(event, look, target); }, travel);
   }
   /** Ganho de vida (vínculo com a vida ou qualquer outro): "+N" verde subindo do retrato. */

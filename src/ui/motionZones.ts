@@ -9,7 +9,7 @@ export function zoneGlow(zone: string | undefined) {
 
 /** Os montes de cada jogador (cemitério, exílio, grimório, zona de comando) e a saída do campo para eles. */
 export function createZoneMotion(kit: MotionKit) {
-  const { root, later, animate, effect, remove, fly, absorb, shatter, warpRift } = kit;
+  const { root, later, animate, effect, remove, fly, absorb, shatter, warpRift, gpu } = kit;
   /** Para onde a carta vai ao sair do campo: cemitério, exílio, grimório ou mão. */
   function destination(event: PresentationEvent, mine: boolean, seat: Element | null, hand: Point, stage: Point) {
     const piles = (selector: string) => center(seat?.querySelector(`.piles ${selector}`)) ?? center(root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} ${selector}`));
@@ -60,6 +60,11 @@ export function createZoneMotion(kit: MotionKit) {
     const { caption, into = null, endRot = 0, fade = true } = opts;
     if (event.to !== 'Exile') {
       if (event.reason === 'destroyed') shatter(from);
+      // Na camada GPU: o sacrifício solta brasas e fumaça escura no lugar, e o voo deixa um rastro (poeira da destruída,
+      // brasas da sacrificada, brilho da devolvida à mão).
+      if (event.reason === 'sacrificed') gpu.play('ash', { at: from });
+      const trail = event.reason === 'destroyed' ? 'dust' : event.reason === 'sacrificed' ? 'ember' : event.to === 'Hand' ? 'sparkle' : undefined;
+      if (trail) gpu.play('trail', { from, to, duration, style: trail });
       const tint = event.reason === 'destroyed' ? 'brightness(.7) grayscale(.6)' : event.reason === 'sacrificed' ? 'brightness(.55) sepia(.4)' : '';
       fly(piece, from, to, end, duration, { caption, endRot, fade, tint });
       if (into) later(() => absorb(into), duration * .85);
@@ -68,9 +73,12 @@ export function createZoneMotion(kit: MotionKit) {
       if (warpReturn(event)) warpRift(from, .7);
       // Some no lugar, em luz; não precisa atravessar a mesa até a pilha do exílio.
       piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
-      const ring = effect('exile-ring', { ...from, w: end.w * 1.3, h: end.w * 1.3 });
-      animate(ring, [{ opacity: 0, scale: '.5' }, { opacity: .9, scale: '1', offset: .4 }, { opacity: 0, scale: '1.3' }], duration);
-      later(() => remove(ring), duration);
+      // Na camada GPU, a carta se desfaz em grãos de luz que sobem; em CSS, o anel claro de sempre.
+      if (!gpu.play('dissolve', { at: from, duration })) {
+        const ring = effect('exile-ring', { ...from, w: end.w * 1.3, h: end.w * 1.3 });
+        animate(ring, [{ opacity: 0, scale: '.5' }, { opacity: .9, scale: '1', offset: .4 }, { opacity: 0, scale: '1.3' }], duration);
+        later(() => remove(ring), duration);
+      }
       animate(piece, [{ opacity: 1, scale: '1', filter: 'brightness(1)' }, { opacity: .9, scale: '1.04', filter: 'brightness(2.2) saturate(.3)', offset: .45 }, { opacity: 0, scale: '1.1', filter: 'brightness(3) blur(3px)' }], duration);
     }
   }

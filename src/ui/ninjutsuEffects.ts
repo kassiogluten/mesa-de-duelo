@@ -32,6 +32,8 @@ export function createNinjaMotion(kit: MotionKit) {
     if (reduced() || event.swapFor === undefined) return;
     waiting.get(event.swapFor)?.remove();
     const cloud = smoke(at);
+    // Na camada GPU, a fumaça ganha volume: uma nuvem que se espalha no lugar do atacante.
+    kit.gpu.play('puff', { at, size: Math.max(at.w, at.h) * 1.6 });
     animate(cloud, [{ opacity: 0, scale: '.5' }, { opacity: 1, scale: '1.1', offset: .35 }, { opacity: .55, scale: '1' }], duration * .8);
     cloud.style.opacity = '.55';
     waiting.set(event.swapFor, cloud);
@@ -57,6 +59,8 @@ export function createNinjaMotion(kit: MotionKit) {
       cloud.style.left = `${to.cx}px`; cloud.style.top = `${to.cy}px`; cloud.style.width = cloud.style.height = `${size}px`;
       animate(cloud, [{ translate: `${was.left + was.width / 2 - to.cx}px ${was.top + was.height / 2 - to.cy}px` }, { translate: '0 0' }], duration * .4);
     }
+    // E estoura de novo quando o shuriken chega, com o ninja surgindo dela.
+    kit.gpu.play('puff', { at: to, size: size * 1.2, delay: duration * .4 });
     const star = effect('ninja-shuriken', { ...from, w: 34, h: 34 }, SHURIKEN);
     animate(star, [
       { translate: '0 0', rotate: '0turn', opacity: 1 },

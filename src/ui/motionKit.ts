@@ -2,6 +2,9 @@
  * O que todas as famílias de animação da mesa usam: as curvas (EASE e as molas), as contas de posição e a camada de
  * efeitos com o que a limpa (animações, timers, peças soltas e cartas escondidas durante um voo).
  */
+import { createGpuPort } from './gpu/gpuPort';
+import { flightArc } from './flightPath';
+
 export const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 // Moer: sem a arrancada do EASE, para a virada cair no meio do voo.
 export const MILL_EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
@@ -55,8 +58,12 @@ export interface MotionState {
 
 export type MotionKit = ReturnType<typeof createMotionKit>;
 
-/** A camada de efeitos de uma mesa: tudo o que cria (peças, animações, timers) é desfeito por `clear`. */
-export function createMotionKit(root: HTMLElement) {
+/**
+ * A camada de efeitos de uma mesa: tudo o que cria (peças, animações, timers) é desfeito por `clear`. Os efeitos que
+ * a camada GPU sabe desenhar passam por `gpu.play` primeiro; sem ela (efeitos leves, reduzir movimento, sem WebGL2),
+ * saem as peças de CSS de sempre. `notice` mostra o aviso da troca automática para efeitos leves.
+ */
+export function createMotionKit(root: HTMLElement, opts: { notice?(text: string): void } = {}) {
   const state: MotionState = { cards: new Map(), handSpots: new Map(), landedAt: new Map(), primed: false };
   const stackPile = () => root.querySelector<HTMLElement>('#fStack:not([hidden]) .stack-pile');
   const effects = new Set<HTMLElement>();
@@ -71,6 +78,7 @@ export function createMotionKit(root: HTMLElement) {
     timers.add(timer);
   };
   const stage = () => stagePoint(layer().getBoundingClientRect());
+  const gpu = createGpuPort(root, { host: layer, reduced, notice: opts.notice });
   /** `easing: 'linear'` deixa cada quadro com o seu próprio ritmo (golpe e projétil precisam chegar na hora do impacto). */
   function animate(el: HTMLElement, frames: Keyframe[], duration: number, easing = EASE, delay = 0) {
     if (reduced()) return;
@@ -92,6 +100,7 @@ export function createMotionKit(root: HTMLElement) {
     layer().append(el); effects.add(el);
   }
   function clear() {
+    gpu.clear();
     for (const animation of animations) animation.cancel();
     animations.clear();
     for (const timer of timers) clearTimeout(timer);
@@ -158,13 +167,14 @@ export function createMotionKit(root: HTMLElement) {
   }
   /** A onda dourada do pouso, em volta de uma carta ou de um monte. */
   function ripple(at: Point | undefined) {
-    if (!at || reduced()) return;
+    if (!at || reduced() || gpu.play('ripple', { at })) return;
     const ring = effect('land-ripple', { ...at, w: at.w * 1.04, h: at.h * 1.04 });
     animate(ring, [{ opacity: .85, scale: '.92' }, { opacity: 0, scale: '1.3' }], 460, 'cubic-bezier(.2,.7,.3,1)');
     later(() => remove(ring), 480);
   }
   /** Destruída: a carta racha e solta fragmentos no lugar em que estava. */
   function shatter(at: Point) {
+    if (gpu.play('shatter', { at })) return;
     const crack = effect('shatter-flash', { ...at, w: at.w * 1.1, h: at.h * 1.1 });
     animate(crack, [{ opacity: .9, scale: '.9' }, { opacity: 0, scale: '1.2' }], 360);
     later(() => remove(crack), 380);
@@ -184,7 +194,7 @@ export function createMotionKit(root: HTMLElement) {
     later(() => remove(rift), 920);
   }
   return {
-    root, state, layer, later, stage, stackPile, recentStack, callouts, hiddenCards,
+    root, state, layer, later, stage, gpu, stackPile, recentStack, callouts, hiddenCards,
     animate, effect, track, clear, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift,
   };
 }
@@ -192,17 +202,15 @@ export function createMotionKit(root: HTMLElement) {
 /** Os quadros do voo de `fly` (e os da legenda, que fica sempre no tamanho de leitura). */
 export function flightFrames(from: Point & { rot?: number }, to: Point, end: Point, opts: { endRot?: number; fade?: boolean; tint?: string } = {}) {
   const { endRot = 0, fade = false, tint = '' } = opts;
-  const dx = from.cx - to.cx, dy = from.cy - to.cy, dist = Math.hypot(dx, dy) || 1;
+  const dx = from.cx - to.cx;
   // Num caminho de lado, o arco sobe acima da linha reta; num caminho para cima, a altura fica por conta do tamanho.
-  const bulge = Math.min(140, dist * .3) * (Math.abs(dx) / dist) + 16;
-  const control = { x: dx * .5, y: dy * .5 - bulge };
+  const arc = flightArc(from, to);
   const s0 = Math.max(.4, Math.min(3, from.w / Math.max(1, end.w)));
   const lean = Math.max(-12, Math.min(12, -dx / 30));
   const r = (n: number, digits = 1) => +n.toFixed(digits);
   const frames: Keyframe[] = [], captionFrames: Keyframe[] = [];
   for (let i = 0, n = 20; i <= n; i++) {
-    const u = i / n, t = (1 - Math.cos(Math.PI * u)) / 2, high = Math.sin(Math.PI * t), back = 1 - t;
-    const x = back * back * dx + 2 * back * t * control.x, y = back * back * dy + 2 * back * t * control.y;
+    const u = i / n, { x, y, t, high, back } = arc(u);
     const scale = (s0 + (1 - s0) * t) * (1 + .22 * high);
     // A legenda vai junto, mas sempre no tamanho de leitura.
     captionFrames.push({ offset: u, scale: String(r(1 / scale, 3)) });

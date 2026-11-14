@@ -16,7 +16,7 @@ export function abilityText(event: PresentationEvent) {
 
 /** Habilidades (gatilhos, ativadas, lealdade) e o planeswalker chegando ao campo. */
 export function createAbilityMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, track, remove, pulse, floatNumber, callouts } = kit;
+  const { root, layer, later, animate, effect, track, remove, pulse, floatNumber, callouts, gpu } = kit;
   /** Brilho na cor do planeswalker em volta da carta; com "reduzir movimento", só a moldura acesa por um instante. */
   function walkerGlow(card: HTMLElement, tone: string, ms: number) {
     card.style.setProperty('--walker', tone);
@@ -64,10 +64,13 @@ export function createAbilityMotion(kit: MotionKit) {
     if (!from || reduced()) return;
     const bounds = layer().getBoundingClientRect();
     const size = Math.max(bounds.width, bounds.height) * .9;
-    const wave = effect('walker-wave', { ...from, w: size, h: size });
-    wave.style.setProperty('--walker', tone);
-    animate(wave, [{ opacity: .9, scale: '.05' }, { opacity: .55, scale: '.6', offset: .5 }, { opacity: 0, scale: '1.1' }], 1100, 'cubic-bezier(.2,.6,.3,1)');
-    later(() => remove(wave), 1150);
+    // Na camada GPU, a onda é de luz e solta faíscas; em CSS, o anel de sempre.
+    if (!gpu.play('shockwave', { at: from, color: tone, reach: size * 1.1 })) {
+      const wave = effect('walker-wave', { ...from, w: size, h: size });
+      wave.style.setProperty('--walker', tone);
+      animate(wave, [{ opacity: .9, scale: '.05' }, { opacity: .55, scale: '.6', offset: .5 }, { opacity: 0, scale: '1.1' }], 1100, 'cubic-bezier(.2,.6,.3,1)');
+      later(() => remove(wave), 1150);
+    }
     const arena = root.querySelector<HTMLElement>('.arena');
     if (arena) animate(arena, [{ translate: '0 0' }, { translate: '-3px 1px', offset: .25 }, { translate: '3px -1px', offset: .5 }, { translate: '0 0' }], 300, 'linear', 120);
   }
@@ -81,6 +84,8 @@ export function createAbilityMotion(kit: MotionKit) {
     const look = loyaltyLook(event);
     if (card && rect?.width) {
       pulse(card);
+      // Na camada GPU, grãos de luz sobem em volta da carta (dourados na habilidade ativada, violeta no gatilho).
+      if (!look) { const at = center(card); if (at) gpu.play('motes', { at, color: event.trigger ? '#9b7bff' : '#f2b54c' }); }
       if (look) loyaltyAbility(look, card, event);
       // Habilidade ativada: a carta se ergue um pouco da mesa enquanto a habilidade sai dela, e assenta de novo.
       else if (!event.trigger) animate(card, [
@@ -136,6 +141,8 @@ export function createAbilityMotion(kit: MotionKit) {
       const dx = to.cx - from.cx, dy = to.cy - from.cy, length = Math.hypot(dx, dy);
       later(() => pulse(el), 260 + i * 60);
       if (reduced() || length < 8) return;
+      // Na camada GPU, um feixe de luz corre até o alvo e estoura em faíscas; em CSS, a linha de sempre.
+      if (gpu.play('beam', { from, to, color: event.trigger ? '#9b7bff' : '#f2b54c', delay: i * 60 })) return;
       const beam = effect(`ability-beam${event.trigger ? ' trigger' : ''}`, { cx: from.cx, cy: from.cy, w: length, h: 4 });
       beam.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;
       animate(beam, [{ scale: '0 1', opacity: .9 }, { scale: '1 1', opacity: 1, offset: .45 }, { scale: '1 1', opacity: 0 }], 700, 'ease-out', i * 60);

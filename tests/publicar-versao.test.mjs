@@ -57,6 +57,21 @@ test('duas mudanças em paralelo saem numa versão só, com os grupos juntos, os
   } finally { rmSync(root, { recursive: true }); }
 });
 
+test('a mesma imagem em dois itens da mesma pasta vai uma vez só, com o mesmo nome nos dois', () => {
+  const root = project({
+    'relatos/novidade.md': '### Novo\n\n- **Meus relatos.** A lista.\n- **Aviso de resposta.** O ponto.\n',
+    'relatos/imagens.json': JSON.stringify({ 'Meus relatos': [{ img: 'menu.webp', legenda: 'O item.' }], 'Aviso de resposta': [{ img: 'menu.webp', legenda: 'O ponto.' }] }),
+    'relatos/menu.webp': 'm',
+  });
+  try {
+    run(root);
+    const visuals = JSON.parse(read(root, 'src/novidades.json'))['0.11.0'];
+    assert.equal(visuals['Meus relatos'][0].img, '0.11.0/menu.webp');
+    assert.equal(visuals['Aviso de resposta'][0].img, '0.11.0/menu.webp');
+    assert.equal(read(root, 'public/novidades/0.11.0/menu.webp'), 'm');
+  } finally { rmSync(root, { recursive: true }); }
+});
+
 test('só correções sobem o Z; --x sobe o X; --dry não grava nada', () => {
   const root = project({ 'a/novidade.md': '### Corrigido\n\n- **Conserto.** Texto.\n' });
   try {

@@ -1,4 +1,41 @@
 {
+  "0.167.0": {
+    "Efeitos completos ou leves": [
+      { "img": "0.167.0/opcao-efeitos.webp", "legenda": "A opção Efeitos em Opções → Aparência, começando em Completos." }
+    ],
+    "Dano com mais impacto": [
+      { "img": "0.167.0/dano-impacto.webp", "legenda": "Um golpe de 5 de dano explode em faíscas vermelhas sobre a criatura atingida." },
+      { "img": "0.167.0/dano-projetil.webp", "legenda": "O projétil de uma habilidade de dano deixa um rastro de brasas até o alvo." },
+      { "img": "0.167.0/dano-veneno.webp", "legenda": "Dano com marcadores −1/−1 explode em roxo." }
+    ],
+    "Pouso, quebra e ultimate mais vivos": [
+      { "img": "0.167.0/pouso.webp", "legenda": "O terreno que chega ao campo levanta uma onda dourada, com poeira saindo da base." },
+      { "img": "0.167.0/estilhacos.webp", "legenda": "A permanente destruída se parte em estilhaços que caem girando." },
+      { "img": "0.167.0/ultimate.webp", "legenda": "O ultimate de um planeswalker azul solta uma onda de luz azul que atravessa a mesa." }
+    ],
+    "Cartas saindo do campo com mais vida": [
+      { "img": "0.167.0/exilar.webp", "legenda": "A carta exilada se desfaz em grãos de luz, com um anel claro em volta." },
+      { "img": "0.167.0/blink.webp", "legenda": "Voltando de um blink, os grãos de luz voltam de todos os lados para a carta." },
+      { "img": "0.167.0/sacrificar.webp", "legenda": "A criatura sacrificada deixa um rastro de brasas até o cemitério." },
+      { "img": "0.167.0/devolver.webp", "legenda": "A criatura devolvida à mão deixa um rastro de brilho até o leque." }
+    ],
+    "Ataque, habilidades e ninjas com mais impacto": [
+      { "img": "0.167.0/atacar.webp", "legenda": "No bote do ataque, riscos vermelhos de velocidade saem de trás do atacante." },
+      { "img": "0.167.0/habilidade.webp", "legenda": "Um gatilho solta grãos violeta em volta da carta e um feixe de luz até o alvo." },
+      { "img": "0.167.0/ninja.webp", "legenda": "A fumaça do ninjutsu se espalha no lugar do atacante." }
+    ],
+    "Meus relatos": [
+      { "img": "0.167.0/meus-relatos.webp", "legenda": "A lista dos relatos enviados: o primeiro, resolvido, com a resposta em destaque; os outros dois, em análise e recebido." },
+      { "img": "0.167.0/menu-meus-relatos.webp", "legenda": "O item Meus relatos no menu ⋯, logo depois de Enviar sugestão ou erro." }
+    ],
+    "Aviso de resposta num relato": [
+      { "img": "0.167.0/aviso-resposta.webp", "legenda": "O aviso na tela inicial: o código do relato que tem resposta, com Depois e Ver." },
+      { "img": "0.167.0/menu-meus-relatos.webp", "legenda": "O ponto dourado no botão ⋯ e no item Meus relatos enquanto a resposta não foi vista (o do sino é o das Novidades)." }
+    ],
+    "Depois de enviar um relato": [
+      { "img": "0.167.0/relato-enviado.webp", "legenda": "A tela de relato enviado, com o código e onde a resposta vai aparecer." }
+    ]
+  },
   "0.166.0": {
     "Prévia da mesa no Laboratório": [
       { "img": "0.166.0/previa.webp", "legenda": "A prévia ao lado do editor: o Jogador 2 em cima e você embaixo, com o Grizzly Bears virado e com dois marcadores +1/+1, o Pacifism preso ao Llanowar Elves, as mãos, as pilhas e Criar sala de teste logo embaixo." }

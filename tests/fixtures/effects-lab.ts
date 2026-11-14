@@ -1,12 +1,16 @@
 import '../../src/style.css';
 import { createForgeTableView } from '../../src/ui/forgeTable';
+import { gpuClock } from '../../src/ui/gpu/gpuSupport';
+import { latestGpuPort } from '../../src/ui/gpu/gpuPort';
+import { center } from '../../src/ui/motionKit';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
  * efeitos de dano (item 15), de movimento (item 16), os efeitos contínuos das permanentes (item 17), o mill (item 24),
  * a mão revelada do oponente (item 41, Telepathy e afins), várias fichas de uma vez (item 43) e os movimentos da 0.117.0
  * (bloqueio, luta, vidência, moeda, dado, embaralhar, equipar, controle, transformar, marcadores, busca, reanimar, conjurar
- * de outro monte, comandante, pagar, mão inicial, revelar e fim da partida).
+ * de outro monte, comandante, pagar, mão inicial, revelar e fim da partida), e os efeitos da camada GPU (item 125) um a
+ * um, com a troca entre GPU e CSS e a câmera lenta só da camada.
  * Abra /tests/fixtures/effects-lab.html no `npm run dev`. A página mostra o painel e a mesa num quadro do tamanho
  * escolhido (?mesa abre só a mesa, que recebe os comandos do painel). Os eventos têm o mesmo formato que a ponte manda.
  */
@@ -81,7 +85,13 @@ function table() {
     window.setTimeout = ((fn: TimerHandler, ms = 0, ...args: unknown[]) => realTimeout(fn, ms * slow, ...args)) as typeof window.setTimeout;
     const animate = Element.prototype.animate;
     Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) { const a = animate.apply(this, args); a.playbackRate = 1 / slow; return a; };
+    // A camada GPU anda no mesmo ritmo.
+    gpuClock.timeScale = 1 / slow;
   }
+  // A camada GPU para os testes e a medição: ?gpu=1 tenta desenhar nela mesmo com efeitos leves, ?gpu=0 fica no CSS.
+  // `gpu.load()` carrega na hora (sem esperar a mesa ociosa), `gpu.stats()` conta os quadros desenhados e os efeitos vivos,
+  // `gpu.play(nome, parâmetros)` desenha um efeito e `gpu.timeScale(0)` congela a camada (para o print pegar o efeito no meio).
+  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, timeScale: (n: number) => { gpuClock.timeScale = n; } };
   let reduce = false;
   const media = window.matchMedia.bind(window);
   // "Reduzir movimento" só nesta página: a mesa pergunta ao navegador a cada efeito.
@@ -713,6 +723,71 @@ function table() {
         }
       }
     },
+    gpu: c => {
+      // Efeitos da camada GPU (item 125) disparados direto, sem mexer no estado da partida.
+      if (c.kind === 'slow') { gpuClock.timeScale = 1 / Number(c.value); return Number(c.value) > 1 ? `Câmera lenta da camada GPU: ${c.value}× mais devagar (o resto da mesa no ritmo normal).` : 'Camada GPU no ritmo normal.'; }
+      if (c.kind === 'freeze') { gpuClock.timeScale = gpuClock.timeScale ? 0 : 1; return gpuClock.timeScale ? 'Camada GPU andando de novo.' : 'Camada GPU congelada: o efeito fica parado onde estava. Toque de novo para soltar.'; }
+      const port = latestGpuPort();
+      if (!port?.ready()) return 'A camada GPU não está pronta: efeitos leves, reduzir movimento, ?gpu=0 ou ainda carregando.';
+      const pointOf = (r: Ref | undefined) => {
+        if (!r) return undefined;
+        if (isCard(r)) return center(document.querySelector(`.field [data-fid="${r.card}"]`));
+        if (isPlayer(r)) { const avatar = document.querySelector(`.avatar[data-pid="${r.player}"]`); return center(avatar?.querySelector('.life') ?? avatar); }
+        const table = document.querySelector('.arena')!.getBoundingClientRect();
+        return center(document.querySelector('#fStack .stack-pile')) ?? { cx: table.left + table.width / 2, cy: table.top + table.height * .48, w: 0, h: 0 };
+      };
+      const selected = pointOf(Number.isFinite(c.id) ? { card: c.id } : undefined);
+      const from = pointOf(c.source), to = pointOf(c.target);
+      const burst = (tone: string, extra: Record<string, unknown> = {}) => {
+        if (!to) return 'Escolha um alvo no campo ou um jogador.';
+        port.play('burst', { at: to, tone: tone as any, size: Math.max(64, Math.min(150, (isPlayer(c.target) ? 90 : to.w) * (extra.heavy ? 1.5 : 1.15))), ...extra });
+      };
+      const needSelected = 'Selecione uma permanente em "Permanente selecionada".';
+      switch (c.kind) {
+        case 'burst': return burst('damage') ?? 'Impacto do dano: faíscas vermelhas, clarão e anel.';
+        case 'heavy': return burst('damage', { heavy: true }) ?? 'Golpe pesado (5 ou mais): clarão maior e mais faíscas.';
+        case 'lethal': return burst('damage', { heavy: true, lethal: true }) ?? 'Golpe letal: o núcleo branco maior e mais faíscas.';
+        case 'wither': return burst('wither') ?? 'Murchar e veneno: faíscas roxas.';
+        case 'loyalty': return burst('loyalty') ?? 'Dano na lealdade: faíscas laranja.';
+        case 'shield': return burst('shield') ?? 'Dano prevenido: anel azul e poucas faíscas, sem gravidade.';
+        case 'bolt':
+          if (!from || !to) return 'Escolha a fonte e o alvo.';
+          port.play('bolt', { from, to, tone: 'damage', duration: 420 });
+          // O impacto chega junto com o projétil, também na câmera lenta da camada.
+          setTimeout(() => burst('damage'), 420 / (gpuClock.timeScale || 1));
+          return 'Projétil com rastro de brasas da fonte até o alvo, e o impacto na chegada.';
+        case 'ripple': if (!selected) return needSelected; port.play('ripple', { at: selected }); return 'Pouso: onda dourada em volta da carta e poeira saindo da base.';
+        case 'shatter': if (!selected) return needSelected; port.play('shatter', { at: selected }); return 'Destruída: clarão e estilhaços que caem girando.';
+        case 'dissolve': if (!selected) return needSelected; port.play('dissolve', { at: selected, duration: 760 }); return 'Exilar: a carta se desfaz em grãos de luz que sobem.';
+        case 'gather': if (!selected) return needSelected; port.play('gather', { at: selected, duration: 760 }); return 'Volta do blink: os grãos de luz voltam de todos os lados e a carta acende.';
+        case 'ash': if (!selected) return needSelected; port.play('ash', { at: selected }); return 'Sacrificar: brasas e fumaça escura subindo do lugar da carta.';
+        case 'motes': if (!selected) return needSelected; port.play('motes', { at: selected, color: c.color || '#f2b54c' }); return 'Habilidade saindo da carta: grãos de luz subindo em volta dela.';
+        case 'puff': if (!selected) return needSelected; port.play('puff', { at: selected, size: Math.max(selected.w, selected.h) * 1.6 }); return 'Fumaça do ninjutsu e do sneak.';
+        case 'dust': if (!selected) return needSelected; port.play('dust', { at: selected }); return 'Virar: um pouco de poeira na base da carta.';
+        case 'charge': {
+          if (!selected) return needSelected;
+          const middle = document.querySelector('.arena')!.getBoundingClientRect();
+          port.play('charge', { at: selected, ahead: selected.cy > middle.top + middle.height / 2 ? -1 : 1 });
+          return 'Atacar: riscos de velocidade e poeira atrás do atacante no bote.';
+        }
+        case 'beam': if (!from || !to) return 'Escolha a fonte e o alvo.'; port.play('beam', { from, to, color: c.color || '#f2b54c' }); return 'Feixe da habilidade (dourado) ou do gatilho (violeta) até o alvo.';
+        case 'trail-sparkle': case 'trail-ember': case 'trail-dust': {
+          if (!selected) return needSelected;
+          const style = c.kind.slice(6) as 'sparkle' | 'ember' | 'dust';
+          const mine = !!document.querySelector(`.field.me [data-fid="${c.id}"]`);
+          const end = center(document.querySelector(style === 'sparkle' ? (mine ? '#fHand' : '#fOppHand') : `${mine ? '#fMePiles' : '#fOppPiles'} .gy`));
+          if (!end) return 'Não achei para onde a carta iria.';
+          port.play('trail', { from: selected, to: end, duration: 760, style });
+          return style === 'sparkle' ? 'Rastro da devolvida à mão (só o rastro; a carta fica no campo).' : style === 'ember' ? 'Rastro de brasas da sacrificada até o cemitério.' : 'Rastro de poeira da destruída até o cemitério.';
+        }
+        case 'shockwave': {
+          if (!selected) return needSelected;
+          const table = document.querySelector('.arena')!.getBoundingClientRect();
+          port.play('shockwave', { at: selected, color: c.color || '#f2b54c', reach: Math.max(table.width, table.height) * .99 });
+          return 'Ultimate: onda de luz na cor do planeswalker atravessando a mesa.';
+        }
+      }
+    },
     reduce: c => { reduce = !!c.value; if (reduce) document.head.append(still); else still.remove(); return reduce ? 'Reduzir movimento ligado nesta página.' : 'Movimento normal.'; },
   };
 
@@ -738,7 +813,7 @@ function table() {
     if (note) report(note);
   });
   // Para ver ou fotografar um movimento: ?mesa&jogar=land,creature joga da mão, uma a cada 2,5 s (a primeira leva de eventos
-  // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar. Além das jogadas da
+  // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar (a camada GPU junto), e &gpu=0 ou &gpu=1 escolhe os efeitos em CSS ou na GPU. Além das jogadas da
   // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
   // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
   // commander, ability, pay, opening, mulligan, reveal, win, lose) e cheio (o "Campo cheio" do painel, para medir com a mesa
@@ -813,6 +888,20 @@ function panel() {
        ['transform', 'Transformar'], ['counters', '+1/+1 em três'], ['lore', 'Saga: capítulo'], ['search', 'Buscar no grimório'], ['reanimate', 'Reanimar'], ['flashback', 'Conjurar do cemitério'],
        ['commander', 'Comandante (ida e volta)'], ['ability', 'Habilidade (se ergue)'], ['pay', 'Pagar com terrenos'], ['opening', 'Mão inicial'], ['mulligan', 'Mulligan'], ['reveal', 'Revelar'], ['win', 'Vitória'], ['lose', 'Derrota']]
       .map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}
+    <h2>Efeitos na GPU (item 125)</h2>
+    <p>Desenhados direto na camada GPU, sem mudar a partida. Impactos e projétil usam Fonte e Alvo da seção Dano; pouso, estilhaços e ultimate, a permanente selecionada.</p>
+    <p id="gpuStatus">Camada GPU: …</p>
+    <div>${[['1', 'GPU'], ['0', 'CSS (leves)']].map(([k, t]) => `<button data-gpu-version="${k}">${t}</button>`).join('')}</div>
+    ${[['burst', 'Impacto'], ['heavy', 'Golpe pesado'], ['lethal', 'Golpe letal'], ['wither', 'Murchar/veneno'], ['loyalty', 'Lealdade'], ['shield', 'Prevenido'], ['bolt', 'Projétil → alvo'], ['ripple', 'Pouso'], ['shatter', 'Estilhaços']]
+      .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
+    ${[['#f2b54c', 'Ultimate (dourado)'], ['#6fb8ff', 'Ultimate (azul)'], ['#b07cff', 'Ultimate (preto)'], ['#ff7a4d', 'Ultimate (vermelho)'], ['#63d68f', 'Ultimate (verde)']]
+      .map(([k, t]) => `<button data-gpu="shockwave" data-color="${k}">${t}</button>`).join('')}
+    <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
+    ${[['dissolve', 'Exilar'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
+       ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)']]
+      .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
+    <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta.</p>
+    <div>Câmera lenta só da camada: ${[['1', '1×'], ['4', '4×'], ['10', '10×']].map(([k, t]) => `<button data-gpu-slow="${k}">${t}</button>`).join('')}<button data-gpu="freeze">Congelar</button></div>
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>
@@ -865,6 +954,14 @@ function panel() {
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.x) send({ cmd: 'extra', kind: b.dataset.x, id: selectedId(), side: $<HTMLSelectElement>('side').value });
     if (b.dataset.hand) send({ cmd: 'hand', kind: b.dataset.hand });
+    if (b.dataset.gpu) send({ cmd: 'gpu', kind: b.dataset.gpu, id: selectedId(), color: b.dataset.color, source: ref($<HTMLSelectElement>('source').value), target: ref($<HTMLSelectElement>('target').value) });
+    if (b.dataset.gpuSlow) { send({ cmd: 'gpu', kind: 'slow', value: b.dataset.gpuSlow }); lab.querySelectorAll<HTMLButtonElement>('[data-gpu-slow]').forEach(x => x.classList.toggle('on', x === b)); }
+    if (b.dataset.gpuVersion) {
+      // Trocar de versão recarrega a mesa (o campo volta ao começo).
+      gpuVersion = b.dataset.gpuVersion;
+      frame.src = `${location.pathname}?mesa&gpu=${gpuVersion}`;
+      syncGpu();
+    }
     if (b.dataset.s) resize(b.dataset.s);
   });
   lab.addEventListener('change', e => {
@@ -874,6 +971,17 @@ function panel() {
     if (t.id === 'reduce') send({ cmd: 'reduce', value: t.checked });
   });
 
+  // Situação da camada GPU da mesa no quadro, lida a cada meio segundo.
+  let gpuVersion = '';
+  function syncGpu() {
+    const gpu = (frame.contentWindow as any)?.gpu;
+    const stats = gpu?.stats?.();
+    $('gpuStatus').textContent = gpuVersion === '0' ? 'Camada GPU: desligada (?gpu=0), efeitos em CSS.'
+      : gpu?.ready?.() ? `Camada GPU: pronta · ${stats?.live ?? 0} efeitos vivos · ${stats?.frames ?? 0} quadros desenhados`
+        : 'Camada GPU: carregando, ou desligada (efeitos leves ou reduzir movimento).';
+    lab.querySelectorAll<HTMLButtonElement>('[data-gpu-version]').forEach(x => x.classList.toggle('on', x.dataset.gpuVersion === (gpuVersion || '1')));
+  }
+  setInterval(syncGpu, 500);
   const SIZES: Record<string, [number, number] | null> = { desktop: null, tablet: [1024, 768], phone: [844, 390] };
   let size = 'desktop';
   function resize(next = size) {

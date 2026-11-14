@@ -104,9 +104,12 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       if (into) { const pileEl = into; later(() => absorb(pileEl), options.duration * .85); }
     }
     else if (event.type === 'entered' && event.from === 'Exile') {
-      const ring = effect('exile-ring', { ...to, w: end.w * 1.3, h: end.w * 1.3 });
-      animate(ring, [{ opacity: 0, scale: '1.3' }, { opacity: .9, scale: '1', offset: .5 }, { opacity: 0, scale: '.8' }], options.duration);
-      later(() => remove(ring), options.duration);
+      // Volta do blink: na camada GPU, os grãos de luz voltam de todos os lados e a carta se forma no meio deles.
+      if (!kit.gpu.play('gather', { at: to, duration: options.duration })) {
+        const ring = effect('exile-ring', { ...to, w: end.w * 1.3, h: end.w * 1.3 });
+        animate(ring, [{ opacity: 0, scale: '1.3' }, { opacity: .9, scale: '1', offset: .5 }, { opacity: 0, scale: '.8' }], options.duration);
+        later(() => remove(ring), options.duration);
+      }
       animate(piece, [{ opacity: 0, scale: '1.1', filter: 'brightness(3) blur(3px)' }, { opacity: .9, scale: '1.03', filter: 'brightness(2) saturate(.4)', offset: .5 }, { opacity: 1, scale: '1', filter: 'none' }], options.duration);
     } else animate(piece, [
       { translate: `${from.cx - to.cx}px ${from.cy - to.cy}px`, scale: '.92', opacity: .8 },

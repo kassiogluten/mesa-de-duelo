@@ -433,7 +433,7 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 **Medir primeiro.**
 
 - [ ] Partida de referência gravada (Commander com 4 jogadores, mesa cheia, combate grande) para repetir sempre igual na página de repetição.
-- [ ] Medir no Chrome com a CPU 4× e 6× mais lenta e num celular de entrada de verdade: quadros por segundo, tarefas longas, tempo de cada `state` até a mesa pintar, memória e tamanho da árvore da página (o Lighthouse contou 6.111 elementos, item 106).
+- [ ] Medir no Chrome com a CPU 4× e 6× mais lenta e num celular de entrada de verdade: quadros por segundo, tarefas longas, tempo de cada `state` até a mesa pintar, memória e tamanho da árvore da página (o Lighthouse contou 6.111 elementos, item 106). A parte dos efeitos (quadros longos, tarefas longas e bloqueio com a CPU 1×, 4× e 6×, nas cenas de dano, voos e campo cheio) foi medida em 13/11/2026 pelo item 125 (`scripts/medir-efeitos.mjs`, números em `docs/spec-mesa-webgl.md`); faltam o tempo de cada `state` até pintar, a memória e o celular de verdade.
 - [ ] Lista dos maiores culpados, em ordem, antes de mexer.
 
 **Mesa mais leve (sem mudar o que se vê).**
@@ -514,8 +514,9 @@ Opções → Aparência volta aos efeitos de hoje em CSS. Spec completa, com dec
 descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao item 114 (medição e "Modo leve").
 
 - [x] Decidir antes da fase 1: uma opção só ("Efeitos: completos / leves", em que "leves" é o modo leve do 114) ou duas opções separadas. Decidido em 13/11/2026: uma opção só.
-- [ ] Fase 0: medir os efeitos de hoje (`scripts/medir-efeitos.mjs`, CPU 1×, 4× e 6×) e fixar os números dos critérios de sucesso. Começada em 13/11/2026: o script e a jogada `cheio` do laboratório de efeitos existem; falta conferir o script e registrar os números (ver "Onde a fase 0 parou" na spec).
-- [ ] Fase 1: a camada GPU (carregada só na partida), a opção para o jogador e a troca automática para leves, sem efeito novo.
-- [ ] Fase 2: dano e projétil, pouso, estilhaços e ultimate na GPU; medir de novo e conferir num celular de entrada.
+- [x] Fase 0: medir os efeitos de hoje (`scripts/medir-efeitos.mjs`, CPU 1×, 4× e 6×) e fixar os números dos critérios de sucesso. Feita em 13/11/2026: números em "Medições" na spec.
+- [x] Fase 1: a camada GPU (carregada só na partida), a opção para o jogador e a troca automática para leves, sem efeito novo. Feita em 13/11/2026 (`novidades-pendentes/efeitos-webgl-fase-1`).
+- [ ] Fase 2: dano e projétil, pouso, estilhaços e ultimate na GPU; medir de novo e conferir num celular de entrada. Os quatro efeitos e a medição sem tela estão feitos (13/11/2026, `novidades-pendentes/efeitos-webgl-fase-2`); falta conferir num celular de entrada de verdade (critério 8) antes de publicar.
+- [x] Fase 2b: efeitos de movimento na GPU (exilar, blink, sacrificar, rastros do voo, ataque, habilidades, ninjutsu, virar), com a carta ainda no DOM. Feita em 13/11/2026 (`novidades-pendentes/efeitos-webgl-movimentos`).
 - [ ] Fase 3: cartas em voo na GPU (textura da imagem do Scryfall, perspectiva, sombra).
 - [ ] Fase 4, só se os números pedirem depois do 114: o campo inteiro em WebGL (spec própria).

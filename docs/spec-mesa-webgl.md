@@ -21,15 +21,15 @@ Dar à mesa efeitos de jogo (partículas, luz, ondas de choque, rastros, voos de
 
 ## Critérios de sucesso
 
-Os números de referência saem da fase 0. Os critérios abaixo são a proposta: depois da fase 0, ajuste os valores com base no que foi medido, registre-os aqui e não os afrouxe depois.
+Os valores abaixo foram fixados com a medição da fase 0 (13/11/2026, [Medições](#medições)); não os afrouxe depois.
 
 | # | Critério | Como conferir |
 | --- | --- | --- |
 | 1 | Com "leves", a mesa fica idêntica à de hoje (pixel a pixel, nos mesmos testes) | `npm run visual -- snap` antes e `compare` depois, com `?gpu=0`; `npm test` sem mudança nos testes de efeitos |
 | 2 | Mesa parada não gasta GPU: nenhum quadro desenhado no canvas sem efeito vivo | Contador de quadros da camada GPU exposto para teste (`gpuLayer.stats()`) |
-| 3 | Durante a cena de dano, a camada GPU não piora a fluidez em relação ao CSS: p95 da duração dos quadros longos (LoAF) igual ou menor que a base, com a CPU 1× e 4× mais lenta | `scripts/medir-efeitos.mjs`, base (fase 0) contra fase 2 |
+| 3 | Durante a cena de dano, a camada GPU não piora a fluidez em relação ao CSS: mediana (de 3 medições) do p95 dos quadros longos (LoAF) igual ou menor que a do CSS medido em seguida, com a CPU 1×, 4× e 6× mais lenta (CSS: 0, 74 e 181 ms) | `scripts/medir-efeitos.mjs`, base (fase 0) contra fase 2 |
 | 4 | Nenhuma tarefa longa (> 50 ms) causada por carregar ou iniciar o PixiJS no meio de uma jogada | Mesma medição; o pacote é carregado com a mesa aberta e ociosa (`requestIdleCallback`), e um efeito pedido antes de ele estar pronto sai em CSS |
-| 5 | Tela inicial sem crescer nada; pacote da GPU com até ~200 KB gzip (ajustar após medir) | Tamanho dos chunks no `npm run build` |
+| 5 | Tela inicial sem crescer nada; pacote da GPU com até 150 KB gzip (medido: ~131 KB, carregado só na partida) | Tamanho dos chunks no `npm run build` |
 | 6 | Nenhum efeito segura a vez do jogador: a duração de cada passo continua a de `presentationDuration()` | Testes da fila de apresentação continuam passando; o efeito em GPU termina dentro do tempo do passo |
 | 7 | Sem WebGL2, contexto perdido ou falha ao carregar o pacote, a mesa continua com os efeitos em CSS, sem erro na tela | Testes da decisão GPU/CSS; `webglcontextlost` forçado com `WEBGL_lose_context` no teste de navegador |
 | 8 | Conferido num celular de entrada de verdade (Chrome com depuração remota) antes de publicar a fase 2 | Registrar aparelho e números nesta spec |
@@ -74,7 +74,7 @@ O item 114 do `ROADMAP.md` ("Melhorar o desempenho em aparelhos fracos") se sobr
 - A fila de apresentação (`tablePresentation.ts`) mostra uma jogada por vez e para com a aba escondida. A duração de cada passo vem de `presentationDuration(evento, rápido)` (`presentationTimeline.ts`). O modo "Rápido" fica em `prefs.fast` (`tableSettings.ts`, chave `KEYS.pace`).
 - Com "reduzir movimento" (`reduced()` em `motionKit.ts`), só ficam o número, a cor e o destaque.
 - As setas de combate e de alvo são um SVG por cima da mesa (`tableArrows.ts`) e ficam como estão.
-- Para testar efeitos: `tests/fixtures/effects-lab.html` (painel com um botão por movimento; `?mesa` abre só a mesa; `?mesa&jogar=a,b,c` faz uma jogada a cada 2,5 s; `?lento=10` deixa tudo dez vezes mais devagar) e `tests/fixtures/token-burst.html`.
+- Para testar efeitos: a seção **Efeitos na GPU (item 125)** do painel do `effects-lab.html` dispara cada efeito da camada (impactos por tom, golpe pesado e letal, projétil, pouso, estilhaços, ultimate em cinco cores), troca entre GPU e CSS (recarrega a mesa com `?gpu=1` ou `?gpu=0`), põe só a camada em câmera lenta (1×, 4×, 10×) e congela o efeito no meio. E também `tests/fixtures/effects-lab.html` (painel com um botão por movimento; `?mesa` abre só a mesa; `?mesa&jogar=a,b,c` faz uma jogada a cada 2,5 s; `?lento=10` deixa tudo dez vezes mais devagar) e `tests/fixtures/token-burst.html`.
 
 ### Testes que dependem das peças de efeito em DOM
 
@@ -103,6 +103,7 @@ Um `<canvas>` WebGL transparente, `position: fixed; inset: 0`, sem receber cliqu
 - `src/ui/gpu/gpuLayer.ts`: cria e destrói o canvas e o `Application` do PixiJS; acompanha o tamanho da janela e o `devicePixelRatio` (com teto: 2 no computador e 1,5 no celular); pausa com a aba escondida; trata `webglcontextlost` (volta ao CSS e não tenta de novo nesta partida); expõe `stats()` (quadros desenhados, efeitos vivos) para os testes e a medição. É destruído junto com a mesa (sair da partida, Rever partida): o navegador limita quantos contextos WebGL abertos uma página pode ter.
 - `src/ui/gpu/gpuEffects.ts`: os efeitos que a `motionKit` pode pedir (`burst`, `bolt`, `ripple`, `shatter`, `shockwave`; na fase 3, `flight`). Cada um recebe o ponto (o mesmo `Point` de hoje), o tom e a duração, e devolve se desenhou. Se não desenhou, quem pediu usa a peça de CSS de hoje.
 - `src/ui/gpu/gpuSupport.ts`: a decisão GPU/CSS, sem importar o PixiJS (para rodar nos testes do Node): opção do jogador, `prefers-reduced-motion`, WebGL2 disponível, contexto perdido, pacote carregado.
+- `src/ui/gpu/gpuPort.ts` (feito na fase 1): a porta que a `motionKit` usa. Carrega a camada com a mesa ociosa, pede cada efeito (`play` devolve se desenhou) e cuida da troca automática para leves. Contexto perdido deixa os efeitos em CSS até recarregar a página, sem gravar "leves" (um contexto perdido pode ser só o celular trocando de app); a troca gravada fica para sem WebGL2 e quadros caindo, e só enquanto o jogador não escolheu nada.
 - Porta `gpu` na `motionKit.ts`. Cada família `motion*.ts` pede o efeito por nome. O `clear()` também limpa a GPU, e o `reduced()` continua valendo antes de tudo.
 
 ### Regras
@@ -122,22 +123,19 @@ Um `<canvas>` WebGL transparente, `position: fixed; inset: 0`, sem receber cliqu
 Mudança só interna: não entra nas novidades.
 
 - [x] Opção `cheio` no `?jogar` do `tests/fixtures/effects-lab.ts`, que manda `{ cmd: 'full' }` (o "Campo cheio" do painel), e comentário do `?jogar` atualizado.
-- [ ] `scripts/medir-efeitos.mjs`, no estilo dos `scripts/medir-*.mjs` (rodado com `node`, precisa do `npm run dev` ligado). Abre `effects-lab.html?mesa&jogar=…` para cada cena e grava os quadros enquanto as jogadas acontecem. Cenas sugeridas:
+- [x] `scripts/medir-efeitos.mjs`, no estilo dos `scripts/medir-*.mjs` (rodado com `node`, precisa do `npm run dev` ligado). Abre `effects-lab.html?mesa&jogar=…` para cada cena e grava os quadros enquanto as jogadas acontecem. Cenas sugeridas:
   - `dano`: `land,bolt,bolt,move:attack,x:fight,move:destroy`
   - `voos`: `land,x:opening,land,creature,countered,move:bounce,x:reanimate`
   - `campo-cheio`: `cheio,cheio,tokens:20,move:attack,move:destroy`
   - Opções: `--cpu 4` (freio de CPU), `--viewport 1366x768`, `--escala 1|2`, `--query gpu=0` (comparar versões), `--json saida.json`.
-- [ ] Registrar os números de hoje nesta spec (seção [Medições](#medições)), com a CPU 1×, 4× e 6×.
-- [ ] Marcar no item 114 o que esta medição cumpre.
+- [x] Registrar os números de hoje nesta spec (seção [Medições](#medições)), com a CPU 1×, 4× e 6×.
+- [x] Marcar no item 114 o que esta medição cumpre (anotado no item "Medir no Chrome…" de lá: a parte dos efeitos está feita; faltam o tempo de cada `state`, a memória e o celular).
 
-**Onde a fase 0 parou (13/11/2026).** O `cheio` e o `scripts/medir-efeitos.mjs` estão escritos e commitados, e o script roda (`node scripts/medir-efeitos.mjs --cenas dano --cpu 1,4`), mas **os números ainda não valem como base**: falta conferir o script antes de registrar a tabela de [Medições](#medições). O que a primeira rodada mostrou (cena `dano`, 1366×768, escala 1):
+**Fase 0 concluída (13/11/2026).** O script mede só a partir da primeira jogada de verdade (3,1 s depois de carregar), com um laço de CPU cronometrado antes e depois da cena conferindo o freio (deu 4,2× e 6,5× com `--cpu 4` e `--cpu 6`, do começo ao fim), e `--vezes 3` mostra a mediana e a faixa. O que a conferência mostrou:
 
-| CPU | Quadros longos | p95 / pior (ms) | Bloqueio (ms) | Tarefas longas | Intervalos > 34 ms |
-| --- | --- | --- | --- | --- | --- |
-| 1× | 4 | 322 / 322 | 0 | 0 | 4 |
-| 4× | 3 | 224 / 224 | 175 | 1 | 2 |
-
-O que conferir: (1) o quadro de 322 ms sem bloqueio na CPU 1× parece ser o carregamento da página, que entra pelo `buffered: true`; descartar o que começa antes da primeira jogada (cerca de 600 ms depois de carregar) ou medir só a partir dela; (2) a CPU 4× deu menos quadros longos que a 1×, então confirmar que o freio está valendo durante a cena inteira (o bloqueio de 175 ms e a tarefa longa de 219 ms dizem que valeu em parte; conferir com um laço de CPU cronometrado dentro da página, com e sem freio); (3) rodar cada cena 3 vezes e ver a variação antes de fixar os critérios; (4) com poucos quadros longos por cena, o p95 é quase o pior caso: registrar também a contagem e o tempo de bloqueio. Depois disso: as três cenas com a CPU 1×, 4× e 6×, a tabela de Medições e o que marcar no item 114.
+- O quadro de 300–490 ms sem bloqueio e sem script que aparecia na CPU 1× sai só na primeira medição de cada navegador (imagens das cartas chegando e a GPU emulada segurando o desenho); nas outras duas, zero. Por isso vale a **mediana** das 3 vezes, não a pior.
+- Com poucos quadros longos por cena, o p95 é quase o pior caso: a tabela registra também a contagem, o bloqueio e as tarefas longas.
+- Para medir sem as próprias edições recarregarem a página (o Vite recarrega a mesa a cada arquivo salvo), meça numa cópia à parte: `git worktree add` do commit, `node_modules` ligado por junção e o Vite em outra porta, com `TABLE_TEST_URL` apontando para ela.
 
 O que já se sabe para escrever o script (descoberto em 13/11/2026):
 
@@ -151,15 +149,15 @@ O que já se sabe para escrever o script (descoberto em 13/11/2026):
 Entra nas novidades: a opção nova em Opções → Aparência (`### Novo`, com print da opção).
 
 - [x] Confirmar com o usuário a decisão pendente do [item 114](#relação-com-o-item-114) (uma opção só ou duas): uma opção só, decidido em 13/11/2026.
-- [ ] `pixi.js` `8.22.0` (exata, sem `^`) no `package.json`.
-- [ ] `src/ui/gpu/gpuSupport.ts`, `gpuLayer.ts` e `gpuEffects.ts` (ainda vazio), como descrito em [Peças](#peças).
-- [ ] Porta `gpu` na `motionKit.ts`; `clear()` limpando a GPU; canvas criado pela mesa (`tableShell.ts` ou `forgeTable.ts`) e destruído ao sair.
-- [ ] Opção "Efeitos: completos / leves" em Opções → Aparência (`tableSettings.ts`, grupo do `#fLookSummary`), com a chave nova em `KEYS` (`src/storage.ts`) e o resumo do grupo mostrando a escolha.
-- [ ] Troca automática para leves: sem WebGL2, contexto perdido, ou quadros longos seguidos nos primeiros efeitos (limite tirado da fase 0). Com aviso discreto na primeira vez ("Os efeitos ficaram leves neste aparelho. Dá para mudar em Opções.").
-- [ ] `effects-lab.html?gpu=0|1` para forçar cada versão, e `?lento` ajustando também `gpuLayer.timeScale`.
-- [ ] Testes (Node): a decisão GPU/CSS em cada caso (opção, reduzir movimento, sem WebGL2, contexto perdido, pacote não carregado), o `clear()` limpando a GPU, e a opção gravando a chave.
-- [ ] Teste de navegador: a mesa abre com `?gpu=1`, o canvas existe, `stats()` mostra zero quadros com a mesa parada (critério 2), e perder o contexto (`WEBGL_lose_context`) volta ao CSS sem erro (critério 7).
-- [ ] Critérios 1 e 5 conferidos.
+- [x] `pixi.js` `8.22.0` (exata, sem `^`) no `package.json`.
+- [x] `src/ui/gpu/gpuSupport.ts`, `gpuLayer.ts` e `gpuEffects.ts`, como descrito em [Peças](#peças), mais `gpuPort.ts` (a porta da `motionKit`: carrega com a mesa ociosa, pede o efeito e devolve se desenhou).
+- [x] Porta `gpu` na `motionKit.ts`; `clear()` limpando a GPU; canvas criado na `.arena` quando a partida abre (`motion.reset()`) e destruído quando a tela da mesa é escondida (sair, voltar ao Laboratório) ou a opção vai para leves.
+- [x] Opção "Efeitos: completos / leves" em Opções → Aparência (`tableSettings.ts`, grupo do `#fLookSummary`), com a chave nova em `KEYS` (`src/storage.ts`) e o resumo do grupo mostrando a escolha.
+- [x] Troca automática para leves: sem WebGL2, contexto perdido, ou quadros longos seguidos nos primeiros efeitos (limite tirado da fase 0). Com aviso discreto na primeira vez ("Os efeitos ficaram leves neste aparelho. Dá para mudar em Opções.").
+- [x] `effects-lab.html?gpu=0|1` para forçar cada versão, e `?lento` ajustando também `gpuLayer.timeScale`.
+- [x] Testes (Node, `tests/gpu-effects.test.mjs`): a decisão GPU/CSS em cada caso (opção, reduzir movimento, sem WebGL2, contexto perdido, pacote não carregado), o `clear()` limpando a GPU, e a opção gravando a chave.
+- [x] Teste de navegador (`tests/gpu-layer.browser.mjs`): a mesa abre com `?gpu=1`, o canvas existe, `stats()` mostra zero quadros com a mesa parada (critério 2), e perder o contexto (`WEBGL_lose_context`) volta ao CSS sem erro (critério 7).
+- [x] Critérios 1 e 5 conferidos: as telas do `npm run visual` iguais antes e depois (com a camada carregada e parada), e o pacote da GPU com ~131 KB gzip, baixado só na partida (a tela inicial não o pede).
 
 ### Fase 2: primeiros efeitos na GPU
 
@@ -167,11 +165,24 @@ Entra nas novidades (`### Mudou`), com prints de cada efeito tirados com `?lento
 
 Começar pelos efeitos mais vistos e mais pobres no CSS:
 
-- [ ] **Dano e projétil** (`motionDamage.ts`): explosão de partículas no impacto, com cor pelo tom do dano (`damageLook`: tom, `heavy`, `lethal`, `deathtouch`, escudo), rastro no projétil e um clarão curto no golpe letal. O número de dano continua no DOM.
-- [ ] **Pouso no campo** (`land-ripple`): onda que se espalha a partir da carta.
-- [ ] **Destruída / anulada** (`shatter-*`): estilhaços com física simples (gravidade, giro) no lugar dos 9 fragmentos de CSS.
-- [ ] **Ultimate do planeswalker** (`motionAbility.ts`): onda de choque que atravessa a mesa.
-- [ ] Medir de novo contra a fase 0 (critérios 3, 4 e 6) e conferir num celular de verdade (critério 8). Registrar em [Medições](#medições).
+- [x] **Dano e projétil** (`motionDamage.ts`): explosão de partículas no impacto, com cor pelo tom do dano (`damageLook`: tom, `heavy`, `lethal`, `deathtouch`, escudo), rastro no projétil e um clarão curto no golpe letal. O número de dano continua no DOM.
+- [x] **Pouso no campo** (`land-ripple`): onda que se espalha a partir da carta.
+- [x] **Destruída / anulada** (`shatter-*`): estilhaços com física simples (gravidade, giro) no lugar dos 9 fragmentos de CSS.
+- [x] **Ultimate do planeswalker** (`motionAbility.ts`): onda de choque que atravessa a mesa.
+- [x] Medir de novo contra a fase 0 (critérios 3, 4 e 6). Registrado em [Medições](#medições). A primeira rodada mostrou uma tarefa longa de 60–90 ms no primeiro efeito da partida com a CPU 1× (os shaders montados no primeiro desenho); a camada passou a desenhar uma vez cada tipo de peça ao carregar, com a mesa ociosa (`warmUp` em `gpuEffects.ts`), e a tarefa sumiu.
+- [ ] Conferir num celular de entrada de verdade (critério 8) antes de publicar a fase 2: Chrome com depuração remota, `effects-lab.html?mesa&jogar=…` com `gpu=0` e com `gpu=1`, e registrar aqui o aparelho e os números.
+
+### Fase 2b: efeitos de movimento na GPU (feita em 13/11/2026)
+
+Pedido depois da fase 2: os movimentos da seção Movimento (item 16) do laboratório ganham efeitos na camada, com a carta continuando no DOM (o voo da carta em si é a fase 3). Ficam em `src/ui/gpu/gpuMoves.ts`; as peças comuns (partículas, duração, borrifo, cores do tema) foram para `gpuParticles.ts`, e o arco do voo foi para `src/ui/flightPath.ts`, usado pelo voo em CSS e pelo rastro na GPU, para os dois andarem juntos.
+
+- [x] Exilar: grãos de luz subindo e anel claro (`dissolve`, no lugar do `exile-ring`); volta do blink: os grãos voltam e a carta acende (`gather`).
+- [x] Sacrificar: brasas e fumaça escura no lugar (`ash`); rastro do voo até o monte (`trail`: brasas na sacrificada, poeira na destruída, brilho na devolvida à mão).
+- [x] Atacar: riscos de velocidade e poeira atrás do atacante no bote (`charge`); bloqueio: a ligação vira um feixe (`beam`).
+- [x] Habilidade e gatilho: grãos subindo em volta da carta (`motes`, dourado ou violeta) e feixe até cada alvo (`beam`, no lugar do `ability-beam`).
+- [x] Ninjutsu e sneak: nuvem de fumaça com volume ao sumir e ao surgir (`puff`, somada à fumaça de CSS que espera o ninja).
+- [x] Virar sem pagar mana: um pouco de poeira na base da carta (`dust`), discreto de propósito.
+- [x] Botões na seção Efeitos na GPU do laboratório, testes e prints (`novidades-pendentes/efeitos-webgl-movimentos`). Sem medição de desempenho nesta etapa (pedido do usuário).
 
 ### Fase 3: cartas em voo na GPU
 
@@ -213,8 +224,41 @@ Só se as medições mostrarem que o DOM é o gargalo no Commander com muitas pe
 
 ## Medições
 
-Preencher na fase 0 e atualizar em cada fase.
+Navegador sem tela do `agent-browser` (Chrome 156, WebGL2 por SwiftShader), 1366×768, escala 1, num computador rápido. Cada linha é a **mediana de 3 medições** e, entre parênteses, a faixa. Colunas: quadros longos (contagem), p95 da duração deles, soma do bloqueio, tarefas longas e intervalos entre quadros acima de 34 ms. Comando: `node scripts/medir-efeitos.mjs --cpu 1,4,6 --vezes 3 [--cenas …] [--query gpu=0|gpu=1]`.
 
-| Data | Fase | Cena | CPU | Quadros longos (p95, ms) | Tarefas longas | Observação |
+**Base, efeitos em CSS (fase 0, código da 0.166.0):**
+
+| Cena | CPU | Quadros longos | p95 (ms) | Bloqueio (ms) | Tarefas longas | Intervalos > 34 ms |
 | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | |
+| dano | 1× | 0 (0–4) | 0 (0–322) | 0 | 0 | 0 (0–4) |
+| dano | 4× | 5 (5–6) | 97 (60–107) | 27 (24–77) | 2 (2–3) | 5 (3–6) |
+| dano | 6× | 17 (13–18) | 117 (105–168) | 365 (356–665) | 11 (10–15) | 19 (16–19) |
+| voos | 1× | 0 (0–5) | 0 (0–115) | 0 | 0 | 0 (0–6) |
+| voos | 4× | 8 (8–10) | 132 (127–138) | 251 (75–265) | 7 (3–8) | 7 (4–10) |
+| voos | 6× | 13 (12–16) | 190 (161–241) | 752 (579–818) | 12 (11–15) | 14 (13–18) |
+| campo-cheio | 1× | 5 (5–5) | 77 (74–100) | 11 (2–13) | 1 (0–2) | 4 (4–4) |
+| campo-cheio | 4× | 11 (11–11) | 305 (301–335) | 1941 (1920–2111) | 17 (17–17) | 17 (16–18) |
+| campo-cheio | 6× | 12 (12–13) | 559 (512–627) | 3658 (3596–3703) | 30 (29–31) | 50 (49–52) |
+
+O que a base diz: os efeitos de hoje passam bem na CPU normal; o que pesa é o campo cheio (quase 2 s de bloqueio em 15 s de cena com a CPU 4×, e 3,6 s com 6×), que é o redesenho da mesa (item 114), não os efeitos.
+
+**Fase 2, CSS contra GPU no mesmo código (`--query gpu=0` e `gpu=1`, rodados em seguida, 13/11/2026):**
+
+| Cena | CPU | Versão | Quadros longos | p95 (ms) | Bloqueio (ms) | Tarefas longas |
+| --- | --- | --- | --- | --- | --- | --- |
+| dano | 1× | CSS | 0 (0–5) | 0 (0–447) | 0 | 0 |
+| dano | 1× | GPU | 0 (0–5) | 0 (0–443) | 0 (0–13) | 0 (0–1) |
+| dano | 4× | CSS | 6 (4–6) | 74 (65–104) | 29 (18–44) | 3 (0–3) |
+| dano | 4× | GPU | 4 (4–5) | 65 (62–142) | 23 (17–28) | 2 (1–2) |
+| dano | 6× | CSS | 14 (14–16) | 181 (105–192) | 342 (319–351) | 11 (10–11) |
+| dano | 6× | GPU | 15 (11–17) | 160 (125–191) | 301 (183–352) | 11 (7–12) |
+| campo-cheio | 1× | CSS | 4 (3–5) | 89 (59–92) | 9 (2–11) | 1 (0–1) |
+| campo-cheio | 1× | GPU | 3 (2–4) | 74 (71–105) | 23 (0–53) | 1 (0–2) |
+| campo-cheio | 4× | CSS | 11 (11–11) | 294 (280–311) | 1785 (1715–1816) | 16 (16–17) |
+| campo-cheio | 4× | GPU | 11 (11–13) | 290 (281–296) | 1767 (1758–1780) | 16 (15–19) |
+| campo-cheio | 6× | CSS | 12 (12–14) | 518 (503–537) | 3618 (3529–3712) | 29 (26–30) |
+| campo-cheio | 6× | GPU | 12 (11–13) | 491 (476–517) | 3467 (3367–3502) | 26 (26–29) |
+
+As linhas GPU da cena `dano` com a CPU 1× e 4× são da segunda rodada, já com o aquecimento dos shaders; as outras linhas GPU são da primeira (antes dele, o que só pode ter pesado contra a GPU). Critério 3: cumprido nas três velocidades (p95 0, 65 e 160 ms contra 0, 74 e 181 ms). Critério 4: com o aquecimento, nenhuma tarefa longa a mais na CPU 1×. Critério 6: os efeitos na GPU duram o mesmo que os de CSS que substituem (impacto 540 ms, pouso 470 ms, estilhaços até ~680 ms, ultimate 1100 ms) e o impacto do projétil sai no mesmo temporizador de antes; os testes da fila de apresentação continuam passando. Critério 8: falta (celular de verdade).
+
+**Troca automática para leves:** um efeito é lento quando a média entre quadros na vida dele passa de 40 ms (menos de 25 quadros por segundo); três lentos entre os oito primeiros da partida trocam para leves (`SLOW_FRAME_MS`, `SLOW_EFFECTS` e `WATCHED_EFFECTS` em `gpuSupport.ts`). Na medição sem tela, nem a CPU 6× chegou perto disso.

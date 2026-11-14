@@ -10,7 +10,7 @@ export function counterText(kind: string, n: number, lore: number) {
 
 /** O que acontece entre permanentes no campo: ataque, bloqueio, anexar, troca de controle, marcadores, mana e transformar. */
 export function createBoardMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards } = kit;
+  const { root, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards, gpu } = kit;
   /**
    * Ataque é só vermelho: o dourado fica para seleção e bloqueio. Cada atacante recua um pouco e avança na direção do
    * oponente (para cima, se está na metade de baixo da mesa), um depois do outro, e volta com mola.
@@ -19,7 +19,9 @@ export function createBoardMotion(kit: MotionKit) {
     const middle = center(layer())?.cy ?? 0;
     root.querySelectorAll<HTMLElement>('.slot.attacking > .bfc').forEach((el, i) => {
       pulse(el, 'attack-highlight');
-      const ahead = (center(el)?.cy ?? 0) > middle ? -1 : 1;
+      const at = center(el), ahead = (at?.cy ?? 0) > middle ? -1 : 1;
+      // Na camada GPU, riscos de velocidade e poeira saem de trás do atacante no bote.
+      if (at && !reduced()) gpu.play('charge', { at, ahead, delay: Math.min(i, 8) * 70 });
       animate(el, [{ translate: '0 0' }, { translate: `0 ${-7 * ahead}px`, offset: .3 }, { translate: `0 ${16 * ahead}px`, scale: '1.04', offset: .55 }, { translate: '0 0', scale: '1' }],
         560, 'cubic-bezier(.3,.7,.4,1)', Math.min(i, 8) * 70);
     });
@@ -48,6 +50,7 @@ export function createBoardMotion(kit: MotionKit) {
         const dx = a.cx - b.cx, dy = a.cy - b.cy, dist = Math.hypot(dx, dy) || 1;
         const delay = Math.min(order++, 8) * 70;
         animate(el, [{ scale: '1' }, { scale: '1.06', offset: .45 }, { scale: '1' }], 420, 'cubic-bezier(.3,.7,.4,1)', delay);
+        if (gpu.play('beam', { from: b, to: a, color: '#f2b54c', delay })) continue;
         const link = effect('ability-beam block-link', { cx: b.cx, cy: b.cy, w: dist, h: 3 });
         link.style.cssText += `;--angle:${Math.atan2(dy, dx)}rad`;
         animate(link, [{ scale: '0 1', opacity: .9 }, { scale: '1 1', opacity: 1, offset: .45 }, { scale: '1 1', opacity: 0 }], 720, 'ease-out', delay);

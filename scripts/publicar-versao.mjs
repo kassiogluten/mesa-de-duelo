@@ -77,8 +77,11 @@ const taken = new Set(existsSync(path(imgDir)) ? readdirSync(path(imgDir)) : [])
 for (const p of pend) {
   for (const [title, list] of Object.entries(p.shots)) {
     visuals[title] = [...(visuals[title] ?? []), ...list.map(s => {
+      // A mesma imagem em dois itens da mesma pasta vai uma vez só, com o mesmo nome nos dois.
+      const from = join(p.dir, s.img), moved = moves.find(m => m.from === from);
+      if (moved) return { img: `${version}/${moved.name}`, legenda: s.legenda };
       const name = taken.has(s.img) ? `${p.folder}-${s.img}` : s.img;
-      if (!moves.some(m => m.from === join(p.dir, s.img))) { taken.add(name); moves.push({ from: join(p.dir, s.img), to: path(`${imgDir}/${name}`) }); }
+      taken.add(name); moves.push({ from, to: path(`${imgDir}/${name}`), name });
       return { img: `${version}/${name}`, legenda: s.legenda };
     })];
   }

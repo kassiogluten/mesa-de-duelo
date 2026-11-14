@@ -149,7 +149,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const playedMoments = new Set<string>();
   // Eliminados já avisados em cada jogo, para o aviso "Fulano foi eliminado: ..." sair uma vez só.
   const knownLosses = new Map<string, Set<number>>();
-  const motion = createMotion(root);
+  const motion = createMotion(root, { notice: text => notice(text) });
   const timeline = new PresentationTimeline();
   const audio = createGameAudio();
   // Nível de passar automaticamente (Opções e o selo junto dos botões); quem passa é a ponte.
@@ -163,7 +163,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Opções da partida (tableSettings.ts): som, jogo e aparência, com as preferências deste aparelho.
   const settings = createTableSettings(root, { audio, passLevel, turnNotice, turnBuzz, connected: () => !!client?.connected && !match.disconnected,
     passLevelChanged: () => { if (passMenu.open) passMenu.sync(); }, closeMenus: () => { setMenu(false, true); setLog(false); }, syncModal,
-    hasState: () => !!client?.state, render: () => render(), rerender: () => renderTable(false) });
+    hasState: () => !!client?.state, render: () => render(), rerender: () => renderTable(false), effectsChanged: () => motion.effectsChanged() });
   const prefs = settings.prefs;
   let previousAnnouncement = '';
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();

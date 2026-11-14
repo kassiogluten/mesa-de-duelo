@@ -345,6 +345,8 @@
 .damage-number > svg { width: 30px; height: 30px; fill: #e9e2ff; filter: drop-shadow(0 0 6px #a06bff); }
 .damage-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 220px; }
 .damage-badges > span { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--azul-060912, #060912) 90%, transparent); border: 1px solid currentColor; font: 700 11px/1.4 var(--body); letter-spacing: .02em; text-shadow: none; white-space: nowrap; }
+/* Camada GPU dos efeitos (item 125): cobre a janela, não recebe clique e fica abaixo dos números de dano (36) e das janelas (42+). */
+.gpu-layer { position: fixed; inset: 0; z-index: 35; pointer-events: none; }
 .damage-impact { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0;
   background: radial-gradient(circle, #fff8 0 12%, color-mix(in srgb, var(--red) 75%, transparent) 30%, transparent 68%);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 55%, transparent), 0 0 26px var(--red); }
