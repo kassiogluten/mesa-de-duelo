@@ -8,6 +8,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.173.0] - 2026-11-14
+
+### Novo
+
+- **Torneios presenciais no sistema suíço.** Com a conta conectada, crie um torneio em **Torneios presenciais** (menu ⋯ da tela inicial) ou em **Meus torneios** (menu da conta), inscreva os jogadores pelo nome e sorteie as rodadas. A 1ª rodada é aleatória; nas seguintes, quem tem os mesmos pontos se enfrenta, sem revanche, e com número ímpar o bye (vitória por 2-0) vai para quem tem menos pontos e ainda não teve um. O número de rodadas é sugerido pela quantidade de jogadores (8 jogadores, 3 rodadas; 16, 4) e dá para mudar em **Editar**. Quem desiste sai do torneio sem sumir da classificação, e um sorteio sem resultados pode ser desfeito.
+- **Placar de cada mesa e classificação com desempates.** O organizador lança o placar em jogos com um toque (2-0, 2-1, 1-1…) e pode corrigir depois. A classificação sai sozinha: vitória vale 3 pontos e empate 1, com os desempates do Magic (% de vitórias dos oponentes, % de jogos ganhos e % de jogos ganhos dos oponentes). Pelo **Copiar link**, os jogadores acompanham as mesas e a classificação pelo celular, sem precisar de conta, e a página se atualiza sozinha.
+- **Inscrição de quem chega atrasado.** Depois do sorteio da 1ª rodada, ainda dá para inscrever jogadores até a 2ª ser sorteada: quem entra assim começa com uma derrota por 0-2 na 1ª rodada e é sorteado normalmente a partir da 2ª. Essa derrota não conta no desempate de ninguém.
+
 ## [0.172.0] - 2026-11-14
 
 ### Mudou

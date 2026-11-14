@@ -49,6 +49,7 @@ export function mountContaMenu(slot: HTMLElement) {
       + `<div class="conta-menu" role="menu" hidden><p class="conta-nome">Conectado como <strong>${esc(nome)}</strong><span class="conta-sync s-${syncStatus().kind}" aria-live="polite">${esc(syncLine())}</span></p>`
       + (syncNotice() ? `<p class="conta-aviso" role="alert">${esc(syncNotice())}</p>` : '')
       + `<a role="menuitem" href="/partidas.html">Minhas partidas</a>`
+      + `<a role="menuitem" href="/torneios.html">Meus torneios</a>`
       + `<button type="button" role="menuitem" data-conta="lixeira">Lixeira</button>`
       + (hasBackup() ? `<button type="button" role="menuitem" data-conta="copia">Baixar decks de antes da conta</button>` : '')
       + `<a role="menuitem" href="/privacidade.html#conta">Privacidade</a>`

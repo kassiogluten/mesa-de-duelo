@@ -1,0 +1,114 @@
+/* Torneios (torneios.html): a moldura de Minhas partidas, com as mesas da rodada, os placares e a classificação. */
+.tn-pagina h1 { overflow-wrap: anywhere; }
+.tn-campo { display: flex; flex-direction: column; gap: 4px; flex: 1 1 220px; min-width: 0; color: var(--muted); font: 600 13px var(--body); }
+.tn-campo small { font-weight: 400; }
+.tn-campo input {
+  min-height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); font: 500 15px var(--body);
+}
+.tn-campo input:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.tn-curto { flex: 0 1 120px; }
+.tn-nota { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.tn-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.tn-status { min-height: 1.4em; margin: 16px 0 0; color: var(--muted); font-size: 13px; }
+.tn-erro { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: #3a1d22; }
+
+/* Meus torneios: o formulário de criar e a lista. */
+.tn-criar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 16px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.tn-criar h2 { flex-basis: 100%; margin: 0; font: 700 18px var(--display); color: var(--gold); }
+.tn-criar .conta-erro { flex-basis: 100%; margin: 0; }
+.tn-lista { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
+.tn-resumo {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 12px 16px; border-radius: 12px; text-decoration: none;
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); color: var(--ink);
+}
+.tn-resumo:hover, .tn-resumo:focus-visible { border-color: var(--gold); }
+.tn-resumo.e-encerrado { border-left-color: var(--muted); }
+.tn-resumo.e-inscricoes { border-left-color: var(--heal); }
+.tn-resumo strong { font: 700 16px var(--display); overflow-wrap: anywhere; }
+.tn-resumo span { grid-column: 1; color: var(--muted); font-size: 13px; }
+.tn-resumo small { grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--muted); font-size: 13px; }
+
+/* Um torneio: cabeçalho, próximo passo e as seções. */
+.tn-cabecalho h1 { margin-top: 2px; }
+.tn-estado { margin: 8px 0 0; color: var(--gold); font: 700 13px var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.tn-estado.e-encerrado { color: var(--muted); }
+.tn-estado.e-inscricoes { color: var(--heal); }
+.tn-sobre { margin: 0 0 12px; color: var(--muted); }
+.tn-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.tn-btn, .tn-mini {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: 600 14px var(--body); cursor: pointer;
+}
+.tn-btn:hover, .tn-mini:hover, .tn-btn:focus-visible, .tn-mini:focus-visible { border-color: var(--gold); }
+.tn-perigo { color: #ffb4a8; border-color: #8a3a2c; }
+.tn-mini { min-height: 30px; padding: 0 10px; font-size: 13px; }
+.tn-editar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-top: 12px; padding: 16px 18px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.tn-editar[hidden] { display: none; }
+.tn-editar .tn-nota { flex-basis: 100%; margin: 0; }
+.tn-editar .tn-linha { flex-basis: 100%; }
+.tn-editar .tn-perigo { margin-left: auto; }
+.tn-passo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; padding: 14px 16px; border-radius: 14px; background: #f2b54c10; border: 1px solid #f2b54c40; }
+.tn-passo .tn-nota { flex-basis: 100%; margin: 0; }
+.tn-passo .arena-btn { padding-inline: 22px; }
+.tn-secao h2:focus { outline: none; }
+
+/* As mesas da rodada: confronto em cima, placares embaixo. */
+.tn-mesas { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
+.tn-mesa {
+  display: grid; grid-template-columns: 80px 1fr; gap: 8px 14px; align-items: center; padding: 12px 16px;
+  border-radius: 12px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold);
+}
+.tn-mesa.tn-feita { border-left-color: var(--heal); }
+.tn-mesa.tn-bye { border-left-color: var(--muted); }
+.tn-mesa p { margin: 0; min-width: 0; }
+.tn-mesa small { color: var(--muted); }
+.tn-num { color: var(--muted); font: 600 13px var(--body); }
+.tn-confronto { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.tn-confronto strong { font-weight: 600; overflow-wrap: anywhere; }
+.tn-confronto .tn-vence { color: var(--heal); }
+.tn-resultado { min-width: 44px; padding: 2px 8px; border-radius: 8px; background: #ffffff0d; color: var(--gold-light); font: 700 15px var(--display); text-align: center; font-variant-numeric: tabular-nums; }
+.tn-placares { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; }
+.tn-placar {
+  min-width: 46px; min-height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); font: 600 14px var(--body); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.tn-placar:hover, .tn-placar:focus-visible { border-color: var(--gold); }
+.tn-placar[aria-pressed='true'] { background: #f2b54c2a; border-color: var(--gold); color: var(--gold-light); }
+.tn-limpar { color: var(--muted); }
+.tn-corrigir { grid-column: 2; }
+.tn-corrigir summary { width: max-content; cursor: pointer; color: var(--muted); font-size: 13px; }
+.tn-corrigir summary:hover { color: var(--ink); }
+.tn-corrigir[open] summary { margin-bottom: 8px; }
+.tn-anterior { margin-bottom: 8px; }
+.tn-anterior summary { cursor: pointer; padding: 8px 0; color: var(--ink); font: 600 15px var(--body); }
+.tn-anterior .tn-mesas { margin-bottom: 8px; }
+
+/* Classificação. */
+.tn-tabela { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.tn-tabela table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tn-tabela th, .tn-tabela td { padding: 8px 10px; text-align: right; border-top: 1px solid #ffffff10; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tn-tabela thead th { border-top: 0; color: var(--muted); font-size: 12px; font-weight: 600; }
+.tn-tabela abbr { text-decoration: none; }
+.tn-tabela .tn-nome { width: 100%; min-width: 7em; text-align: left; font-weight: 600; color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
+.tn-tabela tbody tr:first-child td:first-child { color: var(--gold-light); font-weight: 700; }
+.tn-saiu { opacity: .6; }
+.tn-tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #ffffff10; color: var(--muted); font: 600 11px var(--body); vertical-align: 1px; }
+
+/* Jogadores. */
+.tn-inscrever { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.tn-inscrever .arena-btn { min-height: 42px; }
+.tn-jogadores { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; margin: 14px 0 0; padding: 0; }
+.tn-jogadores li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.tn-jogadores li > span { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .tn-mesa { grid-template-columns: 1fr; }
+  .tn-placares, .tn-corrigir { grid-column: 1; }
+  .tn-placar { flex: 1 0 calc(25% - 6px); }
+  .tn-editar .tn-perigo { margin-left: 0; }
+  /* No celular, a tabela cabe sem rolar: sai o 3º desempate (explicado na nota) e o espaço encolhe. */
+  .tn-tabela th, .tn-tabela td { padding: 8px 6px; }
+  .tn-tabela th:nth-child(7), .tn-tabela td:nth-child(7) { display: none; }
+  .tn-tag { margin-left: 0; margin-top: 2px; display: table; }
+}

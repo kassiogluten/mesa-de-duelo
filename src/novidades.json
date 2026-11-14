@@ -1,4 +1,15 @@
 {
+  "0.173.0": {
+    "Torneios presenciais no sistema suíço": [
+      { "img": "0.173.0/rodada.webp", "legenda": "As mesas da rodada 2, com o bye para quem tem menos pontos e os placares já lançados recolhidos em Corrigir." }
+    ],
+    "Placar de cada mesa e classificação com desempates": [
+      { "img": "0.173.0/classificacao.webp", "legenda": "A classificação com pontos, vitórias, derrotas e empates e os três desempates; a jogadora atrasada aparece marcada." }
+    ],
+    "Inscrição de quem chega atrasado": [
+      { "img": "0.173.0/atrasado.webp", "legenda": "Com a 1ª rodada já sorteada, a inscrição avisa que quem entra agora começa com uma derrota por 0-2." }
+    ]
+  },
   "0.171.0": {
     "Mana voando até a reserva": [
       { "img": "0.171.0/mana-reserva.webp", "legenda": "Duas Florestas viradas soltam orbes verdes que voam em curva até o seu retrato, onde a reserva mostra a mana verde ×2." }

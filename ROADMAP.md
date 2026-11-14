@@ -523,3 +523,16 @@ descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao it
 - [ ] Conferir num celular de entrada de verdade (critério 8, junto com a fase 2), incluindo a cena de dano: decidido em 14/11/2026 que é o celular quem diz se o voo da carta na GPU precisa ficar mais leve. Sem aparelho disponível nesse dia.
 - [x] Fase 3b: o que sobrou em CSS. Feita em 14/11/2026 (detalhes na spec): animações de estado refeitas para a placa de vídeo animar sozinha (a mesa parada com o campo cheio gastava um terço da CPU; caiu para cerca de um sétimo), compra e mão inicial de costas na GPU com a sua carta virando no ar, mana em orbes, moeda, dado, fim da partida, dobra, vida, marcadores e os brilhos de chegada. Ficaram em CSS: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo.
 - [ ] Fase 4, só se os números pedirem depois do 114: o campo inteiro em WebGL (spec própria).
+
+## 129. Torneios suíços dentro do sistema
+
+Pedido em 14/11/2026. O objetivo final é a mesa organizar torneios com as partidas jogadas aqui mesmo: classificação automática, sorteio das rodadas e os pontos de quem vence registrados sozinhos. O primeiro passo saiu como ferramenta para torneios presenciais (`novidades-pendentes/torneios-suicos`): qualquer conta cria um torneio, inscreve jogadores pelo nome e lança os placares à mão; só o organizador mexe, e qualquer um com o link vê. A regra (sorteio sem revanche, bye, atrasados com derrota na 1ª rodada, desempates do Magic) fica no servidor (`Tournament.java`), pronta para ser reaproveitada. Decidido no mesmo dia: placar em jogos, atrasados até o sorteio da 2ª rodada, rodadas sugeridas pela quantidade de jogadores e editáveis, sem top 8.
+
+- [x] Ferramenta para torneios presenciais: criar, inscrever, sortear, lançar placares, classificação e link público.
+- [ ] Avaliar com os jogadores e decidir se segue para os torneios dentro do sistema.
+- [ ] Inscrição pela conta (o jogador entra pelo link, em vez de o organizador digitar o nome).
+- [ ] Sortear a rodada abrindo as salas das mesas, com o resultado da partida lançado sozinho no torneio.
+- [ ] Relógio da rodada (50 minutos, com os turnos extras) e o que fazer com quem não aparece.
+- [ ] Top 8 eliminatório depois das rodadas suíças.
+- [ ] Pontos acumulados de quem vence entre torneios (ranking de temporada).
+

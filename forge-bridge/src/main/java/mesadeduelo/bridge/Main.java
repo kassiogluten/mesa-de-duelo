@@ -101,10 +101,13 @@ public final class Main {
             feedback.authors(accounts::reportAuthor);
             accounts.history(history);
             rooms.accounts(accounts::accountOfToken);
+            Tournaments tournaments = Tournaments.inDir(store.dir().getParent(), accounts);
+            server.tournaments(tournaments);
             server.start();
             Log.bridge().info("Relatos em %s (%d guardados)", store.dir(), store.files());
             Log.bridge().info("Histórico de partidas em %s", history.dir());
             Log.bridge().info(accounts.enabled() ? "Contas ligadas em /api/conta/ (" + accounts.count() + " em " + accounts.dir() + ")." : "Contas desligadas (defina MESA_GOOGLE_CLIENT_ID).");
+            Log.bridge().info("Torneios em /api/torneios/ (%d em %s).", tournaments.count(), tournaments.dir());
             Log.bridge().info(admin.enabled() ? "Área de admin ligada em /api/admin/ (página /admin.html)." : "Área de admin desligada (defina MESA_ADMIN_PASSWORD).");
             Log.bridge().info("Modo %s: WebSocket em ws://%s:%d/ws (Ctrl+C para sair)", mode, host, port);
             if (!"127.0.0.1".equals(host)) Log.bridge().info("Aceitando conexões de outras máquinas: partidas em rede liberadas.");

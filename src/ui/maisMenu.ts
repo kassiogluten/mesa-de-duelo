@@ -2,7 +2,7 @@ import { EVENTS } from '../storage';
 import { ownArtEnabled, setOwnArtEnabled } from '../scryfallCards';
 import { openOwnArtGallery } from './ownArtGallery';
 import { ligarTemaItens, temaItemsHTML, temasDisponiveis } from './temas';
-import { ICON_DOTS, ICON_BALLOON, ICON_TABLE, ICON_FLASK, ICON_REPLAY } from './icons';
+import { ICON_DOTS, ICON_BALLOON, ICON_TABLE, ICON_FLASK, ICON_REPLAY, ICON_TROPHY } from './icons';
 import { hasUnseenReports } from '../myReports';
 import { openMyReportsDialog } from './myReportsDialog';
 
@@ -14,8 +14,8 @@ const ICON_CARDS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6
 
 
 /**
- * Botão ⋯ do cabeçalho: o que se usa de vez em quando (relatar, Meus relatos, Laboratório, cartas da mesa, tema da
- * mesa), fora da linha das abas. Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
+ * Botão ⋯ do cabeçalho: o que se usa de vez em quando (relatar, Meus relatos, Laboratório, Salas, Rever, Torneios,
+ * cartas da mesa, tema da mesa), fora da linha das abas. Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
  */
 export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
   slot.classList.add('tema', 'mais');
@@ -26,6 +26,7 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     + `<button type="button" role="menuitem" data-mais="lab">${ICON_FLASK}<span>Laboratório</span></button>`
     + `<a role="menuitem" href="/salas.html" data-mais="salas">${ICON_TABLE}<span>Salas e partidas ao vivo</span></a>`
     + `<a role="menuitem" href="/partidas.html#gravadas" data-mais="rever">${ICON_REPLAY}<span>Rever partidas</span></a>`
+    + `<a role="menuitem" href="/torneios.html" data-mais="torneios">${ICON_TROPHY}<span>Torneios presenciais</span></a>`
     + `<p class="mais-grupo" role="presentation">Aparência</p><button type="button" role="menuitemcheckbox" aria-checked="true" data-mais="own-art"><span>Cartas da mesa</span></button><button type="button" role="menuitem" data-mais="own-art-gallery" aria-haspopup="dialog">${ICON_CARDS}<span>Ver a série</span></button>`
     + (temasDisponiveis() ? `<p class="mais-grupo" role="presentation">Tema da mesa</p><div role="group" aria-label="Tema da mesa">${temaItemsHTML()}</div>` : '')
     + `</div>`;
