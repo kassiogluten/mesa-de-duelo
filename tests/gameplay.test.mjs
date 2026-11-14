@@ -434,19 +434,32 @@ test('switching sound pack loads that folder, persists it and plays a sample', a
   listeners.get('pointerdown')({ isTrusted: true });
   audio.setMuted(false);
   for (let i = 0; i < 12; i++) await Promise.resolve();
-  assert.ok(urls.every(url => /\/audio\/\d\d-[^/]+\.wav/.test(url)), 'classic pack stays at the audio root');
+  assert.ok(urls.every(url => /\/audio\/\d\d-[^/]+\.mp3/.test(url)), 'classic pack stays at the audio root');
   await audio.setPack('8bits');
   assert.equal(JSON.parse(stored.get('mesa:audio:v1')).pack, '8bits');
   assert.equal(urls.filter(url => url.includes('/audio/8bits/')).length, Object.keys(SOUND_FILES).length);
   assert.equal(sources.length, 1, 'a sample of the new pack plays');
-  assert.match(sources[0].buffer.url, /\/audio\/8bits\/06-turn\.wav/);
+  assert.match(sources[0].buffer.url, /\/audio\/8bits\/06-turn\.mp3/);
   audio.setMuted(true);
 });
 
-test('all shipped sound assets are short stereo PCM without clipping', async () => {
+// Os originais ficam em audio-src/ (WAV); a mesa toca os MP3 de public/audio/ que o `npm run sons` gera deles.
+const originalUrl = (pack, cue) => new URL(`../audio-src/${soundUrl(pack, cue).slice('audio/'.length).replace(/\.mp3$/, '.wav')}`, import.meta.url);
+
+test('every cue ships as a small MP3 converted from its original', async () => {
+  for (const pack of SOUND_PACKS) for (const cue of Object.keys(SOUND_FILES)) {
+    const url = new URL(`../public/${soundUrl(pack.id, cue)}`, import.meta.url);
+    assert.match(url.pathname, /\.mp3$/);
+    const mp3 = await readFile(url), wav = await readFile(originalUrl(pack.id, cue));
+    assert.ok(mp3.toString('ascii', 0, 3) === 'ID3' || (mp3[0] === 0xff && (mp3[1] & 0xe0) === 0xe0), `${pack.id}/${cue} is an MP3`);
+    assert.ok(mp3.length < wav.length / 5, `${pack.id}/${cue} is compressed`);
+  }
+});
+
+test('all sound originals are short stereo PCM without clipping', async () => {
   const hashes = new Set();
   for (const pack of SOUND_PACKS) for (const cue of Object.keys(SOUND_FILES)) {
-    const wav = await readFile(new URL(`../public/${soundUrl(pack.id, cue)}`, import.meta.url));
+    const wav = await readFile(originalUrl(pack.id, cue));
     assert.equal(wav.toString('ascii', 0, 4), 'RIFF'); assert.equal(wav.toString('ascii', 8, 12), 'WAVE');
     assert.equal(wav.readUInt16LE(22), 2); assert.equal(wav.readUInt32LE(24), 44100); assert.equal(wav.readUInt16LE(34), 16);
     // Só a vitória e a derrota, que tocam uma vez por jogo, podem durar mais.
@@ -462,17 +475,17 @@ test('all shipped sound assets are short stereo PCM without clipping', async () 
 
 
 test('damage source is licensed and pinned; adapted blasts start promptly and remain distinct', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../public/audio/sources/manifest.json', import.meta.url), 'utf8'));
+  const manifest = JSON.parse(await readFile(new URL('../audio-src/sources/manifest.json', import.meta.url), 'utf8'));
   assert.deepEqual(Object.keys(manifest.sources).sort(), ['creature', 'player']);
   for (const metadata of Object.values(manifest.sources)) {
     assert.equal(metadata.license, 'CC0-1.0');
-    const source = await readFile(new URL(`../public/audio/sources/${metadata.file}`, import.meta.url));
+    const source = await readFile(new URL(`../audio-src/sources/${metadata.file}`, import.meta.url));
     assert.equal(createHash('sha256').update(source).digest('hex'), metadata.sha256);
     assert.equal(source.length, metadata.bytes);
   }
   const durations = [];
-  for (const name of [SOUND_FILES.impact, SOUND_FILES['player-hit']]) {
-    const wav = await readFile(new URL(`../public/audio/${name}`, import.meta.url));
+  for (const cue of ['impact', 'player-hit']) {
+    const wav = await readFile(originalUrl('classico', cue));
     durations.push((wav.length - 44) / (44100 * 4));
     let energy = 0;
     const samples = Math.round(.05 * 44100) * 2;

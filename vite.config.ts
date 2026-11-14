@@ -50,8 +50,8 @@ export default defineConfig({
       },
       workbox: {
         // O visual e os sons ficam guardados: o jogo abre rápido e, sem servidor, ainda mostra a tela inicial.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,wav}'],
-        globIgnores: ['sobre.html', 'sobre/**', 'sw-avisos.js', 'audio/*/*', 'audio/sources/**', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,mp3}'],
+        globIgnores: ['sobre.html', 'sobre/**', 'sw-avisos.js', 'audio/*/*', 'admin.html', 'tests/**', 'ferramentas/**', 'assets/admin-*'],
         // Toque no aviso "Seu turno" que o service worker mostra no celular (public/sw-avisos.js).
         importScripts: ['sw-avisos.js'],
         navigateFallback: 'index.html',

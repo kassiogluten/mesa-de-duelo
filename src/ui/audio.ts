@@ -16,20 +16,20 @@ export const SOUND_PACKS = [
 export type SoundPack = typeof SOUND_PACKS[number]['id'];
 export interface AudioSettings { muted: boolean; volume: number; pack: SoundPack }
 export const SOUND_FILES = {
-  draw: '01-card-draw.wav', play: '02-card-play.wav', land: '03-land.wav', cast: '04-cast.wav',
-  impact: '05-impact.wav', 'player-hit': '08-player-hit.wav', 'turn-self': '06-turn.wav', wing: '07-wing.wav',
-  'turn-opponent': '09-opponent-turn.wav', ability: '10-ability.wav', resolved: '11-resolved.wav',
-  countered: '12-countered.wav', attack: '13-attack.wav', block: '14-block.wav',
-  heal: '15-heal.wav', poison: '16-poison.wav', shield: '17-shield.wav', shatter: '18-shatter.wav',
-  untap: '19-untap.wav', sneak: '20-sneak.wav', blink: '21-blink.wav', bounce: '22-bounce.wav', exile: '23-exile.wav',
-  sacrifice: '24-sacrifice.wav', 'life-loss': '25-life-loss.wav', shuffle: '26-shuffle.wav',
-  victory: '27-victory.wav', defeat: '28-defeat.wav', counter: '29-counter.wav', 'counter-bad': '30-counter-bad.wav',
-  walker: '31-walker.wav', loyalty: '32-loyalty.wav',
+  draw: '01-card-draw.mp3', play: '02-card-play.mp3', land: '03-land.mp3', cast: '04-cast.mp3',
+  impact: '05-impact.mp3', 'player-hit': '08-player-hit.mp3', 'turn-self': '06-turn.mp3', wing: '07-wing.mp3',
+  'turn-opponent': '09-opponent-turn.mp3', ability: '10-ability.mp3', resolved: '11-resolved.mp3',
+  countered: '12-countered.mp3', attack: '13-attack.mp3', block: '14-block.mp3',
+  heal: '15-heal.mp3', poison: '16-poison.mp3', shield: '17-shield.mp3', shatter: '18-shatter.mp3',
+  untap: '19-untap.mp3', sneak: '20-sneak.mp3', blink: '21-blink.mp3', bounce: '22-bounce.mp3', exile: '23-exile.mp3',
+  sacrifice: '24-sacrifice.mp3', 'life-loss': '25-life-loss.mp3', shuffle: '26-shuffle.mp3',
+  victory: '27-victory.mp3', defeat: '28-defeat.mp3', counter: '29-counter.mp3', 'counter-bad': '30-counter-bad.mp3',
+  walker: '31-walker.mp3', loyalty: '32-loyalty.mp3',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = KEYS.audio;
 const MAX_VOICES = 4;
-const SOUND_REVISION = 'materials-7';
+const SOUND_REVISION = 'mp3-1';
 // Includes the StereoPanner's correlated-channel crossfeed at the maximum pan.
 export const MIX_HEADROOM = .40;
 

@@ -6,3 +6,6 @@ relatos
 __pycache__/
 .git-precommit.log
 .git-precommit-server.log
+
+# Imagens geradas: ficam na branch imagegen, fora da main.
+output/imagegen/

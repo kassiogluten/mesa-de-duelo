@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.172.0] - 2026-11-14
+
+### Mudou
+
+- **Sons mais leves no aplicativo instalado.** Os efeitos sonoros de todos os pacotes agora vêm num formato bem menor, com o mesmo volume e o mesmo corte: o aplicativo instalado baixa cerca de 2 MB a menos, e trocar de pacote de sons fica mais rápido.
+
 ## [0.171.0] - 2026-11-14
 
 ### Novo
