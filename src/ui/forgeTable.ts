@@ -1,6 +1,7 @@
 import type { FState, ForgeClient, NoticeDetail } from '../forge/client';
 import { KEYS, load, save } from '../storage';
 import { createMotion } from './motion';
+import { dizzy, dizzyChanges } from './permanentEffects';
 import { hideCardPreview } from './cardInspector';
 import { type HistoryNames } from './historyLog';
 import './removalNotice.css';
@@ -159,6 +160,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const turnNotice = createTurnNotice();
   // Fim da partida: os nomes das permanentes (para ver quem transformou) e a mão inicial já distribuída.
   let fieldNames = new Map<number, string>(), fieldNamesMatch = '';
+  // As criaturas tontas no desenho anterior, para as estrelinhas do enjoo chegarem ou voarem embora.
+  let dizzyBefore = new Set<number>(), dizzyMatch = '';
   let dealtHand = '', payingBefore = false;
   // Opções da partida (tableSettings.ts): som, jogo e aparência, com as preferências deste aparelho.
   const settings = createTableSettings(root, { audio, passLevel, turnNotice, turnBuzz, connected: () => !!client?.connected && !match.disconnected,
@@ -442,6 +445,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (turned.length) motion.transformed(turned);
     }
     fieldNames = names; fieldNamesMatch = timeline.matchId;
+    // Enjoo de invocação: quem ficou tonto e quem deixou de estar (só entre desenhos da mesma partida).
+    const tonto = new Set(visual.players.flatMap(p => p.battlefield.filter(dizzy).map(c => c.id)));
+    if (!silently && dizzyMatch === timeline.matchId) {
+      const { arrived, cleared } = dizzyChanges(dizzyBefore, tonto, new Set(names.keys()));
+      if (arrived.length || cleared.length) motion.dizzy(arrived, cleared);
+    }
+    dizzyBefore = tonto; dizzyMatch = timeline.matchId;
     // Mão inicial: as cartas saem do grimório; num mulligan, a mão anterior volta antes.
     if (s.input.opening === 'mulligan' && !s.gameOver) {
       const ids = (s.players.find(p => p.id === s.you)?.hand ?? []).map(c => c.id).join(',');

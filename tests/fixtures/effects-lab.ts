@@ -764,6 +764,12 @@ function table() {
         case 'motes': if (!selected) return needSelected; port.play('motes', { at: selected, color: c.color || '#f2b54c' }); return 'Habilidade saindo da carta: grãos de luz subindo em volta dela.';
         case 'puff': if (!selected) return needSelected; port.play('puff', { at: selected, size: Math.max(selected.w, selected.h) * 1.6 }); return 'Fumaça do ninjutsu e do sneak.';
         case 'dust': if (!selected) return needSelected; port.play('dust', { at: selected }); return 'Virar: um pouco de poeira na base da carta.';
+        case 'dizzy': case 'undizzy': {
+          if (!selected) return needSelected;
+          const tag = center(document.querySelector(`.field [data-fid="${c.id}"] .tag.zzz`)) ?? undefined;
+          port.play(c.kind, { at: selected, tag });
+          return c.kind === 'dizzy' ? 'Chegou tonta: as estrelinhas giram em volta e se recolhem no selo do enjoo.' : 'O enjoo passou: as estrelinhas saem do selo e voam embora.';
+        }
         case 'charge': {
           if (!selected) return needSelected;
           const middle = document.querySelector('.arena')!.getBoundingClientRect();
@@ -901,9 +907,9 @@ function panel() {
       .map(([k, t]) => `<button data-gpu="shockwave" data-color="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['dissolve', 'Exilar'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
-       ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)']]
+       ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou']]
       .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="glint">Conjurar (redemoinho)</button><button data-gpu="arrive">Chegada (anel)</button><button data-gpu="arrive" data-color="#9b7bff">Chegada no cemitério</button><button data-gpu="streak">Golpe (riscos)</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
-    <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta.</p>
+    <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta. Ligar e desligar "Enjoo de invocação" na permanente selecionada mostra a aberração de cor e solta as estrelinhas ao ligar e ao desligar.</p>
     <div>Câmera lenta só da camada: ${[['1', '1×'], ['4', '4×'], ['10', '10×']].map(([k, t]) => `<button data-gpu-slow="${k}">${t}</button>`).join('')}<button data-gpu="freeze">Congelar</button></div>
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}

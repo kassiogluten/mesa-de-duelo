@@ -5,6 +5,7 @@ import './novidades.css';
 import { RELEASES, VISUALS, inline, releaseTitle, shotSrc } from './ui/changelog';
 import { esc } from './ui/cardtext';
 import { iniciarTema } from './ui/temas';
+import { justifyRows, ROWS } from './ui/justifiedRows';
 
 iniciarTema();
 
@@ -47,12 +48,21 @@ app.innerHTML = `
   </main>
   <dialog class="vis-lightbox" aria-label="Imagem ampliada"><img alt=""><p></p><button type="button" class="vis-close" aria-label="Fechar">×</button></dialog>`;
 
-// Os prints são tirados em 2x: mostra cada um no tamanho real da mesa (metade da largura do arquivo), nunca esticado.
-for (const img of app.querySelectorAll<HTMLImageElement>('.vis-zoom img')) {
-  const fit = () => { img.style.width = `${img.naturalWidth / 2}px`; };
-  if (img.complete && img.naturalWidth) fit(); else img.addEventListener('load', fit, { once: true });
+// Cada item arruma os prints em linhas justificadas (justifiedRows.ts): a proporção de cada um sai do arquivo ao
+// carregar (até lá, 4:3), e a arrumação refaz quando a largura muda.
+for (const box of app.querySelectorAll<HTMLElement>('.vis-shots')) {
+  const figures = [...box.querySelectorAll<HTMLElement>('figure')];
+  const imgs = figures.map(f => f.querySelector('img')!);
+  const layout = () => {
+    const width = box.clientWidth;
+    if (!width) return;
+    const placed = justifyRows(imgs.map(img => img.naturalWidth ? { ar: img.naturalWidth / img.naturalHeight, natural: img.naturalWidth } : { ar: 4 / 3, natural: Infinity }), width);
+    figures.forEach((f, i) => { f.style.width = `${placed[i]!.w}px`; f.style.marginRight = `${placed[i]!.pad}px`; });
+  };
+  imgs.forEach(img => { if (!img.complete) img.addEventListener('load', layout, { once: true }); });
+  new ResizeObserver(layout).observe(box);
 }
-
+document.documentElement.style.setProperty('--vis-gap', `${ROWS.gap}px`);
 const sections = [...app.querySelectorAll<HTMLElement>('.vis-rel')], more = app.querySelector<HTMLButtonElement>('.vis-more')!;
 let shown = Math.min(PAGE, sections.length);
 /** Mostra as primeiras `count` versões; o botão diz quantas ainda faltam e some quando não falta nenhuma. */

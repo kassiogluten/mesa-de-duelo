@@ -8,6 +8,21 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.169.0] - 2026-11-13
+
+### Novo
+
+- **Criatura tonta com a imagem desalinhada.** Com os efeitos completos, a criatura com enjoo de invocação ganha uma aberração de cor na imagem: uma cópia avermelhada se afasta e volta no ritmo das estrelinhas do selo, abrindo franjas vermelha e azul, junto com o desfoque de sempre. Quando ela chega tonta, as estrelinhas giram em volta da carta e se recolhem no selo; quando o enjoo passa (no seu turno ou ao ganhar ímpeto), elas saem do selo e voam embora. Com muitas criaturas novas de uma vez, só algumas soltam estrelinhas. Com os efeitos leves fica só o selo e a carta apagada, como antes, e com "reduzir movimento" nada se mexe.
+
+### Mudou
+
+- **Novidades em imagens mais arrumadas.** Na página Novidades em imagens, os prints de cada item ficam em linhas da mesma altura que ocupam a largura toda, sem vãos ao lado das imagens estreitas nem buracos embaixo, e nenhum print é cortado. Um print bem largo, como uma faixa da mesa inteira, ganha a linha só para ele. No celular continua uma imagem por linha.
+
+### Corrigido
+
+- **Sem círculo antes de a carta chegar.** Com os efeitos completos, o anel de chegada aparecia parado no lugar para onde a carta ia (a pilha, o campo, o cemitério) antes de ela chegar lá. Agora ele só acende quando a carta chega, e os outros efeitos que começam um pouco depois também não aparecem antes da hora.
+- **Faíscas paradas depois dos efeitos.** O risco do ataque e alguns rastros de cartas voando continuavam soltando faíscas paradas no ponto final depois de o efeito acabar. Agora elas somem junto com o efeito.
+
 ## [0.168.0] - 2026-11-13
 
 ### Mudou

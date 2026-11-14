@@ -69,7 +69,32 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   seals.push(...permanentStatus(c, context.playerName, context.you));
   const restricted = [c.cantAttack && c.cantBlock ? 'não pode atacar nem bloquear' : c.cantAttack ? 'não pode atacar' : c.cantBlock ? 'não pode bloquear' : '',
     c.creature && c.unblockable ? 'não pode ser bloqueada' : c.creature && c.blockLimited ? 'algumas criaturas não podem bloqueá-la' : ''].filter(Boolean).join(', ') || undefined;
-  return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: !!(c.creature && c.sick), restricted };
+  return { frame, glow, base, corner, seals, phased: !!c.phasedOut, targeted: context.targeted, sick: dizzy(c), restricted };
+}
+
+/** Criatura tonta (enjoo de invocação): entrou neste turno e não tem ímpeto. */
+export const dizzy = (c: FCard) => !!(c.creature && c.sick && !c.keywords?.includes('HASTE'));
+/** Teto de criaturas com estrelinhas no mesmo desenho: 20 fichas novas não viram uma nuvem de estrelas. */
+export const DIZZY_MOMENTS = 8;
+/**
+ * Entre um desenho e o seguinte: quem ficou tonto (chegou ao campo com enjoo, ou ganhou enjoo nele) e quem deixou de
+ * estar (o enjoo passou ou a criatura ganhou ímpeto, ainda no campo). Quem saiu do campo não entra em nenhum dos dois.
+ */
+export function dizzyChanges(before: ReadonlySet<number>, after: ReadonlySet<number>, onField: ReadonlySet<number>) {
+  return {
+    arrived: [...after].filter(id => !before.has(id)).slice(0, DIZZY_MOMENTS),
+    cleared: [...before].filter(id => !after.has(id) && onField.has(id)).slice(0, DIZZY_MOMENTS),
+  };
+}
+/**
+ * Aberração de cor da criatura tonta (efeitos completos), separando os canais da imagem: uma camada ciano multiplica a
+ * imagem (fica só o verde e o azul) e uma cópia só com o vermelho clareia por cima (screen). Alinhadas, somam a imagem
+ * de sempre; a cópia vermelha se afastando abre as franjas vermelha e ciano. Entram logo depois da imagem e no mesmo
+ * lugar (as regras de `.face img` e `.af-art img`), e só aparecem quando a cópia carrega.
+ */
+export function sickGhosts(faceHtml: string) {
+  return faceHtml.replace(/<img src="([^"]+)"[^>]*>/, (img, src: string) =>
+    `${img}<span class="sick-cyan" aria-hidden="true"></span><span class="sick-red" aria-hidden="true"><img src="${src}" alt="" draggable="false" onload="this.parentNode.classList.add('on')" onerror="this.remove()"></span>`);
 }
 
 type StatusKind = `type ${TypeIcon}` | 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'enchants' | 'foretold' | 'devotion' | 'devotion met' | 'count' | 'count met' | `state ${FCardState}`;

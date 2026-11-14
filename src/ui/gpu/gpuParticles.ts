@@ -3,7 +3,7 @@ import { Color, Container, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect } from './gpuLayer';
 
 /** As texturas da mesa (criadas uma vez em `prepare`) e o teto de partículas do aparelho. */
-export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: Texture; cardGlow: Texture; max: number }
+export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: Texture; cardGlow: Texture; star: Texture; max: number }
 
 // Teto de faíscas vivas na camada (no celular, metade): um combate grande não vira uma nuvem que derruba os quadros.
 export const MAX_PARTICLES = 400;
@@ -83,16 +83,24 @@ function particles(view: Container) {
 export function timed(life: number, build: (view: Container, sparks: Particles) => (t: number, ms: number) => void, delay = 0): GpuEffect {
   const view = new Container();
   const sparks = particles(view);
-  const draw = build(view, sparks);
-  let age = -delay;
+  // Montado só quando o efeito começa: com atraso, nada aparece antes da hora (o anel de chegada esperava inteiro no
+  // destino da carta) e as faíscas não andam antes de nascer.
+  let draw: ((t: number, ms: number) => void) | null = null;
+  let age = -delay, ended = false;
   view.on('destroyed', () => sparks.drop());
   return {
     view,
     update(ms) {
       age += ms;
-      if (age >= 0) draw(Math.min(1, age / life), ms);
+      if (age >= 0 && !ended) {
+        draw ??= build(view, sparks);
+        draw(Math.min(1, age / life), ms);
+        // O último desenho é o de t = 1: depois dele, quem solta faíscas a cada quadro (risco do golpe, rastros) para,
+        // e o efeito acaba quando as que já saíram somem, em vez de ficar soltando faíscas paradas no ponto final.
+        ended = age >= life;
+      }
       const more = sparks.update(ms);
-      return age < life || more;
+      return !ended || more;
     },
   };
 }

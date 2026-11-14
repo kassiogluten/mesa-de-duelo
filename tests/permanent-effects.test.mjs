@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const { faceDownReminder } = await import('../src/ui/faceDownReminder.ts');
-const { permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import('../src/ui/permanentEffects.ts');
+const { dizzy, dizzyChanges, DIZZY_MOMENTS, sickGhosts, permanentFx, permanentFxHTML, permanentFxText, auraColor, protectionLabel, permanentStatus, typeChange, typeChangeText, typeChangeLine, permanentTypeChange, parseTypeLine } = await import('../src/ui/permanentEffects.ts');
 const css = await readFile(new URL('../src/ui/permanentEffects.css', import.meta.url), 'utf8');
 const creature = extra => ({ id: 1, tapped: false, token: false, creature: true, power: 2, toughness: 2, ...extra });
 
@@ -52,11 +52,36 @@ test('base details, phasing, restrictions and targeting', () => {
   const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'HASTE'], sick: true, cantAttack: true, phasedOut: true }), { targeted: 'theirs' });
   assert.deepEqual(fx.base, ['deathtouch', 'haste', 'chained']);
   const view = permanentFxHTML(fx);
-  assert.deepEqual(view.classes, ['fx-phased', 'fx-sick', 'fx-targeted theirs']);
+  assert.deepEqual(view.classes, ['fx-phased', 'fx-targeted theirs'], 'with haste the summoning sickness changes nothing, so it is not shown');
   assert.match(view.html, /fx-crosshair/);
   assert.doesNotMatch(view.html, /fx-mark/, 'first and double strike have no mark on top');
   assert.equal(permanentFxText(fx), 'fora de fase, não pode atacar, alvo de algo na pilha');
   assert.equal(permanentFx(creature({ sick: true })).sick, true, 'summoning sickness stays until its controller\'s next turn');
+  assert.deepEqual(permanentFxHTML(permanentFx(creature({ sick: true }))).classes, ['fx-sick']);
+});
+
+test('only a creature with summoning sickness and without haste is dizzy', () => {
+  assert.equal(dizzy(creature({ sick: true })), true);
+  assert.equal(dizzy(creature({ sick: true, keywords: ['HASTE'] })), false, 'gaining haste ends the effect');
+  assert.equal(dizzy(creature({ sick: false })), false);
+  assert.equal(dizzy({ id: 2, sick: true, creature: false }), false, 'an artifact that just entered is not dizzy');
+});
+
+test('the stars arrive on the newly dizzy and fly away from those still on the field', () => {
+  const { arrived, cleared } = dizzyChanges(new Set([1, 2, 3]), new Set([3, 4]), new Set([1, 3, 4]));
+  assert.deepEqual(arrived, [4]);
+  assert.deepEqual(cleared, [1], 'the one that left the field (2) gets no stars');
+  const many = new Set(Array.from({ length: 20 }, (_, i) => i + 10));
+  assert.equal(dizzyChanges(new Set(), many, many).arrived.length, DIZZY_MOMENTS, '20 tokens at once do not become a cloud of stars');
+});
+
+test('the colour split copies the permanent image right after it', () => {
+  const face = '<div class="face"><div class="fb">x</div><img src="https://img/a.jpg" alt="Bear" draggable="false" loading="lazy" onerror="this.remove()"></div>';
+  const html = sickGhosts(face);
+  assert.ok(html.includes('onerror="this.remove()"><span class="sick-cyan" aria-hidden="true"></span><span class="sick-red" aria-hidden="true"><img src="https://img/a.jpg" alt=""'), html);
+  assert.equal((html.match(/<img /g) ?? []).length, 2);
+  assert.equal(sickGhosts('<div class="face"><div class="back"></div></div>'), '<div class="face"><div class="back"></div></div>', 'a face without an image stays the same');
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\)[^@]*\.sick-red \{ animation: fx-chroma/, 'the split only moves without reduced motion');
 });
 
 test('effects never take pointer input and only move without reduced motion', () => {

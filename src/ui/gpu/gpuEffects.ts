@@ -1,4 +1,4 @@
-// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts e o voo de gpuFlight.ts), com as cores do tema.
+// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts, as estrelinhas do enjoo de gpuDizzy.ts e o voo de gpuFlight.ts), com as cores do tema.
 import { Color, Container, Graphics, PerspectiveMesh, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
@@ -6,6 +6,7 @@ import { easeOut, MAX_PARTICLES, rand, spray, themeColor, timed, type Shared } f
 import { MOVE_EFFECTS, type MoveParams } from './gpuMoves';
 import { flight, preload, type FlightParams } from './gpuFlight';
 import { PLAY_EFFECTS, type PlayParams } from './gpuPlays';
+import { DIZZY_EFFECTS, type DizzyParams } from './gpuDizzy';
 
 export { preload };
 
@@ -23,7 +24,7 @@ interface DamageParams {
   /** Ultimate do planeswalker: onda de luz na cor dele atravessando a mesa. `reach` é o diâmetro final. */
   shockwave: { at: Point; color: string; reach: number };
 }
-export type GpuEffectParams = DamageParams & MoveParams & PlayParams & { flight: FlightParams };
+export type GpuEffectParams = DamageParams & MoveParams & PlayParams & DizzyParams & { flight: FlightParams };
 export type GpuEffectName = keyof GpuEffectParams;
 
 const shared = new WeakMap<GpuLayer, Shared>();
@@ -58,6 +59,12 @@ export function prepare(layer: GpuLayer) {
       g.shadowColor = '#fff'; g.shadowBlur = 24; g.fillStyle = '#fff';
       g.beginPath(); g.roundRect(50, 30, 100, 140, 8); g.fill();
     }),
+    // A estrelinha de quatro pontas do ícone do enjoo (ICON_DIZZY), branca para receber a cor, com um halo leve.
+    star: painted(64, g => {
+      g.translate(32, 32); g.scale(6.4, 6.4);
+      g.shadowColor = '#fff'; g.shadowBlur = 10; g.fillStyle = '#fff';
+      g.fill(new Path2D('M0-4.2 1.1-1.1 4.2 0 1.1 1.1 0 4.2-1.1 1.1-4.2 0-1.1-1.1z'));
+    }),
     max: layer.coarse ? MAX_PARTICLES / 2 : MAX_PARTICLES,
   });
   warmUp(layer);
@@ -71,7 +78,7 @@ export function prepare(layer: GpuLayer) {
 function warmUp(layer: GpuLayer) {
   const s = shared.get(layer)!;
   const view = new Container({ alpha: .004 });
-  for (const texture of [s.spark, s.glow, s.ring, s.shard, s.cardGlow]) {
+  for (const texture of [s.spark, s.glow, s.ring, s.shard, s.cardGlow, s.star]) {
     view.addChild(new Sprite({ texture, x: 4, y: 4, blendMode: 'add' }), new Sprite({ texture, x: 4, y: 4 }));
   }
   view.addChild(new Graphics().roundRect(0, 0, 20, 28, 4).stroke({ width: 2, color: 0xffffff }));
@@ -212,7 +219,7 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
 export function play<N extends GpuEffectName>(layer: GpuLayer, name: N, params: GpuEffectParams[N]): boolean {
   const s = shared.get(layer);
   if (!s || layer.destroyed) return false;
-  const make = name === 'flight' ? flight : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name];
+  const make = name === 'flight' ? flight : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name] ?? (DIZZY_EFFECTS as any)[name];
   // O voo da carta pode recusar (textura ainda não carregada): quem pediu voa em CSS.
   const effect = make(layer, s, params);
   if (!effect) return false;

@@ -21,6 +21,8 @@ export interface Motion {
   quick(event: PresentationEvent, options: { you: number }): void;
   /** Permanentes que mudaram de face no campo (transformar, dia e noite): giram no lugar e mostram a face nova. */
   transformed(ids: number[]): void;
+  /** Criaturas que ficaram tontas (enjoo de invocação) e que deixaram de estar: as estrelinhas chegam ou voam embora. */
+  dizzy(arrived: number[], cleared: number[]): void;
   /** Mão inicial: as cartas saem do grimório uma a uma; num mulligan, a mão anterior volta antes e o grimório embaralha. */
   deal(cards: HTMLElement[], options: { returning: number }): void;
   /** Cartas reveladas numa janela: entram de costas e viram de face, uma depois da outra. */
@@ -143,6 +145,7 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
       else if (event.type === 'counters') board.counters(event);
     },
     transformed: board.transformed,
+    dizzy: board.dizzy,
     deal: library.deal,
     revealIn: stage.revealIn,
     finale: stage.finale,

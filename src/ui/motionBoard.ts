@@ -1,4 +1,4 @@
-// Animações entre permanentes: ataque, bloqueio, anexar, controle, marcadores, mana e transformar.
+// Animações entre permanentes: ataque, bloqueio, anexar, controle, marcadores, mana, transformar e as estrelinhas do enjoo de invocação.
 import type { PresentationEvent } from './presentationTimeline';
 import { center, LANDING, reduced, SETTLE, type MotionKit, type Point } from './motionKit';
 
@@ -148,5 +148,19 @@ export function createBoardMotion(kit: MotionKit) {
       later(() => ripple(center(el)), 320);
     }
   }
-  return { attackers, blocks, attach, control, counters, manaOrb, transformed };
+  /**
+   * Enjoo de invocação, só na camada GPU (com efeitos leves fica o selo de sempre): as estrelinhas giram em volta de
+   * quem ficou tonto, depois de a carta pousar, e voam embora de quem deixou de estar.
+   */
+  function dizzy(arrived: number[], cleared: number[]) {
+    if (document.hidden || root.hidden || reduced()) return;
+    const spot = (id: number) => {
+      const el = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`), at = center(el);
+      return at ? { at, tag: center(el!.querySelector('.tag.zzz')) ?? undefined } : null;
+    };
+    arrived.forEach((id, i) => { const one = spot(id); if (one) gpu.play('dizzy', { ...one, delay: LANDING.duration + 260 + i * 60 }); });
+    // O selo já sumiu do desenho novo: as estrelinhas saem do alto da carta.
+    cleared.forEach((id, i) => { const one = spot(id); if (one) gpu.play('undizzy', { at: one.at, delay: i * 60 }); });
+  }
+  return { attackers, blocks, attach, control, counters, manaOrb, transformed, dizzy };
 }

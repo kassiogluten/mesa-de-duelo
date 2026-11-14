@@ -1479,3 +1479,38 @@ Ficou de fora: conversa nos dois sentidos, notificação do navegador, votos e r
 antes desta mudança e sem conta não têm chave, então a resposta não chega a eles; os enviados com a conta aparecem.
 
 Feito em 13/11/2026 (novidade em `novidades-pendentes/respostas-aos-relatos/`; a versão sai na publicação). Como ficou, onde saiu do plano: o aviso diz "tem resposta" quando há resposta e "foi resolvido" ou "foi encerrado" quando o relato só mudou de estado, e com vários "Seus relatos têm resposta (N)" ou "têm novidades (N)"; ele some ao entrar na partida. O módulo da mesa recebe o token da conta de quem chama (`refreshMyReports(token)`), em vez de ler a sessão, para não fechar um ciclo de imports com `conta/session.ts`. Na área de admin, o campo da resposta fica desligado nos relatos que não têm como chegar ao jogador. A página de teste é `tests/fixtures/my-reports.html` (com `window.fixture`), usada nos prints e em `tests/my-reports.browser.mjs`.
+
+## 127. ✅ Novidades em imagens: itens com várias imagens de tamanhos diferentes
+
+Pedido em 13/11/2026. Na página Novidades em imagens (`novidades.html`, `src/novidades.ts` e `src/novidades.css`), cada item mostra os prints numa grade de colunas (`.vis-shots`, `repeat(auto-fit, minmax(240px, 1fr))`) em que cada imagem fica no tamanho dela (`width: fit-content`). Quando o item tem imagens de tamanhos e proporções diferentes, o visual quebra. Exemplos na 0.167.0, em "Dano com mais impacto", "Cartas saindo do campo com mais vida" e "Pouso, quebra e ultimate mais vivos":
+
+- uma imagem estreita deixa um vão vazio ao lado dela, na coluna;
+- uma imagem alta abre um buraco embaixo da vizinha da mesma linha;
+- a terceira imagem cai sozinha numa linha nova, com metade da largura vazia;
+- uma imagem bem larga (o ultimate, 2732×623) fica espremida numa coluna e quase não se vê.
+
+- [x] Decidir antes de fazer: (A) linhas justificadas, como um álbum de fotos: as imagens de cada linha ficam com a mesma altura e juntas preenchem a largura, sem cortar nada e sem vãos (recomendado: aproveita qualquer mistura de tamanhos e não pede nada de quem tira o print); (B) molduras iguais: cada imagem numa caixa da mesma proporção, inteira dentro dela, com o fundo da mesa em volta (grade arrumada, mas as pequenas ficam com sobra em volta); (C) colunas em mosaico (masonry), sem buracos, mas a ordem de leitura passa a descer pelas colunas; (D) a primeira imagem grande e as outras como miniaturas embaixo. Em qualquer opção: imagem muito larga (proporção acima de ~2,5) ocupa a linha inteira, e no celular continua uma por linha.
+- [x] Fazer, com a legenda embaixo de cada imagem como hoje e o clique para ampliar (`.vis-zoom`) igual.
+- [x] Conferir com os itens da 0.167.0 (os três acima), com um item de uma imagem só e com um de quatro ou mais, no computador e no celular; prints antes e depois com `npm run visual` (tela `novidades`).
+- [x] Se a decisão pedir algo de quem tira os prints (por exemplo, a mesma proporção dentro de um item), anotar no `CLAUDE.md` (seção "Novidades em imagens") e no `/entregar`.
+
+Feito em 13/11/2026 (novidade em `novidades-pendentes/novidades-em-linhas/`). Decidido: (A) linhas justificadas, em `src/ui/justifiedRows.ts` (alvo de 220 px por linha, teto de 320 px, cada print cresce até 1,5× o tamanho real, proporção acima de 2,5 sozinha na linha, abaixo de 480 px uma por linha no tamanho real). Não pede nada de quem tira os prints, então o `CLAUDE.md` e o `/entregar` ficaram iguais. Conferido com os três itens da 0.167.0, um de uma imagem e um de quatro, no computador e no celular, com prints da página (sem `npm run visual`).
+
+## 128. ✅ Efeito para criatura com enjoo de invocação, combinando com as estrelinhas girando
+
+Pedido em 13/11/2026. Hoje a criatura com enjoo de invocação (`sick`) tem o selo `zZ` com o ícone de tontura (`ICON_DIZZY` em `src/ui/icons.ts`: três estrelinhas douradas girando num círculo tracejado, `dizzy-spin` de 2,4 s em `src/style.css`) e a carta levemente apagada e desfocada (`.bfc.fx-sick`, `src/ui/permanentEffects.css`). Falta um efeito na carta que converse com o ícone, sem poluir a mesa (a mesa cheia pode ter dezenas de criaturas novas, como 20 fichas de uma vez).
+
+O que já vale para qualquer escolha:
+
+- Discreto no campo (o detalhe continua no balão e no inspetor), no mesmo dourado `#ffd66b` e no mesmo giro do ícone.
+- O que fica parado enquanto dura o enjoo vai em CSS/SVG, não na camada GPU: ela só desenha com efeito vivo (critério 2 do item 125), e um efeito que nunca acaba a deixaria ligada o tempo todo. Momentos curtos (a criatura chegando tonta, o enjoo passando) podem ir na camada GPU.
+- Com "reduzir movimento", nada gira (como o ícone hoje). Com "Efeitos: leves", fica só o ícone e o apagado de hoje.
+- Some quando o enjoo acaba (a vez de quem controla começa) ou quando a criatura ganha ímpeto.
+
+- [x] Decidir antes de fazer, com as opções desenhadas lado a lado numa página de comparação (grande e no tamanho real da mesa): (A) estrelinhas orbitando a carta: duas ou três estrelas pequenas, iguais às do ícone, girando devagar numa elipse acima da borda de cima da carta, como a tontura de desenho animado (recomendado: é o próprio ícone ganhando tamanho, e fica fora da arte); (B) halo tracejado: o círculo tracejado do ícone vira uma elipse fina girando em volta da base da carta; (C) balanço: a carta oscila de leve (±1°) no ritmo do ícone, sem nada novo desenhado (pode cansar com muitas criaturas); (D) só nos momentos: estrelinhas saem da carta quando ela chega com enjoo e somem voando quando o enjoo passa, e no resto do tempo fica só o ícone. Dá para juntar (D) com qualquer uma das outras.
+- [x] Fazer na carta do campo nos três estilos (Imagem completa, Arte e texto, Arena), virada ou não, sem cobrir o P/R, os marcadores nem os selos.
+- [x] Mesa cheia: conferir com 20 fichas novas de uma vez (`tokens:20` no laboratório de efeitos) que a mesa continua leve e não vira uma nuvem de estrelas.
+- [x] Laboratório de efeitos: botão para ligar e desligar o enjoo na permanente selecionada (já existe o interruptor de estado; conferir) e para o momento de o enjoo passar.
+- [x] Novidade com print, e teste de que o efeito aparece só em criatura com `sick` e some com ímpeto.
+
+Feito em 13/11/2026 (novidade em `novidades-pendentes/enjoo-aberracao-de-cor/`). Na página de comparação, nenhuma das quatro opções (estrelinhas orbitando, halo, balanço, só os momentos) foi escolhida para o efeito parado: pedido foi uma distorção na imagem que combinasse com o desfoque, e, entre vista dupla, arte tonta, ondulação e aberração de cor, ficou a **aberração de cor**, junto com os momentos (D). Como ficou: a imagem é separada em canais (uma camada ciano multiplica a imagem e uma cópia só com o vermelho clareia por cima, em `sickGhosts`), e a cópia vermelha se afasta e volta em 2,4 s, só com transform; com efeitos leves não entra. Os momentos (`dizzy` e `undizzy` em `src/ui/gpu/gpuDizzy.ts`) saem do desenho anterior para o novo (`dizzyChanges`), com teto de 8 por desenho. Criatura com ímpeto deixa de contar como tonta (nem efeito nem selo). Mesa cheia (38 permanentes, 21 com enjoo): quadros em 16,7 ms, sem mudança. Laboratório de efeitos: o interruptor "Enjoo de invocação" já existia e solta as estrelinhas ao ligar e desligar; os botões "Chegou tonta (enjoo)" e "O enjoo passou" ficaram na seção Efeitos na GPU.

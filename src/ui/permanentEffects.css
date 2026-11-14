@@ -54,6 +54,14 @@
 .bfc.fx-phased > :not(.face) { opacity: .5; }
 .bfc.fx-sick > .face { filter: saturate(.7) brightness(.88); }
 .bfc.fx-sick > .face img { filter: blur(0.7px); transform: scale(1.04); }
+/* Com efeitos completos, aberração de cor (permanentEffects.ts, sickGhosts): a imagem multiplicada por ciano mais a
+   cópia só com o vermelho (screen) somam a imagem de sempre; a cópia afastada abre as franjas. Sem "reduzir movimento",
+   ela se afasta e volta no giro do ícone (2,4 s); só transform, leve com muitas criaturas. */
+.bfc.fx-sick > .face :is(.sick-cyan, .sick-red) { position: absolute; inset: 0; pointer-events: none; display: none; }
+.bfc.fx-sick > .face .sick-cyan:has(+ .sick-red.on), .bfc.fx-sick > .face .sick-red.on { display: block; }
+.bfc.fx-sick > .face .sick-cyan { background: #0ff; mix-blend-mode: multiply; }
+.bfc.fx-sick > .face .sick-red { isolation: isolate; mix-blend-mode: screen; transform: translate(1.6%, -.6%); }
+.bfc.fx-sick > .face .sick-red::after { content: ''; position: absolute; inset: 0; background: #f00; mix-blend-mode: multiply; }
 
 @media (prefers-reduced-motion: no-preference) {
   .bfc > .fx-glow.hexproof { animation: fx-shimmer 3.2s ease-in-out infinite; }
@@ -61,6 +69,7 @@
   .bfc > .fx-frame.ward { animation: fx-runes 6s linear infinite; }
   .bfc > .fx-base.deathtouch, .bfc > .fx-base.haste { animation: fx-drift 2.4s ease-in-out infinite alternate; }
   .bfc > .fx-crosshair { animation: fx-aim 1.2s ease-in-out infinite; }
+  .bfc.fx-sick > .face .sick-red { animation: fx-chroma 2.4s ease-in-out infinite; }
   /* Atacando com vigilância: a carta fica de pé e o olho dá um brilho rápido. */
   .slot.attacking:not(.tapped) .bfc > .fx-corner i.vigilance { animation: fx-vigil .9s ease-out 2; }
 }
@@ -69,7 +78,8 @@
 @keyframes fx-breathe { 0%, 100% { opacity: .4; scale: .98; } 50% { opacity: .85; scale: 1.02; } }
 @keyframes fx-runes { to { border-color: #d6c6ff; filter: hue-rotate(40deg); } }
 @keyframes fx-drift { from { translate: -3px 0; opacity: .7; } to { translate: 3px -2px; opacity: 1; } }
-@keyframes fx-aim { 0%, 100% { scale: .92; opacity: .75; } 50% { scale: 1.05; opacity: 1; } }
+@keyframes fx-chroma { 0%, 100% { transform: translate(2.4%, -.9%); } 50% { transform: translate(-2.4%, .9%); } }
+@keyframes fx-aim {0%, 100% { scale: .92; opacity: .75; } 50% { scale: 1.05; opacity: 1; } }
 
 /* Voar (asa), vigilância (olho) e atropelar (garra): selos pequenos na borda esquerda, abaixo da lupa de inspecionar. */
 .bfc > .fx-corner { top: 30%; left: -7px; z-index: 3; display: flex; flex-direction: column; gap: 2px; }

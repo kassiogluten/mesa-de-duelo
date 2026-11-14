@@ -5,7 +5,8 @@ import type { FCard, FPlayer, FState } from '../forge/client';
 import { esc, manaHTML } from './cardtext';
 import type { CardStyle } from './face';
 import { faceDownReminder } from './faceDownReminder';
-import { auraColor, permanentFx, permanentFxHTML, permanentFxText } from './permanentEffects';
+import { auraColor, dizzy, permanentFx, permanentFxHTML, permanentFxText, sickGhosts } from './permanentEffects';
+import { effectsLevel } from './gpu/gpuSupport';
 import { mergedText } from './cardInspector';
 import { canPlayExileCard, legalBlockTargets, selectedForInput, validBlockSelection, type BlockSelection, type exileShelfCards } from './playContext';
 import { proliferateBoardClass } from './proliferate';
@@ -121,7 +122,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   else if (ci.block) tag = `<span class="tag blk">${ICON_SHIELD}${ci.block}</span>`;
   else if (attackers.length) tag = `<span class="tag atk">Atacado ${ICON_SWORD}${attackers.join(',')}</span>`;
   else if (untappable) tag = '<span class="tag untap" title="A mana ainda não foi gasta: toque para desvirar e devolver a mana" aria-hidden="true">↺</span>';
-  else if (c.creature && c.sick) tag = `<span class="tag zzz" title="Enjoo de invocação">${ICON_DIZZY}</span>`;
+  else if (dizzy(c)) tag = `<span class="tag zzz" title="Enjoo de invocação">${ICON_DIZZY}</span>`;
   if (v.attackSelected(s, c.id)) { inner.push('attack-selected'); tag = `<span class="tag block-pending">${ICON_SWORD}Selecionada</span>`; }
   if (v.attackTargets(s).some(target => target.kind === 'card' && target.id === c.id)) inner.push('attack-target');
   if (blockSelected) tag = `<span class="tag block-pending">${ICON_SHIELD}Selecionada</span>`;
@@ -181,7 +182,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   if (exiled.length) slot.push('has-exu');
   const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');
-  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
+  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${fx.sick && effectsLevel() === 'full' ? sickGhosts(v.face(c, 'small', true)) : v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
 }
 /**
  * Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). As criaturas

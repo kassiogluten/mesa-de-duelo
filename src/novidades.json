@@ -1,4 +1,15 @@
 {
+  "0.169.0": {
+    "Criatura tonta com a imagem desalinhada": [
+      { "img": "0.169.0/aberracao.webp", "legenda": "A Espada Veloz Boros com enjoo de invocação: a imagem desfocada e desalinhada, com franjas vermelha e azul nas bordas e no texto." },
+      { "img": "0.169.0/chegou-tonta.webp", "legenda": "Ao chegar tonta, as estrelinhas douradas giram em volta da carta antes de se recolher no selo." },
+      { "img": "0.169.0/enjoo-passou.webp", "legenda": "Quando o enjoo passa, a carta volta ao normal e as estrelinhas voam embora para cima." }
+    ],
+    "Novidades em imagens mais arrumadas": [
+      { "img": "0.169.0/linhas.webp", "legenda": "Um item com três prints de tamanhos diferentes: os dois estreitos lado a lado, na mesma altura, e o largo numa linha inteira embaixo." },
+      { "img": "0.169.0/linhas-quatro.webp", "legenda": "Quatro prints: três numa linha da mesma altura, ocupando a largura toda, e o mais largo na linha de baixo." }
+    ]
+  },
   "0.168.0": {
     "Carta arrastada em perspectiva": [
       { "img": "0.168.0/arrastar.webp", "legenda": "Raio sendo arrastado da mão: sobre o campo, a carta deita para trás e acende em dourado." }
