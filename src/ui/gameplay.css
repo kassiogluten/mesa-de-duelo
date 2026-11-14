@@ -64,11 +64,26 @@
 .forge .pt { font-size: max(14px, calc(var(--cw) * .15)); }
 .forge .ctr.kw { min-width: 21px; min-height: 21px; justify-content: center; }
 .forge .ctr.kw svg { width: 15px; height: 15px; }
-.forge .slot.has-flying::before { content: ''; position: absolute; left: 5%; right: 5%; bottom: -9px; height: 25px; border-radius: 50%; background: radial-gradient(ellipse, color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%); pointer-events: none; opacity: .65; animation: flying-mist 3.8s ease-in-out infinite alternate; }
-/* Voar: a carta flutua um pouco acima da própria sombra, que fica mais longe e mais difusa. */
-.forge .slot.has-flying > .bfc .face { translate: 0 -3px; box-shadow: 0 13px 14px -3px #000a, 0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent); }
+/* Voar: o lugar inteiro (carta, selos e P/T) flutua, subindo e descendo devagar; a sombra faz o movimento contrário e fica
+   parada na mesa, encolhendo quando a carta sobe; e riscos de vento passam por baixo. Só `transform` e opacidade (e o
+   relógio único de motion.ts: a carta redesenhada continua de onde estava). */
+.forge .slot.has-flying::before { content: ''; position: absolute; left: 8%; right: 8%; bottom: -12px; height: 18px; border-radius: 50%; background: radial-gradient(ellipse, #000c, transparent 70%); pointer-events: none; opacity: .75; }
+.forge .slot.has-flying > .fly-wind { position: absolute; z-index: 0; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, #ffffffbb, transparent); opacity: 0; pointer-events: none; }
+.forge .slot.has-flying > .fly-wind:nth-of-type(1) { width: 46%; bottom: -4px; left: 0; }
+.forge .slot.has-flying > .fly-wind:nth-of-type(2) { width: 34%; bottom: 8px; left: 10%; }
+.forge .slot.has-flying > .fly-wind:nth-of-type(3) { width: 40%; bottom: -12px; left: 20%; }
+@media (prefers-reduced-motion: no-preference) {
+  .forge .slot.has-flying { animation: fly-bob 4.2s ease-in-out infinite; }
+  .forge .slot.has-flying::before { animation: fly-shadow 4.2s ease-in-out infinite; }
+  .forge .slot.has-flying > .fly-wind { animation: fly-wind 4.2s linear infinite; }
+  .forge .slot.has-flying > .fly-wind:nth-of-type(2) { animation-delay: 1.4s; }
+  .forge .slot.has-flying > .fly-wind:nth-of-type(3) { animation-delay: 2.8s; }
+}
+@keyframes fly-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(calc(var(--ch, 128px) * -.05)); } }
+@keyframes fly-shadow { 0%, 100% { transform: translateY(0) scale(1); opacity: .75; } 50% { transform: translateY(calc(var(--ch, 128px) * .05)) scale(.82); opacity: .45; } }
+@keyframes fly-wind { 0% { opacity: 0; transform: translateX(-30%); } 20% { opacity: .9; } 70% { opacity: .6; } 100% { opacity: 0; transform: translateX(160%); } }
+.forge .slot.has-flying > .bfc .face { translate: 0 -3px; box-shadow: 0 10px 12px -4px #0008, 0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent); }
 .forge .slot.has-flying > .bfc.actionable .face { box-shadow: 0 8px 12px #0007, 0 0 0 2px var(--glow); }
-@keyframes flying-mist { from { transform: translateX(-4px) scale(.93); opacity: .3; } to { transform: translateX(4px) scale(1.08); opacity: .65; } }
 .inspect-card { display: grid; place-items: center; position: absolute; z-index: 7; left: -7px; top: -9px; width: 28px; height: 28px; padding: 5px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); color: var(--ink); cursor: zoom-in; }
 .inspect-card svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .forge .hand { left: 190px; right: var(--hand-right); transform: none; max-width: none; justify-content: safe center; height: clamp(144px, 23vh, 215px); overflow-x: auto; overflow-y: hidden; padding: 22px 12px 7px; align-items: flex-end; scrollbar-width: thin; }
@@ -428,7 +443,7 @@
   .forge .ctr.kw svg { width: 12px; height: 12px; }
   .series-score { font-size: 11px; padding: 0; }
 }
-@media (prefers-reduced-motion: reduce) { .forge .slot.has-flying::before { animation: none; opacity: .45; } .stack-gallery-card, .exile-card { transition: none; } .exile-card:hover { transform: scale(calc(1 / .85)); } }
+@media (prefers-reduced-motion: reduce) { .forge .slot.has-flying::before { opacity: .6; } .stack-gallery-card, .exile-card { transition: none; } .exile-card:hover { transform: scale(calc(1 / .85)); } }
 
 /* Marcadores do jogador ao lado do retrato: veneno em verde (com 10 o jogador perde), os outros discretos. */
 .player-counters { position: absolute; z-index: 2; top: -6px; left: calc(100% - 8px); display: flex; flex-direction: column; align-items: flex-start; gap: 3px; pointer-events: auto; }
@@ -456,8 +471,10 @@
 .player-counter small { color: #9fd7a0; font-size: 9px; font-weight: 600; }
 .player-counter.poison { border-color: #4caf50; background: linear-gradient(135deg, #12301af2, #0b1a10f2); color: #c8f5c9; }
 .player-counter.poison svg { color: #7ee081; }
-.player-counter.poison.danger { border-color: #9be05a; box-shadow: 0 0 0 1px #9be05a80, 0 0 12px #7ee08190; animation: poison-pulse 1.4s ease-in-out infinite; }
-@keyframes poison-pulse { 50% { box-shadow: 0 0 0 1px #9be05a, 0 0 18px #9be05acc; } }
+.player-counter.poison.danger { border-color: #9be05a; box-shadow: 0 0 0 1px #9be05a80, 0 2px 6px #0008; }
+/* Veneno perto do fim: o brilho verde respira por conta própria (opacidade e escala), sem repintar a mesa. */
+.player-counter.poison.danger::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; --halo-grow: 1.08;
+  box-shadow: 0 0 0 1px #9be05a, 0 0 16px 2px #9be05acc; animation: halo-breathe 1.4s ease-in-out infinite alternate; }
 .avatar.opp .player-counters { top: 22%; }
 /* Commander com vários jogadores: os selos ficam na linha do assento, ao lado da mão, e não sobre o retrato. */
 .forge.multiplayer .seat-heading .avatar .player-counters { display: none; }
@@ -466,7 +483,7 @@
   .player-counter { padding: 1px 5px 1px 4px; font-size: 10px; }
   .player-counter svg { width: 10px; height: 10px; }
 }
-@media (prefers-reduced-motion: reduce) { .player-counter.poison.danger, .player-counter.bump { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .player-counter.poison.danger::before, .player-counter.bump { animation: none; } }
 
 /*
  * Celular: botões de ação menores, e o seu campo termina antes deles. Com muitas permanentes a fileira rola
@@ -507,10 +524,13 @@
 .forge .action .btns > .pass-level .pass-level-name { display: none; }
 .forge .action .btns > .pass-level[data-level="sempre"] { color: var(--gold-light); border-color: var(--gold); }
 .forge .action .btns > .pass-level[data-level="respostas"], .forge .action .btns > .pass-level[data-level="afeta"], .forge .action .btns > .pass-level.passing { color: #1a1408; background: var(--gold); border-color: var(--gold); }
-.forge .action .btns > .pass-level.passing { animation: pass-level-pulse 1.6s ease-in-out infinite; }
+.forge .action .btns > .pass-level.passing { position: relative; }
+/* Passando até o fim do turno: um anel dourado se abre em volta do botão e some, como um radar. */
+.forge .action .btns > .pass-level.passing::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 4px #f2b54c66; animation: pass-level-ping 1.6s ease-out infinite; }
 .forge .action .btns > .pass-level:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-@keyframes pass-level-pulse { 50% { box-shadow: 0 0 0 4px #f2b54c40; } }
-@media (prefers-reduced-motion: reduce) { .forge .action .btns > .pass-level.passing { animation: none; } }
+@keyframes pass-level-ping { from { opacity: .9; transform: none; } to { opacity: 0; transform: scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { .forge .action .btns > .pass-level.passing::after { animation: none; opacity: .5; } }
 @media (max-width: 760px), (max-height: 500px) {
   .forge .action .btns > .pass-level { width: 32px; min-height: 30px; }
   .forge .action .btns > .pass-level .pass-level-icon { width: 14px; height: 14px; }

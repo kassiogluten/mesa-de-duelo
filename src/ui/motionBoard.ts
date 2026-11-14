@@ -10,7 +10,7 @@ export function counterText(kind: string, n: number, lore: number) {
 
 /** O que acontece entre permanentes no campo: ataque, bloqueio, anexar, troca de controle, marcadores, mana e transformar. */
 export function createBoardMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards, gpu } = kit;
+  const { root, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards, gpu, flare } = kit;
   /**
    * Ataque é só vermelho: o dourado fica para seleção e bloqueio. Cada atacante recua um pouco e avança na direção do
    * oponente (para cima, se está na metade de baixo da mesa), um depois do outro, e volta com mola.
@@ -70,13 +70,15 @@ export function createBoardMotion(kit: MotionKit) {
   function attach(event: PresentationEvent, card: HTMLElement | null) {
     const hostId = event.targets?.cards?.[0], player = event.targets?.players?.[0];
     const host = hostId !== undefined ? root.querySelector<HTMLElement>(`.field [data-fid="${hostId}"]`) : player !== undefined ? root.querySelector<HTMLElement>(`.avatar[data-pid="${player}"]`) : null;
-    if (card) later(() => animate(card, [{ filter: 'brightness(1.9) drop-shadow(0 0 10px #ffe2a0)' }, { filter: 'none' }], 520, 'ease-out'), event.moved ? SETTLE.duration * .6 : 0);
+    if (card) later(() => flare(card, '#ffe2a0', [{ filter: 'brightness(1.9) drop-shadow(0 0 10px #ffe2a0)' }, { filter: 'none' }]), event.moved ? SETTLE.duration * .6 : 0);
     if (!host) return;
     later(() => {
       pulse(host);
       animate(host, [{ scale: '1.07' }, { scale: '1' }], LANDING.duration, LANDING.easing);
       const at = center(host);
       if (!at || reduced()) return;
+      // Na camada GPU: um anel dourado que se abre com faíscas e um brilho em volta da criatura.
+      if (gpu.play('arrive', { at, color: '#ffe2a0', size: Math.max(at.w, at.h) * 1.2 })) { gpu.play('flare', { at, color: '#f2b54c', duration: 560 }); return; }
       const ring = effect('attach-ring', { ...at, w: at.w * 1.12, h: at.h * 1.08 });
       animate(ring, [{ opacity: .9, scale: '.94' }, { opacity: 0, scale: '1.22' }], 560, 'cubic-bezier(.2,.7,.3,1)');
       later(() => remove(ring), 600);
@@ -91,6 +93,9 @@ export function createBoardMotion(kit: MotionKit) {
       later(() => el.classList.remove('control-glow', 'mine', 'theirs'), 1200);
       const at = center(el);
       if (!at || reduced()) return;
+      // Na camada GPU: anel e brilho na cor de quem passou a controlar (dourado se é você, vermelho se é o oponente).
+      const tone = mine ? '#f2b54c' : '#ff6a4d';
+      if (gpu.play('arrive', { at, color: tone, size: Math.max(at.w, at.h) * 1.25 })) { gpu.play('flare', { at, color: tone, duration: 620 }); return; }
       const ring = effect(`control-ring${mine ? ' mine' : ''}`, { ...at, w: at.w * 1.1, h: at.h * 1.1 });
       animate(ring, [{ opacity: .95, scale: '.95' }, { opacity: 0, scale: '1.3' }], 620, 'cubic-bezier(.2,.7,.3,1)');
       later(() => remove(ring), 660);
@@ -123,12 +128,16 @@ export function createBoardMotion(kit: MotionKit) {
       const lore = kind === 'LORE' ? (one.card?.counters?.LORE ?? n) : 0;
       const text = counterText(kind, n, lore);
       if (text) floatNumber({ ...at, h: at.h * .6 }, text, `counter-float${/^M\d+M\d+$/.test(kind) ? ' harmful' : ''}${lore ? ' lore' : ''}`);
+      // Na camada GPU: +N/+N solta faíscas verdes para cima; −N/−N, roxas caindo.
+      if (text && !lore && !reduced()) gpu.play('counter', { at, harmful: /^M\d+M\d+$/.test(kind) });
     }
   }
   /** A mana sai do terreno que acabou de virar e voa até o custo que falta pagar, na caixa de ação. */
   function manaOrb(card: HTMLElement, tone: string, delay: number) {
     const from = center(card), to = center(root.querySelector('#fAction .prompt-short') ?? root.querySelector('#fAction'));
     if (!from || !to || reduced()) return;
+    // Na camada GPU: um orbe de luz com rastro de grãos, que estoura ao chegar no custo.
+    if (gpu.play('mana', { from, to, color: tone, duration: 620, delay })) return;
     const orb = effect('mana-orb', { ...from, w: 18, h: 18 });
     orb.style.setProperty('--mana', tone);
     const dx = to.cx - from.cx, dy = to.cy - from.cy;

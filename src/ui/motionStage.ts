@@ -3,7 +3,7 @@ import { center, reduced, type MotionKit, type Point } from './motionKit';
 
 /** O que acontece no meio da mesa ou nos retratos: moeda e dado, cartas reveladas e o fim da partida. */
 export function createStageMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, remove, shatter } = kit;
+  const { root, layer, later, animate, effect, remove, shatter, gpu } = kit;
   /** Moeda e dado: giram no centro da mesa e param no resultado, com quem jogou embaixo. */
   function chance(event: PresentationEvent, label: string, duration: number) {
     const bounds = layer().getBoundingClientRect();
@@ -19,6 +19,13 @@ export function createStageMotion(kit: MotionKit) {
     const hold = Math.max(duration, 1100);
     later(() => remove(piece), hold);
     if (reduced()) return;
+    // Na camada GPU: a moeda gira com espessura e sombra, o dado rola com perspectiva; a peça em CSS fica só com a legenda.
+    const font = getComputedStyle(piece).fontFamily || 'sans-serif';
+    if (coin ? gpu.play('coin', { at, heads: !!event.heads, label: final, hold, font }) : gpu.play('die', { at: { ...at, w: size * .9, h: size * .9 }, result: final, sides: event.sides ?? 6, hold, font })) {
+      piece.classList.add('gpu-drawn');
+      animate(caption, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .88 }, { opacity: 0 }], hold);
+      return;
+    }
     if (coin) {
       // Sobe girando no ar (cinco voltas) e cai mostrando o lado que saiu.
       animate(piece, [
@@ -57,7 +64,8 @@ export function createStageMotion(kit: MotionKit) {
       if (!el || !at) continue;
       el.classList.add('finale-lose');
       later(() => el.classList.remove('finale-lose'), 1500);
-      shatter({ ...at, w: Math.max(at.w, 70), h: Math.max(at.h, 70) });
+      // Na camada GPU, o retrato racha e solta cinzas e fumaça; sem ela, os estilhaços de sempre.
+      if (!gpu.play('defeat', { at })) shatter({ ...at, w: Math.max(at.w, 70), h: Math.max(at.h, 70) });
       animate(el, [{ translate: '0 0' }, { translate: '-5px 0', offset: .15 }, { translate: '5px 0', offset: .3 }, { translate: '-3px 0', offset: .45 }, { translate: '0 0', offset: .6 }, { translate: '0 0' }], 700);
     }
     for (const id of winners) {
@@ -65,6 +73,8 @@ export function createStageMotion(kit: MotionKit) {
       if (!el || !at) continue;
       el.classList.add('finale-win');
       later(() => el.classList.remove('finale-win'), 1500);
+      // Na camada GPU: raios dourados girando atrás do retrato, onda de luz e confete.
+      if (gpu.play('victory', { at, delay: 200 })) continue;
       const size = Math.max(at.w, at.h) * 2.4;
       const wave = effect('walker-wave finale-wave', { ...at, w: size, h: size });
       wave.style.setProperty('--walker', '#f2b54c');

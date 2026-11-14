@@ -10,6 +10,16 @@ export function scryLabel(top: number, bottom: number) {
 /** O grimório: comprar, moer, embaralhar, vidência e a mão inicial (com a volta das cartas no mulligan). */
 export function createLibraryMotion(kit: MotionKit) {
   const { root, state, later, animate, effect, remove, pulse, fly, absorb, hiddenCards } = kit;
+  /** A face que a carta da sua mão mostra ao chegar, se a imagem dela já está pronta na camada GPU (para virar no ar). */
+  function faceToFlip(card: HTMLElement | undefined) {
+    const url = card?.querySelector<HTMLElement>('.face[data-full]')?.dataset.full;
+    return url && kit.gpu.textureReady(url) ? url : undefined;
+  }
+  /** A carta chegou à mão: vira de face para cima ou, se já virou no ar, só assenta. */
+  function arrived(el: HTMLElement, flipped: boolean) {
+    if (flipped) animate(el, [{ scale: '1.05' }, { scale: '1' }], TAP.duration, TAP.easing);
+    else animate(el, [{ rotate: 'y 90deg', scale: '1.06' }, { rotate: 'y 0deg', scale: '1' }], TAP.duration, TAP.easing);
+  }
   /** O grimório de um jogador (o seu, o do oponente no duelo, ou o do assento no Commander). */
   function libraryOf(actor: number | undefined, you: number) {
     const mine = actor === you;
@@ -76,7 +86,7 @@ export function createLibraryMotion(kit: MotionKit) {
     // Até 7 voos; numa compra grande o resto chega junto com o último.
     const flights = Math.min(count, 7), gap = options.fast ? 60 : 110, travel = options.fast ? 300 : 460;
     // Busca no grimório (tutor): a carta sai com um brilho dourado e uma lupa de luz se abre no grimório.
-    if (options.searched) {
+    if (options.searched && !kit.gpu.play('arrive', { at: library, color: '#f2b54c', size: library.w * 1.6 })) {
       const ring = effect('search-ring', { ...library, w: library.w * 1.5, h: library.w * 1.5 });
       animate(ring, [{ opacity: 0, scale: '.5' }, { opacity: .95, scale: '1', offset: .4 }, { opacity: 0, scale: '1.3' }], 640, 'ease-out');
       later(() => remove(ring), 680);
@@ -89,15 +99,16 @@ export function createLibraryMotion(kit: MotionKit) {
       const ghost = effect(`presentation-piece draw-ghost${options.searched ? ' search-ghost' : ''}`, { ...to, ...size }, '<div class="back"></div>');
       copySleeve(ghost, libEl);
       // Sobe do grimório em arco, inclinada e com sombra, e assenta no lugar dela no leque, já no giro dele; a sua carta
-      // vira de face para cima ao chegar.
+      // vira de face para cima ao chegar (na camada GPU, ela vira no ar, se a imagem dela já carregou).
       // Na camada GPU, um rastro de brilho (dourado na busca) e um brilho pequeno quando a carta chega à mão.
       const glow = options.searched ? '#f2b54c' : '#bfe3ff';
       kit.gpu.play('trail', { from: library, to, duration: travel, delay: i * gap, style: 'sparkle', color: glow });
       kit.gpu.play('arrive', { at: to, color: glow, size: Math.max(size.w, size.h) * .9, delay: travel + i * gap });
-      fly(ghost, library, to, { ...to, ...size }, travel, { delay: i * gap, endRot: card ? turnOf(card) : 0, tint: options.searched ? 'drop-shadow(0 0 10px #f2b54c)' : '' });
+      const flipTo = faceToFlip(card);
+      const flipped = fly(ghost, library, to, { ...to, ...size }, travel, { delay: i * gap, endRot: card ? turnOf(card) : 0, tint: options.searched ? 'drop-shadow(0 0 10px #f2b54c)' : '', flipTo }) && !!flipTo;
       later(() => {
         remove(ghost);
-        if (card) { reveal(card); animate(root.querySelector<HTMLElement>(`#fHand [data-fid="${card.dataset.fid}"]`) ?? card, [{ rotate: 'y 90deg', scale: '1.06' }, { rotate: 'y 0deg', scale: '1' }], TAP.duration, TAP.easing); }
+        if (card) { reveal(card); arrived(root.querySelector<HTMLElement>(`#fHand [data-fid="${card.dataset.fid}"]`) ?? card, flipped); }
       }, travel + i * gap);
     }
     // Cartas além dos voos aparecem com a última.
@@ -174,13 +185,14 @@ export function createLibraryMotion(kit: MotionKit) {
       copySleeve(ghost, libEl);
       ghost.style.opacity = '0';
       later(() => { ghost.style.opacity = ''; }, start + i * 90);
-      fly(ghost, library, to, { ...to, ...size }, 420, { delay: start + i * 90, endRot: turnOf(card) });
+      const flipTo = faceToFlip(card);
+      const flipped = fly(ghost, library, to, { ...to, ...size }, 420, { delay: start + i * 90, endRot: turnOf(card), flipTo }) && !!flipTo;
       later(() => {
         remove(ghost);
         const now = root.querySelector<HTMLElement>(`#fHand [data-fid="${card.dataset.fid}"]`) ?? card;
         if (hiddenCards.delete(card)) card.style.opacity = '';
         now.style.opacity = '';
-        animate(now, [{ rotate: 'y 90deg', scale: '1.06' }, { rotate: 'y 0deg', scale: '1' }], TAP.duration, TAP.easing);
+        arrived(now, flipped);
       }, start + 420 + i * 90);
     });
   }

@@ -4,6 +4,7 @@
  */
 import { createGpuPort } from './gpu/gpuPort';
 import { flightArc } from './flightPath';
+import { SLEEVE_VARS } from './sleeves';
 
 export const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 // Moer: sem a arrancada do EASE, para a virada cair no meio do voo.
@@ -149,29 +150,41 @@ export function createMotionKit(root: HTMLElement, opts: { notice?(text: string)
    * Voo com peso: a carta sai do tamanho e do giro de onde estava, sobe em arco (cresce, como se viesse para perto),
    * inclina para o lado em que vai, deita de volta ao chegar, e a sombra acompanha a altura. `end` é o tamanho da peça.
    * `endRot` é o giro de chegada (a carta no leque); `fade` some no último trecho (entrar numa pilha ou numa carta);
-   * `tint` soma um filtro ao voo (a mágica anulada vai apagada).
+   * `tint` soma um filtro ao voo (a mágica anulada vai apagada). `flipTo` é a face que a carta de costas mostra ao
+   * chegar (a sua compra), virando no ar na camada GPU. Devolve se voou na camada GPU.
    */
   function fly(piece: HTMLElement, from: Point & { rot?: number }, to: Point, end: Point, duration: number,
-    opts: { caption?: HTMLElement; delay?: number; endRot?: number; fade?: boolean; tint?: string } = {}) {
+    opts: { caption?: HTMLElement; delay?: number; endRot?: number; fade?: boolean; tint?: string; flipTo?: string } = {}) {
     const { caption, delay = 0 } = opts;
     const { frames, captionFrames } = flightFrames(from, to, end, opts);
     // Na camada GPU, a carta voa com perspectiva de verdade; a peça em CSS continua o mesmo caminho, invisível, levando a legenda.
-    if (gpuFly(piece, from, to, end, duration, opts)) piece.classList.add('gpu-flying');
+    const onGpu = gpuFly(piece, from, to, end, duration, opts);
+    if (onGpu) piece.classList.add('gpu-flying');
     animate(piece, frames, duration, 'linear', delay);
     if (caption) animate(caption, captionFrames, duration, 'linear', delay);
+    return onGpu;
   }
   /**
    * O voo de uma carta de face para cima na camada GPU, com a imagem completa dela (`data-full`), o brilho de borda na
    * cor da carta (ou na do monte de onde ela vem, pelo `tint`) e escurecida como no CSS (anulada, destruída, sacrificada).
-   * Os versos (compra, moer, embaralhar) e as cópias do golpe continuam em CSS. Devolve se voou na GPU.
+   * As cartas de costas (compra, mão inicial, busca) voam com o verso pintado na cor da capa e, com `flipTo`, viram no
+   * ar. Moer e embaralhar (que viram e se abrem do jeito deles) e as cópias do golpe continuam em CSS. Devolve se voou
+   * na GPU.
    */
-  function gpuFly(piece: HTMLElement, from: Point & { rot?: number }, to: Point, end: Point, duration: number, opts: { delay?: number; endRot?: number; fade?: boolean; tint?: string }) {
-    if (!gpu.ready() || !piece.matches?.('.presentation-piece:not(.draw-ghost, .mill-ghost, .shuffle-ghost, .strike-ghost)')) return false;
+  function gpuFly(piece: HTMLElement, from: Point & { rot?: number }, to: Point, end: Point, duration: number, opts: { delay?: number; endRot?: number; fade?: boolean; tint?: string; flipTo?: string }) {
+    if (!gpu.ready() || !piece.matches?.('.presentation-piece:not(.mill-ghost, .shuffle-ghost, .strike-ghost)')) return false;
+    const tint = opts.tint ?? '';
+    const zone = /drop-shadow\([^)]*?(#[0-9a-f]{3,8})\)/i.exec(tint)?.[1];
+    if (piece.matches('.draw-ghost')) {
+      const backEl = piece.querySelector<HTMLElement>('.back');
+      if (!backEl) return false;
+      const style = getComputedStyle(backEl), back = SLEEVE_VARS.map(name => style.getPropertyValue(name).trim());
+      // O brilho de borda na cor clara da capa (dourado na busca).
+      return gpu.play('flight', { back, flipTo: opts.flipTo, from, to, end, duration, delay: opts.delay, endRot: opts.endRot, fade: opts.fade, edge: zone ?? (back[0] || '#e3b363') });
+    }
     const face = piece.querySelector<HTMLElement>('.face[data-full]');
     const url = face?.dataset.full;
     if (!face || !url) return false;
-    const tint = opts.tint ?? '';
-    const zone = /drop-shadow\([^)]*?(#[0-9a-f]{3,8})\)/i.exec(tint)?.[1];
     const edge = zone ?? EDGE[/\bcol-(\w)/.exec(face.className)?.[1] ?? ''] ?? EDGE.C;
     const shade = /grayscale\(\.8/.test(tint) ? 0x6e6e6e : /grayscale/.test(tint) ? 0x9a9a9a : /sepia/.test(tint) ? 0x8c735a : undefined;
     return gpu.play('flight', { url, from, to, end, duration, delay: opts.delay, endRot: opts.endRot, fade: opts.fade, edge, shade });
@@ -213,14 +226,26 @@ export function createMotionKit(root: HTMLElement, opts: { notice?(text: string)
   /** Dobra: um rasgo no espaço (anel girando em violeta e ciano) que se abre e se fecha sobre a carta. */
   function warpRift(at: Point | undefined, size: number) {
     if (!at || reduced()) return;
+    // Na camada GPU: o rasgo gira em duas cores e puxa grãos de luz para dentro.
+    if (gpu.play('warp', { at, size: Math.min(Math.max(at.w, 60), 150) * 1.45 * size })) return;
     const w = Math.min(Math.max(at.w, 60), 150) * 1.45 * size;
     const rift = effect('warp-rift', { ...at, w, h: w });
     animate(rift, [{ opacity: 0, scale: '.3', rotate: '0deg' }, { opacity: 1, scale: '1', rotate: '140deg', offset: .35 }, { opacity: .8, scale: '1.08', rotate: '260deg', offset: .7 }, { opacity: 0, scale: '.2', rotate: '420deg' }], 900, 'cubic-bezier(.3,.6,.3,1)');
     later(() => remove(rift), 920);
   }
+  /**
+   * A carta acende na cor pedida (ficha que surge, reanimada, planeswalker, aura que encaixa). Na camada GPU, um brilho
+   * em volta dela; sem ela, `fallback` anima o `filter` da própria carta, como antes.
+   */
+  function flare(el: HTMLElement | null, color: string, fallback: Keyframe[], duration = 520) {
+    if (!el || reduced()) return;
+    const at = center(el);
+    if (at && gpu.play('flare', { at, color, duration })) return;
+    animate(el, fallback, duration, 'ease-out');
+  }
   return {
     root, state, layer, later, stage, gpu, toneOf, stackPile, recentStack, callouts, hiddenCards,
-    animate, effect, track, clear, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift,
+    animate, effect, track, clear, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, flare,
   };
 }
 

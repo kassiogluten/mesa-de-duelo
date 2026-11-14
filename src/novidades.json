@@ -1,4 +1,37 @@
 {
+  "0.170.0": {
+    "Voar e vínculo com a vida mais vivos": [
+      { "img": "0.170.0/voar-vinculo.webp", "legenda": "Vampiro Falcão-da-noite flutuando, com grãos verdes de vida subindo pelas bordas e um risco de vento passando por baixo." }
+    ],
+    "Alvo possível com halo": [
+      { "img": "0.170.0/alvo-halo.webp", "legenda": "Criatura do oponente que pode ser alvo, com o anel laranja na carta e o halo que respira em volta." }
+    ],
+    "Compra que vira no ar": [
+      { "img": "0.170.0/compra-virando.webp", "legenda": "A carta comprada sai do grimório deixando um rastro de brilho e vira de lado no ar, ainda de costas, a caminho da mão." }
+    ],
+    "Mana em orbes de luz": [
+      { "img": "0.170.0/mana-orbe.webp", "legenda": "Dois orbes verdes saem das Florestas viradas e voam em curva até o custo, com o rastro de grãos atrás." }
+    ],
+    "Moeda que gira de verdade": [
+      { "img": "0.170.0/moeda.webp", "legenda": "A moeda de lado no ar, girando, e depois caída na mesa mostrando Coroa." }
+    ],
+    "Dado que rola": [
+      { "img": "0.170.0/dado.webp", "legenda": "O d20 rolando inclinado, ainda no 11, e parado no resultado, 19." }
+    ],
+    "Fim da partida com festa": [
+      { "img": "0.170.0/vitoria.webp", "legenda": "Vitória: raios dourados e confete saindo do seu retrato." },
+      { "img": "0.170.0/derrota.webp", "legenda": "Derrota: o seu retrato rachado e escurecido, com estilhaços e fumaça." }
+    ],
+    "Dobra com rasgo no espaço": [
+      { "img": "0.170.0/dobra.webp", "legenda": "O rasgo da dobra aberto sobre a carta, em anéis violeta e ciano, com grãos de luz sendo puxados para dentro." }
+    ],
+    "Brilhos de chegada": [
+      { "img": "0.170.0/reanimar.webp", "legenda": "Criatura voltando do cemitério, com o contorno roxo de luz e grãos subindo em volta, e a carta legível." }
+    ],
+    "Vida e marcadores com faíscas": [
+      { "img": "0.170.0/vida.webp", "legenda": "Ganho de vida: grãos verdes subindo do total de vida, com um anel verde em volta." }
+    ]
+  },
   "0.169.0": {
     "Criatura tonta com a imagem desalinhada": [
       { "img": "0.169.0/aberracao.webp", "legenda": "A Espada Veloz Boros com enjoo de invocação: a imagem desfocada e desalinhada, com franjas vermelha e azul nas bordas e no texto." },

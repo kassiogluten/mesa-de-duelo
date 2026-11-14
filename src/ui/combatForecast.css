@@ -13,10 +13,12 @@
 .forge .life-forecast em { font-style: normal; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
 .forge .life-forecast.safe { color: var(--azul-a9b6cf, #a9b6cf); font-weight: 600; }
 .forge .life-forecast.low { border-color: #f2b54c; color: #ffe2a6; box-shadow: 0 0 10px #f2b54c55; }
-.forge .life-forecast.lethal { border-color: var(--red); background: #3a0e0af2; color: #ffd0c6; box-shadow: 0 0 14px #ec5a3f99; animation: forecast-lethal 1.2s ease-in-out infinite; }
+.forge .life-forecast.lethal { border-color: var(--red); background: #3a0e0af2; color: #ffd0c6; box-shadow: 0 0 10px #ec5a3f80; }
+/* Letal: o brilho vermelho respira por conta própria (opacidade e escala), sem repintar a mesa. */
+.forge .life-forecast.lethal::before { content: ''; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; pointer-events: none; --halo-grow: 1.06;
+  box-shadow: 0 0 22px 2px #ff6a4fcc; animation: halo-breathe 1.2s ease-in-out infinite alternate; }
 .forge .life-forecast.lethal em { color: #fff; }
-@keyframes forecast-lethal { 50% { box-shadow: 0 0 22px #ff6a4fcc; } }
-@media (prefers-reduced-motion: reduce) { .forge .life-forecast.lethal { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .forge .life-forecast.lethal::before { animation: none; } }
 /* Nos assentos do Commander o nome e os marcadores ficam à direita da vida: o selo vai logo abaixo do círculo. */
 .forge.multiplayer .seat-heading .life-forecast { left: 0; top: calc(100% - 6px); bottom: auto; }
 

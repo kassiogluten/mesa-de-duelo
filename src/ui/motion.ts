@@ -57,6 +57,17 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
   const board = createBoardMotion(kit);
   const stage = createStageMotion(kit);
   const flights = createFlightMotion(kit, zones, abilities.walkerArrive);
+  /**
+   * As animações contínuas de estado (voar, vínculo, enjoo, alvo possível) seguem um relógio só, o da página: a carta
+   * redesenhada continua do ponto em que estava, em vez de recomeçar (a voadora não dá um pulo a cada jogada, nem
+   * parece ter mudado de lugar para o passo de cada carta), e as iguais andam juntas.
+   */
+  function syncLoops() {
+    if (typeof root.getAnimations !== 'function' || typeof CSSAnimation === 'undefined') return;
+    for (const a of root.getAnimations({ subtree: true })) {
+      if (a instanceof CSSAnimation && a.startTime !== 0 && a.effect?.getTiming().iterations === Infinity) a.startTime = 0;
+    }
+  }
 
   return {
     capture() {
@@ -80,6 +91,8 @@ export function createMotion(root: HTMLElement, opts: { notice?(text: string): v
       });
     },
     play(options = {}) {
+      // Antes de medir: as cartas redesenhadas voltam ao ponto do relógio (a voadora fica onde estava).
+      syncLoops();
       if (options.silent || reduced()) { state.primed = true; return; }
       const seen = new Set<string>();
       let untapWave = 0;

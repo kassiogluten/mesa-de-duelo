@@ -297,7 +297,8 @@ function typeSeal(c: FCard): PermanentFx['seals'][number] | undefined {
 export function permanentFxHTML(fx: PermanentFx, auraColor?: string) {
   const classes = [fx.phased ? 'fx-phased' : '', fx.sick ? 'fx-sick' : '', fx.targeted ? `fx-targeted ${fx.targeted}` : ''].filter(Boolean);
   const parts = [
-    fx.glow ? `<span class="fx-glow ${fx.glow}"${fx.glow === 'enchanted' && auraColor ? ` style="--aura:${auraColor}"` : ''} aria-hidden="true"></span>` : '',
+    // Vínculo com a vida: em vez de um halo, um fio verde e grãos de vida subindo pelas laterais (os quatro <i>).
+    fx.glow ? `<span class="fx-glow ${fx.glow}"${fx.glow === 'enchanted' && auraColor ? ` style="--aura:${auraColor}"` : ''} aria-hidden="true">${fx.glow === 'lifelink' ? '<i></i><i></i><i></i><i></i>' : ''}</span>` : '',
     fx.frame ? `<span class="fx-frame ${fx.frame}" aria-hidden="true"></span>` : '',
     ...fx.base.map(b => `<span class="fx-base ${b}" aria-hidden="true"></span>`),
     fx.corner.length ? `<span class="fx-corner" aria-hidden="true">${fx.corner.map(k => `<i class="${k}"></i>`).join('')}</span>` : '',

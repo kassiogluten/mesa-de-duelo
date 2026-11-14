@@ -16,7 +16,7 @@ export function abilityText(event: PresentationEvent) {
 
 /** Habilidades (gatilhos, ativadas, lealdade) e o planeswalker chegando ao campo. */
 export function createAbilityMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, track, remove, pulse, floatNumber, callouts, gpu } = kit;
+  const { root, layer, later, animate, effect, track, remove, pulse, floatNumber, callouts, gpu, flare } = kit;
   /** Brilho na cor do planeswalker em volta da carta; com "reduzir movimento", só a moldura acesa por um instante. */
   function walkerGlow(card: HTMLElement, tone: string, ms: number) {
     card.style.setProperty('--walker', tone);
@@ -33,11 +33,15 @@ export function createAbilityMotion(kit: MotionKit) {
     const at = center(card);
     if (!at || reduced()) return;
     const size = Math.max(at.w, at.h) * 1.5;
-    const ring = effect('walker-ring', { ...at, w: size, h: size });
-    ring.style.setProperty('--walker', tone);
-    animate(ring, [{ opacity: 0, scale: '.45' }, { opacity: .95, scale: '.9', offset: .35 }, { opacity: 0, scale: '1.35' }], 760, 'ease-out');
-    later(() => remove(ring), 800);
-    animate(card, [{ filter: `brightness(1.6) drop-shadow(0 0 14px ${tone})` }, { filter: `brightness(1.1) drop-shadow(0 0 8px ${tone})`, offset: .5 }, { filter: 'none' }], 900, 'ease-out');
+    flare(card, tone, [{ filter: `brightness(1.6) drop-shadow(0 0 14px ${tone})` }, { filter: `brightness(1.1) drop-shadow(0 0 8px ${tone})`, offset: .5 }, { filter: 'none' }], 900);
+    // Na camada GPU: o anel de luz na cor dele, com faíscas, e grãos subindo em volta.
+    if (gpu.play('arrive', { at, color: tone, size })) gpu.play('motes', { at, color: tone });
+    else {
+      const ring = effect('walker-ring', { ...at, w: size, h: size });
+      ring.style.setProperty('--walker', tone);
+      animate(ring, [{ opacity: 0, scale: '.45' }, { opacity: .95, scale: '.9', offset: .35 }, { opacity: 0, scale: '1.35' }], 760, 'ease-out');
+      later(() => remove(ring), 800);
+    }
     const badge = card.querySelector<HTMLElement>(':scope > .pt.loyalty');
     if (badge) animate(badge, [{ opacity: 0, scale: '.2' }, { opacity: 1, scale: '1.45', offset: .55 }, { scale: '.95', offset: .8 }, { opacity: 1, scale: '1' }], 520, 'cubic-bezier(.3,.7,.4,1)', 240);
   }

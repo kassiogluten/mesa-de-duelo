@@ -95,6 +95,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
       return runtime.effects.play(runtime.layer, name, params);
     },
     clear() { runtime?.layer.clear(); },
+    /** Se a textura de uma carta já carregou (a carta de costas só vira no ar com a face pronta); sem ela, começa a carregar. */
+    textureReady(url: string) { return !!runtime && !runtime.layer.destroyed && runtime.effects.textureReady(runtime.layer, url); },
     preloadTable,
     /** Para os testes e a medição: quadros desenhados e efeitos vivos (sem a camada, nada). */
     stats: () => runtime?.layer.stats() ?? null,

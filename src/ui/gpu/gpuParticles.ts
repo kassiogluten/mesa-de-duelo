@@ -1,6 +1,6 @@
 // As peças comuns dos efeitos da camada GPU: partículas com física simples, efeitos com duração, borrifo de faíscas e as cores do tema.
 import { Color, Container, Sprite, Texture } from 'pixi.js';
-import type { GpuEffect } from './gpuLayer';
+import type { GpuEffect, GpuLayer } from './gpuLayer';
 
 /** As texturas da mesa (criadas uma vez em `prepare`) e o teto de partículas do aparelho. */
 export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: Texture; cardGlow: Texture; star: Texture; max: number }
@@ -18,6 +18,27 @@ export function themeColor(name: string, fallback: string) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return new Color(value || fallback).toNumber();
   } catch { return new Color(fallback).toNumber(); }
+}
+// Texturas pintadas sob demanda (faces da moeda e do dado, raios, contorno de carta), por camada: poucas, ficam até ela sair.
+const painted = new WeakMap<GpuLayer, Map<string, Texture>>();
+/** A textura `key` desta camada, pintada num canvas 2D na primeira vez que é pedida. */
+export function paintOnce(layer: GpuLayer, key: string, w: number, h: number, paint: (g: CanvasRenderingContext2D) => void) {
+  let cache = painted.get(layer);
+  if (!cache) {
+    cache = new Map();
+    painted.set(layer, cache);
+    const own = cache;
+    layer.onDestroy(() => { for (const t of own.values()) t.destroy(true); own.clear(); });
+  }
+  let texture = cache.get(key);
+  if (!texture) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    paint(canvas.getContext('2d')!);
+    texture = Texture.from(canvas);
+    cache.set(key, texture);
+  }
+  return texture;
 }
 /** Uma cor de CSS (`#6fb8ff`) como número, ou a reserva. */
 export function colorOf(value: string | undefined, fallback: number) {

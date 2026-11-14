@@ -1,4 +1,4 @@
-// Efeitos de jogada na camada GPU: o redemoinho ao conjurar, o anel ao chegar (pilha, mão, cemitério, bloqueio, mão reorganizada) e o risco de velocidade do golpe.
+// Efeitos de jogada na camada GPU: o redemoinho ao conjurar, o anel ao chegar (pilha, mão, cemitério, bloqueio, mão reorganizada), o risco de velocidade do golpe e a mana voando do terreno até o custo.
 import { Sprite } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
@@ -11,7 +11,11 @@ export interface PlayParams {
   arrive: { at: Point; color: string; size?: number; delay?: number };
   /** Golpe: riscos de velocidade numa linha reta de `from` até `to`, no tempo do avanço da carta. */
   streak: { from: Point; to: Point; duration: number; delay?: number; color?: string };
+  /** Mana: um orbe de luz na cor da mana sobe do terreno virado e voa em curva até o custo, deixando grãos, e estoura ao chegar. */
+  mana: { from: Point; to: Point; color: string; duration: number; delay?: number };
 }
+
+const easeInOut = (t: number) => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
 export const PLAY_EFFECTS: { [N in keyof PlayParams]: (layer: GpuLayer, s: Shared, p: PlayParams[N]) => GpuEffect } = {
   glint(layer, s, { at, color, delay = 0 }) {
@@ -57,6 +61,48 @@ export const PLAY_EFFECTS: { [N in keyof PlayParams]: (layer: GpuLayer, s: Share
         const k = easeOut(t);
         ring.scale.set(d / 256 * (.45 + .7 * k)); ring.alpha = .85 * (1 - t);
         glow.scale.set(d / 128 * .55 * (1 + .3 * k)); glow.alpha = .45 * (1 - Math.min(1, t / .6));
+      };
+    }, delay);
+  },
+  mana(layer, s, { from, to, color, duration, delay = 0 }) {
+    const a = layer.local(from.cx, from.cy), b = layer.local(to.cx, to.cy);
+    const tint = colorOf(color, themeColor('--gold', '#f2b54c'));
+    // A curva sobe primeiro (a mana sai de cima do terreno) e depois cai no custo.
+    const lift = Math.min(90, 30 + Math.hypot(b.x - a.x, b.y - a.y) * .15);
+    const c = { x: a.x + (b.x - a.x) * .15, y: Math.min(a.y, b.y) - lift };
+    const at = (k: number) => ({ x: (1 - k) ** 2 * a.x + 2 * (1 - k) * k * c.x + k * k * b.x, y: (1 - k) ** 2 * a.y + 2 * (1 - k) * k * c.y + k * k * b.y });
+    let last = a, popped = false;
+    return timed(duration, (view, sparks) => {
+      const halo = new Sprite({ texture: s.glow, anchor: .5, x: a.x, y: a.y, tint, blendMode: 'add', alpha: 0 });
+      const core = new Sprite({ texture: s.spark, anchor: .5, x: a.x, y: a.y, tint: 0xffffff, blendMode: 'add', alpha: 0 });
+      view.addChild(halo, core);
+      // Ao sair: um anel curto na base do terreno.
+      for (let i = 0; i < (layer.coarse ? 4 : 7); i++) {
+        const angle = rand(0, Math.PI * 2), speed = rand(40, 110);
+        sparks.add(s.spark, s, { x: a.x, y: a.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed * .6, life: rand(220, 360), spin: 0, grow: -.6, scale: rand(.2, .34), gravity: 0, drag: 3, tint: i % 2 ? tint : 0xffffff });
+      }
+      return (t, ms) => {
+        const k = easeInOut(t), p = at(k);
+        // Cresce ao sair, encolhe um pouco ao chegar; o halo pulsa enquanto voa.
+        const size = t < .2 ? t / .2 : 1 - .3 * Math.max(0, (t - .7) / .3);
+        halo.position.set(p.x, p.y); core.position.set(p.x, p.y);
+        halo.scale.set(.32 * size * (1 + .12 * Math.sin(t * 30))); halo.alpha = .9 * Math.min(1, t * 6);
+        core.scale.set(.75 * size); core.alpha = Math.min(1, t * 6);
+        if (ms > 0 && t < 1) {
+          const step = Math.hypot(p.x - last.x, p.y - last.y), count = Math.min(4, 1 + Math.floor(step / 8));
+          for (let i = 0; i < count; i++) {
+            const u = (i + Math.random()) / count;
+            sparks.add(s.spark, s, { x: last.x + (p.x - last.x) * u + rand(-3, 3), y: last.y + (p.y - last.y) * u + rand(-3, 3), vx: rand(-12, 12), vy: rand(-12, 12), life: rand(200, 340), spin: 0, grow: -.7, scale: rand(.18, .34), gravity: 0, drag: 2.5, tint: i % 3 ? tint : 0xffffff });
+          }
+        }
+        last = p;
+        if (t >= 1 && !popped) {
+          popped = true; halo.visible = core.visible = false;
+          for (let i = 0; i < (layer.coarse ? 6 : 10); i++) {
+            const angle = rand(0, Math.PI * 2), speed = rand(60, 150);
+            sparks.add(s.spark, s, { x: b.x, y: b.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: rand(200, 340), spin: 0, grow: -.6, scale: rand(.2, .38), gravity: 0, drag: 3.2, tint: i % 3 ? tint : 0xffffff });
+          }
+        }
       };
     }, delay);
   },

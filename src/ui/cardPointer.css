@@ -1,12 +1,11 @@
 /* Carta apontada para a mesa (cardPointer.ts): anel pulsando na cor de quem apontou e o balão com o nome. */
 .card-pointer { --point: var(--sleeve-light, var(--gold, #f2b54c)); position: fixed; z-index: 60; pointer-events: none; border-radius: 10px;
-  box-shadow: 0 0 0 3px var(--point), 0 0 18px 4px color-mix(in srgb, var(--point) 70%, transparent); animation: card-pointer-pulse 1s ease-in-out infinite; }
+  box-shadow: 0 0 0 3px var(--point); }
+/* O brilho em volta respira por conta própria (opacidade e escala), sem repintar a mesa. */
+.card-pointer::after { content: ''; position: absolute; inset: -2px; border-radius: inherit; pointer-events: none; --halo-grow: 1.05;
+  box-shadow: 0 0 0 2px var(--point), 0 0 24px 7px color-mix(in srgb, var(--point) 80%, transparent); animation: halo-breathe 1s ease-in-out infinite alternate; }
 .card-pointer-tip { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); max-width: 260px; padding: 4px 10px; border-radius: 999px;
   background: var(--point); color: #111; font-size: 13px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   box-shadow: 0 2px 8px rgb(0 0 0 / .45); }
 .card-pointer.below .card-pointer-tip { bottom: auto; top: calc(100% + 8px); }
-@keyframes card-pointer-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px var(--point), 0 0 12px 2px color-mix(in srgb, var(--point) 60%, transparent); }
-  50% { box-shadow: 0 0 0 5px var(--point), 0 0 26px 8px color-mix(in srgb, var(--point) 80%, transparent); }
-}
-@media (prefers-reduced-motion: reduce) { .card-pointer { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .card-pointer::after { animation: none; opacity: .8; } }

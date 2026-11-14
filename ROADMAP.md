@@ -445,6 +445,7 @@ Pedido em 08/11/2026. Em celulares e computadores mais simples a mesa pesa: muit
 
 **Modo leve.**
 
+- [x] Animações que ficam rodando com a mesa parada só com opacidade e `transform` (14/11/2026, fase 3b do item 125): com o campo cheio e 20 fichas enjoadas, o trabalho de desenho da mesa parada caiu de cerca de 1.000 ms para 135 ms a cada 3 s. Regra para as próximas: animação infinita não mexe em `box-shadow`, `filter`, `border-color`, `background`, grupo de dentro de SVG nem nas propriedades soltas `scale`/`translate`/`rotate`.
 - [ ] Opção "Modo leve" nas Opções: sem desfoque (fundo escuro chapado), sem brilhos e sombras animadas, sem tremor nem efeitos de dano, animações curtas, arte em resolução menor.
 - [ ] Ligado sozinho na primeira vez em aparelho fraco (`navigator.deviceMemory`, `hardwareConcurrency`, ou quadros lentos medidos nos primeiros segundos), com aviso e como desligar; também quando o sistema pede para reduzir movimento.
 - [ ] Item no CHANGELOG e prints em Novidades em imagens (mesa normal e no modo leve).
@@ -520,4 +521,5 @@ descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao it
 - [x] Fase 2b: efeitos de movimento na GPU (exilar, blink, sacrificar, rastros do voo, ataque, habilidades, ninjutsu, virar), com a carta ainda no DOM. Feita em 13/11/2026 (`novidades-pendentes/efeitos-webgl-movimentos`).
 - [x] Fase 3: cartas em voo na GPU (textura da imagem do Scryfall, perspectiva, sombra). Feita em 13/11/2026 (`novidades-pendentes/efeitos-webgl-fase-3`), com os estilos Arte e texto e Arena voando com a imagem completa (decidido nesse dia); versos e compra continuam em CSS. Medida em 14/11/2026 (números na spec): voos mais leves na GPU, campo cheio empatado, pacote com 145 KB gzip; a cena de dano ficou mais pesada na GPU com a CPU 4× e 6× (critério 3), com o voo da carta como suspeito.
 - [ ] Conferir num celular de entrada de verdade (critério 8, junto com a fase 2), incluindo a cena de dano: decidido em 14/11/2026 que é o celular quem diz se o voo da carta na GPU precisa ficar mais leve. Sem aparelho disponível nesse dia.
+- [x] Fase 3b: o que sobrou em CSS. Feita em 14/11/2026 (detalhes na spec): animações de estado refeitas para a placa de vídeo animar sozinha (a mesa parada com o campo cheio gastava um terço da CPU; caiu para cerca de um sétimo), compra e mão inicial de costas na GPU com a sua carta virando no ar, mana em orbes, moeda, dado, fim da partida, dobra, vida, marcadores e os brilhos de chegada. Ficaram em CSS: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo.
 - [ ] Fase 4, só se os números pedirem depois do 114: o campo inteiro em WebGL (spec própria).

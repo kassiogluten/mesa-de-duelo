@@ -1,14 +1,16 @@
-// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts, as estrelinhas do enjoo de gpuDizzy.ts e o voo de gpuFlight.ts), com as cores do tema.
+// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts, as estrelinhas do enjoo de gpuDizzy.ts, moeda, dado e fim da partida de gpuStage.ts, os toques de gpuAccents.ts e o voo de gpuFlight.ts), com as cores do tema.
 import { Color, Container, Graphics, PerspectiveMesh, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
 import { easeOut, MAX_PARTICLES, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
 import { MOVE_EFFECTS, type MoveParams } from './gpuMoves';
-import { flight, preload, type FlightParams } from './gpuFlight';
+import { flight, preload, textureReady, type FlightParams } from './gpuFlight';
 import { PLAY_EFFECTS, type PlayParams } from './gpuPlays';
 import { DIZZY_EFFECTS, type DizzyParams } from './gpuDizzy';
+import { STAGE_EFFECTS, type StageParams } from './gpuStage';
+import { ACCENT_EFFECTS, type AccentParams } from './gpuAccents';
 
-export { preload };
+export { preload, textureReady };
 
 /** O tom do golpe, o mesmo de `damageLook` (dano, murchar, veneno, lealdade, escudo). */
 type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield';
@@ -24,7 +26,7 @@ interface DamageParams {
   /** Ultimate do planeswalker: onda de luz na cor dele atravessando a mesa. `reach` é o diâmetro final. */
   shockwave: { at: Point; color: string; reach: number };
 }
-export type GpuEffectParams = DamageParams & MoveParams & PlayParams & DizzyParams & { flight: FlightParams };
+export type GpuEffectParams = DamageParams & MoveParams & PlayParams & DizzyParams & StageParams & AccentParams & { flight: FlightParams };
 export type GpuEffectName = keyof GpuEffectParams;
 
 const shared = new WeakMap<GpuLayer, Shared>();
@@ -219,7 +221,7 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
 export function play<N extends GpuEffectName>(layer: GpuLayer, name: N, params: GpuEffectParams[N]): boolean {
   const s = shared.get(layer);
   if (!s || layer.destroyed) return false;
-  const make = name === 'flight' ? flight : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name] ?? (DIZZY_EFFECTS as any)[name];
+  const make = name === 'flight' ? flight : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name] ?? (DIZZY_EFFECTS as any)[name] ?? (STAGE_EFFECTS as any)[name] ?? (ACCENT_EFFECTS as any)[name];
   // O voo da carta pode recusar (textura ainda não carregada): quem pediu voa em CSS.
   const effect = make(layer, s, params);
   if (!effect) return false;

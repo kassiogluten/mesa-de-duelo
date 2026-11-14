@@ -8,6 +8,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.170.0] - 2026-11-14
+
+### Mudou
+
+- **Mesa parada mais leve.** As animações que ficam rodando enquanto ninguém joga (enjoo de invocação, proteção contra alvos, toque mortífero, ímpeto, vínculo com a vida, alvos possíveis, carta apontada, veneno perto do fim, relógio de espera e o botão de passar até o fim do turno) não fazem mais o navegador redesenhar a mesa a cada quadro: com o campo cheio e vinte criaturas enjoadas, a mesa parada usa cerca de um sétimo do processamento de antes, o que alivia celulares e computadores mais fracos. Junto, o ícone do enjoo gira inteiro, a imagem tonta treme em saltos, como uma imagem com falha de sinal, as runas da proteção acendem e apagam, e o botão de passar até o fim do turno solta um anel dourado, como um radar.
+- **Voar e vínculo com a vida mais vivos.** A criatura que voa flutua devagar, subindo e descendo com os selos e o P/T juntos, enquanto a sombra fica na mesa e encolhe quando ela sobe, e riscos de vento passam por baixo dela. A que tem vínculo com a vida troca o halo verde pulsando, que era igual ao da resistência a magia, por um fio verde e grãos de vida subindo pelas bordas. Essas animações continuam do ponto em que estavam quando a mesa se atualiza, sem recomeçar a cada jogada.
+- **Alvo possível com halo.** A carta e o retrato que podem ser alvo ganham um halo laranja que respira em volta, com a carta parada no lugar. Antes, a carta encolhia e quase sumia a cada pulso, o que atrapalhava ler o que ela era.
+- **Compra que vira no ar.** Com os efeitos completos, a carta comprada, a mão inicial, a volta do mulligan e a carta buscada no grimório voam com perspectiva de verdade, de costas na cor da capa de quem comprou, com sombra na mesa e o brilho de borda na cor da capa (dourado na busca). A sua compra vira de lado no ar e chega à mão já de face para cima, assim que a imagem da carta estiver carregada; enquanto ela não carrega, a carta chega de costas e vira na mão, como antes.
+- **Mana em orbes de luz.** Com os efeitos completos, cada terreno virado para pagar solta um orbe de luz na cor da mana, que sobe e voa em curva até o custo deixando um rastro de grãos, e estoura ao chegar.
+- **Moeda que gira de verdade.** Com os efeitos completos, a moeda sobe girando no ar, com espessura e sombra na mesa, quica ao cair e mostra Cara (dourada) ou Coroa (prateada) com um brilho e faíscas em volta.
+- **Dado que rola.** Com os efeitos completos, o dado entra rolando em perspectiva, trocando de número a cada volta, quica na mesa e para no resultado, com o tipo do dado (d6, d20) no canto.
+- **Fim da partida com festa.** Com os efeitos completos, o retrato de quem vence solta raios dourados girando, uma onda de luz e confete colorido, e o de quem perde racha em estilhaços escuros, com fumaça e cinzas, antes da tela de resultado.
+- **Dobra com rasgo no espaço.** Com os efeitos completos, a carta conjurada ou devolvida pela dobra abre um rasgo violeta e ciano que gira, puxa grãos de luz para dentro e se fecha num ponto.
+- **Brilhos de chegada.** Com os efeitos completos, a criatura que volta do cemitério ganha um contorno roxo de luz com grãos subindo; o planeswalker que chega, um anel e grãos na cor dele; a ficha que surge, um contorno branco; a aura ou o equipamento que encaixa, um anel dourado com faíscas na criatura; e a carta que muda de controle, anel e contorno na cor de quem passou a controlá-la. A carta fica legível o tempo todo, em vez de a imagem dela clarear.
+- **Vida e marcadores com faíscas.** Com os efeitos completos, ganhar vida solta grãos verdes subindo do total de vida, com um anel suave; marcadores +1/+1 soltam faíscas verdes para cima, e −1/−1, roxas caindo. A busca no grimório abre um anel dourado sobre o monte.
+
 ## [0.169.0] - 2026-11-13
 
 ### Novo

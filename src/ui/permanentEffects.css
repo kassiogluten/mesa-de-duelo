@@ -9,7 +9,16 @@
 .bfc > .fx-glow { inset: 0; z-index: -1; border-radius: 6px; --c: #9fe3ff; box-shadow: 0 0 6px 4px color-mix(in srgb, var(--c) 90%, transparent), 0 0 16px 9px color-mix(in srgb, var(--c) 45%, transparent); opacity: 1; }
 .bfc > .fx-glow.hexproof { --c: #9fe3ff; }
 .bfc > .fx-glow.shroud { --c: var(--azul-b9bfcc, #b9bfcc); box-shadow: 0 0 12px 6px color-mix(in srgb, var(--azul-b9bfcc, #b9bfcc) 66.7%, transparent), 0 0 26px 12px color-mix(in srgb, var(--azul-8d94a4, #8d94a4) 40%, transparent); }
-.bfc > .fx-glow.lifelink { --c: #7dffae; }
+.bfc > .fx-glow.lifelink { --c: #7dffae; inset: -1px; box-shadow: 0 0 0 1px #7dffae66, 0 0 8px 1px #5fe89a55; }
+/* Vínculo com a vida: em vez de um halo pulsando, um fio verde parado e grãos de vida subindo pelas laterais, como seiva
+   (atrás da carta: só aparece o que passa da borda). Virada, a carta fica só com o fio. */
+.bfc > .fx-glow.lifelink > i { position: absolute; bottom: 6%; width: max(5px, calc(var(--cw, 92px) * .07)); aspect-ratio: 1; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, #eafff2 0 20%, #7dffae 45%, transparent 70%); }
+.bfc > .fx-glow.lifelink > i:nth-child(1) { left: -4px; }
+.bfc > .fx-glow.lifelink > i:nth-child(2) { right: -4px; }
+.bfc > .fx-glow.lifelink > i:nth-child(3) { left: -7px; }
+.bfc > .fx-glow.lifelink > i:nth-child(4) { right: -7px; }
+.slot.tapped .bfc > .fx-glow.lifelink > i { display: none; }
 .bfc > .fx-glow.enchanted { --c: var(--aura, var(--gold)); opacity: .65; }
 .bfc > .fx-glow.plus { --c: #7dffae; opacity: .45; }
 .bfc > .fx-glow.minus { --c: #b48cff; opacity: .5; }
@@ -18,6 +27,8 @@
 .bfc > .fx-frame { inset: -4px; z-index: 1; border-radius: 8px; border: 2px solid transparent; }
 .bfc > .fx-frame.indestructible { border: 3px solid #f2c75c; box-shadow: 0 0 0 1px #6b4a12, 0 0 10px #f2c75c88, inset 0 0 0 1px #fff3c4aa; }
 .bfc > .fx-frame.ward { border: 2px dashed #b89cff; box-shadow: 0 0 8px #9b7bff99; }
+/* As runas acendem e apagam numa segunda moldura, mais clara, por cima (só opacidade: sem repintar a mesa). */
+.bfc > .fx-frame.ward::before { content: ''; position: absolute; inset: -2px; border: 2px dashed #e6dcff; border-radius: inherit; box-shadow: 0 0 12px #b89cffcc; opacity: 0; }
 .bfc > .fx-frame.protection { border: 2px solid #e9edf5; box-shadow: 0 0 0 1px var(--azul-7b8496, #7b8496), 0 0 9px #ffffff66; }
 .bfc > .fx-frame.menace { border: 2px solid transparent; background: conic-gradient(from 0deg, #e5533c 0 6%, transparent 6% 12%) border-box; -webkit-mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); opacity: .9; }
 .bfc > .fx-frame.defender { inset: auto -5px -6px; height: 8px; border: 0; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--azul-8d97a8, #8d97a8) 0 10px, var(--azul-5c6577, #5c6577) 10px 12px); box-shadow: 0 2px 4px #0008; }
@@ -56,30 +67,36 @@
 .bfc.fx-sick > .face img { filter: blur(0.7px); transform: scale(1.04); }
 /* Com efeitos completos, aberração de cor (permanentEffects.ts, sickGhosts): a imagem multiplicada por ciano mais a
    cópia só com o vermelho (screen) somam a imagem de sempre; a cópia afastada abre as franjas. Sem "reduzir movimento",
-   ela se afasta e volta no giro do ícone (2,4 s); só transform, leve com muitas criaturas. */
+   ela pula entre posições no giro do ícone (2,4 s), em degraus, como falha de sinal: deslizando, as camadas misturadas
+   repintavam a carta a cada quadro, e com muitas criaturas enjoadas a mesa parada gastava um terço da CPU. */
 .bfc.fx-sick > .face :is(.sick-cyan, .sick-red) { position: absolute; inset: 0; pointer-events: none; display: none; }
 .bfc.fx-sick > .face .sick-cyan:has(+ .sick-red.on), .bfc.fx-sick > .face .sick-red.on { display: block; }
 .bfc.fx-sick > .face .sick-cyan { background: #0ff; mix-blend-mode: multiply; }
 .bfc.fx-sick > .face .sick-red { isolation: isolate; mix-blend-mode: screen; transform: translate(1.6%, -.6%); }
 .bfc.fx-sick > .face .sick-red::after { content: ''; position: absolute; inset: 0; background: #f00; mix-blend-mode: multiply; }
 
+/* As animações que ficam rodando com a mesa parada mexem só em `opacity` e `transform` (não nas propriedades soltas
+   `scale`, `translate` e `rotate`, que faziam o navegador refazer as camadas da mesa a cada quadro). */
 @media (prefers-reduced-motion: no-preference) {
   .bfc > .fx-glow.hexproof { animation: fx-shimmer 3.2s ease-in-out infinite; }
-  .bfc > .fx-glow.lifelink { animation: fx-breathe 2.6s ease-in-out infinite; }
-  .bfc > .fx-frame.ward { animation: fx-runes 6s linear infinite; }
+  .bfc > .fx-glow.lifelink > i { animation: fx-sap 3.2s ease-in infinite; }
+  .bfc > .fx-glow.lifelink > i:nth-child(2) { animation-delay: .8s; }
+  .bfc > .fx-glow.lifelink > i:nth-child(3) { animation-delay: 1.6s; }
+  .bfc > .fx-glow.lifelink > i:nth-child(4) { animation-delay: 2.4s; }
+  .bfc > .fx-frame.ward::before { animation: fx-runes 3s ease-in-out infinite alternate; }
   .bfc > .fx-base.deathtouch, .bfc > .fx-base.haste { animation: fx-drift 2.4s ease-in-out infinite alternate; }
   .bfc > .fx-crosshair { animation: fx-aim 1.2s ease-in-out infinite; }
-  .bfc.fx-sick > .face .sick-red { animation: fx-chroma 2.4s ease-in-out infinite; }
+  .bfc.fx-sick > .face .sick-red { animation: fx-chroma 2.4s steps(3, jump-both) infinite; }
   /* Atacando com vigilância: a carta fica de pé e o olho dá um brilho rápido. */
   .slot.attacking:not(.tapped) .bfc > .fx-corner i.vigilance { animation: fx-vigil .9s ease-out 2; }
 }
 @keyframes fx-vigil { 50% { box-shadow: 0 0 0 1px #fff, 0 0 12px 4px #f4e7b8; scale: 1.35; } }
 @keyframes fx-shimmer { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
-@keyframes fx-breathe { 0%, 100% { opacity: .4; scale: .98; } 50% { opacity: .85; scale: 1.02; } }
-@keyframes fx-runes { to { border-color: #d6c6ff; filter: hue-rotate(40deg); } }
-@keyframes fx-drift { from { translate: -3px 0; opacity: .7; } to { translate: 3px -2px; opacity: 1; } }
-@keyframes fx-chroma { 0%, 100% { transform: translate(2.4%, -.9%); } 50% { transform: translate(-2.4%, .9%); } }
-@keyframes fx-aim {0%, 100% { scale: .92; opacity: .75; } 50% { scale: 1.05; opacity: 1; } }
+@keyframes fx-sap { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: 1; } 80% { opacity: .8; } 100% { opacity: 0; transform: translateY(calc(var(--ch, 128px) * -.82)) scale(1); } }
+@keyframes fx-runes { to { opacity: .9; } }
+@keyframes fx-drift { from { transform: translate(-3px, 0); opacity: .7; } to { transform: translate(3px, -2px); opacity: 1; } }
+@keyframes fx-chroma { 0%, 100% { transform: translate(2.4%, -.9%); } 30% { transform: translate(-1%, .4%); } 50% { transform: translate(-2.4%, .9%); } 80% { transform: translate(1.2%, -.2%); } }
+@keyframes fx-aim { 0%, 100% { transform: translate(-50%, -50%) scale(.92); opacity: .75; } 50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; } }
 
 /* Voar (asa), vigilância (olho) e atropelar (garra): selos pequenos na borda esquerda, abaixo da lupa de inspecionar. */
 .bfc > .fx-corner { top: 30%; left: -7px; z-index: 3; display: flex; flex-direction: column; gap: 2px; }

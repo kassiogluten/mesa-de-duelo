@@ -84,6 +84,8 @@ export function attachmentsOf(s: FState) {
   }
   return m;
 }
+/** Voar: três riscos de vento que passam por baixo da carta (no lugar dela, para não girarem com a carta virada). */
+const FLY_WIND = '<i class="fly-wind" aria-hidden="true"></i><i class="fly-wind" aria-hidden="true"></i><i class="fly-wind" aria-hidden="true"></i>';
 /** Ícone do exílio na etiqueta da carta exilada por uma permanente. */
 const ICON_EXILE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.5 17.5 11-11"/></svg>';
 /** Nome curto na etiqueta: virada para baixo, sem revelar qual é. */
@@ -91,7 +93,8 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   const ci = combatIndex(s, c.id);
   const byId = battlefieldById(s);
   const slot = ['slot'];
-  if (c.creature && c.keywords?.includes('FLYING')) slot.push('has-flying');
+  const flying = !!(c.creature && c.keywords?.includes('FLYING'));
+  if (flying) slot.push('has-flying');
   if (c.tapped) slot.push('tapped');
   if (c.attacking || ci.attack) slot.push('attacking');
   if (c.blocking || ci.block) slot.push('blocking');
@@ -182,7 +185,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   if (exiled.length) slot.push('has-exu');
   const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');
-  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${fx.sick && effectsLevel() === 'full' ? sickGhosts(v.face(c, 'small', true)) : v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
+  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}${flying ? FLY_WIND : ''}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${fx.sick && effectsLevel() === 'full' ? sickGhosts(v.face(c, 'small', true)) : v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
 }
 /**
  * Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). As criaturas

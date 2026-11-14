@@ -764,6 +764,12 @@ function table() {
         case 'motes': if (!selected) return needSelected; port.play('motes', { at: selected, color: c.color || '#f2b54c' }); return 'Habilidade saindo da carta: grãos de luz subindo em volta dela.';
         case 'puff': if (!selected) return needSelected; port.play('puff', { at: selected, size: Math.max(selected.w, selected.h) * 1.6 }); return 'Fumaça do ninjutsu e do sneak.';
         case 'dust': if (!selected) return needSelected; port.play('dust', { at: selected }); return 'Virar: um pouco de poeira na base da carta.';
+        case 'flare': if (!selected) return needSelected; port.play('flare', { at: selected, color: c.color || '#a46bff', duration: 900 }); return 'Brilho de chegada: contorno de luz em volta da carta (roxo na reanimada, branco na ficha, dourado na aura).';
+        case 'warp': if (!selected) return needSelected; port.play('warp', { at: selected, size: Math.min(Math.max(selected.w, 60), 150) * 1.45 }); return 'Dobra: o rasgo violeta e ciano gira, puxa grãos e se fecha.';
+        case 'counter': case 'counter-harm': if (!selected) return needSelected; port.play('counter', { at: selected, harmful: c.kind === 'counter-harm' }); return c.kind === 'counter' ? 'Marcador +1/+1: faíscas verdes para cima.' : 'Marcador −1/−1: faíscas roxas caindo.';
+        case 'heal': { const life = center(document.querySelector('#fMeAvatar .life')); if (life) port.play('heal', { at: life }); return 'Ganho de vida: grãos verdes subindo do total de vida.'; }
+        case 'mana': { const land = center(document.querySelector('.field.me .slot .bfc')), cost = center(document.querySelector('#fAction')); if (land && cost) port.play('mana', { from: land, to: cost, color: '#63d68f', duration: 620 }); return 'Mana: orbe de luz do terreno até o custo.'; }
+        case 'victory': case 'defeat': { const me = center(document.querySelector('#fMeAvatar')); if (me) port.play(c.kind, { at: me }); return c.kind === 'victory' ? 'Vitória: raios dourados e confete.' : 'Derrota: o retrato racha, com cinzas e fumaça.'; }
         case 'dizzy': case 'undizzy': {
           if (!selected) return needSelected;
           const tag = center(document.querySelector(`.field [data-fid="${c.id}"] .tag.zzz`)) ?? undefined;
@@ -907,7 +913,8 @@ function panel() {
       .map(([k, t]) => `<button data-gpu="shockwave" data-color="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['dissolve', 'Exilar'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
-       ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou']]
+       ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou'],
+       ['flare', 'Brilho de chegada'], ['warp', 'Dobra'], ['counter', 'Marcador +1/+1'], ['counter-harm', 'Marcador −1/−1'], ['heal', 'Ganho de vida'], ['mana', 'Mana até o custo'], ['victory', 'Vitória'], ['defeat', 'Derrota']]
       .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="glint">Conjurar (redemoinho)</button><button data-gpu="arrive">Chegada (anel)</button><button data-gpu="arrive" data-color="#9b7bff">Chegada no cemitério</button><button data-gpu="streak">Golpe (riscos)</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
     <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta. Ligar e desligar "Enjoo de invocação" na permanente selecionada mostra a aberração de cor e solta as estrelinhas ao ligar e ao desligar.</p>
     <div>Câmera lenta só da camada: ${[['1', '1×'], ['4', '4×'], ['10', '10×']].map(([k, t]) => `<button data-gpu-slow="${k}">${t}</button>`).join('')}<button data-gpu="freeze">Congelar</button></div>

@@ -17,6 +17,9 @@
 .chance-piece.die small { font: 700 11px/1 system-ui, sans-serif; color: #5e5e5e; }
 .chance-piece > b { font: inherit; }
 .chance-piece .presentation-caption { position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); white-space: nowrap; }
+/* Moeda e dado desenhados na camada GPU: a peça em CSS fica só com a legenda. */
+.chance-piece.gpu-drawn { background: none; box-shadow: none; }
+.chance-piece.gpu-drawn > :not(.presentation-caption) { visibility: hidden; }
 
 /* Equipar ou encantar: o anel dourado na criatura que recebe. */
 .attach-ring { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); border-radius: 10px; border: 2px solid #ffe2a0; box-shadow: 0 0 18px #f2b54caa, inset 0 0 12px #f2b54c66; opacity: 0; }

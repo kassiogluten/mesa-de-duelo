@@ -78,6 +78,37 @@ try {
   assert.ok(flight.faceHidden, 'the CSS card is still visible under the GPU flight');
   assert.ok(flight.caption, 'the caption disappeared with the GPU flight');
 
+  // Compra de costas e mana: a carta comprada voa de costas no canvas (o verso pintado na cor da capa), sem esperar a
+  // imagem dela, e pagar com terrenos solta os orbes de mana na GPU, sem a bolinha de CSS.
+  run('open', lab('&gpu=1'));
+  const back = evaluate(`
+    const wait = ms => new Promise(res => setTimeout(res, ms));
+    for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
+    let orbs = 0;
+    const seen = new MutationObserver(list => { for (const m of list) for (const n of m.addedNodes) if (n.classList?.contains('mana-orb')) orbs++; });
+    seen.observe(document.body, { childList: true, subtree: true });
+    window.postMessage({ cmd: 'hand', kind: 'draw' }, '*'); await wait(2500);
+    window.postMessage({ cmd: 'hand', kind: 'draw' }, '*'); await wait(200);
+    const piece = document.querySelector('.presentation-piece.draw-ghost.gpu-flying');
+    const out = { flying: !!piece, backHidden: !!piece && getComputedStyle(piece.querySelector('.back')).visibility === 'hidden', live: gpu.stats().live };
+    await wait(2500);
+    const before = gpu.stats().frames;
+    window.postMessage({ cmd: 'extra', kind: 'pay', side: 'me' }, '*');
+    await wait(1600); seen.disconnect();
+    out.cssOrbs = orbs; out.drewMana = gpu.stats().frames > before;
+    // A moeda gira no canvas; a peça em CSS fica só com a legenda.
+    window.postMessage({ cmd: 'extra', kind: 'coin', side: 'me' }, '*'); await wait(300);
+    const coin = document.querySelector('.chance-piece.gpu-drawn');
+    out.coinOnGpu = !!coin && getComputedStyle(coin.querySelector('b')).visibility === 'hidden' && getComputedStyle(coin.querySelector('.presentation-caption')).visibility === 'visible';
+    return out;
+  `);
+  assert.ok(back.flying, 'the drawn card did not fly face down on the GPU');
+  assert.ok(back.backHidden, 'the CSS card back is still visible under the GPU flight');
+  assert.ok(back.live >= 1, 'no GPU effect alive during the draw');
+  assert.equal(back.cssOrbs, 0, 'the mana orb was drawn in CSS with the GPU layer ready');
+  assert.ok(back.drewMana, 'the GPU layer drew nothing for the mana');
+  assert.ok(back.coinOnGpu, 'the coin was not drawn on the GPU (or the caption was hidden with it)');
+
   run('open', lab('&gpu=0'));
   const off = evaluate(`${LAND}
     await wait(2500);

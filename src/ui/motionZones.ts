@@ -9,7 +9,7 @@ export function zoneGlow(zone: string | undefined) {
 
 /** Os montes de cada jogador (cemitério, exílio, grimório, zona de comando) e a saída do campo para eles. */
 export function createZoneMotion(kit: MotionKit) {
-  const { root, later, animate, effect, remove, fly, absorb, shatter, warpRift, gpu } = kit;
+  const { root, later, animate, effect, remove, fly, absorb, shatter, warpRift, gpu, flare } = kit;
   /** Para onde a carta vai ao sair do campo: cemitério, exílio, grimório ou mão. */
   function destination(event: PresentationEvent, mine: boolean, seat: Element | null, hand: Point, stage: Point) {
     const piles = (selector: string) => center(seat?.querySelector(`.piles ${selector}`)) ?? center(root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} ${selector}`));
@@ -45,10 +45,12 @@ export function createZoneMotion(kit: MotionKit) {
   function reanimate(card: HTMLElement) {
     const at = center(card);
     if (!at || reduced()) return;
+    flare(card, '#a46bff', [{ filter: 'brightness(1.5) drop-shadow(0 0 14px #a46bff)' }, { filter: 'none' }], 900);
+    // Na camada GPU: anel roxo que se abre e grãos subindo em volta da carta.
+    if (gpu.play('arrive', { at, color: '#a46bff', size: Math.max(at.w, at.h) * 1.35 })) { gpu.play('motes', { at, color: '#c9a8ff' }); return; }
     const ring = effect('reanimate-ring', { ...at, w: at.w * 1.35, h: at.h * 1.2 });
     animate(ring, [{ opacity: 0, scale: '.6', translate: '0 10px' }, { opacity: .95, scale: '1', translate: '0 0', offset: .4 }, { opacity: 0, scale: '1.25', translate: '0 -14px' }], 820, 'ease-out');
     later(() => remove(ring), 860);
-    animate(card, [{ filter: 'brightness(1.5) drop-shadow(0 0 14px #a46bff)' }, { filter: 'none' }], 900, 'ease-out');
   }
   /**
    * Saída do campo com um movimento por motivo: destruída racha antes de cair no cemitério, sacrificada vai escurecida,

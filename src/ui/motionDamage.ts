@@ -96,7 +96,7 @@ export function createDamageMotion(kit: MotionKit) {
     animate(bolt, [{ translate: '0 0', scale: '.6', opacity: .6 }, { translate: `${dx * .4}px ${dy * .4}px`, scale: '1.1', opacity: 1, offset: .5 }, { translate: `${dx}px ${dy}px`, scale: '1', opacity: 1 }], travel, 'cubic-bezier(.45, 0, .85, .55)');
     later(() => { remove(bolt); impact(event, look, target); }, travel);
   }
-  /** Ganho de vida (vínculo com a vida ou qualquer outro): "+N" verde subindo do retrato. */
+  /** Ganho de vida (vínculo com a vida ou qualquer outro): "+N" verde subindo do retrato; na camada GPU, com grãos verdes subindo. */
   function heal(event: PresentationEvent) {
     const avatar = event.actor === undefined ? null : root.querySelector<HTMLElement>(`.avatar[data-pid="${event.actor}"]`);
     const at = center(avatar?.querySelector('.life') ?? avatar);
@@ -104,6 +104,7 @@ export function createDamageMotion(kit: MotionKit) {
     avatar.classList.add('heal-flash');
     later(() => avatar.classList.remove('heal-flash'), 850);
     floatNumber(at, `+${event.delta}`, 'heal');
+    if (!reduced()) gpu.play('heal', { at });
   }
   return { damage, heal };
 }

@@ -8,12 +8,13 @@
 .phase-wait-clock[hidden] { display: none; }
 .phase-wait-clock svg { flex: 0 0 auto; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .phase-wait-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.phase-wait-clock.stage-2 { animation: wait-pulse 2.4s ease-in-out infinite; }
-.phase-wait-clock.stage-3 { color: #ffb4a3; background: #ec5a3f2b; box-shadow: inset 0 0 0 1px #ec5a3f99; animation: wait-pulse-late 2s ease-in-out infinite; }
+.phase-wait-clock.stage-3 { color: #ffb4a3; background: #ec5a3f2b; box-shadow: inset 0 0 0 1px #ec5a3f99; }
+/* Com 1 min 30 s, o relógio pulsa: uma camada por cima acende e apaga (opacidade e escala, sem repintar a mesa). O ::after é da dica. */
+.phase-wait-clock:is(.stage-2, .stage-3)::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; --halo-grow: 1.04;
+  background: #f2b54c2a; box-shadow: inset 0 0 0 1px #f2b54ccc, 0 0 10px #f2b54c55; animation: halo-breathe 1.2s ease-in-out infinite alternate; }
+.phase-wait-clock.stage-3::before { background: #ec5a3f26; box-shadow: inset 0 0 0 1px #ec5a3fdd, 0 0 10px #ec5a3f66; animation-duration: 1s; }
 .forge #fPhases .phase-wait-clock[data-tip]::after { left: 0; transform: translateY(4px); }
 .forge #fPhases .phase-wait-clock[data-tip]:hover::after { transform: none; }
-@keyframes wait-pulse { 50% { background: #f2b54c40; box-shadow: inset 0 0 0 1px #f2b54ccc, 0 0 10px #f2b54c55; } }
-@keyframes wait-pulse-late { 50% { background: #ec5a3f4d; box-shadow: inset 0 0 0 1px #ec5a3fdd, 0 0 10px #ec5a3f66; } }
 
 /* Selo "Demorando…" no retrato e no campo de quem a mesa espera há 2 min ou mais. */
 .slow-badge {
@@ -39,5 +40,5 @@
   .wait-nudge { bottom: calc(100% + 14px); font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .phase-wait-clock.stage-2, .phase-wait-clock.stage-3, .wait-nudge { animation: none; }
+  .phase-wait-clock:is(.stage-2, .stage-3)::before, .wait-nudge { animation: none; }
 }

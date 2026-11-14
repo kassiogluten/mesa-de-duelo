@@ -7,13 +7,15 @@ import { center, LANDING, reduced, TAP, turnOf, type MotionKit, type Point } fro
 import { zoneGlow, type createZoneMotion } from './motionZones';
 
 type Face = (card: NonNullable<PresentationEvent['card']>) => string;
+/** A ficha que surge acende (sem a camada GPU, a imagem dela clareia e brilha). */
+const TOKEN_FLARE: Keyframe[] = [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }];
 
 /**
  * Cartas mudando de zona: conjurar até a pilha, resolver e anular saindo dela, entrar no campo, sair dele, descartar,
  * e a cascata de várias permanentes da mesma resolução.
  */
 export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof createZoneMotion>, walkerArrive: (card: HTMLElement, event: PresentationEvent) => void) {
-  const { root, state, later, animate, effect, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, hiddenCards, recentStack, stackPile } = kit;
+  const { root, state, later, animate, effect, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, flare, hiddenCards, recentStack, stackPile } = kit;
   const { destination, pileOf, zonePoint, reanimate, leave } = zones;
   const ninja = createNinjaMotion(kit);
   function cardFlight(event: PresentationEvent, card: HTMLElement | null, id: number | undefined, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }) {
@@ -145,7 +147,7 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       if (id !== undefined && landing) {
         const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
         if (landed) land(landed);
-        if (landed && event.card?.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
+        if (landed && event.card?.token) flare(landed, '#ffffff', TOKEN_FLARE);
         if (landed && walkerArrives(event)) walkerArrive(landed, event);
         if (landed && event.from === 'Graveyard') reanimate(landed);
       }
@@ -193,7 +195,7 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
         // Cada uma assenta com mola; a onda dourada fica para o monte inteiro, no fim.
         if (landed && origin) land(landed, false);
         if (landed && event.from === 'Graveyard') reanimate(landed);
-        if (landed && card.token) animate(landed, [{ filter: 'brightness(1.8) drop-shadow(0 0 10px #fff)' }, { filter: 'none' }], 520, 'ease-out');
+        if (landed && card.token) flare(landed, '#ffffff', TOKEN_FLARE);
       }, reduced() ? 0 : travel + delay);
     });
     for (const [pile, n] of piles) {
