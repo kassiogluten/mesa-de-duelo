@@ -3,6 +3,7 @@ import { createForgeTableView } from '../../src/ui/forgeTable';
 import { gpuClock } from '../../src/ui/gpu/gpuSupport';
 import { latestGpuPort } from '../../src/ui/gpu/gpuPort';
 import { center } from '../../src/ui/motionKit';
+import { createLabPlays, playButtons } from './effectsLabPlays';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
@@ -850,6 +851,13 @@ function table() {
     reduce: c => { reduce = !!c.value; if (reduce) document.head.append(still); else still.remove(); return reduce ? 'Reduzir movimento ligado nesta página.' : 'Movimento normal.'; },
   };
 
+  // Jogadas simuladas (effectsLabPlays.ts): montam a mesa e encadeiam os eventos como numa partida.
+  const labPlays = createLabPlays({
+    ME, OPP, state: () => state, player, newId: () => nextId++, add, card, creature, emit, flush, damage, settle, lifeChange, leave,
+    combat: (attacker, target) => combat(attacker, target), run: c => { commands[c.cmd]?.(c); },
+  });
+  commands.play = c => c.kind === 'all' ? labPlays.startAll() : labPlays.start(c.kind) ?? 'Jogada desconhecida.';
+
   function report(note?: string) {
     const kind = (c: any) => c.faceDown ? 'virada para baixo' : c.planeswalker ? 'planeswalker' : c.creature ? 'criatura' : c.land ? 'terreno' : c.attachedTo ? 'presa' : 'permanente';
     parent.postMessage({ lab: 'board', note, selected: lastAdded, players: players.map(p => ({ id: p.id, name: p.name, life: p.life })),
@@ -875,7 +883,7 @@ function table() {
   // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar (a camada GPU junto), e &gpu=0 ou &gpu=1 escolhe os efeitos em CSS ou na GPU. Além das jogadas da
   // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
   // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
-  // commander, ability, pay, float, opening, mulligan, reveal, win, lose) e cheio (o "Campo cheio" do painel, para medir com a mesa
+  // commander, ability, pay, float, opening, mulligan, reveal, win, lose), jogada:<nome> (as jogadas simuladas de effectsLabPlays.ts) e cheio (o "Campo cheio" do painel, para medir com a mesa
   // lotada: scripts/medir-efeitos.mjs).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
   const run = (play: string) => {
@@ -884,6 +892,7 @@ function table() {
     else if (cmd === 'x') window.postMessage({ cmd: 'extra', kind: arg, side: 'me' }, '*');
     else if (cmd === 'tokens') window.postMessage({ cmd, side: 'me', n: arg }, '*');
     else if (cmd === 'cheio') window.postMessage({ cmd: 'full' }, '*');
+    else if (cmd === 'jogada') window.postMessage({ cmd: 'play', kind: arg }, '*');
     else window.postMessage({ cmd: 'hand', kind: cmd }, '*');
   };
   if (plays.length > 1) plays.forEach((play, i) => realTimeout(() => run(play), 600 + i * 2500));
@@ -898,7 +907,7 @@ function panel() {
     body { margin: 0; background: #070b14; color: #e9eef7; font: 500 13px/1.4 system-ui, sans-serif; display: flex; height: 100dvh; overflow: hidden; }
     #lab { width: 300px; flex: none; overflow: auto; padding: 12px 14px 40px; box-sizing: border-box; background: #0c1222; border-right: 1px solid #f2b54c44; }
     #lab h1 { font-size: 15px; color: #f2b54c; margin: 0 0 4px; } #lab h2 { font-size: 11px; color: #9aa5bb; text-transform: uppercase; letter-spacing: .06em; margin: 14px 0 6px; }
-    #lab p { margin: 0 0 6px; color: #c7cfdd; } #note { min-height: 36px; color: #ffe2a0; }
+    #lab p { margin: 0 0 6px; color: #c7cfdd; } #lab p.play-group { margin: 10px 0 3px; color: #9aa5bb; font-weight: 600; } #note { min-height: 36px; color: #ffe2a0; }
     #lab select, #lab input[type=number], #lab input[type=text] { width: 100%; box-sizing: border-box; margin: 2px 0 6px; padding: 5px 6px; border-radius: 6px; border: 1px solid #ffffff30; background: #131d30; color: inherit; font: inherit; }
     #lab button { margin: 2px 2px 2px 0; padding: 5px 9px; border-radius: 7px; border: 1px solid #ffffff30; background: #ffffff10; color: inherit; font: 600 12px system-ui; cursor: pointer; }
     #lab button:hover { background: #ffffff22; } #lab button.on { border-color: #f2b54c; color: #ffe2a0; }
@@ -917,6 +926,9 @@ function panel() {
   const opt = (value: string, text: string) => `<option value="${value}">${text}</option>`;
   lab.innerHTML = `
     <h1>Laboratório de efeitos</h1><p id="note">Monte o campo, escolha fonte e alvo e dispare os efeitos.</p>
+    <h2>Jogadas</h2>
+    <p>Cada uma monta a mesa e encadeia os efeitos na ordem de uma partida. As seções abaixo disparam um efeito de cada vez.</p>
+    ${playButtons()}<div><button data-play="all">Todas em sequência</button></div>
     <h2>Campo</h2>
     <div class="row"><select id="side">${opt('me', 'Você')}${opt('opp', 'Oponente')}</select></div>
     <select id="template">${Object.entries(TEMPLATES).map(([k, [name]]) => opt(k, name)).join('')}</select>
@@ -1031,6 +1043,7 @@ function panel() {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
     if (!b) return;
     if (b.dataset.tour !== undefined) { tour(b); return; }
+    if (b.dataset.play) { send({ cmd: 'play', kind: b.dataset.play }); return; }
     if (b.dataset.moment) send({ cmd: 'moment', kind: b.dataset.moment });
     if (b.dataset.c) send({ cmd: b.dataset.c, side: $<HTMLSelectElement>('side').value, template: $<HTMLSelectElement>('template').value, id: selectedId(), attachTo: selectedId() });
     if (b.dataset.d) send({ cmd: 'damage', kind: b.dataset.d, source: ref($<HTMLSelectElement>('source').value), target: ref($<HTMLSelectElement>('target').value), amount: $<HTMLInputElement>('amount').value });
