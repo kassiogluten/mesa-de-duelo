@@ -17,7 +17,7 @@ npm run test:browser           # testes de navegador (sobe a mesa sozinho; uns 2
 
 O `npm test` carrega o `tests/register.mjs`, que deixa o teste importar o código da mesa direto (`await import('../src/ui/x.ts')`): ele resolve os imports sem extensão, converte o TypeScript, troca CSS por módulo vazio e simula o `import.meta.env`. Teste novo não precisa montar import nenhum à mão. Teste de navegador novo usa o `browserSession` de `tests/browser-helper.mjs`. Para rodar um arquivo só: `node --import ./tests/register.mjs --test tests/<nome>.test.mjs`.
 
-**Servidor (`forge-bridge`):** precisa do JDK 17 e do Forge em `~/forge` (no Windows, `C:/Users/Kassio/forge`). Outro lugar: acrescente `-Dforge.dir=/caminho`.
+**Servidor (`forge-bridge`):** precisa do JDK 17 e do Forge em `~/forge` (no Windows, `C:/Users/Kassio/forge`). Outro lugar: acrescente `-Dforge.dir=/caminho`. O `npm run forge` e o pre-commit usam o `FORGE_DIR` do `.env`, se houver: rodando à mão, passe o mesmo (`-Dforge.dir=$FORGE_DIR`), senão as cartas mais novas (Star Trek) aparecem como desconhecidas.
 
 ```sh
 cd forge-bridge

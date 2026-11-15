@@ -15,7 +15,9 @@ if echo "$staged" | grep -qE '^(forge-bridge/(src|pom\.xml)|shared/)'; then
   if [ -z "$JAVA_HOME" ] && [ -d "/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" ]; then JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot"; export JAVA_HOME; fi
   if ! command -v mvn >/dev/null 2>&1; then echo "pre-commit: mvn não encontrado; testes do servidor pulados"; exit 0; fi
   echo "pre-commit: testes do servidor"
-  if ! (cd forge-bridge && mvn -o -q test > ../.git-precommit-server.log 2>&1); then
+  # O mesmo clone do Forge que o "npm run forge" usa (FORGE_DIR do .env, como no rodar.sh); sem ele, o ~/forge do pom.
+  forge_dir=$( [ -f .env ] && sed -n 's/^FORGE_DIR=//p' .env | tail -1 )
+  if ! (cd forge-bridge && mvn -o -q test ${forge_dir:+"-Dforge.dir=$forge_dir"} > ../.git-precommit-server.log 2>&1); then
     grep -aE '^\[ERROR\]   |COMPILATION ERROR' .git-precommit-server.log | head -20
     echo "pre-commit: testes do servidor falharam (log em .git-precommit-server.log)"; exit 1
   fi

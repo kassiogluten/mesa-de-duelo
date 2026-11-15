@@ -56,8 +56,10 @@ export const KEYS = {
   ownArt: 'mesa:ownArt',
   /** Fundo de tapete na mesa ('on'/'off'). Opções da mesa. */
   playmat: 'mesa:playmat',
-  /** Efeitos da mesa: 'full' (completos), 'light' (leves, escolhido) ou 'auto-light' (a mesa trocou sozinha); sem a chave, completos. Opções da mesa. */
+  /** Efeitos da mesa: 'auto' (o regulador alivia sozinho), 'full' (completos) ou 'light' (leves); 'auto-light', de antes do regulador, vale como 'auto'; sem a chave, automático. Opções da mesa. */
   effects: 'mesa:effects',
+  /** Selo de quadros por segundo e ping no canto da mesa ('on'; sem a chave, desligado). Opções da mesa. */
+  perfMeter: 'mesa:perf-meter',
   /** Como a mão aparece. Mesa. */
   hand: 'mesa:hand',
   /** Chave antiga de esconder a mão, apagada ao escolher o modo da mão. Mesa. */

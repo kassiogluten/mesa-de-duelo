@@ -196,18 +196,35 @@ try {
     select.value = 'full'; select.dispatchEvent(new Event('change', { bubbles: true }));
     for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
     out.backToFull = gpu.ready() && !!document.querySelector('canvas.gpu-layer');
+    // Os degraus do automático: o 2 para a mesa viva, o 3 troca para o CSS e o 0 traz a camada de volta.
+    select.value = 'auto'; select.dispatchEvent(new Event('change', { bubbles: true }));
+    for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
+    for (let i = 0; i < 30 && !gpu.ambienceStats()?.running; i++) await wait(100);
+    out.ambienceBefore = !!gpu.ambienceStats()?.running;
+    gpu.setTier(2); await wait(100);
+    out.tier2 = { ready: gpu.ready(), ambience: gpu.ambienceStats()?.running };
+    gpu.setTier(3); await wait(100);
+    out.tier3 = { ready: gpu.ready(), canvas: !!document.querySelector('canvas.gpu-layer') };
+    gpu.setTier(0);
+    for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
+    for (let i = 0; i < 30 && !gpu.ambienceStats()?.running; i++) await wait(100);
+    out.tier0 = { ready: gpu.ready(), ambience: gpu.ambienceStats()?.running };
     // Sair da mesa (a tela escondida) desfaz o canvas.
     document.querySelector('#table').hidden = true; await wait(50);
     out.canvasHidden = !!document.querySelector('canvas.gpu-layer, canvas.table-ambience');
     localStorage.removeItem('mesa:effects');
     return out;
   `);
-  assert.ok(option.readyByDefault, 'effects do not start in "completos"');
-  assert.deepEqual(option.options, ['Completos', 'Leves']);
+  assert.ok(option.readyByDefault, 'effects do not start on the GPU in "automático"');
+  assert.deepEqual(option.options, ['Automático', 'Completos', 'Leves']);
   assert.equal(option.saved, 'light');
   assert.equal(option.canvasLight, false, '"leves" kept the GPU layer');
   assert.match(option.summary, /Efeitos leves/);
   assert.ok(option.backToFull, '"completos" did not bring the GPU layer back');
+  assert.ok(option.ambienceBefore, 'the living table did not run in "automático"');
+  assert.deepEqual(option.tier2, { ready: true, ambience: false }, 'tier 2 keeps the GPU effects and stops the living table');
+  assert.deepEqual(option.tier3, { ready: false, canvas: false }, 'tier 3 is the CSS effects');
+  assert.deepEqual(option.tier0, { ready: true, ambience: true }, 'tier 0 brings everything back');
   assert.equal(option.canvasHidden, false, 'leaving the table kept the WebGL context');
-  console.log('GPU layer passed: idle load, no idle frames, effects on the GPU, CSS after context loss, ?gpu=0 and the Effects option.');
+  console.log('GPU layer passed: idle load, no idle frames, effects on the GPU, CSS after context loss, ?gpu=0, the Effects option and the governor tiers.');
 } finally { run('close'); }

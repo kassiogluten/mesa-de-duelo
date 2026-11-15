@@ -559,6 +559,8 @@ Sugestões de 14/11/2026, depois da fila sem pular jogadas e da mesa viva (itens
 **WebGL**
 
 - [x] O que ainda anima em CSS na GPU: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo (as setas com fluxo de energia são o ganho mais visível). Feito em 14/11/2026 (`novidades-pendentes/momentos-e-mesa-reagindo`). Decidido nesse dia: a seta nasce na GPU (um traço de luz até o alvo) e a seta parada continua em SVG, para a camada dos efeitos continuar parando.
+- [x] Contador de FPS e ping na mesa (Opções › Aparência, `perfMeter.ts`), para medir a mesa cheia com os efeitos novos. Feito em 14/11/2026 (`novidades-pendentes/contador-fps-ping`); `perfMeter.fps()` já expõe a última medida.
+- [x] Aliviar os efeitos sozinho com a mesa cheia e com FPS baixo (pedido em 14/11/2026). Feito em 15/11/2026 (`novidades-pendentes/efeitos-automaticos`): Efeitos: Automático (padrão) com o regulador de `effectsGovernor.ts`, em degraus (1 faíscas pela metade, 2 mesa viva e câmera paradas, 3 CSS). Decidido nesse dia: limites que protegem os efeitos (desce com 3 s abaixo de 30, sobe com 6 s acima de 50 animando), em silêncio, com o degrau no selo de FPS; trava dobrando quando a subida recai; mais de 40 permanentes seguram no degrau 1; letal e ultimate nunca perdem faíscas. Falta medir num celular de entrada se os limites estão bons.
 - [ ] Medir a mesa viva (critério 9 da `docs/spec-mesa-webgl.md`): `scripts/medir-efeitos.mjs` com e sem ela e, quando houver aparelho, o celular de entrada (junto com o critério 8).
 - [ ] Brilho de raridade no voo: míticas e foils voando com um reflexo que corre pela carta, na textura que a fase 3 já carrega.
 

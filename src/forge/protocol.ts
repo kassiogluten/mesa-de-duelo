@@ -608,6 +608,8 @@ export type ClientMessage =
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
   | { type: 'list-rooms'; requestId: string }
+  /** Mede o ping: o servidor responde 'pong' na hora, sem mexer em nada. */
+  | { type: 'ping'; requestId: string }
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number } | { type: 'sideboard-cancel'; id: number }
@@ -643,6 +645,7 @@ export interface RequestReplies {
   'room-deck': void;
   'lookup-room': RoomInfo;
   'list-rooms': PublicRoom[];
+  'ping': void;
   'fetch-deck': string;
   'similar-cards': SimilarCard[];
 }
@@ -652,6 +655,7 @@ export type RequestMessage =
   | { type: 'validate-deck'; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; code: string }
   | { type: 'list-rooms' }
+  | { type: 'ping' }
   | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number };
 
@@ -661,6 +665,7 @@ export type ReplyMessage = { requestId: string } & (
   | { type: 'room-info'; room: RoomInfo }
   | { type: 'room-list'; rooms?: PublicRoom[] }
   | { type: 'room-deck' }
+  | { type: 'pong' }
   | { type: 'deck-source'; body: string }
   | { type: 'similar-cards'; cards?: SimilarCard[] }
   | { type: 'validation-error'; validation: DeckValidation; target?: string }

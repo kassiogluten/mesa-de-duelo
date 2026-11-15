@@ -1,0 +1,9 @@
+/* O selo de FPS e ping no canto de cima à direita da mesa (perfMeter.ts). */
+.forge .perf-meter { position: absolute; z-index: 12; top: max(1vh, env(safe-area-inset-top, 0px)); right: max(1vw, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--muted); font: 600 11px/1.2 var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
+.forge .perf-meter[hidden] { display: none; }
+.perf-meter span { min-width: 6ch; text-align: right; }
+.perf-meter .perf-tier { min-width: 0; color: var(--muted); }
+.perf-meter .perf-tier[hidden] { display: none; }
+.perf-meter [data-quality="good"] { color: var(--heal); }
+.perf-meter [data-quality="fair"] { color: var(--gold); }
+.perf-meter [data-quality="poor"] { color: var(--red); }

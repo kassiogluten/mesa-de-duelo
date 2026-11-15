@@ -42,7 +42,7 @@ export function bridgeHttpUrl(path: string, forgeUrl = FORGE_URL) {
 /** Os problemas de um deck recusado, numa frase só. */
 export const validationText = (v: DeckValidation | undefined) =>
   v?.issues?.map(i => `${i.card ? `${i.card}: ` : ''}${i.message}`).join(' ') || 'O deck não vale para o formato da sala.';
-const REPLY_TYPES = new Set<string>(['validation', 'room-info', 'room-list', 'room-deck', 'deck-source', 'similar-cards', 'request-error', 'error', 'validation-error']);
+const REPLY_TYPES = new Set<string>(['validation', 'room-info', 'room-list', 'room-deck', 'pong', 'deck-source', 'similar-cards', 'request-error', 'error', 'validation-error']);
 const isReply = (msg: ServerMessage): msg is ReplyMessage => 'requestId' in msg && typeof msg.requestId === 'string' && REPLY_TYPES.has(msg.type);
 
 /** Lê uma mensagem do servidor; null se não for JSON com `type`. */
@@ -62,7 +62,7 @@ function settleReply(msg: ReplyMessage): { value: unknown } | { error: RequestEr
     case 'room-list': return { value: Array.isArray(msg.rooms) ? msg.rooms : [] };
     case 'deck-source': return { value: msg.body };
     case 'similar-cards': return { value: Array.isArray(msg.cards) ? msg.cards : [] };
-    case 'room-deck': return { value: undefined };
+    case 'room-deck': case 'pong': return { value: undefined };
     case 'validation-error': return { error: new RequestError(validationText(msg.validation)) };
     default: return { error: new RequestError(msg.text ?? 'Não foi possível concluir a solicitação.', msg.reason) };
   }
@@ -86,7 +86,7 @@ export class ForgeClient {
   /** Ação recusada pela ponte sem aviso ao jogador (ex.: clique num pedido que já tinha mudado). Vai só para o painel de erros. */
   onDiagnostic: (diagnostic: { code: string; action?: string; text: string }) => void = () => {};
   onHello: (info: {supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string}) => void = () => {};
-  /** Cada mensagem enviada (para a gravação da partida); delivered false quando a conexão já estava fechada. */
+  /** Cada mensagem enviada (para a gravação da partida), fora os pings; delivered false quando a conexão já estava fechada. */
   onSend: (msg: ClientMessage, delivered: boolean) => void = () => {};
   private requestSequence = 0;
   private pending = new Map<string, {resolve: (value: unknown) => void; reject: (reason: Error) => void; timer: ReturnType<typeof setTimeout>}>();
@@ -113,6 +113,13 @@ export class ForgeClient {
   /** Escolhe ou troca o deck do próprio lugar na sala de espera; recusa com o motivo (deck inválido, partida já começada). */
   chooseRoomDeck(message: Omit<Extract<ClientMessage, { type: 'room-deck' }>, 'type' | 'requestId'>): Promise<void> {
     return this.request({type: 'room-deck', ...message});
+  }
+
+  /** Ida e volta até o servidor, em milissegundos (o selo de FPS e ping da mesa). */
+  async ping(timeoutMs = 5000): Promise<number> {
+    const start = performance.now();
+    await this.request({type: 'ping'}, timeoutMs);
+    return performance.now() - start;
   }
 
   lookupRoom(code: string): Promise<RoomInfo> { return this.request({type: 'lookup-room', code}); }
@@ -174,7 +181,7 @@ export class ForgeClient {
   send(msg: ClientMessage) {
     const delivered = this.connected;
     if (delivered) this.ws!.send(JSON.stringify(msg));
-    this.onSend(msg, delivered);
+    if (msg.type !== 'ping') this.onSend(msg, delivered);
   }
 
   close() {

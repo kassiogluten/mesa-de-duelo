@@ -99,6 +99,7 @@ export function createUiActions(d: UiActionDeps) {
     'shortcuts': () => { openShortcuts(MATCH_SHORTCUTS); },
     'settings-close': () => { d.settings.set(false); },
     'playmat': () => { d.settings.togglePlaymat(); },
+    'perf-meter': () => { d.settings.togglePerfMeter(); },
     'own-art': () => { d.settings.toggleOwnArt(); },
     'own-art-gallery': () => { openOwnArtGallery(); },
     'turn-notice': () => { void d.turnNotice.setEnabled(!d.turnNotice.enabled).then(d.settings.syncTurnNotice); },

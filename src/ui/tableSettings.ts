@@ -1,5 +1,5 @@
 // A janela Opções da partida (som, jogo, aparência) e as preferências que ela guarda neste aparelho: o ritmo das jogadas,
-// o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa e os efeitos (completos ou leves). As seções abertas ficam como o jogador deixou.
+// o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa, os efeitos (automático, completos ou leves) e o selo de FPS e ping. As seções abertas ficam como o jogador deixou.
 import { EVENTS, KEYS } from '../storage';
 import type { CardStyle } from './face';
 import type { createGameAudio, SoundPack } from './audio';
@@ -12,6 +12,7 @@ import type { createTurnNotice } from './turnNotice';
 import { finder } from './dom';
 import { ownArtEnabled, setOwnArtEnabled } from '../scryfallCards';
 import { effectsLevel, setEffectsLevel } from './gpu/gpuSupport';
+import type { createPerfMeter } from './perfMeter';
 
 const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
 
@@ -20,6 +21,7 @@ export interface SettingsDeps {
   passLevel: PassLevelPreference;
   turnNotice: ReturnType<typeof createTurnNotice>;
   turnBuzz: ReturnType<typeof createTurnBuzz>;
+  perfMeter: ReturnType<typeof createPerfMeter>;
   /** Conectado e com a conexão de pé: dá para trocar o nível de passar. */
   connected(): boolean;
   /** O nível mudou: o menu rápido dele, se aberto, acompanha. */
@@ -61,7 +63,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     const settings = d.audio.settings, turnBuzz = d.turnBuzz;
     $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
     $('#fPlaySummary').textContent = [chosen('#fPassLevel'), d.turnNotice.enabled && 'Aviso de turno', screenWake.supported && screenWake.enabled && 'Tela acesa', turnBuzz.supported && turnBuzz.enabled && 'Vibrar', prefs.fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
-    $('#fLookSummary').textContent = [chosen('#fCardStyle'), `Efeitos ${chosen('#fEffects').toLowerCase()}`, prefs.playmat && 'Tapete', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
+    $('#fLookSummary').textContent = [chosen('#fCardStyle'), `Efeitos ${chosen('#fEffects').toLowerCase()}`, prefs.playmat && 'Tapete', d.perfMeter.enabled && 'FPS e ping', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
   }
   /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
   let openOptionGroups = ['sound'];
@@ -85,7 +87,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     syncOptionSummaries();
   }
   function syncPlaymat() {
-    syncSwitch('fPlaymat', prefs.playmat); syncSwitch('fOwnArt', ownArtEnabled());
+    syncSwitch('fPlaymat', prefs.playmat); syncSwitch('fOwnArt', ownArtEnabled()); syncSwitch('fPerfMeter', d.perfMeter.enabled);
     syncOptionSummaries();
   }
   function syncTurnNotice() {
@@ -130,6 +132,8 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     try { localStorage.setItem(KEYS.playmat, prefs.playmat ? 'on' : 'off'); } catch { /* Storage is optional. */ }
     syncPlaymat(); d.rerender();
   }
+  /** O interruptor do selo de FPS e ping. */
+  function togglePerfMeter() { d.perfMeter.setEnabled(!d.perfMeter.enabled); syncPlaymat(); }
   /** O interruptor da arte própria da mesa: vale em todas as telas, e a mesa redesenha com a outra imagem. */
   function toggleOwnArt() { setOwnArtEnabled(!ownArtEnabled()); }
   addEventListener(EVENTS.ownArt, () => { syncPlaymat(); d.rerender(); });
@@ -140,12 +144,12 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
       try { localStorage.setItem(KEYS.cards, prefs.cardStyle); } catch { /* Storage is optional. */ }
       d.rerender();
     }
-    if (t.id === 'fEffects') { setEffectsLevel(t.value === 'light' ? 'light' : 'full'); d.effectsChanged(); }
+    if (t.id === 'fEffects') { setEffectsLevel(t.value === 'light' || t.value === 'full' ? t.value : 'auto'); d.effectsChanged(); }
     if (t.id === 'fSoundPack') { void d.audio.setPack(t.value as SoundPack); }
     if (t.id === 'fTema') escolherTema(parseTema(t.value));
     if (t.id === 'fPassLevel') { if (d.connected() && isPassLevel(t.value)) d.passLevel.change(t.value); syncPassLevel(); if (d.hasState()) d.render(); }
     if (t.id === 'fPace') { prefs.fast = t.value === 'fast'; try { localStorage.setItem(KEYS.pace, prefs.fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
     if (t.closest('[data-options-group]')) syncOptionSummaries();
   });
-  return { prefs, syncPassLevel, syncDevice, syncPlaymat, syncTurnNotice, sync: syncSettings, set: setSettings, togglePlaymat, toggleOwnArt };
+  return { prefs, syncPassLevel, syncDevice, syncPlaymat, syncTurnNotice, sync: syncSettings, set: setSettings, togglePlaymat, toggleOwnArt, togglePerfMeter };
 }

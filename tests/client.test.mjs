@@ -124,3 +124,17 @@ test('malformed or unknown server messages are ignored; an error for no pending 
   assert.deepEqual(states, [3]);
   client.close();
 });
+
+test('ping measures the round trip to the pong and stays out of the match recording', async () => {
+  const { client, socket } = await connect();
+  const recorded = [];
+  client.onSend = msg => recorded.push(msg.type);
+  const ping = client.ping();
+  assert.equal(socket.sent[0].type, 'ping');
+  socket.receive({ type: 'pong', requestId: socket.sent[0].requestId });
+  const ms = await ping;
+  assert.ok(Number.isFinite(ms) && ms >= 0);
+  client.send({ type: 'ok', gen: 1 });
+  assert.deepEqual(recorded, ['ok']);
+  client.close();
+});

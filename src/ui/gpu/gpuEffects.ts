@@ -124,7 +124,7 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
       const n = shield ? 10 : (heavy ? 34 : 22) + (lethal ? 12 : 0);
       spray(sparks, s, x, y, n, shield
         ? { speed: [reach * 1.6, reach * 2.6], life: [260, 420], scale: [.35, .6], colors: [main, hot], drag: 4 }
-        : { speed: [reach * 2.2, reach * 5.5], life: [320, 560], scale: [.3, .7], colors: [hot, main, main, 0xffffff], gravity: 260, drag: 2.6 });
+        : { speed: [reach * 2.2, reach * 5.5], life: [320, 560], scale: [.3, .7], colors: [hot, main, main, 0xffffff], gravity: 260, drag: 2.6, keep: lethal });
       return t => {
         const out = easeOut(Math.min(1, t / .55));
         flash.scale.set(size / 128 * (.4 + 1.1 * out)); flash.alpha = .95 * (1 - out);
@@ -207,7 +207,8 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
       const echo = new Sprite({ texture: s.ring, anchor: .5, x, y, tint: 0xffffff, blendMode: 'add' });
       const glow = new Sprite({ texture: s.glow, anchor: .5, x, y, tint, blendMode: 'add' });
       view.addChild(glow, wave, echo);
-      spray(sparks, s, x, y, layer.coarse ? 24 : 44, { speed: [reach * .35, reach * .8], life: [600, 1000], scale: [.4, .8], colors: [tint, 0xffffff], drag: 1.4 });
+      // A onda do ultimate é um momento grande: as faíscas dela não são cortadas pelo regulador.
+      spray(sparks, s, x, y, layer.coarse ? 24 : 44, { speed: [reach * .35, reach * .8], life: [600, 1000], scale: [.4, .8], colors: [tint, 0xffffff], drag: 1.4, keep: true });
       return t => {
         const k = easeOut(t);
         wave.scale.set(reach / 256 * (.05 + 1.05 * k)); wave.alpha = .95 * (1 - t);

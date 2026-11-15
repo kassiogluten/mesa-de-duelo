@@ -131,7 +131,8 @@ export function createAmbience(host: HTMLElement, opts: { coarse: boolean; onLos
   const shown = { fx: .5, fy: .72, r: .85, g: .72, b: .45, danger: 0, combat: 0 };
   // Os toques somem sozinhos: o clarão em cerca de meio segundo, o tremor mais rápido; o escuro fica `ms` e volta.
   const touch = { flash: [0, 0, 0] as [number, number, number], flashAmount: 0, flashRise: 1, quake: 0, dim: 0, dimTarget: 0, dimUntil: 0 };
-  let frames = 0, raf = 0, last = 0, clock = 0, drift = 0, destroyed = false;
+  // paused: o regulador parou a mesa viva (degrau 2); o canvas fica com o último quadro desenhado.
+  let frames = 0, raf = 0, last = 0, clock = 0, drift = 0, destroyed = false, paused = false;
 
   function resize() {
     const width = Math.max(1, Math.round(innerWidth * scale)), height = Math.max(1, Math.round(innerHeight * scale));
@@ -172,7 +173,7 @@ export function createAmbience(host: HTMLElement, opts: { coarse: boolean; onLos
     gl!.drawArrays(gl!.TRIANGLES, 0, 3);
     frames++;
   }
-  function start() { if (!destroyed && !raf && !document.hidden) { last = 0; raf = requestAnimationFrame(frame); } }
+  function start() { if (!destroyed && !paused && !raf && !document.hidden) { last = 0; raf = requestAnimationFrame(frame); } }
   function stop() { cancelAnimationFrame(raf); raf = 0; }
   const visibility = () => { if (document.hidden) stop(); else start(); };
   document.addEventListener('visibilitychange', visibility);
@@ -193,8 +194,11 @@ export function createAmbience(host: HTMLElement, opts: { coarse: boolean; onLos
     canvas,
     /** A cena nova: a luz, a cor e a vinheta deslizam até ela. */
     set(scene: AmbienceScene) { Object.assign(target, scene); },
+    /** O regulador para (degrau 2) ou solta a mesa viva; parada, ela guarda o último quadro e ignora os toques. */
+    pause(on: boolean) { paused = on; if (on) stop(); else start(); },
     /** Um toque do jogo: clarão, tremor ou escurecer (somam com o que já está acontecendo). */
     pulse(p: AmbiencePulse) {
+      if (paused) return;
       if (p.flash) { touch.flash = p.flash; touch.flashAmount = 1; touch.flashRise = 0; }
       if (p.quake) touch.quake = Math.min(1, touch.quake + p.quake);
       if (p.dim) { touch.dimTarget = Math.max(p.dim.amount, clock < touch.dimUntil ? touch.dimTarget : 0); touch.dimUntil = Math.max(touch.dimUntil, clock + p.dim.ms / 1000); }

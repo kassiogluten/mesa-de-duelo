@@ -1,31 +1,31 @@
-// Decide se os efeitos da mesa saem na camada GPU ou em CSS (opção "Efeitos: completos / leves", reduzir movimento, WebGL2, contexto perdido), sem carregar o PixiJS.
+// Decide se os efeitos da mesa saem na camada GPU ou em CSS (opção "Efeitos: automático / completos / leves", degrau do regulador, reduzir movimento, WebGL2, contexto perdido), sem carregar o PixiJS.
 import { KEYS } from '../../storage';
 
-/** "Efeitos" nas Opções: completos (camada GPU, quando o aparelho aguenta) ou leves (os efeitos em CSS). */
-type EffectsLevel = 'full' | 'light';
-/** O que fica gravado: 'auto-light' é leves escolhido pela mesa (sem WebGL2 ou com os quadros caindo), não pelo jogador. */
-type StoredLevel = EffectsLevel | 'auto-light';
+/** "Efeitos" nas Opções: automático (o regulador desce e sobe os degraus sozinho), completos ou leves (os efeitos em CSS), fixos. */
+type EffectsLevel = 'auto' | 'full' | 'light';
 
-function stored(): StoredLevel | null {
+/** O que está gravado; 'auto-light' (de antes do regulador, a mesa tinha trocado sozinha para leves) vale como automático. */
+function stored(): EffectsLevel | null {
   try {
     const value = localStorage.getItem(KEYS.effects);
-    return value === 'full' || value === 'light' || value === 'auto-light' ? value : null;
+    return value === 'auto' || value === 'full' || value === 'light' ? value : value === 'auto-light' ? 'auto' : null;
   } catch { return null; }
 }
-/** A escolha de "Efeitos" (sem nada gravado, completos). */
-export function effectsLevel(): EffectsLevel { return stored() === null || stored() === 'full' ? 'full' : 'light'; }
+/** A escolha de "Efeitos" (sem nada gravado, automático). */
+export function effectsLevel(): EffectsLevel { return stored() ?? 'auto'; }
 export function setEffectsLevel(level: EffectsLevel) {
   try { localStorage.setItem(KEYS.effects, level); } catch { /* Storage is optional. */ }
 }
+
 /**
- * A mesa troca sozinha para leves só enquanto o jogador não escolheu nada: quem pôs "completos" à mão fica com eles.
- * Devolve se trocou (para o aviso aparecer uma vez só).
+ * Degrau do regulador (só no automático): 0 tudo; 1 faíscas pela metade; 2 também a mesa viva parada e sem câmera;
+ * 3 os efeitos em CSS. Fica aqui, fora do pacote do PixiJS, porque a mesa e a camada GPU leem os dois.
  */
-export function autoLight(): boolean {
-  if (stored() !== null) return false;
-  try { localStorage.setItem(KEYS.effects, 'auto-light'); } catch { return false; }
-  return true;
-}
+export type EffectsTier = 0 | 1 | 2 | 3;
+let tier: EffectsTier = 0;
+/** O degrau de agora; fora do automático, sempre 0 (quem rege, gpuPort.ts, volta para 0 ao sair dele). Barato: as faíscas leem a cada uma. */
+export const effectsTier = (): EffectsTier => tier;
+export function setEffectsTier(next: EffectsTier) { tier = next; }
 
 /** `?gpu=0` força os efeitos em CSS e `?gpu=1` tenta a GPU mesmo com leves (páginas de teste e medição). */
 export function forcedGpu(search = globalThis.location?.search ?? ''): boolean | undefined {
@@ -47,6 +47,8 @@ export function hasWebGL2(): boolean {
 
 interface GpuConditions {
   level: EffectsLevel;
+  /** Degrau do regulador: no 3, os efeitos vão para o CSS. */
+  tier?: EffectsTier;
   forced?: boolean;
   reduced: boolean;
   webgl2: boolean;
@@ -54,34 +56,14 @@ interface GpuConditions {
   lost: boolean;
 }
 /** Onde os efeitos saem: 'gpu' (vale carregar a camada) ou 'css', e por quê. Reduzir movimento vale antes de tudo. */
-export function gpuDecision(c: GpuConditions): { use: 'gpu' | 'css'; reason: 'reduced' | 'forced-off' | 'light' | 'no-webgl2' | 'lost' | 'ok' } {
+export function gpuDecision(c: GpuConditions): { use: 'gpu' | 'css'; reason: 'reduced' | 'forced-off' | 'light' | 'governed' | 'no-webgl2' | 'lost' | 'ok' } {
   if (c.reduced) return { use: 'css', reason: 'reduced' };
   if (c.forced === false) return { use: 'css', reason: 'forced-off' };
   if (c.level === 'light' && c.forced !== true) return { use: 'css', reason: 'light' };
+  if (c.level === 'auto' && c.tier === 3 && c.forced !== true) return { use: 'css', reason: 'governed' };
   if (!c.webgl2) return { use: 'css', reason: 'no-webgl2' };
   if (c.lost) return { use: 'css', reason: 'lost' };
   return { use: 'gpu', reason: 'ok' };
-}
-
-/**
- * Efeito lento: menos de 25 quadros por segundo em média durante a vida dele. Três lentos entre os oito primeiros
- * efeitos de uma partida trocam para leves (os números de base estão em docs/spec-mesa-webgl.md, "Medições").
- */
-export const SLOW_FRAME_MS = 40;
-const SLOW_EFFECTS = 3, WATCHED_EFFECTS = 8;
-/** Conta os primeiros efeitos e diz quando os quadros caíram demais. */
-export function createFrameWatch() {
-  let seen = 0, slow = 0;
-  return {
-    /** Um efeito terminou, com a média de tempo entre quadros dele. Devolve true quando é hora de trocar para leves. */
-    effect(averageFrameMs: number, frames: number): boolean {
-      if (seen >= WATCHED_EFFECTS || frames < 3) return false;
-      seen++;
-      if (averageFrameMs > SLOW_FRAME_MS) slow++;
-      return slow >= SLOW_EFFECTS;
-    },
-    reset() { seen = 0; slow = 0; },
-  };
 }
 
 /** Câmera lenta das páginas de teste (`?lento`): a camada GPU anda junto com os temporizadores e as animações. */

@@ -61,8 +61,8 @@ export interface Motion {
  * fica no seu módulo (dano, habilidades, montes, grimório, campo, centro da mesa, voos de carta); aqui ficam a foto da
  * mesa antes de cada desenho, o passo de cada carta que mudou de lugar e a escolha de quem apresenta cada evento.
  */
-export function createMotion(root: HTMLElement, opts: { notice?(text: string): void } = {}): Motion {
-  const kit = createMotionKit(root, opts);
+export function createMotion(root: HTMLElement): Motion {
+  const kit = createMotionKit(root);
   const { state, animate } = kit;
   const damage = createDamageMotion(kit);
   const abilities = createAbilityMotion(kit);

@@ -1,6 +1,7 @@
 // As peças comuns dos efeitos da camada GPU: partículas com física simples, efeitos com duração, borrifo de faíscas e as cores do tema.
 import { Color, Container, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
+import { effectsTier } from './gpuSupport';
 
 /** As texturas da mesa (criadas uma vez em `prepare`) e o teto de partículas do aparelho. */
 export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: Texture; cardGlow: Texture; star: Texture; max: number }
@@ -8,6 +9,11 @@ export interface Shared { spark: Texture; glow: Texture; ring: Texture; shard: T
 // Teto de faíscas vivas na camada (no celular, metade): um combate grande não vira uma nuvem que derruba os quadros.
 export const MAX_PARTICLES = 400;
 let liveParticles = 0;
+/**
+ * Chance de uma faísca nascer: quanto mais vivas, menos nascem, e o teto se divide entre os efeitos do momento (antes,
+ * os primeiros de um combate grande levavam tudo e os últimos saíam sem nenhuma); no degrau 1 do regulador, metade.
+ */
+export const sparkChance = (live: number, max: number, tier: number) => (tier >= 1 ? .5 : 1) * (1 - (live / max) ** 2);
 
 export const rand = (a: number, b: number) => a + Math.random() * (b - a);
 export const easeOut = (t: number) => 1 - (1 - t) ** 3;
@@ -56,6 +62,8 @@ interface Particle {
 }
 type ParticleSpec = Omit<Particle, 'sprite' | 'age' | 'stretch' | 'alpha' | 'fadeIn'> & {
   x: number; y: number; tint: number; blend?: 'add' | 'normal'; stretch?: number; alpha?: number; fadeIn?: boolean;
+  /** Nasce sempre (até o teto): o que não pode perder força, como o golpe letal. */
+  keep?: boolean;
 };
 type Particles = ReturnType<typeof particles>;
 
@@ -66,6 +74,7 @@ function particles(view: Container) {
     list,
     add(texture: Texture, s: Shared, p: ParticleSpec) {
       if (liveParticles >= s.max) return;
+      if (!p.keep && Math.random() >= sparkChance(liveParticles, s.max, effectsTier())) return;
       const stretch = p.stretch ?? 1;
       const sprite = new Sprite({ texture, anchor: .5, x: p.x, y: p.y, tint: p.tint, blendMode: p.blend ?? 'add' });
       sprite.scale.set(p.scale, p.scale * stretch);
@@ -127,9 +136,9 @@ export function timed(life: number, build: (view: Container, sparks: Particles) 
 }
 
 /** Faíscas saindo de um ponto em todas as direções. */
-export function spray(sparks: Particles, s: Shared, x: number, y: number, n: number, o: { speed: [number, number]; life: [number, number]; scale: [number, number]; colors: number[]; gravity?: number; drag?: number }) {
+export function spray(sparks: Particles, s: Shared, x: number, y: number, n: number, o: { speed: [number, number]; life: [number, number]; scale: [number, number]; colors: number[]; gravity?: number; drag?: number; keep?: boolean }) {
   for (let i = 0; i < n; i++) {
     const angle = rand(0, Math.PI * 2), speed = rand(...o.speed);
-    sparks.add(s.spark, s, { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: rand(...o.life), spin: 0, grow: -.6, scale: rand(...o.scale), gravity: o.gravity ?? 0, drag: o.drag ?? 2.2, tint: o.colors[i % o.colors.length] ?? 0xffffff });
+    sparks.add(s.spark, s, { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: rand(...o.life), spin: 0, grow: -.6, scale: rand(...o.scale), gravity: o.gravity ?? 0, drag: o.drag ?? 2.2, tint: o.colors[i % o.colors.length] ?? 0xffffff, keep: o.keep });
   }
 }

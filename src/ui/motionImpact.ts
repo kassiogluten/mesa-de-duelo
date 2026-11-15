@@ -4,6 +4,7 @@ import type { PresentationEvent } from './presentationTimeline';
 import { damageLook } from './damageEffects';
 import { center, type MotionKit, type Point } from './motionKit';
 import { bigSpell, legendaryEntry } from './impactRules';
+import { effectsTier } from './gpu/gpuSupport';
 
 /** O que faz da jogada um momento grande, ou nada. */
 export function impactOf(event: PresentationEvent): 'big-spell' | 'ultimate' | 'lethal' | 'legend' | null {
@@ -66,7 +67,8 @@ export function createImpactMotion(kit: MotionKit) {
     // Reduzido em 14/11/2026: a mesa escurece de leve em volta e a câmera quase não se mexe.
     gpu.ambiencePulse({ dim: { amount: .4, ms: length * .7 } });
     gpu.play('spotlight', { at, radius: Math.max(at.w, at.h) * 1.1 + 40, duration: length, delay, strength: .22 });
-    push(at, length, delay);
+    // No degrau 2 do regulador a câmera fica parada: mexer na mesa inteira é o que mais pesa.
+    if (effectsTier() < 2) push(at, length, delay);
   }
   return { observe };
 }

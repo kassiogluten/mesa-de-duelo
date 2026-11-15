@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.177.0] - 2026-11-15
+
+### Novo
+
+- **Contador de FPS e ping.** Em Opções › Aparência, **Mostrar FPS e ping** põe um selo pequeno no canto de cima à direita da mesa, com quantos quadros por segundo a mesa desenha e quanto a conexão com o servidor demora para responder (medido a cada 3 segundos). Cada número fica verde quando está bom, âmbar quando está razoável e vermelho quando está ruim, para saber na hora se a mesa ou a conexão está pesando. Vem desligado e fica guardado no aparelho.
+- **Efeitos automáticos.** Em Opções › Aparência, **Efeitos** ganha **Automático**, que passa a ser o padrão. A mesa começa com os efeitos completos e, quando fica lenta (mais de 3 segundos abaixo de 30 quadros por segundo), alivia um degrau de cada vez: primeiro metade das faíscas, depois a mesa viva parada e a câmera sem aproximar, por fim os efeitos leves. Quando ela se firma (6 segundos acima de 50 quadros por segundo com efeitos na tela), os efeitos voltam, também um degrau por vez; se voltar e engasgar de novo, a mesa espera mais antes de tentar outra vez. Com mais de 40 permanentes na mesa, as faíscas já começam pela metade. O golpe letal e o ultimate nunca perdem faíscas, e num combate grande as faíscas se dividem entre todos os golpes, em vez de os primeiros levarem tudo. Nada interrompe o jogo: com **Mostrar FPS e ping** ligado, o selo mostra o degrau de agora (E0 a E3). Quem escolheu Completos ou Leves continua com eles, sem mudança.
+
+### Mudou
+
+- **A mesa não troca mais para efeitos leves de vez.** Antes, se os primeiros efeitos da partida fossem lentos, a mesa passava para os leves até o jogador mudar à mão, com um aviso. Agora quem estava nesses leves automáticos volta para o Automático, que alivia e devolve os efeitos sozinho, em silêncio.
+
 ## [0.176.0] - 2026-11-14
 
 ### Novo

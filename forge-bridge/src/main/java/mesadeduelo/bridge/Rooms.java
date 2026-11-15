@@ -27,6 +27,7 @@ import io.netty.channel.Channel;
  * é opcional, e {type:"room-deck", deck} escolhe ou troca o deck dentro da sala até a partida começar; host, join e room-deck aceitam cover, a carta
  * cuja arte representa o deck no lobby, e bracket (1 a 5), a faixa de poder que o jogador deu ao deck de Commander
  * (start também, com o de cada deck escolhido para o computador dentro do próprio deck); {type:"room-say", key} manda uma mensagem pronta aos outros da sala;
+ * {type:"ping"} responde {type:"pong"} na hora (o ping que a mesa mostra);
  * {type:"list-rooms"} lista as salas públicas abertas e as em andamento;
  * {type:"watch", code, name} assiste à partida já começada de uma sala, sem ocupar assento (pública ou privada, com o código);
  * {type:"watch-player", player} troca o jogador de cuja mesa o espectador vê a partida;
@@ -209,6 +210,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 case "list-rooms" -> {
                     JsonObject response = new JsonObject(); response.addProperty("type", "room-list");
                     response.addProperty("requestId", requestId); response.add("rooms", publicRooms());
+                    BridgeServer.send(ch, response.toString());
+                }
+                case "ping" -> {
+                    JsonObject response = new JsonObject(); response.addProperty("type", "pong");
+                    response.addProperty("requestId", requestId);
                     BridgeServer.send(ch, response.toString());
                 }
                 case "hello" -> onConnect(ch);

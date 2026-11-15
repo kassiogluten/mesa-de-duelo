@@ -704,6 +704,8 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'validate-deck'; requestId: string; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; requestId: string; code: string }
   | { type: 'list-rooms'; requestId: string }
+  /** Mede o ping: o servidor responde 'pong' na hora, sem mexer em nada. */
+  | { type: 'ping'; requestId: string }
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number } | { type: 'sideboard-cancel'; id: number }
@@ -750,6 +752,7 @@ O que cada pedido (com requestId) devolve quando dá certo.
 | `'room-deck'` | `void` |  |
 | `'lookup-room'` | `RoomInfo` |  |
 | `'list-rooms'` | `PublicRoom[]` |  |
+| `'ping'` | `void` |  |
 | `'fetch-deck'` | `string` |  |
 | `'similar-cards'` | `SimilarCard[]` |  |
 
@@ -760,6 +763,7 @@ O que cada pedido (com requestId) devolve quando dá certo.
   | { type: 'validate-deck'; format: DeckFormat; deck: unknown }
   | { type: 'lookup-room'; code: string }
   | { type: 'list-rooms' }
+  | { type: 'ping' }
   | { type: 'fetch-deck'; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; oracleId: string; candidates: string[]; limit?: number }
 ```
@@ -774,6 +778,7 @@ Respostas a um pedido; `requestId` diz a qual.
   | { type: 'room-info'; room: RoomInfo }
   | { type: 'room-list'; rooms?: PublicRoom[] }
   | { type: 'room-deck' }
+  | { type: 'pong' }
   | { type: 'deck-source'; body: string }
   | { type: 'similar-cards'; cards?: SimilarCard[] }
   | { type: 'validation-error'; validation: DeckValidation; target?: string }

@@ -90,8 +90,8 @@ function table() {
   }
   // A camada GPU para os testes e a medição: ?gpu=1 tenta desenhar nela mesmo com efeitos leves, ?gpu=0 fica no CSS.
   // `gpu.load()` carrega na hora (sem esperar a mesa ociosa), `gpu.stats()` conta os quadros desenhados e os efeitos vivos,
-  // `gpu.play(nome, parâmetros)` desenha um efeito e `gpu.timeScale(0)` congela a camada (para o print pegar o efeito no meio).
-  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ambienceStats: () => latestGpuPort()?.ambienceStats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, timeScale: (n: number) => { gpuClock.timeScale = n; } };
+  // `gpu.play(nome, parâmetros)` desenha um efeito, `gpu.setTier(n)` põe a mesa num degrau do regulador e `gpu.timeScale(0)` congela a camada (para o print pegar o efeito no meio).
+  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ambienceStats: () => latestGpuPort()?.ambienceStats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, setTier: (n: any) => latestGpuPort()?.setTier(n), timeScale: (n: number) => { gpuClock.timeScale = n; } };
   let reduce = false;
   const media = window.matchMedia.bind(window);
   // "Reduzir movimento" só nesta página: a mesa pergunta ao navegador a cada efeito.

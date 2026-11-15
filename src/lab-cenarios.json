@@ -1,5 +1,246 @@
 [
   {
+    "nome": "Mesa cheia para medir FPS",
+    "versao": "0.177.0",
+
+    "item": "Contador de FPS e ping",
+    "conferir": "Em Opções › Aparência, ligue Mostrar FPS e ping e deixe Efeitos em Completos. Cada lado começa com cerca de 15 criaturas e muitos terrenos. Com a mesa parada, anote o FPS do selo. Depois, um passo de cada vez, anote o FPS mais baixo que aparece: conjure Secure the Wastes com X alto (muitas fichas entrando juntas) e Raise the Alarm; conjure Overrun e ataque com tudo (combate grande, o Jogador 2 bloqueia); conjure Craterhoof Behemoth (mágica de valor 8: a mesa escurece e a câmera aproxima, e cada criatura ganha bônus); no turno seguinte, Earthquake com X baixo e Pyroclasm (dano em muitas criaturas ao mesmo tempo) e Wrath of God (todas morrem juntas). Repita com Efeitos em Leves para comparar. Os 20 terrenos e os Llanowar Elves pagam vários passos por turno, e o grimório tem mais terrenos.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Secure the Wastes",
+            "Overrun",
+            "Craterhoof Behemoth",
+            "Earthquake",
+            "Wrath of God",
+            "Pyroclasm",
+            "Raise the Alarm",
+            "Lightning Bolt"
+          ],
+          "library": [
+            "Forest",
+            "Plains",
+            "Mountain",
+            "Forest",
+            "Plains",
+            "Mountain",
+            "Forest",
+            "Plains",
+            "Mountain",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Glorious Anthem"
+            },
+            {
+              "name": "Llanowar Elves"
+            },
+            {
+              "name": "Llanowar Elves"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Savannah Lions"
+            },
+            {
+              "name": "Savannah Lions"
+            },
+            {
+              "name": "Serra Angel"
+            },
+            {
+              "name": "Serra Angel"
+            },
+            {
+              "name": "Shivan Dragon"
+            },
+            {
+              "name": "Craw Wurm"
+            },
+            {
+              "name": "Hill Giant"
+            },
+            {
+              "name": "Air Elemental"
+            },
+            {
+              "name": "Giant Spider"
+            }
+          ]
+        },
+        {
+          "life": 40,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Wind Drake"
+            },
+            {
+              "name": "Wind Drake"
+            },
+            {
+              "name": "Hill Giant"
+            },
+            {
+              "name": "Hill Giant"
+            },
+            {
+              "name": "Gray Ogre"
+            },
+            {
+              "name": "Gray Ogre"
+            },
+            {
+              "name": "Giant Spider"
+            },
+            {
+              "name": "Giant Spider"
+            },
+            {
+              "name": "Serra Angel"
+            },
+            {
+              "name": "Craw Wurm"
+            },
+            {
+              "name": "Elvish Mystic"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Shared Fate: a carta exilada do grimório do oponente",
     "conferir": "O Jogador 1 tem Shared Fate e duas Mountains, e começa na etapa de compra: em vez de comprar, ele exila virada para baixo a carta do topo do grimório do Jogador 2, uma Lightning Bolt, que aparece embaixo do Shared Fate. O Jogador 1 a vê apagada, com o olho no canto; na aba do Jogador 2, ela é só uma carta virada para baixo, e nem o registro da partida diz qual é. Clique na Bolt embaixo do Shared Fate: o Jogador 1 a conjura com uma Mountain e, na pilha, ela fica visível para os dois. Passe o turno: na compra do Jogador 2, ele exila o Grizzly Bears do topo do grimório do Jogador 1, que agora é quem vê só uma carta virada para baixo; o Jogador 2 pode conjurá-lo com as Forests. A carta não aparece na faixa de exílio jogável perto da mão: joga-se pela carta embaixo do encantamento.",
     "cenario": {

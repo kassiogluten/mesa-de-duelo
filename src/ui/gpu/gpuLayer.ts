@@ -19,14 +19,13 @@ export type GpuLayer = Awaited<ReturnType<typeof createGpuLayer>>;
 
 /**
  * Cria o canvas dentro de `host` (a `.arena`) e o PixiJS em WebGL2, parado: o laço só roda enquanto há efeito vivo.
- * `onLost` avisa que o contexto caiu (a camada já se desfez). `onEffectDone` recebe a média de tempo entre quadros
- * de cada efeito que terminou, para a troca automática para leves.
+ * `onLost` avisa que o contexto caiu (a camada já se desfez).
  */
 // Teto de densidade: 2 no computador e 1,5 no celular (partículas não pedem mais que isso, e a GPU agradece).
 let coarseDevice = false;
 const density = () => Math.min(globalThis.devicePixelRatio || 1, coarseDevice ? 1.5 : 2);
 
-export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean; onLost(): void; onEffectDone(averageFrameMs: number, frames: number): void }) {
+export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean; onLost(): void }) {
   coarseDevice = opts.coarse;
   const canvas = document.createElement('canvas');
   canvas.className = 'gpu-layer';
@@ -40,19 +39,16 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
   app.ticker.stop();
   host.append(canvas);
 
-  const live = new Map<GpuEffect, { frames: number; elapsed: number }>();
+  const live = new Set<GpuEffect>();
   // O que precisa ser desfeito junto com a camada (as texturas das cartas).
   const cleanups: (() => void)[] = [];
   let frames = 0, destroyed = false, stopAfterRender = false;
   function tick() {
-    const real = app.ticker.elapsedMS, ms = real * gpuClock.timeScale;
-    for (const [effect, info] of live) {
-      info.frames++; info.elapsed += real;
+    const ms = app.ticker.elapsedMS * gpuClock.timeScale;
+    for (const effect of live) {
       if (effect.update(ms)) continue;
       live.delete(effect);
       effect.view.destroy({ children: true });
-      // O primeiro quadro de um efeito sobe as texturas: fica fora da média.
-      if (info.frames > 1) opts.onEffectDone(info.elapsed / info.frames, info.frames);
     }
     stopAfterRender = !live.size;
   }
@@ -70,7 +66,7 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
   function add(effect: GpuEffect) {
     if (destroyed) return;
     app.stage.addChild(effect.view);
-    live.set(effect, { frames: 0, elapsed: 0 });
+    live.add(effect);
     stopAfterRender = false;
     if (!app.ticker.started) app.ticker.start();
   }

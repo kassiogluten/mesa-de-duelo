@@ -64,9 +64,9 @@ export type MotionKit = ReturnType<typeof createMotionKit>;
 /**
  * A camada de efeitos de uma mesa: tudo o que cria (peças, animações, timers) é desfeito por `clear`. Os efeitos que
  * a camada GPU sabe desenhar passam por `gpu.play` primeiro; sem ela (efeitos leves, reduzir movimento, sem WebGL2),
- * saem as peças de CSS de sempre. `notice` mostra o aviso da troca automática para efeitos leves.
+ * saem as peças de CSS de sempre.
  */
-export function createMotionKit(root: HTMLElement, opts: { notice?(text: string): void } = {}) {
+export function createMotionKit(root: HTMLElement) {
   const state: MotionState = { cards: new Map(), handSpots: new Map(), landedAt: new Map(), primed: false };
   const stackPile = () => root.querySelector<HTMLElement>('#fStack:not([hidden]) .stack-pile');
   const effects = new Set<HTMLElement>();
@@ -81,7 +81,8 @@ export function createMotionKit(root: HTMLElement, opts: { notice?(text: string)
     timers.add(timer);
   };
   const stage = () => stagePoint(layer().getBoundingClientRect());
-  const gpu = createGpuPort(root, { host: layer, reduced, notice: opts.notice });
+  // Animando em CSS: peças de efeito na tela ou animações em andamento (as infinitas da mesa não passam por aqui).
+  const gpu = createGpuPort(root, { host: layer, reduced, busy: () => effects.size > 0 || animations.size > 0 });
   /** `easing: 'linear'` deixa cada quadro com o seu próprio ritmo (golpe e projétil precisam chegar na hora do impacto). */
   function animate(el: HTMLElement, frames: Keyframe[], duration: number, easing = EASE, delay = 0) {
     if (reduced()) return;

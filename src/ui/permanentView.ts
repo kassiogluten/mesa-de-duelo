@@ -6,7 +6,7 @@ import { esc, manaHTML } from './cardtext';
 import type { CardStyle } from './face';
 import { faceDownReminder } from './faceDownReminder';
 import { auraColor, dizzy, permanentFx, permanentFxHTML, permanentFxText, sickGhosts } from './permanentEffects';
-import { effectsLevel } from './gpu/gpuSupport';
+import { effectsLevel, effectsTier } from './gpu/gpuSupport';
 import { mergedText } from './cardInspector';
 import { canPlayExileCard, legalBlockTargets, selectedForInput, validBlockSelection, type BlockSelection, type exileShelfCards } from './playContext';
 import { proliferateBoardClass } from './proliferate';
@@ -185,7 +185,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   if (exiled.length) slot.push('has-exu');
   const style = attached.length || exiled.length ? ` style="${attached.length ? `--atts:${attached.length};` : ''}${exiled.length ? `--exus:${Math.min(exiled.length, 3)}` : ''}"` : '';
   if (attached.length) slot.push('has-att');
-  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}${flying ? FLY_WIND : ''}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${fx.sick && effectsLevel() === 'full' ? sickGhosts(v.face(c, 'small', true)) : v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
+  return `<div class="${slot.join(' ')}"${style}>${exu}${atts}${flying ? FLY_WIND : ''}<div class="${inner.join(' ')}" data-fid="${c.id}" role="button" tabindex="0"${selectionCandidate ? ` aria-pressed="${selected}"` : blockCandidate ? ` aria-pressed="${blockSelected}"` : ''} aria-label="${esc(aria)}">${fxView.html}${fx.sick && effectsLevel() !== 'light' && effectsTier() < 3 ? sickGhosts(v.face(c, 'small', true)) : v.face(c, 'small', true)}${badges}${tag}${kwHTML}${pt}${counters}${sumHTML}${selectedBadge(s, c)}</div>${attsN}${exuN}</div>`;
 }
 /**
  * Cartas de uma fileira, sem as auras/equipamentos (que vão desenhados junto da carta a que estão presos). As criaturas

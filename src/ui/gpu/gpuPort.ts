@@ -1,10 +1,10 @@
-// A porta da mesa para a camada GPU: carrega o PixiJS e a mesa viva com a mesa ociosa, pede cada efeito e, sem a camada, deixa quem pediu usar o CSS.
+// A porta da mesa para a camada GPU: carrega o PixiJS e a mesa viva com a mesa ociosa, pede cada efeito, rege o degrau dos efeitos no automático e, sem a camada, deixa quem pediu usar o CSS.
 import type { GpuLayer } from './gpuLayer';
 import type { Ambience, AmbiencePulse, AmbienceScene } from './tableAmbience';
 import type { GpuEffectName, GpuEffectParams } from './gpuEffects';
-import { autoLight, createFrameWatch, effectsLevel, forcedGpu, gpuDecision, hasWebGL2 } from './gpuSupport';
-
-export const AUTO_LIGHT_NOTICE = 'Os efeitos ficaram leves neste aparelho. Dá para mudar em Opções.';
+import { effectsLevel, effectsTier, forcedGpu, gpuDecision, hasWebGL2, setEffectsTier, type EffectsTier } from './gpuSupport';
+import { createGovernor } from './effectsGovernor';
+import { listenFrames, type FrameWindow } from '../frameClock';
 
 type Runtime = { layer: GpuLayer; effects: typeof import('./gpuEffects'); ambience: Ambience | null };
 
@@ -16,9 +16,9 @@ export const latestGpuPort = () => latest;
 
 /**
  * `root` é a mesa; `host()` é onde o canvas entra (a `.arena`). `reduced()` é o "reduzir movimento" lido na hora.
- * `notice` mostra o aviso da troca automática para leves.
+ * `busy()` diz se algum efeito em CSS está animando (o regulador só sobe um degrau depois de ver a mesa aguentar efeito).
  */
-export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduced(): boolean; notice?(text: string): void }) {
+export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduced(): boolean; busy?(): boolean }) {
   let runtime: Runtime | null = null;
   // A carga em andamento e o número dela (uma carga desfeita por `release` não segura a seguinte).
   let loading: { gen: number } | null = null;
@@ -27,17 +27,18 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   let generation = 0;
   // A cena mais recente da mesa viva: quem chega depois (a camada carregou agora) já começa nela.
   let scene: AmbienceScene | null = null;
-  const watch = createFrameWatch();
   const coarse = () => globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
-  const decision = () => gpuDecision({ level: effectsLevel(), forced: forcedGpu(), reduced: o.reduced(), webgl2: hasWebGL2(), lost: contextLost });
+  const decision = () => gpuDecision({ level: effectsLevel(), tier: effectsTier(), forced: forcedGpu(), reduced: o.reduced(), webgl2: hasWebGL2(), lost: contextLost });
+  // O regulador do automático: escuta os quadros só enquanto rege (mesa à vista, automático, com WebGL2).
+  const governor = createGovernor();
+  let unlisten: (() => void) | null = null;
 
   async function load(gen: number) {
     const [layerModule, effects, ambienceModule] = await Promise.all([import('./gpuLayer'), import('./gpuEffects'), import('./tableAmbience')]);
     if (gen !== generation) return;
     const layer = await layerModule.createGpuLayer(o.host(), {
       coarse: coarse(),
-      onLost() { contextLost = true; runtime?.ambience?.destroy(); runtime = null; },
-      onEffectDone(average, frames) { if (watch.effect(average, frames) && forcedGpu() === undefined && autoLight()) switchToLightNow(); },
+      onLost() { contextLost = true; runtime?.ambience?.destroy(); runtime = null; govern(); },
     });
     if (gen !== generation) { layer.destroy(); return; }
     effects.prepare(layer);
@@ -45,6 +46,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     const backdrop = o.host().querySelector<HTMLElement>(':scope > .mat');
     const ambience = backdrop ? ambienceModule.createAmbience(backdrop, { coarse: coarse(), onLost() { if (runtime) runtime.ambience = null; } }) : null;
     if (ambience && scene) ambience.set(scene);
+    if (ambience && effectsTier() >= 2) ambience.pause(true);
     runtime = { layer, effects, ambience };
     preloadTable();
     // As imagens do Scryfall chegam depois do desenho (e a mesa redesenha sozinha): de tempos em tempos, com o navegador
@@ -58,16 +60,32 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     const { layer, effects } = runtime;
     root.querySelectorAll<HTMLElement>('#fHand .face[data-full], #fStack .face[data-full], .field .face[data-full], .piles .face[data-full], #fCommand .face[data-full]').forEach(el => effects.preload(layer, el.dataset.full!));
   }
-  // A troca automática acontece no meio de um quadro da camada: desfaz no próximo giro, fora do laço dela.
-  function switchToLightNow() { setTimeout(() => { release(); o.notice?.(AUTO_LIGHT_NOTICE); }, 0); }
+  /** O regulador rege só no automático, com a mesa à vista e a GPU possível; fora disso, o degrau volta a 0. */
+  function govern() {
+    const on = effectsLevel() === 'auto' && forcedGpu() === undefined && !o.reduced() && hasWebGL2() && !contextLost && !root.hidden;
+    if (on && !unlisten) { governor.reset(performance.now()); unlisten = listenFrames(step); }
+    if (!on) { unlisten?.(); unlisten = null; setTier(0); }
+  }
+  /** A cada meio segundo: o pior quarto dos quadros, se algo animava e quantas permanentes há. */
+  function step(w: FrameWindow) {
+    const busy = (runtime?.layer.stats().live ?? 0) > 0 || !!o.busy?.();
+    setTier(governor.sample({ at: w.at, fps: w.lowFps, busy, permanents: root.querySelectorAll?.('.slot').length ?? 0 }));
+  }
+  /** Degrau novo: 1 corta faíscas (gpuParticles.ts lê na hora), 2 para a mesa viva e a câmera, 3 troca para o CSS. */
+  function setTier(next: EffectsTier) {
+    if (next === effectsTier()) return;
+    setEffectsTier(next);
+    runtime?.ambience?.pause(next >= 2);
+    if (decision().use === 'gpu') prepare(); else release();
+  }
 
   /**
    * A mesa abriu (ou a opção voltou para completos): carrega a camada quando o navegador estiver ocioso, nunca no meio
-   * de uma jogada. Sem WebGL2, a troca para leves acontece aqui, uma vez.
+   * de uma jogada.
    */
   function prepare() {
+    govern();
     const d = decision();
-    if (d.reason === 'no-webgl2' && effectsLevel() === 'full' && autoLight()) { o.notice?.(AUTO_LIGHT_NOTICE); return; }
     if (d.use !== 'gpu' || runtime || loading?.gen === generation || idle !== null || root.hidden) return;
     const gen = ++generation;
     const start = () => {
@@ -83,16 +101,15 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     generation++;
     if (idle !== null) { (globalThis.cancelIdleCallback ?? clearTimeout)(idle); idle = null; }
     runtime?.ambience?.destroy(); runtime?.layer.destroy(); runtime = null;
-    watch.reset();
   }
   // A mesa escondida (voltou à tela inicial, ao Laboratório) libera a camada; à mostra de novo (a partida abre depois
   // de a mesa ser preparada), carrega com a mesa ociosa.
-  if (typeof MutationObserver !== 'undefined') new MutationObserver(() => { if (root.hidden) release(); else prepare(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
+  if (typeof MutationObserver !== 'undefined') new MutationObserver(() => { if (root.hidden) { release(); govern(); } else prepare(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
 
   const port = {
     prepare, release,
     /** A opção "Efeitos" mudou. */
-    refresh() { if (decision().use === 'gpu') prepare(); else release(); },
+    refresh() { govern(); if (decision().use === 'gpu') prepare(); else release(); },
     /**
      * Desenha o efeito na camada GPU. Devolve false quando não desenhou (leves, reduzir movimento, camada ainda
      * carregando, contexto perdido): quem pediu faz o efeito em CSS.
@@ -114,6 +131,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     /** Para os testes e a medição: quadros desenhados e efeitos vivos (sem a camada, nada). */
     stats: () => runtime?.layer.stats() ?? null,
     ready: () => !!runtime,
+    /** Para os testes: põe a mesa num degrau do regulador, como se os quadros tivessem pedido. */
+    setTier,
     /** Para os testes: carrega agora, sem esperar a mesa ficar ociosa. */
     async loadNow() { release(); if (decision().use !== 'gpu') return false; const gen = ++generation; await load(gen).catch(() => {}); return !!runtime; },
   };

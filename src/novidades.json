@@ -1,4 +1,14 @@
 {
+  "0.177.0": {
+    "Contador de FPS e ping": [
+      { "img": "0.177.0/selo-fps-ping.webp", "legenda": "O selo no canto de cima à direita da mesa: quadros por segundo e ping, em verde quando estão bons." },
+      { "img": "0.177.0/opcao-fps-ping.webp", "legenda": "O interruptor Mostrar FPS e ping, em Opções › Aparência." }
+    ],
+    "Efeitos automáticos": [
+      { "img": "0.177.0/opcao-automatico.webp", "legenda": "A opção Efeitos em Automático, com a explicação de como a mesa alivia e devolve os efeitos." },
+      { "img": "0.177.0/selo-degrau.webp", "legenda": "Com Mostrar FPS e ping ligado, o selo mostra o degrau dos efeitos: E2 é a mesa viva parada e metade das faíscas." }
+    ]
+  },
   "0.176.0": {
     "Arrastar qualquer aviso que pede uma decisão": [
       { "img": "0.176.0/caixa-arrastada.webp", "legenda": "A caixa de ação sendo arrastada pela alça de pontinhos, no alto: enquanto se move, ela fica transparente e deixa ver as cartas que podem ser alvo." },
