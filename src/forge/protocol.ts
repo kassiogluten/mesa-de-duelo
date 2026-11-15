@@ -384,6 +384,8 @@ export interface FQuestion {
   firstAt?: 'bottom';
   /** replacement-order (qual efeito de substituição vem primeiro): dá para usar a mesma escolha no resto do efeito que está resolvendo (a resposta leva all). */
   applyToAll?: boolean;
+  /** order de gatilhos: dá para lembrar esta ordem até o fim da partida, sempre que estes mesmos gatilhos aparecerem juntos (a resposta leva remember). */
+  canRemember?: boolean;
   /** library (vidência e vigilância): o que sai do topo vai para o fundo ou o cemitério, ou "top", a ordem das que ficam. Cartas na ordem do grimório. */
   library?: 'bottom' | 'graveyard' | 'top';
   /** piles-split e piles-choose (dois montes): de quem são as cartas, se o dono escolhe o monte e para onde vai cada um ("hand", "graveyard"...), quando o efeito só move as cartas. */
@@ -504,6 +506,8 @@ export interface FState {
   lifeHistory?: { turn: number; life: Record<string, number> }[];
   /** Sem decisões a tomar: eliminado no Commander ou, com watching, assistindo sem jogar. */
   spectating?: boolean;
+  /** Gatilhos opcionais respondidos com "Sempre sim" ou "Sempre não" nesta partida: o texto do gatilho (a chave), a carta que perguntou e a resposta. */
+  autoTriggers?: { key: string; card?: string; accept: boolean }[];
   /** Assistindo à partida de uma sala sem ocupar assento; `you` é o jogador de cuja mesa se vê a partida. */
   watching?: boolean;
   winner?: string;
@@ -528,7 +532,7 @@ export interface FState {
   /** untappable: permanentes viradas para mana com a mana ainda na reserva; clicar ({type:"card"}) desvira e devolve a mana. */
   /** manaOnly: suas permanentes em que um clique agora só geraria mana. Ausente em pontes antigas. */
   /** targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. */
-  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; /** Outro jogador na abertura enquanto você espera: quem, se decide quem começa ou a mão, e se você já manteve a sua. */ openingWait?: { player: number; step: 'start' | 'hand'; kept?: boolean }; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number; /** O retrato paga um {B} com 2 de vida (K'rrik), não um símbolo phyrexiano. */ phyrexianLifeBlack?: boolean;
+  input: { gen: number; priority?: boolean; opening?: 'starting-player' | 'play-draw' | 'mulligan' | 'mulligan-bottom'; openingStartingPlayer?: number; /** Outro jogador na abertura enquanto você espera: quem, se decide quem começa ou a mão, e se você já manteve a sua. */ openingWait?: { player: number; step: 'start' | 'hand'; kept?: boolean }; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; /** O Sim/Não aberto é de um gatilho opcional ("você pode..."): dá para responder "Sempre sim" ou "Sempre não" (ok/cancel com always). */ triggerChoice?: boolean; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' | 'ability' | 'effect'; canAutoPay?: boolean; phyrexianLife?: number; /** O retrato paga um {B} com 2 de vida (K'rrik), não um símbolo phyrexiano. */ phyrexianLifeBlack?: boolean;
     /** Pagando: o custo que falta como o motor conta ("{1}{R}", "0" pago), descontado a cada mana gerada; total é o custo quando o pagamento abriu (só depois de pagar uma parte); life, a vida já separada para mana phyrexiana; x, o X escolhido. Ausente em pontes antigas. */
     manaCost?: { remaining: string; total?: string; life?: number; x?: number };
     /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */
@@ -625,13 +629,15 @@ export type ClientMessage =
   | { type: 'player'; id: number; gen?: number }
   | { type: 'select-set'; cards: number[]; players: number[]; gen: number }
   | { type: 'mana'; color: string; gen?: number }
-  | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number } | { type: 'concede' } | { type: 'hello' }
+  | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number; always?: boolean } | { type: 'concede' } | { type: 'hello' }
+  /** Volta a perguntar um gatilho guardado com "Sempre sim" ou "Sempre não" (a chave de autoTriggers). */
+  | { type: 'forget-trigger'; key: string }
   | { type: 'pass-turn-stop' }
   | { type: 'skip-vote'; target: number; value?: boolean }
   /** Aponta uma carta que todos veem (campo, pilha, cemitério, exílio, zona de comando) para os outros jogadores. */
   | { type: 'point'; card: number }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
-  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean }
+  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean; remember?: boolean }
   /** OK na janela das cartas reveladas do topo de um grimório (revealView). */
   | { type: 'reveal-seen'; seq: number };
 

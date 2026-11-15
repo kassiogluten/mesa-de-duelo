@@ -130,3 +130,27 @@ test('table shell: every fixed part is there, and the optional buttons follow th
   assert.match(full, /data-ui="feedback" aria-haspopup="dialog">/);
   assert.match(full, /id="fBuzz"/);
 });
+
+test('stack gallery: equal items in a row become one card with ×N, but an item you can target stays alone', () => {
+  const view = { face, label: c => c.name, ptText: () => undefined, playerName: () => 'você', you: 0, targetsText: () => '' };
+  const warden = id => ({ id, controller: 0, kind: 'trigger', text: 'Você ganha 1 de vida.', source: card(60 + id, 'Soul Warden') });
+  const pridemate = { id: 9, controller: 0, kind: 'trigger', text: 'Coloque um marcador +1/+1.', source: card(70, "Ajani's Pridemate") };
+  const s = state({}, { stack: [warden(1), warden(2), warden(3), pridemate, warden(4)] });
+  const gallery = stackGalleryHTML(view, s);
+  assert.equal((gallery.match(/class="stack-gallery-item/g) ?? []).length, 3);
+  assert.match(gallery, /<b>1–3<\/b><span>3 iguais<\/span>/);
+  assert.match(gallery, /stack-gallery-copies[^>]*>×3</);
+  assert.match(gallery, /<b>5<\/b><span>5º na resolução/);
+  // Um deles pode ser alvo: ele sai do grupo para ser escolhido.
+  const targeting = stackGalleryHTML(view, { ...s, input: { ...s.input, selectableStacks: [2] } });
+  assert.equal((targeting.match(/class="stack-gallery-item/g) ?? []).length, 5);
+});
+
+test('an optional trigger offers "always yes" and "always no" next to this time\'s yes and no', () => {
+  const view = { findCard: () => undefined, playerName: () => 'Ana', observing: false, disconnected: false, clickLocked: () => false,
+    passLevel: 'acoes', passLevelSupported: true, passingTurn: false, passPending: false, passMenuOpen: false, attackAll: false, attackSelecting: 0, attackBusy: false };
+  const ask = { ok: { enabled: true, label: 'Sim' }, cancel: { enabled: true, label: 'Não' } };
+  const html = buttons(view, state({ ...ask, triggerChoice: true }));
+  assert.match(html, /data-act="cancel"[^>]*>Não<[\s\S]*data-act="cancel" data-always[^>]*>Sempre não<[\s\S]*data-act="ok" data-always[^>]*>Sempre sim<[\s\S]*arena-btn primary" data-act="ok"[^>]*>Sim</);
+  assert.doesNotMatch(buttons(view, state(ask)), /data-always/);
+});

@@ -149,7 +149,7 @@ export function attachTableClicks(d: ClickDeps) {
     if (act === 'ok' || act === 'cancel' || act === 'pass-turn' || act === 'resolve-all') {
       const control = t.closest<HTMLElement>('[data-act]')!;
       if (!d.renderedInputIsCurrent(control)) return;
-      d.inputs.send(act, Number(control.dataset.gen));
+      d.inputs.send(act, Number(control.dataset.gen), control.hasAttribute('data-always'));
       return;
     }
     const prolifRow = t.closest<HTMLElement>('[data-prolif-kind]'), prolifTool = t.closest<HTMLElement>('[data-prolif]');

@@ -253,7 +253,11 @@ final class QuestionBroker {
             q.addProperty("max", remMin < 0 ? options.size() : options.size() - remMin);
         }
         JsonArray rows = optionsJson(options, null);
-        if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) q.addProperty("purpose", "triggers");
+        if ("order".equals(q.get("kind").getAsString()) && AbilityOptions.triggers(options, rows)) {
+            q.addProperty("purpose", "triggers");
+            // O Forge oferece lembrar a ordem destes mesmos gatilhos até o fim da partida.
+            if (a.length > 8 && Boolean.TRUE.equals(a[8])) q.addProperty("canRemember", true);
+        }
         else LibraryChoice.describe(q, String.valueOf(a[0]), options);
         if (!q.has("purpose")) Piles.split(q, String.valueOf(a[0]), options, hosted.getGame());
         q.add("options", rows);
@@ -360,7 +364,9 @@ final class QuestionBroker {
             case showInputDialog -> result = q.options().isEmpty() ? ClientActions.str(msg, "text", "") : pick(q, msg).stream().findFirst().orElse(null);
             case getAbilityToPlay, chooseSingleEntityForEffect -> result = pick(q, msg).stream().findFirst().orElse(null);
             case order -> {
-                result = new IGuiGame.OrderResult<>(pick(q, msg), false);
+                boolean remember = msg.has("remember") && msg.get("remember").isJsonPrimitive() && msg.get("remember").getAsBoolean()
+                    && q.json().has("canRemember");
+                result = new IGuiGame.OrderResult<>(pick(q, msg), remember);
                 if (msg.has("all") && msg.get("all").isJsonPrimitive() && msg.get("all").getAsBoolean()
                         && q.json().has("applyToAll") && q.json().get("applyToAll").getAsBoolean()
                         && seat.controller() instanceof AskingController controller) controller.applyReplacementToAll();

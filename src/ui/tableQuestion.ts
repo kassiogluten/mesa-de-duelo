@@ -95,7 +95,9 @@ export function createTableQuestion(d: QuestionDeps) {
     if (status) status.textContent = nameStatus(found, match.qState?.text ?? '');
   }
 
-  function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[]; all?: boolean }) {
+  /** "Lembrar esta ordem" marcado na tela de ordenar gatilhos: a resposta leva remember. */
+  const keepOrder = (q: FQuestion) => (isTriggerOrder(q) && q.canRemember && triggerOrder?.id === q.id && triggerOrder.t.keep ? { remember: true } : {});
+  function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[]; all?: boolean; remember?: boolean }) {
     const client = d.client();
     const q = client?.state?.question;
     if (!q || !client) return;
@@ -187,6 +189,7 @@ export function createTableQuestion(d: QuestionDeps) {
       }
     }
     if (t instanceof HTMLInputElement && t.id === 'fQApplyAll' && match.qState) { match.qState.all = t.checked; return true; }
+    if (t instanceof HTMLInputElement && t.id === 'fQRememberOrder' && state?.question && isTriggerOrder(state.question)) { triggersFor(state.question).keep = t.checked; return true; }
     const filter = t.closest<HTMLElement>('[data-q-filter]');
     const sortBy = t.closest<HTMLElement>('[data-q-sort]')?.dataset.qSort;
     const filtering = state?.question;
@@ -251,10 +254,10 @@ export function createTableQuestion(d: QuestionDeps) {
       return true;
     }
     if (t.closest('[data-trigger-undo]') && openQuestion && isTriggerOrder(openQuestion)) { if (undoTrigger(triggersFor(openQuestion))) d.render(); return true; }
-    if (t.closest('[data-trigger-confirm]') && openQuestion && isTriggerOrder(openQuestion)) { answer({ indices: [...triggersFor(openQuestion).order] }); return true; }
+    if (t.closest('[data-trigger-confirm]') && openQuestion && isTriggerOrder(openQuestion)) { answer({ indices: [...triggersFor(openQuestion).order], ...keepOrder(openQuestion) }); return true; }
     if (t.closest('[data-q-submit]') && match.qState) { answer({ indices: match.qState.picked }); return true; }
     if (t.closest('[data-q-none]')) { answer({ indices: [] }); return true; }
-    if (t.closest('[data-q-keep]')) { answer({ indices: (d.state()?.question?.options ?? []).map((_, i) => i) }); return true; }
+    if (t.closest('[data-q-keep]')) { answer({ indices: (d.state()?.question?.options ?? []).map((_, i) => i), ...(openQuestion ? keepOrder(openQuestion) : {}) }); return true; }
     const conf = t.closest<HTMLElement>('[data-q-confirm]');
     if (conf) { answer({ value: conf.dataset.qConfirm === 'true' }); return true; }
     return false;

@@ -260,6 +260,14 @@ final class SeatStateView {
                 if (blocking != null) input.add("blocking", blocking);
                 JsonObject suspendCast = InputContext.suspendCast(currentInput);
                 if (suspendCast != null) input.add("suspendCast", suspendCast);
+                // Gatilho opcional ("você pode..."): a mesa oferece também "Sempre sim" e "Sempre não".
+                if (currentInput instanceof InputConfirm && seat.controller() instanceof AskingController asking) {
+                    if (asking.confirmingTrigger()) input.addProperty("triggerChoice", true);
+                }
+                if (!spectating && seat.controller() instanceof AskingController asking) {
+                    JsonArray autoTriggers = asking.autoTriggers();
+                    if (!autoTriggers.isEmpty()) state.add("autoTriggers", autoTriggers);
+                }
                 JsonObject commanderMove = InputContext.commanderMove(currentInput);
                 if (commanderMove != null) input.add("commanderMove", commanderMove);
                 JsonObject selection = InputContext.selection(currentInput);

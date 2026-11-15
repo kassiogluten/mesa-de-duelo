@@ -58,10 +58,15 @@ final class ClientActions {
                 if ("ok".equals(type) && seat.controller() instanceof PlayerControllerHuman human
                     && human.getInputQueue().getInput() instanceof InputConfirmMulligan) seat.keptHand = true;
                 session.markDirty();
+                // "Sempre sim" e "Sempre não" de um gatilho opcional: guarda a resposta antes de responder esta vez.
+                boolean always = msg.has("always") && msg.get("always").isJsonPrimitive() && msg.get("always").getAsBoolean();
+                boolean accept = "ok".equals(type);
                 // O OK de um pagamento é o Automático: a parte genérica sai antes das pedras de mana (AutoPay).
-                seat.onEdt(genAtClick, "ok".equals(type)
-                    ? c -> { if (!(c instanceof PlayerControllerHuman human) || !AutoPay.ok(human)) c.selectButtonOk(); }
-                    : IGameController::selectButtonCancel);
+                seat.onEdt(genAtClick, c -> {
+                    if (always && seat.controller() instanceof AskingController asking) asking.rememberTrigger(accept);
+                    if (!accept) c.selectButtonCancel();
+                    else if (!(c instanceof PlayerControllerHuman human) || !AutoPay.ok(human)) c.selectButtonOk();
+                });
             }
             case "pass-turn" -> {
                 if (!seat.livePriority() || seat.buttonsLocked() || !seat.okEnabled || seat.question != null) { session.markDirty(); break; }
@@ -92,6 +97,15 @@ final class ClientActions {
                 FThreads.invokeInEdtLater(() -> {
                     WebGuiGame g = seat.gui;
                     if (g != null && seat.channel == source) g.stopPassingTurn();
+                    session.markDirty();
+                });
+            }
+            case "forget-trigger" -> {
+                // Opções da partida: volta a perguntar um gatilho guardado com "Sempre sim" ou "Sempre não".
+                String key = str(msg, "key", "");
+                if (key.isEmpty() || key.length() > 2000) break;
+                FThreads.invokeInEdtLater(() -> {
+                    if (seat.controller() instanceof AskingController asking) asking.forgetTrigger(key);
                     session.markDirty();
                 });
             }

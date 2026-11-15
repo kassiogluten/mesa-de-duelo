@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-const { viaMirror, fromMirror, mirrorUrls } = await import('../src/scryfallMirror.ts');
+const { viaMirror, fromMirror, mirrorUrls, imagesHost } = await import('../src/scryfallMirror.ts');
 const { images } = await import('../src/scryfallCards.ts');
 
 const id = '7673784e-db4b-43a1-8d55-1bb9fc1e284f';
@@ -24,6 +24,14 @@ test('a cached image maps back to Scryfall for the fallback, only on our own ori
   assert.equal(fromMirror(`https://mesa.example/scryfall/small/front/7/6/${id}.jpg`, base), `https://cards.scryfall.io/small/front/7/6/${id}.jpg`);
   assert.equal(fromMirror(`https://outro.example/scryfall/small/front/7/6/${id}.jpg`, base), undefined);
   assert.equal(fromMirror('/cartas/raio-normal.webp', base), undefined);
+});
+
+test('the images host becomes an https origin, even without the scheme; an invalid value falls back to the site', () => {
+  assert.equal(imagesHost('https://img.mesao.online'), 'https://img.mesao.online');
+  assert.equal(imagesHost('img.mesao.online'), 'https://img.mesao.online');
+  assert.equal(imagesHost(' https://img.mesao.online/ '), 'https://img.mesao.online');
+  assert.equal(imagesHost('http://localhost:8089'), 'http://localhost:8089');
+  for (const v of [undefined, '', '   ', 'não é endereço']) assert.equal(imagesHost(v), '', String(v));
 });
 
 test('with an images host (the CDN), its addresses also fall back to Scryfall', () => {

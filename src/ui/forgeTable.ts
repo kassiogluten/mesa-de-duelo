@@ -173,7 +173,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const perfMeter = createPerfMeter(root, () => client?.connected && !match.disconnected ? client.ping() : null);
   const settings = createTableSettings(root, { audio, perfMeter, passLevel, turnNotice, turnBuzz, connected: () => !!client?.connected && !match.disconnected,
     passLevelChanged: () => { if (passMenu.open) passMenu.sync(); }, closeMenus: () => { setMenu(false, true); setLog(false); }, syncModal,
-    hasState: () => !!client?.state, render: () => render(), rerender: () => renderTable(false), effectsChanged: () => motion.effectsChanged() });
+    hasState: () => !!client?.state, render: () => render(), rerender: () => renderTable(false), effectsChanged: () => motion.effectsChanged(),
+    autoTriggers: () => client?.state?.autoTriggers ?? [], forgetTrigger: key => client?.send({ type: 'forget-trigger', key }), cardName: name => ptOf(name)?.name ?? name });
   const prefs = settings.prefs;
   let previousAnnouncement = '';
   const renderedContent = new WeakMap<HTMLElement, { html: string; first: ChildNode | null }>();
@@ -395,7 +396,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const question = createTableQuestion({ ...ctx, modalStart: el => modal.start(el) });
 
   // ---------- Desenho ----------
-  function render() { renderTable(true); }
+  function render() { renderTable(true); if (!$('#fSettings').hidden) settings.syncAutoTriggers(); }
 
   const renderAwaiting = createAwaitingCallout(root, () => audio.cue('turn-self', .5));
   const phases = createTablePhases({ ...ctx, opponentStops, stops, clocks, handAutoButton: hand.autoButton });

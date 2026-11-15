@@ -34,7 +34,7 @@ export const isPlayMode =(q: FQuestion) => q.method === 'getAbilityToPlay' || q.
 // ---------- Ordem dos gatilhos ----------
 
 /** Ordem em andamento: a lista inteira como está na tela e quantas posições já foram marcadas por toque. */
-export interface TriggerOrder { order: number[]; placed: number; history: { order: number[]; placed: number }[] }
+export interface TriggerOrder { order: number[]; placed: number; history: { order: number[]; placed: number }[]; /** "Lembrar esta ordem" marcado. */ keep?: boolean }
 
 export const newTriggerOrder = (count: number): TriggerOrder => ({ order: Array.from({ length: count }, (_, i) => i), placed: 0, history: [] });
 
@@ -102,6 +102,7 @@ export function triggerOrderHTML(q: FQuestion, t: TriggerOrder, face: Face, labe
     <p class="q-hint" id="fTriggerHelp">Toque na ordem em que devem resolver, ou arraste. Com o teclado, use as setas. O último a ir para a pilha é o primeiro a resolver.</p>
     <div class="trigger-direction" aria-hidden="true"><span>Resolve primeiro</span><i></i><span>Resolve por último</span></div>
     <ol class="trigger-row" aria-label="Ordem dos gatilhos">${cards}</ol>
+    ${q.canRemember ? `<label class="q-apply-all"><input type="checkbox" id="fQRememberOrder" ${t.keep ? 'checked' : ''}><span>Lembrar esta ordem <small>(até o fim da partida, sempre que estes mesmos gatilhos aparecerem juntos)</small></span></label>` : ''}
     <div class="q-actions">
       <button class="arena-btn secondary" data-trigger-undo ${t.history.length ? '' : 'disabled'}>Desfazer</button>
       <button class="arena-btn secondary" data-q-keep>Ordem automática</button>

@@ -67,6 +67,9 @@ public final class Main {
             // O desfazer do próprio Forge fica desligado: a mesa tem o seu, com pedido e aprovação (UndoHistory).
             // Ligado, ele tiraria um retrato a cada prioridade e o Cancelar viraria "Desfazer" sem ninguém aceitar.
             prefs.setPref(FPref.UI_UNDO_MODE, forge.localinstance.properties.ForgeConstants.UNDO_MODE_OFF);
+            // "Sempre sim/não" de um gatilho opcional vale só na partida de quem escolheu: nunca o modo que grava em
+            // disco, que num servidor seria de todos os jogadores.
+            prefs.setPref(FPref.UI_AUTO_DECISION_MODE, forge.localinstance.properties.ForgeConstants.AUTO_DECISION_PER_ABILITY);
             return null;
         });
         Log.bridge().info("Forge inicializado em %d ms", System.currentTimeMillis() - t0);

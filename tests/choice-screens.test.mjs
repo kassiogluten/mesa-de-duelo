@@ -38,6 +38,10 @@ test('identical triggers are marked without being merged', () => {
   assert.match(html, /Posição 1 de 3, resolve primeiro/);
   assert.match(html, /Posição 3 de 3, resolve por último/);
   assert.match(html, /data-q-keep/);
+  assert.doesNotMatch(html, /fQRememberOrder/);
+  // O Forge oferece lembrar a ordem destes mesmos gatilhos: a caixa aparece, marcada se o jogador já marcou.
+  const remember = screens.triggerOrderHTML({ ...triggers, canRemember: true }, { ...screens.newTriggerOrder(3), keep: true }, () => '', c => c.name);
+  assert.match(remember, /id="fQRememberOrder" checked[\s\S]*Lembrar esta ordem/);
 });
 
 test('play options get Portuguese names, symbols for mana and spelled-out extra costs', () => {

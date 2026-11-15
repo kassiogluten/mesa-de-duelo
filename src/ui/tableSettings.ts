@@ -13,6 +13,8 @@ import { finder } from './dom';
 import { ownArtEnabled, setOwnArtEnabled } from '../scryfallCards';
 import { effectsLevel, setEffectsLevel } from './gpu/gpuSupport';
 import type { createPerfMeter } from './perfMeter';
+import { esc } from './cardtext';
+import type { FState } from '../forge/client';
 
 const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
 
@@ -35,6 +37,12 @@ export interface SettingsDeps {
   rerender(): void;
   /** "Efeitos" mudou entre completos e leves. */
   effectsChanged(): void;
+  /** Gatilhos opcionais respondidos com "Sempre sim" ou "Sempre não" nesta partida. */
+  autoTriggers(): NonNullable<FState['autoTriggers']>;
+  /** Volta a perguntar um deles. */
+  forgetTrigger(key: string): void;
+  /** O nome da carta como a mesa mostra. */
+  cardName(name: string): string;
 }
 
 export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
@@ -118,9 +126,25 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     ($('#fTema') as HTMLSelectElement).value = lerTema();
     syncPassLevel();
   }
+  /** A lista de gatilhos com resposta guardada, com o "Perguntar de novo" de cada um; some sem nenhum. */
+  let autoTriggersHTML = '';
+  function syncAutoTriggers() {
+    const list = d.autoTriggers();
+    const html = list.map(t => `<li><span><strong>${t.card ? esc(d.cardName(t.card)) : ''}<em>${t.accept ? 'Sempre sim' : 'Sempre não'}</em></strong><small>${esc(t.key)}</small></span><button type="button" class="arena-btn secondary" data-forget-trigger="${esc(t.key)}">Perguntar de novo</button></li>`).join('');
+    if (html === autoTriggersHTML) return;
+    autoTriggersHTML = html;
+    $('#fAutoTriggerList').innerHTML = html;
+    $('#fAutoTriggers').hidden = !list.length;
+  }
+  $('#fAutoTriggers').addEventListener('click', e => {
+    const button = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-forget-trigger]');
+    if (!button || !d.connected()) return;
+    d.forgetTrigger(button.dataset.forgetTrigger!);
+    button.disabled = true;
+  });
   function setSettings(open: boolean) {
     if (open) {
-      d.closeMenus(); hideCardPreview(true); syncSettings();
+      d.closeMenus(); hideCardPreview(true); syncSettings(); syncAutoTriggers();
     }
     $('#fSettings').hidden = !open;
     root.querySelector('[aria-controls="fSettings"]')?.setAttribute('aria-expanded', String(open));
@@ -151,5 +175,5 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     if (t.id === 'fPace') { prefs.fast = t.value === 'fast'; try { localStorage.setItem(KEYS.pace, prefs.fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
     if (t.closest('[data-options-group]')) syncOptionSummaries();
   });
-  return { prefs, syncPassLevel, syncDevice, syncPlaymat, syncTurnNotice, sync: syncSettings, set: setSettings, togglePlaymat, toggleOwnArt, togglePerfMeter };
+  return { prefs, syncAutoTriggers, syncPassLevel, syncDevice, syncPlaymat, syncTurnNotice, sync: syncSettings, set: setSettings, togglePlaymat, toggleOwnArt, togglePerfMeter };
 }

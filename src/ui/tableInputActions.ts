@@ -33,7 +33,8 @@ export function createInputActions(d: InputActionDeps) {
   const locked = (gen: number) => gen === d.match().clickedGen && Date.now() - clickedAt < CLICK_LOCK_MS;
   const lock = (gen: number) => { d.match().clickedGen = gen; clickedAt = Date.now(); };
 
-  function send(act: InputAct, gen: number) {
+  /** `always`: "Sempre sim" ou "Sempre não" de um gatilho opcional (guarda a resposta até o fim da partida). */
+  function send(act: InputAct, gen: number, always = false) {
     const client = d.client(), s = client?.state, match = d.match(), { attack } = d;
     if (!client || !s || match.disconnected || gen !== s.input.gen || s.question) return;
     if (!inputActionAllowed(s, act)) return;
@@ -57,7 +58,7 @@ export function createInputActions(d: InputActionDeps) {
     if (s.input.attacking) attack.clear();
     lock(gen); match.selectedBlocker = null;
     d.stopPresentation(); hideCardPreview(true);
-    client.send({ type: act, gen });
+    client.send({ type: act, gen, ...(always ? { always: true } : {}) });
     d.render();
     setTimeout(() => { if (d.match().clickedGen === gen) d.render(); }, CLICK_LOCK_MS + 50);
   }

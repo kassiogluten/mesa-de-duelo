@@ -1,4 +1,16 @@
 {
+  "0.182.0": {
+    "Lembrar a ordem dos gatilhos": [
+      { "img": "0.182.0/lembrar-ordem.webp", "legenda": "A tela de ordenar os gatilhos do Companheiro de Bando de Ajani e do Arcanjo de Thune, com a caixa Lembrar esta ordem marcada antes de confirmar." }
+    ],
+    "Sempre sim e Sempre não nos gatilhos opcionais": [
+      { "img": "0.182.0/sempre-sim.webp", "legenda": "O gatilho opcional da Assistente da Alma: além de Não e Sim, os botões Sempre não e Sempre sim." },
+      { "img": "0.182.0/respostas-guardadas.webp", "legenda": "Em Opções da partida › Jogo, os gatilhos com resposta guardada, cada um com a carta, a resposta e o botão Perguntar de novo." }
+    ],
+    "Itens iguais juntos na pilha": [
+      { "img": "0.182.0/pilha-agrupada.webp", "legenda": "A pilha aberta com 7 efeitos em três cartões: 1–3 e 4–6 são três gatilhos iguais cada, marcados com ×3, e o 7º vem sozinho." }
+    ]
+  },
   "0.180.0": {
     "Ver a jogada de novo pelo Histórico": [
       { "img": "0.180.0/historico.webp", "legenda": "O botão ▶ ao lado de cada jogada do Histórico da partida." },

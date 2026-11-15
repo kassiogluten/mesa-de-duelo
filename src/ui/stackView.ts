@@ -60,18 +60,37 @@ export function stackPanel(v: StackView, s: FState, replaying: boolean, o: { min
     </button><span class="stack-open-hint">${replaying ? 'Clique para inspecionar' : 'Clique para ver a pilha'}</span>`;
 }
 
-/** A pilha aberta em galeria: um item por vez, na ordem em que resolvem, com efeito, alvos e o que dá para fazer. */
+type StackItem = FState['stack'][number];
+/** O que faz dois itens da pilha serem iguais para a galeria: mesmo dono, carta, tipo, efeito, alvos e forma de conjurar. */
+const sameKey = (si: StackItem) => JSON.stringify([si.controller, si.kind, si.source?.name, si.text, si.targets, si.cast, si.modes, si.loyalty]);
+/**
+ * Itens seguidos iguais (uma cadeia de gatilhos de ganho de vida, por exemplo) viram um cartão só, com ×N; no jogo
+ * cada um continua resolvendo separado. Um item que dá para escolher como alvo nunca entra num grupo.
+ */
+export function groupStack(stack: StackItem[], selectable: number[] = []) {
+  const groups: { item: StackItem; at: number; count: number }[] = [];
+  stack.forEach((si, at) => {
+    const last = groups.at(-1);
+    if (last && !selectable.includes(si.id) && !selectable.includes(last.item.id) && sameKey(last.item) === sameKey(si)) last.count++;
+    else groups.push({ item: si, at, count: 1 });
+  });
+  return groups;
+}
+
+/** A pilha aberta em galeria: um item por vez (os iguais seguidos juntos), na ordem em que resolvem, com efeito, alvos e o que dá para fazer. */
 export function stackGalleryHTML(v: StackView, s: FState) {
   const count = s.stack.length;
   return `<section class="stack-gallery" role="dialog" aria-modal="true" aria-labelledby="fStackGalleryTitle" aria-describedby="fStackGalleryHint">
     <header class="stack-gallery-heading"><div><h2 id="fStackGalleryTitle">Pilha <span aria-live="polite">${count}</span></h2><p id="fStackGalleryHint">O primeiro efeito à esquerda resolve primeiro.</p></div><button class="icon-btn" data-ui="stack-close" aria-label="Fechar pilha">Fechar</button></header>
-    <ol class="stack-gallery-track" tabindex="0" aria-label="Efeitos em ordem de resolução. Role para ver todos.">${s.stack.map((si, i) => {
+    <ol class="stack-gallery-track" tabindex="0" aria-label="Efeitos em ordem de resolução. Role para ver todos.">${groupStack(s.stack, s.input.selectableStacks).map(({ item: si, at: i, count: copies }) => {
       const selectable = !!s.input.selectableStacks?.includes(si.id);
       const name = si.source ? v.label(si.source) : 'Efeito';
       const owner = s.players.find(p => p.id === si.controller)?.name;
       return `<li class="stack-gallery-item ${si.controller === s.you ? 'mine' : 'theirs'}" data-stack-instance="${si.id}">
-        <div class="stack-gallery-order"><b>${i + 1}</b><span>${i === 0 ? 'Resolve primeiro' : `${i + 1}º na resolução`}</span></div>
-        <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}">${stackFace(v, si)}${stackKindBadge(si)}</button>
+        <div class="stack-gallery-order">${copies > 1
+          ? `<b>${i + 1}–${i + copies}</b><span>${copies} iguais</span>`
+          : `<b>${i + 1}</b><span>${i === 0 ? 'Resolve primeiro' : `${i + 1}º na resolução`}</span>`}</div>
+        <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}${copies > 1 ? `, ${copies} efeitos iguais` : ''}">${stackFace(v, si)}${stackKindBadge(si)}${copies > 1 ? `<span class="stack-gallery-copies" title="${copies} efeitos iguais, cada um resolve separado">×${copies}</span>` : ''}</button>
         <div class="stack-gallery-owner">${esc(stackOwnerLine(si, s.you, owner))}</div>
         <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}">${stackLoyaltyLine(si) ? `<p class="stack-cast">${esc(stackLoyaltyLine(si))}</p>` : ''}<p>${richText(si.text)}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${v.targetsText(si.targets) ? `<p class="stack-targets">${esc(v.targetsText(si.targets))}</p>` : ''}</div>
         <div class="stack-gallery-actions">${selectable ? `<button class="arena-btn primary" data-stack="${si.id}" data-gen="${s.input.gen}">Selecionar como alvo</button>` : ''}${si.source ? `<button class="icon-btn" data-stack-inspect="${si.id}" aria-label="Inspecionar ${esc(name)}">Inspecionar</button>` : ''}</div>

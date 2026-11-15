@@ -8,6 +8,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.182.0] - 2026-11-15
+
+### Novo
+
+- **Lembrar a ordem dos gatilhos.** A tela de ordenar gatilhos ganha a caixa "Lembrar esta ordem": marcada, os mesmos gatilhos que aparecerem juntos de novo vão para a pilha nessa ordem sem perguntar, até o fim da partida. Num deck de ganho de vida, o Companheiro de Bando de Ajani e o Arcanjo de Thune deixam de pedir a ordem a cada ponto de vida ganho.
+- **Sempre sim e Sempre não nos gatilhos opcionais.** Quando um gatilho pergunta "você pode…" (como o da Assistente da Alma a cada criatura que entra), além do Sim e do Não aparecem Sempre sim e Sempre não, que respondem esta vez e as próximas, até o fim da partida, para todas as cartas com o mesmo gatilho. As respostas guardadas ficam em Opções da partida › Jogo, cada uma com o botão Perguntar de novo.
+- **Itens iguais juntos na pilha.** Na pilha aberta, efeitos iguais seguidos (mesma carta, mesmo efeito e mesmos alvos) aparecem num cartão só, com ×N e as posições que ocupam ("1–3, 3 iguais"). No jogo cada um continua resolvendo separado, e um efeito que você pode escolher como alvo nunca entra no grupo.
+
+### Mudou
+
+- **Pilha cheia resolve mais rápido.** Quando a prioridade passa sozinha com algo na pilha, o jogo não espera mais quase meio segundo por jogador a cada item: uma cadeia de gatilhos de ganho de vida que levava perto de um segundo por gatilho agora resolve de uma vez, e a mesa mostra cada resolução no próprio ritmo, encurtando os passos quando a fila cresce.
+
+### Corrigido
+
+- **Imagens das cartas de volta.** Depois da troca para o servidor de imagens, as cartas apareciam sem imagem na mesa, e a busca de reserva no Scryfall também não acontecia. As imagens voltaram, e a mesa volta a buscar no Scryfall quando o nosso servidor não mostra uma carta.
+
 ## [0.181.1] - 2026-11-15
 
 ### Corrigido

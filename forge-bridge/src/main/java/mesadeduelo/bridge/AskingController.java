@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import forge.card.ColorSet;
 import forge.card.ICardFace;
 import forge.card.mana.ManaCost;
@@ -27,6 +29,8 @@ import forge.game.spellability.OptionalCostValue;
 import forge.game.spellability.SpellAbility;
 import forge.game.trigger.WrappedAbility;
 import forge.game.zone.ZoneType;
+import forge.gamemodes.match.YieldUpdate;
+import forge.player.AutoYieldStore;
 import forge.player.LobbyPlayerHuman;
 import forge.player.PlayerControllerHuman;
 import forge.util.GuiDisplayUtil;
@@ -109,6 +113,8 @@ final class AskingController extends PlayerControllerHuman {
     /** Jogador humano da mesa: cria o {@link AskingController} no lugar do controlador padrão. */
     static final class Lobby extends LobbyPlayerHuman {
         private final UndoHistory undo;
+        /** A carta de cada gatilho guardado com "Sempre sim/não" (o Forge guarda só o texto), enquanto a escolha vale. */
+        final Map<String, String> triggerNames = new java.util.concurrent.ConcurrentHashMap<>();
         Lobby(String name) { this(name, null); }
         Lobby(String name, UndoHistory undo) { super(name); this.undo = undo; }
         @Override public Player createIngamePlayer(Game game, int id) {
@@ -149,7 +155,45 @@ final class AskingController extends PlayerControllerHuman {
     @Override public boolean playChosenSpellAbility(SpellAbility sa) { return untapIfUndone(() -> asking(sa, () -> super.playChosenSpellAbility(sa))); }
     @Override public boolean playSaFromPlayEffect(SpellAbility sa) { return untapIfUndone(() -> asking(sa, () -> super.playSaFromPlayEffect(sa))); }
     @Override public boolean playTrigger(Card host, WrappedAbility wrapper, boolean isMandatory) { return asking(host, () -> super.playTrigger(host, wrapper, isMandatory)); }
-    @Override public boolean confirmTrigger(WrappedAbility wrapper) { return asking(wrapper.getHostCard(), () -> super.confirmTrigger(wrapper)); }
+    @Override public boolean confirmTrigger(WrappedAbility wrapper) {
+        WrappedAbility previous = confirming;
+        confirming = wrapper;
+        try { return asking(wrapper.getHostCard(), () -> super.confirmTrigger(wrapper)); } finally { confirming = previous; }
+    }
+
+    /** Gatilho opcional ("você pode...") esperando o Sim ou o Não do jogador; null fora dessa pergunta. */
+    private volatile WrappedAbility confirming;
+    boolean confirmingTrigger() { return confirming != null; }
+
+    /**
+     * "Sempre sim" ou "Sempre não" para o gatilho perguntado agora: o Forge guarda pelo texto do gatilho (vale para
+     * todas as cartas com ele) até o fim da partida, e a mesa lista nas Opções com o nome da carta que perguntou.
+     */
+    void rememberTrigger(boolean accept) {
+        WrappedAbility wrapper = confirming;
+        if (wrapper == null) return;
+        // A mesa é um cliente remoto para o Forge: ele lê as decisões do jogo atual, que só o YieldUpdate grava.
+        String key = AutoYieldStore.abilitySuffix(wrapper.yieldKey());
+        applyYieldUpdate(new YieldUpdate.TriggerDecision(key, accept ? AutoYieldStore.TriggerDecision.ACCEPT : AutoYieldStore.TriggerDecision.DECLINE));
+        if (getLobbyPlayer() instanceof Lobby lobby && wrapper.getHostCard() != null) lobby.triggerNames.put(key, wrapper.getHostCard().getName());
+    }
+
+    /** Volta a perguntar o gatilho guardado com "Sempre sim" ou "Sempre não". */
+    void forgetTrigger(String key) { applyYieldUpdate(new YieldUpdate.TriggerDecision(key, AutoYieldStore.TriggerDecision.ASK)); }
+
+    /** As respostas guardadas, para as Opções da partida: o texto do gatilho, a carta que perguntou e a resposta. */
+    JsonArray autoTriggers() {
+        JsonArray list = new JsonArray();
+        for (var e : getYieldController().getAutoTriggers()) {
+            if (e.getValue() == AutoYieldStore.TriggerDecision.ASK) continue;
+            JsonObject o = new JsonObject();
+            o.addProperty("key", e.getKey());
+            if (getLobbyPlayer() instanceof Lobby lobby && lobby.triggerNames.containsKey(e.getKey())) o.addProperty("card", lobby.triggerNames.get(e.getKey()));
+            o.addProperty("accept", e.getValue() == AutoYieldStore.TriggerDecision.ACCEPT);
+            list.add(o);
+        }
+        return list;
+    }
     @Override public boolean chooseTargetsFor(SpellAbility sa) { return asking(sa, () -> super.chooseTargetsFor(sa)); }
     @Override public boolean confirmReplacementEffect(ReplacementEffect effect, SpellAbility effectSA, GameEntity affected, String question) {
         return asking(effect.getHostCard(), () -> super.confirmReplacementEffect(effect, effectSA, affected, question));

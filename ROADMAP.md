@@ -302,7 +302,7 @@ Como resolver (na ordem em que eu faria):
 - [x] **Histórico numa linha**: "Hare Apparent criou 8 fichas de Coelho", em vez de 8 linhas.
 - [x] **A fila não pula fichas**: o limite de 12 eventos passa a contar os movimentos juntos, e não cada ficha, para a rajada não ser descartada no meio.
 - [x] **Vários gatilhos seguidos (blink em todos)**: cada gatilho continua sendo um passo, com o aviso do gatilho, mas mais curto quando vários iguais resolvem em sequência (por exemplo, o segundo em diante sem o aviso de 1 s, ou um aviso só, "×5").
-- [ ] **Conferir o lado da ponte numa partida real**: se, com muitos gatilhos, a demora vem também da prioridade (o jogador ou a IA passando a cada gatilho), avaliar a passagem automática para gatilhos sem escolha.
+- [x] **Conferir o lado da ponte numa partida real**: se, com muitos gatilhos, a demora vem também da prioridade (o jogador ou a IA passando a cada gatilho), avaliar a passagem automática para gatilhos sem escolha. Feito em 15/11/2026 (`novidades-pendentes/pilha-rapida`, `forge-bridge/scripts/test-lifegain-stack.mjs`): numa cadeia de ganho de vida, cada item levava ~870 ms sem ninguém clicar (400 ms de pausa do Forge a cada passe automático, por jogador); com o `YIELD_SKIP_RESOLVE_DELAY` a cadeia inteira leva ~1,3 s. O que sobrava para o jogador eram as perguntas: "Lembrar esta ordem" na ordem dos gatilhos (7 telas viraram 2), "Sempre sim/não" nos opcionais e itens iguais juntos na galeria da pilha.
 - [x] Leitor de tela: uma frase só, "8 fichas de Coelho entraram".
 - [x] Laboratório de efeitos (item 18): incluir "criar N fichas" e conferir na página de rajada que as 8 fichas aparecem em até 1,5 s.
 
@@ -498,7 +498,7 @@ As decisões A, B e C (no fim do item) são perguntadas ao usuário, com as alte
 
 **2. Ritmo: o servidor não dorme, a mesa segura (depende da decisão A).**
 
-- [ ] Ligar `YIELD_SKIP_PHASE_DELAY` e `YIELD_SKIP_RESOLVE_DELAY` no `Main` (e no `BridgeRulesTest.engine()`), para o Forge não dormir quando o humano passa sozinho.
+- [ ] Ligar `YIELD_SKIP_PHASE_DELAY` (no `WebGuiGame.openView`, ao lado do `YIELD_SKIP_RESOLVE_DELAY`), para o Forge não dormir 200 ms por fase quando o humano passa sozinho. O `YIELD_SKIP_RESOLVE_DELAY` (400 ms por item da pilha) foi ligado em 15/11/2026 (`novidades-pendentes/pilha-rapida`), pedido para as pilhas longas de ganho de vida; a decisão A segue aberta só para a pausa das fases.
 - [x] Na mesa, a fila de animações acompanhar sem pular jogadas: com a fila crescendo, encurtar os passos (como o "Rápido sem resposta") antes de chegar ao limite de 12, e só pular para o fim em último caso. Feito em 14/11/2026 (o limite passou a 60, para o loop do computador; ver o item 114). Casa com o item de fila de animações do 114 e com as animações do computador repetindo jogadas do 113.
 - [ ] Medir com `-Dmesa.semPausa=true` e `scripts/medir-apresentacao.mjs` que a mesa mostra as jogadas (quase) todas e termina perto do servidor.
 
@@ -574,3 +574,30 @@ Sugestões de 14/11/2026, depois da fila sem pular jogadas e da mesa viva (itens
 **Acabamento**
 
 - [x] Tour no laboratório de efeitos: um botão que roda todos os efeitos em sequência, para conferir depois de cada mudança e tirar os prints das novidades. Feito em 14/11/2026 (seção "Momentos e mesa viva" do `effects-lab.html`).
+
+## 133. Carregando nas imagens das cartas (skeleton ou a própria imagem com blur)
+
+Pedido em 15/11/2026. Hoje, enquanto a imagem de uma carta não chega, o lugar fica vazio, com o verso ou só com a moldura, e de repente a imagem aparece. Na primeira visita, com a internet lenta, ou quando o cache de imagens (item 10) ainda não tem a carta, a mesa e as telas parecem quebradas até tudo carregar.
+
+A ideia é mostrar que a imagem está a caminho: um **skeleton** (a forma da carta com um brilho correndo) ou a **própria imagem borrada** (a versão `small`, que é leve e muitas vezes já está no aparelho, ampliada com blur até a `normal` chegar, como no Arena).
+
+- [ ] Decidir o estilo: skeleton, blur da `small` ou os dois (blur quando a `small` já está no aparelho, skeleton quando não há nada). Ver como fica na mesa, na mão, no inspetor e no construtor de decks antes de escolher.
+- [ ] Onde vale: cartas da mesa e da mão (`<img>` de `faceHTML`), inspetor e prévia, construtor de decks (resultados da busca e lista), capas dos decks e retratos na tela inicial e na sala (hoje fundos em CSS, sem aviso de carregamento: precisam carregar a imagem antes para saber quando ela chegou).
+- [ ] A troca para a imagem pronta sem pulo: o lugar já tem o tamanho da carta, e a imagem entra com um esmaecer curto quando termina de decodificar (`decode()`), nunca no meio.
+- [ ] Imagem que falha (cache e Scryfall): o carregando vira o que já existe hoje (verso ou layout de texto), sem ficar brilhando para sempre.
+- [ ] Leve: um só brilho em CSS animando só `transform`/`opacity` (o padrão do item 125), parado com "reduzir movimento" e nos efeitos leves (degrau 3 do Automático); nada de animação por carta com a mesa cheia.
+- [ ] Imagem já no cache do aparelho não mostra carregando (aparece direto, sem piscar).
+- [ ] Testes: página de teste com a imagem atrasada de propósito (rota do Vite ou `fixture` que segura a resposta) e prints para as novidades.
+
+## 134. Achar os efeitos mais pesados e desligá-los no degrau E1
+
+Pedido em 15/11/2026. Hoje o degrau 1 do Efeitos: Automático (`src/ui/gpu/effectsGovernor.ts`, "E1" no selo de FPS) só corta as faíscas pela metade. Os outros efeitos seguem iguais até o degrau 2 (mesa viva e câmera paradas) e o 3 (efeitos leves). Se o que derruba os quadros é um efeito específico, cortar as faíscas não resolve, e a mesa desce mais um degrau à toa, perdendo efeitos leves junto com os pesados.
+
+A ideia é medir quanto cada efeito custa e, no E1, desligar (ou trocar por uma versão simples) só os poucos mais caros, mantendo o resto.
+
+- [ ] Medir cada efeito sozinho, com a mesa vazia e com a mesa cheia (cenário "Mesa cheia para medir FPS" do Laboratório), com a CPU freada (4× e 6×): tempo por quadro, quadros longos e memória da GPU. Usar `scripts/medir-efeitos.mjs` e os botões do laboratório de efeitos (`/efeitos`), incluindo as jogadas simuladas e os efeitos que ficam rodando (enjoo, proteção, alvo possível, voar, mesa viva, setas).
+- [ ] Ranking dos efeitos por custo, numa tabela em `docs/spec-mesa-webgl.md`, separando o que pesa uma vez (destruir partindo a carta, portal do exílio, golpe letal, confete) do que pesa o tempo todo (animações contínuas por permanente, poeira, luz da mesa).
+- [ ] Decidir quais saem no E1 (provavelmente os 3 a 5 mais caros) e o que cada um vira: desligado, versão simples em CSS ou com menos partículas. Golpe letal e ultimate continuam protegidos, como hoje.
+- [ ] Ligar a lista ao regulador: o E1 passa a ser "faíscas pela metade + sem os efeitos pesados", e o E2 e o E3 continuam como estão.
+- [ ] Conferir que o E1 novo segura a mesa cheia sem descer para o E2 com tanta frequência (medir de novo com o mesmo cenário) e que a troca de degrau não deixa efeito pela metade na tela.
+- [ ] Mostrar no laboratório de efeitos quais efeitos cada degrau desliga, para conferir à mão.

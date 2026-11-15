@@ -120,6 +120,9 @@ final class WebGuiGame extends ProtocolGuiGame {
         // Presentation timing must never create extra priority confirmations.
         syncAutoPass();
         controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_AUTO_PASS_RESPECTS_INTERRUPTS, "false"));
+        // O Forge dorme 400 ms a cada passe automático com a pilha cheia, por jogador, para a tela dele não pular: a
+        // mesa já dá o ritmo de cada resolução (e o encurta quando a fila cresce), e 40 gatilhos não levam 30 s a mais.
+        controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_SKIP_RESOLVE_DELAY, "true"));
         // "Passar até o fim do turno" volta ao nível quando algo afeta o jogador: algo que mira ele ou as permanentes
         // dele, uma remoção em massa ou um ataque contra ele. Uma mágica qualquer do oponente não interrompe.
         controller.applyYieldUpdate(new YieldUpdate.SetYieldPref(FPref.YIELD_INTERRUPT_ON_TARGETING, "true"));

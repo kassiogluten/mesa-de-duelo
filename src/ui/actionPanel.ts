@@ -115,6 +115,11 @@ export function buttons(v: ActionView, s: FState) {
   // O destaque, sempre por último (embaixo, onde a mão já espera), é o próximo passo. Nunca o "Fim de turno": apertado
   // por hábito, ele pularia o resto do turno.
   const pass = b('ok', priority, 'primary');
+  // Gatilho opcional ("você pode..."): além do Sim e do Não desta vez, guardar a resposta até o fim da partida.
+  if (s.input.triggerChoice && ok.enabled && cancel.enabled) {
+    const always = (act: string, label: string) => `<button class="arena-btn secondary" data-act="${act}" data-always data-gen="${s.input.gen}" ${waiting ? 'disabled' : ''}>${label}</button>`;
+    return b('cancel', cancel, 'secondary') + always('cancel', 'Sempre não') + always('ok', 'Sempre sim') + pass;
+  }
   const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'secondary') : '';
   return undo + life('secondary') + resolveAll + passTurn + pass;
 }

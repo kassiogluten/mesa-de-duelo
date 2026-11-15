@@ -5,7 +5,16 @@
  */
 
 const ORIGIN = 'https://cards.scryfall.io/';
-const HOST: string = (import.meta.env?.VITE_IMAGENS_URL ?? '').replace(/\/+$/, '');
+/**
+ * O host das imagens como origem (https://img.…). Sem esquema vale https: com "img.mesao.online" puro, o endereço virava
+ * um caminho dentro do próprio site, que devolve a página do jogo, e as cartas sumiam. Valor que não é endereço: o site.
+ */
+export function imagesHost(value: string | undefined): string {
+  const v = value?.trim().replace(/\/+$/, '');
+  if (!v) return '';
+  try { return new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`).origin; } catch { return ''; }
+}
+const HOST = imagesHost(import.meta.env?.VITE_IMAGENS_URL);
 const MIRROR = `${HOST}/scryfall/`;
 /** Só os tamanhos que a mesa usa e o caminho no formato do Scryfall; o mesmo filtro está no nginx. */
 const PATH = /^(small|normal|art_crop)\/(front|back)\/[0-9a-f]\/[0-9a-f]\/[0-9a-f-]{36}\.jpg(\?\d+)?$/;
