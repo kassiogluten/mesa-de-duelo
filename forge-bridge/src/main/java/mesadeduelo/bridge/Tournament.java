@@ -67,7 +67,9 @@ final class Tournament {
         boolean bye() { return b == 0; }
     }
 
-    record Round(int number, List<Table> tables) {
+    /** {@code extra}: sorteada além das planejadas, com o botão Rodada extra. */
+    record Round(int number, List<Table> tables, boolean extra) {
+        Round(int number, List<Table> tables) { this(number, tables, false); }
         boolean complete() { return tables.stream().allMatch(t -> t.result != null); }
     }
 
@@ -82,6 +84,8 @@ final class Tournament {
     final long created;
     int plannedRounds;
     boolean finished;
+    /** O relógio da rodada atual; sortear ou desfazer uma rodada o volta ao tempo cheio. */
+    RoundClock clock = new RoundClock();
     final List<Player> players = new ArrayList<>();
     final List<Round> rounds = new ArrayList<>();
     private int nextPlayer = 1;
@@ -175,7 +179,30 @@ final class Tournament {
         int number = rounds.size() + 1;
         Round round = new Round(number, number == 1 ? firstRound(active, random) : swissRound(active, random));
         rounds.add(round);
+        clock.reset();
         return round;
+    }
+
+    /**
+     * Rodada extra, depois de jogadas todas as planejadas e antes de encerrar: mais uma rodada no planejado e o sorteio
+     * dela, de uma vez. Desfazer o sorteio dela tira a rodada a mais de novo.
+     */
+    Round pairExtra(Random random) {
+        if (finished) throw new IllegalArgumentException("O torneio já terminou. Reabra para sortear mais uma rodada.");
+        if (rounds.isEmpty()) throw new IllegalArgumentException("O torneio ainda não começou.");
+        if (rounds.size() < rounds()) throw new IllegalArgumentException("Ainda há rodadas planejadas: sorteie a rodada " + (rounds.size() + 1) + ".");
+        if (rounds.size() >= MAX_ROUNDS) throw new IllegalArgumentException("O torneio já tem " + MAX_ROUNDS + " rodadas, o máximo.");
+        int planned = plannedRounds;
+        plannedRounds = rounds.size() + 1;
+        try {
+            Round r = pairNext(random);
+            Round extra = new Round(r.number(), r.tables(), true);
+            rounds.set(rounds.size() - 1, extra);
+            return extra;
+        } catch (IllegalArgumentException e) {
+            plannedRounds = planned;
+            throw e;
+        }
     }
 
     /** Desfaz o sorteio da última rodada, enquanto ela não tem nenhum resultado lançado. */
@@ -185,6 +212,8 @@ final class Tournament {
         if (finished) throw new IllegalArgumentException("O torneio já terminou.");
         if (last.tables().stream().anyMatch(t -> !t.bye() && t.result != null)) throw new IllegalArgumentException("A rodada já tem resultados: apague-os antes de desfazer o sorteio.");
         rounds.remove(rounds.size() - 1);
+        clock.reset();
+        if (last.extra()) plannedRounds = Math.max(1, plannedRounds - 1);
         for (Player p : players) {
             if (p.dropped > rounds.size()) p.dropped = rounds.isEmpty() ? 0 : rounds.size();
             // Sem a 1ª rodada, quem entrou atrasado passa a ser um inscrito comum.
@@ -214,9 +243,16 @@ final class Tournament {
         if (last == null) throw new IllegalArgumentException("O torneio ainda não começou.");
         if (!last.complete()) throw new IllegalArgumentException("Falta lançar resultados da rodada " + last.number() + ".");
         finished = true;
+        clock.reset();
     }
 
     void reopen() { finished = false; }
+
+    /** O relógio, só com uma rodada em andamento. */
+    RoundClock liveClock() {
+        if (!"andamento".equals(status())) throw new IllegalArgumentException("O relógio só corre com uma rodada em andamento.");
+        return clock;
+    }
 
     // ---------- Classificação ----------
 
@@ -363,6 +399,7 @@ final class Tournament {
         o.addProperty("rodadasPlanejadas", plannedRounds);
         o.addProperty("encerrado", finished);
         o.addProperty("proximoJogador", nextPlayer);
+        o.add("relogio", clock.toJson());
         o.add("jogadores", playersJson());
         o.add("rodadas", roundsJson());
         return o;
@@ -374,6 +411,7 @@ final class Tournament {
         t.plannedRounds = o.get("rodadasPlanejadas").getAsInt();
         t.finished = o.get("encerrado").getAsBoolean();
         t.nextPlayer = o.get("proximoJogador").getAsInt();
+        t.clock = RoundClock.fromJson(o.has("relogio") ? o.getAsJsonObject("relogio") : null);
         for (JsonElement e : o.getAsJsonArray("jogadores")) {
             JsonObject p = e.getAsJsonObject();
             Player player = new Player(p.get("id").getAsInt(), p.get("nome").getAsString());
@@ -390,13 +428,13 @@ final class Tournament {
                 Score score = res == null || res.isJsonNull() ? null : new Score(res.getAsJsonObject().get("a").getAsInt(), res.getAsJsonObject().get("b").getAsInt(), res.getAsJsonObject().get("empates").getAsInt());
                 tables.add(new Table(table.get("mesa").getAsInt(), table.get("a").getAsInt(), table.get("b").getAsInt(), score));
             }
-            t.rounds.add(new Round(r.get("numero").getAsInt(), tables));
+            t.rounds.add(new Round(r.get("numero").getAsInt(), tables, r.has("extra") && r.get("extra").getAsBoolean()));
         }
         return t;
     }
 
     /** O que a página mostra, para qualquer um com o link; {@code mine} diz se quem pede é o organizador. */
-    JsonObject publicJson(boolean mine) {
+    JsonObject publicJson(boolean mine, long now) {
         JsonObject o = new JsonObject();
         o.addProperty("id", id);
         o.addProperty("nome", title);
@@ -409,6 +447,8 @@ final class Tournament {
         o.addProperty("rodadasSugeridas", suggestedRounds(players.size()));
         o.addProperty("inscricoesAbertas", canRegister());
         o.addProperty("organizadorSouEu", mine);
+        o.addProperty("minutosPorRodada", clock.minutes());
+        if ("andamento".equals(status())) o.add("relogio", clock.publicJson(now));
         o.add("jogadores", playersJson());
         o.add("rodadasJogadas", roundsJson());
         JsonArray table = new JsonArray();
@@ -463,6 +503,7 @@ final class Tournament {
         for (Round r : rounds) {
             JsonObject o = new JsonObject();
             o.addProperty("numero", r.number());
+            if (r.extra()) o.addProperty("extra", true);
             JsonArray tables = new JsonArray();
             for (Table t : r.tables()) {
                 JsonObject m = new JsonObject();

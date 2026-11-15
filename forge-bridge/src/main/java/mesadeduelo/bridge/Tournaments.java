@@ -44,16 +44,17 @@ import mesadeduelo.bridge.Admin.Response;
  *   GET    (vazio)                          {torneios: [resumo]}: os da conta, mais novos primeiro
  *   POST   (vazio) {nome, formato?}         cria
  *   GET    {código}                         {torneio}, sem login
- *   PUT    {código} {nome?, formato?, rodadas?}
+ *   PUT    {código} {nome?, formato?, rodadas?, minutos?}   minutos: o tempo de cada rodada ({@link RoundClock})
  *   DELETE {código}
  *   POST   {código}/jogadores {nome}         inscreve (atrasado depois do sorteio da 1ª rodada, até o da 2ª)
  *   PUT    {código}/jogadores/{id} {nome}    corrige o nome
  *   DELETE {código}/jogadores/{id}           tira da lista quem ainda não foi sorteado
  *   POST   {código}/jogadores/{id}/sair | voltar
- *   POST   {código}/rodadas                  sorteia a próxima
+ *   POST   {código}/rodadas {extra?}         sorteia a próxima; com extra: true, uma além das planejadas
  *   DELETE {código}/rodadas/{n}              desfaz o sorteio da última, sem resultados
  *   PUT    {código}/rodadas/{n}/mesas/{m} {a, b, empates}
  *   DELETE {código}/rodadas/{n}/mesas/{m}    apaga o resultado
+ *   POST   {código}/relogio {acao: iniciar | pausar | ajustar | zerar, minutos?}   o relógio da rodada atual
  *   POST   {código}/encerrar | reabrir
  */
 final class Tournaments {
@@ -120,13 +121,17 @@ final class Tournaments {
             if (in.has("nome")) t.rename(text(in, "nome"));
             if (in.has("formato")) t.format(text(in, "formato"));
             if (in.has("rodadas")) t.plannedRounds(number(in, "rodadas"));
+            if (in.has("minutos")) t.clock.minutes(number(in, "minutos"));
             return;
         }
         if (n == 2 && p[1].equals("jogadores") && "POST".equals(method)) { t.addPlayer(text(in, "nome")); return; }
         if (n == 3 && p[1].equals("jogadores") && "PUT".equals(method)) { t.renamePlayer(id(p[2]), text(in, "nome")); return; }
         if (n == 3 && p[1].equals("jogadores") && "DELETE".equals(method)) { t.removePlayer(id(p[2])); return; }
         if (n == 4 && p[1].equals("jogadores") && "POST".equals(method) && (p[3].equals("sair") || p[3].equals("voltar"))) { t.drop(id(p[2]), p[3].equals("sair")); return; }
-        if (n == 2 && p[1].equals("rodadas") && "POST".equals(method)) { t.pairNext(random); return; }
+        if (n == 2 && p[1].equals("rodadas") && "POST".equals(method)) {
+            if (in.has("extra") && in.get("extra").isJsonPrimitive() && in.get("extra").getAsBoolean()) t.pairExtra(random); else t.pairNext(random);
+            return;
+        }
         if (n == 3 && p[1].equals("rodadas") && "DELETE".equals(method)) {
             if (id(p[2]) != t.rounds.size()) throw new IllegalArgumentException("Só dá para desfazer o sorteio da última rodada.");
             t.undoPairing();
@@ -135,6 +140,18 @@ final class Tournaments {
         if (n == 5 && p[1].equals("rodadas") && p[3].equals("mesas") && ("PUT".equals(method) || "DELETE".equals(method))) {
             Tournament.Score score = "DELETE".equals(method) ? null : new Tournament.Score(number(in, "a"), number(in, "b"), in.has("empates") ? number(in, "empates") : 0);
             t.result(id(p[2]), id(p[4]), score);
+            return;
+        }
+        if (n == 2 && p[1].equals("relogio") && "POST".equals(method)) {
+            RoundClock c = t.liveClock();
+            long now = clock.getAsLong();
+            switch (String.valueOf(text(in, "acao"))) {
+                case "iniciar" -> c.start(now);
+                case "pausar" -> c.pause(now);
+                case "ajustar" -> c.adjust(now, number(in, "minutos"));
+                case "zerar" -> c.reset();
+                default -> throw new IllegalArgumentException("Ação desconhecida do relógio.");
+            }
             return;
         }
         if (n == 2 && p[1].equals("encerrar") && "POST".equals(method)) { t.finish(); return; }
@@ -194,9 +211,9 @@ final class Tournaments {
         return answer(t, true);
     }
 
-    private static Response answer(Tournament t, boolean mine) {
+    private Response answer(Tournament t, boolean mine) {
         JsonObject o = new JsonObject();
-        o.add("torneio", t.publicJson(mine));
+        o.add("torneio", t.publicJson(mine, clock.getAsLong()));
         return Response.json(200, o);
     }
 

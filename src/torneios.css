@@ -25,13 +25,21 @@
 .tn-resumo:hover, .tn-resumo:focus-visible { border-color: var(--gold); }
 .tn-resumo.e-encerrado { border-left-color: var(--muted); }
 .tn-resumo.e-inscricoes { border-left-color: var(--heal); }
-.tn-resumo strong { font: 700 16px var(--display); overflow-wrap: anywhere; }
-.tn-resumo span { grid-column: 1; color: var(--muted); font-size: 13px; }
-.tn-resumo small { grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--muted); font-size: 13px; }
+.tn-resumo { grid-template-columns: auto 1fr auto; }
+.tn-resumo strong { grid-column: 2; font: 700 16px var(--display); overflow-wrap: anywhere; }
+.tn-resumo > span:not(.tn-resumo-ico) { grid-column: 2; color: var(--muted); font-size: 13px; }
+.tn-resumo small { grid-column: 3; grid-row: 1 / 3; align-self: center; color: var(--muted); font-size: 13px; }
+.tn-resumo-ico {
+  grid-column: 1; grid-row: 1 / 3; align-self: center; display: grid; place-items: center; width: 40px; height: 40px;
+  border-radius: 12px; background: #f2b54c14; border: 1px solid #f2b54c40; color: var(--gold);
+}
+.tn-resumo-ico svg { width: 22px; height: 22px; }
+.tn-resumo.e-encerrado .tn-resumo-ico { color: var(--muted); background: #ffffff08; border-color: var(--line); }
+.tn-resumo.e-inscricoes .tn-resumo-ico { color: var(--heal); background: #63d68f14; border-color: #63d68f40; }
 
 /* Um torneio: cabeçalho, próximo passo e as seções. */
 .tn-cabecalho h1 { margin-top: 2px; }
-.tn-estado { margin: 8px 0 0; color: var(--gold); font: 700 13px var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.tn-estado { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; color: var(--gold); font: 700 13px var(--body); letter-spacing: .06em; text-transform: uppercase; }
 .tn-estado.e-encerrado { color: var(--muted); }
 .tn-estado.e-inscricoes { color: var(--heal); }
 .tn-sobre { margin: 0 0 12px; color: var(--muted); }
@@ -63,7 +71,8 @@
 .tn-mesa.tn-bye { border-left-color: var(--muted); }
 .tn-mesa p { margin: 0; min-width: 0; }
 .tn-mesa small { color: var(--muted); }
-.tn-num { color: var(--muted); font: 600 13px var(--body); }
+.tn-num { display: flex; align-items: center; gap: 6px; color: var(--muted); font: 600 13px var(--body); }
+.tn-bye .tn-num svg { width: 16px; height: 16px; color: var(--gold); }
 .tn-confronto { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .tn-confronto strong { font-weight: 600; overflow-wrap: anywhere; }
 .tn-confronto .tn-vence { color: var(--heal); }
@@ -81,7 +90,12 @@
 .tn-corrigir summary:hover { color: var(--ink); }
 .tn-corrigir[open] summary { margin-bottom: 8px; }
 .tn-anterior { margin-bottom: 8px; }
-.tn-anterior summary { cursor: pointer; padding: 8px 0; color: var(--ink); font: 600 15px var(--body); }
+.tn-anterior summary { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 0; color: var(--ink); font: 600 15px var(--body); }
+.tn-anterior summary::after { content: ''; width: 7px; height: 7px; margin-left: 2px; border: solid var(--muted); border-width: 0 2px 2px 0; transform: rotate(45deg) translateY(-2px); transition: transform 150ms; }
+.tn-anterior[open] summary::after { transform: rotate(225deg) translate(-2px, 0); }
+.tn-anterior summary::-webkit-details-marker { display: none; }
+.tn-anterior summary { list-style: none; }
+.tn-anterior summary svg { color: var(--gold); }
 .tn-anterior .tn-mesas { margin-bottom: 8px; }
 
 /* Classificação. */
@@ -112,3 +126,138 @@
   .tn-tabela th:nth-child(7), .tn-tabela td:nth-child(7) { display: none; }
   .tn-tag { margin-left: 0; margin-top: 2px; display: table; }
 }
+
+/* Ícones: nos botões, títulos e etiquetas, do tamanho do texto ao lado. */
+.tn-pagina button svg, .tn-estado svg, .tn-corrigir summary svg, .tn-anterior summary svg { width: 18px; height: 18px; flex: none; }
+.tn-btn, .tn-mini, .tn-pagina .arena-btn { gap: 8px; }
+.tn-pagina .arena-btn { display: inline-flex; align-items: center; justify-content: center; }
+.tn-mini svg { width: 15px; height: 15px; }
+.tn-estado svg { width: 16px; height: 16px; }
+.tn-titulo { display: flex; align-items: center; gap: 10px; }
+.tn-titulo > svg {
+  width: 34px; height: 34px; padding: 7px; flex: none; border-radius: 10px;
+  background: #f2b54c14; border: 1px solid #f2b54c40; color: var(--gold);
+}
+.tn-titulo small { margin-left: 0; }
+.tn-corrigir summary { display: flex; align-items: center; gap: 6px; }
+.tn-corrigir summary svg { width: 14px; height: 14px; }
+.tn-perigo svg { color: #ffb4a8; }
+
+/* As rodadas em linha: fechada com ✓, a atual com o anel do que já foi lançado, as que faltam apagadas. */
+.tn-progresso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 4px 0 16px; }
+.tn-progresso ol { list-style: none; display: flex; align-items: center; margin: 0; padding: 0; }
+.tn-progresso li { display: flex; align-items: center; }
+.tn-progresso li + li::before { content: ''; width: 22px; height: 2px; background: var(--line); }
+.tn-progresso li.tn-p-feita + li::before, .tn-progresso li.tn-p-feita + li.tn-p-atual::before { background: var(--gold); }
+.tn-bola {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  font: 700 13px var(--display); color: var(--muted); border: 2px solid var(--line); background: var(--panel);
+}
+.tn-p-feita .tn-bola { color: #2b1700; border-color: var(--gold-light); background: linear-gradient(180deg, #ffd27a, var(--gold) 55%, var(--gold-deep)); }
+.tn-p-feita .tn-bola svg { width: 16px; height: 16px; stroke-width: 2.6; }
+.tn-p-atual .tn-bola {
+  position: relative; width: 36px; height: 36px; color: var(--gold-light); border: 0;
+  background: radial-gradient(closest-side, var(--surface) 76%, transparent 78% 100%), conic-gradient(var(--gold) var(--feito, 0%), #ffffff1a 0);
+  box-shadow: 0 0 16px #f2b54c40;
+}
+/* A rodada extra fica com a borda tracejada, para se ver que passou das planejadas. */
+.tn-p-extra .tn-bola { outline: 1px dashed var(--gold); outline-offset: 2px; }
+.tn-progresso p { margin: 0; color: var(--muted); font-size: 13px; }
+.tn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Pódio: o 1º no meio e mais alto, com medalhas de ouro, prata e bronze; no fim, coroa no primeiro. */
+.tn-podio {
+  list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px;
+  max-width: 560px; margin: 0 auto 18px; padding: 0;
+}
+.tn-degrau { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; text-align: center; }
+.tn-degrau.d1 { grid-column: 2; grid-row: 1; }
+.tn-degrau.d2 { grid-column: 1; grid-row: 1; }
+.tn-degrau.d3 { grid-column: 3; grid-row: 1; }
+.tn-degrau strong { max-width: 100%; color: var(--ink); font: 700 15px var(--display); overflow-wrap: anywhere; }
+.tn-degrau.d1 strong { font-size: 17px; color: var(--gold-light); }
+.tn-degrau small { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tn-medalha {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  font: 800 15px var(--display); color: #1d1405; box-shadow: inset 0 1px 0 #ffffff90, 0 3px 12px #0006;
+}
+.tn-medalha.m1 { width: 54px; height: 54px; font-size: 18px; background: linear-gradient(160deg, #fff0bf, var(--gold) 50%, var(--gold-deep)); box-shadow: inset 0 1px 0 #ffffffa0, 0 0 22px #f2b54c66; }
+.tn-medalha.m2 { background: linear-gradient(160deg, #ffffff, #cfcfd2 50%, #8c8c92); }
+.tn-medalha.m3 { background: linear-gradient(160deg, #ffd9b8, #d08a54 50%, #8a4f26); }
+.tn-base {
+  width: 100%; margin-top: 6px; border-radius: 10px 10px 0 0; border: 1px solid var(--line); border-bottom: 0;
+  background: linear-gradient(180deg, #ffffff12, #ffffff03);
+}
+.d1 .tn-base { height: 64px; border-color: #f2b54c66; background: linear-gradient(180deg, #f2b54c2e, #f2b54c05); }
+.d2 .tn-base { height: 44px; }
+.d3 .tn-base { height: 28px; }
+.tn-coroa { color: var(--gold); filter: drop-shadow(0 0 8px #f2b54c88); }
+.tn-coroa svg { width: 30px; height: 30px; }
+.tn-podio-fim .d1 .tn-medalha { animation: tn-brilho 2.4s ease-in-out infinite; }
+@keyframes tn-brilho { 50% { box-shadow: inset 0 1px 0 #ffffffa0, 0 0 34px #f2b54caa; } }
+@media (prefers-reduced-motion: reduce) { .tn-podio-fim .d1 .tn-medalha { animation: none; } }
+
+/* Estados vazios: ilustração em traço dourado e o que fazer a seguir. */
+.tn-vazio {
+  display: flex; align-items: center; gap: 20px; margin-top: 12px; padding: 18px 22px; border-radius: 14px;
+  background: var(--surface); border: 1px dashed #f2b54c40;
+}
+.tn-vazio p { display: flex; flex-direction: column; gap: 6px; margin: 0; color: var(--muted); line-height: 1.5; }
+.tn-vazio strong { color: var(--ink); font: 700 17px var(--display); }
+.tn-vazio a { color: var(--gold-light); }
+.tn-ilustra { width: 150px; height: auto; flex: none; }
+.tn-il-carta { fill: color-mix(in srgb, var(--azul-4a5a80, #4a5a80) 14%, transparent); stroke: var(--muted); stroke-width: 1.6; }
+.tn-il-ouro { fill: #f2b54c26; stroke: var(--gold); stroke-width: 2; }
+.tn-il-traco { stroke: var(--gold); stroke-width: 2; }
+.tn-il-vazio { stroke: var(--muted); stroke-dasharray: 3 4; }
+.tn-il-brilho { stroke: var(--gold-light); stroke-width: 1.6; }
+
+@media (max-width: 640px) {
+  .tn-vazio { flex-direction: column; text-align: center; }
+  .tn-ilustra { width: 128px; }
+  .tn-podio { gap: 6px; }
+  .tn-medalha { width: 38px; height: 38px; }
+  .tn-medalha.m1 { width: 46px; height: 46px; }
+  .tn-degrau strong { font-size: 13px; }
+  .tn-degrau.d1 strong { font-size: 15px; }
+  .tn-progresso li + li::before { width: 12px; }
+}
+
+/* Relógio da rodada: números grandes, âmbar nos últimos 5 minutos e vermelho com o tempo esgotado. */
+.tn-relogio {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 12px;
+  padding: 14px 18px; border-radius: 14px; background: var(--surface); border: 1px solid #f2b54c40;
+}
+.tn-relogio-mostrador { display: flex; flex-direction: column; min-width: 0; }
+.tn-relogio-tempo { font: 800 44px/1 var(--display); color: var(--gold-light); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.tn-relogio-estado { margin-top: 4px; color: var(--muted); font-size: 13px; }
+.tn-relogio-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tn-relogio-acoes .arena-btn { min-height: 40px; padding-inline: 18px; font-size: 15px; }
+.tn-relogio.e-parado .tn-relogio-tempo { color: var(--ink); }
+.tn-relogio.f-aviso { border-color: #ffb54c88; }
+.tn-relogio.f-aviso .tn-relogio-tempo, .tn-telao.f-aviso .tn-telao-tempo { color: #ffc35c; }
+.tn-relogio.f-tempo { border-color: #ff8a7a; background: linear-gradient(180deg, #3a1d22, var(--surface)); }
+.tn-relogio.f-tempo .tn-relogio-tempo, .tn-telao.f-tempo .tn-telao-tempo { color: #ff8a7a; }
+.tn-relogio.f-tempo .tn-relogio-estado { color: #ffb4a8; font-weight: 600; font-size: 15px; }
+.tn-relogio.e-pausado .tn-relogio-tempo { opacity: .7; }
+
+/* Tela cheia para a TV ou o projetor: o relógio ocupa a tela, legível de longe. */
+.tn-telao {
+  position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5vh; padding: 24px; text-align: center; background: radial-gradient(ellipse at 50% 40%, var(--surface), var(--bg-deep) 70%);
+}
+.tn-telao-nome { margin: 0; color: var(--gold); font: 700 clamp(18px, 3.4vw, 40px) var(--display); }
+.tn-telao-rodada { margin: 0; color: var(--muted); font: 600 clamp(16px, 2.6vw, 30px) var(--body); }
+.tn-telao-tempo { color: var(--gold-light); font: 800 clamp(96px, 26vw, 360px)/1 var(--display); font-variant-numeric: tabular-nums; }
+.tn-telao-estado { color: var(--ink); font: 600 clamp(16px, 2.8vw, 34px) var(--body); }
+.tn-telao.f-tempo .tn-telao-estado { color: #ffb4a8; }
+.tn-telao.f-tempo { background: radial-gradient(ellipse at 50% 40%, #3a1d22, var(--bg-deep) 70%); }
+.tn-telao-fechar { position: absolute; top: 16px; right: 16px; opacity: .55; }
+.tn-telao-fechar:hover, .tn-telao-fechar:focus-visible { opacity: 1; }
+
+@media (max-width: 640px) {
+  .tn-relogio-tempo { font-size: 38px; }
+  .tn-relogio-acoes { width: 100%; }
+}
+/* Com a tela cheia aberta, a página atrás não rola. */
+body:has(.tn-telao) { overflow: hidden; }

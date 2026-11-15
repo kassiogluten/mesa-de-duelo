@@ -533,7 +533,8 @@ Pedido em 14/11/2026. O objetivo final é a mesa organizar torneios com as parti
 - [ ] Avaliar com os jogadores e decidir se segue para os torneios dentro do sistema.
 - [ ] Inscrição pela conta (o jogador entra pelo link, em vez de o organizador digitar o nome).
 - [ ] Sortear a rodada abrindo as salas das mesas, com o resultado da partida lançado sozinho no torneio.
-- [ ] Relógio da rodada (50 minutos, com os turnos extras) e o que fazer com quem não aparece.
+- [x] Relógio da rodada (50 minutos editáveis, iniciar, pausar e ajustar, aviso dos 5 turnos extras, tela cheia para a TV). Feito em 14/11/2026 (`novidades-pendentes/torneios-relogio`).
+- [ ] O que fazer com quem não aparece (derrota por atraso depois de alguns minutos do relógio).
 - [ ] Top 8 eliminatório depois das rodadas suíças.
 - [ ] Pontos acumulados de quem vence entre torneios (ranking de temporada).
 

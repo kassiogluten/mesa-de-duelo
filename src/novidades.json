@@ -1,4 +1,25 @@
 {
+  "0.175.0": {
+    "Relógio da rodada nos torneios": [
+      { "img": "0.175.0/relogio.webp", "legenda": "O relógio correndo no alto da rodada, com Pausar, os ajustes de minutos, Recomeçar e Tela cheia." },
+      { "img": "0.175.0/tempo.webp", "legenda": "Com o tempo esgotado, o relógio fica vermelho e avisa dos 5 turnos extras." }
+    ],
+    "Relógio em tela cheia para a TV da loja": [
+      { "img": "0.175.0/tela-cheia.webp", "legenda": "A tela cheia, com o nome do torneio, a rodada e o tempo grandes, para a TV ou o projetor." }
+    ],
+    "Rodada extra antes de encerrar o torneio": [
+      { "img": "0.175.0/rodada-extra.webp", "legenda": "Com as rodadas planejadas jogadas, o botão Rodada extra aparece ao lado de Encerrar o torneio." }
+    ],
+    "Pódio dos três primeiros nos torneios": [
+      { "img": "0.175.0/podio.webp", "legenda": "O pódio de um torneio encerrado: a coroa sobre o primeiro lugar e as medalhas de ouro, prata e bronze." }
+    ],
+    "Rodadas do torneio em linha": [
+      { "img": "0.175.0/rodadas.webp", "legenda": "A 1ª rodada fechada, a 2ª com o anel quase completo (4 de 5 resultados) e as duas que faltam." }
+    ],
+    "Ícones e ilustrações na página de torneios": [
+      { "img": "0.175.0/vazio.webp", "legenda": "Um torneio recém-criado: a seção Jogadores com ícone, o botão Inscrever e o desenho da mesa vazia com o próximo passo." }
+    ]
+  },
   "0.174.0": {
     "Mesa viva": [
       { "img": "0.174.0/luz-de-quem-joga.webp", "legenda": "No turno do oponente, a luz vai para o campo dele." },

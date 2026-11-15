@@ -85,6 +85,71 @@ public class TournamentTest {
         assertThrows(IllegalArgumentException.class, t::finish);
     }
 
+    @Test public void anExtraRoundComesOnlyAfterThePlannedOnesAndUndoingItGivesItBack() {
+        Tournament t = with(8);
+        Random random = new Random(9);
+        t.pairNext(random);
+        assertEquals(3, t.rounds());
+        IllegalArgumentException early = assertThrows(IllegalArgumentException.class, () -> t.pairExtra(random));
+        assertEquals("Ainda há rodadas planejadas: sorteie a rodada 2.", early.getMessage());
+        playAll(t);
+        t.pairNext(random); playAll(t);
+        t.pairNext(random);
+        assertThrows("a última rodada ainda não fechou", IllegalArgumentException.class, () -> t.pairExtra(random));
+        assertEquals("a rodada que falhou não muda o planejado", 3, t.rounds());
+        playAll(t);
+
+        Tournament.Round extra = t.pairExtra(random);
+        assertTrue(extra.extra());
+        assertEquals(4, extra.number());
+        assertEquals(4, t.rounds());
+        assertEquals(4, extra.tables().size());
+        Tournament back = Tournament.fromJson(JsonParser.parseString(t.toJson().toString()).getAsJsonObject());
+        assertTrue("a marca de extra fica no arquivo", back.current().extra());
+
+        t.undoPairing();
+        assertEquals("desfazer a extra tira a rodada a mais", 3, t.rounds());
+        t.pairExtra(random); playAll(t);
+        t.finish();
+        assertThrows(IllegalArgumentException.class, () -> t.pairExtra(random));
+    }
+
+    @Test public void theRoundClockStartsPausesAdjustsAndResetsWithEachPairing() {
+        Tournament t = with(4);
+        assertThrows("sem rodada, sem relógio", IllegalArgumentException.class, t::liveClock);
+        t.pairNext(new Random(10));
+        RoundClock c = t.liveClock();
+        long min = 60_000;
+        assertEquals("parado", c.publicJson(0).get("estado").getAsString());
+        assertEquals(50 * min, c.remaining(0));
+        c.start(1_000);
+        assertEquals(50 * min - 9_000, c.remaining(10_000));
+        assertThrows(IllegalArgumentException.class, () -> c.start(10_000));
+        c.pause(10 * min + 1_000);
+        assertEquals("pausado, o tempo não anda", 40 * min, c.remaining(99 * min));
+        assertEquals("pausado", c.publicJson(0).get("estado").getAsString());
+        c.adjust(0, 5);
+        c.start(0);
+        c.adjust(0, -1);
+        assertEquals(44 * min, c.remaining(0));
+        assertEquals("passa do zero: a mesa mostra o tempo esgotado", -6 * min, c.remaining(50 * min));
+        assertThrows(IllegalArgumentException.class, () -> c.adjust(0, 0));
+        assertThrows(IllegalArgumentException.class, () -> c.minutes(2));
+
+        c.minutes(30);
+        Tournament back = Tournament.fromJson(JsonParser.parseString(t.toJson().toString()).getAsJsonObject());
+        assertEquals("o relógio correndo fica no arquivo", 44 * min, back.clock.remaining(0));
+        assertTrue(back.publicJson(true, 0).getAsJsonObject("relogio").has("terminaEm"));
+
+        playAll(t);
+        t.pairNext(new Random(10));
+        assertFalse("rodada nova: tempo cheio, parado", t.clock.running());
+        assertEquals("com o tempo novo", 30 * min, t.clock.remaining(0));
+        playAll(t);
+        t.finish();
+        assertFalse(t.publicJson(true, 0).has("relogio"));
+    }
+
     @Test public void lateEntrantsStartWithALossUntilTheSecondRoundIsPaired() {
         Tournament t = with(4);
         Random random = new Random(3);
@@ -171,7 +236,7 @@ public class TournamentTest {
         t.drop(t.players.get(1).id, true);
         Tournament back = Tournament.fromJson(JsonParser.parseString(t.toJson().toString()).getAsJsonObject());
         assertEquals(t.toJson(), back.toJson());
-        assertEquals(t.publicJson(true), back.publicJson(true));
+        assertEquals(t.publicJson(true, 5), back.publicJson(true, 5));
         assertEquals("Jogador 6", back.addPlayer("Jogador 6").name);
     }
 

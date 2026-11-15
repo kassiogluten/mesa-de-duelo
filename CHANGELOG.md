@@ -8,6 +8,20 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.175.0] - 2026-11-14
+
+### Novo
+
+- **Relógio da rodada nos torneios.** Cada rodada tem um relógio de 50 minutos (o tempo muda em **Editar**, de 5 a 180 minutos). Depois de anunciar as mesas, o organizador toca em **Iniciar relógio** e pode pausar, continuar, tirar 1 minuto, somar 1 ou 5 minutos e recomeçar. Quem acompanha pelo link vê o mesmo relógio correndo no próprio celular. Nos últimos 5 minutos ele fica âmbar e, quando o tempo acaba, fica vermelho com "Tempo! Terminem o turno e joguem mais 5 turnos", e o aparelho do organizador toca um som e vibra.
+- **Relógio em tela cheia para a TV da loja.** O botão **Tela cheia**, ao lado do relógio, mostra o nome do torneio, a rodada e o tempo bem grandes, para deixar numa TV ou num projetor. Funciona também pelo link público, sem a conta do organizador.
+- **Rodada extra antes de encerrar o torneio.** Quando todas as rodadas planejadas já foram jogadas, o organizador vê **Rodada extra** ao lado de **Encerrar o torneio**: ela sorteia mais uma rodada na hora, no mesmo sistema suíço, sem precisar mudar o número de rodadas em **Editar**. A rodada aparece como "Rodada 4 · extra" nos títulos e na linha das rodadas, e desfazer o sorteio dela volta ao número de antes. Vale até o limite de 15 rodadas.
+
+### Mudou
+
+- **Pódio dos três primeiros nos torneios.** Acima da classificação, os três primeiros aparecem num pódio, com medalhas de ouro, prata e bronze, os pontos e as vitórias, derrotas e empates. Quando o torneio é encerrado, o primeiro lugar ganha a coroa.
+- **Rodadas do torneio em linha.** No alto da página do torneio, uma linha mostra as rodadas: as fechadas com ✓, a atual com um anel que se completa conforme os placares são lançados ("4 de 5 resultados lançados na rodada 2") e as que ainda faltam.
+- **Ícones e ilustrações na página de torneios.** Cada botão (copiar o link, editar, sortear, encerrar, inscrever, sair do torneio) e cada seção ganham um ícone, para achar tudo rápido no celular. A lista sem torneios, o torneio sem jogadores e a classificação antes da 1ª rodada mostram um desenho com o que fazer a seguir.
+
 ## [0.174.0] - 2026-11-14
 
 ### Novo

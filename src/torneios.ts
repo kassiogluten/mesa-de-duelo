@@ -6,7 +6,9 @@ import './partidas.css';
 import './torneios.css';
 import { contaSessao, contasLigadas, onContaChange } from './conta/session';
 import { bridgeHttpUrl } from './forge/client';
-import { criarHTML, listaHTML, torneioHTML, type Resumo, type Torneio } from './torneios/view';
+import { criarHTML, listaHTML, torneioHTML, vazioHTML, type Resumo, type Torneio } from './torneios/view';
+import { ILL_MESA, ILL_TROFEU } from './torneios/art';
+import { ligarRelogio } from './torneios/clockControl';
 import { mountContaMenu } from './ui/contaMenu';
 import { esc } from './ui/cardtext';
 import { iniciarTema } from './ui/temas';
@@ -20,7 +22,7 @@ iniciarTema();
  */
 const API = bridgeHttpUrl('/api/torneios/');
 /** De quanto em quanto tempo a página de quem só olha busca o torneio de novo. */
-const ATUALIZAR_MS = 20_000;
+const ATUALIZAR_MS = 15_000;
 const codigo = new URLSearchParams(location.search).get('id')?.trim().toUpperCase() ?? '';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -41,6 +43,14 @@ const conteudo = app.querySelector<HTMLElement>('[data-conteudo]')!;
 const status = app.querySelector<HTMLElement>('.tn-status')!;
 
 let torneio: Torneio | null = null;
+/** Quando o torneio chegou do servidor: o relógio acerta a hora deste aparelho por ela. */
+let recebidoEm = 0;
+const relogio = ligarRelogio(() => torneio ? { torneio, recebidoEm } : null);
+
+/** O torneio sem o que muda a cada pedido (a hora do servidor e o que falta no relógio correndo), para comparar. */
+const semHora = (t: Torneio | null) => JSON.stringify(t, function (this: Record<string, unknown>, k, v) {
+  return k === 'agora' || (k === 'restanteMs' && this.estado === 'correndo') ? undefined : v;
+});
 let ocupado = false;
 let pedido = 0;
 
@@ -64,7 +74,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 async function carregarLista() {
   const meu = ++pedido;
   if (!contasLigadas()) { aviso('<p>As contas não estão ligadas neste servidor.</p>'); return; }
-  if (!contaSessao()) { aviso('<h2>Entre com a conta</h2><p>Use o botão <strong>Fazer login com o Google</strong>, no alto da página, para criar torneios. Para acompanhar um torneio, basta o link que o organizador compartilhou.</p>'); return; }
+  if (!contaSessao()) { conteudo.innerHTML = vazioHTML(ILL_TROFEU, 'Entre com a conta para criar torneios.', 'Use o botão <strong>Fazer login com o Google</strong>, no alto da página. Para acompanhar um torneio, basta o link que o organizador compartilhou.'); return; }
   aviso('<p>Carregando…</p>');
   try {
     const r = await api<{ torneios: Resumo[] }>('');
@@ -91,6 +101,8 @@ function desenhar(foco?: string) {
   // Os títulos das seções recebem o foco depois de sortear e encerrar.
   if (alvo?.matches('h2')) alvo.tabIndex = -1;
   alvo?.focus();
+  relogio.tick();
+  relogio.atualizarTelao();
 }
 
 async function carregarTorneio(silencioso = false) {
@@ -100,14 +112,15 @@ async function carregarTorneio(silencioso = false) {
     const r = await api<{ torneio: Torneio }>(encodeURIComponent(codigo));
     if (meu !== pedido || ocupado) return;
     // Quem só olha não perde o lugar nem o que estava aberto: só redesenha quando mudou.
-    if (silencioso && JSON.stringify(r.torneio) === JSON.stringify(torneio)) return;
+    if (silencioso && semHora(r.torneio) === semHora(torneio)) return;
     const abertos = [...conteudo.querySelectorAll<HTMLDetailsElement>('details[open] summary')].map(s => s.textContent);
     torneio = r.torneio;
+    recebidoEm = Date.now();
     desenhar();
     conteudo.querySelectorAll<HTMLDetailsElement>('details').forEach(d => { if (abertos.includes(d.querySelector('summary')?.textContent ?? null)) d.open = true; });
   } catch (e) {
     if (meu !== pedido || silencioso) return;
-    aviso(`<h2>Torneio não encontrado</h2><p>${esc(erroTexto(e))}</p><p><a class="arena-btn secondary" href="/torneios.html">Ver meus torneios</a></p>`);
+    conteudo.innerHTML = vazioHTML(ILL_MESA, 'Torneio não encontrado.', `${esc(erroTexto(e))} <a href="/torneios.html">Ver meus torneios</a>`);
   }
 }
 
@@ -120,6 +133,7 @@ async function mudar(method: string, path: string, body?: object, foco?: string)
   try {
     const r = await api<{ torneio: Torneio }>(`${encodeURIComponent(torneio.id)}${path}`, { method, body: body ? JSON.stringify(body) : undefined });
     torneio = r.torneio;
+    recebidoEm = Date.now();
     status.textContent = 'Salvo.';
     desenhar(foco);
   } catch (e) {
@@ -173,7 +187,7 @@ conteudo.addEventListener('submit', async e => {
   }
   if (form.matches('[data-editar]')) {
     abrirEditar(false);
-    await mudar('PUT', '', { nome: dados.nome, formato: dados.formato, ...(dados.rodadas ? { rodadas: Number(dados.rodadas) } : {}) }, '[data-acao="editar"]');
+    await mudar('PUT', '', { nome: dados.nome, formato: dados.formato, ...(dados.rodadas ? { rodadas: Number(dados.rodadas) } : {}), ...(dados.minutos ? { minutos: Number(dados.minutos) } : {}) }, '[data-acao="editar"]');
   }
 });
 
@@ -193,6 +207,12 @@ conteudo.addEventListener('click', async e => {
   else if (d.acao === 'copiar') await copiarLink();
   else if (d.acao === 'editar') abrirEditar(alvo.getAttribute('aria-expanded') !== 'true');
   else if (d.acao === 'sortear') await mudar('POST', '/rodadas', undefined, '#tn-atual');
+  else if (d.acao === 'extra') await mudar('POST', '/rodadas', { extra: true }, '#tn-atual');
+  else if (d.acao === 'relogio') {
+    const acao = d.relogioAcao!;
+    if (acao === 'zerar' && !confirm('Recomeçar o relógio com o tempo cheio, parado?')) return;
+    await mudar('POST', '/relogio', { acao, ...(d.minutos ? { minutos: Number(d.minutos) } : {}) }, acao === 'ajustar' ? `[data-minutos="${d.minutos}"]` : '[data-relogio] button');
+  } else if (d.acao === 'telao') relogio.abrirTelao();
   else if (d.acao === 'desfazer') await mudar('DELETE', `/rodadas/${d.rodada}`);
   else if (d.acao === 'encerrar') { if (confirm('Encerrar o torneio? A classificação de agora fica como a final. Dá para reabrir depois para corrigir.')) await mudar('POST', '/encerrar', undefined, '#tn-class'); }
   else if (d.acao === 'reabrir') await mudar('POST', '/reabrir');
