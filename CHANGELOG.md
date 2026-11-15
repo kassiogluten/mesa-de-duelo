@@ -8,6 +8,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.178.0] - 2026-11-15
+
+### Novo
+
+- **Laboratório de efeitos aberto a todos.** O menu **⋯** da tela inicial ganha **Efeitos**, no grupo Laboratório, que abre em `/efeitos` (dá para mandar o link): uma mesa de mentira onde você monta o campo e dispara cada animação (dano, combate, mágicas, fichas, moer, vidência, ultimate, golpe letal e o tour com todos em sequência), sem precisar de partida.
+
+### Mudou
+
+- **Destruir racha e parte a carta.** Rachaduras de luz correm pela carta destruída (por uma mágica ou morta pelo dano do combate) enquanto ela treme, e ela se parte em pedaços com a própria arte, que pulam e caem; a poeira segue até o cemitério.
+- **Exilar abre um portal.** Um buraco negro com a borda de luz se abre deitado sobre a mesa, e a carta exilada gira, tomba e é sugada para dentro dele num redemoinho, até o portal se fechar num clarão.
+- **Chegada ao campo mais discreta.** As estrelinhas do enjoo de invocação, quando a criatura chega tonta e quando o enjoo passa, ficaram menores, em menor número e mais transparentes, e a moldura dourada que marca a permanente que acabou de entrar virou um contorno fino que some logo.
+- **Menu ⋯ mais curto e em grupos.** Os itens ficam em Partidas (salas, rever e torneios), Laboratório (montar uma mesa e efeitos), Aparência e Ajuda (enviar sugestão ou erro e Meus relatos), e os temas da mesa viram uma linha de amostras coloridas, com o atual marcado em dourado e o nome ao passar o dedo ou o mouse.
+
 ## [0.177.0] - 2026-11-15
 
 ### Novo

@@ -19,7 +19,7 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
   const { destination, pileOf, zonePoint, reanimate, leave } = zones;
   const ninja = createNinjaMotion(kit);
   function cardFlight(event: PresentationEvent, card: HTMLElement | null, id: number | undefined, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }) {
-    if (event.type === 'resolved' && !event.trigger && card && id !== undefined && performance.now() - (state.landedAt.get(String(id)) ?? -Infinity) < 4000) { pulse(card); return; }
+    if (event.type === 'resolved' && !event.trigger && card && id !== undefined && performance.now() - (state.landedAt.get(String(id)) ?? -Infinity) < 4000) { pulse(card, 'arrive-highlight'); return; }
     const old = id === undefined ? undefined : state.cards.get(String(id));
     const stage = kit.stage();
     const mine = event.actor === options.you;
@@ -133,7 +133,8 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       { translate: '0 0', scale: '1', opacity: disappearing ? .1 : 1 },
     ], options.duration);
     if (target && card) {
-      pulse(card);
+      // Chegando ao campo, um contorno leve; no alvo de uma mágica, o destaque de sempre.
+      pulse(card, landing ? 'arrive-highlight' : false);
       if (options.hideDestination && !reduced() && landing) { card.style.opacity = '0'; hiddenCards.add(card); }
     }
     // A pilha já mostra a mágica: ela some até a carta que voa chegar, para não aparecer duas vezes.

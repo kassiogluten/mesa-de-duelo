@@ -39,14 +39,20 @@
 .shared-shell-header .news-icon, .shared-shell-header .mais-btn { justify-content: center; width: 40px; min-width: 40px; height: 40px; padding: 0; }
 .news-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
 .mais-btn svg { width: 18px; height: 18px; fill: currentColor; }
-.mais-menu { min-width: 230px; }
+.mais-menu { min-width: 250px; }
 /* Resposta nova num relato: o ponto do botão ⋯ (o mesmo do sino das Novidades) e o do item Meus relatos. */
 .mais-btn { position: relative; }
 .mais-item-dot { flex-shrink: 0; width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
 .mais-item-dot[hidden], .mais-dot[hidden] { display: none; }
 .mais-menu [data-mais] svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
 .mais-grupo { margin: 6px 0 2px; padding: 8px 10px 2px; border-top: 1px solid #ffffff14; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-.mais-menu [role='group'] { display: flex; flex-direction: column; }
+.mais-grupo:first-child { margin-top: 0; padding-top: 4px; border-top: 0; }
+/* Tema da mesa: as amostras numa linha só, depois de "Tema". */
+.mais-tema-linha { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 10px; color: var(--ink); font: 500 14px var(--body); }
+.mais-temas { display: flex; gap: 2px; margin-left: auto; }
+.tema-menu .mais-temas button { min-height: 0; padding: 3px; border-radius: 50%; }
+.tema-menu .mais-temas button[aria-checked='true']::after { content: none; }
+.mais-temas button[aria-checked='true'] .tema-amostra { box-shadow: inset 0 0 0 1px #ffffff2a, 0 0 0 2px var(--azul-18233b, #18233b), 0 0 0 4px var(--gold); }
 /* Conta: depois de Novidades; no celular, na linha das abas, para a primeira linha não quebrar. */
 .shared-shell-header.home-top > .conta { margin-left: -32px; }
 @media (max-width: 700px) {

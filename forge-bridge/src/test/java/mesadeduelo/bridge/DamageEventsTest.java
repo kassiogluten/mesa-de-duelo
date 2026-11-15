@@ -130,6 +130,20 @@ public class DamageEventsTest {
         assertEquals("destroyed", left.get("reason").getAsString()); assertEquals("Graveyard", left.get("to").getAsString());
     }
 
+    @Test public void creaturesKilledInCombatLeaveAsDestroyed() {
+        Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        Card attacker = add(game, "Colossal Dreadmaw", a), blocker = add(game, "Grizzly Bears", b);
+        VisibleEvents events = fight(game, a, PhaseType.COMBAT_DAMAGE);
+        Combat combat = new Combat(a); game.getPhaseHandler().setCombat(combat);
+        combat.addAttacker(attacker, b); combat.addBlocker(attacker, blocker);
+        strike(game, combat, false);
+        game.getAction().checkStateEffects(true);
+        // Morrer pelo dano do combate é ser destruída: a mesa a racha e parte, como num Murder.
+        JsonObject left = events.json(0).asList().stream().map(e -> e.getAsJsonObject()).filter(e -> "left".equals(e.get("type").getAsString())).findFirst().orElseThrow();
+        assertEquals(blocker.getId(), left.get("sourceId").getAsInt());
+        assertEquals("destroyed", left.get("reason").getAsString()); assertEquals("Graveyard", left.get("to").getAsString());
+    }
+
     @Test public void ninjutsuLinksTheAttackerThatLeftToTheNinjaThatEnters() {
         Game game = ExilePermissionsTest.game(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
         Card blade = add(game, "Slither Blade", a);

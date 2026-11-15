@@ -1,4 +1,21 @@
 {
+  "0.178.0": {
+    "Destruir racha e parte a carta": [
+      { "img": "0.178.0/destruir.webp", "legenda": "Em câmera lenta: as rachaduras cobrem a carta, ela se parte e os pedaços caem enquanto a poeira segue para o cemitério." }
+    ],
+    "Exilar abre um portal": [
+      { "img": "0.178.0/exilar.webp", "legenda": "Em câmera lenta: o portal abre embaixo da carta, que gira, tomba e encolhe até sumir no centro escuro." }
+    ],
+    "Chegada ao campo mais discreta": [
+      { "img": "0.178.0/chegada.webp", "legenda": "Em câmera lenta: o contorno fino da permanente que chegou, que se abre e some, e uma das estrelinhas do enjoo, pequena, perto do alto da carta." }
+    ],
+    "Laboratório de efeitos aberto a todos": [
+      { "img": "0.178.0/pagina.webp", "legenda": "O Laboratório de efeitos: as jogadas prontas no painel à esquerda e a mesa montada ao lado, pronta para disparar cada animação." }
+    ],
+    "Menu ⋯ mais curto e em grupos": [
+      { "img": "0.178.0/menu.webp", "legenda": "O menu ⋯ em grupos: Partidas, Laboratório (com Efeitos, novo), Aparência com os temas numa linha de amostras e Ajuda." }
+    ]
+  },
   "0.177.0": {
     "Contador de FPS e ping": [
       { "img": "0.177.0/selo-fps-ping.webp", "legenda": "O selo no canto de cima à direita da mesa: quadros por segundo e ping, em verde quando estão bons." },

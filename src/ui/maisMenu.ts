@@ -12,23 +12,30 @@ const ICON_INBOX = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13 6
 /** Leque de cartas: o item Ver a série das cartas da mesa. */
 const ICON_CARDS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="10" height="14" rx="1.5"/><path d="M9 3.5h9.5A1.5 1.5 0 0 1 20 5v13"/></svg>';
 
+/** Faísca: o item Laboratório de efeitos. */
+const ICON_SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7ZM19 15c.3 1.9 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1.1 3-3Z"/></svg>';
 
 /**
- * Botão ⋯ do cabeçalho: o que se usa de vez em quando (relatar, Meus relatos, Laboratório, Salas, Rever, Torneios,
- * cartas da mesa, tema da mesa), fora da linha das abas. Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
+ * Botão ⋯ do cabeçalho: o que se usa de vez em quando, fora da linha das abas, em grupos (Partidas: Salas, Rever,
+ * Torneios; Laboratório: montar uma mesa e efeitos; Aparência: cartas da mesa e o tema, em amostras numa linha; Ajuda:
+ * relatar e Meus relatos). Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
  */
 export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
   slot.classList.add('tema', 'mais');
   slot.innerHTML = `<button type="button" class="news-btn tema-btn mais-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções" title="Mais opções">${ICON_DOTS}<span class="news-dot mais-dot" hidden></span></button>`
     + `<div class="tema-menu mais-menu" role="menu" aria-label="Mais opções" hidden>`
-    + `<button type="button" role="menuitem" data-mais="feedback">${ICON_BALLOON}<span>Enviar sugestão ou erro</span></button>`
-    + `<button type="button" role="menuitem" data-mais="my-reports" aria-haspopup="dialog">${ICON_INBOX}<span>Meus relatos</span><span class="mais-item-dot" hidden></span></button>`
-    + `<button type="button" role="menuitem" data-mais="lab">${ICON_FLASK}<span>Laboratório</span></button>`
+    + `<p class="mais-grupo" role="presentation">Partidas</p>`
     + `<a role="menuitem" href="/salas.html" data-mais="salas">${ICON_TABLE}<span>Salas e partidas ao vivo</span></a>`
     + `<a role="menuitem" href="/partidas.html#gravadas" data-mais="rever">${ICON_REPLAY}<span>Rever partidas</span></a>`
     + `<a role="menuitem" href="/torneios.html" data-mais="torneios">${ICON_TROPHY}<span>Torneios presenciais</span></a>`
+    + `<p class="mais-grupo" role="presentation">Laboratório</p>`
+    + `<button type="button" role="menuitem" data-mais="lab" aria-label="Laboratório: montar uma mesa">${ICON_FLASK}<span>Montar uma mesa</span></button>`
+    + `<a role="menuitem" href="/efeitos" data-mais="efeitos" aria-label="Laboratório de efeitos">${ICON_SPARK}<span>Efeitos</span></a>`
     + `<p class="mais-grupo" role="presentation">Aparência</p><button type="button" role="menuitemcheckbox" aria-checked="true" data-mais="own-art"><span>Cartas da mesa</span></button><button type="button" role="menuitem" data-mais="own-art-gallery" aria-haspopup="dialog">${ICON_CARDS}<span>Ver a série</span></button>`
-    + (temasDisponiveis() ? `<p class="mais-grupo" role="presentation">Tema da mesa</p><div role="group" aria-label="Tema da mesa">${temaItemsHTML()}</div>` : '')
+    + (temasDisponiveis() ? `<div class="mais-tema-linha"><span aria-hidden="true">Tema</span><div class="mais-temas" role="group" aria-label="Tema da mesa">${temaItemsHTML()}</div></div>` : '')
+    + `<p class="mais-grupo" role="presentation">Ajuda</p>`
+    + `<button type="button" role="menuitem" data-mais="feedback">${ICON_BALLOON}<span>Enviar sugestão ou erro</span></button>`
+    + `<button type="button" role="menuitem" data-mais="my-reports" aria-haspopup="dialog">${ICON_INBOX}<span>Meus relatos</span><span class="mais-item-dot" hidden></span></button>`
     + `</div>`;
   const button = slot.querySelector<HTMLButtonElement>('.mais-btn')!, menu = slot.querySelector<HTMLElement>('.mais-menu')!;
   const marcarTema = ligarTemaItens(menu);

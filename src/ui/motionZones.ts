@@ -1,6 +1,7 @@
 import type { PresentationEvent } from './presentationTimeline';
 import { warpReturn } from './warpEffects';
 import { center, reduced, type MotionKit, type Point } from './motionKit';
+import { createLeaveEffects } from './leaveEffects';
 
 /** O brilho de quem vem de um monte especial: roxo do cemitério, branco do exílio, dourado da zona de comando. */
 export function zoneGlow(zone: string | undefined) {
@@ -10,6 +11,7 @@ export function zoneGlow(zone: string | undefined) {
 /** Os montes de cada jogador (cemitério, exílio, grimório, zona de comando) e a saída do campo para eles. */
 export function createZoneMotion(kit: MotionKit) {
   const { root, later, animate, effect, remove, fly, absorb, shatter, warpRift, gpu, flare } = kit;
+  const scenes = createLeaveEffects(kit);
   /** Para onde a carta vai ao sair do campo: cemitério, exílio, grimório ou mão. */
   function destination(event: PresentationEvent, mine: boolean, seat: Element | null, hand: Point, stage: Point) {
     const piles = (selector: string) => center(seat?.querySelector(`.piles ${selector}`)) ?? center(root.querySelector(`${mine ? '#fMePiles' : '#fOppPiles'} ${selector}`));
@@ -53,36 +55,32 @@ export function createZoneMotion(kit: MotionKit) {
     later(() => remove(ring), 860);
   }
   /**
-   * Saída do campo com um movimento por motivo: destruída racha antes de cair no cemitério, sacrificada vai escurecida,
-   * exilada se desfaz em luz, devolvida voa em arco até o lugar dela no leque. Morrer por dano e o resto voam em arco
-   * para o monte certo, que pulsa ao recebê-la.
+   * Saída do campo com um movimento por motivo: destruída racha e se parte em pedaços no lugar, sacrificada vai
+   * escurecida, exilada é sugada por um portal em espiral, devolvida voa em arco até o lugar dela no leque. Morrer por
+   * dano e o resto voam em arco para o monte certo, que pulsa ao recebê-la.
    */
   function leave(event: PresentationEvent, from: Point, to: Point, end: Point, piece: HTMLElement, duration: number,
     opts: { caption?: HTMLElement; into?: HTMLElement | null; endRot?: number; fade?: boolean } = {}) {
     const { caption, into = null, endRot = 0, fade = true } = opts;
-    if (event.to !== 'Exile') {
-      if (event.reason === 'destroyed') shatter(from);
-      // Na camada GPU: o sacrifício solta brasas e fumaça escura no lugar, e o voo deixa um rastro (poeira da destruída,
-      // brasas da sacrificada, brilho da devolvida à mão).
-      if (event.reason === 'sacrificed') gpu.play('ash', { at: from });
-      const trail = event.reason === 'destroyed' ? 'dust' : event.reason === 'sacrificed' ? 'ember' : event.to === 'Hand' ? 'sparkle' : undefined;
-      if (trail) gpu.play('trail', { from, to, duration, style: trail });
-      const tint = event.reason === 'destroyed' ? 'brightness(.7) grayscale(.6)' : event.reason === 'sacrificed' ? 'brightness(.55) sepia(.4)' : '';
-      fly(piece, from, to, end, duration, { caption, endRot, fade, tint });
-      if (into) later(() => absorb(into), duration * .85);
-    } else {
+    if (event.to === 'Exile') {
       // A conjurada por dobra volta para o exílio no fim do turno: um rasgo menor no lugar dela.
       if (warpReturn(event)) warpRift(from, .7);
-      // Some no lugar, em luz; não precisa atravessar a mesa até a pilha do exílio.
+      // Some no lugar, no portal; não precisa atravessar a mesa até a pilha do exílio.
+      if (!reduced()) { scenes.vortex(from, piece, duration, caption); return; }
       piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
-      // Na camada GPU, a carta se desfaz em grãos de luz que sobem; em CSS, o anel claro de sempre.
-      if (!gpu.play('dissolve', { at: from, duration })) {
-        const ring = effect('exile-ring', { ...from, w: end.w * 1.3, h: end.w * 1.3 });
-        animate(ring, [{ opacity: 0, scale: '.5' }, { opacity: .9, scale: '1', offset: .4 }, { opacity: 0, scale: '1.3' }], duration);
-        later(() => remove(ring), duration);
-      }
-      animate(piece, [{ opacity: 1, scale: '1', filter: 'brightness(1)' }, { opacity: .9, scale: '1.04', filter: 'brightness(2.2) saturate(.3)', offset: .45 }, { opacity: 0, scale: '1.1', filter: 'brightness(3) blur(3px)' }], duration);
+      return;
     }
+    // Destruída: a cena inteira acontece no lugar; só a poeira vai até o cemitério.
+    if (event.reason === 'destroyed' && !reduced()) { scenes.crumble(from, to, piece, duration, into); return; }
+    if (event.reason === 'destroyed') shatter(from);
+    // Na camada GPU: o sacrifício solta brasas e fumaça escura no lugar, e o voo deixa um rastro (brasas da
+    // sacrificada, brilho da devolvida à mão).
+    if (event.reason === 'sacrificed') gpu.play('ash', { at: from });
+    const trail = event.reason === 'sacrificed' ? 'ember' : event.to === 'Hand' ? 'sparkle' : undefined;
+    if (trail) gpu.play('trail', { from, to, duration, style: trail });
+    const tint = event.reason === 'destroyed' ? 'brightness(.7) grayscale(.6)' : event.reason === 'sacrificed' ? 'brightness(.55) sepia(.4)' : '';
+    fly(piece, from, to, end, duration, { caption, endRot, fade, tint });
+    if (into) later(() => absorb(into), duration * .85);
   }
   return { destination, pileOf, zonePoint, reanimate, leave };
 }

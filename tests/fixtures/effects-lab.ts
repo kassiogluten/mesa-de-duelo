@@ -12,7 +12,7 @@ import { createLabPlays, playButtons } from './effectsLabPlays';
  * (bloqueio, luta, vidência, moeda, dado, embaralhar, equipar, controle, transformar, marcadores, busca, reanimar, conjurar
  * de outro monte, comandante, pagar, mão inicial, revelar e fim da partida), e os efeitos da camada GPU (item 125) um a
  * um, com a troca entre GPU e CSS e a câmera lenta só da camada.
- * Abra /tests/fixtures/effects-lab.html no `npm run dev`. A página mostra o painel e a mesa num quadro do tamanho
+ * Abra /tests/fixtures/effects-lab.html no `npm run dev` (ou /efeitos, o endereço aberto a todos, no menu ⋯). A página mostra o painel e a mesa num quadro do tamanho
  * escolhido (?mesa abre só a mesa, que recebe os comandos do painel). Os eventos têm o mesmo formato que a ponte manda.
  */
 
@@ -223,7 +223,7 @@ function table() {
   function settle() {
     for (const [id, n] of pendingLoss) lifeChange(id, -n);
     pendingLoss.clear();
-    for (const c of dying) leave(c, 'Graveyard');
+    for (const c of dying) leave(c, 'Graveyard', 'destroyed');
     dying.clear();
   }
   function leave(c: any, to: string, reason?: string) {
@@ -408,9 +408,9 @@ function table() {
     move: c => {
       const x = byId(c.id); if (!x) return 'Escolha uma permanente.';
       switch (c.kind) {
-        case 'destroy': if (has(x, 'INDESTRUCTIBLE')) return 'Indestrutível: não sai do campo.'; leave(x, 'Graveyard', 'destroyed'); return 'Destruída: racha e cai no cemitério.';
+        case 'destroy': if (has(x, 'INDESTRUCTIBLE')) return 'Indestrutível: não sai do campo.'; leave(x, 'Graveyard', 'destroyed'); return 'Destruída: racha e se parte em pedaços.';
         case 'sacrifice': leave(x, 'Graveyard', 'sacrificed'); return 'Sacrificada: afunda e vai para o cemitério.';
-        case 'exile': leave(x, 'Exile'); return 'Exilada: se desfaz em luz.';
+        case 'exile': leave(x, 'Exile'); return 'Exilada: sugada por um portal em espiral.';
         case 'bounce': leave(x, 'Hand'); return 'Devolvida: sobe e voa até a mão.';
         case 'blink': {
           leave(x, 'Exile');
@@ -803,7 +803,7 @@ function table() {
           return 'Projétil com rastro de brasas da fonte até o alvo, e o impacto na chegada.';
         case 'ripple': if (!selected) return needSelected; port.play('ripple', { at: selected }); return 'Pouso: onda dourada em volta da carta e poeira saindo da base.';
         case 'shatter': if (!selected) return needSelected; port.play('shatter', { at: selected }); return 'Destruída: clarão e estilhaços que caem girando.';
-        case 'dissolve': if (!selected) return needSelected; port.play('dissolve', { at: selected, duration: 760 }); return 'Exilar: a carta se desfaz em grãos de luz que sobem.';
+        case 'vortex': if (!selected) return needSelected; port.play('vortex', { at: selected, duration: 820 }); return 'Exilar: o portal em espiral abre, gira e fecha num clarão.';
         case 'gather': if (!selected) return needSelected; port.play('gather', { at: selected, duration: 760 }); return 'Volta do blink: os grãos de luz voltam de todos os lados e a carta acende.';
         case 'ash': if (!selected) return needSelected; port.play('ash', { at: selected }); return 'Sacrificar: brasas e fumaça escura subindo do lugar da carta.';
         case 'motes': if (!selected) return needSelected; port.play('motes', { at: selected, color: c.color || '#f2b54c' }); return 'Habilidade saindo da carta: grãos de luz subindo em volta dela.';
@@ -968,7 +968,7 @@ function panel() {
     ${[['#f2b54c', 'Ultimate (dourado)'], ['#6fb8ff', 'Ultimate (azul)'], ['#b07cff', 'Ultimate (preto)'], ['#ff7a4d', 'Ultimate (vermelho)'], ['#63d68f', 'Ultimate (verde)']]
       .map(([k, t]) => `<button data-gpu="shockwave" data-color="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
-    ${[['dissolve', 'Exilar'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
+    ${[['vortex', 'Exilar (portal)'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
        ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou'],
        ['flare', 'Brilho de chegada'], ['warp', 'Dobra'], ['counter', 'Marcador +1/+1'], ['counter-harm', 'Marcador −1/−1'], ['heal', 'Ganho de vida'], ['mana', 'Mana até o custo'], ['victory', 'Vitória'], ['defeat', 'Derrota']]
       .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="glint">Conjurar (redemoinho)</button><button data-gpu="arrive">Chegada (anel)</button><button data-gpu="arrive" data-color="#9b7bff">Chegada no cemitério</button><button data-gpu="streak">Golpe (riscos)</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>

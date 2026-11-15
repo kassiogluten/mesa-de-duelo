@@ -25,8 +25,9 @@ export const DIZZY_EFFECTS: { [N in keyof DizzyParams]: (layer: GpuLayer, s: Sha
     const size = Math.min(at.w, at.h);
     // A elipse fica acima da carta, no lado do selo (a carta virada tem o selo de lado).
     const cx = (card.x + end.x) / 2, cy = (card.y + end.y) / 2 - size * .1;
-    const rx = size * .55, ry = size * .16, n = layer.coarse ? 3 : 5, star = size * .16 / 64;
-    return timed(1000, (view, sparks) => {
+    // Discretas: poucas estrelinhas pequenas e translúcidas, numa elipse curta.
+    const rx = size * .4, ry = size * .11, n = layer.coarse ? 2 : 3, star = size * .11 / 64;
+    return timed(850, (view, sparks) => {
       const stars = Array.from({ length: n }, (_, i) => {
         const sprite = new Sprite({ texture: s.star, anchor: .5, x: card.x, y: card.y, tint: i % 2 ? 0xfff1cf : STAR, blendMode: 'add', alpha: 0 });
         view.addChild(sprite);
@@ -47,13 +48,13 @@ export const DIZZY_EFFECTS: { [N in keyof DizzyParams]: (layer: GpuLayer, s: Sha
           one.sprite.position.set(card.x + (tx - card.x) * open, card.y + (ty - card.y) * open);
           one.sprite.scale.set(star * one.k * (.65 + .35 * depth) * (1 - .5 * close));
           one.sprite.rotation = a * 1.5;
-          one.sprite.alpha = Math.min(1, t / .15) * (.55 + .45 * depth) * (1 - close * close);
+          one.sprite.alpha = .7 * Math.min(1, t / .15) * (.55 + .45 * depth) * (1 - close * close);
         }
         // Um brilho curto no selo quando as estrelinhas se recolhem nele.
-        glow.scale.set(size * .5 / 128 * (.6 + .6 * close)); glow.alpha = .55 * Math.sin(Math.PI * close);
+        glow.scale.set(size * .35 / 128 * (.6 + .6 * close)); glow.alpha = .25 * Math.sin(Math.PI * close);
         if (!glinted && close > .6) {
           glinted = true;
-          for (let i = 0; i < (layer.coarse ? 3 : 6); i++) {
+          for (let i = 0; i < (layer.coarse ? 1 : 2); i++) {
             const angle = rand(0, Math.PI * 2), speed = rand(30, 70);
             sparks.add(s.spark, s, { x: end.x, y: end.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: rand(220, 340), spin: 0, grow: -.6, scale: rand(.15, .28), gravity: 0, drag: 3, tint: STAR });
           }
@@ -63,7 +64,7 @@ export const DIZZY_EFFECTS: { [N in keyof DizzyParams]: (layer: GpuLayer, s: Sha
   },
   undizzy(layer, s, { at, tag, delay = 0 }) {
     const from = tagSpot(layer, at, tag);
-    const size = Math.min(at.w, at.h), n = layer.coarse ? 3 : 4, star = size * .15 / 64;
+    const size = Math.min(at.w, at.h), n = layer.coarse ? 2 : 3, star = size * .1 / 64;
     return timed(760, (view, sparks) => {
       const glow = new Sprite({ texture: s.glow, anchor: .5, x: from.x, y: from.y, tint: STAR, blendMode: 'add' });
       view.addChild(glow);
@@ -72,9 +73,9 @@ export const DIZZY_EFFECTS: { [N in keyof DizzyParams]: (layer: GpuLayer, s: Sha
         const sprite = new Sprite({ texture: s.star, anchor: .5, x: from.x, y: from.y, tint: i % 2 ? 0xfff1cf : STAR, blendMode: 'add' });
         view.addChild(sprite);
         const angle = -Math.PI / 2 + (i - (n - 1) / 2) * .62 + rand(-.12, .12);
-        return { sprite, dx: Math.cos(angle) * size * rand(.7, 1), dy: Math.sin(angle) * size * rand(.8, 1.1), spin: rand(5, 9) * (i % 2 ? 1 : -1), k: rand(.75, 1) };
+        return { sprite, dx: Math.cos(angle) * size * rand(.4, .6), dy: Math.sin(angle) * size * rand(.45, .65), spin: rand(5, 9) * (i % 2 ? 1 : -1), k: rand(.75, 1) };
       });
-      for (let i = 0; i < (layer.coarse ? 3 : 6); i++) {
+      for (let i = 0; i < (layer.coarse ? 1 : 2); i++) {
         const angle = rand(-Math.PI, 0), speed = rand(40, 90);
         sparks.add(s.spark, s, { x: from.x, y: from.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: rand(240, 380), spin: 0, grow: -.6, scale: rand(.15, .28), gravity: 0, drag: 2.5, tint: STAR });
       }
@@ -84,9 +85,9 @@ export const DIZZY_EFFECTS: { [N in keyof DizzyParams]: (layer: GpuLayer, s: Sha
           one.sprite.position.set(from.x + one.dx * k, from.y + one.dy * k);
           one.sprite.rotation = one.spin * t;
           one.sprite.scale.set(star * one.k * (1 - .45 * t));
-          one.sprite.alpha = t < .5 ? 1 : 1 - (t - .5) / .5;
+          one.sprite.alpha = .7 * (t < .5 ? 1 : 1 - (t - .5) / .5);
         }
-        glow.scale.set(size * .45 / 128 * (1 + .5 * k)); glow.alpha = .5 * (1 - Math.min(1, t / .5));
+        glow.scale.set(size * .3 / 128 * (1 + .5 * k)); glow.alpha = .2 * (1 - Math.min(1, t / .5));
       };
     }, delay);
   },

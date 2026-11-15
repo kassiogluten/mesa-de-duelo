@@ -114,17 +114,17 @@ export function createMotionKit(root: HTMLElement) {
     callouts.length = 0;
     for (const el of hiddenCards) { el.style.opacity = ''; el.style.visibility = ''; }
     hiddenCards.clear();
-    root.querySelectorAll('.damage-flash,.semantic-highlight,.attack-highlight,.lethal-hit,.heal-flash,.incoming,.walker-glow,.loyalty-up,.loyalty-down,.loyalty-zero,.control-glow,.finale-win,.finale-lose').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash', 'incoming', 'walker-glow', 'loyalty-up', 'loyalty-down', 'loyalty-zero', 'control-glow', 'finale-win', 'finale-lose'));
+    root.querySelectorAll('.damage-flash,.semantic-highlight,.arrive-highlight,.attack-highlight,.lethal-hit,.heal-flash,.incoming,.walker-glow,.loyalty-up,.loyalty-down,.loyalty-zero,.control-glow,.finale-win,.finale-lose').forEach(el => el.classList.remove('damage-flash', 'semantic-highlight', 'arrive-highlight', 'attack-highlight', 'lethal-hit', 'heal-flash', 'incoming', 'walker-glow', 'loyalty-up', 'loyalty-down', 'loyalty-zero', 'control-glow', 'finale-win', 'finale-lose'));
   }
   function remove(el: HTMLElement) {
     el.remove(); effects.delete(el);
     const i = callouts.findIndex(c => c.note === el);
     if (i >= 0) callouts.splice(i, 1);
   }
-  function pulse(el: HTMLElement | null, kind: boolean | 'attack-highlight' = false) {
+  function pulse(el: HTMLElement | null, kind: boolean | 'attack-highlight' | 'arrive-highlight' = false) {
     if (!el) return;
     const damage = kind === true;
-    const cls = kind === 'attack-highlight' ? kind : damage ? 'damage-flash' : 'semantic-highlight';
+    const cls = kind === 'attack-highlight' || kind === 'arrive-highlight' ? kind : damage ? 'damage-flash' : 'semantic-highlight';
     el.classList.add(cls);
     if (damage) animate(el, [{ translate: '0 0' }, { translate: '0 3px', offset: .25 }, { translate: '0 0' }], 260);
     later(() => el.classList.remove(cls), 850);
@@ -208,7 +208,7 @@ export function createMotionKit(root: HTMLElement) {
   function ripple(at: Point | undefined) {
     if (!at || reduced() || gpu.play('ripple', { at })) return;
     const ring = effect('land-ripple', { ...at, w: at.w * 1.04, h: at.h * 1.04 });
-    animate(ring, [{ opacity: .85, scale: '.92' }, { opacity: 0, scale: '1.3' }], 460, 'cubic-bezier(.2,.7,.3,1)');
+    animate(ring, [{ opacity: .45, scale: '.96' }, { opacity: 0, scale: '1.14' }], 460, 'cubic-bezier(.2,.7,.3,1)');
     later(() => remove(ring), 480);
   }
   /** Destruída: a carta racha e solta fragmentos no lugar em que estava. */

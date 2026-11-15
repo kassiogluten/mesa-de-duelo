@@ -528,7 +528,7 @@ test('damage source is licensed and pinned; adapted blasts start promptly and re
 function motionFixture(reduce = false) {
   const animated = [], nodes = [];
   class Element {
-    constructor(rect = { left: 0, top: 0, width: 80, height: 112 }) { this.rect = rect; this.style = {}; this.children = []; this.classes = new Set(); this.classList = { add: c => this.classes.add(c), remove: (...cs) => cs.forEach(c => this.classes.delete(c)) }; }
+    constructor(rect = { left: 0, top: 0, width: 80, height: 112 }) { this.rect = rect; this.style = { setProperty(k, v) { this[k] = v; } }; this.children = []; this.classes = new Set(); this.classList = { add: c => this.classes.add(c), remove: (...cs) => cs.forEach(c => this.classes.delete(c)) }; }
     getBoundingClientRect() { return this.rect; }
     setAttribute() {}
     append(child) { this.children.push(child); }
@@ -536,6 +536,8 @@ function motionFixture(reduce = false) {
     animate(frames, options) { animated.push({ element: this, frames, options }); return { cancel() { this.oncancel?.(); } }; }
     closest() { return null; }
     querySelector(selector) { return selector === '.life' ? this.life : null; }
+    querySelectorAll() { return []; }
+    insertAdjacentHTML() {}
   }
   const arena = new Element({ left: 0, top: 0, width: 1280, height: 800 });
   const land = new Element({ left: 420, top: 200, width: 70, height: 98 });
@@ -701,16 +703,23 @@ test('table moments: the opening hand shuffles; the result plays victory or defe
   assert.deepEqual(tableMoment({ ...base, players: [{ id: 1, name: 'Ana', eliminated: true }, { id: 2, name: 'Bia' }] }), { key: 'm:1:result', cue: 'defeat' });
 });
 
-test('destroyed permanents shatter where they were; exiled ones vanish in place', () => {
+test('destroyed permanents crack and break apart where they were; exiled ones sink into a portal in place', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const f = motionFixture();
   const card = { id: 7, name: 'Bears' };
   f.motion.capture();
   f.motion.present(event(1, 'left', { card, actor: 1, to: 'Graveyard', reason: 'destroyed' }), { you: 1, html: '<div class="face"></div>', label: 'Destruída', duration: 500 });
-  assert.equal(f.nodes.filter(n => n.className === 'shatter-shard').length, 9);
+  const piece = f.nodes.find(n => n.className === 'presentation-piece');
+  assert.ok(piece.classes.has('destroy-holding'), 'a carta fica no lugar enquanto racha');
+  assert.ok(f.animated.some(a => a.element === piece && a.frames.every(k => 'translate' in k)), 'a carta treme antes de quebrar');
+  assert.equal(f.nodes.filter(n => n.className === 'presentation-piece destroy-shard').length, 0);
+  t.mock.timers.tick(200);
+  assert.equal(f.nodes.filter(n => n.className === 'presentation-piece destroy-shard').length, 10);
   assert.ok(f.nodes.some(n => n.className === 'shatter-flash'));
   f.motion.reset();
   const g = motionFixture();
   g.motion.present(event(2, 'left', { card, actor: 1, to: 'Exile' }), { you: 1, html: '<div class="face"></div>', label: 'Exilada', duration: 500 });
-  assert.ok(g.nodes.some(n => n.className === 'exile-ring'));
+  assert.ok(g.nodes.some(n => n.className === 'exile-vortex'));
+  assert.ok(g.nodes.find(n => n.className === 'presentation-piece').classes.has('exile-sinking'));
   g.motion.reset();
 });

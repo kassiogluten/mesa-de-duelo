@@ -319,6 +319,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
   const duration = legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
     : event.type === 'coin' || event.type === 'die' ? 1250 : event.type === 'scry' ? 900
     : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
+    // Destruída e exilada têm cena própria (leaveEffects.ts): rachar e se partir, ou ser sugada pelo portal.
+    : event.type === 'left' && event.to === 'Exile' ? 820 : event.type === 'left' && event.reason === 'destroyed' ? 760
     : event.type === 'blockers' ? 620
     : event.type === 'entered' && event.card?.planeswalker && event.from !== 'Exile' ? 560
     // Ninjutsu e sneak: o shuriken precisa ser visto cruzando a mesa até a fumaça.

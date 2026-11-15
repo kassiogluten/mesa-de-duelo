@@ -1,13 +1,16 @@
-// Os efeitos de movimento na camada GPU: exílio em luz, volta do blink, rastro do voo, cinzas do sacrifício, fumaça do ninja, feixe de habilidade, avanço do ataque e poeira ao virar.
-import { Sprite } from 'pixi.js';
+// Os efeitos de movimento na camada GPU: portal do exílio, volta do blink, rastro do voo, cinzas do sacrifício, fumaça do ninja, feixe de habilidade, avanço do ataque e poeira ao virar.
+import { Container, Sprite } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
 import { flightArc } from '../flightPath';
-import { colorOf, easeOut, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
+import { colorOf, easeOut, paintOnce, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
 
 export interface MoveParams {
-  /** Exilada: a carta se desfaz em grãos de luz que sobem, com um anel claro em volta. `duration` é a do passo. */
-  dissolve: { at: Point; duration: number };
+  /**
+   * Exilada: um portal escuro com a borda de luz, deitado sobre a mesa, abre, gira com braços em espiral e grãos de luz
+   * rodando para o centro, e fecha num clarão. A carta (por cima da camada) é sugada por ele. `duration` é a do passo.
+   */
+  vortex: { at: Point; duration: number };
   /** Voltando do exílio (blink): grãos de luz vêm de volta de todos os lados e a carta acende ao se formar. */
   gather: { at: Point; duration: number };
   /**
@@ -32,23 +35,58 @@ export interface MoveParams {
 const LIGHT = [0xffffff, 0xfff1cf, 0xcdefff];
 
 export const MOVE_EFFECTS: { [N in keyof MoveParams]: (layer: GpuLayer, s: Shared, p: MoveParams[N]) => GpuEffect } = {
-  dissolve(layer, s, { at, duration }) {
+  vortex(layer, s, { at, duration }) {
     const { x, y } = layer.local(at.cx, at.cy);
-    const rate = layer.coarse ? .06 : .11; // grãos por ms
-    return timed(duration * .75, (view, sparks) => {
-      const glow = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: 0xfff6dd, blendMode: 'add' });
-      const ring = new Sprite({ texture: s.ring, anchor: .5, x, y, tint: 0xffffff, blendMode: 'add' });
-      view.addChild(glow, ring);
-      let owed = 0;
-      return (t, ms) => {
-        // Os grãos saem de toda a carta, mais no começo, e sobem devagar como poeira de luz.
-        owed += ms * rate * (t < .7 ? 1 - t * .8 : 0);
-        for (; owed >= 1; owed--) {
-          sparks.add(s.spark, s, { x: x + rand(-.5, .5) * at.w, y: y + rand(-.5, .5) * at.h, vx: rand(-25, 25), vy: rand(-140, -40), life: rand(500, 900), spin: 0, grow: -.5, scale: rand(.18, .42), gravity: -30, drag: 1.2, tint: LIGHT[Math.floor(rand(0, 3))]! });
+    const size = Math.max(at.w, at.h) * 1.15, flat = .62, n = layer.coarse ? 14 : 26;
+    // Três braços em espiral, claros perto do centro e sumindo para fora, pintados uma vez por mesa.
+    const spiral = paintOnce(layer, 'vortex', 256, 256, g => {
+      g.translate(128, 128); g.lineCap = 'round'; g.shadowColor = '#fff'; g.shadowBlur = 10; g.strokeStyle = '#fff';
+      for (let arm = 0; arm < 3; arm++) {
+        g.rotate(Math.PI * 2 / 3);
+        for (let a = 0; a < 3.4; a += .08) {
+          const r1 = 14 + a * 33, r2 = 14 + (a + .08) * 33;
+          g.globalAlpha = Math.max(0, 1 - a / 3.4); g.lineWidth = 7 * (1 - a / 4.5);
+          g.beginPath(); g.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); g.lineTo(Math.cos(a + .08) * r2, Math.sin(a + .08) * r2); g.stroke();
         }
-        const k = easeOut(t), size = Math.max(at.w, at.h);
-        glow.scale.set(size * 1.3 / 128 * (.8 + .3 * k)); glow.alpha = .55 * Math.sin(Math.PI * Math.min(1, t * 1.4));
-        ring.scale.set(size / 256 * (.6 + .8 * k)); ring.alpha = .8 * (1 - t);
+      }
+    });
+    return timed(duration, (view, sparks) => {
+      // Deitado sobre a mesa: o disco é achatado na vertical; os braços giram dentro dele.
+      const disc = new Container({ x, y });
+      disc.scale.y = flat;
+      // O fundo do buraco: duas camadas escuras, a menor quase preta, para o centro ficar fundo de verdade.
+      const core = new Sprite({ texture: s.glow, anchor: .5, tint: 0x020309, alpha: 0 });
+      const pit = new Sprite({ texture: s.glow, anchor: .5, tint: 0x000000, alpha: 0 });
+      const arms = new Sprite({ texture: spiral, anchor: .5, tint: 0xcfe0ff, blendMode: 'add', alpha: 0 });
+      const rim = new Sprite({ texture: s.ring, anchor: .5, tint: 0xe4ecff, blendMode: 'add', alpha: 0 });
+      disc.addChild(core, pit, arms, rim);
+      view.addChild(disc);
+      // Grãos de luz que nascem na borda e rodam cada vez mais rápido até o centro.
+      const motes = Array.from({ length: n }, (_, i) => {
+        const sprite = new Sprite({ texture: s.spark, anchor: .5, tint: LIGHT[i % 3]!, blendMode: 'add', alpha: 0 });
+        view.addChild(sprite);
+        return { sprite, angle: rand(0, Math.PI * 2), reach: rand(.75, 1.15), born: rand(.05, .6), life: rand(.25, .4) };
+      });
+      let flashed = false;
+      return (t, ms) => {
+        const open = easeOut(Math.min(1, t / .22)), close = t > .8 ? ((t - .8) / .2) ** 2 : 0, k = open * (1 - close);
+        const radius = size / 2 * k;
+        core.scale.set(size * 1.6 / 128 * k); core.alpha = k;
+        pit.scale.set(size * .9 / 128 * k); pit.alpha = k;
+        arms.scale.set(size / 256 * k); arms.alpha = .7 * k; arms.rotation -= ms * .006 * (1 + t * 2.5);
+        rim.scale.set(size / 256 * k * 1.08); rim.alpha = .9 * k;
+        for (const m of motes) {
+          const u = (t - m.born) / m.life;
+          if (u < 0 || u > 1) { m.sprite.alpha = 0; continue; }
+          const r = radius * m.reach * (1 - u) ** 1.4;
+          m.angle -= ms * .001 * (4 + 10 * u);
+          m.sprite.position.set(x + Math.cos(m.angle) * r, y + Math.sin(m.angle) * r * flat);
+          m.sprite.alpha = Math.sin(Math.PI * u); m.sprite.scale.set(.42 * (1 - u * .6));
+        }
+        if (!flashed && t >= .92) {
+          flashed = true;
+          spray(sparks, s, x, y, layer.coarse ? 8 : 14, { speed: [60, 200], life: [200, 380], scale: [.25, .45], colors: LIGHT, drag: 3 });
+        }
       };
     });
   },

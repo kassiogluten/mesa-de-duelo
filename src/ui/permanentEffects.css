@@ -121,6 +121,19 @@
 /* Destruída: estalo e fragmentos. */
 .shatter-flash { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 8px; background: radial-gradient(closest-side, #fff, #ffd7a055 60%, transparent); }
 .shatter-shard { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); background: linear-gradient(135deg, #e9e2d0, #8c7e66); clip-path: polygon(50% 0, 100% 70%, 20% 100%); box-shadow: 0 0 4px #fff8; }
+/* Destruída (leaveEffects.ts): as rachaduras correm sobre a carta e ela se parte em pedaços com a arte dela. */
+.destroy-cracks { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; filter: drop-shadow(0 0 2px #ffb36b) drop-shadow(0 0 5px #ff8a3d99); }
+.destroy-cracks path { fill: none; stroke: #fff4dc; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.presentation-piece.destroy-shard > .face { box-shadow: none; }
+.presentation-piece.destroy-holding { z-index: 33; }
+/* Exilada (leaveEffects.ts): a carta, por cima da camada GPU, é sugada pelo portal; a legenda fica parada no lugar. */
+.presentation-piece.exile-sinking { z-index: 36; }
+.presentation-piece.exile-caption { z-index: 36; }
+.exile-vortex { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%) scaleY(.62); border-radius: 50%; overflow: hidden; opacity: 0;
+  background: radial-gradient(closest-side, #000 0 48%, #000c 66%, transparent 100%); box-shadow: 0 0 0 2px #ffffffcc, 0 0 22px #ffffff88, inset 0 0 18px #ffffff66; }
+.exile-vortex-arms { position: absolute; inset: 0; border-radius: 50%; mix-blend-mode: screen;
+  background: repeating-conic-gradient(from 0deg, #fff0 0deg, #fff9 22deg, #fff0 60deg, #fff0 120deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 18%, #000 40%, transparent 96%); mask: radial-gradient(closest-side, transparent 18%, #000 40%, transparent 96%); }
 /* Exilada ou voltando do exílio: anel de luz branca. */
 .exile-ring { position: fixed; z-index: 33; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 18px #fff, inset 0 0 14px #ffffffaa; opacity: 0; }
 /* Estados guardados pelo motor (controle trocado, atiçada, regeneração, escolhas): discretos; o texto fica no balão. */

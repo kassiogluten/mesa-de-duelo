@@ -13,6 +13,12 @@ const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.
 const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'torneios', 'rever', 'salas', 'admin'] as const;
 const TOOLS = new Set<string>(['admin', ...Object.keys(fixtures)]);
 
+// /efeitos é o Laboratório de efeitos aberto a todos (menu ⋯); na publicação quem faz a troca é o deploy/nginx.conf.
+const efeitos = (req: { url?: string }, _res: unknown, next: () => void) => {
+  if (req.url === '/efeitos' || req.url?.startsWith('/efeitos?')) req.url = `/tests/fixtures/effects-lab.html${req.url.slice('/efeitos'.length)}`;
+  next();
+};
+
 export default defineConfig({
   build: {
     rollupOptions: {
@@ -23,6 +29,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    { name: 'efeitos', configureServer: s => { s.middlewares.use(efeitos); }, configurePreviewServer: s => { s.middlewares.use(efeitos); } },
     VitePWA({
       // A página decide quando atualizar: o jogador vê "Nova versão" e escolhe a hora (src/ui/pwa.ts).
       registerType: 'prompt',
@@ -59,7 +66,7 @@ export default defineConfig({
         // Páginas guardadas abertas com parâmetros (/rever.html?id=… e ?mesa) acham a cópia guardada; sem isso, o endereço
         // não batia com nenhuma e caía na tela inicial. utm_ e fbclid são os que o Workbox já ignora por padrão.
         ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^id$/, /^mesa$/],
-        navigateFallbackDenylist: [/^\/sobre/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
+        navigateFallbackDenylist: [/^\/sobre/, /^\/efeitos/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {

@@ -164,19 +164,19 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
     const w = at.w * 1.04, h = at.h * 1.04;
     return timed(470, (view, sparks) => {
       const ring = new Graphics()
-        .roundRect(-w / 2, -h / 2, w, h, 9).stroke({ width: 9, color: gold, alpha: .18 })
-        .roundRect(-w / 2, -h / 2, w, h, 8).stroke({ width: 4, color: gold, alpha: .35 })
-        .roundRect(-w / 2, -h / 2, w, h, 8).stroke({ width: 2, color: 0xfff1cf, alpha: .95 });
+        .roundRect(-w / 2, -h / 2, w, h, 9).stroke({ width: 6, color: gold, alpha: .08 })
+        .roundRect(-w / 2, -h / 2, w, h, 8).stroke({ width: 3, color: gold, alpha: .16 })
+        .roundRect(-w / 2, -h / 2, w, h, 8).stroke({ width: 1.5, color: 0xfff1cf, alpha: .5 });
       ring.position.set(x, y); ring.blendMode = 'add';
       view.addChild(ring);
-      // Poeira dourada saindo da base da carta para os lados, rente à mesa.
-      for (let i = 0; i < 12; i++) {
+      // Um pouco de poeira dourada saindo da base da carta para os lados, rente à mesa.
+      for (let i = 0; i < 5; i++) {
         const side = i % 2 ? 1 : -1;
-        sparks.add(s.spark, s, { x: x + side * rand(0, w * .45), y: y + h / 2 - rand(0, 6), vx: side * rand(40, 150), vy: rand(-60, -10), life: rand(300, 460), spin: 0, grow: -.4, scale: rand(.25, .5), gravity: 120, drag: 3, tint: i % 3 ? gold : 0xfff1cf });
+        sparks.add(s.spark, s, { x: x + side * rand(0, w * .45), y: y + h / 2 - rand(0, 6), vx: side * rand(30, 100), vy: rand(-40, -10), life: rand(260, 400), spin: 0, grow: -.4, scale: rand(.18, .32), gravity: 120, drag: 3, tint: i % 3 ? gold : 0xfff1cf });
       }
       return t => {
         const k = easeOut(t);
-        ring.scale.set(.92 + .38 * k); ring.alpha = .85 * (1 - t);
+        ring.scale.set(.96 + .18 * k); ring.alpha = .6 * (1 - t);
       };
     });
   },

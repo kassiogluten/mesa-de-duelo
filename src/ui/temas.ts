@@ -50,8 +50,8 @@ const amostra = (t: typeof TEMAS[number]) => `<span class="tema-amostra" aria-hi
 /** As opções de um <select> de tema. */
 export const temaOptionsHTML = () => TEMAS.map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join('');
 
-/** As paletas como itens de menu (no menu ⋯ do cabeçalho), cada uma com a amostra do fundo. */
-export const temaItemsHTML = () => TEMAS.map(t => `<button type="button" role="menuitemradio" aria-checked="false" data-tema="${t.id}">${amostra(t)}<span>${esc(t.nome)}</span></button>`).join('');
+/** As paletas como itens de menu (no menu ⋯ do cabeçalho): só a amostra do fundo, com o nome na dica e no aria-label. */
+export const temaItemsHTML = () => TEMAS.map(t => `<button type="button" role="menuitemradio" aria-checked="false" data-tema="${t.id}" aria-label="${esc(t.nome)}" title="${esc(t.nome)}">${amostra(t)}</button>`).join('');
 
 /** Marca a paleta atual e troca de tema ao tocar num item; trocar não fecha o menu, para ver cada paleta na hora. */
 export function ligarTemaItens(menu: HTMLElement) {
