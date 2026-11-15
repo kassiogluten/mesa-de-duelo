@@ -1514,3 +1514,17 @@ O que já vale para qualquer escolha:
 - [x] Novidade com print, e teste de que o efeito aparece só em criatura com `sick` e some com ímpeto.
 
 Feito em 13/11/2026 (novidade em `novidades-pendentes/enjoo-aberracao-de-cor/`). Na página de comparação, nenhuma das quatro opções (estrelinhas orbitando, halo, balanço, só os momentos) foi escolhida para o efeito parado: pedido foi uma distorção na imagem que combinasse com o desfoque, e, entre vista dupla, arte tonta, ondulação e aberração de cor, ficou a **aberração de cor**, junto com os momentos (D). Como ficou: a imagem é separada em canais (uma camada ciano multiplica a imagem e uma cópia só com o vermelho clareia por cima, em `sickGhosts`), e a cópia vermelha se afasta e volta em 2,4 s, só com transform; com efeitos leves não entra. Os momentos (`dizzy` e `undizzy` em `src/ui/gpu/gpuDizzy.ts`) saem do desenho anterior para o novo (`dizzyChanges`), com teto de 8 por desenho. Criatura com ímpeto deixa de contar como tonta (nem efeito nem selo). Mesa cheia (38 permanentes, 21 com enjoo): quadros em 16,7 ms, sem mudança. Laboratório de efeitos: o interruptor "Enjoo de invocação" já existia e solta as estrelinhas ao ligar e desligar; os botões "Chegou tonta (enjoo)" e "O enjoo passou" ficaram na seção Efeitos na GPU.
+
+## 130. ✅ Arrastar qualquer aviso que pede uma decisão
+
+Hoje só o painel "Atacar quem?" pode ser arrastado (o título serve de alça, o lugar fica guardado no aparelho e dois cliques o devolvem ao lugar; `attackChoice.ts`, chave `attackPanel`). Os outros avisos que pedem uma ação do jogador ficam parados e muitas vezes cobrem permanentes que ele precisa tocar para responder, e aí não dá para escolher a carta.
+
+Feito em 14/11/2026 (`novidades-pendentes/arrastar-avisos`). Decidido nesse dia: o lugar fica guardado por lugar na tela (a caixa de ação no canto, que todas as decisões dividem e que herdou o lugar do "Atacar quem?"; a caixa no centro, que também vale para a abertura; e a barra de "Ver a mesa"); a alça da caixa é uma faixa fina com pontinhos no alto; das janelas de escolha só a barra recolhida se arrasta (a janela grande escurece a mesa inteira, e o "Ver a mesa" já resolve); e o desvio sozinho só vale no lugar de sempre.
+
+- [x] Módulo comum `dragPanel.ts` (alça, captura do ponteiro, 4 px antes de mover, sempre dentro da tela, dois cliques para voltar, pontinhos `DRAG_GRIP` em `icons.ts`); `attackChoice.ts` perdeu o arraste próprio.
+- [x] Toda a caixa de ação (`#fAction`), com a faixa `.drag-handle`; no "Atacar quem?", o título continua sendo alça.
+- [x] Barra recolhida de uma escolha ("Ver a mesa"), pelo texto. O aviso "Sua decisão" do centro não pega cliques (as cartas embaixo dele já respondem), então ficou como está.
+- [x] Chaves `actionPanel`, `centerPanel` e `questionBar` em `KEYS`; a antiga `attackPanel` é levada para `actionPanel` na primeira leitura.
+- [x] Transparente ao arrastar; no lugar de sempre, sai de cima das cartas e retratos que podem ser escolhidos, para o lado livre mais perto (`dodgeShift`).
+- [x] No toque: a alça pega o dedo numa faixa maior que os pontinhos, com `touch-action: none` (não rola a página) e separada dos botões.
+- [x] Teste no navegador (`tests/drag-panel.browser.mjs`): arrastar, responder com a caixa movida, não sair da tela ao redimensionar, dois cliques e a barra de "Ver a mesa"; e `tests/drag-panel.test.mjs` para o limite e o desvio.

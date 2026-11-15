@@ -1,11 +1,11 @@
 // A escolha de ataque na mesa: as criaturas marcadas, o defensor escolhido primeiro, o "atacar com tudo", a fila de ataques
 // que vai para o servidor um de cada vez, as recusas explicadas (atiçada, alvo não permitido) e o painel "Atacar quem?"
-// com o arraste da caixa das ações.
+// (o título é uma alça da caixa das ações, arrastada pelo dragPanel.ts).
 import type { FCard, FState, ForgeClient, NoticeDetail } from '../forge/client';
-import { KEYS } from '../storage';
 import { esc } from './cardtext';
 import { label } from './cardFaces';
 import { hideCardPreview } from './cardInspector';
+import { DRAG_GRIP } from './icons';
 import { AttackQueue, attackAllAction, attackScope, availableAttackTargets, legalAttackAllTargets, legalAttackGroupTargets, legalAttackTargets, validAttackSelection, type Defender } from './commanderTable';
 
 /** O que a escolha de ataque precisa da mesa. */
@@ -19,7 +19,7 @@ export interface AttackDeps {
 }
 
 /** O estado e as ações da escolha de ataque; `clear(true)` volta tudo ao começo (partida nova, conexão caída). */
-export function createAttackChoice(root: HTMLElement, d: AttackDeps) {
+export function createAttackChoice(d: AttackDeps) {
   const a = {
     /** Criaturas marcadas para atacar, ainda sem defensor (valem só para o prompt `selectionGen`). */
     selected: new Set<number>(),
@@ -32,7 +32,7 @@ export function createAttackChoice(root: HTMLElement, d: AttackDeps) {
     /** "Atacar com tudo" esperando o defensor (o prompt em que começou). */
     allGen: null as number | null,
     clear: clearAttackChoice, flush: flushAttacks, sync: syncAttackChoice, targets: currentAttackTargets, defenderName, refuse: refuseAttack,
-    choose: chooseAttackDefender, panelHTML: attackChoices, syncPanelShift: syncAttackPanelShift, tapAttacker, removeSelected,
+    choose: chooseAttackDefender, panelHTML: attackChoices, tapAttacker, removeSelected,
   };
   function clearAttackChoice(reset = false) {
     a.selected.clear(); a.pinned = null; a.allGen = null; a.selectionGen = -1;
@@ -97,62 +97,6 @@ export function createAttackChoice(root: HTMLElement, d: AttackDeps) {
     } else a.pinned = defender;
     hideCardPreview(true); d.render();
   }
-  /**
-   * O painel "Atacar quem?" fica no canto das ações e às vezes cobre as próprias criaturas: o título serve de alça para
-   * arrastar a caixa das ações para outro lugar. O deslocamento vale para os próximos combates (neste aparelho), a caixa
-   * nunca sai da tela, e dois cliques no título a devolvem ao lugar de sempre.
-   */
-  let attackPanelShift: { x: number; y: number } | null = (() => {
-    try { const v = JSON.parse(localStorage.getItem(KEYS.attackPanel) ?? 'null'); return v && Number.isFinite(v.x) && Number.isFinite(v.y) ? { x: v.x, y: v.y } : null; } catch { return null; }
-  })();
-  function saveAttackPanelShift() {
-    try { if (attackPanelShift) localStorage.setItem(KEYS.attackPanel, JSON.stringify(attackPanelShift)); else localStorage.removeItem(KEYS.attackPanel); } catch {}
-  }
-  function syncAttackPanelShift() {
-    const el = root.querySelector<HTMLElement>('#fAction');
-    if (!el) return;
-    const shift = el.classList.contains('attack-choosing') ? attackPanelShift : null;
-    el.classList.toggle('moved', !!shift);
-    if (!shift) { el.style.removeProperty('--drag-x'); el.style.removeProperty('--drag-y'); return; }
-    const place = (x: number, y: number) => { el.style.setProperty('--drag-x', `${Math.round(x)}px`); el.style.setProperty('--drag-y', `${Math.round(y)}px`); };
-    place(shift.x, shift.y);
-    // Janela menor que a do arraste: a caixa volta para dentro da tela (sem mudar o lugar guardado).
-    const r = el.getBoundingClientRect(), m = 4;
-    const dx = r.left < m ? m - r.left : r.right > innerWidth - m ? Math.max(m - r.left, innerWidth - m - r.right) : 0;
-    const dy = r.top < m ? m - r.top : r.bottom > innerHeight - m ? Math.max(m - r.top, innerHeight - m - r.bottom) : 0;
-    if (dx || dy) place(shift.x + dx, shift.y + dy);
-  }
-  root.addEventListener('pointerdown', e => {
-    const handle = (e.target as HTMLElement).closest<HTMLElement>('#fAction.attack-choosing .attack-choices-title');
-    if (!handle || e.button !== 0) return;
-    const el = root.querySelector<HTMLElement>('#fAction')!;
-    const start = { x: e.clientX, y: e.clientY }, base = attackPanelShift ?? { x: 0, y: 0 };
-    let moved = false;
-    handle.setPointerCapture(e.pointerId);
-    el.classList.add('dragging');
-    const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
-      if (!moved && Math.hypot(dx, dy) < 4) return;
-      moved = true;
-      attackPanelShift = { x: base.x + dx, y: base.y + dy };
-      syncAttackPanelShift();
-    };
-    const end = () => {
-      handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', end); handle.removeEventListener('pointercancel', end);
-      el.classList.remove('dragging');
-      if (!moved) return;
-      // Guarda o lugar em que a caixa ficou de fato (já trazida para dentro da tela).
-      const x = parseFloat(el.style.getPropertyValue('--drag-x')), y = parseFloat(el.style.getPropertyValue('--drag-y'));
-      if (Number.isFinite(x) && Number.isFinite(y)) attackPanelShift = { x, y };
-      saveAttackPanelShift();
-    };
-    handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
-    e.preventDefault();
-  });
-  root.addEventListener('dblclick', e => {
-    if (!(e.target as HTMLElement).closest('#fAction.attack-choosing .attack-choices-title')) return;
-    attackPanelShift = null; saveAttackPanelShift(); syncAttackPanelShift();
-  });
   function attackChoices(s: FState) {
     if (a.allGen === null && !a.selected.size && !a.pinned && !a.queue.queuedAttackers.length) return '';
     const removable = [...a.selected].some(id => s.combat.some(pair => pair.attacker === id));
@@ -171,7 +115,7 @@ export function createAttackChoice(root: HTMLElement, d: AttackDeps) {
         + `${coming ? `<span class="attack-target-count" aria-hidden="true">${coming}</span>` : ''}</button>`;
     }).join('');
     const tools = `${removable ? '<button class="icon-btn" data-ui="attack-remove">Retirar do combate</button>' : ''}${a.allGen === null ? '<button class="icon-btn" data-ui="attack-clear">Limpar seleção</button>' : ''}`;
-    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle" title="Arraste para mover este painel. Dois cliques o devolvem ao lugar.">Atacar quem?<svg class="drag-grip" viewBox="0 0 12 12" aria-hidden="true"><circle cx="3" cy="3" r="1.1"/><circle cx="9" cy="3" r="1.1"/><circle cx="3" cy="9" r="1.1"/><circle cx="9" cy="9" r="1.1"/><circle cx="3" cy="6" r="1.1"/><circle cx="9" cy="6" r="1.1"/></svg></h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
+    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle" title="Arraste para mover este painel. Dois cliques o devolvem ao lugar.">Atacar quem?${DRAG_GRIP}</h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
   }
   /** Toque numa criatura que pode atacar: marca ou desmarca, ou já manda o ataque quando só há um defensor (ou ele foi fixado). */
   function tapAttacker(s: FState, id: number, gen: number) {

@@ -1,0 +1,26 @@
+/* Avisos que se arrastam pela alça (dragPanel.ts): a caixa de ação, o "Atacar quem?" e a barra de "Ver a mesa". */
+.forge .action > .drag-handle {
+  position: relative; align-self: stretch; display: grid; place-items: center; height: 10px; margin: -2px 0 -4px;
+  color: var(--gold); opacity: .55; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.forge .action > .drag-handle .drag-grip { width: 12px; height: 12px; rotate: 90deg; }
+.forge .action > .drag-handle:hover { opacity: .9; }
+/* Na pergunta do centro, a alça fica acima do "Sua decisão"; no "Atacar quem?" e na barra de "Ver a mesa", o título também é alça. */
+.forge .action.centered-decision > .drag-handle { order: -1; }
+.forge .action.attack-choosing .attack-choices-title,
+.forge .question-bar-text { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.drag-grip { width: 12px; height: 12px; flex: none; fill: currentColor; opacity: .7; }
+.forge .question-bar > .drag-grip { width: 14px; height: 14px; margin-right: -6px; color: var(--gold); }
+
+.forge .drag-moved { translate: var(--drag-x, 0) var(--drag-y, 0); }
+.forge .drag-active { transition: none; }
+.forge .drag-active :is(.drag-handle, .attack-choices-title, .question-bar-text) { cursor: grabbing; }
+/* Enquanto se move, o aviso deixa ver as cartas por baixo. */
+.forge .drag-moving { opacity: .72; box-shadow: 0 10px 30px #000a; }
+
+/* No toque, a alça pega o dedo numa faixa bem maior que os pontinhos, sem empurrar os botões. */
+@media (pointer: coarse) {
+  .forge .action > .drag-handle { height: 14px; opacity: .75; }
+  .forge .action > .drag-handle::before { content: ''; position: absolute; inset: -10px -4px -6px; }
+  .forge .action > .drag-handle .drag-grip { width: 14px; height: 14px; }
+}

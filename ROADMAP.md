@@ -538,18 +538,6 @@ Pedido em 14/11/2026. O objetivo final é a mesa organizar torneios com as parti
 - [ ] Top 8 eliminatório depois das rodadas suíças.
 - [ ] Pontos acumulados de quem vence entre torneios (ranking de temporada).
 
-## 130. Arrastar qualquer aviso que pede uma decisão
-
-Hoje só o painel "Atacar quem?" pode ser arrastado (o título serve de alça, o lugar fica guardado no aparelho e dois cliques o devolvem ao lugar; `attackChoice.ts`, chave `attackPanel`). Os outros avisos que pedem uma ação do jogador ficam parados e muitas vezes cobrem permanentes que ele precisa tocar para responder, e aí não dá para escolher a carta.
-
-- [ ] Tirar o arraste de `attackChoice.ts` para um módulo comum (alça, captura do ponteiro, limite de 4 px antes de mover, sempre dentro da tela, dois cliques para voltar, a alça com o ícone de pontinhos), para cada aviso só dizer qual é a alça e onde guarda o lugar.
-- [ ] Usar em toda a caixa de ação: escolher alvo, pagar custo, confirmar bloqueio, proliferar, mulligan, quem começa e o pedido com "Ver detalhes", não só no "Atacar quem?".
-- [ ] Usar também na barra recolhida de uma escolha ("Ver a mesa") e nos outros painéis flutuantes que aparecem enquanto a mesa espera uma resposta (votos, ordem dos gatilhos, aviso no retrato).
-- [ ] Decidir se cada tipo de aviso guarda o próprio lugar ou se todos dividem um só (uma chave em `KEYS` para cada um, ou uma para a caixa de ação inteira).
-- [ ] Ao arrastar, o aviso fica um pouco transparente por cima das cartas; e, se ele abrir em cima de uma carta que pode ser escolhida, sair sozinho para o lado, quando houver espaço.
-- [ ] No celular: alça grande o bastante para o dedo e o arraste não pode rolar a página nem ser confundido com tocar no botão.
-- [ ] Teste no navegador: o aviso arrastado continua respondendo, não sai da tela ao girar o celular ou redimensionar, e a carta que estava embaixo pode ser tocada.
-
 ## 131. Animações e imersão: próximos passos
 
 Sugestões de 14/11/2026, depois da fila sem pular jogadas e da mesa viva (itens 114 e 125). Cada uma vira item próprio, ou decisão, quando for escolhida.

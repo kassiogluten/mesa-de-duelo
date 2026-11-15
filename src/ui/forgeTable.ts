@@ -54,6 +54,7 @@ import './tableMoves.css';
 import './handPeek.css';
 import './tableHeaders.css';
 import './combatPose.css';
+import './dragPanel.css';
 import { installWheelSideways } from './wheelSideways';
 import { newMatchState } from './tableState';
 import { tableShellHTML } from './tableShell';
@@ -66,6 +67,7 @@ import { exileShelfHTML } from './zoneView';
 import { outsideHand } from './handView';
 import { passLevelVisible, type ActionView } from './actionPanel';
 import { createAttackChoice } from './attackChoice';
+import { createDragPanels, moveStoredPlace } from './dragPanel';
 import { createTableClocks } from './tableClocks';
 import { createPassMenu, createStopMenu } from './passMenus';
 import { createHistoryPanel } from './historyPanel';
@@ -300,7 +302,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   document.fonts?.addEventListener('loadingdone', () => { if (!root.hidden) layoutCounters(root); });
   window.addEventListener('resize', () => {
     const s = shownState();
-    attack.syncPanelShift(); hand.placeControls();
+    drag.sync(); hand.placeControls();
     if (s?.type === 'state' && !root.hidden) { fitLoneRows(root); fitRowWidths(root); layoutCounters(root); layoutExileShelf(root); layoutCardDecision(root); layoutStack(root); syncSeatScroll(root); drawArrows(s); }
   });
 
@@ -337,8 +339,18 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     return actor === undefined ? 'Mostrando a jogada…' : actor === live.you ? 'Mostrando a sua jogada…' : `Mostrando a jogada de ${playerName(actor)}…`;
   }
   // Escolha de ataque (attackChoice.ts): criaturas marcadas, defensor fixado, "atacar com tudo", a fila e o painel "Atacar quem?".
-  const attack = createAttackChoice(root, { client: () => client, disconnected: () => match.disconnected, findCard: id => findCard(id), notice, stopPresentation: () => presentation.stop(), render: () => renderTable(false) });
+  const attack = createAttackChoice({ client: () => client, disconnected: () => match.disconnected, findCard: id => findCard(id), notice, stopPresentation: () => presentation.stop(), render: () => renderTable(false) });
   const seats = createTableSeats({ ...ctx, attack, focus, compact: () => compactTable.matches });
+  // Avisos que pedem uma decisão e se arrastam pela alça (dragPanel.ts): a caixa de ação no canto (todas as decisões dividem
+  // o lugar), a caixa no centro e a barra da escolha recolhida com "Ver a mesa".
+  moveStoredPlace(KEYS.attackPanel, KEYS.actionPanel);
+  const drag = createDragPanels(root, [
+    { handle: '.drag-handle, .attack-choices-title', panel: '#fAction',
+      key: el => el.closest('[data-opening]') || el.classList.contains('centered-decision') ? KEYS.centerPanel : KEYS.actionPanel,
+      avoid: el => el.classList.contains('awaiting') && !el.classList.contains('centered-decision') || el.classList.contains('attack-choosing')
+        ? [...root.querySelectorAll('.bfc.actionable, .att.actionable, .avatar.selectable-player, .exile-card.selectable')].map(c => c.getBoundingClientRect()).filter(r => r.width) : [] },
+    { handle: '.question-bar-text, .question-bar .drag-grip', panel: '#fQuestion.minimized .question-bar', key: () => KEYS.questionBar },
+  ]);
   const zone = createTableZone(ctx);
 
   /** Frases dos eventos (eventText.ts), com os nomes da mesa. */
@@ -446,6 +458,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     layoutCardDecision(root);
     layoutStack(root);
     syncSeatScroll(root);
+    drag.sync();
     applyCombatPose(root, visual);
     drawCombatArrows(root, visual);
     playMotion(s, visual, silently);

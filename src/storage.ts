@@ -64,8 +64,14 @@ export const KEYS = {
   handHide: 'mesa:hand-hide',
   /** Grupos abertos no painel de opções da mesa (JSON). Mesa. */
   optionsOpen: 'mesa:options-open',
-  /** Posição do painel de ataque arrastado (JSON {x, y}). Mesa. */
+  /** Chave antiga do painel "Atacar quem?" arrastado, levada para `actionPanel` na primeira leitura. Mesa. */
   attackPanel: 'mesa:attack-panel',
+  /** Deslocamento da caixa de ação no canto, arrastada pela alça (JSON {x, y}). Mesa. */
+  actionPanel: 'mesa:action-panel',
+  /** Deslocamento da caixa de ação no centro (sim ou não, mulligan, quem começa) (JSON {x, y}). Mesa. */
+  centerPanel: 'mesa:center-panel',
+  /** Deslocamento da barra de uma escolha recolhida com "Ver a mesa" (JSON {x, y}). Mesa. */
+  questionBar: 'mesa:question-bar',
   /** '1' liga as ferramentas de desenvolvimento na mesa. Mesa. */
   dev: 'mesa:dev',
   /** Vibrar no começo do seu turno. Opções da mesa. */

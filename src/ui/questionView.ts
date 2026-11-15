@@ -1,7 +1,8 @@
 // A janela de pergunta no centro da mesa: o HTML de cada tipo de escolha (cartas, ordem, sim ou não, quantidades, texto,
-// e os tipos com tela própria em outros módulos), e a barra que fica no lugar dela com "Ver a mesa".
+// e os tipos com tela própria em outros módulos), e a barra que fica no lugar dela com "Ver a mesa" (arrastável pelo texto).
 import type { FCard, FOption, FPlayer, FQuestion } from '../forge/client';
 import { esc, optionHTML } from './cardtext';
+import { DRAG_GRIP } from './icons';
 import { choiceOrder, isPlayMode, isTriggerOrder, playModeHTML, triggerOrderHTML, type TriggerOrder } from './choiceScreens';
 import { choiceGroupHTML, choiceLayout, choiceToolsHTML, isFilterableChoice, type ChoiceSort, type ChoiceView } from './choiceFilters';
 import { isLibraryChoice, libraryChoiceHTML, libraryHeading, libraryStart } from './libraryChoice';
@@ -139,5 +140,5 @@ export function questionBar(v: QuestionView, q: FQuestion, picked: number) {
   const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
   const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
   const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isPilesSplit(q) || isPilesChoice(q) ? pilesHeading(q, v.piles) : isVote(q) && q.card ? `Votação: ${v.label(q.card)}` : isReplacementOrder(q) ? 'Qual efeito aplicar primeiro?' : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
-  return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}"><div class="question-bar-text"><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
+  return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}">${DRAG_GRIP}<div class="question-bar-text" title="Arraste para mover este aviso. Dois cliques o devolvem ao lugar."><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div><button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
 }

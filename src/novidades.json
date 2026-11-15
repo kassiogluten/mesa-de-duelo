@@ -1,4 +1,10 @@
 {
+  "0.176.0": {
+    "Arrastar qualquer aviso que pede uma decisão": [
+      { "img": "0.176.0/caixa-arrastada.webp", "legenda": "A caixa de ação sendo arrastada pela alça de pontinhos, no alto: enquanto se move, ela fica transparente e deixa ver as cartas que podem ser alvo." },
+      { "img": "0.176.0/barra-ver-a-mesa.webp", "legenda": "A barra de uma escolha recolhida com \"Ver a mesa\", com os pontinhos ao lado do texto: ela também se arrasta." }
+    ]
+  },
   "0.175.0": {
     "Relógio da rodada nos torneios": [
       { "img": "0.175.0/relogio.webp", "legenda": "O relógio correndo no alto da rodada, com Pausar, os ajustes de minutos, Recomeçar e Tela cheia." },

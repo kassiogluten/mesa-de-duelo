@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.176.0] - 2026-11-14
+
+### Novo
+
+- **Arrastar qualquer aviso que pede uma decisão.** A caixa de ação ganhou uma alça com pontinhos no alto: arraste-a para tirar o aviso de cima das cartas que você precisa tocar, seja para escolher um alvo, pagar um custo, bloquear, proliferar, decidir o mulligan ou quem começa. A barra que fica no lugar de uma escolha recolhida com "Ver a mesa" também se arrasta, pelo texto. Enquanto se move, o aviso fica um pouco transparente; ele nunca sai da tela (nem ao girar o celular), e dois cliques na alça o devolvem ao lugar de sempre. O lugar fica guardado neste aparelho: um para a caixa do canto, que vale para todas as decisões (o que você já tinha escolhido para o "Atacar quem?" continua valendo), um para a caixa do centro e um para a barra.
+- **O aviso sai de cima da carta que você pode escolher.** No lugar de sempre, se a caixa de ação abrir em cima de uma carta ou de um retrato que pode ser escolhido, ela vai sozinha para o lado livre mais perto, quando há espaço. Se você arrastou a caixa para outro lugar, ela fica onde você deixou.
+
 ## [0.175.0] - 2026-11-14
 
 ### Novo

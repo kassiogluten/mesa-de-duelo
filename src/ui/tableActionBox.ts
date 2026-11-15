@@ -1,12 +1,13 @@
 // A caixa de ação da mesa: a carta que o pedido cita, o pedido (a frase curta sempre à vista e o texto do Forge em
-// "Ver detalhes"), o painel do alvo, do proliferar e do "Atacar quem?", a previsão do bloqueio, os botões e o selo do
-// nível de passar. E o que o leitor de tela ouve a cada pedido novo.
+// "Ver detalhes"), o painel do alvo, do proliferar e do "Atacar quem?", a previsão do bloqueio, os botões, o selo do
+// nível de passar e a alça que arrasta a caixa. E o que o leitor de tela ouve a cada pedido novo.
 import type { FPlayer, FState } from '../forge/client';
 import { esc, richText, withoutCardIds } from './cardtext';
 import { label, ptOf } from './cardFaces';
 import { buttons, passLevelControl, proliferateNames, targetInfoHTML, targetInfoOf, targetInfoText, voteBoardPrompt } from './actionPanel';
 import type { createAttackChoice } from './attackChoice';
 import { forecastLineHTML, forecastText } from './combatForecast';
+import { DRAG_GRIP } from './icons';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
 import { isProliferating, proliferatePanelHTML } from './proliferate';
 import { zoneWithArticle } from './questionView';
@@ -64,6 +65,9 @@ export interface ActionBoxDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' |
   /** O aviso "Sua decisão" (tableNotices.ts); devolve se há decisão esperando. */
   renderAwaiting(s: FState, text: string): unknown;
 }
+
+/** Faixa do alto da caixa de ação: a alça que a arrasta (dragPanel.ts). */
+const DRAG_HANDLE = `<div class="drag-handle" title="Arraste para mover este aviso. Dois cliques o devolvem ao lugar." aria-hidden="true">${DRAG_GRIP}</div>`;
 
 export function createActionBox(d: ActionBoxDeps) {
   const { root, $ } = d;
@@ -124,9 +128,8 @@ export function createActionBox(d: ActionBoxDeps) {
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';
-    d.setHTML($('#fAction'), `${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(d.actionView(), s)}${passLevelControl(d.actionView(), s)}</div>`);
+    d.setHTML($('#fAction'), `${DRAG_HANDLE}${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(d.actionView(), s)}${passLevelControl(d.actionView(), s)}</div>`);
     d.settings.syncPassLevel();
-    attack.syncPanelShift();
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');
     const moreEl = root.querySelector<HTMLElement>('[data-ui="prompt-more"]');
