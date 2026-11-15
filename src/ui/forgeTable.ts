@@ -337,6 +337,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   function showingText() {
     const live = client?.state;
     if (!live || shownState() === live) return undefined;
+    if (timeline.replaying) return 'Repetindo a jogada…';
     const actor = (timeline.current ?? null)?.event.actor;
     return actor === undefined ? 'Mostrando a jogada…' : actor === live.you ? 'Mostrando a sua jogada…' : `Mostrando a jogada de ${playerName(actor)}…`;
   }
@@ -374,6 +375,20 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     blocked: s => s.gameOver || match.disconnected || (!!s.question && !question.minimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || match.stackGalleryOpen });
   /** Histórico agrupado (Menu → Registro): só é montado com a gaveta aberta. */
   function renderLog() { historyLog.render(); }
+  /** ▶ no Histórico: a jogada se repete na mesa com o histórico fechado, e ele volta aberto no mesmo ponto ao terminar. */
+  function replayLine(key: string) {
+    const line = historyLog.replay(key);
+    if (!line) return;
+    if (timeline.current || timeline.queued) { announce('Espere a mesa terminar de mostrar a jogada.'); return; }
+    const drawer = $('#fLogDrawer'), scroll = drawer.scrollTop;
+    const reopen = () => {
+      if (!drawer.hidden || root.hidden) return;
+      setLog(true); drawer.scrollTop = scroll;
+      root.querySelector<HTMLElement>(`#fLog [data-log-replay="${CSS.escape(key)}"]`)?.focus({ preventScroll: true });
+    };
+    setLog(false);
+    if (!presentation.replay(line.events, line.label, reopen)) reopen();
+  }
   const stack = createTableStack({ ...ctx, modal, renderLog });
 
   const inputs = createInputActions({ ...ctx, attack, passMenu });
@@ -519,7 +534,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const ui = createUiActions({ ...ctx, attack, passMenu, settings, errors, removals, reveals, turnNotice, turnBuzz, hand, focus, setMenu, setLog,
     startPassingTurn: () => inputs.startPassingTurn(), toggleDetails: () => actionBox.toggleDetails(), minimizeQuestion: id => question.minimize(id),
     closeStackGallery: () => stack.closeGallery(), closeZone: () => zone.close() });
-  attachTableClicks({ ...ctx, ui, phases, seats, question, zone, overlay, inputs, attack, historyLog, focus, stops, opponentStops, passMenu, passLevel, setMenu,
+  attachTableClicks({ ...ctx, ui, phases, seats, question, zone, overlay, inputs, attack, historyLog, replayLine, focus, stops, opponentStops, passMenu, passLevel, setMenu,
     closeStackGallery: () => stack.closeGallery(), compact: () => compactTable.matches });
   root.addEventListener('input', e => {
     const t = e.target as HTMLInputElement;

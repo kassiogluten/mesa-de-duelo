@@ -141,3 +141,15 @@ test('effect summaries and name lists', () => {
   assert.deepEqual(effectParts([ev('left', { card: card(1, 'Elves'), to: 'Exile' }), ev('left', { card: card(2, 'X'), to: 'Hand' }), ev('mill', { actor: 2, milled: [{}, {}] })], names),
     ['exilou Elves', 'devolveu X à mão', 'Bruno moeu 2 cartas']);
 });
+
+test('each line keeps its events (the play, what it caused and the resolution) to show it again on the table', () => {
+  seq = 0;
+  const events = [ev('turn', { actor: 1, turn: 4 }),
+    ev('spell-cast', { actor: 1, stackId: 9, card: card(30, 'Wrath of God'), ...onStack(9) }),
+    ev('left', { actor: 2, card: card(20, 'Llanowar Elves'), reason: 'destroyed', ...onStack(9) }),
+    ev('resolved', { actor: 1, stackId: 9, card: card(30, 'Wrath of God'), ...onStack(9) }),
+    ev('draw', { actor: 1, count: 1 })];
+  const [wrath, draw] = historyTurns(events, names)[0].lines;
+  assert.deepEqual(wrath.events.map(e => e.type), ['spell-cast', 'left', 'resolved']);
+  assert.deepEqual(draw.events.map(e => e.type), ['draw']);
+});

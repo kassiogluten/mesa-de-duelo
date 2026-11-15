@@ -1,4 +1,10 @@
 {
+  "0.180.0": {
+    "Ver a jogada de novo pelo Histórico": [
+      { "img": "0.180.0/historico.webp", "legenda": "O botão ▶ ao lado de cada jogada do Histórico da partida." },
+      { "img": "0.180.0/repetindo.webp", "legenda": "A faixa no alto da mesa enquanto o Raio se repete, com o botão Parar." }
+    ]
+  },
   "0.179.0": {
     "Aviso de versão nova no centro da tela": [
       { "img": "0.179.0/janela.webp", "legenda": "A janela de versão nova no meio da tela, com a tela inicial embaçada atrás e os botões Depois e Atualizar agora." }

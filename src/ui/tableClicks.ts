@@ -40,6 +40,8 @@ export interface ClickDeps extends Pick<TableCtx, 'root' | 'client' | 'match' | 
   passMenu: ReturnType<typeof createPassMenu>;
   passLevel: PassLevelPreference;
   setMenu(open: boolean, restore?: boolean): void;
+  /** ▶ de uma linha do Histórico: a jogada se repete na mesa. */
+  replayLine(key: string): void;
   closeStackGallery(): void;
   /** Celular: a mesa estreita, sem lupa nas cartas. */
   compact(): boolean;
@@ -90,6 +92,8 @@ export function attachTableClicks(d: ClickDeps) {
     if (t.id === 'fStackGallery') { runUi(tables.panel, 'stack-close', t, e); return; }
     if (t.id === 'fSettings') { runUi(tables.panel, 'settings-close', t, e); return; }
     if (d.overlay.click(t)) return;
+    const replay = t.closest<HTMLElement>('[data-log-replay]');
+    if (replay) { d.replayLine(replay.dataset.logReplay!); return; }
     const logToggle = t.closest<HTMLElement>('[data-log-toggle]');
     if (logToggle) {
       const key = logToggle.dataset.logToggle!;

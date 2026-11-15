@@ -3,7 +3,8 @@
 import type { FCard } from '../forge/client';
 import { esc } from './cardtext';
 import { historyTurns, turnSummary, type HistoryItem, type HistoryNames } from './historyLog';
-import type { PresentationTimeline } from './presentationTimeline';
+import { ICON_REPLAY } from './icons';
+import { replayable, type PresentationEvent, type PresentationTimeline } from './presentationTimeline';
 
 export interface HistoryDeps {
   timeline: PresentationTimeline;
@@ -19,6 +20,8 @@ export function createHistoryPanel(root: HTMLElement, d: HistoryDeps) {
   let historyMatch = '';
   /** As cartas que o histórico mostra, para ampliar mesmo depois de terem saído da mesa. */
   const historyCards = new Map<string, FCard>();
+  /** As jogadas que o botão ▶ mostra de novo, com o texto da faixa ("Turno 4 · Ana conjurou Raio"). */
+  const replays = new Map<string, { events: PresentationEvent[]; label: string }>();
   function historyThumb(card: FCard | undefined) {
     const art = card && (card.image ?? d.image(card.name, 'small', card.print));
     return `<span class="history-thumb"${art ? ` style="background-image:url('${art}')"` : ''} aria-hidden="true"></span>`;
@@ -32,20 +35,26 @@ export function createHistoryPanel(root: HTMLElement, d: HistoryDeps) {
   function render() {
     if ((root.querySelector('#fLogDrawer') as HTMLElement).hidden) return;
     if (historyMatch !== d.timeline.matchId) { historyMatch = d.timeline.matchId; historyOpen.clear(); }
-    historyCards.clear();
+    historyCards.clear(); replays.clear();
     const you = d.you();
     d.names.you = you;
     const turns = historyTurns(d.timeline.history, d.names);
     const recent = new Set(turns.slice(-2).map(t => t.key));
     d.setHTML(root.querySelector('#fLog') as HTMLElement, turns.slice().reverse().map(turn => {
       const open = historyOpen.get(turn.key) ?? recent.has(turn.key);
-      const title = turn.turn === undefined ? 'Início da partida' : `Turno ${turn.turn} · ${turn.actor === you ? 'Você' : esc(d.names.player(turn.actor))}`;
+      const heading = turn.turn === undefined ? 'Início da partida' : `Turno ${turn.turn} · ${turn.actor === you ? 'Você' : d.names.player(turn.actor)}`;
+      const title = esc(heading);
       return `<li class="history-turn${turn.actor !== undefined && turn.actor === you ? ' mine' : ''}">
         <button class="history-turn-head" data-log-toggle="${turn.key}" aria-expanded="${open}"><span class="history-caret" aria-hidden="true"></span><span class="history-turn-title">${title}</span><span class="history-turn-count">${turnSummary(turn)}</span></button>
         <ul class="history-lines"${open ? '' : ' hidden'}>${turn.lines.slice().reverse().map(line => {
           const expanded = historyOpen.get(line.key) ?? false;
+          let again = '';
+          if (replayable(line.events)) {
+            replays.set(line.key, { events: line.events, label: `${heading} · ${line.text}` });
+            again = `<button class="history-replay" data-log-replay="${line.key}" aria-label="Ver de novo: ${esc(line.text)}" title="Ver de novo">${ICON_REPLAY}</button>`;
+          }
           const more = line.children.length ? `<button class="history-more" data-log-toggle="${line.key}" aria-expanded="${expanded}" aria-label="${expanded ? 'Esconder' : 'Mostrar'} os detalhes (${line.children.length})">${line.children.length}<span class="history-caret" aria-hidden="true"></span></button>` : '';
-          return `<li class="history-line${line.actor !== undefined && line.actor === you ? ' mine' : ''}"><div class="history-row">${historyItem(line)}${more}</div>${line.children.length && expanded
+          return `<li class="history-line${line.actor !== undefined && line.actor === you ? ' mine' : ''}"><div class="history-row">${historyItem(line)}${again}${more}</div>${line.children.length && expanded
             ? `<ul class="history-details">${line.children.map(child => `<li>${historyItem(child)}</li>`).join('')}</ul>` : ''}</li>`;
         }).join('') || '<li class="history-line history-empty">Nenhuma jogada ainda.</li>'}</ul></li>`;
     }).join('') || '<li class="history-empty">As jogadas aparecerão aqui.</li>');
@@ -55,5 +64,7 @@ export function createHistoryPanel(root: HTMLElement, d: HistoryDeps) {
     /** Abre ou fecha um turno ou uma linha (o botão diz como está agora). */
     toggle(key: string, open: boolean) { historyOpen.set(key, open); render(); },
     card: (key: string) => historyCards.get(key),
+    /** A jogada de uma linha, para ver de novo na mesa. */
+    replay: (key: string) => replays.get(key),
   };
 }

@@ -33,7 +33,7 @@ Os valores abaixo foram fixados com a medição da fase 0 (13/11/2026, [Mediçõ
 | 6 | Nenhum efeito segura a vez do jogador: a duração de cada passo continua a de `presentationDuration()` | Testes da fila de apresentação continuam passando; o efeito em GPU termina dentro do tempo do passo |
 | 7 | Sem WebGL2, contexto perdido ou falha ao carregar o pacote, a mesa continua com os efeitos em CSS, sem erro na tela | Testes da decisão GPU/CSS; `webglcontextlost` forçado com `WEBGL_lose_context` no teste de navegador |
 | 8 | Conferido num celular de entrada de verdade (Chrome com depuração remota) antes de publicar a fase 2 | Registrar aparelho e números nesta spec |
-| 9 | Mesa viva: no máximo 30 quadros por segundo, parada com a aba escondida, com "leves" e com reduzir movimento; com ela ligada, a mesa parada não passa a ter quadros longos e a cena de dano não piora além da faixa das três medições | `gpu-layer.browser.mjs` (quadros por segundo, some com leves e ao sair); `scripts/medir-efeitos.mjs` com `gpu=1` antes e depois (pendente) |
+| 9 | Mesa viva: no máximo 30 quadros por segundo, parada com a aba escondida, com "leves" e com reduzir movimento; com ela ligada, a mesa parada não passa a ter quadros longos e a cena de dano não piora além da faixa das três medições | `gpu-layer.browser.mjs` (quadros por segundo, some com leves e ao sair); `scripts/medir-efeitos.mjs` com `gpu=1` e `gpu=1&viva=0`, cenas `dano` e `parada` (feito em 15/11/2026; falta o celular) |
 
 ## Por que não trocar de linguagem
 
@@ -220,7 +220,8 @@ Pedido em 14/11/2026: mais ambientação e imersão. Decidido nesse dia: animaç
 - [x] Botões Passar o turno, Vida baixa e Vida cheia no laboratório de efeitos; `gpu.ambienceStats()` e checagens no `gpu-layer.browser.mjs`.
 - [x] Toques do jogo (14/11/2026, item 131): `pulse` com clarão na cor da mágica que resolve (reduzido no mesmo dia a 6% só no meio da mesa, subindo suave: a 30% na mesa inteira, parecia um relâmpago branco quando a mágica chegava ao campo), tremor no golpe pesado e escurecer nos momentos grandes (`motionImpact.ts`), e a poeira com relógio próprio (`drift`), que acelera no combate sem saltar. A cor da luz vem da arte do tapete de quem joga (`vividAverage` em `ambienceScene.ts`, a média pesada pela saturação), e a da capa fica de reserva.
 - [x] Momentos grandes na camada dos efeitos (`gpuMoments.ts`): `spotlight` (a mesa escurece em volta do foco, um sprite com o furo e um retângulo com `cut()` cobrindo o resto) e `legend` (raios, anel e brasas); a câmera aproxima 1,2% com a animação de `scale` na `.arena`, com a origem no foco. Reduzidos no mesmo dia (escurecer 0,22 em vez de 0,5, câmera 1,2% em vez de 3%), e a lendária ficou só com o `legend` fraco, sem escurecer nem câmera.
-- [ ] Medir o custo (critério 9) com `scripts/medir-efeitos.mjs` e no celular de entrada, junto com o critério 8.
+- [x] Medir o custo (critério 9) com `scripts/medir-efeitos.mjs`. Feito em 15/11/2026 (números em [Medições](#medições)): a cena de dano passa; com a mesa parada e a CPU freada ela traz quadros longos, em parte por causa do WebGL emulado na CPU.
+- [ ] Medir no celular de entrada, junto com o critério 8.
 
 ### Fase 4 (decidir com números): o campo inteiro em WebGL
 
@@ -325,3 +326,26 @@ O que a fase 3 diz:
 **Voos, fase 3b (14/11/2026, com a mão inicial voando de costas na GPU):** `--cenas voos --cpu 1,4 --vezes 3`, CSS e GPU em seguida. CPU 1×: zero quadros longos nas duas (a faixa vai a 137 e 163 ms só na primeira medição de cada navegador). CPU 4×: CSS com 7 quadros longos, p95 98 ms (93–101), bloqueio 98 ms; GPU com 7, p95 100 ms (89–108), bloqueio 99 ms. Empate dentro da faixa; os piores quadros são de layout da mesa (o `onmessage` do laboratório redesenhando), não da camada.
 
 **Troca automática para leves (substituída em 15/11/2026):** a troca de mão única (três efeitos lentos entre os oito primeiros trocavam para leves de vez) deu lugar ao regulador do Efeitos: automático (`effectsGovernor.ts`), que desce e sobe por degraus: 1 faíscas pela metade, 2 mesa viva parada e câmera parada, 3 efeitos em CSS. Desce com 3 s abaixo de 30 quadros por segundo (pior quarto da janela, `frameClock.ts`) e sobe com 6 s acima de 50 com algo animando; a subida que recai em até 20 s trava o degrau por 20 s, dobrando até 160 s; mais de 40 permanentes seguram a mesa no degrau 1.
+
+**Mesa viva, critério 9 (15/11/2026, código da 0.179.0):** `--cenas dano,parada --cpu 1,4,6 --vezes 3`, com `--query gpu=1` e `gpu=1&viva=0` (a mesa viva tirada, só a camada dos efeitos) rodados em seguida por cena. A cena `parada` é nova: a mão dada e cinco jogadas `pausa`, a mesa parada por 15 s. Com `gpu=1` o regulador do automático fica desligado, então a mesa viva nunca para sozinha nessa medição.
+
+| Cena | CPU | Mesa viva | Quadros longos | p95 (ms) | Bloqueio (ms) | Tarefas longas | Freio medido |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| parada | 1× | com | 0 | 0 | 0 | 0 | 1,1× |
+| parada | 1× | sem | 0 | 0 | 0 | 0 | 1,0× |
+| parada | 4× | com | 4 (4–10) | 141 (108–195) | 36 (0–120) | 2 (1–6) | 6,6× |
+| parada | 4× | sem | 0 | 0 | 0 | 0 | 4,1× |
+| parada | 6× | com | 16 (13–16) | 442 (413–658) | 676 (454–1015) | 8 (8–10) | 8,0× |
+| parada | 6× | sem | 7 (6–8) | 243 (212–264) | 212 (175–249) | 3 (3–4) | 6,7× |
+| dano | 1× | com | 14 (11–21) | 139 (133–175) | 41 (0–42) | 1 (0–2) | 1,1× |
+| dano | 1× | sem | 9 (9–14) | 175 (84–209) | 0 (0–48) | 0 (0–2) | 1,0× |
+| dano | 4× | com | 51 (42–61) | 308 (300–376) | 3743 (3089–4038) | 67 (53–70) | 6,3× |
+| dano | 4× | sem | 44 (40–51) | 256 (242–309) | 3227 (2257–3483) | 52 (44–60) | 5,9× |
+| dano | 6× | com | 48 (40–54) | 479 (391–739) | 6255 (5037–6659) | 68 (56–68) | 10,8× |
+| dano | 6× | sem | 50 (48–56) | 429 (336–501) | 5206 (4046–6166) | 73 (61–74) | 8,1× |
+
+O que diz:
+
+- **Mesa parada:** com a CPU normal, nada (zero quadros longos com e sem). Freada, a mesa viva **traz** quadros longos que não existiam (4 com a CPU 4×, e 16 contra 7 com 6×): o critério 9 não passa aí. A coluna "freio medido" sobe junto (6,6× contra 4,1×): o WebGL deste navegador é o SwiftShader, que desenha o shader na CPU e disputa os núcleos com a página, então parte do peso é da emulação e não aconteceria numa placa de vídeo de verdade. Quem decide é o celular de entrada (critério 8). Na mesa real, o automático já para a mesa viva no degrau 2 quando os quadros caem abaixo de 30 por segundo.
+- **Dano:** a mediana com a mesa viva fica dentro da faixa das medições sem ela com a CPU 4× (308 contra 242–309 ms) e 6× (479 contra 336–501 ms), e com a CPU 1× o p95 é até menor (139 contra 175 ms). Critério 9 cumprido nessa cena.
+- **Atenção, fora do critério 9:** a cena `dano` ficou bem mais pesada que na fase 3 mesmo sem a mesa viva (9 quadros longos com a CPU 1×, contra 0 em 14/11, e cerca de 3 s de bloqueio com 4×, contra 2 ms). Muita coisa entrou na cena desde a 0.169.0 (momentos de impacto, mesa reagindo, faíscas, rachaduras ao destruir), e a máquina pode ter estado mais ocupada. Vale um rastro do Chrome na cena antes de concluir.

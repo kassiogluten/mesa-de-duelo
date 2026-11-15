@@ -883,8 +883,8 @@ function table() {
   // da página não é apresentada, então jogue duas vezes). &lento=10 deixa a mesa dez vezes mais devagar (a camada GPU junto), e &gpu=0 ou &gpu=1 escolhe os efeitos em CSS ou na GPU. Além das jogadas da
   // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
   // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
-  // commander, ability, pay, float, opening, mulligan, reveal, win, lose), jogada:<nome> (as jogadas simuladas de effectsLabPlays.ts) e cheio (o "Campo cheio" do painel, para medir com a mesa
-  // lotada: scripts/medir-efeitos.mjs).
+  // commander, ability, pay, float, opening, mulligan, reveal, win, lose), jogada:<nome> (as jogadas simuladas de effectsLabPlays.ts) cheio (o "Campo cheio" do painel, para medir com a mesa
+  // lotada: scripts/medir-efeitos.mjs) e pausa (nada: a mesa parada).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
   const run = (play: string) => {
     const [cmd, arg] = play.split(':');
@@ -893,6 +893,7 @@ function table() {
     else if (cmd === 'tokens') window.postMessage({ cmd, side: 'me', n: arg }, '*');
     else if (cmd === 'cheio') window.postMessage({ cmd: 'full' }, '*');
     else if (cmd === 'jogada') window.postMessage({ cmd: 'play', kind: arg }, '*');
+    else if (cmd === 'pausa') return;
     else window.postMessage({ cmd: 'hand', kind: cmd }, '*');
   };
   if (plays.length > 1) plays.forEach((play, i) => realTimeout(() => run(play), 600 + i * 2500));

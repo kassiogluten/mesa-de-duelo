@@ -2,7 +2,7 @@
 import type { GpuLayer } from './gpuLayer';
 import type { Ambience, AmbiencePulse, AmbienceScene } from './tableAmbience';
 import type { GpuEffectName, GpuEffectParams } from './gpuEffects';
-import { effectsLevel, effectsTier, forcedGpu, gpuDecision, hasWebGL2, setEffectsTier, type EffectsTier } from './gpuSupport';
+import { ambienceOff, effectsLevel, effectsTier, forcedGpu, gpuDecision, hasWebGL2, setEffectsTier, type EffectsTier } from './gpuSupport';
 import { createGovernor } from './effectsGovernor';
 import { listenFrames, type FrameWindow } from '../frameClock';
 
@@ -43,7 +43,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     if (gen !== generation) { layer.destroy(); return; }
     effects.prepare(layer);
     // A mesa viva tem o próprio contexto: se ele cair, só ela some, e os efeitos continuam.
-    const backdrop = o.host().querySelector<HTMLElement>(':scope > .mat');
+    const backdrop = ambienceOff() ? null : o.host().querySelector<HTMLElement>(':scope > .mat');
     const ambience = backdrop ? ambienceModule.createAmbience(backdrop, { coarse: coarse(), onLost() { if (runtime) runtime.ambience = null; } }) : null;
     if (ambience && scene) ambience.set(scene);
     if (ambience && effectsTier() >= 2) ambience.pause(true);

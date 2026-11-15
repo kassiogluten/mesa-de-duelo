@@ -8,7 +8,7 @@ import { SOUND_PACKS } from './audio';
 import { PASS_LEVELS, PASS_LEVEL_ALWAYS, passLevelInfo } from './passLevel';
 import { screenWake } from './screenWake';
 import { temaOptionsHTML, temasDisponiveis } from './temas';
-import { ICON_BALLOON, ICON_EYE, ICON_FLAG, ICON_FLASK, ICON_HOME, ICON_REFRESH } from './icons';
+import { ICON_BALLOON, ICON_EYE, ICON_FLAG, ICON_FLASK, ICON_HOME, ICON_REFRESH, ICON_REPLAY } from './icons';
 
 // Ícones que só o menu da partida usa.
 const ICON_LIST = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -85,6 +85,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
       <div class="errors-actions"><button class="ghost-btn" data-ui="errors-report" aria-haspopup="dialog"${o.feedback ? '' : ' hidden'}>Relatar este erro</button><button class="ghost-btn" data-ui="errors-copy">Copiar relatório</button><button class="ghost-btn" data-ui="errors-download"${o.download ? '' : ' hidden'}>Baixar gravação</button><button class="ghost-btn" data-ui="errors-clear">Limpar</button></div>
       <p class="errors-status" id="fErrorsStatus" role="status" aria-live="polite"></p></aside>
     <aside class="log-drawer" id="fLogDrawer" hidden><div class="stack-heading"><h2>Histórico da partida</h2><button class="icon-btn" data-ui="log" aria-label="Fechar histórico">Fechar</button></div><ul id="fLog"></ul></aside>
+    <div class="replay-banner" id="fReplay" role="status" hidden>${ICON_REPLAY}<span class="replay-text"></span><button class="btn" data-ui="replay-stop">Parar</button></div>
 
     <div class="opp-hand" id="fOppHand"></div>
     <div class="avatar-slot opp" id="fOppAvatar"></div>

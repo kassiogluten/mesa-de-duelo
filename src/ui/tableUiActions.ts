@@ -141,6 +141,7 @@ export function createUiActions(d: UiActionDeps) {
       button.textContent = bridge ? `Regras ${s?.rulesVersion ?? '?'} · Motor ${s?.engineVersion ?? '?'}` : `Mesa de Duelo ${VERSION}`;
     },
     'log': () => { d.errors.set(false); d.setLog($('#fLogDrawer').hidden, true); },
+    'replay-stop': () => { d.stopPresentation(); d.renderTable(); },
     'errors': () => { d.errors.set($('#fErrorsDrawer').hidden, true); },
     'feedback': () => { d.setMenu(false); d.opts.onFeedback?.({ kind: 'sugestao' }); },
     'watchable': () => { d.setMenu(false); const client = d.client(); const listed = !!client?.state?.audience?.listed; client?.send({ type: 'watchable', on: !listed }); },

@@ -16,12 +16,25 @@ export function createPresentationQueue(d: PresentationDeps) {
   let drawingNow = 0;
   /** O próximo desenho só alcança os eventos, sem mostrar nem tocar nada (partida aberta, aba voltando, conexão de volta). */
   let silentNext = true;
+  /** Ver a jogada de novo (Histórico): o que fazer ao terminar e o número da repetição (o som de cada uma toca de novo). */
+  let replayEnd: (() => void) | null = null;
+  let replayRun = 0;
+  const banner = () => root.querySelector<HTMLElement>('#fReplay');
+  function endReplay() {
+    if (!replayEnd) return;
+    const done = replayEnd;
+    replayEnd = null;
+    const el = banner();
+    if (el) el.hidden = true;
+    done();
+  }
 
   function advance() {
     clearTimeout(presentationTimer);
     const match = d.match();
     if (document.hidden || root.hidden || match.disconnected) { stop(); return; }
     let entry = timeline.advance();
+    if (replayEnd && !entry?.replay) endReplay();
     const s = d.state();
     const draws: PresentationEvent[] = [], quick: PresentationEvent[] = [];
     while (entry?.audioOnly) {
@@ -75,14 +88,23 @@ export function createPresentationQueue(d: PresentationDeps) {
       motion.present(part.event, { you: s.you, html: part.event.card ? d.face(part.event.card, 'normal') : undefined,
         label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast), hideDestination: !hasLiveDecision(s) });
     }
-    audio.play(entry.event, timeline.matchId, entry.audible, s.you);
+    audio.play(entry.event, entry.replay ? `${timeline.matchId}:replay${replayRun}` : timeline.matchId, entry.audible, s.you);
     if (entry.event.type === 'damage' && entry.event.targets?.players?.length) d.announce(d.eventDescription(entry.event));
     else if (!hasLiveDecision(s)) d.announce(d.eventDescription(entry.event));
     presentationTimer = window.setTimeout(advance, duration);
   }
   function stop() {
     clearTimeout(presentationTimer); timeline.catchUp(); displayFrame = null; d.match().arriving.clear();
-    motion.cancelPresentation(); audio.silence();
+    motion.cancelPresentation(); audio.silence(); endReplay();
+  }
+  /** Repete na mesa os passos de uma jogada antiga, com a faixa "Repetindo" no alto; false quando a fila não está parada. */
+  function replay(events: readonly PresentationEvent[], label: string, onEnd: () => void) {
+    if (document.hidden || root.hidden || d.match().disconnected || !timeline.replay(events)) return false;
+    replayRun++; replayEnd = onEnd;
+    const el = banner();
+    if (el) { el.querySelector('.replay-text')!.textContent = `Repetindo: ${label}`; el.hidden = false; }
+    advance();
+    return true;
   }
   /**
    * Junta os eventos novos do estado à fila. `collect` recebe o estado logo depois (as janelas de remoção leem o
@@ -105,7 +127,7 @@ export function createPresentationQueue(d: PresentationDeps) {
   });
 
   return {
-    advance, stop, ingest,
+    advance, stop, ingest, replay,
     frame: () => displayFrame,
     drawing: () => drawingNow,
     /** Este desenho é só para alcançar os eventos (ou a aba está escondida). */

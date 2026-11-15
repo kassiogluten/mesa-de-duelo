@@ -87,7 +87,7 @@ export interface PresentationEvent {
   stateVersion?: number;
   frame?: PresentationFrame;
 }
-export interface PresentationEntry { event: PresentationEvent; audible: boolean; audioOnly?: boolean }
+export interface PresentationEntry { event: PresentationEvent; audible: boolean; audioOnly?: boolean; /** Uma jogada antiga vista de novo pelo Histórico. */ replay?: true }
 // O histórico agrupa os eventos por turno e jogada; guardar a partida inteira não enche a lista.
 const HISTORY_LIMIT = 3000;
 // A fila não descarta jogadas: com ela crescendo, os passos encurtam (presentationPace). Só um acúmulo que nenhum ritmo
@@ -149,6 +149,9 @@ function sameLandTransition(a: PresentationEvent, b: PresentationEvent) {
     (entry.card?.id ?? entry.sourceId) !== undefined && (entry.card?.id ?? entry.sourceId) === (played.card?.id ?? played.sourceId) &&
     Math.abs(entry.seq - played.seq) <= 2;
 }
+
+/** Algum destes eventos tem passo na mesa (o Histórico só oferece ver de novo a jogada que tem o que mostrar). */
+export const replayable = (events: readonly PresentationEvent[]) => events.some(e => PRESENTABLE.has(e.type));
 
 /** Pure, bounded presentation queue. It never schedules engine input or changes authoritative state. */
 export class PresentationTimeline {
@@ -264,6 +267,18 @@ export class PresentationTimeline {
     if (this.current) this.lastPresentedSeq = Math.max(this.lastPresentedSeq, this.current.event.seq);
     return this.current;
   }
+  /**
+   * Ver a jogada de novo (Histórico): os passos dela entram na fila, cada um com o quadro da mesa daquele momento, como
+   * se chegassem agora. Só com a fila parada; as compras ficam de fora, como na apresentação ao vivo.
+   */
+  replay(events: readonly PresentationEvent[]) {
+    if (this.current || this.pending.length) return false;
+    this.pending = events.filter(e => PRESENTABLE.has(e.type)).sort((a, b) => a.seq - b.seq)
+      .map(e => ({ event: { ...structuredClone(e), repeat: undefined }, audible: true, replay: true as const }));
+    return this.pending.length > 0;
+  }
+  /** A fila está mostrando uma jogada vista de novo. */
+  get replaying() { return !!(this.current?.replay || this.pending[0]?.replay); }
   catchUp() { this.pending = []; this.current = null; this.lastPresentedSeq = this.cursor; }
   reset(matchId = '') {
     this.matchId = matchId; this.cursor = 0; this.history = []; this.current = null;

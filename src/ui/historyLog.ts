@@ -19,7 +19,7 @@ export interface HistoryNames {
   describe(event: PresentationEvent): string;
 }
 export interface HistoryItem { key: string; text: string; card?: FCard; actor?: number }
-export interface HistoryLine extends HistoryItem { children: HistoryItem[] }
+export interface HistoryLine extends HistoryItem { children: HistoryItem[]; /** Os eventos da jogada, para vê-la de novo na mesa. */ events: PresentationEvent[] }
 export interface HistoryTurn { key: string; turn?: number; actor?: number; lines: HistoryLine[] }
 
 /** O que uma mágica ou habilidade pode causar ao resolver (fica na linha dela). */
@@ -206,8 +206,12 @@ function details(events: readonly PresentationEvent[], names: HistoryNames): His
 }
 const item = (event: PresentationEvent, text: string): HistoryItem => ({ key: `e${event.seq}`, text, card: event.card?.name && !event.card.faceDown ? event.card : undefined, actor: event.actor });
 
+/** Todos os eventos de uma linha: a jogada, o que ela causou, a resolução e as linhas juntadas a ela. */
+const unitEvents = (unit: Unit): PresentationEvent[] => unit.parts
+  ? unit.parts.flatMap(unitEvents) : [unit.head, ...unit.effects, ...(unit.outcome ? [unit.outcome] : [])];
+
 function line(unit: Unit, names: HistoryNames): HistoryLine {
-  const base = item(unit.head, '');
+  const base = { ...item(unit.head, ''), events: unitEvents(unit) };
   if (unit.parts && unit.parts.length > 1) return { ...base, ...runLine(unit.parts, names) };
   const { head, effects, outcome } = unit;
   const children = effects.length > 1 ? details(effects, names) : [];

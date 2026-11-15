@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.180.0] - 2026-11-15
+
+### Novo
+
+- **Ver a jogada de novo pelo Histórico.** Cada linha do Histórico da partida que tem algo para mostrar ganha um botão ▶ (Ver de novo): a jogada se repete na mesa como da primeira vez, com a vida, o campo e a pilha daquele momento, e uma faixa no alto diz o que está se repetindo, com o botão Parar. O Histórico fecha enquanto ela passa e volta aberto no mesmo ponto ao terminar; a mesa então volta ao jogo de agora. Tocar no texto da linha continua ampliando a carta.
+
 ## [0.179.0] - 2026-11-15
 
 ### Mudou

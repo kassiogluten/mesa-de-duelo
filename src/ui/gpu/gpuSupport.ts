@@ -33,6 +33,11 @@ export function forcedGpu(search = globalThis.location?.search ?? ''): boolean |
   return value === '0' ? false : value === '1' ? true : undefined;
 }
 
+/** `?viva=0` tira a mesa viva e deixa só a camada dos efeitos (para medir o custo dela: scripts/medir-efeitos.mjs). */
+export function ambienceOff(search = globalThis.location?.search ?? ''): boolean {
+  return new URLSearchParams(search).get('viva') === '0';
+}
+
 let webgl2: boolean | undefined;
 /** O aparelho tem WebGL2 (testado uma vez por página, devolvendo o contexto de teste na hora). */
 export function hasWebGL2(): boolean {
