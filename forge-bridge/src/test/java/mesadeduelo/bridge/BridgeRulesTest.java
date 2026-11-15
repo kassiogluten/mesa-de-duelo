@@ -91,6 +91,9 @@ public class BridgeRulesTest {
         has(validate(deck("Plains",55,"Faerie Guidemother",3,"Gift of the Fae",2)),"too-many-copies");
         assertEquals("Faerie Guidemother",DeckValidation.resolve("Faerie Guidemother // Gift of the Fae").getName());
         assertEquals("Lightning Bolt",DeckValidation.resolve("Raio").getName());
+        // "Vigor" também é o nome em português da Stamina: o nome em inglês vence.
+        assertEquals("Vigor",DeckValidation.resolve("Vigor").getName());
+        assertEquals("Stamina",DeckValidation.resolve("Stamina").getName());
     }
     @Test public void oracleIdentityMustMatchName() {
         JsonObject d=deck("Island",60); d.getAsJsonArray("cards").get(0).getAsJsonObject().addProperty("oracleId","bad-id");

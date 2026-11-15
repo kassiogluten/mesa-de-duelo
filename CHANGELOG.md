@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.181.1] - 2026-11-15
+
+### Corrigido
+
+- **Vigor aceito no deck.** O Vigor (a criatura verde 6/6 com Atropelar) era confundido com a Stamina, porque "Vigor" também é o nome dela em português, e o deck recusava a carta com um erro. Agora ele entra no deck normalmente.
+
 ## [0.181.0] - 2026-11-15
 
 ### Mudou

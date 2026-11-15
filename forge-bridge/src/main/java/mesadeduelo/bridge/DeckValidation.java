@@ -165,7 +165,9 @@ final class DeckValidation {
 
     static PaperCard resolve(String name) {
         var db = StaticData.instance().getCommonCards();
-        PaperCard card = db.getCard(TRANSLATED_NAMES.getOrDefault(name.strip().toLowerCase(Locale.ROOT), name));
+        // O nome em inglês vem antes da tradução: "Vigor" é uma carta e também o nome em português da Stamina.
+        PaperCard card = db.getCard(name);
+        if (card == null) card = db.getCard(TRANSLATED_NAMES.getOrDefault(name.strip().toLowerCase(Locale.ROOT), name));
         if (card == null && name.contains(" // ")) card = db.getCard(name.substring(0, name.indexOf(" // ")));
         // O Forge escreve as reticências separadas ("All Good Things . . ."); o Scryfall, juntas ("All Good Things...").
         if (card == null && name.contains("...")) card = db.getCard(name.replace("...", " . . ."));
