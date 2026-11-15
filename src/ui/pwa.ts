@@ -28,6 +28,29 @@ function banner(className: string, html: string) {
   return el;
 }
 
+/**
+ * Aviso de versão nova: janela no centro, com a mesa embaçada atrás. "Depois", Esc e tocar fora fecham; o foco vai
+ * para "Atualizar agora" e volta para onde estava ao fechar.
+ */
+export function updateDialog(update: () => void) {
+  document.querySelector('.pwa-update')?.remove();
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const dlg = document.createElement('dialog');
+  dlg.className = 'pwa-update';
+  dlg.setAttribute('aria-labelledby', 'pwaUpdateTitle'); dlg.setAttribute('aria-describedby', 'pwaUpdateText');
+  dlg.innerHTML = '<h2 id="pwaUpdateTitle">Nova versão do jogo</h2><p id="pwaUpdateText">Atualize para ver as novidades. Uma partida em andamento continua de onde parou.</p>'
+    + '<div class="pwa-actions"><button type="button" class="pwa-dismiss">Depois</button><button type="button" class="pwa-primary">Atualizar agora</button></div>';
+  document.body.append(dlg);
+  dlg.addEventListener('click', e => { if (e.target === dlg || (e.target as HTMLElement).closest('.pwa-dismiss')) dlg.close(); });
+  dlg.addEventListener('close', () => { dlg.remove(); if (opener?.isConnected) opener.focus({ preventScroll: true }); });
+  dlg.querySelector<HTMLButtonElement>('.pwa-primary')!.addEventListener('click', event => {
+    (event.currentTarget as HTMLButtonElement).disabled = true;
+    update();
+  });
+  dlg.showModal();
+  dlg.querySelector<HTMLElement>('.pwa-primary')!.focus();
+}
+
 function iosHint() {
   const el = banner('pwa-ios-hint', `<p><strong>Instalar no iPhone ou iPad</strong>No Safari, toque em <b>Compartilhar</b> <span aria-hidden="true">⬆︎</span> e depois em <b>Adicionar à Tela de Início</b>.</p><button type="button" class="pwa-dismiss">Entendi</button>`);
   el.querySelector('button')!.addEventListener('click', () => el.remove());
@@ -60,7 +83,7 @@ function watchDownload(registration: ServiceWorkerRegistration) {
   track(registration.installing);
 }
 
-/** Registra o service worker, o aviso de versão nova e o aviso de sem internet. Chamar uma vez, no início. */
+/** Registra o service worker, a janela de versão nova e o aviso de sem internet. Chamar uma vez, no início. */
 export function setupPwa() {
   addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
@@ -80,12 +103,7 @@ export function setupPwa() {
   if (!('serviceWorker' in navigator)) return;
   const updateSW = registerSW({
     onNeedRefresh() {
-      const el = banner('pwa-update', '<p><strong>Nova versão do jogo</strong>Atualize para ver as novidades. Uma partida em andamento continua de onde parou.</p><div class="pwa-actions"><button type="button" class="pwa-dismiss">Depois</button><button type="button" class="pwa-primary">Atualizar agora</button></div>');
-      el.querySelector('.pwa-dismiss')!.addEventListener('click', () => el.remove());
-      el.querySelector<HTMLButtonElement>('.pwa-primary')!.addEventListener('click', event => {
-        (event.currentTarget as HTMLButtonElement).disabled = true;
-        void updateSW(true);
-      });
+      updateDialog(() => void updateSW(true));
     },
     onRegisteredSW(_url, registration) {
       if (!registration) return;

@@ -2,7 +2,7 @@
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';
-import { RELEASES, VISUALS, inline, releaseTitle, shotSrc } from './ui/changelog';
+import { RELEASES, VISUALS, inline, pageEnd, releaseTitle, shotSrc } from './ui/changelog';
 import { esc } from './ui/cardtext';
 import { iniciarTema } from './ui/temas';
 import { justifyRows, ROWS } from './ui/justifiedRows';
@@ -12,13 +12,14 @@ iniciarTema();
 /**
  * Novidades em imagens: os itens do CHANGELOG.md que têm figuras em src/novidades.json, com o print de como ficou
  * na mesa. Linkada no painel Novidades; cada versão tem âncora #vX.Y.Z. Mostra as versões mais recentes e libera as
- * anteriores de PAGE em PAGE, em vez de um índice com um botão por versão.
+ * anteriores de PAGE em PAGE (esticando para não cortar um dia ou uma versão ao meio), em vez de um índice com um botão por versão.
  */
 const slug = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const GROUP_CLASS: Record<string, string> = { Novo: 'new', Mudou: 'changed', Corrigido: 'fixed' };
 
-const PAGE = 5;
 const releases = RELEASES.map(r => ({ ...r, items: r.items.flatMap(i => { const shots = VISUALS[r.version]?.[i.title]; return shots?.length ? [{ ...i, shots }] : []; }) })).filter(r => r.items.length);
+
+const firstPage = pageEnd(releases, 0);
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -30,7 +31,7 @@ app.innerHTML = `
     <h1>Novidades em imagens</h1>
     <p class="vis-lead">Como cada mudança aparece na mesa. O texto completo de cada versão continua no botão <b>Novidades</b> da tela inicial.</p>
     ${releases.length ? '' : '<p class="vis-empty">Ainda não há imagens das novidades.</p>'}
-    ${releases.map((r, index) => `<section class="vis-rel" id="v${esc(r.version)}"${index < PAGE ? '' : ' hidden'}>
+    ${releases.map((r, index) => `<section class="vis-rel" id="v${esc(r.version)}"${index < firstPage ? '' : ' hidden'}>
       <h2 tabindex="-1">${esc(releaseTitle(r))}${r.date ? ` <small>${r.date}</small>` : ''}</h2>
       ${r.items.map(i => `<article class="vis-item" id="v${esc(r.version)}-${slug(i.title)}">
         <div class="vis-text">
@@ -64,7 +65,7 @@ for (const box of app.querySelectorAll<HTMLElement>('.vis-shots')) {
 }
 document.documentElement.style.setProperty('--vis-gap', `${ROWS.gap}px`);
 const sections = [...app.querySelectorAll<HTMLElement>('.vis-rel')], more = app.querySelector<HTMLButtonElement>('.vis-more')!;
-let shown = Math.min(PAGE, sections.length);
+let shown = firstPage;
 /** Mostra as primeiras `count` versões; o botão diz quantas ainda faltam e some quando não falta nenhuma. */
 function showUpTo(count: number) {
   shown = Math.min(Math.max(count, shown), sections.length);
@@ -76,7 +77,7 @@ function showUpTo(count: number) {
 showUpTo(shown);
 more.addEventListener('click', () => {
   const first = shown;
-  showUpTo(shown + PAGE);
+  showUpTo(pageEnd(releases, shown));
   // O foco vai para a primeira versão que apareceu, para quem navega pelo teclado continuar lendo dali.
   sections[first]?.querySelector<HTMLElement>('h2')?.focus();
 });

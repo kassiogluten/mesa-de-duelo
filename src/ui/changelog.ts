@@ -69,6 +69,19 @@ function markSeen() {
 
 /** Quantas versões o painel mostra de cada vez: as mais recentes primeiro, e o resto pelo botão no fim. */
 const PAGE = 5;
+/** X.Y de uma versão: 0.178.0 e 0.178.1 são da mesma. */
+const minor = (version: string) => version.split('.').slice(0, 2).join('.');
+/**
+ * Onde termina a página que começa em `start`: PAGE versões, esticada enquanto a seguinte for do mesmo dia ou da
+ * mesma versão X.Y que a última mostrada, para não cortar um dia (ou uma versão) ao meio.
+ */
+export function pageEnd(releases: readonly Pick<Release, 'version' | 'date'>[], start: number) {
+  let end = Math.min(start + PAGE, releases.length);
+  const together = (a: Pick<Release, 'version' | 'date'>, b: Pick<Release, 'version' | 'date'>) =>
+    (!!a.date && a.date === b.date) || (a.version !== PENDING && minor(a.version) === minor(b.version));
+  while (end > start && end < releases.length && together(releases[end - 1]!, releases[end]!)) end++;
+  return end;
+}
 const releaseHTML = (r: Release) => `<section class="news-rel">
         <h3 tabindex="-1">${esc(releaseTitle(r))}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
       </section>`;
@@ -83,7 +96,7 @@ export function mountChangelog(host: HTMLElement) {
     </button>
     <div class="news-panel" id="newsPanel" role="dialog" aria-label="Novidades" hidden>
       <a class="news-visual-all" href="/novidades.html">Ver as novidades em imagens</a>
-      ${RELEASES.slice(0, PAGE).map(releaseHTML).join('')}
+      ${RELEASES.slice(0, pageEnd(RELEASES, 0)).map(releaseHTML).join('')}
       <button type="button" class="news-more" hidden></button>
     </div>`;
   host.append(el);
@@ -91,7 +104,7 @@ export function mountChangelog(host: HTMLElement) {
   const btn = el.querySelector<HTMLButtonElement>('.news-btn')!;
   const panel = el.querySelector<HTMLElement>('.news-panel')!;
   const more = el.querySelector<HTMLButtonElement>('.news-more')!;
-  let shown = Math.min(PAGE, RELEASES.length);
+  let shown = pageEnd(RELEASES, 0);
   const syncMore = () => {
     const left = RELEASES.length - shown;
     more.hidden = !left;
@@ -99,7 +112,7 @@ export function mountChangelog(host: HTMLElement) {
   };
   syncMore();
   more.addEventListener('click', () => {
-    const next = RELEASES.slice(shown, shown + PAGE);
+    const next = RELEASES.slice(shown, pageEnd(RELEASES, shown));
     more.insertAdjacentHTML('beforebegin', next.map(releaseHTML).join(''));
     const sections = panel.querySelectorAll<HTMLElement>('.news-rel');
     // O foco vai para a primeira versão que apareceu, para continuar lendo dali.

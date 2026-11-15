@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.179.0] - 2026-11-15
+
+### Mudou
+
+- **Aviso de versão nova no centro da tela.** Quando sai uma versão nova, o aviso abre como uma janela no meio da tela, com a mesa embaçada atrás, em vez de uma faixa no canto que passava despercebida. "Atualizar agora" já vem selecionado; "Depois", Esc ou um toque fora fecham, e uma partida em andamento continua de onde parou.
+- **Novidades não cortam mais um dia ao meio.** O painel Novidades e a página Novidades em imagens continuam mostrando 5 versões de cada vez, mas agora estendem a lista até a última versão do mesmo dia (ou da mesma versão, como 0.163.0 a 0.163.2): tudo o que saiu num dia aparece junto, e o botão "Mostrar versões anteriores" abre o dia anterior inteiro.
+
 ## [0.178.0] - 2026-11-15
 
 ### Novo

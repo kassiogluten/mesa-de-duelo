@@ -20,3 +20,25 @@
   .pwa-banner { flex-direction: column; align-items: stretch; gap: 10px; width: calc(100vw - 32px); }
   .pwa-actions { justify-content: flex-end; }
 }
+
+/* Versão nova: janela no centro, com a mesa embaçada e escurecida atrás (como os modais da mesa). */
+.pwa-update {
+  width: min(460px, calc(100vw - 32px)); box-sizing: border-box; padding: 24px; border: 1px solid rgb(242 181 76 / .32); border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 50%, var(--bg-deep)); color: var(--ink); box-shadow: 0 8px 20px #0004, 0 32px 80px #0007;
+  font: 400 15px/1.5 var(--body, sans-serif); animation: pwa-update-in .28s cubic-bezier(.2, .8, .2, 1) both;
+}
+.pwa-update::backdrop {
+  background: radial-gradient(ellipse 75% 70% at 50% 46%, rgb(10 18 34 / .45), rgb(2 4 10 / .85) 78%);
+  -webkit-backdrop-filter: blur(6px) saturate(.8); backdrop-filter: blur(6px) saturate(.8); animation: pwa-backdrop-in .28s ease both;
+}
+.pwa-update h2 { margin: 0 0 10px; color: var(--gold-light, var(--gold)); font: 600 21px/1.25 var(--body, sans-serif); letter-spacing: -.02em; }
+.pwa-update p { margin: 0; color: var(--muted); }
+.pwa-update .pwa-actions { justify-content: flex-end; margin-top: 22px; }
+.pwa-update button { min-height: 44px; padding: 10px 18px; border-radius: 10px; border: 1px solid var(--line); background: none; color: var(--ink); font: 600 14px var(--body, sans-serif); cursor: pointer; white-space: nowrap; }
+.pwa-update .pwa-primary { border-color: var(--gold); background: var(--gold); color: #2b1700; }
+.pwa-update button:disabled { opacity: .6; cursor: default; }
+.pwa-update :focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+@keyframes pwa-update-in { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+@keyframes pwa-backdrop-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pwa-update, .pwa-update::backdrop { animation: none; } }
+@media (max-width: 600px) { .pwa-update { padding: 20px; border-radius: 18px; } }

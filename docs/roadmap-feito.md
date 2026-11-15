@@ -1528,3 +1528,13 @@ Feito em 14/11/2026 (`novidades-pendentes/arrastar-avisos`). Decidido nesse dia:
 - [x] Transparente ao arrastar; no lugar de sempre, sai de cima das cartas e retratos que podem ser escolhidos, para o lado livre mais perto (`dodgeShift`).
 - [x] No toque: a alça pega o dedo numa faixa maior que os pontinhos, com `touch-action: none` (não rola a página) e separada dos botões.
 - [x] Teste no navegador (`tests/drag-panel.browser.mjs`): arrastar, responder com a caixa movida, não sair da tela ao redimensionar, dois cliques e a barra de "Ver a mesa"; e `tests/drag-panel.test.mjs` para o limite e o desvio.
+
+## 132. ✅ Aviso de versão nova como janela no centro
+
+Hoje o aviso "Nova versão do jogo" (`banner('pwa-update', …)` em `src/ui/pwa.ts`) é uma faixa no canto da tela, fácil de não notar. Pedido em 15/11/2026: virar uma janela centralizada, com o fundo embaçado.
+
+- [x] O aviso abre como janela no centro da tela, com o resto da mesa embaçado (blur) e escurecido por trás, na mesma linguagem dos outros modais (item 7).
+- [x] Manter os botões "Depois" e "Atualizar agora" e o texto de que a partida em andamento continua de onde parou; "Depois", Esc e tocar fora fecham.
+- [x] Os outros avisos do mesmo arquivo (sem internet, instalar no iPhone) continuam como faixa.
+
+Feito em 15/11/2026 (`novidades-pendentes/aviso-versao-modal`): `<dialog>` modal (`updateDialog` em `pwa.ts`) com o fundo embaçado e escurecido; o foco vai para "Atualizar agora" e volta para onde estava ao fechar.

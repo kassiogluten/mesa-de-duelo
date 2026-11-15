@@ -1,4 +1,9 @@
 {
+  "0.179.0": {
+    "Aviso de versão nova no centro da tela": [
+      { "img": "0.179.0/janela.webp", "legenda": "A janela de versão nova no meio da tela, com a tela inicial embaçada atrás e os botões Depois e Atualizar agora." }
+    ]
+  },
   "0.178.0": {
     "Destruir racha e parte a carta": [
       { "img": "0.178.0/destruir.webp", "legenda": "Em câmera lenta: as rachaduras cobrem a carta, ela se parte e os pedaços caem enquanto a poeira segue para o cemitério." }
