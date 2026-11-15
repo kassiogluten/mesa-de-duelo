@@ -19,7 +19,13 @@ const efeitos = (req: { url?: string }, _res: unknown, next: () => void) => {
   next();
 };
 
+// Imagens das cartas pelo cache (/scryfall/, src/scryfallMirror.ts): na publicação é o nginx que guarda; no dev e no
+// preview, o Vite só repassa ao Scryfall.
+const scryfallMirror = { '/scryfall/': { target: 'https://cards.scryfall.io', changeOrigin: true, rewrite: (path: string) => path.slice('/scryfall'.length) } };
+
 export default defineConfig({
+  server: { proxy: scryfallMirror },
+  preview: { proxy: scryfallMirror },
   build: {
     rollupOptions: {
       input: { index: 'index.html', ...Object.fromEntries(PAGES.map(p => [p, `${p}.html`])), ...fixtures },
@@ -92,9 +98,10 @@ export default defineConfig({
             options: { cacheName: 'google-fonts', expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 }, cacheableResponse: { statuses: [0, 200] } },
           },
           {
-            // Imagens das cartas: a mesma URL nunca muda de conteúdo. A busca vai em modo CORS (o Scryfall manda
-            // Access-Control-Allow-Origin: *) para a resposta não ser opaca, que o navegador conta como ~7 MB na cota.
-            urlPattern: ({ url }) => url.origin === 'https://cards.scryfall.io',
+            // Imagens das cartas, pelo nosso cache (/scryfall/, no host das imagens ou no site) ou direto do Scryfall, a reserva: a mesma URL nunca muda
+            // de conteúdo. A busca vai em modo CORS (o Scryfall manda Access-Control-Allow-Origin: *) para a resposta não
+            // ser opaca, que o navegador conta como ~7 MB na cota.
+            urlPattern: ({ url }) => url.origin === 'https://cards.scryfall.io' || url.pathname.startsWith('/scryfall/'),
             handler: 'CacheFirst',
             options: {
               cacheName: 'scryfall-images',

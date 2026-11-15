@@ -7,10 +7,16 @@ services:
       args:
         # Client ID do Google (OAuth "Web application"), em GOOGLE_CLIENT_ID no Coolify: o mesmo valor vai para a ponte.
         - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+        # Host das imagens das cartas (ex.: https://img.mesao.online), em IMAGENS_URL no Coolify. Sem ele, o próprio site.
+        - VITE_IMAGENS_URL=${IMAGENS_URL:-}
     depends_on:
       - bridge
     expose:
       - "80"
+    volumes:
+      # Imagens das cartas já pedidas ao Scryfall (deploy/nginx.conf, até 5 GB): sobrevivem a um deploy novo. Sem
+      # backup, porque se refazem sozinhas.
+      - scryfall-cache:/var/cache/nginx/scryfall
     restart: unless-stopped
 
   bridge:
@@ -78,6 +84,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  scryfall-cache:
   forge-data:
   feedback-data:
   prometheus-data:

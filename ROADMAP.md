@@ -32,16 +32,23 @@ Hoje as animações mostram o que aconteceu, mas são discretas e parecidas entr
 
 Hoje cada aparelho baixa as imagens das cartas direto do Scryfall (`cards.scryfall.io`, endereços em `src/cards.ts`), e o service worker do PWA não guarda essas imagens. Cada partida e cada visita ao construtor de decks repete os downloads, e o Scryfall pede para os apps guardarem as imagens em vez de buscá-las de novo.
 
-A ideia é um cache que se forma **aos poucos, só com as imagens que alguém de fato pediu**: nada de baixar a coleção inteira de uma vez.
+A ideia é um cache que se forma **aos poucos, só com as imagens que alguém de fato pediu**: nada de baixar a coleção inteira de uma vez. O objetivo é usar menos o Scryfall: ele fica como segunda escolha.
 
-- [ ] Endpoint de imagem no nosso servidor (por exemplo `/img/{id-scryfall}/{tamanho}` no nginx ou na ponte): na primeira vez busca no Scryfall, guarda e devolve; nas seguintes, devolve a cópia guardada. Só aceita os tamanhos usados pela mesa (`small`, `normal`, `art_crop`) e ids no formato do Scryfall, para não virar um proxy aberto.
-- [ ] CDN na frente desse endpoint (Cloudflare ou parecido), com cache longo (`Cache-Control: public, max-age=31536000, immutable`). A imagem só chega à CDN depois que alguém a pediu ao menos uma vez.
-- [ ] Sem importação em massa: nenhum job de pré-carga nem varredura dos bulk data do Scryfall. O cache cresce só com o uso real.
-- [ ] Respeitar o Scryfall: no máximo uma busca por imagem ainda não guardada, fila com limite de requisições por segundo, `User-Agent` identificado e reaproveitar a imagem já guardada mesmo se a busca falhar depois.
-- [ ] No frontend, trocar `cards.scryfall.io` pelo endereço do cache, com volta automática para o Scryfall se o cache estiver fora do ar.
+Decidido em 15/11/2026: o cache é o `proxy_cache` do nginx (`deploy/nginx.conf`), não código na ponte; o endereço espelha o caminho do Scryfall em `/scryfall/<tamanho>/<face>/a/b/<id>.jpg` (`/cartas/` já é da arte própria da mesa), então a mesa só troca o começo do endereço e o verso das cartas de duas faces vem junto (`src/scryfallMirror.ts`); a CDN é a Cloudflare no plano gratuito num domínio só para as imagens, `img.mesao.online` (o Free não aceita só um subdomínio do `kassio.site` sem levar o domínio, e levar o jogo inteiro para um domínio novo deixaria para trás os decks guardados no aparelho), ligado pela variável `IMAGENS_URL` no Coolify, que entra no build (passo a passo no `README.md`); se uma imagem não carrega pelo cache, a mesma imagem é pedida direto ao Scryfall.
+
+- [x] Endpoint de imagem no nosso servidor: `/scryfall/…` no nginx busca no Scryfall na primeira vez, guarda no volume `scryfall-cache` e devolve; nas seguintes, devolve a cópia guardada (`X-Cache: MISS`/`HIT`). Só aceita `small`, `normal` e `art_crop`, frente ou verso, e ids no formato do Scryfall; qualquer outro caminho dá 404, então não vira um proxy aberto.
+- [x] Cache longo para a CDN (`Cache-Control: public, max-age=31536000, immutable`, só nas respostas de sucesso). A imagem só chega à CDN depois que alguém a pediu ao menos uma vez.
+- [x] Host das imagens configurável no build (`IMAGENS_URL` → `VITE_IMAGENS_URL`), com CORS no nginx e a volta ao Scryfall valendo também para ele.
+- [ ] Ligar a Cloudflare em `img.mesao.online` (DNS, domínio no Coolify, regra de cache para `/scryfall/*`) e pôr `IMAGENS_URL` no Coolify, seguindo o `README.md`.
+- [x] Sem importação em massa: nenhum job de pré-carga nem varredura dos bulk data do Scryfall. O cache cresce só com o uso real (a pré-carga das imagens de um deck importado, que já existia, passa pelo cache).
+- [x] Respeitar o Scryfall: uma busca só por imagem ainda não guardada, mesmo com várias mesas pedindo ao mesmo tempo (`proxy_cache_lock`), `User-Agent` identificado e a cópia guardada continua valendo se o Scryfall falhar (`proxy_cache_use_stale`). Não há fila por segundo: a busca de imagens no `cards.scryfall.io` não tem limite de requisições (o limite do Scryfall é na API), e o limite por IP do endpoint segura os excessos.
+- [x] No frontend, os endereços de `cards.scryfall.io` passam pelo cache (as cartas novas ao chegar do Scryfall, as guardadas no IndexedDB ao abrir a mesa) e, se a imagem não carrega, a mesa a pede direto ao Scryfall (`<img>` e o voo da carta na GPU). Os fundos em CSS (retratos, capas dos decks, tapete) não têm essa volta: se o nginx estiver fora do ar, o site inteiro também está.
+- [ ] Terrenos básicos da série Nyx e fichas escolhidas pela série ainda vêm por `api.scryfall.com/…?format=image` (um redirecionamento); trocar pelo endereço fixo da imagem para passarem pelo cache.
 - [x] Dados das cartas (texto, tradução e endereços das imagens) guardados no IndexedDB em vez do localStorage, para não disputar espaço com os decks; o que estava no localStorage passa para lá sozinho.
 - [x] No aparelho: regra de cache do service worker para as imagens (CacheFirst, com limite de quantidade e de idade), para quem já viu uma carta não baixar de novo nem pela CDN.
-- [ ] Limpeza: limite de espaço no servidor, removendo as imagens menos usadas; métricas de acerto do cache e de buscas ao Scryfall no painel do Grafana.
+- [x] Limpeza: até 5 GB no servidor; a imagem que fica 90 dias sem ser pedida sai, e com o disco cheio saem as menos usadas (`max_size` e `inactive` do `proxy_cache_path`).
+- [ ] Métricas de acerto do cache e de buscas ao Scryfall no painel do Grafana (o nginx ainda não tem exportador; por ora, o `X-Cache` na resposta).
+- [ ] Limites por IP de verdade atrás do proxy do Coolify e da Cloudflare (`real_ip` no nginx), que hoje veem o IP do proxy: vale para todos os limites, ver o item 19.
 - [ ] Conferir os termos de uso de imagens do Scryfall e da Wizards antes de publicar.
 
 ## 11. Escolher como as cartas aparecem (imagem inteira ou arte com layout próprio)

@@ -1,6 +1,7 @@
 import ownArt from './own-art.json' with { type: 'json' };
 import { EVENTS, KEYS } from './storage';
 import { API } from './scryfallApi';
+import { viaMirror } from './scryfallMirror';
 
 /** Como as cartas do Scryfall ficam guardadas: só os campos que o jogo usa, com as faces e a impressão em português. */
 export type Images = { small?: string; normal?: string; art_crop?: string };
@@ -40,7 +41,8 @@ export interface ScryCard {
   v?: number;
 }
 
-export const images = (u: any): Images | undefined => u && { small: u.small, normal: u.normal, art_crop: u.art_crop };
+/** As imagens de uma carta ou face, já pelo nosso cache (src/scryfallMirror.ts). */
+export const images = (u: any): Images | undefined => u && { small: viaMirror(u.small), normal: viaMirror(u.normal), art_crop: viaMirror(u.art_crop) };
 /**
  * Arte padrão dos terrenos básicos: a série Nyx de arte cheia de Sam Burley, de Theros Beyond Death (THB 250–254).
  * Vale em todas as telas, inclusive no lugar da impressão em português.

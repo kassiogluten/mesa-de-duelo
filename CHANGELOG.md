@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.181.0] - 2026-11-15
+
+### Mudou
+
+- **Imagens das cartas pelo servidor da mesa.** As imagens das cartas passam a vir do próprio servidor da Mesa de Duelo, que guarda cada carta na primeira vez que alguém a vê. Cartas já vistas por outros jogadores abrem mais rápido, e a mesa depende menos do Scryfall. Se o servidor não conseguir mostrar uma imagem, a mesa a busca direto no Scryfall, como antes. Quem já tem o jogo instalado baixa cada imagem uma vez a mais, agora pelo servidor.
+
 ## [0.180.0] - 2026-11-15
 
 ### Novo

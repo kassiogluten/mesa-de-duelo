@@ -1,5 +1,6 @@
 // Permanentes viradas para baixo: o nome do jeito (metamorfose, disfarce...) e a carta de lembrete.
 import type { FCard } from '../forge/client';
+import { viaMirror } from '../scryfallMirror';
 
 export type FaceDownKind = NonNullable<FCard['faceDownKind']>;
 
@@ -29,7 +30,7 @@ export interface FaceDownReminder {
   art: string;
 }
 
-const url = (version: string, id: string) => `https://cards.scryfall.io/${version}/front/${id[0]}/${id[1]}/${id}.jpg`;
+const url = (version: string, id: string) => viaMirror(`https://cards.scryfall.io/${version}/front/${id[0]}/${id[1]}/${id}.jpg`);
 
 /** A carta de lembrete de uma permanente virada para baixo, quando a ponte diz como ela foi virada. */
 export function faceDownReminder(c: Pick<FCard, 'faceDown' | 'faceDownKind'>): FaceDownReminder | undefined {

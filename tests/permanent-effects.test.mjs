@@ -22,9 +22,9 @@ test('face-down permanents get the fixed Scryfall reminder card of how they were
   const ids = { morph: '5430da88-b72e-4d64-bd3c-b21062cac1c2', manifest: '7b010eeb-1304-4e0b-9eff-3e4561b67396', disguise: '241b3b6d-a25f-4a43-b5d6-1d1079e7e498', cloak: '241b3b6d-a25f-4a43-b5d6-1d1079e7e498' };
   for (const [kind, id] of Object.entries(ids)) {
     const r = faceDownReminder({ faceDown: true, faceDownKind: kind });
-    assert.equal(r.normal, `https://cards.scryfall.io/normal/front/${id[0]}/${id[1]}/${id}.jpg`, kind);
-    assert.match(r.small, /^https:\/\/cards\.scryfall\.io\/small\//);
-    assert.match(r.art, /^https:\/\/cards\.scryfall\.io\/art_crop\//);
+    assert.equal(r.normal, `/scryfall/normal/front/${id[0]}/${id[1]}/${id}.jpg`, kind);
+    assert.match(r.small, /^\/scryfall\/small\//);
+    assert.match(r.art, /^\/scryfall\/art_crop\//);
     assert.ok(r.text.length > 20);
   }
   assert.equal(faceDownReminder({ faceDown: true, faceDownKind: 'morph' }).label, 'Metamorfose');

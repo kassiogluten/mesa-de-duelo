@@ -5,6 +5,7 @@ import { scryfallFormat, type DeckFormat } from './decks';
 import { request } from './scryfallApi';
 import { faceView, images, isFaceAlias, legalityFresh, forgeSpelling, lookupName, printKey, slim, slimPt, validCard, withDefaultArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
 import { preloadImages } from './scryfallImages';
+import { mirrorUrls } from './scryfallMirror';
 export { legalityFresh, type Printing, type ScryCard } from './scryfallCards';
 export { preloadImages } from './scryfallImages';
 
@@ -74,16 +75,17 @@ export async function loadCardCache() {
       const name = key.slice(LEGACY_PREFIX.length);
       try {
         const c = JSON.parse(localStorage.getItem(key) ?? 'null');
-        if (validCard(c) && !memory.has(name)) { memory.set(name, c); void cardStore.write(name, c); }
+        if (validCard(c) && !memory.has(name)) { const card = mirrorUrls(c); memory.set(name, card); void cardStore.write(name, card); }
       } catch { /* entrada corrompida: só some */ }
       localStorage.removeItem(key);
     }
   } catch { /* localStorage bloqueado */ }
   // Versões antigas deixavam a magia preparada ocupar o nome de uma carta real (ver cachePut): esses registros
-  // são descartados e a carta é buscada de novo pelo nome.
+  // são descartados e a carta é buscada de novo pelo nome. As guardadas antes do cache de imagens ainda apontam para
+  // o Scryfall e passam a usar o cache.
   for (const [name, c] of await cardStore.readAll<ScryCard>()) {
-    if (name.startsWith(PRINT_PREFIX)) { if (c && typeof c === 'object') printings.set(name.slice(PRINT_PREFIX.length), c as PrintImages); continue; }
-    if (validCard(c) && !memory.has(name) && !(c.layout === 'prepare' && isFaceAlias(name, c))) memory.set(name, c);
+    if (name.startsWith(PRINT_PREFIX)) { if (c && typeof c === 'object') printings.set(name.slice(PRINT_PREFIX.length), mirrorUrls(c as PrintImages)); continue; }
+    if (validCard(c) && !memory.has(name) && !(c.layout === 'prepare' && isFaceAlias(name, c))) memory.set(name, mirrorUrls(c));
   }
 }
 

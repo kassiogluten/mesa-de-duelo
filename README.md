@@ -68,7 +68,21 @@ O `docker-compose.yml` sobe dois serviços: `web` (o site no nginx, que repassa 
 3. Defina `ADMIN_PASSWORD` nas variáveis do recurso para ligar a área de admin em `https://seu-dominio/admin` (relatos dos jogadores e partidas em andamento).
 4. Faça o deploy. O primeiro build da ponte demora (clona e compila o Forge); o servidor precisa de uns 3 GB de RAM livres para compilar e 4 GB para rodar. `JAVA_OPTS` muda a memória da ponte (padrão `-Xmx4g`; com menos memória no servidor, use `-Xmx2g`).
 
-A página publicada conecta em `wss://seu-dominio/ws` sozinha. Para atualizar o Forge, troque `FORGE_COMMIT` no `forge-bridge/Dockerfile` (e `forge.version` no `pom.xml`, se a versão mudar).
+A página publicada conecta em `wss://seu-dominio/ws` sozinha. As imagens das cartas passam pelo próprio site (`/scryfall/…`): o nginx busca cada uma no Scryfall na primeira vez e guarda no volume `scryfall-cache` (até 5 GB). O cabeçalho `X-Cache` (`MISS`, `HIT`) mostra de onde ela veio. Para atualizar o Forge, troque `FORGE_COMMIT` no `forge-bridge/Dockerfile` (e `forge.version` no `pom.xml`, se a versão mudar).
+
+### CDN das imagens (Cloudflare, plano gratuito, em `img.mesao.online`)
+
+As imagens das cartas saem com `Cache-Control: public, max-age=31536000, immutable`, então a CDN guarda cada uma depois do primeiro pedido e o servidor quase não as entrega mais. A mesa continua em `mtg.kassio.site`; só as imagens vêm de `img.mesao.online`, um domínio inteiro na Cloudflare (o Free não aceita um subdomínio sozinho de um domínio que está em outro DNS). Sem `IMAGENS_URL`, as imagens vêm do próprio site, como antes.
+
+1. Na Cloudflare, com o `mesao.online` ativo (plano Free), crie em **DNS** o registro **A** `img` com o IP do servidor do Coolify, em **Proxied** (nuvem laranja).
+2. No Coolify, no serviço **web**, acrescente o domínio: `https://mtg.kassio.site,https://img.mesao.online`. Faça o deploy para sair o certificado. Se ele não sair atrás da Cloudflare, deixe a nuvem cinza até sair e depois volte para laranja.
+3. Em **SSL/TLS** do `mesao.online`: modo **Full (strict)**.
+4. Em **Caching › Cache Rules**: regra "Hostname equals `img.mesao.online` e URI Path starts with `/scryfall/`" → **Eligible for cache**, com Edge TTL e Browser TTL usando o que a origem manda.
+5. Opcional, para o host não virar uma cópia do site: em **Rules › Redirect Rules**, "Hostname equals `img.mesao.online` e URI Path does not start with `/scryfall/`" → redirecionar para `https://mtg.kassio.site` (302).
+6. Confira: `curl -sI "https://img.mesao.online/scryfall/normal/front/7/6/7673784e-db4b-43a1-8d55-1bb9fc1e284f.jpg?1783903008"` responde 200, `image/jpeg` e `Access-Control-Allow-Origin: *`; na segunda vez, `cf-cache-status: HIT`.
+7. Só então ligue na mesa: `IMAGENS_URL=https://img.mesao.online` nas variáveis do recurso no Coolify e um deploy novo (o valor entra no build). Se a CDN der problema, apague a variável e faça deploy: as imagens voltam a vir do próprio site.
+
+Atrás da Cloudflare e do proxy do Coolify, o nginx vê o IP do proxy e não o do jogador, então os limites por IP do `deploy/nginx.conf` valem para todos juntos. Ver o item 19 do `ROADMAP.md`.
 
 ## Relatos dos jogadores
 

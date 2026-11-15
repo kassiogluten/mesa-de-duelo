@@ -4,6 +4,7 @@ import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
 import { flightArc } from '../flightPath';
 import { colorOf, type Shared } from './gpuParticles';
+import { fromMirror } from '../../scryfallMirror';
 
 export interface FlightParams {
   /** A imagem completa da carta (Scryfall ou a arte própria da mesa). Sem ela, `back` diz a capa do verso. */
@@ -102,8 +103,10 @@ export function backTexture(layer: GpuLayer, colors: readonly string[]) {
 
 /** Carrega a imagem e recorta os cantos arredondados da carta (o JPEG do Scryfall vem com cantos quadrados). */
 async function load(layer: GpuLayer, url: string, entry: Entry) {
-  const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
-  if (!response.ok) throw new Error(String(response.status));
+  // Pelo cache de imagens e, se ele falhar, direto no Scryfall (como faz a <img> da carta).
+  const get = (u: string) => fetch(u, { mode: 'cors', credentials: 'omit' }).then(r => { if (!r.ok) throw new Error(String(r.status)); return r; });
+  const original = fromMirror(url);
+  const response = await get(url).catch(e => { if (!original) throw e; return get(original); });
   const bitmap = await createImageBitmap(await response.blob());
   const canvas = document.createElement('canvas');
   canvas.width = bitmap.width; canvas.height = bitmap.height;
