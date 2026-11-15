@@ -65,4 +65,5 @@ Object.assign(window, {
     atual: () => atual,
   },
 });
-await import('../../src/torneios');
+// Sem await no topo: o alvo do build (es2020) não aceita, e nada depende do fim da carga.
+void import('../../src/torneios');
