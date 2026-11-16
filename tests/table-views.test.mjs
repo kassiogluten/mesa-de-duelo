@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { stackPanel, stackGalleryHTML } = await import('../src/ui/stackView.ts');
-const { amountStatus, newQuestionDraft, questionHTML, questionBar, zoneName, zoneWithArticle } = await import('../src/ui/questionView.ts');
+const { amountStatus, missingPicks, newQuestionDraft, questionHTML, questionBar, zoneName, zoneWithArticle } = await import('../src/ui/questionView.ts');
 const { gameResult, rematchButton, reconnectingHTML, disconnectedHTML } = await import('../src/ui/resultView.ts');
 const { sideboardHTML } = await import('../src/ui/sideboardView.ts');
 const { attackConfirmLabel, blockConfirmLabel, buttons, targetInfoHTML, targetInfoText } = await import('../src/ui/actionPanel.ts');
@@ -53,6 +53,16 @@ test('yes/no questions get one button each, and the minimized bar shows how many
   const choose = { id: 2, kind: 'choose', title: 'Escolha', min: 1, max: 3, options: ['A', 'B', 'C', 'D'] };
   assert.match(questionBar(view, choose, 2), /2 de 3 escolhidas/);
   assert.match(questionBar(view, choose, 2), /data-ui="question-restore"/);
+  // Escolha de várias: selo x/y ao lado do Confirmar (verde quando vale), Confirmar sempre tocável e marcar/desmarcar todas.
+  const empty = questionHTML(view, choose, newQuestionDraft(choose));
+  assert.match(empty, /class="q-pick-count" id="fQPickCount"[^>]*>0<small>\/ 3<\/small>/);
+  assert.match(empty, /data-q-submit>Confirmar/);
+  assert.match(empty, /data-q-all>Selecionar todas/);
+  const full = questionHTML(view, choose, { ...newQuestionDraft(choose), picked: [0, 1, 2] });
+  assert.match(full, /class="q-pick-count ok"/);
+  assert.match(full, /data-q-all>Desmarcar todas/);
+  assert.equal(missingPicks({ ...choose, min: 2 }, 1), 1);
+  assert.equal(missingPicks(choose, 1), 0);
   // Reordenar o cemitério (Fossil Find): a primeira escolhida vai para o fundo, e a dica diz isso.
   const order = { id: 3, kind: 'order', title: 'Escolha a ordem', options: ['A', 'B'] };
   assert.match(questionHTML(view, order, newQuestionDraft(order)), /a primeira fica em cima/);

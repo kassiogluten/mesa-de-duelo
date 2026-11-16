@@ -141,3 +141,21 @@
   .forge .zone-tab { min-height: 30px; padding: 4px 10px; font-size: 13px; }
   .forge .zone-target .q-hint { font-size: 14px; }
 }
+
+/* Escolha de várias: selo "x / y" ao lado do Confirmar (verde quando já vale) e o aviso de que faltam escolhas. */
+.forge .q-pick-count {
+  display: inline-flex; align-items: baseline; gap: 4px; align-self: center; min-width: 76px; justify-content: center;
+  padding: 6px 14px; border: 2px solid rgb(255 255 255 / .22); border-radius: 999px; background: rgb(255 255 255 / .06);
+  font: 700 24px/1 var(--display); color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 2px 8px rgb(0 0 0 / .6);
+}
+.forge .q-pick-count small { font-size: 15px; font-weight: 600; color: var(--muted); }
+.forge .q-pick-count.ok { border-color: rgb(92 214 130 / .85); background: rgb(92 214 130 / .14); box-shadow: 0 0 14px rgb(92 214 130 / .3); }
+.forge .q-pick-count.ok small { color: rgb(170 240 190); }
+.forge .q-pick-count.warn { border-color: rgb(255 96 96 / .95); background: rgb(255 96 96 / .16); box-shadow: 0 0 16px rgb(255 96 96 / .45); animation: q-pick-shake .4s ease; }
+.forge .q-pick-warn:not([hidden]) { order: -1; flex-basis: 100%; margin: 0; text-align: center; font-weight: 600; color: rgb(255 140 140); }
+@keyframes q-pick-shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { .forge .q-pick-count.warn { animation: none; } }
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .q-pick-count { min-width: 62px; padding: 5px 10px; font-size: 19px; }
+  .forge .q-pick-count small { font-size: 13px; }
+}

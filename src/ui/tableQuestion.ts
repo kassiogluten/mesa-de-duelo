@@ -13,7 +13,7 @@ import { isLibraryChoice, librarySummary, moveLibraryCard, placeLibraryCard } fr
 import { isNameChoice, nameListHTML, nameMatches, nameStatus } from './nameChoice';
 import { isPilesChoice, isPilesSplit, movePileCard, splitSummary } from './piles';
 import { isReplacementOrder } from './replacementOrder';
-import { amountStatus, choiceTypeLine, newQuestionDraft, questionBar as renderQuestionBar, questionHTML as renderQuestion, type QuestionView } from './questionView';
+import { amountStatus, choiceTypeLine, missingPicks, newQuestionDraft, questionBar as renderQuestionBar, questionHTML as renderQuestion, type QuestionView } from './questionView';
 import { attachTriggerOrder } from './triggerOrderInput';
 import { prefsChanged } from '../conta/sync';
 import { EVENTS } from '../storage';
@@ -206,6 +206,22 @@ export function createTableQuestion(d: QuestionDeps) {
       d.announce(root.querySelector('#fQStatus')?.textContent ?? '');
       return true;
     }
+    if (t.closest('[data-q-all]') && match.qState && state?.question?.kind === 'choose') {
+      const q = state.question, max = q.max ?? 1, picked = match.qState.picked;
+      if (picked.length >= Math.min(max, q.options?.length ?? 0)) picked.length = 0;
+      else {
+        // Marca as que estão à vista, na ordem da tela, até o máximo da pergunta.
+        for (const b of root.querySelectorAll<HTMLElement>('#fQuestion [data-q-opt]:not([hidden])')) {
+          const i = Number(b.dataset.qOpt);
+          if (picked.length >= max) break;
+          if (!picked.includes(i)) picked.push(i);
+        }
+      }
+      d.render();
+      root.querySelector<HTMLElement>('[data-q-all]')?.focus({ preventScroll: true });
+      d.announce(`${picked.length} de ${Math.min(max, q.options?.length ?? 0)} escolhidas.`);
+      return true;
+    }
     const opt = t.closest<HTMLElement>('[data-q-opt]');
     if (opt && match.qState) {
       const q = state?.question;
@@ -255,12 +271,26 @@ export function createTableQuestion(d: QuestionDeps) {
     }
     if (t.closest('[data-trigger-undo]') && openQuestion && isTriggerOrder(openQuestion)) { if (undoTrigger(triggersFor(openQuestion))) d.render(); return true; }
     if (t.closest('[data-trigger-confirm]') && openQuestion && isTriggerOrder(openQuestion)) { answer({ indices: [...triggersFor(openQuestion).order], ...keepOrder(openQuestion) }); return true; }
-    if (t.closest('[data-q-submit]') && match.qState) { answer({ indices: match.qState.picked }); return true; }
+    if (t.closest('[data-q-submit]') && match.qState) {
+      const missing = openQuestion ? missingPicks(openQuestion, match.qState.picked.length) : 0;
+      if (missing && openQuestion) { warnMissing(openQuestion, missing); return true; }
+      answer({ indices: match.qState.picked });
+      return true;
+    }
     if (t.closest('[data-q-none]')) { answer({ indices: [] }); return true; }
     if (t.closest('[data-q-keep]')) { answer({ indices: (d.state()?.question?.options ?? []).map((_, i) => i), ...(openQuestion ? keepOrder(openQuestion) : {}) }); return true; }
     const conf = t.closest<HTMLElement>('[data-q-confirm]');
     if (conf) { answer({ value: conf.dataset.qConfirm === 'true' }); return true; }
     return false;
+  }
+
+  /** Confirmar com escolhas a menos: o selo fica vermelho e treme, e o aviso diz quantas faltam. */
+  function warnMissing(q: FQuestion, missing: number) {
+    const warn = root.querySelector<HTMLElement>('#fQPickWarn'), count = root.querySelector<HTMLElement>('#fQPickCount');
+    const cards = (q.options ?? []).some(o => typeof o !== 'string' && o.card);
+    const text = `Escolha mais ${missing} ${cards ? (missing === 1 ? 'carta' : 'cartas') : (missing === 1 ? 'opção' : 'opções')}.`;
+    if (warn) { warn.textContent = text; warn.hidden = false; }
+    if (count) { count.classList.remove('warn'); void count.offsetWidth; count.classList.add('warn'); }
   }
 
   root.addEventListener('submit', e => {

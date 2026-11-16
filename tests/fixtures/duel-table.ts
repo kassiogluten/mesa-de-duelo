@@ -527,9 +527,10 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
   },
   /**
    * Tutor (Demonic Tutor) num grimório de Commander: escolha de uma carta entre `n`, na ordem do grimório, como a
-   * ponte manda. `max` acima de 1 é uma busca de várias cartas (as marcadas continuam marcadas ao trocar de filtro).
+   * ponte manda. `max` acima de 1 é uma busca de várias cartas (as marcadas continuam marcadas ao trocar de filtro);
+   * `min` acima de 0 exige um mínimo (o Confirmar avisa quantas faltam).
    */
-  tutor(n = 24, max = 1) {
+  tutor(n = 24, max = 1, min = 0) {
     const pool: [string, string, string][] = [
       ['Sol Ring', 'Artifact', '{1}'], ['Command Tower', 'Land', ''], ['Llanowar Elves', 'Creature — Elf Druid', '{G}'],
       ['Lightning Greaves', 'Artifact — Equipment', '{2}'], ['Steel Overseer', 'Artifact Creature — Construct', '{2}'],
@@ -545,7 +546,7 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       const c = card(800 + i, name, 10, { typeLine, manaCost, creature: /Creature/.test(typeLine), land: /Land/.test(typeLine) });
       return { kind: 'card', card: c, label: name };
     });
-    state.question = { id: 90 + n + max, method: 'getChoices', kind: 'choose', title: max > 1 ? `Escolha até ${max} cartas` : 'Escolha uma carta do seu grimório', min: 0, max, options };
+    state.question = { id: 90 + n + max, method: 'getChoices', kind: 'choose', title: max > 1 ? (min ? `Escolha ${min === max ? max : `de ${min} a ${max}`} cartas` : `Escolha até ${max} cartas`) : 'Escolha uma carta do seu grimório', min, max, options };
     view.render();
   },
   /** Silverquill Silencer: nomear uma carta entre `total` nomes (dezenas de milhares por padrão), que a ponte manda só como texto. */

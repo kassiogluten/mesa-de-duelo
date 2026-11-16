@@ -121,7 +121,6 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   const items = layout ? layout.groups.map(g => choiceGroupHTML(g, layout) + g.indices.map(i => item(i, !layout.visible.has(i))).join('')).join('')
     : choiceOrder(q, v.label).map(i => item(i)).join('');
   const n = draft.picked.length;
-  const ready = n >= min && n <= max;
   // Mão revelada (Thoughtseize): as cartas que não podem ser escolhidas aparecem apagadas, para ver a mão inteira numa janela só.
   const revealed = q.revealed ?? [];
   const unavailable = revealed.map(c => `<div class="q-opt has-card unavailable" data-q-card="${c.id}" aria-disabled="true"><div class="q-face">${v.face(c)}</div><span>${esc(v.label(c))}</span></div>`).join('');
@@ -133,9 +132,25 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
     <div class="q-actions">
       ${(q.min ?? 1) === 0 && !isOrder ? '<button class="arena-btn secondary" data-q-none>Nenhum</button>' : ''}
       ${isOrder ? '<button class="arena-btn secondary" data-q-keep>Manter ordem</button>' : ''}
-      ${!single ? `<button class="arena-btn primary" data-q-submit ${ready ? '' : 'disabled'}>Confirmar</button>` : ''}
+      ${!single && !isOrder && opts.length > 1 ? `<button class="arena-btn secondary" data-q-all>${n >= Math.min(max, opts.length) ? 'Desmarcar todas' : 'Selecionar todas'}</button>` : ''}
+      ${!single ? pickCountHTML(n, min, max, opts.length) : ''}
+      ${!single ? '<button class="arena-btn primary" data-q-submit>Confirmar</button>' : ''}
     </div>`;
 }
+/** Selo "x / y" ao lado do Confirmar: verde quando a quantidade já vale; o aviso de faltar escolha aparece acima dele. */
+function pickCountHTML(n: number, min: number, max: number, total: number) {
+  const top = Math.min(max, total);
+  const ready = n >= min && n <= max;
+  const range = min === top ? `${top}` : `de ${min} a ${top}`;
+  return `<p class="q-pick-warn" id="fQPickWarn" role="alert" hidden></p><span class="q-pick-count${ready ? ' ok' : ''}" id="fQPickCount" aria-label="${n} de ${top} escolhidas; escolha ${range}">${n}<small>/ ${top}</small></span>`;
+}
+
+/** Quantas faltam escolher na escolha comum de várias, ou nada se já dá para confirmar (as telas próprias têm a sua regra). */
+export function missingPicks(q: FQuestion, picked: number) {
+  if (q.kind !== 'choose' || isLibraryChoice(q) || isPilesSplit(q)) return 0;
+  return Math.max(0, (q.min ?? 1) - picked);
+}
+
 export function questionBar(v: QuestionView, q: FQuestion, picked: number) {
   const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
   const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';

@@ -1,4 +1,10 @@
 {
+  "0.184.0": {
+    "Escolhas de várias cartas mais claras": [
+      { "img": "0.184.0/aviso.webp", "legenda": "Confirmar com só 1 das 3 cartas: o selo 1 / 3 fica vermelho e o aviso diz que faltam 2." },
+      { "img": "0.184.0/todas.webp", "legenda": "Depois de Selecionar todas, as 3 cartas ficam marcadas, o selo 3 / 3 fica verde e o botão vira Desmarcar todas." }
+    ]
+  },
   "0.183.0": {
     "Selo do enjoo sem fundo": [
       { "img": "0.183.0/enjoo.webp", "legenda": "Uma criatura com enjoo de invocação: as estrelinhas giram no alto da carta sem a pílula escura, clareando a arte por baixo." }

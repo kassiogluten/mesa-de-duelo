@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.184.0] - 2026-11-15
+
+### Novo
+
+- **Escolhas de várias cartas mais claras.** Nas janelas em que se escolhem várias opções, o contador fica num selo grande ao lado do Confirmar ("1 / 3"), que fica verde quando a quantidade já vale. O Confirmar não fica mais apagado: tocar nele com escolhas a menos deixa o selo vermelho e avisa quantas faltam ("Escolha mais 2 cartas."). E um botão Selecionar todas marca de uma vez todas as que cabem na escolha (as que estão à vista, até o máximo), virando Desmarcar todas para limpar a seleção.
+
 ## [0.183.0] - 2026-11-15
 
 ### Mudou
