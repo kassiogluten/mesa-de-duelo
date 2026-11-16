@@ -34,6 +34,8 @@ export const KEYS = {
   turnNotice: 'mesa:turnNotice',
   /** Ritmo da mesa: 'fast' (rápido sem resposta) ou 'normal'. Opções da mesa. */
   pace: 'mesa:pace',
+  /** Janela de remoção: 'min' (sempre minimizada), 'max' (sempre expandida); sem a chave, Misto. Opções da mesa. */
+  removalWindow: 'mesa:removalWindow',
   /** Nível de passar a vez sozinho. Mesa. */
   passLevel: 'mesa:passLevel',
   /** Chave antiga de "passar respostas" ('true'/'false'), ainda gravada para aparelhos antigos. Mesa. */
@@ -74,6 +76,8 @@ export const KEYS = {
   centerPanel: 'mesa:center-panel',
   /** Deslocamento da barra de uma escolha recolhida com "Ver a mesa" (JSON {x, y}). Mesa. */
   questionBar: 'mesa:question-bar',
+  /** Deslocamento da faixa das remoções minimizadas (JSON {x, y}). Mesa. */
+  removalStrip: 'mesa:removal-strip',
   /** '1' liga as ferramentas de desenvolvimento na mesa. Mesa. */
   dev: 'mesa:dev',
   /** Vibrar no começo do seu turno. Opções da mesa. */

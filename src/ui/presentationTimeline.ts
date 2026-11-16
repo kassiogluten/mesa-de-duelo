@@ -284,6 +284,8 @@ export class PresentationTimeline {
   /** A fila está mostrando uma jogada vista de novo. */
   get replaying() { return !!(this.current?.replay || this.pending[0]?.replay); }
   catchUp() { this.pending = []; this.current = null; this.lastPresentedSeq = this.cursor; }
+  /** O evento tem (ou ainda vai ter) o seu passo na mesa: não foi alcançado em silêncio nem descartado com a fila cheia. */
+  shows(seq: number) { return this.current?.event.seq === seq || this.pending.some(entry => !entry.audioOnly && entry.event.seq === seq); }
   reset(matchId = '') {
     this.matchId = matchId; this.cursor = 0; this.history = []; this.current = null;
     this.pending = []; this.initialized = false; this.lastPresentedSeq = 0; this.triggers = null;

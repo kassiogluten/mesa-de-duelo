@@ -128,6 +128,11 @@ export function createUiActions(d: UiActionDeps) {
   /** As ações: o menu, o histórico e os erros, desfazer, sair, o resultado e as janelas de remoção e de zona. */
   const action: UiTable = {
     'removal-ok': () => { d.removals.close(); },
+    'removal-minimize': () => { d.removals.minimize(); },
+    'removal-open': () => { d.removals.open(); },
+    'removal-dismiss': () => { d.removals.dismiss(); },
+    'removal-prev': () => { d.removals.step(-1); },
+    'removal-next': () => { d.removals.step(1); },
     'reveal-ok': () => { d.reveals.close(); },
     'attack-clear': () => { d.attack.clear(); d.renderTable(); },
     'attack-remove': () => { const s = d.state(); if (s) d.attack.removeSelected(s); },

@@ -25,7 +25,7 @@ final class AccountDecks {
     static final int MAX_ID = 100, MAX_NAME = 200, MAX_ENTRIES = 1000, MAX_COUNT = 9999, MAX_DECK_CHARS = 200_000;
 
     /** As chaves do localStorage que acompanham a conta; o resto é deste aparelho. */
-    static final java.util.Set<String> PREF_KEYS = java.util.Set.of("mesa:audio:v1", "mesa:turnNotice", "mesa:pace",
+    static final java.util.Set<String> PREF_KEYS = java.util.Set.of("mesa:audio:v1", "mesa:turnNotice", "mesa:pace", "mesa:removalWindow",
         "mesa:passLevel", "mesa:passResponses", "mesa:autoPassNoActions", "mesa:opponentStops", "mesa:choiceSort", "mesa:name", "mesa:tema");
     static final int MAX_PREF_CHARS = 4000;
 

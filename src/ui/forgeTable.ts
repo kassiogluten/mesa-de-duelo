@@ -358,6 +358,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       avoid: el => el.classList.contains('awaiting') && !el.classList.contains('centered-decision') || el.classList.contains('attack-choosing')
         ? [...root.querySelectorAll('.bfc.actionable, .att.actionable, .avatar.selectable-player, .exile-card.selectable')].map(c => c.getBoundingClientRect()).filter(r => r.width) : [] },
     { handle: '.question-bar-text, .question-bar > .drag-pill', panel: '#fQuestion.minimized .question-bar', key: () => KEYS.questionBar },
+    // A faixa das remoções sai de cima da zona de comando (que fica no mesmo canto no Commander).
+    { handle: '.removal-strip > .drag-pill', panel: '#fRemovalStrip .removal-strip', key: () => KEYS.removalStrip,
+      avoid: () => [...root.querySelectorAll('#fCommand:not([hidden]) .command-slot')].map(c => c.getBoundingClientRect()).filter(r => r.width) },
   ]);
   const zone = createTableZone(ctx);
 
@@ -373,7 +376,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   };
   // Histórico (historyPanel.ts) e as janelas de remoção feitas por outro jogador (removalQueue.ts).
   const historyLog = createHistoryPanel(root, { timeline, names: historyNames, you: () => client?.state?.you, image, setHTML });
-  const removals = createRemovalQueue(root, { timeline, names: historyNames, face, state: () => client?.state, setHTML, leave: leaveOverlay, syncModal,
+  const removals = createRemovalQueue(root, { timeline, names: historyNames, face, state: () => client?.state, mode: () => settings.prefs.removalWindow, setHTML, leave: leaveOverlay, syncModal,
     blocked: s => s.gameOver || match.disconnected || (!!s.question && !question.minimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || match.stackGalleryOpen || !$('#fReveal').hidden });
   // Cartas reveladas do topo de um grimório (revealWindow.ts): janela que não segura o jogo, como a das remoções.
   const reveals = createRevealWindow(root, { face, setHTML, leave: leaveOverlay, syncModal, seen: seq => client?.send({ type: 'reveal-seen', seq }),

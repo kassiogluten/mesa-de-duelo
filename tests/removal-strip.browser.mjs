@@ -1,0 +1,61 @@
+import assert from 'node:assert/strict';
+import { browserSession, TABLE_URL } from './browser-helper.mjs';
+// Janela de remoção: duas remoções de uma carta só vão para a faixa minimizada, que abre a janela com navegação; Minimizar,
+// Esc e tocar fora a recolhem; OK tira uma por vez; o × dispensa. O Wrath of God nas suas permanentes abre a janela sozinho.
+const { run, evaluate } = browserSession('removal-strip-check');
+try {
+  run('open', `${TABLE_URL}/tests/fixtures/duel-table.html?cenario=remocao-faixa`);
+  run('set', 'viewport', '1366', '768');
+  const r = evaluate(`
+    const wait = ms => new Promise(res => setTimeout(res, ms)), out = {};
+    const win = () => document.querySelector('#fRemoval'), strip = () => document.querySelector('#fRemovalStrip');
+    const ui = name => document.querySelector('[data-ui="' + name + '"]');
+    for (let i = 0; i < 100 && strip().hidden; i++) await wait(100);
+    out.strip = !strip().hidden; out.windowClosed = win().hidden;
+    out.stripText = strip().querySelector('.removal-strip-text').textContent;
+    out.mine = strip().querySelector('.removal-strip').classList.contains('mine');
+    out.count = strip().querySelector('.removal-strip-count')?.textContent;
+    ui('removal-open').click(); await wait(50);
+    out.opened = !win().hidden && strip().hidden;
+    out.nav = win().querySelector('.removal-nav span').textContent;
+    out.first = win().querySelector('h2').textContent;
+    ui('removal-next').click(); await wait(50);
+    out.second = win().querySelector('h2').textContent;
+    ui('removal-minimize').click(); await wait(50);
+    out.minimized = win().hidden && !strip().hidden;
+    ui('removal-open').click(); await wait(50);
+    win().querySelector('h2').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await wait(50);
+    out.escMinimizes = win().hidden && !strip().hidden;
+    ui('removal-open').click(); await wait(50);
+    win().dispatchEvent(new MouseEvent('click', { bubbles: true })); await wait(50);
+    out.outsideMinimizes = win().hidden && !strip().hidden;
+    ui('removal-open').click(); await wait(50);
+    ui('removal-ok').click(); await wait(50);
+    out.afterOk = !win().hidden && !win().querySelector('.removal-nav') && win().querySelector('h2').textContent;
+    ui('removal-minimize').click(); await wait(50);
+    out.oneLeft = !strip().hidden && !strip().querySelector('.removal-strip-count');
+    ui('removal-dismiss').click(); await wait(50);
+    out.dismissed = strip().hidden && win().hidden;
+    window.fixture.removal(2, 1);
+    for (let i = 0; i < 100 && win().hidden; i++) await wait(100);
+    out.wrathOpens = !win().hidden && strip().hidden && win().querySelector('h2').textContent;
+    return out;
+  `);
+  assert.ok(r.strip, 'the strip did not appear');
+  assert.ok(r.windowClosed, 'a single-card removal opened the full window');
+  assert.match(r.stripText, /exilou .+, sua/);
+  assert.ok(r.mine, 'strip without the mark of a removal that affects you');
+  assert.equal(r.count, '2');
+  assert.ok(r.opened, 'tapping the strip did not open the window');
+  assert.equal(r.nav, '1 de 2');
+  assert.match(r.first, /destruiu/);
+  assert.match(r.second, /exilou/);
+  assert.ok(r.minimized, 'Minimizar did not go back to the strip');
+  assert.ok(r.escMinimizes, 'Esc did not minimize');
+  assert.ok(r.outsideMinimizes, 'tapping outside did not minimize');
+  assert.match(r.afterOk || '', /exilou/, 'OK did not move to the next removal');
+  assert.ok(r.oneLeft, 'the strip did not keep the remaining removal');
+  assert.ok(r.dismissed, 'the × did not dismiss');
+  assert.match(r.wrathOpens || '', /destruiu 3 permanentes/, 'a mass removal of your permanents did not open the window');
+  console.log('Removal strip passed: single removals minimized, open/next/minimize/Esc/outside/OK/×, mass removal opens by itself.');
+} finally { run('close'); }

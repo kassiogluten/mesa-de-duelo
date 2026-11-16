@@ -83,7 +83,7 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     const seatMenu = root.querySelector<HTMLElement>('.seat-menu.open [data-seat-menu]');
     if (seatMenu) { e.preventDefault(); seatMenu.click(); return; }
     if (!$('#fReveal').hidden) { e.preventDefault(); d.reveals.close(); return; }
-    if (!$('#fRemoval').hidden) { e.preventDefault(); d.removals.close(); return; }
+    if (!$('#fRemoval').hidden) { e.preventDefault(); d.removals.minimize(); return; }
     if (!$('#fSettings').hidden) { e.preventDefault(); d.settings.set(false); return; }
     if (!$('#fMenu').hidden) { e.preventDefault(); d.setMenu(false, true); return; }
     if (!$('#fLogDrawer').hidden) { e.preventDefault(); d.setLog(false, true); return; }

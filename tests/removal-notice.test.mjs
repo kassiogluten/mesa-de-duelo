@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { removalCause, removalNotices, removedByOwner } = await import('../src/ui/removalNotice.ts');
+const { opensExpanded, parseRemovalWindowMode, removalAffects, removalCause, removalNotices, removedByOwner } = await import('../src/ui/removalNotice.ts');
 
 const YOU = 1, ANA = 2, CAIO = 3;
 let seq = 0;
@@ -66,4 +66,30 @@ test('without the stack in the frame, the controller comes from the cast', () =>
   const [notice] = removalNotices(history, 0, YOU);
   assert.equal(notice.cause.controller, ANA);
   assert.equal(notice.cause.card.name, 'Wrath of God');
+});
+
+test('in the mixed mode only a mass removal of your cards, or one the table did not show, opens the whole window', () => {
+  const notice = (...removed) => ({ key: 'rm', cause: { stackId: 1, controller: ANA }, removed: removed.map(([actor, token]) => ({ seq: ++seq, type: 'left', actor, card: { id: seq, name: 'x', token } })) });
+  const mass = notice([YOU], [ANA]), single = notice([YOU]), theirs = notice([ANA], [CAIO]), tokens = notice([YOU, true], [YOU, true]);
+  assert.equal(opensExpanded(mass, YOU, 'mixed', false), true);
+  assert.equal(opensExpanded(single, YOU, 'mixed', false), false, 'one card of yours goes to the strip');
+  assert.equal(opensExpanded(single, YOU, 'mixed', true), true, 'unless the table did not show it');
+  assert.equal(opensExpanded(theirs, YOU, 'mixed', true), false, 'between opponents goes to the strip');
+  assert.equal(opensExpanded(tokens, YOU, 'mixed', true), false, 'tokens alone do not count');
+  assert.equal(opensExpanded(single, YOU, 'max', false), true);
+  assert.equal(opensExpanded(mass, YOU, 'min', true), false);
+  assert.equal(removalAffects(tokens, YOU), true);
+  assert.equal(removalAffects(theirs, YOU), false);
+  assert.deepEqual(['min', 'max', 'mixed', null, 'x'].map(parseRemovalWindowMode), ['min', 'max', 'mixed', 'mixed', 'mixed']);
+});
+
+test('the timeline tells whether a removal has its step on the table or was caught up silently', async () => {
+  const { PresentationTimeline } = await import('../src/ui/presentationTimeline.ts');
+  const timeline = new PresentationTimeline();
+  timeline.ingest('m', [{ seq: 1, type: 'turn', actor: ANA, turn: 2 }]);
+  const shown = { seq: 2, type: 'left', actor: YOU, card: card(40, 'Llanowar Elves'), from: 'Battlefield', to: 'Graveyard' };
+  timeline.ingest('m', [shown]);
+  assert.equal(timeline.shows(2), true);
+  timeline.ingest('m', [{ ...shown, seq: 3, card: card(41, 'Serra Angel') }], { silent: true });
+  assert.equal(timeline.shows(3), false, 'caught up silently (hidden tab)');
 });

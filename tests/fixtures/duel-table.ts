@@ -610,6 +610,31 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       view.render();
     }, 300);
   },
+  /** Faixa das remoções minimizadas: o oponente mata uma criatura sua com Murder e exila outra com Swords to Plowshares. */
+  pointRemovals() {
+    const me = 10, opp = 23;
+    const elves = card(620, 'Llanowar Elves', me), angel = card(621, 'Serra Angel', me), bears = card(720, 'Grizzly Bears', opp);
+    const murder = card(820, 'Murder', opp, { creature: false, typeLine: 'Instant', manaCost: '{1}{B}{B}' });
+    const swords = card(821, 'Swords to Plowshares', opp, { creature: false, typeLine: 'Instant', manaCost: '{W}' });
+    let seq = 0;
+    const frame = (stackId: number | undefined, source: any, mine: any[]) => ({ turn: 2, phase: 'MAIN1', activePlayer: opp, combat: [], stack: stackId ? [{ id: stackId, source, controller: opp }] : [],
+      players: [{ id: me, life: 20, handCount: 5, library: 50, battlefield: mine }, { id: opp, life: 20, handCount: 5, library: 50, battlefield: [bears] }] });
+    const ev = (type: string, extra: any = {}) => ({ seq: ++seq, stateVersion: seq, type, ...extra });
+    const removal = (stackId: number, source: any, target: any, mine: any[], extra: any) => [
+      ev('spell-cast', { actor: opp, stackId, sourceId: source.id, card: source, frame: frame(stackId, source, mine) }),
+      ev('left', { actor: me, sourceId: target.id, card: target, from: 'Battlefield', stackId, sourceName: source.name, frame: frame(stackId, source, mine), ...extra }),
+      ev('resolved', { actor: opp, stackId, sourceId: source.id, card: source, frame: frame(stackId, source, mine.filter(c => c !== target)) })];
+    state.matchId = 'remocao-faixa';
+    state.events = [ev('turn', { actor: opp, turn: 2 })];
+    state.eventCursor = seq;
+    view.render();
+    setTimeout(() => {
+      state.events = [...state.events, ...removal(11, murder, elves, [elves, angel], { reason: 'destroyed', to: 'Graveyard' }),
+        ...removal(12, swords, angel, [angel], { to: 'Exile' })];
+      state.eventCursor = seq;
+      view.render();
+    }, 300);
+  },
   history() {
     const me = 10, opp = 23;
     const c = (id: number, name: string, controller: number) => card(id, name, controller);
@@ -716,6 +741,8 @@ if (cenario === 'improvisar') (window as any).fixture.improvise();
 // Pagar mana à mão: ?cenario=pagar (Craw Wurm, {4}{G}{G}); toque nos terrenos e no Sol Ring para descontar.
 if (cenario === 'pagar') (window as any).fixture.payMana();
 // Janela de remoção: ?cenario=remocao&minhas=8&dele=3 (Wrath of God do oponente).
+// Faixa das remoções minimizadas: ?cenario=remocao-faixa (Murder e Swords to Plowshares do oponente).
+if (cenario === 'remocao-faixa') (window as any).fixture.pointRemovals();
 if (cenario === 'remocao') { const q = new URLSearchParams(location.search); (window as any).fixture.removal(Number(q.get('minhas') ?? 8), Number(q.get('dele') ?? 3)); }
 // Pagamento automático com o talismã: ?cenario=automatico (agora) ou ?cenario=automatico&antes=1 (o Forge antes).
 if (cenario === 'automatico') (window as any).fixture.autoPay(new URLSearchParams(location.search).has('antes'));

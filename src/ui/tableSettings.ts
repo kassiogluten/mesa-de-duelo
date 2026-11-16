@@ -1,5 +1,5 @@
 // A janela Opções da partida (som, jogo, aparência) e as preferências que ela guarda neste aparelho: o ritmo das jogadas,
-// o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa, os efeitos (automático, completos ou leves) e o selo de FPS e ping. As seções abertas ficam como o jogador deixou.
+// a janela de remoção, o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa, os efeitos (automático, completos ou leves) e o selo de FPS e ping. As seções abertas ficam como o jogador deixou.
 import { EVENTS, KEYS } from '../storage';
 import type { CardStyle } from './face';
 import type { createGameAudio, SoundPack } from './audio';
@@ -15,6 +15,7 @@ import { effectsLevel, setEffectsLevel } from './gpu/gpuSupport';
 import type { createPerfMeter } from './perfMeter';
 import { esc } from './cardtext';
 import type { FState } from '../forge/client';
+import { parseRemovalWindowMode } from './removalNotice';
 
 const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
 
@@ -48,8 +49,9 @@ export interface SettingsDeps {
 export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
   const $ = finder(root);
   /** O que o jogador escolheu nas Opções; a mesa lê daqui a cada desenho. */
-  const prefs = { fast: false, cardStyle: 'full' as CardStyle, playmat: true };
+  const prefs = { fast: false, cardStyle: 'full' as CardStyle, playmat: true, removalWindow: parseRemovalWindowMode(null) };
   try { prefs.fast = localStorage.getItem(KEYS.pace) === 'fast'; } catch { /* Storage is optional. */ }
+  try { prefs.removalWindow = parseRemovalWindowMode(localStorage.getItem(KEYS.removalWindow)); } catch { /* Storage is optional. */ }
   try { prefs.cardStyle = parseCardStyle(localStorage.getItem(KEYS.cards)); } catch { /* Storage is optional. */ }
   try { prefs.playmat = localStorage.getItem(KEYS.playmat) !== 'off'; } catch { /* Storage is optional. */ }
 
@@ -70,7 +72,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     const chosen = (id: string) => ($(id) as HTMLSelectElement).selectedOptions[0]?.textContent ?? '';
     const settings = d.audio.settings, turnBuzz = d.turnBuzz;
     $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
-    $('#fPlaySummary').textContent = [chosen('#fPassLevel'), d.turnNotice.enabled && 'Aviso de turno', screenWake.supported && screenWake.enabled && 'Tela acesa', turnBuzz.supported && turnBuzz.enabled && 'Vibrar', prefs.fast ? 'Rápido' : 'Ritmo normal'].filter(Boolean).join(' · ');
+    $('#fPlaySummary').textContent = [chosen('#fPassLevel'), d.turnNotice.enabled && 'Aviso de turno', screenWake.supported && screenWake.enabled && 'Tela acesa', turnBuzz.supported && turnBuzz.enabled && 'Vibrar', prefs.fast ? 'Rápido' : 'Ritmo normal', prefs.removalWindow !== 'mixed' && `Remoção ${chosen('#fRemovalWindow').toLowerCase()}`].filter(Boolean).join(' · ');
     $('#fLookSummary').textContent = [chosen('#fCardStyle'), `Efeitos ${chosen('#fEffects').toLowerCase()}`, prefs.playmat && 'Tapete', d.perfMeter.enabled && 'FPS e ping', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
   }
   /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
@@ -121,6 +123,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     $('#fVolumeValue').textContent = `${volume}%`;
     ($('#fSoundPack') as HTMLSelectElement).value = settings.pack;
     ($('#fPace') as HTMLSelectElement).value = prefs.fast ? 'fast' : 'normal';
+    ($('#fRemovalWindow') as HTMLSelectElement).value = prefs.removalWindow;
     ($('#fCardStyle') as HTMLSelectElement).value = prefs.cardStyle;
     ($('#fEffects') as HTMLSelectElement).value = effectsLevel();
     ($('#fTema') as HTMLSelectElement).value = lerTema();
@@ -173,6 +176,11 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     if (t.id === 'fTema') escolherTema(parseTema(t.value));
     if (t.id === 'fPassLevel') { if (d.connected() && isPassLevel(t.value)) d.passLevel.change(t.value); syncPassLevel(); if (d.hasState()) d.render(); }
     if (t.id === 'fPace') { prefs.fast = t.value === 'fast'; try { localStorage.setItem(KEYS.pace, prefs.fast ? 'fast' : 'normal'); } catch { /* Storage is optional. */ } }
+    if (t.id === 'fRemovalWindow') {
+      prefs.removalWindow = parseRemovalWindowMode(t.value);
+      try { if (prefs.removalWindow === 'mixed') localStorage.removeItem(KEYS.removalWindow); else localStorage.setItem(KEYS.removalWindow, prefs.removalWindow); } catch { /* Storage is optional. */ }
+      if (d.hasState()) d.rerender();
+    }
     if (t.closest('[data-options-group]')) syncOptionSummaries();
   });
   return { prefs, syncAutoTriggers, syncPassLevel, syncDevice, syncPlaymat, syncTurnNotice, sync: syncSettings, set: setSettings, togglePlaymat, toggleOwnArt, togglePerfMeter };

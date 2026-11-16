@@ -8,6 +8,7 @@ import { SOUND_PACKS } from './audio';
 import { PASS_LEVELS, PASS_LEVEL_ALWAYS, passLevelInfo } from './passLevel';
 import { screenWake } from './screenWake';
 import { temaOptionsHTML, temasDisponiveis } from './temas';
+import { REMOVAL_WINDOW_MODES } from './removalNotice';
 import { ICON_BALLOON, ICON_EYE, ICON_FLAG, ICON_FLASK, ICON_HOME, ICON_REFRESH, ICON_REPLAY } from './icons';
 
 // Ícones que só o menu da partida usa.
@@ -67,6 +68,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
           ${o.buzz ? `<div class="game-option-auto-pass"><div class="game-option-row"><span id="fBuzzLabel">Vibrar na sua vez</span><button class="sound-switch" id="fBuzz" data-ui="buzz" role="switch" aria-checked="true" aria-labelledby="fBuzzLabel" aria-describedby="fBuzzHint"><span class="sound-switch-track" aria-hidden="true"><span></span></span><span id="fBuzzState" aria-hidden="true">Ligado</span></button></div><p id="fBuzzHint">O celular vibra quando o seu turno começa, quando você precisa bloquear e quando chega uma decisão sua no turno de outro jogador.</p></div>` : ''}
           <div class="game-option-auto-pass game-option-auto-triggers" id="fAutoTriggers" hidden><span id="fAutoTriggersLabel">Gatilhos com resposta guardada</span><p>Respondidos com Sempre sim ou Sempre não nesta partida: valem para todas as cartas com o mesmo gatilho.</p><ul aria-labelledby="fAutoTriggersLabel" id="fAutoTriggerList"></ul></div>
           <div class="game-option-pace"><label for="fPace">Ritmo das jogadas</label><select id="fPace" aria-describedby="fPaceHint"><option value="normal">Normal</option><option value="fast">Rápido sem resposta</option></select><p id="fPaceHint">Acelere as animações quando não houver uma decisão sua. Suas respostas continuam disponíveis imediatamente.</p></div>
+          <div class="game-option-pace"><label for="fRemovalWindow">Janela de remoção</label><select id="fRemovalWindow" aria-describedby="fRemovalWindowHint">${REMOVAL_WINDOW_MODES.map(m => `<option value="${m.id}">${m.name}</option>`).join('')}</select><p id="fRemovalWindowHint">Quando um oponente tira cartas do campo. No Misto, a janela só abre sozinha quando uma remoção em massa leva permanentes suas, ou quando a mesa não chegou a mostrar a sua carta saindo; o resto fica numa faixa no canto, que abre com um toque.</p></div>
         </details>
         <details class="game-option-group" data-options-group="look">
           <summary><svg class="game-option-group-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg><span class="game-option-group-title">Aparência</span><span class="game-option-group-value" id="fLookSummary"></span></summary>
@@ -130,6 +132,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
     <div class="overlay" id="fOverlay" hidden></div>
     <div class="overlay" id="fZone" hidden></div>
     <div class="overlay stack-gallery-overlay" id="fStackGallery" hidden></div>
+    <div class="removal-strip-slot" id="fRemovalStrip" hidden></div>
     <div class="overlay" id="fRemoval" hidden></div>
     <div class="overlay" id="fReveal" hidden></div>
     <div class="overlay vote-overlay" id="fVote" hidden></div>

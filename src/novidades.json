@@ -1,4 +1,15 @@
 {
+  "0.197.0": {
+    "Remoções minimizadas": [
+      { "img": "0.197.0/faixa.webp", "legenda": "A faixa no canto da mesa: a carta que causou, o que ela fez, quantas remoções há e a borda vermelha porque uma carta sua saiu." }
+    ],
+    "Janela de remoção com navegação": [
+      { "img": "0.197.0/janela-navegacao.webp", "legenda": "Aberta pela faixa, a janela mostra a primeira de duas remoções, com as setas para passar, Minimizar e OK, ver a próxima." }
+    ],
+    "Escolha da janela de remoção nas Opções": [
+      { "img": "0.197.0/opcoes.webp", "legenda": "Janela de remoção nas Opções, com o Misto escolhido." }
+    ]
+  },
   "0.196.0": {
     "Foil nos detalhes da carta": [
       { "img": "0.196.0/foil-raridades.webp", "legenda": "Da esquerda para a direita, com o mouse no alto à direita de cada carta: comum (só o reflexo), incomum (prata), rara (dourado), mítica (arco-íris) e especial (arco-íris com cintilado), todas inclinadas para a luz." }

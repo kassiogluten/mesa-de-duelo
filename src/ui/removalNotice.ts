@@ -75,3 +75,24 @@ export function removedByOwner(notice: RemovalNotice, you: number | undefined) {
   const owners = [...new Set(notice.removed.map(e => e.actor))].sort((a, b) => Number(b === you) - Number(a === you));
   return owners.map(owner => ({ owner, removed: notice.removed.filter(e => e.actor === owner) }));
 }
+
+/** Como a janela de remoção aparece (Opções → Jogo): Misto, sempre minimizada ou sempre expandida (como era antes). */
+export type RemovalWindowMode = 'mixed' | 'min' | 'max';
+export const REMOVAL_WINDOW_MODES: readonly { id: RemovalWindowMode; name: string }[] = [
+  { id: 'mixed', name: 'Misto' }, { id: 'min', name: 'Sempre minimizada' }, { id: 'max', name: 'Sempre expandida' },
+];
+export const parseRemovalWindowMode = (value: string | null): RemovalWindowMode => value === 'min' || value === 'max' ? value : 'mixed';
+
+/** Alguma permanente sua (ficha ou não) saiu. */
+export const removalAffects = (notice: RemovalNotice, you: number | undefined) => you !== undefined && notice.removed.some(e => e.actor === you);
+
+/**
+ * A remoção abre a janela inteira sozinha? No Misto, só quando leva uma carta sua (fichas sozinhas não contam) e é em
+ * massa (duas ou mais permanentes) ou a mesa não chegou a mostrá-la (aba escondida, jogadas puladas com a fila cheia).
+ * O resto entra na faixa minimizada.
+ */
+export function opensExpanded(notice: RemovalNotice, you: number | undefined, mode: RemovalWindowMode, unseen: boolean) {
+  if (mode !== 'mixed') return mode === 'max';
+  const yours = you !== undefined && notice.removed.some(e => e.actor === you && !e.card?.token);
+  return yours && (notice.removed.length > 1 || unseen);
+}

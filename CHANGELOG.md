@@ -8,6 +8,14 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.197.0] - 2026-11-16
+
+### Mudou
+
+- **Remoções minimizadas.** A janela que mostra o que um oponente tirou do campo não interrompe mais a partida a cada remoção. Agora ela só abre sozinha quando uma remoção em massa leva permanentes suas, ou quando a mesa não chegou a mostrar uma carta sua saindo (com a aba em segundo plano, por exemplo). As outras ficam numa faixa no canto esquerdo da mesa, com a carta que causou e o que ela fez, sem escurecer a mesa e sem pedir **OK**. A faixa empilha as remoções, fica com a borda vermelha quando alguma levou uma carta sua, pode ser arrastada e some quando começa o seu turno. O **×** dispensa todas, e o histórico continua guardando tudo.
+- **Janela de remoção com navegação.** Ao tocar na faixa, a janela abre com **‹ 1 de 3 ›** para passar pelas remoções, **Minimizar** para voltar à faixa e **OK, ver a próxima** para tirar uma por vez. Tocar fora da janela ou apertar Esc também minimiza.
+- **Escolha da janela de remoção nas Opções.** Em Opções → Jogo, **Janela de remoção** tem o **Misto** (o padrão, descrito acima), **Sempre minimizada** e **Sempre expandida**, que abre toda remoção como antes. A escolha acompanha a sua conta.
+
 ## [0.196.0] - 2026-11-16
 
 ### Novo

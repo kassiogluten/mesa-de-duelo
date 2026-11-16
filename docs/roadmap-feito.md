@@ -1585,3 +1585,18 @@ Pedido em 16/11/2026, depois do dado em 3D (item 125): mais objetos em 3D de ver
 - [x] Emblema do planeswalker surgindo como um medalhão em 3D com a arte dele, do planeswalker até o lugar do emblema (`novidades-pendentes/emblema-3d`).
 - [x] Fim da partida: um brasão em 3D sobre o retrato de quem venceu, com a tela do resultado esperando por ele (`novidades-pendentes/brasao-de-vitoria-3d`).
 - [x] Fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta quando são criadas, no máximo 3 por jogada e desligadas já no degrau 1 (`novidades-pendentes/fichas-3d`).
+
+## 137. ✅ Janela de remoção menos frequente
+
+Pedido em 16/11/2026. A janela de remoção (item 32) é importante, porque mostra o que sumiu e por quê, mas abria em toda remoção feita por outro jogador, inclusive um Raio entre dois oponentes, uma ficha destruída ou uma remoção que a mesa acabou de animar na frente do jogador. No Commander com quatro jogadores, era uma janela atrás da outra, cada uma pedindo **OK**.
+
+Feito em 16/11/2026 (`novidades-pendentes/remocao-minimizada`), a partir da prévia aprovada (`docs/previews/remocao-minimizada.html`), em `src/ui/removalQueue.ts` (a faixa e a janela) e `src/ui/removalNotice.ts` (`opensExpanded`, a regra de quando abrir).
+
+- [x] Quando a janela abre sozinha (Misto, o padrão): remoção que leva uma carta sua (fichas sozinhas não contam) e é em massa (duas ou mais permanentes, de qualquer dono), ou que a mesa não chegou a mostrar (aba escondida, ou jogadas puladas com a fila cheia: `PresentationTimeline.shows`). O resto entra minimizado, inclusive a remoção entre oponentes.
+- [x] Forma minimizada: uma faixa na borda esquerda, na altura da divisa entre os campos (no celular, uma barra larga acima da mão), com a carta que causou, o texto curto, "e mais N remoções · toque para ver" e o total, em cartões empilhados. Borda vermelha se alguma levou carta sua. Não escurece a mesa, não pede **OK**, não conta como janela aberta e se arrasta pela alça (`mesa:removal-strip`). Some no começo do seu turno (as que ficaram prontas em turnos anteriores; com a janela aberta, espera ela fechar) ou pelo **×**; o histórico guarda todas.
+- [x] Juntar seguidas: a janela navega entre as remoções (**‹ 1 de 3 ›**); **OK, ver a próxima** tira só a da tela; **Minimizar**, tocar fora e Esc voltam à faixa. Fila de até 12 (antes 5).
+- [x] Opções → Jogo → **Janela de remoção**: Misto / Sempre minimizada / Sempre expandida (toda remoção abre a janela, como antes, agora com a navegação; Esc é o OK, como antes, e tocar fora não faz nada). Chave `mesa:removalWindow`, sincronizada com a conta (também na lista do servidor, `AccountDecks.PREF_KEYS`).
+- [x] Testes: `tests/removal-notice.test.mjs` (a regra e o `shows`) e `tests/removal-strip.browser.mjs`, com a página `?cenario=remocao-faixa` de `tests/fixtures/duel-table.html`.
+
+Ficou de fora: medir quantas janelas abriam por partida antes e depois. Dá para comparar com o **Sempre expandida** numa partida contra o computador, se um dia for preciso.
+
