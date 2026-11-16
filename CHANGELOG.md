@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.183.0] - 2026-11-15
+
+### Mudou
+
+- **Selo do enjoo sem fundo.** As estrelinhas que giram no alto da criatura com enjoo de invocação perderam a pílula azul escura: agora ficam soltas sobre a carta, um pouco maiores, e se misturam à arte, clareando a imagem por onde passam.
+
 ## [0.182.0] - 2026-11-15
 
 ### Novo

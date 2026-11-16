@@ -169,8 +169,9 @@ a { color: var(--gold); }
 .tag svg { width: 12px; height: 12px; }
 .tag.atk { background: var(--red); color: #fff; }
 .tag.blk { background: var(--gold); color: #2a1600; }
-.tag.zzz { background: var(--azul-2a3550, #2a3550); color: var(--azul-c8d4f0, #c8d4f0); font-style: normal; padding: 1px 5px; }
-.tag.zzz .dizzy { width: 16px; height: 16px; }
+/* Sem pílula: o ícone se mistura à arte (color-dodge), e as estrelinhas "queimam" a imagem por baixo. */
+.tag.zzz { background: none; box-shadow: none; color: var(--azul-c8d4f0, #c8d4f0); font-style: normal; padding: 0; mix-blend-mode: color-dodge; }
+.tag.zzz .dizzy { width: 20px; height: 20px; }
 /* O ícone inteiro gira (um elemento da página, que a placa de vídeo gira sozinha); girar só o grupo de dentro do SVG
    refazia o layout da mesa a cada quadro com cada criatura enjoada. Com `transform`, e não `rotate`: a propriedade
    solta fazia o navegador refazer as camadas da mesa a cada quadro. */

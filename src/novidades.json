@@ -1,4 +1,9 @@
 {
+  "0.183.0": {
+    "Selo do enjoo sem fundo": [
+      { "img": "0.183.0/enjoo.webp", "legenda": "Uma criatura com enjoo de invocação: as estrelinhas giram no alto da carta sem a pílula escura, clareando a arte por baixo." }
+    ]
+  },
   "0.182.0": {
     "Lembrar a ordem dos gatilhos": [
       { "img": "0.182.0/lembrar-ordem.webp", "legenda": "A tela de ordenar os gatilhos do Companheiro de Bando de Ajani e do Arcanjo de Thune, com a caixa Lembrar esta ordem marcada antes de confirmar." }
