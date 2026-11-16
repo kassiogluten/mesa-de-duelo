@@ -40,7 +40,7 @@ test('the print chosen in the deck shows over the table cards, with the option o
     assert.equal(cacheGet('Forest', print).image_uris.normal, 'one276-n');
     setOwnArtEnabled(false);
     assert.equal(cacheGet('Forest', print).image_uris.normal, 'one276-n');
-    assert.match(cacheGet('Forest').image_uris.normal, /cards\/thb\/254/);
+    assert.match(cacheGet('Forest').image_uris.normal, /\/scryfall\/cards\/normal\/thb\/254$/);
   } finally { setOwnArtEnabled(true); globalThis.fetch = originalFetch; }
 });
 

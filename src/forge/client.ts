@@ -1,4 +1,5 @@
 import type { DeckData, DeckFormat } from '../decks';
+import { viaMirror } from '../scryfallMirror';
 import type { ClientMessage, DeckValidation, FRoom, FState, NoticeDetail, PublicRoom, ReplyMessage, RequestMessage, RequestReplies, RoomInfo, RoomSaying, ServerMessage, SimilarCard } from './protocol';
 
 export type * from './protocol';
@@ -45,11 +46,17 @@ export const validationText = (v: DeckValidation | undefined) =>
 const REPLY_TYPES = new Set<string>(['validation', 'room-info', 'room-list', 'room-deck', 'pong', 'deck-source', 'similar-cards', 'request-error', 'error', 'validation-error']);
 const isReply = (msg: ServerMessage): msg is ReplyMessage => 'requestId' in msg && typeof msg.requestId === 'string' && REPLY_TYPES.has(msg.type);
 
+/**
+ * As imagens de ficha que o servidor manda pela série e número (api.scryfall.com/…?format=image) passam pelo nosso
+ * cache de imagens; o resto da mensagem fica igual. Só lê campo a campo quando há uma delas.
+ */
+const mirrorImage = (key: string, value: unknown) => key === 'image' && typeof value === 'string' ? viaMirror(value) : value;
+
 /** Lê uma mensagem do servidor; null se não for JSON com `type`. */
 export function parseServerMessage(data: unknown): ServerMessage | null {
   if (typeof data !== 'string') return null;
   try {
-    const msg: unknown = JSON.parse(data);
+    const msg: unknown = data.includes('api.scryfall.com/cards/') ? JSON.parse(data, mirrorImage) : JSON.parse(data);
     return msg && typeof msg === 'object' && typeof (msg as { type?: unknown }).type === 'string' ? msg as ServerMessage : null;
   } catch { return null; }
 }

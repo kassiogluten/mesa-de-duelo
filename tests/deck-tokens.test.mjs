@@ -53,7 +53,7 @@ test('choosing a printing stores what the server needs to recognize the token, a
   chooseToken(deck, kind, { set: 'tblb', cn: '3' });
   assert.deepEqual(deck.tokens, [{ oracleId: 'rabbit-oracle', name: 'Rabbit', colors: 'W', power: '1', toughness: '1', set: 'tblb', cn: '3' }]);
   assert.deepEqual(forgeDeck(deck).tokens, deck.tokens);
-  assert.equal(tokenImage(deck.tokens[0], 'small'), 'https://api.scryfall.com/cards/tblb/3?format=image&version=small');
+  assert.equal(tokenImage(deck.tokens[0], 'small'), '/scryfall/cards/small/tblb/3');
   chooseToken(deck, kind, null);
   assert.equal(deck.tokens, undefined);
   assert.equal(forgeDeck(deck).tokens, undefined);

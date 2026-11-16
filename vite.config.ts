@@ -21,7 +21,13 @@ const efeitos = (req: { url?: string }, _res: unknown, next: () => void) => {
 
 // Imagens das cartas pelo cache (/scryfall/, src/scryfallMirror.ts): na publicação é o nginx que guarda; no dev e no
 // preview, o Vite só repassa ao Scryfall.
-const scryfallMirror = { '/scryfall/': { target: 'https://cards.scryfall.io', changeOrigin: true, rewrite: (path: string) => path.slice('/scryfall'.length) } };
+// As fichas pela série e número (/scryfall/cards/<tamanho>/<série>/<número>[/back]) vão à API, que redireciona para a imagem.
+const apiImage = (path: string) => path.replace(/^\/scryfall\/cards\/([^/]+)\/([^/]+)\/([^/?]+)(\/back)?.*$/,
+  (_, version: string, set: string, cn: string, back?: string) => `/cards/${set}/${cn}?format=image&version=${version}${back ? '&face=back' : ''}`);
+const scryfallMirror = {
+  '/scryfall/cards/': { target: 'https://api.scryfall.com', changeOrigin: true, followRedirects: true, rewrite: apiImage },
+  '/scryfall/': { target: 'https://cards.scryfall.io', changeOrigin: true, rewrite: (path: string) => path.slice('/scryfall'.length) },
+};
 // Imagem de carta atrasada de propósito (página de teste do carregando, tests/fixtures/image-loading.html):
 // /scryfall/…?lento=3000 espera 3 s antes de seguir para o Scryfall (a small espera lentoSmall, se vier); ?falha=1 dá 404.
 const lento = (req: { url?: string }, res: { statusCode: number; end: () => void }, next: () => void) => {

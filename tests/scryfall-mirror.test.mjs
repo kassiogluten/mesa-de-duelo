@@ -14,8 +14,29 @@ test('card images go through our cache, with the same path and the version query
 });
 
 test('only the sizes the table uses are mirrored; anything else keeps the Scryfall address', () => {
-  for (const url of [scry('large'), scry('png').replace('.jpg', '.png'), 'https://cards.scryfall.io/normal/front/7/6/../../x.jpg', 'https://api.scryfall.com/cards/thb/250?format=image&version=normal', '/cartas/raio-normal.webp'])
+  for (const url of [scry('large'), scry('png').replace('.jpg', '.png'), 'https://cards.scryfall.io/normal/front/7/6/../../x.jpg', '/cartas/raio-normal.webp',
+    'https://api.scryfall.com/cards/thb/250?format=image&version=large', 'https://api.scryfall.com/cards/plst/ZEN-1%E2%98%85?format=image&version=normal'])
     assert.equal(viaMirror(url), url);
+});
+
+test('tokens and Nyx lands asked by set and number go through the cache too, and map back to the API', () => {
+  const api = (set, cn, version, back = '') => `https://api.scryfall.com/cards/${set}/${cn}?format=image&version=${version}${back}`;
+  assert.equal(viaMirror(api('TBLB', '3', 'normal')), '/scryfall/cards/normal/tblb/3');
+  assert.equal(viaMirror(api('tust', '1', 'small', '&face=back')), '/scryfall/cards/small/tust/1/back');
+  assert.equal(viaMirror(api('thb', '250', 'art_crop')), '/scryfall/cards/art_crop/thb/250');
+  const base = 'https://mesa.example/';
+  assert.equal(fromMirror('/scryfall/cards/normal/tblb/3', base), api('tblb', '3', 'normal'));
+  assert.equal(fromMirror('/scryfall/cards/small/tust/1/back', base), api('tust', '1', 'small', '&face=back'));
+});
+
+test('token images in a server message are switched to the cache, and nothing else in it changes', async () => {
+  const { parseServerMessage } = await import('../src/forge/client.ts');
+  const raw = JSON.stringify({ type: 'state', state: { cards: [{ name: 'Rabbit', image: 'https://api.scryfall.com/cards/tfdn/5?format=image&version=normal' },
+    { name: 'Note', text: 'https://api.scryfall.com/cards/tfdn/5?format=image&version=normal' }] } });
+  const msg = parseServerMessage(raw);
+  assert.equal(msg.state.cards[0].image, '/scryfall/cards/normal/tfdn/5');
+  assert.equal(msg.state.cards[1].text, 'https://api.scryfall.com/cards/tfdn/5?format=image&version=normal');
+  assert.deepEqual(parseServerMessage('{"type":"pong"}'), { type: 'pong' });
 });
 
 test('a cached image maps back to Scryfall for the fallback, only on our own origin', () => {
@@ -60,8 +81,16 @@ test('nginx serves the same paths the table asks for, and the dev server forward
   assert.ok(re.test(viaMirror(scry('normal')).split('?')[0]));
   assert.ok(re.test(viaMirror(scry('art_crop', 'back')).split('?')[0]));
   assert.ok(!re.test(`/scryfall/large/front/7/6/${id}.jpg`));
+  const cards = nginx.match(/location ~ "(\^\/scryfall\/cards\/[^"]+)"/)?.[1];
+  assert.ok(cards, 'location /scryfall/cards/ no nginx');
+  const tokens = new RegExp(cards);
+  for (const url of ['https://api.scryfall.com/cards/tblb/3?format=image&version=normal', 'https://api.scryfall.com/cards/tust/1?format=image&version=small&face=back'])
+    assert.ok(tokens.test(viaMirror(url)), url);
+  assert.ok(!re.test(viaMirror('https://api.scryfall.com/cards/tblb/3?format=image&version=normal')), 'a rota das imagens por id não pega as fichas');
+  assert.match(nginx, /location ~ "\^\/scryfall-api\/[^"]+" \{\s*allow 127\.0\.0\.1;\s*deny all;/, 'a rota interna só aceita o próprio nginx');
   assert.match(nginx, /proxy_cache_lock on;/);
   assert.match(nginx, /add_header Access-Control-Allow-Origin "\*" always;/, 'CORS for the images host');
   const vite = await readFile(new URL('../vite.config.ts', import.meta.url), 'utf8');
   assert.match(vite, /'\/scryfall\/': \{ target: 'https:\/\/cards\.scryfall\.io'/);
+  assert.match(vite, /'\/scryfall\/cards\/': \{ target: 'https:\/\/api\.scryfall\.com'/);
 });

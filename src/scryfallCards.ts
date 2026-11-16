@@ -49,7 +49,7 @@ export const images = (u: any): Images | undefined => u && { small: viaMirror(u.
  */
 const BASIC_ART: Record<string, string> = { plains: '250', island: '251', swamp: '252', mountain: '253', forest: '254' };
 const basicImages = (num: string): Images => {
-  const url = (version: string) => `${API}/cards/thb/${num}?format=image&version=${version}`;
+  const url = (version: string) => viaMirror(`${API}/cards/thb/${num}?format=image&version=${version}`);
   return { small: url('small'), normal: url('normal'), art_crop: url('art_crop') };
 };
 /**

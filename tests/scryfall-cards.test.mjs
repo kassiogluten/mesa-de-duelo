@@ -34,8 +34,8 @@ test('own art is the default; turned off, basic lands use the Nyx series and oth
   assert.equal(ring().image_uris.small, '/cartas/sol-ring-small.webp');
   assert.equal(withDefaultArt({ name: 'Mana Crypt', layout: 'normal', type_line: 'Artifact', image_uris: uris('m') }).image_uris.normal, 'm-n');
   setOwnArtEnabled(false);
-  assert.equal(land().image_uris.normal, 'https://api.scryfall.com/cards/thb/254?format=image&version=normal');
-  assert.equal(land().image_uris.art_crop, 'https://api.scryfall.com/cards/thb/254?format=image&version=art_crop');
+  assert.equal(land().image_uris.normal, '/scryfall/cards/normal/thb/254');
+  assert.equal(land().image_uris.art_crop, '/scryfall/cards/art_crop/thb/254');
   assert.equal(land().pt.image_uris, undefined);
   assert.equal(ring().image_uris.small, 's-s');
   setOwnArtEnabled(true);

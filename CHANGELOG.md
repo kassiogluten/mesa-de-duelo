@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.188.0] - 2026-11-15
+
+### Mudou
+
+- **Fichas e terrenos básicos carregam mais rápido.** As imagens das fichas, inclusive as que você escolhe no deck, e dos terrenos básicos de arte cheia agora vêm do nosso cache de imagens, como as das outras cartas: a primeira pessoa que vê uma ficha a guarda para todos, e o aparelho não a baixa de novo. Se o cache falhar, a imagem é buscada direto no Scryfall, como antes.
+
 ## [0.187.0] - 2026-11-15
 
 ### Mudou

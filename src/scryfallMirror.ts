@@ -1,10 +1,16 @@
 /**
  * Imagens das cartas pelo nosso cache (ROADMAP item 10): o endereço de cards.scryfall.io vira /scryfall/… no host das
  * imagens (VITE_IMAGENS_URL, a CDN na frente do nosso nginx) ou, sem ele, no próprio site; o nginx guarda em disco
- * (deploy/nginx.conf). O Scryfall fica de reserva: uma imagem que não carrega pelo cache é pedida direto a ele.
+ * (deploy/nginx.conf). As fichas e os terrenos da série Nyx, pedidos pela série e número
+ * (api.scryfall.com/cards/<série>/<número>?format=image, um redirecionamento), viram /scryfall/cards/<tamanho>/<série>/<número>,
+ * e o nginx segue o redirecionamento e guarda a imagem. O Scryfall fica de reserva: uma imagem que não carrega pelo
+ * cache é pedida direto a ele.
  */
 
 const ORIGIN = 'https://cards.scryfall.io/';
+/** Imagem pela série e número; só números simples (o nginx recusa o resto), com o verso pelo `face=back`. */
+const API_IMAGE = /^https:\/\/api\.scryfall\.com\/cards\/([a-z0-9]{2,8})\/([0-9a-z-]{1,12})\?format=image&version=(small|normal|art_crop)(&face=back)?$/i;
+const API_PATH = /^cards\/(small|normal|art_crop)\/([a-z0-9]{2,8})\/([0-9a-z-]{1,12})(\/back)?$/i;
 /**
  * O host das imagens como origem (https://img.…). Sem esquema vale https: com "img.mesao.online" puro, o endereço virava
  * um caminho dentro do próprio site, que devolve a página do jogo, e as cartas sumiam. Valor que não é endereço: o site.
@@ -21,6 +27,8 @@ const PATH = /^(small|normal|art_crop)\/(front|back)\/[0-9a-f]\/[0-9a-f]\/[0-9a-
 
 /** O endereço da imagem pelo nosso cache; qualquer outro endereço volta como veio. */
 export function viaMirror<T extends string | undefined>(url: T): T {
+  const api = url?.match(API_IMAGE);
+  if (api) return `${MIRROR}cards/${api[3]}/${api[1]!.toLowerCase()}/${api[2]}${api[4] ? '/back' : ''}` as T;
   if (!url?.startsWith(ORIGIN)) return url;
   const path = url.slice(ORIGIN.length);
   return (PATH.test(path) ? MIRROR + path : url) as T;
@@ -35,6 +43,8 @@ export function fromMirror(url: string, base = globalThis.location?.href ?? 'htt
     const u = new URL(url, base);
     const ours = [new URL(base).origin, ...host ? [new URL(host).origin] : []];
     if (!ours.includes(u.origin) || !u.pathname.startsWith('/scryfall/')) return undefined;
+    const api = u.pathname.slice('/scryfall/'.length).match(API_PATH);
+    if (api) return `https://api.scryfall.com/cards/${api[2]}/${api[3]}?format=image&version=${api[1]}${api[4] ? '&face=back' : ''}`;
     return ORIGIN + u.pathname.slice('/scryfall/'.length) + u.search;
   } catch { return undefined; }
 }

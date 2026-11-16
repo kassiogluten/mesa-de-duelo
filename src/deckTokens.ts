@@ -1,6 +1,7 @@
 // Fichas do deck: quais as cartas criam e as séries de cada uma no Scryfall, para o jogador escolher a arte.
 import { request } from './scryfallApi';
 import { images, lookupName, type Images } from './scryfallCards';
+import { viaMirror } from './scryfallMirror';
 import type { DeckData, DeckToken } from './decks';
 import { deckEntries } from './decks';
 
@@ -19,9 +20,9 @@ export const colorKey = (colors: unknown) => Array.isArray(colors) ? [...WUBRG].
 /** Fichas que a mesa sabe mostrar: as de uma face (emblemas e fichas de duas faces ficam de fora). */
 const isToken = (d: any) => d?.layout === 'token' && typeof d.oracle_id === 'string';
 
-/** Imagem de uma série escolhida, pelo endereço de imagem do Scryfall. */
+/** Imagem de uma série escolhida, pelo endereço de imagem do Scryfall (pelo nosso cache, src/scryfallMirror.ts). */
 export const tokenImage = (t: Pick<DeckToken, 'set' | 'cn'>, version: keyof Images = 'normal') =>
-  `https://api.scryfall.com/cards/${encodeURIComponent(t.set)}/${encodeURIComponent(t.cn)}?format=image&version=${version}`;
+  viaMirror(`https://api.scryfall.com/cards/${encodeURIComponent(t.set)}/${encodeURIComponent(t.cn)}?format=image&version=${version}`);
 
 /** As fichas que as cartas do deck criam, na ordem do nome. Pede ao Scryfall só o que ainda não conhece. */
 export async function deckTokens(deck: DeckData): Promise<TokenKind[]> {
