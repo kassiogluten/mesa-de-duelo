@@ -613,3 +613,14 @@ Itens em ordem de ganho por esforço:
 - [ ] Ordem do service worker: a tela inicial carrega primeiro e o resto do pacote (`globPatterns`) é guardado depois. Avaliar tirar do pacote o que só abre por clique e funciona bem buscado na hora (Torneios, Rever partida, Privacidade), passando para regra em tempo de execução, sem voltar ao problema da página que abria em branco sem internet (comentário do `rollupOptions` no `vite.config.ts`).
 - [ ] CSS: medir quanto do `forgeTable-*.css` (219 KB) e do `style-*.css` não é usado na primeira tela (o Lighthouse do 106 apontou 69 KB) e separar o da mesa do da tela inicial, se valer.
 - [ ] Medir antes e depois: total do precache (o `vite build` já mostra "precache N entries (X KiB)"), bytes transferidos no primeiro acesso pelo DevTools com rede "4G lenta" e o tempo até a tela inicial aparecer; anotar aqui. Um teste que falhe se o precache passar de um limite (por exemplo, o tamanho de depois mais 10%).
+
+## 136. Jogar sem falar português
+
+Pedido em 16/11/2026. Hoje a mesa inteira está em português: os textos estão escritos direto no código (mais de 3 mil, sem camada de tradução), o servidor liga o Forge em português para o processo todo (o `Localizer` do Forge é um só por processo) e uns 10 pontos da mesa leem o texto do Forge em português para decidir algo. As cartas já caem para o inglês quando não há tradução. O objetivo é que quem não fala português jogue do começo ao fim em inglês, sem o português perder nada, e com estrutura para outros idiomas depois. Levantamento, decisões e fases: `docs/spec-outros-idiomas.md`.
+
+- [ ] Tomar as 8 decisões da spec (idiomas, como escolher, texto do Forge na partida, salas mistas, nomes dos decks prontos, novidades, prints e página de apresentação).
+- [ ] Fase 0: camada de tradução (`t()`), `mesa:lang` nas preferências da conta, idioma na entrada da sala e o teste curto do idioma por jogador no servidor.
+- [ ] Fase 1: telas fora da partida e cartas em inglês, escondidas atrás do `mesa:dev`.
+- [ ] Fase 2: a partida (textos da mesa, os pontos que leem o texto do Forge, o servidor no idioma de cada jogador e os textos próprios do servidor).
+- [ ] Fase 3: conteúdo (nomes dos decks prontos, Como jogar, Laboratório, Novidades e a página de apresentação do item 104).
+- [ ] Fase 4: revisão do inglês por quem joga Magic, lançamento, contagem por idioma e regras novas no `CLAUDE.md` e no `/entregar`.
