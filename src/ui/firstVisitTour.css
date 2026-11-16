@@ -1,0 +1,24 @@
+/* Tour da primeira visita (firstVisitTour.ts): o destaque sobre a área da vez e o balão que a explica. */
+.tour-spot {
+  position: fixed; z-index: 40; pointer-events: none; border-radius: 14px;
+  box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.6), 0 0 0 2px var(--gold), 0 0 26px rgba(242, 181, 76, 0.45);
+  transition: top 0.25s var(--ease-out), left 0.25s var(--ease-out), width 0.25s var(--ease-out), height 0.25s var(--ease-out);
+}
+.tour-balloon {
+  position: fixed; z-index: 41; box-sizing: border-box; width: min(300px, calc(100vw - 24px)); padding: 16px 18px 12px;
+  border-radius: 12px; background: var(--azul-18233b, #18233b); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55); color: var(--ink); font: 14px/1.45 var(--body);
+  animation: tour-in 0.25s var(--ease-out);
+}
+.tour-spot[hidden], .tour-balloon[hidden] { display: none; }
+.tour-balloon:focus { outline: none; }
+.tour-count { margin: 0 0 4px; color: var(--gold-light); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.tour-balloon h2 { margin: 0 0 6px; font: 600 18px/1.25 var(--display); }
+.tour-text { margin: 0; color: var(--muted); }
+.tour-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 14px; }
+.tour-actions .arena-btn { min-height: 38px; padding: 6px 18px; }
+@keyframes tour-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot { transition: none; }
+  .tour-balloon { animation: none; }
+}

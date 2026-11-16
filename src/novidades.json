@@ -1,4 +1,12 @@
 {
+  "0.190.0": {
+    "Como jogar na primeira visita": [
+      { "img": "0.190.0/passo-deck.webp", "legenda": "O primeiro balão aponta para os decks prontos: tocar num deles já leva ao passo seguinte." },
+      { "img": "0.190.0/passo-partida.webp", "legenda": "No segundo, a área do formato, do oponente e de quantos jogadores fica em destaque, com o resto da tela escurecido." },
+      { "img": "0.190.0/passo-jogar.webp", "legenda": "O último mostra o deck escolhido e o botão Jogar, que começa a partida e fecha os balões." },
+      { "img": "0.190.0/menu-como-jogar.webp", "legenda": "Para ver os balões de novo, use Como jogar, na Ajuda do menu ⋯." }
+    ]
+  },
   "0.189.0": {
     "Botões de ação com ícones": [
       { "img": "0.189.0/turno.webp", "legenda": "No seu turno, o Fim de turno com o ícone de avançar até o fim e o botão de passar para o combate com a seta." },

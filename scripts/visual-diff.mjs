@@ -28,6 +28,8 @@ const PAGES = [
   ['menu-mais', 'index.html', `document.querySelector('.mais-btn').click();`],
   ['laboratorio', 'index.html', `document.querySelector('.mais-btn').click(); await pause(100); document.querySelector('[data-mais="lab"]').click();`],
   ['formatos-outros', 'index.html', `document.querySelector('[data-setting="format"][data-value="others"]').click();`],
+  // O tour da primeira visita só abre nesta: as outras começam com ele já visto (ver o localStorage abaixo).
+  ['tour', 'index.html'],
   ['mesa-livre', 'index.html', `document.querySelector('[data-setting="opponent"][data-value="free"]').click(); await pause(200); document.querySelector('#scrLobby [data-deck]').click(); await pause(200); document.querySelector('#startMatch').click();`],
 ];
 /** Telas que mudam sozinhas entre duas rodadas do mesmo código (até este tanto, em %): aparecem na saída, mas não contam. */
@@ -58,7 +60,7 @@ async function snap(out) {
       for (const [name, page, setup] of PAGES) {
         // Cada tela começa do zero: o que uma tela grava no navegador (um deck novo, uma escolha) não vaza para a próxima.
         run('open', `${url}/${page}`);
-        evaluate('try { localStorage.clear(); sessionStorage.clear(); } catch {} return true;');
+        evaluate(`try { localStorage.clear(); sessionStorage.clear(); ${name === 'tour' ? '' : "localStorage.setItem('mesa:tour', '1');"} } catch {} return true;`);
         run('open', `${url}/${page}`);
         evaluate(`${FREEZE} const pause = ms => new Promise(r => setTimeout(r, ms)); await pause(800); ${setup ?? ''} ${SETTLE} return true;`);
         run('screenshot', join(out, `${name}@${w}x${h}.png`));

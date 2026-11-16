@@ -12,13 +12,16 @@ const ICON_INBOX = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13 6
 /** Leque de cartas: o item Ver a série das cartas da mesa. */
 const ICON_CARDS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="10" height="14" rx="1.5"/><path d="M9 3.5h9.5A1.5 1.5 0 0 1 20 5v13"/></svg>';
 
+/** Interrogação: o item Como jogar. */
+const ICON_HELP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 16.8v.4"/></svg>';
+
 /** Faísca: o item Laboratório de efeitos. */
 const ICON_SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7ZM19 15c.3 1.9 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1.1 3-3Z"/></svg>';
 
 /**
  * Botão ⋯ do cabeçalho: o que se usa de vez em quando, fora da linha das abas, em grupos (Partidas: Salas, Rever,
  * Torneios; Laboratório: montar uma mesa e efeitos; Aparência: cartas da mesa e o tema, em amostras numa linha; Ajuda:
- * relatar e Meus relatos). Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
+ * Como jogar, relatar e Meus relatos). Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
  */
 export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
   slot.classList.add('tema', 'mais');
@@ -34,6 +37,7 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     + `<p class="mais-grupo" role="presentation">Aparência</p><button type="button" role="menuitemcheckbox" aria-checked="true" data-mais="own-art"><span>Cartas da mesa</span></button><button type="button" role="menuitem" data-mais="own-art-gallery" aria-haspopup="dialog">${ICON_CARDS}<span>Ver a série</span></button>`
     + (temasDisponiveis() ? `<div class="mais-tema-linha"><span aria-hidden="true">Tema</span><div class="mais-temas" role="group" aria-label="Tema da mesa">${temaItemsHTML()}</div></div>` : '')
     + `<p class="mais-grupo" role="presentation">Ajuda</p>`
+    + `<button type="button" role="menuitem" data-mais="tour">${ICON_HELP}<span>Como jogar</span></button>`
     + `<button type="button" role="menuitem" data-mais="feedback">${ICON_BALLOON}<span>Enviar sugestão ou erro</span></button>`
     + `<button type="button" role="menuitem" data-mais="my-reports" aria-haspopup="dialog">${ICON_INBOX}<span>Meus relatos</span><span class="mais-item-dot" hidden></span></button>`
     + `</div>`;
@@ -78,10 +82,11 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     if (item === 'own-art') { setOwnArtEnabled(!ownArtEnabled()); return; }
     if (item === 'own-art-gallery') { fechar(); openOwnArtGallery(); return; }
     if (item === 'my-reports') { fechar(); openMyReportsDialog(); return; }
-    if (item !== 'feedback' && item !== 'lab') return;
+    if (item !== 'feedback' && item !== 'lab' && item !== 'tour') return;
     fechar();
-    // O Laboratório é uma tela própria; quem a abre é o main.ts.
+    // O Laboratório é uma tela própria; quem a abre é o main.ts. O tour é da tela inicial: Meus decks volta para ela.
     if (item === 'lab') dispatchEvent(new CustomEvent(EVENTS.laboratorio));
+    else if (item === 'tour') dispatchEvent(new CustomEvent(EVENTS.comoJogar));
     else onFeedback();
   });
 }

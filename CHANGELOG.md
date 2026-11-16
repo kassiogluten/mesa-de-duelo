@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.190.0] - 2026-11-16
+
+### Novo
+
+- **Como jogar na primeira visita.** Quem abre a mesa pela primeira vez vê três balões, um de cada vez, mostrando o caminho até a partida: escolher um deck, ajustar o formato, o oponente e quantos jogadores, e tocar em Jogar. Escolher um deck já leva ao passo seguinte, e dá para pular a qualquer momento. Para ver de novo, use **Como jogar** no menu ⋯.
+
 ## [0.189.0] - 2026-11-16
 
 ### Mudou

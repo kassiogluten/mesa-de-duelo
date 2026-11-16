@@ -28,7 +28,7 @@ Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). 
 
 **Partidas de verdade:** `npm run test:e2e` sobe o servidor numa porta própria (7199) e roda os `forge-bridge/scripts/test-*.mjs` contra ele (uns 4 min; um só: `npm run test:e2e -- undo`).
 
-**Refatoração sem mudar a tela:** `npm run visual -- snap <pasta>` tira prints de 36 telas (páginas de teste da mesa e telas do site) em dois tamanhos (sem animações e sem as imagens das cartas, que carregam em tempos diferentes). Tire antes e depois da mudança e rode `npm run visual -- compare <antes> <depois>`: grava `diff-*.png` onde mudou. O ruído conhecido (relógios, mesa livre embaralhada, nomes que chegam do Scryfall) fica em `NOISE`, no script: aparece na saída e não conta. A partir da 0.126.1 cobre 36 telas, inclusive Meus decks, construtor, Laboratório, menu ⋯ e mesa livre.
+**Refatoração sem mudar a tela:** `npm run visual -- snap <pasta>` tira prints de 37 telas (páginas de teste da mesa e telas do site) em dois tamanhos (sem animações e sem as imagens das cartas, que carregam em tempos diferentes). Tire antes e depois da mudança e rode `npm run visual -- compare <antes> <depois>`: grava `diff-*.png` onde mudou. O ruído conhecido (relógios, mesa livre embaralhada, nomes que chegam do Scryfall) fica em `NOISE`, no script: aparece na saída e não conta. A partir da 0.126.1 cobre 36 telas, inclusive Meus decks, construtor, Laboratório, menu ⋯ e mesa livre.
 
 **Código morto:** `npm run unused` lista exports que ninguém usa ("morto" pode apagar).
 

@@ -1,5 +1,5 @@
 // Meus decks: a biblioteca, criar, importar e editar decks, com busca de cartas e "Parecidas".
-import { KEYS } from '../storage';
+import { EVENTS, KEYS } from '../storage';
 import './decks.css';
 import { DEFAULT_DECKS, hasCommandZone, countEntries, deckEntries, exportDeckList, exportDeckRecovery, entryKey, getDeckStorageState, loadUserDecks, parseDeckList, promoteToCommander, saveUserDecks, type DeckData, type DeckEntry, type DeckFormat, type ParsedList } from '../decks';
 import { type Color } from '../cards';
@@ -109,6 +109,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   function goHome() { setDeckActions(false); importSeq++; importBusy = false; validationSeq++; validating = false; hideCardPreview(); opts.onBack(); }
   function goLibrary() { setDeckActions(false); importSeq++; importBusy = false; validationSeq++; validating = false; view = 'library'; selected = null; hideCardPreview(); render(); }
   mountAppHeader(root.querySelector('[data-app-header]')!, { active: 'decks', onPlay: goHome, onDecks: goLibrary });
+  // Como jogar (menu ⋯) é um tour da tela inicial: volta para ela.
+  addEventListener(EVENTS.comoJogar, () => { if (!root.hidden) goHome(); });
 
   function renderStatus() {
     const recovery = getDeckStorageState().recovery.length;

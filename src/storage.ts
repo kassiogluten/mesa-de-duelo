@@ -112,6 +112,8 @@ export const KEYS = {
   forgeUrl: 'mesa:forgeUrl',
   /** '1' depois da primeira partida: mostra o atalho de jogar de novo. Tela inicial. */
   played: 'mesa:played',
+  /** '1' depois que o tour da primeira visita abriu (ele volta pelo menu ⋯, Como jogar). Tela inicial. */
+  tour: 'mesa:tour',
   /** Exibição dos decks da tela inicial: grade (com as colunas) ou lista (JSON). Tela inicial. */
   deckLayoutHome: 'mesa:deckLayout:home',
   /** Última versão do painel Novidades que o jogador viu. Tela inicial. */
@@ -162,6 +164,8 @@ export const EVENTS = {
   ownArt: 'mesa:own-art',
   /** Abrir o Laboratório (menu ⋯). */
   laboratorio: 'mesa:laboratorio',
+  /** Abrir o tour da tela inicial (menu ⋯, Como jogar). */
+  comoJogar: 'mesa:como-jogar',
   /** Os relatos do jogador mudaram: um foi enviado, a situação chegou do servidor ou as novidades foram vistas. */
   meusRelatos: 'mesa:meus-relatos',
 } as const;

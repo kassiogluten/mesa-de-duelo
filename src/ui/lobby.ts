@@ -17,6 +17,7 @@ import { botBracketMax as bracketMaxFor, botBrackets, botPool as poolFor, drawBo
 import { botBracketButtonsHTML, botBracketHelp, chosenDeckHTML, commanderAiPanelHTML, deckTilesHTML, formatName, lobbyHTML, opponentOptionsHTML, personalShelfHTML, preconGroupsHTML, ROOM_DECKS_SHELF, roomDeckTilesHTML, roomDecksHelp, roomInfoHTML, startLabel, type TileContext } from './lobbyView';
 import { createRoomsPoller } from './lobbyRooms';
 import { attachTileMenus } from './tileMenus';
+import { createFirstVisitTour } from './firstVisitTour';
 import { mountDeckLayout } from './deckLayout';
 import './deckFilters.css';
 import './lobby.css';
@@ -39,6 +40,8 @@ export interface Lobby {
   openRoomLink(code: string): void;
   /** Vindo da página Salas (?criar-sala=1): Outra pessoa, na aba Criar sala, pública. */
   openCreateRoom(): void;
+  /** O tour da tela inicial: sozinho na primeira visita, e pelo menu ⋯ (Como jogar). */
+  startTour(): void;
 }
 export interface LobbyOptions {
   onPlay(you: DeckData, opp: DeckData | null, config: MatchConfig, opponents?: (DeckData | null)[]): Promise<void>;
@@ -661,6 +664,10 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
     }});
   refresh();
   fitSidebar();
+  const tour = createFirstVisitTour(root);
+  const startTour = () => { if (!busy && !waitingRoom) tour.start(); };
+  // Pelo menu ⋯: de Meus decks, espera a volta para a tela inicial.
+  addEventListener(EVENTS.comoJogar, () => requestAnimationFrame(startTour));
   // Salas no cabeçalho com a contagem (item 87): quantas salas esperam e quantas partidas dá para assistir.
   async function countRooms() {
     if (root.hidden || document.visibilityState !== 'visible') return;
@@ -683,7 +690,7 @@ export function mountLobby(root: HTMLElement, opts: LobbyOptions): Lobby {
   }
   // Os comandantes vêm primeiro: são as capas dos decks, e a lista inteira (milhares de cartas) demora a chegar.
   loadCards();
-  return { refresh, setStatus, setBusy, roomSay: (seat, key) => roomLobby.say(seat, key), openRoomLink(code) {
+  return { refresh, setStatus, setBusy, startTour, roomSay: (seat, key) => roomLobby.say(seat, key), openRoomLink(code) {
     // 8 caracteres: uma partida contra o computador, que só dá para assistir (o link do admin, por exemplo).
     if (!ROOM_CODE.test(code) && !WATCH_CODE.test(code)) { setStatus('O link da sala está incompleto. Peça o código para quem convidou você.', true); return; }
     if (busy || waitingRoom) return;

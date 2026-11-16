@@ -340,3 +340,5 @@ if (saved) void resumeSaved(saved);
 else if (links.room) lobby.openRoomLink(links.room);
 else if (links.createRoom) lobby.openCreateRoom();
 else if (savedFree) { freeTable.resume(savedFree); show('free'); }
+// Primeira visita neste aparelho: o tour da tela inicial (escolher o deck, ajustar a partida, Jogar).
+else if (!load(KEYS.played) && !load(KEYS.tour)) lobby.startTour();
