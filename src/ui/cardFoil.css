@@ -21,7 +21,8 @@
   background: radial-gradient(circle at var(--mx) var(--my), #ffffffd9 0, #ffffff40 22%, transparent 55%);
 }
 .ci-foil.foil-active::after { opacity: .75; }
-/* O brilho da raridade: uma faixa que atravessa a carta na diagonal e anda com a luz. */
+/* O brilho da raridade: uma faixa que atravessa a carta na diagonal e anda com a luz (o arco-íris também é faixa, para
+   não tingir a arte toda). */
 .ci-foil::before {
   z-index: 1; opacity: 0; background-size: 260% 260%; background-position: var(--mx) var(--my);
 }
@@ -30,20 +31,20 @@
   background-image: linear-gradient(115deg, transparent 30%, #cccccc 42%, #f6f6f6 50%, #cccccc 58%, transparent 70%);
 }
 .ci-foil[data-foil="rare"]::before {
-  mix-blend-mode: color-dodge; opacity: .2;
+  mix-blend-mode: color-dodge; opacity: .08;
   background-image: linear-gradient(115deg, transparent 26%, #b8842a 38%, #ffd77a 47%, #fff3cf 50%, #ffd77a 53%, #b8842a 62%, transparent 74%);
 }
 .ci-foil[data-foil="mythic"]::before, .ci-foil[data-foil="special"]::before {
-  mix-blend-mode: color-dodge; opacity: .22;
-  background-image: linear-gradient(115deg, #ff5f5f 0%, #ffb35f 14%, #fff06b 28%, #6bff9e 42%, #6bd6ff 56%, #9f7bff 70%, #ff6bd6 84%, #ff5f5f 100%);
+  mix-blend-mode: color-dodge; opacity: .1;
+  background-image: linear-gradient(115deg, transparent 36%, #ff5f5f 40%, #ffb35f 43%, #fff06b 46%, #6bff9e 50%, #6bd6ff 54%, #9f7bff 57%, #ff6bd6 60%, transparent 64%);
 }
-.ci-foil[data-foil="special"]::before { opacity: .32; }
+.ci-foil[data-foil="special"]::before { opacity: .14; }
 .ci-foil[data-foil="uncommon"].foil-active::before { opacity: .3; }
-.ci-foil[data-foil="rare"].foil-active::before { opacity: .42; }
-.ci-foil[data-foil="mythic"].foil-active::before { opacity: .4; }
-.ci-foil[data-foil="special"].foil-active::before { opacity: .55; }
+.ci-foil[data-foil="rare"].foil-active::before { opacity: .2; }
+.ci-foil[data-foil="mythic"].foil-active::before { opacity: .24; }
+.ci-foil[data-foil="special"].foil-active::before { opacity: .32; }
 /* O cintilado: pontinhos de luz que acendem conforme a luz passa (só nas míticas e especiais). */
-.ci-foil-glitter { z-index: 2; display: none; mix-blend-mode: color-dodge; opacity: .18; }
+.ci-foil-glitter { z-index: 2; display: none; mix-blend-mode: color-dodge; opacity: .06; }
 .ci-foil[data-foil="mythic"] .ci-foil-glitter, .ci-foil[data-foil="special"] .ci-foil-glitter {
   display: block;
   background:
@@ -53,9 +54,9 @@
   -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0, #0008 30%, transparent 60%);
   mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0, #0008 30%, transparent 60%);
 }
-.ci-foil[data-foil="mythic"].foil-active .ci-foil-glitter { opacity: .45; }
-.ci-foil[data-foil="special"] .ci-foil-glitter { opacity: .3; }
-.ci-foil[data-foil="special"].foil-active .ci-foil-glitter { opacity: .7; }
+.ci-foil[data-foil="mythic"].foil-active .ci-foil-glitter { opacity: .2; }
+.ci-foil[data-foil="special"] .ci-foil-glitter { opacity: .1; }
+.ci-foil[data-foil="special"].foil-active .ci-foil-glitter { opacity: .3; }
 /* Sem movimento (reduzir movimento ou Efeitos leves): o brilho parado no meio, sem inclinar. */
 .ci-foil.foil-still { transform: none; transition: none; }
 /* Os arranjos de celular do modal (cardInspector.css), agora na moldura em volta da imagem. */

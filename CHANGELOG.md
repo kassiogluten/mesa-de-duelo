@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.206.0] - 2026-11-16
+
+### Mudou
+
+- **Foil mais suave nas raras e míticas.** O brilho da carta aberta nos detalhes ficou com cerca de metade da força: o dourado das raras aparece de leve quando a luz passa, e o arco-íris das míticas e especiais virou uma faixa que corre com a luz, sem tingir a arte inteira, com um cintilado mais discreto.
+
 ## [0.205.0] - 2026-11-16
 
 ### Novo

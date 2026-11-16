@@ -1,4 +1,9 @@
 {
+  "0.206.0": {
+    "Foil mais suave nas raras e míticas": [
+      { "img": "0.206.0/foil-rara-mitica.webp", "legenda": "Uma rara e uma mítica abertas nos detalhes, com a luz no alto à direita: o dourado aparece de leve, e o arco-íris da mítica é uma faixa na diagonal, deixando o resto da carta limpo." }
+    ]
+  },
   "0.205.0": {
     "Laboratório de efeitos volta a abrir": [
       { "img": "0.205.0/celular.webp", "legenda": "O Laboratório de efeitos num celular em pé: a mesa em cima e o painel com as jogadas embaixo, rolando." }
