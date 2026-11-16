@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic game cues. Standard library only; thirty original physical-model cues.
+"""Deterministic game cues. Standard library only; thirty-five original physical-model cues.
 
 The two damage cues adapt bundled SFXMint-generated CC0 takes. Their checksums,
 licenses and generation provenance are recorded in sources/manifest.json; regeneration needs no network.
@@ -359,6 +359,51 @@ def loyalty(buf):
     add_texture(buf, .05, .3, (3000, 9000), .12, 3202, lambda t: bell(t, .12, .07))
 
 
+def reminder(buf):
+    # A fingernail on a glass, twice at the same pitch: asking for attention without the turn's fanfare.
+    for start, seed in [(0, 3301), (.17, 3302)]:
+        add_texture(buf, start, .02, (2000, 8000), .35, seed, lambda t: math.exp(-t / .003))
+        add_modes(buf, start, [(1318.5, .35, .15), (1318.5 * 2.76, .08, .05)], attack=.001)
+
+
+def alarm(buf):
+    # A handbell rung hard three times, the bronze still ringing between strokes: time is up.
+    for start, amplitude, seed in [(0, .85, 3401), (.24, .9, 3402), (.48, 1, 3403)]:
+        add_texture(buf, start, .03, (1500, 7000), .5 * amplitude, seed, lambda t: math.exp(-t / .005))
+        add_modes(buf, start, [(987.77, .4, .3), (987.77 * 2.42, .22, .18), (987.77 * 3.93, .1, .09),
+                               (987.77 * .5, .12, .25)], amplitude, attack=.001)
+
+
+def graveyard(buf):
+    # A card slips off the edge and drops onto the pile: a short falling paper stroke and a dull landing.
+    add_texture(buf, 0, .17, (600, 4200), 1, 3501, lambda t: bell(t, .06, .035) * (1 - t / .2))
+    add_texture(buf, .15, .09, (110, 1100), .75, 3502, lambda t: math.exp(-t / .022))
+    add_modes(buf, .15, [(124, .32, .06), (203, .1, .035)], attack=.003)
+
+
+def equip(buf):
+    # Metal fitted onto the card: a clank of plate and the click of a buckle closing.
+    add_texture(buf, 0, .04, (900, 6000), .6, 3601, lambda t: math.exp(-t / .006))
+    add_modes(buf, 0, [(612, .4, .09), (1031, .3, .07), (1693, .18, .05), (2417, .08, .03)], attack=.001)
+    add_modes(buf, 0, [(142, .25, .04)], attack=.002)
+    add_texture(buf, .14, .02, (2000, 8000), .5, 3602, lambda t: math.exp(-t / .003))
+    add_modes(buf, .14, [(2310, .14, .015), (3420, .06, .01)], attack=.0008)
+
+
+def dice(buf):
+    # Bone dice tumbling on the felt: irregular knocks that slow down, then a last rock into place.
+    rng = random.Random(3701)
+    at, gap = 0.0, .035
+    for i in range(8):
+        f = rng.uniform(720, 1150)
+        amplitude = 1 - i / 11
+        add_modes(buf, at, [(f, .3, .018), (f * 2.3, .12, .01)], amplitude, attack=.0008)
+        add_texture(buf, at, .015, (500, 4000), .35 * amplitude, 3710 + i, lambda t: math.exp(-t / .003))
+        at += gap * rng.uniform(.75, 1.3)
+        gap *= 1.16
+    add_modes(buf, at, [(860, .14, .012)], attack=.0008)
+
+
 # file, material, duration, peak, reflection amount, composer
 DESIGNS = [
     ('01-card-draw', 'paper / two brushed strokes', .30, .28, 0, draw),
@@ -393,6 +438,11 @@ DESIGNS = [
     ('30-counter-bad', 'clay beads on a card / two falling taps', .26, .26, .01, counter_bad),
     ('31-walker', 'glass swell and bronze / rising to a bright chord', .92, .34, .07, walker),
     ('32-loyalty', 'crystal-bronze seal / strike and rising glint', .70, .30, .04, loyalty),
+    ('33-reminder', 'glass / two equal taps', .40, .24, .02, reminder),
+    ('34-alarm', 'handbell / three hard strokes', 1.0, .42, .05, alarm),
+    ('35-graveyard', 'paper fall / dull landing', .34, .26, .01, graveyard),
+    ('36-equip', 'metal plate / clank and buckle', .32, .34, .02, equip),
+    ('37-dice', 'bone dice on felt / slowing knocks', .62, .30, .01, dice),
 ]
 
 

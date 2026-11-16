@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 const { PresentationTimeline, hasLiveDecision, holdDecision, stateWithFrame, presentationDuration, presentationPace, calloutDuration } = await import('../src/ui/presentationTimeline.ts');
@@ -109,6 +110,39 @@ test('counters only sound: good and bad ones each get one cue per batch, and "en
   assert.equal(soundForEvent(event(1, 'counters', { counter: 'RAD' })), 'counter-bad');
   assert.equal(soundForEvent(event(1, 'counters', { counter: 'ENERGY' })), 'counter');
   assert.equal(soundForEvent(event(1, 'counters', { counter: 'P1P1', entering: true })), null);
+});
+
+test('a counter going away sounds the opposite of it arriving', () => {
+  assert.equal(soundForEvent(event(1, 'counters', { counter: 'P1P1', delta: -1 })), 'counter-bad');
+  assert.equal(soundForEvent(event(2, 'counters', { counter: 'M1M1', delta: -1 })), 'counter');
+  assert.equal(soundForEvent(event(3, 'counters', { counter: 'P1P1', delta: 2 })), 'counter');
+  const timeline = new PresentationTimeline(); timeline.ingest('a', []);
+  timeline.ingest('a', [event(4, 'counters', { counter: 'P1P1', delta: 1, card: { id: 5 } }), event(5, 'counters', { counter: 'P1P1', delta: -1, card: { id: 6 } })]);
+  const entries = []; let entry;
+  while ((entry = timeline.advance())) entries.push(entry);
+  assert.deepEqual(entries.map(e => soundForEvent(e.event)), ['counter', 'counter-bad'], 'adding and removing are two sounds, not one batch');
+});
+
+test('loyalty or defense lost to damage is the hit itself, while other counter losses still sound', () => {
+  const mix = new AudioEventMix();
+  mix.level(event(1, 'damage', { targets: { cards: [8] } }), 'a');
+  assert.equal(mix.level(event(2, 'counters', { counter: 'LOYALTY', delta: -3, card: { id: 8 } }), 'a'), 0);
+  assert.equal(mix.level(event(3, 'counters', { counter: 'LOYALTY', delta: -2, card: { id: 9 } }), 'a'), 1, 'another planeswalker was not hit');
+  mix.level(event(4, 'damage', { targets: { cards: [10] } }), 'a');
+  assert.equal(mix.level(event(5, 'counters', { counter: 'DEFENSE', delta: -4, card: { id: 10 } }), 'a'), 0);
+  mix.level(event(6, 'damage', { prevented: true, targets: { cards: [11] } }), 'a');
+  assert.equal(mix.level(event(7, 'counters', { counter: 'LOYALTY', delta: -1, card: { id: 11 } }), 'a'), 1, 'a prevented hit made no sound');
+});
+
+test('graveyard, shuffle, equip, dice and stealing have their own cues', () => {
+  const mappings = {
+    draw: 'draw', scry: 'draw', discard: 'graveyard', mill: 'graveyard', shuffle: 'shuffle', attached: 'equip',
+    coin: 'dice', die: 'dice', 'starting-roll': 'dice', 'control-changed': 'sneak', 'ability-activated': 'ability', 'land-played': 'land',
+  };
+  for (const [type, cue] of Object.entries(mappings)) assert.equal(soundForEvent(event(1, type), 1), cue, type);
+  for (const cue of ['reminder', 'alarm', 'graveyard', 'equip', 'dice']) {
+    for (const pack of SOUND_PACKS) assert.ok(existsSync(new URL(`../public/${soundUrl(pack.id, cue)}`, import.meta.url)), `${pack.id}/${cue}`);
+  }
 });
 
 test('counters from an infect or wither hit stay silent, and a spell that only put counters skips its resolution sound', () => {

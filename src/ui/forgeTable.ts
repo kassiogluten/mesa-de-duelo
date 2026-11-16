@@ -149,7 +149,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Estado da partida aberta (tableState.ts): attach() troca o objeto inteiro.
   let match = newMatchState();
   // Relógios do turno e da partida e o alerta de espera demorada (tableClocks.ts).
-  const clocks = createTableClocks(root, { state: () => client?.state, presenting: () => !!timeline.current, disconnected: () => match.disconnected, announce: text => announce(text), cue: volume => audio.cue('turn-self', volume) });
+  const clocks = createTableClocks(root, { state: () => client?.state, presenting: () => !!timeline.current, disconnected: () => match.disconnected, announce: text => announce(text), cue: volume => audio.cue('reminder', volume) });
   const showBanner = createTurnBanner(root);
   // Momentos que já tocaram (resultado, cada mão inicial): voltar à mesa não repete o som.
   const playedMoments = new Set<string>();
@@ -399,7 +399,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // ---------- Desenho ----------
   function render() { renderTable(true); if (!$('#fSettings').hidden) settings.syncAutoTriggers(); }
 
-  const renderAwaiting = createAwaitingCallout(root, () => audio.cue('turn-self', .5));
+  const renderAwaiting = createAwaitingCallout(root, () => audio.cue('reminder', .5));
   const phases = createTablePhases({ ...ctx, opponentStops, stops, clocks, handAutoButton: hand.autoButton });
   const actionBox = createActionBox({ ...ctx, attack, settings, renderAwaiting });
   const topBar = createTableTopBar({ ...ctx, showBanner, turnBuzz });

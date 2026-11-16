@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Themed sound packs. Standard library only, deterministic, original synthesis.
 
-Each pack renders the same thirty-two cues as the classic set (generate.py), with the same
+Each pack renders the same thirty-seven cues as the classic set (generate.py), with the same
 file names, into audio-src/<pack>/, so the game swaps packs by folder. The styles are
 evocations written from scratch: no sound comes from another game (Arena reuses only
 the CC0 damage takes in sources/, as the classic set does).
@@ -1572,6 +1572,252 @@ def scifi_loyalty(buf):
 
 # Pack folder -> (early reflections, [(file, material, duration, first-pass peak, room, composer)]).
 # Files match the classic set (generate.DESIGNS); a missing cue would fall silent in that pack.
+# Reminder (two equal taps, never the turn's call), alarm (repeated, insistent), graveyard (a card falling to the pile),
+# equip (metal fitted and fastened) and dice (tumbling knocks that slow down): one of each per pack.
+def bits_reminder(buf):
+    add_notes(buf, 0, [88, None, None, 88], .05, length=.06, shape='square', duty=.25, amp=.32, release=.008)
+
+
+def bits_alarm(buf):
+    add_notes(buf, 0, [93, 86, 93, 86, 93, 86], .1, length=.09, shape='square', duty=.5, amp=.3, release=.006)
+    add_notes(buf, 0, [57, None, 57, None, 57, None], .1, length=.09, shape='tri', amp=.45)
+
+
+def bits_graveyard(buf):
+    add_tone(buf, 0, .2, hz(76), hz(52), shape='square', duty=.125, amp=.3, frame=FRAME)
+    add_tone(buf, .18, .12, 110, 50, shape='tri', amp=.7, decay=.05, frame=FRAME)
+    add_noise8(buf, .18, .05, 2000, amp=.25, decay=.015, seed=8101)
+
+
+def bits_equip(buf):
+    add_noise8(buf, 0, .05, 12000, amp=.45, decay=.012, seed=8102)
+    add_tone(buf, 0, .14, hz(79), shape='square', duty=.25, amp=.25, decay=.05)
+    add_tone(buf, 0, .14, hz(80), shape='square', duty=.125, amp=.2, decay=.05)
+    add_tone(buf, .13, .05, hz(96), shape='square', duty=.125, amp=.25, decay=.02)
+
+
+def bits_dice(buf):
+    rng = random.Random(8103)
+    at, gap = 0.0, .04
+    for i in range(7):
+        add_noise8(buf, at, .03, rng.uniform(5000, 9000), amp=.45 * (1 - i / 10), decay=.008, seed=8104 + i)
+        add_tone(buf, at, .03, hz(rng.choice([72, 74, 76, 79])), shape='square', duty=.125, amp=.15 * (1 - i / 10), decay=.01)
+        at += gap * rng.uniform(.8, 1.2)
+        gap *= 1.18
+
+
+def fantasy_reminder(buf):
+    for start in (0, .19):
+        glass(buf, start, hz(88), .7, decay=.2)
+    add_texture(buf, 0, .4, (4000, 9000), .05, 9401, lambda t: bell(t, .1, .08))
+
+
+def fantasy_alarm(buf):
+    # A tower bell rung three times over a low drum.
+    for start, amplitude in [(0, .85), (.27, .9), (.54, 1)]:
+        add_fm(buf, start, .5, hz(69), 1.4, 2.2, amp=.4 * amplitude, decay=.3, index_decay=.12)
+        add_drum(buf, start, 60, 25, .1, .4 * amplitude)
+
+
+def fantasy_graveyard(buf):
+    add_texture(buf, 0, .18, (700, 4500), .9, 9402, lambda t: bell(t, .06, .035))
+    add_pluck(buf, .15, hz(45), amp=.4, damping=.993, seed=9403, brightness=.35)
+    add_drum(buf, .15, 70, 20, .07, .35)
+
+
+def fantasy_equip(buf):
+    # Steel slid home: a ringing blade and the latch of a scabbard.
+    add_sweep(buf, 0, .12, (1500, 5000), (3000, 9000), .4, 9404, lambda t: bell(t, .06, .03))
+    add_fm(buf, .1, .45, 1180, 1.41, 1.8, amp=.3, decay=.12, index_decay=.04)
+    add_modes(buf, .1, [(160, .25, .04)], attack=.002)
+    add_texture(buf, .24, .02, (2000, 8000), .4, 9405, lambda t: math.exp(-t / .003))
+
+
+def fantasy_dice(buf):
+    rng = random.Random(9406)
+    at, gap = 0.0, .04
+    for i in range(7):
+        wood(buf, at, rng.uniform(700, 1000), .7 * (1 - i / 10), seed=9407 + i)
+        at += gap * rng.uniform(.8, 1.2)
+        gap *= 1.17
+    glass(buf, at, hz(93), .25, decay=.15)
+
+
+def cute_reminder(buf):
+    for start in (0, .17):
+        pop(buf, start, 700, 1000, .35, .04)
+        mallet(buf, start + .02, 84, .5, decay=.14)
+
+
+def cute_alarm(buf):
+    # A little alarm clock ringing.
+    for i in range(12):
+        mallet(buf, i * .055, 96 if i % 2 else 91, .45, decay=.05)
+    mallet(buf, .7, 84, .5, decay=.2)
+
+
+def cute_graveyard(buf):
+    pop(buf, 0, 900, 220, .6, .18)
+    mallet(buf, .17, 48, .6, decay=.12)
+
+
+def cute_equip(buf):
+    pop(buf, 0, 400, 800, .4, .04)
+    coin(buf, .02, 1900, .45, decay=.08)
+    mallet(buf, .12, 91, .4, decay=.08)
+
+
+def cute_dice(buf):
+    rng = random.Random(10201)
+    at, gap = 0.0, .045
+    for i in range(7):
+        pop(buf, at, rng.uniform(500, 900), rng.uniform(300, 500), .45 * (1 - i / 10), .03)
+        at += gap * rng.uniform(.8, 1.2)
+        gap *= 1.15
+    mallet(buf, at, 88, .35, decay=.1)
+
+
+def arena_reminder(buf):
+    for start in (0, .2):
+        coin(buf, start, 1180, .5, decay=.16)
+        add_drum(buf, start, 110, 20, .04, .2)
+
+
+def arena_alarm(buf):
+    # Three war-horn blasts over drum strokes.
+    for start in (0, .3, .6):
+        add_drum(buf, start, 65, 35, .12, .8)
+        for note, amplitude in [(57, .3), (64, .2)]:
+            add_tone(buf, start, .26, hz(note), shape='saw', amp=amplitude, attack=.02, release=.06, lowpass=1100)
+
+
+def arena_graveyard(buf):
+    add_texture(buf, 0, .15, (500, 3500), .7, 11201, lambda t: bell(t, .05, .03))
+    add_drum(buf, .13, 48, 30, .16, .9)
+    add_texture(buf, .13, .2, (60, 900), .6, 11202, lambda t: math.exp(-t / .05))
+
+
+def arena_equip(buf):
+    # Anvil strike and a heavy strap pulled tight.
+    add_fm(buf, 0, .4, 820, 2.76, 2.5, amp=.4, decay=.1, index_decay=.03)
+    add_drum(buf, 0, 90, 30, .05, .5)
+    add_texture(buf, 0, .05, (900, 6000), .5, 11203, lambda t: math.exp(-t / .006))
+    add_texture(buf, .16, .1, (300, 2500), .4, 11204, lambda t: bell(t, .04, .02))
+
+
+def arena_dice(buf):
+    rng = random.Random(11205)
+    at, gap = 0.0, .04
+    for i in range(7):
+        wood(buf, at, rng.uniform(380, 560), .8 * (1 - i / 10), seed=11206 + i)
+        at += gap * rng.uniform(.8, 1.25)
+        gap *= 1.17
+    add_drum(buf, at, 80, 15, .04, .25)
+
+
+def quiet_reminder(buf):
+    add_tone(buf, 0, .12, hz(84), amp=.4, decay=.05)
+    add_tone(buf, .16, .12, hz(84), amp=.4, decay=.05)
+
+
+def quiet_alarm(buf):
+    for start in (0, .2, .4):
+        add_tone(buf, start, .16, hz(88), amp=.45, decay=.07)
+        add_tone(buf, start, .16, hz(76), amp=.2, decay=.07)
+
+
+def quiet_graveyard(buf):
+    add_texture(buf, 0, .12, (500, 3000), .6, 12301, lambda t: bell(t, .04, .025))
+    add_tone(buf, .08, .14, hz(60), hz(55), amp=.4, decay=.05)
+
+
+def quiet_equip(buf):
+    add_modes(buf, 0, [(1900, .25, .03), (2900, .1, .02)], attack=.001)
+    add_texture(buf, .08, .02, (2000, 7000), .3, 12302, lambda t: math.exp(-t / .003))
+
+
+def quiet_dice(buf):
+    rng = random.Random(12303)
+    at, gap = 0.0, .045
+    for i in range(5):
+        add_modes(buf, at, [(rng.uniform(900, 1300), .25 * (1 - i / 8), .012)], attack=.001)
+        at += gap * rng.uniform(.8, 1.2)
+        gap *= 1.2
+
+
+def tavern_reminder(buf):
+    add_pluck(buf, 0, hz(76), amp=.45, damping=.995, seed=13301, brightness=.6)
+    add_pluck(buf, .17, hz(76), amp=.45, damping=.995, seed=13302, brightness=.6)
+
+
+def tavern_alarm(buf):
+    # The innkeeper's handbell, shaken.
+    for i, start in enumerate((0, .14, .28, .42, .56)):
+        coin(buf, start, 1450, .55 if i % 2 else .7, decay=.22)
+
+
+def tavern_graveyard(buf):
+    add_texture(buf, 0, .16, (700, 4500), .9, 13303, lambda t: bell(t, .06, .035))
+    wood(buf, .14, 170, .7, seed=13304)
+
+
+def tavern_equip(buf):
+    # Leather strap and an iron buckle.
+    add_texture(buf, 0, .12, (300, 2500), .6, 13305, lambda t: bell(t, .05, .025))
+    coin(buf, .1, 2400, .4, decay=.06)
+    wood(buf, .1, 400, .35, seed=13306)
+    coin(buf, .19, 3100, .3, decay=.04)
+
+
+def tavern_dice(buf):
+    # Shaken in a leather cup, then thrown on the boards (the ability is the roll on its own).
+    rng = random.Random(13307)
+    for i in range(6):
+        add_texture(buf, i * .03, .02, (400, 2500), .4, 13308 + i, lambda t: math.exp(-t / .005))
+    at, gap = .22, .04
+    for i in range(6):
+        wood(buf, at, rng.uniform(600, 850), .7 * (1 - i / 9), seed=13320 + i)
+        at += gap * rng.uniform(.8, 1.2)
+        gap *= 1.18
+
+
+def scifi_reminder(buf):
+    add_fm(buf, 0, .14, hz(88), 2.0, .6, amp=.35, decay=.05)
+    add_fm(buf, .17, .14, hz(88), 2.0, .6, amp=.35, decay=.05)
+
+
+def scifi_alarm(buf):
+    # A klaxon sweeping three times.
+    for start in (0, .3, .6):
+        add_tone(buf, start, .26, 520, 880, shape='square', amp=.25, attack=.01, release=.03, lowpass=2200)
+        add_tone(buf, start, .26, 260, 440, shape='saw', amp=.15, attack=.01, release=.03, lowpass=900)
+
+
+def scifi_graveyard(buf):
+    # Deleted: a falling chirp into a low thud.
+    add_tone(buf, 0, .18, 1400, 180, amp=.35, decay=.1)
+    add_tone(buf, .16, .1, 90, 50, amp=.5, decay=.04)
+    add_noise8(buf, .16, .04, 3000, amp=.15, decay=.01, seed=14301)
+
+
+def scifi_equip(buf):
+    # A magnetic lock engaging.
+    add_tone(buf, 0, .16, 120, 480, shape='saw', amp=.25, attack=.01, lowpass=1500)
+    add_noise8(buf, .15, .03, 11000, amp=.35, decay=.006, seed=14302)
+    add_fm(buf, .15, .2, 1600, 1.5, 1.2, amp=.2, decay=.05)
+
+
+def scifi_dice(buf):
+    # A random-number generator settling on a result.
+    rng = random.Random(14303)
+    at, gap = 0.0, .035
+    for i in range(8):
+        add_tone(buf, at, .03, hz(rng.choice([84, 86, 88, 91, 93, 96])), amp=.3, decay=.012)
+        at += gap
+        gap *= 1.17
+    add_tone(buf, at, .12, hz(91), amp=.35, decay=.06)
+
+
 PACKS = {
     '8bits': (((.023, 1), (.047, .5)), [
         ('01-card-draw', 'pulse / two-note blip', .14, .26, 0, bits_draw),
@@ -1606,6 +1852,11 @@ PACKS = {
         ('30-counter-bad', 'pulse and triangle / two falling blips', 0.2, 0.26, 0.01, bits_counter_bad),
         ('31-walker', 'pulse and triangle / rising arpeggio and chord', 0.86, 0.34, 0.06, bits_walker),
         ('32-loyalty', 'pulse strike and rising blips', 0.3, 0.3, 0.02, bits_loyalty),
+        ('33-reminder', 'pulse / two equal blips', 0.3, 0.24, 0.02, bits_reminder),
+        ('34-alarm', 'pulse and triangle / two-note alarm', 0.66, 0.4, 0.03, bits_alarm),
+        ('35-graveyard', 'pulse slide / triangle thud', 0.34, 0.26, 0.01, bits_graveyard),
+        ('36-equip', 'noise and detuned pulses / clank and tick', 0.22, 0.32, 0.01, bits_equip),
+        ('37-dice', 'noise ticks / slowing', 0.66, 0.28, 0.01, bits_dice),
     ]),
     'fantasia': (((.031, 1), (.067, .7), (.113, .5), (.171, .3)), [
         ('01-card-draw', 'parchment and sparkle', .52, .26, .08, fantasy_draw),
@@ -1640,6 +1891,11 @@ PACKS = {
         ('30-counter-bad', 'two dull falling bells', 0.42, 0.26, 0.08, fantasy_counter_bad),
         ('31-walker', 'harp rise and brass chord', 0.92, 0.34, 0.12, fantasy_walker),
         ('32-loyalty', 'rune bell and rising glints', 0.62, 0.3, 0.08, fantasy_loyalty),
+        ('33-reminder', 'two glass chimes', 0.5, 0.24, 0.08, fantasy_reminder),
+        ('34-alarm', 'tower bell and drum', 1.05, 0.42, 0.14, fantasy_alarm),
+        ('35-graveyard', 'parchment and low harp', 0.55, 0.26, 0.08, fantasy_graveyard),
+        ('36-equip', 'ringing blade and scabbard latch', 0.55, 0.34, 0.08, fantasy_equip),
+        ('37-dice', 'wooden dice and a glint', 0.75, 0.3, 0.06, fantasy_dice),
     ]),
     'aventura': (((.023, 1), (.051, .5)), [
         ('01-card-draw', 'pop and marimba', .26, .26, .03, cute_draw),
@@ -1674,6 +1930,11 @@ PACKS = {
         ('30-counter-bad', 'falling pop and low marimba', 0.26, 0.26, 0.02, cute_counter_bad),
         ('31-walker', 'slide whistle and marimba chord', 0.82, 0.34, 0.05, cute_walker),
         ('32-loyalty', 'marimba seal and two pops', 0.42, 0.3, 0.03, cute_loyalty),
+        ('33-reminder', 'two marimba boops', 0.4, 0.24, 0.03, cute_reminder),
+        ('34-alarm', 'little alarm clock', 0.95, 0.4, 0.04, cute_alarm),
+        ('35-graveyard', 'falling pop and low marimba', 0.38, 0.26, 0.02, cute_graveyard),
+        ('36-equip', 'pop, clink and tick', 0.3, 0.32, 0.02, cute_equip),
+        ('37-dice', 'bouncing pops', 0.7, 0.28, 0.02, cute_dice),
     ]),
     'arena': (((.037, 1), (.083, .6), (.139, .35)), [
         ('01-card-draw', 'card snap', .16, .26, .02, arena_draw),
@@ -1708,6 +1969,11 @@ PACKS = {
         ('30-counter-bad', 'dull token and drum', 0.32, 0.3, 0.03, arena_counter_bad),
         ('31-walker', 'rising power and horn chord', 0.92, 0.36, 0.08, arena_walker),
         ('32-loyalty', 'struck metal seal and sweep', 0.6, 0.32, 0.05, arena_loyalty),
+        ('33-reminder', 'two struck coins and drum', 0.45, 0.26, 0.05, arena_reminder),
+        ('34-alarm', 'war horn blasts and drums', 0.95, 0.44, 0.08, arena_alarm),
+        ('35-graveyard', 'drop and heavy earth', 0.5, 0.3, 0.04, arena_graveyard),
+        ('36-equip', 'anvil strike and strap', 0.45, 0.36, 0.05, arena_equip),
+        ('37-dice', 'bone dice on stone', 0.7, 0.3, 0.04, arena_dice),
     ]),
     'discreto': (((.029, 1),), [
         ('01-card-draw', 'paper tick', .08, .14, 0, quiet_draw),
@@ -1742,6 +2008,11 @@ PACKS = {
         ('30-counter-bad', 'tick and tiny falling tone', 0.16, 0.16, 0, quiet_counter_bad),
         ('31-walker', 'soft rising tone and dyad', 0.62, 0.2, 0, quiet_walker),
         ('32-loyalty', 'small bell tap and glint', 0.24, 0.18, 0, quiet_loyalty),
+        ('33-reminder', 'two soft equal notes', 0.32, 0.16, 0, quiet_reminder),
+        ('34-alarm', 'three soft pulses', 0.6, 0.3, 0, quiet_alarm),
+        ('35-graveyard', 'paper and falling note', 0.26, 0.18, 0, quiet_graveyard),
+        ('36-equip', 'small metal tick', 0.14, 0.2, 0, quiet_equip),
+        ('37-dice', 'few light ticks', 0.45, 0.18, 0, quiet_dice),
     ]),
     'taverna': (((.019, 1), (.043, .6)), [
         ('01-card-draw', 'card slide and snap', .14, .26, .03, tavern_draw),
@@ -1776,6 +2047,11 @@ PACKS = {
         ('30-counter-bad', 'bone die on the boards', 0.22, 0.28, 0.03, tavern_counter_bad),
         ('31-walker', 'rolled lute chord and bell', 0.95, 0.34, 0.05, tavern_walker),
         ('32-loyalty', 'wax seal and ringing coin', 0.5, 0.3, 0.03, tavern_loyalty),
+        ('33-reminder', 'two lute notes', 0.55, 0.24, 0.03, tavern_reminder),
+        ('34-alarm', 'innkeeper handbell', 0.9, 0.4, 0.04, tavern_alarm),
+        ('35-graveyard', 'card on the boards', 0.32, 0.26, 0.02, tavern_graveyard),
+        ('36-equip', 'leather strap and buckle', 0.3, 0.32, 0.02, tavern_equip),
+        ('37-dice', 'cup shaken and dice thrown', 0.8, 0.3, 0.02, tavern_dice),
     ]),
     'scifi': (((.041, 1), (.097, .6), (.157, .35)), [
         ('01-card-draw', 'data chirp', .10, .24, .03, scifi_draw),
@@ -1810,6 +2086,11 @@ PACKS = {
         ('30-counter-bad', 'two falling buzzes', 0.22, 0.26, 0.03, scifi_counter_bad),
         ('31-walker', 'power-up and synth chord', 0.92, 0.34, 0.08, scifi_walker),
         ('32-loyalty', 'ring-modulated seal and beeps', 0.36, 0.3, 0.04, scifi_loyalty),
+        ('33-reminder', 'two notification tones', 0.36, 0.22, 0.04, scifi_reminder),
+        ('34-alarm', 'klaxon sweeps', 0.92, 0.38, 0.06, scifi_alarm),
+        ('35-graveyard', 'delete chirp and thud', 0.3, 0.26, 0.03, scifi_graveyard),
+        ('36-equip', 'magnetic lock', 0.38, 0.32, 0.04, scifi_equip),
+        ('37-dice', 'random-number ticks', 0.8, 0.26, 0.03, scifi_dice),
     ]),
 }
 

@@ -128,10 +128,14 @@ const TRIGGER_EFFECTS = new Set(['entered', 'left', 'damage', 'life-changed', 'm
 export function harmfulCounter(counter: string | undefined) {
   return !!counter && (/^M\d+M\d+$/.test(counter) || counter === 'POISON' || counter === 'RAD');
 }
+/** Marcador que soa mal: um que atrapalha chegando ou um que ajuda indo embora (tirar -1/-1 soa bem). */
+export function counterHurts(event: Pick<PresentationEvent, 'counter' | 'delta'>) {
+  return harmfulCounter(event.counter) !== (event.delta ?? 0) < 0;
+}
 function sameAudio(a: PresentationEvent, b: PresentationEvent) {
   if (a.type !== b.type) return false;
   if (a.type === 'draw' && !!a.searched !== !!b.searched) return false;
-  return a.type === 'counters' ? harmfulCounter(a.counter) === harmfulCounter(b.counter) : a.actor === b.actor;
+  return a.type === 'counters' ? counterHurts(a) === counterHurts(b) : a.actor === b.actor;
 }
 
 /** Compras seguidas do mesmo jogador: no histórico, "Bruno comprou 2 cartas". */

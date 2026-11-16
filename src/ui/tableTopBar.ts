@@ -42,7 +42,7 @@ export function createTableTopBar(d: TopBarDeps) {
     if (vote) {
       d.setHTML(voteEl, vote.html);
       voteEl.hidden = false;
-      if (vote.key !== lastVoteKey) { d.audio.cue('turn-self', .45); d.turnBuzz.nudge(); }
+      if (vote.key !== lastVoteKey) { d.audio.cue('reminder', .45); d.turnBuzz.nudge(); }
     } else voteEl.hidden = true;
     lastVoteKey = vote?.key ?? '';
     d.setHTML($('#fSkipBar'), skipBar);

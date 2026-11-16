@@ -1,5 +1,5 @@
 // O relógio da rodada vivo na página Torneios: conta a cada meio segundo, toca o alarme do organizador e abre a tela cheia.
-import { soundUrl } from '../ui/audio';
+import { savedSoundPack, soundUrl } from '../ui/audio';
 import { estadoTexto, fase, restante, telaoHTML, tempoTexto } from './clock';
 import { nomeRodada, type Torneio } from './view';
 
@@ -36,7 +36,7 @@ export function ligarRelogio(atual: Atual) {
   }
 
   function alarme() {
-    try { void new Audio(`/${soundUrl('classico', 'turn-self')}`).play().catch(() => {}); } catch { /* sem som */ }
+    try { void new Audio(`/${soundUrl(savedSoundPack(), 'alarm')}`).play().catch(() => {}); } catch { /* sem som */ }
     try { navigator.vibrate?.([400, 200, 400, 200, 400]); } catch { /* sem vibração */ }
   }
 

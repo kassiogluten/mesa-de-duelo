@@ -1,5 +1,5 @@
 import { KEYS, loadJSON, saveJSON } from '../storage';
-import { harmfulCounter, type PresentationEvent } from './presentationTimeline';
+import { counterHurts, type PresentationEvent } from './presentationTimeline';
 import { warpCast, warpReturn } from './warpEffects';
 
 /** Same cues, same file names: each themed pack lives in its own folder under audio/. */
@@ -24,7 +24,8 @@ export const SOUND_FILES = {
   untap: '19-untap.mp3', sneak: '20-sneak.mp3', blink: '21-blink.mp3', bounce: '22-bounce.mp3', exile: '23-exile.mp3',
   sacrifice: '24-sacrifice.mp3', 'life-loss': '25-life-loss.mp3', shuffle: '26-shuffle.mp3',
   victory: '27-victory.mp3', defeat: '28-defeat.mp3', counter: '29-counter.mp3', 'counter-bad': '30-counter-bad.mp3',
-  walker: '31-walker.mp3', loyalty: '32-loyalty.mp3',
+  walker: '31-walker.mp3', loyalty: '32-loyalty.mp3', reminder: '33-reminder.mp3', alarm: '34-alarm.mp3',
+  graveyard: '35-graveyard.mp3', equip: '36-equip.mp3', dice: '37-dice.mp3',
 } as const;
 export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = KEYS.audio;
@@ -35,11 +36,14 @@ export const MIX_HEADROOM = .40;
 
 export function soundForEvent(event: PresentationEvent, you?: number): SoundCue | null {
   switch (event.type) {
-    case 'draw': case 'discard': case 'mill': return 'draw';
-    // Embaralhar e vidência mexem no grimório; anexar assenta como um terreno; moeda, dado e troca de controle soam como uma habilidade.
-    case 'shuffle': case 'scry': return 'draw';
-    case 'attached': return 'land';
-    case 'coin': case 'die': case 'starting-roll': case 'control-changed': return 'ability';
+    // Vidência mexe no grimório como comprar; descartar e moer levam cartas ao cemitério.
+    case 'draw': case 'scry': return 'draw';
+    case 'discard': case 'mill': return 'graveyard';
+    case 'shuffle': return 'shuffle';
+    case 'attached': return 'equip';
+    case 'coin': case 'die': case 'starting-roll': return 'dice';
+    // Mudar de dono é a permanente indo de fininho para o outro lado.
+    case 'control-changed': return 'sneak';
     case 'land-played': return 'land';
     case 'spell-cast': return 'cast';
     case 'ability-activated': return event.loyalty ? 'loyalty' : 'ability';
@@ -68,7 +72,7 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     case 'counters':
       // Os de "entra com" já vêm no som da entrada.
       if (event.entering) return null;
-      return harmfulCounter(event.counter) ? 'counter-bad' : 'counter';
+      return counterHurts(event) ? 'counter-bad' : 'counter';
     case 'turn': {
       const actor = event.actor ?? event.frame?.activePlayer;
       return you === undefined || actor == null ? null : actor === you ? 'turn-self' : 'turn-opponent';
@@ -140,6 +144,11 @@ export function normalizeAudioSettings(value: Partial<AudioSettings> | null | un
   return { muted: value?.muted === true, volume, pack };
 }
 
+/** O pacote escolhido nas opções da mesa, para os sons tocados fora dela (o alarme do relógio do torneio). */
+export function savedSoundPack() {
+  return normalizeAudioSettings(loadJSON<Partial<AudioSettings> | null>(SETTINGS_KEY, null)).pack;
+}
+
 export function soundUrl(pack: SoundPack, cue: SoundCue) {
   return `audio/${pack === 'classico' ? '' : `${pack}/`}${SOUND_FILES[cue]}`;
 }
@@ -162,16 +171,26 @@ export class AudioEventMix {
   private draw: { seq: number; actor?: number } | null = null;
   private hits = new Map<number, number>();
   private wounds = new Map<string, number>();
+  private struck = new Map<number, number>();
   private stackOutcomes = new Map<number, number>();
   level(event: PresentationEvent, matchId: string) {
     if (matchId !== this.matchId) {
-      this.matchId = matchId; this.outcomes.clear(); this.draw = null; this.hits.clear(); this.wounds.clear(); this.stackOutcomes.clear();
+      this.matchId = matchId; this.outcomes.clear(); this.draw = null; this.hits.clear(); this.wounds.clear(); this.struck.clear(); this.stackOutcomes.clear();
     }
     // Veneno do infectar e -1/-1 do murchar vêm do golpe, que já soou com o som de veneno.
     if (event.type === 'damage' && !event.prevented && (event.infect || event.wither)) {
       for (const player of event.targets?.players ?? []) this.wounds.set(`p${player}`, event.seq);
       for (const card of event.targets?.cards ?? []) this.wounds.set(`c${card}`, event.seq);
       if (this.wounds.size > 64) this.wounds.delete(this.wounds.keys().next().value!);
+    }
+    // Lealdade (ou defesa da batalha) perdida pelo dano é o próprio golpe, que já soou.
+    if (event.type === 'damage' && !event.prevented) {
+      for (const card of event.targets?.cards ?? []) this.struck.set(card, event.seq);
+      if (this.struck.size > 64) this.struck.delete(this.struck.keys().next().value!);
+    }
+    if (event.type === 'counters' && (event.delta ?? 0) < 0 && (event.counter === 'LOYALTY' || event.counter === 'DEFENSE')) {
+      const hit = event.card?.id === undefined ? undefined : this.struck.get(event.card.id);
+      if (hit !== undefined && event.seq > hit && event.seq - hit <= 12) return 0;
     }
     if (event.type === 'counters') {
       const target = event.card?.id !== undefined ? `c${event.card.id}` : event.actor !== undefined ? `p${event.actor}` : '';

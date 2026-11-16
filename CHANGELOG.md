@@ -8,6 +8,21 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.186.0] - 2026-11-15
+
+### Novo
+
+- **Sons próprios para mais momentos.** Descartar e moer ganham o som de carta caindo no cemitério, em vez do de comprar; embaralhar o grimório toca o embaralhar, que antes só soava no mulligan; anexar aura ou equipamento ganha um som de metal se encaixando, em vez do de terreno; moeda, dado e o sorteio de quem começa ganham dados rolando; e uma permanente que muda de dono entra de fininho do outro lado. Os sons novos existem nos oito pacotes.
+
+### Mudou
+
+- **Lembretes com som de lembrete.** A decisão parada, a votação esperando o seu voto e o aviso de que você está demorando tocam dois toques curtos, em vez do som de começo do seu turno, que agora só quer dizer "é a sua vez".
+- **Alarme do relógio do torneio.** O fim do tempo da rodada toca um alarme próprio, no pacote de sons que você escolheu na mesa.
+
+### Corrigido
+
+- **Som dos marcadores que saem.** Tirar um marcador +1/+1 soava como ganhar e tirar um -1/-1 soava como sofrer; agora tirar soa ao contrário de pôr. E o planeswalker (ou a batalha) que leva dano toca só o golpe, sem o som de marcador logo depois.
+
 ## [0.185.0] - 2026-11-15
 
 ### Novo
