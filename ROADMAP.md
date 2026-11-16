@@ -624,3 +624,20 @@ Pedido em 16/11/2026. Hoje a mesa inteira está em português: os textos estão 
 - [ ] Fase 2: a partida (textos da mesa, os pontos que leem o texto do Forge, o servidor no idioma de cada jogador e os textos próprios do servidor).
 - [ ] Fase 3: conteúdo (nomes dos decks prontos, Como jogar, Laboratório, Novidades e a página de apresentação do item 104).
 - [ ] Fase 4: revisão do inglês por quem joga Magic, lançamento, contagem por idioma e regras novas no `CLAUDE.md` e no `/entregar`.
+
+## 138. Botões da caixa de decisão mais bem distribuídos
+
+Pedido em 16/11/2026. Na caixa de decisão de um gatilho opcional ("Use a habilidade desencadeada de Quintessential Katana?"), os quatro botões ficam numa linha só, com larguras desiguais: Não e Sim numa linha, Sempre não e Sempre sim quebrados em duas, todos em forma de pílula muito alta, e o Sim maior que os outros. Fica apertado, os quatro parecem ter o mesmo peso e é fácil tocar num Sempre sem querer. Os botões são montados em `src/ui/actionPanel.ts` (`always(...)`).
+
+- [ ] Escolher a distribuição (decidir com o jogador antes): Não e Sim como botões principais lado a lado, com Sempre não e Sempre sim menores numa linha de baixo; ou só Não e Sim, com uma caixa "Lembrar esta resposta" acima; ou os Sempre num menu ao lado de cada botão.
+- [ ] Texto de cada botão numa linha só, botões da mesma linha com a mesma altura e largura parecida, sem o Sim engolir o espaço dos outros.
+- [ ] Conferir na caixa de ação recolhida, no celular (largura estreita) e nas outras decisões que usam os mesmos botões (com Passar, sem os Sempre).
+
+## 139. Alça de mover as janelas mais fácil de achar e de pegar
+
+Pedido em 16/11/2026. Os avisos que se arrastam (a caixa de ação, a decisão no centro da mesa, o "Atacar quem?" e a barra de "Ver a mesa") têm uma alça de seis pontinhos dourados de 12px, meio apagada, numa faixa de 10px de altura acima do "Sua decisão". Ela passa despercebida, é difícil de acertar com o mouse e não diz que dá para mover; que dois cliques devolvem a janela ao lugar só aparece no texto que surge ao passar o mouse, que no celular não existe. Código em `src/ui/dragPanel.ts` e `src/ui/dragPanel.css`, ícone `DRAG_GRIP` em `src/ui/icons.ts`.
+
+- [ ] Escolher o desenho (decidir com o jogador antes): uma barra (pílula) larga no topo, como a das folhas do celular; a faixa de cima inteira (com o "Sua decisão") como alça, com a mãozinha ao passar; ou os pontinhos maiores e mais visíveis ao passar o mouse.
+- [ ] Área de pegar maior no mouse e no toque, sem empurrar os botões nem o texto da janela.
+- [ ] Um jeito visível de devolver a janela ao lugar depois de movida (por exemplo, um botão pequeno que só aparece quando ela saiu do lugar), além dos dois cliques.
+- [ ] Mesma alça e mesmo comportamento em todos os avisos que se arrastam; conferir no celular e com a caixa recolhida.
