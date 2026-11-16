@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.191.0] - 2026-11-16
+
+### Mudou
+
+- **A carta que resolve espera a escolha na pilha.** Quando uma mágica ou habilidade pede uma escolha enquanto resolve (as criaturas que o Mycoloth devora, o nome que o Silverquill Silencer escolhe), ela continua no topo da pilha, acesa, com o selo Aguardando sua escolha, em vez de aparecer de novo na caixa de ação, lá embaixo, como se tivesse saído da pilha. Quando é outro jogador da sala quem escolhe, a carta fica acesa mais de leve e o selo diz quem está escolhendo. Com a pilha recolhida, a carta volta a aparecer na caixa de ação.
+
 ## [0.190.1] - 2026-11-16
 
 ### Corrigido

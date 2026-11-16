@@ -76,9 +76,12 @@ final class StateJson {
 
         JsonArray stack = new JsonArray();
         if (gv.getStack() != null) {
+            // O item que está resolvendo: a mesa o destaca enquanto ele espera a escolha que pede ao resolver.
+            int resolving = game == null ? -1 : LibraryReveal.resolvingId(game);
             for (StackItemView si : gv.getStack()) {
                 JsonObject s = new JsonObject();
                 s.addProperty("id", si.getId());
+                if (si.getId() == resolving) s.addProperty("resolving", true);
                 s.addProperty("text", CoinFlipText.stack(si.getText()));
                 s.addProperty("kind", stackKind(si));
                 if (si.getSourceCard() != null) s.add("source", card(si.getSourceCard()));

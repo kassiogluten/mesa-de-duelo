@@ -31,6 +31,29 @@ test('stack pile: the top card resolves first, and a replay only offers to inspe
   assert.match(gallery, /<i class="face">Shock<\/i>/);
 });
 
+test('stack pile: the top item stays in place, lit, while it waits for a choice it asks for as it resolves', () => {
+  const view = { face, label: c => c.name, ptText: () => undefined, playerName: id => (id === 1 ? 'Ana' : 'você'), you: 0, targetsText: () => '' };
+  const mycoloth = { id: 5, controller: 0, kind: 'spell', text: 'Mycoloth', source: card(50, 'Mycoloth'), resolving: true };
+  const choosing = state({ selectable: [60], selection: { cards: [], min: 0, max: 1 }, ok: { enabled: true, label: 'OK' }, card: mycoloth.source }, { stack: [mycoloth] });
+  const mine = stackPanel(view, choosing, false, { minimized: false, galleryOpen: false });
+  assert.match(mine, /class="stack-pile awaiting-choice mine"/);
+  assert.match(mine, /Aguardando sua escolha/);
+  assert.match(mine, /Mycoloth está resolvendo e aguarda a sua escolha/);
+  // Uma pergunta na janela do centro (nomear uma carta) também conta.
+  assert.match(stackPanel(view, state({}, { stack: [mycoloth], question: { id: 1, kind: 'choose', title: 'Escolha', options: [] } }), false, { minimized: false, galleryOpen: false }), /Aguardando sua escolha/);
+  // A escolha é de outro jogador da sala: o mesmo destaque, mais discreto, com o nome de quem decide.
+  const theirs = stackPanel(view, state({}, { stack: [{ ...mycoloth, controller: 1 }], deciding: [{ player: 1, kind: 'choice' }] }), false, { minimized: false, galleryOpen: false });
+  assert.match(theirs, /class="stack-pile awaiting-choice"/);
+  assert.match(theirs, /Ana está escolhendo/);
+  // Sem o marcador do servidor (o item ainda não resolve), nada muda, mesmo com uma escolha aberta (alvos de uma resposta, por exemplo).
+  const notYet = stackPanel(view, { ...choosing, stack: [{ ...mycoloth, resolving: undefined }] }, false, { minimized: false, galleryOpen: false });
+  assert.doesNotMatch(notYet, /awaiting-choice/);
+  assert.match(notYet, /Resolve primeiro/);
+  // Resolvendo sem ninguém decidir, e na reprodução de uma jogada: o selo de sempre.
+  assert.match(stackPanel(view, state({}, { stack: [mycoloth] }), false, { minimized: false, galleryOpen: false }), /Resolve primeiro/);
+  assert.match(stackPanel(view, choosing, true, { minimized: false, galleryOpen: false }), /Jogada recente/);
+});
+
 test('question drafts start from the option minimums and amounts must add up to the total', () => {
   const q = { id: 3, kind: 'amount', title: 'Distribua', total: 3, options: [{ label: 'Ana', min: 1 }, { label: 'Bia' }] };
   const draft = newQuestionDraft(q);

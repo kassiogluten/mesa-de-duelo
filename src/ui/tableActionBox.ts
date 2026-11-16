@@ -92,7 +92,10 @@ export function createActionBox(d: ActionBoxDeps) {
     const onLibraryTop = !!pc && s.players.some(p => p.libraryTop?.id === pc.id);
     const deciding = !s.gameOver && !s.question && !s.input.priority && !s.input.vote && !s.input.opening && !s.input.attacking && !s.input.blocking;
     const targetSource = !!pc && (choosingTargets ? pc.id === s.input.targeting!.source : deciding && !onLibraryTop);
-    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || targetSource || onLibraryTop || !d.findCard(pc.id, false))
+    // A carta que resolve e pede a escolha já está acesa no topo da pilha (stackView.ts): repeti-la aqui parecia que
+    // ela tinha saído da pilha. Com a pilha recolhida, ela volta a aparecer aqui.
+    const onStackTop = !!pc && !!s.stack[0]?.resolving && s.stack[0].source?.id === pc.id && !match.stackMinimized;
+    const promptCard = !s.input.suspendCast && pc && !pc.faceDown && pc.name && (!!s.input.vote || (!onStackTop && (targetSource || onLibraryTop || !d.findCard(pc.id, false))))
       ? targetSource
         ? `<div class="prompt-card target-source-card" data-peek="${pc.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(label(pc))}">${d.face(pc, 'normal')}</div>`
         : `<div class="prompt-card" data-peek="${pc.id}">${d.face(pc, 'normal')}</div>` : '';

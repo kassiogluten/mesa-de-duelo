@@ -1,4 +1,10 @@
 {
+  "0.191.0": {
+    "A carta que resolve espera a escolha na pilha": [
+      { "img": "0.191.0/aguardando-sua-escolha.webp", "legenda": "O Mycoloth continua aceso no topo da pilha, com o selo Aguardando sua escolha, enquanto a caixa de ação pede as criaturas para devorar, sem repetir a carta." },
+      { "img": "0.191.0/oponente-escolhendo.webp", "legenda": "Quando a escolha é do oponente, a carta fica acesa mais de leve e o selo diz quem está escolhendo." }
+    ]
+  },
   "0.190.1": {
     "Marcadores de habilidade em português e sem repetir": [
       { "img": "0.190.1/indominus.webp", "legenda": "Indominus Rex, Alpha com sete marcadores de habilidade: cada um aparece uma vez, com o ícone da habilidade e o nome em português no balão (Voar ×1, Golpe duplo ×1...)." }

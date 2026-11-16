@@ -1,5 +1,6 @@
-// Como a pilha aparece na mesa: dono, tipo do item, forma de conjurar e custo de lealdade.
+// Como a pilha aparece na mesa: dono, tipo do item, forma de conjurar, custo de lealdade e quem decide enquanto o topo resolve.
 import type { FState } from '../forge/client';
+import { awaitingDecision } from './awaitingDecision';
 import type { PresentationEvent } from './presentationTimeline';
 
 export interface StackPresentation {
@@ -22,6 +23,21 @@ export function stackPresentation(state: FState, event?: PresentationEvent | nul
 }
 
 type StackItem = FState['stack'][number];
+
+/**
+ * O item do topo está resolvendo e parou numa escolha que ele pede (Devorar, "escolha um nome de carta", "sacrifique
+ * uma criatura"): de quem é a escolha. `mine` quando é sua; senão, o nome de quem decide. Nulo fora da resolução.
+ */
+export function resolvingChoice(s: FState): { mine: true } | { mine: false; name: string } | null {
+  const top = s.stack[0];
+  if (!top?.resolving || s.gameOver) return null;
+  if (s.question || awaitingDecision(s) || (s.input.paying && !s.input.priority)) return { mine: true };
+  const other = s.deciding?.find(d => d.player !== s.you && d.kind === 'choice');
+  return other ? { mine: false, name: s.players.find(p => p.id === other.player)?.name ?? 'Oponente' } : null;
+}
+
+/** A frase do selo do topo enquanto ele espera a escolha. */
+export const resolvingChoiceLabel = (c: NonNullable<ReturnType<typeof resolvingChoice>>) => c.mine ? 'Aguardando sua escolha' : `${c.name} está escolhendo`;
 
 /** Why an item is on the stack, as the table labels it. */
 export const STACK_KINDS = {

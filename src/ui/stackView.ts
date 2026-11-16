@@ -1,9 +1,9 @@
-// A pilha na mesa: o monte de cartas ao lado do campo (o topo com o selo do tipo e a faixa da habilidade de lealdade ou do
-// modo escolhido) e a galeria que abre ao tocar nele.
+// A pilha na mesa: o monte de cartas ao lado do campo (o topo com o selo do tipo, a faixa da habilidade de lealdade ou do
+// modo escolhido e o destaque enquanto ele espera uma escolha ao resolver) e a galeria que abre ao tocar nele.
 import type { FCard, FState } from '../forge/client';
 import { esc, richText } from './cardtext';
 import { countSealsHTML } from './cardCounts';
-import { STACK_KINDS, loyaltyLineIn, modeLineIn, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackTag } from './stackPresentation';
+import { STACK_KINDS, loyaltyLineIn, modeLineIn, resolvingChoice, resolvingChoiceLabel, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackTag } from './stackPresentation';
 
 /** O que a pilha precisa da mesa. */
 export interface StackView {
@@ -53,10 +53,13 @@ export function stackPanel(v: StackView, s: FState, replaying: boolean, o: { min
   const count = s.stack.length;
   const top = s.stack[0];
   if (!top) return '';
+  // O topo resolvendo parado numa escolha: ele fica no lugar, aceso, e o selo diz de quem é a vez.
+  const waiting = replaying ? null : resolvingChoice(s);
+  const topLabel = replaying ? 'Jogada recente' : waiting ? resolvingChoiceLabel(waiting) : 'Resolve primeiro';
   return `<div class="stack-heading"><h2>Pilha</h2><span class="stack-count">${count}</span>${`<button class="stack-size-toggle" data-ui="stack-size" aria-label="${o.minimized ? 'Expandir a pilha' : 'Recolher a pilha para ver o campo'}" aria-expanded="${!o.minimized}">${o.minimized ? '+' : '−'}</button>`}</div>
-    <button class="stack-pile" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${o.galleryOpen}" aria-controls="fStackGallery"`} aria-label="${stackBadgeText(top) ? `${esc(stackBadgeText(top))}. ` : ''}${replaying ? `Inspecionar ${top.source ? esc(v.label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(v.label(top.source)) : 'O efeito do topo'} resolve primeiro.`}">
+    <button class="stack-pile${waiting ? ` awaiting-choice${waiting.mine ? ' mine' : ''}` : ''}" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${o.galleryOpen}" aria-controls="fStackGallery"`} aria-label="${stackBadgeText(top) ? `${esc(stackBadgeText(top))}. ` : ''}${replaying ? `Inspecionar ${top.source ? esc(v.label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(v.label(top.source)) : 'O efeito do topo'} ${waiting ? `está resolvendo e ${waiting.mine ? 'aguarda a sua escolha' : `${esc(waiting.name)} está escolhendo`}.` : 'resolve primeiro.'}`}">
       ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(v, si)}${i ? '' : stackKindBadge(si) + stackLoyaltyStrip(v, si) + stackModeStrip(v, si)}</div>`).join('')}
-      <span class="stack-top-label">${replaying ? 'Jogada recente' : 'Resolve primeiro'}</span>
+      <span class="stack-top-label">${esc(topLabel)}</span>
     </button><span class="stack-open-hint">${replaying ? 'Clique para inspecionar' : 'Clique para ver a pilha'}</span>`;
 }
 
