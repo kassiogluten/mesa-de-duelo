@@ -26,7 +26,17 @@ export type Entrada =
   | { t: number; tipo: 'vida'; jogador: number; de: number; para: number }
   | { t: number; tipo: 'cmd'; jogador: number; origem: string; de: number; para: number; vidaDe: number; vidaPara: number }
   | { t: number; tipo: 'dado'; lados: number; resultado: number }
-  | { t: number; tipo: 'moeda'; resultado: 'cara' | 'coroa' };
+  | { t: number; tipo: 'moeda'; resultado: 'cara' | 'coroa' }
+  | Sorteio;
+
+/** Uma rodada do sorteio de quem começa: o que cada um tirou. Da segunda em diante, só os empatados no maior número. */
+export type Rodada = { jogador: number; resultado: number }[];
+/** O sorteio de quem começa: as rodadas e quem tirou o maior número (e escolhe quem começa). */
+export interface Sorteio { t: number; tipo: 'inicio'; rodadas: Rodada[]; vencedor: number }
+/** O dado do sorteio de quem começa. */
+export const LADOS_SORTEIO = 20;
+/** Empates seguidos até o sorteio desistir e ficar com o primeiro dos empatados (com dado de verdade, nunca chega aqui). */
+const MAX_RODADAS = 8;
 
 export interface Partida { config: Config; jogadores: Jogador[]; historico: Entrada[]; inicio: number }
 
@@ -131,7 +141,7 @@ export function mudarComandante(p: Partida, jogador: number, origem: string, del
 export function desfazer(p: Partida): Entrada | null {
   for (let i = p.historico.length - 1; i >= 0; i--) {
     const e = p.historico[i]!;
-    if (e.tipo === 'dado' || e.tipo === 'moeda') continue;
+    if (e.tipo !== 'vida' && e.tipo !== 'cmd') continue;
     const j = jogadorDe(p, e.jogador);
     if (e.tipo === 'vida') j.vida -= e.para - e.de;
     else {
@@ -142,6 +152,19 @@ export function desfazer(p: Partida): Entrada | null {
     return e;
   }
   return null;
+}
+
+/** A cada tanto de vida somada ou tirada de uma vez (no mesmo "+3" ao lado da vida), o painel ganha o golpe ou a cura grande. */
+export const GOLPE_GRANDE = 10;
+
+/**
+ * Se a soma do "+3" passou de 10, 20, 30… no mesmo sentido: o nível do golpe (negativo para perda), ou 0. Trocar de
+ * sentido recomeça a conta.
+ */
+export function golpeGrande(antes: number, soma: number) {
+  const nivel = Math.floor(Math.abs(soma) / GOLPE_GRANDE);
+  const nivelAntes = Math.sign(antes) === Math.sign(soma) ? Math.floor(Math.abs(antes) / GOLPE_GRANDE) : 0;
+  return nivel > nivelAntes ? Math.sign(soma) * nivel : 0;
 }
 
 /** Uma mudança na vida de um jogador: tocada no painel dele ou vinda do dano de comandante. */
@@ -160,6 +183,25 @@ export const podeDesfazer = (p: Partida) => p.historico.some(e => e.tipo === 'vi
 export function rolar(p: Partida, lados: number, sorte = Math.random, agora = Date.now()): Entrada {
   const n = Math.floor(sorte() * lados) + 1;
   const e: Entrada = lados === 2 ? { t: agora, tipo: 'moeda', resultado: n === 1 ? 'cara' : 'coroa' } : { t: agora, tipo: 'dado', lados, resultado: n };
+  registrar(p, e);
+  return e;
+}
+
+/**
+ * Quem começa: cada jogador ainda na partida rola um d20; empatados no maior número rolam de novo, até sobrar um, que
+ * escolhe quem começa. Vai para o histórico. Com menos de dois na partida, não há sorteio (null).
+ */
+export function sortearInicio(p: Partida, sorte = Math.random, agora = Date.now()): Sorteio | null {
+  let quem = p.jogadores.flatMap((_, i) => derrota(p, i) ? [] : [i]);
+  if (quem.length < 2) return null;
+  const rodadas: Rodada[] = [];
+  while (quem.length > 1 && rodadas.length < MAX_RODADAS) {
+    const rodada = quem.map(jogador => ({ jogador, resultado: Math.floor(sorte() * LADOS_SORTEIO) + 1 }));
+    const maior = Math.max(...rodada.map(r => r.resultado));
+    rodadas.push(rodada);
+    quem = rodada.filter(r => r.resultado === maior).map(r => r.jogador);
+  }
+  const e: Sorteio = { t: agora, tipo: 'inicio', rodadas, vencedor: quem[0]! };
   registrar(p, e);
   return e;
 }
@@ -185,6 +227,10 @@ export function nomeComandante(p: Partida, origem: string) {
 export function textoEntrada(p: Partida, e: Entrada): string {
   if (e.tipo === 'dado') return `d${e.lados}: ${e.resultado}`;
   if (e.tipo === 'moeda') return `Moeda: ${e.resultado === 'cara' ? 'Cara' : 'Coroa'}`;
+  if (e.tipo === 'inicio') {
+    const rodadas = e.rodadas.map((r, i) => `${i ? 'desempate: ' : ''}${r.map(x => `${nomeDe(p, x.jogador)} ${x.resultado}`).join(', ')}`);
+    return `Quem começa (d${LADOS_SORTEIO}): ${rodadas.join('; ')}. ${nomeDe(p, e.vencedor)} escolhe quem começa.`;
+  }
   const quem = nomeDe(p, e.jogador);
   if (e.tipo === 'vida') {
     const d = e.para - e.de;

@@ -104,7 +104,15 @@ interface SolidDieParams {
   travel: number;
   /** Inclinação final para trás, em radianos (0: a face do resultado bem de frente). */
   tilt: number;
+  /** Giro no plano da tela, em radianos no sentido horário (como o `rotate` do CSS): o dado rola e para virado para quem senta daquele lado. */
+  turn?: number;
 }
+
+/** Um deslocamento (dx, dy) do jeito de quem olha girado `turn` radianos no sentido horário da tela. */
+const turned = (turn: number, dx: number, dy: number) => {
+  const c = Math.cos(turn), s = Math.sin(turn);
+  return { x: dx * c - dy * s, y: dx * s + dy * c };
+};
 
 /** Pixels por raio do dado: no d6, a face da frente parada fica com `size` de largura; nos outros, um pouco maior que o dado chapado, para o número caber. */
 function unitOf(sides: number, size: number) {
@@ -113,29 +121,36 @@ function unitOf(sides: number, size: number) {
 }
 
 /** Um dado rolando: entra girando em dois eixos e quicando e desacelera até parar na rotação `resting`, com o pouso em .5. */
-function roller(piece: SolidPiece, p: { x: number; y: number; size: number; unit: number; travel: number; resting: ReturnType<typeof restingRotation> }) {
+function roller(piece: SolidPiece, p: { x: number; y: number; size: number; unit: number; travel: number; resting: ReturnType<typeof restingRotation>; turn?: number }) {
+  const turn = p.turn ?? 0;
+  // O giro na tela é em volta do eixo de quem olha (+z), no sentido contrário ao do CSS (y para cima no 3D); por
+  // fora do giro da rolagem, para o dado rolar para a direita de quem senta daquele lado.
+  const seat = turn ? rotation([0, 0, 1], -turn) : null;
   // Rola para a direita (o alto vai para a direita: giro em volta de -y), com um pouco de giro de lado e de frente.
   const spinA = normalize([rand(-.3, .3), -1, rand(-.2, .2)]), spinB = normalize([1, rand(-.4, .4), rand(-.3, .3)]);
   const turnsA = (p.travel ? 2.6 : 2.1) * Math.PI * 2 + rand(0, Math.PI), turnsB = rand(.6, 1.2) * Math.PI * (Math.random() < .5 ? -1 : 1);
   return (t: number, glow: number) => {
     const roll = Math.min(1, t / .5), k = easeOut(roll);
     const hop = Math.abs(Math.sin(roll * Math.PI * 2.5)) * p.size * (p.travel ? .55 : .2) * (1 - roll);
-    const px = p.x - p.travel * (1 - k), py = p.y + 30 * (p.travel / 130) * (1 - k) - hop;
+    const off = turned(turn, -p.travel * (1 - k), 30 * (p.travel / 130) * (1 - k) - hop);
+    const px = p.x + off.x, py = p.y + off.y;
     // Desacelera até parar exatamente na posição de descanso.
     const left = (1 - roll) ** 2.2;
-    const m = multiply(rotation(spinA, turnsA * left), multiply(rotation(spinB, turnsB * left), p.resting));
+    const spin = multiply(rotation(spinA, turnsA * left), rotation(spinB, turnsB * left));
+    const m = seat ? multiply(seat, multiply(spin, p.resting)) : multiply(spin, p.resting);
     const squash = t >= .5 && t < .6 ? 1 + .1 * Math.sin((t - .5) / .1 * Math.PI) : 1;
     piece.pose(m, px, py, p.unit * squash, glow);
-    return { px, hop };
+    return { px, py, hop };
   };
 }
 
 /** Faíscas e poeira do pouso, saindo por trás do dado. */
-function landing(s: Shared, sparks: Parameters<typeof spray>[0], x: number, y: number, size: number, count: number) {
+function landing(s: Shared, sparks: Parameters<typeof spray>[0], x: number, y: number, size: number, count: number, turn = 0) {
   spray(sparks, s, x, y, count, { speed: [size * 1.2, size * 2.8], life: [280, 480], scale: [.22, .45], colors: [0xffffff, 0xfff1cf, 0xcdefff], drag: 3 });
   for (let i = 0; i < 8; i++) {
     const side = i % 2 ? 1 : -1;
-    sparks.add(s.glow, s, { x: x + side * rand(0, size * .4), y: y + size * .5, vx: side * rand(40, 110), vy: rand(-20, 0), life: rand(360, 520), spin: 0, grow: 1.2, scale: rand(.08, .13), gravity: 0, drag: 3, tint: 0xc9bea8, blend: 'normal', alpha: .35, fadeIn: true });
+    const at = turned(turn, side * rand(0, size * .4), size * .5), v = turned(turn, side * rand(40, 110), rand(-20, 0));
+    sparks.add(s.glow, s, { x: x + at.x, y: y + at.y, vx: v.x, vy: v.y, life: rand(360, 520), spin: 0, grow: 1.2, scale: rand(.08, .13), gravity: 0, drag: 3, tint: 0xc9bea8, blend: 'normal', alpha: .35, fadeIn: true });
   }
 }
 
@@ -146,24 +161,26 @@ function landing(s: Shared, sparks: Parameters<typeof spray>[0], x: number, y: n
 export function solidDie(layer: GpuLayer, s: Shared, p: SolidDieParams): GpuEffect | null {
   const shape = dieShape(p.sides);
   if (!shape) return null;
-  const { x, y } = p.at, size = p.size, unit = unitOf(p.sides, size);
+  const { x, y } = p.at, size = p.size, unit = unitOf(p.sides, size), turn = p.turn ?? 0;
   const resting = restingRotation(shape, p.result, p.tilt);
   return timed(p.hold, (view, sparks) => {
-    const shadow = new Sprite({ texture: s.glow, anchor: .5, x, y: y + size * .62, tint: 0x000000, alpha: 0 });
+    const shadow = new Sprite({ texture: s.glow, anchor: .5, x, y: y + size * .62, tint: 0x000000, alpha: 0, rotation: turn });
     const halo = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: 0xffffff, blendMode: 'add', alpha: 0 });
     const piece = diePiece(layer, shape, p.font, 'ivory', 'value');
-    const roll = roller(piece, { x, y, size, unit, travel: p.travel, resting });
+    const roll = roller(piece, { x, y, size, unit, travel: p.travel, resting, turn });
     view.addChild(shadow, halo, piece.mesh);
     let landed = false;
     return t => {
-      const { px, hop } = roll(t, landed ? Math.max(0, 1 - (t - .5) / .18) : 0);
+      const { px, py, hop } = roll(t, landed ? Math.max(0, 1 - (t - .5) / .18) : 0);
       const fade = t > .88 ? 1 - (t - .88) / .12 : Math.min(1, t / .06);
       piece.mesh.alpha = fade;
-      shadow.position.set(px + size * .06, y + size * .62);
+      // A sombra fica no chão de quem olha: embaixo do dado, do lado dele.
+      const ground = turned(turn, size * .06, size * .62), lift = turned(turn, 0, -hop);
+      shadow.position.set(px - lift.x + ground.x, py - lift.y + ground.y);
       shadow.scale.set(size / 128 * (.7 - hop / size * .4), size / 128 * .16); shadow.alpha = .5 * fade;
       if (!landed && t >= .5) {
         landed = true;
-        landing(s, sparks, x, y, size, layer.coarse ? 10 : 18);
+        landing(s, sparks, x, y, size, layer.coarse ? 10 : 18, turn);
         // As faíscas saem por trás do dado: as faces ficam por cima, legíveis.
         view.addChild(piece.mesh);
       }

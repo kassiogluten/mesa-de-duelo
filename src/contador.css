@@ -245,6 +245,17 @@ body.cv-jogando { position: fixed; inset: 0; overflow: hidden; overscroll-behavi
 .cv-dado-btn:hover svg, .cv-dado-btn:focus-visible svg { transform: rotate(-8deg) scale(1.08); }
 .cv-dado-btn:active { transform: scale(.96); }
 .cv-dado-btn:hover, .cv-dado-btn:focus-visible { border-color: var(--gold); }
+.cv-sortear {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 8px; padding: 10px 14px; border-radius: 14px; cursor: pointer; text-align: left;
+  background: var(--panel); border: 1px solid var(--line); color: var(--ink); transition: transform .15s var(--ease-out), border-color .15s;
+}
+.cv-sortear svg { flex: none; width: 40px; height: 40px; filter: drop-shadow(0 4px 6px #0008); transition: transform .25s var(--ease-spring); }
+.cv-sortear span { display: flex; flex-direction: column; gap: 2px; }
+.cv-sortear strong { font: 700 15px var(--display); }
+.cv-sortear small { color: var(--muted); font: 500 12.5px/1.35 var(--body); }
+.cv-sortear:hover, .cv-sortear:focus-visible { border-color: var(--gold); }
+.cv-sortear:hover svg, .cv-sortear:focus-visible svg { transform: rotate(-8deg) scale(1.08); }
+.cv-sortear:active { transform: scale(.98); }
 .cv-hist-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .cv-hist-topo h3 { margin: 0; }
 .cv-hist { display: flex; flex-direction: column; gap: 4px; max-height: 32dvh; margin: 0; padding: 0; overflow: auto; list-style: none; }
@@ -262,7 +273,48 @@ body.cv-jogando { position: fixed; inset: 0; overflow: hidden; overscroll-behavi
 .cv-menu-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cv-menu-acoes .cv-mini { min-height: 44px; padding: 4px 12px; font-size: 13px; line-height: 1.2; text-align: left; }
 
+/* Quem começa: uma camada por cima do painel, virada para o jogador, com o número dele no lugar onde o d20 assenta. */
+.cv-sorteio {
+  position: absolute; inset: 0; z-index: 3; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: center;
+  padding: 6cqh 5cqw; background: color-mix(in srgb, var(--bg-deep) 72%, transparent); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  animation: cv-sorteio-in .25s var(--ease-out); transition: opacity .3s, filter .3s;
+}
+@keyframes cv-sorteio-in { from { opacity: 0; } }
+/* A vida some por baixo enquanto o sorteio está no painel: o "40" atrás do número confundiria a leitura. */
+.cv-face:has(> .cv-sorteio) > .cv-vida-vista { visibility: hidden; }
+.cv-sorteio-titulo { margin: 0; color: color-mix(in srgb, var(--cor) 70%, #fff); font: 700 clamp(13px, 9cqh, 22px) var(--display); }
+.cv-sorteio-num { color: var(--ink); font: 800 min(42cqh, 30cqw)/1 var(--display); font-variant-numeric: tabular-nums; }
+/* 6 e 9 sublinhados, como nos dados: quem olha de outro lado da mesa não confunde. */
+.cv-sorteio-num.sublinhado { text-decoration: underline; text-decoration-thickness: .07em; text-underline-offset: .08em; }
+.cv-sorteio.rolando .cv-sorteio-num:empty { visibility: hidden; }
+.cv-sorteio.sem-3d .cv-sorteio-num { color: var(--muted); animation: cv-sorteio-gira .45s linear infinite; }
+@keyframes cv-sorteio-gira { to { rotate: 360deg; } }
+.cv-sorteio:not(.rolando) .cv-sorteio-num { animation: cv-pulo .3s var(--ease-spring); }
+.cv-sorteio.maior .cv-sorteio-num, .cv-sorteio.empate .cv-sorteio-num { color: var(--gold-light); text-shadow: 0 0 28px #f2b54c88; }
+.cv-sorteio-texto { min-height: 1.3em; margin: 0; color: var(--ink); font: 600 clamp(12px, 7cqh, 18px)/1.3 var(--body); text-align: center; }
+.cv-sorteio.fora { filter: saturate(.3) brightness(.75); }
+.cv-sorteio.vencedor { background: color-mix(in srgb, var(--cor) 22%, color-mix(in srgb, var(--bg-deep) 70%, transparent)); box-shadow: inset 0 0 0 3px var(--gold), inset 0 0 50px #f2b54c55; }
+.cv-sorteio.vencedor .cv-sorteio-num { color: var(--gold-light); text-shadow: 0 0 32px #f2b54caa; }
+.cv-sorteio.vencedor .cv-sorteio-texto { color: var(--gold-light); font-weight: 700; }
+.cv-sorteio.pronto { cursor: pointer; }
+
+/* Golpe grande (10 ou mais de uma vez): o painel treme com um clarão vermelho; a cura grande acende em verde. */
+.cv-painel.golpe { animation: cv-golpe calc(.35s + .08s * var(--golpe, 1)) var(--ease-out); }
+.cv-painel.golpe::after, .cv-painel.cura::after {
+  content: ''; position: absolute; inset: 0; z-index: 4; border-radius: inherit; pointer-events: none; animation: cv-golpe-luz .8s ease-out forwards;
+}
+.cv-painel.golpe::after { box-shadow: inset 0 0 0 3px #ec5a3f, inset 0 0 calc(30px + 14px * var(--golpe, 1)) #ec5a3fa0; background: #ec5a3f22; }
+.cv-painel.cura::after { box-shadow: inset 0 0 0 3px var(--heal), inset 0 0 44px color-mix(in srgb, var(--heal) 60%, transparent); background: color-mix(in srgb, var(--heal) 12%, transparent); }
+@keyframes cv-golpe {
+  12% { translate: calc(-3px * var(--golpe, 1)) calc(2px * var(--golpe, 1)); }
+  28% { translate: calc(3px * var(--golpe, 1)) calc(-2px * var(--golpe, 1)); }
+  44% { translate: calc(-2px * var(--golpe, 1)) calc(-1px * var(--golpe, 1)); }
+  62% { translate: calc(2px * var(--golpe, 1)) calc(1px * var(--golpe, 1)); }
+  80% { translate: -1px 0; }
+}
+@keyframes cv-golpe-luz { from { opacity: 1; } to { opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .cv-delta:not(:empty), .cv-rolagem { animation: none; }
-  .cv-dado-btn svg { transition: none; }
+  .cv-delta:not(:empty), .cv-rolagem, .cv-sorteio, .cv-sorteio-num, .cv-painel.golpe { animation: none !important; }
+  .cv-dado-btn svg, .cv-sortear svg { transition: none; }
 }

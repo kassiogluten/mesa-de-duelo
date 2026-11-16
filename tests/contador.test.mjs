@@ -106,6 +106,62 @@ test('desfazer volta a última mudança de vida ou de comandante, passando por c
   assert.equal(p.historico.length, 1, 'o d20 fica no histórico');
 });
 
+/** Uma sorte que devolve os números de `seq` (de 1 a 20) em ordem, para o d20. */
+const d20 = (...seq) => { let i = 0; return () => (seq[i++] - 1) / 20; };
+
+test('quem começa: todos rolam um d20 e quem tira mais escolhe', () => {
+  const p = partida(3);
+  p.jogadores[0].nome = 'Ana'; p.jogadores[2].nome = 'Caio';
+  const e = s.sortearInicio(p, d20(7, 12, 19), 5);
+  assert.deepEqual(e.rodadas, [[{ jogador: 0, resultado: 7 }, { jogador: 1, resultado: 12 }, { jogador: 2, resultado: 19 }]]);
+  assert.equal(e.vencedor, 2);
+  assert.equal(p.historico.at(-1), e);
+  assert.equal(s.textoEntrada(p, e), 'Quem começa (d20): Ana 7, Jogador 2 12, Caio 19. Caio escolhe quem começa.');
+});
+
+test('quem começa: empatados no maior número rolam de novo, os outros não', () => {
+  const p = partida(4);
+  const e = s.sortearInicio(p, d20(15, 3, 15, 9, 15, 15, 20, 4), 0);
+  assert.equal(e.rodadas.length, 3);
+  assert.deepEqual(e.rodadas[1].map(r => r.jogador), [0, 2]);
+  assert.deepEqual(e.rodadas[2], [{ jogador: 0, resultado: 20 }, { jogador: 2, resultado: 4 }]);
+  assert.equal(e.vencedor, 0);
+  assert.match(s.textoEntrada(p, e), /; desempate: Jogador 1 15, Jogador 3 15; desempate: Jogador 1 20, Jogador 3 4\. Jogador 1 escolhe/);
+});
+
+test('quem começa: quem já saiu não rola, e com um só na partida não há sorteio', () => {
+  const p = partida(3, { comandante: false });
+  s.mudarVida(p, 1, -40, 0);
+  assert.deepEqual(s.sortearInicio(p, d20(2, 5), 0).rodadas[0].map(r => r.jogador), [0, 2]);
+  s.mudarVida(p, 2, -40, 10_000);
+  assert.equal(s.sortearInicio(p, d20(1), 0), null);
+  // Empate sem fim (a sorte sempre igual) para depois de algumas rodadas, com o primeiro dos empatados.
+  const q = partida(2);
+  const e = s.sortearInicio(q, () => 0, 0);
+  assert.ok(e.rodadas.length > 1 && e.rodadas.length <= 10);
+  assert.equal(e.vencedor, 0);
+});
+
+test('desfazer passa por cima do sorteio de quem começa', () => {
+  const p = partida(2);
+  s.mudarVida(p, 1, -3, 0);
+  s.sortearInicio(p, d20(4, 9), 10_000);
+  assert.equal(s.desfazer(p).tipo, 'vida');
+  assert.equal(p.jogadores[1].vida, 40);
+  assert.equal(p.historico.at(-1).tipo, 'inicio');
+});
+
+test('golpe grande a cada 10 somados ou tirados de uma vez, no mesmo sentido', () => {
+  assert.equal(s.golpeGrande(0, -1), 0);
+  assert.equal(s.golpeGrande(-9, -10), -1);
+  assert.equal(s.golpeGrande(0, -10), -1);
+  assert.equal(s.golpeGrande(-10, -11), 0, 'passar de 10 para 11 não repete');
+  assert.equal(s.golpeGrande(-10, -20), -2);
+  assert.equal(s.golpeGrande(0, 10), 1);
+  assert.equal(s.golpeGrande(5, -10), -1, 'trocar de sentido recomeça a conta');
+  assert.equal(s.golpeGrande(-12, -2), 0, 'voltar não é golpe');
+});
+
 test('d6, d20 e moeda caem entre o primeiro e o último lado', () => {
   const p = partida();
   assert.deepEqual(s.rolar(p, 6, () => 0, 0), { t: 0, tipo: 'dado', lados: 6, resultado: 1 });

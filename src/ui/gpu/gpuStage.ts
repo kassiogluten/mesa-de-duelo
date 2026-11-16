@@ -20,7 +20,7 @@ export interface StageParams {
    * dois d10, dezenas e unidades. Nos outros, e do degrau 2 do automático em diante, o dado chapado, trocando de número
    * a cada volta, com `sides` no canto.
    */
-  die: { at: Point; result: string; sides: number; hold: number; font: string; travel?: number; tilt?: number };
+  die: { at: Point; result: string; sides: number; hold: number; font: string; travel?: number; tilt?: number; /** Giro na tela, em radianos no sentido horário: o dado para virado para quem senta daquele lado (o d4 ao d20). */ turn?: number };
   /** Quem venceu: raios dourados girando atrás do retrato, uma onda de luz e confete. */
   victory: { at: Point; delay?: number };
   /** Quem perdeu: o retrato racha, solta cinzas que caem e fumaça escura. */
@@ -131,14 +131,14 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
       };
     });
   },
-  die(layer, s, { at, result, sides, hold, font, travel = 130, tilt = .38 }) {
+  die(layer, s, { at, result, sides, hold, font, travel = 130, tilt = .38, turn = 0 }) {
     const { x, y } = layer.local(at.cx, at.cy);
     const value = Number(result);
     const fits = Number.isInteger(value) && value >= 1 && value <= sides;
     const solid = !fits || !solidAllowed() ? null
       : sides === 2 ? twoSidedDie(layer, s, { at: { x, y }, size: at.w, result: value, hold, font })
         : sides === 100 ? percentileDice(layer, s, { at: { x, y }, size: at.w, result: value, hold, font, travel, tilt })
-          : solidDie(layer, s, { at: { x, y }, size: at.w, sides, result: value, hold, font, travel, tilt });
+          : solidDie(layer, s, { at: { x, y }, size: at.w, sides, result: value, hold, font, travel, tilt, turn });
     if (solid) return solid;
     const size = at.w, n = Math.max(2, sides);
     // Os números que passam enquanto ele rola (como no dado em CSS) e, por último, o resultado.
@@ -155,15 +155,16 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
         // Rola de baixo à esquerda até o meio (até .5), quica (até .6), fica e some (de .88 até o fim).
         const roll = Math.min(1, t / .5), k = easeOut(roll);
         // `travel`: de quanto mais à esquerda ele vem rolando (0 no sorteio de quem começa, com os dados lado a lado).
-        const px = x - travel * (1 - k), hop = Math.abs(Math.sin(roll * Math.PI * 2.5)) * 46 * (1 - roll);
-        const py = y + 30 * (travel / 130) * (1 - k) - hop;
+        const hop = Math.abs(Math.sin(roll * Math.PI * 2.5)) * 46 * (1 - roll);
+        const dx = -travel * (1 - k), dy = 30 * (travel / 130) * (1 - k) - hop, c = Math.cos(turn), sn = Math.sin(turn);
+        const px = x + dx * c - dy * sn, py = y + dx * sn + dy * c;
         const tumble = halfTurns * Math.PI * (1 - (1 - roll) ** 2);
         // A cada meia volta o número muda; ao parar, é o resultado.
         mesh.texture = faces[Math.min(halfTurns, Math.round(tumble / Math.PI))]!;
         const yaw = tumble - Math.round(tumble / Math.PI) * Math.PI, pitch = Math.sin(roll * Math.PI * 3) * (1 - roll) * .6;
         const spinPlane = -200 * DEG * (1 - k);
         const squash = t >= .5 && t < .6 ? 1 + .12 * Math.sin((t - .5) / .1 * Math.PI) : 1;
-        mesh.setCorners(...square(px, py, size * squash, pitch, yaw, spinPlane));
+        mesh.setCorners(...square(px, py, size * squash, pitch, yaw, spinPlane + turn));
         const fade = t > .88 ? 1 - (t - .88) / .12 : Math.min(1, t / .06);
         mesh.alpha = fade;
         shadow.position.set(px, y + size * .62); shadow.scale.set(size / 128 * (.6 - hop / 300), size / 128 * .14); shadow.alpha = .45 * fade;

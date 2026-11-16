@@ -171,7 +171,7 @@ export function mesaHTML(p: Partida, d: Disposicao, modos: ReadonlyMap<number, M
 export function historicoHTML(p: Partida) {
   if (!p.historico.length) return '<li class="cv-hist-vazio">Nada ainda. As mudanças de vida aparecem aqui.</li>';
   return p.historico.slice().reverse().slice(0, 60).map(e => {
-    const cor = e.tipo === 'vida' || e.tipo === 'cmd' ? jogadorDe(p, e.jogador).cor : 'var(--muted)';
+    const cor = e.tipo === 'vida' || e.tipo === 'cmd' ? jogadorDe(p, e.jogador).cor : e.tipo === 'inicio' ? jogadorDe(p, e.vencedor).cor : 'var(--muted)';
     return `<li style="--cor:${cor}"><span>${esc(textoEntrada(p, e))}</span><time>${horaTexto(e.t)}</time></li>`;
   }).join('');
 }
@@ -197,6 +197,10 @@ const ICON_D20 = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 42 
 const ICON_MOEDA = '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#9a5a14"/><circle cx="24" cy="24" r="18" fill="#f2b54c"/><circle cx="24" cy="24" r="15.5" fill="none" stroke="#ffe2a0" stroke-width="1.2" stroke-dasharray="1.2 2.2"/>'
   + '<path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" transform="translate(12.6 13.1) scale(.95)" fill="#6b3a08"/></svg>';
 
+/** A camada do sorteio de quem começa, por cima do painel e virada para o jogador: o número dele e o que aconteceu. */
+export const sorteioHTML = () =>
+  '<div class="cv-sorteio rolando" data-sorteio role="status"><p class="cv-sorteio-titulo">Quem começa?</p><b class="cv-sorteio-num" data-sorteio-num></b><p class="cv-sorteio-texto" data-sorteio-texto></p></div>';
+
 /** A janela do botão do meio: dados, histórico e a partida. */
 export function menuHTML() {
   const dado = (lados: number, icone: string, nome: string, rotulo: string) =>
@@ -211,6 +215,7 @@ export function menuHTML() {
         ${dado(20, ICON_D20, 'd20', 'Rolar um d20')}
         ${dado(2, ICON_MOEDA, 'Moeda', 'Jogar a moeda')}
       </div>
+      <button type="button" class="cv-sortear" data-sortear>${ICON_D20}<span><strong>Quem começa</strong><small>Todos rolam um d20 no seu lado da mesa; quem tirar mais escolhe quem começa</small></span></button>
     </section>
     <section class="cv-menu-sec">
       <div class="cv-hist-topo"><h3>Histórico</h3>${acao('data-desfazer', ICON_DESFAZER, 'Desfazer a última')}</div>

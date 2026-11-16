@@ -1,4 +1,15 @@
 {
+  "0.203.0": {
+    "Quem começa no Contador de vida": [
+      { "img": "0.203.0/botao.webp", "legenda": "O botão Quem começa, logo abaixo dos dados na janela da logo do meio da mesa." },
+      { "img": "0.203.0/dados.webp", "legenda": "Cada jogador rola o seu d20 em 3D no próprio painel, parando virado para ele." },
+      { "img": "0.203.0/resultado.webp", "legenda": "Quem tirou mais fica com o painel dourado e escolhe quem começa; os outros veem o nome dele." }
+    ],
+    "Golpes grandes no Contador de vida": [
+      { "img": "0.203.0/golpe.webp", "legenda": "Perder 20 de uma vez: o painel treme com um clarão vermelho e faíscas." },
+      { "img": "0.203.0/cura.webp", "legenda": "Ganhar 10 de uma vez: o painel acende em verde, com grãos de luz subindo." }
+    ]
+  },
   "0.202.0": {
     "Coroa no dano de comandante do Contador de vida": [
       { "img": "0.202.0/coroa.webp", "legenda": "A Ana ainda sem dano de comandante, com o botão redondo só com a coroa, e o Davi com o pill das marcas do dano de cada comandante; no canto, a última mudança dele, vinda de um comandante." }

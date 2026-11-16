@@ -9,8 +9,8 @@ export interface AccentParams {
   flare: { at: Point; color: string; duration?: number; delay?: number };
   /** Dobra: um rasgo violeta e ciano que gira, puxa grãos de luz para dentro e se fecha. `size` é o diâmetro. */
   warp: { at: Point; size: number };
-  /** Ganho de vida: grãos verdes subindo do total de vida, com um anel suave. */
-  heal: { at: Point };
+  /** Ganho de vida: grãos verdes subindo do total de vida, com um anel suave. `turn` (radianos, sentido horário) gira o "para cima" para quem senta daquele lado. */
+  heal: { at: Point; turn?: number };
   /** Marcadores: +N/+N solta faíscas verdes para cima; −N/−N, roxas caindo. */
   counter: { at: Point; harmful: boolean };
 }
@@ -69,9 +69,10 @@ export const ACCENT_EFFECTS: { [N in keyof AccentParams]: (layer: GpuLayer, s: S
       };
     });
   },
-  heal(layer, s, { at }) {
+  heal(layer, s, { at, turn = 0 }) {
     const { x, y } = layer.local(at.cx, at.cy);
-    const size = Math.max(at.w, at.h);
+    const size = Math.max(at.w, at.h), c = Math.cos(turn), sn = Math.sin(turn);
+    const turned = (dx: number, dy: number) => ({ x: dx * c - dy * sn, y: dx * sn + dy * c });
     return timed(700, (view, sparks) => {
       const ring = new Sprite({ texture: s.ring, anchor: .5, x, y, tint: HEAL, blendMode: 'add' });
       const glow = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: HEAL, blendMode: 'add' });
@@ -79,7 +80,11 @@ export const ACCENT_EFFECTS: { [N in keyof AccentParams]: (layer: GpuLayer, s: S
       let owed = 0;
       return (t, ms) => {
         owed += ms * (layer.coarse ? .04 : .07) * (t < .7 ? 1 : 0);
-        for (; owed >= 1; owed--) sparks.add(s.spark, s, { x: x + rand(-.6, .6) * size, y: y + rand(-.1, .5) * size, vx: rand(-10, 10), vy: rand(-120, -60), life: rand(500, 800), spin: 0, grow: -.5, scale: rand(.22, .42), gravity: -20, drag: 1.2, tint: Math.random() < .3 ? 0xffffff : HEAL });
+        for (; owed >= 1; owed--) {
+          const from = turned(rand(-.6, .6) * size, rand(-.1, .5) * size), v = turned(rand(-10, 10), rand(-120, -60));
+          // A gravidade das partículas é só vertical: girado, o grão sobe só com a velocidade.
+          sparks.add(s.spark, s, { x: x + from.x, y: y + from.y, vx: v.x, vy: v.y, life: rand(500, 800), spin: 0, grow: -.5, scale: rand(.22, .42), gravity: turn ? 0 : -20, drag: 1.2, tint: Math.random() < .3 ? 0xffffff : HEAL });
+        }
         const k = easeOut(t);
         ring.scale.set(size * 1.6 / 256 * (.6 + .6 * k)); ring.alpha = .8 * (1 - t);
         glow.scale.set(size * 1.4 / 128); glow.alpha = .45 * Math.sin(Math.PI * Math.min(1, t * 1.3));

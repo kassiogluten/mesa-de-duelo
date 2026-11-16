@@ -1,5 +1,6 @@
-// A mesa do Contador de vida: toques nos painéis (tocar soma 1, segurar soma 10), o dano de comandante, os dados no meio da mesa e a tela acesa.
-import { LETAL_COMANDANTE, derrota, jogadorDe, disposicao, mudarComandante, mudarVida, rolar, type Entrada, type Partida } from './state';
+// A mesa do Contador de vida: toques nos painéis (tocar soma 1, segurar soma 10), o dano de comandante, os golpes grandes na vida, os dados no meio da mesa, o sorteio de quem começa e a tela acesa.
+import { GIRO, LETAL_COMANDANTE, derrota, jogadorDe, disposicao, golpeGrande, mudarComandante, mudarVida, rolar, sortearInicio, type Entrada, type Partida } from './state';
+import { mostrarSorteio, type SorteioNaMesa } from './startingRoll';
 import { criarEfeitos3d } from './effects3d';
 import type { Point } from '../ui/motionKit';
 import { ICON_REFRESH } from '../ui/icons';
@@ -22,7 +23,7 @@ export interface Mesa { destruir(): void }
  * Monta a mesa em `raiz` e cuida dela até `destruir`. `salvar` é chamado a cada mudança; as ações do menu do meio
  * (recomeçar, trocar jogadores) voltam para quem montou.
  */
-export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, acoes: Omit<MenuAcoes, 'mudou' | 'rolar'>): Mesa {
+export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, acoes: Omit<MenuAcoes, 'mudou' | 'rolar' | 'sortear'>): Mesa {
   const modos = new Map<number, Modo>();
   const deltas = new Map<number, { soma: number; timer: number }>();
   // A camada 3D cobre a janela inteira, fora da mesa (que se redesenha ao girar o celular).
@@ -30,7 +31,9 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
   const deitada = matchMedia('(orientation: landscape)');
   let disp = disposicao(p.jogadores.length, deitada.matches);
 
+  let sorteio: SorteioNaMesa | null = null;
   const desenhar = () => {
+    sorteio?.cancelar(); sorteio = null;
     disp = disposicao(p.jogadores.length, deitada.matches);
     raiz.innerHTML = mesaHTML(p, disp, modos);
   };
@@ -38,7 +41,7 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
   const redesenharPainel = (j: number) => { painel(j).outerHTML = painelHTML(p, disp, j, modos.get(j)); };
 
   /** Atualiza os números de um painel sem refazer os botões (o dedo pode estar segurando um deles). */
-  const atualizar = (j: number, delta = 0) => {
+  const atualizar = (j: number, delta = 0): number => {
     const el = painel(j), jog = jogadorDe(p, j);
     el.classList.toggle('fora', !!derrota(p, j));
     const vida = el.querySelector<HTMLElement>('[data-vida]');
@@ -57,22 +60,36 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
       o.textContent = String(v);
       o.closest('.cv-cmd')?.classList.toggle('letal', v >= LETAL_COMANDANTE);
     });
-    if (delta) mostrarDelta(j, delta);
+    return delta ? mostrarDelta(j, delta) : 0;
   };
 
+  /** Mostra o "+3" somado ao lado da vida e devolve o nível do golpe grande, se a soma acabou de passar de 10, 20… */
   const mostrarDelta = (j: number, delta: number) => {
     const atual = deltas.get(j);
     if (atual) clearTimeout(atual.timer);
-    const soma = (atual?.soma ?? 0) + delta;
+    const antes = atual?.soma ?? 0, soma = antes + delta, golpe = golpeGrande(antes, soma);
     const el = painel(j).querySelector<HTMLElement>('[data-delta]');
     const limpar = () => { deltas.delete(j); const e = painel(j).querySelector<HTMLElement>('[data-delta]'); if (e) { e.textContent = ''; e.className = 'cv-delta'; } };
     deltas.set(j, { soma, timer: window.setTimeout(limpar, DELTA_MS) });
-    if (!el) return;
+    if (!el) return golpe;
     el.textContent = soma ? `${soma > 0 ? '+' : '−'}${Math.abs(soma)}` : '±0';
     el.className = `cv-delta ${soma > 0 ? 'ganho' : soma < 0 ? 'perda' : ''}`;
     // Reinicia o pulso a cada toque.
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    return golpe;
   };
+
+  /** O painel treme com um clarão vermelho (perda) ou acende em verde (ganho), e a camada 3D solta o golpe ou a cura. */
+  const marcarGolpe = (j: number, nivel: number) => {
+    const el = painel(j), classe = nivel < 0 ? 'golpe' : 'cura';
+    el.classList.remove('golpe', 'cura'); void el.offsetWidth; el.classList.add(classe);
+    el.style.setProperty('--golpe', String(Math.min(3, Math.abs(nivel))));
+    window.setTimeout(() => painel(j)?.classList.remove(classe), 800);
+    const at = pontoDe(j);
+    if (nivel < 0) { efeitos.golpe({ ...at, w: at.w / .45, h: at.h / .45 }, -nivel); navigator.vibrate?.(40); }
+    else efeitos.cura({ ...at, w: at.w * 1.2, h: at.h * 1.2 }, giroDe(j));
+  };
+  const giroDe = (j: number) => GIRO[disp.lugares.find(l => l.jogador === j)?.lado ?? 'baixo'];
 
   /** Aplica o toque (ou um passo do segurar) do botão. */
   const aplicar = (botao: HTMLElement, passo: number) => {
@@ -83,9 +100,11 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
     const foraAntes = p.jogadores.map((_, i) => !!derrota(p, i));
     if (origem) mudarComandante(p, j, origem, sinal * passo);
     else mudarVida(p, j, sinal * passo);
-    atualizar(j, jogadorDe(p, j).vida - antes);
+    const golpe = atualizar(j, jogadorDe(p, j).vida - antes);
     salvar();
     fimDeJogo(foraAntes);
+    // Quem acabou de sair já racha: o golpe grande fica para quem continua na partida.
+    if (golpe > 0 || (golpe < 0 && !derrota(p, j))) marcarGolpe(j, golpe);
   };
 
   /** O meio do painel, para os efeitos de quem sai e de quem vence. */
@@ -125,6 +144,16 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
     if (assenta === null) mostrarRolagem(e, lados);
     else rolagemTimer = window.setTimeout(() => { if (vez === rolagemVez) mostrarRolagem(e, lados); }, assenta);
   };
+  /** Quem começa: o sorteio vai para o histórico e cada painel (de quem ainda está na partida) rola o seu d20. */
+  const sortear = () => {
+    const e = sortearInicio(p);
+    if (!e) return;
+    salvar();
+    // O sorteio aparece por cima da vida: quem estava no dano de comandante ou no histórico volta para ela.
+    if (modos.size) { modos.clear(); desenhar(); }
+    sorteio?.cancelar();
+    sorteio = mostrarSorteio(raiz, p, disp, e, efeitos, pontoDe);
+  };
   rolagem.addEventListener('click', ev => {
     const botao = (ev.target as HTMLElement).closest<HTMLElement>('[data-de-novo]');
     if (botao) void rolarDado(Number(botao.dataset.deNovo));
@@ -162,7 +191,7 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
       modos.delete(j); redesenharPainel(j);
       painel(j).querySelector<HTMLElement>(era === 'hist' ? '.cv-ultima' : '.cv-cmd-btn')?.focus();
     }
-    else if (acao === 'menu') abrirMenu(p, { ...acoes, mudou: () => { desenhar(); salvar(); }, rolar: lados => { void rolarDado(lados); } });
+    else if (acao === 'menu') abrirMenu(p, { ...acoes, mudou: () => { desenhar(); salvar(); }, rolar: lados => { void rolarDado(lados); }, sortear });
   };
   // Segurar o dedo não abre o menu do navegador nem seleciona o número.
   const semMenu = (e: Event) => { if ((e.target as HTMLElement).closest('.cv-painel')) e.preventDefault(); };
@@ -198,6 +227,7 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
       soltar();
       clearInterval(relogio);
       clearTimeout(rolagemTimer); rolagemVez++;
+      sorteio?.cancelar();
       rolagem.remove();
       efeitos.destruir();
       deltas.forEach(d => clearTimeout(d.timer));

@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.203.0] - 2026-11-16
+
+### Novo
+
+- **Quem começa no Contador de vida.** Na logo do meio da mesa, o botão Quem começa faz cada jogador rolar um d20 em 3D no próprio painel, e o dado para virado para quem senta ali. Quem empata no maior número rola de novo, os outros apagam, e quem tirar mais ganha o painel dourado com "Você escolhe quem começa" (os outros veem o nome dele). O sorteio fica no histórico, e um toque num painel tira o resultado da mesa.
+- **Golpes grandes no Contador de vida.** Perder 10 ou mais de vida de uma vez faz o painel tremer, com um clarão vermelho e faíscas, e fica mais forte a cada 10. Ganhar 10 ou mais acende o painel em verde, com grãos de luz subindo para o lado de quem joga.
+
 ## [0.202.0] - 2026-11-16
 
 ### Mudou

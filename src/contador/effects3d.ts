@@ -1,4 +1,4 @@
-// Os objetos em 3D do Contador de vida, pela mesma camada GPU da partida: d6, d20 e moeda rolando no meio da mesa, a racha de quem sai e o brasão de quem vence.
+// Os objetos em 3D do Contador de vida, pela mesma camada GPU da partida: d6, d20 e moeda rolando no meio da mesa, o d20 de quem começa em cada painel, os golpes grandes na vida, a racha de quem sai e o brasão de quem vence.
 import type { GpuLayer } from '../ui/gpu/gpuLayer';
 import type { Point } from '../ui/motionKit';
 import { effectsLevel, gpuDecision, hasWebGL2 } from '../ui/gpu/gpuSupport';
@@ -11,9 +11,20 @@ type Camada = { layer: GpuLayer; fx: Efeitos };
 const DADO_MS = 2600;
 const MOEDA_MS = 2600;
 
-interface Efeitos3d {
+export interface Efeitos3d {
   /** Rola no meio da tela. Devolve em quantos ms o resultado assenta, ou null sem 3D (quem chamou mostra em texto). */
   rolar(e: Entrada): Promise<number | null>;
+  /**
+   * O d20 de quem começa, rolando no painel (`at`) e parando virado para quem senta ali (`giro`, em graus como o
+   * `rotate` do CSS). Fica `hold` ms na mesa e assenta na metade; devolve se rolou em 3D.
+   */
+  rolarNo(at: Point, lados: number, resultado: number, giro: number, hold: number): Promise<boolean>;
+  /** Um anel de luz na cor pedida em volta do painel (quem ganhou o sorteio). */
+  brilho(at: Point, cor: string): void;
+  /** Golpe grande na vida (10 ou mais de uma vez): clarão e faíscas vermelhas, maiores a cada 10 (`nivel`). */
+  golpe(at: Point, nivel: number): void;
+  /** Cura grande: grãos verdes subindo para o lado de quem senta ali (`giro`, em graus). */
+  cura(at: Point, giro: number): void;
   /** Alguém saiu da partida: o painel racha e solta cinzas. */
   fora(at: Point): void;
   /** Sobrou um: raios dourados e o brasão em 3D caindo sobre o painel. */
@@ -60,6 +71,21 @@ export function criarEfeitos3d(host: HTMLElement): Efeitos3d {
       const ok = c.fx.play(c.layer, 'die', { at, result: String(e.resultado), sides: e.lados, hold: DADO_MS, font: fonte(), travel: size * 1.1, tilt: .3 });
       return ok ? DADO_MS * .5 : null;
     },
+    async rolarNo(at, lados, resultado, giro, hold) {
+      const c = await pronta();
+      return !!c?.fx.play(c.layer, 'die', { at, result: String(resultado), sides: lados, hold, font: fonte(), travel: at.w * .5, tilt: .25, turn: giro * Math.PI / 180 });
+    },
+    brilho(at, cor) { void pronta().then(c => c?.fx.play(c.layer, 'arrive', { at, color: cor, size: Math.max(at.w, at.h) * 1.6 })); },
+    golpe(at, nivel) {
+      void pronta().then(c => {
+        if (!c) return;
+        const lado = Math.min(at.w, at.h);
+        // Do tamanho do painel: o anel não passa para o do vizinho (quem levou o golpe fica claro).
+        c.fx.play(c.layer, 'burst', { at, tone: 'damage', size: lado * (.75 + .15 * Math.min(3, nivel - 1)), heavy: true, lethal: nivel >= 2 });
+        if (nivel >= 2) c.fx.play(c.layer, 'shockwave', { at, color: '#ec5a3f', reach: lado * 1.1 });
+      });
+    },
+    cura(at, giro) { void pronta().then(c => c?.fx.play(c.layer, 'heal', { at, turn: giro * Math.PI / 180 })); },
     fora(at) { void pronta().then(c => c?.fx.play(c.layer, 'defeat', { at })); },
     vence(at) {
       void pronta().then(c => {

@@ -1,4 +1,4 @@
-// A janela da logo no meio do Contador de vida: d6, d20 e moeda (que rolam no meio da mesa), o histórico com desfazer, recomeçar e sair.
+// A janela da logo no meio do Contador de vida: d6, d20 e moeda (que rolam no meio da mesa), o sorteio de quem começa, o histórico com desfazer, recomeçar e sair.
 import { desfazer, podeDesfazer, type Partida } from './state';
 import { historicoHTML, menuHTML } from './view';
 
@@ -7,6 +7,8 @@ export interface MenuAcoes {
   mudou(): void;
   /** Rolar um dado de `lados` lados (2: a moeda) no meio da mesa, com a janela já fechada. */
   rolar(lados: number): void;
+  /** Sortear quem começa (cada um rola um d20 no seu painel), com a janela já fechada. */
+  sortear(): void;
   /** Recomeçar com os mesmos jogadores. */
   reiniciar(): void;
   /** Voltar à configuração. */
@@ -33,6 +35,7 @@ export function abrirMenu(p: Partida, acoes: MenuAcoes) {
     const dado = alvo.closest<HTMLElement>('[data-rolar]');
     // O dado rola no meio da mesa, à vista de todos: a janela sai da frente.
     if (dado) { dlg.close(); acoes.rolar(Number(dado.dataset.rolar)); return; }
+    if (alvo.closest('[data-sortear]')) { dlg.close(); acoes.sortear(); return; }
     if (alvo.closest('[data-desfazer]')) { desfazer(p); mostrar(); acoes.mudou(); return; }
     if (alvo.closest('[data-tela-cheia]')) {
       const pedido = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
