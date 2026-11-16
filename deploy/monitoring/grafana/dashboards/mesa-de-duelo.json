@@ -767,6 +767,668 @@
     },
     {
       "type": "row",
+      "title": "Como se joga",
+      "id": 34,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Tamanho das mesas (por hora)",
+      "description": "Partidas iniciadas pelo número de jogadores à mesa, contando o computador. Janela móvel de 1 hora.",
+      "id": 35,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (players) (increase(mesa_matches_started_total[1h]))",
+          "legendFormat": "{{players}} jogadores",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Partidas abandonadas",
+      "description": "Parte das partidas encerradas que foi abandonada (saíram, a sala fechou ou ninguém voltou), por formato. Últimas 6 horas.",
+      "id": 36,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (format) (increase(mesa_matches_ended_total{outcome=\"abandonada\"}[6h])) / sum by (format) (increase(mesa_matches_ended_total[6h]))",
+          "legendFormat": "{{format}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Jogos terminados (por hora)",
+      "description": "Cada jogo de uma melhor de três conta separado. Janela móvel de 1 hora.",
+      "id": 37,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (format, mode) (increase(mesa_games_finished_total[1h]))",
+          "legendFormat": "{{format}} · {{mode}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Turnos por jogo (média)",
+      "description": "Média de turnos dos jogos terminados, por formato. Últimas 6 horas.",
+      "id": 38,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (format) (increase(mesa_game_turns_sum[6h])) / sum by (format) (increase(mesa_game_turns_count[6h]))",
+          "legendFormat": "{{format}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Como os jogos terminam",
+      "description": "Derrotas pelo motivo, últimas 24 horas. vida: chegou a 0; comandante: 21 de dano de um comandante; grimório: comprou sem cartas; veneno; efeito: uma carta mandou perder; vitoria-alternativa: o oponente venceu por uma carta; concedeu: desistiu ou saiu.",
+      "id": 39,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (reason) (increase(mesa_games_losses_total[24h]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Contra o computador: vitórias das pessoas",
+      "description": "Parte dos jogos com o computador à mesa que uma pessoa venceu, pelo estilo do computador (em sala, completada com computadores, o estilo é o equilibrado). Empates contam no total. Últimas 24 horas.",
+      "id": 40,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (style) (increase(mesa_games_vs_computer_total{result=\"humano\"}[24h])) / sum by (style) (increase(mesa_games_vs_computer_total[24h]))",
+          "legendFormat": "{{style}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_games_vs_computer_total{result=\"humano\"}[24h])) / sum(increase(mesa_games_vs_computer_total[24h]))",
+          "legendFormat": "todos os estilos",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Cartas e pedidos recusados",
+      "id": 41,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Acerto do cache de cartas",
+      "description": "Parte das cartas que o servidor entregou do próprio cache, sem ir ao Scryfall. Última hora.",
+      "id": 42,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 40
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_cartas_hits_total[1h])) / (sum(increase(mesa_cartas_hits_total[1h])) + sum(increase(mesa_cartas_misses_total[1h])))",
+          "legendFormat": "acerto",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cartas e Scryfall (por hora)",
+      "description": "Cartas entregues do cache e as que precisaram do Scryfall; pedidos feitos ao Scryfall (cada um pode trazer várias cartas) e os que falharam. Janela móvel de 1 hora.",
+      "id": 43,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 40
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_cartas_hits_total[1h]))",
+          "legendFormat": "do cache",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_cartas_misses_total[1h]))",
+          "legendFormat": "fora do cache",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_cartas_scryfall_total[1h]))",
+          "legendFormat": "pedidos ao Scryfall",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(mesa_cartas_scryfall_failures_total[1h]))",
+          "legendFormat": "falhas do Scryfall",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Pedidos recusados por motivo (por hora)",
+      "description": "deck: deck inválido; sala-inexistente: código de sala que não existe; bloqueado: IP com códigos errados demais; recusado: a ação não vale agora (sala cheia, nome em uso...); falha: erro inesperado no servidor, vale investigar. Janela móvel de 1 hora.",
+      "id": 44,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 40
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (reason) (increase(mesa_requests_rejected_total[1h]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Pedidos recusados por pedido (por hora)",
+      "description": "Qual pedido foi recusado: entrar em sala (join), começar contra o computador (start), criar sala (host), validar deck... \"partida\" junta as ações de dentro da partida. Janela móvel de 1 hora.",
+      "id": 45,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 40
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (request) (increase(mesa_requests_rejected_total[1h]))",
+          "legendFormat": "{{request}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0,
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
       "title": "Ponte (Java e motor do Forge)",
       "id": 14,
       "collapsed": false,
@@ -774,7 +1436,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 48
       },
       "panels": []
     },
@@ -791,7 +1453,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 23
+        "y": 49
       },
       "targets": [
         {
@@ -868,7 +1530,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 23
+        "y": 49
       },
       "targets": [
         {
@@ -936,7 +1598,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 23
+        "y": 49
       },
       "targets": [
         {
@@ -995,7 +1657,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 31
+        "y": 57
       },
       "targets": [
         {
@@ -1063,7 +1725,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 31
+        "y": 57
       },
       "targets": [
         {
@@ -1149,7 +1811,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 31
+        "y": 57
       },
       "targets": [
         {
@@ -1214,7 +1876,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 65
       },
       "panels": []
     },
@@ -1231,7 +1893,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 40
+        "y": 66
       },
       "targets": [
         {
@@ -1291,7 +1953,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 40
+        "y": 66
       },
       "targets": [
         {
@@ -1351,7 +2013,7 @@
         "h": 8,
         "w": 4,
         "x": 16,
-        "y": 40
+        "y": 66
       },
       "targets": [
         {
@@ -1418,7 +2080,7 @@
         "h": 8,
         "w": 4,
         "x": 20,
-        "y": 40
+        "y": 66
       },
       "targets": [
         {
@@ -1474,7 +2136,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 74
       },
       "panels": []
     },
@@ -1491,7 +2153,7 @@
         "h": 8,
         "w": 4,
         "x": 0,
-        "y": 49
+        "y": 75
       },
       "targets": [
         {
@@ -1551,7 +2213,7 @@
         "h": 8,
         "w": 4,
         "x": 4,
-        "y": 49
+        "y": 75
       },
       "targets": [
         {
@@ -1611,7 +2273,7 @@
         "h": 8,
         "w": 16,
         "x": 8,
-        "y": 49
+        "y": 75
       },
       "targets": [
         {
@@ -1676,7 +2338,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 83
       },
       "panels": []
     },
@@ -1693,7 +2355,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 58
+        "y": 84
       },
       "targets": [
         {
@@ -1752,7 +2414,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 58
+        "y": 84
       },
       "targets": [
         {
@@ -1811,7 +2473,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 58
+        "y": 84
       },
       "targets": [
         {

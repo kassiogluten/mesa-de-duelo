@@ -24,6 +24,8 @@ Se os gráficos da seção **Containers do servidor** ficarem vazios, o Docker d
 
 - **Agora**: jogadores conectados, conexões abertas (inclui quem está só no lobby), partidas em andamento, salas aguardando, jogadores reconectando e há quanto tempo a ponte está no ar.
 - **Uso ao longo do tempo**: jogadores e partidas por formato (Pauper, Commander, livre) e modo (contra a IA ou em rede), partidas iniciadas e encerradas por hora (concluídas ou abandonadas) e duração média.
+- **Como se joga**: tamanho das mesas (quantos jogadores, contando o computador), parte das partidas abandonadas por formato, jogos terminados por hora, turnos por jogo, por que os jogadores perdem (vida, comandante, grimório, veneno, carta, concessão) e quanto as pessoas vencem do computador, por estilo.
+- **Cartas e pedidos recusados**: acerto do cache de cartas do servidor, cartas que precisaram do Scryfall e as falhas dele, e pedidos recusados por motivo (deck inválido, sala que não existe, IP bloqueado por códigos errados, recusa, falha inesperada) e por pedido.
 - **Ponte**: memória da JVM contra o limite `-Xmx`, CPU, pausas de coleta de lixo, tempo para publicar o estado das partidas (acima de 50 ms a mesa atrasa), mensagens e erros, threads.
 - **Relatos dos jogadores**: relatos recebidos por hora (sugestão ou erro, com ou sem a partida), recusados por motivo, o espaço ocupado no volume `feedback-data` e quantos estão guardados.
 - **Containers do servidor**: CPU, memória e rede de cada serviço. O seletor **Projeto** no topo filtra o projeto do Coolify quando há outros apps no mesmo servidor.
@@ -38,7 +40,13 @@ Se os gráficos da seção **Containers do servidor** ficarem vazios, o Docker d
 | `mesa_matches_started_total` | contador | `format`, `mode`, `players` |
 | `mesa_matches_ended_total`, `mesa_match_duration_seconds` | contador, tempo | `format`, `mode`, `outcome` (`concluida`/`abandonada`) |
 | `mesa_games_finished_total` | contador | `format`, `mode` (cada jogo de uma melhor de três) |
-| `mesa_ws_messages_received_total`, `mesa_ws_messages_invalid_total`, `mesa_requests_rejected_total`, `mesa_tick_errors_total` | contador | |
+| `mesa_game_turns` | distribuição | `format`, `mode` (turnos de cada jogo) |
+| `mesa_games_losses_total` | contador | `format`, `mode`, `reason` (`vida`/`comandante`/`grimorio`/`veneno`/`efeito`/`vitoria-alternativa`/`concedeu`/`empate`) |
+| `mesa_games_vs_computer_total` | contador | `format`, `mode`, `style` (estilo do computador), `result` (`humano`/`computador`/`empate`) |
+| `mesa_requests_rejected_total` | contador | `request` (o pedido; `partida` para as ações dentro dela, `invalido` sem tipo), `reason` (`deck`/`sala-inexistente`/`bloqueado`/`recusado`/`falha`) |
+| `mesa_rooms_code_blocked_total` | contador | (buscas e códigos recusados por excesso de códigos errados do mesmo IP) |
+| `mesa_cartas_hits_total`, `mesa_cartas_misses_total`, `mesa_cartas_scryfall_total`, `mesa_cartas_scryfall_failures_total` | contador | (cache de dados das cartas) |
+| `mesa_ws_messages_received_total`, `mesa_ws_messages_invalid_total`, `mesa_tick_errors_total` | contador | |
 | `mesa_tick_seconds` | tempo | |
 | `mesa_feedback_received_total` | contador | `kind` (`sugestao`/`erro`), `attached` (com a partida) |
 | `mesa_feedback_rejected_total` | contador | `reason` (`invalido`/`grande`/`limite`/`disco`/`erro`) |

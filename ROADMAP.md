@@ -109,7 +109,7 @@ A ideia é limitar **por IP (e por conexão, quando fizer sentido)** cada ponto 
 - [x] Busca de cartas no construtor de decks: o aparelho já fala direto com a API do Scryfall; conferido: a busca só sai ao enviar o formulário ou trocar um filtro (não a cada tecla), e todo pedido ao Scryfall passa por uma fila com 110 ms entre pedidos (~9 por segundo).
 - [x] Mensagem para o jogador quando bater no limite da busca de sala ("Muitas tentativas com códigos que não existem. Espere alguns minutos e tente de novo.").
 - [ ] Mesma mensagem para os limites que ainda virão na ponte. O limite do nginx em `/ws` recusa a conexão sem mensagem: o navegador não recebe o código 429 de um WebSocket recusado, por isso ele é folgado (30 por minuto com rajada de 20, 30 abertas por IP).
-- [ ] Métricas no Grafana: pedidos recusados por limite, por ponto, e alertas quando um IP for bloqueado com frequência.
+- [ ] Métricas no Grafana: pedidos recusados por limite, por ponto, e alertas quando um IP for bloqueado com frequência. Já no painel (seção **Cartas e pedidos recusados**): as recusas do servidor por pedido e por motivo, inclusive o IP bloqueado por códigos errados. Faltam as recusas do nginx em `/ws` (sem exportador) e os alertas.
 - [ ] Testes: script que dispara conexões e mensagens em excesso e confere que o limite segura sem afetar uma partida normal rodando ao lado.
 
 ## 20. Migrar a interface para Preact (ou React)

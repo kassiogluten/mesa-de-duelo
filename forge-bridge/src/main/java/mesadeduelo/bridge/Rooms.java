@@ -202,8 +202,9 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         try { msg = JsonParser.parseString(text).getAsJsonObject(); }
         catch (RuntimeException e) { Metrics.INVALID_MESSAGES.increment(); BridgeServer.send(ch, Session.toast("error", "Mensagem inválida.")); return; }
         String requestId = msg.has("requestId") && msg.get("requestId").isJsonPrimitive() ? msg.get("requestId").getAsString() : null;
+        String type = null;
         try {
-            String type = MatchConfig.string(msg, "type");
+            type = MatchConfig.string(msg, "type");
             switch (type) {
                 case "validate-deck", "fetch-deck", "similar-cards" -> LobbyRequests.handle(ch, type, msg, requestId);
                 case "lookup-room" -> lookup(ch, code(msg), requestId);
@@ -270,13 +271,14 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 }
             }
         } catch (InvalidDeck e) {
-            Metrics.REQUEST_ERRORS.increment();
+            Metrics.requestRejected(type, "deck");
             JsonObject response = new JsonObject(); response.addProperty("type", "validation-error");
             response.addProperty("target", e.target); response.add("validation", e.result.json());
             if (requestId != null) response.addProperty("requestId", requestId);
             BridgeServer.send(ch, response.toString());
         } catch (RuntimeException e) {
-            Metrics.REQUEST_ERRORS.increment();
+            Metrics.requestRejected(type, e instanceof RoomNotFound ? "sala-inexistente" : e instanceof TooManyCodes ? "bloqueado"
+                : e instanceof IllegalArgumentException || e instanceof IllegalStateException ? "recusado" : "falha");
             JsonObject response = new JsonObject();
             response.addProperty("type", requestId == null ? "error" : "request-error");
             response.addProperty("text", e.getMessage() == null ? "Não foi possível concluir esta ação." : e.getMessage());
@@ -289,6 +291,11 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
 
     private static final class RoomNotFound extends IllegalArgumentException {
         RoomNotFound(String code) { super("Não existe sala com o código " + code + "."); }
+    }
+
+    /** Recusa por códigos errados demais do mesmo IP: à parte só para a métrica. */
+    private static final class TooManyCodes extends IllegalArgumentException {
+        TooManyCodes(String text) { super(text); }
     }
 
     private synchronized void lookup(Channel ch, String code, String requestId) {
@@ -304,7 +311,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         long now = System.currentTimeMillis();
         if (codeMisses.exceeded(key, now)) {
             Metrics.CODE_MISSES_BLOCKED.increment();
-            throw new IllegalArgumentException("Muitas tentativas com códigos que não existem. Espere alguns minutos e tente de novo.");
+            throw new TooManyCodes("Muitas tentativas com códigos que não existem. Espere alguns minutos e tente de novo.");
         }
         Session s = byCode.get(code);
         if (s == null || !(s.isRoom() || s.soloWatchable())) {
@@ -332,7 +339,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         long now = System.currentTimeMillis();
         if (codeMisses.exceeded(key, now)) {
             Metrics.CODE_MISSES_BLOCKED.increment();
-            throw new IllegalArgumentException("Muitas tentativas com códigos já usados. Espere alguns minutos e tente de novo.");
+            throw new TooManyCodes("Muitas tentativas com códigos já usados. Espere alguns minutos e tente de novo.");
         }
         if (byCode.containsKey(code)) {
             codeMisses.record(key, now);

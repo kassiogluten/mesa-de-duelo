@@ -62,10 +62,35 @@ final class MatchRecorder {
     void gameEnded(HostedMatch ended) {
         if (gameSince > 0) gameMs = System.currentTimeMillis() - gameSince;
         Metrics.gameFinished(session.config.format(), session.isRoom());
+        if (ended.getMatch() != null) gameMetrics(ended.getMatch());
         gameDurations.add(gameMs);
         if (ended.getMatch() != null && ended.getMatch().isMatchOver()) record(ended.getMatch(), null, null, null);
         else if (session.abandoned) unfinished(session.conceder);
         if (startedAt > 0 && ended.getMatch() != null && ended.getMatch().isMatchOver()) { Metrics.matchEnded(session.config.format(), session.isRoom(), "concluida", startedAt); startedAt = 0; }
+    }
+
+    /** Métricas do jogo que acabou: turnos, o motivo de cada derrota e, com humanos e computador na mesa, quem venceu. */
+    private void gameMetrics(forge.game.Match fm) {
+        forge.game.GameOutcome last = null;
+        for (forge.game.GameOutcome each : fm.getOutcomes()) last = each;
+        if (last == null) return;
+        String format = session.config.format();
+        boolean room = session.isRoom(), human = false, computer = false;
+        Metrics.gameTurns(format, room, last.getLastTurnNumber());
+        for (var e : last) {
+            if (seated(e.getKey())) human = true; else computer = true;
+            var po = e.getValue().getOutcome();
+            if (po != null && !po.hasWon() && po.lossState != null) Metrics.gameLoss(format, room, po.lossState);
+        }
+        if (!human || !computer) return;
+        RegisteredPlayer winner = last.getWinningPlayer();
+        Metrics.gameVsComputer(format, room, session.aiStyle, winner == null ? "empate" : seated(winner) ? "humano" : "computador");
+    }
+
+    /** O jogador é uma pessoa sentada à mesa (os outros são o computador). */
+    private boolean seated(RegisteredPlayer rp) {
+        for (Seat each : session.seats) if (each.registered == rp) return true;
+        return false;
     }
 
     /** No estado da partida: quanto o jogo durou ({@code gameMs}) ou, com ele correndo, quanto já passou ({@code elapsedMs}). */

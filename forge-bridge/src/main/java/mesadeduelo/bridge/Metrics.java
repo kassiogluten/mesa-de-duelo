@@ -1,9 +1,12 @@
 package mesadeduelo.bridge;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
@@ -40,7 +43,6 @@ final class Metrics {
 
     static final Counter MESSAGES = Counter.builder("mesa.ws.messages.received").description("Mensagens recebidas dos navegadores").register(REGISTRY);
     static final Counter INVALID_MESSAGES = Counter.builder("mesa.ws.messages.invalid").description("Mensagens que não eram JSON válido").register(REGISTRY);
-    static final Counter REQUEST_ERRORS = Counter.builder("mesa.requests.rejected").description("Pedidos recusados (deck inválido, sala cheia, código errado...)").register(REGISTRY);
     static final Counter CODE_MISSES_BLOCKED = Counter.builder("mesa.rooms.code.blocked").description("Buscas de sala recusadas por excesso de códigos errados do mesmo IP").register(REGISTRY);
     static final Counter TICK_ERRORS = Counter.builder("mesa.tick.errors").description("Exceções ao publicar o estado das partidas").register(REGISTRY);
     static final Timer TICK = Timer.builder("mesa.tick").description("Tempo para publicar o estado de todas as partidas (a cada 50 ms)").register(REGISTRY);
@@ -70,6 +72,45 @@ final class Metrics {
             Timer.builder("mesa.match.duration").description("Duração das partidas, do início ao fim")
                 .tags("format", format(format), "mode", mode(room), "outcome", outcome).register(REGISTRY)
                 .record(java.time.Duration.ofMillis(System.currentTimeMillis() - startedAtMillis));
+    }
+
+    /** Pedidos da tela inicial e da sala que têm nome próprio na métrica; os de dentro da partida contam como "partida". */
+    static final Set<String> REQUEST_TYPES = Set.of("validate-deck", "fetch-deck", "similar-cards", "lookup-room", "list-rooms",
+        "start", "host", "lab-host", "join", "room-deck", "watch", "watch-player", "watchable", "fill-computers", "room-ready",
+        "room-say", "rejoin", "rematch", "leave", "lab-close");
+
+    /** {@code type} null quando a mensagem nem disse o que era; {@code reason}: deck, sala-inexistente, bloqueado, recusado ou falha. */
+    static void requestRejected(String type, String reason) {
+        String request = type == null ? "invalido" : REQUEST_TYPES.contains(type) ? type : "partida";
+        Counter.builder("mesa.requests.rejected").description("Pedidos recusados, por pedido e motivo (deck inválido, sala que não existe, códigos errados demais, recusa ou falha)")
+            .tags("request", request, "reason", reason).register(REGISTRY).increment();
+    }
+
+    /** O motivo da derrota do Forge com nome curto em português; os valores são os do enum, então a lista é fechada. */
+    private static final Map<forge.game.player.GameLossReason, String> LOSS_REASONS = Map.of(
+        forge.game.player.GameLossReason.Conceded, "concedeu",
+        forge.game.player.GameLossReason.LifeReachedZero, "vida",
+        forge.game.player.GameLossReason.Milled, "grimorio",
+        forge.game.player.GameLossReason.Poisoned, "veneno",
+        forge.game.player.GameLossReason.SpellEffect, "efeito",
+        forge.game.player.GameLossReason.CommanderDamage, "comandante",
+        forge.game.player.GameLossReason.OpponentWon, "vitoria-alternativa",
+        forge.game.player.GameLossReason.IntentionalDraw, "empate");
+
+    static void gameTurns(String format, boolean room, int turns) {
+        DistributionSummary.builder("mesa.game.turns").description("Turnos de cada jogo terminado")
+            .tags("format", format(format), "mode", mode(room)).register(REGISTRY).record(turns);
+    }
+
+    static void gameLoss(String format, boolean room, forge.game.player.GameLossReason reason) {
+        Counter.builder("mesa.games.losses").description("Derrotas em cada jogo, pelo motivo (vida, veneno, comandante, grimório, concedeu...)")
+            .tags("format", format(format), "mode", mode(room), "reason", LOSS_REASONS.getOrDefault(reason, "outro")).register(REGISTRY).increment();
+    }
+
+    /** Jogo com humanos e computador na mesa: {@code result} é humano, computador ou empate. */
+    static void gameVsComputer(String format, boolean room, String style, String result) {
+        Counter.builder("mesa.games.vs.computer").description("Jogos com o computador na mesa, por quem venceu e o estilo do computador")
+            .tags("format", format(format), "mode", mode(room), "style", AiStyle.of(AiStyle.profile(style)), "result", result).register(REGISTRY).increment();
     }
 
     static final String[] FEEDBACK_KINDS = {"sugestao", "erro"};
