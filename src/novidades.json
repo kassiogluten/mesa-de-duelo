@@ -1,4 +1,9 @@
 {
+  "0.202.0": {
+    "Coroa no dano de comandante do Contador de vida": [
+      { "img": "0.202.0/coroa.webp", "legenda": "A Ana ainda sem dano de comandante, com o botão redondo só com a coroa, e o Davi com o pill das marcas do dano de cada comandante; no canto, a última mudança dele, vinda de um comandante." }
+    ]
+  },
   "0.201.0": {
     "Contador de vida para partidas no papel": [
       { "img": "0.201.0/mesa.webp", "legenda": "Quatro jogadores com o celular em pé: cada painel virado para quem está daquele lado, com a vida grande, o − e o + nos lados, a última mudança no canto e a logo da mesa no meio, que abre os dados e o histórico." },

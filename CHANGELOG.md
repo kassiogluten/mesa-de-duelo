@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.202.0] - 2026-11-16
+
+### Mudou
+
+- **Coroa no dano de comandante do Contador de vida.** O botão que abre o dano de comandante em cada painel trocou o escudo por uma coroa dourada e ficou redondo: só a coroa quando o jogador ainda não levou dano de comandante, e um pill de pontas redondas com as marcas na cor de cada comandante quando já levou. A coroa também aparece na última mudança do canto do painel quando ela veio de um comandante.
+
 ## [0.201.0] - 2026-11-16
 
 ### Novo

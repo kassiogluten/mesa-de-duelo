@@ -6,8 +6,8 @@ import {
   textoEntrada, vistaDe, type Config, type Disposicao, type Mudanca, type Partida,
 } from './state';
 
-/** Escudo com espada: o dano de comandante. */
-const ICON_COMANDANTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 4.5 5.5v5.8c0 4.6 3.1 8.7 7.5 10.2 4.4-1.5 7.5-5.6 7.5-10.2V5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 6.5v9M9.5 13.5h5M12 15.5v2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+/** Coroa: o dano de comandante. */
+const ICON_COMANDANTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 8.2 12 12 5.5l3.8 6.5L20 8.5 18.4 18H5.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5.6 20.5h12.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14.4" r="1.3" fill="currentColor"/></svg>';
 export const ICON_CAVEIRA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.6 1.2 4.6 3 5.8V20h10v-3.2c1.8-1.2 3-3.2 3-5.8a8 8 0 0 0-8-8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="11.5" r="1.8" fill="currentColor"/><circle cx="15" cy="11.5" r="1.8" fill="currentColor"/><path d="M10.5 20v-2M13.5 20v-2" stroke="currentColor" stroke-width="1.6"/></svg>';
 
 const radio = (name: string, value: number, atual: number, texto = String(value)) =>
