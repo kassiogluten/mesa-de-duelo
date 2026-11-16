@@ -300,6 +300,9 @@
 .prompt-more[hidden] { display: none; }
 .prompt-more:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; border-radius: 4px; }
 .forge .action .btns { width: 100%; flex-direction: column; gap: 7px; align-items: stretch; }
+/* O ícone antes do texto de cada botão da caixa de ação (actionIcons.ts). */
+.arena-btn > .act-icon { display: inline-block; width: 1.05em; height: 1.05em; margin-right: .45em; vertical-align: -.17em; }
+.arena-btn > .act-icon svg { display: block; width: 100%; height: 100%; }
 .observe-label { text-align: right; font: 700 15px/1.4 var(--display); color: var(--ink); text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8); }
 .observe-label.win { color: var(--gold); }
 .observe-label.lose { color: var(--red); }

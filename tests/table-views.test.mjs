@@ -5,6 +5,7 @@ const { stackPanel, stackGalleryHTML } = await import('../src/ui/stackView.ts');
 const { amountStatus, missingPicks, newQuestionDraft, questionHTML, questionBar, zoneName, zoneWithArticle } = await import('../src/ui/questionView.ts');
 const { gameResult, rematchButton, reconnectingHTML, disconnectedHTML } = await import('../src/ui/resultView.ts');
 const { sideboardHTML } = await import('../src/ui/sideboardView.ts');
+const { actionIconHTML } = await import('../src/ui/actionIcons.ts');
 const { attackConfirmLabel, blockConfirmLabel, buttons, targetInfoHTML, targetInfoText } = await import('../src/ui/actionPanel.ts');
 const { commanderLedgerHTML, zoneHTML, zoneKey } = await import('../src/ui/zoneView.ts');
 const { tableShellHTML } = await import('../src/ui/tableShell.ts');
@@ -161,6 +162,17 @@ test('an optional trigger offers "always yes" and "always no" next to this time\
     passLevel: 'acoes', passLevelSupported: true, passingTurn: false, passPending: false, passMenuOpen: false, attackAll: false, attackSelecting: 0, attackBusy: false };
   const ask = { ok: { enabled: true, label: 'Sim' }, cancel: { enabled: true, label: 'Não' } };
   const html = buttons(view, state({ ...ask, triggerChoice: true }));
-  assert.match(html, /data-act="cancel"[^>]*>Não<[\s\S]*data-act="cancel" data-always[^>]*>Sempre não<[\s\S]*data-act="ok" data-always[^>]*>Sempre sim<[\s\S]*arena-btn primary" data-act="ok"[^>]*>Sim</);
+  assert.match(html, /data-act="cancel"[^>]*>(?:<span class="act-icon">.*?<\/span>)?Não<[\s\S]*data-act="cancel" data-always[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sempre não<[\s\S]*data-act="ok" data-always[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sempre sim<[\s\S]*arena-btn primary" data-act="ok"[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sim</);
   assert.doesNotMatch(buttons(view, state(ask)), /data-always/);
+});
+
+test('each action button carries the icon of what it does, and a choice from the card stays without one', () => {
+  const view = { findCard: () => undefined, playerName: () => 'Ana', observing: false, disconnected: false, clickLocked: () => false,
+    passLevel: 'acoes', passLevelSupported: true, passingTurn: false, passPending: false, passMenuOpen: false, attackAll: false, attackSelecting: 0, attackBusy: false };
+  const icon = (html, act) => html.match(new RegExp(`data-act="${act}"[^>]*>(<span class="act-icon">.*?</span>)?`))?.[1] ?? '';
+  const turn = buttons(view, state({ priority: true, ok: { enabled: true, label: 'OK' }, cancel: { enabled: true, label: 'Fim de turno' } }, { phase: 'MAIN1' }));
+  assert.equal(icon(turn, 'ok'), actionIconHTML('pass'));
+  assert.equal(icon(turn, 'pass-turn'), actionIconHTML('endTurn'));
+  assert.equal(icon(buttons(view, state({ ok: { enabled: true, label: 'Sim' }, cancel: { enabled: true, label: 'Não' } })), 'cancel'), actionIconHTML('cancel'));
+  assert.equal(icon(buttons(view, state({ ok: { enabled: true, label: 'Cara' }, cancel: { enabled: true, label: 'Coroa' } })), 'ok'), '');
 });

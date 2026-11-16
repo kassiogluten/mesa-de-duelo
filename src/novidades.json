@@ -1,4 +1,11 @@
 {
+  "0.189.0": {
+    "Botões de ação com ícones": [
+      { "img": "0.189.0/turno.webp", "legenda": "No seu turno, o Fim de turno com o ícone de avançar até o fim e o botão de passar para o combate com a seta." },
+      { "img": "0.189.0/pilha.webp", "legenda": "Com mágicas na pilha: o X no Cancelar, as camadas no Resolver todos e o visto no Resolver." },
+      { "img": "0.189.0/pagar.webp", "legenda": "Pagando um custo: a gota de mana, o X para desistir da mágica e o coração para pagar com vida." }
+    ]
+  },
   "0.185.0": {
     "Carta desenhada e imagem leve enquanto a carta carrega": [
       { "img": "0.185.0/esboco.webp", "legenda": "Primeiro, a carta desenhada: nome e custo, janela da arte, tipo, texto de regras e P/R." },

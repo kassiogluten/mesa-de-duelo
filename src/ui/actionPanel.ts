@@ -13,6 +13,7 @@ import { abilityKindLabel, paymentButtonLabels, targetProgress, voteRequest } fr
 import { waitingOnText } from './awaitingDecision';
 import { gameResult, watchBarHTML } from './resultView';
 import { zoneName } from './questionView';
+import { actionIconHTML, guessActionIcon, type ActionIcon } from './actionIcons';
 
 /** O que a caixa de ação precisa da mesa. */
 export interface ActionView {
@@ -63,7 +64,7 @@ export function choosingPlayer(s: FState) {
 export function buttons(v: ActionView, s: FState) {
   if (s.gameOver && v.observing && !v.disconnected) {
     const result = gameResult(s);
-    return `<span class="observe-label ${result.tone}">${result.title} · Jogo encerrado</span><button class="arena-btn primary" data-ui="result">Ver resultado</button>`;
+    return `<span class="observe-label ${result.tone}">${result.title} · Jogo encerrado</span><button class="arena-btn primary" data-ui="result">${actionIconHTML('result')}Ver resultado</button>`;
   }
   if (s.gameOver || s.question) return '';
   if (s.watching) return watchBarHTML(s);
@@ -73,12 +74,12 @@ export function buttons(v: ActionView, s: FState) {
   }
   if (s.input.opening === 'starting-player') {
     const choices = s.players.filter(player => s.input.selectablePlayers?.includes(player.id));
-    return choices.length ? choices.map(player => `<button class="arena-btn ${player.id === s.you ? 'primary' : 'secondary'}" data-pid="${player.id}" data-gen="${s.input.gen}">${esc(player.name)}${player.id === s.you ? ' · Você' : ''}</button>`).join('') : '<button class="arena-btn waiting" disabled>Aguardando a escolha de quem começa…</button>';
+    return choices.length ? choices.map(player => `<button class="arena-btn ${player.id === s.you ? 'primary' : 'secondary'}" data-pid="${player.id}" data-gen="${s.input.gen}">${esc(player.name)}${player.id === s.you ? ' · Você' : ''}</button>`).join('') : `<button class="arena-btn waiting" disabled>${actionIconHTML('waiting')}Aguardando a escolha de quem começa…</button>`;
   }
   // Escolha de um jogador só no retrato (o oponente que decide no Curator of Destinies): um botão por jogador, como no "Quem começa?".
   const players = choosingPlayer(s) ? s.players.filter(player => s.input.selectablePlayers!.includes(player.id)) : [];
   if (players.length) {
-    const cancelChoice = s.input.cancel.enabled && s.input.cancel.label ? `<button class="arena-btn secondary" data-act="cancel" data-gen="${s.input.gen}">${optionHTML(s.input.cancel.label)}</button>` : '';
+    const cancelChoice = s.input.cancel.enabled && s.input.cancel.label ? `<button class="arena-btn secondary" data-act="cancel" data-gen="${s.input.gen}">${actionIconHTML(guessActionIcon(s.input.cancel.label))}${optionHTML(s.input.cancel.label)}</button>` : '';
     return players.map(player => `<button class="arena-btn primary" data-pid="${player.id}" data-gen="${s.input.gen}">${esc(player.name)}${player.id === s.you ? ' · Você' : ''}</button>`).join('') + cancelChoice;
   }
   const decision = cardDecision(s);
@@ -93,34 +94,38 @@ export function buttons(v: ActionView, s: FState) {
     // O "Automático" do Forge escolhe as primeiras cartas da mão por você.
     // Com a escolha completa ele fica desativado: some, e só o "Devolver" fica.
     : s.input.opening === 'mulligan-bottom' && s.input.cancel.label ? { ...s.input.cancel, label: s.input.cancel.enabled ? 'Escolher por mim' : '' } : s.input.cancel;
+  const okIcon: ActionIcon | undefined = payment ? 'mana' : move ? 'commander' : s.input.blocking ? 'block' : s.input.attacking ? 'attack' : s.input.opening === 'play-draw' ? 'pass'
+    : s.input.suspendCast || s.input.opening === 'mulligan' || s.input.opening === 'mulligan-bottom' || isProliferating(s) || decision ? 'ok' : guessActionIcon(s.input.ok.label);
+  // Mandar a carta para outra zona, "Oponente joga" e "Escolher por mim" não são desistir: ficam sem o X.
+  const cancelIcon: ActionIcon | undefined = payment || v.attackAll || s.input.suspendCast ? 'cancel' : move || s.input.opening === 'play-draw' || s.input.opening === 'mulligan-bottom' ? undefined : guessActionIcon(s.input.cancel.label);
   const waiting = v.clickLocked(s.input.gen) || (!!s.input.attacking && v.attackBusy);
-  const b = (act: string, btn: { label: string; enabled: boolean }, kind: string) =>
-    btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && v.attackAll ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${optionHTML(btn.label)}</button>` : '';
+  const b = (act: string, btn: { label: string; enabled: boolean }, kind: string, icon?: ActionIcon) =>
+    btn.label ? `<button class="arena-btn ${kind}" data-act="${act}"${act === 'ok' ? ' aria-keyshortcuts="Space" title="Atalho: Espaço"' : ''}${act === 'cancel' && v.attackAll ? ' data-ui="attack-clear"' : ''} data-gen="${s.input.gen}" ${btn.enabled && !waiting ? '' : 'disabled'}>${actionIconHTML(icon)}${optionHTML(btn.label)}</button>` : '';
   const mine = s.activePlayer === s.you;
-  if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting${v.showing ? ' showing' : ''}" disabled>${v.showing ? esc(v.showing) : s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (v.passingTurn ? 'Passando até o fim do turno…' : '') || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
+  if (!ok.enabled && !cancel.enabled) return decision ? '' : `<button class="arena-btn waiting${v.showing ? ' showing' : ''}" disabled>${actionIconHTML(v.showing ? 'showing' : 'waiting')}${v.showing ? esc(v.showing) : s.input.opening ? 'Aguardando confirmação…' : waitingOnText(s) || (v.passingTurn ? 'Passando até o fim do turno…' : '') || (mine ? 'Aguardando o jogo…' : s.players.length > 2 ? `${s.players.find(p => p.id === s.activePlayer)?.name ?? 'Oponente'} jogando…` : 'Oponente jogando…')}</button>`;
   // "Fim de turno" passaria direto por um combate extra ainda por vir: com um pendente, o atalho some.
   const extraCombat = mine && (s.extraCombats ?? 0) > 0;
   const endTurn = !!s.input.priority && ok.enabled && mine && !s.stack.length && !s.input.targeting && !s.input.paying && !extraCombat;
-  const undo = (endTurn || (extraCombat && !!s.input.priority)) && /fim de turno|end turn/i.test(cancel.label) ? '' : b('cancel', cancel, 'secondary');
+  const undo = (endTurn || (extraCombat && !!s.input.priority)) && /fim de turno|end turn/i.test(cancel.label) ? '' : b('cancel', cancel, 'secondary', cancelIcon);
   const priority = s.input.priority ? { ...ok, label: passLabel(s) } : ok;
   // Pilha longa: resolve tudo de uma vez. Para sozinho se algo novo entrar na pilha ou se o jogo pedir uma decisão.
   const resolveAll = !!s.input.priority && ok.enabled && s.stack.length >= 2 && !s.input.targeting && !s.input.paying
-    ? b('resolve-all', { label: `Resolver todos (${s.stack.length})`, enabled: true }, 'secondary') : '';
+    ? b('resolve-all', { label: `Resolver todos (${s.stack.length})`, enabled: true }, 'secondary', 'resolveAll') : '';
   // Mana phyrexiana: o mesmo que tocar no próprio retrato, um símbolo por 2 de vida.
   const lifeEnabled = s.input.paying && s.input.phyrexianLife !== undefined;
-  const life = (kind: string) => lifeEnabled ? b('phyrexian-life', { label: 'Pagar 2 de vida', enabled: true }, kind) : '';
+  const life = (kind: string) => lifeEnabled ? b('phyrexian-life', { label: 'Pagar 2 de vida', enabled: true }, kind, 'life') : '';
   // Sem mana para o automático, a vida vira o destaque; sem ela, só sobra desistir ou não pagar.
   if (s.input.paying && s.input.canAutoPay === false && cancel.enabled)
-    return lifeEnabled ? b('ok', ok, 'secondary') + b('cancel', cancel, 'secondary') + life('primary') : b('ok', ok, 'secondary') + b('cancel', cancel, 'primary');
+    return lifeEnabled ? b('ok', ok, 'secondary', okIcon) + b('cancel', cancel, 'secondary', cancelIcon) + life('primary') : b('ok', ok, 'secondary', okIcon) + b('cancel', cancel, 'primary', cancelIcon);
   // O destaque, sempre por último (embaixo, onde a mão já espera), é o próximo passo. Nunca o "Fim de turno": apertado
   // por hábito, ele pularia o resto do turno.
-  const pass = b('ok', priority, 'primary');
+  const pass = b('ok', priority, 'primary', !s.input.priority ? okIcon : priority.label === 'Resolver' ? 'ok' : 'pass');
   // Gatilho opcional ("você pode..."): além do Sim e do Não desta vez, guardar a resposta até o fim da partida.
   if (s.input.triggerChoice && ok.enabled && cancel.enabled) {
-    const always = (act: string, label: string) => `<button class="arena-btn secondary" data-act="${act}" data-always data-gen="${s.input.gen}" ${waiting ? 'disabled' : ''}>${label}</button>`;
-    return b('cancel', cancel, 'secondary') + always('cancel', 'Sempre não') + always('ok', 'Sempre sim') + pass;
+    const always = (act: string, label: string, icon: ActionIcon) => `<button class="arena-btn secondary" data-act="${act}" data-always data-gen="${s.input.gen}" ${waiting ? 'disabled' : ''}>${actionIconHTML(icon)}${label}</button>`;
+    return b('cancel', cancel, 'secondary', cancelIcon) + always('cancel', 'Sempre não', 'alwaysNo') + always('ok', 'Sempre sim', 'alwaysYes') + pass;
   }
-  const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'secondary') : '';
+  const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'secondary', 'endTurn') : '';
   return undo + life('secondary') + resolveAll + passTurn + pass;
 }
 /** O selo do nível fica à vista durante toda a partida, também com o oponente jogando, para trocar a qualquer hora. */

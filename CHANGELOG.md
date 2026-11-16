@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.189.0] - 2026-11-16
+
+### Mudou
+
+- **Botões de ação com ícones.** Os botões da caixa de ação ganham um ícone ao lado do texto, para reconhecer de relance: seta para passar e avançar de fase, avançar até o fim no Fim de turno, camadas no Resolver todos, visto para confirmar e resolver, X para desistir ou cancelar, espada no ataque, escudo no bloqueio, gota de mana no pagar automaticamente, coração no pagar com vida, coroa na zona de comando e ampulheta enquanto espera o oponente. As escolhas que vêm da carta (cara ou coroa, uma cor, um modo) continuam só com o texto.
+
 ## [0.188.1] - 2026-11-16
 
 ### Corrigido

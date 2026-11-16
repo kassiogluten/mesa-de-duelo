@@ -57,6 +57,6 @@ test('a decision waiting for the queue shows whose play is being shown, in the b
   const s = { type: 'state', you: 0, turn: 3, activePlayer: 1, gameOver: false, stack: [], combat: [],
     players: [{ id: 0, name: 'Você', battlefield: [], hand: [] }, { id: 1, name: 'Ana', battlefield: [], hand: [] }],
     input: { gen: -1, selectable: [], ok: { enabled: false, label: '' }, cancel: { enabled: false, label: '' }, message: '' } };
-  assert.match(buttons({ ...view, showing: 'Mostrando a jogada de Ana…' }, s), /class="arena-btn waiting showing" disabled>Mostrando a jogada de Ana…/);
+  assert.match(buttons({ ...view, showing: 'Mostrando a jogada de Ana…' }, s), /class="arena-btn waiting showing" disabled>(?:<span class="act-icon">.*?<\/span>)?Mostrando a jogada de Ana…/);
   assert.match(buttons(view, s), /Oponente jogando…/);
 });
