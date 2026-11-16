@@ -1,0 +1,69 @@
+/* O foil da carta aberta nos detalhes (cardFoil.ts): a moldura inclina pela luz (--rx, --ry) e as camadas de brilho
+   correm com ela (--mx, --my). Por cima da imagem, isoladas dela: o brilho da raridade (::before), o cintilado das
+   míticas e especiais (.ci-foil-glitter) e o reflexo de luz (::after). */
+.ci-foil {
+  --mx: 50%; --my: 50%; --rx: 0deg; --ry: 0deg;
+  position: relative; isolation: isolate; align-self: start; border-radius: 8px;
+  transform: perspective(900px) rotateX(var(--ry)) rotateY(var(--rx));
+  transition: transform .5s cubic-bezier(.2, .8, .3, 1), box-shadow .5s ease;
+  touch-action: pan-y;
+}
+.ci-foil.tilting { transition: transform .08s linear, box-shadow .2s ease; }
+.ci-foil.foil-active { box-shadow: calc(var(--rx) * -.8) calc(var(--ry) * .8) 24px #0009; }
+.card-inspector .ci-foil .ci-image { width: 100%; margin: 0; }
+.ci-foil .ci-image { position: relative; z-index: 0; }
+.ci-foil::before, .ci-foil::after, .ci-foil-glitter {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transition: opacity .4s ease;
+}
+/* O reflexo de luz: uma mancha clara onde a luz bate, em todas as raridades. */
+.ci-foil::after {
+  z-index: 3; mix-blend-mode: soft-light; opacity: .35;
+  background: radial-gradient(circle at var(--mx) var(--my), #ffffffd9 0, #ffffff40 22%, transparent 55%);
+}
+.ci-foil.foil-active::after { opacity: .75; }
+/* O brilho da raridade: uma faixa que atravessa a carta na diagonal e anda com a luz. */
+.ci-foil::before {
+  z-index: 1; opacity: 0; background-size: 260% 260%; background-position: var(--mx) var(--my);
+}
+.ci-foil[data-foil="uncommon"]::before {
+  mix-blend-mode: color-dodge; opacity: .14;
+  background-image: linear-gradient(115deg, transparent 30%, #cccccc 42%, #f6f6f6 50%, #cccccc 58%, transparent 70%);
+}
+.ci-foil[data-foil="rare"]::before {
+  mix-blend-mode: color-dodge; opacity: .2;
+  background-image: linear-gradient(115deg, transparent 26%, #b8842a 38%, #ffd77a 47%, #fff3cf 50%, #ffd77a 53%, #b8842a 62%, transparent 74%);
+}
+.ci-foil[data-foil="mythic"]::before, .ci-foil[data-foil="special"]::before {
+  mix-blend-mode: color-dodge; opacity: .22;
+  background-image: linear-gradient(115deg, #ff5f5f 0%, #ffb35f 14%, #fff06b 28%, #6bff9e 42%, #6bd6ff 56%, #9f7bff 70%, #ff6bd6 84%, #ff5f5f 100%);
+}
+.ci-foil[data-foil="special"]::before { opacity: .32; }
+.ci-foil[data-foil="uncommon"].foil-active::before { opacity: .3; }
+.ci-foil[data-foil="rare"].foil-active::before { opacity: .42; }
+.ci-foil[data-foil="mythic"].foil-active::before { opacity: .4; }
+.ci-foil[data-foil="special"].foil-active::before { opacity: .55; }
+/* O cintilado: pontinhos de luz que acendem conforme a luz passa (só nas míticas e especiais). */
+.ci-foil-glitter { z-index: 2; display: none; mix-blend-mode: color-dodge; opacity: .18; }
+.ci-foil[data-foil="mythic"] .ci-foil-glitter, .ci-foil[data-foil="special"] .ci-foil-glitter {
+  display: block;
+  background:
+    radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 2px) 0 0 / 23px 29px,
+    radial-gradient(circle at 70% 60%, #fff 0 1px, transparent 2px) 0 0 / 31px 37px,
+    radial-gradient(circle at 40% 80%, #fff8 0 1px, transparent 2px) 0 0 / 17px 19px;
+  -webkit-mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0, #0008 30%, transparent 60%);
+  mask-image: radial-gradient(circle at var(--mx) var(--my), #000 0, #0008 30%, transparent 60%);
+}
+.ci-foil[data-foil="mythic"].foil-active .ci-foil-glitter { opacity: .45; }
+.ci-foil[data-foil="special"] .ci-foil-glitter { opacity: .3; }
+.ci-foil[data-foil="special"].foil-active .ci-foil-glitter { opacity: .7; }
+/* Sem movimento (reduzir movimento ou Efeitos leves): o brilho parado no meio, sem inclinar. */
+.ci-foil.foil-still { transform: none; transition: none; }
+/* Os arranjos de celular do modal (cardInspector.css), agora na moldura em volta da imagem. */
+@media (max-width: 700px) {
+  .card-inspector .ci-foil { width: fit-content; max-width: 100%; margin: auto; }
+  .card-inspector .ci-foil .ci-image { width: auto; max-height: 260px; }
+}
+@media (max-height: 500px) and (min-width: 501px) {
+  .card-inspector .ci-foil { grid-column: 1; grid-row: 1 / 3; width: min(calc((100dvh - 40px) * .716), 45vw); margin: 12px 0 12px 12px; }
+  .card-inspector .ci-foil .ci-image { width: 100%; max-height: none; }
+}

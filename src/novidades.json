@@ -1,4 +1,9 @@
 {
+  "0.196.0": {
+    "Foil nos detalhes da carta": [
+      { "img": "0.196.0/foil-raridades.webp", "legenda": "Da esquerda para a direita, com o mouse no alto à direita de cada carta: comum (só o reflexo), incomum (prata), rara (dourado), mítica (arco-íris) e especial (arco-íris com cintilado), todas inclinadas para a luz." }
+    ]
+  },
   "0.195.0": {
     "Brasão de vitória em 3D": [
       { "img": "0.195.0/brasao-caindo.webp", "legenda": "O brasão caindo e girando sobre o seu retrato, ainda com o verso vermelho e a estrela dourada, entre os raios e o confete." },

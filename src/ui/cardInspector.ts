@@ -1,8 +1,9 @@
-// Prévia e inspetor de carta: imagem, texto, marcadores, estados da permanente e o botão de virar.
+// Prévia e inspetor de carta: imagem (no inspetor, com o foil da raridade), texto, marcadores, estados da permanente e o botão de virar.
 import { cacheGet, fetchByNames, fetchPrintings, type Printing } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
 import { counterName } from './cardLabels';
+import { attachFoil, foilOf, type Foil } from './cardFoil';
 import './cardInspector.css';
 
 export interface InspectorCard {
@@ -67,7 +68,7 @@ function content(card: InspectorCard, compact: boolean) {
   // Na prévia, os estados da permanente ficam numa faixa abaixo da imagem; no inspetor, junto do texto.
   const notes = hidden ? [] : card.notes ?? [];
   return `<header class="ci-head"><div><h2 id="${compact ? 'ci-preview-name' : 'ci-name'}">${esc(name)}</h2>${cost ? `<div class="ci-cost">${manaHTML(cost)}</div>` : ''}</div><span class="ci-actions">${sides ? flipButtonHTML(sides, 'ci-control') : ''}${!compact && card.onPoint ? '<button type="button" class="ci-control ci-point" data-ci-point aria-label="Apontar esta carta para os outros jogadores" title="Destaca a carta na mesa dos outros jogadores">Apontar</button>' : ''}${compact ? '<button type="button" class="ci-control" data-ci-pin aria-label="Ampliar os detalhes da carta">Ampliar</button>' : `<button type="button" class="ci-control" data-ci-close aria-label="Fechar detalhes da carta"${card.onPoint ? ' autofocus' : ''}>Fechar</button>`}</span></header>
-  <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? `<img class="ci-image" src="${esc(image)}" alt="${esc(name)}" draggable="false">` : ''}<div class="ci-details">
+  <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? imageHTML(image, name, compact ? null : foilOf(sc?.rarity)) : ''}<div class="ci-details">
     ${type ? `<p class="ci-type">${esc(type)}${card.typeChange ? ` <mark class="ci-type-change">— ${esc(card.typeChange)}</mark>` : ''}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
     ${card.keywords?.length ? `<ul class="ci-keywords">${card.keywords.map(k => `<li>${esc(keywords[k] ?? k.replaceAll('_', ' ').toLowerCase())}</li>`).join('')}</ul>` : ''}
@@ -82,6 +83,11 @@ function content(card: InspectorCard, compact: boolean) {
     ${card.preparedFrom ? `<p class="ci-note">Feitiço preparado de ${esc(card.preparedFrom)}: pode ser conjurado enquanto a criatura estiver preparada.</p>` : ''}
     ${card.attachedTo !== undefined || card.attachedToPlayer !== undefined ? '<p class="ci-note">Anexada a uma carta ou a um jogador na mesa.</p>' : ''}
   </div>${compact && notes.length ? `<ul class="ci-status">${notes.map(note => `<li>${esc(note)}</li>`).join('')}</ul>` : ''}</div>`;
+}
+/** A imagem da carta; no modal (`foil`), dentro da moldura que inclina e brilha conforme a raridade (cardFoil.ts). */
+function imageHTML(image: string, name: string, foil: Foil | null) {
+  const img = `<img class="ci-image" src="${esc(image)}" alt="${esc(name)}" draggable="false">`;
+  return foil ? `<div class="ci-foil" data-foil="${foil}">${img}<span class="ci-foil-glitter"></span></div>` : img;
 }
 /** Cartas de baixo de uma mutação, com miniatura e texto: as habilidades delas também valem. Tocar na miniatura abre a carta. */
 function mergedRules(merged: MergedPart[]) {
@@ -109,8 +115,11 @@ function fill(el: HTMLElement, card: InspectorCard, compact: boolean) {
   if (body) body.scrollTop = scrollTop;
   if (restoreControl) el.querySelector<HTMLElement>('.ci-control')?.focus({preventScroll: true});
   el.querySelector('.ci-image')?.addEventListener('error', e => {
-    (e.target as HTMLElement).remove(); el.querySelector('.ci-body')?.classList.add('ci-no-image');
+    const img = e.target as HTMLElement;
+    (img.closest('.ci-foil') ?? img).remove(); el.querySelector('.ci-body')?.classList.add('ci-no-image');
   }, { once: true });
+  // No modal, a luz passa pela carta só na primeira vez que ela é desenhada (o texto que chega depois redesenha).
+  if (!compact) { attachFoil(el.querySelector<HTMLElement>('.ci-foil'), el.dataset.foilShown !== card.name); el.dataset.foilShown = card.name ?? ''; }
   el.querySelector<HTMLElement>('[data-flip]')?.addEventListener('click', e => {
     const sides = sidesOf(card);
     if (sides) turnCard(el.querySelector<HTMLImageElement>('.ci-image'), e.currentTarget as HTMLElement, sides);

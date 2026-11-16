@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.196.0] - 2026-11-16
+
+### Novo
+
+- **Foil nos detalhes da carta.** Ao abrir os detalhes de uma carta, ela inclina em 3D seguindo o mouse (no toque, seguindo o dedo arrastado de lado), com um reflexo de luz que corre por ela. Cada raridade tem o seu brilho, mais forte quanto mais rara: a comum fica só com o reflexo, a incomum ganha um brilho prateado, a rara um dourado, a mítica um arco-íris e a especial um arco-íris com cintilado. Ao abrir, a luz passa uma vez pela carta. Com movimento reduzido ou Efeitos leves, a carta não inclina e o brilho fica parado.
+
 ## [0.195.0] - 2026-11-16
 
 ### Novo

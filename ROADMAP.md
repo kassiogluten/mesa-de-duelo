@@ -635,3 +635,14 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
   Feitos em 16/11/2026 (`novidades-pendentes/entrada-na-partida`). A compra espera o sorteio sair da mesa. Ao manter, a transição de CSS da mão termina na hora, e cada carta desliza do leque até a mão junto com a sua lupa. Também nesse dia: as lupas das cartas ainda a caminho não aparecem mais nos lugares vazios. Os efeitos da mesa começam a carregar no clique em Jogar, e o sorteio espera por eles (até 1,5 s) para rolar o dado em 3D; antes, a primeira rodada saía sempre chapada.
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
+
+## 141. Ícone próprio para Intimidar
+
+Pedido em 16/11/2026. Uma criatura com intimidar ("só pode ser bloqueada por criaturas de artefato e/ou criaturas que compartilhem uma cor com ela") hoje não tem marca própria na mesa: o servidor a põe entre as evasões sem ícone (`EVASION` em `PermanentDetails.java`, junto de medo, sombra, travessia, sorrateiro e equitação) e ela ganha só o escudo vazado genérico de "bloqueio limitado" (`blockLimited`). No modal de detalhes, a palavra-chave aparece crua ("intimidate"), sem nome em português (`keywords` em `cardInspector.ts` e `cardLabels.ts`).
+
+- [ ] Decidir antes de fazer: (A) ícone próprio na carta, como o de Ameaçar (`MENACE` em `icons.ts`) e Voar, com o balão "Intimidar: só pode ser bloqueada por criaturas de artefato ou que tenham uma cor em comum com ela" (recomendado); (B) só o nome e o balão no escudo vazado de hoje, sem ícone novo; ou (C) aproveitar e dar ícone às outras evasões da lista (medo, sombra, travessia, sorrateiro, equitação).
+- [ ] O desenho do ícone (uma máscara ou um olhar ameaçador, diferente da caveira do toque mortífero e dos chifres de Ameaçar) e a cor dele.
+- [ ] Mandar o intimidar nas palavras-chave da permanente (tirá-lo do `EVASION`, para não ganhar também o escudo vazado) e conferir no `ProtocolContractTest`.
+- [ ] Nome em português ("Intimidar") no modal de detalhes, nos selos e no balão.
+- [ ] No bloqueio: os bloqueadores que não podem bloquear a criatura com intimidar ficam apagados, como hoje com voar (conferir se a mesa já faz isso pelo `blockLimited`).
+- [ ] Novidade, print em Novidades em imagens e um cenário no Laboratório com uma criatura com intimidar (por exemplo, Bladetusk Boar ou Halo Hunter) atacando, e bloqueadores de artefato, da mesma cor e de outra cor.
