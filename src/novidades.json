@@ -1,4 +1,10 @@
 {
+  "0.193.0": {
+    "Marcador +1/+1 acende na hora em que entra": [
+      { "img": "0.193.0/onda-verde.webp", "legenda": "Quando o marcador +1/+1 entra, a borda da carta acende em verde, uma onda verde sobe pela arte e o P/T pisca." },
+      { "img": "0.193.0/parada.webp", "legenda": "Depois, a criatura fica sem halo: só o selo de marcadores e o P/T em verde mostram que ela cresceu." }
+    ]
+  },
   "0.192.0": {
     "Dados em 3D": [
       { "img": "0.192.0/dados.webp", "legenda": "Do d4 ao d20, cada dado assentado com o resultado de frente e os números das faces vizinhas à mostra." },

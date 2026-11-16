@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.193.0] - 2026-11-16
+
+### Mudou
+
+- **Marcador +1/+1 acende na hora em que entra.** A criatura com marcadores +1/+1 não fica mais com o halo verde atrás da carta, que se confundia com o vínculo com a vida. Agora o destaque vem quando o marcador entra: uma onda verde sobe pela carta, a borda acende e o P/T pisca, junto com o +N/+N que já subia. Depois a carta fica só com o selo de marcadores e o P/T em verde.
+
 ## [0.192.0] - 2026-11-16
 
 ### Novo

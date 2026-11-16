@@ -10,7 +10,7 @@ import { FACE_DOWN_LABEL } from './faceDownReminder';
  */
 export interface PermanentFx {
   frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'defender' | 'token';
-  glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'plus' | 'minus';
+  glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'minus';
   base: ('deathtouch' | 'haste' | 'chained')[];
   /** Detalhes na borda esquerda: asa (voar), olho (vigilância), garra (atropelar), caveira (toque mortífero), escudo com exclamação, cheio ou vazado (não pode ser bloqueada por ninguém ou por algumas criaturas) e espada/escudo riscados (não pode atacar/bloquear). */
   corner: ('flying' | 'vigilance' | 'trample' | 'deathtouch' | 'unblockable' | 'block-limited' | 'no-attack' | 'no-block')[];
@@ -39,11 +39,12 @@ export const protectionLabel = (from: string) => PROTECTION_LABEL[from] ?? from;
 export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; enchanted?: boolean; playerName?: (id: number) => string; you?: number } = {}): PermanentFx {
   const k = new Set(c.keywords ?? []);
   const has = (name: string) => k.has(name);
+  // +1/+1 não deixa brilho parado: a carta acende só quando o marcador entra (motionBoard, counters).
   const p1 = c.counters?.P1P1 ?? 0, m1 = c.counters?.M1M1 ?? 0;
   const frame = has('INDESTRUCTIBLE') ? 'indestructible' : has('WARD') ? 'ward' : has('PROTECTION') ? 'protection'
     : c.creature && has('MENACE') ? 'menace' : c.creature && has('DEFENDER') ? 'defender' : c.token ? 'token' : undefined;
   const glow = has('HEXPROOF') ? 'hexproof' : has('SHROUD') ? 'shroud' : c.creature && has('LIFELINK') ? 'lifelink'
-    : context.enchanted ? 'enchanted' : p1 > m1 ? 'plus' : m1 > p1 ? 'minus' : undefined;
+    : context.enchanted ? 'enchanted' : m1 > p1 ? 'minus' : undefined;
   const base: PermanentFx['base'] = [];
   if (c.creature && has('DEATHTOUCH')) base.push('deathtouch');
   if (c.creature && has('HASTE') && c.sick) base.push('haste');

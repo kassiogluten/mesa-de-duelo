@@ -20,7 +20,6 @@
 .bfc > .fx-glow.lifelink > i:nth-child(4) { right: -7px; }
 .slot.tapped .bfc > .fx-glow.lifelink > i { display: none; }
 .bfc > .fx-glow.enchanted { --c: var(--aura, var(--gold)); opacity: .65; }
-.bfc > .fx-glow.plus { --c: #7dffae; opacity: .45; }
 .bfc > .fx-glow.minus { --c: #b48cff; opacity: .5; }
 
 /* Moldura fora da carta (o miolo é transparente). */

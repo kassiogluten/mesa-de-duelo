@@ -13,7 +13,7 @@ test('one frame and one glow at most, chosen by importance', () => {
   assert.equal(permanentFx(creature({ keywords: ['LIFELINK'] }), { enchanted: true }).glow, 'lifelink');
   assert.equal(permanentFx(creature({}), { enchanted: true }).glow, 'enchanted');
   assert.equal(permanentFx(creature({ token: true })).frame, 'token');
-  assert.equal(permanentFx(creature({ counters: { P1P1: 2 } })).glow, 'plus');
+  assert.equal(permanentFx(creature({ counters: { P1P1: 2 } })).glow, undefined, '+1/+1 only lights up when the counter arrives');
   assert.equal(permanentFx(creature({ counters: { M1M1: 1 } })).glow, 'minus');
   assert.equal(permanentFx({ id: 2, tapped: false, token: false, keywords: ['MENACE'] }).frame, undefined, 'creature-only keywords stay off other permanents');
 });

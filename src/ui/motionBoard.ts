@@ -130,7 +130,20 @@ export function createBoardMotion(kit: MotionKit) {
       if (text) floatNumber({ ...at, h: at.h * .6 }, text, `counter-float${/^M\d+M\d+$/.test(kind) ? ' harmful' : ''}${lore ? ' lore' : ''}`);
       // Na camada GPU: +N/+N solta faíscas verdes para cima; −N/−N, roxas caindo.
       if (text && !lore && !reduced()) gpu.play('counter', { at, harmful: /^M\d+M\d+$/.test(kind) });
+      if (/^P\d+P\d+$/.test(kind) && n > 0) grow(el);
     }
+  }
+  /** +N/+N: uma onda verde sobe pela carta e o P/T pisca. É o único destaque: a carta não fica com brilho depois. */
+  function grow(card: HTMLElement) {
+    if (reduced()) return;
+    const surge = document.createElement('span');
+    surge.className = 'counter-surge';
+    surge.setAttribute('aria-hidden', 'true');
+    surge.innerHTML = '<i></i>';
+    card.append(surge);
+    later(() => surge.remove(), 1000);
+    const pt = card.querySelector<HTMLElement>(':scope > .pt');
+    if (pt) animate(pt, [{ scale: '1', filter: 'none' }, { scale: '1.3', filter: 'brightness(1.6) drop-shadow(0 0 5px #7dffae)', offset: .3 }, { scale: '1', filter: 'none' }], 1000, 'ease-out');
   }
   /**
    * A mana sai do terreno que acabou de virar e voa até o custo que falta pagar, na caixa de ação; com `player`, ela foi
