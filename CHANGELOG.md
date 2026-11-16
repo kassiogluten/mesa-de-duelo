@@ -8,6 +8,20 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.192.0] - 2026-11-16
+
+### Novo
+
+- **Dados em 3D.** Do d4 ao d20, o dado que uma carta manda rolar agora tem volume: entra girando e quicando e para com o resultado de frente para você, com os números das faces vizinhas à mostra. O sorteio de quem começa também rola os d6 em 3D, cada um no seu lugar. O d2 e o d100 continuam como antes. Aparece com os efeitos completos; com os efeitos leves ou com movimento reduzido, os dados ficam como eram.
+
+### Corrigido
+
+- **Dado do sorteio no lugar certo.** No sorteio de quem começa, o dado da primeira rodada parava um pouco ao lado do lugar dele e só no fim pulava para o lugar certo; agora para exatamente onde fica.
+- **Nenhuma carta voa por cima dos dados.** No sorteio de quem começa, as cartas da sua mão inicial voavam até a mão por cima da caixa dos dados enquanto eles ainda rolavam. Agora a mão inicial só chega depois que os dados saem da mesa, ou depois que você escolhe quem começa. As lupas das cartas que ainda estão a caminho também não aparecem mais flutuando nos lugares vazios.
+- **A mão inicial desce direto até a mesa.** Ao tocar em Manter, o leque da mão inicial pulava para o canto da tela e só depois ia para a mão. Agora as cartas descem direto do meio da mesa até a mão, cada uma com a sua lupa.
+- **Dado 3D desde o começo da partida.** O sorteio de quem começa rolava o dado chapado, porque os efeitos da mesa ainda estavam carregando quando a partida abria. Agora eles começam a carregar quando você toca em Jogar, e o sorteio espera por eles por um instante antes de rolar.
+- **Sem elipse no meio da mesa.** Em alguns computadores aparecia uma elipse grande, de borda serrilhada, no meio da mesa, onde as bordas começam a escurecer. Dentro dela, a luz de quem joga o turno e a poeira sumiam. Agora a luz aparece por igual na mesa inteira.
+
 ## [0.191.0] - 2026-11-16
 
 ### Mudou

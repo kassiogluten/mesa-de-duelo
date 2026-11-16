@@ -223,6 +223,15 @@ Pedido em 14/11/2026: mais ambientação e imersão. Decidido nesse dia: animaç
 - [x] Medir o custo (critério 9) com `scripts/medir-efeitos.mjs`. Feito em 15/11/2026 (números em [Medições](#medições)): a cena de dano passa; com a mesa parada e a CPU freada ela traz quadros longos, em parte por causa do WebGL emulado na CPU.
 - [ ] Medir no celular de entrada, junto com o critério 8.
 
+### Dado em 3D (feito em 16/11/2026)
+
+Pedido em 16/11/2026, como teste de 3D de verdade na camada: o WebGL é 3D, mas o PixiJS é um motor 2D, e até aqui o "3D" da mesa era perspectiva calculada à mão num `PerspectiveMesh` (voo da carta, moeda, dado chapado). Decidido nesse dia: 3D dentro do próprio PixiJS (sem Three.js, que somaria por volta de 150 KB gzip e um segundo contexto WebGL), começando pelo dado e usando o mesmo dado no sorteio de quem começa.
+
+- [x] `src/ui/gpu/diceGeometry.ts` (sem PixiJS, testado em `tests/dice-geometry.test.mjs`): d4, d6, d8, d10 (trapezoedro), d12 e d20 a partir dos vértices, com as faces achadas como casca convexa; números de 1 a N com as faces opostas somando N + 1; a rotação final que deixa o resultado de frente e em pé, com inclinação opcional.
+- [x] `src/ui/gpu/gpuDie.ts`: `Mesh` com `Geometry` própria (posição em 3D, normal da face, lugar na textura) e um `Shader` com `GlProgram` próprio. O vértice gira, projeta com perspectiva e devolve `w = 1/f` (textura em perspectiva correta); as faces de trás são descartadas pelo lado em que a câmera está, sem profundidade nem sentido dos triângulos (o dado é convexo, as faces da frente nunca se cobrem). Luz difusa, brilho de verniz e clarão no pouso no fragmento. Os números são pintados uma vez numa textura por dado (`paintOnce`).
+- [x] Onde aparece: o dado de carta (evento `die`) do d4 ao d20, inclinado para mostrar o volume; d2 e d100 continuam chapados. No sorteio de quem começa, o d6 rola no lugar e assenta bem de frente, do tamanho do dado em CSS que fica por baixo. Corrigido junto: o dado da GPU do sorteio assentava deslocado do de CSS na primeira rodada, porque era medido com a caixa ainda crescendo na entrada.
+- [x] Medido com `scripts/medir-efeitos.mjs --cenas dados` (cinco d20 seguidos), contra o dado chapado: ver [Medições](#medições).
+
 ### Fase 4 (decidir com números): o campo inteiro em WebGL
 
 Só se as medições mostrarem que o DOM é o gargalo no Commander com muitas permanentes **depois** dos itens de "mesa mais leve" do 114. Seria a maior mudança: clique e toque por cálculo de posição, Tab e leitor de tela com uma cópia invisível em DOM, temas e marcadores redesenhados na GPU. Vira uma spec própria, se chegar a esse ponto.
@@ -349,3 +358,16 @@ O que diz:
 - **Mesa parada:** com a CPU normal, nada (zero quadros longos com e sem). Freada, a mesa viva **traz** quadros longos que não existiam (4 com a CPU 4×, e 16 contra 7 com 6×): o critério 9 não passa aí. A coluna "freio medido" sobe junto (6,6× contra 4,1×): o WebGL deste navegador é o SwiftShader, que desenha o shader na CPU e disputa os núcleos com a página, então parte do peso é da emulação e não aconteceria numa placa de vídeo de verdade. Quem decide é o celular de entrada (critério 8). Na mesa real, o automático já para a mesa viva no degrau 2 quando os quadros caem abaixo de 30 por segundo.
 - **Dano:** a mediana com a mesa viva fica dentro da faixa das medições sem ela com a CPU 4× (308 contra 242–309 ms) e 6× (479 contra 336–501 ms), e com a CPU 1× o p95 é até menor (139 contra 175 ms). Critério 9 cumprido nessa cena.
 - **Atenção, fora do critério 9:** a cena `dano` ficou bem mais pesada que na fase 3 mesmo sem a mesa viva (9 quadros longos com a CPU 1×, contra 0 em 14/11, e cerca de 3 s de bloqueio com 4×, contra 2 ms). Muita coisa entrou na cena desde a 0.169.0 (momentos de impacto, mesa reagindo, faíscas, rachaduras ao destruir), e a máquina pode ter estado mais ocupada. Vale um rastro do Chrome na cena antes de concluir.
+
+### Dado em 3D (16/11/2026)
+
+`node scripts/medir-efeitos.mjs --cenas dados --cpu 1,4 --vezes 3`, com `gpu=1`, contra o dado chapado de antes (desligado o 3D só para a medição). Mediana e faixa de 3 medições.
+
+| cena | CPU | versão | quadros longos | p95 (ms) | bloqueio (ms) | intervalo p95 (ms) |
+|---|---|---|---|---|---|---|
+| dados | 1× | 3D | 0 | 0 | 0 | 16,8 |
+| dados | 1× | chapado | 0 | 0 | 0 | 16,7 |
+| dados | 4× | 3D | 1 (0–4) | 78 (0–96) | 0 (0–47) | 16,8 (16,7–83,4) |
+| dados | 4× | chapado | 0 (0–1) | 0 (0–68) | 0 | 33,3 |
+
+O que diz: com a CPU normal, nenhum dos dois traz quadro longo. Freada 4×, as faixas se cruzam (o pior quadro do 3D foi desenho e layout, sem script, e uma das três medições teve 82 tarefas longas que as outras não tiveram); com WebGL emulado na CPU, não dá para separar o dado do ruído. O desenho do dado em si é pequeno (até 20 faces, um desenho por dado); o custo de uma vez é compilar o shader e pintar a textura dos números no primeiro dado da partida.

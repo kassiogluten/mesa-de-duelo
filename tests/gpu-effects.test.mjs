@@ -115,6 +115,18 @@ test('without the GPU layer, every effect is refused (the caller draws it in CSS
   port.clear(); port.release();
 });
 
+test('the starting roll never waits for a GPU layer that will not come (light effects, no WebGL2, reduced motion)', async () => {
+  const root = { hidden: false };
+  const port = createGpuPort(root, { host: () => root, reduced: () => false });
+  const started = Date.now();
+  assert.equal(await port.whenReady(5000), false, 'without WebGL2 it answers at once');
+  port.warm();
+  assert.equal(port.ready(), false, 'warming without WebGL2 loads nothing');
+  assert.ok(Date.now() - started < 1000);
+  const reduced = createGpuPort(root, { host: () => root, reduced: () => true });
+  assert.equal(await reduced.whenReady(5000), false);
+});
+
 test('without WebGL2 the automatic option just uses the CSS effects, silently, and nothing is saved', () => {
   stored.clear();
   const root = { hidden: false };

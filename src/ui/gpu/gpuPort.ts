@@ -88,13 +88,27 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     const d = decision();
     if (d.use !== 'gpu' || runtime || loading?.gen === generation || idle !== null || root.hidden) return;
     const gen = ++generation;
-    const start = () => {
-      idle = null;
-      const current = loading = { gen };
-      load(gen).catch(() => { /* Sem o pacote (rede, navegador): os efeitos continuam em CSS. */ }).finally(() => { if (loading === current) loading = null; });
-    };
+    const start = () => { idle = null; startLoad(gen); };
     const ric = globalThis.requestIdleCallback;
     idle = ric ? ric(start, { timeout: 4000 }) as unknown as number : globalThis.setTimeout(start, 1200) as unknown as number;
+  }
+  /**
+   * Carrega já, sem esperar a mesa ficar ociosa (e mesmo com ela ainda escondida): a partida foi pedida e a mesa vai
+   * abrir. O sorteio de quem começa vem logo na abertura, com a mesa ainda sendo montada; carregando enquanto o
+   * servidor prepara a partida, a camada fica pronta para o dado rolar em 3D.
+   */
+  function warm() {
+    if (runtime || decision().use !== 'gpu') return;
+    if (idle !== null) { (globalThis.cancelIdleCallback ?? clearTimeout)(idle); idle = null; }
+    if (loading?.gen === generation) return;
+    const gen = ++generation;
+    startLoad(gen);
+    // A partida não abriu (o servidor recusou, a pessoa desistiu): sem a mesa à vista, a camada não fica ligada à toa.
+    if (root.hidden) setTimeout(() => { if (root.hidden && generation === gen) release(); }, 30_000);
+  }
+  function startLoad(gen: number) {
+    const current = loading = { gen };
+    load(gen).catch(() => { /* Sem o pacote (rede, navegador): os efeitos continuam em CSS. */ }).finally(() => { if (loading === current) loading = null; });
   }
   /** Saiu da mesa ou trocou para leves: desfaz o canvas e o contexto WebGL. */
   function release() {
@@ -107,7 +121,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   if (typeof MutationObserver !== 'undefined') new MutationObserver(() => { if (root.hidden) { release(); govern(); } else prepare(); }).observe(root, { attributes: true, attributeFilter: ['hidden'] });
 
   const port = {
-    prepare, release,
+    prepare, release, warm,
     /** A opção "Efeitos" mudou. */
     refresh() { govern(); if (decision().use === 'gpu') prepare(); else release(); },
     /**
@@ -131,6 +145,21 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     /** Para os testes e a medição: quadros desenhados e efeitos vivos (sem a camada, nada). */
     stats: () => runtime?.layer.stats() ?? null,
     ready: () => !!runtime,
+    /**
+     * Carrega agora, sem esperar a mesa ficar ociosa, e avisa quando a camada estiver pronta ou em `ms`, o que vier
+     * primeiro (false: sem ela, os efeitos saem em CSS). O sorteio de quem começa, logo na abertura da partida, espera
+     * por ela para o dado rolar em 3D.
+     */
+    whenReady(ms: number): Promise<boolean> {
+      if (runtime) return Promise.resolve(true);
+      if (decision().use !== 'gpu' || root.hidden) return Promise.resolve(false);
+      warm();
+      const until = performance.now() + ms;
+      return new Promise(resolve => {
+        const check = () => { if (runtime) resolve(true); else if (performance.now() >= until || !loading) resolve(!!runtime); else setTimeout(check, 40); };
+        check();
+      });
+    },
     /** Para os testes: põe a mesa num degrau do regulador, como se os quadros tivessem pedido. */
     setTier,
     /** Para os testes: carrega agora, sem esperar a mesa ficar ociosa. */

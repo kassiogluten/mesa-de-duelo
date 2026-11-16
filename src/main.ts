@@ -217,6 +217,7 @@ async function startMatch(you: DeckData, opp: DeckData | null, config: MatchConf
   const client = await requireForge(FORGE_URL);
   lastMatch = [you, opp, config, opponents];
   lobby.setStatus('Preparando a mesa…');
+  forgeTable.warmEffects();
   await requestMatch(client, {url: FORGE_URL, deck: you, opp: opp ?? undefined, opponents, config, net: false}, {type: 'start', you: forgeDeck(you), bracket: deckBracket(you), opponent: opp ? aiDeck(opp) : null, ...(opponents ? { opponents: opponents.map(d => d ? aiDeck(d) : null) } : {}), config, aiStyle: chosenAiStyle(), ...playerName(), ...matchOwner(you)});
 }
 /** O estilo do computador escolhido na tela inicial (ou vindo da conta). */
@@ -224,6 +225,7 @@ function chosenAiStyle() { const v = load(KEYS.aiStyle); return isAiStyle(v) ? v
 async function startNetMatch(you: DeckData, url: string, message: ClientMessage, config?: MatchConfig, lab = false) {
   const client = await requireForge(url);
   lobby.setStatus(message.type === 'host' ? 'Criando a sala…' : 'Entrando na sala…');
+  forgeTable.warmEffects();
   await requestMatch(client, {url, deck: you, config, net: true, lab}, message);
 }
 /** Cria a sala de teste do Laboratório; quem cria joga como Jogador 1. */

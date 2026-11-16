@@ -50,6 +50,10 @@ export interface Motion {
   ambience(scene: AmbienceScene): void;
   /** Sorteio de quem começa: o dado de `el` rola na camada GPU, no lugar, e para em `result` na metade de `hold`. Devolve se rolou na GPU. */
   rollDie(el: Element, result: number, hold: number): boolean;
+  /** Espera a camada GPU (carregando já, sem esperar a mesa ociosa) por até `ms`; devolve se ela está pronta. */
+  effectsReady(ms: number): Promise<boolean>;
+  /** A partida foi pedida: a camada GPU começa a carregar já, para estar pronta na abertura. */
+  warmEffects(): void;
   /** Um anel de luz na cor pedida em volta de `el` (o dado do vencedor do sorteio). */
   glow(el: Element, color: string): void;
   /** Setas de alvo que acabaram de aparecer: cada uma nasce num traço de luz até o alvo. */
@@ -140,7 +144,9 @@ export function createMotion(root: HTMLElement): Motion {
             // Mudou de tamanho também (o campo apertou, a carta foi para outra fileira): cresce ou encolhe junto com o passo.
             const grow = before.w / at.w;
             const sized = Math.abs(grow - 1) > .03 && grow > .3 && grow < 3;
-            animate(slot, [{ translate: `${dx}px ${dy}px`, ...(sized ? { scale: String(+grow.toFixed(3)) } : {}) }, { translate: '0 0', ...(sized ? { scale: '1' } : {}) }],
+            // Na mão, vai o lugar inteiro (a carta e a lupa ao lado): a lupa não fica para trás, já no lugar novo.
+            const moving = slot === el ? el.closest<HTMLElement>('.hand-slot') ?? el : slot;
+            animate(moving, [{ translate: `${dx}px ${dy}px`, ...(sized ? { scale: String(+grow.toFixed(3)) } : {}) }, { translate: '0 0', ...(sized ? { scale: '1' } : {}) }],
               SETTLE.duration, SETTLE.easing);
           }
         } else if (state.primed && !options.semantic) {
@@ -196,8 +202,10 @@ export function createMotion(root: HTMLElement): Motion {
       const at = center(el);
       if (!at || reduced()) return false;
       const font = getComputedStyle(el).fontFamily || 'sans-serif';
-      return kit.gpu.play('die', { at: { ...at, w: at.w * 1.05, h: at.h * 1.05 }, result: String(result), sides: 6, hold, font, travel: 0 });
+      return kit.gpu.play('die', { at: { ...at, w: at.w * 1.05, h: at.h * 1.05 }, result: String(result), sides: 6, hold, font, travel: 0, tilt: 0 });
     },
+    warmEffects() { if (!reduced()) kit.gpu.warm(); },
+    effectsReady: ms => reduced() ? Promise.resolve(false) : kit.gpu.whenReady(ms),
     glow(el, color) { const at = center(el); if (at) kit.gpu.play('arrive', { at, color, size: Math.max(at.w, at.h) * 1.8 }); },
     arrowsBorn(arrows) {
       if (document.hidden || root.hidden) return;

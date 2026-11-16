@@ -100,7 +100,7 @@ import { createInputActions } from './tableInputActions';
 import { createUiActions } from './tableUiActions';
 import { attachTableClicks } from './tableClicks';
 import { finder } from './dom';
-import { applyStartingRoll, currentStartingRoll } from './startingRoll';
+import { applyStartingRoll, currentStartingRoll, rollingNow } from './startingRoll';
 
 export interface ForgeTableOptions {
   onExit(): void;
@@ -117,6 +117,8 @@ export interface ForgeTableOptions {
 
 export interface ForgeTableView {
   attach(client: ForgeClient, portraits: (string | undefined)[]): void;
+  /** A partida foi pedida ("Preparando a mesa…"): os efeitos da mesa começam a carregar, para estarem prontos na abertura. */
+  warmEffects(): void;
   render(): void;
   notice(text: string, error?: boolean, detail?: NoticeDetail): void;
   /** Conexão caiu e o navegador está tentando voltar sozinho. */
@@ -470,7 +472,10 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     });
     root.querySelectorAll<HTMLElement>('.row, .hand, .exile-shelf-track, .table-seat > .field').forEach(el => { const position = scrollPositions.get(el.id); el.scrollLeft = position?.left ?? 0; el.scrollTop = position?.top ?? 0; });
     applyOpeningPresentation(root, s, currentStartingRoll(timeline.history));
-    applyStartingRoll(root, s, timeline.history, timeline.matchId, motion);
+    applyStartingRoll(root, s, timeline.history, timeline.matchId, motion, () => {
+      const now = client?.state;
+      if (now?.type === 'state') dealOpeningHand(shownState() ?? now, presentation.silent());
+    });
     modal.restore(savedFocus);
     syncModal();
     layoutCounters(root);
@@ -510,8 +515,15 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       if (arrived.length || cleared.length) motion.dizzy(arrived, cleared);
     }
     dizzyBefore = tonto; dizzyMatch = timeline.matchId;
-    // Mão inicial: as cartas saem do grimório; num mulligan, a mão anterior volta antes.
+    dealOpeningHand(s, silently);
+  }
+  /**
+   * Mão inicial: as cartas saem do grimório; num mulligan, a mão anterior volta antes. Com o sorteio de quem começa na
+   * mesa, a compra espera ele sair (nenhuma carta voa por cima dos dados): o fim do sorteio chama de novo.
+   */
+  function dealOpeningHand(s: FState, silently: boolean) {
     if (s.input.opening === 'mulligan' && !s.gameOver) {
+      if (rollingNow(root)) return;
       const ids = (s.players.find(p => p.id === s.you)?.hand ?? []).map(c => c.id).join(',');
       if (ids && ids !== dealtHand) {
         const again = !!dealtHand;
@@ -573,6 +585,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       settings.syncPassLevel(); stops.sync(); settings.syncTurnNotice(); settings.syncDevice(); syncModal();
     },
     render,
+    warmEffects: () => motion.warmEffects(),
     notice,
     reconnecting(attempt) {
       if (attempt === 1) errors.record('conexão', 'A conexão caiu; tentando voltar sozinho.');

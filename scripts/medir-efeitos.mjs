@@ -6,7 +6,7 @@
 //   node scripts/medir-efeitos.mjs [opções]
 //
 //   --cpu 1,4,6           freio de CPU (1 = sem freio); uma medição por valor
-//   --cenas dano,voos     só estas cenas (dano, voos, campo-cheio, parada)
+//   --cenas dano,voos     só estas cenas (dano, voos, campo-cheio, parada, dados)
 //   --vezes 3             quantas vezes medir cada cena em cada freio (a tabela mostra a mediana e a faixa)
 //   --viewport 1366x768   tamanho da janela (CSS px)
 //   --escala 1            pixels por pixel de CSS (1 ou 2)
@@ -31,6 +31,8 @@ const SCENES = {
   'campo-cheio': 'cheio,cheio,tokens:20,move:attack,move:destroy',
   // A mesa parada com a mão dada: o que sobra é a mesa viva (critério 9) e as animações de estado.
   parada: 'pausa,pausa,pausa,pausa,pausa',
+  // Cinco d20 seguidos no meio da mesa (o dado em 3D).
+  dados: 'x:die,x:die,x:die,x:die,x:die',
 };
 
 const opts = { cpu: '1', cenas: Object.keys(SCENES).join(','), vezes: '1', viewport: '1366x768', escala: '1', query: '', json: '' };
@@ -39,7 +41,7 @@ for (let i = 0; i < args.length; i++) if (args[i].startsWith('--')) opts[args[i]
 const rates = opts.cpu.split(',').map(Number).filter(n => n >= 1);
 const scenes = opts.cenas.split(',').filter(name => SCENES[name]);
 const times = Math.max(1, Number(opts.vezes) || 1);
-if (!rates.length || !scenes.length) { console.error('Uso: node scripts/medir-efeitos.mjs [--cpu 1,4,6] [--cenas dano,voos,campo-cheio,parada] [--vezes 3] [--viewport 1366x768] [--escala 1] [--query gpu=0] [--json saida.json]'); process.exit(1); }
+if (!rates.length || !scenes.length) { console.error('Uso: node scripts/medir-efeitos.mjs [--cpu 1,4,6] [--cenas dano,voos,campo-cheio,parada,dados] [--vezes 3] [--viewport 1366x768] [--escala 1] [--query gpu=0] [--json saida.json]'); process.exit(1); }
 
 const CLI = fileURLToPath(new URL('../node_modules/agent-browser/bin/agent-browser.js', import.meta.url));
 const session = `medir-efeitos-${process.pid}`;

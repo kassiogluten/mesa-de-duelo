@@ -200,7 +200,10 @@ export function createLibraryMotion(kit: MotionKit) {
       const to = center(card);
       if (!to) return;
       const size = { w: card.offsetWidth || to.w, h: card.offsetHeight || to.h };
-      card.style.opacity = '0'; hiddenCards.add(card);
+      // Some o lugar inteiro (a carta e a lupa ao lado dela) até a carta chegar: antes, as lupas das que ainda vinham
+      // ficavam flutuando nos lugares vazios.
+      const slot = card.closest<HTMLElement>('.hand-slot') ?? card;
+      slot.style.opacity = '0'; hiddenCards.add(slot);
       const ghost = effect('presentation-piece draw-ghost deal-ghost', { ...to, ...size }, '<div class="back"></div>');
       copySleeve(ghost, libEl);
       ghost.style.opacity = '0';
@@ -210,8 +213,8 @@ export function createLibraryMotion(kit: MotionKit) {
       later(() => {
         remove(ghost);
         const now = root.querySelector<HTMLElement>(`#fHand [data-fid="${card.dataset.fid}"]`) ?? card;
-        if (hiddenCards.delete(card)) card.style.opacity = '';
-        now.style.opacity = '';
+        if (hiddenCards.delete(slot)) slot.style.opacity = '';
+        (now.closest<HTMLElement>('.hand-slot') ?? now).style.opacity = '';
         arrived(now, flipped);
       }, start + 420 + i * 90);
     });

@@ -40,6 +40,16 @@ export function openingHandCount(hand: Pick<FCard, 'land' | 'name'>[]) {
   return `${lands} ${lands === 1 ? 'terreno' : 'terrenos'} · ${spells} ${spells === 1 ? 'mágica' : 'mágicas'}`;
 }
 
+/**
+ * A mão sai do meio da mesa para o lugar dela: a transição de CSS da mão (que, com a mão espiando por baixo, só começa
+ * depois de um quarto de segundo) termina já, e as cartas deslizam do leque até a mão pela animação de cada carta, que
+ * mede o lugar final. Sem isso, o leque pulava para um lugar errado no meio do caminho.
+ */
+function settleHand(arena: HTMLElement) {
+  if (typeof CSSTransition === 'undefined') return;
+  arena.querySelector('.hand')?.getAnimations?.({ subtree: true }).forEach(a => { if (a instanceof CSSTransition) a.finish(); });
+}
+
 /** Present the engine's opening decisions in the center, without changing their actions. */
 export function applyOpeningPresentation(root: HTMLElement, state: FState, roll?: PresentationEvent) {
   const arena = root.querySelector<HTMLElement>('.arena.forge');
@@ -51,6 +61,7 @@ export function applyOpeningPresentation(root: HTMLElement, state: FState, roll?
   if (!opening) {
     delete arena.dataset.opening;
     heading?.remove(); shade?.remove();
+    if (previous) settleHand(arena);
     return;
   }
   arena.dataset.opening = opening;

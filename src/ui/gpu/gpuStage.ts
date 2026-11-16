@@ -1,7 +1,8 @@
-// Momentos do meio da mesa na camada GPU: a moeda girando com espessura e sombra, o dado rolando com perspectiva, e o fim da partida (raios e confete para quem vence, racha e cinzas para quem perde).
+// Momentos do meio da mesa na camada GPU: a moeda girando com espessura e sombra, o dado rolando (em 3D do d4 ao d20), e o fim da partida (raios e confete para quem vence, racha e cinzas para quem perde).
 import { Container, PerspectiveMesh, Sprite } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
+import { solidDie } from './gpuDie';
 import { easeOut, paintOnce, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
 
 export interface StageParams {
@@ -10,8 +11,12 @@ export interface StageParams {
    * `hold` ms. `font` é a família da letra da mesa.
    */
   coin: { at: Point; heads: boolean; label: string; hold: number; font: string };
-  /** Dado: entra rolando, trocando de número a cada volta, quica e para em `result`. `sides` vai no canto (d6, d20). */
-  die: { at: Point; result: string; sides: number; hold: number; font: string; travel?: number };
+  /**
+   * Dado: entra rolando, quica e para em `result`. Do d4 ao d20, em 3D de verdade (`gpuDie.ts`), parando com o resultado
+   * de frente, inclinado `tilt` radianos (0: bem de frente); nos outros (d2, d100), o dado chapado, trocando de número a
+   * cada volta, com `sides` no canto.
+   */
+  die: { at: Point; result: string; sides: number; hold: number; font: string; travel?: number; tilt?: number };
   /** Quem venceu: raios dourados girando atrás do retrato, uma onda de luz e confete. */
   victory: { at: Point; delay?: number };
   /** Quem perdeu: o retrato racha, solta cinzas que caem e fumaça escura. */
@@ -143,8 +148,11 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
       };
     });
   },
-  die(layer, s, { at, result, sides, hold, font, travel = 130 }) {
+  die(layer, s, { at, result, sides, hold, font, travel = 130, tilt = .38 }) {
     const { x, y } = layer.local(at.cx, at.cy);
+    const value = Number(result);
+    const solid = Number.isInteger(value) && value >= 1 && value <= sides ? solidDie(layer, s, { at: { x, y }, size: at.w, sides, result: value, hold, font, travel, tilt }) : null;
+    if (solid) return solid;
     const size = at.w, n = Math.max(2, sides);
     // Os números que passam enquanto ele rola (como no dado em CSS) e, por último, o resultado.
     const shown = Array.from({ length: 6 }, (_, i) => String(((Number(result) || 1) + i * 7) % n + 1));

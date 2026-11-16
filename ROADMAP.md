@@ -531,6 +531,7 @@ descoberto e o plano de cada fase: `docs/spec-mesa-webgl.md`. Se sobrepõe ao it
 - [ ] Conferir num celular de entrada de verdade (critério 8, junto com a fase 2), incluindo a cena de dano: decidido em 14/11/2026 que é o celular quem diz se o voo da carta na GPU precisa ficar mais leve. Sem aparelho disponível nesse dia. Em 15/11/2026, ainda sem aparelho: no celular, conferir também a mesa viva parada (critério 9) e a cena de dano, que ficou mais pesada desde a fase 3 mesmo sem a mesa viva (ver a medição de 15/11 na spec).
 - [x] Fase 3b: o que sobrou em CSS. Feita em 14/11/2026 (detalhes na spec): animações de estado refeitas para a placa de vídeo animar sozinha (a mesa parada com o campo cheio gastava um terço da CPU; caiu para cerca de um sétimo), compra e mão inicial de costas na GPU com a sua carta virando no ar, mana em orbes, moeda, dado, fim da partida, dobra, vida, marcadores e os brilhos de chegada. Ficaram em CSS: moer, embaralhar, vidência, shuriken, sorteio de quem começa e as setas de alvo (foram para a GPU em 14/11/2026, item 131).
 - [x] Mesa viva (14/11/2026, `novidades-pendentes/mesa-viva`): um shader por baixo das cartas, com a luz no campo de quem joga, poeira, combate e vinheta da vida baixa, a 30 quadros por segundo em meia resolução (decidido nesse dia: contínua, junto com "Efeitos"; o critério 2 vale só para a camada dos efeitos, e entrou o critério 9). Medida com `scripts/medir-efeitos.mjs` em 15/11/2026 (critério 9, números na spec): passa na cena de dano; com a mesa parada e a CPU freada traz quadros longos, em parte pelo WebGL emulado na CPU. Falta o celular de entrada (abaixo).
+- [x] Dado em 3D (16/11/2026, `novidades-pendentes/dado-3d`): o primeiro objeto em 3D de verdade na camada, dentro do PixiJS (malha e shader próprios, sem biblioteca nova), do d4 ao d20, também no sorteio de quem começa. Medido na cena `dados` (detalhes na spec): sem quadro longo com a CPU normal; com a 4×, dentro do ruído do WebGL emulado.
 - [ ] Fase 4, só se os números pedirem depois do 114: o campo inteiro em WebGL (spec própria).
 
 ## 129. Torneios suíços dentro do sistema
@@ -624,6 +625,16 @@ Pedido em 16/11/2026. Hoje a mesa inteira está em português: os textos estão 
 - [ ] Fase 2: a partida (textos da mesa, os pontos que leem o texto do Forge, o servidor no idioma de cada jogador e os textos próprios do servidor).
 - [ ] Fase 3: conteúdo (nomes dos decks prontos, Como jogar, Laboratório, Novidades e a página de apresentação do item 104).
 - [ ] Fase 4: revisão do inglês por quem joga Magic, lançamento, contagem por idioma e regras novas no `CLAUDE.md` e no `/entregar`.
+
+## 137. Ordem das animações ao entrar na partida
+
+Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animações ao mesmo tempo e elementos que atrapalham. Gravados nesse dia três vídeos da entrada (Commander contra o computador, com o relógio contado do clique em Jogar), em `~/Vídeos/mesa-entrada-na-partida/`: `4-jogadores-oponente-comeca.mp4`, `2-jogadores-empate-e-oponente-comeca.mp4` e `2-jogadores-voce-escolhe.mp4`. O jogador vai apontando o que mudar; cada item abaixo é um pedido dele.
+
+- [x] Nenhuma carta voa por cima da tela dos dados. Hoje, quando o computador ganha o sorteio, as cartas de costas da mão inicial voam por cima da caixa dos dados enquanto eles rolam (vídeo de 4 jogadores, por volta de 0:01). A compra da mão inicial só começa depois que os dados param ou depois que quem começa é escolhido. Quando você ganha o sorteio, a mão já chega depois da escolha.
+- [x] A mão inicial vai até a mão no campo. Ao tocar em Manter, a tela da mão inicial some de uma vez e a mesa aparece com o leque já em outro lugar, descendo até a mão (vídeo de 2 jogadores com empate, de 0:09.5 a 0:10.4). As cartas devem sair do lugar em que estavam na tela da mão inicial e ir, animadas, até a mão no campo.
+  Feitos em 16/11/2026 (`novidades-pendentes/entrada-na-partida`). A compra espera o sorteio sair da mesa. Ao manter, a transição de CSS da mão termina na hora, e cada carta desliza do leque até a mão junto com a sua lupa. Também nesse dia: as lupas das cartas ainda a caminho não aparecem mais nos lugares vazios. Os efeitos da mesa começam a carregar no clique em Jogar, e o sorteio espera por eles (até 1,5 s) para rolar o dado em 3D; antes, a primeira rodada saía sempre chapada.
+- [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
+- [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
 
 ## 138. Botões da caixa de decisão mais bem distribuídos
 

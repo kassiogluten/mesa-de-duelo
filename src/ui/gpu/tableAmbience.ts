@@ -85,7 +85,10 @@ void main() {
   light += flash * (1. - edge) * .06;
   // Momento grande: a mesa toda escurece por baixo das cartas.
   dark = mix(dark, 1., dim * .55);
-  color = vec4(light, dark);
+  // Com alfa pré-multiplicado, a cor não pode passar do alfa: no meio da mesa, onde a vinheta não escurece (alfa 0), a
+  // luz ficava sem definição, e o navegador a descartava. Aparecia uma elipse nítida no meio da mesa, onde a vinheta
+  // começa. O alfa vai até a luz mais forte; o fundo escurece por isso no máximo uns 2%.
+  color = vec4(light, max(dark, max(light.r, max(light.g, light.b))));
 }`;
 
 /** Um toque do jogo na mesa viva: clarão na cor dada, tremor (0 a 1) e escurecer por `ms`. */

@@ -1,4 +1,22 @@
 {
+  "0.192.0": {
+    "Dados em 3D": [
+      { "img": "0.192.0/dados.webp", "legenda": "Do d4 ao d20, cada dado assentado com o resultado de frente e os números das faces vizinhas à mostra." },
+      { "img": "0.192.0/sorteio.webp", "legenda": "No sorteio de quem começa, os d6 de cada jogador girando no ar, cada um no seu lugar." }
+    ],
+    "Dado do sorteio no lugar certo": [
+      { "img": "0.192.0/sorteio-assentado.webp", "legenda": "Os dados do sorteio assentados exatamente sobre o lugar de cada jogador, com o número que cada um tirou." }
+    ],
+    "Nenhuma carta voa por cima dos dados": [
+      { "img": "0.192.0/compra-depois-dos-dados.webp", "legenda": "Os dados já saíram da mesa: só então as cartas da mão inicial vêm do grimório, sem lupas soltas nos lugares que ainda estão vazios." }
+    ],
+    "A mão inicial desce direto até a mesa": [
+      { "img": "0.192.0/mao-desce-para-a-mesa.webp", "legenda": "Depois de Manter, o leque da mão inicial descendo inteiro até a mão, cada carta com a sua lupa." }
+    ],
+    "Dado 3D desde o começo da partida": [
+      { "img": "0.192.0/sorteio-3d.webp", "legenda": "O primeiro sorteio da partida já rola com os dados em 3D." }
+    ]
+  },
   "0.191.0": {
     "A carta que resolve espera a escolha na pilha": [
       { "img": "0.191.0/aguardando-sua-escolha.webp", "legenda": "O Mycoloth continua aceso no topo da pilha, com o selo Aguardando sua escolha, enquanto a caixa de ação pede as criaturas para devorar, sem repetir a carta." },
