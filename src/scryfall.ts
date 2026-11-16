@@ -6,6 +6,7 @@ import { request } from './scryfallApi';
 import { faceView, images, isFaceAlias, legalityFresh, forgeSpelling, lookupName, printKey, slim, slimPt, validCard, withDefaultArt, withPrinting, type Images, type PrintImages, type Printing, type ScryCard } from './scryfallCards';
 import { preloadImages } from './scryfallImages';
 import { mirrorUrls } from './scryfallMirror';
+import { serverCards, serverKey } from './serverCards';
 export { legalityFresh, type Printing, type ScryCard } from './scryfallCards';
 export { preloadImages } from './scryfallImages';
 
@@ -121,12 +122,39 @@ export function cachePut(card: ScryCard) {
 }
 
 /**
- * Completa as cartas com a impressão em português, em lotes de buscas `lang:pt (!"A" or !"B" …)`.
- * Cartas sem tradução ficam marcadas para não serem procuradas de novo; falha de rede não marca nada.
+ * Cartas no formato do Scryfall pelos nomes: primeiro pelo cache do servidor (que já traz a impressão em português), e
+ * direto do `/cards/collection` o que ele não trouxe.
+ */
+async function collectionByNames(names: string[]): Promise<any[]> {
+  const server = await serverCards(names);
+  const data = [...server.data];
+  const direct = [...new Set(names.filter(n => server.later.has(serverKey(n))))];
+  for (let i = 0; i < direct.length; i += 75) {
+    const chunk = direct.slice(i, i + 75);
+    const { json } = await request('/cards/collection', { identifiers: chunk.map(name => ({ name: lookupName(name) })) });
+    data.push(...json?.data ?? []);
+  }
+  return data;
+}
+
+/**
+ * Completa as cartas com a impressão em português: a do cache do servidor ou, sem ela, em lotes de buscas
+ * `lang:pt (!"A" or !"B" …)` no Scryfall. Cartas sem tradução ficam marcadas para não serem procuradas de novo; falha
+ * de rede não marca nada.
  */
 async function addPortuguese(cards: ScryCard[]) {
   // Registros guardados pelo nome de uma face apontam para a carta inteira: a tradução é gravada nela.
-  const todo = [...new Map(cards.filter(c => !c.ptChecked).map(c => [c.name, cacheGet(c.name) ?? c])).values()];
+  const pending = [...new Map(cards.filter(c => !c.ptChecked).map(c => [c.name, cacheGet(c.name) ?? c])).values()];
+  if (!pending.length) return;
+  const server = new Map((await serverCards(pending.map(c => c.name))).data.map(d => [String(d.name).toLowerCase(), d]));
+  const todo: ScryCard[] = [];
+  for (const c of pending) {
+    const d = server.get(c.name.toLowerCase());
+    if (!d || !('pt' in d)) { todo.push(c); continue; }
+    if (d.pt) c.pt = slimPt(d.pt);
+    c.ptChecked = true;
+    cachePut(c);
+  }
   for (let i = 0; i < todo.length; i += 30) {
     const chunk = todo.slice(i, i + 30);
     const q = `lang:pt (${chunk.map(c => `!"${c.name.replace(/"/g, '')}"`).join(' or ')})`;
@@ -151,14 +179,10 @@ export async function fetchByNames(names: string[], refreshLegality = false): Pr
     const c = cachedCard(n);
     if (c && (!refreshLegality || legalityFresh(c))) out.set(n.toLowerCase(), c); else missing.push(n);
   }
-  for (let i = 0; i < missing.length; i += 75) {
-    const chunk = missing.slice(i, i + 75);
-    const { json } = await request('/cards/collection', { identifiers: chunk.map(name => ({ name: lookupName(name) })) });
-    for (const d of json?.data ?? []) {
-      const s = slim(d);
-      cachePut(s);
-      out.set(s.name.toLowerCase(), s);
-    }
+  for (const d of await collectionByNames(missing)) {
+    const s = slim(d);
+    cachePut(s);
+    out.set(s.name.toLowerCase(), s);
   }
   await addPortuguese([...out.values()]);
   return out;
@@ -225,17 +249,16 @@ export async function resolveCardNames(names: string[]): Promise<{ found: Map<st
     const c = cachedCard(n);
     if (c) found.set(n.toLowerCase(), c.name); else todo.push(n);
   }
-  for (let i = 0; i < todo.length; i += 75) {
-    const chunk = todo.slice(i, i + 75);
-    const { json } = await request('/cards/collection', { identifiers: chunk.map(name => ({ name: lookupName(name) })) });
+  if (todo.length) {
+    const data = await collectionByNames(todo);
     const byName = new Map<string, string>();
-    for (const d of json?.data ?? []) {
+    for (const d of data) {
       const s = slim(d);
       cachePut(s);
       byName.set(s.name.toLowerCase(), s.name);
     }
-    for (const d of json?.data ?? []) for (const f of d.card_faces ?? []) if (f.name && !byName.has(String(f.name).toLowerCase())) byName.set(String(f.name).toLowerCase(), d.name);
-    for (const n of chunk) { const hit = byName.get(n.toLowerCase()); if (hit) found.set(n.toLowerCase(), hit); }
+    for (const d of data) for (const f of d.card_faces ?? []) if (f.name && !byName.has(String(f.name).toLowerCase())) byName.set(String(f.name).toLowerCase(), d.name);
+    for (const n of todo) { const hit = byName.get(n.toLowerCase()); if (hit) found.set(n.toLowerCase(), hit); }
   }
   const missing: string[] = [];
   const ambiguous: { name: string; options: string[] }[] = [];

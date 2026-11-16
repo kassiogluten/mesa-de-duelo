@@ -115,7 +115,7 @@ export function slim(c: any): ScryCard {
     cmc: c.cmc,
     rarity: c.rarity,
     legalities: c.legalities,
-    fetchedAt: Date.now(),
+    fetchedAt: typeof c.atualizada === 'number' ? c.atualizada : Date.now(),
     layout: c.layout,
     mana_cost: c.mana_cost ?? faces[0]?.mana_cost,
     type_line: c.type_line,
@@ -128,8 +128,9 @@ export function slim(c: any): ScryCard {
     faces: faces.length > 0 || undefined,
     faceNames: faces.length ? faces.map(f => f.name) : undefined,
     faceImages: faceImages.some(Boolean) ? faceImages : undefined,
-    pt: pt ? slimPt(c) : undefined,
-    ptChecked: pt || undefined,
+    // Vinda do cache do servidor (src/serverCards.ts): já com a impressão em português procurada.
+    pt: pt ? slimPt(c) : 'pt' in c ? c.pt ? slimPt(c.pt) : undefined : undefined,
+    ptChecked: pt || 'pt' in c || undefined,
   };
 }
 

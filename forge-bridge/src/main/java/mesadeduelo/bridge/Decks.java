@@ -20,6 +20,17 @@ final class Decks {
         } catch (java.io.IOException e) { throw new ExceptionInInitializerError(e); }
     }
 
+    /** Os nomes de todas as cartas dos decks prontos (lista, reserva e comandantes), para a pré-carga dos dados. */
+    static java.util.Set<String> cardNames() {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        for (JsonObject deck : LISTS.values())
+            for (String part : java.util.List.of("cards", "sideboard", "commanders"))
+                if (deck.has(part) && deck.get(part).isJsonArray())
+                    for (var e : deck.getAsJsonArray(part))
+                        if (e.isJsonObject() && e.getAsJsonObject().has("name")) out.add(e.getAsJsonObject().get("name").getAsString());
+        return out;
+    }
+
     static JsonObject template(String id) {
         JsonObject o = LISTS.get(id);
         if (o == null) o = LISTS.get("padrao-" + id);

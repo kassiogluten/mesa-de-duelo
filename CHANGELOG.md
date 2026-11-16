@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.187.0] - 2026-11-15
+
+### Mudou
+
+- **Cartas e traduções abrem mais rápido.** Os textos das cartas e a versão em português delas ficam guardados no nosso servidor e são entregues a todos os jogadores, em vez de cada aparelho buscar tudo no Scryfall. Um deck, a mesa ou o deck do adversário abrem com as cartas já em português na primeira vez, e os decks prontos já ficam guardados desde o começo. Se o servidor não tiver uma carta, ela é buscada direto no Scryfall, como antes.
+
 ## [0.186.0] - 2026-11-15
 
 ### Novo

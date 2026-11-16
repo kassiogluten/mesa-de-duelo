@@ -98,7 +98,7 @@ app.innerHTML = `
       <h2>Serviços de outras empresas</h2>
       <p>Algumas partes do jogo dependem de serviços de fora, que recebem o endereço IP e as informações normais de navegação de quem os acessa:</p>
       <ul>
-        <li>${ext('https://scryfall.com/docs/privacy', 'Scryfall')}: o navegador busca nele as imagens e os textos das cartas.</li>
+        <li>${ext('https://scryfall.com/docs/privacy', 'Scryfall')}: de onde vêm as imagens e os textos das cartas. O servidor do jogo guarda uma cópia do que já foi pedido; o navegador vai direto ao Scryfall nas buscas do construtor de decks e quando a cópia não está disponível.</li>
         <li>${ext('https://policies.google.com/privacy?hl=pt-BR', 'Google')}: as fontes do site (Google Fonts) e, se você usar, o login com Google.</li>
         <li>Moxfield e Archidekt: quando você importa um deck por link, é o servidor do jogo que busca a lista. O seu IP não é enviado a esses sites.</li>
         <li>A empresa de hospedagem do servidor, que guarda os dados descritos nesta página em nome do responsável.</li>
