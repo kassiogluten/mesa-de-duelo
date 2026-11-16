@@ -1,5 +1,78 @@
 [
   {
+    "nome": "Indominus Rex, Alpha: marcadores de habilidade",
+    "versao": "0.190.1",
+    "item": "Marcadores de habilidade em português e sem repetir",
+    "conferir": "Conjure o Indominus Rex, Alpha (os seis terrenos pagam) e, ao entrar, descarte as cinco criaturas da mão. Ele deve entrar com 7 marcadores (Voar, Iniciativa, Golpe duplo, Toque mortífero, Vínculo com a vida, Atropelar e Vigilância) e comprar 7 cartas. Na carta, cada habilidade aparece uma vez só, como marcador em português e com o ícone dela (\"Voar ×1\"), sem \"Flying\" e sem repetir a habilidade ao lado; o selo resumido conta 7.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Indominus Rex, Alpha",
+            "Vampire Nighthawk",
+            "Serra Angel",
+            "Colossal Dreadmaw",
+            "Mirri, Cat Warrior",
+            "Boros Swiftblade"
+          ],
+          "library": [
+            "Island",
+            "Swamp",
+            "Forest",
+            "Island",
+            "Swamp",
+            "Forest",
+            "Island",
+            "Swamp",
+            "Forest",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Swamp"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": []
+        }
+      ]
+    }
+  },
+  {
     "nome": "Mesa cheia para medir FPS",
     "versao": "0.177.0",
 

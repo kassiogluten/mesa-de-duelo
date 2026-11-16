@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { proliferateToggle, proliferateSuggestion, proliferateClear, proliferateSummary, proliferateOkLabel, proliferatePanelHTML, proliferateBoardClass, counterName } = await import('../src/ui/proliferate.ts');
+const { proliferateToggle, proliferateSuggestion, proliferateClear, proliferateSummary, proliferateOkLabel, proliferatePanelHTML, proliferateBoardClass } = await import('../src/ui/proliferate.ts');
+const { counterName } = await import('../src/ui/cardLabels.ts');
 
 function state() {
   return { you: 1, gameOver: false, players: [], input: { gen: 7, priority: false, ok: { enabled: true }, selection: { cards: [], players: [], min: 0, max: 4 }, proliferate: { candidates: [

@@ -2,7 +2,7 @@
 import { cacheGet, fetchByNames, fetchPrintings, type Printing } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
-import { counterName } from './proliferate';
+import { counterName } from './cardLabels';
 import './cardInspector.css';
 
 export interface InspectorCard {

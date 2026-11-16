@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.190.1] - 2026-11-16
+
+### Corrigido
+
+- **Marcadores de habilidade em português e sem repetir.** Os marcadores que dão uma habilidade à criatura, como os do Indominus Rex, Alpha, apareciam em inglês ("Flying ×1", "First strike ×1"), com um disco no lugar do ícone, e a mesma habilidade aparecia de novo ao lado, já traduzida; o selo da carta contava tudo duas vezes. Agora cada um aparece uma vez só, como marcador, com o nome em português e o ícone da habilidade ("Voar ×1"), também no detalhe da carta e no Proliferar.
+
 ## [0.190.0] - 2026-11-16
 
 ### Novo

@@ -1,4 +1,9 @@
 {
+  "0.190.1": {
+    "Marcadores de habilidade em português e sem repetir": [
+      { "img": "0.190.1/indominus.webp", "legenda": "Indominus Rex, Alpha com sete marcadores de habilidade: cada um aparece uma vez, com o ícone da habilidade e o nome em português no balão (Voar ×1, Golpe duplo ×1...)." }
+    ]
+  },
   "0.190.0": {
     "Como jogar na primeira visita": [
       { "img": "0.190.0/passo-deck.webp", "legenda": "O primeiro balão aponta para os decks prontos: tocar num deles já leva ao passo seguinte." },

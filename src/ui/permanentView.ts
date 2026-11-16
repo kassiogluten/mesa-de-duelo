@@ -15,7 +15,7 @@ import { walkerForecast } from './combatForecast';
 import type { Defender } from './commanderTable';
 import { label } from './cardFaces';
 import { COUNTER_DISC, COUNTER_ICON, ICON_CLIP, ICON_CROWN, ICON_DIZZY, ICON_LAYERS, ICON_SHIELD, ICON_SWORD, KEYWORD_ICON, inspectIcon } from './icons';
-import { KEYWORD_LABEL, counterLabel, fieldKeywordsOf } from './cardLabels';
+import { KEYWORD_LABEL, counterKeyword, counterLabel, fieldKeywordsOf } from './cardLabels';
 
 /** O que as peças do campo precisam da mesa. */
 export interface BoardView {
@@ -136,8 +136,9 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
     : c.classLevel ? `<span class="pt class-level" title="${esc(classLevelText(c))}"><small>Nv</small><b>${c.classLevel}</b>${c.classMaxLevel ? `<small>/${c.classMaxLevel}</small>` : ''}</span>` : '';
   const shown = Object.entries(c.counters ?? {}).filter(([k]) => !(c.planeswalker && k === 'LOYALTY'));
   const counters = shown.length
-    ? `<span class="counters">${shown.map(([k, n]) => chip(v, 'ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[k] ?? COUNTER_DISC, `${counterLabel(k)} ×${n}`, n)).join('')}</span>` : '';
-  const kws = fieldKeywordsOf(c);
+    ? `<span class="counters">${shown.map(([k, n]) => chip(v, 'ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[counterKeyword(k) ?? k] ?? COUNTER_DISC, `${counterLabel(k)} ×${n}`, n)).join('')}</span>` : '';
+  // A palavra-chave que vem de um marcador (Voar ×1) já aparece no marcador: não repete como palavra-chave.
+  const kws = fieldKeywordsOf(c).filter(k => !shown.some(([ck]) => counterKeyword(ck) === k));
   const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip(v, 'ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k] ?? k)).join('')}</span>` : '';
   // Selo único que substitui marcadores e palavras-chave quando eles não cabem na carta (layoutCounters); toca e abre o inspetor.
   const sumText = [shown.length ? `Marcadores: ${shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', ')}.` : '', kws.length ? `Habilidades: ${kws.map(k => KEYWORD_LABEL[k]).join(', ')}.` : ''].filter(Boolean).join(' ');

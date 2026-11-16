@@ -1,19 +1,12 @@
 import type { FState, ProliferateCandidate, ProliferateEffect } from '../forge/client';
 import { esc } from './cardtext';
-import { playerCounterName } from './playerCounters';
+import { counterName } from './cardLabels';
 
 /*
  * Proliferar: cada permanente ou jogador com marcadores pode ganhar mais um de cada tipo. A ponte diz, para
  * quem prolifera, se cada marcador ajuda ou prejudica (um -1/-1 na criatura do oponente ajuda você). A lista
  * agrupa por isso, com seta e cor, e mostra o número antes → depois, para ninguém marcar o próprio veneno sem ver.
  */
-
-const CARD_COUNTERS: Record<string, string> = {
-  P1P1: '+1/+1', M1M1: '−1/−1', LOYALTY: 'Lealdade', DEFENSE: 'Defesa', SHIELD: 'Escudo', STUN: 'Atordoamento',
-  TIME: 'Tempo', CHARGE: 'Carga', LORE: 'Saga', OIL: 'Óleo', AGE: 'Idade', FADE: 'Desvanecer', FLOOD: 'Inundação',
-  DIVINITY: 'Divindade', QUEST: 'Missão', LEVEL: 'Nível', FINALITY: 'Finalidade', BOUNTY: 'Recompensa',
-};
-export const counterName = (type: string) => CARD_COUNTERS[type] ?? playerCounterName(type);
 
 const GROUPS: { effect: ProliferateEffect; title: string; mark: string }[] = [
   { effect: 'good', title: 'Te ajuda', mark: '▲' },

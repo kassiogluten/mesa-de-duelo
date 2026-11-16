@@ -188,3 +188,22 @@ test('protective keywords (hexproof, indestructible) show on any permanent; comb
   // A cópia sem a habilidade não entra na mesma pilha.
   assert.equal((backRow(view, s, s.players[0]).match(/class="stack"/g) ?? []).length, 2);
 });
+
+test('keyword counters (Indominus Rex, Alpha) show once, translated, with the keyword icon', async () => {
+  const { counterName } = await import('../src/ui/cardLabels.ts');
+  const rex = card(63, 'Indominus Rex, Alpha', { creature: true, power: 6, toughness: 6, typeLine: 'Legendary Creature — Dinosaur Mutant',
+    counters: { Flying: 1, 'First Strike': 1, 'Double Strike': 1, Deathtouch: 1, Lifelink: 1, Trample: 1, Vigilance: 1 },
+    keywords: ['FLYING', 'FIRST_STRIKE', 'DOUBLE_STRIKE', 'DEATHTOUCH', 'LIFELINK', 'TRAMPLE', 'VIGILANCE', 'REACH'] });
+  const html = bfCard(view, state([rex]), rex);
+  for (const name of ['Voar', 'Iniciativa', 'Golpe duplo', 'Toque mortífero', 'Vínculo com a vida', 'Atropelar', 'Vigilância']) {
+    assert.match(html, new RegExp(`aria-label="${name} ×1"`));
+    assert.doesNotMatch(html, new RegExp(`aria-label="${name}"`));
+  }
+  assert.doesNotMatch(html, /Flying ×|First strike/);
+  // Alcance é impresso (não veio de marcador): continua como palavra-chave; o selo conta 7 marcadores + 1 habilidade.
+  assert.match(html, /aria-label="Alcance"/);
+  assert.match(html, /class="ctr ctr-sum"[^>]*>[\s\S]*?<b>8<\/b>/);
+  assert.equal(counterName('Hexproof:Card.Black:black'), 'Resistência à magia');
+  assert.equal(counterName('Exalted'), 'Exaltado');
+  assert.equal(counterName('P1P1'), '+1/+1');
+});
