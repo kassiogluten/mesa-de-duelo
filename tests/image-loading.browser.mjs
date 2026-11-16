@@ -26,9 +26,16 @@ try {
   evaluate('fixture.load({ms:200,fail:true});return true;');
   waitFor(loading);
   assert.equal(evaluate('return document.querySelectorAll("#mao .face > img").length;'), 0, 'a imagem que falhou sai e fica o esboço');
+  // Falhou só no cache: a reserva traz do Scryfall e, redesenhada (a mesa a cada atualização), a imagem vai direto a
+  // ele, sem o esboço piscar enquanto o cache falha de novo.
+  evaluate('fixture.load({ms:0,cacheFail:true});return true;');
+  waitFor('[...document.querySelectorAll("#cena img")].every(i=>i.src.startsWith("https://cards.scryfall.io/")&&i.complete&&i.naturalWidth>0)');
+  s = evaluate(`fixture.redraw();await null;${counts}`);
+  assert.equal(s.wait, 0, `a imagem que já falhou no cache não espera de novo: ${JSON.stringify(s)}`);
+  assert.ok(evaluate('return [...document.querySelectorAll("#cena img")].every(i=>i.src.startsWith("https://cards.scryfall.io/"));'), 'redesenhada, vai direto ao Scryfall');
   // A imagem demora e a small chega antes: ela fica no lugar (a arte recortada não tem small).
   evaluate('await fixture.load({ms:8000,smallFirst:true});return true;');
   waitFor('document.querySelectorAll("#mao img.img-small").length===4');
   assert.equal(evaluate('return document.querySelectorAll("#arte img.img-small").length;'), 0, 'a arte recortada não tem small');
-  console.log('Image loading passed: card sketch first, the small when the image is slow, then the image; ready and failed images do not keep waiting.');
+  console.log('Image loading passed: card sketch first, the small when the image is slow, then the image; ready and failed images do not keep waiting, and an image that failed in the cache goes straight to Scryfall when redrawn.');
 } finally { run('close'); }

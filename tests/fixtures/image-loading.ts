@@ -8,7 +8,9 @@ import { faceHTML } from '../../src/ui/face';
  * As imagens vêm pelo /scryfall/ do Vite com ?lento (vite.config.ts), sempre com um endereço novo para não sair do
  * cache. Pelo console: fixture.load({ ms: 4000 }) monta a cena com a imagem chegando em 4 s e a small na
  * hora; smallMs atrasa a small e smallFirst: true a traz antes de montar; fixture.load({ fail: true }) faz tudo falhar, no
- * cache e no Scryfall; fixture.load({ ms: 0 }) mostra a cena pronta. Com ?lento=4000 na página, ela já começa assim.
+ * cache e no Scryfall, e cacheFail: true só no cache (a reserva traz do Scryfall); fixture.load({ ms: 0 }) mostra a cena
+ * pronta; fixture.redraw() monta de novo com os mesmos endereços, como a mesa a cada atualização. Com ?lento=4000 na
+ * página, ela já começa assim.
  */
 const CARDS: [name: string, cost: string, type: string, id: string, version: string, color: string, text: string][] = [
   ['Llanowar Elves', '{G}', 'Criatura — Elfo Druida', '6/a/6a0b230b-d391-4998-a3f7-7b158a0ec2cd', '1783909057', 'G', '{T}: Adicione {G}.'],
@@ -19,11 +21,13 @@ const CARDS: [name: string, cost: string, type: string, id: string, version: str
 const ATRAXA = 'd/0/d0d33d52-3d28-4635-b985-51e126289259';
 const NONE = '0/0/00000000-0000-0000-0000-000000000000';
 
-interface Options { ms?: number; smallMs?: number; fail?: boolean; smallFirst?: boolean }
+interface Options { ms?: number; smallMs?: number; fail?: boolean; cacheFail?: boolean; smallFirst?: boolean }
+let last: [Options, number] = [{}, 0];
 
-async function load({ ms = 4000, smallMs = 0, fail = false, smallFirst = false }: Options = {}) {
-  const v = Date.now();
-  const q = `?lento=${ms}&lentoSmall=${smallMs}${fail ? '&falha=1' : ''}&v=${v}`;
+async function load(options: Options = {}, v = Date.now()) {
+  last = [options, v];
+  const { ms = 4000, smallMs = 0, fail = false, cacheFail = false, smallFirst = false } = options;
+  const q = `?lento=${ms}&lentoSmall=${smallMs}${fail || cacheFail ? '&falha=1' : ''}&v=${v}`;
   // Para falhar de vez, uma carta que o Scryfall também não tem (senão a reserva a traz de lá).
   const url = (size: string, id: string) => `/scryfall/${size}/front/${fail ? NONE : id}.jpg${q}`;
   // A small já no aparelho antes da cena (as imagens atrasadas ocupam as conexões, e a small esperaria atrás delas).
@@ -44,4 +48,4 @@ document.head.append(style);
 
 const initial = Number(new URLSearchParams(location.search).get('lento') ?? 4000);
 load({ ms: initial });
-Object.assign(window, { fixture: { load } });
+Object.assign(window, { fixture: { load, redraw: () => load(...last) } });

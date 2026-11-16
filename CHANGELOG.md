@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.188.1] - 2026-11-16
+
+### Corrigido
+
+- **Fichas não piscam mais na mesa.** Desde a versão anterior, a imagem das fichas e dos terrenos básicos de arte cheia piscava a cada jogada, alternando entre a imagem e o esboço da carta, porque o nosso cache de imagens não conseguia buscá-las no Scryfall. Agora o cache as entrega, e, se uma imagem falhar nele, a mesa passa a buscá-la direto no Scryfall enquanto ela estiver aberta, sem piscar.
+
 ## [0.188.0] - 2026-11-15
 
 ### Mudou

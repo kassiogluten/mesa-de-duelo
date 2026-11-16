@@ -1,5 +1,5 @@
 // Carregando nas imagens das cartas (ROADMAP item 133): primeiro o esboço da carta, depois a small se a imagem demora e por fim a imagem, em toda a página.
-import '../scryfallMirror';
+import { knownFallback } from '../scryfallMirror';
 import './imageLoading.css';
 
 /** Imagem de carta: do Scryfall ou do nosso cache dele (/scryfall/…, no site ou no host das imagens). */
@@ -34,6 +34,9 @@ function probe(url: string, done: () => void) {
  * imagem, pinta o fundo; imageLoading.css). Já pronta, não ganha nada, como antes.
  */
 function watchImage(img: HTMLImageElement) {
+  // Já falhou no cache nesta página: vai direto ao Scryfall, sem esperar o cache falhar de novo.
+  const fallback = img.src && knownFallback(img.src);
+  if (fallback) { img.src = fallback; return; }
   const src = img.getAttribute('src');
   if (!isCardImage(src) || ready.has(src) || img.hasAttribute('data-no-wait') || img.classList.contains('img-wait') || (img.complete && img.naturalWidth > 0)) return;
   img.classList.add('img-wait');

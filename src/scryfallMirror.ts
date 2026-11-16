@@ -58,6 +58,15 @@ export function mirrorUrls<T>(value: T): T {
 }
 
 /**
+ * Imagens do cache que já falharam nesta página (endereço absoluto) e o endereço delas no Scryfall. A mesa redesenha as
+ * cartas a cada atualização, e a <img> nova iria ao cache de novo: a carta piscava entre o esboço e a imagem.
+ */
+const failed = new Map<string, string>();
+
+/** O endereço no Scryfall de uma imagem do cache que já falhou nesta página, para ir direto a ele; senão undefined. */
+export const knownFallback = (url: string) => failed.get(url);
+
+/**
  * Uma imagem do cache que não carrega é pedida ao Scryfall antes que a tela trate o erro (o verso como reserva, por
  * exemplo): o ouvinte na captura da janela vem antes do da própria imagem. Se o Scryfall também falhar, o erro segue.
  */
@@ -65,9 +74,11 @@ function installMirrorFallback(target: Pick<Window, 'addEventListener'> = window
   target.addEventListener('error', event => {
     const img = event.target;
     if (!(img instanceof HTMLImageElement)) return;
-    const original = fromMirror(img.currentSrc || img.src);
+    const src = img.currentSrc || img.src;
+    const original = fromMirror(src);
     if (!original) return;
     event.stopImmediatePropagation();
+    failed.set(src, original);
     img.src = original;
   }, true);
 }
