@@ -302,7 +302,7 @@ function table() {
     // objetos voltam a ser chapados ou somem; no 3, tudo em CSS). O regulador pode mudar sozinho depois, medindo os quadros.
     tier: c => {
       latestGpuPort()?.setTier(Number(c.n) as 0 | 1 | 2 | 3);
-      return ['Degrau 0: todos os objetos em 3D.', 'Degrau 1: as fichas ficam sem o objeto; o resto continua em 3D.', 'Degrau 2: moeda e dados chapados; dia e noite, coroa, emblema e brasão não aparecem.', 'Degrau 3: os efeitos em CSS.'][Number(c.n)] + (new URLSearchParams(location.search).has('gpu') ? ' (Com a versão GPU ou CSS escolhida à mão, o regulador fica desligado e o degrau volta a 0: recarregue sem ela.)' : '');
+      return ['Degrau 0: todos os objetos em 3D.', 'Degrau 1: as fichas e os marcadores de jogador ficam sem o objeto (o veneno perto de matar continua); o resto continua em 3D.', 'Degrau 2: moeda e dados chapados; dia e noite, coroa, emblema, brasão e o frasco do veneno não aparecem, e a carta que muda de face gira no lugar.', 'Degrau 3: os efeitos em CSS.'][Number(c.n)] + (new URLSearchParams(location.search).has('gpu') ? ' (Com a versão GPU ou CSS escolhida à mão, o regulador fica desligado e o degrau volta a 0: recarregue sem ela.)' : '');
     },
     // Objetos 3D (item 140): a coroa do Monarca e a Dianteira passam de você para o oponente e de volta (na primeira vez, chegam de ninguém).
     holder: c => {
@@ -377,6 +377,15 @@ function table() {
         emit('entered', { card: structuredClone(token), sourceId: token.id, actor: owner.id, from: null, to: 'Battlefield', stackId: resolution, sourceName: 'Lab' });
       }
       return names.length > 1 ? 'Tesouro, Pista, Comida e Sangue: a gema, a lente, a maçã e a gota caem girando sobre cada ficha (no máximo 3 por jogada).' : `${name3d(names[0]!)} cai girando sobre a ficha e entra nela.`;
+    },
+    // Objetos 3D: o marcador de jogador sobe e o objeto dele (frasco, raio, estrela, disco) cai sobre o selo, ao lado do retrato.
+    tally: c => {
+      const owner = sideOf(c.side);
+      if (c.kind === 'clear') { owner.counters = {}; return 'Marcadores do jogador zerados.'; }
+      const now = owner.counters?.[c.kind] ?? 0, next = c.near ? (now < 6 ? 7 : Math.min(10, now + 1)) : now + 1;
+      owner.counters = { ...owner.counters, [c.kind]: next };
+      const what = ({ POISON: 'O frasco do veneno', ENERGY: 'O raio da energia', EXPERIENCE: 'A estrela da experiência', RAD: 'O disco da radiação' } as Record<string, string>)[c.kind];
+      return c.kind === 'POISON' && next >= 7 ? `Veneno em ${next}: o frasco cai maior, com uma onda em volta${next >= 10 ? ' (é o que mata)' : ''}.` : `${what} cai girando sobre o selo e entra nele.`;
     },
     toggle: c => {
       const x = byId(c.id); if (!x) return;
@@ -699,7 +708,7 @@ function table() {
           if (!x) return 'Ponha uma criatura no campo primeiro.';
           x.name = x.name === 'Insectile Aberration' ? 'Delver of Secrets' : 'Insectile Aberration';
           Object.assign(x, x.name === 'Insectile Aberration' ? { power: 3, toughness: 2, keywords: ['FLYING'], manaCost: '' } : { power: 1, toughness: 1, keywords: [], manaCost: '{U}' });
-          return 'Transformar: a carta gira no lugar e mostra a outra face.';
+          return 'Transformar: a carta sobe, vira mostrando a face de antes e a nova e pousa (sem a camada GPU, gira no lugar).';
         }
         case 'counters': case 'lore': {
           if (c.kind === 'lore') {
@@ -968,7 +977,7 @@ const EFFECT_LABELS: Record<string, string> = {
   charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
   mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
   undizzy: 'estrelinhas indo embora', coin: 'moeda', die: 'dado', victory: 'vitória', defeat: 'derrota', spotlight: 'mesa escurecendo da mágica grande', legend: 'raios da lendária',
-  arrowBirth: 'seta de alvo nascendo', shuriken: 'shuriken', shuffle: 'embaralhar', scry: 'vidência', flight: 'carta voando',
+  arrowBirth: 'seta de alvo nascendo', shuriken: 'shuriken', shuffle: 'embaralhar', scry: 'vidência', flight: 'carta voando', tally: 'objeto do marcador de jogador', cardTurn: 'carta mudando de face',
 };
 /** O que cada degrau desliga, lido da lista do regulador (TIER1_CUTS), para conferir à mão. */
 function tierList() {
@@ -1046,6 +1055,8 @@ function panel() {
     <div>${[['d2', 'd2'], ['d4', 'd4'], ['d6', 'd6'], ['d8', 'd8'], ['d10', 'd10'], ['d12', 'd12'], ['die', 'd20'], ['d100', 'd100'], ['coin', 'Moeda']].map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}</div>
     <div><button data-c="day-night">Dia e noite</button><button data-holder="monarch">Monarca</button><button data-holder="initiative">Dianteira</button><button data-walker="emblem">Emblema</button>${[['win', 'Vitória (brasão)'], ['lose', 'Derrota (brasão do oponente)']].map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}</div>
     <div>${[['Treasure', 'Tesouro'], ['Clue', 'Pista'], ['Food', 'Comida'], ['Blood', 'Sangue'], ['all', 'As quatro (só 3 ganham o objeto)']].map(([k, t]) => `<button data-trinket="${k}">${t}</button>`).join('')}</div>
+    <div>${[['POISON', 'Veneno'], ['ENERGY', 'Energia'], ['EXPERIENCE', 'Experiência'], ['RAD', 'Radiação']].map(([k, t]) => `<button data-tally="${k}">${t}</button>`).join('')}<button data-tally="POISON" data-near="1">Veneno perto de matar</button><button data-tally="clear">Zerar marcadores</button></div>
+    <p>A carta que muda de face sobe e vira de verdade: use Transformar (acima) ou marque e desmarque "Virada para baixo" na selecionada.</p>
     <div>Degrau do automático: ${[0, 1, 2, 3].map(n => `<button data-tier="${n}">${n}</button>`).join('')}</div>
     <h2>Efeitos na GPU (item 125)</h2>
     <p>Desenhados direto na camada GPU, sem mudar a partida. Impactos e projétil usam Fonte e Alvo da seção Dano; pouso, estilhaços e ultimate, a permanente selecionada.</p>
@@ -1148,6 +1159,7 @@ function panel() {
     if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
     if (b.dataset.holder) send({ cmd: 'holder', kind: b.dataset.holder });
     if (b.dataset.tier) send({ cmd: 'tier', n: b.dataset.tier });
+    if (b.dataset.tally) send({ cmd: 'tally', kind: b.dataset.tally, near: !!b.dataset.near, side: $<HTMLSelectElement>('side').value });
     if (b.dataset.trinket) send({ cmd: 'trinkets', kind: b.dataset.trinket, side: $<HTMLSelectElement>('side').value });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.x) send({ cmd: 'extra', kind: b.dataset.x, id: selectedId(), side: $<HTMLSelectElement>('side').value });

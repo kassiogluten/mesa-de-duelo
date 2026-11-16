@@ -1,4 +1,15 @@
 {
+  "0.204.0": {
+    "Carta que muda de face vira de verdade": [
+      { "img": "0.204.0/carta-transformando.webp", "legenda": "A carta que transformou no ar, já mostrando a face nova, inclinada, com a sombra na mesa." },
+      { "img": "0.204.0/carta-virando-de-face.webp", "legenda": "A carta virada para baixo subindo de costas, na cor da capa, antes de virar de face para cima." }
+    ],
+    "Marcadores de jogador caem como objetos": [
+      { "img": "0.204.0/objetos-dos-marcadores.webp", "legenda": "Os quatro objetos: o frasco do veneno, o raio da energia, a estrela da experiência e o disco da radiação." },
+      { "img": "0.204.0/frasco-do-veneno.webp", "legenda": "O frasco de veneno pousando no selo de veneno, ao lado do seu retrato." },
+      { "img": "0.204.0/veneno-perto-de-matar.webp", "legenda": "Com o veneno do oponente em 7, o frasco cai maior e solta uma onda verde em volta." }
+    ]
+  },
   "0.203.0": {
     "Quem começa no Contador de vida": [
       { "img": "0.203.0/botao.webp", "legenda": "O botão Quem começa, logo abaixo dos dados na janela da logo do meio da mesa." },

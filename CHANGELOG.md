@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.204.0] - 2026-11-16
+
+### Novo
+
+- **Carta que muda de face vira de verdade.** A permanente que transforma, vira cópia de outra ou é virada de face para cima (ou para baixo) sobe da mesa, vira de lado mostrando a face de antes e depois a nova, e pousa de volta, com sombra e brilho na borda. Com muitas de uma vez, só as quatro primeiras sobem; quando o dia vira noite, as cartas continuam girando no lugar, como antes. Com efeitos leves ou com a mesa lenta, também.
+- **Marcadores de jogador caem como objetos.** Quando um jogador ganha veneno, energia, experiência ou radiação, um objeto cai girando sobre o selo ao lado do retrato, quica, acende e entra nele: um frasco de veneno, um raio dourado, uma estrela lilás e um disco amarelo de radiação. Com o veneno em 7 ou mais, o frasco cai maior e solta uma onda verde em volta; no décimo, maior ainda. Com a mesa lenta no Efeitos: Automático, os objetos saem primeiro, e o frasco do veneno perto de matar é o último a sair.
+
 ## [0.203.0] - 2026-11-16
 
 ### Novo

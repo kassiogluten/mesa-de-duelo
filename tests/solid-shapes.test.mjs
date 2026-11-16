@@ -72,3 +72,29 @@ test('the token shapes are convex, flat-faced and fast to build', async () => {
     assert.ok(points.every(p => Math.hypot(...p) <= 1 + 1e-9), `${name}: fits the unit circle`);
   }
 });
+
+test('the player counter shapes have flat faces pointing out, fit the unit circle and draw in the right order', async () => {
+  const { TALLY_SHAPES, facetedFaces } = await import('../src/ui/gpu/solidShapes.ts');
+  for (const [name, build] of Object.entries(TALLY_SHAPES)) {
+    const faces = facetedFaces(build());
+    const points = faces.flatMap(f => f.corners);
+    assert.ok(points.every(p => Math.hypot(...p) <= 1 + 1e-9), `${name}: fits the unit circle`);
+    for (const face of faces) {
+      const d = dot(face.normal, face.corners[0]);
+      for (const c of face.corners) assert.ok(close(dot(face.normal, c), d), `${name}: flat face`);
+      for (const [u, v] of face.uv) assert.ok(u >= 0 && u <= 1 && v >= 0 && v <= 1, `${name}: inside the texture`);
+      // Para fora: do meio da face, a normal aponta para longe do eixo (o frasco) ou do plano do meio (as chapas).
+      const mid = face.corners.reduce((a, c) => [a[0] + c[0], a[1] + c[1], a[2] + c[2]], [0, 0, 0]).map(v => v / face.corners.length);
+      const out = name === 'poison' ? dot(face.normal, [mid[0], 0, mid[2]]) + (Math.abs(face.normal[1]) > .99 ? face.normal[1] * mid[1] : 0) : Math.abs(face.normal[2]) > 1e-6 ? face.normal[2] * mid[2] : dot(face.normal, mid);
+      assert.ok(out > 0, `${name}: normal points out`);
+    }
+  }
+  // Estas formas não são convexas e o shader não usa profundidade: a ordem das faces é a ordem de desenhar.
+  const flask = TALLY_SHAPES.poison(), height = f => f.corners.reduce((a, c) => a + c[1], 0) / f.corners.length;
+  const walls = flask.filter(f => Math.abs(f.normal[1]) < .99);
+  assert.ok(walls.every((f, i) => i === 0 || height(f) >= height(walls[i - 1]) - 1e-9), 'the flask is drawn from the bottom up');
+  for (const name of ['energy', 'experience']) {
+    const faces = TALLY_SHAPES[name](), firstCap = faces.findIndex(f => Math.abs(f.normal[2]) > 1e-6);
+    assert.ok(firstCap > 0 && faces.slice(firstCap).every(f => Math.abs(f.normal[2]) > 1e-6), `${name}: sides first, caps last`);
+  }
+});

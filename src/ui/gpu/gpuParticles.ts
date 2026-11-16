@@ -68,7 +68,7 @@ type ParticleSpec = Omit<Particle, 'sprite' | 'age' | 'stretch' | 'alpha' | 'fad
 type Particles = ReturnType<typeof particles>;
 
 /** Um grupo de partículas que andam sozinhas (velocidade, arrasto, gravidade, giro) e somem no fim da vida. */
-function particles(view: Container) {
+export function particles(view: Container) {
   const list: Particle[] = [];
   return {
     list,

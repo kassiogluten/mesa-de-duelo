@@ -1,6 +1,6 @@
 // Animações entre permanentes: ataque, bloqueio, anexar, controle, marcadores, mana, transformar e as estrelinhas do enjoo de invocação.
 import type { PresentationEvent } from './presentationTimeline';
-import { center, LANDING, reduced, SETTLE, type MotionKit, type Point } from './motionKit';
+import { center, LANDING, reduced, SETTLE, sideOf, type MotionKit, type Point, type Snap } from './motionKit';
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
 /** O que sobe de uma permanente que ganhou marcadores: o capítulo da saga, +N/+N, −N/−N, ou nada para os outros. */
@@ -8,9 +8,12 @@ export function counterText(kind: string, n: number, lore: number) {
   return lore ? `Capítulo ${ROMAN[lore] ?? lore}` : /^P\d+P\d+$/.test(kind) ? `+${n}/+${n}` : /^M\d+M\d+$/.test(kind) ? `−${n}/−${n}` : '';
 }
 
+/** Quanto dura a virada da carta na camada GPU, e quantas viram lá na mesma jogada. */
+const TURN_MS = 780, TURN_LIMIT = 4;
+
 /** O que acontece entre permanentes no campo: ataque, bloqueio, anexar, troca de controle, marcadores, mana e transformar. */
 export function createBoardMotion(kit: MotionKit) {
-  const { root, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards, gpu, flare } = kit;
+  const { root, state, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards, gpu, flare, toneOf } = kit;
   /**
    * Ataque é só vermelho: o dourado fica para seleção e bloqueio. Cada atacante recua um pouco e avança na direção do
    * oponente (para cima, se está na metade de baixo da mesa), um depois do outro, e volta com mola.
@@ -169,11 +172,60 @@ export function createBoardMotion(kit: MotionKit) {
       { translate: `${dx}px ${dy}px`, scale: '.7', opacity: .9 }], 620, 'cubic-bezier(.4,0,.3,1)', delay);
     later(() => remove(orb), 640 + delay);
   }
-  function transformed(ids: number[]) {
+  /**
+   * Na camada GPU, a carta sobe, vira de verdade (a face de antes, `before.side`, e depois a nova) e pousa, com a carta
+   * da mesa escondida enquanto isso. Diz se virou lá; sem a camada ou sem a textura da face de antes, não.
+   */
+  /**
+   * As cartas escondidas enquanto viram na camada GPU, pelo número delas. A mesa pode redesenhar no meio da virada, e o
+   * desenho novo tira o estilo da carta: `keepTurning` a esconde de novo a cada desenho, até a virada acabar ou os
+   * efeitos serem limpos (`clears`). Escondida por `visibility`, e não por `opacity` como as dos voos.
+   */
+  const turning = new Map<number, { started: number; clears: number }>();
+  const fieldCard = (id: number) => root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
+  function keepTurning() {
+    for (const [id, turn] of turning) {
+      const el = turn.clears === kit.clears() ? fieldCard(id) : null;
+      if (!el) { turning.delete(id); continue; }
+      if (el.style.visibility !== 'hidden') { el.style.visibility = 'hidden'; hiddenCards.add(el); }
+    }
+  }
+  /**
+   * Na camada GPU, a carta sobe, vira de verdade (a face de antes, `before.side`, e depois a nova) e pousa, com a carta
+   * da mesa escondida enquanto isso. Diz se virou lá; sem a camada ou sem a textura da face de antes, não.
+   */
+  function turn3d(id: number, el: HTMLElement, before: Snap | undefined) {
+    const face = el.querySelector<HTMLElement>('.face') ?? el, box = center(face);
+    const from = before?.side, to = sideOf(el);
+    if (!box || !from || !to) return false;
+    const started = performance.now();
+    const done = (landed: boolean) => {
+      const turn = turning.get(id);
+      if (turn?.started !== started) return;
+      turning.delete(id);
+      const shown = turn.clears === kit.clears() ? fieldCard(id) : null;
+      if (!shown) return;
+      hiddenCards.delete(shown); shown.style.visibility = '';
+      // A imagem da face nova não chegou a tempo: a carta da mesa termina o giro, do lado em que a de cima parou.
+      if (landed) ripple(center(shown)); else animate(shown, [{ rotate: 'y 90deg', scale: '1.08', filter: 'brightness(1.8)' }, { rotate: 'y 0deg', scale: '1', filter: 'none' }], 320, 'cubic-bezier(.3,.7,.4,1)');
+    };
+    // O tamanho da carta em pé (a caixa dela na tela vem deitada quando está virada).
+    const at = { ...box, w: face.offsetWidth || box.w, h: face.offsetHeight || box.h };
+    if (!gpu.play('cardTurn', { at, rot: el.closest('.tapped') ? 90 : 0, from, to, edge: toneOf(el), duration: TURN_MS, done })) return false;
+    turning.set(id, { started, clears: kit.clears() });
+    keepTurning();
+    // Se a camada cair no meio da virada, a carta volta a aparecer sozinha.
+    later(() => done(true), TURN_MS + 700);
+    return true;
+  }
+  function transformed(ids: number[], flat = false) {
     if (document.hidden || root.hidden || reduced()) return;
+    let turns = 0;
     for (const id of ids) {
       const el = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
       if (!el) continue;
+      // Muitas de uma vez (ou dia e noite, `flat`): só as primeiras sobem; as outras giram no lugar.
+      if (!flat && turns < TURN_LIMIT && !turning.has(id) && turn3d(id, el, state.cards.get(String(id)))) { turns++; continue; }
       // Gira no lugar como uma carta virando de lado e mostra a face nova, com um brilho no meio do giro.
       animate(el, [{ rotate: 'y 0deg', scale: '1', filter: 'none' }, { rotate: 'y 90deg', scale: '1.08', filter: 'brightness(1.8)', offset: .45 }, { rotate: 'y 0deg', scale: '1', filter: 'none' }], 620, 'cubic-bezier(.3,.7,.4,1)');
       later(() => ripple(center(el)), 320);
@@ -193,5 +245,5 @@ export function createBoardMotion(kit: MotionKit) {
     // O selo já sumiu do desenho novo: as estrelinhas saem do alto da carta.
     cleared.forEach((id, i) => { const one = spot(id); if (one) gpu.play('undizzy', { at: one.at, delay: i * 60 }); });
   }
-  return { attackers, blocks, attach, control, counters, manaOrb, transformed, dizzy };
+  return { attackers, blocks, attach, control, counters, manaOrb, transformed, keepTurning, dizzy };
 }

@@ -257,10 +257,15 @@ try {
     // As fichas de artefato ganham o objeto em 3D no degrau 0 e são as primeiras a sair (degrau 1); a moeda fica até o 2.
     const trinketAt = { cx: 300, cy: 300, w: 80, h: 112 };
     out.trinkets = { tier0: gpu.play('trinket', { at: trinketAt, kind: 'treasure' }) };
+    // Os marcadores de jogador saem com as fichas no degrau 1, menos o veneno perto de matar, que fica até o 2. A carta sem textura não vira na GPU.
+    const tally = (kind, level = 0) => gpu.play('tally', { at: trinketAt, kind, size: 72, level });
+    out.tallies = { tier0: ['poison', 'energy', 'experience', 'rad'].map(kind => tally(kind)), turnWithoutTexture: gpu.play('cardTurn', { at: trinketAt, from: { url: 'https://cards.scryfall.io/small/front/0/0/nothing.jpg' }, to: { back: [] }, duration: 780 }), turnFromBack: gpu.play('cardTurn', { at: trinketAt, from: { back: [] }, to: { back: ['#fff'] }, duration: 780 }) };
     gpu.setTier(1); await wait(100);
+    out.tallies.tier1 = [tally('energy'), tally('poison'), tally('poison', 1)];
     out.trinkets.tier1 = gpu.play('trinket', { at: trinketAt, kind: 'food' }); out.trinkets.coinTier1 = gpu.play('coin', { at: trinketAt, heads: true, label: 'Cara', hold: 1200, font: 'serif' });
     gpu.setTier(2); await wait(100);
     out.tier2 = { ready: gpu.ready(), ambience: gpu.ambienceStats()?.running };
+    out.tallies.tier2 = [tally('poison', 2), gpu.play('cardTurn', { at: trinketAt, from: { back: [] }, to: { back: [] }, duration: 780 })];
     gpu.setTier(3); await wait(100);
     out.tier3 = { ready: gpu.ready(), canvas: !!document.querySelector('canvas.gpu-layer') };
     gpu.setTier(0);
@@ -285,6 +290,8 @@ try {
     'tier 1 drops the big spell darkening, keeps the protected one and stops the continuous animations');
   assert.deepEqual(option.tier1Off, { calm: false, wind: option.tier0Wind }, 'back to tier 0, the continuous animations move again');
   assert.deepEqual(option.trinkets, { tier0: true, tier1: false, coinTier1: true }, 'the token objects should be on the GPU at tier 0 and gone at tier 1, with the coin still there');
+  assert.deepEqual(option.tallies, { tier0: [true, true, true, true], turnWithoutTexture: false, turnFromBack: true, tier1: [false, false, true], tier2: [false, false] },
+    'the player counter objects leave at tier 1 except poison near the limit, which leaves at tier 2 with the 3D card turn; a card with no texture does not turn on the GPU');
   assert.deepEqual(option.tier2, { ready: true, ambience: false }, 'tier 2 keeps the GPU effects and stops the living table');
   assert.deepEqual(option.tier3, { ready: false, canvas: false }, 'tier 3 is the CSS effects');
   assert.deepEqual(option.tier0, { ready: true, ambience: true }, 'tier 0 brings everything back');

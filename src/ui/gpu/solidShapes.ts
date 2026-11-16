@@ -1,4 +1,4 @@
-// As formas dos objetos sólidos da camada GPU que não são dados (moeda, medalhão, escudo, gemas): faces com cantos, normal e o alto de cada uma, o lugar de cada canto na textura e a malha pronta para a GPU, sem PixiJS.
+// As formas dos objetos sólidos da camada GPU que não são dados (moeda, medalhão, escudo, gemas, frasco, raio e estrela): faces com cantos, normal e o alto de cada uma, o lugar de cada canto na textura e a malha pronta para a GPU, sem PixiJS.
 import { cross, dot, hull, normalize, type Vec3 } from './diceGeometry';
 
 /** Uma face plana do sólido: os cantos em volta dela, a normal para fora, o alto do desenho e o lugar de cada canto na textura (0 a 1). */
@@ -103,6 +103,37 @@ export const TRINKET_SHAPES = {
   food: () => revolve([[.78, .24], [.74, .5], [.6, .74], [.32, .92], [-.05, .95], [-.42, .84], [-.68, .6], [-.82, .32], [-.86, .1]], 12),
   /** Sangue: uma gota, um cone do alto até encostar na bola de baixo. */
   blood: () => revolve([[1, 0], [-.18, .53], [-.3, .567], [-.42, .58], [-.57, .56], [-.71, .5], [-.83, .41], [-.92, .29], [-.98, .15], [-1, 0]], 12),
+};
+
+/**
+ * Chapa de um contorno que se vê inteiro do meio dele (estrela, raio; x e y em raios, no sentido anti-horário), com
+ * `depth` de espessura e o meio levantado `bump` dos dois lados, para a luz pegar cada ponta de um jeito. Não é convexa
+ * e o shader não usa profundidade: as laterais vêm primeiro e as tampas por último, que é a ordem certa de desenhar.
+ */
+function slab(outline: [number, number][], depth: number, bump: number): { corners: Vec3[]; normal: Vec3 }[] {
+  const half = depth / 2, edges = outline.map((p, i) => [p, outline[(i + 1) % outline.length]!] as const);
+  const minus = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const cap = (z: number, top: Vec3) => edges.map(([p, q]) => {
+    const corners: Vec3[] = z > 0 ? [top, [p[0], p[1], z], [q[0], q[1], z]] : [top, [q[0], q[1], z], [p[0], p[1], z]];
+    return { corners, normal: normalize(cross(minus(corners[1]!, top), minus(corners[2]!, top))) };
+  });
+  return [
+    ...edges.map(([p, q]) => ({ corners: [[p[0], p[1], half], [p[0], p[1], -half], [q[0], q[1], -half], [q[0], q[1], half]] as Vec3[], normal: normalize([q[1] - p[1], p[0] - q[0], 0]) })),
+    ...cap(half, [0, 0, half + bump]), ...cap(-half, [0, 0, -half - bump]),
+  ];
+}
+
+/** Os objetos dos marcadores de jogador, dentro do círculo de raio 1, de pé (o alto para +y). */
+export const TALLY_SHAPES = {
+  /**
+   * Veneno: um frasco, com a rolha, o gargalo e o bojo. Não é convexo: as faces vão de baixo para cima, a ordem certa
+   * de desenhar para quem olha de cima (o gargalo por cima do ombro de trás).
+   */
+  poison: () => revolve([[.97, .19], [.74, .19], [.3, .15], [.05, .5], [-.3, .72], [-.6, .68], [-.84, .46], [-.93, .2]], 12).reverse(),
+  /** Energia: um raio, em chapa. */
+  energy: () => slab([[.28, .94], [-.56, -.14], [-.08, -.14], [-.28, -.94], [.56, .14], [.08, .14]], .3, .12),
+  /** Experiência: uma estrela de cinco pontas, em chapa, com o meio alto. */
+  experience: () => slab(Array.from({ length: 10 }, (_, i) => { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .43 : .98; return [Math.cos(a) * r, Math.sin(a) * r] as [number, number]; }), .22, .2),
 };
 
 /** A malha das faces: cada uma em leque de triângulos, com a normal da face em todos os cantos dela. */

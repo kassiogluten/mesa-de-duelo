@@ -2,7 +2,7 @@
 import type { FPlayer } from '../forge/client';
 import type { PresentationEvent } from './presentationTimeline';
 import type { AmbienceScene } from './gpu/tableAmbience';
-import { center, createMotionKit, LANDING, reduced, SETTLE, TAP, turnOf } from './motionKit';
+import { center, createMotionKit, LANDING, reduced, SETTLE, sideOf, TAP, turnOf } from './motionKit';
 import { createDamageMotion } from './motionDamage';
 import { createAbilityMotion } from './motionAbility';
 import { createZoneMotion } from './motionZones';
@@ -27,8 +27,11 @@ export interface Motion {
   drew(actor: number, count: number, options: { you: number; cards: HTMLElement[]; fast: boolean; searched?: boolean }): number[];
   /** Sem passo próprio, junto com a jogada: embaralhar (o grimório se mexe) e marcadores (a carta cresce e o número sobe). */
   quick(event: PresentationEvent, options: { you: number }): void;
-  /** Permanentes que mudaram de face no campo (transformar, dia e noite): giram no lugar e mostram a face nova. */
-  transformed(ids: number[]): void;
+  /**
+   * Permanentes que mudaram de face no campo (transformar, virar de face para cima): sobem, viram mostrando a face de
+   * antes e a nova e pousam, na camada GPU. Com `flat` (dia e noite, que viram a mesa inteira) ou sem a camada, giram no lugar.
+   */
+  transformed(ids: number[], flat?: boolean): void;
   /** Criaturas que ficaram tontas (enjoo de invocação) e que deixaram de estar: as estrelinhas chegam ou voam embora. */
   dizzy(arrived: number[], cleared: number[]): void;
   /** Mão inicial: as cartas saem do grimório uma a uma; num mulligan, a mão anterior volta antes e o grimório embaralha. */
@@ -64,7 +67,8 @@ export interface Motion {
   dayNight(day: boolean, icon: Element | null): void;
   /**
    * Desenho dos assentos: se a coroa do Monarca ou a Dianteira mudou de mão, o medalhão voa de um retrato para o outro;
-   * um emblema novo sai do planeswalker e pousa ao lado do retrato.
+   * um emblema novo sai do planeswalker e pousa ao lado do retrato; e o marcador de jogador que subiu (veneno, energia,
+   * experiência, radiação) ganha o objeto dele caindo sobre o selo.
    */
   holders(players: FPlayer[], match: string): void;
 }
@@ -105,7 +109,7 @@ export function createMotion(root: HTMLElement): Motion {
         const key = el.dataset.fid ?? el.dataset.peek!;
         if (cards.has(key)) return;
         const at = center(el);
-        if (at) cards.set(key, { ...at, el, tapped: !!el.closest('.tapped'), zone: el.parentElement?.closest('[id]')?.id ?? '' });
+        if (at) cards.set(key, { ...at, el, tapped: !!el.closest('.tapped'), zone: el.parentElement?.closest('[id]')?.id ?? '', side: el.dataset.fid ? sideOf(el) : undefined });
       });
       // As cartas que podem voar logo já carregam a textura delas na camada GPU.
       kit.gpu.preloadTable();
@@ -122,6 +126,8 @@ export function createMotion(root: HTMLElement): Motion {
     play(options = {}) {
       // Antes de medir: as cartas redesenhadas voltam ao ponto do relógio (a voadora fica onde estava).
       syncLoops();
+      // A carta que ainda está virando na camada GPU continua escondida na mesa redesenhada.
+      board.keepTurning();
       if (options.silent || reduced()) { state.primed = true; return; }
       const seen = new Set<string>();
       let untapWave = 0;

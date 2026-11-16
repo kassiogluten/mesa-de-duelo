@@ -1,10 +1,11 @@
-// Os medalhões em 3D da mesa, na camada GPU: o disco de sol e lua quando o dia vira noite (e o contrário) a coroa do Monarca e o escudo da Dianteira passando de um retrato para o outro o emblema novo saindo do planeswalker e as fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta; sem a camada, fica só o ícone ou o selo pulsando.
+// Os medalhões em 3D da mesa, na camada GPU: o disco de sol e lua quando o dia vira noite (e o contrário) a coroa do Monarca e o escudo da Dianteira passando de um retrato para o outro o emblema novo saindo do planeswalker, as fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta e o frasco do veneno, o raio da energia, a estrela da experiência e o disco da radiação caindo sobre o selo do jogador; sem a camada, fica só o ícone ou o selo pulsando.
 import type { FCard, FPlayer } from '../forge/client';
 import { holderChanges, type Holders } from './holderChanges';
 import { center, reduced, type MotionKit, type Point } from './motionKit';
 import { emblemSource } from './cardFaces';
 import { walkerTone } from './planeswalkerEffects';
 import { trinketOf } from './tokenTrinkets';
+import { tallyGains, type Tallies } from './playerTallies';
 
 export function createMedalMotion(kit: MotionKit) {
   const { root, layer, gpu, animate } = kit;
@@ -12,6 +13,8 @@ export function createMedalMotion(kit: MotionKit) {
   const waitFor = (el: Element | null, ms: number) => { if (el instanceof HTMLElement) animate(el, [{ opacity: 0 }, { opacity: 0, offset: .85 }, { opacity: 1 }], ms, 'linear'); };
   // Quem tinha a coroa e a Dianteira no último desenho.
   let holders: Holders | null = null;
+  // Quanto cada jogador tinha de cada marcador no último desenho.
+  let tallies: Tallies | null = null;
   /** Se a mesa está à vista e com movimento: escondida ou com "reduzir movimento", nenhum medalhão. */
   const showing = () => !document.hidden && !root.hidden && !reduced();
   /** O meio da mesa, com o tamanho de um medalhão (um pouco menor em telas baixas). */
@@ -38,8 +41,19 @@ export function createMedalMotion(kit: MotionKit) {
     holders(players: FPlayer[], match: string) {
       const { passes, emblems, now } = holderChanges(holders, players, match);
       holders = now;
-      if ((!passes.length && !emblems.length) || !showing()) return;
+      const counted = tallyGains(tallies, players, match);
+      tallies = counted.now;
+      if ((!passes.length && !emblems.length && !counted.gains.length) || !showing()) return;
       const avatar = (id: number) => root.querySelector(`.avatar[data-pid="${id}"]`);
+      // O marcador que subiu: o objeto dele cai sobre o selo (um depois do outro), e o selo só aparece quando ele pousa.
+      counted.gains.forEach((gain, i) => {
+        const badge = root.querySelector(`[data-ctr="p${gain.player}:${gain.counter}"]`), portrait = center(avatar(gain.player));
+        const at = center(badge) ?? portrait, delay = i * 280;
+        if (at && gpu.play('tally', { at, kind: gain.kind, size: portrait?.w ?? 72, level: gain.level, delay }) && badge instanceof HTMLElement) {
+          const ms = 1200 + gain.level * 300;
+          animate(badge, [{ opacity: 0 }, { opacity: 0, offset: .44 }, { opacity: 1, offset: .52 }, { opacity: 1 }], ms, 'linear', delay);
+        }
+      });
       for (const pass of passes) {
         const badge = root.querySelector(`[data-ctr="p${pass.to}:${pass.kind === 'monarch' ? 'MONARCH' : 'INITIATIVE'}"]`);
         const to = center(badge) ?? center(avatar(pass.to)), from = pass.from === null ? undefined : center(avatar(pass.from));

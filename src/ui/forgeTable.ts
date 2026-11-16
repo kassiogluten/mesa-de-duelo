@@ -2,6 +2,7 @@ import type { FState, ForgeClient, NoticeDetail } from '../forge/client';
 import { KEYS, load, save } from '../storage';
 import { createMotion } from './motion';
 import { dizzy, dizzyChanges } from './permanentEffects';
+import { createFaceWatch } from './faceTurns';
 import { hideCardPreview } from './cardInspector';
 import { type HistoryNames } from './historyLog';
 import './removalNotice.css';
@@ -166,8 +167,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // Etapas do turno dos oponentes em que a ponte segura a prioridade para você.
   const opponentStops = new OpponentStopsPreference(message => { if (client?.connected && !match.disconnected) client.send(message); });
   const turnNotice = createTurnNotice();
-  // Fim da partida: os nomes das permanentes (para ver quem transformou) e a mão inicial já distribuída.
-  let fieldNames = new Map<number, string>(), fieldNamesMatch = '';
+  // Os nomes das permanentes entre um desenho e outro, para ver quem mudou de face.
+  const faceWatch = createFaceWatch();
   // As criaturas tontas no desenho anterior, para as estrelinhas do enjoo chegarem ou voarem embora.
   let dizzyBefore = new Set<number>(), dizzyMatch = '';
   let dealtHand = '', payingBefore = false;
@@ -504,17 +505,13 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     motion.play({ silent: silently || suppressOpeningPreview(s) || !!s.input.blocking || !!s.input.selection, semantic: !!s.events, paying: s.input.paying || payingBefore ? id => manaTone(findCard(id)) : undefined, pooled });
     // O último terreno do pagamento chega num estado em que o pagamento já acabou: ele também solta a mana.
     payingBefore = !!s.input.paying;
-    // Mesma permanente com outro nome no campo: transformou (dupla face, dia e noite) ou virou cópia de outra.
-    const names = new Map(visual.players.flatMap(p => p.battlefield.map(c => [c.id, c.faceDown ? '' : c.name ?? ''] as [number, string])));
-    if (!silently && fieldNamesMatch === timeline.matchId) {
-      const turned = [...names].filter(([id, n]) => n && fieldNames.get(id) && fieldNames.get(id) !== n).map(([id]) => id);
-      if (turned.length) motion.transformed(turned);
-    }
-    fieldNames = names; fieldNamesMatch = timeline.matchId;
+    // Mesma permanente com outra face no campo: transformou, virou cópia de outra ou virou de face para cima.
+    const faces = faceWatch.see(visual.players, timeline.matchId, visual.dayTime);
+    if (!silently && faces.turned.length) motion.transformed(faces.turned, faces.flat);
     // Enjoo de invocação: quem ficou tonto e quem deixou de estar (só entre desenhos da mesma partida).
     const tonto = new Set(visual.players.flatMap(p => p.battlefield.filter(dizzy).map(c => c.id)));
     if (!silently && dizzyMatch === timeline.matchId) {
-      const { arrived, cleared } = dizzyChanges(dizzyBefore, tonto, new Set(names.keys()));
+      const { arrived, cleared } = dizzyChanges(dizzyBefore, tonto, faces.onField);
       if (arrived.length || cleared.length) motion.dizzy(arrived, cleared);
     }
     dizzyBefore = tonto; dizzyMatch = timeline.matchId;

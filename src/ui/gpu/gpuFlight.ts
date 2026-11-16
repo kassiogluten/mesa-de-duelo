@@ -161,6 +161,18 @@ export function textureReady(layer: GpuLayer, url: string) {
   return !!ready(layer, url)?.texture;
 }
 
+/**
+ * A textura pronta de uma carta, segura enquanto um efeito a usa (a limpeza das texturas não a solta até `release`); sem
+ * ela, nada, e ela começa a carregar.
+ */
+export function holdTexture(layer: GpuLayer, url: string): { texture: Texture; release(): void } | undefined {
+  const entry = ready(layer, url);
+  if (!entry?.texture) return undefined;
+  entry.busy++; entry.used = performance.now();
+  let held = true;
+  return { texture: entry.texture, release() { if (held) { held = false; entry.busy--; } } };
+}
+
 const DEG = Math.PI / 180, PERSPECTIVE = 900;
 const smooth = (x: number) => { const t = Math.max(0, Math.min(1, x)); return t * t * (3 - 2 * t); };
 // Onde a carta de costas vira no ar (fração do voo): começa no alto do arco e termina antes de chegar.

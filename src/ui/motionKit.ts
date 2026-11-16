@@ -5,6 +5,7 @@
 import { createGpuPort } from './gpu/gpuPort';
 import { flightArc } from './flightPath';
 import { SLEEVE_VARS } from './sleeves';
+import type { TurnSide } from './gpu/gpuTurn';
 
 export const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 // Moer: sem a arrancada do EASE, para a virada cair no meio do voo.
@@ -26,7 +27,8 @@ export const TAP = spring(420, 26);
 export interface Point { cx: number; cy: number; w: number; h: number }
 /** O brilho de borda do voo na GPU, pela cor da moldura da carta (a mesma do `planeswalkerEffects`, dourado no multicolor). */
 const EDGE: Record<string, string> = { W: '#fff3c4', U: '#6fb8ff', B: '#b07cff', R: '#ff7a4d', G: '#63d68f', M: '#f2b54c', L: '#c8b48a', C: '#dfe6ee' };
-export interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string }
+/** `side` é o lado da carta que estava à mostra (a imagem completa, ou o verso), para ela virar na camada GPU se mudar de face. */
+export interface Snap extends Point { el: HTMLElement; tapped: boolean; zone: string; side?: TurnSide }
 /** Onde uma carta da sua mão estava: o tamanho sem o giro do leque, e o giro à parte. */
 export interface HandSpot extends Point { rot: number; seen: number }
 
@@ -38,6 +40,16 @@ export function center(el: Element | null | undefined): Point | undefined {
 /** O centro da mesa, onde aparece a carta sem lugar no campo (ou o que não tem de onde sair), no tamanho de uma carta. */
 export function stagePoint(bounds: { left: number; top: number; width: number; height: number }): Point {
   return { cx: bounds.left + bounds.width * .5, cy: bounds.top + bounds.height * .48, w: Math.min(112, bounds.height * .17), h: Math.min(156, bounds.height * .237) };
+}
+/** O lado de uma carta que está à mostra: a imagem completa dela (`data-full`) ou, de costas, as cores da capa. */
+export function sideOf(el: Element | null | undefined): TurnSide | undefined {
+  const face = el?.matches('.face') ? el as HTMLElement : el?.querySelector<HTMLElement>('.face');
+  if (!face) return undefined;
+  if (face.dataset.full) return { url: face.dataset.full };
+  const back = face.querySelector('.back');
+  if (!back) return undefined;
+  const style = getComputedStyle(back);
+  return { back: SLEEVE_VARS.map(name => style.getPropertyValue(name).trim()) };
 }
 /** O giro de uma carta na tela (o leque gira cada carta um pouco). */
 export function turnOf(el: Element | null | undefined) {
@@ -103,7 +115,10 @@ export function createMotionKit(root: HTMLElement) {
   function track(el: HTMLElement) {
     layer().append(el); effects.add(el);
   }
+  // Quantas vezes a camada foi limpa: quem escondeu uma carta por conta própria sabe que ela já voltou.
+  let clears = 0;
   function clear() {
+    clears++;
     gpu.clear();
     for (const animation of animations) animation.cancel();
     animations.clear();
@@ -245,7 +260,7 @@ export function createMotionKit(root: HTMLElement) {
     animate(el, fallback, duration, 'ease-out');
   }
   return {
-    root, state, layer, later, stage, gpu, toneOf, stackPile, recentStack, callouts, hiddenCards,
+    root, state, layer, later, stage, gpu, toneOf, stackPile, recentStack, callouts, hiddenCards, clears: () => clears,
     animate, effect, track, clear, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, flare,
   };
 }

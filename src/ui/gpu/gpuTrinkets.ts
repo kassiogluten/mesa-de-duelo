@@ -26,7 +26,7 @@ const LOOK: Record<Trinket, { stops: [string, string, string]; spark: number; sh
 const LENS = 'M10 3a7 7 0 1 0 4.2 12.6l5.1 5.1 1.4-1.4-5.1-5.1A7 7 0 0 0 10 3zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z';
 
 /** O degradê do objeto, com a luz no alto à esquerda (as facetas dão o resto). */
-function gradient(g: CanvasRenderingContext2D, x: number, y: number, size: number, [hi, mid, low]: [string, string, string]) {
+export function gradient(g: CanvasRenderingContext2D, x: number, y: number, size: number, [hi, mid, low]: [string, string, string]) {
   const fill = g.createRadialGradient(x + size * .35, y + size * .3, size * .05, x + size / 2, y + size / 2, size * .7);
   fill.addColorStop(0, hi); fill.addColorStop(.5, mid); fill.addColorStop(1, low);
   g.fillStyle = fill; g.fillRect(x, y, size, size);
