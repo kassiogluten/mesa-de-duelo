@@ -1538,3 +1538,18 @@ Hoje o aviso "Nova versão do jogo" (`banner('pwa-update', …)` em `src/ui/pwa.
 - [x] Os outros avisos do mesmo arquivo (sem internet, instalar no iPhone) continuam como faixa.
 
 Feito em 15/11/2026 (`novidades-pendentes/aviso-versao-modal`): `<dialog>` modal (`updateDialog` em `pwa.ts`) com o fundo embaçado e escurecido; o foco vai para "Atualizar agora" e volta para onde estava ao fechar.
+
+## 133. ✅ Carregando nas imagens das cartas (esboço de carta, depois a small, depois a imagem)
+
+Pedido em 15/11/2026. Hoje, enquanto a imagem de uma carta não chega, o lugar fica vazio, com o verso ou só com a moldura, e de repente a imagem aparece. Na primeira visita, com a internet lenta, ou quando o cache de imagens (item 10) ainda não tem a carta, a mesa e as telas parecem quebradas até tudo carregar.
+
+Feito em 15/11/2026 (`novidades-pendentes/carregando-imagens`), com `src/ui/imageLoading.ts` (um só observador na página acompanha cada `<img>` de carta que ainda não chegou) e o esboço de carta de `faceHTML` (`.fb` em `style.css`).
+
+- [x] Decidir o estilo. Decidido no mesmo dia, depois de ver cada passo: o skeleton saiu porque cobria a carta em texto (nome, custo, tipo), útil enquanto carrega; a arte recortada dentro do esboço saiu porque pesa quase o mesmo que a imagem (36 a 60 KB contra 65 a 85 KB da `normal`; a `small` tem uns 12 KB). Ficou: o esboço parecido com uma carta impressa (moldura preta, barra de nome e custo, janela da arte vazia, barra de tipo, caixa de texto com as regras, P/R ou lealdade no canto) → a `small` ampliada se a imagem demora (sem `filter: blur`, que borraria as bordas para dentro) → a imagem.
+- [x] Onde vale: o esboço em toda carta desenhada por `faceHTML` no estilo imagem completa (campo, mão, pilha, escolhas), também quando a imagem falha. A `small` em toda `<img>` de carta `normal`/`large` (também inspetor, prévia e construtor, sem esboço por baixo); a arte recortada (estilos Arte e texto e Arena) e as imagens que já são `small` (cartas pequenas do campo) só ganham o esmaecer. Os fundos em CSS (retratos, capas) ficaram como antes.
+- [x] Sem baixar à toa: a `small` só é pedida com a imagem demorando (`img-slow`, depois de 140 ms).
+- [x] A troca sem pulo: a imagem pronta entra depois do `decode()`; sem a `small` no lugar, com um esmaecer curto.
+- [x] Imagem que falha (cache e Scryfall): fica o esboço; a que vai tentar o Scryfall espera de novo (o ouvinte de erro vem depois da reserva de `scryfallMirror.ts`).
+- [x] Leve: nada anima enquanto espera; o esmaecer sai com "reduzir movimento".
+- [x] Imagem já no aparelho não muda nada: nos primeiros 140 ms nada acontece, e um endereço que já chegou nesta página não espera de novo quando a mesa redesenha.
+- [x] Testes: `tests/fixtures/image-loading.html` com a imagem atrasada pela rota `?lento=` do Vite (`lentoSmall`, `?falha=1`), `tests/image-loading.browser.mjs` e `tests/image-loading.test.mjs`; prints na pasta da novidade.

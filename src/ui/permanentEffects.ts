@@ -94,7 +94,7 @@ export function dizzyChanges(before: ReadonlySet<number>, after: ReadonlySet<num
  */
 export function sickGhosts(faceHtml: string) {
   return faceHtml.replace(/<img src="([^"]+)"[^>]*>/, (img, src: string) =>
-    `${img}<span class="sick-cyan" aria-hidden="true"></span><span class="sick-red" aria-hidden="true"><img src="${src}" alt="" draggable="false" onload="this.parentNode.classList.add('on')" onerror="this.remove()"></span>`);
+    `${img}<span class="sick-cyan" aria-hidden="true"></span><span class="sick-red" aria-hidden="true"><img src="${src}" alt="" draggable="false" data-no-wait onload="this.parentNode.classList.add('on')" onerror="this.remove()"></span>`);
 }
 
 type StatusKind = `type ${TypeIcon}` | 'control' | 'goaded' | 'regen' | 'chosen' | 'protector' | 'enchants' | 'foretold' | 'devotion' | 'devotion met' | 'count' | 'count met' | `state ${FCardState}`;

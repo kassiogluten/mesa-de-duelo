@@ -1,0 +1,9 @@
+/* Carregando nas imagens das cartas (imageLoading.ts). Até a imagem chegar, fica à vista o esboço da carta por baixo
+   dela (style.css, .fb). Se ela demora, a small entra no lugar, ampliada (pequena e esticada, já fica borrada); a
+   aspect-ratio dá altura à <img> ainda sem imagem onde só a largura é definida (carta ampliada, prévia). */
+img.img-small { background: var(--img-small) center / cover no-repeat; aspect-ratio: 488 / 680; }
+img.img-in { animation: img-in 0.2s ease-out; }
+
+@keyframes img-in { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) { img.img-in { animation: none; } }

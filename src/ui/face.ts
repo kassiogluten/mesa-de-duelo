@@ -34,7 +34,11 @@ const BACK_LAYER = '<div class="back face-back" aria-hidden="true"></div>';
  */
 export type CardStyle = 'full' | 'art' | 'arena';
 
-/** Carta desenhada: imagem do Scryfall por cima de uma moldura em CSS que aparece se a imagem faltar. */
+/**
+ * Carta desenhada: imagem do Scryfall por cima de um esboço de carta em CSS (moldura, nome e custo, janela da arte vazia,
+ * tipo, texto e P/R), que aparece enquanto a imagem não chega ou se ela faltar. Se a imagem demora, a small entra antes
+ * dela (imageLoading.ts).
+ */
 export function faceHTML(f: FaceInfo) {
   if (f.style === 'art') return artFaceHTML(f);
   if (f.style === 'arena') return arenaFaceHTML(f);
@@ -42,8 +46,10 @@ export function faceHTML(f: FaceInfo) {
   return `<div class="face col-${f.color}"${fullAttr(f)}>
     <div class="fb">
       <div class="fb-head"><span class="fb-name">${esc(f.name)}</span><span class="fb-cost">${manaHTML(f.manaCost)}</span></div>
+      <div class="fb-art"></div>
       <div class="fb-type">${esc(f.typeLine)}</div>
-      ${f.creature ? `<div class="fb-pt">${f.power ?? 0}/${f.toughness ?? 0}</div>` : ''}
+      <div class="fb-text">${f.text ? richText(f.text).replace(/\n/g, '<br>') : ''}</div>
+      ${f.creature ? `<div class="fb-pt">${f.power ?? 0}/${f.toughness ?? 0}</div>` : f.loyalty !== undefined ? `<div class="fb-pt fb-loyalty">${f.loyalty}</div>` : ''}
     </div>
     ${f.image ? `<img src="${f.image}" alt="${esc(f.name)}" draggable="false" loading="lazy" onerror="this.remove()">` : ''}
   </div>`;

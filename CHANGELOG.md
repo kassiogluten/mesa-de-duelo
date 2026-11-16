@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.185.0] - 2026-11-15
+
+### Novo
+
+- **Carta desenhada e imagem leve enquanto a carta carrega.** Enquanto a imagem de uma carta ainda está a caminho (primeira visita, internet lenta), a carta desenhada que aparece no lugar ficou parecida com uma carta de verdade: moldura preta, barra com nome e custo, janela da arte, barra de tipo, caixa de texto com as regras e P/R no canto. Se a imagem demora, a versão leve dela (bem menor, chega antes) entra no lugar; quando a imagem completa chega, ela substitui a leve sem aparecer pela metade. Vale na mesa, na mão, na pilha, nas escolhas, na carta ampliada e no construtor de decks. A imagem que já está no aparelho aparece direto, e a que não carrega de jeito nenhum deixa a carta desenhada no lugar.
+
 ## [0.184.0] - 2026-11-15
 
 ### Novo

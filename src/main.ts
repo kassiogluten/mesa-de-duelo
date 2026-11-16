@@ -2,6 +2,7 @@
 import { EVENTS, KEYS, NAMES, load } from './storage';
 import { DEFAULT_AI_STYLE, isAiStyle } from './aiStyle';
 import './style.css';
+import './ui/imageLoading';
 import { setupPwa } from './ui/pwa';
 import { type DeckData } from './decks';
 import { deckBracket } from './brackets';

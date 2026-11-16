@@ -22,6 +22,14 @@ const efeitos = (req: { url?: string }, _res: unknown, next: () => void) => {
 // Imagens das cartas pelo cache (/scryfall/, src/scryfallMirror.ts): na publicação é o nginx que guarda; no dev e no
 // preview, o Vite só repassa ao Scryfall.
 const scryfallMirror = { '/scryfall/': { target: 'https://cards.scryfall.io', changeOrigin: true, rewrite: (path: string) => path.slice('/scryfall'.length) } };
+// Imagem de carta atrasada de propósito (página de teste do carregando, tests/fixtures/image-loading.html):
+// /scryfall/…?lento=3000 espera 3 s antes de seguir para o Scryfall (a small espera lentoSmall, se vier); ?falha=1 dá 404.
+const lento = (req: { url?: string }, res: { statusCode: number; end: () => void }, next: () => void) => {
+  if (!req.url?.startsWith('/scryfall/') || !/[?&](lento|falha)=/.test(req.url)) return next();
+  const q = new URL(req.url, 'http://x').searchParams;
+  const ms = Number((req.url.includes('/small/') && q.get('lentoSmall')) || q.get('lento') || 0);
+  setTimeout(() => { if (q.get('falha')) { res.statusCode = 404; res.end(); } else next(); }, Math.min(ms, 30000));
+};
 
 export default defineConfig({
   server: { proxy: scryfallMirror },
@@ -36,6 +44,7 @@ export default defineConfig({
   },
   plugins: [
     { name: 'efeitos', configureServer: s => { s.middlewares.use(efeitos); }, configurePreviewServer: s => { s.middlewares.use(efeitos); } },
+    { name: 'imagem-lenta', configureServer: s => { s.middlewares.use(lento); } },
     VitePWA({
       // A página decide quando atualizar: o jogador vê "Nova versão" e escolhe a hora (src/ui/pwa.ts).
       registerType: 'prompt',

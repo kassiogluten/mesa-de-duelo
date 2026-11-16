@@ -575,20 +575,6 @@ Sugestões de 14/11/2026, depois da fila sem pular jogadas e da mesa viva (itens
 
 - [x] Tour no laboratório de efeitos: um botão que roda todos os efeitos em sequência, para conferir depois de cada mudança e tirar os prints das novidades. Feito em 14/11/2026 (seção "Momentos e mesa viva" do `effects-lab.html`).
 
-## 133. Carregando nas imagens das cartas (skeleton ou a própria imagem com blur)
-
-Pedido em 15/11/2026. Hoje, enquanto a imagem de uma carta não chega, o lugar fica vazio, com o verso ou só com a moldura, e de repente a imagem aparece. Na primeira visita, com a internet lenta, ou quando o cache de imagens (item 10) ainda não tem a carta, a mesa e as telas parecem quebradas até tudo carregar.
-
-A ideia é mostrar que a imagem está a caminho: um **skeleton** (a forma da carta com um brilho correndo) ou a **própria imagem borrada** (a versão `small`, que é leve e muitas vezes já está no aparelho, ampliada com blur até a `normal` chegar, como no Arena).
-
-- [ ] Decidir o estilo: skeleton, blur da `small` ou os dois (blur quando a `small` já está no aparelho, skeleton quando não há nada). Ver como fica na mesa, na mão, no inspetor e no construtor de decks antes de escolher.
-- [ ] Onde vale: cartas da mesa e da mão (`<img>` de `faceHTML`), inspetor e prévia, construtor de decks (resultados da busca e lista), capas dos decks e retratos na tela inicial e na sala (hoje fundos em CSS, sem aviso de carregamento: precisam carregar a imagem antes para saber quando ela chegou).
-- [ ] A troca para a imagem pronta sem pulo: o lugar já tem o tamanho da carta, e a imagem entra com um esmaecer curto quando termina de decodificar (`decode()`), nunca no meio.
-- [ ] Imagem que falha (cache e Scryfall): o carregando vira o que já existe hoje (verso ou layout de texto), sem ficar brilhando para sempre.
-- [ ] Leve: um só brilho em CSS animando só `transform`/`opacity` (o padrão do item 125), parado com "reduzir movimento" e nos efeitos leves (degrau 3 do Automático); nada de animação por carta com a mesa cheia.
-- [ ] Imagem já no cache do aparelho não mostra carregando (aparece direto, sem piscar).
-- [ ] Testes: página de teste com a imagem atrasada de propósito (rota do Vite ou `fixture` que segura a resposta) e prints para as novidades.
-
 ## 134. Achar os efeitos mais pesados e desligá-los no degrau E1
 
 Pedido em 15/11/2026. Hoje o degrau 1 do Efeitos: Automático (`src/ui/gpu/effectsGovernor.ts`, "E1" no selo de FPS) só corta as faíscas pela metade. Os outros efeitos seguem iguais até o degrau 2 (mesa viva e câmera paradas) e o 3 (efeitos leves). Se o que derruba os quadros é um efeito específico, cortar as faíscas não resolve, e a mesa desce mais um degrau à toa, perdendo efeitos leves junto com os pesados.

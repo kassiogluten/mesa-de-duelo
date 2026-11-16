@@ -30,6 +30,7 @@ import './combatForecast.css';
 import './choiceScreens.css';
 import './choiceFilters.css';
 import './libraryChoice.css';
+import './imageLoading';
 import './piles.css';
 import './combatDamage.css';
 import './gameplay.css';
