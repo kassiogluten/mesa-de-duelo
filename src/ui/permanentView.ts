@@ -15,7 +15,7 @@ import { walkerForecast } from './combatForecast';
 import type { Defender } from './commanderTable';
 import { label } from './cardFaces';
 import { COUNTER_DISC, COUNTER_ICON, ICON_CLIP, ICON_CROWN, ICON_DIZZY, ICON_LAYERS, ICON_SHIELD, ICON_SWORD, KEYWORD_ICON, inspectIcon } from './icons';
-import { KEYWORD_LABEL, counterKeyword, counterLabel, fieldKeywordsOf } from './cardLabels';
+import { counterKeyword, counterLabel, fieldKeywordsOf, keywordName, keywordRule } from './cardLabels';
 
 /** O que as peças do campo precisam da mesa. */
 export interface BoardView {
@@ -63,8 +63,9 @@ export function combatIndex(s: FState, id: number): { attack?: number; block?: n
   return b >= 0 ? { block: b + 1 } : {};
 }
 /** Selo com ícone (e número, se houver); o nome aparece no balão ao passar o mouse ou clicar. */
-export const chip = (v: BoardView, cls: string, key: string, icon: string, name: string, n?: number) =>
-  `<span class="${cls}${v.openCounter === key ? ' open' : ''}" data-ctr="${key}" role="button" tabindex="0" aria-label="${esc(name)}">${icon}${n !== undefined ? `<b>${n}</b>` : ''}<span class="ctr-tip">${esc(name)}</span></span>`;
+/** Selo de marcador ou de palavra-chave; com `rule`, o balão explica a regra embaixo do nome. */
+export const chip = (v: BoardView, cls: string, key: string, icon: string, name: string, n?: number, rule?: string) =>
+  `<span class="${cls}${v.openCounter === key ? ' open' : ''}" data-ctr="${key}" role="button" tabindex="0" aria-label="${esc(rule ? `${name}: ${rule}` : name)}">${icon}${n !== undefined ? `<b>${n}</b>` : ''}<span class="ctr-tip${rule ? ' rule' : ''}">${rule ? `<b>${esc(name)}</b><small>${esc(rule)}</small>` : esc(name)}</span></span>`;
 export const classLevelText = (c: FCard) => `Nível ${c.classLevel}${c.classMaxLevel ? ` de ${c.classMaxLevel}` : ''}${c.classMaxLevel && c.classLevel === c.classMaxLevel ? ' (máximo)' : ''}`;
 /** Classe do número de P/T: verde acima da base, vermelho abaixo. */
 export const delta = (v: number, base: number | undefined) => (base === undefined || v === base ? '' : v > base ? 'up' : 'down');
@@ -139,9 +140,9 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
     ? `<span class="counters">${shown.map(([k, n]) => chip(v, 'ctr', `${c.id}:${k}`, COUNTER_ICON[k] ?? KEYWORD_ICON[counterKeyword(k) ?? k] ?? COUNTER_DISC, `${counterLabel(k)} ×${n}`, n)).join('')}</span>` : '';
   // A palavra-chave que vem de um marcador (Voar ×1) já aparece no marcador: não repete como palavra-chave.
   const kws = fieldKeywordsOf(c).filter(k => !shown.some(([ck]) => counterKeyword(ck) === k));
-  const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip(v, 'ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, KEYWORD_LABEL[k] ?? k)).join('')}</span>` : '';
+  const kwHTML = kws.length ? `<span class="kws">${kws.map(k => chip(v, 'ctr kw', `${c.id}:kw:${k}`, KEYWORD_ICON[k] ?? COUNTER_DISC, keywordName(c, k), undefined, keywordRule(c, k))).join('')}</span>` : '';
   // Selo único que substitui marcadores e palavras-chave quando eles não cabem na carta (layoutCounters); toca e abre o inspetor.
-  const sumText = [shown.length ? `Marcadores: ${shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', ')}.` : '', kws.length ? `Habilidades: ${kws.map(k => KEYWORD_LABEL[k]).join(', ')}.` : ''].filter(Boolean).join(' ');
+  const sumText = [shown.length ? `Marcadores: ${shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', ')}.` : '', kws.length ? `Habilidades: ${kws.map(k => keywordName(c, k)).join(', ')}.` : ''].filter(Boolean).join(' ');
   const sumHTML = shown.length + kws.length > 1 && !c.faceDown && c.name
     ? `<span class="ctr ctr-sum" data-inspect="${c.id}" role="button" tabindex="0" aria-label="${esc(`${sumText} Toque para ver os detalhes.`)}">${ICON_LAYERS}<b>${shown.length + kws.length}</b><span class="ctr-tip">${esc(sumText)}<small>Toque para ver os detalhes.</small></span></span>` : '';
   // A ponte marca o comandante; uma ponte mais antiga só manda a lista de comandantes de cada jogador (mesmo id da carta).
@@ -166,7 +167,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
     if (c.creature || c.token) slot.push('ar-square');
   }
   const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.ringBearer ? 'Portador do Anel' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
-    kws.map(k => KEYWORD_LABEL[k]).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : '', exiledAria(slotExiled(s, c).map(x => x.card))].filter(Boolean).join(', ');
+    kws.map(k => keywordName(c, k)).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : '', exiledAria(slotExiled(s, c).map(x => x.card))].filter(Boolean).join(', ');
   const atts = attached.map((a, i) =>
     `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${v.face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');
   // Com dois ou mais anexos o leque fica estreito: o selo abre todos eles, junto da carta, em tamanho normal.

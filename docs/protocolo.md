@@ -297,6 +297,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `preparedFrom?` | `string` | No exílio, a cópia do feitiço preparado: o nome da criatura de onde ela veio. |
 | `ward?` | `string` | Custo da proteção contra alvos (ward), como "{2}" ou "Pay 3 life". |
 | `protection?` | `string[]` | De que a proteção protege, como o Forge escreve: "red", "artifact", "multicolored"… |
+| `landwalk?` | `string[]` | Travessia (landwalk): o tipo de terreno, como o Forge escreve ("Swamp", "Land.Legendary", "Forest.Snow"). |
 | `phasedOut?` | `boolean` | Fora de fase (phasing): continua no campo, mas como se não existisse. |
 | `cantAttack?` | `boolean` | Proibida de atacar ou de bloquear por um efeito (não conta enjoo, estar virada nem defensor). |
 | `cantBlock?` | `boolean` |  |

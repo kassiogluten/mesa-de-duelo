@@ -207,3 +207,26 @@ test('keyword counters (Indominus Rex, Alpha) show once, translated, with the ke
   assert.equal(counterName('Exalted'), 'Exaltado');
   assert.equal(counterName('P1P1'), '+1/+1');
 });
+
+test('evasions that limit blockers (intimidate, fear, shadow, skulk, horsemanship, landwalk) get their own badge with the rule in the balloon', async () => {
+  const { KEYWORD_ICON } = await import('../src/ui/icons.ts');
+  const { landwalkLand } = await import('../src/ui/cardLabels.ts');
+  const boar = bear(64, { name: 'Bladetusk Boar', keywords: ['INTIMIDATE'] });
+  const html = bfCard(view, state([boar]), boar);
+  assert.match(html, /aria-label="Intimidar: Só pode ser bloqueada por criaturas de artefato ou que tenham uma cor em comum com ela\."/);
+  assert.match(html, /class="ctr-tip rule"><b>Intimidar<\/b><small>/);
+  assert.ok(html.includes(KEYWORD_ICON.INTIMIDATE));
+  for (const [k, name] of [['FEAR', 'Medo'], ['SHADOW', 'Sombra'], ['SKULK', 'Sorrateiro'], ['HORSEMANSHIP', 'Equitação']]) {
+    const c = bear(65, { keywords: [k] });
+    assert.match(bfCard(view, state([c]), c), new RegExp(`aria-label="${name}: [^"]+"`), k);
+    assert.ok(KEYWORD_ICON[k], k);
+  }
+  const wraith = bear(66, { name: 'Bog Wraith', keywords: ['LANDWALK'], landwalk: ['Swamp'] });
+  assert.match(bfCard(view, state([wraith]), wraith), /aria-label="Travessia de pântano: Não pode ser bloqueada enquanto o jogador que defende controlar um pântano\."/);
+  const twice = bear(67, { keywords: ['LANDWALK'], landwalk: ['Island', 'Land.Legendary'] });
+  assert.match(bfCard(view, state([twice]), twice), /aria-label="Travessia de ilha e de terreno lendário: [^"]*controlar uma ilha ou um terreno lendário\."/);
+  assert.deepEqual(landwalkLand('Forest.Snow'), { name: 'floresta da neve', article: 'uma' });
+  // Sem regra, o balão continua só com o nome.
+  const flyer = bear(68, { keywords: ['FLYING'] });
+  assert.match(bfCard(view, state([flyer]), flyer), /<span class="ctr-tip">Voar<\/span>/);
+});

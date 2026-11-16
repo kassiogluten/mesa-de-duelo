@@ -1,5 +1,84 @@
 [
   {
+    "nome": "Intimidar, medo, sombra e travessia: selos e bloqueio",
+    "versao": "0.199.0",
+    "item": "Ícones para intimidar, medo, sombra, sorrateiro, equitação e travessia",
+    "conferir": "O Jogador 1 tem o Javali Presa de Navalha (intimidar), o Espectro Pavoroso (medo), o Assassino de Dauth (sombra) e a Aparição do Pântano (travessia de pântano). Cada um mostra o seu selo na carta (olhar franzido, rosto assustado, silhueta com sombra e seta sobre os morros), sem o escudo vazado; tocar no selo mostra o nome em português e a regra. Ataque com os quatro. No bloqueio do Jogador 2, os Ursos Cinzentos (verdes) não podem bloquear ninguém; o Goblin Enfurecido (vermelho) pode bloquear só o Javali; o Ornitóptero (artefato), o Javali e o Espectro; a Aparição não pode ser bloqueada, porque o Jogador 2 controla um Pântano, e o Assassino também não, porque ninguém tem sombra.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Bladetusk Boar"
+            },
+            {
+              "name": "Dread Specter"
+            },
+            {
+              "name": "Dauthi Slayer"
+            },
+            {
+              "name": "Bog Wraith"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Swamp"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Raging Goblin"
+            },
+            {
+              "name": "Ornithopter"
+            },
+            {
+              "name": "Swamp"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Indominus Rex, Alpha: marcadores de habilidade",
     "versao": "0.190.1",
     "item": "Marcadores de habilidade em português e sem repetir",

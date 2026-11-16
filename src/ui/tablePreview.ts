@@ -32,7 +32,7 @@ export function createCardPreview(d: PreviewDeps) {
     // Virada para baixo de outro jogador: a carta de lembrete, que só diz como ela foi virada (isso é público).
     if (c && reminder && !secret) {
       const card = { name: reminder.label, image: reminder.normal, text: reminder.text, typeLine: 'Criatura', power: c.power, toughness: c.toughness,
-        basePower: c.basePower, baseToughness: c.baseToughness, counters: c.counters, damage: c.damage, keywords: c.keywords,
+        basePower: c.basePower, baseToughness: c.baseToughness, counters: c.counters, damage: c.damage, keywords: c.keywords, landwalk: c.landwalk,
         notes: [`Virada para baixo (${reminder.label}): só quem a controla sabe qual carta é.`, ...permanentStatus(c, d.playerName, state?.you).map(seal => seal.label), ...exiledNotes(state, c)], onPoint };
       if (pinned) inspectCard(card, trigger); else showCardPreview(card, trigger, at);
       return;

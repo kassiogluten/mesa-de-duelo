@@ -228,6 +228,8 @@ export interface FCard {
   ward?: string;
   /** De que a proteção protege, como o Forge escreve: "red", "artifact", "multicolored"… */
   protection?: string[];
+  /** Travessia (landwalk): o tipo de terreno, como o Forge escreve ("Swamp", "Land.Legendary", "Forest.Snow"). */
+  landwalk?: string[];
   /** Fora de fase (phasing): continua no campo, mas como se não existisse. */
   phasedOut?: boolean;
   /** Proibida de atacar ou de bloquear por um efeito (não conta enjoo, estar virada nem defensor). */

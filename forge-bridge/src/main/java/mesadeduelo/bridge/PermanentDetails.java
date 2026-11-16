@@ -2,6 +2,7 @@ package mesadeduelo.bridge;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import forge.card.CardTypeView;
 import forge.game.Game;
 import forge.game.StaticEffect;
@@ -158,12 +159,14 @@ final class PermanentDetails {
 
     static void add(JsonObject o, CardView c, CardStateView s, Game game) {
         if (s.getKeywords() != null) {
-            JsonArray protection = new JsonArray();
+            JsonArray protection = new JsonArray(), landwalk = new JsonArray();
             for (KeywordView k : s.getKeywords()) {
                 if (k.keyword() == Keyword.WARD && !o.has("ward")) o.addProperty("ward", wardCost(k.original()));
                 if (k.keyword() == Keyword.PROTECTION) { String from = protectionFrom(k.original()); if (from != null) protection.add(from); }
+                if (k.keyword() == Keyword.LANDWALK) { String land = landwalkType(k.original()); if (land != null && !landwalk.contains(new JsonPrimitive(land))) landwalk.add(land); }
             }
             if (!protection.isEmpty()) o.add("protection", protection);
+            if (!landwalk.isEmpty()) o.add("landwalk", landwalk);
         }
         if (game == null || !s.isCreature() || c.getZone() != ZoneType.Battlefield) return;
         Card gc;
@@ -181,10 +184,6 @@ final class PermanentDetails {
         } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem marca desta vez */ }
     }
 
-    /** Palavras-chave de evasão sem ícone próprio na mesa: ganham o escudo vazado. Voar tem a asa; proteção, o selo. */
-    private static final java.util.Set<Keyword> EVASION = java.util.EnumSet.of(Keyword.INTIMIDATE, Keyword.SHADOW, Keyword.FEAR,
-            Keyword.LANDWALK, Keyword.SKULK, Keyword.HORSEMANSHIP);
-
     /**
      * "Não pode ser bloqueada": 2 se ninguém pode bloquear, 1 se só algumas criaturas não podem (Delney, "exceto por
      * criaturas com voar", "enquanto o defensor controla...", intimidar, sombra, medo, travessia, sorrateiro, equitação),
@@ -198,11 +197,7 @@ final class PermanentDetails {
         for (Card source : sources)
             for (StaticAbility st : source.getStaticAbilities()) {
                 if (!st.checkConditions(StaticAbilityMode.CantBlockBy) || !st.matchesValidParam("ValidAttacker", attacker)) continue;
-                if (st.getKeyword() != null) {
-                    // Só a palavra-chave da própria criatura (a sombra de outra só limita quem ela bloqueia).
-                    if (source == attacker && EVASION.contains(st.getKeyword().getKeyword())) found = 1;
-                    continue;
-                }
+                if (st.getKeyword() != null) continue;
                 if (!st.hasParam("ValidBlocker") && !st.hasParam("ValidBlockerRelative") && !st.hasParam("ValidAttackerRelative")
                         && !st.hasParam("ValidDefender")) return 2;
                 found = 1;
@@ -216,6 +211,13 @@ final class PermanentDetails {
         if (param.isEmpty()) return "";
         if (param.matches("\\d+")) return "{" + param + "}";
         try { return new Cost(param, true).toSimpleString(); } catch (RuntimeException e) { return param; }
+    }
+
+    /** "Landwalk:Swamp" → "Swamp"; "Landwalk:Land.Legendary:Legendary land" → "Land.Legendary" (a mesa traduz). */
+    static String landwalkType(String original) {
+        if (original == null) return null;
+        String[] parts = original.split(":");
+        return parts.length >= 2 && !parts[1].isBlank() ? parts[1].trim() : null;
     }
 
     /** "Protection from red" → "red"; "Protection:Card.MultiColor:multicolored" → "multicolored"; "Protection:Artifact" → "artifact". */

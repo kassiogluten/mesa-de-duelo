@@ -72,6 +72,29 @@ public class InputContextTest {
             assertEquals(ground.getId(), row.getAsJsonArray("attackers").get(0).getAsInt());
         });
     }
+    /** Intimidar e travessia: o bloqueador só pode ir para o atacante que ele pode bloquear de verdade. */
+    @Test public void intimidateAndLandwalkLimitTheLegalBlocks() {
+        Game game = ExilePermissionsTest.game(); Player attacking = game.getPlayers().get(0), defending = game.getPlayers().get(1);
+        Card boar = ExilePermissionsTest.add(game, "Bladetusk Boar", attacking, ZoneType.Battlefield);
+        Card wraith = ExilePermissionsTest.add(game, "Bog Wraith", attacking, ZoneType.Battlefield);
+        Card bears = ExilePermissionsTest.add(game, "Grizzly Bears", defending, ZoneType.Battlefield);
+        Card goblin = ExilePermissionsTest.add(game, "Raging Goblin", defending, ZoneType.Battlefield);
+        Card thopter = ExilePermissionsTest.add(game, "Ornithopter", defending, ZoneType.Battlefield);
+        ExilePermissionsTest.add(game, "Swamp", defending, ZoneType.Battlefield);
+        Combat combat = new Combat(attacking); game.getPhaseHandler().setCombat(combat);
+        combat.addAttacker(boar, defending); combat.addAttacker(wraith, defending);
+        FThreads.invokeInEdtAndWait(() -> {
+            InputBlock input = new InputBlock(human(game, defending), defending, combat);
+            var blocking = InputContext.blocking(input);
+            var legal = new java.util.HashMap<Integer, String>();
+            for (var row : blocking.getAsJsonArray("legalAssignments"))
+                legal.put(row.getAsJsonObject().get("blocker").getAsInt(), row.getAsJsonObject().getAsJsonArray("attackers").toString());
+            assertFalse("o urso verde não bloqueia o javali vermelho com intimidar, e a Aparição atravessa o pântano", legal.containsKey(bears.getId()));
+            assertEquals("[" + boar.getId() + "]", legal.get(goblin.getId()));
+            assertEquals("[" + boar.getId() + "]", legal.get(thopter.getId()));
+            assertFalse(InputContext.assignBlock(input, boar.getId(), bears.getId()));
+        });
+    }
     @Test public void onlyActualSuspendPlayConfirmationReceivesTypedContext() {
         Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
         Card rift = ExilePermissionsTest.add(game, "Rift Bolt", me, ZoneType.Exile);

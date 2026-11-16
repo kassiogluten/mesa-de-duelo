@@ -1030,6 +1030,10 @@ body[data-screen='lobby'] .credits { display: none; }
 .bfc.crowded > .ctr-sum { display: inline-flex; position: absolute; left: 3%; bottom: 3%; z-index: 3; }
 .ctr-sum .ctr-tip { width: max-content; max-width: 220px; white-space: normal; line-height: 1.35; font-weight: 500; }
 .ctr-sum .ctr-tip small { display: block; margin-top: 2px; color: var(--gold-light); }
+/* Selo de evasão (intimidar, medo, sombra...): o nome e, embaixo, a regra de quem pode bloquear. */
+.ctr-tip.rule { width: max-content; max-width: 220px; white-space: normal; line-height: 1.35; font-weight: 500; }
+.ctr-tip.rule b { display: block; font-weight: 700; }
+.ctr-tip.rule small { display: block; margin-top: 2px; font-size: 10.5px; color: var(--ink); }
 
 .stack-panel {
   position: absolute; z-index: 9; right: calc(max(1.2vw, env(safe-area-inset-right, 0px)) + 150px); top: 50%; transform: translateY(-50%);

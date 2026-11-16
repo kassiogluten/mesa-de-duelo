@@ -1,4 +1,11 @@
 {
+  "0.199.0": {
+    "Ícones para intimidar, medo, sombra, sorrateiro, equitação e travessia": [
+      { "img": "0.199.0/selos.webp", "legenda": "Os seis selos novos, da esquerda para a direita: intimidar, medo, sombra, sorrateiro, equitação (ao lado do Ímpeto) e travessia." },
+      { "img": "0.199.0/balao-intimidar.webp", "legenda": "Tocar no selo de intimidar mostra quem pode bloquear a criatura." },
+      { "img": "0.199.0/balao-travessia.webp", "legenda": "A travessia diz de que terreno é e quando a criatura não pode ser bloqueada." }
+    ]
+  },
   "0.198.0": {
     "Tirar 5 minutos do relógio do torneio": [
       { "img": "0.198.0/relogio.webp", "legenda": "O relógio da rodada com os ajustes −5, −1, +1 e +5 min ao lado de Pausar." }

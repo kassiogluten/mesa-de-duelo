@@ -177,11 +177,15 @@ public class DamageEventsTest {
         assertTrue(flag(pacified, "cantAttack")); assertTrue(flag(pacified, "cantBlock"));
         assertFalse(StateJson.card(knight.getView(), game).has("cantAttack"));
         Card blade = add(game, "Slither Blade", a), delney = add(game, "Delney, Streetwise Lookout", a), tetsuko = add(game, "Tetsuko Umezawa, Fugitive", b), giant = add(game, "Hill Giant", b);
-        Card boar = add(game, "Bladetusk Boar", a), dauthi = add(game, "Dauthi Slayer", a);
+        Card boar = add(game, "Bladetusk Boar", a), dauthi = add(game, "Dauthi Slayer", a), wraith = add(game, "Bog Wraith", a);
         game.getAction().checkStateEffects(true);
         assertTrue(flag(StateJson.card(blade.getView(), game), "unblockable"));
-        assertTrue("intimidar", flag(StateJson.card(boar.getView(), game), "blockLimited"));
-        assertTrue("sombra", flag(StateJson.card(dauthi.getView(), game), "blockLimited"));
+        // Intimidar, sombra e travessia têm selo próprio na mesa: não ganham também o escudo vazado.
+        JsonObject boarJson = StateJson.card(boar.getView(), game), wraithJson = StateJson.card(wraith.getView(), game);
+        assertFalse("intimidar", boarJson.has("blockLimited")); assertTrue(boarJson.getAsJsonArray("keywords").toString().contains("INTIMIDATE"));
+        assertTrue("a sombra não conta, mas a Delney limita quem bloqueia a Dauthi (2/2)", flag(StateJson.card(dauthi.getView(), game), "blockLimited"));
+        assertFalse("travessia", wraithJson.has("blockLimited")); assertEquals("Swamp", wraithJson.getAsJsonArray("landwalk").get(0).getAsString());
+        assertEquals("Land.Legendary", PermanentDetails.landwalkType("Landwalk:Land.Legendary:Legendary land"));
         assertTrue("Tetsuko é 1/3: ela mesma não pode ser bloqueada", flag(StateJson.card(tetsuko.getView(), game), "unblockable"));
         JsonObject limited = StateJson.card(delney.getView(), game);
         assertFalse("Delney depende do poder de quem bloqueia", limited.has("unblockable")); assertTrue(flag(limited, "blockLimited"));

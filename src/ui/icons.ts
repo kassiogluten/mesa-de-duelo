@@ -64,6 +64,16 @@ export const KEYWORD_ICON: Record<string, string> = {
   WARD: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10" stroke-width="2"/><circle cx="12.0" cy="8.6" r="4.6"/><circle cx="14.9" cy="13.7" r="4.6"/><circle cx="9.1" cy="13.7" r="4.6"/></svg>',
   INDESTRUCTIBLE: svg('M6 3h12l4 6-10 12L2 9z'),
   PROTECTION: svg('M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5zm0 2.2 6 2.2V11c0 4-2.6 7.6-6 8.9-3.4-1.3-6-4.9-6-8.9V6.4z'),
+  /** Evasões que limitam quem bloqueia: olhar franzido (intimidar), rosto assustado (medo), silhueta com a sombra atrás,
+   * pegadas (sorrateiro), cabeça de cavalo (equitação) e seta por cima dos morros (travessia). */
+  INTIMIDATE: svgEo('M2 5.5l8.5 3.6-.7 1.7L1.3 7.2zM22 5.5l-8.5 3.6.7 1.7 8.5-3.6z', 'M2.5 12.5c2.6-1 5.6-.6 8 1.3-1 2.4-3 3.4-5 3.1-1.6-.3-2.6-2-3-4.4zm19 0c-2.6-1-5.6-.6-8 1.3 1 2.4 3 3.4 5 3.1 1.6-.3 2.6-2 3-4.4z'),
+  FEAR: svgEo('M12 1.5c-4.7 0-7.5 4-7.5 9.5 0 6.3 3.4 11.5 7.5 11.5s7.5-5.2 7.5-11.5c0-5.5-2.8-9.5-7.5-9.5zM7.3 9.6a1.9 2.4 0 1 0 3.8 0 1.9 2.4 0 1 0-3.8 0zm5.6 0a1.9 2.4 0 1 0 3.8 0 1.9 2.4 0 1 0-3.8 0zm-2.8 7.3a1.9 3.3 0 1 0 3.8 0 1.9 3.3 0 1 0-3.8 0z'),
+  SHADOW: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3.5a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4zM8 22c0-5.5 2.9-9 6.5-9s6.5 3.5 6.5 9z" fill="currentColor" opacity=".4"/>'
+    + '<path d="M9.5 2a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4zM3 21c0-5.5 2.9-9 6.5-9s6.5 3.5 6.5 9z" fill="currentColor"/></svg>',
+  SKULK: svgEo('M6.2 13c1.8-.3 3.4 1 3.5 3.6.1 2.6-.9 5-2.8 5.2-2 .2-3-1.8-2.9-4.3.1-2.4.6-4.2 2.2-4.5zM4.6 10.6a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm2.5-.5a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm2.2.9a.9.9 0 1 0 1.8 0 .9.9 0 0 0-1.8 0z',
+    'M16.2 5c1.8-.3 3.4 1 3.5 3.6.1 2.6-.9 5-2.8 5.2-2 .2-3-1.8-2.9-4.3.1-2.4.6-4.2 2.2-4.5zM14.6 2.6a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm2.5-.5a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm2.2.9a.9.9 0 1 0 1.8 0 .9.9 0 0 0-1.8 0z'),
+  HORSEMANSHIP: svgEo('M6.5 22.5h12l-.7-3.5c-.4-2 .2-3.8 1.3-5.3l.9-1.3c.9-1.4.7-3.2-.5-4.3L16.5 5.5 17 1.5l-3.2 2.6C9.8 3.8 6.8 6.6 5.6 10.4L4.1 15c-.4 1.2.5 2.3 1.7 2.3.7 0 1.2-.3 1.6-.9l2-2.8c.6 2.6-.2 4.9-1.7 6.8zM12.4 7.6a1.1 1.1 0 1 0 2.2 0 1.1 1.1 0 0 0-2.2 0z'),
+  LANDWALK: svgEo('M1 22l6.5-9.5 4 5.5 3.5-4.5L23 22z', 'M2 5h13.5V1.5l6 5-6 5V8H2z'),
 };
 
 

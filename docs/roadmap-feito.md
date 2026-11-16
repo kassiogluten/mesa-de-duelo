@@ -1600,3 +1600,15 @@ Feito em 16/11/2026 (`novidades-pendentes/remocao-minimizada`), a partir da pré
 
 Ficou de fora: medir quantas janelas abriam por partida antes e depois. Dá para comparar com o **Sempre expandida** numa partida contra o computador, se um dia for preciso.
 
+## 141. ✅ Ícone próprio para Intimidar
+
+Pedido em 16/11/2026. Uma criatura com intimidar ("só pode ser bloqueada por criaturas de artefato e/ou criaturas que compartilhem uma cor com ela") não tinha marca própria na mesa: o servidor a punha entre as evasões sem ícone (`EVASION` em `PermanentDetails.java`, junto de medo, sombra, travessia, sorrateiro e equitação) e ela ganhava só o escudo vazado genérico de "bloqueio limitado" (`blockLimited`). No modal de detalhes, a palavra-chave aparecia crua ("intimidate").
+
+Feito em 16/11/2026 (`novidades-pendentes/selos-de-evasao`).
+
+- [x] Decidido: as seis evasões da lista ganham ícone e nome (opção C), com o balão explicando a regra de quem pode bloquear.
+- [x] Desenhos (`KEYWORD_ICON` em `icons.ts`), no azul-claro dos outros selos: olhar franzido (intimidar, o escolhido), rosto assustado (medo), silhueta com a sombra atrás (sombra), pegadas (sorrateiro), cabeça de cavalo (equitação) e seta por cima dos morros (travessia).
+- [x] O `EVASION` saiu: as palavras-chave já iam em `keywords` e não contam mais para o `blockLimited`. A travessia manda o tipo de terreno em `landwalk` ("Swamp", "Land.Legendary"), e a mesa diz "Travessia de pântano". Conferido no `DamageEventsTest` e no `ProtocolContractTest`.
+- [x] Nomes em português no selo, no modal de detalhes (que passou a usar os nomes de `cardLabels.ts`) e no balão (`keywordName`/`keywordRule`).
+- [x] No bloqueio, a mesa já seguia o servidor (`legalAssignments`, pelo `CombatUtil.canBlock` do Forge): `InputContextTest.intimidateAndLandwalkLimitTheLegalBlocks`.
+- [x] Novidade, prints e o cenário "Intimidar, medo, sombra e travessia: selos e bloqueio" no Laboratório.

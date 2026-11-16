@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.199.0] - 2026-11-16
+
+### Novo
+
+- **Ícones para intimidar, medo, sombra, sorrateiro, equitação e travessia.** As criaturas com essas habilidades ganham um selo próprio na carta, como Voar e Ameaçar: um olhar franzido (intimidar), um rosto assustado (medo), uma silhueta com a sombra atrás (sombra), pegadas (sorrateiro), uma cabeça de cavalo (equitação) e uma seta por cima dos morros (travessia). Tocar no selo mostra o nome em português e a regra de quem pode bloquear a criatura, e a travessia diz de que terreno é ("Travessia de pântano"). No lugar delas, a carta não mostra mais o escudo vazado genérico de "algumas criaturas não podem bloqueá-la", e os detalhes da carta trazem o nome em português em vez de "intimidate" ou "landwalk".
+
 ## [0.198.0] - 2026-11-16
 
 ### Novo

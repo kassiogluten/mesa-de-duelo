@@ -26,6 +26,7 @@ const KEYWORDS: [string, string][] = [
   ['PROTECTION', 'Proteção'], ['FLYING', 'Voar'], ['DEATHTOUCH', 'Toque mortífero'], ['LIFELINK', 'Vínculo com a vida'],
   ['FIRST_STRIKE', 'Iniciativa'], ['DOUBLE_STRIKE', 'Golpe duplo'], ['VIGILANCE', 'Vigilância'], ['HASTE', 'Ímpeto'],
   ['DEFENDER', 'Defensor'], ['MENACE', 'Ameaçar'], ['TRAMPLE', 'Atropelar'], ['INFECT', 'Infectar'], ['WITHER', 'Murchar'], ['REACH', 'Alcance'],
+  ['INTIMIDATE', 'Intimidar'], ['FEAR', 'Medo'], ['SHADOW', 'Sombra'], ['SKULK', 'Sorrateiro'], ['HORSEMANSHIP', 'Equitação'], ['LANDWALK', 'Travessia'],
 ];
 const STATES: [string, string][] = [
   ['tapped', 'Virada'], ['sick', 'Enjoo de invocação'], ['token', 'Ficha'], ['faceDown', 'Virada para baixo'], ['phasedOut', 'Fora de fase'],
@@ -381,6 +382,7 @@ function table() {
         x.keywords = on ? [...new Set([...(x.keywords ?? []), c.key])] : (x.keywords ?? []).filter((k: string) => k !== c.key);
         if (c.key === 'WARD') x.ward = on ? c.ward || '{2}' : undefined;
         if (c.key === 'PROTECTION') x.protection = on ? (c.protection || 'red').split(',') : undefined;
+        if (c.key === 'LANDWALK') x.landwalk = on ? (c.landwalk || 'Swamp').split(',') : undefined;
       } else if (c.key === 'P1P1' || c.key === 'M1M1') {
         const n = on ? 1 : 0; const sign = c.key === 'P1P1' ? 1 : -1, before = x.counters?.[c.key] ?? 0;
         x.counters = { ...x.counters, [c.key]: n }; if (!n) delete x.counters[c.key];

@@ -2,7 +2,7 @@
 import { cacheGet, fetchByNames, fetchPrintings, type Printing } from '../scryfall';
 import { esc, manaHTML, richText } from './cardtext';
 import { cardSides, flipButtonHTML, turnCard } from './cardFlip';
-import { counterName } from './cardLabels';
+import { counterName, keywordName } from './cardLabels';
 import { attachFoil, foilOf, type Foil } from './cardFoil';
 import './cardInspector.css';
 
@@ -11,7 +11,7 @@ export interface InspectorCard {
   /** A impressão escolhida no deck: a imagem e as faces para virar são as dela. */
   print?: Partial<Printing>; manaCost?: string; typeLine?: string;
   power?: number | string; toughness?: number | string; basePower?: number; baseToughness?: number;
-  keywords?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
+  keywords?: string[]; landwalk?: string[]; counters?: Record<string, number>; copyOf?: string; token?: boolean;
   attachedTo?: number; attachedToPlayer?: number; faceDown?: boolean; damage?: number;
   classLevel?: number; classMaxLevel?: number; ringBearer?: boolean; prepared?: boolean; preparedSpell?: string; preparedFrom?: string;
   merged?: MergedPart[];
@@ -31,7 +31,8 @@ export function mergedText(merged: { name?: string; faceDown?: boolean }[]) {
   const under = names.slice(1);
   return `Mutada: ${names[0]} por cima${under.length ? `, ${under.length > 1 ? `${under.slice(0, -1).join(', ')} e ${under.at(-1)}` : under[0]} embaixo` : ''}`;
 }
-const keywords: Record<string, string> = { FLYING: 'Voar', FIRST_STRIKE: 'Iniciativa', DOUBLE_STRIKE: 'Golpe duplo', TRAMPLE: 'Atropelar', HASTE: 'Ímpeto', VIGILANCE: 'Vigilância', REACH: 'Alcance', DEATHTOUCH: 'Toque mortífero', LIFELINK: 'Vínculo com a vida', HEXPROOF: 'Resistência à magia', INDESTRUCTIBLE: 'Indestrutível', MENACE: 'Ameaçar', DEFENDER: 'Defensor', SHROUD: 'Manto', WARD: 'Proteção contra alvos', PROTECTION: 'Proteção' };
+/** Nome em português; as que a mesa ainda não traduz saem como o Forge escreve ("split second"). */
+const keywordLabelOf = (card: InspectorCard, k: string) => { const name = keywordName(card, k); return name === k ? k.replaceAll('_', ' ').toLowerCase() : name; };
 let preview: HTMLElement | null = null;
 let modal: HTMLDialogElement | null = null;
 let hovered: InspectorCard | null = null;
@@ -71,7 +72,7 @@ function content(card: InspectorCard, compact: boolean) {
   <div class="ci-body${image ? '' : ' ci-no-image'}">${image ? imageHTML(image, name, compact ? null : foilOf(sc?.rarity)) : ''}<div class="ci-details">
     ${type ? `<p class="ci-type">${esc(type)}${card.typeChange ? ` <mark class="ci-type-change">— ${esc(card.typeChange)}</mark>` : ''}</p>` : ''}<div class="ci-rules">${richText(text)}</div>
     ${power !== undefined && toughness !== undefined ? `<p class="ci-strength"><strong>${esc(String(power))} / ${esc(String(toughness))}</strong>${current ? ` <span>Base: ${card.basePower}/${card.baseToughness}</span>` : ''}${card.damage ? ` · ${card.damage} de dano marcado` : ''}</p>` : ''}
-    ${card.keywords?.length ? `<ul class="ci-keywords">${card.keywords.map(k => `<li>${esc(keywords[k] ?? k.replaceAll('_', ' ').toLowerCase())}</li>`).join('')}</ul>` : ''}
+    ${card.keywords?.length ? `<ul class="ci-keywords">${card.keywords.map(k => `<li>${esc(keywordLabelOf(card, k))}</li>`).join('')}</ul>` : ''}
     ${Object.entries(card.counters ?? {}).length ? `<p>Marcadores: ${Object.entries(card.counters!).map(([k,v]) => `${esc(counterName(k))} × ${v}`).join(', ')}</p>` : ''}
     ${card.classLevel ? `<p class="ci-strength"><strong>Nível ${card.classLevel}${card.classMaxLevel ? ` de ${card.classMaxLevel}` : ''}</strong>${card.classMaxLevel && card.classLevel >= card.classMaxLevel ? ' <span>Nível máximo</span>' : ''}</p>` : ''}
     ${card.token ? '<p class="ci-note">Ficha</p>' : ''}${card.copyOf ? `<p class="ci-note">Cópia de ${esc(card.copyOf)}</p>` : ''}
