@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.198.0] - 2026-11-16
+
+### Novo
+
+- **Tirar 5 minutos do relógio do torneio.** Quem organiza ganha o botão −5 min ao lado do −1, +1 e +5 min, para descontar de uma vez o tempo de uma pausa que não foi parada no relógio.
+
 ## [0.197.0] - 2026-11-16
 
 ### Mudou

@@ -1,4 +1,9 @@
 {
+  "0.198.0": {
+    "Tirar 5 minutos do relógio do torneio": [
+      { "img": "0.198.0/relogio.webp", "legenda": "O relógio da rodada com os ajustes −5, −1, +1 e +5 min ao lado de Pausar." }
+    ]
+  },
   "0.197.0": {
     "Remoções minimizadas": [
       { "img": "0.197.0/faixa.webp", "legenda": "A faixa no canto da mesa: a carta que causou, o que ela fez, quantas remoções há e a borda vermelha porque uma carta sua saiu." }

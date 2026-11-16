@@ -8,7 +8,7 @@ export interface Relogio { estado: 'parado' | 'correndo' | 'pausado'; restanteMs
 /** Com 5 minutos ou menos, o relógio fica âmbar. */
 export const AVISO_MS = 5 * 60_000;
 /** Os ajustes que o organizador tem à mão. */
-export const AJUSTES = [-1, 1, 5] as const;
+export const AJUSTES = [-5, -1, 1, 5] as const;
 
 /**
  * O que falta agora. Correndo, conta até {@code terminaEm} pelo relógio deste aparelho, corrigido pela diferença

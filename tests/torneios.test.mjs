@@ -147,7 +147,7 @@ test('relógio na página: controles só para quem organiza, tela cheia para tod
   const parado = clock.relogioHTML({ estado: 'parado', restanteMs: 3_000_000, agora: 0 }, 3_000_000, 50, true);
   assert.match(parado, /class="tn-relogio f-ok e-parado"/);
   assert.match(parado, /data-relogio-acao="iniciar"><svg[^]*?<\/svg><span>Iniciar relógio/);
-  assert.match(parado, /data-minutos="-1"[^>]*>−1 min[^]*data-minutos="5"[^>]*>\+5 min/);
+  assert.match(parado, /data-minutos="-5"[^>]*>−5 min[^]*data-minutos="-1"[^>]*>−1 min[^]*data-minutos="5"[^>]*>\+5 min/);
   assert.doesNotMatch(parado, /zerar/, 'parado não tem o que recomeçar');
   const pausado = clock.relogioHTML({ estado: 'pausado', restanteMs: 60_000, agora: 0 }, 60_000, 50, true);
   assert.match(pausado, /f-aviso e-pausado[^]*<span>Continuar[^]*data-relogio-acao="zerar"/);
