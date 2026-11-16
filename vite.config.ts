@@ -4,13 +4,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // Além do jogo: as novidades em imagens (/novidades.html, linkada no painel Novidades e guardada com o app), a política
 // de privacidade (/privacidade.html, no rodapé e no menu da conta), Salas (/salas.html, no cabeçalho e no menu ⋯), Minhas
-// partidas (/partidas.html, no menu da conta e no menu ⋯), Torneios (/torneios.html, nos mesmos dois menus), Rever
+// partidas (/partidas.html, no menu da conta e no menu ⋯), Torneios (/torneios.html, nos mesmos dois menus), o Contador
+// de vida das partidas no papel (/contador.html, no menu ⋯ e em Torneios), Rever
 // partida (/rever.html, aberta de Minhas partidas), a
 // apresentação (/sobre, em sobre.html, para quem chega de fora e os buscadores), a área de admin (/admin.html) e as
 // páginas de teste da mesa (/tests/fixtures/*.html), linkadas na área de admin. Os scripts das duas últimas saem em
 // ferramentas/ e ficam fora do cache do app instalado; os das outras páginas vão em assets/ e são guardados com o app.
 const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.endsWith('.html')).map(f => [f.replace('.html', ''), `tests/fixtures/${f}`]));
-const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'torneios', 'rever', 'salas', 'admin'] as const;
+const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'torneios', 'contador', 'rever', 'salas', 'admin'] as const;
 const TOOLS = new Set<string>(['admin', ...Object.keys(fixtures)]);
 
 // /efeitos é o Laboratório de efeitos aberto a todos (menu ⋯); na publicação quem faz a troca é o deploy/nginx.conf.

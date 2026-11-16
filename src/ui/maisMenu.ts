@@ -15,12 +15,15 @@ const ICON_CARDS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6
 /** Interrogação: o item Como jogar. */
 const ICON_HELP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 16.8v.4"/></svg>';
 
+/** Coração: o item Contador de vida, das partidas no papel. */
+const ICON_HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+
 /** Faísca: o item Laboratório de efeitos. */
 const ICON_SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7ZM19 15c.3 1.9 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1.1 3-3Z"/></svg>';
 
 /**
  * Botão ⋯ do cabeçalho: o que se usa de vez em quando, fora da linha das abas, em grupos (Partidas: Salas, Rever,
- * Torneios; Laboratório: montar uma mesa e efeitos; Aparência: cartas da mesa e o tema, em amostras numa linha; Ajuda:
+ * Torneios, Contador de vida; Laboratório: montar uma mesa e efeitos; Aparência: cartas da mesa e o tema, em amostras numa linha; Ajuda:
  * Como jogar, relatar e Meus relatos). Um ponto no botão e no item Meus relatos avisa de resposta ainda não vista.
  */
 export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
@@ -31,6 +34,7 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
     + `<a role="menuitem" href="/salas.html" data-mais="salas">${ICON_TABLE}<span>Salas e partidas ao vivo</span></a>`
     + `<a role="menuitem" href="/partidas.html#gravadas" data-mais="rever">${ICON_REPLAY}<span>Rever partidas</span></a>`
     + `<a role="menuitem" href="/torneios.html" data-mais="torneios">${ICON_TROPHY}<span>Torneios presenciais</span></a>`
+    + `<a role="menuitem" href="/contador.html" data-mais="contador">${ICON_HEART}<span>Contador de vida (papel)</span></a>`
     + `<p class="mais-grupo" role="presentation">Laboratório</p>`
     + `<button type="button" role="menuitem" data-mais="lab" aria-label="Laboratório: montar uma mesa">${ICON_FLASK}<span>Montar uma mesa</span></button>`
     + `<a role="menuitem" href="/efeitos" data-mais="efeitos" aria-label="Laboratório de efeitos">${ICON_SPARK}<span>Efeitos</span></a>`

@@ -34,7 +34,7 @@ app.innerHTML = `
   </header>
   <main class="vis pt-pagina tn-pagina">
     ${codigo ? '' : `<h1>Torneios</h1>
-    <p class="vis-lead">Organize um torneio presencial no sistema suíço: inscreva os jogadores, sorteie as rodadas e lance os placares. A classificação e os desempates saem sozinhos, e qualquer pessoa com o link acompanha pelo celular.</p>`}
+    <p class="vis-lead">Organize um torneio presencial no sistema suíço: inscreva os jogadores, sorteie as rodadas e lance os placares. A classificação e os desempates saem sozinhos, e qualquer pessoa com o link acompanha pelo celular. Na mesa, cada partida pode marcar a vida com o <a href="/contador.html">Contador de vida</a>.</p>`}
     <div data-conteudo></div>
     <p class="tn-status" role="status" aria-live="polite"></p>
   </main>`;

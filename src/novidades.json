@@ -1,4 +1,27 @@
 {
+  "0.201.0": {
+    "Contador de vida para partidas no papel": [
+      { "img": "0.201.0/mesa.webp", "legenda": "Quatro jogadores com o celular em pé: cada painel virado para quem está daquele lado, com a vida grande, o − e o + nos lados, a última mudança no canto e a logo da mesa no meio, que abre os dados e o histórico." },
+      { "img": "0.201.0/configuracao.webp", "legenda": "Antes de começar: quantos jogadores, a vida inicial, o dano de comandante e o nome e a cor de cada um, na ordem do turno." }
+    ],
+    "Dano de comandante no Contador de vida": [
+      { "img": "0.201.0/comandante.webp", "legenda": "O dano de comandante aberto no painel da Ana, como um mapa da mesa visto do lugar dela: o Bruno e a Carla (com os dois comandantes) do outro lado, o Davi à direita e o lugar dela marcado como Você; o dano de 21 fica em vermelho." },
+      { "img": "0.201.0/fora.webp", "legenda": "A Ana fora da partida pelos 21 de dano do comandante do Bruno, e o Davi com as marcas do dano que já levou, na cor de cada comandante." }
+    ],
+    "Dados, moeda e histórico no Contador de vida": [
+      { "img": "0.201.0/d20.webp", "legenda": "O d20 em 3D parado no meio da mesa com o 14 para cima, e o resultado escrito logo abaixo, com De novo." },
+      { "img": "0.201.0/d6.webp", "legenda": "O d6 em 3D assentado no 5." },
+      { "img": "0.201.0/moeda.webp", "legenda": "A moeda em 3D caída na Coroa, com a borda serrilhada à vista." },
+      { "img": "0.201.0/menu.webp", "legenda": "A janela que a logo do meio da mesa abre: o d6, o d20 e a moeda desenhados nos botões, o histórico com Desfazer a última e os botões da partida, cada um com o seu ícone." }
+    ],
+    "Quando a vida mudou, no painel de cada jogador": [
+      { "img": "0.201.0/ultima.webp", "legenda": "No canto do painel do Davi, a última mudança na vida dele: −5 do dano de comandante, agora há pouco." },
+      { "img": "0.201.0/mudancas.webp", "legenda": "As mudanças de vida da Ana, abertas no painel dela: quanto mudou, o antes e o depois e a hora exata de cada uma." }
+    ],
+    "Fim da partida no Contador de vida": [
+      { "img": "0.201.0/fim.webp", "legenda": "O Bruno zerou e ficou fora; a Ana, a última na partida, recebe os raios dourados, o confete e o brasão de Vitória em 3D." }
+    ]
+  },
   "0.200.0": {
     "Primeiro degrau dos efeitos automáticos mais certeiro": [
       { "img": "0.200.0/magica-grande-e0.webp", "legenda": "Uma mágica grande chegando com os efeitos completos: a mesa escurece em volta dela." },

@@ -253,7 +253,7 @@ export function torneioHTML(t: Torneio) {
   const passadas = (t.estado === 'encerrado' ? rodadas : rodadas.slice(0, -1)).slice().reverse();
   return `${cabecalhoHTML(t)}
     ${proximoPassoHTML(t)}
-    ${atual && t.estado !== 'encerrado' ? `<section class="tn-secao" aria-labelledby="tn-atual">${tituloHTML('tn-atual', ICON_SWORDS, nomeRodada(atual))}${t.relogio ? relogioHTML(t.relogio, t.relogio.restanteMs, t.minutosPorRodada, t.organizadorSouEu) : ''}${rodadaHTML(t, atual, editavel)}</section>` : ''}
+    ${atual && t.estado !== 'encerrado' ? `<section class="tn-secao" aria-labelledby="tn-atual">${tituloHTML('tn-atual', ICON_SWORDS, nomeRodada(atual))}${t.relogio ? relogioHTML(t.relogio, t.relogio.restanteMs, t.minutosPorRodada, t.organizadorSouEu) : ''}${rodadaHTML(t, atual, editavel)}<p class="tn-nota">Para marcar a vida na mesa, use o <a href="/contador.html">Contador de vida</a> no celular.</p></section>` : ''}
     <section class="tn-secao" aria-labelledby="tn-class">${tituloHTML('tn-class', ICON_PODIUM, t.estado === 'encerrado' ? 'Classificação final' : 'Classificação')}${classificacaoHTML(t)}</section>
     <section class="tn-secao" aria-labelledby="tn-jog">${tituloHTML('tn-jog', ICON_USERS, 'Jogadores', ` <small>${t.jogadores.length}</small>`)}${jogadoresHTML(t)}</section>
     ${passadas.length ? `<section class="tn-secao" aria-labelledby="tn-ant">${tituloHTML('tn-ant', ICON_HISTORY, t.estado === 'encerrado' ? 'Rodadas' : 'Rodadas anteriores')}

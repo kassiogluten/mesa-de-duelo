@@ -130,6 +130,8 @@ export const KEYS = {
   // Outras telas
   /** Mesa livre em andamento (JSON). Mesa livre. */
   livre: 'mesa:livre',
+  /** Configuração e partida em andamento do Contador de vida, para as partidas no papel (JSON). Contador de vida. */
+  contador: 'mesa:contador:v1',
   /** Rascunho do cenário em edição (JSON). Laboratório. */
   labRascunho: 'mesa:lab:rascunho',
   /** Cenários salvos neste aparelho (JSON). Laboratório. */

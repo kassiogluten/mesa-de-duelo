@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.201.0] - 2026-11-16
+
+### Novo
+
+- **Contador de vida para partidas no papel.** Uma página nova, no menu ⋯ (Partidas) e na página Torneios: deixe o celular no meio da mesa e cada jogador, de 2 a 6, marca a sua vida no lado da tela virado para ele, com o celular em pé ou deitado. Toque à esquerda para tirar 1 e à direita para somar 1; segure para tirar ou somar 10 de uma vez. A vida inicial vem pronta (20, 25, 30 ou 40), cada jogador ganha nome e cor, a tela não apaga durante a partida e tudo funciona sem internet. Nomes, cores e parceiro podem ser trocados no meio da partida, em Jogadores, sem perder a vida marcada. Recarregar ou fechar a página não perde a partida: ela volta como estava.
+- **Dano de comandante no Contador de vida.** O escudo de cada painel abre o dano que cada comandante adversário já causou àquele jogador, num mapa da mesa visto do lugar dele: quem senta à sua esquerda aparece à esquerda, quem está do outro lado aparece em cima, o seu lugar fica marcado como Você e quem joga com parceiro tem os dois comandantes lado a lado. Somar o dano tira a vida junto, as marcas na cor de quem causou ficam no painel, e quem chega a 21 de um mesmo comandante (ou a 0 de vida) fica marcado como fora da partida, com o motivo.
+- **Dados, moeda e histórico no Contador de vida.** A logo da mesa, o losango dourado no meio da tela, abre os botões do d6, do d20 e da moeda, cada um com o desenho do dado ou da moeda, e rola em 3D, no meio da mesa e à vista de todos: o dado entra rolando, quica e para com o resultado para cima, e a moeda gira no ar e cai mostrando Cara ou Coroa. O resultado fica escrito logo abaixo, com De novo para rolar outra vez. A mesma janela guarda o histórico das mudanças de vida e dos dados, com Desfazer a última para corrigir um toque errado, e dali também dá para recomeçar a partida com os mesmos jogadores, trocar os jogadores, ligar a tela cheia e sair, cada botão com o seu ícone. Com os efeitos leves ou com reduzir movimento, o resultado aparece direto, sem a animação.
+- **Quando a vida mudou, no painel de cada jogador.** No canto de cada painel fica a última mudança na vida daquele jogador e há quanto tempo ela foi (−5 há 2 min), para tirar a dúvida de "será que já tirei?". Um toque ali abre todas as mudanças dele, cada uma com a hora exata, o antes e o depois, e o dano de comandante que levou. O histórico da janela da logo também passa a mostrar os segundos.
+- **Fim da partida no Contador de vida.** Quem sai da partida tem o painel rachado, com cinzas e fumaça, e quando sobra um só jogador, raios dourados e confete saem do painel dele e o brasão de Vitória em 3D cai girando por cima. Corrigir um toque errado e voltar a vida não repete o efeito.
+
 ## [0.200.0] - 2026-11-16
 
 ### Mudou
