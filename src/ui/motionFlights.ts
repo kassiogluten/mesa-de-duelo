@@ -1,4 +1,6 @@
 // Animações de cartas mudando de zona: conjurar, resolver, anular, entrar e sair do campo.
+import type { FCard } from '../forge/client';
+import { TRINKET_LIMIT } from './tokenTrinkets';
 import { entryTiming, type PresentationEvent } from './presentationTimeline';
 import { walkerArrives } from './planeswalkerEffects';
 import { warpCast } from './warpEffects';
@@ -14,7 +16,12 @@ const TOKEN_FLARE: Keyframe[] = [{ filter: 'brightness(1.8) drop-shadow(0 0 10px
  * Cartas mudando de zona: conjurar até a pilha, resolver e anular saindo dela, entrar no campo, sair dele, descartar,
  * e a cascata de várias permanentes da mesma resolução.
  */
-export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof createZoneMotion>, walkerArrive: (card: HTMLElement, event: PresentationEvent) => void) {
+/**
+ * `trinket`: a ficha de Tesouro, Pista, Comida ou Sangue que pousou ganha o objeto dela em 3D (motionMedals.ts); diz se
+ * ganhou.
+ */
+export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof createZoneMotion>, walkerArrive: (card: HTMLElement, event: PresentationEvent) => void,
+  trinket: (card: HTMLElement, data: FCard) => boolean) {
   const { root, state, later, animate, effect, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, flare, hiddenCards, recentStack, stackPile } = kit;
   const { destination, pileOf, zonePoint, reanimate, leave } = zones;
   const ninja = createNinjaMotion(kit);
@@ -148,7 +155,7 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       if (id !== undefined && landing) {
         const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
         if (landed) land(landed);
-        if (landed && event.card?.token) flare(landed, '#ffffff', TOKEN_FLARE);
+        if (landed && event.card?.token) { flare(landed, '#ffffff', TOKEN_FLARE); trinket(landed, event.card); }
         if (landed && walkerArrives(event)) walkerArrive(landed, event);
         if (landed && event.from === 'Graveyard') reanimate(landed);
       }
@@ -169,6 +176,8 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
     const total = travel + (flights - 1) * gap;
     // Cada monte de cartas iguais recebe as suas: "+8" em cima do monte, que cresce conforme elas chegam.
     const piles = new Map<HTMLElement, number>();
+    // Numa rajada de fichas, só as primeiras ganham o objeto em 3D.
+    let trinkets = 0;
     cards.forEach((card, i) => {
       const el = root.querySelector<HTMLElement>(`.field [data-fid="${card.id}"]`);
       const pile = el?.closest<HTMLElement>('.stack') ?? el;
@@ -196,7 +205,10 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
         // Cada uma assenta com mola; a onda dourada fica para o monte inteiro, no fim.
         if (landed && origin) land(landed, false);
         if (landed && event.from === 'Graveyard') reanimate(landed);
-        if (landed && card.token) flare(landed, '#ffffff', TOKEN_FLARE);
+        if (landed && card.token) {
+          flare(landed, '#ffffff', TOKEN_FLARE);
+          if (trinkets < TRINKET_LIMIT && trinket(landed, card)) trinkets++;
+        }
       }, reduced() ? 0 : travel + delay);
     });
     for (const [pile, n] of piles) {

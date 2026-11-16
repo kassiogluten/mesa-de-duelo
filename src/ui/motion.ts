@@ -1,4 +1,5 @@
 // Animações da mesa: compara o antes e o depois de cada jogada e anima o que mudou.
+import type { FPlayer } from '../forge/client';
 import type { PresentationEvent } from './presentationTimeline';
 import type { AmbienceScene } from './gpu/tableAmbience';
 import { center, createMotionKit, LANDING, reduced, SETTLE, TAP, turnOf } from './motionKit';
@@ -10,6 +11,7 @@ import { createBoardMotion } from './motionBoard';
 import { createStageMotion } from './motionStage';
 import { createFlightMotion } from './motionFlights';
 import { createImpactMotion } from './motionImpact';
+import { createMedalMotion } from './motionMedals';
 
 const KEYED = '[data-fid],[data-peek]';
 export interface Motion {
@@ -58,6 +60,13 @@ export interface Motion {
   glow(el: Element, color: string): void;
   /** Setas de alvo que acabaram de aparecer: cada uma nasce num traço de luz até o alvo. */
   arrowsBorn(arrows: { from: { x: number; y: number }; via: { x: number; y: number }; to: { x: number; y: number }; color: string }[]): void;
+  /** Virou dia (`day`) ou noite: o disco de sol e lua vira no meio da mesa e voa até `icon`, o ícone da trilha de fases. */
+  dayNight(day: boolean, icon: Element | null): void;
+  /**
+   * Desenho dos assentos: se a coroa do Monarca ou a Dianteira mudou de mão, o medalhão voa de um retrato para o outro;
+   * um emblema novo sai do planeswalker e pousa ao lado do retrato.
+   */
+  holders(players: FPlayer[], match: string): void;
 }
 
 /**
@@ -74,7 +83,8 @@ export function createMotion(root: HTMLElement): Motion {
   const library = createLibraryMotion(kit);
   const board = createBoardMotion(kit);
   const stage = createStageMotion(kit);
-  const flights = createFlightMotion(kit, zones, abilities.walkerArrive);
+  const medals = createMedalMotion(kit);
+  const flights = createFlightMotion(kit, zones, abilities.walkerArrive, medals.trinket);
   const impact = createImpactMotion(kit);
   /**
    * As animações contínuas de estado (voar, vínculo, enjoo, alvo possível) seguem um relógio só, o da página: a carta
@@ -211,5 +221,7 @@ export function createMotion(root: HTMLElement): Motion {
       if (document.hidden || root.hidden) return;
       arrows.forEach((arrow, i) => kit.gpu.play('arrowBirth', { ...arrow, delay: i * 70 }));
     },
+    dayNight: medals.dayNight,
+    holders: medals.holders,
   };
 }

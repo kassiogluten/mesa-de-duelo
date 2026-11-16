@@ -635,14 +635,3 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
   Feitos em 16/11/2026 (`novidades-pendentes/entrada-na-partida`). A compra espera o sorteio sair da mesa. Ao manter, a transição de CSS da mão termina na hora, e cada carta desliza do leque até a mão junto com a sua lupa. Também nesse dia: as lupas das cartas ainda a caminho não aparecem mais nos lugares vazios. Os efeitos da mesa começam a carregar no clique em Jogar, e o sorteio espera por eles (até 1,5 s) para rolar o dado em 3D; antes, a primeira rodada saía sempre chapada.
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
-
-## 140. Objetos 3D na camada dos efeitos
-
-Pedido em 16/11/2026, depois do dado em 3D (item 125): mais objetos em 3D de verdade, sem pesar nas partidas com FPS baixo. A regra está em `docs/spec-mesa-webgl.md` ("Objetos 3D"): um objeto só, por pouco tempo, num momento em que a mesa já está esperando; nunca contínuo nem um por permanente; do degrau 2 do automático em diante, a versão chapada. Decidido nesse dia: fazer todos, em entregas separadas, cada uma na própria pasta de `novidades-pendentes/`.
-
-- [x] Moeda em 3D, d2 e d100 em 3D e o shader dos sólidos aquecido com a mesa ociosa (`novidades-pendentes/moeda-e-dados-3d`).
-- [ ] Dia e noite: um disco de sol e lua que vira quando o dia vira noite (e o contrário).
-- [ ] Monarca e Dianteira: o medalhão da coroa e o escudo da dianteira passando de um jogador para outro.
-- [ ] Emblema do planeswalker surgindo como uma placa em 3D.
-- [ ] Fim da partida: um brasão em 3D sobre o retrato de quem venceu.
-- [ ] Fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta quando são criadas, desligadas já no degrau 1.

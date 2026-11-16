@@ -19,7 +19,7 @@ import { newSeatState } from './tableState';
 import { seatTurnChange } from './turnHighlight';
 import { label } from './cardFaces';
 
-export interface SeatsDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' | 'state' | 'match' | 'portraits' | 'prefs' | 'face' | 'faceStyle' | 'image' | 'playerName' | 'cardName' | 'announce' | 'renderTable'> {
+export interface SeatsDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' | 'state' | 'match' | 'portraits' | 'prefs' | 'face' | 'faceStyle' | 'image' | 'playerName' | 'cardName' | 'announce' | 'renderTable' | 'motion'> {
   attack: ReturnType<typeof createAttackChoice>;
   focus: OpponentFocus;
   /** Celular: os terrenos virados vão para um monte só. */
@@ -110,6 +110,8 @@ export function createTableSeats(d: SeatsDeps) {
     syncMat($('#fMeMat'), matArt(s, me, 0));
     fitLoneRows(root);
     fitRowWidths(root);
+    // A coroa do Monarca e a Dianteira que mudaram de mão voam de um retrato para o outro (com os selos já no lugar).
+    d.motion.holders(visual.players, matchKey);
     return seatNotice;
   }
 

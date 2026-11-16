@@ -70,6 +70,7 @@ const HAND_POOL: [string, Record<string, unknown>][] = [
   ['Mountain', { land: true, typeLine: 'Basic Land — Mountain' }],
 ];
 let nextId = 1000;
+const name3d = (name: string) => ({ Treasure: 'A gema do Tesouro', Clue: 'A lente da Pista', Food: 'A maçã da Comida', Blood: 'A gota do Sangue' } as Record<string, string>)[name] ?? name;
 function card(name: string, extra: Record<string, unknown> = {}) { return { name, tapped: false, token: false, creature: false, ...extra }; }
 function creature(name: string, power: number, toughness: number, manaCost: string, keywords: string[] = []) {
   return card(name, { creature: true, power, toughness, basePower: power, baseToughness: toughness, damage: 0, manaCost, typeLine: 'Creature', keywords });
@@ -293,6 +294,25 @@ function table() {
     },
     'life-low': () => { player(ME).life = 3; return 'Sua vida em 3: as bordas da mesa escurecem e pulsam em vermelho.'; },
     'life-full': () => { player(ME).life = 20; return 'Sua vida em 20: a vinheta volta ao normal.'; },
+    // Objetos 3D (item 140): o degrau do Efeitos automático, para ver o que cada um tira (no 1, as fichas; no 2, os outros
+    // objetos voltam a ser chapados ou somem; no 3, tudo em CSS). O regulador pode mudar sozinho depois, medindo os quadros.
+    tier: c => {
+      latestGpuPort()?.setTier(Number(c.n) as 0 | 1 | 2 | 3);
+      return ['Degrau 0: todos os objetos em 3D.', 'Degrau 1: as fichas ficam sem o objeto; o resto continua em 3D.', 'Degrau 2: moeda e dados chapados; dia e noite, coroa, emblema e brasão não aparecem.', 'Degrau 3: os efeitos em CSS.'][Number(c.n)] + (new URLSearchParams(location.search).has('gpu') ? ' (Com a versão GPU ou CSS escolhida à mão, o regulador fica desligado e o degrau volta a 0: recarregue sem ela.)' : '');
+    },
+    // Objetos 3D (item 140): a coroa do Monarca e a Dianteira passam de você para o oponente e de volta (na primeira vez, chegam de ninguém).
+    holder: c => {
+      const kind = c.kind === 'initiative' ? 'initiative' : 'monarch', name = kind === 'monarch' ? 'A coroa do Monarca' : 'A Dianteira';
+      const now = players.find((p: any) => p[kind]), next = now?.id === ME ? OPP : ME;
+      for (const p of players) (p as any)[kind] = p.id === next;
+      return `${name} ${now ? 'passa' : 'chega'} para ${next === ME ? 'você' : 'o oponente'}: o medalhão ${now ? 'sai do retrato de quem tinha, ' : ''}vira no ar e pousa no selo.`;
+    },
+    // Objetos 3D (item 140): o disco de sol e lua vira no meio da mesa e voa até o ícone da trilha.
+    'day-night': () => {
+      if (!state.dayTime) { state.dayTime = 'day'; return 'Agora é dia: o sol aparece na trilha (sem virar). Toque de novo para virar noite.'; }
+      state.dayTime = state.dayTime === 'day' ? 'night' : 'day';
+      return state.dayTime === 'day' ? 'Virou dia: o disco mostra a lua, vira para o sol e voa até a trilha.' : 'Virou noite: o disco mostra o sol, vira para a lua e voa até a trilha.';
+    },
     // A sua decisão esperando a fila (item 131): o oponente conjura um Bolt em você e, no mesmo estado, você ganha a
     // prioridade; o botão diz "Mostrando a jogada de Oponente…" até o passo acabar, e só então vira OK.
     hold: () => {
@@ -342,6 +362,17 @@ function table() {
         emit('entered', { card: structuredClone(token), sourceId: token.id, actor: owner.id, from: null, to: 'Battlefield', stackId: resolution, sourceName: 'Raise the Alarm' });
       }
       return `Criar ${n} fichas: chegam juntas, em cascata curta, e o monte mostra "+${n}".`;
+    },
+    // Objetos 3D (item 140): fichas de artefato que caem como um objeto (gema, lente, maçã, gota) sobre a carta.
+    trinkets: c => {
+      const owner = sideOf(c.side), resolution = nextId++;
+      const names: string[] = c.kind === 'all' ? ['Treasure', 'Clue', 'Food', 'Blood'] : [c.kind];
+      for (const name of names) {
+        const token = { id: nextId++, controller: owner.id, ...card(name, { token: true, typeLine: `Token Artifact — ${name}` }) };
+        owner.battlefield.push(token);
+        emit('entered', { card: structuredClone(token), sourceId: token.id, actor: owner.id, from: null, to: 'Battlefield', stackId: resolution, sourceName: 'Lab' });
+      }
+      return names.length > 1 ? 'Tesouro, Pista, Comida e Sangue: a gema, a lente, a maçã e a gota caem girando sobre cada ficha (no máximo 3 por jogada).' : `${name3d(names[0]!)} cai girando sobre a ficha e entra nela.`;
     },
     toggle: c => {
       const x = byId(c.id); if (!x) return;
@@ -482,8 +513,19 @@ function table() {
         return `${w.name} entra: moldura na cor dele, anel de luz e o escudo de lealdade surgindo.`;
       }
       const picked = byId(c.id);
-      const w: any = picked?.planeswalker ? picked : [...owner.battlefield].reverse().find((x: any) => x.planeswalker);
+      let w: any = picked?.planeswalker ? picked : [...owner.battlefield].reverse().find((x: any) => x.planeswalker);
+      // O emblema precisa de um planeswalker de onde sair: sem nenhum do lado escolhido, o Jace entra calado.
+      if (!w && c.kind === 'emblem') {
+        w = { id: nextId++, controller: owner.id, ...card('Jace Beleren', { planeswalker: true, typeLine: 'Legendary Planeswalker — Jace', manaCost: '{1}{U}{U}', counters: { LOYALTY: 3 } }) };
+        owner.battlefield.push(w); lastAdded = w.id;
+      }
       if (!w) return 'Ponha um planeswalker no campo primeiro (Entrar).';
+      // Objetos 3D (item 140): o emblema sai do planeswalker como um medalhão, vira e pousa ao lado do retrato.
+      if (c.kind === 'emblem') {
+        const holder = player(w.controller);
+        holder.emblems = [...(holder.emblems ?? []), { id: nextId++, name: `Emblem — ${w.name}`, emblem: true, controller: holder.id }];
+        return 'Emblema: o medalhão sobe do planeswalker, vira para a arte e pousa ao lado do retrato.';
+      }
       const [cost, text] = ({ plus: ['+2', 'Each player draws a card.'], zero: ['0', 'Look at the top card of target player\'s library.'],
         minus: ['-1', 'Target player draws a card.'], ult: ['-10', 'Target player mills twenty cards.'] } as Record<string, [string, string]>)[c.kind];
       w.counters = { ...w.counters, LOYALTY: Math.max(0, (w.counters?.LOYALTY ?? 0) + Number(cost)) };
@@ -622,6 +664,11 @@ function table() {
         case 'scry': emit('scry', { actor: c.side === 'opp' ? OPP : ME, top: 1, bottom: 2 }); return 'Vidência 3: as cartas sobem em leque; uma volta por cima e duas passam por baixo.';
         case 'coin': emit('coin', { actor: ME, heads: Math.random() < .5 }); return 'Moeda: gira no ar e cai no resultado.';
         case 'die': emit('die', { actor: ME, sides: 20, result: 1 + Math.floor(Math.random() * 20), sourceName: 'Delina, Wild Mage' }); return 'Dado: rola, troca de número e para no resultado.';
+        case 'd2': case 'd4': case 'd6': case 'd8': case 'd10': case 'd12': case 'd100': {
+          const sides = Number(c.kind.slice(1));
+          emit('die', { actor: ME, sides, result: 1 + Math.floor(Math.random() * sides), sourceName: 'Delina, Wild Mage' });
+          return sides === 2 ? 'd2: uma moeda de 1 e 2 gira no ar e cai no resultado.' : sides === 100 ? 'd100: o d10 das dezenas e o das unidades rolam juntos.' : `d${sides}: rola em 3D e para com o resultado de frente.`;
+        }
         case 'shuffle': emit('shuffle', { actor: c.side === 'opp' ? OPP : ME }); return 'Embaralhar: o grimório balança e as metades se abrem.';
         case 'attach': {
           const host = picked?.creature ? picked : mineFirst(me, (x: any) => x.creature);
@@ -960,6 +1007,12 @@ function panel() {
        ['transform', 'Transformar'], ['counters', '+1/+1 em três'], ['lore', 'Saga: capítulo'], ['search', 'Buscar no grimório'], ['reanimate', 'Reanimar'], ['flashback', 'Conjurar do cemitério'],
        ['commander', 'Comandante (ida e volta)'], ['ability', 'Habilidade (se ergue)'], ['pay', 'Pagar com terrenos'], ['float', 'Gerar mana (reserva)'], ['opening', 'Mão inicial'], ['mulligan', 'Mulligan'], ['reveal', 'Revelar'], ['win', 'Vitória'], ['lose', 'Derrota']]
       .map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}
+    <h2>Objetos 3D (item 140, do lado escolhido em Campo)</h2>
+    <p>Dados, moeda e medalhões em 3D de verdade na camada GPU. A vitória põe o brasão em você; a derrota, no oponente.</p>
+    <div>${[['d2', 'd2'], ['d4', 'd4'], ['d6', 'd6'], ['d8', 'd8'], ['d10', 'd10'], ['d12', 'd12'], ['die', 'd20'], ['d100', 'd100'], ['coin', 'Moeda']].map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}</div>
+    <div><button data-c="day-night">Dia e noite</button><button data-holder="monarch">Monarca</button><button data-holder="initiative">Dianteira</button><button data-walker="emblem">Emblema</button>${[['win', 'Vitória (brasão)'], ['lose', 'Derrota (brasão do oponente)']].map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}</div>
+    <div>${[['Treasure', 'Tesouro'], ['Clue', 'Pista'], ['Food', 'Comida'], ['Blood', 'Sangue'], ['all', 'As quatro (só 3 ganham o objeto)']].map(([k, t]) => `<button data-trinket="${k}">${t}</button>`).join('')}</div>
+    <div>Degrau do automático: ${[0, 1, 2, 3].map(n => `<button data-tier="${n}">${n}</button>`).join('')}</div>
     <h2>Efeitos na GPU (item 125)</h2>
     <p>Desenhados direto na camada GPU, sem mudar a partida. Impactos e projétil usam Fonte e Alvo da seção Dano; pouso, estilhaços e ultimate, a permanente selecionada.</p>
     <p id="gpuStatus">Camada GPU: …</p>
@@ -1022,10 +1075,12 @@ function panel() {
   // Tour (item 131): toca os botões do painel um depois do outro, com tempo para cada efeito terminar.
   const TOUR: [string, number][] = [
     ['[data-c="reset"]', 1500], ['[data-hand="land"]', 2600], ['[data-hand="creature"]', 3000], ['[data-hand="bolt"]', 3200],
-    ['[data-x="scry"]', 2400], ['[data-x="shuffle"]', 1800], ['[data-mill="3"]', 2800], ['[data-tokens="3"]', 2600],
-    ['[data-x="coin"]', 2400], ['[data-x="die"]', 2400], ['[data-moment="legend"]', 3600], ['[data-moment="big"]', 3800],
-    ['[data-walker="enter"]', 2400], ['[data-walker="ult"]', 3400], ['[data-c="turn"]', 2800], ['[data-c="life-low"]', 3400],
-    ['[data-c="life-full"]', 1600], ['[data-x="win"]', 3200],
+    ['[data-x="scry"]', 2400], ['[data-x="shuffle"]', 1800], ['[data-mill="3"]', 2800], ['[data-tokens="3"]', 2600], ['[data-trinket="all"]', 2600],
+    ['[data-x="coin"]', 2400], ['[data-x="die"]', 2400], ['[data-x="d100"]', 2400], ['[data-moment="legend"]', 3600], ['[data-moment="big"]', 3800],
+    ['[data-walker="enter"]', 2400], ['[data-walker="ult"]', 3400], ['[data-walker="emblem"]', 2400], ['[data-c="turn"]', 2800], ['[data-c="life-low"]', 3400],
+    ['[data-c="life-full"]', 1600], ['[data-c="day-night"]', 600], ['[data-c="day-night"]', 2400], ['[data-c="day-night"]', 2400],
+    ['[data-holder="monarch"]', 1600], ['[data-holder="monarch"]', 2200], ['[data-holder="initiative"]', 1600], ['[data-holder="initiative"]', 2200],
+    ['[data-x="d2"]', 2400], ['[data-x="d6"]', 2400], ['[data-x="win"]', 3200],
   ];
   let touring = 0;
   function tour(button: HTMLButtonElement) {
@@ -1053,6 +1108,9 @@ function panel() {
     if (b.dataset.tokens) send({ cmd: 'tokens', side: $<HTMLSelectElement>('side').value, n: b.dataset.tokens, mixed: !!b.dataset.mixed });
     if (b.dataset.warp) send({ cmd: 'warp', kind: b.dataset.warp });
     if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
+    if (b.dataset.holder) send({ cmd: 'holder', kind: b.dataset.holder });
+    if (b.dataset.tier) send({ cmd: 'tier', n: b.dataset.tier });
+    if (b.dataset.trinket) send({ cmd: 'trinkets', kind: b.dataset.trinket, side: $<HTMLSelectElement>('side').value });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
     if (b.dataset.x) send({ cmd: 'extra', kind: b.dataset.x, id: selectedId(), side: $<HTMLSelectElement>('side').value });
     if (b.dataset.hand) send({ cmd: 'hand', kind: b.dataset.hand });

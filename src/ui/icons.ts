@@ -3,6 +3,12 @@
 export const ICON_SWORD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 3H21v6.5L10 20.5l-2 .5-.5-2L18.5 8V5.5H16L5 16.5 3.5 15z" fill="currentColor"/></svg>';
 export const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 6.5 8.4 14.6a1.6 1.6 0 0 0 2.3 2.3l8.4-8.4a3.4 3.4 0 0 0-4.8-4.8L5.6 12.4a5.2 5.2 0 0 0 7.4 7.4l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 export const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
+/**
+ * Os lados da moeda, como caminho de 24×24: a Cara é um rosto de perfil e a Coroa, a coroa. A moeda da camada GPU os
+ * pinta no canvas, e a de CSS (efeitos leves), em SVG.
+ */
+export const COIN_HEADS_PATH = 'M7.5 21v-3.6C5.6 16.2 4.5 14 4.5 11.2 4.5 6.6 7.9 3 12.2 3c3.4 0 5.6 2.2 5.6 5.6l1.9 3.2c.2.4-.1.8-.5.8h-1.3v1.4l.4.6-.4.6v1.1c0 .9-.7 1.6-1.6 1.6h-1.8V21z';
+export const COIN_TAILS_PATH = 'M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z';
 export const ICON_CLOSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 export const ICON_HOME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5.5 9.5V20h5v-6h3v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 /** Ícones mínimos no canto dos montes, para o cemitério (lápide) e o exílio (portal) não se confundirem de relance. */

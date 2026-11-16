@@ -8,6 +8,22 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.195.0] - 2026-11-16
+
+### Novo
+
+- **Brasão de vitória em 3D.** No fim da partida, junto com os raios e o confete, um brasão cai girando sobre o retrato de quem venceu. Enquanto cai, mostra o verso vermelho com uma estrela dourada; ao assentar, mostra o lado dourado, com louros, a estrela e "Vitória", quica e brilha. O resultado da partida aparece logo depois que ele assenta.
+- **Dia e noite virando em 3D.** Quando o dia vira noite (ou a noite vira dia), um disco de sol e lua aparece no meio da mesa mostrando o lado de antes, vira mostrando o de agora, acende e voa até o ícone de sol ou lua ao lado do turno.
+- **Emblema chegando em 3D.** Quando um planeswalker dá um emblema, ele sobe do planeswalker como um medalhão com aro dourado, mostrando o verso azul com uma estrela. O medalhão vira para a arte do planeswalker, acende na cor dele e voa até o lugar do emblema, ao lado do retrato. O emblema da mesa aparece quando o medalhão pousa.
+- **Fichas de Tesouro, Pista, Comida e Sangue em 3D.** Ao serem criadas, cada uma ganha o seu objeto, que cai girando sobre a carta, quica, acende e entra nela. O Tesouro é uma gema dourada, a Pista uma lente com a lupa, a Comida uma maçã e o Sangue uma gota. Numa jogada que cria muitas de uma vez, só as três primeiras ganham o objeto. Com Efeitos no automático, eles são os primeiros a sair quando a mesa fica pesada.
+- **Moeda em 3D.** A moeda de Cara ou Coroa agora tem espessura e borda serrilhada, dourada do lado da cara e prateada do lado da coroa. Ela sobe girando, cai, quica e para deitada na mesa, com o resultado para cima. Cada lado mostra um ícone, com o nome pequeno embaixo: um rosto de perfil na Cara e uma coroa na Coroa (também na moeda dos efeitos leves).
+- **d2 e d100 em 3D.** O d2 rola como uma moeda de marfim, com 1 de um lado e 2 do outro. O d100 rola como dois d10, igual aos dados de porcentagem: o azul marca as dezenas (00 a 90) e o de marfim, as unidades (0 a 9). 00 com 0 dá 100.
+- **A coroa do Monarca e a Dianteira passam de mão em 3D.** Quando alguém vira o Monarca ou toma a Dianteira, um medalhão sai do retrato de quem tinha, vira no ar e voa até o lugar do selo de quem passou a ter. O selo aparece quando ele pousa e acende. A coroa é um medalhão dourado com púrpura no verso, e a Dianteira é um escudo de bronze com vermelho no verso. Quando ninguém tinha antes, o medalhão aparece já em cima do selo.
+
+### Mudou
+
+- **Dados e moeda sem pesar na mesa.** O primeiro dado ou moeda da partida não dá mais um tranco ao aparecer: a mesa se prepara para eles enquanto está parada. Com Efeitos no automático, quando a mesa fica pesada e os efeitos começam a aliviar sozinhos, os dados e a moeda voltam a ser chapados.
+
 ## [0.194.0] - 2026-11-16
 
 ### Mudou

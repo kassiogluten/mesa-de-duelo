@@ -1,4 +1,4 @@
-// A forma dos dados em 3D (d4, d6, d8, d10, d12, d20): faces numeradas, a direção de leitura de cada número e a rotação que deixa um número virado para quem olha, sem PixiJS.
+// A forma dos dados em 3D (d4, d6, d8, d10, d12, d20): faces numeradas, a direção de leitura de cada número, a rotação que deixa uma face virada para quem olha e as contas de vetor e matriz dos sólidos, sem PixiJS.
 export type Vec3 = [number, number, number];
 /** Matriz 3×3 por linhas: `apply(m, v)` = m·v. */
 export type Mat3 = [number, number, number, number, number, number, number, number, number];
@@ -53,7 +53,7 @@ function vertices(sides: number): Vec3[] | null {
 }
 
 /** As faces de um poliedro convexo: os planos por três vértices com todos os outros do mesmo lado. */
-function hull(points: Vec3[]): { corners: Vec3[]; normal: Vec3 }[] {
+export function hull(points: Vec3[]): { corners: Vec3[]; normal: Vec3 }[] {
   const eps = 1e-6, faces: { corners: Vec3[]; normal: Vec3; d: number }[] = [];
   for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) for (let k = j + 1; k < points.length; k++) {
     const a = points[i]!;
@@ -126,7 +126,23 @@ export function rotation(axis: Vec3, angle: number): Mat3 {
  */
 export function restingRotation(shape: DieShape, value: number, tilt = 0): Mat3 {
   const face = shape.faces.find(f => f.value === value) ?? shape.faces[0]!;
-  const right = cross(face.up, face.normal);
-  const facing: Mat3 = [...right, ...face.up, ...face.normal] as Mat3;
-  return tilt ? multiply(rotation([1, 0, 0], tilt), facing) : facing;
+  return facing(face.normal, face.up, tilt);
 }
+
+/** A rotação que deixa uma face (normal e alto do desenho dela) virada para quem olha, em pé, inclinada `tilt` para a frente. */
+export function facing(normal: Vec3, up: Vec3, tilt = 0): Mat3 {
+  const right = cross(up, normal);
+  const m: Mat3 = [...right, ...up, ...normal] as Mat3;
+  return tilt ? multiply(rotation([1, 0, 0], tilt), m) : m;
+}
+
+/**
+ * O d100 em dois d10, como os dados de porcentagem: a face (1 a 10) que fica para cima no das dezenas e no das
+ * unidades. A face 10 se lê 00 no das dezenas e 0 no das unidades, então 100 sai como 00 e 0.
+ */
+export function percentileFaces(result: number) {
+  const tens = Math.floor(result / 10) % 10, units = result % 10;
+  return { tens: tens || 10, units: units || 10 };
+}
+/** Como se lê cada face (1 a 10) do d10 das dezenas (00 a 90) e do das unidades (0 a 9). */
+export const percentileLabel = (die: 'tens' | 'units', face: number) => die === 'units' ? String(face % 10) : String((face % 10) * 10).padStart(2, '0');

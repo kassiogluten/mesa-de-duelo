@@ -24,7 +24,7 @@ test('each solid die has one face per number, with the right shape, and opposite
   }
 });
 
-test('d2 and d100 have no solid die (they keep the flat one)', () => {
+test('d2 and d100 have no die shape of their own (the d2 rolls as a coin and the d100 as two d10)', () => {
   assert.equal(dieShape(2), null);
   assert.equal(dieShape(100), null);
 });

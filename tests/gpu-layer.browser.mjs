@@ -147,8 +147,35 @@ try {
     window.postMessage({ cmd: 'extra', kind: 'coin', side: 'me' }, '*'); await wait(300);
     const coin = document.querySelector('.chance-piece.gpu-drawn');
     out.coinOnGpu = !!coin && getComputedStyle(coin.querySelector('b')).visibility === 'hidden' && getComputedStyle(coin.querySelector('.presentation-caption')).visibility === 'visible';
-    // Gerar mana sem pagar: a mana voa até a reserva no retrato (na GPU, sem a bolinha de CSS), que pulsa na chegada.
     await wait(1500);
+    // O d100 também sai na camada (dois d10 em 3D), e o d2 (uma moeda de 1 e 2).
+    for (const kind of ['d100', 'd2']) {
+      window.postMessage({ cmd: 'extra', kind, side: 'me' }, '*'); await wait(300);
+      out[kind] = !!document.querySelector('.chance-piece.die.gpu-drawn') && gpu.stats().live >= 1;
+      await wait(1500);
+    }
+    // Dia e noite: a primeira vez só põe o sol na trilha; a segunda vira noite, e o disco vira na camada.
+    window.postMessage({ cmd: 'day-night' }, '*'); await wait(300);
+    for (let i = 0; i < 60 && gpu.stats().live; i++) await wait(100);
+    window.postMessage({ cmd: 'day-night' }, '*'); await wait(300);
+    out.dayNight = gpu.stats().live >= 1 && !!document.querySelector('.phase-daynight.night');
+    // A coroa do Monarca chega de ninguém e depois passa para o oponente: as duas vezes, o medalhão sai na camada.
+    // Cada vez, com a camada vazia antes (o efeito anterior já acabou), para contar só o medalhão.
+    const idle = async () => { for (let i = 0; i < 60 && gpu.stats().live; i++) await wait(100); };
+    out.holder = [];
+    for (let i = 0; i < 2; i++) {
+      await idle();
+      window.postMessage({ cmd: 'holder', kind: 'monarch' }, '*'); await wait(300);
+      out.holder.push(gpu.stats().live >= 1);
+    }
+    // Um emblema novo para o dono do Jace: o medalhão sai do planeswalker.
+    await idle();
+    window.postMessage({ cmd: 'walker', kind: 'enter', side: 'opp' }, '*'); await wait(2500);
+    await idle();
+    window.postMessage({ cmd: 'walker', kind: 'emblem', side: 'opp' }, '*'); await wait(300);
+    out.emblem = gpu.stats().live >= 1;
+    await idle();
+    // Gerar mana sem pagar: a mana voa até a reserva no retrato (na GPU, sem a bolinha de CSS), que pulsa na chegada.
     // O "Pagar" de antes deixou os terrenos virados: a primeira vez põe dois terrenos novos.
     window.postMessage({ cmd: 'extra', kind: 'float', side: 'me' }, '*'); await wait(1500);
     orbs = 0; seen.observe(document.body, { childList: true, subtree: true });
@@ -166,6 +193,22 @@ try {
   assert.equal(back.cssOrbs, 0, 'the mana orb was drawn in CSS with the GPU layer ready');
   assert.ok(back.drewMana, 'the GPU layer drew nothing for the mana');
   assert.ok(back.coinOnGpu, 'the coin was not drawn on the GPU (or the caption was hidden with it)');
+  assert.ok(back.d100, 'the d100 was not drawn on the GPU');
+  assert.ok(back.d2, 'the d2 was not drawn on the GPU');
+  assert.ok(back.dayNight, 'the day and night disc was not drawn on the GPU');
+  assert.deepEqual(back.holder, [true, true], 'the Monarch medal did not fly on the GPU');
+  assert.ok(back.emblem, 'the emblem medal did not fly on the GPU');
+  // Vitória: os raios e o confete e, junto, o brasão em 3D; a tela do resultado espera o brasão assentar.
+  const win = evaluate(`
+    const wait = ms => new Promise(res => setTimeout(res, ms));
+    for (let i = 0; i < 60 && gpu.stats().live; i++) await wait(100);
+    window.postMessage({ cmd: 'extra', kind: 'win', side: 'me' }, '*'); await wait(500);
+    const crest = gpu.stats().live >= 2;
+    await wait(1100);
+    return { crest, resultWaits: document.querySelector('#fOverlay').hidden };
+  `);
+  assert.ok(win.crest, 'the victory crest was not drawn on the GPU with the rays');
+  assert.ok(win.resultWaits, 'the result screen did not wait for the victory crest');
   assert.equal(back.poolOrbs, 0, 'the mana going to the pool was drawn in CSS with the GPU layer ready');
   assert.ok(back.drewPool, 'the GPU layer drew nothing for the mana going to the pool');
   assert.ok(back.poolPulsed, 'the mana pool did not pulse when the mana arrived');
@@ -201,6 +244,11 @@ try {
     for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
     for (let i = 0; i < 30 && !gpu.ambienceStats()?.running; i++) await wait(100);
     out.ambienceBefore = !!gpu.ambienceStats()?.running;
+    // As fichas de artefato ganham o objeto em 3D no degrau 0 e são as primeiras a sair (degrau 1); a moeda fica até o 2.
+    const at = { cx: 300, cy: 300, w: 80, h: 112 };
+    out.trinkets = { tier0: gpu.play('trinket', { at, kind: 'treasure' }) };
+    gpu.setTier(1); await wait(100);
+    out.trinkets.tier1 = gpu.play('trinket', { at, kind: 'food' }); out.trinkets.coinTier1 = gpu.play('coin', { at, heads: true, label: 'Cara', hold: 1200, font: 'serif' });
     gpu.setTier(2); await wait(100);
     out.tier2 = { ready: gpu.ready(), ambience: gpu.ambienceStats()?.running };
     gpu.setTier(3); await wait(100);
@@ -222,6 +270,7 @@ try {
   assert.match(option.summary, /Efeitos leves/);
   assert.ok(option.backToFull, '"completos" did not bring the GPU layer back');
   assert.ok(option.ambienceBefore, 'the living table did not run in "automático"');
+  assert.deepEqual(option.trinkets, { tier0: true, tier1: false, coinTier1: true }, 'the token objects should be on the GPU at tier 0 and gone at tier 1, with the coin still there');
   assert.deepEqual(option.tier2, { ready: true, ambience: false }, 'tier 2 keeps the GPU effects and stops the living table');
   assert.deepEqual(option.tier3, { ready: false, canvas: false }, 'tier 3 is the CSS effects');
   assert.deepEqual(option.tier0, { ready: true, ambience: true }, 'tier 0 brings everything back');

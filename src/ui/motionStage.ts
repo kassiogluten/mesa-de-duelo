@@ -1,7 +1,8 @@
 import type { PresentationEvent } from './presentationTimeline';
 import { center, reduced, type MotionKit, type Point } from './motionKit';
+import { COIN_HEADS_PATH, COIN_TAILS_PATH } from './icons';
 
-/** O que acontece no meio da mesa ou nos retratos: moeda e dado, cartas reveladas e o fim da partida. */
+/** O que acontece no meio da mesa ou nos retratos: moeda e dado, cartas reveladas e o fim da partida (com o brasão em 3D de quem venceu). */
 export function createStageMotion(kit: MotionKit) {
   const { root, layer, later, animate, effect, remove, shatter, gpu } = kit;
   /** Moeda e dado: giram no centro da mesa e param no resultado, com quem jogou embaixo. */
@@ -13,7 +14,10 @@ export function createStageMotion(kit: MotionKit) {
     const piece = effect(`chance-piece ${coin ? `coin ${event.heads ? 'heads' : 'tails'}` : 'die'}`, at);
     const value = document.createElement('b');
     const final = coin ? (event.heads ? 'Cara' : 'Coroa') : String(event.result ?? '?');
-    value.textContent = final; piece.append(value);
+    // A moeda mostra o ícone do lado (o rosto na Cara, a coroa na Coroa) com o nome pequeno embaixo.
+    if (coin) value.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${event.heads ? COIN_HEADS_PATH : COIN_TAILS_PATH}" fill="currentColor"/></svg><small>${final}</small>`;
+    else value.textContent = final;
+    piece.append(value);
     if (!coin && event.sides) { const sides = document.createElement('small'); sides.textContent = `d${event.sides}`; piece.append(sides); }
     const caption = document.createElement('span'); caption.className = 'presentation-caption'; caption.textContent = label; piece.append(caption);
     const hold = Math.max(duration, 1100);
@@ -68,13 +72,18 @@ export function createStageMotion(kit: MotionKit) {
       if (!gpu.play('defeat', { at })) shatter({ ...at, w: Math.max(at.w, 70), h: Math.max(at.h, 70) });
       animate(el, [{ translate: '0 0' }, { translate: '-5px 0', offset: .15 }, { translate: '5px 0', offset: .3 }, { translate: '-3px 0', offset: .45 }, { translate: '0 0', offset: .6 }, { translate: '0 0' }], 700);
     }
+    let crest = false;
     for (const id of winners) {
       const el = avatar(id), at = center(el);
       if (!el || !at) continue;
       el.classList.add('finale-win');
       later(() => el.classList.remove('finale-win'), 1500);
-      // Na camada GPU: raios dourados girando atrás do retrato, onda de luz e confete.
-      if (gpu.play('victory', { at, delay: 200 })) continue;
+      // Na camada GPU: raios dourados girando atrás do retrato, onda de luz e confete, e o brasão em 3D caindo sobre ele
+      // (a tela do resultado espera o brasão).
+      if (gpu.play('victory', { at, delay: 200 })) {
+        if (gpu.play('crest', { at, font: getComputedStyle(el).getPropertyValue('--display') || 'serif', delay: 150 })) crest = true;
+        continue;
+      }
       const size = Math.max(at.w, at.h) * 2.4;
       const wave = effect('walker-wave finale-wave', { ...at, w: size, h: size });
       wave.style.setProperty('--walker', '#f2b54c');
@@ -83,7 +92,7 @@ export function createStageMotion(kit: MotionKit) {
     }
     const arena = root.querySelector<HTMLElement>('.arena');
     if (arena && losers.length) animate(arena, [{ translate: '0 0' }, { translate: '-4px 2px', offset: .25 }, { translate: '3px -1px', offset: .5 }, { translate: '0 0' }], 320, 'linear', 80);
-    return 1300;
+    return crest ? 2100 : 1300;
   }
   return { chance, revealIn, finale };
 }

@@ -1,4 +1,36 @@
 {
+  "0.195.0": {
+    "Brasão de vitória em 3D": [
+      { "img": "0.195.0/brasao-caindo.webp", "legenda": "O brasão caindo e girando sobre o seu retrato, ainda com o verso vermelho e a estrela dourada, entre os raios e o confete." },
+      { "img": "0.195.0/brasao.webp", "legenda": "O brasão assentado sobre o retrato de quem venceu: dourado, com louros, a estrela e Vitória." }
+    ],
+    "Dia e noite virando em 3D": [
+      { "img": "0.195.0/virando.webp", "legenda": "O disco virando no meio da mesa, de lado, com o sol dourado ainda à mostra." },
+      { "img": "0.195.0/noite.webp", "legenda": "Virou noite: o lado da lua, com as estrelas, aceso no meio da mesa." },
+      { "img": "0.195.0/dia.webp", "legenda": "Virou dia: o lado do sol, com raios dourados em volta." }
+    ],
+    "Emblema chegando em 3D": [
+      { "img": "0.195.0/emblema-verso.webp", "legenda": "O medalhão subindo do Jace Beleren, ainda com o verso azul e a estrela dourada." },
+      { "img": "0.195.0/emblema-arte.webp", "legenda": "O medalhão virando para a arte do Jace, com o aro dourado e a espessura à mostra." },
+      { "img": "0.195.0/emblema-pousando.webp", "legenda": "O medalhão a caminho do retrato do oponente, onde o emblema aparece quando ele pousa." }
+    ],
+    "Fichas de Tesouro, Pista, Comida e Sangue em 3D": [
+      { "img": "0.195.0/fichas.webp", "legenda": "A gema do Tesouro, a lente da Pista, a maçã da Comida e a gota do Sangue caindo, girando, sobre cada ficha." },
+      { "img": "0.195.0/fichas-pousando.webp", "legenda": "Os quatro objetos pousados sobre as fichas, logo antes de entrarem nelas." }
+    ],
+    "Moeda em 3D": [
+      { "img": "0.195.0/moeda.webp", "legenda": "A Cara dourada, com o rosto de perfil, e a Coroa prateada, com a coroa, paradas e deitadas na mesa, com o nome pequeno embaixo do ícone e a espessura da moeda aparecendo." },
+      { "img": "0.195.0/moeda-girando.webp", "legenda": "A moeda girando no ar, quase de lado, mostrando a coroa e a borda serrilhada, que passa do dourado da cara para o prateado da coroa." }
+    ],
+    "d2 e d100 em 3D": [
+      { "img": "0.195.0/d2-e-d100.webp", "legenda": "O d2 parado no 2 e o d100 em dois d10: o azul das dezenas no 50 e o de marfim das unidades no 7, somando 57." }
+    ],
+    "A coroa do Monarca e a Dianteira passam de mão em 3D": [
+      { "img": "0.195.0/monarca.webp", "legenda": "O medalhão dourado da coroa saindo do seu retrato, prestes a voar até o oponente." },
+      { "img": "0.195.0/monarca-voando.webp", "legenda": "A coroa no meio do caminho até o oponente; o selo Monarca dele só aparece quando ela pousa." },
+      { "img": "0.195.0/dianteira.webp", "legenda": "O escudo de bronze da Dianteira, com o ponto de exclamação do selo, virando sobre o seu retrato." }
+    ]
+  },
   "0.194.0": {
     "Botões do \"você pode\" mais fáceis de acertar": [
       { "img": "0.194.0/botoes-gatilho.webp", "legenda": "Não e Sim do mesmo tamanho lado a lado, e Sempre não e Sempre sim menores na linha de baixo." }

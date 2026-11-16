@@ -1574,3 +1574,14 @@ Pedido em 16/11/2026. Os avisos que se arrastam (a caixa de ação, a decisão n
 - [x] Mesma alça e mesmo comportamento em todos os avisos que se arrastam; conferir no celular e com a caixa recolhida.
 
 Feito em 16/11/2026 (mesma pasta): `DRAG_PILL` e `DRAG_RESET` em `icons.ts`; `dragPanel.ts` marca `drag-placed` só quando o lugar é do jogador (não ao desviar das cartas) e liga o `[data-drag-reset]`; `dragPanel.css` desenha a faixa com moldura (`--drag-pt`/`--drag-px`) e sem. O "Voltar ao lugar" tem texto na pergunta do centro e na barra, e só ícone na caixa do canto e no celular. `tests/drag-panel.browser.mjs` cobre o botão.
+
+## 140. ✅ Objetos 3D na camada dos efeitos
+
+Pedido em 16/11/2026, depois do dado em 3D (item 125): mais objetos em 3D de verdade, sem pesar nas partidas com FPS baixo. A regra está em `docs/spec-mesa-webgl.md` ("Objetos 3D"): um objeto só, por pouco tempo, num momento em que a mesa já está esperando; nunca contínuo nem um por permanente; do degrau 2 do automático em diante, a versão chapada. Decidido nesse dia: fazer todos, em entregas separadas, cada uma na própria pasta de `novidades-pendentes/`.
+
+- [x] Moeda em 3D, d2 e d100 em 3D e o shader dos sólidos aquecido com a mesa ociosa (`novidades-pendentes/moeda-e-dados-3d`).
+- [x] Dia e noite: um disco de sol e lua que vira quando o dia vira noite (e o contrário) e voa até o ícone da trilha (`novidades-pendentes/dia-e-noite-3d`).
+- [x] Monarca e Dianteira: o medalhão da coroa e o escudo da Dianteira passando de um jogador para outro (`novidades-pendentes/monarca-e-dianteira-3d`).
+- [x] Emblema do planeswalker surgindo como um medalhão em 3D com a arte dele, do planeswalker até o lugar do emblema (`novidades-pendentes/emblema-3d`).
+- [x] Fim da partida: um brasão em 3D sobre o retrato de quem venceu, com a tela do resultado esperando por ele (`novidades-pendentes/brasao-de-vitoria-3d`).
+- [x] Fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta quando são criadas, no máximo 3 por jogada e desligadas já no degrau 1 (`novidades-pendentes/fichas-3d`).

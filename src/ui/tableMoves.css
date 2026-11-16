@@ -16,6 +16,9 @@
 .chance-piece.die { border-radius: 18%; background: linear-gradient(145deg, #fdfdfd, #dcdcdc); color: #1f1f1f; font-size: 30px; box-shadow: 0 10px 26px #000a, inset 0 0 0 2px #fff, inset 0 -5px 8px #99999966; }
 .chance-piece.die small { font: 700 11px/1 system-ui, sans-serif; color: #5e5e5e; }
 .chance-piece > b { font: inherit; }
+.chance-piece.coin > b { display: grid; place-items: center; gap: 1px; width: 100%; }
+.chance-piece.coin > b svg { width: 48%; height: auto; filter: drop-shadow(1px 1px 0 #ffffff70); }
+.chance-piece.coin > b small { font-size: 11px; letter-spacing: .02em; }
 .chance-piece .presentation-caption { position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); white-space: nowrap; }
 /* Moeda e dado desenhados na camada GPU: a peça em CSS fica só com a legenda. */
 .chance-piece.gpu-drawn { background: none; box-shadow: none; }

@@ -8,7 +8,7 @@ import type { createTableClocks } from './tableClocks';
 import type { TableCtx } from './tableContext';
 import { turnHighlight } from './turnHighlight';
 
-export interface PhasesDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' | 'portraits'> {
+export interface PhasesDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' | 'portraits' | 'motion'> {
   opponentStops: OpponentStopsPreference;
   stops: ReturnType<typeof createStopMenu>;
   clocks: ReturnType<typeof createTableClocks>;
@@ -20,7 +20,7 @@ export function createTablePhases(d: PhasesDeps) {
   const { root, $ } = d;
   /** O ícone da trilha com o nome à mostra (pela classe e pela fase, porque a trilha é redesenhada) e até quando. */
   let trailTip: { key: string; until: number } | null = null, trailTipTimer = 0;
-  // Dia ou noite do último desenho da trilha: o sol ou a lua pulsa quando vira.
+  // Dia ou noite do último desenho da trilha: o sol ou a lua pulsa quando vira, e o disco de sol e lua vira no meio da mesa.
   let lastDayTime: FState['dayTime'];
 
   /** O ícone da trilha (ou dos relógios) mais perto de um toque no espaço entre eles (44 px de altura no toque). */
@@ -75,7 +75,12 @@ export function createTablePhases(d: PhasesDeps) {
     const phases = $('#fPhases'), handAuto = d.handAutoButton;
     if (phases.firstElementChild?.nextElementSibling !== handAuto) phases.firstElementChild?.after(handAuto);
     syncTrailTip();
-    if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) root.querySelector('.phase-daynight')?.classList.add('bump');
+    if (lastDayTime && visual.dayTime && visual.dayTime !== lastDayTime) {
+      const icon = root.querySelector('.phase-daynight');
+      icon?.classList.add('bump');
+      // O disco de sol e lua vira no meio da mesa e voa até o ícone (na camada GPU; sem ela, só o ícone pulsa).
+      d.motion.dayNight(visual.dayTime === 'day', icon);
+    }
     lastDayTime = visual.dayTime;
     stops.place();
     d.clocks.sync(visual);

@@ -1,20 +1,24 @@
-// Momentos do meio da mesa na camada GPU: a moeda girando com espessura e sombra, o dado rolando (em 3D do d4 ao d20), e o fim da partida (raios e confete para quem vence, racha e cinzas para quem perde).
+// Momentos do meio da mesa na camada GPU: a moeda e os dados (em 3D, ou chapados do degrau 2 do automático em diante) e o fim da partida (raios e confete para quem vence, racha e cinzas para quem perde).
 import { Container, PerspectiveMesh, Sprite } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
-import { solidDie } from './gpuDie';
+import { percentileDice, solidDie } from './gpuDie';
+import { COIN_PALETTES, fitText, headsOrTails, paintCoinFace, twoSidedDie } from './gpuCoin';
+import { solidAllowed } from './gpuSolid';
+import { COIN_HEADS_PATH, COIN_TAILS_PATH } from '../icons';
 import { easeOut, paintOnce, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
 
 export interface StageParams {
   /**
    * Moeda: sobe girando no ar e cai mostrando `label` ("Cara" ou "Coroa"), quica, brilha no resultado e some no fim de
-   * `hold` ms. `font` é a família da letra da mesa.
+   * `hold` ms, em 3D com espessura e serrilha (`gpuCoin.ts`). `font` é a família da letra da mesa.
    */
   coin: { at: Point; heads: boolean; label: string; hold: number; font: string };
   /**
-   * Dado: entra rolando, quica e para em `result`. Do d4 ao d20, em 3D de verdade (`gpuDie.ts`), parando com o resultado
-   * de frente, inclinado `tilt` radianos (0: bem de frente); nos outros (d2, d100), o dado chapado, trocando de número a
-   * cada volta, com `sides` no canto.
+   * Dado: entra rolando, quica e para em `result`. Em 3D de verdade: do d4 ao d20 (`gpuDie.ts`), parando com o resultado
+   * de frente, inclinado `tilt` radianos (0: bem de frente); o d2 como uma moeda de 1 e 2 (`gpuCoin.ts`); o d100 como
+   * dois d10, dezenas e unidades. Nos outros, e do degrau 2 do automático em diante, o dado chapado, trocando de número
+   * a cada volta, com `sides` no canto.
    */
   die: { at: Point; result: string; sides: number; hold: number; font: string; travel?: number; tilt?: number };
   /** Quem venceu: raios dourados girando atrás do retrato, uma onda de luz e confete. */
@@ -23,39 +27,16 @@ export interface StageParams {
   defeat: { at: Point };
 }
 
-/** Texto centrado, encolhendo a letra até caber na largura. */
-function label(g: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, max: number, font: string) {
-  let px = size;
-  g.font = `800 ${px}px ${font}`;
-  while (px > 12 && g.measureText(text).width > max) { px -= 2; g.font = `800 ${px}px ${font}`; }
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText(text, x, y);
-}
-
-const COIN = { heads: ['#fff6cf', '#f2b54c', '#a8741c', '#7a520f', '#2a1600'], tails: ['#ffffff', '#c2c2c2', '#737373', '#444444', '#222222'] };
-/** Uma face da moeda: disco com relevo, aro e o nome do lado no meio. */
+/** Uma face da moeda chapada: disco com relevo, aro e o ícone do lado no meio, com o nome pequeno. */
 function coinFace(layer: GpuLayer, heads: boolean, text: string, font: string) {
-  const [hi, mid, low, rim, ink] = heads ? COIN.heads : COIN.tails;
-  return paintOnce(layer, `coin:${heads}:${text}:${font}`, 256, 256, g => {
-    const disc = g.createRadialGradient(96, 82, 10, 128, 128, 128);
-    disc.addColorStop(0, hi!); disc.addColorStop(.55, mid!); disc.addColorStop(1, low!);
-    g.fillStyle = disc; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
-    // O aro: um anel claro por dentro e a borda escura por fora.
-    g.lineWidth = 10; g.strokeStyle = rim!; g.beginPath(); g.arc(128, 128, 121, 0, Math.PI * 2); g.stroke();
-    g.lineWidth = 4; g.strokeStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(128, 128, 106, 0, Math.PI * 2); g.stroke();
-    // Os pontinhos do relevo em volta do aro.
-    g.fillStyle = 'rgba(255,255,255,.4)';
-    for (let i = 0; i < 36; i++) { const a = i / 36 * Math.PI * 2; g.beginPath(); g.arc(128 + Math.cos(a) * 96, 128 + Math.sin(a) * 96, 2.2, 0, Math.PI * 2); g.fill(); }
-    g.fillStyle = ink!;
-    label(g, text, 128, 132, 62, 170, font);
-  });
+  return paintOnce(layer, `coin:${heads}:${text}:${font}`, 256, 256, g => paintCoinFace(g, heads ? COIN_PALETTES.gold : COIN_PALETTES.silver, text, font, 128, 128, 126, heads ? COIN_HEADS_PATH : COIN_TAILS_PATH));
 }
-/** A espessura da moeda: o mesmo disco, mais escuro, que aparece por baixo da face quando ela está de lado. */
+/** A espessura da moeda chapada: o mesmo disco, mais escuro, que aparece por baixo da face quando ela está de lado. */
 function coinEdge(layer: GpuLayer, heads: boolean) {
-  const [, , low, rim] = heads ? COIN.heads : COIN.tails;
+  const [, , low, rim] = heads ? COIN_PALETTES.gold : COIN_PALETTES.silver;
   return paintOnce(layer, `coin-edge:${heads}`, 256, 256, g => {
     const band = g.createLinearGradient(0, 0, 256, 0);
-    band.addColorStop(0, rim!); band.addColorStop(.5, low!); band.addColorStop(1, rim!);
+    band.addColorStop(0, rim); band.addColorStop(.5, low); band.addColorStop(1, rim);
     g.fillStyle = band; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
   });
 }
@@ -68,7 +49,7 @@ function dieFace(layer: GpuLayer, value: string, sides: number, font: string) {
     g.lineWidth = 6; g.strokeStyle = '#ffffff'; g.beginPath(); g.roundRect(10, 10, 236, 236, 40); g.stroke();
     g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.roundRect(4, 4, 248, 248, 46); g.stroke();
     g.fillStyle = '#1f1f1f';
-    label(g, value, 128, 124, 120, 200, font);
+    fitText(g, value, 128, 124, 120, 200, font);
     g.fillStyle = '#5e5e5e'; g.font = '700 30px system-ui, sans-serif'; g.textAlign = 'center';
     g.fillText(`d${sides}`, 128, 214);
   });
@@ -108,6 +89,8 @@ const CONFETTI = [0xf2b54c, 0xffe08a, 0xec5a3f, 0x6fb8ff, 0x63d68f, 0xb07cff, 0x
 export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Shared, p: StageParams[N]) => GpuEffect } = {
   coin(layer, s, { at, heads, label: text, hold, font }) {
     const { x, y } = layer.local(at.cx, at.cy);
+    // Em 3D, menos no degrau 2 do automático em diante (a mesa já está aliviando): aí, a moeda chapada.
+    if (solidAllowed()) return headsOrTails(layer, s, { at: { x, y }, size: at.w, heads, label: text, hold, font });
     const size = at.w, gold = themeColor('--gold', '#f2b54c');
     const front = coinFace(layer, true, heads ? text : 'Cara', font), back = coinFace(layer, false, heads ? 'Coroa' : text, font);
     // Cinco voltas e meia: termina com a face do resultado para cima (par de meias-voltas mostra a cara).
@@ -151,7 +134,11 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
   die(layer, s, { at, result, sides, hold, font, travel = 130, tilt = .38 }) {
     const { x, y } = layer.local(at.cx, at.cy);
     const value = Number(result);
-    const solid = Number.isInteger(value) && value >= 1 && value <= sides ? solidDie(layer, s, { at: { x, y }, size: at.w, sides, result: value, hold, font, travel, tilt }) : null;
+    const fits = Number.isInteger(value) && value >= 1 && value <= sides;
+    const solid = !fits || !solidAllowed() ? null
+      : sides === 2 ? twoSidedDie(layer, s, { at: { x, y }, size: at.w, result: value, hold, font })
+        : sides === 100 ? percentileDice(layer, s, { at: { x, y }, size: at.w, result: value, hold, font, travel, tilt })
+          : solidDie(layer, s, { at: { x, y }, size: at.w, sides, result: value, hold, font, travel, tilt });
     if (solid) return solid;
     const size = at.w, n = Math.max(2, sides);
     // Os números que passam enquanto ele rola (como no dado em CSS) e, por último, o resultado.
