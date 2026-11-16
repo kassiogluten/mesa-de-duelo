@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.194.0] - 2026-11-16
+
+### Mudou
+
+- **Botões do "você pode" mais fáceis de acertar.** Quando um gatilho opcional pergunta se você quer usar a habilidade, Não e Sim ficam lado a lado, do mesmo tamanho e com o texto numa linha só; Sempre não e Sempre sim ficam menores, numa linha embaixo, longe do Sim, para ninguém tocar num "Sempre" sem querer.
+- **Alça para mover os avisos mais fácil de achar.** Os avisos que dá para arrastar (a caixa de ação, a decisão no centro da mesa, o "Atacar quem?" e a barra de "Ver a mesa") têm uma pílula dourada no alto no lugar dos pontinhos; nas caixas com moldura, a faixa de cima inteira (com o "Sua decisão") pega e acende ao passar o mouse. Depois de mover um aviso, aparece o botão "Voltar ao lugar", que o devolve ao lugar de sempre (os dois cliques continuam valendo).
+
+### Corrigido
+
+- **Espaço não responde mais "Sempre sim".** Num gatilho opcional, apertar Espaço respondia Sempre sim e guardava a resposta até o fim da partida; agora responde só o Sim desta vez.
+
 ## [0.193.0] - 2026-11-16
 
 ### Mudou

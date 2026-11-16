@@ -69,7 +69,8 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     if (target !== document.body && target.closest('button, a, [role="button"], [tabindex]') && !mouseFocused(target)) return;
     if (d.modal.current() || document.querySelector('dialog[open], .feedback-overlay') || !$('#fMenu').hidden || !$('#fLogDrawer').hidden || !$('#fErrorsDrawer').hidden) return;
     // O botão de passar (OK, Resolver, "Para o combate"...): avança um passo. "Fim de turno" fica só no clique.
-    const primary = root.querySelector<HTMLButtonElement>('#fAction .btns [data-act="ok"]:not(:disabled)');
+    // Nunca um "Sempre sim": a resposta guardada até o fim da partida fica só no clique.
+    const primary = root.querySelector<HTMLButtonElement>('#fAction .btns [data-act="ok"]:not(:disabled):not([data-always])');
     if (!primary) return;
     e.preventDefault();
     primary.click();

@@ -1553,3 +1553,24 @@ Feito em 15/11/2026 (`novidades-pendentes/carregando-imagens`), com `src/ui/imag
 - [x] Leve: nada anima enquanto espera; o esmaecer sai com "reduzir movimento".
 - [x] Imagem já no aparelho não muda nada: nos primeiros 140 ms nada acontece, e um endereço que já chegou nesta página não espera de novo quando a mesa redesenha.
 - [x] Testes: `tests/fixtures/image-loading.html` com a imagem atrasada pela rota `?lento=` do Vite (`lentoSmall`, `?falha=1`), `tests/image-loading.browser.mjs` e `tests/image-loading.test.mjs`; prints na pasta da novidade.
+
+## 138. ✅ Botões da caixa de decisão mais bem distribuídos
+
+Pedido em 16/11/2026. Na caixa de decisão de um gatilho opcional ("Use a habilidade desencadeada de Quintessential Katana?"), os quatro botões ficam numa linha só, com larguras desiguais: Não e Sim numa linha, Sempre não e Sempre sim quebrados em duas, todos em forma de pílula muito alta, e o Sim maior que os outros. Fica apertado, os quatro parecem ter o mesmo peso e é fácil tocar num Sempre sem querer. Os botões são montados em `src/ui/actionPanel.ts` (`always(...)`).
+
+- [x] Escolher a distribuição. Decidido com o jogador em 16/11/2026: Não e Sim como botões principais lado a lado, com Sempre não e Sempre sim menores numa linha de baixo (as outras eram a caixa "Lembrar esta resposta" e um menu nos botões).
+- [x] Texto de cada botão numa linha só, botões da mesma linha com a mesma altura e largura parecida, sem o Sim engolir o espaço dos outros.
+- [x] Conferir na caixa de ação recolhida, no celular (largura estreita) e nas outras decisões que usam os mesmos botões (com Passar, sem os Sempre).
+
+Feito em 16/11/2026 (`novidades-pendentes/botoes-e-alca-das-janelas`): `.yes-no` e `.always-answers` em `actionPanel.ts`, estilo em `awaitingDecision.css`; cenário `?cenario=gatilho-opcional` em `tests/fixtures/duel-table.ts`. De quebra, o Espaço apertava o Sempre sim (vinha antes do Sim); agora o atalho ignora os `data-always` (`tableKeyboard.ts`).
+
+## 139. ✅ Alça de mover as janelas mais fácil de achar e de pegar
+
+Pedido em 16/11/2026. Os avisos que se arrastam (a caixa de ação, a decisão no centro da mesa, o "Atacar quem?" e a barra de "Ver a mesa") têm uma alça de seis pontinhos dourados de 12px, meio apagada, numa faixa de 10px de altura acima do "Sua decisão". Ela passa despercebida, é difícil de acertar com o mouse e não diz que dá para mover; que dois cliques devolvem a janela ao lugar só aparece no texto que surge ao passar o mouse, que no celular não existe. Código em `src/ui/dragPanel.ts` e `src/ui/dragPanel.css`, ícone `DRAG_GRIP` em `src/ui/icons.ts`.
+
+- [x] Escolher o desenho. Decidido com o jogador em 16/11/2026, depois de ver as três aplicadas na mesa: a pílula no topo com a faixa de cima inteira (e o "Sua decisão") como alça.
+- [x] Área de pegar maior no mouse e no toque, sem empurrar os botões nem o texto da janela.
+- [x] Um jeito visível de devolver a janela ao lugar depois de movida (por exemplo, um botão pequeno que só aparece quando ela saiu do lugar), além dos dois cliques.
+- [x] Mesma alça e mesmo comportamento em todos os avisos que se arrastam; conferir no celular e com a caixa recolhida.
+
+Feito em 16/11/2026 (mesma pasta): `DRAG_PILL` e `DRAG_RESET` em `icons.ts`; `dragPanel.ts` marca `drag-placed` só quando o lugar é do jogador (não ao desviar das cartas) e liga o `[data-drag-reset]`; `dragPanel.css` desenha a faixa com moldura (`--drag-pt`/`--drag-px`) e sem. O "Voltar ao lugar" tem texto na pergunta do centro e na barra, e só ícone na caixa do canto e no celular. `tests/drag-panel.browser.mjs` cobre o botão.

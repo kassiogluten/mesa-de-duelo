@@ -432,6 +432,14 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       ] };
     view.render();
   },
+  /** Gatilho opcional ("você pode..."): Não e Sim desta vez, e Sempre não e Sempre sim até o fim da partida. `?cenario=gatilho-opcional`. */
+  optionalTrigger() {
+    const katana = card(290, 'Quintessential Katana', 10, { creature: false, manaCost: '{2}', typeLine: 'Artifact — Equipment' });
+    if (!state.players[0].battlefield.some((c: any) => c.id === 290)) state.players[0].battlefield.push(katana);
+    Object.assign(state.input, { gen: 12, priority: false, actionable: [], selectable: [], selectablePlayers: [], targeting: undefined, card: katana,
+      message: 'Use a habilidade desencadeada de Quintessential Katana (290)?', ok: { label: 'Sim', enabled: true }, cancel: { label: 'Não', enabled: true }, triggerChoice: true });
+    view.render();
+  },
   triggers() {
     state.question = { id: 41, method: 'order', kind: 'order', purpose: 'triggers', title: 'Reordenar habilidades simultâneas', options: [
       { kind: 'ability', card: warden(100), label: 'Soul Warden - Whenever another creature enters, you gain 1 life.', ability: 'Whenever another creature enters, you gain 1 life.' },
@@ -694,6 +702,7 @@ if (new URLSearchParams(location.search).get('cenario') === 'tipo-ganho') (windo
 if (new URLSearchParams(location.search).get('cenario') === 'contagens') (window as any).fixture.counts(Number(new URLSearchParams(location.search).get('licoes') ?? 3));
 const cenario = new URLSearchParams(location.search).get('cenario');
 if (cenario === 'proliferar') (window as any).fixture.proliferate();
+if (cenario === 'gatilho-opcional') (window as any).fixture.optionalTrigger();
 if (cenario === 'ataque-monte') (window as any).fixture.groupedAttack();
 // Dois montes: ?cenario=montes&passo=split|choose (&steam=1 para a Steam Augury, em que quem conjura separa).
 if (cenario === 'montes') { const q = new URLSearchParams(location.search); (window as any).fixture.piles(q.get('passo') === 'choose' ? 'choose' : 'split', q.has('steam')); }

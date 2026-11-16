@@ -65,8 +65,10 @@ export const EYE_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 
 export const FOCUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="3"/></svg>';
 export const EXPAND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>';
 
-/** Pontinhos da alça de um painel que se arrasta (dragPanel.ts). */
-export const DRAG_GRIP = '<svg class="drag-grip" viewBox="0 0 12 12" aria-hidden="true"><circle cx="3" cy="3" r="1.1"/><circle cx="9" cy="3" r="1.1"/><circle cx="3" cy="9" r="1.1"/><circle cx="9" cy="9" r="1.1"/><circle cx="3" cy="6" r="1.1"/><circle cx="9" cy="6" r="1.1"/></svg>';
+/** Painéis que se arrastam (dragPanel.ts): a pílula da alça e o botão que devolve o painel ao lugar de sempre. */
+export const DRAG_PILL = '<span class="drag-pill" aria-hidden="true"></span>';
+export const DRAG_RESET = '<button type="button" class="drag-reset" data-drag-reset title="Voltar ao lugar de sempre" aria-label="Voltar este aviso ao lugar de sempre">'
+  + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg><span>Voltar ao lugar</span></button>';
 
 export const inspectIcon ='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6m-3-3v6"/></svg>';
 

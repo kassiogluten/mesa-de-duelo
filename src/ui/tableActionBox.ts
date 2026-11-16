@@ -7,7 +7,7 @@ import { label, ptOf } from './cardFaces';
 import { buttons, passLevelControl, proliferateNames, targetInfoHTML, targetInfoOf, targetInfoText, voteBoardPrompt } from './actionPanel';
 import type { createAttackChoice } from './attackChoice';
 import { forecastLineHTML, forecastText } from './combatForecast';
-import { DRAG_GRIP } from './icons';
+import { DRAG_PILL, DRAG_RESET } from './icons';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
 import { isProliferating, proliferatePanelHTML } from './proliferate';
 import { zoneWithArticle } from './questionView';
@@ -66,8 +66,11 @@ export interface ActionBoxDeps extends Pick<TableCtx, 'root' | '$' | 'setHTML' |
   renderAwaiting(s: FState, text: string): unknown;
 }
 
-/** Faixa do alto da caixa de ação: a alça que a arrasta (dragPanel.ts). */
-const DRAG_HANDLE = `<div class="drag-handle" title="Arraste para mover este aviso. Dois cliques o devolvem ao lugar." aria-hidden="true">${DRAG_GRIP}</div>`;
+/**
+ * Faixa do alto da caixa de ação: a alça que a arrasta (dragPanel.ts), com a pílula e, na pergunta do centro, o "Sua decisão";
+ * e o botão que a devolve ao lugar de sempre, que só aparece depois de ela ser movida (fora da alça, para o leitor de tela).
+ */
+const DRAG_HANDLE = `<div class="drag-handle" title="Arraste para mover este aviso. Dois cliques o devolvem ao lugar." aria-hidden="true">${DRAG_PILL}</div>${DRAG_RESET}`;
 
 export function createActionBox(d: ActionBoxDeps) {
   const { root, $ } = d;

@@ -5,7 +5,6 @@ import type { FCard, FState, ForgeClient, NoticeDetail } from '../forge/client';
 import { esc } from './cardtext';
 import { label } from './cardFaces';
 import { hideCardPreview } from './cardInspector';
-import { DRAG_GRIP } from './icons';
 import { AttackQueue, attackAllAction, attackScope, availableAttackTargets, legalAttackAllTargets, legalAttackGroupTargets, legalAttackTargets, validAttackSelection, type Defender } from './commanderTable';
 
 /** O que a escolha de ataque precisa da mesa. */
@@ -115,7 +114,7 @@ export function createAttackChoice(d: AttackDeps) {
         + `${coming ? `<span class="attack-target-count" aria-hidden="true">${coming}</span>` : ''}</button>`;
     }).join('');
     const tools = `${removable ? '<button class="icon-btn" data-ui="attack-remove">Retirar do combate</button>' : ''}${a.allGen === null ? '<button class="icon-btn" data-ui="attack-clear">Limpar seleção</button>' : ''}`;
-    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle" title="Arraste para mover este painel. Dois cliques o devolvem ao lugar.">Atacar quem?${DRAG_GRIP}</h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
+    return `<div class="attack-choices" role="group" aria-labelledby="fAttackTitle"><h3 class="attack-choices-title" id="fAttackTitle" title="Arraste para mover este painel. Dois cliques o devolvem ao lugar.">Atacar quem?</h3><div class="attack-targets">${targets}</div>${tools ? `<div class="attack-tools">${tools}</div>` : ''}</div>`;
   }
   /** Toque numa criatura que pode atacar: marca ou desmarca, ou já manda o ataque quando só há um defensor (ou ele foi fixado). */
   function tapAttacker(s: FState, id: number, gen: number) {

@@ -1,26 +1,86 @@
 /* Avisos que se arrastam pela alça (dragPanel.ts): a caixa de ação, o "Atacar quem?" e a barra de "Ver a mesa". */
+
+/* A pílula dourada que diz "arraste aqui", como a das folhas do celular. */
+.drag-pill { display: block; flex: none; width: 40px; height: 5px; border-radius: 3px; background: var(--gold); opacity: .55; transition: opacity .15s, width .15s, box-shadow .15s; }
+
+/* Caixa de ação: a faixa do alto é a alça. Sem moldura (prioridade, mulligan, ataque), só a pílula numa faixa estreita. */
 .forge .action > .drag-handle {
-  position: relative; align-self: stretch; display: grid; place-items: center; height: 10px; margin: -2px 0 -4px;
-  color: var(--gold); opacity: .55; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  position: relative; align-self: stretch; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 16px; margin: -4px 0 -6px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
 }
-.forge .action > .drag-handle .drag-grip { width: 12px; height: 12px; rotate: 90deg; }
-.forge .action > .drag-handle:hover { opacity: .9; }
-/* Na pergunta do centro, a alça fica acima do "Sua decisão"; no "Atacar quem?" e na barra de "Ver a mesa", o título também é alça. */
+/* A área que pega passa da pílula para os lados e para cima, sem empurrar o resto da caixa. */
+.forge .action > .drag-handle::before { content: ''; position: absolute; inset: -6px 0 -2px; }
+.forge .action > .drag-handle:hover .drag-pill, .forge .drag-active > .drag-handle .drag-pill { opacity: 1; width: 48px; box-shadow: 0 0 8px #f2b54c80; }
+
+/* Com moldura (decisão esperando, escolha de cartas, pergunta do centro): a faixa ocupa a largura toda, separada por uma linha. */
+.forge .action.awaiting { --drag-pt: 12px; --drag-px: 14px; }
+.forge .action.card-decision { --drag-pt: 16px; --drag-px: 16px; }
+.forge .action.card-decision.hand-decision { --drag-pt: 14px; --drag-px: 18px; }
+.forge .action.centered-decision { --drag-pt: 18px; --drag-px: 20px; }
+.forge .action:is(.awaiting, .card-decision, .centered-decision) > .drag-handle {
+  min-height: 30px; margin: calc(-1 * var(--drag-pt)) calc(-1 * var(--drag-px)) 0; padding: 9px 0 8px; box-sizing: border-box;
+  border-bottom: 1px solid #f2b54c26; border-radius: 11px 11px 0 0; background: linear-gradient(#ffffff0a, transparent); transition: background .15s;
+}
+.forge .action:is(.awaiting, .card-decision, .centered-decision) > .drag-handle::before { content: none; }
+.forge .action:is(.awaiting, .card-decision, .centered-decision) > .drag-handle:hover,
+.forge .action.drag-active:is(.awaiting, .card-decision, .centered-decision) > .drag-handle { background: linear-gradient(#f2b54c1f, #f2b54c08); }
+/* Na pergunta do centro, o "Sua decisão" faz parte da alça, como o título de uma janela. */
 .forge .action.centered-decision > .drag-handle { order: -1; }
-.forge .action.attack-choosing .attack-choices-title,
+.forge .action.centered-decision > .drag-handle::after {
+  content: 'Sua decisão'; color: var(--gold); font: 700 11px/1.2 var(--display); letter-spacing: .14em; text-transform: uppercase;
+}
+
+/* "Atacar quem?": o título também arrasta a caixa. */
+.forge .action.attack-choosing .attack-choices-title { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+/* Barra de "Ver a mesa": a pílula no alto e o texto arrastam. */
+.forge .question-bar { position: relative; padding-top: 14px; }
+.forge .question-bar > .drag-pill { position: absolute; top: 5px; left: 50%; translate: -50% 0; cursor: grab; touch-action: none; }
+.forge .question-bar > .drag-pill::before { content: ''; position: absolute; inset: -6px -20px -4px; }
 .forge .question-bar-text { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-.drag-grip { width: 12px; height: 12px; flex: none; fill: currentColor; opacity: .7; }
-.forge .question-bar > .drag-grip { width: 14px; height: 14px; margin-right: -6px; color: var(--gold); }
+.forge .question-bar:is(:has(> .question-bar-text:hover), :has(> .drag-pill:hover), .drag-active) > .drag-pill { opacity: 1; width: 48px; box-shadow: 0 0 8px #f2b54c80; }
+
+/* "Voltar ao lugar": só aparece depois que o jogador moveu o aviso. */
+.drag-reset {
+  display: none; align-items: center; gap: 5px; height: 24px; padding: 0 10px 0 8px; border: 1px solid #f2b54c66; border-radius: 999px;
+  background: color-mix(in srgb, var(--azul-0a1424, #0a1424) 90%, transparent); color: var(--gold-light); font: 600 12px/1 var(--body); white-space: nowrap; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.drag-reset svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.drag-reset:hover { border-color: var(--gold); background: #f2b54c26; }
+.drag-reset:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+.forge .drag-placed .drag-reset { display: inline-flex; }
+.forge .action > .drag-reset { position: absolute; z-index: 2; top: 3px; right: 6px; }
+/* Na caixa estreita do canto, só o ícone, para não cobrir a pílula; o texto fica na pergunta do centro e na barra. */
+.forge .action:not(.centered-decision) > .drag-reset { width: 26px; height: 26px; padding: 0; justify-content: center; }
+.forge .action:not(.centered-decision) > .drag-reset span { display: none; }
+/* Sem moldura, a faixa da alça cresce para o botão caber ao lado da pílula. */
+.forge .action.drag-placed:not(.awaiting, .card-decision, .centered-decision) > .drag-handle { min-height: 26px; margin-top: -6px; }
+.forge .action.drag-placed:not(.awaiting, .card-decision, .centered-decision) > .drag-reset { top: -4px; right: 0; }
+.forge .question-bar > .drag-reset { flex: none; }
 
 .forge .drag-moved { translate: var(--drag-x, 0) var(--drag-y, 0); }
 .forge .drag-active { transition: none; }
-.forge .drag-active :is(.drag-handle, .attack-choices-title, .question-bar-text) { cursor: grabbing; }
+.forge .drag-active :is(.drag-handle, .attack-choices-title, .question-bar-text, .drag-pill) { cursor: grabbing; }
 /* Enquanto se move, o aviso deixa ver as cartas por baixo. */
 .forge .drag-moving { opacity: .72; box-shadow: 0 10px 30px #000a; }
 
-/* No toque, a alça pega o dedo numa faixa bem maior que os pontinhos, sem empurrar os botões. */
+/* Celular: a faixa acompanha a caixa menor, e o "Voltar ao lugar" fica só com o ícone. */
+@media (max-width: 760px), (max-height: 500px) {
+  .forge .action.card-decision { --drag-pt: 10px; --drag-px: 10px; }
+  .forge .action.centered-decision { --drag-pt: 12px; --drag-px: 14px; }
+  .forge .action:is(.awaiting, .card-decision, .centered-decision) > .drag-handle { min-height: 26px; padding: 7px 0 6px; gap: 4px; }
+  .drag-reset { width: 26px; height: 26px; padding: 0; justify-content: center; }
+  .drag-reset span { display: none; }
+  .drag-reset svg { width: 15px; height: 15px; }
+  .forge .question-bar { padding-top: 12px; }
+}
+
+/* No toque, áreas de pegar maiores, sem empurrar os botões. */
 @media (pointer: coarse) {
-  .forge .action > .drag-handle { height: 14px; opacity: .75; }
-  .forge .action > .drag-handle::before { content: ''; position: absolute; inset: -10px -4px -6px; }
-  .forge .action > .drag-handle .drag-grip { width: 14px; height: 14px; }
+  .forge .action > .drag-handle::before { inset: -12px 0 -4px; }
+  .forge .question-bar > .drag-pill::before { inset: -10px -28px -8px; }
+  .drag-reset::before { content: ''; position: absolute; inset: -8px; }
+  .drag-reset { position: relative; }
+  .forge .action > .drag-reset { position: absolute; }
 }

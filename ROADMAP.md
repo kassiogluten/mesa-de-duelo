@@ -636,19 +636,13 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
 
-## 138. Botões da caixa de decisão mais bem distribuídos
+## 140. Objetos 3D na camada dos efeitos
 
-Pedido em 16/11/2026. Na caixa de decisão de um gatilho opcional ("Use a habilidade desencadeada de Quintessential Katana?"), os quatro botões ficam numa linha só, com larguras desiguais: Não e Sim numa linha, Sempre não e Sempre sim quebrados em duas, todos em forma de pílula muito alta, e o Sim maior que os outros. Fica apertado, os quatro parecem ter o mesmo peso e é fácil tocar num Sempre sem querer. Os botões são montados em `src/ui/actionPanel.ts` (`always(...)`).
+Pedido em 16/11/2026, depois do dado em 3D (item 125): mais objetos em 3D de verdade, sem pesar nas partidas com FPS baixo. A regra está em `docs/spec-mesa-webgl.md` ("Objetos 3D"): um objeto só, por pouco tempo, num momento em que a mesa já está esperando; nunca contínuo nem um por permanente; do degrau 2 do automático em diante, a versão chapada. Decidido nesse dia: fazer todos, em entregas separadas, cada uma na própria pasta de `novidades-pendentes/`.
 
-- [ ] Escolher a distribuição (decidir com o jogador antes): Não e Sim como botões principais lado a lado, com Sempre não e Sempre sim menores numa linha de baixo; ou só Não e Sim, com uma caixa "Lembrar esta resposta" acima; ou os Sempre num menu ao lado de cada botão.
-- [ ] Texto de cada botão numa linha só, botões da mesma linha com a mesma altura e largura parecida, sem o Sim engolir o espaço dos outros.
-- [ ] Conferir na caixa de ação recolhida, no celular (largura estreita) e nas outras decisões que usam os mesmos botões (com Passar, sem os Sempre).
-
-## 139. Alça de mover as janelas mais fácil de achar e de pegar
-
-Pedido em 16/11/2026. Os avisos que se arrastam (a caixa de ação, a decisão no centro da mesa, o "Atacar quem?" e a barra de "Ver a mesa") têm uma alça de seis pontinhos dourados de 12px, meio apagada, numa faixa de 10px de altura acima do "Sua decisão". Ela passa despercebida, é difícil de acertar com o mouse e não diz que dá para mover; que dois cliques devolvem a janela ao lugar só aparece no texto que surge ao passar o mouse, que no celular não existe. Código em `src/ui/dragPanel.ts` e `src/ui/dragPanel.css`, ícone `DRAG_GRIP` em `src/ui/icons.ts`.
-
-- [ ] Escolher o desenho (decidir com o jogador antes): uma barra (pílula) larga no topo, como a das folhas do celular; a faixa de cima inteira (com o "Sua decisão") como alça, com a mãozinha ao passar; ou os pontinhos maiores e mais visíveis ao passar o mouse.
-- [ ] Área de pegar maior no mouse e no toque, sem empurrar os botões nem o texto da janela.
-- [ ] Um jeito visível de devolver a janela ao lugar depois de movida (por exemplo, um botão pequeno que só aparece quando ela saiu do lugar), além dos dois cliques.
-- [ ] Mesma alça e mesmo comportamento em todos os avisos que se arrastam; conferir no celular e com a caixa recolhida.
+- [x] Moeda em 3D, d2 e d100 em 3D e o shader dos sólidos aquecido com a mesa ociosa (`novidades-pendentes/moeda-e-dados-3d`).
+- [ ] Dia e noite: um disco de sol e lua que vira quando o dia vira noite (e o contrário).
+- [ ] Monarca e Dianteira: o medalhão da coroa e o escudo da dianteira passando de um jogador para outro.
+- [ ] Emblema do planeswalker surgindo como uma placa em 3D.
+- [ ] Fim da partida: um brasão em 3D sobre o retrato de quem venceu.
+- [ ] Fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta quando são criadas, desligadas já no degrau 1.

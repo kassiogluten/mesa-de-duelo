@@ -357,7 +357,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       key: el => el.closest('[data-opening]') || el.classList.contains('centered-decision') ? KEYS.centerPanel : KEYS.actionPanel,
       avoid: el => el.classList.contains('awaiting') && !el.classList.contains('centered-decision') || el.classList.contains('attack-choosing')
         ? [...root.querySelectorAll('.bfc.actionable, .att.actionable, .avatar.selectable-player, .exile-card.selectable')].map(c => c.getBoundingClientRect()).filter(r => r.width) : [] },
-    { handle: '.question-bar-text, .question-bar .drag-grip', panel: '#fQuestion.minimized .question-bar', key: () => KEYS.questionBar },
+    { handle: '.question-bar-text, .question-bar > .drag-pill', panel: '#fQuestion.minimized .question-bar', key: () => KEYS.questionBar },
   ]);
   const zone = createTableZone(ctx);
 

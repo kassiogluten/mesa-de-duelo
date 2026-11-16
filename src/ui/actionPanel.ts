@@ -120,10 +120,12 @@ export function buttons(v: ActionView, s: FState) {
   // O destaque, sempre por último (embaixo, onde a mão já espera), é o próximo passo. Nunca o "Fim de turno": apertado
   // por hábito, ele pularia o resto do turno.
   const pass = b('ok', priority, 'primary', !s.input.priority ? okIcon : priority.label === 'Resolver' ? 'ok' : 'pass');
-  // Gatilho opcional ("você pode..."): além do Sim e do Não desta vez, guardar a resposta até o fim da partida.
+  // Gatilho opcional ("você pode..."): Não e Sim desta vez lado a lado e, menores numa linha de baixo, longe do Sim,
+  // guardar a resposta até o fim da partida.
   if (s.input.triggerChoice && ok.enabled && cancel.enabled) {
-    const always = (act: string, label: string, icon: ActionIcon) => `<button class="arena-btn secondary" data-act="${act}" data-always data-gen="${s.input.gen}" ${waiting ? 'disabled' : ''}>${actionIconHTML(icon)}${label}</button>`;
-    return b('cancel', cancel, 'secondary', cancelIcon) + always('cancel', 'Sempre não', 'alwaysNo') + always('ok', 'Sempre sim', 'alwaysYes') + pass;
+    const always = (act: string, label: string, icon: ActionIcon) => `<button class="always-btn" data-act="${act}" data-always data-gen="${s.input.gen}" ${waiting ? 'disabled' : ''}>${actionIconHTML(icon)}${label}</button>`;
+    return `<div class="yes-no">${b('cancel', cancel, 'secondary', cancelIcon)}${pass}</div>`
+      + `<div class="always-answers" role="group" aria-label="Até o fim da partida">${always('cancel', 'Sempre não', 'alwaysNo')}${always('ok', 'Sempre sim', 'alwaysYes')}</div>`;
   }
   const passTurn = endTurn ? b('pass-turn', { label: 'Fim de turno', enabled: true }, 'secondary', 'endTurn') : '';
   return undo + life('secondary') + resolveAll + passTurn + pass;

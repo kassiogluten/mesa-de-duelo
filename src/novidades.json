@@ -1,4 +1,14 @@
 {
+  "0.194.0": {
+    "Botões do \"você pode\" mais fáceis de acertar": [
+      { "img": "0.194.0/botoes-gatilho.webp", "legenda": "Não e Sim do mesmo tamanho lado a lado, e Sempre não e Sempre sim menores na linha de baixo." }
+    ],
+    "Alça para mover os avisos mais fácil de achar": [
+      { "img": "0.194.0/alca-centro.webp", "legenda": "Na decisão do centro, a faixa de cima com a pílula e o \"Sua decisão\" é a alça; movido, o aviso mostra \"Voltar ao lugar\"." },
+      { "img": "0.194.0/alca-canto.webp", "legenda": "Na caixa de ação do canto, a mesma faixa com a pílula; depois de movida, o botão redondo a devolve ao lugar." },
+      { "img": "0.194.0/alca-barra.webp", "legenda": "A barra de \"Ver a mesa\" com a pílula no alto e o \"Voltar ao lugar\" depois de movida." }
+    ]
+  },
   "0.193.0": {
     "Marcador +1/+1 acende na hora em que entra": [
       { "img": "0.193.0/onda-verde.webp", "legenda": "Quando o marcador +1/+1 entra, a borda da carta acende em verde, uma onda verde sobe pela arte e o P/T pisca." },

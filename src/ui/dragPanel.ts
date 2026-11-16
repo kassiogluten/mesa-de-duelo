@@ -1,5 +1,5 @@
 // Painéis da mesa que se arrastam pela alça: o limite antes de mover, sempre dentro da tela, o lugar guardado neste
-// aparelho, dois cliques para voltar ao lugar de sempre e, no lugar de sempre, sair de cima das cartas que podem ser escolhidas.
+// aparelho, o botão "Voltar ao lugar" (e dois cliques) para o lugar de sempre e, nele, sair de cima das cartas que podem ser escolhidas.
 import { load, loadJSON, save, saveJSON, type StorageKey } from '../storage';
 
 export interface Shift { x: number; y: number }
@@ -88,8 +88,11 @@ export function createDragPanels(root: HTMLElement, specs: DragPanelSpec[]) {
   function settle(spec: DragPanelSpec, el: HTMLElement) {
     const key = spec.key(el);
     place(el, null);
+    // `drag-placed`: o painel está onde o jogador o deixou (e não só desviando das cartas); mostra o "Voltar ao lugar".
+    const own = key ? stored(key) : null;
+    el.classList.toggle('drag-placed', !!own);
     if (!key) return;
-    const shift = stored(key) ?? (spec.avoid ? dodgeShift(el.getBoundingClientRect(), spec.avoid(el), view()) : null);
+    const shift = own ?? (spec.avoid ? dodgeShift(el.getBoundingClientRect(), spec.avoid(el), view()) : null);
     if (shift) put(el, shift);
   }
   /** Coloca cada painel no lugar dele; chamado a cada desenho e quando a janela muda de tamanho. */
@@ -126,16 +129,27 @@ export function createDragPanels(root: HTMLElement, specs: DragPanelSpec[]) {
       handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', end); handle.removeEventListener('pointercancel', end);
       el.classList.remove('drag-active', 'drag-moving');
       // Guarda o lugar em que o painel ficou de fato (já trazido para dentro da tela).
-      if (last) remember(key, last);
+      if (last) { remember(key, last); el.classList.add('drag-placed'); }
     };
     handle.addEventListener('pointermove', move); handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
     e.preventDefault();
   });
+  /** Esquece o lugar guardado e devolve o painel ao lugar de sempre. */
+  function reset(spec: DragPanelSpec, el: HTMLElement, key: StorageKey) {
+    remember(key, null);
+    settle(spec, el);
+  }
   root.addEventListener('dblclick', e => {
     const hit = grab(e.target);
-    if (!hit) return;
-    remember(hit.key, null);
-    settle(hit.spec, hit.el);
+    if (hit) reset(hit.spec, hit.el, hit.key);
+  });
+  root.addEventListener('click', e => {
+    const button = (e.target as Element | null)?.closest?.('[data-drag-reset]');
+    if (!button) return;
+    for (const spec of specs) {
+      const el = button.closest<HTMLElement>(spec.panel), key = el && spec.key(el);
+      if (el && key) { reset(spec, el, key); return; }
+    }
   });
   return { sync };
 }

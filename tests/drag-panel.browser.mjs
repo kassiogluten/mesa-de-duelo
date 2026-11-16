@@ -3,6 +3,7 @@ import { browserSession, TABLE_URL } from './browser-helper.mjs';
 
 const { run, evaluate } = browserSession('drag-panel-check');
 const rect = selector => evaluate(`const r=document.querySelector(${JSON.stringify(selector)})?.getBoundingClientRect();return r?{left:r.left,top:r.top,right:r.right,bottom:r.bottom,x:r.x+r.width/2,y:r.y+r.height/2}:null;`);
+const shown = selector => evaluate(`return !!document.querySelector(${JSON.stringify(selector)})?.checkVisibility();`);
 const stored = key => evaluate(`return localStorage.getItem(${JSON.stringify(key)});`);
 const inside = (r, w, h) => r.left >= 3 && r.top >= 3 && r.right <= w - 3 && r.bottom <= h - 3;
 /** Arrasta pela alça com o mouse de verdade (captura do ponteiro incluída), em passos. */
@@ -35,6 +36,7 @@ try {
     assert.ok(inside(after, width, height), 'the dragged box stays on screen');
     assert.ok(JSON.parse(stored('mesa:action-panel')), 'the place is kept on this device');
     assert.equal(evaluate(`return document.querySelector('#fAction').classList.contains('drag-moving');`), false, 'not translucent after letting go');
+    assert.ok(shown('#fAction > .drag-reset'), 'a moved box offers to go back to its place');
 
     // Continua respondendo: uma carta de alvo fora da caixa (a que estava embaixo dela no lugar de sempre, se houver).
     const free = evaluate(`const a=document.querySelector('#fAction').getBoundingClientRect();return window.fixture.state.input.selectable.map(id=>[id,document.querySelector('[data-fid="'+id+'"]')?.getBoundingClientRect()]).filter(([,r])=>r).filter(([,r])=>r.width&&!(a.left<r.right&&a.right>r.left&&a.top<r.bottom&&a.bottom>r.top)).map(([id])=>id);`);
@@ -54,7 +56,15 @@ try {
     run('set', 'viewport', String(width), String(height));
     evaluate('window.dispatchEvent(new Event("resize"));return true;');
 
-    // Dois cliques: volta ao lugar de sempre e esquece o lugar guardado.
+    // "Voltar ao lugar": volta ao lugar de sempre, esquece o lugar guardado e some.
+    // No celular deitado a caixa é mais alta que a metade da tela, e o canto dela fica sob a barra do alto (o desfazer).
+    if (width === 1280) run('click', '#fAction > .drag-reset');
+    else evaluate(`document.querySelector('#fAction > .drag-reset').click();return true;`);
+    assert.equal(stored('mesa:action-panel'), null);
+    assert.equal(shown('#fAction > .drag-reset'), false, 'the button hides once the box is back in place');
+    // Dois cliques fazem o mesmo.
+    drag('#fAction > .drag-handle', 10 - rect('#fAction').left, 0);
+    assert.ok(JSON.parse(stored('mesa:action-panel')));
     run('dblclick', '#fAction > .drag-handle');
     assert.equal(stored('mesa:action-panel'), null);
 
@@ -66,6 +76,7 @@ try {
     const moved = rect('.question-bar');
     assert.ok(moved.top < bar.top - 60, 'the collapsed choice bar moved up');
     assert.ok(JSON.parse(stored('mesa:question-bar')), 'the bar keeps its own place');
+    assert.ok(shown('.question-bar > .drag-reset'), 'the moved bar offers to go back to its place');
     run('click', '[data-ui="question-restore"]');
     assert.ok(rect('.question'), 'the choice comes back from the moved bar');
   }

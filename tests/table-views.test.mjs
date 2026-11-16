@@ -180,12 +180,13 @@ test('stack gallery: equal items in a row become one card with ×N, but an item 
   assert.equal((targeting.match(/class="stack-gallery-item/g) ?? []).length, 5);
 });
 
-test('an optional trigger offers "always yes" and "always no" next to this time\'s yes and no', () => {
+test('an optional trigger shows this time\'s no and yes side by side, with "always no" and "always yes" smaller below', () => {
   const view = { findCard: () => undefined, playerName: () => 'Ana', observing: false, disconnected: false, clickLocked: () => false,
     passLevel: 'acoes', passLevelSupported: true, passingTurn: false, passPending: false, passMenuOpen: false, attackAll: false, attackSelecting: 0, attackBusy: false };
   const ask = { ok: { enabled: true, label: 'Sim' }, cancel: { enabled: true, label: 'Não' } };
   const html = buttons(view, state({ ...ask, triggerChoice: true }));
-  assert.match(html, /data-act="cancel"[^>]*>(?:<span class="act-icon">.*?<\/span>)?Não<[\s\S]*data-act="cancel" data-always[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sempre não<[\s\S]*data-act="ok" data-always[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sempre sim<[\s\S]*arena-btn primary" data-act="ok"[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sim</);
+  assert.match(html, /^<div class="yes-no"><button class="arena-btn secondary" data-act="cancel"[^>]*>(?:<span class="act-icon">.*?<\/span>)?Não<\/button><button class="arena-btn primary" data-act="ok"[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sim<\/button><\/div>/);
+  assert.match(html, /<div class="always-answers"[^>]*><button class="always-btn" data-act="cancel" data-always[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sempre não<\/button><button class="always-btn" data-act="ok" data-always[^>]*>(?:<span class="act-icon">.*?<\/span>)?Sempre sim<\/button><\/div>$/);
   assert.doesNotMatch(buttons(view, state(ask)), /data-always/);
 });
 
