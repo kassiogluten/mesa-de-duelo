@@ -10,7 +10,9 @@ export interface MomentParams {
    * Momento grande (mágica de valor 6 ou mais, ultimate, golpe letal, lendária): a mesa escurece em volta de `at`,
    * deixando um círculo de `radius` px aceso, por `duration` ms.
    */
-  spotlight: { at: Point; radius: number; duration: number; delay?: number; strength?: number };
+  spotlight: { at: Point; radius: number; duration: number; delay?: number; strength?: number;
+    /** Golpe letal e ultimate: o degrau 1 do automático não tira (só a mágica grande perde o escuro). */
+    keep?: boolean };
   /** Lendária chegando: raios suaves girando atrás do lugar dela, um anel fino e poucas brasas douradas subindo. */
   legend: { at: Point; color?: string; delay?: number };
   /** Seta de alvo nascendo: um traço de luz percorre a curva (de `from`, passando perto de `via`, até `to`) e estoura no alvo. */

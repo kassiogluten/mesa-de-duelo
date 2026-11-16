@@ -24,6 +24,7 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { TABLE_URL } from '../tests/browser-helper.mjs';
+import { connectCdp } from './cdp-pagina.mjs';
 
 const SCENES = {
   dano: 'land,bolt,bolt,move:attack,x:fight,move:destroy',
@@ -50,26 +51,11 @@ execFileSync(process.execPath, cli(['open', 'about:blank']), { stdio: 'ignore' }
 const run = (...a) => execFileSync(process.execPath, cli(a), { encoding: 'utf8' }).trim();
 const evaluate = code => JSON.parse(execFileSync(process.execPath, cli(['eval', '--stdin']), { input: `(async () => {${code}})()`, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim());
 
-/**
- * O freio de CPU, pelo protocolo do Chrome (o agent-browser não tem o comando). A conexão fica aberta até o fim da
- * medição: o freio vale enquanto a sessão estiver presa à página.
- */
+/** O freio de CPU (scripts/cdp-pagina.mjs): vale enquanto a conexão estiver aberta; devolve como soltá-lo. */
 async function throttle(rate) {
-  const ws = new WebSocket(run('get', 'cdp-url'));
-  await new Promise((resolve, reject) => { ws.addEventListener('open', resolve, { once: true }); ws.addEventListener('error', () => reject(new Error('sem conexão com o protocolo do Chrome')), { once: true }); });
-  let id = 0;
-  const waiting = new Map();
-  ws.addEventListener('message', ({ data }) => { const m = JSON.parse(data); if (m.id && waiting.has(m.id)) { waiting.get(m.id)(m); waiting.delete(m.id); } });
-  const send = (method, params = {}, sessionId) => new Promise(resolve => { const n = ++id; waiting.set(n, resolve); ws.send(JSON.stringify({ id: n, method, params, ...(sessionId ? { sessionId } : {}) })); });
-  const { result } = await send('Target.getTargets');
-  let pages = 0;
-  for (const target of result.targetInfos.filter(t => t.type === 'page')) {
-    const attached = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
-    const set = await send('Emulation.setCPUThrottlingRate', { rate }, attached.result.sessionId);
-    if (!set.error) pages++;
-  }
-  if (!pages) throw new Error('não consegui frear a CPU de nenhuma página');
-  return () => ws.close();
+  const cdp = await connectCdp(run('get', 'cdp-url'));
+  await cdp.throttle(rate);
+  return () => cdp.close();
 }
 
 // A primeira jogada de verdade do `?jogar` (a mão dada sai aos 600 ms, a primeira jogada 2,5 s depois).

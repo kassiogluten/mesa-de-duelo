@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.200.0] - 2026-11-16
+
+### Mudou
+
+- **Primeiro degrau dos efeitos automáticos mais certeiro.** Com **Efeitos: Automático**, quando a mesa fica lenta, o primeiro alívio agora tira também o que mais pesa: a mesa escurecendo em volta de uma mágica grande e os raios atrás de uma lendária que chega. Também param as animações que ficam rodando nas cartas do campo: as criaturas que voam param de flutuar e perdem o vento, as gotas do vínculo com a vida e a luz que corre na seta de alvo somem, e a mira de quem é alvo e o tremor de cor da criatura com enjoo ficam parados, ainda à vista. Antes, esse degrau só cortava metade das faíscas, que pesam pouco, e o que mais pesava continuava até a mesa descer mais um degrau e perder também a mesa viva. O golpe letal e o ultimate continuam inteiros, com a mesa escurecendo. Quando a mesa se firma, tudo volta a animar.
+
 ## [0.199.0] - 2026-11-16
 
 ### Novo

@@ -583,12 +583,12 @@ Pedido em 15/11/2026. Hoje o degrau 1 do Efeitos: Automático (`src/ui/gpu/effec
 
 A ideia é medir quanto cada efeito custa e, no E1, desligar (ou trocar por uma versão simples) só os poucos mais caros, mantendo o resto.
 
-- [ ] Medir cada efeito sozinho, com a mesa vazia e com a mesa cheia (cenário "Mesa cheia para medir FPS" do Laboratório), com a CPU freada (4× e 6×): tempo por quadro, quadros longos e memória da GPU. Usar `scripts/medir-efeitos.mjs` e os botões do laboratório de efeitos (`/efeitos`), incluindo as jogadas simuladas e os efeitos que ficam rodando (enjoo, proteção, alvo possível, voar, mesa viva, setas).
-- [ ] Ranking dos efeitos por custo, numa tabela em `docs/spec-mesa-webgl.md`, separando o que pesa uma vez (destruir partindo a carta, portal do exílio, golpe letal, confete) do que pesa o tempo todo (animações contínuas por permanente, poeira, luz da mesa).
-- [ ] Decidir quais saem no E1 (provavelmente os 3 a 5 mais caros) e o que cada um vira: desligado, versão simples em CSS ou com menos partículas. Golpe letal e ultimate continuam protegidos, como hoje.
-- [ ] Ligar a lista ao regulador: o E1 passa a ser "faíscas pela metade + sem os efeitos pesados", e o E2 e o E3 continuam como estão.
-- [ ] Conferir que o E1 novo segura a mesa cheia sem descer para o E2 com tanta frequência (medir de novo com o mesmo cenário) e que a troca de degrau não deixa efeito pela metade na tela.
-- [ ] Mostrar no laboratório de efeitos quais efeitos cada degrau desliga, para conferir à mão.
+- [x] Medir cada efeito sozinho, com a mesa cheia, com a CPU normal, 4× e 6×. Feito em 16/11/2026 com `scripts/medir-cada-efeito.mjs` (novo: cada jogada, estado contínuo e peça da camada sozinhos, com rastro do Chrome, área pintada pela camada e quedas abaixo de 30 quadros por segundo), com a placa de vídeo real: a emulada copiava o canvas de volta a cada quadro e fazia a camada parecer 3 a 4 vezes mais pesada. A mesa vazia só foi medida com a placa emulada (não muda a escolha). Relatório: `docs/custo-dos-efeitos.html`.
+- [x] Ranking dos efeitos por custo em `docs/spec-mesa-webgl.md` ("Custo de cada efeito"), separando o que pesa uma vez do que pesa o tempo todo.
+- [x] Decidir quais saem no E1. Decidido em 16/11/2026: a mesa escurecendo da mágica de valor 6 e os raios da lendária saem; as animações contínuas das permanentes param à vista (a criatura que voa para de flutuar e perde o vento, a seiva do vínculo e a luz da seta de alvo somem, a mira e a aberração do enjoo ficam paradas). Golpe letal e ultimate continuam inteiros.
+- [x] Ligar a lista ao regulador: `TIER1_CUTS` em `gpuSupport.ts` (o `play` da porta recusa ou desenha em CSS) e `data-fx-calm` na mesa do degrau 1 em diante; o E2 e o E3 continuam como estavam (`novidades-pendentes/efeitos-e1-mais-leve`).
+- [ ] Conferir que o E1 novo segura a mesa cheia sem descer para o E2 com tanta frequência. Medido em 16/11/2026 (tabela na spec): no E1, a mágica de valor 6 derruba 1 janela em vez de 4 com a CPU 6×, a lendária nenhuma em vez de 2, e o voar, o vínculo e a mira quase não gastam mais. A troca de degrau não deixa efeito pela metade. Falta ver numa partida de verdade, num celular de entrada, se a mesa desce menos para o E2 (junto com o critério 8 do item 125).
+- [x] Mostrar no laboratório de efeitos quais efeitos cada degrau desliga: seção "Degraus do automático", com os botões E0 a E3 e a lista lida do regulador. O degrau posto à mão fica parado, também com a versão GPU.
 
 ## 135. Primeiro acesso mais leve
 

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const stored = new Map();
 globalThis.localStorage = { getItem: key => stored.get(key) ?? null, setItem: (key, value) => stored.set(key, String(value)), removeItem: key => stored.delete(key) };
 const { KEYS } = await import('../src/storage.ts');
-const { gpuDecision, effectsLevel, setEffectsLevel, forcedGpu, effectsTier } = await import('../src/ui/gpu/gpuSupport.ts');
+const { gpuDecision, effectsLevel, setEffectsLevel, forcedGpu, effectsTier, effectCut, TIER1_CUTS } = await import('../src/ui/gpu/gpuSupport.ts');
 const { createGpuPort } = await import('../src/ui/gpu/gpuPort.ts');
 const { createGovernor, GOVERNOR } = await import('../src/ui/gpu/effectsGovernor.ts');
 const { lowFps } = await import('../src/ui/frameClock.ts');
@@ -97,6 +97,19 @@ test('a crowded table stays at least on tier 1, and returns to 0 when it empties
   assert.equal(feed(g, 5000, 5000, 60, { permanents: GOVERNOR.crowded + 1 }), 1);
   assert.equal(feed(g, 5500, 30000, 60, { permanents: GOVERNOR.crowded + 1 }), 1, 'never climbs below the floor');
   assert.equal(feed(g, 30500, 36500, 60, { permanents: 12 }), 0);
+});
+
+test('tier 1 cuts only the listed heavy effects, from tier 1 on, and never a lethal hit nor the ultimate', () => {
+  assert.ok(Object.keys(TIER1_CUTS).length > 0, 'tier 1 has a list');
+  for (const [name, to] of Object.entries(TIER1_CUTS)) {
+    assert.ok(to === 'css' || to === 'off');
+    assert.equal(effectCut(name, {}, 0), null, `${name} whole at tier 0`);
+    assert.equal(effectCut(name, {}, 1), to);
+    assert.equal(effectCut(name, {}, 2), to);
+    assert.equal(effectCut(name, { lethal: true }, 1), null, `${name} lethal is protected`);
+  }
+  assert.equal(effectCut('shockwave', {}, 2), null, 'the ultimate is protected');
+  assert.equal(effectCut('not-listed', {}, 1), null);
 });
 
 test('the low fps of a window is the 75th percentile of the frame gaps', () => {

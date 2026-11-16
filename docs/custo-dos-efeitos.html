@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Relatório do ROADMAP 134 (16/11/2026): custo de cada efeito da mesa, medido com scripts/medir-cada-efeito.mjs; resumo em docs/spec-mesa-webgl.md, "Custo de cada efeito". -->
+<title>Custo dos efeitos da mesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: uma coluna de leitura (resumo, decisão, método) e tabelas largas logo abaixo, cada uma com sua barra de custo. */
+:root {
+  --bg: #f6f4ef; --panel: #ffffff; --ink: #1b2130; --muted: #5d6576; --line: #dcd8cf;
+  --gold: #a8730f; --bar: #c9922b; --bar-soft: #ead6ad; --css: #4f7fb5;
+  --cut: #b5452f; --cut-bg: #f7e1db; --keep: #2f7a52; --keep-bg: #dcefe3; --warn: #a8730f; --warn-bg: #f6e8c9;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1020; --panel: #121a2e; --ink: #e7ebf3; --muted: #9aa5bb; --line: #26304a;
+  --gold: #f2b54c; --bar: #f2b54c; --bar-soft: #3a3320; --css: #7fb0ea;
+  --cut: #ff8d75; --cut-bg: #3a1d19; --keep: #79d29f; --keep-bg: #15301f; --warn: #f2b54c; --warn-bg: #352a12; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1020; --panel: #121a2e; --ink: #e7ebf3; --muted: #9aa5bb; --line: #26304a;
+  --gold: #f2b54c; --bar: #f2b54c; --bar-soft: #3a3320; --css: #7fb0ea;
+  --cut: #ff8d75; --cut-bg: #3a1d19; --keep: #79d29f; --keep-bg: #15301f; --warn: #f2b54c; --warn-bg: #352a12; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+main { max-width: 1080px; margin: 0 auto; padding-block: 40px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 44px; }
+.prose { max-width: 68ch; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(28px, 4.4vw, 40px); }
+h2 { font-size: 22px; margin-bottom: 6px; }
+h3 { font-size: 16px; margin: 18px 0 6px; }
+p { margin: 0 0 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.lede { color: var(--muted); font-size: 17px; margin-top: 12px; }
+header { display: grid; gap: 6px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 13px; margin-top: 12px; }
+.facts b { color: var(--ink); font-weight: 600; }
+section { display: grid; gap: 10px; min-width: 0; }
+.findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.finding .num { font: 600 26px/1.1 var(--mono); color: var(--gold); font-variant-numeric: tabular-nums; }
+.finding p { margin: 0; font-size: 14px; }
+.decision { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 6px 10px 10px 6px; padding: 18px 20px; display: grid; gap: 8px; }
+.decision ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.chip { display: inline-block; font: 600 11px/1 var(--body); letter-spacing: .03em; padding: 4px 7px; border-radius: 999px; white-space: nowrap; vertical-align: middle; }
+.chip.cut { color: var(--cut); background: var(--cut-bg); }
+.chip.keep { color: var(--keep); background: var(--keep-bg); }
+.chip.warn { color: var(--warn); background: var(--warn-bg); }
+.tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+th, td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; vertical-align: middle; }
+th { font: 600 11.5px/1.3 var(--body); color: var(--muted); letter-spacing: .03em; text-transform: uppercase; background: var(--panel); position: sticky; top: 0; }
+th:first-child, td:first-child { text-align: left; }
+tbody tr:last-child td { border-bottom: 0; }
+td.name { min-width: 230px; }
+td.name small { display: block; color: var(--muted); font-size: 12px; }
+td.mono, td .mono { font-family: var(--mono); font-size: 12.5px; }
+.barcell { min-width: 180px; text-align: left; }
+.bar { display: flex; align-items: center; gap: 8px; }
+.bar i { display: block; height: 10px; border-radius: 2px; background: var(--bar); min-width: 1px; }
+.bar.css i { background: var(--css); height: 6px; }
+.bar span { font: 12.5px var(--mono); font-variant-numeric: tabular-nums; }
+.zero { color: var(--muted); }
+.hot { color: var(--cut); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--sw); }
+dl.method { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; font-size: 14px; }
+dl.method dt { font-weight: 600; }
+dl.method dd { margin: 0; color: var(--muted); }
+@media (max-width: 560px) { dl.method { grid-template-columns: 1fr; } dl.method dd { margin-bottom: 6px; } }
+ol.next { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+</style>
+<style>* { box-sizing: border-box; } body { margin: 0; }</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Mesa de Duelo · item 134 do roadmap</div>
+    <h1>Quanto custa cada efeito da mesa</h1>
+    <p class="lede prose">Cada efeito medido sozinho, para escolher o que o degrau E1 do Efeitos: automático desliga quando os quadros caem. Com a escolha feita e o resultado do E1 novo medido.</p>
+    <div class="facts">
+      <span><b>16/11/2026</b></span>
+      <span>Mesa cheia: <b>38 permanentes</b>, 22 criaturas</span>
+      <span>Janela de <b>1366×768</b></span>
+      <span>Placa de vídeo real (Intel UHD 770)</span>
+      <span>Cada efeito <b>3 vezes</b> em 10 s</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>O que os números dizem</h2>
+    <div class="findings">
+      <div class="finding"><div class="num">166 telas</div><p>A mesa escurecendo da mágica de valor 6 pinta o equivalente a 166 telas inteiras por vez: é o que mais pesa na placa de um celular. O ultimate pinta 182, mas é protegido.</p></div>
+      <div class="finding"><div class="num">106 ms/s</div><p>O vento do voar com 22 criaturas gasta 10% da linha principal o tempo todo, mesmo com a mesa parada. Seiva do vínculo (89), mira do alvo (68) e aberração do enjoo (67) vêm logo atrás.</p></div>
+      <div class="finding"><div class="num">0 quedas</div><p>Com a CPU normal, nenhum efeito derrubou os quadros abaixo de 30 por segundo. O custo de uma jogada na linha principal acompanha quanto tempo ela dura.</p></div>
+      <div class="finding"><div class="num">3 a 4×</div><p>As primeiras medidas, com o WebGL emulado, inflavam a camada de efeitos: o navegador de testes copiava o canvas de volta a cada quadro. Refeitas com a placa real, que é o que vale.</p></div>
+    </div>
+  </section>
+
+  <section class="decision prose">
+    <h2>O que o E1 tira agora</h2>
+    <p>Decidido em 16/11 e conferido com a CPU freada: entre as medidas repetidas três vezes, a mágica de valor 6 é a que mais derruba os quadros com a CPU 6×, e a lendária chega a 30 quadros por segundo no pior momento.</p>
+    <ul>
+      <li><span class="chip cut">sai</span> Mesa escurecendo da mágica de valor 6</li>
+      <li><span class="chip cut">sai</span> Raios da lendária chegando</li>
+      <li><span class="chip warn">para à vista</span> A criatura que voa (flutuação, sombra e vento), seiva do vínculo com a vida, aberração do enjoo, mira e luz da seta de alvo</li>
+      <li><span class="chip keep">inteiros</span> Golpe letal e ultimate, com a mesa escurecendo deles</li>
+    </ul>
+    <p>As quedas de sacrificar, jogar terreno e moeda com a CPU 4×, e de exilar e embaralhar com a 6×, sumiram ao repetir: eram travadas esporádicas da máquina. Parar só o vento do voar não aliviava nada; o que pesa é a criatura inteira flutuando, e ela também para.</p>
+  </section>
+
+  <section>
+    <h2>O E1 novo, medido</h2>
+    <p class="prose">A mesma mesa cheia no E0 e no E1, rodados em seguida. Com a CPU 6×, mediana de 3 medidas.</p>
+    <div class="tablewrap"><table><thead><tr><th>Efeito</th><th>E0</th><th>E1</th></tr></thead><tbody>
+      <tr><td class="name">Mágica de valor 6, CPU 6×</td><td class="mono">4 quedas · 108 telas</td><td class="mono">1 queda · 36 telas</td></tr>
+      <tr><td class="name">Mágica de valor 6, CPU normal</td><td class="mono">602 ms · 143 telas</td><td class="mono">384 ms · 45 telas</td></tr>
+      <tr><td class="name">Lendária, CPU 6×</td><td class="mono">2 quedas · pior a 5 qps</td><td class="mono">0 quedas · pior a 60 qps</td></tr>
+      <tr><td class="name">Lendária, CPU normal</td><td class="mono">864 ms</td><td class="mono">435 ms</td></tr>
+      <tr><td class="name">Voar, 22 criaturas</td><td class="mono">78 ms/s</td><td class="mono">0 ms/s</td></tr>
+      <tr><td class="name">Vínculo com a vida</td><td class="mono">147 ms/s</td><td class="mono">19 ms/s</td></tr>
+      <tr><td class="name">Alvo de algo na pilha</td><td class="mono">96 ms/s</td><td class="mono">18 ms/s</td></tr>
+      <tr><td class="name">Enjoo de invocação</td><td class="mono">70 ms/s</td><td class="mono">37 ms/s</td></tr>
+    </tbody></table></div>
+    <p class="prose">"Quedas" são janelas de meio segundo abaixo de 30 quadros por segundo. Falta ver numa partida de verdade, num celular de entrada, se a mesa desce menos vezes para o E2.</p>
+  </section>
+
+  <section>
+    <h2>Jogadas, por vez</h2>
+    <p class="prose">A jogada inteira, como na partida: a carta, o que é CSS e o que é da camada. "Página" é o tempo a mais da linha principal (scripts, estilo, layout e pintura), e "telas" a área que a camada pintou somada (uma tela inteira = 1). As duas últimas colunas contam as janelas de meio segundo abaixo de 30 quadros por segundo, a medida do regulador: mediana de 3 medidas nas jogadas repetidas, uma medida nas outras.</p>
+    <div class="legend"><span style="--sw: var(--bar)">camada de efeitos</span><span style="--sw: var(--css)">mesma jogada em CSS</span></div>
+    <div class="tablewrap"><table id="once"><thead><tr><th>Jogada</th><th>Página (ms)</th><th>Em CSS (ms)</th><th>Desenho (ms)</th><th>Telas</th><th>Objetos</th><th>CPU 4× &lt;30</th><th>CPU 6× &lt;30</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>O que pesa o tempo todo, por segundo</h2>
+    <p class="prose">O estado ligado em todas as 22 criaturas e a mesa parada, contra a mesma mesa sem o estado. Por criatura, divida por 22: o voar fica perto de 5 ms por segundo.</p>
+    <div class="tablewrap"><table id="cont"><thead><tr><th>Estado</th><th>Página (ms/s)</th><th>Desenho (ms/s)</th><th>Pintura em blocos (ms/s)</th><th>CPU 4× &lt;30</th><th>CPU 6× &lt;30</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Peças da camada sozinhas, por vez</h2>
+    <p class="prose">Cada peça desenhada direto na camada, sem a carta, o som nem o redesenho da mesa. Mostra o preço de manter a camada desenhando: quanto mais longa a peça, mais a página trabalha.</p>
+    <div class="tablewrap"><table id="pieces"><thead><tr><th>Peça</th><th>Página (ms)</th><th>Camada (ms)</th><th>Telas</th><th>Objetos</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Placa emulada contra placa real</h2>
+    <p class="prose">O navegador de testes sem tela usa por padrão o WebGL emulado na CPU e compõe a página sem placa. Assim, o canvas dos efeitos é copiado de volta para a memória a cada quadro (cerca de 1 s a cada 10 s só nisso). Com a placa real a cópia some, e a camada fica perto do CSS.</p>
+    <div class="tablewrap"><table id="emu"><thead><tr><th>Jogada</th><th>Camada, emulada (ms)</th><th>CSS, emulada (ms)</th><th>Camada, real (ms)</th><th>CSS, real (ms)</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="prose">
+    <h2>Como foi medido</h2>
+    <dl class="method">
+      <dt>Página</dt><dd>Laboratório de efeitos, com a mesa cheia montada e a mesa viva desligada (ela é medida à parte, como estado contínuo).</dd>
+      <dt>Repetição</dt><dd>Cada jogada é disparada três vezes, a cada 2,5 s, numa janela de 10 s; o custo é a diferença para a mesma mesa sem nada, dividida por três. Com a CPU normal, duas medidas de cada (a mediana).</dd>
+      <dt>Trabalho</dt><dd>Rastro do Chrome entre duas marcas da página: linha principal, desenho (estilo, layout, pintura, envio ao compositor) e pintura em blocos.</dd>
+      <dt>Placa</dt><dd>A camada soma a cada quadro a área pintada, recortada na tela, o pico de objetos e a memória das texturas, que ficou em até 8,4 MB (as imagens das cartas em voo) e não pesa na escolha.</dd>
+      <dt>Quedas</dt><dd>Com a CPU freada 4× e 6×, as janelas de meio segundo abaixo de 30 quadros por segundo no pior quarto, como o regulador mede. Uma medida de cada; as jogadas que mais derrubaram foram repetidas três vezes.</dd>
+      <dt>Ferramenta</dt><dd><span class="mono">node scripts/medir-cada-efeito.mjs</span>, com o laboratório de efeitos aberto no servidor de desenvolvimento.</dd>
+    </dl>
+  </section>
+
+  <section class="prose">
+    <h2>Próximos passos</h2>
+    <ol class="next">
+      <li>Conferir num celular de entrada de verdade se a mesa desce menos vezes para o E2.</li>
+      <li>Passar a medição antiga (cenas de dano, voos, campo cheio) para a placa real: as medidas dela com a camada também pesavam contra a camada.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+const DATA = {"base":{"main":560.992,"render":326.321,"mainCss":640.618,"ambienceMain":607.031},"once":[{"name":"land","label":"Jogar terreno (voo e pouso)","main":122,"render":74,"raster":6,"layer":17,"fill":3.6,"objects":6,"cssMain":96,"emuMain":374,"emuCssMain":151},{"name":"creature","label":"Conjurar criatura (voo, redemoinho, pouso, enjoo)","main":380,"render":252,"raster":24,"layer":36,"fill":29.4,"objects":29,"cssMain":356,"emuMain":1219,"emuCssMain":310},{"name":"bolt","label":"Lightning Bolt (pilha, seta, projétil, faíscas, clarão)","main":423,"render":281,"raster":22,"layer":39,"fill":21.1,"objects":91,"cssMain":285,"emuMain":1203,"emuCssMain":377},{"name":"draw","label":"Comprar uma carta","main":113,"render":80,"raster":6,"layer":18,"fill":2.9,"objects":103,"cssMain":10,"emuMain":318,"emuCssMain":109},{"name":"destroy","label":"Destruir (racha, estilhaços, rastro de poeira)","main":107,"render":56,"raster":11,"layer":14,"fill":1.9,"objects":55,"cssMain":62,"emuMain":295,"emuCssMain":167},{"name":"sacrifice","label":"Sacrificar (cinzas e brasas)","main":91,"render":44,"raster":8,"layer":17,"fill":5.7,"objects":83,"cssMain":29,"emuMain":624,"emuCssMain":103},{"name":"exile","label":"Exilar (portal em espiral)","main":89,"render":48,"raster":6,"layer":14,"fill":3.3,"objects":24,"cssMain":37,"emuMain":456,"emuCssMain":81},{"name":"bounce","label":"Devolver à mão (voo e rastro)","main":116,"render":62,"raster":10,"layer":13,"fill":3.6,"objects":88,"cssMain":57,"emuMain":321,"emuCssMain":162},{"name":"blink","label":"Blink (some em luz e volta)","main":158,"render":101,"raster":18,"layer":20,"fill":0.4,"objects":42,"cssMain":103,"emuMain":706,"emuCssMain":179},{"name":"attack","label":"Atacar (bote, riscos, poeira)","main":82,"render":48,"raster":11,"layer":8,"fill":0.6,"objects":30,"cssMain":66,"emuMain":251,"emuCssMain":120},{"name":"ninjutsu","label":"Ninjutsu (fumaça, shuriken)","main":415,"render":261,"raster":43,"layer":45,"fill":29.3,"objects":123,"cssMain":290,"emuMain":1494,"emuCssMain":373},{"name":"tap","label":"Virar (poeira)","main":42,"render":24,"raster":6,"layer":3,"fill":0,"objects":5,"cssMain":33,"emuMain":113,"emuCssMain":79},{"name":"fight","label":"Lutar","main":290,"render":183,"raster":37,"layer":31,"fill":4.8,"objects":128,"cssMain":260,"emuMain":1189,"emuCssMain":386},{"name":"block","label":"Bloquear","main":142,"render":100,"raster":13,"layer":11,"fill":0.9,"objects":55,"cssMain":100,"emuMain":367,"emuCssMain":239},{"name":"combat","label":"Dano de combate no jogador","main":178,"render":126,"raster":13,"layer":11,"fill":0.9,"objects":62,"cssMain":145,"emuMain":455,"emuCssMain":228},{"name":"lethal","label":"Golpe letal (protegido)","main":117,"render":85,"raster":17,"layer":12,"fill":39.6,"objects":119,"cssMain":94,"emuMain":513,"emuCssMain":152},{"name":"legend","label":"Lendária chegando (raios)","main":325,"render":223,"raster":16,"layer":34,"fill":42.3,"objects":37,"cssMain":281,"emuMain":1517,"emuCssMain":349},{"name":"big-spell","label":"Mágica de valor 6 (mesa escurece, câmera)","main":338,"render":229,"raster":32,"layer":34,"fill":166,"objects":30,"cssMain":302,"emuMain":1587,"emuCssMain":383},{"name":"ultimate","label":"Ultimate do planeswalker (protegido)","main":104,"render":72,"raster":18,"layer":20,"fill":182,"objects":121,"cssMain":104,"emuMain":1156,"emuCssMain":184},{"name":"loyalty","label":"Lealdade +2","main":25,"render":26,"raster":7,"layer":0,"fill":0,"objects":0,"cssMain":58,"emuMain":34,"emuCssMain":136},{"name":"tokens","label":"Criar 10 fichas","main":441,"render":312,"raster":44,"layer":35,"fill":13.4,"objects":38,"cssMain":481,"emuMain":1065,"emuCssMain":547},{"name":"turn","label":"Passar o turno (luz da mesa desliza)","main":95,"render":83,"raster":28,"layer":0,"fill":0,"objects":0,"cssMain":92,"emuMain":51,"emuCssMain":138},{"name":"scry","label":"Vidência (leque)","main":61,"render":32,"raster":2,"layer":13,"fill":4.9,"objects":21,"cssMain":43,"emuMain":384,"emuCssMain":102},{"name":"shuffle","label":"Embaralhar","main":48,"render":24,"raster":1,"layer":10,"fill":1.3,"objects":18,"cssMain":9,"emuMain":215,"emuCssMain":28},{"name":"coin","label":"Moeda","main":70,"render":34,"raster":1,"layer":15,"fill":2,"objects":34,"cssMain":34,"emuMain":464,"emuCssMain":58},{"name":"die","label":"Dado","main":89,"render":31,"raster":1,"layer":16,"fill":1.2,"objects":29,"cssMain":49,"emuMain":379,"emuCssMain":85},{"name":"attach","label":"Equipar / aura encaixando","main":84,"render":49,"raster":6,"layer":9,"fill":4.3,"objects":15,"cssMain":82,"emuMain":264,"emuCssMain":146},{"name":"transform","label":"Transformar","main":55,"render":29,"raster":3,"layer":7,"fill":0.2,"objects":6,"cssMain":100,"emuMain":140,"emuCssMain":379},{"name":"counters","label":"Marcadores","main":80,"render":43,"raster":3,"layer":10,"fill":0.1,"objects":42,"cssMain":41,"emuMain":198,"emuCssMain":489},{"name":"search","label":"Buscar no grimório","main":108,"render":66,"raster":6,"layer":20,"fill":4.4,"objects":121,"cssMain":61,"emuMain":414,"emuCssMain":122},{"name":"reanimate","label":"Reanimar","main":258,"render":162,"raster":14,"layer":35,"fill":5.2,"objects":99,"cssMain":408,"emuMain":959,"emuCssMain":384},{"name":"flashback","label":"Conjurar do cemitério","main":235,"render":158,"raster":8,"layer":26,"fill":18.2,"objects":112,"cssMain":214,"emuMain":814,"emuCssMain":303},{"name":"pay","label":"Pagar (mana em orbes)","main":104,"render":59,"raster":5,"layer":15,"fill":0.1,"objects":73,"cssMain":67,"emuMain":377,"emuCssMain":91},{"name":"opening","label":"Mão inicial","main":155,"render":95,"raster":7,"layer":25,"fill":50.4,"objects":21,"cssMain":87,"emuMain":1109,"emuCssMain":299},{"name":"win","label":"Vitória (raios e confete)","main":115,"render":60,"raster":4,"layer":14,"fill":5.8,"objects":147,"cssMain":41,"emuMain":391,"emuCssMain":91},{"name":"lose","label":"Derrota (racha e cinzas)","main":99,"render":60,"raster":4,"layer":15,"fill":7.6,"objects":150,"cssMain":24,"emuMain":284,"emuCssMain":122}],"pieces":[{"name":"burst","label":"Faíscas do dano","main":35,"render":18,"raster":1,"layer":7,"fill":0.6,"objects":25},{"name":"heavy","label":"Faíscas do golpe pesado","main":32,"render":14,"raster":1,"layer":8,"fill":1,"objects":37},{"name":"lethal","label":"Faíscas do golpe letal","main":47,"render":18,"raster":0,"layer":7,"fill":1.1,"objects":49},{"name":"bolt","label":"Projétil com rastro","main":24,"render":6,"raster":1,"layer":13,"fill":0.9,"objects":94},{"name":"ripple","label":"Onda do pouso","main":45,"render":21,"raster":1,"layer":9,"fill":0.4,"objects":6},{"name":"shatter","label":"Estilhaços","main":34,"render":16,"raster":1,"layer":9,"fill":0.8,"objects":27},{"name":"vortex","label":"Portal do exílio","main":65,"render":32,"raster":1,"layer":14,"fill":2.7,"objects":24},{"name":"gather","label":"Volta do blink","main":32,"render":11,"raster":0,"layer":9,"fill":0.8,"objects":41},{"name":"ash","label":"Cinzas do sacrifício","main":70,"render":36,"raster":0,"layer":15,"fill":2.5,"objects":23},{"name":"motes","label":"Grãos da habilidade","main":71,"render":33,"raster":1,"layer":14,"fill":0.1,"objects":20},{"name":"puff","label":"Fumaça do ninja","main":43,"render":27,"raster":1,"layer":12,"fill":10.2,"objects":18},{"name":"dust","label":"Poeira ao virar","main":52,"render":23,"raster":1,"layer":5,"fill":0.1,"objects":5},{"name":"flare","label":"Brilho de chegada","main":58,"render":27,"raster":1,"layer":10,"fill":3,"objects":2},{"name":"warp","label":"Rasgo da dobra","main":121,"render":61,"raster":1,"layer":21,"fill":2.4,"objects":39},{"name":"counter","label":"Faíscas do marcador","main":63,"render":38,"raster":1,"layer":9,"fill":0,"objects":14},{"name":"heal","label":"Ganho de vida","main":92,"render":54,"raster":1,"layer":19,"fill":0.4,"objects":35},{"name":"mana","label":"Orbe de mana","main":112,"render":58,"raster":1,"layer":19,"fill":0.1,"objects":64},{"name":"victory","label":"Vitória","main":126,"render":51,"raster":0,"layer":33,"fill":13.3,"objects":111},{"name":"defeat","label":"Derrota","main":145,"render":67,"raster":1,"layer":31,"fill":7.1,"objects":45},{"name":"dizzy","label":"Estrelinhas do enjoo","main":89,"render":30,"raster":1,"layer":11,"fill":0,"objects":6},{"name":"charge","label":"Riscos do ataque","main":103,"render":52,"raster":1,"layer":11,"fill":0.1,"objects":15},{"name":"beam","label":"Feixe da habilidade","main":140,"render":87,"raster":1,"layer":17,"fill":0.1,"objects":74},{"name":"trail-ember","label":"Rastro de brasas","main":74,"render":33,"raster":0,"layer":17,"fill":0.1,"objects":45},{"name":"glint","label":"Redemoinho ao conjurar","main":88,"render":43,"raster":1,"layer":8,"fill":0.6,"objects":19},{"name":"arrive","label":"Anel de chegada","main":78,"render":36,"raster":1,"layer":6,"fill":0.5,"objects":11},{"name":"streak","label":"Risco do golpe","main":49,"render":29,"raster":1,"layer":10,"fill":0.5,"objects":49},{"name":"shockwave","label":"Onda do ultimate","main":129,"render":61,"raster":1,"layer":18,"fill":61.1,"objects":47}],"cont":[{"name":"mesa-viva","label":"Mesa viva (luz, poeira, vinheta)","main":7,"render":0,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"sick","label":"Enjoo de invocação (estrelinhas, aberração de cor)","main":67,"render":49,"raster":5,"layer":0,"fill":0,"objects":0},{"name":"flying","label":"Voar (vento)","main":106,"render":79,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"hexproof","label":"Resistência à magia (brilho)","main":13,"render":6,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"lifelink","label":"Vínculo com a vida (seiva)","main":89,"render":61,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"ward","label":"Ward (runas)","main":26,"render":14,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"protection","label":"Proteção (moldura)","main":3,"render":1,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"indestructible","label":"Indestrutível (moldura)","main":2,"render":0,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"deathtouch","label":"Toque mortífero (névoa na base)","main":19,"render":8,"raster":0,"layer":0,"fill":0,"objects":0},{"name":"targeted","label":"Alvo de algo na pilha (mira e setas)","main":68,"render":48,"raster":4,"layer":0,"fill":0,"objects":0}],"thr":{"4":{"land":{"slow":0,"long":606.7000000029802,"fill":8.59186672174199},"creature":{"slow":0,"long":1626.9999999962747,"fill":77.08696122110592},"bolt":{"slow":0,"long":1627.2999999970198,"fill":55.492728858039186},"draw":{"slow":0,"long":366,"fill":8.3},"destroy":{"slow":0,"long":632,"fill":5.7},"sacrifice":{"slow":0,"long":365.69999999925494,"fill":13.777062519679816},"exile":{"slow":0,"long":304,"fill":9.2},"bounce":{"slow":0,"long":290,"fill":9.2},"blink":{"slow":1,"long":809,"fill":1},"attack":{"slow":0,"long":759,"fill":1.8},"ninjutsu":{"slow":0,"long":2137,"fill":63.4},"tap":{"slow":0,"long":234,"fill":0.1},"fight":{"slow":0,"long":941,"fill":12.6},"block":{"slow":0,"long":755,"fill":1.9},"combat":{"slow":0,"long":811,"fill":2.4},"lethal":{"slow":0,"long":648.9999999962747,"fill":86.83041429563507},"legend":{"slow":0,"long":1704.8999999947846,"fill":100.98141320711086},"big-spell":{"slow":0,"long":1613.0999999977648,"fill":374.48792545419326},"ultimate":{"slow":1,"long":559,"fill":491.9},"loyalty":{"slow":0,"long":401,"fill":0},"tokens":{"slow":1,"long":866,"fill":29.1},"turn":{"slow":0,"long":493,"fill":0},"scry":{"slow":0,"long":424,"fill":14.3},"shuffle":{"slow":0,"long":357,"fill":3.7},"coin":{"slow":0,"long":408.9000000022352,"fill":5.854131701274336},"die":{"slow":0,"long":439,"fill":3.6},"attach":{"slow":0,"long":683,"fill":11.4},"transform":{"slow":0,"long":411,"fill":0.7},"counters":{"slow":0,"long":240,"fill":0.2},"search":{"slow":0,"long":384,"fill":12.2},"reanimate":{"slow":0,"long":1154,"fill":13.3},"flashback":{"slow":0,"long":1321,"fill":49.6},"pay":{"slow":0,"long":642,"fill":0.4},"opening":{"slow":0,"long":679,"fill":143.2},"win":{"slow":0,"long":627,"fill":18.3},"lose":{"slow":0,"long":606,"fill":22.2},"sick":{"slow":0,"long":0,"fill":0},"flying":{"slow":0,"long":122,"fill":0},"hexproof":{"slow":0,"long":215,"fill":0},"lifelink":{"slow":0,"long":0,"fill":0},"ward":{"slow":0,"long":0,"fill":0},"protection":{"slow":0,"long":313,"fill":0},"indestructible":{"slow":0,"long":0,"fill":0},"deathtouch":{"slow":0,"long":0,"fill":0},"targeted":{"slow":0,"long":0,"fill":0},"mesa-viva":{"slow":0}},"6":{"land":{"slow":0,"long":820.1999999992549,"fill":7.323107467768209},"creature":{"slow":1,"long":2701.699999988079,"fill":62.78281261344406},"bolt":{"slow":0,"long":2465.6999999918044,"fill":48.78458065323703},"draw":{"slow":0,"long":751,"fill":6.7},"destroy":{"slow":0,"long":422,"fill":5.4},"sacrifice":{"slow":0,"long":466.30000000074506,"fill":13.530933564410342},"exile":{"slow":10,"long":5584,"fill":0.2},"bounce":{"slow":0,"long":567,"fill":6.4},"blink":{"slow":0,"long":719,"fill":0.9},"attack":{"slow":0,"long":1048,"fill":1.5},"ninjutsu":{"slow":1,"long":2750,"fill":50.3},"tap":{"slow":0,"long":369,"fill":0.1},"fight":{"slow":0,"long":1392,"fill":10.8},"block":{"slow":0,"long":1170,"fill":1.3},"combat":{"slow":1,"long":1161,"fill":2},"lethal":{"slow":1,"long":927.6999999955297,"fill":75.91981666389177},"legend":{"slow":0,"long":2251.39999999851,"fill":93.0856429669421},"big-spell":{"slow":2,"long":2262.8000000081956,"fill":382.1422409634259},"coin":{"slow":0,"long":706.9999999962747,"fill":5.790624537596973},"mesa-viva":{"slow":0},"sick":{"slow":0},"flying":{"slow":0},"hexproof":{"slow":0},"lifelink":{"slow":0},"ward":{"slow":0},"protection":{"slow":0},"indestructible":{"slow":0},"deathtouch":{"slow":0},"targeted":{"slow":0},"ultimate":{"slow":0},"loyalty":{"slow":0},"tokens":{"slow":2},"turn":{"slow":0},"scry":{"slow":0},"shuffle":{"slow":10},"die":{"slow":0},"attach":{"slow":1},"transform":{"slow":0},"counters":{"slow":0},"search":{"slow":0},"reanimate":{"slow":0},"flashback":{"slow":0},"pay":{"slow":0},"opening":{"slow":0},"win":{"slow":1},"lose":{"slow":0}}}};
+const CUT = new Set(['big-spell', 'legend']), PROTECTED = new Set(['lethal', 'ultimate']), PAUSE = new Set(['flying', 'lifelink', 'sick', 'targeted']);
+const LABELS = { 'mesa-viva': 'Mesa viva (luz, poeira, vinheta)' };
+const fmt = n => n == null || Number.isNaN(n) ? '–' : Math.round(n).toLocaleString('pt-BR');
+const fmt1 = n => n == null ? '–' : (n < 10 ? n.toFixed(1) : Math.round(n)).toLocaleString('pt-BR');
+const bar = (value, max, cls = '') => `<div class="bar ${cls}"><i style="width:${Math.max(0, value) / max * 120}px"></i><span>${fmt(Math.max(0, value))}</span></div>`;
+const slow = (rate, name) => { const r = DATA.thr[rate]?.[name]; if (!r) return '<span class="zero">–</span>'; return r.slow ? `<span class="hot">${r.slow}</span>` : '<span class="zero">0</span>'; };
+const chip = name => CUT.has(name) ? ' <span class="chip cut">sai no E1</span>' : PROTECTED.has(name) ? ' <span class="chip keep">protegido</span>' : PAUSE.has(name) ? ' <span class="chip warn">para no E1</span>' : '';
+const nameCell = (r) => `<td class="name">${LABELS[r.name] ?? r.label ?? r.name}${chip(r.name)}<small class="mono">${r.name}</small></td>`;
+
+const once = [...DATA.once].sort((a, b) => b.main - a.main);
+const maxOnce = Math.max(...once.map(r => Math.max(r.main, r.cssMain ?? 0)));
+document.querySelector('#once tbody').innerHTML = once.map(r => `<tr>${nameCell(r)}
+  <td class="barcell">${bar(r.main, maxOnce)}</td><td class="barcell">${bar(r.cssMain ?? 0, maxOnce, 'css')}</td>
+  <td class="mono">${fmt(r.render)}</td><td class="mono">${fmt1(r.fill)}</td><td class="mono">${r.objects}</td>
+  <td class="mono">${slow(4, r.name)}</td><td class="mono">${slow(6, r.name)}</td></tr>`).join('');
+
+const cont = [...DATA.cont].sort((a, b) => b.main - a.main);
+const maxCont = Math.max(...cont.map(r => r.main));
+document.querySelector('#cont tbody').innerHTML = cont.map(r => `<tr>${nameCell(r)}
+  <td class="barcell">${bar(r.main, maxCont)}</td><td class="mono">${fmt(Math.max(0, r.render))}</td><td class="mono">${fmt(Math.max(0, r.raster))}</td>
+  <td class="mono">${slow(4, r.name)}</td><td class="mono">${slow(6, r.name)}</td></tr>`).join('');
+
+const pieces = [...DATA.pieces].sort((a, b) => b.main - a.main);
+const maxPiece = Math.max(...pieces.map(r => r.main));
+document.querySelector('#pieces tbody').innerHTML = pieces.map(r => `<tr>${nameCell(r)}
+  <td class="barcell">${bar(r.main, maxPiece)}</td><td class="mono">${fmt(r.layer)}</td><td class="mono">${fmt1(r.fill)}</td><td class="mono">${r.objects}</td></tr>`).join('');
+
+const emu = once.filter(r => r.emuMain != null).sort((a, b) => b.emuMain - a.emuMain).slice(0, 10);
+document.querySelector('#emu tbody').innerHTML = emu.map(r => `<tr>${nameCell(r)}
+  <td class="mono">${fmt(r.emuMain)}</td><td class="mono">${fmt(r.emuCssMain)}</td><td class="mono">${fmt(r.main)}</td><td class="mono">${fmt(r.cssMain)}</td></tr>`).join('');
+</script>
+</body>
+</html>

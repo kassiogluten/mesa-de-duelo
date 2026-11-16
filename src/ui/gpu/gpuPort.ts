@@ -2,7 +2,7 @@
 import type { GpuLayer } from './gpuLayer';
 import type { Ambience, AmbiencePulse, AmbienceScene } from './tableAmbience';
 import type { GpuEffectName, GpuEffectParams } from './gpuEffects';
-import { ambienceOff, effectsLevel, effectsTier, forcedGpu, gpuDecision, hasWebGL2, setEffectsTier, type EffectsTier } from './gpuSupport';
+import { ambienceOff, effectCut, effectsLevel, effectsTier, forcedGpu, gpuDecision, hasWebGL2, setEffectsTier, type EffectsTier } from './gpuSupport';
 import { createGovernor } from './effectsGovernor';
 import { listenFrames, type FrameWindow } from '../frameClock';
 
@@ -32,6 +32,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   // O regulador do automático: escuta os quadros só enquanto rege (mesa à vista, automático, com WebGL2).
   const governor = createGovernor();
   let unlisten: (() => void) | null = null;
+  // O degrau escolhido à mão pelas páginas de teste (`setTier` da porta): fica valendo, com ou sem o automático.
+  let pinned: EffectsTier | null = null;
 
   async function load(gen: number) {
     const [layerModule, effects, ambienceModule] = await Promise.all([import('./gpuLayer'), import('./gpuEffects'), import('./tableAmbience')]);
@@ -62,6 +64,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   }
   /** O regulador rege só no automático, com a mesa à vista e a GPU possível; fora disso, o degrau volta a 0. */
   function govern() {
+    // O degrau posto à mão (testes, laboratório de efeitos) fica onde está, sem o regulador.
+    if (pinned !== null) { unlisten?.(); unlisten = null; setTier(pinned); return; }
     const on = effectsLevel() === 'auto' && forcedGpu() === undefined && !o.reduced() && hasWebGL2() && !contextLost && !root.hidden;
     if (on && !unlisten) { governor.reset(performance.now()); unlisten = listenFrames(step); }
     if (!on) { unlisten?.(); unlisten = null; setTier(0); }
@@ -71,10 +75,12 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     const busy = (runtime?.layer.stats().live ?? 0) > 0 || !!o.busy?.();
     setTier(governor.sample({ at: w.at, fps: w.lowFps, busy, permanents: root.querySelectorAll?.('.slot').length ?? 0 }));
   }
-  /** Degrau novo: 1 corta faíscas (gpuParticles.ts lê na hora), 2 para a mesa viva e a câmera, 3 troca para o CSS. */
+  /** Degrau novo: 1 corta faíscas (gpuParticles.ts lê na hora) e os efeitos pesados (`play`) e para as animações contínuas, 2 para a mesa viva e a câmera, 3 troca para o CSS. */
   function setTier(next: EffectsTier) {
     if (next === effectsTier()) return;
     setEffectsTier(next);
+    // Do degrau 1 em diante, as animações contínuas das permanentes param à vista (permanentEffects.css).
+    root.toggleAttribute?.('data-fx-calm', next >= 1);
     runtime?.ambience?.pause(next >= 2);
     if (decision().use === 'gpu') prepare(); else release();
   }
@@ -130,6 +136,9 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
      */
     play<N extends GpuEffectName>(name: N, params: GpuEffectParams[N]): boolean {
       if (!runtime || runtime.layer.destroyed || decision().use !== 'gpu') return false;
+      // No degrau 1, os efeitos pesados saem na versão simples em CSS ('css': quem pediu desenha) ou não saem ('off').
+      const cut = effectCut(name, params);
+      if (cut) return cut === 'off';
       return runtime.effects.play(runtime.layer, name, params);
     },
     clear() { runtime?.layer.clear(); },
@@ -160,8 +169,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
         check();
       });
     },
-    /** Para os testes: põe a mesa num degrau do regulador, como se os quadros tivessem pedido. */
-    setTier,
+    /** Para os testes e o laboratório: põe a mesa num degrau do regulador, como se os quadros tivessem pedido, e o deixa lá. */
+    setTier(next: EffectsTier) { pinned = next; setTier(next); },
     /** Para os testes: carrega agora, sem esperar a mesa ficar ociosa. */
     async loadNow() { release(); if (decision().use !== 'gpu') return false; const gen = ++generation; await load(gen).catch(() => {}); return !!runtime; },
   };

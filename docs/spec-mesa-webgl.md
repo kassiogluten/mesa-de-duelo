@@ -383,3 +383,69 @@ O que diz:
 | dados | 4× | chapado | 0 (0–1) | 0 (0–68) | 0 | 33,3 |
 
 O que diz: com a CPU normal, nenhum dos dois traz quadro longo. Freada 4×, as faixas se cruzam (o pior quadro do 3D foi desenho e layout, sem script, e uma das três medições teve 82 tarefas longas que as outras não tiveram); com WebGL emulado na CPU, não dá para separar o dado do ruído. O desenho do dado em si é pequeno (até 20 faces, um desenho por dado); o custo de uma vez é compilar o shader e pintar a textura dos números no primeiro dado da partida.
+
+## Custo de cada efeito (ROADMAP 134, 16/11/2026)
+
+Cada efeito medido sozinho, para escolher o que o degrau 1 do Efeitos: automático tira. Ferramenta nova: `scripts/medir-cada-efeito.mjs` (com o `npm run dev` ligado). Ela abre o laboratório de efeitos com a mesa cheia (o "Campo cheio": 38 permanentes, 22 criaturas), dispara a jogada três vezes numa janela de 10 s (ou liga um estado em todas as criaturas e deixa a mesa parada) e compara com a mesma mesa sem nada. Com a CPU normal, um rastro do Chrome dá o tempo da linha principal da página e do desenho (estilo, layout, pintura, envio ao compositor). A camada dos efeitos soma por quadro a área que pintou (`gpuProbe` em `gpuSupport.ts`: "telas", recortada na tela, sobrepostos somam), o pico de objetos e a memória das texturas. Com a CPU freada 4× e 6×, contam as janelas de meio segundo abaixo de 30 quadros por segundo no pior quarto, a medida do regulador. Os efeitos são medidos sem a mesa viva, que entra à parte como estado contínuo. Relatório com todas as tabelas: `docs/custo-dos-efeitos.html` (abrir no navegador).
+
+**Placa emulada não serve para isso.** Por padrão, o navegador de testes usa o WebGL emulado na CPU (SwiftShader) e compõe a página sem placa (`--disable-gpu-compositing`). Assim, o canvas da camada é copiado de volta para a memória a cada quadro (`GLES2::ReadPixels` dentro do `Commit`, cerca de 1 s a cada 10 s de efeito). Isso fazia a camada parecer 3 a 4 vezes mais pesada que o CSS na linha principal (mágica de valor 6: 1.587 contra 383 ms) e a mesa viva custar 350 ms por segundo. Com a placa real (`--placa real`, o padrão do script: ANGLE sobre o OpenGL do sistema, Intel UHD 770), a cópia some (o `Commit` do ninjutsu cai de 2.158 para 82 ms), a camada fica perto do CSS e a mesa viva custa 7 ms por segundo. As medições antigas desta spec com a camada GPU, todas com a placa emulada, pesam contra a camada pelo mesmo motivo.
+
+**Pesa uma vez** (por vez, mesa cheia, placa real; "telas" é a área pintada pela camada; as quedas com a CPU 6× são a mediana de 3 medidas nas linhas de sacrificar, terreno, moeda, criatura, Bolt, letal, lendária e mágica de valor 6, e de 1 medida nas outras):
+
+| Jogada | Página (ms) | Em CSS (ms) | Telas | CPU 6×: janelas < 30 |
+| --- | --- | --- | --- | --- |
+| Criar 10 fichas | 441 | 481 | 13 | 2 (1 medida) |
+| Lightning Bolt | 423 | 285 | 21 | 0 |
+| Ninjutsu | 415 | 290 | 29 | 1 (1 medida) |
+| Conjurar criatura | 380 | 356 | 29 | 1 |
+| Mágica de valor 6 (mesa escurece, câmera) | 338 | 302 | 166 | 2 (pior quarto a 15 quadros) |
+| Lendária chegando (raios) | 325 | 281 | 42 | 0 (pior quarto a 30) |
+| Lutar | 290 | 260 | 4,8 | 0 |
+| Reanimar | 258 | 408 | 5,2 | 0 |
+| Conjurar do cemitério | 235 | 214 | 18 | 0 |
+| Dano de combate no jogador | 178 | 145 | 0,9 | 1 (1 medida) |
+| Mão inicial | 155 | 87 | 50 | 0 |
+| Golpe letal (protegido) | 117 | 94 | 40 | 1 |
+| Ultimate (protegido) | 104 | 104 | 182 | 1 (1 medida) |
+
+**Pesa o tempo todo** (por segundo, o estado em todas as 22 criaturas, mesa parada; por criatura, divida por 22):
+
+| Estado | Página (ms/s) | Desenho (ms/s) |
+| --- | --- | --- |
+| Voar (vento) | 106 | 79 |
+| Vínculo com a vida (seiva) | 89 | 61 |
+| Alvo de algo na pilha (mira e luz da seta) | 68 | 48 |
+| Enjoo de invocação (aberração de cor) | 67 | 49 |
+| Ward (runas) | 26 | 14 |
+| Toque mortífero (névoa) | 19 | 8 |
+| Resistência à magia (brilho) | 13 | 6 |
+| Mesa viva | 7 | 0 |
+| Proteção, indestrutível (molduras) | 3 | 1 |
+
+O que diz:
+
+- Com a CPU normal, nada derruba os quadros. O custo de uma jogada na linha principal acompanha quanto tempo ela dura: enquanto a camada desenha, a página refaz o quadro a cada quadro. A parte da própria camada (andar e desenhar) é pequena: 15 a 45 ms por jogada.
+- Na placa, a área pintada separa poucos efeitos: o ultimate (182 telas por vez, onda e mesa escurecendo), a mágica de valor 6 (166, a mesa escurecendo: um retângulo preto e um sprite do tamanho da tela por cerca de 1 s), a mão inicial (50), a lendária (42) e o golpe letal (40). O resto fica abaixo de 30.
+- Freada 6×, a mágica de valor 6 é a que mais derruba os quadros entre as medidas repetidas. As primeiras medidas de uma vez só apontavam sacrificar, terreno e moeda (4×) ou exilar e embaralhar (6×), e caíram para 0 na repetição: eram travadas esporádicas da máquina.
+- Os estados contínuos não derrubam quadros nesta máquina, nem com a CPU 6× (o pior quarto ficou em 60), mas ocupam a linha principal o tempo todo: com dez criaturas voando, perto de 50 ms por segundo num computador rápido.
+- Memória das texturas: até 8,4 MB, das imagens das cartas em voo. Não pesa na escolha.
+
+**Decidido em 16/11/2026** (`TIER1_CUTS` em `gpuSupport.ts`): no degrau 1, além das faíscas pela metade, saem a mesa escurecendo da mágica de valor 6 e os raios da lendária, e as animações contínuas das permanentes param à vista (`data-fx-calm` na mesa: o vento do voar, a seiva do vínculo e a luz da seta de alvo somem; a mira e a aberração do enjoo ficam paradas). Golpe letal e ultimate continuam inteiros, com a mesa escurecendo deles (`keep`). O E2 e o E3 continuam como estavam, somando o que o E1 tira.
+
+**O E1 novo, medido de novo** (mesa cheia, placa real, mediana de 3 medidas com a CPU 6× e de 2 ou 3 com a CPU normal; `--degrau 0` e `--degrau 1` rodados em seguida, num servidor de desenvolvimento só com esta mudança, porque outra tarefa salvando arquivos na mesma pasta recarregava a página no meio das medidas):
+
+| Efeito | E0 | E1 |
+| --- | --- | --- |
+| Mágica de valor 6, CPU 6× | 4 janelas < 30, 108 telas por vez | 1 janela, 36 telas |
+| Mágica de valor 6, CPU normal | 602 ms por vez na página, 143 telas | 384 ms, 45 telas |
+| Lendária, CPU 6× | 2 janelas < 30, pior quarto a 5 quadros | 0 janelas, pior quarto a 60 |
+| Lendária, CPU normal | 864 ms por vez | 435 ms |
+| Voar (22 criaturas) | 78 ms/s | 0 |
+| Vínculo com a vida | 147 ms/s | 19 ms/s |
+| Alvo de algo na pilha | 96 ms/s | 18 ms/s |
+| Enjoo de invocação | 70 ms/s | 37 ms/s |
+
+- Parar só o vento do voar não aliviou nada (173 contra 204 ms/s, dentro do ruído): o que pesa é o lugar inteiro da criatura flutuando, com a sombra. O E1 para também a flutuação; a carta fica no alto, parada.
+- Os números do E0 desta tabela saíram mais altos que os do ranking acima porque foram tirados noutro momento e noutro servidor; a comparação vale entre as duas colunas, rodadas em seguida.
+- A troca de degrau não deixa efeito pela metade: o que já está na camada termina; o que começa depois já sai sem os cortes. As animações contínuas vão para o desenho parado (a mira e a carta que voa dão um pequeno salto até ele) e, de volta ao E0, recomeçam do início.
+- Falta conferir, numa partida de verdade e num celular de entrada, que a mesa desce menos vezes para o E2 (critério 8 do item 125).

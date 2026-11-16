@@ -244,11 +244,21 @@ try {
     for (let i = 0; i < 80 && !gpu.ready(); i++) await wait(100);
     for (let i = 0; i < 30 && !gpu.ambienceStats()?.running; i++) await wait(100);
     out.ambienceBefore = !!gpu.ambienceStats()?.running;
-    // As fichas de artefato ganham o objeto em 3D no degrau 0 e são as primeiras a sair (degrau 1); a moeda fica até o 2.
-    const at = { cx: 300, cy: 300, w: 80, h: 112 };
-    out.trinkets = { tier0: gpu.play('trinket', { at, kind: 'treasure' }) };
+    // O degrau 1: a mesa escurecendo da mágica grande não sai (a do golpe letal e do ultimate sim), e as animações
+    // contínuas das permanentes param (o vento do Vampire Nighthawk, que voa).
+    const wind = () => getComputedStyle(document.querySelector('.fly-wind')).animationName;
+    const at = { cx: 600, cy: 400, w: 90, h: 120 };
+    const drawn = params => { const before = gpu.stats().live; const played = gpu.play('spotlight', { at, radius: 120, duration: 400, ...params }); return { played, drew: gpu.stats().live > before }; };
+    out.tier0Wind = wind();
     gpu.setTier(1); await wait(100);
-    out.trinkets.tier1 = gpu.play('trinket', { at, kind: 'food' }); out.trinkets.coinTier1 = gpu.play('coin', { at, heads: true, label: 'Cara', hold: 1200, font: 'serif' });
+    out.tier1 = { calm: !!document.querySelector('[data-fx-calm]'), wind: wind(), bigSpell: drawn({}), lethal: drawn({ keep: true }) };
+    gpu.setTier(0); await wait(100);
+    out.tier1Off = { calm: !!document.querySelector('[data-fx-calm]'), wind: wind() };
+    // As fichas de artefato ganham o objeto em 3D no degrau 0 e são as primeiras a sair (degrau 1); a moeda fica até o 2.
+    const trinketAt = { cx: 300, cy: 300, w: 80, h: 112 };
+    out.trinkets = { tier0: gpu.play('trinket', { at: trinketAt, kind: 'treasure' }) };
+    gpu.setTier(1); await wait(100);
+    out.trinkets.tier1 = gpu.play('trinket', { at: trinketAt, kind: 'food' }); out.trinkets.coinTier1 = gpu.play('coin', { at: trinketAt, heads: true, label: 'Cara', hold: 1200, font: 'serif' });
     gpu.setTier(2); await wait(100);
     out.tier2 = { ready: gpu.ready(), ambience: gpu.ambienceStats()?.running };
     gpu.setTier(3); await wait(100);
@@ -270,10 +280,14 @@ try {
   assert.match(option.summary, /Efeitos leves/);
   assert.ok(option.backToFull, '"completos" did not bring the GPU layer back');
   assert.ok(option.ambienceBefore, 'the living table did not run in "automático"');
+  assert.notEqual(option.tier0Wind, 'none', 'the flying wind does not move at tier 0');
+  assert.deepEqual(option.tier1, { calm: true, wind: 'none', bigSpell: { played: true, drew: false }, lethal: { played: true, drew: true } },
+    'tier 1 drops the big spell darkening, keeps the protected one and stops the continuous animations');
+  assert.deepEqual(option.tier1Off, { calm: false, wind: option.tier0Wind }, 'back to tier 0, the continuous animations move again');
   assert.deepEqual(option.trinkets, { tier0: true, tier1: false, coinTier1: true }, 'the token objects should be on the GPU at tier 0 and gone at tier 1, with the coin still there');
   assert.deepEqual(option.tier2, { ready: true, ambience: false }, 'tier 2 keeps the GPU effects and stops the living table');
   assert.deepEqual(option.tier3, { ready: false, canvas: false }, 'tier 3 is the CSS effects');
   assert.deepEqual(option.tier0, { ready: true, ambience: true }, 'tier 0 brings everything back');
   assert.equal(option.canvasHidden, false, 'leaving the table kept the WebGL context');
-  console.log('GPU layer passed: idle load, no idle frames, effects on the GPU, CSS after context loss, ?gpu=0, the Effects option and the governor tiers.');
+  console.log('GPU layer passed: idle load, no idle frames, effects on the GPU, CSS after context loss, ?gpu=0, the Effects option and the governor tiers (with what tier 1 drops).');
 } finally { run('close'); }

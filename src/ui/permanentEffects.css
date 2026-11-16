@@ -89,6 +89,14 @@
   /* Atacando com vigilância: a carta fica de pé e o olho dá um brilho rápido. */
   .slot.attacking:not(.tapped) .bfc > .fx-corner i.vigilance { animation: fx-vigil .9s ease-out 2; }
 }
+/* Degrau 1 em diante do Efeitos: automático (gpuPort.ts põe `data-fx-calm` na mesa; ROADMAP 134): as animações que
+   rodam o tempo todo param à vista. A criatura que voa fica parada no alto, com a sombra; a mira e a aberração do enjoo
+   ficam no desenho parado; o vento do voar, a seiva do vínculo com a vida e a luz que corre na seta de alvo só existem
+   em movimento e somem. (Parar só o vento do voar não aliviava nada: o que pesa é o lugar inteiro flutuando.) */
+[data-fx-calm] .slot.has-flying, [data-fx-calm] .slot.has-flying::before,
+[data-fx-calm] .slot.has-flying > .fly-wind, [data-fx-calm] .bfc > .fx-glow.lifelink > i, [data-fx-calm] .bfc > .fx-crosshair,
+[data-fx-calm] .bfc.fx-sick > .face .sick-red { animation: none; }
+[data-fx-calm] .target-arrows .arrow-pulse { display: none; }
 @keyframes fx-vigil { 50% { box-shadow: 0 0 0 1px #fff, 0 0 12px 4px #f4e7b8; scale: 1.35; } }
 @keyframes fx-shimmer { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
 @keyframes fx-sap { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: 1; } 80% { opacity: .8; } 100% { opacity: 0; transform: translateY(calc(var(--ch, 128px) * -.82)) scale(1); } }

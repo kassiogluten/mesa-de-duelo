@@ -1,4 +1,10 @@
 {
+  "0.200.0": {
+    "Primeiro degrau dos efeitos automáticos mais certeiro": [
+      { "img": "0.200.0/magica-grande-e0.webp", "legenda": "Uma mágica grande chegando com os efeitos completos: a mesa escurece em volta dela." },
+      { "img": "0.200.0/magica-grande-e1.webp", "legenda": "A mesma mágica no primeiro alívio dos efeitos automáticos: a carta chega igual, sem a mesa escurecer." }
+    ]
+  },
   "0.199.0": {
     "Ícones para intimidar, medo, sombra, sorrateiro, equitação e travessia": [
       { "img": "0.199.0/selos.webp", "legenda": "Os seis selos novos, da esquerda para a direita: intimidar, medo, sombra, sorrateiro, equitação (ao lado do Ímpeto) e travessia." },

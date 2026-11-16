@@ -1,6 +1,6 @@
 import '../../src/style.css';
 import { createForgeTableView } from '../../src/ui/forgeTable';
-import { gpuClock } from '../../src/ui/gpu/gpuSupport';
+import { gpuClock, gpuProbe, TIER1_CUTS } from '../../src/ui/gpu/gpuSupport';
 import { latestGpuPort } from '../../src/ui/gpu/gpuPort';
 import { center } from '../../src/ui/motionKit';
 import { createLabPlays, playButtons } from './effectsLabPlays';
@@ -93,8 +93,9 @@ function table() {
   }
   // A camada GPU para os testes e a medição: ?gpu=1 tenta desenhar nela mesmo com efeitos leves, ?gpu=0 fica no CSS.
   // `gpu.load()` carrega na hora (sem esperar a mesa ociosa), `gpu.stats()` conta os quadros desenhados e os efeitos vivos,
-  // `gpu.play(nome, parâmetros)` desenha um efeito, `gpu.setTier(n)` põe a mesa num degrau do regulador e `gpu.timeScale(0)` congela a camada (para o print pegar o efeito no meio).
-  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ambienceStats: () => latestGpuPort()?.ambienceStats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, setTier: (n: any) => latestGpuPort()?.setTier(n), timeScale: (n: number) => { gpuClock.timeScale = n; } };
+  // `gpu.play(nome, parâmetros)` desenha um efeito, `gpu.setTier(n)` põe a mesa num degrau do regulador, `gpu.timeScale(0)` congela a camada (para o print pegar o efeito no meio) e
+  // `gpu.probe(true)` zera e liga a medição de área desenhada, objetos e texturas, que `gpu.probed()` devolve (scripts/medir-cada-efeito.mjs).
+  (window as any).gpu = { load: () => latestGpuPort()?.loadNow(), stats: () => latestGpuPort()?.stats() ?? null, ambienceStats: () => latestGpuPort()?.ambienceStats() ?? null, ready: () => !!latestGpuPort()?.ready(), play: (name: any, params: any) => latestGpuPort()?.play(name, params) ?? false, setTier: (n: any) => latestGpuPort()?.setTier(n), timeScale: (n: number) => { gpuClock.timeScale = n; }, probe: (on: boolean) => { Object.assign(gpuProbe, { on, fill: 0, peakObjects: 0, peakTextureBytes: 0 }); }, probed: () => ({ ...gpuProbe }) };
   let reduce = false;
   const media = window.matchMedia.bind(window);
   // "Reduzir movimento" só nesta página: a mesa pergunta ao navegador a cada efeito.
@@ -287,6 +288,8 @@ function table() {
     clear: () => { for (const p of players) p.battlefield = []; return 'Campo limpo.'; },
     reset: () => { setup(); return 'Mesa de volta ao começo.'; },
     full: () => { setup(true); return 'Campo cheio: confira sobreposição e desempenho.'; },
+    // Um estado em todas as criaturas (as duas mesas), para medir o custo de um efeito contínuo: scripts/medir-cada-efeito.mjs.
+    'state-all': c => { for (const x of all()) if (x.creature) commands.toggle({ cmd: 'toggle', id: x.id, key: c.key, value: true }); return `${c.key} em todas as criaturas.`; },
     // Mesa viva (item 125): a luz vai para o campo de quem joga, e a vida baixa pesa a vinheta.
     turn: () => {
       state.activePlayer = state.activePlayer === ME ? OPP : ME; state.turn++; state.phase = 'MAIN1';
@@ -933,11 +936,20 @@ function table() {
   // mão, aceita move:<movimento> (na sua primeira criatura, como move:attack ou move:destroy), tokens:<quantas> e x:<movimento da
   // 0.117.0> (block, fight, scry, coin, die, shuffle, attach, control, transform, counters, lore, search, reanimate, flashback,
   // commander, ability, pay, float, opening, mulligan, reveal, win, lose), jogada:<nome> (as jogadas simuladas de effectsLabPlays.ts) cheio (o "Campo cheio" do painel, para medir com a mesa
-  // lotada: scripts/medir-efeitos.mjs) e pausa (nada: a mesa parada).
+  // lotada: scripts/medir-efeitos.mjs) e pausa (nada: a mesa parada). Para medir um efeito de cada vez (scripts/medir-cada-efeito.mjs):
+  // gpu:<efeito> (o efeito sozinho na camada GPU, na sua primeira criatura ou dela até o oponente), dano:<tipo> (burn, lethal, combat…),
+  // momento:<legend|big>, walker:<plus|ult|enter>, turno e estado:<chave> (o estado em todas as criaturas, como estado:sick ou estado:FLYING).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
+  const firstCreature = () => player(ME).battlefield.find((x: any) => x.creature)?.id;
   const run = (play: string) => {
     const [cmd, arg] = play.split(':');
-    if (cmd === 'move') window.postMessage({ cmd, kind: arg, id: player(ME).battlefield.find((x: any) => x.creature)?.id }, '*');
+    if (cmd === 'move') window.postMessage({ cmd, kind: arg, id: firstCreature() }, '*');
+    else if (cmd === 'gpu') window.postMessage({ cmd, kind: arg, id: firstCreature(), source: { card: firstCreature() }, target: { player: OPP } }, '*');
+    else if (cmd === 'dano') window.postMessage({ cmd: 'damage', kind: arg, amount: 3, source: { card: firstCreature() }, target: { player: OPP } }, '*');
+    else if (cmd === 'momento') window.postMessage({ cmd: 'moment', kind: arg }, '*');
+    else if (cmd === 'walker') window.postMessage({ cmd, kind: arg, side: player(ME).battlefield.some((x: any) => x.planeswalker) || arg === 'enter' ? 'me' : 'opp' }, '*');
+    else if (cmd === 'turno') window.postMessage({ cmd: 'turn' }, '*');
+    else if (cmd === 'estado') window.postMessage({ cmd: 'state-all', key: arg }, '*');
     else if (cmd === 'x') window.postMessage({ cmd: 'extra', kind: arg, side: 'me' }, '*');
     else if (cmd === 'tokens') window.postMessage({ cmd, side: 'me', n: arg }, '*');
     else if (cmd === 'cheio') window.postMessage({ cmd: 'full' }, '*');
@@ -949,6 +961,26 @@ function table() {
 }
 
 // ---------------------------------------------------------------- painel
+/** Os efeitos da camada pelo nome que o jogador entende (a lista do que cada degrau desliga). */
+const EFFECT_LABELS: Record<string, string> = {
+  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate',
+  vortex: 'portal do exílio', gather: 'volta do blink', ash: 'cinzas do sacrifício', motes: 'grãos da habilidade', puff: 'fumaça do ninja', dust: 'poeira ao virar',
+  charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
+  mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
+  undizzy: 'estrelinhas indo embora', coin: 'moeda', die: 'dado', victory: 'vitória', defeat: 'derrota', spotlight: 'mesa escurecendo da mágica grande', legend: 'raios da lendária',
+  arrowBirth: 'seta de alvo nascendo', shuriken: 'shuriken', shuffle: 'embaralhar', scry: 'vidência', flight: 'carta voando',
+};
+/** O que cada degrau desliga, lido da lista do regulador (TIER1_CUTS), para conferir à mão. */
+function tierList() {
+  const cuts = Object.entries(TIER1_CUTS).map(([name, to]) => `${EFFECT_LABELS[name] ?? name} (${to === 'css' ? 'versão simples' : 'desligado'})`);
+  return [
+    '<li><b>E0</b>: todos os efeitos.</li>',
+    `<li><b>E1</b>: faíscas pela metade${cuts.length ? `; sem ${cuts.join(', ')}` : ''}; as animações contínuas das permanentes paradas (vento do voar, seiva do vínculo, aberração do enjoo, mira e luz da seta de alvo). Golpe letal e ultimate inteiros.</li>`,
+    '<li><b>E2</b>: o E1, mais a mesa viva parada e sem a câmera aproximando.</li>',
+    '<li><b>E3</b>: os efeitos leves, em CSS.</li>',
+  ].join('');
+}
+
 function panel() {
   document.title = 'Laboratório de efeitos';
   document.body.innerHTML = '';
@@ -1030,6 +1062,10 @@ function panel() {
       .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}<button data-gpu="motes" data-color="#9b7bff">Gatilho (grãos)</button><button data-gpu="beam">Feixe: habilidade</button><button data-gpu="glint">Conjurar (redemoinho)</button><button data-gpu="arrive">Chegada (anel)</button><button data-gpu="arrive" data-color="#9b7bff">Chegada no cemitério</button><button data-gpu="streak">Golpe (riscos)</button><button data-gpu="beam" data-color="#9b7bff">Feixe: gatilho</button>
     <p>Os botões da seção Movimento (item 16) já usam esses efeitos quando a camada está pronta. Ligar e desligar "Enjoo de invocação" na permanente selecionada mostra a aberração de cor e solta as estrelinhas ao ligar e ao desligar.</p>
     <div>Câmera lenta só da camada: ${[['1', '1×'], ['4', '4×'], ['10', '10×']].map(([k, t]) => `<button data-gpu-slow="${k}">${t}</button>`).join('')}<button data-gpu="freeze">Congelar</button></div>
+    <h2>Degraus do automático (item 134)</h2>
+    <p>Põe a mesa num degrau do Efeitos: automático, como se os quadros tivessem caído. Com a versão GPU escolhida acima, o degrau fica onde você pôs; sem ela, o regulador pode mudá-lo de novo.</p>
+    <div>${[0, 1, 2, 3].map(n => `<button data-tier="${n}">E${n}</button>`).join('')}</div>
+    <ul id="tiers" style="margin:4px 0 0;padding-left:18px">${tierList()}</ul>
     <h2>Momentos e mesa viva (itens 125 e 131)</h2>
     <p>A mesa viva só aparece com a camada GPU. O Tour roda os efeitos em sequência (toque de novo para parar).</p>
     <button data-tour>Tour: todos os efeitos</button>
@@ -1123,6 +1159,10 @@ function panel() {
       gpuVersion = b.dataset.gpuVersion;
       frame.src = `${location.pathname}?mesa&gpu=${gpuVersion}`;
       syncGpu();
+    }
+    if (b.dataset.tier) {
+      (frame.contentWindow as any)?.gpu?.setTier(Number(b.dataset.tier));
+      lab.querySelectorAll<HTMLButtonElement>('[data-tier]').forEach(x => x.classList.toggle('on', x === b));
     }
     if (b.dataset.s) resize(b.dataset.s);
   });

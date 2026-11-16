@@ -66,7 +66,8 @@ export function createImpactMotion(kit: MotionKit) {
     if (kind === 'legend') { gpu.play('legend', { at, color: hex(cardLight(event.card)), delay }); return; }
     // Reduzido em 14/11/2026: a mesa escurece de leve em volta e a câmera quase não se mexe.
     gpu.ambiencePulse({ dim: { amount: .4, ms: length * .7 } });
-    gpu.play('spotlight', { at, radius: Math.max(at.w, at.h) * 1.1 + 40, duration: length, delay, strength: .22 });
+    // No degrau 1, a mágica grande fica sem o escuro (o que mais pinta a tela); golpe letal e ultimate o mantêm.
+    gpu.play('spotlight', { at, radius: Math.max(at.w, at.h) * 1.1 + 40, duration: length, delay, strength: .22, keep: kind !== 'big-spell' });
     // No degrau 2 do regulador a câmera fica parada: mexer na mesa inteira é o que mais pesa.
     if (effectsTier() < 2) push(at, length, delay);
   }
