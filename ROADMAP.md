@@ -588,3 +588,28 @@ A ideia é medir quanto cada efeito custa e, no E1, desligar (ou trocar por uma 
 - [ ] Ligar a lista ao regulador: o E1 passa a ser "faíscas pela metade + sem os efeitos pesados", e o E2 e o E3 continuam como estão.
 - [ ] Conferir que o E1 novo segura a mesa cheia sem descer para o E2 com tanta frequência (medir de novo com o mesmo cenário) e que a troca de degrau não deixa efeito pela metade na tela.
 - [ ] Mostrar no laboratório de efeitos quais efeitos cada degrau desliga, para conferir à mão.
+
+## 135. Primeiro acesso mais leve
+
+Pedido em 15/11/2026. No primeiro acesso, o service worker guarda o aplicativo inteiro: 133 arquivos, cerca de 3,3 MB (cerca de 1,25 MB se viessem comprimidos), medidos no build da 0.187.0. São 56 arquivos `.js` (2,4 MB), 18 `.css` (466 KB), 37 sons `.mp3` (380 KB), além de ícones e HTML. Os maiores:
+
+| Arquivo | Tamanho | Com gzip | O que é |
+|---|---|---|---|
+| `decks-*.js` | 532 KB | 104 KB | os decks prontos (`shared/starter-decks.json`) dentro do código |
+| `forgeTable-*.js` | 452 KB | 154 KB | a mesa de jogo |
+| `changelog-*.js` | 377 KB | 121 KB | o `CHANGELOG.md` e o `docs/changelog-antigo.md` inteiros, para o painel Novidades |
+| `forgeTable-*.css` | 219 KB | 43 KB | o visual da mesa |
+| `main-*.js` | 174 KB | 52 KB | |
+| pedaços do pixi.js | ~300 KB | ~90 KB | WebGL, WebGPU, Graphics e afins |
+
+O nginx (`deploy/nginx.conf`) só comprime o `/api/cartas`: JS, CSS e HTML saem sem gzip, a não ser que o proxy do Coolify ou a Cloudflare comprimam no caminho. O objetivo é baixar menos no primeiro acesso, e baixar primeiro o que a tela inicial precisa, sem perder o jogo sem internet depois de instalado.
+
+Itens em ordem de ganho por esforço:
+
+- [ ] Medir no endereço real o que chega comprimido (`curl -sI -H 'Accept-Encoding: gzip, br'` num `.js` e num `.css`). Se não chega, ligar `gzip` (e `brotli`, se o nginx da imagem tiver) para HTML, CSS, JS, SVG e o manifesto; é o mesmo primeiro item do 106, fazer junto. Sozinho tira cerca de 2 MB.
+- [ ] Novidades fora do código: o `changelog-*.js` vira um arquivo de texto (ou JSON) buscado só ao abrir o painel Novidades, com só as versões recentes no primeiro pedaço e as anteriores à 0.100.0 sob demanda. A versão mostrada na tela inicial continua vindo no código.
+- [ ] Decks prontos fora do código: a lista leve (nome, cores, bracket, preço, capa) no código e as listas de cartas num JSON buscado ao escolher ou abrir um deck pronto, guardado pelo service worker em tempo de execução. Conferir a validação do computador e o tutorial, que usam os decks prontos.
+- [ ] Mesa e pixi.js só quando a partida começa: conferir com o `vite build` o que a tela inicial importa de `forgeTable` e do pixi.js e, se algo vier sem precisar, trocar por `import()` dinâmico. O service worker continua guardando os dois, mas depois da tela inicial.
+- [ ] Ordem do service worker: a tela inicial carrega primeiro e o resto do pacote (`globPatterns`) é guardado depois. Avaliar tirar do pacote o que só abre por clique e funciona bem buscado na hora (Torneios, Rever partida, Privacidade), passando para regra em tempo de execução, sem voltar ao problema da página que abria em branco sem internet (comentário do `rollupOptions` no `vite.config.ts`).
+- [ ] CSS: medir quanto do `forgeTable-*.css` (219 KB) e do `style-*.css` não é usado na primeira tela (o Lighthouse do 106 apontou 69 KB) e separar o da mesa do da tela inicial, se valer.
+- [ ] Medir antes e depois: total do precache (o `vite build` já mostra "precache N entries (X KiB)"), bytes transferidos no primeiro acesso pelo DevTools com rede "4G lenta" e o tempo até a tela inicial aparecer; anotar aqui. Um teste que falhe se o precache passar de um limite (por exemplo, o tamanho de depois mais 10%).
