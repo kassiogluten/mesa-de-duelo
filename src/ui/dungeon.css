@@ -25,6 +25,21 @@ button.player-counter:focus-visible { outline: 2px solid var(--gold); outline-of
 button.dungeon-room.choice { cursor: pointer; border-color: var(--gold); background: #1f1a35; box-shadow: 0 0 12px #f2c14e33; }
 button.dungeon-room.choice:hover, button.dungeon-room.choice:focus-visible { background: #2c2448; outline: 2px solid var(--gold); outline-offset: 1px; }
 
+/* A placa que cai ao lado do retrato quando o jogador entra numa sala (dourada ao completar a masmorra): dungeonPlaque.ts. */
+.dungeon-plaque { position: fixed; z-index: 36; pointer-events: none; min-width: 150px; max-width: 220px; padding: 8px 12px 9px; border-radius: 8px; border: 1px solid #8b7bd6; background: linear-gradient(180deg, #4a4458, #2c2838); box-shadow: 0 0 0 3px #1a1626, 0 10px 24px #000b, inset 0 1px 0 #ffffff22; color: #f1ecff; text-align: left; }
+.dungeon-plaque.done { border-color: var(--gold); background: linear-gradient(180deg, #5a4314, #2e2108); box-shadow: 0 0 0 3px #1a1204, 0 0 24px #f2c14e66, inset 0 1px 0 #ffffff33; }
+.dungeon-plaque .dp-kicker { display: flex; align-items: center; gap: 5px; font: 700 10px/1.2 var(--body); color: #b5a6ff; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.dungeon-plaque.done .dp-kicker { color: var(--gold); }
+.dungeon-plaque .dp-kicker svg { width: 13px; height: 13px; flex-shrink: 0; fill: currentColor; }
+.dungeon-plaque strong { display: block; margin-top: 2px; font: 800 15px/1.2 Georgia, 'Times New Roman', serif; overflow-wrap: anywhere; }
+.dungeon-plaque.done strong { color: #fff1c4; }
+.dungeon-plaque .dp-steps { display: flex; gap: 3px; margin-top: 6px; }
+.dungeon-plaque .dp-steps i { flex: 1; height: 4px; border-radius: 2px; background: #ffffff22; }
+.dungeon-plaque .dp-steps i.on { background: #b5a6ff; }
+.dungeon-plaque.done .dp-steps i { background: var(--gold); }
+.dungeon-plaque .dp-dust { position: absolute; bottom: -4px; width: 8px; height: 8px; border-radius: 50%; background: #b8b0c8; opacity: 0; }
+.dungeon-plaque .dp-spark { position: absolute; left: 50%; top: 45%; width: 5px; height: 5px; border-radius: 50%; background: #fff3c4; box-shadow: 0 0 8px var(--gold); opacity: 0; }
+
 @media (max-width: 560px) {
   .dungeon-level { grid-template-columns: 1fr; }
   .dungeon-level + .dungeon-level::before { display: none; }

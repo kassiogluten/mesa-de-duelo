@@ -1,4 +1,4 @@
-// Os medalhões em 3D da mesa, na camada GPU: o disco de sol e lua quando o dia vira noite (e o contrário) a coroa do Monarca e o escudo da Dianteira passando de um retrato para o outro o emblema novo saindo do planeswalker, as fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta e o frasco do veneno, o raio da energia, a estrela da experiência e o disco da radiação caindo sobre o selo do jogador; sem a camada, fica só o ícone ou o selo pulsando.
+// Os medalhões em 3D da mesa, na camada GPU: o disco de sol e lua quando o dia vira noite (e o contrário) a coroa do Monarca e o escudo da Dianteira passando de um retrato para o outro o emblema novo saindo do planeswalker, as fichas de Tesouro, Pista, Comida e Sangue caindo sobre a carta e o frasco do veneno, o raio da energia, a estrela da experiência e o disco da radiação caindo sobre o selo do jogador (e, em CSS, a placa da sala da masmorra); sem a camada, fica só o ícone ou o selo pulsando.
 import type { FCard, FPlayer } from '../forge/client';
 import { holderChanges, type Holders } from './holderChanges';
 import { center, reduced, type MotionKit, type Point } from './motionKit';
@@ -6,6 +6,8 @@ import { emblemSource } from './cardFaces';
 import { walkerTone } from './planeswalkerEffects';
 import { trinketOf } from './tokenTrinkets';
 import { tallyGains, type Tallies } from './playerTallies';
+import { dungeonSteps, type DungeonMarks } from './dungeonSteps';
+import { createDungeonPlaques } from './dungeonPlaque';
 
 export function createMedalMotion(kit: MotionKit) {
   const { root, layer, gpu, animate } = kit;
@@ -15,6 +17,9 @@ export function createMedalMotion(kit: MotionKit) {
   let holders: Holders | null = null;
   // Quanto cada jogador tinha de cada marcador no último desenho.
   let tallies: Tallies | null = null;
+  // Em que sala da masmorra cada jogador estava no último desenho.
+  let dungeons: DungeonMarks | null = null;
+  const plaques = createDungeonPlaques(kit);
   /** Se a mesa está à vista e com movimento: escondida ou com "reduzir movimento", nenhum medalhão. */
   const showing = () => !document.hidden && !root.hidden && !reduced();
   /** O meio da mesa, com o tamanho de um medalhão (um pouco menor em telas baixas). */
@@ -43,7 +48,11 @@ export function createMedalMotion(kit: MotionKit) {
       holders = now;
       const counted = tallyGains(tallies, players, match);
       tallies = counted.now;
-      if ((!passes.length && !emblems.length && !counted.gains.length) || !showing()) return;
+      const ventured = dungeonSteps(dungeons, players, match);
+      dungeons = ventured.now;
+      if ((!passes.length && !emblems.length && !counted.gains.length && !ventured.steps.length) || !showing()) return;
+      // Entrou numa sala ou completou a masmorra: a placa cai ao lado do retrato e entra no selo.
+      plaques(ventured.steps);
       const avatar = (id: number) => root.querySelector(`.avatar[data-pid="${id}"]`);
       // O marcador que subiu: o objeto dele cai sobre o selo (um depois do outro), e o selo só aparece quando ele pousa.
       counted.gains.forEach((gain, i) => {

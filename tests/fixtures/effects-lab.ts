@@ -77,8 +77,6 @@ function creature(name: string, power: number, toughness: number, manaCost: stri
   return card(name, { creature: true, power, toughness, basePower: power, baseToughness: toughness, damage: 0, manaCost, typeLine: 'Creature', keywords });
 }
 
-if (new URLSearchParams(location.search).has('mesa')) table(); else panel();
-
 // ---------------------------------------------------------------- mesa
 function table() {
   const params = new URLSearchParams(location.search), slow = Number(params.get('lento')) || 1;
@@ -386,6 +384,28 @@ function table() {
       owner.counters = { ...owner.counters, [c.kind]: next };
       const what = ({ POISON: 'O frasco do veneno', ENERGY: 'O raio da energia', EXPERIENCE: 'A estrela da experiência', RAD: 'O disco da radiação' } as Record<string, string>)[c.kind];
       return c.kind === 'POISON' && next >= 7 ? `Veneno em ${next}: o frasco cai maior, com uma onda em volta${next >= 10 ? ' (é o que mata)' : ''}.` : `${what} cai girando sobre o selo e entra nele.`;
+    },
+    // Masmorra: o jogador entra na Undercity e anda uma sala por toque (pelo caminho mais longo); a placa cai ao lado do retrato.
+    // "Completar" tira a masmorra e a põe nas completadas (a placa dourada).
+    dungeon: c => {
+      const owner = sideOf(c.side);
+      if (c.kind === 'done') {
+        const name = owner.dungeon?.name ?? 'Undercity';
+        owner.dungeon = undefined;
+        owner.completedDungeons = [...(owner.completedDungeons ?? []), name];
+        return `${name} completa: a placa dourada cai ao lado do retrato, com faíscas, e entra no selo (✓).`;
+      }
+      const room = (name: string, text: string, ...next: string[]) => ({ name, text, next });
+      const rooms = [room('Secret Entrance', 'Search your library for a basic land card.', 'Forge', 'Lost Well'), room('Forge', 'Put two +1/+1 counters on target creature.', 'Trap!', 'Arena'),
+        room('Lost Well', 'Scry 2.', 'Arena', 'Stash'), room('Trap!', 'Target player loses 5 life.', 'Archives'), room('Arena', 'Goad target creature.', 'Archives', 'Catacombs'),
+        room('Stash', 'Create a Treasure token.', 'Catacombs'), room('Archives', 'Draw a card.', 'Throne of the Dead Three'), room('Catacombs', 'Create a 4/1 black Skeleton creature token with menace.', 'Throne of the Dead Three'),
+        room('Throne of the Dead Three', 'Reveal the top ten cards of your library…')];
+      const path = ['Secret Entrance', 'Forge', 'Arena', 'Catacombs', 'Throne of the Dead Three'];
+      const d = owner.dungeon ?? { id: nextId++, name: 'Undercity', rooms };
+      const at = d.room ? path.indexOf(d.room) : -1;
+      if (at >= path.length - 1) return 'Já está na última sala: toque em Completar.';
+      owner.dungeon = { ...d, room: path[at + 1] };
+      return `${path[at + 1]} (passo ${at + 2} de ${path.length}): a placa cai ao lado do retrato, o passo novo acende e ela entra no selo.`;
     },
     toggle: c => {
       const x = byId(c.id); if (!x) return;
@@ -1006,7 +1026,13 @@ function panel() {
     #lab .row { display: flex; gap: 6px; } #lab .row > * { flex: 1; }
     #stage { flex: 1; position: relative; display: grid; place-items: center; overflow: hidden; background: repeating-linear-gradient(45deg, #0a0f1b 0 12px, #0c1220 12px 24px); }
     #frame { border: 0; background: #000; box-shadow: 0 0 0 1px #ffffff22, 0 20px 50px #000a; transform-origin: 50% 50%; }
-    #size { position: absolute; top: 8px; right: 10px; font-size: 11px; color: #9aa5bb; }`;
+    #size { position: absolute; top: 8px; right: 10px; font-size: 11px; color: #9aa5bb; }
+    /* Tela estreita (celular em pé): a mesa em cima e o painel embaixo, rolando. */
+    @media (max-width: 720px) {
+      body { flex-direction: column; }
+      #stage { order: -1; min-height: 0; }
+      #lab { width: auto; height: 45dvh; border-right: 0; border-top: 1px solid #f2b54c44; }
+    }`;
   document.head.append(css);
   const lab = document.createElement('aside'); lab.id = 'lab';
   const stage = document.createElement('div'); stage.id = 'stage';
@@ -1056,6 +1082,7 @@ function panel() {
     <div><button data-c="day-night">Dia e noite</button><button data-holder="monarch">Monarca</button><button data-holder="initiative">Dianteira</button><button data-walker="emblem">Emblema</button>${[['win', 'Vitória (brasão)'], ['lose', 'Derrota (brasão do oponente)']].map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}</div>
     <div>${[['Treasure', 'Tesouro'], ['Clue', 'Pista'], ['Food', 'Comida'], ['Blood', 'Sangue'], ['all', 'As quatro (só 3 ganham o objeto)']].map(([k, t]) => `<button data-trinket="${k}">${t}</button>`).join('')}</div>
     <div>${[['POISON', 'Veneno'], ['ENERGY', 'Energia'], ['EXPERIENCE', 'Experiência'], ['RAD', 'Radiação']].map(([k, t]) => `<button data-tally="${k}">${t}</button>`).join('')}<button data-tally="POISON" data-near="1">Veneno perto de matar</button><button data-tally="clear">Zerar marcadores</button></div>
+    <div><button data-dungeon="room">Masmorra: próxima sala</button><button data-dungeon="done">Masmorra: completar</button></div>
     <p>A carta que muda de face sobe e vira de verdade: use Transformar (acima) ou marque e desmarque "Virada para baixo" na selecionada.</p>
     <div>Degrau do automático: ${[0, 1, 2, 3].map(n => `<button data-tier="${n}">${n}</button>`).join('')}</div>
     <h2>Efeitos na GPU (item 125)</h2>
@@ -1159,6 +1186,7 @@ function panel() {
     if (b.dataset.walker) send({ cmd: 'walker', kind: b.dataset.walker, side: $<HTMLSelectElement>('side').value, id: selectedId() });
     if (b.dataset.holder) send({ cmd: 'holder', kind: b.dataset.holder });
     if (b.dataset.tier) send({ cmd: 'tier', n: b.dataset.tier });
+    if (b.dataset.dungeon) send({ cmd: 'dungeon', kind: b.dataset.dungeon, side: $<HTMLSelectElement>('side').value });
     if (b.dataset.tally) send({ cmd: 'tally', kind: b.dataset.tally, near: !!b.dataset.near, side: $<HTMLSelectElement>('side').value });
     if (b.dataset.trinket) send({ cmd: 'trinkets', kind: b.dataset.trinket, side: $<HTMLSelectElement>('side').value });
     if (b.dataset.reveal) send({ cmd: 'reveal', kind: b.dataset.reveal });
@@ -1211,3 +1239,6 @@ function panel() {
   new ResizeObserver(() => resize()).observe(stage);
   resize();
 }
+
+// Por último: as constantes do arquivo (como EFFECT_LABELS) já existem quando a mesa ou o painel montam.
+if (new URLSearchParams(location.search).has('mesa')) table(); else panel();

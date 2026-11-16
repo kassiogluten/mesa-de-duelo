@@ -1,4 +1,13 @@
 {
+  "0.205.0": {
+    "Laboratório de efeitos volta a abrir": [
+      { "img": "0.205.0/celular.webp", "legenda": "O Laboratório de efeitos num celular em pé: a mesa em cima e o painel com as jogadas embaixo, rolando." }
+    ],
+    "Placa da masmorra": [
+      { "img": "0.205.0/placa-da-sala.webp", "legenda": "Entrando na Arena, o passo 3 de 5 da Undercity: a placa cai ao lado do retrato e o passo novo acende na trilha." },
+      { "img": "0.205.0/masmorra-completa.webp", "legenda": "Masmorra completa: a placa sai dourada, com faíscas, e o selo passa a mostrar o ✓." }
+    ]
+  },
   "0.204.0": {
     "Carta que muda de face vira de verdade": [
       { "img": "0.204.0/carta-transformando.webp", "legenda": "A carta que transformou no ar, já mostrando a face nova, inclinada, com a sombra na mesa." },

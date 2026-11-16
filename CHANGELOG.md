@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.205.0] - 2026-11-16
+
+### Novo
+
+- **Placa da masmorra.** Quando um jogador entra numa sala da masmorra, uma placa de pedra cai ao lado do retrato dele com o nome da sala, o passo em que está e a trilha de passos, com o novo acendendo; depois ela entra no selo da masmorra, que dá um pulo. Ao completar a masmorra, a placa sai dourada, com faíscas. No Laboratório de efeitos, os botões Masmorra: próxima sala e Masmorra: completar mostram as duas.
+
+### Corrigido
+
+- **Laboratório de efeitos volta a abrir.** O painel ao lado da mesa abria vazio, sem nenhum botão, e a mesa ficava pequena e parada no meio da tela. Agora ele monta de novo; no celular em pé (ou numa janela estreita) a mesa fica em cima e o painel embaixo, rolando, em vez de a mesa ficar espremida num canto.
+
 ## [0.204.0] - 2026-11-16
 
 ### Novo
