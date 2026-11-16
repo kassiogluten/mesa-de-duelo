@@ -151,7 +151,7 @@ Avaliado em 28/10/2026: **é possível e vale usar**, como complemento ao botão
 
 ### Configuração do Google
 
-- No Google Cloud Console, criar um projeto e um **OAuth Client ID do tipo "Web application"**. As origens JavaScript autorizadas são `https://mtg.kassio.site` e `http://localhost:5173`.
+- No Google Cloud Console, criar um projeto e um **OAuth Client ID do tipo "Web application"**. As origens JavaScript autorizadas são `https://mtg.kassio.site`, `https://mesao.online` e `http://localhost:5173`.
 - Tela de consentimento: só os escopos `openid profile`, que não exigem verificação do Google. Ela pede o nome do app, o logo e o link de uma **página de política de privacidade**, que precisa existir no site.
 - Variável: `GOOGLE_CLIENT_ID` no Coolify. O `docker-compose.yml` repassa o mesmo valor para o build do site (`VITE_GOOGLE_CLIENT_ID`) e para a ponte (`MESA_GOOGLE_CLIENT_ID`). Localmente, os dois ficam no `.env` (ver `.env.example`). Sem client ID, o botão não aparece e `/api/conta/` responde 503, como faz a área de admin sem senha.
 - Limitação: o GIS não aceita origens por IP. No `npm run dev:rede` (celular na rede local, com IP), o login não funciona, e o resto do jogo continua normal.

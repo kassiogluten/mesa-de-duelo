@@ -84,6 +84,17 @@ As imagens das cartas saem com `Cache-Control: public, max-age=31536000, immutab
 
 Atrás da Cloudflare e do proxy do Coolify, o nginx vê o IP do proxy e não o do jogador, então os limites por IP do `deploy/nginx.conf` valem para todos juntos. Ver o item 19 do `ROADMAP.md`.
 
+### Segundo domínio (`mesao.online`, junto com `mtg.kassio.site`)
+
+O código não tem domínio fixo: a conexão com a ponte sai de `location.host` (`src/forge/client.ts`), o nginx não tem `server_name` e troca `https://__MESA_HOST__` pelo domínio de quem pediu (prévia do link, canonical, `robots.txt`, `sitemap.xml`), e a imagem de cada convite (`?sala=`) sai com o domínio por onde ele foi aberto. Os dois endereços servem a mesma ponte, então salas, contas e relatos são os mesmos nos dois.
+
+1. Na Cloudflare, no `mesao.online`: registro **A** `@` (e, se quiser, `www`) com o IP do servidor do Coolify, em **DNS only** (nuvem cinza), para a mesa e a conexão com a ponte seguirem o mesmo caminho do `mtg.kassio.site`. Em **Proxied** (nuvem laranja), a Cloudflare fecha a conexão com a ponte que passa uns 100 segundos sem mensagem, e a mesa não manda nada enquanto o jogador pensa; a nuvem laranja exige antes um ping periódico da mesa, e também Rocket Loader, Email Obfuscation e Bot Fight Mode desligados na zona. A regra de redirecionamento do passo 5 acima vale só para `img.mesao.online` e não pega o domínio principal.
+2. No Coolify, no serviço **web**, os domínios ficam `https://mtg.kassio.site,https://mesao.online,https://img.mesao.online` (mais `https://www.mesao.online`, se criou o `www`). Deploy para sair o certificado.
+3. No Google Cloud Console, no OAuth Client ID do `GOOGLE_CLIENT_ID`: acrescente `https://mesao.online` (e o `www`) em **Origens JavaScript autorizadas**. Sem isso, Entrar com Google falha no domínio novo. O client ID é o mesmo, sem novo build.
+4. Confira: `https://mesao.online` abre a mesa, uma partida contra o computador começa (a conexão `wss://mesao.online/ws` abre), Entrar com Google funciona e `curl -s https://mesao.online/robots.txt` mostra `Sitemap: https://mesao.online/sitemap.xml`.
+
+O navegador guarda tudo por domínio: no domínio novo o jogador começa sem os decks, as preferências, a partida em andamento, as partidas guardadas para rever e os relatos enviados. Quem entra com a conta Google recebe de volta Meus decks e as preferências sincronizadas (as de `SYNCED_PREFS`, `src/conta/prefs.ts`); o resto fica só no domínio antigo. O app instalado (PWA) e a permissão de notificação também são de cada domínio.
+
 ## Relatos dos jogadores
 
 Pelo botão **Enviar sugestão ou erro** (tela inicial e menu da partida), o jogador manda um relato para a ponte (`POST /api/relatos`). Com **Anexar a partida**, vai junto a gravação do que a mesa recebeu e enviou (`src/forge/recording.ts`) e, no servidor, o diário da ponte (decks de todos e retratos do Forge). Desenho completo em `docs/relatos-e-repeticao.md`.
