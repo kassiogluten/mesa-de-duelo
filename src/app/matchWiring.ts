@@ -93,6 +93,8 @@ export function bindMatchClient(client: ForgeClient, w: MatchWiring) {
     if (session.current && (!error || session.screen !== 'game')) recorder.note(error ? 'erro' : 'aviso', text);
     if (session.screen === 'game') table.notice(text, error, detail);
     else lobby.setStatus(text, error);
+    // Resposta recusada pelo servidor: a pergunta continua valendo, então a janela dela volta em vez de sumir.
+    if (error && session.screen === 'game' && client.state?.question) table.render();
     // Voltando a assistir, a sala pode ter acabado: sem estado nesta conexão, volta ao início com o aviso.
     if (error && session.watching && !client.state && session.screen === 'game') { session.watching = null; w.show('lobby'); lobby.setStatus(text, true); return; }
     // Sala fechada ou código errado antes de a partida começar: volta ao formulário.

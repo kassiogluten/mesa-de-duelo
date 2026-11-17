@@ -145,9 +145,11 @@ function pickCountHTML(n: number, min: number, max: number, total: number) {
   return `<p class="q-pick-warn" id="fQPickWarn" role="alert" hidden></p><span class="q-pick-count${ready ? ' ok' : ''}" id="fQPickCount" aria-label="${n} de ${top} escolhidas; escolha ${range}">${n}<small>/ ${top}</small></span>`;
 }
 
-/** Quantas faltam escolher na escolha comum de várias, ou nada se já dá para confirmar (as telas próprias têm a sua regra). */
+/** Quantas faltam escolher na escolha comum de várias ou na ordem (que pede todas), ou nada se já dá para confirmar (as telas próprias têm a sua regra). */
 export function missingPicks(q: FQuestion, picked: number) {
-  if (q.kind !== 'choose' || isLibraryChoice(q) || isPilesSplit(q)) return 0;
+  if (isLibraryChoice(q) || isPilesSplit(q) || isTriggerOrder(q) || isReplacementOrder(q)) return 0;
+  if (q.kind === 'order') return Math.max(0, (q.options?.length ?? 0) - picked);
+  if (q.kind !== 'choose') return 0;
   return Math.max(0, (q.min ?? 1) - picked);
 }
 

@@ -1,4 +1,9 @@
 {
+  "0.212.1": {
+    "Confirmar a ordem das cartas sem ter tocado em todas não trava mais a mesa": [
+      { "img": "0.212.1/aviso-ordem.webp", "legenda": "Confirmar com só uma das duas cartas ordenada: a janela continua aberta, o selo fica vermelho e o aviso diz quantas faltam." }
+    ]
+  },
   "0.212.0": {
     "Mesa de vários jogadores no celular com os botões numa coluna": [
       { "img": "0.212.0/coluna-de-botoes.webp", "legenda": "O menu, o Desfazer, o histórico e o relógio do turno numa coluna à esquerda, com o primeiro oponente começando no topo da tela; ao lado do comandante dele, o dano de comandante só com o número." }

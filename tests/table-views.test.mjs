@@ -90,6 +90,10 @@ test('yes/no questions get one button each, and the minimized bar shows how many
   // Reordenar o cemitério (Fossil Find): a primeira escolhida vai para o fundo, e a dica diz isso.
   const order = { id: 3, kind: 'order', title: 'Escolha a ordem', options: ['A', 'B'] };
   assert.match(questionHTML(view, order, newQuestionDraft(order)), /a primeira fica em cima/);
+  // Ordem pede todas: Confirmar sem ter tocado em todas avisa quantas faltam, em vez de mandar uma resposta que o servidor recusa.
+  assert.equal(missingPicks(order, 0), 2);
+  assert.equal(missingPicks(order, 1), 1);
+  assert.equal(missingPicks(order, 2), 0);
   const graveyard = { ...order, firstAt: 'bottom' };
   assert.match(questionHTML(view, graveyard, newQuestionDraft(graveyard)), /a primeira fica embaixo/);
 });

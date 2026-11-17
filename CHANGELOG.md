@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.212.1] - 2026-11-17
+
+### Corrigido
+
+- **Confirmar a ordem das cartas sem ter tocado em todas não trava mais a mesa.** Na escolha de ordem (como as duas cartas que a Tempestade Cerebral devolve ao grimório), tocar em Confirmar antes de ordenar todas mostrava o erro "Ordene todas as opções" e a janela sumia, sem dar como responder. Agora a janela fica aberta e avisa quantas cartas faltam tocar, lembrando que "Manter ordem" deixa como está. E, se o servidor recusar uma resposta por qualquer outro motivo, a janela da escolha volta em vez de sumir.
+
 ## [0.212.0] - 2026-11-17
 
 ### Mudou

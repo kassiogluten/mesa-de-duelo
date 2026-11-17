@@ -288,7 +288,8 @@ export function createTableQuestion(d: QuestionDeps) {
   function warnMissing(q: FQuestion, missing: number) {
     const warn = root.querySelector<HTMLElement>('#fQPickWarn'), count = root.querySelector<HTMLElement>('#fQPickCount');
     const cards = (q.options ?? []).some(o => typeof o !== 'string' && o.card);
-    const text = `Escolha mais ${missing} ${cards ? (missing === 1 ? 'carta' : 'cartas') : (missing === 1 ? 'opção' : 'opções')}.`;
+    const what = cards ? (missing === 1 ? 'carta' : 'cartas') : (missing === 1 ? 'opção' : 'opções');
+    const text = q.kind === 'order' ? `Toque em mais ${missing} ${what} para definir a ordem, ou use "Manter ordem".` : `Escolha mais ${missing} ${what}.`;
     if (warn) { warn.textContent = text; warn.hidden = false; }
     if (count) { count.classList.remove('warn'); void count.offsetWidth; count.classList.add('warn'); }
   }
