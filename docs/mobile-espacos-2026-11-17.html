@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Estudo de 17/11/2026: como a mesa usa a tela do celular deitado (2 e 4 jogadores, mesa pequena e cheia), com prints, medidas e ideias para avaliar. Os prints ficam em docs/mobile-espacos/, só na máquina (as imagens de docs/ estão no .gitignore). -->
+<title>Espaço da mesa no celular</title>
+<style>
+/* Layout: coluna de leitura; cada mesa e cada ideia é um bloco com o print na largura toda (ou antes e depois lado a lado). */
+:root {
+  --bg: #f6f4ef; --panel: #ffffff; --ink: #1b2130; --muted: #5d6576; --line: #dcd8cf; --gold: #a8730f;
+  --bad: #b5452f; --bad-bg: #f7e1db; --good: #2f7a52; --good-bg: #dcefe3; --warn-bg: #f6e8c9;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #0b1020; --panel: #121a2e; --ink: #e7ebf3; --muted: #9aa5bb; --line: #26304a; --gold: #f2b54c;
+  --bad: #ff8d75; --bad-bg: #3a1d19; --good: #79d29f; --good-bg: #15301f; --warn-bg: #352a12; color-scheme: dark } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+main { max-width: 1120px; margin: 0 auto; padding: 40px 16px 72px; display: grid; gap: 40px; }
+.prose { max-width: 70ch; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(26px, 4.2vw, 38px); }
+h2 { font-size: 22px; margin-bottom: 8px; }
+h3 { font-size: 17px; margin-bottom: 6px; }
+p { margin: 0 0 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.muted { color: var(--muted); }
+figure { margin: 0; }
+figure img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.grid2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.tag.bad { color: var(--bad); background: var(--bad-bg); } .tag.good { color: var(--good); background: var(--good-bg); } .tag.warn { color: var(--gold); background: var(--warn-bg); }
+.bands { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+.bands span { display: grid; place-items: center; white-space: nowrap; overflow: hidden; border-right: 1px solid var(--bg); color: #10141f; }
+.b-top { background: #e2a04a; } .b-opp { background: #8fb3e0; } .b-me { background: #9fd3b0; } .b-hand { background: #cdb7e6; }
+ul { margin: 0; padding-left: 20px; } li { margin-bottom: 4px; }
+.gain { font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<header class="prose">
+  <p class="eyebrow">Estudo · 17/11/2026</p>
+  <h1>Espaço da mesa no celular deitado</h1>
+  <p>Na mesa cheia de 4 jogadores, mais da metade das suas permanentes fica fora da tela, enquanto a faixa de cima tem dois terços vazios. Três mudanças só de celular resolvem isso; as três foram montadas como protótipo e estão abaixo, com antes e depois.</p>
+  <p class="muted">Prints em 844×390 (celular deitado, em tela cheia), tirados das páginas de teste da mesa. As cartas montadas só para encher a mesa não têm arte e aparecem em verde ou cinza; o que importa aqui é o tamanho e a posição. Medidas em px de CSS.</p>
+</header>
+
+<section class="card">
+  <h2>O que foi feito depois deste estudo</h2>
+  <ul class="prose">
+    <li><b>Ideias 1 a 5: feitas</b> em 17/11/2026 (<code>src/ui/phoneTable.css</code> e <code>fitFieldLines</code> em <code>src/ui/tableLayout.ts</code>; novidade em <code>novidades-pendentes/celular-deitado</code>). As ideias 2, 3 e 4 viraram uma regra só: cada campo fica numa linha enquanto couber e em duas fileiras depois, também no Commander de dois.</li>
+    <li><b>Ideia 6: descartada.</b> No toque a trilha de fases tem 44 px de altura, e os botões de ação continuam na altura da fileira de baixo mesmo numa linha só; o ganho medido seria nenhum.</li>
+    <li><b>Medido com toque em 740×340, 800×360, 844×390, 667×375 e 932×430.</b> Os prints e as medidas abaixo são de antes da mudança.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>Como a altura era dividida</h2>
+  <div>
+    <p><b>2 jogadores</b> (390 px)</p>
+    <div class="bands"><span class="b-top" style="flex:58">topo 58</span><span class="b-opp" style="flex:124">oponente 124</span><span class="b-me" style="flex:124">meu campo 124</span><span class="b-hand" style="flex:82">mão e botões 82</span></div>
+  </div>
+  <div>
+    <p><b>4 jogadores</b> (390 px)</p>
+    <div class="bands"><span class="b-top" style="flex:44">barra 44</span><span class="b-opp" style="flex:146">oponentes 146 (cabeçalho 41 + cartas 105)</span><span class="b-me" style="flex:117">meu campo 117</span><span class="b-hand" style="flex:82">mão e botões 82</span></div>
+  </div>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Mesa</th><th>Tela coberta por cartas</th><th>Criatura</th><th>Mão</th><th>Fora da tela</th></tr></thead>
+    <tbody>
+      <tr><td>2 jogadores, pequena</td><td class="num">11%</td><td class="num">45×62</td><td class="num">62×87</td><td>nada</td></tr>
+      <tr><td>2 jogadores, cheia</td><td class="num">29%</td><td class="num">45×62</td><td class="num">62×87</td><td>nada</td></tr>
+      <tr><td>4 jogadores, pequena</td><td class="num">26%</td><td class="num">minha 66×92, oponentes 60×84</td><td class="num">76×106</td><td>nada</td></tr>
+      <tr><td>4 jogadores, cheia</td><td class="num">33%</td><td class="num">minha 39×55, oponentes 36×50</td><td class="num">76×106</td><td><span class="tag bad">muita coisa</span> minhas: 9 de 15 criaturas e 10 de 16 das outras permanentes; oponentes: 20 de 32 criaturas e 49 de 55 das outras</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="muted">"Fora da tela" conta cada carta, inclusive cada ficha de um monte, que só aparece rolando a fileira para o lado.</p>
+</section>
+
+<section class="card">
+  <h2>Os quatro prints de hoje</h2>
+  <div class="grid2">
+    <figure><img src="mobile-espacos/duel-small.webp" alt="Mesa pequena de 2 jogadores no celular deitado"><figcaption><b>2 jogadores, pequena.</b> Só 11% da tela é carta. As cartas ficam em 45×62 mesmo com a mesa vazia, porque terrenos e criaturas ocupam duas fileiras.</figcaption></figure>
+    <figure><img src="mobile-espacos/duel-full.webp" alt="Mesa cheia de 2 jogadores no celular deitado"><figcaption><b>2 jogadores, cheia.</b> Tudo cabe, sem rolar. É a mesa que melhor usa a tela hoje.</figcaption></figure>
+    <figure><img src="mobile-espacos/cmd-small.webp" alt="Mesa pequena de 4 jogadores no celular deitado"><figcaption><b>4 jogadores, pequena.</b> A barra de cima ocupa 44 px de altura na largura toda, mas só 289 dos 844 px têm alguma coisa.</figcaption></figure>
+    <figure><img src="mobile-espacos/cmd-full.webp" alt="Mesa cheia de 4 jogadores no celular deitado"><figcaption><b>4 jogadores, cheia.</b> Minhas criaturas e as outras permanentes dividem uma fileira só, cada metade rolando. Cada oponente mostra 4 criaturas e os terrenos atrás de uma seta.</figcaption></figure>
+  </div>
+</section>
+
+<section class="card">
+  <p class="eyebrow">Ideia 1 · 4 jogadores</p>
+  <h2>Botões da mesa numa coluna à esquerda</h2>
+  <p class="prose">Menu, desfazer, histórico e o relógio do turno descem para uma coluna de 40 px na borda esquerda, acima da zona de comando, e os oponentes sobem para a faixa de cima. <span class="gain">Ganho: 44 px de altura (11% da tela) para os campos, ao custo de 40 px de largura dos oponentes (5%).</span> Na mesa pequena as cartas crescem com a altura nova: oponentes de 60×84 para 75×104, a minha de 66×92 para 77×108.</p>
+  <div class="grid2">
+    <figure><img src="mobile-espacos/cmd-small.webp" alt="Antes: barra de botões em cima"><figcaption>Antes</figcaption></figure>
+    <figure><img src="mobile-espacos/proto-cmd-small.webp" alt="Depois: botões em coluna à esquerda e cartas maiores"><figcaption>Depois (protótipo)</figcaption></figure>
+  </div>
+  <p class="muted">Custo: o botão de tela cheia não cabe na coluna junto com o relógio; no protótipo ele some e passaria a ser um item do menu ☰.</p>
+</section>
+
+<section class="card">
+  <p class="eyebrow">Ideias 2 e 3 · 4 jogadores, mesa cheia</p>
+  <h2>Duas fileiras quando uma não basta</h2>
+  <p class="prose"><b>Ideia 2, meu campo:</b> quando as cartas não cabem numa fileira, as criaturas ficam com a largura toda e os terrenos e as outras permanentes vão para uma fileira menor embaixo, como no duelo. <span class="gain">Minhas cartas fora da tela: de 19 para nenhuma, e a criatura ainda cresce de 39×55 para 42×58.</span></p>
+  <p class="prose"><b>Ideia 3, oponentes:</b> com a altura da ideia 1, cada oponente também ganha duas fileiras, terrenos em montes em cima e criaturas embaixo na largura toda da coluna. <span class="gain">Criaturas dos oponentes fora da tela: de 20 para 14 (de 32); outras permanentes: de 49 para 33 (de 55).</span></p>
+  <div class="grid2">
+    <figure><img src="mobile-espacos/cmd-full.webp" alt="Antes: mesa cheia de 4 com fileiras rolando"><figcaption>Antes</figcaption></figure>
+    <figure><img src="mobile-espacos/proto-cmd-full.webp" alt="Depois: duas fileiras para mim e para cada oponente"><figcaption>Depois (protótipo, ideias 1, 2 e 3 juntas)</figcaption></figure>
+  </div>
+  <p class="muted">O protótipo também baixa a mão para o tamanho do duelo (62×87 em vez de 76×106) quando a mesa está cheia, para a fileira de baixo não ficar atrás dela. As criaturas dos oponentes ficam um pouco menores (34×48 em vez de 36×50). Só foi medido com a ideia 1 junto; sem ela, a ideia 2 teria 117 px de altura em vez de 136.</p>
+</section>
+
+<section class="card">
+  <p class="eyebrow">Ideia 4 · 2 jogadores, mesa pequena</p>
+  <h2>Uma fileira só enquanto couber</h2>
+  <p class="prose">Enquanto as permanentes de um jogador cabem numa linha, os terrenos ficam ao lado das criaturas e tudo cresce até a altura do campo. Passou disso, volta às duas fileiras de hoje. <span class="gain">Criatura de 45×62 para 69×96 (2,4 vezes a área); terreno de 26×36 para 50×70.</span></p>
+  <div class="grid2">
+    <figure><img src="mobile-espacos/duel-small.webp" alt="Antes: duas fileiras com cartas pequenas"><figcaption>Antes</figcaption></figure>
+    <figure><img src="mobile-espacos/proto-duel-small.webp" alt="Depois: uma fileira com cartas maiores"><figcaption>Depois (protótipo)</figcaption></figure>
+  </div>
+  <p class="muted">Precisa de uma regra na mesa para decidir quando cabe (parecida com a que já faz a fileira sozinha crescer); o protótipo fixa o tamanho à mão.</p>
+</section>
+
+<section class="card">
+  <h2>Ideias menores, sem protótipo</h2>
+  <ul class="prose">
+    <li><b>Ideia 5, cabeçalho dos oponentes mais baixo:</b> hoje tem 41 px por causa do "Dano 8/21" em duas linhas; com o dano como selo no retrato do comandante cairia para uns 30 px. Ganho estimado de 10 px para as cartas dos oponentes.</li>
+    <li><b>Ideia 6, botões de ação numa linha:</b> "Fim de turno" vira um botão só com o ícone ao lado do botão principal. O bloco do canto direito (148×82 mais a trilha de fases) perderia uns 36 px de altura, e a fileira de terrenos do duelo, hoje cortada em 674 px por causa dele, poderia ir até 828. Não medido.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>O que não muda e o que falta conferir</h2>
+  <ul class="prose">
+    <li><b>Computador e tablet não mudam.</b> Tudo entraria nos blocos de CSS que já valem só para tela baixa ou estreita (altura até 500 px ou largura até 760 px), os mesmos que hoje definem a mesa do celular.</li>
+    <li><b>Os protótipos são CSS aplicado por cima da página de teste</b>, sem nenhuma mudança no código. Têm arestas: no de 4 jogadores cheio, o selo "×2" de um monte encosta no cabeçalho do oponente.</li>
+    <li><b>Não conferido:</b> combate, pilha aberta, janelas de decisão, prateleira do exílio, oponente oculto, mesa de 3 jogadores, celular menor (667×375) e o navegador sem tela cheia (por volta de 340 px de altura).</li>
+  </ul>
+  <p class="prose"><b>Ordem sugerida:</b> ideias 1 e 2 juntas (resolvem as cartas escondidas na mesa cheia de 4), depois a 4 (o maior ganho de tamanho na mesa mais comum), depois a 3. As ideias 5 e 6 são ajustes que cabem em qualquer uma das outras.</p>
+</section>
+</main>
+</body>
+</html>

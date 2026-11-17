@@ -58,12 +58,13 @@ import './handPeek.css';
 import './tableHeaders.css';
 import './combatPose.css';
 import './dragPanel.css';
+import './phoneTable.css';
 import { installWheelSideways } from './wheelSideways';
 import { newMatchState } from './tableState';
 import { tableShellHTML } from './tableShell';
 import { eventDescription as describeEvent, frameCard, targetsDescription as describeTargets, type EventView } from './eventText';
 import { createCardFaces, ptOf, label } from './cardFaces';
-import { fitLoneRows, fitRowWidths, layoutExileShelf, layoutCardDecision, layoutCounters, layoutPortraitCounters, layoutStack, syncSeatScroll } from './tableLayout';
+import { fitFields, layoutExileShelf, layoutCardDecision, layoutCounters, layoutPortraitCounters, layoutStack, syncSeatScroll } from './tableLayout';
 import { drawCombatArrows } from './tableArrows';
 import { applyCombatPose } from './combatPose';
 import { exileShelfHTML } from './zoneView';
@@ -311,7 +312,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   window.addEventListener('resize', () => {
     const s = shownState();
     drag.sync(); hand.placeControls();
-    if (s?.type === 'state' && !root.hidden) { fitLoneRows(root); fitRowWidths(root); layoutCounters(root); layoutPortraitCounters(root); layoutExileShelf(root); layoutCardDecision(root); layoutStack(root); syncSeatScroll(root); drawArrows(s); }
+    if (s?.type === 'state' && !root.hidden) { fitFields(root); layoutCounters(root); layoutPortraitCounters(root); layoutExileShelf(root); layoutCardDecision(root); layoutStack(root); syncSeatScroll(root); drawArrows(s); }
   });
 
   /** Celular: a mesa é estreita e os terrenos virados, que ocupam a largura de uma carta deitada, vão para um monte só. */

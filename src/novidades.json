@@ -1,4 +1,20 @@
 {
+  "0.212.0": {
+    "Mesa de vários jogadores no celular com os botões numa coluna": [
+      { "img": "0.212.0/coluna-de-botoes.webp", "legenda": "O menu, o Desfazer, o histórico e o relógio do turno numa coluna à esquerda, com o primeiro oponente começando no topo da tela; ao lado do comandante dele, o dano de comandante só com o número." }
+    ],
+    "Campo numa linha só ou em duas fileiras, conforme o que cabe": [
+      { "img": "0.212.0/uma-linha.webp", "legenda": "Mesa pequena no duelo: os terrenos ao lado das criaturas e as cartas da altura do campo." },
+      { "img": "0.212.0/duas-fileiras.webp", "legenda": "Seu campo cheio com vários jogadores: as criaturas na largura toda e, embaixo, os artefatos, os encantamentos e os terrenos." },
+      { "img": "0.212.0/oponente-duas-fileiras.webp", "legenda": "O campo de um oponente em duas fileiras: artefatos, encantamentos e terrenos em cima, criaturas embaixo." }
+    ],
+    "Selos de número sem borda no celular": [
+      { "img": "0.212.0/selos-sem-borda.webp", "legenda": "A taxa do comandante (+2), a contagem do grimório e do cemitério e o ×N dos montes de terrenos de um oponente: só o disco escuro e o número." }
+    ],
+    "Pilhas do oponente à vista no Commander de dois pelo celular": [
+      { "img": "0.212.0/commander-de-dois.webp", "legenda": "O grimório, o cemitério e o comandante do oponente no canto direito do topo, longe do histórico e do relógio." }
+    ]
+  },
   "0.211.0": {
     "Cabeçalho mais enxuto no celular": [
       { "img": "0.211.0/cabecalho-inicio.webp", "legenda": "Tela inicial no celular: o nome da mesa com Novidades, o menu ⋯ e a conta na primeira linha, e as três abas na segunda." },

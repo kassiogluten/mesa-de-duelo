@@ -1,0 +1,109 @@
+/*
+ * A mesa no celular deitado (tela baixa), para as cartas ficarem com a tela: com vários jogadores, os botões do topo viram
+ * uma coluna à esquerda e os oponentes sobem para a faixa de cima; cada campo fica numa linha só enquanto couber e passa a
+ * duas fileiras quando não cabe (tableLayout.ts escolhe e marca o campo com .one-line ou .two-lines). Nada aqui vale fora
+ * do celular deitado.
+ */
+
+/* Tela cheia pelo menu: só aparece onde o botão da barra do topo sai (vários jogadores, abaixo). */
+.forge .game-menu .btn.game-menu-fullscreen { display: none; }
+.game-menu-fullscreen .fs-exit, :fullscreen .game-menu-fullscreen .fs-enter { display: none; }
+:fullscreen .game-menu-fullscreen .fs-exit { display: inline; }
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* ---------- Vários jogadores: os botões numa coluna, os oponentes na faixa de cima ---------- */
+  .forge.multiplayer { --rail-left: max(4px, env(safe-area-inset-left, 0px)); --rail-w: 46px; --seats-h: calc((100vh - 83px) * .5556 - 3px); --mine-h: calc((100vh - 83px) * .4444); grid-template-rows: 0 minmax(0, 1.25fr) 1px minmax(0, 1fr) 82px; }
+  .forge.multiplayer .topbar { top: max(4px, env(safe-area-inset-top, 0px)); left: var(--rail-left); width: var(--rail-w); flex-direction: column; align-items: stretch; gap: 3px; }
+  .forge.multiplayer .topbar .icon-btn { width: 100%; min-width: 0; height: clamp(32px, 10vh, 40px); min-height: 0; padding: 0; justify-content: center; }
+  /* A coluna não tem altura para os quatro botões e o relógio: a tela cheia vai para o menu. */
+  .forge.multiplayer .topbar .fs-btn { display: none; }
+  .forge.multiplayer .game-menu .btn.game-menu-fullscreen { display: flex; }
+  /* O relógio em duas linhas: de quem é a vez e o turno em cima, o tempo embaixo. */
+  .forge.multiplayer .topbar .turn-info { flex-wrap: wrap; justify-content: center; gap: 3px 2px; padding: 3px 1px; border-radius: 12px; }
+  /* O menu abre ao lado da coluna, não por cima dela. */
+  .forge.multiplayer .game-menu { top: max(4px, env(safe-area-inset-top, 0px)); left: calc(var(--rail-left) + var(--rail-w) + 6px); max-height: calc(100dvh - max(4px, env(safe-area-inset-top, 0px)) - max(8px, env(safe-area-inset-bottom, 0px))); }
+  .forge.multiplayer .commander-opponents { padding-left: calc(var(--rail-left) + var(--rail-w) + 6px); padding-top: max(3px, env(safe-area-inset-top, 0px)); }
+  /* A faixa de pular a vez não tem mais a linha livre do topo: fica sobre a linha que divide a mesa, sem cobrir a vida de ninguém. */
+  .forge.multiplayer .skip-bar { top: calc(var(--seats-h) - 18px); left: 50%; right: auto; transform: translateX(-50%); width: min(480px, calc(100vw - 230px)); }
+  /* A pilha recolhida também perdeu a linha do topo: vai para o canto do seu campo acima dos botões de ação, que as fileiras deixam livre. */
+  .forge.multiplayer .stack-panel.minimized { top: calc(var(--seats-h) + 8px); right: 8px; }
+  /* O selo de FPS e ping desce para o canto de baixo da faixa dos oponentes, do lado da coluna, longe das pilhas e dos botões de cada um. */
+  .forge.multiplayer .perf-meter { top: calc(var(--seats-h) - 22px); right: auto; left: calc(var(--rail-left) + var(--rail-w) + 8px); }
+  /* A coluna termina onde começa a sua zona de comando, que fica sem o título (a carta já diz). */
+  .forge.multiplayer .own-command .command-heading { display: none; }
+
+  /* Cabeçalho de cada oponente numa linha só: o dano de comandante vira só o número, ao lado do comandante dele. */
+  .forge.multiplayer .seat-heading { min-height: 32px; }
+  .forge.multiplayer .seat-heading .commander-damage { padding: 4px 2px; font-size: 0; }
+  .forge.multiplayer .seat-heading .commander-damage b { display: inline; font-size: 11px; }
+
+  /* Selos de número (contagem das pilhas, taxa do comandante, ×N dos montes): sem a borda, que pesava ao lado de cartas pequenas, com uma sombra leve que os separa da carta, e um pouco menores. */
+  .forge .pile > span, .forge .command-tax, .forge .stack-n { border: 0; box-shadow: 0 1px 5px #000c; }
+  .forge .pile > span, .forge:not(.multiplayer) .piles .pile > span, .forge.multiplayer .piles.me .pile > span, .forge.multiplayer .seat-zones .pile > span { min-width: 15px; padding: 0 3px; font-size: 9px; line-height: 14px; }
+  .forge .command-tax, .forge.multiplayer .seat-heading .seat-command .command-tax { padding: 0 4px; font-size: 9px; line-height: 14px; }
+  .forge .stack-n { min-width: 24px; min-height: 22px; padding: 0 4px; font-size: 10px; top: -12px; }
+  /* O toque continua com a área de antes, maior que o selo. */
+  .forge .stack-n::after { content: ''; position: absolute; inset: -4px; }
+  .forge .attack-group > .stack-n { top: calc(50% + var(--atk-dy, 0px) - var(--atk-half) - 11px); }
+
+  /* Numa linha só as cartas já têm a altura do campo: a fileira sozinha não passa disso. */
+  .forge .field.one-line { --lone-max: var(--ch); }
+  /*
+   * Seu campo fica no meio da faixa entre o topo dele e o topo da mão, e não da caixa do campo: quando as cartas encolhem
+   * para caber, a sobra se divide em cima e embaixo. A mão aparece a 68 px da borda da tela. Com vários jogadores ela cobre
+   * os últimos 19 px do campo (a faixa de baixo tem 82 px); no duelo começa 21vh − 68 px abaixo dele, e no Commander de dois, 14 px.
+   * Duas fileiras quase não têm sobra: descem só metade disso, para não encostar na mão numa tela mais baixa. As duas fileiras
+   * de vários jogadores já ficam rente à mão e não mudam.
+   */
+  .forge.multiplayer > .field.me.one-line { align-items: center; padding-bottom: 19px; }
+  .forge:not(.multiplayer) > .field.me.one-line { align-items: center; padding-top: max(0px, calc(21vh - 68px)); }
+  .forge:not(.multiplayer) > .field.me.two-lines { padding-top: max(0px, calc(10.5vh - 34px)); }
+  .forge.commander-game:not(.multiplayer) > .field.me.one-line { padding-top: 14px; }
+  .forge.commander-game:not(.multiplayer) > .field.me.two-lines { padding-top: 7px; }
+
+  /* ---------- Oponentes: uma linha enquanto couber, duas fileiras depois ---------- */
+  .forge.multiplayer .table-seat > .field { --ch: min(var(--line-h, 999px), clamp(52px, calc(var(--seats-h) - 50px), 104px)); }
+  .forge.multiplayer .table-seat > .field.one-line { justify-content: safe center; }
+  .forge.multiplayer .table-seat > .field.one-line .seat-row { width: auto; flex: 0 1 auto; }
+  .forge.multiplayer .table-seat > .field.two-lines { flex-direction: column; align-items: stretch; justify-content: center; --ch: clamp(46px, calc((var(--seats-h) - 54px) * .6), 84px); --lch: calc(var(--ch) * .62); }
+  .forge.multiplayer .table-seat > .field.two-lines .seat-row { width: 100%; flex: 0 0 auto; }
+  .forge.multiplayer .table-seat > .field.two-lines .row { min-height: 0; padding-block: 4px; }
+  /* Com duas fileiras o botão de exibição sobe para o canto da fileira de cima, que termina antes dele. */
+  .forge.multiplayer .table-seat:not(.collapsed):has(> .field.two-lines) .seat-view { bottom: auto; top: 36px; }
+  .forge.multiplayer .table-seat > .field.two-lines .lands-lane { width: calc(100% - 42px); align-self: flex-start; }
+  /* A fileira de cima dos oponentes serve mais para contar: espaços justos, e ela encolhe mais que as outras antes de rolar (fitRowWidths). */
+  .forge.multiplayer .table-seat > .field.two-lines .row.lands, .forge.multiplayer .table-seat > .field.two-lines .row.lands .perm-group { gap: 5px; }
+  .forge.multiplayer .table-seat > .field.two-lines .row.lands .perm-group + .perm-group { margin-left: 3px; padding-left: 7px; }
+  /* O ×N dos montes dela é menor e quase não sobe: logo acima ficam a vida e as pilhas do oponente. */
+  .forge.multiplayer .table-seat > .field.two-lines .row.lands .stack-n { top: -5px; min-width: 20px; min-height: 18px; font-size: 9px; }
+
+  /* ---------- Seu campo com vários jogadores ---------- */
+  .forge.multiplayer > .field.me { --ch: min(var(--line-h, 999px), clamp(56px, calc(var(--mine-h) - 32px), 110px)); }
+  .forge.multiplayer:not([data-opening]) > .field.me.one-line > .row.lands { width: auto; max-width: none; }
+  .forge.multiplayer > .field.me.two-lines { flex-direction: column; align-items: stretch; justify-content: flex-start; --ch: clamp(46px, calc((var(--mine-h) - 42px) * .6), 84px); --lch: calc(var(--ch) * .62); }
+  .forge.multiplayer > .field.me.two-lines .row { width: 100%; max-width: none; flex: 0 0 auto; min-height: 0; padding-block: 4px; }
+  /* O ×N dos montes da fileira de cima fica dentro do seu campo, sem entrar por baixo dos oponentes. */
+  .forge.multiplayer > .field.me.two-lines .row.creatures { padding-top: 12px; }
+  .forge.multiplayer > .field.me.two-lines .row.lands .stack-n { top: -8px; }
+  .forge.multiplayer:not([data-opening]) > .field.me.two-lines > .row.lands { width: calc(100% - var(--action-w) - 6px); max-width: none; min-height: 0; }
+
+  /* ---------- Duelo: terrenos ao lado das criaturas enquanto couber ---------- */
+  .forge:not(.multiplayer):not(.commander-game) > .field.one-line { flex-direction: row; align-items: center; --ch: min(var(--line-h, 999px), clamp(62px, calc((79vh - 60px) / 2 - 28px), 110px)); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .72); --lcw: calc(var(--lch) * .716); }
+  /* As criaturas dos dois lados ficam na mesma ponta da mesa, uma de frente para a outra. */
+  .forge:not(.multiplayer) > .field.opp.one-line { flex-direction: row-reverse; }
+  .forge:not(.multiplayer):not(.commander-game) > .field.one-line > .row { width: auto; flex: 0 1 auto; }
+  .forge:not(.multiplayer):not(.commander-game):not([data-opening]) > .field.me.one-line > .row.lands { width: auto; padding-left: 8px; }
+  /* Duas fileiras: do tamanho de sempre, e menores numa tela mais baixa, para a de baixo não ficar atrás da mão (87 px de carta numa faixa de 21vh). */
+  .forge:not(.multiplayer):not(.commander-game) > .field.two-lines { --ch: clamp(50px, calc((60.5vh - 131px) * .63), 16vh); --cw: calc(var(--ch) * .716); --lch: calc(var(--ch) * .58); --lcw: calc(var(--lch) * .716); }
+
+  /* ---------- Commander de dois: duas fileiras quando a linha não basta ---------- */
+  /* As pilhas e o comandante do oponente vão para o canto direito do topo, como no duelo: à esquerda ficavam por baixo do histórico e do relógio. */
+  .forge.commander-game:not(.multiplayer) .piles.opp { left: auto; right: max(10px, env(safe-area-inset-right, 0px)); }
+  .forge.commander-game:not(.multiplayer) > .field { --ch: min(var(--line-h, 999px), clamp(60px, calc((100vh - 156px) / 2 - 24px), 96px)); }
+  .forge.commander-game:not(.multiplayer) > .field.one-line > .row.lands { max-width: none; }
+  .forge.commander-game:not(.multiplayer):not([data-opening]) > .field.me.one-line > .row.lands { width: auto; }
+  .forge.commander-game:not(.multiplayer) > .field.two-lines { flex-direction: column; align-items: stretch; --ch: clamp(48px, calc(((100vh - 156px) / 2 - 30px) * .62), 96px); --lch: calc(var(--ch) * .62); }
+  .forge.commander-game:not(.multiplayer) > .field.two-lines > .row { width: 100%; max-width: none; flex: 0 0 auto; min-height: 0; padding-block: 5px 4px; }
+  .forge.commander-game:not(.multiplayer):not([data-opening]) > .field.me.two-lines > .row.lands { width: calc(100% - var(--action-w) - 6px); max-width: none; }
+  .forge.commander-game:not(.multiplayer) > .field.me.two-lines .row.lands .stack-n { top: -8px; }
+}

@@ -156,6 +156,7 @@ export function createUiActions(d: UiActionDeps) {
     'errors-clear': () => { d.errors.clear(); },
     'errors-copy': () => { d.errors.copy(); },
     'fullscreen': () => { void toggleFullscreen(); },
+    'menu-fullscreen': () => { d.setMenu(false); void toggleFullscreen(); },
     'undo': () => { const client = d.client(), state = client?.state; if (state && !undoButtonState(state).disabled) client!.send({ type: 'undo-request' }); },
     'watch-player': (t) => {
       const client = d.client();

@@ -8,6 +8,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.212.0] - 2026-11-17
+
+### Mudou
+
+- **Mesa de vários jogadores no celular com os botões numa coluna.** No celular deitado, o menu, o Desfazer, o histórico e o relógio do turno ficam numa coluna à esquerda, e os oponentes passam a ocupar a tela desde o topo: sobra mais altura para as cartas de todo mundo. O cabeçalho de cada oponente ficou numa linha só, com o dano de comandante como o número ao lado do comandante dele. A tela cheia, que não cabe na coluna, virou um item do menu ☰.
+- **Campo numa linha só ou em duas fileiras, conforme o que cabe.** No celular deitado, cada campo (o seu e o de cada oponente) fica numa linha só enquanto couber, com os terrenos ao lado das criaturas e as cartas da altura do campo, bem maiores na mesa pequena. Quando a mesa enche, o campo passa a duas fileiras, com as criaturas na largura toda e os terrenos e as outras permanentes na outra, em vez de esconder cartas para o lado. O seu campo fica no meio do espaço entre o topo dele e a mão: quando as cartas encolhem para caber, a sobra se divide em cima e embaixo, em vez de ficar toda logo acima da mão. Vale no duelo, no Commander de dois e com vários jogadores; numa tela mais baixa, a fileira de baixo do duelo também não fica mais atrás da mão.
+- **Selos de número sem borda no celular.** A contagem das pilhas, a taxa do comandante e o ×N dos montes perderam o anel em volta e ficaram um pouco menores: só o disco escuro e o número, com uma sombra leve, pesando menos ao lado das cartas.
+
+### Corrigido
+
+- **Pilhas do oponente à vista no Commander de dois pelo celular.** O grimório, o cemitério e o comandante do oponente ficavam por baixo do botão do histórico e do relógio do turno; no celular deitado eles foram para o canto direito do topo, como no duelo.
+
 ## [0.211.0] - 2026-11-17
 
 ### Mudou

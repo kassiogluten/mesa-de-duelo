@@ -9,3 +9,10 @@ __pycache__/
 
 # Imagens geradas: ficam na branch imagegen, fora da main.
 output/imagegen/
+
+# Fotos e prints de relatórios e estudos em docs/ ficam só na máquina; os das novidades vão em novidades-pendentes/ e public/novidades/.
+docs/**/*.png
+docs/**/*.webp
+docs/**/*.jpg
+docs/**/*.jpeg
+docs/**/*.setup.js

@@ -1,11 +1,68 @@
-// Medidas da mesa depois de cada desenho: fileiras que encolhem para caber, a fileira sozinha que cresce, a mão que se
+// Medidas da mesa depois de cada desenho: o campo numa linha ou em duas fileiras no celular deitado, fileiras que encolhem para caber, a fileira sozinha que cresce, a mão que se
 // encaixa com a prateleira do exílio, a caixa de decisão da mão, os selos que viram um só, os seus selos em volta do retrato, a pilha que não cobre os botões
 // e as setas de rolar dos assentos. Tudo lê o DOM já desenhado; nada aqui muda o que a mesa mostra, só onde e de que tamanho.
 
 const q = (root: HTMLElement, sel: string) => root.querySelector(sel) as HTMLElement;
 
+/** Celular deitado: a mesma condição das regras de CSS que usam .one-line e .two-lines (phoneTable.css). */
+const lowLandscape = matchMedia('(orientation: landscape) and (max-height: 500px)');
+const px = (value: string) => parseFloat(value) || 0;
+
+/**
+ * Largura que as cartas de uma fileira ocupam, caiba ou não na largura atual. Pela posição delas e não pelo scrollWidth,
+ * que as cartas em movimento (chegando de outro lugar da mesa) esticam por um instante.
+ */
+function rowExtent(row: HTMLElement) {
+  const first = row.firstElementChild as HTMLElement | null, last = row.lastElementChild as HTMLElement | null;
+  return first && last ? last.offsetLeft + last.offsetWidth - first.offsetLeft : 0;
+}
+/** O que a fileira pede do campo: as cartas, o respiro e as margens dela. */
+function rowNeed(row: HTMLElement) {
+  const style = getComputedStyle(row);
+  return rowExtent(row) + px(style.paddingLeft) + px(style.paddingRight) + px(style.marginLeft) + px(style.marginRight);
+}
+/**
+ * Celular deitado: cada campo fica numa linha só (terrenos ao lado das criaturas, cartas da altura do campo) enquanto
+ * couber, e passa a duas fileiras (criaturas na largura toda, terrenos e o resto na outra) quando não cabe mais.
+ * "Cabe" aceita encolher as cartas da linha até o tamanho que as duas fileiras já dariam às criaturas.
+ * Fora do celular deitado nenhum campo ganha classe: vale o arranjo do CSS de sempre.
+ */
+function fitFieldLines(root: HTMLElement) {
+  for (const field of root.querySelectorAll<HTMLElement>('.forge > .field, .table-seat > .field')) {
+    field.classList.remove('one-line', 'two-lines');
+    field.style.removeProperty('--line-h');
+    if (!lowLandscape.matches || !field.clientHeight) continue;
+    field.classList.add('one-line');
+    const rows = [...field.querySelectorAll<HTMLElement>('.row')].filter(row => row.childElementCount > 0);
+    // Com uma fileira só não há o que dividir: ela cresce e encolhe pelas regras de sempre.
+    if (rows.length < 2) continue;
+    // As medidas partem do tamanho cheio: sem o ajuste de largura nem a fileira sozinha do desenho anterior, que esconderia a outra.
+    for (const row of rows) { row.style.removeProperty('--ch'); row.style.removeProperty('--cw'); row.classList.remove('lone'); }
+    const slot = field.querySelector<HTMLElement>('.row.creatures .slot');
+    if (!slot) continue;
+    // O piso é a altura que as criaturas teriam nas duas fileiras: abaixo dela, a linha só já não compensa.
+    field.classList.replace('one-line', 'two-lines');
+    const min = slot.offsetHeight;
+    field.classList.replace('two-lines', 'one-line');
+    const style = getComputedStyle(field);
+    const room = field.clientWidth - px(style.paddingLeft) - px(style.paddingRight);
+    const need = () => rows.reduce((sum, row) => sum + rowNeed(row), 0);
+    let h = slot.offsetHeight;
+    let fits = need() <= room + 1;
+    // Os espaços entre as cartas não encolhem junto: algumas medidas acertam o tamanho.
+    for (let i = 0; i < 5 && !fits && h > min; i++) {
+      h = Math.max(min, Math.min(h - 1, Math.floor(h * room / need())));
+      field.style.setProperty('--line-h', `${h}px`);
+      fits = need() <= room + 1;
+    }
+    if (fits) continue;
+    field.style.removeProperty('--line-h');
+    field.classList.replace('one-line', 'two-lines');
+  }
+}
+
 /** Com uma das fileiras do campo vazia, a outra ganha a altura livre do campo (--lone-h); o CSS limita o tamanho. */
-export function fitLoneRows(root: HTMLElement) {
+function fitLoneRows(root: HTMLElement) {
   root.querySelectorAll<HTMLElement>('.field').forEach(field => {
     const rows = [...field.querySelectorAll<HTMLElement>(':scope > .row')];
     const filled = rows.filter(row => row.childElementCount > 0);
@@ -15,8 +72,8 @@ export function fitLoneRows(root: HTMLElement) {
       if (row !== lone) row.style.removeProperty('--lone-h');
     }
     if (!lone) return;
-    const px = (style: CSSStyleDeclaration, ...props: ('paddingTop' | 'paddingBottom')[]) => props.reduce((sum, prop) => sum + (parseFloat(style[prop]) || 0), 0);
-    const free = field.clientHeight - px(getComputedStyle(field), 'paddingTop', 'paddingBottom') - px(getComputedStyle(lone), 'paddingTop', 'paddingBottom');
+    const pad = (style: CSSStyleDeclaration) => px(style.paddingTop) + px(style.paddingBottom);
+    const free = field.clientHeight - pad(getComputedStyle(field)) - pad(getComputedStyle(lone));
     lone.style.setProperty('--lone-h', `${Math.max(0, Math.floor(free))}px`);
   });
 }
@@ -25,18 +82,22 @@ export function fitLoneRows(root: HTMLElement) {
  * (e nunca abaixo de 48px, que já é o tamanho do celular); passando disso, a fileira rola para o lado como antes.
  * O tamanho cheio é o do CSS (e da fileira sozinha no campo): por isso cada desenho começa sem o ajuste anterior.
  */
-export function fitRowWidths(root: HTMLElement) {
+function fitRowWidths(root: HTMLElement) {
   const rows = [...root.querySelectorAll<HTMLElement>('.field .row.creatures, .field .row.lands')];
   for (const row of rows) { row.style.removeProperty('--ch'); row.style.removeProperty('--cw'); }
   for (const row of rows) {
     const full = row.querySelector<HTMLElement>('.slot')?.offsetHeight ?? 0;
     if (!full) continue;
     const style = getComputedStyle(row), pad = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
-    const floor = Math.min(full, Math.max(Math.round(full * .6), 48));
+    // A fileira de cima de um oponente no celular (terrenos e o resto, em duas fileiras) pode ficar menor: ali basta contar.
+    const least = row.matches('.table-seat > .field.two-lines .row.lands') ? 30 : 48;
+    const floor = Math.min(full, Math.max(Math.round(full * .6), least));
     let h = full;
     // Os espaços entre as cartas não encolhem junto: duas ou três medidas acertam o tamanho.
+    // Na linha só do celular a fileira tem a largura das cartas: qualquer carta em movimento a faria encolher à toa.
+    const byPosition = row.closest('.field.one-line') !== null;
     for (let i = 0; i < 4 && h > floor; i++) {
-      const room = row.clientWidth - pad, used = row.scrollWidth - pad;
+      const room = row.clientWidth - pad, used = byPosition ? rowExtent(row) : row.scrollWidth - pad;
       if (room <= 0 || used <= room + 1) break;
       h = Math.max(floor, Math.min(h - 1, Math.floor(h * room / used)));
       row.style.setProperty('--ch', `${h}px`);
@@ -44,6 +105,8 @@ export function fitRowWidths(root: HTMLElement) {
     }
   }
 }
+/** As três medidas dos campos, na ordem em que uma depende da outra: o arranjo, a fileira sozinha e a largura. */
+export function fitFields(root: HTMLElement) { fitFieldLines(root); fitLoneRows(root); fitRowWidths(root); }
 export function layoutExileShelf(root: HTMLElement) {
   const arena = root.querySelector<HTMLElement>('.forge')!;
   const hand = q(root, '#fHand');
