@@ -1,4 +1,10 @@
 {
+  "0.208.0": {
+    "Verso das cartas com a logo da mesa": [
+      { "img": "0.208.0/versos.webp", "legenda": "As oito capas com o losango da mesa no meio, cada uma na sua cor." },
+      { "img": "0.208.0/grimorio.webp", "legenda": "O grimório do oponente na capa azul, com a logo no verso." }
+    ]
+  },
   "0.207.0": {
     "Golpe de combate com peso": [
       { "img": "0.207.0/ataque.webp", "legenda": "Os atacantes se erguem da mesa no ataque, com a sombra crescendo e o anel vermelho no chão." },

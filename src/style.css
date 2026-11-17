@@ -389,9 +389,16 @@ a { color: var(--gold); }
 .back {
   border-radius: 6% / 4.5%; border: 2px solid var(--sleeve-edge, #1d1209);
   background:
-    radial-gradient(ellipse 34% 26% at 50% 50%, var(--sleeve-light, #e3b363) 0 30%, var(--sleeve-mid, #8c5523) 31% 55%, transparent 56%),
     radial-gradient(ellipse at 50% 50%, var(--sleeve-base, #6b3d18), var(--sleeve-dark, #2b170a) 75%);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+/* No meio do verso, a logo da mesa (o losango da marca) nas cores da capa do jogador. */
+.back::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 40%; aspect-ratio: 1; border-radius: 24%;
+  transform: translate(-50%, -50%) rotate(45deg); pointer-events: none;
+  background: linear-gradient(135deg, var(--sleeve-light, #e3b363), color-mix(in srgb, var(--sleeve-light, #e3b363), var(--sleeve-mid, #8c5523)) 45%, var(--sleeve-mid, #8c5523));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sleeve-light, #e3b363) 40%, transparent), inset 0 0 0 1.5px rgba(255, 255, 255, 0.28);
 }
 /* Verso na cor de cada jogador (item 85): o servidor sorteia uma das 8, sem repetir na mesa. A 0 é o verso de sempre.
    Cores bem separadas em claro/escuro e matiz, para continuarem distintas para quem não diferencia vermelho e verde. */

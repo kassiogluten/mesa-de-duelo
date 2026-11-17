@@ -57,7 +57,7 @@ function cacheOf(layer: GpuLayer) {
 // Os versos pintados, por capa (as cinco cores): poucos por partida, ficam até a camada sair.
 const backs = new WeakMap<GpuLayer, Map<string, Texture>>();
 /**
- * O verso na cor da capa, no desenho do `.back` (o medalhão claro no meio de um fundo que escurece para a borda), com
+ * O verso na cor da capa, no desenho do `.back` (a logo da mesa, o losango, no meio de um fundo que escurece para a borda), com
  * um brilho em diagonal e um fio claro na borda de dentro, para ler como uma carta de verdade quando ela gira.
  */
 export function backTexture(layer: GpuLayer, colors: readonly string[]) {
@@ -82,12 +82,17 @@ export function backTexture(layer: GpuLayer, colors: readonly string[]) {
   const field = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, H * .62);
   field.addColorStop(0, base); field.addColorStop(.75, dark); field.addColorStop(1, dark);
   g.fillStyle = field; g.fillRect(0, 0, W, H);
-  // O medalhão: elipse clara com um anel na cor do meio.
+  // A logo: o losango da marca (quadrado de cantos redondos girado), do claro ao tom do meio, com um fio claro por dentro.
+  const side = W * .4, r = side * .24;
   g.save();
-  g.translate(W / 2, H / 2); g.scale(1, (H * .26) / (W * .34));
-  const medal = g.createRadialGradient(0, 0, 0, 0, 0, W * .34);
-  medal.addColorStop(0, light); medal.addColorStop(.3, light); medal.addColorStop(.31, mid); medal.addColorStop(.55, mid); medal.addColorStop(.56, 'rgba(0,0,0,0)');
-  g.fillStyle = medal; g.beginPath(); g.arc(0, 0, W * .34, 0, Math.PI * 2); g.fill();
+  g.translate(W / 2, H / 2); g.rotate(Math.PI / 4);
+  const logo = g.createLinearGradient(-side / 2, 0, side / 2, 0);
+  logo.addColorStop(0, light); logo.addColorStop(1, mid);
+  g.shadowColor = light; g.shadowBlur = 14;
+  g.fillStyle = logo; g.beginPath(); g.roundRect(-side / 2, -side / 2, side, side, r); g.fill();
+  g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = 2.5;
+  g.beginPath(); g.roundRect(-side / 2 + 1.25, -side / 2 + 1.25, side - 2.5, side - 2.5, r); g.stroke();
   g.restore();
   // Brilho em diagonal, do canto de cima, e a borda de baixo um pouco mais escura.
   const sheen = g.createLinearGradient(0, 0, W, H);

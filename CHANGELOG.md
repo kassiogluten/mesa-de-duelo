@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.208.0] - 2026-11-16
+
+### Mudou
+
+- **Verso das cartas com a logo da mesa.** O círculo no meio do verso virou o losango da Mesa de Duelo, na cor da capa de cada jogador: no grimório, na mão do oponente, nas cartas viradas para baixo e nas cartas que voam pela mesa ao comprar, embaralhar ou olhar o topo.
+
 ## [0.207.0] - 2026-11-16
 
 ### Mudou
