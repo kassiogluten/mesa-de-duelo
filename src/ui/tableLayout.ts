@@ -1,5 +1,5 @@
 // Medidas da mesa depois de cada desenho: fileiras que encolhem para caber, a fileira sozinha que cresce, a mão que se
-// encaixa com a prateleira do exílio, a caixa de decisão da mão, os selos que viram um só, a pilha que não cobre os botões
+// encaixa com a prateleira do exílio, a caixa de decisão da mão, os selos que viram um só, os seus selos em volta do retrato, a pilha que não cobre os botões
 // e as setas de rolar dos assentos. Tudo lê o DOM já desenhado; nada aqui muda o que a mesa mostra, só onde e de que tamanho.
 
 const q = (root: HTMLElement, sel: string) => root.querySelector(sel) as HTMLElement;
@@ -90,6 +90,54 @@ export function layoutCounters(root: HTMLElement) {
     const crowded = (counters && counters.scrollWidth > counters.clientWidth + 1) || (c && c.top < limit) || (k && k.top < limit)
       || (c && k && c.left < k.right && k.left < c.right && c.top < k.bottom && k.top < c.bottom);
     card.classList.toggle('crowded', !!crowded);
+  });
+}
+/**
+ * Os seus selos e emblemas em volta do retrato (gameplay.css): o ângulo (--a) e a distância do centro (--r) de cada
+ * disco, um ao lado do outro sem se encostar, pelo tamanho que o retrato e os discos têm agora. Primeiro os selos,
+ * depois os emblemas. Descem pelo lado direito (do alto até antes da vida) e depois pelo esquerdo, numa volta e, se
+ * precisar, em outras mais para fora. Uma posição que deixaria o disco fora da tela, ou por cima do grimório, do
+ * cemitério, do exílio, da zona de comando, da mão ou da vida, fica vazia: nada cobre as suas pilhas, em nenhum layout (duelo, Commander, celular).
+ */
+export function layoutPortraitCounters(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>('.portrait:has(> .player-counters, > .emblems)').forEach(portrait => {
+    const discs = [...portrait.querySelectorAll<HTMLElement>(':scope > .player-counters > *, :scope > .emblems > .emblem')];
+    const size = portrait.offsetWidth, d = Math.max(0, ...discs.map(disc => disc.offsetWidth));
+    if (!size || !d) return;
+    const box = portrait.getBoundingClientRect(), cx = box.left + size / 2, cy = box.top + size / 2;
+    const rects = (sel: string) => [...root.querySelectorAll(sel)].map(el => el.getBoundingClientRect()).filter(r => r.width && r.height);
+    const blocked = rects('#fMePiles > *, #fCommand:not([hidden]) > *'), hand = rects('#fHand > *');
+    // A vida é um círculo: conta a distância até o centro dela, não a caixa.
+    const lifeBox = portrait.closest('.avatar')?.querySelector(':scope > .life')?.getBoundingClientRect();
+    const life = lifeBox?.width ? { x: lifeBox.left + lifeBox.width / 2, y: lifeBox.top + lifeBox.height / 2, r: Math.max(lifeBox.width, lifeBox.height) / 2 } : null;
+    const width = innerWidth, height = innerHeight;
+    // O disco e a etiqueta do número, no canto de baixo à direita: 0 cabe, 1 só encosta na mão, 2 não cabe.
+    const fits = (a: number, r: number) => {
+      const x = cx + Math.cos(a * Math.PI / 180) * r, y = cy + Math.sin(a * Math.PI / 180) * r;
+      const l = x - d / 2, t = y - d / 2, rt = x + d / 2 + 6, b = y + d / 2 + 5;
+      const hits = (o: DOMRect) => l < o.right && o.left < rt && t < o.bottom && o.top < b;
+      if (life && Math.hypot(x - life.x, y - life.y) < life.r + d / 2) return 2;
+      if (l < 2 || t < 2 || rt > width - 2 || b > height - 2 || blocked.some(hits)) return 2;
+      return hand.some(hits) ? 1 : 0;
+    };
+    // Nas voltas de fora, o lado esquerdo só vai até o alto (no celular, ali em cima ficam as pilhas); da quarta em
+    // diante, só o direito, até todos terem lugar.
+    const GAP = 2, free: { a: number; r: number }[] = [], byHand: { a: number; r: number }[] = [];
+    for (let lap = 0; free.length + byHand.length < discs.length && lap < 8; lap++) {
+      const r = size / 2 + d * .2 + lap * (d + GAP), step = 2 * Math.asin(Math.min(1, (d / 2 + GAP / 2) / r)) * 180 / Math.PI;
+      const angles: number[] = [];
+      for (let a = lap < 3 ? -80 : -40; a <= 50; a += step) angles.push(a);
+      if (lap < 3) for (let a = -80 - step; a >= (lap ? -150 : -230); a -= step) angles.push(a);
+      for (const a of angles) { const fit = fits(a, r); if (fit === 0) free.push({ a, r }); else if (fit === 1) byHand.push({ a, r }); }
+    }
+    // Sem lugar livre para todos (muitos selos e emblemas num retrato pequeno), os últimos encostam no canto da mão.
+    const slots = [...free, ...byHand];
+    discs.forEach((disc, i) => {
+      const slot = slots[i];
+      if (!slot) return;
+      disc.style.setProperty('--a', `${slot.a.toFixed(1)}deg`);
+      disc.style.setProperty('--r', `${slot.r.toFixed(1)}px`);
+    });
   });
 }
 export function layoutStack(root: HTMLElement) {

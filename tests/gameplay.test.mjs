@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 const { PresentationTimeline, hasLiveDecision, holdDecision, stateWithFrame, presentationDuration, presentationPace, calloutDuration } = await import('../src/ui/presentationTimeline.ts');
 const { canDragHandCard, handDropAction } = await import('../src/ui/handDrag.ts');
 const { createMotion } = await import('../src/ui/motion.ts');
+const { hitStop, knockback } = await import('../src/ui/motionDamage.ts');
 const { AudioEventGate, AudioEventMix, UntapWatch, tableMoment, normalizeAudioSettings, soundForEvent, soundVariation, SOUND_FILES, SOUND_PACKS, soundUrl, MIX_HEADROOM, createGameAudio } = await import('../src/ui/audio.ts');
 const event = (seq, type = 'spell-cast', extra = {}) => ({ seq, type, ...extra });
 function state() {
@@ -639,6 +640,34 @@ test('combat damage strikes with a copy of the attacker and restores the card', 
   assert.deepEqual(badges, ['2º golpe', 'Atropelar']);
   assert.equal(ghost.removed, true); assert.equal(f.land.style.opacity, '');
   f.motion.reset();
+});
+
+test('combat strike winds up, holds still on contact while the target flashes, then shoves the target along the blow', async () => {
+  const f = motionFixture();
+  f.motion.present(event(1, 'damage', { sourceId: 7, combat: true, targets: { players: [1] }, delta: -6 }),
+    { you: 1, label: 'Dano', duration: 400, html: '<div class="face"></div>' });
+  const ghost = f.nodes.find(n => n.className === 'presentation-piece strike-ghost');
+  const frames = f.animated.find(a => a.element === ghost).frames;
+  const xy = t => t.split(' ').map(Number.parseFloat);
+  // A vida do alvo está para baixo e para a esquerda do atacante: o impulso recua para cima e para a direita.
+  const [rx, ry] = xy(frames[1].translate);
+  assert.ok(rx > 0 && ry < 0, 'winds up away from the target');
+  assert.equal(frames[2].translate, frames[3].translate, 'holds still on contact');
+  await new Promise(resolve => setTimeout(resolve, 380));
+  const flash = f.animated.find(a => a.element === f.avatar && String(a.frames[0].filter).startsWith('brightness(3.2)'));
+  assert.ok(flash, 'the target flashes white during the stop');
+  const shove = f.animated.find(a => a.element === f.avatar && a.frames[1]?.scale === '.9');
+  const [sx, sy] = xy(shove.frames[1].translate);
+  assert.ok(sx < 0 && sy > 0, 'the target is pushed along the blow');
+  assert.ok(numberOf(f), 'the number shows after the stop');
+  f.motion.reset();
+});
+
+test('the contact stop and the shove grow with the blow', () => {
+  assert.ok(hitStop({ heavy: false, lethal: false }) < hitStop({ heavy: true, lethal: false }));
+  assert.ok(hitStop({ heavy: true, lethal: false }) < hitStop({ heavy: false, lethal: true }));
+  assert.ok(knockback(2, false).push < knockback(6, false).push);
+  assert.ok(knockback(30, false).push <= 26 && knockback(30, true).shake <= 12, 'never throws the table around');
 });
 
 test('life gain shows a green number; life loss does not', () => {

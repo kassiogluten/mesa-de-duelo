@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.207.0] - 2026-11-16
+
+### Mudou
+
+- **Golpe de combate com peso.** Ao atacar, a criatura se ergue da mesa, com a sombra crescendo por baixo, e fica erguida enquanto ataca. No golpe ela toma impulso, recua um pouco e dispara deixando um rastro avermelhado. No contato, a mesa para por uma fração de segundo com o alvo aceso em branco, mais tempo no golpe pesado e no letal. Depois o alvo é empurrado no sentido do golpe e volta, as faíscas saem por trás dele em leque, uma onda curta se abre do ponto do golpe e a mesa treme nesse sentido. O número do dano chega grande e assenta, e no golpe de 5 ou mais as cores do alvo se separam por um instante. No celular, a onda e as cores separadas ficam de fora; com os efeitos leves, o rastro também.
+- **Selos e emblemas em volta do retrato.** Os seus selos (veneno, energia, experiência, Monarca, Dianteira, masmorra, terrenos jogados e os outros) viraram discos pequenos encostados na borda do seu retrato, cada um com o número numa etiqueta, em vez de uma coluna que descia por cima do grimório e do cemitério e saía da tela quando eram muitos. Os seus emblemas entram no mesmo anel, depois dos selos, com o aro dourado e a arte, em vez da fileira que cobria as pilhas e, no celular em pé, passava por baixo da mão. Eles contornam o retrato pelo lado direito e depois pelo esquerdo, abrem outra volta quando não cabem e nunca cobrem as suas pilhas, a zona de comando nem a vida, no duelo, no Commander e no celular. O nome do Monarca e da Dianteira e o limite do veneno ficam no balão, ao tocar no disco.
+
 ## [0.206.0] - 2026-11-16
 
 ### Mudou

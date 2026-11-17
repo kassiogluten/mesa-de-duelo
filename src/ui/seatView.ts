@@ -66,13 +66,14 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const art = v.portraits[idx];
   const offline = s.room?.players.find(rp => rp.playerId !== undefined ? rp.playerId === p.id : rp.seat !== undefined && p.seat !== undefined ? rp.seat === p.seat : rp.name === p.name)?.connected === false;
   const forecast = s.forecast?.find(f => f.player === p.id);
+  // Os seus selos e emblemas ficam dentro do retrato, em volta da borda (gameplay.css); os dos oponentes, ao lado dele.
   return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${shownStyle(p) ? `, computador ${shownStyle(p).toLowerCase()}` : ''}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? `, eliminado${eliminatedWhy(v, s, p, ': ')}` : ''}">
-    <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}</div>
+    <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}${idx === 0 ? playerCounters(v, p) + emblems(v, p) : ''}</div>
     ${idx === 0 ? lifeHTML(v, p, cls) : opponentLifeHTML(v, s, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
-    ${playerCounters(v, p)}
+    ${idx === 0 ? '' : playerCounters(v, p)}
     <div class="pname">${esc(p.name)}${shownStyle(p) ? ` <small class="pstyle" title="Estilo do computador">${shownStyle(p)}</small>` : ''}</div>
-    ${emblems(v, p)}
+    ${idx === 0 ? '' : emblems(v, p)}
     ${p.eliminated ? `<span class="seat-eliminated"${eliminatedWhy(v, s, p) ? ` title="Eliminado: ${eliminatedWhy(v, s, p)}"` : ''}>Eliminado</span>` : ''}
     ${offline ? '<div class="offline">desconectado</div>' : ''}
   </div>`;

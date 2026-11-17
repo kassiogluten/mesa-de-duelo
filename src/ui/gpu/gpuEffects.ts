@@ -22,8 +22,11 @@ export { preload, textureReady };
 /** O tom do golpe, o mesmo de `damageLook` (dano, murchar, veneno, lealdade, escudo). */
 type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield';
 interface DamageParams {
-  /** Impacto do dano: clarão, anel e faíscas na cor do tom. `size` é o diâmetro do clarão em CSS px. */
-  burst: { at: Point; tone: GpuTone; size: number; heavy?: boolean; lethal?: boolean };
+  /**
+   * Impacto do dano: clarão, anel e faíscas na cor do tom. `size` é o diâmetro do clarão em CSS px. `dir` (radianos) é
+   * o sentido do golpe de combate: as faíscas saem em leque por trás do alvo e uma onda curta se abre do ponto do golpe.
+   */
+  burst: { at: Point; tone: GpuTone; size: number; heavy?: boolean; lethal?: boolean; dir?: number };
   /** Projétil da fonte até o alvo em `duration` ms, deixando um rastro de brasas. */
   bolt: { from: Point; to: Point; tone: GpuTone; duration: number };
   /** Onda dourada do pouso, em volta de uma carta ou de um monte, com poeira saindo da base. */
@@ -117,25 +120,47 @@ function bezier(x1: number, y1: number, x2: number, y2: number) {
 }
 const BOLT_EASE = bezier(.45, 0, .85, .55);
 const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, p: DamageParams[N]) => GpuEffect } = {
-  burst(layer, s, { at, tone, size, heavy, lethal }) {
+  burst(layer, s, { at, tone, size, heavy, lethal, dir }) {
     const { x, y } = layer.local(at.cx, at.cy);
     const { main, hot } = toneColors(tone);
     const shield = tone === 'shield';
+    const blow = dir !== undefined && !shield;
     return timed(540, (view, sparks) => {
+      // A onda do golpe de combate: um anel claro com uma sombra logo por dentro, como uma lente passando pela mesa
+      // (fica de fora no celular, onde a tela é pequena para ela).
+      const lens = blow && !layer.coarse ? {
+        shade: new Sprite({ texture: s.ring, anchor: .5, x, y, tint: 0x000000 }),
+        light: new Sprite({ texture: s.ring, anchor: .5, x, y, tint: 0xfff1d6, blendMode: 'add' }),
+      } : null;
+      if (lens) view.addChild(lens.shade, lens.light);
       const flash = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: hot, blendMode: 'add' });
       const ring = new Sprite({ texture: s.ring, anchor: .5, x, y, tint: main, blendMode: 'add' });
       const core = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: 0xffffff, blendMode: 'add' });
       view.addChild(flash, ring, core);
       const reach = size / 2;
       const n = shield ? 10 : (heavy ? 34 : 22) + (lethal ? 12 : 0);
-      spray(sparks, s, x, y, n, shield
-        ? { speed: [reach * 1.6, reach * 2.6], life: [260, 420], scale: [.35, .6], colors: [main, hot], drag: 4 }
-        : { speed: [reach * 2.2, reach * 5.5], life: [320, 560], scale: [.3, .7], colors: [hot, main, main, 0xffffff], gravity: 260, drag: 2.6, keep: lethal });
+      if (blow) {
+        // Golpe de combate: quase todas saem em leque no sentido do golpe, alongadas; umas poucas para todo lado.
+        for (let i = 0; i < n; i++) {
+          const cone = i % 5 !== 0, angle = cone ? dir + rand(-.85, .85) : rand(0, Math.PI * 2), speed = rand(reach * (cone ? 3 : 1.6), reach * (cone ? 7.5 : 3.5));
+          sparks.add(s.spark, s, { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: rand(280, 520), spin: 0, grow: -.6, scale: rand(.25, .55), stretch: cone ? 2.6 : 1, gravity: 220, drag: 2.8, tint: [hot, main, main, 0xffffff][i % 4]!, keep: lethal });
+        }
+      } else {
+        spray(sparks, s, x, y, n, shield
+          ? { speed: [reach * 1.6, reach * 2.6], life: [260, 420], scale: [.35, .6], colors: [main, hot], drag: 4 }
+          : { speed: [reach * 2.2, reach * 5.5], life: [320, 560], scale: [.3, .7], colors: [hot, main, main, 0xffffff], gravity: 260, drag: 2.6, keep: lethal });
+      }
+      const wave = size * (heavy ? 2.2 : 1.6);
       return t => {
         const out = easeOut(Math.min(1, t / .55));
         flash.scale.set(size / 128 * (.4 + 1.1 * out)); flash.alpha = .95 * (1 - out);
         core.scale.set(size / 128 * (.5 + .3 * out) * (lethal ? 1.6 : 1)); core.alpha = Math.max(0, 1 - t / .3);
         ring.scale.set(size / 256 * (.3 + 1.25 * easeOut(t))); ring.alpha = .9 * (1 - t);
+        if (lens) {
+          const k = wave / 256 * (.2 + easeOut(t));
+          lens.light.scale.set(k); lens.light.alpha = .5 * (1 - t);
+          lens.shade.scale.set(k * .93); lens.shade.alpha = .3 * (1 - t);
+        }
       };
     });
   },

@@ -46,9 +46,11 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
   const cleanups: (() => void)[] = [];
   let frames = 0, destroyed = false, stopAfterRender = false;
   let work = 0, tickStart = 0;
+  // Até quando o tempo dos efeitos fica parado (o golpe de combate congela a cena no contato).
+  let frozenUntil = 0;
   function tick() {
     tickStart = performance.now();
-    const ms = app.ticker.elapsedMS * gpuClock.timeScale;
+    const ms = tickStart < frozenUntil ? 0 : app.ticker.elapsedMS * gpuClock.timeScale;
     for (const effect of live) {
       if (effect.update(ms)) continue;
       live.delete(effect);
@@ -123,8 +125,12 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
     const r = canvas.getBoundingClientRect();
     return { x: x - r.left, y: y - r.top };
   }
+  /** Para o tempo dos efeitos vivos por `ms` (tempo dos efeitos: na câmera lenta, dura mais), sem apagar nada. */
+  function freeze(ms: number) {
+    frozenUntil = Math.max(frozenUntil, performance.now() + ms / (gpuClock.timeScale || 1));
+  }
   return {
-    canvas, app, add, clear, destroy, local, coarse: opts.coarse,
+    canvas, app, add, clear, destroy, local, freeze, coarse: opts.coarse,
     /** Roda `fn` quando a camada for desfeita. */
     onDestroy(fn: () => void) { cleanups.push(fn); },
     get destroyed() { return destroyed; },

@@ -1,4 +1,16 @@
 {
+  "0.207.0": {
+    "Golpe de combate com peso": [
+      { "img": "0.207.0/ataque.webp", "legenda": "Os atacantes se erguem da mesa no ataque, com a sombra crescendo e o anel vermelho no chão." },
+      { "img": "0.207.0/contato.webp", "legenda": "No contato, a mesa para: o bloqueador acende em branco e o rastro do atacante fica para trás." },
+      { "img": "0.207.0/impacto.webp", "legenda": "Quando a mesa solta, as faíscas saem em leque no sentido do golpe, a onda se abre e o número chega grande." }
+    ],
+    "Selos e emblemas em volta do retrato": [
+      { "img": "0.207.0/selos-em-volta.webp", "legenda": "Cinco selos e dois emblemas em volta do retrato, no duelo, longe do grimório e do cemitério." },
+      { "img": "0.207.0/selos-commander.webp", "legenda": "No Commander, com o grimório colado ao retrato, os discos e o emblema sobem pelo alto em vez de cobrir as pilhas." },
+      { "img": "0.207.0/selos-celular.webp", "legenda": "No celular em pé, os discos abrem para a direita, entre o cemitério e a mão." }
+    ]
+  },
   "0.206.0": {
     "Foil mais suave nas raras e míticas": [
       { "img": "0.206.0/foil-rara-mitica.webp", "legenda": "Uma rara e uma mítica abertas nos detalhes, com a luz no alto à direita: o dourado aparece de leve, e o arco-íris da mítica é uma faixa na diagonal, deixando o resto da carta limpo." }

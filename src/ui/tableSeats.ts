@@ -14,7 +14,7 @@ import { avatar, collapsedSeat, commandCards, damageButton, focusButton, focusHT
 import { followSeats, forcedSeatReason, manualSeatChoice, visibleSeats, type SeatMemory } from './seatVisibility';
 import { trackCounterBumps } from './tableCards';
 import type { TableCtx } from './tableContext';
-import { fitLoneRows, fitRowWidths } from './tableLayout';
+import { fitLoneRows, fitRowWidths, layoutPortraitCounters } from './tableLayout';
 import { newSeatState } from './tableState';
 import { seatTurnChange } from './turnHighlight';
 import { label } from './cardFaces';
@@ -110,6 +110,8 @@ export function createTableSeats(d: SeatsDeps) {
     syncMat($('#fMeMat'), matArt(s, me, 0));
     fitLoneRows(root);
     fitRowWidths(root);
+    // Os seus selos em volta do retrato, antes das animações que caem sobre eles.
+    layoutPortraitCounters(root);
     // A coroa do Monarca e a Dianteira que mudaram de mão voam de um retrato para o outro (com os selos já no lugar).
     d.motion.holders(visual.players, matchKey);
     return seatNotice;

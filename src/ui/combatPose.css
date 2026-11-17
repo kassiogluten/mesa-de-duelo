@@ -9,6 +9,8 @@
 .field .slot.blocking > .bfc { transform: translate(calc(-50% + var(--blk-x, 0px)), calc(-50% + var(--blk-y, 0px))); }
 .field .slot.tapped.blocking > .bfc { transform: translate(calc(-50% + var(--blk-x, 0px)), calc(-50% + var(--blk-y, 0px))) rotate(90deg); }
 .field .slot.blocking { z-index: 4; }
+/* O atacante fica erguido da mesa enquanto ataca: a sombra mais funda, por baixo do contorno vermelho. */
+.field .slot.attacking > .bfc .face { box-shadow: 0 0 0 2px var(--red), 0 0 18px rgba(236, 90, 63, 0.8), 0 14px 16px -4px #000b; }
 /* Ida para a pose com um pouco de mola; a volta usa a transição de sempre da carta. */
 .field .slot.attacking > .bfc, .field .slot.blocking > .bfc { transition: transform .38s cubic-bezier(.3, 1.35, .5, 1), filter .2s; }
 @media (prefers-reduced-motion: reduce) { .field .slot.attacking > .bfc, .field .slot.blocking > .bfc { transition: none; } }

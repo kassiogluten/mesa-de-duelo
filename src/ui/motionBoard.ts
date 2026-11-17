@@ -15,8 +15,9 @@ const TURN_MS = 780, TURN_LIMIT = 4;
 export function createBoardMotion(kit: MotionKit) {
   const { root, state, layer, later, animate, effect, remove, pulse, floatNumber, fly, land, ripple, hiddenCards, gpu, flare, toneOf } = kit;
   /**
-   * Ataque é só vermelho: o dourado fica para seleção e bloqueio. Cada atacante recua um pouco e avança na direção do
-   * oponente (para cima, se está na metade de baixo da mesa), um depois do outro, e volta com mola.
+   * Ataque é só vermelho: o dourado fica para seleção e bloqueio. Cada atacante abaixa um pouco e se ergue na direção do
+   * oponente (para cima, se está na metade de baixo da mesa), um depois do outro, com a sombra crescendo como se saísse
+   * da mesa, e assenta na pose do combate (combatPose.css), que mantém a sombra mais funda enquanto ele ataca.
    */
   function attackers(label: string, duration: number) {
     const middle = center(layer())?.cy ?? 0;
@@ -29,8 +30,12 @@ export function createBoardMotion(kit: MotionKit) {
         // E um anel vermelho no chão, no bote.
         gpu.play('arrive', { at, color: '#ec5a3f', size: Math.max(at.w, at.h) * 1.05, delay: Math.min(i, 8) * 70 + 560 * .3 });
       }
-      animate(el, [{ translate: '0 0' }, { translate: `0 ${-7 * ahead}px`, offset: .3 }, { translate: `0 ${16 * ahead}px`, scale: '1.04', offset: .55 }, { translate: '0 0', scale: '1' }],
-        560, 'cubic-bezier(.3,.7,.4,1)', Math.min(i, 8) * 70);
+      animate(el, [
+        { translate: '0 0', scale: '1', filter: 'drop-shadow(0 2px 3px #0008)' },
+        { translate: `0 ${-6 * ahead}px`, scale: '.97', filter: 'drop-shadow(0 1px 2px #0008)', offset: .3 },
+        { translate: `0 ${14 * ahead}px`, scale: '1.08', filter: 'drop-shadow(0 20px 14px #000b)', offset: .65 },
+        { translate: '0 0', scale: '1', filter: 'drop-shadow(0 12px 12px #000a)' }],
+      620, 'cubic-bezier(.3,.7,.4,1)', Math.min(i, 8) * 70);
     });
     const banner = effect('combat-banner', { cx: 0, cy: 0, w: 0, h: 0 });
     banner.removeAttribute('style');

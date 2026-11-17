@@ -142,6 +142,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
       return runtime.effects.play(runtime.layer, name, params);
     },
     clear() { runtime?.layer.clear(); },
+    /** Congela por `ms` o tempo dos efeitos que já estão na camada (o contato do golpe de combate); sem ela, nada. */
+    freeze(ms: number) { if (runtime && !runtime.layer.destroyed && decision().use === 'gpu') runtime.layer.freeze(ms); },
     /** A mesa viva vai para esta cena (quem joga, a cor dele, a sua vida, o combate). */
     ambience(next: AmbienceScene) { scene = next; runtime?.ambience?.set(next); },
     /** Um toque do jogo na mesa viva (clarão, tremor, escurecer); sem ela, nada. */

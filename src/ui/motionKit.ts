@@ -146,7 +146,8 @@ export function createMotionKit(root: HTMLElement) {
   }
   /** A carta do topo da pilha, se esteve à vista há pouco (a pilha some quando esvazia, antes da resolução ser mostrada). */
   const recentStack = () => state.stackSpot && performance.now() - state.stackSpot.seen < 5000 ? state.stackSpot : undefined;
-  function floatNumber(at: Point, text: string, classes: string, badges: string[] = [], icon = '') {
+  /** O número que sobe do alvo; `pop` (golpe de combate) chega grande, encolhe passando do ponto e assenta. */
+  function floatNumber(at: Point, text: string, classes: string, badges: string[] = [], icon = '', pop = false) {
     // Perto da borda de cima (retrato do oponente), o número desce em vez de subir para fora da tela.
     const below = at.cy - at.h / 2 < 90;
     // Perto da borda do lado (zona de comando, retrato no canto), o número fica inteiro na tela.
@@ -159,8 +160,14 @@ export function createMotionKit(root: HTMLElement) {
       for (const badge of badges) { const tag = document.createElement('span'); tag.textContent = badge; list.append(tag); }
     }
     const rise = below ? 1 : -1;
-    animate(marker, [{ opacity: 0, translate: `0 ${-6 * rise}px`, scale: '.7' }, { opacity: 1, translate: `0 ${6 * rise}px`, scale: '1.12', offset: .16 }, { opacity: 1, translate: `0 ${18 * rise}px`, scale: '1', offset: .7 }, { opacity: 0, translate: `0 ${30 * rise}px` }], 1100);
-    later(() => remove(marker), 1150);
+    if (pop) animate(marker, [
+      { opacity: 0, translate: '0 0', scale: '2.1', rotate: '-6deg' },
+      { opacity: 1, translate: `0 ${4 * rise}px`, scale: '.88', rotate: '2deg', offset: .12 },
+      { opacity: 1, translate: `0 ${8 * rise}px`, scale: '1.06', rotate: '0deg', offset: .22 },
+      { opacity: 1, translate: `0 ${16 * rise}px`, scale: '1', offset: .72 },
+      { opacity: 0, translate: `0 ${30 * rise}px`, scale: '.96' }], 1200, 'ease-out');
+    else animate(marker, [{ opacity: 0, translate: `0 ${-6 * rise}px`, scale: '.7' }, { opacity: 1, translate: `0 ${6 * rise}px`, scale: '1.12', offset: .16 }, { opacity: 1, translate: `0 ${18 * rise}px`, scale: '1', offset: .7 }, { opacity: 0, translate: `0 ${30 * rise}px` }], 1100);
+    later(() => remove(marker), pop ? 1250 : 1150);
   }
   /**
    * Voo com peso: a carta sai do tamanho e do giro de onde estava, sobe em arco (cresce, como se viesse para perto),

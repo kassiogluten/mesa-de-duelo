@@ -347,7 +347,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
     // Ninjutsu e sneak: o shuriken precisa ser visto cruzando a mesa até a fumaça.
     : event.reason === 'ninjutsu' || event.reason === 'sneak' ? (event.type === 'entered' ? 1100 : 560)
     : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
-    : event.type === 'damage' ? (event.combat ? 620 : 760)
+    // O golpe de combate toma impulso e congela no contato (motionDamage.ts): pede um pouco mais que os 620 de antes.
+    : event.type === 'damage' ? 760
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
     : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
       : event.type === 'turn' ? 480 : 340;
