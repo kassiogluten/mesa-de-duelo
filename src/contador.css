@@ -56,8 +56,8 @@
 body.cv-jogando { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; }
 .cv-raiz { position: fixed; inset: 0; background: var(--bg-deep); }
 .cv-mesa {
-  position: absolute; inset: 0; display: grid; gap: 6px;
-  padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  --pt: max(6px, env(safe-area-inset-top)); --pr: max(6px, env(safe-area-inset-right)); --pb: max(6px, env(safe-area-inset-bottom)); --pl: max(6px, env(safe-area-inset-left));
+  position: absolute; inset: 0; display: grid; gap: 6px; padding: var(--pt) var(--pr) var(--pb) var(--pl);
 }
 .cv-painel {
   position: relative; min-width: 0; min-height: 0; overflow: hidden; container-type: size; border-radius: 18px;
@@ -115,18 +115,20 @@ body.cv-jogando { position: fixed; inset: 0; overflow: hidden; overscroll-behavi
 .cv-cmd-btn {
   /* Redondo só com a coroa; com marcas de dano, vira um pill redondo nas pontas. */
   position: absolute; z-index: 1; bottom: 5cqh; left: 50%; translate: -50% 0; display: flex; align-items: center; justify-content: center; gap: 6px;
-  min-width: 44px; height: 44px; padding: 0; border-radius: 999px; cursor: pointer;
+  min-width: 34px; height: 34px; padding: 0; border-radius: 999px; cursor: pointer;
   background: #00000066; border: 1px solid #f2b54c55; color: var(--gold-light); box-shadow: 0 2px 10px #0006;
 }
-.cv-cmd-btn:has(.cv-marca) { padding: 0 6px 0 10px; }
-.cv-cmd-btn svg { width: 24px; height: 24px; flex: none; }
+/* O botão é pequeno para não disputar com a vida; a área de toque continua com 44px. */
+.cv-cmd-btn::before { content: ''; position: absolute; inset: -5px; border-radius: inherit; }
+.cv-cmd-btn:has(.cv-marca) { gap: 5px; padding: 0 5px 0 8px; }
+.cv-cmd-btn svg { width: 18px; height: 18px; flex: none; }
 .cv-cmd-btn:active { scale: .94; }
 .cv-marcas:empty { display: none; }
 .cv-cmd-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .cv-marcas { display: flex; gap: 4px; }
 .cv-marca {
-  display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 5px; border-radius: 999px;
-  background: var(--cor); color: #1a1000; font: 800 13px var(--display); font-variant-numeric: tabular-nums;
+  display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px;
+  background: var(--cor); color: #1a1000; font: 800 12px var(--display); font-variant-numeric: tabular-nums;
 }
 .cv-marca.letal { outline: 2px solid #ff8a73; }
 
@@ -212,6 +214,8 @@ body.cv-jogando { position: fixed; inset: 0; overflow: hidden; overscroll-behavi
 
 /* O botão do meio é a logo da mesa (o losango dourado, como no cabeçalho): abre os dados, o histórico e a partida. */
 .cv-meio {
+  /* No encontro dos painéis, não no meio da tela: com a borda segura maior de um lado (tela cheia, entalhe), os dois diferem. */
+  left: calc(var(--pl) + (100% - var(--pl) - var(--pr)) * var(--x)); top: calc(var(--pt) + (100% - var(--pt) - var(--pb)) * var(--y));
   position: absolute; z-index: 5; translate: -50% -50%; rotate: 45deg; width: 44px; height: 44px; padding: 0; border-radius: 12px; cursor: pointer;
   background: linear-gradient(135deg, var(--gold-light), var(--gold) 45%, var(--gold-deep));
   border: 4px solid var(--bg-deep); box-shadow: 0 0 22px #f2b54c66, 0 4px 14px #000a;

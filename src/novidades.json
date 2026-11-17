@@ -1,4 +1,12 @@
 {
+  "0.210.0": {
+    "Coroa do dano de comandante menor no Contador de vida": [
+      { "img": "0.210.0/coroa-menor.webp", "legenda": "A coroa menor embaixo da vida de cada jogador; no painel de quem já levou dano, as marcas ao lado dela." }
+    ],
+    "Logo do meio do Contador de vida no encontro dos painéis em tela cheia": [
+      { "img": "0.210.0/logo-no-encontro.webp", "legenda": "Com a borda de cima da tela maior que a de baixo, o losango dourado continua no ponto em que os quatro painéis se encontram." }
+    ]
+  },
   "0.208.0": {
     "Verso das cartas com a logo da mesa": [
       { "img": "0.208.0/versos.webp", "legenda": "As oito capas com o losango da mesa no meio, cada uma na sua cor." },

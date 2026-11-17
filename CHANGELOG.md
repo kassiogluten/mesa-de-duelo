@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.210.0] - 2026-11-17
+
+### Mudou
+
+- **Coroa do dano de comandante menor no Contador de vida.** O botão da coroa em cada painel ficou menor, e as marcas de dano ao lado dela também, para não disputar espaço com a vida. A área de toque continua do mesmo tamanho.
+
+### Corrigido
+
+- **Logo do meio do Contador de vida no encontro dos painéis em tela cheia.** Em tela cheia, num celular com entalhe ou com a borda maior de um lado, o losango dourado ficava fora do lugar, mais para cima ou para o lado do ponto em que os painéis se encontram. Agora ele fica sempre no encontro dos painéis, em pé ou deitado.
+
 ## [0.209.0] - 2026-11-17
 
 ### Mudou

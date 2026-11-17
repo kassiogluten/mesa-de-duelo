@@ -163,7 +163,7 @@ export function painelHTML(p: Partida, d: Disposicao, j: number, modo: Modo = 'v
 export function mesaHTML(p: Partida, d: Disposicao, modos: ReadonlyMap<number, Modo>) {
   return `<div class="cv-mesa" style="grid-template-rows:repeat(${d.linhas}, 1fr);grid-template-columns:repeat(${d.colunas}, 1fr)">
       ${p.jogadores.map((_, j) => painelHTML(p, d, j, modos.get(j))).join('')}
-      <button type="button" class="cv-meio" data-acao="menu" style="left:${d.meio.x * 100}%;top:${d.meio.y * 100}%" aria-label="Mesa: dados, histórico e partida" aria-haspopup="dialog"></button>
+      <button type="button" class="cv-meio" data-acao="menu" style="--x:${d.meio.x};--y:${d.meio.y}" aria-label="Mesa: dados, histórico e partida" aria-haspopup="dialog"></button>
     </div>`;
 }
 
