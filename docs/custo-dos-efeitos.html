@@ -72,6 +72,19 @@ dl.method dt { font-weight: 600; }
 dl.method dd { margin: 0; color: var(--muted); }
 @media (max-width: 560px) { dl.method { grid-template-columns: 1fr; } dl.method dd { margin-bottom: 6px; } }
 ol.next { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+/* Guia de leitura: resumo, vocabulário, leituras numeradas e a nota "Como ler" acima de cada tabela. */
+.tldr ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+dl.gloss { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; font-size: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+dl.gloss dt { font: 600 13px/1.6 var(--mono); color: var(--gold); }
+dl.gloss dd { margin: 0; }
+dl.gloss dd small { display: block; color: var(--muted); font-size: 13px; }
+@media (max-width: 560px) { dl.gloss { grid-template-columns: 1fr; gap: 2px; } dl.gloss dd { margin-bottom: 10px; } }
+.finding h3 { margin: 0; font-size: 15.5px; }
+.finding .tag { font: 600 12px/1 var(--mono); color: var(--gold); }
+.read { border-left: 3px solid var(--gold); padding: 2px 0 2px 12px; color: var(--muted); font-size: 14px; max-width: 72ch; }
+.read b { color: var(--ink); font-weight: 600; }
+td.gain { color: var(--keep); font-weight: 600; }
+.foot { color: var(--muted); font-size: 13px; }
 </style>
 <style>* { box-sizing: border-box; } body { margin: 0; }</style>
 </head>
@@ -89,6 +102,34 @@ ol.next { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
       <span>Cada efeito <b>3 vezes</b> em 10 s</span>
     </div>
   </header>
+
+  <section class="decision tldr prose">
+    <h2>Em poucas palavras</h2>
+    <ol>
+      <li><b>A pergunta:</b> quando a mesa começa a travar num aparelho fraco, o que desligar primeiro para aliviar mais, estragando menos?</li>
+      <li><b>A resposta:</b> duas jogadas perdem o enfeite mais caro (a mesa escurecendo da mágica de valor 6 e os raios da lendária) e quatro animações que nunca param (voar, vínculo com a vida, enjoo e mira do alvo) ficam paradas.</li>
+      <li><b>O resultado:</b> essas quatro animações juntas caem de 391 para 74 ms por segundo (81% a menos), a mágica de valor 6 pinta 69% menos tela e a lendária deixa de derrubar os quadros com a CPU freada.</li>
+      <li><b>O que falta:</b> confirmar num celular de entrada de verdade. Tudo aqui foi medido num computador, com a CPU freada para imitar o celular.</li>
+      <li><b>Depois deste relatório (versão 0.209.0, 17/11):</b> a mesa parada foi resolvida por outro caminho. Os números "por segundo" daqui valem para a mesa com alguma jogada acontecendo; com a mesa em silêncio, os mesmos estados hoje custam de 14 a 24 ms/s. Veja "Mesa em silêncio" mais abaixo.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Como ler os números</h2>
+    <p class="prose">O relatório mede dois gastos diferentes: o trabalho da <b>página</b> (processador) e a área que a <b>placa de vídeo</b> pinta. Quase toda dúvida some separando os dois.</p>
+    <dl class="gloss">
+      <dt>Página (ms)</dt><dd>Quanto o processador trabalhou a mais por causa do efeito, em milésimos de segundo. <small>Régua: a 60 quadros por segundo, cada quadro tem 16,7 ms. Uma jogada de 113 ms (a mediana) gasta o equivalente a 7 quadros, espalhados pela duração dela.</small></dd>
+      <dt>ms/s</dt><dd>O mesmo gasto, só que cobrado a cada segundo, enquanto o estado estiver na mesa. <small>Régua: 1.000 ms/s é o processador inteiro. 100 ms/s é 10% dele, o tempo todo.</small></dd>
+      <dt>Desenho (ms)</dt><dd>A parte da "Página" que é o navegador recalculando e repintando a tela. <small>Já está dentro da "Página", não se soma a ela.</small></dd>
+      <dt>Telas</dt><dd>Quanta área a camada de efeitos pintou, somando todos os quadros. 1 tela = a tela inteira pintada uma vez. <small>É o gasto da placa de vídeo, o que mais pesa num celular. Luz e escurecimento cobrindo a mesa toda custam muito aqui, faíscas pequenas quase nada.</small></dd>
+      <dt>Objetos</dt><dd>O pico de coisas na camada ao mesmo tempo (faíscas, riscos, cartas em voo). <small>Mostrou pouca relação com o custo: 150 objetos pequenos pesam menos que um escurecimento de tela inteira.</small></dd>
+      <dt>CPU 4× / 6×</dt><dd>A CPU freada 4 ou 6 vezes, para imitar um celular intermediário e um de entrada.</dd>
+      <dt>&lt;30 (quedas)</dt><dd>Quantos pedaços de meio segundo ficaram abaixo de 30 quadros por segundo. É a mesma conta que o Efeitos: automático faz para decidir baixar os efeitos. <small>0 é o esperado. 1 isolado, numa medida só, pode ser acaso. 2 ou mais, repetido, é problema.</small></dd>
+      <dt>E0, E1, E2, E3</dt><dd>Os degraus do Efeitos: automático. E0 é tudo ligado. E1 é o primeiro alívio (o assunto deste relatório). E2 para a mesa viva e a câmera. E3 troca os efeitos para CSS. <small>Quanto melhor o E1 aliviar, menos vezes a mesa precisa descer para o E2, que o jogador nota mais.</small></dd>
+      <dt>Camada / CSS</dt><dd>Os dois jeitos de desenhar o mesmo efeito: a camada de efeitos (WebGL, mais bonita) ou animação CSS simples (a do E3).</dd>
+      <dt>Protegido</dt><dd>Golpe letal e ultimate: são o clímax da partida e não perdem nada no E1, mesmo sendo caros.</dd>
+    </dl>
+  </section>
 
   <section>
     <h2>O que os números dizem</h2>
@@ -115,41 +156,80 @@ ol.next { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
   <section>
     <h2>O E1 novo, medido</h2>
     <p class="prose">A mesma mesa cheia no E0 e no E1, rodados em seguida. Com a CPU 6×, mediana de 3 medidas.</p>
-    <div class="tablewrap"><table><thead><tr><th>Efeito</th><th>E0</th><th>E1</th></tr></thead><tbody>
-      <tr><td class="name">Mágica de valor 6, CPU 6×</td><td class="mono">4 quedas · 108 telas</td><td class="mono">1 queda · 36 telas</td></tr>
-      <tr><td class="name">Mágica de valor 6, CPU normal</td><td class="mono">602 ms · 143 telas</td><td class="mono">384 ms · 45 telas</td></tr>
-      <tr><td class="name">Lendária, CPU 6×</td><td class="mono">2 quedas · pior a 5 qps</td><td class="mono">0 quedas · pior a 60 qps</td></tr>
-      <tr><td class="name">Lendária, CPU normal</td><td class="mono">864 ms</td><td class="mono">435 ms</td></tr>
-      <tr><td class="name">Voar, 22 criaturas</td><td class="mono">78 ms/s</td><td class="mono">0 ms/s</td></tr>
-      <tr><td class="name">Vínculo com a vida</td><td class="mono">147 ms/s</td><td class="mono">19 ms/s</td></tr>
-      <tr><td class="name">Alvo de algo na pilha</td><td class="mono">96 ms/s</td><td class="mono">18 ms/s</td></tr>
-      <tr><td class="name">Enjoo de invocação</td><td class="mono">70 ms/s</td><td class="mono">37 ms/s</td></tr>
+    <div class="tablewrap"><table><thead><tr><th>Efeito</th><th>E0</th><th>E1</th><th>Ganho</th></tr></thead><tbody>
+      <tr><td class="name">Mágica de valor 6, CPU 6×</td><td class="mono">4 quedas · 108 telas</td><td class="mono">1 queda · 36 telas</td><td class="mono gain">3 quedas a menos · −67% de tela</td></tr>
+      <tr><td class="name">Mágica de valor 6, CPU normal</td><td class="mono">602 ms · 143 telas</td><td class="mono">384 ms · 45 telas</td><td class="mono gain">−36% de página · −69% de tela</td></tr>
+      <tr><td class="name">Lendária, CPU 6×</td><td class="mono">2 quedas · pior a 5 qps</td><td class="mono">0 quedas · pior a 60 qps</td><td class="mono gain">não derruba mais</td></tr>
+      <tr><td class="name">Lendária, CPU normal</td><td class="mono">864 ms</td><td class="mono">435 ms</td><td class="mono gain">−50%</td></tr>
+      <tr><td class="name">Voar, 22 criaturas</td><td class="mono">78 ms/s</td><td class="mono">0 ms/s</td><td class="mono gain">−100%</td></tr>
+      <tr><td class="name">Vínculo com a vida</td><td class="mono">147 ms/s</td><td class="mono">19 ms/s</td><td class="mono gain">−87%</td></tr>
+      <tr><td class="name">Alvo de algo na pilha</td><td class="mono">96 ms/s</td><td class="mono">18 ms/s</td><td class="mono gain">−81%</td></tr>
+      <tr><td class="name">Enjoo de invocação</td><td class="mono">70 ms/s</td><td class="mono">37 ms/s</td><td class="mono gain">−47%</td></tr>
+      <tr><td class="name"><b>Os quatro estados somados</b></td><td class="mono">391 ms/s</td><td class="mono">74 ms/s</td><td class="mono gain">−81%</td></tr>
     </tbody></table></div>
     <p class="prose">"Quedas" são janelas de meio segundo abaixo de 30 quadros por segundo. Falta ver numa partida de verdade, num celular de entrada, se a mesa desce menos vezes para o E2.</p>
+    <p class="read"><b>Como ler:</b> compare só as duas colunas entre si. Os números do E0 daqui não batem com os das tabelas de baixo (voar 78 aqui, 106 lá; vínculo 147 aqui, 89 lá) porque foram tirados noutro momento e noutro servidor. O que vale é a diferença entre E0 e E1, rodados em seguida.</p>
+  </section>
+
+  <section>
+    <h2>Seis leituras para não se perder nas tabelas</h2>
+    <div class="findings">
+      <div class="finding"><div class="tag">1 · dois rankings</div><h3>Pesado para o processador não é pesado para a placa</h3><p>No ranking de página lideram criar 10 fichas (441 ms), Lightning Bolt (423) e ninjutsu (415). No de telas, ultimate (182) e mágica de valor 6 (166), que em página são medianas (104 e 338). Essas duas sozinhas pintam 53% de toda a área das 36 jogadas. Por isso o corte não seguiu o ranking de página: seguiu as telas e as quedas com a CPU freada.</p></div>
+      <div class="finding"><div class="tag">2 · aluguel contra compra</div><h3>O que fica ligado pesa mais do que o que passa</h3><p>Uma jogada cobra uma vez. Um estado cobra a cada segundo. O voar (106 ms/s) gasta em 5 segundos mais do que a jogada mais cara do relatório (441 ms). Mas atenção: esse preço vale enquanto a página está desenhando quadros, ou seja, durante as jogadas. Com a mesa em silêncio, desde a 0.209.0, ele cai para perto de zero.</p></div>
+      <div class="finding"><div class="tag">3 · concentração</div><h3>Quatro estados são 82% do custo contínuo</h3><p>Voar, vínculo, alvo e enjoo somam 330 dos 400 ms/s medidos nos dez estados. Os outros seis juntos (mesa viva, ward, toque mortífero, resistência, proteção, indestrutível) somam 70. Não havia mais nada relevante para parar: a mesa viva, por exemplo, custa só 7.</p></div>
+      <div class="finding"><div class="tag">4 · no celular</div><h3>O estado pesa quando uma jogada passa por cima</h3><p>Numa conta grosseira, 106 ms/s com a CPU 4 vezes mais lenta viram mais de 400: quase metade do processador só para as criaturas flutuarem enquanto uma jogada acontece. Sozinho isso não derruba os quadros (0 quedas em todos os estados, mesmo a 6×), mas tira a folga que a jogada precisa. É nessa hora que o E1 para os estados, e por isso a pausa continua valendo mesmo com a mesa em silêncio já resolvida.</p></div>
+      <div class="finding"><div class="tag">5 · camada contra CSS</div><h3>A camada de efeitos não é a vilã</h3><p>Com a placa real, as 36 jogadas somam 5.754 ms na camada contra 4.601 em CSS: 25% a mais, não as 3 a 4 vezes das medidas antigas. Quatro jogadas saem até mais baratas na camada (reanimar, fichas, transformar, lealdade). A diferença grande fica em jogadas curtas em que o CSS quase não custa: comprar carta (113 contra 10), embaralhar (48 contra 9), derrota (99 contra 24). Se um dia for preciso aliviar mais, é por aí que vale olhar.</p></div>
+      <div class="finding"><div class="tag">6 · ruído</div><h3>Nem todo número vermelho é problema</h3><p>Exilar e embaralhar aparecem com 10 quedas na coluna da CPU 6×, mas ao repetir deram 0: foi a máquina travando naquele momento. A maioria das jogadas tem uma medida só nessas colunas, então um "1" isolado diz pouco. E entre medições feitas em momentos diferentes a variação chega a dezenas de por cento (o vínculo deu 89 numa e 147 noutra). Confie nas diferenças grandes e nas linhas repetidas três vezes.</p></div>
+    </div>
   </section>
 
   <section>
     <h2>Jogadas, por vez</h2>
     <p class="prose">A jogada inteira, como na partida: a carta, o que é CSS e o que é da camada. "Página" é o tempo a mais da linha principal (scripts, estilo, layout e pintura), e "telas" a área que a camada pintou somada (uma tela inteira = 1). As duas últimas colunas contam as janelas de meio segundo abaixo de 30 quadros por segundo, a medida do regulador: mediana de 3 medidas nas jogadas repetidas, uma medida nas outras.</p>
+    <p class="read"><b>Como ler:</b> a tabela está ordenada pela "Página". A barra dourada é a jogada como ela é hoje, a azul é a mesma jogada em CSS: barras parecidas querem dizer que a camada de efeitos custa quase o mesmo. Depois olhe a coluna "Telas" separadamente, porque ela tem outro ranking. Nas duas últimas colunas, vermelho é queda de quadros; o asterisco marca as que sumiram ao repetir.</p>
     <div class="legend"><span style="--sw: var(--bar)">camada de efeitos</span><span style="--sw: var(--css)">mesma jogada em CSS</span></div>
     <div class="tablewrap"><table id="once"><thead><tr><th>Jogada</th><th>Página (ms)</th><th>Em CSS (ms)</th><th>Desenho (ms)</th><th>Telas</th><th>Objetos</th><th>CPU 4× &lt;30</th><th>CPU 6× &lt;30</th></tr></thead><tbody></tbody></table></div>
+    <p class="foot">* Travada esporádica da máquina: ao repetir a medida, a queda sumiu.</p>
   </section>
 
   <section>
     <h2>O que pesa o tempo todo, por segundo</h2>
     <p class="prose">O estado ligado em todas as 22 criaturas e a mesa parada, contra a mesma mesa sem o estado. Por criatura, divida por 22: o voar fica perto de 5 ms por segundo.</p>
+    <p class="read"><b>Como ler:</b> é o pior caso, com as 22 criaturas no mesmo estado. Numa mesa comum, com 3 ou 4 criaturas voando, o voar custa uns 15 a 20 ms/s. Divida por 10 para ter a porcentagem do processador: 106 ms/s é 10,6%. As quedas são 0 em todas as linhas: nenhum estado trava a mesa sozinho, ele só ocupa o processador que as jogadas vão precisar. E leia estes números como "o estado com a página acordada": a ferramenta de medida roda um contador de quadros que mantém a página desenhando, o que exagera o custo da mesa realmente parada.</p>
     <div class="tablewrap"><table id="cont"><thead><tr><th>Estado</th><th>Página (ms/s)</th><th>Desenho (ms/s)</th><th>Pintura em blocos (ms/s)</th><th>CPU 4× &lt;30</th><th>CPU 6× &lt;30</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Mesa em silêncio: o que mudou depois (0.209.0)</h2>
+    <p class="prose">Ao tentar levar o voar para a camada de efeitos, a medida mostrou que o peso não estava nas animações das cartas, e sim na página, que nunca descansava: três laços pediam um quadro novo 60 vezes por segundo mesmo sem nada acontecendo, e a cada quadro o navegador refazia a conta de todas as animações em andamento. Com os laços parados, as mesmas animações quase não custam. Medido com a mesa cheia parada, no modo de verdade, placa real, antes e depois em seguida:</p>
+    <div class="tablewrap"><table><thead><tr><th>Mesa cheia parada</th><th>Antes</th><th>Depois</th><th>Ganho</th></tr></thead><tbody>
+      <tr><td class="name">Nada animando</td><td class="mono">725 ms/s · 60 quadros/s</td><td class="mono">16 ms/s · 1 quadro/s</td><td class="mono gain">−98%</td></tr>
+      <tr><td class="name">Voar, 22 criaturas</td><td class="mono">877 ms/s</td><td class="mono">23 ms/s</td><td class="mono gain">−97%</td></tr>
+      <tr><td class="name">Vínculo com a vida</td><td class="mono">860 ms/s</td><td class="mono">14 ms/s</td><td class="mono gain">−98%</td></tr>
+      <tr><td class="name">Enjoo de invocação</td><td class="mono">742 ms/s</td><td class="mono">24 ms/s</td><td class="mono gain">−97%</td></tr>
+      <tr><td class="name">Alvo de algo na pilha</td><td class="mono">862 ms/s</td><td class="mono">505 ms/s enquanto a luz corre · 31 ms/s depois</td><td class="mono gain">−41% · −96%</td></tr>
+    </tbody></table></div>
+    <p class="read"><b>Como ler:</b> estes números não se comparam com os das outras tabelas (outra forma de medir, a mesa viva ligada). O que importa é a ordem de grandeza: a mesa parada passou de ocupar uns 70% do processador para menos de 3%, com todos os efeitos ligados. A receita que funcionou:</p>
+    <ol class="next prose">
+      <li><b>Animar só posição e transparência.</b> Essas duas a placa de vídeo anima sozinha, sem acordar a página. Cor de borda, filtro, traço de SVG e tamanho obrigam a repintar a cada quadro.</li>
+      <li><b>Nenhum laço de quadros ligado sem motivo.</b> Basta um rodando para o navegador refazer todas as animações a cada quadro. A camada de efeitos e o regulador agora dormem quando nada se move.</li>
+      <li><b>O que precisa de desenho próprio vai para fora da página.</b> A luz e a poeira da mesa viva são desenhadas à parte, a no máximo 30 quadros por segundo.</li>
+      <li><b>O que não dá para deixar leve, roda e para.</b> A luz da seta de alvo passa três vezes e para; a seta continua acesa.</li>
+    </ol>
+    <p class="prose">Com isso, levar os estados contínuos para o WebGL deixou de compensar. O que resta em aberto é a luz da seta de alvo enquanto corre (até uns 8 s numa seta longa) e a conferência num celular de entrada.</p>
   </section>
 
   <section>
     <h2>Peças da camada sozinhas, por vez</h2>
     <p class="prose">Cada peça desenhada direto na camada, sem a carta, o som nem o redesenho da mesa. Mostra o preço de manter a camada desenhando: quanto mais longa a peça, mais a página trabalha.</p>
+    <p class="read"><b>Como ler:</b> esta tabela serve para achar qual pedaço de uma jogada pesa. Quase todas as peças pintam 3 telas ou menos; as exceções são a onda do ultimate (61), a vitória (13), a fumaça do ninja (10) e a derrota (7). Ou seja, o custo de placa vem de poucas peças grandes, não das faíscas.</p>
     <div class="tablewrap"><table id="pieces"><thead><tr><th>Peça</th><th>Página (ms)</th><th>Camada (ms)</th><th>Telas</th><th>Objetos</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section>
     <h2>Placa emulada contra placa real</h2>
     <p class="prose">O navegador de testes sem tela usa por padrão o WebGL emulado na CPU e compõe a página sem placa. Assim, o canvas dos efeitos é copiado de volta para a memória a cada quadro (cerca de 1 s a cada 10 s só nisso). Com a placa real a cópia some, e a camada fica perto do CSS.</p>
+    <p class="read"><b>Como ler:</b> as colunas "emulada" estão aqui só para explicar por que as medidas antigas pareciam condenar a camada de efeitos. Não use para decidir nada: o que vale são as duas colunas "real", iguais às da tabela de jogadas.</p>
     <div class="tablewrap"><table id="emu"><thead><tr><th>Jogada</th><th>Camada, emulada (ms)</th><th>CSS, emulada (ms)</th><th>Camada, real (ms)</th><th>CSS, real (ms)</th></tr></thead><tbody></tbody></table></div>
   </section>
 
@@ -181,7 +261,8 @@ const LABELS = { 'mesa-viva': 'Mesa viva (luz, poeira, vinheta)' };
 const fmt = n => n == null || Number.isNaN(n) ? '–' : Math.round(n).toLocaleString('pt-BR');
 const fmt1 = n => n == null ? '–' : (n < 10 ? n.toFixed(1) : Math.round(n)).toLocaleString('pt-BR');
 const bar = (value, max, cls = '') => `<div class="bar ${cls}"><i style="width:${Math.max(0, value) / max * 120}px"></i><span>${fmt(Math.max(0, value))}</span></div>`;
-const slow = (rate, name) => { const r = DATA.thr[rate]?.[name]; if (!r) return '<span class="zero">–</span>'; return r.slow ? `<span class="hot">${r.slow}</span>` : '<span class="zero">0</span>'; };
+const NOISE = { 6: new Set(['exile', 'shuffle']) }; // quedas que sumiram ao repetir a medida
+const slow = (rate, name) => { const r = DATA.thr[rate]?.[name]; if (!r) return '<span class="zero">–</span>'; if (r.slow && NOISE[rate]?.has(name)) return `<span class="zero" title="Sumiu ao repetir a medida">${r.slow}*</span>`; return r.slow ? `<span class="hot">${r.slow}</span>` : '<span class="zero">0</span>'; };
 const chip = name => CUT.has(name) ? ' <span class="chip cut">sai no E1</span>' : PROTECTED.has(name) ? ' <span class="chip keep">protegido</span>' : PAUSE.has(name) ? ' <span class="chip warn">para no E1</span>' : '';
 const nameCell = (r) => `<td class="name">${LABELS[r.name] ?? r.label ?? r.name}${chip(r.name)}<small class="mono">${r.name}</small></td>`;
 
