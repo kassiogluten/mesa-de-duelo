@@ -1,13 +1,15 @@
 // O regulador dos efeitos (Efeitos: automático): com os quadros caindo, desce um degrau depressa; estável e com algo animando, sobe devagar, travando o degrau que já falhou.
+// Só mede com algo animando: com a mesa parada, descansa (sem laço de quadros), e o tempo parado não conta.
 import type { EffectsTier } from './gpuSupport';
 
 /**
  * Os limites, escolhidos em 15/11/2026 para proteger os efeitos: desce com 3 s abaixo de 30 quadros por segundo,
  * sobe com 6 s acima de 50, animando. Depois de cada troca, 5 s sem outra; a subida que cai de novo em até 20 s trava
  * aquele degrau por 20 s, e o tempo dobra a cada nova recaída (até 160 s). Os 5 s do começo da mesa não contam
- * (imagens chegando, camada carregando). Com mais de 40 permanentes, a mesa não passa do degrau 1.
+ * (imagens chegando, camada carregando). Com mais de 40 permanentes, a mesa não passa do degrau 1. `windowMs` é a
+ * janela de cada medida (a do frameClock.ts).
  */
-export const GOVERNOR = { lowFps: 30, lowMs: 3000, highFps: 50, highMs: 6000, coolMs: 5000, relapseMs: 20000, lockMs: 20000, maxLockMs: 160000, warmupMs: 5000, crowded: 40 };
+export const GOVERNOR = { lowFps: 30, lowMs: 3000, highFps: 50, highMs: 6000, coolMs: 5000, relapseMs: 20000, lockMs: 20000, maxLockMs: 160000, warmupMs: 5000, crowded: 40, windowMs: 500 };
 
 /** Uma medida: quando (ms), os quadros por segundo do pior quarto da janela, se algo animava e as permanentes na mesa. */
 export interface GovernorSample { at: number; fps: number; busy: boolean; permanents: number }
@@ -17,6 +19,8 @@ export function createGovernor(limits = GOVERNOR) {
   // lowSince: desde quando está abaixo do limite; busyHighSince: desde quando, acima do limite, algo começou a animar.
   let lowSince: number | null = null, busyHighSince: number | null = null;
   let lockUntil = -Infinity, lock = limits.lockMs;
+  // lastAt: a última medida; restedAt: quando o regulador foi descansar (a mesa parou de animar), ou null.
+  let lastAt = 0, restedAt: number | null = null;
   const clamp = (n: number) => Math.max(0, Math.min(3, n)) as EffectsTier;
 
   return {
@@ -24,10 +28,17 @@ export function createGovernor(limits = GOVERNOR) {
     /** A mesa abriu (ou o automático voltou): recomeça do degrau 0, com a espera do começo. */
     reset(at: number) {
       tier = 0; since = at; lastChange = lastClimb = lockUntil = -Infinity; lock = limits.lockMs;
-      lowSince = busyHighSince = null;
+      lowSince = busyHighSince = null; restedAt = null;
     },
+    /**
+     * A mesa parou de animar e as medidas param. Na volta, os quadros baixos de antes continuam contando, mas o tempo
+     * parado não: duas jogadas lentas seguidas descem o degrau; uma jogada lenta depois de um minuto parado, não.
+     */
+    rest() { restedAt ??= lastAt; },
     /** Devolve o degrau depois desta medida. */
     sample(s: GovernorSample): EffectsTier {
+      if (restedAt !== null) { if (lowSince !== null) lowSince += s.at - limits.windowMs - restedAt; restedAt = null; }
+      lastAt = s.at;
       if (s.at - since < limits.warmupMs) return tier;
       const floor: EffectsTier = s.permanents > limits.crowded ? 1 : 0;
       if (tier < floor) { tier = floor; lastChange = s.at; }

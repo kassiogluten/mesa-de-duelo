@@ -75,6 +75,17 @@ test('the governor steps back up only after 6 s above 50 fps with something anim
   assert.equal(feed(g, 37000, 37000, 40), 0, 'between 30 and 50 nothing changes');
 });
 
+test('the governor rests while the table is idle: the idle time does not count, slow plays add up', () => {
+  const g = createGovernor();
+  g.reset(0);
+  feed(g, 5000, 6500, 20);
+  g.rest();
+  assert.equal(feed(g, 60000, 60500, 20), 0, 'a slow play after a minute idle does not step down by itself');
+  assert.equal(feed(g, 61000, 61000, 20), 1, 'but the slow windows before the rest still count (3 s in all)');
+  g.rest();
+  assert.equal(feed(g, 90000, 92500, 60), 1, 'a fast play resets nothing it should not');
+});
+
 test('a climb that falls back locks that tier, doubling the wait each time', () => {
   const g = createGovernor();
   g.reset(0);

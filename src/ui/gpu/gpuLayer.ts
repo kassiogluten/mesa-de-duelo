@@ -1,5 +1,5 @@
 // A camada GPU da mesa: um canvas WebGL transparente por cima do campo, só para os efeitos, que desenha apenas enquanto há efeito vivo.
-import { Application, Container, UPDATE_PRIORITY } from 'pixi.js';
+import { Application, Container, Ticker, UPDATE_PRIORITY } from 'pixi.js';
 import { gpuClock, gpuProbe } from './gpuSupport';
 
 /** Um efeito vivo na camada: anda `ms` (já na câmera lenta) a cada quadro e diz se continua. */
@@ -39,6 +39,11 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
     resizeTo: window, failIfMajorPerformanceCaveat: false,
   });
   app.ticker.stop();
+  // O PixiJS liga um laço só dele (Ticker.system, com o agendador do coletor de texturas) que roda para sempre, mesmo sem
+  // efeito: a página desenhava 60 quadros por segundo com a mesa parada, e cada animação contínua em CSS (voar, vínculo
+  // com a vida) refazia o estilo a cada um. Ele passa a andar só junto com o nosso laço, em `tick`.
+  Ticker.system.autoStart = false;
+  Ticker.system.stop();
   host.append(canvas);
 
   const live = new Set<GpuEffect>();
@@ -50,6 +55,7 @@ export async function createGpuLayer(host: HTMLElement, opts: { coarse: boolean;
   let frozenUntil = 0;
   function tick() {
     tickStart = performance.now();
+    Ticker.system.update(tickStart);
     const ms = tickStart < frozenUntil ? 0 : app.ticker.elapsedMS * gpuClock.timeScale;
     for (const effect of live) {
       if (effect.update(ms)) continue;

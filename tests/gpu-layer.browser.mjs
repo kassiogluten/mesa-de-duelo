@@ -30,6 +30,9 @@ try {
     // Mesa viva: no fundo da mesa, sem clique, a uns 30 quadros por segundo, enquanto a camada dos efeitos fica parada.
     const backdrop = document.querySelector('canvas.table-ambience');
     out.ambienceInMat = !!backdrop?.parentElement?.classList.contains('mat') && getComputedStyle(backdrop).pointerEvents === 'none';
+    // A mesa viva desenha num worker: com o servidor recém-ligado, o módulo dele ainda está sendo preparado; o ritmo
+    // conta a partir do primeiro quadro.
+    for (let i = 0; i < 50 && !gpu.ambienceStats()?.frames; i++) await wait(100);
     const ambience0 = gpu.ambienceStats()?.frames ?? 0;
     const idle0 = gpu.stats().frames; await wait(1000);
     out.ambienceFrames = (gpu.ambienceStats()?.frames ?? 0) - ambience0;

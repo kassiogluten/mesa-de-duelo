@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.209.0] - 2026-11-17
+
+### Mudou
+
+- **Luz da seta de alvo passa três vezes.** A luz que corre pela seta, da mágica na pilha até o alvo, agora passa três vezes e para, como já fazia a seta de combate; a seta continua acesa enquanto a mágica espera. Correndo sem parar, ela fazia a mesa redesenhar o tempo todo enquanto o oponente pensava.
+
+### Corrigido
+
+- **Mesa parada bem mais leve.** Com a mesa parada, sem nenhuma jogada acontecendo, a página continuava redesenhando a mesa inteira 60 vezes por segundo, gastando bateria e esquentando o celular à toa. Agora ela descansa enquanto nada acontece: a luz e a poeira da mesa viva são desenhadas à parte, sem acordar a página, e as animações que ficam rodando nas cartas (voar, vínculo com a vida, enjoo de invocação) quase não pesam mais. Num computador rápido, com o campo cheio, o trabalho da mesa parada caiu de cerca de 70% do tempo para menos de 2%. O Contador de vida também para de redesenhar depois do primeiro dado em 3D.
+
 ## [0.208.0] - 2026-11-16
 
 ### Mudou

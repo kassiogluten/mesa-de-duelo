@@ -100,6 +100,7 @@ export function createMotionKit(root: HTMLElement) {
     if (reduced()) return;
     const animation = el.animate(frames, { duration, easing, delay, fill: delay ? 'backwards' : 'auto' });
     animations.add(animation);
+    gpu.wake();
     animation.onfinish = animation.oncancel = () => animations.delete(animation);
   }
   function effect(className: string, point: Point, html?: string) {
@@ -114,6 +115,7 @@ export function createMotionKit(root: HTMLElement) {
   /** Põe uma peça na camada de efeitos: sai com as outras na limpeza. */
   function track(el: HTMLElement) {
     layer().append(el); effects.add(el);
+    gpu.wake();
   }
   // Quantas vezes a camada foi limpa: quem escondeu uma carta por conta própria sabe que ela já voltou.
   let clears = 0;

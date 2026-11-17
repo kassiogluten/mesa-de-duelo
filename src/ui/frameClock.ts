@@ -17,6 +17,8 @@ let raf = 0, start = 0, last = 0, frames = 0;
 let gaps: number[] = [];
 
 function tick(now: number) {
+  // Quem para de escutar dentro do aviso (o regulador indo descansar) desliga o laço: este quadro não pede outro.
+  raf = 0;
   if (last) { gaps.push(now - last); frames++; }
   last = now;
   if (!start) start = now;
@@ -25,7 +27,7 @@ function tick(now: number) {
     start = now; frames = 0; gaps = [];
     for (const fn of listeners) fn(w);
   }
-  raf = requestAnimationFrame(tick);
+  if (!raf && listeners.size && !document.hidden) raf = requestAnimationFrame(tick);
 }
 /** Liga só com alguém escutando e a aba à vista; ao voltar, recomeça a janela (a pausa não conta como quadro lento). */
 function sync() {

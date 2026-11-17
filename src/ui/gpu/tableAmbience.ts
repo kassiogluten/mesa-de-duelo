@@ -1,227 +1,149 @@
-// A mesa viva: um shader só, por baixo das cartas, com a luz que segue quem joga, poeira na cor dele, a vinheta da vida baixa e os toques do jogo (clarão, tremor, escurecer), a 30 quadros por segundo em meia resolução.
+// A mesa viva: um shader só, por baixo das cartas (ambienceDraw.ts), a 30 quadros por segundo em meia resolução, desenhado num worker para a página não acordar a cada quadro; sem worker com OffscreenCanvas, na própria página.
+import { AMBIENCE_FRAME_MS, ambienceContext, createAmbienceDraw, type AmbienceFromWorker, type AmbiencePulse, type AmbienceScene, type AmbienceToWorker } from './ambienceDraw';
 
-/** O que a mesa viva mostra agora; ela desliza até aqui em vez de pular. */
-export interface AmbienceScene {
-  /** Centro do campo de quem joga o turno, de 0 a 1 na janela. */
-  focus: { x: number; y: number };
-  /** Cor de quem joga o turno (a da capa das cartas), de 0 a 1. */
-  tone: [number, number, number];
-  /** Sua vida baixa: 0 (tranquilo) a 1 (por um fio). */
-  danger: number;
-  /** Combate em andamento: a luz fecha e esquenta. */
-  combat: boolean;
-}
-
-const VERTEX = `#version 300 es
-in vec2 corner;
-out vec2 uv;
-void main() { uv = corner * .5 + .5; gl_Position = vec4(corner, 0., 1.); }`;
-
-// Saída com alfa pré-multiplicado: a luz soma por cima do fundo da mesa e a vinheta o escurece.
-const FRAGMENT = `#version 300 es
-precision mediump float;
-in vec2 uv;
-out vec4 color;
-uniform vec2 size;
-uniform float time;
-uniform vec2 focus;
-uniform vec3 tone;
-uniform float danger;
-uniform float combat;
-// Os toques do jogo (pulse): o clarão de uma mágica resolvendo, o tremor de um golpe pesado, o escuro de um momento
-// grande, e o relógio da poeira (anda mais rápido no combate, sem dar saltos).
-uniform vec3 flash;
-uniform float quake;
-uniform float dim;
-uniform float drift;
-
-float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
-float noise(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  f = f * f * (3. - 2. * f);
-  return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
-}
-// Poeira: um grão por célula, subindo devagar e balançando; só as células vizinhas contam.
-float motes(vec2 p, float scale, float speed, float seed) {
-  p *= scale;
-  p.y -= drift * speed;
-  vec2 cell = floor(p);
-  float light = 0.;
-  for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
-    vec2 c = cell + vec2(x, y);
-    float h = hash(c + seed);
-    if (h > .22) continue;
-    vec2 at = c + vec2(hash(c + seed + 7.1), hash(c + seed + 3.7));
-    at.x += sin(time * (.35 + h) + h * 40.) * .35;
-    float d = length(p - at);
-    float twinkle = .55 + .45 * sin(time * (1.2 + h * 2.) + h * 60.);
-    light += (smoothstep(.04, 0., d) + smoothstep(.13, 0., d) * .1) * twinkle;
-  }
-  return light;
-}
-void main() {
-  float aspect = size.x / size.y;
-  vec2 p = vec2(uv.x * aspect, 1. - uv.y);
-  // O golpe pesado sacode a luz e a faz piscar.
-  vec2 f = vec2(focus.x * aspect, focus.y) + quake * .02 * vec2(sin(time * 61.), cos(time * 47.));
-  // A luz de quem joga: uma elipse larga que respira; no combate, mais fechada e mais quente.
-  vec2 d = (p - f) / vec2(mix(.62, .48, combat) * aspect * .55, mix(.42, .34, combat));
-  float spot = exp(-dot(d, d) * 1.6) * (.85 + .15 * sin(time * .45)) * (1. + quake * .5 * sin(time * 53.)) * (1. - dim * .7);
-  float haze = noise(p * 2.2 + vec2(time * .03, time * .018)) * .6 + noise(p * 5. - time * .04) * .4;
-  vec3 warm = mix(vec3(1., .9, .72), vec3(1., .55, .3), combat);
-  vec3 lightColor = mix(tone, warm, .45);
-  vec3 light = lightColor * spot * (.16 + haze * .06);
-  // Grãos de poeira, mais visíveis perto da luz.
-  float dust = motes(p, 9., .045, 1.) + motes(p, 16., .03, 9.) * .4;
-  light += mix(lightColor, vec3(1.), .35) * dust * (.035 + spot * .28);
-  // Vinheta: as bordas da mesa somem no escuro; com a vida baixa, pesam mais e pulsam em vermelho, como um coração.
-  vec2 e = uv - .5;
-  float edge = smoothstep(.25, .85, length(e * vec2(1., .9)) * 1.25);
-  float beat = pow(max(0., sin(time * 2.4)), 6.) * .6 + .4;
-  float dark = edge * (.22 + danger * .35);
-  light += vec3(.8, .06, .03) * edge * danger * beat * .45;
-  // O clarão: um brilho leve na cor da mágica, só no meio da mesa (reduzido em 14/11/2026: o de antes clareava a
-  // tela inteira, como um relâmpago branco, quando a mágica resolvia e chegava ao campo).
-  light += flash * (1. - edge) * .06;
-  // Momento grande: a mesa toda escurece por baixo das cartas.
-  dark = mix(dark, 1., dim * .55);
-  // Com alfa pré-multiplicado, a cor não pode passar do alfa: no meio da mesa, onde a vinheta não escurece (alfa 0), a
-  // luz ficava sem definição, e o navegador a descartava. Aparecia uma elipse nítida no meio da mesa, onde a vinheta
-  // começa. O alfa vai até a luz mais forte; o fundo escurece por isso no máximo uns 2%.
-  color = vec4(light, max(dark, max(light.r, max(light.g, light.b))));
-}`;
-
-/** Um toque do jogo na mesa viva: clarão na cor dada, tremor (0 a 1) e escurecer por `ms`. */
-export interface AmbiencePulse {
-  flash?: [number, number, number];
-  quake?: number;
-  dim?: { amount: number; ms: number };
-}
+export type { AmbiencePulse, AmbienceScene } from './ambienceDraw';
 
 /** Quadros desenhados (para os testes: parada, a conta não sobe). */
 interface AmbienceStats { frames: number; running: boolean }
 
-const FRAME_MS = 1000 / 30;
+/** Quem desenha: o worker ou a própria página. `run` liga e desliga o laço; `frames` conta os quadros. */
+interface Painter {
+  set(scene: AmbienceScene): void;
+  pulse(p: AmbiencePulse): void;
+  run(on: boolean): void;
+  resize(width: number, height: number): void;
+  frames(): number;
+  destroy(): void;
+}
+
+/** O navegador desenha WebGL fora da página? (Sem isso, a mesa viva fica na página, como antes.) */
+const offscreen = () => typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined' && 'transferControlToOffscreen' in HTMLCanvasElement.prototype;
 
 /**
- * Cria o canvas da mesa viva dentro de `host` (o fundo da mesa). Devolve null sem WebGL2 ou sem compilar o shader:
- * a mesa fica com o fundo de sempre.
+ * Cria o canvas da mesa viva dentro de `host` (o fundo da mesa). Devolve null sem WebGL2 ou sem compilar o shader na
+ * página: a mesa fica com o fundo de sempre. No worker, a falha chega depois: ele tenta de novo na página, e só sem
+ * ela avisa `onLost`.
  */
 export function createAmbience(host: HTMLElement, opts: { coarse: boolean; onLost?(): void }) {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'table-ambience';
-  canvas.setAttribute('aria-hidden', 'true');
-  const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
-  if (!gl) return null;
-  const program = buildProgram(gl);
-  if (!program) { gl.getExtension('WEBGL_lose_context')?.loseContext(); return null; }
-  gl.useProgram(program);
-  const buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  // Um triângulo que cobre a tela inteira.
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const corner = gl.getAttribLocation(program, 'corner');
-  gl.enableVertexAttribArray(corner);
-  gl.vertexAttribPointer(corner, 2, gl.FLOAT, false, 0, 0);
-  const u = (name: string) => gl.getUniformLocation(program, name);
-  const uniforms = { size: u('size'), time: u('time'), focus: u('focus'), tone: u('tone'), danger: u('danger'), combat: u('combat'),
-    flash: u('flash'), quake: u('quake'), dim: u('dim'), drift: u('drift') };
-  host.append(canvas);
-
   // Luz difusa não precisa de nitidez: meia resolução no computador, um terço no celular.
   const scale = opts.coarse ? .34 : .5;
-  const target: AmbienceScene = { focus: { x: .5, y: .72 }, tone: [.85, .72, .45], danger: 0, combat: false };
-  const shown = { fx: .5, fy: .72, r: .85, g: .72, b: .45, danger: 0, combat: 0 };
-  // Os toques somem sozinhos: o clarão em cerca de meio segundo, o tremor mais rápido; o escuro fica `ms` e volta.
-  const touch = { flash: [0, 0, 0] as [number, number, number], flashAmount: 0, flashRise: 1, quake: 0, dim: 0, dimTarget: 0, dimUntil: 0 };
-  // paused: o regulador parou a mesa viva (degrau 2); o canvas fica com o último quadro desenhado.
-  let frames = 0, raf = 0, last = 0, clock = 0, drift = 0, destroyed = false, paused = false;
+  const size = () => ({ width: Math.max(1, Math.round(innerWidth * scale)), height: Math.max(1, Math.round(innerHeight * scale)) });
+  // A cena e o laço guardados aqui: quem desenha de novo (o worker falhou e a página assumiu) começa igual.
+  let scene: AmbienceScene | null = null, running = false, destroyed = false, paused = false;
 
-  function resize() {
-    const width = Math.max(1, Math.round(innerWidth * scale)), height = Math.max(1, Math.round(innerHeight * scale));
-    if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; gl!.viewport(0, 0, width, height); }
+  let canvas = newCanvas();
+  let painter: Painter | null = offscreen() ? workerPainter(canvas) : pagePainter(canvas);
+  if (!painter) return null;
+  host.append(canvas);
+
+  function newCanvas() {
+    const el = document.createElement('canvas');
+    el.className = 'table-ambience';
+    el.setAttribute('aria-hidden', 'true');
+    return el;
   }
-  function frame(now: number) {
-    raf = requestAnimationFrame(frame);
-    const elapsed = now - last;
-    if (elapsed < FRAME_MS - 2) return;
-    last = now;
-    // Depois de uma pausa (aba de volta), a luz continua de onde estava, sem salto.
-    const dt = Math.min(elapsed, 100) / 1000;
-    clock += dt;
-    // A luz leva cerca de um segundo para trocar de lado; a vinheta, um pouco mais.
-    const k = 1 - Math.exp(-dt * 3), slow = 1 - Math.exp(-dt * 1.5);
-    shown.fx += (target.focus.x - shown.fx) * k; shown.fy += (target.focus.y - shown.fy) * k;
-    shown.r += (target.tone[0] - shown.r) * k; shown.g += (target.tone[1] - shown.g) * k; shown.b += (target.tone[2] - shown.b) * k;
-    shown.danger += (target.danger - shown.danger) * slow; shown.combat += ((target.combat ? 1 : 0) - shown.combat) * k;
-    // No combate, a poeira sobe mais depressa (o relógio dela acelera, sem saltar).
-    drift += dt * (1 + shown.combat * 1.6);
-    // O clarão sobe em vez de estourar (flashRise) e apaga devagar.
-    touch.flashRise = Math.min(1, touch.flashRise + dt * 6);
-    touch.flashAmount *= Math.exp(-dt * 2); touch.quake *= Math.exp(-dt * 5);
-    const dimGoal = clock < touch.dimUntil ? touch.dimTarget : 0;
-    touch.dim += (dimGoal - touch.dim) * (1 - Math.exp(-dt * (dimGoal > touch.dim ? 9 : 3)));
-    resize();
-    gl!.uniform2f(uniforms.size, canvas.width, canvas.height);
-    gl!.uniform1f(uniforms.time, clock);
-    gl!.uniform2f(uniforms.focus, shown.fx, shown.fy);
-    gl!.uniform3f(uniforms.tone, shown.r, shown.g, shown.b);
-    gl!.uniform1f(uniforms.danger, shown.danger);
-    gl!.uniform1f(uniforms.combat, shown.combat);
-    const glow = touch.flashAmount * touch.flashRise;
-    gl!.uniform3f(uniforms.flash, touch.flash[0] * glow, touch.flash[1] * glow, touch.flash[2] * glow);
-    gl!.uniform1f(uniforms.quake, touch.quake);
-    gl!.uniform1f(uniforms.dim, touch.dim);
-    gl!.uniform1f(uniforms.drift, drift);
-    gl!.drawArrays(gl!.TRIANGLES, 0, 3);
-    frames++;
+  /** O worker não conseguiu (sem WebGL2 no OffscreenCanvas, worker que não carregou): a página assume. */
+  function fallBack() {
+    if (destroyed) return;
+    painter?.destroy();
+    const next = newCanvas(), page = pagePainter(next);
+    canvas.replaceWith(next); canvas = next;
+    if (!page) { lose(); return; }
+    painter = page;
+    if (scene) page.set(scene);
+    if (running) page.run(true);
   }
-  function start() { if (!destroyed && !paused && !raf && !document.hidden) { last = 0; raf = requestAnimationFrame(frame); } }
-  function stop() { cancelAnimationFrame(raf); raf = 0; }
-  const visibility = () => { if (document.hidden) stop(); else start(); };
-  document.addEventListener('visibilitychange', visibility);
-  const lost = (e: Event) => { e.preventDefault(); destroy(); opts.onLost?.(); };
-  canvas.addEventListener('webglcontextlost', lost);
+  function lose() { destroy(); opts.onLost?.(); }
+
+  function workerPainter(el: HTMLCanvasElement): Painter {
+    const worker = new Worker(new URL('./ambienceWorker.ts', import.meta.url), { type: 'module' });
+    const send = (m: AmbienceToWorker, transfer: Transferable[] = []) => worker.postMessage(m, transfer);
+    let frames = 0;
+    worker.onmessage = (e: MessageEvent<AmbienceFromWorker>) => {
+      if (e.data.type === 'frames') frames = e.data.frames;
+      else if (e.data.type === 'failed') fallBack();
+      else lose();
+    };
+    worker.onerror = e => { e.preventDefault(); fallBack(); };
+    const target = el.transferControlToOffscreen();
+    send({ type: 'start', canvas: target, ...size() }, [target]);
+    return {
+      set: next => send({ type: 'set', scene: next }),
+      pulse: p => send({ type: 'pulse', pulse: p }),
+      run: on => send({ type: 'run', on }),
+      resize: (width, height) => send({ type: 'size', width, height }),
+      frames: () => frames,
+      destroy: () => worker.terminate(),
+    };
+  }
+
+  function pagePainter(el: HTMLCanvasElement): Painter | null {
+    const gl = ambienceContext(el);
+    if (!gl) return null;
+    const draw = createAmbienceDraw(gl);
+    if (!draw) { gl.getExtension('WEBGL_lose_context')?.loseContext(); return null; }
+    const lost = (e: Event) => { e.preventDefault(); lose(); };
+    el.addEventListener('webglcontextlost', lost);
+    let frames = 0, raf = 0, last = 0;
+    const resize = (width: number, height: number) => { if (el.width !== width || el.height !== height) { el.width = width; el.height = height; } };
+    const { width, height } = size();
+    resize(width, height);
+    function frame(now: number) {
+      raf = requestAnimationFrame(frame);
+      const elapsed = now - last;
+      if (elapsed < AMBIENCE_FRAME_MS - 2) return;
+      last = now;
+      // Depois de uma pausa (aba de volta), a luz continua de onde estava, sem salto.
+      draw!.draw(Math.min(elapsed, 100) / 1000);
+      frames++;
+    }
+    return {
+      set: next => draw.set(next),
+      pulse: p => draw.pulse(p),
+      run(on) {
+        if (on && !raf) { last = 0; raf = requestAnimationFrame(frame); }
+        if (!on) { cancelAnimationFrame(raf); raf = 0; }
+      },
+      resize,
+      frames: () => frames,
+      destroy() {
+        cancelAnimationFrame(raf); raf = 0;
+        el.removeEventListener('webglcontextlost', lost);
+        gl.getExtension('WEBGL_lose_context')?.loseContext();
+      },
+    };
+  }
+
+  /** O laço roda com a mesa viva solta (fora do degrau 2) e a aba à vista. */
+  function sync() {
+    const on = !destroyed && !paused && !document.hidden;
+    if (on !== running) { running = on; painter?.run(on); }
+  }
+  const resized = () => { const { width, height } = size(); painter?.resize(width, height); };
+  document.addEventListener('visibilitychange', sync);
+  addEventListener('resize', resized);
 
   function destroy() {
     if (destroyed) return;
     destroyed = true;
-    stop();
-    document.removeEventListener('visibilitychange', visibility);
-    canvas.removeEventListener('webglcontextlost', lost);
-    gl!.getExtension('WEBGL_lose_context')?.loseContext();
+    sync();
+    document.removeEventListener('visibilitychange', sync);
+    removeEventListener('resize', resized);
+    painter?.destroy(); painter = null;
     canvas.remove();
   }
-  start();
+  sync();
   return {
-    canvas,
+    get canvas() { return canvas; },
     /** A cena nova: a luz, a cor e a vinheta deslizam até ela. */
-    set(scene: AmbienceScene) { Object.assign(target, scene); },
+    set(next: AmbienceScene) { scene = next; painter?.set(next); },
     /** O regulador para (degrau 2) ou solta a mesa viva; parada, ela guarda o último quadro e ignora os toques. */
-    pause(on: boolean) { paused = on; if (on) stop(); else start(); },
+    pause(on: boolean) { paused = on; sync(); },
     /** Um toque do jogo: clarão, tremor ou escurecer (somam com o que já está acontecendo). */
-    pulse(p: AmbiencePulse) {
-      if (paused) return;
-      if (p.flash) { touch.flash = p.flash; touch.flashAmount = 1; touch.flashRise = 0; }
-      if (p.quake) touch.quake = Math.min(1, touch.quake + p.quake);
-      if (p.dim) { touch.dimTarget = Math.max(p.dim.amount, clock < touch.dimUntil ? touch.dimTarget : 0); touch.dimUntil = Math.max(touch.dimUntil, clock + p.dim.ms / 1000); }
-    },
+    pulse(p: AmbiencePulse) { if (!paused) painter?.pulse(p); },
     destroy,
     get destroyed() { return destroyed; },
-    stats: (): AmbienceStats => ({ frames, running: !!raf }),
+    stats: (): AmbienceStats => ({ frames: painter?.frames() ?? 0, running }),
   };
 }
 export type Ambience = NonNullable<ReturnType<typeof createAmbience>>;
-
-function buildProgram(gl: WebGL2RenderingContext) {
-  const shader = (type: number, source: string) => {
-    const s = gl.createShader(type)!;
-    gl.shaderSource(s, source); gl.compileShader(s);
-    return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
-  };
-  const vertex = shader(gl.VERTEX_SHADER, VERTEX), fragment = shader(gl.FRAGMENT_SHADER, FRAGMENT);
-  if (!vertex || !fragment) return null;
-  const program = gl.createProgram()!;
-  gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
-  return gl.getProgramParameter(program, gl.LINK_STATUS) ? program : null;
-}

@@ -158,7 +158,9 @@ export function drawTargetArrows(root: HTMLElement, s: FState, stack: FState['st
     const label = tag ? `<g class="target-tag ${head}"><rect x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" width="${width}" height="20" rx="10"/><text x="${(tx + width / 2).toFixed(1)}" y="${(ty + 14).toFixed(1)}">${esc(tag)}</text></g>` : '';
     return { d, cls, glyph: head === 'aura' ? 'star' : 'aim', s: { x: sx, y: sy }, c: { x: cx, y: cy }, e: { x: ex, y: ey }, target: key.split('>')[1] ?? key, extra: label };
   });
-  const html = beams.length ? `<defs>${beamDefs('fTargetGlow')}</defs>${beamsHTML(beams, 'fTargetGlow')}` : '';
+  // O pulso de luz corre 3 vezes e para: correndo para sempre, ele repintava a seta a cada quadro e não deixava a
+  // página descansar enquanto a mágica esperava na pilha (docs/spec-mesa-webgl.md, "Mesa em silêncio").
+  const html = beams.length ? `<defs>${beamDefs('fTargetGlow')}</defs>${beamsHTML(beams, 'fTargetGlow', 3)}` : '';
   if (svg.dataset.html !== html) { svg.innerHTML = html; svg.dataset.html = html; }
   root.querySelectorAll('.stack-focus').forEach(el => el.classList.remove('stack-focus'));
   if (focused !== null) root.querySelectorAll(`#fStack [data-stack="${focused}"], #fStackGallery [data-stack="${focused}"]`).forEach(el => el.classList.add('stack-focus'));

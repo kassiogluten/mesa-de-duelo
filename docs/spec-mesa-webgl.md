@@ -451,3 +451,25 @@ O que diz:
 - Os números do E0 desta tabela saíram mais altos que os do ranking acima porque foram tirados noutro momento e noutro servidor; a comparação vale entre as duas colunas, rodadas em seguida.
 - A troca de degrau não deixa efeito pela metade: o que já está na camada termina; o que começa depois já sai sem os cortes. As animações contínuas vão para o desenho parado (a mira e a carta que voa dão um pequeno salto até ele) e, de volta ao E0, recomeçam do início.
 - Falta conferir, numa partida de verdade e num celular de entrada, que a mesa desce menos vezes para o E2 (critério 8 do item 125).
+
+## Mesa em silêncio (16/11/2026)
+
+Ao prototipar o voar na camada (a recomendação depois do item 134), a medição mostrou que o custo dos estados contínuos não estava nas animações de CSS, e sim na página que nunca descansava. Uma animação só de `transform` e `opacity` vai para o compositor e não custa nada à página, **desde que a página não desenhe quadros**; com algum laço de `requestAnimationFrame` rodando, o Chrome refaz a cada quadro o estilo de todas as animações em andamento, também as do compositor (o rastro mostrava 3,5 vezes mais invalidações "Animation" com o voar ligado). E havia três laços que nunca paravam:
+
+- **PixiJS:** o `SchedulerSystem` do renderizador pendura o agendador do coletor de texturas no `Ticker.system`, que liga sozinho e roda para sempre, com ou sem efeito vivo. A camada parava o próprio laço, mas não esse. Agora `Ticker.system` fica parado e anda só dentro do `tick` da camada (`gpuLayer.ts`): o coletor só marca `_ready`, e quem coleta é o desenho seguinte.
+- **Regulador (`frameClock.ts`):** escutava os quadros a partida inteira, e o laço não parava quando quem escutava saía dentro do próprio aviso (o `tick` pedia o quadro seguinte depois de avisar). Agora o regulador só mede com algo animando (decidido nesse dia): acorda com `play` da porta e com as peças e animações do `motionKit`, e dorme depois de duas janelas (1 s) paradas. O tempo parado não conta como quadros baixos (`rest()` em `effectsGovernor.ts`): duas jogadas lentas seguidas descem o degrau; uma jogada lenta depois de um minuto parado, não.
+- **Mesa viva:** passou para um worker com `OffscreenCanvas` (`ambienceWorker.ts`; o shader e o estado ficaram em `ambienceDraw.ts`, usados pelos dois caminhos). O canvas do worker chega ao compositor sem quadro da página. Sem `OffscreenCanvas`, ou se o worker não conseguir o WebGL2, a página desenha como antes.
+
+Medido com um rastro do Chrome só da linha principal da página (o `medir-cada-efeito.mjs` roda o próprio laço de quadros para contar as janelas lentas e por isso mantém a página acordada: ele exagera os estados contínuos), no modo de verdade (Efeitos: automático, mesa viva ligada, sem `gpu=1`), o Campo cheio do laboratório parado depois de assentar, placa real, código de antes e de depois rodados em seguida:
+
+| Mesa cheia parada | Antes | Depois |
+| --- | --- | --- |
+| Nada animando | 725 ms/s, 60 quadros/s | 16 ms/s, 1 quadro/s |
+| Voar (22 criaturas) | 877 ms/s | 23 ms/s |
+| Vínculo com a vida | 860 ms/s | 14 ms/s |
+| Enjoo de invocação | 742 ms/s | 24 ms/s |
+| Alvo de algo na pilha | 862 ms/s | 505 ms/s, 48 quadros/s |
+
+- O que sobrava era o pulso de luz da seta de alvo (`.arrow-pulse`): `stroke-dashoffset` num SVG com filtro de desfoque, que nunca vai ao compositor e repintava a cada quadro enquanto a seta existisse. Decidido no mesmo dia: ele passa 3 vezes e para, como o da seta de combate. Enquanto corre (até uns 8 s numa seta longa, a 330 px por segundo), custa o mesmo de antes; depois, a mesa com 4 setas de alvo ficou em 31 ms/s e 1 quadro por segundo. A mira das cartas alvejadas (`fx-aim`) vai ao compositor e não acorda a página.
+- O Contador de vida também ficava com o laço do PixiJS ligado depois do primeiro dado em 3D.
+- Desenhar os estados contínuos em WebGL (a ideia de antes) deixou de compensar: a flutuação da carta é DOM e ficaria em CSS, e o resto já quase não custa com a página parada.

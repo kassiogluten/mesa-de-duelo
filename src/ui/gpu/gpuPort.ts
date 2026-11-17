@@ -29,9 +29,12 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   let scene: AmbienceScene | null = null;
   const coarse = () => globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
   const decision = () => gpuDecision({ level: effectsLevel(), tier: effectsTier(), forced: forcedGpu(), reduced: o.reduced(), webgl2: hasWebGL2(), lost: contextLost });
-  // O regulador do automático: escuta os quadros só enquanto rege (mesa à vista, automático, com WebGL2).
+  // O regulador do automático rege com a mesa à vista, no automático e com WebGL2 (`governing`), mas só escuta os quadros
+  // enquanto algo anima: com a mesa parada, a página não roda laço de quadros, e as animações contínuas em CSS (voar,
+  // vínculo com a vida) ficam só no compositor, sem refazer o estilo a cada quadro. `idleWindows`: medidas seguidas sem
+  // nada animando.
   const governor = createGovernor();
-  let unlisten: (() => void) | null = null;
+  let unlisten: (() => void) | null = null, governing = false, idleWindows = 0;
   // O degrau escolhido à mão pelas páginas de teste (`setTier` da porta): fica valendo, com ou sem o automático.
   let pinned: EffectsTier | null = null;
 
@@ -65,15 +68,27 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   /** O regulador rege só no automático, com a mesa à vista e a GPU possível; fora disso, o degrau volta a 0. */
   function govern() {
     // O degrau posto à mão (testes, laboratório de efeitos) fica onde está, sem o regulador.
-    if (pinned !== null) { unlisten?.(); unlisten = null; setTier(pinned); return; }
+    if (pinned !== null) { governing = false; sleep(); setTier(pinned); return; }
     const on = effectsLevel() === 'auto' && forcedGpu() === undefined && !o.reduced() && hasWebGL2() && !contextLost && !root.hidden;
-    if (on && !unlisten) { governor.reset(performance.now()); unlisten = listenFrames(step); }
-    if (!on) { unlisten?.(); unlisten = null; setTier(0); }
+    if (on && !governing) { governing = true; governor.reset(performance.now()); wake(); }
+    if (!on) { governing = false; sleep(); setTier(0); }
   }
-  /** A cada meio segundo: o pior quarto dos quadros, se algo animava e quantas permanentes há. */
+  /** Algo começou a animar: o regulador volta a escutar os quadros. */
+  function wake() {
+    if (governing && !unlisten) { idleWindows = 0; unlisten = listenFrames(step); }
+  }
+  /** Para de escutar os quadros (mesa parada, ou fora do automático). */
+  function sleep() {
+    if (!unlisten) return;
+    unlisten(); unlisten = null;
+    governor.rest();
+  }
+  /** A cada meio segundo: o pior quarto dos quadros, se algo animava e quantas permanentes há; parada há 1 s, dorme. */
   function step(w: FrameWindow) {
     const busy = (runtime?.layer.stats().live ?? 0) > 0 || !!o.busy?.();
     setTier(governor.sample({ at: w.at, fps: w.lowFps, busy, permanents: root.querySelectorAll?.('.slot').length ?? 0 }));
+    idleWindows = busy ? 0 : idleWindows + 1;
+    if (idleWindows >= 2) sleep();
   }
   /** Degrau novo: 1 corta faíscas (gpuParticles.ts lê na hora) e os efeitos pesados (`play`) e para as animações contínuas, 2 para a mesa viva e a câmera, 3 troca para o CSS. */
   function setTier(next: EffectsTier) {
@@ -139,8 +154,11 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
       // No degrau 1, os efeitos pesados saem na versão simples em CSS ('css': quem pediu desenha) ou não saem ('off').
       const cut = effectCut(name, params);
       if (cut) return cut === 'off';
+      wake();
       return runtime.effects.play(runtime.layer, name, params);
     },
+    /** Um efeito em CSS começou: o regulador volta a medir (com a mesa parada, ele descansa). */
+    wake,
     clear() { runtime?.layer.clear(); },
     /** Congela por `ms` o tempo dos efeitos que já estão na camada (o contato do golpe de combate); sem ela, nada. */
     freeze(ms: number) { if (runtime && !runtime.layer.destroyed && decision().use === 'gpu') runtime.layer.freeze(ms); },
