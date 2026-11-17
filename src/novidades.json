@@ -1,4 +1,10 @@
 {
+  "0.211.0": {
+    "Cabeçalho mais enxuto no celular": [
+      { "img": "0.211.0/cabecalho-inicio.webp", "legenda": "Tela inicial no celular: o nome da mesa com Novidades, o menu ⋯ e a conta na primeira linha, e as três abas na segunda." },
+      { "img": "0.211.0/cabecalho-salas.webp", "legenda": "Página Salas no celular: o nome, \"Voltar ao jogo\" e a conta numa linha só." }
+    ]
+  },
   "0.210.0": {
     "Coroa do dano de comandante menor no Contador de vida": [
       { "img": "0.210.0/coroa-menor.webp", "legenda": "A coroa menor embaixo da vida de cada jogador; no painel de quem já levou dano, as marcas ao lado dela." }

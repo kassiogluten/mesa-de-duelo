@@ -21,15 +21,22 @@
 .shared-shell-header .news-btn { min-height: 40px; white-space: nowrap; }
 .shared-shell-header :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) { .shared-shell-header .home-nav:hover:not(:disabled) { color: var(--ink); background: #ffffff08; } }
+/* Celular: duas linhas. Em cima, a marca e os ícones (instalar, Novidades, ⋯ e conta) juntos na ponta; embaixo,
+   as três abas dividindo a largura, encostadas na linha do cabeçalho. */
 @media (max-width: 700px) {
-  .shared-shell-header.home-top { min-height: 72px; gap: 12px; padding: 14px 0 8px; flex-wrap: wrap; }
+  .shared-shell-header.home-top { min-height: 0; gap: 6px 8px; padding: 12px 0 0; flex-wrap: wrap; }
   .shared-shell-header .home-brand { font-size: 19px; gap: 9px; }
-  .shared-shell-header.home-top nav { order: 3; width: 100%; }
-  .shared-shell-header .home-nav { flex: 1; }
+  .shared-shell-header.home-top nav { order: 3; width: 100%; gap: 0; align-self: auto; }
+  .shared-shell-header .home-nav { flex: 1 1 0; justify-content: center; padding-inline: 4px; border-radius: 6px 6px 0 0; }
   .shared-shell-header .news-btn { padding: 6px 10px; font-size: 13px; }
+  /* Instalar: só o ícone, do tamanho dos outros; o texto continua lá para o leitor de tela. */
+  .shared-shell-header .pwa-install { justify-content: center; gap: 0; width: 40px; min-width: 40px; height: 40px; padding: 0; font-size: 0; }
+  .shared-shell-header .pwa-install svg { width: 18px; height: 18px; }
 }
+/* Tela estreita com o botão de instalar à mostra, ou muito estreita: fica só o losango da marca, para a linha não quebrar. */
+@media (max-width: 389px) { .shared-shell-header.home-top:has(.pwa-install:not([hidden])) .home-brand > span:last-child { display: none; } }
+@media (max-width: 339px) { .shared-shell-header .home-brand > span:last-child { display: none; } }
 .shared-shell-header .home-news { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 700px) { .shared-shell-header .pwa-install { padding: 6px 10px; font-size: 13px; } }
 /* Celular deitado e tablet estreito: cabe numa linha só. */
 @media (min-width: 701px) and (max-width: 960px) {
   .shared-shell-header.home-top { gap: 20px; }
@@ -53,19 +60,13 @@
 .tema-menu .mais-temas button { min-height: 0; padding: 3px; border-radius: 50%; }
 .tema-menu .mais-temas button[aria-checked='true']::after { content: none; }
 .mais-temas button[aria-checked='true'] .tema-amostra { box-shadow: inset 0 0 0 1px #ffffff2a, 0 0 0 2px var(--azul-18233b, #18233b), 0 0 0 4px var(--gold); }
-/* Conta: depois de Novidades; no celular, na linha das abas, para a primeira linha não quebrar. */
+/* Conta: depois de Novidades; no celular, na ponta da primeira linha, com os outros ícones. */
 .shared-shell-header.home-top > .conta { margin-left: -32px; }
-@media (max-width: 700px) {
-  .shared-shell-header.home-top > .conta { order: 4; margin-left: 0; }
-  .shared-shell-header.home-top:has(> .conta:not([hidden])) nav { width: auto; flex: 1; }
-}
-/* Menu ⋯ (relatar e tema): entre Novidades e a conta; no celular, também na linha das abas. */
+@media (max-width: 700px) { .shared-shell-header.home-top > .conta { margin-left: 0; } }
+/* Menu ⋯ (relatar e tema): entre Novidades e a conta, também no celular. */
 .shared-shell-header.home-top > .tema { margin-left: -32px; }
 .shared-shell-header.home-top > .tema + .conta { margin-left: -32px; }
 @media (min-width: 701px) and (max-width: 960px) {
   .shared-shell-header.home-top > .tema, .shared-shell-header.home-top > .tema + .conta { margin-left: -12px; }
 }
-@media (max-width: 700px) {
-  .shared-shell-header.home-top > .tema, .shared-shell-header.home-top > .tema + .conta { order: 4; margin-left: 0; }
-  .shared-shell-header.home-top:has(> .tema:not([hidden])) nav { width: auto; flex: 1; }
-}
+@media (max-width: 700px) { .shared-shell-header.home-top > .tema, .shared-shell-header.home-top > .tema + .conta { margin-left: 0; } }

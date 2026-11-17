@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.211.0] - 2026-11-17
+
+### Mudou
+
+- **Cabeçalho mais enxuto no celular.** Na tela inicial e em Meus decks, o cabeçalho passou de três linhas para duas: em cima, o nome da mesa com Novidades, o menu ⋯ e a conta juntos na ponta; embaixo, as abas Jogar, Meus decks e Salas dividindo a largura toda, mais fáceis de tocar. O botão de instalar o jogo vira só o ícone. Em Salas, Minhas partidas, Torneios e nas outras páginas, "Voltar ao jogo" e a conta ficam na mesma linha do nome. Sobra mais tela para o que importa.
+
 ## [0.210.0] - 2026-11-17
 
 ### Mudou
