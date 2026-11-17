@@ -69,9 +69,11 @@
    relógio único de motion.ts: a carta redesenhada continua de onde estava). */
 .forge .slot.has-flying::before { content: ''; position: absolute; left: 8%; right: 8%; bottom: -12px; height: 18px; border-radius: 50%; background: radial-gradient(ellipse, #000c, transparent 70%); pointer-events: none; opacity: .75; }
 .forge .slot.has-flying > .fly-wind { position: absolute; z-index: 0; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, #ffffffbb, transparent); opacity: 0; pointer-events: none; }
-.forge .slot.has-flying > .fly-wind:nth-of-type(1) { width: 46%; bottom: -4px; left: 0; }
-.forge .slot.has-flying > .fly-wind:nth-of-type(2) { width: 34%; bottom: 8px; left: 10%; }
-.forge .slot.has-flying > .fly-wind:nth-of-type(3) { width: 40%; bottom: -12px; left: 20%; }
+/* Cada risco para antes da borda direita do lugar (`--wind-to`, em relação à largura dele): passando dela, a fileira
+   ganhava e perdia largura para rolar a cada passada, e a barra de rolagem ficava aparecendo e sumindo. */
+.forge .slot.has-flying > .fly-wind:nth-of-type(1) { width: 46%; bottom: -4px; left: 0; --wind-to: 115%; }
+.forge .slot.has-flying > .fly-wind:nth-of-type(2) { width: 34%; bottom: 8px; left: 10%; --wind-to: 160%; }
+.forge .slot.has-flying > .fly-wind:nth-of-type(3) { width: 40%; bottom: -12px; left: 20%; --wind-to: 100%; }
 @media (prefers-reduced-motion: no-preference) {
   .forge .slot.has-flying { animation: fly-bob 4.2s ease-in-out infinite; }
   .forge .slot.has-flying::before { animation: fly-shadow 4.2s ease-in-out infinite; }
@@ -81,7 +83,7 @@
 }
 @keyframes fly-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(calc(var(--ch, 128px) * -.05)); } }
 @keyframes fly-shadow { 0%, 100% { transform: translateY(0) scale(1); opacity: .75; } 50% { transform: translateY(calc(var(--ch, 128px) * .05)) scale(.82); opacity: .45; } }
-@keyframes fly-wind { 0% { opacity: 0; transform: translateX(-30%); } 20% { opacity: .9; } 70% { opacity: .6; } 100% { opacity: 0; transform: translateX(160%); } }
+@keyframes fly-wind { 0% { opacity: 0; transform: translateX(-30%); } 20% { opacity: .9; } 70% { opacity: .6; } 100% { opacity: 0; transform: translateX(var(--wind-to, 100%)); } }
 .forge .slot.has-flying > .bfc .face { translate: 0 -3px; box-shadow: 0 10px 12px -4px #0008, 0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent); }
 .forge .slot.has-flying > .bfc.actionable .face { box-shadow: 0 8px 12px #0007, 0 0 0 2px var(--glow); }
 .inspect-card { display: grid; place-items: center; position: absolute; z-index: 7; left: -7px; top: -9px; width: 28px; height: 28px; padding: 5px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line); color: var(--ink); cursor: zoom-in; }

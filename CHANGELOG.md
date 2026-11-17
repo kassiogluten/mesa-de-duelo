@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.212.2] - 2026-11-17
+
+### Corrigido
+
+- **A barra de rolagem da fileira não fica mais aparecendo e sumindo com criaturas com voar.** Os riscos de vento da animação de voar passavam da borda da carta, e a fileira ganhava e perdia espaço para rolar a cada passada. Agora o vento fica dentro do lugar da carta.
+
 ## [0.212.1] - 2026-11-17
 
 ### Corrigido
