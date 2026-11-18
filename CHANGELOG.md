@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.214.0] - 2026-11-18
+
+### Novo
+
+- **Limpa campo com onda.** Quando uma mágica ou habilidade tira 3 ou mais permanentes do campo de uma vez (Wrath of God, Damnation, Evacuation, Cyclonic Rift sobrecarregado), a mesa escurece, treme de leve e uma onda na cor da carta sai do retrato de quem a conjurou e varre a mesa inteira: luz dourada no branco, maré no azul, névoa roxa no preto, fogo no vermelho, folhas no verde, dourado nas de várias cores e prata nas incolores. Cada permanente racha, é sugada pelo portal ou volta para a mão no instante em que a onda passa por ela, tudo num passo só (antes, saíam uma depois da outra), com uma faixa no meio da mesa dizendo o que aconteceu, como "Wrath of God: 9 permanentes destruídas". Com 1 ou 2 permanentes, a saída continua como antes.
+- **Limpa campo de dano.** Pyroclasm, Blasphemous Act, Anger of the Gods e outros que causam dano a 3 ou mais criaturas sem mirar nelas trocam os projéteis, um para cada criatura, por uma onda de fogo (névoa roxa nos marcadores −1/−1) que atinge cada uma quando passa, com o número do dano de sempre; as que morrem em seguida racham todas juntas. O dano dividido entre alvos escolhidos, como o do Arc Lightning, continua com os projéteis.
+
+### Corrigido
+
+- **Criatura virada saindo do campo.** A permanente virada que é destruída ou exilada agora racha, e é sugada pelo portal, deitada e no tamanho dela, em vez de aparecer esticada no espaço que ocupava na mesa.
+
 ## [0.213.0] - 2026-11-18
 
 ### Mudou

@@ -60,18 +60,21 @@ export function createZoneMotion(kit: MotionKit) {
    * dano e o resto voam em arco para o monte certo, que pulsa ao recebê-la.
    */
   function leave(event: PresentationEvent, from: Point, to: Point, end: Point, piece: HTMLElement, duration: number,
-    opts: { caption?: HTMLElement; into?: HTMLElement | null; endRot?: number; fade?: boolean } = {}) {
+    opts: { caption?: HTMLElement; into?: HTMLElement | null; endRot?: number; fade?: boolean; turned?: boolean } = {}) {
     const { caption, into = null, endRot = 0, fade = true } = opts;
+    // Virada no campo: a cena no lugar (rachar, o portal) começa com a carta virada, no tamanho dela (`from` é o
+    // retângulo deitado que ela ocupava na tela).
+    const spot = opts.turned ? { ...from, w: from.h, h: from.w, rot: 90 } : from;
     if (event.to === 'Exile') {
       // A conjurada por dobra volta para o exílio no fim do turno: um rasgo menor no lugar dela.
       if (warpReturn(event)) warpRift(from, .7);
       // Some no lugar, no portal; não precisa atravessar a mesa até a pilha do exílio.
-      if (!reduced()) { scenes.vortex(from, piece, duration, caption); return; }
+      if (!reduced()) { scenes.vortex(spot, piece, duration, caption); return; }
       piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
       return;
     }
     // Destruída: a cena inteira acontece no lugar; só a poeira vai até o cemitério.
-    if (event.reason === 'destroyed' && !reduced()) { scenes.crumble(from, to, piece, duration, into); return; }
+    if (event.reason === 'destroyed' && !reduced()) { scenes.crumble(spot, to, piece, duration, into); return; }
     if (event.reason === 'destroyed') shatter(from);
     // Na camada GPU: o sacrifício solta brasas e fumaça escura no lugar, e o voo deixa um rastro (brasas da
     // sacrificada, brilho da devolvida à mão).

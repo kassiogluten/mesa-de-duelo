@@ -6,6 +6,7 @@ import { listNames } from './historyLog';
 import { loyaltyLook } from './planeswalkerEffects';
 import type { PresentationEvent } from './presentationTimeline';
 import { startingRollText } from './startingRoll';
+import { sweepOutcome } from './boardSweep';
 
 /** O que as frases precisam da mesa: o estado ao vivo (jogadores e você), o nome das cartas e a carta por id. */
 export interface EventView {
@@ -22,6 +23,7 @@ const ZONE_FROM: Record<string, string> = { Graveyard: 'do cemitério', Exile: '
 
 /** A frase de um evento. `detailed` (no histórico) acrescenta alvos, de quem era a carta e de onde ela veio. */
 export function eventDescription(v: EventView, event: PresentationEvent, detailed = false) {
+  if (event.sweep) return sweepDescription(v, event);
   const who = v.state()?.players.find(p => p.id === event.actor)?.name ?? 'Jogador';
   const name = event.card?.name ? v.label(event.card) : 'uma carta';
   const on = detailed ? historyTargets(v, event) : '';
@@ -85,6 +87,19 @@ export function loyaltyDescription(event: PresentationEvent, who: string, name: 
   return cost ? `${who} usou ${cost} de ${name}${on}.` : `${who} usou uma habilidade de lealdade de ${name}${on}.`;
 }
 /** Uma carta que já saiu do campo, como estava na mesa no momento do evento. */
+/** Limpa campo: "Wrath of God: 9 permanentes destruídas." ou "Pyroclasm: 2 de dano em 7 criaturas." */
+function sweepDescription(v: EventView, event: PresentationEvent) {
+  const sweep = event.sweep!;
+  const cause = sweep.cause?.name ? v.label(sweep.cause) : sweep.name ? v.ptName(sweep.name) || sweep.name : 'Limpa campo';
+  if (event.type !== 'damage') return `${cause}: ${sweepOutcome(sweep.events)}.`;
+  const amounts = new Set(sweep.events.map(e => Math.abs(e.delta ?? 0)));
+  const n = amounts.size === 1 ? [...amounts][0]! : undefined;
+  const what = event.wither ? (n === undefined ? 'marcadores −1/−1' : `${n} marcador${n === 1 ? '' : 'es'} −1/−1`) : n === undefined ? 'dano' : `${n} de dano`;
+  const cards = [...new Set(sweep.events.flatMap(e => e.targets?.cards ?? []))];
+  const players = new Set(sweep.events.flatMap(e => e.targets?.players ?? [])).size;
+  const creatures = cards.every(id => { const c = v.findCard(id) ?? sweep.events.map(e => frameCard(id, e)).find(Boolean); return !c || !!c.creature; });
+  return `${cause}: ${what} em ${cards.length} ${creatures ? 'criaturas' : 'permanentes'}${players ? ` e ${players} ${players === 1 ? 'jogador' : 'jogadores'}` : ''}.`;
+}
 export function frameCard(id: number, event: PresentationEvent) {
   for (const p of event.frame?.players ?? []) { const c = p.battlefield.find(card => card.id === id); if (c) return c; }
   return event.frame?.stack.find(si => si.source?.id === id)?.source;

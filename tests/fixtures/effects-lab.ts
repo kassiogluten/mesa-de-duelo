@@ -227,14 +227,14 @@ function table() {
     for (const c of dying) leave(c, 'Graveyard', 'destroyed');
     dying.clear();
   }
-  function leave(c: any, to: string, reason?: string) {
+  function leave(c: any, to: string, reason?: string, extra: Record<string, unknown> = {}) {
     const owner = player(c.controller);
     if (!owner.battlefield.includes(c)) return;
     owner.battlefield = owner.battlefield.filter((x: any) => x !== c && x.attachedTo !== c.id);
     const zone = to === 'Exile' ? owner.exile : to === 'Hand' ? owner.hand : owner.graveyard;
     if (to === 'Hand') owner.handCount++;
     zone.push({ ...c, damage: 0, tapped: false });
-    emit('left', { card: structuredClone(c), sourceId: c.id, actor: c.controller, from: 'Battlefield', to, ...(reason ? { reason } : {}) });
+    emit('left', { card: structuredClone(c), sourceId: c.id, actor: c.controller, from: 'Battlefield', to, ...(reason ? { reason } : {}), ...extra });
   }
 
   const sourceCard = (r: Ref) => isCard(r) ? byId(r.card) : undefined;
@@ -927,6 +927,13 @@ function table() {
           port.play('shockwave', { at: selected, color: c.color || '#f2b54c', reach: Math.max(table.width, table.height) * .99 });
           return 'Ultimate: onda de luz na cor do planeswalker atravessando a mesa.';
         }
+        case 'sweep': {
+          const me = center(document.querySelector('#fMeAvatar')), table = document.querySelector('.arena')!.getBoundingClientRect();
+          if (!me) return 'Não achei o seu retrato.';
+          const reach = Math.max(...[[table.left, table.top], [table.right, table.top], [table.left, table.bottom], [table.right, table.bottom]].map(([x, y]) => Math.hypot(x! - me.cx, y! - me.cy)));
+          port.play('sweep', { from: me, reach, travel: 960, style: (c.color || 'W') as any });
+          return 'Limpa campo: a mesa escurece e a onda na cor da mágica sai do seu retrato e varre a mesa (só a onda; as jogadas da seção Limpa campo mostram as cartas saindo).';
+        }
       }
     },
     reduce: c => { reduce = !!c.value; if (reduce) document.head.append(still); else still.remove(); return reduce ? 'Reduzir movimento ligado nesta página.' : 'Movimento normal.'; },
@@ -992,7 +999,7 @@ function table() {
 // ---------------------------------------------------------------- painel
 /** Os efeitos da camada pelo nome que o jogador entende (a lista do que cada degrau desliga). */
 const EFFECT_LABELS: Record<string, string> = {
-  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate',
+  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo',
   vortex: 'portal do exílio', gather: 'volta do blink', ash: 'cinzas do sacrifício', motes: 'grãos da habilidade', puff: 'fumaça do ninja', dust: 'poeira ao virar',
   charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
   mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
@@ -1093,6 +1100,9 @@ function panel() {
       .map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     ${[['#f2b54c', 'Ultimate (dourado)'], ['#6fb8ff', 'Ultimate (azul)'], ['#b07cff', 'Ultimate (preto)'], ['#ff7a4d', 'Ultimate (vermelho)'], ['#63d68f', 'Ultimate (verde)']]
       .map(([k, t]) => `<button data-gpu="shockwave" data-color="${k}">${t}</button>`).join('')}
+    <p>Limpa campo (a onda sai do seu retrato):</p>
+    ${[['W', 'Branco (luz)'], ['U', 'Azul (maré)'], ['B', 'Preto (névoa)'], ['R', 'Vermelho (fogo)'], ['G', 'Verde (folhas)'], ['M', 'Várias cores'], ['C', 'Incolor (prata)']]
+      .map(([k, t]) => `<button data-gpu="sweep" data-color="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['vortex', 'Exilar (portal)'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
        ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou'],

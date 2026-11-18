@@ -1,5 +1,6 @@
 import type { FCard, FState, FTargets } from '../forge/client';
 import { bigSpell, legendaryEntry } from './impactRules';
+import { sweepDuration } from './boardSweep';
 
 /** Public, immutable board view at an engine event boundary. Never contains a hand or prompt. */
 export interface PresentationFrame {
@@ -84,6 +85,12 @@ export interface PresentationEvent {
   grouped?: PresentationEvent[];
   /** Só na mesa: golpe de combate que sai junto com o revide do alvo; os dois se chocam no meio. */
   clash?: boolean;
+  /**
+   * Só na mesa: limpa campo (boardSweep.ts). As saídas do campo, ou os danos, da mesma mágica ou habilidade num passo
+   * só, com a carta que as causou (ou o nome dela) e quem a controla. Sem `wave`: as mortes logo depois de um limpa
+   * campo de dano, que já teve a onda.
+   */
+  sweep?: { events: PresentationEvent[]; cause?: FCard; name?: string; controller?: number; wave: boolean };
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -255,10 +262,15 @@ export class PresentationTimeline {
       if (this.triggers.count > 1) event.repeat = true;
     } else if (this.triggers?.key === key && this.triggers.count > 1) event.repeat = true;
   }
-  /** Tira da fila os próximos eventos que ainda fazem parte do atual (como dano dividido entre vários alvos). */
-  takeWhile(test: (event: PresentationEvent) => boolean) {
-    const taken: PresentationEntry[] = [];
-    while (this.pending[0] && !this.pending[0].audioOnly && test(this.pending[0].event)) taken.push(this.pending.shift()!);
+  /**
+   * Tira da fila os próximos eventos que ainda fazem parte do atual (como dano dividido entre vários alvos). Com `min`,
+   * só tira se forem pelo menos tantos; senão, não tira nenhum.
+   */
+  takeWhile(test: (event: PresentationEvent) => boolean, min = 1) {
+    let count = 0;
+    while (this.pending[count] && !this.pending[count]!.audioOnly && test(this.pending[count]!.event)) count++;
+    if (count < min) return [];
+    const taken = this.pending.splice(0, count);
     if (taken.length) this.lastPresentedSeq = Math.max(this.lastPresentedSeq, taken.at(-1)!.event.seq);
     return taken;
   }
@@ -330,6 +342,7 @@ export function presentationPace(waiting: number, fast: boolean) {
 /** `pace`: true é o Rápido (0,6); um número é a fração do tempo cheio (presentationPace). */
 export function presentationDuration(event: PresentationEvent, pace: boolean | number) {
   const scale = typeof pace === 'number' ? pace : pace ? .6 : 1, fast = scale < 1;
+  if (event.sweep) return sweepDuration(event.sweep, scale);
   // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
   if (event.type === 'mill' || (event.entries?.length ?? 0) > 1) {
     const m = event.type === 'mill' ? millTiming(event.milled?.length ?? 1, fast) : entryTiming(event.entries!.length, fast || !!event.repeat);

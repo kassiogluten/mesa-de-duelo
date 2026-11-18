@@ -1,4 +1,17 @@
 {
+  "0.214.0": {
+    "Limpa campo com onda": [
+      { "img": "0.214.0/onda-branca.webp", "legenda": "Wrath of God no campo cheio: a onda de luz dourada saiu do seu retrato e atravessa a mesa; as criaturas por onde ela já passou racham e se partem, as do outro lado ainda esperam a vez, e a faixa no meio diz \"Cólera de Deus: 8 permanentes destruídas\"." },
+      { "img": "0.214.0/onda-preta.webp", "legenda": "Damnation do oponente: a névoa roxa saiu do retrato dele, escureceu a mesa e já passou por todas as criaturas, que se partem enquanto a frente da onda chega ao seu lado." },
+      { "img": "0.214.0/onda-mare.webp", "legenda": "Evacuation: a maré azul varre a mesa e cada criatura que ela alcança voa de volta para a mão do dono; as fichas acendem e somem." }
+    ],
+    "Limpa campo de dano": [
+      { "img": "0.214.0/onda-fogo.webp", "legenda": "Pyroclasm: a onda de fogo atravessa a mesa e cada criatura é atingida quando ela passa, com o −2 de sempre, no lugar de um projétil para cada uma; a faixa diz \"Piroclasmo: 2 de dano em 8 criaturas\"." }
+    ],
+    "Criatura virada saindo do campo": [
+      { "img": "0.214.0/virada.webp", "legenda": "Duas criaturas suas que atacaram, viradas, rachando no lugar delas: deitadas e no tamanho certo, com a arte inteira, em vez de esticadas." }
+    ]
+  },
   "0.213.0": {
     "Aviso de versão nova mostra os números das versões": [
       { "img": "0.213.0/versoes.webp", "legenda": "A janela de versão nova com a sua versão à esquerda e a mais recente, em destaque, à direita." }

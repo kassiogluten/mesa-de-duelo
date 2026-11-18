@@ -5,6 +5,7 @@ import type { FState } from '../forge/client';
 import { suppressOpeningPreview } from './openingPresentation';
 import { calloutDuration, presentationDuration, presentationPace, hasLiveDecision, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import type { TableCtx } from './tableContext';
+import { damageSweep, sameSweep, sweepCause, SWEEP_MIN } from './boardSweep';
 
 export type PresentationDeps = Pick<TableCtx, 'root' | 'timeline' | 'motion' | 'audio' | 'prefs' | 'state' | 'match' | 'face' | 'eventDescription' | 'announce' | 'render' | 'renderTable'>;
 
@@ -14,6 +15,8 @@ export function createPresentationQueue(d: PresentationDeps) {
   let displayFrame: PresentationFrame | null = null;
   /** Cartas que você está comprando no passo que a mesa desenha agora (ficam escondidas na mão até o voo chegar). */
   let drawingNow = 0;
+  /** A carta do último limpa campo de dano mostrado: as mortes que vêm dele racham juntas, sem outra onda. */
+  let burnedBy: number | undefined;
   /** O próximo desenho só alcança os eventos, sem mostrar nem tocar nada (partida aberta, aba voltando, conexão de volta). */
   let silentNext = true;
   /** Ver a jogada de novo (Histórico): o que fazer ao terminar e o número da repetição (o som de cada uma toca de novo). */
@@ -65,11 +68,26 @@ export function createPresentationQueue(d: PresentationDeps) {
     // O ritmo é o das Opções; com a fila crescendo, os passos encurtam em vez de serem pulados. A sua decisão espera
     // a fila acabar.
     const pace = presentationPace(timeline.queuedSteps + 1, d.prefs.fast), shortened = pace < 1;
-    const duration = presentationDuration(entry.event, pace);
     // Dano dividido: os próximos danos da mesma mágica ou habilidade saem juntos, cada um para o seu alvo.
     const first = entry.event;
     const divided = first.type === 'damage' && !first.combat && !first.prevented && first.sourceId !== undefined
       ? timeline.takeWhile(e => e.type === 'damage' && !e.combat && !e.prevented && e.sourceId === first.sourceId) : [];
+    // Limpa campo (boardSweep.ts): o mesmo dano em 3 criaturas ou mais, sem mirar, vira uma onda que varre a mesa; as
+    // saídas do campo da mesma mágica ou habilidade (Wrath of God, Evacuation) também, de 3 em diante; e as mortes
+    // logo depois de um limpa campo de dano racham juntas, sem outra onda.
+    let sweep: PresentationEvent['sweep'];
+    if (divided.length && damageSweep(timeline.history, [first, ...divided.map(part => part.event)])) {
+      sweep = { events: [first, ...divided.map(part => part.event)], cause: first.card, controller: first.actor, wave: true };
+      burnedBy = first.sourceId;
+    } else if (first.type === 'left') {
+      const cause = sweepCause(timeline.history, first);
+      const afterBurn = burnedBy !== undefined && cause?.card?.id === burnedBy;
+      const rest = cause ? timeline.takeWhile(sameSweep(timeline.history, cause.stackId), afterBurn ? 1 : SWEEP_MIN - 1) : [];
+      if (cause && rest.length) sweep = { events: [first, ...rest.map(part => part.event)], cause: cause.card, name: cause.name, controller: cause.controller, wave: !afterBurn };
+    }
+    if (first.type === 'turn') burnedBy = undefined;
+    const shown: PresentationEvent = sweep ? { ...first, sweep } : first;
+    const duration = presentationDuration(shown, pace);
     // Luta: o golpe de volta (da criatura atingida na outra) sai junto, e as duas se chocam no meio.
     const fought = first.type === 'damage' && first.fight && first.targets?.cards?.length
       ? timeline.takeWhile(e => e.type === 'damage' && !!e.fight && e.sourceId === first.targets!.cards![0]) : [];
@@ -81,7 +99,8 @@ export function createPresentationQueue(d: PresentationDeps) {
       const all = [first, ...clashing.map(part => part.event)];
       for (const e of all) e.clash = all.some(o => o !== e && o.sourceId !== undefined && o.sourceId === e.targets?.cards?.[0] && o.targets?.cards?.[0] === e.sourceId);
     }
-    if (first.type === 'mill') motion.milled(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal') });
+    if (sweep) motion.sweep(shown, { you: s.you, label: d.eventDescription(shown), duration, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
+    else if (first.type === 'mill') motion.milled(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal') });
     else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
     else for (const part of [entry, ...divided, ...fought, ...clashing]) {
       if (divided.length) part.event.divided = divided.length + 1;
@@ -89,8 +108,8 @@ export function createPresentationQueue(d: PresentationDeps) {
         label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast), hideDestination: !hasLiveDecision(s) });
     }
     audio.play(entry.event, entry.replay ? `${timeline.matchId}:replay${replayRun}` : timeline.matchId, entry.audible, s.you);
-    if (entry.event.type === 'damage' && entry.event.targets?.players?.length) d.announce(d.eventDescription(entry.event));
-    else if (!hasLiveDecision(s)) d.announce(d.eventDescription(entry.event));
+    if (shown.type === 'damage' && !sweep && shown.targets?.players?.length) d.announce(d.eventDescription(shown));
+    else if (!hasLiveDecision(s)) d.announce(d.eventDescription(shown));
     presentationTimer = window.setTimeout(advance, duration);
   }
   function stop() {

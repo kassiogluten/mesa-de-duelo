@@ -18,10 +18,22 @@ function crackPath([x, y]: [number, number], i: number) {
 }
 const CRACKS = `<svg class="destroy-cracks" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">${RIM.map((p, i) => `<path pathLength="1" d="${crackPath(p, i)}"/>`).join('')}</svg>`;
 
-/** A peça da carta parada no lugar de onde sai, no tamanho que ela tinha no campo. */
-function placeAt(piece: HTMLElement, from: Point) {
+/** A carta que sai, com o giro que tinha no campo (`rot`: 90 na virada). */
+type Leaving = Point & { rot?: number };
+/** A peça da carta parada no lugar de onde sai, no tamanho e no giro que ela tinha no campo. */
+function placeAt(piece: HTMLElement, from: Leaving) {
   piece.style.left = `${from.cx}px`; piece.style.top = `${from.cy}px`;
   piece.style.width = `${from.w}px`; piece.style.height = `${from.h}px`; piece.style.setProperty('--fw', `${from.w}px`);
+  if (from.rot) piece.style.transform = `translate(-50%, -50%) rotate(${from.rot}deg)`;
+}
+/**
+ * O giro da carta virada num pedaço que gira em volta do próprio centro (`gx`, `gy`, em % da carta): o pedaço fica no
+ * lugar dele na carta virada, e não girado em volta do centro dele.
+ */
+function turnedShard(from: Leaving, gx: number, gy: number) {
+  const a = (from.rot ?? 0) * Math.PI / 180, vx = (50 - gx) / 100 * from.w, vy = (50 - gy) / 100 * from.h;
+  const ox = vx - (vx * Math.cos(a) - vy * Math.sin(a)), oy = vy - (vx * Math.sin(a) + vy * Math.cos(a));
+  return `translate(-50%, -50%) translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) rotate(${from.rot}deg)`;
 }
 
 export function createLeaveEffects(kit: MotionKit) {
@@ -31,7 +43,7 @@ export function createLeaveEffects(kit: MotionKit) {
    * Destruída: rachaduras correm do golpe até a borda enquanto a carta treme, e ela se parte em pedaços com a arte dela,
    * que pulam e caem com peso; a poeira segue até o cemitério, que pulsa ao recebê-la.
    */
-  function crumble(from: Point, to: Point, piece: HTMLElement, duration: number, into: HTMLElement | null) {
+  function crumble(from: Leaving, to: Point, piece: HTMLElement, duration: number, into: HTMLElement | null) {
     placeAt(piece, from);
     // A legenda (na peça) fica por cima dos pedaços.
     piece.classList.add('destroy-holding');
@@ -56,6 +68,7 @@ export function createLeaveEffects(kit: MotionKit) {
         const shard = effect('presentation-piece destroy-shard', from, html);
         shard.style.clipPath = `polygon(${HIT[0]}% ${HIT[1]}%, ${x}% ${y}%, ${nx}% ${ny}%)`;
         shard.style.transformOrigin = `${gx}% ${gy}%`;
+        if (from.rot) shard.style.transform = turnedShard(from, gx, gy);
         const dx = (gx - HIT[0]) / 100 * from.w * (.8 + Math.random() * .5), up = from.h * (.12 + Math.random() * .14) + Math.max(0, HIT[1] - gy) / 100 * from.h * .5;
         const fall = from.h * (1 + Math.random() * .4), spin = (gx < HIT[0] ? -1 : 1) * (40 + Math.random() * 110);
         // Lançado para fora e para cima, e a gravidade puxa: a posição em cada quarto do tempo.
@@ -76,7 +89,7 @@ export function createLeaveEffects(kit: MotionKit) {
    * Exilada: um portal escuro com a borda de luz se abre deitado sobre a mesa, e a carta gira, tomba e encolhe até ser
    * sugada para dentro dele; o portal se fecha num clarão. A legenda fica parada no lugar, fora do giro.
    */
-  function vortex(from: Point, piece: HTMLElement, duration: number, caption?: HTMLElement) {
+  function vortex(from: Leaving, piece: HTMLElement, duration: number, caption?: HTMLElement) {
     placeAt(piece, from);
     piece.classList.add('exile-sinking');
     if (caption) {
@@ -95,7 +108,7 @@ export function createLeaveEffects(kit: MotionKit) {
     }
     // A carta fica invisível no fim: a animação devolve o estilo dela ao acabar, um pouco antes da limpeza.
     piece.style.opacity = '0';
-    const turn = (tilt: number, spin: number, scale: number) => `translate(-50%, -50%) perspective(700px) rotateX(${tilt}deg) rotate(${spin}deg) scale(${scale})`;
+    const turn = (tilt: number, spin: number, scale: number) => `translate(-50%, -50%) perspective(700px) rotateX(${tilt}deg) rotate(${spin + (from.rot ?? 0)}deg) scale(${scale})`;
     animate(piece, [
       { transform: turn(0, 0, 1), filter: 'brightness(1)', opacity: 1 },
       { transform: turn(34, -35, .9), filter: 'brightness(1.25) saturate(.7)', opacity: 1, offset: .25 },

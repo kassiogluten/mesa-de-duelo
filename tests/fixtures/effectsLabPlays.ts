@@ -18,7 +18,8 @@ export interface LabApi {
   damage(source: any, target: Ref, amount: number, flags?: Record<string, unknown>): void;
   settle(): void;
   lifeChange(id: number, delta: number): void;
-  leave(c: any, to: string, reason?: string): void;
+  /** `extra`: o que mais vai no evento (o `stackId` da mágica que resolve, num limpa campo). */
+  leave(c: any, to: string, reason?: string, extra?: Record<string, unknown>): void;
   combat(attacker: any, target: Ref): void;
   /** Um comando do painel (os mesmos botões das outras seções), sem desenhar: quem chama desenha. */
   run(cmd: Command): void;
@@ -29,7 +30,8 @@ interface Play { note: string; steps: [number, () => void][] }
 
 /** Os botões, por grupo e na ordem do painel (o painel não carrega a mesa: só precisa dos nomes). */
 export const PLAY_BUTTONS: [group: string, plays: [key: string, label: string][]][] = [
-  ['Turno e mágicas', [['upkeep', 'Começo do turno'], ['develop', 'Terreno e criatura'], ['bolt', 'Raio no oponente'], ['counter', 'Contramágica'], ['wrath', 'Ira de Deus']]],
+  ['Turno e mágicas', [['upkeep', 'Começo do turno'], ['develop', 'Terreno e criatura'], ['bolt', 'Raio no oponente'], ['counter', 'Contramágica']]],
+  ['Limpa campo', [['wrath', 'Ira de Deus'], ['damnation', 'Danação'], ['pyroclasm', 'Piroclasmo'], ['evacuation', 'Evacuação'], ['eviction', 'Despejo impiedoso']]],
   ['Combate', [['combat', 'Ataque com bloqueios'], ['swing', 'Ataque do oponente'], ['lethal', 'Ataque letal']]],
   ['Cemitério e exílio', [['graveyard', 'Moer e reanimar'], ['blink', 'Blink com gatilho'], ['sacrifice', 'Sacrificar para comprar'], ['flashback', 'Conjurar do cemitério'], ['removal', 'Exilar uma ameaça']]],
   ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['tutor', 'Tutor']]],
@@ -107,6 +109,28 @@ export function createLabPlays(lab: LabApi) {
 
   // Cada jogada guarda as cartas que usa entre um passo e outro.
   let held: Record<string, any> = {};
+  /**
+   * Limpa campo no campo cheio: a mágica de `spell()` vai à pilha e, ao resolver, `hit` tira cada criatura (com o
+   * número da pilha, como a ponte manda).
+   */
+  function sweepPlay(note: string, spell: () => any, hit: (c: any, stackId: number) => void): Play {
+    return {
+      note,
+      steps: [
+        // Duas das suas criaturas viradas (atacaram neste turno): saem viradas.
+        [0, () => { stage(['big', 'hawk', 'blade', 'token', 'land', 'land', 'land', 'land'], ['small', 'knight', 'spawn', 'myr', 'token', 'land', 'land']); for (const c of creaturesOf(me()).slice(0, 2)) c.tapped = true; }],
+        [900, () => {
+          held.sweep = spell();
+          for (const x of lab.player(held.sweep.controller).battlefield.filter((y: any) => y.land)) x.tapped = true;
+          held.sweepStack = cast(held.sweep);
+        }],
+        [1800, () => {
+          for (const c of [...creaturesOf(me()), ...creaturesOf(opp())]) hit(c, held.sweepStack);
+          resolve(held.sweep, held.sweepStack);
+        }],
+      ],
+    };
+  }
   const plays: Record<string, Play> = {
     upkeep: {
       note: 'Começo do turno: a luz vai para o seu lado, tudo desvira em onda e você compra uma carta.',
@@ -158,18 +182,31 @@ export function createLabPlays(lab: LabApi) {
         }],
       ],
     },
-    wrath: {
-      note: 'Ira de Deus no campo cheio: a mágica resolve e todas as criaturas são destruídas de uma vez (o Darksteel Myr, indestrutível, fica).',
+    wrath: sweepPlay('Ira de Deus no campo cheio: a onda de luz dourada sai do seu retrato e varre a mesa, e cada criatura racha quando ela passa (o Darksteel Myr, indestrutível, fica).',
+      () => spellCard('Wrath of God', 'Sorcery', '{2}{W}{W}', 'Destroy all creatures. They can\'t be regenerated.'),
+      (c, stackId) => { if (!c.keywords?.includes('INDESTRUCTIBLE')) lab.leave(c, 'Graveyard', 'destroyed', { stackId, sourceName: 'Wrath of God' }); }),
+    damnation: sweepPlay('Danação do oponente: a névoa roxa sai do retrato dele e varre a mesa, e cada criatura racha quando ela passa.',
+      () => spellCard('Damnation', 'Sorcery', '{2}{B}{B}', 'Destroy all creatures. They can\'t be regenerated.', OPP),
+      (c, stackId) => { if (!c.keywords?.includes('INDESTRUCTIBLE')) lab.leave(c, 'Graveyard', 'destroyed', { stackId, sourceName: 'Damnation' }); }),
+    evacuation: sweepPlay('Evacuação: a maré sai do seu retrato e cada criatura volta para a mão do dono quando ela passa (as fichas somem).',
+      () => spellCard('Evacuation', 'Instant', '{3}{U}{U}', 'Return all creatures to their owners\' hands.'),
+      (c, stackId) => lab.leave(c, 'Hand', undefined, { stackId, sourceName: 'Evacuation' })),
+    eviction: sweepPlay('Despejo impiedoso (branco e preto): a onda dourada sai do seu retrato e cada criatura é sugada pelo portal quando ela passa.',
+      () => spellCard('Merciless Eviction', 'Sorcery', '{4}{W}{B}', 'Choose one — Exile all artifacts; creatures; enchantments; planeswalkers.'),
+      (c, stackId) => lab.leave(c, 'Exile', undefined, { stackId, sourceName: 'Merciless Eviction' })),
+    pyroclasm: {
+      note: 'Piroclasmo: a onda de fogo sai do seu retrato e cada criatura leva 2 de dano quando ela passa; depois, as que morreram racham todas juntas, sem outra onda.',
       steps: [
-        [0, () => { stage(['big', 'hawk', 'blade', 'token', 'land', 'land', 'land', 'land'], ['small', 'knight', 'spawn', 'myr', 'token', 'land', 'land']); }],
+        [0, () => { stage(['hawk', 'blade', 'token', 'big', 'land', 'land'], ['small', 'knight', 'spawn', 'token', 'land', 'land']); }],
         [900, () => {
           for (const x of me().battlefield.filter((y: any) => y.land)) x.tapped = true;
-          held.wrath = spellCard('Wrath of God', 'Sorcery', '{2}{W}{W}', 'Destroy all creatures. They can\'t be regenerated.');
-          held.wrathStack = cast(held.wrath);
+          held.pyro = spellCard('Pyroclasm', 'Sorcery', '{1}{R}', 'Pyroclasm deals 2 damage to each creature.');
+          held.pyroStack = cast(held.pyro);
         }],
         [1800, () => {
-          for (const c of [...creaturesOf(me()), ...creaturesOf(opp())]) if (!c.keywords?.includes('INDESTRUCTIBLE')) lab.leave(c, 'Graveyard', 'destroyed');
-          resolve(held.wrath, held.wrathStack);
+          for (const c of [...creaturesOf(me()), ...creaturesOf(opp())]) lab.damage(held.pyro, { card: c.id }, 2);
+          resolve(held.pyro, held.pyroStack);
+          lab.settle();
         }],
       ],
     },

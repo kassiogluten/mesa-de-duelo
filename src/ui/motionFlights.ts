@@ -82,13 +82,14 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
     // já começa grande (no tamanho dela) e termina no tamanho de onde entra.
     const end = landing ? target! : pile ?? (arcs && to !== stage && to !== hand ? to : { ...to, w: stage.w, h: stage.h });
     const piece = effect('presentation-piece', end, options.html);
-    const caption = document.createElement('span');
-    caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption);
+    // Sem legenda própria no limpa campo: a faixa no meio da mesa já diz o que aconteceu.
+    const caption = options.label ? document.createElement('span') : undefined;
+    if (caption) { caption.className = 'presentation-caption'; caption.textContent = options.label; piece.append(caption); }
     const disappearing = !landing && ['left', 'countered', 'resolved', 'discard'].includes(event.type);
     if (event.type === 'left') {
       // Ninjutsu e sneak: o atacante some numa fumaça, que espera o ninja no lugar dele.
       if (ninjaSwap(event)) ninja.vanish(event, from, options.duration);
-      leave(event, from, to, end, piece, options.duration, { caption, into, endRot: handBack ? turnOf(handBack) : 0, fade: !handBack });
+      leave(event, from, to, end, piece, options.duration, { caption, into, endRot: handBack ? turnOf(handBack) : 0, fade: !handBack, turned: !!old?.tapped });
       // Comandante voltando à zona de comando: chega com uma onda dourada.
       if (event.to === 'Command' && into) { const zone = into; later(() => ripple(center(zone)), options.duration * .85); }
       if (handBack && options.hideDestination && !reduced()) { handBack.style.opacity = '0'; hiddenCards.add(handBack); }

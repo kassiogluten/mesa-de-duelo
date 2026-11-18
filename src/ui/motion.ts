@@ -12,6 +12,7 @@ import { createStageMotion } from './motionStage';
 import { createFlightMotion } from './motionFlights';
 import { createImpactMotion } from './motionImpact';
 import { createMedalMotion } from './motionMedals';
+import { createSweepMotion, type SweepOptions } from './motionSweep';
 
 const KEYED = '[data-fid],[data-peek]';
 export interface Motion {
@@ -23,6 +24,8 @@ export interface Motion {
    */
   play(options?: { silent?: boolean; semantic?: boolean; paying?: (id: number) => string | undefined; pooled?: (id: number) => { tone: string; player: number } | undefined }): void;
   present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean }): void;
+  /** Limpa campo (`event.sweep`): a onda na cor da mágica varre a mesa e cada permanente sai, ou é atingida, quando ela passa. */
+  sweep(event: PresentationEvent, options: SweepOptions): void;
   /** Compra: versos de carta saem do grimório e vão para a mão. `cards` são as cartas novas da sua mão, mostradas ao chegar. */
   drew(actor: number, count: number, options: { you: number; cards: HTMLElement[]; fast: boolean; searched?: boolean }): number[];
   /** Sem passo próprio, junto com a jogada: embaralhar (o grimório se mexe) e marcadores (a carta cresce e o número sobe). */
@@ -90,6 +93,7 @@ export function createMotion(root: HTMLElement): Motion {
   const medals = createMedalMotion(kit);
   const flights = createFlightMotion(kit, zones, abilities.walkerArrive, medals.trinket);
   const impact = createImpactMotion(kit);
+  const sweeps = createSweepMotion(kit, { flights, damage, impact });
   /**
    * As animações contínuas de estado (voar, vínculo, enjoo, alvo possível) seguem um relógio só, o da página: a carta
    * redesenhada continua do ponto em que estava, em vez de recomeçar (a voadora não dá um pulo a cada jogada, nem
@@ -190,6 +194,7 @@ export function createMotion(root: HTMLElement): Motion {
       if (event.type === 'ability-activated') { abilities.ability(event, card, options); return; }
       flights.cardFlight(event, card, id, options);
     },
+    sweep: sweeps.sweep,
     drew: library.drew,
     milled: library.milled,
     entered: flights.entered,

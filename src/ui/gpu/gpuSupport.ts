@@ -37,10 +37,10 @@ export function setEffectsTier(next: EffectsTier) { tier = next; }
  * (`data-fx-calm` na mesa, permanentEffects.css).
  */
 export const TIER1_CUTS: Readonly<Partial<Record<GpuEffectName, 'css' | 'off'>>> = { spotlight: 'off', legend: 'off' };
-/** Golpe letal e ultimate nunca perdem nada para o regulador: as faíscas deles e a mesa escurecendo deles (`keep`). */
+/** Golpe letal, ultimate e limpa campo nunca perdem nada para o regulador: as faíscas deles e a mesa escurecendo deles (`keep`). */
 const isProtected = (name: string, params: unknown) => {
   const p = params as { lethal?: boolean; keep?: boolean } | null | undefined;
-  return name === 'shockwave' || !!p?.lethal || !!p?.keep;
+  return name === 'shockwave' || name === 'sweep' || !!p?.lethal || !!p?.keep;
 };
 /** O que acontece com este efeito no degrau de agora: null (sai inteiro), 'css' ou 'off'. */
 export function effectCut(name: string, params?: unknown, at: EffectsTier = tier): 'css' | 'off' | null {

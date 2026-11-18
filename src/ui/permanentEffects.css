@@ -177,3 +177,8 @@
 .fx-seal.type.land { color: #b9d98c; }
 .fx-seal.type.enchantment { color: #e2c8ff; }
 .fx-seal.type.lost { color: #ff9a8a; }
+/* Limpa campo (motionSweep.ts): a faixa na cor da onda, por cima da camada GPU; sem ela, a mesa escurece e um anel na cor da mágica cresce de quem conjurou. */
+.combat-banner.sweep-banner { z-index: 37; border-color: var(--sweep); color: var(--sweep); box-shadow: 0 0 26px color-mix(in srgb, var(--sweep) 50%, transparent); }
+.sweep-dim { position: fixed; inset: 0; z-index: 31; pointer-events: none; background: #000; opacity: 0; }
+.sweep-wave { position: fixed; z-index: 34; pointer-events: none; transform: translate(-50%, -50%); transform-origin: 0 0; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, transparent 84%, color-mix(in srgb, var(--sweep) 18%, transparent) 92%, color-mix(in srgb, var(--sweep) 70%, transparent) 97.5%, transparent 100%); }

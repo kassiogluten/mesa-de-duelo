@@ -56,7 +56,8 @@ export function createDamageMotion(kit: MotionKit) {
     }
     later(() => impact(event, look, target, blow), blow.stop);
   }
-  function impact(event: PresentationEvent, look: DamageLook, target: ReturnType<typeof damageTarget>, blow?: Blow) {
+  /** `calm`: sem sacudir a mesa no golpe pesado (no limpa campo, a onda já sacode uma vez). */
+  function impact(event: PresentationEvent, look: DamageLook, target: ReturnType<typeof damageTarget>, blow?: Blow, calm = false) {
     const at = target.at!;
     pulse(target.el, look.tone !== 'shield');
     const size = Math.max(64, Math.min(150, (target.player === undefined ? at.w : 90) * (look.heavy ? 1.5 : 1.15)));
@@ -85,7 +86,7 @@ export function createDamageMotion(kit: MotionKit) {
       animate(target.el, [{ translate: '0 0' }, { translate: `${-a}px 0`, offset: .25 }, { translate: `${(a * .6).toFixed(1)}px 0`, offset: .55 }, { translate: '0 0' }], 260);
     }
     if (event.commander && target.player !== undefined) pulse(root.querySelector<HTMLElement>(`[data-zone="damage"][data-gy="${target.player}"]`));
-    if (blow) return;
+    if (blow || calm) return;
     const arena = look.heavy ? root.querySelector<HTMLElement>('.arena') : null;
     if (arena) animate(arena, [{ translate: '0 0' }, { translate: '-5px 2px', offset: .2 }, { translate: '4px -2px', offset: .45 }, { translate: '-2px 1px', offset: .7 }, { translate: '0 0' }], 320);
   }
@@ -180,5 +181,10 @@ export function createDamageMotion(kit: MotionKit) {
     floatNumber(at, `+${event.delta}`, 'heal');
     if (!reduced()) gpu.play('heal', { at });
   }
-  return { damage, heal };
+  /** Limpa campo de dano: o dano chega a este alvo quando a onda passa por ele, sem o projétil. */
+  function hit(event: PresentationEvent) {
+    const target = damageTarget(event);
+    if (target.at) impact(event, damageLook(event), target, undefined, true);
+  }
+  return { damage, heal, hit, damageTarget };
 }

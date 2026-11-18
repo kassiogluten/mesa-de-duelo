@@ -37,7 +37,7 @@ function fakeTable() {
     damage: (source, target, amount, flags = {}) => events.push({ type: 'damage', from: source.name, target, amount, ...flags }),
     settle: () => events.push({ type: 'settle' }),
     lifeChange: (pid, delta) => { player(pid).life += delta; events.push({ type: 'life-changed', actor: pid, delta }); },
-    leave(c, to, reason) { const owner = player(c.controller); owner.battlefield = owner.battlefield.filter(x => x !== c); events.push({ type: 'left', name: c.name, to, reason }); },
+    leave(c, to, reason, extra = {}) { const owner = player(c.controller); owner.battlefield = owner.battlefield.filter(x => x !== c); events.push({ type: 'left', name: c.name, to, reason, ...extra }); },
     combat: (attacker, target) => events.push({ type: 'combat', from: attacker.name, target }),
     run: c => commands.push(c),
   };
@@ -46,7 +46,7 @@ function fakeTable() {
 
 test('every lab play button runs and sends events or panel commands, with a note for the panel', () => {
   const keys = PLAY_BUTTONS.flatMap(([, list]) => list.map(([key]) => key));
-  assert.equal(keys.length, 17);
+  assert.equal(keys.length, 21);
   for (const key of keys) {
     const t = fakeTable();
     const note = createLabPlays(t.lab).start(key);
@@ -76,6 +76,23 @@ test('wrath destroys every creature but the indestructible one, then the spell r
   assert.ok(!destroyed.includes('Darksteel Myr'));
   const last = t.events.at(-1);
   assert.equal(last.type, 'resolved'); assert.equal(last.card.name, 'Wrath of God'); assert.equal(last.to, 'Graveyard');
+  // Como a ponte manda: cada saída com o número da pilha da mágica que resolve, para a mesa juntar o limpa campo.
+  assert.ok(t.events.filter(e => e.type === 'left').every(e => e.stackId === last.stackId));
+});
+
+test('the other sweeps: bounce and exile carry the stack number; pyroclasm damages every creature, resolves, then settles the dead', () => {
+  for (const [key, to] of [['evacuation', 'Hand'], ['eviction', 'Exile']]) {
+    const t = fakeTable();
+    createLabPlays(t.lab).start(key);
+    const left = t.events.filter(e => e.type === 'left');
+    assert.equal(left.length, 9, key);
+    assert.ok(left.every(e => e.to === to && e.stackId === t.events.at(-1).stackId), key);
+  }
+  const t = fakeTable();
+  createLabPlays(t.lab).start('pyroclasm');
+  const order = t.events.map(e => e.type).filter(type => ['damage', 'resolved', 'settle'].includes(type));
+  assert.deepEqual([...new Set(order)], ['damage', 'resolved', 'settle']);
+  assert.equal(t.events.filter(e => e.type === 'damage').length, 8);
 });
 
 test('the counter play: the spell is cast, the counterspell answers it with a target, resolves, and the spell is countered', () => {
