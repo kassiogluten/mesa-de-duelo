@@ -635,6 +635,37 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       view.render();
     }, 300);
   },
+  /**
+   * Cartas reveladas por outro jogador, na faixa das remoções: o topo do grimório dele com Goblin Guide e, com `dig`,
+   * um Grisly Salvage dele já com a escolha. `removal` põe antes um Murder na sua criatura (a faixa conta os dois).
+   */
+  reveals(dig = true, removal = false) {
+    const opp = 23;
+    Object.assign(state.players[1], { ai: false, name: 'Ana' });
+    const guide = card(830, 'Goblin Guide', opp, { manaCost: '{R}', typeLine: 'Creature — Goblin Scout' });
+    const salvage = card(831, 'Grisly Salvage', opp, { creature: false, manaCost: '{B}{G}', typeLine: 'Instant' });
+    const top = [card(840, 'Serra Angel', opp, { manaCost: '{3}{W}{W}', typeLine: 'Creature — Angel', power: 4, toughness: 4 }), land(841, opp), card(842, 'Grizzly Bears', opp),
+      card(843, 'Lightning Bolt', opp, { creature: false, manaCost: '{R}', typeLine: 'Instant' }), land(844, opp)];
+    state.matchId = removal ? 'reveladas-remocao' : 'reveladas';
+    state.events = [{ seq: 1, stateVersion: 1, type: 'turn', actor: opp, turn: 2 }];
+    state.eventCursor = 1;
+    delete state.reveals;
+    view.render();
+    setTimeout(() => {
+      if (removal) {
+        const murder = card(820, 'Murder', opp, { creature: false, typeLine: 'Instant', manaCost: '{1}{B}{B}' }), elves = card(620, 'Llanowar Elves', 10);
+        const frame = { turn: 2, phase: 'MAIN1', activePlayer: opp, combat: [], stack: [{ id: 11, source: murder, controller: opp }], players: [{ id: 10, life: 20, handCount: 5, library: 50, battlefield: [elves] }, { id: opp, life: 20, handCount: 5, library: 50, battlefield: [] }] };
+        state.events = [...state.events, { seq: 2, stateVersion: 2, type: 'spell-cast', actor: opp, stackId: 11, sourceId: murder.id, card: murder, frame },
+          { seq: 3, stateVersion: 3, type: 'left', actor: 10, sourceId: elves.id, card: elves, from: 'Battlefield', to: 'Graveyard', reason: 'destroyed', stackId: 11, sourceName: 'Murder', frame },
+          { seq: 4, stateVersion: 4, type: 'resolved', actor: opp, stackId: 11, sourceId: murder.id, card: murder, frame: { ...frame, stack: [] } }];
+        state.eventCursor = 4;
+      }
+      state.reveals = [
+        ...(dig ? [{ seq: 1, chooser: 'Ana', source: salvage, cards: top, chosen: [840], waiting: false }] : []),
+        { seq: 2, chooser: 'Ana', source: guide, cards: [card(845, 'Counterspell', opp, { creature: false, manaCost: '{U}{U}', typeLine: 'Instant' })], waiting: false, owner: 'Ana', zone: 'Library' }];
+      view.render();
+    }, 300);
+  },
   history() {
     const me = 10, opp = 23;
     const c = (id: number, name: string, controller: number) => card(id, name, controller);
@@ -743,6 +774,8 @@ if (cenario === 'pagar') (window as any).fixture.payMana();
 // Janela de remoção: ?cenario=remocao&minhas=8&dele=3 (Wrath of God do oponente).
 // Faixa das remoções minimizadas: ?cenario=remocao-faixa (Murder e Swords to Plowshares do oponente).
 if (cenario === 'remocao-faixa') (window as any).fixture.pointRemovals();
+// Cartas reveladas por outro jogador na mesma faixa: ?cenario=reveladas (com &remocao=1, um Murder antes).
+if (cenario === 'reveladas') (window as any).fixture.reveals(true, new URLSearchParams(location.search).has('remocao'));
 if (cenario === 'remocao') { const q = new URLSearchParams(location.search); (window as any).fixture.removal(Number(q.get('minhas') ?? 8), Number(q.get('dele') ?? 3)); }
 // Pagamento automático com o talismã: ?cenario=automatico (agora) ou ?cenario=automatico&antes=1 (o Forge antes).
 if (cenario === 'automatico') (window as any).fixture.autoPay(new URLSearchParams(location.search).has('antes'));

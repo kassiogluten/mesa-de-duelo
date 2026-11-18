@@ -93,3 +93,17 @@ test('the timeline tells whether a removal has its step on the table or was caug
   timeline.ingest('m', [{ ...shown, seq: 3, card: card(41, 'Serra Angel') }], { silent: true });
   assert.equal(timeline.shows(3), false, 'caught up silently (hidden tab)');
 });
+
+test('cards revealed by another player: the strip and the window say who revealed what', async () => {
+  const { revealStripText, revealViewText } = await import('../src/ui/revealWindow.ts');
+  const guide = card(60, 'Goblin Guide'), salvage = card(61, 'Grisly Salvage');
+  const plain = { seq: 1, chooser: 'Ana', source: guide, cards: [card(62, 'Island')], waiting: false, owner: 'Caio', zone: 'Library' };
+  assert.deepEqual(revealStripText(plain), { head: 'Goblin Guide (Ana)', what: 'Caio revelou Island do grimório' });
+  assert.deepEqual(revealViewText(plain), { title: 'Caio revelou Island do grimório', line: 'Carta revelada com Goblin Guide.' });
+  // Sem efeito resolvendo (um custo, por exemplo): só quem revelou.
+  assert.deepEqual(revealStripText({ seq: 2, cards: [card(63, 'Island'), card(64, 'Forest')], waiting: false, owner: 'Ana', zone: 'Hand' }), { head: 'Ana', what: 'revelou 2 cartas da mão' });
+  const dig = { seq: 3, chooser: 'Ana', source: salvage, cards: [card(65, 'Serra Angel'), card(66, 'Forest')], waiting: true };
+  assert.equal(revealStripText(dig).what, 'revelou 2 cartas e está escolhendo…');
+  assert.equal(revealStripText({ ...dig, waiting: false, chosen: [65] }).what, 'revelou 2 cartas e escolheu Serra Angel');
+  assert.equal(revealStripText({ ...dig, waiting: false }).what, 'revelou 2 cartas e não escolheu nenhuma');
+});

@@ -420,17 +420,19 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 
 ## FRevealView
 
-A janela das cartas reveladas do topo de um grimório (Grisly Salvage): quem escolhe, as cartas e as escolhidas.
+Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (Grisly Salvage): quem escolhe, as cartas e as escolhidas. De outro jogador, sem escolha (o Explorar dele, o topo do grimório dele): o dono e a zona.
 
 | Campo | Tipo | O que é |
 |---|---|---|
 | `seq` | `number` |  |
-| `chooser?` | `string` |  |
+| `chooser?` | `string` | Quem escolhe, ou quem controla o efeito que revelou. |
 | `source?` | `FCard` |  |
 | `cards` | `FCard[]` |  |
 | `chosen?` | `number[]` | As escolhidas (ids); ausente enquanto escolhe ou se não escolheu nenhuma. |
 | `waiting` | `boolean` | Quem escolhe ainda não escolheu (o efeito continua resolvendo). |
 | `mine?` | `boolean` | O revelar foi do próprio jogador, sem escolha depois. |
+| `owner?` | `string` | Revelar de outro jogador sem escolha depois: o dono das cartas e a zona de onde vieram (Library, Hand...). |
+| `zone?` | `string` |  |
 
 ## FQuestion
 
@@ -632,6 +634,7 @@ Previsão do combate de um jogador atacado, com as regras do Forge (prevenção,
 | `input` | `{ gen: number; priority?: boolean; opening?: 'starting-player' \| 'play-draw' \| 'mulligan' \| 'mulligan-bottom'; openingStartingPlayer?: number; /** Outro jogador na abertura enquanto você espera: quem, se decide quem começa ou a mão, e se você já manteve a sua. */ openingWait?: { player: number; step: 'start' \| 'hand'; kept?: boolean }; openingReturnCount?: number; openingReturnRemaining?: number; openingSelected?: number[]; message: string; /** O Sim/Não aberto é de um gatilho opcional ("você pode..."): dá para responder "Sempre sim" ou "Sempre não" (ok/cancel com always). */ triggerChoice?: boolean; ok: FButton; cancel: FButton; selectable: number[]; selectableStacks?: number[]; selectablePlayers?: number[]; actionable?: number[]; untappable?: number[]; manaOnly?: number[]; card?: FCard; paying?: boolean; payingFor?: 'spell' \| 'ability' \| 'effect'; canAutoPay?: boolean; phyrexianLife?: number; /** O retrato paga um {B} com 2 de vida (K'rrik), não um símbolo phyrexiano. */ phyrexianLifeBlack?: boolean; /** Pagando: o custo que falta como o motor conta ("{1}{R}", "0" pago), descontado a cada mana gerada; total é o custo quando o pagamento abriu (só depois de pagar uma parte); life, a vida já separada para mana phyrexiana; x, o X escolhido. Ausente em pontes antigas. */ manaCost?: { remaining: string; total?: string; life?: number; x?: number }; /** Cartas selecionadas pelo motor no prompt atual, com os limites reais da escolha. */ /** players: só quando jogadores também podem ser escolhidos (proliferar). */ selection?: { cards: number[]; players?: number[]; min: number; max: number }; /** Improvisar, convocar ou dobrar água: virar permanentes antes da mana (selection traz as já viradas); remaining é o custo que falta. */ tapToPay?: { kind: 'improvise' \| 'convoke' \| 'waterbend'; remaining: string }; /** Proliferar: o que pode ganhar marcadores e se cada marcador ajuda ou prejudica quem escolhe. */ proliferate?: { candidates: ProliferateCandidate[] }; /** Escolha de conjurar durante a resolução do gatilho de suspender; usa OK/Cancelar. */ suspendCast?: { card: FCard }; /** Regra 903.9b: o comandante iria para a mão ou o grimório (to) e pode ir à zona de comando no lugar. */ /** Comandante iria para `to` (903.9b) ou, com `stays`, já está em `to` (903.9a, cemitério ou exílio). */ commanderMove?: { to: 'Hand' \| 'Library' \| 'Graveyard' \| 'Exile' \| string; stays?: boolean; card?: FCard }; /** Atacantes e bloqueadores da declaração atual, identificados pela instância da carta. */ blocking?: { selectedAttacker: number \| null; attackers: number[]; blockers: number[]; legalAssignments: { blocker: number; attackers: number[] }[] }; attacking?: { attackers: number[]; defenders: { id: number; kind: 'player' \| 'card' }[]; legalAssignments: { attacker: number; defenders: { id: number; kind: 'player' \| 'card' }[] }[] }; targeting?: FTargeting; /** Voto numa permanente, escolhido tocando no campo: a carta que vota e os votos já dados. */ vote?: { card: FCard; votes: FVote[] } }` | targeting: escolhendo alvos; source é a carta que alveja (card traz os dados dela) e o resto são os alvos já escolhidos. |
 | `question?` | `FQuestion` |  |
 | `revealView?` | `FRevealView` | Cartas reveladas do topo de um grimório por outro jogador (ou pelo próprio, sem escolha depois): janela que não segura o jogo e se atualiza com a escolha. |
+| `reveals?` | `FRevealView[]` | Cartas reveladas por outro jogador: avisos que vão para a faixa das remoções, até a mesa responder reveal-seen. |
 | `deciding?` | `{ player: number; kind: 'choice' \| 'attack' \| 'block' }[]` | Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. |
 | `waiting?` | `{ player: number; kind: 'priority' \| 'choice' \| 'attack' \| 'block'; ms: number }[]` | Jogadores humanos que a mesa espera agora, inclusive quem recebe o estado e a prioridade comum, com quanto tempo a espera atual já durou quando o estado saiu (ms). Uma resposta abre outra espera. Ausente em pontes antigas. |
 | `room?` | `FRoom` |  |
@@ -736,7 +739,7 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'point'; card: number }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean; remember?: boolean }
-  /** OK na janela das cartas reveladas do topo de um grimório (revealView). */
+  /** OK na janela das cartas reveladas (revealView), ou a mesa guardou um aviso de reveals. */
   | { type: 'reveal-seen'; seq: number }
 ```
 

@@ -376,11 +376,11 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     label,
     describe: event => ctx.eventDescription(event, true),
   };
-  // Histórico (historyPanel.ts) e as janelas de remoção feitas por outro jogador (removalQueue.ts).
+  // Histórico (historyPanel.ts) e os avisos do que outro jogador fez: remoções e cartas reveladas (removalQueue.ts).
   const historyLog = createHistoryPanel(root, { timeline, names: historyNames, you: () => client?.state?.you, image, setHTML });
-  const removals = createRemovalQueue(root, { timeline, names: historyNames, face, state: () => client?.state, mode: () => settings.prefs.removalWindow, setHTML, leave: leaveOverlay, syncModal,
+  const removals = createRemovalQueue(root, { timeline, names: historyNames, face, state: () => client?.state, mode: () => settings.prefs.removalWindow, setHTML, leave: leaveOverlay, syncModal, seen: seq => client?.send({ type: 'reveal-seen', seq }),
     blocked: s => s.gameOver || match.disconnected || (!!s.question && !question.minimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || match.stackGalleryOpen || !$('#fReveal').hidden });
-  // Cartas reveladas do topo de um grimório (revealWindow.ts): janela que não segura o jogo, como a das remoções.
+  // As suas cartas reveladas do topo do grimório, sem escolha depois (revealWindow.ts): janela que não segura o jogo.
   const reveals = createRevealWindow(root, { face, setHTML, leave: leaveOverlay, syncModal, seen: seq => client?.send({ type: 'reveal-seen', seq }),
     blocked: s => s.gameOver || match.disconnected || (!!s.question && !question.minimized()) || !$('#fOverlay').hidden || !$('#fZone').hidden || match.stackGalleryOpen });
   /** Histórico agrupado (Menu → Registro): só é montado com a gaveta aberta. */

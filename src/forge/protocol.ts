@@ -364,9 +364,13 @@ export interface FOption {
   room?: string;
 }
 
-/** A janela das cartas reveladas do topo de um grimório (Grisly Salvage): quem escolhe, as cartas e as escolhidas. */
+/**
+ * Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (Grisly Salvage): quem escolhe, as cartas
+ * e as escolhidas. De outro jogador, sem escolha (o Explorar dele, o topo do grimório dele): o dono e a zona.
+ */
 export interface FRevealView {
   seq: number;
+  /** Quem escolhe, ou quem controla o efeito que revelou. */
   chooser?: string;
   source?: FCard;
   cards: FCard[];
@@ -376,6 +380,9 @@ export interface FRevealView {
   waiting: boolean;
   /** O revelar foi do próprio jogador, sem escolha depois. */
   mine?: boolean;
+  /** Revelar de outro jogador sem escolha depois: o dono das cartas e a zona de onde vieram (Library, Hand...). */
+  owner?: string;
+  zone?: string;
 }
 export interface FQuestion {
   id: number;
@@ -563,6 +570,8 @@ export interface FState {
   question?: FQuestion;
   /** Cartas reveladas do topo de um grimório por outro jogador (ou pelo próprio, sem escolha depois): janela que não segura o jogo e se atualiza com a escolha. */
   revealView?: FRevealView;
+  /** Cartas reveladas por outro jogador: avisos que vão para a faixa das remoções, até a mesa responder reveal-seen. */
+  reveals?: FRevealView[];
   /** Outros jogadores com uma decisão aberta (alvo, pergunta, ataque, bloqueio); prioridade comum fica de fora. */
   deciding?: { player: number; kind: 'choice' | 'attack' | 'block' }[];
   /**
@@ -645,7 +654,7 @@ export type ClientMessage =
   | { type: 'point'; card: number }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
   | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean; remember?: boolean }
-  /** OK na janela das cartas reveladas do topo de um grimório (revealView). */
+  /** OK na janela das cartas reveladas (revealView), ou a mesa guardou um aviso de reveals. */
   | { type: 'reveal-seen'; seq: number };
 
 /** Carta parecida devolvida pela ponte: a nota (0 a 1) e as tags em comum que mais pesaram. */

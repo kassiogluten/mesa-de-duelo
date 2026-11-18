@@ -363,10 +363,14 @@ final class SeatStateView {
                 state.add("input", input);
                 QuestionBroker.Question q = seat.question;
                 if (q != null && !spectating) state.add("question", q.json());
-                // Cartas reveladas do topo de um grimório, numa janela que não segura o jogo (LibraryReveal).
-                if (!spectating && seat.controller() instanceof AskingController asking && asking.libraryView() != null) {
-                    JsonObject revealView = LibraryReveal.json(asking.libraryView(), m.getGame());
+                // Cartas reveladas que não seguram o jogo (LibraryReveal): a janela do próprio revelar e os avisos do que os outros revelam.
+                if (!spectating && seat.controller() instanceof AskingController asking) {
+                    LibraryReveal.View own = asking.libraryView();
+                    JsonObject revealView = own != null && own.mine() ? LibraryReveal.json(own, m.getGame()) : null;
                     if (revealView != null) state.add("revealView", revealView);
+                    JsonArray reveals = new JsonArray();
+                    for (LibraryReveal.View v : asking.revealNotices()) reveals.add(LibraryReveal.json(v, m.getGame()));
+                    if (!reveals.isEmpty()) state.add("reveals", reveals);
                 }
                 state.add("deciding", deciding(seat));
                 state.add("waiting", waiting());

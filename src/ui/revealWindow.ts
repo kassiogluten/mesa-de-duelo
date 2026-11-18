@@ -1,4 +1,4 @@
-// A janela das cartas reveladas do topo de um grimório (Grisly Salvage, Satyr Wayfinder) para quem assiste: não segura o jogo e se atualiza com a escolha.
+// As cartas reveladas que não seguram o jogo: a janela do seu próprio revelar sem escolha depois e os textos e as cartas dos avisos do que os outros revelam (que ficam na faixa das remoções).
 import type { FCard, FRevealView, FState } from '../forge/client';
 import { esc } from './cardtext';
 import { label } from './cardFaces';
@@ -15,16 +15,47 @@ export interface RevealWindowDeps {
   seen(seq: number): void;
 }
 
+const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
+const ZONES: Record<string, string> = { Library: 'do grimório', Hand: 'da mão', Graveyard: 'do cemitério', Exile: 'do exílio' };
+/** "Lightning Bolt do grimório" ou "3 cartas da mão": o que outro jogador revelou, sem escolha depois. */
+function revealedWhat(v: FRevealView) {
+  const [only] = v.cards;
+  const what = v.cards.length === 1 && only?.name && !only.faceDown ? label(only) : `${v.cards.length} ${v.cards.length === 1 ? 'carta' : 'cartas'}`;
+  const where = ZONES[v.zone ?? ''];
+  return where ? `${what} ${where}` : what;
+}
+
 /** O título e a linha de baixo: quem revelou, se ainda está escolhendo e o que escolheu. */
 export function revealViewText(v: FRevealView): { title: string; line: string } {
   const source = v.source?.name ? label(v.source) : '';
   const names = v.cards.filter(c => v.chosen?.includes(c.id)).map(label);
-  const line = source ? `Cartas reveladas com ${source}.` : '';
+  const line = source ? `${v.cards.length === 1 ? 'Carta revelada' : 'Cartas reveladas'} com ${source}.` : '';
   if (v.mine) return { title: 'Cartas reveladas do seu grimório', line };
+  if (v.zone) return { title: `${v.owner ?? 'O oponente'} revelou ${revealedWhat(v)}`, line };
   const who = v.chooser ?? 'O oponente';
   if (v.waiting) return { title: `${who} está escolhendo…`, line: `${line} A janela mostra a escolha assim que ele terminar.`.trim() };
-  if (names.length) return { title: `${who} escolheu ${names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0]}`, line };
+  if (names.length) return { title: `${who} escolheu ${list(names)}`, line };
   return { title: `${who} não escolheu nenhuma carta`, line };
+}
+
+/** O aviso na faixa: a carta que fez revelar e quem a controla (ou só quem revelou) e, embaixo, o que aconteceu. */
+export function revealStripText(v: FRevealView): { head: string; what: string } {
+  const who = v.chooser ?? v.owner ?? 'O oponente';
+  const head = v.source?.name && !v.source.faceDown ? `${label(v.source)} (${who})` : who;
+  if (v.zone) return { head, what: `${v.owner && v.owner !== who ? `${v.owner} revelou` : 'revelou'} ${revealedWhat(v)}` };
+  const count = `revelou ${v.cards.length} ${v.cards.length === 1 ? 'carta' : 'cartas'}`;
+  const names = v.cards.filter(c => v.chosen?.includes(c.id)).map(label);
+  if (v.waiting) return { head, what: `${count} e está escolhendo…` };
+  return { head, what: names.length ? `${count} e escolheu ${list(names)}` : `${count} e não escolheu nenhuma` };
+}
+
+/** As cartas reveladas, a escolhida em destaque e as outras apagadas depois da escolha; `thumb` desenha e guarda cada uma. */
+export function revealCardsHTML(v: FRevealView, thumb: (key: string, c: FCard, chosen: boolean) => string) {
+  const decided = !!v.chosen;
+  return v.cards.map((c, i) => {
+    const chosen = !!v.chosen?.includes(c.id);
+    return `<div class="reveal-card${chosen ? ' chosen' : decided ? ' passed' : ''}">${thumb(`rv${v.seq}-${i}`, c, chosen)}${chosen ? '<span class="q-badge" aria-hidden="true">✓</span>' : ''}</div>`;
+  }).join('');
 }
 
 export function createRevealWindow(root: HTMLElement, d: RevealWindowDeps) {
@@ -36,12 +67,10 @@ export function createRevealWindow(root: HTMLElement, d: RevealWindowDeps) {
   function html(v: FRevealView) {
     cards.clear();
     const { title, line } = revealViewText(v);
-    const decided = !!v.chosen;
-    const items = v.cards.map((c, i) => {
-      const key = `rv${v.seq}-${i}`, chosen = !!v.chosen?.includes(c.id);
+    const items = revealCardsHTML(v, (key, c, chosen) => {
       cards.set(key, c);
-      return `<div class="reveal-card${chosen ? ' chosen' : decided ? ' passed' : ''}"><button class="q-face" data-event="${key}" aria-label="Inspecionar ${esc(label(c))}${chosen ? ' (escolhida)' : ''}">${d.face(c, 'normal')}</button>${chosen ? '<span class="q-badge" aria-hidden="true">✓</span>' : ''}</div>`;
-    }).join('');
+      return `<button class="q-face" data-event="${key}" aria-label="Inspecionar ${esc(label(c))}${chosen ? ' (escolhida)' : ''}">${d.face(c, 'normal')}</button>`;
+    });
     return `<section class="question zone-view reveal-view" role="dialog" aria-modal="true" aria-labelledby="fRevealTitle">
       <h2 id="fRevealTitle">${esc(title)}</h2>${line ? `<p class="q-hint">${esc(line)}</p>` : ''}
       <div class="q-opts cards" aria-live="polite">${items}</div>

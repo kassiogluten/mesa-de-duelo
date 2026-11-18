@@ -309,30 +309,70 @@ final class AskingController extends PlayerControllerHuman {
     CardCollectionView pendingLibraryReveal() { return pendingLibraryReveal; }
     /** A escolha usou as cartas reveladas: a janela que não segura o jogo deixa de ser necessária. */
     void libraryRevealChosen() { pendingLibraryReveal = null; libraryView = null; }
-    /** A janela de revelar que não segura o jogo (quem assiste, ou o próprio jogador sem escolha depois). */
+    /** O revelar do topo do grimório em curso (quem assiste, ou o próprio jogador sem escolha depois); a mesa só abre a janela do próprio. */
     private volatile LibraryReveal.View libraryView;
     private static final java.util.concurrent.atomic.AtomicInteger LIBRARY_SEQ = new java.util.concurrent.atomic.AtomicInteger();
     LibraryReveal.View libraryView() { return libraryView; }
-    /** OK na janela: some, a menos que já seja outra. */
-    void libraryViewSeen(int seq) { LibraryReveal.View v = libraryView; if (v != null && v.seq() == seq) libraryView = null; }
+    /**
+     * Cartas reveladas por outro jogador: avisos que não seguram o jogo (a mesa os põe na faixa das remoções). Ficam
+     * até a mesa dizer que guardou; só os mais recentes, para o estado não crescer.
+     */
+    private volatile List<LibraryReveal.View> revealNotices = List.of();
+    private static final int REVEAL_NOTICES = 6;
+    List<LibraryReveal.View> revealNotices() { return revealNotices; }
+    /** Um aviso novo, ou o mesmo já com a escolha. */
+    private synchronized void noticed(LibraryReveal.View v) {
+        List<LibraryReveal.View> next = new java.util.ArrayList<>(revealNotices);
+        next.removeIf(other -> other.seq() == v.seq());
+        next.add(v);
+        while (next.size() > REVEAL_NOTICES) next.remove(0);
+        revealNotices = List.copyOf(next);
+    }
+    /** OK na janela (ou a mesa guardou o aviso): some, a menos que já seja outra. */
+    synchronized void libraryViewSeen(int seq) {
+        LibraryReveal.View v = libraryView;
+        if (v != null && v.seq() == seq) libraryView = null;
+        if (revealNotices.stream().anyMatch(other -> other.seq() == seq)) revealNotices = revealNotices.stream().filter(other -> other.seq() != seq).toList();
+    }
 
-    /** O revelar que vem antes de "você escolhe" fica para a própria escolha, numa janela só. */
+    /**
+     * O revelar que vem antes de "você escolhe" fica para a própria escolha, numa janela só. O que outro jogador revela
+     * (o Explorar dele, o topo do grimório dele) não segura o jogo: vira um aviso. O que é seu, ou vem de um efeito
+     * seu, continua na janela do Forge, que espera o OK.
+     */
     @Override public void reveal(CardCollectionView cards, ZoneType zone, Player owner, String message, boolean addSuffix) {
         if (zone == ZoneType.Hand && DiscardReveal.choiceFollows(getGame(), getPlayer(), owner, cards)) return;
         if (zone == ZoneType.Library && libraryReveal(cards, owner)) return;
+        if (othersReveal(cards, zone, owner)) return;
         super.reveal(cards, zone, owner, message, addSuffix);
+    }
+
+    /** Cartas de outro jogador, reveladas sem ser por um efeito deste: aviso em vez de janela. */
+    private boolean othersReveal(CardCollectionView cards, ZoneType zone, Player owner) {
+        if (cards == null || cards.isEmpty() || zone == null || owner == null || owner == getPlayer()) return false;
+        SpellAbility resolving = LibraryReveal.resolving(getGame());
+        Player controller = resolving == null ? null : resolving.getActivatingPlayer();
+        if (controller == getPlayer()) return false;
+        noticed(new LibraryReveal.View(LIBRARY_SEQ.incrementAndGet(), LibraryReveal.resolvingId(getGame()),
+            controller == null ? null : controller.getName(), resolving == null ? null : resolving.getHostCard(),
+            List.copyOf(cards.stream().toList()), null, false, owner.getName(), zone.name()));
+        // Qualquer chamada à tela marca o estado como mudado: o aviso sai mesmo que nada mais mude na mesa.
+        getGui().updateCards(CardView.getCollection(cards));
+        return true;
     }
 
     /**
      * Revelar do topo do grimório com escolha (LibraryReveal): quem escolhe vê as cartas na própria escolha; quem
-     * assiste ganha a janela que não segura o jogo e, quando chega a escolhida, a mesma janela a marca.
+     * assiste ganha um aviso que não segura o jogo e, quando chega a escolhida, o mesmo aviso a marca.
      */
     private boolean libraryReveal(CardCollectionView cards, Player owner) {
         LibraryReveal.View current = libraryView;
-        // A escolhida mostrada aos outros, depois do revelar do mesmo efeito: atualiza a janela em vez de abrir outra.
+        // A escolhida mostrada aos outros, depois do revelar do mesmo efeito: atualiza o aviso em vez de abrir outro.
         if (current != null && current.chosen() == null && current.stackId() == LibraryReveal.resolvingId(getGame())
                 && current.cards().containsAll(cards.stream().toList())) {
-            libraryView = current.choose(cards.stream().map(Card::getId).toList());
+            LibraryReveal.View chosen = current.choose(cards.stream().map(Card::getId).toList());
+            libraryView = chosen;
+            if (!chosen.mine()) noticed(chosen);
             return true;
         }
         SpellAbility dig = LibraryReveal.dig(getGame(), owner, cards);
@@ -340,8 +380,10 @@ final class AskingController extends PlayerControllerHuman {
         Player chooser = dig.getActivatingPlayer();
         boolean mine = chooser == getPlayer();
         if (mine) pendingLibraryReveal = cards;
-        libraryView = new LibraryReveal.View(LIBRARY_SEQ.incrementAndGet(), LibraryReveal.resolvingId(getGame()),
-            chooser == null ? null : chooser.getName(), dig.getHostCard(), List.copyOf(cards.stream().toList()), null, mine);
+        LibraryReveal.View view = new LibraryReveal.View(LIBRARY_SEQ.incrementAndGet(), LibraryReveal.resolvingId(getGame()),
+            chooser == null ? null : chooser.getName(), dig.getHostCard(), List.copyOf(cards.stream().toList()), null, mine, null, null);
+        libraryView = view;
+        if (!mine) noticed(view);
         return true;
     }
     @Override public <T extends GameEntity> T chooseSingleEntityForEffect(FCollectionView<T> options, DelayedReveal reveal, SpellAbility sa, String title, boolean isOptional, Player targeted, Map<String, Object> params) {

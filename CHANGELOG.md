@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.216.0] - 2026-11-18
+
+### Mudou
+
+- **Cartas reveladas por um oponente vão para a faixa do canto.** O que um oponente revela (o Explorar dele, o topo do grimório dele, um Grisly Salvage) não abre mais uma janela no meio da mesa nem segura o jogo até o seu OK: vira um aviso na mesma faixa das remoções, com a carta e o que foi revelado, e um toque abre a janela com as cartas. Remoções e cartas reveladas ficam juntas, na ordem em que aconteceram, com o mesmo contador, as setas para passar de um aviso ao outro e o × para dispensar. O que você mesmo revela, ou o que um efeito seu mostra, continua abrindo a janela como antes.
+
 ## [0.215.0] - 2026-11-18
 
 ### Novo

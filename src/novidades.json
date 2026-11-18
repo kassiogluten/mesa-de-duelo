@@ -1,4 +1,10 @@
 {
+  "0.216.0": {
+    "Cartas reveladas por um oponente vão para a faixa do canto": [
+      { "img": "0.216.0/faixa.webp", "legenda": "A faixa no canto da mesa avisa que Ana revelou uma carta do grimório com Goblin Guide, e que há mais um aviso guardado." },
+      { "img": "0.216.0/janela.webp", "legenda": "Tocar na faixa abre a janela com as cartas reveladas: aqui, as cinco do Grisly Salvage de Ana, com a escolhida em destaque." }
+    ]
+  },
   "0.215.0": {
     "Cúpula da proteção contra alvos": [
       { "img": "0.215.0/ward-disparou.webp", "legenda": "O oponente mirou a Prole de Abolete: a cúpula de favos sobe em volta dela e o golpe bate no alto, do lado da pilha, acendendo os favos daquele canto." },
