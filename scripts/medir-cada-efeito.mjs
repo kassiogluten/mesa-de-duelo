@@ -91,7 +91,8 @@ const EFFECTS = [
     ['motes', 'Grãos da habilidade'], ['puff', 'Fumaça do ninja'], ['dust', 'Poeira ao virar'], ['flare', 'Brilho de chegada'], ['warp', 'Rasgo da dobra'],
     ['counter', 'Faíscas do marcador'], ['heal', 'Ganho de vida'], ['mana', 'Orbe de mana'], ['victory', 'Vitória'], ['defeat', 'Derrota'],
     ['dizzy', 'Estrelinhas do enjoo'], ['charge', 'Riscos do ataque'], ['beam', 'Feixe da habilidade'], ['trail-ember', 'Rastro de brasas'],
-    ['glint', 'Redemoinho ao conjurar'], ['arrive', 'Anel de chegada'], ['streak', 'Risco do golpe'], ['shockwave', 'Onda do ultimate']]
+    ['glint', 'Redemoinho ao conjurar'], ['arrive', 'Anel de chegada'], ['streak', 'Risco do golpe'], ['shockwave', 'Onda do ultimate'],
+    ['ward', 'Cúpula do ward'], ['ward-held', 'Ward segurou'], ['ward-paid', 'Ward pago']]
     .map(([kind, label]) => [`gpu:${kind}`, 'gpu', `gpu:${kind}`, label]),
 ];
 

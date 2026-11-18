@@ -1,4 +1,4 @@
-// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts, as estrelinhas do enjoo de gpuDizzy.ts, moeda, dado e fim da partida de gpuStage.ts, os toques de gpuAccents.ts, os momentos grandes de gpuMoments.ts, o grimório de gpuPiles.ts, os medalhões de gpuMedals.ts, as fichas em 3D de gpuTrinkets.ts, os marcadores de jogador de gpuTallies.ts, a carta que muda de face de gpuTurn.ts, a onda do limpa campo de gpuSweep.ts e o voo de gpuFlight.ts), com as cores do tema.
+// Os efeitos desenhados na camada GPU (faíscas do dano, projétil com rastro, onda do pouso, estilhaços, onda do ultimate, os de movimento de gpuMoves.ts, as estrelinhas do enjoo de gpuDizzy.ts, moeda, dado e fim da partida de gpuStage.ts, os toques de gpuAccents.ts, os momentos grandes de gpuMoments.ts, o grimório de gpuPiles.ts, os medalhões de gpuMedals.ts, as fichas em 3D de gpuTrinkets.ts, os marcadores de jogador de gpuTallies.ts, a carta que muda de face de gpuTurn.ts, a onda do limpa campo de gpuSweep.ts, a cúpula do ward de gpuWard.ts e o voo de gpuFlight.ts), com as cores do tema.
 import { Color, Container, Graphics, PerspectiveMesh, Sprite, Texture } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
@@ -17,6 +17,7 @@ import { TRINKET_EFFECTS, type TrinketParams } from './gpuTrinkets';
 import { TALLY_EFFECTS, type TallyParams } from './gpuTallies';
 import { cardTurn, type TurnParams } from './gpuTurn';
 import { SWEEP_EFFECTS, type SweepParams } from './gpuSweep';
+import { WARD_EFFECTS, type WardParams } from './gpuWard';
 
 export { preload, textureReady };
 
@@ -37,7 +38,7 @@ interface DamageParams {
   /** Ultimate do planeswalker: onda de luz na cor dele atravessando a mesa. `reach` é o diâmetro final. */
   shockwave: { at: Point; color: string; reach: number };
 }
-export type GpuEffectParams = DamageParams & MoveParams & PlayParams & DizzyParams & StageParams & AccentParams & MomentParams & PileParams & MedalParams & TrinketParams & TallyParams & TurnParams & SweepParams & { flight: FlightParams };
+export type GpuEffectParams = DamageParams & MoveParams & PlayParams & DizzyParams & StageParams & AccentParams & MomentParams & PileParams & MedalParams & TrinketParams & TallyParams & TurnParams & SweepParams & WardParams & { flight: FlightParams };
 export type GpuEffectName = keyof GpuEffectParams;
 
 const shared = new WeakMap<GpuLayer, Shared>();
@@ -256,7 +257,7 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
 export function play<N extends GpuEffectName>(layer: GpuLayer, name: N, params: GpuEffectParams[N]): boolean {
   const s = shared.get(layer);
   if (!s || layer.destroyed) return false;
-  const make = name === 'flight' ? flight : name === 'cardTurn' ? cardTurn : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name] ?? (DIZZY_EFFECTS as any)[name] ?? (STAGE_EFFECTS as any)[name] ?? (ACCENT_EFFECTS as any)[name] ?? (MOMENT_EFFECTS as any)[name] ?? (PILE_EFFECTS as any)[name] ?? (MEDAL_EFFECTS as any)[name] ?? (TRINKET_EFFECTS as any)[name] ?? (TALLY_EFFECTS as any)[name] ?? (SWEEP_EFFECTS as any)[name];
+  const make = name === 'flight' ? flight : name === 'cardTurn' ? cardTurn : (DAMAGE_EFFECTS as any)[name] ?? (MOVE_EFFECTS as any)[name] ?? (PLAY_EFFECTS as any)[name] ?? (DIZZY_EFFECTS as any)[name] ?? (STAGE_EFFECTS as any)[name] ?? (ACCENT_EFFECTS as any)[name] ?? (MOMENT_EFFECTS as any)[name] ?? (PILE_EFFECTS as any)[name] ?? (MEDAL_EFFECTS as any)[name] ?? (TRINKET_EFFECTS as any)[name] ?? (TALLY_EFFECTS as any)[name] ?? (SWEEP_EFFECTS as any)[name] ?? (WARD_EFFECTS as any)[name];
   // O voo e a virada da carta podem recusar (textura ainda não carregada): quem pediu anima em CSS.
   const effect = make(layer, s, params);
   if (!effect) return false;

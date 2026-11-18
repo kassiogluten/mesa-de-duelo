@@ -41,12 +41,14 @@ final class VisibleEvents {
     private final Map<Integer, JsonObject> swaps = new HashMap<>();
     /** Vida de cada jogador no fim de cada turno ({@code turn} 0 é a vida inicial), para o gráfico do fim do jogo. */
     private final java.util.List<JsonObject> lifePoints = new java.util.ArrayList<>();
+    /** Gatilhos de ward na pilha, para dizer contra quem dispararam e se seguraram. */
+    private final WardEvents wards = new WardEvents();
 
     VisibleEvents(Runnable changed, LongSupplier version) { this.changed = changed; this.version = version; }
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); clearTurns();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); clearTurns();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -54,7 +56,7 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
     private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
 
     /** Começo de turno: fecha o turno anterior na conta de quem o jogou e anota a vida de todos no fim dele. */
@@ -167,6 +169,7 @@ final class VisibleEvents {
             e.add("targets", StateJson.stackTargets(x.si()));
             // O "+N" de lealdade é pago antes da habilidade ir para a pilha: a mesa mostra esse marcador junto com ela.
             if (Loyalty.describe(e, game, x.si().getId()) && x.si().getSourceCard() != null) paidCounters(x.si().getSourceCard().getId());
+            wards.cast(e, game, Loyalty.ability(game, x.si().getId()));
             spells.put(x.sa().getId(), e.deepCopy());
             if (spells.size() > HISTORY_LIMIT) spells.keySet().removeIf(id -> id != x.sa().getId() && spells.size() > HISTORY_LIMIT);
         } else if (event instanceof GameEventSpellResolved x) {
@@ -174,6 +177,7 @@ final class VisibleEvents {
         } else if (event instanceof GameEventSpellRemovedFromStack x && x.sa() != null) {
             String type = "stack-removed";
             if (game != null && !game.getStack().isEmpty() && game.getStack().peekAbility().getApi() == ApiType.Counter) type = "countered";
+            if (wards.countered(x.sa().getId(), game)) type = "countered";
             e = finish(x.sa(), type);
         } else if (event instanceof GameEventCardChangeZone x && x.card() != null) {
             ZoneType from = x.from() == null ? null : x.from().zoneType(), to = x.to() == null ? null : x.to().zoneType();
@@ -446,6 +450,7 @@ final class VisibleEvents {
         if (cast == null) return null;
         cast = cast.deepCopy();
         cast.addProperty("type", kind);
+        if ("resolved".equals(kind)) wards.resolved(cast, ability.getId());
         cast.addProperty("from", "Stack"); cast.remove("to");
         CardView source = ability.getHostCard();
         if (source != null && source.getZone() != null && source.getZone() != ZoneType.Stack)

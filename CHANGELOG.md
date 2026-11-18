@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.215.0] - 2026-11-18
+
+### Novo
+
+- **Cúpula da proteção contra alvos.** Quando uma mágica ou habilidade do oponente mira uma permanente com proteção contra alvos (ward) e o gatilho dispara, uma cúpula de favos violeta sobe em volta da carta, e o golpe bate nela do lado da pilha, ondulando pelos favos. Quando o gatilho resolve, a mesa mostra se a proteção segurou: se a mágica foi anulada, a cúpula acende inteira e se desfaz em luz; se o custo foi pago, ela trinca e cai em cacos. O aviso ao lado da carta e o histórico dizem "Proteção contra alvos de …", e, na resolução, "anulou o efeito" ou "custo pago". Com os efeitos leves, a moldura de runas da carta salta e acende no lugar da cúpula.
+
 ## [0.214.0] - 2026-11-18
 
 ### Novo

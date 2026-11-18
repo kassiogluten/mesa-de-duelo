@@ -43,3 +43,10 @@ test('ninjutsu and sneak say the attacker went back as a cost and whose place th
   assert.match(entered, /^Ninjutsu: Ninja of the Deep Hours entra atacando no lugar de Slither Blade/);
   assert.match(eventDescription(view, { type: 'entered', actor: 1, card: { name: 'Donatello, Gadget Master' }, from: 'Stack', reason: 'sneak', swapName: 'Shock' }), /^Sneak: .* no lugar de Choque/);
 });
+
+test('ward says whose protection triggered and, when it resolves, whether it countered or the cost was paid', () => {
+  const ward = { type: 'ability-activated', actor: 0, trigger: true, ward: true, card: { name: 'Aboleth Spawn' }, wardAgainst: 5 };
+  assert.equal(eventDescription(view, ward), 'Proteção contra alvos de Aboleth Spawn.');
+  assert.equal(eventDescription(view, { ...ward, type: 'resolved', held: true }), 'Proteção contra alvos de Aboleth Spawn: anulou o efeito.');
+  assert.equal(eventDescription(view, { ...ward, type: 'resolved', held: false }), 'Proteção contra alvos de Aboleth Spawn: custo pago.');
+});

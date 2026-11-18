@@ -52,7 +52,7 @@ final class Loyalty {
         return text.replaceFirst("^\\s*\\[?[+\u2212-]?[0-9X]+\\]?\\s*:\\s*", "").trim();
     }
 
-    private static SpellAbility ability(Game game, int stackId) {
+    static SpellAbility ability(Game game, int stackId) {
         if (game == null) return null;
         try {
             for (SpellAbilityStackInstance item : game.getStack()) {

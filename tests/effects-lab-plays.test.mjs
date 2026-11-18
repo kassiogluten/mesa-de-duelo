@@ -46,13 +46,30 @@ function fakeTable() {
 
 test('every lab play button runs and sends events or panel commands, with a note for the panel', () => {
   const keys = PLAY_BUTTONS.flatMap(([, list]) => list.map(([key]) => key));
-  assert.equal(keys.length, 21);
+  assert.equal(keys.length, 23);
   for (const key of keys) {
     const t = fakeTable();
     const note = createLabPlays(t.lab).start(key);
     assert.ok(note && note.length > 20, `${key}: no note`);
     assert.ok(t.events.length + t.commands.length > 1, `${key}: nothing happened`);
     assert.ok(playButtons().includes(`data-play="${key}"`), `${key}: no button`);
+  }
+});
+
+test('ward plays: the trigger names the Bolt it answered; unpaid it counters the Bolt and holds, paid the Bolt resolves', () => {
+  for (const paid of [false, true]) {
+    const t = fakeTable();
+    createLabPlays(t.lab).start(paid ? 'wardPaid' : 'ward');
+    const cast = t.events.find(e => e.type === 'spell-cast');
+    const ward = t.events.find(e => e.type === 'ability-activated');
+    assert.ok(ward.ward && ward.trigger);
+    assert.equal(ward.card.name, 'Aboleth Spawn');
+    assert.equal(ward.wardAgainst, cast.stackId);
+    const end = t.events.find(e => e.type === 'resolved' && e.ward);
+    assert.equal(end.held, !paid);
+    assert.equal(t.events.some(e => e.type === 'countered' && e.stackId === cast.stackId), !paid);
+    assert.equal(t.events.some(e => e.type === 'damage' && e.amount === 3), paid);
+    assert.equal(t.state.stack.length, 0, 'stack empty at the end');
   }
 });
 

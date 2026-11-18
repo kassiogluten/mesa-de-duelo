@@ -40,6 +40,10 @@ export interface PresentationEvent {
   self?: boolean;
   lethal?: boolean;
   prevented?: boolean;
+  /** Gatilho de ward: o item da pilha que mirou a permanente e, ao resolver, se anulou quem mirou (ver `FEvent`). */
+  ward?: boolean;
+  wardAgainst?: number;
+  held?: boolean;
   /** Número do turno que começou (`turn`). */
   turn?: number;
   /** Só na mesa: quantas compras seguidas do mesmo jogador viraram uma entrada só (`draw`). */
@@ -360,6 +364,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
     // Ninjutsu e sneak: o shuriken precisa ser visto cruzando a mesa até a fumaça.
     : event.reason === 'ninjutsu' || event.reason === 'sneak' ? (event.type === 'entered' ? 1100 : 560)
     : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
+    // O ward resolvendo: a habilidade volta à carta e a cúpula segura ou trinca (gpuWard.ts).
+    : event.type === 'resolved' && event.ward && event.held !== undefined ? 760
     // O golpe de combate toma impulso e congela no contato (motionDamage.ts): pede um pouco mais que os 620 de antes.
     : event.type === 'damage' ? 760
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)

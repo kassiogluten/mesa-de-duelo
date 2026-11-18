@@ -1,4 +1,11 @@
 {
+  "0.215.0": {
+    "Cúpula da proteção contra alvos": [
+      { "img": "0.215.0/ward-disparou.webp", "legenda": "O oponente mirou a Prole de Abolete: a cúpula de favos sobe em volta dela e o golpe bate no alto, do lado da pilha, acendendo os favos daquele canto." },
+      { "img": "0.215.0/ward-segurou.webp", "legenda": "A mágica foi anulada: a cúpula acende inteira, incha e se desfaz em estrelinhas violeta." },
+      { "img": "0.215.0/ward-pago.webp", "legenda": "O oponente pagou o custo: a cúpula apagada trinca e os favos caem girando em cacos." }
+    ]
+  },
   "0.214.0": {
     "Limpa campo com onda": [
       { "img": "0.214.0/onda-branca.webp", "legenda": "Wrath of God no campo cheio: a onda de luz dourada saiu do seu retrato e atravessa a mesa; as criaturas por onde ela já passou racham e se partem, as do outro lado ainda esperam a vez, e a faixa no meio diz \"Cólera de Deus: 8 permanentes destruídas\"." },

@@ -927,6 +927,9 @@ function table() {
           port.play('shockwave', { at: selected, color: c.color || '#f2b54c', reach: Math.max(table.width, table.height) * .99 });
           return 'Ultimate: onda de luz na cor do planeswalker atravessando a mesa.';
         }
+        case 'ward': if (!selected) return needSelected; port.play('ward', { at: selected, from: pointOf(c.source) }); return 'Ward disparou: a cúpula de favos sobe em volta da carta e o golpe bate nela do lado da Fonte (sem Fonte, de cima).';
+        case 'ward-held': if (!selected) return needSelected; port.play('wardEnd', { at: selected, held: true }); return 'Ward segurou: a cúpula acende inteira, incha e se desfaz em luz.';
+        case 'ward-paid': if (!selected) return needSelected; port.play('wardEnd', { at: selected, held: false }); return 'Ward pago: a cúpula aparece apagada, pisca, trinca e cai em cacos.';
         case 'sweep': {
           const me = center(document.querySelector('#fMeAvatar')), table = document.querySelector('.arena')!.getBoundingClientRect();
           if (!me) return 'Não achei o seu retrato.';
@@ -999,7 +1002,7 @@ function table() {
 // ---------------------------------------------------------------- painel
 /** Os efeitos da camada pelo nome que o jogador entende (a lista do que cada degrau desliga). */
 const EFFECT_LABELS: Record<string, string> = {
-  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo',
+  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo', ward: 'cúpula do ward', wardEnd: 'desfecho do ward',
   vortex: 'portal do exílio', gather: 'volta do blink', ash: 'cinzas do sacrifício', motes: 'grãos da habilidade', puff: 'fumaça do ninja', dust: 'poeira ao virar',
   charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
   mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
@@ -1103,6 +1106,8 @@ function panel() {
     <p>Limpa campo (a onda sai do seu retrato):</p>
     ${[['W', 'Branco (luz)'], ['U', 'Azul (maré)'], ['B', 'Preto (névoa)'], ['R', 'Vermelho (fogo)'], ['G', 'Verde (folhas)'], ['M', 'Várias cores'], ['C', 'Incolor (prata)']]
       .map(([k, t]) => `<button data-gpu="sweep" data-color="${k}">${t}</button>`).join('')}
+    <p>Proteção contra alvos (ward), na permanente selecionada; o golpe vem da Fonte da seção Dano:</p>
+    ${[['ward', 'Ward disparou'], ['ward-held', 'Ward segurou'], ['ward-paid', 'Ward pago']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['vortex', 'Exilar (portal)'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
        ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou'],

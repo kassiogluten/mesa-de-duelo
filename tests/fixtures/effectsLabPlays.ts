@@ -30,7 +30,7 @@ interface Play { note: string; steps: [number, () => void][] }
 
 /** Os botões, por grupo e na ordem do painel (o painel não carrega a mesa: só precisa dos nomes). */
 export const PLAY_BUTTONS: [group: string, plays: [key: string, label: string][]][] = [
-  ['Turno e mágicas', [['upkeep', 'Começo do turno'], ['develop', 'Terreno e criatura'], ['bolt', 'Raio no oponente'], ['counter', 'Contramágica']]],
+  ['Turno e mágicas', [['upkeep', 'Começo do turno'], ['develop', 'Terreno e criatura'], ['bolt', 'Raio no oponente'], ['counter', 'Contramágica'], ['ward', 'Ward anula'], ['wardPaid', 'Ward pago']]],
   ['Limpa campo', [['wrath', 'Ira de Deus'], ['damnation', 'Danação'], ['pyroclasm', 'Piroclasmo'], ['evacuation', 'Evacuação'], ['eviction', 'Despejo impiedoso']]],
   ['Combate', [['combat', 'Ataque com bloqueios'], ['swing', 'Ataque do oponente'], ['lethal', 'Ataque letal']]],
   ['Cemitério e exílio', [['graveyard', 'Moer e reanimar'], ['blink', 'Blink com gatilho'], ['sacrifice', 'Sacrificar para comprar'], ['flashback', 'Conjurar do cemitério'], ['removal', 'Exilar uma ameaça']]],
@@ -131,7 +131,51 @@ export function createLabPlays(lab: LabApi) {
       ],
     };
   }
+  /**
+   * O oponente mira a sua Aboleth Spawn (ward {2}) com um Lightning Bolt: o ward dispara e, sem o custo pago (`paid`
+   * falso), anula o Bolt; pago, o Bolt resolve e a Spawn leva 3.
+   */
+  function wardPlay(note: string, paid: boolean): Play {
+    const trigger = () => ({ id: held.wardStack, text: 'Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)', kind: 'trigger', source: structuredClone(held.spawn), controller: ME });
+    const wardEvent = (type: string, extra: Record<string, unknown>) =>
+      lab.emit(type, { card: structuredClone(held.spawn), sourceId: held.spawn.id, actor: ME, trigger: true, ward: true, stackId: held.wardStack, ...extra });
+    return {
+      note,
+      steps: [
+        [0, () => {
+          stage(['spawn', 'land', 'land'], [() => basic('Mountain'), ...(paid ? [() => basic('Island'), () => basic('Island')] : []), 'small']);
+          held.spawn = me().battlefield.find((x: any) => x.name === 'Aboleth Spawn');
+        }],
+        [900, () => {
+          opp().battlefield.find((y: any) => y.name === 'Mountain').tapped = true;
+          held.bolt = spellCard('Lightning Bolt', 'Instant', '{R}', 'Lightning Bolt deals 3 damage to any target.', OPP);
+          held.boltStack = cast(held.bolt, { cards: [held.spawn.id], players: [] });
+        }],
+        [1100, () => {
+          held.wardStack = lab.newId();
+          lab.state().stack.unshift(trigger());
+          wardEvent('ability-activated', { to: 'Stack', wardAgainst: held.boltStack, text: trigger().text });
+        }],
+        [1800, () => {
+          const s = lab.state(); s.stack = s.stack.filter((x: any) => x.id !== held.wardStack);
+          if (paid) for (const x of opp().battlefield.filter((y: any) => y.land)) x.tapped = true;
+          else {
+            s.stack = s.stack.filter((x: any) => x.id !== held.boltStack);
+            opp().graveyard.push(held.bolt);
+            lab.emit('countered', { card: structuredClone(held.bolt), sourceId: held.bolt.id, actor: OPP, stackId: held.boltStack, from: 'Stack', to: 'Graveyard' });
+          }
+          wardEvent('resolved', { from: 'Stack', to: 'Battlefield', held: !paid });
+        }],
+        ...(paid ? [[1300, () => {
+          resolve(held.bolt, held.boltStack);
+          lab.damage(held.bolt, { card: held.spawn.id }, 3);
+        }] as [number, () => void]] : []),
+      ],
+    };
+  }
   const plays: Record<string, Play> = {
+    ward: wardPlay('Ward anula: o oponente mira a sua Aboleth Spawn com um Lightning Bolt, a cúpula de favos sobe em volta dela com o golpe batendo do lado da pilha e, sem o {2} pago, o Bolt é anulado e a cúpula acende e se desfaz em luz.', false),
+    wardPaid: wardPlay('Ward pago: o oponente mira a sua Aboleth Spawn com um Lightning Bolt, a cúpula sobe, ele paga o {2}, a cúpula trinca e cai em cacos e o Bolt resolve.', true),
     upkeep: {
       note: 'Começo do turno: a luz vai para o seu lado, tudo desvira em onda e você compra uma carta.',
       steps: [

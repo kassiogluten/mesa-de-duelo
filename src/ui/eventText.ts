@@ -32,7 +32,8 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
   switch (event.type) {
     case 'land-played': return `${who} jogou ${name}${from}.`;
     case 'spell-cast': return `${who} conjurou ${name}${from}${on}.`;
-    case 'ability-activated': return event.loyalty && !event.trigger ? loyaltyDescription(event, who, name, on) : event.trigger ?`Gatilho${event.card?.name ? ` de ${name}` : ''}${on}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}${on}.`;
+    case 'ability-activated': if (event.ward) return `Proteção contra alvos de ${name}${on}.`;
+      return event.loyalty && !event.trigger ? loyaltyDescription(event, who, name, on) : event.trigger ?`Gatilho${event.card?.name ? ` de ${name}` : ''}${on}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}${on}.`;
     case 'draw': return event.searched ? `${who} buscou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`} no grimório.`
       : `${who} comprou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`}.`;
     case 'scry': {
@@ -51,7 +52,8 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
       return event.moved ? `${kind}: ${name} passou para ${host}.` : `${kind}: ${name} em ${host}.`;
     }
     case 'control-changed': return `${who} ganhou o controle de ${name}${detailed && event.previous !== undefined ? ` (era de ${v.state()?.players.find(p => p.id === event.previous)?.name ?? 'outro jogador'})` : ''}.`;
-    case 'resolved': return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
+    case 'resolved': if (event.ward && event.held !== undefined) return `Proteção contra alvos de ${name}: ${event.held ? 'anulou o efeito' : 'custo pago'}.`;
+      return `Resolução: ${event.card?.name ? name : 'efeito'}.`;
     case 'countered': return `Anulado: ${event.card?.name ? name : 'efeito'}.`;
     // "Carta …" concorda com qualquer nome (o Cavaleiro, a Aura).
     case 'left': return event.reason === 'ninjutsu' || event.reason === 'sneak' ? `${SWAP[event.reason]}: ${name} volta para a mão${owner}.`

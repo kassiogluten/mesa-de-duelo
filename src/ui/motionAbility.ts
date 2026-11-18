@@ -1,4 +1,4 @@
-// Animações de habilidades (gatilhos, ativadas, lealdade) e do planeswalker chegando ao campo.
+// Animações de habilidades (gatilhos, ativadas, lealdade, a cúpula do ward) e do planeswalker chegando ao campo.
 import type { PresentationEvent } from './presentationTimeline';
 import { loyaltyLook, walkerTone, type LoyaltyLook } from './planeswalkerEffects';
 import { center, reduced, type MotionKit } from './motionKit';
@@ -88,8 +88,10 @@ export function createAbilityMotion(kit: MotionKit) {
     const look = loyaltyLook(event);
     if (card && rect?.width) {
       pulse(card);
-      // Na camada GPU, grãos de luz sobem em volta da carta (dourados na habilidade ativada, violeta no gatilho).
-      if (!look) { const at = center(card); if (at) gpu.play('motes', { at, color: event.trigger ? '#9b7bff' : '#f2b54c' }); }
+      // Na camada GPU, grãos de luz sobem em volta da carta (dourados na habilidade ativada, violeta no gatilho); o ward
+      // ergue a cúpula dele.
+      if (event.ward) wardHit(event, card, options.duration);
+      else if (!look) { const at = center(card); if (at) gpu.play('motes', { at, color: event.trigger ? '#9b7bff' : '#f2b54c' }); }
       if (look) loyaltyAbility(look, card, event);
       // Habilidade ativada: a carta se ergue um pouco da mesa enquanto a habilidade sai dela, e assenta de novo.
       else if (!event.trigger) animate(card, [
@@ -133,6 +135,39 @@ export function createAbilityMotion(kit: MotionKit) {
     later(() => remove(piece), options.duration);
   }
 
+  /** A moldura de runas do ward na carta, para a reserva em CSS (sem camada GPU). */
+  function wardFrame(card: HTMLElement, keyframes: Keyframe[], ms: number) {
+    const frame = card.querySelector<HTMLElement>('.fx-frame.ward');
+    if (frame && !reduced()) animate(frame, keyframes, ms, 'ease-out');
+  }
+  /**
+   * O ward disparou: na camada GPU, a cúpula de favos sobe em volta da carta e o golpe bate nela do lado do item da
+   * pilha que mirou. Em CSS, a moldura de runas da carta salta e acende.
+   */
+  function wardHit(event: PresentationEvent, card: HTMLElement, duration: number) {
+    const at = center(card);
+    if (!at) return;
+    const id = event.wardAgainst;
+    const aimed = id === undefined ? null : root.querySelector<HTMLElement>(`.stack-pile[data-stack="${id}"], .stack-pile [data-stack="${id}"]`);
+    const from = center(aimed) ?? center(kit.stackPile()) ?? undefined;
+    if (gpu.play('ward', { at, from, duration: Math.max(700, duration * 1.1) })) return;
+    wardFrame(card, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.1)', opacity: 1, offset: .3 }, { transform: 'scale(.98)', offset: .6 }, { transform: 'scale(1)', opacity: 1 }], 700);
+  }
+  /**
+   * O ward resolveu, quando a habilidade volta à carta (perto do fim de `duration`): na camada GPU, a cúpula segura e se
+   * desfaz em luz (`held`) ou trinca e cai em cacos. Em CSS, a moldura pulsa ou apaga por um instante.
+   */
+  function wardEnd(event: PresentationEvent, card: HTMLElement, duration: number) {
+    const held = !!event.held;
+    later(() => {
+      const at = center(card);
+      if (!at || !card.isConnected) return;
+      if (gpu.play('wardEnd', { at, held })) return;
+      wardFrame(card, held ? [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', offset: .35 }, { transform: 'scale(1)' }]
+        : [{ opacity: 1 }, { opacity: .2, offset: .3 }, { opacity: .7, offset: .5 }, { opacity: .15, offset: .7 }, { opacity: 1 }], 640);
+    }, duration * .8);
+  }
+
   /** Feixe da carta de origem até cada alvo do gatilho ou da habilidade; com "reduzir movimento", só o destaque no alvo. */
   function beams(event: PresentationEvent, card: HTMLElement) {
     const from = center(card);
@@ -153,5 +188,5 @@ export function createAbilityMotion(kit: MotionKit) {
       later(() => remove(beam), 760 + i * 60);
     });
   }
-  return { ability, walkerArrive };
+  return { ability, walkerArrive, wardEnd };
 }

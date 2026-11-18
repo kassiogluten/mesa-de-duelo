@@ -167,6 +167,9 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `self?` | `boolean` |  |
 | `lethal?` | `boolean` |  |
 | `prevented?` | `boolean` | `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). |
+| `ward?` | `boolean` | Gatilho da proteção contra alvos (ward), em `ability-activated` e no `resolved` dele. `wardAgainst`: o item da pilha que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou. |
+| `wardAgainst?` | `number` |  |
+| `held?` | `boolean` |  |
 | `reason?` | `'destroyed' \| 'sacrificed' \| 'warped' \| 'ninjutsu' \| 'sneak'` | `left`: por que a carta saiu do campo, quando o Forge diz. |
 | `swapFor?` | `number` | Ninjutsu e sneak: no `left` do atacante, a carta do ninja; no `entered` do ninja, o atacante que voltou para a mão. |
 | `swapWith?` | `number` |  |

@@ -192,6 +192,7 @@ export function createMotion(root: HTMLElement): Motion {
       if (event.type === 'control-changed') { board.control(event, card, id === undefined ? undefined : state.cards.get(String(id)), options); return; }
       if (event.type === 'turn' || !options.html) return;
       if (event.type === 'ability-activated') { abilities.ability(event, card, options); return; }
+      if (event.type === 'resolved' && event.ward && event.held !== undefined && card) abilities.wardEnd(event, card, options.duration);
       flights.cardFlight(event, card, id, options);
     },
     sweep: sweeps.sweep,
