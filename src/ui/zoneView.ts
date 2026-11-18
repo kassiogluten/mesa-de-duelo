@@ -16,7 +16,7 @@ export type ZoneKind = 'gy' | 'exile' | 'command' | 'damage' | 'dungeon' | 'hand
 export interface ZoneView {
   face(c: FCard, size: 'small' | 'normal'): string;
   findCard(id: number): FCard | undefined;
-  /** Escolhendo alvo no cemitério: o pedido e o que já foi marcado, e os botões da caixa de ação (Cancelar, Concluir). */
+  /** Escolhendo alvo no cemitério ou no exílio: o pedido e o que já foi marcado, e os botões da caixa de ação (Cancelar, Concluir). */
   targetHead(s: FState): string;
   buttons(s: FState): string;
 }
@@ -77,17 +77,19 @@ export function zoneHTML(v: ZoneView, s: FState, z: { kind: ZoneKind; player: FP
     const back = returnTag(c);
     return `${c.plotted ? '<div class="zone-tag">Tramada</div>' : c.foretold ? foretoldTag(c) : c.preparedFrom ? '<div class="zone-tag">Preparado</div>' : back ? `<div class="zone-tag" title="${esc(returnNote(s, c) ?? '')}">${back}</div>` : ''}${caption ? `<span class="exile-status" title="${esc(caption.status)}">${caption.caption}</span>` : ''}`;
   };
-  const targeting = kind === 'gy' && !groupIds && !!s.input.targeting && !s.input.paying && !s.gameOver ? s.input.targeting : null;
+  const targeting = (kind === 'gy' || kind === 'exile') && !groupIds && !!s.input.targeting && !s.input.paying && !s.gameOver ? s.input.targeting : null;
   const card = (c: FCard) => `<div class="zone-card">${kind !== 'hand' && canUse(s, c)
     ? `<div class="q-face actionable${selectedForInput(s, c.id) || targeting?.cards?.includes(c.id) ? ' choice-selected' : ''}" data-fid="${c.id}" data-gen="${s.input.gen}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, c.id)}"` : ''} aria-label="${s.input.selection ? 'Escolher' : targeting ? 'Escolher como alvo' : 'Usar'} ${esc(label(c))}">${v.face(c, 'normal')}${tags(c)}${selectedBadge(s, c)}</div>`
     : `<button class="q-face" data-peek="${c.id}" aria-label="Inspecionar ${esc(label(c))}${shelf.has(c.id) ? `. ${esc(shelf.get(c.id)!.status)}` : ''}">${v.face(c, 'normal')}${tags(c)}</button>`}
     <button class="icon-btn" data-inspect="${c.id}">${inspectIcon}Inspecionar</button></div>`;
   // Cemitério: uma aba por jogador, para passar ao de cada oponente sem fechar; as que têm alvo mostram quantos.
+  // O exílio ganha as abas só na escolha de alvo (fora dela, cada exílio abre pela pilha do jogador).
   const selectable = new Set(s.input.selectable);
-  const tabs = kind === 'gy' && !groupIds && p && s.players.length > 1 ? `<div class="zone-tabs" role="tablist" aria-label="Cemitério de quem">${s.players.map(pl => {
-    const n = targeting ? pl.graveyard.filter(c => selectable.has(c.id)).length : 0;
+  const zoneOf = (pl: FPlayer) => kind === 'exile' ? pl.exile : pl.graveyard;
+  const tabs = (kind === 'gy' || targeting) && !groupIds && p && s.players.length > 1 ? `<div class="zone-tabs" role="tablist" aria-label="${title} de quem">${s.players.map(pl => {
+    const n = targeting ? zoneOf(pl).filter(c => selectable.has(c.id)).length : 0, total = zoneOf(pl).length;
     const who = pl.id === s.you ? 'Você' : pl.name;
-    return `<button type="button" role="tab" class="zone-tab${n ? ' has-targets' : ''}" data-gy="${pl.id}" data-zone="gy" aria-selected="${pl.id === p.id}"${pl.id === p.id ? '' : ' tabindex="-1"'} aria-label="Cemitério ${pl.id === s.you ? 'seu' : `de ${esc(pl.name)}`}, ${pl.graveyard.length} ${pl.graveyard.length === 1 ? 'carta' : 'cartas'}${n ? `, ${n} ${n === 1 ? 'alvo' : 'alvos'}` : ''}">${esc(who)} <span class="zone-tab-count">${pl.graveyard.length}</span>${n ? `<span class="zone-tab-targets" aria-hidden="true">${n} ${n === 1 ? 'alvo' : 'alvos'}</span>` : ''}</button>`;
+    return `<button type="button" role="tab" class="zone-tab${n ? ' has-targets' : ''}" data-gy="${pl.id}" data-zone="${kind}" aria-selected="${pl.id === p.id}"${pl.id === p.id ? '' : ' tabindex="-1"'} aria-label="${title} ${pl.id === s.you ? 'seu' : `de ${esc(pl.name)}`}, ${total} ${total === 1 ? 'carta' : 'cartas'}${n ? `, ${n} ${n === 1 ? 'alvo' : 'alvos'}` : ''}">${esc(who)} <span class="zone-tab-count">${total}</span>${n ? `<span class="zone-tab-targets" aria-hidden="true">${n} ${n === 1 ? 'alvo' : 'alvos'}</span>` : ''}</button>`;
   }).join('')}</div>` : '';
   // Escolhendo alvo: o pedido e os botões da mesa (Cancelar, Concluir) vêm junto, porque o resto da mesa fica atrás da janela.
   const targetHead = targeting ? v.targetHead(s) : '';

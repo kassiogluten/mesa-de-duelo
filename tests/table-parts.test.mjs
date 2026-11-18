@@ -1,10 +1,10 @@
 // Partes sem DOM que saíram da forgeTable.ts: achar cartas, a cor da mana, os textos do Forge, os marcadores que
-// mudaram, o pedido da caixa de ação, o cemitério que abre sozinho no alvo e os botões do pedido.
+// mudaram, o pedido da caixa de ação, o cemitério ou o exílio que abre sozinho no alvo e os botões do pedido.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { findCard, manaTone, fixForgeText, trackCounterBumps, poolTotals, poolsThatGrew } = await import('../src/ui/tableCards.ts');
 const { boardPrompt, instructionLines } = await import('../src/ui/tableActionBox.ts');
-const { graveyardTargeting, zoneKindOf } = await import('../src/ui/tableZone.ts');
+const { zoneTargeting, zoneKindOf } = await import('../src/ui/tableZone.ts');
 const { inputActionAllowed } = await import('../src/ui/tableInputActions.ts');
 
 function player(id, name, extra = {}) {
@@ -81,14 +81,22 @@ test('the Forge sends "Card (id) - ability" before the request: the request come
   assert.deepEqual(instructionLines('Choque (12) - Causa 2 de dano.\n\nEscolha um alvo.', true), ['Choque (12) - Causa 2 de dano.', '', 'Escolha um alvo.']);
 });
 
-test('the graveyard opens by itself only when every target is in graveyards, yours first', () => {
+test('the graveyard (or the exile) opens by itself only when every target is in it, yours first', () => {
   const s = state({ targeting: { source: 3, kind: 'spell' }, selectable: [20, 21] });
   s.players[0].graveyard = [{ id: 20 }];
   s.players[1].graveyard = [{ id: 21 }];
-  assert.deepEqual(graveyardTargeting(s), { key: '3:spell:', player: 0 });
+  assert.deepEqual(zoneTargeting(s), { key: '3:spell:', kind: 'gy', player: 0 });
   s.input.selectable = [20, 21, 30];
-  assert.equal(graveyardTargeting(s), null);
-  assert.equal(graveyardTargeting(state()), null);
+  assert.equal(zoneTargeting(s), null);
+  assert.equal(zoneTargeting(state()), null);
+  // The Darkness Crystal: a criatura que ele exilou do oponente, no exílio do oponente.
+  const crystal = state({ targeting: { source: 5, kind: 'ability', ability: 'x' }, selectable: [40] });
+  crystal.players[1].exile = [{ id: 40 }, { id: 41 }];
+  assert.deepEqual(zoneTargeting(crystal), { key: '5:ability:x', kind: 'exile', player: 1 });
+  // Um alvo no cemitério e outro no exílio: nenhuma janela abre sozinha.
+  crystal.players[0].graveyard = [{ id: 20 }];
+  crystal.input.selectable = [40, 20];
+  assert.equal(zoneTargeting(crystal), null);
   assert.equal(zoneKindOf('exile'), 'exile');
   assert.equal(zoneKindOf(undefined), 'gy');
 });

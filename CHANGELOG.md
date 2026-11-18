@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.216.1] - 2026-11-18
+
+### Corrigido
+
+- **Alvo no exílio abre o exílio sozinho.** Quando o alvo só pode ser uma carta exilada, como na habilidade do The Darkness Crystal, que devolve uma criatura que ele exilou, o exílio de quem tem o alvo abre sozinho, com o pedido, o Cancelar e uma aba por jogador mostrando quantos alvos há em cada um, como já acontecia com o cemitério; antes a janela não abria, e a carta só dava para escolher abrindo o exílio à mão.
+
 ## [0.216.0] - 2026-11-18
 
 ### Mudou

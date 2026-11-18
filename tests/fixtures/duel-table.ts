@@ -20,7 +20,7 @@ const client = { state, connected: true, send: (message: any) => { messages.push
 function simulatePoint(message: any) {
   if (message.type === 'point') setTimeout(() => view.pointed(state.you, message.card));
 }
-/** Cenário de alvo no cemitério: tocar num alvo encerra a escolha, como a ponte faria (a janela do cemitério fecha junto). */
+/** Cenário de alvo no cemitério (ou no exílio): tocar num alvo encerra a escolha, como a ponte faria (a janela fecha junto). */
 function simulateGraveyardTarget(message: any) {
   const input = state.input;
   if (!input.targeting || !input.graveyardTarget || message.gen !== input.gen || message.type !== 'card' || !input.selectable.includes(message.id)) return;
@@ -388,6 +388,23 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       message: `Reanimate (290) - ${text}\n\nSelect target creature card in a graveyard`,
       ok: { label: 'OK', enabled: false }, cancel: { label: 'Cancelar', enabled: true }, card: reanimate,
       targeting: { source: 290, card: reanimate, kind: 'spell', ability: text, min: 1, max: 1, count: 0, valid: ['Creature'], zones: ['Graveyard'], cards: [] } });
+    view.render();
+  },
+  /**
+   * Alvo que só pode estar no exílio: The Darkness Crystal devolve a criatura que exilou do oponente. O exílio do
+   * oponente abre sozinho, com o pedido e o Cancelar, e só o Grizzly Bears (exilado pelo Crystal) serve de alvo.
+   */
+  exileTarget() {
+    const [me, opp] = state.players;
+    const text = '{4}{B}{B}, {T}: Ponha o card de criatura alvo exilado com The Darkness Crystal no campo de batalha virado sob seu controle com dois marcadores +1/+1 adicionais.';
+    const crystal = card(297, 'The Darkness Crystal', 10, { creature: false, manaCost: '{2}{B}{B}', typeLine: 'Legendary Artifact', exiling: [298] });
+    me.battlefield = [...me.battlefield.filter((c: any) => c.id !== 297), crystal];
+    opp.exile = [card(299, 'Lightning Bolt', 23, { creature: false, manaCost: '{R}', typeLine: 'Instant' }),
+      card(298, 'Grizzly Bears', 23, { manaCost: '{1}{G}', typeLine: 'Creature — Bear' })];
+    Object.assign(state.input, { gen: 30, priority: false, actionable: [], selectable: [298], selectablePlayers: [], graveyardTarget: true,
+      message: `The Darkness Crystal (297) - ${text}\n\nSelect target creature card exiled with The Darkness Crystal`,
+      ok: { label: 'OK', enabled: false }, cancel: { label: 'Cancelar', enabled: true }, card: crystal,
+      targeting: { source: 297, card: crystal, kind: 'ability', ability: text, min: 1, max: 1, count: 0, valid: ['Creature.ExiledWithSource'], zones: ['Exile'], cards: [] } });
     view.render();
   },
   extras() {
@@ -763,6 +780,8 @@ if (cenario === 'ataque-monte') (window as any).fixture.groupedAttack();
 // Dois montes: ?cenario=montes&passo=split|choose (&steam=1 para a Steam Augury, em que quem conjura separa).
 if (cenario === 'montes') { const q = new URLSearchParams(location.search); (window as any).fixture.piles(q.get('passo') === 'choose' ? 'choose' : 'split', q.has('steam')); }
 // Alvo no cemitério: ?cenario=alvo-cemiterio (&dele=1 para só o oponente ter alvos).
+// Alvo no exílio: ?cenario=alvo-exilio (The Darkness Crystal).
+if (cenario === 'alvo-exilio') (window as any).fixture.exileTarget();
 if (cenario === 'alvo-cemiterio') (window as any).fixture.graveyardTarget(new URLSearchParams(location.search).has('dele'));
 if (cenario === 'lealdade') (window as any).fixture.walkerAbilities();
 if (cenario === 'gifts') (window as any).fixture.gifts();

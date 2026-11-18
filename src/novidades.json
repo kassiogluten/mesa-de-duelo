@@ -1,4 +1,9 @@
 {
+  "0.216.1": {
+    "Alvo no exílio abre o exílio sozinho": [
+      { "img": "0.216.1/exilio-abre-no-alvo.webp", "legenda": "A habilidade do The Darkness Crystal pede uma criatura que ele exilou: o exílio do oponente abre sozinho, com a aba dizendo quantos alvos há nele, o pedido, o Cancelar, e só os Ursos Cinzentos destacados para escolher." }
+    ]
+  },
   "0.216.0": {
     "Cartas reveladas por um oponente vão para a faixa do canto": [
       { "img": "0.216.0/faixa.webp", "legenda": "A faixa no canto da mesa avisa que Ana revelou uma carta do grimório com Goblin Guide, e que há mais um aviso guardado." },

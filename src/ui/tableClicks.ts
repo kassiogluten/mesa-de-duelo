@@ -224,7 +224,7 @@ export function attachTableClicks(d: ClickDeps) {
     const theirs = d.findCard(id)?.controller !== s.you;
     if (d.compact() && cd.closest('.field') && theirs && !usable(s, id) && !selectedForInput(s, id)) { d.showPreview(d.findCard(id), cd, true); return; }
     // Usar uma carta do cemitério ou do exílio fecha a janela, para a pergunta seguinte aparecer.
-    // No alvo de cemitério aberto sozinho, a janela fica até a escolha acabar (com vários alvos, marca um de cada vez).
+    // No alvo de cemitério (ou de exílio) aberto sozinho, a janela fica até a escolha acabar (com vários alvos, marca um de cada vez).
     if (cd.closest('#fZone') && !(d.zone.openedForTarget() && s.input.targeting)) d.zone.close();
     // Na sua manutenção, virar algo só para mana pede confirmação, uma vez por manutenção.
     const upkeepKey = upkeepManaKey(s, id);
