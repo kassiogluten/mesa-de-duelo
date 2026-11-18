@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.213.0] - 2026-11-18
+
+### Mudou
+
+- **Aviso de versão nova mostra os números das versões.** A janela "Nova versão do jogo" troca o texto de descrição pela sua versão e pela versão mais recente, lado a lado.
+
 ## [0.212.2] - 2026-11-17
 
 ### Corrigido

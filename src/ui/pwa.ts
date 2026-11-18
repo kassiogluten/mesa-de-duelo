@@ -1,4 +1,6 @@
 import { registerSW } from 'virtual:pwa-register';
+import { VERSION } from './changelog';
+import { esc } from './cardtext';
 import './pwa.css';
 
 /** Evento do Chrome/Edge que permite abrir o convite de instalação na hora em que o jogador clicar. */
@@ -28,19 +30,36 @@ function banner(className: string, html: string) {
   return el;
 }
 
+/** A versão publicada agora (versao.json, gravado no build), ou nada se não deu para saber. */
+export async function latestVersion(): Promise<string> {
+  try {
+    const res = await fetch('/versao.json', { cache: 'no-store' });
+    const version = res.ok ? (await res.json() as { version?: unknown }).version : '';
+    return typeof version === 'string' && /^\d+\.\d+\.\d+$/.test(version) ? version : '';
+  } catch { return ''; }
+}
+
 /**
- * Aviso de versão nova: janela no centro, com a mesa embaçada atrás. "Depois", Esc e tocar fora fecham; o foco vai
- * para "Atualizar agora" e volta para onde estava ao fechar.
+ * Aviso de versão nova: janela no centro, com a mesa embaçada atrás, mostrando a versão que o jogador tem e a mais
+ * recente (que chega depois; sem ela, só a do jogador). "Depois", Esc e tocar fora fecham; o foco vai para
+ * "Atualizar agora" e volta para onde estava ao fechar.
  */
-export function updateDialog(update: () => void) {
+export function updateDialog(update: () => void, latest: Promise<string> = latestVersion(), current = VERSION) {
   document.querySelector('.pwa-update')?.remove();
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const dlg = document.createElement('dialog');
   dlg.className = 'pwa-update';
-  dlg.setAttribute('aria-labelledby', 'pwaUpdateTitle'); dlg.setAttribute('aria-describedby', 'pwaUpdateText');
-  dlg.innerHTML = '<h2 id="pwaUpdateTitle">Nova versão do jogo</h2><p id="pwaUpdateText">Atualize para ver as novidades. Uma partida em andamento continua de onde parou.</p>'
+  dlg.setAttribute('aria-labelledby', 'pwaUpdateTitle'); dlg.setAttribute('aria-describedby', 'pwaUpdateVersions');
+  dlg.innerHTML = `<h2 id="pwaUpdateTitle">Nova versão do jogo</h2><dl class="pwa-versions" id="pwaUpdateVersions"><div><dt>Sua versão</dt><dd>${esc(current || '?')}</dd></div>`
+    + '<span class="pwa-versions-arrow" aria-hidden="true" hidden>→</span><div class="pwa-latest" hidden><dt>Versão mais recente</dt><dd></dd></div></dl>'
     + '<div class="pwa-actions"><button type="button" class="pwa-dismiss">Depois</button><button type="button" class="pwa-primary">Atualizar agora</button></div>';
   document.body.append(dlg);
+  void latest.then(version => {
+    if (!version || version === current) return;
+    dlg.querySelector('.pwa-latest dd')!.textContent = version;
+    dlg.querySelector<HTMLElement>('.pwa-latest')!.hidden = false;
+    dlg.querySelector<HTMLElement>('.pwa-versions-arrow')!.hidden = false;
+  });
   dlg.addEventListener('click', e => { if (e.target === dlg || (e.target as HTMLElement).closest('.pwa-dismiss')) dlg.close(); });
   dlg.addEventListener('close', () => { dlg.remove(); if (opener?.isConnected) opener.focus({ preventScroll: true }); });
   dlg.querySelector<HTMLButtonElement>('.pwa-primary')!.addEventListener('click', event => {

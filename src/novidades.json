@@ -1,4 +1,9 @@
 {
+  "0.213.0": {
+    "Aviso de versão nova mostra os números das versões": [
+      { "img": "0.213.0/versoes.webp", "legenda": "A janela de versão nova com a sua versão à esquerda e a mais recente, em destaque, à direita." }
+    ]
+  },
   "0.212.1": {
     "Confirmar a ordem das cartas sem ter tocado em todas não trava mais a mesa": [
       { "img": "0.212.1/aviso-ordem.webp", "legenda": "Confirmar com só uma das duas cartas ordenada: a janela continua aberta, o selo fica vermelho e o aviso diz quantas faltam." }

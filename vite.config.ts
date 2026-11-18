@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -51,6 +51,8 @@ export default defineConfig({
   },
   plugins: [
     { name: 'efeitos', configureServer: s => { s.middlewares.use(efeitos); }, configurePreviewServer: s => { s.middlewares.use(efeitos); } },
+    // A versão publicada, num arquivo que fica fora do cache do app: o aviso de versão nova lê daqui qual é a mais recente (src/ui/pwa.ts).
+    { name: 'versao', generateBundle() { this.emitFile({ type: 'asset', fileName: 'versao.json', source: JSON.stringify({ version: JSON.parse(readFileSync('package.json', 'utf8')).version }) }); } },
     { name: 'imagem-lenta', configureServer: s => { s.middlewares.use(lento); } },
     VitePWA({
       // A página decide quando atualizar: o jogador vê "Nova versão" e escolhe a hora (src/ui/pwa.ts).
