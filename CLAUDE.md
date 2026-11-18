@@ -79,6 +79,7 @@ A mesa em `localhost:5173` conversa com o servidor local na porta 7171 (`npm run
 - Arquivo e identificador novos: em inglês, como a maior parte do código (`handView.ts`, `SeatStateView`). Texto que o jogador vê: em português. Comentários: em português. Não renomeie o que já existe só por isso (`salas.ts`, `conta/`, `temas.ts` ficam).
 - Todo arquivo de `src/` e do servidor começa com um comentário de uma frase dizendo o que ele faz: é o que o `npm run mapa` mostra (e o `tests/mapa.test.mjs` confere).
 - Tipos das mensagens com o servidor: `src/forge/protocol.ts`. Chaves do navegador: `src/storage.ts`. Ícones da interface: `src/ui/icons.ts` (os de um efeito usado num módulo só podem ficar nele). `$` de uma tela: `finder(raiz)` de `src/ui/dom.ts`. Módulo falso num teste: `mock()` de `tests/register.mjs`.
+- Efeito novo na mesa (ou mexer num que existe): decida GPU ou CSS pela seção "Onde fica cada efeito" de `docs/spec-mesa-webgl.md` (momento visual rico na GPU, estado contínuo em CSS, texto e interação no DOM; reserva em CSS sempre).
 - Arquivo passando de ~600 linhas: divida antes de acrescentar (padrões em `docs/roadmap-manutencao.md`).
 
 ## Arquivos grandes

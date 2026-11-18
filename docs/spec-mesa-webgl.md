@@ -117,6 +117,26 @@ Um `<canvas>` WebGL transparente, `position: fixed; inset: 0`, sem receber cliqu
 - **Memória:** cada efeito destrói o que criou ao terminar (`destroy({ children: true })`); texturas compartilhadas (faísca, brilho) são criadas uma vez por mesa. Teto de partículas por efeito e no total (por exemplo, 400), com menos no celular.
 - **Cartas em voo (fase 3):** a textura vem da mesma imagem do Scryfall que a carta mostra. O Scryfall responde com `Access-Control-Allow-Origin: *` e o service worker já guarda as imagens de `cards.scryfall.io` em modo CORS (`vite.config.ts`), então `fetch(url, { mode: 'cors' })` + `createImageBitmap` serve como textura sem baixar de novo. A carta pode estar em três estilos (imagem completa, arte e texto, Arena; `face.ts`). Os dois últimos são montados em DOM e não viram textura direto: decidir na fase 3 entre voar com a imagem completa ou deixar esses estilos com o voo em DOM.
 
+### Onde fica cada efeito: GPU ou CSS
+
+Regra para efeito novo ou para rever um que já existe, tirada das decisões das fases 2 a 3b e da mesa viva (registrada em 17/11/2026). Faça as perguntas na ordem: a primeira que responder decide.
+
+1. **Fica rodando com a mesa parada? → CSS.** Halo de alvo, voadora flutuando, vínculo com a vida, ward, enjoo, relógio de espera e seta de alvo parada são estados, não momentos. Na camada dos efeitos, o laço desenharia sem parar e quebraria o critério 2. Em CSS, animando só `transform` e `opacity` (nada de `box-shadow`, `filter` ou das propriedades soltas `scale`/`translate`/`rotate`, ver fase 3b), para a placa de vídeo animar sozinha. A exceção é a mesa viva, com canvas e critério próprios (o 9).
+2. **É texto, ou algo que o jogador clica, foca ou lê? → DOM.** Número de dano, legendas, balões, avisos e contadores: texto nítido, leitor de tela e os testes de sempre. Quando a GPU desenha o efeito, o texto vai numa peça em DOM por cima (`.gpu-flying`, `.chance-piece.gpu-drawn`).
+3. **Precisa acompanhar um elemento que o layout move? → CSS, dentro do elemento.** A camada lê a posição uma vez, na hora do efeito. O que rola com a fileira, muda de lugar num redesenho ou segue o hover fica preso ao `.slot` em CSS (como os riscos de vento da voadora, que ficam dentro do lugar da carta para não abrir barra de rolagem na fileira).
+4. **Depende de uma imagem que pode não estar pronta? → GPU, com reserva em CSS.** O voo da carta só sai na GPU se a textura chegou a tempo; se o `play()` da porta devolve `false`, quem pediu usa o CSS.
+5. **É um momento com partículas, luz, física, perspectiva ou muitas peças? → GPU.** Explosão de dano, estilhaços, poeira, brasas, rastro, onda de choque, carta em perspectiva, dado em 3D. Em CSS isso vira dezenas de elementos e `filter`/`box-shadow`/`blur` animados; na GPU fica mais bonito e mais barato.
+6. **A versão em CSS é um elemento só, com `transform` e `opacity`? → pode ficar em CSS.** Pulso, deslize curto e realce simples já são baratos. Só vale levar à GPU se o visual mudar de nível.
+
+Todo efeito na GPU, seja qual for, precisa de:
+
+- **Reserva em CSS**, para "leves", sem WebGL2 e contexto perdido. Pode ser mínima; com "reduzir movimento", só ficam o número, a cor e o destaque.
+- **Caber no passo da apresentação** (critério 6): a duração vem de `presentationDuration()` e respeita o modo Rápido.
+- **Medição** com `scripts/medir-efeitos.mjs` antes de publicar: não piorar o p95 dos quadros longos com a CPU 1×, 4× e 6× (critério 3). Se piorar, ou fica em CSS ou fica mais leve na GPU.
+- **Botão no laboratório de efeitos** (seção Efeitos na GPU), para disparar, ver em câmera lenta e tirar os prints.
+
+Em uma frase: momento visual rico na GPU, estado contínuo em CSS, texto e interação no DOM; na dúvida, meça.
+
 ## Plano em fases
 
 ### Fase 0: medir antes (base de comparação)
