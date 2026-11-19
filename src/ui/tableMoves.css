@@ -1,5 +1,5 @@
 /* Movimentos da mesa além de jogar e resolver (0.117.0): bloqueio, vidência, moeda e dado, anexar, controle, marcadores,
-   mana, reanimar, busca, embaralhar, mão inicial e fim da partida. As animações ficam em motion.ts; aqui só a aparência. */
+   mana, reanimar, busca, embaralhar, mão inicial, fim da partida e a arte do comandante entrando. As animações ficam em motion.ts; aqui só a aparência. */
 
 /* Bloqueio: a ligação entre o bloqueador e o atacante, no dourado do bloqueio. */
 .ability-beam.block-link { background: linear-gradient(90deg, #fff1b8, var(--gold) 55%, #fff); box-shadow: 0 0 12px var(--gold), 0 0 2px #fff; }
@@ -71,3 +71,9 @@
 @media (prefers-reduced-motion: reduce) {
   .avatar.finale-lose, .avatar.finale-win { transition: none; }
 }
+
+/* Comandante saindo da zona de comando (commanderEntry.ts): a arte recortada cresce para fora da moldura, atrás da carta
+   que acabou de cair, com as bordas esfumadas. */
+.commander-bloom { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); transform-origin: 0 0; border-radius: 50%;
+  background: center / cover no-repeat;
+  -webkit-mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent 100%); }

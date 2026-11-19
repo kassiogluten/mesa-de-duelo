@@ -1,4 +1,4 @@
-// Momentos grandes na camada GPU: a mesa escurecendo em volta do que importa, a lendária chegando com raios, a seta de alvo nascendo num traço de luz e o shuriken do ninja.
+// Momentos grandes na camada GPU: a mesa escurecendo em volta do que importa, a lendária chegando com raios, o comandante batendo na mesa, a seta de alvo nascendo num traço de luz e o shuriken do ninja.
 import { Graphics, Sprite } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
 import type { Point } from '../motionKit';
@@ -15,6 +15,8 @@ export interface MomentParams {
     keep?: boolean };
   /** Lendária chegando: raios suaves girando atrás do lugar dela, um anel fino e poucas brasas douradas subindo. */
   legend: { at: Point; color?: string; delay?: number };
+  /** Comandante caindo no lugar dele: clarão, um anel largo, poeira rente à mesa saindo dos dois lados da base e faíscas douradas. */
+  commanderSlam: { at: Point; color?: string; delay?: number };
   /** Seta de alvo nascendo: um traço de luz percorre a curva (de `from`, passando perto de `via`, até `to`) e estoura no alvo. */
   arrowBirth: { from: { x: number; y: number }; via: { x: number; y: number }; to: { x: number; y: number }; color: string; delay?: number };
   /** Shuriken do ninja: gira de `from` até `to` em `duration` ms, deixando um rastro prateado, e estoura ao chegar. */
@@ -77,6 +79,28 @@ export const MOMENT_EFFECTS: { [N in keyof MomentParams]: (layer: GpuLayer, s: S
         // Brasas douradas subindo enquanto os raios giram.
         owed += ms * (layer.coarse ? .003 : .006) * (1 - t);
         for (; owed >= 1; owed--) sparks.add(s.spark, s, { x: x + rand(-.5, .5) * size, y: y + rand(-.1, .5) * size, vx: rand(-15, 15), vy: rand(-140, -60), life: rand(600, 1000), spin: 0, grow: -.5, scale: rand(.2, .4), gravity: -10, drag: 1.2, tint: Math.random() < .3 ? 0xffffff : gold });
+      };
+    }, delay);
+  },
+  commanderSlam(layer, s, { at, color, delay = 0 }) {
+    const { x, y } = layer.local(at.cx, at.cy);
+    const gold = colorOf(color, themeColor('--gold', '#f2b54c'));
+    const size = Math.max(at.w, at.h, 80);
+    return timed(820, (view, sparks) => {
+      const flash = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: 0xfff1cf, blendMode: 'add' });
+      const ring = new Sprite({ texture: s.ring, anchor: .5, x, y, tint: gold, blendMode: 'add' });
+      view.addChild(flash, ring);
+      // A poeira sai rente à mesa, da base da carta, para os dois lados; as faíscas, em volta dela toda.
+      const base = y + at.h * .45;
+      for (let i = 0; i < (layer.coarse ? 6 : 12); i++) {
+        const side = i % 2 ? 1 : -1;
+        sparks.add(s.glow, s, { x: x + side * at.w * rand(.1, .45), y: base + rand(-4, 4), vx: side * rand(90, 220), vy: rand(-40, -5), life: rand(480, 760), spin: 0, grow: 1.4, scale: rand(.12, .2), gravity: 30, drag: 3.2, tint: 0xc9bea8, blend: 'normal', alpha: .5, fadeIn: true });
+      }
+      spray(sparks, s, x, y, layer.coarse ? 8 : 16, { speed: [size * 1.2, size * 2.6], life: [380, 700], scale: [.25, .5], colors: [gold, 0xfff1cf, 0xffffff], drag: 2.8 });
+      return t => {
+        const k = easeOut(t);
+        flash.scale.set(size * 1.4 / 128 * (.6 + .5 * k)); flash.alpha = .55 * Math.max(0, 1 - t * 2.4);
+        ring.scale.set(size * 2.6 / 256 * (.25 + .9 * k)); ring.alpha = .85 * (1 - t);
       };
     }, delay);
   },

@@ -325,13 +325,15 @@ function table() {
       setTimeout(() => { state.input = { ...state.input, priority: false, ok: { label: 'OK', enabled: false } }; state.stack = []; flush(); }, 4000);
       return 'Decisão esperando: o botão mostra de quem é a jogada até a mesa terminar de mostrá-la.';
     },
-    // Momentos grandes (item 131): uma lendária ou uma mágica de valor 6 conjurada da mão, que resolve e entra no campo.
+    // Momentos grandes (item 131): uma lendária ou uma mágica de valor 6 conjurada da mão, ou o comandante conjurado da
+    // zona de comando, que resolve e entra no campo.
     moment: c => {
-      const me = player(ME), legend = c.kind === 'legend';
-      const made: any = { id: nextId++, controller: ME, ...(legend ? { ...creature('Isamaru, Hound of Konda', 2, 2, '{W}'), typeLine: 'Legendary Creature — Dog' } : creature('Colossal Dreadmaw', 6, 6, '{4}{G}{G}', ['TRAMPLE'])) };
+      const me = player(ME), legend = c.kind === 'legend', commander = c.kind === 'commander';
+      const made: any = { id: nextId++, controller: ME, ...(commander ? { ...creature("Yuriko, the Tiger's Shadow", 1, 3, '{1}{U}{B}'), typeLine: 'Legendary Creature — Human Ninja', commander: true }
+        : legend ? { ...creature('Isamaru, Hound of Konda', 2, 2, '{W}'), typeLine: 'Legendary Creature — Dog' } : creature('Colossal Dreadmaw', 6, 6, '{4}{G}{G}', ['TRAMPLE'])) };
       const stackId = nextId++;
       state.stack = [{ id: stackId, kind: 'spell', text: made.name, source: structuredClone(made), controller: ME }];
-      emit('spell-cast', { card: structuredClone(made), sourceId: made.id, actor: ME, from: 'Hand', to: 'Stack', stackId });
+      emit('spell-cast', { card: structuredClone(made), sourceId: made.id, actor: ME, from: commander ? 'Command' : 'Hand', to: 'Stack', stackId });
       flush();
       setTimeout(() => {
         state.stack = []; me.battlefield.push(made); lastAdded = made.id;
@@ -339,6 +341,7 @@ function table() {
         emit('entered', { card: structuredClone(made), sourceId: made.id, actor: ME, from: 'Stack', to: 'Battlefield' });
         flush();
       }, 1500);
+      if (commander) return 'Comandante: sai da zona de comando, paira acima do lugar dele e mergulha; a mesa treme, sobe poeira, a arte sai da moldura e volta, e a coroa salta no canto.';
       return legend ? 'Lendária: ela entra com um brilho dourado leve e raios fracos atrás dela.' : 'Mágica de valor 6: a mesa escurece em volta da pilha e a câmera chega perto; ao resolver, a mesa acende na cor dela.';
     },
     mill: c => {
@@ -977,7 +980,7 @@ function table() {
   // commander, ability, pay, float, opening, mulligan, reveal, win, lose), jogada:<nome> (as jogadas simuladas de effectsLabPlays.ts) cheio (o "Campo cheio" do painel, para medir com a mesa
   // lotada: scripts/medir-efeitos.mjs) e pausa (nada: a mesa parada). Para medir um efeito de cada vez (scripts/medir-cada-efeito.mjs):
   // gpu:<efeito> (o efeito sozinho na camada GPU, na sua primeira criatura ou dela até o oponente), dano:<tipo> (burn, lethal, combat…),
-  // momento:<legend|big>, walker:<plus|ult|enter>, turno e estado:<chave> (o estado em todas as criaturas, como estado:sick ou estado:FLYING).
+  // momento:<legend|big|commander>, walker:<plus|ult|enter>, turno e estado:<chave> (o estado em todas as criaturas, como estado:sick ou estado:FLYING).
   const plays = ['deal', ...(params.get('jogar')?.split(',') ?? [])];
   const firstCreature = () => player(ME).battlefield.find((x: any) => x.creature)?.id;
   const run = (play: string) => {
@@ -1123,7 +1126,7 @@ function panel() {
     <p>A mesa viva só aparece com a camada GPU. O Tour roda os efeitos em sequência (toque de novo para parar).</p>
     <button data-tour>Tour: todos os efeitos</button>
     <div><button data-c="turn">Passar o turno</button><button data-c="life-low">Vida baixa</button><button data-c="life-full">Vida cheia</button></div>
-    <div><button data-moment="legend">Lendária entrando</button><button data-moment="big">Mágica de valor 6</button><button data-walker="ult">Ultimate</button><button data-hand="bolt">Seta de alvo (Bolt)</button><button data-c="hold">Decisão esperando</button></div>
+    <div><button data-moment="legend">Lendária entrando</button><button data-moment="commander">Comandante entrando</button><button data-moment="big">Mágica de valor 6</button><button data-walker="ult">Ultimate</button><button data-hand="bolt">Seta de alvo (Bolt)</button><button data-c="hold">Decisão esperando</button></div>
     <h2>Mão revelada (item 41)</h2>
     ${[['all', 'Revelar a mão do oponente'], ['one', 'Só uma carta à vista'], ['none', 'Esconder de novo']].map(([k, t]) => `<button data-reveal="${k}">${t}</button>`).join('')}
     <h2>Aparência e tela</h2>

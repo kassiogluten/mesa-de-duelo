@@ -1,4 +1,10 @@
 {
+  "0.217.0": {
+    "Entrada do comandante": [
+      { "img": "0.217.0/paira.webp", "legenda": "Yuriko, a Sombra do Tigre, acaba de sair da pilha: grande, com a sombra funda e um brilho dourado em volta, a carta paira acima do lugar dela no campo, um instante antes de mergulhar na mesa." },
+      { "img": "0.217.0/arte.webp", "legenda": "Logo depois do impacto, a arte da Yuriko sai da moldura e cresce em volta da carta, com as bordas esfumadas e a luz dourada atrás, antes de voltar para dentro." }
+    ]
+  },
   "0.216.1": {
     "Alvo no exílio abre o exílio sozinho": [
       { "img": "0.216.1/exilio-abre-no-alvo.webp", "legenda": "A habilidade do The Darkness Crystal pede uma criatura que ele exilou: o exílio do oponente abre sozinho, com a aba dizendo quantos alvos há nele, o pedido, o Cancelar, e só os Ursos Cinzentos destacados para escolher." }

@@ -7,6 +7,7 @@ import { warpCast } from './warpEffects';
 import { createNinjaMotion, ninjaSwap } from './ninjutsuEffects';
 import { center, LANDING, reduced, TAP, turnOf, type MotionKit, type Point } from './motionKit';
 import { zoneGlow, type createZoneMotion } from './motionZones';
+import { createCommanderEntry } from './commanderEntry';
 
 type Face = (card: NonNullable<PresentationEvent['card']>) => string;
 /** A ficha que surge acende (sem a camada GPU, a imagem dela clareia e brilha). */
@@ -25,6 +26,7 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
   const { root, state, later, animate, effect, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, flare, hiddenCards, recentStack, stackPile } = kit;
   const { destination, pileOf, zonePoint, reanimate, leave } = zones;
   const ninja = createNinjaMotion(kit);
+  const commander = createCommanderEntry(kit);
   function cardFlight(event: PresentationEvent, card: HTMLElement | null, id: number | undefined, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }) {
     if (event.type === 'resolved' && !event.trigger && card && id !== undefined && performance.now() - (state.landedAt.get(String(id)) ?? -Infinity) < 4000) { pulse(card, 'arrive-highlight'); return; }
     const old = id === undefined ? undefined : state.cards.get(String(id));
@@ -102,7 +104,9 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
     } else if (landing || event.type === 'spell-cast') {
       if (landing) state.landedAt.set(String(id), performance.now());
       // Ninja de ninjutsu ou sneak: surge da fumaça, com o shuriken vindo da mão de quem usou.
-      if (landing && ninjaSwap(event) && ninja.appear(event, piece, hand, to, options.duration, turnOf(card))) { /* já animado */ }
+      // Comandante saindo da zona de comando: paira acima do lugar, mergulha com impacto e a arte sai da moldura.
+      if (landing && event.commanderEntry && commander.arrive(event.card, piece, from, to, options.duration)) { /* já animado */ }
+      else if (landing && ninjaSwap(event) && ninja.appear(event, piece, hand, to, options.duration, turnOf(card))) { /* já animado */ }
       // Sem o lugar no leque (mão do oponente, mão longa), sai do centro da mão no tamanho de uma carta.
       else {
         // Vinda do cemitério ou do exílio: na camada GPU, um rastro de brilho na cor do monte (pedido antes, para ficar atrás da carta).
@@ -119,7 +123,8 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       // Dobra: a carta chega à pilha rasgando o espaço.
       if (warpCast(event)) { const at = to; later(() => warpRift(at, 1), options.duration * .7); }
       // Comandante conjurado da zona de comando: a taxa sobe 2 para a próxima vez.
-      if (event.type === 'spell-cast' && event.from === 'Command') floatNumber(from, '+2', 'tax', ['Taxa de comandante']);
+      // A arte dele já vem sendo buscada, para a entrada no campo.
+      if (event.type === 'spell-cast' && event.from === 'Command') { floatNumber(from, '+2', 'tax', ['Taxa de comandante']); commander.preload(event.card); }
     } else if (settled) {
       // Anulada: racha na pilha e cai apagada no cemitério. Resolvida: entra no cemitério, ou na carta que a gerou.
       const countered = event.type === 'countered';
@@ -155,7 +160,8 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
       // Terreno ou permanente chegando ao campo: pousa com mola; fichas surgem com um brilho.
       if (id !== undefined && landing) {
         const landed = root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
-        if (landed) land(landed);
+        // O comandante já bateu na mesa: no fim, a coroa dele salta no canto.
+        if (landed) { if (event.commanderEntry) commander.crown(landed); else land(landed); }
         if (landed && event.card?.token) { flare(landed, '#ffffff', TOKEN_FLARE); trinket(landed, event.card); }
         if (landed && walkerArrives(event)) walkerArrive(landed, event);
         if (landed && event.from === 'Graveyard') reanimate(landed);

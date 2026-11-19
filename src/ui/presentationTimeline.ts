@@ -1,5 +1,5 @@
 import type { FCard, FState, FTargets } from '../forge/client';
-import { bigSpell, legendaryEntry } from './impactRules';
+import { bigSpell, commanderEntry, COMMANDER_ENTRY, legendaryEntry } from './impactRules';
 import { sweepDuration } from './boardSweep';
 
 /** Public, immutable board view at an engine event boundary. Never contains a hand or prompt. */
@@ -62,6 +62,8 @@ export interface PresentationEvent {
   milled?: FCard[];
   /** Só na mesa: as permanentes que a mesma resolução pôs no campo, uma depois da outra, num movimento só (`entered`). */
   entries?: FCard[];
+  /** Só na mesa: o comandante entrando no campo depois de ser conjurado da zona de comando (`entered`), com a entrada própria. */
+  commanderEntry?: boolean;
   /** Só na mesa: gatilho da mesma carta logo depois de outro igual (blink em todos), com um aviso mais curto. */
   repeat?: boolean;
   /** Marcadores (`counters`): o tipo, como o Forge chama (P1P1, M1M1, LOYALTY, POISON…), e se vieram com a entrada. */
@@ -123,7 +125,7 @@ function joinMill(a: PresentationEvent, b: PresentationEvent): PresentationEvent
 /** Entradas seguidas do mesmo jogador, vindas do mesmo lugar e da mesma resolução (fichas, blink em massa). */
 function sameEntry(a: PresentationEvent | undefined, b: PresentationEvent) {
   return a?.type === 'entered' && b.type === 'entered' && a.actor === b.actor && (a.from ?? null) === (b.from ?? null) &&
-    a.stackId !== undefined && a.stackId === b.stackId;
+    a.stackId !== undefined && a.stackId === b.stackId && !a.commanderEntry && !b.commanderEntry;
 }
 function joinEntry(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
   return { ...b, repeat: a.repeat, entries: [...(a.entries ?? (a.card ? [a.card] : [])), ...(b.card ? [b.card] : [])] };
@@ -177,6 +179,8 @@ export class PresentationTimeline {
   private pending: PresentationEntry[] = [];
   private initialized = false;
   private lastPresentedSeq = 0;
+  /** As cartas conjuradas da zona de comando que ainda não resolveram: ao entrar no campo, ganham a entrada de comandante. */
+  private commandCasts = new Set<number>();
   /** Os gatilhos iguais da sequência atual: quantos foram para a pilha. */
   private triggers: { key: string; count: number } | null = null;
   get queued() { return this.pending.length; }
@@ -195,6 +199,7 @@ export class PresentationTimeline {
       if (!PRESENTABLE.has(event.type) && !AUDIO_ONLY.has(event.type)) continue;
       if (event.type === 'counters' && (event.entering || event.paid)) continue;
       const copy = structuredClone(event);
+      this.markCommanderEntry(copy);
       if (copy.type === 'mill') copy.milled = copy.card ? [copy.card] : [];
       if (sameMill(accepted.at(-1), copy)) accepted[accepted.length - 1] = joinMill(accepted.at(-1)!, copy);
       else accepted.push(copy);
@@ -266,6 +271,14 @@ export class PresentationTimeline {
       if (this.triggers.count > 1) event.repeat = true;
     } else if (this.triggers?.key === key && this.triggers.count > 1) event.repeat = true;
   }
+  /** Conjurado da zona de comando: quando a mesma carta sai da pilha para o campo, a entrada é a do comandante. */
+  private markCommanderEntry(event: PresentationEvent) {
+    const id = event.card?.id ?? event.sourceId;
+    if (id === undefined) return;
+    if (event.type === 'spell-cast') { if (event.from === 'Command') this.commandCasts.add(id); else this.commandCasts.delete(id); }
+    else if (event.type === 'countered') this.commandCasts.delete(id);
+    else if (event.type === 'entered' && this.commandCasts.delete(id) && event.from === 'Stack') event.commanderEntry = true;
+  }
   /**
    * Tira da fila os próximos eventos que ainda fazem parte do atual (como dano dividido entre vários alvos). Com `min`,
    * só tira se forem pelo menos tantos; senão, não tira nenhum.
@@ -305,6 +318,7 @@ export class PresentationTimeline {
   reset(matchId = '') {
     this.matchId = matchId; this.cursor = 0; this.history = []; this.current = null;
     this.pending = []; this.initialized = false; this.lastPresentedSeq = 0; this.triggers = null;
+    this.commandCasts.clear();
   }
 }
 
@@ -354,7 +368,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
   }
   // Planeswalker: a entrada e o ultimate ganham um pouco mais de tempo, sem segurar a partida.
   // Momentos grandes (impactRules.ts): a lendária chegando e a mágica grande ganham tempo para a cena.
-  const duration = legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
+  // O comandante saindo da zona de comando tem a cena mais longa das entradas (commanderEntry.ts).
+  const duration = commanderEntry(event) ? COMMANDER_ENTRY : legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
     : event.type === 'coin' || event.type === 'die' ? 1250 : event.type === 'scry' ? 900
     : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
     // Destruída e exilada têm cena própria (leaveEffects.ts): rachar e se partir, ou ser sugada pelo portal.

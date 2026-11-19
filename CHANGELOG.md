@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.217.0] - 2026-11-18
+
+### Novo
+
+- **Entrada do comandante.** Quando um comandante é conjurado da zona de comando, o seu ou o de um oponente, ele ganha uma entrada própria ao resolver: sai da pilha, paira grande acima do lugar dele e mergulha na mesa, que treme de leve, com um clarão, um anel dourado e poeira subindo dos lados. Logo depois, a arte dele sai da moldura, cresce em volta da carta com as bordas esfumadas e volta para dentro, e a coroa de comandante salta no canto. Vale a cada vez que ele sai da zona de comando; se ele entrar no campo de outro jeito (conjurado da mão, piscado, reanimado), a entrada é a de sempre.
+
 ## [0.216.1] - 2026-11-18
 
 ### Corrigido
