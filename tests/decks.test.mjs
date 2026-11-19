@@ -183,7 +183,7 @@ test('Standard ready decks have 60 main, up to 15 sideboard, and check cards aga
 
 test('Sacola 50 ready decks have 60 main, up to 15 sideboard, and check cards against Legacy', () => {
   const sacola = decks.DEFAULT_DECKS.filter(d => d.format === 'sacola50');
-  assert.equal(sacola.length, 17);
+  assert.equal(sacola.length, 27);
   for (const deck of sacola) { assert.equal(decks.deckSize(deck), 60); assert.ok(decks.countEntries(deck.sideboard) <= 15); assert.match(deck.id, /^sacola-/); }
   assert.equal(decks.scryfallFormat('sacola50'), 'legacy');
   assert.equal(decks.scryfallFormat('free'), undefined);
@@ -428,8 +428,8 @@ test('each format lists only the ready decks built for it; Livre lists every 60-
   const count = f => decks.DEFAULT_DECKS.filter(d => decks.readyDeckFits(d, f)).length;
   assert.equal(count('standard'), 16);
   assert.equal(count('pauper'), 12);
-  assert.equal(count('sacola50'), 17, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
-  assert.equal(count('free'), 45);
+  assert.equal(count('sacola50'), 27, 'Standard and Pauper decks are Legacy-legal but stay out of Sacola 50');
+  assert.equal(count('free'), 55);
   assert.equal(count('commander'), decks.DEFAULT_DECKS.filter(d => d.format === 'commander' && !d.precon).length, 'os precons ficam no Commander Precon');
 });
 

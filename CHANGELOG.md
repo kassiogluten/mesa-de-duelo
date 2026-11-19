@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.225.0] - 2026-11-19
+
+### Novo
+
+- **Mais dez decks prontos de Sacola 50.** Tirados das listas mais bem colocadas dos torneios SACOLA50, cada um com um jeito diferente de jogar e nenhum repetido dos que já existiam: **Poste Branco** (controle branco com Cloudpost, que limpa a mesa e vence com Decree of Justice), **Espíritos Azorius** (espíritos voadores que entram no turno do oponente e anulam mágicas), **Criaturas Abzan** (criaturas que fazem o oponente sacrificar, destroem e voltam com Restoration Angel), **Afinidade Sombria** (artefatos quase de graça com Cranial Plating), **Oito Racks** (descarte até a mão do oponente acabar e The Rack causar dano), **Hipergênese** (a cascata acha Hypergenesis e põe as criaturas gigantes da mão direto no campo), **Aventuras Golgari** (criaturas com aventura que compram cartas com o Edgewall Innkeeper), **Heroico Azorius** (criaturas que crescem a cada mágica e aura que as tem como alvo), **Devoção Verde** (criaturas verdes fortes e baratas, com Aspect of Hydra para o golpe final) e **Muralhas Bant** (defensores que batem com a resistência). Com o Sacola 50 escolhido, agora são 27 decks prontos para você ou para o computador.
+
 ## [0.224.0] - 2026-11-19
 
 ### Mudou

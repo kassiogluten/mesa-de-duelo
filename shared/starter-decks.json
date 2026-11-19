@@ -4819,6 +4819,1090 @@
     ]
   },
   {
+    "id": "sacola-hipergenese",
+    "name": "Hipergênese",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Temple of Abandon",
+        "count": 2
+      },
+      {
+        "name": "Havenwood Battleground",
+        "count": 4
+      },
+      {
+        "name": "Mountain",
+        "count": 2
+      },
+      {
+        "name": "Irrigation Ditch",
+        "count": 4
+      },
+      {
+        "name": "Frontier Bivouac",
+        "count": 4
+      },
+      {
+        "name": "Aether Hub",
+        "count": 4
+      },
+      {
+        "name": "Yavimaya Coast",
+        "count": 1
+      },
+      {
+        "name": "Shivan Reef",
+        "count": 1
+      },
+      {
+        "name": "Shardless Agent",
+        "count": 4
+      },
+      {
+        "name": "Bloodbraid Elf",
+        "count": 4
+      },
+      {
+        "name": "Cyclops of Eternal Fury",
+        "count": 4
+      },
+      {
+        "name": "Magister Sphinx",
+        "count": 1
+      },
+      {
+        "name": "Gaea's Revenge",
+        "count": 3
+      },
+      {
+        "name": "Bogardan Hellkite",
+        "count": 4
+      },
+      {
+        "name": "End-Raze Forerunners",
+        "count": 4
+      },
+      {
+        "name": "Inkwell Leviathan",
+        "count": 4
+      },
+      {
+        "name": "Hypergenesis",
+        "count": 4
+      },
+      {
+        "name": "Throes of Chaos",
+        "count": 2
+      },
+      {
+        "name": "Warstorm Surge",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Foundation Breaker",
+        "count": 4
+      },
+      {
+        "name": "Ravenous Trap",
+        "count": 3
+      },
+      {
+        "name": "Ricochet Trap",
+        "count": 4
+      },
+      {
+        "name": "Dead // Gone",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-aventuras",
+    "name": "Aventuras Golgari",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Jungle Hollow",
+        "count": 1
+      },
+      {
+        "name": "Temple of Malady",
+        "count": 3
+      },
+      {
+        "name": "Evolving Wilds",
+        "count": 3
+      },
+      {
+        "name": "Swamp",
+        "count": 7
+      },
+      {
+        "name": "Forest",
+        "count": 7
+      },
+      {
+        "name": "Witherbloom Campus",
+        "count": 1
+      },
+      {
+        "name": "Edgewall Innkeeper",
+        "count": 4
+      },
+      {
+        "name": "Midnight Reaper",
+        "count": 1
+      },
+      {
+        "name": "Plaguecrafter",
+        "count": 1
+      },
+      {
+        "name": "Smitten Swordmaster",
+        "count": 4
+      },
+      {
+        "name": "Lovestruck Beast",
+        "count": 4
+      },
+      {
+        "name": "Order of Midnight",
+        "count": 2
+      },
+      {
+        "name": "Foulmire Knight",
+        "count": 4
+      },
+      {
+        "name": "Murderous Rider",
+        "count": 4
+      },
+      {
+        "name": "Stormkeld Vanguard",
+        "count": 1
+      },
+      {
+        "name": "Beanstalk Giant",
+        "count": 4
+      },
+      {
+        "name": "Lucky Clover",
+        "count": 4
+      },
+      {
+        "name": "Altar of Bhaal",
+        "count": 1
+      },
+      {
+        "name": "Agonizing Remorse",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Knight of Dusk's Shadow",
+        "count": 1
+      },
+      {
+        "name": "Stormkeld Vanguard",
+        "count": 3
+      },
+      {
+        "name": "Reaper of Night",
+        "count": 2
+      },
+      {
+        "name": "Duress",
+        "count": 2
+      },
+      {
+        "name": "Lost Legacy",
+        "count": 3
+      },
+      {
+        "name": "Cling to Dust",
+        "count": 2
+      },
+      {
+        "name": "Return to Nature",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "sacola-heroico",
+    "name": "Heroico Azorius",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Prairie Stream",
+        "count": 4
+      },
+      {
+        "name": "Island",
+        "count": 6
+      },
+      {
+        "name": "Plains",
+        "count": 6
+      },
+      {
+        "name": "Temple of Enlightenment",
+        "count": 2
+      },
+      {
+        "name": "Lagonna-Band Trailblazer",
+        "count": 4
+      },
+      {
+        "name": "Favored Hoplite",
+        "count": 4
+      },
+      {
+        "name": "Seeker of the Way",
+        "count": 2
+      },
+      {
+        "name": "Battlewise Hoplite",
+        "count": 4
+      },
+      {
+        "name": "Eidolon of Countless Battles",
+        "count": 2
+      },
+      {
+        "name": "Gods Willing",
+        "count": 4
+      },
+      {
+        "name": "Stubborn Denial",
+        "count": 2
+      },
+      {
+        "name": "Triton Tactics",
+        "count": 2
+      },
+      {
+        "name": "Boon of Safety",
+        "count": 2
+      },
+      {
+        "name": "Defiant Strike",
+        "count": 4
+      },
+      {
+        "name": "Combat Research",
+        "count": 4
+      },
+      {
+        "name": "Hyena Umbra",
+        "count": 2
+      },
+      {
+        "name": "Aqueous Form",
+        "count": 4
+      },
+      {
+        "name": "Lifelink",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Ordeal of Thassa",
+        "count": 2
+      },
+      {
+        "name": "Encase in Ice",
+        "count": 2
+      },
+      {
+        "name": "All That Glitters",
+        "count": 2
+      },
+      {
+        "name": "Distortion Strike",
+        "count": 2
+      },
+      {
+        "name": "Spell Pierce",
+        "count": 2
+      },
+      {
+        "name": "You See a Guard Approach",
+        "count": 2
+      },
+      {
+        "name": "Essence Capture",
+        "count": 3
+      }
+    ]
+  },
+  {
+    "id": "sacola-devocao",
+    "name": "Devoção Verde",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Forest",
+        "count": 20
+      },
+      {
+        "name": "Wildwood Scourge",
+        "count": 2
+      },
+      {
+        "name": "Pelt Collector",
+        "count": 3
+      },
+      {
+        "name": "Avatar of the Resolute",
+        "count": 4
+      },
+      {
+        "name": "Barkhide Troll",
+        "count": 4
+      },
+      {
+        "name": "Briarbridge Tracker",
+        "count": 4
+      },
+      {
+        "name": "Garruk's Harbinger",
+        "count": 3
+      },
+      {
+        "name": "Yorvo, Lord of Garenbrig",
+        "count": 2
+      },
+      {
+        "name": "Leatherback Baloth",
+        "count": 3
+      },
+      {
+        "name": "Reverent Hunter",
+        "count": 2
+      },
+      {
+        "name": "Surrak, the Hunt Caller",
+        "count": 2
+      },
+      {
+        "name": "Vivien's Arkbow",
+        "count": 1
+      },
+      {
+        "name": "Aspect of Hydra",
+        "count": 4
+      },
+      {
+        "name": "Snakeskin Veil",
+        "count": 3
+      },
+      {
+        "name": "Lead the Stampede",
+        "count": 3
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Setessan Petitioner",
+        "count": 3
+      },
+      {
+        "name": "Shifting Ceratops",
+        "count": 4
+      },
+      {
+        "name": "Tormod's Crypt",
+        "count": 2
+      },
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 2
+      },
+      {
+        "name": "Return to Nature",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-muralhas",
+    "name": "Muralhas Bant",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Botanical Plaza",
+        "count": 2
+      },
+      {
+        "name": "Seaside Citadel",
+        "count": 4
+      },
+      {
+        "name": "Thriving Heath",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 2
+      },
+      {
+        "name": "Forest",
+        "count": 8
+      },
+      {
+        "name": "Island",
+        "count": 1
+      },
+      {
+        "name": "Saruli Caretaker",
+        "count": 4
+      },
+      {
+        "name": "Wall of Blossoms",
+        "count": 4
+      },
+      {
+        "name": "Wall of Omens",
+        "count": 4
+      },
+      {
+        "name": "Tetsuko Umezawa, Fugitive",
+        "count": 1
+      },
+      {
+        "name": "Overgrown Battlement",
+        "count": 3
+      },
+      {
+        "name": "Axebane Guardian",
+        "count": 3
+      },
+      {
+        "name": "Wall of Denial",
+        "count": 4
+      },
+      {
+        "name": "Arcades, the Strategist",
+        "count": 1
+      },
+      {
+        "name": "Tower Defense",
+        "count": 2
+      },
+      {
+        "name": "Elven Farsight",
+        "count": 4
+      },
+      {
+        "name": "Commune with the Gods",
+        "count": 1
+      },
+      {
+        "name": "Assault Formation",
+        "count": 4
+      },
+      {
+        "name": "High Alert",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 2
+      },
+      {
+        "name": "Oblivion Ring",
+        "count": 2
+      },
+      {
+        "name": "Unmoored Ego",
+        "count": 3
+      },
+      {
+        "name": "Fell the Mighty",
+        "count": 1
+      },
+      {
+        "name": "Negate",
+        "count": 3
+      },
+      {
+        "name": "Return to Nature",
+        "count": 4
+      }
+    ]
+  },
+  {
+    "id": "sacola-poste",
+    "name": "Poste Branco",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Crawling Barrens",
+        "count": 1
+      },
+      {
+        "name": "Glimmerpost",
+        "count": 4
+      },
+      {
+        "name": "Cloudpost",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 14
+      },
+      {
+        "name": "Timeless Dragon",
+        "count": 3
+      },
+      {
+        "name": "Realm-Cloaked Giant",
+        "count": 1
+      },
+      {
+        "name": "Collector's Vault",
+        "count": 2
+      },
+      {
+        "name": "Monument to Perfection",
+        "count": 3
+      },
+      {
+        "name": "Mazemind Tome",
+        "count": 3
+      },
+      {
+        "name": "Condemn",
+        "count": 3
+      },
+      {
+        "name": "Mana Tithe",
+        "count": 1
+      },
+      {
+        "name": "Swords to Plowshares",
+        "count": 3
+      },
+      {
+        "name": "Reprieve",
+        "count": 1
+      },
+      {
+        "name": "Decree of Justice",
+        "count": 3
+      },
+      {
+        "name": "Shatter the Sky",
+        "count": 4
+      },
+      {
+        "name": "Dawn of Hope",
+        "count": 3
+      },
+      {
+        "name": "Runed Halo",
+        "count": 2
+      },
+      {
+        "name": "Story Circle",
+        "count": 1
+      },
+      {
+        "name": "Banishing Light",
+        "count": 1
+      },
+      {
+        "name": "Cast Out",
+        "count": 1
+      },
+      {
+        "name": "Gideon Jura",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Kor Firewalker",
+        "count": 1
+      },
+      {
+        "name": "Phyrexian Censor",
+        "count": 4
+      },
+      {
+        "name": "Blossoming Calm",
+        "count": 3
+      },
+      {
+        "name": "Sundering Growth",
+        "count": 1
+      },
+      {
+        "name": "Gideon's Triumph",
+        "count": 1
+      },
+      {
+        "name": "Calamity's Wake",
+        "count": 4
+      },
+      {
+        "name": "Disenchant",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-espiritos",
+    "name": "Espíritos Azorius",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Moorland Haunt",
+        "count": 1
+      },
+      {
+        "name": "Prairie Stream",
+        "count": 2
+      },
+      {
+        "name": "Port Town",
+        "count": 4
+      },
+      {
+        "name": "Snow-Covered Plains",
+        "count": 6
+      },
+      {
+        "name": "Snow-Covered Island",
+        "count": 9
+      },
+      {
+        "name": "Ascendant Spirit",
+        "count": 4
+      },
+      {
+        "name": "Spectral Sailor",
+        "count": 4
+      },
+      {
+        "name": "Rattlechains",
+        "count": 4
+      },
+      {
+        "name": "Shacklegeist",
+        "count": 4
+      },
+      {
+        "name": "Supreme Phantom",
+        "count": 4
+      },
+      {
+        "name": "Errant and Giada",
+        "count": 2
+      },
+      {
+        "name": "Spell Queller",
+        "count": 3
+      },
+      {
+        "name": "Drogskol Captain",
+        "count": 4
+      },
+      {
+        "name": "Lofty Denial",
+        "count": 3
+      },
+      {
+        "name": "Geistlight Snare",
+        "count": 3
+      },
+      {
+        "name": "Combat Research",
+        "count": 3
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Remorseful Cleric",
+        "count": 4
+      },
+      {
+        "name": "Blossoming Calm",
+        "count": 3
+      },
+      {
+        "name": "Disenchant",
+        "count": 3
+      },
+      {
+        "name": "Test of Talents",
+        "count": 3
+      },
+      {
+        "name": "Hibernation",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "sacola-abzan",
+    "name": "Criaturas Abzan",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Temple of Silence",
+        "count": 3
+      },
+      {
+        "name": "Forest",
+        "count": 4
+      },
+      {
+        "name": "Swamp",
+        "count": 4
+      },
+      {
+        "name": "Plains",
+        "count": 4
+      },
+      {
+        "name": "Temple of Plenty",
+        "count": 4
+      },
+      {
+        "name": "Temple of Malady",
+        "count": 4
+      },
+      {
+        "name": "Accursed Marauder",
+        "count": 4
+      },
+      {
+        "name": "Charming Prince",
+        "count": 4
+      },
+      {
+        "name": "Scavenging Ooze",
+        "count": 3
+      },
+      {
+        "name": "Gloomshrieker",
+        "count": 3
+      },
+      {
+        "name": "Plaguecrafter",
+        "count": 3
+      },
+      {
+        "name": "Knight of Autumn",
+        "count": 3
+      },
+      {
+        "name": "Skinrender",
+        "count": 4
+      },
+      {
+        "name": "Restoration Angel",
+        "count": 3
+      },
+      {
+        "name": "Ravenous Chupacabra",
+        "count": 3
+      },
+      {
+        "name": "Cataclysmic Gearhulk",
+        "count": 3
+      },
+      {
+        "name": "Lead the Stampede",
+        "count": 4
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Scavenging Ooze",
+        "count": 1
+      },
+      {
+        "name": "Tidehollow Sculler",
+        "count": 2
+      },
+      {
+        "name": "Brain Maggot",
+        "count": 4
+      },
+      {
+        "name": "Loxodon Smiter",
+        "count": 4
+      },
+      {
+        "name": "Gloomshrieker",
+        "count": 1
+      },
+      {
+        "name": "Acidic Slime",
+        "count": 2
+      },
+      {
+        "name": "Cataclysmic Gearhulk",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "sacola-afinidade",
+    "name": "Afinidade Sombria",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Power Depot",
+        "count": 4
+      },
+      {
+        "name": "Darksteel Citadel",
+        "count": 4
+      },
+      {
+        "name": "Mistvault Bridge",
+        "count": 4
+      },
+      {
+        "name": "Swamp",
+        "count": 3
+      },
+      {
+        "name": "Mountain",
+        "count": 2
+      },
+      {
+        "name": "Ornithopter",
+        "count": 4
+      },
+      {
+        "name": "Signal Pest",
+        "count": 3
+      },
+      {
+        "name": "Etherium Pteramander",
+        "count": 4
+      },
+      {
+        "name": "Gingerbrute",
+        "count": 2
+      },
+      {
+        "name": "Vault Skirge",
+        "count": 3
+      },
+      {
+        "name": "Etched Champion",
+        "count": 1
+      },
+      {
+        "name": "Frogmite",
+        "count": 4
+      },
+      {
+        "name": "Sojourner's Companion",
+        "count": 4
+      },
+      {
+        "name": "Imskir Iron-Eater",
+        "count": 2
+      },
+      {
+        "name": "Springleaf Drum",
+        "count": 4
+      },
+      {
+        "name": "Cranial Plating",
+        "count": 4
+      },
+      {
+        "name": "Cranial Ram",
+        "count": 3
+      },
+      {
+        "name": "Dowsing Device",
+        "count": 1
+      },
+      {
+        "name": "Forging the Anchor",
+        "count": 2
+      },
+      {
+        "name": "Scene of the Crime",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 2
+      },
+      {
+        "name": "Lantern of the Lost",
+        "count": 2
+      },
+      {
+        "name": "Duress",
+        "count": 2
+      },
+      {
+        "name": "Slaughter Games",
+        "count": 1
+      },
+      {
+        "name": "Spell Pierce",
+        "count": 2
+      },
+      {
+        "name": "Smash to Smithereens",
+        "count": 1
+      },
+      {
+        "name": "Abrade",
+        "count": 1
+      },
+      {
+        "name": "Negate",
+        "count": 2
+      },
+      {
+        "name": "Metallic Rebuke",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "sacola-rack",
+    "name": "Oito Racks",
+    "builtin": true,
+    "format": "sacola50",
+    "cards": [
+      {
+        "name": "Mishra's Factory",
+        "count": 2
+      },
+      {
+        "name": "Barren Moor",
+        "count": 1
+      },
+      {
+        "name": "Swamp",
+        "count": 18
+      },
+      {
+        "name": "Nether Spirit",
+        "count": 1
+      },
+      {
+        "name": "The Rack",
+        "count": 4
+      },
+      {
+        "name": "Funeral Charm",
+        "count": 1
+      },
+      {
+        "name": "Power Word Kill",
+        "count": 2
+      },
+      {
+        "name": "Raven's Crime",
+        "count": 3
+      },
+      {
+        "name": "Bloodchief's Thirst",
+        "count": 2
+      },
+      {
+        "name": "Inquisition of Kozilek",
+        "count": 4
+      },
+      {
+        "name": "Smallpox",
+        "count": 4
+      },
+      {
+        "name": "Wrench Mind",
+        "count": 4
+      },
+      {
+        "name": "Hymn to Tourach",
+        "count": 4
+      },
+      {
+        "name": "Shrieking Affliction",
+        "count": 4
+      },
+      {
+        "name": "Hopeless Nightmare",
+        "count": 2
+      },
+      {
+        "name": "Bandit's Talent",
+        "count": 2
+      },
+      {
+        "name": "Dark Tutelage",
+        "count": 2
+      }
+    ],
+    "sideboard": [
+      {
+        "name": "Soul-Guide Lantern",
+        "count": 2
+      },
+      {
+        "name": "Lantern of the Lost",
+        "count": 2
+      },
+      {
+        "name": "Ratchet Bomb",
+        "count": 1
+      },
+      {
+        "name": "Duress",
+        "count": 3
+      },
+      {
+        "name": "Innocent Blood",
+        "count": 2
+      },
+      {
+        "name": "Dreams of Steel and Oil",
+        "count": 2
+      },
+      {
+        "name": "Infest",
+        "count": 2
+      },
+      {
+        "name": "Lost Legacy",
+        "count": 1
+      }
+    ]
+  },
+  {
     "id": "commander-fichas",
     "name": "Triunfo das Fichas",
     "builtin": true,

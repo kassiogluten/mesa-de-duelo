@@ -1,4 +1,9 @@
 {
+  "0.225.0": {
+    "Mais dez decks prontos de Sacola 50": [
+      { "img": "0.225.0/sacola-mais-dez-decks.webp", "legenda": "Com o Sacola 50 escolhido, os dez decks novos entre os decks prontos, cada um com a arte e as cores dele: de **Oito Racks** a **Hipergênese**, ao lado de Fúria Boros e Lâmina de Laelia, que já existiam." }
+    ]
+  },
   "0.224.0": {
     "Escolher um número com contador, custo e mana disponível": [
       { "img": "0.224.0/numero-x.webp", "legenda": "O X da Bola de Fogo: o número grande com − e +, os atalhos \"Mín 0\" e \"O que dá para pagar (7)\", quanto você paga, a frase da carta com 4 no lugar do X e a barra da mana que você tem." },
