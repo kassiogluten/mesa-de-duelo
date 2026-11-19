@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Prévias de 19/11/2026 dos itens 6 a 10 da varredura (ROADMAP 143 a 145): como é hoje e uma proposta clicável de cada um, no computador e no celular deitado, para decidir antes de fazer. -->
+<title>Varredura: próximos</title>
+<style>
+/* Página escura como a mesa; os valores da janela de pergunta (cores, bordas, raio) seguem style.css e arenaModals.css. */
+:root {
+  color-scheme: dark;
+  --bg: #060912; --card: #0d1424; --line: rgba(255, 255, 255, .12); --ink: #eef1f8; --muted: #9aa5bb;
+  --gold: #f2b54c; --gold-light: #ffe2a0; --glow: #59b5ff; --red: #ec5a3f; --green: #4fc77a;
+  --opt: #16203a; --opt-line: #34405e; --opt-on: #22294a;
+  --display: "Outfit", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+main { max-width: 1240px; margin: 0 auto; padding: 40px 16px 72px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(26px, 4.2vw, 38px); }
+h2 { font-size: 23px; margin: 52px 0 8px; display: flex; gap: 12px; align-items: baseline; }
+h2 .n { display: inline-grid; place-items: center; min-width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: #1b1200; font-size: 17px; flex: none; }
+p { margin: 0 0 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.muted { color: var(--muted); }
+.prose { max-width: 76ch; }
+.lead { font-size: 17px; color: var(--muted); margin-top: 12px; }
+code, .raw { font: 12.5px/1.45 ui-monospace, "Cascadia Code", Consolas, monospace; background: #ffffff0d; border: 1px solid #ffffff14; border-radius: 6px; padding: 1px 6px; color: #ffcfb9; white-space: pre-wrap; }
+ul.problems { margin: 6px 0 0; padding-left: 20px; max-width: 80ch; }
+ul.problems li { margin-bottom: 5px; }
+ul.problems b { color: var(--gold-light); font-weight: 600; }
+
+/* Ordem sugerida. */
+.order { counter-reset: o; list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 8px; }
+.order li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.order li.top { border-color: #f2b54c66; }
+.order .num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #ffffff12; font: 700 15px var(--display); }
+.order li.top .num { background: var(--gold); color: #1b1200; }
+.order b { font-weight: 600; }
+.order .why { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.chip { padding: 2px 9px; border-radius: 999px; font: 600 11.5px/1.6 var(--body); background: #ffffff10; color: var(--muted); white-space: nowrap; }
+.chip.hi { background: #4fc77a26; color: #b9f3cc; } .chip.mid { background: #f2b54c22; color: var(--gold-light); } .chip.lo { background: #ffffff0c; color: var(--muted); }
+@media (max-width: 700px) { .order li { grid-template-columns: 32px minmax(0, 1fr); } .chips { grid-column: 2; justify-content: flex-start; } }
+
+/* Controles: tamanho da tela. */
+.controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 28px -16px 0; padding: 12px 16px; background: #060912ee; backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.controls .group, .tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.controls .group > span, .tabs > span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+.seg { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); font: 500 13px var(--body); cursor: pointer; }
+.seg[aria-pressed="true"] { border-color: var(--gold); background: #2a2210; color: var(--gold-light); }
+.tabs { margin: 14px 0 0; }
+
+/* Hoje × proposta, lado a lado (um embaixo do outro em tela estreita ou no modo celular). */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+body.phone .pair, .pair.wide { grid-template-columns: 1fr; }
+@media (max-width: 1000px) { .pair { grid-template-columns: 1fr; } }
+.panel { border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; }
+.panel.rec { border-color: #f2b54c99; box-shadow: 0 0 0 1px #f2b54c44; }
+.panel header { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.tag { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #ec5a3f33; color: #ffb4a3; font: 600 11px/1.4 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.panel.rec .tag { background: var(--gold); color: #101b2f; }
+.panel header small { color: var(--muted); font-size: 12.5px; text-align: right; }
+.panel .notes { padding: 10px 14px 14px; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--line); }
+.panel .notes ul { margin: 0; padding-left: 18px; }
+
+/* O palco: um pedaço de mesa com a janela no meio. No modo celular, 740×340 (a altura real deitado no navegador). */
+.stage-wrap { padding: 14px; display: grid; place-items: center; overflow-x: auto; }
+.stage {
+  container-type: size; position: relative; width: 100%; height: 480px; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(120% 140% at 50% 0%, #284470, #13203a 55%, #0a1120); box-shadow: inset 0 0 0 1px var(--line);
+  display: grid; place-items: center;
+}
+body.phone .stage { width: 740px; min-width: 740px; height: 340px; }
+.stage::before { content: ""; position: absolute; inset: 0; background: rgb(3 6 14 / .55); }
+.stage.board::before { background: rgb(3 6 14 / .15); }
+.stage .result { position: absolute; left: 10px; bottom: 8px; z-index: 4; padding: 3px 10px; border-radius: 999px; background: #0b1a10; border: 1px solid #4fc77a88; color: #b9f3cc; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.stage .result.show { opacity: 1; }
+.stage .size { position: absolute; right: 10px; bottom: 8px; z-index: 4; color: #ffffff55; font-size: 11px; }
+
+/* A janela de pergunta da mesa (.forge .question). */
+.q {
+  position: relative; z-index: 2; width: min(580px, 94%); max-height: calc(100% - 24px); overflow: auto; padding: 16px 18px 14px;
+  border: 1px solid rgb(242 181 76 / .28); border-radius: 18px;
+  background: linear-gradient(180deg, rgb(20 32 54 / .94), rgb(9 15 29 / .96));
+  box-shadow: 0 30px 80px rgb(0 0 0 / .65), inset 0 1px 0 rgb(255 255 255 / .05);
+}
+.q.wide { width: min(680px, 96%); }
+body.phone .q { padding: 10px 14px 10px; border-radius: 14px; }
+.q h4 { margin: 0 0 4px; padding: 0 84px; font: 600 19px/1.25 var(--display); text-align: center; text-shadow: 0 2px 10px rgb(0 0 0 / .6); }
+body.phone .q h4 { font-size: 16px; }
+.q .sub { text-align: center; color: var(--muted); font-size: 13px; margin: 0 0 10px; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+body.phone .q .sub { margin-bottom: 6px; font-size: 12px; }
+.q .hint { text-align: center; color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+.q-actions { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+body.phone .q-actions { margin-top: 8px; }
+.btn { min-width: 110px; padding: 9px 16px; border-radius: 10px; font: 600 14px var(--body); cursor: pointer; border: 1px solid transparent; }
+body.phone .btn { padding: 7px 14px; font-size: 13px; }
+.btn.primary { background: linear-gradient(180deg, #f6c867, #d99a2b); color: #2b1700; border-color: #ffe2a0; box-shadow: 0 4px 14px rgb(242 181 76 / .3); }
+.btn.secondary { background: #ffffff10; color: var(--ink); border-color: #ffffff2a; }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.minimize { position: absolute; right: 12px; top: 12px; padding: 3px 9px; border-radius: 8px; border: 1px solid #ffffff22; background: #ffffff0a; color: var(--muted); font: 500 11.5px var(--body); }
+.count { display: inline-flex; align-items: baseline; gap: 3px; padding: 3px 10px; border-radius: 999px; background: #ffffff10; font: 700 14px var(--display); }
+.count small { color: var(--muted); font-weight: 500; }
+.count.ok { background: #4fc77a2a; color: #b9f3cc; }
+
+/* Hoje: um botão por linha (a escolha genérica). */
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list button { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--opt); border: 1px solid var(--opt-line); color: var(--ink); font: 400 14px var(--body); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; }
+body.phone .list button { padding: 6px 10px; font-size: 13px; }
+.list button:hover { border-color: var(--glow); transform: translateY(-2px); }
+.list button.on { border-color: var(--gold); background: var(--opt-on); }
+.list.scroll { max-height: 250px; overflow: auto; padding-right: 4px; }
+body.phone .list.scroll { max-height: 170px; }
+.qcard { float: left; margin: 0 12px 6px 0; }
+
+/* Carta de mentira (moldura, nome, custo, texto). */
+.card { width: 92px; aspect-ratio: 63 / 88; border-radius: 6px; padding: 5px; background: linear-gradient(160deg, #3a2a20, #1c1410); border: 2px solid #111; box-shadow: 0 6px 16px #0009; display: flex; flex-direction: column; gap: 3px; font: 600 7.5px/1.2 var(--body); color: #f4ead8; }
+.card .art { flex: 1; border-radius: 3px; background: linear-gradient(135deg, #a0442c, #e09a4c 55%, #2c1d14); }
+.card.blue .art { background: linear-gradient(135deg, #2f5f9b, #7cc0e8 55%, #1a2a40); }
+.card.white .art { background: linear-gradient(135deg, #b9ad8c, #f3ead0 55%, #5c5340); }
+.card.green .art { background: linear-gradient(135deg, #2f6b3c, #9bd3ae 55%, #1c2e20); }
+.card.grey .art { background: linear-gradient(135deg, #5d6573, #b8c0cc 55%, #2a2f38); }
+.card .line { font-weight: 500; font-size: 6.5px; color: #d9cdb8; }
+body.phone .card { width: 70px; }
+
+/* Símbolos de mana de mentira. */
+.ms { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; font: 700 .72em/1 var(--body); color: #111; background: #cbc5bd; box-shadow: 0 1px 0 #0008; vertical-align: -.2em; margin: 0 1px; }
+.ms.W { background: #f8f1d8; } .ms.U { background: #a9d4f2; } .ms.B { background: #b9aeb0; } .ms.R { background: #f3a083; } .ms.G { background: #9bd3ae; }
+
+/* Restante da lista. */
+table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font: 600 12px var(--body); letter-spacing: .05em; text-transform: uppercase; }
+td:first-child { color: var(--gold-light); font-weight: 600; white-space: nowrap; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.good { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+/* 1. Caixa de ação (canto da mesa). */
+.board-hint { position: absolute; inset: 14px 14px auto 14px; z-index: 1; display: flex; gap: 8px; justify-content: center; }
+.board-hint .mini { width: 54px; aspect-ratio: 63/88; border-radius: 5px; background: linear-gradient(135deg, #3b4a66, #1d2638); border: 1px solid #0008; }
+.board-hint .mini.sel { outline: 2px solid var(--glow); box-shadow: 0 0 14px #59b5ffaa; }
+.board-hint .mini.on { outline: 2px solid var(--gold); box-shadow: 0 0 14px #f2b54caa; transform: translateY(-4px); }
+body.phone .board-hint .mini { width: 40px; }
+.abox { position: absolute; right: 14px; bottom: 30px; z-index: 3; width: min(360px, 60%); padding: 12px 14px; border-radius: 14px; border: 1px solid #ffffff22; background: linear-gradient(180deg, #17223a, #0c1426); box-shadow: 0 16px 40px #000a; }
+body.phone .abox { bottom: 22px; padding: 8px 10px; width: 330px; }
+.abox .src { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 600 13px var(--display); color: var(--gold-light); }
+.abox .src i { width: 22px; height: 22px; border-radius: 4px; background: linear-gradient(135deg, #a0442c, #e09a4c); flex: none; }
+.abox .msg { font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+body.phone .abox .msg { max-height: 72px; font-size: 12px; }
+.abox .msg.raw { font: 12px/1.4 ui-monospace, Consolas, monospace; color: #e8dccd; background: none; border: 0; padding: 0; }
+.abox .prog { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.abox .q-actions { justify-content: flex-end; margin-top: 10px; }
+.abox .btn { min-width: 0; }
+
+
+/* 6. Divisão do dano. */
+.split { display: grid; gap: 8px; }
+.split-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--opt-line); background: var(--opt); }
+body.phone .split-row { padding: 5px 8px; grid-template-columns: 40px minmax(0, 1fr) auto; }
+.split-row .mini-card { width: 54px; aspect-ratio: 63/88; border-radius: 5px; background: linear-gradient(135deg, #3d7a4a, #9bd3ae 55%, #1c2e20); border: 1px solid #0008; }
+.split-row .mini-card.player { aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #c9d6ef, #4b5f86); }
+body.phone .split-row .mini-card { width: 40px; }
+.split-row b { font: 600 14px var(--display); }
+.split-row small { display: block; color: var(--muted); font-size: 12px; }
+.split-row small.kill { color: #ffb4a3; }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--opt-line); background: #0d1527; color: var(--ink); font: 600 18px/1 var(--display); cursor: pointer; }
+.stepper button:disabled { opacity: .3; cursor: not-allowed; }
+.stepper output { min-width: 28px; text-align: center; font: 700 24px var(--display); color: var(--gold-light); }
+.left { text-align: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
+.left b { color: var(--ink); }
+.left.ok b { color: #b9f3cc; }
+.amounts label { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--opt); border: 1px solid var(--opt-line); margin-bottom: 6px; font-size: 14px; }
+.amounts small { display: block; color: var(--muted); font-size: 11.5px; }
+.amounts input { width: 70px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--opt-line); background: #0a1222; color: var(--ink); font: 14px var(--body); }
+.tline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.tchip { padding: 2px 9px; border-radius: 999px; background: #ffffff12; font-size: 12px; color: var(--ink); }
+.tchip.gold { background: #2a2210; color: var(--gold-light); border: 1px solid #f2b54c55; }
+
+/* 7. Avisos. */
+.toast { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); z-index: 3; width: min(440px, 86%); padding: 10px 14px; border-radius: 12px; border: 1px solid #ffffff22; background: linear-gradient(180deg, #17223a, #0c1426); box-shadow: 0 16px 40px #000a; font-size: 13.5px; line-height: 1.45; }
+.toast.raw { white-space: pre-wrap; }
+.toast b { font-family: var(--display); }
+.toast .piles { display: flex; gap: 14px; margin-top: 8px; }
+.toast .pile { flex: 1; padding: 6px 8px; border-radius: 10px; background: #ffffff0a; font-size: 12.5px; }
+.toast .pile.mine { border: 1px solid #f2b54c66; background: #2a2210; }
+.toast .pile small { display: block; color: var(--muted); }
+.toast .minis { display: flex; gap: 4px; margin-top: 4px; }
+.toast .minis i { width: 26px; aspect-ratio: 63/88; border-radius: 3px; background: linear-gradient(135deg, #5d6573, #b8c0cc); }
+
+/* 9. Busca em dois passos. */
+.slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.slot { min-height: 116px; padding: 8px; border-radius: 12px; border: 1px dashed #ffffff33; display: grid; justify-items: center; align-content: start; gap: 6px; }
+body.phone .slot { min-height: 78px; }
+.slot.filled { border-style: solid; border-color: #f2b54c88; background: #2a2210; }
+.slot b { font: 600 13px var(--display); color: var(--muted); }
+.found { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.land { width: 64px; aspect-ratio: 63/88; border-radius: 6px; display: grid; place-items: end center; padding-bottom: 4px; font: 600 10px var(--body); color: #f4ead8; border: 2px solid #111; cursor: pointer; transition: transform .15s; }
+body.phone .land { width: 48px; }
+.land:hover { transform: translateY(-3px); }
+.land.G { background: linear-gradient(160deg, #2f6b3c, #9bd3ae 55%, #1c2e20); }
+.land.U { background: linear-gradient(160deg, #2f5f9b, #7cc0e8 55%, #1a2a40); }
+.land.W { background: linear-gradient(160deg, #9c9273, #efe6c8 55%, #4d4636); color: #1d1b16; }
+.land.B { background: linear-gradient(160deg, #3a3240, #8a7c8c 55%, #1c1820); }
+.land.R { background: linear-gradient(160deg, #8a3420, #e88a5c 55%, #3a1810); }
+.land.picked { outline: 2px solid var(--gold); }
+.land.dim { opacity: .45; }
+
+/* 10. Ponder e pilha. */
+.order-strip { display: flex; gap: 8px; justify-content: center; margin: 4px 0 6px; }
+.order-strip .o { display: grid; justify-items: center; gap: 3px; font-size: 11.5px; color: var(--muted); }
+.stackbox { position: absolute; left: 14px; top: 14px; z-index: 3; width: min(320px, 56%); padding: 10px 12px; border-radius: 12px; border: 1px solid #ffffff22; background: linear-gradient(180deg, #17223a, #0c1426); font-size: 13px; }
+body.phone .stackbox { width: 300px; padding: 8px 10px; }
+.stackbox .title { color: var(--muted); font: 600 11px var(--body); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+.stackbox .item { display: flex; gap: 8px; align-items: flex-start; }
+.stackbox .item i { width: 30px; aspect-ratio: 63/88; border-radius: 4px; background: linear-gradient(135deg, #a0442c, #e09a4c); flex: none; }
+.stackbox .raw { font: 12px/1.4 ui-monospace, Consolas, monospace; color: #e8dccd; background: none; border: 0; padding: 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Roadmap 143 a 145 · varredura de 19/11/2026</div>
+  <h1>O resto da varredura: prévias</h1>
+  <p class="lead prose">Os itens 6 a 10 da <a href="varredura-experiencia.html" style="color:var(--gold-light)">varredura</a>, que ficaram para depois dos cinco primeiros. Cada um com como é hoje (os textos que a mesa recebe do servidor, já com as mudanças de 19/11/2026) e uma proposta clicável, no computador e no celular deitado. Nada disso está feito: é para decidir.</p>
+
+  <ol class="order">
+    <li class="top"><span class="num">6</span><div><b>Dano dividido e Bola de Fogo</b> <span class="muted">· roadmap 143</span><div class="why">Dividir o dano com − e +, como no dano de combate; na Bola de Fogo, o dano de cada alvo e o custo crescendo a cada alvo marcado.</div></div><div class="chips"><span class="chip mid">ganho médio</span><span class="chip mid">mesa, talvez servidor</span></div></li>
+    <li class="top"><span class="num">7</span><div><b>Aviso do Fato ou Ficção</b> <span class="muted">· roadmap 145</span><div class="why">O aviso cru do Forge vira os dois montes, com o de quem escolheu destacado.</div></div><div class="chips"><span class="chip lo">ganho baixo</span><span class="chip hi">barato</span></div></li>
+    <li class="top"><span class="num">8</span><div><b>Botões que dizem o que fazem</b> <span class="muted">· roadmap 145</span><div class="why">"Nenhum", "OK" e "Cancelar" soltos viram a ação: "Não procurar", "Continuar", "Desistir da mágica".</div></div><div class="chips"><span class="chip lo">ganho baixo</span><span class="chip hi">só a mesa</span></div></li>
+    <li class="top"><span class="num">9</span><div><b>Busca em dois passos numa tela só</b> <span class="muted">· roadmap 144</span><div class="why">Cultivate: as duas cartas e o destino de cada uma na mesma janela.</div></div><div class="chips"><span class="chip mid">ganho médio</span><span class="chip mid">mesa e servidor</span></div></li>
+    <li class="top"><span class="num">10</span><div><b>Ponder e o texto da pilha</b> <span class="muted">· roadmap 145</span><div class="why">O "embaralhar?" mostrando as cartas que você ordenou; a pilha com o texto da carta em português.</div></div><div class="chips"><span class="chip lo">ganho baixo</span><span class="chip mid">só a mesa</span></div></li>
+  </ol>
+
+  <div class="controls">
+    <div class="group"><span>Tela</span>
+      <button class="seg" data-screen="desk" aria-pressed="true">Computador</button>
+      <button class="seg" data-screen="phone" aria-pressed="false">Celular deitado (740×340)</button>
+    </div>
+    <span class="muted" style="font-size:13px">As prévias respondem ao clique; a faixa verde diz o que a mesa mandaria ao servidor.</span>
+  </div>
+
+  <h2><span class="n">6</span>Dano dividido e Bola de Fogo</h2>
+  <ul class="problems">
+    <li>Raio Bifurcado com dois alvos: a divisão cai na janela genérica <code>Distribua o total entre as opções</code>, com um campo numérico por alvo ("De 0 a 2") e <code>Restante: 2.</code> Não diz quanto mata cada criatura.</li>
+    <li>Bola de Fogo: o X é escolhido antes dos alvos. Ao marcar os alvos, a caixa diz "Escolha até 5 alvos para Bola de Fogo.", mas não diz quanto dano cada alvo leva (o X dividido igualmente, arredondado para baixo) nem que cada alvo depois do primeiro custa {1} a mais.</li>
+  </ul>
+  <div class="tabs" data-tabs="dmg"><span>Carta</span></div>
+  <div class="pair" id="dmgPair"></div>
+
+  <h2><span class="n">7</span>Aviso do Fato ou Ficção</h2>
+  <ul class="problems">
+    <li>Depois de escolher o monte, o aviso chega como o Forge escreve: <code>valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island</code>, com os nomes em inglês e sem dizer o que aconteceu com o outro monte.</li>
+  </ul>
+  <div class="pair" id="noticePair"></div>
+
+  <h2><span class="n">8</span>Botões que dizem o que fazem</h2>
+  <ul class="problems">
+    <li>Busca opcional (Wood Elves): título <code>Escolha a carta de seu grimório</code>, a Floresta e um botão <code>Nenhum</code>.</li>
+    <li>Cartas reveladas (Fato ou Ficção): <code>Fato ou Ficção - Revelando cartas de seu grimório</code> e um <code>OK</code> sozinho.</li>
+    <li>Alvo do contra-feitiço na pilha: <code>Cancelar</code> e um <code>OK</code> que nunca liga.</li>
+  </ul>
+  <div class="tabs" data-tabs="btn"><span>Caso</span></div>
+  <div class="pair" id="btnPair"></div>
+
+  <h2><span class="n">9</span>Busca em dois passos numa tela só</h2>
+  <ul class="problems">
+    <li>Cultivate: primeiro <code>Escolha até 2 cartas de seu grimório</code>, com os terrenos básicos do grimório e sem dizer o destino de cada uma; depois uma segunda janela, <code>Escolha a carta que vai para o campo de batalha</code>.</li>
+    <li>Só na segunda janela o jogador descobre que uma vai para o campo e a outra para a mão; para trocar de ideia, não dá para voltar.</li>
+  </ul>
+  <div class="pair" id="cultPair"></div>
+
+  <h2><span class="n">10</span>Ponder e o texto da pilha</h2>
+  <ul class="problems">
+    <li>Ponder: depois de ordenar as três cartas do topo, a caixa pergunta <code>Quer embaralhar o grimório?</code> com Sim e Não, sem mostrar as cartas que você acabou de pôr lá.</li>
+    <li>Pilha: <code>Pilhagem Infiel (121) - Jogador 1 draws two cards. Jogador 1 discards two cards.</code>, com o número da carta e o efeito em inglês.</li>
+  </ul>
+  <div class="tabs" data-tabs="misc"><span>Caso</span></div>
+  <div class="pair" id="miscPair"></div>
+</main>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const ms = s => `<span class="ms ${/^\d+$/.test(s) ? '' : s}">${s}</span>`;
+const mana = text => text.replace(/\{(\w+)\}/g, (_, s) => ms(s));
+const stage = (inner, board = false) => `<div class="stage-wrap"><div class="stage${board ? ' board' : ''}">${inner}<span class="result"></span><span class="size"></span></div></div>`;
+const panel = (rec, title, body, notes = '') => `<section class="panel${rec ? ' rec' : ''}"><header><span class="tag">${rec ? 'Proposta' : 'Hoje'}</span><small>${title}</small></header>${body}${notes ? `<div class="notes">${notes}</div>` : ''}</section>`;
+const head = (t, sub = '') => `<span class="minimize">Ver a mesa</span><h4>${t}</h4>${sub ? `<p class="sub">${sub}</p>` : ''}`;
+function flash(el, text) {
+  const r = el.closest('.stage').querySelector('.result');
+  r.textContent = text; r.classList.add('show');
+  clearTimeout(r._t); r._t = setTimeout(() => r.classList.remove('show'), 2200);
+}
+function tabs(name, items, current, onPick) {
+  const box = document.querySelector(`[data-tabs="${name}"]`);
+  box.innerHTML = box.querySelector('span').outerHTML + Object.entries(items).map(([k, v]) => `<button class="seg" data-k="${k}" aria-pressed="${k === current}">${esc(v)}</button>`).join('');
+  box.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; box.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x === b)); onPick(b.dataset.k); };
+}
+
+/* 6. Dano dividido e Bola de Fogo. */
+const TARGETS = [{ name: 'Ursos Cinzentos', kind: 'card', lethal: 2, note: '2/2' }, { name: 'Elfos de Llanowar', kind: 'card', lethal: 1, note: '1/1' }, { name: 'Jogador 2', kind: 'player', note: '20 de vida' }];
+let dmgKey = 'forked', split = [1, 1], fireTargets = [0, 2];
+function renderDmg() {
+  if (dmgKey === 'forked') {
+    const tg = TARGETS.slice(0, 2), total = 2, left = total - split.reduce((a, b) => a + b, 0);
+    const today = `<div class="q">${head('Distribua o total entre as opções')}<div class="amounts">${tg.map(t => `<label><span>${t.name}<small>De 0 a 2</small></span><input type="number" value="0"></label>`).join('')}</div><p class="hint">Restante: 2.</p><div class="q-actions"><button class="btn primary" disabled>Confirmar distribuição</button></div></div>`;
+    const rows = tg.map((t, i) => `<div class="split-row"><span class="mini-card ${t.kind === 'player' ? 'player' : ''}"></span><span><b>${t.name}</b><small class="${split[i] >= (t.lethal ?? 99) ? 'kill' : ''}">${t.note}${t.lethal ? (split[i] >= t.lethal ? ' · morre' : ` · morre com ${t.lethal}`) : ''}</small></span><span class="stepper"><button data-sub="${i}" ${split[i] <= 0 ? 'disabled' : ''}>−</button><output>${split[i]}</output><button data-add="${i}" ${left <= 0 ? 'disabled' : ''}>+</button></span></div>`).join('');
+    const prop = `<div class="q">${head('Raio Bifurcado: divida 2 de dano', `${ms('R')} entre os dois alvos`)}<div class="split">${rows}</div><p class="left ${left ? '' : 'ok'}">${left ? `Falta dividir <b>${left}</b>` : '<b>Todo o dano dividido</b>'}</p><div class="q-actions"><button class="btn secondary" data-even>Dividir igual</button><button class="btn primary" data-ok ${left ? 'disabled' : ''}>Confirmar</button></div></div>`;
+    $('#dmgPair').innerHTML = panel(false, 'a janela genérica de distribuir', stage(today), 'Campos numéricos com "De 0 a 2" e "Restante"; não diz quanto mata cada criatura.') +
+      panel(true, 'a divisão com − e +, como no dano de combate', stage(prop), 'A mesma tela do dano de combate (combatDamage.ts): o alvo, quanto mata e o que falta dividir. Começa dividido igual. Dá para fazer só na mesa, reconhecendo a pergunta de distribuir que vem de um alvo dividido; o servidor só precisa mandar, em cada alvo, a resistência que falta (hoje vem só o nome).');
+  } else {
+    const n = fireTargets.length, x = 4, each = n ? Math.floor(x / n) : 0, extra = Math.max(0, n - 1), cost = x + 1 + extra;
+    const today = `<div class="board-hint">${TARGETS.map((t, i) => `<div class="mini ${fireTargets.includes(i) ? 'on' : 'sel'}"></div>`).join('')}</div><div class="abox"><div class="src"><i></i>Bola de Fogo</div><div class="msg">Escolha até 5 alvos para Bola de Fogo.</div><div class="prog">Pode marcar mais ${5 - n} alvos</div><div class="q-actions"><button class="btn secondary">Desistir da mágica</button><button class="btn primary">OK</button></div></div>`;
+    const prop = `<div class="board-hint">${TARGETS.map((t, i) => `<div class="mini ${fireTargets.includes(i) ? 'on' : 'sel'}" data-t="${i}" title="${t.name}"></div>`).join('')}</div><div class="abox"><div class="src"><i></i>Bola de Fogo · X = ${x}</div><div class="msg">${n ? `${n} ${n === 1 ? 'alvo' : 'alvos'}: ${each} de dano em cada.` : 'Toque nos alvos.'}</div><div class="tline">${fireTargets.map(i => `<span class="tchip">${TARGETS[i].name}: ${each}</span>`).join('')}<span class="tchip gold">Custo ${mana(`{${x}}{R}`)}${extra ? ` + ${mana(`{${extra}}`)} = ${mana(`{${cost - 1}}{R}`)}` : ''}</span></div><div class="prog">${cost > 6 ? `Falta ${cost - 6} de mana: você tem 6.` : 'Você tem 6 de mana.'}${x % (n || 1) ? ' O resto da divisão se perde.' : ''}</div><div class="q-actions"><button class="btn secondary">Desistir da mágica</button><button class="btn primary" data-fire ${n ? '' : 'disabled'}>Confirmar ${n} ${n === 1 ? 'alvo' : 'alvos'}</button></div></div>`;
+    $('#dmgPair').innerHTML = panel(false, 'a frase dos alvos, sem dano nem custo', stage(today, true), 'Diz quantos alvos cabem, mas não quanto cada um leva nem quanto a mágica vai custar.') +
+      panel(true, 'o dano de cada alvo e o custo a cada toque', stage(prop, true), 'Toque nas cartas de cima para marcar ou desmarcar alvos. O dano e o custo saem do X já escolhido e do texto da carta; dá para fazer só na mesa para a Bola de Fogo, e com uma marca do servidor para outras cartas de "divididos igualmente".');
+  }
+  const p = $('#dmgPair .panel.rec');
+  p.onclick = e => {
+    const add = e.target.closest('[data-add]'), sub = e.target.closest('[data-sub]'), t = e.target.closest('[data-t]');
+    if (add) { split[+add.dataset.add]++; renderDmg(); }
+    if (sub) { split[+sub.dataset.sub]--; renderDmg(); }
+    if (e.target.closest('[data-even]')) { split = [1, 1]; renderDmg(); }
+    if (e.target.closest('[data-ok]')) flash(e.target, `Responde: ${split.join(' e ')}`);
+    if (t) { const i = +t.dataset.t, at = fireTargets.indexOf(i); if (at >= 0) fireTargets.splice(at, 1); else fireTargets.push(i); renderDmg(); }
+    if (e.target.closest('[data-fire]')) flash(e.target, 'Confirma os alvos e segue para o pagamento');
+  };
+  sizes();
+}
+tabs('dmg', { forked: 'Raio Bifurcado (dividir)', fireball: 'Bola de Fogo (X = 4)' }, dmgKey, k => { dmgKey = k; renderDmg(); });
+
+/* 7. Aviso do Fato ou Ficção. */
+function renderNotice() {
+  const today = `<div class="toast raw">valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1:
+Plains
+Island
+</div>`;
+  const prop = `<div class="toast"><b>Fato ou Ficção:</b> Jogador 1 ficou com o monte de 2.<div class="piles"><div class="pile mine">Para a mão<small>Planície, Ilha</small><div class="minis"><i></i><i></i></div></div><div class="pile">Para o cemitério<small>Pântano, Montanha, Floresta</small><div class="minis"><i></i><i></i><i></i></div></div></div></div>`;
+  $('#noticePair').innerHTML = panel(false, 'o aviso cru do Forge', stage(prop.replace(/.*/s, today), true)) +
+    panel(true, 'os dois montes e para onde foi cada um', stage(prop, true), 'Os nomes em português, o monte escolhido destacado e o outro também, que hoje some sem aviso. O servidor já sabe os dois montes (a tela dos montes usa); falta mandar o resultado junto do aviso, ou a mesa guardar os montes da pergunta.');
+  sizes();
+}
+
+/* 8. Botões. */
+const BTN = { search: 'Busca opcional (Wood Elves)', reveal: 'Cartas reveladas (Fato ou Ficção)', leak: 'Alvo na pilha (Vazamento de Mana)' };
+let btnKey = 'search';
+const land = (c, n, cls = '') => `<div class="land ${c} ${cls}">${n}</div>`;
+function renderBtn() {
+  let today, prop, note;
+  if (btnKey === 'search') {
+    today = `<div class="q">${head('Escolha a carta de seu grimório')}<div class="found">${land('G', 'Floresta')}</div><div class="q-actions"><button class="btn secondary">Nenhum</button></div></div>`;
+    prop = `<div class="q">${head('Elfos da Floresta: procurar uma Floresta?', 'Ela entra no campo desvirada; depois o grimório é embaralhado.')}<div class="found"><span data-pick>${land('G', 'Floresta')}</span></div><div class="q-actions"><button class="btn secondary" data-no>Não procurar</button></div></div>`;
+    note = 'O título e a frase vêm do texto da carta; "Nenhum" vira "Não procurar". Só na mesa, reconhecendo a busca opcional (mínimo 0, cartas do grimório).';
+  } else if (btnKey === 'reveal') {
+    today = `<div class="q">${head('Fato ou Ficção - Revelando cartas de seu grimório')}<div class="found">${land('W', 'Planície')}${land('U', 'Ilha')}${land('B', 'Pântano')}${land('R', 'Montanha')}${land('G', 'Floresta')}</div><div class="q-actions"><button class="btn primary">OK</button></div></div>`;
+    prop = `<div class="q">${head('Fato ou Ficção: as 5 cartas do topo do seu grimório', 'Um oponente vai dividi-las em dois montes.')}<div class="found">${land('W', 'Planície')}${land('U', 'Ilha')}${land('B', 'Pântano')}${land('R', 'Montanha')}${land('G', 'Floresta')}</div><div class="q-actions"><button class="btn primary" data-go>Continuar</button></div></div>`;
+    note = '"OK" vira "Continuar" e o título diz de onde vêm as cartas, sem o traço do Forge. Só na mesa.';
+  } else {
+    today = `<div class="board-hint"><div class="mini sel" style="width:80px"></div></div><div class="abox"><div class="src"><i></i>Vazamento de Mana</div><div class="msg">Escolha na pilha a mágica alvo de Vazamento de Mana.</div><div class="q-actions"><button class="btn secondary">Cancelar</button><button class="btn primary" disabled>OK</button></div></div>`;
+    prop = `<div class="board-hint"><div class="mini sel" style="width:80px" data-stack></div></div><div class="abox"><div class="src"><i></i>Vazamento de Mana</div><div class="msg">Escolha na pilha a mágica alvo de Vazamento de Mana.</div><div class="prog">Toque na mágica destacada.</div><div class="q-actions"><button class="btn secondary" data-no>Desistir da mágica</button></div></div>`;
+    note = '"Cancelar" vira "Desistir da mágica" (como no pagamento) e o OK, que só liga depois do alvo e logo some, sai. Só na mesa.';
+  }
+  $('#btnPair').innerHTML = panel(false, 'botões sem objeto', stage(today, btnKey === 'leak')) + panel(true, 'o botão diz o que faz', stage(prop, btnKey === 'leak'), note);
+  $('#btnPair .panel.rec').onclick = e => {
+    if (e.target.closest('[data-pick]')) flash(e.target, 'Responde: a Floresta');
+    if (e.target.closest('[data-no]')) flash(e.target, btnKey === 'search' ? 'Responde: nenhuma carta' : 'Desiste da mágica');
+    if (e.target.closest('[data-go]')) flash(e.target, 'Fecha e segue');
+    if (e.target.closest('[data-stack]')) flash(e.target, 'Alvo: Ursos Cinzentos na pilha');
+  };
+  sizes();
+}
+tabs('btn', BTN, btnKey, k => { btnKey = k; renderBtn(); });
+
+/* 9. Cultivate. */
+const LIB = [['G', 'Floresta'], ['G', 'Floresta'], ['U', 'Ilha'], ['W', 'Planície'], ['R', 'Montanha'], ['B', 'Pântano']];
+let todayStep = 1, todayPicked = [], slots = [null, null];
+function renderCult() {
+  const today = todayStep === 1
+    ? `<div class="q">${head('Escolha até 2 cartas de seu grimório', 'Escolha de 0 a 2.')}<div class="found">${LIB.map(([c, n], i) => `<span data-tp="${i}">${land(c, n, todayPicked.includes(i) ? 'picked' : '')}</span>`).join('')}</div><div class="q-actions"><button class="btn secondary">Nenhum</button><span class="count ${todayPicked.length ? 'ok' : ''}">${todayPicked.length}<small>/ 2</small></span><button class="btn primary" data-tnext>Confirmar</button></div></div>`
+    : `<div class="q">${head('Escolha a carta que vai para o campo de batalha')}<div class="found">${todayPicked.map(i => `<span data-tend>${land(LIB[i][0], LIB[i][1])}</span>`).join('')}</div><p class="hint">A outra vai para a sua mão.</p><div class="q-actions"><button class="btn secondary" data-trestart>Ver de novo</button></div></div>`;
+  const used = slots.filter(s => s !== null);
+  const slot = (k, label) => `<div class="slot ${slots[k] !== null ? 'filled' : ''}" data-slot="${k}"><b>${label}</b>${slots[k] !== null ? land(LIB[slots[k]][0], LIB[slots[k]][1]) : ''}</div>`;
+  const prop = `<div class="q wide">${head('Cultivar: procure até dois terrenos básicos', 'Toque num terreno para pôr no primeiro espaço livre; toque no espaço para tirar.')}<div class="found">${LIB.map(([c, n], i) => `<span data-p="${i}">${land(c, n, used.includes(i) ? 'dim' : '')}</span>`).join('')}</div><div class="slots">${slot(0, 'Campo (virado)')}${slot(1, 'Mão')}</div><div class="q-actions"><button class="btn secondary" data-none>Não procurar</button><button class="btn primary" data-ok>${used.length ? 'Confirmar' : 'Confirmar sem nenhum'}</button></div></div>`;
+  $('#cultPair').innerHTML = panel(false, todayStep === 1 ? 'passo 1 de 2' : 'passo 2 de 2', stage(today), 'Clique em duas cartas e em Confirmar: só aí aparece a pergunta do destino.') +
+    panel(true, 'as cartas e o destino de cada uma juntos', stage(prop), 'Os dois espaços deixam claro, desde o começo, que uma vai para o campo virada e a outra para a mão; dá para trocar antes de confirmar. Precisa do servidor: o Forge pergunta as duas coisas em sequência, e a tela só junta as respostas se o servidor reconhecer a busca de duas etapas.');
+  const [t, p] = document.querySelectorAll('#cultPair .panel');
+  t.onclick = e => {
+    const tp = e.target.closest('[data-tp]');
+    if (tp) { const i = +tp.dataset.tp, at = todayPicked.indexOf(i); if (at >= 0) todayPicked.splice(at, 1); else if (todayPicked.length < 2) todayPicked.push(i); renderCult(); }
+    if (e.target.closest('[data-tnext]') && todayPicked.length) { todayStep = 2; renderCult(); }
+    if (e.target.closest('[data-tend]')) flash(e.target, 'Responde o campo; a outra vai para a mão');
+    if (e.target.closest('[data-trestart]')) { todayStep = 1; todayPicked = []; renderCult(); }
+  };
+  p.onclick = e => {
+    const pick = e.target.closest('[data-p]'), s = e.target.closest('[data-slot]');
+    if (pick) { const i = +pick.dataset.p; if (!used.includes(i)) { const free = slots.indexOf(null); if (free >= 0) slots[free] = i; renderCult(); } return; }
+    if (s) { slots[+s.dataset.slot] = null; renderCult(); return; }
+    if (e.target.closest('[data-none]')) flash(e.target, 'Responde: nenhuma carta');
+    if (e.target.closest('[data-ok]')) flash(e.target, used.length ? `Campo: ${slots[0] !== null ? LIB[slots[0]][1] : '—'}; mão: ${slots[1] !== null ? LIB[slots[1]][1] : '—'}` : 'Responde: nenhuma carta');
+  };
+  sizes();
+}
+
+/* 10. Ponder e pilha. */
+let miscKey = 'ponder';
+function renderMisc() {
+  let today, prop, note;
+  if (miscKey === 'ponder') {
+    today = `<div class="abox"><div class="src"><i></i>Ponderar</div><div class="msg">Quer embaralhar o grimório?</div><div class="q-actions"><button class="btn secondary">Não</button><button class="btn primary">Sim</button></div></div>`;
+    prop = `<div class="q">${head('Ponderar: embaralhar o grimório?', 'O topo do seu grimório, na ordem que você deixou:')}<div class="order-strip">${[['U', 'Ilha'], ['G', 'Floresta'], ['R', 'Montanha']].map(([c, n], i) => `<span class="o">${land(c, n)}${i === 0 ? '1ª, no topo' : `${i + 1}ª`}</span>`).join('')}</div><div class="q-actions"><button class="btn secondary" data-keep>Manter esta ordem</button><button class="btn primary" data-shuffle>Embaralhar</button></div></div>`;
+    note = 'As três cartas na ordem escolhida e os botões dizendo o que fazem. A mesa já tem as cartas da pergunta anterior (a ordem do grimório); só precisa guardá-las até o "embaralhar?".';
+  } else {
+    today = `<div class="stackbox"><div class="title">Pilha</div><div class="item"><i></i><span class="raw">Pilhagem Infiel (121) - Jogador 1 draws two cards. Jogador 1 discards two cards.</span></div></div>`;
+    prop = `<div class="stackbox"><div class="title">Pilha</div><div class="item"><i></i><span><b>Pilhagem Infiel</b> · Jogador 1<br><span class="muted">Compre dois cards e depois descarte dois cards.</span></span></div></div>`;
+    note = 'O nome da carta, quem conjurou e o texto impresso em português (o que a mesa já usa no inspetor da carta), no lugar do texto do Forge. Com alvos, eles continuam aparecendo como hoje. Só na mesa.';
+  }
+  $('#miscPair').innerHTML = panel(false, miscKey === 'ponder' ? 'Sim ou Não, sem as cartas' : 'o texto do Forge', stage(today, true)) + panel(true, miscKey === 'ponder' ? 'as cartas que você ordenou' : 'o texto da carta em português', stage(prop, miscKey !== 'ponder'), note);
+  $('#miscPair .panel.rec').onclick = e => {
+    if (e.target.closest('[data-keep]')) flash(e.target, 'Responde: não embaralhar');
+    if (e.target.closest('[data-shuffle]')) flash(e.target, 'Responde: embaralhar');
+  };
+  sizes();
+}
+tabs('misc', { ponder: 'Ponder', stack: 'Texto da pilha' }, miscKey, k => { miscKey = k; renderMisc(); });
+
+function sizes() { document.querySelectorAll('.stage .size').forEach(s => { s.textContent = document.body.classList.contains('phone') ? '740 × 340' : ''; }); }
+document.querySelector('.controls').onclick = e => {
+  const b = e.target.closest('[data-screen]'); if (!b) return;
+  document.querySelectorAll('[data-screen]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  document.body.classList.toggle('phone', b.dataset.screen === 'phone');
+  sizes();
+};
+renderDmg(); renderNotice(); renderBtn(); renderCult(); renderMisc();
+</script>
+</body>
+</html>

@@ -18,7 +18,9 @@ export interface ShortInstructionInput {
   reserve?: string;
   card?: { name?: string };
   /** valid/zones: o que serve como alvo, quando o pedido do Forge não dá para traduzir. */
-  targeting?: { card?: { name?: string }; valid?: string[]; zones?: string[] };
+  targeting?: { card?: { name?: string }; valid?: string[]; zones?: string[]; min?: number; max?: number };
+  /** Itens da pilha que a escolha aceita (o alvo de um contra-feitiço). */
+  selectableStacks?: number[];
   /** Voto numa permanente: a carta que vota. */
   vote?: { card: { name?: string } };
 }
@@ -87,7 +89,7 @@ const CHOOSER = /^(?:Seletor|Chooser)\s*:?$/i;
 const COUNTS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
 
 /** Traduz o tipo do alvo ("creature or player"); null se sobrar alguma palavra desconhecida. */
-function targetKind(text: string) {
+export function targetKind(text: string) {
   let out = text.toLowerCase().trim();
   for (const [re, pt] of PHRASES) out = out.replace(re, `§${pt}§`);
   const parts = out.split('§').flatMap((part, i) => i % 2 ? [part] : part.split(/\s+/).filter(Boolean).map(word => WORDS[word] ?? null));
@@ -112,16 +114,42 @@ function sourceName(input: ShortInstructionInput, translate: (name: string) => s
   return engine ? translate(engine) : input.message.match(/^(.+?) \(\d+\)(?: -|\n|$)/)?.[1]?.trim();
 }
 
+/** Manutenção que sacrifica a permanente se não for paga: a cumulativa (o Forge pede em inglês) e o eco. */
+const UPKEEP = { cumulative: 'Manutenção cumulativa', echo: 'Eco' } as const;
+function upkeepKind(message: string): keyof typeof UPKEEP | null {
+  const first = message.trim();
+  return /^Cumulative upkeep for\b/i.test(first) ? 'cumulative' : /^(?:Pagar Eco|Pay Echo)\b/i.test(first) ? 'echo' : null;
+}
+
+/** Alvo que só está na pilha (o contra-feitiço, "Select target spell"), sem os dados do alvo: o que tocar para escolher. */
+const STACK_TARGETS: [RegExp, string][] = [
+  [/^Select target spell or ability\b/i, 'o alvo'],
+  [/^Select target (?:\w+ )?spell\b/i, 'a mágica alvo'],
+  [/^Select target (?:activated or triggered )?ability\b/i, 'a habilidade alvo'],
+];
+function stackTargetRequest(message: string, name: string | undefined): string | null {
+  const line = message.split('\n').map(l => l.trim()).filter(Boolean).pop() ?? '';
+  const what = STACK_TARGETS.find(([re]) => re.test(line))?.[1];
+  return what ? `Escolha na pilha ${what}${name ? ` de ${name}` : ''}.` : null;
+}
+
 /** translate: nome da carta no idioma da mesa (o motor manda o nome em inglês). */
 export function shortInstruction(input: ShortInstructionInput, translate: (name: string) => string = name => name): string | null {
   const name = sourceName(input, translate);
   if (input.vote) return voteRequest(input.vote.card.name ? translate(input.vote.card.name) : undefined);
   // "Um oponente escolhe" com mais de um oponente (Curator of Destinies, Fact or Fiction): o Forge só pergunta "Seletor:".
   if (CHOOSER.test(input.message.trim())) return name ? `${name}: escolha o oponente que vai decidir.` : 'Escolha o oponente que vai decidir.';
+  if (!input.targeting && input.selectableStacks?.length) {
+    const stack = stackTargetRequest(input.message, name);
+    if (stack) return stack;
+  }
   if (input.targeting) {
     const request = parseTargetRequest(input.message);
     const fallback = validTargetKind(input.targeting.valid, input.targeting.zones);
     if (!request) return name ? `Escolha o alvo de ${name}${fallback ? ` (${fallback})` : ''}.` : null;
+    // "Select any target (5 more can be targeted)" (Bola de Fogo): o número certo vem dos limites da escolha.
+    const { min, max } = input.targeting;
+    if (request.count === 1 && !request.upTo && max !== undefined && max > 1) Object.assign(request, { count: max, upTo: (min ?? 0) < max });
     const how = request.upTo ? `até ${request.count} ${request.count === 1 ? 'alvo' : 'alvos'}` : request.count === 1 ? 'um alvo' : `${request.count} alvos`;
     const kind = request.kind || fallback;
     return `Escolha ${how}${name ? ` para ${name}` : ''}${kind ? ` (${kind})` : ''}.`;
@@ -134,6 +162,13 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
     const ask = paymentSentence(input.manaCost, name, effect, pending) + reserve;
     if (pending) return `${ask} ${phyrexianHint(input.phyrexianLife!, input.phyrexianLifeBlack)}`;
     if (!effect) return ask;
+    const upkeep = upkeepKind(input.message);
+    if (upkeep) {
+      const { remaining, total } = input.manaCost, what = name ?? 'a permanente';
+      if (paid(remaining)) return `${UPKEEP[upkeep]} de ${what} paga.${reserve}`;
+      const due = total && total !== remaining ? `falta ${remaining} de ${total}` : `pague ${remaining}`;
+      return `${UPKEEP[upkeep]}: ${due} para manter ${what} no campo. Sem pagar, ela é sacrificada.${reserve}${input.canAutoPay === false ? ' A sua mana não dá para pagar.' : ''}`;
+    }
     return input.canAutoPay === false ? `${ask} A sua mana não dá para pagar.` : `${ask} Pague ou recuse.`;
   }
   // Custo pedido por um efeito (Estudo Rístico, Mana Leak): a carta costuma ser de outro jogador, e pagar é opcional.
@@ -213,9 +248,9 @@ function phyrexianHint(pending: number, black?: boolean): string {
  * quer dizer que a mana à vista não paga o custo, e o Cancelar desfaz a conjuração ou a ativação, ou só recusa o
  * pagamento quando o custo vem de um efeito ("a menos que pague {3}").
  */
-export function paymentButtonLabels(input: Pick<ShortInstructionInput, 'payingFor' | 'canAutoPay'> & { ok: { enabled: boolean } }): { ok: string; cancel: string } {
+export function paymentButtonLabels(input: Pick<ShortInstructionInput, 'payingFor' | 'canAutoPay'> & { ok: { enabled: boolean }; message?: string }): { ok: string; cancel: string } {
   return {
     ok: input.canAutoPay ?? input.ok.enabled ? 'Pagar automaticamente' : 'Mana insuficiente',
-    cancel: input.payingFor === 'spell' ? 'Desistir da mágica' : input.payingFor === 'ability' ? 'Desistir da habilidade' : input.payingFor === 'effect' ? 'Não pagar' : 'Desistir',
+    cancel: input.payingFor === 'effect' && upkeepKind(input.message ?? '') ? 'Não pagar e sacrificar' : input.payingFor === 'spell' ? 'Desistir da mágica' : input.payingFor === 'ability' ? 'Desistir da habilidade' : input.payingFor === 'effect' ? 'Não pagar' : 'Desistir',
   };
 }

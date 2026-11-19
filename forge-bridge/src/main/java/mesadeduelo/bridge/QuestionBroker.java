@@ -155,6 +155,24 @@ final class QuestionBroker {
             return ASK;
         }
         JsonArray rows = optionsJson(options, display);
+        // Custos opcionais (reforço, recompra...): a mesa mostra o custo total de cada forma e a mana disponível.
+        if (seat.controller() instanceof AskingController asking && asking.optionalCosts() != null && options.size() == asking.optionalCosts().options().size()) {
+            OptionalCosts.describe(q, asking.optionalCosts(), rows);
+            q.add("options", rows);
+            return ASK;
+        }
+        // Tipo de criatura: a mesa mostra uma busca, com os tipos do deck (e quantas cartas têm cada um) no topo.
+        if (seat.controller() instanceof AskingController asking && asking.creatureTypeCounts() != null && options.stream().allMatch(String.class::isInstance)) {
+            CreatureTypeChoice.describe(q, asking.creatureTypeCounts(), rows);
+            q.add("options", rows);
+            return ASK;
+        }
+        // Os modos de uma mágica modal, todos de uma vez: o número de cada um na carta e os que ficaram de fora.
+        if (seat.controller() instanceof AskingController asking && asking.modeContext() != null) {
+            ModeChoice.describe(q, asking.modeContext(), options, rows);
+            q.add("options", rows);
+            return ASK;
+        }
         revealedAlongside(seat, options, q);
         Dungeons.roomChoice(hosted.getGame(), options, rows, q);
         Piles.choose(q, options, hosted.getGame());

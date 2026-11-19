@@ -1,0 +1,27 @@
+/* Custos opcionais (optionalCosts.ts): cada forma de conjurar num cartão, com o custo total, o que muda e o aviso de mana que falta. */
+.forge .offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.forge .offer {
+  display: grid; gap: 4px; align-content: start; padding: 12px 14px; border-radius: 14px; text-align: left;
+  border: 1px solid var(--azul-34405e, #34405e); background: var(--azul-16203a, #16203a); color: var(--ink);
+  font: 400 13.5px/1.4 var(--body); cursor: pointer; transition: border-color .15s, transform .15s;
+}
+.forge .offer:hover, .forge .offer:focus-visible { border-color: var(--glow); transform: translateY(-2px); outline: none; }
+.forge .offer b { font: 600 15px/1.2 var(--display); }
+.forge .offer-cost { font-size: 18px; }
+.forge .offer small { color: var(--muted); font-size: 12px; }
+.forge .offer-effect { color: var(--gold-light); }
+.forge .offer-lack { color: #ffb4a3; font-size: 12.5px; }
+.forge .offer.short { border-style: dashed; }
+.forge .offer.on { border-color: var(--gold); background: #2a2210; }
+.forge .offer-mana { margin: 8px 0 0; text-align: center; color: var(--muted); font-size: 13px; }
+.forge .offer-mana strong { color: var(--ink); }
+
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .question.optional-costs { padding-block: 10px; }
+  .forge .question.optional-costs h2 { font-size: 17px; margin-bottom: 4px; }
+  .forge .offer { padding: 8px 10px; }
+  .forge .offer-cost { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .forge .offer { transition: none; }
+}

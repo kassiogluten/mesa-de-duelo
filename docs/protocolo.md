@@ -431,6 +431,21 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `defender?` | `boolean` |  |
 | `face?` | `{ name: string; manaCost: string; typeLine: string }` | Outra face ou metade usada pela opção (aventura, carta dividida). |
 | `room?` | `string` | dungeon-room: nome da sala da masmorra que a opção escolhe. |
+| `modeIndex?` | `number` | modes: o número do modo na carta (1 é o primeiro) e o que serve de alvo, na sintaxe do Forge ("Creature.YouCtrl") e as zonas fora do campo. |
+| `valid?` | `string[]` |  |
+| `zones?` | `string[]` |  |
+| `count?` | `number` | creature-type: quantas cartas do jogador têm este tipo. |
+| `optional?` | `string` | optional-costs: o tipo do custo opcional, como o Forge o chama (Kicker1, Kicker2, Buyback, Entwine...). |
+
+## FUnavailableMode
+
+modes: um modo que não dá para escolher agora, porque não tem alvo possível (target) ou porque a carta não deixa repetir (chosen).
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `modeIndex` | `number` |  |
+| `label` | `string` |  |
+| `reason` | `'target' \| 'chosen'` |  |
 
 ## FRevealView
 
@@ -455,7 +470,9 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 | `id` | `number` |  |
 | `method` | `string` |  |
 | `kind` | `'choose' \| 'confirm' \| 'order' \| 'text' \| 'reveal' \| 'amount' \| 'number'` | reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. |
-| `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). |
+| `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order' \| 'modes' \| 'creature-type' \| 'optional-costs'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. |
+| `modeCount?` | `number` | modes: quantos modos a carta tem e os que não dá para escolher agora. |
+| `unavailableModes?` | `FUnavailableMode[]` |  |
 | `revealed?` | `FCard[]` | Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). |
 | `revealedNote?` | `string` |  |
 | `firstAt?` | `'bottom'` | order: a primeira da resposta fica no fundo (reordenar o cemitério, cartas para o fundo do grimório); sem ele, fica em cima. |
@@ -482,7 +499,7 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 | `values?` | `number[]` | number: só estes números valem (a carta oferece números soltos, como 2, 4 e 6). |
 | `unit?` | `'x' \| 'times'` | number: o que o número conta, o X do custo ou quantas vezes pagar um custo. |
 | `cancel?` | `'spell' \| 'ability'` | number: dá para desistir de conjurar a mágica (spell) ou de ativar a habilidade (ability); a resposta vai sem number. |
-| `cost?` | `FNumberCost` | number: o resto do custo, o que cada unidade acrescenta ("{1}", "{1}{G}") e a mana que o jogador consegue gerar agora. |
+| `cost?` | `FNumberCost` | number: o resto do custo, o que cada unidade acrescenta ("{1}", "{1}{G}") e a mana que o jogador consegue gerar agora. optional-costs: o custo de mana da mágica sem os opcionais (base) e a mana disponível. |
 | `options?` | `(FOption \| string)[]` |  |
 | `card?` | `FCard` |  |
 | `initial?` | `string` |  |

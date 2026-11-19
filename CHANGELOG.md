@@ -8,6 +8,19 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.226.0] - 2026-11-19
+
+### Novo
+
+- **Modos de uma mágica modal numa tela só.** "Escolha um —" e "Escolha dois —" (Comandos, Amuletos, criaturas com modo ao entrar) abrem uma janela só, com todos os modos na ordem da carta, em português, e o alvo que cada um pede; os que não dá para escolher ficam apagados com o motivo ("Sem alvo possível agora"). No "escolha dois", você marca os dois (eles ganham 1 e 2) e confirma, em vez de passar por uma janela por modo sem saber qual já foi.
+- **Cor, proteção e tipo de terreno básico com os símbolos de mana.** Escolher uma cor (Painter's Servant, Prismatic Strands), a proteção contra uma cor ou artefatos (Apostle's Blessing) ou um tipo de terreno básico (Convincing Mirage) mostra os símbolos grandes com o nome em português, e um toque responde, no lugar da lista "WHITE, BLUE, BLACK…" em inglês. O aviso depois também sai em português ("Jogador 1 escolheu vermelho.").
+- **Tipo de criatura com busca.** Cavern of Souls e as outras cartas que pedem um tipo de criatura abrem uma busca, em português ou em inglês ("zumbi" ou "zombie"), com os tipos do seu deck no topo e quantas cartas têm cada um, no lugar de 382 botões em inglês. Enter escolhe o primeiro da lista, e o aviso depois diz o tipo em português.
+- **Reforço e outros custos opcionais com o custo total.** Ao conjurar uma mágica com reforço (kicker), recompra ou entrelaçar, a janela mostra as duas formas lado a lado, "Sem reforço" e "Com reforço", cada uma com o custo total, o que a carta faz e, quando a mana do campo não dá, quanto falta; um toque escolhe. Com mais de um custo opcional, você marca os que quer e o botão diz quanto vai pagar.
+
+### Mudou
+
+- **Pedidos da caixa de ação em português.** Pedidos que chegavam em inglês ou pela metade viram uma frase curta, com o texto original em "Ver detalhes": sacrificar ("Sacrifique 1 criatura.", com o botão "Sacrificar"), sacrificar ou virar para pagar um custo, tirar um marcador para pagar um custo, descartar, o alvo de um contra-feitiço na pilha ("Escolha na pilha a mágica alvo de Vazamento de Mana.") e a manutenção cumulativa e o eco, que agora dizem quanto pagar e que, sem pagar, a carta é sacrificada (o botão vira "Não pagar e sacrificar"). A Bola de Fogo diz quantos alvos dá para escolher ("Escolha até 5 alvos"), e a segunda janela do Cultivate pergunta em português qual carta vai para o campo de batalha.
+
 ## [0.225.0] - 2026-11-19
 
 ### Novo

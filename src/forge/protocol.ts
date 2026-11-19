@@ -383,7 +383,18 @@ export interface FOption {
   face?: { name: string; manaCost: string; typeLine: string };
   /** dungeon-room: nome da sala da masmorra que a opção escolhe. */
   room?: string;
+  /** modes: o número do modo na carta (1 é o primeiro) e o que serve de alvo, na sintaxe do Forge ("Creature.YouCtrl") e as zonas fora do campo. */
+  modeIndex?: number;
+  valid?: string[];
+  zones?: string[];
+  /** creature-type: quantas cartas do jogador têm este tipo. */
+  count?: number;
+  /** optional-costs: o tipo do custo opcional, como o Forge o chama (Kicker1, Kicker2, Buyback, Entwine...). */
+  optional?: string;
 }
+
+/** modes: um modo que não dá para escolher agora, porque não tem alvo possível (target) ou porque a carta não deixa repetir (chosen). */
+export interface FUnavailableMode { modeIndex: number; label: string; reason: 'target' | 'chosen' }
 
 /**
  * Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (Grisly Salvage): quem escolhe, as cartas
@@ -410,8 +421,11 @@ export interface FQuestion {
   method: string;
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount' | 'number';
-  /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order';
+  /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. */
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order' | 'modes' | 'creature-type' | 'optional-costs';
+  /** modes: quantos modos a carta tem e os que não dá para escolher agora. */
+  modeCount?: number;
+  unavailableModes?: FUnavailableMode[];
   /** Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). */
   revealed?: FCard[];
   revealedNote?: string;
@@ -453,7 +467,7 @@ export interface FQuestion {
   unit?: 'x' | 'times';
   /** number: dá para desistir de conjurar a mágica (spell) ou de ativar a habilidade (ability); a resposta vai sem number. */
   cancel?: 'spell' | 'ability';
-  /** number: o resto do custo, o que cada unidade acrescenta ("{1}", "{1}{G}") e a mana que o jogador consegue gerar agora. */
+  /** number: o resto do custo, o que cada unidade acrescenta ("{1}", "{1}{G}") e a mana que o jogador consegue gerar agora. optional-costs: o custo de mana da mágica sem os opcionais (base) e a mana disponível. */
   cost?: FNumberCost;
   options?: (FOption | string)[];
   card?: FCard;

@@ -1,4 +1,24 @@
 {
+  "0.226.0": {
+    "Modos de uma mágica modal numa tela só": [
+      { "img": "0.226.0/modos.webp", "legenda": "Comando de Kolaghan com um modo marcado: os quatro modos na ordem da carta, o alvo de cada um, o de destruir artefato apagado por não ter alvo e o selo 1/2." }
+    ],
+    "Cor, proteção e tipo de terreno básico com os símbolos de mana": [
+      { "img": "0.226.0/cores.webp", "legenda": "Bênção do Apóstolo: os cinco símbolos de mana e o de artefatos, com o nome em português, para escolher a proteção." },
+      { "img": "0.226.0/terreno-basico.webp", "legenda": "Miragem Convincente: os cinco tipos de terreno básico com o símbolo da cor de cada um." }
+    ],
+    "Tipo de criatura com busca": [
+      { "img": "0.226.0/tipo-de-criatura.webp", "legenda": "Caverna das Almas: a busca, os tipos do deck no topo com quantas cartas têm (Elfo 14, Druida 6) e todos os tipos em português, com o nome em inglês ao lado." }
+    ],
+    "Reforço e outros custos opcionais com o custo total": [
+      { "img": "0.226.0/reforco.webp", "legenda": "Explodir em Raios: sem reforço por {R} com 2 de dano, ou com reforço por {4}{R} com a frase do reforço, e a mana disponível embaixo." }
+    ],
+    "Pedidos da caixa de ação em português": [
+      { "img": "0.226.0/pedido-sacrificar.webp", "legenda": "Édito Diabólico pedindo o sacrifício: \"Sacrifique 1 criatura.\" no lugar de \"Escolha 1 creature(s) a sacrifice.\"" },
+      { "img": "0.226.0/pedido-manutencao.webp", "legenda": "Manutenção cumulativa da Rêmora Mística: quanto pagar, o que acontece sem pagar e o botão \"Não pagar e sacrificar\"." },
+      { "img": "0.226.0/pedido-pilha.webp", "legenda": "Vazamento de Mana: \"Escolha na pilha a mágica alvo\" no lugar de \"Select target spell\"." }
+    ]
+  },
   "0.225.0": {
     "Mais dez decks prontos de Sacola 50": [
       { "img": "0.225.0/sacola-mais-dez-decks.webp", "legenda": "Com o Sacola 50 escolhido, os dez decks novos entre os decks prontos, cada um com a arte e as cores dele: de **Oito Racks** a **Hipergênese**, ao lado de Fúria Boros e Lâmina de Laelia, que já existiam." }

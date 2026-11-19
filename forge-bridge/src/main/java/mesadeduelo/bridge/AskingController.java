@@ -27,6 +27,7 @@ import forge.game.replacement.ReplacementEffect;
 import forge.game.spellability.AbilitySub;
 import forge.game.spellability.OptionalCostValue;
 import forge.game.spellability.SpellAbility;
+import forge.game.spellability.SpellAbilityView;
 import forge.game.trigger.WrappedAbility;
 import forge.game.zone.ZoneType;
 import forge.gamemodes.match.YieldUpdate;
@@ -285,9 +286,41 @@ final class AskingController extends PlayerControllerHuman {
         numberContext = context;
         try { return choice.get(); } finally { numberContext = previous; }
     }
-    @Override public List<OptionalCostValue> chooseOptionalCosts(SpellAbility sa, List<OptionalCostValue> costs) { return asking(sa, () -> super.chooseOptionalCosts(sa, costs)); }
+    private volatile OptionalCosts.Context optionalCosts;
+    /** Os custos opcionais perguntados agora (reforço, recompra...), com o custo da mágica e a mana disponível; {@code null} fora deles. */
+    OptionalCosts.Context optionalCosts() { return optionalCosts; }
+    @Override public List<OptionalCostValue> chooseOptionalCosts(SpellAbility sa, List<OptionalCostValue> costs) {
+        return asking(sa, () -> {
+            OptionalCosts.Context previous = optionalCosts;
+            optionalCosts = OptionalCosts.of(sa, costs, getPlayer());
+            try { return super.chooseOptionalCosts(sa, costs); } finally { optionalCosts = previous; }
+        });
+    }
+    private volatile ModeChoice.Context modeContext;
+    /** Os modos perguntados agora (ModeChoice.java); {@code null} fora de uma escolha de modos. */
+    ModeChoice.Context modeContext() { return modeContext; }
+    /** Todos os modos numa pergunta só, em vez de uma janela por modo (com o mesmo título do Forge, para mesas antigas). */
     @Override public List<AbilitySub> chooseModeForAbility(SpellAbility sa, List<AbilitySub> possible, int min, int num, boolean allowRepeat) {
-        return asking(sa, () -> super.chooseModeForAbility(sa, possible, min, num, allowRepeat));
+        return asking(sa, () -> {
+            if (!ModeChoice.supported(sa, possible, allowRepeat) || (min == num && num == possible.size()))
+                return super.chooseModeForAbility(sa, possible, min, num, allowRepeat);
+            var tracker = getGame().getTracker();
+            boolean frozen = tracker.isFrozen();
+            // Como no Forge: as vistas das habilidades só se atualizam com o rastreador solto.
+            if (frozen) tracker.unfreeze();
+            Map<SpellAbilityView, AbilitySub> views = SpellAbilityView.getMap(possible);
+            if (frozen) tracker.freeze();
+            ModeChoice.Context context = ModeChoice.of(sa, possible, views);
+            String title = forge.util.Localizer.getInstance().getMessage("lblPlayerActivatedCardChooseMode", sa.getActivatingPlayer().toString(), sa.getHostCard().getTranslatedName());
+            ModeChoice.Context previous = modeContext;
+            modeContext = context;
+            List<SpellAbilityView> chosen;
+            try { chosen = getGui().getChoices(title, min, Math.min(num, context.options().size()), context.options(), null, null); }
+            finally { modeContext = previous; }
+            List<AbilitySub> out = new java.util.ArrayList<>();
+            if (chosen != null) for (SpellAbilityView v : chosen) { AbilitySub sub = views.get(v); if (sub != null) out.add(sub); }
+            return out;
+        });
     }
     @Override public boolean confirmAction(SpellAbility sa, PlayerActionConfirmMode mode, String message, List<String> options, Card cardToShow, Map<String, Object> params) {
         return asking(sa, () -> super.confirmAction(sa, mode, message, options, cardToShow, params));
@@ -413,7 +446,17 @@ final class AskingController extends PlayerControllerHuman {
     }
     @Override public int chooseNumber(SpellAbility sa, String title, int min, int max) { return asking(sa, () -> super.chooseNumber(sa, title, min, max)); }
     @Override public int chooseNumber(SpellAbility sa, String title, List<Integer> choices, Player related) { return asking(sa, () -> super.chooseNumber(sa, title, choices, related)); }
-    @Override public String chooseSomeType(String kind, SpellAbility sa, Collection<String> valid, boolean isOptional) { return asking(sa, () -> super.chooseSomeType(kind, sa, valid, isOptional)); }
+    private volatile Map<String, Integer> creatureTypeCounts;
+    /** Na escolha de um tipo de criatura, quantas cartas do jogador têm cada tipo; {@code null} fora dela. */
+    Map<String, Integer> creatureTypeCounts() { return creatureTypeCounts; }
+    @Override public String chooseSomeType(String kind, SpellAbility sa, Collection<String> valid, boolean isOptional) {
+        return asking(sa, () -> {
+            if (!"Creature".equals(kind)) return super.chooseSomeType(kind, sa, valid, isOptional);
+            Map<String, Integer> previous = creatureTypeCounts;
+            creatureTypeCounts = CreatureTypeChoice.counts(getPlayer());
+            try { return super.chooseSomeType(kind, sa, valid, isOptional); } finally { creatureTypeCounts = previous; }
+        });
+    }
     @Override public ColorSet chooseColors(String message, SpellAbility sa, int min, int max, ColorSet options) { return asking(sa, () -> super.chooseColors(message, sa, min, max, options)); }
     @Override public byte chooseColor(String message, SpellAbility sa, ColorSet colors) { return asking(sa, () -> super.chooseColor(message, sa, colors)); }
     @Override public CounterType chooseCounterType(List<CounterType> options, SpellAbility sa, String prompt, Map<String, Object> params) {

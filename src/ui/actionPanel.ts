@@ -1,5 +1,6 @@
 // A caixa de ação: os botões de cada momento (passar, fim de turno, resolver tudo, pagar, confirmar ataque ou bloqueio,
 // mulligan, quem começa), o selo do nível de passar, o painel do alvo sendo escolhido e os nomes da lista de proliferar.
+import { selectionRequest } from './forgeRequest';
 import { lossReasonText } from './lossReason';
 import type { FCard, FState } from '../forge/client';
 import { esc, optionHTML, richText, withoutCardIds } from './cardtext';
@@ -88,7 +89,7 @@ export function buttons(v: ActionView, s: FState) {
   const payment = s.input.paying ? paymentButtonLabels(s.input) : null;
   const ok = payment && s.input.ok.label ? { ...s.input.ok, label: payment.ok } : move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && !v.attackAll && !v.attackSelecting && !v.attackBusy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
     : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount - (s.input.openingReturnCount ?? 0)}` }
-    : s.input.opening === 'mulligan-bottom' && s.input.openingReturnCount ? { ...s.input.ok, label: s.input.openingReturnCount === 1 ? 'Devolver 1 carta' : `Devolver ${s.input.openingReturnCount} cartas` } : isProliferating(s) ? { ...s.input.ok, label: proliferateOkLabel(s) } : decision ? { ...s.input.ok, label: 'Confirmar seleção' } : s.input.ok;
+    : s.input.opening === 'mulligan-bottom' && s.input.openingReturnCount ? { ...s.input.ok, label: s.input.openingReturnCount === 1 ? 'Devolver 1 carta' : `Devolver ${s.input.openingReturnCount} cartas` } : isProliferating(s) ? { ...s.input.ok, label: proliferateOkLabel(s) } : decision ? { ...s.input.ok, label: (!s.input.tapToPay && selectionRequest(s.input.message)?.ok) || 'Confirmar seleção' } : s.input.ok;
   // No proliferar o Cancelar do Forge troca o modo de seleção em massa ("Meu", "Todos"); a lista tem os próprios atalhos.
   const cancel = payment && s.input.cancel.label ? { ...s.input.cancel, label: payment.cancel } : isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : v.attackAll ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' }
     // O "Automático" do Forge escolhe as primeiras cartas da mão por você.

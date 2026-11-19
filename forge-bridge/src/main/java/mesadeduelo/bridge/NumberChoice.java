@@ -63,7 +63,7 @@ final class NumberChoice {
     static String withoutX(ManaCost cost) { return cost.toString().replace("{X}", ""); }
 
     /** Mana que o jogador consegue gerar agora (fontes desviradas e a reserva), pela conta que o computador usa. */
-    private static int available(Player player) {
+    static int available(Player player) {
         if (player == null) return -1;
         try { return ComputerUtilMana.getAvailableManaEstimate(player, true) + player.getManaPool().totalMana(); }
         catch (RuntimeException e) { return -1; }

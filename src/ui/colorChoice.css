@@ -1,0 +1,23 @@
+/* Cor, proteção e tipo de terreno básico (colorChoice.ts): símbolos redondos grandes com o nome embaixo, numa linha. */
+.forge .color-opts { display: flex; flex-wrap: wrap; gap: 14px 18px; justify-content: center; margin: 6px 0 4px; }
+.forge .color-opt {
+  display: grid; justify-items: center; gap: 6px; padding: 6px 4px; border: 0; border-radius: 12px; background: none;
+  color: var(--ink); font: 500 14px/1.2 var(--body); cursor: pointer;
+}
+.forge .color-dot { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; transition: transform .15s, box-shadow .15s; }
+.forge .color-dot .pip { font-size: 51px; box-shadow: 0 3px 0 rgb(0 0 0 / .55), 0 0 0 2px rgb(255 255 255 / .16); }
+.forge .color-dot.dot-A { background: #b7b4ad; color: #1d1b16; box-shadow: 0 3px 0 rgb(0 0 0 / .55), 0 0 0 2px rgb(255 255 255 / .16); }
+.forge .color-dot.dot-A svg { width: 34px; height: 34px; }
+.forge .color-opt:hover .color-dot, .forge .color-opt:focus-visible .color-dot { transform: translateY(-3px) scale(1.05); }
+.forge .color-opt:hover .color-dot .pip, .forge .color-opt:focus-visible .color-dot .pip,
+.forge .color-opt:hover .color-dot.dot-A, .forge .color-opt:focus-visible .color-dot.dot-A { box-shadow: 0 5px 0 rgb(0 0 0 / .55), 0 0 0 3px var(--glow); }
+.forge .color-opt:focus-visible { outline: none; }
+
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .color-dot, .forge .color-dot.dot-A { width: 50px; height: 50px; }
+  .forge .color-dot .pip { font-size: 40px; }
+  .forge .color-opt { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .forge .color-dot { transition: none; }
+}

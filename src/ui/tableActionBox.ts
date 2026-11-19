@@ -9,6 +9,7 @@ import type { createAttackChoice } from './attackChoice';
 import { forecastLineHTML, forecastText } from './combatForecast';
 import { DRAG_PILL, DRAG_RESET } from './icons';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
+import { selectionRequest } from './forgeRequest';
 import { isProliferating, proliferatePanelHTML } from './proliferate';
 import { zoneWithArticle } from './questionView';
 import { openingHandCount } from './openingPresentation';
@@ -130,7 +131,9 @@ export function createActionBox(d: ActionBoxDeps) {
     $('#fAction').classList.toggle('attack-choosing', !!attackPanel);
     $('#fAction').classList.toggle('proliferating', !!prolifPanel);
     // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
-    const short = decision || !instruction ? null : shortInstruction(s.input.paying ? { ...s.input, reserve: poolCost(s.players.find(p => p.id === s.you)?.pool) } : s.input, name => ptOf(name)?.name || name);
+    // Escolha de cartas com um pedido conhecido (sacrificar, descartar, tirar marcador): a frase em português, com o texto do Forge em "Ver detalhes".
+    const asked = decision && !s.input.tapToPay ? selectionRequest(prompt) : null;
+    const short = asked ? asked.text : decision || !instruction ? null : shortInstruction(s.input.paying ? { ...s.input, reserve: poolCost(s.players.find(p => p.id === s.you)?.pool) } : s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';

@@ -1,0 +1,38 @@
+/* Os modos de uma mágica modal (modeChoice.ts): um cartão por modo, em duas colunas, com o número, o texto e o alvo; os de fora apagados com o motivo. */
+.forge .question.mode-choice { width: min(720px, 96vw); }
+.forge .mode-sub { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+.forge .mode-sub .q-pick-count { margin: 0; }
+.forge .mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.forge .mode-opt {
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; text-align: left;
+  border: 1px solid var(--azul-34405e, #34405e); background: var(--azul-16203a, #16203a); color: var(--ink);
+  font: 400 14px/1.4 var(--body); cursor: pointer; transition: border-color .15s, transform .15s, background .15s;
+}
+.forge .mode-opt:hover:not(.off), .forge .mode-opt:focus-visible { border-color: var(--glow); transform: translateY(-2px); }
+.forge .mode-opt:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+.forge .mode-opt small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.forge .mode-k {
+  flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / .25); font: 700 12px/1 var(--display); color: var(--muted);
+}
+.forge .mode-opt.on { border-color: var(--gold); background: #2a2210; }
+.forge .mode-opt.on .mode-k { background: var(--gold); border-color: var(--gold); color: #1b1200; }
+.forge .mode-opt.off { opacity: .45; cursor: default; }
+.forge .mode-opt .mode-why { color: #ffb4a3; }
+.forge .question.mode-choice .q-actions { align-items: center; }
+
+/* Uma coluna quando não cabe; no celular deitado, cartões mais baixos para não rolar. */
+@media (max-width: 560px) {
+  .forge .mode-grid { grid-template-columns: 1fr; }
+}
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .question.mode-choice { padding-block: 10px; }
+  .forge .question.mode-choice h2 { font-size: 17px; margin-bottom: 2px; }
+  .forge .mode-sub { margin-bottom: 6px; font-size: 12.5px; }
+  .forge .mode-grid { gap: 6px; }
+  .forge .mode-opt { padding: 6px 9px; font-size: 12.5px; gap: 7px; }
+  .forge .question.mode-choice .q-actions { margin-top: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .forge .mode-opt { transition: none; }
+}

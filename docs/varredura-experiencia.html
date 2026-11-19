@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Varredura de 19/11/2026 (ROADMAP 142): as decisões da partida que ainda caem na janela genérica ou chegam em inglês, na ordem sugerida, com prévias de como é hoje e de como poderia ficar, no computador e no celular deitado. -->
+<title>Varredura de experiência</title>
+<style>
+/* Página escura como a mesa; os valores da janela de pergunta (cores, bordas, raio) seguem style.css e arenaModals.css. */
+:root {
+  color-scheme: dark;
+  --bg: #060912; --card: #0d1424; --line: rgba(255, 255, 255, .12); --ink: #eef1f8; --muted: #9aa5bb;
+  --gold: #f2b54c; --gold-light: #ffe2a0; --glow: #59b5ff; --red: #ec5a3f; --green: #4fc77a;
+  --opt: #16203a; --opt-line: #34405e; --opt-on: #22294a;
+  --display: "Outfit", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+main { max-width: 1240px; margin: 0 auto; padding: 40px 16px 72px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(26px, 4.2vw, 38px); }
+h2 { font-size: 23px; margin: 52px 0 8px; display: flex; gap: 12px; align-items: baseline; }
+h2 .n { display: inline-grid; place-items: center; min-width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: #1b1200; font-size: 17px; flex: none; }
+p { margin: 0 0 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.muted { color: var(--muted); }
+.prose { max-width: 76ch; }
+.lead { font-size: 17px; color: var(--muted); margin-top: 12px; }
+code, .raw { font: 12.5px/1.45 ui-monospace, "Cascadia Code", Consolas, monospace; background: #ffffff0d; border: 1px solid #ffffff14; border-radius: 6px; padding: 1px 6px; color: #ffcfb9; white-space: pre-wrap; }
+ul.problems { margin: 6px 0 0; padding-left: 20px; max-width: 80ch; }
+ul.problems li { margin-bottom: 5px; }
+ul.problems b { color: var(--gold-light); font-weight: 600; }
+
+/* Ordem sugerida. */
+.order { counter-reset: o; list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 8px; }
+.order li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.order li.top { border-color: #f2b54c66; }
+.order .num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #ffffff12; font: 700 15px var(--display); }
+.order li.top .num { background: var(--gold); color: #1b1200; }
+.order b { font-weight: 600; }
+.order .why { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.chip { padding: 2px 9px; border-radius: 999px; font: 600 11.5px/1.6 var(--body); background: #ffffff10; color: var(--muted); white-space: nowrap; }
+.chip.hi { background: #4fc77a26; color: #b9f3cc; } .chip.mid { background: #f2b54c22; color: var(--gold-light); } .chip.lo { background: #ffffff0c; color: var(--muted); }
+@media (max-width: 700px) { .order li { grid-template-columns: 32px minmax(0, 1fr); } .chips { grid-column: 2; justify-content: flex-start; } }
+
+/* Controles: tamanho da tela. */
+.controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 28px -16px 0; padding: 12px 16px; background: #060912ee; backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.controls .group, .tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.controls .group > span, .tabs > span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+.seg { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); font: 500 13px var(--body); cursor: pointer; }
+.seg[aria-pressed="true"] { border-color: var(--gold); background: #2a2210; color: var(--gold-light); }
+.tabs { margin: 14px 0 0; }
+
+/* Hoje × proposta, lado a lado (um embaixo do outro em tela estreita ou no modo celular). */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+body.phone .pair, .pair.wide { grid-template-columns: 1fr; }
+@media (max-width: 1000px) { .pair { grid-template-columns: 1fr; } }
+.panel { border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; }
+.panel.rec { border-color: #f2b54c99; box-shadow: 0 0 0 1px #f2b54c44; }
+.panel header { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.tag { display: inline-block; padding: 3px 9px; border-radius: 999px; background: #ec5a3f33; color: #ffb4a3; font: 600 11px/1.4 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.panel.rec .tag { background: var(--gold); color: #101b2f; }
+.panel header small { color: var(--muted); font-size: 12.5px; text-align: right; }
+.panel .notes { padding: 10px 14px 14px; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--line); }
+.panel .notes ul { margin: 0; padding-left: 18px; }
+
+/* O palco: um pedaço de mesa com a janela no meio. No modo celular, 740×340 (a altura real deitado no navegador). */
+.stage-wrap { padding: 14px; display: grid; place-items: center; overflow-x: auto; }
+.stage {
+  container-type: size; position: relative; width: 100%; height: 480px; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(120% 140% at 50% 0%, #284470, #13203a 55%, #0a1120); box-shadow: inset 0 0 0 1px var(--line);
+  display: grid; place-items: center;
+}
+body.phone .stage { width: 740px; min-width: 740px; height: 340px; }
+.stage::before { content: ""; position: absolute; inset: 0; background: rgb(3 6 14 / .55); }
+.stage.board::before { background: rgb(3 6 14 / .15); }
+.stage .result { position: absolute; left: 10px; bottom: 8px; z-index: 4; padding: 3px 10px; border-radius: 999px; background: #0b1a10; border: 1px solid #4fc77a88; color: #b9f3cc; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.stage .result.show { opacity: 1; }
+.stage .size { position: absolute; right: 10px; bottom: 8px; z-index: 4; color: #ffffff55; font-size: 11px; }
+
+/* A janela de pergunta da mesa (.forge .question). */
+.q {
+  position: relative; z-index: 2; width: min(580px, 94%); max-height: calc(100% - 24px); overflow: auto; padding: 16px 18px 14px;
+  border: 1px solid rgb(242 181 76 / .28); border-radius: 18px;
+  background: linear-gradient(180deg, rgb(20 32 54 / .94), rgb(9 15 29 / .96));
+  box-shadow: 0 30px 80px rgb(0 0 0 / .65), inset 0 1px 0 rgb(255 255 255 / .05);
+}
+.q.wide { width: min(680px, 96%); }
+body.phone .q { padding: 10px 14px 10px; border-radius: 14px; }
+.q h4 { margin: 0 0 4px; padding: 0 84px; font: 600 19px/1.25 var(--display); text-align: center; text-shadow: 0 2px 10px rgb(0 0 0 / .6); }
+body.phone .q h4 { font-size: 16px; }
+.q .sub { text-align: center; color: var(--muted); font-size: 13px; margin: 0 0 10px; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+body.phone .q .sub { margin-bottom: 6px; font-size: 12px; }
+.q .hint { text-align: center; color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+.q-actions { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+body.phone .q-actions { margin-top: 8px; }
+.btn { min-width: 110px; padding: 9px 16px; border-radius: 10px; font: 600 14px var(--body); cursor: pointer; border: 1px solid transparent; }
+body.phone .btn { padding: 7px 14px; font-size: 13px; }
+.btn.primary { background: linear-gradient(180deg, #f6c867, #d99a2b); color: #2b1700; border-color: #ffe2a0; box-shadow: 0 4px 14px rgb(242 181 76 / .3); }
+.btn.secondary { background: #ffffff10; color: var(--ink); border-color: #ffffff2a; }
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.minimize { position: absolute; right: 12px; top: 12px; padding: 3px 9px; border-radius: 8px; border: 1px solid #ffffff22; background: #ffffff0a; color: var(--muted); font: 500 11.5px var(--body); }
+.count { display: inline-flex; align-items: baseline; gap: 3px; padding: 3px 10px; border-radius: 999px; background: #ffffff10; font: 700 14px var(--display); }
+.count small { color: var(--muted); font-weight: 500; }
+.count.ok { background: #4fc77a2a; color: #b9f3cc; }
+
+/* Hoje: um botão por linha (a escolha genérica). */
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list button { display: flex; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--opt); border: 1px solid var(--opt-line); color: var(--ink); font: 400 14px var(--body); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; }
+body.phone .list button { padding: 6px 10px; font-size: 13px; }
+.list button:hover { border-color: var(--glow); transform: translateY(-2px); }
+.list button.on { border-color: var(--gold); background: var(--opt-on); }
+.list.scroll { max-height: 250px; overflow: auto; padding-right: 4px; }
+body.phone .list.scroll { max-height: 170px; }
+.qcard { float: left; margin: 0 12px 6px 0; }
+
+/* Carta de mentira (moldura, nome, custo, texto). */
+.card { width: 92px; aspect-ratio: 63 / 88; border-radius: 6px; padding: 5px; background: linear-gradient(160deg, #3a2a20, #1c1410); border: 2px solid #111; box-shadow: 0 6px 16px #0009; display: flex; flex-direction: column; gap: 3px; font: 600 7.5px/1.2 var(--body); color: #f4ead8; }
+.card .art { flex: 1; border-radius: 3px; background: linear-gradient(135deg, #a0442c, #e09a4c 55%, #2c1d14); }
+.card.blue .art { background: linear-gradient(135deg, #2f5f9b, #7cc0e8 55%, #1a2a40); }
+.card.white .art { background: linear-gradient(135deg, #b9ad8c, #f3ead0 55%, #5c5340); }
+.card.green .art { background: linear-gradient(135deg, #2f6b3c, #9bd3ae 55%, #1c2e20); }
+.card.grey .art { background: linear-gradient(135deg, #5d6573, #b8c0cc 55%, #2a2f38); }
+.card .line { font-weight: 500; font-size: 6.5px; color: #d9cdb8; }
+body.phone .card { width: 70px; }
+
+/* Símbolos de mana de mentira. */
+.ms { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; font: 700 .72em/1 var(--body); color: #111; background: #cbc5bd; box-shadow: 0 1px 0 #0008; vertical-align: -.2em; margin: 0 1px; }
+.ms.W { background: #f8f1d8; } .ms.U { background: #a9d4f2; } .ms.B { background: #b9aeb0; } .ms.R { background: #f3a083; } .ms.G { background: #9bd3ae; }
+
+/* 1. Caixa de ação (canto da mesa). */
+.board-hint { position: absolute; inset: 14px 14px auto 14px; z-index: 1; display: flex; gap: 8px; justify-content: center; }
+.board-hint .mini { width: 54px; aspect-ratio: 63/88; border-radius: 5px; background: linear-gradient(135deg, #3b4a66, #1d2638); border: 1px solid #0008; }
+.board-hint .mini.sel { outline: 2px solid var(--glow); box-shadow: 0 0 14px #59b5ffaa; }
+.board-hint .mini.on { outline: 2px solid var(--gold); box-shadow: 0 0 14px #f2b54caa; transform: translateY(-4px); }
+body.phone .board-hint .mini { width: 40px; }
+.abox { position: absolute; right: 14px; bottom: 30px; z-index: 3; width: min(360px, 60%); padding: 12px 14px; border-radius: 14px; border: 1px solid #ffffff22; background: linear-gradient(180deg, #17223a, #0c1426); box-shadow: 0 16px 40px #000a; }
+body.phone .abox { bottom: 22px; padding: 8px 10px; width: 330px; }
+.abox .src { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 600 13px var(--display); color: var(--gold-light); }
+.abox .src i { width: 22px; height: 22px; border-radius: 4px; background: linear-gradient(135deg, #a0442c, #e09a4c); flex: none; }
+.abox .msg { font-size: 13px; line-height: 1.4; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+body.phone .abox .msg { max-height: 72px; font-size: 12px; }
+.abox .msg.raw { font: 12px/1.4 ui-monospace, Consolas, monospace; color: #e8dccd; background: none; border: 0; padding: 0; }
+.abox .prog { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.abox .q-actions { justify-content: flex-end; margin-top: 10px; }
+.abox .btn { min-width: 0; }
+
+/* 2. Modos. */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+body.phone .modes { gap: 6px; }
+.mode { position: relative; display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); text-align: left; font: 400 13.5px/1.4 var(--body); cursor: pointer; transition: border-color .15s, transform .15s, background .15s; }
+body.phone .mode { padding: 6px 9px; font-size: 12px; gap: 7px; }
+.mode:hover:not(:disabled) { border-color: var(--glow); transform: translateY(-2px); }
+.mode .k { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ffffff33; font: 700 12px var(--display); flex: none; }
+.mode.on { border-color: var(--gold); background: #2a2210; }
+.mode.on .k { background: var(--gold); color: #1b1200; border-color: var(--gold); }
+.mode:disabled { opacity: .42; cursor: not-allowed; }
+.mode small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+.mode .why { color: #ffb4a3; }
+
+/* 3. Cores. */
+.colors { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 6px 0 2px; }
+.color { display: grid; justify-items: center; gap: 6px; padding: 6px 4px; border: 0; background: none; color: var(--ink); font: 500 13px var(--body); cursor: pointer; }
+.color .dot { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 50%; font: 800 24px var(--display); color: #111; box-shadow: 0 3px 0 #0009, 0 0 0 2px #ffffff22; transition: transform .15s, box-shadow .15s; }
+body.phone .color .dot { width: 48px; height: 48px; font-size: 19px; }
+.color:hover .dot { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 0 #0009, 0 0 0 3px var(--glow); }
+.dot.W { background: #f8f1d8; } .dot.U { background: #a9d4f2; } .dot.B { background: #b9aeb0; } .dot.R { background: #f3a083; } .dot.G { background: #9bd3ae; } .dot.A { background: #b8c0cc; font-size: 20px; }
+
+/* 4. Tipo de criatura. */
+.search { width: 100%; padding: 9px 12px; border-radius: 10px; background: #0a1222; border: 1px solid var(--opt-line); color: var(--ink); font: 15px var(--body); }
+body.phone .search { padding: 6px 10px; font-size: 13px; }
+.group-title { margin: 10px 0 6px; color: var(--muted); font: 600 11.5px var(--body); letter-spacing: .06em; text-transform: uppercase; }
+body.phone .group-title { margin: 6px 0 4px; }
+.types { display: flex; flex-wrap: wrap; gap: 6px; }
+.types.all { max-height: 150px; overflow: auto; }
+body.phone .types.all { max-height: 64px; }
+.type { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); font: 500 13px var(--body); cursor: pointer; }
+.type:hover { border-color: var(--glow); }
+.type small { color: var(--muted); font-weight: 400; margin-left: 4px; }
+.type.mine { border-color: #f2b54c66; background: #2a2210; }
+.type.mine b { color: var(--gold-light); margin-left: 5px; }
+
+/* 5. Custo opcional. */
+.offers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.offer { display: grid; gap: 4px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; font: 400 13px/1.4 var(--body); }
+body.phone .offer { padding: 8px 10px; }
+.offer:hover:not(:disabled) { border-color: var(--glow); transform: translateY(-2px); }
+.offer:disabled { opacity: .5; cursor: not-allowed; }
+.offer b { font: 600 15px var(--display); }
+.offer .cost { font-size: 18px; }
+.offer .eff { color: var(--gold-light); }
+.offer .miss { color: #ffb4a3; font-size: 12px; }
+.manabar { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; color: var(--muted); font-size: 12.5px; }
+.manabar .bar { display: flex; gap: 3px; }
+.manabar .bar i { width: 14px; height: 8px; border-radius: 2px; background: #f3a083; }
+
+/* Restante da lista. */
+table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font: 600 12px var(--body); letter-spacing: .05em; text-transform: uppercase; }
+td:first-child { color: var(--gold-light); font-weight: 600; white-space: nowrap; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.good { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Roadmap 142 · varredura de 19/11/2026</div>
+  <h1>Decisões que ainda caem na janela genérica</h1>
+  <p class="lead prose">26 mesas montadas pelo Laboratório no servidor de verdade (Forge em português), cada uma com uma carta que dispara um tipo de decisão. Os textos marcados como "hoje" são exatamente os que a mesa recebeu. Abaixo, a ordem sugerida e, para os cinco primeiros, uma prévia clicável de como é hoje e de como poderia ficar.</p>
+
+  <p class="prose" style="margin-top:14px;padding:10px 14px;border:1px solid #4fc77a66;border-radius:12px;background:#0b1a10"><b>Feito em 19/11/2026:</b> os itens 1 a 5, como nas prévias, com duas diferenças: a tela dos modos não tem "Cancelar mágica" (o Forge não deixa desistir nesse ponto), e no reforço o cartão sem mana suficiente não fica bloqueado, só avisa quanto falta (a conta da mana disponível é uma estimativa). Os itens 6 a 10 viraram os itens 143 a 145 do roadmap, e o que a varredura não cobriu, o 146.</p>
+
+  <h2 style="margin-top:36px">Ordem sugerida</h2>
+  <p class="prose muted">O critério: quantas partidas a decisão aparece, o quanto ela confunde hoje e quanto custa arrumar (só a mesa ou mesa e servidor). Os dois primeiros são os que mais pesam no dia a dia; o terceiro é barato e de efeito imediato; o quarto é o pior de todos quando aparece, mas aparece menos.</p>
+  <ol class="order">
+    <li class="top"><span class="num">1</span><div><b>Pedidos da caixa de ação em inglês ou crus</b><div class="why">Sacrificar, descartar, tirar marcador, manutenção cumulativa, alvo do contra-feitiço: acontece em quase toda partida, e a mesa já tem a frase curta para alvos e pagamento, então é estender o que existe.</div></div><div class="chips"><span class="chip hi">ganho alto</span><span class="chip hi">só a mesa</span><span class="chip mid">toda partida</span></div></li>
+    <li class="top"><span class="num">2</span><div><b>Mágica modal ("Escolha um —", "Escolha dois —")</b><div class="why">Charms, Commands e criaturas com modo ao entrar são muito comuns; hoje "escolha dois" abre duas janelas seguidas, sem dizer qual já foi, com modos em inglês.</div></div><div class="chips"><span class="chip hi">ganho alto</span><span class="chip mid">mesa e servidor</span><span class="chip mid">comum</span></div></li>
+    <li class="top"><span class="num">3</span><div><b>Cor, proteção e tipo de terreno básico</b><div class="why">"WHITE / BLUE / BLACK" em maiúsculas e em inglês. As opções são sempre as mesmas, então a tela própria é pequena e não depende do servidor.</div></div><div class="chips"><span class="chip mid">ganho médio</span><span class="chip hi">só a mesa</span><span class="chip mid">comum</span></div></li>
+    <li class="top"><span class="num">4</span><div><b>Tipo de criatura</b><div class="why">382 botões em inglês, em ordem alfabética, com o título "Escolha um tipo creature". Aparece menos (Cavern of Souls, decks tribais de Commander), mas quando aparece é a pior tela do jogo.</div></div><div class="chips"><span class="chip hi">ganho alto</span><span class="chip mid">mesa e servidor</span><span class="chip lo">às vezes</span></div></li>
+    <li class="top"><span class="num">5</span><div><b>Custos opcionais (kicker e parecidos)</b><div class="why">"Selecionar custos opcionais", um botão "Kicker – {4}" e um "Nenhum": não diz o que muda nem se a mana dá. Segue o caminho da escolha de número (custo e mana disponível).</div></div><div class="chips"><span class="chip mid">ganho médio</span><span class="chip mid">mesa e servidor</span><span class="chip mid">comum</span></div></li>
+    <li><span class="num">6</span><div><b>Bola de Fogo e dano dividido</b><div class="why">X escolhido antes dos alvos; "(5 more can be targeted)"; a divisão cai em campos numéricos.</div></div><div class="chips"><span class="chip mid">ganho médio</span><span class="chip mid">mesa, talvez servidor</span></div></li>
+    <li><span class="num">7</span><div><b>Avisos depois da escolha</b><div class="why">"escolheu white", "escolheu Advisor", "valor do efeito de Fato ou Ficção para Jogador 1 é…".</div></div><div class="chips"><span class="chip lo">ganho baixo</span><span class="chip hi">barato</span></div></li>
+    <li><span class="num">8</span><div><b>Botões que não dizem o que fazem</b><div class="why">"Nenhum" e "OK" soltos; muito disso sai junto com os itens 1, 2 e 5.</div></div><div class="chips"><span class="chip lo">ganho baixo</span><span class="chip hi">só a mesa</span></div></li>
+    <li><span class="num">9</span><div><b>Buscas em dois passos (Cultivate)</b><div class="why">Primeiro escolhe as duas sem saber o destino, depois uma segunda janela em inglês.</div></div><div class="chips"><span class="chip mid">ganho médio</span><span class="chip mid">mesa e servidor</span><span class="chip lo">às vezes</span></div></li>
+    <li><span class="num">10</span><div><b>Detalhes menores</b><div class="why">Ponder sem as cartas no "embaralhar?", números entre parênteses nos textos da pilha, "Divida ss cartas".</div></div><div class="chips"><span class="chip lo">ganho baixo</span></div></li>
+  </ol>
+
+  <div class="controls">
+    <div class="group"><span>Tela</span>
+      <button class="seg" data-screen="desk" aria-pressed="true">Computador</button>
+      <button class="seg" data-screen="phone" aria-pressed="false">Celular deitado (740×340)</button>
+    </div>
+    <span class="muted" style="font-size:13px">As prévias respondem ao clique; a faixa verde diz o que a mesa mandaria ao servidor.</span>
+  </div>
+
+  <!-- 1 -->
+  <h2><span class="n">1</span>Pedidos da caixa de ação em inglês ou crus</h2>
+  <ul class="problems">
+    <li>A mesa já troca o texto do Forge por uma frase curta nos <b>alvos</b> e no <b>pagamento</b>. Fora disso, o texto chega como o Forge escreve: em inglês, com o número da carta entre parênteses e o texto inteiro da habilidade.</li>
+    <li>Os botões continuam "OK" e "Cancelar", mesmo quando cancelar quer dizer "sacrificar a carta".</li>
+  </ul>
+  <div class="tabs" data-tabs="ask"><span>Carta</span></div>
+  <div class="pair" id="askPair"></div>
+
+  <!-- 2 -->
+  <h2><span class="n">2</span>Mágica modal</h2>
+  <ul class="problems">
+    <li>Título: <code>Jogador 1 ativou Comando de Kolaghan - Escolha um modo</code>, igual para cada modo.</li>
+    <li>"Escolha dois" vira <b>duas janelas seguidas</b>; a segunda tem um modo a menos e não diz qual já foi escolhido.</li>
+    <li>Modos com "•" na frente e alguns em inglês: <code>Amuleto Izzet deals 2 damage to target creature.</code>, <code>Put a charge counter on target artifact.</code></li>
+    <li>Um modo que não dá para escolher (sem alvo) só some, sem explicação.</li>
+  </ul>
+  <div class="tabs" data-tabs="modal"><span>Carta</span></div>
+  <div class="pair" id="modalPair"></div>
+
+  <!-- 3 -->
+  <h2><span class="n">3</span>Cor, proteção e tipo de terreno básico</h2>
+  <ul class="problems">
+    <li>Cor: <code>WHITE</code> <code>BLUE</code> <code>BLACK</code> <code>RED</code> <code>GREEN</code>. Proteção: <code>white … green</code> <code>Artifact</code>. Terreno básico: <code>Escolha um tipo basic land</code> com <code>Mountain</code>, <code>Swamp</code>…</li>
+    <li>O aviso depois diz <code>Jogador 1 escolheu white</code>.</li>
+  </ul>
+  <div class="tabs" data-tabs="color"><span>Carta</span></div>
+  <div class="pair" id="colorPair"></div>
+
+  <!-- 4 -->
+  <h2><span class="n">4</span>Tipo de criatura</h2>
+  <ul class="problems">
+    <li>Título <code>Escolha um tipo creature</code> e <b>382 botões</b>, um embaixo do outro, em inglês e em ordem alfabética (o Forge põe os tipos do seu deck no topo, mas só por ordem, sem dizer quantas cartas têm).</li>
+    <li>Não há busca: para achar "Zombie" é preciso rolar até o fim. O aviso depois diz <code>Jogador 1 escolheu Advisor</code>.</li>
+  </ul>
+  <div class="pair" id="typePair"></div>
+
+  <!-- 5 -->
+  <h2><span class="n">5</span>Custos opcionais (kicker)</h2>
+  <ul class="problems">
+    <li>Título <code>Selecionar custos opcionais</code>, um botão <code>Kicker – {4}</code>, "Nenhum", o selo 0/1 e "Confirmar": três cliques para dizer "não quero reforçar".</li>
+    <li>Não mostra o que muda (2 → 4 de dano), quanto fica o total, nem se a mana do campo dá para pagar.</li>
+  </ul>
+  <div class="tabs" data-tabs="kick"><span>Mana no campo</span></div>
+  <div class="pair" id="kickPair"></div>
+
+  <h2 style="margin-top:56px">O resto da lista</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Item</th><th>Hoje (texto real)</th><th>Sugestão</th></tr></thead>
+    <tbody>
+      <tr><td>6. Bola de Fogo e dano dividido</td><td>X antes dos alvos; <code>Select any target (5 more can be targeted)</code> com OK liberado sem alvo; Forked Bolt: <code>Select any target to distribute damage to</code> e depois "Distribua o total entre as opções" com campos numéricos.</td><td>Frase certa ("até 5 alvos; cada um depois do primeiro custa {1}"), o custo crescendo a cada alvo e a divisão com − e +, como no dano de combate.</td></tr>
+      <tr><td>7. Avisos depois da escolha</td><td><code>Jogador 1 escolheu white</code>, <code>escolheu Advisor</code>, <code>valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island</code>.</td><td>"Jogador 1 escolheu branco", "escolheu Elfo", "Jogador 1 ficou com o monte de 2: Planície, Ilha".</td></tr>
+      <tr><td>8. Botões sem objeto</td><td>"Nenhum" (custos opcionais, busca do Wood Elves), "OK" sozinho nas cartas reveladas.</td><td>"Não procurar", "Conjurar sem reforço", "Continuar".</td></tr>
+      <tr><td>9. Busca em dois passos</td><td>Cultivate: <code>Escolha até 2 cartas de seu grimório</code> e depois <code>Select a card to put onto the battlefield</code>.</td><td>Uma tela com dois espaços: "Campo (virado)" e "Mão".</td></tr>
+      <tr><td>10. Detalhes</td><td>Ponder: "Quer embaralhar o grimório?" sem as cartas; pilha com <code>Pilhagem Infiel (121) - Jogador 1 draws two cards.</code>; título <code>Divida ss cartas em duas pilhas</code>.</td><td>Mostrar as 3 cartas no "embaralhar?"; texto da pilha pela carta em português; conferir se o título dos montes aparece.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Já está bom</h2>
+  <p class="prose muted">Sem nenhum dos sinais da varredura: escolha de número, nomear carta, ordem dos gatilhos, vidência e vigilância, montes, dano de combate, voto, proliferar, "como jogar a carta" e virar/desvirar (Twiddle).</p>
+
+  <h2>O que a varredura ainda não cobriu</h2>
+  <ul class="problems">
+    <li>Prints de cada uma no computador e no celular deitado (a lista vem do texto que chega à mesa; as prévias acima são desenhos).</li>
+    <li>Teclado e foco; menus e avisos da mesa; telas fora da partida (salas, decks, resultado).</li>
+    <li>Moeda (Stitch in Time) e Mana Leak até o fim, que a sonda não conseguiu disparar.</li>
+  </ul>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const ms = s => `<span class="ms ${/^\d+$/.test(s) ? '' : s}">${s}</span>`;
+const mana = text => text.replace(/\{(\w+)\}/g, (_, s) => ms(s));
+const card = (name, color = '', cost = '', line = '') => `<div class="card ${color}"><span>${esc(name)} ${mana(cost)}</span><div class="art"></div><span class="line">${esc(line)}</span></div>`;
+const stage = (inner, board = false) => `<div class="stage-wrap"><div class="stage${board ? ' board' : ''}">${inner}<span class="result"></span><span class="size"></span></div></div>`;
+const panel = (rec, title, note, body, notes = '') => `<section class="panel${rec ? ' rec' : ''}"><header><span class="tag">${rec ? 'Proposta' : 'Hoje'}</span><small>${title}</small></header>${body}${notes ? `<div class="notes">${notes}</div>` : ''}</section>`;
+function flash(el, text) {
+  const r = el.closest('.stage').querySelector('.result');
+  r.textContent = text; r.classList.add('show');
+  clearTimeout(r._t); r._t = setTimeout(() => r.classList.remove('show'), 2200);
+}
+function tabs(name, items, current, onPick) {
+  const box = document.querySelector(`[data-tabs="${name}"]`);
+  box.innerHTML = box.querySelector('span').outerHTML + Object.entries(items).map(([k, v]) => `<button class="seg" data-k="${k}" aria-pressed="${k === current}">${esc(v.label)}</button>`).join('');
+  box.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; box.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x === b)); onPick(b.dataset.k); };
+}
+
+/* 1. Caixa de ação. */
+const ASK = {
+  edict: { label: 'Édito Diabólico (quem sacrifica)', src: 'Édito Diabólico', minis: 3, pick: 1,
+    raw: 'Édito Diabólico (121)\n - O jogador alvo sacrifica uma criatura.\nEscolha 1 creature(s) a sacrifice.', ok: 'OK', cancel: 'Cancelar', cancelOn: false,
+    msg: 'Sacrifique 1 criatura sua.', hint: 'Toque numa criatura sua no campo.', go: 'Sacrificar', no: null, answer: 'sacrifica a criatura marcada' },
+  rites: { label: 'Ritos da Vila (custo)', src: 'Ritos da Vila', minis: 2, pick: 1,
+    raw: 'Ritos da Vila (121)\n - As an additional cost to cast this spell, sacrifice a creature.\nDraw two cards.\nSelecione creature para sacrificar (1 restantes)', ok: 'OK', cancel: 'Cancelar', cancelOn: true,
+    msg: 'Para conjurar, sacrifique 1 criatura sua.', hint: 'Depois você compra 2 cartas.', go: 'Sacrificar e conjurar', no: 'Cancelar mágica', answer: 'sacrifica e conjura' },
+  conduit: { label: 'Conduto de Energia (tirar marcador)', src: 'Conduto de Energia', minis: 2, pick: 1,
+    raw: 'Conduto de Energia (129)\n - {T}, Remova um marcador de uma permanente que você controla: Escolha um Coloque um marcador de carga sobre o artefato alvo; ou, coloque um marcador +1/+1 na criatura alvo.\r\n• Put a charge counter on target artifact.\r\n• Put a +1/+1 counter on target creature.\r\n\r\n Put a charge counter on target artifact.\nSelect a permanent to remove 1 counter(s) from', ok: 'OK', cancel: 'Cancelar', cancelOn: true,
+    msg: 'Escolha uma permanente sua para tirar 1 marcador.', hint: 'É o custo da habilidade.', go: 'Tirar o marcador', no: 'Cancelar habilidade', answer: 'tira o marcador e ativa' },
+  remora: { label: 'Rêmora Mística (manutenção cumulativa)', src: 'Rêmora Mística', minis: 0, pick: 0,
+    raw: 'Cumulative upkeep for Rêmora Mística (129)\nRêmora Mística (129) - \n\nPagar Custo de Mana: {2}', ok: 'Automático', cancel: 'Cancelar', cancelOn: true,
+    msg: 'Manutenção cumulativa: pague {2} para manter a Rêmora Mística.', hint: 'Sem pagar, ela é sacrificada. Na próxima manutenção serão {3}.', go: 'Pagar {2}', no: 'Não pagar (sacrificar)', answer: 'paga {2}', noAnswer: 'não paga; a Rêmora é sacrificada' },
+  leak: { label: 'Vazamento de Mana (alvo)', src: 'Vazamento de Mana', minis: 0, pick: 0, stack: true,
+    raw: 'Select target spell', ok: 'OK', cancel: 'Cancelar', cancelOn: true,
+    msg: 'Escolha a mágica alvo de Vazamento de Mana.', hint: 'Toque na mágica na pilha (Ursos Cinzentos).', go: null, no: 'Cancelar mágica', answer: '' },
+};
+let askKey = 'edict', askPicked = false;
+function renderAsk() {
+  const a = ASK[askKey];
+  const minis = (sel, on) => a.minis ? `<div class="board-hint">${Array.from({ length: a.minis }, (_, i) => `<div class="mini ${sel ? 'sel' : ''} ${on && i === 0 ? 'on' : ''}" ${sel ? 'data-mini' : ''}></div>`).join('')}</div>`
+    : a.stack ? `<div class="board-hint"><div class="mini ${sel ? 'sel' : ''}" ${sel ? 'data-stack' : ''} style="width:80px"></div></div>` : '';
+  const today = stage(`${minis(false, false)}<div class="abox"><div class="msg raw">${esc(a.raw)}</div><div class="q-actions"><button class="btn secondary" ${a.cancelOn ? '' : 'disabled'}>${a.cancel}</button><button class="btn primary" ${a.ok === 'Automático' ? '' : 'disabled'}>${a.ok}</button></div></div>`, true);
+  const go = a.go ? `<button class="btn primary" data-go ${a.pick && !askPicked ? 'disabled' : ''}>${mana(a.go)}</button>` : '';
+  const no = a.no ? `<button class="btn secondary" data-no>${esc(a.no)}</button>` : '';
+  const prog = a.pick ? `<div class="prog">${askPicked ? '1 de 1 marcada' : `Falta ${a.pick} ${a.pick === 1 ? 'carta' : 'cartas'}`}</div>` : '';
+  const prop = stage(`${minis(true, askPicked)}<div class="abox"><div class="src"><i></i>${esc(a.src)}</div><div class="msg">${mana(esc(a.msg))}</div><div class="prog">${mana(esc(a.hint))}</div>${prog}<div class="q-actions">${no}${go}</div></div>`, true);
+  $('#askPair').innerHTML =
+    panel(false, 'o texto do Forge como chega', '', today, 'O texto inteiro da habilidade, o número da carta e o pedido em inglês; "OK" e "Cancelar" sem objeto.') +
+    panel(true, 'frase curta pela carta, botões que dizem o que fazem', '', prop, 'Mesma caixa de hoje, com a frase montada a partir da carta e do tipo de pedido (como já se faz com alvos e pagamento). Toque nas cartas destacadas.');
+  const p = $('#askPair .panel.rec');
+  p.onclick = e => {
+    if (e.target.closest('[data-mini],[data-stack]')) {
+      if (a.stack) { flash(e.target, 'Alvo: Ursos Cinzentos na pilha'); return; }
+      askPicked = true; renderAsk(); return;
+    }
+    if (e.target.closest('[data-go]')) flash(e.target, `Responde: ${a.answer}`);
+    if (e.target.closest('[data-no]')) flash(e.target, a.noAnswer ? `Responde: ${a.noAnswer}` : 'Desiste da mágica');
+  };
+  sizes();
+}
+tabs('ask', ASK, askKey, k => { askKey = k; askPicked = false; renderAsk(); });
+
+/* 2. Modos. */
+const MODAL = {
+  kolaghan: { label: 'Comando de Kolaghan (escolha dois)', name: 'Comando de Kolaghan', cost: '{1}{B}{R}', color: '', n: 2,
+    modes: [
+      { pt: 'Devolva o card de criatura alvo do seu cemitério para a sua mão.', raw: '• Devolva o card de criatura alvo de seu cemitério para a sua mão.', target: 'criatura no seu cemitério' },
+      { pt: 'O jogador alvo descarta um card.', raw: '• O jogador alvo descarta um card.', target: 'jogador' },
+      { pt: 'Destrua o artefato alvo.', raw: '• Destrua o artefato alvo.', target: 'artefato', off: 'Nenhum artefato no campo' },
+      { pt: 'Comando de Kolaghan causa 2 pontos de dano a qualquer alvo.', raw: '• Comando de Kolaghan causa 2 pontos de dano à criatura ou ao jogador alvo.', target: 'qualquer alvo' },
+    ] },
+  izzet: { label: 'Amuleto Izzet (escolha um)', name: 'Amuleto Izzet', cost: '{U}{R}', color: 'blue', n: 1,
+    modes: [
+      { pt: 'Anule a mágica alvo que não seja criatura, a menos que seu controlador pague {2}.', raw: null, target: 'mágica na pilha', off: 'Nenhuma mágica na pilha' },
+      { pt: 'Amuleto Izzet causa 2 pontos de dano à criatura alvo.', raw: 'Amuleto Izzet deals 2 damage to target creature.', target: 'criatura' },
+      { pt: 'Compre dois cards e depois descarte dois cards.', raw: 'Draw two cards, then discard two cards. ' },
+    ] },
+};
+let modalKey = 'kolaghan', todayStep = [], picked = [];
+function renderModal() {
+  const m = MODAL[modalKey];
+  const avail = m.modes.map((x, i) => i).filter(i => !m.modes[i].off);
+  const left = avail.filter(i => !todayStep.includes(i));
+  const done = todayStep.length >= m.n;
+  const todayQ = done ? `<div class="q"><h4>Modos escolhidos</h4><p class="hint">A mágica segue para os alvos.</p><div class="q-actions"><button class="btn secondary" data-restart>Ver de novo</button></div></div>`
+    : `<div class="q"><span class="minimize">Ver a mesa</span><h4>Jogador 1 ativou ${esc(m.name)} - Escolha um modo</h4><div class="qcard">${card(m.name, m.color, m.cost)}</div>
+      <div class="list">${left.map(i => `<button data-today="${i}">${esc(m.modes[i].raw ?? m.modes[i].pt)}</button>`).join('')}</div>
+      <div class="q-actions" style="clear:both"><button class="btn secondary" data-none>Nenhum</button></div></div>`;
+  const ok = picked.length === m.n;
+  const propQ = `<div class="q wide"><span class="minimize">Ver a mesa</span><h4>${esc(m.name)}: escolha ${m.n === 1 ? 'um modo' : `${m.n} modos`}</h4>
+    <p class="sub">${mana(m.cost)} <span class="count ${ok ? 'ok' : ''}">${picked.length}<small>/ ${m.n}</small></span></p>
+    <div class="modes">${m.modes.map((x, i) => `<button class="mode ${picked.includes(i) ? 'on' : ''}" data-mode="${i}" ${x.off ? 'disabled' : ''}><span class="k">${picked.includes(i) ? picked.indexOf(i) + 1 : '·'}</span><span>${mana(esc(x.pt))}${x.off ? `<small class="why">${x.off}</small>` : x.target ? `<small>Alvo: ${x.target}</small>` : ''}</span></button>`).join('')}</div>
+    <div class="q-actions"><button class="btn secondary" data-cancel>Cancelar mágica</button>${m.n > 1 ? `<button class="btn primary" data-confirm ${ok ? '' : 'disabled'}>Confirmar modos</button>` : ''}</div></div>`;
+  $('#modalPair').innerHTML =
+    panel(false, m.n > 1 ? `uma janela por modo (${Math.min(todayStep.length + 1, m.n)} de ${m.n})` : 'lista genérica', '', stage(todayQ), m.n > 1 ? 'Clique num modo: abre outra janela igual, com um a menos, sem dizer qual já foi. O modo sem alvo simplesmente some.' : 'O título repete "Jogador 1 ativou…"; dois dos três modos estão em inglês e o de anular sumiu (não há mágica na pilha).') +
+    panel(true, 'todos os modos numa tela, com contagem', '', stage(propQ), 'O texto em português vem da carta impressa, um modo por cartão, com o alvo que ele pede; os que não dá para escolher ficam apagados com o motivo. No "escolha um", tocar já responde. Pede ao servidor mandar os modos de uma vez (hoje o Forge pergunta um por um).');
+  const [t, p] = document.querySelectorAll('#modalPair .panel');
+  t.onclick = e => {
+    const b = e.target.closest('[data-today]');
+    if (b) { todayStep.push(+b.dataset.today); renderModal(); }
+    if (e.target.closest('[data-restart]')) { todayStep = []; renderModal(); }
+    if (e.target.closest('[data-none]')) flash(e.target, 'Nenhum: desiste da mágica? Não diz.');
+  };
+  p.onclick = e => {
+    const b = e.target.closest('[data-mode]');
+    if (b && !b.disabled) {
+      const i = +b.dataset.mode, at = picked.indexOf(i);
+      if (m.n === 1) { picked = [i]; renderModal(); flash($('#modalPair .panel.rec .q'), `Responde: modo ${i + 1}`); return; }
+      if (at >= 0) picked.splice(at, 1); else if (picked.length < m.n) picked.push(i);
+      renderModal();
+    }
+    if (e.target.closest('[data-confirm]')) flash(e.target, `Responde: modos ${picked.map(i => i + 1).join(' e ')}`);
+    if (e.target.closest('[data-cancel]')) flash(e.target, 'Desiste da mágica');
+  };
+  sizes();
+}
+tabs('modal', MODAL, modalKey, k => { modalKey = k; todayStep = []; picked = []; renderModal(); });
+
+/* 3. Cores. */
+const COLOR = {
+  painter: { label: 'Servo do Pintor (cor)', name: 'Servo do Pintor', cost: '{2}', cardColor: 'grey', title: 'Escolha uma cor', raw: ['WHITE', 'BLUE', 'BLACK', 'RED', 'GREEN'],
+    head: 'Servo do Pintor: escolha uma cor', sub: 'As cartas passam a ser também da cor escolhida.',
+    opts: [['W', 'W', 'Branco'], ['U', 'U', 'Azul'], ['B', 'B', 'Preto'], ['R', 'R', 'Vermelho'], ['G', 'G', 'Verde']] },
+  blessing: { label: 'Bênção do Apóstolo (proteção)', name: 'Bênção do Apóstolo', cost: '{1}{W}', cardColor: 'white', title: 'Escolha a proteção', raw: ['white', 'blue', 'black', 'red', 'green', 'Artifact'],
+    head: 'Ursos Cinzentos ganha proteção contra…', sub: 'Até o fim do turno.',
+    opts: [['W', 'W', 'Branco'], ['U', 'U', 'Azul'], ['B', 'B', 'Preto'], ['R', 'R', 'Vermelho'], ['G', 'G', 'Verde'], ['A', '⚙', 'Artefatos']] },
+  mirage: { label: 'Miragem Convincente (terreno básico)', name: 'Miragem Convincente', cost: '{1}{U}', cardColor: 'blue', title: 'Escolha um tipo basic land', raw: ['Mountain', 'Swamp', 'Forest', 'Plains', 'Island'],
+    head: 'A Ilha encantada vira…', sub: 'Escolha um tipo de terreno básico.',
+    opts: [['W', 'W', 'Planície'], ['U', 'U', 'Ilha'], ['B', 'B', 'Pântano'], ['R', 'R', 'Montanha'], ['G', 'G', 'Floresta']] },
+};
+let colorKey = 'painter';
+function renderColor() {
+  const c = COLOR[colorKey];
+  const today = `<div class="q"><span class="minimize">Ver a mesa</span><h4>${esc(c.title)}</h4><div class="qcard">${card(c.name, c.cardColor, c.cost)}</div><div class="list">${c.raw.map(r => `<button data-raw="${esc(r)}">${esc(r)}</button>`).join('')}</div><div style="clear:both"></div></div>`;
+  const prop = `<div class="q"><span class="minimize">Ver a mesa</span><h4>${esc(c.head)}</h4><p class="sub">${esc(c.name)} ${mana(c.cost)} · ${esc(c.sub)}</p><div class="colors">${c.opts.map(([k, s, n]) => `<button class="color" data-color="${esc(n)}"><span class="dot ${k}">${s}</span>${esc(n)}</button>`).join('')}</div></div>`;
+  $('#colorPair').innerHTML =
+    panel(false, 'lista genérica', '', stage(today), 'Os nomes como o Forge guarda, em inglês; o aviso depois repete o mesmo nome.') +
+    panel(true, 'símbolos grandes, um toque responde', '', stage(prop), 'As opções são sempre as mesmas cinco (mais Artefatos na proteção), então a mesa reconhece a pergunta pelas opções e desenha os símbolos, sem depender do servidor. O aviso depois sai com o mesmo nome em português.');
+  $('#colorPair').onclick = e => {
+    const raw = e.target.closest('[data-raw]'), col = e.target.closest('[data-color]');
+    if (raw) flash(raw, `Aviso: "Jogador 1 escolheu ${raw.dataset.raw}"`);
+    if (col) flash(col, `Responde: ${col.dataset.color}; aviso "Você escolheu ${col.dataset.color.toLowerCase()}"`);
+  };
+  sizes();
+}
+tabs('color', COLOR, colorKey, k => { colorKey = k; renderColor(); });
+
+/* 4. Tipo de criatura. */
+const EN = ['Advisor', 'Aenar', 'Aetherborn', 'Alien', 'Ally', 'Andorian', 'Android', 'Angel', 'Antelope', 'Ape', 'Archer', 'Archon', 'Armadillo', 'Armored', 'Army', 'Artificer', 'Assassin', 'Assembly-Worker', 'Astartes', 'Atog', 'Aurochs', 'Avatar', 'Azra', 'Badger', 'Balloon', 'Barbarian', 'Bard', 'Basilisk', 'Bat', 'Bear', 'Beast', 'Beaver', 'Beeble', 'Beholder', 'Berserker', 'Bird', 'Blinkmoth', 'Boar', 'Bringer', 'Brushwagg', 'Camarid', 'Camel', 'Capybara', 'Caribou', 'Carrier', 'Cat', 'Centaur', 'Child', 'Chimera', 'Citizen', 'Cleric', 'Clown', 'Cockatrice', 'Construct', 'Coward', 'Coyote', 'Crab', 'Crocodile', "C'tan", 'Custodes', 'Cyberman', 'Cyclops', 'Dalek', 'Dauthi', 'Demigod', 'Demon', 'Deserter', 'Detective', 'Devil', 'Dinosaur', 'Djinn', 'Doctor', 'Dog', 'Dragon', 'Drake', 'Dreadnought', 'Drone', 'Druid', 'Dryad', 'Dwarf', '…'];
+const TYPES = [['Elfo', 'Elf', 14], ['Druida', 'Druid', 6], ['Guerreiro', 'Warrior', 3], ['Xamã', 'Shaman', 2]];
+const ALL = [['Anjo', 'Angel'], ['Arqueiro', 'Archer'], ['Artífice', 'Artificer'], ['Assassino', 'Assassin'], ['Avatar', 'Avatar'], ['Bárbaro', 'Barbarian'], ['Besta', 'Beast'], ['Cavaleiro', 'Knight'], ['Clérigo', 'Cleric'], ['Constructo', 'Construct'], ['Demônio', 'Demon'], ['Dinossauro', 'Dinosaur'], ['Dragão', 'Dragon'], ['Druida', 'Druid'], ['Elfo', 'Elf'], ['Espírito', 'Spirit'], ['Fada', 'Faerie'], ['Gato', 'Cat'], ['Goblin', 'Goblin'], ['Guerreiro', 'Warrior'], ['Humano', 'Human'], ['Hidra', 'Hydra'], ['Ladino', 'Rogue'], ['Mago', 'Wizard'], ['Merfolk', 'Merfolk'], ['Monge', 'Monk'], ['Pirata', 'Pirate'], ['Rato', 'Rat'], ['Sliver', 'Sliver'], ['Soldado', 'Soldier'], ['Vampiro', 'Vampire'], ['Xamã', 'Shaman'], ['Zumbi', 'Zombie']];
+let typeQuery = '';
+function renderType() {
+  const today = `<div class="q"><span class="minimize">Ver a mesa</span><h4>Escolha um tipo creature</h4><div class="qcard">${card('Caverna das Almas', 'grey', '', 'Terreno')}</div><div class="list scroll">${EN.map(t => `<button data-en="${esc(t)}">${esc(t)}</button>`).join('')}</div><p class="hint" style="clear:both;margin-top:8px">… 382 botões no total</p></div>`;
+  $('#typePair').innerHTML =
+    panel(false, '382 botões em inglês', '', stage(today), 'Role a lista: não há busca, e os tipos do seu deck não aparecem como tal.') +
+    panel(true, 'busca, com os tipos do seu deck primeiro', '', stage(`<div class="q"><span class="minimize">Ver a mesa</span><h4>Caverna das Almas: escolha um tipo de criatura</h4>
+      <input class="search" id="typeSearch" placeholder="Buscar (Zumbi, zombie…)" value="${esc(typeQuery)}" autocomplete="off">
+      <div id="typeLists"></div></div>`), 'Mesma ideia de nomear uma carta: busca em português ou em inglês, e no topo os tipos que aparecem no seu deck, com quantas cartas cada um tem (o Forge já ordena por isso; falta mandar a contagem). Pede ao servidor marcar a pergunta como tipo de criatura.');
+  const s = $('#typeSearch');
+  s.oninput = () => { typeQuery = s.value; lists(); };
+  lists();
+  $('#typePair').onclick = e => {
+    const en = e.target.closest('[data-en]'), t = e.target.closest('[data-type]');
+    if (en) flash(en, `Aviso: "Jogador 1 escolheu ${en.dataset.en}"`);
+    if (t) flash(t, `Responde: ${t.dataset.type}`);
+  };
+  sizes();
+}
+function lists() {
+  const q = typeQuery.trim().toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+  const match = ([pt, en]) => !q || [pt, en].some(x => x.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').includes(q));
+  const mine = TYPES.filter(match), all = ALL.filter(match);
+  $('#typeLists').innerHTML = `${mine.length ? `<div class="group-title">Do seu deck</div><div class="types">${mine.map(([pt, en, n]) => `<button class="type mine" data-type="${pt}">${pt}<small>${en}</small><b>${n}</b></button>`).join('')}</div>` : ''}
+    <div class="group-title">Todos (${q ? all.length : 382})</div><div class="types all">${all.map(([pt, en]) => `<button class="type" data-type="${pt}">${pt}${pt !== en ? `<small>${en}</small>` : ''}</button>`).join('') || '<span class="muted">Nenhum tipo com esse nome.</span>'}</div>`;
+}
+
+/* 5. Kicker. */
+const KICK = { five: { label: '5 Montanhas', lands: 5 }, three: { label: '3 Montanhas', lands: 3 } };
+let kickKey = 'five', kickOn = false;
+function renderKick() {
+  const lands = KICK[kickKey].lands;
+  const today = `<div class="q"><span class="minimize">Ver a mesa</span><h4>Selecionar custos opcionais</h4><div class="qcard">${card('Explodir em Raios', '', '{R}')}</div><p class="hint">Escolha de 0 a 1.</p>
+    <div class="list"><button class="${kickOn ? 'on' : ''}" data-kick>Kicker – ${mana('{4}')} ${kickOn ? '<span>✓</span>' : ''}</button></div>
+    <div class="q-actions" style="clear:both"><button class="btn secondary" data-none>Nenhum</button><span class="count ${'ok'}">${kickOn ? 1 : 0}<small>/ 1</small></span><button class="btn primary" data-ok>Confirmar</button></div></div>`;
+  const miss = 5 - lands;
+  const prop = `<div class="q"><span class="minimize">Ver a mesa</span><h4>Explodir em Raios: reforçar?</h4><p class="sub">Reforço (kicker) ${mana('{4}')}</p>
+    <div class="offers">
+      <button class="offer" data-pay="sem reforço"><b>Sem reforço</b><span class="cost">${mana('{R}')}</span><span class="eff">2 de dano a qualquer alvo</span></button>
+      <button class="offer" data-pay="com reforço" ${miss > 0 ? 'disabled' : ''}><b>Com reforço</b><span class="cost">${mana('{4}{R}')}</span><span class="eff">4 de dano a qualquer alvo</span>${miss > 0 ? `<span class="miss">Falta ${miss} de mana</span>` : ''}</button>
+    </div>
+    <div class="manabar">Mana disponível <span class="bar">${'<i></i>'.repeat(lands)}</span> ${lands}</div>
+    <div class="q-actions"><button class="btn secondary" data-cancel>Cancelar mágica</button></div></div>`;
+  $('#kickPair').innerHTML =
+    panel(false, 'lista genérica de custos opcionais', '', stage(today), 'Não diz o que o reforço faz nem se dá para pagar; "Nenhum" quer dizer "conjurar sem reforço".') +
+    panel(true, 'as duas formas lado a lado, com o efeito e a mana', '', stage(prop), 'Um toque responde. O efeito de cada forma vem do texto da carta; o custo total e a mana disponível são os mesmos que o servidor já manda na escolha de número. Com mais de um custo opcional (kicker duplo, entrelaçar), os cartões viram interruptores com um "Conjurar" embaixo.');
+  $('#kickPair').onclick = e => {
+    if (e.target.closest('[data-kick]')) { kickOn = !kickOn; renderKick(); return; }
+    if (e.target.closest('[data-none]')) flash(e.target, 'Responde: sem reforço');
+    if (e.target.closest('[data-ok]')) flash(e.target, `Responde: ${kickOn ? 'com reforço' : 'sem reforço'}`);
+    const pay = e.target.closest('[data-pay]');
+    if (pay && !pay.disabled) flash(pay, `Responde: ${pay.dataset.pay}`);
+    if (e.target.closest('[data-cancel]')) flash(e.target, 'Desiste da mágica');
+  };
+  sizes();
+}
+tabs('kick', KICK, kickKey, k => { kickKey = k; renderKick(); });
+
+/* Tamanho da tela. */
+function sizes() { document.querySelectorAll('.stage .size').forEach(s => { s.textContent = document.body.classList.contains('phone') ? '740 × 340' : ''; }); }
+document.querySelector('.controls').onclick = e => {
+  const b = e.target.closest('[data-screen]'); if (!b) return;
+  document.querySelectorAll('[data-screen]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  document.body.classList.toggle('phone', b.dataset.screen === 'phone');
+  sizes();
+};
+renderAsk(); renderModal(); renderColor(); renderType(); renderKick();
+</script>
+</body>
+</html>

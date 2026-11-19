@@ -2,6 +2,7 @@
 // e os tipos com tela própria em outros módulos), e a barra que fica no lugar dela com "Ver a mesa" (arrastável pelo texto).
 import type { FCard, FOption, FPlayer, FQuestion } from '../forge/client';
 import { esc, optionHTML } from './cardtext';
+import { ptTitle } from './forgeRequest';
 import { DRAG_PILL, DRAG_RESET } from './icons';
 import { choiceOrder, isPlayMode, isTriggerOrder, playModeHTML, triggerOrderHTML, type TriggerOrder } from './choiceScreens';
 import { choiceGroupHTML, choiceLayout, choiceToolsHTML, isFilterableChoice, type ChoiceSort, type ChoiceView } from './choiceFilters';
@@ -13,6 +14,10 @@ import { isNameChoice, nameChoiceHTML } from './nameChoice';
 import { dungeonRoomHTML, isDungeonRoom } from './dungeon';
 import { isReplacementOrder, replacementOrderHTML } from './replacementOrder';
 import { isNumberChoice, numberChoiceHTML, rulesOf } from './numberChoice';
+import { isModeChoice, modeChoiceHTML, modesAsk } from './modeChoice';
+import { colorChoiceHTML, isColorChoice } from './colorChoice';
+import { isTypeChoice, typeChoiceHTML } from './typeChoice';
+import { isOptionalCosts, optionalCostsHTML } from './optionalCosts';
 import type { QuestionDraft } from './tableState';
 
 /** O que as perguntas precisam da mesa. */
@@ -74,9 +79,13 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   if (isPilesSplit(q)) return pilesSplitHTML(q, draft.picked, v.piles);
   if (isPilesChoice(q)) return pilesChoiceHTML(q, v.piles);
   if (isReplacementOrder(q)) return replacementOrderHTML(q, draft.all !== false, v.face, v.label);
+  if (isOptionalCosts(q)) return optionalCostsHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined);
+  if (isTypeChoice(q)) return typeChoiceHTML(q, draft.text, q.card ? v.label(q.card) : undefined);
+  if (isColorChoice(q)) return colorChoiceHTML(q, q.card ? v.label(q.card) : undefined);
+  if (isModeChoice(q)) return modeChoiceHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined, q.card?.manaCost);
   if (isNumberChoice(q)) return numberChoiceHTML(q, draft.text, q.card ? v.face(q.card) : '', rulesOf(q.card, v.ptText), q.card?.name ? [q.card.name, v.label(q.card)] : undefined);
   const opts = q.options ?? [];
-  const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
+  const head = `<div class="q-head"><h2>${esc(ptTitle(q.title))}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
   if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
   if (isNameChoice(q)) return nameChoiceHTML(q, head, draft.text, v.ptName);
   if (q.kind === 'amount') {
@@ -158,6 +167,6 @@ export function missingPicks(q: FQuestion, picked: number) {
 export function questionBar(v: QuestionView, q: FQuestion, picked: number) {
   const max = q.kind === 'order' ? q.options?.length ?? 0 : q.max ?? 1;
   const progress = (q.kind === 'choose' || q.kind === 'order') && max > 1 ? `<span>${picked} de ${max} ${max === 1 ? 'escolhida' : 'escolhidas'}</span>` : '';
-  const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isPilesSplit(q) || isPilesChoice(q) ? pilesHeading(q, v.piles) : isVote(q) && q.card ? `Votação: ${v.label(q.card)}` : isReplacementOrder(q) ? 'Qual efeito aplicar primeiro?' : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : q.title;
+  const title = isTriggerOrder(q) ? 'Ordene seus gatilhos' : isLibraryChoice(q) ? libraryHeading(q) : isPilesSplit(q) || isPilesChoice(q) ? pilesHeading(q, v.piles) : isVote(q) && q.card ? `Votação: ${v.label(q.card)}` : isReplacementOrder(q) ? 'Qual efeito aplicar primeiro?' : isPlayMode(q) ? 'Como jogar a carta' : isCombatDamage(q) ? 'Distribua o dano de combate' : isModeChoice(q) ? `${q.card ? `${v.label(q.card)}: ` : ''}${modesAsk(q.min ?? 1, q.max ?? 1)}` : isTypeChoice(q) ? 'Escolha um tipo de criatura' : isOptionalCosts(q) ? 'Custos opcionais' : ptTitle(q.title);
   return `<div class="question-bar" role="region" aria-label="Escolha pendente: ${esc(title)}">${DRAG_PILL}<div class="question-bar-text" title="Arraste para mover este aviso. Dois cliques o devolvem ao lugar."><strong>${esc(title)}</strong>${progress}<small>Olhando a mesa. A escolha continua esperando.</small></div>${DRAG_RESET}<button class="arena-btn primary" data-ui="question-restore">Voltar à escolha</button></div>`;
 }

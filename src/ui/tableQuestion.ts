@@ -11,6 +11,10 @@ import { hideCardPreview } from './cardInspector';
 import { restoreRowScroll, rowScroll, syncAllRowEdges } from './cardRow';
 import { isLibraryChoice, librarySummary, moveLibraryCard, placeLibraryCard } from './libraryChoice';
 import { isNameChoice, nameListHTML, nameMatches, nameStatus } from './nameChoice';
+import { isModeChoice } from './modeChoice';
+import { isColorChoice } from './colorChoice';
+import { firstTypeMatch, isTypeChoice, typeListsHTML } from './typeChoice';
+import { isOptionalCosts } from './optionalCosts';
 import { clampNumber, isNumberChoice, numberValue, refreshNumber, rulesOf } from './numberChoice';
 import { isPilesChoice, isPilesSplit, movePileCard, splitSummary } from './piles';
 import { isReplacementOrder } from './replacementOrder';
@@ -118,17 +122,18 @@ export function createTableQuestion(d: QuestionDeps) {
       qEl.classList.toggle('minimized', isMinimized);
       // Escolha grande de cartas redesenhada (uma carta marcada, um filtro): continua onde estava, sem entrar de novo.
       const before = qEl.querySelector<HTMLElement>('.question');
-      const typingName = document.activeElement?.id === 'fQNameSearch';
+      const searchId = document.activeElement?.id;
+      const typingName = searchId === 'fQNameSearch' || searchId === 'fQTypeSearch';
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
       // Fileira de cartas (celular): marcar uma carta redesenha a escolha, mas a fileira fica onde estava.
       const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
-      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : isModeChoice(s.question) ? ' mode-choice' : isColorChoice(s.question) ? ' color-choice' : isTypeChoice(s.question) ? ' type-choice' : isOptionalCosts(s.question) ? ' optional-costs' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (s.question.kind === 'reveal' && !isMinimized && after && Number(before?.dataset.qid) !== s.question.id) d.motion.revealIn([...after.querySelectorAll<HTMLElement>('.q-face')]);
       if (again !== null && after && after !== before) after.scrollTop = again;
       if (after && after !== before) restoreRowScroll(after, rows);
       // A busca de nomes recebe o foco ao abrir e o mantém quando a escolha é redesenhada no meio da digitação.
-      const nameSearch = after && after !== before ? after.querySelector<HTMLInputElement>('#fQNameSearch') : null;
+      const nameSearch = after && after !== before ? after.querySelector<HTMLInputElement>('#fQNameSearch, #fQTypeSearch') : null;
       if (nameSearch && (typingName || Number(before?.dataset.qid) !== s.question.id)) {
         nameSearch.focus({ preventScroll: true });
         nameSearch.setSelectionRange(nameSearch.value.length, nameSearch.value.length);
@@ -327,7 +332,7 @@ export function createTableQuestion(d: QuestionDeps) {
   function warnMissing(q: FQuestion, missing: number) {
     const warn = root.querySelector<HTMLElement>('#fQPickWarn'), count = root.querySelector<HTMLElement>('#fQPickCount');
     const cards = (q.options ?? []).some(o => typeof o !== 'string' && o.card);
-    const what = cards ? (missing === 1 ? 'carta' : 'cartas') : (missing === 1 ? 'opção' : 'opções');
+    const what = isModeChoice(q) ? (missing === 1 ? 'modo' : 'modos') : cards ? (missing === 1 ? 'carta' : 'cartas') : (missing === 1 ? 'opção' : 'opções');
     const text = q.kind === 'order' ? `Toque em mais ${missing} ${what} para definir a ordem, ou use "Manter ordem".` : `Escolha mais ${missing} ${what}.`;
     if (warn) { warn.textContent = text; warn.hidden = false; }
     if (count) { count.classList.remove('warn'); void count.offsetWidth; count.classList.add('warn'); }
@@ -350,6 +355,14 @@ export function createTableQuestion(d: QuestionDeps) {
       answer({ number: numberNow(q) });
       return;
     }
+    if (form.matches('[data-q-type]')) {
+      e.preventDefault();
+      const q = d.state()?.question;
+      if (!q || !isTypeChoice(q)) return;
+      const first = firstTypeMatch(q, d.match().qState?.text ?? '');
+      if (first !== undefined) answer({ indices: [first] });
+      return;
+    }
     if (!form.matches('[data-q-text]')) return;
     e.preventDefault();
     if (Number((e.target as HTMLElement).closest<HTMLElement>('[data-qid]')?.dataset.qid) !== d.state()?.question?.id) return;
@@ -366,6 +379,11 @@ export function createTableQuestion(d: QuestionDeps) {
     if (t.id === 'fQNameSearch' && match.qState && s?.question && isNameChoice(s.question)) {
       match.qState.text = t.value;
       applyNameSearch(s.question);
+    }
+    if (t.id === 'fQTypeSearch' && match.qState && s?.question && isTypeChoice(s.question)) {
+      match.qState.text = t.value;
+      const list = $('#fQuestion').querySelector<HTMLElement>('#fQTypes');
+      if (list) { list.innerHTML = typeListsHTML(s.question, t.value); }
     }
     if (t.id === 'fQSearch' && s?.question && isFilterableChoice(s.question)) {
       viewFor(s.question).query = t.value;

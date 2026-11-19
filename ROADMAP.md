@@ -638,19 +638,36 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
 
-## 142. Varredura de telas e decisões que podem ficar melhores para o jogador
+## 143. Bola de Fogo e dano dividido com a divisão na tela
 
-Pedido em 19/11/2026, depois da escolha de número: ela usava a mesma lista genérica de qualquer escolha (um botão por número, um "..." que abria outra janela) e virou um contador com o custo, a mana disponível e o efeito (estudo e decisão em `docs/escolha-numero-opcoes.html`, novidade em `novidades-pendentes/escolha-de-numero`). A ideia é procurar, de propósito, outros pontos assim, em vez de esperar que alguém tropece neles.
+Da varredura do item 142 (`docs/varredura-experiencia.html`, item 6; prévia em `docs/varredura-proximos.html`). Na Bola de Fogo o X é escolhido antes dos alvos, então não dá para ver o custo crescer a cada alvo; no Forked Bolt e parecidos, a divisão do dano cai na janela genérica "Distribua o total entre as opções", com campos numéricos.
 
-Sinais de que uma tela ou decisão merece uma versão melhor:
-- Cai na janela genérica (lista de botões de texto, "Sim/Não", campo de texto) quando o assunto pede uma tela própria (número, cor, tipo de criatura, modo, quantidade).
-- Não mostra o que a escolha custa ou faz (mana, vida, cartas), e o problema só aparece depois.
-- Botões que não dizem o que fazem ("OK", "Nenhum", "Cancelar" sem objeto).
-- Precisa de uma segunda janela ou de vários passos para algo que caberia num só.
-- Rola ou aperta no celular deitado (340 a 360 px de altura).
-- Texto do Forge cru ou em inglês, ou com ids de carta (ex.: visto nesse dia, ao escolher os alvos da Fireball: "Select any target (2 more can be targeted)").
-- Não dá para usar só com o teclado, ou o foco começa no lugar errado.
+- [ ] Divisão do dano entre os alvos com − e +, como no dano de combate (`combatDamage.ts`), com o total que falta.
+- [ ] Bola de Fogo: o custo de cada alvo a mais junto do X (estudar se dá para mostrar antes, ou só depois dos alvos).
+- [x] Prévia em `docs/varredura-proximos.html` (19/11/2026); falta escolher.
 
-- [ ] Fazer a varredura: cada tipo de pergunta do servidor (`kind` e `purpose` em `src/forge/protocol.ts`), os pedidos da caixa de ação (`input.message`, alvos, pagar mana), os menus e avisos da mesa e as telas fora da partida (salas, decks, resultado). Para cada um, montar a mesa mínima (páginas de teste em `tests/fixtures/` ou o Laboratório), olhar no computador e no celular deitado e anotar os sinais acima.
-- [ ] Juntar o que achar numa lista por ganho para o jogador e esforço (só a mesa, ou mesa e servidor), em `docs/varredura-experiencia.html`.
-- [ ] Para cada item escolhido, um HTML de opções em `docs/` (como o da escolha de número) para decidir, e um item próprio neste roadmap para fazer.
+## 144. Buscas em dois passos numa tela só
+
+Da varredura do item 142 (item 9; prévia em `docs/varredura-proximos.html`). Cultivate e parecidos pedem primeiro as duas cartas sem dizer o destino ("Escolha até 2 cartas do seu grimório") e depois uma segunda janela ("Escolha a carta que vai para o campo de batalha").
+
+- [ ] Uma tela com dois espaços, "Campo (virado)" e "Mão", e as cartas achadas para arrastar ou tocar (precisa do servidor juntar as duas perguntas).
+- [x] Prévia em `docs/varredura-proximos.html` (19/11/2026); falta escolher.
+
+## 145. Detalhes da varredura
+
+Da varredura do item 142 (itens 7, 8 e 10; prévias em `docs/varredura-proximos.html`). Cada um é pequeno.
+
+- [ ] Ponder: o "Quer embaralhar o grimório?" mostra as três cartas que você acabou de ordenar.
+- [ ] Textos da pilha com o número da carta e partes em inglês ("Pilhagem Infiel (121) - Jogador 1 draws two cards."): usar o texto da carta em português quando houver.
+- [ ] Botões sem objeto que sobraram: "Nenhum" na busca opcional (Wood Elves: "Não procurar"), "OK" sozinho nas cartas reveladas ("Continuar"), "Cancelar" no alvo de um contra-feitiço ("Desistir da mágica").
+- [ ] Aviso do Fato ou Ficção: "valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island" vira "Jogador 1 ficou com o monte de 2: Planície e Ilha".
+- [ ] Conferir se o título "Divida ss cartas em duas pilhas" (erro da tradução do Forge) aparece em algum lugar da tela dos montes.
+
+## 146. Resto da varredura: telas fora das perguntas
+
+O item 142 cobriu as perguntas do servidor e os pedidos da caixa de ação. Faltou olhar, com os mesmos sinais (ver o item 142 em `docs/roadmap-feito.md`):
+
+- [ ] Prints de cada pergunta no celular deitado (740×340), com toque emulado.
+- [ ] Teclado e foco em cada janela de pergunta.
+- [ ] Menus e avisos da mesa, e as telas fora da partida (salas, decks, resultado).
+- [ ] Moeda (Stitch in Time) e o Mana Leak até o fim, que a sondagem não conseguiu disparar.

@@ -534,6 +534,309 @@
     }
   },
   {
+    "nome": "Comando de Kolaghan: os modos numa tela só",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Kolaghan's Command na mão, um Swamp e duas Mountains, e um Grizzly Bears no cemitério; o Jogador 2 tem um Grizzly Bears e duas cartas na mão, sem artefato. Conjure o Comando de Kolaghan: abre uma janela só com os quatro modos em português, na ordem da carta, com o alvo de cada um; \"Destrua o artefato alvo\" fica apagado com \"Sem alvo possível agora\", e o selo mostra 0/2. Toque em dois modos (eles ganham 1 e 2) e confirme: os alvos dos dois modos são pedidos em seguida, e a mágica vai para a pilha com os dois.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Kolaghan's Command"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [
+            "Grizzly Bears"
+          ],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Swamp"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Island",
+            "Forest"
+          ],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Caverna das Almas: tipo de criatura com busca",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Cavern of Souls na mão, Llanowar Elves e Elvish Mystic no campo e três Llanowar Elves no grimório. Jogue a Caverna das Almas: em vez de uma lista de botões em inglês, abre uma busca com \"Do seu deck\" no topo (Elfo e Druida, com quantas cartas têm cada um) e todos os tipos em português, com o nome em inglês ao lado. Digite \"zumbi\" ou \"zombie\": sobra Zumbi. Apague e toque em Elfo: o aviso diz \"Jogador 1 escolheu Elfo.\"",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Cavern of Souls"
+          ],
+          "library": [
+            "Llanowar Elves",
+            "Llanowar Elves",
+            "Llanowar Elves"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Llanowar Elves"
+            },
+            {
+              "name": "Elvish Mystic"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Explodir em Raios: com ou sem reforço",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Burst Lightning na mão e cinco Mountains; o Jogador 2 tem um Grizzly Bears. Conjure o Explodir em Raios: a janela mostra \"Sem reforço\" ({R}, 2 de dano) e \"Com reforço\" ({4}{R}, a frase do reforço), com \"Mana disponível: 5\". Toque em Com reforço, escolha o Grizzly Bears e pague: as cinco Mountains viram e ele leva 4 de dano. Com só três Mountains, o cartão Com reforço avisaria \"Falta 2 de mana\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Burst Lightning"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Bênção do Apóstolo: proteção pelos símbolos de cor",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Apostle's Blessing na mão, duas Plains e um Grizzly Bears. Conjure a Bênção do Apóstolo no Grizzly Bears e pague: em vez de \"white … green, Artifact\", a janela mostra os cinco símbolos de mana com o nome em português e um de Artefatos. Toque em Vermelho: o aviso diz \"Jogador 1 escolheu vermelho.\" e o Grizzly Bears ganha proteção contra vermelho.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Apostle's Blessing"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Pedidos em português: manutenção cumulativa e sacrifício",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 começa na manutenção com Mystic Remora (um marcador de idade), três Islands, um Swamp, Grizzly Bears e Llanowar Elves no campo e Village Rites na mão. Na manutenção, a caixa de ação diz \"Manutenção cumulativa: pague {2} para manter Rêmora Mística no campo. Sem pagar, ela é sacrificada.\", com o botão \"Não pagar e sacrificar\" no lugar de \"Cancelar\". Pague. Na fase principal, conjure Village Rites: a caixa diz \"Para pagar o custo, sacrifique 1 criatura.\" e o botão é \"Sacrificar\"; o texto do Forge fica em \"Ver detalhes\".",
+    "cenario": {
+      "active": 0,
+      "phase": "upkeep",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Village Rites"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mystic Remora",
+              "counters": {
+                "AGE": 1
+              }
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Swamp"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Llanowar Elves"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Proliferar: marcadores bons e ruins dos dois lados",
     "tipo": "conferir",
     "conferir": "O Jogador 1 tem Steady Progress na mão, três Islands, Grizzly Bears com dois marcadores +1/+1, Runeclaw Bear com um −1/−1 e 2 de veneno. O Jogador 2 tem Serra Angel com um −1/−1, Garruk Wildspeaker com 3 de lealdade e 9 de veneno. Conjure Steady Progress: a lista do proliferar separa em Te ajuda os +1/+1 do Grizzly Bears, o −1/−1 da Serra Angel e o veneno do Jogador 2 (que avisa \"perde a partida\"), e em Te prejudica o −1/−1 do Runeclaw Bear, a lealdade do Garruk e o seu veneno, cada linha com o número antes e depois. Marque algo de Te prejudica: o painel avisa, e o botão diz Proliferar (N). Confirme só o que te ajuda: cada escolhido ganha mais um marcador de cada tipo que já tem, o Jogador 1 compra uma carta e, com o 10º veneno, o Jogador 2 perde a partida.",

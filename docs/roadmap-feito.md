@@ -1612,3 +1612,21 @@ Feito em 16/11/2026 (`novidades-pendentes/selos-de-evasao`).
 - [x] Nomes em português no selo, no modal de detalhes (que passou a usar os nomes de `cardLabels.ts`) e no balão (`keywordName`/`keywordRule`).
 - [x] No bloqueio, a mesa já seguia o servidor (`legalAssignments`, pelo `CombatUtil.canBlock` do Forge): `InputContextTest.intimidateAndLandwalkLimitTheLegalBlocks`.
 - [x] Novidade, prints e o cenário "Intimidar, medo, sombra e travessia: selos e bloqueio" no Laboratório.
+
+## 142. ✅ Varredura de telas e decisões que podem ficar melhores para o jogador
+
+Pedido em 19/11/2026, depois da escolha de número: ela usava a mesma lista genérica de qualquer escolha (um botão por número, um "..." que abria outra janela) e virou um contador com o custo, a mana disponível e o efeito (estudo e decisão em `docs/escolha-numero-opcoes.html`, novidade em `novidades-pendentes/escolha-de-numero`). A ideia é procurar, de propósito, outros pontos assim, em vez de esperar que alguém tropece neles.
+
+Sinais de que uma tela ou decisão merece uma versão melhor:
+- Cai na janela genérica (lista de botões de texto, "Sim/Não", campo de texto) quando o assunto pede uma tela própria (número, cor, tipo de criatura, modo, quantidade).
+- Não mostra o que a escolha custa ou faz (mana, vida, cartas), e o problema só aparece depois.
+- Botões que não dizem o que fazem ("OK", "Nenhum", "Cancelar" sem objeto).
+- Precisa de uma segunda janela ou de vários passos para algo que caberia num só.
+- Rola ou aperta no celular deitado (340 a 360 px de altura).
+- Texto do Forge cru ou em inglês, ou com ids de carta (ex.: visto nesse dia, ao escolher os alvos da Fireball: "Select any target (2 more can be targeted)").
+- Não dá para usar só com o teclado, ou o foco começa no lugar errado.
+
+- [x] Fazer a varredura: cada tipo de pergunta do servidor (`kind` e `purpose` em `src/forge/protocol.ts`), os pedidos da caixa de ação (`input.message`, alvos, pagar mana), os menus e avisos da mesa e as telas fora da partida (salas, decks, resultado). Para cada um, montar a mesa mínima (páginas de teste em `tests/fixtures/` ou o Laboratório), olhar no computador e no celular deitado e anotar os sinais acima.
+- [x] Juntar o que achar numa lista por ganho para o jogador e esforço (só a mesa, ou mesa e servidor), em `docs/varredura-experiencia.html`. Em 19/11/2026: 26 mesas do Laboratório montadas no servidor de verdade, cada uma com uma carta que dispara uma decisão, com os textos que a mesa recebe; a página tem a ordem sugerida e prévias de hoje × proposta dos cinco primeiros, no computador e no celular deitado.
+- [x] Para cada item escolhido, um HTML de opções em `docs/` (como o da escolha de número) para decidir, e um item próprio neste roadmap para fazer. Os cinco primeiros foram aprovados direto pelas prévias da varredura e feitos na mesma mudança (novidade em `novidades-pendentes/telas-de-escolha`): pedidos da caixa de ação em português (`src/ui/forgeRequest.ts`), modos de uma mágica modal numa tela só (`ModeChoice.java`, `src/ui/modeChoice.ts`), cor, proteção e terreno básico com os símbolos (`src/ui/colorChoice.ts`), tipo de criatura com busca (`CreatureTypeChoice.java`, `src/ui/typeChoice.ts`, nomes em `src/ui/creatureTypes.ts`) e custos opcionais com o custo total (`OptionalCosts.java`, `src/ui/optionalCosts.ts`). O resto da lista virou os itens 143 a 146.
+- Cancelar a mágica na tela dos modos ficou de fora: o Forge não deixa desistir nesse ponto (com nenhum modo, a mágica seguiria sem efeito), então a tela não tem esse botão.

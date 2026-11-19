@@ -1,5 +1,6 @@
 import '../../src/style.css';
 import { createForgeTableView } from '../../src/ui/forgeTable';
+import { choiceScreens } from './choiceScreens';
 const card = (id: number, name: string, controller: number, extra = {}) => ({ id, name, controller, tapped: false, token: false, manaCost: '{1}{G}', typeLine: 'Creature — Elf', creature: true, power: 2, toughness: 2, ...extra });
 const land = (id: number, controller: number) => card(id, 'Forest', controller, { creature: false, land: true, typeLine: 'Basic Land — Forest', manaCost: '' });
 const players = [10, 23].map((id, seat) => ({ id, seat, name: seat ? 'Oponente' : 'Você', ai: seat === 1, life: 20 - seat * 4, library: 50, handCount: 5,
@@ -824,3 +825,5 @@ if (cenario === 'conexao-perdida') {
   if (new URLSearchParams(location.search).get('sala')) (state as any).session = { code: 'ABCD', token: 't' };
   view.disconnected();
 }
+// Escolhas com tela própria e pedidos da caixa de ação (item 142): window.fixture.modes(), .color('land'), .creatureType(), .kicker(3), .request('remora').
+Object.assign((window as any).fixture, choiceScreens(state, view));
