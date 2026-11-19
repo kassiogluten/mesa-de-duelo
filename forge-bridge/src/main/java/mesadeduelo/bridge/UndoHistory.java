@@ -40,9 +40,12 @@ final class UndoHistory {
     /** Turnos guardados: o atual e o anterior. O Desfazer volta no máximo até o começo do turno anterior. */
     static final int TURNS = 2;
 
-    /** Uma decisão: o jogo logo antes do prompt, quem decidiu e o que fez ("pass", "land", "cast" ou "ability"). */
-    record Step(GameMemento memento, int logSize, Player player, int turn, PhaseType phase, String action, String card) {
-        Step decided(String action, String card) { return new Step(memento, logSize, player, turn, phase, action, card); }
+    /**
+     * Uma decisão: o jogo logo antes do prompt, quem decidiu e o que fez ("pass", "land", "cast" ou "ability"), e
+     * {@code kept}, o que a ponte guarda fora do jogo e volta junto com ele (os números da partida, {@link MatchStats}).
+     */
+    record Step(GameMemento memento, int logSize, Player player, int turn, PhaseType phase, String action, String card, Object kept) {
+        Step decided(String action, String card) { return new Step(memento, logSize, player, turn, phase, action, card, kept); }
 
         /** "conjurar Raio", "passar a vez na fase principal 1"... para o aviso, o pedido e o histórico. */
         String text() {
@@ -99,7 +102,7 @@ final class UndoHistory {
             r = recorder;
         }
         var ph = g.getPhaseHandler();
-        return new Step(r.capture(g), g.getGameLog().size(), who, ph.getTurn(), ph.getPhase(), null, null);
+        return new Step(r.capture(g), g.getGameLog().size(), who, ph.getTurn(), ph.getPhase(), null, null, keep.get());
     }
 
     /** Começou o turno {@code turn}: as decisões de antes do turno anterior saem do histórico. */
@@ -144,6 +147,10 @@ final class UndoHistory {
         return n;
     }
 
+    /** O que fica fora do jogo e volta junto com ele: tirado em cada retrato ({@link #capture}) e devolvido na volta. */
+    volatile java.util.function.Supplier<Object> keep = () -> null;
+    volatile java.util.function.Consumer<Object> restoreKept = kept -> { };
+
     /** Avisado (na thread do jogo) depois de cada volta, com o passo desfeito. */
     volatile java.util.function.Consumer<Step> undone = step -> { };
 
@@ -174,6 +181,7 @@ final class UndoHistory {
         g.getGameLog().truncateTo(target.logSize());
         if (!memento.problems.isEmpty()) Log.bridge().warn("Desfazer: problemas ao restaurar: " + memento.problems);
         refreshViews(g);
+        restoreKept.accept(target.kept());
         g.fireEvent(new GameEventSnapshotRestored(false));
         g.getGameLog().add(GameLogEntryType.INFORMATION, target.player().getName() + " desfez: " + target.text() + (note == null ? "." : " (" + note + ")."));
         undone.accept(target);

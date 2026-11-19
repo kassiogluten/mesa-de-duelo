@@ -2,7 +2,7 @@
 // antes do resultado, em que o retrato de quem perdeu racha) e o resultado, e os avisos de conexão caída.
 import type { FState } from '../forge/client';
 import { ptOf } from './cardFaces';
-import { gameSummaryHTML } from './lifeChart';
+import { statsDetailsHTML, statsHighlightsHTML } from './matchStats';
 import { disconnectedHTML, gameResult, lifeDetails, reconnectingHTML, resultHTML } from './resultView';
 import { createSideboardPanel } from './sideboardPanel';
 import type { TableCtx } from './tableContext';
@@ -13,14 +13,19 @@ export function createTableOverlay(d: OverlayDeps) {
   const { root, $ } = d;
   // Fim da partida (o momento antes do resultado).
   let finaleKey = '', finaleUntil = 0, wasPlaying = false;
-  /** Entre os jogos, o resumo do jogo que acabou fica recolhido; aberto ou fechado, continua assim ao redesenhar. */
-  let lifeDetailsOpen = false;
+  /**
+   * O gráfico de vida e a tabela de números do jogo que acabou ficam recolhidos (no resultado e entre os jogos);
+   * abertos ou fechados, continuam assim ao redesenhar.
+   */
+  let lifeDetailsOpen = false, statsOpen = false;
   // "toggle" não sobe pela árvore: a escuta é na captura.
   root.addEventListener('toggle', e => {
-    if ((e.target as HTMLElement).matches?.('[data-life-details]')) lifeDetailsOpen = (e.target as HTMLDetailsElement).open;
+    const t = e.target as HTMLElement;
+    if (t.matches?.('[data-life-details]')) lifeDetailsOpen = (t as HTMLDetailsElement).open;
+    if (t.matches?.('[data-stats-details]')) statsOpen = (t as HTMLDetailsElement).open;
   }, true);
-  const lifeDetailsHTML = (s: FState) => lifeDetails(s, lifeDetailsOpen, name => ptOf(name)?.name || name);
-  const sideboard = createSideboardPanel(d, lifeDetailsHTML);
+  const detailsHTML = (s: FState) => statsDetailsHTML(s, statsOpen) + lifeDetails(s, lifeDetailsOpen, name => ptOf(name)?.name || name);
+  const sideboard = createSideboardPanel(d, detailsHTML);
 
   function render(s: FState) {
     const match = d.match();
@@ -47,7 +52,8 @@ export function createTableOverlay(d: OverlayDeps) {
       ov.hidden = true; ov.dataset.html = '';
     } else if (s.gameOver && !match.disconnected) {
       const result = gameResult(s);
-      const summary = gameSummaryHTML(s, name => ptOf(name)?.name || name);
+      // Os quatro números de quem joga à vista; a tabela de todos e o gráfico de vida, recolhidos.
+      const summary = statsHighlightsHTML(s) + detailsHTML(s);
       const html = resultHTML(s, { result, summary, still: !ov.hidden, lab: !!s.room?.lab && !!d.opts.onLabClose, feedback: !!d.opts.onFeedback });
       if (ov.hidden || ov.dataset.html !== html) { ov.innerHTML = html; ov.dataset.html = html; }
       ov.hidden = false;

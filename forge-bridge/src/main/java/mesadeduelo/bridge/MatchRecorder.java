@@ -62,6 +62,7 @@ final class MatchRecorder {
     void gameEnded(HostedMatch ended) {
         if (gameSince > 0) gameMs = System.currentTimeMillis() - gameSince;
         Metrics.gameFinished(session.config.format(), session.isRoom());
+        session.stats.gameEnded(ended.getGame());
         if (ended.getMatch() != null) gameMetrics(ended.getMatch());
         gameDurations.add(gameMs);
         if (ended.getMatch() != null && ended.getMatch().isMatchOver()) record(ended.getMatch(), null, null, null);
@@ -126,7 +127,7 @@ final class MatchRecorder {
      * jogou com a conta conectada (veja {@link AccountMatches}); apagar a conta os tira ({@link MatchHistory#forget}).
      *
      * {id, startedAt, endedAt, ms, format, length, mode:"ia"|"rede", public?, end, winner: índice|null,
-     *  players:[{name?, ai, account?, deckId?, deck, colors, commander?, wins}],
+     *  players:[{name?, ai, account?, deckId?, deck, colors, commander?, wins, stats?: {números de MatchStats, damageTo:[por índice]}}],
      *  games:[{winner: índice|null, turns, ms?, end, result:["win"|"draw"|"playing"|motivo da derrota do Forge], mull:[n]}]}
      */
     JsonObject historyJson(forge.game.Match fm) { return historyJson(fm, null, null, null); }
@@ -225,6 +226,8 @@ final class MatchRecorder {
                 for (var e : deck.getOrCreate(DeckSection.Commander)) commanders.add(e.getKey().getDisplayName());
                 if (!commanders.isEmpty()) p.addProperty("commander", String.join(" + ", commanders));
             }
+            JsonObject stats = session.stats.seriesJson(rp, order, current);
+            if (stats != null) p.add("stats", stats);
             int wins = fm.getGamesWonBy(rp.getPlayer()) + (i == unfinishedWinner ? 1 : 0);
             p.addProperty("wins", wins);
             if (wins > bestWins) { best = i; bestWins = wins; tie = false; } else if (wins == bestWins) tie = true;

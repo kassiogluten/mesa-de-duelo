@@ -1,5 +1,6 @@
 import { esc, manaHTML } from '../ui/cardtext';
 import { aiStyleName, DEFAULT_AI_STYLE } from '../aiStyle';
+import type { FPlayerStats } from '../forge/protocol';
 import type { ReplaySummary } from '../replays';
 
 /*
@@ -9,10 +10,12 @@ import type { ReplaySummary } from '../replays';
 
 export type Resultado = 'vitoria' | 'derrota' | 'empate' | 'queda';
 export interface DeckDaPartida { id?: string; nome?: string; comandante?: string; cores?: string }
-export interface Oponente { nome?: string; ia: boolean; /** Estilo do computador (src/aiStyle.ts). */ estilo?: string; deck?: string; comandante?: string; cores?: string }
+export interface Oponente { nome?: string; ia: boolean; /** Estilo do computador (src/aiStyle.ts). */ estilo?: string; deck?: string; comandante?: string; cores?: string; /** Dano que você causou a ele. */ dano?: number }
+/** Os números da conta numa partida (somados nos jogos da série); as partidas de antes deles não os têm. */
+export type Estatisticas = Omit<FPlayerStats, 'damageTo'>;
 export interface Partida {
   id: string; quando: string; formato?: string; melhorDe?: 'bo1' | 'bo3'; modo?: 'ia' | 'rede'; ms?: number; fim?: string;
-  resultado: Resultado; turnos: number; jogos: number; placar: number[]; deck: DeckDaPartida; oponentes: Oponente[];
+  resultado: Resultado; turnos: number; jogos: number; placar: number[]; deck: DeckDaPartida; oponentes: Oponente[]; estatisticas?: Estatisticas;
 }
 export interface Grupo { partidas: number; vitorias: number }
 export interface Numeros {
@@ -21,6 +24,8 @@ export interface Numeros {
   porDeck: (Grupo & { id: string; nome?: string })[];
   porFormato: (Grupo & { formato: string })[];
   porOponente: (Grupo & { tipo: 'ia' | 'pessoas' })[];
+  /** A soma dos números das partidas que os têm, e quantas são. */
+  estatisticas?: { partidas: number; soma: Estatisticas };
 }
 export interface Resposta {
   total: number; pagina: number; porPagina: number; partidas: Partida[]; numeros: Numeros;
@@ -70,16 +75,32 @@ function detalhe(p: Partida) {
   return extra.join(', ');
 }
 
+/** Os números da partida numa linha: o dano sempre, o resto só quando passou de zero. */
+const NUMEROS: { key: keyof Estatisticas; um: string; varios: string; sempre?: boolean }[] = [
+  { key: 'damage', um: 'de dano causado', varios: 'de dano causado', sempre: true },
+  { key: 'removals', um: 'remoção', varios: 'remoções' },
+  { key: 'counters', um: 'anulação', varios: 'anulações' },
+  { key: 'kills', um: 'criatura eliminada em combate', varios: 'criaturas eliminadas em combate' },
+];
+export function numerosDaPartida(e?: Estatisticas) {
+  if (!e) return '';
+  return NUMEROS.filter(n => n.sempre || (e[n.key] ?? 0) > 0).map(n => { const v = e[n.key] ?? 0; return `${v} ${v === 1 ? n.um : n.varios}`; }).join(' · ');
+}
+
 /** O link da repetição, para a partida guardada neste aparelho. */
 const reverHTML = (id: string) => `<a class="pt-rever" href="/rever.html?id=${encodeURIComponent(id)}">Rever</a>`;
 
 /** `rever`: a partida está guardada neste aparelho e dá para rever. */
 export function partidaHTML(p: Partida, nomeDoFormato: NomeDoFormato, rever = false) {
   const meu = p.deck.comandante || p.deck.nome || 'Deck sem nome';
+  // Com mais de um oponente, quanto dano você causou em cada um.
+  const varios = p.oponentes.length > 1 && !!p.estatisticas;
   const contra = p.oponentes.map(o => {
     const deck = deckDoOponente(o);
-    return `<li>${coresHTML(o.cores)}<span><strong>${esc(nomeDoOponente(o))}</strong>${deck ? ` <small>${esc(deck)}</small>` : ''}</span></li>`;
+    const dano = varios ? ` <small class="pt-dano">· levou ${o.dano ?? 0} de dano seu</small>` : '';
+    return `<li>${coresHTML(o.cores)}<span><strong>${esc(nomeDoOponente(o))}</strong>${deck ? ` <small>${esc(deck)}</small>` : ''}${dano}</span></li>`;
   }).join('');
+  const numeros = numerosDaPartida(p.estatisticas);
   const sobre = [p.formato ? nomeDoFormato(p.formato) : '', p.melhorDe === 'bo3' ? 'melhor de três' : '',
     p.turnos ? `${p.turnos} ${p.turnos === 1 ? 'turno' : 'turnos'}` : '', p.ms ? duracao(p.ms) : ''].filter(Boolean);
   const extra = detalhe(p);
@@ -89,7 +110,8 @@ export function partidaHTML(p: Partida, nomeDoFormato: NomeDoFormato, rever = fa
       <p class="pt-meu">${coresHTML(p.deck.cores)}<span><strong>${esc(meu)}</strong>${p.deck.comandante && p.deck.nome ? ` <small>${esc(p.deck.nome)}</small>` : ''}</span></p>
       <p class="pt-contra">contra</p>
       <ul class="pt-oponentes">${contra}</ul>
-    </div>
+    </div>${numeros ? `
+    <p class="pt-stats">${esc(numeros)}</p>` : ''}
     <p class="pt-sobre"><time datetime="${esc(p.quando)}">${esc(quando(p.quando))}</time>${sobre.length ? `<span>${esc(sobre.join(' · '))}</span>` : ''}${rever ? reverHTML(p.id) : ''}</p>
   </li>`;
 }
@@ -125,6 +147,22 @@ function grupoHTML(titulo: string, linhas: { nome: string; g: Grupo }[]) {
     linhas.map(l => `<tr><th scope="row">${esc(l.nome)}</th><td>${l.g.partidas}</td><td>${l.g.vitorias}</td><td>${taxa(l.g)}</td></tr>`).join('')}</tbody></table></section>`;
 }
 
+/** "4,5": uma casa decimal, só quando ajuda. */
+export const media = (soma: number, partidas: number) => (Math.round(10 * soma / partidas) / 10).toLocaleString('pt-BR');
+
+const MEDIAS: { key: keyof Estatisticas; nome: string }[] = [
+  { key: 'damage', nome: 'Dano causado' }, { key: 'damageTaken', nome: 'Dano recebido' }, { key: 'removals', nome: 'Remoções' },
+  { key: 'counters', nome: 'Anulações' }, { key: 'kills', nome: 'Criaturas eliminadas em combate' }, { key: 'draws', nome: 'Cartas compradas' },
+];
+
+/** A média dos números por partida, só das partidas que os têm (as de antes deles ficam de fora). */
+function mediasHTML(e?: Numeros['estatisticas']) {
+  if (!e?.partidas) return '';
+  const linhas = MEDIAS.map(m => `<tr><th scope="row">${esc(m.nome)}</th><td>${media(e.soma[m.key] ?? 0, e.partidas)}</td></tr>`).join('');
+  return `<section class="pt-grupo"><h3>Média por partida</h3><table><thead><tr><th scope="col"><span class="sr-only">Número</span></th><th scope="col">Média</th></tr></thead><tbody>${linhas}</tbody></table>`
+    + `<p class="pt-nota">De ${e.partidas} ${e.partidas === 1 ? 'partida' : 'partidas'} com os números registrados.</p></section>`;
+}
+
 /** Os números do alto e as taxas por deck, formato e oponente. */
 export function numerosHTML(n: Numeros, nomeDoFormato: NomeDoFormato) {
   const cartao = (valor: string, rotulo: string) => `<div class="pt-cartao"><strong>${esc(valor)}</strong><span>${esc(rotulo)}</span></div>`;
@@ -139,6 +177,7 @@ export function numerosHTML(n: Numeros, nomeDoFormato: NomeDoFormato) {
     grupoHTML('Por deck', n.porDeck.map(g => ({ nome: g.nome || 'Deck sem nome', g }))),
     grupoHTML('Por formato', n.porFormato.map(g => ({ nome: nomeDoFormato(g.formato), g }))),
     grupoHTML('Por oponente', n.porOponente.map(g => ({ nome: g.tipo === 'ia' ? 'Contra o computador' : 'Contra pessoas', g }))),
+    mediasHTML(n.estatisticas),
   ].join('');
   return `<div class="pt-cartoes">${cartoes}</div>${n.partidas ? `<div class="pt-grupos">${grupos}</div>` : ''}`;
 }

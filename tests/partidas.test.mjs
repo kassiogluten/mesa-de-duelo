@@ -54,3 +54,24 @@ test('a consulta leva só os filtros escolhidos', () => {
   assert.match(filtros, /<option value="d1" selected>Elfos/);
   assert.equal(view.duracao(20_000), 'menos de 1 min');
 });
+
+test('os seus números na partida: o dano sempre, o resto quando passou de zero, e o dano em cada oponente com mais de um', () => {
+  const html = view.partidaHTML(partida({ estatisticas: { damage: 14, removals: 1, counters: 2, draws: 8 } }), formato);
+  assert.match(html, /<p class="pt-stats">14 de dano causado · 1 remoção · 2 anulações<\/p>/);
+  assert.doesNotMatch(html, /levou/, 'com um oponente só, o dano dele é o dano causado');
+  assert.doesNotMatch(view.partidaHTML(partida(), formato), /pt-stats/, 'partida de antes dos números');
+  const varios = view.partidaHTML(partida({ estatisticas: { damage: 9 }, oponentes: [{ ia: true, dano: 9 }, { ia: true }] }), formato);
+  assert.match(varios, /levou 9 de dano seu/);
+  assert.match(varios, /levou 0 de dano seu/);
+});
+
+test('média por partida, só das partidas com os números registrados', () => {
+  const base = { partidas: 5, vitorias: 3, derrotas: 2, empates: 0, porDeck: [], porFormato: [], porOponente: [] };
+  const html = view.numerosHTML({ ...base, estatisticas: { partidas: 2, soma: { damage: 25, removals: 3 } } }, formato);
+  assert.match(html, /<h3>Média por partida<\/h3>/);
+  assert.match(html, /<th scope="row">Dano causado<\/th><td>12,5<\/td>/);
+  assert.match(html, /<th scope="row">Remoções<\/th><td>1,5<\/td>/);
+  assert.match(html, /<th scope="row">Anulações<\/th><td>0<\/td>/);
+  assert.match(html, /De 2 partidas com os números registrados/);
+  assert.doesNotMatch(view.numerosHTML(base, formato), /Média por partida/);
+});

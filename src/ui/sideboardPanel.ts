@@ -15,7 +15,7 @@ const HOLD_MS = 320;
 
 interface Press { side: SideboardSide; key: string; name: string; x: number; y: number; id: number; touch: boolean; armed: boolean; dragging: boolean; timer: number; ghost: HTMLElement | null; tile: HTMLElement }
 
-export function createSideboardPanel(d: SideboardPanelDeps, lifeDetailsHTML: (s: FState) => string) {
+export function createSideboardPanel(d: SideboardPanelDeps, detailsHTML: (s: FState) => string) {
   let filter: SideboardFilter = { text: '', type: '' };
   let filterFor = -1, fetchedFor = -1;
   let press: Press | null = null;
@@ -37,7 +37,7 @@ export function createSideboardPanel(d: SideboardPanelDeps, lifeDetailsHTML: (s:
     // Sem os dados de alguma carta (imagem, tipo, custo), busca uma vez e redesenha quando chegarem.
     const missing = [...sb.main, ...sb.sideboard].map(e => e.name).filter(name => !cacheGet(name));
     if (missing.length && fetchedFor !== sb.id) { fetchedFor = sb.id; void fetchByNames(missing).then(() => d.render(), () => {}); }
-    return sideboardHTML(s, match.sideboardDraft, { error: match.sideboardError, busy: match.sideboardBusy, details: lifeDetailsHTML(s), filter,
+    return sideboardHTML(s, match.sideboardDraft, { error: match.sideboardError, busy: match.sideboardBusy, details: detailsHTML(s), filter,
       ptName: name => ptOf(name)?.name || name, feedback: !!d.opts.onFeedback });
   }
 

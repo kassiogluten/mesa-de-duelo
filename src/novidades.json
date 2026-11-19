@@ -1,4 +1,17 @@
 {
+  "0.228.0": {
+    "Os seus números no fim de cada jogo": [
+      { "img": "0.228.0/destaques.webp", "legenda": "A vitória com os quatro números de quem jogou: dano causado, remoções, anulações e cartas compradas." },
+      { "img": "0.228.0/tabela.webp", "legenda": "Ver todos os números aberto: você e o oponente lado a lado, com o maior de cada linha em dourado." }
+    ],
+    "Os números de cada partida em Minhas partidas": [
+      { "img": "0.228.0/minhas-partidas.webp", "legenda": "Uma partida de Commander com o dano que cada oponente levou de você e os seus números embaixo." },
+      { "img": "0.228.0/media-por-partida.webp", "legenda": "A média por partida, contada das partidas que já têm os números." }
+    ],
+    "O gráfico de vida no fim do jogo fica recolhido": [
+      { "img": "0.228.0/destaques.webp", "legenda": "Ver gráfico de vida fica embaixo de Ver todos os números, recolhido." }
+    ]
+  },
   "0.227.0": {
     "Dividir o dano com − e +": [
       { "img": "0.227.0/dividir-dano.webp", "legenda": "Raio em Arco dividindo 3 de dano: 2 nos Ursos Cinzentos e 1 nos Elfos de Llanowar, os dois marcados com \"Morre\", e \"Tudo dividido\"." }

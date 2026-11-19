@@ -88,7 +88,7 @@ public class UndoHistoryTest {
         h.capture(game, me);   // liga o histórico a este jogo
         for (int turn = 1; turn <= 3; turn++)
             for (int k = 0; k < 2; k++)
-                h.decided(new UndoHistory.Step(recorder.capture(game), 0, me, turn, PhaseType.MAIN1, null, null), null);
+                h.decided(new UndoHistory.Step(recorder.capture(game), 0, me, turn, PhaseType.MAIN1, null, null, null), null);
         assertEquals("os do turno 1 saíram quando o 3 teve uma decisão", 4, h.size());
         assertEquals(3, h.lastOf(me.getId()).turn());
         game.fireEvent(new GameEventTurnBegan(me.getView(), 4));

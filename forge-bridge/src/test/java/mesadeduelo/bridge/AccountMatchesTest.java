@@ -105,4 +105,21 @@ public class AccountMatchesTest {
         assertEquals(45, third.getAsJsonObject("numeros").getAsJsonObject("sequencia").get("n").getAsInt());
         assertEquals(0, AccountMatches.page(many, "eu", AccountMatches.Filter.of(Map.of("pagina", "x")), NOW).get("pagina").getAsInt());
     }
+
+    @Test public void theAccountsNumbersGoWithEachMatchAndAddUpInTheTotals() {
+        JsonObject withStats = match("s", "2026-10-31T11:00:00Z", "commander", "d1", "Elfos", "vitoria", true);
+        JsonObject me = withStats.getAsJsonArray("players").get(0).getAsJsonObject();
+        me.add("stats", JsonParser.parseString("{\"damage\":14,\"removals\":2,\"damageTo\":[0,14]}"));
+        JsonObject other = match("t", "2026-10-31T09:00:00Z", "commander", "d1", "Elfos", "derrota", true);
+        other.getAsJsonArray("players").get(0).getAsJsonObject().add("stats", JsonParser.parseString("{\"damage\":6,\"counters\":1}"));
+        JsonObject page = AccountMatches.page(List.of(withStats, other, MINE.get(0)), "eu", AccountMatches.Filter.of(Map.of()), NOW);
+        JsonObject row = page.getAsJsonArray("partidas").get(0).getAsJsonObject();
+        assertEquals("{\"damage\":14,\"removals\":2}", row.getAsJsonObject("estatisticas").toString());
+        assertEquals(14, row.getAsJsonArray("oponentes").get(0).getAsJsonObject().get("dano").getAsInt());
+        assertFalse("older matches have no numbers", page.getAsJsonArray("partidas").get(2).getAsJsonObject().has("estatisticas"));
+        JsonObject totals = page.getAsJsonObject("numeros").getAsJsonObject("estatisticas");
+        assertEquals(2, totals.get("partidas").getAsInt());
+        assertEquals(20, totals.getAsJsonObject("soma").get("damage").getAsInt());
+        assertEquals(1, totals.getAsJsonObject("soma").get("counters").getAsInt());
+    }
 }

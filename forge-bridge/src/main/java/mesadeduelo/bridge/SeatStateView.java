@@ -40,7 +40,7 @@ final class SeatStateView {
     /** A mesa vista pelo jogador {@code viewer} (-2: ninguém), com os tempos de turno, a vida, os versos e os brackets. */
     private JsonObject gameState(GameView gv, int viewer, forge.game.Game game) {
         JsonObject state = StateJson.game(gv, viewer, game);
-        session.events.addTurnTimes(state); session.events.addLifeHistory(state);
+        session.events.addTurnTimes(state); session.events.addLifeHistory(state); session.stats.addStats(state);
         addBrackets(state);
         return state;
     }

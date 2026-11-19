@@ -136,6 +136,18 @@ export interface FMatch {
   /** Nome (no jogo) de quem desistiu da série; só com `abandoned`. Ausente em servidores antigos. */
   concededBy?: string;
 }
+/**
+ * Os números de um jogador num jogo (zeros ficam de fora): dano causado aos outros (`combatDamage` é a parte de combate),
+ * recebido e o maior num turno; permanentes dos outros que ele removeu por mágica ou habilidade; mágicas e habilidades
+ * que anulou e que teve anuladas; criaturas dos outros mortas em combate pelas dele e criaturas dele que morreram;
+ * criaturas que atacaram; mágicas, habilidades ativadas, terrenos, cartas compradas e vida ganha. `damageTo`: o dano
+ * causado a cada jogador, pelo id.
+ */
+export interface FPlayerStats {
+  damage?: number; combatDamage?: number; damageTaken?: number; biggestTurn?: number; removals?: number; counters?: number;
+  countered?: number; kills?: number; creaturesLost?: number; attackers?: number; spells?: number; abilities?: number;
+  lands?: number; draws?: number; lifeGained?: number; damageTo?: Record<string, number>;
+}
 export interface FSideboarding { id: number; main: DeckEntry[]; sideboard: DeckEntry[]; ready: boolean }
 
 /**
@@ -568,6 +580,8 @@ export interface FState {
   gameOver: boolean;
   /** Vida de cada jogador (pelo id) no fim de cada turno; `turn` 0 é a vida inicial. Só no fim do jogo. */
   lifeHistory?: { turn: number; life: Record<string, number> }[];
+  /** Os números de cada jogador (pelo id) no jogo que acabou. Só no fim do jogo. */
+  stats?: Record<string, FPlayerStats>;
   /** Sem decisões a tomar: eliminado no Commander ou, com watching, assistindo sem jogar. */
   spectating?: boolean;
   /** Gatilhos opcionais respondidos com "Sempre sim" ou "Sempre não" nesta partida: o texto do gatilho (a chave), a carta que perguntou e a resposta. */

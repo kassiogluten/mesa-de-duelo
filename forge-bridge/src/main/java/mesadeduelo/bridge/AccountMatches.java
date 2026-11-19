@@ -16,6 +16,10 @@ import com.google.gson.JsonObject;
  *   GET partidas?periodo=7|30|90&formato=F&deck=D&pagina=N
  *   → {total, pagina, porPagina, partidas:[linha], numeros, filtros:{formatos, decks:[{id, nome}]}}
  *
+ * Cada linha leva {@code estatisticas}, os números da conta naquela partida ({@link MatchStats}, sem o damageTo), e
+ * cada oponente o {@code dano} que a conta causou a ele; nos números, {@code estatisticas} soma os de todas as partidas
+ * que os têm (as gravadas antes deles ficam de fora da conta).
+ *
  * O período, o formato e o deck valem para a lista e para os números; as opções dos filtros vêm de todas as partidas.
  * A partida que caiu sem vencedor (ninguém voltou) aparece na lista, mas fica fora dos números. O deck é o salvo na
  * conta (o id dele): editar a lista não muda o deck; sem id, vale o nome.
@@ -98,10 +102,14 @@ final class AccountMatches {
         r.addProperty("jogos", games);
         JsonArray score = new JsonArray(), opponents = new JsonArray();
         score.add(wins(players.get(me)));
+        JsonObject mine = players.get(me).getAsJsonObject();
+        JsonObject stats = mine.has("stats") && mine.get("stats").isJsonObject() ? mine.getAsJsonObject("stats") : null;
+        JsonArray damageTo = stats != null && stats.has("damageTo") && stats.get("damageTo").isJsonArray() ? stats.getAsJsonArray("damageTo") : null;
         for (int i = 0; i < players.size(); i++) {
             if (i == me) continue;
             score.add(wins(players.get(i)));
             JsonObject p = players.get(i).getAsJsonObject(), op = new JsonObject();
+            if (damageTo != null && i < damageTo.size() && damageTo.get(i).getAsInt() > 0) op.add("dano", damageTo.get(i));
             copy(p, "name", op, "nome");
             op.addProperty("ia", p.has("ai") && p.get("ai").getAsBoolean());
             copy(p, "aiStyle", op, "estilo");
@@ -111,7 +119,12 @@ final class AccountMatches {
             opponents.add(op);
         }
         r.add("placar", score);
-        JsonObject mine = players.get(me).getAsJsonObject(), deck = new JsonObject();
+        if (stats != null) {
+            JsonObject own = stats.deepCopy();
+            own.remove("damageTo");
+            r.add("estatisticas", own);
+        }
+        JsonObject deck = new JsonObject();
         copy(mine, "deckId", deck, "id");
         copy(mine, "deck", deck, "nome");
         copy(mine, "commander", deck, "comandante");
@@ -127,6 +140,8 @@ final class AccountMatches {
         long ms = 0;
         Map<String, int[]> byDeck = new LinkedHashMap<>(), byFormat = new LinkedHashMap<>(), byOpponent = new LinkedHashMap<>();
         Map<String, String> deckNames = new LinkedHashMap<>();
+        Map<String, Integer> statSums = new LinkedHashMap<>();
+        int withStats = 0;
         String streak = null;
         int streakN = 0;
         boolean streakOpen = true;
@@ -137,6 +152,11 @@ final class AccountMatches {
             played++;
             if (win) won++; else if ("derrota".equals(result)) lost++; else drawn++;
             if (r.has("ms")) { ms += r.get("ms").getAsLong(); timed++; }
+            if (r.has("estatisticas")) {
+                withStats++;
+                for (var e : r.getAsJsonObject("estatisticas").entrySet())
+                    if (e.getValue().isJsonPrimitive() && e.getValue().getAsJsonPrimitive().isNumber()) statSums.merge(e.getKey(), e.getValue().getAsInt(), Integer::sum);
+            }
             String deck = deckKey(r.getAsJsonObject("deck"));
             deckNames.putIfAbsent(deck, text(r.getAsJsonObject("deck"), "nome"));
             tally(byDeck, deck, win);
@@ -156,6 +176,13 @@ final class AccountMatches {
         o.addProperty("empates", drawn);
         if (timed > 0) o.addProperty("duracaoMedia", ms / timed);
         if (streak != null) { JsonObject s = new JsonObject(); s.addProperty("resultado", streak); s.addProperty("n", streakN); o.add("sequencia", s); }
+        if (withStats > 0) {
+            JsonObject s = new JsonObject(), sums = new JsonObject();
+            s.addProperty("partidas", withStats);
+            statSums.forEach(sums::addProperty);
+            s.add("soma", sums);
+            o.add("estatisticas", s);
+        }
         o.add("porDeck", groups(byDeck, "id", deckNames));
         o.add("porFormato", groups(byFormat, "formato", null));
         o.add("porOponente", groups(byOpponent, "tipo", null));

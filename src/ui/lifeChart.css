@@ -37,6 +37,8 @@
 .life-details > summary { display: inline-flex; align-items: center; min-height: 40px; color: var(--gold-light); font: 500 14px var(--body); cursor: pointer; }
 .life-details > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 6px; }
 .life-details .life-chart, .life-details .commander-damage-summary { width: 100%; margin-inline: 0; }
+/* No resultado, recolhidos embaixo dos números: abertos, ficam na largura do gráfico, e não na da tela. */
+.result > .life-details, .result > .stats-details { width: min(600px, 92vw); margin-inline: auto; }
 
 /* Com o resumo, o resultado pode passar da altura da tela: rola. */
 .result.has-summary { max-height: 100dvh; overflow-y: auto; padding: 16px 0; box-sizing: border-box; }

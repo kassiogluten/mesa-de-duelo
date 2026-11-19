@@ -8,6 +8,17 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.228.0] - 2026-11-19
+
+### Novo
+
+- **Os seus números no fim de cada jogo.** A janela do resultado mostra quanto dano você causou, quantas permanentes dos oponentes você removeu, quantas mágicas anulou e quantas cartas comprou. Em **Ver todos os números**, uma tabela compara todos os jogadores: dano causado (e quanto foi em combate), dano recebido, maior dano num turno, remoções, anulações, mágicas anuladas, criaturas eliminadas em combate, criaturas perdidas, ataques, mágicas conjuradas, habilidades ativadas, terrenos, cartas compradas e vida ganha, com o maior de cada linha em dourado. Com mais de dois jogadores, ela também diz quanto dano cada um causou em cada outro. Remoção é a permanente de outro jogador que sai do campo por mágica ou habilidade sua (destruída, exilada, devolvida à mão ou sacrificada por efeito seu); a criatura que morre em combate conta à parte. Desfazer uma jogada desfaz os números dela. Entre os jogos de uma melhor de três, a tabela também aparece na troca de cartas.
+- **Os números de cada partida em Minhas partidas.** Cada partida jogada com a conta conectada mostra o seu dano causado, remoções, anulações e criaturas eliminadas em combate e, contra mais de um oponente, quanto dano cada um levou de você. Em cima, **Média por partida** mostra a sua média de dano causado e recebido, remoções, anulações, criaturas eliminadas e cartas compradas. As partidas de antes desta versão não têm os números e ficam fora da média.
+
+### Mudou
+
+- **O gráfico de vida no fim do jogo fica recolhido.** Ele continua lá, em **Ver gráfico de vida**, logo abaixo dos números, para a janela do resultado não ficar comprida.
+
 ## [0.227.0] - 2026-11-19
 
 ### Novo

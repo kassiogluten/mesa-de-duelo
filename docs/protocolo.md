@@ -221,6 +221,29 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `ready` | `boolean[]` | Quem está pronto para o próximo jogo: os assentos na ordem da sala e depois os computadores (sempre prontos). |
 | `concededBy?` | `string` | Nome (no jogo) de quem desistiu da série; só com `abandoned`. Ausente em servidores antigos. |
 
+## FPlayerStats
+
+Os números de um jogador num jogo (zeros ficam de fora): dano causado aos outros (`combatDamage` é a parte de combate), recebido e o maior num turno; permanentes dos outros que ele removeu por mágica ou habilidade; mágicas e habilidades que anulou e que teve anuladas; criaturas dos outros mortas em combate pelas dele e criaturas dele que morreram; criaturas que atacaram; mágicas, habilidades ativadas, terrenos, cartas compradas e vida ganha. `damageTo`: o dano causado a cada jogador, pelo id.
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `damage?` | `number` |  |
+| `combatDamage?` | `number` |  |
+| `damageTaken?` | `number` |  |
+| `biggestTurn?` | `number` |  |
+| `removals?` | `number` |  |
+| `counters?` | `number` |  |
+| `countered?` | `number` |  |
+| `kills?` | `number` |  |
+| `creaturesLost?` | `number` |  |
+| `attackers?` | `number` |  |
+| `spells?` | `number` |  |
+| `abilities?` | `number` |  |
+| `lands?` | `number` |  |
+| `draws?` | `number` |  |
+| `lifeGained?` | `number` |  |
+| `damageTo?` | `Record<string, number>` |  |
+
 ## FSideboarding
 
 | Campo | Tipo | O que é |
@@ -663,6 +686,7 @@ Previsão do combate de um jogador atacado, com as regras do Forge (prevenção,
 | `turnElapsedMs?` | `number` | Quanto o turno atual já durou quando o estado saiu do servidor, em ms; ausente no fim do jogo e em pontes antigas. |
 | `gameOver` | `boolean` |  |
 | `lifeHistory?` | `{ turn: number; life: Record<string, number> }[]` | Vida de cada jogador (pelo id) no fim de cada turno; `turn` 0 é a vida inicial. Só no fim do jogo. |
+| `stats?` | `Record<string, FPlayerStats>` | Os números de cada jogador (pelo id) no jogo que acabou. Só no fim do jogo. |
 | `spectating?` | `boolean` | Sem decisões a tomar: eliminado no Commander ou, com watching, assistindo sem jogar. |
 | `autoTriggers?` | `{ key: string; card?: string; accept: boolean }[]` | Gatilhos opcionais respondidos com "Sempre sim" ou "Sempre não" nesta partida: o texto do gatilho (a chave), a carta que perguntou e a resposta. |
 | `watching?` | `boolean` | Assistindo à partida de uma sala sem ocupar assento; `you` é o jogador de cuja mesa se vê a partida. |

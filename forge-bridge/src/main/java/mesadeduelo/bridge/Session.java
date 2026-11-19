@@ -61,6 +61,8 @@ final class Session {
     final MatchConfig config;
     final AtomicLong stateVersion = new AtomicLong();
     final VisibleEvents events = new VisibleEvents(this::markDirty, stateVersion::get);
+    /** Os números de cada jogador (dano, remoções, anulações...) para o fim do jogo e o histórico. */
+    final MatchStats stats = new MatchStats();
     volatile String matchId = UUID.randomUUID().toString();
     volatile String matchPhase = "playing";
     volatile int gameNumber = 1;
@@ -112,6 +114,8 @@ final class Session {
         seats = new Seat[humans];
         for (int i = 0; i < humans; i++) seats[i] = new Seat(this, i);
         undo = new UndoController(this);
+        undo.history.keep = stats::copy;
+        undo.history.restoreKept = stats::restore;
     }
 
     static Session solo(String code, Channel ch, Deck you, Deck opponent, MatchConfig config) {
@@ -316,7 +320,7 @@ final class Session {
         recordAbandoned(null);
         stop();
         matchId = UUID.randomUUID().toString();
-        events.reset(); stateVersion.set(0);
+        events.reset(); stats.reset(); stateVersion.set(0);
         matchPhase = "playing"; gameNumber = 1; abandoned = false; conceder = null; seriesQuitter = null;
         recorder.reset();
         undo.clear();

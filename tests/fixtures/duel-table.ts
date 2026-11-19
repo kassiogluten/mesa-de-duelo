@@ -506,9 +506,17 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
   /**
    * Fim do jogo: a tela de resultado ou, na melhor de três, "Prepare o próximo jogo" (com "Relatar um problema").
    * `ready`: eu já confirmei as trocas; `opponentReady`: o oponente já confirmou; `concededBy`: quem desistiu da série.
+   * `stats`: com os números de cada jogador e o gráfico de vida, como o servidor manda no fim do jogo.
    */
-  gameEnd(step: 'result' | 'sideboard' = 'result', o: { ready?: boolean; opponentReady?: boolean; concededBy?: string } = {}) {
+  gameEnd(step: 'result' | 'sideboard' = 'result', o: { ready?: boolean; opponentReady?: boolean; concededBy?: string; stats?: boolean } = {}) {
     state.gameOver = true; state.winner = 'Você';
+    if (o.stats) Object.assign(state, {
+      stats: {
+        10: { damage: 23, combatDamage: 17, damageTaken: 9, biggestTurn: 8, removals: 3, counters: 1, kills: 2, creaturesLost: 1, attackers: 11, spells: 9, abilities: 2, lands: 6, draws: 12, lifeGained: 4, damageTo: { 23: 23 } },
+        23: { damage: 9, combatDamage: 6, damageTaken: 23, biggestTurn: 4, removals: 1, countered: 1, kills: 1, creaturesLost: 4, attackers: 5, spells: 7, abilities: 4, lands: 7, draws: 11, damageTo: { 10: 9 } },
+      },
+      lifeHistory: [[20, 20], [20, 18], [17, 18], [17, 13], [15, 13], [15, 5], [13, 5], [13, 0]].map(([me, op], turn) => ({ turn, life: { 10: me, 23: op } })),
+    });
     state.match = { gameNumber: 1, wins: [1, 0], draws: 0, over: step === 'result', phase: step === 'result' ? 'complete' : 'sideboarding', ready: [!!o.ready, !!o.opponentReady],
       ...(o.concededBy ? { abandoned: true, concededBy: o.concededBy } : {}) };
     if (step === 'sideboard') state.sideboarding = { id: 1, ready: !!o.ready,

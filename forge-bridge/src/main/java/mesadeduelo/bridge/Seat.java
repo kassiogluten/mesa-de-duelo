@@ -288,7 +288,7 @@ final class Seat {
                 case openView -> {
                     @SuppressWarnings("unchecked") TrackableCollection<PlayerView> mine = (TrackableCollection<PlayerView>) a[0];
                     me = mine.iterator().next();
-                    if (session.match != null) session.events.attach(session.match.getGame());
+                    if (session.match != null) { session.events.attach(session.match.getGame()); session.stats.attach(session.match.getGame()); }
                     MatchJournal j = session.journal;
                     if (session.match != null && j != null && j.matchId.equals(belongsToMatch)) j.attach(session.match.getGame(), session.gameNumber);
                 }
