@@ -22,6 +22,7 @@ As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/chan
 - **Botões que dizem o que fazem.** Na busca opcional no grimório, "Nenhum" vira "Não procurar"; nas cartas reveladas, "OK" vira "Continuar", com o título "Fato ou Ficção: cartas reveladas do seu grimório"; ao escolher alvos de uma mágica ou o alvo de um contra-feitiço na pilha, "Cancelar" vira "Desistir da mágica".
 - **Ponder mostra as cartas na pergunta de embaralhar.** Depois de ordenar o topo do grimório, a pergunta "Quer embaralhar o grimório?" mostra as cartas na ordem que você deixou, com os botões "Embaralhar" e "Manter esta ordem".
 - **Pilha com o texto da carta em português.** Ao abrir a pilha, uma mágica mostra o texto impresso da carta em português, no lugar da frase em inglês do jogo com o número da carta.
+- **A carta junto das escolhas.** As janelas de reforço e outros custos opcionais, modos de uma mágica modal, cor e proteção, tipo de criatura, dividir dano e Cultivate mostram a carta que pede a escolha à esquerda, como a escolha de número já fazia; toque nela para ver os detalhes. No celular deitado ela fica menor, e em tela estreita sai para dar lugar às opções.
 
 ## [0.226.0] - 2026-11-19
 

@@ -21,6 +21,10 @@
     ],
     "Pilha com o texto da carta em português": [
       { "img": "0.227.0/pilha.webp", "legenda": "Pilhagem Infiel na pilha com o texto da carta em português embaixo." }
+    ],
+    "A carta junto das escolhas": [
+      { "img": "0.227.0/reforco-com-carta.webp", "legenda": "Explodir em Raios ao lado das duas formas de conjurar, sem e com reforço." },
+      { "img": "0.227.0/modos-com-carta.webp", "legenda": "Comando de Kolaghan ao lado dos quatro modos." }
     ]
   },
   "0.226.0": {

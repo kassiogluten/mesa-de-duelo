@@ -41,6 +41,7 @@ import './colorChoice.css';
 import './typeChoice.css';
 import './optionalCosts.css';
 import './splitDestinations.css';
+import './questionBeside.css';
 import './gameplay.css';
 import './stack.css';
 import './permanentEffects.css';

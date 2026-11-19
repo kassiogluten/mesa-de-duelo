@@ -81,17 +81,17 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   if (isPilesSplit(q)) return pilesSplitHTML(q, draft.picked, v.piles);
   if (isPilesChoice(q)) return pilesChoiceHTML(q, v.piles);
   if (isReplacementOrder(q)) return replacementOrderHTML(q, draft.all !== false, v.face, v.label);
-  if (isOptionalCosts(q)) return optionalCostsHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined);
-  if (isTypeChoice(q)) return typeChoiceHTML(q, draft.text, q.card ? v.label(q.card) : undefined);
-  if (isColorChoice(q)) return colorChoiceHTML(q, q.card ? v.label(q.card) : undefined);
-  if (isModeChoice(q)) return modeChoiceHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined, q.card?.manaCost);
+  if (isOptionalCosts(q)) return besideCard(v, q, optionalCostsHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined));
+  if (isTypeChoice(q)) return besideCard(v, q, typeChoiceHTML(q, draft.text, q.card ? v.label(q.card) : undefined));
+  if (isColorChoice(q)) return besideCard(v, q, colorChoiceHTML(q, q.card ? v.label(q.card) : undefined));
+  if (isModeChoice(q)) return besideCard(v, q, modeChoiceHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined, q.card?.manaCost));
   if (isNumberChoice(q)) return numberChoiceHTML(q, draft.text, q.card ? v.face(q.card) : '', rulesOf(q.card, v.ptText), q.card?.name ? [q.card.name, v.label(q.card)] : undefined);
   const opts = q.options ?? [];
   const head = `<div class="q-head"><h2>${esc(ptTitle(q.title))}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
   if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
   if (isNameChoice(q)) return nameChoiceHTML(q, head, draft.text, v.ptName);
-  if (isSplitDestinations(q)) return splitDestinationsHTML({ face: v.face, label: v.label }, q, draft.picked);
-  if (isAmountChoice(q)) return amountChoiceHTML({ face: v.face, label: v.label, players: v.players }, q, amountsOf(draft.amounts));
+  if (isSplitDestinations(q)) return besideCard(v, q, splitDestinationsHTML({ face: v.face, label: v.label }, q, draft.picked));
+  if (isAmountChoice(q)) return besideCard(v, q, amountChoiceHTML({ face: v.face, label: v.label, players: v.players }, q, amountsOf(draft.amounts)));
   if (q.kind === 'confirm' && q.purpose === 'commander-zone') return commanderZoneHTML(v, q);
   if (q.kind === 'confirm') {
     return `${head}<div class="q-actions">${opts.map((o, i) =>
@@ -144,6 +144,18 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
       ${!single ? pickCountHTML(n, min, max, opts.length) : ''}
       ${!single ? '<button class="arena-btn primary" data-q-submit>Confirmar</button>' : ''}
     </div>`;
+}
+const HEAD_END = 'Ver a mesa</button></div>';
+/**
+ * A carta que pede a escolha à esquerda do conteúdo, abaixo do título (custos opcionais, modos, cor, tipo de criatura,
+ * dividir, busca de dois destinos), como na escolha de número; toque nela para inspecionar.
+ */
+export function besideCard(v: Pick<QuestionView, 'face' | 'label'>, q: FQuestion, html: string) {
+  const card = q.card;
+  const at = html.indexOf(HEAD_END);
+  if (!card || card.faceDown || !card.name || at < 0) return html;
+  const cut = at + HEAD_END.length;
+  return `${html.slice(0, cut)}<div class="q-beside"><div class="q-beside-card" data-peek="${card.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(v.label(card))}">${v.face(card)}</div><div class="q-beside-main">${html.slice(cut)}</div></div>`;
 }
 /** "Fato ou Ficção - Revelando cartas de seu grimório" → "Fato ou Ficção: cartas reveladas do seu grimório". */
 export function revealTitle(title: string) {

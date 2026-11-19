@@ -1,0 +1,18 @@
+/* A carta que pede a escolha ao lado do conteúdo (besideCard em questionView.ts): à esquerda, abaixo do título; some em tela estreita e encolhe no celular deitado. */
+.forge .q-beside { display: flex; gap: 18px; align-items: flex-start; }
+.forge .q-beside-card { flex: none; width: 150px; --fw: 150px; aspect-ratio: 488 / 680; margin-top: 4px; cursor: zoom-in; border-radius: 8px; }
+.forge .q-beside-card:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+.forge .q-beside-main { flex: 1 1 auto; min-width: 0; }
+/* A janela cresce o tanto da carta, para o conteúdo não apertar. */
+.forge #fQuestion .question.mode-choice:has(.q-beside) { width: min(890px, 96vw); }
+.forge #fQuestion .question.type-choice:has(.q-beside) { width: min(850px, 96vw); }
+.forge #fQuestion .question.optional-costs:has(.q-beside), .forge #fQuestion .question.split-destinations:has(.q-beside) { width: min(820px, 96vw); }
+.forge #fQuestion .question.color-choice:has(.q-beside) { width: min(740px, 96vw); }
+
+@media (max-width: 560px) {
+  .forge .q-beside-card { display: none; }
+}
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .q-beside { gap: 10px; }
+  .forge .q-beside-card { width: 92px; --fw: 92px; margin-top: 0; }
+}
