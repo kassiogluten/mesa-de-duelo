@@ -32,14 +32,13 @@
   .forge.hand-hidden { --peek-strip: 14px; }
   .forge.hand-hidden:not([data-opening], .has-hand-decision, .dragging-hand) .hand { transform: translateY(calc(100% + 40px)); visibility: hidden; transition: transform .2s ease, visibility 0s linear .2s; }
 
-  /* Seta da mão, centralizada acima dela (o lugar exato vem do script): mostra ou esconde a mão. */
   /* Mão automática: um ícone pequeno de mão ao lado do relógio do turno, aceso quando ligado. */
   .forge .phase-hand { cursor: pointer; }
   .forge .phase-hand:hover { color: var(--ink); border-color: var(--line); }
   .forge .phase-hand[aria-pressed="true"], .forge .phase-hand[aria-pressed="true"] .phase-hand-count { color: var(--azul-101b2f, #101b2f); background: var(--gold); }
   .forge .phase-hand:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
   .forge.has-hand-decision .phase-hand { visibility: hidden; }
-  /* A seta (só com a mão automática desligada) fica centralizada acima da mão, discreta até o mouse chegar nela. */
+  /* A seta (só com a mão automática desligada) fica centralizada com a mão, no pé da mesa, discreta até o mouse chegar nela. */
   .forge:not([data-opening]) .hand-mode { display: flex; align-items: center; gap: 6px; position: absolute; z-index: 9; left: 50%; top: auto; bottom: 12px; translate: -50% 0; opacity: .5; transition: opacity .15s; }
   .forge:not([data-opening]) .hand-mode[hidden] { display: none; }
   .forge .hand-mode:hover, .forge .hand-mode:focus-within { opacity: 1; }
@@ -86,9 +85,12 @@
    * dos 64px). Telas altas começam assim (handMode.ts).
    */
   .forge.hand-fixed {
-    --peek-strip: calc(var(--hch) * .66 + 26px);
+    /* A mão fixa fica um pouco acima do pé da mesa, com mais de cada carta à vista; a seta fica embaixo dela. */
+    --hand-lift: 16px;
+    --peek-strip: calc(var(--hch) * .66 + 26px + var(--hand-lift));
     --ch: clamp(84px, calc((100vh - var(--top-band, 62px) - var(--peek-strip)) * .32 - 32px), 200px);
   }
+  .forge.hand-fixed:not([data-opening]) .hand { bottom: var(--hand-lift); }
   .forge.hand-fixed .action.hand-decision, .forge.multiplayer.hand-fixed .action.hand-decision { bottom: calc(var(--peek-strip) + 8px); }
   .forge.multiplayer.hand-fixed { --ch: clamp(72px, calc((100vh - 62px - var(--peek-strip)) * .282 - 12px), 200px); }
   .forge.multiplayer.hand-fixed .table-seat > .field { --ch: clamp(64px, calc((100vh - 62px - var(--peek-strip)) * .287 - 43px), 180px); }

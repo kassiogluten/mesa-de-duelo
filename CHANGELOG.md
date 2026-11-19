@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.219.0] - 2026-11-18
+
+### Mudou
+
+- **Seta da mão sempre no pé da mesa.** A seta que mostra e esconde a mão fica sempre no mesmo lugar, embaixo e no meio da mão, com a mão à vista ou escondida: dá para abrir e fechar a mão no mesmo toque, sem o botão pular para cima das cartas. A mão à vista também sobe um pouco, mostrando mais de cada carta.
+
 ## [0.218.0] - 2026-11-18
 
 ### Novo

@@ -62,27 +62,15 @@ export function createTableHand(d: HandDeps) {
     placeControls();
   }
   /**
-   * Os botões ficam centralizados acima da mão, logo acima do topo das cartas em repouso (sem contar o mouse por cima,
-   * que sobe a mão automática ou uma carta): as medidas sem transformação (offset*) não mudam com isso.
+   * A seta fica centralizada com a mão e sempre no pé da mesa, no mesmo lugar com a mão fixa ou oculta: mostrar e
+   * esconder é o mesmo toque, sem o botão pular para cima das cartas. Com a mão automática ela some (só o ícone da mão).
    */
   function placeControls() {
     const box = $('#fHandMode'), hand = $('#fHand');
     if (!box.offsetParent || !hand.offsetParent) return;
-    const mode = d.state()?.watching ? watchHandMode : handMode;
     const arenaHeight = (box.offsetParent as HTMLElement).clientHeight;
-    const slot = hand.querySelector<HTMLElement>('.hand-slot');
-    const peek = parseFloat(getComputedStyle(hand).getPropertyValue('--peek-visible')) || 50;
-    // Mão fixa: o topo das cartas e dos selos de custo dentro da mão, somado ao lugar da mão sem o deslizar (que pode
-    // estar no meio da animação de abrir).
-    const drawnTop = () => {
-      const handTop = hand.getBoundingClientRect().top;
-      return hand.offsetTop + Math.min(...[...hand.querySelectorAll<HTMLElement>('.hcard, .hcost')].map(el => el.getBoundingClientRect().top - handTop));
-    };
-    const cardsTop = !slot || mode === 'oculta' ? arenaHeight - 6
-      : mode === 'auto' ? arenaHeight - peek - 14
-      : drawnTop();
     box.style.left = `${Math.round(hand.offsetLeft + hand.offsetWidth / 2)}px`;
-    box.style.top = `${Math.round(Math.max(4, cardsTop - box.offsetHeight - 8))}px`;
+    box.style.top = `${Math.round(Math.max(4, arenaHeight - 14 - box.offsetHeight))}px`;
   }
   function apply(next: HandMode) {
     if (d.state()?.watching) watchHandMode = next;

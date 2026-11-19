@@ -1,4 +1,10 @@
 {
+  "0.219.0": {
+    "Seta da mão sempre no pé da mesa": [
+      { "img": "0.219.0/seta-mao-a-vista.webp", "legenda": "Com a mão à vista, as cartas um pouco mais altas e a seta para esconder no pé da mesa, no meio da mão." },
+      { "img": "0.219.0/seta-mao-escondida.webp", "legenda": "Com a mão escondida, a seta para mostrar fica no mesmo lugar." }
+    ]
+  },
   "0.218.0": {
     "Ninjutsu e sneak na mão": [
       { "img": "0.218.0/selo.webp", "legenda": "Na hora dos bloqueios, com um atacante seu passando livre: o Ninja das Horas Tardias tem o shuriken no topo e o contorno prateado do ninjutsu, e o Donatello, Gadget Master, o shuriken e o contorno verde do sneak." }
