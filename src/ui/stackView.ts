@@ -44,6 +44,15 @@ export function stackModeStrip(v: StackView, si: FState['stack'][number]) {
   const rows = si.modes.map(m => `<span class="stack-mode-row"><b class="mode-chip" title="Modo ${m.index} da carta" aria-label="Modo ${m.index}:">${m.index}</b><span>${richText(modeLineIn(pt, m.index) || m.text)}</span></span>`).join('');
   return `<span class="stack-loyalty stack-mode" title="${si.modes.length > 1 ? 'Modos escolhidos' : 'Modo escolhido'}">${rows}</span>`;
 }
+/**
+ * O efeito de um item da pilha, para ler: numa mágica sem modos, o texto impresso da carta em português (quando a mesa o
+ * tem); senão, o texto do Forge sem o "Nome (id) - " da frente. Os alvos e a forma de conjurar continuam em linhas próprias.
+ */
+export function stackEffectText(v: Pick<StackView, 'ptText'>, si: FState['stack'][number]) {
+  const pt = (si.kind ?? 'spell') === 'spell' && !si.modes?.length && !si.loyalty ? v.ptText(si.source?.name) : undefined;
+  if (pt) return pt;
+  return si.text.replace(/^.+? \(\d+\) - /, '').trim() || si.text;
+}
 export function stackFace(v: StackView, si: FState['stack'][number]) {
   // O valor que a carta conta (item 56), atualizado enquanto ela espera na pilha.
   const counted = si.source ? countSealsHTML(si.source, v.playerName, v.you) : '';
@@ -95,7 +104,7 @@ export function stackGalleryHTML(v: StackView, s: FState) {
           : `<b>${i + 1}</b><span>${i === 0 ? 'Resolve primeiro' : `${i + 1}º na resolução`}</span>`}</div>
         <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}${copies > 1 ? `, ${copies} efeitos iguais` : ''}">${stackFace(v, si)}${stackKindBadge(si)}${copies > 1 ? `<span class="stack-gallery-copies" title="${copies} efeitos iguais, cada um resolve separado">×${copies}</span>` : ''}</button>
         <div class="stack-gallery-owner">${esc(stackOwnerLine(si, s.you, owner))}</div>
-        <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}">${stackLoyaltyLine(si) ? `<p class="stack-cast">${esc(stackLoyaltyLine(si))}</p>` : ''}<p>${richText(si.text)}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${v.targetsText(si.targets) ? `<p class="stack-targets">${esc(v.targetsText(si.targets))}</p>` : ''}</div>
+        <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}">${stackLoyaltyLine(si) ? `<p class="stack-cast">${esc(stackLoyaltyLine(si))}</p>` : ''}<p>${richText(stackEffectText(v, si))}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${v.targetsText(si.targets) ? `<p class="stack-targets">${esc(v.targetsText(si.targets))}</p>` : ''}</div>
         <div class="stack-gallery-actions">${selectable ? `<button class="arena-btn primary" data-stack="${si.id}" data-gen="${s.input.gen}">Selecionar como alvo</button>` : ''}${si.source ? `<button class="icon-btn" data-stack-inspect="${si.id}" aria-label="Inspecionar ${esc(name)}">Inspecionar</button>` : ''}</div>
       </li>`;
     }).join('')}</ol>

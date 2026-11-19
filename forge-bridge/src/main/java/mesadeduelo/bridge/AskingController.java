@@ -436,10 +436,36 @@ final class AskingController extends PlayerControllerHuman {
         return true;
     }
     @Override public <T extends GameEntity> T chooseSingleEntityForEffect(FCollectionView<T> options, DelayedReveal reveal, SpellAbility sa, String title, boolean isOptional, Player targeted, Map<String, Object> params) {
-        return asking(sa, () -> super.chooseSingleEntityForEffect(options, reveal, sa, title, isOptional, targeted, params));
+        return asking(sa, () -> {
+            // Segunda pergunta de uma busca com dois destinos: a ordem que o jogador já deu responde.
+            if (plannedRoot != null && sa != null && sa.getRootAbility() == plannedRoot) {
+                for (Integer id : List.copyOf(plannedOrder)) for (T option : options) {
+                    if (option.getId() == id) { plannedOrder.remove(id); return option; }
+                }
+            }
+            return super.chooseSingleEntityForEffect(options, reveal, sa, title, isOptional, targeted, params);
+        });
     }
+    private volatile com.google.gson.JsonArray splitDestinations;
+    /** Os dois lugares da busca perguntada agora (SplitDestinations.java); {@code null} fora dela. */
+    com.google.gson.JsonArray splitDestinations() { return splitDestinations; }
+    /** A busca de dois destinos em andamento e as cartas na ordem dos lugares, para responder a pergunta seguinte. */
+    private volatile SpellAbility plannedRoot;
+    private final List<Integer> plannedOrder = new java.util.concurrent.CopyOnWriteArrayList<>();
     @Override public <T extends GameEntity> List<T> chooseEntitiesForEffect(FCollectionView<T> options, int min, int max, DelayedReveal reveal, SpellAbility sa, String title, Player targeted, Map<String, Object> params) {
-        return asking(sa, () -> super.chooseEntitiesForEffect(options, min, max, reveal, sa, title, targeted, params));
+        return asking(sa, () -> {
+            com.google.gson.JsonArray destinations = SplitDestinations.of(sa);
+            if (destinations == null) return super.chooseEntitiesForEffect(options, min, max, reveal, sa, title, targeted, params);
+            com.google.gson.JsonArray previous = splitDestinations;
+            splitDestinations = destinations;
+            try {
+                List<T> chosen = super.chooseEntitiesForEffect(options, min, max, reveal, sa, title, targeted, params);
+                plannedRoot = sa.getRootAbility();
+                plannedOrder.clear();
+                if (chosen != null) for (T c : chosen) plannedOrder.add(c.getId());
+                return chosen;
+            } finally { splitDestinations = previous; }
+        });
     }
     @Override public SpellAbility chooseSingleSpellForEffect(List<SpellAbility> spells, SpellAbility sa, String title, Map<String, Object> params) {
         return asking(sa, () -> super.chooseSingleSpellForEffect(spells, sa, title, params));

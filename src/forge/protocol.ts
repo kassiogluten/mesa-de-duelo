@@ -422,7 +422,11 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount' | 'number';
   /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order' | 'modes' | 'creature-type' | 'optional-costs';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order' | 'modes' | 'creature-type' | 'optional-costs' | 'split-destinations';
+  /** amount: o que se divide entre as opções (dano, escudo de prevenção ou marcadores). */
+  amountOf?: 'damage' | 'shield' | 'counters';
+  /** split-destinations: os dois lugares das cartas buscadas (Cultivate), na ordem da resposta: o primeiro recebe count cartas, o segundo o resto. */
+  destinations?: { zone: string; count?: number; tapped?: boolean }[];
   /** modes: quantos modos a carta tem e os que não dá para escolher agora. */
   modeCount?: number;
   unavailableModes?: FUnavailableMode[];
@@ -657,6 +661,8 @@ export interface FTargeting extends FTargets {
   kind?: 'spell' | 'ability' | 'trigger'; ability?: string;
   min?: number; max?: number; count?: number;
   valid?: string[]; zones?: string[];
+  /** Dano dividido igualmente entre os alvos (Bola de Fogo): o total, o X escolhido e a mana que o jogador consegue gerar. */
+  divideEvenly?: { amount: number; x?: number; available?: number };
 }
 
 /** Quem joga com a conta conectada: o token da sessão e o deck salvo, para a partida entrar em Minhas partidas. */

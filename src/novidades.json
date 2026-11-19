@@ -1,4 +1,28 @@
 {
+  "0.227.0": {
+    "Dividir o dano com − e +": [
+      { "img": "0.227.0/dividir-dano.webp", "legenda": "Raio em Arco dividindo 3 de dano: 2 nos Ursos Cinzentos e 1 nos Elfos de Llanowar, os dois marcados com \"Morre\", e \"Tudo dividido\"." }
+    ],
+    "Cultivate numa janela só": [
+      { "img": "0.227.0/cultivar.webp", "legenda": "Cultivar com a Ilha no espaço Campo (virado) e uma Floresta no espaço Mão, e os terrenos achados em cima." }
+    ],
+    "Bola de Fogo mostra o dano de cada alvo e o custo": [
+      { "img": "0.227.0/bola-de-fogo.webp", "legenda": "Bola de Fogo com X = 4 e dois alvos marcados: 2 de dano em cada, o custo {5}{R} e o botão \"Confirmar 2 alvos\"." }
+    ],
+    "Aviso do Fato ou Ficção com os dois montes": [
+      { "img": "0.227.0/fato-ou-ficcao.webp", "legenda": "O aviso depois da escolha: as duas cartas que foram para a mão, em miniatura, e as três que foram para o cemitério." }
+    ],
+    "Botões que dizem o que fazem": [
+      { "img": "0.227.0/reveladas.webp", "legenda": "As cartas reveladas do Fato ou Ficção com o título em português e o botão \"Continuar\"." },
+      { "img": "0.227.0/alvo-na-pilha.webp", "legenda": "O alvo do Vazamento de Mana na pilha, com \"Desistir da mágica\" no lugar de \"Cancelar\"." }
+    ],
+    "Ponder mostra as cartas na pergunta de embaralhar": [
+      { "img": "0.227.0/ponder.webp", "legenda": "A pergunta de embaralhar do Ponderar com as três cartas na ordem escolhida e os botões \"Manter esta ordem\" e \"Embaralhar\"." }
+    ],
+    "Pilha com o texto da carta em português": [
+      { "img": "0.227.0/pilha.webp", "legenda": "Pilhagem Infiel na pilha com o texto da carta em português embaixo." }
+    ]
+  },
   "0.226.0": {
     "Modos de uma mágica modal numa tela só": [
       { "img": "0.226.0/modos.webp", "legenda": "Comando de Kolaghan com um modo marcado: os quatro modos na ordem da carta, o alvo de cada um, o de destruir artefato apagado por não ter alvo e o selo 1/2." }

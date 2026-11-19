@@ -1,10 +1,12 @@
 // A caixa de ação: os botões de cada momento (passar, fim de turno, resolver tudo, pagar, confirmar ataque ou bloqueio,
 // mulligan, quem começa), o selo do nível de passar, o painel do alvo sendo escolhido e os nomes da lista de proliferar.
 import { selectionRequest } from './forgeRequest';
+import { evenSplit, type EvenSplit } from './divideTargets';
+import { shuffleAfterOrder } from './libraryShuffle';
 import { lossReasonText } from './lossReason';
 import type { FCard, FState } from '../forge/client';
 import { esc, optionHTML, richText, withoutCardIds } from './cardtext';
-import { label } from './cardFaces';
+import { label, ptOf } from './cardFaces';
 import { voteTallyText } from './cardVote';
 import { cardDecision } from './decisionPrompt';
 import { isProliferating, proliferateOkLabel } from './proliferate';
@@ -87,14 +89,24 @@ export function buttons(v: ActionView, s: FState) {
   const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
   const move = s.input.commanderMove;
   const payment = s.input.paying ? paymentButtonLabels(s.input) : null;
-  const ok = payment && s.input.ok.label ? { ...s.input.ok, label: payment.ok } : move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && !v.attackAll && !v.attackSelecting && !v.attackBusy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
+  let ok = payment && s.input.ok.label ? { ...s.input.ok, label: payment.ok } : move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && !v.attackAll && !v.attackSelecting && !v.attackBusy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
     : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount - (s.input.openingReturnCount ?? 0)}` }
     : s.input.opening === 'mulligan-bottom' && s.input.openingReturnCount ? { ...s.input.ok, label: s.input.openingReturnCount === 1 ? 'Devolver 1 carta' : `Devolver ${s.input.openingReturnCount} cartas` } : isProliferating(s) ? { ...s.input.ok, label: proliferateOkLabel(s) } : decision ? { ...s.input.ok, label: (!s.input.tapToPay && selectionRequest(s.input.message)?.ok) || 'Confirmar seleção' } : s.input.ok;
   // No proliferar o Cancelar do Forge troca o modo de seleção em massa ("Meu", "Todos"); a lista tem os próprios atalhos.
-  const cancel = payment && s.input.cancel.label ? { ...s.input.cancel, label: payment.cancel } : isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : v.attackAll ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' }
+  let cancel = payment && s.input.cancel.label ? { ...s.input.cancel, label: payment.cancel } : isProliferating(s) ? { ...s.input.cancel, label: '' } : move ? { ...s.input.cancel, label: zoneName(move.to) } : v.attackAll ? { ...s.input.cancel, label: 'Cancelar seleção' } : s.input.suspendCast ? { ...s.input.cancel, label: 'Deixar no exílio' } : s.input.opening === 'play-draw' ? { ...s.input.cancel, label: 'Oponente joga' }
     // O "Automático" do Forge escolhe as primeiras cartas da mão por você.
     // Com a escolha completa ele fica desativado: some, e só o "Devolver" fica.
     : s.input.opening === 'mulligan-bottom' && s.input.cancel.label ? { ...s.input.cancel, label: s.input.cancel.enabled ? 'Escolher por mim' : '' } : s.input.cancel;
+  // Escolhendo alvos de uma mágica ou habilidade (ou o alvo de um contra-feitiço na pilha): o Cancelar desiste dela, e o OK
+  // da pilha, que só liga depois do alvo e logo some, sai. Na Bola de Fogo, o OK diz quantos alvos confirma.
+  const t = !s.input.paying ? s.input.targeting : undefined;
+  const stackPick = !s.input.targeting && !s.input.paying && !s.input.priority && !!s.input.selectableStacks?.length && /^Select target/im.test(s.input.message.trim().split('\n').pop() ?? '');
+  const giveUp = t?.kind === 'spell' || stackPick ? 'Desistir da mágica' : t?.kind === 'ability' ? 'Desistir da habilidade' : null;
+  if (giveUp && cancel.label) cancel = { ...cancel, label: giveUp };
+  if (stackPick && !ok.enabled) ok = { ...ok, label: '' };
+  if (t?.divideEvenly && ok.label) { const n = t.count ?? 0; ok = { ...ok, label: n ? `Confirmar ${n} ${n === 1 ? 'alvo' : 'alvos'}` : 'Confirmar sem alvo' }; }
+  // "Embaralhar o grimório?" depois de ordenar o topo (Ponder): os botões dizem o que fazem.
+  if (shuffleAfterOrder(s) && ok.label && cancel.label) { ok = { ...ok, label: 'Embaralhar' }; cancel = { ...cancel, label: 'Manter esta ordem' }; }
   const okIcon: ActionIcon | undefined = payment ? 'mana' : move ? 'commander' : s.input.blocking ? 'block' : s.input.attacking ? 'attack' : s.input.opening === 'play-draw' ? 'pass'
     : s.input.suspendCast || s.input.opening === 'mulligan' || s.input.opening === 'mulligan-bottom' || isProliferating(s) || decision ? 'ok' : guessActionIcon(s.input.ok.label);
   // Mandar a carta para outra zona, "Oponente joga" e "Escolher por mim" não são desistir: ficam sem o X.
@@ -153,7 +165,7 @@ export function voteBoardPrompt(v: ActionView, vote: NonNullable<FState['input']
  * Escolha de alvos antes da pilha: o gatilho ou a habilidade que pede o alvo (no idioma do motor, que já vem em
  * português quando a carta tem tradução), quantos alvos faltam e quais já foram marcados.
  */
-export interface TargetInfo { source: string; kind: string | null; ability: string; progress: string | null; chosen: string[] }
+export interface TargetInfo { source: string; kind: string | null; ability: string; progress: string | null; chosen: string[]; split?: EvenSplit | null }
 export function targetInfoOf(v: ActionView, s: FState): TargetInfo | null {
   const t = s.input.targeting;
   if (!t) return null;
@@ -163,16 +175,18 @@ export function targetInfoOf(v: ActionView, s: FState): TargetInfo | null {
   const chosen = [...(t.cards ?? []).map(id => { const c = v.findCard(id); return c ? label(c) : null; }),
     ...(t.players ?? []).map(id => id === s.you ? 'você' : s.players.find(p => p.id === id)?.name ?? null)].filter((n): n is string => !!n);
   const progress = targetProgress(t);
-  if (!ability && !progress && !chosen.length) return null;
-  return { source: src ? label(src) : 'a carta', kind, ability, progress, chosen };
+  const split = src ? evenSplit(t, src.manaCost, ptOf(src.name)?.text || src.text) : null;
+  if (!ability && !progress && !chosen.length && !split) return null;
+  return { source: src ? label(src) : 'a carta', kind, ability, progress, chosen, split };
 }
 export function targetInfoHTML(info: TargetInfo) {
   const ability = info.ability ? `<div class="target-ability"><p><span class="target-ability-kind">${esc(info.kind!)}</span> ${richText(info.ability)}</p></div>` : '';
   const status = [info.progress ? `<strong>${esc(info.progress)}</strong>` : '', info.chosen.length ? `<span>Marcado${info.chosen.length > 1 ? 's' : ''}: ${esc(info.chosen.join(', '))}</span>` : ''].filter(Boolean).join('');
-  return `<div class="target-info">${ability}${status ? `<p class="target-status">${status}</p>` : ''}</div>`;
+  const split = info.split ? `<p class="target-split"><span>${esc(info.split.line)}</span>${info.split.cost ? `<span class="target-split-cost">Custo: ${richText(info.split.cost)}${info.split.lack ? ` · falta ${info.split.lack} de mana` : ''}</span>` : ''}</p>` : '';
+  return `<div class="target-info">${ability}${status ? `<p class="target-status">${status}</p>` : ''}${split}</div>`;
 }
 /** O mesmo, para o leitor de tela. */
 export function targetInfoText(info: TargetInfo) {
-  return [info.ability ? `${info.kind} de ${info.source}: ${/[.!?]$/.test(info.ability) ? info.ability : `${info.ability}.`}` : '', info.progress ? `${info.progress}.` : '', info.chosen.length ? `Marcado${info.chosen.length > 1 ? 's' : ''}: ${info.chosen.join(', ')}.` : '']
+  return [info.ability ? `${info.kind} de ${info.source}: ${/[.!?]$/.test(info.ability) ? info.ability : `${info.ability}.`}` : '', info.progress ? `${info.progress}.` : '', info.chosen.length ? `Marcado${info.chosen.length > 1 ? 's' : ''}: ${info.chosen.join(', ')}.` : '', info.split?.line ?? '']
     .filter(Boolean).join(' ');
 }

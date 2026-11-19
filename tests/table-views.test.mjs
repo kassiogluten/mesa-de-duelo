@@ -54,11 +54,12 @@ test('stack pile: the top item stays in place, lit, while it waits for a choice 
   assert.match(stackPanel(view, choosing, true, { minimized: false, galleryOpen: false }), /Jogada recente/);
 });
 
-test('question drafts start from the option minimums and amounts must add up to the total', () => {
+test('amount drafts start split evenly within the option limits and must add up to the total', () => {
   const q = { id: 3, kind: 'amount', title: 'Distribua', total: 3, options: [{ label: 'Ana', min: 1 }, { label: 'Bia' }] };
   const draft = newQuestionDraft(q);
-  assert.deepEqual(draft, { id: 3, picked: [], text: '', amounts: ['1', '0'] });
-  assert.equal(amountStatus(q, draft).text, 'Restante: 2.');
+  assert.deepEqual(draft, { id: 3, picked: [], text: '', amounts: ['2', '1'] });
+  assert.equal(amountStatus(q, draft).valid, true);
+  assert.equal(amountStatus(q, { ...draft, amounts: ['1', '0'] }).text, 'Restante: 2.');
   assert.equal(amountStatus(q, { ...draft, amounts: ['1', '2'] }).valid, true);
   assert.equal(amountStatus(q, { ...draft, amounts: ['3', '2'] }).text, 'Excesso: 2.');
   assert.equal(amountStatus(q, { ...draft, amounts: ['0', '3'] }).text, 'Respeite os limites indicados para cada alvo.');

@@ -10,6 +10,7 @@ import { forecastLineHTML, forecastText } from './combatForecast';
 import { DRAG_PILL, DRAG_RESET } from './icons';
 import { cardDecision, selectionMessage, tapToPayMessage, tapToPayShort } from './decisionPrompt';
 import { selectionRequest } from './forgeRequest';
+import { shuffleAfterOrder } from './libraryShuffle';
 import { isProliferating, proliferatePanelHTML } from './proliferate';
 import { zoneWithArticle } from './questionView';
 import { openingHandCount } from './openingPresentation';
@@ -137,7 +138,10 @@ export function createActionBox(d: ActionBoxDeps) {
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';
-    d.setHTML($('#fAction'), `${DRAG_HANDLE}${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(d.actionView(), s)}${passLevelControl(d.actionView(), s)}</div>`);
+    // Ponder: as cartas que você acabou de pôr no topo, na ordem, junto da pergunta de embaralhar.
+    const topCards = shuffleAfterOrder(s);
+    const topStrip = topCards ? `<ol class="top-order" aria-label="O topo do seu grimório, de cima para baixo">${topCards.map((c, i) => `<li><span class="top-order-face" data-peek="${c.id}">${d.face(c, 'normal')}</span><small>${i === 0 ? '1ª, no topo' : `${i + 1}ª`}</small></li>`).join('')}</ol>` : '';
+    d.setHTML($('#fAction'), `${DRAG_HANDLE}${promptCard}<div class="decision-copy">${heading}<div class="prompt${expanded ? ' expanded' : ''}${short ? ' has-short' : ''}" id="fPrompt">${promptBody}</div>${more}</div>${targetPanel}${topStrip}${selectionCount}${prolifPanel}${attackPanel}${blockForecast}<div class="btns">${buttons(d.actionView(), s)}${passLevelControl(d.actionView(), s)}</div>`);
     d.settings.syncPassLevel();
     // "Ver detalhes" só aparece quando o texto não cabe nas linhas da caixa.
     const promptEl = root.querySelector<HTMLElement>('#fPrompt');

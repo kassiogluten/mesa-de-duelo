@@ -534,6 +534,312 @@
     }
   },
   {
+    "nome": "Raio em Arco: dividir o dano com − e +",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Arc Lightning na mão e três Mountains; o Jogador 2 tem Grizzly Bears e Llanowar Elves. Conjure o Raio em Arco nas duas criaturas: a janela de dividir mostra as duas cartas, já com 2 e 1, \"Morre\" embaixo de cada uma e \"Tudo dividido\". Tire 1 do Grizzly Bears: ele passa a \"Morre com 2\" e a janela diz \"Falta dividir 1\"; o Confirmar só liga quando tudo estiver dividido. Confirme com 2 e 1: as duas criaturas morrem.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Arc Lightning"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Llanowar Elves"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Bola de Fogo: dano de cada alvo e custo",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Fireball na mão e seis Mountains; o Jogador 2 tem Grizzly Bears e Llanowar Elves. Conjure a Bola de Fogo com X = 4 e marque o Grizzly Bears e o Jogador 2: a caixa de ação diz \"2 alvos: 2 de dano em cada.\" e \"Custo: {5}{R}\", e o botão é \"Confirmar 2 alvos\". Marque também o Llanowar Elves: \"3 alvos: 1 de dano em cada. Sobra 1, que se perde.\", custo {6}{R}. Com o Cancelar, o botão diz \"Desistir da mágica\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Fireball"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Llanowar Elves"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Cultivar: os terrenos e os dois destinos numa janela",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Cultivate na mão e três Forests; o grimório tem Forest, Island, Plains e Swamp. Conjure o Cultivar: uma janela só mostra os terrenos básicos do grimório e os espaços \"Campo (virado)\" e \"Mão\". Toque na Island (vai para o campo) e numa Forest (vai para a mão); toque no espaço do campo para tirar a Island e veja a Forest subir para ele; ponha a Island de novo e confirme. A Island entra no campo virada, a Forest vai para a mão, e não abre a segunda janela.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Cultivate"
+          ],
+          "library": [
+            "Forest",
+            "Island",
+            "Plains",
+            "Swamp"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Fato ou Ficção: o aviso com os dois montes",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Fact or Fiction na mão e quatro Islands; o grimório começa com Plains, Island, Swamp, Mountain e Forest. Conjure o Fato ou Ficção: as cartas reveladas aparecem com o título \"Fato ou Ficção: cartas reveladas do seu grimório\" e o botão \"Continuar\". Depois que o Jogador 2 dividir os montes, escolha um: o aviso diz com quais cartas você ficou, em português e em miniatura, e para onde foi o outro monte.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Fact or Fiction"
+          ],
+          "library": [
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Ponder, Wood Elves e a pilha: botões e textos",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Ponder, Wood Elves e Faithless Looting na mão, Islands, Forests e uma Mountain. Conjure o Ponderar e, antes de resolver, abra a pilha: ela mostra o texto da carta em português. Ordene as três cartas do topo: a pergunta de embaralhar mostra as três na ordem que você deixou, com \"Embaralhar\" e \"Manter esta ordem\". Depois conjure o Wood Elves: a busca no grimório tem \"Não procurar\" no lugar de \"Nenhum\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Ponder",
+            "Wood Elves",
+            "Faithless Looting"
+          ],
+          "library": [
+            "Plains",
+            "Forest",
+            "Swamp",
+            "Island",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Comando de Kolaghan: os modos numa tela só",
     "tipo": "conferir",
     "conferir": "O Jogador 1 tem Kolaghan's Command na mão, um Swamp e duas Mountains, e um Grizzly Bears no cemitério; o Jogador 2 tem um Grizzly Bears e duas cartas na mão, sem artefato. Conjure o Comando de Kolaghan: abre uma janela só com os quatro modos em português, na ordem da carta, com o alvo de cada um; \"Destrua o artefato alvo\" fica apagado com \"Sem alvo possível agora\", e o selo mostra 0/2. Toque em dois modos (eles ganham 1 e 2) e confirme: os alvos dos dois modos são pedidos em seguida, e a mágica vai para a pilha com os dois.",

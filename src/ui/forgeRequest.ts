@@ -3,6 +3,7 @@
 import { targetKind } from './shortInstruction';
 import { colorName } from './colorChoice';
 import { creatureTypePt } from './creatureTypes';
+import type { FQuestion } from '../forge/client';
 
 export interface SelectionRequest {
   /** O que fazer, numa frase: "Sacrifique 1 criatura." */
@@ -89,4 +90,36 @@ export function choiceNotice(text: string) {
   if (color !== m[2]) return `${m[1]}${color.toLowerCase()}.`;
   const type = creatureTypePt(m[2]!);
   return type !== m[2] ? `${m[1]}${type}.` : text;
+}
+
+/** Os montes da última escolha de monte respondida (Fato ou Ficção), para o aviso dizer para onde foi cada um. */
+let lastPiles: { source?: string; piles: string[][]; chosen: number; chosenTo?: string; otherTo?: string } | null = null;
+/** Guarda os montes ao responder a escolha de monte; `option` é a opção respondida (a de um dos montes). */
+export function rememberPiles(q: FQuestion, option: number) {
+  if (q.purpose !== 'piles-choose' || !q.piles?.length) return;
+  const name = (i: number) => { const o = q.options?.[i]; return o && typeof o !== 'string' ? o.card?.name ?? '' : ''; };
+  lastPiles = { source: q.card?.name, piles: q.piles.map(p => p.cards.map(name)), chosen: q.piles.findIndex(p => p.option === option), chosenTo: q.chosenTo, otherTo: q.otherTo };
+}
+
+const ZONE_TO: Record<string, string> = { hand: 'para a mão', graveyard: 'para o cemitério', exile: 'para o exílio', library: 'para o grimório', battlefield: 'para o campo' };
+const list = (names: string[]) => names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0] ?? '';
+
+/**
+ * "valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1:\nPlains\nIsland" → "Jogador 1 ficou com
+ * o monte de 2 (Planície e Ilha), para a mão; Pântano, Montanha e Floresta vão para o cemitério." Com o título da carta
+ * e os nomes das cartas escolhidas, para o aviso mostrar as miniaturas. Os nomes passam por `translate`.
+ */
+export function pilesNotice(text: string, translate: (name: string) => string = n => n) {
+  const m = text.match(/^valor do efeito de (.+?) para .+? é (.+?) escolhe a Pilha (\d+):\s*\n([\s\S]*)$/);
+  if (!m) return null;
+  const chosen = m[4]!.split('\n').map(l => l.trim()).filter(Boolean);
+  const memory = lastPiles && (!lastPiles.source || translate(lastPiles.source) === m[1] || lastPiles.source === m[1]) ? lastPiles : null;
+  const other = memory ? memory.piles[memory.chosen === 0 ? 1 : 0] ?? [] : [];
+  const to = memory?.chosenTo ? ` ${ZONE_TO[memory.chosenTo] ?? ''}`.trimEnd() : '';
+  const otherTo = memory?.otherTo ? ZONE_TO[memory.otherTo] : undefined;
+  const names = chosen.map(translate);
+  let out = chosen.length ? `${m[2]} ficou com o monte de ${chosen.length} (${list(names)})${to}.` : `${m[2]} ficou com o monte vazio.`;
+  if (other.length) out += ` ${list(other.map(translate))} ${other.length === 1 ? 'vai' : 'vão'} ${otherTo ?? 'para o outro lugar'}.`;
+  lastPiles = null;
+  return { title: m[1]!, text: out, cards: chosen };
 }

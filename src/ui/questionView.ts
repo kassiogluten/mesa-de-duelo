@@ -18,6 +18,8 @@ import { isModeChoice, modeChoiceHTML, modesAsk } from './modeChoice';
 import { colorChoiceHTML, isColorChoice } from './colorChoice';
 import { isTypeChoice, typeChoiceHTML } from './typeChoice';
 import { isOptionalCosts, optionalCostsHTML } from './optionalCosts';
+import { isSplitDestinations, splitDestinationsHTML } from './splitDestinations';
+import { amountChoiceHTML, amountsOf, evenAmounts, isAmountChoice } from './amountChoice';
 import type { QuestionDraft } from './tableState';
 
 /** O que as perguntas precisam da mesa. */
@@ -40,7 +42,7 @@ export interface QuestionView {
 
 /** A seleção começa vazia (na escolha do grimório e na divisão em montes, já arrumada), com o texto e os valores iniciais. */
 export function newQuestionDraft(q: FQuestion): QuestionDraft {
-  return { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : isPilesSplit(q) ? pilesStart(q) : [], text: q.initial ?? '', amounts: (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
+  return { id: q.id, picked: isLibraryChoice(q) ? libraryStart(q) : isPilesSplit(q) ? pilesStart(q) : [], text: q.initial ?? '', amounts: isAmountChoice(q) ? evenAmounts(q).map(String) : (q.options ?? []).map(o => String(typeof o === 'string' ? 0 : o.min ?? 0)) };
 }
 
 export const optLabel = (o: FOption | string) => (typeof o === 'string' ? o : o.label);
@@ -88,14 +90,8 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   const head = `<div class="q-head"><h2>${esc(ptTitle(q.title))}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
   if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
   if (isNameChoice(q)) return nameChoiceHTML(q, head, draft.text, v.ptName);
-  if (q.kind === 'amount') {
-    const status = amountStatus(q, draft);
-    return `${head}<form data-q-amount-form><div class="q-amounts">${opts.map((o, i) => {
-      const min = typeof o === 'string' ? 0 : o.min ?? 0;
-      const max = typeof o === 'string' ? q.total ?? 0 : o.max ?? q.total ?? 0;
-      return `<label><span>${esc(optLabel(o))}<small>De ${min} a ${max}</small></span><input data-q-amount="${i}" type="number" inputmode="numeric" min="${min}" max="${max}" step="1" value="${esc(draft.amounts[i] ?? '')}" aria-describedby="fAmountRemaining"></label>`;
-    }).join('')}</div><p class="q-hint" id="fAmountRemaining" aria-live="polite">${status.text}</p><div class="q-actions"><button class="arena-btn primary" data-q-amount-submit ${status.valid ? '' : 'disabled'}>Confirmar distribuição</button></div></form>`;
-  }
+  if (isSplitDestinations(q)) return splitDestinationsHTML({ face: v.face, label: v.label }, q, draft.picked);
+  if (isAmountChoice(q)) return amountChoiceHTML({ face: v.face, label: v.label, players: v.players }, q, amountsOf(draft.amounts));
   if (q.kind === 'confirm' && q.purpose === 'commander-zone') return commanderZoneHTML(v, q);
   if (q.kind === 'confirm') {
     return `${head}<div class="q-actions">${opts.map((o, i) =>
@@ -103,10 +99,11 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   }
   if (q.kind === 'reveal') {
     const anyCards = opts.some(o => typeof o !== 'string' && o.card);
-    return `${head}<div class="q-opts ${anyCards ? 'cards' : ''}">${opts.map(o => typeof o !== 'string' && o.card
+    const revealHead = head.replace(`<h2>${esc(ptTitle(q.title))}</h2>`, `<h2>${esc(revealTitle(q.title))}</h2>`);
+    return `${revealHead}<div class="q-opts ${anyCards ? 'cards' : ''}">${opts.map(o => typeof o !== 'string' && o.card
       ? `<div class="q-face" data-peek="${o.card.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(v.label(o.card))}">${v.face(o.card)}</div>`
       : `<div class="q-opt"><span>${esc(optLabel(o))}</span></div>`).join('')}</div>
-      <div class="q-actions"><button class="arena-btn primary" data-q-none>OK</button></div>`;
+      <div class="q-actions"><button class="arena-btn primary" data-q-none>Continuar</button></div>`;
   }
   if (q.kind === 'text') {
     return `${head}<form class="q-text" data-q-text><input id="fQInput" ${q.numeric ? 'type="number"' : ''} value="${esc(draft.text)}" aria-label="Resposta">
@@ -141,12 +138,23 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   return `${head}${hint ? `<p class="q-hint">${hint}</p>` : ''}${tools}
     <div class="q-opts ${anyCards || revealed.length ? 'cards' : ''}${layout ? ' filtered' : ''}">${items}${unavailable}</div>
     <div class="q-actions">
-      ${(q.min ?? 1) === 0 && !isOrder ? '<button class="arena-btn secondary" data-q-none>Nenhum</button>' : ''}
+      ${(q.min ?? 1) === 0 && !isOrder ? `<button class="arena-btn secondary" data-q-none>${noneLabel(q)}</button>` : ''}
       ${isOrder ? '<button class="arena-btn secondary" data-q-keep>Manter ordem</button>' : ''}
       ${!single && !isOrder && opts.length > 1 ? `<button class="arena-btn secondary" data-q-all>${n >= Math.min(max, opts.length) ? 'Desmarcar todas' : 'Selecionar todas'}</button>` : ''}
       ${!single ? pickCountHTML(n, min, max, opts.length) : ''}
       ${!single ? '<button class="arena-btn primary" data-q-submit>Confirmar</button>' : ''}
     </div>`;
+}
+/** "Fato ou Ficção - Revelando cartas de seu grimório" → "Fato ou Ficção: cartas reveladas do seu grimório". */
+export function revealTitle(title: string) {
+  const m = title.match(/^(.+?) - Revelando cartas (de|do|da) (.+)$/);
+  if (!m) return ptTitle(title);
+  const prep = m[2] === 'de' && /^seu\b/.test(m[3]!) ? 'do' : m[2] === 'de' && /^sua\b/.test(m[3]!) ? 'da' : m[2];
+  return `${m[1]}: cartas reveladas ${prep} ${m[3]}`;
+}
+/** O botão de não escolher nada diz o que acontece: na busca no grimório, "Não procurar". */
+export function noneLabel(q: FQuestion) {
+  return /grimório|library/i.test(q.title) ? 'Não procurar' : (q.max ?? 1) === 1 ? 'Não escolher' : 'Nenhuma';
 }
 /** Selo "x / y" ao lado do Confirmar: verde quando a quantidade já vale; o aviso de faltar escolha aparece acima dele. */
 function pickCountHTML(n: number, min: number, max: number, total: number) {

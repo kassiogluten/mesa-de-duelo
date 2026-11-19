@@ -8,6 +8,21 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.227.0] - 2026-11-19
+
+### Novo
+
+- **Dividir o dano com − e +.** Quando uma mágica divide o dano como você escolher (Arc Lightning e parecidas), a janela mostra cada alvo com a carta, quanto dano mata cada criatura ("Morre com 2", "Morre ✓") e o que falta dividir, com − e + como no dano de combate, já começando dividido igual; no lugar dos campos numéricos de antes. Escudos de prevenção e marcadores divididos usam a mesma janela.
+- **Cultivate numa janela só.** Cultivate e Kodama's Reach mostram os terrenos achados e os dois destinos lado a lado, "Campo (virado)" e "Mão": toque numa carta para pô-la no primeiro espaço livre e toque no espaço para tirá-la, antes de confirmar. Não abre mais a segunda janela perguntando qual vai para o campo.
+
+### Mudou
+
+- **Bola de Fogo mostra o dano de cada alvo e o custo.** Ao marcar os alvos, a caixa de ação diz quanto cada um leva ("2 alvos: 2 de dano em cada", e quanto se perde no arredondamento) e o custo com o {1} a mais por alvo depois do primeiro, avisando quando a mana não dá; o botão diz quantos alvos confirma.
+- **Aviso do Fato ou Ficção com os dois montes.** Depois de escolher o monte, o aviso diz, em português, com quais cartas o jogador ficou e para onde foi o outro monte, com as cartas escolhidas em miniatura, no lugar do texto em inglês do jogo.
+- **Botões que dizem o que fazem.** Na busca opcional no grimório, "Nenhum" vira "Não procurar"; nas cartas reveladas, "OK" vira "Continuar", com o título "Fato ou Ficção: cartas reveladas do seu grimório"; ao escolher alvos de uma mágica ou o alvo de um contra-feitiço na pilha, "Cancelar" vira "Desistir da mágica".
+- **Ponder mostra as cartas na pergunta de embaralhar.** Depois de ordenar o topo do grimório, a pergunta "Quer embaralhar o grimório?" mostra as cartas na ordem que você deixou, com os botões "Embaralhar" e "Manter esta ordem".
+- **Pilha com o texto da carta em português.** Ao abrir a pilha, uma mágica mostra o texto impresso da carta em português, no lugar da frase em inglês do jogo com o número da carta.
+
 ## [0.226.0] - 2026-11-19
 
 ### Novo

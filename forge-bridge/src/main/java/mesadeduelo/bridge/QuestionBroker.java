@@ -246,6 +246,11 @@ final class QuestionBroker {
         q.addProperty("min", (Integer) a[2]);
         q.addProperty("max", (Integer) a[3]);
         options.addAll((Collection<?>) a[1]);
+        // Busca de dois destinos (Cultivate): a resposta vem na ordem dos lugares.
+        if (p.seat().controller() instanceof AskingController asking && asking.splitDestinations() != null) {
+            q.addProperty("purpose", "split-destinations");
+            q.add("destinations", asking.splitDestinations());
+        }
         revealedAlongside(p.seat(), options, q);
         q.add("options", optionsJson(options, null));
         ChooserPrompt.describe(q, String.valueOf(a[0]), hosted.getGame());
@@ -342,6 +347,9 @@ final class QuestionBroker {
         options.addAll(limits.keySet());
         q.addProperty("kind", "amount"); q.addProperty("total", total);
         q.addProperty("title", "Distribua o total entre as opções");
+        // O que se divide (dano, escudo ou marcadores), para a mesa escrever o título e dizer quanto mata cada criatura.
+        String unit = amountUnit(a.length > 4 ? a[4] : null);
+        if (unit != null) q.addProperty("amountOf", unit);
         if (a[0] instanceof CardView card) q.add("card", StateJson.card(card));
         JsonArray rows = optionsJson(options, null);
         for (int i = 0; i < options.size(); i++) {
@@ -350,6 +358,17 @@ final class QuestionBroker {
         }
         q.add("options", rows);
         return ASK;
+    }
+
+    /** O rótulo que o Forge passa ao dividir ("dano", "escudo", "marcadores", já traduzido e em minúsculas). */
+    private static String amountUnit(Object label) {
+        if (label == null) return null;
+        forge.util.Localizer l = forge.util.Localizer.getInstance();
+        String text = String.valueOf(label);
+        if (text.equalsIgnoreCase(l.getMessage("lblDamage"))) return "damage";
+        if (text.equalsIgnoreCase(l.getMessage("lblShield"))) return "shield";
+        if (text.equalsIgnoreCase(l.getMessage("lblCounters"))) return "counters";
+        return null;
     }
 
     private Object combatDamage(Prompt p) {

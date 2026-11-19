@@ -1630,3 +1630,28 @@ Sinais de que uma tela ou decisão merece uma versão melhor:
 - [x] Juntar o que achar numa lista por ganho para o jogador e esforço (só a mesa, ou mesa e servidor), em `docs/varredura-experiencia.html`. Em 19/11/2026: 26 mesas do Laboratório montadas no servidor de verdade, cada uma com uma carta que dispara uma decisão, com os textos que a mesa recebe; a página tem a ordem sugerida e prévias de hoje × proposta dos cinco primeiros, no computador e no celular deitado.
 - [x] Para cada item escolhido, um HTML de opções em `docs/` (como o da escolha de número) para decidir, e um item próprio neste roadmap para fazer. Os cinco primeiros foram aprovados direto pelas prévias da varredura e feitos na mesma mudança (novidade em `novidades-pendentes/telas-de-escolha`): pedidos da caixa de ação em português (`src/ui/forgeRequest.ts`), modos de uma mágica modal numa tela só (`ModeChoice.java`, `src/ui/modeChoice.ts`), cor, proteção e terreno básico com os símbolos (`src/ui/colorChoice.ts`), tipo de criatura com busca (`CreatureTypeChoice.java`, `src/ui/typeChoice.ts`, nomes em `src/ui/creatureTypes.ts`) e custos opcionais com o custo total (`OptionalCosts.java`, `src/ui/optionalCosts.ts`). O resto da lista virou os itens 143 a 146.
 - Cancelar a mágica na tela dos modos ficou de fora: o Forge não deixa desistir nesse ponto (com nenhum modo, a mágica seguiria sem efeito), então a tela não tem esse botão.
+
+## 143. ✅ Bola de Fogo e dano dividido com a divisão na tela
+
+Da varredura do item 142 (`docs/varredura-experiencia.html`, item 6; prévia em `docs/varredura-proximos.html`). Na Bola de Fogo o X é escolhido antes dos alvos, então não dá para ver o custo crescer a cada alvo; no Forked Bolt e parecidos, a divisão do dano cai na janela genérica "Distribua o total entre as opções", com campos numéricos.
+
+- [x] Divisão do dano entre os alvos com − e +, como no dano de combate (`combatDamage.ts`), com o total que falta (`src/ui/amountChoice.ts`; o servidor manda o que se divide em `amountOf`). Com os mínimos de 1 por alvo, o Raio Bifurcado em dois alvos não pergunta (só há 1 e 1); a tela aparece no Arc Lightning e parecidos.
+- [x] Bola de Fogo: o dano de cada alvo e o custo com o {1} a mais por alvo, na caixa de ação, a cada alvo marcado (`src/ui/divideTargets.ts`; o servidor manda o total, o X e a mana disponível em `targeting.divideEvenly`).
+- [x] Prévia em `docs/varredura-proximos.html` (19/11/2026), aprovada e feita no mesmo dia (novidade em `novidades-pendentes/varredura-segunda-parte`).
+
+## 144. ✅ Buscas em dois passos numa tela só
+
+Da varredura do item 142 (item 9; prévia em `docs/varredura-proximos.html`). Cultivate e parecidos pedem primeiro as duas cartas sem dizer o destino ("Escolha até 2 cartas do seu grimório") e depois uma segunda janela ("Escolha a carta que vai para o campo de batalha").
+
+- [x] Uma tela com dois espaços, "Campo (virado)" e "Mão", e as cartas achadas para tocar (`SplitDestinations.java` marca a busca e responde a segunda pergunta com a ordem dada; `src/ui/splitDestinations.ts`).
+- [x] Prévia em `docs/varredura-proximos.html` (19/11/2026), aprovada e feita no mesmo dia (novidade em `novidades-pendentes/varredura-segunda-parte`).
+
+## 145. ✅ Detalhes da varredura
+
+Da varredura do item 142 (itens 7, 8 e 10; prévias em `docs/varredura-proximos.html`). Cada um é pequeno.
+
+- [x] Ponder: o "Quer embaralhar o grimório?" mostra as três cartas que você acabou de ordenar, na caixa de ação (`src/ui/libraryShuffle.ts`).
+- [x] Textos da pilha com o número da carta e partes em inglês ("Pilhagem Infiel (121) - Jogador 1 draws two cards."): numa mágica sem modos, o texto da carta em português quando houver; senão, o do Forge sem o "Nome (id) - ".
+- [x] Botões sem objeto que sobraram: "Nenhum" na busca opcional (Wood Elves: "Não procurar"), "OK" sozinho nas cartas reveladas ("Continuar"), "Cancelar" no alvo de um contra-feitiço ("Desistir da mágica").
+- [x] Aviso do Fato ou Ficção: "valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island" vira "Jogador 1 ficou com o monte de 2: Planície e Ilha".
+- [x] Conferir se o título "Divida ss cartas em duas pilhas" (erro da tradução do Forge) aparece em algum lugar da tela dos montes: não, a tela dos montes tem título próprio (`pilesHeading`).

@@ -638,31 +638,6 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
 
-## 143. Bola de Fogo e dano dividido com a divisão na tela
-
-Da varredura do item 142 (`docs/varredura-experiencia.html`, item 6; prévia em `docs/varredura-proximos.html`). Na Bola de Fogo o X é escolhido antes dos alvos, então não dá para ver o custo crescer a cada alvo; no Forked Bolt e parecidos, a divisão do dano cai na janela genérica "Distribua o total entre as opções", com campos numéricos.
-
-- [ ] Divisão do dano entre os alvos com − e +, como no dano de combate (`combatDamage.ts`), com o total que falta.
-- [ ] Bola de Fogo: o custo de cada alvo a mais junto do X (estudar se dá para mostrar antes, ou só depois dos alvos).
-- [x] Prévia em `docs/varredura-proximos.html` (19/11/2026); falta escolher.
-
-## 144. Buscas em dois passos numa tela só
-
-Da varredura do item 142 (item 9; prévia em `docs/varredura-proximos.html`). Cultivate e parecidos pedem primeiro as duas cartas sem dizer o destino ("Escolha até 2 cartas do seu grimório") e depois uma segunda janela ("Escolha a carta que vai para o campo de batalha").
-
-- [ ] Uma tela com dois espaços, "Campo (virado)" e "Mão", e as cartas achadas para arrastar ou tocar (precisa do servidor juntar as duas perguntas).
-- [x] Prévia em `docs/varredura-proximos.html` (19/11/2026); falta escolher.
-
-## 145. Detalhes da varredura
-
-Da varredura do item 142 (itens 7, 8 e 10; prévias em `docs/varredura-proximos.html`). Cada um é pequeno.
-
-- [ ] Ponder: o "Quer embaralhar o grimório?" mostra as três cartas que você acabou de ordenar.
-- [ ] Textos da pilha com o número da carta e partes em inglês ("Pilhagem Infiel (121) - Jogador 1 draws two cards."): usar o texto da carta em português quando houver.
-- [ ] Botões sem objeto que sobraram: "Nenhum" na busca opcional (Wood Elves: "Não procurar"), "OK" sozinho nas cartas reveladas ("Continuar"), "Cancelar" no alvo de um contra-feitiço ("Desistir da mágica").
-- [ ] Aviso do Fato ou Ficção: "valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island" vira "Jogador 1 ficou com o monte de 2: Planície e Ilha".
-- [ ] Conferir se o título "Divida ss cartas em duas pilhas" (erro da tradução do Forge) aparece em algum lugar da tela dos montes.
-
 ## 146. Resto da varredura: telas fora das perguntas
 
 O item 142 cobriu as perguntas do servidor e os pedidos da caixa de ação. Faltou olhar, com os mesmos sinais (ver o item 142 em `docs/roadmap-feito.md`):

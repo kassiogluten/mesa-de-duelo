@@ -1,0 +1,20 @@
+/* Busca de dois destinos (splitDestinations.ts): as cartas achadas numa fileira e os espaços de cada destino embaixo. */
+.forge .dest-found { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 6px 0 10px; }
+.forge .dest-card { width: 80px; --fw: 80px; aspect-ratio: 488 / 680; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; transition: transform .15s, opacity .15s; }
+.forge .dest-card:hover, .forge .dest-card:focus-visible { transform: translateY(-4px); outline: 2px solid var(--glow); outline-offset: 2px; }
+.forge .dest-card.used { opacity: .35; }
+.forge .dest-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.forge .dest-slot {
+  display: grid; justify-items: center; align-content: start; gap: 6px; min-height: 112px; padding: 6px; border-radius: 12px;
+  border: 1px dashed rgb(255 255 255 / .25); background: rgb(0 0 0 / .2); color: var(--muted); font: 600 13px var(--display); cursor: default;
+}
+.forge .dest-slot.filled { border: 1px solid rgb(242 181 76 / .6); background: #2a2210; color: var(--gold-light); cursor: pointer; }
+.forge .dest-face { display: block; width: 64px; --fw: 64px; aspect-ratio: 488 / 680; }
+
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .dest-card { width: 64px; --fw: 64px; }
+  .forge .dest-found { margin: 2px 0 6px; gap: 6px; }
+  .forge .dest-slot { min-height: 0; padding: 4px; }
+  .forge .dest-face { width: 48px; --fw: 48px; }
+}
+@media (prefers-reduced-motion: reduce) { .forge .dest-card { transition: none; } }

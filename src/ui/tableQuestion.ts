@@ -15,6 +15,10 @@ import { isModeChoice } from './modeChoice';
 import { isColorChoice } from './colorChoice';
 import { firstTypeMatch, isTypeChoice, typeListsHTML } from './typeChoice';
 import { isOptionalCosts } from './optionalCosts';
+import { isSplitDestinations, pickDestination } from './splitDestinations';
+import { rememberPiles } from './forgeRequest';
+import { rememberTopOrder } from './libraryShuffle';
+import { amountsOf, evenAmounts, isAmountChoice, stepAmount } from './amountChoice';
 import { clampNumber, isNumberChoice, numberValue, refreshNumber, rulesOf } from './numberChoice';
 import { isPilesChoice, isPilesSplit, movePileCard, splitSummary } from './piles';
 import { isReplacementOrder } from './replacementOrder';
@@ -107,6 +111,7 @@ export function createTableQuestion(d: QuestionDeps) {
     const q = client?.state?.question;
     if (!q || !client) return;
     d.stopPresentation();
+    if (extra.indices) rememberTopOrder(q, extra.indices);
     client.send({ type: 'answer', id: q.id, ...extra });
     d.match().qState = null; triggerOrder = null; damageSplit = null;
     $('#fQuestion').hidden = true;
@@ -127,7 +132,7 @@ export function createTableQuestion(d: QuestionDeps) {
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
       // Fileira de cartas (celular): marcar uma carta redesenha a escolha, mas a fileira fica onde estava.
       const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
-      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : isModeChoice(s.question) ? ' mode-choice' : isColorChoice(s.question) ? ' color-choice' : isTypeChoice(s.question) ? ' type-choice' : isOptionalCosts(s.question) ? ' optional-costs' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : isModeChoice(s.question) ? ' mode-choice' : isColorChoice(s.question) ? ' color-choice' : isTypeChoice(s.question) ? ' type-choice' : isOptionalCosts(s.question) ? ' optional-costs' : isAmountChoice(s.question) ? ' combat-damage amount-split' : isSplitDestinations(s.question) ? ' split-destinations' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (s.question.kind === 'reveal' && !isMinimized && after && Number(before?.dataset.qid) !== s.question.id) d.motion.revealIn([...after.querySelectorAll<HTMLElement>('.q-face')]);
       if (again !== null && after && after !== before) after.scrollTop = again;
@@ -179,11 +184,18 @@ export function createTableQuestion(d: QuestionDeps) {
       }
       return true;
     }
+    const destPick = t.closest<HTMLElement>('[data-dest-pick]'), destSlot = t.closest<HTMLElement>('[data-dest-slot]');
+    if ((destPick || destSlot) && match.qState && state?.question && isSplitDestinations(state.question) && match.qState.id === state.question.id) {
+      if (destPick) pickDestination(state.question, match.qState.picked, Number(destPick.dataset.destPick));
+      else match.qState.picked.splice(Number(destSlot!.dataset.destSlot), 1);
+      d.render();
+      return true;
+    }
     const pileMove = t.closest<HTMLElement>('[data-pile-move]');
     const pilePick = t.closest<HTMLElement>('[data-pile-pick]');
     const pileQuestion = state?.question;
     if ((pileMove || pilePick) && match.qState && pileQuestion && match.qState.id === pileQuestion.id) {
-      if (pilePick && isPilesChoice(pileQuestion)) { answer({ indices: [Number(pilePick.dataset.pilePick)] }); return true; }
+      if (pilePick && isPilesChoice(pileQuestion)) { rememberPiles(pileQuestion, Number(pilePick.dataset.pilePick)); answer({ indices: [Number(pilePick.dataset.pilePick)] }); return true; }
       if (pileMove && isPilesSplit(pileQuestion)) {
         const option = Number(pileMove.dataset.pileMove);
         movePileCard(match.qState.picked, option);
@@ -284,6 +296,26 @@ export function createTableQuestion(d: QuestionDeps) {
         if (held) { held = false; return true; }
         setNumber(openQuestion, set ? Number(set.dataset.numSet) : numberNow(openQuestion) + Number(add!.dataset.numAdd));
         d.announce(String(numberNow(openQuestion)));
+        return true;
+      }
+    }
+    if (openQuestion && isAmountChoice(openQuestion) && match.qState?.id === openQuestion.id) {
+      const draft = match.qState;
+      const step = t.closest<HTMLElement>('[data-amt-add],[data-amt-sub]');
+      if (step) {
+        const add = step.hasAttribute('data-amt-add'), index = Number(step.dataset.amtAdd ?? step.dataset.amtSub);
+        draft.amounts = stepAmount(openQuestion, amountsOf(draft.amounts), index, add ? 1 : -1).map(String);
+        d.render();
+        // O foco fica no mesmo botão (ou no outro do mesmo alvo, se este desligou).
+        const key = add ? 'data-amt-add' : 'data-amt-sub', again = root.querySelector<HTMLButtonElement>(`[${key}="${index}"]`);
+        (again && !again.disabled ? again : root.querySelector<HTMLElement>(`[data-amt-sub="${index}"]:not(:disabled), [data-amt-add="${index}"]:not(:disabled)`))?.focus();
+        d.announce(root.querySelector('#fAmountStatus')?.textContent ?? '');
+        return true;
+      }
+      if (t.closest('[data-amt-even]')) { draft.amounts = evenAmounts(openQuestion).map(String); d.render(); return true; }
+      if (t.closest('[data-amt-confirm]')) {
+        const status = amountStatus(openQuestion, draft);
+        if (status.valid) answer({ amounts: status.amounts });
         return true;
       }
     }

@@ -470,7 +470,9 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 | `id` | `number` |  |
 | `method` | `string` |  |
 | `kind` | `'choose' \| 'confirm' \| 'order' \| 'text' \| 'reveal' \| 'amount' \| 'number'` | reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. |
-| `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order' \| 'modes' \| 'creature-type' \| 'optional-costs'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. |
+| `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order' \| 'modes' \| 'creature-type' \| 'optional-costs' \| 'split-destinations'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. |
+| `amountOf?` | `'damage' \| 'shield' \| 'counters'` | amount: o que se divide entre as opções (dano, escudo de prevenção ou marcadores). |
+| `destinations?` | `{ zone: string; count?: number; tapped?: boolean }[]` | split-destinations: os dois lugares das cartas buscadas (Cultivate), na ordem da resposta: o primeiro recebe count cartas, o segundo o resto. |
 | `modeCount?` | `number` | modes: quantos modos a carta tem e os que não dá para escolher agora. |
 | `unavailableModes?` | `FUnavailableMode[]` |  |
 | `revealed?` | `FCard[]` | Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). |
@@ -732,6 +734,7 @@ Estende: `FTargets`
 | `count?` | `number` |  |
 | `valid?` | `string[]` |  |
 | `zones?` | `string[]` |  |
+| `divideEvenly?` | `{ amount: number; x?: number; available?: number }` | Dano dividido igualmente entre os alvos (Bola de Fogo): o total, o X escolhido e a mana que o jogador consegue gerar. |
 
 ## MatchOwner
 

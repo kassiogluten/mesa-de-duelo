@@ -17,7 +17,7 @@ import { createTurnBuzz } from './turnBuzz';
 import { watchRowEdges } from './cardRow';
 import { type DiagnosticEntry } from './matchDiagnostics';
 import { fixPossessives } from './forgeText';
-import { choiceNotice } from './forgeRequest';
+import { choiceNotice, pilesNotice } from './forgeRequest';
 import { VERSION } from './changelog';
 import { attachHandDrag, moveGroupInHand, moveInHand } from './handDrag';
 import { exileShelfCards, validBlockSelection } from './playContext';
@@ -40,6 +40,7 @@ import './modeChoice.css';
 import './colorChoice.css';
 import './typeChoice.css';
 import './optionalCosts.css';
+import './splitDestinations.css';
 import './gameplay.css';
 import './stack.css';
 import './permanentEffects.css';
@@ -547,6 +548,9 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const preview = createCardPreview({ ...ctx, eventCard: key => historyLog.card(key) ?? removals.card(key) ?? reveals.card(key) ?? toasts.card(key), pointAction: c => pointer.action(c) });
   function notice(text: string, error = false, detail?: NoticeDetail) {
     text = choiceNotice(fixPossessives(text, playerNames()));
+    // Fato ou Ficção: os dois montes e para onde foi cada um, com as cartas escolhidas em miniatura.
+    const piles = !detail ? pilesNotice(text, name => ptOf(name)?.name || name) : null;
+    if (piles) { text = piles.text; detail = { title: piles.title, cards: piles.cards.map((name, i) => ({ id: -1 - i, name })) }; }
     if (error) errors.record('aviso', text);
     if (error && client?.state?.input.attacking && attack.queue.busy) { attack.clear(true); renderTable(false); }
     if (error && client?.state?.sideboarding) { match.sideboardError = text; match.sideboardBusy = false; render(); }

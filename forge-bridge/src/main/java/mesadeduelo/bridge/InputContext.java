@@ -185,6 +185,17 @@ final class InputContext {
             for (ZoneType zone : tgt.getZone()) if (zone != ZoneType.Battlefield) zones.add(zone.name());
             if (!zones.isEmpty()) result.add("zones", zones);
         }
+        // Dano dividido igualmente entre os alvos (Bola de Fogo): o total, o X já escolhido e a mana disponível.
+        if (sa.hasParam("DivideEvenly") && sa.hasParam("NumDmg") && sa.getHostCard() != null) {
+            JsonObject divide = new JsonObject();
+            try { divide.addProperty("amount", forge.game.ability.AbilityUtils.calculateAmount(sa.getHostCard(), sa.getParam("NumDmg"), sa)); }
+            catch (RuntimeException e) { return result; }
+            Integer x = root.getXManaCostPaid();
+            if (x != null) divide.addProperty("x", x);
+            int available = NumberChoice.available(sa.getActivatingPlayer());
+            if (available >= 0) divide.addProperty("available", available);
+            result.add("divideEvenly", divide);
+        }
         return result;
     }
 
