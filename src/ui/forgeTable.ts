@@ -34,6 +34,7 @@ import './libraryChoice.css';
 import './imageLoading';
 import './piles.css';
 import './combatDamage.css';
+import './numberChoice.css';
 import './gameplay.css';
 import './stack.css';
 import './permanentEffects.css';

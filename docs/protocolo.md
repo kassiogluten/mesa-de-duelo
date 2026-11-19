@@ -454,7 +454,7 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 |---|---|---|
 | `id` | `number` |  |
 | `method` | `string` |  |
-| `kind` | `'choose' \| 'confirm' \| 'order' \| 'text' \| 'reveal' \| 'amount'` | reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. |
+| `kind` | `'choose' \| 'confirm' \| 'order' \| 'text' \| 'reveal' \| 'amount' \| 'number'` | reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. |
 | `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). |
 | `revealed?` | `FCard[]` | Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). |
 | `revealedNote?` | `string` |  |
@@ -477,8 +477,12 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 | `deathtouch?` | `boolean` |  |
 | `title` | `string` |  |
 | `total?` | `number` |  |
-| `min?` | `number` |  |
+| `min?` | `number` | number: o menor e o maior número (sem max, não há teto). Nas outras, quantas opções escolher. |
 | `max?` | `number` |  |
+| `values?` | `number[]` | number: só estes números valem (a carta oferece números soltos, como 2, 4 e 6). |
+| `unit?` | `'x' \| 'times'` | number: o que o número conta, o X do custo ou quantas vezes pagar um custo. |
+| `cancel?` | `'spell' \| 'ability'` | number: dá para desistir de conjurar a mágica (spell) ou de ativar a habilidade (ability); a resposta vai sem number. |
+| `cost?` | `FNumberCost` | number: o resto do custo, o que cada unidade acrescenta ("{1}", "{1}{G}") e a mana que o jogador consegue gerar agora. |
 | `options?` | `(FOption \| string)[]` |  |
 | `card?` | `FCard` |  |
 | `initial?` | `string` |  |
@@ -490,6 +494,14 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 |---|---|---|
 | `player` | `number` |  |
 | `label` | `string` |  |
+
+## FNumberCost
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `base` | `string` |  |
+| `each` | `string` |  |
+| `available?` | `number` |  |
 
 ## FButton
 
@@ -752,7 +764,7 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   /** Aponta uma carta que todos veem (campo, pilha, cemitério, exílio, zona de comando) para os outros jogadores. */
   | { type: 'point'; card: number }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
-  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean; remember?: boolean }
+  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; number?: number; all?: boolean; remember?: boolean }
   /** OK na janela das cartas reveladas (revealView), ou a mesa guardou um aviso de reveals. */
   | { type: 'reveal-seen'; seq: number }
 ```

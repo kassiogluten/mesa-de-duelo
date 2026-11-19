@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.224.0] - 2026-11-19
+
+### Mudou
+
+- **Escolher um número com contador, custo e mana disponível.** Quando uma carta pede um número (o X da Fireball, quantas vezes pagar o multikicker, o "escolha um número" do Talion), a lista de botões, um por número, dá lugar a um número grande com − e + (segure para correr), atalhos para o mínimo e o máximo, e dá para digitar o número e usar as setas do teclado. No X e no pagar várias vezes, a janela mostra quanto você vai pagar, a mana que você tem para gastar, um atalho "O que dá para pagar" e quanto falta quando passa disso; no X, mostra também a frase da carta com o número no lugar do X ("causa 4 pontos de dano..."). Números maiores que 9 não abrem mais uma segunda janela, o botão "Nenhum" virou "Cancelar mágica" e, quando a carta aceita só alguns números, eles aparecem como fichas redondas.
+
 ## [0.223.0] - 2026-11-19
 
 ### Novo

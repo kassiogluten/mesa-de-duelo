@@ -1,4 +1,11 @@
 {
+  "0.224.0": {
+    "Escolher um número com contador, custo e mana disponível": [
+      { "img": "0.224.0/numero-x.webp", "legenda": "O X da Bola de Fogo: o número grande com − e +, os atalhos \"Mín 0\" e \"O que dá para pagar (7)\", quanto você paga, a frase da carta com 4 no lugar do X e a barra da mana que você tem." },
+      { "img": "0.224.0/numero-x-falta.webp", "legenda": "Passando do que dá para pagar: o número e a caixa ficam alaranjados, com \"Falta 2 de mana\", e a barra mostra o que falta tracejado." },
+      { "img": "0.224.0/numero-multikicker.webp", "legenda": "Quantas vezes pagar o multikicker do Bando de Gnarlid: pagando 2 vezes, o custo total e a mana que sobra; o botão diz \"Pagar 2 vezes\"." }
+    ]
+  },
   "0.223.0": {
     "Animações no campo nas Opções": [
       { "img": "0.223.0/animacoes-no-campo.webp", "legenda": "A lista Animações no campo aberta em Opções → Aparência, com Voar desligado e o resumo mostrando 10 de 12 ligadas." }

@@ -56,6 +56,9 @@ export function createModalFocus(d: ModalDeps) {
   /** Onde o foco começa numa janela: a escolha principal (o modo recomendado, o primeiro gatilho, o botão de confirmar
    *  quando não há opções a marcar), para o Espaço apertá-la; senão, o primeiro controle. Nunca o "Ver a mesa", que fica no Esc. */
   function start(active: HTMLElement) {
+    // Escolha de número: com mouse e teclado, o campo (para digitar e usar as setas); no toque, o confirmar, sem abrir o teclado.
+    const number = active.querySelector<HTMLElement>(matchMedia('(pointer: fine)').matches ? '#fQNumber' : '[data-num-confirm]');
+    if (number) return number;
     return active.querySelector<HTMLElement>('[data-vote-start], .play-mode-option.recommended, [data-trigger], [data-cd-confirm]:not(:disabled), [data-ui="removal-ok"], [data-ui="reveal-ok"]')
       ?? (active.querySelector('[data-q-opt]') ? null : active.querySelector<HTMLElement>('.q-actions .arena-btn.primary:not(:disabled)'))
       ?? [...active.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"]), input, [tabindex="0"]')].find(el => !el.matches('[data-ui="question-minimize"]'));

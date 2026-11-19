@@ -405,6 +405,7 @@ public class AiSpeedProbe {
             case "confirm" -> a.addProperty("value", false);
             case "order" -> { for (int i = 0; i < n; i++) idx.add(i); a.add("indices", idx); }
             case "reveal" -> a.add("indices", idx);
+            case "number" -> a.addProperty("number", min);
             case "text" -> { if (n > 0) { idx.add(0); a.add("indices", idx); } else a.addProperty("text", q.has("initial") ? q.get("initial").getAsString() : "0"); }
             case "amount" -> {
                 if (q.has("suggested")) a.add("amounts", q.get("suggested"));

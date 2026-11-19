@@ -438,6 +438,23 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
       card: c(800, 'Craw Wurm', 7, 4, 10), options, suggested: trample ? [2, 3, 2] : [2, 5] };
     view.render();
   },
+  /** Escolher um número: o X da Fireball (com custo e mana), o multikicker do Gnarlid Pack, o "escolha um número" do Talion e números soltos. */
+  numberChoice(which: 'x' | 'times' | 'number' | 'values' = 'x', available = 8) {
+    const fireball = card(320, 'Fireball', 10, { creature: false, manaCost: '{X}{R}', typeLine: 'Sorcery',
+      text: 'This spell costs {1} more to cast for each target beyond the first.\nFireball deals X damage divided evenly, rounded down, among any number of targets.' });
+    const pack = card(321, 'Gnarlid Pack', 10, { manaCost: '{1}{G}', typeLine: 'Creature — Beast', power: 2, toughness: 2,
+      text: 'Multikicker {1}{G}\nThis creature enters with a +1/+1 counter on it for each time it was kicked.' });
+    const talion = card(322, 'Talion, the Kindly Lord', 10, { manaCost: '{2}{W}{B}', typeLine: 'Legendary Creature — Faerie Noble', power: 3, toughness: 4,
+      text: 'Flying\nAs Talion enters, choose a number between 1 and 10.' });
+    state.question = which === 'x'
+      ? { id: 610, method: 'getChoices', kind: 'number', title: 'Escolha X para Fireball', min: 0, unit: 'x', cancel: 'spell', card: fireball, cost: { base: '{R}', each: '{1}', available } }
+      : which === 'times'
+        ? { id: 611, method: 'getChoices', kind: 'number', title: 'Quantas vezes pagar {1}{G}?', min: 0, unit: 'times', card: pack, cost: { base: '{1}{G}', each: '{1}{G}', available } }
+        : which === 'number'
+          ? { id: 612, method: 'getChoices', kind: 'number', title: 'Escolha um número', min: 1, max: 10, card: talion }
+          : { id: 613, method: 'getChoices', kind: 'number', title: 'Escolha um número', min: 2, max: 6, values: [2, 4, 6], card: talion };
+    view.render();
+  },
   /** Leonardo pondo marcadores com Corpsejack Menace e Hardened Scales: qual efeito vem primeiro, com "usar em todas". */
   replacementOrder() {
     const card = (id: number, name: string, manaCost: string, typeLine: string, power: number, toughness: number) =>

@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Estudo de 19/11/2026: opções para a janela em que o jogador escolhe um número (X de uma mágica, pagar várias vezes, "escolha um número"), cada uma funcionando ao lado de como é hoje, no computador e no celular deitado. -->
+<title>Escolha de número: opções</title>
+<style>
+/* Página escura como a mesa; os valores da janela de pergunta (cores, bordas, raio) vêm de style.css e arenaModals.css. */
+:root {
+  color-scheme: dark;
+  --bg: #060912; --card: #0d1424; --line: rgba(255, 255, 255, .12); --ink: #eef1f8; --muted: #9aa5bb;
+  --gold: #f2b54c; --gold-light: #ffe2a0; --glow: #59b5ff; --red: #ec5a3f; --green: #4fc77a; --amber: #ffb547;
+  --opt: #16203a; --opt-line: #34405e; --opt-on: #22294a;
+  --display: "Outfit", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+main { max-width: 1240px; margin: 0 auto; padding: 40px 16px 72px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(26px, 4.2vw, 38px); }
+h2 { font-size: 22px; margin: 44px 0 8px; }
+h3 { font-size: 19px; }
+p { margin: 0 0 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.muted { color: var(--muted); }
+.prose { max-width: 72ch; }
+.lead { font-size: 17px; color: var(--muted); margin-top: 12px; }
+ul.problems { margin: 6px 0 0; padding-left: 20px; }
+ul.problems li { margin-bottom: 4px; }
+ul.problems b { color: var(--gold-light); font-weight: 600; }
+
+/* Controles da página: cenário e tamanho da tela. */
+.controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 22px -16px 0; padding: 12px 16px; background: #060912ee; backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.controls .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.controls .group > span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+.seg { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); font: 500 13px var(--body); cursor: pointer; }
+.seg[aria-pressed="true"] { border-color: var(--gold); background: #2a2210; color: var(--gold-light); }
+
+/* Uma opção por cartão: a mesa de exemplo à esquerda, o que ela resolve à direita. */
+.options { display: grid; gap: 18px; margin-top: 18px; }
+.opt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; }
+@media (max-width: 900px) { .opt { grid-template-columns: 1fr; } }
+.opt.rec { border-color: #f2b54c99; box-shadow: 0 0 0 1px #f2b54c44; }
+.opt .info { padding: 18px 18px 16px; border-left: 1px solid var(--line); }
+@media (max-width: 900px) { .opt .info { border-left: 0; border-top: 1px solid var(--line); } }
+.tag { display: inline-block; margin-bottom: 8px; padding: 3px 9px; border-radius: 999px; background: #ffffff12; color: var(--muted); font: 600 11px/1.4 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.opt.rec .tag { background: var(--gold); color: #101b2f; }
+.opt.today .tag { background: #ec5a3f33; color: #ffb4a3; }
+.info p { color: var(--muted); font-size: 14px; line-height: 1.55; margin-top: 6px; }
+.info dl { margin: 12px 0 0; font-size: 13.5px; line-height: 1.5; }
+.info dt { font-weight: 600; color: var(--ink); margin-top: 10px; }
+.info dd { margin: 2px 0 0; color: var(--muted); }
+.info dd ul { margin: 0; padding-left: 18px; }
+.cost-tag { display: inline-block; margin-top: 12px; padding: 4px 10px; border-radius: 8px; font-size: 12.5px; background: #ffffff0d; color: var(--muted); }
+.cost-tag b { color: var(--ink); }
+
+/* O palco: um pedaço de mesa com a janela no meio. No modo celular ele vira 740×340, a altura real deitado no navegador. */
+.stage-wrap { padding: 16px; display: grid; place-items: center; overflow-x: auto; }
+.stage {
+  container-type: size; position: relative; width: 100%; height: 470px; border-radius: 12px; overflow: hidden;
+  background: radial-gradient(120% 140% at 50% 0%, #284470, #13203a 55%, #0a1120); box-shadow: inset 0 0 0 1px var(--line);
+  display: grid; place-items: center;
+}
+body.phone .stage { width: 740px; min-width: 740px; height: 340px; }
+.stage::before { content: ""; position: absolute; inset: 0; background: rgb(3 6 14 / .55); }
+.stage .result { position: absolute; left: 10px; bottom: 8px; z-index: 3; padding: 3px 10px; border-radius: 999px; background: #0b1a10; border: 1px solid #4fc77a88; color: #b9f3cc; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.stage .result.show { opacity: 1; }
+.stage .size { position: absolute; right: 10px; bottom: 8px; z-index: 3; color: #ffffff55; font-size: 11px; }
+
+/* A janela de pergunta da mesa (.forge .question). */
+.q {
+  position: relative; z-index: 2; width: min(580px, 94%); max-height: calc(100% - 24px); overflow: auto; padding: 18px 20px 16px;
+  border: 1px solid rgb(242 181 76 / .28); border-radius: 18px;
+  background: linear-gradient(180deg, rgb(20 32 54 / .94), rgb(9 15 29 / .96));
+  box-shadow: 0 30px 80px rgb(0 0 0 / .65), inset 0 1px 0 rgb(255 255 255 / .05);
+}
+.q h4 { margin: 0 0 4px; font: 600 20px/1.25 var(--display); text-align: center; text-shadow: 0 2px 10px rgb(0 0 0 / .6); }
+.q .sub { text-align: center; color: var(--muted); font-size: 13px; margin: 0 0 12px; display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.q .hint { text-align: center; color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.q-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.btn { min-width: 120px; padding: 9px 18px; border-radius: 10px; font: 600 14px var(--body); cursor: pointer; border: 1px solid transparent; }
+.btn.primary { background: linear-gradient(180deg, #f6c867, #d99a2b); color: #2b1700; border-color: #ffe2a0; box-shadow: 0 4px 14px rgb(242 181 76 / .3); }
+.btn.secondary { background: #ffffff10; color: var(--ink); border-color: #ffffff2a; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Hoje: um botão por linha. */
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list button { display: flex; padding: 9px 12px; border-radius: 10px; background: var(--opt); border: 1px solid var(--opt-line); color: var(--ink); font: 400 14px var(--body); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s; }
+.list button:hover { border-color: var(--glow); transform: translateY(-2px); }
+.q input.text { width: 100%; padding: 9px 12px; border-radius: 10px; background: #0a1222; border: 1px solid var(--opt-line); color: var(--ink); font: 15px var(--body); }
+
+/* Símbolos de mana de mentira. */
+.ms { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; font: 700 .72em/1 var(--body); color: #111; background: #cbc5bd; box-shadow: 0 1px 0 #0008; vertical-align: -.2em; margin: 0 1px; }
+.ms.R { background: #f3a083; } .ms.G { background: #9bd3ae; } .ms.X { background: #cbc5bd; }
+
+/* A: contador. */
+.counter { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 4px 0 6px; }
+.step { width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); font: 600 26px/1 var(--display); cursor: pointer; transition: border-color .15s, transform .1s; }
+.step:hover:not(:disabled) { border-color: var(--glow); }
+.step:active:not(:disabled) { transform: scale(.92); }
+.step:disabled { opacity: .3; cursor: not-allowed; }
+.big { min-width: 120px; text-align: center; padding: 2px 6px 4px; border-radius: 14px; border: 1px solid transparent; background: transparent; color: var(--gold-light); font: 700 64px/1 var(--display); text-shadow: 0 0 22px rgb(242 181 76 / .35); width: 150px; }
+.big:focus { outline: none; border-color: #f2b54c66; background: #00000033; }
+.big.over { color: #ffcf8a; text-shadow: 0 0 22px rgb(255 140 60 / .45); }
+.unit { color: var(--muted); font: 600 13px var(--body); text-align: center; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 2px; }
+.quick { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.quick button { padding: 4px 11px; border-radius: 999px; border: 1px solid var(--opt-line); background: var(--opt); color: var(--ink); font: 500 12.5px var(--body); cursor: pointer; }
+.quick button:hover { border-color: var(--glow); }
+.kbd { display: inline-block; padding: 0 5px; border: 1px solid #ffffff33; border-bottom-width: 2px; border-radius: 4px; font: 600 11px/1.5 var(--body); color: var(--ink); }
+
+/* B: fichas. */
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 470px; margin: 0 auto; }
+.chip { width: 50px; height: 50px; flex: none; border-radius: 50%; border: 2px solid var(--opt-line); background: radial-gradient(circle at 35% 30%, #2a3a63, #121b31); color: var(--ink); font: 700 19px/1 var(--display); cursor: pointer; box-shadow: 0 3px 8px #0008, inset 0 0 0 4px #ffffff08; transition: transform .12s, border-color .12s; }
+.chip:hover { transform: translateY(-3px); border-color: var(--glow); }
+.chip.other { font: 600 12px/1.1 var(--body); color: var(--muted); }
+.chip.over { border-style: dashed; color: #ffffffaa; }
+.other-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+.other-row input { width: 110px; padding: 8px 10px; border-radius: 10px; background: #0a1222; border: 1px solid var(--gold); color: var(--ink); font: 600 16px var(--body); text-align: center; }
+
+/* C: régua. */
+.ruler { margin: 4px 6px 0; }
+.ruler .val { text-align: center; font: 700 52px/1 var(--display); color: var(--gold-light); text-shadow: 0 0 22px rgb(242 181 76 / .35); }
+.ruler input[type=range] { width: 100%; accent-color: var(--gold); height: 30px; margin: 6px 0 0; cursor: pointer; }
+.ticks { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; padding: 0 6px; }
+.ruler .more { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+
+/* D: prévia do custo e do efeito. */
+.preview { margin: 8px auto 0; max-width: 420px; padding: 9px 12px; border-radius: 12px; background: #0a1222cc; border: 1px solid var(--opt-line); font-size: 13.5px; text-align: center; }
+.preview .pay { display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.preview .eff { color: var(--muted); margin-top: 3px; }
+.preview.over { border-color: #ffb54788; background: #2a1b08cc; }
+.preview.over .eff { color: #ffcf8a; }
+.mana-bar { display: flex; gap: 3px; justify-content: center; margin-top: 7px; }
+.mana-bar i { width: 18px; height: 6px; border-radius: 3px; background: #ffffff1c; }
+.mana-bar i.used { background: var(--gold); box-shadow: 0 0 6px #f2b54c88; }
+.mana-bar i.base { background: #f3a083; }
+.mana-bar i.lack { background: transparent; outline: 1px dashed #ffb547; }
+
+/* Celular deitado: a janela da mesa encolhe (phoneTable.css). */
+@container (max-height: 360px) {
+  .q { padding: 10px 14px 10px; border-radius: 14px; }
+  .q h4 { font-size: 16px; }
+  .q .sub { margin-bottom: 6px; font-size: 12px; }
+  .q .hint { margin-bottom: 6px; font-size: 12px; }
+  .q-actions { margin-top: 8px; }
+  .btn { padding: 7px 14px; min-width: 100px; font-size: 13px; }
+  .big { font-size: 46px; width: 120px; }
+  .step { width: 46px; height: 46px; }
+  .chips { max-width: none; gap: 6px; }
+  .chip { width: 42px; height: 42px; font-size: 16px; }
+  .ruler .val { font-size: 38px; }
+  .preview { padding: 6px 10px; font-size: 12.5px; margin-top: 4px; }
+  .mana-bar { margin-top: 4px; }
+}
+
+.note { margin-top: 32px; padding: 18px 20px; border: 1px solid #f2b54c55; border-radius: 12px; background: #1a160c; }
+.note h3 { margin-bottom: 8px; color: var(--gold-light); }
+.note ol, .note ul { margin: 6px 0 0; padding-left: 22px; }
+.note li { margin-bottom: 6px; }
+.common { margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+.common ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); }
+.common li b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <header class="prose">
+    <p class="eyebrow">Estudo · 19 de novembro de 2026</p>
+    <h1>Escolha de número: opções</h1>
+    <p class="lead">Quando uma carta pede um número (o X da Fireball, quantas vezes pagar um multikicker, o "escolha um número" do Talion), a mesa mostra a mesma janela de qualquer escolha: um botão por número, um embaixo do outro. Abaixo, como é hoje e quatro jeitos de melhorar, todos funcionando: troque o cenário e o tamanho da tela no alto.</p>
+    <h3 style="margin-top:22px">O que incomoda hoje</h3>
+    <ul class="problems">
+      <li><b>Uma linha por número.</b> De 0 a 9 já são dez botões empilhados; no celular deitado (340 px de altura) a lista precisa rolar e o "..." fica escondido.</li>
+      <li><b>Sem teto, dois passos.</b> Quando não há limite (X, multikicker), a lista para no 9 e termina em "...", que abre outra janela com um campo de texto.</li>
+      <li><b>Não diz o que o número custa.</b> Dá para escolher X = 9 com 4 terras; o problema só aparece depois, na hora de pagar.</li>
+      <li><b>"Nenhum" no X cancela a mágica</b>, mas o botão não diz isso.</li>
+      <li><b>Teclado não ajuda.</b> Não dá para digitar o número nem usar as setas na lista.</li>
+    </ul>
+  </header>
+
+  <div class="controls" role="toolbar" aria-label="Cenário e tela">
+    <div class="group" id="scenarioBtns"><span>Cenário</span></div>
+    <div class="group" id="sizeBtns"><span>Tela</span>
+      <button class="seg" data-size="desk" aria-pressed="true">Computador</button>
+      <button class="seg" data-size="phone" aria-pressed="false">Celular deitado (740×340)</button>
+    </div>
+  </div>
+
+  <h2>Hoje</h2>
+  <div class="options">
+    <article class="opt today" data-opt="today">
+      <div class="stage-wrap"><div class="stage"></div></div>
+      <div class="info">
+        <span class="tag">Como é hoje</span>
+        <h3>Lista de botões</h3>
+        <p>A mesma janela das escolhas de texto: cada número é uma linha. Tocar num número responde na hora. Sem teto, o "..." abre um campo de texto.</p>
+      </div>
+    </article>
+  </div>
+
+  <h2>Opções</h2>
+  <div class="options">
+    <article class="opt rec" data-opt="a">
+      <div class="stage-wrap"><div class="stage"></div></div>
+      <div class="info">
+        <span class="tag">A · Recomendada para começar</span>
+        <h3>Contador com − e +</h3>
+        <p>Um número grande no meio, botões − e + dos lados e atalhos (mínimo, máximo, valores comuns). Dá para digitar o número direto e usar as setas; segurar o + corre os números.</p>
+        <dl>
+          <dt>Bom</dt><dd><ul><li>Mesma altura para 0–3 ou 0–1000: cabe folgado no celular deitado.</li><li>Acaba o "..." e a segunda janela.</li><li>Botão diz o que confirma ("Confirmar X = 4") e o que cancela ("Cancelar mágica").</li></ul></dd>
+          <dt>Menos bom</dt><dd>Para um número pequeno, são dois toques (escolher e confirmar) em vez de um.</dd>
+        </dl>
+        <span class="cost-tag">Trabalho: <b>só a mesa</b> (reconhece quando todas as opções são números)</span>
+      </div>
+    </article>
+
+    <article class="opt" data-opt="b">
+      <div class="stage-wrap"><div class="stage"></div></div>
+      <div class="info">
+        <span class="tag">B</span>
+        <h3>Grade de fichas</h3>
+        <p>Os números viram fichas redondas numa grade, como marcadores na mesa. Um toque responde, como hoje. A ficha "Outro" abre o campo de digitar na mesma janela.</p>
+        <dl>
+          <dt>Bom</dt><dd><ul><li>Um toque só, o mais rápido para números pequenos.</li><li>Dez números numa ou duas linhas em vez de dez linhas.</li></ul></dd>
+          <dt>Menos bom</dt><dd>Sem teto continua precisando de "Outro"; com 1–20 a grade já fica grande no celular. Um toque errado responde sem volta.</dd>
+        </dl>
+        <span class="cost-tag">Trabalho: <b>só a mesa</b></span>
+      </div>
+    </article>
+
+    <article class="opt" data-opt="c">
+      <div class="stage-wrap"><div class="stage"></div></div>
+      <div class="info">
+        <span class="tag">C</span>
+        <h3>Régua deslizante</h3>
+        <p>Uma régua de arrastar, com o número grande acima e as marcações embaixo. Sem teto, a régua vai até 20 e "Mais" estende.</p>
+        <dl>
+          <dt>Bom</dt><dd>Gostoso no toque para faixas médias (1–10, 0–20) e mostra de cara o tamanho da faixa.</dd>
+          <dt>Menos bom</dt><dd><ul><li>Acertar um número exato arrastando é chato, no celular principalmente.</li><li>Sem teto não tem um fim natural.</li><li>Ainda precisa de − e + para o ajuste fino.</li></ul></dd>
+        </dl>
+        <span class="cost-tag">Trabalho: <b>só a mesa</b></span>
+      </div>
+    </article>
+
+    <article class="opt rec" data-opt="d">
+      <div class="stage-wrap"><div class="stage"></div></div>
+      <div class="info">
+        <span class="tag">D · Recomendada em seguida</span>
+        <h3>Contador com o custo e o efeito</h3>
+        <p>O contador da opção A, mais uma linha que diz o que aquele número custa e faz: "Paga {4}{R} · causa 4 de dano". Uma barra mostra a mana disponível, e o atalho "O que dá para pagar" leva ao máximo. Acima disso, avisa quanto falta (sem proibir, porque ainda dá para gerar mana depois).</p>
+        <dl>
+          <dt>Bom</dt><dd><ul><li>Resolve o problema que mais custa partida: escolher um X que não dá para pagar.</li><li>Ensina a carta para quem está aprendendo.</li></ul></dd>
+          <dt>Menos bom</dt><dd>Precisa de informação nova do servidor; o texto do efeito só sai para as mecânicas mais comuns (X de dano, de compra, marcadores). Sem custo (Talion), fica igual à A.</dd>
+        </dl>
+        <span class="cost-tag">Trabalho: <b>mesa + servidor</b> (custo por unidade, mana disponível, efeito)</span>
+      </div>
+    </article>
+  </div>
+
+  <div class="common">
+    <h3>Vale para qualquer opção escolhida</h3>
+    <ul>
+      <li><b>Botões com nome:</b> "Confirmar X = 4" e "Cancelar mágica" no lugar de um número solto e de "Nenhum".</li>
+      <li><b>Teclado:</b> digitar o número, <span class="kbd">↑</span> <span class="kbd">↓</span> para mudar, <span class="kbd">Enter</span> confirma, <span class="kbd">Esc</span> minimiza para ver a mesa.</li>
+      <li><b>Lista de números soltos</b> (a carta oferece só 2, 4 e 6, por exemplo): continua em fichas, porque o − e o + pulariam números que não valem.</li>
+      <li><b>O computador e o laboratório</b> não mudam: a resposta para o servidor é a mesma (o número escolhido).</li>
+    </ul>
+  </div>
+
+  <div class="note">
+    <h3>Recomendação</h3>
+    <ol>
+      <li><b>Agora: A (contador).</b> Só mexe na mesa, cobre todas as escolhas de número (com e sem teto) e é a que melhor cabe no celular deitado.</li>
+      <li><b>Depois: D (custo e efeito) para o X e o pagar várias vezes.</b> É o maior ganho para o jogador, mas pede o servidor mandar o custo e a mana disponível; entra como um passo à parte, sem refazer o A.</li>
+      <li>B fica como alternativa se você preferir manter o "um toque responde" de hoje. C não recomendo: arrastar até um número exato é pior do que tocar no +.</li>
+    </ol>
+    <p style="margin-top:10px"><b>Decidido em 19/11/2026: D</b> (o contador com o custo e o efeito), feito de uma vez, com o servidor mandando o custo e a mana disponível.</p>
+  </div>
+</main>
+
+<script>
+// Os cenários: o que o servidor manda hoje (título, faixa, se pode cancelar) e, para a opção D, o custo e a mana disponível.
+const SCENARIOS = {
+  fireball: {
+    label: 'X da Fireball', title: 'Escolha X para Fireball', card: 'Fireball', cost: ['X', 'R'],
+    min: 0, max: Infinity, cancel: 'Cancelar mágica', unit: 'X', start: 0,
+    lands: 8, base: 1, perUnit: 1, unitSym: ['1'],
+    pay: n => [String(n), 'R'], effect: n => n === 0 ? 'Causa 0 de dano.' : `Causa ${n} de dano a um alvo (ou dividido entre vários).`,
+    common: [1, 2, 3, 5],
+  },
+  talion: {
+    label: 'Escolha um número (Talion)', title: 'Escolha um número', card: 'Talion, the Kindly Lord', cost: ['2', 'W', 'B'],
+    min: 1, max: 10, cancel: null, unit: 'número', start: 1,
+    lands: null, effect: n => `Quando um oponente conjurar uma mágica de valor de mana ${n}, você compra uma carta e ele perde 2 de vida.`,
+    common: [],
+  },
+  gnarlid: {
+    label: 'Pagar várias vezes (multikicker)', title: 'Quantas vezes você quer pagar {1}{G} para Gnarlid Pack?', card: 'Gnarlid Pack', cost: ['1', 'G'],
+    min: 0, max: Infinity, cancel: 'Cancelar mágica', unit: 'vezes', start: 0,
+    lands: 6, base: 2, perUnit: 2,
+    pay: n => n === 0 ? ['1', 'G'] : [String(1 + n), ...Array(n + 1).fill('G')],
+    effect: n => n === 0 ? 'Entra sem marcadores.' : `Entra com ${n} ${n === 1 ? 'marcador' : 'marcadores'} +1/+1.`,
+    common: [1, 2, 3],
+  },
+};
+let scenario = 'fireball';
+const sc = () => SCENARIOS[scenario];
+const ms = s => `<span class="ms ${/^\d+$/.test(s) ? '' : s}">${s}</span>`;
+const costHTML = list => list.map(ms).join('');
+const titleHTML = t => t.replace(/\{(\w+)\}/g, (_, s) => ms(s));
+const fin = s => Number.isFinite(s.max);
+const clamp = (n, s) => Math.max(s.min, fin(s) ? Math.min(s.max, n) : n);
+const affordable = s => s.lands == null ? null : Math.floor((s.lands - s.base) / s.perUnit);
+const head = s => `<h4>${titleHTML(s.title)}</h4><p class="sub">${s.card} ${costHTML(s.cost)}</p>`;
+const cancelBtn = s => s.cancel ? `<button class="btn secondary" data-act="cancel">${s.cancel}</button>` : '';
+const confirmLabel = (s, n) => s.unit === 'X' ? `Confirmar X = ${n}` : s.unit === 'vezes' ? `Pagar ${n} ${n === 1 ? 'vez' : 'vezes'}` : `Confirmar ${n}`;
+
+// Estado de cada opção (o número em escolha e passos internos).
+const state = {};
+function reset() {
+  for (const k of ['today', 'a', 'b', 'c', 'd']) state[k] = { n: sc().start, typing: false, rulerMax: 20 };
+}
+
+const RENDER = {
+  today(s, st) {
+    if (st.typing) {
+      const range = fin(s) ? `entre ${s.min} e ${s.max}` : `maior ou igual a ${s.min}`;
+      return `<div class="q"><h4>${titleHTML(s.title)}</h4><p class="hint">Digite um número ${range}</p>
+        <input class="text" type="number" data-today-input value=""><div class="q-actions"><button class="btn primary" data-act="today-ok">Confirmar</button></div></div>`;
+    }
+    const top = fin(s) ? s.max : s.min + 9;
+    const nums = []; for (let i = s.min; i <= top; i++) nums.push(i);
+    return `<div class="q">${head(s)}<div class="list">${nums.map(n => `<button data-pick="${n}">${n}</button>`).join('')}${fin(s) ? '' : '<button data-act="more">...</button>'}</div>
+      <div class="q-actions">${s.cancel ? '<button class="btn secondary" data-act="cancel">Nenhum</button>' : ''}</div></div>`;
+  },
+  a(s, st) {
+    const n = st.n;
+    const quick = [`<button data-set="${s.min}">Mín ${s.min}</button>`, ...s.common.filter(c => c > s.min).map(c => `<button data-set="${c}">${c}</button>`),
+      fin(s) ? `<button data-set="${s.max}">Máx ${s.max}</button>` : `<button data-add="10">+10</button>`];
+    return `<div class="q">${head(s)}
+      <div class="unit">${s.unit === 'X' ? 'Valor de X' : s.unit === 'vezes' ? 'Vezes' : `De ${s.min} a ${s.max}`}</div>
+      <div class="counter"><button class="step" data-add="-1" ${n <= s.min ? 'disabled' : ''} aria-label="Menos">−</button>
+        <input class="big" data-num inputmode="numeric" value="${n}" aria-label="Número">
+        <button class="step" data-add="1" ${fin(s) && n >= s.max ? 'disabled' : ''} aria-label="Mais">+</button></div>
+      <div class="quick">${quick.join('')}</div>
+      <div class="q-actions">${cancelBtn(s)}<button class="btn primary" data-act="confirm">${confirmLabel(s, n)}</button></div></div>`;
+  },
+  b(s, st) {
+    const top = fin(s) ? s.max : s.min + 9;
+    const nums = []; for (let i = s.min; i <= top; i++) nums.push(i);
+    const other = fin(s) ? '' : st.typing
+      ? '' : '<button class="chip other" data-act="other">Outro</button>';
+    const row = st.typing ? `<div class="other-row"><input data-other type="number" inputmode="numeric" min="${s.min}" placeholder="${top + 1}" aria-label="Outro número"><button class="btn primary" data-act="other-ok">Confirmar</button></div>` : '';
+    return `<div class="q">${head(s)}<p class="hint">Toque no número.</p>
+      <div class="chips">${nums.map(n => `<button class="chip" data-pick="${n}">${n}</button>`).join('')}${other}</div>${row}
+      <div class="q-actions">${cancelBtn(s)}</div></div>`;
+  },
+  c(s, st) {
+    const max = fin(s) ? s.max : st.rulerMax;
+    const n = Math.min(st.n, max);
+    const step = Math.max(1, Math.round((max - s.min) / 10));
+    const ticks = []; for (let i = s.min; i <= max; i += step) ticks.push(i);
+    return `<div class="q">${head(s)}<div class="ruler"><div class="val">${n}</div>
+      <input type="range" data-range min="${s.min}" max="${max}" step="1" value="${n}" aria-label="Número">
+      <div class="ticks">${ticks.map(t => `<span>${t}</span>`).join('')}</div>
+      <div class="more"><button class="btn secondary" style="min-width:0" data-add="-1">−</button><button class="btn secondary" style="min-width:0" data-add="1">+</button>${fin(s) ? '' : '<button class="btn secondary" style="min-width:0" data-act="extend">Mais (até ' + (st.rulerMax + 20) + ')</button>'}</div></div>
+      <div class="q-actions">${cancelBtn(s)}<button class="btn primary" data-act="confirm">${confirmLabel(s, n)}</button></div></div>`;
+  },
+  d(s, st) {
+    const n = st.n, cap = affordable(s);
+    const over = cap != null && n > cap;
+    let preview;
+    if (cap == null) preview = `<div class="preview"><div class="eff" style="margin:0">${s.effect(n)}</div></div>`;
+    else {
+      const need = s.base + n * s.perUnit, lack = Math.max(0, need - s.lands);
+      const bar = Array.from({ length: Math.max(s.lands, need) }, (_, i) =>
+        `<i class="${i >= s.lands ? 'lack' : i < s.base ? 'base' : i < need ? 'used' : ''}"></i>`).join('');
+      preview = `<div class="preview ${over ? 'over' : ''}"><div class="pay">Paga ${costHTML(s.pay(n))}</div>
+        <div class="eff">${over ? `Falta ${lack} de mana: você tem ${s.lands} terras desviradas.` : s.effect(n)}</div>
+        <div class="mana-bar" title="Mana disponível">${bar}</div></div>`;
+    }
+    const quick = [`<button data-set="${s.min}">Mín ${s.min}</button>`,
+      cap != null ? `<button data-set="${cap}">O que dá para pagar (${cap})</button>` : fin(s) ? `<button data-set="${s.max}">Máx ${s.max}</button>` : ''];
+    return `<div class="q">${head(s)}
+      <div class="counter"><button class="step" data-add="-1" ${n <= s.min ? 'disabled' : ''} aria-label="Menos">−</button>
+        <input class="big ${over ? 'over' : ''}" data-num inputmode="numeric" value="${n}" aria-label="Número">
+        <button class="step" data-add="1" ${fin(s) && n >= s.max ? 'disabled' : ''} aria-label="Mais">+</button></div>
+      <div class="quick">${quick.join('')}</div>${preview}
+      <div class="q-actions">${cancelBtn(s)}<button class="btn primary" data-act="confirm">${confirmLabel(s, n)}</button></div></div>`;
+  },
+};
+
+function render(key) {
+  const art = document.querySelector(`[data-opt="${key}"]`);
+  const stage = art.querySelector('.stage');
+  const focused = document.activeElement?.closest?.(`[data-opt="${key}"]`) ? document.activeElement.matches('[data-num]') : false;
+  stage.innerHTML = RENDER[key](sc(), state[key]) + '<span class="result"></span>' + `<span class="size">${document.body.classList.contains('phone') ? 'celular deitado · 740×340' : 'computador'}</span>`;
+  if (focused) { const el = stage.querySelector('[data-num]'); el?.focus(); el?.select(); }
+}
+function renderAll() { for (const k of Object.keys(RENDER)) render(k); }
+function answer(key, text) {
+  const r = document.querySelector(`[data-opt="${key}"] .result`);
+  r.textContent = `A mesa responde: ${text}`; r.classList.add('show');
+  clearTimeout(r._t); r._t = setTimeout(() => r.classList.remove('show'), 1800);
+}
+function setN(key, n) { state[key].n = clamp(n, sc()); render(key); }
+
+document.addEventListener('click', e => {
+  const art = e.target.closest('[data-opt]'); if (!art) return;
+  const key = art.dataset.opt, st = state[key], s = sc(), t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.pick) { answer(key, t.dataset.pick); return; }
+  if (t.dataset.add) { const max = key === 'c' && !fin(s) ? st.rulerMax : Infinity; setN(key, Math.min(max, st.n + Number(t.dataset.add))); return; }
+  if (t.dataset.set) { setN(key, Number(t.dataset.set)); return; }
+  const act = t.dataset.act;
+  if (act === 'cancel') answer(key, s.cancel ? 'cancelou a mágica' : 'nenhum');
+  if (act === 'confirm') answer(key, String(st.n));
+  if (act === 'more' || act === 'other') { st.typing = true; render(key); art.querySelector('input')?.focus(); }
+  if (act === 'today-ok' || act === 'other-ok') {
+    const v = Number(art.querySelector('input').value);
+    if (Number.isInteger(v) && v >= s.min) { answer(key, String(v)); st.typing = false; render(key); }
+  }
+  if (act === 'extend') { st.rulerMax += 20; render(key); }
+});
+document.addEventListener('input', e => {
+  const art = e.target.closest('[data-opt]'); if (!art) return;
+  const key = art.dataset.opt;
+  if (e.target.matches('[data-range]')) { state[key].n = Number(e.target.value); art.querySelector('.ruler .val').textContent = state[key].n; art.querySelector('[data-act="confirm"]').textContent = confirmLabel(sc(), state[key].n); }
+});
+document.addEventListener('change', e => {
+  if (!e.target.matches('[data-num]')) return;
+  const key = e.target.closest('[data-opt]').dataset.opt, v = parseInt(e.target.value, 10);
+  setN(key, Number.isNaN(v) ? sc().min : v);
+});
+document.addEventListener('keydown', e => {
+  if (!e.target.matches('[data-num]')) return;
+  const key = e.target.closest('[data-opt]').dataset.opt;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); setN(key, state[key].n + (e.key === 'ArrowUp' ? 1 : -1)); }
+  if (e.key === 'Enter') { const v = parseInt(e.target.value, 10); setN(key, Number.isNaN(v) ? sc().min : v); answer(key, String(state[key].n)); }
+});
+// Segurar o − ou o + corre os números.
+let hold;
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('.step'); if (!t || t.disabled) return;
+  const key = t.closest('[data-opt]').dataset.opt, d = Number(t.dataset.add);
+  hold = setTimeout(function run() { setN(key, state[key].n + d); hold = setTimeout(run, 70); }, 420);
+});
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) document.addEventListener(ev, () => clearTimeout(hold));
+
+// Controles do alto.
+const scenarioBtns = document.getElementById('scenarioBtns');
+for (const [k, v] of Object.entries(SCENARIOS)) scenarioBtns.insertAdjacentHTML('beforeend', `<button class="seg" data-scenario="${k}" aria-pressed="${k === scenario}">${v.label}</button>`);
+scenarioBtns.addEventListener('click', e => {
+  const b = e.target.closest('[data-scenario]'); if (!b) return;
+  scenario = b.dataset.scenario;
+  scenarioBtns.querySelectorAll('.seg').forEach(x => x.setAttribute('aria-pressed', x === b));
+  reset(); renderAll();
+});
+document.getElementById('sizeBtns').addEventListener('click', e => {
+  const b = e.target.closest('[data-size]'); if (!b) return;
+  document.body.classList.toggle('phone', b.dataset.size === 'phone');
+  document.querySelectorAll('#sizeBtns .seg').forEach(x => x.setAttribute('aria-pressed', x === b));
+  renderAll();
+});
+reset(); renderAll();
+</script>
+</body>
+</html>

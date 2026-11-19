@@ -106,6 +106,7 @@
     --azul-263b55: oklch(from #263b55 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-333c52: oklch(from #333c52 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-294163: oklch(from #294163 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-2a3a63: oklch(from #2a3a63 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-34405e: oklch(from #34405e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-34445e: oklch(from #34445e l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-284470: oklch(from #284470 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));

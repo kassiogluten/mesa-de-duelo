@@ -1,6 +1,7 @@
 package mesadeduelo.bridge;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -258,6 +259,16 @@ final class WebGuiGame extends ProtocolGuiGame {
             }
         }
         lifecycle.awaitInput(game.get(), me == null ? -1 : me.getId(), done);
+    }
+
+    /** Números: uma pergunta só com a faixa ({@link NumberChoice}), em vez da lista de 0 a 9 e do "outro" com campo de texto. */
+    @Override public Integer getInteger(String message, int min, int max, boolean sortDesc) { return number(message, min, max); }
+    @Override public Integer getInteger(String message, int min, int max, int cutoff) { return number(message, min, max); }
+
+    private Integer number(String message, int min, int max) {
+        if (max <= min) return min;
+        Object chosen = oneOrNone(message, List.<Object>of(new NumberChoice.Range(min, max)));
+        return chosen instanceof Integer n ? n : null;
     }
 
     @Override

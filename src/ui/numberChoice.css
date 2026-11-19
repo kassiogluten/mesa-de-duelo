@@ -1,0 +1,77 @@
+/* Escolher um número (numberChoice.ts): a carta ao lado, o contador grande com − e +, os atalhos e a linha de custo com a barra da mana disponível. */
+.forge .num-choice { display: flex; gap: 18px; align-items: center; justify-content: center; margin: 0; }
+.forge .num-card { flex: none; width: 150px; --fw: 150px; aspect-ratio: 488 / 680; }
+.forge .num-main { flex: 1 1 auto; min-width: 0; display: grid; justify-items: center; gap: 8px; }
+.forge .num-main .q-actions { margin-top: 4px; }
+.forge .num-unit { color: var(--muted); font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; }
+
+.forge .num-counter { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.forge .num-step {
+  width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--azul-34405e, #34405e); background: var(--azul-16203a, #16203a);
+  color: var(--ink); font: 600 26px/1 var(--display); cursor: pointer; touch-action: manipulation; user-select: none;
+  transition: border-color .15s, transform .1s, opacity .15s;
+}
+.forge .num-step:hover:not(:disabled) { border-color: var(--glow); }
+.forge .num-step:active:not(:disabled) { transform: scale(.92); }
+.forge .num-step:disabled { opacity: .3; cursor: not-allowed; }
+.forge .num-value {
+  width: 3.2ch; min-width: 120px; padding: 2px 6px 4px; border: 1px solid transparent; border-radius: 14px; background: transparent;
+  color: var(--gold-light); font: 700 60px/1 var(--display); text-align: center; text-shadow: 0 0 22px rgb(242 181 76 / .35);
+  font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield;
+}
+.forge .num-value::-webkit-inner-spin-button, .forge .num-value::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.forge .num-value:focus-visible { outline: none; border-color: rgb(242 181 76 / .45); background: rgb(0 0 0 / .25); }
+.forge .num-value.over { color: #ffcf8a; text-shadow: 0 0 22px rgb(255 140 60 / .45); }
+
+.forge .num-quicks { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.forge .num-quick {
+  padding: 4px 12px; border-radius: 999px; border: 1px solid var(--azul-34405e, #34405e); background: var(--azul-16203a, #16203a);
+  color: var(--ink); font: 500 13px/1.4 var(--body); cursor: pointer;
+}
+.forge .num-quick:hover { border-color: var(--glow); }
+
+.forge .num-live:empty { display: none; }
+.forge .num-preview {
+  max-width: 420px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--azul-34405e, #34405e); background: rgb(10 18 34 / .8);
+  text-align: center; font-size: 14px; line-height: 1.45;
+}
+.forge .num-preview p { margin: 0; }
+.forge .num-pay .pip { margin-inline: 1px; }
+.forge .num-effect { color: var(--muted); margin-top: 2px; }
+.forge .num-preview.over { border-color: rgb(255 181 71 / .55); background: rgb(42 27 8 / .8); }
+.forge .num-preview.over .num-effect { color: #ffcf8a; }
+.forge .num-bar { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 6px; }
+.forge .num-bar i { width: 16px; height: 6px; border-radius: 3px; background: rgb(255 255 255 / .12); }
+.forge .num-bar i.base { background: #f3a083; }
+.forge .num-bar i.used { background: var(--gold); box-shadow: 0 0 6px rgb(242 181 76 / .55); }
+.forge .num-bar i.lack { background: transparent; outline: 1px dashed #ffb547; outline-offset: -1px; }
+
+/* Números soltos (a carta só aceita alguns): fichas redondas, um toque responde. */
+.forge .num-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.forge .num-chip {
+  width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--azul-34405e, #34405e);
+  background: radial-gradient(circle at 35% 30%, var(--azul-2a3a63, #2a3a63), var(--azul-121b31, #121b31)); color: var(--ink); font: 700 19px/1 var(--display); cursor: pointer;
+  box-shadow: 0 3px 8px rgb(0 0 0 / .5), inset 0 0 0 4px rgb(255 255 255 / .03); transition: transform .12s, border-color .12s;
+}
+.forge .num-chip:hover { transform: translateY(-3px); border-color: var(--glow); }
+
+/* Telas estreitas: a carta sai, o texto da linha de custo já diz o que ela faz. */
+@media (max-width: 560px) {
+  .forge .num-card { display: none; }
+}
+/* Celular deitado (uns 340 px de altura): carta menor, número e botões mais baixos, tudo sem rolar. */
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .question.number-choice { padding-block: 10px; }
+  .forge .question.number-choice h2 { font-size: 17px; margin-bottom: 4px; }
+  .forge .num-card { width: 96px; --fw: 96px; }
+  .forge .num-main { gap: 5px; }
+  .forge .num-step { width: 44px; height: 44px; font-size: 22px; }
+  .forge .num-value { font-size: 44px; min-width: 96px; }
+  .forge .num-preview { padding: 5px 10px; font-size: 13px; }
+  .forge .num-bar { margin-top: 4px; }
+  .forge .num-chip { width: 42px; height: 42px; font-size: 16px; }
+  .forge .question.number-choice .q-actions .arena-btn { padding-block: 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .forge .num-step, .forge .num-chip { transition: none; }
+}

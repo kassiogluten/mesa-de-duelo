@@ -409,7 +409,7 @@ export interface FQuestion {
   id: number;
   method: string;
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
-  kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount';
+  kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount' | 'number';
   /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). */
   purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order';
   /** Escolha entre cartas reveladas (Thoughtseize na mão do oponente, Grisly Salvage no topo do grimório): as que não podem ser escolhidas, mostradas apagadas, e de onde vieram ("Mão de Ana revelada."). */
@@ -444,8 +444,17 @@ export interface FQuestion {
   deathtouch?: boolean;
   title: string;
   total?: number;
+  /** number: o menor e o maior número (sem max, não há teto). Nas outras, quantas opções escolher. */
   min?: number;
   max?: number;
+  /** number: só estes números valem (a carta oferece números soltos, como 2, 4 e 6). */
+  values?: number[];
+  /** number: o que o número conta, o X do custo ou quantas vezes pagar um custo. */
+  unit?: 'x' | 'times';
+  /** number: dá para desistir de conjurar a mágica (spell) ou de ativar a habilidade (ability); a resposta vai sem number. */
+  cancel?: 'spell' | 'ability';
+  /** number: o resto do custo, o que cada unidade acrescenta ("{1}", "{1}{G}") e a mana que o jogador consegue gerar agora. */
+  cost?: FNumberCost;
   options?: (FOption | string)[];
   card?: FCard;
   initial?: string;
@@ -453,6 +462,8 @@ export interface FQuestion {
 }
 
 export interface FVote { player: number; label: string }
+
+export interface FNumberCost { base: string; each: string; available?: number }
 
 export interface FButton { label: string; enabled: boolean }
 
@@ -674,7 +685,7 @@ export type ClientMessage =
   /** Aponta uma carta que todos veem (campo, pilha, cemitério, exílio, zona de comando) para os outros jogadores. */
   | { type: 'point'; card: number }
   | { type: 'undo-request' } | { type: 'undo-vote'; value: boolean } | { type: 'undo-cancel' }
-  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; all?: boolean; remember?: boolean }
+  | { type: 'answer'; id: number; indices?: number[]; amounts?: number[]; value?: boolean; text?: string; number?: number; all?: boolean; remember?: boolean }
   /** OK na janela das cartas reveladas (revealView), ou a mesa guardou um aviso de reveals. */
   | { type: 'reveal-seen'; seq: number };
 

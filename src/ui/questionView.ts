@@ -12,6 +12,7 @@ import { isVote, voteHTML } from './cardVote';
 import { isNameChoice, nameChoiceHTML } from './nameChoice';
 import { dungeonRoomHTML, isDungeonRoom } from './dungeon';
 import { isReplacementOrder, replacementOrderHTML } from './replacementOrder';
+import { isNumberChoice, numberChoiceHTML, rulesOf } from './numberChoice';
 import type { QuestionDraft } from './tableState';
 
 /** O que as perguntas precisam da mesa. */
@@ -73,6 +74,7 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   if (isPilesSplit(q)) return pilesSplitHTML(q, draft.picked, v.piles);
   if (isPilesChoice(q)) return pilesChoiceHTML(q, v.piles);
   if (isReplacementOrder(q)) return replacementOrderHTML(q, draft.all !== false, v.face, v.label);
+  if (isNumberChoice(q)) return numberChoiceHTML(q, draft.text, q.card ? v.face(q.card) : '', rulesOf(q.card, v.ptText), q.card?.name ? [q.card.name, v.label(q.card)] : undefined);
   const opts = q.options ?? [];
   const head = `<div class="q-head"><h2>${esc(q.title)}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
   if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));

@@ -637,3 +637,20 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
   Feitos em 16/11/2026 (`novidades-pendentes/entrada-na-partida`). A compra espera o sorteio sair da mesa. Ao manter, a transição de CSS da mão termina na hora, e cada carta desliza do leque até a mão junto com a sua lupa. Também nesse dia: as lupas das cartas ainda a caminho não aparecem mais nos lugares vazios. Os efeitos da mesa começam a carregar no clique em Jogar, e o sorteio espera por eles (até 1,5 s) para rolar o dado em 3D; antes, a primeira rodada saía sempre chapada.
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
+
+## 142. Varredura de telas e decisões que podem ficar melhores para o jogador
+
+Pedido em 19/11/2026, depois da escolha de número: ela usava a mesma lista genérica de qualquer escolha (um botão por número, um "..." que abria outra janela) e virou um contador com o custo, a mana disponível e o efeito (estudo e decisão em `docs/escolha-numero-opcoes.html`, novidade em `novidades-pendentes/escolha-de-numero`). A ideia é procurar, de propósito, outros pontos assim, em vez de esperar que alguém tropece neles.
+
+Sinais de que uma tela ou decisão merece uma versão melhor:
+- Cai na janela genérica (lista de botões de texto, "Sim/Não", campo de texto) quando o assunto pede uma tela própria (número, cor, tipo de criatura, modo, quantidade).
+- Não mostra o que a escolha custa ou faz (mana, vida, cartas), e o problema só aparece depois.
+- Botões que não dizem o que fazem ("OK", "Nenhum", "Cancelar" sem objeto).
+- Precisa de uma segunda janela ou de vários passos para algo que caberia num só.
+- Rola ou aperta no celular deitado (340 a 360 px de altura).
+- Texto do Forge cru ou em inglês, ou com ids de carta (ex.: visto nesse dia, ao escolher os alvos da Fireball: "Select any target (2 more can be targeted)").
+- Não dá para usar só com o teclado, ou o foco começa no lugar errado.
+
+- [ ] Fazer a varredura: cada tipo de pergunta do servidor (`kind` e `purpose` em `src/forge/protocol.ts`), os pedidos da caixa de ação (`input.message`, alvos, pagar mana), os menus e avisos da mesa e as telas fora da partida (salas, decks, resultado). Para cada um, montar a mesa mínima (páginas de teste em `tests/fixtures/` ou o Laboratório), olhar no computador e no celular deitado e anotar os sinais acima.
+- [ ] Juntar o que achar numa lista por ganho para o jogador e esforço (só a mesa, ou mesa e servidor), em `docs/varredura-experiencia.html`.
+- [ ] Para cada item escolhido, um HTML de opções em `docs/` (como o da escolha de número) para decidir, e um item próprio neste roadmap para fazer.

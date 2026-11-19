@@ -11,6 +11,7 @@ import { hideCardPreview } from './cardInspector';
 import { restoreRowScroll, rowScroll, syncAllRowEdges } from './cardRow';
 import { isLibraryChoice, librarySummary, moveLibraryCard, placeLibraryCard } from './libraryChoice';
 import { isNameChoice, nameListHTML, nameMatches, nameStatus } from './nameChoice';
+import { clampNumber, isNumberChoice, numberValue, refreshNumber, rulesOf } from './numberChoice';
 import { isPilesChoice, isPilesSplit, movePileCard, splitSummary } from './piles';
 import { isReplacementOrder } from './replacementOrder';
 import { amountStatus, choiceTypeLine, missingPicks, newQuestionDraft, questionBar as renderQuestionBar, questionHTML as renderQuestion, type QuestionView } from './questionView';
@@ -97,7 +98,7 @@ export function createTableQuestion(d: QuestionDeps) {
 
   /** "Lembrar esta ordem" marcado na tela de ordenar gatilhos: a resposta leva remember. */
   const keepOrder = (q: FQuestion) => (isTriggerOrder(q) && q.canRemember && triggerOrder?.id === q.id && triggerOrder.t.keep ? { remember: true } : {});
-  function answer(extra: { indices?: number[]; value?: boolean; text?: string; amounts?: number[]; all?: boolean; remember?: boolean }) {
+  function answer(extra: { indices?: number[]; value?: boolean; text?: string; number?: number; amounts?: number[]; all?: boolean; remember?: boolean }) {
     const client = d.client();
     const q = client?.state?.question;
     if (!q || !client) return;
@@ -121,7 +122,7 @@ export function createTableQuestion(d: QuestionDeps) {
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
       // Fileira de cartas (celular): marcar uma carta redesenha a escolha, mas a fileira fica onde estava.
       const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
-      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (s.question.kind === 'reveal' && !isMinimized && after && Number(before?.dataset.qid) !== s.question.id) d.motion.revealIn([...after.querySelectorAll<HTMLElement>('.q-face')]);
       if (again !== null && after && after !== before) after.scrollTop = again;
@@ -239,10 +240,48 @@ export function createTableQuestion(d: QuestionDeps) {
     return false;
   }
 
+  /** Escolha de número: muda o número do rascunho e a janela aberta, sem redesenhá-la. */
+  function setNumber(q: FQuestion, n: number) {
+    const match = d.match();
+    if (!match.qState || match.qState.id !== q.id) return;
+    const value = clampNumber(q, n);
+    match.qState.text = String(value);
+    refreshNumber($('#fQuestion'), q, value, rulesOf(q.card, name => ptOf(name)?.text), true);
+  }
+  const numberNow = (q: FQuestion) => numberValue(q, d.match().qState?.id === q.id ? d.match().qState!.text : undefined);
+  // Segurar o − ou o + corre os números; o clique que vem ao soltar não conta de novo.
+  let holding: ReturnType<typeof setTimeout> | undefined, held = false;
+  const stopHold = () => { clearTimeout(holding); holding = undefined; };
+  root.addEventListener('pointerdown', e => {
+    const step = (e.target as HTMLElement).closest<HTMLButtonElement>('.num-step');
+    const q = d.state()?.question;
+    held = false;
+    if (!step || step.disabled || !q || !isNumberChoice(q)) return;
+    const by = Number(step.dataset.numAdd);
+    holding = setTimeout(function run() {
+      held = true;
+      const before = numberNow(q);
+      setNumber(q, before + by);
+      holding = numberNow(q) === before ? undefined : setTimeout(run, 70);
+    }, 420);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'pointerleave'] as const) root.addEventListener(type, stopHold);
+
   /** Cliques que respondem: a divisão do dano, os gatilhos, confirmar, nenhuma, manter tudo, sim ou não. */
   function clickAnswer(t: HTMLElement) {
     const match = d.match();
     const openQuestion = d.state()?.question;
+    if (openQuestion && isNumberChoice(openQuestion)) {
+      const pick = t.closest<HTMLElement>('[data-num-pick]');
+      if (pick) { answer({ number: Number(pick.dataset.numPick) }); return true; }
+      const add = t.closest<HTMLElement>('[data-num-add]'), set = t.closest<HTMLElement>('[data-num-set]');
+      if (add || set) {
+        if (held) { held = false; return true; }
+        setNumber(openQuestion, set ? Number(set.dataset.numSet) : numberNow(openQuestion) + Number(add!.dataset.numAdd));
+        d.announce(String(numberNow(openQuestion)));
+        return true;
+      }
+    }
     if (openQuestion && isCombatDamage(openQuestion)) {
       const step = t.closest<HTMLElement>('[data-cd-add],[data-cd-sub],[data-cd-lethal]');
       if (step) {
@@ -304,6 +343,13 @@ export function createTableQuestion(d: QuestionDeps) {
       if (status.valid) answer({ amounts: status.amounts });
       return;
     }
+    if (form.matches('[data-q-number]')) {
+      e.preventDefault();
+      const q = d.state()?.question;
+      if (!q || !isNumberChoice(q) || Number(form.closest<HTMLElement>('[data-qid]')?.dataset.qid) !== q.id) return;
+      answer({ number: numberNow(q) });
+      return;
+    }
     if (!form.matches('[data-q-text]')) return;
     e.preventDefault();
     if (Number((e.target as HTMLElement).closest<HTMLElement>('[data-qid]')?.dataset.qid) !== d.state()?.question?.id) return;
@@ -313,6 +359,10 @@ export function createTableQuestion(d: QuestionDeps) {
   function input(t: HTMLInputElement) {
     const match = d.match(), s = d.state();
     if (t.id === 'fQInput' && match.qState) match.qState.text = t.value;
+    if (t.id === 'fQNumber' && match.qState && s?.question && isNumberChoice(s.question) && match.qState.id === s.question.id) {
+      match.qState.text = t.value;
+      refreshNumber($('#fQuestion'), s.question, numberValue(s.question, t.value), rulesOf(s.question.card, name => ptOf(name)?.text), false);
+    }
     if (t.id === 'fQNameSearch' && match.qState && s?.question && isNameChoice(s.question)) {
       match.qState.text = t.value;
       applyNameSearch(s.question);

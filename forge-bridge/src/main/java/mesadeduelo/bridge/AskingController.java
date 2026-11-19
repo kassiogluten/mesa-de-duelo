@@ -270,7 +270,21 @@ final class AskingController extends PlayerControllerHuman {
     }
 
     // Escolhas pedidas por um efeito, com a habilidade que pede.
-    @Override public Integer announceRequirements(SpellAbility sa, int min, int max, String announce) { return asking(sa, () -> super.announceRequirements(sa, min, max, announce)); }
+    @Override public Integer announceRequirements(SpellAbility sa, int min, int max, String announce) {
+        return asking(sa, () -> withNumber(NumberChoice.announcing(sa, announce, getPlayer()), () -> super.announceRequirements(sa, min, max, announce)));
+    }
+    @Override public int chooseNumberForKeywordCost(SpellAbility sa, forge.game.cost.Cost cost, forge.game.keyword.KeywordInterface keyword, String prompt, int max) {
+        return asking(sa, () -> withNumber(NumberChoice.keywordCost(sa, cost, getPlayer()), () -> super.chooseNumberForKeywordCost(sa, cost, keyword, prompt, max)));
+    }
+
+    private volatile NumberChoice.Context numberContext;
+    /** O número pedido agora (X, quantas vezes pagar): o custo e o que dá para desistir; {@code null} fora de um. */
+    NumberChoice.Context numberContext() { return numberContext; }
+    private <T> T withNumber(NumberChoice.Context context, Supplier<T> choice) {
+        NumberChoice.Context previous = numberContext;
+        numberContext = context;
+        try { return choice.get(); } finally { numberContext = previous; }
+    }
     @Override public List<OptionalCostValue> chooseOptionalCosts(SpellAbility sa, List<OptionalCostValue> costs) { return asking(sa, () -> super.chooseOptionalCosts(sa, costs)); }
     @Override public List<AbilitySub> chooseModeForAbility(SpellAbility sa, List<AbilitySub> possible, int min, int num, boolean allowRepeat) {
         return asking(sa, () -> super.chooseModeForAbility(sa, possible, min, num, allowRepeat));

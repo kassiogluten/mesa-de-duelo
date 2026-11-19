@@ -136,9 +136,12 @@ final class QuestionBroker {
 
     private Object choices(Prompt p) {
         Seat seat = p.seat(); Object[] a = p.a(); JsonObject q = p.q(); List<Object> options = p.options(); HostedMatch hosted = p.hosted();
+        q.addProperty("title", String.valueOf(a[0]));
+        // Um número (X, quantas vezes pagar, "escolha um número"): contador na mesa, com o custo quando há.
+        if ((Integer) a[1] >= 0 && NumberChoice.describe(q, (Collection<?>) a[3], (Integer) a[1], options,
+                seat.controller() instanceof AskingController asking ? asking.numberContext() : null)) return ASK;
         // min/max -1: é um reveal() do Forge (Explore, revelar o topo...), só para mostrar as cartas.
         q.addProperty("kind", (Integer) a[1] < 0 ? "reveal" : "choose");
-        q.addProperty("title", String.valueOf(a[0]));
         q.addProperty("min", (Integer) a[1]);
         q.addProperty("max", (Integer) a[2]);
         @SuppressWarnings("unchecked") FSerializableFunction<Object, String> display = (FSerializableFunction<Object, String>) a[5];
@@ -357,6 +360,7 @@ final class QuestionBroker {
         Question q = seat.question;
         if (q == null || !msg.has("id") || ClientActions.exactInt(msg.get("id")) != q.id()) return;
         validateAnswer(q, msg);
+        if (isNumber(q)) { q.answer().complete(NumberChoice.answer(q, msg)); return; }
         Object result;
         switch (q.method()) {
             case confirm, showConfirmDialog -> result = msg.get("value").getAsBoolean();
@@ -397,7 +401,10 @@ final class QuestionBroker {
         q.addProperty("zone", zone == null ? "Graveyard" : zone.name());
     }
 
+    private static boolean isNumber(Question q) { return q.json().has("kind") && "number".equals(q.json().get("kind").getAsString()); }
+
     private static void validateAnswer(Question q, JsonObject msg) {
+        if (isNumber(q)) { NumberChoice.validate(q.json(), msg); return; }
         if (q.method() == ProtocolMethod.confirm || q.method() == ProtocolMethod.showConfirmDialog) {
             if (!msg.has("value") || !msg.get("value").isJsonPrimitive() || !msg.get("value").getAsJsonPrimitive().isBoolean())
                 throw new IllegalArgumentException("Escolha uma resposta válida.");
