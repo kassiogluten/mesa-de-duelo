@@ -50,7 +50,8 @@ test('ward cost, protection, prevention and face-down get readable seals', () =>
 
 test('base details, phasing, restrictions and targeting', () => {
   const fx = permanentFx(creature({ keywords: ['DEATHTOUCH', 'DOUBLE_STRIKE', 'FIRST_STRIKE', 'HASTE'], sick: true, cantAttack: true, phasedOut: true }), { targeted: 'theirs' });
-  assert.deepEqual(fx.base, ['deathtouch', 'haste', 'chained']);
+  assert.deepEqual(fx.base, ['deathtouch', 'haste'], 'no dashed bar under creatures that cannot attack or block');
+  assert.equal(permanentFx(creature({ keywords: ['DEFENDER'] })).frame, undefined, 'defender has no striped bar under the card');
   const view = permanentFxHTML(fx);
   assert.deepEqual(view.classes, ['fx-phased', 'fx-targeted theirs'], 'with haste the summoning sickness changes nothing, so it is not shown');
   assert.match(view.html, /fx-crosshair/);

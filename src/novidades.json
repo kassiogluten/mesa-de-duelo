@@ -1,4 +1,12 @@
 {
+  "0.221.0": {
+    "Setas com gota que aponta para o alvo": [
+      { "img": "0.221.0/setas-gota.webp", "legenda": "A seta dourada do bloqueio, com o escudo na gota apontando para a atacante, e a seta vermelha de uma mágica do oponente, com a mira apontando para a sua criatura." }
+    ],
+    "Sem faixa embaixo de quem não pode atacar": [
+      { "img": "0.221.0/defensor-sem-barra.webp", "legenda": "Uma criatura com defensor e outra impedida de atacar, sem nada embaixo da carta; a impedida mantém a espada riscada na borda." }
+    ]
+  },
   "0.220.0": {
     "Indestrutível e regeneração aparecem na mesa": [
       { "img": "0.220.0/indestrutivel.webp", "legenda": "O Darksteel Myr levou 3 de dano e ficou: a carta acende em dourado, com \"Indestrutível\" subindo dela." },

@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.221.0] - 2026-11-19
+
+### Mudou
+
+- **Setas com gota que aponta para o alvo.** O símbolo perto da ponta de cada seta (espada no ataque, escudo no bloqueio, mira no alvo, estrela na aura de jogador) agora é cheio, na cor da seta, e fica dentro de uma gota com a ponta virada para onde a seta vai: dá para ver de relance o que ela é e quem ela atinge.
+- **Sem faixa embaixo de quem não pode atacar.** A faixa listrada embaixo das criaturas com defensor e a corrente tracejada embaixo das que não podem atacar ou bloquear saem da mesa. Quem está impedido por um efeito continua com a espada ou o escudo riscados na borda esquerda da carta.
+
 ## [0.220.0] - 2026-11-19
 
 ### Novo

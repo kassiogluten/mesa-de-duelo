@@ -218,8 +218,9 @@ a { color: var(--gold); }
 .beam .arrow-under { stroke: rgba(10, 6, 16, .67); stroke-width: 5px; }
 .beam .arrow { stroke: currentColor; stroke-width: 2.6px; }
 .beam .arrow-pulse { stroke: #fff; stroke-width: 2.4px; stroke-dasharray: 22px var(--len); animation: beam-pulse var(--dur) linear var(--runs, infinite); animation-fill-mode: forwards; }
-.beam .arrow-glyph circle { fill: color-mix(in srgb, var(--azul-080e1b, #080e1b) 87%, transparent); stroke: currentColor; stroke-width: 2px; }
-.beam .arrow-glyph path, .beam .arrow-glyph > circle + circle { fill: none; stroke: currentColor; stroke-width: 2px; }
+.beam .arrow-glyph .plate { fill: color-mix(in srgb, var(--azul-080e1b, #080e1b) 87%, transparent); stroke: currentColor; stroke-width: 2px; }
+.beam .arrow-glyph .s { fill: none; stroke: currentColor; stroke-width: 2.4px; }
+.beam .arrow-glyph .f { fill: currentColor; stroke: currentColor; stroke-width: .8px; }
 .beam .arrow-diamond path { fill: #fff; stroke: currentColor; stroke-width: 2px; filter: drop-shadow(0 0 3px currentColor); }
 @keyframes beam-pulse { from { stroke-dashoffset: 0; } to { stroke-dashoffset: calc(-22px - var(--len)); } }
 @media (prefers-reduced-motion: reduce) { .beam .arrow-pulse { display: none; } }

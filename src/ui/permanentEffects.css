@@ -30,14 +30,12 @@
 .bfc > .fx-frame.ward::before { content: ''; position: absolute; inset: -2px; border: 2px dashed #e6dcff; border-radius: inherit; box-shadow: 0 0 12px #b89cffcc; opacity: 0; }
 .bfc > .fx-frame.protection { border: 2px solid #e9edf5; box-shadow: 0 0 0 1px var(--azul-7b8496, #7b8496), 0 0 9px #ffffff66; }
 .bfc > .fx-frame.menace { border: 2px solid transparent; background: conic-gradient(from 0deg, #e5533c 0 6%, transparent 6% 12%) border-box; -webkit-mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); opacity: .9; }
-.bfc > .fx-frame.defender { inset: auto -5px -6px; height: 8px; border: 0; border-radius: 2px; background: repeating-linear-gradient(90deg, var(--azul-8d97a8, #8d97a8) 0 10px, var(--azul-5c6577, #5c6577) 10px 12px); box-shadow: 0 2px 4px #0008; }
 .bfc > .fx-frame.token { border: 2px solid var(--azul-d9dde6, #d9dde6); box-shadow: 0 0 6px #ffffff40; }
 
 /* Detalhes na base, abaixo da carta. */
 .bfc > .fx-base { left: 6%; right: 6%; bottom: -12px; height: 14px; z-index: -1; border-radius: 50%; }
 .bfc > .fx-base.deathtouch { background: radial-gradient(ellipse, #2f6b3a 0, #173f22aa 45%, transparent 70%); filter: blur(2px); }
 .bfc > .fx-base.haste { background: radial-gradient(ellipse, #ffb35a 0, #ff6a2a88 40%, transparent 70%); filter: blur(2px); }
-.bfc > .fx-base.chained { bottom: -7px; height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, var(--azul-a7afbd, #a7afbd) 0 6px, transparent 6px 9px); filter: none; z-index: 1; opacity: .85; }
 
 /* Lâminas da iniciativa e do golpe duplo: fora do canto de cima, à direita. */
 

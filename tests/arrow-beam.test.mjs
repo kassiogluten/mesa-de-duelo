@@ -17,7 +17,10 @@ test('an arrow keeps path.arrow, runs a pulse sized to its length and shows its 
   assert.match(html, /<g class="beam attack">/);
   assert.match(html, /<path class="arrow" d=/);
   assert.match(html, /class="arrow-pulse"[^>]*--len:100px/);
-  assert.match(html, /class="arrow-glyph" transform="translate\(86\.0 0\.0\)"/, 'at 86% of the way');
+  assert.match(html, /class="arrow-glyph" transform="translate\(82\.0 0\.0\)"/, 'at 82% of the way');
+  assert.match(html, /<path class="plate" transform="rotate\(0\.0\)"/, 'the drop points where the arrow goes');
+  const down = beamHTML({ d: 'M0 0 Q0 50 0 100', cls: 'mine', glyph: 'aim', s, c: { x: 0, y: 50 }, e: { x: 0, y: 100 }, glow: 'g' });
+  assert.match(down, /class="plate" transform="rotate\(90\.0\)"/);
   assert.doesNotMatch(html, /--runs/, 'without a limit, the pulse runs while the arrow exists');
   const combat = beamHTML({ d: 'M0 0 Q50 0 100 0', cls: 'block', glyph: 'shield', s, c, e, glow: 'g', pulses: 3, diamond: true });
   assert.match(combat, /--runs:3/);

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Estudo de 19/11/2026: opções de desenho para o símbolo das setas da mesa (espada no ataque, escudo no bloqueio, mira no alvo, estrela na aura de jogador), cada uma numa mesa de exemplo com as cores e as medidas reais, ao lado do que existe hoje. -->
+<title>Símbolos das setas: opções</title>
+<style>
+/* Página escura como a mesa: os símbolos só fazem sentido vistos sobre o feltro azul, em cima das cartas. */
+:root {
+  color-scheme: dark;
+  --bg: #060912; --card: #0d1424; --line: rgba(255, 255, 255, .12); --ink: #eef1f8; --muted: #9aa5bb;
+  --gold: #f2b54c; --gold-light: #ffe2a0; --red: #ec5a3f; --blue: #6cc4ff; --lilac: #c9a2ff; --disc: #080e1bde;
+  --display: "Outfit", "Segoe UI", system-ui, sans-serif; --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+main { max-width: 1200px; margin: 0 auto; padding: 40px 16px 72px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(26px, 4.2vw, 38px); }
+h2 { font-size: 22px; margin: 44px 0 6px; }
+h3 { font-size: 19px; }
+p { margin: 0 0 10px; }
+.eyebrow { font: 600 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.muted { color: var(--muted); }
+.prose { max-width: 70ch; }
+.lead { font-size: 17px; color: var(--muted); margin-top: 12px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: 7px; }
+.legend i { width: 18px; height: 4px; border-radius: 2px; background: currentColor; }
+
+/* Uma opção por cartão: a mesa de exemplo em cima, os quatro símbolos ampliados embaixo. */
+.options { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 500px), 1fr)); gap: 16px; margin-top: 18px; }
+.opt { border: 1px solid var(--line); border-radius: 14px; background: var(--card); overflow: hidden; }
+.opt.rec { border-color: #f2b54c99; box-shadow: 0 0 0 1px #f2b54c44; }
+.opt header { padding: 16px 16px 12px; }
+.opt .tag { display: inline-block; margin-bottom: 8px; padding: 3px 9px; border-radius: 999px; background: #ffffff12; color: var(--muted); font: 600 11px/1.4 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.opt.rec .tag { background: var(--gold); color: #101b2f; }
+.opt header p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.scene { display: block; width: 100%; height: auto; background: radial-gradient(120% 140% at 50% 0%, #284470, #13203a 55%, #0a1120); border-block: 1px solid var(--line); }
+.zoom { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 10px 8px 12px; }
+.zoom figure { margin: 0; text-align: center; }
+.zoom svg { width: 78px; height: 78px; overflow: visible; }
+.zoom figcaption { color: var(--muted); font-size: 12px; line-height: 1.3; }
+
+/* As setas, com os valores da mesa (style.css): brilho, contorno escuro, traço na cor e o pulso de luz. */
+.beam path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.beam .arrow-glow { stroke: currentColor; stroke-width: 9px; opacity: .3; }
+.beam .arrow-under { stroke: rgba(10, 6, 16, .67); stroke-width: 5px; }
+.beam .arrow { stroke: currentColor; stroke-width: 2.6px; }
+.beam .arrow-pulse { stroke: #fff; stroke-width: 2.4px; stroke-dasharray: 22px var(--len); animation: beam-pulse var(--dur) linear infinite; }
+@keyframes beam-pulse { from { stroke-dashoffset: 0; } to { stroke-dashoffset: calc(-22px - var(--len)); } }
+@media (prefers-reduced-motion: reduce) { .beam .arrow-pulse { display: none; } }
+.attack { color: var(--red); } .block { color: var(--gold); } .choosing { color: var(--blue); } .theirs { color: var(--red); } .aura { color: var(--lilac); }
+
+/* O símbolo: `.plate` é o fundo (disco, gota ou losango) e `.g` o desenho; `s` é em traço e `f`, cheio. */
+.medal .plate { fill: var(--disc); stroke: currentColor; stroke-width: 2px; stroke-linejoin: round; }
+.medal .g .s { fill: none; stroke: currentColor; stroke-width: var(--sw, 2px); stroke-linecap: round; stroke-linejoin: round; }
+.medal .g .f { fill: currentColor; stroke: currentColor; stroke-width: .8px; stroke-linejoin: round; }
+.medal.lit .plate { fill: currentColor; stroke: #fff; stroke-width: 1.5px; filter: drop-shadow(0 0 4px currentColor); }
+.medal.lit .g { color: #0a1120; }
+
+/* Cartas, retrato e pilha de mentira. */
+.c rect { fill: url(#cardFill); stroke: #ffffff33; }
+.c text, .lbl { fill: #cfd8ea; font: 600 9px var(--body); text-anchor: middle; opacity: .75; }
+.av { fill: #1a2947; stroke: #ffffff44; stroke-width: 2; }
+
+.note { margin-top: 28px; padding: 16px 18px; border: 1px solid #f2b54c55; border-radius: 12px; background: #1a160c; }
+.note h3 { margin-bottom: 6px; color: var(--gold-light); }
+.note ul { margin: 8px 0 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <header class="prose">
+    <p class="eyebrow">Estudo · 19 de novembro de 2026</p>
+    <h1>Símbolos das setas: opções de desenho</h1>
+    <p class="lead">Cada seta da mesa leva, perto da ponta, um símbolo dizendo o que ela é. Hoje ele é um rabisco fino dentro de um disco escuro: a espada vira um emaranhado de tracinhos, a estrela fica miúda, e nada na seta mostra para que lado ela aponta. Abaixo, cinco jeitos de redesenhar, na mesma mesa de exemplo.</p>
+    <ul class="legend">
+      <li style="color: var(--red)"><i></i>Ataque (espada) e alvo do oponente (mira)</li>
+      <li style="color: var(--gold)"><i></i>Bloqueio (escudo)</li>
+      <li style="color: var(--blue)"><i></i>Você escolhendo o alvo (mira)</li>
+      <li style="color: var(--lilac)"><i></i>Aura num jogador (estrela)</li>
+    </ul>
+  </header>
+
+  <h2>As opções</h2>
+  <p class="muted prose">O primeiro cartão é a mesa de hoje. A mesa de exemplo está perto do tamanho real numa tela de computador; embaixo dela, os quatro símbolos ampliados três vezes.</p>
+  <div class="options" id="options"></div>
+
+  <section class="note prose">
+    <h3>Recomendação: D, gota que aponta</h3>
+    <p>É a única que resolve as duas coisas de uma vez: o símbolo cheio se lê de relance, e a ponta da gota mostra para onde a seta vai, o que hoje só se descobre seguindo o pulso de luz.</p>
+    <ul>
+      <li><b>B, símbolo cheio</b>, é a troca mais discreta: mesmo disco, só o desenho melhora.</li>
+      <li><b>C, selo aceso</b>, é a que mais salta aos olhos; com muitas setas na mesa pode pesar.</li>
+      <li>O losango aceso das setas que dividem o mesmo alvo continua como está em todas as opções.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+// Os símbolos num quadrado de 18 px centrado na origem. `old`: os de hoje; `line`: traço redesenhado; `solid`: cheios.
+const GLYPHS = {
+  old: {
+    sword: '<path class="s" d="M-6 6 5-5M2-6h4v4M-6 2l4 4M-7 7l3-3"/>',
+    shield: '<path class="s" d="M0-7 6-4v5c0 4-3 6-6 7-3-1-6-3-6-7v-5z"/>',
+    aim: '<circle class="s" r="6"/><path class="s" d="M0-9v5M0 9V4M-9 0h5M9 0H4"/>',
+    star: '<path class="s" d="M0-7 2-2h5L3 1l1.5 5.5L0 3.5-4.5 6.5-3 1-7-2h5z"/>',
+  },
+  line: {
+    sword: '<path class="s" d="M7-7-2.6 2.6M-5.6-.6.6 5.6M-3 3l-3.6 3.6"/>',
+    shield: '<path class="s" d="M0-7.6 6.2-5v5.2c0 4-2.8 6.3-6.2 7.4-3.4-1.1-6.2-3.4-6.2-7.4V-5zM0-3.4v6.6"/>',
+    aim: '<circle class="s" r="5.4"/><path class="s" d="M0-8.6v3.2M0 8.6V5.4M-8.6 0h3.2M8.6 0H5.4"/><circle class="f" r="1.3"/>',
+    star: '<path class="s" d="M0-8 2-2.75l5.6.25L3.2 1.05l1.5 5.45L0 3.4l-4.7 3.1 1.5-5.45L-7.6-2.5l5.6-.25z"/>',
+  },
+  solid: {
+    sword: '<path class="f" d="M8-8 7.2-3.6-1.6 5.2-5.2 1.6 3.6-7.2z"/><path class="s" style="--sw:2.3px" d="M-6.6-.6.6 6.6M-3.8 3.8l-2.6 2.6"/><circle class="f" cx="-7" cy="7" r="1.3"/>',
+    shield: '<path class="f" d="M0-8 6.5-5.2v5.4c0 4.2-2.9 6.6-6.5 7.8-3.6-1.2-6.5-3.6-6.5-7.8v-5.4z"/>',
+    aim: '<circle class="s" style="--sw:2.4px" r="5.2"/><path class="s" style="--sw:2.4px" d="M0-8.8v2.6M0 8.8V6.2M-8.8 0h2.6M8.8 0H6.2"/><circle class="f" r="1.9"/>',
+    star: '<path class="f" d="M0-8.4 2.1-2.9l5.9.3L3.4 1.1l1.5 5.7L0 3.6l-4.9 3.2 1.5-5.7L-8-2.6l5.9-.3z"/>',
+  },
+};
+// O fundo de cada opção; a gota é girada para a ponta olhar o alvo (o desenho de dentro fica em pé).
+const DISC = '<circle class="plate" r="13"/>';
+const DROP = a => `<path class="plate" transform="rotate(${a.toFixed(1)})" d="M20 0 7.8 9.76A12.5 12.5 0 1 1 7.8-9.76z"/>`;
+const DIAMOND = '<rect class="plate" x="-10.6" y="-10.6" width="21.2" height="21.2" rx="3" transform="rotate(45)"/>';
+const OPTIONS = [
+  { tag: 'Hoje', name: 'Como está', set: 'old', plate: () => DISC,
+    why: 'Disco escuro com o símbolo em traço fino. A espada e a estrela se perdem; a seta não tem ponta.' },
+  { tag: 'Opção A', name: 'Traço redesenhado', set: 'line', plate: () => DISC,
+    why: 'O mesmo disco, com os quatro símbolos refeitos: menos tracinhos, formas maiores. A mudança mais leve.' },
+  { tag: 'Opção B', name: 'Símbolo cheio', set: 'solid', plate: () => DISC,
+    why: 'O mesmo disco, com o símbolo preenchido na cor da seta. Lê bem de longe e por cima de arte clara.' },
+  { tag: 'Opção C', name: 'Selo aceso', set: 'solid', plate: () => DISC, lit: true,
+    why: 'Inverte: disco na cor da seta, símbolo escuro, aro claro. O que mais chama atenção.' },
+  { tag: 'Opção D · recomendada', rec: true, name: 'Gota que aponta', set: 'solid', plate: DROP, at: .82,
+    why: 'O disco ganha uma ponta virada para o alvo: o símbolo cheio diz o que é e a gota diz para onde vai.' },
+  { tag: 'Opção E', name: 'Losango', set: 'solid', plate: () => DIAMOND, scale: .82,
+    why: 'Medalhão em losango, parente do losango aceso que já marca as setas que dividem um alvo.' },
+];
+
+function medal(o, glyph, x, y, angle, cls) {
+  return `<g class="medal ${cls}${o.lit ? ' lit' : ''}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">${o.plate(angle)}<g class="g"${o.scale ? ` transform="scale(${o.scale})"` : ''}>${GLYPHS[o.set][glyph]}</g></g>`;
+}
+
+// Curvas como as da mesa: quadrática (`c`) ou cúbica (`c` e `c2`).
+function curveAt(s, c, e, u, c2) {
+  const v = 1 - u;
+  if (!c2) return { x: v * v * s.x + 2 * v * u * c.x + u * u * e.x, y: v * v * s.y + 2 * v * u * c.y + u * u * e.y };
+  return { x: v ** 3 * s.x + 3 * v * v * u * c.x + 3 * v * u * u * c2.x + u ** 3 * e.x, y: v ** 3 * s.y + 3 * v * v * u * c.y + 3 * v * u * u * c2.y + u ** 3 * e.y };
+}
+function beam(o, cls, glyph, s, e, kind) {
+  let c, c2, d;
+  if (kind === 'block') {
+    const my = (s.y + e.y) / 2; c = { x: s.x, y: my }; c2 = { x: e.x, y: my };
+    d = `M${s.x} ${s.y} C${c.x} ${c.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`;
+  } else {
+    const dx = e.x - s.x, dy = e.y - s.y, len = Math.hypot(dx, dy), bend = kind === 'attack' ? Math.min(80, len * .15) : Math.min(120, len * .25);
+    c = { x: (s.x + e.x) / 2 - (dy / len) * bend, y: (s.y + e.y) / 2 + (dx / len) * bend };
+    d = `M${s.x} ${s.y} Q${c.x.toFixed(1)} ${c.y.toFixed(1)} ${e.x} ${e.y}`;
+  }
+  let len = 0, last = s;
+  for (let i = 1; i <= 16; i++) { const p = curveAt(s, c, e, i / 16, c2); len += Math.hypot(p.x - last.x, p.y - last.y); last = p; }
+  const u = o.at ?? .86, at = curveAt(s, c, e, u, c2), a = curveAt(s, c, e, u - .03, c2), b = curveAt(s, c, e, u + .03, c2);
+  const angle = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  return `<g class="beam ${cls}"><path class="arrow-glow" d="${d}" filter="url(#glow)"/><path class="arrow-under" d="${d}"/><path class="arrow" d="${d}"/>`
+    + `<path class="arrow-pulse" d="${d}" style="--len:${Math.round(len)}px;--dur:${Math.max(.6, len / 330).toFixed(2)}s"/>${medal(o, glyph, at.x, at.y, angle, '')}</g>`;
+}
+
+const cardAt = (x, y, text) => `<g class="c"><rect x="${x}" y="${y}" width="58" height="80" rx="5"/><text x="${x + 29}" y="${y + 73}">${text}</text></g>`;
+function scene(o) {
+  return `<svg class="scene" viewBox="0 0 520 300" role="img" aria-label="Mesa de exemplo com as setas de ataque, bloqueio, alvo e aura">
+    <defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.5"/></filter>
+      <linearGradient id="cardFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#40598a"/><stop offset="1" stop-color="#1a2744"/></linearGradient></defs>
+    <circle class="av" cx="46" cy="58" r="24"/><text class="lbl" x="46" y="61">Oponente</text>
+    ${cardAt(130, 18, 'Planeswalker')}${cardAt(232, 18, 'Bloqueia')}${cardAt(334, 18, 'Criatura')}
+    ${cardAt(17, 202, 'Maldição')}${cardAt(120, 202, 'Ataca')}${cardAt(240, 202, 'Sua criatura')}${cardAt(350, 202, 'Sua mágica')}
+    <g class="c"><rect x="446" y="106" width="58" height="80" rx="5" style="stroke: var(--red)"/><text x="475" y="179">Pilha</text></g>
+    ${beam(o, 'aura', 'star', { x: 46, y: 202 }, { x: 46, y: 62 }, 'target')}
+    ${beam(o, 'attack', 'sword', { x: 150, y: 202 }, { x: 159, y: 62 }, 'attack')}
+    ${beam(o, 'block', 'shield', { x: 261, y: 58 }, { x: 157, y: 242 }, 'block')}
+    ${beam(o, 'choosing', 'aim', { x: 379, y: 202 }, { x: 363, y: 60 }, 'target')}
+    ${beam(o, 'theirs', 'aim', { x: 446, y: 160 }, { x: 269, y: 240 }, 'target')}
+  </svg>`;
+}
+const ZOOM = [['sword', 'attack', 'Ataque'], ['shield', 'block', 'Bloqueio'], ['aim', 'choosing', 'Alvo'], ['star', 'aura', 'Aura em jogador']];
+const zoom = o => `<div class="zoom">${ZOOM.map(([glyph, cls, text]) =>
+  `<figure><svg viewBox="-17 -17 40 34" aria-hidden="true"><g transform="translate(3 0)">${medal(o, glyph, -3, 0, 0, cls)}</g></svg><figcaption>${text}</figcaption></figure>`).join('')}</div>`;
+
+document.getElementById('options').innerHTML = OPTIONS.map(o =>
+  `<article class="opt${o.rec ? ' rec' : ''}"><header><span class="tag">${o.tag}</span><h3>${o.name}</h3><p>${o.why}</p></header>${scene(o)}${zoom(o)}</article>`).join('');
+</script>
+</body>
+</html>

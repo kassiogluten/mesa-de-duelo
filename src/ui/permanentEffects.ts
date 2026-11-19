@@ -9,9 +9,9 @@ import { FACE_DOWN_LABEL } from './faceDownReminder';
  * cobrir nome, custo nem P/T; o movimento (pulsar, correr) só existe sem "reduzir movimento" (no CSS).
  */
 export interface PermanentFx {
-  frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'defender' | 'token';
+  frame?: 'indestructible' | 'ward' | 'protection' | 'menace' | 'token';
   glow?: 'hexproof' | 'shroud' | 'lifelink' | 'enchanted' | 'minus';
-  base: ('deathtouch' | 'haste' | 'chained')[];
+  base: ('deathtouch' | 'haste')[];
   /** Detalhes na borda esquerda: asa (voar), olho (vigilância), garra (atropelar), caveira (toque mortífero), escudo com exclamação, cheio ou vazado (não pode ser bloqueada por ninguém ou por algumas criaturas) e espada/escudo riscados (não pode atacar/bloquear). */
   corner: ('flying' | 'vigilance' | 'trample' | 'deathtouch' | 'unblockable' | 'block-limited' | 'no-attack' | 'no-block')[];
   seals: { kind: 'ward' | 'protection' | 'prevent' | 'face-down' | StatusKind; html: string; label: string }[];
@@ -42,13 +42,12 @@ export function permanentFx(c: FCard, context: { targeted?: 'mine' | 'theirs'; e
   // +1/+1 não deixa brilho parado: a carta acende só quando o marcador entra (motionBoard, counters).
   const p1 = c.counters?.P1P1 ?? 0, m1 = c.counters?.M1M1 ?? 0;
   const frame = has('INDESTRUCTIBLE') ? 'indestructible' : has('WARD') ? 'ward' : has('PROTECTION') ? 'protection'
-    : c.creature && has('MENACE') ? 'menace' : c.creature && has('DEFENDER') ? 'defender' : c.token ? 'token' : undefined;
+    : c.creature && has('MENACE') ? 'menace' : c.token ? 'token' : undefined;
   const glow = has('HEXPROOF') ? 'hexproof' : has('SHROUD') ? 'shroud' : c.creature && has('LIFELINK') ? 'lifelink'
     : context.enchanted ? 'enchanted' : m1 > p1 ? 'minus' : undefined;
   const base: PermanentFx['base'] = [];
   if (c.creature && has('DEATHTOUCH')) base.push('deathtouch');
   if (c.creature && has('HASTE') && c.sick) base.push('haste');
-  if (c.creature && (c.cantAttack || c.cantBlock)) base.push('chained');
   const CORNER = { FLYING: 'flying', VIGILANCE: 'vigilance', TRAMPLE: 'trample', DEATHTOUCH: 'deathtouch' } as const;
   const corner: PermanentFx['corner'] = c.creature ? (Object.keys(CORNER) as (keyof typeof CORNER)[]).filter(has).map(k => CORNER[k]) : [];
   if (c.creature && c.unblockable) corner.push('unblockable');
