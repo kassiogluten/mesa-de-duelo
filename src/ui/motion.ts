@@ -13,6 +13,8 @@ import { createFlightMotion } from './motionFlights';
 import { createImpactMotion } from './motionImpact';
 import { createMedalMotion } from './motionMedals';
 import { createSweepMotion, type SweepOptions } from './motionSweep';
+import { createSurviveMotion } from './motionSurvive';
+import { createSpellMotion } from './motionSpells';
 
 const KEYED = '[data-fid],[data-peek]';
 export interface Motion {
@@ -23,7 +25,7 @@ export interface Motion {
    * dono da mana do terreno que virou sem pagar nada, com a reserva dele crescendo (ela voa até o retrato).
    */
   play(options?: { silent?: boolean; semantic?: boolean; paying?: (id: number) => string | undefined; pooled?: (id: number) => { tone: string; player: number } | undefined }): void;
-  present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean }): void;
+  present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean; face?: (card: NonNullable<PresentationEvent['card']>) => string }): void;
   /** Limpa campo (`event.sweep`): a onda na cor da mágica varre a mesa e cada permanente sai, ou é atingida, quando ela passa. */
   sweep(event: PresentationEvent, options: SweepOptions): void;
   /** Compra: versos de carta saem do grimório e vão para a mão. `cards` são as cartas novas da sua mão, mostradas ao chegar. */
@@ -84,16 +86,18 @@ export interface Motion {
 export function createMotion(root: HTMLElement): Motion {
   const kit = createMotionKit(root);
   const { state, animate } = kit;
-  const damage = createDamageMotion(kit);
+  const survive = createSurviveMotion(kit);
+  const damage = createDamageMotion(kit, survive);
   const abilities = createAbilityMotion(kit);
   const zones = createZoneMotion(kit);
   const library = createLibraryMotion(kit);
+  const spells = createSpellMotion(kit, library.libraryOf);
   const board = createBoardMotion(kit);
   const stage = createStageMotion(kit);
   const medals = createMedalMotion(kit);
   const flights = createFlightMotion(kit, zones, abilities.walkerArrive, medals.trinket);
   const impact = createImpactMotion(kit);
-  const sweeps = createSweepMotion(kit, { flights, damage, impact });
+  const sweeps = createSweepMotion(kit, { flights, damage, impact, survive });
   /**
    * As animações contínuas de estado (voar, vínculo, enjoo, alvo possível) seguem um relógio só, o da página: a carta
    * redesenhada continua do ponto em que estava, em vez de recomeçar (a voadora não dá um pulo a cada jogada, nem
@@ -190,10 +194,17 @@ export function createMotion(root: HTMLElement): Motion {
       const card = id === undefined ? null : root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`);
       if (event.type === 'attached') { board.attach(event, card); return; }
       if (event.type === 'control-changed') { board.control(event, card, id === undefined ? undefined : state.cards.get(String(id)), options); return; }
-      if (event.type === 'turn' || !options.html) return;
+      if (event.type === 'turn') { if (event.extra) spells.extraTurn(event, options.you, options.duration); return; }
+      if (event.type === 'survived') { survive.survived(event, options.duration); return; }
+      if (event.type === 'cascade') { spells.cascade(event, options); return; }
+      if (!options.html) return;
+      // Cópias (tempestade, Twincast): desdobram da original na pilha, em vez de voar da mão.
+      if (event.type === 'spell-cast' && event.copy) { spells.copies(event, { html: options.html, duration: options.duration }); return; }
       if (event.type === 'ability-activated') { abilities.ability(event, card, options); return; }
       if (event.type === 'resolved' && event.ward && event.held !== undefined && card) abilities.wardEnd(event, card, options.duration);
       flights.cardFlight(event, card, id, options);
+      // Reforçada ou com X: quando a mágica chega à pilha, a energia converge nela e o número aparece.
+      if (event.type === 'spell-cast' && (event.kicked || event.x !== undefined)) spells.boost(event, options.duration);
     },
     sweep: sweeps.sweep,
     drew: library.drew,
@@ -203,6 +214,7 @@ export function createMotion(root: HTMLElement): Motion {
       if (document.hidden || root.hidden) return;
       if (event.type === 'shuffle') library.shuffle(library.libraryOf(event.actor, options.you));
       else if (event.type === 'counters') board.counters(event);
+      else if (event.type === 'phased') spells.phased(event);
     },
     transformed: board.transformed,
     dizzy: board.dizzy,

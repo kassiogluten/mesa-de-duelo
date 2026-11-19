@@ -30,7 +30,9 @@ interface Play { note: string; steps: [number, () => void][] }
 
 /** Os botões, por grupo e na ordem do painel (o painel não carrega a mesa: só precisa dos nomes). */
 export const PLAY_BUTTONS: [group: string, plays: [key: string, label: string][]][] = [
-  ['Turno e mágicas', [['upkeep', 'Começo do turno'], ['develop', 'Terreno e criatura'], ['bolt', 'Raio no oponente'], ['counter', 'Contramágica'], ['ward', 'Ward anula'], ['wardPaid', 'Ward pago']]],
+  ['Turno e mágicas', [['upkeep', 'Começo do turno'], ['develop', 'Terreno e criatura'], ['bolt', 'Raio no oponente'], ['counter', 'Contramágica'], ['ward', 'Ward anula'], ['wardPaid', 'Ward pago'],
+    ['extraTurn', 'Turno extra'], ['storm', 'Tempestade'], ['kicker', 'Reforço'], ['xspell', 'Mágica com X'], ['cascade', 'Cascata']]],
+  ['Aguentar e fase', [['indestructible', 'Raio na indestrutível'], ['regenerate', 'Regenerar'], ['doubleStrike', 'Golpe duplo'], ['phasing', 'Mudança de fase']]],
   ['Limpa campo', [['wrath', 'Ira de Deus'], ['damnation', 'Danação'], ['pyroclasm', 'Piroclasmo'], ['evacuation', 'Evacuação'], ['eviction', 'Despejo impiedoso']]],
   ['Combate', [['combat', 'Ataque com bloqueios'], ['swing', 'Ataque do oponente'], ['lethal', 'Ataque letal']]],
   ['Cemitério e exílio', [['graveyard', 'Moer e reanimar'], ['blink', 'Blink com gatilho'], ['sacrifice', 'Sacrificar para comprar'], ['flashback', 'Conjurar do cemitério'], ['removal', 'Exilar uma ameaça']]],
@@ -126,6 +128,8 @@ export function createLabPlays(lab: LabApi) {
         }],
         [1800, () => {
           for (const c of [...creaturesOf(me()), ...creaturesOf(opp())]) hit(c, held.sweepStack);
+          // Como a ponte: as indestrutíveis que ficaram vêm depois de todas as saídas, antes de a mágica resolver.
+          for (const c of held.stayed ?? []) stays(c, held.sweepStack, held.sweep.name);
           resolve(held.sweep, held.sweepStack);
         }],
       ],
@@ -173,7 +177,172 @@ export function createLabPlays(lab: LabApi) {
       ],
     };
   }
+  /** A permanente que ficou no campo no lugar de ser destruída, como a ponte avisa. */
+  function stays(c: any, stackId: number | undefined, sourceName: string | undefined, how = 'indestructible') {
+    lab.emit('survived', { card: structuredClone(c), sourceId: c.id, actor: c.controller, survived: how, ...(stackId === undefined ? {} : { stackId }), ...(sourceName ? { sourceName } : {}) });
+  }
+  /** Uma mágica sua que mira o oponente, com o que a deixa diferente (`extra`: reforço, X): paga, vai à pilha e resolve causando `amount`. */
+  function burnPlay(note: string, spell: () => any, lands: number, cost: string, extra: Record<string, unknown>, amount: number): Play {
+    return {
+      note,
+      steps: [
+        [0, () => { stage([...Array.from({ length: lands }, () => () => basic('Mountain')), 'small'], ['small', 'land']); }],
+        ...pay(lands, cost, 900, () => {
+          held.spell = spell();
+          held.stack = lab.newId();
+          const targets = { cards: [], players: [OPP] };
+          lab.state().stack.push({ id: held.stack, text: held.spell.text, source: structuredClone(held.spell), controller: ME, targets });
+          lab.emit('spell-cast', { card: structuredClone(held.spell), sourceId: held.spell.id, actor: ME, from: 'Hand', to: 'Stack', stackId: held.stack, targets, ...extra });
+        }),
+        [1900, () => { resolve(held.spell, held.stack); lab.damage(held.spell, { player: OPP }, amount); lab.settle(); }],
+      ],
+    };
+  }
   const plays: Record<string, Play> = {
+    extraTurn: {
+      note: 'Turno extra: o Time Warp resolve, o seu turno acaba e o próximo é seu de novo, com o relógio voltando no meio da mesa.',
+      steps: [
+        [0, () => { stage(['big', 'hawk', 'land', 'land', 'land', 'land', 'land'], ['small', 'land']); }],
+        [900, () => {
+          for (const x of me().battlefield.filter((y: any) => y.land)) x.tapped = true;
+          held.warp = spellCard('Time Warp', 'Sorcery', '{3}{U}{U}', 'Target player takes an extra turn after this one.');
+          held.warpStack = cast(held.warp, { cards: [], players: [ME] });
+        }],
+        [1700, () => { resolve(held.warp, held.warpStack); lab.state().extraTurns = [ME]; }],
+        [1500, () => {
+          const s = lab.state(); s.turn++; s.activePlayer = ME; s.phase = 'UPKEEP'; s.extraTurn = true; s.extraTurns = [];
+          lab.emit('turn', { actor: ME, turn: s.turn, extra: true });
+          for (const c of me().battlefield) c.tapped = false;
+        }],
+        [2200, () => { const s = lab.state(); s.phase = 'MAIN1'; s.extraTurn = false; }],
+      ],
+    },
+    storm: {
+      note: 'Tempestade: o Grapeshot vai à pilha, o gatilho da tempestade cria 4 cópias, que se desdobram da original em leque com "×4", e cada uma resolve causando 1.',
+      steps: [
+        [0, () => { stage([() => basic('Mountain'), () => basic('Mountain'), 'small'], ['small', 'land']); }],
+        ...pay(2, '{1}{R}', 900, () => {
+          held.shot = spellCard('Grapeshot', 'Sorcery', '{1}{R}', 'Grapeshot deals 1 damage to any target.\nStorm');
+          held.shotStack = cast(held.shot, { cards: [], players: [OPP] });
+        }),
+        [1300, () => {
+          held.stormStack = lab.newId();
+          lab.state().stack.push({ id: held.stormStack, text: 'Storm (When you cast this spell, copy it for each spell cast before it this turn.)', kind: 'trigger', source: structuredClone(held.shot), controller: ME });
+          lab.emit('ability-activated', { card: structuredClone(held.shot), sourceId: held.shot.id, actor: ME, trigger: true, stackId: held.stormStack, to: 'Stack', text: 'Storm' });
+        }],
+        [1500, () => {
+          const s = lab.state(); s.stack = s.stack.filter((x: any) => x.id !== held.stormStack);
+          held.copies = Array.from({ length: 4 }, () => {
+            const copy = { ...structuredClone(held.shot), id: lab.newId() }, stackId = lab.newId(), targets = { cards: [], players: [OPP] };
+            s.stack.push({ id: stackId, text: copy.text, source: structuredClone(copy), controller: ME, targets });
+            lab.emit('spell-cast', { card: structuredClone(copy), sourceId: copy.id, actor: ME, to: 'Stack', stackId, targets, copy: true });
+            return { copy, stackId };
+          });
+          lab.emit('resolved', { card: structuredClone(held.shot), sourceId: held.shot.id, actor: ME, trigger: true, stackId: held.stormStack, from: 'Stack', to: 'Stack' });
+        }],
+        ...[3, 2, 1, 0].map((i): [number, () => void] => [i === 3 ? 2200 : 1100, () => {
+          const { copy, stackId } = held.copies[i];
+          const s = lab.state(); s.stack = s.stack.filter((x: any) => x.id !== stackId);
+          lab.emit('resolved', { card: structuredClone(copy), sourceId: copy.id, actor: ME, stackId, from: 'Stack' });
+          lab.damage(copy, { player: OPP }, 1); lab.settle();
+        }]),
+        [1100, () => { resolve(held.shot, held.shotStack); lab.damage(held.shot, { player: OPP }, 1); lab.settle(); }],
+      ],
+    },
+    kicker: burnPlay('Reforço: o Burst Lightning é conjurado com o reforço pago; quando chega à pilha, a energia converge na carta, "Reforço" sobe dela, e ele causa 4 em vez de 2.',
+      () => spellCard('Burst Lightning', 'Instant', '{R}', 'Kicker {4}\nBurst Lightning deals 2 damage to any target. If this spell was kicked, it deals 4 damage instead.'), 5, '{4}{R}', { kicked: true }, 4),
+    xspell: burnPlay('Mágica com X: a Fireball é conjurada com X = 6; quando chega à pilha, a energia converge nela com um anel grande, "X = 6" sobe da carta, e ela causa 6.',
+      () => spellCard('Fireball', 'Sorcery', '{X}{R}', 'This spell costs {1} more to cast for each target beyond the first.\nFireball deals X damage divided evenly, rounded down, among any number of targets.'), 7, '{6}{R}', { x: 6 }, 6),
+    cascade: {
+      note: 'Cascata: a Bloodbraid Elf vai à pilha, o gatilho da cascata abre o topo do grimório em leque no meio da mesa, o Lightning Bolt acende e é conjurado de graça; as outras voltam para o fundo.',
+      steps: [
+        [0, () => { stage([() => basic('Mountain'), () => basic('Forest'), () => basic('Mountain'), () => basic('Forest')], ['small', 'land']); }],
+        ...pay(4, '{2}{R}{G}', 900, () => {
+          held.elf = { ...lab.creature('Bloodbraid Elf', 3, 2, '{2}{R}{G}', ['HASTE']), id: lab.newId(), controller: ME, typeLine: 'Creature — Elf Berserker', text: 'Haste\nCascade', tapped: false, token: false };
+          held.elfStack = cast(held.elf);
+        }),
+        [1300, () => {
+          held.cascadeStack = lab.newId();
+          lab.state().stack.push({ id: held.cascadeStack, text: 'Cascade', kind: 'trigger', source: structuredClone(held.elf), controller: ME });
+          lab.emit('ability-activated', { card: structuredClone(held.elf), sourceId: held.elf.id, actor: ME, trigger: true, stackId: held.cascadeStack, to: 'Stack', text: 'Cascade' });
+        }],
+        [1500, () => {
+          const s = lab.state();
+          const revealed = [basic('Forest'), lab.card('Shivan Dragon', { creature: true, typeLine: 'Creature — Dragon', manaCost: '{4}{R}{R}' }), basic('Mountain'), basic('Forest'),
+            spellCard('Lightning Bolt', 'Instant', '{R}', 'Lightning Bolt deals 3 damage to any target.')].map(c => ({ id: lab.newId(), controller: ME, tapped: false, token: false, ...c }));
+          held.found = revealed.at(-1);
+          me().library = Math.max(0, (me().library ?? 40) - 1);
+          lab.emit('cascade', { card: structuredClone(held.elf), sourceId: held.elf.id, actor: ME, stackId: held.cascadeStack, dig: 'cascade', revealed: structuredClone(revealed), hit: held.found.id, cast: true });
+          held.foundStack = lab.newId();
+          const targets = { cards: [], players: [OPP] };
+          s.stack.push({ id: held.foundStack, text: held.found.text, source: structuredClone(held.found), controller: ME, targets });
+          lab.emit('spell-cast', { card: structuredClone(held.found), sourceId: held.found.id, actor: ME, from: 'Exile', to: 'Stack', stackId: held.foundStack, targets });
+          s.stack = s.stack.filter((x: any) => x.id !== held.cascadeStack);
+          lab.emit('resolved', { card: structuredClone(held.elf), sourceId: held.elf.id, actor: ME, trigger: true, stackId: held.cascadeStack, from: 'Stack', to: 'Stack' });
+        }],
+        [4200, () => { resolve(held.found, held.foundStack); lab.damage(held.found, { player: OPP }, 3); lab.settle(); }],
+        [1500, () => {
+          const s = lab.state(); s.stack = s.stack.filter((x: any) => x.id !== held.elfStack);
+          me().battlefield.push(held.elf);
+          lab.emit('resolved', { card: structuredClone(held.elf), sourceId: held.elf.id, actor: ME, stackId: held.elfStack, from: 'Stack', to: 'Battlefield' });
+          lab.emit('entered', { card: structuredClone(held.elf), sourceId: held.elf.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+        }],
+      ],
+    },
+    indestructible: {
+      note: 'Raio na indestrutível: o oponente acerta 3 de dano no seu Darksteel Myr (0/1); ele racha com o golpe, as rachaduras se fecham em dourado e ele fica no campo.',
+      steps: [
+        [0, () => { stage(['myr', 'small', 'land', 'land'], [() => basic('Mountain'), 'small']); held.myr = me().battlefield.find((x: any) => x.name === 'Darksteel Myr'); }],
+        [900, () => {
+          opp().battlefield.find((y: any) => y.name === 'Mountain').tapped = true;
+          held.bolt = spellCard('Lightning Bolt', 'Instant', '{R}', 'Lightning Bolt deals 3 damage to any target.', OPP);
+          held.boltStack = cast(held.bolt, { cards: [held.myr.id], players: [] });
+        }],
+        [1700, () => { lab.damage(held.bolt, { card: held.myr.id }, 3); resolve(held.bolt, held.boltStack); lab.settle(); }],
+      ],
+    },
+    regenerate: {
+      note: 'Regenerar: o oponente manda destruir a sua criatura com um Doom Blade; ela tinha um escudo de regeneração, então racha, as rachaduras se fecham em verde e ela fica no campo, virada.',
+      steps: [
+        [0, () => {
+          stage([() => lab.creature('Drudge Skeletons', 1, 1, '{1}{B}'), 'small', 'land', 'land'], [() => basic('Swamp'), () => basic('Swamp'), 'small']);
+          held.bones = me().battlefield.find((x: any) => x.name === 'Drudge Skeletons');
+        }],
+        [900, () => {
+          for (const x of opp().battlefield.filter((y: any) => y.land)) x.tapped = true;
+          held.blade = spellCard('Go for the Throat', 'Instant', '{1}{B}', 'Destroy target nonartifact creature.', OPP);
+          held.bladeStack = cast(held.blade, { cards: [held.bones.id], players: [] });
+        }],
+        [1700, () => { held.bones.tapped = true; stays(held.bones, held.bladeStack, 'Go for the Throat', 'regenerated'); resolve(held.blade, held.bladeStack); }],
+      ],
+    },
+    doubleStrike: {
+      note: 'Golpe duplo: a sua Boros Swiftblade ataca sem bloqueio; no primeiro golpe, um corte atravessa o retrato do oponente e, no segundo, outro corte cruza o primeiro.',
+      steps: [
+        [0, () => { stage(['blade', 'land', 'land'], ['land', 'land']); [held.blade] = creaturesOf(me()); }],
+        [900, () => { attack([held.blade]); }],
+        [1700, () => { lab.state().phase = 'COMBAT_FIRST_STRIKE_DAMAGE'; lab.damage(held.blade, { player: OPP }, 1, { combat: true, step: 'first-strike' }); lab.settle(); }],
+        [1500, () => { lab.state().phase = 'COMBAT_DAMAGE'; lab.damage(held.blade, { player: OPP }, 1, { combat: true, step: 'regular' }); lab.settle(); }],
+        [1800, () => { endCombat(); }],
+      ],
+    },
+    phasing: {
+      note: 'Mudança de fase: as suas duas criaturas saem de fase (ondulam e ficam translúcidas, como miragem) e, no começo do seu turno, voltam firmes com um clarão.',
+      steps: [
+        [0, () => { stage(['big', 'hawk', 'land', 'land'], ['small', 'land']); held.out = creaturesOf(me()); }],
+        [900, () => {
+          for (const c of held.out) { c.phasedOut = true; lab.emit('phased', { card: structuredClone(c), sourceId: c.id, actor: ME, out: true }); }
+          // Um passo qualquer leva junto a mudança de fase, que não tem passo próprio.
+          lab.lifeChange(ME, 1);
+        }],
+        [3200, () => {
+          const s = lab.state(); s.turn++; s.activePlayer = ME; s.phase = 'UNTAP';
+          for (const c of held.out) { c.phasedOut = false; lab.emit('phased', { card: structuredClone(c), sourceId: c.id, actor: ME }); }
+          lab.emit('turn', { actor: ME, turn: s.turn });
+        }],
+        [1500, () => { lab.state().phase = 'MAIN1'; }],
+      ],
+    },
     ward: wardPlay('Ward anula: o oponente mira a sua Aboleth Spawn com um Lightning Bolt, a cúpula de favos sobe em volta dela com o golpe batendo do lado da pilha e, sem o {2} pago, o Bolt é anulado e a cúpula acende e se desfaz em luz.', false),
     wardPaid: wardPlay('Ward pago: o oponente mira a sua Aboleth Spawn com um Lightning Bolt, a cúpula sobe, ele paga o {2}, a cúpula trinca e cai em cacos e o Bolt resolve.', true),
     upkeep: {
@@ -228,10 +397,10 @@ export function createLabPlays(lab: LabApi) {
     },
     wrath: sweepPlay('Ira de Deus no campo cheio: a onda de luz dourada sai do seu retrato e varre a mesa, e cada criatura racha quando ela passa (o Darksteel Myr, indestrutível, fica).',
       () => spellCard('Wrath of God', 'Sorcery', '{2}{W}{W}', 'Destroy all creatures. They can\'t be regenerated.'),
-      (c, stackId) => { if (!c.keywords?.includes('INDESTRUCTIBLE')) lab.leave(c, 'Graveyard', 'destroyed', { stackId, sourceName: 'Wrath of God' }); }),
+      (c, stackId) => { if (c.keywords?.includes('INDESTRUCTIBLE')) held.stayed = [...(held.stayed ?? []), c]; else lab.leave(c, 'Graveyard', 'destroyed', { stackId, sourceName: 'Wrath of God' }); }),
     damnation: sweepPlay('Danação do oponente: a névoa roxa sai do retrato dele e varre a mesa, e cada criatura racha quando ela passa.',
       () => spellCard('Damnation', 'Sorcery', '{2}{B}{B}', 'Destroy all creatures. They can\'t be regenerated.', OPP),
-      (c, stackId) => { if (!c.keywords?.includes('INDESTRUCTIBLE')) lab.leave(c, 'Graveyard', 'destroyed', { stackId, sourceName: 'Damnation' }); }),
+      (c, stackId) => { if (c.keywords?.includes('INDESTRUCTIBLE')) held.stayed = [...(held.stayed ?? []), c]; else lab.leave(c, 'Graveyard', 'destroyed', { stackId, sourceName: 'Damnation' }); }),
     evacuation: sweepPlay('Evacuação: a maré sai do seu retrato e cada criatura volta para a mão do dono quando ela passa (as fichas somem).',
       () => spellCard('Evacuation', 'Instant', '{3}{U}{U}', 'Return all creatures to their owners\' hands.'),
       (c, stackId) => lab.leave(c, 'Hand', undefined, { stackId, sourceName: 'Evacuation' })),
@@ -435,7 +604,7 @@ export function createLabPlays(lab: LabApi) {
       at += plays[key]!.steps.reduce((sum, [ms]) => sum + ms, 0) + 3500;
     }
     queue.push(window.setTimeout(() => { queue = []; }, at));
-    return 'Jogadas em sequência: as 17, uma depois da outra (toque de novo para parar).';
+    return 'Jogadas em sequência: todas, uma depois da outra (toque de novo para parar).';
   }
   return { start, startAll };
 }

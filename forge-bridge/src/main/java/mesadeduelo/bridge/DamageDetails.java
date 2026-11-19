@@ -51,6 +51,8 @@ final class DamageDetails {
         int toughness = state == null ? 0 : state.getToughness();
         // Marcadores −1/−1 (murchar, infectar) já estão na resistência atual.
         if (deathtouch || (state != null && state.isCreature() && toughness <= target.getDamage())) e.addProperty("lethal", true);
+        // O golpe que mataria uma indestrutível: a mesa mostra que ela aguentou.
+        if (e.has("lethal") && has(target, Keyword.INDESTRUCTIBLE)) e.addProperty("indestructible", true);
     }
 
     /**

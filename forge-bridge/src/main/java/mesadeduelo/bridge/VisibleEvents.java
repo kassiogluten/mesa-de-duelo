@@ -43,12 +43,14 @@ final class VisibleEvents {
     private final java.util.List<JsonObject> lifePoints = new java.util.ArrayList<>();
     /** Gatilhos de ward na pilha, para dizer contra quem dispararam e se seguraram. */
     private final WardEvents wards = new WardEvents();
+    /** Cascata e descobrir cavando o grimório: as cartas exiladas viram uma entrada só. */
+    private final CascadeEvents cascade = new CascadeEvents();
 
     VisibleEvents(Runnable changed, LongSupplier version) { this.changed = changed; this.version = version; }
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); clearTurns();
+        game = next; gameStarted = false; spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); cascade.reset(); clearTurns();
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
                 synchronized (VisibleEvents.this) { if (game == next) VisibleEvents.this.receive(event); }
@@ -56,7 +58,7 @@ final class VisibleEvents {
         });
     }
 
-    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
+    synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); cascade.reset(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
     private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
 
     /** Começo de turno: fecha o turno anterior na conta de quem o jogou e anota a vida de todos no fim dele. */
@@ -156,6 +158,11 @@ final class VisibleEvents {
         if (event instanceof GameEventCardDestroyed) { destroyPending = true; return; }
         boolean destroyed = destroyPending && event instanceof GameEventCardChangeZone;
         if (event instanceof GameEventCardChangeZone || event instanceof GameEventPlayerPriority || event instanceof GameEventSpellResolved) destroyPending = false;
+        // Cascata e descobrir: a busca fecha quando a carta achada é conjurada ou quando a habilidade termina de resolver.
+        if (event instanceof GameEventSpellAbilityCast x && x.si().getSourceCard() != null && cascade.found(x.si().getSourceCard().getId())) publishIf(cascade.flush(x.si().getSourceCard().getId()));
+        if (event instanceof GameEventSpellResolved && cascade.pending()) publishIf(cascade.flush(null));
+        // As indestrutíveis que a mágica ou habilidade mandou destruir e continuam no campo.
+        if (event instanceof GameEventSpellResolved x && !x.hasFizzled()) for (var c : SurvivalEvents.withstood(game)) publish(survived(c.getView(), "indestructible"));
         if (event instanceof GameEventLandPlayed x) {
             e = card("land-played", x.land()); actor(e, x.player().getId()); e.addProperty("to", "Battlefield");
         } else if (event instanceof GameEventSpellAbilityCast x) {
@@ -170,6 +177,7 @@ final class VisibleEvents {
             // O "+N" de lealdade é pago antes da habilidade ir para a pilha: a mesa mostra esse marcador junto com ela.
             if (Loyalty.describe(e, game, x.si().getId()) && x.si().getSourceCard() != null) paidCounters(x.si().getSourceCard().getId());
             wards.cast(e, game, Loyalty.ability(game, x.si().getId()));
+            CastDetails.describe(e, Loyalty.ability(game, x.si().getId()));
             spells.put(x.sa().getId(), e.deepCopy());
             if (spells.size() > HISTORY_LIMIT) spells.keySet().removeIf(id -> id != x.sa().getId() && spells.size() > HISTORY_LIMIT);
         } else if (event instanceof GameEventSpellResolved x) {
@@ -182,6 +190,7 @@ final class VisibleEvents {
         } else if (event instanceof GameEventCardChangeZone x && x.card() != null) {
             ZoneType from = x.from() == null ? null : x.from().zoneType(), to = x.to() == null ? null : x.to().zoneType();
             if (to == ZoneType.Stack && from != null) origins.put(x.card().getId(), from.name());
+            if (from == ZoneType.Library && to == ZoneType.Exile) cascade.exiled(game, x.card());
             if (from == ZoneType.Library && to == ZoneType.Hand) {
                 e = type("draw"); if (x.card().getOwner() != null) actor(e, x.card().getOwner().getId());
                 // Busca no grimório (tutor): a mesa mostra a carta saindo do grimório como uma busca, sem dizer qual é.
@@ -253,6 +262,8 @@ final class VisibleEvents {
         } else if (event instanceof GameEventTurnBegan x) {
             turnBegan(x.turnOwner().getId(), x.turnNumber());
             e = type("turn"); actor(e, x.turnOwner().getId()); e.addProperty("turn", x.turnNumber());
+            // Turno extra (Time Warp): a mesa mostra o relógio voltando.
+            if (game != null && game.getPhaseHandler().getPlayerTurn() != null && game.getPhaseHandler().getPlayerTurn().isExtraTurn()) e.addProperty("extra", true);
         } else if (event instanceof GameEventPlayerPriority x && x.priority() != null) {
             e = type("priority"); actor(e, x.priority().getId());
         } else if (event instanceof GameEventShuffle x && x.player() != null) {
@@ -274,6 +285,12 @@ final class VisibleEvents {
             // Equipar, encantar ou trocar de criatura: a carta presa e onde ela foi parar (`moved` quando já estava presa a outra).
             e = card("attached", x.equipment()); e.add("targets", StateJson.targets(java.util.List.of(x.newTarget())));
             if (x.oldEntity() != null) e.addProperty("moved", true);
+        } else if (event instanceof GameEventCardRegenerated x && x.cards() != null) {
+            // Regenerou: em vez de ser destruída, a permanente fica no campo, virada e sem dano.
+            for (CardView c : x.cards()) if (c != null) publish(survived(c, "regenerated"));
+        } else if (event instanceof GameEventCardPhased x && x.card() != null) {
+            // Mudança de fase: `out` quando saiu de fase; sem ele, voltou.
+            e = card("phased", x.card()); if (x.phaseState()) e.addProperty("out", true);
         } else if (event instanceof GameEventZone x && x.zoneType() == ZoneType.Battlefield && x.mode() == EventValueChangeType.Added
                 && x.card() != null && x.player() != null) {
             // Troca de controle: a permanente passa do campo de um jogador para o de outro sem sair do campo.
@@ -303,6 +320,16 @@ final class VisibleEvents {
             }
             append(e);
         }
+    }
+
+    private void publishIf(JsonObject e) { if (e != null) publish(e); }
+
+    /** A permanente que ficou no campo no lugar de ser destruída: `survived` diz como ("indestructible" ou "regenerated"). */
+    private JsonObject survived(CardView c, String how) {
+        JsonObject e = card("survived", c);
+        e.addProperty("survived", how);
+        resolvingSource(e);
+        return e;
     }
 
     /** Quem controla cada permanente agora (começo do jogo e depois de desfazer). */

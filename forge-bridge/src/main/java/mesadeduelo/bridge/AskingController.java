@@ -341,6 +341,8 @@ final class AskingController extends PlayerControllerHuman {
      * seu, continua na janela do Forge, que espera o OK.
      */
     @Override public void reveal(CardCollectionView cards, ZoneType zone, Player owner, String message, boolean addSuffix) {
+        // Cascata e descobrir: a mesa mostra as cartas saindo do grimório em leque, sem janela nem aviso.
+        if (CascadeEvents.digging(getGame()) != null) return;
         if (zone == ZoneType.Hand && DiscardReveal.choiceFollows(getGame(), getPlayer(), owner, cards)) return;
         if (zone == ZoneType.Library && libraryReveal(cards, owner)) return;
         if (othersReveal(cards, zone, owner)) return;

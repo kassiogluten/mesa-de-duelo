@@ -67,7 +67,7 @@ export interface RoomInfo { code: string; config: MatchConfig; available: boolea
 export interface FEvent {
   seq: number; stateVersion: number;
   type: 'land-played' | 'spell-cast' | 'ability-activated' | 'resolved' | 'countered' | 'entered' | 'left' | 'attackers' | 'blockers' | 'damage' | 'life-changed' | 'turn' | 'priority' | 'draw' | 'discard' | 'mill' | 'stack-removed'
-    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed' | 'counters' | 'starting-roll';
+    | 'shuffle' | 'scry' | 'coin' | 'die' | 'attached' | 'control-changed' | 'counters' | 'starting-roll' | 'survived' | 'cascade' | 'phased';
   actor?: number; cards?: number[]; card?: FCard; sourceId?: number; stackId?: number; targets?: FTargets;
   text?: string; from?: string; to?: string; delta?: number; trigger?: boolean;
   /** Só em `damage`; ver forge-bridge/README.md. */
@@ -80,6 +80,20 @@ export interface FEvent {
    * que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou.
    */
   ward?: boolean; wardAgainst?: number; held?: boolean;
+  /**
+   * `survived`: a permanente que ficou no campo no lugar de ser destruída, e como (indestrutível diante de um "destrua",
+   * ou regenerada). `indestructible`: só em `damage`, o golpe letal numa indestrutível.
+   */
+  survived?: 'indestructible' | 'regenerated'; indestructible?: boolean;
+  /** `spell-cast`: é uma cópia (tempestade, Twincast), foi reforçada (kicker) e o valor do X, quando o custo tem X. */
+  copy?: boolean; kicked?: boolean; x?: number;
+  /**
+   * `cascade` (cascata e descobrir): as cartas exiladas do topo do grimório, na ordem em que saíram, a que parou a busca
+   * (`hit`) e se ela foi conjurada de graça. `card` é a carta da cascata ou do descobrir.
+   */
+  dig?: 'cascade' | 'discover'; revealed?: FCard[]; hit?: number; cast?: boolean;
+  /** `phased` (mudança de fase): a permanente saiu de fase; sem `out`, voltou. */
+  out?: boolean;
   /** `left`: por que a carta saiu do campo, quando o Forge diz. */
   reason?: 'destroyed' | 'sacrificed' | 'warped' | 'ninjutsu' | 'sneak';
   /** Ninjutsu e sneak: no `left` do atacante, a carta do ninja; no `entered` do ninja, o atacante que voltou para a mão. */
@@ -101,8 +115,8 @@ export interface FEvent {
   moved?: boolean; previous?: number;
   /** `counters`: qual marcador (P1P1, LOYALTY...), se veio com a carta entrando e, na lealdade, se foi custo pago. */
   counter?: string; entering?: boolean; paid?: boolean;
-  /** `turn`: o número do turno que começou. */
-  turn?: number;
+  /** `turn`: o número do turno que começou, e se é um turno extra. */
+  turn?: number; extra?: boolean;
   frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {

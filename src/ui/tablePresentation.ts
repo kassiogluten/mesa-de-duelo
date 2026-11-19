@@ -83,8 +83,14 @@ export function createPresentationQueue(d: PresentationDeps) {
       const cause = sweepCause(timeline.history, first);
       const afterBurn = burnedBy !== undefined && cause?.card?.id === burnedBy;
       const rest = cause ? timeline.takeWhile(sameSweep(timeline.history, cause.stackId), afterBurn ? 1 : SWEEP_MIN - 1) : [];
-      if (cause && rest.length) sweep = { events: [first, ...rest.map(part => part.event)], cause: cause.card, name: cause.name, controller: cause.controller, wave: !afterBurn };
+      if (cause && rest.length) {
+        // As indestrutíveis que a mesma mágica mandou destruir aguentam quando a onda passa por elas.
+        const stayed = timeline.takeWhile(e => e.type === 'survived' && e.stackId === cause.stackId);
+        sweep = { events: [first, ...rest.map(part => part.event)], cause: cause.card, name: cause.name, controller: cause.controller, wave: !afterBurn, survivors: stayed.map(part => part.event) };
+      }
     }
+    // As que ficaram no campo pela mesma mágica (fora de um limpa campo) racham e se fecham juntas.
+    const together = first.type === 'survived' ? timeline.takeWhile(e => e.type === 'survived' && e.stackId === first.stackId) : [];
     if (first.type === 'turn') burnedBy = undefined;
     const shown: PresentationEvent = sweep ? { ...first, sweep } : first;
     const duration = presentationDuration(shown, pace);
@@ -102,10 +108,10 @@ export function createPresentationQueue(d: PresentationDeps) {
     if (sweep) motion.sweep(shown, { you: s.you, label: d.eventDescription(shown), duration, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
     else if (first.type === 'mill') motion.milled(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal') });
     else if (first.type === 'entered' && (first.entries?.length ?? 0) > 1) motion.entered(first, { you: s.you, fast: shortened, face: card => d.face(card, 'normal'), hideDestination: !hasLiveDecision(s) });
-    else for (const part of [entry, ...divided, ...fought, ...clashing]) {
+    else for (const part of [entry, ...divided, ...fought, ...clashing, ...together]) {
       if (divided.length) part.event.divided = divided.length + 1;
       motion.present(part.event, { you: s.you, html: part.event.card ? d.face(part.event.card, 'normal') : undefined,
-        label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast), hideDestination: !hasLiveDecision(s) });
+        label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast), hideDestination: !hasLiveDecision(s), face: card => d.face(card, 'normal') });
     }
     audio.play(entry.event, entry.replay ? `${timeline.matchId}:replay${replayRun}` : timeline.matchId, entry.audible, s.you);
     if (shown.type === 'damage' && !sweep && shown.targets?.players?.length) d.announce(d.eventDescription(shown));

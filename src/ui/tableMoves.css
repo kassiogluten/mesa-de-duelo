@@ -77,3 +77,37 @@
 .commander-bloom { position: fixed; z-index: 31; pointer-events: none; transform: translate(-50%, -50%); transform-origin: 0 0; border-radius: 50%;
   background: center / cover no-repeat;
   -webkit-mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse closest-side, #000 55%, transparent 100%); }
+
+/* Indestrutível e regeneração (motionSurvive.ts): o nome do que salvou a permanente sobe dela; sem a camada GPU, um
+   contorno na mesma cor acende em volta da carta. */
+.damage-number.survive > b { font-size: 19px; letter-spacing: .02em; }
+.damage-number.survive > svg { width: 22px; height: 22px; fill: currentColor; filter: drop-shadow(0 0 5px currentColor); }
+.damage-number.survive.gold { color: #f2c14c; }
+.damage-number.survive.regen { color: #7fe3a4; }
+.mend-glow { position: fixed; z-index: 34; pointer-events: none; transform: translate(-50%, -50%); border-radius: 8px; border: 2px solid var(--mend, #f2c14c); box-shadow: 0 0 14px var(--mend, #f2c14c), inset 0 0 12px color-mix(in srgb, var(--mend, #f2c14c) 60%, transparent); opacity: 0; }
+.mend-glow.regen { --mend: #63d68f; }
+/* O corte do primeiro golpe e do golpe duplo, sem a camada GPU: um risco claro atravessando o alvo. */
+.strike-slash { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 2px; background: linear-gradient(90deg, transparent, var(--azul-cfe6ff, #cfe6ff) 20%, #fff 50%, var(--azul-cfe6ff, #cfe6ff) 80%, transparent); box-shadow: 0 0 10px var(--azul-9fd3ff, #9fd3ff); opacity: 0; }
+
+/* Turno extra, sem a camada GPU: o mostrador e os dois ponteiros, que giram para trás (motionSpells.ts). */
+.extra-turn-clock { position: fixed; z-index: 34; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid var(--clock, var(--gold)); background: radial-gradient(circle, #0009 0 55%, #0004 75%, transparent 100%); box-shadow: 0 0 22px color-mix(in srgb, var(--clock, var(--gold)) 60%, transparent), inset 0 0 18px color-mix(in srgb, var(--clock, var(--gold)) 35%, transparent); opacity: 0; }
+.extra-turn-clock > i { position: absolute; left: 50%; bottom: 50%; width: 3px; margin-left: -1.5px; border-radius: 2px; background: #fff1cf; box-shadow: 0 0 8px var(--clock, var(--gold)); transform-origin: 50% 100%; }
+.extra-turn-clock > .minute { height: 38%; }
+.extra-turn-clock > .hour { height: 25%; width: 4px; margin-left: -2px; }
+
+/* Cópias de uma mágica: os fantasmas que se abrem em leque a partir da pilha e o "×N" acima dela. */
+.presentation-piece.copy-ghost { z-index: 31; opacity: 0; }
+.presentation-piece.copy-ghost > .face { box-shadow: 0 8px 20px #0007, 0 0 0 2px var(--azul-cfe6ff, #cfe6ff); }
+.entry-count.copy-count { z-index: 41; color: #fff; font-size: 40px; -webkit-text-stroke: 1px var(--copy, #fff); text-shadow: 0 2px 4px var(--bg-deep), 0 0 10px #000a; }
+/* Mágica reforçada ou com X: o número que sobe da pilha e, sem a camada GPU, o anel que fecha e estoura. */
+.damage-number.boost { color: var(--gold-light, #fff1b8); }
+.damage-number.boost > b { font-size: 30px; }
+.boost-ring { position: fixed; z-index: 34; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 3px solid var(--boost, var(--gold)); box-shadow: 0 0 16px var(--boost, var(--gold)), inset 0 0 14px color-mix(in srgb, var(--boost, var(--gold)) 55%, transparent); opacity: 0; }
+
+/* Cascata e descobrir: as cartas do topo do grimório abertas em leque no meio da mesa; a achada acende em dourado. */
+.presentation-piece.cascade-card > .face { box-shadow: 0 10px 24px #0009, 0 0 0 1px #0008; }
+.presentation-piece.cascade-card.hit > .face { box-shadow: 0 14px 30px #000a, 0 0 0 2px var(--gold), 0 0 22px color-mix(in srgb, var(--gold) 70%, transparent); }
+.cascade-title { position: fixed; z-index: 40; pointer-events: none; transform: translate(-50%, -100%); width: max-content !important; height: auto !important; padding: 5px 14px; border: 1px solid var(--gold); border-radius: 999px; background: color-mix(in srgb, var(--bg-deep) 88%, transparent); color: var(--gold-light, #fff1b8); font: 800 15px/1.2 var(--display); letter-spacing: .03em; box-shadow: 0 6px 18px #0008; }
+/* Mudança de fase: o aviso que sobe da permanente. */
+.damage-number.phase { color: var(--azul-9fd3ff, #9fd3ff); }
+.damage-number.phase > b { font-size: 18px; letter-spacing: .02em; }

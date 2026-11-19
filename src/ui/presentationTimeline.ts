@@ -44,8 +44,25 @@ export interface PresentationEvent {
   ward?: boolean;
   wardAgainst?: number;
   held?: boolean;
-  /** Número do turno que começou (`turn`). */
+  /** Ficou no campo no lugar de ser destruída (`survived`), e o golpe letal numa indestrutível (`damage`). */
+  survived?: 'indestructible' | 'regenerated';
+  indestructible?: boolean;
+  /** Mágica chegando à pilha (`spell-cast`): cópia, reforçada e o valor do X. */
+  copy?: boolean;
+  kicked?: boolean;
+  x?: number;
+  /** Só na mesa: quantas cópias seguidas da mesma mágica viraram uma entrada só (`spell-cast` com `copy`). */
+  copies?: number;
+  /** Cascata e descobrir (`cascade`): as cartas que saíram do grimório, a que parou a busca e se foi conjurada. */
+  dig?: 'cascade' | 'discover';
+  revealed?: FCard[];
+  hit?: number;
+  cast?: boolean;
+  /** Mudança de fase (`phased`): saiu de fase; sem ele, voltou. */
+  out?: boolean;
+  /** Número do turno que começou (`turn`), e se é um turno extra. */
   turn?: number;
+  extra?: boolean;
   /** Só na mesa: quantas compras seguidas do mesmo jogador viraram uma entrada só (`draw`). */
   count?: number;
   /** Só na mesa: quantos alvos o mesmo dano dividido atinge junto (vários `damage` seguidos da mesma fonte). */
@@ -96,7 +113,7 @@ export interface PresentationEvent {
    * só, com a carta que as causou (ou o nome dela) e quem a controla. Sem `wave`: as mortes logo depois de um limpa
    * campo de dano, que já teve a onda.
    */
-  sweep?: { events: PresentationEvent[]; cause?: FCard; name?: string; controller?: number; wave: boolean };
+  sweep?: { events: PresentationEvent[]; cause?: FCard; name?: string; controller?: number; wave: boolean; /** As indestrutíveis que ficaram (`survived`). */ survivors?: PresentationEvent[] };
   stateVersion?: number;
   frame?: PresentationFrame;
 }
@@ -110,9 +127,9 @@ const CATCH_UP_LIMIT = 4;
 const AUDIO_QUEUE_LIMIT = 4;
 // Ordinary draws and priority changes should not turn a board game into an activity feed.
 const PRESENTABLE = new Set(['land-played', 'spell-cast', 'ability-activated', 'resolved', 'countered', 'entered', 'left', 'discard', 'mill', 'attackers', 'blockers', 'damage', 'life-changed', 'turn',
-  'scry', 'coin', 'die', 'attached', 'control-changed', 'starting-roll']);
+  'scry', 'coin', 'die', 'attached', 'control-changed', 'starting-roll', 'survived', 'cascade']);
 // Sem passo próprio: tocam (e animam) junto com o que vier, sem segurar a partida.
-const AUDIO_ONLY = new Set(['draw', 'counters', 'shuffle']);
+const AUDIO_ONLY = new Set(['draw', 'counters', 'shuffle', 'phased']);
 
 /** Cartas moídas uma depois da outra pelo mesmo jogador (e pelo mesmo motivo) viram um só movimento. */
 function sameMill(a: PresentationEvent | undefined, b: PresentationEvent) {
@@ -129,6 +146,13 @@ function sameEntry(a: PresentationEvent | undefined, b: PresentationEvent) {
 }
 function joinEntry(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
   return { ...b, repeat: a.repeat, entries: [...(a.entries ?? (a.card ? [a.card] : [])), ...(b.card ? [b.card] : [])] };
+}
+/** Cópias seguidas da mesma mágica, do mesmo jogador (tempestade, replicar): chegam à pilha num movimento só, com "×N". */
+function sameCopy(a: PresentationEvent | undefined, b: PresentationEvent) {
+  return a?.type === 'spell-cast' && b.type === 'spell-cast' && !!a.copy && !!b.copy && a.actor === b.actor && !!a.card?.name && a.card.name === b.card?.name;
+}
+function joinCopy(a: PresentationEvent, b: PresentationEvent): PresentationEvent {
+  return { ...b, copies: (a.copies ?? 1) + 1 };
 }
 /** Gatilho (na pilha ou resolvendo), por jogador e nome da carta: vários iguais seguidos passam mais rápido. */
 function triggerKey(event: PresentationEvent) {
@@ -148,6 +172,7 @@ export function counterHurts(event: Pick<PresentationEvent, 'counter' | 'delta'>
 function sameAudio(a: PresentationEvent, b: PresentationEvent) {
   if (a.type !== b.type) return false;
   if (a.type === 'draw' && !!a.searched !== !!b.searched) return false;
+  if (a.type === 'phased') return !!a.out === !!b.out;
   return a.type === 'counters' ? counterHurts(a) === counterHurts(b) : a.actor === b.actor;
 }
 
@@ -231,6 +256,9 @@ export class PresentationTimeline {
       } else if (previous && sameMill(previous.event, event)) {
         // O resto de um mill que ainda espera a vez entra no mesmo movimento.
         this.pending[this.pending.length - 1] = { ...previous, event: joinMill(previous.event, event) };
+      } else if (previous && sameCopy(previous.event, event)) {
+        // As cópias da tempestade se desdobram juntas da original, e não uma por passo.
+        this.pending[this.pending.length - 1] = { ...previous, event: joinCopy(previous.event, event) };
       } else if (previous && sameEntry(previous.event, event)) {
         // Fichas criadas juntas entram juntas: um movimento, e não um passo de 340 ms por ficha.
         this.pending[this.pending.length - 1] = { ...previous, event: joinEntry(previous.event, event) };
@@ -361,6 +389,7 @@ export function presentationPace(waiting: number, fast: boolean) {
 export function presentationDuration(event: PresentationEvent, pace: boolean | number) {
   const scale = typeof pace === 'number' ? pace : pace ? .6 : 1, fast = scale < 1;
   if (event.sweep) return sweepDuration(event.sweep, scale);
+  if (event.type === 'cascade') { const c = cascadeTiming(event.revealed?.length ?? 1, fast); return c.start + (c.shown - 1) * c.gap + c.hold; }
   // Faixa de ataque e aviso de habilidade precisam ficar na tela o bastante para serem lidos.
   if (event.type === 'mill' || (event.entries?.length ?? 0) > 1) {
     const m = event.type === 'mill' ? millTiming(event.milled?.length ?? 1, fast) : entryTiming(event.entries!.length, fast || !!event.repeat);
@@ -378,6 +407,10 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
     : event.type === 'entered' && event.card?.planeswalker && event.from !== 'Exile' ? 560
     // Ninjutsu e sneak: o shuriken precisa ser visto cruzando a mesa até a fumaça.
     : event.reason === 'ninjutsu' || event.reason === 'sneak' ? (event.type === 'entered' ? 1100 : 560)
+    // Cópias desdobrando da original, e a mágica reforçada ou com X: um pouco mais para o leque e para o número.
+    : event.type === 'spell-cast' && event.copy ? 900 : event.type === 'spell-cast' && (event.kicked || event.x !== undefined) ? 900
+    // Indestrutível ou regenerada: as rachaduras aparecem e se fecham (gpuSurvive.ts).
+    : event.type === 'survived' ? 820
     : event.type === 'resolved' && event.repeat ? 180 : event.type === 'spell-cast' ? 720
     // O ward resolvendo: a habilidade volta à carta e a cúpula segura ou trinca (gpuWard.ts).
     : event.type === 'resolved' && event.ward && event.held !== undefined ? 760
@@ -385,7 +418,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
     : event.type === 'damage' ? 760
     : event.type === 'life-changed' ? ((event.delta ?? 0) > 0 ? 520 : 260)
     : ['countered', 'land-played', 'discard'].includes(event.type) ? 540
-      : event.type === 'turn' ? 480 : 340;
+      // Turno extra: o relógio volta no meio da mesa.
+      : event.type === 'turn' ? (event.extra ? 1300 : 480) : 340;
   // Encurtado pela fila, nenhum passo fica rápido demais para ser visto.
   return Math.round(Math.max(duration * scale, Math.min(duration, 200)));
 }
@@ -397,6 +431,15 @@ export function entryTiming(count: number, fast: boolean) {
   const flights = Math.max(1, Math.min(count, 8));
   const gap = (count >= 8 ? 60 : count >= 5 ? 80 : 110) * (fast ? .6 : 1);
   return { flights, gap: Math.round(gap), travel: fast ? 260 : 420 };
+}
+/**
+ * Ritmo da cascata e do descobrir: as cartas saem do grimório em leque, uma depois da outra (só as 7 últimas aparecem,
+ * com a que parou a busca por último), e a cena segura um instante com a achada acesa.
+ */
+export function cascadeTiming(count: number, fast: boolean) {
+  const shown = Math.max(1, Math.min(count, 7));
+  const gap = Math.round((shown >= 6 ? 110 : 150) * (fast ? .6 : 1));
+  return { shown, gap, start: fast ? 240 : 380, hold: fast ? 620 : 950 };
 }
 /**
  * Ritmo do mill: uma carta voa depois da outra; com muitas, o intervalo encurta e só as primeiras voam (o resto chega

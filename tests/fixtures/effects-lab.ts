@@ -197,12 +197,14 @@ function table() {
     }
     const infect = has(source, 'INFECT'), wither = has(source, 'WITHER') || (infect && !!t);
     const deathtouch = has(source, 'DEATHTOUCH'), lifelink = has(source, 'LIFELINK');
-    let lethal = false;
+    let lethal = false, aguenta = false;
     if (t?.planeswalker) { t.counters.LOYALTY = Math.max(0, t.counters.LOYALTY - amount); lethal = t.counters.LOYALTY <= 0; }
     else if (t?.creature) {
       if (wither) { t.toughness -= amount; t.power -= amount; t.counters = { ...t.counters, M1M1: (t.counters?.M1M1 ?? 0) + amount }; }
       else t.damage = (t.damage ?? 0) + amount;
-      lethal = !has(t, 'INDESTRUCTIBLE') && (deathtouch || t.damage >= t.toughness) || t.toughness <= 0;
+      lethal = deathtouch || t.damage >= t.toughness || t.toughness <= 0;
+      // Como a ponte: o golpe letal numa indestrutível vem marcado, e ela fica no campo.
+      aguenta = lethal && t.toughness > 0 && has(t, 'INDESTRUCTIBLE');
     } else if (isPlayer(target)) {
       const p = player(target.player);
       if (infect) p.counters = { ...p.counters, POISON: (p.counters?.POISON ?? 0) + amount };
@@ -212,10 +214,10 @@ function table() {
     emit('damage', { card: structuredClone(source), sourceId: source.id, actor: source.controller, delta: -amount, targets: targetsOf(target), combat,
       ...(combat ? { step: flags.step ?? 'regular' } : {}), ...(has(source, 'DOUBLE_STRIKE') ? { doubleStrike: true } : {}), ...(deathtouch ? { deathtouch: true } : {}),
       ...(lifelink ? { lifelink: true } : {}), ...(infect && isPlayer(target) ? { infect: true } : {}), ...(wither && t ? { wither: true } : {}),
-      ...(t?.planeswalker ? { loyalty: true } : {}), ...(lethal ? { lethal: true } : {}), ...flags });
+      ...(t?.planeswalker ? { loyalty: true } : {}), ...(lethal ? { lethal: true } : {}), ...(aguenta ? { indestructible: true } : {}), ...flags });
     if (lifelink) lifeChange(source.controller, amount);
     if (isPlayer(target) && !infect) pendingLoss.set(target.player, (pendingLoss.get(target.player) ?? 0) + amount);
-    if (lethal && t) dying.add(t);
+    if (lethal && t && !aguenta) dying.add(t);
   }
   const pendingLoss = new Map<number, number>();
   const dying = new Set<any>();
@@ -930,6 +932,28 @@ function table() {
           port.play('shockwave', { at: selected, color: c.color || '#f2b54c', reach: Math.max(table.width, table.height) * .99 });
           return 'Ultimate: onda de luz na cor do planeswalker atravessando a mesa.';
         }
+        case 'mend-gold': if (!selected) return needSelected; port.play('mend', { at: selected, how: 'indestructible' }); return 'Indestrutível: a carta racha a partir do meio e as rachaduras se fecham em luz dourada, das pontas para dentro.';
+        case 'mend-green': if (!selected) return needSelected; port.play('mend', { at: selected, how: 'regenerated' }); return 'Regenerou: as rachaduras se fecham em verde e grãos de luz sobem da carta.';
+        case 'slash': case 'slash-2': {
+          if (!to) return 'Escolha um alvo no campo ou um jogador.';
+          port.play('slash', { at: to, dir: from ? Math.atan2(to.cy - from.cy, to.cx - from.cx) : -Math.PI / 2, second: c.kind === 'slash-2' });
+          return c.kind === 'slash' ? 'Primeiro golpe: um corte de lâmina atravessa o alvo, de lado para o golpe.' : 'Segundo golpe do golpe duplo: outro corte cruza o primeiro, que ainda aparece apagado.';
+        }
+        case 'extra-turn': {
+          const table = document.querySelector('.arena')!.getBoundingClientRect(), size = Math.max(110, Math.min(170, table.height * .22));
+          port.play('extraTurn', { at: { cx: table.left + table.width / 2, cy: table.top + table.height * .62, w: size, h: size }, size, color: c.color || '#f2b54c', duration: 1300 });
+          return 'Turno extra: o relógio aparece no meio da mesa, os ponteiros giram para trás deixando rastro e ele se desfaz num anel.';
+        }
+        case 'echo': {
+          const at = pointOf(undefined)!;
+          port.play('echo', { at: at.w ? at : { ...at, w: 100, h: 140 }, color: c.color || '#ff7a3d', copies: 4, side: -1, duration: 900 });
+          return 'Cópias: contornos de carta saem da pilha em leque (aqui, 4), com faíscas; as cartas e o "×N" vão por cima, na mesa.';
+        }
+        case 'empower': case 'empower-x': {
+          const at = pointOf(undefined)!;
+          port.play('empower', { at: at.w ? at : { ...at, w: 100, h: 140 }, color: c.color || '#ff7a3d', power: c.kind === 'empower-x' ? 9 : 3, duration: 680 });
+          return c.kind === 'empower' ? 'Reforço: grãos de luz convergem em espiral para a carta e um anel estoura dela.' : 'Mágica com X = 9: mais grãos e um anel maior.';
+        }
         case 'ward': if (!selected) return needSelected; port.play('ward', { at: selected, from: pointOf(c.source) }); return 'Ward disparou: a cúpula de favos sobe em volta da carta e o golpe bate nela do lado da Fonte (sem Fonte, de cima).';
         case 'ward-held': if (!selected) return needSelected; port.play('wardEnd', { at: selected, held: true }); return 'Ward segurou: a cúpula acende inteira, incha e se desfaz em luz.';
         case 'ward-paid': if (!selected) return needSelected; port.play('wardEnd', { at: selected, held: false }); return 'Ward pago: a cúpula aparece apagada, pisca, trinca e cai em cacos.';
@@ -1005,7 +1029,7 @@ function table() {
 // ---------------------------------------------------------------- painel
 /** Os efeitos da camada pelo nome que o jogador entende (a lista do que cada degrau desliga). */
 const EFFECT_LABELS: Record<string, string> = {
-  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo', ward: 'cúpula do ward', wardEnd: 'desfecho do ward',
+  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo', ward: 'cúpula do ward', wardEnd: 'desfecho do ward', mend: 'rachaduras que se fecham', slash: 'corte do primeiro golpe', extraTurn: 'relógio do turno extra', echo: 'eco das cópias', empower: 'energia do reforço e do X',
   vortex: 'portal do exílio', gather: 'volta do blink', ash: 'cinzas do sacrifício', motes: 'grãos da habilidade', puff: 'fumaça do ninja', dust: 'poeira ao virar',
   charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
   mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
@@ -1111,6 +1135,10 @@ function panel() {
       .map(([k, t]) => `<button data-gpu="sweep" data-color="${k}">${t}</button>`).join('')}
     <p>Proteção contra alvos (ward), na permanente selecionada; o golpe vem da Fonte da seção Dano:</p>
     ${[['ward', 'Ward disparou'], ['ward-held', 'Ward segurou'], ['ward-paid', 'Ward pago']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
+    <p>Aguentar e cortar: as rachaduras na permanente selecionada; o corte no Alvo, vindo da Fonte:</p>
+    ${[['mend-gold', 'Indestrutível'], ['mend-green', 'Regenerou'], ['slash', 'Primeiro golpe'], ['slash-2', 'Golpe duplo (2º)']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
+    <p>Mágicas (o relógio no meio da mesa; o eco e a energia, na pilha ou no meio da mesa):</p>
+    ${[['extra-turn', 'Turno extra'], ['echo', 'Cópias (eco)'], ['empower', 'Reforço'], ['empower-x', 'X = 9']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['vortex', 'Exilar (portal)'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
        ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou'],

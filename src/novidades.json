@@ -1,4 +1,28 @@
 {
+  "0.220.0": {
+    "Indestrutível e regeneração aparecem na mesa": [
+      { "img": "0.220.0/indestrutivel.webp", "legenda": "O Darksteel Myr levou 3 de dano e ficou: a carta acende em dourado, com \"Indestrutível\" subindo dela." },
+      { "img": "0.220.0/regenerou.webp", "legenda": "A criatura que se regenerou fica virada, com as rachaduras se fechando em verde e \"Regenerou\" por cima." }
+    ],
+    "Corte do primeiro golpe e do golpe duplo": [
+      { "img": "0.220.0/golpe-duplo.webp", "legenda": "O segundo golpe do golpe duplo: um corte de lâmina cruza a marca do primeiro no retrato do oponente." }
+    ],
+    "Relógio do turno extra": [
+      { "img": "0.220.0/turno-extra.webp", "legenda": "A faixa \"Turno extra\" e, logo abaixo, o relógio de luz com os ponteiros voltando." }
+    ],
+    "Cópias de mágica saem juntas da original": [
+      { "img": "0.220.0/copias.webp", "legenda": "As 4 cópias do Grapeshot se abrem em leque a partir da pilha, com \"×4\" por cima." }
+    ],
+    "Reforço e X na hora de conjurar": [
+      { "img": "0.220.0/x.webp", "legenda": "A Fireball chega à pilha e \"X = 6\" sobe da carta." }
+    ],
+    "Cascata e descobrir abrem o grimório em leque": [
+      { "img": "0.220.0/cascata.webp", "legenda": "As cinco cartas da cascata abertas no meio da mesa; a última, a que serve, acende em dourado." }
+    ],
+    "Permanente fora de fase parece miragem": [
+      { "img": "0.220.0/fora-de-fase.webp", "legenda": "Duas criaturas saindo de fase: translúcidas e tracejadas, com o aviso \"Saiu de fase\"." }
+    ]
+  },
   "0.219.0": {
     "Seta da mão sempre no pé da mesa": [
       { "img": "0.219.0/seta-mao-a-vista.webp", "legenda": "Com a mão à vista, as cartas um pouco mais altas e a seta para esconder no pé da mesa, no meio da mão." },

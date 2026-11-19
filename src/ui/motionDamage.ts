@@ -3,6 +3,7 @@ import type { PresentationEvent } from './presentationTimeline';
 import { damageLook, type DamageLook } from './damageEffects';
 import { center, reduced, type MotionKit } from './motionKit';
 import { effectsTier } from './gpu/gpuSupport';
+import type { createSurviveMotion } from './motionSurvive';
 
 const SKULL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a8 8 0 0 0-8 8c0 2.6 1.2 4.4 3 5.6V19a1 1 0 0 0 1 1h1v-2h2v2h2v-2h2v2h1a1 1 0 0 0 1-1v-3.4c1.8-1.2 3-3 3-5.6a8 8 0 0 0-8-8zm-3.5 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>';
 
@@ -19,7 +20,7 @@ interface Blow { ux: number; uy: number; stop: number; amount: number }
 const coarse = () => globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
 
 /** Dano e ganho de vida: o golpe ou o projétil até o alvo, o número que sobe e o retrato que acende. */
-export function createDamageMotion(kit: MotionKit) {
+export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof createSurviveMotion>) {
   const { root, layer, later, animate, effect, remove, pulse, floatNumber, hiddenCards, recentStack, gpu } = kit;
   function damageTarget(event: PresentationEvent) {
     const player = event.targets?.players?.[0];
@@ -49,6 +50,9 @@ export function createDamageMotion(kit: MotionKit) {
    */
   function contact(event: PresentationEvent, look: DamageLook, target: ReturnType<typeof damageTarget>, blow: Blow) {
     gpu.freeze(blow.stop);
+    // Primeiro golpe (iniciativa ou a primeira metade do golpe duplo) e o segundo golpe do golpe duplo: um corte de
+    // lâmina atravessa o alvo no contato; o segundo cruza o primeiro.
+    if (event.combat && target.at && (event.step === 'first-strike' || event.doubleStrike)) survive.slash(target.at, Math.atan2(blow.uy, blow.ux), event.step !== 'first-strike');
     const face = faceOf(target);
     if (face && look.tone !== 'shield') {
       const total = blow.stop + 140;
@@ -71,7 +75,10 @@ export function createDamageMotion(kit: MotionKit) {
     }
     floatNumber(at, look.amount, `${look.tone}${look.heavy ? ' heavy' : ''}${look.lethal ? ' lethal' : ''}`, look.badges, look.deathtouch ? SKULL : '', !!blow);
     const card = target.player === undefined ? target.el : null;
-    if (look.lethal && card) {
+    if (look.lethal && card && event.indestructible) {
+      // Golpe letal numa indestrutível: ela racha com o golpe e as rachaduras se fecham em dourado.
+      later(() => { const now = center(card); if (now && card.isConnected) survive.mend(now, 'indestructible'); }, 160);
+    } else if (look.lethal && card) {
       // Golpe letal: a carta escurece; a ida para o cemitério vem no evento seguinte.
       card.classList.add('lethal-hit');
       later(() => card.classList.remove('lethal-hit'), 1100);

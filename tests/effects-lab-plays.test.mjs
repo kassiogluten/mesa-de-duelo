@@ -46,7 +46,7 @@ function fakeTable() {
 
 test('every lab play button runs and sends events or panel commands, with a note for the panel', () => {
   const keys = PLAY_BUTTONS.flatMap(([, list]) => list.map(([key]) => key));
-  assert.equal(keys.length, 23);
+  assert.equal(keys.length, 32);
   for (const key of keys) {
     const t = fakeTable();
     const note = createLabPlays(t.lab).start(key);
@@ -95,6 +95,40 @@ test('wrath destroys every creature but the indestructible one, then the spell r
   assert.equal(last.type, 'resolved'); assert.equal(last.card.name, 'Wrath of God'); assert.equal(last.to, 'Graveyard');
   // Como a ponte manda: cada saída com o número da pilha da mágica que resolve, para a mesa juntar o limpa campo.
   assert.ok(t.events.filter(e => e.type === 'left').every(e => e.stackId === last.stackId));
+});
+
+test('wrath says the indestructible one stayed, with the stack number of the spell, before it resolves', () => {
+  const t = fakeTable();
+  createLabPlays(t.lab).start('wrath');
+  const stayed = t.events.filter(e => e.type === 'survived');
+  assert.deepEqual(stayed.map(e => [e.card.name, e.survived]), [['Darksteel Myr', 'indestructible']]);
+  assert.equal(stayed[0].stackId, t.events.at(-1).stackId);
+});
+
+test('the new effect plays send what the server would: extra turn, copies, kicker, X, cascade, survived and phasing', () => {
+  const run = key => { const t = fakeTable(); createLabPlays(t.lab).start(key); return t; };
+  assert.ok(run('extraTurn').events.some(e => e.type === 'turn' && e.extra));
+  const storm = run('storm');
+  const copies = storm.events.filter(e => e.type === 'spell-cast' && e.copy);
+  assert.equal(copies.length, 4);
+  assert.ok(copies.every(e => e.card.name === 'Grapeshot' && e.actor === ME));
+  assert.equal(storm.events.filter(e => e.type === 'damage').length, 5, 'four copies and the original');
+  assert.equal(storm.state.stack.length, 0);
+  assert.ok(run('kicker').events.some(e => e.type === 'spell-cast' && e.kicked && e.x === undefined));
+  assert.ok(run('xspell').events.some(e => e.type === 'spell-cast' && e.x === 6));
+  const cascade = run('cascade');
+  const dig = cascade.events.find(e => e.type === 'cascade');
+  assert.equal(dig.revealed.length, 5);
+  assert.equal(dig.hit, dig.revealed.at(-1).id);
+  const free = cascade.events.find(e => e.type === 'spell-cast' && e.from === 'Exile');
+  assert.equal(free.card.id, dig.hit);
+  assert.ok(cascade.events.indexOf(dig) < cascade.events.indexOf(free));
+  assert.equal(cascade.state.stack.length, 0);
+  assert.ok(run('regenerate').events.some(e => e.type === 'survived' && e.survived === 'regenerated'));
+  const phasing = run('phasing').events.filter(e => e.type === 'phased');
+  assert.deepEqual(phasing.map(e => !!e.out), [true, true, false, false]);
+  const strikes = run('doubleStrike').events.filter(e => e.type === 'damage').map(e => e.step);
+  assert.deepEqual(strikes, ['first-strike', 'regular']);
 });
 
 test('the other sweeps: bounce and exile carry the stack number; pyroclasm damages every creature, resolves, then settles the dead', () => {

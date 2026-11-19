@@ -41,6 +41,10 @@ export function soundForEvent(event: PresentationEvent, you?: number): SoundCue 
     case 'discard': case 'mill': return 'graveyard';
     case 'shuffle': return 'shuffle';
     case 'attached': return 'equip';
+    // A que ficou no campo no lugar de ser destruída soa como o escudo; a cascata mexe no grimório; a fase, como o blink.
+    case 'survived': return 'shield';
+    case 'cascade': return 'draw';
+    case 'phased': return 'blink';
     case 'coin': case 'die': case 'starting-roll': return 'dice';
     // Mudar de dono é a permanente indo de fininho para o outro lado.
     case 'control-changed': return 'sneak';

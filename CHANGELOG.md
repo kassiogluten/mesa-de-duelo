@@ -8,6 +8,21 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.220.0] - 2026-11-19
+
+### Novo
+
+- **Indestrutível e regeneração aparecem na mesa.** Quando uma permanente indestrutível leva um golpe que a mataria ou é alvo de um "destrua" (inclusive num limpa campo, quando a onda passa por ela), ela racha e as rachaduras se fecham em luz dourada, com "Indestrutível" subindo da carta. A que se regenera faz o mesmo em verde, com "Regenerou". O histórico diz qual permanente ficou no campo e por quê.
+- **Corte do primeiro golpe e do golpe duplo.** No dano de combate da iniciativa, um corte de lâmina atravessa o alvo no contato. No golpe duplo, o segundo golpe faz outro corte, cruzando o primeiro.
+- **Relógio do turno extra.** Quando começa um turno extra, um relógio de luz aparece no meio da mesa com os ponteiros girando para trás, junto com a faixa "Turno extra". O histórico passa a dizer "Turno extra de …".
+- **Cópias de mágica saem juntas da original.** As cópias da tempestade (e de qualquer mágica copiada) se desdobram em leque da carta na pilha, num passo só, com "×N" por cima, em vez de uma animação por cópia. O histórico diz quantas cópias foram criadas.
+- **Reforço e X na hora de conjurar.** Quando uma mágica reforçada ou com X chega à pilha, a energia na cor dela converge na carta e estoura num anel, maior quanto maior o X, e "Reforço" ou "X = N" sobe da pilha. O histórico também diz.
+- **Cascata e descobrir abrem o grimório em leque.** As cartas que saem do topo do grimório se abrem no meio da mesa, de face para cima, uma depois da outra; a que serve chega por último e acende em dourado, e as outras voltam para o grimório. Isso fica no lugar da janela e do aviso de cartas reveladas, e o histórico diz quantas cartas saíram e qual foi encontrada.
+
+### Mudou
+
+- **Permanente fora de fase parece miragem.** A carta fora de fase, que já ficava translúcida e tracejada, agora ondula de leve. Ao sair de fase ela estremece, com "Saiu de fase"; ao voltar, se firma com um clarão, com "Voltou de fase".
+
 ## [0.219.0] - 2026-11-18
 
 ### Mudou

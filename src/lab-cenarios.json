@@ -1,5 +1,539 @@
 [
   {
+    "nome": "Wrath of God com uma indestrutível no campo",
+    "versao": "0.220.0",
+    "item": "Indestrutível e regeneração aparecem na mesa",
+    "conferir": "O Jogador 1 tem Wrath of God na mão, quatro Plains e um Grizzly Bears; o Jogador 2 tem Darksteel Myr e dois Grizzly Bears. Conjure Wrath of God: a onda dourada varre a mesa, os três ursos racham e saem, e o Darksteel Myr racha quando a onda passa, as rachaduras se fecham em dourado, \"Indestrutível\" sobe dele e ele fica no campo. O histórico diz que o Darksteel Myr é indestrutível e ficou no campo.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Wrath of God"
+          ],
+          "library": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Darksteel Myr"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Lightning Bolt numa indestrutível",
+    "versao": "0.220.0",
+    "item": "Indestrutível e regeneração aparecem na mesa",
+    "conferir": "O Jogador 1 tem Lightning Bolt e uma Mountain; o Jogador 2 tem Darksteel Myr (0/1). Conjure o Lightning Bolt no Darksteel Myr: o raio acerta, o \"−3\" sobe, a carta racha em vez de escurecer, as rachaduras se fecham em dourado com \"Indestrutível\" e o Myr continua no campo.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Lightning Bolt"
+          ],
+          "library": [
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Darksteel Myr"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Drudge Skeletons: regenerar",
+    "versao": "0.220.0",
+    "item": "Indestrutível e regeneração aparecem na mesa",
+    "conferir": "O Jogador 1 tem Drudge Skeletons, um Swamp, uma Mountain e Lightning Bolt na mão. Ative a habilidade do Drudge Skeletons ({B}: regenerar) e deixe resolver. Depois conjure o Lightning Bolt nele mesmo: em vez de morrer, o Skeletons vira, racha, as rachaduras se fecham em verde com \"Regenerou\" e ele fica no campo. O histórico diz que ele se regenerou.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Lightning Bolt"
+          ],
+          "library": [
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Drudge Skeletons"
+            },
+            {
+              "name": "Swamp"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Boros Swiftblade: golpe duplo sem bloqueio",
+    "versao": "0.220.0",
+    "item": "Corte do primeiro golpe e do golpe duplo",
+    "conferir": "O Jogador 1 tem Boros Swiftblade (golpe duplo) e White Knight (iniciativa); o Jogador 2 tem um Grizzly Bears. Ataque com os dois. Se o Jogador 2 não bloquear a Swiftblade, ela bate duas vezes: no primeiro golpe um corte de lâmina atravessa o retrato dele (selo \"1º golpe\") e, no segundo, outro corte cruza o primeiro (selo \"2º golpe\"). O golpe do White Knight, na etapa da iniciativa, também vem com o corte.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Boros Swiftblade"
+            },
+            {
+              "name": "White Knight"
+            },
+            {
+              "name": "Plains"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Time Warp: turno extra",
+    "versao": "0.220.0",
+    "item": "Relógio do turno extra",
+    "conferir": "O Jogador 1 tem Time Warp na mão e cinco Islands. Conjure Time Warp em você mesmo e passe o turno: quando o turno extra começa, a faixa \"Turno extra\" aparece e, logo abaixo, um relógio de luz com os ponteiros girando para trás. O histórico diz \"Turno extra de …\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Time Warp"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Grapeshot com tempestade",
+    "versao": "0.220.0",
+    "item": "Cópias de mágica saem juntas da original",
+    "conferir": "O Jogador 1 tem dois Shock e um Grapeshot na mão e quatro Mountains. Conjure os dois Shock no Jogador 2 e, depois, o Grapeshot: o gatilho da tempestade cria duas cópias, que se abrem juntas em leque a partir da carta na pilha, com \"×2\" por cima, num passo só. O histórico diz que foram criadas 2 cópias de Grapeshot, e cada uma resolve causando 1.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Shock",
+            "Shock",
+            "Grapeshot"
+          ],
+          "library": [
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Burst Lightning com reforço e Fireball com X",
+    "versao": "0.220.0",
+    "item": "Reforço e X na hora de conjurar",
+    "conferir": "O Jogador 1 tem Burst Lightning e Fireball na mão e oito Mountains. Conjure o Burst Lightning no Jogador 2 pagando o reforço ({4} a mais): quando ele chega à pilha, a energia vermelha converge na carta, estoura num anel e \"Reforço\" sobe da pilha; ele causa 4. Depois conjure a Fireball com X = 2: o mesmo, com \"X = 2\". O histórico diz \"com reforço\" e \"com X = 2\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Burst Lightning",
+            "Fireball"
+          ],
+          "library": [
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Bloodbraid Elf: cascata",
+    "versao": "0.220.0",
+    "item": "Cascata e descobrir abrem o grimório em leque",
+    "conferir": "O Jogador 1 tem Bloodbraid Elf na mão, duas Mountains e duas Forests; o grimório começa com Forest, Mountain, Lightning Bolt. Conjure a Bloodbraid Elf: o gatilho da cascata resolve e as três cartas saem do grimório e se abrem em leque no meio da mesa, de face para cima, com \"Cascata · 3 cartas\"; o Lightning Bolt chega por último e acende em dourado. Não abre janela de cartas reveladas. Aceitando conjurar, o Bolt vai para a pilha e as outras voltam para o fundo do grimório. O histórico diz quantas cartas saíram e qual foi encontrada.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Bloodbraid Elf"
+          ],
+          "library": [
+            "Forest",
+            "Mountain",
+            "Lightning Bolt",
+            "Forest",
+            "Mountain",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Slip Out the Back: sair e voltar de fase",
+    "versao": "0.220.0",
+    "item": "Permanente fora de fase parece miragem",
+    "conferir": "O Jogador 1 tem Grizzly Bears, uma Island e Slip Out the Back na mão. Conjure Slip Out the Back no Grizzly Bears: ele ganha um marcador +1/+1, estremece com \"Saiu de fase\" e fica translúcido e tracejado, ondulando de leve como miragem. Passe os turnos: no começo do seu próximo turno ele volta firme, com um clarão e \"Voltou de fase\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Slip Out the Back"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Island"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Proliferar: marcadores bons e ruins dos dois lados",
     "tipo": "conferir",
     "conferir": "O Jogador 1 tem Steady Progress na mão, três Islands, Grizzly Bears com dois marcadores +1/+1, Runeclaw Bear com um −1/−1 e 2 de veneno. O Jogador 2 tem Serra Angel com um −1/−1, Garruk Wildspeaker com 3 de lealdade e 9 de veneno. Conjure Steady Progress: a lista do proliferar separa em Te ajuda os +1/+1 do Grizzly Bears, o −1/−1 da Serra Angel e o veneno do Jogador 2 (que avisa \"perde a partida\"), e em Te prejudica o −1/−1 do Runeclaw Bear, a lealdade do Garruk e o seu veneno, cada linha com o número antes e depois. Marque algo de Te prejudica: o painel avisa, e o botão diz Proliferar (N). Confirme só o que te ajuda: cada escolhido ganha mais um marcador de cada tipo que já tem, o Jogador 1 compra uma carta e, com o 10º veneno, o Jogador 2 perde a partida.",

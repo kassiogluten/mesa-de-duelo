@@ -31,7 +31,13 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
   const owner = detailed && event.actor !== undefined ? ` (${event.actor === v.state()?.you ? 'sua' : `de ${who}`})` : '';
   switch (event.type) {
     case 'land-played': return `${who} jogou ${name}${from}.`;
-    case 'spell-cast': return `${who} conjurou ${name}${from}${on}.`;
+    case 'spell-cast': {
+      if (event.copy) return (event.copies ?? 1) > 1 ? `${who} criou ${event.copies} cópias de ${name}.` : `${who} copiou ${name}${on}.`;
+      const extras = [event.kicked ? 'com reforço' : '', event.x !== undefined ? `com X = ${event.x}` : ''].filter(Boolean).join(' e ');
+      return `${who} conjurou ${name}${from}${extras ? ` ${extras}` : ''}${on}.`;
+    }
+    case 'survived': return event.survived === 'regenerated' ? `${name} se regenerou${owner}.` : `${name} é indestrutível e ficou no campo${owner}.`;
+    case 'cascade': return cascadeDescription(v, event, who);
     case 'ability-activated': if (event.ward) return `Proteção contra alvos de ${name}${on}.`;
       return event.loyalty && !event.trigger ? loyaltyDescription(event, who, name, on) : event.trigger ?`Gatilho${event.card?.name ? ` de ${name}` : ''}${on}.` : `${who} ativou uma habilidade${event.card?.name ? ` de ${name}` : ''}${on}.`;
     case 'draw': return event.searched ? `${who} buscou ${(event.count ?? 1) === 1 ? 'uma carta' : `${event.count} cartas`} no grimório.`
@@ -68,7 +74,7 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
       : detailed && event.card?.token && !event.from ? `Ficha criada: ${name}${owner}.` : `${name} entrou no campo${owner}.`;
     case 'attackers': return attackDescription(v, event);
     case 'blockers': { const n = event.cards?.length ?? 0; return detailed && n ? `${who} bloqueou com ${n} ${n === 1 ? 'criatura' : 'criaturas'}.` : `${who} declarou bloqueadores.`; }
-    case 'turn': return `Turno de ${who}.`;
+    case 'turn': return event.extra ? `Turno extra de ${who}.` : `Turno de ${who}.`;
     case 'damage': {
       const n = Math.abs(event.delta ?? 0);
       const target = [...(event.targets?.players ?? []).map(id => v.state()?.players.find(p => p.id === id)?.name),
@@ -81,6 +87,14 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
     case 'life-changed': return `${who}: ${event.delta && event.delta > 0 ? '+' : ''}${event.delta ?? 0} de vida.`;
     default: return event.text ? withoutCardIds(event.text) : 'O jogo avançou.';
   }
+}
+/** "Cascata de Bloodbraid Elf: 3 cartas reveladas; Ana conjurou Lightning Bolt." */
+function cascadeDescription(v: EventView, event: PresentationEvent, who: string) {
+  const n = event.revealed?.length ?? 0;
+  const what = `${event.dig === 'discover' ? 'Descobrir' : 'Cascata'}${event.card?.name ? ` de ${v.label(event.card)}` : ''}`;
+  const hit = event.revealed?.find(c => c.id === event.hit);
+  const found = hit ? `; ${event.cast ? `${who} conjurou ${v.label(hit)}` : `${who} encontrou ${v.label(hit)}`}` : '; nenhuma carta serviu';
+  return `${what}: ${n} ${n === 1 ? 'carta revelada' : 'cartas reveladas'}${found}.`;
 }
 /** "Ana usou +2 de Jace Beleren." ou "Ana usou o ultimate de Jace Beleren (−10)." */
 export function loyaltyDescription(event: PresentationEvent, who: string, name: string, on: string) {

@@ -7,6 +7,7 @@ import { effectsTier } from './gpu/gpuSupport';
 import type { createFlightMotion } from './motionFlights';
 import type { createDamageMotion } from './motionDamage';
 import type { createImpactMotion } from './motionImpact';
+import type { createSurviveMotion } from './motionSurvive';
 
 /** Acima de tantas permanentes (um campo de fichas), as que sobram saem só num clarão, sem a cena inteira de cada uma. */
 const FULL_SCENES = 30;
@@ -25,6 +26,7 @@ const light = (hex: string): [number, number, number] => [1, 3, 5].map(i => pars
 
 export function createSweepMotion(kit: MotionKit, parts: {
   flights: ReturnType<typeof createFlightMotion>; damage: ReturnType<typeof createDamageMotion>; impact: ReturnType<typeof createImpactMotion>;
+  survive: ReturnType<typeof createSurviveMotion>;
 }) {
   const { root, state, layer, later, animate, effect, remove, gpu } = kit;
 
@@ -87,6 +89,14 @@ export function createSweepMotion(kit: MotionKit, parts: {
     const travel = Math.round(o.duration * (sweep.wave ? .48 : .2));
     if (sweep.wave) { wave(from, reach, travel, style); banner(o.label, o.duration, style); }
     const color = SWEEP_COLORS[style];
+    // As indestrutíveis que a mágica mandou destruir: a onda passa, elas racham e se fecham, e ficam no campo.
+    for (const stayed of sweep.survivors ?? []) {
+      const id = stayed.card?.id ?? stayed.sourceId;
+      const el = id === undefined ? null : root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`), at = center(el);
+      if (!at || !stayed.survived) continue;
+      const how = stayed.survived;
+      later(() => { const now = center(el); if (now) parts.survive.mend(now, how); }, arrival(at, from, reach, travel));
+    }
     let scenes = 0;
     for (const left of sweep.events) {
       const id = left.card?.id ?? left.sourceId;
