@@ -22,11 +22,8 @@ const TEST_PAGES: [string, string, string][] = [
   ['/tests/fixtures/token-burst.html', 'Rajada de fichas', 'Hare Apparent no campo: conjura mais um ou dá blink em todos e mede quanto a mesa leva para mostrar as fichas.'],
   ['/tests/fixtures/room-lobby.html', 'Sala de espera', 'Sala em rede antes de começar, com a prateleira Seu deck: escolher um deck marca o seu lugar como pronto. window.fixture.room() muda o formato, os lugares e quem já escolheu.'],
   ['/tests/fixtures/duel-table.html','Mesa 1×1', 'Partida fixa contra um oponente, com contadores, Classe e perguntas (gatilhos, jeitos de jogar, dano de combate) pelo console.'],
-  ['/tests/fixtures/duel-table.html?cenario=proliferar', 'Proliferar', 'Escolha do proliferar com marcadores bons e ruins dos dois lados (veneno, +1/+1, −1/−1, lealdade, energia). Os cliques marcam e o Proliferar aplica os marcadores.'],
-  ['/tests/fixtures/duel-table.html?cenario=improvisar', 'Improvisar', 'Bola de Fogo com X=4 e a Inspiring Statuary em campo: os artefatos ficam destacados, cada toque marca ou desmarca e a caixa mostra quanto falta pagar. Confirmar vira os marcados. Simulado, sem a ponte.'],
   ['/tests/fixtures/commander-table.html', 'Mesa de Commander', 'Quatro jogadores, para conferir o layout dos assentos, a pilha e o campo cheio.'],
   ['/tests/fixtures/commander-endgame.html', 'Commander: fim de partida', 'Quatro mesas cheias no fim do jogo (fichas, planeswalkers, equipamentos, comandantes em campo) para ajustar o posicionamento. Pelo console: fixture.pilha(), fixture.ataque(), fixture.eliminar().'],
-  ['/tests/fixtures/extra-turn.html', 'Turno e combate extra', 'Roteiro de Time Walk e Relentless Assault: os cliques da mesa avançam a simulação.'],
 ];
 
 const root = document.querySelector<HTMLElement>('#admin')!;
@@ -73,7 +70,7 @@ function shell() {
     <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#ranking" data-tab="ranking">Ranking</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
     <button class="adm-ghost" data-act="logout">Sair</button></header>
     <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admRanking" aria-label="Ranking" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
-  root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova.</p>
+  root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova. Cartas e mecânicas com a ponte de verdade (proliferar, improvisar, turno e combate extra) ficam nos Cenários prontos do Laboratório.</p>
     <ul class="adm-pages">${TEST_PAGES.map(([href, title, text]) => `<li><a class="adm-card adm-page" href="${href}" target="_blank" rel="noopener"><strong>${esc(title)}</strong><span>${esc(text)}</span><code>${esc(href)}</code></a></li>`).join('')}</ul>`;
   syncTab();
 }

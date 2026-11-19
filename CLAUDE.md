@@ -40,7 +40,8 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 - Cada cenário tem `nome` (o que o jogador vê na lista), `versao` (só nos publicados) e `item` (o título em negrito do item, sem o ponto final), `conferir` (o que fazer na mesa e o que deve acontecer, em português, para o jogador) e `cenario` (o mesmo formato de “Copiar cenário”). Monte a mesa mínima que mostra a correção, com as terras para pagar e cartas no grimório para comprar; o Jogador 1 é quem cria a sala.
 - Os mais novos ficam no começo da lista. Se a correção mudar de novo, atualize o cenário em vez de criar outro.
 - Problema reproduzido que ainda não tem correção pode entrar como **para investigar**: sem `versao` nem `item` (a lista mostra "Para investigar"), com o `conferir` dizendo o que acontece hoje e o que deveria acontecer. Quando a correção sair, ele ganha `item` (e, ao publicar, `versao`) em vez de virar outro cenário: mova-o para o `cenarios.json` da mudança.
-- `tests/lab.test.mjs` confere que cada cenário (fora os para investigar) aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
+- Carta ou mecânica que já funciona e vale ter montada para conferir à mão (o que antes ficava numa página de teste simulada da área de admin) entra como **para conferir**: sem `versao` nem `item`, com `"tipo": "conferir"` (a lista mostra "Para conferir"), direto em `src/lab-cenarios.json`.
+- `tests/lab.test.mjs` confere que cada cenário (fora os para investigar e os para conferir) aponta para um item do CHANGELOG e que o editor o monta igual; `LabTest.readyScenariosOfTheTableAreAccepted` (no servidor) confere que as cartas e os marcadores existem.
 
 ## Coleções novas
 

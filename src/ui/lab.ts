@@ -121,7 +121,7 @@ export function mountLab(root: HTMLElement, opts: LabOptions): LabView {
     guide = r;
     const el = $('#labGuide');
     el.hidden = !r;
-    el.innerHTML = r ? `<strong>O que conferir</strong> <span class="lab-pos">(${r.item ? `${esc(readyTag(r))}, ${esc(r.item)}` : 'para investigar, ainda sem correção'})</span><p>${esc(r.conferir)}</p>` : '';
+    el.innerHTML = r ? `<strong>O que conferir</strong> <span class="lab-pos">(${r.item ? `${esc(readyTag(r))}, ${esc(r.item)}` : r.tipo === 'conferir' ? 'para conferir, já funciona assim' : 'para investigar, ainda sem correção'})</span><p>${esc(r.conferir)}</p>` : '';
   };
 
   function render() {

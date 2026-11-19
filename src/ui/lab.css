@@ -175,6 +175,7 @@
 .lab-tag { font-size: 12px; font-weight: 700; color: var(--muted); }
 .lab-tag.next { color: var(--gold); }
 .lab-tag.investigate { color: #f0a35e; }
+.lab-tag.check { color: #8cc9a4; }
 .lab-scn-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; flex: none; }
 .lab-scn-actions .lab-play { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 55%, transparent); }
 

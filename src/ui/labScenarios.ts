@@ -1,4 +1,4 @@
-// Janela de cenários do Laboratório: os prontos (correções e problemas para investigar) e os salvos, com busca.
+// Janela de cenários do Laboratório: os prontos (correções, mecânicas para conferir e problemas para investigar) e os salvos, com busca.
 import type { LabScenario } from '../forge/client';
 import { esc } from './cardtext';
 import { finder } from './dom';
@@ -15,13 +15,13 @@ interface ScenariosOptions {
 type Tab = 'ready' | 'saved';
 
 const HINT: Record<Tab, string> = {
-  ready: 'Mesas montadas para conferir as correções, uma por correção, e os problemas ainda para investigar.',
+  ready: 'Mesas montadas para conferir as correções, uma por correção, as cartas e mecânicas que já funcionam e os problemas ainda para investigar.',
   saved: 'Os cenários que você salvou neste aparelho.',
 };
 /** Sem acento e em minúsculas, para a busca achar "exilio" em "exílio". */
 const plain = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 const cardsIn = (s: LabScenario) => s.players.reduce((n, p) => n + p.hand.length + p.library.length + p.graveyard.length + p.exile.length + p.battlefield.length, 0);
-const tagClass = (r: Ready) => !r.versao ? ' investigate' : r.versao === PENDING ? ' next' : '';
+const tagClass = (r: Ready) => r.versao === PENDING ? ' next' : r.versao ? '' : r.tipo === 'conferir' ? ' check' : ' investigate';
 
 export function scenariosDialogHTML() {
   return `<dialog class="lab-dialog lab-scenarios" id="labScenarios" aria-labelledby="labScenariosTitle">

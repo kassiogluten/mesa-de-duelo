@@ -35,11 +35,15 @@ export const zoneList = (side: Side, zone: Zone): (string | Exiled | Permanent)[
 
 /**
  * Cenário pronto para conferir à mão uma correção do CHANGELOG (item é o título em negrito, sem o ponto). Sem versão
- * e item, é um problema ainda sem correção, deixado para investigar; ganha os dois quando a correção sair.
+ * e item, é um problema ainda sem correção, deixado para investigar, que ganha os dois quando a correção sair; ou, com
+ * tipo "conferir", uma carta ou mecânica que já funciona, deixada montada para conferir de novo quando precisar.
  */
-export interface Ready { nome: string; versao?: string; item?: string; conferir: string; cenario: LabScenario }
-/** "0.145.0" numa correção; "Próxima versão" numa que ainda não subiu; "Para investigar" num problema ainda sem correção. */
-export const readyTag = (r: Ready) => r.versao === PENDING ? 'Próxima versão' : r.versao ?? 'Para investigar';
+export interface Ready { nome: string; versao?: string; item?: string; tipo?: 'conferir'; conferir: string; cenario: LabScenario }
+/**
+ * "0.145.0" numa correção; "Próxima versão" numa que ainda não subiu; "Para conferir" numa mecânica que já funciona;
+ * "Para investigar" num problema ainda sem correção.
+ */
+export const readyTag = (r: Ready) => r.versao === PENDING ? 'Próxima versão' : r.versao ?? (r.tipo === 'conferir' ? 'Para conferir' : 'Para investigar');
 /** Os das correções que ainda não ganharam número vêm primeiro: são os mais novos. */
 export const READY_SCENARIOS = [...PENDING_SCENARIOS, ...READY as unknown as Ready[]];
 

@@ -63,7 +63,8 @@ test('cada cenário pronto aponta para uma correção do CHANGELOG (ou fica para
   for (const r of lab.READY_SCENARIOS) {
     assert.ok(r.nome && r.conferir, `${r.nome}: falta o nome ou o que conferir`);
     assert.ok(!names.has(r.nome), `${r.nome}: nome repetido`); names.add(r.nome);
-    assert.equal(!r.versao, !r.item, `${r.nome}: versão e item vêm juntos, ou nenhum dos dois (para investigar)`);
+    assert.equal(!r.versao, !r.item, `${r.nome}: versão e item vêm juntos, ou nenhum dos dois (para investigar ou para conferir)`);
+    assert.ok(r.tipo === undefined || (r.tipo === 'conferir' && !r.versao), `${r.nome}: o único tipo é "conferir", e só num cenário sem versão`);
     if (r.versao) {
       const section = sections.get(r.versao);
       assert.ok(section, `${r.nome}: a versão ${r.versao} não está no CHANGELOG`);

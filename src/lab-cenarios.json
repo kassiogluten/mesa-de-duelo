@@ -1,5 +1,165 @@
 [
   {
+    "nome": "Proliferar: marcadores bons e ruins dos dois lados",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Steady Progress na mão, três Islands, Grizzly Bears com dois marcadores +1/+1, Runeclaw Bear com um −1/−1 e 2 de veneno. O Jogador 2 tem Serra Angel com um −1/−1, Garruk Wildspeaker com 3 de lealdade e 9 de veneno. Conjure Steady Progress: a lista do proliferar separa em Te ajuda os +1/+1 do Grizzly Bears, o −1/−1 da Serra Angel e o veneno do Jogador 2 (que avisa \"perde a partida\"), e em Te prejudica o −1/−1 do Runeclaw Bear, a lealdade do Garruk e o seu veneno, cada linha com o número antes e depois. Marque algo de Te prejudica: o painel avisa, e o botão diz Proliferar (N). Confirme só o que te ajuda: cada escolhido ganha mais um marcador de cada tipo que já tem, o Jogador 1 compra uma carta e, com o 10º veneno, o Jogador 2 perde a partida.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 2,
+          "hand": [
+            "Steady Progress"
+          ],
+          "library": [
+            "Island",
+            "Island",
+            "Island"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears",
+              "counters": {
+                "P1P1": 2
+              }
+            },
+            {
+              "name": "Runeclaw Bear",
+              "counters": {
+                "M1M1": 1
+              }
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 9,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Serra Angel",
+              "counters": {
+                "M1M1": 1
+              }
+            },
+            {
+              "name": "Garruk Wildspeaker",
+              "counters": {
+                "LOYALTY": 3
+              }
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "nome": "Turno extra e combate extra: Time Walk e Relentless Assault",
+    "tipo": "conferir",
+    "conferir": "O Jogador 1 tem Time Walk e Relentless Assault na mão, Goblin Guide e Monastery Swiftspear no campo, duas Islands e quatro Mountains; o Jogador 2 tem Grizzly Bears. Ataque com as duas criaturas. Na fase principal 2, conjure Relentless Assault: as criaturas que atacaram desviram, a trilha de fases mostra ×2 no combate e o botão de passar diz Para o combate extra; o combate extra abre com a faixa Combate extra e o atalho Fim de turno some até ele passar. Ataque de novo e, na fase principal que vem depois, conjure Time Walk: passe o mouse no número do turno e a dica avisa \"Depois: turno extra seu\". Ao fim do turno, em vez de passar para o Jogador 2, começa a faixa Turno extra e o número do turno ganha um \"+\".",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Time Walk",
+            "Relentless Assault"
+          ],
+          "library": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Goblin Guide"
+            },
+            {
+              "name": "Monastery Swiftspear"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Island"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            },
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "The Darkness Crystal: devolver a criatura exilada",
     "versao": "0.216.1",
     "item": "Alvo no exílio abre o exílio sozinho",
@@ -76,6 +236,7 @@
   },
   {
     "nome": "Nylea, Keen-Eyed: revelar o topo por {2}{G}",
+    "tipo": "conferir",
     "conferir": "O Jogador 1 tem Nylea, Keen-Eyed e seis Forests; o grimório começa com Lightning Bolt e Grizzly Bears. A Nylea não é criatura (devoção ao verde menor que cinco), mas a habilidade pode ser ativada. Ative {2}{G}: três Forests viram, o Lightning Bolt é revelado e a mesa pergunta se ele vai para o cemitério; com Sim ele vai, com Não fica no topo. Ative de novo: com o Grizzly Bears no topo, ele vai direto para a mão, sem pergunta. Hoje funciona assim; o cenário fica para conferir a carta.",
     "cenario": {
       "active": 0, "phase": "main1",
@@ -1172,11 +1333,11 @@
     "nome": "Improvisar e convocar",
     "versao": "0.64.1",
     "item": "Improvisar e convocar escolhendo na mesa",
-    "conferir": "Conjure Divination: os artefatos que ajudam a pagar ficam destacados e marcam com um toque, e a caixa de ação diz em português que cada um paga {1} e quanto ainda falta. Desista no pagamento: os artefatos usados desviram. A Stoke the Flames faz o mesmo com as criaturas (convocar).",
+    "conferir": "Conjure Divination: os artefatos que ajudam a pagar ficam destacados e marcam com um toque, e a caixa de ação diz em português que cada um paga {1} e quanto ainda falta. Desista no pagamento: os artefatos usados desviram. A Stoke the Flames faz o mesmo com as criaturas (convocar). O X também se paga assim: conjure Fireball com X=3 mirando o Jogador 2; na hora de pagar {3}{R}, a Inspiring Statuary e os dois Ornithopters ficam destacados, cada toque marca ou desmarca um e a caixa mostra quanto ainda falta. Marque os três, confirme e pague o {R} com a Mountain: os artefatos ficam virados e o Jogador 2 vai a 17 de vida.",
     "cenario": {
       "active": 0, "phase": "main1",
       "players": [
-        { "life": 20, "poison": 0, "hand": ["Divination", "Stoke the Flames"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+        { "life": 20, "poison": 0, "hand": ["Divination", "Stoke the Flames", "Fireball"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
           "battlefield": [{ "name": "Inspiring Statuary" }, { "name": "Ornithopter" }, { "name": "Ornithopter" }, { "name": "Island" },
                           { "name": "Llanowar Elves" }, { "name": "Grizzly Bears" }, { "name": "Grizzly Bears" }, { "name": "Mountain" }] },
         { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
