@@ -83,7 +83,7 @@ export function pageEnd(releases: readonly Pick<Release, 'version' | 'date'>[], 
   return end;
 }
 const releaseHTML = (r: Release) => `<section class="news-rel">
-        <h3 tabindex="-1">${esc(releaseTitle(r))}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades.html#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
+        <h3 tabindex="-1">${esc(releaseTitle(r))}${r.date ? ` <small>${r.date}</small>` : ''}${VISUALS[r.version] ? ` <a class="news-visual" href="/novidades#v${esc(r.version)}">ver em imagens</a>` : ''}</h3>${r.html}
       </section>`;
 
 /** Botão "Novidades" com a versão atual; abre um painel com o histórico. Um ponto marca versão ainda não vista. */
@@ -95,7 +95,7 @@ export function mountChangelog(host: HTMLElement) {
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4.5 1.5 6 2 6.5H4c.5-.5 2-2 2-6.5Z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg><span class="news-dot" ${seen() === VERSION ? 'hidden' : ''}></span><span class="news-sync" aria-hidden="true"></span>
     </button>
     <div class="news-panel" id="newsPanel" role="dialog" aria-label="Novidades" hidden>
-      <a class="news-visual-all" href="/novidades.html">Ver as novidades em imagens</a>
+      <a class="news-visual-all" href="/novidades">Ver as novidades em imagens</a>
       ${RELEASES.slice(0, pageEnd(RELEASES, 0)).map(releaseHTML).join('')}
       <button type="button" class="news-more" hidden></button>
     </div>`;

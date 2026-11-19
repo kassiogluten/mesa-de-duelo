@@ -12,7 +12,7 @@ import { iniciarTema } from './ui/temas';
 iniciarTema();
 
 /**
- * Contador de vida (/contador.html): sem servidor e sem internet (fica guardado com o app). A configuração e a partida
+ * Contador de vida (/contador): sem servidor e sem internet (fica guardado com o app). A configuração e a partida
  * em andamento ficam neste aparelho, para a partida continuar depois de recarregar ou de o celular apagar a tela.
  */
 interface Guardado { config: Config; partida: Partida | null }

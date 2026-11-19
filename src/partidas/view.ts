@@ -4,7 +4,7 @@ import type { FPlayerStats } from '../forge/protocol';
 import type { ReplaySummary } from '../replays';
 
 /*
- * Minhas partidas (/partidas.html): o que a rota partidas da conta devolve, em HTML. Sem DOM, para os testes.
+ * Minhas partidas (/partidas): o que a rota partidas da conta devolve, em HTML. Sem DOM, para os testes.
  * Os números e os filtros vêm prontos do servidor (AccountMatches); aqui só se escreve.
  */
 
@@ -88,7 +88,7 @@ export function numerosDaPartida(e?: Estatisticas) {
 }
 
 /** O link da repetição, para a partida guardada neste aparelho. */
-const reverHTML = (id: string) => `<a class="pt-rever" href="/rever.html?id=${encodeURIComponent(id)}">Rever</a>`;
+const reverHTML = (id: string) => `<a class="pt-rever" href="/rever?id=${encodeURIComponent(id)}">Rever</a>`;
 
 /** `rever`: a partida está guardada neste aparelho e dá para rever. */
 export function partidaHTML(p: Partida, nomeDoFormato: NomeDoFormato, rever = false) {

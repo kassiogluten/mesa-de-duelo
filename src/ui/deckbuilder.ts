@@ -20,6 +20,7 @@ import { montarAvisoConta } from './contaAviso';
 import { buildSearchQuery, similarQuery } from './cardSearch';
 import { deckIdentity, identityExempt, editHTML, importHTML, libraryHTML, printOf, resultsHTML, slotRole, statusHTML, type BuilderState } from './deckbuilderView';
 import { finder } from './dom';
+import type { Route } from '../app/router';
 import { chooseToken, deckTokens, type TokenKind } from '../deckTokens';
 import { openTokenPicker } from './deckTokensView';
 
@@ -28,6 +29,8 @@ interface BuilderOptions {
   onChange(): void;
   initialFormat?: DeckFormat;
   onFormatChange?(format: DeckFormat): void;
+  /** A tela trocou entre a lista, o editor de um deck e a importação (o endereço acompanha). */
+  onViewChange?(): void;
   onPlay?(deck: DeckData): void;
   validateDeck?(deck: DeckData, format: DeckFormat): Promise<ServerDeckValidation>;
   /** JSON público do deck no Moxfield ou no Archidekt (pela ponte). */
@@ -154,7 +157,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     root.querySelector('.dw-ready')?.addEventListener('toggle', e => { const next = (e.target as HTMLDetailsElement).open; if (next !== showReady) { showReady = next; if (next) void loadData(); } });
   }
   function renderEdit() {
-    const deck = current(); if (!deck) { view = 'library'; renderLibrary(); return; }
+    const deck = current(); if (!deck) { view = 'library'; renderLibrary(); opts.onViewChange?.(); return; }
     $('#dwContent').innerHTML = editHTML(deck, state());
     if (searchOpen && !deck.builtin) renderResults();
   }
@@ -200,7 +203,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     try { art = localStorage.getItem(KEYS.cards) === 'art'; } catch { /* Storage is optional. */ }
     void preloadDeckImages(deckEntries(deck).map(e => e.name), art ? ['small', 'normal', 'art_crop'] : ['small', 'normal']).catch(() => {});
   }
-  function render() { renderStatus(); if (view === 'library') renderLibrary(); else if (view === 'import') renderImport(); else renderEdit(); }
+  function render() { renderStatus(); if (view === 'library') renderLibrary(); else if (view === 'import') renderImport(); else renderEdit(); opts.onViewChange?.(); }
   async function loadData() {
     if (view === 'import') return;
     const requestView = view, requestSelected = selected;
@@ -517,6 +520,11 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   root.addEventListener('focusout', () => hideCardPreview());
   render();
   return {
+    /** A tela aberta, para o endereço: a lista, o editor de um deck ou a importação. */
+    route(): Route {
+      if (view === 'edit' && selected) return { screen: 'decks', view: 'edit', deckId: selected };
+      return { screen: 'decks', view: view === 'import' ? 'import' : 'library' };
+    },
     refresh(nextFormat?: DeckFormat) { user = loadUserDecks(); if (nextFormat) format = nextFormat; saveError = getDeckStorageState().error ?? ''; preserveRender(render); },
     open(options: DeckBuilderOpen) {
       importSeq++; importBusy = false; validationSeq++; validating = false; validation = null; validationError = ''; hideCardPreview();
@@ -525,7 +533,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       importTarget = null;
       if (options.action === 'create') create();
       else if (options.action === 'import') beginImport();
-      else if (options.action === 'edit') { const deck = user.find(d => d.id === options.deckId); if (deck) edit(deck); else { notice = 'Este deck não está mais na sua coleção.'; goLibrary(); } }
+      else if (options.action === 'edit') { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === options.deckId); if (deck) edit(deck); else { notice = 'Este deck não está mais na sua coleção.'; goLibrary(); } }
       else { view = 'library'; selected = null; importReview = null; render(); void loadData(); }
     },
   };

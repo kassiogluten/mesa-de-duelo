@@ -16,7 +16,7 @@ import { iniciarTema } from './ui/temas';
 iniciarTema();
 
 /**
- * Torneios (/torneios.html): sem `?id`, os torneios da conta e o formulário de criar; com `?id=CÓDIGO`, um torneio.
+ * Torneios (/torneios): sem `?id`, os torneios da conta e o formulário de criar; com `?id=CÓDIGO`, um torneio.
  * Os dados vêm de /api/torneios/ (Tournaments na ponte), que sorteia, classifica e confere quem pode mexer. Quem só
  * olha (sem ser o organizador) vê a página se atualizar sozinha enquanto o torneio corre.
  */
@@ -29,12 +29,12 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
   <header class="home-top shared-shell-header vis-top pt-top">
     <a class="home-brand" href="/" aria-label="Mesa de Duelo — início"><span class="brand-mark" aria-hidden="true"></span><span>Mesa de Duelo</span></a>
-    <a class="vis-back" href="${codigo ? '/torneios.html' : '/'}">${codigo ? 'Meus torneios' : 'Voltar ao jogo'}</a>
+    <a class="vis-back" href="${codigo ? '/torneios' : '/'}">${codigo ? 'Meus torneios' : 'Voltar ao jogo'}</a>
     <div data-app-conta></div>
   </header>
   <main class="vis pt-pagina tn-pagina">
     ${codigo ? '' : `<h1>Torneios</h1>
-    <p class="vis-lead">Organize um torneio presencial no sistema suíço: inscreva os jogadores, sorteie as rodadas e lance os placares. A classificação e os desempates saem sozinhos, e qualquer pessoa com o link acompanha pelo celular. Na mesa, cada partida pode marcar a vida com o <a href="/contador.html">Contador de vida</a>.</p>`}
+    <p class="vis-lead">Organize um torneio presencial no sistema suíço: inscreva os jogadores, sorteie as rodadas e lance os placares. A classificação e os desempates saem sozinhos, e qualquer pessoa com o link acompanha pelo celular. Na mesa, cada partida pode marcar a vida com o <a href="/contador">Contador de vida</a>.</p>`}
     <div data-conteudo></div>
     <p class="tn-status" role="status" aria-live="polite"></p>
   </main>`;
@@ -120,7 +120,7 @@ async function carregarTorneio(silencioso = false) {
     conteudo.querySelectorAll<HTMLDetailsElement>('details').forEach(d => { if (abertos.includes(d.querySelector('summary')?.textContent ?? null)) d.open = true; });
   } catch (e) {
     if (meu !== pedido || silencioso) return;
-    conteudo.innerHTML = vazioHTML(ILL_MESA, 'Torneio não encontrado.', `${esc(erroTexto(e))} <a href="/torneios.html">Ver meus torneios</a>`);
+    conteudo.innerHTML = vazioHTML(ILL_MESA, 'Torneio não encontrado.', `${esc(erroTexto(e))} <a href="/torneios">Ver meus torneios</a>`);
   }
 }
 
@@ -158,7 +158,7 @@ function abrirEditar(aberto: boolean) {
 }
 
 async function copiarLink() {
-  const link = `${location.origin}/torneios.html?id=${encodeURIComponent(codigo)}`;
+  const link = `${location.origin}/torneios?id=${encodeURIComponent(codigo)}`;
   try { await navigator.clipboard.writeText(link); status.textContent = 'Link copiado. Mande para os jogadores acompanharem.'; }
   catch { status.textContent = `Copie o link: ${link}`; }
 }
@@ -172,7 +172,7 @@ conteudo.addEventListener('submit', async e => {
     botao.disabled = true;
     try {
       const r = await api<{ torneio: Torneio }>('', { method: 'POST', body: JSON.stringify({ nome: dados.nome, formato: dados.formato }) });
-      location.href = `/torneios.html?id=${encodeURIComponent(r.torneio.id)}`;
+      location.href = `/torneios?id=${encodeURIComponent(r.torneio.id)}`;
     } catch (err) {
       botao.disabled = false;
       form.querySelector('.conta-erro')?.remove();
@@ -218,7 +218,7 @@ conteudo.addEventListener('click', async e => {
   else if (d.acao === 'reabrir') await mudar('POST', '/reabrir');
   else if (d.acao === 'apagar') {
     if (!confirm(`Apagar o torneio "${torneio.nome}"? Isso não tem volta, e o link deixa de funcionar.`)) return;
-    try { await api(encodeURIComponent(torneio.id), { method: 'DELETE' }); location.href = '/torneios.html'; }
+    try { await api(encodeURIComponent(torneio.id), { method: 'DELETE' }); location.href = '/torneios'; }
     catch (err) { mostrarErro(erroTexto(err)); }
   }
 });

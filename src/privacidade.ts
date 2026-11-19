@@ -9,7 +9,7 @@ import { iniciarTema } from './ui/temas';
 iniciarTema();
 
 /**
- * Política de privacidade (/privacidade.html), linkada no rodapé da tela inicial e no menu da conta. É também o
+ * Política de privacidade (/privacidade), linkada no rodapé da tela inicial e no menu da conta. É também o
  * endereço cadastrado na tela de consentimento do Google. Precisa acompanhar o código: o que muda no que o jogo guarda
  * ou envia muda aqui também, com a data no topo.
  */

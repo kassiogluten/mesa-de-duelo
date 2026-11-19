@@ -75,6 +75,28 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     e.preventDefault();
     primary.click();
   });
+  /**
+   * O painel aberto por cima da mesa que o voltar do celular fecha (menus, Opções, histórico, erros, cartas reveladas,
+   * zona, galeria da pilha, foco num oponente), do mais à frente para o mais atrás. A pergunta, as seleções do ataque e a
+   * janela de remoção (que só minimiza) ficam de fora: o voltar não mexe na jogada.
+   */
+  function topPanel(): (() => void) | null {
+    const { stops, passMenu } = d, match = d.match();
+    if (!root.isConnected || root.closest('[hidden]')) return null;
+    if (stops.group) return () => stops.set(null, true);
+    if (passMenu.open) return () => passMenu.set(false, true);
+    const seatMenu = root.querySelector<HTMLElement>('.seat-menu.open [data-seat-menu]');
+    if (seatMenu) return () => seatMenu.click();
+    if (!$('#fReveal').hidden) return () => d.reveals.close();
+    if (!$('#fSettings').hidden) return () => d.settings.set(false);
+    if (!$('#fMenu').hidden) return () => d.setMenu(false, true);
+    if (!$('#fLogDrawer').hidden) return () => d.setLog(false, true);
+    if (!$('#fErrorsDrawer').hidden) return () => d.errors.set(false, true);
+    if (match.stackGalleryOpen) return () => d.closeStackGallery();
+    if (match.zoneOf !== null || match.groupIds) return () => d.closeZone();
+    if (d.focus.seat() !== null) return () => d.focus.close();
+    return null;
+  }
   function escape(e: KeyboardEvent) {
     const { stops, passMenu, attack } = d, match = d.match();
     if (stops.group) { e.preventDefault(); stops.set(null, true); return; }
@@ -148,4 +170,8 @@ export function attachTableKeyboard(d: KeyboardDeps) {
     const el = target.closest<HTMLElement>('[data-mana],[data-ctr],[data-fid],[data-pid],[data-gy],[data-peek]');
     if (el && !el.matches('button') && (e.key === 'Enter' || (e.key === ' ' && !mouseFocused(target)))) { e.preventDefault(); el.click(); }
   });
+  return {
+    panelOpen: () => !!topPanel(),
+    closePanel() { topPanel()?.(); },
+  };
 }

@@ -1,4 +1,4 @@
-// Entrada da página do jogo: monta a tela inicial, a mesa, os decks e a mesa livre e troca entre elas.
+// Entrada da página do jogo: monta a tela inicial, a mesa, os decks e a mesa livre e troca entre elas, cada uma com o seu endereço.
 import { EVENTS, KEYS, NAMES, load } from './storage';
 import { DEFAULT_AI_STYLE, isAiStyle } from './aiStyle';
 import './style.css';
@@ -29,6 +29,7 @@ import { createForgeConnection } from './app/connection';
 import { bindMatchClient, type MatchSession, type Screen } from './app/matchWiring';
 import { RECONNECT_DELAYS, retryWithDelays, REWATCH_DELAYS } from './app/retry';
 import { startupLinks } from './app/startupLinks';
+import { createRouter, routePath, type Route } from './app/router';
 import { countFunnel } from './funnel';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -54,10 +55,53 @@ function show(name: Screen) {
   if (name === 'lobby' || name === 'decks') void mostrarOneTap(); else esconderOneTap();
   // O aviso de resposta num relato também não fica por cima da mesa.
   if (name !== 'lobby' && name !== 'decks') hideMyReportsNotice();
+  router.sync(screenPath());
 }
 
 /** A partida do assento (ou a sala esperando o oponente), a assistida e a tela à vista. */
 const session: MatchSession = { current: null, watching: null, screen: 'lobby' };
+
+/** O endereço da tela à vista: em Meus decks, o da lista, do editor do deck aberto ou da importação. */
+function screenPath() {
+  return routePath(session.screen === 'decks' ? builder.route() : { screen: session.screen } as Route);
+}
+/**
+ * O painel por cima da tela que o voltar do celular fecha, do mais à frente para o mais atrás: as janelas (dialog), Enviar
+ * relato e Meus relatos, os menus do cabeçalho (Novidades, ⋯, conta) e os da mesa (menu, Opções, zona…) e da mesa livre.
+ */
+function topOverlay(): (() => void) | null {
+  const dialog = [...document.querySelectorAll<HTMLDialogElement>('dialog[open]')].pop();
+  if (dialog) return () => { if (dialog.dispatchEvent(new Event('cancel', { cancelable: true }))) dialog.close(); };
+  const sheet = [...document.querySelectorAll<HTMLElement>('.feedback-overlay')].pop();
+  if (sheet) return () => { const close = sheet.querySelector<HTMLElement>('[data-fb="close"]'); if (close) close.click(); else sheet.remove(); };
+  const header = document.querySelector(screens[session.screen])?.querySelector<HTMLElement>('.shared-shell-header [aria-expanded="true"]');
+  if (header) return () => header.click();
+  if (session.screen === 'game' && forgeTable.panelOpen()) return () => forgeTable.closePanel();
+  if (session.screen === 'free' && freeTable.panelOpen()) return () => freeTable.closePanel();
+  return null;
+}
+/** Abre a tela de um endereço (o voltar e o avançar, e o endereço ao abrir a página). */
+function openRoute(route: Route) {
+  // A partida não abre pelo endereço (só voltando a ela ao recarregar) e a mesa livre só com um jogo guardado.
+  const savedFree = route.screen === 'free' && !freeTable.active() ? loadFreeTable() : null;
+  if (route.screen === 'game' || (route.screen === 'free' && !freeTable.active() && !savedFree)) { router.sync(screenPath()); return; }
+  // Saiu da mesa livre sem nada no campo (com cartas, o voltar pergunta antes): o jogo não fica guardado.
+  if (session.screen === 'free' && route.screen !== 'free') freeTable.leave();
+  switch (route.screen) {
+    case 'lobby': show('lobby'); lobby.refresh(); break;
+    case 'decks': builder.open(route.view === 'edit' ? { action: 'edit', deckId: route.deckId } : { action: route.view }); show('decks'); break;
+    case 'lab': labView.open(); show('lab'); scrollTo({ top: 0 }); break;
+    case 'free': if (savedFree) freeTable.resume(savedFree); show('free'); break;
+  }
+}
+const router = createRouter({
+  current: screenPath,
+  overlayOpen: () => !!topOverlay(),
+  closeOverlay: () => topOverlay()?.(),
+  canLeave: () => session.screen !== 'game' && !(session.screen === 'free' && freeTable.hasCards()),
+  requestLeave: () => { if (session.screen === 'game') forgeTable.requestExit(); else if (session.screen === 'free') freeTable.requestExit(); },
+  navigate: openRoute,
+});
 let lastMatch: [DeckData, DeckData | null, MatchConfig, (DeckData | null)[]?] | null = null;
 let pendingStart: { resolve(): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> } | null = null;
 function finishStart(error?: string) {
@@ -168,6 +212,7 @@ const lobby = mountLobby(document.querySelector('#scrLobby')!, {
 
 const builder = mountDeckBuilder(document.querySelector('#scrDecks')!, {
   onBack: () => { lobby.refresh(); show('lobby'); },
+  onViewChange: () => { if (session.screen === 'decks') router.sync(screenPath()); },
   onChange: () => lobby.refresh(),
   fetchDeckSource: async (site, id) => (await requireForge(FORGE_URL)).fetchDeckSource(site, id),
   similarCards: async (oracleId, candidates) => (await requireForge(FORGE_URL)).similarCards(oracleId, candidates),
@@ -325,22 +370,30 @@ async function resumeSaved(saved: ForgeMatch) {
   if (session.current === saved) {
     lobby.setStatus(`Não consegui voltar à partida em andamento: o servidor em ${saved.url} não respondeu. Recarregue a página para tentar de novo.`, true);
     session.current = null;
+    if (session.screen === 'lobby') router.sync(screenPath());
   }
 }
 
 show('lobby');
 
 // Old shared links now open setup; no match starts without a format and deck choice.
-if (location.hash === '#jogar') history.replaceState(null, '', location.pathname + location.search);
+if (location.hash === '#jogar') history.replaceState(history.state, '', location.pathname + location.search);
 const saved = loadResume();
 const savedFree = loadFreeTable();
 // Link de convite (?sala=MESA) ou vindo da página Salas (?criar-sala=1): sai do endereço para recarregar a página não entrar de novo.
 const links = startupLinks(location.search);
-if (links.room || links.createRoom) history.replaceState(null, '', location.pathname + links.search + location.hash);
+if (links.room || links.createRoom) history.replaceState(history.state, '', location.pathname + links.search + location.hash);
+// A tela do endereço (/decks, /laboratorio…); recarregar numa delas volta para ela.
+const initial = router.initial();
+router.start();
 // Quem já está numa partida volta para ela; o link fica para depois.
 if (saved) void resumeSaved(saved);
 else if (links.room) lobby.openRoomLink(links.room);
 else if (links.createRoom) lobby.openCreateRoom();
-else if (savedFree) { freeTable.resume(savedFree); show('free'); }
+else if (savedFree && (initial.screen === 'lobby' || initial.screen === 'free')) { freeTable.resume(savedFree); show('free'); }
+else if (initial.screen === 'decks' || initial.screen === 'lab') openRoute(initial);
 // Primeira visita neste aparelho: o tour da tela inicial (escolher o deck, ajustar a partida, Jogar).
-else if (!load(KEYS.played) && !load(KEYS.tour)) lobby.startTour();
+else if (initial.screen === 'lobby' && !load(KEYS.played) && !load(KEYS.tour)) lobby.startTour();
+// /partida sem partida para voltar e /mesa-livre sem jogo guardado caem no início. Voltando à partida, quem acerta o
+// endereço é a própria volta (a mesa ou, se o servidor não responder, o início).
+if (!saved) router.sync(screenPath());

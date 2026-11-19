@@ -35,7 +35,7 @@ const formatName = (f: DeckFormat) => FORMAT_LABEL[f];
 const ptName = (name: string) => cacheGet(name)?.pt?.name || name;
 const artOf = (name: string | undefined) => { const sc = name ? cacheGet(name) : null; return sc ? cardInfo(sc).artCrop : undefined; };
 /** Link de convite: abre a tela inicial já na sala (veja o "?sala=" em main.ts). */
-export const roomLink = (code: string) => `${location.origin}${location.pathname}?sala=${encodeURIComponent(code)}`;
+export const roomLink = (code: string) => `${location.origin}/?sala=${encodeURIComponent(code)}`;
 
 /** Os menus do topo levam para fora da sala: pergunta antes. "Ficar na sala" vem em foco: na dúvida, ninguém sai. */
 export function confirmLeaveRoom(code: string, to: 'play' | 'decks' | 'salas'): Promise<boolean> {

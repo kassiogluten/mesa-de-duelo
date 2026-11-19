@@ -12,7 +12,7 @@ import { iniciarTema } from './ui/temas';
 iniciarTema();
 
 /**
- * Salas (/salas.html, item 87): as salas públicas esperando jogadores e as partidas em andamento para assistir, num
+ * Salas (/salas, item 87): as salas públicas esperando jogadores e as partidas em andamento para assistir, num
  * lugar só, atualizadas sozinhas. A lista vem do servidor de jogo (a mesma da aba Entrar numa sala); entrar e assistir
  * voltam para a mesa pelo link da sala.
  */

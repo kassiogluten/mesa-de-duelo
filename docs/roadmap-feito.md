@@ -1655,3 +1655,23 @@ Da varredura do item 142 (itens 7, 8 e 10; prévias em `docs/varredura-proximos.
 - [x] Botões sem objeto que sobraram: "Nenhum" na busca opcional (Wood Elves: "Não procurar"), "OK" sozinho nas cartas reveladas ("Continuar"), "Cancelar" no alvo de um contra-feitiço ("Desistir da mágica").
 - [x] Aviso do Fato ou Ficção: "valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island" vira "Jogador 1 ficou com o monte de 2: Planície e Ilha".
 - [x] Conferir se o título "Divida ss cartas em duas pilhas" (erro da tradução do Forge) aparece em algum lugar da tela dos montes: não, a tela dos montes tem título próprio (`pilesHeading`).
+
+## 147. ✅ Endereço próprio para cada tela do app
+
+Pedido em 19/11/2026. As cinco telas do `index.html` (início, partida, Meus decks, mesa livre e Laboratório) são trocadas pelo JavaScript sem mudar o endereço (`show()` em `src/main.ts`). Por isso:
+
+- o voltar do celular (Android e app instalado) sai do site em vez de voltar de tela;
+- recarregar a página leva sempre à tela inicial;
+- não dá para mandar um link direto para uma tela (um deck aberto no editor, por exemplo).
+
+As outras páginas (Salas, Minhas partidas, Torneios, Contador, Rever partida, Novidades em imagens, Privacidade) já são separadas, mas com `.html` no endereço; só `/sobre`, `/admin` e `/efeitos` têm endereço limpo, por regra no `deploy/nginx.conf`.
+
+Decidido: **não** separar as telas do app em páginas próprias. A partida, a mesa livre, o Laboratório e Meus decks dividem a conexão com o servidor, as cartas já carregadas, os sons e o app instalado; trocar de página recarregaria tudo e, numa partida, derrubaria a conexão. O caminho é dar endereço a cada tela dentro do próprio `index.html`, pelo histórico do navegador.
+
+- [x] Rotas pelo histórico (`history.pushState` e `popstate`) a partir do `show()`: `/` (início), `/decks`, `/decks/<id>` (o editor do deck), `/mesa-livre`, `/laboratorio` e `/partida`. Recarregar numa rota abre a tela dela; `/partida` sem partida para voltar (`src/app/resume.ts`) cai no início. Feito em `src/app/router.ts`; a importação ganhou também `/decks/importar`. Quem abre um endereço direto ganha o início atrás dele (o voltar volta ao início em vez de sair do site), e os botões de voltar das telas reaproveitam o histórico em vez de empilhar a mesma tela.
+- [x] Voltar do celular durante a partida (ou na mesa livre com cartas na mesa) pergunta "Sair da partida?" em vez de sair direto. Na partida é a mesma saída do menu (`requestExit` em `tableUiActions.ts`): Conceder com o jogo em andamento, fechar a sala de teste no Laboratório, "Sair desta partida?" no resto; assistindo ou com o jogo acabado sai direto, como no menu.
+- [x] Painéis por cima da tela (Opções, Novidades, Meus relatos, a janela de zona da mesa): o voltar fecha o painel antes de mudar de tela. Vale para toda janela (`dialog`), Enviar relato, os menus do cabeçalho, os painéis da mesa (`topPanel` em `tableKeyboard.ts`) e os da mesa livre; o painel aberto por um toque ganha uma entrada no histórico, para fechar com o voltar também na tela inicial.
+- [x] `deploy/nginx.conf`: as rotas novas abrem o `index.html` (o app instalado já cai no `index.html` em endereços desconhecidos, pelo `navigateFallback` do `vite.config.ts`); no `npm run dev`, o mesmo pelo middleware do `vite.config.ts`. Nada a mudar: o `location /` já caía no `index.html`, e o Vite (dev e preview) já serve o `index.html` em endereço desconhecido e o `<nome>.html` em `/<nome>`.
+- [x] Junto: tirar o `.html` dos endereços das outras páginas (`/salas`, `/partidas`, `/torneios`, `/contador`, `/rever`, `/novidades`, `/privacidade`), com os endereços antigos redirecionando (301) para os novos, e os links, o `public/sitemap.xml` e o `navigateFallbackDenylist` acertados. O denylist não precisou mudar: o Workbox acha `/<nome>` entre as páginas guardadas como `<nome>.html` (`cleanURLs`) antes de cair no `index.html`. `tests/router.test.mjs` confere os links e as regras do nginx.
+- [x] Convites (`?sala=`, `?criar-sala=1`, `src/app/startupLinks.ts`) continuam funcionando, inclusive vindos de links antigos.
+- [x] Testes de navegador do voltar (sair de Meus decks volta ao início; na partida, pergunta) e do recarregar em cada rota. `tests/app-routes.browser.mjs` (Meus decks, editor, Novidades, Laboratório, mesa livre, `/partida` sem partida) e `tests/router.test.mjs` (o roteador, inclusive a pergunta da partida, que no navegador precisa do servidor).

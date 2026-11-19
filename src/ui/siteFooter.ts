@@ -17,6 +17,6 @@ export function siteFooterHTML() {
     <p class="site-legal">Mesa de Duelo é conteúdo de fã não oficial, gratuito, permitido pela ${ext('https://company.wizards.com/pt-br/legal/fancontentpolicy', 'Política de Conteúdo de Fãs')}.
       Não é aprovado nem endossado pela Wizards of the Coast e não tem nenhum vínculo com ela. Partes dos materiais usados são propriedade da Wizards of the Coast.
       Magic: The Gathering e seus logotipos são marcas da Wizards of the Coast LLC. ©Wizards of the Coast LLC.</p>
-    <p class="site-contact">Contato: ${ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`)} · <a href="/sobre">Sobre a Mesa de Duelo</a> · <a href="/privacidade.html">Política de privacidade</a></p>
+    <p class="site-contact">Contato: ${ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`)} · <a href="/sobre">Sobre a Mesa de Duelo</a> · <a href="/privacidade">Política de privacidade</a></p>
   </footer>`;
 }

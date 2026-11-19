@@ -11,7 +11,7 @@ import { iniciarTema } from './ui/temas';
 iniciarTema();
 
 /*
- * A mesa fica num quadro (rever.html?mesa), como na repetição dos relatos: ela recebe os estados por mensagem e não
+ * A mesa fica num quadro (/rever?mesa), como na repetição dos relatos: ela recebe os estados por mensagem e não
  * fala com o servidor. Cliques na mesa não vão a lugar nenhum. Só aparece o que o jogador viu na hora: a gravação
  * guarda o estado que chegou a ele, com a mão dos outros virada para baixo.
  */
@@ -38,7 +38,7 @@ async function panel(id: string) {
   const app = document.querySelector<HTMLDivElement>('#app')!;
   app.innerHTML = `<div class="rv">
     <header class="rv-bar">
-      <a class="rv-back" href="/partidas.html#gravadas">← Minhas partidas</a>
+      <a class="rv-back" href="/partidas#gravadas">← Minhas partidas</a>
       <p class="rv-title" id="rvTitle">Rever partida</p>
     </header>
     <div class="rv-stage"><iframe class="rv-frame" title="Mesa da partida" src="${location.pathname}?mesa" hidden></iframe><p class="rv-msg" id="rvMsg" role="status">Carregando a partida…</p></div>
@@ -57,7 +57,7 @@ async function panel(id: string) {
   const frame = $<HTMLIFrameElement>('.rv-frame'), msg = $('#rvMsg'), seek = $<HTMLInputElement>('#rvSeek'), turnSel = $<HTMLSelectElement>('#rvTurn');
   const recording = id ? await loadReplay(id) : null;
   if (!recording || !recording.frames.length) {
-    msg.innerHTML = 'Esta partida não está guardada neste aparelho. <a href="/partidas.html#gravadas">Ver as partidas guardadas</a>';
+    msg.innerHTML = 'Esta partida não está guardada neste aparelho. <a href="/partidas#gravadas">Ver as partidas guardadas</a>';
     return;
   }
   const rec: Recording = recording;
@@ -102,7 +102,7 @@ async function panel(id: string) {
 
   window.addEventListener('message', ({ data, origin }) => {
     if (origin !== location.origin) return;
-    if (data?.rever === 'exit') location.href = '/partidas.html#gravadas';
+    if (data?.rever === 'exit') location.href = '/partidas#gravadas';
     if (data?.rever !== 'ready' || ready) return;
     ready = true;
     msg.hidden = true; frame.hidden = false; $('.rv-controls').hidden = false;

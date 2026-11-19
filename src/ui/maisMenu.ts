@@ -31,10 +31,10 @@ export function mountMaisMenu(slot: HTMLElement, onFeedback: () => void) {
   slot.innerHTML = `<button type="button" class="news-btn tema-btn mais-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Mais opções" title="Mais opções">${ICON_DOTS}<span class="news-dot mais-dot" hidden></span></button>`
     + `<div class="tema-menu mais-menu" role="menu" aria-label="Mais opções" hidden>`
     + `<p class="mais-grupo" role="presentation">Partidas</p>`
-    + `<a role="menuitem" href="/salas.html" data-mais="salas">${ICON_TABLE}<span>Salas e partidas ao vivo</span></a>`
-    + `<a role="menuitem" href="/partidas.html#gravadas" data-mais="rever">${ICON_REPLAY}<span>Rever partidas</span></a>`
-    + `<a role="menuitem" href="/torneios.html" data-mais="torneios">${ICON_TROPHY}<span>Torneios presenciais</span></a>`
-    + `<a role="menuitem" href="/contador.html" data-mais="contador">${ICON_HEART}<span>Contador de vida (papel)</span></a>`
+    + `<a role="menuitem" href="/salas" data-mais="salas">${ICON_TABLE}<span>Salas e partidas ao vivo</span></a>`
+    + `<a role="menuitem" href="/partidas#gravadas" data-mais="rever">${ICON_REPLAY}<span>Rever partidas</span></a>`
+    + `<a role="menuitem" href="/torneios" data-mais="torneios">${ICON_TROPHY}<span>Torneios presenciais</span></a>`
+    + `<a role="menuitem" href="/contador" data-mais="contador">${ICON_HEART}<span>Contador de vida (papel)</span></a>`
     + `<p class="mais-grupo" role="presentation">Laboratório</p>`
     + `<button type="button" role="menuitem" data-mais="lab" aria-label="Laboratório: montar uma mesa">${ICON_FLASK}<span>Montar uma mesa</span></button>`
     + `<a role="menuitem" href="/efeitos" data-mais="efeitos" aria-label="Laboratório de efeitos">${ICON_SPARK}<span>Efeitos</span></a>`

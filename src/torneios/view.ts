@@ -5,7 +5,7 @@ import { ILL_MESA, ILL_PODIO, ILL_TROFEU } from './art';
 import { relogioHTML, type Relogio } from './clock';
 
 /*
- * Torneios (/torneios.html): o que a rota /api/torneios/ devolve, em HTML. Sem DOM, para os testes.
+ * Torneios (/torneios): o que a rota /api/torneios/ devolve, em HTML. Sem DOM, para os testes.
  * A classificação e os desempates vêm prontos do servidor (Tournament.java); aqui só se escreve.
  */
 
@@ -79,7 +79,7 @@ export function criarHTML() {
 
 export function listaHTML(torneios: Resumo[]) {
   if (!torneios.length) return vazioHTML(ILL_TROFEU, 'Você ainda não criou nenhum torneio.', 'Dê um nome acima e crie o primeiro: depois é só inscrever os jogadores e sortear a 1ª rodada.');
-  return `<ol class="tn-lista">${torneios.map(t => `<li><a class="tn-resumo e-${t.estado}" href="/torneios.html?id=${encodeURIComponent(t.id)}">
+  return `<ol class="tn-lista">${torneios.map(t => `<li><a class="tn-resumo e-${t.estado}" href="/torneios?id=${encodeURIComponent(t.id)}">
     <span class="tn-resumo-ico">${ICON_TROPHY}</span>
     <strong>${esc(t.nome)}</strong>
     <span>${[t.formato ? esc(t.formato) : '', `${t.jogadores} ${t.jogadores === 1 ? 'jogador' : 'jogadores'}`, esc(andamentoTexto({ estado: t.estado, rodadas: t.rodadas, rodadasJogadas: Array.from({ length: t.rodada }) as Rodada[] }))].filter(Boolean).join(' · ')}</span>
@@ -253,7 +253,7 @@ export function torneioHTML(t: Torneio) {
   const passadas = (t.estado === 'encerrado' ? rodadas : rodadas.slice(0, -1)).slice().reverse();
   return `${cabecalhoHTML(t)}
     ${proximoPassoHTML(t)}
-    ${atual && t.estado !== 'encerrado' ? `<section class="tn-secao" aria-labelledby="tn-atual">${tituloHTML('tn-atual', ICON_SWORDS, nomeRodada(atual))}${t.relogio ? relogioHTML(t.relogio, t.relogio.restanteMs, t.minutosPorRodada, t.organizadorSouEu) : ''}${rodadaHTML(t, atual, editavel)}<p class="tn-nota">Para marcar a vida na mesa, use o <a href="/contador.html">Contador de vida</a> no celular.</p></section>` : ''}
+    ${atual && t.estado !== 'encerrado' ? `<section class="tn-secao" aria-labelledby="tn-atual">${tituloHTML('tn-atual', ICON_SWORDS, nomeRodada(atual))}${t.relogio ? relogioHTML(t.relogio, t.relogio.restanteMs, t.minutosPorRodada, t.organizadorSouEu) : ''}${rodadaHTML(t, atual, editavel)}<p class="tn-nota">Para marcar a vida na mesa, use o <a href="/contador">Contador de vida</a> no celular.</p></section>` : ''}
     <section class="tn-secao" aria-labelledby="tn-class">${tituloHTML('tn-class', ICON_PODIUM, t.estado === 'encerrado' ? 'Classificação final' : 'Classificação')}${classificacaoHTML(t)}</section>
     <section class="tn-secao" aria-labelledby="tn-jog">${tituloHTML('tn-jog', ICON_USERS, 'Jogadores', ` <small>${t.jogadores.length}</small>`)}${jogadoresHTML(t)}</section>
     ${passadas.length ? `<section class="tn-secao" aria-labelledby="tn-ant">${tituloHTML('tn-ant', ICON_HISTORY, t.estado === 'encerrado' ? 'Rodadas' : 'Rodadas anteriores')}

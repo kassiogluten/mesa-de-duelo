@@ -187,5 +187,15 @@ export function createUiActions(d: UiActionDeps) {
     'result': (t, e, ui) => action['observe']!(t, e, ui), // definida logo acima
     'zone-close': () => { d.closeZone(); },
   };
-  return { pass, prompt, view, panel, action };
+  /**
+   * O voltar do celular na partida: a mesma saída do menu, com a mesma pergunta (Conceder com o jogo em andamento,
+   * fechar a sala de teste no Laboratório, Sair da partida no resto; assistindo ou com o jogo acabado, sai direto).
+   */
+  function requestExit() {
+    const run = (ui: string) => action[ui]!($('#fMenuExit'), new MouseEvent('click'), ui);
+    if (!$('#fMenuLab').hidden) run('lab-close');
+    else if (!$('#fMenuConcede').hidden) run('concede');
+    else run('exit');
+  }
+  return { pass, prompt, view, panel, action, requestExit };
 }

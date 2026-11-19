@@ -140,6 +140,11 @@ export interface ForgeTableView {
   diagnostic(d: { code: string; action?: string; text: string }): void;
   /** Alguém apontou uma carta da mesa: ela pulsa com o nome de quem apontou. */
   pointed(player: number, card: number): void;
+  /** Painel aberto por cima da mesa (menu, Opções, zona…), que o voltar do celular fecha. */
+  panelOpen(): boolean;
+  closePanel(): void;
+  /** O voltar do celular na partida: a saída do menu, com a mesma pergunta. */
+  requestExit(): void;
 }
 
 /** Ferramentas de desenvolvimento na mesa: no `npm run dev` ou com localStorage `KEYS.dev` = "1". */
@@ -572,7 +577,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   attachPreviewInput({ ...ctx, handDrag, stackFocusOn: el => stack.focusOn(el) });
   // ---------- Ordem dos gatilhos: teclado e arrastar ----------
   question.attachTriggerInput();
-  attachTableKeyboard({ ...ctx, modal, focus, stops, passMenu, removals, reveals, settings, errors, attack, setMenu, setLog,
+  const keyboard = attachTableKeyboard({ ...ctx, modal, focus, stops, passMenu, removals, reveals, settings, errors, attack, setMenu, setLog,
     closeStackGallery: () => stack.closeGallery(), closeZone: () => zone.close(), questionMinimized: () => question.minimized(),
     switchZonePlayer: player => { if (client?.state) zone.switchPlayer(client.state, player); } });
 
@@ -598,6 +603,8 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
       settings.syncPassLevel(); stops.sync(); settings.syncTurnNotice(); settings.syncDevice(); syncModal();
     },
     render,
+    // O voltar do celular: fecha o painel de cima ou sai pela mesma pergunta do menu.
+    panelOpen: keyboard.panelOpen, closePanel: keyboard.closePanel, requestExit: ui.requestExit,
     warmEffects: () => motion.warmEffects(),
     notice,
     reconnecting(attempt) {

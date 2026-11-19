@@ -24,7 +24,21 @@ const ZONE_NAME: Record<Zone, string> = { library: 'Grimório', hand: 'Mão', ba
 const LONG_PRESS = 480;
 
 export interface FreeTableOptions { onExit(): void }
-export interface FreeTable { open(deck: DeckData, format: DeckFormat): void; resume(saved: Sandbox): void }
+export interface FreeTable {
+  open(deck: DeckData, format: DeckFormat): void;
+  resume(saved: Sandbox): void;
+  /** Há jogo aberto (o deck na mesa). */
+  active(): boolean;
+  /** Há carta no campo de batalha: sair descarta o jogo, então o voltar do celular pergunta antes. */
+  hasCards(): boolean;
+  /** Sair perguntando, como o botão Sair. */
+  requestExit(): void;
+  /** Sair sem perguntar (nada no campo). */
+  leave(): void;
+  /** Menu de carta, zona aberta ou criar ficha: o voltar fecha. */
+  panelOpen(): boolean;
+  closePanel(): void;
+}
 
 export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): FreeTable {
   let s: Sandbox | null = null;
@@ -231,7 +245,7 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
     const action = t.closest<HTMLElement>('[data-act]')?.dataset.act;
     if (action) { runAction(action); return; }
     const ui = t.closest<HTMLElement>('[data-ui]')?.dataset.ui;
-    if (ui === 'exit') { if (confirm('Sair da mesa livre? O jogo atual será descartado.')) { s = null; save(); hideCardPreview(true); opts.onExit(); } return; }
+    if (ui === 'exit') { requestExit(); return; }
     if (ui === 'undo') { const prev = history.undo(); if (prev) { s = prev; menu = null; save(); render(); } return; }
     if (ui === 'restart') { if (confirm('Recomeçar com o grimório embaralhado e uma nova mão?')) start(newSandbox({ id: 'livre', ...s!.deck }, s!.format)); return; }
     if (ui === 'token') { tokenForm = true; menu = null; render(); return; }
@@ -347,8 +361,17 @@ export function createFreeTableView(root: HTMLElement, opts: FreeTableOptions): 
     if (e.key.toLowerCase() === 'd') act(s => untapAll(s));
   });
 
+  function leave() { s = null; menu = null; viewing = null; tokenForm = false; save(); hideCardPreview(true); }
+  function requestExit() { if (confirm('Sair da mesa livre? O jogo atual será descartado.')) { leave(); opts.onExit(); } }
+
   return {
     open(deck, format) { start(newSandbox(deck, format)); },
     resume(saved) { start(saved); },
+    active: () => !!s,
+    hasCards: () => !!s?.zones.battlefield.length,
+    requestExit,
+    leave,
+    panelOpen: () => !!s && (!!menu || viewing !== null || tokenForm),
+    closePanel() { if (menu) menu = null; else { viewing = null; tokenForm = false; } render(); },
   };
 }

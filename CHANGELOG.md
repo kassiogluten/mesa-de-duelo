@@ -8,6 +8,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.229.0] - 2026-11-19
+
+### Novo
+
+- **Cada tela com o seu endereço.** Meus decks, o deck aberto no editor, a importação, a mesa livre, o Laboratório e a partida têm endereço próprio (`/decks`, `/decks/…`, `/mesa-livre`, `/laboratorio`, `/partida`). O voltar do celular e do app instalado volta para a tela anterior em vez de sair do site, recarregar a página continua na mesma tela, e dá para mandar o link de um deck aberto no editor.
+
+### Mudou
+
+- **O voltar fecha o que está aberto.** Com Novidades, o menu ⋯, Meus relatos, as Opções e o menu da partida, a janela de uma zona ou qualquer outra janela aberta, o voltar fecha essa janela primeiro, sem trocar de tela.
+- **O voltar na partida pergunta antes.** No meio do jogo, o voltar do celular abre a mesma pergunta do Conceder do menu (no Laboratório, a de fechar a sala de teste); na mesa livre com cartas no campo, pergunta se quer descartar o jogo.
+- **Endereços sem .html.** Salas, Minhas partidas, Torneios, Contador de vida, Rever partida, Novidades em imagens e Política de privacidade abrem em `/salas`, `/partidas`, `/torneios`, `/contador`, `/rever`, `/novidades` e `/privacidade`; os links antigos, com `.html`, continuam funcionando e levam ao endereço novo.
+
 ## [0.228.0] - 2026-11-19
 
 ### Novo

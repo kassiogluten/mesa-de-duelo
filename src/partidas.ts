@@ -15,7 +15,7 @@ import { iniciarTema } from './ui/temas';
 iniciarTema();
 
 /**
- * Minhas partidas (/partidas.html), aberta pelo menu da conta: as partidas jogadas com a conta conectada e os números
+ * Minhas partidas (/partidas), aberta pelo menu da conta: as partidas jogadas com a conta conectada e os números
  * delas. Os dados vêm de GET /api/conta/partidas (AccountMatches na ponte); só a própria conta os vê.
  */
 const nomeDoFormato = (f: string) => FORMAT_LABEL[f as DeckFormat] ?? f;

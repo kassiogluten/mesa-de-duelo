@@ -46,7 +46,7 @@ test('turn marks find the turns and the games of a best of three', () => {
 test('Minhas partidas lists the recorded matches with Rever and Apagar, and links the account ones', () => {
   const rec = recording([state(), state({ turn: 4, gameOver: true, winner: 'Oponente', config: { format: 'pauper' } })]);
   const html = gravadasHTML([summarize(rec, 10)], f => f.toUpperCase(), 10);
-  assert.match(html, /href="\/rever\.html\?id=m1"/);
+  assert.match(html, /href="\/rever\?id=m1"/);
   assert.match(html, /data-apagar="m1"/);
   assert.match(html, /Derrota/);
   assert.match(html, /contra <strong>Computador<\/strong>/);

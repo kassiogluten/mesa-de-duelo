@@ -74,7 +74,7 @@ test('a página escapa o que foi digitado e a lista leva ao torneio', () => {
   assert.match(view.torneioHTML(torneio({ organizadorSouEu: false })), /Copiar link/);
   assert.doesNotMatch(view.torneioHTML(torneio({ organizadorSouEu: false })), /data-editar/);
   const lista = view.listaHTML([{ id: 'ABCDEFGH', nome: 'Liga', formato: 'Modern', criadoEm: '', estado: 'andamento', jogadores: 8, rodada: 2, rodadas: 3 }]);
-  assert.match(lista, /href="\/torneios.html\?id=ABCDEFGH"/);
+  assert.match(lista, /href="\/torneios\?id=ABCDEFGH"/);
   assert.match(lista, /Modern · 8 jogadores · Rodada 2 de 3/);
   assert.match(view.listaHTML([]), /class="tn-vazio"><svg class="tn-ilustra"[^]*ainda não criou/);
 });
