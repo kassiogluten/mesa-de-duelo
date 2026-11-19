@@ -8,6 +8,21 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.222.0] - 2026-11-19
+
+### Novo
+
+- **Golpe de comandante.** Quando um comandante causa dano de combate a um jogador, ele avança com uma aura e um rastro dourados; no golpe, uma coroa dourada se estampa no retrato de quem levou, o número sobe em dourado e uma coroa pequena voa até o "Dano X/21", que acende e conta do número de antes até o de agora, com o "+N" logo abaixo. No golpe que leva o dano de um comandante a 21, a coroa estremece, fica vermelha e se parte ao meio, com estilhaços vermelhos.
+- **Coroa no dano de comandante do Contador de vida.** No Contador de vida, somar dano de comandante faz o número saltar em dourado e uma coroa se estampar no quadro do comandante; no toque que chega a 21, a coroa fica vermelha e se parte. De 15 em diante, o quadro e a marca daquele comandante ficam em alerta, com a borda vermelha.
+
+### Mudou
+
+- **Dano de comandante perto de 21.** De 15 em diante, o "Dano X/21" da mesa ganha um brilho vermelho que pulsa devagar atrás do número, além do número avermelhado.
+
+### Corrigido
+
+- **"Dano X/21" na hora do golpe.** Durante o combate, o contador do dano de comandante já mostrava o total do fim do combate antes de o golpe ser mostrado; agora ele muda quando o golpe chega, passo a passo (no golpe duplo, um de cada vez).
+
 ## [0.221.0] - 2026-11-19
 
 ### Mudou

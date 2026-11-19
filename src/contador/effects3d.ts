@@ -1,4 +1,4 @@
-// Os objetos em 3D do Contador de vida, pela mesma camada GPU da partida: d6, d20 e moeda rolando no meio da mesa, o d20 de quem começa em cada painel, os golpes grandes na vida, a racha de quem sai e o brasão de quem vence.
+// Os objetos em 3D do Contador de vida, pela mesma camada GPU da partida: d6, d20 e moeda rolando no meio da mesa, o d20 de quem começa em cada painel, os golpes grandes na vida, a coroa do dano de comandante, a racha de quem sai e o brasão de quem vence.
 import type { GpuLayer } from '../ui/gpu/gpuLayer';
 import type { Point } from '../ui/motionKit';
 import { effectsLevel, gpuDecision, hasWebGL2 } from '../ui/gpu/gpuSupport';
@@ -25,6 +25,11 @@ export interface Efeitos3d {
   golpe(at: Point, nivel: number): void;
   /** Cura grande: grãos verdes subindo para o lado de quem senta ali (`giro`, em graus). */
   cura(at: Point, giro: number): void;
+  /**
+   * Dano de comandante somado: a coroa dourada, da largura de `at`, se estampa no quadro do comandante; `letal` é o toque que chega a
+   * 21, e a coroa se parte em estilhaços vermelhos.
+   */
+  coroa(at: Point, letal: boolean): void;
   /** Alguém saiu da partida: o painel racha e solta cinzas. */
   fora(at: Point): void;
   /** Sobrou um: raios dourados e o brasão em 3D caindo sobre o painel. */
@@ -86,6 +91,7 @@ export function criarEfeitos3d(host: HTMLElement): Efeitos3d {
       });
     },
     cura(at, giro) { void pronta().then(c => c?.fx.play(c.layer, 'heal', { at, turn: giro * Math.PI / 180 })); },
+    coroa(at, letal) { void pronta().then(c => c?.fx.play(c.layer, 'crownStamp', { at, size: Math.max(36, Math.min(110, Math.min(at.w, at.h))), lethal: letal })); },
     fora(at) { void pronta().then(c => c?.fx.play(c.layer, 'defeat', { at })); },
     vence(at) {
       void pronta().then(c => {

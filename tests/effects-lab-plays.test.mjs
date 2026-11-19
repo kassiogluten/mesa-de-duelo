@@ -46,7 +46,7 @@ function fakeTable() {
 
 test('every lab play button runs and sends events or panel commands, with a note for the panel', () => {
   const keys = PLAY_BUTTONS.flatMap(([, list]) => list.map(([key]) => key));
-  assert.equal(keys.length, 32);
+  assert.equal(keys.length, 34);
   for (const key of keys) {
     const t = fakeTable();
     const note = createLabPlays(t.lab).start(key);
@@ -129,6 +129,18 @@ test('the new effect plays send what the server would: extra turn, copies, kicke
   assert.deepEqual(phasing.map(e => !!e.out), [true, true, false, false]);
   const strikes = run('doubleStrike').events.filter(e => e.type === 'damage').map(e => e.step);
   assert.deepEqual(strikes, ['first-strike', 'regular']);
+});
+
+test('commander plays: your commander swings unblocked and the strike says it is a commander one, in combat', () => {
+  for (const [key, before] of [['commanderStrike', 8], ['commanderLethal', 16]]) {
+    const t = fakeTable(); createLabPlays(t.lab).start(key);
+    const opp = t.players.find(p => p.id === OPP);
+    const hit = t.events.find(e => e.type === 'damage');
+    assert.ok(hit.commander && hit.combat, key);
+    assert.equal(hit.target.player, OPP, key);
+    assert.equal(opp.commanderDamage.find(d => d.commanderId === hit.sourceId)?.damage ?? opp.commanderDamage[0].damage, before, key);
+    assert.ok(opp.commanders?.length, `${key}: the opponent has a commander, so the duel shows the counter`);
+  }
 });
 
 test('the other sweeps: bounce and exile carry the stack number; pyroclasm damages every creature, resolves, then settles the dead', () => {

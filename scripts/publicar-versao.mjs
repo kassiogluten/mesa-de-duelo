@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Dá número às novidades pendentes (novidades-pendentes/): junta todas numa versão nova do CHANGELOG.md, move os prints
-// para public/novidades/<versão>/, registra em src/novidades.json e src/lab-cenarios.json e acerta a versão do package.json.
+// para public/novidades/<versão>/, registra em src/novidades.json e src/lab-cenarios.json, troca os botões marcados como
+// novos no laboratório de efeitos (tests/fixtures/effects-lab-new.json) e acerta a versão do package.json.
 //
 //   npm run publicar-versao [-- --x] [--dry]
 //
@@ -19,7 +20,9 @@ const opt = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] 
 const ROOT = opt('--raiz') ?? fileURLToPath(new URL('..', import.meta.url));
 const DRY = args.includes('--dry'), MAJOR = args.includes('--x');
 const PENDING_DIR = join(ROOT, 'novidades-pendentes');
-const KNOWN = new Set(['novidade.md', 'imagens.json', 'cenarios.json']);
+const KNOWN = new Set(['novidade.md', 'imagens.json', 'cenarios.json', 'lab-efeitos.json']);
+/** Os botões do laboratório de efeitos marcados como novos: só os da versão que acabou de sair. */
+const LAB_NEW = 'tests/fixtures/effects-lab-new.json';
 const path = p => join(ROOT, p);
 const read = p => readFileSync(path(p), 'utf8');
 const fail = msg => { console.error(`publicar-versao: ${msg}`); process.exit(1); };
@@ -51,7 +54,9 @@ const pend = folders.map(folder => {
     if (!s.item || !titles.has(s.item)) fail(`${folder}/cenarios.json: "${s.nome}" precisa de um item do novidade.md`);
     if (s.versao) fail(`${folder}/cenarios.json: "${s.nome}" não leva versao (ela sai daqui)`);
   }
-  return { folder, dir, md, shots, scenariosText };
+  const labButtons = json('lab-efeitos.json') ?? [];
+  if (!Array.isArray(labButtons) || labButtons.some(b => typeof b !== 'string' || !/^[a-z-]+:.+/.test(b))) fail(`${folder}/lab-efeitos.json: uma lista de botões como "gpu:crown" ou "play:commanderStrike"`);
+  return { folder, dir, md, shots, scenariosText, labButtons };
 });
 
 let merged;
@@ -107,7 +112,11 @@ if (labEntries.length) {
   if (parsed.slice(0, added).some(s => s.versao !== version)) fail('não consegui pôr a versão nos cenários (confira o "item" de cada um)');
 }
 
-// 6. package.json e package-lock.json com a versão nova (o mesmo que npm version --no-git-tag-version).
+// 6. Laboratório de efeitos: os botões novos desta versão; os marcados numa versão anterior deixam de ser novos.
+const labNew = [...new Set(pend.flatMap(p => p.labButtons))];
+const nextLabNew = `${JSON.stringify({ versao: version, botoes: labNew }, null, 2)}\n`;
+
+// 7. package.json e package-lock.json com a versão nova (o mesmo que npm version --no-git-tag-version).
 const pkg = read('package.json').replace(/("version":\s*")[^"]+"/, `$1${version}"`);
 const lock = existsSync(path('package-lock.json')) ? JSON.parse(read('package-lock.json')) : null;
 if (lock) { lock.version = version; if (lock.packages?.['']) lock.packages[''].version = version; }
@@ -116,6 +125,7 @@ console.log(`Versão ${version} (antes ${top.slice(1).join('.')}), com ${folders
 console.log(section.trimEnd());
 if (moves.length) console.log(`\n${moves.length} ${moves.length === 1 ? 'print' : 'prints'} para ${imgDir}/`);
 if (labEntries.length) console.log(`${labEntries.length === 1 ? 'Cenário' : 'Cenários'} do Laboratório na ${version}`);
+console.log(labNew.length ? `Laboratório de efeitos: ${labNew.length} ${labNew.length === 1 ? 'botão novo' : 'botões novos'} (${labNew.join(', ')})` : 'Laboratório de efeitos: nenhum botão novo (os selos da versão anterior saem)');
 if (DRY) { console.log('\n(--dry: nada foi gravado)'); process.exit(0); }
 
 writeFileSync(path('CHANGELOG.md'), nextChangelog);
@@ -123,6 +133,8 @@ if (moves.length) mkdirSync(path(imgDir), { recursive: true });
 for (const m of moves) renameSync(m.from, m.to);
 writeFileSync(path('src/novidades.json'), nextVisuals);
 writeFileSync(path('src/lab-cenarios.json'), nextLab);
+mkdirSync(path('tests/fixtures'), { recursive: true });
+writeFileSync(path(LAB_NEW), nextLabNew);
 writeFileSync(path('package.json'), pkg);
 if (lock) writeFileSync(path('package-lock.json'), `${JSON.stringify(lock, null, 2)}\n`);
 for (const p of pend) rmSync(p.dir, { recursive: true });

@@ -37,6 +37,9 @@ export interface PresentationEvent {
   wither?: boolean;
   loyalty?: boolean;
   commander?: boolean;
+  /** Golpe de comandante: o comandante que conta e o total que ele já causou ao jogador, com este golpe. */
+  commanderId?: number;
+  commanderTotal?: number;
   self?: boolean;
   lethal?: boolean;
   prevented?: boolean;

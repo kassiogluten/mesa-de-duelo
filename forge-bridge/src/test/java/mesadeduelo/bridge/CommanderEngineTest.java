@@ -119,6 +119,29 @@ public class CommanderEngineTest {
         assertTrue(game.isGameOver()); assertEquals(owner.getName(), game.getView().getWinningPlayerName());
     }
 
+    @Test public void commanderStrikeTellsTheTableTheTotalAndTheFrameCarriesIt() {
+        Game game = game(2); Player owner = game.getPlayers().get(0), victim = game.getPlayers().get(1);
+        Card first = commander(game, owner);
+        game.getAction().moveToPlay(first, null, null);
+        VisibleEvents events = new VisibleEvents(() -> {}, () -> 1); events.attach(game);
+        victim.addDamageAfterPrevention(6, first, null, true, new GameEntityCounterTable());
+        victim.addDamageAfterPrevention(3, first, null, false, new GameEntityCounterTable());
+        victim.addDamageAfterPrevention(7, first, null, true, new GameEntityCounterTable());
+        List<JsonObject> damage = events.json(0).asList().stream().map(e -> e.getAsJsonObject()).filter(e -> "damage".equals(e.get("type").getAsString())).toList();
+        assertEquals(3, damage.size());
+        // O golpe de combate diz o total daquele comandante no jogador, já com ele; o dano fora do combate não conta.
+        assertEquals(6, damage.get(0).get("commanderTotal").getAsInt());
+        assertFalse(damage.get(1).has("commander")); assertFalse(damage.get(1).has("commanderTotal"));
+        assertEquals(13, damage.get(2).get("commanderTotal").getAsInt());
+        assertEquals(first.getId(), damage.get(2).get("commanderId").getAsInt());
+        // O quadro do passo leva o dano de comandante de cada jogador, como estava naquele momento.
+        JsonObject seat = damage.get(0).getAsJsonObject("frame").getAsJsonArray("players").asList().stream().map(e -> e.getAsJsonObject())
+            .filter(e -> e.get("id").getAsInt() == victim.getId()).findFirst().orElseThrow();
+        JsonObject row = seat.getAsJsonArray("commanderDamage").asList().stream().map(e -> e.getAsJsonObject())
+            .filter(e -> e.get("commanderId").getAsInt() == first.getId()).findFirst().orElseThrow();
+        assertEquals(6, row.get("damage").getAsInt());
+    }
+
     @Test public void exactDefenderSelectionNeverUsesFirstOpponentImplicitly() {
         Game game = game(4); Player player = game.getPlayers().get(0), defender = game.getPlayers().get(3);
         Card attacker = ExilePermissionsTest.add(game, "Raging Goblin", player, ZoneType.Battlefield);

@@ -73,6 +73,11 @@ export interface FEvent {
   /** Só em `damage`; ver forge-bridge/README.md. */
   combat?: boolean; step?: 'first-strike' | 'regular'; doubleStrike?: boolean; trample?: boolean; deathtouch?: boolean; lifelink?: boolean;
   infect?: boolean; wither?: boolean; loyalty?: boolean; commander?: boolean; self?: boolean; lethal?: boolean;
+  /**
+   * Golpe de comandante (`commander`): o comandante que conta (`commanderId`, a carta de verdade num comandante fundido) e
+   * o total que ele já causou ao jogador atingido, com este golpe (`commanderTotal`).
+   */
+  commanderId?: number; commanderTotal?: number;
   /** `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). */
   prevented?: boolean;
   /**
@@ -117,7 +122,7 @@ export interface FEvent {
   counter?: string; entering?: boolean; paid?: boolean;
   /** `turn`: o número do turno que começou, e se é um turno extra. */
   turn?: number; extra?: boolean;
-  frame?: {players: Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'>[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
+  frame?: {players: (Pick<FPlayer, 'id' | 'life' | 'battlefield' | 'handCount' | 'library'> & Partial<Pick<FPlayer, 'commanderDamage'>>)[]; stack: FState['stack']; turn: number; phase: string | null; activePlayer: number | null; combat?: FState['combat']};
 }
 export interface FMatch {
   gameNumber: number; wins: number[]; draws: number; over: boolean; abandoned?: boolean;

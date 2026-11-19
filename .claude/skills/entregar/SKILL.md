@@ -23,6 +23,9 @@ Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entre
 - No `cenarios.json` da pasta da mudança (uma lista, no estilo de `src/lab-cenarios.json`): `nome`, `item`, `conferir`, `cenario` (o formato de "Copiar cenário": `active`, `phase`, `players[2]` com `life`, `poison`, `hand`, `library`, `graveyard`, `exile`, `battlefield`). **Sem `versao`**: ela entra na publicação.
 - Correção que já tem cenário publicado: atualize-o em `src/lab-cenarios.json` em vez de criar outro. Se ele estava como para investigar (sem `versao` e `item`), tire-o de lá e ponha no `cenarios.json` da mudança, com o `item`.
 
+## 3b. Laboratório de efeitos (botões novos)
+- Botão novo no laboratório de efeitos, ou que passou a disparar um efeito novo: liste-o em `novidades-pendentes/<pasta>/lab-efeitos.json` (`["gpu:crown", "play:commanderStrike"]`) para ganhar o selo "novo". Os de versões anteriores perdem o selo sozinhos na publicação.
+
 ## 4. Testes
 - Mesa: `npm test` e `npx tsc --noEmit -p .` (segundos).
 - Mexeu no servidor: `cd forge-bridge && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-17.0.20.101-hotspot" mvn -o -q test -Dtest=<Classes>`; a suíte inteira leva ~30 s.

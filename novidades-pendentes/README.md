@@ -10,6 +10,7 @@ novidades-pendentes/<nome-da-mudanca>/
   novidade.md      os itens, como no CHANGELOG (obrigatório)
   imagens.json     prints de cada item (se houver o que ver)
   cenarios.json    cenários do Laboratório (correções de regra ou carta)
+  lab-efeitos.json botões novos (ou com efeito novo) do laboratório de efeitos
   *.webp           os prints
 ```
 
@@ -37,6 +38,15 @@ novidades-pendentes/<nome-da-mudanca>/
 
 `cenarios.json`: uma lista no formato de `src/lab-cenarios.json`, com `nome`, `item`, `conferir` e `cenario`, mas
 **sem** `versao` (ela entra na publicação).
+
+`lab-efeitos.json`: os botões do laboratório de efeitos que a mudança criou ou que ganharam efeito novo, como
+`<atributo>:<valor>` (o `data-` do botão: `gpu:crown` é o `[data-gpu="crown"]`, `play:commanderStrike` a jogada pronta).
+Eles ganham o selo "novo" no painel. Ao publicar, `tests/fixtures/effects-lab-new.json` passa a ter só os botões da
+versão nova: os marcados numa versão anterior perdem o selo.
+
+```json
+["gpu:crown", "play:commanderStrike"]
+```
 
 Enquanto a mudança não sobe, a mesa mostra esses itens como **Próxima versão** no painel Novidades, na página
 Novidades em imagens e nos Cenários prontos do Laboratório. A main nunca fica com pastas aqui: o `pre-push` recusa.

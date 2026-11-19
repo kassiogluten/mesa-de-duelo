@@ -14,6 +14,7 @@ import { createImpactMotion } from './motionImpact';
 import { createMedalMotion } from './motionMedals';
 import { createSweepMotion, type SweepOptions } from './motionSweep';
 import { createSurviveMotion } from './motionSurvive';
+import { createCommanderMotion } from './motionCommander';
 import { createSpellMotion } from './motionSpells';
 
 const KEYED = '[data-fid],[data-peek]';
@@ -87,7 +88,7 @@ export function createMotion(root: HTMLElement): Motion {
   const kit = createMotionKit(root);
   const { state, animate } = kit;
   const survive = createSurviveMotion(kit);
-  const damage = createDamageMotion(kit, survive);
+  const damage = createDamageMotion(kit, survive, createCommanderMotion(kit));
   const abilities = createAbilityMotion(kit);
   const zones = createZoneMotion(kit);
   const library = createLibraryMotion(kit);

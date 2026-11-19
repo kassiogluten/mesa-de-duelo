@@ -166,6 +166,8 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `commander?` | `boolean` |  |
 | `self?` | `boolean` |  |
 | `lethal?` | `boolean` |  |
+| `commanderId?` | `number` | Golpe de comandante (`commander`): o comandante que conta (`commanderId`, a carta de verdade num comandante fundido) e o total que ele já causou ao jogador atingido, com este golpe (`commanderTotal`). |
+| `commanderTotal?` | `number` |  |
 | `prevented?` | `boolean` | `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). |
 | `ward?` | `boolean` | Gatilho da proteção contra alvos (ward), em `ability-activated` e no `resolved` dele. `wardAgainst`: o item da pilha que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou. |
 | `wardAgainst?` | `number` |  |
@@ -202,7 +204,7 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `paid?` | `boolean` |  |
 | `turn?` | `number` | `turn`: o número do turno que começou, e se é um turno extra. |
 | `extra?` | `boolean` |  |
-| `frame?` | `{players: Pick<FPlayer, 'id' \| 'life' \| 'battlefield' \| 'handCount' \| 'library'>[]; stack: FState['stack']; turn: number; phase: string \| null; activePlayer: number \| null; combat?: FState['combat']}` |  |
+| `frame?` | `{players: (Pick<FPlayer, 'id' \| 'life' \| 'battlefield' \| 'handCount' \| 'library'> & Partial<Pick<FPlayer, 'commanderDamage'>>)[]; stack: FState['stack']; turn: number; phase: string \| null; activePlayer: number \| null; combat?: FState['combat']}` |  |
 
 ## FMatch
 

@@ -1,9 +1,10 @@
-// Animações de dano e ganho de vida: golpe ou projétil, número que sobe e retrato que acende.
+// Animações de dano e ganho de vida: golpe ou projétil, número que sobe e retrato que acende (o golpe de comandante, com aura e coroa).
 import type { PresentationEvent } from './presentationTimeline';
 import { damageLook, type DamageLook } from './damageEffects';
 import { center, reduced, type MotionKit } from './motionKit';
 import { effectsTier } from './gpu/gpuSupport';
 import type { createSurviveMotion } from './motionSurvive';
+import { COMMANDER_GOLD, type createCommanderMotion } from './motionCommander';
 
 const SKULL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a8 8 0 0 0-8 8c0 2.6 1.2 4.4 3 5.6V19a1 1 0 0 0 1 1h1v-2h2v2h2v-2h2v2h1a1 1 0 0 0 1-1v-3.4c1.8-1.2 3-3 3-5.6a8 8 0 0 0-8-8zm-3.5 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm7 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>';
 
@@ -20,7 +21,7 @@ interface Blow { ux: number; uy: number; stop: number; amount: number }
 const coarse = () => globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
 
 /** Dano e ganho de vida: o golpe ou o projétil até o alvo, o número que sobe e o retrato que acende. */
-export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof createSurviveMotion>) {
+export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof createSurviveMotion>, commander: ReturnType<typeof createCommanderMotion>) {
   const { root, layer, later, animate, effect, remove, pulse, floatNumber, hiddenCards, recentStack, gpu } = kit;
   function damageTarget(event: PresentationEvent) {
     const player = event.targets?.players?.[0];
@@ -73,7 +74,8 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
       animate(burst, [{ opacity: .95, scale: '.3' }, { opacity: .8, scale: '1', offset: .45 }, { opacity: 0, scale: '1.35' }], 520);
       later(() => remove(burst), 560);
     }
-    floatNumber(at, look.amount, `${look.tone}${look.heavy ? ' heavy' : ''}${look.lethal ? ' lethal' : ''}`, look.badges, look.deathtouch ? SKULL : '', !!blow);
+    const crowned = !!event.commander && target.player !== undefined && look.tone !== 'shield';
+    floatNumber(at, look.amount, `${look.tone}${look.heavy ? ' heavy' : ''}${look.lethal ? ' lethal' : ''}${crowned ? ' commander' : ''}`, look.badges, look.deathtouch ? SKULL : '', !!blow);
     const card = target.player === undefined ? target.el : null;
     if (look.lethal && card && event.indestructible) {
       // Golpe letal numa indestrutível: ela racha com o golpe e as rachaduras se fecham em dourado.
@@ -92,7 +94,8 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
       const a = Math.min(6, 1.5 + (event.delta ?? 0) * .6);
       animate(target.el, [{ translate: '0 0' }, { translate: `${-a}px 0`, offset: .25 }, { translate: `${(a * .6).toFixed(1)}px 0`, offset: .55 }, { translate: '0 0' }], 260);
     }
-    if (event.commander && target.player !== undefined) pulse(root.querySelector<HTMLElement>(`[data-zone="damage"][data-gy="${target.player}"]`));
+    // Golpe de comandante: a coroa se estampa no retrato e voa até o contador "Dano X/21" (motionCommander.ts).
+    if (crowned) commander.hit(event, center(target.el?.querySelector('.portrait')) ?? at);
     if (blow || calm) return;
     const arena = look.heavy ? root.querySelector<HTMLElement>('.arena') : null;
     if (arena) animate(arena, [{ translate: '0 0' }, { translate: '-5px 2px', offset: .2 }, { translate: '4px -2px', offset: .45 }, { translate: '-2px 1px', offset: .7 }, { translate: '0 0' }], 320);
@@ -133,6 +136,9 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
     const source = damageSource(event);
     const from = source.at, to = target.at;
     const dx = to.cx - from.cx, dy = to.cy - from.cy;
+    // Golpe de comandante: o contador volta para o número de antes até a coroa chegar nele.
+    const crowned = !!event.commander && target.player !== undefined && !event.prevented;
+    if (crowned) commander.prime(event);
     if (reduced() || look.motion === 'self' || Math.hypot(dx, dy) < 8) { impact(event, look, target); return; }
     if (look.motion === 'strike' && source.el && html) {
       // Luta (e atacante contra bloqueador que revida): as duas avançam juntas e se chocam no meio, em vez de chegar até o alvo.
@@ -141,7 +147,8 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
       // carta de verdade some enquanto isso.
       const tapped = !!source.el.closest('.tapped');
       const box = { ...from, w: tapped ? from.h : from.w, h: tapped ? from.w : from.h };
-      const ghost = effect('presentation-piece strike-ghost', box, html);
+      // O comandante avança com aura e rastro dourados, e os grãos dourados se juntam nele no impulso.
+      const ghost = effect(`presentation-piece strike-ghost${crowned ? ' commander' : ''}`, box, html);
       const turn = tapped ? '90deg' : '0deg';
       const dist = Math.hypot(dx, dy), ux = dx / dist, uy = dy / dist;
       const reach = event.fight || event.clash ? .42 : Math.max(0, 1 - (Math.min(to.w, to.h) * .55 + Math.min(from.w, from.h) * .4) / dist);
@@ -152,7 +159,8 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
       const along = (k: number) => `${(-ux * recoil + (dx * reach + ux * recoil) * k).toFixed(1)}px ${(-uy * recoil + (dy * reach + uy * recoil) * k).toFixed(1)}px`;
       source.el.style.opacity = '0'; hiddenCards.add(source.el);
       // Na camada GPU, riscos de velocidade acompanham o disparo até o ponto do choque.
-      gpu.play('streak', { from, to: { ...from, cx: from.cx + dx * reach, cy: from.cy + dy * reach }, duration: dash, delay: wind });
+      if (crowned) gpu.play('glint', { at: from, color: COMMANDER_GOLD });
+      gpu.play('streak', { from, to: { ...from, cx: from.cx + dx * reach, cy: from.cy + dy * reach }, duration: dash, delay: wind, ...(crowned ? { color: COMMANDER_GOLD } : {}) });
       animate(ghost, [
         { translate: '0 0', scale: '1', rotate: turn, easing: 'ease-out' },
         { translate: along(0), scale: '.95', rotate: turn, offset: wind / travel, easing: 'cubic-bezier(.7, 0, 1, .6)' },
@@ -161,7 +169,7 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
         { translate: '0 0', scale: '1', rotate: turn }], travel, 'linear');
       // O rastro: duas cópias apagando no caminho do disparo (só com os efeitos completos).
       if (!reduced() && effectsTier() < 1) for (const k of [.15, .45]) later(() => {
-        const trail = effect('presentation-piece strike-trail', box, html);
+        const trail = effect(`presentation-piece strike-trail${crowned ? ' commander' : ''}`, box, html);
         animate(trail, [{ translate: along(k), rotate: turn, scale: '1', opacity: .4 }, { translate: along(k), rotate: turn, scale: '1', opacity: 0 }], 170, 'linear');
         later(() => remove(trail), 190);
       }, wind + dash * (k + .35));

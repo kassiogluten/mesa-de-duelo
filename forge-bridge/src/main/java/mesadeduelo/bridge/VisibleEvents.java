@@ -462,7 +462,8 @@ final class VisibleEvents {
             JsonArray players = new JsonArray();
             for (var entry : state.getAsJsonArray("players")) {
                 JsonObject player = entry.getAsJsonObject(), visible = new JsonObject();
-                for (String key : java.util.List.of("id", "life", "battlefield", "handCount", "library")) visible.add(key, player.get(key));
+                // O dano de comandante vai junto: o "Dano X/21" mostra o de cada passo, e não o do fim do combate.
+                for (String key : java.util.List.of("id", "life", "battlefield", "handCount", "library", "commanderDamage")) if (player.has(key)) visible.add(key, player.get(key));
                 players.add(visible);
             }
             frame.add("players", players); return frame;

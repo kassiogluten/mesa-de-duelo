@@ -18,7 +18,7 @@ import forge.game.spellability.SpellAbility;
 /**
  * O que a mesa precisa para desenhar um dano sem ler o texto do Forge: se é combate e em qual etapa, as palavras-chave
  * da fonte que mudam o golpe (atropelar, golpe duplo, toque mortífero, vínculo com a vida), dano a si mesmo, de
- * comandante e se o golpe é letal. O Forge só diz se é combate no dano a jogador; nas cartas, a etapa e o combate
+ * comandante (com o total daquele comandante no jogador) e se o golpe é letal. O Forge só diz se é combate no dano a jogador; nas cartas, a etapa e o combate
  * vêm do estado do jogo no momento do evento (o dano de combate nunca é causado com algo resolvendo na pilha).
  */
 final class DamageDetails {
@@ -35,7 +35,13 @@ final class DamageDetails {
         Combat fight = game == null ? null : game.getCombat();
         if (attacker != null && fight != null && p != null && fight.isBlocked(attacker) && fight.isAttacking(attacker, p) && has(source, Keyword.TRAMPLE)) e.addProperty("trample", true);
         if (infect) e.addProperty("infect", true);
-        if (combat && source != null && source.isCommander() && game != null && game.getRules().hasAppliedVariant(forge.game.GameType.Commander)) e.addProperty("commander", true);
+        if (combat && source != null && source.isCommander() && game != null && game.getRules().hasAppliedVariant(forge.game.GameType.Commander)) {
+            e.addProperty("commander", true);
+            // O total que este comandante já causou ao jogador, com este golpe (o Forge soma antes de avisar): a mesa
+            // conta o "Dano X/21" de antes para o de agora. Comandante fundido (mutate) conta pela carta de verdade.
+            Card real = attacker == null ? null : attacker.getRealCommander();
+            if (real != null && p != null) { e.addProperty("commanderId", real.getId()); e.addProperty("commanderTotal", p.getCommanderDamage(real)); }
+        }
         if (source != null && source.getController() != null && source.getController().getId() == target.getId()) e.addProperty("self", true);
         if (p != null && !infect) {
             int loss = pendingLoss.merge(p.getId(), amount, Integer::sum);

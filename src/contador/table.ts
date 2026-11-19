@@ -1,5 +1,5 @@
-// A mesa do Contador de vida: toques nos painéis (tocar soma 1, segurar soma 10), o dano de comandante, os golpes grandes na vida, os dados no meio da mesa, o sorteio de quem começa e a tela acesa.
-import { GIRO, LETAL_COMANDANTE, derrota, jogadorDe, disposicao, golpeGrande, mudarComandante, mudarVida, rolar, sortearInicio, type Entrada, type Partida } from './state';
+// A mesa do Contador de vida: toques nos painéis (tocar soma 1, segurar soma 10), o dano de comandante (com a coroa que se estampa no quadro), os golpes grandes na vida, os dados no meio da mesa, o sorteio de quem começa e a tela acesa.
+import { GIRO, LETAL_COMANDANTE, PERTO_COMANDANTE, derrota, jogadorDe, disposicao, golpeGrande, mudarComandante, mudarVida, rolar, sortearInicio, type Entrada, type Partida } from './state';
 import { mostrarSorteio, type SorteioNaMesa } from './startingRoll';
 import { criarEfeitos3d } from './effects3d';
 import type { Point } from '../ui/motionKit';
@@ -59,6 +59,7 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
       const v = jog.cmd[o.dataset.cmdValor!] ?? 0;
       o.textContent = String(v);
       o.closest('.cv-cmd')?.classList.toggle('letal', v >= LETAL_COMANDANTE);
+      o.closest('.cv-cmd')?.classList.toggle('perto', v >= PERTO_COMANDANTE && v < LETAL_COMANDANTE);
     });
     return delta ? mostrarDelta(j, delta) : 0;
   };
@@ -98,14 +99,36 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
     const antes = jogadorDe(p, j).vida;
     const origem = botao.dataset.origem;
     const foraAntes = p.jogadores.map((_, i) => !!derrota(p, i));
+    const cmdAntes = origem ? jogadorDe(p, j).cmd[origem] ?? 0 : 0;
     if (origem) mudarComandante(p, j, origem, sinal * passo);
     else mudarVida(p, j, sinal * passo);
     const golpe = atualizar(j, jogadorDe(p, j).vida - antes);
     salvar();
+    if (origem) golpeDeComandante(botao, cmdAntes, jogadorDe(p, j).cmd[origem] ?? 0);
     fimDeJogo(foraAntes);
     // Quem acabou de sair já racha: o golpe grande fica para quem continua na partida.
     if (golpe > 0 || (golpe < 0 && !derrota(p, j))) marcarGolpe(j, golpe);
   };
+
+  /**
+   * Dano de comandante somado: o número do quadro salta em dourado e a coroa se estampa nele (e se parte em vermelho
+   * no toque que chega a 21). Tirar dano não tem efeito.
+   */
+  const golpeDeComandante = (botao: HTMLElement, antes: number, agora: number) => {
+    const quadro = botao.closest<HTMLElement>('.cv-cmd');
+    if (!quadro || agora <= antes) return;
+    const letal = agora >= LETAL_COMANDANTE && antes < LETAL_COMANDANTE;
+    quadro.classList.remove('sobe', 'sobe-letal'); void quadro.offsetWidth;
+    quadro.classList.add(letal ? 'sobe-letal' : 'sobe');
+    // Toques seguidos não empilham coroas: uma por quadro a cada 350 ms (a do 21 sempre sai).
+    const agoraMs = performance.now();
+    if (!letal && agoraMs - (ultimaCoroa.get(quadro) ?? -1e9) < 350) return;
+    ultimaCoroa.set(quadro, agoraMs);
+    // Menor e acima do número, sobre o nome: o número que acabou de mudar continua à vista.
+    const r = quadro.getBoundingClientRect(), lado = Math.min(r.width, r.height) * .42;
+    efeitos.coroa({ cx: r.left + r.width / 2, cy: r.top + r.height * .19, w: lado, h: lado }, letal);
+  };
+  const ultimaCoroa = new WeakMap<HTMLElement, number>();
 
   /** O meio do painel, para os efeitos de quem sai e de quem vence. */
   const pontoDe = (j: number): Point => {

@@ -119,8 +119,14 @@ export function createMotionKit(root: HTMLElement) {
   }
   // Quantas vezes a camada foi limpa: quem escondeu uma carta por conta própria sabe que ela já voltou.
   let clears = 0;
+  // O que um efeito mudou na mesa e precisa desfazer se a apresentação for interrompida (o contador que rola).
+  const undo = new Set<() => void>();
+  /** Registra como desfazer uma mudança na mesa; devolve o que tira o registro (quando o próprio efeito desfez). */
+  function onClear(fn: () => void) { undo.add(fn); return () => { undo.delete(fn); }; }
   function clear() {
     clears++;
+    for (const fn of undo) fn();
+    undo.clear();
     gpu.clear();
     for (const animation of animations) animation.cancel();
     animations.clear();
@@ -269,7 +275,7 @@ export function createMotionKit(root: HTMLElement) {
     animate(el, fallback, duration, 'ease-out');
   }
   return {
-    root, state, layer, later, stage, gpu, toneOf, stackPile, recentStack, callouts, hiddenCards, clears: () => clears,
+    root, state, layer, later, stage, gpu, toneOf, stackPile, recentStack, callouts, hiddenCards, clears: () => clears, onClear,
     animate, effect, track, clear, remove, pulse, floatNumber, fly, absorb, land, ripple, shatter, warpRift, flare,
   };
 }

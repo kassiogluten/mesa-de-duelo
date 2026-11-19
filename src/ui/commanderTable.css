@@ -11,6 +11,21 @@
 .commander-damage { padding: 6px 0; border: 0; background: transparent; color: var(--muted); font: 500 12px var(--body); cursor: pointer; white-space: nowrap; }
 .commander-damage b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .commander-damage.danger b { color: #ff9a81; }
+/* O contador do dano de comandante: de 15 em diante, um brilho vermelho pulsa devagar atrás dele; quando a coroa do
+   golpe de comandante chega (motionCommander.ts), ele acende em dourado (em vermelho no golpe que chega a 21). */
+.commander-damage { position: relative; isolation: isolate; }
+.commander-damage::before, .commander-damage::after { content: ''; position: absolute; inset: -2px -8px; z-index: -1; border-radius: 999px; pointer-events: none; opacity: 0; }
+.commander-damage.danger::before { background: radial-gradient(closest-side, #ff5a3f88, #ff5a3f22 70%, transparent); opacity: .55; }
+.commander-damage.commander-hit::after { background: radial-gradient(closest-side, #f2c14ccc, #f2c14c33 70%, transparent); animation: commander-hit .9s ease-out forwards; }
+.commander-damage.commander-lethal::after { background: radial-gradient(closest-side, #ff4d3dd9, #ff4d3d40 70%, transparent); }
+.commander-damage.commander-hit b { color: #ffd66b; }
+.commander-damage.commander-lethal b { color: #ff8a73; }
+@keyframes commander-hit { 0% { opacity: 1; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.5); } }
+@keyframes commander-danger { from { opacity: .25; } to { opacity: .9; } }
+@media (prefers-reduced-motion: no-preference) {
+  .commander-damage.danger::before { animation: commander-danger 1.8s ease-in-out infinite alternate; }
+}
+[data-fx-calm] .commander-damage.danger::before { animation: none; }
 .duel-command .command-card { width: 44px; --fw: 44px; }
 .duel-command { align-items: flex-start; }
 .commander-ledger ul { list-style: none; padding: 0; margin: 20px 0; max-height: 50vh; overflow: auto; }

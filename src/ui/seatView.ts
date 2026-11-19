@@ -8,6 +8,7 @@ import { emblemLabel, emblemSource, label } from './cardFaces';
 import { proliferateBoardClass } from './proliferate';
 import { forecastBadgeHTML, forecastText } from './combatForecast';
 import { canPlayCommander } from './commanderTable';
+import { COMMANDER_LIMIT, COMMANDER_NEAR, countsAttr } from './commanderCounter';
 import { dungeonBadgesHTML, dungeonText, withDungeonBadges } from './dungeon';
 import { awaitingDecision } from './awaitingDecision';
 import { playerCountersHTML, playerCountersText as countersText } from './playerCounters';
@@ -156,9 +157,11 @@ export function commandCards(v: SeatView, s: FState, p: FPlayer) {
 }
 export function damageButton(p: FPlayer) {
   // Só aparece depois do primeiro dano de comandante: "Dano 0/21" não diz nada.
+  // O dano de cada comandante vai junto, para o golpe de comandante rolar o número de antes para o de agora
+  // (motionCommander.ts); de 15 em diante, o contador fica em alerta.
   const highest = Math.max(0, ...(p.commanderDamage ?? []).map(item => item.damage));
   if (highest <= 0) return '';
-  return `<button class="commander-damage${highest >= 15 ? ' danger' : ''}" data-gy="${p.id}" data-zone="damage" aria-label="Ver dano de comandante recebido por ${esc(p.name)}">Dano <b>${highest}/21</b></button>`;
+  return `<button class="commander-damage${highest >= COMMANDER_NEAR ? ' danger' : ''}" data-gy="${p.id}" data-zone="damage" data-commander-damage="${countsAttr(p.commanderDamage ?? [])}" aria-label="Ver dano de comandante recebido por ${esc(p.name)}">Dano <b>${highest}/${COMMANDER_LIMIT}</b></button>`;
 }
 export function seatRow(id: string, kind: 'lands' | 'creatures', name: string, content: string) {
   const zone = kind === 'lands' ? 'terrenos' : 'criaturas';

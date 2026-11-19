@@ -4,6 +4,7 @@ import { gpuClock, gpuProbe, TIER1_CUTS } from '../../src/ui/gpu/gpuSupport';
 import { latestGpuPort } from '../../src/ui/gpu/gpuPort';
 import { center } from '../../src/ui/motionKit';
 import { createLabPlays, playButtons } from './effectsLabPlays';
+import { markNewButtons, NEW_BUTTON_CSS } from './effectsLabNew';
 
 /*
  * Laboratório de efeitos (item 18 do roadmap): a mesa de verdade, sem a ponte, para montar o campo e disparar os
@@ -166,7 +167,7 @@ function table() {
 
   function frame() {
     return structuredClone({ turn: state.turn, phase: state.phase, activePlayer: state.activePlayer, stack: state.stack, combat: state.combat,
-      players: players.map(p => ({ id: p.id, life: p.life, battlefield: p.battlefield, handCount: p.handCount, library: p.library })) });
+      players: players.map(p => ({ id: p.id, life: p.life, battlefield: p.battlefield, handCount: p.handCount, library: p.library, ...(p.commanderDamage ? { commanderDamage: p.commanderDamage } : {}) })) });
   }
   function emit(type: string, extra: Record<string, unknown>) { batch.push({ seq: ++seq, stateVersion: seq, type, ...extra, frame: frame() }); }
   function flush() {
@@ -211,10 +212,19 @@ function table() {
       else lethal = p.life - amount <= 0;
     }
     const combat = !!flags.combat;
+    // Como a ponte: o golpe de comandante num jogador soma no dano daquele comandante e diz o total, já com ele.
+    let crowned: Record<string, unknown> = {};
+    if (flags.commander && combat && isPlayer(target) && !infect) {
+      const p = player(target.player), list = p.commanderDamage ??= [];
+      let row = list.find((d: any) => d.commanderId === source.id);
+      if (!row) list.push(row = { commanderId: source.id, damage: 0 });
+      row.damage += amount;
+      crowned = { commanderId: source.id, commanderTotal: row.damage };
+    }
     emit('damage', { card: structuredClone(source), sourceId: source.id, actor: source.controller, delta: -amount, targets: targetsOf(target), combat,
       ...(combat ? { step: flags.step ?? 'regular' } : {}), ...(has(source, 'DOUBLE_STRIKE') ? { doubleStrike: true } : {}), ...(deathtouch ? { deathtouch: true } : {}),
       ...(lifelink ? { lifelink: true } : {}), ...(infect && isPlayer(target) ? { infect: true } : {}), ...(wither && t ? { wither: true } : {}),
-      ...(t?.planeswalker ? { loyalty: true } : {}), ...(lethal ? { lethal: true } : {}), ...(aguenta ? { indestructible: true } : {}), ...flags });
+      ...(t?.planeswalker ? { loyalty: true } : {}), ...(lethal ? { lethal: true } : {}), ...(aguenta ? { indestructible: true } : {}), ...flags, ...crowned });
     if (lifelink) lifeChange(source.controller, amount);
     if (isPlayer(target) && !infect) pendingLoss.set(target.player, (pendingLoss.get(target.player) ?? 0) + amount);
     if (lethal && t && !aguenta) dying.add(t);
@@ -932,6 +942,19 @@ function table() {
           port.play('shockwave', { at: selected, color: c.color || '#f2b54c', reach: Math.max(table.width, table.height) * .99 });
           return 'Ultimate: onda de luz na cor do planeswalker atravessando a mesa.';
         }
+        case 'crown': case 'crown-lethal': {
+          const portrait = center(document.querySelector('#fOppAvatar .portrait') ?? document.querySelector('#fOppAvatar'));
+          if (!portrait) return 'Não achei o retrato do oponente.';
+          port.play('crownStamp', { at: portrait, size: Math.max(54, Math.min(110, portrait.w * 1.15)), lethal: c.kind === 'crown-lethal' });
+          return c.kind === 'crown' ? 'Golpe de comandante: a coroa dourada cai sobre o retrato do oponente, se estampa com um anel e faíscas, e sobe apagando.' : 'Golpe de comandante que chega a 21: a coroa se estampa, estremece, fica vermelha e se parte ao meio, com estilhaços vermelhos.';
+        }
+        case 'crown-fly': {
+          const portrait = center(document.querySelector('#fOppAvatar .portrait') ?? document.querySelector('#fOppAvatar'));
+          const counter = center(document.querySelector('.commander-damage b')) ?? center(document.querySelector('#fOppPiles')) ?? center(document.querySelector('#fOppHand'));
+          if (!portrait || !counter) return 'Não achei o retrato ou o contador.';
+          port.play('crownFly', { from: portrait, to: counter, duration: 520 });
+          return 'A coroa pequena sai do retrato e voa em arco até o contador "Dano X/21" (ou, sem ele, até os montes do oponente).';
+        }
         case 'mend-gold': if (!selected) return needSelected; port.play('mend', { at: selected, how: 'indestructible' }); return 'Indestrutível: a carta racha a partir do meio e as rachaduras se fecham em luz dourada, das pontas para dentro.';
         case 'mend-green': if (!selected) return needSelected; port.play('mend', { at: selected, how: 'regenerated' }); return 'Regenerou: as rachaduras se fecham em verde e grãos de luz sobem da carta.';
         case 'slash': case 'slash-2': {
@@ -1029,7 +1052,7 @@ function table() {
 // ---------------------------------------------------------------- painel
 /** Os efeitos da camada pelo nome que o jogador entende (a lista do que cada degrau desliga). */
 const EFFECT_LABELS: Record<string, string> = {
-  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo', ward: 'cúpula do ward', wardEnd: 'desfecho do ward', mend: 'rachaduras que se fecham', slash: 'corte do primeiro golpe', extraTurn: 'relógio do turno extra', echo: 'eco das cópias', empower: 'energia do reforço e do X',
+  burst: 'faíscas do dano', bolt: 'projétil com rastro', ripple: 'onda do pouso', shatter: 'estilhaços da destruída', shockwave: 'onda do ultimate', sweep: 'onda do limpa campo', ward: 'cúpula do ward', wardEnd: 'desfecho do ward', mend: 'rachaduras que se fecham', slash: 'corte do primeiro golpe', crownStamp: 'coroa do golpe de comandante', crownFly: 'coroa voando ao contador', extraTurn: 'relógio do turno extra', echo: 'eco das cópias', empower: 'energia do reforço e do X',
   vortex: 'portal do exílio', gather: 'volta do blink', ash: 'cinzas do sacrifício', motes: 'grãos da habilidade', puff: 'fumaça do ninja', dust: 'poeira ao virar',
   charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
   mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
@@ -1069,7 +1092,7 @@ function panel() {
       body { flex-direction: column; }
       #stage { order: -1; min-height: 0; }
       #lab { width: auto; height: 45dvh; border-right: 0; border-top: 1px solid #f2b54c44; }
-    }`;
+    }${NEW_BUTTON_CSS}`;
   document.head.append(css);
   const lab = document.createElement('aside'); lab.id = 'lab';
   const stage = document.createElement('div'); stage.id = 'stage';
@@ -1137,6 +1160,8 @@ function panel() {
     ${[['ward', 'Ward disparou'], ['ward-held', 'Ward segurou'], ['ward-paid', 'Ward pago']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Aguentar e cortar: as rachaduras na permanente selecionada; o corte no Alvo, vindo da Fonte:</p>
     ${[['mend-gold', 'Indestrutível'], ['mend-green', 'Regenerou'], ['slash', 'Primeiro golpe'], ['slash-2', 'Golpe duplo (2º)']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
+    <p>Golpe de comandante (a coroa no retrato do oponente e o voo até o "Dano X/21"; a jogada inteira está em Jogadas, Valor e Commander):</p>
+    ${[['crown', 'Coroa no retrato'], ['crown-lethal', 'Coroa partida (21)'], ['crown-fly', 'Coroa voando ao contador']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Mágicas (o relógio no meio da mesa; o eco e a energia, na pilha ou no meio da mesa):</p>
     ${[['extra-turn', 'Turno extra'], ['echo', 'Cópias (eco)'], ['empower', 'Reforço'], ['empower-x', 'X = 9']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
@@ -1162,6 +1187,8 @@ function panel() {
     <label class="chk" style="width:100%"><input type="checkbox" id="reduce"> Reduzir movimento (só nesta página)</label>
     <div>${[['desktop', 'Computador'], ['tablet', 'Tablet'], ['phone', 'Celular deitado']].map(([k, t]) => `<button data-s="${k}">${t}</button>`).join('')}</div>`;
 
+  // Os botões novos desta versão (ou da próxima) ganham o selo "novo" (effectsLabNew.ts).
+  markNewButtons(lab);
   const $ = <T extends HTMLElement>(id: string) => lab.querySelector<T>(`#${id}`)!;
   lab.querySelector('#toggles')!.innerHTML = [...KEYWORDS, ...STATES].map(([k, t]) => `<label class="chk"><input type="checkbox" data-t="${k}"> ${t}</label>`).join('');
   let board: any = { cards: [], players: [] };

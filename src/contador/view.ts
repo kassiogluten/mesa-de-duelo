@@ -2,7 +2,7 @@
 import { esc } from '../ui/cardtext';
 import { ICON_CLOSE, ICON_REFRESH } from '../ui/icons';
 import {
-  CORES, GIRO, LETAL_COMANDANTE, corPadrao, deltaVida, jogadorDe, mudancasDe, MAX_JOGADORES, MIN_JOGADORES, VIDAS, comandantesDe, derrota, donoDe, nomeComandante, nomeDe,
+  CORES, GIRO, LETAL_COMANDANTE, PERTO_COMANDANTE, corPadrao, deltaVida, jogadorDe, mudancasDe, MAX_JOGADORES, MIN_JOGADORES, VIDAS, comandantesDe, derrota, donoDe, nomeComandante, nomeDe,
   textoEntrada, vistaDe, type Config, type Disposicao, type Mudanca, type Partida,
 } from './state';
 
@@ -61,7 +61,7 @@ export const proximaCor = (atual: string, usadas: string[]) => {
 export function marcasHTML(p: Partida, j: number) {
   const cmd = jogadorDe(p, j).cmd;
   return Object.entries(cmd).filter(([, v]) => v > 0).map(([o, v]) =>
-    `<span class="cv-marca${v >= LETAL_COMANDANTE ? ' letal' : ''}" style="--cor:${jogadorDe(p, donoDe(o)).cor}" title="${esc(nomeComandante(p, o))}">${v}</span>`).join('');
+    `<span class="cv-marca${v >= LETAL_COMANDANTE ? ' letal' : v >= PERTO_COMANDANTE ? ' perto' : ''}" style="--cor:${jogadorDe(p, donoDe(o)).cor}" title="${esc(nomeComandante(p, o))}">${v}</span>`).join('');
 }
 
 export function foraTexto(p: Partida, j: number) {
@@ -79,7 +79,7 @@ function cmdHTML(p: Partida, d: Disposicao, j: number) {
   const vista = vistaDe(d, lado);
   const quadro = (origem: string) => {
     const dono = donoDe(origem), valor = jogadorDe(p, j).cmd[origem] ?? 0, quem = esc(nomeComandante(p, origem));
-    return `<div class="cv-cmd${valor >= LETAL_COMANDANTE ? ' letal' : ''}" style="--cor:${jogadorDe(p, dono).cor}">
+    return `<div class="cv-cmd${valor >= LETAL_COMANDANTE ? ' letal' : valor >= PERTO_COMANDANTE ? ' perto' : ''}" style="--cor:${jogadorDe(p, dono).cor}">
       <span class="cv-cmd-nome">${quem}</span>
       <output class="cv-cmd-valor" data-cmd-valor="${origem}">${valor}</output>
       <button type="button" class="cv-toque menos" data-acao="cmd-menos" data-origem="${origem}" aria-label="${nome}: tirar 1 do dano do comandante de ${quem}"><span>−</span></button>

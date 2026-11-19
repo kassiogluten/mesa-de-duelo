@@ -93,7 +93,8 @@ const EFFECTS = [
     ['dizzy', 'Estrelinhas do enjoo'], ['charge', 'Riscos do ataque'], ['beam', 'Feixe da habilidade'], ['trail-ember', 'Rastro de brasas'],
     ['glint', 'Redemoinho ao conjurar'], ['arrive', 'Anel de chegada'], ['streak', 'Risco do golpe'], ['shockwave', 'Onda do ultimate'],
     ['ward', 'Cúpula do ward'], ['ward-held', 'Ward segurou'], ['ward-paid', 'Ward pago'],
-    ['mend-gold', 'Indestrutível'], ['mend-green', 'Regenerou'], ['slash', 'Primeiro golpe'], ['slash-2', 'Golpe duplo'], ['extra-turn', 'Turno extra'], ['echo', 'Cópias'], ['empower', 'Reforço'], ['empower-x', 'X = 9']]
+    ['mend-gold', 'Indestrutível'], ['mend-green', 'Regenerou'], ['slash', 'Primeiro golpe'], ['slash-2', 'Golpe duplo'], ['extra-turn', 'Turno extra'], ['echo', 'Cópias'], ['empower', 'Reforço'], ['empower-x', 'X = 9'],
+    ['crown', 'Coroa do golpe de comandante'], ['crown-lethal', 'Coroa partida (21)'], ['crown-fly', 'Coroa voando ao contador']]
     .map(([kind, label]) => [`gpu:${kind}`, 'gpu', `gpu:${kind}`, label]),
 ];
 

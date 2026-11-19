@@ -54,7 +54,7 @@ test('cada novidade pendente está completa e no formato que o publicar-versao e
       assert.ok(titles.has(s.item), `${folder}/cenarios.json: "${s.nome}" precisa de um item do novidade.md`);
       assert.equal(s.versao, undefined, `${folder}/cenarios.json: "${s.nome}" não leva versao (ela sai na publicação)`);
     }
-    const extra = (await readdir(new URL(`${folder}/`, dir))).filter(f => !['novidade.md', 'imagens.json', 'cenarios.json'].includes(f) && !used.has(f));
+    const extra = (await readdir(new URL(`${folder}/`, dir))).filter(f => !['novidade.md', 'imagens.json', 'cenarios.json', 'lab-efeitos.json'].includes(f) && !used.has(f));
     assert.deepEqual(extra, [], `${folder}/ tem arquivos que nenhum item usa`);
   }
 });

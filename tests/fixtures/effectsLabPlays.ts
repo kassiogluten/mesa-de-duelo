@@ -36,7 +36,7 @@ export const PLAY_BUTTONS: [group: string, plays: [key: string, label: string][]
   ['Limpa campo', [['wrath', 'Ira de Deus'], ['damnation', 'Danação'], ['pyroclasm', 'Piroclasmo'], ['evacuation', 'Evacuação'], ['eviction', 'Despejo impiedoso']]],
   ['Combate', [['combat', 'Ataque com bloqueios'], ['swing', 'Ataque do oponente'], ['lethal', 'Ataque letal']]],
   ['Cemitério e exílio', [['graveyard', 'Moer e reanimar'], ['blink', 'Blink com gatilho'], ['sacrifice', 'Sacrificar para comprar'], ['flashback', 'Conjurar do cemitério'], ['removal', 'Exilar uma ameaça']]],
-  ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['tutor', 'Tutor']]],
+  ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['commanderStrike', 'Golpe de comandante'], ['commanderLethal', 'Comandante chega a 21'], ['tutor', 'Tutor']]],
 ];
 
 export function createLabPlays(lab: LabApi) {
@@ -51,7 +51,8 @@ export function createLabPlays(lab: LabApi) {
   /** Mesa limpa para a jogada: campos com as permanentes pedidas, cemitérios e exílios vazios, vida 20 e a sua mão cheia. */
   function stage(mine: (string | (() => any))[], theirs: (string | (() => any))[], life: [number, number] = [20, 20]) {
     const s = lab.state();
-    for (const p of [me(), opp()]) { p.battlefield = []; p.graveyard = []; p.exile = []; p.pool = {}; p.counters = {}; p.preventDamage = undefined; }
+    for (const p of [me(), opp()]) { p.battlefield = []; p.graveyard = []; p.exile = []; p.pool = {}; p.counters = {}; p.preventDamage = undefined; p.commanderDamage = undefined; }
+    opp().commanders = undefined; opp().commandZone = undefined;
     me().life = life[0]; opp().life = life[1];
     Object.assign(s, { stack: [], combat: [], phase: 'MAIN1', activePlayer: ME, gameOver: false, winner: undefined });
     s.input = { ...s.input, paying: false, priority: false, ok: { label: 'OK', enabled: false }, cancel: { label: '', enabled: false } };
@@ -111,6 +112,24 @@ export function createLabPlays(lab: LabApi) {
 
   // Cada jogada guarda as cartas que usa entre um passo e outro.
   let held: Record<string, any> = {};
+  /**
+   * O seu comandante (Prossh, 5/5) ataca o oponente, que já levou `before` de dano dele e tem o próprio comandante na
+   * zona de comando (é ali, no duelo, que fica o "Dano X/21" dele).
+   */
+  function commanderSwing(before: number): [number, () => void][] {
+    return [
+      [0, () => {
+        stage(['land', 'land', 'land'], ['small', 'land'], [40, 40 - before]);
+        held.cmd = put('me', { ...lab.creature('Prossh, Skyraider of Kher', 5, 5, '{3}{B}{R}{G}', ['FLYING']), typeLine: 'Legendary Creature — Dragon', commander: true });
+        const theirs = { id: lab.newId(), controller: OPP, ...lab.creature('Isamaru, Hound of Konda', 2, 2, '{W}'), typeLine: 'Legendary Creature — Dog', commander: true };
+        opp().commanders = [{ id: theirs.id, name: theirs.name, tax: 0, casts: 0 }]; opp().commandZone = [theirs];
+        opp().commanderDamage = [{ commanderId: held.cmd.id, damage: before }, { commanderId: theirs.id, damage: 0 }];
+      }],
+      [900, () => { attack([held.cmd]); }],
+      [1700, () => { lab.state().phase = 'COMBAT_DAMAGE'; lab.damage(held.cmd, { player: OPP }, 5, { combat: true, step: 'regular', commander: true }); lab.settle(); }],
+      [2400, () => { endCombat(); }],
+    ];
+  }
   /**
    * Limpa campo no campo cheio: a mágica de `spell()` vai à pilha e, ao resolver, `hit` tira cada criatura (com o
    * número da pilha, como a ponte manda).
@@ -567,6 +586,14 @@ export function createLabPlays(lab: LabApi) {
         [900, () => { lab.run({ cmd: 'extra', kind: 'commander', side: 'me' }); }],
         [3800, () => { lab.run({ cmd: 'extra', kind: 'commander', side: 'me' }); }],
       ],
+    },
+    commanderStrike: {
+      note: 'Golpe de comandante: o seu Prossh ataca sem bloqueio, avança com aura dourada e a coroa se estampa no retrato do oponente; uma coroa pequena voa até o "Dano" dele, que rola de 8/21 para 13/21.',
+      steps: commanderSwing(8),
+    },
+    commanderLethal: {
+      note: 'Comandante chega a 21: com 16 de dano do seu Prossh, o oponente leva o golpe que chega a 21; a coroa estremece, fica vermelha e se parte, e o "Dano" acende em vermelho.',
+      steps: commanderSwing(16),
     },
     tutor: {
       note: 'Tutor: o Demonic Tutor resolve, a carta buscada sai dourada do grimório e ele embaralha.',

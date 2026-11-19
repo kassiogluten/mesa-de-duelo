@@ -9,6 +9,8 @@ export const MIN_JOGADORES = 2;
 export const MAX_JOGADORES = 6;
 /** Dano de um mesmo comandante que tira o jogador da partida. */
 export const LETAL_COMANDANTE = 21;
+/** De quanto dano de um mesmo comandante em diante o quadro e a marca ficam em alerta (como o "Dano X/21" da partida). */
+export const PERTO_COMANDANTE = 15;
 /** Toques seguidos no mesmo jogador dentro deste tempo viram uma linha só no histórico. */
 export const JUNTAR_MS = 2500;
 const MAX_HISTORICO = 300;

@@ -75,6 +75,7 @@ events[].frame.players[].battlefield[].text
 events[].frame.players[].battlefield[].token
 events[].frame.players[].battlefield[].toughness
 events[].frame.players[].battlefield[].typeLine
+events[].frame.players[].commanderDamage
 events[].frame.players[].handCount
 events[].frame.players[].id
 events[].frame.players[].library

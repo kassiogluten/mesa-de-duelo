@@ -1,4 +1,22 @@
 {
+  "0.222.0": {
+    "Golpe de comandante": [
+      { "img": "0.222.0/golpe-coroa.webp", "legenda": "O golpe do comandante chega: a coroa dourada se estampa no retrato do oponente, com o anel de luz, e o −5 sobe em dourado com o selo Comandante." },
+      { "img": "0.222.0/golpe-contador.webp", "legenda": "A coroa pequena pousou no contador: o Dano contou de 8 até 13/21 e o +5 aparece logo abaixo." },
+      { "img": "0.222.0/golpe-21.webp", "legenda": "O golpe que leva o dano do comandante a 21: a coroa fica vermelha e se parte ao meio sobre o retrato, com estilhaços vermelhos." }
+    ],
+    "Coroa no dano de comandante do Contador de vida": [
+      { "img": "0.222.0/contador-coroa.webp", "legenda": "Um toque no + do dano de comandante: a coroa dourada se estampa sobre o quadro e o número salta." },
+      { "img": "0.222.0/contador-perto.webp", "legenda": "Com 15 de dano do mesmo comandante, o quadro fica com a borda vermelha e o número avermelhado." },
+      { "img": "0.222.0/contador-21.webp", "legenda": "O toque que chega a 21: a coroa fica vermelha e se parte, e o painel de quem saiu racha." }
+    ],
+    "Dano de comandante perto de 21": [
+      { "img": "0.222.0/alerta-15.webp", "legenda": "O Dano 16/21 com o brilho vermelho atrás do número, que pulsa devagar." }
+    ],
+    "\"Dano X/21\" na hora do golpe": [
+      { "img": "0.222.0/golpe-voo.webp", "legenda": "O golpe já chegou ao retrato e a coroa ainda voa até o contador, que continua em 8/21 até ela pousar." }
+    ]
+  },
   "0.221.0": {
     "Setas com gota que aponta para o alvo": [
       { "img": "0.221.0/setas-gota.webp", "legenda": "A seta dourada do bloqueio, com o escudo na gota apontando para a atacante, e a seta vermelha de uma mágica do oponente, com a mira apontando para a sua criatura." }

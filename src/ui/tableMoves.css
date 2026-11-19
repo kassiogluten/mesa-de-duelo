@@ -111,3 +111,14 @@
 /* Mudança de fase: o aviso que sobe da permanente. */
 .damage-number.phase { color: var(--azul-9fd3ff, #9fd3ff); }
 .damage-number.phase > b { font-size: 18px; letter-spacing: .02em; }
+
+/* Golpe de comandante (motionCommander.ts): o comandante avança com aura e rastro dourados, o número sobe em dourado,
+   e sem a camada GPU a coroa do selo se estampa no retrato e voa até o contador "Dano X/21". */
+.strike-ghost.commander > .face { box-shadow: 0 16px 34px #000a, 0 0 0 2px #f2c14c, 0 0 18px 5px #f2c14c99; }
+.strike-trail.commander > .face { filter: sepia(1) hue-rotate(8deg) saturate(2.6) brightness(1.3); }
+.damage-number.commander { color: #ffd66b; }
+.crown-stamp, .crown-fly { position: fixed; z-index: 36; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; }
+.crown-stamp > svg, .crown-fly > svg { width: 100%; height: 100%; fill: #f2c14c; filter: drop-shadow(0 0 6px #f2c14c) drop-shadow(0 2px 2px #0009); }
+.crown-stamp.lethal > svg, .crown-fly.lethal > svg { fill: #ff6a55; filter: drop-shadow(0 0 8px #ff4d3d) drop-shadow(0 2px 2px #0009); }
+.commander-plus { position: fixed; z-index: 36; pointer-events: none; transform: translate(-50%, 0); width: max-content !important; height: auto !important; color: #ffd66b; font: 800 16px/1 var(--display); font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px var(--bg-deep), 0 0 8px #000a; opacity: 0; }
+.commander-plus.lethal { color: #ff8a73; }
