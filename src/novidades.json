@@ -1,4 +1,9 @@
 {
+  "0.223.0": {
+    "Animações no campo nas Opções": [
+      { "img": "0.223.0/animacoes-no-campo.webp", "legenda": "A lista Animações no campo aberta em Opções → Aparência, com Voar desligado e o resumo mostrando 10 de 12 ligadas." }
+    ]
+  },
   "0.222.0": {
     "Golpe de comandante": [
       { "img": "0.222.0/golpe-coroa.webp", "legenda": "O golpe do comandante chega: a coroa dourada se estampa no retrato do oponente, com o anel de luz, e o −5 sobe em dourado com o selo Comandante." },

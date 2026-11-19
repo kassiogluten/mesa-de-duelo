@@ -1,0 +1,17 @@
+/* Animações em loop desligadas nas Opções (loopEffects.ts põe `data-fx-off` na mesa): cada uma para à vista, como no
+   degrau 1 do Efeitos automático (permanentEffects.css, `data-fx-calm`). O que só existe em movimento (vento do voar,
+   seiva do vínculo com a vida, runas do ward, luz da seta) some; o resto fica no desenho parado. O `.forge` no meio
+   deixa cada regra mais forte que a original, seja qual for a ordem dos arquivos. */
+[data-fx-off~="flying"] .forge .slot.has-flying, [data-fx-off~="flying"] .forge .slot.has-flying::before,
+[data-fx-off~="flying"] .forge .slot.has-flying > .fly-wind,
+[data-fx-off~="hexproof"] .forge .bfc > .fx-glow.hexproof,
+[data-fx-off~="lifelink"] .forge .bfc > .fx-glow.lifelink > i,
+[data-fx-off~="ward"] .forge .bfc > .fx-frame.ward::before,
+[data-fx-off~="base"] .forge .bfc > :is(.fx-base.deathtouch, .fx-base.haste),
+[data-fx-off~="crosshair"] .forge .bfc > .fx-crosshair,
+[data-fx-off~="phased"] .forge .bfc.fx-phased > .face,
+[data-fx-off~="sick"] .forge .bfc.fx-sick > .face .sick-red, [data-fx-off~="sick"] .forge .tag.zzz .dizzy,
+[data-fx-off~="warning"] .forge .player-counter.poison.danger::before, [data-fx-off~="warning"] .forge .life-forecast.lethal::before { animation: none; }
+/* O halo de alvo possível fica aceso, um pouco abaixo do máximo (como com "reduzir movimento"). */
+[data-fx-off~="targetable"] .forge .bfc.targetable::after, [data-fx-off~="targetable"] .forge .avatar.targetable .portrait::after { animation: none; opacity: .85; }
+[data-fx-off~="arrow"] .forge .target-arrows .arrow-pulse { display: none; }

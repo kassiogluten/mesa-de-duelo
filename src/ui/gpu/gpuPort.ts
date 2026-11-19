@@ -5,6 +5,7 @@ import type { GpuEffectName, GpuEffectParams } from './gpuEffects';
 import { ambienceOff, effectCut, effectsLevel, effectsTier, forcedGpu, gpuDecision, hasWebGL2, setEffectsTier, type EffectsTier } from './gpuSupport';
 import { createGovernor } from './effectsGovernor';
 import { listenFrames, type FrameWindow } from '../frameClock';
+import { loopEffectOn } from '../loopEffects';
 
 type Runtime = { layer: GpuLayer; effects: typeof import('./gpuEffects'); ambience: Ambience | null };
 
@@ -27,6 +28,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
   let generation = 0;
   // A cena mais recente da mesa viva: quem chega depois (a camada carregou agora) já começa nela.
   let scene: AmbienceScene | null = null;
+  // A mesa viva fica parada no degrau 2 do automático ou desligada à mão (Opções → Animações no campo).
+  const ambienceHeld = () => effectsTier() >= 2 || !loopEffectOn('ambience');
   const coarse = () => globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
   const decision = () => gpuDecision({ level: effectsLevel(), tier: effectsTier(), forced: forcedGpu(), reduced: o.reduced(), webgl2: hasWebGL2(), lost: contextLost });
   // O regulador do automático rege com a mesa à vista, no automático e com WebGL2 (`governing`), mas só escuta os quadros
@@ -51,7 +54,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     const backdrop = ambienceOff() ? null : o.host().querySelector<HTMLElement>(':scope > .mat');
     const ambience = backdrop ? ambienceModule.createAmbience(backdrop, { coarse: coarse(), onLost() { if (runtime) runtime.ambience = null; } }) : null;
     if (ambience && scene) ambience.set(scene);
-    if (ambience && effectsTier() >= 2) ambience.pause(true);
+    if (ambience && ambienceHeld()) ambience.pause(true);
     runtime = { layer, effects, ambience };
     preloadTable();
     // As imagens do Scryfall chegam depois do desenho (e a mesa redesenha sozinha): de tempos em tempos, com o navegador
@@ -96,7 +99,7 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
     setEffectsTier(next);
     // Do degrau 1 em diante, as animações contínuas das permanentes param à vista (permanentEffects.css).
     root.toggleAttribute?.('data-fx-calm', next >= 1);
-    runtime?.ambience?.pause(next >= 2);
+    runtime?.ambience?.pause(ambienceHeld());
     if (decision().use === 'gpu') prepare(); else release();
   }
 
@@ -143,8 +146,8 @@ export function createGpuPort(root: HTMLElement, o: { host(): HTMLElement; reduc
 
   const port = {
     prepare, release, warm,
-    /** A opção "Efeitos" mudou. */
-    refresh() { govern(); if (decision().use === 'gpu') prepare(); else release(); },
+    /** A opção "Efeitos" (ou uma das animações no campo) mudou. */
+    refresh() { runtime?.ambience?.pause(ambienceHeld()); govern(); if (decision().use === 'gpu') prepare(); else release(); },
     /**
      * Desenha o efeito na camada GPU. Devolve false quando não desenhou (leves, reduzir movimento, camada ainda
      * carregando, contexto perdido): quem pediu faz o efeito em CSS.

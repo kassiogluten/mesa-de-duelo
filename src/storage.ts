@@ -60,6 +60,8 @@ export const KEYS = {
   playmat: 'mesa:playmat',
   /** Efeitos da mesa: 'auto' (o regulador alivia sozinho), 'full' (completos) ou 'light' (leves); 'auto-light', de antes do regulador, vale como 'auto'; sem a chave, automático. Opções da mesa. */
   effects: 'mesa:effects',
+  /** Animações em loop do campo desligadas à mão (JSON com os nomes de loopEffects.ts; sem a chave, todas ligadas). Opções da mesa. */
+  loopEffectsOff: 'mesa:loop-effects-off',
   /** Selo de quadros por segundo e ping no canto da mesa ('on'; sem a chave, desligado). Opções da mesa. */
   perfMeter: 'mesa:perf-meter',
   /** Como a mão aparece. Mesa. */

@@ -1,5 +1,5 @@
 // A janela Opções da partida (som, jogo, aparência) e as preferências que ela guarda neste aparelho: o ritmo das jogadas,
-// a janela de remoção, o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa, os efeitos (automático, completos ou leves) e o selo de FPS e ping. As seções abertas ficam como o jogador deixou.
+// a janela de remoção, o estilo das cartas, o tapete com a arte do deck, a arte própria da mesa, os efeitos (automático, completos ou leves), as animações em loop do campo e o selo de FPS e ping. As seções abertas ficam como o jogador deixou.
 import { EVENTS, KEYS } from '../storage';
 import type { CardStyle } from './face';
 import type { createGameAudio, SoundPack } from './audio';
@@ -16,6 +16,7 @@ import type { createPerfMeter } from './perfMeter';
 import { esc } from './cardtext';
 import type { FState } from '../forge/client';
 import { parseRemovalWindowMode } from './removalNotice';
+import { applyLoopEffects, LOOP_EFFECTS, loopEffectOn, loopEffectsOff, setLoopEffect, type LoopEffectId } from './loopEffects';
 
 const parseCardStyle = (v: string | null): CardStyle => (v === 'art' || v === 'arena' ? v : 'full');
 
@@ -73,7 +74,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     const settings = d.audio.settings, turnBuzz = d.turnBuzz;
     $('#fSoundSummary').textContent = settings.muted ? 'Desligado' : `${chosen('#fSoundPack')} · ${Math.round(settings.volume * 100)}%`;
     $('#fPlaySummary').textContent = [chosen('#fPassLevel'), d.turnNotice.enabled && 'Aviso de turno', screenWake.supported && screenWake.enabled && 'Tela acesa', turnBuzz.supported && turnBuzz.enabled && 'Vibrar', prefs.fast ? 'Rápido' : 'Ritmo normal', prefs.removalWindow !== 'mixed' && `Remoção ${chosen('#fRemovalWindow').toLowerCase()}`].filter(Boolean).join(' · ');
-    $('#fLookSummary').textContent = [chosen('#fCardStyle'), `Efeitos ${chosen('#fEffects').toLowerCase()}`, prefs.playmat && 'Tapete', d.perfMeter.enabled && 'FPS e ping', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
+    $('#fLookSummary').textContent = [chosen('#fCardStyle'), `Efeitos ${chosen('#fEffects').toLowerCase()}`, loopEffectsOff().size && `${loopEffectsOff().size} ${loopEffectsOff().size === 1 ? 'animação parada' : 'animações paradas'}`, prefs.playmat && 'Tapete', d.perfMeter.enabled && 'FPS e ping', ownArtEnabled() && 'Cartas da mesa', temasDisponiveis() && chosen('#fTema')].filter(Boolean).join(' · ');
   }
   /** Seções abertas das Opções: ficam como o jogador deixou (no começo, só Som). */
   let openOptionGroups = ['sound'];
@@ -92,6 +93,23 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     control.setAttribute('aria-checked', String(on));
     $(`#${id}State`).textContent = on ? 'Ligado' : 'Desligado';
   }
+  /** Os interruptores das animações no campo e o resumo da lista. */
+  function syncLoops() {
+    root.querySelectorAll<HTMLElement>('#fLoops [role="switch"][data-loop-effect]').forEach(control => control.setAttribute('aria-checked', String(loopEffectOn(control.dataset.loopEffect as LoopEffectId))));
+    const on = LOOP_EFFECTS.length - loopEffectsOff().size;
+    $('#fLoopsSummary').textContent = on === LOOP_EFFECTS.length ? 'Todas ligadas' : `${on} de ${LOOP_EFFECTS.length} ligadas`;
+    ($('#fLoops [data-loop-effect="all"]') as HTMLButtonElement).disabled = on === LOOP_EFFECTS.length;
+    syncOptionSummaries();
+  }
+  // Liga ou desliga uma animação (ou todas): a mesa para na hora, e a mesa viva também.
+  $('#fLoops').addEventListener('click', e => {
+    const control = (e.target as HTMLElement).closest<HTMLElement>('[data-loop-effect]');
+    if (!control) return;
+    const id = control.dataset.loopEffect!;
+    if (id === 'all') setLoopEffect(null, true); else setLoopEffect(id as LoopEffectId, !loopEffectOn(id as LoopEffectId));
+    applyLoopEffects(root); syncLoops(); d.effectsChanged();
+  });
+  applyLoopEffects(root);
   function syncDevice() {
     syncSwitch('fAwake', screenWake.enabled); syncSwitch('fBuzz', d.turnBuzz.enabled);
     syncOptionSummaries();
@@ -127,7 +145,7 @@ export function createTableSettings(root: HTMLElement, d: SettingsDeps) {
     ($('#fCardStyle') as HTMLSelectElement).value = prefs.cardStyle;
     ($('#fEffects') as HTMLSelectElement).value = effectsLevel();
     ($('#fTema') as HTMLSelectElement).value = lerTema();
-    syncPassLevel();
+    syncLoops(); syncPassLevel();
   }
   /** A lista de gatilhos com resposta guardada, com o "Perguntar de novo" de cada um; some sem nenhum. */
   let autoTriggersHTML = '';

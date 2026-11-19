@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.223.0] - 2026-11-19
+
+### Novo
+
+- **Animações no campo nas Opções.** Em Opções → Aparência, a lista "Animações no campo" tem um interruptor para cada animação que fica rodando com a mesa parada: voar, resistência a magia, vínculo com a vida, ward, toque mortífero e ímpeto, mira de alvo, fora de fase, enjoo de invocação, halo de alvo possível, luz na seta de alvo, avisos de perigo e a mesa viva. Desligada, a animação para e o desenho fica parado na carta. Com o selo de FPS e ping ligado, dá para ver quanto cada uma pesa no seu aparelho; "Ligar todas" volta tudo ao normal.
+
 ## [0.222.0] - 2026-11-19
 
 ### Novo
