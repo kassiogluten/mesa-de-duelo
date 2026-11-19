@@ -42,7 +42,8 @@ novidades-pendentes/<nome-da-mudanca>/
 `lab-efeitos.json`: os botões do laboratório de efeitos que a mudança criou ou que ganharam efeito novo, como
 `<atributo>:<valor>` (o `data-` do botão: `gpu:crown` é o `[data-gpu="crown"]`, `play:commanderStrike` a jogada pronta).
 Eles ganham o selo "novo" no painel. Ao publicar, `tests/fixtures/effects-lab-new.json` passa a ter só os botões da
-versão nova: os marcados numa versão anterior perdem o selo.
+versão nova: os marcados numa versão anterior perdem o selo. Versão sem botão novo não mexe nele, e os selos da última
+versão que trouxe algum continuam.
 
 ```json
 ["gpu:crown", "play:commanderStrike"]

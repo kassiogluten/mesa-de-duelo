@@ -24,7 +24,7 @@ Siga na ordem. Pule o que não se aplica, e diga o que pulou e por quê ao entre
 - Correção que já tem cenário publicado: atualize-o em `src/lab-cenarios.json` em vez de criar outro. Se ele estava como para investigar (sem `versao` e `item`), tire-o de lá e ponha no `cenarios.json` da mudança, com o `item`.
 
 ## 3b. Laboratório de efeitos (botões novos)
-- Botão novo no laboratório de efeitos, ou que passou a disparar um efeito novo: liste-o em `novidades-pendentes/<pasta>/lab-efeitos.json` (`["gpu:crown", "play:commanderStrike"]`) para ganhar o selo "novo". Os de versões anteriores perdem o selo sozinhos na publicação.
+- Botão novo no laboratório de efeitos, ou que passou a disparar um efeito novo: liste-o em `novidades-pendentes/<pasta>/lab-efeitos.json` (`["gpu:crown", "play:commanderStrike"]`) para ganhar o selo "novo". Os de versões anteriores perdem o selo sozinhos quando sai uma versão com botão novo; versão sem botão novo mantém os selos da última que trouxe algum.
 
 ## 4. Testes
 - Mesa: `npm test` e `npx tsc --noEmit -p .` (segundos).

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Dá número às novidades pendentes (novidades-pendentes/): junta todas numa versão nova do CHANGELOG.md, move os prints
 // para public/novidades/<versão>/, registra em src/novidades.json e src/lab-cenarios.json, troca os botões marcados como
-// novos no laboratório de efeitos (tests/fixtures/effects-lab-new.json) e acerta a versão do package.json.
+// novos no laboratório de efeitos (tests/fixtures/effects-lab-new.json) quando a versão traz algum e acerta a versão do
+// package.json.
 //
 //   npm run publicar-versao [-- --x] [--dry]
 //
@@ -21,7 +22,7 @@ const ROOT = opt('--raiz') ?? fileURLToPath(new URL('..', import.meta.url));
 const DRY = args.includes('--dry'), MAJOR = args.includes('--x');
 const PENDING_DIR = join(ROOT, 'novidades-pendentes');
 const KNOWN = new Set(['novidade.md', 'imagens.json', 'cenarios.json', 'lab-efeitos.json']);
-/** Os botões do laboratório de efeitos marcados como novos: só os da versão que acabou de sair. */
+/** Os botões do laboratório de efeitos marcados como novos: os da última versão que trouxe algum. */
 const LAB_NEW = 'tests/fixtures/effects-lab-new.json';
 const path = p => join(ROOT, p);
 const read = p => readFileSync(path(p), 'utf8');
@@ -112,9 +113,10 @@ if (labEntries.length) {
   if (parsed.slice(0, added).some(s => s.versao !== version)) fail('não consegui pôr a versão nos cenários (confira o "item" de cada um)');
 }
 
-// 6. Laboratório de efeitos: os botões novos desta versão; os marcados numa versão anterior deixam de ser novos.
+// 6. Laboratório de efeitos: os botões novos desta versão tomam o lugar dos anteriores; sem botão novo, os selos da
+// última versão que trouxe algum continuam, para o painel sempre mostrar o efeito mais recente.
 const labNew = [...new Set(pend.flatMap(p => p.labButtons))];
-const nextLabNew = `${JSON.stringify({ versao: version, botoes: labNew }, null, 2)}\n`;
+const nextLabNew = labNew.length ? `${JSON.stringify({ versao: version, botoes: labNew }, null, 2)}\n` : null;
 
 // 7. package.json e package-lock.json com a versão nova (o mesmo que npm version --no-git-tag-version).
 const pkg = read('package.json').replace(/("version":\s*")[^"]+"/, `$1${version}"`);
@@ -125,7 +127,7 @@ console.log(`Versão ${version} (antes ${top.slice(1).join('.')}), com ${folders
 console.log(section.trimEnd());
 if (moves.length) console.log(`\n${moves.length} ${moves.length === 1 ? 'print' : 'prints'} para ${imgDir}/`);
 if (labEntries.length) console.log(`${labEntries.length === 1 ? 'Cenário' : 'Cenários'} do Laboratório na ${version}`);
-console.log(labNew.length ? `Laboratório de efeitos: ${labNew.length} ${labNew.length === 1 ? 'botão novo' : 'botões novos'} (${labNew.join(', ')})` : 'Laboratório de efeitos: nenhum botão novo (os selos da versão anterior saem)');
+console.log(labNew.length ? `Laboratório de efeitos: ${labNew.length} ${labNew.length === 1 ? 'botão novo' : 'botões novos'} (${labNew.join(', ')})` : 'Laboratório de efeitos: nenhum botão novo (os selos de antes continuam)');
 if (DRY) { console.log('\n(--dry: nada foi gravado)'); process.exit(0); }
 
 writeFileSync(path('CHANGELOG.md'), nextChangelog);
@@ -133,8 +135,10 @@ if (moves.length) mkdirSync(path(imgDir), { recursive: true });
 for (const m of moves) renameSync(m.from, m.to);
 writeFileSync(path('src/novidades.json'), nextVisuals);
 writeFileSync(path('src/lab-cenarios.json'), nextLab);
-mkdirSync(path('tests/fixtures'), { recursive: true });
-writeFileSync(path(LAB_NEW), nextLabNew);
+if (nextLabNew) {
+  mkdirSync(path('tests/fixtures'), { recursive: true });
+  writeFileSync(path(LAB_NEW), nextLabNew);
+}
 writeFileSync(path('package.json'), pkg);
 if (lock) writeFileSync(path('package-lock.json'), `${JSON.stringify(lock, null, 2)}\n`);
 for (const p of pend) rmSync(p.dir, { recursive: true });

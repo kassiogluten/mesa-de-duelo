@@ -57,7 +57,7 @@ test('duas mudanças em paralelo saem numa versão só, com os grupos juntos, os
   } finally { rmSync(root, { recursive: true }); }
 });
 
-test('os botões novos do laboratório de efeitos ficam só com os da versão nova', () => {
+test('os botões novos do laboratório de efeitos ficam com os da última versão que trouxe algum', () => {
   const root = project({
     'golpe/novidade.md': '### Novo\n\n- **Golpe.** Coroa.\n',
     'golpe/lab-efeitos.json': '["gpu:crown", "play:commanderStrike"]',
@@ -69,11 +69,17 @@ test('os botões novos do laboratório de efeitos ficam só com os da versão no
     writeFileSync(join(root, 'tests/fixtures/effects-lab-new.json'), JSON.stringify({ versao: '0.10.2', botoes: ['gpu:velho'] }));
     run(root);
     assert.deepEqual(JSON.parse(read(root, 'tests/fixtures/effects-lab-new.json')), { versao: '0.11.0', botoes: ['gpu:crown', 'play:commanderStrike', 'gpu:echo'] });
-    // A versão seguinte, sem botão novo: os selos da anterior saem.
+    // A versão seguinte, sem botão novo: os selos da anterior continuam.
     mkdirSync(join(root, 'novidades-pendentes/fix'), { recursive: true });
     writeFileSync(join(root, 'novidades-pendentes/fix/novidade.md'), '### Corrigido\n\n- **Conserto.** Certo.\n');
     run(root);
-    assert.deepEqual(JSON.parse(read(root, 'tests/fixtures/effects-lab-new.json')), { versao: '0.11.1', botoes: [] });
+    assert.deepEqual(JSON.parse(read(root, 'tests/fixtures/effects-lab-new.json')), { versao: '0.11.0', botoes: ['gpu:crown', 'play:commanderStrike', 'gpu:echo'] });
+    // Uma versão com botão novo: ele toma o lugar dos anteriores.
+    mkdirSync(join(root, 'novidades-pendentes/brilho'), { recursive: true });
+    writeFileSync(join(root, 'novidades-pendentes/brilho/novidade.md'), '### Novo\n\n- **Brilho.** Luz.\n');
+    writeFileSync(join(root, 'novidades-pendentes/brilho/lab-efeitos.json'), '["gpu:glow"]');
+    run(root);
+    assert.deepEqual(JSON.parse(read(root, 'tests/fixtures/effects-lab-new.json')), { versao: '0.12.0', botoes: ['gpu:glow'] });
   } finally { rmSync(root, { recursive: true }); }
 });
 

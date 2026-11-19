@@ -1,11 +1,11 @@
-// Os botões do laboratório de efeitos que são novos (ou ganharam efeito novo): os da versão que acabou de sair e os das mudanças ainda sem número ganham o selo "novo"; a cada versão publicada, os da anterior perdem o selo.
+// Os botões do laboratório de efeitos que são novos (ou ganharam efeito novo): os da última versão publicada que trouxe algum e os das mudanças ainda sem número ganham o selo "novo"; só uma versão com botão novo tira o selo dos anteriores.
 import published from './effects-lab-new.json';
 
 /**
  * Cada botão novo é `<atributo>:<valor>`, o `data-` do botão no painel: "gpu:crown" é o `[data-gpu="crown"]` da seção
  * Efeitos na GPU, "play:commanderStrike" a jogada pronta. A mudança lista os seus em
  * novidades-pendentes/<pasta>/lab-efeitos.json; o `npm run publicar-versao` troca o effects-lab-new.json pelos da
- * versão nova (e só por eles).
+ * versão nova quando ela traz algum, e o deixa como está quando não traz.
  */
 const pending = import.meta.glob<string[]>('../../novidades-pendentes/*/lab-efeitos.json', { eager: true, import: 'default' });
 

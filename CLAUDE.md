@@ -45,7 +45,7 @@ O Laboratório (menu **⋯** da tela inicial) tem uma lista de **Cenários pront
 
 ## Laboratório de efeitos: selo nos botões novos
 
-Todo botão novo do laboratório de efeitos (`tests/fixtures/effects-lab.ts` e as jogadas de `effectsLabPlays.ts`), ou que passou a disparar um efeito novo, ganha o selo "novo" **na mesma mudança**: liste-o em `novidades-pendentes/<pasta>/lab-efeitos.json` (`["gpu:crown", "play:commanderStrike"]`, o `data-` do botão; formato no `README.md` de lá). O `publicar-versao` grava em `tests/fixtures/effects-lab-new.json` só os da versão nova, e os de versões anteriores perdem o selo; não edite esse arquivo à mão. `tests/effects-lab-new.test.mjs` confere que cada um aponta para um botão que existe.
+Todo botão novo do laboratório de efeitos (`tests/fixtures/effects-lab.ts` e as jogadas de `effectsLabPlays.ts`), ou que passou a disparar um efeito novo, ganha o selo "novo" **na mesma mudança**: liste-o em `novidades-pendentes/<pasta>/lab-efeitos.json` (`["gpu:crown", "play:commanderStrike"]`, o `data-` do botão; formato no `README.md` de lá). O `publicar-versao` grava em `tests/fixtures/effects-lab-new.json` só os da versão nova, e os de versões anteriores perdem o selo; versão sem botão novo não mexe nele, então o painel sempre mostra os selos da última versão que trouxe efeito. Não edite esse arquivo à mão. `tests/effects-lab-new.test.mjs` confere que cada um aponta para um botão que existe.
 
 ## Coleções novas
 

@@ -1,4 +1,10 @@
 {
-  "versao": "0.225.0",
-  "botoes": []
+  "versao": "0.222.0",
+  "botoes": [
+    "gpu:crown",
+    "gpu:crown-lethal",
+    "gpu:crown-fly",
+    "play:commanderStrike",
+    "play:commanderLethal"
+  ]
 }
