@@ -1,6 +1,7 @@
 // Ninjutsu e sneak (item 115): o atacante some numa fumaça que marca o lugar dele, e o ninja surge dela com um shuriken.
 import type { PresentationEvent } from './presentationTimeline';
 import { reduced, type MotionKit, type Point } from './motionKit';
+import { ICON_SHURIKEN as SHURIKEN } from './icons';
 
 /*
  * O atacante não bloqueado volta para a mão como custo; a fumaça fica no lugar dele enquanto a habilidade (ou a mágica,
@@ -14,7 +15,6 @@ export function ninjaSwap(event: PresentationEvent): boolean {
 }
 
 const PUFFS: [number, number, number][] = [[-.3, -.15, .7], [.25, -.25, .65], [-.05, .2, .8], [.35, .2, .6], [-.4, .25, .55], [.05, -.4, .55]];
-const SHURIKEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 1l2.2 7.8L22 11l-7.8 2.2L12 23l-2.2-7.8L2 12l7.8-2.2zm0 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
 /** Quanto tempo a fumaça espera a habilidade resolver antes de sumir sozinha (anulada, ou a mesa pulou a entrada). */
 const WAIT = 12000;
 

@@ -222,6 +222,8 @@ export interface FCard {
   foretellCost?: string;
   /** Na mão do dono: o custo de mana de conjurar agora, quando uma redução ou aumento o tira do impresso; delta é quanto o valor de mana mudou. */
   castCost?: { cost: string; delta: number };
+  /** Carta da sua mão que dá para usar agora no lugar de um atacante não bloqueado seu: por ninjutsu ou por sneak. */
+  swap?: 'ninjutsu' | 'sneak';
   /** Tramada (plot) no exílio. */
   plotted?: boolean;
   /** Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. */

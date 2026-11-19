@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 const { newMatchState, newSeatState } = await import('../src/ui/tableState.ts');
 const { passTurnShortcut } = await import('../src/ui/passMenus.ts');
-const { handHTML, hiddenHandHTML, outsideHand } = await import('../src/ui/handView.ts');
+const { handHTML, hiddenHandHTML, outsideHand, swapNow } = await import('../src/ui/handView.ts');
 
 function state(input = {}, extra = {}) {
   return { type: 'state', you: 0, activePlayer: 1, gameOver: false, stack: [], combat: [],
@@ -45,6 +45,21 @@ test('hand fan: playable cards, copies piled together, cards from outside the ha
   assert.match(html, /hcard playable incoming outside/);
   assert.match(html, /<div class="hzone">Cemitério<\/div>/);
   assert.equal((hiddenHandHTML({ handCount: 3 }).match(/hidden-card/g) ?? []).length, 3);
+});
+
+test('hand fan: a card that can come in by ninjutsu or sneak right now gets the shuriken and its own outline', () => {
+  const ninja = { id: 30, name: 'Ninja of the Deep Hours', swap: 'ninjutsu' }, turtle = { id: 31, name: 'Donatello, Gadget Master', swap: 'sneak' };
+  const s = state({ actionable: [30, 31] });
+  const html = handHTML(s, [{ c: ninja, tag: '' }, { c: turtle, tag: '' }], { face: c => `<i>${c.name}</i>`, incoming: () => false, playerName: () => 'Ana' });
+  assert.match(html, /class="hcard playable swap ninjutsu" data-fid="30" title="Ninjutsu: Troque por um atacante não bloqueado seu."/);
+  assert.match(html, /class="hcard playable swap sneak" data-fid="31" title="Sneak: /);
+  assert.equal((html.match(/class="swap-seal"/g) ?? []).length, 2);
+  assert.match(html, /aria-label="Ninja of the Deep Hours. Pode usar Ninjutsu"/);
+  // Sem a prioridade, ou quando o motor não a deixa jogar agora, a carta fica como as outras.
+  assert.equal(swapNow(state({ actionable: [] }), ninja), undefined);
+  assert.equal(swapNow(state({ actionable: [30], priority: false }), ninja), undefined);
+  assert.equal(swapNow(s, ninja, 'Cemitério'), undefined, 'cards from outside the hand never carry it');
+  assert.equal(swapNow(s, { id: 30, name: 'Grizzly Bears' }), undefined);
 });
 
 test('graveyard and library shelves: cards usable from there sit beside the exile, out of the hand', async () => {

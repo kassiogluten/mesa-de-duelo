@@ -1,0 +1,20 @@
+/*
+ * Carta da mão que pode entrar agora no lugar de um atacante não bloqueado (handView.ts): o selo redondo com o shuriken
+ * no meio da borda de cima, que de tempos em tempos dá um giro rápido, e o contorno da carta jogável trocado pelo da
+ * forma de entrar: prateado no ninjutsu, verde no sneak.
+ */
+.hcard.swap { --swap: #d9d9d9; --swap-glow: rgba(225, 225, 225, .7); }
+.hcard.swap.sneak { --swap: #7fe0b0; --swap-glow: rgba(111, 208, 160, .75); }
+.hcard.swap.playable .face { box-shadow: 0 0 0 2px var(--swap), 0 0 18px var(--swap-glow); }
+.swap-seal {
+  position: absolute; left: 50%; top: 0; transform: translate(-50%, -55%); z-index: 2;
+  width: clamp(20px, calc(var(--hcw) * .2), 28px); aspect-ratio: 1; border-radius: 50%; box-sizing: border-box;
+  display: grid; place-items: center; color: var(--swap);
+  background: radial-gradient(circle at 50% 35%, var(--azul-1b2c4d, #1b2c4d), var(--azul-080c18, #080c18));
+  border: 1.5px solid var(--swap); box-shadow: 0 2px 6px rgba(0, 0, 0, .65), 0 0 0 1px rgba(0, 0, 0, .5);
+}
+.swap-seal svg { width: 66%; height: 66%; fill: currentColor; animation: swap-spin 2.6s cubic-bezier(.3, 0, .2, 1) infinite; }
+/* O sneak gira para o outro lado e meio tempo depois, para os dois na mesma mão não girarem juntos. */
+.hcard.swap.sneak .swap-seal svg { animation-direction: reverse; animation-delay: -1.3s; }
+@keyframes swap-spin { 0%, 62% { transform: rotate(0deg); } 86%, 100% { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .swap-seal svg { animation: none; } }

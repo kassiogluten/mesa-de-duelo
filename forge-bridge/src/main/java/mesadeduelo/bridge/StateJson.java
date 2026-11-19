@@ -184,7 +184,7 @@ final class StateJson {
         o.addProperty("library", p.getZoneSize(ZoneType.Library));
         o.addProperty("handCount", p.getZoneSize(ZoneType.Hand));
         JsonArray hand = showHand ? cards(p.getHand(), game) : new JsonArray();
-        // Custo atual de conjurar, quando uma redução ou aumento o tira do impresso.
+        // Custo atual de conjurar, quando uma redução ou aumento o tira do impresso, e o ninjutsu ou sneak que dá para usar agora.
         if (showHand && game != null) Castable.addHandCosts(hand, game, p.getId());
         o.add("hand", hand);
         o.add("battlefield", cards(p.getBattlefield(), game));

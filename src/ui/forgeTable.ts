@@ -37,6 +37,7 @@ import './combatDamage.css';
 import './gameplay.css';
 import './stack.css';
 import './permanentEffects.css';
+import './handSwap.css';
 import './phaseHud.css';
 import './gameOptions.css';
 import './decisionPrompt.css';

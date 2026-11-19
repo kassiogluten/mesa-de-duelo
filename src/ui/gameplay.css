@@ -91,6 +91,10 @@
 .forge .hand { left: 190px; right: var(--hand-right); transform: none; max-width: none; justify-content: safe center; height: clamp(144px, 23vh, 215px); overflow-x: auto; overflow-y: hidden; padding: 22px 12px 7px; align-items: flex-end; scrollbar-width: thin; }
 .hand-slot { position: relative; width: clamp(74px, 13.5vh, 126px); height: calc(clamp(74px, 13.5vh, 126px) / .716); flex: 0 0 auto; margin-left: -12px; }
 .hand-slot:first-child { margin-left: 0; }
+/* O lugar tem a altura da carta inteira, mas a carta desce para fora da mesa: só ela e a lupa pegam o mouse, para o
+   espaço vazio acima dela não roubar o toque dos terrenos e artefatos do campo logo acima da mão. */
+.forge .hand-slot { pointer-events: none; }
+.forge .hand-slot > * { pointer-events: auto; }
 .forge .hand-slot .hcard { width: 100%; height: 100%; --fw: clamp(74px, 13.5vh, 126px); transform: none; margin: 0; }
 .forge .hand-slot .hcard:hover, .forge .hand-slot .hcard:focus-visible { transform: none; }
 .forge .hand-slot:focus-within { z-index: 60; }
@@ -101,7 +105,15 @@
 .forge .hand:not(.crowded) .hand-slot:first-child { margin-left: 0; }
 .forge .hand:not(.crowded) .hcard { --fw: var(--hcw); transform: translateY(calc(34% + var(--dy))) rotate(var(--rot)); }
 .forge .hand:not(.crowded) .hand-slot:hover, .forge .hand:not(.crowded) .hand-slot:focus-within { z-index: 60; }
-.forge .hand:not(.crowded) .hcard:hover, .forge .hand:not(.crowded) .hcard:focus-visible { transform: translateY(5%) scale(1.04); }
+.forge .hand:not(.crowded) .hcard:focus-visible { transform: translateY(5%) scale(1.04); }
+/* Com o mouse, a carta sobe só no desenho (o que está dentro dela): a área que pega o mouse fica onde ela estava. Levantada
+   por inteiro, ela cobria os terrenos e artefatos logo acima da mão e continuava com o mouse enquanto ele subia para eles. */
+.forge .hand:not(.crowded) .hcard > * { transition: translate .18s ease, rotate .18s ease, scale .18s ease; }
+.forge .hand:not(.crowded) .hcard:hover:not(:focus-visible) > * { translate: 0 calc(var(--hch) * -.29 - var(--dy, 0px)); rotate: calc(var(--rot, 0deg) * -1); }
+.forge .hand:not(.crowded) .hcard:hover:not(:focus-visible) > .face { scale: 1.04; }
+/* O desenho levantado deixa o mouse passar (o navegador o testaria na posição nova): quem pega é a carta, no lugar dela.
+   Os selos de contagem continuam com o balão deles. */
+.forge .hand:not(.crowded) .hcard:hover:not(:focus-visible) > :not(.count-seals) { pointer-events: none; }
 .forge .hand:not(.crowded) .inspect-card { top: 35%; }
 .forge .hcard.playable { touch-action: none; cursor: grab; }
 .forge .hcard.drag-source { opacity: .35; }

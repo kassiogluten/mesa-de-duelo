@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.218.0] - 2026-11-18
+
+### Novo
+
+- **Ninjutsu e sneak na mão.** Quando um atacante seu não foi bloqueado e uma carta da mão pode entrar no lugar dele, ela ganha um selo redondo com um shuriken no meio da borda de cima, que de tempos em tempos dá um giro rápido, e o contorno dela troca o azul de carta jogável pelo prateado (ninjutsu) ou pelo verde (sneak). Passar o mouse no selo diz qual é e o que faz. Fora dessa hora, a carta fica como as outras.
+
+### Corrigido
+
+- **Terrenos e artefatos logo acima da mão.** Tocar ou passar o mouse nas permanentes da fileira de baixo do campo, perto da mão, às vezes pegava a carta da mão, que subia por cima delas e não soltava. Um espaço invisível acima de cada carta da mão pegava o mouse, e a carta levantada continuava com ele enquanto ele subia para o campo. Agora só a parte da carta que aparece pega o mouse; ela continua subindo para ser lida, mas, ao levar o mouse para o campo, ela desce e o toque vai para a permanente.
+
 ## [0.217.0] - 2026-11-18
 
 ### Novo

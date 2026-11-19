@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import forge.game.Game;
 import forge.game.card.Card;
+import forge.game.combat.Combat;
 import forge.game.player.Player;
 import forge.game.phase.PhaseType;
 import forge.game.zone.ZoneType;
@@ -86,6 +87,25 @@ public class CastableTest {
         assertNull("{R} has no generic part", costs.get(bolt.getId()));
         assertNull("creatures are not reduced", costs.get(bears.getId()));
         assertNull("X costs are only known when cast", costs.get(fireball.getId()));
+    }
+
+    /** Ninjutsu e sneak: a carta da mão diz qual dá para usar, só com um atacante seu não bloqueado. */
+    @Test public void handCardsSayWhenNinjutsuOrSneakCanBeUsed() {
+        Game game = TestGames.empty(); Player me = game.getPlayers().get(0), them = game.getPlayers().get(1);
+        game.getPhaseHandler().devModeSet(PhaseType.MAIN1, me);
+        Card blade = TestGames.add(game, "Slither Blade", me, ZoneType.Battlefield);
+        Card ninja = TestGames.add(game, "Ninja of the Deep Hours", me, ZoneType.Hand);
+        Card turtle = TestGames.add(game, "Donatello, Gadget Master", me, ZoneType.Hand);
+        Card bears = TestGames.add(game, "Grizzly Bears", me, ZoneType.Hand);
+        for (int i = 0; i < 5; i++) TestGames.add(game, "Island", me, ZoneType.Battlefield);
+        assertTrue("sem atacante, nenhuma das duas", Castable.handSwaps(me).isEmpty());
+        game.getPhaseHandler().devModeSet(PhaseType.COMBAT_DECLARE_BLOCKERS, me);
+        Combat combat = new Combat(me); game.getPhaseHandler().setCombat(combat);
+        combat.addAttacker(blade, them); combat.setBlocked(blade, false);
+        var swaps = Castable.handSwaps(me);
+        assertEquals("ninjutsu", swaps.get(ninja.getId()));
+        assertEquals("sneak", swaps.get(turtle.getId()));
+        assertNull(swaps.get(bears.getId()));
     }
 
     /** Beam me up (Star Trek): conjurar do cemitério, como o Flashback, com a forma "beammeup" para a mesa. */

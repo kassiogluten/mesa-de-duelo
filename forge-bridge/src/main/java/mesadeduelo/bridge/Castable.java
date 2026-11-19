@@ -23,6 +23,7 @@ import forge.game.zone.Zone;
 import forge.game.Game;
 import forge.game.card.Card;
 import forge.game.player.Player;
+import forge.game.spellability.AlternativeCost;
 import forge.game.spellability.SpellAbility;
 import forge.game.zone.ZoneType;
 import forge.gamemodes.match.input.InputPassPriority;
@@ -51,13 +52,20 @@ final class Castable {
 
     private static final Map<Game, Map<Integer, Map<Integer, HandCost>>> HAND_COSTS = Collections.synchronizedMap(new WeakHashMap<>());
 
+    /** Cartas da mão que dá para usar agora trocando por um atacante não bloqueado: "ninjutsu" ou "sneak". Só com prioridade. */
+    private static final Map<Game, Map<Integer, Map<Integer, String>>> HAND_SWAPS = Collections.synchronizedMap(new WeakHashMap<>());
+
     /** Thread do jogo, com o pedido {@code input} já aberto para {@code who}. */
     static void refresh(Player who, Object input) {
         Map<Integer, Snapshot> byPlayer = SNAPSHOTS.computeIfAbsent(who.getGame(), g -> new ConcurrentHashMap<>());
+        Map<Integer, Map<Integer, String>> swaps = HAND_SWAPS.computeIfAbsent(who.getGame(), g -> new ConcurrentHashMap<>());
         if (!(input instanceof InputPassPriority) || !who.equals(who.getGame().getPhaseHandler().getPriorityPlayer())) {
             byPlayer.remove(who.getId());
+            swaps.remove(who.getId());
             return;
         }
+        try { swaps.put(who.getId(), handSwaps(who)); }
+        catch (RuntimeException e) { swaps.remove(who.getId()); }
         try { HAND_COSTS.computeIfAbsent(who.getGame(), g -> new ConcurrentHashMap<>()).put(who.getId(), handCosts(who)); }
         catch (RuntimeException e) { /* sem custo atual desta vez: a mão mostra o impresso */ }
         List<Integer> ids;
@@ -135,8 +143,36 @@ final class Castable {
         }
     }
 
-    /** Põe {@code castCost} nas cartas da mão de {@code playerId} (só a mão do dono chega com as cartas). */
+    /**
+     * Ninjutsu e sneak que o motor deixa usar agora (um atacante não bloqueado, a etapa certa), por carta da mão. Só as
+     * cartas com uma das duas palavras-chave passam pela conferência, que refaz os efeitos estáticos como a de conjurar.
+     */
+    static Map<Integer, String> handSwaps(Player me) {
+        Map<Integer, String> out = new HashMap<>();
+        for (Card c : me.getCardsIn(ZoneType.Hand)) {
+            if (!c.hasKeyword(Keyword.NINJUTSU) && !c.hasKeyword(Keyword.SNEAK)) continue;
+            String mode = null;
+            for (SpellAbility sa : c.getAllPossibleAbilities(me, true)) {
+                if (sa.isNinjutsu()) { mode = "ninjutsu"; break; }
+                if (sa.getAlternativeCost() == AlternativeCost.Sneak) mode = "sneak";
+            }
+            if (mode != null) out.put(c.getId(), mode);
+        }
+        return out;
+    }
+
+    /**
+     * Põe nas cartas da mão de {@code playerId} (só a mão do dono chega com as cartas) o {@code castCost}, custo atual
+     * de conjurar, e o {@code swap}, ninjutsu ou sneak que dá para usar agora.
+     */
     static void addHandCosts(JsonArray hand, Game game, int playerId) {
+        Map<Integer, Map<Integer, String>> swapsByPlayer = HAND_SWAPS.get(game);
+        Map<Integer, String> swaps = swapsByPlayer == null ? null : swapsByPlayer.get(playerId);
+        if (swaps != null && !swaps.isEmpty()) for (JsonElement e : hand) {
+            JsonObject card = e.getAsJsonObject();
+            String mode = card.has("id") ? swaps.get(card.get("id").getAsInt()) : null;
+            if (mode != null) card.addProperty("swap", mode);
+        }
         Map<Integer, Map<Integer, HandCost>> byPlayer = HAND_COSTS.get(game);
         Map<Integer, HandCost> costs = byPlayer == null ? null : byPlayer.get(playerId);
         if (costs == null || costs.isEmpty()) return;

@@ -149,6 +149,9 @@ const MODES: Record<string, [string, string]> = {
   ability: ['Habilidade', ''],
 };
 
+/** O nome em português de uma forma de jogar (ninjutsu, flashback...) e a frase que a explica. */
+export const modeText = (mode: string) => MODES[mode];
+
 /** Custos extras do Forge (em inglês) em português, quando a frase é das conhecidas. */
 export function extraCostText(text: string) {
   const t = text.trim();

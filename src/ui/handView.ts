@@ -1,5 +1,5 @@
-// A mão em leque: cada carta (com o selo do custo, de onde veio quando é de fora da mão, o valor que ela conta e as pilhas
-// de cópias iguais), as cartas de fora da mão que dá para jogar agora e a mão de costas de quem assiste.
+// A mão em leque: cada carta (com o selo do custo, de onde veio quando é de fora da mão, o valor que ela conta, as pilhas
+// de cópias iguais e o shuriken de quem pode entrar por ninjutsu ou sneak agora), as cartas de fora da mão que dá para jogar agora e a mão de costas de quem assiste.
 import type { FCard, FPlayer, FState } from '../forge/client';
 import { esc, manaHTML } from './cardtext';
 import { countSeals, countSealsHTML } from './cardCounts';
@@ -7,6 +7,8 @@ import { label } from './cardFaces';
 import { selectedForInput } from './playContext';
 import { canUse, inspectButton, selectedBadge, usable } from './permanentView';
 import { sleeveClass } from './sleeves';
+import { ICON_SHURIKEN } from './icons';
+import { modeText } from './choiceScreens';
 
 /** Uma posição do leque: a carta, a etiqueta de onde ela vem (vazia na mão) e as cópias empilhadas nela. */
 export type HandFanItem = { c: FCard; tag: string; copies?: number[] };
@@ -38,10 +40,20 @@ export function handHTML(s: FState, fan: HandFanItem[], o: { face(c: FCard): str
     const where = tag ? `<div class="hzone">${esc(tag)}</div>` : '';
     // O valor que a carta conta (item 56): o selo fica na borda esquerda, a parte do leque que a carta seguinte não cobre.
     const counted = c.faceDown ? '' : countSealsHTML(c, o.playerName, s.you);
+    const swap = swapNow(s, c, tag);
+    const swapText = swap ? modeText(swap) : undefined;
     const countedText = c.faceDown ? '' : countSeals(c, o.playerName, s.you).map(seal => seal.label).join(' ');
-    return `<div class="hand-slot"><div class="hcard ${sel}${o.incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${pile ? ' pile' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}" data-fid="${c.id}" role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${pile ? `, ${pile} cópias` : ''}${tag ? ` (${esc(tag)})` : ''}${countedText ? `. ${esc(countedText)}` : ''}"
-      style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${o.face(c)}${cost}${where}${counted}${selectedBadge(s, c)}${pile ? `<span class="hand-copies" aria-hidden="true" title="${pile} cópias de ${esc(label(c))}">×${pile}</span>` : ''}</div>${inspectButton(c)}</div>`;
+    return `<div class="hand-slot"><div class="hcard ${sel}${o.incoming(c.id) ? ' incoming' : ''}${tag ? ' outside' : ''}${pile ? ' pile' : ''}${openingSelected ? ' opening-selected' : ''}${selected ? ' choice-selected' : ''}${swap ? ` swap ${swap}` : ''}" data-fid="${c.id}"${swapText ? ` title="${esc(`${swapText[0]}: ${swapText[1]}`)}"` : ''} role="button" tabindex="0"${openingSelection} aria-label="${esc(label(c))}${pile ? `, ${pile} cópias` : ''}${tag ? ` (${esc(tag)})` : ''}${countedText ? `. ${esc(countedText)}` : ''}${swap ? `. Pode usar ${swapText?.[0] ?? swap}` : ''}"
+      style="--rot:${off * 2.6}deg;--dy:${off * off * 2.2}px;z-index:${i + 1}">${o.face(c)}${cost}${where}${counted}${swap ? `<span class="swap-seal" aria-hidden="true">${ICON_SHURIKEN}</span>` : ''}${selectedBadge(s, c)}${pile ? `<span class="hand-copies" aria-hidden="true" title="${pile} cópias de ${esc(label(c))}">×${pile}</span>` : ''}</div>${inspectButton(c)}</div>`;
   }).join('');
+}
+
+/**
+ * Ninjutsu ou sneak que a carta da mão pode usar agora (um atacante seu não bloqueado, com a prioridade): o servidor diz
+ * qual, e a mesa só mostra enquanto ela é jogável. Cartas de fora da mão (`tag`) não entram.
+ */
+export function swapNow(s: FState, c: FCard, tag = ''): FCard['swap'] {
+  return !tag && c.swap && s.input.priority && s.input.actionable?.includes(c.id) ? c.swap : undefined;
 }
 
 /** Selo de custo: o impresso, ou o de agora quando uma redução ou aumento o mudou (verde mais barato, vermelho mais caro). */

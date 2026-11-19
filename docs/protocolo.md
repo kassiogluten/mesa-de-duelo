@@ -294,6 +294,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `foretold?` | `boolean` | Prevista (foretell) no exílio; para o dono vem de face para cima, com o custo previsto em foretellCost. |
 | `foretellCost?` | `string` |  |
 | `castCost?` | `{ cost: string; delta: number }` | Na mão do dono: o custo de mana de conjurar agora, quando uma redução ou aumento o tira do impresso; delta é quanto o valor de mana mudou. |
+| `swap?` | `'ninjutsu' \| 'sneak'` | Carta da sua mão que dá para usar agora no lugar de um atacante não bloqueado seu: por ninjutsu ou por sneak. |
 | `plotted?` | `boolean` | Tramada (plot) no exílio. |
 | `prepared?` | `boolean` | Criatura preparada: pode conjurar uma cópia do feitiço dela (preparedSpell), que espera no exílio. |
 | `preparedSpell?` | `string` |  |
