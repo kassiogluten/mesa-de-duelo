@@ -1,6 +1,6 @@
 import type { DeckData, DeckFormat } from '../decks';
 import { viaMirror } from '../scryfallMirror';
-import type { ClientMessage, DeckValidation, FRoom, FState, NoticeDetail, PublicRoom, ReplyMessage, RequestMessage, RequestReplies, RoomInfo, RoomSaying, ServerMessage, SimilarCard } from './protocol';
+import type { ClientMessage, DeckValidation, FRoom, FState, NoticeDetail, PublicRoom, ReplyMessage, RequestMessage, RequestReplies, RoomInfo, RoomSaying, ServerMessage, ServerNoticeData, SimilarCard } from './protocol';
 
 export type * from './protocol';
 
@@ -87,6 +87,8 @@ export class ForgeClient {
   replaced = false;
   /** A ponte não conhece mais a partida pedida no "rejoin". */
   onGone: (text: string) => void = () => {};
+  /** Aviso do servidor (manutenção) marcado ou retirado (null). */
+  onServerNotice: (notice: ServerNoticeData | null) => void = () => {};
   onNotice: (text: string, error: boolean, detail?: NoticeDetail) => void = () => {};
   onClose: () => void = () => {};
   onValidation: (validation: DeckValidation, target: string) => void = () => {};
@@ -177,6 +179,7 @@ export class ForgeClient {
           case 'error': this.onNotice(msg.text ?? '', true); break;
           case 'diagnostic': this.onDiagnostic({ code: String(msg.code ?? ''), action: msg.action, text: String(msg.text ?? '') }); break;
           case 'gone': this.onGone(msg.text); break;
+          case 'server-notice': this.onServerNotice(msg.notice ?? null); break;
           case 'replaced': this.replaced = true; this.onNotice(msg.text, true); break;
         }
       };

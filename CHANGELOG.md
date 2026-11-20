@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.232.0] - 2026-11-19
+
+### Novo
+
+- **Aviso de manutenção do servidor.** Quando o servidor vai ser reiniciado, aparece uma faixa no alto da tela com o aviso e o horário no seu relógio, contando quanto falta ("22:50 · em 13 min"). Ela aparece na partida, na sala, assistindo e na tela inicial, e também para quem chega depois do aviso. Dá para fechar no ×; ela volta sozinha a 5 minutos e a 1 minuto do reinício, mais avermelhada, e some depois do horário.
+
 ## [0.231.1] - 2026-11-19
 
 ### Corrigido

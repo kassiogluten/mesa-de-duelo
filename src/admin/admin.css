@@ -177,3 +177,18 @@ body { min-height: 100%; height: auto; }
   .adm-rank-recent li { flex-wrap: wrap; }
   .adm-rank-recent time { margin-left: 0; }
 }
+/* Aba Aviso: o aviso no ar, o formulário e a prévia da faixa como os jogadores a veem. */
+#admAviso { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 760px; }
+#admAviso > *, .adm-notice-form > * { min-width: 0; }
+#admAviso[hidden] { display: none; }
+.adm-notice-card, .adm-notice-form { display: grid; gap: 12px; padding: 16px; }
+.adm-notice-card p, .adm-notice-form h2 { margin: 0; }
+.adm-notice-live { margin: 0; padding: 10px 12px; border-left: 3px solid var(--gold); border-radius: 6px; background: #f2b54c12; white-space: pre-wrap; }
+.adm-notice-card .adm-ghost { justify-self: start; }
+.adm-notice-time { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+.adm-notice-time label { width: 140px; }
+.adm-notice-quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-notice-preview { display: flex; justify-content: center; padding: 18px 12px; border-radius: 12px; background: var(--bg-deep); }
+.adm-notice-preview .server-notice { position: static; transform: none; animation: none; width: auto; max-width: 100%; font-weight: 500; }
+.adm-notice-preview .server-notice-text { flex: 1 1 auto; }
+.adm-notice-preview .server-notice-close { pointer-events: none; }

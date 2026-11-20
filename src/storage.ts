@@ -122,6 +122,8 @@ export const KEYS = {
   tour: 'mesa:tour',
   /** Exibição dos decks da tela inicial: grade (com as colunas) ou lista (JSON). Tela inicial. */
   deckLayoutHome: 'mesa:deckLayout:home',
+  /** Aviso do servidor que o jogador fechou: o id e a fase (JSON); a faixa volta na fase seguinte. Todas as telas. */
+  avisoServidor: 'mesa:aviso-servidor',
   /** Última versão do painel Novidades que o jogador viu. Tela inicial. */
   novidades: 'mesa:novidades',
   /** Relatos enviados por este aparelho: código, chave para ver a resposta e servidor (JSON, até 50). Meus relatos. */

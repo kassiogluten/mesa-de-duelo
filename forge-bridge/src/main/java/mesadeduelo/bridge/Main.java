@@ -108,6 +108,9 @@ public final class Main {
             server.tournaments(tournaments);
             CardDataCache cardData = CardDataCache.fromSystem();
             server.cardData(cardData);
+            ServerNotice notice = new ServerNotice(System::currentTimeMillis);
+            server.notice(notice);
+            admin.notice(notice, server::clientCount);
             server.start();
             Log.bridge().info("Relatos em %s (%d guardados)", store.dir(), store.files());
             Log.bridge().info("Histórico de partidas em %s", history.dir());

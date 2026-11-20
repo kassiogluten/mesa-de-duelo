@@ -21,6 +21,7 @@ import { VERSION } from './ui/changelog';
 import { atualizarConta } from './conta/session';
 import { esconderOneTap, mostrarOneTap } from './conta/google';
 import { iniciarSincronia } from './ui/contaMenu';
+import { serverNotice } from './ui/serverNotice';
 import { mountLab } from './ui/lab';
 import { clearResume, loadResume, saveResume, type ForgeMatch } from './app/resume';
 import { aiDeck, forgeDeck, LAB_DECK, matchOwner, NO_DECK, playerName, seatDeck } from './app/matchDecks';
@@ -117,6 +118,8 @@ startFeedbackQueue();
 // Resposta nova num relato: o ponto do menu ⋯ e, uma vez, o aviso. Nunca na partida: quem volta direto para uma
 // partida em andamento fica sem o aviso desta vez (não é marcado como avisado) e o vê na próxima.
 void checkMyReports(() => session.screen === 'lobby' || session.screen === 'decks');
+// Aviso do servidor (manutenção): pergunta de tempos em tempos; numa partida ou sala ele chega também pela conexão.
+serverNotice.watch();
 
 function download(bytes: Uint8Array, name: string) {
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/gzip' }));

@@ -883,5 +883,17 @@ Tudo o que o servidor manda à mesa. Campo novo numa mensagem: declare aqui (o e
   | { type: 'diagnostic'; code?: string; action?: string; text?: string }
   | { type: 'gone'; text: string }
   | { type: 'replaced'; text: string }
+  /** Aviso do servidor para todos (manutenção): ao ser marcado ou retirado (null), e logo ao conectar enquanto vale. */
+  | { type: 'server-notice'; notice: ServerNoticeData | null }
   | ReplyMessage
 ```
+
+## ServerNoticeData
+
+Aviso do servidor: o texto do admin ({hora} vira o horário de quem lê) e o horário marcado (ms desde 1970).
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `id` | `string` |  |
+| `text` | `string` |  |
+| `at?` | `number` |  |

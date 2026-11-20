@@ -34,7 +34,8 @@ import java.net.InetSocketAddress;
  * Servidor WebSocket em ws://HOST:PORTA/ws. No modo watch, quem conecta recebe na hora o último estado publicado
  * por {@link #broadcast}; no modo play cada conexão recebe só o que é endereçado a ela ({@link #send(Channel, String)}).
  * Na mesma porta: GET /metrics, GET /health e, no modo play, POST /api/relatos ({@link Feedback}), POST /api/funil ({@link Funnel}),
- * os torneios ({@link Tournaments}), os dados das cartas ({@link CardDataCache}) e a área de admin ({@link Admin}).
+ * os torneios ({@link Tournaments}), os dados das cartas ({@link CardDataCache}), a área de admin ({@link Admin}) e GET /api/aviso
+ * ({@link ServerNotice}, que também chega pelo WebSocket a quem conecta enquanto o aviso vale).
  */
 final class BridgeServer {
     private final String host;
@@ -56,6 +57,8 @@ final class BridgeServer {
     private volatile Tournaments tournaments;
     /** Rota POST /api/cartas; null no modo watch. */
     private volatile CardDataCache cardData;
+    /** Aviso do servidor (manutenção); null no modo watch. */
+    private volatile ServerNotice notice;
 
     interface Listener {
         void onConnect(Channel ch);
@@ -76,6 +79,7 @@ final class BridgeServer {
     void funnel(Funnel f) { funnel = f; }
     void tournaments(Tournaments t) { tournaments = t; }
     void cardData(CardDataCache c) { cardData = c; }
+    void notice(ServerNotice n) { notice = n; n.broadcaster(this::sendAll); }
 
     void start() throws InterruptedException {
         EventLoopGroup boss = new NioEventLoopGroup(1);
@@ -103,6 +107,8 @@ final class BridgeServer {
                     if (t != null) ch.pipeline().addLast(t.new Handler());
                     CardDataCache d = cardData;
                     if (d != null) ch.pipeline().addLast(d.new Handler());
+                    ServerNotice sn = notice;
+                    if (sn != null) ch.pipeline().addLast(sn.new Handler());
                     ch.pipeline()
                         .addLast(new HttpEndpoints())
                         .addLast(new WebSocketServerProtocolHandler("/ws", null, true, 1 << 20))
@@ -117,6 +123,10 @@ final class BridgeServer {
                                     clients.add(ctx.channel());
                                     String snapshot = last;
                                     if (snapshot != null) ctx.channel().writeAndFlush(new TextWebSocketFrame(snapshot));
+                                    // Quem conecta enquanto vale um aviso do servidor recebe-o logo de cara.
+                                    ServerNotice sn = notice;
+                                    ServerNotice.Notice current = sn == null ? null : sn.current();
+                                    if (current != null) ctx.channel().writeAndFlush(new TextWebSocketFrame(ServerNotice.message(current)));
                                     listener.onConnect(ctx.channel());
                                 }
                                 super.userEventTriggered(ctx, evt);
@@ -135,6 +145,9 @@ final class BridgeServer {
         last = json;
         clients.writeAndFlush(new TextWebSocketFrame(json));
     }
+
+    /** Envia para todas as conexões abertas, sem mexer no último estado do modo watch. */
+    void sendAll(String json) { clients.writeAndFlush(new TextWebSocketFrame(json)); }
 
     /** Envia para uma conexão só; ignora se ela já fechou. */
     static void send(Channel ch, String json) {

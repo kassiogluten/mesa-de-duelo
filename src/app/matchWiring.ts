@@ -5,6 +5,7 @@ import type { Lobby } from '../ui/lobby';
 import type { ForgeConnection } from './connection';
 import type { RecordingSession } from './recordingSession';
 import { clearResume, saveResume, type ForgeMatch } from './resume';
+import { serverNotice } from '../ui/serverNotice';
 
 export type Screen = 'lobby' | 'game' | 'decks' | 'free' | 'lab';
 /** Assistindo à partida de uma sala: sem deck, sem assento e sem gravação; cair a conexão pede para assistir de novo. */
@@ -101,6 +102,7 @@ export function bindMatchClient(client: ForgeClient, w: MatchWiring) {
     if (error && session.current?.net && session.screen !== 'game') { session.current = null; lobby.showRoom(null); }
   };
   client.onDiagnostic = d => { if (mine()) table.diagnostic(d); };
+  client.onServerNotice = notice => serverNotice.set(notice);
   client.onGone = text => {
     // A ponte não conhece mais a partida (encerrada ou ponte reiniciada): esquece e volta ao início.
     session.current = null; session.watching = null;

@@ -1,0 +1,25 @@
+/* Faixa do aviso do servidor (manutenção): fixa no alto, centralizada, sem cobrir a barra do topo da mesa. */
+.server-notice {
+  position: fixed; z-index: 1100; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 10px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; box-sizing: border-box; width: max-content; max-width: min(640px, calc(100vw - 32px));
+  padding: 8px 8px 8px 14px; border: 1px solid color-mix(in srgb, var(--gold, #f2b54c) 55%, transparent); border-radius: 14px;
+  background: color-mix(in srgb, #2a1d08 94%, transparent); color: var(--gold-light, #ffe2a0); box-shadow: 0 8px 28px #000a;
+  font: 500 14px/1.35 var(--body, system-ui, sans-serif); animation: server-notice-in .3s ease-out;
+}
+.server-notice[hidden] { display: none; }
+.server-notice-icon { display: inline-grid; flex: 0 0 auto; color: var(--gold, #f2b54c); }
+.server-notice-icon svg { width: 20px; height: 20px; }
+.server-notice-text { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.server-notice-when { flex: 0 0 auto; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--gold, #f2b54c) 18%, transparent); color: var(--gold-light, #ffe2a0); font-weight: 600; font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.server-notice-close { display: inline-grid; place-items: center; flex: 0 0 auto; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+.server-notice-close:hover, .server-notice-close:focus-visible { background: #ffffff1a; }
+.server-notice-close svg { width: 16px; height: 16px; }
+/* A 5 min e a 1 min do horário, a faixa esquenta. */
+.server-notice[data-stage="soon"], .server-notice[data-stage="imminent"], .server-notice[data-stage="past"] { border-color: #ff8a5c; background: color-mix(in srgb, #3a1308 95%, transparent); }
+.server-notice[data-stage="imminent"] .server-notice-when, .server-notice[data-stage="past"] .server-notice-when { background: #ff8a5c33; color: #ffd2c0; }
+@keyframes server-notice-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+@media (prefers-reduced-motion: reduce) { .server-notice { animation: none; } }
+@media (max-width: 560px) {
+  .server-notice { flex-wrap: wrap; row-gap: 4px; font-size: 13px; }
+  .server-notice-text { flex: 1 1 calc(100% - 80px); }
+}

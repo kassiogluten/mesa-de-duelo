@@ -9,6 +9,7 @@ import type { Item, Status, Stored } from './adminShared';
 import { historyHTML, liveMatchesHTML, type End, type LiveMatch, type PastMatch } from './adminMatches';
 import { reportDetailHTML, reportListHTML, type ReportFilter } from './adminReports';
 import { funnelHTML, type FunnelWeek } from './adminFunnel';
+import { mountAdminNotice } from './adminNotice';
 import { rankingHTML, type RankingState, type SortKey } from './adminRanking';
 
 /*
@@ -33,7 +34,7 @@ let selected: string | null = null;
 const details = new Map<string, Stored>();
 let notice = '';
 
-const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : location.hash === '#ranking' ? 'ranking' : 'relatos';
+const tab = () => location.hash === '#paginas' ? 'paginas' : location.hash === '#partidas' ? 'partidas' : location.hash === '#ranking' ? 'ranking' : location.hash === '#aviso' ? 'aviso' : 'relatos';
 
 // ---------------------------------------------------------------- entrar
 
@@ -67,13 +68,16 @@ async function start() {
 
 function shell() {
   root.innerHTML = `<header class="adm-top"><a class="adm-brand" href="/"><span class="brand-mark" aria-hidden="true"></span>Mesa de Duelo</a>
-    <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#ranking" data-tab="ranking">Ranking</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
+    <nav class="adm-tabs" aria-label="Seções"><a href="#relatos" data-tab="relatos">Relatos</a><a href="#partidas" data-tab="partidas">Partidas</a><a href="#ranking" data-tab="ranking">Ranking</a><a href="#aviso" data-tab="aviso">Aviso</a><a href="#paginas" data-tab="paginas">Páginas de teste</a></nav>
     <button class="adm-ghost" data-act="logout">Sair</button></header>
-    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admRanking" aria-label="Ranking" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
+    <main class="adm-main"><section id="admRelatos" aria-label="Relatos"></section><section id="admPartidas" aria-label="Partidas" hidden><div id="admVivas"></div><div id="admFunil" class="adm-history"></div><div id="admHistorico" class="adm-history"></div></section><section id="admRanking" aria-label="Ranking" hidden></section><section id="admAviso" aria-label="Aviso do servidor" hidden></section><section id="admPaginas" aria-label="Páginas de teste" hidden></section></main>`;
   root.querySelector('#admPaginas')!.innerHTML = `<h1>Páginas de teste</h1><p class="adm-muted">A mesa de verdade sem a ponte, para conferir telas e efeitos. Abrem numa aba nova. Cartas e mecânicas com a ponte de verdade (proliferar, improvisar, turno e combate extra) ficam nos Cenários prontos do Laboratório.</p>
     <ul class="adm-pages">${TEST_PAGES.map(([href, title, text]) => `<li><a class="adm-card adm-page" href="${href}" target="_blank" rel="noopener"><strong>${esc(title)}</strong><span>${esc(text)}</span><code>${esc(href)}</code></a></li>`).join('')}</ul>`;
+  noticeTab = mountAdminNotice(root.querySelector<HTMLElement>('#admAviso')!, () => login('A sessão acabou. Entre de novo.'));
   syncTab();
 }
+
+let noticeTab: ReturnType<typeof mountAdminNotice> | null = null;
 
 function syncTab() {
   const current = tab();
@@ -82,6 +86,8 @@ function syncTab() {
   root.querySelector<HTMLElement>('#admPaginas')!.hidden = current !== 'paginas';
   root.querySelector<HTMLElement>('#admPartidas')!.hidden = current !== 'partidas';
   root.querySelector<HTMLElement>('#admRanking')!.hidden = current !== 'ranking';
+  root.querySelector<HTMLElement>('#admAviso')!.hidden = current !== 'aviso';
+  if (current === 'aviso') void noticeTab?.load();
   if (current === 'ranking') void loadRanking(ranking.month);
   clearInterval(matchesTimer);
   // Na aba de partidas, a lista se atualiza sozinha a cada 10 s.

@@ -55,6 +55,10 @@ import io.netty.handler.codec.http.QueryStringDecoder;
  *   PUT    relatos/{código}/estado {status, note?, issue?, reply?}: reply é a resposta que o jogador vê em Meus relatos
  *                                  (até 2.000 caracteres; ausente mantém a que havia, vazia apaga)
  *   DELETE relatos/{código}
+ *   GET    aviso                   {notice, conexoes}: o aviso do servidor que vale agora ({@link ServerNotice}) e quantas
+ *                                  conexões abertas o receberiam
+ *   PUT    aviso {text, at}        marca o aviso e o manda a todos (at: horário em ms desde 1970; ausente, sem horário)
+ *   DELETE aviso                   retira o aviso de todas as telas
  *   POST   logout
  */
 final class Admin {
@@ -76,6 +80,9 @@ final class Admin {
     private final MatchHistory history;
     /** Resumo das contas dos jogadores; null com as contas desligadas. */
     private volatile Accounts accounts;
+    /** Aviso do servidor; null nos testes que não o usam. */
+    private volatile ServerNotice notice;
+    private volatile java.util.function.IntSupplier connections = () -> 0;
     /** Contadores de quem começa a jogar; null nos testes que não os usam. */
     private volatile Funnel funnel;
     private final byte[] password;
@@ -106,6 +113,8 @@ final class Admin {
     boolean enabled() { return password != null; }
     void accounts(Accounts a) { accounts = a; }
     void funnel(Funnel f) { funnel = f; }
+    /** O aviso do servidor e quantas conexões estão abertas. */
+    void notice(ServerNotice n, java.util.function.IntSupplier connections) { notice = n; this.connections = connections; }
 
     private static byte[] sha(String text) {
         try { return MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)); }
@@ -125,6 +134,7 @@ final class Admin {
                 Funnel f = funnel;
                 return f == null ? Response.error(404, "Contagem de visitantes desligada.") : Response.json(200, f.json());
             }
+            if (path.equals("aviso")) return notice(method, body);
             if ((path.equals("historico") || path.startsWith("historico/")) && "GET".equals(method)) return history(path.substring("historico".length()));
             if ((path.equals("ranking") || path.startsWith("ranking/")) && "GET".equals(method)) return ranking(path.substring("ranking".length()));
             String[] parts = path.split("/");
@@ -140,6 +150,22 @@ final class Admin {
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
             return Response.error(500, "Falha ao ler ou gravar os relatos: " + e.getMessage());
+        }
+    }
+
+    private Response notice(String method, byte[] body) {
+        ServerNotice n = notice;
+        if (n == null) return Response.error(404, "Aviso do servidor desligado.");
+        switch (method) {
+            case "GET" -> { JsonObject o = n.json(); o.addProperty("conexoes", connections.getAsInt()); return Response.json(200, o); }
+            case "PUT" -> {
+                JsonElement json;
+                try { json = JsonParser.parseString(new String(body, StandardCharsets.UTF_8)); }
+                catch (RuntimeException e) { return Response.error(400, "Mande {text, at}."); }
+                return n.put(json);
+            }
+            case "DELETE" -> { n.clear(); return Response.json(200, n.json()); }
+            default -> { return Response.error(405, "Use GET, PUT ou DELETE."); }
         }
     }
 

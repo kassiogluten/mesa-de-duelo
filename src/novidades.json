@@ -1,4 +1,9 @@
 {
+  "0.232.0": {
+    "Aviso de manutenção do servidor": [
+      { "img": "0.232.0/aviso-mesa.webp", "legenda": "Na mesa, logo abaixo da barra de cima, a faixa do aviso com o horário do reinício e quanto falta, e o × para fechar." }
+    ]
+  },
   "0.231.1": {
     "Habilidades que se usam do exílio com a carta suspensa": [
       { "img": "0.231.1/gargadon-suspenso.webp", "legenda": "Na prateleira do exílio, o Greater Gargadon suspenso fica aceso porque dá para usar a habilidade dele; o Rift Bolt, também suspenso, só espera." }
