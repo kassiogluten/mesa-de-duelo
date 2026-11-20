@@ -72,3 +72,11 @@
 .seat-menu-item:hover, .seat-menu-item:focus-visible { background: #ffffff0f; border-color: var(--line); outline: none; }
 .seat-menu-item[aria-pressed="true"] svg { color: var(--gold); }
 @media (pointer: coarse) { .seat-menu-item { min-height: 44px; } }
+/* Sala de teste do Laboratório: reiniciar o cenário, ao lado do Desfazer. */
+.forge .lab-restart-btn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto; min-height: 40px; padding-inline: 12px; color: #c9b8f2; border-color: #b39ddb66; }
+.forge .lab-restart-btn svg { width: 18px; height: 18px; }
+.forge .lab-restart-btn[hidden] { display: none; }
+@media (max-height: 500px), (max-width: 760px) {
+  .forge .lab-restart-btn { min-width: 44px; min-height: 44px; padding-inline: 10px; justify-content: center; }
+  .forge .lab-restart-btn .lab-restart-label { display: none; }
+}

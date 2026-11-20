@@ -182,6 +182,14 @@ export function createUiActions(d: UiActionDeps) {
       });
     },
     'lab-close': () => { if (d.state()?.gameOver || d.match().disconnected || confirm('Fechar a sala de teste? A partida acaba para os dois lados.')) { d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset(); d.opts.onLabClose?.(); } },
+    'lab-restart': () => {
+      d.setMenu(false);
+      const s = d.state(), client = d.client();
+      if (!client || d.match().disconnected) return;
+      if (s && !s.gameOver && !confirm('Reiniciar o cenário? A partida volta à mesa montada, para os dois lados.')) return;
+      d.stopPresentation(); hideCardPreview(true); d.turnNotice.reset();
+      client.send({ type: 'lab-restart' });
+    },
     'rematch': () => { d.setMenu(false); d.opts.onRematch(); },
     'observe': (_t, _e, ui) => { const match = d.match(); match.observing = ui === 'observe'; d.render(); if (!d.match().observing) ($('#fOverlay').querySelector('[data-ui="observe"]') as HTMLElement | null)?.focus(); },
     'result': (t, e, ui) => action['observe']!(t, e, ui), // definida logo acima

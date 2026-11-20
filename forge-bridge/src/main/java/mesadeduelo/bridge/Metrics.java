@@ -77,7 +77,7 @@ final class Metrics {
     /** Pedidos da tela inicial e da sala que têm nome próprio na métrica; os de dentro da partida contam como "partida". */
     static final Set<String> REQUEST_TYPES = Set.of("validate-deck", "fetch-deck", "similar-cards", "lookup-room", "list-rooms",
         "start", "host", "lab-host", "join", "room-deck", "watch", "watch-player", "watchable", "fill-computers", "room-ready",
-        "room-say", "rejoin", "rematch", "leave", "lab-close");
+        "room-say", "rejoin", "rematch", "leave", "lab-close", "lab-restart");
 
     /** {@code type} null quando a mensagem nem disse o que era; {@code reason}: deck, sala-inexistente, bloqueado, recusado ou falha. */
     static void requestRejected(String type, String reason) {

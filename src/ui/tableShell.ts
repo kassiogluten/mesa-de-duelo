@@ -34,6 +34,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
         <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fs-enter" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path class="fs-exit" d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
       </button>
       <button class="icon-btn undo-btn" id="fUndo" data-ui="undo" hidden>${UNDO_ICON}<span class="undo-label">Desfazer</span></button>
+      <button class="icon-btn lab-restart-btn" id="fLabRestart" data-ui="lab-restart" aria-label="Reiniciar cenário" title="Reiniciar o cenário: a partida volta à mesa montada, para os dois lados" hidden>${ICON_REFRESH}<span class="lab-restart-label">Reiniciar cenário</span></button>
       <button class="icon-btn log-btn" data-ui="log" aria-label="Histórico da partida" title="Histórico da partida" aria-expanded="false" aria-controls="fLogDrawer">${ICON_HISTORY}</button>
       <div class="turn-info" id="fTurnInfo"></div>
       <ul class="match-bar" id="fMatchBar" aria-label="Partida"></ul>
@@ -50,6 +51,7 @@ export function tableShellHTML(o: { feedback: boolean; download: boolean; buzz: 
       <div class="game-menu-divider" aria-hidden="true"></div>
       <button class="btn" data-ui="rematch" id="fMenuRematch">${ICON_REFRESH}${label('Recomeçar partida')}</button>
       <button class="btn" data-ui="watchable" id="fMenuWatchable" hidden>${ICON_EYE}${label('')}</button>
+      <button class="btn" data-ui="lab-restart" id="fMenuLabRestart" hidden>${ICON_REFRESH}${label('Reiniciar o cenário')}</button>
       <button class="btn" data-ui="lab-close" id="fMenuLab" hidden>${ICON_FLASK}${label('Fechar a sala e voltar ao Laboratório')}</button>
       <button class="btn menu-danger" data-ui="concede" id="fMenuConcede" aria-haspopup="dialog" hidden>${ICON_FLAG}${label('Conceder')}</button>
       <button class="btn" data-ui="exit" id="fMenuExit" hidden>${ICON_HOME}${label('Sair da partida')}</button>

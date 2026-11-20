@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Sala de teste do Laboratório: qualquer um dos lados a fecha para os dois. */
+/** Sala de teste do Laboratório: qualquer um dos lados a fecha ou a reinicia para os dois. */
 public class LabRoomTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
 
@@ -46,6 +46,30 @@ public class LabRoomTest {
             // A sala não existe mais: voltar a ela pelo código não dá.
             rooms.onMessage(guest, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Jogador 2\",\"deck\":{\"cards\":[]}}");
             assertTrue(until(guest, j -> "error".equals(j.get("type").getAsString())).get("text").getAsString().contains(code));
+        } finally {
+            rooms.onMessage(host, "{\"type\":\"leave\"}");
+            rooms.onMessage(guest, "{\"type\":\"leave\"}");
+            host.finishAndReleaseAll(); guest.finishAndReleaseAll();
+        }
+    }
+
+    @Test public void restartingTheTestRoomStartsTheScenarioAgainForBothSides() throws Exception {
+        Rooms rooms = new Rooms();
+        EmbeddedChannel host = new EmbeddedChannel(), guest = new EmbeddedChannel();
+        try {
+            rooms.onMessage(host, "{\"type\":\"lab-host\",\"name\":\"Jogador 1\",\"scenario\":{\"players\":[{\"hand\":[\"Lightning Bolt\"]},{}]}}");
+            String code = until(host, j -> "room".equals(j.get("type").getAsString())).getAsJsonObject("room").get("code").getAsString();
+            rooms.onMessage(guest, "{\"type\":\"join\",\"code\":\"" + code + "\",\"name\":\"Jogador 2\"}");
+            String first = until(host, j -> j.has("matchId")).get("matchId").getAsString();
+            until(guest, j -> j.has("matchId"));
+
+            rooms.onMessage(guest, "{\"type\":\"lab-restart\"}");
+            JsonObject toast = until(host, j -> "toast".equals(j.get("type").getAsString()));
+            assertEquals("Jogador 2 reiniciou o cenário.", toast.get("text").getAsString());
+            // Partida nova nos dois lados, e a sala continua a mesma.
+            JsonObject again = until(host, j -> j.has("matchId") && !first.equals(j.get("matchId").getAsString()));
+            assertEquals(code, again.getAsJsonObject("session").get("code").getAsString());
+            until(guest, j -> j.has("matchId") && !first.equals(j.get("matchId").getAsString()));
         } finally {
             rooms.onMessage(host, "{\"type\":\"leave\"}");
             rooms.onMessage(guest, "{\"type\":\"leave\"}");

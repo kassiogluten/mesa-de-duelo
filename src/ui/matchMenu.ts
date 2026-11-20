@@ -1,5 +1,5 @@
 // O menu da partida e a barra do topo, a cada desenho: formato e sala, quem assiste, as saídas (desistir, parar de
-// assistir, fechar a sala de teste), recomeçar, o placar da melhor de três e o botão Desfazer.
+// assistir, fechar a sala de teste), recomeçar (e reiniciar o cenário da sala de teste), o placar da melhor de três e o botão Desfazer.
 import type { FState } from '../forge/client';
 import { matchBarHTML, matchFormatName, seriesText } from './matchBar';
 import { undoButtonState } from './undo';
@@ -22,6 +22,9 @@ export function syncMatchMenu(root: HTMLElement, s: FState, o: { multiplayer: bo
   // Na sala de teste, a saída é fechar a sala e voltar ao Laboratório, em vez de desistir.
   const lab = !!s.room?.lab && !s.watching && o.labClose;
   $('#fMenuLab').hidden = !lab;
+  // E o reinício do cenário, à mão na barra do topo: a partida volta à mesa montada, para os dois lados.
+  $('#fMenuLabRestart').hidden = !lab;
+  $('#fLabRestart').hidden = !lab;
   // Com o jogo em andamento, a saída é Conceder (que pergunta se continua na mesa ou sai). Fora dele, Sair da partida,
   // menos entre os jogos da melhor de três, em que o painel do sideboard tem Desistir da série.
   const me = s.players.find(p => p.id === s.you);

@@ -1,4 +1,9 @@
 {
+  "0.230.0": {
+    "Reiniciar o cenário na sala de teste": [
+      { "img": "0.230.0/reiniciar-cenario.webp", "legenda": "Na sala de teste do Laboratório, o botão Reiniciar cenário na barra de cima, ao lado do Desfazer." }
+    ]
+  },
   "0.228.0": {
     "Os seus números no fim de cada jogo": [
       { "img": "0.228.0/destaques.webp", "legenda": "A vitória com os quatro números de quem jogou: dano causado, remoções, anulações e cartas compradas." },

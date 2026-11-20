@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.230.0] - 2026-11-19
+
+### Novo
+
+- **Reiniciar o cenário na sala de teste.** Na partida de um cenário do Laboratório, o botão "Reiniciar cenário" na barra de cima (e também no menu da partida) volta a mesa ao estado montado, com as mesmas cartas na mão, no campo e no grimório, para os dois lados. Qualquer um dos dois pode reiniciar; com o jogo em andamento a mesa pede confirmação, e o outro lado vê o aviso de quem reiniciou. Dá para testar a mesma jogada várias vezes sem fechar a sala e criá-la de novo.
+
 ## [0.229.0] - 2026-11-19
 
 ### Novo

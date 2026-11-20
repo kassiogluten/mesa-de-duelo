@@ -1,5 +1,60 @@
 [
   {
+    "nome": "K'rrik e Jet Medallion: pagar Liliana Vess com a mana já na reserva",
+    "conferir": "O Jogador 1 tem Liliana Vess na mão e, no campo, K'rrik, Son of Yawgmoth, Jet Medallion e dois Swamps. Com o Jet Medallion, a Liliana custa {2}{B}{B}, e o K'rrik deixa pagar cada {B} com 2 de vida. Vire os dois Swamps antes de conjurar (a reserva fica com {B}{B}) e então conjure a Liliana. Hoje a mana da reserva vai para o {B}{B} e sobra o {2} genérico, que a vida não paga, e a Liliana não sai. O certo é a mana da reserva pagar o {2} e o {B}{B} ser pago com vida: a Liliana entra e o Jogador 1 fica com 16 de vida.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Liliana Vess"
+          ],
+          "library": [
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "K'rrik, Son of Yawgmoth"
+            },
+            {
+              "name": "Jet Medallion"
+            },
+            {
+              "name": "Swamp"
+            },
+            {
+              "name": "Swamp"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Wrath of God com uma indestrutível no campo",
     "versao": "0.220.0",
     "item": "Indestrutível e regeneração aparecem na mesa",

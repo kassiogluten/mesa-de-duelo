@@ -788,7 +788,7 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'fetch-deck'; requestId: string; site: 'moxfield' | 'archidekt'; id: string }
   | { type: 'similar-cards'; requestId: string; oracleId: string; candidates: string[]; limit?: number }
   | { type: 'sideboard'; id: number; deck: unknown } | { type: 'next-game'; id: number } | { type: 'sideboard-cancel'; id: number }
-  | { type: 'rematch' } | { type: 'leave' } | { type: 'lab-close' }
+  | { type: 'rematch' } | { type: 'leave' } | { type: 'lab-close' } | { type: 'lab-restart' }
   | ({ type: 'preferences' } & Partial<FPreferences>)
   | { type: 'card'; id: number; gen?: number }
   | { type: 'block'; attacker: number; blocker: number; gen: number }

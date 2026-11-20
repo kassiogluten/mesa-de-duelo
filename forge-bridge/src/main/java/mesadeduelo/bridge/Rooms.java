@@ -33,7 +33,8 @@ import io.netty.channel.Channel;
  * {type:"watch-player", player} troca o jogador de cuja mesa o espectador vê a partida;
  * {type:"rematch"} pede revanche (contra a IA começa na hora, em rede quando os dois pedirem);
  * {type:"leave"} concede e sai;
- * {type:"lab-close"} fecha a sala de teste do Laboratório para os dois lados (quem fica recebe um "gone").
+ * {type:"lab-close"} fecha a sala de teste do Laboratório para os dois lados (quem fica recebe um "gone");
+ * {type:"lab-restart"} recomeça a sala de teste do zero, com a mesa do cenário, para os dois lados.
  *
  * Volta à partida: todo estado traz session:{code, token}. Se a conexão cair, a partida fica guardada e
  * {type:"rejoin", code, token} devolve o jogador ao seu assento, inclusive depois de recarregar a página.
@@ -264,6 +265,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                 case "rematch" -> rematch(ch);
                 case "leave" -> leave(ch);
                 case "lab-close" -> labClose(ch);
+                case "lab-restart" -> labRestart(ch);
                 default -> {
                     Session s = byChannel.get(ch);
                     Seat seat = s == null ? null : s.seatOf(ch);
@@ -621,6 +623,18 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
             each.channel = null;
         }
         close(s, seat);
+    }
+
+    /** Na sala de teste, qualquer um dos lados recomeça a partida na hora, com a mesa do cenário como foi montada. */
+    private synchronized void labRestart(Channel ch) {
+        Session s = byChannel.get(ch);
+        Seat seat = s == null ? null : s.seatOf(ch);
+        if (seat == null || !s.isLab() || !s.full()) return;
+        for (Seat each : s.seats) each.rematch = false;
+        s.start();
+        notifyOthers(s, seat, seat.name + " reiniciou o cenário.");
+        Log.of(s).info("Sala de teste %s reiniciada por %s", s.code, seat.name);
+        s.markDirty();
     }
 
     /** Fecha a partida; {@code quitter} saiu por vontade própria (sem ele, ninguém voltou a tempo). */
