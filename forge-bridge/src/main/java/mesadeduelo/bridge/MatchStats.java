@@ -76,19 +76,24 @@ final class MatchStats {
     private final Map<Integer, Hit> hits = new HashMap<>();
     /** Quem pôs na pilha o item que acabou de resolver: as mortes de logo depois (ação de estado) contam para ele. */
     private Integer lastResolver;
+    /**
+     * O jogo que já terminou e entrou na conta da série: os números dele ficam em {@link #lines} para o resultado (e a
+     * troca com o sideboard) até o próximo jogo começar, mas não contam de novo nem mudam mais.
+     */
+    private Game counted;
 
     synchronized void attach(Game next) {
         if (next == null || next == game) return;
-        game = next; lines = new HashMap<>(); owners.clear(); controllers.clear(); hits.clear(); lastResolver = null;
+        game = next; counted = null; lines = new HashMap<>(); owners.clear(); controllers.clear(); hits.clear(); lastResolver = null;
         next.subscribeToEvents(new Object() {
             @Subscribe public void receive(GameEvent event) {
-                synchronized (MatchStats.this) { if (game == next) MatchStats.this.receive(event); }
+                synchronized (MatchStats.this) { if (game == next && counted != next) MatchStats.this.receive(event); }
             }
         });
     }
 
     /** Partida nova: nenhum jogo contado. */
-    synchronized void reset() { game = null; lines = new HashMap<>(); finished.clear(); damageBy.clear(); owners.clear(); controllers.clear(); hits.clear(); lastResolver = null; }
+    synchronized void reset() { game = null; counted = null; lines = new HashMap<>(); finished.clear(); damageBy.clear(); owners.clear(); controllers.clear(); hits.clear(); lastResolver = null; }
 
     /** Retrato dos números do jogo atual, para o Desfazer. */
     synchronized Map<Integer, Line> copy() {
@@ -229,9 +234,12 @@ final class MatchStats {
         state.add("stats", all);
     }
 
-    /** Fim de um jogo: os números dele entram na conta da série, por jogador inscrito. Chamado uma vez por jogo. */
+    /**
+     * Fim de um jogo: os números dele entram na conta da série, por jogador inscrito (uma vez só). Eles continuam no
+     * estado ({@link #addStats}) até o próximo jogo: o resultado é montado depois desta chamada.
+     */
     synchronized void gameEnded(Game ended) {
-        if (ended == null) return;
+        if (ended == null || ended == counted) return;
         for (Player p : ended.getRegisteredPlayers()) {
             Line l = lines.get(p.getId());
             if (l == null) continue;
@@ -242,7 +250,8 @@ final class MatchStats {
                 if (target != null) damageBy.computeIfAbsent(p.getRegisteredPlayer(), k -> new LinkedHashMap<>()).merge(target.getRegisteredPlayer(), t.getValue(), Integer::sum);
             }
         }
-        lines = new HashMap<>();
+        if (ended == game) counted = ended;
+        else lines = new HashMap<>();
     }
 
     private static Player playerById(Game g, int id) {
@@ -260,7 +269,7 @@ final class MatchStats {
         Line done = finished.get(rp);
         if (done != null) total.add(done);
         Map<RegisteredPlayer, Integer> to = new LinkedHashMap<>(damageBy.getOrDefault(rp, Map.of()));
-        if (unfinished != null && unfinished == game) {
+        if (unfinished != null && unfinished == game && counted != game) {
             Player me = null;
             for (Player p : unfinished.getRegisteredPlayers()) if (p.getRegisteredPlayer() == rp) me = p;
             Line now = me == null ? null : lines.get(me.getId());

@@ -51,7 +51,14 @@ export const MOMENT_EFFECTS: { [N in keyof MomentParams]: (layer: GpuLayer, s: S
       // O círculo aceso fica em .22 da metade da textura; o resto da tela, fora do sprite, é um retângulo escuro.
       const scale = radius / (128 * .22), half = 128 * scale;
       const spot = new Sprite({ texture: spotTexture(layer), anchor: .5, x, y, scale });
-      const rest = new Graphics().rect(-10, -10, width + 20, height + 20).fill({ color: 0x000000 }).rect(x - half + 1, y - half + 1, half * 2 - 2, half * 2 - 2).cut();
+      // Quatro faixas em volta do quadrado, sem cobrir o sprite: com o `cut()` o buraco não saía, e a tela inteira
+      // escurecia, a carta junto, com o quadrado ainda mais escuro por cima.
+      const left = x - half, top = y - half, right = x + half, bottom = y + half;
+      const rest = new Graphics()
+        .rect(-10, -10, width + 20, Math.max(0, top + 10)).fill({ color: 0x000000 })
+        .rect(-10, bottom, width + 20, Math.max(0, height + 10 - bottom)).fill({ color: 0x000000 })
+        .rect(-10, top, Math.max(0, left + 10), half * 2).fill({ color: 0x000000 })
+        .rect(right, top, Math.max(0, width + 10 - right), half * 2).fill({ color: 0x000000 });
       view.addChild(rest, spot);
       return t => {
         // Escurece depressa, fica e volta devagar.

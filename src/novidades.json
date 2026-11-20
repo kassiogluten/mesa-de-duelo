@@ -1,4 +1,12 @@
 {
+  "0.233.0": {
+    "Game Changer chegando à mesa": [
+      { "img": "0.233.0/cena.webp", "legenda": "O Rhystic Study chega à pilha sob o facho de luz, com a gema girando sobre ele e \"Game Changer\" com o nome da carta ao lado." }
+    ],
+    "Selo de Game Changer": [
+      { "img": "0.233.0/selo.webp", "legenda": "O Rhystic Study e o Ancient Tomb no campo, cada um com a gema dourada no canto de cima." }
+    ]
+  },
   "0.232.0": {
     "Aviso de manutenção do servidor": [
       { "img": "0.232.0/aviso-mesa.webp", "legenda": "Na mesa, logo abaixo da barra de cima, a faixa do aviso com o horário do reinício e quanto falta, e o × para fechar." }

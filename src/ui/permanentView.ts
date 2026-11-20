@@ -14,6 +14,7 @@ import { ringText, RING_ICON } from './playerCounters';
 import { walkerForecast } from './combatForecast';
 import type { Defender } from './commanderTable';
 import { label } from './cardFaces';
+import { gameChangerBadge, gameChangerCard } from './gameChanger';
 import { COUNTER_DISC, COUNTER_ICON, ICON_CLIP, ICON_CROWN, ICON_DIZZY, ICON_LAYERS, ICON_SHIELD, ICON_SWORD, KEYWORD_ICON, inspectIcon } from './icons';
 import { counterKeyword, counterLabel, fieldKeywordsOf, keywordName, keywordRule } from './cardLabels';
 
@@ -151,8 +152,11 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
   if (mutated) inner.push('mutated');
   // Portador do Anel: anel dourado no canto de cima à direita; a dica diz o que o Anel já faz por ele.
   const ringTempted = c.ringBearer ? s.players.find(p => p.id === c.controller)?.ringTempted ?? 0 : 0;
+  // Game Changer (só nas partidas com as regras do Commander): a gema no canto de cima à direita.
+  const gameChanger = gameChangerCard(s, c);
   const badges = [isCommander ? `<span class="badge commander" title="Comandante">${ICON_CROWN}</span>` : '',
-    c.ringBearer ? `<span class="badge ring-bearer" title="${esc(['Portador do Anel.', ringTempted ? ringText(ringTempted) : ''].join(' ').trim())}">${RING_ICON}</span>` : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
+    c.ringBearer ? `<span class="badge ring-bearer" title="${esc(['Portador do Anel.', ringTempted ? ringText(ringTempted) : ''].join(' ').trim())}">${RING_ICON}</span>` : '',
+    gameChanger ? gameChangerBadge() : '', c.copyOf ? `<span class="badge copy" title="${esc(c.copyOf)} copiando ${esc(label(c))}">Cópia</span>` : '',
     mutated ? `<span class="badge mutated" title="${esc(mergedText(c.merged!))}">Mutada ×${c.merged!.length}</span>` : '',
     c.token ? '<span class="badge token">Ficha</span>' : '',
     c.prepared ? `<span class="badge prepared" title="${esc(c.preparedSpell ? `Preparada: quem a controla pode conjurar uma cópia de ${c.preparedSpell}` : 'Preparada')}">Preparada</span>` : ''].join('');
@@ -166,7 +170,7 @@ export function bfCard(v: BoardView, s: FState, c: FCard, attached: FCard[] = []
     inner.push('ar-field');
     if (c.creature || c.token) slot.push('ar-square');
   }
-  const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.ringBearer ? 'Portador do Anel' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
+  const aria = [label(c), untappable ? 'virada para mana, toque para desvirar e devolver a mana' : '', isCommander ? 'comandante' : '', c.ringBearer ? 'Portador do Anel' : '', gameChanger ? 'Game Changer' : '', c.copyOf ? `cópia feita por ${c.copyOf}` : '', mutated ? mergedText(c.merged!).toLowerCase() : '', c.token ? 'ficha' : '', c.prepared ? `preparada${c.preparedSpell ? `, pode conjurar ${c.preparedSpell}` : ''}` : '', permanentFxText(fx),
     kws.map(k => keywordName(c, k)).join(', '), shown.map(([k, n]) => `${counterLabel(k)} ×${n}`).join(', '), loyalty !== undefined ? `lealdade ${loyalty}` : '', c.classLevel ? classLevelText(c).toLowerCase() : '', attached.length ? `com ${attached.map(label).join(', ')}` : '', exiledAria(slotExiled(s, c).map(x => x.card))].filter(Boolean).join(', ');
   const atts = attached.map((a, i) =>
     `<div class="att${usable(s, a.id) ? ' actionable' : ''}${selectedForInput(s, a.id) ? ' choice-selected' : ''}" data-fid="${a.id}" role="button" tabindex="0"${s.input.selection ? ` aria-pressed="${selectedForInput(s, a.id)}"` : ''} style="--i:${i + 1}" aria-label="${esc(label(a))}, presa a ${esc(label(c))}">${v.face(a, 'small', true)}${selectedBadge(s, a)}</div>`).join('');

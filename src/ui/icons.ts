@@ -5,6 +5,8 @@ export const ICON_CLIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M
 /** O shuriken do ninjutsu e do sneak: o que gira pela mesa quando o ninja entra e o selo da carta da mão que pode entrar assim. */
 export const ICON_SHURIKEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 1l2.2 7.8L22 11l-7.8 2.2L12 23l-2.2-7.8L2 12l7.8-2.2zm0 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
 export const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="currentColor"/></svg>';
+/** Gema lapidada: o selo de Game Changer. */
+export const ICON_GEM = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4h9L21 9.5 12 21 3 9.5z" fill="currentColor"/><path d="M3 9.5h18M7.5 4 10 9.5 12 21M16.5 4 14 9.5 12 21M10 9.5 12 4l2 5.5" fill="none" stroke="#5a3606" stroke-width="1" stroke-linejoin="round" opacity=".55"/></svg>';
 /**
  * Os lados da moeda, como caminho de 24×24: a Cara é um rosto de perfil e a Coroa, a coroa. A moeda da camada GPU os
  * pinta no canvas, e a de CSS (efeitos leves), em SVG.

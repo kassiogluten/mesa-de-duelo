@@ -46,7 +46,7 @@ function fakeTable() {
 
 test('every lab play button runs and sends events or panel commands, with a note for the panel', () => {
   const keys = PLAY_BUTTONS.flatMap(([, list]) => list.map(([key]) => key));
-  assert.equal(keys.length, 34);
+  assert.equal(keys.length, 35);
   for (const key of keys) {
     const t = fakeTable();
     const note = createLabPlays(t.lab).start(key);

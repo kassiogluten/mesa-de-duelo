@@ -8,6 +8,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.233.0] - 2026-11-20
+
+### Novo
+
+- **Game Changer chegando à mesa.** Numa partida de Commander, quando alguém conjura uma carta da lista oficial de Game Changers (ou joga um terreno dela, como o Ancient Tomb), a mesa escurece, um facho de luz cai sobre a carta com poeira dourada e uma gema lapidada surge girando sob a luz, com "Game Changer" e o nome da carta ao lado. Depois de um instante, a gema voa para o canto da carta. Com "reduzir movimento", aparece só o aviso com o nome; sem os efeitos completos, um anel dourado acende em volta da carta.
+- **Selo de Game Changer.** Nas partidas de Commander, as cartas da lista levam uma gema dourada pequena no canto de cima, na pilha e no campo. O balão do selo e os detalhes da carta dizem que ela é um Game Changer.
+
+### Corrigido
+
+- **Mesa escurecendo nos momentos grandes.** Na mágica de valor 6 ou mais, no ultimate e no golpe letal, a mesa escurece em volta e deixa acesa a carta ou o retrato em foco. Antes escurecia tudo, inclusive o que estava em foco, com um quadrado mais escuro no meio.
+- **Números do fim do jogo de volta.** O resultado do jogo voltou a mostrar o dano causado, as remoções, as anulações e as cartas compradas de verdade, e a tabela de "Ver todos os números" com os de cada jogador, em vez de tudo zerado. Numa melhor de três, os números do jogo que acabou continuam à vista na troca com o sideboard.
+
 ## [0.232.0] - 2026-11-19
 
 ### Novo

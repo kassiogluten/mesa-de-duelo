@@ -273,6 +273,10 @@ a { color: var(--gold); }
 /* Portador do Anel: anel dourado no canto oposto ao dos outros selos. */
 .badge.ring-bearer { left: auto; right: 3%; display: inline-flex; align-items: center; justify-content: center; padding: 2px; border-radius: 50%; background: radial-gradient(circle, #3a2a08, #1a1204); color: #f2c14e; box-shadow: 0 0 0 1px #f2c14e99, 0 0 8px #f2c14e88; }
 .badge.ring-bearer svg { width: max(11px, calc(var(--cw) * .15)); height: max(11px, calc(var(--cw) * .15)); }
+/* Game Changer: a gema dourada num disco escuro, no canto de cima à direita (abaixo do anel, se for também o Portador). */
+.badge.game-changer { left: auto; right: 3%; display: inline-flex; align-items: center; justify-content: center; padding: 2px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, var(--azul-13203a, #13203a), var(--azul-090d18, #090d18)); color: #f2b54c; box-shadow: 0 0 0 1px #f2b54ccc, 0 1px 4px rgba(0, 0, 0, .7); }
+.badge.game-changer svg { width: max(11px, calc(var(--cw) * .15)); height: max(11px, calc(var(--cw) * .15)); }
+.badge.ring-bearer ~ .badge.game-changer { top: calc(3% + max(15px, calc(var(--cw) * .15) + 6px)); }
 /*
  * Auras e equipamentos: aparecem atrás da carta a que estão presos, um pouco acima e à direita.
  * A subida total para em 18% da carta (o degrau encolhe com mais anexos) e a margem de cima reserva

@@ -6,6 +6,7 @@ import { suppressOpeningPreview } from './openingPresentation';
 import { calloutDuration, presentationDuration, presentationPace, hasLiveDecision, type PresentationEvent, type PresentationFrame } from './presentationTimeline';
 import type { TableCtx } from './tableContext';
 import { damageSweep, sameSweep, sweepCause, SWEEP_MIN } from './boardSweep';
+import { commanderRules } from '../decks';
 
 export type PresentationDeps = Pick<TableCtx, 'root' | 'timeline' | 'motion' | 'audio' | 'prefs' | 'state' | 'match' | 'face' | 'eventDescription' | 'announce' | 'render' | 'renderTable'>;
 
@@ -137,7 +138,7 @@ export function createPresentationQueue(d: PresentationDeps) {
    */
   function ingest(s: FState, silently: boolean, collect: (s: FState) => void) {
     const beforeCurrent = timeline.current;
-    timeline.ingest(s.matchId ?? s.session?.code ?? 'local', s.events ?? [], { silent: silently, cursor: s.eventCursor });
+    timeline.ingest(s.matchId ?? s.session?.code ?? 'local', s.events ?? [], { silent: silently, cursor: s.eventCursor, gameChangers: commanderRules(s.config?.format) });
     silentNext = false;
     collect(s);
     if (beforeCurrent && !timeline.current) { clearTimeout(presentationTimer); motion.cancelPresentation(); }

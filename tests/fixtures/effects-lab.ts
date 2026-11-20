@@ -972,6 +972,12 @@ function table() {
           port.play('echo', { at: at.w ? at : { ...at, w: 100, h: 140 }, color: c.color || '#ff7a3d', copies: 4, side: -1, duration: 900 });
           return 'Cópias: contornos de carta saem da pilha em leque (aqui, 4), com faíscas; as cartas e o "×N" vão por cima, na mesa.';
         }
+        case 'game-changer': {
+          const at = pointOf(undefined)!, card = at.w ? at : { ...at, w: 100, h: 140 };
+          port.play('spotlight', { at: card, radius: Math.max(card.w, card.h) * .75 + 30, duration: 2300, strength: .45 });
+          port.play('gameChanger', { at: card, to: { cx: card.cx + card.w * .4, cy: card.cy - card.h * .42, w: 14, h: 14 }, duration: 2300 });
+          return 'Game Changer: a mesa escurece, o facho de luz cai sobre a carta com poeira dourada, a gema surge girando com faíscas, fica um instante e voa até o canto da carta (a jogada inteira, com a faixa e o selo, está em Jogadas, Valor e Commander).';
+        }
         case 'empower': case 'empower-x': {
           const at = pointOf(undefined)!;
           port.play('empower', { at: at.w ? at : { ...at, w: 100, h: 140 }, color: c.color || '#ff7a3d', power: c.kind === 'empower-x' ? 9 : 3, duration: 680 });
@@ -1056,7 +1062,7 @@ const EFFECT_LABELS: Record<string, string> = {
   vortex: 'portal do exílio', gather: 'volta do blink', ash: 'cinzas do sacrifício', motes: 'grãos da habilidade', puff: 'fumaça do ninja', dust: 'poeira ao virar',
   charge: 'riscos do ataque', beam: 'feixe da habilidade', trail: 'rastro do voo', glint: 'redemoinho ao conjurar', arrive: 'anel de chegada', streak: 'risco do golpe',
   mana: 'orbe de mana', flare: 'brilho de chegada', warp: 'rasgo da dobra', counter: 'faíscas do marcador', heal: 'ganho de vida', dizzy: 'estrelinhas do enjoo',
-  undizzy: 'estrelinhas indo embora', coin: 'moeda', die: 'dado', victory: 'vitória', defeat: 'derrota', spotlight: 'mesa escurecendo da mágica grande', legend: 'raios da lendária',
+  undizzy: 'estrelinhas indo embora', coin: 'moeda', die: 'dado', victory: 'vitória', defeat: 'derrota', spotlight: 'mesa escurecendo da mágica grande', legend: 'raios da lendária', gameChanger: 'facho e gema do Game Changer',
   arrowBirth: 'seta de alvo nascendo', shuriken: 'shuriken', shuffle: 'embaralhar', scry: 'vidência', flight: 'carta voando', tally: 'objeto do marcador de jogador', cardTurn: 'carta mudando de face',
 };
 /** O que cada degrau desliga, lido da lista do regulador (TIER1_CUTS), para conferir à mão. */
@@ -1162,8 +1168,8 @@ function panel() {
     ${[['mend-gold', 'Indestrutível'], ['mend-green', 'Regenerou'], ['slash', 'Primeiro golpe'], ['slash-2', 'Golpe duplo (2º)']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Golpe de comandante (a coroa no retrato do oponente e o voo até o "Dano X/21"; a jogada inteira está em Jogadas, Valor e Commander):</p>
     ${[['crown', 'Coroa no retrato'], ['crown-lethal', 'Coroa partida (21)'], ['crown-fly', 'Coroa voando ao contador']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
-    <p>Mágicas (o relógio no meio da mesa; o eco e a energia, na pilha ou no meio da mesa):</p>
-    ${[['extra-turn', 'Turno extra'], ['echo', 'Cópias (eco)'], ['empower', 'Reforço'], ['empower-x', 'X = 9']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
+    <p>Mágicas (o relógio no meio da mesa; o eco, a energia e a gema do Game Changer, na pilha ou no meio da mesa):</p>
+    ${[['extra-turn', 'Turno extra'], ['echo', 'Cópias (eco)'], ['empower', 'Reforço'], ['empower-x', 'X = 9'], ['game-changer', 'Game Changer']].map(([k, t]) => `<button data-gpu="${k}">${t}</button>`).join('')}
     <p>Movimento (na permanente selecionada; o feixe vai da Fonte ao Alvo):</p>
     ${[['vortex', 'Exilar (portal)'], ['gather', 'Volta do blink'], ['ash', 'Sacrificar'], ['trail-ember', 'Rastro: sacrificada'], ['trail-dust', 'Rastro: destruída'], ['trail-sparkle', 'Rastro: devolvida'],
        ['charge', 'Atacar'], ['dust', 'Virar'], ['puff', 'Fumaça do ninja'], ['motes', 'Habilidade (grãos)'], ['dizzy', 'Chegou tonta (enjoo)'], ['undizzy', 'O enjoo passou'],

@@ -3,6 +3,7 @@
 import type { FCard, FState } from '../forge/client';
 import { esc, richText } from './cardtext';
 import { countSealsHTML } from './cardCounts';
+import { gameChangerBadge, gameChangerCard } from './gameChanger';
 import { STACK_KINDS, loyaltyLineIn, modeLineIn, resolvingChoice, resolvingChoiceLabel, stackBadgeText, stackCastLine, stackLoyaltyCost, stackLoyaltyLine, stackLoyaltyTone, stackOwnerLine, stackTag } from './stackPresentation';
 
 /** O que a pilha precisa da mesa. */
@@ -19,6 +20,9 @@ export interface StackView {
 }
 
 /** Selo que diz por que o item está na pilha (mágica, habilidade ou gatilho) e, se houver, como foi conjurado ou o custo de lealdade. */
+/** Mágica da lista de Game Changers na pilha (não uma habilidade dela): a gema no canto da carta. */
+const stackGameChanger = (s: FState, si: FState['stack'][number]) => !si.kind || si.kind === 'spell' ? (gameChangerCard(s, si.source) ? gameChangerBadge() : '') : '';
+
 export function stackKindBadge(si: FState['stack'][number]) {
   const kind = si.kind && STACK_KINDS[si.kind];
   const tag = stackTag(si);
@@ -80,7 +84,7 @@ export function stackPanel(v: StackView, s: FState, replaying: boolean, o: { min
   const topLabel = replaying ? 'Jogada recente' : waiting ? resolvingChoiceLabel(waiting) : 'Resolve primeiro';
   return `<div class="stack-heading"><h2>Pilha</h2><span class="stack-count">${count}</span>${`<button class="stack-size-toggle" data-ui="stack-size" aria-label="${o.minimized ? 'Expandir a pilha' : 'Recolher a pilha para ver o campo'}" aria-expanded="${!o.minimized}">${o.minimized ? '+' : '−'}</button>`}</div>
     <button class="stack-pile${waiting ? ` awaiting-choice${waiting.mine ? ' mine' : ''}` : ''}" data-ui="${replaying ? 'stack-replay' : 'stack-open'}" data-stack="${top.id}" ${replaying ? 'data-stack-replay' : `data-gen="${s.input.gen}" aria-haspopup="dialog" aria-expanded="${o.galleryOpen}" aria-controls="fStackGallery"`} aria-label="${stackBadgeText(top) ? `${esc(stackBadgeText(top))}. ` : ''}${replaying ? `Inspecionar ${top.source ? esc(v.label(top.source)) : 'efeito'}. Reprodução de uma jogada já processada; não está mais na pilha.` : `Abrir a pilha: ${count} ${count === 1 ? 'efeito' : 'efeitos'}. ${top.source ? esc(v.label(top.source)) : 'O efeito do topo'} ${waiting ? `está resolvendo e ${waiting.mine ? 'aguarda a sua escolha' : `${esc(waiting.name)} está escolhendo`}.` : 'resolve primeiro.'}`}">
-      ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(v, si)}${i ? '' : stackKindBadge(si) + stackLoyaltyStrip(v, si) + stackModeStrip(v, si)}</div>`).join('')}
+      ${s.stack.slice(0, 4).map((si, i) => `<div class="stack-layer ${si.controller === s.you ? 'mine' : 'theirs'}${!replaying && s.input.selectableStacks?.includes(si.id) ? ' actionable' : ''}" style="--depth:${i}" ${i ? `data-stack="${si.id}"` : ''} aria-hidden="true">${stackFace(v, si)}${i ? '' : stackKindBadge(si) + stackLoyaltyStrip(v, si) + stackModeStrip(v, si) + stackGameChanger(s, si)}</div>`).join('')}
       <span class="stack-top-label">${esc(topLabel)}</span>
     </button><span class="stack-open-hint">${replaying ? 'Clique para inspecionar' : 'Clique para ver a pilha'}</span>`;
 }
@@ -115,7 +119,7 @@ export function stackGalleryHTML(v: StackView, s: FState) {
         <div class="stack-gallery-order">${copies > 1
           ? `<b>${i + 1}–${i + copies}</b><span>${copies} iguais</span>`
           : `<b>${i + 1}</b><span>${i === 0 ? 'Resolve primeiro' : `${i + 1}º na resolução`}</span>`}</div>
-        <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}${copies > 1 ? `, ${copies} efeitos iguais` : ''}">${stackFace(v, si)}${stackKindBadge(si)}${copies > 1 ? `<span class="stack-gallery-copies" title="${copies} efeitos iguais, cada um resolve separado">×${copies}</span>` : ''}</button>
+        <button class="stack-gallery-card${selectable ? ' actionable' : ''}" data-stack="${si.id}" data-gen="${s.input.gen}" aria-label="${selectable ? 'Selecionar como alvo' : 'Inspecionar'}: ${esc(name)}${copies > 1 ? `, ${copies} efeitos iguais` : ''}">${stackFace(v, si)}${stackKindBadge(si)}${stackGameChanger(s, si)}${copies > 1 ? `<span class="stack-gallery-copies" title="${copies} efeitos iguais, cada um resolve separado">×${copies}</span>` : ''}</button>
         <div class="stack-gallery-owner">${esc(stackOwnerLine(si, s.you, owner))}</div>
         <div class="stack-gallery-effect" tabindex="0" aria-label="Efeito e alvos de ${esc(name)}">${stackLoyaltyLine(si) ? `<p class="stack-cast">${esc(stackLoyaltyLine(si))}</p>` : ''}<p>${richText(stackEffectText(v, si))}</p>${stackCastLine(si.cast) ? `<p class="stack-cast">${esc(stackCastLine(si.cast))}</p>` : ''}${v.targetsText(si.targets) ? `<p class="stack-targets">${esc(v.targetsText(si.targets))}</p>` : ''}</div>
         <div class="stack-gallery-actions">${selectable ? `<button class="arena-btn primary" data-stack="${si.id}" data-gen="${s.input.gen}">Selecionar como alvo</button>` : ''}${si.source ? `<button class="icon-btn" data-stack-inspect="${si.id}" aria-label="Inspecionar ${esc(name)}">Inspecionar</button>` : ''}</div>

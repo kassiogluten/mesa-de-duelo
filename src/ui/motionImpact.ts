@@ -3,11 +3,13 @@ import type { FCard } from '../forge/client';
 import type { PresentationEvent } from './presentationTimeline';
 import { damageLook } from './damageEffects';
 import { center, type MotionKit, type Point } from './motionKit';
-import { bigSpell, legendaryEntry } from './impactRules';
+import { bigSpell, gameChangerPlay, legendaryEntry } from './impactRules';
 import { effectsTier } from './gpu/gpuSupport';
 
 /** O que faz da jogada um momento grande, ou nada. */
 export function impactOf(event: PresentationEvent): 'big-spell' | 'ultimate' | 'lethal' | 'legend' | null {
+  // O Game Changer tem a cena própria, com o holofote dele (gameChangerMoment.ts).
+  if (gameChangerPlay(event)) return null;
   if (bigSpell(event)) return 'big-spell';
   if (event.type === 'ability-activated' && event.ultimate) return 'ultimate';
   if (event.type === 'damage' && event.lethal && !event.prevented && !!event.targets?.players?.length) return 'lethal';

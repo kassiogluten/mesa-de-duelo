@@ -104,6 +104,17 @@
 .damage-number.boost > b { font-size: 30px; }
 .boost-ring { position: fixed; z-index: 34; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; border: 3px solid var(--boost, var(--gold)); box-shadow: 0 0 16px var(--boost, var(--gold)), inset 0 0 14px color-mix(in srgb, var(--boost, var(--gold)) 55%, transparent); opacity: 0; }
 
+/* Game Changer chegando à mesa (gameChangerMoment.ts): a faixa com o nome embaixo da carta e, sem a camada GPU, o
+   anel dourado em volta dela. */
+.gc-banner { position: fixed; z-index: 40; pointer-events: none; transform: translate(-50%, 0); width: max-content !important; height: auto !important; display: grid; justify-items: center; gap: 3px; text-align: center; opacity: 0; }
+.gc-banner.above { transform: translate(-50%, -100%); }
+.gc-banner.left { transform: translate(-100%, -50%); justify-items: end; text-align: right; }
+.gc-banner.right { transform: translate(0, -50%); justify-items: start; text-align: left; }
+.gc-banner > b { padding-left: .3em; color: var(--gold-light, #ffe2a0); font: 800 14px/1 var(--display); letter-spacing: .3em; text-transform: uppercase; text-shadow: 0 0 12px color-mix(in srgb, var(--gold) 80%, transparent), 0 2px 4px #000c; }
+.gc-banner > span { color: var(--ink); font: 600 13px/1.3 var(--body); text-shadow: 0 1px 3px #000, 0 0 10px #000a; }
+.gc-banner > i { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.gc-halo { position: fixed; z-index: 34; pointer-events: none; transform: translate(-50%, -50%); border-radius: 9px; border: 2px solid var(--gold); box-shadow: 0 0 18px color-mix(in srgb, var(--gold) 75%, transparent), inset 0 0 14px color-mix(in srgb, var(--gold) 45%, transparent); opacity: 0; }
+
 /* Cascata e descobrir: as cartas do topo do grimório abertas em leque no meio da mesa; a achada acende em dourado. */
 .presentation-piece.cascade-card > .face { box-shadow: 0 10px 24px #0009, 0 0 0 1px #0008; }
 .presentation-piece.cascade-card.hit > .face { box-shadow: 0 14px 30px #000a, 0 0 0 2px var(--gold), 0 0 22px color-mix(in srgb, var(--gold) 70%, transparent); }

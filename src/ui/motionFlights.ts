@@ -1,4 +1,4 @@
-// Animações de cartas mudando de zona: conjurar, resolver, anular, entrar e sair do campo.
+// Animações de cartas mudando de zona: conjurar, resolver, anular, entrar e sair do campo (e, com um Game Changer, a cena dele quando a carta chega).
 import type { FCard } from '../forge/client';
 import { TRINKET_LIMIT } from './tokenTrinkets';
 import { entryTiming, type PresentationEvent } from './presentationTimeline';
@@ -8,6 +8,8 @@ import { createNinjaMotion, ninjaSwap } from './ninjutsuEffects';
 import { center, LANDING, reduced, TAP, turnOf, type MotionKit, type Point } from './motionKit';
 import { zoneGlow, type createZoneMotion } from './motionZones';
 import { createCommanderEntry } from './commanderEntry';
+import { createGameChangerMoment } from './gameChangerMoment';
+import { GAME_CHANGER_FLIGHT } from './impactRules';
 
 type Face = (card: NonNullable<PresentationEvent['card']>) => string;
 /** A ficha que surge acende (sem a camada GPU, a imagem dela clareia e brilha). */
@@ -27,7 +29,11 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
   const { destination, pileOf, zonePoint, reanimate, leave } = zones;
   const ninja = createNinjaMotion(kit);
   const commander = createCommanderEntry(kit);
-  function cardFlight(event: PresentationEvent, card: HTMLElement | null, id: number | undefined, options: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }) {
+  const gameChanger = createGameChangerMoment(kit);
+  function cardFlight(event: PresentationEvent, card: HTMLElement | null, id: number | undefined, step: { you: number; html?: string; label: string; duration: number; hideDestination?: boolean }) {
+    // Game Changer: a carta voa no começo do passo e o resto é a cena dele, quando ela chega (gameChangerMoment.ts).
+    const options = event.gameChanger ? { ...step, duration: Math.round(step.duration * GAME_CHANGER_FLIGHT) } : step;
+    const scene = step.duration - options.duration;
     if (event.type === 'resolved' && !event.trigger && card && id !== undefined && performance.now() - (state.landedAt.get(String(id)) ?? -Infinity) < 4000) { pulse(card, 'arrive-highlight'); return; }
     const old = id === undefined ? undefined : state.cards.get(String(id));
     const stage = kit.stage();
@@ -166,6 +172,7 @@ export function createFlightMotion(kit: MotionKit, zones: ReturnType<typeof crea
         if (landed && walkerArrives(event)) walkerArrive(landed, event);
         if (landed && event.from === 'Graveyard') reanimate(landed);
       }
+      if (event.gameChanger) gameChanger.moment(event, event.type === 'spell-cast' ? stackPile() : id !== undefined ? root.querySelector<HTMLElement>(`.field [data-fid="${id}"]`) : null, scene);
     }, options.duration);
   }
   function entered(event: PresentationEvent, options: { you: number; fast: boolean; face: Face; hideDestination?: boolean }) {

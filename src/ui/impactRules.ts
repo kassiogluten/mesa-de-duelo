@@ -1,4 +1,4 @@
-// Quais jogadas são momentos grandes (mágica de valor 6 ou mais, lendária entrando, comandante saindo da zona de comando), para a fila dar mais tempo a elas e a mesa mostrá-las com mais peso.
+// Quais jogadas são momentos grandes (mágica de valor 6 ou mais, lendária entrando, comandante saindo da zona de comando, Game Changer chegando à mesa), para a fila dar mais tempo a elas e a mesa mostrá-las com mais peso.
 import type { PresentationEvent } from './presentationTimeline';
 
 /** Valor de mana de um custo impresso ("{4}{G}{G}" é 6; X vale 0; híbrido {2/W} vale 2), só da primeira face. */
@@ -24,3 +24,10 @@ export function legendaryEntry(event: PresentationEvent) {
 }
 /** Mágica grande sendo conjurada. */
 export const bigSpell = (event: PresentationEvent) => event.type === 'spell-cast' && manaValueOf(event.card?.manaCost) >= BIG_SPELL;
+
+/** Game Changer conjurado ou jogado numa partida com as regras do Commander (marcado na fila, presentationTimeline.ts). */
+export const gameChangerPlay = (event: PresentationEvent) => (event.type === 'spell-cast' || event.type === 'land-played') && !!event.gameChanger && !!event.card;
+/** Duração cheia do passo do Game Changer, em ms: o voo e os 2,3 s da cena (o Rápido e a fila cheia encurtam como os outros). */
+export const GAME_CHANGER = 3000;
+/** A parte do passo que é o voo até a pilha (ou o campo); o resto é a cena. */
+export const GAME_CHANGER_FLIGHT = .24;

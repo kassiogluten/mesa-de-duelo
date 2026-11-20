@@ -1,5 +1,6 @@
 import type { FCard, FState, FTargets } from '../forge/client';
-import { bigSpell, commanderEntry, COMMANDER_ENTRY, legendaryEntry } from './impactRules';
+import { bigSpell, commanderEntry, COMMANDER_ENTRY, GAME_CHANGER, gameChangerPlay, legendaryEntry } from './impactRules';
+import { isGameChanger } from '../brackets';
 import { sweepDuration } from './boardSweep';
 
 /** Public, immutable board view at an engine event boundary. Never contains a hand or prompt. */
@@ -84,6 +85,11 @@ export interface PresentationEvent {
   entries?: FCard[];
   /** Só na mesa: o comandante entrando no campo depois de ser conjurado da zona de comando (`entered`), com a entrada própria. */
   commanderEntry?: boolean;
+  /**
+   * Só na mesa: carta da lista de Game Changers chegando à mesa (`spell-cast`, sem ser cópia, ou `land-played`) numa
+   * partida com as regras do Commander, com o holofote e a gema (gameChangerMoment.ts).
+   */
+  gameChanger?: boolean;
   /** Só na mesa: gatilho da mesma carta logo depois de outro igual (blink em todos), com um aviso mais curto. */
   repeat?: boolean;
   /** Marcadores (`counters`): o tipo, como o Forge chama (P1P1, M1M1, LOYALTY, POISON…), e se vieram com a entrada. */
@@ -198,6 +204,12 @@ function sameLandTransition(a: PresentationEvent, b: PresentationEvent) {
 /** Algum destes eventos tem passo na mesa (o Histórico só oferece ver de novo a jogada que tem o que mostrar). */
 export const replayable = (events: readonly PresentationEvent[]) => events.some(e => PRESENTABLE.has(e.type));
 
+/** Game Changer conjurado (a cópia não) ou jogado como terreno. */
+function markGameChanger(event: PresentationEvent) {
+  const played = (event.type === 'spell-cast' && !event.copy) || event.type === 'land-played';
+  if (played && event.card?.name && !event.card.token && !event.card.faceDown && isGameChanger(event.card.name)) event.gameChanger = true;
+}
+
 /** Pure, bounded presentation queue. It never schedules engine input or changes authoritative state. */
 export class PresentationTimeline {
   matchId = '';
@@ -215,7 +227,11 @@ export class PresentationTimeline {
   /** Passos com imagem que ainda esperam a vez (os só de som e os gatilhos repetidos não contam). */
   get queuedSteps() { return this.pending.filter(entry => !entry.audioOnly && !entry.event.repeat).length; }
 
-  ingest(matchId: string, events: readonly PresentationEvent[], options: { silent?: boolean; cursor?: number } = {}) {
+  /**
+   * `gameChangers`: a partida tem as regras do Commander, e as cartas da lista de Game Changers ganham o momento
+   * próprio ao chegar à mesa.
+   */
+  ingest(matchId: string, events: readonly PresentationEvent[], options: { silent?: boolean; cursor?: number; gameChangers?: boolean } = {}) {
     const fresh = !this.initialized || matchId !== this.matchId;
     if (fresh) this.reset(matchId);
     this.initialized = true;
@@ -228,6 +244,7 @@ export class PresentationTimeline {
       if (event.type === 'counters' && (event.entering || event.paid)) continue;
       const copy = structuredClone(event);
       this.markCommanderEntry(copy);
+      if (options.gameChangers) markGameChanger(copy);
       if (copy.type === 'mill') copy.milled = copy.card ? [copy.card] : [];
       if (sameMill(accepted.at(-1), copy)) accepted[accepted.length - 1] = joinMill(accepted.at(-1)!, copy);
       else accepted.push(copy);
@@ -401,7 +418,8 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
   // Planeswalker: a entrada e o ultimate ganham um pouco mais de tempo, sem segurar a partida.
   // Momentos grandes (impactRules.ts): a lendária chegando e a mágica grande ganham tempo para a cena.
   // O comandante saindo da zona de comando tem a cena mais longa das entradas (commanderEntry.ts).
-  const duration = commanderEntry(event) ? COMMANDER_ENTRY : legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
+  // Game Changer: o voo até a pilha (ou o campo) e a cena do holofote com a gema (gameChangerMoment.ts).
+  const duration = gameChangerPlay(event) ? GAME_CHANGER : commanderEntry(event) ? COMMANDER_ENTRY : legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
     : event.type === 'coin' || event.type === 'die' ? 1250 : event.type === 'scry' ? 900
     : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
     // Destruída e exilada têm cena própria (leaveEffects.ts): rachar e se partir, ou ser sugada pelo portal.

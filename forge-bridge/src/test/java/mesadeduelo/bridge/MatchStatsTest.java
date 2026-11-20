@@ -109,18 +109,43 @@ public class MatchStatsTest {
         MatchStats s = stats(game);
         cast(game, a, "Lightning Bolt", b); game.getStack().resolveStack();
         s.gameEnded(game);
-        cast(game, a, "Lightning Bolt", b); game.getStack().resolveStack();
+        // O segundo jogo da série: os mesmos jogadores inscritos, com ids novos.
+        Game second = game.getMatch().createGame(); second.setNoGUIUser();
+        second.getPhaseHandler().devModeSet(PhaseType.MAIN1, second.getPlayers().get(0));
+        s.attach(second);
+        Player a2 = second.getPlayers().get(0), b2 = second.getPlayers().get(1);
+        cast(second, a2, "Lightning Bolt", b2); second.getStack().resolveStack();
         var order = List.of(a.getRegisteredPlayer(), b.getRegisteredPlayer());
         JsonObject finished = s.seriesJson(a.getRegisteredPlayer(), order, null);
         assertEquals(3, finished.get("damage").getAsInt());
         assertEquals(0, finished.getAsJsonArray("damageTo").get(0).getAsInt());
         assertEquals(3, finished.getAsJsonArray("damageTo").get(1).getAsInt());
         // A série que acabou antes da hora conta o jogo em andamento.
-        JsonObject conceded = s.seriesJson(a.getRegisteredPlayer(), order, game);
+        JsonObject conceded = s.seriesJson(a.getRegisteredPlayer(), order, second);
         assertEquals(6, conceded.get("damage").getAsInt());
         assertEquals(6, conceded.getAsJsonArray("damageTo").get(1).getAsInt());
         JsonObject other = s.seriesJson(b.getRegisteredPlayer(), order, null);
         assertFalse(other.has("damage")); assertEquals(3, other.get("damageTaken").getAsInt());
+    }
+
+    @Test public void theResultStillHasTheNumbersAfterTheGameEnds() {
+        Game game = TestGames.empty(); Player a = game.getPlayers().get(0), b = game.getPlayers().get(1);
+        MatchStats s = stats(game);
+        cast(game, a, "Lightning Bolt", b); game.getStack().resolveStack();
+        // A sessão fecha o jogo (e soma à série) antes de montar o estado do resultado.
+        s.gameEnded(game);
+        assertEquals(3, n(over(s, game), a, "damage"));
+        assertEquals(3, n(over(s, game), b, "damageTaken"));
+        // Fechar de novo, ou a série abandonada logo depois, não conta o mesmo jogo duas vezes.
+        s.gameEnded(game);
+        var order = List.of(a.getRegisteredPlayer(), b.getRegisteredPlayer());
+        assertEquals(3, s.seriesJson(a.getRegisteredPlayer(), order, game).get("damage").getAsInt());
+        // O que acontece depois do fim não muda os números do jogo que acabou.
+        cast(game, a, "Lightning Bolt", b); game.getStack().resolveStack();
+        assertEquals(3, n(over(s, game), a, "damage"));
+        // O próximo jogo começa do zero.
+        Game next = TestGames.empty(); s.attach(next);
+        assertEquals(0, n(over(s, next), next.getPlayers().get(0), "damage"));
     }
 
     @Test public void duringTheGameTheStateHasNoNumbers() {

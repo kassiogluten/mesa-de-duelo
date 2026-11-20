@@ -36,7 +36,7 @@ export const PLAY_BUTTONS: [group: string, plays: [key: string, label: string][]
   ['Limpa campo', [['wrath', 'Ira de Deus'], ['damnation', 'Danação'], ['pyroclasm', 'Piroclasmo'], ['evacuation', 'Evacuação'], ['eviction', 'Despejo impiedoso']]],
   ['Combate', [['combat', 'Ataque com bloqueios'], ['swing', 'Ataque do oponente'], ['lethal', 'Ataque letal']]],
   ['Cemitério e exílio', [['graveyard', 'Moer e reanimar'], ['blink', 'Blink com gatilho'], ['sacrifice', 'Sacrificar para comprar'], ['flashback', 'Conjurar do cemitério'], ['removal', 'Exilar uma ameaça']]],
-  ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['commanderStrike', 'Golpe de comandante'], ['commanderLethal', 'Comandante chega a 21'], ['tutor', 'Tutor']]],
+  ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['commanderStrike', 'Golpe de comandante'], ['commanderLethal', 'Comandante chega a 21'], ['tutor', 'Tutor'], ['gameChanger', 'Game Changer']]],
 ];
 
 export function createLabPlays(lab: LabApi) {
@@ -54,7 +54,8 @@ export function createLabPlays(lab: LabApi) {
     for (const p of [me(), opp()]) { p.battlefield = []; p.graveyard = []; p.exile = []; p.pool = {}; p.counters = {}; p.preventDamage = undefined; p.commanderDamage = undefined; }
     opp().commanders = undefined; opp().commandZone = undefined;
     me().life = life[0]; opp().life = life[1];
-    Object.assign(s, { stack: [], combat: [], phase: 'MAIN1', activePlayer: ME, gameOver: false, winner: undefined });
+    // Só a jogada do Game Changer põe a mesa no Commander; as outras voltam à mesa livre.
+    Object.assign(s, { stack: [], combat: [], phase: 'MAIN1', activePlayer: ME, gameOver: false, winner: undefined, config: { ...s.config, format: 'free' } });
     s.input = { ...s.input, paying: false, priority: false, ok: { label: 'OK', enabled: false }, cancel: { label: '', enabled: false } };
     for (const [side, list] of [['me', mine], ['opp', theirs]] as const) {
       for (const t of list) { if (typeof t === 'string') lab.add(side, t, false); else put(side, t()); }
@@ -594,6 +595,26 @@ export function createLabPlays(lab: LabApi) {
     commanderLethal: {
       note: 'Comandante chega a 21: com 16 de dano do seu Prossh, o oponente leva o golpe que chega a 21; a coroa estremece, fica vermelha e se parte, e o "Dano" acende em vermelho.',
       steps: commanderSwing(16),
+    },
+    gameChanger: {
+      note: 'Game Changer: numa partida de Commander, o Rhystic Study chega à pilha, a mesa escurece, um facho de luz cai sobre ele com poeira dourada, a gema gira sob a luz com "Game Changer" e o nome embaixo, e pousa como selo no canto. Ele resolve e fica no campo com o selo; depois, o Ancient Tomb é jogado com a mesma cena.',
+      steps: [
+        [0, () => { stage(['land', 'land', 'land'], ['small', 'land']); lab.state().config = { ...lab.state().config, format: 'commander' }; }],
+        ...pay(3, '{2}{U}', 900, () => {
+          held.study = spellCard('Rhystic Study', 'Enchantment', '{2}{U}', 'Whenever an opponent casts a spell, you may draw a card unless that player pays {1}.');
+          held.studyStack = cast(held.study);
+        }),
+        [3600, () => {
+          const s = lab.state(); s.stack = s.stack.filter((x: any) => x.id !== held.studyStack);
+          me().battlefield.push(held.study);
+          lab.emit('resolved', { card: structuredClone(held.study), sourceId: held.study.id, actor: ME, stackId: held.studyStack, from: 'Stack', to: 'Battlefield' });
+          lab.emit('entered', { card: structuredClone(held.study), sourceId: held.study.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+        }],
+        [1600, () => {
+          const tomb = put('me', lab.card('Ancient Tomb', { land: true, typeLine: 'Land' }));
+          lab.emit('land-played', { card: structuredClone(tomb), sourceId: tomb.id, actor: ME, to: 'Battlefield' });
+        }],
+      ],
     },
     tutor: {
       note: 'Tutor: o Demonic Tutor resolve, a carta buscada sai dourada do grimório e ele embaralha.',

@@ -34,6 +34,9 @@ const GAME_CHANGERS = listIndex(lists.gameChangers), LAND_DENIAL = listIndex(lis
 const EXTRA_TURNS = listIndex(lists.extraTurns), TUTORS = listIndex(lists.tutors);
 const COMBOS = lists.combos.flatMap(c => { const min = COMBO_MIN[c.tag]; return min ? [{ cards: c.cards, min }] : []; });
 
+/** Carta da lista oficial de Game Changers (pelo nome inteiro ou pelo da face da frente). */
+export const isGameChanger = (name: string) => faces(name).some(k => GAME_CHANGERS.has(k));
+
 export interface BracketReason { min: Bracket; text: string }
 /** min: a faixa mais baixa que as cartas permitem; reasons: o porquê, da que mais pesa para a que só informa. */
 export interface BracketEstimate { min: Bracket; reasons: BracketReason[] }

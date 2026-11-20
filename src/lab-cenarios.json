@@ -1,5 +1,35 @@
 [
   {
+    "nome": "Números do fim do jogo: Lightning Bolt para vencer",
+    "versao": "0.233.0",
+    "item": "Números do fim do jogo de volta",
+    "conferir": "O Jogador 2 está com 3 de vida. Conjure Lightning Bolt nele com a Mountain. O jogo acaba e o resultado mostra 3 de dano causado; em \"Ver todos os números\", Você tem 3 em Dano causado e 1 em Mágicas conjuradas, e o Jogador 2 tem 3 em Dano recebido. Nada pode aparecer zerado.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": ["Lightning Bolt"],
+          "library": ["Mountain", "Mountain", "Mountain"],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [{ "name": "Mountain" }]
+        },
+        {
+          "life": 3,
+          "poison": 0,
+          "hand": [],
+          "library": ["Forest", "Forest", "Forest"],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [{ "name": "Forest" }]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Gargadonte Maior: tirar marcador de tempo no exílio",
     "versao": "0.231.1",
 
