@@ -9,7 +9,7 @@ import { isBracket, type Bracket } from './brackets';
 export type DeckFormat = 'free' | 'standard' | 'pauper' | 'sacola50' | 'commander' | 'oathbreaker' | 'precon';
 export const DECK_FORMATS: readonly DeckFormat[] = ['standard', 'pauper', 'sacola50', 'free', 'commander', 'oathbreaker', 'precon'];
 export const FORMAT_LABEL: Record<DeckFormat, string> = { free: 'Livre', standard: 'Standard', pauper: 'Pauper', sacola50: 'Sacola 50', commander: 'Commander', oathbreaker: 'Oathbreaker', precon: 'Commander Precon' };
-/** Commander, Oathbreaker e Precon: zona de comando, de dois a quatro jogadores e uma partida só, sem sideboard. */
+/** Commander, Oathbreaker e Precon: zona de comando, de dois a quatro jogadores e uma partida só, sem sideboard (no Commander, fora das 100 só o companheiro). */
 export const hasCommandZone = (format: DeckFormat | undefined): format is 'commander' | 'oathbreaker' | 'precon' => format === 'commander' || format === 'oathbreaker' || format === 'precon';
 /** Commander e Precon: as regras do Commander (40 de vida, dano de comandante, bracket). */
 export const commanderRules = (format: string | undefined) => format === 'commander' || format === 'precon';
@@ -236,7 +236,7 @@ export function parseDeckList(text: string): ParsedList {
   for (const raw of lines) {
     if (!raw) { if (!hasHeaders && !hasCommanderTags && seenCard) section = 'sideboard'; continue; }
     const header = sectionOf(raw);
-    if (header) { section = /^(deck|main)/.test(header) ? 'main' : header === 'sideboard' ? 'sideboard' : /^commander/.test(header) ? 'commanders' : 'ignored'; continue; }
+    if (header) { section = /^(deck|main)/.test(header) ? 'main' : header === 'sideboard' || /^companion/.test(header) ? 'sideboard' : /^commander/.test(header) ? 'commanders' : 'ignored'; continue; }
     if (/^(\/\/|#)/.test(raw) || /^(about|name)\s/i.test(raw)) continue;
     const sb = /^SB:\s*/i.test(raw);
     const line = raw.replace(/^SB:\s*/i, '');
@@ -263,5 +263,5 @@ export function parseDeckList(text: string): ParsedList {
 }
 export function exportDeckList(deck: DeckData): string {
   const lines = (entries: DeckEntry[]) => entries.map(e => `${e.count} ${e.name}${e.set ? ` ${printLabel(e)}` : ''}`).join('\n');
-  return `${deck.commanders?.length ? `Commander\n${lines(deck.commanders)}\n\n` : ''}Deck\n${lines(deck.cards)}${deck.sideboard?.length ? `\n\nSideboard\n${lines(deck.sideboard)}` : ''}\n`;
+  return `${deck.commanders?.length ? `Commander\n${lines(deck.commanders)}\n\n` : ''}Deck\n${lines(deck.cards)}${deck.sideboard?.length ? `\n\n${deck.format === 'commander' ? 'Companion' : 'Sideboard'}\n${lines(deck.sideboard)}` : ''}\n`;
 }

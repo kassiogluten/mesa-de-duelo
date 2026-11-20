@@ -365,6 +365,9 @@ a { color: var(--gold); }
   background: radial-gradient(circle at 35% 30%, var(--azul-4a5f8c, #4a5f8c), var(--azul-1a2440, #1a2440)) 50% 18% / 260% auto no-repeat;
 }
 .emblem:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+/* O companheiro revelado: a mesma miniatura, com o aro prateado; aceso quando dá para pôr na mão. */
+.emblem.companion { border: 0; background: conic-gradient(from 45deg, #ececec, #7a7a7a, #ececec, #7a7a7a, #ececec); }
+.emblem.companion.playable { cursor: pointer; box-shadow: 0 0 0 2px var(--glow), 0 0 12px rgb(89 181 255 / .8); }
 /*
  * Reserva de mana dentro do retrato: o retrato fica desfocado por baixo e os símbolos crescem conforme cabem
  * (uma cor ocupa quase tudo; várias se dividem em linhas, uma sobre a outra). Os símbolos ficam acima da vida,

@@ -1567,6 +1567,20 @@
     }
   },
   {
+    "nome": "Juramento de Regentes: só com oponente com mais terrenos",
+    "tipo": "conferir",
+    "conferir": "O Jogador 2 tem Juramento de Regentes (Oath of Lieges) e três Plains; o Jogador 1 está na manutenção com duas Plains. Como o Jogador 2 tem mais terrenos, o Juramento desencadeia mirando o Jogador 2 e pergunta ao Jogador 1 se quer procurar no grimório: aceite e pegue uma Plains (ficam 3 contra 3). Passe o turno: na manutenção do Jogador 2, com os terrenos iguais, nada desencadeia e o registro passa direto pela manutenção. Passe de novo: na sua manutenção, ainda 3 contra 3, também nada. Com a mesma quantidade de terrenos o Juramento não tem alvo e não faz nada. Hoje funciona assim; o cenário fica para conferir a carta.",
+    "cenario": {
+      "active": 0, "phase": "upkeep",
+      "players": [
+        { "life": 20, "poison": 0, "hand": [], "library": ["Plains", "Plains", "Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Plains" }, { "name": "Plains" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Oath of Lieges" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }] }
+      ]
+    }
+  },
+  {
     "nome": "Intimidar, medo, sombra e travessia: selos e bloqueio",
     "versao": "0.199.0",
     "item": "Ícones para intimidar, medo, sombra, sorrateiro, equitação e travessia",

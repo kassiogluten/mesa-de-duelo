@@ -118,6 +118,14 @@ export function attackAllAction(state: FState, defender: Defender, gen: number) 
   return { type: 'attack-all' as const, defender: defender.id, defenderKind: defender.kind, gen };
 }
 
+/** O seu companheiro revelado pode ir para a mão agora ({3}, quando você poderia conjurar um feitiço). */
+export function canPlayCompanion(state: FState, id: number, gen: number) {
+  return gen === state.input.gen && !state.gameOver && !state.question && !state.spectating && !state.input.paying && !state.input.targeting &&
+    !!state.input.priority && state.input.ok.enabled &&
+    state.players.find(player => player.id === state.you && !player.eliminated)?.companion?.id === id &&
+    (!!state.castable?.includes(id) || !!state.input.actionable?.includes(id));
+}
+
 export function canPlayCommander(state: FState, id: number, gen: number) {
   return gen === state.input.gen && !state.gameOver && !state.question && !state.spectating && !state.input.paying && !state.input.targeting &&
     !!state.input.priority && state.input.ok.enabled &&

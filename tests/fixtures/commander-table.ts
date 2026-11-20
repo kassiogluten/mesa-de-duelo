@@ -40,6 +40,14 @@ Object.assign((window as any).fixture, {
     const names = ['Llanowar Elves','Elvish Mystic','Fyndhorn Elves','Birds of Paradise','Elvish Visionary','Sakura-Tribe Elder','Wood Elves','Reclamation Sage','Eternal Witness','Solemn Simulacrum','Beast Whisperer','Llanowar Visionary','Ghalta, Primal Hunger','Garruk’s Packleader','Terastodon','Acidic Slime','Avenger of Zendikar','Rampaging Baloths','Scavenging Ooze','Tireless Tracker','Courser of Kruphix','Lotus Cobra'];
     state.players.filter(p=>p.id!==state.you).forEach(p=>{p.battlefield=[...names.map((name,i)=>card(10000+p.id*100+i,name,p.id)),...Array.from({length:12},(_,i)=>card(20000+p.id*100+i,'Saproling',p.id,{token:true,power:1,toughness:1})),...Array.from({length:8},(_,i)=>card(30000+p.id*100+i,'Forest',p.id,{land:true,creature:false,typeLine:'Basic Land — Forest',manaCost:''}))];}); view.render();
   },
+  /** Companheiro: o seu (Carla) aceso para ir à mão por {3}, ou apagado; o do Bruno, só para ver. */
+  companion(playable = true) {
+    const lurrus = card(800, 'Lurrus of the Dream-Den', 36, {manaCost:'{1}{W/B}{W/B}',typeLine:'Legendary Creature — Cat Nightmare',power:3,toughness:2});
+    Object.assign(state.players[2]!, {companion: lurrus});
+    Object.assign(state.players[1]!, {companion: card(801, 'Kaheera, the Orphanguard', 23, {manaCost:'{3}{G/W}{G/W}',typeLine:'Legendary Creature — Cat Beast',power:3,toughness:2})});
+    state.castable = playable ? [502, 800] : [502]; state.input.actionable = playable ? [502, 800] : [502];
+    view.render();
+  },
   /** Alerta de espera demorada: a mesa espera `player` há `ms`, num estado novo como o da ponte. */
   wait(player:number, ms:number, kind='priority') { (client as any).state = {...state, waiting:[{player, kind, ms}]}; view.render(); }
 });

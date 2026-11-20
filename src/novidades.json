@@ -1,4 +1,11 @@
 {
+  "0.234.0": {
+    "Companheiro no Commander": [
+      { "img": "0.234.0/vaga-no-editor.webp", "legenda": "Em Meus decks, o Lurrus da Toca Onírica na vaga Companheiro, logo abaixo da comandante Ayli, com Trocar e Remover." },
+      { "img": "0.234.0/companheiro-aceso.webp", "legenda": "Na partida, o seu companheiro na miniatura de aro prateado, acesa na sua fase principal: tocar nela pede {3} e o põe na mão." },
+      { "img": "0.234.0/companheiro-oponente.webp", "legenda": "O companheiro de um oponente, ao lado da vida dele: tocar mostra a carta." }
+    ]
+  },
   "0.233.0": {
     "Game Changer chegando à mesa": [
       { "img": "0.233.0/cena.webp", "legenda": "O Rhystic Study chega à pilha sob o facho de luz, com a gema girando sobre ele e \"Game Changer\" com o nome da carta ao lado." }

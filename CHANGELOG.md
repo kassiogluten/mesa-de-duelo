@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.234.0] - 2026-11-20
+
+### Novo
+
+- **Companheiro no Commander.** O deck de Commander ganha a vaga Companheiro, ao lado dos comandantes em Meus decks: uma carta com Companheiro (Lurrus, Kaheera, Gyruda e os outros), fora das 100 e dentro da identidade de cor dos comandantes. O deck só entra na partida se cumprir a condição do companheiro, contando o comandante, e o aviso diz qual é a condição. O Lutri fica fora da vaga: a regra do Commander não o deixa ser companheiro, só jogar no deck ou como comandante. Na partida, o companheiro aparece sozinho, sem pergunta, numa miniatura de aro prateado junto do retrato. Tocar nela mostra a carta. Na sua fase principal, com a pilha vazia, a sua acende como o comandante: tocar nela pede {3} e põe o companheiro na mão. As listas com a seção Companion (Arena, Moxfield, Archidekt) já trazem o companheiro para a vaga, e a exportação o escreve nessa seção.
+
 ## [0.233.0] - 2026-11-20
 
 ### Novo

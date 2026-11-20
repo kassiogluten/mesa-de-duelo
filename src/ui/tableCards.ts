@@ -12,7 +12,7 @@ import { revealedCards } from './revealedHand';
 export function findCard(s: FState | null | undefined, frame: PresentationFrame | null, id: number, withPrompt = true): FCard | undefined {
   if (!s) return undefined;
   for (const p of stateWithFrame(s, frame).players) {
-    for (const c of [...p.hand, ...p.battlefield, ...p.graveyard, ...p.exile, ...(p.commandZone ?? []), ...(p.emblems ?? []), ...(p.libraryTop ? [p.libraryTop] : []), ...revealedCards(p)]) if (c.id === id) return c;
+    for (const c of [...p.hand, ...p.battlefield, ...p.graveyard, ...p.exile, ...(p.commandZone ?? []), ...(p.emblems ?? []), ...(p.companion ? [p.companion] : []), ...(p.libraryTop ? [p.libraryTop] : []), ...revealedCards(p)]) if (c.id === id) return c;
   }
   const onStack = s.stack.find(si => si.source?.id === id)?.source;
   if (onStack) return onStack;

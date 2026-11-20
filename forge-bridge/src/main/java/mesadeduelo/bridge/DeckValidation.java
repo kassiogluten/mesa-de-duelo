@@ -246,8 +246,7 @@ final class DeckValidation {
         int total = deck.getMain().countAll() + commanderCount;
         if (unlimitedSize ? total < 100 : total != 100)
             issue(issues, "total-count", unlimitedSize ? "Este comandante permite um deck sem tamanho máximo, mas com pelo menos 100 cartas, incluindo os comandantes." : "Commander exige exatamente 100 cartas, incluindo os comandantes.", null, "main");
-        if (deck.getOrCreate(DeckSection.Sideboard).countAll() != 0)
-            issue(issues, "sideboard-not-supported", "Commander não usa sideboard nesta mesa. Companheiros ainda não são suportados.", null, "sideboard");
+        checkCompanion(deck, issues);
         byte identity = 0;
         for (var e : commanders) {
             var rules = e.getKey().getRules();
@@ -287,7 +286,27 @@ final class DeckValidation {
     }
 
     /**
-     * Regras de construção do comandante que a mesa sabe conferir: cartas liberadas da identidade de cor e deck sem tamanho
+     * Fora das 100 cartas, o Commander só aceita um companheiro (no sideboard, como o Forge o procura), e o deck inicial,
+     * com o comandante, precisa cumprir a condição dele. Identidade de cor e banidas são conferidas com as outras cartas.
+     */
+    private static void checkCompanion(Deck deck, JsonArray issues) {
+        CardPool side = deck.getOrCreate(DeckSection.Sideboard);
+        if (side.countAll() == 0) return;
+        PaperCard companion = side.countAll() == 1 ? side.toFlatList().get(0) : null;
+        if (companion == null || !Companions.isCompanion(companion)) {
+            issue(issues, "sideboard-not-supported", "No Commander, fora das 100 cartas só cabe um companheiro.", null, "sideboard");
+            return;
+        }
+        if (Companions.BANNED_AS_COMPANION.contains(companion.getName())) {
+            issue(issues, "banned-companion", "Esta carta não pode ser companheira no Commander; ela vale só no deck ou como comandante.", companion.getDisplayName(), "sideboard");
+            return;
+        }
+        if (!Companions.meets(companion, deck))
+            issue(issues, "companion-restriction", "O deck não cumpre a condição do companheiro: " + Companions.condition(companion) + ".", companion.getDisplayName(), "sideboard");
+    }
+
+    /**
+     * Regras de construção do comandante que a mesa sabe conferir:cartas liberadas da identidade de cor e deck sem tamanho
      * máximo, mais a cor extra que o jogador escolhe no editor (Tolabow).
      */
     static boolean supportedDeckRules(PaperCard commander) {

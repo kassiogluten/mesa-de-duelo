@@ -158,6 +158,7 @@ players[].battlefield[].typeLine
 players[].commandZone
 players[].commanderDamage
 players[].commanders
+players[].companion
 players[].counters
 players[].counters.POISON
 players[].eliminated

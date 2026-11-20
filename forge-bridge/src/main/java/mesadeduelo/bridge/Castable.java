@@ -94,7 +94,7 @@ final class Castable {
         for (Card c : me.getCardsActivatableInExternalZones(false)) {
             if (c.isInZone(ZoneType.Graveyard) || c.isInZone(ZoneType.Exile) || c.isInZone(ZoneType.Command) || c.isInZone(ZoneType.Library)) candidates.add(c);
         }
-        for (Card c : me.getCardsIn(ZoneType.Command)) if (c.isCommander()) candidates.add(c);
+        for (Card c : me.getCardsIn(ZoneType.Command)) if (c.isCommander() || Companions.inCommandZone(c)) candidates.add(c);
         for (Card c : me.getCardsIn(ZoneType.Exile)) if (c.isPlotted()) candidates.add(c);
         return candidates.stream().filter(c -> castableNow(c, me)).map(Card::getId).toList();
     }

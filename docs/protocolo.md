@@ -417,6 +417,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `commanders?` | `{ id: number; name: string; casts: number; tax: number }[]` |  |
 | `commanderDamage?` | `{ commanderId: number; damage: number }[]` |  |
 | `emblems?` | `FCard[]` | Emblemas na zona de comando (nome "Emblem — Planeswalker"). |
+| `companion?` | `FCard` | Companheiro revelado, enquanto espera na zona de comando; o dono o põe na mão por {3} (fica em `castable` quando dá). |
 | `pool` | `Record<string, number>` |  |
 | `dungeon?` | `FDungeon` | Masmorra em andamento na zona de comando (se aventurar). |
 | `completedDungeons?` | `string[]` | Nomes das masmorras que o jogador já completou. |

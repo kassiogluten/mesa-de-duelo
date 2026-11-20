@@ -7,7 +7,7 @@ import { countSealsHTML } from './cardCounts';
 import { emblemLabel, emblemSource, label } from './cardFaces';
 import { proliferateBoardClass } from './proliferate';
 import { forecastBadgeHTML, forecastText } from './combatForecast';
-import { canPlayCommander } from './commanderTable';
+import { canPlayCommander, canPlayCompanion } from './commanderTable';
 import { COMMANDER_LIMIT, COMMANDER_NEAR, countsAttr } from './commanderCounter';
 import { dungeonBadgesHTML, dungeonText, withDungeonBadges } from './dungeon';
 import { awaitingDecision } from './awaitingDecision';
@@ -69,12 +69,12 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const forecast = s.forecast?.find(f => f.player === p.id);
   // Os seus selos e emblemas ficam dentro do retrato, em volta da borda (gameplay.css); os dos oponentes, ao lado dele.
   return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${shownStyle(p) ? `, computador ${shownStyle(p).toLowerCase()}` : ''}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? `, eliminado${eliminatedWhy(v, s, p, ': ')}` : ''}">
-    <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}${idx === 0 ? playerCounters(v, p) + emblems(v, p) : ''}</div>
+    <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}${idx === 0 ? playerCounters(v, p) + emblems(v, s, p) : ''}</div>
     ${idx === 0 ? lifeHTML(v, p, cls) : opponentLifeHTML(v, s, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
     ${idx === 0 ? '' : playerCounters(v, p)}
     <div class="pname">${esc(p.name)}${shownStyle(p) ? ` <small class="pstyle" title="Estilo do computador">${shownStyle(p)}</small>` : ''}</div>
-    ${idx === 0 ? '' : emblems(v, p)}
+    ${idx === 0 ? '' : emblems(v, s, p)}
     ${p.eliminated ? `<span class="seat-eliminated"${eliminatedWhy(v, s, p) ? ` title="Eliminado: ${eliminatedWhy(v, s, p)}"` : ''}>Eliminado</span>` : ''}
     ${offline ? '<div class="offline">desconectado</div>' : ''}
   </div>`;
@@ -124,14 +124,25 @@ function eliminatedWhy(v: Pick<SeatView, 'cardName'>, s: Pick<FState, 'players' 
 export const playerCountersText = (v: SeatView, p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, v.activePlayer, v.spellsTotal) + dungeonText(p);
 export const playerCounters = (v: SeatView, p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, v.counterBumps.get(p.id), v.openCounter, p.ringTempted),
   playerStatusHTML(p, v.activePlayer, v.openCounter, v.counterBumps.get(p.id), v.spellsTotal) + dungeonBadgesHTML(p, v.openCounter));
-export function emblems(v: SeatView, p: FPlayer) {
+export function emblems(v: SeatView, s: FState, p: FPlayer) {
   const list = p.emblems ?? [];
-  if (!list.length) return '';
-  return `<div class="emblems">${list.map(c => {
+  if (!list.length && !p.companion) return '';
+  return `<div class="emblems">${p.companion ? companionHTML(v, s, p, p.companion) : ''}${list.map(c => {
     const art = v.image(emblemSource(c), 'small');
     return `<div class="emblem" data-peek="${c.id}" tabindex="0" aria-label="${esc(emblemLabel(c))}">
       <div class="emblem-art" ${art ? `style="background-image:url('${art}')"` : ''}></div></div>`;
   }).join('')}</div>`;
+}
+/**
+ * O companheiro revelado, na miniatura dos emblemas, com o aro prateado. Tocar mostra a carta; quando dá para pôr na
+ * mão ({3}, na velocidade de feitiço), a sua acende e o toque já o põe.
+ */
+function companionHTML(v: SeatView, s: FState, p: FPlayer, c: FCard) {
+  const art = v.image(c.name, 'small', c.print), name = esc(label(c));
+  const face = `<div class="emblem-art" ${art ? `style="background-image:url('${art}')"` : ''}></div>`;
+  if (canPlayCompanion(s, c.id, s.input.gen)) return `<button type="button" class="emblem companion playable" data-fid="${c.id}" data-companion-card aria-label="Pôr ${name}, seu companheiro, na mão por 3 manas">${face}</button>`;
+  const whose = p.id === s.you ? `Seu companheiro: ${name}. Vai para a mão por 3 manas, quando você poderia conjurar um feitiço` : `Companheiro de ${esc(p.name)}: ${name}`;
+  return `<div class="emblem companion" data-peek="${c.id}" tabindex="0" title="Companheiro" aria-label="${whose}">${face}</div>`;
 }
 export function piles(v: SeatView, s: FState, p: FPlayer) {
   const top = p.graveyard[p.graveyard.length - 1];

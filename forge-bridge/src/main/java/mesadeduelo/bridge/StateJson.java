@@ -209,6 +209,10 @@ final class StateJson {
         JsonArray emblems = new JsonArray();
         for (CardView c : nzv(p.getCommand())) if (c.isEmblem()) emblems.add(card(c, game));
         o.add("emblems", emblems);
+        // O companheiro revelado, enquanto espera na zona de comando (todos o veem; o dono o põe na mão por {3}).
+        if (engine != null) try {
+            for (Card c : engine.getCardsIn(ZoneType.Command)) if (Companions.inCommandZone(c)) { o.add("companion", card(c.getView(), game)); break; }
+        } catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: fica para o próximo estado */ }
         Dungeons.add(o, p, game);
         JsonObject pool = new JsonObject();
         for (int i = 0; i < 5; i++) pool.addProperty(COLOR_KEYS[i], p.getMana(MagicColor.WUBRG[i]));

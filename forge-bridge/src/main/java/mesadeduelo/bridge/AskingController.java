@@ -436,6 +436,8 @@ final class AskingController extends PlayerControllerHuman {
         return true;
     }
     @Override public <T extends GameEntity> T chooseSingleEntityForEffect(FCollectionView<T> options, DelayedReveal reveal, SpellAbility sa, String title, boolean isOptional, Player targeted, Map<String, Object> params) {
+        // O companheiro é revelado sem perguntar: o deck do Commander só leva um, e quem o pôs quer jogar com ele.
+        if (sa != null && sa.getApi() == forge.game.ability.ApiType.CompanionChoose && !options.isEmpty()) return options.iterator().next();
         return asking(sa, () -> {
             // Segunda pergunta de uma busca com dois destinos: a ordem que o jogador já deu responde.
             if (plannedRoot != null && sa != null && sa.getRootAbility() == plannedRoot) {

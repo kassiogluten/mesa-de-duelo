@@ -7,7 +7,7 @@ import { hideCardPreview } from './cardInspector';
 import { label } from './cardFaces';
 import type { createAttackChoice } from './attackChoice';
 import type { createHistoryPanel } from './historyPanel';
-import { canPlayCommander } from './commanderTable';
+import { canPlayCommander, canPlayCompanion } from './commanderTable';
 import type { OpponentFocus } from './opponentFocus';
 import type { createPassMenu, createStopMenu } from './passMenus';
 import { canUse, usable } from './permanentView';
@@ -160,6 +160,14 @@ export function attachTableClicks(d: ClickDeps) {
       const message = prolifRow ? proliferateToggle(s, prolifRow.dataset.prolifKind === 'player' ? 'player' : 'card', Number(prolifRow.dataset.prolifId))
         : prolifTool!.dataset.prolif === 'suggested' ? proliferateSuggestion(s) : proliferateClear(s);
       if (message) { d.stopPresentation(); client.send(message); }
+      return;
+    }
+    // O companheiro aceso vai para a mão; apagado, o toque só mostra a carta (data-peek, acima).
+    const companion = t.closest<HTMLElement>('[data-companion-card]');
+    if (companion && client.state) {
+      const s = client.state, id = Number(companion.dataset.fid);
+      if (d.renderedInputIsCurrent(companion) && canPlayCompanion(s, id, s.input.gen)) { d.stopPresentation(); client.send({ type: 'card', id, gen: s.input.gen }); }
+      else d.showPreview(d.findCard(id), companion, true);
       return;
     }
     if (t.closest('.emblem')) return; // fica dentro do retrato, mas não é um clique no jogador

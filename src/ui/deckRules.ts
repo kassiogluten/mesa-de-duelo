@@ -2,6 +2,7 @@
 import { countEntries, deckEntries, FORMAT_LABEL, hasCommandZone, isBasic, isConstructed, isPrecon, scryfallFormat, type DeckData, type DeckFormat } from '../decks';
 import { cacheGet, legalityFresh, type ScryCard } from '../scryfall';
 import { rulebreakersOf } from '../rulebreaker';
+import { BANNED_AS_COMPANION, deckCompanion } from './companion';
 
 export interface DeckIssue { code: string; message: string; card?: string; section?: 'main' | 'sideboard' | 'commander' }
 export interface ServerDeckValidation { valid: boolean; issues: DeckIssue[]; rulesVersion?: string; engineVersion?: string }
@@ -40,7 +41,10 @@ export function validateDeckLocal(deck: DeckData, format: DeckFormat = deck.form
   if (format === 'commander') {
     if (unlimitedSize ? main + commanderCount < 100 : main + commanderCount !== 100) issues.push({ code: 'total_count', message: unlimitedSize ? `Este comandante permite um deck sem tamanho máximo, mas com pelo menos 100 cartas, incluindo os comandantes. Total atual: ${main + commanderCount}.` : `Commander exige 100 cartas, incluindo os comandantes. Total atual: ${main + commanderCount}.` });
     if (commanderCount < 1 || commanderCount > 2 || commanders.some(e => e.count !== 1)) issues.push({ code: 'commander_count', message: 'Escolha um comandante ou dois comandantes com uma parceria válida.', section: 'commander' });
-    if (side) issues.push({ code: 'sideboard_count', message: 'Commander não usa sideboard nesta mesa.', section: 'sideboard' });
+    // Fora das 100 só cabe o companheiro; a condição dele (contando o comandante) o servidor confere.
+    if (side && !deckCompanion(deck)) issues.push({ code: 'sideboard_count', message: 'No Commander, fora das 100 cartas só cabe um companheiro.', section: 'sideboard' });
+    const companion = deckCompanion(deck);
+    if (companion && BANNED_AS_COMPANION.includes(companion.name)) issues.push({ code: 'banned_companion', card: companion.name, section: 'sideboard', message: `${cacheGet(companion.name)?.pt?.name || companion.name}: não pode ser companheiro no Commander; vale só no deck ou como comandante.` });
     // Forge validates eligibility and partnership. Never claim local metadata proves this.
     issues.push({ code: 'commander_unverified', message: 'A elegibilidade dos comandantes e a parceria precisam ser conferidas pelo servidor.' });
   } else if (format === 'oathbreaker') {

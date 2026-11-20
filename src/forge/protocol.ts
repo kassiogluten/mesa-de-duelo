@@ -354,6 +354,8 @@ export interface FPlayer {
   commanderDamage?: { commanderId: number; damage: number }[];
   /** Emblemas na zona de comando (nome "Emblem — Planeswalker"). */
   emblems?: FCard[];
+  /** Companheiro revelado, enquanto espera na zona de comando; o dono o põe na mão por {3} (fica em `castable` quando dá). */
+  companion?: FCard;
   pool: Record<string, number>;
   /** Masmorra em andamento na zona de comando (se aventurar). */
   dungeon?: FDungeon;

@@ -19,7 +19,7 @@ const ZONE_NAME: Record<Zone, string> = { battlefield: 'no campo', command: 'na 
 export function publicSpot(s: Pick<FState, 'players' | 'stack'> | null | undefined, id: number): PublicSpot | undefined {
   if (!s) return undefined;
   for (const p of s.players) {
-    const zones: [Zone, FCard[]][] = [['battlefield', p.battlefield], ['command', p.commandZone ?? []], ['graveyard', p.graveyard], ['exile', p.exile]];
+    const zones: [Zone, FCard[]][] = [['battlefield', p.battlefield], ['command', [...(p.commandZone ?? []), ...(p.companion ? [p.companion] : [])]], ['graveyard', p.graveyard], ['exile', p.exile]];
     for (const [zone, cards] of zones) { const card = cards.find(c => c.id === id); if (card) return { zone, player: p.id, card }; }
   }
   const item = s.stack.find(si => si.source?.id === id);

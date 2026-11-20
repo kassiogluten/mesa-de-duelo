@@ -18,6 +18,7 @@ import './deckFilters.css';
 import { mountDeckLayout } from './deckLayout';
 import { montarAvisoConta } from './contaAviso';
 import { buildSearchQuery, similarQuery } from './cardSearch';
+import { COMPANION_FILTER } from './companion';
 import { deckIdentity, identityExempt, editHTML, importHTML, libraryHTML, printOf, resultsHTML, slotRole, statusHTML, type BuilderState } from './deckbuilderView';
 import { finder } from './dom';
 import type { Route } from '../app/router';
@@ -62,6 +63,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   let tokensSeq = 0;
   let searchOpen = false;
   let commanderSlot: number | null = null;
+  /** A busca está escolhendo o companheiro do deck de Commander. */
+  let companionSlot = false;
   let deckActionsOpen = false;
   let searchQuery = '';
   let searchType = '';
@@ -101,7 +104,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   const $ = finder(root);
   /** O que as telas desenham (deckbuilderView), lido na hora de cada desenho. */
   const state = (): BuilderState => ({
-    format, ptName, user, view, listQuery, libraryColors, showReady, notice, cardsError, saveError, removed, section, tokenKinds, tokensError, searchOpen, commanderSlot,
+    format, ptName, user, view, listQuery, libraryColors, showReady, notice, cardsError, saveError, removed, section, tokenKinds, tokensError, searchOpen, commanderSlot, companionSlot,
     deckActionsOpen, searchQuery, searchType, searchFunc, similarTo, similarTags, searchColors, results, hasMore, total, searching, searchError,
     validation, validating, validationError, canValidate: !!opts.validateDeck, canSimilar: !!opts.similarCards,
     importDraft, importFormat, importBusy, importError, importTarget, importMode, importReview, importAcknowledged, listEdit, importCommanderOffer,
@@ -235,7 +238,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   function edit(deck: DeckData) {
     deckActionsOpen = false;
     importSeq++; importBusy = false; validationSeq++; validating = false;
-    selected = deck.id; view = 'edit'; section = 'main'; tokenKinds = null; tokensError = false; tokensSeq++; commanderSlot = null; searchOpen = !deck.cards.length && !deck.builtin && !hasCommandZone(deck.format);
+    selected = deck.id; view = 'edit'; section = 'main'; tokenKinds = null; tokensError = false; tokensSeq++; commanderSlot = null; companionSlot = false; searchOpen = !deck.cards.length && !deck.builtin && !hasCommandZone(deck.format);
     validation = null; validationError = ''; resetSearch(); hideCardPreview(); render(); void loadData();
   }
   function create() {
@@ -268,9 +271,9 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
   async function runSearch(more = false) {
     const deck = current(); if (!deck) return;
     if (!more) { similarTo = null; similarTags.clear(); }
-    const asked = !!searchQuery.trim() || searchColors.size > 0 || !!searchType || !!searchFunc || commanderSlot !== null;
+    const asked = !!searchQuery.trim() || searchColors.size > 0 || !!searchType || !!searchFunc || commanderSlot !== null || companionSlot;
     const role = commanderSlot === null ? null : slotRole(deck, commanderSlot);
-    const q = buildSearchQuery({ text: searchQuery, colors: searchColors, type: searchType, func: searchFunc, identity: role === null || role === 'signature' ? deckIdentity(deck) : null, identityExempt: identityExempt(deck), commanderSlot: role === null ? false : role === 'commander' || role });
+    const q = [buildSearchQuery({ text: searchQuery, colors: searchColors, type: searchType, func: searchFunc, identity: role === null || role === 'signature' ? deckIdentity(deck) : null, identityExempt: identityExempt(deck), commanderSlot: role === null ? false : role === 'commander' || role }), companionSlot ? COMPANION_FILTER : ''].filter(Boolean).join(' ');
     const seq = ++searchSeq;
     if (!asked) { results = []; searching = false; renderResults(); return; }
     searching = true; searchError = ''; if (!more) { results = []; nextPage = 1; } renderResults();
@@ -413,7 +416,15 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     if (ds.peek) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.peek); if (deck) openDeckPreview(deck, { selected: false, onPick: () => edit(deck), pickLabel: deck.builtin ? 'Ver deck' : 'Editar deck' }); return; }
     if (ds.select) { const deck = [...user, ...DEFAULT_DECKS].find(d => d.id === ds.select); if (deck) edit(deck); return; }
     if (ds.copy) { const deck = DEFAULT_DECKS.find(d => d.id === ds.copy); if (deck) duplicate(deck); return; }
-    if (ds.commanderSlot !== undefined) { commanderSlot = Number(ds.commanderSlot); searchOpen = true; resetSearch(); renderEdit(); $('#dwCardQuery')?.focus(); void runSearch(); return; }
+    if (ds.companionSlot !== undefined) { commanderSlot = null; companionSlot = true; searchOpen = true; resetSearch(); renderEdit(); $('#dwCardQuery')?.focus(); void runSearch(); return; }
+    if (ds.setCompanion) {
+      const deck = current(); if (!deck || deck.builtin || !companionSlot) return;
+      deck.sideboard = [{ name: ds.setCompanion, count: 1, oracleId: cacheGet(ds.setCompanion)?.oracle_id }];
+      companionSlot = false; searchOpen = false; changed(deck); renderEdit();
+      root.querySelector<HTMLElement>('[data-focus="companion"]')?.focus(); return;
+    }
+    if (ds.removeCompanion !== undefined) { const deck = current(); if (deck && !deck.builtin) { deck.sideboard = []; companionSlot = false; searchOpen = false; resetSearch(); changed(deck); preserveRender(renderEdit); } return; }
+    if (ds.commanderSlot !== undefined) { companionSlot = false; commanderSlot = Number(ds.commanderSlot); searchOpen = true; resetSearch(); renderEdit(); $('#dwCardQuery')?.focus(); void runSearch(); return; }
     if (ds.setCommander) {
       const deck = current(); if (!deck || deck.builtin || commanderSlot === null) return;
       const commanders = deck.commanders ?? (deck.commanders = []);
@@ -422,7 +433,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       root.querySelector<HTMLElement>(`[data-focus="commander:${focusSlot}"]`)?.focus(); return;
     }
     if (ds.removeCommander !== undefined) { const deck = current(); if (deck && !deck.builtin) { deck.commanders?.splice(Number(ds.removeCommander), 1); commanderSlot = null; searchOpen = false; resetSearch(); changed(deck); preserveRender(renderEdit); } return; }
-    if (ds.section) { commanderSlot = null; section = ds.section as typeof section; if (section === 'tokens') { searchOpen = false; void loadTokens(); } preserveRender(renderEdit); return; }
+    if (ds.section) { commanderSlot = null; companionSlot = false; section = ds.section as typeof section; if (section === 'tokens') { searchOpen = false; void loadTokens(); } preserveRender(renderEdit); return; }
     if (ds.token) { const deck = current(), kind = tokenKinds?.find(k => k.oracleId === ds.token); if (deck && kind) openTokenPicker(deck, kind, print => { if (deck.builtin) return; chooseToken(deck, kind, print); deck.updatedAt = new Date().toISOString(); persist(); preserveRender(renderEdit); }); return; }
     if (ds.add) { change(ds.add, 1); return; }
     if (ds.dec) { change(ds.dec, -1); return; }
@@ -457,8 +468,8 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'retry-save': persist(); break;
       case 'retry-cards': cardsError = null; renderStatus(); void loadData(); break;
       case 'clear-search': listQuery = ''; libraryColors = new Set(); renderLibrary(); break;
-      case 'search': commanderSlot = null; searchOpen = !searchOpen; hideCardPreview(); renderEdit(); if (searchOpen) $('#dwCardQuery')?.focus(); break;
-      case 'open-search': commanderSlot = null; searchOpen = true; renderEdit(); $('#dwCardQuery')?.focus(); break;
+      case 'search': commanderSlot = null; companionSlot = false; searchOpen = !searchOpen; hideCardPreview(); renderEdit(); if (searchOpen) $('#dwCardQuery')?.focus(); break;
+      case 'open-search': commanderSlot = null; companionSlot = false; searchOpen = true; renderEdit(); $('#dwCardQuery')?.focus(); break;
       case 'more': void runSearch(true); break;
       case 'retry-search': if (similarTo) void runSimilar(similarTo); else void runSearch(); break;
       case 'back-to-text': similarTo = null; similarTags.clear(); searchFunc = ''; results = []; renderEdit(); $('#dwCardQuery')?.focus(); void runSearch(); break;
@@ -497,7 +508,7 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
     const input = e.target as HTMLInputElement;
     if (input.id === 'dwImportFormat') { importFormat = input.value as DeckFormat; if (importError) importError = ''; }
     if (input.id === 'dwFormat' || input.id === 'dwImportFormat') { format = input.value as DeckFormat; opts.onFormatChange?.(format); if (view === 'library') renderLibrary(); else if (view === 'import' && !importReview) preserveRender(renderImport); }
-    if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
+    if (input.id === 'dwDeckFormat') { const deck = current(); if (deck && !deck.builtin) { deck.format = input.value as DeckFormat; format = deck.format; commanderSlot = null; companionSlot = false; section = 'main'; changed(deck); resetSearch(); preserveRender(renderEdit); void loadData(); } }
     if (input.dataset.commanderColor !== undefined) { const deck = current(), entry = deck?.commanders?.[Number(input.dataset.commanderColor)]; if (deck && !deck.builtin && entry) { if (/^[WBRG]$/.test(input.value)) entry.chosenColors = input.value; else delete entry.chosenColors; changed(deck); resetSearch(); preserveRender(renderEdit); } }
     if (input.id === 'dwBracket') { const deck = current(), value = Number(input.value); if (deck && !deck.builtin && isBracket(value)) { deck.bracket = value; changed(deck); preserveRender(renderEdit); } }
     if (input.id === 'dwSearchType') { searchType = input.value; void runSearch(); }
