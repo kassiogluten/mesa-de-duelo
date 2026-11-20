@@ -278,6 +278,15 @@ Object.assign(window, { fixture: { state, client, view, messages, feedbackReques
     Object.assign(state, { playableExile: [278], castable: [278] });
     view.render();
   },
+  /** Suspensas no exílio: o Greater Gargadon com a habilidade de lá disponível (aceso) e o Rift Bolt só esperando. */
+  suspendedAbility() {
+    const [me] = state.players;
+    me.exile.push(card(390, 'Greater Gargadon', 10, { manaCost: '{9}{R}', typeLine: 'Creature — Beast', power: 9, toughness: 7, counters: { TIME: 10 } }),
+      card(391, 'Rift Bolt', 10, { creature: false, manaCost: '{2}{R}', typeLine: 'Sorcery', counters: { TIME: 1 } }));
+    Object.assign(state, { suspendedExile: [390, 391], castable: [390] });
+    state.input.actionable = [...state.input.actionable, 390];
+    view.render();
+  },
   /**
    * Viradas para baixo no campo, com a carta de lembrete de cada tipo: a sua metamorfose (você vê qual carta é) e o
    * seu disfarce; do oponente, uma manifestada, uma encoberta e uma sem tipo conhecido (fica o verso). Uma prevista
@@ -553,6 +562,15 @@ Pagar Custo de Mana: ${cost}`, paying: true, payingFor: opts.effect ? 'effect' :
     const text = { '+2': 'Each player draws a card.', '-1': 'Target player draws a card.', '-10': 'Target player mills twenty cards.' }[which];
     state.stack = [{ id: 344, kind: 'ability', controller: 23, source: jace, text: `Jace Beleren - ${text}`,
       loyalty: { cost: which, text, ...(which === '-10' ? { ultimate: true } : {}) }, ...(which === '+2' ? {} : { targets: { players: [me.id] } }) }];
+    Object.assign(state.input, { priority: true, actionable: [], selectable: [] });
+    view.render();
+  },
+  /** A habilidade do Greater Gargadon na pilha, com a linha dela na carta: a galeria mostra o texto impresso em português. */
+  abilityOnStack() {
+    const gargadon = card(390, 'Greater Gargadon', 10, { manaCost: '{9}{R}', typeLine: 'Creature — Beast', power: 9, toughness: 7, counters: { TIME: 10 },
+      text: 'Suspend 10—{R}\r\n\r\nSacrifice an artifact, creature, or land: Remove a time counter from Greater Gargadon. Activate only if Greater Gargadon is suspended.' });
+    state.players[0].exile.push(gargadon);
+    state.stack = [{ id: 349, kind: 'ability', controller: 10, source: gargadon, line: 1, text: 'Gargadonte Maior (390) - Remove 1 Time counter fromGargadonte Maior (390).' }];
     Object.assign(state.input, { priority: true, actionable: [], selectable: [] });
     view.render();
   },

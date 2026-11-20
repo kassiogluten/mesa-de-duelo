@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.231.1] - 2026-11-19
+
+### Corrigido
+
+- **Habilidades que se usam do exílio com a carta suspensa.** Com o Gargadonte Maior (Greater Gargadon) suspenso, tocar nele no exílio usa a habilidade de sacrificar um artefato, uma criatura ou um terreno para tirar um marcador de tempo; antes o toque só mostrava a carta. Na prateleira do exílio, a carta suspensa fica acesa quando a habilidade pode ser usada.
+- **Habilidades ativadas na pilha em português.** Ao abrir a pilha, uma habilidade ativada mostra o efeito como está impresso na carta em português (sem o custo, que já foi pago), em vez de um texto em inglês, às vezes com palavras coladas, como "Remove 1 Time counter fromGargadonte Maior". Habilidades com X continuam com o texto que traz o valor escolhido.
+
 ## [0.231.0] - 2026-11-19
 
 ### Mudou

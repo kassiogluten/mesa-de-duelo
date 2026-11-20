@@ -1,4 +1,12 @@
 {
+  "0.231.1": {
+    "Habilidades que se usam do exílio com a carta suspensa": [
+      { "img": "0.231.1/gargadon-suspenso.webp", "legenda": "Na prateleira do exílio, o Greater Gargadon suspenso fica aceso porque dá para usar a habilidade dele; o Rift Bolt, também suspenso, só espera." }
+    ],
+    "Habilidades ativadas na pilha em português": [
+      { "img": "0.231.1/gargadon-pilha.webp", "legenda": "Na pilha aberta, a habilidade do Gargadonte Maior com o texto da carta em português: remova um marcador temporal, ative somente se estiver suspenso." }
+    ]
+  },
   "0.231.0": {
     "A carta que pede a escolha fica ao lado das cartas": [
       { "img": "0.231.0/carta-ao-lado-celular.webp", "legenda": "Gifts Ungiven no celular deitado: a carta que pede fica à esquerda, e as quatro cartas para escolher aparecem inteiras." }

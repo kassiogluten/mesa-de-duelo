@@ -51,7 +51,20 @@ export function stackModeStrip(v: StackView, si: FState['stack'][number]) {
 export function stackEffectText(v: Pick<StackView, 'ptText'>, si: FState['stack'][number]) {
   const pt = (si.kind ?? 'spell') === 'spell' && !si.modes?.length && !si.loyalty ? v.ptText(si.source?.name) : undefined;
   if (pt) return pt;
-  return si.text.replace(/^.+? \(\d+\) - /, '').trim() || si.text;
+  return abilityLineIn(v.ptText(si.source?.name), si) || si.text.replace(/^.+? \(\d+\) - /, '').trim() || si.text;
+}
+/**
+ * Habilidade ativada: a linha dela no texto em português da carta, sem o custo (já pago). Só quando o texto em português
+ * tem as mesmas linhas do texto da carta que o servidor conhece; senão, vazio (fica a descrição do servidor).
+ */
+export function abilityLineIn(ptText: string | undefined, si: FState['stack'][number]): string {
+  if (si.kind !== 'ability' || si.line === undefined || !ptText || !si.source?.text) return '';
+  const lines = (text: string) => text.split(/\r?\n/).filter(line => line.trim());
+  const pt = lines(ptText), en = lines(si.source.text);
+  if (pt.length !== en.length) return '';
+  const line = pt[si.line]?.trim() ?? '';
+  const colon = line.indexOf(': ');
+  return (colon > 0 ? line.slice(colon + 2) : line).trim();
 }
 export function stackFace(v: StackView, si: FState['stack'][number]) {
   // O valor que a carta conta (item 56), atualizado enquanto ela espera na pilha.

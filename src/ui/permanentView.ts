@@ -48,7 +48,7 @@ export const canUse = (s: FState, c: FCard) => usable(s, c.id) || (!s.question &
 export function exileCaption(s: FState, { card, suspended, choosing }: ReturnType<typeof exileShelfCards>[number]) {
   const playable = canPlayExileCard(s, card.id, s.input.gen);
   const time = card.counters?.TIME ?? 0;
-  const status = choosing ? 'Conjurar agora' : suspended ? time > 0 ? `Suspensa · ${time}` : 'Aguardando resolução'
+  const status = choosing ? 'Conjurar agora' : suspended ? time > 0 ? `Suspensa · ${time}${playable ? '. Usar a habilidade' : ''}` : 'Aguardando resolução'
     : card.foretold ? `Prevista${card.foretellCost ? `: conjure por ${card.foretellCost}` : ''}${playable ? '' : ', a partir do turno seguinte ao da previsão'}`
     : playable ? card.land ? 'Jogar terreno' : 'Conjurar' : 'Aguardando o momento de jogar';
   const caption = choosing ? 'Conjurar' : suspended ? time > 0 ? 'Suspensa' : 'Na pilha' : playable ? 'Jogar' : 'Aguarde';

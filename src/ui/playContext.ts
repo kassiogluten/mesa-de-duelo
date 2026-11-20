@@ -11,9 +11,13 @@ export function exileShelfCards(state: FState): { card: FCard; suspended: boolea
     }));
 }
 
+/**
+ * Jogar ou usar uma carta do exílio: com permissão de jogá-la de lá, ou suspensa com uma habilidade que se ativa do
+ * exílio (Greater Gargadon), quando o motor diz que dá para usar agora.
+ */
 export function canPlayExileCard(state: FState, id: number, gen: number) {
   return state.input.gen === gen && !!state.input.priority && state.input.ok.enabled && !state.gameOver && !state.question && !state.sideboarding &&
-    !state.input.paying && !state.input.targeting && !state.input.suspendCast && !!state.playableExile?.includes(id) &&
+    !state.input.paying && !state.input.targeting && !state.input.suspendCast && (!!state.playableExile?.includes(id) || !!state.suspendedExile?.includes(id)) &&
     state.players.some(player => player.exile.some(card => card.id === id && !card.faceDown)) &&
     (!!state.castable?.includes(id) || !!state.input.actionable?.includes(id));
 }

@@ -92,3 +92,14 @@ test('stack items read the printed Portuguese text of a spell', () => {
   assert.equal(stackEffectText(v, { id: 2, text: 'Raio (5) - Raio deals 3 damage.', kind: 'spell', source: { name: 'Bolt' } }), 'Raio deals 3 damage.');
   assert.equal(stackEffectText(v, { id: 3, text: 'Algo (9) - habilidade', kind: 'ability', source: { name: 'Faithless Looting' } }), 'habilidade');
 });
+
+test('an activated ability reads its own line of the Portuguese card text, without the paid cost', () => {
+  const pt = 'Suspender 10 — {R}\nSacrifique um artefato, uma criatura ou um terreno: Remova um marcador temporal de Gargadonte Maior. Ative somente se Gargadonte Maior estiver suspenso.';
+  const v = { ptText: name => (name === 'Greater Gargadon' ? pt : undefined) };
+  const source = { name: 'Greater Gargadon', text: 'Suspend 10—{R}\r\n\r\nSacrifice an artifact, creature, or land: Remove a time counter from Greater Gargadon. Activate only if Greater Gargadon is suspended.' };
+  const item = { id: 7, text: 'Gargadonte Maior (121) - Remove 1 Time counter fromGargadonte Maior (121).', kind: 'ability', line: 1, source };
+  assert.equal(stackEffectText(v, item), 'Remova um marcador temporal de Gargadonte Maior. Ative somente se Gargadonte Maior estiver suspenso.');
+  assert.equal(stackEffectText(v, { ...item, line: undefined }), 'Remove 1 Time counter fromGargadonte Maior (121).', 'sem a linha, fica a do servidor');
+  assert.equal(stackEffectText(v, { ...item, source: { ...source, text: 'Sacrifice an artifact, creature, or land: Remove a time counter.' } }), 'Remove 1 Time counter fromGargadonte Maior (121).', 'linhas diferentes: não arrisca');
+  assert.equal(stackEffectText({ ptText: () => undefined }, item), 'Remove 1 Time counter fromGargadonte Maior (121).', 'sem texto em português');
+});

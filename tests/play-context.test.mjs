@@ -45,6 +45,15 @@ test('exile click and drag require both a surviving permission and current legal
   assert.equal(canPlayExileCard(s, 30, 42), false);
   assert.equal(handDropAction(s, intent, 100, 100, bounds), null);
 });
+test('a suspended card with an ability usable from exile (Greater Gargadon) is clickable; one without stays waiting', () => {
+  const s = state();
+  assert.equal(canPlayExileCard(s, 31, 42), false, 'Rift Bolt suspensa não tem o que usar');
+  s.castable = [30, 31]; s.input.actionable = [30, 31];
+  assert.equal(canPlayExileCard(s, 31, 42), true);
+  assert.equal(canDragHandCard(s, 31, 42), false, 'arrastar continua só para o que se joga do exílio');
+  s.suspendedExile = [];
+  assert.equal(canPlayExileCard(s, 31, 42), false);
+});
 test('exile visibility never leaks private faces or trusts an ID no longer in exile', () => {
   const s = state(); s.players[0].exile[0].faceDown = true;
   assert.equal(exileShelfCards(s).some(x => x.card.id === 30), false);

@@ -1,5 +1,63 @@
 [
   {
+    "nome": "Gargadonte Maior: tirar marcador de tempo no exílio",
+    "versao": "0.231.1",
+
+    "item": "Habilidades que se usam do exílio com a carta suspensa",
+    "conferir": "O Jogador 1 tem Greater Gargadon na mão, duas Mountains, um Grizzly Bears e um Ornithopter. Toque no Gargadonte Maior e escolha Suspender ({R}): ele vai para o exílio com 10 marcadores de tempo e aparece aceso na prateleira do exílio. Toque nele de novo: a mesa pede um artefato, uma criatura ou um terreno para sacrificar. Escolha o Grizzly Bears: ele vai para o cemitério, a habilidade entra na pilha (aberta, ela diz \"Remova um marcador temporal de Gargadonte Maior...\", em português) e, ao resolver, o Gargadonte fica com 9 marcadores. Dá para repetir com o Ornithopter e as Mountains (8, 7, 6...).",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [
+            "Greater Gargadon"
+          ],
+          "library": [
+            "Mountain",
+            "Mountain",
+            "Mountain"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Mountain"
+            },
+            {
+              "name": "Grizzly Bears"
+            },
+            {
+              "name": "Ornithopter"
+            }
+          ]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [
+            {
+              "name": "Forest"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Moeda: a pergunta sai depois de responder",
     "versao": "0.231.0",
 
