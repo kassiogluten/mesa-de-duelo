@@ -1,4 +1,4 @@
-// O topo da mesa: a trilha de fases (com o retrato de quem joga o turno, as paradas no turno dos oponentes, o dia e a
+// O topo da mesa: a trilha de fases (com o retrato de quem joga o turno, as paradas marcadas, o dia e a
 // noite e os relógios), o contorno na metade da mesa de quem joga o turno e o nome dos ícones da trilha no toque.
 import type { FPlayer, FState } from '../forge/client';
 import type { OpponentStopsPreference } from './opponentStops';

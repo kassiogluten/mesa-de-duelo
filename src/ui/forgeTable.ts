@@ -179,7 +179,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const audio = createGameAudio();
   // Nível de passar automaticamente (Opções e o selo junto dos botões); quem passa é a ponte.
   const passLevel = new PassLevelPreference(message => { if (client?.connected && !match.disconnected) client.send(message); });
-  // Etapas do turno dos oponentes em que a ponte segura a prioridade para você.
+  // Etapas marcadas em que a ponte segura a prioridade para você, em todos os turnos.
   const opponentStops = new OpponentStopsPreference(message => { if (client?.connected && !match.disconnected) client.send(message); });
   const turnNotice = createTurnNotice();
   // Os nomes das permanentes entre um desenho e outro, para ver quem mudou de face.
@@ -244,7 +244,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   };
   const { findCard, playerName } = ctx;
 
-  // Menus do nível de passar e das paradas no turno dos oponentes (passMenus.ts).
+  // Menus do nível de passar e das paradas marcadas (passMenus.ts).
   const passMenu = createPassMenu(root, { state: () => client?.state, visible: s => passLevelVisible(actionView(), s), passLevel, setHTML });
   // Dá para marcar paradas quando a ponte oferece a opção e você está jogando.
   const stops = createStopMenu(root, { stops: opponentStops, hasState: () => !!client?.state, render: () => render(),

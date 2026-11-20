@@ -63,7 +63,7 @@ export function attachTableClicks(d: ClickDeps) {
     const lifeCol = t.closest<SVGGElement>('.lc-col');
     if (lifeCol) { for (const col of root.querySelectorAll('.lc-col.on')) if (col !== lifeCol) col.classList.remove('on'); lifeCol.classList.toggle('on'); return; }
     if (d.phases.click(t, e)) return;
-    // Paradas no turno do oponente: o ícone da trilha abre o menu do grupo; fora dele, o menu fecha.
+    // Paradas marcadas: o ícone da trilha abre o menu do grupo; fora dele, o menu fecha.
     const stopGroup = t.closest<HTMLElement>('[data-stop-group]')?.dataset.stopGroup;
     if (stopGroup) { stops.set(stops.group === stopGroup ? null : stopGroup, e.detail === 0); return; }
     const stop = t.closest<HTMLElement>('#fStopMenu [data-stop]');

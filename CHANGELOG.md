@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.235.0] - 2026-11-20
+
+### Mudou
+
+- **Etapas marcadas param em todos os turnos.** As etapas marcadas na trilha de fases agora seguram a prioridade também no seu turno, não só no dos oponentes, e sempre valem mais que o passar automaticamente: nem "Só quando me afeta", nem "Respostas", nem "Passar até o fim do turno" passam por elas. Marque Bloqueadores, por exemplo, para responder aos bloqueios no seu ataque. O menu de cada grupo da trilha diz "todos os turnos". Quem já tinha marcado etapas passa a parar nelas também no próprio turno.
+
 ## [0.234.0] - 2026-11-20
 
 ### Novo

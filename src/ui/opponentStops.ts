@@ -1,10 +1,10 @@
-// Paradas no turno do oponente: as etapas marcadas em que o jogo segura a prioridade para você.
+// Paradas: as etapas marcadas em que o jogo segura a prioridade para você, em todos os turnos (o nome do arquivo é de quando valiam só no turno do oponente).
 import { KEYS } from '../storage';
 import type { FPreferences } from '../forge/client';
 import { esc } from './cardtext';
 
 export const OPPONENT_STOPS_KEY = KEYS.opponentStops;
-/** Etapas do turno de um oponente que dão prioridade, na ordem do turno, com o grupo da trilha de fases. */
+/** Etapas que dão prioridade, na ordem do turno, com o grupo da trilha de fases. */
 export const STOP_STEPS = [
   ['UPKEEP', 'Manutenção', 'start'],
   ['DRAW', 'Compra', 'start'],
@@ -33,9 +33,9 @@ export function stopsByGroup(stops: readonly string[]): Map<string, string[]> {
   return groups;
 }
 
-/** O jogo está segurando a prioridade para você: turno de outro jogador, numa etapa marcada, com a pilha vazia. */
+/** O jogo está segurando a prioridade para você: numa etapa marcada, em qualquer turno, com a pilha vazia. */
 export function holdingStop(state: { activePlayer: number | null; you: number; phase: string | null; stack: unknown[] }, stops: readonly string[]) {
-  return state.activePlayer !== null && state.activePlayer !== state.you && !state.stack.length && !!state.phase && stops.includes(state.phase);
+  return state.activePlayer !== null && !state.stack.length && !!state.phase && stops.includes(state.phase);
 }
 
 /** Botões das etapas (só as do grupo da trilha, se informado); `aria-pressed` diz quais estão marcadas. */
@@ -44,11 +44,11 @@ export function stopsOptionsHTML(stops: readonly string[], enabled: boolean, gro
     `<button type="button" class="stop-step" data-stop="${step}" aria-pressed="${stops.includes(step)}"${enabled ? '' : ' disabled'}>${esc(label)}</button>`).join('');
 }
 
-/** Menu que abre ao tocar num ícone da trilha de fases: as etapas daquele grupo, para todos os oponentes. */
+/** Menu que abre ao tocar num ícone da trilha de fases: as etapas daquele grupo, para todos os turnos. */
 export function stopMenuHTML(group: string, title: string, stops: readonly string[]): string {
-  return `<p class="stop-menu-title" id="fStopMenuTitle">${esc(title)} · turno do oponente</p>
+  return `<p class="stop-menu-title" id="fStopMenuTitle">${esc(title)} · todos os turnos</p>
     <div class="stop-steps">${stopsOptionsHTML(stops, true, group)}</div>
-    <p class="stop-menu-hint">Nas etapas marcadas o jogo para e segura a prioridade para você em qualquer nível de passar automaticamente, mesmo sem ações e com Passar até o fim do turno. Vale para todos os oponentes.</p>`;
+    <p class="stop-menu-hint">Nas etapas marcadas o jogo para e segura a prioridade para você em qualquer nível de passar automaticamente, mesmo sem ações e com Passar até o fim do turno. Vale em todos os turnos, o seu e os dos oponentes.</p>`;
 }
 
 interface PreferenceStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }

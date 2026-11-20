@@ -75,7 +75,7 @@ final class Seat {
     // A seat preference survives reconnects, the next game, and a rematch.
     /** Nível de passar automaticamente ({@link PassLevel}); o padrão é "Só com ações". */
     volatile PassLevel passLevel = PassLevel.ACOES;
-    /** Etapas do turno dos oponentes em que o jogo segura a prioridade para este assento, mesmo sem ações. */
+    /** Etapas marcadas em que o jogo segura a prioridade para este assento, em todos os turnos, mesmo sem ações (o nome do protocolo é antigo). */
     volatile Set<PhaseType> opponentStops = Set.of();
 
     volatile WebGuiGame gui;

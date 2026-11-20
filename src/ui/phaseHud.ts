@@ -130,7 +130,7 @@ function matchClockHTML(state: HudState): string {
  */
 const WAIT_CLOCK = `<span class="phase-wait-clock" data-wait-clock aria-hidden="true" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9"/></svg><span class="phase-wait-name" data-wait-name></span><span data-wait-time>0:00</span></span>`;
 
-/** Paradas no turno dos oponentes na trilha: as etapas marcadas, se dá para mudá-las agora e o grupo com o menu aberto. */
+/** Paradas na trilha (valem em todos os turnos): as etapas marcadas, se dá para mudá-las agora e o grupo com o menu aberto. */
 export interface HudStops { value: readonly string[]; editable?: boolean; open?: string | null }
 
 /** Nome do grupo da trilha, para o título do menu de paradas. */
@@ -154,7 +154,7 @@ export function turnInfoHTML(state: HudState, activePortrait?: string): string {
 /**
  * Trilha compacta de fases. Ela nunca avança o motor: os nomes aparecem ao passar o mouse e o resumo completo vai
  * para leitores de tela. A cor diz de quem é o turno. Com `stops.editable`, cada ícone abre o menu das etapas daquele grupo
- * em que o jogo para no turno dos oponentes; os grupos com etapa marcada ganham um ponto.
+ * em que o jogo para, em todos os turnos; os grupos com etapa marcada ganham um ponto.
  */
 export function phaseHudHTML(state: HudState, hudStops: HudStops | readonly string[] = []): string {
   const { value: stops, editable = false, open = null }: HudStops = Array.isArray(hudStops) ? { value: hudStops as readonly string[] } : hudStops as HudStops;
@@ -173,13 +173,13 @@ export function phaseHudHTML(state: HudState, hudStops: HudStops | readonly stri
     <ol class="phase-track ${state.gameOver ? '' : mine ? 'mine' : 'theirs'}${edit ? ' editable' : ''}"${edit ? '' : ' aria-hidden="true"'}>${PHASES.map(([key, label, icon], index) => {
       const current = step?.group === key && !state.gameOver;
       const held = marked.get(key);
-      const tip = open === key ? '' : [current ? `${label} · ${detail}` : label, key === 'combat' ? combat : '', held ? `Parada no turno do oponente: ${held.join(', ')}` : ''].filter(Boolean).join(' · ');
+      const tip = open === key ? '' : [current ? `${label} · ${detail}` : label, key === 'combat' ? combat : '', held ? `Parada marcada: ${held.join(', ')}` : ''].filter(Boolean).join(' · ');
       // Selo no combate: quantos combates o turno tem até agora (contando os que ainda vêm).
       const combats = key === 'combat' && !state.gameOver ? Math.max(state.combatNumber ?? 0, 1) + (state.extraCombats ?? 0) : 0;
       const badge = combats > 1 ? `<b class="phase-combat-count">×${combats}</b>` : '';
       const stop = held ? '<i class="phase-stop-dot"></i>' : '';
       const svg = `<svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>`;
-      const name = `${label}: paradas no turno do oponente${held ? ` (${held.join(', ')})` : ''}`;
+      const name = `${label}: paradas marcadas${held ? ` (${held.join(', ')})` : ''}`;
       const body = edit ? `<button type="button" class="phase-step-btn" data-stop-group="${key}" aria-label="${esc(name)}" aria-haspopup="true" aria-expanded="${open === key}" aria-controls="fStopMenu">${svg}</button>` : svg;
       return `<li class="phase-step${current ? ' current' : ''}${current && holding ? ' held' : ''}${index < activeIndex ? ' passed' : ''}${open === key ? ' open' : ''}" data-phase="${key}"${tip ? ` data-tip="${esc(tip)}"` : ''}>${body}${badge}${stop}</li>`;
     }).join('')}</ol>`;

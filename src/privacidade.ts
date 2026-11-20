@@ -76,7 +76,7 @@ app.innerHTML = `
         <li>um código derivado do seu identificador Google, que não permite descobrir qual é a conta;</li>
         <li>o seu primeiro nome e o endereço da sua foto do Google, atualizados a cada vez que você entra;</li>
         <li>o seu nome na mesa (na primeira vez, o seu primeiro nome, se o campo estiver vazio), que você pode mudar;</li>
-        <li>as preferências da mesa: som, aviso de turno, ritmo, passar a vez automaticamente e onde o jogo para no turno do oponente;</li>
+        <li>as preferências da mesa: som, aviso de turno, ritmo, passar a vez automaticamente e as etapas em que o jogo para;</li>
         <li>os decks que você salvar enquanto estiver conectado, incluindo os apagados há menos de 30 dias, que ficam numa lixeira para você poder recuperar;</li>
         <li>a ligação entre a conta e as partidas que você jogar conectado, para mostrar em <strong>Minhas partidas</strong> quantas você jogou e venceu, com quais decks e contra quem. Só você vê essa página; os outros jogadores aparecem nela com o nome que usaram na sala;</li>
         <li>as sessões abertas (uma por aparelho conectado), guardadas de forma que não podem ser usadas por quem lê o arquivo. Uma sessão vale 180 dias e se renova enquanto você usa o jogo.</li>

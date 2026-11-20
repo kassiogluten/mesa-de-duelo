@@ -1,5 +1,5 @@
 // Os dois menus pequenos junto da trilha e dos botões: a troca rápida do nível de passar automaticamente (com o atalho
-// "Passar até o fim do turno") e as paradas no turno dos oponentes (um menu por grupo de fases da trilha).
+// "Passar até o fim do turno") e as paradas marcadas (um menu por grupo de fases da trilha).
 import type { FState } from '../forge/client';
 import { passMenuHTML, type PassLevelPreference } from './passLevel';
 import { stopMenuHTML, type OpponentStopsPreference } from './opponentStops';
@@ -51,7 +51,7 @@ export function createPassMenu(root: HTMLElement, d: { state(): FState | null | 
   return { get open() { return open; }, sync, set, shortcut };
 }
 
-/** As paradas no turno dos oponentes: o menu de um grupo de fases da trilha, aberto pelo ícone dele. */
+/** As paradas marcadas: o menu de um grupo de fases da trilha, aberto pelo ícone dele. */
 export function createStopMenu(root: HTMLElement, d: { editable(): boolean; stops: OpponentStopsPreference; hasState(): boolean; render(): void }) {
   /** Grupo da trilha de fases com o menu de paradas aberto. */
   let group: string | null = null;

@@ -40,7 +40,7 @@ final class WebGuiGame extends ProtocolGuiGame {
      */
     static final Set<PhaseType> STOPS_THEIRS = EnumSet.of(PhaseType.COMBAT_BEGIN, PhaseType.COMBAT_DECLARE_ATTACKERS,
         PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.END_OF_TURN);
-    /** Etapas do turno de um oponente que o jogador pode marcar para segurar a prioridade (as que dão prioridade). */
+    /** Etapas que o jogador pode marcar para segurar a prioridade (as que dão prioridade), em qualquer turno. */
     static final Set<PhaseType> HOLDABLE = EnumSet.of(PhaseType.UPKEEP, PhaseType.DRAW, PhaseType.MAIN1, PhaseType.COMBAT_BEGIN,
         PhaseType.COMBAT_DECLARE_ATTACKERS, PhaseType.COMBAT_DECLARE_BLOCKERS, PhaseType.COMBAT_DAMAGE, PhaseType.COMBAT_END,
         PhaseType.MAIN2, PhaseType.END_OF_TURN);
@@ -54,7 +54,10 @@ final class WebGuiGame extends ProtocolGuiGame {
     private volatile PlayerView me;
     /** Nível de passar automaticamente do jogador ({@link PassLevel}). */
     private final Supplier<PassLevel> level;
-    /** Etapas marcadas pelo jogador no turno dos oponentes: nelas o jogo para em qualquer nível, mesmo sem ações. */
+    /**
+     * Etapas marcadas pelo jogador: nelas o jogo para em todos os turnos (o dele e os dos oponentes), em qualquer nível
+     * e com "Passar até o fim do turno", mesmo sem ações. Parar vale mais que passar automaticamente.
+     */
     private final Supplier<Set<PhaseType>> held;
     /** O jogo está numa etapa marcada: a passagem automática fica desligada até a etapa acabar. */
     private volatile boolean holding;
@@ -168,7 +171,7 @@ final class WebGuiGame extends ProtocolGuiGame {
         return active;
     }
 
-    /** O jogo está parado numa etapa que o jogador marcou no turno de um oponente. */
+    /** O jogo está parado numa etapa que o jogador marcou. */
     boolean holding() { return holding; }
 
     /** Reaplica as paradas depois que o jogador muda as etapas marcadas, inclusive na etapa em que o jogo está. */
@@ -243,9 +246,9 @@ final class WebGuiGame extends ProtocolGuiGame {
         }
     }
 
+    /** Etapa marcada, no turno de qualquer jogador (o próprio também: responder aos bloqueadores no seu ataque). */
     private boolean holds(PlayerView turn, PhaseType phase) {
-        PlayerView mine = me;
-        return mine != null && turn != null && phase != null && !mine.equals(turn) && held.get().contains(phase);
+        return me != null && turn != null && phase != null && held.get().contains(phase);
     }
 
     @Override
@@ -275,7 +278,7 @@ final class WebGuiGame extends ProtocolGuiGame {
     public boolean isUiSetToSkipPhase(PlayerView playerTurn, PhaseType phase) {
         boolean mine = me != null && me.equals(playerTurn);
         if (mine && phase == openedForAbility) return false;
-        if (!mine && held.get().contains(phase)) return false;
+        if (held.get().contains(phase)) return false;
         // Sem atacantes não há a que responder depois dos ataques: o oponente que não atacou não gera pedido.
         if (!mine && phase == PhaseType.COMBAT_DECLARE_ATTACKERS) {
             CombatView combat = getGameView() == null ? null : getGameView().getCombat();

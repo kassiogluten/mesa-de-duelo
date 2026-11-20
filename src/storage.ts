@@ -42,7 +42,7 @@ export const KEYS = {
   passResponses: 'mesa:passResponses',
   /** Chave antiga de "passar sem ações" ('true'/'false'), ainda gravada para aparelhos antigos. Mesa. */
   autoPassNoActions: 'mesa:autoPassNoActions',
-  /** Paradas no turno do oponente (JSON). Mesa. */
+  /** Etapas marcadas em que o jogo para, em todos os turnos (JSON). Mesa. */
   opponentStops: 'mesa:opponentStops',
   /** Ordem das cartas nas telas de escolha. Mesa. */
   choiceSort: 'mesa:choiceSort',

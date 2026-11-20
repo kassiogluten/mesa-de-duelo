@@ -1,4 +1,9 @@
 {
+  "0.235.0": {
+    "Etapas marcadas param em todos os turnos": [
+      { "img": "0.235.0/menu-paradas.webp", "legenda": "O menu do Combate na trilha de fases, com Bloqueadores marcado e o aviso de que a marca vale em todos os turnos, o seu e os dos oponentes, em qualquer nível de passar automaticamente." }
+    ]
+  },
   "0.234.0": {
     "Companheiro no Commander": [
       { "img": "0.234.0/vaga-no-editor.webp", "legenda": "Em Meus decks, o Lurrus da Toca Onírica na vaga Companheiro, logo abaixo da comandante Ayli, com Trocar e Remover." },

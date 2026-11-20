@@ -58,7 +58,7 @@ test('rapid toggles keep one request in flight and stale echoes do not undo the 
   assert.deepEqual(p.value, ['END_OF_TURN']);
 });
 
-test('the options buttons say which steps are marked, and holding needs an opponent turn with an empty stack', () => {
+test('the options buttons say which steps are marked, and holding needs a marked step with an empty stack, in any turn', () => {
   const html = stopsOptionsHTML(['UPKEEP'], true);
   assert.equal((html.match(/data-stop=/g) ?? []).length, 10);
   assert.match(html, /data-stop="UPKEEP" aria-pressed="true">Manutenção/);
@@ -66,7 +66,7 @@ test('the options buttons say which steps are marked, and holding needs an oppon
   assert.match(stopsOptionsHTML([], false), /disabled/);
   const s = { activePlayer: 2, you: 1, phase: 'UPKEEP', stack: [] };
   assert.equal(holdingStop(s, ['UPKEEP']), true);
-  assert.equal(holdingStop({ ...s, activePlayer: 1 }, ['UPKEEP']), false);
+  assert.equal(holdingStop({ ...s, activePlayer: 1 }, ['UPKEEP']), true, 'vale também no seu turno');
   assert.equal(holdingStop({ ...s, stack: [{}] }, ['UPKEEP']), false);
   assert.equal(holdingStop(s, ['DRAW']), false);
 });
@@ -75,8 +75,8 @@ test('the track menu lists only the steps of the chosen group', async () => {
   const { stopMenuHTML } = await import('../src/ui/opponentStops.ts');
   const combat = stopMenuHTML('combat', 'Combate', ['COMBAT_END']);
   assert.equal((combat.match(/data-stop=/g) ?? []).length, 5);
-  assert.match(combat, /Combate · turno do oponente/);
+  assert.match(combat, /Combate · todos os turnos/);
   assert.match(combat, /data-stop="COMBAT_END" aria-pressed="true"/);
-  assert.match(combat, /todos os oponentes/);
+  assert.match(combat, /Vale em todos os turnos, o seu e os dos oponentes/);
   assert.equal((stopMenuHTML('start', 'Início', []).match(/data-stop=/g) ?? []).length, 2);
 });

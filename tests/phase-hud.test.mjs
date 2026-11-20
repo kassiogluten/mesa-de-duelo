@@ -134,13 +134,13 @@ test('the turn clock shows minutes and seconds, and hours only past one hour', (
   assert.doesNotMatch(turnInfoHTML({ ...state, gameOver: true }), /data-turn-timer/);
 });
 
-test('marked opponent steps show a dot on their group, and the held step gets a ring only during an opponent turn', () => {
+test('marked steps show a dot on their group, and the held step gets a ring in any turn', () => {
   const theirs = { ...state, activePlayer: 2, phase: 'UPKEEP', stack: [] };
   const stops = ['UPKEEP', 'DRAW', 'COMBAT_DECLARE_ATTACKERS'];
   const html = phaseHudHTML(theirs, stops);
   assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
-  assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada no turno do oponente: Manutenção, Compra"/);
-  assert.match(html, /Combate · Parada no turno do oponente: Atacantes/);
+  assert.match(html, /data-phase="start" data-tip="Início · Manutenção · Parada marcada: Manutenção, Compra"/);
+  assert.match(html, /Combate · Parada marcada: Atacantes/);
   assert.match(html, /phase-step current held/);
   assert.match(html, /Parada sua/);
   assert.doesNotMatch(html, /<button|data-act|role="button"|tabindex=/);
@@ -148,7 +148,7 @@ test('marked opponent steps show a dot on their group, and the held step gets a 
   assert.doesNotMatch(phaseHudHTML({ ...theirs, phase: 'MAIN1' }, stops), /held/);
   const mine = phaseHudHTML({ ...state, phase: 'UPKEEP', stack: [] }, stops);
   assert.equal((mine.match(/phase-stop-dot/g) ?? []).length, 2);
-  assert.doesNotMatch(mine, /current held|Parada sua/);
+  assert.match(mine, /phase-step current held/, 'no seu turno a etapa marcada também segura');
 });
 
 test('the match clock shows how long the current game has run, only while it runs', () => {
@@ -168,8 +168,8 @@ test('with editable stops every track icon is a button that opens the menu of it
     const html = phaseHudHTML(s, { value: stops, editable: true, open: 'combat' });
     assert.equal((html.match(/<button type="button" class="phase-step-btn"/g) ?? []).length, 5);
     assert.doesNotMatch(html, /<ol[^>]*aria-hidden/);
-    assert.match(html, /data-stop-group="start" aria-label="Início: paradas no turno do oponente \(Manutenção\)" aria-haspopup="true" aria-expanded="false"/);
-    assert.match(html, /data-stop-group="combat" aria-label="Combate: paradas no turno do oponente \(Dano de combate\)" aria-haspopup="true" aria-expanded="true"/);
+    assert.match(html, /data-stop-group="start" aria-label="Início: paradas marcadas \(Manutenção\)" aria-haspopup="true" aria-expanded="false"/);
+    assert.match(html, /data-stop-group="combat" aria-label="Combate: paradas marcadas \(Dano de combate\)" aria-haspopup="true" aria-expanded="true"/);
     assert.equal((html.match(/phase-stop-dot/g) ?? []).length, 2);
     assert.doesNotMatch(html, /data-phase="combat" data-tip/);
   }

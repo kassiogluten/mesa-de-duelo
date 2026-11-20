@@ -22,7 +22,7 @@ import forge.trackable.TrackableCollection;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** Etapas marcadas no turno do oponente seguram a prioridade: o Forge não pula nem passa sozinho nelas. */
+/** Etapas marcadas seguram a prioridade em todos os turnos: nem o Forge nem o nível de passar passam sozinhos nelas. */
 public class HeldStopsTest {
     @BeforeClass public static void engine() { BridgeRulesTest.engine(); }
 
@@ -31,10 +31,11 @@ public class HeldStopsTest {
         final Player me = game.getPlayers().get(0), opponent = game.getPlayers().get(1);
         final PlayerControllerHuman human = new PlayerControllerHuman(game, me, new LobbyPlayerHuman("Test"));
         final AtomicReference<Set<PhaseType>> stops = new AtomicReference<>(Set.of());
+        final AtomicReference<PassLevel> level = new AtomicReference<>(PassLevel.ACOES);
         final WebGuiGame gui = new WebGuiGame(new IRemote() {
             public void send(NetEvent event) { }
             public Object sendAndWait(IdentifiableNetEvent event) { return null; }
-        }, () -> PassLevel.ACOES, stops::get, new MatchLifecycle(), () -> game);
+        }, level::get, stops::get, new MatchLifecycle(), () -> game);
 
         Fixture() {
             gui.setGameView(game.getView());
@@ -64,7 +65,7 @@ public class HeldStopsTest {
         f.stops.set(EnumSet.of(PhaseType.UPKEEP));
         f.gui.stopsChanged();
         assertFalse(f.yields().isSkippingPhase(opp, PhaseType.UPKEEP));
-        assertTrue("só o turno dos oponentes", f.yields().isSkippingPhase(f.me.getView(), PhaseType.UPKEEP));
+        assertFalse("vale também no próprio turno", f.yields().isSkippingPhase(f.me.getView(), PhaseType.UPKEEP));
 
         f.step(f.opponent, PhaseType.UPKEEP);
         assertTrue(f.gui.holding());
@@ -75,8 +76,25 @@ public class HeldStopsTest {
         assertTrue("a passagem automática volta quando a etapa acaba", f.autoPass());
 
         f.step(f.me, PhaseType.UPKEEP);
-        assertFalse("a marca não vale no próprio turno", f.gui.holding());
-        assertTrue(f.autoPass());
+        assertTrue("a marca vale no próprio turno", f.gui.holding());
+        assertFalse(f.autoPass());
+    }
+
+    /** Responder aos bloqueadores no seu ataque: a marca vale mais que "Só quando me afeta". */
+    @Test public void markedStepHoldsInOwnTurnAboveEveryPassLevel() {
+        Fixture f = new Fixture();
+        f.level.set(PassLevel.AFETA);
+        f.gui.levelChanged();
+        f.enter(f.me, PhaseType.COMBAT_DECLARE_BLOCKERS);
+        f.step(f.me, PhaseType.COMBAT_DECLARE_BLOCKERS);
+        assertTrue("sem marca, o nível passa os bloqueadores do seu ataque", f.gui.levelPasses());
+
+        f.stops.set(EnumSet.of(PhaseType.COMBAT_DECLARE_BLOCKERS));
+        f.gui.stopsChanged();
+        assertTrue(f.gui.holding());
+        assertFalse("marcada, a ponte não passa", f.gui.levelPasses());
+        assertFalse("nem o Forge", f.autoPass());
+        assertFalse(f.skipsMine(PhaseType.COMBAT_DECLARE_BLOCKERS));
     }
 
     @Test public void markingTheCurrentStepHoldsItAndUnmarkingReleasesIt() {
