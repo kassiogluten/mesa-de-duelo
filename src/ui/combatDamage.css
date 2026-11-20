@@ -40,3 +40,10 @@
   .cd-btn { width: 30px; height: 30px; }
 }
 @media (max-width: 600px) { .cd-body { grid-template-columns: 1fr; justify-items: center; } }
+/* Celular deitado: sem a frase da ordem dos bloqueadores e com as cartas menores, a janela cabe inteira, com o Confirmar à vista. */
+@media (orientation: landscape) and (max-height: 420px) {
+  #fQuestion .question.combat-damage .cd-main > .q-hint { display: none; }
+  .cd-face.big { width: 64px; --fw: 64px; }
+  .cd-face { width: 52px; --fw: 52px; }
+  .cd-target { gap: 2px; }
+}

@@ -1,4 +1,33 @@
 {
+  "0.231.0": {
+    "A carta que pede a escolha fica ao lado das cartas": [
+      { "img": "0.231.0/carta-ao-lado-celular.webp", "legenda": "Gifts Ungiven no celular deitado: a carta que pede fica à esquerda, e as quatro cartas para escolher aparecem inteiras." }
+    ],
+    "Dano de combate inteiro no celular deitado": [
+      { "img": "0.231.0/dano-combate-celular.webp", "legenda": "A Serpente Terrestre de Craw dividindo 7 de dano no celular deitado: tudo cabe, com o Confirmar dano à vista." }
+    ],
+    "Vazamento de Mana diz o que você perde": [
+      { "img": "0.231.0/mana-leak.webp", "legenda": "O Vazamento de Mana pede {3}: sem pagar, os Ursos Cinzentos são anulados; os botões dizem Deixar anular e Pagar e salvar." }
+    ],
+    "Pedido respondido sai da caixa de ação": [
+      { "img": "0.231.0/moeda-respondida.webp", "legenda": "Depois de escolher cara ou coroa, a caixa de ação só diz que está esperando o jogo." }
+    ],
+    "Nomear uma carta em português": [
+      { "img": "0.231.0/nomear-carta.webp", "legenda": "A Silenciadora de Platinopena pede o nome de uma carta que não seja de terreno, com o título em português." }
+    ],
+    "Escolhas de cartas sem a carta grande por cima": [
+      { "img": "0.231.0/montes-sem-carta-grande.webp", "legenda": "Os montes do Fato ou Ficção abrem inteiros, sem a primeira carta ampliada por cima." }
+    ],
+    "Teclado começa na primeira opção": [
+      { "img": "0.231.0/foco-cor.webp", "legenda": "Na escolha de cor do Servo do Pintor, o foco começa no Branco, a primeira opção." }
+    ],
+    "Caixa de ação inteira no celular deitado": [
+      { "img": "0.231.0/bola-de-fogo-celular.webp", "legenda": "Os alvos da Bola de Fogo no celular deitado: a caixa cabe na tela, rola por dentro e os botões ficam presos embaixo." }
+    ],
+    "Busca de Meus decks no celular deitado": [
+      { "img": "0.231.0/busca-decks-celular.webp", "legenda": "No celular deitado, a busca ocupa a largura dela, e as cores descem para a linha de baixo." }
+    ]
+  },
   "0.230.0": {
     "Reiniciar o cenário na sala de teste": [
       { "img": "0.230.0/reiniciar-cenario.webp", "legenda": "Na sala de teste do Laboratório, o botão Reiniciar cenário na barra de cima, ao lado do Desfazer." }

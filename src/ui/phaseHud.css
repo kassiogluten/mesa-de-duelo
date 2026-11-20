@@ -126,5 +126,5 @@
 @media (pointer: coarse) {
   .forge #fPhases.phase-trail { min-height: 44px; box-sizing: border-box; gap: 8px; }
   .forge #fPhases .phase-track { gap: 9px; }
-  .forge .action { bottom: 56px; }
+  .forge .action { bottom: 56px; max-height: calc(100% - 62px); }
 }

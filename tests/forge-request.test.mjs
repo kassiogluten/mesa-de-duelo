@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const { selectionRequest, ptTitle } = await import('../src/ui/forgeRequest.ts');
-const { shortInstruction, paymentButtonLabels } = await import('../src/ui/shortInstruction.ts');
+const { shortInstruction, paymentButtonLabels, counteredUnlessPaid } = await import('../src/ui/shortInstruction.ts');
 
 test('sacrificing, discarding and removing counters become a Portuguese request with a named button', () => {
   assert.deepEqual(selectionRequest('Édito Diabólico (121)\n - O jogador alvo sacrifica uma criatura.\nEscolha 1 creature(s) a sacrifice.'), { text: 'Sacrifique 1 criatura.', ok: 'Sacrificar' });
@@ -42,4 +42,32 @@ test('Fireball-like requests count the targets from the choice limits', () => {
 test('English choice titles get a Portuguese title', () => {
   assert.equal(ptTitle('Select a card to put onto the battlefield'), 'Escolha a carta que vai para o campo de batalha');
   assert.equal(ptTitle('Escolha uma carta'), 'Escolha uma carta');
+});
+
+test('naming a card: the English description in the title becomes Portuguese', () => {
+  assert.equal(ptTitle('Escolha o nome da carta nonland.'), 'Escolha o nome de uma carta que não seja de terreno.');
+  assert.equal(ptTitle('Escolha o nome da carta noncreature, nonland.'), 'Escolha o nome de uma carta que não seja de criatura nem de terreno.');
+  assert.equal(ptTitle('Escolha o nome da carta nonlegendary, nonland.'), 'Escolha o nome de uma carta que não seja lendária nem de terreno.');
+  assert.equal(ptTitle('Escolha o nome da carta nonbasic land.'), 'Escolha o nome de uma carta de terreno não básico.');
+  assert.equal(ptTitle('Escolha o nome da carta creature, enchantment, or planeswalker.'), 'Escolha o nome de uma carta de criatura, encantamento ou planeswalker.');
+  assert.equal(ptTitle('Escolha o nome da carta permanent card with mana value 3 or less.'), 'Escolha o nome de uma carta de permanente com valor de mana 3 ou menos.');
+  // Descrição desconhecida: fica como veio, em vez de meia tradução.
+  assert.equal(ptTitle('Escolha o nome da carta card of that color.'), 'Escolha o nome da carta card of that color.');
+});
+
+test('Mana Leak: refusing to pay says which spell is countered, and the buttons say so', () => {
+  const input = { paying: true, payingFor: 'effect', canAutoPay: true, ok: { enabled: true }, card: { id: 130, name: 'Mana Leak' }, manaCost: { remaining: '{3}' },
+    message: 'Fuga de Mana (130)\n\nFuga de Mana (130) - Anula a mágica alvo a menos que seu controlador pague {3}.\n\nPagar Custo de Mana: {3}' };
+  // Como o servidor manda: o Mana Leak resolvendo no topo, sem o alvo, e a mágica de quem paga embaixo.
+  const stack = [{ source: { id: 130, name: 'Mana Leak' }, controller: 23, kind: 'spell', resolving: true }, { source: { id: 121, name: 'Grizzly Bears' }, controller: 10, kind: 'spell' }];
+  const pt = name => ({ 'Grizzly Bears': 'Ursos Cinzentos', 'Mana Leak': 'Vazamento de Mana' })[name] ?? name;
+  const counters = counteredUnlessPaid(input, stack, 10, pt);
+  assert.equal(counters, 'Ursos Cinzentos');
+  assert.equal(shortInstruction({ ...input, counters }, pt), 'Vazamento de Mana pede {3}. Sem pagar, Ursos Cinzentos é anulada.');
+  assert.deepEqual(paymentButtonLabels({ ...input, counters }), { ok: 'Pagar e salvar', cancel: 'Deixar anular' });
+  // Duas mágicas suas embaixo: não dá para saber qual é o alvo.
+  assert.equal(counteredUnlessPaid(input, [...stack, { source: { id: 122, name: 'Shock' }, controller: 10, kind: 'spell' }], 10), 'a sua mágica');
+  // Outros pagamentos de efeito (Rhystic Study) ficam como antes.
+  assert.equal(counteredUnlessPaid({ ...input, message: 'Estudo Rístico - Pagar Custo de Mana: {1}' }, stack, 10), undefined);
+  assert.deepEqual(paymentButtonLabels(input), { ok: 'Pagar automaticamente', cancel: 'Não pagar' });
 });

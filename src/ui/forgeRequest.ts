@@ -80,7 +80,30 @@ export function selectionRequest(message: string): SelectionRequest | null {
 const TITLES: [RegExp, string][] = [
   [/^Select a card to put onto the battlefield$/i, 'Escolha a carta que vai para o campo de batalha'],
 ];
-export const ptTitle = (title: string) => TITLES.find(([re]) => re.test(title.trim()))?.[1] ?? title;
+export const ptTitle = (title: string) => TITLES.find(([re]) => re.test(title.trim()))?.[1] ?? cardNameTitle(title) ?? title;
+
+const NAME_KINDS: Record<string, string> = { land: 'terreno', creature: 'criatura', artifact: 'artefato', enchantment: 'encantamento', planeswalker: 'planeswalker',
+  battle: 'batalha', instant: 'mágica instantânea', sorcery: 'feitiço', permanent: 'permanente' };
+const listed = (words: string[], last: string) => words.length > 1 ? `${words.slice(0, -1).join(', ')} ${last} ${words.at(-1)}` : words[0] ?? '';
+/**
+ * Nomear uma carta com restrição (Silverquill Silencer, Meddling Mage): o Forge põe a descrição da carta em inglês no
+ * título ("Escolha o nome da carta noncreature, nonland."). Descrição que não se conhece fica como veio.
+ */
+function cardNameTitle(title: string): string | null {
+  const m = title.trim().match(/^Escolha o nome da carta (.+?)\.?$/);
+  if (!m) return null;
+  let desc = m[1]!.trim(), value = '';
+  const mv = desc.match(/^(.*?)\s*with mana value (\w+) or (less|greater)$/i);
+  if (mv) { desc = mv[1]!; value = ` com valor de mana ${mv[2]} ou ${mv[3]!.toLowerCase() === 'less' ? 'menos' : 'mais'}`; }
+  desc = desc.replace(/\s*\bcard$/i, '').trim();
+  if (/^nonbasic land$/i.test(desc)) return `Escolha o nome de uma carta de terreno não básico${value}.`;
+  const parts = desc ? desc.split(/\s*,\s*(?:or\s+)?|\s+or\s+/i) : [];
+  const no = parts.filter(p => /^non/i.test(p)).map(p => p.slice(3).toLowerCase()), yes = parts.filter(p => !/^non/i.test(p)).map(p => p.toLowerCase());
+  if ((no.length && yes.length) || yes.some(w => !NAME_KINDS[w]) || no.some(w => !NAME_KINDS[w] && w !== 'legendary')) return null;
+  const kind = (w: string) => w === 'legendary' ? 'lendária' : `de ${NAME_KINDS[w]}`;
+  const phrase = no.length ? ` que não seja ${no.map(kind).join(' nem ')}` : yes.length ? ` de ${listed(yes.map(w => NAME_KINDS[w]!), 'ou')}` : '';
+  return `Escolha o nome de uma carta${phrase}${value}.`;
+}
 
 /** O aviso do que alguém escolheu, com a cor ou o tipo de criatura em português: "Jogador 1 escolheu white" → "Jogador 1 escolheu branco". */
 export function choiceNotice(text: string) {

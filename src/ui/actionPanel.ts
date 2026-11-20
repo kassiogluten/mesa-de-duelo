@@ -12,7 +12,7 @@ import { cardDecision } from './decisionPrompt';
 import { isProliferating, proliferateOkLabel } from './proliferate';
 import { passLabel } from './phaseHud';
 import { passLevelBadgeHTML, type PassLevel } from './passLevel';
-import { abilityKindLabel, paymentButtonLabels, targetProgress, voteRequest } from './shortInstruction';
+import { abilityKindLabel, counteredUnlessPaid, paymentButtonLabels, targetProgress, voteRequest } from './shortInstruction';
 import { waitingOnText } from './awaitingDecision';
 import { gameResult, watchBarHTML } from './resultView';
 import { zoneName } from './questionView';
@@ -88,7 +88,7 @@ export function buttons(v: ActionView, s: FState) {
   const decision = cardDecision(s);
   const handCount = s.players.find(p => p.id === s.you)?.hand.length ?? 0;
   const move = s.input.commanderMove;
-  const payment = s.input.paying ? paymentButtonLabels(s.input) : null;
+  const payment = s.input.paying ? paymentButtonLabels({ ...s.input, counters: counteredUnlessPaid(s.input, s.stack, s.you, name => ptOf(name)?.name || name) }) : null;
   let ok = payment && s.input.ok.label ? { ...s.input.ok, label: payment.ok } : move ? { ...s.input.ok, label: 'Zona de comando' } : s.input.suspendCast ? { ...s.input.ok, label: 'Conjurar agora' } : s.input.blocking ? { ...s.input.ok, label: blockConfirmLabel(s) } : s.input.attacking ? { ...s.input.ok, label: attackConfirmLabel(s.combat.length), enabled: s.input.ok.enabled && !v.attackAll && !v.attackSelecting && !v.attackBusy } : s.input.opening === 'play-draw' ? { ...s.input.ok, label: 'Eu jogo' }
     : s.input.opening === 'mulligan' ? { ...s.input.ok, label: `Manter ${handCount - (s.input.openingReturnCount ?? 0)}` }
     : s.input.opening === 'mulligan-bottom' && s.input.openingReturnCount ? { ...s.input.ok, label: s.input.openingReturnCount === 1 ? 'Devolver 1 carta' : `Devolver ${s.input.openingReturnCount} cartas` } : isProliferating(s) ? { ...s.input.ok, label: proliferateOkLabel(s) } : decision ? { ...s.input.ok, label: (!s.input.tapToPay && selectionRequest(s.input.message)?.ok) || 'Confirmar seleção' } : s.input.ok;

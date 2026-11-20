@@ -1,5 +1,37 @@
 [
   {
+    "nome": "Moeda: a pergunta sai depois de responder",
+    "versao": "0.231.0",
+
+    "item": "Pedido respondido sai da caixa de ação",
+    "conferir": "Conjure Stitch in Time e toque em Cara ou Coroa. Depois do aviso da moeda, a caixa de ação diz só que está esperando o jogo: “cara ou coroa?” não aparece de novo até o fim do turno.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Stitch in Time"], "library": ["Island", "Island", "Island"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Island" }, { "name": "Mountain" }, { "name": "Mountain" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
+    "nome": "Nomear uma carta que não seja de terreno",
+    "versao": "0.231.0",
+
+    "item": "Nomear uma carta em português",
+    "conferir": "Conjure Silverquill Silencer. A janela de nomear diz “Escolha o nome de uma carta que não seja de terreno.”, sem “nonland”.",
+    "cenario": {
+      "active": 0, "phase": "main1",
+      "players": [
+        { "life": 20, "poison": 0, "hand": ["Silverquill Silencer"], "library": ["Plains", "Swamp", "Plains"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Plains" }, { "name": "Swamp" }] },
+        { "life": 20, "poison": 0, "hand": [], "library": ["Forest", "Forest", "Forest"], "graveyard": [], "exile": [],
+          "battlefield": [] }
+      ]
+    }
+  },
+  {
     "nome": "K'rrik e Jet Medallion: pagar Liliana Vess com a mana já na reserva",
     "conferir": "O Jogador 1 tem Liliana Vess na mão e, no campo, K'rrik, Son of Yawgmoth, Jet Medallion e dois Swamps. Com o Jet Medallion, a Liliana custa {2}{B}{B}, e o K'rrik deixa pagar cada {B} com 2 de vida. Vire os dois Swamps antes de conjurar (a reserva fica com {B}{B}) e então conjure a Liliana. Hoje a mana da reserva vai para o {B}{B} e sobra o {2} genérico, que a vida não paga, e a Liliana não sai. O certo é a mana da reserva pagar o {2} e o {B}{B} ser pago com vida: a Liliana entra e o Jogador 1 fica com 16 de vida.",
     "cenario": {

@@ -359,7 +359,10 @@
   .forge .row.lands { min-height: calc(var(--lch) + 16px); padding: 8px; }
   /* Cartas pequenas demais para a lupa: ela cobriria a carta. Tocar numa carta que não faz nada agora (ou segurar) mostra a carta. */
   .forge:not([data-opening]) .hand .inspect-card { display: none; }
-  .forge .action { width: 190px; max-width: 30vw; right: 6px; bottom: 6px; gap: 6px; }
+  /* Alta demais (proliferar, Bola de Fogo, improvisar), a caixa passava do topo da tela: rola por dentro. */
+  .forge .action { width: 190px; max-width: 30vw; right: 6px; bottom: 6px; gap: 6px; max-height: calc(100% - 12px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  /* Rolando, os botões ficam presos no pé da caixa: o que rola é a carta e o texto. */
+  .forge .action > .btns { position: sticky; bottom: -12px; margin-bottom: -12px; padding-bottom: 12px; z-index: 1; background: linear-gradient(to bottom, transparent, rgb(9 19 34 / .97) 10px); }
   .forge .action .prompt { font-size: 12px; line-height: 17px; -webkit-line-clamp: 3; line-clamp: 3; }
   .forge .action .prompt.expanded { max-height: 45vh; }
   .prompt-more { font-size: 12px; }

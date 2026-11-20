@@ -637,13 +637,3 @@ Pedido em 16/11/2026. As primeiras telas depois de tocar em Jogar têm animaçõ
   Feitos em 16/11/2026 (`novidades-pendentes/entrada-na-partida`). A compra espera o sorteio sair da mesa. Ao manter, a transição de CSS da mão termina na hora, e cada carta desliza do leque até a mão junto com a sua lupa. Também nesse dia: as lupas das cartas ainda a caminho não aparecem mais nos lugares vazios. Os efeitos da mesa começam a carregar no clique em Jogar, e o sorteio espera por eles (até 1,5 s) para rolar o dado em 3D; antes, a primeira rodada saía sempre chapada.
 - [ ] Os dados ficam parados em "?" enquanto os efeitos carregam: cerca de 1,3 s no navegador de testes (WebGL na CPU). Conferir num aparelho de verdade; se a espera aparecer, sacudir os dados enquanto esperam ou encurtar o prazo.
 - [ ] Vistos nos vídeos, ainda não pedidos: a mesa inteira pisca por um instante antes da caixa dos dados (0:00.5); o aviso "Segure uma carta para ver os detalhes" aparece em cima do sorteio; a caixa de ação continua com "Você quer manter a mão?" depois de manter e diz "Você está indo 2nd.".
-
-## 146. Resto da varredura: telas fora das perguntas
-
-O item 142 cobriu as perguntas do servidor e os pedidos da caixa de ação. Faltou olhar, com os mesmos sinais (ver o item 142 em `docs/roadmap-feito.md`):
-
-- [ ] Prints de cada pergunta no celular deitado (740×340), com toque emulado.
-- [ ] Teclado e foco em cada janela de pergunta.
-- [ ] Menus e avisos da mesa, e as telas fora da partida (salas, decks, resultado).
-- [ ] Moeda (Stitch in Time) e o Mana Leak até o fim, que a sondagem não conseguiu disparar.
-

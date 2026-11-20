@@ -1656,6 +1656,17 @@ Da varredura do item 142 (itens 7, 8 e 10; prévias em `docs/varredura-proximos.
 - [x] Aviso do Fato ou Ficção: "valor do efeito de Fato ou Ficção para Jogador 1 é Jogador 1 escolhe a Pilha 1: Plains Island" vira "Jogador 1 ficou com o monte de 2: Planície e Ilha".
 - [x] Conferir se o título "Divida ss cartas em duas pilhas" (erro da tradução do Forge) aparece em algum lugar da tela dos montes: não, a tela dos montes tem título próprio (`pilesHeading`).
 
+## 146. ✅ Resto da varredura: telas fora das perguntas
+
+O item 142 cobriu as perguntas do servidor e os pedidos da caixa de ação. Faltou olhar, com os mesmos sinais (ver o item 142), o que está abaixo. Feito em 19/11/2026; achados, prévias e os prints de cada tela em `docs/varredura-resto.html` (novidade em `novidades-pendentes/varredura-resto`).
+
+- [x] Prints de cada pergunta no celular deitado (740×340), com toque emulado: as 47 janelas de pergunta e da caixa de ação das páginas de teste, na galeria da página.
+- [x] Teclado e foco em cada janela de pergunta. O foco começava na carta ao lado nas telas novas (modos, cor, tipo de criatura, reforço) e, em qualquer escolha de cartas, abria a carta ampliada por cima da janela; no toque, a troca de cartas começava na busca e abria o teclado do aparelho. Corrigidos (`tableModal.ts`, `tablePreview.ts`).
+- [x] Menus e avisos da mesa, e as telas fora da partida (salas, decks, resultado): a caixa de ação passava do topo no celular deitado (agora rola, com os botões presos no pé) e a busca de Meus decks ficava com 26 px. Corrigidos.
+- [x] Moeda (Stitch in Time) e o Mana Leak até o fim, numa sala de teste com dois jogadores no servidor: depois de responder, o pedido antigo ficava na caixa de ação até o fim do turno (corrigido em `boardPrompt`). O título de nomear uma carta vinha com a descrição em inglês ("nonland"); traduzido.
+- [x] Decididos pelas prévias da página e feitos no mesmo dia: a carta que pede a escolha ao lado das cartas também nas escolhas comuns (Gifts, busca opcional, reveladas); dano de combate compacto no celular deitado; o Mana Leak diz qual mágica é anulada, com "Deixar anular" e "Pagar e salvar".
+- Anotado, sem mudança: o aviso "Segure uma carta" por cima da primeira janela no celular (como o 137 anota no sorteio); a lista "Todos" do tipo de criatura baixa no celular; o texto da habilidade empurrando as cartas no alvo do exílio; o Monte 2 abaixo da dobra ao dividir os montes; "Demorando…" duas vezes no aviso de demora.
+
 ## 147. ✅ Endereço próprio para cada tela do app
 
 Pedido em 19/11/2026. As cinco telas do `index.html` (início, partida, Meus decks, mesa livre e Laboratório) são trocadas pelo JavaScript sem mudar o endereço (`show()` em `src/main.ts`). Por isso:

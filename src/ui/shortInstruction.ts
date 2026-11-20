@@ -23,6 +23,27 @@ export interface ShortInstructionInput {
   selectableStacks?: number[];
   /** Voto numa permanente: a carta que vota. */
   vote?: { card: { name?: string } };
+  /** Pagamento de "a menos que pague" que anula uma mágica (Mana Leak): o que é anulado sem o pagamento (counteredUnlessPaid). */
+  counters?: string;
+}
+
+/** Mana Leak e parecidos: "Anula a mágica alvo a menos que seu controlador pague {3}". */
+const COUNTER_UNLESS = /anul\w*\s+a\s+mágica[^.]*?alvo,?\s+a menos que|counter target[^.]*?spell unless/i;
+type StackLike = { source?: { id: number; name?: string }; targets?: { cards?: number[] }; controller?: number; kind?: string }[];
+/**
+ * Pagando o custo de um "a menos que pague" que anula uma mágica (Mana Leak, Force Spike): o nome da mágica alvo, que
+ * é anulada sem o pagamento; undefined em qualquer outro pagamento. Quem paga é o dono da mágica alvo: sem o alvo na
+ * pilha (o servidor não manda o das mágicas já na pilha), vale a única mágica dele abaixo; com mais de uma, "a sua mágica".
+ */
+export function counteredUnlessPaid(input: Pick<ShortInstructionInput, 'paying' | 'payingFor' | 'message'> & { card?: { id?: number } }, stack: StackLike,
+  you?: number, translate: (name: string) => string = name => name): string | undefined {
+  if (!input.paying || input.payingFor !== 'effect' || !COUNTER_UNLESS.test(input.message)) return undefined;
+  const at = Math.max(0, stack.findIndex(item => item.source?.id === input.card?.id));
+  const counter = stack[at], below = stack.slice(at + 1);
+  const targeted = below.find(item => item.source && counter?.targets?.cards?.includes(item.source.id));
+  const mine = below.filter(item => item.controller === you && (item.kind ?? 'spell') === 'spell');
+  const target = (targeted ?? (mine.length === 1 ? mine[0] : undefined))?.source?.name;
+  return target ? translate(target) : 'a sua mágica';
 }
 
 export interface PaymentCost { remaining: string; total?: string; life?: number; x?: number }
@@ -169,6 +190,7 @@ export function shortInstruction(input: ShortInstructionInput, translate: (name:
       const due = total && total !== remaining ? `falta ${remaining} de ${total}` : `pague ${remaining}`;
       return `${UPKEEP[upkeep]}: ${due} para manter ${what} no campo. Sem pagar, ela é sacrificada.${reserve}${input.canAutoPay === false ? ' A sua mana não dá para pagar.' : ''}`;
     }
+    if (input.counters) return `${ask} Sem pagar, ${input.counters} é anulada.${input.canAutoPay === false ? ' A sua mana não dá para pagar.' : ''}`;
     return input.canAutoPay === false ? `${ask} A sua mana não dá para pagar.` : `${ask} Pague ou recuse.`;
   }
   // Custo pedido por um efeito (Estudo Rístico, Mana Leak): a carta costuma ser de outro jogador, e pagar é opcional.
@@ -248,9 +270,12 @@ function phyrexianHint(pending: number, black?: boolean): string {
  * quer dizer que a mana à vista não paga o custo, e o Cancelar desfaz a conjuração ou a ativação, ou só recusa o
  * pagamento quando o custo vem de um efeito ("a menos que pague {3}").
  */
-export function paymentButtonLabels(input: Pick<ShortInstructionInput, 'payingFor' | 'canAutoPay'> & { ok: { enabled: boolean }; message?: string }): { ok: string; cancel: string } {
+export function paymentButtonLabels(input: Pick<ShortInstructionInput, 'payingFor' | 'canAutoPay' | 'counters'> & { ok: { enabled: boolean }; message?: string }): { ok: string; cancel: string } {
+  const can = input.canAutoPay ?? input.ok.enabled;
+  // Mana Leak: recusar é deixar a sua mágica ser anulada, e pagar é salvá-la.
+  if (input.counters) return { ok: can ? 'Pagar e salvar' : 'Mana insuficiente', cancel: 'Deixar anular' };
   return {
-    ok: input.canAutoPay ?? input.ok.enabled ? 'Pagar automaticamente' : 'Mana insuficiente',
+    ok: can ? 'Pagar automaticamente' : 'Mana insuficiente',
     cancel: input.payingFor === 'effect' && upkeepKind(input.message ?? '') ? 'Não pagar e sacrificar' : input.payingFor === 'spell' ? 'Desistir da mágica' : input.payingFor === 'ability' ? 'Desistir da habilidade' : input.payingFor === 'effect' ? 'Não pagar' : 'Desistir',
   };
 }

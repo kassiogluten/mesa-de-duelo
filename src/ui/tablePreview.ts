@@ -92,9 +92,14 @@ export function attachPreviewInput(d: PreviewInputDeps) {
     const to = (e as PointerEvent).relatedTarget as HTMLElement | null;
     if (!to?.closest?.(`${inspectable},.card-inspector-preview`)) hideCardPreview();
   });
+  // A carta em foco aparece no canto quando o foco veio do teclado ou de tocar nela. O foco que a mesa põe sozinha ao
+  // abrir uma janela, depois de um clique ou toque em outro lugar, não abre a carta: ela cobriria a janela sem ninguém ter pedido.
+  let keyboard = false, pressed: Node | null = null;
+  document.addEventListener('pointerdown', e => { keyboard = false; pressed = e.target as Node; }, true);
+  document.addEventListener('keydown', () => { keyboard = true; }, true);
   root.addEventListener('focusin', e => {
     const el = (e.target as HTMLElement).closest<HTMLElement>(inspectable);
-    if (el && !d.handDrag.active) d.showPreview(d.cardFromElement(el), el);
+    if (el && (keyboard || (!!pressed && el.contains(pressed))) && !d.handDrag.active) d.showPreview(d.cardFromElement(el), el);
   });
   root.addEventListener('focusout', e => {
     const to = e.relatedTarget as HTMLElement | null;

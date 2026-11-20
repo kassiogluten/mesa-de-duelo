@@ -14,7 +14,7 @@ import { shuffleAfterOrder } from './libraryShuffle';
 import { isProliferating, proliferatePanelHTML } from './proliferate';
 import { zoneWithArticle } from './questionView';
 import { openingHandCount } from './openingPresentation';
-import { poolCost, shortInstruction, spokenMana } from './shortInstruction';
+import { counteredUnlessPaid, poolCost, shortInstruction, spokenMana } from './shortInstruction';
 import type { createTableSettings } from './tableSettings';
 import type { TableCtx } from './tableContext';
 
@@ -28,6 +28,12 @@ export interface PromptChoices {
   blocker(): string | null;
   /** A frase do voto aberto na mesa. */
   vote(): string;
+}
+
+/** Nada a fazer no pedido: os dois botões apagados e nada para tocar, pagar ou escolher. */
+function answered(input: FState['input']) {
+  return !input.ok.enabled && !input.cancel.enabled && !input.priority && !input.paying && !input.opening && !input.targeting && !input.selection
+    && !input.tapToPay && !input.selectable.length && !input.selectableStacks?.length && !input.selectablePlayers?.length;
 }
 
 /** O pedido da caixa de ação, antes de virar frase curta: vazio quando os botões e a mesa já dizem tudo. */
@@ -51,6 +57,9 @@ export function boardPrompt(s: FState, c: PromptChoices): string {
   // Esperando o oponente na abertura: o centro já explica, e a mensagem que sobrou é a da sua escolha anterior.
   if (s.input.openingWait) return '';
   if (opening === 'starting-player' || opening === 'play-draw' || opening === 'mulligan' || (opening === 'mulligan-bottom' && s.input.openingReturnCount !== undefined)) return '';
+  // Pedido já respondido (a moeda, o "pague {3}" do Mana Leak): enquanto o jogo segue sem pedido novo, o servidor mantém
+  // o texto antigo com os botões apagados. Sem nada para tocar, a caixa só diz que espera.
+  if (answered(s.input)) return '';
   if (opening === 'mulligan-bottom') return s.input.message.replace(/(\d+)\s+carta\(s\)/g, (_, n: string) => `${n} ${Number(n) === 1 ? 'carta' : 'cartas'}`);
   return s.input.tapToPay ? tapToPayMessage(s.input.tapToPay, s.input.card ? label(s.input.card) : undefined) : s.input.message;
 }
@@ -134,7 +143,7 @@ export function createActionBox(d: ActionBoxDeps) {
     // Frase curta sempre à vista; o texto do Forge (habilidade inteira, pedido em inglês) fica em "Ver detalhes".
     // Escolha de cartas com um pedido conhecido (sacrificar, descartar, tirar marcador): a frase em português, com o texto do Forge em "Ver detalhes".
     const asked = decision && !s.input.tapToPay ? selectionRequest(prompt) : null;
-    const short = asked ? asked.text : decision || !instruction ? null : shortInstruction(s.input.paying ? { ...s.input, reserve: poolCost(s.players.find(p => p.id === s.you)?.pool) } : s.input, name => ptOf(name)?.name || name);
+    const short = asked ? asked.text : decision || !instruction ? null : shortInstruction(s.input.paying ? { ...s.input, reserve: poolCost(s.players.find(p => p.id === s.you)?.pool), counters: counteredUnlessPaid(s.input, s.stack, s.you, name => ptOf(name)?.name || name) } : s.input, name => ptOf(name)?.name || name);
     const forgeText = richText(lines.join('\n')).replace(/\n/g, '<br>');
     const promptBody = short ? `<strong class="prompt-short">${richText(short)}</strong><span class="prompt-forge"><br><br>${forgeText}</span>` : forgeText;
     const targetPanel = targetInfo && !decision ? targetInfoHTML(targetInfo) : '';

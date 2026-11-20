@@ -8,6 +8,24 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.231.0] - 2026-11-19
+
+### Mudou
+
+- **A carta que pede a escolha fica ao lado das cartas.** Nas escolhas entre cartas (Gifts Ungiven, a busca do Wood Elves, as cartas reveladas do Fato ou Ficção, olhar a mão do oponente), a carta que pede a escolha fica à esquerda, menor, como nas escolhas de modo e de cor, e não mais grande no meio: no celular deitado, as opções aparecem sem rolar. Toque nela para vê-la de perto.
+- **Dano de combate inteiro no celular deitado.** A janela de distribuir o dano fica mais compacta (cartas menores, sem a frase da ordem dos bloqueadores) e cabe na tela, com o Confirmar à vista.
+- **Vazamento de Mana diz o que você perde.** Ao pagar o {3} do Vazamento de Mana, e de outras anulações "a menos que pague", a caixa de ação diz qual mágica sua é anulada se você não pagar, e os botões viram "Deixar anular" e "Pagar e salvar".
+
+### Corrigido
+
+- **Pedido respondido sai da caixa de ação.** Depois de escolher cara ou coroa, ou de pagar (ou recusar) o {3} do Vazamento de Mana, a caixa de ação não fica mais repetindo a pergunta antiga, às vezes com o texto cru do jogo, até o fim do turno: ela diz só que está esperando o jogo.
+- **Nomear uma carta em português.** O título da escolha diz, por exemplo, "Escolha o nome de uma carta que não seja de terreno", e não mais "Escolha o nome da carta nonland".
+- **Escolhas de cartas sem a carta grande por cima.** Ao abrir uma escolha de cartas (Gifts Ungiven, os montes do Fato ou Ficção, a busca no grimório, a ordem dos efeitos), a primeira carta não abre mais grande por cima da janela para quem usa o toque ou o mouse; ela só aparece no canto para quem anda pelo teclado.
+- **Teclado começa na primeira opção.** Nas escolhas de modo, cor, proteção, tipo de terreno básico, tipo de criatura e reforço, o foco começa na primeira opção, e não na carta ao lado dela.
+- **Caixa de ação inteira no celular deitado.** Os pedidos mais altos (proliferar, os alvos da Bola de Fogo, improvisar) não passam mais do topo da tela: a caixa rola por dentro.
+- **Troca de cartas sem abrir o teclado do celular.** Entre os jogos de uma série, a tela de trocar cartas não começa mais com o cursor na busca no celular, o que abria o teclado do aparelho por cima das cartas.
+- **Busca de Meus decks no celular deitado.** O campo de busca não fica mais espremido ao lado dos filtros: formato e cores descem para a linha de baixo quando não cabem.
+
 ## [0.230.0] - 2026-11-19
 
 ### Novo

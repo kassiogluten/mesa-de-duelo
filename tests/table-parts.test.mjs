@@ -76,6 +76,15 @@ test('the action box prompt: attack, blocking, vote, priority and the opening', 
   assert.equal(boardPrompt(state({}, { gameOver: true }), choices({ vote: () => assert.fail('only read when voting') })), '');
 });
 
+test('an answered request (the coin, Mana Leak) leaves the action box waiting, not asking again', () => {
+  const off = { ok: { label: 'Cara', enabled: false }, cancel: { label: 'Coroa', enabled: false } };
+  assert.equal(boardPrompt(state({ priority: false, message: 'Costurado no Tempo: cara ou coroa?', ...off }), choices()), '');
+  assert.equal(boardPrompt(state({ priority: false, message: 'Fuga de Mana (130)\n\nPagar Custo de Mana: {3}', ...off }), choices()), '');
+  // Ainda há o que tocar (o sacrifício do Diabolic Edict começa com os botões apagados): o pedido fica.
+  assert.equal(boardPrompt(state({ priority: false, message: 'Escolha 1 creature(s) a sacrifice.', selectable: [5], ...off }), choices()), 'Escolha 1 creature(s) a sacrifice.');
+  assert.equal(boardPrompt(state({ priority: false, message: 'Pagar Custo de Mana: {3}', paying: true, ...off }), choices()), 'Pagar Custo de Mana: {3}');
+});
+
 test('the Forge sends "Card (id) - ability" before the request: the request comes first', () => {
   assert.deepEqual(instructionLines('Choque (12) - Causa 2 de dano.\n\nEscolha um alvo.', false), ['Escolha um alvo.', '', 'Choque (12) - Causa 2 de dano.']);
   assert.deepEqual(instructionLines('Choque (12) - Causa 2 de dano.\n\nEscolha um alvo.', true), ['Choque (12) - Causa 2 de dano.', '', 'Escolha um alvo.']);

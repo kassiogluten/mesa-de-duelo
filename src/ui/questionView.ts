@@ -87,7 +87,10 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   if (isModeChoice(q)) return besideCard(v, q, modeChoiceHTML(q, draft.picked, rulesOf(q.card, v.ptText), q.card ? v.label(q.card) : undefined, q.card?.manaCost));
   if (isNumberChoice(q)) return numberChoiceHTML(q, draft.text, q.card ? v.face(q.card) : '', rulesOf(q.card, v.ptText), q.card?.name ? [q.card.name, v.label(q.card)] : undefined);
   const opts = q.options ?? [];
-  const head = `<div class="q-head"><h2>${esc(ptTitle(q.title))}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
+  const plainHead = `<div class="q-head"><h2>${esc(ptTitle(q.title))}</h2><button class="icon-btn q-minimize" data-ui="question-minimize" aria-label="Ver a mesa sem perder esta escolha">Ver a mesa</button></div>`;
+  const head = `${plainHead}${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
+  // Escolha entre cartas: a carta que pede fica ao lado delas, e não no meio, empurrando as opções para baixo (no celular deitado, para fora da tela).
+  const withCard = (top: string, body: string) => hasBesideCard(q) ? besideCard(v, q, `${top}${body}`) : `${top}${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}${body}`;
   if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
   if (isNameChoice(q)) return nameChoiceHTML(q, head, draft.text, v.ptName);
   if (isSplitDestinations(q)) return besideCard(v, q, splitDestinationsHTML({ face: v.face, label: v.label }, q, draft.picked));
@@ -99,11 +102,12 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   }
   if (q.kind === 'reveal') {
     const anyCards = opts.some(o => typeof o !== 'string' && o.card);
-    const revealHead = head.replace(`<h2>${esc(ptTitle(q.title))}</h2>`, `<h2>${esc(revealTitle(q.title))}</h2>`);
-    return `${revealHead}<div class="q-opts ${anyCards ? 'cards' : ''}">${opts.map(o => typeof o !== 'string' && o.card
+    const revealHead = plainHead.replace(`<h2>${esc(ptTitle(q.title))}</h2>`, `<h2>${esc(revealTitle(q.title))}</h2>`);
+    const top = anyCards ? revealHead : `${revealHead}${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
+    return (anyCards ? (body: string) => withCard(top, body) : (body: string) => `${top}${body}`)(`<div class="q-opts ${anyCards ? 'cards' : ''}">${opts.map(o => typeof o !== 'string' && o.card
       ? `<div class="q-face" data-peek="${o.card.id}" role="button" tabindex="0" aria-label="Inspecionar ${esc(v.label(o.card))}">${v.face(o.card)}</div>`
       : `<div class="q-opt"><span>${esc(optLabel(o))}</span></div>`).join('')}</div>
-      <div class="q-actions"><button class="arena-btn primary" data-q-none>Continuar</button></div>`;
+      <div class="q-actions"><button class="arena-btn primary" data-q-none>Continuar</button></div>`);
   }
   if (q.kind === 'text') {
     return `${head}<form class="q-text" data-q-text><input id="fQInput" ${q.numeric ? 'type="number"' : ''} value="${esc(draft.text)}" aria-label="Resposta">
@@ -135,7 +139,7 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   const revealedHint = revealed.length ? `${q.revealedNote ? `${esc(q.revealedNote)} ` : ''}As cartas apagadas não podem ser escolhidas.` : '';
   const hint = isOrder ? `Toque na ordem desejada (a primeira fica ${q.firstAt === 'bottom' ? 'embaixo' : 'em cima'}).`
     : [single ? '' : `Escolha ${min === max ? min : `de ${min} a ${max}`}.`, revealedHint].filter(Boolean).join(' ');
-  return `${head}${hint ? `<p class="q-hint">${hint}</p>` : ''}${tools}
+  const body = `${hint ? `<p class="q-hint">${hint}</p>` : ''}${tools}
     <div class="q-opts ${anyCards || revealed.length ? 'cards' : ''}${layout ? ' filtered' : ''}">${items}${unavailable}</div>
     <div class="q-actions">
       ${(q.min ?? 1) === 0 && !isOrder ? `<button class="arena-btn secondary" data-q-none>${noneLabel(q)}</button>` : ''}
@@ -144,12 +148,15 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
       ${!single ? pickCountHTML(n, min, max, opts.length) : ''}
       ${!single ? '<button class="arena-btn primary" data-q-submit>Confirmar</button>' : ''}
     </div>`;
+  return (anyCards || revealed.length) && !layout ? withCard(plainHead, body) : `${head}${body}`;
 }
 const HEAD_END = 'Ver a mesa</button></div>';
 /**
  * A carta que pede a escolha à esquerda do conteúdo, abaixo do título (custos opcionais, modos, cor, tipo de criatura,
  * dividir, busca de dois destinos), como na escolha de número; toque nela para inspecionar.
  */
+/** A carta que pede a escolha pode ir ao lado: existe e está de face para cima. */
+const hasBesideCard = (q: FQuestion) => !!q.card && !q.card.faceDown && !!q.card.name;
 export function besideCard(v: Pick<QuestionView, 'face' | 'label'>, q: FQuestion, html: string) {
   const card = q.card;
   const at = html.indexOf(HEAD_END);
