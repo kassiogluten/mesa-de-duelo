@@ -1,0 +1,16 @@
+/* Os bichos que atravessam a tela quando uma criatura do tipo deles entra: por cima de tudo, sem pegar cliques, animados só com transform. */
+.screen-critter { position: fixed; left: 0; top: 0; z-index: 2147482999; pointer-events: none; will-change: transform; contain: layout style; }
+.screen-critter > svg { position: absolute; display: block; overflow: visible; filter: drop-shadow(.6px 1.2px .8px rgba(0, 0, 0, .5)); }
+.screen-critter.squirrel > svg { width: 48px; height: 34px; left: -24px; top: -30px; }
+.screen-critter.rat > svg { width: 50px; height: 20px; left: -25px; top: -16px; }
+.screen-critter.spider > svg { width: 22px; height: 22px; left: -11px; top: -4px; }
+.screen-critter.bat > svg { width: 44px; height: 22px; left: -22px; top: -11px; }
+/* O esquilo parado mexe o rabo; o rato parado treme os bigodes. */
+.critter-tail { transform-box: fill-box; transform-origin: 90% 90%; }
+.screen-critter.squirrel.resting .critter-tail { animation: critter-tail .32s ease-in-out infinite alternate; }
+@keyframes critter-tail { from { transform: rotate(-6deg); } to { transform: rotate(9deg); } }
+.screen-critter.rat.resting .critter-whiskers { animation: critter-whiskers .09s linear infinite alternate; }
+@keyframes critter-whiskers { from { transform: translateY(-.4px); } to { transform: translateY(.4px); } }
+/* O fio da aranha, preso no alto da tela. */
+.screen-critter-thread { position: fixed; top: 0; z-index: 2147482998; width: 1px; margin-left: -.5px; pointer-events: none; transform-origin: 50% 0; background: linear-gradient(rgba(235, 235, 240, .15), rgba(235, 235, 240, .6)); }
+@media (prefers-reduced-motion: reduce) { .screen-critter, .screen-critter-thread { display: none; } }

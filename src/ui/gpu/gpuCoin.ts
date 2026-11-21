@@ -1,7 +1,7 @@
-// A moeda em 3D na camada GPU (e o d2, uma moeda com 1 e 2): um disco com espessura e serrilha, que sobe girando em volta do eixo horizontal, cai, quica e assenta com o resultado virado para quem olha.
+// A moeda em 3D na camada GPU (e o d2, uma moeda com 1 e 2): um disco com espessura e serrilha, que sobe girando em volta do eixo horizontal, cai, quica e assenta com o resultado virado para quem olha (ou, às vezes, cai em pé, fica equilibrada e só então tomba).
 import { Sprite } from 'pixi.js';
 import type { GpuEffect, GpuLayer } from './gpuLayer';
-import { facing, multiply, rotation } from './diceGeometry';
+import { facing, multiply, rotation, type Mat3 } from './diceGeometry';
 import { easeOut, paintOnce, rand, spray, themeColor, timed, type Shared } from './gpuParticles';
 import { solidPiece } from './gpuSolid';
 import { circle, prism, solidData } from './solidShapes';
@@ -83,6 +83,8 @@ interface SolidCoinParams {
   font: string;
   /** A cor das faíscas do pouso. */
   sparkColors: number[];
+  /** Em pé: a moeda cai de lado, fica uns instantes equilibrada e só então tomba no resultado; os ms a mais no fim de `hold`. */
+  edge?: number;
 }
 
 /**
@@ -100,8 +102,20 @@ function solidCoin(layer: GpuLayer, s: Shared, p: SolidCoinParams): GpuEffect {
   // Deitada para trás, como vista de cima, com a espessura aparecendo embaixo; o verso fica de frente depois de meia
   // volta em x.
   const tilt = -.42;
-  const resting = p.showFront ? facing([0, 0, 1], [0, 1, 0], tilt) : facing([0, 0, -1], [0, -1, 0], tilt);
+  const flat = p.showFront ? facing([0, 0, 1], [0, 1, 0]) : facing([0, 0, -1], [0, -1, 0]);
+  const tilted = (m: Mat3) => multiply(rotation([1, 0, 0], tilt), m);
+  const resting = tilted(flat);
+  /**
+   * De pé, como nos desenhos: de lado para quem olha (`rise` 1 deixa só uma fatia da face do resultado à mostra, 0 é
+   * deitada) e inclinada `lean` para um lado.
+   */
+  const standing = (rise: number, lean: number) => multiply(rotation([0, 0, 1], lean), multiply(rotation([0, 1, 0], rise * 1.25), resting));
   const turns = 5 * Math.PI * 2, wobble = rand(.25, .45) * (Math.random() < .5 ? -1 : 1);
+  // Em pé: o voo e o pouso duram o mesmo de sempre (`base`); o tempo a mais é o equilíbrio e o tombo.
+  const edge = p.edge ?? 0, base = p.hold - edge, side = Math.random() < .5 ? -1 : 1;
+  const land = .62 * base, fall = edge ? land + edge * .78 : land, fallMs = edge ? Math.min(380, edge * .22) : 0;
+  /** Quando a moeda fica deitada de vez (o clarão e as faíscas do resultado). */
+  const down = fall + fallMs;
   return timed(p.hold, (view, sparks) => {
     const shadow = new Sprite({ texture: s.glow, anchor: .5, x, y: y + size * .55, tint: 0x000000, alpha: 0 });
     const halo = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: p.sparkColors[0], blendMode: 'add', alpha: 0 });
@@ -109,20 +123,33 @@ function solidCoin(layer: GpuLayer, s: Shared, p: SolidCoinParams): GpuEffect {
     view.addChild(shadow, halo, piece.mesh);
     let landed = false;
     return t => {
-      const up = t < .35 ? easeOut(t / .35) : 0, fall = t >= .35 && t < .62 ? (t - .35) / .27 : 0;
-      const height = t < .35 ? -40 + 100 * up : t < .62 ? 60 * (1 - fall * fall) : t < .72 ? 14 * Math.sin((t - .62) / .1 * Math.PI) : 0;
-      const spin = Math.min(1, t / .62), left = (1 - spin) ** 2;
+      const ms = t * p.hold, tb = Math.min(ms, land + .1 * base) / base;
+      const up = tb < .35 ? easeOut(tb / .35) : 0, drop = tb >= .35 && tb < .62 ? (tb - .35) / .27 : 0;
+      let height = tb < .35 ? -40 + 100 * up : tb < .62 ? 60 * (1 - drop * drop) : tb < .72 ? (edge ? 6 : 14) * Math.sin((tb - .62) / .1 * Math.PI) : 0;
+      const spin = Math.min(1, tb / .62), left = (1 - spin) ** 2;
+      // De pé, balança de um lado para o outro, cada vez mais, até tombar mostrando o resultado.
+      let target = resting, lift = 0;
+      if (edge && ms < fall) {
+        const k = Math.max(0, (ms - land) / (fall - land));
+        target = standing(1 - .12 * k * k * Math.abs(Math.sin(k * Math.PI * 4)), side * .16 * Math.sin(k * Math.PI * 5) * (.3 + k));
+        lift = 1;
+      } else if (edge && ms < down) {
+        const k = (ms - fall) / fallMs, g = k * k;
+        target = standing(1 - g, side * .3 * g);
+        lift = 1 - g;
+      } else if (edge && ms < down + 140) height += 5 * Math.sin((ms - down) / 140 * Math.PI);
       // Gira em volta do eixo x (para a frente) e balança um pouco de lado, e os dois param juntos no resultado.
-      const m = multiply(rotation([1, 0, 0], -turns * left), multiply(rotation([0, 1, 0], wobble * Math.sin(spin * Math.PI * 3) * left), resting));
-      const grow = t < .35 ? .6 + .5 * up : t < .62 ? 1.1 - .1 * fall : 1;
-      const squash = t >= .62 && t < .72 ? 1 + .06 * Math.sin((t - .62) / .1 * Math.PI) : 1;
+      const m = multiply(rotation([1, 0, 0], -turns * left), multiply(rotation([0, 1, 0], wobble * Math.sin(spin * Math.PI * 3) * left), target));
+      const grow = tb < .35 ? .6 + .5 * up : tb < .62 ? 1.1 - .1 * drop : 1;
+      const squash = !edge && tb >= .62 && tb < .72 ? 1 + .06 * Math.sin((tb - .62) / .1 * Math.PI) : 1;
       const cy = y - height;
-      piece.pose(m, x, cy, size * .49 * grow * squash, landed ? Math.max(0, 1 - (t - .62) / .2) * .8 : 0);
-      const fade = t > .88 ? 1 - (t - .88) / .12 : Math.min(1, t / .08);
+      const since = (ms - down) / base;
+      piece.pose(m, x, cy, size * .49 * grow * squash, landed ? Math.max(0, 1 - since / .2) * .8 : 0);
+      const fade = ms > p.hold - .12 * base ? (p.hold - ms) / (.12 * base) : Math.min(1, tb / .08);
       piece.mesh.alpha = fade;
-      shadow.scale.set(size / 128 * (.55 - height / 400), size / 128 * .14); shadow.alpha = .45 * fade * (1 - height / 200);
-      halo.scale.set(size * 2.2 / 128); halo.alpha = landed ? .55 * Math.max(0, 1 - (t - .62) / .3) * fade : 0;
-      if (!landed && t >= .62) {
+      shadow.scale.set(size / 128 * (.55 - height / 400) * (1 - lift * .35), size / 128 * .14); shadow.alpha = .45 * fade * (1 - height / 200);
+      halo.scale.set(size * 2.2 / 128); halo.alpha = landed ? .55 * Math.max(0, 1 - since / .3) * fade : 0;
+      if (!landed && ms >= down) {
         landed = true;
         spray(sparks, s, x, y, layer.coarse ? 12 : 22, { speed: [size * 1.2, size * 3], life: [300, 560], scale: [.25, .5], colors: p.sparkColors, drag: 3 });
         for (let i = 0; i < 8; i++) {
@@ -137,10 +164,10 @@ function solidCoin(layer: GpuLayer, s: Shared, p: SolidCoinParams): GpuEffect {
 }
 
 /** A moeda de Cara ou Coroa: cara dourada com o rosto de perfil, coroa prateada com a coroa. */
-export function headsOrTails(layer: GpuLayer, s: Shared, p: { at: { x: number; y: number }; size: number; heads: boolean; label: string; hold: number; font: string }) {
+export function headsOrTails(layer: GpuLayer, s: Shared, p: { at: { x: number; y: number }; size: number; heads: boolean; label: string; hold: number; font: string; edge?: number }) {
   const gold = themeColor('--gold', '#f2b54c');
   return solidCoin(layer, s, {
-    at: p.at, size: p.size, hold: p.hold, font: p.font, showFront: p.heads,
+    at: p.at, size: p.size, hold: p.hold, font: p.font, showFront: p.heads, edge: p.edge,
     front: { text: p.heads ? p.label : 'Cara', palette: COIN_PALETTES.gold, icon: COIN_HEADS_PATH },
     back: { text: p.heads ? 'Coroa' : p.label, palette: COIN_PALETTES.silver, icon: COIN_TAILS_PATH },
     sparkColors: p.heads ? [gold, 0xfff6cf, 0xffffff] : [0xdfe6ee, 0xffffff],

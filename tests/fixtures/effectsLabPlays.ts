@@ -36,7 +36,8 @@ export const PLAY_BUTTONS: [group: string, plays: [key: string, label: string][]
   ['Limpa campo', [['wrath', 'Ira de Deus'], ['damnation', 'Danação'], ['pyroclasm', 'Piroclasmo'], ['evacuation', 'Evacuação'], ['eviction', 'Despejo impiedoso']]],
   ['Combate', [['combat', 'Ataque com bloqueios'], ['swing', 'Ataque do oponente'], ['lethal', 'Ataque letal']]],
   ['Cemitério e exílio', [['graveyard', 'Moer e reanimar'], ['blink', 'Blink com gatilho'], ['sacrifice', 'Sacrificar para comprar'], ['flashback', 'Conjurar do cemitério'], ['removal', 'Exilar uma ameaça']]],
-  ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['commanderStrike', 'Golpe de comandante'], ['commanderLethal', 'Comandante chega a 21'], ['tutor', 'Tutor'], ['gameChanger', 'Game Changer']]],
+  ['Momentos da partida', [['creatures', 'Criaturas com som'], ['firstBlood', 'Primeiro sangue'], ['doubleKill', 'Eliminação dupla'], ['comeback', 'Virada no fim do jogo'], ['byAThread', 'Vitória por um fio'], ['crowded', 'Campo lotado range'], ['longTurn', 'Turno longo (ampulheta)']]],
+  ['Valor e Commander', [['walker', 'Planeswalker'], ['tokens', 'Fichas e marcadores'], ['commander', 'Comandante'], ['commanderStrike', 'Golpe de comandante'], ['commanderThreat', 'Comandante ameaça (18/21)'], ['commanderLethal', 'Comandante chega a 21'], ['tutor', 'Tutor'], ['gameChanger', 'Game Changer']]],
 ];
 
 export function createLabPlays(lab: LabApi) {
@@ -73,6 +74,22 @@ export function createLabPlays(lab: LabApi) {
       [wait, () => { input(true); const first = lands()[0]; if (first) first.tapped = true; }],
       ...Array.from({ length: n - 1 }, (): [number, () => void] => [380, () => { const next = lands()[0]; if (next) next.tapped = true; }]),
       [450, () => { input(false); then(); }],
+    ];
+  }
+  /**
+   * Um fim de jogo: o jogo começa (turno 1) com a vida `life`, `blow` derruba o oponente e o resultado aparece com a vida
+   * de cada turno (`turns`, você e o oponente), como o servidor manda no fim do jogo.
+   */
+  function ending(life: [number, number], turns: [number, number][], blow: () => void): [number, () => void][] {
+    return [
+      [0, () => { stage(['land', 'land', 'land', () => ({ ...lab.creature('Shivan Dragon', 7, 5, '{4}{R}{R}', ['FLYING']), typeLine: 'Creature — Dragon' })], ['land'], life); }],
+      [500, () => { lab.emit('turn', { actor: ME, turn: 1 }); }],
+      [700, blow],
+      [2600, () => {
+        const s = lab.state();
+        s.lifeHistory = [...turns.map(([mine, theirs], i) => ({ turn: i + 1, life: { [ME]: mine, [OPP]: theirs } })), { turn: turns.length + 1, life: { [ME]: me().life, [OPP]: opp().life } }];
+        Object.assign(s, { gameOver: true, winner: me().name });
+      }],
     ];
   }
   /** Conjura da mão: a carta vai à pilha (com o alvo, se houver). Devolve o número da pilha. */
@@ -592,6 +609,10 @@ export function createLabPlays(lab: LabApi) {
       note: 'Golpe de comandante: o seu Prossh ataca sem bloqueio, avança com aura dourada e a coroa se estampa no retrato do oponente; uma coroa pequena voa até o "Dano" dele, que rola de 8/21 para 13/21.',
       steps: commanderSwing(8),
     },
+    commanderThreat: {
+      note: 'Comandante ameaça: com 13 de dano do seu Prossh, o golpe leva o "Dano" do oponente a 18/21; de 15 em diante o número pulsa vermelho, e de 18 em diante o contador também treme de vez em quando.',
+      steps: commanderSwing(13),
+    },
     commanderLethal: {
       note: 'Comandante chega a 21: com 16 de dano do seu Prossh, o oponente leva o golpe que chega a 21; a coroa estremece, fica vermelha e se parte, e o "Dano" acende em vermelho.',
       steps: commanderSwing(16),
@@ -615,6 +636,77 @@ export function createLabPlays(lab: LabApi) {
           lab.emit('land-played', { card: structuredClone(tomb), sourceId: tomb.id, actor: ME, to: 'Battlefield' });
         }],
       ],
+    },
+    creatures: {
+      note: 'Criaturas com som: entram um urso (rosna), um elfo (sininhos da floresta), um dragão (ruge) e três fichas de Esquilo juntas (um som só, e um esquilo atravessa a borda de baixo da tela).',
+      steps: [
+        [0, () => { stage(['land', 'land', 'land'], ['small', 'land']); }],
+        ...([['Grizzly Bears', 'Creature — Bear', '{1}{G}', 2, 2], ['Llanowar Elves', 'Creature — Elf Druid', '{G}', 1, 1], ['Shivan Dragon', 'Creature — Dragon', '{4}{R}{R}', 5, 5]] as const)
+          .map(([name, typeLine, manaCost, power, toughness], i): [number, () => void] => [i ? 1900 : 900, () => {
+            const c = put('me', { ...lab.creature(name, power, toughness, manaCost), typeLine });
+            lab.emit('entered', { card: structuredClone(c), sourceId: c.id, actor: ME, from: 'Stack', to: 'Battlefield' });
+          }]),
+        [2200, () => {
+          const stackId = lab.newId();
+          for (let i = 0; i < 3; i++) {
+            const t = put('me', { ...lab.creature('Squirrel', 1, 1, ''), typeLine: 'Token Creature — Squirrel', token: true });
+            lab.emit('entered', { card: structuredClone(t), sourceId: t.id, actor: ME, from: 'None', to: 'Battlefield', stackId });
+          }
+        }],
+      ],
+    },
+    firstBlood: {
+      note: 'Primeiro sangue: o jogo começa (turno 1) e o seu urso acerta o oponente sem bloqueio; o retrato dele leva um corte vermelho, as bordas da mesa piscam, a faixa "Primeiro sangue" aparece e o narrador diz "First blood!". O segundo golpe já é um golpe comum.',
+      steps: [
+        [0, () => { stage(['land', 'land', () => ({ ...lab.creature('Grizzly Bears', 2, 2, '{1}{G}'), typeLine: 'Creature — Bear' })], ['land']); }],
+        [600, () => { lab.emit('turn', { actor: ME, turn: 1 }); }],
+        [900, () => { const bear = creaturesOf(me())[0]; if (bear) lab.combat(bear, { player: OPP }); }],
+        [3200, () => { const bear = creaturesOf(me())[0]; if (bear) { bear.tapped = false; bear.attacking = false; lab.combat(bear, { player: OPP }); } }],
+      ],
+    },
+    doubleKill: {
+      note: 'Eliminação dupla: com os dois jogadores a 3 de vida, o Terremoto (X = 3) acerta os dois; os retratos se apagam um depois do outro, cada um com um corte em X, a faixa "Eliminação dupla" aparece no meio da mesa e o narrador diz "Double kill!".',
+      steps: [
+        [0, () => { stage(['land', 'land', 'land', 'land'], ['land', 'land'], [3, 3]); }],
+        [900, () => {
+          held.quake = spellCard('Earthquake', 'Sorcery', '{X}{R}', 'Earthquake deals X damage to each creature without flying and each player.');
+          held.quakeStack = cast(held.quake);
+        }],
+        [1500, () => {
+          lab.damage(held.quake, { player: OPP }, 3);
+          lab.damage(held.quake, { player: ME }, 3);
+          resolve(held.quake, held.quakeStack);
+        }],
+      ],
+    },
+    longTurn: {
+      note: 'Turno longo: o seu turno já passa de 2 minutos; a ampulheta aparece no canto de cima do seu retrato, com a areia escorrendo, e vira de vez em quando. Some quando o turno passa.',
+      steps: [
+        [0, () => { stage(['land', 'land'], ['land']); }],
+        [400, () => { lab.emit('turn', { actor: ME, turn: 2 }); lab.state().turnElapsedMs = 125_000; }],
+      ],
+    },
+    crowded: {
+      note: 'Campo lotado range: com 32 terrenos no seu campo, mais duas fichas entram; a mesa balança de leve e range, como madeira cedendo ao peso (no máximo uma vez a cada 15 s).',
+      steps: [
+        [0, () => { stage(Array.from({ length: 32 }, () => 'land'), ['land']); }],
+        [900, () => { lab.run({ cmd: 'tokens', side: 'me', n: 2 }); }],
+      ],
+    },
+    comeback: {
+      note: 'Virada no fim do jogo: com 3 de vida, você ganha 15 de vida e o seu dragão derruba o oponente; o resultado traz "Virada!" em dourado ("Você chegou a 3 de vida e virou o jogo") e o destaque do jogo, o maior golpe, com "Ver de novo".',
+      steps: ending([3, 7], [[20, 20], [3, 20], [3, 7]], () => {
+        lab.lifeChange(ME, 15);
+        const dragon = creaturesOf(me())[0];
+        if (dragon) { dragon.sick = false; lab.combat(dragon, { player: OPP }); }
+      }),
+    },
+    byAThread: {
+      note: 'Vitória por um fio: com 1 de vida, o seu dragão derruba o oponente; o resultado traz "Por um fio" com o coração batendo devagar ("Você venceu com 1 de vida").',
+      steps: ending([1, 7], [[20, 20], [6, 14], [1, 7]], () => {
+        const dragon = creaturesOf(me())[0];
+        if (dragon) { dragon.sick = false; lab.combat(dragon, { player: OPP }); }
+      }),
     },
     tutor: {
       note: 'Tutor: o Demonic Tutor resolve, a carta buscada sai dourada do grimório e ele embaralha.',

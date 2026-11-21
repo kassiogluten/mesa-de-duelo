@@ -7,6 +7,8 @@ import { calloutDuration, presentationDuration, presentationPace, hasLiveDecisio
 import type { TableCtx } from './tableContext';
 import { damageSweep, sameSweep, sweepCause, SWEEP_MIN } from './boardSweep';
 import { commanderRules } from '../decks';
+import { createCreatureTouches } from './creatureTouches';
+import { CREAK_GAP, CREAK_SOUND, crowdedSide, FIRST_BLOOD, knockedOut, MULTI_KILL_HOLD, multiKill } from './tableMoments';
 
 export type PresentationDeps = Pick<TableCtx, 'root' | 'timeline' | 'motion' | 'audio' | 'prefs' | 'state' | 'match' | 'face' | 'eventDescription' | 'announce' | 'render' | 'renderTable'>;
 
@@ -24,6 +26,9 @@ export function createPresentationQueue(d: PresentationDeps) {
   let replayEnd: (() => void) | null = null;
   let replayRun = 0;
   const banner = () => root.querySelector<HTMLElement>('#fReplay');
+  /** Quando a mesa rangeu pela última vez, por jogador (campo lotado). */
+  const creaked = new Map<number, number>();
+  const touches = createCreatureTouches({ host: document.body, sound: (path, level, delay) => audio.extra(path, level, delay) });
   function endReplay() {
     if (!replayEnd) return;
     const done = replayEnd;
@@ -48,7 +53,8 @@ export function createPresentationQueue(d: PresentationDeps) {
       entry = timeline.advance();
     }
     // `s` já vem com a sua decisão guardada enquanto houver passo (holdDecision): a mesa mostra o quadro da jogada.
-    displayFrame = s && !hasLiveDecision(s) ? entry?.event.frame ?? null : null;
+    // No fim do jogo, só a jogada vista de novo (o destaque do jogo) volta a mesa ao quadro dela.
+    displayFrame = s && (!hasLiveDecision(s) || (!!s.gameOver && !!entry?.replay)) ? entry?.event.frame ?? null : null;
     drawingNow = s ? draws.filter(dr => dr.actor === s.you).reduce((n, dr) => n + (dr.count ?? 1), 0) : 0;
     d.renderTable();
     drawingNow = 0;
@@ -115,9 +121,28 @@ export function createPresentationQueue(d: PresentationDeps) {
         label: d.eventDescription(part.event), duration, calloutDuration: calloutDuration(part.event, d.prefs.fast), hideDestination: !hasLiveDecision(s), face: card => d.face(card, 'normal') });
     }
     audio.play(entry.event, entry.replay ? `${timeline.matchId}:replay${replayRun}` : timeline.matchId, entry.audible, s.you);
+    touches.observe(shown, entry.audible);
+    // Os momentos que contam a história do jogo (tableMoments.ts): o primeiro golpe de combate num jogador e vários
+    // jogadores derrubados pelo mesmo golpe, com a voz do narrador.
+    const blow = [first, ...divided.map(part => part.event), ...clashing.map(part => part.event)];
+    const blood = blow.find(e => e.firstBlood), out = knockedOut(blow), kill = multiKill(out.length);
+    // Campo lotado (mais de 30 permanentes): a mesa range quando chega mais uma.
+    const crowded = crowdedSide(first);
+    if (crowded !== null && performance.now() - (creaked.get(crowded) ?? -Infinity) > CREAK_GAP) {
+      creaked.set(crowded, performance.now());
+      motion.creak();
+      if (entry.audible) audio.extra(CREAK_SOUND, .9, .1);
+    }
+    let hold = duration;
+    if (blood) { motion.firstBlood(blood, duration); if (entry.audible) audio.extra(FIRST_BLOOD.voice, 1, .15); }
+    if (kill) {
+      hold += MULTI_KILL_HOLD;
+      motion.multiKill(out, hold);
+      if (entry.audible) audio.extra(kill.voice, 1, blood ? 1.25 : .35);
+    }
     if (shown.type === 'damage' && !sweep && shown.targets?.players?.length) d.announce(d.eventDescription(shown));
     else if (!hasLiveDecision(s)) d.announce(d.eventDescription(shown));
-    presentationTimer = window.setTimeout(advance, duration);
+    presentationTimer = window.setTimeout(advance, hold);
   }
   function stop() {
     clearTimeout(presentationTimer); timeline.catchUp(); displayFrame = null; d.match().arriving.clear();

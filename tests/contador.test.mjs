@@ -299,3 +299,18 @@ test('nome, cor e parceiro mudados na configuração valem na partida em andamen
   s.aplicarConfig(p, s.comJogadores({ ...c, jogadores: c.jogadores.map(j => ({ ...j, nome: 'X' })) }, 2));
   assert.deepEqual(p.jogadores.map((_, i) => s.nomeDe(p, i)), ['X', 'X', 'Jogador 3']);
 });
+
+test('a mesa presa gira ao contrário do aparelho e só troca de disposição pelo Girar a mesa', () => {
+  // Presa em pé (0) e o celular girado para a esquerda (90): a tela deitou, a mesa continua em pé, girada para trás.
+  assert.deepEqual(s.giroDaMesa(0, 90, true), { giro: -90, deitada: false });
+  assert.deepEqual(s.giroDaMesa(0, 270, true), { giro: 90, deitada: false });
+  assert.deepEqual(s.giroDaMesa(0, 180, false), { giro: 180, deitada: false });
+  assert.deepEqual(s.giroDaMesa(90, 90, true), { giro: 0, deitada: true });
+  // Sem girar o aparelho (computador), a disposição segue a janela.
+  assert.deepEqual(s.giroDaMesa(0, 0, true), { giro: 0, deitada: true });
+  assert.equal(s.quartoDeVolta(-90), 270);
+  assert.equal(s.quartoDeVolta(450), 90);
+  const p = { ...partida(4), angulo: 90 };
+  assert.equal(s.reiniciar(p).angulo, 90, 'recomeçar mantém a mesa onde estava');
+  assert.equal(s.reiniciar(partida(4)).angulo, undefined);
+});

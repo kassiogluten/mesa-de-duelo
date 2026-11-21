@@ -16,6 +16,7 @@ import { createSweepMotion, type SweepOptions } from './motionSweep';
 import { createSurviveMotion } from './motionSurvive';
 import { createCommanderMotion } from './motionCommander';
 import { createSpellMotion } from './motionSpells';
+import { createMomentMotion } from './motionMoments';
 
 const KEYED = '[data-fid],[data-peek]';
 export interface Motion {
@@ -27,6 +28,12 @@ export interface Motion {
    */
   play(options?: { silent?: boolean; semantic?: boolean; paying?: (id: number) => string | undefined; pooled?: (id: number) => { tone: string; player: number } | undefined }): void;
   present(event: PresentationEvent, options: { you: number; html?: string; label: string; duration: number; calloutDuration?: number; hideDestination?: boolean; face?: (card: NonNullable<PresentationEvent['card']>) => string }): void;
+  /** Primeiro sangue (motionMoments.ts): o corte vermelho e a faixa no retrato atingido. */
+  firstBlood(event: PresentationEvent, duration: number): void;
+  /** Vários jogadores derrubados pelo mesmo golpe: os retratos se apagam um depois do outro e a faixa da eliminação aparece. */
+  multiKill(players: number[], duration: number): void;
+  /** O campo lotado rangendo: a mesa balança de leve. */
+  creak(): void;
   /** Limpa campo (`event.sweep`): a onda na cor da mágica varre a mesa e cada permanente sai, ou é atingida, quando ela passa. */
   sweep(event: PresentationEvent, options: SweepOptions): void;
   /** Compra: versos de carta saem do grimório e vão para a mão. `cards` são as cartas novas da sua mão, mostradas ao chegar. */
@@ -98,6 +105,7 @@ export function createMotion(root: HTMLElement): Motion {
   const medals = createMedalMotion(kit);
   const flights = createFlightMotion(kit, zones, abilities.walkerArrive, medals.trinket);
   const impact = createImpactMotion(kit);
+  const moments = createMomentMotion(kit);
   const sweeps = createSweepMotion(kit, { flights, damage, impact, survive });
   /**
    * As animações contínuas de estado (voar, vínculo, enjoo, alvo possível) seguem um relógio só, o da página: a carta
@@ -207,6 +215,9 @@ export function createMotion(root: HTMLElement): Motion {
       // Reforçada ou com X: quando a mágica chega à pilha, a energia converge nela e o número aparece.
       if (event.type === 'spell-cast' && (event.kicked || event.x !== undefined)) spells.boost(event, options.duration);
     },
+    firstBlood(event, duration) { if (!document.hidden && !root.hidden) moments.firstBlood(event, duration); },
+    multiKill(players, duration) { if (!document.hidden && !root.hidden) moments.multiKill(players, duration); },
+    creak() { if (!document.hidden && !root.hidden) moments.creak(); },
     sweep: sweeps.sweep,
     drew: library.drew,
     milled: library.milled,

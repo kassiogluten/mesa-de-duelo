@@ -18,3 +18,7 @@
 .screen-bug-found.out { animation: bug-found-out .45s ease-in both; }
 @keyframes bug-found-in { from { opacity: 0; transform: translateY(8px) scale(.9); } to { opacity: 1; transform: none; } }
 @keyframes bug-found-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
+/* A carta do comboio de formigas: pequena, nas costas delas, com a arte de uma permanente da mesa ou o verso. */
+.screen-bug-card { position: fixed; left: 0; top: 0; z-index: 2147483000; pointer-events: none; will-change: transform; }
+.screen-bug-card > div { position: absolute; width: calc(24px * var(--zoom, 1)); height: calc(34px * var(--zoom, 1)); left: calc(-12px * var(--zoom, 1)); top: calc(-17px * var(--zoom, 1)); border-radius: calc(2px * var(--zoom, 1)); background: radial-gradient(circle at 50% 45%, #6b4a2b 0 22%, #3d2716 23% 30%, #6b4a2b 31%), #6b4a2b; border: calc(1px * var(--zoom, 1)) solid #1d140d; box-shadow: 0 1px 2px rgba(0, 0, 0, .55); }
+.screen-bug-card > div.art { background-size: cover; background-position: center; border-color: #111; }

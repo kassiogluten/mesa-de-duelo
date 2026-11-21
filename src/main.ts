@@ -180,8 +180,10 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
     else if (lastMatch) void startMatch(...lastMatch);
   },
 });
-// Brincadeira na partida, para quem joga e para quem assiste: de vez em quando, um inseto passa por um canto da tela.
-startScreenBugs(document.body, () => session.screen === 'game' && !!connection.client?.state && !connection.client.state.gameOver);
+// Brincadeira na partida, para quem joga e para quem assiste: de vez em quando, um inseto passa por um canto da tela
+// (pegar três na mesma partida chama o comboio de formigas).
+startScreenBugs(document.body, () => session.screen === 'game' && !!connection.client?.state && !connection.client.state.gameOver,
+  { match: () => connection.client?.state?.matchId ?? '' });
 
 mountRotateGate();
 setupPwa();

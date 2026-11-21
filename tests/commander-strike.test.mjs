@@ -45,6 +45,8 @@ test('the counter carries the damage of each commander and goes on alert from 15
   assert.match(calm, /<b>14\/21<\/b>/);
   assert.doesNotMatch(calm, /danger/);
   assert.match(damageButton(p(COMMANDER_NEAR)), /class="commander-damage danger"/);
+  assert.match(damageButton(p(17)), /class="commander-damage danger"/, 'pulses from 15');
+  assert.match(damageButton(p(18)), /class="commander-damage danger critical"/, 'shakes from 18');
 });
 
 test('the frame of each step carries the commander damage of that moment', () => {

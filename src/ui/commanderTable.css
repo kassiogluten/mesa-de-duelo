@@ -11,8 +11,9 @@
 .commander-damage { padding: 6px 0; border: 0; background: transparent; color: var(--muted); font: 500 12px var(--body); cursor: pointer; white-space: nowrap; }
 .commander-damage b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .commander-damage.danger b { color: #ff9a81; }
-/* O contador do dano de comandante: de 15 em diante, um brilho vermelho pulsa devagar atrás dele; quando a coroa do
-   golpe de comandante chega (motionCommander.ts), ele acende em dourado (em vermelho no golpe que chega a 21). */
+/* O contador do dano de comandante: de 15 em diante, um brilho vermelho pulsa devagar atrás dele e o número pulsa junto;
+   de 18 em diante (um golpe do fim), o contador também treme de vez em quando. Quando a coroa do golpe de comandante
+   chega (motionCommander.ts), ele acende em dourado (em vermelho no golpe que chega a 21). */
 .commander-damage { position: relative; isolation: isolate; }
 .commander-damage::before, .commander-damage::after { content: ''; position: absolute; inset: -2px -8px; z-index: -1; border-radius: 999px; pointer-events: none; opacity: 0; }
 .commander-damage.danger::before { background: radial-gradient(closest-side, #ff5a3f88, #ff5a3f22 70%, transparent); opacity: .55; }
@@ -22,10 +23,18 @@
 .commander-damage.commander-lethal b { color: #ff8a73; }
 @keyframes commander-hit { 0% { opacity: 1; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.5); } }
 @keyframes commander-danger { from { opacity: .25; } to { opacity: .9; } }
+.commander-damage.danger b { display: inline-block; }
+.commander-damage.critical b { color: #ff6f57; }
+@keyframes commander-pulse { 0%, 100% { transform: scale(1); text-shadow: none; } 50% { transform: scale(1.14); text-shadow: 0 0 8px #ff5a3fcc; } }
+@keyframes commander-shake { 0%, 14%, 100% { translate: 0 0; } 2% { translate: -2px 0; } 4% { translate: 2px 0; } 6% { translate: -2px 0; } 8% { translate: 2px 0; } 10% { translate: -1px 0; } 12% { translate: 1px 0; } }
 @media (prefers-reduced-motion: no-preference) {
   .commander-damage.danger::before { animation: commander-danger 1.8s ease-in-out infinite alternate; }
+  .commander-damage.danger b { animation: commander-pulse 1.8s ease-in-out infinite; }
+  .commander-damage.critical::before { animation-duration: .9s; }
+  .commander-damage.critical b { animation: commander-pulse .9s ease-in-out infinite; }
+  .commander-damage.critical { animation: commander-shake 2.6s ease-in-out infinite; }
 }
-[data-fx-calm] .commander-damage.danger::before { animation: none; }
+[data-fx-calm] .commander-damage.danger::before, [data-fx-calm] .commander-damage.danger b, [data-fx-calm] .commander-damage.critical { animation: none; }
 .duel-command .command-card { width: 44px; --fw: 44px; }
 .duel-command { align-items: flex-start; }
 .commander-ledger ul { list-style: none; padding: 0; margin: 20px 0; max-height: 50vh; overflow: auto; }

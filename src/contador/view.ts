@@ -183,6 +183,7 @@ const linha = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path 
 const ICON_DESFAZER = linha('M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11');
 const ICON_TELA_CHEIA = linha('M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5');
 const ICON_JOGADORES = linha('M9 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4ZM3 20a6 6 0 0 1 12 0M16.5 11a2.6 2.6 0 1 0 0-5.2M17.5 14.3A5 5 0 0 1 21 19');
+const ICON_GIRAR = linha('M5 9h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2ZM13 3.5a7 7 0 0 1 7.5 6M20.5 9.5l-2.6-1.2M20.5 9.5l1.1-2.6');
 const ICON_SAIR = linha('M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10');
 
 /** O d6 de marfim em perspectiva: 1 em cima, 2 à esquerda e 3 à direita. */
@@ -223,6 +224,7 @@ export function menuHTML() {
     </section>
     <section class="cv-menu-sec cv-menu-acoes">
       ${acao('data-tela-cheia hidden', ICON_TELA_CHEIA, 'Tela cheia')}
+      ${acao('data-girar', ICON_GIRAR, 'Girar a mesa')}
       ${acao('data-reiniciar', ICON_REFRESH, 'Recomeçar')}
       ${acao('data-configurar aria-label="Trocar os jogadores"', ICON_JOGADORES, 'Jogadores')}
       <a class="cv-mini" href="/">${ICON_SAIR}<span>Sair</span></a>

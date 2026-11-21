@@ -202,6 +202,8 @@
 .history-line { padding: 5px 0 5px 4px; border-bottom: 1px solid var(--line); }
 .history-line.mine { color: var(--ink); }
 .history-row { display: flex; align-items: flex-start; gap: 6px; }
+/* Os momentos da jogada (primeiro sangue, eliminação dupla): um selo vermelho no fim da frase. */
+.history-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border: 1px solid #e2544a; border-radius: 999px; color: #ffc1b8; font-size: .78em; font-weight: 700; line-height: 1.5; white-space: nowrap; vertical-align: 1px; }
 .history-row > .history-text, .history-details .history-text { flex: 1; }
 .history-inspect { display: flex; align-items: flex-start; gap: 7px; flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; color: inherit; font: inherit; cursor: zoom-in; }
 .history-thumb { flex-shrink: 0; width: 30px; height: 22px; margin-top: 1px; border-radius: 4px; border: 1px solid var(--line); background: var(--azul-1a2338, #1a2338) center 28% / 140% auto no-repeat; }

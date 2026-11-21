@@ -55,6 +55,8 @@
 /* ---------- A mesa ---------- */
 body.cv-jogando { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; }
 .cv-raiz { position: fixed; inset: 0; background: var(--bg-deep); }
+/* O celular girou mas a mesa ficou presa: ela gira ao contrário, no tamanho da tela de antes. */
+.cv-raiz.girada { inset: auto; left: 50%; top: 50%; width: var(--mesa-w); height: var(--mesa-h); transform: translate(-50%, -50%) rotate(var(--mesa-giro)); }
 .cv-mesa {
   --pt: max(6px, env(safe-area-inset-top)); --pr: max(6px, env(safe-area-inset-right)); --pb: max(6px, env(safe-area-inset-bottom)); --pl: max(6px, env(safe-area-inset-left));
   position: absolute; inset: 0; display: grid; gap: 6px; padding: var(--pt) var(--pr) var(--pb) var(--pl);

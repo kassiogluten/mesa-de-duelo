@@ -786,3 +786,11 @@ test('destroyed permanents crack and break apart where they were; exiled ones si
   assert.ok(g.nodes.find(n => n.className === 'presentation-piece').classes.has('exile-sinking'));
   g.motion.reset();
 });
+
+test('at the end of the game, only a replayed play (the game highlight) brings back its frame', () => {
+  const over = state(); over.gameOver = true;
+  assert.equal(stateWithFrame(over, frame), over);
+  assert.notEqual(stateWithFrame(over, frame, true), over);
+  const live = state(); live.input.ok.enabled = true;
+  assert.equal(stateWithFrame(live, frame, true), live, 'a live decision never shows an old frame');
+});

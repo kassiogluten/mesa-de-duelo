@@ -40,7 +40,11 @@ export const LADOS_SORTEIO = 20;
 /** Empates seguidos até o sorteio desistir e ficar com o primeiro dos empatados (com dado de verdade, nunca chega aqui). */
 const MAX_RODADAS = 8;
 
-export interface Partida { config: Config; jogadores: Jogador[]; historico: Entrada[]; inicio: number }
+export interface Partida {
+  config: Config; jogadores: Jogador[]; historico: Entrada[]; inicio: number;
+  /** Em que giro do aparelho (0, 90, 180 ou 270) a mesa ficou presa: girar o celular não muda o lugar de ninguém. */
+  angulo?: number;
+}
 
 /** Comandantes de um jogador: um, ou dois com parceiro (o segundo leva "b"). */
 export const comandanteId = (jogador: number, segundo = false) => `${jogador}${segundo ? 'b' : ''}`;
@@ -94,7 +98,12 @@ export function aplicarConfig(p: Partida, c: Config) {
 }
 
 /** A mesma mesa de volta ao começo: mesmos jogadores, vida inicial, sem dano nem histórico. */
-export const reiniciar = (p: Partida, agora = Date.now()) => novaPartida(p.config, agora);
+export function reiniciar(p: Partida, agora = Date.now()): Partida {
+  const nova = novaPartida(p.config, agora);
+  // Os jogadores continuam nos mesmos lugares: a mesa continua presa onde estava.
+  if (p.angulo !== undefined) nova.angulo = p.angulo;
+  return nova;
+}
 
 function registrar(p: Partida, e: Entrada) {
   p.historico.push(e);
@@ -259,6 +268,19 @@ export function lerConfig(raw: unknown): Config | null {
 }
 
 // ---------- Lugares na tela ----------
+
+/** Um giro em graus levado para 0, 90, 180 ou 270. */
+export const quartoDeVolta = (graus: number) => ((Math.round(graus / 90) * 90) % 360 + 360) % 360;
+
+/**
+ * A mesa presa no giro `angulo` com o aparelho agora em `atual` (graus anti-horários desde a posição natural, como
+ * no `screen.orientation.angle`): quanto a mesa gira na tela (CSS, horário) para cada painel continuar de frente
+ * para o mesmo jogador, e se ela é desenhada deitada, sabendo se a tela está deitada agora.
+ */
+export function giroDaMesa(angulo: number, atual: number, telaDeitada: boolean): { giro: number; deitada: boolean } {
+  const d = quartoDeVolta(atual - angulo);
+  return { giro: d === 0 ? 0 : d === 180 ? 180 : d === 90 ? -90 : 90, deitada: d % 180 ? !telaDeitada : telaDeitada };
+}
 
 /** De que lado da tela o jogador senta: o painel dele gira para ficar de frente. */
 export type Lado = 'baixo' | 'cima' | 'esq' | 'dir';

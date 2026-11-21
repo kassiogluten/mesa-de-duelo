@@ -133,3 +133,16 @@
 .crown-stamp.lethal > svg, .crown-fly.lethal > svg { fill: #ff6a55; filter: drop-shadow(0 0 8px #ff4d3d) drop-shadow(0 2px 2px #0009); }
 .commander-plus { position: fixed; z-index: 36; pointer-events: none; transform: translate(-50%, 0); width: max-content !important; height: auto !important; color: #ffd66b; font: 800 16px/1 var(--display); font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px var(--bg-deep), 0 0 8px #000a; opacity: 0; }
 .commander-plus.lethal { color: #ff8a73; }
+
+/* Momentos da partida (motionMoments.ts): a faixa do primeiro sangue (no retrato atingido) e da eliminação de vários
+   jogadores (no meio da mesa), o corte de lâmina e as bordas da mesa piscando vermelhas. */
+.moment-banner { position: fixed; z-index: 41; pointer-events: none; transform: translate(-50%, 0); width: max-content !important; height: auto !important; display: grid; justify-items: center; gap: 4px; text-align: center; opacity: 0; }
+.moment-banner.right { transform: translate(0, -50%); justify-items: start; text-align: left; }
+.moment-banner.left { transform: translate(-100%, -50%); justify-items: end; text-align: right; }
+.moment-banner.middle { transform: translate(-50%, -50%); }
+.moment-banner > b { padding-left: .3em; font: 800 15px/1 var(--display); letter-spacing: .3em; text-transform: uppercase; }
+.moment-banner.blood > b { color: #ffc1b8; text-shadow: 0 0 14px rgb(226 84 74 / .95), 0 2px 4px #000c; }
+.moment-banner.kill > b { font-size: 30px; color: #ffe0b0; text-shadow: 0 0 22px rgb(226 84 74 / .9), 0 0 6px rgb(242 181 76 / .8), 0 3px 6px #000d; }
+.moment-banner > i { width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #e2544a, transparent); }
+.moment-slash { position: fixed; z-index: 39; pointer-events: none; height: 4px !important; border-radius: 50%; background: linear-gradient(90deg, transparent, #fff 42%, #ffd6cf 58%, transparent); box-shadow: 0 0 10px 2px rgb(226 84 74 / .9), 0 0 26px 6px rgb(226 84 74 / .45); opacity: 0; }
+.moment-vignette { position: fixed; z-index: 33; pointer-events: none; transform: translate(-50%, -50%); box-shadow: inset 0 0 100px 24px rgb(150 16 16 / .55); opacity: 0; }

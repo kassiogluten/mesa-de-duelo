@@ -1,7 +1,7 @@
 // O golpe de comandante num jogador: a coroa dourada que se estampa no retrato (e se parte no golpe que chega a 21) e a coroa pequena que voa até o contador "Dano X/21", que rola do número de antes para o de agora.
 import type { PresentationEvent } from './presentationTimeline';
 import { center, reduced, type MotionKit, type Point } from './motionKit';
-import { COMMANDER_LIMIT, COMMANDER_NEAR, commanderCounterChange, countsOf } from './commanderCounter';
+import { COMMANDER_CRITICAL, COMMANDER_LIMIT, COMMANDER_NEAR, commanderCounterChange, countsOf } from './commanderCounter';
 
 /** A cor da aura, do rastro e das faíscas do comandante que golpeia. */
 export const COMMANDER_GOLD = '#f2c14c';
@@ -21,6 +21,7 @@ export function createCommanderMotion(kit: MotionKit) {
     const b = counter.querySelector('b');
     if (b) b.textContent = `${value}/${COMMANDER_LIMIT}`;
     counter.classList.toggle('danger', value >= COMMANDER_NEAR);
+    counter.classList.toggle('critical', value >= COMMANDER_CRITICAL);
   }
   /** Mostra o contador de volta, se o golpe o tinha escondido (o primeiro dano de comandante: antes, nem havia contador). */
   function reveal(counter: HTMLElement) {

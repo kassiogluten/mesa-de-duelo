@@ -1,7 +1,7 @@
 {
   "name": "mesa-de-duelo",
   "private": true,
-  "version": "0.236.1",
+  "version": "0.237.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
     "icons": "pwa-assets-generator",
     "print": "node scripts/print-novidade.mjs",
     "sons": "node scripts/sons-mp3.mjs",
+    "sons:elevenlabs": "node scripts/sons-elevenlabs.mjs",
     "publicar-versao": "node --import ./tests/register.mjs scripts/publicar-versao.mjs",
     "arte": "node scripts/arte-propria.mjs",
     "prepare": "node -e \"try { require('child_process').execSync('git config core.hooksPath .githooks', { stdio: 'ignore' }) } catch {}\"",

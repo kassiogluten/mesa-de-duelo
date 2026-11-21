@@ -2,6 +2,7 @@ import type { FCard, FState, FTargets } from '../forge/client';
 import { bigSpell, commanderEntry, COMMANDER_ENTRY, GAME_CHANGER, gameChangerPlay, legendaryEntry } from './impactRules';
 import { isGameChanger } from '../brackets';
 import { sweepDuration } from './boardSweep';
+import { combatHitOnPlayer } from './tableMoments';
 
 /** Public, immutable board view at an engine event boundary. Never contains a hand or prompt. */
 export interface PresentationFrame {
@@ -92,6 +93,8 @@ export interface PresentationEvent {
    * partida com as regras do Commander, com o holofote e a gema (gameChangerMoment.ts).
    */
   gameChanger?: boolean;
+  /** Só na mesa: o primeiro golpe de combate num jogador neste jogo (tableMoments.ts), com o corte e a voz do narrador. */
+  firstBlood?: boolean;
   /** Só na mesa: gatilho da mesma carta logo depois de outro igual (blink em todos), com um aviso mais curto. */
   repeat?: boolean;
   /** Marcadores (`counters`): o tipo, como o Forge chama (P1P1, M1M1, LOYALTY, POISON…), e se vieram com a entrada. */
@@ -109,6 +112,8 @@ export interface PresentationEvent {
   bottom?: number;
   heads?: boolean;
   startingToss?: boolean;
+  /** Só na mesa: a moeda cai em pé antes de tombar no resultado (sem ele, sorteado em `coinOnEdge`; o laboratório força). */
+  edge?: boolean;
   sides?: number;
   result?: number;
   /** O d6 de quem começa (`starting-roll`): as rodadas, e `actor` é quem escolhe. */
@@ -225,6 +230,11 @@ export class PresentationTimeline {
   private commandCasts = new Set<number>();
   /** Os gatilhos iguais da sequência atual: quantos foram para a pilha. */
   private triggers: { key: string; count: number } | null = null;
+  /**
+   * Já houve golpe de combate num jogador neste jogo. Começa marcado: só o começo do jogo visto (o turno 1) o desmarca,
+   * para quem abre a partida no meio não ver um primeiro sangue que não foi o primeiro.
+   */
+  private bloodied = true;
   get queued() { return this.pending.length; }
   /** Passos com imagem que ainda esperam a vez (os só de som e os gatilhos repetidos não contam). */
   get queuedSteps() { return this.pending.filter(entry => !entry.audioOnly && !entry.event.repeat).length; }
@@ -246,6 +256,7 @@ export class PresentationTimeline {
       if (event.type === 'counters' && (event.entering || event.paid)) continue;
       const copy = structuredClone(event);
       this.markCommanderEntry(copy);
+      this.markFirstBlood(copy);
       if (options.gameChangers) markGameChanger(copy);
       if (copy.type === 'mill') copy.milled = copy.card ? [copy.card] : [];
       if (sameMill(accepted.at(-1), copy)) accepted[accepted.length - 1] = joinMill(accepted.at(-1)!, copy);
@@ -321,6 +332,13 @@ export class PresentationTimeline {
       if (this.triggers.count > 1) event.repeat = true;
     } else if (this.triggers?.key === key && this.triggers.count > 1) event.repeat = true;
   }
+  /** Primeiro sangue: o primeiro golpe de combate num jogador de cada jogo (o turno 1 começa outro jogo, na melhor de três). */
+  private markFirstBlood(event: PresentationEvent) {
+    if (event.type === 'turn' && event.turn === 1) { this.bloodied = false; return; }
+    if (this.bloodied || !combatHitOnPlayer(event)) return;
+    this.bloodied = true;
+    event.firstBlood = true;
+  }
   /** Conjurado da zona de comando: quando a mesma carta sai da pilha para o campo, a entrada é a do comandante. */
   private markCommanderEntry(event: PresentationEvent) {
     const id = event.card?.id ?? event.sourceId;
@@ -368,7 +386,7 @@ export class PresentationTimeline {
   reset(matchId = '') {
     this.matchId = matchId; this.cursor = 0; this.history = []; this.current = null;
     this.pending = []; this.initialized = false; this.lastPresentedSeq = 0; this.triggers = null;
-    this.commandCasts.clear();
+    this.commandCasts.clear(); this.bloodied = true;
   }
 }
 
@@ -391,8 +409,9 @@ export function holdDecision(state: FState): FState {
       manaCost: undefined, selection: undefined, tapToPay: undefined, proliferate: undefined, suspendCast: undefined, commanderMove: undefined,
       blocking: undefined, attacking: undefined, targeting: undefined, vote: undefined, card: undefined } };
 }
-export function stateWithFrame(state: FState, frame: PresentationFrame | null): FState {
-  if (!frame || hasLiveDecision(state)) return state;
+/** `replaying`: a mesa está repetindo uma jogada; no fim do jogo, só assim ela volta ao quadro daquela jogada (o destaque do jogo). */
+export function stateWithFrame(state: FState, frame: PresentationFrame | null, replaying = false): FState {
+  if (!frame || (hasLiveDecision(state) && !(replaying && state.gameOver))) return state;
   return { ...state, turn: frame.turn, phase: frame.phase, activePlayer: frame.activePlayer,
     players: state.players.map(player => ({ ...player, ...frame.players.find(p => p.id === player.id) })),
     stack: frame.stack, combat: frame.combat ?? [],
@@ -406,6 +425,18 @@ export function stateWithFrame(state: FState, frame: PresentationFrame | null): 
 export function presentationPace(waiting: number, fast: boolean) {
   const crowd = waiting <= 3 ? 1 : waiting <= 6 ? .8 : waiting <= 12 ? .6 : waiting <= 24 ? .45 : .35;
   return Math.min(fast ? .6 : 1, crowd);
+}
+/** De vez em quando (1 em 50), a moeda cai em pé, fica equilibrada e só então tomba no resultado, que não muda. */
+export const COIN_EDGE_ODDS = 50;
+/** O tempo a mais da moeda em pé, em ms (o equilíbrio e o tombo). */
+export const COIN_EDGE = 1500;
+/**
+ * A moeda desta jogada cai em pé. O sorteio sai do número do evento, e não do acaso: ver a jogada de novo repete
+ * igual. A moeda de quem começa fica de fora (ela tem a apresentação própria).
+ */
+export function coinOnEdge(event: PresentationEvent) {
+  if (event.type !== 'coin' || event.startingToss) return false;
+  return event.edge ?? (Math.imul(event.seq, 2654435761) >>> 0) % COIN_EDGE_ODDS === 7;
 }
 /** `pace`: true é o Rápido (0,6); um número é a fração do tempo cheio (presentationPace). */
 export function presentationDuration(event: PresentationEvent, pace: boolean | number) {
@@ -422,7 +453,7 @@ export function presentationDuration(event: PresentationEvent, pace: boolean | n
   // O comandante saindo da zona de comando tem a cena mais longa das entradas (commanderEntry.ts).
   // Game Changer: o voo até a pilha (ou o campo) e a cena do holofote com a gema (gameChangerMoment.ts).
   const duration = gameChangerPlay(event) ? GAME_CHANGER : commanderEntry(event) ? COMMANDER_ENTRY : legendaryEntry(event) ? 700 : bigSpell(event) ? 1000 : event.type === 'attackers' ? 1300 : event.type === 'ability-activated' ? (event.repeat ? 400 : event.ultimate ? 1300 : 1000)
-    : event.type === 'coin' || event.type === 'die' ? 1250 : event.type === 'scry' ? 900
+    : event.type === 'coin' || event.type === 'die' ? 1250 + (coinOnEdge(event) ? COIN_EDGE : 0) : event.type === 'scry' ? 900
     : event.type === 'control-changed' ? 640 : event.type === 'attached' ? 520
     // Destruída e exilada têm cena própria (leaveEffects.ts): rachar e se partir, ou ser sugada pelo portal.
     : event.type === 'left' && event.to === 'Exile' ? 820 : event.type === 'left' && event.reason === 'destroyed' ? 760

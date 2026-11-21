@@ -27,9 +27,10 @@ export function createHistoryPanel(root: HTMLElement, d: HistoryDeps) {
     return `<span class="history-thumb"${art ? ` style="background-image:url('${art}')"` : ''} aria-hidden="true"></span>`;
   }
   function historyItem(item: HistoryItem) {
-    if (!item.card) return `<span class="history-text">${esc(item.text)}</span>`;
+    const badges = (item.badges ?? []).map(b => `<span class="history-badge">${esc(b)}</span>`).join('');
+    if (!item.card) return `<span class="history-text">${esc(item.text)}${badges}</span>`;
     historyCards.set(item.key, item.card);
-    return `<button class="history-inspect" data-event="${item.key}">${historyThumb(item.card)}<span class="history-text">${esc(item.text)}</span></button>`;
+    return `<button class="history-inspect" data-event="${item.key}">${historyThumb(item.card)}<span class="history-text">${esc(item.text)}${badges}</span></button>`;
   }
   /** Histórico agrupado: só é montado com a gaveta aberta. */
   function render() {

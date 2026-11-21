@@ -1,4 +1,4 @@
-import type { PresentationEvent } from './presentationTimeline';
+import { COIN_EDGE, coinOnEdge, type PresentationEvent } from './presentationTimeline';
 import { center, reduced, type MotionKit, type Point } from './motionKit';
 import { COIN_HEADS_PATH, COIN_TAILS_PATH } from './icons';
 
@@ -21,13 +21,30 @@ export function createStageMotion(kit: MotionKit) {
     if (!coin && event.sides) { const sides = document.createElement('small'); sides.textContent = `d${event.sides}`; piece.append(sides); }
     const caption = document.createElement('span'); caption.className = 'presentation-caption'; caption.textContent = label; piece.append(caption);
     const hold = Math.max(duration, 1100);
+    // Em pé: a parte do tempo que é o equilíbrio e o tombo (o Rápido e a fila cheia encurtam junto).
+    const edge = coin && coinOnEdge(event) ? Math.round(hold * COIN_EDGE / (1250 + COIN_EDGE)) : 0;
     later(() => remove(piece), hold);
     if (reduced()) return;
     // Na camada GPU: a moeda gira com espessura e sombra, o dado rola com perspectiva; a peça em CSS fica só com a legenda.
     const font = getComputedStyle(piece).fontFamily || 'sans-serif';
-    if (coin ? gpu.play('coin', { at, heads: !!event.heads, label: final, hold, font }) : gpu.play('die', { at: { ...at, w: size * .9, h: size * .9 }, result: final, sides: event.sides ?? 6, hold, font })) {
+    if (coin ? gpu.play('coin', { at, heads: !!event.heads, label: final, hold, font, edge }) : gpu.play('die', { at: { ...at, w: size * .9, h: size * .9 }, result: final, sides: event.sides ?? 6, hold, font })) {
       piece.classList.add('gpu-drawn');
       animate(caption, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .88 }, { opacity: 0 }], hold);
+      return;
+    }
+    if (coin && edge) {
+      // Em pé: cai de lado (só a borda à mostra), balança, e só então deita mostrando o lado que saiu.
+      const at = (ms: number) => Math.min(1, ms / hold), base = hold - edge, land = .62 * base, fall = land + edge * .8;
+      animate(piece, [
+        { opacity: 0, translate: '0 40px', scale: '.6', rotate: 'x 0deg' },
+        { opacity: 1, translate: '0 -60px', scale: '1.1', rotate: 'x 900deg', offset: at(.35 * base) },
+        { opacity: 1, translate: '0 -6px', scale: '1', rotate: 'x 1888deg', offset: at(land), easing: 'ease-in-out' },
+        { opacity: 1, translate: '0 -6px', scale: '1', rotate: 'x 1882deg', offset: at(land + edge * .3), easing: 'ease-in-out' },
+        { opacity: 1, translate: '0 -6px', scale: '1', rotate: 'x 1892deg', offset: at(land + edge * .55), easing: 'ease-in-out' },
+        { opacity: 1, translate: '0 -6px', scale: '1', rotate: 'x 1886deg', offset: at(fall), easing: 'cubic-bezier(.5,0,.9,.5)' },
+        { opacity: 1, translate: '0 0', scale: '1', rotate: 'x 1800deg', offset: at(fall + 320), easing: 'cubic-bezier(.3,1.5,.5,1)' },
+        { opacity: 1, translate: '0 0', scale: '1', rotate: 'x 1800deg', offset: at(hold - .12 * base) },
+        { opacity: 0, translate: '0 0', scale: '1', rotate: 'x 1800deg' }], hold, 'linear');
       return;
     }
     if (coin) {

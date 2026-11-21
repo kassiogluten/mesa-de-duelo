@@ -112,6 +112,7 @@ import { createUiActions } from './tableUiActions';
 import { attachTableClicks } from './tableClicks';
 import { finder } from './dom';
 import { applyStartingRoll, currentStartingRoll, rollingNow } from './startingRoll';
+import { gameHighlight } from './gameEnding';
 
 export interface ForgeTableOptions {
   onExit(): void;
@@ -250,7 +251,16 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   const stops = createStopMenu(root, { stops: opponentStops, hasState: () => !!client?.state, render: () => render(),
     editable: () => !!client?.connected && !match.disconnected && opponentStops.supported && !!client.state && !client.state.gameOver && !client.state.spectating });
   // A janela grande do centro (sideboard, resultado, conexão caída) e a escuta da caixa do resumo do jogo.
-  const overlay = createTableOverlay(ctx);
+  const overlay = createTableOverlay({ ...ctx,
+    highlight: () => gameHighlight(timeline.history, historyNames),
+    // O destaque visto de novo no fim do jogo: o resultado sai da frente enquanto a jogada se repete, e volta depois.
+    replayHighlight(best) {
+      if (timeline.current || timeline.queued) { announce('Espere a mesa terminar de mostrar a jogada.'); return; }
+      const back = () => { match.observing = false; render(); };
+      match.observing = true; render();
+      if (!presentation.replay(best.events, `Destaque do jogo · ${best.text}`, back)) back();
+    },
+  });
   function setMenu(open: boolean, restore = false) {
     $('#fMenu').hidden = !open;
     // Toda vez que o menu abre, a linha do rodapé volta a mostrar a versão da mesa.
@@ -293,7 +303,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
   // A fila de apresentação (tablePresentation.ts): cada jogada nova mostrada um passo de cada vez.
   const presentation = createPresentationQueue(ctx);
   /** As setas de combate e de alvo, na mesa como a apresentação a mostra agora. */
-  function drawArrows(s: FState) { const visual = stateWithFrame(s, presentation.frame()); applyCombatPose(root, visual); drawCombatArrows(root, visual); stack.drawTargetArrows(visual); }
+  function drawArrows(s: FState) { const visual = stateWithFrame(s, presentation.frame(), timeline.replaying); applyCombatPose(root, visual); drawCombatArrows(root, visual); stack.drawTargetArrows(visual); }
   root.querySelectorAll<HTMLElement>('.row').forEach(row => {
     row.tabIndex = 0;
     row.setAttribute('aria-label', `${row.closest('.opp') ? 'Campo do oponente' : 'Seu campo'}: ${row.classList.contains('lands') ? 'terrenos e outros permanentes' : 'criaturas'}. Role para ver todas as cartas.`);
@@ -443,7 +453,7 @@ export function createForgeTableView(root: HTMLElement, opts: ForgeTableOptions)
     const s = shownState() ?? live;
     if (s.spectating) { turnNotice.reset(); turnBuzz.reset(); } else { turnNotice.observe(s); turnBuzz.observe(s); }
     if (!validBlockSelection(s, match.selectedBlocker)) match.selectedBlocker = null;
-    const visual = stateWithFrame(s, presentation.frame());
+    const visual = stateWithFrame(s, presentation.frame(), timeline.replaying);
     seats.trackCounters(visual.players);
     attack.sync(s);
     const { me, opponents: seated } = tablePlayers(visual);

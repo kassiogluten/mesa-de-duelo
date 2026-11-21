@@ -1,0 +1,238 @@
+{
+  "criaturas/bear": {
+    "text": "A single short deep bear growl, close up, dry, no music",
+    "duration_seconds": 1.5,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "0d0ea8f0b1f0731e0dbd7c0f36ce9e697017e4829d7f70895f9f926118522901"
+  },
+  "criaturas/elf": {
+    "text": "A short magical elven forest chime: a soft harp glissando with sparkling little bells, fantasy, no voice",
+    "duration_seconds": 1.6,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "29c92dd9f359eaac1eb7799e56173372431d435e165fda755d953b5f138c4b18"
+  },
+  "criaturas/wolf": {
+    "text": "A single short wolf howl, slightly distant, fantasy forest at night",
+    "duration_seconds": 2.2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "a135ade9052d6321e6c8579c4b07aebee8574e09082ba77228168d3f4e05e914"
+  },
+  "criaturas/cat": {
+    "text": "A single short cute cat meow",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "27ee06fed85c92b51160c23b165896218041523092e70d8e9fa0015d127aad1d"
+  },
+  "criaturas/dog": {
+    "text": "Two quick dog barks, medium dog",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "4ef1b04ed8667b3afe8c165d1f2d9676026e3858f44dac3599e1743e1902ea85"
+  },
+  "criaturas/bird": {
+    "text": "A small songbird chirping twice, short",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "81b1bd68d0231a7e8d001c71e56af5f6143db18ec189f63f2a385d1fd332691e"
+  },
+  "criaturas/dragon": {
+    "text": "A short dragon roar with a burst of fire breath, epic fantasy",
+    "duration_seconds": 2.2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "e37dbecbe251fce7d2b3282770adc1fd39aaaa3c590c2dbae6d400dbd26055ac"
+  },
+  "criaturas/zombie": {
+    "text": "A short low zombie groan",
+    "duration_seconds": 1.6,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "9234ddf3f9e482b9a20aaa14098bb05b3dc989bfc4ce568b0a6aa88fc0ee9983"
+  },
+  "criaturas/goblin": {
+    "text": "A short mischievous goblin cackle, small creature giggling",
+    "duration_seconds": 1.5,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "b7d01591b0fc150837a9f596da18a2b069e4de3bca73f72a36228c3e28dd6d08"
+  },
+  "criaturas/frog": {
+    "text": "Two short frog croaks",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "6c3364c02c8e3287e95fecde26e87e11efcfae9098c1c7958d600be7e7a197a0"
+  },
+  "criaturas/snake": {
+    "text": "A short snake hiss",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "d3002ce1eb1946ce36d94381089b1aa9a812f087856826a3d0f0f1eeddcb82ba"
+  },
+  "criaturas/insect": {
+    "text": "A short buzzing insect swarm passing by",
+    "duration_seconds": 1.3,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "a9f926ff08ebd428950b622d827ea7c1ce12cf9019e8bbbf84dc5e8971ba6c22"
+  },
+  "criaturas/angel": {
+    "text": "A short heavenly angelic choir chord, 'aah', with a soft shimmer",
+    "duration_seconds": 2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "71d64c3a1b717e0042107b40825682095dff9e70eca7c9e7c9f991baf3f8799e"
+  },
+  "criaturas/merfolk": {
+    "text": "Short underwater bubbles followed by a gentle water splash",
+    "duration_seconds": 1.5,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "d91178687091f4de939f95887da85ca65de5dc4b2db8d5a671edd3ce76fe582f"
+  },
+  "criaturas/horse": {
+    "text": "A single short horse neigh",
+    "duration_seconds": 1.6,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "afeaf63d5198bcf08250c13e7f9875612991fa8d8c5f5da3261efe823637bc07"
+  },
+  "criaturas/dinosaur": {
+    "text": "A short dinosaur roar, like a tyrannosaurus",
+    "duration_seconds": 2.2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "dda82a2184c887f706bdd2ce27371058bda96f92d33cb50a9fb26542e80eae66"
+  },
+  "criaturas/skeleton": {
+    "text": "A short rattle of dry bones, a skeleton clattering",
+    "duration_seconds": 1.2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "b760515249b96608df4b94caecfafe7b9460c0ff6e07fc03ceb90baf8e24f22b"
+  },
+  "criaturas/spirit": {
+    "text": "A short ghostly whispering whoosh, ethereal",
+    "duration_seconds": 1.6,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "991d6f7f74a940a2cec17b9d10e4f59caeb14c303dda5ba357253bd7d191e9a1"
+  },
+  "criaturas/ooze": {
+    "text": "A short squishy slime squelch, gooey",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "5ef27757b8e2d7fc374c2d84e8944ebaaa31a0e2230b0710394788617042a7a0"
+  },
+  "criaturas/elephant": {
+    "text": "A single short elephant trumpet",
+    "duration_seconds": 1.6,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "31580928d162347629769a6f2b05f2ddc8d2cbf9849c03e19bf0c117ed41669c"
+  },
+  "criaturas/demon": {
+    "text": "A short deep demonic laugh with a little reverb",
+    "duration_seconds": 2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "68e2b94516911eb90267ca84632d53d584740727495de765dcb1ccc6eb01de5b"
+  },
+  "criaturas/squirrel": {
+    "text": "A short squirrel chatter, quick squeaky chirps",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "bc05e54e1dacb4111d33168b55b3d49ae7b46dfc55df78874a54c685168c972f"
+  },
+  "criaturas/rat": {
+    "text": "Short rat squeaks",
+    "duration_seconds": 0.8,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "5bd34b4733af171a00c84386e64d79ff48f16ff01c1a9789da2c6f08d0b6b30a"
+  },
+  "criaturas/bat": {
+    "text": "Short high pitched bat screeches with fluttering wings",
+    "duration_seconds": 1,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "8814e80bacc580958e361140631fd3085f565aa8e679539f5f90afeaff31caa1"
+  },
+  "mesa/rangido": {
+    "text": "A short creak of an old wooden table under heavy weight, single creak",
+    "duration_seconds": 1.2,
+    "prompt_influence": 0.55,
+    "endpoint": "/sound-generation?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "402c77c94403e94b32c3a5455ad898207723a5ea8e11ef4310b11796ead2a96d"
+  },
+  "voz/first-blood": {
+    "text": "First blood!",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.35,
+      "similarity_boost": 0.8,
+      "style": 0.6
+    },
+    "endpoint": "/text-to-speech/pNInz6obpgDQGcFmaJgB?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "80a69b7ea982a3db6ed54ad581be9b05681efc587d9d8d2fd91332f660f61c98"
+  },
+  "voz/double-kill": {
+    "text": "Double kill!",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.35,
+      "similarity_boost": 0.8,
+      "style": 0.6
+    },
+    "endpoint": "/text-to-speech/pNInz6obpgDQGcFmaJgB?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "bd58debbb437379ff9f1693663891c9c4c77a143dd6368194e576e998ba25963"
+  },
+  "voz/triple-kill": {
+    "text": "Triple kill!",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+      "stability": 0.35,
+      "similarity_boost": 0.8,
+      "style": 0.6
+    },
+    "endpoint": "/text-to-speech/pNInz6obpgDQGcFmaJgB?output_format=mp3_44100_128",
+    "gerado": "2026-11-21",
+    "sha256": "1b06080742afe13941f023a093cff0ee251014a3aada00de0ab694d360268f95"
+  }
+}

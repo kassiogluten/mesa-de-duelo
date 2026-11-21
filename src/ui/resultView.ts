@@ -6,7 +6,12 @@ import { tablePlayers } from './commanderTable';
 import { lossReasonText } from './lossReason';
 import { gameSummaryHTML } from './lifeChart';
 import { turnTimeText } from './phaseHud';
-import { ICON_FLAG, ICON_EYE, ICON_HOME } from './icons';
+import { ICON_FLAG, ICON_EYE, ICON_HOME, ICON_REPLAY } from './icons';
+import type { EndingTitle, GameHighlight } from './gameEnding';
+import './gameEnding.css';
+
+/** O coração da vitória por um fio, batendo devagar. */
+const HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z" fill="currentColor"/></svg>';
 
 export function gameResult(s: FState) {
   const played = s.match?.gameMs != null ? ` · ${turnTimeText(s.match.gameMs)} de jogo` : '';
@@ -69,10 +74,23 @@ export function lifeDetails(s: FState, open: boolean, ptName: (name: string) => 
   const summary = gameSummaryHTML(s, ptName);
   return summary ? `<details class="life-details" data-life-details${open ? ' open' : ''}><summary>Ver gráfico de vida</summary>${summary}</details>` : '';
 }
-/** A janela do fim do jogo: quem venceu, o resumo (gráfico de vida), a revanche e as saídas. */
-export function resultHTML(s: FState, o: { result: ReturnType<typeof gameResult>; summary: string; still: boolean; lab: boolean; feedback: boolean }) {
+/**
+ * Os títulos do jogo (a virada, em dourado; a vitória por um fio, com o coração batendo) e o destaque do jogo, com o
+ * botão para ver a jogada de novo na mesa. `art`: a miniatura da carta do destaque.
+ */
+export function endingHTML(titles: EndingTitle[], highlight: GameHighlight | null, art?: string) {
+  const ribbons = titles.map(t => `<div class="ending-title ${t.kind}"><b>${t.kind === 'thread' ? HEART : ''}<span>${t.title}</span></b><small>${esc(t.detail)}</small></div>`).join('');
+  const thumb = art ? `<span class="gh-thumb" style="background-image:url('${art}')" aria-hidden="true"></span>` : '';
+  const best = highlight ? `<div class="game-highlight">${thumb}<span class="gh-body"><b>Destaque do jogo · ${highlight.kind}</b><span>${esc(highlight.text)}</span></span>
+    <button class="arena-btn secondary gh-replay" data-ui="result-replay">${ICON_REPLAY}Ver de novo</button></div>` : '';
+  return `${ribbons ? `<div class="ending-titles">${ribbons}</div>` : ''}${best}`;
+}
+
+/** A janela do fim do jogo: quem venceu, os títulos e o destaque, o resumo (gráfico de vida), a revanche e as saídas. */
+export function resultHTML(s: FState, o: { result: ReturnType<typeof gameResult>; summary: string; still: boolean; lab: boolean; feedback: boolean; ending?: string }) {
   return `<div role="dialog" aria-modal="true" aria-label="Resultado da partida" class="result ${o.result.tone}${o.summary ? ' has-summary' : ''}${o.still ? ' still' : ''}">
     <h2>${o.result.title}</h2><p>${o.result.detail}</p>
+    ${o.ending ?? ''}
     ${o.summary}
     ${rematchNote(s)}
     <div class="result-btns">${rematchButton(s)}<button class="arena-btn secondary" data-ui="observe">${ICON_EYE}Ver campo de batalha</button>${o.lab ? `<button class="arena-btn secondary" data-ui="lab-close">${ICON_HOME}Laboratório</button>` : `<button class="arena-btn secondary" data-ui="exit">${ICON_HOME}Início</button>`}</div>

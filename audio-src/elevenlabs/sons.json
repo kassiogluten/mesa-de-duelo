@@ -1,0 +1,170 @@
+[
+  {
+    "nome": "criaturas/bear",
+    "tipo": "efeito",
+    "pedido": "A single short deep bear growl, close up, dry, no music",
+    "duracao": 1.5
+  },
+  {
+    "nome": "criaturas/elf",
+    "tipo": "efeito",
+    "pedido": "A short magical elven forest chime: a soft harp glissando with sparkling little bells, fantasy, no voice",
+    "duracao": 1.6
+  },
+  {
+    "nome": "criaturas/wolf",
+    "tipo": "efeito",
+    "pedido": "A single short wolf howl, slightly distant, fantasy forest at night",
+    "duracao": 2.2
+  },
+  {
+    "nome": "criaturas/cat",
+    "tipo": "efeito",
+    "pedido": "A single short cute cat meow",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/dog",
+    "tipo": "efeito",
+    "pedido": "Two quick dog barks, medium dog",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/bird",
+    "tipo": "efeito",
+    "pedido": "A small songbird chirping twice, short",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/dragon",
+    "tipo": "efeito",
+    "pedido": "A short dragon roar with a burst of fire breath, epic fantasy",
+    "duracao": 2.2
+  },
+  {
+    "nome": "criaturas/zombie",
+    "tipo": "efeito",
+    "pedido": "A short low zombie groan",
+    "duracao": 1.6
+  },
+  {
+    "nome": "criaturas/goblin",
+    "tipo": "efeito",
+    "pedido": "A short mischievous goblin cackle, small creature giggling",
+    "duracao": 1.5
+  },
+  {
+    "nome": "criaturas/frog",
+    "tipo": "efeito",
+    "pedido": "Two short frog croaks",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/snake",
+    "tipo": "efeito",
+    "pedido": "A short snake hiss",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/insect",
+    "tipo": "efeito",
+    "pedido": "A short buzzing insect swarm passing by",
+    "duracao": 1.3
+  },
+  {
+    "nome": "criaturas/angel",
+    "tipo": "efeito",
+    "pedido": "A short heavenly angelic choir chord, 'aah', with a soft shimmer",
+    "duracao": 2.0
+  },
+  {
+    "nome": "criaturas/merfolk",
+    "tipo": "efeito",
+    "pedido": "Short underwater bubbles followed by a gentle water splash",
+    "duracao": 1.5
+  },
+  {
+    "nome": "criaturas/horse",
+    "tipo": "efeito",
+    "pedido": "A single short horse neigh",
+    "duracao": 1.6
+  },
+  {
+    "nome": "criaturas/dinosaur",
+    "tipo": "efeito",
+    "pedido": "A short dinosaur roar, like a tyrannosaurus",
+    "duracao": 2.2
+  },
+  {
+    "nome": "criaturas/skeleton",
+    "tipo": "efeito",
+    "pedido": "A short rattle of dry bones, a skeleton clattering",
+    "duracao": 1.2
+  },
+  {
+    "nome": "criaturas/spirit",
+    "tipo": "efeito",
+    "pedido": "A short ghostly whispering whoosh, ethereal",
+    "duracao": 1.6
+  },
+  {
+    "nome": "criaturas/ooze",
+    "tipo": "efeito",
+    "pedido": "A short squishy slime squelch, gooey",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/elephant",
+    "tipo": "efeito",
+    "pedido": "A single short elephant trumpet",
+    "duracao": 1.6
+  },
+  {
+    "nome": "criaturas/demon",
+    "tipo": "efeito",
+    "pedido": "A short deep demonic laugh with a little reverb",
+    "duracao": 2.0
+  },
+  {
+    "nome": "criaturas/squirrel",
+    "tipo": "efeito",
+    "pedido": "A short squirrel chatter, quick squeaky chirps",
+    "duracao": 1.0
+  },
+  {
+    "nome": "criaturas/rat",
+    "tipo": "efeito",
+    "pedido": "Short rat squeaks",
+    "duracao": 0.8
+  },
+  {
+    "nome": "criaturas/bat",
+    "tipo": "efeito",
+    "pedido": "Short high pitched bat screeches with fluttering wings",
+    "duracao": 1.0
+  },
+  {
+    "nome": "mesa/rangido",
+    "tipo": "efeito",
+    "pedido": "A short creak of an old wooden table under heavy weight, single creak",
+    "duracao": 1.2
+  },
+  {
+    "nome": "voz/first-blood",
+    "tipo": "voz",
+    "voz": "pNInz6obpgDQGcFmaJgB",
+    "texto": "First blood!"
+  },
+  {
+    "nome": "voz/double-kill",
+    "tipo": "voz",
+    "voz": "pNInz6obpgDQGcFmaJgB",
+    "texto": "Double kill!"
+  },
+  {
+    "nome": "voz/triple-kill",
+    "tipo": "voz",
+    "voz": "pNInz6obpgDQGcFmaJgB",
+    "texto": "Triple kill!"
+  }
+]

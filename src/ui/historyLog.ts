@@ -1,5 +1,6 @@
 import type { FCard } from '../forge/client';
 import type { PresentationEvent } from './presentationTimeline';
+import { FIRST_BLOOD, knockedOut, multiKill } from './tableMoments';
 
 /**
  * Histórico da partida (Menu → Registro) agrupado: um bloco por turno e, dentro dele, uma linha por jogada. A mágica
@@ -18,7 +19,7 @@ export interface HistoryNames {
   /** A frase de um evento sozinho. */
   describe(event: PresentationEvent): string;
 }
-export interface HistoryItem { key: string; text: string; card?: FCard; actor?: number }
+export interface HistoryItem { key: string; text: string; card?: FCard; actor?: number; /** Os momentos da jogada ("Primeiro sangue", "Eliminação dupla"), num selo ao lado. */ badges?: string[] }
 export interface HistoryLine extends HistoryItem { children: HistoryItem[]; /** Os eventos da jogada, para vê-la de novo na mesa. */ events: PresentationEvent[] }
 export interface HistoryTurn { key: string; turn?: number; actor?: number; lines: HistoryLine[] }
 
@@ -210,8 +211,15 @@ const item = (event: PresentationEvent, text: string): HistoryItem => ({ key: `e
 const unitEvents = (unit: Unit): PresentationEvent[] => unit.parts
   ? unit.parts.flatMap(unitEvents) : [unit.head, ...unit.effects, ...(unit.outcome ? [unit.outcome] : [])];
 
+/** Os momentos da jogada (tableMoments.ts) que ganham um selo na linha. */
+function badgesOf(events: readonly PresentationEvent[]) {
+  const badges = [events.some(e => e.firstBlood) ? FIRST_BLOOD.title : '', multiKill(knockedOut(events).length)?.title ?? ''].filter(Boolean);
+  return badges.length ? { badges } : {};
+}
+
 function line(unit: Unit, names: HistoryNames): HistoryLine {
-  const base = { ...item(unit.head, ''), events: unitEvents(unit) };
+  const events = unitEvents(unit);
+  const base = { ...item(unit.head, ''), events, ...badgesOf(events) };
   if (unit.parts && unit.parts.length > 1) return { ...base, ...runLine(unit.parts, names) };
   const { head, effects, outcome } = unit;
   const children = effects.length > 1 ? details(effects, names) : [];

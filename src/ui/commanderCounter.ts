@@ -1,8 +1,10 @@
-// O contador "Dano X/21" do dano de comandante: o limite que elimina, o alerta perto dele e as contas de quanto ele mostrava antes e depois de um golpe de comandante.
+// O contador "Dano X/21" do dano de comandante: o limite que elimina, o alerta perto dele (pulsando a partir de 15, tremendo a partir de 18) e as contas de quanto ele mostrava antes e depois de um golpe de comandante.
 import type { PresentationEvent } from './presentationTimeline';
 
-/** O dano de um mesmo comandante que elimina, e de quanto em diante o contador fica em alerta. */
-export const COMMANDER_LIMIT = 21, COMMANDER_NEAR = 15;
+/** O dano de um mesmo comandante que elimina, de quanto em diante o contador pulsa vermelho e de quanto em diante ele treme. */
+export const COMMANDER_LIMIT = 21, COMMANDER_NEAR = 15, COMMANDER_CRITICAL = 18;
+/** A classe do contador pelo maior dano de comandante recebido: em alerta (pulsa) ou por um golpe (treme). */
+export const commanderThreat = (highest: number) => highest >= COMMANDER_CRITICAL ? ' danger critical' : highest >= COMMANDER_NEAR ? ' danger' : '';
 /** O dano de comandante que o jogador recebeu, como o contador guarda (`data-commander-damage="12:5,40:13"`). */
 export function countsOf(el: HTMLElement | null): Map<number, number> {
   const out = new Map<number, number>();

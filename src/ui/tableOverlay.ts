@@ -3,11 +3,16 @@
 import type { FState } from '../forge/client';
 import { ptOf } from './cardFaces';
 import { statsDetailsHTML, statsHighlightsHTML } from './matchStats';
-import { disconnectedHTML, gameResult, lifeDetails, reconnectingHTML, resultHTML } from './resultView';
+import { disconnectedHTML, endingHTML, gameResult, lifeDetails, reconnectingHTML, resultHTML } from './resultView';
+import { endingTitles, type GameHighlight } from './gameEnding';
 import { createSideboardPanel } from './sideboardPanel';
 import type { TableCtx } from './tableContext';
 
-export type OverlayDeps = Pick<TableCtx, 'root' | '$' | 'setHTML' | 'opts' | 'state' | 'match' | 'timeline' | 'motion' | 'render' | 'syncModal'>;
+export type OverlayDeps = Pick<TableCtx, 'root' | '$' | 'setHTML' | 'opts' | 'state' | 'match' | 'timeline' | 'motion' | 'render' | 'syncModal' | 'image'> & {
+  /** O destaque do jogo que acabou (gameEnding.ts) e como vê-lo de novo na mesa. */
+  highlight(): GameHighlight | null;
+  replayHighlight(highlight: GameHighlight): void;
+};
 
 export function createTableOverlay(d: OverlayDeps) {
   const { root, $ } = d;
@@ -54,14 +59,20 @@ export function createTableOverlay(d: OverlayDeps) {
       const result = gameResult(s);
       // Os quatro números de quem joga à vista; a tabela de todos e o gráfico de vida, recolhidos.
       const summary = statsHighlightsHTML(s) + detailsHTML(s);
-      const html = resultHTML(s, { result, summary, still: !ov.hidden, lab: !!s.room?.lab && !!d.opts.onLabClose, feedback: !!d.opts.onFeedback });
+      // A virada, a vitória por um fio e o destaque do jogo (gameEnding.ts).
+      const best = d.highlight(), card = best?.card;
+      const ending = endingHTML(endingTitles(s), best, card ? card.image ?? d.image(card.name, 'small', card.print) : undefined);
+      const html = resultHTML(s, { result, summary, ending, still: !ov.hidden, lab: !!s.room?.lab && !!d.opts.onLabClose, feedback: !!d.opts.onFeedback });
       if (ov.hidden || ov.dataset.html !== html) { ov.innerHTML = html; ov.dataset.html = html; }
       ov.hidden = false;
     } else if (!match.disconnected) { ov.hidden = true; ov.dataset.html = ''; }
   }
 
-  /** Cliques na troca com o sideboard (sideboardPanel.ts). True quando tratou. */
-  const click = (t: HTMLElement) => sideboard.click(t);
+  /** Cliques na troca com o sideboard (sideboardPanel.ts) e no "Ver de novo" do destaque. True quando tratou. */
+  const click = (t: HTMLElement) => {
+    if (t.closest('[data-ui="result-replay"]')) { const best = d.highlight(); if (best) d.replayHighlight(best); return true; }
+    return sideboard.click(t);
+  };
 
   /** Aviso de conexão caída: tentando voltar (`attempt`) ou de vez (`reason`, com sala ou não). */
   function connection(html: string) {

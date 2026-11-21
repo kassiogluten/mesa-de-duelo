@@ -1,4 +1,4 @@
-// A janela da logo no meio do Contador de vida: d6, d20 e moeda (que rolam no meio da mesa), o sorteio de quem começa, o histórico com desfazer, recomeçar e sair.
+// A janela da logo no meio do Contador de vida: d6, d20 e moeda (que rolam no meio da mesa), o sorteio de quem começa, o histórico com desfazer, girar a mesa, recomeçar e sair.
 import { desfazer, podeDesfazer, type Partida } from './state';
 import { historicoHTML, menuHTML } from './view';
 
@@ -9,10 +9,19 @@ export interface MenuAcoes {
   rolar(lados: number): void;
   /** Sortear quem começa (cada um rola um d20 no seu painel), com a janela já fechada. */
   sortear(): void;
+  /** Girar a mesa um quarto de volta (em pé ↔ deitada), de propósito: girar o celular não muda nada. */
+  girar(): void;
   /** Recomeçar com os mesmos jogadores. */
   reiniciar(): void;
   /** Voltar à configuração. */
   configurar(): void;
+}
+
+type TravaDeRotacao = ScreenOrientation & { lock?(o: OrientationType): Promise<void> };
+/** Em tela cheia, o Android deixa travar a rotação de fato (fora dela, quem segura é a mesa, que gira ao contrário). */
+function travarRotacao() {
+  const o = screen.orientation as TravaDeRotacao | undefined;
+  if (document.fullscreenElement && o?.lock) o.lock(o.type).catch(() => { /* o navegador recusou */ });
 }
 
 export function abrirMenu(p: Partida, acoes: MenuAcoes) {
@@ -39,9 +48,10 @@ export function abrirMenu(p: Partida, acoes: MenuAcoes) {
     if (alvo.closest('[data-desfazer]')) { desfazer(p); mostrar(); acoes.mudou(); return; }
     if (alvo.closest('[data-tela-cheia]')) {
       const pedido = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-      pedido.then(marcarTelaCheia, () => {});
+      pedido.then(() => { marcarTelaCheia(); travarRotacao(); }, () => {});
       return;
     }
+    if (alvo.closest('[data-girar]')) { dlg.close(); acoes.girar(); return; }
     if (alvo.closest('[data-reiniciar]')) {
       if (!confirm('Recomeçar a partida? Todos voltam à vida inicial e o histórico é apagado.')) return;
       dlg.close(); acoes.reiniciar();

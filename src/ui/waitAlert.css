@@ -16,6 +16,17 @@
 .forge #fPhases .phase-wait-clock[data-tip]::after { left: 0; transform: translateY(4px); }
 .forge #fPhases .phase-wait-clock[data-tip]:hover::after { transform: none; }
 
+/* A ampulheta no canto de cima do retrato de quem está num turno de mais de 2 minutos (tableClocks.ts): a areia escorre
+   e, de vez em quando, ela vira. Só brincadeira, sem a cor de alerta do "Demorando…". */
+.turn-hourglass { position: absolute; z-index: 3; right: 0; top: 0; width: 22px; height: 22px; padding: 2px; box-sizing: border-box; border-radius: 50%; pointer-events: auto; color: var(--gold-light, #ffe2a0); background: var(--bg-deep); box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 70%, transparent), 0 2px 6px #0009; }
+.turn-hourglass > svg { display: block; width: 100%; height: 100%; }
+.turn-hourglass .hg-stream { animation: hg-stream .6s linear infinite; }
+@keyframes hg-stream { to { stroke-dashoffset: -2.2; } }
+@keyframes hg-flip { 0%, 46% { rotate: 0deg; } 50%, 96% { rotate: 180deg; } 100% { rotate: 360deg; } }
+@media (prefers-reduced-motion: no-preference) { .turn-hourglass > svg { animation: hg-flip 24s cubic-bezier(.5, 0, .3, 1.4) infinite; } }
+@media (prefers-reduced-motion: reduce) { .turn-hourglass .hg-stream { animation: none; } }
+[data-fx-calm] .turn-hourglass > svg, [data-fx-calm] .turn-hourglass .hg-stream { animation: none; }
+
 /* Selo "Demorando…" no retrato e no campo de quem a mesa espera há 2 min ou mais. */
 .slow-badge {
   position: absolute; z-index: 3; pointer-events: none; padding: 2px 8px; border-radius: 999px; white-space: nowrap;

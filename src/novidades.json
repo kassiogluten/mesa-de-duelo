@@ -1,4 +1,22 @@
 {
+  "0.237.0": {
+    "Contador de vida com a mesa presa": [
+      { "img": "0.237.0/girar-a-mesa.webp", "legenda": "O item Girar a mesa no menu do meio do Contador de vida, para trocar entre em pé e deitada de propósito." }
+    ],
+    "Criaturas com voz": [
+      { "img": "0.237.0/esquilo.webp", "legenda": "Com fichas de Esquilo entrando, um esquilo atravessa a borda de baixo da tela aos pulos." }
+    ],
+    "Momentos da partida": [
+      { "img": "0.237.0/primeiro-sangue.webp", "legenda": "O primeiro golpe no oponente: o corte vermelho no retrato e a faixa \"Primeiro sangue\" ao lado." },
+      { "img": "0.237.0/eliminacao-dupla.webp", "legenda": "O Terremoto derruba os dois jogadores: os retratos se apagam e a faixa \"Eliminação dupla\" aparece no meio da mesa." },
+      { "img": "0.237.0/ameaca-de-comandante.webp", "legenda": "Com 18 de dano do mesmo comandante, o contador fica vermelho, pulsa e treme de vez em quando." },
+      { "img": "0.237.0/ampulheta.webp", "legenda": "Num turno de mais de 2 minutos, a ampulheta aparece no canto do retrato e vira de vez em quando." }
+    ],
+    "Fim de jogo com história": [
+      { "img": "0.237.0/virada.webp", "legenda": "Vitória depois de chegar a 3 de vida: a faixa \"Virada!\" em dourado e o destaque do jogo, com \"Ver de novo\"." },
+      { "img": "0.237.0/por-um-fio.webp", "legenda": "Vitória com 1 de vida: \"Por um fio\" com o coração batendo, e o maior golpe do jogo como destaque." }
+    ]
+  },
   "0.236.1": {
     "Meus relatos com as respostas": [
       { "img": "0.236.1/resposta-do-relato.webp", "legenda": "Meus relatos com o andamento de cada relato e, no resolvido, a resposta do responsável com a data." }

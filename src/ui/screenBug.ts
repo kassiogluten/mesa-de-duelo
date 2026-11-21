@@ -1,4 +1,4 @@
-// Brincadeira na partida (para quem joga e para quem assiste): de vez em quando, uma formiga ou um mosquito passa por um canto da tela, como se estivesse no monitor; quem o pega ganha os parabéns.
+// Brincadeira na partida (para quem joga e para quem assiste): de vez em quando, uma formiga ou um mosquito passa por um canto da tela, como se estivesse no monitor; quem o pega ganha os parabéns, e quem pega três na mesma partida vê um comboio de formigas levando uma carta da mesa.
 import './screenBug.css';
 import { effectsLevel } from './gpu/gpuSupport';
 
@@ -130,9 +130,9 @@ let ids = 0;
  * Um inseto passa pelo canto da tela e some. `zoom` só para a página de teste (ver de perto). Resolve quando ele sai.
  * Fica de fora com "reduzir movimento" e com Efeitos leves.
  */
-export async function crawl(host: HTMLElement, kind: BugKind, opts: { corner?: Corner; zoom?: number; force?: boolean } = {}): Promise<void> {
+export async function crawl(host: HTMLElement, kind: BugKind, opts: { corner?: Corner; zoom?: number; force?: boolean } = {}): Promise<boolean> {
   const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-  if (!opts.force && (reduced || effectsLevel() === 'light')) return;
+  if (!opts.force && (reduced || effectsLevel() === 'light')) return false;
   const zoom = opts.zoom ?? 1, corner = opts.corner ?? pick(['bl', 'br', 'tl', 'tr'] as const);
   const w = innerWidth, h = innerHeight;
   const el = document.createElement('div');
@@ -182,6 +182,58 @@ export async function crawl(host: HTMLElement, kind: BugKind, opts: { corner?: C
     }
   } catch { /* a animação foi cancelada (página escondida, mesa desmontada) */ }
   finally { timers.forEach(clearTimeout); el.remove(); }
+  return !!caught;
+}
+
+/** Quantos insetos pegar na mesma partida para as formigas virem buscar uma carta. */
+export const CONVOY_CATCHES = 3;
+
+/**
+ * O comboio: uma fila de formigas atravessa a borda de baixo da tela carregando nas costas uma carta pequena da mesa (a
+ * arte de uma permanente à vista; sem nenhuma, o verso). Resolve quando a última sai.
+ */
+export async function convoy(host: HTMLElement, opts: { zoom?: number; force?: boolean; toRight?: boolean } = {}) {
+  const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  if (!opts.force && (reduced || effectsLevel() === 'light')) return;
+  const zoom = opts.zoom ?? 1, w = innerWidth, h = innerHeight, toRight = opts.toRight ?? Math.random() < .5;
+  const ants = 8, gap = 15 * zoom, speed = 105 * zoom, carriers = [2, 3, 4];
+  // Um caminho só para a fila inteira: rente à borda de baixo, numa onda suave.
+  const from = toRight ? -30 * zoom : w + 30 * zoom, to = toRight ? w + 30 * zoom : -30 * zoom, base = h - 38 * zoom;
+  const total = Math.abs(to - from) / speed, waves = Math.max(2, Math.round(w / 420));
+  const points = Array.from({ length: 81 }, (_, i) => {
+    const k = i / 80;
+    return { offset: k, x: from + (to - from) * k, y: base + Math.sin(k * waves * Math.PI * 2) * 7 * zoom };
+  });
+  const path = points.map((p, i) => {
+    const [a, b] = i < points.length - 1 ? [p, points[i + 1]!] : [points[i - 1]!, p];
+    return { ...p, a: Math.atan2(b.y - a.y, b.x - a.x) };
+  });
+  const keyframes = (scale: number) => path.map(p => ({ offset: p.offset, transform: `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${(p.a * 180 / Math.PI + 90).toFixed(1)}deg) scale(${scale})` }));
+  const pieces: HTMLElement[] = [], runs: Promise<unknown>[] = [];
+  const delay = (i: number) => i * gap / speed * 1000;
+  for (let i = 0; i < ants; i++) {
+    const el = document.createElement('div');
+    el.className = 'screen-bug ant';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = antSVG(`bug-convoy-${++ids}`);
+    host.append(el); pieces.push(el);
+    runs.push(el.animate(keyframes(zoom), { duration: total * 1000, delay: delay(i), easing: 'linear', fill: 'both' }).finished);
+  }
+  const arts = [...document.querySelectorAll<HTMLElement>('.field .face[data-full]')].map(face => face.dataset.full!).filter(Boolean);
+  const card = document.createElement('div');
+  card.className = 'screen-bug-card';
+  card.setAttribute('aria-hidden', 'true');
+  const face = document.createElement('div');
+  face.style.setProperty('--zoom', String(zoom));
+  if (arts.length) { face.className = 'art'; face.style.backgroundImage = `url("${arts[Math.floor(Math.random() * arts.length)]}")`; }
+  card.append(face);
+  host.append(card); pieces.push(card);
+  // A carta vai nas costas das formigas do meio, balançando um pouco com o passo delas.
+  const middle = carriers.reduce((sum, i) => sum + delay(i), 0) / carriers.length;
+  runs.push(card.animate(keyframes(1), { duration: total * 1000, delay: middle, easing: 'linear', fill: 'both' }).finished);
+  face.animate([{ rotate: '-4deg' }, { rotate: '4deg' }], { duration: 420, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+  try { await Promise.all(runs); } catch { /* cancelada */ }
+  finally { pieces.forEach(el => el.remove()); }
 }
 
 /** O aviso de quem pegou o inseto: perto de onde ele estava, sem sair da tela, e some sozinho. */
@@ -202,15 +254,25 @@ function found(x: number, y: number) {
  * Na partida: um inseto de vez em quando (o primeiro depois de uns minutos, depois a cada 4 a 8),
  * só com a aba à vista. `watching` diz, a cada conferida, se há uma partida aberta na tela agora.
  */
-export function startScreenBugs(host: HTMLElement, watching: () => boolean, opts: { first?: [number, number]; every?: [number, number] } = {}) {
+export function startScreenBugs(host: HTMLElement, watching: () => boolean, opts: { first?: [number, number]; every?: [number, number]; match?: () => string } = {}) {
   const first = opts.first ?? [90, 180], every = opts.every ?? [240, 480];
   let next = Date.now() + rand(first[0], first[1]) * 1000, busy = false, stopped = false;
+  // Quantos insetos foram pegos em cada partida: o terceiro chama o comboio.
+  let catches = { match: '', count: 0 };
+  const caught = async () => {
+    const match = opts.match?.() ?? '';
+    catches = { match, count: catches.match === match ? catches.count + 1 : 1 };
+    if (catches.count !== CONVOY_CATCHES) return;
+    await new Promise(r => setTimeout(r, 1500));
+    await convoy(host);
+  };
   const tick = window.setInterval(() => {
     if (stopped || busy) return;
     if (!watching()) { next = Math.max(next, Date.now() + rand(first[0], first[1]) * 1000 * .5); return; }
     if (Date.now() < next || document.visibilityState !== 'visible') return;
     busy = true;
-    void crawl(host, Math.random() < .6 ? 'ant' : 'mosquito').finally(() => { busy = false; next = Date.now() + rand(every[0], every[1]) * 1000; });
+    void crawl(host, Math.random() < .6 ? 'ant' : 'mosquito').then(got => got ? caught() : undefined)
+      .finally(() => { busy = false; next = Date.now() + rand(every[0], every[1]) * 1000; });
   }, 5000);
   return () => { stopped = true; clearInterval(tick); };
 }

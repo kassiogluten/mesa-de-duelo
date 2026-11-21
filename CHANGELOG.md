@@ -8,6 +8,18 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.237.0] - 2026-11-21
+
+### Novo
+
+- **Criaturas com voz.** Cada tipo de criatura tem o seu som ao entrar no campo: o urso rosna, o elfo traz sininhos da floresta, o lobo uiva, o dragão ruge, e mais de 20 outros tipos. Esquilo, rato, aranha e morcego também passam correndo (ou voando) pela tela.
+- **Momentos da partida.** O primeiro golpe de combate num jogador vira o "Primeiro sangue", e o golpe que derruba dois jogadores de uma vez, a "Eliminação dupla", com o narrador e um selo no Histórico. O dano de comandante pulsa a partir de 15 e treme a partir de 18, a mesa range quando um campo passa de 30 permanentes, e quem está num turno de mais de 2 minutos ganha uma ampulheta no retrato.
+- **Fim de jogo com história.** O resultado mostra a "Virada!" de quem venceu depois de cair a 5 de vida ou menos, o "Por um fio" de quem venceu com 1 de vida e o destaque do jogo, a jogada mais marcante, com o botão para vê-la de novo na mesa.
+
+### Mudou
+
+- **Contador de vida com a mesa presa.** Com o celular no meio da mesa, girar ou inclinar o aparelho não troca mais o lugar de ninguém: a mesa fica na posição em que a partida começou e cada painel continua de frente para o mesmo jogador, também depois de recarregar ou recomeçar. Para mudar de propósito entre em pé e deitada, use **Girar a mesa** no menu do meio; no Android, em tela cheia, a rotação da tela também fica travada.
+
 ## [0.236.1] - 2026-11-20
 
 ### Corrigido

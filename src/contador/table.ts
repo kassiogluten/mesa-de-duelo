@@ -1,7 +1,7 @@
-// A mesa do Contador de vida: toques nos painéis (tocar soma 1, segurar soma 10), o dano de comandante (com a coroa que se estampa no quadro), os golpes grandes na vida, os dados no meio da mesa, o sorteio de quem começa e a tela acesa.
-import { GIRO, LETAL_COMANDANTE, PERTO_COMANDANTE, derrota, jogadorDe, disposicao, golpeGrande, mudarComandante, mudarVida, rolar, sortearInicio, type Entrada, type Partida } from './state';
+// A mesa do Contador de vida, presa na posição em que a partida começou: toques nos painéis (tocar soma 1, segurar soma 10), o dano de comandante (com a coroa que se estampa no quadro), os golpes grandes na vida, os dados no meio da mesa, o sorteio de quem começa e a tela acesa.
+import { GIRO, LETAL_COMANDANTE, PERTO_COMANDANTE, derrota, jogadorDe, disposicao, giroDaMesa, golpeGrande, mudarComandante, mudarVida, quartoDeVolta, rolar, sortearInicio, type Entrada, type Partida } from './state';
 import { mostrarSorteio, type SorteioNaMesa } from './startingRoll';
-import { criarEfeitos3d } from './effects3d';
+import { criarEfeitos3d, type Efeitos3d } from './effects3d';
 import type { Point } from '../ui/motionKit';
 import { ICON_REFRESH } from '../ui/icons';
 import { ICON_CAVEIRA, foraTexto, marcasHTML, mesaHTML, painelHTML, ultimaHTML, type Modo } from './view';
@@ -16,6 +16,12 @@ const RELOGIO_MS = 5000;
 const ROLAGEM_MS = 6000;
 /** Quanto tempo o "+3" ao lado da vida fica depois do último toque. */
 const DELTA_MS = 1800;
+/** Ao girar o celular, o giro do aparelho e o tamanho novo da tela chegam em momentos diferentes: espera os dois. */
+const GIRO_MS = 150;
+
+/** Quanto o aparelho está girado desde a posição natural (o Safari antigo só tem o `window.orientation`). */
+const anguloDoAparelho = () =>
+  quartoDeVolta(screen.orientation?.angle ?? Number((window as unknown as { orientation?: number }).orientation ?? 0));
 
 export interface Mesa { destruir(): void }
 
@@ -23,20 +29,47 @@ export interface Mesa { destruir(): void }
  * Monta a mesa em `raiz` e cuida dela até `destruir`. `salvar` é chamado a cada mudança; as ações do menu do meio
  * (recomeçar, trocar jogadores) voltam para quem montou.
  */
-export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, acoes: Omit<MenuAcoes, 'mudou' | 'rolar' | 'sortear'>): Mesa {
+export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, acoes: Omit<MenuAcoes, 'mudou' | 'rolar' | 'sortear' | 'girar'>): Mesa {
   const modos = new Map<number, Modo>();
   const deltas = new Map<number, { soma: number; timer: number }>();
-  // A camada 3D cobre a janela inteira, fora da mesa (que se redesenha ao girar o celular).
-  const efeitos = criarEfeitos3d(document.body);
-  const deitada = matchMedia('(orientation: landscape)');
-  let disp = disposicao(p.jogadores.length, deitada.matches);
+  /**
+   * Com o celular deitado no meio da mesa, qualquer inclinação gira a tela e trocaria o lugar de todo mundo. A mesa
+   * fica presa no giro em que a partida começou (ou no que "Girar a mesa" escolheu) e, quando o aparelho gira, ela
+   * gira ao contrário: cada painel continua de frente para o mesmo jogador.
+   */
+  const telaDeitada = matchMedia('(orientation: landscape)');
+  if (p.angulo === undefined) { p.angulo = anguloDoAparelho(); salvar(); }
+  let giro = giroDaMesa(p.angulo, anguloDoAparelho(), telaDeitada.matches);
+  let disp = disposicao(p.jogadores.length, giro.deitada);
+  // A camada 3D cobre a janela inteira, fora da mesa, e não gira com ela: o giro da mesa entra no de cada painel.
+  const camada3d = criarEfeitos3d(document.body);
+  const efeitos: Efeitos3d = {
+    ...camada3d,
+    cura: (at, g) => camada3d.cura(at, g + giro.giro),
+    rolarNo: (at, lados, resultado, g, hold) => camada3d.rolarNo(at, lados, resultado, g + giro.giro, hold),
+  };
 
   let sorteio: SorteioNaMesa | null = null;
   const desenhar = () => {
     sorteio?.cancelar(); sorteio = null;
-    disp = disposicao(p.jogadores.length, deitada.matches);
+    disp = disposicao(p.jogadores.length, giro.deitada);
     raiz.innerHTML = mesaHTML(p, disp, modos);
   };
+  /** Gira a mesa ao contrário do aparelho; só redesenha quando ela troca entre em pé e deitada. */
+  const prender = () => {
+    const antes = giro.deitada;
+    giro = giroDaMesa(p.angulo!, anguloDoAparelho(), telaDeitada.matches);
+    const deLado = giro.giro % 180 !== 0;
+    raiz.classList.toggle('girada', giro.giro !== 0);
+    raiz.style.setProperty('--mesa-giro', `${giro.giro}deg`);
+    raiz.style.setProperty('--mesa-w', `${deLado ? innerHeight : innerWidth}px`);
+    raiz.style.setProperty('--mesa-h', `${deLado ? innerWidth : innerHeight}px`);
+    if (giro.deitada !== antes) desenhar();
+  };
+  let prenderTimer = 0;
+  const aoGirar = () => { clearTimeout(prenderTimer); prenderTimer = window.setTimeout(prender, GIRO_MS); };
+  /** "Girar a mesa", no menu: um quarto de volta, trocando entre em pé e deitada. */
+  const girar = () => { p.angulo = quartoDeVolta(p.angulo! + 90); salvar(); prender(); };
   const painel = (j: number) => raiz.querySelector<HTMLElement>(`.cv-painel[data-j="${j}"]`)!;
   const redesenharPainel = (j: number) => { painel(j).outerHTML = painelHTML(p, disp, j, modos.get(j)); };
 
@@ -214,7 +247,7 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
       modos.delete(j); redesenharPainel(j);
       painel(j).querySelector<HTMLElement>(era === 'hist' ? '.cv-ultima' : '.cv-cmd-btn')?.focus();
     }
-    else if (acao === 'menu') abrirMenu(p, { ...acoes, mudou: () => { desenhar(); salvar(); }, rolar: lados => { void rolarDado(lados); }, sortear });
+    else if (acao === 'menu') abrirMenu(p, { ...acoes, mudou: () => { desenhar(); salvar(); }, rolar: lados => { void rolarDado(lados); }, sortear, girar });
   };
   // Segurar o dedo não abre o menu do navegador nem seleciona o número.
   const semMenu = (e: Event) => { if ((e.target as HTMLElement).closest('.cv-painel')) e.preventDefault(); };
@@ -224,7 +257,9 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
   addEventListener('pointercancel', onCancel);
   raiz.addEventListener('click', onClick);
   raiz.addEventListener('contextmenu', semMenu);
-  deitada.addEventListener('change', desenhar);
+  addEventListener('resize', aoGirar);
+  // Virar de ponta-cabeça não muda o tamanho da tela.
+  addEventListener('orientationchange', aoGirar);
 
   // A tela não apaga no meio da partida; o pedido cai quando a aba some e volta com ela.
   let trava: WakeLockSentinel | null = null;
@@ -245,6 +280,7 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
   }, RELOGIO_MS);
 
   desenhar();
+  prender();
   return {
     destruir() {
       soltar();
@@ -252,14 +288,16 @@ export function montarMesa(raiz: HTMLElement, p: Partida, salvar: () => void, ac
       clearTimeout(rolagemTimer); rolagemVez++;
       sorteio?.cancelar();
       rolagem.remove();
-      efeitos.destruir();
+      camada3d.destruir();
+      clearTimeout(prenderTimer);
       deltas.forEach(d => clearTimeout(d.timer));
       raiz.removeEventListener('pointerdown', onDown);
       removeEventListener('pointerup', onUp);
       removeEventListener('pointercancel', onCancel);
       raiz.removeEventListener('click', onClick);
       raiz.removeEventListener('contextmenu', semMenu);
-      deitada.removeEventListener('change', desenhar);
+      removeEventListener('resize', aoGirar);
+      removeEventListener('orientationchange', aoGirar);
       document.removeEventListener('visibilitychange', acender);
       trava?.release().catch(() => {});
       raiz.innerHTML = '';

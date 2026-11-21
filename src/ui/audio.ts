@@ -31,6 +31,8 @@ export type SoundCue = keyof typeof SOUND_FILES;
 const SETTINGS_KEY = KEYS.audio;
 const MAX_VOICES = 4;
 const SOUND_REVISION = 'mp3-1';
+/** Os sons avulsos (as criaturas, o narrador) ficam de fora do pacote Discreto, que é para quem quer a mesa quieta. */
+const QUIET_PACK: SoundPack = 'discreto';
 // Includes the StereoPanner's correlated-channel crossfeed at the maximum pan.
 export const MIX_HEADROOM = .40;
 
@@ -274,6 +276,19 @@ export function createGameAudio() {
     }));
   }
   const buffer = (cue: SoundCue) => buffers.get(`${settings.pack}/${cue}`);
+  // Os sons avulsos são iguais em todos os pacotes e baixam na primeira vez que tocam.
+  const extras = new Map<string, Promise<AudioBuffer | null>>();
+  function extraBuffer(ctx: AudioContext, path: string) {
+    let pending = extras.get(path);
+    if (!pending) {
+      pending = fetch(`${import.meta.env.BASE_URL}audio/${path}?v=${SOUND_REVISION}`)
+        .then(r => { if (!r.ok) throw new Error('Audio unavailable'); return r.arrayBuffer(); })
+        .then(data => ctx.decodeAudioData(data))
+        .catch(() => null);
+      extras.set(path, pending);
+    }
+    return pending;
+  }
   async function unlock() {
     try {
       if (!context) {
@@ -331,6 +346,25 @@ export function createGameAudio() {
       voices.add(source);
       source.onended = () => { voices.delete(source); source.disconnect(); gain.disconnect(); };
       source.start();
+    },
+    /**
+     * Som avulso de audio/<path> (o rosnado do urso, a voz do "First blood"), `delay` segundos depois de agora; respeita o
+     * mudo e o volume, e fica de fora no pacote Discreto. O que demora a baixar não toca atrasado.
+     */
+    extra(path: string, level = 1, delay = 0) {
+      if (settings.muted || settings.pack === QUIET_PACK || !unlocked || document.hidden || !context || !master) return;
+      const ctx = context, out = master, asked = ctx.currentTime;
+      void extraBuffer(ctx, path).then(sample => {
+        if (!sample || settings.muted || document.hidden || voices.size >= MAX_VOICES || ctx.currentTime - asked > .8) return;
+        const source = ctx.createBufferSource();
+        const gain = ctx.createGain();
+        source.buffer = sample;
+        gain.gain.value = level;
+        source.connect(gain); gain.connect(out);
+        voices.add(source);
+        source.onended = () => { voices.delete(source); source.disconnect(); gain.disconnect(); };
+        source.start(Math.max(ctx.currentTime, asked + delay));
+      });
     },
     play(event: PresentationEvent, matchId: string, audible: boolean, you?: number) {
       const allowed = gate.allow(`${matchId}:${event.seq}`, { ...settings, unlocked, visible: !document.hidden, audible });

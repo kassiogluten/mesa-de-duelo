@@ -13,7 +13,8 @@ export interface StageParams {
    * Moeda: sobe girando no ar e cai mostrando `label` ("Cara" ou "Coroa"), quica, brilha no resultado e some no fim de
    * `hold` ms, em 3D com espessura e serrilha (`gpuCoin.ts`). `font` é a família da letra da mesa.
    */
-  coin: { at: Point; heads: boolean; label: string; hold: number; font: string };
+  /** `edge`: a moeda cai em pé e só tomba depois (os ms a mais no fim de `hold`). */
+  coin: { at: Point; heads: boolean; label: string; hold: number; font: string; edge?: number };
   /**
    * Dado: entra rolando, quica e para em `result`. Em 3D de verdade: do d4 ao d20 (`gpuDie.ts`), parando com o resultado
    * de frente, inclinado `tilt` radianos (0: bem de frente); o d2 como uma moeda de 1 e 2 (`gpuCoin.ts`); o d100 como
@@ -87,38 +88,43 @@ function square(x: number, y: number, size: number, pitch: number, yaw: number, 
 const CONFETTI = [0xf2b54c, 0xffe08a, 0xec5a3f, 0x6fb8ff, 0x63d68f, 0xb07cff, 0xffffff];
 
 export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Shared, p: StageParams[N]) => GpuEffect } = {
-  coin(layer, s, { at, heads, label: text, hold, font }) {
+  coin(layer, s, { at, heads, label: text, hold, font, edge = 0 }) {
     const { x, y } = layer.local(at.cx, at.cy);
     // Em 3D, menos no degrau 2 do automático em diante (a mesa já está aliviando): aí, a moeda chapada.
-    if (solidAllowed()) return headsOrTails(layer, s, { at: { x, y }, size: at.w, heads, label: text, hold, font });
+    if (solidAllowed()) return headsOrTails(layer, s, { at: { x, y }, size: at.w, heads, label: text, hold, font, edge });
     const size = at.w, gold = themeColor('--gold', '#f2b54c');
     const front = coinFace(layer, true, heads ? text : 'Cara', font), back = coinFace(layer, false, heads ? 'Coroa' : text, font);
     // Cinco voltas e meia: termina com a face do resultado para cima (par de meias-voltas mostra a cara).
     const turns = heads ? 10 : 11;
+    // Em pé: a moeda chapada fica de lado (só a borda à mostra) o tempo a mais, e só então deita no resultado.
+    const base = hold - edge, stand = .62 * base, rise = stand + edge;
     return timed(hold, (view, sparks) => {
       const shadow = new Sprite({ texture: s.glow, anchor: .5, x, y: y + size * .55, tint: 0x000000, alpha: 0 });
       const halo = new Sprite({ texture: s.glow, anchor: .5, x, y, tint: heads ? gold : 0xdfe6ee, blendMode: 'add', alpha: 0 });
-      const edge = new Sprite({ texture: coinEdge(layer, heads), anchor: .5, x, y });
+      const rim = new Sprite({ texture: coinEdge(layer, heads), anchor: .5, x, y });
       const face = new Sprite({ texture: front, anchor: .5, x, y });
-      view.addChild(shadow, halo, edge, face);
+      view.addChild(shadow, halo, rim, face);
       let landed = false;
-      return t => {
-        // Sobe (até .35), cai (até .62) e quica uma vez; de .88 até o fim, some.
+      return wall => {
+        // Sobe (até .35), cai (até .62) e quica uma vez; de .88 até o fim, some. Em pé, a linha do tempo de sempre
+        // espera o tempo a mais logo depois do pouso.
+        const ms = wall * hold, standing = edge > 0 && ms >= stand && ms < rise;
+        const t = !edge ? wall : (ms < stand ? ms : ms < rise ? stand : ms - edge) / base;
         const up = t < .35 ? easeOut(t / .35) : 0, fall = t >= .35 && t < .62 ? (t - .35) / .27 : 0;
         const height = t < .35 ? -40 + 100 * up : t < .62 ? 60 * (1 - fall * fall) : t < .72 ? 14 * Math.sin((t - .62) / .1 * Math.PI) : 0;
         const spin = Math.min(1, t / .62), angle = turns * Math.PI * (1 - (1 - spin) ** 2);
-        const k = Math.cos(angle), flat = Math.max(.05, Math.abs(k));
+        const k = standing ? .05 : Math.cos(angle), flat = Math.max(.05, Math.abs(k));
         face.texture = k >= 0 ? front : back;
         const scale = size / 256 * (t < .35 ? .6 + .5 * up : t < .62 ? 1.1 - .1 * fall : 1);
         const cy = y - height;
         face.position.set(x, cy); face.scale.set(scale, scale * flat);
         // A espessura: o disco escuro aparece por baixo quando a moeda está de lado.
-        edge.position.set(x, cy + Math.sin(angle) * size * .045); edge.scale.set(scale, scale * flat);
+        rim.position.set(x, cy + Math.sin(angle) * size * .045); rim.scale.set(scale, scale * flat);
         const fade = t > .88 ? 1 - (t - .88) / .12 : Math.min(1, t / .08);
-        face.alpha = edge.alpha = fade;
+        face.alpha = rim.alpha = fade;
         shadow.scale.set(size / 128 * (.55 - height / 400), size / 128 * .14); shadow.alpha = .45 * fade * (1 - height / 200);
         halo.scale.set(size * 2.2 / 128); halo.alpha = landed ? .55 * Math.max(0, 1 - (t - .62) / .3) * fade : 0;
-        if (!landed && t >= .62) {
+        if (!landed && t >= .62 && !standing) {
           landed = true;
           spray(sparks, s, x, y, layer.coarse ? 12 : 22, { speed: [size * 1.2, size * 3], life: [300, 560], scale: [.25, .5], colors: heads ? [gold, 0xfff6cf, 0xffffff] : [0xdfe6ee, 0xffffff], drag: 3 });
           for (let i = 0; i < 8; i++) {
@@ -126,7 +132,7 @@ export const STAGE_EFFECTS: { [N in keyof StageParams]: (layer: GpuLayer, s: Sha
             sparks.add(s.glow, s, { x: x + side * rand(0, size * .4), y: y + size * .45, vx: side * rand(40, 110), vy: rand(-20, 0), life: rand(360, 520), spin: 0, grow: 1.2, scale: rand(.08, .13), gravity: 0, drag: 3, tint: 0xc9bea8, blend: 'normal', alpha: .35, fadeIn: true });
           }
           // As faíscas saem por trás da moeda: a face fica por cima, legível.
-          view.addChild(edge, face);
+          view.addChild(rim, face);
         }
       };
     });

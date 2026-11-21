@@ -1,5 +1,6 @@
 // Os relógios da trilha de fases (quanto dura o turno e a partida) e o alerta de espera demorada: o relógio de quem a mesa
-// espera, o aviso em cima do próprio retrato e o selo "Demorando…" no retrato e no campo de quem passou de 2 minutos.
+// espera, o aviso em cima do próprio retrato e o selo "Demorando…" no retrato e no campo de quem passou de 2 minutos; e a
+// ampulheta, só de brincadeira, no retrato de quem está num turno de mais de 2 minutos.
 import type { FState } from '../forge/client';
 import { turnTimeText } from './phaseHud';
 import { WaitAnnouncer, WaitClock, waitClockTip, waitNudgeText, type SlowWait } from './waitAlert';
@@ -15,6 +16,10 @@ export interface ClockDeps {
 }
 
 /** `sync` a cada desenho; depois disso o relógio anda sozinho a cada segundo até o jogo acabar ou a mesa sair da tela. */
+/** Turno longo: a partir daqui, a ampulheta aparece no retrato de quem está jogando (sem pressa: é só brincadeira). */
+export const LONG_TURN_MS = 120_000;
+const HOURGLASS = '<svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7.5 3.5c0 4 4.5 5.5 4.5 8.5s-4.5 4.5-4.5 8.5h9c0-4-4.5-5.5-4.5-8.5s4.5-4.5 4.5-8.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path class="hg-sand-top" d="M9.3 6.5h5.4c-.6 1.6-2.7 2.6-2.7 4z" fill="currentColor"/><path class="hg-sand-bottom" d="M8.8 19.5c.4-2 2-2.8 3.2-3.6 1.2.8 2.8 1.6 3.2 3.6z" fill="currentColor"/><path class="hg-stream" d="M12 12v4" stroke="currentColor" stroke-width=".9" stroke-dasharray="1 1.2"/></svg>';
+
 export function createTableClocks(root: HTMLElement, d: ClockDeps) {
   // Relógio do turno: o servidor diz quanto o turno já durou (como no relógio da partida); numa ponte antiga, começa
   // quando a mesa vê o turno mudar (ou ao abrir a partida). Anda a cada segundo.
@@ -77,9 +82,20 @@ export function createTableClocks(root: HTMLElement, d: ClockDeps) {
     if (step?.text) d.announce(step.text);
     if (step?.sound) d.cue(.4);
   };
+  /** A ampulheta no retrato de quem está num turno longo; sai quando o turno passa. */
+  const markLongTurn = (player: number | null) => {
+    root.querySelectorAll<HTMLElement>('[data-hourglass]').forEach(el => { if (Number(el.dataset.hourglass) !== player) el.remove(); });
+    if (player === null) return;
+    root.querySelectorAll<HTMLElement>(`.avatar[data-pid="${player}"]`).forEach(avatar => {
+      if (avatar.querySelector(':scope > [data-hourglass]')) return;
+      avatar.insertAdjacentHTML('beforeend', `<span class="turn-hourglass" data-hourglass="${player}" title="Turno de mais de 2 minutos" aria-hidden="true">${HOURGLASS}</span>`);
+    });
+  };
   const tickTurnClock = () => {
     const el = root.querySelector<HTMLElement>('[data-turn-timer]');
     if (root.isConnected) tickWait();
+    const live = d.state();
+    markLongTurn(live && !live.gameOver && live.activePlayer != null && Date.now() - clockSince >= LONG_TURN_MS ? live.activePlayer : null);
     if (!root.isConnected || !el) { clearInterval(clockTimer); clockTimer = undefined; return; }
     const turnTime = turnTimeText(Date.now() - clockSince);
     // O relógio da trilha e o do cartão da vida de quem está jogando.

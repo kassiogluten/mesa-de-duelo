@@ -726,6 +726,7 @@ function table() {
         }
         case 'scry': emit('scry', { actor: c.side === 'opp' ? OPP : ME, top: 1, bottom: 2 }); return 'Vidência 3: as cartas sobem em leque; uma volta por cima e duas passam por baixo.';
         case 'coin': emit('coin', { actor: ME, heads: Math.random() < .5 }); return 'Moeda: gira no ar e cai no resultado.';
+        case 'coinEdge': emit('coin', { actor: ME, heads: Math.random() < .5, edge: true }); return 'Moeda em pé (1 em 50 na partida): cai de lado, fica equilibrada balançando e só então tomba no resultado.';
         case 'die': emit('die', { actor: ME, sides: 20, result: 1 + Math.floor(Math.random() * 20), sourceName: 'Delina, Wild Mage' }); return 'Dado: rola, troca de número e para no resultado.';
         case 'd2': case 'd4': case 'd6': case 'd8': case 'd10': case 'd12': case 'd100': {
           const sides = Number(c.kind.slice(1));
@@ -1152,7 +1153,7 @@ function panel() {
     <h2>Jogar da mão</h2>
     ${[['land', 'Jogar terreno'], ['creature', 'Conjurar criatura'], ['countered', 'Conjurar e anular'], ['bolt', 'Lightning Bolt da mão'], ['draw', 'Comprar'], ['deal', 'Encher a mão']].map(([k, t]) => `<button data-hand="${k}">${t}</button>`).join('')}
     <h2>Movimentos da 0.117.0 (na selecionada, ou do lado escolhido)</h2>
-    ${[['block', 'Bloquear'], ['fight', 'Lutar'], ['scry', 'Vidência 3'], ['coin', 'Moeda'], ['die', 'Dado d20'], ['shuffle', 'Embaralhar'], ['attach', 'Equipar'], ['control', 'Trocar de controle'],
+    ${[['block', 'Bloquear'], ['fight', 'Lutar'], ['scry', 'Vidência 3'], ['coin', 'Moeda'], ['coinEdge', 'Moeda em pé'], ['die', 'Dado d20'], ['shuffle', 'Embaralhar'], ['attach', 'Equipar'], ['control', 'Trocar de controle'],
        ['transform', 'Transformar'], ['counters', '+1/+1 em três'], ['lore', 'Saga: capítulo'], ['search', 'Buscar no grimório'], ['reanimate', 'Reanimar'], ['flashback', 'Conjurar do cemitério'],
        ['commander', 'Comandante (ida e volta)'], ['ability', 'Habilidade (se ergue)'], ['pay', 'Pagar com terrenos'], ['float', 'Gerar mana (reserva)'], ['opening', 'Mão inicial'], ['mulligan', 'Mulligan'], ['reveal', 'Revelar'], ['win', 'Vitória'], ['lose', 'Derrota']]
       .map(([k, t]) => `<button data-x="${k}">${t}</button>`).join('')}
