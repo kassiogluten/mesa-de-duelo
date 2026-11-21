@@ -32,6 +32,7 @@ import { RECONNECT_DELAYS, retryWithDelays, REWATCH_DELAYS } from './app/retry';
 import { startupLinks } from './app/startupLinks';
 import { createRouter, routePath, type Route } from './app/router';
 import { countFunnel } from './funnel';
+import { startScreenBugs } from './ui/screenBug';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `
@@ -179,6 +180,8 @@ const forgeTable = createForgeTableView(document.querySelector('#scrGame')!, {
     else if (lastMatch) void startMatch(...lastMatch);
   },
 });
+// Brincadeira na partida, para quem joga e para quem assiste: de vez em quando, um inseto passa por um canto da tela.
+startScreenBugs(document.body, () => session.screen === 'game' && !!connection.client?.state && !connection.client.state.gameOver);
 
 mountRotateGate();
 setupPwa();

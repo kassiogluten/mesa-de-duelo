@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.236.1] - 2026-11-20
+
+### Corrigido
+
+- **Meus relatos com as respostas.** No site, Meus relatos dizia "Não consegui falar com o servidor agora" e não mostrava o andamento nem a resposta dos relatos enviados, e o ponto dourado de resposta nova nunca acendia. Agora a lista traz o andamento (Recebido, Em análise, Resolvido, Encerrado) e a resposta de cada relato.
+
 ## [0.236.0] - 2026-11-20
 
 ### Novo

@@ -1,4 +1,9 @@
 {
+  "0.236.1": {
+    "Meus relatos com as respostas": [
+      { "img": "0.236.1/resposta-do-relato.webp", "legenda": "Meus relatos com o andamento de cada relato e, no resolvido, a resposta do responsável com a data." }
+    ]
+  },
   "0.236.0": {
     "Proteção do jogador à vista": [
       { "img": "0.236.0/protecao-contra-tudo.webp", "legenda": "Depois da The One Ring, o seu retrato com o aro branco-prateado, o escudo na borda e o balão dizendo o que a proteção faz, até quando dura e de onde vem." },

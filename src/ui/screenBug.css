@@ -1,0 +1,20 @@
+/* O inseto da brincadeira de quem assiste: por cima de tudo, sem pegar cliques, animado só com transform. */
+.screen-bug { position: fixed; left: 0; top: 0; z-index: 2147483000; pointer-events: none; will-change: transform; contain: layout style; }
+.screen-bug > svg { position: absolute; display: block; overflow: visible; }
+.screen-bug.ant > svg { width: 10px; height: 15px; left: -5px; top: -7.5px; filter: drop-shadow(.5px 1px .6px rgba(0, 0, 0, .55)); }
+.screen-bug.mosquito > svg { width: 34px; height: 34px; left: -17px; top: -17px; filter: drop-shadow(.4px .8px .5px rgba(0, 0, 0, .45)); }
+/* A sombra no vidro: colada no inseto pousado, longe e apagada quando ele voa na frente da tela. */
+.bug-shadow { position: absolute; left: -4px; top: -6px; width: 8px; height: 12px; border-radius: 50%; background: rgba(0, 0, 0, .35); opacity: 0; transform: translate(0, 0); transition: transform .25s ease-out, opacity .25s ease-out; }
+.screen-bug.mosquito.flying .bug-shadow { opacity: .28; transform: translate(10px, 16px) scale(1.6); }
+.screen-bug.mosquito.flying > svg { filter: blur(.35px) drop-shadow(.4px .8px .5px rgba(0, 0, 0, .3)); }
+/* Antenas da formiga: tremem o tempo todo, mais visíveis quando ela para. */
+.bug-antennae { transform-box: fill-box; transform-origin: 50% 100%; animation: bug-antennae .9s ease-in-out infinite alternate; }
+@keyframes bug-antennae { 0% { transform: rotate(-7deg) scaleY(.96); } 50% { transform: rotate(5deg); } 100% { transform: rotate(-3deg) scaleY(1.03); } }
+@media (prefers-reduced-motion: reduce) { .screen-bug { display: none; } }
+/* Só o inseto pega o toque (um pouco maior que o desenho, para dar para acertar o mosquito); o resto deixa passar para a mesa. */
+.bug-hit { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; pointer-events: auto; }
+/* Os parabéns de quem pegou o inseto. */
+.screen-bug-found { position: fixed; left: 0; top: 0; z-index: 2147483001; pointer-events: none; padding: 8px 14px; border-radius: 10px; border: 1px solid #f2b54c; background: var(--azul-0c1222, #0c1222); color: #f6e7c8; font: 600 14px/1.3 system-ui, sans-serif; box-shadow: 0 6px 20px rgba(0, 0, 0, .5); white-space: nowrap; animation: bug-found-in .28s cubic-bezier(.2, 1.4, .4, 1) both; }
+.screen-bug-found.out { animation: bug-found-out .45s ease-in both; }
+@keyframes bug-found-in { from { opacity: 0; transform: translateY(8px) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes bug-found-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-6px); } }
