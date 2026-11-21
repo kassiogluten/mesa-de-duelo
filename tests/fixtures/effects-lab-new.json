@@ -1,7 +1,6 @@
 {
-  "versao": "0.233.0",
+  "versao": "0.236.0",
   "botoes": [
-    "play:gameChanger",
-    "gpu:game-changer"
+    "d:protected"
   ]
 }

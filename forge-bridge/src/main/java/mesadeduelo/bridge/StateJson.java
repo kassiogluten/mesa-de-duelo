@@ -175,6 +175,9 @@ final class StateJson {
             // Bênção da cidade (Ascend) é para sempre; a velocidade (Start your engines!) vai de 1 a 4 e nunca cai a 0.
             if (engine.hasBlessing()) o.addProperty("blessing", true);
             if (engine.getSpeed() > 0) o.addProperty("speed", engine.getSpeed());
+            // Proteção contra tudo ou contra algo, resistência à magia e manto do próprio jogador (The One Ring, Leyline of Sanctity).
+            JsonArray protections = PlayerProtections.of(engine, game);
+            if (!protections.isEmpty()) o.add("protections", protections);
             // Mágicas que o jogador conjurou neste turno (Tempestade soma as de todos).
             try { if (engine.getSpellsCastThisTurn() > 0) o.addProperty("spellsCast", engine.getSpellsCastThisTurn()); }
             catch (RuntimeException concurrentRead) { /* leitura durante a jogada do motor: sem contagem desta vez */ }

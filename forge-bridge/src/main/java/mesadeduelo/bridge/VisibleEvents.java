@@ -45,6 +45,8 @@ final class VisibleEvents {
     private final WardEvents wards = new WardEvents();
     /** Cascata e descobrir cavando o grimório: as cartas exiladas viram uma entrada só. */
     private final CascadeEvents cascade = new CascadeEvents();
+    /** Golpes de combate que a proteção do jogador já segurou (turno, etapa, criatura, jogador), para avisar uma vez só. */
+    private final java.util.Set<String> protectedHits = new java.util.HashSet<>();
 
     VisibleEvents(Runnable changed, LongSupplier version) { this.changed = changed; this.version = version; }
 
@@ -59,7 +61,7 @@ final class VisibleEvents {
     }
 
     synchronized void reset() { history.clear(); spells.clear(); origins.clear(); damage.reset(); shields.clear(); controllers.clear(); swaps.clear(); wards.reset(); cascade.reset(); clearTurns(); sequence = 0; game = null; gameStarted = false; }
-    private void clearTurns() { turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
+    private void clearTurns() { protectedHits.clear(); turnOwner = -1; turnSince = 0; lastTurnMs.clear(); lifePoints.clear(); }
 
     /** Começo de turno: fecha o turno anterior na conta de quem o jogou e anota a vida de todos no fim dele. */
     private void turnBegan(int owner, int turn) {
@@ -153,6 +155,11 @@ final class VisibleEvents {
         if (event instanceof GameEventGameStarted) { gameStarted = true; changed.run(); }
         if (event instanceof GameEventGameStarted || event instanceof GameEventSnapshotRestored) seedControllers();
         if (!(event instanceof GameEventPlayerPriority)) prevented();
+        // A proteção que uma mágica ou habilidade dá ao jogador: a origem só se sabe enquanto ela resolve.
+        if (event instanceof forge.game.event.GameEventPlayerStatsChanged x) {
+            PlayerProtections.remember(game);
+            for (var hit : PlayerProtections.combatHits(game, x.players())) protectedHit(hit);
+        }
         JsonObject e = null;
         // O Forge avisa a destruição sem dizer a carta, logo antes de ela sair do campo: vale para a próxima troca de zona.
         if (event instanceof GameEventCardDestroyed) { destroyPending = true; return; }
@@ -300,6 +307,23 @@ final class VisibleEvents {
             }
         }
         if (e != null) publish(e);
+    }
+
+    /**
+     * O golpe de combate que a proteção do jogador segurou (The One Ring, Teferi's Protection): um `damage` com
+     * `prevented` e `protection`, uma vez por criatura em cada etapa de dano. O Forge não avisa: ver {@link PlayerProtections#combatHits}.
+     */
+    private void protectedHit(PlayerProtections.Hit hit) {
+        String key = game.getPhaseHandler().getTurn() + ":" + game.getPhaseHandler().getPhase() + ":" + hit.attacker().getId() + ":" + hit.defender().getId();
+        if (!protectedHits.add(key)) return;
+        JsonObject e = card("damage", hit.attacker().getView());
+        if (hit.attacker().getController() != null) actor(e, hit.attacker().getController().getId());
+        e.addProperty("delta", -hit.prevented());
+        e.add("targets", StateJson.targets(java.util.List.of(hit.defender().getView())));
+        DamageDetails.common(e, game, hit.attacker().getView(), true);
+        e.addProperty("prevented", true);
+        e.addProperty("protection", true);
+        publish(e);
     }
 
     /** Põe o quadro público da mesa no evento (menos na compra, na prioridade e no embaralhar) e o guarda na lista. */

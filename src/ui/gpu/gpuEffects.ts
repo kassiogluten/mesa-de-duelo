@@ -26,7 +26,7 @@ import { COMMANDER_EFFECTS, crownTextures, type CommanderParams } from './gpuCom
 export { preload, textureReady };
 
 /** O tom do golpe, o mesmo de `damageLook` (dano, murchar, veneno, lealdade, escudo). */
-type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield';
+type GpuTone = 'damage' | 'wither' | 'poison' | 'loyalty' | 'shield' | 'protection';
 interface DamageParams {
   /**
    * Impacto do dano: clarão, anel e faíscas na cor do tom. `size` é o diâmetro do clarão em CSS px. `dir` (radianos) é
@@ -114,6 +114,7 @@ const toneColors = (tone: GpuTone): { main: number; hot: number } =>
   tone === 'wither' || tone === 'poison' ? { main: 0x9b6bff, hot: 0xc9a6ff }
     : tone === 'loyalty' ? { main: 0xff9a55, hot: 0xffd2a8 }
       : tone === 'shield' ? { main: 0x9fe3ff, hot: 0xe6f8ff }
+        : tone === 'protection' ? { main: 0xdfe8ff, hot: 0xffffff }
         : { main: themeColor('--red', '#ec5a3f'), hot: 0xffc46b };
 
 /** Curva cúbica de Bézier como a do CSS (`cubic-bezier(x1, y1, x2, y2)`), para o projétil chegar na hora do impacto em CSS. */
@@ -130,7 +131,7 @@ const DAMAGE_EFFECTS: { [N in keyof DamageParams]: (layer: GpuLayer, s: Shared, 
   burst(layer, s, { at, tone, size, heavy, lethal, dir }) {
     const { x, y } = layer.local(at.cx, at.cy);
     const { main, hot } = toneColors(tone);
-    const shield = tone === 'shield';
+    const shield = tone === 'shield' || tone === 'protection';
     const blow = dir !== undefined && !shield;
     return timed(540, (view, sparks) => {
       // A onda do golpe de combate: um anel claro com uma sombra logo por dentro, como uma lente passando pela mesa

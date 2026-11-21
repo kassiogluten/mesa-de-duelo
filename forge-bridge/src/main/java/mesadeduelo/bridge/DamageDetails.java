@@ -96,7 +96,7 @@ final class DamageDetails {
         return e;
     }
 
-    private static void common(JsonObject e, Game game, CardView source, boolean combat) {
+    static void common(JsonObject e, Game game, CardView source, boolean combat) {
         e.addProperty("combat", combat);
         if (combat && game != null) e.addProperty("step", game.getPhaseHandler().is(PhaseType.COMBAT_FIRST_STRIKE_DAMAGE) ? "first-strike" : "regular");
         if (has(source, Keyword.DOUBLE_STRIKE)) e.addProperty("doubleStrike", true);

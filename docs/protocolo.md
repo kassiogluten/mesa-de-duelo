@@ -169,6 +169,7 @@ Mesa montada no Laboratório (veja forge-bridge Lab.java): o jogador 1 é quem c
 | `commanderId?` | `number` | Golpe de comandante (`commander`): o comandante que conta (`commanderId`, a carta de verdade num comandante fundido) e o total que ele já causou ao jogador atingido, com este golpe (`commanderTotal`). |
 | `commanderTotal?` | `number` |  |
 | `prevented?` | `boolean` | `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). |
+| `protection?` | `boolean` | Com `prevented`: o golpe de combate que a proteção do jogador atingido segurou (The One Ring), e não um escudo. |
 | `ward?` | `boolean` | Gatilho da proteção contra alvos (ward), em `ability-activated` e no `resolved` dele. `wardAgainst`: o item da pilha que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou. |
 | `wardAgainst?` | `number` |  |
 | `held?` | `boolean` |  |
@@ -402,6 +403,7 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `landsPlayed?` | `number` | Terrenos jogados neste turno e quantos pode jogar (-1 = sem limite). |
 | `maxLands?` | `number` |  |
 | `blessing?` | `boolean` | Tem a bênção da cidade (Ascend): dura até o fim da partida. |
+| `protections?` | `FPlayerProtection[]` | Proteções do próprio jogador (The One Ring, Leyline of Sanctity, Ivory Mask), uma por palavra-chave; ausente quando nenhuma. |
 | `speed?` | `number` | Velocidade (Start your engines!), de 1 a 4; ausente enquanto o jogador não tem velocidade. |
 | `spellsCast?` | `number` | Mágicas que o jogador conjurou neste turno; ausente quando nenhuma. |
 | `lastTurnMs?` | `number` | Quanto durou o turno mais recente que o jogador terminou, em ms (medido pelo servidor); ausente antes do primeiro. |
@@ -422,6 +424,18 @@ Uma contagem da carta: o que é contado (`of`, com zona, de quem, tipos, qualida
 | `dungeon?` | `FDungeon` | Masmorra em andamento na zona de comando (se aventurar). |
 | `completedDungeons?` | `string[]` | Nomes das masmorras que o jogador já completou. |
 | `initiative?` | `boolean` | Tem a iniciativa. |
+
+## FPlayerProtection
+
+Uma proteção do jogador: proteção (contra tudo, contra uma cor...), resistência à magia ou manto. `from` diz do que protege ("everything", "red", "artifacts"; na resistência à magia, só quando é contra algo). `source` é a carta que a dá, quando se sabe; `until` ("turn": até o fim do turno, "next-turn": até o próximo turno de `untilPlayer`) só vem quando a proteção foi dada por uma mágica ou habilidade com duração; sem ele, dura enquanto a carta de origem ficar.
+
+| Campo | Tipo | O que é |
+|---|---|---|
+| `kind` | `'protection' \| 'hexproof' \| 'shroud'` |  |
+| `from?` | `string` |  |
+| `source?` | `string` |  |
+| `until?` | `'turn' \| 'next-turn'` |  |
+| `untilPlayer?` | `number` |  |
 
 ## FDungeon
 

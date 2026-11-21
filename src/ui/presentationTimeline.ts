@@ -44,6 +44,8 @@ export interface PresentationEvent {
   self?: boolean;
   lethal?: boolean;
   prevented?: boolean;
+  /** Com `prevented`: foi a proteção do jogador que segurou o golpe (ver `FEvent`). */
+  protection?: boolean;
   /** Gatilho de ward: o item da pilha que mirou a permanente e, ao resolver, se anulou quem mirou (ver `FEvent`). */
   ward?: boolean;
   wardAgainst?: number;

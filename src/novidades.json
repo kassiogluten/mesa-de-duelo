@@ -1,4 +1,14 @@
 {
+  "0.236.0": {
+    "Proteção do jogador à vista": [
+      { "img": "0.236.0/protecao-contra-tudo.webp", "legenda": "Depois da The One Ring, o seu retrato com o aro branco-prateado, o escudo na borda e o balão dizendo o que a proteção faz, até quando dura e de onde vem." },
+      { "img": "0.236.0/resistencia-a-magia.webp", "legenda": "O oponente com Leyline of Sanctity: o aro tracejado azul-claro em volta do retrato e o selo de resistência à magia, com o balão aberto." },
+      { "img": "0.236.0/manto-no-commander.webp", "legenda": "No Commander, o assento com manto até o fim do turno: a névoa cinza em volta da vida e o selo só com o ícone, ao lado da mão." }
+    ],
+    "A proteção segura o ataque": [
+      { "img": "0.236.0/protecao-segura-o-golpe.webp", "legenda": "O Grizzly Bears ataca quem está protegido pela The One Ring: o aro acende, a onda abre em volta do retrato e o \"−2\" sobe riscado, com \"Proteção\"; a vida continua em 20." }
+    ]
+  },
   "0.235.0": {
     "Etapas marcadas param em todos os turnos": [
       { "img": "0.235.0/menu-paradas.webp", "legenda": "O menu do Combate na trilha de fases, com Bloqueadores marcado e o aviso de que a marca vale em todos os turnos, o seu e os dos oponentes, em qualquer nível de passar automaticamente." }

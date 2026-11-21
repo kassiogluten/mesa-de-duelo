@@ -17,6 +17,7 @@ export const LOOP_EFFECTS = [
   { id: 'crosshair', name: 'Mira de alvo', hint: 'A mira na carta que é alvo de algo na pilha.' },
   { id: 'phased', name: 'Fora de fase', hint: 'A carta ondulando como miragem.' },
   { id: 'sick', name: 'Enjoo de invocação', hint: 'A cor falhando e as estrelinhas girando.' },
+  { id: 'protection', name: 'Proteção do jogador', hint: 'O aro de luz em volta do retrato de quem está protegido.' },
   { id: 'targetable', name: 'Alvo possível', hint: 'O halo laranja que respira nas cartas e nos retratos que você pode escolher.' },
   { id: 'arrow', name: 'Luz na seta de alvo', hint: 'O brilho que corre pela seta até o alvo.' },
   { id: 'warning', name: 'Avisos de perigo', hint: 'O brilho do veneno perto do fim e do golpe letal previsto.' },

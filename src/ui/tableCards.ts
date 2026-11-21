@@ -71,7 +71,7 @@ export function trackCounterBumps(last: Map<number, Record<string, number>>, pla
   const bumps = new Map<number, Set<string>>();
   for (const p of players) {
     const before = last.get(p.id), now: Record<string, number> = { ...p.counters, ...(p.ringTempted ? { RING: p.ringTempted } : {}), ...(p.monarch ? { MONARCH: 1 } : {}), ...(p.spellsCast ? { SPELLS: p.spellsCast } : {}),
-      ...(p.blessing ? { BLESSING: 1 } : {}), ...(p.speed ? { SPEED: p.speed } : {}) };
+      ...(p.blessing ? { BLESSING: 1 } : {}), ...(p.speed ? { SPEED: p.speed } : {}), ...(p.protections?.length ? { PROTECTION: 1 } : {}) };
     if (before) {
       const changed = new Set([...Object.keys(before), ...Object.keys(now)].filter(k => (before[k] ?? 0) !== (now[k] ?? 0) && (now[k] ?? 0) > 0));
       if (changed.size) bumps.set(p.id, changed);

@@ -1,0 +1,61 @@
+/* Proteção do jogador (playerProtection.ts): o selo, com as cores das permanentes, e o aro de luz em volta do retrato,
+   fora do aro dourado do turno e do halo laranja de alvo possível. Branco-prateado para proteção, tracejado azul-claro
+   para resistência à magia, névoa cinza para manto. As animações mexem só em opacity e transform. */
+.player-counter.protection { border-color: var(--azul-b9c3d6, #b9c3d6); background: linear-gradient(135deg, color-mix(in srgb, var(--azul-1c2333, #1c2333) 94.9%, transparent), color-mix(in srgb, var(--azul-0c1222, #0c1222) 94.9%, transparent)); color: #eef2f8; }
+.player-counter.protection.hexproof { border-color: #7fd3f5; color: #c9f1ff; }
+.player-counter.protection.shroud { border-color: var(--azul-8d94a4, #8d94a4); color: #dfe3ea; }
+.player-counter.protection svg { color: currentColor; }
+/* O ícone da resistência à magia é só traço: sem isto, o fill dos selos o pinta cheio. */
+.player-counter.protection.hexproof svg { fill: none; }
+.player-counter.protection .prot-pips { display: inline-flex; gap: 1px; font-style: normal; }
+.player-counter.protection .prot-pips .pip, .player-counter.protection .prot-pips > * { width: 12px; height: 12px; font-size: 8px; }
+/* No seu retrato, o selo vira disco (gameplay.css): o nome fica no balão e a cor contra a qual protege vai no canto. */
+.portrait > .player-counters > .player-counter.protection > b { display: none; }
+.portrait > .player-counters > .player-counter.protection > .prot-pips { position: absolute; right: -5px; bottom: -4px; }
+
+.avatar:is(.prot-all, .prot-some, .prot-hexproof, .prot-shroud) .portrait::before {
+  content: ''; position: absolute; inset: -8px; z-index: 0; border-radius: 50%; pointer-events: none;
+}
+.avatar.prot-all .portrait::before { border: 1.5px solid #eef2f8d9; box-shadow: 0 0 10px 2px color-mix(in srgb, var(--azul-d8e4ff, #d8e4ff) 43.9%, transparent), inset 0 0 8px color-mix(in srgb, var(--azul-d8e4ff, #d8e4ff) 25.1%, transparent); }
+/* Contra tudo: um brilho corre pelo aro, no ::after do retrato. Ali fica também o halo laranja de alvo possível, mas
+   quem está protegido contra tudo não pode ser alvo, então os dois não aparecem juntos. */
+.avatar.prot-all:not(.targetable) .portrait::after {
+  content: ''; position: absolute; inset: -9px; z-index: 0; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 80%, #ffffffcc 88%, transparent 96%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+}
+.avatar.prot-some .portrait::before { border: 1.5px solid #ff9a78cc; box-shadow: 0 0 10px 2px #ff7a5560; }
+.avatar.prot-hexproof .portrait::before {
+  background: repeating-conic-gradient(#9fe3ff 0 22deg, transparent 22deg 30deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px)); mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  filter: drop-shadow(0 0 4px #9fe3ffb0);
+}
+.avatar.prot-shroud .portrait::before { inset: -12px; background: radial-gradient(closest-side, transparent 68%, color-mix(in srgb, var(--azul-c3c9d6, #c3c9d6) 62.7%, transparent) 80%, color-mix(in srgb, var(--azul-8d94a4, #8d94a4) 37.6%, transparent) 90%, transparent 100%); filter: blur(1.5px); }
+/* No cabeçalho do assento (Commander com vários jogadores) a vida cobre o retrato: o aro fica em volta dela. */
+.forge.multiplayer .seat-heading .avatar:is(.prot-all, .prot-some, .prot-hexproof, .prot-shroud) .portrait::before { inset: -9px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .avatar:is(.prot-all, .prot-some, .prot-shroud) .portrait::before { animation: halo-breathe 3s ease-in-out infinite alternate; --halo-grow: 1.03; }
+  .avatar.prot-all:not(.targetable) .portrait::after { animation: prot-sweep 4.5s linear infinite; }
+  .avatar.prot-hexproof .portrait::before { animation: prot-sweep 18s linear infinite; }
+}
+@keyframes prot-sweep { to { transform: rotate(360deg); } }
+/* Degrau 1 em diante do Efeitos: automático: o aro fica aceso, parado (o interruptor nas Opções fica em loopEffects.css). */
+[data-fx-calm] .avatar:is(.prot-all, .prot-some, .prot-hexproof, .prot-shroud) .portrait::before,
+[data-fx-calm] .avatar.prot-all .portrait::after { animation: none; }
+/* No cabeçalho do assento falta espaço: só o ícone, para não empurrar o nome do jogador; o nome da proteção fica no balão. */
+.forge.multiplayer .seat-heading > .player-counters > .player-counter.protection { padding: 2px 4px; }
+.forge.multiplayer .seat-heading > .player-counters > .player-counter.protection > b { display: none; }
+
+/* A proteção segurando um golpe de combate (motionDamage.ts): o aro acende, a onda corre por ele a partir do ponto do
+   golpe, e o número sobe riscado, prateado, com "Proteção". */
+.prot-hit-flare, .prot-hit-wave { position: fixed; z-index: 35; pointer-events: none; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0; }
+.prot-hit-flare { border: 3px solid #fff; box-shadow: 0 0 18px 6px color-mix(in srgb, var(--azul-e6eeff, #e6eeff) 81.6%, transparent), inset 0 0 14px color-mix(in srgb, var(--azul-e6eeff, #e6eeff) 56.5%, transparent); }
+.prot-hit-wave {
+  background: conic-gradient(from var(--hit, 0deg), #fff 0deg, #fff0 70deg, #fff0 290deg, #fff 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  filter: drop-shadow(0 0 6px #fff);
+}
+.damage-impact.protection { background: radial-gradient(circle, transparent 40%, #eef2f855 58%, #fff 64%, transparent 68%); box-shadow: 0 0 22px var(--azul-dfe8ff, #dfe8ff); }
+.damage-number.protection { color: #eef2f8; text-shadow: 0 0 10px var(--azul-c9d8ff, #c9d8ff), 0 2px 4px var(--bg-deep); }
+.damage-number.protection > b { text-decoration: line-through; text-decoration-thickness: 3px; }

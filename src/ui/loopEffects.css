@@ -11,6 +11,7 @@
 [data-fx-off~="crosshair"] .forge .bfc > .fx-crosshair,
 [data-fx-off~="phased"] .forge .bfc.fx-phased > .face,
 [data-fx-off~="sick"] .forge .bfc.fx-sick > .face .sick-red, [data-fx-off~="sick"] .forge .tag.zzz .dizzy,
+[data-fx-off~="protection"] .forge .avatar:is(.prot-all, .prot-some, .prot-hexproof, .prot-shroud) .portrait::before, [data-fx-off~="protection"] .forge .avatar.prot-all .portrait::after,
 [data-fx-off~="warning"] .forge .player-counter.poison.danger::before, [data-fx-off~="warning"] .forge .life-forecast.lethal::before { animation: none; }
 /* O halo de alvo possível fica aceso, um pouco abaixo do máximo (como com "reduzir movimento"). */
 [data-fx-off~="targetable"] .forge .bfc.targetable::after, [data-fx-off~="targetable"] .forge .avatar.targetable .portrait::after { animation: none; opacity: .85; }

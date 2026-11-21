@@ -81,6 +81,7 @@ export function eventDescription(v: EventView, event: PresentationEvent, detaile
         ...(event.targets?.cards ?? []).map(id => { const c = v.findCard(id) ?? frameCard(id, event); return c ? v.label(c) : undefined; })].filter(Boolean).join(', ');
       const from = event.card?.name && !event.card.faceDown ? ` de ${v.label(event.card)}` : '';
       const what = event.infect && event.targets?.players?.length ? `${n} de veneno` : event.wither ? `${n} marcador${n === 1 ? '' : 'es'} −1/−1` : `${n} de dano`;
+      if (event.protection) return `A proteção${target ? ` de ${target}` : ''} segurou ${n} de dano${from}.`;
       if (event.prevented) return `Escudo preveniu ${n} de dano${target ? ` a ${target}` : ''}${from}.`;
       return `${target ? `${target} sofreu ${what}` : `${what} causado`}${from}${damageDetail(event)}.`;
     }

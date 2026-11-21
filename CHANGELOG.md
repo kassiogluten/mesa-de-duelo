@@ -8,6 +8,13 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.236.0] - 2026-11-20
+
+### Novo
+
+- **Proteção do jogador à vista.** Quem está protegido ganha um escudo junto do retrato e um aro de luz em volta dele enquanto a proteção durar: branco-prateado com um brilho correndo para proteção contra tudo (The One Ring, Teferi's Protection), na cor para proteção contra uma cor, tracejado azul-claro para resistência à magia (Leyline of Sanctity) e névoa cinza para manto (Ivory Mask, Gilded Light). O balão do selo diz o que a proteção faz, de qual carta ela vem e até quando dura ("até o seu próximo turno", "até o fim do turno"). O brilho do aro tem interruptor próprio em Opções, junto das outras animações.
+- **A proteção segura o ataque.** Quando uma criatura ataca um jogador protegido dela (proteção contra tudo, ou contra a cor dela), o golpe vai até o retrato e o aro da proteção o segura: ele acende, uma onda de luz corre por ele a partir do lado de onde o golpe veio e a criatura é empurrada para trás. O número sobe riscado, prateado, com "Proteção", e o histórico diz quanto a proteção segurou. Antes, o golpe sumia sem nada na mesa.
+
 ## [0.235.0] - 2026-11-20
 
 ### Mudou

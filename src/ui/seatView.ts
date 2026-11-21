@@ -13,6 +13,7 @@ import { dungeonBadgesHTML, dungeonText, withDungeonBadges } from './dungeon';
 import { awaitingDecision } from './awaitingDecision';
 import { playerCountersHTML, playerCountersText as countersText } from './playerCounters';
 import { playerStatusHTML, playerStatusText } from './playerStatus';
+import { playerProtectionHTML, playerProtectionText, protectionHaloClass } from './playerProtection';
 import { seatHandHTML } from './revealedHand';
 import { focusedByAttack, type SeatMemory } from './seatVisibility';
 import { sleeveClass } from './sleeves';
@@ -54,6 +55,8 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   if (s.activePlayer === p.id && !s.gameOver) cls.push('active');
   if (!p.eliminated && (s.input.selectablePlayers?.includes(p.id) || v.attackTargets(s).some(target => target.kind === 'player' && target.id === p.id))) cls.push('selectable-player');
   if (p.eliminated) cls.push('eliminated');
+  const halo = p.eliminated ? '' : protectionHaloClass(p);
+  if (halo) cls.push(halo);
   const prolif = proliferateBoardClass(s, 'player', p.id);
   if (prolif) cls.push(prolif);
   if (prolif && s.input.selection?.players?.includes(p.id)) cls.push('choice-selected');
@@ -69,10 +72,10 @@ export function avatar(v: SeatView, s: FState, p: FPlayer, idx: number) {
   const forecast = s.forecast?.find(f => f.player === p.id);
   // Os seus selos e emblemas ficam dentro do retrato, em volta da borda (gameplay.css); os dos oponentes, ao lado dele.
   return `<div class="${cls.join(' ')}" data-pid="${p.id}" role="button" tabindex="0" aria-label="${esc(p.name)}${shownStyle(p) ? `, computador ${shownStyle(p).toLowerCase()}` : ''}${isBracket(p.bracket) ? `, ${bracketLabel(p.bracket)}` : ''}, ${p.life} de vida${playerCountersText(v, p)}${forecast ? `. ${esc(forecastText(forecast, p.id === s.you ? null : p.name, v.cardName))}` : ''}${offline ? ', desconectado' : ''}${p.eliminated ? `, eliminado${eliminatedWhy(v, s, p, ': ')}` : ''}">
-    <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}${idx === 0 ? playerCounters(v, p) + emblems(v, s, p) : ''}</div>
+    <div class="portrait" ${art ? `style="background-image:url('${art}')"` : ''}>${pool ? `<div class="pool${spend ? ' spend' : ''}" data-n="${colors}">${pool}</div>` : ''}${idx === 0 ? playerCounters(v, s, p) + emblems(v, s, p) : ''}</div>
     ${idx === 0 ? lifeHTML(v, p, cls) : opponentLifeHTML(v, s, p, cls)}
     ${forecast ? forecastBadgeHTML(forecast, idx === 0) : ''}
-    ${idx === 0 ? '' : playerCounters(v, p)}
+    ${idx === 0 ? '' : playerCounters(v, s, p)}
     <div class="pname">${esc(p.name)}${shownStyle(p) ? ` <small class="pstyle" title="Estilo do computador">${shownStyle(p)}</small>` : ''}</div>
     ${idx === 0 ? '' : emblems(v, s, p)}
     ${p.eliminated ? `<span class="seat-eliminated"${eliminatedWhy(v, s, p) ? ` title="Eliminado: ${eliminatedWhy(v, s, p)}"` : ''}>Eliminado</span>` : ''}
@@ -121,9 +124,9 @@ function eliminatedWhy(v: Pick<SeatView, 'cardName'>, s: Pick<FState, 'players' 
   const reason = lossReasonText(s, p, p.id === s.you, v.cardName);
   return reason ? prefix + esc(reason) : '';
 }
-export const playerCountersText = (v: SeatView, p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, v.activePlayer, v.spellsTotal) + dungeonText(p);
-export const playerCounters = (v: SeatView, p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, v.counterBumps.get(p.id), v.openCounter, p.ringTempted),
-  playerStatusHTML(p, v.activePlayer, v.openCounter, v.counterBumps.get(p.id), v.spellsTotal) + dungeonBadgesHTML(p, v.openCounter));
+export const playerCountersText = (v: SeatView, p: FPlayer) => countersText(p.counters, p.ringTempted) + playerStatusText(p, v.activePlayer, v.spellsTotal) + playerProtectionText(p) + dungeonText(p);
+export const playerCounters = (v: SeatView, s: Pick<FState, 'you'>, p: FPlayer) => withDungeonBadges(playerCountersHTML(p.id, p.counters, v.counterBumps.get(p.id), v.openCounter, p.ringTempted),
+  playerProtectionHTML(p, s.you, v.playerName, v.openCounter, v.counterBumps.get(p.id)) + playerStatusHTML(p, v.activePlayer, v.openCounter, v.counterBumps.get(p.id), v.spellsTotal) + dungeonBadgesHTML(p, v.openCounter));
 export function emblems(v: SeatView, s: FState, p: FPlayer) {
   const list = p.emblems ?? [];
   if (!list.length && !p.companion) return '';
@@ -199,7 +202,7 @@ export function focusHTML(v: SeatView, s: FState, visual: FState, p: FPlayer, op
   const portrait = v.portraits[idx];
   return `${art ? `<div class="playmat" aria-hidden="true" style="${esc(matStyle(art))}"></div>` : ''}
     <header class="focus-head">
-      <div class="focus-who"><span class="focus-portrait"${portrait ? ` style="background-image:url('${esc(portrait)}')"` : ''} aria-hidden="true"></span><div><h2 id="fFocusTitle">${esc(p.name)}</h2><p class="focus-life"><b>${p.life}</b> de vida · ${p.handCount ?? p.hand.length} na mão</p></div>${playerCounters(v, p)}${damageButton(p)}</div>
+      <div class="focus-who"><span class="focus-portrait"${portrait ? ` style="background-image:url('${esc(portrait)}')"` : ''} aria-hidden="true"></span><div><h2 id="fFocusTitle">${esc(p.name)}</h2><p class="focus-life"><b>${p.life}</b> de vida · ${p.handCount ?? p.hand.length} na mão</p></div>${playerCounters(v, s, p)}${damageButton(p)}</div>
       ${others.length ? `<div class="focus-switch" role="group" aria-label="Trocar de oponente">${others.map(o => `<button type="button" class="focus-other" data-focus-seat="${o.id}" aria-label="Focar em ${esc(o.name)}, ${o.life} de vida"><span>${esc(o.name)}</span><b>${o.life}</b></button>`).join('')}</div>` : ''}
       <button type="button" class="arena-btn secondary focus-close" data-ui="focus-close">${ICON_CLOSE}Fechar</button>
     </header>
@@ -236,7 +239,7 @@ export function seatTurnClass(v: SeatView, s: FState, p: FPlayer) {
 /** Oponente oculto: faixa compacta com retrato, vida, mão, marcadores e dano de comandante, e um botão para voltar. */
 export function collapsedSeat(v: SeatView, s: FState, p: FPlayer, index: number) {
   return `<section class="table-seat collapsed${p.eliminated ? ' eliminated' : ''}${seatTurnClass(v, s, p)}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)} oculto${p.eliminated ? ', eliminado' : ''}">
-    <header class="seat-heading"><div class="avatar-slot">${avatar(v, s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(v, p)}${damageButton(p)}</header>
+    <header class="seat-heading"><div class="avatar-slot">${avatar(v, s, p, index + 1)}</div>${seatHandHTML(p)}${playerCounters(v, s, p)}${damageButton(p)}</header>
     <p class="seat-summary">${p.battlefield.filter(c => c.creature).length} criaturas · ${p.battlefield.filter(c => c.land).length} terrenos</p>
     <div class="seat-zones"><div class="piles">${piles(v, s, p)}</div></div>
     ${focusButton(p, ' seat-focus')}
@@ -248,7 +251,7 @@ export function opponentSeat(v: SeatView, s: FState, p: FPlayer, index: number, 
   const focused = focusedByAttack(v.seatMemory, p.id);
   return `<section class="table-seat${p.eliminated ? ' eliminated' : ''}${seatTurnClass(v, s, p)}${forced && !chosen ? ' forced' : ''}" data-seat-player="${p.id}" aria-label="Campo de ${esc(p.name)}${p.eliminated ? ', eliminado' : ''}">
     ${(art => art ? `<div class="playmat" aria-hidden="true" style="${esc(matStyle(art))}"></div>` : '')(v.matArt(s, p, index + 1))}
-    <header class="seat-heading"><div class="avatar-slot">${avatar(v, s, p, index + 1)}</div>${seatHandHTML(p)}${p.commandZone?.length ? `<div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(v, s, p)}</div>` : ''}${playerCounters(v, p)}${damageButton(p)}${seatControls(v, p, true, count)}</header>
+    <header class="seat-heading"><div class="avatar-slot">${avatar(v, s, p, index + 1)}</div>${seatHandHTML(p)}${p.commandZone?.length ? `<div class="seat-command" aria-label="Zona de comando de ${esc(p.name)}">${commandCards(v, s, p)}</div>` : ''}${playerCounters(v, s, p)}${damageButton(p)}${seatControls(v, p, true, count)}</header>
     ${forced && !chosen ? `<p class="seat-forced" role="status">À vista: ${esc(forced)}</p>` : focused ? '<p class="seat-forced focused">Em foco: atacando você</p>' : ''}
     <div class="seat-zones"><div class="piles">${piles(v, s, p)}</div></div>
     <div id="fField-${p.id}" class="field opp${s.activePlayer === p.id ? ' turn' : ''}">${seatRow(`fLands-${p.id}`, 'lands', p.name, backRow(v, s, p))}${seatRow(`fCreatures-${p.id}`, 'creatures', p.name, fieldRow(v, s, p.battlefield.filter(c => !isBackRow(c))))}</div>

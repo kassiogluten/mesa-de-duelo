@@ -1,6 +1,6 @@
 // Animações de dano e ganho de vida: golpe ou projétil, número que sobe e retrato que acende (o golpe de comandante, com aura e coroa).
 import type { PresentationEvent } from './presentationTimeline';
-import { damageLook, type DamageLook } from './damageEffects';
+import { damageLook, heldLook, type DamageLook } from './damageEffects';
 import { center, reduced, type MotionKit } from './motionKit';
 import { effectsTier } from './gpu/gpuSupport';
 import type { createSurviveMotion } from './motionSurvive';
@@ -55,7 +55,7 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
     // lâmina atravessa o alvo no contato; o segundo cruza o primeiro.
     if (event.combat && target.at && (event.step === 'first-strike' || event.doubleStrike)) survive.slash(target.at, Math.atan2(blow.uy, blow.ux), event.step !== 'first-strike');
     const face = faceOf(target);
-    if (face && look.tone !== 'shield') {
+    if (face && !heldLook(look)) {
       const total = blow.stop + 140;
       animate(face, [{ filter: 'brightness(3.2) saturate(0)' }, { filter: 'brightness(3.2) saturate(0)', offset: blow.stop / total }, { filter: 'none' }], total, 'linear');
     }
@@ -64,7 +64,7 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
   /** `calm`: sem sacudir a mesa no golpe pesado (no limpa campo, a onda já sacode uma vez). */
   function impact(event: PresentationEvent, look: DamageLook, target: ReturnType<typeof damageTarget>, blow?: Blow, calm = false) {
     const at = target.at!;
-    pulse(target.el, look.tone !== 'shield');
+    pulse(target.el, !heldLook(look));
     const size = Math.max(64, Math.min(150, (target.player === undefined ? at.w : 90) * (look.heavy ? 1.5 : 1.15)));
     // Na camada GPU, o impacto explode em faíscas na cor do dano (no golpe de combate, em leque no sentido dele e com a
     // onda curta); em CSS, o clarão redondo de sempre.
@@ -74,7 +74,8 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
       animate(burst, [{ opacity: .95, scale: '.3' }, { opacity: .8, scale: '1', offset: .45 }, { opacity: 0, scale: '1.35' }], 520);
       later(() => remove(burst), 560);
     }
-    const crowned = !!event.commander && target.player !== undefined && look.tone !== 'shield';
+    const crowned = !!event.commander && target.player !== undefined && !heldLook(look);
+    if (look.tone === 'protection' && target.player !== undefined) protectionHold(target, blow);
     floatNumber(at, look.amount, `${look.tone}${look.heavy ? ' heavy' : ''}${look.lethal ? ' lethal' : ''}${crowned ? ' commander' : ''}`, look.badges, look.deathtouch ? SKULL : '', !!blow);
     const card = target.player === undefined ? target.el : null;
     if (look.lethal && card && event.indestructible) {
@@ -85,7 +86,7 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
       card.classList.add('lethal-hit');
       later(() => card.classList.remove('lethal-hit'), 1100);
     }
-    if (blow && target.el && !reduced()) shove(target, look, blow);
+    if (blow && target.el && !reduced() && look.tone !== 'protection') shove(target, look, blow);
     else if (look.lethal && card) {
       animate(card, [{ translate: '0 0' }, { translate: '-4px 0', offset: .2 }, { translate: '4px 0', offset: .4 }, { translate: '-3px 0', offset: .6 }, { translate: '0 0' }], 380);
     }
@@ -99,6 +100,21 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
     if (blow || calm) return;
     const arena = look.heavy ? root.querySelector<HTMLElement>('.arena') : null;
     if (arena) animate(arena, [{ translate: '0 0' }, { translate: '-5px 2px', offset: .2 }, { translate: '4px -2px', offset: .45 }, { translate: '-2px 1px', offset: .7 }, { translate: '0 0' }], 320);
+  }
+  /**
+   * A proteção do jogador segura o golpe (The One Ring): o aro em volta do retrato acende e uma onda de luz corre por
+   * ele a partir do ponto do golpe; o retrato não afunda (quem é empurrada é a criatura, no `damage`).
+   */
+  function protectionHold(target: ReturnType<typeof damageTarget>, blow?: Blow) {
+    const at = center(target.el?.querySelector('.portrait'));
+    if (!at) return;
+    const flare = effect('prot-hit-flare', { ...at, w: at.w + 16, h: at.h + 16 });
+    animate(flare, [{ opacity: 0, scale: '1' }, { opacity: 1, scale: '1.08', offset: .15 }, { opacity: 0, scale: '1' }], 800, 'ease-out');
+    const wave = effect('prot-hit-wave', { ...at, w: at.w + 22, h: at.h + 22 });
+    // O ponto mais claro da onda fica do lado de onde o golpe veio (o conic-gradient conta do alto, no sentido do relógio).
+    if (blow) wave.style.setProperty('--hit', `${(Math.atan2(-blow.uy, -blow.ux) * 180 / Math.PI + 90).toFixed(0)}deg`);
+    animate(wave, [{ opacity: 1, scale: '1' }, { opacity: 0, scale: '1.35' }], 900, 'ease-out');
+    later(() => { remove(flare); remove(wave); }, 950);
   }
   /**
    * Depois do contato: o alvo é empurrado no sentido do golpe (a carta gira um pouco; o retrato afunda) e volta com
@@ -166,6 +182,8 @@ export function createDamageMotion(kit: MotionKit, survive: ReturnType<typeof cr
         { translate: along(0), scale: '.95', rotate: turn, offset: wind / travel, easing: 'cubic-bezier(.7, 0, 1, .6)' },
         { translate: along(1), scale: '1.1', rotate: turn, offset: hit / travel },
         { translate: along(1), scale: '1.1', rotate: turn, offset: (hit + stop) / travel, easing: 'cubic-bezier(.2, 1.4, .4, 1)' },
+        // A proteção segura o golpe: a criatura é empurrada para trás, girando, antes de voltar ao lugar.
+        ...(look.tone === 'protection' ? [{ translate: along(.5), scale: '.96', rotate: `${(tapped ? 90 : 0) + (ux >= 0 ? -12 : 12)}deg`, offset: (hit + stop + (travel - hit - stop) * .3) / travel }] : []),
         { translate: '0 0', scale: '1', rotate: turn }], travel, 'linear');
       // O rastro: duas cópias apagando no caminho do disparo (só com os efeitos completos).
       if (!reduced() && effectsTier() < 1) for (const k of [.15, .45]) later(() => {

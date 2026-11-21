@@ -189,6 +189,11 @@ function table() {
     if (amount <= 0) return;
     const t = isCard(target) ? byId(target.card) : undefined;
     let prevented = 0;
+    // Jogador com proteção contra tudo (The One Ring): o golpe de combate é segurado inteiro, como a ponte avisa.
+    if (flags.combat && isPlayer(target) && player(target.player).protections?.some((x: any) => x.kind === 'protection' && x.from === 'everything')) {
+      emit('damage', { card: structuredClone(source), sourceId: source.id, actor: source.controller, delta: -amount, targets: targetsOf(target), prevented: true, protection: true, combat: true, step: 'regular' });
+      return;
+    }
     const shield = t ? t.preventDamage ?? 0 : isPlayer(target) ? player(target.player).preventDamage ?? 0 : 0;
     if (shield) {
       prevented = Math.min(shield, amount); amount -= prevented;
@@ -471,6 +476,15 @@ function table() {
             .filter(r => JSON.stringify(r) !== JSON.stringify(tgt)).slice(0, 2);
           withSpell(spell => [tgt, ...others].forEach(r => damage(spell, r, Math.max(1, Math.round(amount / 3)))));
           return 'Dano dividido: os projéteis saem juntos da mesma fonte, cada um com seu número.';
+        }
+        case 'protected': {
+          if (!isPlayer(tgt)) return 'Proteção do jogador: escolha um jogador como alvo.';
+          const a = attackerFor(undefined);
+          if (!a) return 'Escolha como fonte uma criatura no campo.';
+          player(tgt.player).protections = [{ kind: 'protection', from: 'everything', source: 'The One Ring', until: 'next-turn', untilPlayer: tgt.player }];
+          settle();
+          combat(a.src, tgt, { restore: a.restore });
+          return 'Proteção do jogador: o aro em volta do retrato acende, a onda corre a partir do golpe e a criatura é empurrada; "−N" prateado e riscado, com "Proteção".';
         }
         case 'pain': { const s = src ?? sideOf('me').battlefield.find((x: any) => x.land) ?? bolt(); damage(s, { player: s.controller ?? ME }, amount, { self: true }); settle(); return 'Dor: o dano acontece no próprio retrato, sem trajeto.'; }
         default: {
@@ -1122,7 +1136,7 @@ function panel() {
     <h2>Dano (item 15)</h2>
     <label>Fonte</label><select id="source"></select><label>Alvo</label><select id="target"></select>
     <label>Quantidade</label><input type="number" id="amount" value="3" min="1" max="20">
-    ${[['burn', 'Mágica'], ['combat', 'Combate'], ['trample', 'Atropelar'], ['double', 'Golpe duplo'], ['first', 'Iniciativa'], ['deathtouch', 'Toque mortífero'], ['lifelink', 'Vínculo'], ['infect', 'Infectar'], ['wither', 'Murchar'], ['prevented', 'Prevenido'], ['divided', 'Dividido'], ['pain', 'Dor'], ['lethal', 'Letal']]
+    ${[['burn', 'Mágica'], ['combat', 'Combate'], ['trample', 'Atropelar'], ['double', 'Golpe duplo'], ['first', 'Iniciativa'], ['deathtouch', 'Toque mortífero'], ['lifelink', 'Vínculo'], ['infect', 'Infectar'], ['wither', 'Murchar'], ['prevented', 'Prevenido'], ['protected', 'Proteção do jogador'], ['divided', 'Dividido'], ['pain', 'Dor'], ['lethal', 'Letal']]
       .map(([k, t]) => `<button data-d="${k}">${t}</button>`).join('')}
     <h2>Movimento (item 16, na selecionada)</h2>
     ${[['destroy', 'Destruir'], ['sacrifice', 'Sacrificar'], ['tap', 'Virar/desvirar'], ['attack', 'Atacar'],['tap-all', 'Virar tudo do lado'], ['untap-all', 'Desvirar tudo (onda)'], ['blink', 'Blink'], ['bounce', 'Devolver à mão'], ['exile', 'Exilar'], ['trigger', 'Gatilho → alvo'], ['ability', 'Habilidade → alvo'], ['ninjutsu', 'Ninjutsu'], ['sneak', 'Sneak']]

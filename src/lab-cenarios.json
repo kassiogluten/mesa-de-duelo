@@ -1,5 +1,34 @@
 [
   {
+    "nome": "Proteção do jogador: The One Ring, Leyline of Sanctity e Gilded Light",
+    "tipo": "conferir",
+    "conferir": "Logo que a mesa abre, o retrato do Jogador 2 já tem o aro tracejado azul-claro e o selo de resistência à magia, que diz no balão que vem de Leyline of Sanctity. Conjure The One Ring: quando ela entra, o seu retrato ganha o aro branco-prateado com um brilho correndo e o escudo na borda, e o balão diz \"Proteção contra tudo, até o seu próximo turno\" e \"Vem de The One Ring\". Conjure Gilded Light: aparece também o selo de manto, \"até o fim do turno\", e o aro passa a ser a névoa cinza. Passe o turno: o manto some no fim do turno. Se o Jogador 2 atacar você com o Grizzly Bears, o aro segura o golpe: acende, a onda corre a partir do lado do golpe, o \"−2\" sobe riscado com \"Proteção\" e a vida não muda. A proteção contra tudo some no começo do seu próximo turno.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": ["The One Ring", "Gilded Light"],
+          "library": ["Plains", "Plains", "Plains", "Plains", "Plains"],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [{ "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }]
+        },
+        {
+          "life": 20,
+          "poison": 0,
+          "hand": [],
+          "library": ["Plains", "Plains", "Plains", "Plains", "Plains"],
+          "graveyard": [],
+          "exile": [],
+          "battlefield": [{ "name": "Leyline of Sanctity" }, { "name": "Grizzly Bears" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }, { "name": "Plains" }]
+        }
+      ]
+    }
+  },
+  {
     "nome": "Números do fim do jogo: Lightning Bolt para vencer",
     "versao": "0.233.0",
     "item": "Números do fim do jogo de volta",

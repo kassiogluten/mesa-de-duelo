@@ -80,6 +80,8 @@ export interface FEvent {
   commanderId?: number; commanderTotal?: number;
   /** `damage` gasto num escudo de prevenção (o `delta` é o quanto foi prevenido). */
   prevented?: boolean;
+  /** Com `prevented`: o golpe de combate que a proteção do jogador atingido segurou (The One Ring), e não um escudo. */
+  protection?: boolean;
   /**
    * Gatilho da proteção contra alvos (ward), em `ability-activated` e no `resolved` dele. `wardAgainst`: o item da pilha
    * que mirou a permanente (só na ida para a pilha). `held`: só no `resolved`, se o ward anulou quem mirou.
@@ -333,6 +335,8 @@ export interface FPlayer {
   maxLands?: number;
   /** Tem a bênção da cidade (Ascend): dura até o fim da partida. */
   blessing?: boolean;
+  /** Proteções do próprio jogador (The One Ring, Leyline of Sanctity, Ivory Mask), uma por palavra-chave; ausente quando nenhuma. */
+  protections?: FPlayerProtection[];
   /** Velocidade (Start your engines!), de 1 a 4; ausente enquanto o jogador não tem velocidade. */
   speed?: number;
   /** Mágicas que o jogador conjurou neste turno; ausente quando nenhuma. */
@@ -364,6 +368,14 @@ export interface FPlayer {
   /** Tem a iniciativa. */
   initiative?: boolean;
 }
+
+/**
+ * Uma proteção do jogador: proteção (contra tudo, contra uma cor...), resistência à magia ou manto. `from` diz do que
+ * protege ("everything", "red", "artifacts"; na resistência à magia, só quando é contra algo). `source` é a carta que a
+ * dá, quando se sabe; `until` ("turn": até o fim do turno, "next-turn": até o próximo turno de `untilPlayer`) só vem
+ * quando a proteção foi dada por uma mágica ou habilidade com duração; sem ele, dura enquanto a carta de origem ficar.
+ */
+export interface FPlayerProtection { kind: 'protection' | 'hexproof' | 'shroud'; from?: string; source?: string; until?: 'turn' | 'next-turn'; untilPlayer?: number }
 
 export interface FDungeon {
   id: number;

@@ -81,6 +81,7 @@
     --azul-19283c: oklch(from #19283c l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-1a2740: oklch(from #1a2740 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-172840: oklch(from #172840 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-1c2333: oklch(from #1c2333 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-1c2644: oklch(from #1c2644 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-1b293d: oklch(from #1b293d l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-1a2940: oklch(from #1a2940 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
@@ -144,17 +145,20 @@
     --azul-aab9cd: oklch(from #aab9cd l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-b8bec8: oklch(from #b8bec8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-b9bfcc: oklch(from #b9bfcc l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-b9c3d6: oklch(from #b9c3d6 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-bcc5d4: oklch(from #bcc5d4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-a9c4ff: oklch(from #a9c4ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-9cc8ff: oklch(from #9cc8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-b9c7df: oklch(from #b9c7df l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-bec9dc: oklch(from #bec9dc l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-c0cbe0: oklch(from #c0cbe0 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c3c9d6: oklch(from #c3c9d6 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-c3cddd: oklch(from #c3cddd l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-9fd3ff: oklch(from #9fd3ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-c9d0de: oklch(from #c9d0de l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-9fd8ff: oklch(from #9fd8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-c7d2e4: oklch(from #c7d2e4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-c9d8ff: oklch(from #c9d8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-cbd2e1: oklch(from #cbd2e1 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-c9d3e2: oklch(from #c9d3e2 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-c9d3e4: oklch(from #c9d3e4 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
@@ -164,6 +168,7 @@
     --azul-c9d4ff: oklch(from #c9d4ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-cfd8e6: oklch(from #cfd8e6 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-d5dcea: oklch(from #d5dcea l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-d8e4ff: oklch(from #d8e4ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-d9dde6: oklch(from #d9dde6 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-d8dfec: oklch(from #d8dfec l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-d9dfec: oklch(from #d9dfec l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
@@ -173,9 +178,11 @@
     --azul-cfe8ff: oklch(from #cfe8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-dfe6f2: oklch(from #dfe6f2 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-dfe7f7: oklch(from #dfe7f7 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-dfe8ff: oklch(from #dfe8ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-e4e8f2: oklch(from #e4e8f2 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-d7ecff: oklch(from #d7ecff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-e6ecf8: oklch(from #e6ecf8 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
+    --azul-e6eeff: oklch(from #e6eeff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-e8edf5: oklch(from #e8edf5 l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
     --azul-f3f6ff: oklch(from #f3f6ff l calc(c * var(--tema-c, 1)) calc(h + var(--tema-h)));
   }
