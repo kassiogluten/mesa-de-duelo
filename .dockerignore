@@ -3,3 +3,5 @@ dist
 .git
 forge-bridge/target
 .env
+godot-table/.godot
+godot-table/export

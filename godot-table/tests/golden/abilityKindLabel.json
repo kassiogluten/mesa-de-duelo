@@ -1,0 +1,26 @@
+[
+ {
+  "args": [
+   "ability"
+  ],
+  "out": "Habilidade"
+ },
+ {
+  "args": [
+   "spell"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "trigger"
+  ],
+  "out": "Gatilho"
+ },
+ {
+  "args": [
+   null
+  ],
+  "out": null
+ }
+]

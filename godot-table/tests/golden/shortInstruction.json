@@ -1,0 +1,688 @@
+[
+ {
+  "args": [
+   {
+    "message": "",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Savannah Lions"
+    }
+   }
+  ],
+  "out": "Pague o custo de mana de Savannah Lions."
+ },
+ {
+  "args": [
+   {
+    "message": "",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Thundering Tanadon"
+    },
+    "manaCost": {
+     "remaining": "{4}",
+     "total": "{4}{G/P}{G/P}",
+     "life": 4
+    }
+   }
+  ],
+  "out": "Falta {4} de {4}{G/P}{G/P} para Thundering Tanadon. Mais 4 de vida no fim do pagamento."
+ },
+ {
+  "args": [
+   {
+    "message": "",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Thundering Tanadon"
+    },
+    "phyrexianLife": 2,
+    "manaCost": {
+     "remaining": "{4}{G/P}",
+     "total": "{4}{G/P}{G/P}",
+     "life": 2
+    }
+   }
+  ],
+  "out": "Falta {4}{G/P} de {4}{G/P}{G/P} para Thundering Tanadon. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano. Já são 2 de vida."
+ },
+ {
+  "args": [
+   {
+    "message": "",
+    "paying": true,
+    "payingFor": "spell",
+    "phyrexianLife": 0,
+    "card": {
+     "name": "Gitaxian Probe"
+    }
+   }
+  ],
+  "out": "Pague o custo de mana de Gitaxian Probe. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano."
+ },
+ {
+  "args": [
+   {
+    "message": "",
+    "paying": true,
+    "payingFor": "spell",
+    "phyrexianLife": 2,
+    "card": {
+     "name": "Thundering Tanadon"
+    }
+   }
+  ],
+  "out": "Pague o custo de mana de Thundering Tanadon. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano. Já são 2 de vida."
+ },
+ {
+  "args": [
+   {
+    "message": "",
+    "paying": true,
+    "payingFor": "spell",
+    "phyrexianLife": 2,
+    "phyrexianLifeBlack": true,
+    "card": {
+     "name": "Dark Ritual"
+    }
+   }
+  ],
+  "out": "Pague o custo de mana de Dark Ritual. Toque no seu retrato para pagar 2 de vida por um {B}. Já são 2 de vida."
+ },
+ {
+  "args": [
+   {
+    "message": "Algo diferente",
+    "targeting": {
+     "card": {
+      "name": "X"
+     },
+     "valid": [
+      "Player"
+     ]
+    }
+   }
+  ],
+  "out": "Escolha o alvo de X (jogador)."
+ },
+ {
+  "args": [
+   {
+    "message": "Algo totalmente diferente",
+    "targeting": {
+     "card": {
+      "name": "X"
+     }
+    }
+   }
+  ],
+  "out": "Escolha o alvo de X."
+ },
+ {
+  "args": [
+   {
+    "message": "Bola de Fogo (121) - texto\n\nSelect any target\n(5 more can be targeted)",
+    "targeting": {
+     "card": {
+      "name": "Bola de Fogo"
+     },
+     "min": 0,
+     "max": 5
+    }
+   }
+  ],
+  "out": "Escolha até 5 alvos para Bola de Fogo."
+ },
+ {
+  "args": [
+   {
+    "message": "Chooser:"
+   }
+  ],
+  "out": "Escolha o oponente que vai decidir."
+ },
+ {
+  "args": [
+   {
+    "message": "Cumulative upkeep for Rêmora Mística (129)\nRêmora Mística (129) - \n\nPagar Custo de Mana: {2}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "manaCost": {
+     "remaining": "{1}",
+     "total": "{4}"
+    },
+    "card": {
+     "name": "Rêmora Mística"
+    },
+    "ok": {
+     "enabled": true
+    }
+   }
+  ],
+  "out": "Manutenção cumulativa: falta {1} de {4} para manter Rêmora Mística no campo. Sem pagar, ela é sacrificada."
+ },
+ {
+  "args": [
+   {
+    "message": "Cumulative upkeep for Rêmora Mística (129)\nRêmora Mística (129) - \n\nPagar Custo de Mana: {2}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "manaCost": {
+     "remaining": "{2}"
+    },
+    "card": {
+     "name": "Rêmora Mística"
+    },
+    "ok": {
+     "enabled": true
+    }
+   }
+  ],
+  "out": "Manutenção cumulativa: pague {2} para manter Rêmora Mística no campo. Sem pagar, ela é sacrificada."
+ },
+ {
+  "args": [
+   {
+    "message": "Escolha uma opção"
+   }
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "message": "Estudo Rístico (88)",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "card": {
+     "name": "Estudo Rístico"
+    }
+   }
+  ],
+  "out": "Estudo Rístico pede um pagamento de mana. Pague ou recuse."
+ },
+ {
+  "args": [
+   {
+    "message": "Estudo Rístico (88)\n\nPagar Custo de Mana: {1}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": false,
+    "card": {
+     "name": "Estudo Rístico"
+    }
+   }
+  ],
+  "out": "Estudo Rístico pede {1}, e a sua mana não dá para pagar."
+ },
+ {
+  "args": [
+   {
+    "message": "Estudo Rístico (88)\n\nPagar Custo de Mana: {1}",
+    "paying": true,
+    "payingFor": "effect",
+    "card": {
+     "name": "Rhystic Study"
+    }
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Rhystic Study": "Estudo Rístico"
+  },
+  "out": "Estudo Rístico pede {1}. Pague ou recuse."
+ },
+ {
+  "args": [
+   {
+    "message": "Etapa de Limpeza\nEscolha 1 carta(s) para descartar para levar sua mão ao máximo de 7 cartas.",
+    "selectableStacks": []
+   }
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "message": "Oponente está indo primeiro.\nVocê, você está indo 2nd.\n\nVocê quer manter a mão?",
+    "selectableStacks": []
+   }
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {2}{R}",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Jiboia"
+    },
+    "manaCost": {
+     "remaining": "{2}",
+     "total": "{2}{R}"
+    }
+   }
+  ],
+  "out": "Falta {2} de {2}{R} para Jiboia."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {2}{R}",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Jiboia"
+    },
+    "manaCost": {
+     "remaining": "{2}{R}"
+    }
+   }
+  ],
+  "out": "Pague {2}{R} para Jiboia."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {2}{R}",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Jiboia"
+    },
+    "manaCost": {
+     "remaining": "{3}{R}",
+     "x": 3
+    }
+   }
+  ],
+  "out": "Pague {3}{R} para Jiboia (X = 3)."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {2}{R}",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Jiboia"
+    },
+    "manaCost": {
+     "remaining": "{R}",
+     "total": "{2}{R}"
+    },
+    "reserve": "{G}"
+   }
+  ],
+  "out": "Falta {R} de {2}{R} para Jiboia. Na reserva: {G}."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {2}{R}",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Jiboia"
+    },
+    "manaCost": {
+     "remaining": "{R/G}{R/G}"
+    }
+   }
+  ],
+  "out": "Pague {R/G}{R/G} para Jiboia."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {2}{R}",
+    "paying": true,
+    "payingFor": "spell",
+    "card": {
+     "name": "Jiboia"
+    },
+    "manaCost": {
+     "remaining": "0",
+     "total": "{2}{R}"
+    }
+   }
+  ],
+  "out": "Custo de Jiboia pago."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {3}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": false,
+    "card": {
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    }
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Mana Leak": "Vazamento de Mana"
+  },
+  "out": "Vazamento de Mana pede {3}. A sua mana não dá para pagar."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {3}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "card": {
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{1}",
+     "total": "{3}"
+    }
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Mana Leak": "Vazamento de Mana"
+  },
+  "out": "Falta {1} de {3} para Vazamento de Mana. Pague ou recuse."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {3}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "card": {
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    }
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Mana Leak": "Vazamento de Mana"
+  },
+  "out": "Vazamento de Mana pede {3}. Pague ou recuse."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: {U/P}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": false,
+    "phyrexianLife": 0,
+    "card": {
+     "name": "Gitaxian Probe"
+    }
+   }
+  ],
+  "out": "Gitaxian Probe pede {U/P}. Toque no seu retrato para pagar 2 de vida por um símbolo phyrexiano."
+ },
+ {
+  "args": [
+   {
+    "message": "Pagar Custo de Mana: 1",
+    "paying": true,
+    "payingFor": "effect"
+   }
+  ],
+  "out": "Pague o custo pedido ou recuse."
+ },
+ {
+  "args": [
+   {
+    "message": "Prioridade: Você\nTurno: 2 (Você)\nFase: Fase principal, pós-combate\nPilha: Vazio",
+    "selectableStacks": []
+   }
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "message": "Prioridade: Você\nTurno: 2 (Você)\nFase: Fase principal, pré-combate\nPilha: Vazio",
+    "selectableStacks": []
+   }
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "message": "Raio da Fenda (7) - causa 3\n\nSelect target creature",
+    "targeting": {}
+   }
+  ],
+  "out": "Escolha um alvo para Raio da Fenda (criatura)."
+ },
+ {
+  "args": [
+   {
+    "message": "Relâmpago em Cadeia (134)\n\nRelâmpago em Cadeia (134) -\n\nPagar Custo de Mana: ",
+    "paying": true
+   }
+  ],
+  "out": "Pague o custo de mana de Relâmpago em Cadeia."
+ },
+ {
+  "args": [
+   {
+    "message": "Select any target",
+    "targeting": {
+     "card": {
+      "name": "Raio"
+     },
+     "valid": [
+      "Any"
+     ]
+    }
+   }
+  ],
+  "out": "Escolha um alvo para Raio."
+ },
+ {
+  "args": [
+   {
+    "message": "Select any target",
+    "targeting": {
+     "card": {
+      "name": "Raio"
+     }
+    }
+   }
+  ],
+  "out": "Escolha um alvo para Raio."
+ },
+ {
+  "args": [
+   {
+    "message": "Select target creature",
+    "targeting": {
+     "card": {
+      "name": "Vines of Vastwood"
+     }
+    }
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Vines of Vastwood": "Trepadeira de Matavasta"
+  },
+  "out": "Escolha um alvo para Trepadeira de Matavasta (criatura)."
+ },
+ {
+  "args": [
+   {
+    "message": "Select target player or planeswalker\n\nEspículo de Lava (5) - Espículo de Lava causa 3 pontos de dano ao jogador alvo.",
+    "targeting": {
+     "card": {
+      "name": "Espículo de Lava"
+     }
+    }
+   }
+  ],
+  "out": "Escolha um alvo para Espículo de Lava (jogador ou planeswalker)."
+ },
+ {
+  "args": [
+   {
+    "message": "Select target spell",
+    "selectableStacks": [
+     210
+    ],
+    "card": {
+     "name": "Mana Leak"
+    }
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Mana Leak": "Vazamento de Mana"
+  },
+  "out": "Escolha na pilha a mágica alvo de Vazamento de Mana."
+ },
+ {
+  "args": [
+   {
+    "message": "Select target tapped creature",
+    "targeting": {
+     "card": {
+      "name": "X"
+     },
+     "valid": [
+      "Creature.tapped"
+     ]
+    }
+   }
+  ],
+  "out": "Escolha um alvo para X (criatura)."
+ },
+ {
+  "args": [
+   {
+    "message": "Select target tapped creature",
+    "targeting": {
+     "card": {
+      "name": "X"
+     }
+    }
+   }
+  ],
+  "out": "Escolha um alvo para X."
+ },
+ {
+  "args": [
+   {
+    "message": "Select up to two target creatures you control",
+    "targeting": {
+     "card": {
+      "name": "X"
+     }
+    }
+   }
+  ],
+  "out": "Escolha até 2 alvos para X (criaturas que você controla)."
+ },
+ {
+  "args": [
+   {
+    "message": "Seletor: algo mais"
+   }
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "message": "Seletor:",
+    "card": {
+     "name": "Curator of Destinies"
+    }
+   }
+  ],
+  "out": "Curator of Destinies: escolha o oponente que vai decidir."
+ },
+ {
+  "args": [
+   {
+    "message": "Sentinela da Urtica - Criatura 2 / 2\n\nPagar Custo de Mana: ",
+    "paying": true,
+    "card": {
+     "name": "Sentinela da Urtica"
+    }
+   }
+  ],
+  "out": "Pague o custo de mana de Sentinela da Urtica."
+ },
+ {
+  "args": [
+   {
+    "message": "Trepadeira de Matavasta (12) - A criatura alvo...\n\nSelect target creature",
+    "targeting": {
+     "card": {
+      "name": "Trepadeira de Matavasta"
+     }
+    }
+   }
+  ],
+  "out": "Escolha um alvo para Trepadeira de Matavasta (criatura)."
+ },
+ {
+  "args": [
+   {
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    },
+    "card": {
+     "id": 130,
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    },
+    "message": "Fuga de Mana (130)\n\nFuga de Mana (130) - Anula a mágica alvo a menos que seu controlador pague {3}.\n\nPagar Custo de Mana: {3}",
+    "counters": "Ursos Cinzentos"
+   },
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Mana Leak": "Vazamento de Mana"
+  },
+  "out": "Vazamento de Mana pede {3}. Sem pagar, Ursos Cinzentos é anulada."
+ }
+]

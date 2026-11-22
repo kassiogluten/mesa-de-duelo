@@ -30,6 +30,27 @@ Para uma classe só: acrescente `-q -Dtest=NomeDoTest` (várias: `-Dtest=A,B`). 
 
 **Refatoração sem mudar a tela:** `npm run visual -- snap <pasta>` tira prints de 37 telas (páginas de teste da mesa e telas do site) em dois tamanhos (sem animações e sem as imagens das cartas, que carregam em tempos diferentes). Tire antes e depois da mudança e rode `npm run visual -- compare <antes> <depois>`: grava `diff-*.png` onde mudou. O ruído conhecido (relógios, mesa livre embaralhada, nomes que chegam do Scryfall) fica em `NOISE`, no script: aparece na saída e não conta. A partir da 0.126.1 cobre 36 telas, inclusive Meus decks, construtor, Laboratório, menu ⋯ e mesa livre.
 
+**Mesa no PC (`godot-table/`, Godot 4.7.2; `docs/spec-mesa-godot.md`):** o `npm run godot -- <args>` acha o executável do Godot (variável `GODOT`, PATH ou instalação do winget).
+
+```sh
+npm run godot:smoke              # conecta ao servidor local (npm run forge), confere o hello e mede um ping
+npm run godot:test-atualizador   # exporta o executável e testa o atualizador de ponta a ponta (uns 40 s)
+npm run godot:pck                # gera o pacote do jogo e o versao.json em dist/mesa-pc/ (o deploy faz isso sozinho)
+```
+
+```sh
+npm run godot:test               # testes dentro do Godot (godot-table/tests/test_*.gd); um arquivo: npm run godot:test -- table_view
+npm run godot:partida            # inicia contra o computador, derruba a conexão e confere a volta ao assento (servidor local ligado)
+npm run godot:crossplay          # crossplay nos dois sentidos: a mesa no PC cria e o site entra, depois o contrário (servidor local ligado)
+npm run godot:golden             # regrava os fixtures dourados dos textos (godot-table/tests/golden/) a partir dos testes de TS
+```
+
+Mudou um texto da mesa do navegador (frase curta, pedidos, possessivos): o `tests/godot-golden.test.mjs` falha; rode `npm run godot:golden` e ajuste o porte em `godot-table/text/` até o `npm run godot:test` passar.
+
+Para ver a mesa: `npm run godot` abre a tela inicial. Variáveis úteis: `MESA_PARTIDA_DIRETO=1` pula a tela inicial, `MESA_COMMANDER=1` escolhe o Commander com 4, `MESA_LAB=<botão>` abre o laboratório de efeitos e aperta o botão (ex.: `MESA_LAB=Destruída`), `MESA_AUTOJOGAR=1` joga sozinho, `MESA_PRINT=<arquivo.png>` (com `MESA_PRINT_APOS=<s>`) salva um print e fecha, imprimindo o resumo de FPS, `MESA_FPS=1` (ou F3) mostra o medidor, `FORGE_URL` troca o servidor. Para depurar cliques: `MESA_LOG_ENVIO=1` imprime cada mensagem mandada ao servidor e cada clique em carta, `MESA_TESTE_CLIQUE=1` aceita a mão e clica numa carta jogável da mão pelo caminho real do mouse, e `MESA_SAIR_APOS=<s>` fecha sozinho (dá para rodar com `--headless`, sem a janela aparecer e receber cliques de quem está usando o PC). Exemplo: `MESA_PARTIDA_DIRETO=1 MESA_AUTOJOGAR=1 MESA_PRINT=mesa.png MESA_PRINT_APOS=60 npm run godot -- --resolution 1600x900 --disable-vsync`.
+
+O `godot:test-atualizador` precisa dos templates de exportação do Windows em `%APPDATA%/Godot/export_templates/4.7.2.stable/` (`windows_release_x86_64.exe` e `windows_debug_x86_64.exe`).
+
 **Código morto:** `npm run unused` lista exports que ninguém usa ("morto" pode apagar).
 
 **Contrato do estado:** o `ProtocolContractTest` (servidor) monta uma partida e confere que todo campo do estado está em `tests/protocol/state-keys.txt`; o `tests/protocol.test.mjs` confere que todo campo dessa lista está declarado em `src/forge/protocol.ts`. Campo novo no estado: rode o `ProtocolContractTest` com `-Dprotocol.update=true`, declare o campo no `protocol.ts` e rode `npm test`.

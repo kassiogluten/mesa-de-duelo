@@ -1,0 +1,4 @@
+# Pastas que o Godot gera e as exportações.
+.godot/
+export/
+data/

@@ -1,0 +1,101 @@
+[
+ {
+  "args": [
+   "Algo que o Forge pede"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "Conduto de Energia (129)\n - texto\nSelect a permanent to remove 1 counter(s) from"
+  ],
+  "out": {
+   "text": "Para pagar o custo, escolha a permanente de onde sai 1 marcador.",
+   "ok": "Tirar o marcador"
+  }
+ },
+ {
+  "args": [
+   "Édito Diabólico (121)\n - O jogador alvo sacrifica uma criatura.\nEscolha 1 creature(s) a sacrifice."
+  ],
+  "out": {
+   "text": "Sacrifique 1 criatura.",
+   "ok": "Sacrificar"
+  }
+ },
+ {
+  "args": [
+   "Etapa de Limpeza\nEscolha 1 carta(s) para descartar para levar sua mão ao máximo de 7 cartas."
+  ],
+  "out": {
+   "text": "Descarte 1 carta: o máximo na mão é 7.",
+   "ok": "Descartar"
+  }
+ },
+ {
+  "args": [
+   "Oponente está indo primeiro.\nVocê, você está indo 2nd.\n\nVocê quer manter a mão?"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "Pilhagem Infiel (121)\n\nDescartar 2 carta(s)"
+  ],
+  "out": {
+   "text": "Descarte 2 cartas.",
+   "ok": "Descartar"
+  }
+ },
+ {
+  "args": [
+   "Prioridade: Você\nTurno: 2 (Você)\nFase: Fase principal, pós-combate\nPilha: Vazio"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "Prioridade: Você\nTurno: 2 (Você)\nFase: Fase principal, pré-combate\nPilha: Vazio"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "Ritos da Vila (121)\n - As an additional cost to cast this spell, sacrifice a creature.\nDraw two cards.\nSelecione creature para sacrificar (1 restantes)"
+  ],
+  "out": {
+   "text": "Para pagar o custo, sacrifique 1 criatura.",
+   "ok": "Sacrificar"
+  }
+ },
+ {
+  "args": [
+   "X\nEscolha 1 creature(s) a frobnicate."
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "X\nEscolha 1 sliver(s) a sacrifice."
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "X\nEscolha até 2 creature(s) a exile."
+  ],
+  "out": {
+   "text": "Exile até 2 criaturas.",
+   "ok": "Exilar"
+  }
+ },
+ {
+  "args": [
+   "X\nEscolha um(n) artifact or creature para virar (2 restante)"
+  ],
+  "out": {
+   "text": "Para pagar o custo, vire 2 artefatos ou criaturas.",
+   "ok": "Virar"
+  }
+ }
+]

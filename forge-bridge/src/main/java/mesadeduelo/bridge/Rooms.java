@@ -154,9 +154,16 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
         return a != null && java.security.MessageDigest.isEqual(a.getBytes(java.nio.charset.StandardCharsets.UTF_8), b.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
+    /**
+     * Versão do protocolo, no hello. Sobe quando uma mudança deixa de funcionar com clientes antigos, para a mesa no PC
+     * (docs/spec-mesa-godot.md) pedir a atualização em vez de jogar com mensagens que não entende.
+     */
+    static final int PROTOCOL_VERSION = 1;
+
     @Override public void onConnect(Channel ch) {
         JsonObject hello = new JsonObject();
         hello.addProperty("type", "hello");
+        hello.addProperty("protocolVersion", PROTOCOL_VERSION);
         JsonArray formats = new JsonArray(); MatchConfig.FORMATS.forEach(formats::add);
         hello.add("supportedFormats", formats);
         MatchConfig.versions(hello);
@@ -219,7 +226,7 @@ final class Rooms implements BridgeServer.Listener, Feedback.Journals {
                     response.addProperty("requestId", requestId);
                     BridgeServer.send(ch, response.toString());
                 }
-                case "hello" -> onConnect(ch);
+                case "hello" -> { Metrics.clientHello(msg.has("client") && msg.get("client").isJsonPrimitive() ? msg.get("client").getAsString() : null); onConnect(ch); }
                 case "start" -> {
                     // Modo de repetição: o primeiro "start" vira a partida do relato, com os decks gravados nele.
                     Replay r = replay;

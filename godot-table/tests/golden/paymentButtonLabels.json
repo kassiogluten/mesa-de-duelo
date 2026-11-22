@@ -1,0 +1,170 @@
+[
+ {
+  "args": [
+   {
+    "message": "Cumulative upkeep for Rêmora Mística (129)\nRêmora Mística (129) - \n\nPagar Custo de Mana: {2}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "manaCost": {
+     "remaining": "{2}"
+    },
+    "card": {
+     "name": "Rêmora Mística"
+    },
+    "ok": {
+     "enabled": true
+    }
+   }
+  ],
+  "out": {
+   "ok": "Pagar automaticamente",
+   "cancel": "Não pagar e sacrificar"
+  }
+ },
+ {
+  "args": [
+   {
+    "message": "Estudo pede {1}",
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "manaCost": {
+     "remaining": "{2}"
+    },
+    "card": {
+     "name": "Rêmora Mística"
+    },
+    "ok": {
+     "enabled": true
+    }
+   }
+  ],
+  "out": {
+   "ok": "Pagar automaticamente",
+   "cancel": "Não pagar"
+  }
+ },
+ {
+  "args": [
+   {
+    "ok": {
+     "enabled": false
+    }
+   }
+  ],
+  "out": {
+   "ok": "Mana insuficiente",
+   "cancel": "Desistir"
+  }
+ },
+ {
+  "args": [
+   {
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    },
+    "card": {
+     "id": 130,
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    },
+    "message": "Fuga de Mana (130)\n\nFuga de Mana (130) - Anula a mágica alvo a menos que seu controlador pague {3}.\n\nPagar Custo de Mana: {3}",
+    "counters": "Ursos Cinzentos"
+   }
+  ],
+  "out": {
+   "ok": "Pagar e salvar",
+   "cancel": "Deixar anular"
+  }
+ },
+ {
+  "args": [
+   {
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    },
+    "card": {
+     "id": 130,
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    },
+    "message": "Fuga de Mana (130)\n\nFuga de Mana (130) - Anula a mágica alvo a menos que seu controlador pague {3}.\n\nPagar Custo de Mana: {3}"
+   }
+  ],
+  "out": {
+   "ok": "Pagar automaticamente",
+   "cancel": "Não pagar"
+  }
+ },
+ {
+  "args": [
+   {
+    "payingFor": "ability",
+    "canAutoPay": false,
+    "ok": {
+     "enabled": false
+    }
+   }
+  ],
+  "out": {
+   "ok": "Mana insuficiente",
+   "cancel": "Desistir da habilidade"
+  }
+ },
+ {
+  "args": [
+   {
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    }
+   }
+  ],
+  "out": {
+   "ok": "Pagar automaticamente",
+   "cancel": "Não pagar"
+  }
+ },
+ {
+  "args": [
+   {
+    "payingFor": "spell",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": false
+    }
+   }
+  ],
+  "out": {
+   "ok": "Pagar automaticamente",
+   "cancel": "Desistir da mágica"
+  }
+ },
+ {
+  "args": [
+   {
+    "payingFor": "spell",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    }
+   }
+  ],
+  "out": {
+   "ok": "Pagar automaticamente",
+   "cancel": "Desistir da mágica"
+  }
+ }
+]

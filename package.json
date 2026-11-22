@@ -28,7 +28,16 @@
     "css-why": "node scripts/css-why.mjs",
     "mapa": "node scripts/mapa.mjs",
     "relatos": "node --import ./tests/register.mjs deploy/relatos.mjs",
-    "protocol-doc": "node scripts/protocol-doc.mjs"
+    "protocol-doc": "node scripts/protocol-doc.mjs",
+    "protocol-godot": "node scripts/protocol-godot.mjs",
+    "godot": "node scripts/godot.mjs",
+    "godot:smoke": "node scripts/godot.mjs --headless --script res://tools/smoke.gd",
+    "godot:partida": "node scripts/godot.mjs --headless --script res://tools/match_check.gd",
+    "godot:crossplay": "node --import ./tests/register.mjs scripts/godot-crossplay.mjs",
+    "godot:test": "node scripts/godot.mjs --headless --script res://tools/run_tests.gd --",
+    "godot:golden": "node --import ./tests/register.mjs scripts/godot-golden.mjs",
+    "godot:pck": "node scripts/godot-pck.mjs",
+    "godot:test-atualizador": "node scripts/godot-updater-test.mjs"
   },
   "devDependencies": {
     "@vite-pwa/assets-generator": "^0.2.6",

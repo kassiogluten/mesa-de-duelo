@@ -1,0 +1,96 @@
+[
+ {
+  "args": [
+   ""
+  ],
+  "out": ""
+ },
+ {
+  "args": [
+   "Ana's cemitério",
+   [
+    "Você",
+    "Ana"
+   ]
+  ],
+  "out": "O cemitério de Ana"
+ },
+ {
+  "args": [
+   "Escolha um alvo."
+  ],
+  "out": "Escolha um alvo."
+ },
+ {
+  "args": [
+   "Escolha uma carta de você's cemitério."
+  ],
+  "out": "Escolha uma carta do seu cemitério."
+ },
+ {
+  "args": [
+   "Lightning Bolt's damage"
+  ],
+  "out": "Lightning Bolt's damage"
+ },
+ {
+  "args": [
+   "Olhando as cartas em Ana's mão",
+   [
+    "Você",
+    "Ana"
+   ]
+  ],
+  "out": "Olhando as cartas na mão de Ana"
+ },
+ {
+  "args": [
+   "Olhando as cartas em IA vermelho's mão",
+   [
+    "IA vermelho",
+    "Você"
+   ]
+  ],
+  "out": "Olhando as cartas na mão de IA vermelho"
+ },
+ {
+  "args": [
+   "Olhando as cartas em Oponente's mão"
+  ],
+  "out": "Olhando as cartas na mão de Oponente"
+ },
+ {
+  "args": [
+   "Olhando as cartas em você's mão"
+  ],
+  "out": "Olhando as cartas na sua mão"
+ },
+ {
+  "args": [
+   "Oponente's cemitério está vazio."
+  ],
+  "out": "O cemitério de Oponente está vazio."
+ },
+ {
+  "args": [
+   "Procurar Oponente's grimório?"
+  ],
+  "out": "Procurar o grimório de Oponente?"
+ },
+ {
+  "args": [
+   "Procurar você's grimório?",
+   [
+    "Você",
+    "Ana"
+   ]
+  ],
+  "out": "Procurar seu grimório?"
+ },
+ {
+  "args": [
+   "Procurar você's grimório?"
+  ],
+  "out": "Procurar seu grimório?"
+ }
+]

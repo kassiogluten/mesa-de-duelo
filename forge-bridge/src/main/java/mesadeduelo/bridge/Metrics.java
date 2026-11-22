@@ -55,6 +55,13 @@ final class Metrics {
         return "outro";
     }
 
+    /** Um cliente que se apresentou no hello: a mesa no PC manda "godot"; a do navegador ainda não se apresenta. */
+    static void clientHello(String client) {
+        String tag = "web".equals(client) || "godot".equals(client) ? client : "outro";
+        Counter.builder("mesa.ws.client.hello").description("Clientes que se apresentaram ao conectar, por tipo")
+            .tags("client", tag).register(REGISTRY).increment();
+    }
+
     static void matchStarted(String format, boolean room, int players) {
         Counter.builder("mesa.matches.started").description("Partidas iniciadas (inclui revanches)")
             .tags("format", format(format), "mode", mode(room), "players", String.valueOf(players)).register(REGISTRY).increment();

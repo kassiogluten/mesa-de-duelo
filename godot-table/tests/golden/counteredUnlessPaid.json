@@ -1,0 +1,139 @@
+[
+ {
+  "args": [
+   {
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    },
+    "card": {
+     "id": 130,
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    },
+    "message": "Estudo Rístico - Pagar Custo de Mana: {1}"
+   },
+   [
+    {
+     "source": {
+      "id": 130,
+      "name": "Mana Leak"
+     },
+     "controller": 23,
+     "kind": "spell",
+     "resolving": true
+    },
+    {
+     "source": {
+      "id": 121,
+      "name": "Grizzly Bears"
+     },
+     "controller": 10,
+     "kind": "spell"
+    }
+   ],
+   10
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   {
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    },
+    "card": {
+     "id": 130,
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    },
+    "message": "Fuga de Mana (130)\n\nFuga de Mana (130) - Anula a mágica alvo a menos que seu controlador pague {3}.\n\nPagar Custo de Mana: {3}"
+   },
+   [
+    {
+     "source": {
+      "id": 130,
+      "name": "Mana Leak"
+     },
+     "controller": 23,
+     "kind": "spell",
+     "resolving": true
+    },
+    {
+     "source": {
+      "id": 121,
+      "name": "Grizzly Bears"
+     },
+     "controller": 10,
+     "kind": "spell"
+    },
+    {
+     "source": {
+      "id": 122,
+      "name": "Shock"
+     },
+     "controller": 10,
+     "kind": "spell"
+    }
+   ],
+   10
+  ],
+  "out": "a sua mágica"
+ },
+ {
+  "args": [
+   {
+    "paying": true,
+    "payingFor": "effect",
+    "canAutoPay": true,
+    "ok": {
+     "enabled": true
+    },
+    "card": {
+     "id": 130,
+     "name": "Mana Leak"
+    },
+    "manaCost": {
+     "remaining": "{3}"
+    },
+    "message": "Fuga de Mana (130)\n\nFuga de Mana (130) - Anula a mágica alvo a menos que seu controlador pague {3}.\n\nPagar Custo de Mana: {3}"
+   },
+   [
+    {
+     "source": {
+      "id": 130,
+      "name": "Mana Leak"
+     },
+     "controller": 23,
+     "kind": "spell",
+     "resolving": true
+    },
+    {
+     "source": {
+      "id": 121,
+      "name": "Grizzly Bears"
+     },
+     "controller": 10,
+     "kind": "spell"
+    }
+   ],
+   10,
+   {
+    "$translate": true
+   }
+  ],
+  "names": {
+   "Grizzly Bears": "Ursos Cinzentos"
+  },
+  "out": "Ursos Cinzentos"
+ }
+]

@@ -1,0 +1,56 @@
+[
+ {
+  "args": [
+   "Escolha o nome da carta card of that color."
+  ],
+  "out": "Escolha o nome da carta card of that color."
+ },
+ {
+  "args": [
+   "Escolha o nome da carta creature, enchantment, or planeswalker."
+  ],
+  "out": "Escolha o nome de uma carta de criatura, encantamento ou planeswalker."
+ },
+ {
+  "args": [
+   "Escolha o nome da carta nonbasic land."
+  ],
+  "out": "Escolha o nome de uma carta de terreno não básico."
+ },
+ {
+  "args": [
+   "Escolha o nome da carta noncreature, nonland."
+  ],
+  "out": "Escolha o nome de uma carta que não seja de criatura nem de terreno."
+ },
+ {
+  "args": [
+   "Escolha o nome da carta nonland."
+  ],
+  "out": "Escolha o nome de uma carta que não seja de terreno."
+ },
+ {
+  "args": [
+   "Escolha o nome da carta nonlegendary, nonland."
+  ],
+  "out": "Escolha o nome de uma carta que não seja lendária nem de terreno."
+ },
+ {
+  "args": [
+   "Escolha o nome da carta permanent card with mana value 3 or less."
+  ],
+  "out": "Escolha o nome de uma carta de permanente com valor de mana 3 ou menos."
+ },
+ {
+  "args": [
+   "Escolha uma carta"
+  ],
+  "out": "Escolha uma carta"
+ },
+ {
+  "args": [
+   "Select a card to put onto the battlefield"
+  ],
+  "out": "Escolha a carta que vai para o campo de batalha"
+ }
+]

@@ -816,7 +816,9 @@ Quem joga com a conta conectada: o token da sessão e o deck salvo, para a parti
   | { type: 'player'; id: number; gen?: number }
   | { type: 'select-set'; cards: number[]; players: number[]; gen: number }
   | { type: 'mana'; color: string; gen?: number }
-  | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number; always?: boolean } | { type: 'concede' } | { type: 'hello' }
+  | { type: 'ok' | 'cancel' | 'pass-turn' | 'resolve-all'; gen?: number; always?: boolean } | { type: 'concede' }
+  /** O cliente se apresenta (a mesa no PC manda 'godot'); o servidor responde com outro hello. */
+  | { type: 'hello'; client?: 'web' | 'godot'; clientVersion?: string }
   /** Volta a perguntar um gatilho guardado com "Sempre sim" ou "Sempre não" (a chave de autoTriggers). */
   | { type: 'forget-trigger'; key: string }
   | { type: 'pass-turn-stop' }
@@ -893,7 +895,7 @@ Tudo o que o servidor manda à mesa. Campo novo numa mensagem: declare aqui (o e
   /** Alguém (player: o id do jogador) apontou uma carta da mesa; vem também para quem apontou. */
   | { type: 'point'; player: number; card: number }
   | { type: 'validation-error'; validation: DeckValidation; target: string; requestId?: string }
-  | { type: 'hello'; supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string }
+  | { type: 'hello'; supportedFormats: DeckFormat[]; rulesVersion: string; engineVersion: string; /** Sobe quando uma mudança deixa de funcionar com clientes antigos. Ausente em servidores antigos. */ protocolVersion?: number }
   | { type: 'toast'; text: string; title?: string; cards?: { id: number; name: string }[]; groups?: { player: string; cards: string[] }[] }
   | { type: 'error'; text: string; requestId?: string; reason?: string }
   | { type: 'diagnostic'; code?: string; action?: string; text?: string }

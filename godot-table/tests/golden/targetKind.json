@@ -1,0 +1,50 @@
+[
+ {
+  "args": [
+   "artifacts or creatures"
+  ],
+  "out": "artefatos ou criaturas"
+ },
+ {
+  "args": [
+   "creature"
+  ],
+  "out": "criatura"
+ },
+ {
+  "args": [
+   "creatures you control"
+  ],
+  "out": "criaturas que você controla"
+ },
+ {
+  "args": [
+   "creatures"
+  ],
+  "out": "criaturas"
+ },
+ {
+  "args": [
+   "permanent"
+  ],
+  "out": "permanente"
+ },
+ {
+  "args": [
+   "player or planeswalker"
+  ],
+  "out": "jogador ou planeswalker"
+ },
+ {
+  "args": [
+   "sliver"
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   "tapped creature"
+  ],
+  "out": null
+ }
+]

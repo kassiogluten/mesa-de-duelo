@@ -1,0 +1,96 @@
+[
+ {
+  "args": [
+   [
+    "Any"
+   ],
+   null
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   [
+    "Any"
+   ]
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   [
+    "Card.Creature+YouOwn"
+   ],
+   [
+    "Graveyard"
+   ]
+  ],
+  "out": "criatura num cemitério"
+ },
+ {
+  "args": [
+   [
+    "Creature.OppCtrl"
+   ]
+  ],
+  "out": "criatura de um oponente"
+ },
+ {
+  "args": [
+   [
+    "Creature.tapped"
+   ],
+   null
+  ],
+  "out": "criatura"
+ },
+ {
+  "args": [
+   [
+    "Creature.YouCtrl+nonToken",
+    "Planeswalker.YouCtrl",
+    "Battle"
+   ]
+  ],
+  "out": "criatura que você controla, planeswalker que você controla ou batalha"
+ },
+ {
+  "args": [
+   [
+    "Creature",
+    "Player"
+   ]
+  ],
+  "out": "criatura ou jogador"
+ },
+ {
+  "args": [
+   [
+    "Emblem"
+   ]
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   [
+    "Player"
+   ],
+   null
+  ],
+  "out": "jogador"
+ },
+ {
+  "args": [
+   null,
+   null
+  ],
+  "out": null
+ },
+ {
+  "args": [
+   null
+  ],
+  "out": null
+ }
+]
