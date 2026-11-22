@@ -11,7 +11,7 @@ import { isPilesChoice, isPilesSplit, pilesChoiceHTML, pilesHeading, pilesSplitH
 import { combatDamageHTML, isCombatDamage } from './combatDamage';
 import { isVote, voteHTML } from './cardVote';
 import { isNameChoice, nameChoiceHTML } from './nameChoice';
-import { dungeonRoomHTML, isDungeonRoom } from './dungeon';
+import { dungeonChoiceHTML, dungeonRoomHTML, isDungeonChoice, isDungeonRoom } from './dungeon';
 import { isReplacementOrder, replacementOrderHTML } from './replacementOrder';
 import { isNumberChoice, numberChoiceHTML, rulesOf } from './numberChoice';
 import { isModeChoice, modeChoiceHTML, modesAsk } from './modeChoice';
@@ -91,7 +91,9 @@ export function questionHTML(v: QuestionView, q: FQuestion, draft: QuestionDraft
   const head = `${plainHead}${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}`;
   // Escolha entre cartas: a carta que pede fica ao lado delas, e não no meio, empurrando as opções para baixo (no celular deitado, para fora da tela).
   const withCard = (top: string, body: string) => hasBesideCard(q) ? besideCard(v, q, `${top}${body}`) : `${top}${q.card ? `<div class="q-card">${v.face(q.card)}</div>` : ''}${body}`;
-  if (isDungeonRoom(q)) return dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
+  // A sala: a carta da masmorra ao lado do mapa. A masmorra: as cartas lado a lado.
+  if (isDungeonRoom(q)) return hasBesideCard(q) ? besideCard(v, q, dungeonRoomHTML(q, plainHead, v.players.find(p => p.id === q.dungeonOwner))) : dungeonRoomHTML(q, head, v.players.find(p => p.id === q.dungeonOwner));
+  if (isDungeonChoice(q)) return dungeonChoiceHTML(q, head, v.face, v.label);
   if (isNameChoice(q)) return nameChoiceHTML(q, head, draft.text, v.ptName);
   if (isSplitDestinations(q)) return besideCard(v, q, splitDestinationsHTML({ face: v.face, label: v.label }, q, draft.picked));
   if (isAmountChoice(q)) return besideCard(v, q, amountChoiceHTML({ face: v.face, label: v.label, players: v.players }, q, amountsOf(draft.amounts)));

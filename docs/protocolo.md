@@ -469,6 +469,7 @@ Uma proteção do jogador: proteção (contra tudo, contra uma cor...), resistê
 | `defender?` | `boolean` |  |
 | `face?` | `{ name: string; manaCost: string; typeLine: string }` | Outra face ou metade usada pela opção (aventura, carta dividida). |
 | `room?` | `string` | dungeon-room: nome da sala da masmorra que a opção escolhe. |
+| `dungeon?` | `FDungeon` | dungeon-choice: a masmorra que a opção escolhe, com as salas (a carta, com a imagem, vem em card). |
 | `modeIndex?` | `number` | modes: o número do modo na carta (1 é o primeiro) e o que serve de alvo, na sintaxe do Forge ("Creature.YouCtrl") e as zonas fora do campo. |
 | `valid?` | `string[]` |  |
 | `zones?` | `string[]` |  |
@@ -508,7 +509,7 @@ Cartas reveladas que não seguram o jogo. Do topo de um grimório com escolha (G
 | `id` | `number` |  |
 | `method` | `string` |  |
 | `kind` | `'choose' \| 'confirm' \| 'order' \| 'text' \| 'reveal' \| 'amount' \| 'number'` | reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. |
-| `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order' \| 'modes' \| 'creature-type' \| 'optional-costs' \| 'split-destinations'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. |
+| `purpose?` | `'triggers' \| 'play-mode' \| 'combat-damage' \| 'commander-zone' \| 'dungeon-room' \| 'dungeon-choice' \| 'vote' \| 'library' \| 'card-name' \| 'piles-split' \| 'piles-choose' \| 'replacement-order' \| 'modes' \| 'creature-type' \| 'optional-costs' \| 'split-destinations'` | card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. |
 | `amountOf?` | `'damage' \| 'shield' \| 'counters'` | amount: o que se divide entre as opções (dano, escudo de prevenção ou marcadores). |
 | `destinations?` | `{ zone: string; count?: number; tapped?: boolean }[]` | split-destinations: os dois lugares das cartas buscadas (Cultivate), na ordem da resposta: o primeiro recebe count cartas, o segundo o resto. |
 | `modeCount?` | `number` | modes: quantos modos a carta tem e os que não dá para escolher agora. |

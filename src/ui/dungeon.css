@@ -1,4 +1,4 @@
-/* Masmorras: selos de dianteira e de masmorra ao lado do retrato, o mapa de salas e a escolha da próxima sala. */
+/* Masmorras: selos de dianteira e de masmorra ao lado do retrato, o mapa de salas, a escolha da masmorra e a da próxima sala. */
 button.player-counter { cursor: pointer; font: inherit; font: 700 12px/1.2 var(--body); }
 button.player-counter:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .player-counter small { opacity: .7; font-weight: 600; }
@@ -25,6 +25,24 @@ button.player-counter:focus-visible { outline: 2px solid var(--gold); outline-of
 button.dungeon-room.choice { cursor: pointer; border-color: var(--gold); background: #1f1a35; box-shadow: 0 0 12px #f2c14e33; }
 button.dungeon-room.choice:hover, button.dungeon-room.choice:focus-visible { background: #2c2448; outline: 2px solid var(--gold); outline-offset: 1px; }
 
+/* Escolha da masmorra: as cartas lado a lado (tocar escolhe, a lupa amplia). Escolha da sala: a carta ao lado do mapa. */
+.forge #fQuestion .question.dungeon-choice { width: min(760px, 96vw); }
+.forge #fQuestion .question.dungeon-room:has(.q-beside) { width: min(900px, 96vw); }
+.question.dungeon-room .q-beside .dungeon-map { max-height: 52vh; }
+.forge .question.dungeon-room .q-beside-card { width: 190px; --fw: 190px; }
+.dungeon-picks { list-style: none; margin: 14px 0 4px; padding: 0; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.dungeon-pick { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 200px; }
+.dungeon-pick-card { width: 200px; --fw: 200px; aspect-ratio: 488 / 680; padding: 0; border: 0; border-radius: 10px; background: none; color: inherit; cursor: pointer; }
+.dungeon-pick-card .face { box-shadow: 0 14px 30px rgb(0 0 0 / .6); transition: box-shadow .18s, transform .18s; }
+.dungeon-pick-card:hover .face, .dungeon-pick-card:focus-visible .face { box-shadow: 0 0 0 2px var(--gold), 0 0 22px #f2c14e66, 0 18px 34px rgb(0 0 0 / .65); transform: translateY(-3px); }
+.dungeon-pick-card:focus-visible { outline: none; }
+.dungeon-pick p { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.dungeon-pick strong { font: 700 14px/1.25 var(--body); color: #e6e0ff; }
+.dungeon-pick small { color: var(--muted); font-size: 12px; }
+.dungeon-pick-zoom { position: absolute; right: 8px; top: calc(200px * 680 / 488 - 44px); z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #ffffff30; background: color-mix(in srgb, var(--azul-0c1222, #0c1222) 90.2%, transparent); color: var(--ink); cursor: zoom-in; }
+.dungeon-pick-zoom svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.dungeon-pick-zoom:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+
 /* A placa que cai ao lado do retrato quando o jogador entra numa sala (dourada ao completar a masmorra): dungeonPlaque.ts. */
 .dungeon-plaque { position: fixed; z-index: 36; pointer-events: none; min-width: 150px; max-width: 220px; padding: 8px 12px 9px; border-radius: 8px; border: 1px solid #8b7bd6; background: linear-gradient(180deg, #4a4458, #2c2838); box-shadow: 0 0 0 3px #1a1626, 0 10px 24px #000b, inset 0 1px 0 #ffffff22; color: #f1ecff; text-align: left; }
 .dungeon-plaque.done { border-color: var(--gold); background: linear-gradient(180deg, #5a4314, #2e2108); box-shadow: 0 0 0 3px #1a1204, 0 0 24px #f2c14e66, inset 0 1px 0 #ffffff33; }
@@ -41,7 +59,15 @@ button.dungeon-room.choice:hover, button.dungeon-room.choice:focus-visible { bac
 .dungeon-plaque .dp-spark { position: absolute; left: 50%; top: 45%; width: 5px; height: 5px; border-radius: 50%; background: #fff3c4; box-shadow: 0 0 8px var(--gold); opacity: 0; }
 
 @media (max-width: 560px) {
+  .dungeon-picks { gap: 10px; }
+  .dungeon-pick, .dungeon-pick-card { width: 132px; --fw: 132px; }
+  .dungeon-pick-zoom { top: calc(132px * 680 / 488 - 40px); right: 4px; }
   .dungeon-level { grid-template-columns: 1fr; }
   .dungeon-level + .dungeon-level::before { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { button.dungeon-room.choice { transition: none; } }
+@media (prefers-reduced-motion: reduce) { button.dungeon-room.choice, .dungeon-pick-card .face { transition: none; } .dungeon-pick-card:hover .face, .dungeon-pick-card:focus-visible .face { transform: none; } }
+@media (orientation: landscape) and (max-height: 420px) {
+  .forge .question.dungeon-room .q-beside-card { width: 92px; --fw: 92px; }
+  .dungeon-pick, .dungeon-pick-card { width: 118px; --fw: 118px; }
+  .dungeon-pick-zoom { top: calc(118px * 680 / 488 - 38px); right: 4px; }
+}

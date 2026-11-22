@@ -8,6 +8,16 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.238.0] - 2026-11-22
+
+### Novo
+
+- **Imagem da masmorra na hora de escolher.** Quando uma carta manda se aventurar na masmorra e você ainda não está em nenhuma, aparecem as cartas das masmorras lado a lado, cada uma com quantos passos tem até completar, em vez de uma lista só com os nomes: tocar na carta escolhe, e a lupa no canto amplia a carta para ler as salas. Na escolha da próxima sala, a carta da masmorra fica ao lado do mapa, e um toque nela a amplia.
+
+### Mudou
+
+- **Excluir deck pede confirmação.** Em Meus decks, o Excluir das Ações do deck abre uma janela com o nome do deck e o total de cartas, perguntando se é para excluir mesmo; o Voltar já vem escolhido, então na dúvida nada é apagado. Depois de confirmar, o aviso "Deck excluído" continua com o Desfazer.
+
 ## [0.237.0] - 2026-11-21
 
 ### Novo

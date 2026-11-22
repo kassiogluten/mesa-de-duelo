@@ -409,6 +409,8 @@ export interface FOption {
   face?: { name: string; manaCost: string; typeLine: string };
   /** dungeon-room: nome da sala da masmorra que a opção escolhe. */
   room?: string;
+  /** dungeon-choice: a masmorra que a opção escolhe, com as salas (a carta, com a imagem, vem em card). */
+  dungeon?: FDungeon;
   /** modes: o número do modo na carta (1 é o primeiro) e o que serve de alvo, na sintaxe do Forge ("Creature.YouCtrl") e as zonas fora do campo. */
   modeIndex?: number;
   valid?: string[];
@@ -448,7 +450,7 @@ export interface FQuestion {
   /** reveal: só mostra as cartas (Explore, revelar o topo...); responde com indices vazio. */
   kind: 'choose' | 'confirm' | 'order' | 'text' | 'reveal' | 'amount' | 'number';
   /** card-name: nomear uma carta, com todos os nomes do jogo nas opções (só texto). triggers: ordenar gatilhos simultâneos; play-mode: escolher como jogar uma carta; vote: votação do conselho (card é a carta que vota). modes: os modos de uma mágica modal, todos numa pergunta. */
-  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order' | 'modes' | 'creature-type' | 'optional-costs' | 'split-destinations';
+  purpose?: 'triggers' | 'play-mode' | 'combat-damage' | 'commander-zone' | 'dungeon-room' | 'dungeon-choice' | 'vote' | 'library' | 'card-name' | 'piles-split' | 'piles-choose' | 'replacement-order' | 'modes' | 'creature-type' | 'optional-costs' | 'split-destinations';
   /** amount: o que se divide entre as opções (dano, escudo de prevenção ou marcadores). */
   amountOf?: 'damage' | 'shield' | 'counters';
   /** split-destinations: os dois lugares das cartas buscadas (Cultivate), na ordem da resposta: o primeiro recebe count cartas, o segundo o resto. */

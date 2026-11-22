@@ -1,4 +1,13 @@
 {
+  "0.238.0": {
+    "Excluir deck pede confirmação": [
+      { "img": "0.238.0/confirmar-exclusao.webp", "legenda": "A janela que aparece ao excluir um deck, com o nome e o total de cartas, e o Voltar já escolhido." }
+    ],
+    "Imagem da masmorra na hora de escolher": [
+      { "img": "0.238.0/escolher-masmorra.webp", "legenda": "As três masmorras lado a lado na hora de se aventurar, cada uma com quantos passos tem até completar e a lupa para ampliar." },
+      { "img": "0.238.0/escolher-sala.webp", "legenda": "Na escolha da sala, a carta da Lost Mine of Phandelver ao lado do mapa, com as duas salas seguintes marcadas." }
+    ]
+  },
   "0.237.0": {
     "Contador de vida com a mesa presa": [
       { "img": "0.237.0/girar-a-mesa.webp", "legenda": "O item Girar a mesa no menu do meio do Contador de vida, para trocar entre em pé e deitada de propósito." }

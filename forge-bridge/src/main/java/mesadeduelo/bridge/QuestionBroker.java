@@ -175,6 +175,7 @@ final class QuestionBroker {
         }
         revealedAlongside(seat, options, q);
         Dungeons.roomChoice(hosted.getGame(), options, rows, q);
+        if (seat.controller() instanceof PlayerControllerHuman human) Dungeons.dungeonChoice(hosted.getGame(), human.getPlayer(), options, rows, q);
         Piles.choose(q, options, hosted.getGame());
         q.add("options", rows);
         CoinFlipText.choice(q);

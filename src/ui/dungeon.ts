@@ -1,10 +1,10 @@
-import type { FDungeon, FPlayer, FQuestion } from '../forge/client';
+import type { FCard, FDungeon, FPlayer, FQuestion } from '../forge/client';
 import './dungeon.css';
 import { esc } from './cardtext';
 
 /*
- * Masmorras (se aventurar na masmorra, dianteira): o selo ao lado do retrato, o mapa de salas e a escolha
- * da próxima sala. A sala atual vem do servidor; as salas por onde o jogador já passou o Forge não guarda,
+ * Masmorras (se aventurar na masmorra, dianteira): o selo ao lado do retrato, o mapa de salas, a escolha de
+ * qual masmorra entrar e a da próxima sala. A sala atual vem do servidor; as salas por onde o jogador já passou o Forge não guarda,
  * então o mapa só marca a atual, as próximas possíveis e as que ficaram para trás pela profundidade.
  */
 
@@ -122,6 +122,25 @@ export function dungeonViewHTML(p: FPlayer) {
 }
 
 export const isDungeonRoom = (q: FQuestion) => q.purpose === 'dungeon-room';
+export const isDungeonChoice = (q: FQuestion) => q.purpose === 'dungeon-choice' && (q.options ?? []).every(o => typeof o !== 'string' && o.card && o.dungeon);
+
+const ZOOM_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6m-3-3v6"/></svg>';
+
+/**
+ * Escolha de qual masmorra entrar: as cartas lado a lado, cada uma com quantos passos tem até completar. Tocar na
+ * carta escolhe; a lupa abre a carta ampliada, para ler as salas.
+ */
+export function dungeonChoiceHTML(q: FQuestion, head: string, face: (c: FCard) => string, label: (c: FCard) => string) {
+  const picks = (q.options ?? []).map((o, i) => {
+    if (typeof o === 'string' || !o.card || !o.dungeon) return '';
+    const name = label(o.card), { total } = dungeonProgress(o.dungeon);
+    const steps = `${total} ${total === 1 ? 'passo' : 'passos'} até completar`;
+    return `<li class="dungeon-pick"><button class="dungeon-pick-card" data-q-opt="${i}" data-q-card="${o.card.id}" aria-label="Entrar em ${esc(name)}: ${esc(steps)}">${face(o.card)}</button>`
+      + `<p><strong>${esc(name)}</strong><small>${esc(steps)}</small></p>`
+      + `<button type="button" class="dungeon-pick-zoom" data-inspect="${o.card.id}" aria-label="Ampliar ${esc(name)} para ler as salas">${ZOOM_ICON}</button></li>`;
+  }).join('');
+  return `${head}<p class="q-hint">Toque na masmorra em que quer entrar. A lupa amplia a carta para ler as salas.</p><ul class="dungeon-picks">${picks}</ul>`;
+}
 
 /** Escolha da próxima sala: o mapa inteiro, com as salas oferecidas como botões. */
 export function dungeonRoomHTML(q: FQuestion, head: string, owner: FPlayer | undefined) {

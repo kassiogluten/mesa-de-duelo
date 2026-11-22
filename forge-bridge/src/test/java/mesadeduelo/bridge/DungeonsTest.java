@@ -71,10 +71,34 @@ public class DungeonsTest {
         assertTrue(Dungeons.roomChoice(game, options, rows, q));
         assertEquals("dungeon-room", q.get("purpose").getAsString());
         assertEquals(me.getId(), q.get("dungeonOwner").getAsInt());
+        assertEquals(d.getId(), q.getAsJsonObject("card").get("id").getAsInt());
         assertEquals("Goblin Lair", rows.get(0).getAsJsonObject().get("room").getAsString());
         assertEquals("Create a Treasure token.", rows.get(1).getAsJsonObject().get("ability").getAsString());
 
         // Habilidades que não são de masmorra continuam como estavam.
         assertFalse(Dungeons.roomChoice(game, List.of("Sim"), new JsonArray(), new JsonObject()));
+    }
+
+    /** A escolha de qual masmorra entrar vira "dungeon-choice": cada opção leva a masmorra inteira, com imagem e salas. */
+    @Test public void dungeonChoiceCarriesImageAndRooms() {
+        Game game = ExilePermissionsTest.game(); Player me = game.getPlayers().get(0);
+        List<Object> options = new ArrayList<>();
+        for (String name : List.of("Dungeon of the Mad Mage", "Lost Mine of Phandelver", "Tomb of Annihilation"))
+            options.add(new forge.game.card.CardFaceView(name, name));
+        JsonArray rows = new JsonArray();
+        for (Object o : options) { JsonObject row = new JsonObject(); row.addProperty("label", o.toString()); rows.add(row); }
+        JsonObject q = new JsonObject();
+        assertTrue(Dungeons.dungeonChoice(game, me, options, rows, q));
+        assertEquals("dungeon-choice", q.get("purpose").getAsString());
+        JsonObject lostMine = rows.get(1).getAsJsonObject().getAsJsonObject("dungeon");
+        assertEquals("Lost Mine of Phandelver", lostMine.get("name").getAsString());
+        assertEquals("Cave Entrance", lostMine.getAsJsonArray("rooms").get(0).getAsJsonObject().get("name").getAsString());
+        assertFalse(lostMine.has("room"));
+        assertEquals("Lost Mine of Phandelver", rows.get(1).getAsJsonObject().getAsJsonObject("card").get("name").getAsString());
+        assertTrue(rows.get(1).getAsJsonObject().getAsJsonObject("card").has("image"));
+        assertTrue(lostMine.get("image").getAsString().startsWith("https://"));
+        assertEquals(9, rows.get(0).getAsJsonObject().getAsJsonObject("dungeon").getAsJsonArray("rooms").size());
+        // Nomes que não são de masmorra continuam como estavam.
+        assertFalse(Dungeons.dungeonChoice(game, me, List.of(new forge.game.card.CardFaceView("Lightning Bolt", "Lightning Bolt")), new JsonArray(), new JsonObject()));
     }
 }

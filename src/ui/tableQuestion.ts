@@ -12,6 +12,7 @@ import { restoreRowScroll, rowScroll, syncAllRowEdges } from './cardRow';
 import { isLibraryChoice, librarySummary, moveLibraryCard, placeLibraryCard } from './libraryChoice';
 import { isNameChoice, nameListHTML, nameMatches, nameStatus } from './nameChoice';
 import { isModeChoice } from './modeChoice';
+import { isDungeonChoice, isDungeonRoom } from './dungeon';
 import { isColorChoice } from './colorChoice';
 import { firstTypeMatch, isTypeChoice, typeListsHTML } from './typeChoice';
 import { isOptionalCosts } from './optionalCosts';
@@ -132,7 +133,7 @@ export function createTableQuestion(d: QuestionDeps) {
       const again = isFilterableChoice(s.question) && Number(before?.dataset.qid) === s.question.id ? before!.scrollTop : null;
       // Fileira de cartas (celular): marcar uma carta redesenha a escolha, mas a fileira fica onde estava.
       const rows = Number(before?.dataset.qid) === s.question.id ? rowScroll(before) : [];
-      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : isModeChoice(s.question) ? ' mode-choice' : isColorChoice(s.question) ? ' color-choice' : isTypeChoice(s.question) ? ' type-choice' : isOptionalCosts(s.question) ? ' optional-costs' : isAmountChoice(s.question) ? ' combat-damage amount-split' : isSplitDestinations(s.question) ? ' split-destinations' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
+      d.setHTML(qEl, isMinimized ? questionBar(s.question) : `<div class="question${isTriggerOrder(s.question) ? ' trigger-order' : isLibraryChoice(s.question) ? ' library-choice' : isPilesSplit(s.question) || isPilesChoice(s.question) ? ' piles' : isPlayMode(s.question) ? ' play-mode' : isCombatDamage(s.question) ? ' combat-damage' : isNumberChoice(s.question) ? ' number-choice' : isModeChoice(s.question) ? ' mode-choice' : isColorChoice(s.question) ? ' color-choice' : isTypeChoice(s.question) ? ' type-choice' : isOptionalCosts(s.question) ? ' optional-costs' : isAmountChoice(s.question) ? ' combat-damage amount-split' : isSplitDestinations(s.question) ? ' split-destinations' : isDungeonChoice(s.question) ? ' dungeon-choice' : isDungeonRoom(s.question) ? ' dungeon-room' : ''}${again !== null ? ' settled' : ''}" data-qid="${s.question.id}" role="dialog" aria-modal="true" aria-label="${esc(s.question.title)}">${questionHTML(s.question)}</div>`);
       const after = qEl.querySelector<HTMLElement>('.question');
       if (s.question.kind === 'reveal' && !isMinimized && after && Number(before?.dataset.qid) !== s.question.id) d.motion.revealIn([...after.querySelectorAll<HTMLElement>('.q-face')]);
       if (again !== null && after && after !== before) after.scrollTop = again;

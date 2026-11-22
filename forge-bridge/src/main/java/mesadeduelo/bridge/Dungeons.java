@@ -8,7 +8,12 @@ import java.util.Map;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import forge.StaticData;
+import forge.card.CardRules;
 import forge.game.Game;
+import forge.game.card.CardFaceView;
+import forge.game.card.CardFactory;
+import forge.item.PaperToken;
 import forge.game.card.Card;
 import forge.game.card.CardView;
 import forge.game.player.Player;
@@ -20,7 +25,7 @@ import forge.game.zone.ZoneType;
 
 /**
  * Masmorras (se aventurar, iniciativa): o mapa de salas da masmorra na zona de comando, a sala atual,
- * as masmorras completadas e quem tem a iniciativa. Também deixa legível a escolha da próxima sala.
+ * as masmorras completadas e quem tem a iniciativa. Também deixa legíveis a escolha da masmorra e a da próxima sala.
  */
 final class Dungeons {
     private Dungeons() { }
@@ -41,6 +46,57 @@ final class Dungeons {
         return rooms;
     }
 
+    /** A masmorra como a mesa a desenha: nome, imagem, sala atual (se já entrou) e as salas. */
+    static JsonObject json(Card c) {
+        JsonObject d = new JsonObject();
+        d.addProperty("id", c.getId());
+        d.addProperty("name", c.getName());
+        String image = StateJson.tokenImage(c.getView().getCurrentState());
+        if (image != null) d.addProperty("image", image);
+        String current = c.getCurrentRoom();
+        if (current != null && !current.isEmpty()) d.addProperty("room", current);
+        JsonArray rooms = new JsonArray();
+        for (Room r : rooms(c)) {
+            JsonObject row = new JsonObject();
+            row.addProperty("name", r.name());
+            row.addProperty("text", r.text());
+            JsonArray next = new JsonArray();
+            r.next().forEach(next::add);
+            row.add("next", next);
+            rooms.add(row);
+        }
+        d.add("rooms", rooms);
+        return d;
+    }
+
+    /**
+     * Escolha de qual masmorra entrar (se aventurar sem masmorra em andamento): o Forge manda só os nomes. Cada
+     * linha ganha a carta da masmorra (com a imagem, para a mesa mostrar as cartas lado a lado e ampliar) e as
+     * salas. As cartas são montadas na partida, fora de qualquer zona, só para a escolha.
+     */
+    static boolean dungeonChoice(Game game, Player player, List<Object> options, JsonArray rows, JsonObject q) {
+        if (game == null || player == null || options.isEmpty() || !options.stream().allMatch(o -> o instanceof CardFaceView)) return false;
+        Map<String, String> scripts = new LinkedHashMap<>();
+        for (Map.Entry<String, CardRules> e : StaticData.instance().getAllTokens().getRules().entrySet())
+            if (e.getValue().getType().isDungeon()) scripts.putIfAbsent(e.getValue().getMainPart().getName(), e.getKey());
+        List<Card> found = new ArrayList<>();
+        for (Object o : options) {
+            String script = scripts.get(((CardFaceView) o).getName());
+            PaperToken token = script == null ? null : StaticData.instance().getAllTokens().getToken(script);
+            if (token == null) return false;
+            found.add(CardFactory.getCard(token, player, game));
+        }
+        for (int i = 0; i < found.size(); i++) {
+            JsonObject row = rows.get(i).getAsJsonObject();
+            row.addProperty("kind", "card");
+            row.add("card", StateJson.card(found.get(i).getView()));
+            row.add("dungeon", json(found.get(i)));
+        }
+        q.addProperty("purpose", "dungeon-choice");
+        q.addProperty("title", "Em qual masmorra você vai se aventurar?");
+        return true;
+    }
+
     /** Acrescenta dungeon, completedDungeons e initiative ao jogador, só quando existem. */
     static void add(JsonObject o, PlayerView p, Game game) {
         if (game == null) return;
@@ -48,25 +104,7 @@ final class Dungeons {
         if (player == null) return;
         for (Card c : player.getCardsIn(ZoneType.Command)) {
             if (!c.getType().isDungeon()) continue;
-            JsonObject d = new JsonObject();
-            d.addProperty("id", c.getId());
-            d.addProperty("name", c.getName());
-            String image = StateJson.tokenImage(c.getView().getCurrentState());
-            if (image != null) d.addProperty("image", image);
-            String current = c.getCurrentRoom();
-            if (current != null && !current.isEmpty()) d.addProperty("room", current);
-            JsonArray rooms = new JsonArray();
-            for (Room r : rooms(c)) {
-                JsonObject row = new JsonObject();
-                row.addProperty("name", r.name());
-                row.addProperty("text", r.text());
-                JsonArray next = new JsonArray();
-                r.next().forEach(next::add);
-                row.add("next", next);
-                rooms.add(row);
-            }
-            d.add("rooms", rooms);
-            o.add("dungeon", d);
+            o.add("dungeon", json(c));
             break;
         }
         if (!player.getCompletedDungeons().isEmpty()) {
@@ -107,6 +145,8 @@ final class Dungeons {
         q.addProperty("purpose", "dungeon-room");
         q.addProperty("title", "Para qual sala de " + dungeon.getName() + " você vai?");
         q.addProperty("dungeonOwner", dungeon.getOwner().getId());
+        // A carta da masmorra vai ao lado do mapa (no lugar da carta que mandou se aventurar), para ler e ampliar.
+        q.add("card", StateJson.card(dungeon.getView()));
         return true;
     }
 }

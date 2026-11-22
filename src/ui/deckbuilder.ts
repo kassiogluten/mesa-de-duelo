@@ -11,6 +11,7 @@ import { cardCopyLimit, copiesInDeck, type ServerDeckValidation } from './deckRu
 import { inspectCard, showCardPreview, hideCardPreview } from './cardInspector';
 import { openDeckPreview } from './deckPreview';
 import { download, openDeckExport } from './deckExport';
+import { confirmDeckDelete } from './deckDelete';
 import { mountAppHeader } from './appHeader';
 import { applyDeckImport, applyDeckListEdit, deckImportSnapshot, deckListChanges, type DeckImportMode } from './deckImport';
 import { toggleColor, type ColorFilter } from './deckFilters';
@@ -459,7 +460,15 @@ export function mountDeckBuilder(root: HTMLElement, opts: BuilderOptions) {
       case 'list-edit': { const deck = current(); if (deck) beginImport(deck, true); break; }
       case 'import-cancel': { user = loadUserDecks(); const deck = importTarget && user.find(d => d.id === importTarget!.id); importTarget = null; listEdit = false; if (deck) edit(deck); else goLibrary(); break; }
       case 'dup': { const deck = current(); if (deck) duplicate(deck); break; }
-      case 'del': { const deck = current(); if (deck && !deck.builtin) { removed = { deck, index: user.indexOf(deck) }; user = user.filter(d => d.id !== deck.id); selected = null; view = 'library'; persist('Deck excluído.'); render(); } break; }
+      case 'del': {
+        const deck = current(); if (!deck || deck.builtin) break;
+        setDeckActions(false, true);
+        void confirmDeckDelete(deck).then(ok => {
+          const now = current(); if (!ok || view !== 'edit' || now?.id !== deck.id) return;
+          removed = { deck: now, index: user.indexOf(now) }; user = user.filter(d => d.id !== now.id); selected = null; view = 'library'; persist('Deck excluído.'); render();
+        });
+        break;
+      }
       case 'undo': if (removed) { user.splice(removed.index, 0, removed.deck); removed = null; persist('Deck restaurado.'); render(); } break;
       case 'export': { const deck = current(); setDeckActions(false, true); if (deck) openDeckExport(deck); break; }
       case 'source': { const deck = current(); if (deck?.importSource) download([...deck.importHistory ?? [], deck.importSource].join('\n\n// Importação seguinte\n\n'), 'listas-originais.txt'); break; }

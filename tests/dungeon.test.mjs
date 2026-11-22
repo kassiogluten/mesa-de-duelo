@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-const { roomDepths, dungeonProgress, nextRooms, dungeonBadgesHTML, dungeonMapHTML, dungeonRoomHTML, dungeonText, withDungeonBadges } = await import('../src/ui/dungeon.ts');
+const { roomDepths, dungeonProgress, nextRooms, dungeonBadgesHTML, dungeonMapHTML, dungeonRoomHTML, dungeonChoiceHTML, isDungeonChoice, dungeonText, withDungeonBadges } = await import('../src/ui/dungeon.ts');
 
 const room = (name, ...next) => ({ name, text: `${name} effect.`, next });
 const undercity = {
@@ -54,4 +54,18 @@ test('choosing the next room turns the offered rooms into answer buttons', () =>
   assert.match(html, /data-q-opt="1" aria-label="Ir para Arena/);
   assert.doesNotMatch(html, /data-q-opt="\d+" aria-label="Ir para Stash/);
   assert.match(dungeonRoomHTML(q, '', undefined), /<b>Arena<\/b>/);
+});
+
+test('choosing which dungeon shows each card side by side: tapping the card enters, the magnifier only zooms', () => {
+  const lostMine = { id: 21, name: 'Lost Mine', rooms: [room('Cave Entrance', 'Goblin Lair', 'Mine Tunnels'), room('Goblin Lair', 'Temple'), room('Mine Tunnels', 'Temple'), room('Temple')] };
+  const card = (id, name) => ({ id, name, controller: 1, tapped: false, token: true, typeLine: 'Dungeon', image: `https://img/${id}` });
+  const q = { id: 1, method: 'getChoices', kind: 'choose', purpose: 'dungeon-choice', title: 'Em qual masmorra você vai se aventurar?', min: 1, max: 1,
+    options: [{ kind: 'card', label: 'Undercity', card: card(9, 'Undercity'), dungeon: undercity }, { kind: 'card', label: 'Lost Mine', card: card(21, 'Lost Mine'), dungeon: lostMine }] };
+  assert.equal(isDungeonChoice(q), true);
+  assert.equal(isDungeonChoice({ ...q, options: [{ label: 'Lost Mine' }] }), false, 'without the cards it stays a plain list');
+  const html = dungeonChoiceHTML(q, '<h2>head</h2>', c => `<img src="${c.image}">`, c => c.name);
+  assert.match(html, /<button class="dungeon-pick-card" data-q-opt="1" data-q-card="21" aria-label="Entrar em Lost Mine: 3 passos até completar"><img src="https:\/\/img\/21">/);
+  assert.match(html, /<button type="button" class="dungeon-pick-zoom" data-inspect="9" aria-label="Ampliar Undercity para ler as salas">/);
+  assert.match(html, /<small>5 passos até completar<\/small>/);
+  assert.doesNotMatch(html, /dungeon-pick-zoom[^>]*data-q-opt/, 'the magnifier never answers the question');
 });
