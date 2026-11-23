@@ -83,16 +83,16 @@ Princípios:
 Requisito (22/11/2026): sai versão nova todo dia, e ela tem que chegar ao jogador sem esforço. Por isso o atualizador entra na **fase 0**, antes da primeira cena de jogo: tudo o que vier depois já nasce atualizável.
 
 **Como funciona para o jogador.**
-1. Baixa o instalador no site uma vez. Ele instala só para o usuário (em `%LOCALAPPDATA%`, sem pedir administrador) e cria o atalho.
+1. Baixa o zip na página `/baixar` uma vez e extrai onde quiser (decisão de 23/11/2026: sem instalador). Dentro vêm o executável, o pacote do jogo da versão do dia (a primeira abertura funciona sem internet) e um `LEIA-ME.txt`.
 2. A cada abertura, uma tela curta ("Procurando atualização… / Baixando 4,2 MB…") confere a versão e, se houver nova, baixa e entra. Sem internet ou com o servidor fora, entra com a última versão boa.
 3. Com a mesa aberta e saindo versão nova, aparece um aviso discreto ("Versão nova disponível: reinicie quando terminar a partida"). Nunca reinicia sozinha no meio de uma partida.
-4. O instalador só é baixado de novo quando o motor (Godot) muda, o que é raro; aí a própria tela de atualização baixa e abre o instalador novo.
+4. O zip só é baixado de novo quando o motor (Godot) ou o boot mudam, o que é raro; aí a tela de atualização diz "Esta versão precisa ser baixada de novo no site." e abre a `/baixar`.
 
 **Como funciona por dentro.**
 - O executável exportado traz embutido só o **boot** (`godot-table/boot/`): a tela de atualização e o atualizador, pequenos e estáveis. Todo o resto (cenas, scripts, efeitos, sons, texturas) vai num `game.pck` separado.
 - Manifesto público no nosso servidor (`/mesa-pc/versao.json`, servido pelo nginx do deploy): `{ version, pck, sha256, size, engine, minBoot, download }`.
 - O boot baixa o `.pck` para `user://updates/<versão>.pck.part`, confere tamanho e SHA-256, renomeia, carrega com `ProjectSettings.load_resource_pack()` e troca para a cena principal do jogo. Guarda a versão anterior para voltar se a nova não carregar (e só apaga depois de uma abertura bem-sucedida da nova).
-- `engine` diferente do motor do executável ou `minBoot` maior que o do boot: em vez do `.pck`, oferece o instalador novo (se já tiver um pacote que funciona, entra com ele).
+- `engine` diferente do motor do executável ou `minBoot` maior que o do boot: em vez do `.pck`, oferece baixar o zip de novo (se já tiver um pacote que funciona, entra com ele). O pacote que vem no zip (`game-<versão>.pck` ao lado do executável) é copiado para `user://updates` quando ainda não há pacote ou quando ele é mais novo que o atual.
 - Voltar uma versão ruim é trocar o manifesto para o `.pck` anterior.
 - **Regras do código:** o boot não importa nada de fora de `boot/` nem usa `class_name` (ele roda antes do pacote existir). O código do jogo pode usar `class_name`: conferido em 22/11/2026 que classes com nome vindas do `.pck` carregado em tempo de execução funcionam no executável exportado. **Nada de autoload** no `project.godot`: as configurações do projeto vão embutidas no executável, que só tem o boot, e o autoload de um script que só existe no pacote quebraria a abertura. Serviços compartilhados são nós da tela que precisa deles (o `CardCatalog` é filho da `MatchScreen`).
 - **Valores do JSON:** `String(null)` é erro no GDScript, e o servidor manda `null` em vários campos (`phase`, `activePlayer`…). Para texto vindo do servidor, use `Txt.of(valor)` (`game/txt.gd`).
@@ -101,7 +101,7 @@ Requisito (22/11/2026): sai versão nova todo dia, e ela tem que chegar ao jogad
 
 **Compatibilidade com o servidor.** Como todo cliente se atualiza ao abrir, quase todos estão na versão do dia; quem ficou com a mesa aberta usa a anterior. O servidor continua aceitando o protocolo de pelo menos a versão anterior e recusa, com mensagem clara ("Atualize a mesa para continuar"), quem estiver abaixo do `protocolVersion` mínimo.
 
-**Instalador.** Inno Setup por usuário (`PrivilegesRequired=lowest`). Assinar o executável e o instalador (por exemplo, Azure Trusted Signing) para o Windows não mostrar o aviso de "aplicativo não reconhecido"; como as atualizações diárias são só o `.pck`, a assinatura pesa apenas no instalador, que muda pouco.
+**Zip.** `npm run godot:zip` (depois do `godot:pck`, no build do Docker) exporta o executável com o template do Windows (numa camada em cache da imagem) e monta `/mesa-pc/mesa-de-duelo-pc.zip`; o manifesto ganha `zip`, `zipSize` e `zipSha256`, e o nginx serve o zip com `no-cache` e `Content-Disposition: attachment`. Se a exportação falhar no build, o site e o pacote sobem e só o zip fica de fora. Sem assinatura por enquanto: a página e o LEIA-ME explicam o aviso do Windows; assinar (por exemplo, Azure Trusted Signing) pesaria só no executável, que muda pouco.
 
 ## Mudanças no servidor (pequenas, compatíveis)
 
@@ -187,7 +187,7 @@ Decisão (23/11/2026): o login no PC é **vinculado pelo site**, como num login 
 ### Fase 5: Distribuição
 Decisões (23/11/2026): **sem instalador e sem assinatura** por enquanto: a mesa no PC sai num zip (`/mesa-pc/mesa-de-duelo-pc.zip`) que o jogador extrai onde quiser; as atualizações continuam indo para `user://updates`, então a pasta não importa. Página **`/baixar`** no site, com link discreto "Mesa no PC" na tela inicial do navegador, só no Windows. **Novidades no mesmo painel**: um só CHANGELOG, e os itens só da mesa no PC levam o selo "Mesa no PC"; a mesa no PC mostra o mesmo painel.
 
-- [ ] Zip da mesa no PC publicado a cada deploy; página de download `/baixar` e link na tela inicial (só no Windows).
+- [x] Zip da mesa no PC publicado a cada deploy (`npm run godot:zip`, 39 MB, conferido pelo `npm run godot:test-atualizador`); página de download `/baixar` e link "Mesa no PC" no rodapé da tela inicial, só no Windows. Feito em 23/11/2026. **O build do Docker com a exportação do executável ainda não rodou** (sem Docker nesta máquina): conferir no primeiro deploy.
 - [x] Aviso de versão nova com a mesa aberta e recusa educada de cliente velho pelo `protocolVersion` (o servidor manda `minProtocolVersion` no hello e recusa a mesa no PC abaixo dele).
 - [ ] Novidades: selo "Mesa no PC" nos itens só dela, no painel do navegador e no painel da mesa no PC.
 
