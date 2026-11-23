@@ -2,7 +2,7 @@
 import './style.css';
 import './ui/appHeader.css';
 import './novidades.css';
-import { RELEASES, VISUALS, inline, pageEnd, releaseTitle, shotSrc } from './ui/changelog';
+import { RELEASES, VISUALS, inline, pageEnd, pcBadge, releaseTitle, shotSrc } from './ui/changelog';
 import { esc } from './ui/cardtext';
 import { iniciarTema } from './ui/temas';
 import { justifyRows, ROWS } from './ui/justifiedRows';
@@ -36,7 +36,7 @@ app.innerHTML = `
       ${r.items.map(i => `<article class="vis-item" id="v${esc(r.version)}-${slug(i.title)}">
         <div class="vis-text">
           <span class="vis-tag ${GROUP_CLASS[i.group] ?? ''}">${esc(i.group)}</span>
-          <h3>${esc(i.title)}</h3>
+          <h3>${esc(i.title)}${i.pc ? ` ${pcBadge()}` : ''}</h3>
           <p>${inline(i.text)}</p>
         </div>
         <div class="vis-shots">${i.shots.map(s => `<figure>

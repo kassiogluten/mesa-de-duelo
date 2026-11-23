@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readNewsFeed } from './scripts/news-feed.mjs';
 
 // Além do jogo, que tem as telas do app em endereços próprios (/decks, /laboratorio, /partida…, src/app/router.ts), todos
 // abrindo o index.html: as novidades em imagens (/novidades, linkada no painel Novidades e guardada com o app), a política
@@ -56,6 +57,19 @@ export default defineConfig({
     { name: 'efeitos', configureServer: s => { s.middlewares.use(efeitos); }, configurePreviewServer: s => { s.middlewares.use(efeitos); } },
     // A versão publicada, num arquivo que fica fora do cache do app: o aviso de versão nova lê daqui qual é a mais recente (src/ui/pwa.ts).
     { name: 'versao', generateBundle() { this.emitFile({ type: 'asset', fileName: 'versao.json', source: JSON.stringify({ version: JSON.parse(readFileSync('package.json', 'utf8')).version }) }); } },
+    // As novidades para a mesa no PC (scripts/news-feed.mjs), também fora do cache do app; no dev, lidas a cada pedido.
+    {
+      name: 'novidades-json',
+      generateBundle() { this.emitFile({ type: 'asset', fileName: 'novidades.json', source: JSON.stringify(readNewsFeed(process.cwd())) }); },
+      configureServer: s => {
+        s.middlewares.use((req, res, next) => {
+          if (req.url?.split('?')[0] !== '/novidades.json') return next();
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.end(JSON.stringify(readNewsFeed(process.cwd())));
+        });
+      },
+    },
     { name: 'imagem-lenta', configureServer: s => { s.middlewares.use(lento); } },
     VitePWA({
       // A página decide quando atualizar: o jogador vê "Nova versão" e escolhe a hora (src/ui/pwa.ts).
