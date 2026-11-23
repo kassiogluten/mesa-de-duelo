@@ -17,6 +17,7 @@ var _catalog: CardCatalog
 var _table: TableView
 var _hud: Hud
 var _question: QuestionDialog
+var _zones: ZoneViewer
 var _room: RoomPanel
 var _fx: FxDirector
 var _finale_done: bool = false
@@ -51,6 +52,11 @@ func _ready() -> void:
 	_hud.catalog = _catalog
 	layer.add_child(_hud)
 	_fx.hud = _hud
+	_zones = ZoneViewer.new()
+	_zones.catalog = _catalog
+	layer.add_child(_zones)
+	_zones.action.connect(func(message: Dictionary) -> void: _client.send(message))
+	_hud.zone_requested.connect(open_zone)
 	_question = QuestionDialog.new()
 	_question.catalog = _catalog
 	layer.add_child(_question)
@@ -88,6 +94,13 @@ func _ready() -> void:
 ## O último estado recebido do servidor.
 func current_state() -> Dictionary:
 	return _state
+
+
+## Abre a janela de uma zona do jogador: "graveyard", "exile", "command", "hand" (mão revelada) ou "damage" (dano de
+## comandante). Os selos do retrato já chamam; o clique nos montes 3D pode chamar com SeatInfo.owner_zone(estado, id).
+func open_zone(player_id: int, zone: String) -> void:
+	_zones.apply_state(_state)
+	_zones.open_zone(player_id, zone)
 
 
 func _process(delta: float) -> void:
@@ -161,6 +174,7 @@ func _on_message(msg: Dictionary) -> void:
 			_table.apply_state(msg)
 			_play_finale(msg)
 			_hud.apply_state(msg, _blocker_name())
+			_zones.apply_state(msg)
 			_question.show_question(msg.get("question", {}) if msg.get("question") is Dictionary else {})
 			_refresh_highlights()
 			_probe_click.call_deferred()
