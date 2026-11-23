@@ -245,6 +245,7 @@ func _build_badges(badges: Array) -> void:
 		var chip := PanelContainer.new()
 		chip.tooltip_text = Txt.of(b["hint"])
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+		chip.set_meta("badge_key", Txt.of(b["key"]))
 		chip.add_theme_stylebox_override("panel", _chip_style(Color(0.35, 0.06, 0.05, 0.92) if danger else CHIP_BG, DANGER if danger else Color(tone.r, tone.g, tone.b, 0.55), 13))
 		if bool(b["done"]):
 			chip.modulate = Color(1, 1, 1, 0.5)
@@ -273,6 +274,15 @@ func _build_badges(badges: Array) -> void:
 			_badges.add_child(line)
 		line.add_child(chip)
 	_badges.visible = not badges.is_empty()
+
+
+## O selo de chave `key` (POISON, MONARCH, RING…) à mostra, para os efeitos o acharem (fx/state_seats.gd); null sem ele.
+func badge_chip(key: String) -> Control:
+	for line: Node in _badges.get_children():
+		for chip: Node in line.get_children():
+			if Txt.of(chip.get_meta("badge_key", "")) == key and not chip.is_queued_for_deletion():
+				return chip as Control
+	return null
 
 
 func _build_chips(zones: Dictionary, damage: Dictionary) -> void:

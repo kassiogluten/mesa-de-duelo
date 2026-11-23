@@ -262,21 +262,10 @@ static func _embers(d: FxDirector, pos: Vector3) -> void:
 			Fx.burst(d, spot, Color(1.0, 0.55, 0.2), 5, 0.3, 1.2, 0.04, 0.7))
 
 
-## Marcadores: o número sobe na carta (ou no jogador, no veneno e afins) e a carta treme.
+## Marcadores: na permanente, a ficha salta da carta e se encaixa no selo (que conta até o número novo); a lealdade vira
+## algarismo por algarismo; no jogador (veneno, energia…), a ficha voa até o selo do assento (fx/state_counters.gd).
 static func counters(d: FxDirector, event: Dictionary) -> void:
-	var delta: int = int(event.get("delta", 1))
-	var kind: String = Txt.of(event.get("counter"))
-	var text: String = {"P1P1": "+%d/+%d" % [delta, delta], "M1M1": "-%d/-%d" % [delta, delta], "LOYALTY": "+%d lealdade" % delta, "POISON": "+%d veneno" % delta}.get(kind, "+%d" % delta)
-	var color: Color = Color(1.0, 0.4, 0.35) if kind in ["M1M1", "POISON"] else Color(0.55, 1.0, 0.6)
-	var players: Array = (event.get("targets", {}) as Dictionary).get("players", []) if event.get("targets") is Dictionary else []
-	var key: Variant = "player:%d" % int(players[0]) if not players.is_empty() else FxDirector.card_id(event)
-	var pos: Variant = d.table.anchor(key)
-	if pos is Vector3:
-		Fx.float_text(d, pos, text, color, 60, 0.9)
-		Fx.burst(d, pos, color, 14, 0.9, 0.45, 0.06)
-		var node: CardNode = d.table.card_node(key) if key is int else null
-		if node:
-			node.jolt()
+	CounterFx.play(d, event)
 
 
 ## Aura ou equipamento preso: a corrente de luz da carta até a permanente (ou o jogador) em que ela se prendeu, depois que
