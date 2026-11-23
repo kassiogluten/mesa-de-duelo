@@ -5,7 +5,8 @@ extends RefCounted
 ## A que distância da câmera ficam os títulos e placares.
 const TEXT_DEPTH := 8.0
 ## Quanto da tela (fração da largura e da altura) os títulos e os placares deixam livre nas bordas.
-const TITLE_MARGIN := Vector2(0.3, 0.2)
+## Os títulos ficam sempre no meio da tela na horizontal (largos demais para caber ao lado de um retrato no canto).
+const TITLE_MARGIN := Vector2(0.5, 0.22)
 const SCORE_MARGIN := Vector2(0.1, 0.16)
 
 static var _slash_shader: Shader

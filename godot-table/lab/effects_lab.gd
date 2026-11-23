@@ -84,7 +84,8 @@ func _panel() -> Control:
 		["Entrada", _enter.bind(103)], ["Entrada lendária", _enter.bind(112)], ["Destruída", _leave.bind(202, "Graveyard", "destroyed")],
 		["Sacrificada", _leave.bind(102, "Graveyard", "sacrificed")], ["Exilada", _leave.bind(201, "Exile", "")],
 		["Ataque", _attack], ["Bloqueio", _block], ["Marcadores +1/+1", _counters], ["Anulada", _countered],
-		["Indestrutível", _survived], ["Limpa-campo", _wrath], ["Moeda", _simple.bind({"type": "coin", "heads": true})], ["Dado", _simple.bind({"type": "die", "sides": 20, "result": 17})],
+		["Indestrutível", _survived], ["Limpa-campo", _wrath],
+		["Primeiro sangue", _first_blood], ["Golpe de comandante", _commander_hit], ["Moeda", _simple.bind({"type": "coin", "heads": true})], ["Dado", _simple.bind({"type": "die", "sides": 20, "result": 17})],
 		["Quem começa", _simple.bind({"type": "starting-roll", "actor": 0, "rolls": [[{"player": 0, "roll": 4}, {"player": 1, "roll": 4}], [{"player": 0, "roll": 6}, {"player": 1, "roll": 2}]]})],
 		["Seu turno", _simple.bind({"type": "turn", "actor": 0, "turn": 6})], ["Vitória", func() -> void: _fx.game_over(true)],
 		["Derrota", func() -> void: _fx.game_over(false)], ["Remontar mesa", _reset],
@@ -240,6 +241,16 @@ func _countered() -> void:
 	_stack = false
 	_fx.before_state(_state([event]))
 	_table.apply_state(_state())
+
+
+## O primeiro golpe de combate num jogador (o momento só vale uma vez por partida: "Remontar mesa" não o reinicia).
+func _first_blood() -> void:
+	_rebuild([_event({"type": "damage", "combat": true, "card": _card(202), "sourceId": 202, "targets": {"players": [0]}, "delta": -2})])
+
+
+## Golpe de comandante, com o total já perto do letal.
+func _commander_hit() -> void:
+	_rebuild([_event({"type": "damage", "combat": true, "commander": true, "commanderId": 201, "commanderTotal": 16, "card": _card(201), "sourceId": 201, "targets": {"players": [0]}, "delta": -5})])
 
 
 ## Todas as criaturas destruídas de uma vez (o pior caso para os quadros).

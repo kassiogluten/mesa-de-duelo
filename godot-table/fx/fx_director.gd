@@ -24,6 +24,8 @@ var mood: TableMood
 ## Escala de velocidade dos efeitos (o laboratório usa câmera lenta).
 var speed: float = 1.0
 var _last_seq: int = -1
+## Momentos grandes (primeiro sangue, eliminação dupla/tripla, golpe de comandante, ultimate): detectados a cada estado.
+var _moments := Moments.new()
 var _you: int = 0
 var _names: Dictionary = {}
 var _slow_frames: float = 0.0
@@ -69,7 +71,9 @@ func before_state(state: Dictionary) -> void:
 		if int(event.get("seq", -1)) > _last_seq:
 			fresh.append(event)
 			_last_seq = int(event.get("seq", -1))
-	if fresh.is_empty():
+	# Os momentos olham o estado inteiro (vida, eliminados), mesmo sem eventos novos.
+	var moments: Array = _moments.observe(state)
+	if fresh.is_empty() and moments.is_empty():
 		return
 	# Quem vai para o cemitério ou o exílio sai em cena: o nó fica com o diretor até o efeito dele.
 	var leaving: Dictionary = {}
@@ -86,12 +90,20 @@ func before_state(state: Dictionary) -> void:
 		total += float(DURATION.get(Txt.of(event.get("type")), 0.0))
 	var pace: float = minf(1.0, MAX_BATCH / maxf(total, 0.001)) / speed
 	var at: float = 0.05
+	## seq do evento → quando ele toca, para o momento dele tocar junto.
+	var times: Dictionary = {}
 	for event: Dictionary in fresh:
 		var played: Dictionary = event
+		times[int(event.get("seq", -1))] = at
 		# Referência fraca: a carta pode já ter sumido quando o temporizador dispara.
 		var ref: WeakRef = weakref(leaving.get(_card_id(event)))
 		get_tree().create_timer(at).timeout.connect(func() -> void: _play(played, ref.get_ref() as CardNode))
 		at += float(DURATION.get(Txt.of(event.get("type")), 0.0)) * pace
+	# Cada momento junto do evento que o causou; a eliminação múltipla depois do último golpe.
+	for raw: Variant in moments:
+		var moment: Dictionary = raw
+		var when: float = at if moment.get("kind") == "multi-kill" else float(times.get(int(moment.get("seq", -1)), at)) + 0.12 / speed
+		get_tree().create_timer(when).timeout.connect(func() -> void: Moments.play(moment, self, table))
 	# Garantia: uma carta separada que não saiu em cena (evento sem efeito) se apaga mesmo assim.
 	for id: Variant in leaving:
 		var ref: WeakRef = weakref(leaving[id])
