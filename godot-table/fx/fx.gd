@@ -53,7 +53,8 @@ static func burst(parent: Node3D, pos: Vector3, color: Color, amount: int = 60, 
 	process.scale_min = size * 0.6
 	process.scale_max = size * 1.4
 	var ramp := Gradient.new()
-	ramp.set_color(0, Color(color.lightened(0.5), 1.0))
+	# Nascem só um pouco mais claras e meio transparentes: muitas somando luz no mesmo ponto estouravam em branco.
+	ramp.set_color(0, Color(color.lightened(0.2), 0.75))
 	ramp.set_color(1, Color(color, 0.0))
 	var ramp_tex := GradientTexture1D.new()
 	ramp_tex.gradient = ramp
