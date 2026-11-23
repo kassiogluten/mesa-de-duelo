@@ -404,6 +404,9 @@ func _inspect_context() -> Dictionary:
 		"card_name": func(id: int) -> String:
 			var card: Dictionary = _table.card_data(id)
 			return _catalog.label(Txt.of(card.get("name"))) if Txt.of(card.get("name")) != "" else "",
+		# As cartas ligadas e o Apontar do inspetor.
+		"state": _state,
+		"point": func(id: int) -> void: _client.send({"type": "point", "card": id}),
 	}
 
 
