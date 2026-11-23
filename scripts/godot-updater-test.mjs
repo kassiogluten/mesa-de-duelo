@@ -13,6 +13,8 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { readZip } from './zip-file.mjs';
+import { readTarGz } from './tar-gz-file.mjs';
+import { LINUX_ARCHIVE, LINUX_EXE, LINUX_README, SHORTCUT_SCRIPT, SHORTCUT_SCRIPT_TEXT } from './godot-linux-files.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const EXE = join(ROOT, 'godot-table', 'export', 'MesaDeDuelo.exe');
@@ -123,6 +125,32 @@ try {
     zipManifest.zip === 'mesa-de-duelo-pc.zip' && zipManifest.zipSize === zipBytes.length
       && zipManifest.zipSha256 === createHash('sha256').update(zipBytes).digest('hex') && zipManifest.download.endsWith('/baixar'),
     JSON.stringify(zipManifest));
+
+  // O .tar.gz do Linux: a mesma pasta, com o executável e o script do atalho executáveis (0755) e o resto 0644.
+  const tarFile = join(zdir, LINUX_ARCHIVE);
+  const tar = existsSync(tarFile) ? readTarGz(tarFile) : [];
+  const modes = Object.fromEntries(tar.map(e => [e.name, e.mode.toString(8)]));
+  const expected = { 'Mesa de Duelo/': '755', [`Mesa de Duelo/${LINUX_EXE}`]: '755', 'Mesa de Duelo/game-2.0.0.pck': '644',
+    'Mesa de Duelo/icon.png': '644', 'Mesa de Duelo/LEIA-ME.txt': '644', [`Mesa de Duelo/${SHORTCUT_SCRIPT}`]: '755' };
+  check('o .tar.gz do Linux traz a pasta com o executável, o pacote, o ícone, o LEIA-ME e o atalho, com os modos certos',
+    JSON.stringify(modes) === JSON.stringify(expected), JSON.stringify(modes));
+  const tarFiles = Object.fromEntries(tar.map(e => [e.name, e.data]));
+  const linuxExe = tarFiles[`Mesa de Duelo/${LINUX_EXE}`] ?? Buffer.alloc(0);
+  // ELF de 64 bits para x86_64, com o boot embutido no fim (o Godot fecha o pacote embutido com "GDPC").
+  check('o executável do Linux é um ELF x86_64 com o boot embutido',
+    linuxExe.length > 1024 * 1024 && linuxExe.readUInt32BE(0) === 0x7f454c46 && linuxExe[4] === 2 && linuxExe.readUInt16LE(18) === 62
+      && linuxExe.subarray(-4).toString('latin1') === 'GDPC' && linuxExe.includes('res://boot/boot.gd') && !linuxExe.includes('res://main.tscn'),
+    `${linuxExe.length} bytes`);
+  check('o pacote, o LEIA-ME e o atalho do Linux são os do site',
+    tarFiles['Mesa de Duelo/game-2.0.0.pck']?.equals(readFileSync(join(zdir, 'game-2.0.0.pck')))
+      && tarFiles['Mesa de Duelo/LEIA-ME.txt']?.toString('utf8') === LINUX_README
+      && tarFiles[`Mesa de Duelo/${SHORTCUT_SCRIPT}`]?.toString('utf8') === SHORTCUT_SCRIPT_TEXT
+      && tarFiles['Mesa de Duelo/icon.png']?.equals(readFileSync(join(ROOT, 'godot-table', 'boot', 'icon.png'))), 'conteúdo diferente');
+  const tarBytes = existsSync(tarFile) ? readFileSync(tarFile) : Buffer.alloc(0);
+  check('o manifesto diz o nome, o tamanho e o hash do .tar.gz',
+    zipManifest.linux === LINUX_ARCHIVE && zipManifest.linuxSize === tarBytes.length
+      && zipManifest.linuxSha256 === createHash('sha256').update(tarBytes).digest('hex'), JSON.stringify(zipManifest));
+
   const folder = join(work, 'extraido');
   for (const e of entries) {
     const target = join(folder, e.name);

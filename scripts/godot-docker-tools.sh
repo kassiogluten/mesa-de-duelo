@@ -1,10 +1,11 @@
 #!/bin/sh
-# Baixa, no build do Docker, o Godot (Linux) e o template de exportação do Windows que o zip da mesa no PC usa.
+# Baixa, no build do Docker, o Godot (Linux) e os templates de exportação do Windows e do Linux que os downloads da mesa no PC usam.
 #   sh scripts/godot-docker-tools.sh <versão do Godot>
-# Do .tpz de ~1 GB com os templates de todas as plataformas, guarda só o windows_release_x86_64.exe e apaga o resto.
+# Do .tpz de ~1 GB com os templates de todas as plataformas, guarda só o windows_release_x86_64.exe e o
+# linux_release.x86_64 e apaga o resto.
 # O que já existe fica: o Dockerfile roda uma vez numa camada em cache (só baixa de novo quando a versão muda) e outra vez
 # a cada deploy, que só baixa se a camada em cache ficou sem alguma peça (download que falhou não fica preso no cache).
-# Nunca falha o build: sem o Godot, o site sobe sem a mesa no PC; sem o template, sobe sem o zip (avisos no log).
+# Nunca falha o build: sem o Godot, o site sobe sem a mesa no PC; sem um template, sobe sem aquele download (avisos no log).
 V="$1"
 REL="https://github.com/godotengine/godot/releases/download/${V}-stable"
 TEMPLATES="${HOME:-/root}/.local/share/godot/export_templates/${V}.stable"
@@ -22,11 +23,16 @@ if [ ! -x /usr/local/bin/godot ]; then
   rm -rf /tmp/godot.zip /tmp/godot
 fi
 
-if [ ! -f "$TEMPLATES/windows_release_x86_64.exe" ]; then
+if [ ! -f "$TEMPLATES/windows_release_x86_64.exe" ] || [ ! -f "$TEMPLATES/linux_release.x86_64" ]; then
   mkdir -p "$TEMPLATES"
-  { wget -q "$REL/Godot_v${V}-stable_export_templates.tpz" -O /tmp/templates.tpz \
-    && unzip -j -o -q /tmp/templates.tpz templates/windows_release_x86_64.exe templates/version.txt -d "$TEMPLATES"; } \
-    || { rm -f "$TEMPLATES/windows_release_x86_64.exe"; echo "AVISO: o template do Windows não foi baixado; o zip da mesa no PC fica de fora neste deploy."; }
+  if wget -q "$REL/Godot_v${V}-stable_export_templates.tpz" -O /tmp/templates.tpz; then
+    unzip -j -o -q /tmp/templates.tpz templates/windows_release_x86_64.exe templates/version.txt -d "$TEMPLATES" \
+      || { rm -f "$TEMPLATES/windows_release_x86_64.exe"; echo "AVISO: o template do Windows não foi extraído; o zip da mesa no PC fica de fora neste deploy."; }
+    unzip -j -o -q /tmp/templates.tpz templates/linux_release.x86_64 -d "$TEMPLATES" \
+      || { rm -f "$TEMPLATES/linux_release.x86_64"; echo "AVISO: o template do Linux não foi extraído; o .tar.gz da mesa no PC fica de fora neste deploy."; }
+  else
+    echo "AVISO: os templates de exportação não foram baixados; os downloads da mesa no PC ficam de fora neste deploy."
+  fi
   rm -f /tmp/templates.tpz
 fi
 exit 0

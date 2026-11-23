@@ -44,8 +44,8 @@ const lento = (req: { url?: string }, res: { statusCode: number; end: () => void
   setTimeout(() => { if (q.get('falha')) { res.statusCode = 404; res.end(); } else next(); }, Math.min(ms, 30000));
 };
 
-// A mesa no PC no dev (/mesa-pc/<arquivo>): o que o npm run godot:pck e o godot:zip gravaram em dist/mesa-pc/, ou 404.
-const MESA_PC_TYPES: Record<string, string> = { json: 'application/json; charset=utf-8', zip: 'application/zip', pck: 'application/octet-stream' };
+// A mesa no PC no dev (/mesa-pc/<arquivo>): o que o npm run godot:pck e o godot:zip (zip e .tar.gz) gravaram em dist/mesa-pc/, ou 404.
+const MESA_PC_TYPES: Record<string, string> = { json: 'application/json; charset=utf-8', zip: 'application/zip', gz: 'application/gzip', pck: 'application/octet-stream' };
 const mesaPc = (req: { url?: string }, res: { statusCode: number; setHeader: (k: string, v: string | number) => void; end: () => void } & NodeJS.WritableStream, next: () => void) => {
   const path = req.url?.split('?')[0] ?? '';
   if (!path.startsWith('/mesa-pc/')) return next();
@@ -55,7 +55,7 @@ const mesaPc = (req: { url?: string }, res: { statusCode: number; setHeader: (k:
   res.setHeader('Content-Type', MESA_PC_TYPES[name.split('.').pop() ?? ''] ?? 'application/octet-stream');
   res.setHeader('Content-Length', statSync(file).size);
   res.setHeader('Cache-Control', 'no-cache');
-  if (name.endsWith('.zip')) res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+  if (/\.(zip|tar\.gz)$/.test(name)) res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
   createReadStream(file).pipe(res);
 };
 

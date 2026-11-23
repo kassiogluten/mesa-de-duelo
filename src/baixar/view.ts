@@ -1,33 +1,48 @@
-// Baixar a mesa no PC: o que vem do manifesto (/mesa-pc/versao.json) e o HTML da página /baixar.
+// Baixar a mesa no PC: o que vem do manifesto (/mesa-pc/versao.json) e o cartão do botão de baixar da página /baixar.
 import { esc } from '../ui/cardtext';
+import type { PcPlatform } from './platform';
 
-/** Onde o pacote fica quando o manifesto não diz outro endereço. */
+/** Onde os downloads ficam quando o manifesto não diz outro endereço. */
 const MESA_PC_DIR = '/mesa-pc/';
 export const DEFAULT_ZIP = `${MESA_PC_DIR}mesa-de-duelo-pc.zip`;
+export const DEFAULT_LINUX = `${MESA_PC_DIR}mesa-de-duelo-pc-linux.tar.gz`;
 export const MANIFEST_URL = `${MESA_PC_DIR}versao.json`;
 
 /**
- * O que a página usa do manifesto. Sem `href`, o zip ainda não foi publicado (manifesto de antes do zip, ou o build não
- * gerou): o botão não aponta para lugar nenhum, porque o endereço sem arquivo devolveria a página do site no lugar do zip.
+ * Um download do manifesto. Sem `href`, ele ainda não foi publicado (manifesto de antes dele, ou o build não gerou):
+ * o botão não aponta para lugar nenhum, porque o endereço sem arquivo devolveria a página do site no lugar do arquivo.
  */
-interface Download { version?: string; href?: string; size?: number }
+interface Asset { href?: string; size?: number }
+/** O que a página usa do manifesto: a versão, o zip do Windows e o .tar.gz do Linux. */
+interface Download { version?: string; windows: Asset; linux: Asset }
 
-/** O manifesto como veio (qualquer JSON) → versão, endereço e tamanho do zip; o que não for válido fica de fora. */
+const validSize = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : undefined;
+
+/** O manifesto como veio (qualquer JSON) → versão e, de cada PC, endereço e tamanho; o que não for válido fica de fora. */
 export function downloadFromManifest(raw: unknown): Download {
   const m = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
   const version = typeof m.version === 'string' && /^\d+\.\d+\.\d+$/.test(m.version) ? m.version : undefined;
-  const size = typeof m.zipSize === 'number' && Number.isFinite(m.zipSize) && m.zipSize > 0 ? m.zipSize : undefined;
-  return { version, href: typeof m.zip === 'string' && m.zip ? zipHref(m.zip) : undefined, size };
+  return {
+    version,
+    windows: { href: typeof m.zip === 'string' && m.zip ? zipHref(m.zip) : undefined, size: validSize(m.zipSize) },
+    linux: { href: typeof m.linux === 'string' && m.linux ? linuxHref(m.linux) : undefined, size: validSize(m.linuxSize) },
+  };
 }
 
-/** O campo `zip`: um nome de arquivo (dentro de /mesa-pc/), um caminho do site ou um https://; o resto cai no padrão. */
-export function zipHref(zip: unknown): string {
-  if (typeof zip !== 'string' || !zip) return DEFAULT_ZIP;
-  if (/^[\w.-]+\.zip$/i.test(zip)) return MESA_PC_DIR + zip;
-  if (/^\/[\w./-]+\.zip$/i.test(zip) && !zip.startsWith('//')) return zip;
-  if (/^https:\/\/[^\s"'<>]+\.zip$/i.test(zip)) return zip;
-  return DEFAULT_ZIP;
+/** Um nome de arquivo (dentro de /mesa-pc/), um caminho do site ou um https:// terminado em `ext`; o resto cai no padrão. */
+function assetHref(value: unknown, ext: string, fallback: string): string {
+  if (typeof value !== 'string' || !value) return fallback;
+  const end = `${ext.replace(/\./g, '\\.')}$`;
+  if (new RegExp(`^[\\w.-]+${end}`, 'i').test(value)) return MESA_PC_DIR + value;
+  if (new RegExp(`^/[\\w./-]+${end}`, 'i').test(value) && !value.startsWith('//')) return value;
+  if (new RegExp(`^https://[^\\s"'<>]+${end}`, 'i').test(value)) return value;
+  return fallback;
 }
+
+/** O campo `zip` do manifesto (Windows). */
+export const zipHref = (zip: unknown) => assetHref(zip, '.zip', DEFAULT_ZIP);
+/** O campo `linux` do manifesto (o .tar.gz). */
+export const linuxHref = (file: unknown) => assetHref(file, '.tar.gz', DEFAULT_LINUX);
 
 /** Tamanho como o Windows mostra (base 1024), com vírgula: 89478485 → "85,3 MB"; de 100 MB para cima, sem casa. */
 export function formatSize(bytes: number): string {
@@ -40,68 +55,49 @@ export function formatSize(bytes: number): string {
 /** Momento do botão: conferindo o manifesto, com o que ele trouxe, ou sem ele (aí não há o que baixar). */
 export type ManifestState = { kind: 'carregando' } | { kind: 'pronto'; download: Download } | { kind: 'falhou' };
 
-/** "Versão 0.239.0 · 85,3 MB", só com o que se sabe. */
-export function downloadDetails(state: ManifestState): string {
+/** Sistema mostrado quando o manifesto não diz versão nem tamanho. */
+const SYSTEM: Record<PcPlatform, string> = { windows: 'Windows 10 e 11', linux: 'Linux de 64 bits' };
+
+/** "Versão 0.239.0 · 85,3 MB" do download deste PC (nos outros aparelhos, só a versão), com o que se sabe. */
+export function downloadDetails(state: ManifestState, platform: PcPlatform | null = 'windows'): string {
   if (state.kind === 'carregando') return 'Conferindo a versão…';
   if (state.kind === 'falhou') return 'Não deu para conferir o download agora. Tente de novo daqui a pouco.';
-  const { version, size, href } = state.download;
-  if (!href) return 'O download fica disponível em instantes. Tente de novo daqui a pouco.';
-  return [version && `Versão ${version}`, size && formatSize(size)].filter(Boolean).join(' · ') || 'Windows 10 e 11';
+  const { version, windows, linux } = state.download;
+  const asset = platform ? state.download[platform] : undefined;
+  if (platform ? !asset?.href : !windows.href && !linux.href) return 'O download fica disponível em instantes. Tente de novo daqui a pouco.';
+  return [version && `Versão ${version}`, asset?.size && formatSize(asset.size)].filter(Boolean).join(' · ')
+    || (platform ? SYSTEM[platform] : 'Windows e Linux');
 }
 
 const ICON_DOWNLOAD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5 12 15.5l5-5M5 19.5h14"/></svg>';
-const ICON_WINDOWS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.6 10.5 4.6v6.9h-7zM11.8 4.4l8.7-1.2v8.3h-8.7zM3.5 12.8h7v6.9l-7-1zM11.8 12.8h8.7v8.3l-8.7-1.2z"/></svg>';
+const ICON_PC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h15A1.5 1.5 0 0 1 21 5.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 14.5zM9 20h6M12 16v4"/></svg>';
 
-/** O cartão do botão de baixar: no Windows, o botão grande; fora dele, o aviso e o Jogar no navegador. */
-export function downloadCardHTML(state: ManifestState, windows: boolean): string {
-  const href = state.kind === 'pronto' ? state.download.href : undefined;
-  const details = `<p class="bx-detalhes" data-detalhes>${esc(downloadDetails(state))}</p>`;
-  // Só vira link com o zip confirmado no manifesto; antes disso, o mesmo botão desligado.
-  const button = (cls: string, content: string) => href
-    ? `<a class="${cls}" href="${esc(href)}" download data-baixar>${content}</a>`
-    : `<button type="button" class="${cls}" disabled data-baixar>${content}</button>`;
-  if (windows) {
-    return `${button('arena-btn primary big bx-baixar', `${ICON_DOWNLOAD}<span>Baixar para Windows</span>`)}
+/** Nome do PC no botão e o arquivo que ele baixa. */
+const LABEL: Record<PcPlatform, { name: string; note: string }> = {
+  windows: { name: 'Windows', note: 'Um arquivo .zip. Não precisa instalar nem ser administrador do PC.' },
+  linux: { name: 'Linux', note: 'Um arquivo .tar.gz. Não precisa instalar nem da senha de administrador.' },
+};
+
+/** O cartão do botão de baixar: no Windows e no Linux, o botão grande do PC; nos outros, o aviso e o Jogar no navegador. */
+export function downloadCardHTML(state: ManifestState, platform: PcPlatform | null): string {
+  const details = `<p class="bx-detalhes" data-detalhes>${esc(downloadDetails(state, platform))}</p>`;
+  // Só vira link com o arquivo confirmado no manifesto; antes disso, o mesmo botão desligado.
+  const button = (pc: PcPlatform, cls: string, content: string) => {
+    const href = state.kind === 'pronto' ? state.download[pc].href : undefined;
+    return href
+      ? `<a class="${cls}" href="${esc(href)}" download data-baixar="${pc}">${content}</a>`
+      : `<button type="button" class="${cls}" disabled data-baixar="${pc}">${content}</button>`;
+  };
+  if (platform) {
+    return `${button(platform, 'arena-btn primary big bx-baixar', `${ICON_DOWNLOAD}<span>Baixar para ${LABEL[platform].name}</span>`)}
       ${details}
-      <p class="bx-nota">Um arquivo .zip. Não precisa instalar nem ser administrador do PC.</p>`;
+      <p class="bx-nota">${LABEL[platform].note}</p>`;
   }
-  return `<p class="bx-aviso">${ICON_WINDOWS}<span>A mesa no PC é só para <strong>Windows</strong>, por enquanto. Neste aparelho, jogue no navegador: é a mesma conta, com os mesmos decks.</span></p>
+  return `<p class="bx-aviso">${ICON_PC}<span>A mesa no PC é só para <strong>Windows</strong> e <strong>Linux</strong>, por enquanto. Neste aparelho, jogue no navegador: é a mesma conta, com os mesmos decks.</span></p>
     <div class="bx-botoes">
       <a class="arena-btn primary big" href="/">Jogar no navegador</a>
-      ${button('arena-btn secondary bx-mesmo-assim', 'Baixar para um PC com Windows')}
+      ${button('windows', 'arena-btn secondary bx-mesmo-assim', 'Baixar para Windows')}
+      ${button('linux', 'arena-btn secondary bx-mesmo-assim', 'Baixar para Linux')}
     </div>
     ${details}`;
-}
-
-/** O resto da página, que não depende do manifesto: os passos, o aviso do Windows, o que precisa e como desinstalar. */
-export function guideHTML(): string {
-  return `<section class="bx-secao" aria-labelledby="bx-passos">
-      <h2 id="bx-passos">Como começar</h2>
-      <ol class="bx-passos">
-        <li><span><strong>Baixe</strong> o arquivo .zip.</span></li>
-        <li><span><strong>Extraia</strong> numa pasta de sua escolha (botão direito no arquivo, <em>Extrair tudo…</em>).</span></li>
-        <li><span><strong>Abra</strong> o <em>Mesa de Duelo.exe</em> que está nela.</span></li>
-      </ol>
-      <p>A mesa se atualiza sozinha toda vez que abre: não precisa baixar de novo a cada versão.</p>
-    </section>
-    <section class="bx-secao bx-windows" aria-labelledby="bx-aviso-windows">
-      <h2 id="bx-aviso-windows">Se o Windows avisar</h2>
-      <p>O Windows pode avisar que o aplicativo não é reconhecido: toque em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>.</p>
-      <p class="bx-menor">O aviso aparece porque a mesa é nova e ainda não tem assinatura digital, não por algum problema no arquivo.</p>
-    </section>
-    <div class="bx-duas">
-      <section class="bx-secao" aria-labelledby="bx-precisa">
-        <h2 id="bx-precisa">O que precisa</h2>
-        <ul>
-          <li>Windows 10 ou 11, de 64 bits.</li>
-          <li>Placa de vídeo com Vulkan ou DirectX 12, com o driver atualizado.</li>
-          <li>Internet para jogar e para as atualizações.</li>
-        </ul>
-      </section>
-      <section class="bx-secao" aria-labelledby="bx-desinstalar">
-        <h2 id="bx-desinstalar">Como desinstalar</h2>
-        <p>É só apagar a pasta onde você extraiu a mesa. Os decks da sua conta continuam nela.</p>
-        <p class="bx-menor">Para apagar também as atualizações baixadas, as imagens guardadas e o login, apague a pasta <code>%APPDATA%\\Godot\\app_userdata\\Mesa de Duelo</code>.</p>
-      </section>
-    </div>`;
 }

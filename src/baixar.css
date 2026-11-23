@@ -1,4 +1,4 @@
-/* Mesa no PC (baixar.html): o cartão do botão de baixar e as seções de passos, aviso do Windows e requisitos. */
+/* Mesa no PC (baixar.html): o cartão do botão de baixar e as seções de passos, aviso do Windows ou atalho do Linux e requisitos. */
 .bx-top .vis-back { margin-left: auto; }
 .bx-pagina { max-width: 760px; }
 .vis.bx-pagina h1 { font-size: 38px; }
@@ -13,7 +13,7 @@
 .bx-detalhes { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 .bx-nota { margin: 0; color: var(--muted); font-size: 14px; }
 .bx-aviso { display: flex; gap: 12px; margin: 0 0 6px; color: var(--muted); line-height: 1.55; }
-.bx-aviso svg { fill: var(--glow); stroke: none; margin-top: 2px; }
+.bx-aviso svg { stroke: var(--glow); margin-top: 2px; }
 .bx-aviso strong { color: var(--ink); }
 .bx-botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .bx-botoes a { text-decoration: none; text-align: center; }
@@ -34,8 +34,8 @@
   content: counter(bx-passo); flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
   font: 800 18px/1 var(--display); color: #2b1700; background: linear-gradient(180deg, #ffd27a, var(--gold) 45%, var(--gold-deep));
 }
-.bx-windows { padding: 16px 18px; border-radius: 14px; border: 1px solid #59b5ff40; background: #59b5ff0d; }
-.bx-windows h2 { color: var(--glow); }
+.bx-destaque { padding: 16px 18px; border-radius: 14px; border: 1px solid #59b5ff40; background: #59b5ff0d; }
+.bx-destaque h2 { color: var(--glow); }
 .bx-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
 @media (max-width: 640px) {
   .vis.bx-pagina h1 { font-size: 30px; }

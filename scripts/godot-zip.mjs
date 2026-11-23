@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// Monta o zip da mesa no PC (mesa-de-duelo-pc.zip): o executável (só o boot), o pacote do jogo da versão e o LEIA-ME.
+// Monta os downloads da mesa no PC: o zip do Windows e o .tar.gz do Linux, cada um com o executável (só o boot), o pacote do jogo da versão e o LEIA-ME.
 //   npm run godot:zip                       em dist/mesa-pc/, depois do npm run godot:pck
 //   npm run godot:zip -- --out <pasta>
-// Lê o versao.json da pasta (versão e pacote), exporta o executável (preset "Windows", precisa do template de exportação
-// do Windows) e acrescenta ao manifesto zip, zipSize e zipSha256. Roda no build do Docker logo depois do godot-pck.mjs.
-// O jogador extrai a pasta "Mesa de Duelo" onde quiser; o pacote dentro dela faz a primeira abertura funcionar sem baixar.
+// Lê o versao.json da pasta (versão e pacote), exporta os executáveis (presets "Windows" e "Linux", cada um com o seu
+// template de exportação) e acrescenta ao manifesto zip, zipSize e zipSha256 (Windows) e linux, linuxSize e linuxSha256.
+// Roda no build do Docker logo depois do godot-pck.mjs. Só o Windows falhar dá erro; o Linux que falha fica de fora com
+// um aviso. O jogador extrai a pasta "Mesa de Duelo" onde quiser; o pacote dentro dela faz a primeira abertura funcionar
+// sem baixar.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -12,6 +14,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeZip } from './zip-file.mjs';
+import { writeTarGz } from './tar-gz-file.mjs';
+import { LINUX_ARCHIVE, LINUX_EXE, LINUX_README, SHORTCUT_SCRIPT, SHORTCUT_SCRIPT_TEXT } from './godot-linux-files.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const ZIP_NAME = 'mesa-de-duelo-pc.zip';
@@ -60,6 +64,28 @@ function fail(message) {
   process.exit(1);
 }
 
+/** Exporta o executável do preset; sem o template da plataforma, o Godot avisa e não grava nada. */
+function exportExe(preset, path) {
+  const exported = godot('--headless', '--export-release', preset, path);
+  if (!exported.ok || !existsSync(path) || statSync(path).size < 1024 * 1024) {
+    throw new Error(`O executável ${preset} não foi exportado (o template de exportação ${preset} está instalado?).\n${exported.out}`);
+  }
+  return readFileSync(path);
+}
+
+/** Grava pelo .part e devolve o nome, o tamanho e o hash; o arquivo anterior só é trocado com o novo inteiro. */
+function publishArchive(path, write) {
+  const part = `${path}.part`;
+  try {
+    write(part);
+    renameSync(part, path);
+  } finally {
+    rmSync(part, { force: true });
+  }
+  const bytes = readFileSync(path);
+  return { size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
+}
+
 const out = resolve(arg('out', join(ROOT, 'dist', 'mesa-pc')));
 const manifestPath = join(out, 'versao.json');
 if (!existsSync(manifestPath)) fail(`Falta ${manifestPath}: rode antes o npm run godot:pck.`);
@@ -73,37 +99,54 @@ if (!existsSync(join(ROOT, 'godot-table', '.godot'))) {
   if (!imported.ok) fail(imported.out);
 }
 
+const pck = readFileSync(pckPath);
+// Com a versão no nome, como no site: o boot sabe qual é sem abrir o pacote.
+const bundledPck = `game-${manifest.version}.pck`;
+const mb = bytes => `${(bytes / 1048576).toFixed(1)} MB`;
 const work = mkdtempSync(join(tmpdir(), 'mesa-pc-zip-'));
-const zipPath = join(out, ZIP_NAME);
-const part = `${zipPath}.part`;
+const updated = { ...manifest };
+let changed = false;
 try {
-  const exe = join(work, EXE_NAME);
-  const exported = godot('--headless', '--export-release', 'Windows', exe);
-  // O executável sai só com o template do Windows instalado; sem ele, o Godot avisa e não grava nada.
-  if (!exported.ok || !existsSync(exe) || statSync(exe).size < 1024 * 1024) {
-    throw new Error(`O executável não foi exportado (o template de exportação do Windows está instalado?).\n${exported.out}`);
+  try {
+    const exe = exportExe('Windows', join(work, EXE_NAME));
+    const zip = publishArchive(join(out, ZIP_NAME), part => writeZip(part, [
+      { name: `${FOLDER}/` },
+      { name: `${FOLDER}/${EXE_NAME}`, data: exe },
+      { name: `${FOLDER}/${bundledPck}`, data: pck },
+      { name: `${FOLDER}/LEIA-ME.txt`, data: Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(README.replace(/\n/g, '\r\n'), 'utf8')]) },
+    ]));
+    Object.assign(updated, { zip: ZIP_NAME, zipSize: zip.size, zipSha256: zip.sha256 });
+    changed = true;
+    console.log(`Zip ${ZIP_NAME} (${mb(zip.size)}, versão ${manifest.version}) em ${out}`);
+  } catch (e) {
+    // O zip e os campos dele no manifesto ficam como estavam.
+    console.error(e.message);
+    process.exitCode = 1;
   }
 
-  writeZip(part, [
-    { name: `${FOLDER}/` },
-    { name: `${FOLDER}/${EXE_NAME}`, data: readFileSync(exe) },
-    // Com a versão no nome, como no site: o boot sabe qual é sem abrir o pacote.
-    { name: `${FOLDER}/game-${manifest.version}.pck`, data: readFileSync(pckPath) },
-    { name: `${FOLDER}/LEIA-ME.txt`, data: Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(README.replace(/\n/g, '\r\n'), 'utf8')]) },
-  ]);
-  renameSync(part, zipPath);
+  try {
+    const exe = exportExe('Linux', join(work, LINUX_EXE));
+    const linux = publishArchive(join(out, LINUX_ARCHIVE), part => writeTarGz(part, [
+      { name: `${FOLDER}/`, mode: 0o755 },
+      { name: `${FOLDER}/${LINUX_EXE}`, data: exe, mode: 0o755 },
+      { name: `${FOLDER}/${bundledPck}`, data: pck, mode: 0o644 },
+      { name: `${FOLDER}/icon.png`, data: readFileSync(join(ROOT, 'godot-table', 'boot', 'icon.png')), mode: 0o644 },
+      { name: `${FOLDER}/LEIA-ME.txt`, data: Buffer.from(LINUX_README, 'utf8'), mode: 0o644 },
+      { name: `${FOLDER}/${SHORTCUT_SCRIPT}`, data: Buffer.from(SHORTCUT_SCRIPT_TEXT, 'utf8'), mode: 0o755 },
+    ]));
+    Object.assign(updated, { linux: LINUX_ARCHIVE, linuxSize: linux.size, linuxSha256: linux.sha256 });
+    changed = true;
+    console.log(`Linux ${LINUX_ARCHIVE} (${mb(linux.size)}, versão ${manifest.version}) em ${out}`);
+  } catch (e) {
+    // Nunca derruba o deploy: o Windows sai igual e o manifesto fica sem os campos do Linux desta versão.
+    console.warn(`AVISO: o pacote Linux da mesa no PC ficou de fora.\n${e.message}`);
+  }
 
-  // O manifesto por último, como no godot-pck.mjs: a página de download lê dele o tamanho e a versão.
-  const bytes = readFileSync(zipPath);
-  const updated = { ...manifest, zip: ZIP_NAME, zipSize: bytes.length, zipSha256: createHash('sha256').update(bytes).digest('hex') };
-  writeFileSync(`${manifestPath}.part`, JSON.stringify(updated, null, 2) + '\n');
-  renameSync(`${manifestPath}.part`, manifestPath);
-  console.log(`Zip ${ZIP_NAME} (${(bytes.length / 1048576).toFixed(1)} MB, versão ${manifest.version}) em ${out}`);
-} catch (e) {
-  // O zip e o manifesto anteriores ficam como estavam.
-  rmSync(part, { force: true });
-  console.error(e.message);
-  process.exitCode = 1;
+  // O manifesto por último, como no godot-pck.mjs: a página de download lê dele os tamanhos e a versão.
+  if (changed) {
+    writeFileSync(`${manifestPath}.part`, JSON.stringify(updated, null, 2) + '\n');
+    renameSync(`${manifestPath}.part`, manifestPath);
+  }
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
