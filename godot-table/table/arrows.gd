@@ -1,4 +1,5 @@
-# Setas em arco na mesa 3D (alvo, ataque, bloqueio): uma fita curva com ponta, refeita a cada quadro para seguir as cartas.
+# Setas em arco na mesa 3D (alvo, ataque, bloqueio): uma fita curva com ponta, refeita a cada quadro para seguir as cartas;
+# a seta que segue o mouse (mirando um alvo, arrastando um atacante, escolhendo quem bloquear) é tracejada e anda.
 class_name Arrows
 extends MeshInstance3D
 
@@ -6,7 +7,7 @@ const SEGMENTS := 28
 const WIDTH := 0.09
 const HEAD := 0.26
 
-## [{from: Vector3, to: Vector3, color: Color}] — as pontas já em coordenadas da mesa, atualizadas por quem desenha.
+## [{from: Vector3, to: Vector3, color: Color, live: bool}] — as pontas já em coordenadas da mesa, atualizadas por quem desenha.
 var arrows: Array = []
 var _mesh := ImmediateMesh.new()
 var _material := StandardMaterial3D.new()
@@ -33,12 +34,13 @@ func _process(delta: float) -> void:
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	for raw: Variant in arrows:
 		var arrow: Dictionary = raw
-		_draw(arrow["from"], arrow["to"], arrow["color"])
+		_draw(arrow["from"], arrow["to"], arrow["color"], bool(arrow.get("live", false)))
 	_mesh.surface_end()
 
 
-## Um arco de `a` até `b` que sobe no meio, com a ponta deitada na direção do alvo; a cor pulsa de leve.
-func _draw(a: Vector3, b: Vector3, color: Color) -> void:
+## Um arco de `a` até `b` que sobe no meio, com a ponta deitada na direção do alvo; a cor pulsa de leve. A seta viva
+## (`live`) é tracejada, com os traços correndo para a ponta, e a ponta maior.
+func _draw(a: Vector3, b: Vector3, color: Color, live: bool = false) -> void:
 	var lift: float = clamp(a.distance_to(b) * 0.28, 0.4, 2.2)
 	var mid: Vector3 = (a + b) * 0.5 + Vector3(0, lift, 0)
 	var points: Array[Vector3] = []
@@ -52,17 +54,24 @@ func _draw(a: Vector3, b: Vector3, color: Color) -> void:
 		var side: Vector3 = (p1 - p0).cross(Vector3.UP).normalized() * WIDTH * 0.5
 		var fade0: float = float(i) / SEGMENTS
 		var fade1: float = float(i + 1) / SEGMENTS
+		if live and dash_gap(float(i) / SEGMENTS, _time):
+			continue
 		var c0 := Color(color, (0.25 + 0.75 * fade0) * pulse)
 		var c1 := Color(color, (0.25 + 0.75 * fade1) * pulse)
 		_quad(p0 - side, p0 + side, p1 + side, p1 - side, c0, c1)
 	# Ponta: um triângulo do fim da fita até o alvo.
 	var tail: Vector3 = points[SEGMENTS]
 	var dir: Vector3 = (b - tail).normalized()
-	var across: Vector3 = dir.cross(Vector3.UP).normalized() * HEAD * 0.6
-	var tip_color := Color(color, pulse)
+	var across: Vector3 = dir.cross(Vector3.UP).normalized() * HEAD * (0.8 if live else 0.6)
+	var tip_color := Color(color.lightened(0.15) if live else color, 1.0 if live else pulse)
 	_vertex(tail - across, tip_color)
 	_vertex(tail + across, tip_color)
 	_vertex(b, tip_color)
+
+
+## Na seta viva, se o pedaço em `t` (0 na origem, 1 na ponta) cai num vão do tracejado; os traços andam com o tempo.
+static func dash_gap(t: float, time: float) -> bool:
+	return fposmod(t * 7.0 - time * 2.2, 1.0) > 0.62
 
 
 func _quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, c0: Color, c1: Color) -> void:
