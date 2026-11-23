@@ -82,6 +82,7 @@ func _ready() -> void:
 	_question.catalog = _catalog
 	layer.add_child(_question)
 	_room = RoomPanel.new()
+	_room.client = _client
 	layer.add_child(_room)
 	_room.action.connect(func(message: Dictionary) -> void: _client.send(message))
 	_room.leave_pressed.connect(_leave)
@@ -270,10 +271,22 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_message(msg: Dictionary) -> void:
+	# O assento fica guardado para a tela inicial oferecer "Voltar à partida" (net/saved_session.gd).
+	SavedSession.track(msg)
 	match Txt.of(msg.get("type", "")):
 		"room":
 			_room.show_room(msg.get("room", {}) if msg.get("room") is Dictionary else {})
 			_hud.set_room(msg.get("room", {}) if msg.get("room") is Dictionary else {})
+		"room-say":
+			_room.say(int(msg.get("seat", -1)), Txt.of(msg.get("key")))
+		"validation-error":
+			# Deck recusado ao criar ou entrar na sala: o motivo, e de volta ao início se nem a sala abriu.
+			var refusal: String = RoomPanel._refusal_text(msg)
+			_hud.show_toast(refusal, "error")
+			if _room.visible:
+				_room.set_status(refusal, true)
+			elif _state.is_empty():
+				get_tree().create_timer(3.0).timeout.connect(_leave)
 		"state":
 			_room.visible = false
 			if _state.is_empty():
@@ -292,6 +305,8 @@ func _on_message(msg: Dictionary) -> void:
 			_probe_click.call_deferred()
 		"error":
 			_hud.show_toast(Txt.of(msg.get("text", "")), "error")
+			if _room.visible:
+				_room.set_status(Txt.of(msg.get("text", "")), true)
 			# Recusado antes de começar (código errado, sala cheia): volta ao início depois de mostrar o aviso.
 			if _state.is_empty() and not _room.visible:
 				get_tree().create_timer(3.0).timeout.connect(_leave)
@@ -301,6 +316,9 @@ func _on_message(msg: Dictionary) -> void:
 			_show_point(int(msg.get("player", -1)), int(msg.get("card", -1)))
 		"gone":
 			_hud.show_toast(Txt.of(msg.get("text", "A partida acabou.")))
+			# Voltando a uma partida que o servidor já encerrou: não há mesa, volta ao início.
+			if _state.is_empty() and not _room.visible:
+				get_tree().create_timer(3.0).timeout.connect(_leave)
 
 
 ## Alguém apontou uma carta (o "Apontar" do inspetor): o contorno dela pulsa três vezes na cor do verso de quem apontou,
@@ -460,6 +478,9 @@ func _leave() -> void:
 	if not _state.is_empty() and not bool(_state.get("gameOver", false)):
 		_client.send({"type": "concede"})
 	_client.send({"type": "leave"})
+	# Sem conexão, o servidor não soube da saída e o assento continua lá: fica guardado para "Voltar à partida".
+	if _client.is_open() or bool(_state.get("gameOver", false)):
+		SavedSession.clear()
 	_client.forget_session()
 	_client.close()
 	finished.emit()

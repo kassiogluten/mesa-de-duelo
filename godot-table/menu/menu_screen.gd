@@ -6,6 +6,8 @@ extends Control
 signal play(start_message: Dictionary)
 ## Abrir o laboratório de efeitos.
 signal lab
+## Abrir a tela Jogar online (salas públicas, código, criar sala).
+signal online
 
 const StarterDecks := preload("res://cards/starter_decks.gd")
 ## Os jeitos de jogar contra o computador: rótulo, formato e quantos jogadores.
@@ -16,8 +18,6 @@ var _mode: OptionButton
 var _yours: OptionButton
 var _theirs: OptionButton
 var _start: Button
-var _name: LineEdit
-var _code: LineEdit
 var _decks: Array = []
 
 
@@ -65,33 +65,19 @@ func _ready() -> void:
 	_start.pressed.connect(_on_play)
 	column.add_child(_start)
 
-	# Partida em rede, com a mesa do navegador ou outra mesa no PC: criar uma sala ou entrar com o código.
-	var online := Hud._label(18, Color(1, 1, 1, 0.75))
-	online.text = "Jogar com outras pessoas"
-	column.add_child(online)
-	_name = LineEdit.new()
-	_name.placeholder_text = "Seu nome na mesa"
-	_name.text = OS.get_environment("MESA_NOME")
-	_name.custom_minimum_size = Vector2(0, 44)
-	column.add_child(_name)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var host := Hud._button("Criar sala", false)
-	host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	host.pressed.connect(_on_host)
-	row.add_child(host)
-	_code = LineEdit.new()
-	_code.placeholder_text = "Código"
-	_code.max_length = 8
-	_code.custom_minimum_size = Vector2(120, 44)
-	row.add_child(_code)
-	var join := Hud._button("Entrar", false)
-	join.pressed.connect(_on_join)
-	row.add_child(join)
-	var watch := Hud._button("Assistir", false)
-	watch.pressed.connect(_on_watch)
-	row.add_child(watch)
-	column.add_child(row)
+	# Partida em rede, com a mesa do navegador ou outra mesa no PC: a tela Jogar online (menu/online_screen.gd).
+	var online_button := Hud._button("Jogar online", false)
+	online_button.name = "Online"
+	online_button.custom_minimum_size = Vector2(0, 52)
+	online_button.pressed.connect(func() -> void: online.emit())
+	column.add_child(online_button)
+	# Partida ou sala em andamento guardada (a mesa fechou ou a conexão caiu): volta ao mesmo assento.
+	var saved: Dictionary = SavedSession.current()
+	if not saved.is_empty():
+		var resume := Hud._button("Voltar à partida" + (" · sala %s" % Txt.of(saved.get("code")) if bool(saved.get("room", false)) else ""), true)
+		resume.name = "Resume"
+		resume.pressed.connect(func() -> void: play.emit(RoomMessages.rejoin(saved)))
+		column.add_child(resume)
 	var options := HBoxContainer.new()
 	options.add_theme_constant_override("separation", 10)
 	var prefs: Dictionary = Prefs.load_all()
@@ -163,32 +149,6 @@ func _fill_decks() -> void:
 		if _decks.size() > initial:
 			picker.select(initial)
 	_start.disabled = _decks.size() < 2
-
-
-func _player_name() -> String:
-	var name: String = _name.text.strip_edges()
-	return name if name != "" else "Jogador"
-
-
-func _on_host() -> void:
-	var mode: Array = MODES[_mode.selected]
-	play.emit({
-		"type": "host", "name": _player_name(), "deck": StarterDecks.forge_deck(_decks[_yours.selected]),
-		"config": {"format": mode[1], "matchLength": "bo1", "playerCount": int(mode[2])}, "visibility": "private",
-	})
-
-
-func _on_join() -> void:
-	var code: String = _code.text.strip_edges().to_upper()
-	if code == "":
-		return
-	play.emit({"type": "join", "code": code, "name": _player_name(), "deck": StarterDecks.forge_deck(_decks[_yours.selected])})
-
-
-func _on_watch() -> void:
-	var code: String = _code.text.strip_edges().to_upper()
-	if code != "":
-		play.emit({"type": "watch", "code": code, "name": _player_name()})
 
 
 func _on_play() -> void:
