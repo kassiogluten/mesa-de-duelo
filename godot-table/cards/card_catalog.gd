@@ -45,6 +45,10 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_save_info()
+	# Espera as imagens que ainda estão sendo decodificadas (fecha a mesa ou o teste sem deixar fio solto).
+	for job: Dictionary in _decoding.values():
+		WorkerThreadPool.wait_for_task_completion(int(job["task"]))
+	_decoding.clear()
 
 
 ## Os dados de uma carta, ou {} enquanto não chegam (peça antes com request()).
@@ -305,11 +309,14 @@ func _process(_delta: float) -> void:
 
 ## Decodifica a imagem (JPG/PNG/WebP e as mipmaps) noutro fio, para a mesa não engasgar quando muitas chegam juntas.
 func _decode_async(url: String, bytes: PackedByteArray, save: bool) -> void:
+	# A trava e o dicionário vão como locais: se o catálogo sair da cena no meio, o fio não toca num objeto já liberado.
+	var lock: Mutex = _decoded_lock
+	var store: Dictionary = _decoded
 	var task: int = WorkerThreadPool.add_task(func() -> void:
 		var image: Image = _decode_image(bytes)
-		_decoded_lock.lock()
-		_decoded[url] = image
-		_decoded_lock.unlock())
+		lock.lock()
+		store[url] = image
+		lock.unlock())
 	_decoding[url] = {"task": task, "bytes": bytes, "save": save}
 
 
