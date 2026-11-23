@@ -1,19 +1,24 @@
-# Física leve das cartas: o quique e a inclinação que se desfaz quando a carta pousa, e a inclinação 3D para o lado do
-# mouse na carta sob ele (a carta parece de papelão de verdade). Nenhum dos dois muda onde a carta termina.
+# Física leve das cartas fora do voo: o assentar de papel (um tapa rente, sem quique), o empurrãozinho na carta de baixo
+# do monte e a inclinação 3D para o lado do mouse na carta sob ele. O voo e o pouso ficam em table/paper_physics.gd.
 class_name CardMotion
 extends RefCounted
 
-## Pouso: duração, altura do quique e inclinação máxima (com força 1).
-const SETTLE_TIME := 0.42
-const SETTLE_LIFT := 0.035
-const SETTLE_TILT := 0.07
+## Assentar: duração, quanto a carta afunda (o ar saindo de baixo) e o balanço máximo (com força 1).
+const SETTLE_TIME := 0.3
+const SETTLE_DIP := 0.004
+const SETTLE_TILT := 0.022
+## Empurrãozinho: quanto a carta de baixo escorrega (unidades da carta) e gira no máximo, e em quanto tempo.
+const NUDGE := 0.014
+const NUDGE_TWIST := 0.035
+const NUDGE_TIME := 0.2
 ## Mouse: inclinação máxima em cada eixo (radianos) e o tempo para chegar nela.
 const HOVER_TILT := 0.16
 const HOVER_TIME := 0.12
 
 
-## A carta acabou de pousar: um quique pequeno e uma inclinação para um lado que balança e some. Termina exatamente no
-## transform que ela tinha ao chamar; se outra coisa mexer na carta no meio (um voo novo), o pouso desiste e não briga.
+## A carta acabou de encostar: afunda um tico e balança pouco em volta de um eixo fixo pelo id (papel não quica).
+## Termina exatamente no transform que ela tinha ao chamar; se outra coisa mexer na carta no meio (um voo novo), o
+## assentar desiste e não briga.
 static func settle(node: Node3D, strength: float = 1.0) -> void:
 	if node == null or not node.is_inside_tree() or strength <= 0.0 or Fx.quality == 0:
 		return
@@ -21,7 +26,8 @@ static func settle(node: Node3D, strength: float = 1.0) -> void:
 	if old and old.is_valid():
 		old.kill()
 	var home: Transform3D = node.transform
-	var angle: float = randf() * TAU
+	var id: int = (node as CardNode).card_id if node is CardNode else node.get_instance_id()
+	var angle: float = PaperPhysics.hash01(id, 11) * TAU
 	var axis := Vector3(cos(angle), 0.0, sin(angle))
 	var written: Array[Transform3D] = [home]
 	var tween: Tween = node.create_tween()
@@ -38,16 +44,46 @@ static func settle(node: Node3D, strength: float = 1.0) -> void:
 			node.transform = home)
 
 
-## A pose do pouso no instante `t` (0 a 1): sobe e desce em quiques cada vez menores e balança em volta de `axis`
-## (deitado no tampo, no espaço da carta). Em t = 0 e t = 1 é exatamente `home`.
+## A pose do assentar no instante `t` (0 a 1): afunda e volta (nunca sobe acima de `home`) e balança cada vez menos em
+## volta de `axis` (deitado no tampo). Em t = 0 e t = 1 é exatamente `home`.
 static func settle_pose(home: Transform3D, axis: Vector3, t: float, strength: float = 1.0) -> Transform3D:
 	if t <= 0.0 or t >= 1.0:
 		return home
-	var fade: float = exp(-4.5 * t) * (1.0 - t)
-	var lift: float = SETTLE_LIFT * strength * fade * absf(sin(t * PI * 2.0))
-	var tilt: float = SETTLE_TILT * strength * fade * sin(t * PI * 3.0)
-	var basis: Basis = home.basis * Basis(axis.normalized(), tilt)
-	return Transform3D(basis, home.origin + Vector3(0.0, lift, 0.0))
+	var scale: float = home.basis.get_scale().x
+	var dip: float = -SETTLE_DIP * strength * scale * sin(PI * clampf(t / 0.35, 0.0, 1.0))
+	var tilt: float = SETTLE_TILT * strength * exp(-5.0 * t) * (1.0 - t) * sin(t * PI * 4.0)
+	var basis: Basis = Basis(axis.normalized(), tilt) * home.basis
+	return Transform3D(basis, home.origin + Vector3(0.0, dip, 0.0))
+
+
+## Quem pousou em cima empurra a carta de baixo: escorrega um tico na direção `dir` (no tampo), gira um nada e o atrito
+## segura ali (não volta: o monte fica do jeito que ficou). `id` fixa o giro; desiste se outra coisa mexer na carta.
+static func nudge(node: Node3D, dir: Vector3, strength: float = 1.0, id: int = 0) -> void:
+	if node == null or not node.is_inside_tree() or Fx.quality == 0 or strength <= 0.0:
+		return
+	var home: Transform3D = node.transform
+	var flat := Vector3(dir.x, 0, dir.z)
+	if flat.length() < 0.01:
+		var angle: float = PaperPhysics.hash01(id, 6) * TAU
+		flat = Vector3(cos(angle), 0, sin(angle))
+	var push: Vector3 = nudge_offset(flat, strength, home.basis.get_scale().x)
+	var twist: float = PaperPhysics.signed(id, 9) * NUDGE_TWIST * strength
+	var written: Array[Transform3D] = [home]
+	var tween: Tween = node.create_tween()
+	tween.tween_method(func(t: float) -> void:
+		if not node.transform.is_equal_approx(written[0]):
+			tween.kill()
+			return
+		var k: float = PaperPhysics.travel(t)
+		var current := Transform3D(Basis(Vector3.UP, twist * k) * home.basis, home.origin + push * k)
+		node.transform = current
+		written[0] = current, 0.0, 1.0, NUDGE_TIME)
+
+
+## Quanto o empurrãozinho leva a carta (no tampo, na direção de `dir`).
+static func nudge_offset(dir: Vector3, strength: float, scale: float) -> Vector3:
+	var flat := Vector3(dir.x, 0, dir.z)
+	return flat.normalized() * NUDGE * scale * strength if flat.length() > 0.0001 else Vector3.ZERO
 
 
 ## Inclina a carta para o lado do mouse: `local_point` é onde o mouse está na carta, de (-1, -1) no canto de cima à

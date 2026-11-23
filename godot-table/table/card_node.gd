@@ -4,6 +4,8 @@ extends Node3D
 
 signal clicked(card: CardNode)
 signal hover_changed(card: CardNode, on: bool)
+## Encostou na mesa (ou no alto do monte) no fim de um voo: ainda escorrega uns milímetros e assenta depois disso.
+signal landed(card: CardNode)
 
 const SIZE := Vector2(0.63, 0.88)
 const SHADER := preload("res://table/card.gdshader")
@@ -38,8 +40,12 @@ var _edge_material := StandardMaterial3D.new()
 var _bottom: MeshInstance3D
 var _shadow: MeshInstance3D
 var _shadow_on: bool = false
-## Voando em arco (a sombra de contato espera o pouso).
-var _flying: bool = false
+## O movimento em curso (PaperPhysics.Flight; null parada), o instante dele e a carta em que ela vai pousar (monte).
+var _flight: PaperPhysics.Flight
+var _flight_time: float = 0.0
+var _under: WeakRef
+## A borda, a sombra e os selos já sumiram (queimando): o voo não acende a sombra de volta.
+var _extras_hidden: bool = false
 var _badges := CardBadges.new()
 var _cost: Node3D
 var _cost_key: String = ""
@@ -152,19 +158,31 @@ func set_hand_info(cost: String, playable: bool, delta: int = 0) -> void:
 ## Sombra de contato embaixo da carta (no campo e nos montes; na mão e na pilha, não).
 func set_contact_shadow(on: bool) -> void:
 	_shadow_on = on
-	_shadow.visible = on and not _flying
+	if _flight == null:
+		_rest_shadow()
 
 
-## Um monte (o grimório): a borda desce até `depth`, como várias cartas empilhadas.
+## A espessura da carta: num monte, a de uma carta de papel (PaperPhysics.pile_step), para o monte ter a altura das
+## cartas sem uma atravessar a outra; no grimório, a do monte inteiro.
 func set_pile_depth(depth: float) -> void:
-	_set_depth(maxf(depth, THICKNESS))
+	_set_depth(maxf(depth, 0.002))
 
 
 func _set_depth(depth: float) -> void:
 	_depth = depth
 	_edge.scale = Vector3(1, depth / THICKNESS, 1)
 	_bottom.position = Vector3(0, -depth, 0)
-	_shadow.position = Vector3(0, -depth - 0.0015 - _raise.y, 0)
+	if _flight == null:
+		_rest_shadow()
+
+
+## A sombra parada: colada no tampo, embaixo da face que encosta nele (a de baixo; virada, a própria face), sem
+## acompanhar o desenho que sobe quando a carta é selecionada.
+func _rest_shadow() -> void:
+	var flipped: bool = (_target if _placed else transform).basis.y.y < 0.0
+	_shadow.transform = Transform3D(Basis.IDENTITY, Vector3(0, (0.0015 if flipped else -_depth - 0.0015) - _raise.y, 0))
+	_shadow.transparency = 0.0
+	_shadow.visible = _shadow_on and not _extras_hidden
 
 
 func set_texture(tex: Texture2D) -> void:
@@ -246,7 +264,8 @@ func set_raise(offset: Vector3) -> void:
 	if offset.is_equal_approx(_raise):
 		return
 	_raise = offset
-	_shadow.position = Vector3(0, -_depth - 0.0015 - offset.y, 0)
+	if _flight == null:
+		_rest_shadow()
 	if lifted:
 		return
 	if _raise_tween:
@@ -262,34 +281,138 @@ func raise_offset() -> Vector3:
 	return _raise
 
 
-## Leva a carta até `target`; com `arc`, sobe no meio do caminho (mudança de zona).
-func move_to(target: Transform3D, arc: bool = false) -> void:
+## Leva a carta até `target`; com `arc`, em arco (mudança de zona). Física de papel (PaperPhysics): descola da mesa
+## pela borda, voa com o ar freando, chega nivelada, encosta com um tapa, escorrega uns milímetros e assenta. `under` é
+## a carta em que ela pousa (o alto de um monte), que leva um empurrãozinho no toque.
+func move_to(target: Transform3D, arc: bool = false, under: CardNode = null) -> void:
 	if _placed and target.is_equal_approx(_target):
 		return
 	_target = target
-	if not _placed:
+	if arc:
+		# Saiu de um monte (onde a carta tem a espessura do papel): volta à espessura de carta solta.
+		_set_depth(THICKNESS)
+	if not _placed or not is_inside_tree():
 		_placed = true
 		transform = target
+		_rest_shadow()
 		return
+	_fly(PaperPhysics.plan(transform, target, arc, card_id, MOVE_TIME), under)
+
+
+## Uma carta nova num monte (moída, destruída, exilada): cai rente do alto do monte, nivelada, e assenta sobre `under`;
+## `delay` espera escondida (várias de uma vez caem uma depois da outra).
+func drop_in(target: Transform3D, under: CardNode = null, delay: float = 0.0) -> void:
+	_target = target
+	_placed = true
+	if not is_inside_tree() or Fx.quality == 0:
+		transform = target
+		_rest_shadow()
+		return
+	var s: float = target.basis.get_scale().x
+	var angle: float = PaperPhysics.hash01(card_id, 4) * TAU
+	var from_dir := Vector3(cos(angle), 0, sin(angle))
+	var tilt := Basis(from_dir.cross(Vector3.UP).normalized(), 0.12)
+	var start := Transform3D(tilt * target.basis, target.origin + from_dir * 0.09 * s + Vector3(0, 0.18 * s, 0))
+	transform = start
+	_fly(PaperPhysics.plan(start, target, false, card_id, MOVE_TIME, false), under, delay)
+
+
+## A carta em que a que está voando vai pousar (o alto do monte): leva o empurrãozinho no toque.
+func land_on(under: CardNode) -> void:
+	if _flight != null and under != null and under != self:
+		_under = weakref(under)
+
+
+## A carta que acabou de sair para o lugar dela entra por baixo de `host` (a aura, o equipamento): passa por trás e
+## chega deslizando de lá, sem atravessar a criatura. Chame logo depois do move_to.
+func tuck_under(host: CardNode) -> void:
+	if _flight != null and host != null and host != self:
+		_flight.tuck_under(host.target_transform().origin)
+
+
+## Encostou (ou está parada) no lugar que a mesa deu a ela. Virando no lugar conta como pousada.
+func is_landed() -> bool:
+	if _flight != null and _flight.kind != PaperPhysics.Kind.TURN and _flight_time < _flight.touch_time:
+		return false
+	return transform.origin.distance_to(_target.origin) < 0.08
+
+
+## O lugar que a mesa deu à carta (onde ela termina o movimento em curso).
+func target_transform() -> Transform3D:
+	return _target if _placed else transform
+
+
+## Empurrãozinho de quem pousou em cima (CardMotion.nudge): escorrega um tico na direção `dir` e fica ali.
+func nudge(dir: Vector3, strength: float = 1.0) -> void:
+	if _flight == null:
+		CardMotion.nudge(self, dir, strength, card_id)
+
+
+func _fly(flight: PaperPhysics.Flight, under: CardNode, delay: float = 0.0) -> void:
 	if _tween:
 		_tween.kill()
-	_tween = create_tween().set_parallel(true)
-	var from: Transform3D = transform
-	var lift: float = 1.2 if arc else 0.0
-	# No voo em arco a sombra de contato sairia do tampo junto com a carta: some e volta no pouso.
-	_flying = arc
-	if arc:
+	_flight = flight
+	_flight_time = 0.0
+	_under = weakref(under) if under != null and under != self else null
+	var written: Array[Transform3D] = [transform]
+	var tween: Tween = create_tween()
+	_tween = tween
+	if delay > 0.0:
+		visible = false
+		tween.tween_interval(delay)
+		tween.tween_callback(func() -> void:
+			visible = true
+			written[0] = transform)
+	tween.tween_method(func(time: float) -> void:
+		# Outra coisa mexeu na carta (o portal do exílio, um golpe): o voo desiste e não briga.
+		if _flight != flight or not transform.is_equal_approx(written[0]):
+			tween.kill()
+			if _flight == flight:
+				_end_flight()
+			return
+		var before: float = _flight_time
+		_flight_time = time
+		var pose: Transform3D = flight.pose(time)
+		transform = pose
+		written[0] = pose
+		_flight_shadow(flight, time, pose)
+		if before < flight.touch_time and time >= flight.touch_time:
+			_touch(flight), 0.0, flight.total, flight.total)
+	tween.tween_callback(func() -> void:
+		if _flight == flight:
+			_flight_time = flight.total
+			if flight.touch_time >= flight.total:
+				_touch(flight)
+			_end_flight())
+
+
+## O toque na mesa: avisa quem espera o pouso e empurra a carta de baixo (no monte).
+func _touch(flight: PaperPhysics.Flight) -> void:
+	if not flight.lands or flight.kind == PaperPhysics.Kind.TURN:
+		return
+	var below: CardNode = _under.get_ref() as CardNode if _under else null
+	_under = null
+	if below and is_instance_valid(below):
+		below.nudge(flight.dir, 1.0 if flight.kind == PaperPhysics.Kind.ARC else 0.6)
+	landed.emit(self)
+
+
+func _end_flight() -> void:
+	_flight = null
+	_rest_shadow()
+
+
+## A sombra de contato no voo: fica no tampo (ou no alto do monte) embaixo da carta, aperta e escurece chegando, abre e
+## some subindo, e se afasta um pouco da luz. Só nos movimentos que pousam na mesa.
+func _flight_shadow(flight: PaperPhysics.Flight, time: float, pose: Transform3D) -> void:
+	if not flight.lands or _extras_hidden:
 		_shadow.visible = false
-	_tween.tween_method(func(t: float) -> void:
-		var eased: float = ease(t, -2.2)
-		var current: Transform3D = from.interpolate_with(target, eased)
-		current.origin.y += sin(t * PI) * lift
-		transform = current, 0.0, 1.0, MOVE_TIME * (1.6 if arc else 1.0))
-	# Pouso com física leve: um quique pequeno e a inclinação que se desfaz (mais forte quando veio em arco).
-	_tween.chain().tween_callback(func() -> void:
-		_flying = false
-		_shadow.visible = _shadow_on
-		CardMotion.settle(self, 1.0 if arc else 0.4))
+		return
+	var look: Array = flight.shadow(time, pose, _depth, _shadow_on)
+	_shadow.visible = float(look[0]) > 0.01
+	if _shadow.visible:
+		_shadow.transparency = 1.0 - float(look[0])
+		_shadow.global_transform = look[1]
 
 
 ## Levanta (ou abaixa) o desenho da carta da mão. A área do clique não sai do lugar: só cresce para cobrir também a
@@ -373,6 +496,7 @@ func vanish() -> void:
 func _hide_extras() -> void:
 	_badges.clear()
 	_shadow_on = false
+	_extras_hidden = true
 	_shadow.visible = false
 	var tween := create_tween()
 	tween.tween_interval(0.12)

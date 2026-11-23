@@ -275,30 +275,50 @@ func dragging(node: CardNode) -> bool:
 	return node != null and not node.visible
 
 
-## Cemitério, exílio e zona de comando: as cartas empilhadas, a de cima à mostra, e quantas são.
+## Cemitério, exílio e zona de comando: as cartas empilhadas, a de cima à mostra, e quantas são. O monte tem a
+## espessura das cartas de papel e uma bagunça arrumada fixa por id (PaperPhysics.pile_pose); quem chega pousa no alto
+## dele e empurra um tico a de baixo, e a carta nova (moída, destruída) cai rente sobre o monte.
 func _place_pile(player: Dictionary, zone: String, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
 	var cards: Array = player.get(zone, []) if player.get(zone) is Array else []
 	var key: String = "command" if zone == "commandZone" else zone
 	var pos: Vector3 = frame[key]
 	var scale: float = frame["scale"]
+	# No primeiro estado (a mesa sendo montada, antes de o grimório existir) os montes já começam no lugar.
+	var settled: bool = card_node("library:%d" % int(player["id"])) != null
+	var step: float = PaperPhysics.pile_step(cards.size())
+	var below: CardNode = null
+	var drops: int = 0
 	for i: int in cards.size():
 		var card: Dictionary = cards[i]
-		put_card(int(card["id"]), card, key, Transform3D(Basis.from_scale(Vector3(scale, scale, scale)), pos + Vector3(0, FIELD_Y + 0.003 * i, 0)), sleeve, seen, names)
-		(_cards[int(card["id"])] as CardNode).set_contact_shadow(i == 0)
+		var id: int = int(card["id"])
+		var fresh: bool = not _cards.has(id)
+		var arriving: bool = fresh or _zones.get(id, key) != key
+		var face_down: bool = bool(card.get("faceDown", false))
+		var t: Transform3D = PaperPhysics.pile_pose(pos, scale, id, i, cards.size(), face_down)
+		put_card(id, card, key, t, sleeve, seen, names)
+		var node: CardNode = _cards[id]
+		node.set_pile_depth(step)
+		node.set_contact_shadow(i == 0)
+		if fresh and settled:
+			node.drop_in(t, below, drops * 0.08)
+			drops += 1
+		elif arriving:
+			node.land_on(below)
+		below = node
 	_count_label("%s:%d" % [key, int(player["id"])], cards.size(), pos + Vector3(0.22, 0.25, 0.3), seen, cards.size() > 1)
 
 
+## O grimório: um bloco virado para baixo, apoiado no tampo, com a altura das cartas que tem (PaperPhysics.library_pose).
 func _place_library(player: Dictionary, frame: Dictionary, sleeve: Color, seen: Dictionary) -> void:
 	var count: int = int(player.get("library", 0))
 	var pos: Vector3 = frame["library"]
 	var scale: float = frame["scale"]
 	var key: String = "library:%d" % int(player["id"])
 	if count > 0:
-		var depth: float = min(count, 60) * 0.004
-		var t := Transform3D((Basis(Vector3.FORWARD, PI)).scaled(Vector3(scale, scale, scale)), pos + Vector3(0, depth + 0.002, 0))
-		put_card(key, {}, "library", t, sleeve, seen, PackedStringArray())
+		var pose: Array = PaperPhysics.library_pose(pos, scale, count)
+		put_card(key, {}, "library", pose[0], sleeve, seen, PackedStringArray())
 		# Virado para baixo, a face de cima é a de baixo da carta: a borda do monte desce do verso até o tampo.
-		(_cards[key] as CardNode).set_pile_depth(depth)
+		(_cards[key] as CardNode).set_pile_depth(pose[1])
 	_count_label(key, count, pos + Vector3(0.22, 0.45, 0.3), seen, true)
 
 

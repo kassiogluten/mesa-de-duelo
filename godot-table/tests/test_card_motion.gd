@@ -1,4 +1,4 @@
-# Física leve das cartas: o pouso quica e volta exatamente ao lugar, não briga com outro voo, e a inclinação segue o mouse.
+# Física leve das cartas: o assentar (sem quique) volta exatamente ao lugar, não briga com outro voo, e a inclinação segue o mouse.
 extends "res://tests/test_case.gd"
 
 var _quality: int = 2
@@ -17,8 +17,8 @@ func test_card_settles_back_exactly_where_it_landed() -> void:
 	check(CardMotion.settle_pose(home, axis, 0.0).is_equal_approx(home), "começa no lugar")
 	check(CardMotion.settle_pose(home, axis, 1.0).is_equal_approx(home), "termina no lugar")
 	var mid: Transform3D = CardMotion.settle_pose(home, axis, 0.2)
-	check(mid.origin.y > home.origin.y, "quica para cima")
-	check(mid.origin.y - home.origin.y < 0.1, "quique pequeno")
+	check(mid.origin.y <= home.origin.y + 0.0001, "papel não quica: não sobe acima do lugar")
+	check(home.origin.y - mid.origin.y < 0.01, "afunda só um tico")
 	check(not mid.basis.is_equal_approx(home.basis), "inclina no meio")
 	CardMotion.settle(card)
 	await tree.create_timer(CardMotion.SETTLE_TIME + 0.15).timeout

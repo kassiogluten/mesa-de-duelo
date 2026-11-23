@@ -20,8 +20,9 @@ func _init(table: TableView) -> void:
 
 
 func place(player: Dictionary, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
-	var library: Vector3 = (frame["library"] as Vector3) + Vector3(0, 0.3, 0)
 	var scale: float = frame["scale"]
+	# A comprada sai deitada do alto do grimório (o monte de agora, sem ela) e descola dele pela borda.
+	var library: Vector3 = PaperPhysics.pile_top(frame["library"], scale, int(player.get("library", 0)))
 	# A carta que chega na mão (comprada) voa do grimório; com várias, uma depois da outra. Na busca no grimório quem
 	# voa é o efeito da busca (CardFlights.tutor), então a carta só aparece; e na mesa sendo montada (o primeiro estado,
 	# antes de o grimório existir) a mão já começa no lugar, como na mesa do navegador.
