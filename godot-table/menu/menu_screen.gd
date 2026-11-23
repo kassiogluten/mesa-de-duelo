@@ -4,8 +4,6 @@ extends Control
 
 ## Pedido de partida pronto ({type:"start", ...}).
 signal play(start_message: Dictionary)
-## Abrir o laboratório de efeitos.
-signal lab
 ## Abrir a tela Jogar online (salas públicas, código, criar sala).
 signal online
 ## Relatar um problema e Meus relatos (as janelas ficam em main.gd).
@@ -51,7 +49,7 @@ func _ready() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(title)
 	var subtitle := Hud._label(20, Color(1, 1, 1, 0.6))
-	subtitle.text = "Prévia da mesa no PC · contra o computador"
+	subtitle.text = "Partidas de Magic contra o computador ou com amigos"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(subtitle)
 
@@ -139,9 +137,6 @@ func _ready() -> void:
 	_sync.decks_changed.connect(_fill_decks)
 	if AccountSession.signed_in():
 		_sync.run()
-	var lab_button := Hud._button("Laboratório de efeitos", false)
-	lab_button.pressed.connect(func() -> void: lab.emit())
-	column.add_child(lab_button)
 	var reports := HBoxContainer.new()
 	reports.add_theme_constant_override("separation", 10)
 	for entry: Array in [["Relatar um problema", report], ["Meus relatos", my_reports]]:

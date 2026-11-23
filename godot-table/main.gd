@@ -98,7 +98,6 @@ func _show_menu() -> void:
 	var version: String = UpdateState.current_version()
 	menu.version_text = "Versão %s" % version if version != "" else "Versão de desenvolvimento"
 	menu.play.connect(_start_match)
-	menu.lab.connect(_open_lab)
 	menu.online.connect(_open_online)
 	# Da tela inicial, o relato leva a última partida desta abertura da mesa, se houve uma.
 	menu.report.connect(func() -> void: _report.open({"from": "inicio", "recorder": MatchRecorder.last, "session": MatchRecorder.last.session if MatchRecorder.last else {}}))
