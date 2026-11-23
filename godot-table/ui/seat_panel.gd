@@ -9,8 +9,8 @@ signal zone_pressed(player_id: int, zone: String)
 ## Pagando: tocou num pip da reserva ({type:"mana", color, gen}).
 signal mana_pressed(message: Dictionary)
 
-const GOLD := Color("#f0b84a")
-const DANGER := Color("#ff5a4e")
+const GOLD := HudStyle.GOLD
+const DANGER := HudStyle.DANGER
 const CHIP_BG := Color(0.06, 0.08, 0.13, 0.9)
 
 var player_id: int = -1
@@ -20,6 +20,9 @@ var portrait: Button
 
 var _side: float = 0.0
 var _column_width: float = 420.0
+## Onde ficam os selos: "right" (ao lado, o seu), "left" (à esquerda do retrato, o oponente do duelo, cuja mão fica à
+## direita) ou "below" (embaixo do nome, os oponentes do Commander, com a mão logo ao lado).
+var _layout: String = "right"
 var _placed_at: Vector2 = Vector2(-1, -1)
 var _name: Label
 var _status: Label
@@ -50,11 +53,11 @@ func setup(id: int, is_mine: bool) -> void:
 	portrait.focus_mode = Control.FOCUS_NONE
 	portrait.pressed.connect(func() -> void: portrait_pressed.emit(player_id))
 	add_child(portrait)
-	_name = Hud._label(20, Color(1, 1, 1, 0.88))
+	_name = HudStyle.label(20, Color(1, 1, 1, 0.88))
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name)
-	_status = Hud._label(15, Color("#ff8f84"))
+	_status = HudStyle.label(15, Color("#ff8f84"))
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,19 +81,24 @@ func setup(id: int, is_mine: bool) -> void:
 	_forecast = PanelContainer.new()
 	_forecast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_forecast.visible = false
-	_forecast_label = Hud._label(19, Color.WHITE)
+	_forecast_label = HudStyle.label(19, Color.WHITE)
 	_forecast.add_child(_forecast_label)
 	add_child(_forecast)
 
 
 ## Põe o retrato com o centro em `center` (no seu, medido do canto de baixo à esquerda) e lado `side`; os selos
-## ocupam até `column_width` ao lado dele (quebrando a linha quando não cabem).
-func place(center: Vector2, side: float, column_width: float = 420.0) -> void:
-	if is_equal_approx(side, _side) and is_equal_approx(column_width, _column_width) and _placed_at == center:
+## ocupam até `column_width` (quebrando a linha quando não cabem), do lado que `layout` diz ("right", "left", "below").
+func place(center: Vector2, side: float, column_width: float = 420.0, layout: String = "right") -> void:
+	if is_equal_approx(side, _side) and is_equal_approx(column_width, _column_width) and _placed_at == center and layout == _layout:
 		return
+	var relayout: bool = layout != _layout or not is_equal_approx(column_width, _column_width)
 	_side = side
 	_column_width = column_width
+	_layout = layout
 	_placed_at = center
+	if relayout and _signature != "":
+		# As linhas dos selos quebram pela largura e se alinham pelo lado: redesenha no próximo estado.
+		_signature = ""
 	if mine:
 		set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 		offset_left = center.x - side / 2.0
@@ -187,7 +195,7 @@ func _portrait_hint(player: Dictionary, state: Dictionary) -> String:
 func _style_portrait() -> void:
 	var ring: Color = Color(1.0, 0.82, 0.3) if _selectable else (GOLD if _active else Color(1, 1, 1, 0.18))
 	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := Hud._panel_style(Color(0.08, 0.1, 0.16, 0.94), int(_side / 2.0))
+		var style := HudStyle.panel(Color(0.08, 0.1, 0.16, 0.94), int(_side / 2.0))
 		style.border_color = ring
 		style.set_border_width_all(6 if _selectable else (4 if _active else 3))
 		if _active or _selectable:
@@ -244,14 +252,14 @@ func _build_badges(badges: Array) -> void:
 		chip.add_child(row)
 		row.add_child(_icon(SeatIcons.icon(Txt.of(b["icon"]), DANGER.lightened(0.3) if danger else tone, 18)))
 		if Txt.of(b["text"]) != "":
-			var value := Hud._label(17, Color.WHITE)
+			var value := HudStyle.label(17, Color.WHITE)
 			value.text = Txt.of(b["text"])
 			value.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			row.add_child(value)
 			if b["key"] == "TURN":
 				_turn_label = value
 		if Txt.of(b["sub"]) != "":
-			var sub := Hud._label(13, Color(1, 1, 1, 0.6))
+			var sub := HudStyle.label(13, Color(1, 1, 1, 0.6))
 			sub.text = Txt.of(b["sub"])
 			sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			row.add_child(sub)
@@ -259,6 +267,7 @@ func _build_badges(badges: Array) -> void:
 			line = HBoxContainer.new()
 			line.add_theme_constant_override("separation", 5)
 			line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			line.size_flags_horizontal = _row_flag()
 			_badges.add_child(line)
 		line.add_child(chip)
 	_badges.visible = not badges.is_empty()
@@ -313,7 +322,7 @@ func _build_pool(pips: Array) -> void:
 			row.mouse_filter = Control.MOUSE_FILTER_PASS
 			row.add_child(_icon(SeatIcons.mana(Txt.of(pip["color"]), 28)))
 			if Txt.of(pip["label"]) != "":
-				var count := Hud._label(17, Color.WHITE)
+				var count := HudStyle.label(17, Color.WHITE)
 				count.text = Txt.of(pip["label"])
 				count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				row.add_child(count)
@@ -335,21 +344,40 @@ func _build_pool(pips: Array) -> void:
 		_pool.add_child(item)
 
 
-## A coluna ao lado do retrato, centrada na altura dele, e a previsão do combate junto da vida (acima do seu retrato,
-## que fica no canto de baixo; abaixo do nome no oponente).
+## O alinhamento das fileiras pela posição da coluna: encostadas no retrato.
+func _row_flag() -> int:
+	return {"left": Control.SIZE_SHRINK_END, "below": Control.SIZE_SHRINK_CENTER}.get(_layout, Control.SIZE_SHRINK_BEGIN)
+
+
+## A coluna dos selos (ao lado do retrato, centrada na altura dele, ou embaixo do nome) e a previsão do combate junto
+## da vida (acima do seu retrato, que fica no canto de baixo; abaixo do nome, e dos selos, no oponente).
 func _layout_column() -> void:
-	# O HFlowContainer quebra a linha pela largura que tem: a coluna ganha a largura toda e o fluxo se ajeita nela.
-	_column.custom_minimum_size = Vector2(_column_width, 0)
-	_column.size = Vector2(_column_width, 0)
+	for row: Control in [_badges, _chips, _pool]:
+		row.size_flags_horizontal = _row_flag()
+	_chips.alignment = BoxContainer.ALIGNMENT_END if _layout == "left" else (BoxContainer.ALIGNMENT_CENTER if _layout == "below" else BoxContainer.ALIGNMENT_BEGIN)
+	_column.custom_minimum_size = Vector2(0, 0)
 	_column.reset_size()
 	var column_size: Vector2 = _column.get_combined_minimum_size()
-	_column.position = Vector2(_side + 14, (_side - column_size.y) / 2.0)
+	var width: float = maxf(column_size.x, 1.0)
+	_column.size = Vector2(width, column_size.y)
+	var name_bottom: float = _side + (52.0 if _status.visible else 30.0)
+	match _layout:
+		"left":
+			_column.position = Vector2(-14.0 - width, (_side - column_size.y) / 2.0)
+		"below":
+			var x: float = _side / 2.0 - width / 2.0
+			# Sem sair pela esquerda da tela (o primeiro oponente fica encostado na borda).
+			x = maxf(x, 8.0 - position.x)
+			_column.position = Vector2(x, name_bottom)
+		_:
+			_column.position = Vector2(_side + 14.0, (_side - column_size.y) / 2.0)
 	_forecast.reset_size()
 	var fsize: Vector2 = _forecast.get_combined_minimum_size()
 	if mine:
 		_forecast.position = Vector2(maxf(-offset_left + 12.0, _side / 2.0 - fsize.x / 2.0), -fsize.y - 10)
 	else:
-		_forecast.position = Vector2(_side / 2.0 - fsize.x / 2.0, _side + (52 if _status.visible else 32))
+		var below: float = name_bottom + (column_size.y + 8.0 if _layout == "below" and column_size.y > 0.0 else 2.0)
+		_forecast.position = Vector2(maxf(_side / 2.0 - fsize.x / 2.0, 8.0 - position.x), below)
 
 
 func _chip_button(icon_name: String, text: String, tone: Color, hint: String) -> Button:
