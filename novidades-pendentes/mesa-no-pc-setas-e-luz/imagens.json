@@ -22,5 +22,11 @@
       "img": "cartas-viradas.webp",
       "legenda": "Em cima, como era: os terrenos virados um por cima do outro; embaixo, como ficou: a fileira usa o espaço livre e as cartas ficam lado a lado."
     }
+  ],
+  "Pilha maior": [
+    {
+      "img": "pilha-maior.webp",
+      "legenda": "À esquerda, como era: a carta do topo pequena; à direita, como ficou: maior, com o texto legível."
+    }
   ]
 }

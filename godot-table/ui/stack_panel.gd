@@ -13,17 +13,19 @@ signal preview(texture: Texture2D)
 signal layout_changed
 
 const GOLD := StackStyle.GOLD
-const WIDTH := 280.0
+const WIDTH := 372.0
 ## Largura da pílula da pilha recolhida.
 const COLLAPSED_W := 262.0
 const MARGIN_RIGHT := 24.0
-const TOP := 150.0
+const TOP := 132.0
 ## Com três oponentes ou mais, o do canto direito tem o grimório logo acima do painel: o painel desce um pouco.
 const TOP_CROWDED := 170.0
 const HEADER_H := 44.0
 ## Altura da carta do topo na tela; a largura sai da proporção da carta.
-const CARD_H := 270.0
+const CARD_H := 350.0
 const COLLAPSED_H := 84.0
+## Folga entre a carta do topo e a borda direita do painel.
+const CARD_SIDE_GAP := 42.0
 ## Quanto cada camada de baixo aparece por trás do topo (para cima e para a esquerda), até a terceira: uma faixa larga de
 ## cada carta à vista, para ficar claro que há mais itens debaixo do topo.
 const PEEK := Vector2(-24, -24)
@@ -250,7 +252,9 @@ func layer_rect(depth: int) -> Rect2:
 		var d: int = mini(depth, 2)
 		return Rect2(Vector2(view.x - MARGIN_RIGHT - small.x - 14.0 + d * -6.0, _top() + HEADER_H + 14.0 + d * -6.0), small)
 	var size := Vector2(CARD_H * CardNode.SIZE.x / CardNode.SIZE.y, CARD_H)
-	var base := Vector2(left + (WIDTH - size.x) / 2.0 - PEEK.x * MAX_PEEK / 2.0, _top() + HEADER_H + 22.0 - PEEK.y * MAX_PEEK)
+	# A carta do topo encostada à direita do painel (com folga: a perspectiva a deixa um pouco maior que o vão), e as de
+	# baixo aparecendo à esquerda dela.
+	var base := Vector2(left + WIDTH - size.x - CARD_SIDE_GAP, _top() + HEADER_H + 22.0 - PEEK.y * MAX_PEEK)
 	return Rect2(base + PEEK * mini(depth, MAX_PEEK), size)
 
 

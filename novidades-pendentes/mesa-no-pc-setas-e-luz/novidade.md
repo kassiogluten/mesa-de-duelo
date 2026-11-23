@@ -4,6 +4,7 @@
 - **Cartas menos estouradas.** [Mesa no PC] Menos luz e brilho sobre as cartas: o branco da moldura e da caixa de texto não estoura mais, o reflexo ficou mais fosco e as setas não apagam a carta que passa embaixo delas.
 - **Aura menor nas cartas que dá para usar.** [Mesa no PC] O brilho em volta das cartas que você pode jogar ou usar agora ficou colado à borda, mais fino e mais fraco, sem vazar para as cartas vizinhas.
 - **Mais espaço para as cartas viradas.** [Mesa no PC] Com o campo cheio, a fileira de terrenos (e a das criaturas) se estica para o lado da mesa sem grimório e cemitério antes de apertar as cartas, então as viradas ficam lado a lado em vez de uma por cima da outra.
+- **Pilha maior.** [Mesa no PC] A carta do topo da pilha ficou bem maior no painel da direita, para dar para ler o texto dela sem abrir os detalhes.
 
 ### Corrigido
 
