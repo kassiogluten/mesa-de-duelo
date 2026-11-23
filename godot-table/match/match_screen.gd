@@ -17,6 +17,7 @@ var _catalog: CardCatalog
 var _table: TableView
 var _hud: Hud
 var _question: QuestionDialog
+var _zones: ZoneViewer
 var _room: RoomPanel
 var _fx: FxDirector
 var _finale_done: bool = false
@@ -51,6 +52,11 @@ func _ready() -> void:
 	_hud.catalog = _catalog
 	layer.add_child(_hud)
 	_fx.hud = _hud
+	_zones = ZoneViewer.new()
+	_zones.catalog = _catalog
+	layer.add_child(_zones)
+	_zones.action.connect(func(message: Dictionary) -> void: _client.send(message))
+	_hud.zone_requested.connect(open_zone)
 	_question = QuestionDialog.new()
 	_question.catalog = _catalog
 	layer.add_child(_question)
@@ -93,6 +99,13 @@ func _ready() -> void:
 ## O último estado recebido do servidor.
 func current_state() -> Dictionary:
 	return _state
+
+
+## Abre a janela de uma zona do jogador: "graveyard", "exile", "command", "hand" (mão revelada) ou "damage" (dano de
+## comandante). Os selos do retrato já chamam; o clique nos montes 3D pode chamar com SeatInfo.owner_zone(estado, id).
+func open_zone(player_id: int, zone: String) -> void:
+	_zones.apply_state(_state)
+	_zones.open_zone(player_id, zone)
 
 
 func _process(delta: float) -> void:
@@ -147,6 +160,9 @@ func _autoplay_step() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Espaço aperta o botão principal da caixa de ação, como na mesa do navegador.
 	if event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_SPACE:
+		# Com a janela de uma zona aberta, o espaço não passa a prioridade sem querer.
+		if _zones.is_open():
+			return
 		var message: Dictionary = _hud.primary_message()
 		if not message.is_empty():
 			_client.send(message)
@@ -166,6 +182,7 @@ func _on_message(msg: Dictionary) -> void:
 			_table.apply_state(msg)
 			_play_finale(msg)
 			_hud.apply_state(msg, _blocker_name())
+			_zones.apply_state(msg)
 			_question.show_question(msg.get("question", {}) if msg.get("question") is Dictionary else {})
 			_refresh_highlights()
 			_probe_click.call_deferred()
@@ -272,6 +289,8 @@ func _on_card_clicked(node: CardNode) -> void:
 	if OS.get_environment("MESA_LOG_ENVIO") == "1":
 		print("CLIQUE na carta %d (zona %s)" % [node.card_id, _table.zone_of(node.card_id)])
 	var input: Dictionary = _input_data()
+	if _open_pile(node, input):
+		return
 	var gen: int = int(input.get("gen", 0))
 	if gen == _clicked_gen:
 		return
@@ -291,6 +310,20 @@ func _on_card_clicked(node: CardNode) -> void:
 			_clicked_gen = gen
 			_client.send({"type": "card", "id": id, "gen": gen})
 			return
+
+
+## Carta de cemitério, exílio ou zona de comando que não é uma escolha agora: abre a janela daquela zona.
+func _open_pile(node: CardNode, input: Dictionary) -> bool:
+	if not ["graveyard", "exile", "command"].has(_table.zone_of(node.card_id)):
+		return false
+	for list: String in ["selectable", "actionable", "untappable", "manaOnly"]:
+		if (input.get(list, []) as Array).has(node.card_id):
+			return false
+	var where: Dictionary = SeatInfo.owner_zone(_state, node.card_id)
+	if where.is_empty():
+		return false
+	open_zone(int(where["player"]), Txt.of(where["zone"]))
+	return true
 
 
 ## Bloqueio: escolhe a sua criatura e depois o atacante (direto, se ela só pode bloquear um).
