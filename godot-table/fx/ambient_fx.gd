@@ -26,6 +26,8 @@ const WIPE_QUIET := 2.5
 const EMITTERS_MINE := 6
 const EMITTERS_DUEL := 3
 const EMITTERS_FAR := 0
+## No máximo tantas camadas acesas na mesa (cada uma é um desenho a mais por quadro); as suas cartas vêm primeiro.
+const MAX_LAYERS := 40
 ## Olhadas por segundo no escurecer da carta (o prompt escurece o resto do campo).
 const POLL_RATE := 10.0
 const PREF_KEY := "ambientEffects"
@@ -137,7 +139,12 @@ func refresh() -> void:
 		return
 	var seen: Dictionary = {}
 	var now: float = _now()
-	for raw: Variant in state.get("players", []):
+	var layers: int = 0
+	# As suas cartas primeiro: se o teto de camadas chegar, quem fica sem é o oponente mais longe.
+	var players: Array = (state.get("players", []) as Array).duplicate()
+	players.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(table.frame_of(int(a["id"])).get("side", -1)) > int(table.frame_of(int(b["id"])).get("side", -1)))
+	for raw: Variant in players:
 		var player: Dictionary = raw
 		var frame: Dictionary = table.frame_of(int(player["id"]))
 		if frame.is_empty():
@@ -155,19 +162,22 @@ func refresh() -> void:
 			var node: CardNode = table.card_node(id)
 			if node == null or not (tops.has(id) or attached.has(id)):
 				continue
+			# Os oponentes do Commander ficam longe e pequenos: um efeito só, sem os de identidade nem o elo do anexo.
 			var modes: Array[int] = []
 			if not attached.has(id):
-				modes = AmbientTraits.pick(card, ctx)
-			# Os oponentes do Commander ficam longe e pequenos: um efeito só, para não virar ruído.
-			if far and modes.size() > 1:
-				modes = modes.slice(0, 1)
+				modes = AmbientTraits.pick(card, ctx, far)
 			var link := Color(0, 0, 0, 0)
-			if attached.has(id):
+			if attached.has(id) and not far:
 				link = _link_color(card)
 				link.a = -1.0
-			elif hosts.has(id):
+			elif hosts.has(id) and not far:
 				link = _link_color((hosts[id] as Array)[0])
 				link.a = 1.0
+			if layers >= MAX_LAYERS:
+				modes = []
+				link.a = 0.0
+			if not modes.is_empty() or link.a != 0.0:
+				layers += 1
 			var hovers: bool = tops.has(id) and AmbientTraits.hovers(card)
 			if modes.is_empty() and not hovers and link.a == 0.0:
 				continue

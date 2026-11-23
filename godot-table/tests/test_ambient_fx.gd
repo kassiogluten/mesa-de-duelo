@@ -148,3 +148,10 @@ func test_particle_budget_per_side() -> void:
 	AmbientFx.enabled = was_enabled
 	table.catalog.queue_free()
 	table.queue_free()
+
+
+func test_far_opponents_get_one_gameplay_effect() -> void:
+	var token: Dictionary = _card("Soldier", "Token Creature — Soldier", ["LIFELINK", "VIGILANCE"], {"token": true})
+	check_eq(AmbientTraits.pick(token, {}, true), [M.LIFELINK] as Array[int], "longe: um efeito só")
+	var plain: Dictionary = _card("Soldier", "Token Creature — Soldier", [], {"token": true, "counters": {"P1P1": 1}})
+	check(AmbientTraits.pick(plain, {}, true).is_empty(), "longe: ficha e +1/+1 não acendem")

@@ -20,6 +20,9 @@ const PRIORITY: Array[int] = [
 	Mode.REACH, Mode.VIGILANCE, Mode.DEFENDER, Mode.P1P1, Mode.LEGENDARY, Mode.TOKEN,
 ]
 
+## Os que só contam quem a carta é (somem longe da câmera).
+const IDENTITY: Array[int] = [Mode.LEGENDARY, Mode.TOKEN, Mode.P1P1]
+
 ## Palavra-chave do Forge → efeito.
 const KEYWORD_MODE := {
 	"FLYING": Mode.FLYING, "LIFELINK": Mode.LIFELINK, "INDESTRUCTIBLE": Mode.INDESTRUCTIBLE, "DEATHTOUCH": Mode.DEATHTOUCH,
@@ -69,9 +72,15 @@ static func candidates(card: Dictionary, ctx: Dictionary = {}) -> Array[int]:
 	return out
 
 
-## Os efeitos que a carta mostra: os dois mais fortes ([] sem nenhum).
-static func pick(card: Dictionary, ctx: Dictionary = {}) -> Array[int]:
+## Os efeitos que a carta mostra: os dois mais fortes ([] sem nenhum). Longe (os oponentes do Commander), um só e sem os
+## de identidade (lendária, ficha, +1/+1), que ali seriam só ruído.
+static func pick(card: Dictionary, ctx: Dictionary = {}, far: bool = false) -> Array[int]:
 	var all: Array[int] = candidates(card, ctx)
+	if far:
+		for mode: int in all:
+			if not IDENTITY.has(mode):
+				return [mode] as Array[int]
+		return [] as Array[int]
 	return all.slice(0, MAX_SLOTS)
 
 
