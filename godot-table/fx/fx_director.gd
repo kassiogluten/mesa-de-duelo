@@ -62,7 +62,6 @@ var _combat_number: int = 0
 
 ## Automático (o regulador escolhe) ou fixo pela opção do jogador.
 var automatic: bool = true
-var _ambience: GPUParticles3D
 ## Sonda para conferir partidas de verdade (MESA_FX_LOG, MESA_FX_PRINTS); null fora disso.
 var _probe: FxProbe
 
@@ -72,8 +71,6 @@ func _ready() -> void:
 	var level: String = Txt.of(prefs.get("effects", "auto"))
 	automatic = level == "auto"
 	Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2)
-	if Fx.quality > 0:
-		_ambience = Fx.ambience(self)
 	if FxProbe.wanted():
 		_probe = FxProbe.new()
 		add_child(_probe)
@@ -83,8 +80,6 @@ func _process(delta: float) -> void:
 	# Regulador: com os quadros caindo por um tempo, os efeitos ficam mais leves (só no Automático).
 	if not automatic:
 		return
-	if _ambience and Fx.quality == 0:
-		_ambience.emitting = false
 	if delta > 1.0 / 45.0:
 		_slow_frames += delta
 		if _slow_frames > 1.5 and Fx.quality > 0:

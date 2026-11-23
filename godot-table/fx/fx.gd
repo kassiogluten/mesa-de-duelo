@@ -259,43 +259,6 @@ static func focus(camera: Camera3D, target: Vector3, amount: float = 0.12, durat
 	tween.tween_property(camera, "position", home, duration * 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 
-## Mesa viva: poeira de luz flutuando devagar sobre o tampo, sem parar (poucas partículas, quase de graça).
-static func ambience(parent: Node3D) -> GPUParticles3D:
-	var dust := GPUParticles3D.new()
-	dust.amount = 60
-	dust.lifetime = 9.0
-	dust.preprocess = 9.0
-	dust.local_coords = false
-	dust.visibility_aabb = AABB(Vector3(-10, -1, -7), Vector3(20, 6, 14))
-	var process := ParticleProcessMaterial.new()
-	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	process.emission_box_extents = Vector3(8.5, 0.6, 5.0)
-	process.direction = Vector3(0, 1, 0)
-	process.spread = 60.0
-	process.initial_velocity_min = 0.03
-	process.initial_velocity_max = 0.12
-	process.gravity = Vector3.ZERO
-	process.turbulence_enabled = true
-	process.turbulence_noise_strength = 0.4
-	process.turbulence_noise_scale = 3.0
-	process.scale_min = 0.025
-	process.scale_max = 0.06
-	var ramp := Gradient.new()
-	# Bem fraca: forte, cada partícula estoura no brilho da cena e vira uma bolha.
-	ramp.set_color(0, Color(1.0, 0.85, 0.6, 0.0))
-	ramp.add_point(0.3, Color(0.5, 0.42, 0.3, 0.5))
-	ramp.add_point(0.7, Color(0.35, 0.4, 0.5, 0.45))
-	ramp.set_color(ramp.get_point_count() - 1, Color(0.7, 0.8, 1.0, 0.0))
-	var ramp_tex := GradientTexture1D.new()
-	ramp_tex.gradient = ramp
-	process.color_ramp = ramp_tex
-	dust.process_material = process
-	dust.draw_pass_1 = _spark()
-	dust.position = Vector3(0, 0.8, 0)
-	parent.add_child(dust)
-	return dust
-
-
 ## Tremor de câmera curto (golpe grande, eliminação), pelo deslocamento da lente: não mexe na posição, que o foco anima.
 static func shake(camera: Camera3D, strength: float = 0.12, duration: float = 0.35) -> void:
 	MomentPieces.shake(camera, strength, duration)
