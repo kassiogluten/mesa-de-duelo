@@ -207,3 +207,16 @@ func test_arrow_arc_leaves_room_for_the_head_and_thins_at_the_card() -> void:
 	check(points[points.size() / 2].y > 0.4, "o arco sobe no meio")
 	check(Arrows.width_at(0.0) < Arrows.width_at(0.5), "mais fino ao sair da carta")
 	check(is_equal_approx(Arrows.width_at(1.0), Arrows.WIDTH), "cheio no resto")
+
+
+func test_mulligan_bottom_makes_the_hand_clickable_and_marks_the_chosen() -> void:
+	var s: Dictionary = {"you": 0, "input": {"gen": 4, "opening": "mulligan-bottom", "openingReturnCount": 2, "openingSelected": [12],
+		"selectable": [], "actionable": []},
+		"players": [{"id": 0, "hand": [{"id": 11}, {"id": 12}, {"id": 13}]}, {"id": 1, "hand": [{"id": 21}]}]}
+	check_eq(DecisionRoles.opening_hand(s), [11, 12, 13], "as cartas da sua mão, mesmo fora de selectable")
+	var roles: Dictionary = DecisionRoles.build(s, BlockFlow.new(), AttackFlow.new())
+	check_eq(roles["selected"], [12], "a já escolhida para o fundo fica marcada")
+	check_eq(roles["selectable"], [11, 13], "as outras acendem para escolher")
+	(s["input"] as Dictionary)["opening"] = "mulligan"
+	check_eq(DecisionRoles.opening_hand(s), [], "fora da escolha do fundo, nada muda")
+

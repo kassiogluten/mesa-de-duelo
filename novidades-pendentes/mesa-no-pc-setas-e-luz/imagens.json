@@ -1,0 +1,14 @@
+{
+  "Setas de energia": [
+    {
+      "img": "setas.webp",
+      "legenda": "A seta dourada que segue o mouse, com os pulsos correndo até a ponta, a de ataque em vermelho e a de bloqueio em azul."
+    }
+  ],
+  "Cartas menos estouradas": [
+    {
+      "img": "cartas-menos-brancas.webp",
+      "legenda": "Antes, à esquerda, o branco das cartas estourava sob a luz; depois, à direita, a moldura e o texto aparecem sem brilho demais."
+    }
+  ]
+}

@@ -157,6 +157,10 @@ func click_card(node: CardNode) -> void:
 		else:
 			_apply(attacks.choose(s, {"id": id, "kind": "card"}, card_name))
 		return
+	# Fundo do grimório depois do mulligan: tocar na carta da mão marca (ou desmarca) que ela vai para o fundo.
+	if DecisionRoles.opening_hand(s).has(id):
+		send_once({"type": "card", "id": id, "gen": gen})
+		return
 	for list: String in ["selectable", "actionable", "untappable", "manaOnly"]:
 		if (input.get(list, []) as Array).has(id):
 			send_once({"type": "card", "id": id, "gen": gen})

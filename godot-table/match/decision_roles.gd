@@ -16,6 +16,18 @@ static func _ints(value: Variant) -> Array:
 	return (value as Array).map(func(id: Variant) -> int: return int(id)) if value is Array else []
 
 
+## Depois do mulligan, escolhendo as cartas que vão para o fundo do grimório: as da sua mão (o servidor não as põe em
+## `selectable`, como a mesa do navegador, que manda o toque em qualquer carta da mão). [] fora dessa escolha.
+static func opening_hand(s: Dictionary) -> Array:
+	if Txt.of(_input(s).get("opening")) != "mulligan-bottom":
+		return []
+	var you: int = int(s.get("you", -1))
+	for raw: Variant in s.get("players", []):
+		if raw is Dictionary and int((raw as Dictionary).get("id", -2)) == you:
+			return ((raw as Dictionary).get("hand", []) as Array).filter(func(c: Variant) -> bool: return c is Dictionary).map(func(c: Dictionary) -> int: return int(c.get("id", -1)))
+	return []
+
+
 ## Os papéis para TableHighlights: {selected, selectable, attacking, untappable, actionable, mana_only, blocking, stacks}.
 ## `dragged`: a permanente sendo arrastada (o atacante arrastado acende quem ele pode atacar).
 static func build(s: Dictionary, blocks: BlockFlow, attacks: AttackFlow, dragged: CardNode = null) -> Dictionary:
@@ -26,6 +38,10 @@ static func build(s: Dictionary, blocks: BlockFlow, attacks: AttackFlow, dragged
 	if selection is Dictionary:
 		selected = _ints((selection as Dictionary).get("cards"))
 	var actionable: Array = _ints(input.get("actionable"))
+	var bottom: Array = opening_hand(s)
+	if not bottom.is_empty():
+		selected = _ints(input.get("openingSelected"))
+		selectable = bottom.filter(func(id: int) -> bool: return not selected.has(id))
 	if not BlockFlow.legal(s).is_empty():
 		selectable = blocks.selectable(s)
 		if blocks.pending():
