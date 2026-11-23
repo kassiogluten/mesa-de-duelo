@@ -7,6 +7,8 @@ extends Control
 ## Mensagem pronta para o servidor ({type:"rematch"}).
 signal action(message: Dictionary)
 signal leave_pressed
+## "Relatar um problema", discreto embaixo dos botões.
+signal report_pressed
 
 const GOLD := Color("#f0b84a")
 const TONES := {"win": Color("#f4c04e"), "lose": Color("#ec6a5e"), "draw": Color("#c9d2e3")}
@@ -172,6 +174,18 @@ func _ready() -> void:
 	_home = _wide(Hud._button("Início", false))
 	_home.pressed.connect(func() -> void: leave_pressed.emit())
 	buttons.add_child(_home)
+	var report := Button.new()
+	report.name = "Report"
+	report.text = "Relatar um problema"
+	report.flat = true
+	report.focus_mode = Control.FOCUS_NONE
+	report.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	report.add_theme_font_size_override("font_size", 15)
+	report.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
+	report.add_theme_color_override("font_hover_color", Color(1, 1, 1, 0.85))
+	report.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	report.pressed.connect(func() -> void: report_pressed.emit())
+	_column.add_child(report)
 
 	# Vendo o campo: só o botão para voltar ao resultado, embaixo no meio (o resto da tela fica livre).
 	_back = Hud._button("Voltar ao resultado", true)

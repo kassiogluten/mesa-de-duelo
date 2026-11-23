@@ -23,6 +23,7 @@ export function issueBody(stored: Stored) {
     '', '> ' + String(r.description ?? '').replace(/\n/g, '\n> '), '',
     '| | |', '|---|---|',
     `| Versão da mesa | ${r.app?.version ?? '?'} |`,
+    r.client?.type === 'godot' ? `| Mesa | no PC (Godot ${r.client.engine ?? '?'}) |` : null,
     r.match?.rulesVersion ? `| Regras / motor | ${r.match.rulesVersion} / ${r.match.engineVersion ?? '?'} |` : null,
     r.match?.format ? `| Formato | ${r.match.format}${r.match.net ? ' (em rede)' : ''}, ${r.match.playerCount ?? '?'} jogadores |` : null,
     `| Onde | ${r.from === 'partida' ? 'durante a partida' : 'tela inicial'} |`,

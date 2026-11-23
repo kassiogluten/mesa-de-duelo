@@ -192,3 +192,6 @@ body { min-height: 100%; height: auto; }
 .adm-notice-preview .server-notice { position: static; transform: none; animation: none; width: auto; max-width: 100%; font-weight: 500; }
 .adm-notice-preview .server-notice-text { flex: 1 1 auto; }
 .adm-notice-preview .server-notice-close { pointer-events: none; }
+
+/* Print da mesa no PC enviado com o relato. */
+.adm-shot { display: block; max-width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .12); }
