@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { GOLDEN_DIR } from '../scripts/godot-golden.mjs';
-import { RECORDED } from '../scripts/godot-golden-record.mjs';
+import { PROJECT, RECORDED, VIEWS, viewFrom } from '../scripts/godot-golden-record.mjs';
 
 const modules = {};
 for (const [path, names] of Object.entries(RECORDED)) {
@@ -20,8 +20,10 @@ test('as saídas guardadas nos fixtures dourados continuam as da mesa do navegad
     assert.ok(modules[fn], `${file}: função que não está em RECORDED`);
     for (const c of JSON.parse(readFileSync(join(GOLDEN_DIR, file), 'utf8'))) {
       // null no arquivo é um argumento ausente (o JSON não guarda undefined); { $translate } é a tradução dos nomes, pelo mapa `names`.
-      const args = c.args.map(a => a === null ? undefined : a?.$translate ? (n => c.names?.[n] ?? n) : a);
-      const out = modules[fn](...args) ?? null;
+      // { $view } é a vista da mesa (objeto com funções), gravada como mapas chave → resultado.
+      const args = c.args.map((a, i) => a === null ? undefined : a?.$translate ? (n => c.names?.[n] ?? n) : a?.$view ? viewFrom(a.$view, VIEWS[fn][i]) : a);
+      const raw = modules[fn](...args);
+      const out = (PROJECT[fn] && raw != null ? PROJECT[fn](raw) : raw) ?? null;
       if (JSON.stringify(out) !== JSON.stringify(c.out)) stale.push(`${fn}(${JSON.stringify(c.args).slice(0, 80)}…)`);
     }
   }

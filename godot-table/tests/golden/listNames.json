@@ -1,0 +1,78 @@
+[
+ {
+  "args": [
+   [
+    "1 sua",
+    "2 de Bruno"
+   ],
+   2
+  ],
+  "out": "1 sua e 2 de Bruno"
+ },
+ {
+  "args": [
+   [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f"
+   ],
+   4
+  ],
+  "out": "a, b, c, d e mais 2"
+ },
+ {
+  "args": [
+   [
+    "a",
+    "b",
+    "c"
+   ]
+  ],
+  "out": "a, b e c"
+ },
+ {
+  "args": [
+   [
+    "A",
+    "B"
+   ]
+  ],
+  "out": "A e B"
+ },
+ {
+  "args": [
+   [
+    "a"
+   ]
+  ],
+  "out": "a"
+ },
+ {
+  "args": [
+   [
+    "Bruno"
+   ]
+  ],
+  "out": "Bruno"
+ },
+ {
+  "args": [
+   [
+    "Llanowar Elves"
+   ]
+  ],
+  "out": "Llanowar Elves"
+ },
+ {
+  "args": [
+   [
+    "você",
+    "Grizzly Bears"
+   ]
+  ],
+  "out": "você e Grizzly Bears"
+ }
+]

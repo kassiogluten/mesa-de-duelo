@@ -1,4 +1,5 @@
-# O HUD por cima da mesa 3D: retratos com vida, fase do turno, caixa de ação com os botões e a carta ampliada.
+# O HUD por cima da mesa 3D: retratos com vida, menu, relógios e histórico no alto, trilha de fases, caixa de ação com
+# os botões e a carta ampliada.
 class_name Hud
 extends Control
 
@@ -10,6 +11,9 @@ signal leave_pressed
 signal zone_requested(player_id: int, zone: String)
 ## O jogador trocou o nível de passar (para guardar).
 signal pass_level_changed(level: String)
+## Opções trocadas no menu da partida (valem na hora).
+signal effects_changed(level: String)
+signal volume_changed(volume: float)
 
 ## Nome das etapas (STOP_STEPS de src/ui/opponentStops.ts).
 const PHASES := {
@@ -26,7 +30,11 @@ var portrait_slot: Callable = func(_id: int) -> Vector2: return Vector2(-1, -1)
 ## Quantos jogadores há (retratos menores com mais de um oponente).
 var player_count: Callable = func() -> int: return 2
 
-var _phase: Label
+var _menu: MatchMenu
+var _history_button: Button
+var _clocks: TurnClocks
+var _track: PhaseTrack
+var _history: HistoryPanel
 var _action_panel: PanelContainer
 var _short: Label
 var _detail: Label
@@ -52,9 +60,29 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	_phase = _label(22, Color(1, 1, 1, 0.85))
-	_phase.position = Vector2(24, 18)
-	add_child(_phase)
+	# Alto à esquerda: menu, histórico e os relógios (duração, turno, tempo do turno, espera), como na mesa do navegador.
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	top.position = Vector2(24, 16)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(top)
+	_menu = MatchMenu.new()
+	_menu.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	_menu.leave_pressed.connect(func() -> void: leave_pressed.emit())
+	_menu.pass_level_changed.connect(func(level: String) -> void: pass_level_changed.emit(level))
+	_menu.effects_changed.connect(func(level: String) -> void: effects_changed.emit(level))
+	_menu.volume_changed.connect(func(volume: float) -> void: volume_changed.emit(volume))
+	top.add_child(_menu)
+	_history_button = Button.new()
+	_history_button.icon = HudIcons.texture(HudIcons.HISTORY, 40)
+	_history_button.add_theme_constant_override("icon_max_width", 20)
+	_history_button.tooltip_text = "Histórico da partida"
+	_history_button.custom_minimum_size = Vector2(44, 40)
+	_history_button.focus_mode = Control.FOCUS_NONE
+	MatchMenu._style(_history_button)
+	top.add_child(_history_button)
+	_clocks = TurnClocks.new()
+	top.add_child(_clocks)
 	_bar = MatchBar.new()
 	_bar.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
@@ -99,6 +127,21 @@ func _ready() -> void:
 	_buttons_box.add_theme_constant_override("separation", 8)
 	column.add_child(_buttons_box)
 
+	# Trilha de fases embaixo da caixa de ação, onde o olho já está para passar a vez.
+	_action_panel.offset_bottom = -82
+	_action_panel.offset_top = -158
+	_track = PhaseTrack.new()
+	_track.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_track.offset_left = -400
+	_track.offset_top = -72
+	_track.offset_right = -24
+	_track.offset_bottom = -24
+	_track.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_track.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_track.visible = false
+	_track.action.connect(func(message: Dictionary) -> void: action.emit(message))
+	add_child(_track)
+
 	_preview = TextureRect.new()
 	_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -110,6 +153,17 @@ func _ready() -> void:
 	_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_preview.visible = false
 	add_child(_preview)
+
+	# Gaveta do histórico, à esquerda, abaixo do menu.
+	_history = HistoryPanel.new()
+	_history.catalog = catalog
+	_history.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	_history.offset_left = 24
+	_history.offset_right = 24 + 460
+	_history.offset_top = 68
+	_history.offset_bottom = -200
+	add_child(_history)
+	_history_button.pressed.connect(func() -> void: _history.toggle())
 
 	_toast = _label(20, Color(1, 0.85, 0.8))
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -153,11 +207,12 @@ func apply_state(state: Dictionary, blocker_name: String = "") -> void:
 	var input: Dictionary = state.get("input", {})
 	var you: int = int(state.get("you", 0))
 	var active: Variant = state.get("activePlayer")
-	var whose: String = "seu turno" if active != null and int(active) == you else "turno do oponente"
-	var phase: String = Txt.of(PHASES.get(Txt.of(state.get("phase", "")), ""))
-	_phase.text = "Turno %d · %s%s" % [int(state.get("turn", 0)), whose, (" · " + phase) if phase != "" else ""] if int(state.get("turn", 0)) > 0 else "Começando a partida…"
 	_apply_action_box(state, blocker_name)
 	_bar.apply_state(state)
+	_menu.apply_state(state)
+	_clocks.apply_state(state)
+	_track.apply_state(state)
+	_history.ingest(state)
 	_apply_between(state)
 	var selectable_players: Array = input.get("selectablePlayers", [])
 	for raw: Variant in state.get("players", []):
@@ -209,29 +264,9 @@ func _apply_between(state: Dictionary) -> void:
 	_between_button.pressed.connect(func() -> void: action.emit({"type": "next-game", "id": id}))
 
 
-## Faixa que atravessa o meio da tela ("Seu turno", "Ataque!"): entra deslizando, fica um instante e some.
+## Faixa que atravessa o meio da tela ("Seu turno", "Ataque!"), com o acabamento da mesa do navegador (ui/turn_banner.gd).
 func banner(text: String, color: Color) -> void:
-	var label := _label(64, color)
-	label.text = text
-	label.add_theme_constant_override("outline_size", 14)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	label.offset_left = -500
-	label.offset_right = 500
-	label.offset_top = -60
-	label.offset_bottom = 20
-	label.modulate.a = 0.0
-	label.pivot_offset = Vector2(500, 40)
-	label.scale = Vector2(1.3, 1.3)
-	add_child(label)
-	var tween := label.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "modulate:a", 1.0, 0.18)
-	tween.tween_property(label, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_interval(0.55)
-	tween.chain().tween_property(label, "modulate:a", 0.0, 0.3)
-	tween.parallel().tween_property(label, "position:y", label.position.y - 30, 0.3)
-	tween.chain().tween_callback(label.queue_free)
+	TurnBanner.play(self, text, color)
 
 
 ## O retrato pulsa quando a vida muda: cresce e acende em verde (ganho) ou vermelho (perda).

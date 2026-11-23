@@ -1,0 +1,166 @@
+[
+ {
+  "args": [
+   {
+    "config": {
+     "format": "free",
+     "matchLength": "bo1"
+    },
+    "match": {
+     "gameNumber": 1,
+     "wins": [
+      0,
+      0
+     ]
+    }
+   }
+  ],
+  "out": []
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ],
+     "spectators": [
+      "Eva",
+      "Caio"
+     ]
+    }
+   }
+  ],
+  "out": [
+   {
+    "kind": "series",
+    "text": "Jogo 2 · 1 × 0",
+    "label": "Jogo 2 da melhor de três, placar 1 × 0"
+   },
+   {
+    "kind": "offline",
+    "text": "Bia desconectado",
+    "label": "Bia está desconectado"
+   }
+  ]
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ]
+    },
+    "spectating": true,
+    "watching": true
+   }
+  ],
+  "out": [
+   {
+    "kind": "spectating",
+    "text": "Assistindo",
+    "label": "Você está assistindo, sem jogar"
+   },
+   {
+    "kind": "series",
+    "text": "Jogo 2 · 1 × 0",
+    "label": "Jogo 2 da melhor de três, placar 1 × 0"
+   },
+   {
+    "kind": "offline",
+    "text": "Bia desconectado",
+    "label": "Bia está desconectado"
+   }
+  ]
+ },
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ]
+    }
+   }
+  ],
+  "out": [
+   {
+    "kind": "series",
+    "text": "Jogo 2 · 1 × 0",
+    "label": "Jogo 2 da melhor de três, placar 1 × 0"
+   },
+   {
+    "kind": "offline",
+    "text": "Bia desconectado",
+    "label": "Bia está desconectado"
+   }
+  ]
+ }
+]

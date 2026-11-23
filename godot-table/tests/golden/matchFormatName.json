@@ -1,0 +1,36 @@
+[
+ {
+  "args": [
+   {
+    "config": {
+     "format": "pauper",
+     "matchLength": "bo3"
+    },
+    "match": {
+     "gameNumber": 2,
+     "wins": [
+      1,
+      0
+     ]
+    },
+    "room": {
+     "code": "K7QM",
+     "seat": 0,
+     "players": [
+      {
+       "name": "Ana",
+       "connected": true,
+       "seat": 0
+      },
+      {
+       "name": "Bia",
+       "connected": false,
+       "seat": 1
+      }
+     ]
+    }
+   }
+  ],
+  "out": "Pauper"
+ }
+]
