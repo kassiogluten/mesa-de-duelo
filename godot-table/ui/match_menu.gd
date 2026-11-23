@@ -154,7 +154,7 @@ func _build_panel() -> void:
 	_update.visible = false
 	column.add_child(_update)
 	var version: String = UpdateState.current_version()
-	column.add_child(_text(13, Color(1, 1, 1, 0.4), "Mesa de Duelo · %s" % ("versão %s" % version if version != "" else "versão de desenvolvimento")))
+	column.add_child(_text(13, Color(1, 1, 1, 0.4), "Mesa de Duelo · %s" % ("versão %s" % UpdateState.display_version(version) if version != "" else "versão de desenvolvimento")))
 
 
 ## Um texto do menu; com `width`, quebra as linhas nessa largura.

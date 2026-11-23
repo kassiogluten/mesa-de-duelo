@@ -51,6 +51,12 @@ test('without a download in the manifest there is nothing to download', () => {
   assert.match(downloadDetails({ kind: 'falhou' }, 'linux'), /Não deu para conferir o download agora/);
 });
 
+test('the version from the manifest shows only the number, without the package hash', () => {
+  assert.equal(downloadFromManifest({ version: '0.240.0+a1b2c3d4' }).version, '0.240.0');
+  assert.equal(downloadFromManifest({ version: '0.240.0' }).version, '0.240.0');
+  assert.equal(downloadFromManifest({ version: '<b>+x' }).version, undefined);
+});
+
 test('the download address only from a file name, a site path or https', () => {
   assert.equal(zipHref('mesa-de-duelo-pc-0.239.0.zip'), '/mesa-pc/mesa-de-duelo-pc-0.239.0.zip');
   assert.equal(zipHref('/mesa-pc/outro.zip'), '/mesa-pc/outro.zip');

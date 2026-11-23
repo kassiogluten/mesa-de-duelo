@@ -42,6 +42,11 @@ func test_is_newer_compares_numbers() -> void:
 	check(UpdateState.is_newer("0.10.0", "0.9.0"), "compara número, não texto")
 	check(not UpdateState.is_newer("1.0.0", "1.0.0"), "igual não é mais nova")
 	check(UpdateState.is_newer("1.0.0", ""), "qualquer versão é mais nova que nenhuma")
+	# O hash do pacote (deploy só com correções, mesmo número) não faz uma versão mais nova que a outra.
+	check(not UpdateState.is_newer("0.240.0+a1b2c3d4", "0.240.0+ffff0000"), "mesmo número com outro pacote não é mais nova")
+	check(UpdateState.is_newer("0.241.0+00000000", "0.240.0+ffffffff"), "o número decide, não o hash")
+	check_eq(UpdateState.display_version("0.240.0+a1b2c3d4"), "0.240.0", "o jogador vê só o número")
+	check_eq(UpdateState.display_version("0.240.0"), "0.240.0", "sem hash, igual")
 
 
 func test_bundled_pack_is_adopted_once() -> void:

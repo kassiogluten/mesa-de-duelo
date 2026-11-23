@@ -21,7 +21,9 @@ const validSize = (n: unknown) => typeof n === 'number' && Number.isFinite(n) &&
 /** O manifesto como veio (qualquer JSON) → versão e, de cada PC, endereço e tamanho; o que não for válido fica de fora. */
 export function downloadFromManifest(raw: unknown): Download {
   const m = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
-  const version = typeof m.version === 'string' && /^\d+\.\d+\.\d+$/.test(m.version) ? m.version : undefined;
+  // O número do pacote leva o hash depois do "+" (0.240.0+a1b2c3d4, scripts/godot-pck.mjs); o jogador vê só o número.
+  const number = typeof m.version === 'string' ? m.version.split('+')[0] ?? '' : '';
+  const version = /^\d+\.\d+\.\d+$/.test(number) ? number : undefined;
   return {
     version,
     windows: { href: typeof m.zip === 'string' && m.zip ? zipHref(m.zip) : undefined, size: validSize(m.zipSize) },

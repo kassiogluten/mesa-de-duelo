@@ -96,7 +96,7 @@ func _build_overlay() -> void:
 func _show_menu() -> void:
 	var menu := MenuScreen.new()
 	var version: String = UpdateState.current_version()
-	menu.version_text = "Versão %s" % version if version != "" else "Versão de desenvolvimento"
+	menu.version_text = "Versão %s" % UpdateState.display_version(version) if version != "" else "Versão de desenvolvimento"
 	menu.play.connect(_start_match)
 	menu.online.connect(_open_online)
 	# Da tela inicial, o relato leva a última partida desta abertura da mesa, se houve uma.

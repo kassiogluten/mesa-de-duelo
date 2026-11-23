@@ -196,6 +196,7 @@ func test_update_check_evaluates_the_manifest() -> void:
 	var found: Dictionary = UpdateCheck.evaluate({"version": "1.1.0", "engine": "4.7.2", "minBoot": 1}, "1.0.0", state, 1, "4.7.2")
 	check_eq(found.get("version"), "1.1.0", "versão nova")
 	check_eq(found.get("reinstall"), false, "entra sozinha ao reabrir")
+	check_eq(UpdateCheck.evaluate({"version": "1.0.0+bbbb2222"}, "1.0.0+aaaa1111", state, 1, "4.7.2").get("version"), "1.0.0+bbbb2222", "deploy só com correções (mesmo número, outro pacote): também é versão nova")
 	check_eq(UpdateCheck.evaluate({"version": "1.1.0", "engine": "4.8.0"}, "1.0.0", state, 1, "4.7.2").get("reinstall"), true, "outro motor: instalar de novo")
 	check_eq(UpdateCheck.evaluate({"version": "1.1.0", "minBoot": 2}, "1.0.0", state, 1, "4.7.2").get("reinstall"), true, "boot novo: instalar de novo")
 

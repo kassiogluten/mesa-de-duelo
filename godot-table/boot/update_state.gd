@@ -77,6 +77,11 @@ static func confirm() -> void:
 
 
 ## A versão do pacote do jogo em uso ("" rodando direto do projeto, sem atualizador).
+## A versão para mostrar ao jogador: o número, sem o hash do pacote (0.240.0+a1b2c3d4 → 0.240.0).
+static func display_version(version: String) -> String:
+	return version.get_slice("+", 0)
+
+
 static func current_version() -> String:
 	return String(load_state()["current"]) if OS.has_feature("template") or OS.get_environment("MESA_PC_MANIFEST") != "" else ""
 
@@ -118,12 +123,13 @@ static func adopt_bundled(state: Dictionary, bundled: Dictionary) -> Dictionary:
 	return promote(state, version)
 
 
-## `a` é uma versão (x.y.z) mais nova que `b`; qualquer versão é mais nova que "".
+## `a` é uma versão (x.y.z) mais nova que `b`; qualquer versão é mais nova que "". O hash depois do "+" (x.y.z+a1b2c3d4,
+## o mesmo número com outro pacote) não conta: só diz que o pacote é outro, não qual é mais novo.
 static func is_newer(a: String, b: String) -> bool:
 	if b == "":
 		return a != ""
-	var pa: PackedStringArray = a.split(".")
-	var pb: PackedStringArray = b.split(".")
+	var pa: PackedStringArray = a.get_slice("+", 0).split(".")
+	var pb: PackedStringArray = b.get_slice("+", 0).split(".")
 	for i: int in maxi(pa.size(), pb.size()):
 		var x: int = pa[i].to_int() if i < pa.size() else 0
 		var y: int = pb[i].to_int() if i < pb.size() else 0
