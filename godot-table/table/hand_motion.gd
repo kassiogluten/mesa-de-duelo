@@ -8,6 +8,10 @@ const ARRIVE_TIME := 0.62
 const ARRIVE_STAGGER := 0.075
 ## Quanto a carta sobe no meio do voo.
 const ARRIVE_LIFT := 1.5
+## A parte do voo em que a carta só descola do grimório (a borda do lado da mão sobe, presa na de trás) e o balanço do
+## ar no caminho (radianos).
+const ARRIVE_PEEL := 0.1
+const ARRIVE_FLUTTER := 0.035
 ## Arrasto: inclinação máxima (radianos), por px/s do mouse, e o quanto ela encolhe ao deitar no campo.
 const DRAG_TILT_MAX := 0.32
 const DRAG_TILT_PER_PX := 0.00032
@@ -40,20 +44,29 @@ static func fly_in(node: Node3D, from: Transform3D, to: Transform3D, flip: bool,
 		written[0] = current, 0.0, 1.0, ARRIVE_TIME)
 	tween.tween_callback(func() -> void:
 		if node.transform.is_equal_approx(written[0]):
-			node.transform = to
-			CardMotion.settle(node, 0.35))
+			node.transform = to)
 
 
-## A pose do voo no instante `t` (0 a 1): curva pelo alto, girando de `q0` para `q1`; com `flip`, sai de costas e
-## termina de virar antes de chegar (para dar tempo de ver a carta).
+## A pose do voo no instante `t` (0 a 1): descola do alto do grimório pela borda do lado da mão, sobe rápido e o ar
+## freia a chegada (PaperPhysics.travel), girando de `q0` para `q1` com um balanço leve; com `flip`, sai de costas e
+## termina de virar antes de chegar (para dar tempo de ver a carta). Chega parada, sem quicar.
 static func arrive_pose(q0: Quaternion, q1: Quaternion, s0: float, s1: float, p0: Vector3, p1: Vector3, p2: Vector3, flip: bool, t: float) -> Transform3D:
-	var e: float = ease(clampf(t, 0.0, 1.0), -1.8)
+	t = clampf(t, 0.0, 1.0)
+	var e: float = PaperPhysics.travel((t - ARRIVE_PEEL) / (1.0 - ARRIVE_PEEL))
 	var pos: Vector3 = p0.lerp(p1, e).lerp(p1.lerp(p2, e), e)
-	var basis := Basis(q0.slerp(q1, e))
+	var basis := Basis(q0.slerp(q1, PaperPhysics.level(e)))
 	if flip:
 		var turned: float = clampf(e / 0.7, 0.0, 1.0)
 		basis = basis * Basis(Vector3.FORWARD, PI * (1.0 - ease(turned, -2.0)))
-	return Transform3D(basis.scaled(Vector3.ONE * lerpf(s0, s1, e)), pos)
+	var dir := Vector3(p2.x - p0.x, 0, p2.z - p0.z)
+	if dir.length() > 0.001:
+		dir = dir.normalized()
+		var roll: float = ARRIVE_FLUTTER * sin(t * TAU * 1.6) * pow(sin(PI * e), 2.0)
+		var peel: float = PaperPhysics.PEEL * sin(PI * clampf(t / (ARRIVE_PEEL * 3.0), 0.0, 1.0))
+		basis = Basis(dir, roll) * Basis(dir.cross(Vector3.UP).normalized(), peel) * basis
+		# Gira em volta da borda de trás, que fica no monte enquanto a da frente sobe.
+		pos.y += 0.5 * CardNode.SIZE.y * s0 * sin(peel) * (1.0 - e)
+	return Transform3D(basis.scaled(Vector3.ONE * lerpf(s0, s1, PaperPhysics.level(e))), pos)
 
 
 ## Inclinação da carta arrastada pela velocidade do mouse (px/s): x gira em volta do eixo de lado (para cima, a borda

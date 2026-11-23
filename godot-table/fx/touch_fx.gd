@@ -5,8 +5,6 @@ extends RefCounted
 
 ## Mais que isto, o efeito toca mesmo com a carta ainda no ar (ela pode ter ido para outro lugar).
 const MAX_WAIT := 0.75
-## A carta está pousada quando falta menos que isto (unidades da mesa) até o lugar dela.
-const LANDED := 0.08
 
 
 ## Roda `play` quando a carta pousar no lugar dela (já pousada: agora). A carta que sumiu no meio não toca.
@@ -21,12 +19,9 @@ static func when_landed(parent: Node, node: CardNode, play: Callable, max_wait: 
 	parent.add_child(waiter)
 
 
-## A carta já chegou no lugar que a mesa deu a ela.
+## A carta já encostou no lugar que a mesa deu a ela (CardNode.is_landed: o toque, antes do escorregão final).
 static func landed(node: CardNode) -> bool:
-	var target: Variant = node.get("_target")
-	if not target is Transform3D:
-		return true
-	return node.transform.origin.distance_to((target as Transform3D).origin) < LANDED
+	return node.is_landed()
 
 
 ## Poeira de luz que se espalha rente ao feltro a partir de `pos` (o pouso de um terreno, de uma permanente).
