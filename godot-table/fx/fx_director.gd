@@ -1,5 +1,6 @@
 # Diretor dos efeitos: lê os eventos novos de cada estado (dano, vida, mágica, entrada, saída, combate, marcadores, turno)
-# e toca um efeito por evento, em sequência curta. A carta destruída ou exilada fica com ele para sair em cena.
+# e o que mudou sem evento (transformar, monarca, dia/noite), e toca um efeito por evento, em sequência curta (o efeito de
+# cada um fica em EventFx). A carta destruída ou exilada fica com ele para sair em cena.
 class_name FxDirector
 extends Node3D
 
@@ -9,8 +10,13 @@ signal finale(won: bool)
 const DURATION := {
 	"damage": 0.26, "spell-cast": 0.32, "ability-activated": 0.22, "entered": 0.24, "left": 0.3,
 	"attackers": 0.3, "blockers": 0.24, "countered": 0.3, "resolved": 0.12, "counters": 0.1, "survived": 0.3,
-	"coin": 0.6, "die": 0.6, "starting-roll": 1.2, "turn": 0.1, "draw": 0.05,
+	"coin": 0.6, "die": 0.6, "starting-roll": 1.2, "turn": 0.1, "draw": 0.05, "attached": 0.3, "control-changed": 0.4,
+	"land-played": 0.08,
 }
+## Momentos com cena mais longa: o limpa-campo com a onda, o comandante saindo da zona de comando e o Game Changer.
+const SWEEP_TIME := 1.3
+const COMMANDER_TIME := 1.1
+const GAME_CHANGER_TIME := 1.6
 ## Onde caem o dado e a moeda: no meio do tampo.
 const TABLE_CENTER := Vector3(0, 0, 0.3)
 ## Tempo máximo para os efeitos de um estado: com muitos eventos (limpa-campo), o ritmo encurta.
@@ -29,6 +35,19 @@ var _moments := Moments.new()
 var _you: int = 0
 var _names: Dictionary = {}
 var _slow_frames: float = 0.0
+## O que muda sem evento (transformar, monarca, mana dos terrenos…), os limpa-campos e os bichos.
+var _watch := StateWatch.new()
+var _sweeps := BoardSweep.new()
+var _critters := Critters.new()
+var _commander_rules: bool = false
+## Do estado em andamento: seq do spell-cast → os terrenos que pagaram; seq das entradas do comandante; seq do
+## control-changed → onde a carta estava antes.
+var _mana: Dictionary = {}
+var _commander_entries: Dictionary = {}
+var _control_from: Dictionary = {}
+## O último estado (a faixa do turno lê dele) e o combate de agora (o segundo em diante ganha a faixa "Combate extra").
+var _state: Dictionary = {}
+var _combat_number: int = 0
 
 
 ## Automático (o regulador escolhe) ou fixo pela opção do jogador.
@@ -63,6 +82,9 @@ func _process(delta: float) -> void:
 ## Chamar com cada estado ANTES de a mesa aplicá-lo: separa as cartas que vão sair e agenda os efeitos.
 func before_state(state: Dictionary) -> void:
 	_you = int(state.get("you", 0))
+	_state = state
+	_commander_rules = GameChangers.commander_rules(state)
+	_combat_banner(state)
 	for p: Variant in state.get("players", []):
 		_names[int((p as Dictionary)["id"])] = Txt.of((p as Dictionary).get("name"))
 	var fresh: Array = []
@@ -72,6 +94,13 @@ func before_state(state: Dictionary) -> void:
 			fresh.append(event)
 			_last_seq = int(event.get("seq", -1))
 	fresh = _group_mills(fresh)
+	# O que mudou sem evento, olhando a mesa como ela está agora (antes do estado novo).
+	var now: float = Time.get_ticks_msec() / 1000.0
+	var watch: Dictionary = _watch.observe(state, fresh, func(id: int) -> Dictionary:
+		return table.card_data(id) if table.zone_of(id) == "battlefield" else {}, now)
+	_mana = watch["mana"]
+	_commander_entries = watch["commander_entries"]
+	_schedule_changes(watch)
 	# Os momentos olham o estado inteiro (vida, eliminados), mesmo sem eventos novos.
 	var moments: Array = _moments.observe(state)
 	if fresh.is_empty() and moments.is_empty():
@@ -79,27 +108,46 @@ func before_state(state: Dictionary) -> void:
 	# Quem vai para o cemitério ou o exílio sai em cena: o nó fica com o diretor até o efeito dele.
 	var leaving: Dictionary = {}
 	for event: Dictionary in fresh:
-		var id: int = _card_id(event)
+		var id: int = card_id(event)
 		var dies: bool = event.get("type") == "left" and Txt.of(event.get("to")) in ["Graveyard", "Exile"] and table.zone_of(id) == "battlefield"
 		var countered: bool = event.get("type") == "countered" and table.zone_of(id) == "stack"
 		if id >= 0 and (dies or countered):
 			var node: CardNode = table.detach(id)
 			if node:
 				leaving[id] = node
+		if event.get("type") == "control-changed":
+			_control_from[int(event.get("seq", -1))] = table.anchor(id)
+	# Limpa-campo: as saídas da mesma mágica viram uma onda só, no lugar do primeiro evento do grupo.
+	var sweep_first: Dictionary = {}
+	var sweep_member: Dictionary = {}
+	for raw: Variant in _sweeps.observe(fresh, func(id: int) -> bool: return table.zone_of(id) == "battlefield" or leaving.has(id)):
+		var group: Dictionary = raw
+		var members: Array = group["events"]
+		sweep_first[int((members[0] as Dictionary).get("seq", -1))] = group
+		for member: Variant in members:
+			sweep_member[int((member as Dictionary).get("seq", -1))] = true
 	var total: float = 0.0
 	for event: Dictionary in fresh:
-		total += _duration(event)
+		total += _event_time(event, sweep_first, sweep_member)
 	var pace: float = minf(1.0, MAX_BATCH / maxf(total, 0.001)) / speed
 	var at: float = 0.05
 	## seq do evento → quando ele toca, para o momento dele tocar junto.
 	var times: Dictionary = {}
 	for event: Dictionary in fresh:
 		var played: Dictionary = event
-		times[int(event.get("seq", -1))] = at
-		# Referência fraca: a carta pode já ter sumido quando o temporizador dispara.
-		var ref: WeakRef = weakref(leaving.get(_card_id(event)))
-		get_tree().create_timer(at).timeout.connect(func() -> void: _play(played, ref.get_ref() as CardNode))
-		at += _duration(event) * pace
+		var seq: int = int(event.get("seq", -1))
+		times[seq] = at
+		if sweep_first.has(seq):
+			var group: Dictionary = sweep_first[seq]
+			var refs: Dictionary = {}
+			for member: Variant in group["events"]:
+				refs[int((member as Dictionary).get("seq", -1))] = weakref(leaving.get(card_id(member as Dictionary)))
+			get_tree().create_timer(at).timeout.connect(func() -> void: EventFx.sweep(self, group, refs))
+		elif not sweep_member.has(seq):
+			# Referência fraca: a carta pode já ter sumido quando o temporizador dispara.
+			var ref: WeakRef = weakref(leaving.get(card_id(event)))
+			get_tree().create_timer(at).timeout.connect(func() -> void: _play(played, ref.get_ref() as CardNode))
+		at += _event_time(event, sweep_first, sweep_member) * pace
 	# Cada momento junto do evento que o causou; a eliminação múltipla depois do último golpe.
 	for raw: Variant in moments:
 		var moment: Dictionary = raw
@@ -112,6 +160,84 @@ func before_state(state: Dictionary) -> void:
 			var node: CardNode = ref.get_ref() as CardNode
 			if node and not node.is_queued_for_deletion():
 				node.vanish())
+
+
+## Quanto o evento ocupa na sequência, contando o limpa-campo (o primeiro do grupo leva a onda, os outros não ocupam).
+func _event_time(event: Dictionary, sweep_first: Dictionary, sweep_member: Dictionary) -> float:
+	var seq: int = int(event.get("seq", -1))
+	if sweep_first.has(seq):
+		return SWEEP_TIME if bool((sweep_first[seq] as Dictionary).get("wave", true)) else 0.5
+	if sweep_member.has(seq):
+		return 0.0
+	if _commander_entries.has(seq):
+		return COMMANDER_TIME
+	if GameChangers.play(event, _commander_rules):
+		return GAME_CHANGER_TIME
+	return _duration(event)
+
+
+## O que mudou sem evento: a carta que transformou gira e troca de face (a imagem antiga ainda está na carta), as
+## medalhas do monarca, da dianteira e do dia/noite, e a mesa rangendo com o campo lotado.
+func _schedule_changes(watch: Dictionary) -> void:
+	for raw: Variant in watch["transforms"]:
+		var change: Dictionary = raw
+		var node: CardNode = table.card_node(int(change["id"]))
+		var material: ShaderMaterial = CardDressing.material_of(node)
+		var old_tex: Variant = material.get_shader_parameter("front_tex") if material else null
+		var ref: WeakRef = weakref(node)
+		var face_up: bool = bool(change["face_up"])
+		get_tree().create_timer(0.05).timeout.connect(func() -> void:
+			PermanentFx.flip(self, ref.get_ref() as CardNode, old_tex as Texture2D, face_up, speed))
+	var monarch: Variant = watch["monarch"]
+	if monarch != null and int(monarch) >= 0:
+		_medal(int(monarch), false)
+	var initiative: Variant = watch["initiative"]
+	if initiative != null and int(initiative) >= 0:
+		_medal(int(initiative), true)
+	if Txt.of(watch["day"]) != "":
+		var day: bool = watch["day"] == "day"
+		get_tree().create_timer(0.1).timeout.connect(func() -> void: Medallions.day_night(self, table.camera, day, mood, speed))
+	if int(watch["creak"]) >= 0:
+		var side: Vector3 = table.seat_center(int(watch["creak"]))
+		get_tree().create_timer(0.2).timeout.connect(func() -> void:
+			Critters.creak(self, table.camera, side)
+			if sounds:
+				sounds.play("creak", side))
+
+
+## Começou um combate extra (o segundo combate do turno em diante): a faixa "Combate extra", como na mesa do navegador.
+func _combat_banner(state: Dictionary) -> void:
+	var n: int = int(state.get("combatNumber", 0)) if state.get("combatNumber") != null else 0
+	if n > 1 and n > _combat_number and hud:
+		var mine: bool = state.get("activePlayer") != null and int(state["activePlayer"]) == _you
+		var text: String = "Combate extra" + (" (%dº combate)" % n if n > 2 else "")
+		get_tree().create_timer(0.1).timeout.connect(func() -> void: hud.banner(text, PhaseTrack.MINE if mine else PhaseTrack.THEIRS))
+	_combat_number = n
+
+
+## Onde a carta vai ficar: o destino do voo dela (a pilha no painel, o lugar no campo), ou onde está agora; null se não
+## está à mostra. O efeito da mágica conjurada acende ali, e não na mão de onde ela ainda está saindo.
+func landing(id: int) -> Variant:
+	var node: CardNode = table.card_node(id)
+	if node == null:
+		return table.anchor(id)
+	var target: Variant = node.get("_target")
+	if target is Transform3D:
+		return table.global_transform * (target as Transform3D).origin
+	return node.global_position
+
+
+## A medalha do monarca (ou da dianteira) indo para o jogador.
+func _medal(player: int, initiative: bool) -> void:
+	var mine: bool = player == _you
+	var name: String = Txt.of(_names.get(player, "Oponente"))
+	var subtitle: String
+	if initiative:
+		subtitle = "Você tem a dianteira" if mine else "%s tem a dianteira" % name
+	else:
+		subtitle = "Você é o monarca" if mine else "%s é o monarca" % name
+	get_tree().create_timer(0.15).timeout.connect(func() -> void:
+		Medallions.crown_holder(self, table.camera, table.anchor("player:%d" % player), "Dianteira" if initiative else "Monarca", subtitle, initiative, speed))
 
 
 ## Quanto o evento ocupa na sequência: as cartas voando têm a duração delas, o resto a da tabela.
@@ -151,7 +277,8 @@ static func _group_mills(events: Array) -> Array:
 	return out
 
 
-static func _card_id(event: Dictionary) -> int:
+## O id da carta do evento (a carta, a fonte, ou a primeira de `cards`), ou -1.
+static func card_id(event: Dictionary) -> int:
 	if event.get("card") is Dictionary and (event["card"] as Dictionary).has("id"):
 		return int((event["card"] as Dictionary)["id"])
 	if event.get("sourceId") != null:
@@ -161,23 +288,28 @@ static func _card_id(event: Dictionary) -> int:
 
 
 func _play(event: Dictionary, leaving: CardNode) -> void:
+	var seq: int = int(event.get("seq", -1))
 	if sounds:
-		var where: Variant = table.anchor(_card_id(event)) if _card_id(event) >= 0 else null
+		var where: Variant = table.anchor(card_id(event)) if card_id(event) >= 0 else null
 		sounds.play(Sounds.cue_for(event, _you), where if where is Vector3 else Vector3.ZERO)
 		# A criatura entrando também traz o som do tipo dela (o urso rosna, o lobo uiva…).
 		if Txt.of(event.get("type")) == "entered":
 			CreatureSounds.play_cue(sounds, CreatureSounds.cue_for_event(event), where if where is Vector3 else Vector3.ZERO)
 	match Txt.of(event.get("type")):
 		"damage":
-			_damage(event)
+			EventFx.damage(self, event)
 		"life-changed":
-			_life(event)
+			EventFx.life(self, event)
 		"spell-cast":
-			_spell(event)
+			EventFx.spell(self, event, _mana.get(seq, []), GameChangers.play(event, _commander_rules))
+		"land-played":
+			if GameChangers.play(event, _commander_rules):
+				at_card(event, func(pos: Vector3, card: Dictionary) -> void:
+					ArrivalFx.game_changer(self, table, pos, table.catalog.label(Txt.of(card.get("name"))), speed))
 		"ability-activated":
-			_ability(event)
+			EventFx.ability(self, event)
 		"resolved":
-			_at_card(event, func(pos: Vector3, card: Dictionary) -> void: Fx.burst(self, pos, Fx.card_color(card), 24, 1.6, 0.45))
+			EventFx.resolved(self, event)
 		"countered":
 			if leaving and is_instance_valid(leaving):
 				var pos: Vector3 = leaving.global_position
@@ -186,15 +318,20 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 				Fx.float_text(self, pos, "Anulada", Color(0.75, 0.85, 1.0), 60)
 				leaving.burn_away(Color(0.6, 0.75, 1.0), 0.7 / speed)
 		"entered":
-			_entered(event)
+			EventFx.entered(self, event, _commander_entries.has(seq))
+			var card: Dictionary = event.get("card", {}) if event.get("card") is Dictionary else {}
+			var critter: String = _critters.on_entered(card, Time.get_ticks_msec() / 1000.0)
+			if critter != "":
+				Critters.spawn(self, critter, speed)
 		"left":
-			_left(event, leaving)
+			EventFx.left(self, event, leaving)
 		"attackers":
 			for id: Variant in event.get("cards", []):
 				var node: CardNode = table.card_node(int(id))
 				if node:
 					node.flash_color(Color(1.0, 0.3, 0.2), 0.5)
 					Fx.burst(self, node.global_position, Color(1.0, 0.35, 0.2), 18, 1.4, 0.5)
+					Fx.ring(self, node.global_position, Color(1.0, 0.35, 0.2), 0.8, 0.4, 0.2)
 			if not (event.get("cards", []) as Array).is_empty():
 				hud.banner("Ataque!", Color(1.0, 0.45, 0.3))
 		"blockers":
@@ -204,20 +341,21 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 					node.flash_color(Color(0.35, 0.65, 1.0), 0.5)
 					Fx.ring(self, node.global_position, Color(0.4, 0.7, 1.0), 0.9, 0.4)
 		"counters":
-			_counters(event)
+			EventFx.counters(self, event)
 		"survived":
-			_at_card(event, func(pos: Vector3, _card: Dictionary) -> void:
-				var node: CardNode = table.card_node(_card_id(event))
-				if node:
-					node.flash_color(Color(1, 1, 1), 0.6)
-					node.jolt()
-				Fx.float_text(self, pos, "Indestrutível" if event.get("survived") == "indestructible" else "Regenerada", Color(0.95, 0.95, 1.0), 52))
+			EventFx.survived(self, event)
+		"attached":
+			EventFx.attached(self, event)
+		"control-changed":
+			EventFx.control(self, event, _control_from.get(seq))
+			_control_from.erase(seq)
 		"turn":
 			var mine: bool = int(event.get("actor", -1)) == _you
-			var title: String = "Seu turno" if mine else "Turno de %s" % _names.get(int(event.get("actor", -1)), "Oponente")
-			if bool(event.get("extra", false)):
-				title += " extra"
-			hud.banner(title, Hud.GOLD if mine else Color(0.75, 0.85, 1.0))
+			hud.banner(PhaseText.turn_banner_text(_state), PhaseTrack.MINE if mine else PhaseTrack.THEIRS)
+			# De vez em quando, um bicho atravessa a mesa na virada do turno.
+			var critter: String = _critters.on_turn(Time.get_ticks_msec() / 1000.0, randf())
+			if critter != "":
+				get_tree().create_timer(1.2).timeout.connect(func() -> void: Critters.spawn(self, critter, speed))
 		"draw":
 			var actor: int = int(event.get("actor", _you))
 			if bool(event.get("searched", false)):
@@ -228,7 +366,8 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 		"cascade":
 			var digger: int = int(event.get("actor", _you))
 			CardFlights.cascade(self, table.catalog, table.library_position(digger), table.zone_position(digger, "exile"),
-				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger))
+				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger),
+				landing(int(event.get("hit", -1))) if int(event.get("hit", -1)) >= 0 else null)
 		"mill":
 			var miller: int = int(event.get("actor", _you))
 			CardFlights.mill(self, table.catalog, table.library_position(miller), table.zone_position(miller, "graveyard"),
@@ -254,159 +393,9 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 			Dice3D.starting_roll(self, spots, event.get("rolls", []))
 
 
-## Dano: no combate o atacante avança e golpeia; fora dele, um projétil sai da fonte. O alvo pisca, solta faíscas e o número.
-func _damage(event: Dictionary) -> void:
-	var amount: int = absi(int(event.get("delta", 0)))
-	var targets: Dictionary = event.get("targets", {}) if event.get("targets") is Dictionary else {}
-	var to_key: Variant = null
-	if not (targets.get("cards", []) as Array).is_empty():
-		to_key = int(targets["cards"][0])
-	elif not (targets.get("players", []) as Array).is_empty():
-		to_key = "player:%d" % int(targets["players"][0])
-	var target: Variant = table.anchor(to_key) if to_key != null else null
-	if not target is Vector3:
-		return
-	var source_id: int = _card_id(event)
-	var source: Variant = table.anchor(source_id) if source_id >= 0 else null
-	var card: Dictionary = event.get("card", {}) if event.get("card") is Dictionary else table.card_data(source_id)
-	var color: Color = Color(1.0, 0.4, 0.2) if bool(event.get("combat", false)) else Fx.card_color(card)
-	var impact: Callable = func() -> void: _impact(target, to_key, amount, color, event)
-	if bool(event.get("combat", false)) and source is Vector3:
-		var attacker: CardNode = table.card_node(source_id)
-		if attacker:
-			attacker.lunge(target)
-		get_tree().create_timer(0.13 / speed).timeout.connect(impact)
-	elif source is Vector3:
-		Fx.bolt(self, source, target, color, 0.32 / speed, impact)
-	else:
-		impact.call()
-
-
-func _impact(target: Vector3, to_key: Variant, amount: int, color: Color, event: Dictionary) -> void:
-	if bool(event.get("prevented", false)):
-		Fx.ring(self, target, Color(0.6, 0.85, 1.0), 1.2, 0.5, 0.2)
-		Fx.float_text(self, target, "Prevenido", Color(0.7, 0.9, 1.0), 56)
-		return
-	var big: bool = amount >= 5 or bool(event.get("lethal", false))
-	Fx.burst(self, target, color, 40 + amount * 8, 2.2 + amount * 0.15, 0.6)
-	Fx.ring(self, target, color, 1.0 + amount * 0.12, 0.45)
-	Fx.light(self, target, color, 3.0 + amount * 0.4, 4.0)
-	var text: String = ("%d veneno" % amount) if bool(event.get("infect", false)) else "-%d" % amount
-	Fx.float_text(self, target, text, Color(0.6, 1.0, 0.4) if bool(event.get("infect", false)) else Color(1.0, 0.35, 0.3), 84 if big else 72)
-	if to_key is int:
-		var node: CardNode = table.card_node(to_key)
-		if node:
-			node.flash_color(Color(1.0, 0.25, 0.2), 0.4)
-	if big:
-		Fx.shake(table.camera, 0.08 + minf(amount, 12) * 0.012)
-	if bool(event.get("lethal", false)):
-		Fx.focus(table.camera, target, 0.14, 1.1)
-
-
-## Vida: o ganho sobe em verde no retrato; a perda sem dano (pagar vida, perder vida) sobe em vermelho.
-func _life(event: Dictionary) -> void:
-	var delta: int = int(event.get("delta", 0))
-	var actor: int = int(event.get("actor", -1))
-	if actor < 0 or delta == 0:
-		return
-	var pos: Variant = table.anchor("player:%d" % actor)
-	if not pos is Vector3:
-		return
-	if delta > 0:
-		Fx.burst(self, pos, Color(0.45, 1.0, 0.55), 26, 1.2, 0.7, 0.06)
-		Fx.float_text(self, pos, "+%d" % delta, Color(0.5, 1.0, 0.6), 72)
-	hud.pulse_life(actor, delta)
-
-
-## Mágica conjurada: a carta na pilha acende na cor dela, com onda e luz; cópia, reforço e X ganham um selo.
-func _spell(event: Dictionary) -> void:
-	_at_card(event, func(pos: Vector3, card: Dictionary) -> void:
-		var color: Color = Fx.card_color(card)
-		if mood:
-			mood.pulse(color)
-		Fx.ring(self, pos - Vector3(0, pos.y - 0.05, 0), color, 2.2, 0.6)
-		Fx.burst(self, pos, color, 50, 2.0, 0.7)
-		Fx.light(self, pos, color, 3.5, 5.0, 0.5)
-		var tags: PackedStringArray = []
-		if bool(event.get("copy", false)):
-			tags.append("Cópia")
-		if bool(event.get("kicked", false)):
-			tags.append("Reforçada")
-		if event.get("x") != null:
-			tags.append("X = %d" % int(event["x"]))
-		if not tags.is_empty():
-			Fx.float_text(self, pos, " · ".join(tags), color.lightened(0.3), 54)
-		var node: CardNode = table.card_node(int(card.get("id", -1)))
-		if node:
-			node.flash_color(color, 0.5))
-
-
-## Habilidade ativada ou gatilho: a fonte pisca e solta um anel (dourado nos gatilhos).
-func _ability(event: Dictionary) -> void:
-	_at_card(event, func(pos: Vector3, card: Dictionary) -> void:
-		var color: Color = Hud.GOLD if bool(event.get("trigger", false)) else Fx.card_color(card)
-		Fx.ring(self, pos, color, 1.0, 0.4, 0.18)
-		Fx.burst(self, pos, color, 20, 1.2, 0.45)
-		var node: CardNode = table.card_node(_card_id(event))
-		if node:
-			node.flash_color(color, 0.35))
-
-
-## Entrada no campo: poeira e onda na cor; a lendária desce com coluna de luz e um tremor leve.
-func _entered(event: Dictionary) -> void:
-	_at_card(event, func(pos: Vector3, card: Dictionary) -> void:
-		var color: Color = Fx.card_color(card)
-		var type_line: String = Txt.of(card.get("typeLine"))
-		var legendary: bool = type_line.contains("Legendary") or type_line.contains("Lendári")
-		Fx.ring(self, pos, color, 1.4 if legendary else 0.9, 0.5)
-		Fx.burst(self, pos, color.lerp(Color.WHITE, 0.4), 50 if legendary else 22, 1.8 if legendary else 1.1, 0.6, 0.06)
-		var node: CardNode = table.card_node(int(card.get("id", -1)))
-		if node:
-			node.flash_color(color, 0.45)
-		if legendary:
-			Fx.pillar(self, pos, Hud.GOLD)
-			Fx.light(self, pos, Hud.GOLD, 5.0, 6.0, 0.8)
-			Fx.focus(table.camera, pos, 0.1)
-			Fx.shake(table.camera, 0.06))
-
-
-## Saída do campo em cena: destruída queima, sacrificada queima em roxo, exilada é sugada por um portal.
-func _left(event: Dictionary, node: CardNode) -> void:
-	if node == null or not is_instance_valid(node):
-		return
-	var pos: Vector3 = node.global_position
-	if Txt.of(event.get("to")) == "Exile":
-		Fx.ring(self, pos, Color(0.75, 0.9, 1.0), 1.3, 0.7, 0.25)
-		Fx.burst(self, pos, Color(0.7, 0.85, 1.0), 40, 1.4, 0.7)
-		node.swirl_away(0.75 / speed)
-	elif event.get("reason") == "sacrificed":
-		Fx.burst(self, pos, Color(0.6, 0.25, 0.85), 40, 1.6, 0.9)
-		node.burn_away(Color(0.7, 0.3, 1.0), 0.9 / speed)
-	else:
-		Fx.burst(self, pos, Color(1.0, 0.5, 0.15), 50, 1.8, 0.9)
-		Fx.light(self, pos, Color(1.0, 0.5, 0.2), 2.5, 3.0, 0.8)
-		node.burn_away(Color(1.0, 0.45, 0.12), 0.9 / speed)
-
-
-## Marcadores: o número sobe na carta (ou no jogador, no veneno e afins) e a carta treme.
-func _counters(event: Dictionary) -> void:
-	var delta: int = int(event.get("delta", 1))
-	var kind: String = Txt.of(event.get("counter"))
-	var text: String = {"P1P1": "+%d/+%d" % [delta, delta], "M1M1": "-%d/-%d" % [delta, delta], "LOYALTY": "+%d lealdade" % delta, "POISON": "+%d veneno" % delta}.get(kind, "+%d" % delta)
-	var color: Color = Color(1.0, 0.4, 0.35) if kind in ["M1M1", "POISON"] else Color(0.55, 1.0, 0.6)
-	var players: Array = (event.get("targets", {}) as Dictionary).get("players", []) if event.get("targets") is Dictionary else []
-	var key: Variant = "player:%d" % int(players[0]) if not players.is_empty() else _card_id(event)
-	var pos: Variant = table.anchor(key)
-	if pos is Vector3:
-		Fx.float_text(self, pos, text, color, 60, 0.9)
-		var node: CardNode = table.card_node(key) if key is int else null
-		if node:
-			node.jolt()
-
-
 ## Roda `play(posição, carta)` na carta do evento (na pilha, no campo), se ela está à mostra.
-func _at_card(event: Dictionary, play: Callable) -> void:
-	var id: int = _card_id(event)
+func at_card(event: Dictionary, play: Callable) -> void:
+	var id: int = card_id(event)
 	var pos: Variant = table.anchor(id) if id >= 0 else null
 	if event.get("stackId") != null and not pos is Vector3:
 		pos = table.anchor("stack:%d" % int(event["stackId"]))

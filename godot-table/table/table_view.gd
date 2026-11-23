@@ -45,49 +45,8 @@ func _ready() -> void:
 
 
 func _build_scene() -> void:
-	camera = Camera3D.new()
-	camera.fov = 42.0
-	add_child(camera)
-	camera.look_at_from_position(CAMERA_POS, CAMERA_LOOK)
-
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-62, -28, 0)
-	sun.light_energy = 1.05
-	sun.shadow_enabled = true
-	sun.shadow_blur = 2.0
-	add_child(sun)
-
-	var lamp := OmniLight3D.new()
-	lamp.position = Vector3(0, 6.5, 1.0)
-	lamp.omni_range = 16.0
-	lamp.light_energy = 0.9
-	lamp.light_color = Color(1.0, 0.92, 0.8)
-	add_child(lamp)
-
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.03, 0.04, 0.07)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.45, 0.5, 0.65)
-	env.ambient_light_energy = 0.55
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = true
-	env.glow_intensity = 0.9
-	env.glow_bloom = 0.08
-	env.glow_hdr_threshold = 0.9
-	var world := WorldEnvironment.new()
-	world.environment = env
-	add_child(world)
-
-	var top := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(30, 18)
-	top.mesh = plane
-	var felt := ShaderMaterial.new()
-	felt.shader = preload("res://table/table_top.gdshader")
-	top.material_override = felt
-	top.position = Vector3(0, -0.01, 0)
-	add_child(top)
+	# Câmera, luzes, ambiente, pós-processamento e o tampo: table/table_environment.gd.
+	camera = TableEnvironment.build(self)
 
 	_arrows = Arrows.new()
 	add_child(_arrows)
