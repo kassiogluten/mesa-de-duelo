@@ -7,6 +7,11 @@ extends Node3D
 ## Quantos quadros os materiais ficam desenhados antes de sumir.
 const FRAMES := 4
 
+## Os materiais aquecidos, guardados enquanto a mesa existir: o Godot apaga o shader de um StandardMaterial3D quando some o
+## último material com as mesmas opções, e o próximo recompilava (a moeda travava ~40 ms a cada lançamento, não só no
+## primeiro; a Pista, a Comida e o esquilo, na primeira vez depois do aquecimento).
+static var _kept: Array[Material] = []
+
 var camera: Camera3D
 var _coin_task: int = -1
 var _coin_images: Array[Image] = []
@@ -20,10 +25,11 @@ func _ready() -> void:
 	camera.add_child(holder)
 	holder.position = Vector3(0, 0, -1.5)
 	var shaders: Array[Material] = []
-	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), PermanentFx._dome(), CardDressing._halo(),
+	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), ShieldFx.DOME, CardDressing._halo(),
 			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash(),
 			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER, StackPresence.HAZE_SHADER,
-			ExilePortal.SHADER, TrailRibbon.SHADER, EnergyBeam.SHADER]:
+			ExilePortal.SHADER, TrailRibbon.SHADER, EnergyBeam.SHADER, MomentExtras.SHAFT, MomentExtras.LEAF, MomentExtras.STAR,
+			FinaleFx.GRADE, BoardSweep.SCORCH, BoardSweep.HEAT, ArrivalFx.GEM_SHADER, ArrivalFx.LENS_SHADER, ArrivalFx.LIQUID_SHADER]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
@@ -43,6 +49,7 @@ func _ready() -> void:
 	shaders.append(SicknessFx.orbit_material())
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 0.001
+	_kept.append_array(shaders)
 	for material: Material in shaders:
 		var mesh := MeshInstance3D.new()
 		mesh.mesh = quad
@@ -64,6 +71,14 @@ func _ready() -> void:
 	# Os tipos de partícula e de material padrão ficam vivos (sem isso, cada um recompila o shader na primeira vez depois
 	# de uma pausa, ~6 ms).
 	CombatPieces.keep_materials(self)
+	# As peças dos momentos grandes (folhas e cinzas, poeira, cintilas, cacos e a sombra de contato), transparentes.
+	var clear := Color(0, 0, 0, 0)
+	MomentExtras.leaves(self, spot, [clear], 8, 0.2, Vector2(0.01, 0.01), 0.001, 0.0, 1.0, 0.1, 0.0, 0.0)
+	MomentExtras.dust_ring(self, spot, clear, 0.01, 4, 0.2, 0.001)
+	MomentExtras.sparkles(self, spot, clear, 0.01, 0.2, 4, 0.001)
+	MomentExtras.shards(self, spot, clear, 4, 0.01, 0.2, 0.001, 0.01)
+	MomentExtras.contact_shadow(holder, 0.001)
+	keep(self)
 	# Os números do dano e os textos (com contorno, na fonte dos títulos e na comum), já com os algarismos.
 	for font: Font in [MomentPieces._font(), null]:
 		var label := Label3D.new()
@@ -95,6 +110,7 @@ func _ready() -> void:
 		var object: Node3D = ArrivalFx._token_object(kind)
 		if object:
 			objects.add_child(object)
+	keep(objects)
 	_coin_task = WorkerThreadPool.add_task(_draw_coin)
 	ManaPoolFx.warm(self)
 	for mode: int in AmbientTraits.PARTICLE_MODES:
@@ -122,7 +138,33 @@ func _process(_delta: float) -> void:
 		coin.position = Vector3(0, 0, -1.5)
 		coin.scale = Vector3.ONE * 0.001
 		camera.add_child(coin)
+		keep(coin)
 		_free_later(coin)
+
+
+## Guarda os materiais de `node` e dos filhos (os das malhas e das partículas também), para os shaders deles não serem
+## apagados.
+static func keep(node: Node) -> void:
+	var nodes: Array[Node] = [node]
+	nodes.append_array(node.find_children("*", "GeometryInstance3D", true, false))
+	for raw: Node in nodes:
+		var geometry: GeometryInstance3D = raw as GeometryInstance3D
+		if geometry == null:
+			continue
+		if geometry.material_override and not _kept.has(geometry.material_override):
+			_kept.append(geometry.material_override)
+		var mesh: Mesh = (geometry as MeshInstance3D).mesh if geometry is MeshInstance3D else null
+		if geometry is GPUParticles3D:
+			# As partículas também: o material de processo (cada combinação de opções é um shader) e o do desenho.
+			var particles: GPUParticles3D = geometry as GPUParticles3D
+			if particles.process_material and not _kept.has(particles.process_material):
+				_kept.append(particles.process_material)
+			mesh = particles.draw_pass_1
+		if mesh:
+			for surface: int in mesh.get_surface_count():
+				var material: Material = mesh.surface_get_material(surface)
+				if material and not _kept.has(material):
+					_kept.append(material)
 
 
 func _free_later(holder: Node3D) -> void:

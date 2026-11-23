@@ -34,6 +34,15 @@ static func trace(node: CardNode, color: Color, duration: float = 0.5, speed: fl
 	tween.tween_method(func(v: float) -> void: top.set_shader_parameter("trace_alpha", v), 1.2, 0.0, duration / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
+## Uma faixa de luz atravessa a face da carta na diagonal (a carta que se fecha inteira de novo, a vitória).
+static func sweep(node: CardNode, color: Color, duration: float = 0.5, speed: float = 1.0) -> void:
+	if not _usable(node):
+		return
+	var top: ShaderMaterial = _layer(node, color, 0.005, duration / speed + 0.05)
+	top.set_shader_parameter("sweep_alpha", 1.3)
+	_tween_of(top).tween_method(func(v: float) -> void: top.set_shader_parameter("sweep", v), -0.15, 1.15, duration / speed).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
 ## Terreno pousando: só a poça de luz na cor da mana sai de baixo dele e a borda acende de leve, rápido.
 static func settle(node: CardNode, color: Color, speed: float = 1.0) -> void:
 	if not _usable(node):

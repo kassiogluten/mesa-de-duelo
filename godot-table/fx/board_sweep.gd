@@ -13,6 +13,9 @@ const REACH := 11.0
 const AFTERMATH := ["left", "damage", "life-changed", "entered", "mill", "discard", "draw", "counters", "survived"]
 const PLURAL := [["destroyed", "destruídas"], ["sacrificed", "sacrificadas"], ["Exile", "exiladas"], ["Hand", "devolvidas à mão"], ["Library", "postas no grimório"]]
 
+const SCORCH := preload("res://fx/scorch.gdshader")
+const HEAT := preload("res://fx/heat_refract.gdshader")
+
 static var _front_shader: Shader
 
 ## Fontes que miraram cartas (o dano dividido entre alvos escolhidos continua com os projéteis, sem onda).
@@ -107,8 +110,8 @@ static func arrival(distance: float) -> float:
 	return WAVE_TIME * (1.0 - sqrt(1.0 - k))
 
 
-## A onda: um muro de luz na cor que abre a partir de `origin` e atravessa a mesa, com faíscas na frente, um anel no tampo,
-## um clarão no começo e a mesa tremendo de leve. `speed` é a velocidade dos efeitos (câmera lenta no laboratório).
+## A onda: um muro de luz na cor que abre a partir de `origin` e atravessa a mesa, com o ar entortando junto dele, brasas
+## levadas pela frente, o tampo chamuscando por onde ela passa (e esfriando depois), um anel no tampo e um clarão no começo. `speed` é a velocidade dos efeitos (câmera lenta no laboratório).
 static func wave(parent: Node3D, origin: Vector3, color: Color, speed: float = 1.0) -> void:
 	var duration: float = WAVE_TIME / speed
 	var front := MeshInstance3D.new()
@@ -124,17 +127,37 @@ static func wave(parent: Node3D, origin: Vector3, color: Color, speed: float = 1
 	var material := ShaderMaterial.new()
 	material.shader = _front()
 	material.set_shader_parameter("color", color)
+	material.render_priority = 1
 	front.material_override = material
 	front.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	front.position = origin + Vector3(0, 0.45, 0)
 	front.scale = Vector3(0.2, 0.9, 0.2)
 	parent.add_child(front)
+	# O ar entortando no muro: a mesma malha, desenhada antes da luz, lendo o que está atrás.
+	var heat := MeshInstance3D.new()
+	var heat_material := ShaderMaterial.new()
+	if Fx.quality >= 1:
+		heat.mesh = cylinder
+		heat_material.shader = HEAT
+		heat_material.render_priority = -1
+		heat.material_override = heat_material
+		heat.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		heat.position = front.position
+		heat.scale = front.scale
+		front.add_sibling(heat)
+	var scorch: ShaderMaterial = _scorch(parent, origin, color)
 	var radius: Callable = func(t: float) -> void:
 		var r: float = REACH * (1.0 - (1.0 - t) * (1.0 - t))
 		front.scale = Vector3(maxf(r, 0.05), 0.9 * (1.0 - t * 0.5), maxf(r, 0.05))
 		material.set_shader_parameter("alpha", clampf(t * 8.0, 0.0, 1.0) * (1.0 - t * t))
+		if heat.is_inside_tree():
+			heat.scale = front.scale
+			heat_material.set_shader_parameter("strength", 0.045 * clampf(t * 6.0, 0.0, 1.0) * (1.0 - t))
+		if scorch:
+			scorch.set_shader_parameter("radius", r / REACH)
 	var tween := front.create_tween()
 	tween.tween_method(radius, 0.0, 1.0, duration)
+	tween.tween_callback(heat.queue_free)
 	tween.tween_callback(front.queue_free)
 	# O rastro no tampo: um anel largo que segue a frente e um fino mais rápido na frente dele.
 	Fx.ring(parent, origin, color, REACH * 1.02, duration * 1.05, 0.06)
@@ -144,13 +167,38 @@ static func wave(parent: Node3D, origin: Vector3, color: Color, speed: float = 1
 	_front_sparks(parent, origin, color, duration)
 
 
-## Faíscas soltas pela frente da onda: o anel de onde elas saem cresce junto com ela.
+## O tampo chamuscado: fuligem e brasas atrás da frente (que o `wave` empurra pelo "radius"), que esfriam e somem.
+static func _scorch(parent: Node3D, origin: Vector3, color: Color) -> ShaderMaterial:
+	if Fx.quality == 0:
+		return null
+	var plane := MeshInstance3D.new()
+	var mesh := PlaneMesh.new()
+	mesh.size = Vector2(2, 2)
+	plane.mesh = mesh
+	var material := ShaderMaterial.new()
+	material.shader = SCORCH
+	material.set_shader_parameter("color", color.lerp(Color(1.0, 0.55, 0.2), 0.35))
+	plane.material_override = material
+	plane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	plane.position = Vector3(origin.x, 0.004, origin.z)
+	plane.scale = Vector3(REACH, 1.0, REACH)
+	parent.add_child(plane)
+	var tween := plane.create_tween()
+	tween.tween_interval(WAVE_TIME * 0.7)
+	tween.tween_method(func(v: float) -> void: material.set_shader_parameter("cool", v), 0.0, 1.0, 0.9)
+	tween.tween_method(func(v: float) -> void: material.set_shader_parameter("alpha", v), 1.0, 0.0, 1.1).set_ease(Tween.EASE_IN)
+	tween.tween_callback(plane.queue_free)
+	return material
+
+
+## Brasas soltas pela frente da onda: o anel de onde elas saem cresce junto com ela, e elas sobem e se espalham para fora,
+## como levadas pelo vento da onda.
 static func _front_sparks(parent: Node3D, origin: Vector3, color: Color, duration: float) -> void:
 	if Fx.quality == 0:
 		return
 	var sparks := GPUParticles3D.new()
-	sparks.amount = 260 if Fx.quality >= 2 else 140
-	sparks.lifetime = 0.55
+	sparks.amount = 320 if Fx.quality >= 2 else 160
+	sparks.lifetime = 0.9
 	sparks.local_coords = false
 	sparks.visibility_aabb = AABB(Vector3(-14, -1, -10), Vector3(28, 5, 20))
 	var process := ParticleProcessMaterial.new()
@@ -163,12 +211,21 @@ static func _front_sparks(parent: Node3D, origin: Vector3, color: Color, duratio
 	process.spread = 35.0
 	process.initial_velocity_min = 0.6
 	process.initial_velocity_max = 1.8
-	process.gravity = Vector3(0, -1.5, 0)
-	process.scale_min = 0.05
-	process.scale_max = 0.12
+	process.radial_velocity_min = 1.0
+	process.radial_velocity_max = 3.0
+	process.damping_min = 1.0
+	process.damping_max = 2.0
+	process.gravity = Vector3(0, 0.5, 0)
+	process.turbulence_enabled = Fx.quality >= 2
+	process.turbulence_noise_strength = 1.5
+	process.turbulence_noise_scale = 3.0
+	process.turbulence_influence_min = 0.05
+	process.turbulence_influence_max = 0.15
+	process.scale_min = 0.04
+	process.scale_max = 0.1
 	var ramp := Gradient.new()
-	ramp.set_color(0, Color(color.lerp(Color.WHITE, 0.5), 0.8))
-	ramp.set_color(1, Color(color, 0.0))
+	ramp.offsets = PackedFloat32Array([0.0, 0.35, 1.0])
+	ramp.colors = PackedColorArray([Color(color.lerp(Color.WHITE, 0.6), 0.9), Color(color.lerp(Color(1.0, 0.5, 0.15), 0.4), 0.7), Color(0.6, 0.15, 0.03, 0.0)])
 	var ramp_tex := GradientTexture1D.new()
 	ramp_tex.gradient = ramp
 	process.color_ramp = ramp_tex
@@ -183,7 +240,7 @@ static func _front_sparks(parent: Node3D, origin: Vector3, color: Color, duratio
 		process.emission_ring_radius = maxf(r, 0.3)
 		process.emission_ring_inner_radius = maxf(r - 0.15, 0.1), 0.0, 1.0, duration)
 	tween.tween_callback(func() -> void: sparks.emitting = false)
-	tween.tween_interval(0.7)
+	tween.tween_interval(1.0)
 	tween.tween_callback(sparks.queue_free)
 
 
@@ -240,7 +297,7 @@ void fragment() {
 	float body = pow(1.0 - h, 2.2) * (0.55 + 0.9 * flames);
 	float base = smoothstep(0.12, 0.0, h);
 	ALBEDO = mix(color.rgb, vec3(1.0), base * 0.6) * (1.4 + base * 2.0);
-	ALPHA = clamp(body + base, 0.0, 1.0) * alpha * 0.6;
+	ALPHA = clamp(body + base, 0.0, 1.0) * alpha * 0.5;
 }
 """
 	return _front_shader

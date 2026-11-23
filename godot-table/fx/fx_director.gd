@@ -455,14 +455,9 @@ func at_card(event: Dictionary, play: Callable) -> void:
 		play.call(pos, card)
 
 
-## Fim da partida: fogos dourados na vitória, brasas escuras na derrota.
+## Fim da partida: a cena final (fx/finale_fx.gd), luz e ouro na vitória, a mesa sem cor e cinzas na derrota.
 func game_over(won: bool) -> void:
-	var color: Color = Hud.GOLD if won else Color(0.55, 0.3, 0.7)
-	for i: int in 6 if won else 3:
-		var pos := Vector3(randf_range(-4.5, 4.5), randf_range(1.0, 2.5), randf_range(-2.5, 1.5))
-		get_tree().create_timer(i * 0.25).timeout.connect(func() -> void:
-			Fx.burst(self, pos, color if i % 2 == 0 else color.lightened(0.4), 90, 3.5, 1.2, 0.08)
-			Fx.light(self, pos, color, 4.0, 6.0, 0.8))
+	FinaleFx.play(self, table, won, _you, mood)
 	if sounds:
 		sounds.play("victory" if won else "defeat")
 	finale.emit(won)

@@ -4,56 +4,12 @@
 class_name PermanentFx
 extends RefCounted
 
-const WARD := Color(0.45, 0.78, 1.0)
 const CONTROL := Color(0.72, 0.42, 1.0)
 
-static var _dome_shader: Shader
 
-
-## A cúpula do ward sobre a carta em `pos`: "rise" sobe e fica um instante; "hold" acende e segura (quem mirou foi
-## anulado); "break" trinca e se parte (o custo foi pago).
+## A cúpula do ward sobre a carta em `pos` ("rise", "hold" ou "break"): fica em fx/shield_fx.gd.
 static func ward(parent: Node3D, pos: Vector3, outcome: String, speed: float = 1.0) -> void:
-	var dome := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 1.0
-	sphere.height = 2.0
-	sphere.is_hemisphere = true
-	sphere.radial_segments = 48
-	sphere.rings = 16
-	dome.mesh = sphere
-	var material := ShaderMaterial.new()
-	material.shader = _dome()
-	material.set_shader_parameter("color", WARD)
-	dome.material_override = material
-	dome.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	dome.position = Vector3(pos.x, 0.0, pos.z)
-	var full := Vector3(0.55, 0.38, 0.7)
-	dome.scale = Vector3(full.x, 0.01, full.z)
-	parent.add_child(dome)
-	var set_param: Callable = func(v: float, key: String) -> void: material.set_shader_parameter(key, v)
-	var tween := dome.create_tween()
-	tween.tween_property(dome, "scale", full, 0.28 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_method(set_param.bind("alpha"), 0.0, 1.0, 0.2 / speed)
-	match outcome:
-		"hold":
-			tween.tween_callback(func() -> void:
-				Fx.light(parent, pos, WARD, 4.0, 4.0, 0.5 / speed)
-				Fx.float_text(parent, pos + Vector3(0, 0.3, 0), "Protegida", WARD.lightened(0.35), 60))
-			tween.tween_method(set_param.bind("flash"), 1.0, 0.0, 0.45 / speed)
-			tween.tween_interval(0.35 / speed)
-			tween.tween_method(set_param.bind("alpha"), 1.0, 0.0, 0.35 / speed)
-		"break":
-			tween.tween_interval(0.12 / speed)
-			tween.tween_method(set_param.bind("cracks"), 0.0, 1.0, 0.3 / speed)
-			tween.tween_callback(func() -> void:
-				Fx.burst(parent, pos + Vector3(0, 0.25, 0), WARD.lightened(0.4), 70, 2.6, 0.75, 0.07)
-				Fx.float_text(parent, pos + Vector3(0, 0.3, 0), "Ward pago", WARD.lightened(0.2), 50))
-			tween.tween_property(dome, "scale", full * 1.15, 0.12 / speed)
-			tween.parallel().tween_method(set_param.bind("alpha"), 1.0, 0.0, 0.12 / speed)
-		_:
-			tween.tween_interval(0.7 / speed)
-			tween.tween_method(set_param.bind("alpha"), 1.0, 0.0, 0.4 / speed)
-	tween.tween_callback(dome.queue_free)
+	ShieldFx.ward(parent, pos, outcome, speed)
 
 
 ## A aura ou o equipamento se prende: uma corrente de elos de luz se estende dela até a carta (ou o jogador), um pulso
@@ -121,27 +77,9 @@ static func flip(parent: Node3D, node: CardNode, old_tex: Texture2D, face_up: bo
 		Fx.float_text(parent, pos + Vector3(0, 0.2, 0), "Desvirada" if face_up else "Transformou", Color(1.0, 0.9, 0.65), 54))
 
 
-## Sobreviveu: a carta trinca do meio para fora, a luz vaza pelas fendas e elas se fecham com um clarão.
+## Sobreviveu (indestrutível ou regenerada): as rachaduras que fecham ficam em fx/shield_fx.gd.
 static func survive(parent: Node3D, node: CardNode, regenerated: bool, speed: float = 1.0) -> void:
-	if node == null or not is_instance_valid(node):
-		return
-	var material: ShaderMaterial = CardDressing.material_of(node)
-	var color: Color = Color(0.45, 1.0, 0.55) if regenerated else Color(1.0, 0.86, 0.45)
-	var pos: Vector3 = node.global_position
-	node.jolt(0.08)
-	Fx.burst(parent, pos + Vector3(0, 0.1, 0), Color(0.9, 0.9, 1.0), 30, 1.6, 0.5, 0.06)
-	if material == null:
-		return
-	material.set_shader_parameter("crack_color", color)
-	var set_cracks: Callable = func(v: float) -> void: material.set_shader_parameter("cracks", v)
-	var tween := node.create_tween()
-	tween.tween_method(set_cracks, 0.0, 1.0, 0.22 / speed).set_ease(Tween.EASE_OUT)
-	tween.tween_interval(0.3 / speed)
-	tween.tween_callback(func() -> void:
-		node.flash_color(color, 0.45)
-		CardGlow.pulse(node, color, 0.05, speed)
-		Fx.light(parent, pos, color, 3.0, 3.5, 0.5 / speed))
-	tween.tween_method(set_cracks, 1.0, 0.0, 0.42 / speed).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	ShieldFx.survive(parent, node, regenerated, speed)
 
 
 ## Golpe duplo: no primeiro golpe um corte; no segundo, outro cruzando, e o "Golpe duplo".
@@ -172,37 +110,3 @@ static func mana(parent: Node3D, sources: Array, to: Vector3, speed: float = 1.0
 					Fx.light(parent, to, color, 2.2, 3.0, 0.3 / speed)))
 		i += 1
 	return (i * gap + 0.42) / speed + ManaOrb.POP_TIME
-
-
-static func _dome() -> Shader:
-	if _dome_shader == null:
-		_dome_shader = Shader.new()
-		_dome_shader.code = """
-shader_type spatial;
-render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled;
-uniform vec4 color : source_color = vec4(0.45, 0.78, 1.0, 1.0);
-uniform float alpha = 1.0;
-uniform float flash = 0.0;
-uniform float cracks = 0.0;
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-// Favos hexagonais: perto da borda da célula, 1.
-float hexes(vec2 p) {
-	p.x *= 1.1547;
-	p.y += mod(floor(p.x), 2.0) * 0.5;
-	vec2 f = abs(fract(p) - 0.5);
-	return smoothstep(0.42, 0.5, max(f.x * 1.5 + f.y, f.y * 2.0));
-}
-void fragment() {
-	float rim = pow(1.0 - abs(dot(NORMAL, VIEW)), 2.2);
-	float cells = hexes(UV * vec2(18.0, 7.0));
-	float shimmer = 0.6 + 0.4 * sin(UV.y * 30.0 - TIME * 5.0);
-	float crack = 0.0;
-	if (cracks > 0.0) {
-		vec2 g = floor(UV * vec2(9.0, 4.0));
-		crack = step(1.0 - cracks * 0.8, hash(g)) * cells;
-	}
-	ALBEDO = mix(color.rgb, vec3(1.0), flash * 0.6 + crack) * (1.2 + flash * 2.5 + crack * 3.0);
-	ALPHA = clamp(rim * 0.75 + cells * 0.12 * shimmer + flash * 0.3 + crack, 0.0, 1.0) * alpha;
-}
-"""
-	return _dome_shader

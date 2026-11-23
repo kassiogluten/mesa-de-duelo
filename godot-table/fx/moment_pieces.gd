@@ -14,6 +14,9 @@ static var _solid_shader: Shader
 static var _crown_mesh: ArrayMesh
 static var _beam_shader: Shader
 static var _title_font: SystemFont
+## Os textos grandes na tela agora ou daqui a pouco ({rect em pixels, start, end em ms}): o próximo título ou placar
+## que cairia em cima de um deles desce (ou sobe) para uma faixa livre.
+static var _lanes: Array[Dictionary] = []
 
 
 ## Um ponto ao lado de `at` na tela, `pixels` na direção do meio da tela, sempre à mesma distância da câmera: os
@@ -27,6 +30,49 @@ static func beside(table: TableView, at: Vector3, pixels: float, margin: Vector2
 	var step: Vector2 = toward.normalized() * minf(pixels, toward.length()) if toward.length() > 1.0 else Vector2.ZERO
 	var spot: Vector2 = (screen + step).clamp(size * margin, size * (Vector2.ONE - margin))
 	return camera.project_position(spot, TEXT_DEPTH)
+
+
+## Reserva o pedaço da tela que um texto de `world` (largura e altura, em unidades da mesa) ocupa em `pos`, de daqui a
+## `delay` até `delay + life` segundos; devolve `pos`, ou o ponto da faixa livre mais perto (acima, depois abaixo) se ele
+## cairia em cima de outro ou atrás da mão.
+static func claim(parent: Node3D, pos: Vector3, world: Vector2, delay: float, life: float) -> Vector3:
+	var camera: Camera3D = parent.get_viewport().get_camera_3d() if parent.is_inside_tree() else null
+	if camera == null or camera.is_position_behind(pos):
+		return pos
+	var now: int = Time.get_ticks_msec()
+	var start: int = now + int(delay * 1000.0)
+	var end: int = start + int(life * 1000.0)
+	_lanes.assign(_lanes.filter(func(lane: Dictionary) -> bool: return int(lane["end"]) > now))
+	var depth: float = -(camera.global_transform.affine_inverse() * pos).z
+	var view: Vector2 = camera.get_viewport().get_visible_rect().size
+	var per_unit: float = view.y / (2.0 * depth * tan(deg_to_rad(camera.fov) * 0.5))
+	var size: Vector2 = world * per_unit
+	var center: Vector2 = camera.unproject_position(pos)
+	var chosen: Vector2 = center
+	# A mão (embaixo, perto da câmera) cobre o que fica atrás dela: o texto nunca vai para lá.
+	var blocked: Array[Rect2] = []
+	var table: Variant = parent.get("table")
+	if table is TableView:
+		var hand: Rect2 = (table as TableView).hand_rect()
+		if hand.has_area():
+			blocked.append(hand.grow(12.0))
+	for step: int in [0, -1, 1, -2, 2, -3]:
+		var spot: Vector2 = center + Vector2(0, size.y * 1.08 * step)
+		if spot.y - size.y * 0.5 < view.y * 0.06 or spot.y + size.y * 0.5 > view.y * 0.94:
+			continue
+		var rect := Rect2(spot - size * 0.5, size)
+		var free: bool = true
+		for hand: Rect2 in blocked:
+			free = free and not hand.intersects(rect)
+		for lane: Dictionary in _lanes:
+			if (lane["rect"] as Rect2).intersects(rect) and start < int(lane["end"]) and int(lane["start"]) < end:
+				free = false
+				break
+		if free:
+			chosen = spot
+			break
+	_lanes.append({"rect": Rect2(chosen - size * 0.5, size), "start": start, "end": end})
+	return pos if chosen == center else camera.project_position(chosen, depth)
 
 
 ## Para cima na tela (o alto da câmera), para empilhar textos de frente para ela.
@@ -73,8 +119,11 @@ static func slash(parent: Node3D, pos: Vector3, color: Color, angle: float, leng
 		tween.tween_callback(cut.queue_free))
 
 
-## Título grande que bate na mesa (cresce para trás), fica um instante com um risco de luz embaixo, sobe e some.
+## Título grande que bate na mesa (cresce para trás), fica um instante com um risco de luz embaixo, sobe e some. Se outro
+## título ou placar já ocupa aquele pedaço da tela nesse tempo, este vai para a faixa livre mais perto.
 static func title(parent: Node3D, pos: Vector3, text: String, color: Color, outline: Color, size: int, duration: float, delay: float) -> void:
+	var world := Vector2(text.length() * size * 0.0034 * 0.6, size * 0.0034 * 1.25)
+	pos = claim(parent, pos, world, delay, 0.2 + duration * 0.95)
 	after(parent, delay, func() -> void:
 		var label := Label3D.new()
 		label.text = text
