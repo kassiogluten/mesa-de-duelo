@@ -4,7 +4,7 @@ class_name EventFx
 extends RefCounted
 
 
-## Dano: no combate o atacante avança e golpeia; fora dele, um projétil sai da fonte. O alvo pisca, solta faíscas e o número.
+## Dano: no combate o atacante avança e golpeia; fora dele, um projétil no estilo da cor da carta sai da fonte (SpellMissile). O alvo pisca, solta faíscas e o número.
 static func damage(d: FxDirector, event: Dictionary) -> void:
 	var amount: int = absi(int(event.get("delta", 0)))
 	var targets: Dictionary = event.get("targets", {}) if event.get("targets") is Dictionary else {}
@@ -27,7 +27,8 @@ static func damage(d: FxDirector, event: Dictionary) -> void:
 			attacker.lunge(target)
 		d.get_tree().create_timer(0.13 / d.speed).timeout.connect(impact)
 	elif source is Vector3:
-		Fx.bolt(d, source, target, color, 0.32 / d.speed, impact)
+		var struck: CardNode = d.table.card_node(int(to_key)) if to_key is int else null
+		SpellMissile.launch(d, source, target, card, impact, d.speed, struck)
 	else:
 		impact.call()
 

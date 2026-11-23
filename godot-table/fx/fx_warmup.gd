@@ -19,7 +19,8 @@ func _ready() -> void:
 	holder.position = Vector3(0, 0, -1.5)
 	var shaders: Array[Material] = []
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), PermanentFx._dome(), CardDressing._halo(),
-			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material()]:
+			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER,
+			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
@@ -40,6 +41,7 @@ func _ready() -> void:
 	var spot: Vector3 = camera.global_transform * Vector3(0, 0, -1.5)
 	Fx.burst(self, spot, Color(0, 0, 0, 0), 4, 0.01, 0.2, 0.001)
 	BoardSweep._front_sparks(self, spot, Color(0, 0, 0, 0), 0.2)
+	SpellMissile.warm(self, spot)
 	var label := Label3D.new()
 	label.text = "Aquecendo 0123456789"
 	label.font = MomentPieces._font()
