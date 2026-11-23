@@ -14,6 +14,7 @@ const FILES := {
 	"sacrifice": "24-sacrifice.mp3", "life-loss": "25-life-loss.mp3", "shuffle": "26-shuffle.mp3",
 	"victory": "27-victory.mp3", "defeat": "28-defeat.mp3", "counter": "29-counter.mp3", "counter-bad": "30-counter-bad.mp3",
 	"walker": "31-walker.mp3", "loyalty": "32-loyalty.mp3", "graveyard": "35-graveyard.mp3", "equip": "36-equip.mp3", "dice": "37-dice.mp3",
+	"creak": "mesa/rangido.mp3",
 }
 const VOICES := 6
 const HURTS := ["M1M1", "POISON", "TIME", "AGE", "DOOM"]

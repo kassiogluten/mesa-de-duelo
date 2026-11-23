@@ -32,8 +32,8 @@ function syncData() {
   mkdirSync(join(dir, 'audio'), { recursive: true });
   for (const name of SHARED_DATA) copy(join(ROOT, 'shared', name), join(dir, name));
   const audio = join(ROOT, 'public', 'audio');
-  // Os sons da mesa e os de cada tipo de criatura (criaturas/).
-  for (const sub of ['', 'criaturas']) {
+  // Os sons da mesa, os de cada tipo de criatura (criaturas/) e o rangido da mesa lotada (mesa/).
+  for (const sub of ['', 'criaturas', 'mesa']) {
     const from = join(audio, sub);
     if (!existsSync(from)) continue;
     mkdirSync(join(dir, 'audio', sub), { recursive: true });

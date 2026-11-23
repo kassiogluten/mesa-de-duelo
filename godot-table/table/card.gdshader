@@ -1,4 +1,4 @@
-// Carta na mesa: frente com a imagem, verso desenhado com a cor do jogador, cantos arredondados e brilho de destaque.
+// Carta na mesa: frente com a imagem e verniz, verso com a cor do jogador, cantos arredondados, brilho de destaque que corre a borda e foil nas raras e míticas.
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -16,6 +16,11 @@ uniform float dissolve : hint_range(0.0, 1.0) = 0.0;
 uniform vec3 dissolve_color : source_color = vec3(1.0, 0.45, 0.12);
 // Clarão rápido (dano, entrada): soma luz na carta inteira.
 uniform vec4 flash = vec4(1.0, 1.0, 1.0, 0.0);
+// Foil: 0 nenhum, 1 rara (um brilho que passa), 2 mítica (arco-íris mais forte). CardDressing liga pela raridade.
+uniform float foil : hint_range(0.0, 2.0) = 0.0;
+// Rachaduras (sobreviveu): 0 nenhuma, 1 a carta inteira trincada; a cor acende nas fendas.
+uniform float cracks : hint_range(0.0, 1.0) = 0.0;
+uniform vec3 crack_color : source_color = vec3(1.0, 0.95, 0.8);
 
 const vec2 SIZE = vec2(0.63, 0.88);
 const float CORNER = 0.035;
@@ -49,6 +54,27 @@ float noise(vec2 p) {
 	return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
 }
 
+vec3 hue(float h) {
+	return clamp(abs(fract(h + vec3(0.0, 0.6667, 0.3333)) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+}
+
+// Fendas de Voronoi: perto da borda entre duas células, 1; longe, 0.
+float crack_lines(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	float d1 = 8.0;
+	float d2 = 8.0;
+	for (int y = -1; y <= 1; y++) {
+		for (int x = -1; x <= 1; x++) {
+			vec2 g = vec2(float(x), float(y));
+			vec2 o = vec2(hash(i + g), hash(i + g + 17.3));
+			float d = length(g + o - f);
+			if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) { d2 = d; }
+		}
+	}
+	return smoothstep(0.07, 0.0, d2 - d1);
+}
+
 void fragment() {
 	float d = card_sdf(UV);
 	if (d > 0.0) {
@@ -59,16 +85,52 @@ void fragment() {
 		discard;
 	}
 	vec3 color;
+	// Quanto a carta está de frente para quem olha (1 de frente, 0 de lado): o verniz e o foil mudam com o ângulo.
+	float facing = abs(dot(NORMAL, VIEW));
+	vec3 extra = vec3(0.0);
 	if (FRONT_FACING) {
 		color = has_front ? texture(front_tex, UV).rgb : vec3(0.18, 0.17, 0.2);
+		if (foil > 0.0 && has_front) {
+			// Foil: faixas de arco-íris na diagonal que andam com o ângulo da carta e com o tempo, mais fortes nas partes claras.
+			float diag = UV.x * 0.8 + UV.y * 1.1;
+			float h = diag * 1.4 + (1.0 - facing) * 2.2 + TIME * 0.05;
+			float band = 0.5 + 0.5 * sin(diag * 9.0 - TIME * 0.7 + (1.0 - facing) * 8.0);
+			float luma = dot(color, vec3(0.299, 0.587, 0.114));
+			float sparkle = step(0.985, hash(floor(UV * vec2(90.0, 126.0)) + floor(TIME * 3.0))) * band;
+			float k = foil >= 1.5 ? 1.0 : 0.45;
+			extra += hue(h) * band * (0.1 + 0.25 * luma) * k + vec3(sparkle) * 0.6 * k;
+			// O brilho que passa de tempos em tempos.
+			float sweep = smoothstep(0.08, 0.0, abs(fract(TIME * 0.12) * 3.0 - 1.0 - diag * 0.9));
+			extra += vec3(1.0, 0.97, 0.9) * sweep * 0.22 * k;
+		}
 	} else {
 		color = card_back(vec2(1.0 - UV.x, UV.y));
 	}
 	color = mix(color, color * 0.32, dim);
-	float rim = smoothstep(-0.028, 0.0, d);
+	if (cracks > 0.0) {
+		// As rachaduras partem do meio e se espalham; dentro delas a carta escurece e a luz vaza.
+		vec2 c = (UV - 0.5) * SIZE;
+		float reach = cracks * 0.75;
+		float lines = crack_lines(UV * vec2(5.0, 7.0)) * smoothstep(reach, reach - 0.15, length(c));
+		color = mix(color, color * 0.25, lines);
+		extra += crack_color * lines * 3.0 * cracks;
+	}
 	ALBEDO = color;
-	ROUGHNESS = 0.62;
-	SPECULAR = 0.25;
-	float edge = dissolve > 0.0 ? smoothstep(dissolve * 1.1 + 0.06, dissolve * 1.1 - 0.05, burn) : 0.0;
-	EMISSION = glow.rgb * glow.a * (rim * 2.2 + 0.06) + vec3(hover * 0.05) + dissolve_color * edge * 4.0 + flash.rgb * flash.a;
+	// Verniz de carta: um pouco brilhante, com uma camada de laca por cima.
+	ROUGHNESS = 0.48;
+	SPECULAR = 0.35;
+	CLEARCOAT = 0.35;
+	CLEARCOAT_ROUGHNESS = 0.25;
+	vec3 glow_light = vec3(0.0);
+	if (glow.a > 0.0) {
+		// Destaque: a borda acesa respira, um brilho corre em volta e um véu suave entra um pouco na carta.
+		vec2 p = (UV - 0.5) * SIZE;
+		float angle = atan(p.y, p.x);
+		float run = pow(0.5 + 0.5 * sin(angle - TIME * 2.6), 10.0) + pow(0.5 + 0.5 * sin(angle + 3.14159 - TIME * 2.6), 10.0);
+		float breathe = 0.82 + 0.18 * sin(TIME * 3.2);
+		float edge_band = smoothstep(-0.034, 0.0, d);
+		float veil = smoothstep(-0.11, 0.0, d) * 0.22;
+		glow_light = glow.rgb * glow.a * (edge_band * (1.7 * breathe + run * 2.2) + veil + 0.04);
+	}
+	EMISSION = glow_light + vec3(hover * 0.06) + dissolve_color * (dissolve > 0.0 ? smoothstep(dissolve * 1.1 + 0.06, dissolve * 1.1 - 0.05, burn) : 0.0) * 4.0 + flash.rgb * flash.a + extra;
 }
