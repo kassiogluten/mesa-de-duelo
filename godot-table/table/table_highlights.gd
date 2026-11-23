@@ -50,7 +50,7 @@ static func role_of(id: int, stack_id: int, roles: Dictionary) -> String:
 	if id < 0:
 		return ""
 	for pair: Array in [["selected", "selected"], ["selectable", "target"], ["attacking", "attacking"], ["untappable", "untappable"],
-			["actionable", "actionable"], ["mana_only", "mana"], ["blocking", "blocking"]]:
+			["mana_only", "mana"], ["actionable", "actionable"], ["blocking", "blocking"]]:
 		if (roles.get(pair[0], []) as Array).has(id):
 			return pair[1]
 	return ""
@@ -115,20 +115,15 @@ func _show(key: Variant, node: CardNode, role: String) -> void:
 	node.set_raise(raise)
 
 
-## O mouse entrou ou saiu de uma carta: a que responde ao clique acende mais e o cursor vira a mãozinha.
+## O mouse entrou ou saiu de uma carta: a que responde ao clique acende mais (o cursor é da TableInteraction).
 func hover(node: CardNode, on: bool) -> void:
 	if on:
 		_hovered = node
 	elif _hovered == node:
 		_hovered = null
 	var key: Variant = view.key_of(node)
-	var role: String = Txt.of(_role.get(key, "")) if key != null else ""
 	if key != null:
-		_show(key, node, role)
-	if on and clickable(role):
-		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
-	elif not on or not clickable(role):
-		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+		_show(key, node, Txt.of(_role.get(key, "")))
 
 
 ## O estado de uma carta agora ("" sem destaque).
