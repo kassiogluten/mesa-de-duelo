@@ -81,6 +81,8 @@ func apply_state(state: Dictionary) -> void:
 	_field.place_all(players, _frames, seen, names)
 	# Os efeitos contínuos das permanentes (voar, vínculo com a vida, indestrutível…): fx/ambient_fx.gd.
 	AmbientFx.sync(self)
+	# O que mudou nas permanentes sem efeito próprio (enjoo, desvirar, P/T, selos novos): fx/state_fx.gd.
+	StateFx.sync(self)
 	for raw: Variant in players:
 		var player: Dictionary = raw
 		var frame: Dictionary = _frames[int(player["id"])]

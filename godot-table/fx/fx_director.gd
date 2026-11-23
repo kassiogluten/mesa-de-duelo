@@ -45,6 +45,8 @@ var _slow_frames: float = 0.0
 var _watch := StateWatch.new()
 var _sweeps := BoardSweep.new()
 var _critters := Critters.new()
+## Os selos do assento que aparecem ou mudam (veneno, monarca, o Anel…): fx/state_seats.gd.
+var _seat_badges := SeatBadgeFx.new()
 var _commander_rules: bool = false
 ## Do estado em andamento: seq do spell-cast → os terrenos que pagaram; seq das entradas do comandante; seq do
 ## control-changed → onde a carta estava antes.
@@ -111,6 +113,7 @@ func before_state(state: Dictionary) -> void:
 	_mana = watch["mana"]
 	_commander_entries = watch["commander_entries"]
 	_schedule_changes(watch)
+	_seat_badges.observe(state, fresh, hud)
 	# Os momentos olham o estado inteiro (vida, eliminados), mesmo sem eventos novos.
 	var moments: Array = _moments.observe(state)
 	if fresh.is_empty() and moments.is_empty():
