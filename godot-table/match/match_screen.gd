@@ -41,6 +41,9 @@ func _ready() -> void:
 	_fx.table = _table
 	_fx.sounds = Sounds.new()
 	_fx.add_child(_fx.sounds)
+	_fx.mood = TableMood.new()
+	_fx.add_child(_fx.mood)
+	_fx.mood.attach(_table)
 	add_child(_fx)
 	var layer := CanvasLayer.new()
 	add_child(layer)

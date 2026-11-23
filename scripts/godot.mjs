@@ -32,7 +32,13 @@ function syncData() {
   mkdirSync(join(dir, 'audio'), { recursive: true });
   for (const name of SHARED_DATA) copy(join(ROOT, 'shared', name), join(dir, name));
   const audio = join(ROOT, 'public', 'audio');
-  if (existsSync(audio)) for (const name of readdirSync(audio).filter(n => n.endsWith('.mp3'))) copy(join(audio, name), join(dir, 'audio', name));
+  // Os sons da mesa e os de cada tipo de criatura (criaturas/).
+  for (const sub of ['', 'criaturas']) {
+    const from = join(audio, sub);
+    if (!existsSync(from)) continue;
+    mkdirSync(join(dir, 'audio', sub), { recursive: true });
+    for (const name of readdirSync(from).filter(n => n.endsWith('.mp3'))) copy(join(from, name), join(dir, 'audio', sub, name));
+  }
 }
 
 /** O arquivo mais novo que o Godot importa (scripts, shaders, cenas, sons), fora de .godot/ e export/: se for mais novo que a

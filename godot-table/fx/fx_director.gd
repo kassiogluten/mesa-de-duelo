@@ -17,6 +17,8 @@ const MAX_BATCH := 2.4
 var table: TableView
 var hud: Hud
 var sounds: Sounds
+## Clima da mesa: a luz puxa para a cor das mágicas conjuradas e volta devagar.
+var mood: TableMood
 ## Escala de velocidade dos efeitos (o laboratório usa câmera lenta).
 var speed: float = 1.0
 var _last_seq: int = -1
@@ -110,6 +112,9 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 	if sounds:
 		var where: Variant = table.anchor(_card_id(event)) if _card_id(event) >= 0 else null
 		sounds.play(Sounds.cue_for(event, _you), where if where is Vector3 else Vector3.ZERO)
+		# A criatura entrando também traz o som do tipo dela (o urso rosna, o lobo uiva…).
+		if Txt.of(event.get("type")) == "entered":
+			CreatureSounds.play_cue(sounds, CreatureSounds.cue_for_event(event), where if where is Vector3 else Vector3.ZERO)
 	match Txt.of(event.get("type")):
 		"damage":
 			_damage(event)
@@ -242,6 +247,8 @@ func _life(event: Dictionary) -> void:
 func _spell(event: Dictionary) -> void:
 	_at_card(event, func(pos: Vector3, card: Dictionary) -> void:
 		var color: Color = Fx.card_color(card)
+		if mood:
+			mood.pulse(color)
 		Fx.ring(self, pos - Vector3(0, pos.y - 0.05, 0), color, 2.2, 0.6)
 		Fx.burst(self, pos, color, 50, 2.0, 0.7)
 		Fx.light(self, pos, color, 3.5, 5.0, 0.5)

@@ -127,6 +127,8 @@ func move_to(target: Transform3D, arc: bool = false) -> void:
 		var current: Transform3D = from.interpolate_with(target, eased)
 		current.origin.y += sin(t * PI) * lift
 		transform = current, 0.0, 1.0, MOVE_TIME * (1.6 if arc else 1.0))
+	# Pouso com física leve: um quique pequeno e a inclinação que se desfaz (mais forte quando veio em arco).
+	_tween.chain().tween_callback(func() -> void: CardMotion.settle(self, 1.0 if arc else 0.4))
 
 
 ## Levanta (ou abaixa) o desenho da carta da mão. A área do clique não sai do lugar: só cresce para cobrir também a
