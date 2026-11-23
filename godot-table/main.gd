@@ -22,6 +22,9 @@ func _ready() -> void:
 	# MESA_PARTIDA_DIRETO=1 pula a tela inicial (para testar a mesa direto).
 	if OS.get_environment("MESA_PARTIDA_DIRETO") == "1":
 		(_screen as MenuScreen).call("_on_play")
+	# MESA_ONLINE=1 abre direto a tela Jogar online (para conferir as salas).
+	if OS.get_environment("MESA_ONLINE") == "1":
+		_open_online()
 	# MESA_LAB=<botão> abre o laboratório de efeitos e aperta o botão (para conferir um efeito): MESA_LAB=Destruída.
 	if OS.get_environment("MESA_LAB") != "":
 		_open_lab()
@@ -52,7 +55,15 @@ func _show_menu() -> void:
 	menu.version_text = "Versão %s" % version if version != "" else "Versão de desenvolvimento"
 	menu.play.connect(_start_match)
 	menu.lab.connect(_open_lab)
+	menu.online.connect(_open_online)
 	_swap(menu)
+
+
+func _open_online() -> void:
+	var online := OnlineScreen.new()
+	online.play.connect(_start_match)
+	online.back.connect(_show_menu)
+	_swap(online)
 
 
 func _open_lab() -> void:
