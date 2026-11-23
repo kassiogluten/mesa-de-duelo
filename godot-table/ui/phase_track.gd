@@ -38,11 +38,8 @@ func _ready() -> void:
 	if saved is Array:
 		stops = saved
 		_local_choice = true
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.06, 0.1, 0.82)
-	style.set_corner_radius_all(26)
-	style.border_color = Color(1, 1, 1, 0.08)
-	style.set_border_width_all(1)
+	var style := HudStyle.chip_style()
+	style.set_corner_radius_all(HudStyle.RADIUS_BUTTON)
 	style.content_margin_left = 16
 	style.content_margin_right = 8
 	style.content_margin_top = 6
@@ -57,15 +54,15 @@ func _ready() -> void:
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	caption.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(caption)
-	_caption_turn = Hud._label(13, MINE)
+	_caption_turn = HudStyle.label(HudStyle.SIZE_CAPTION, MINE)
 	_caption_turn.add_theme_constant_override("outline_size", 0)
 	_caption_turn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_caption_turn.custom_minimum_size = Vector2(120, 0)
+	_caption_turn.custom_minimum_size = Vector2(100, 0)
 	caption.add_child(_caption_turn)
-	_caption_step = Hud._label(16, Color(1, 1, 1, 0.92))
+	_caption_step = HudStyle.label(HudStyle.SIZE_BODY, Color(1, 1, 1, 0.92))
 	_caption_step.add_theme_constant_override("outline_size", 0)
 	_caption_step.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_caption_step.custom_minimum_size = Vector2(120, 0)
+	_caption_step.custom_minimum_size = Vector2(100, 0)
 	caption.add_child(_caption_step)
 	for entry: Array in PhaseText.GROUPS:
 		row.add_child(_make_slot(entry))
@@ -259,18 +256,23 @@ func _build_menu() -> void:
 	_menu = PanelContainer.new()
 	_menu.top_level = true
 	_menu.visible = false
-	_menu.add_theme_stylebox_override("panel", Hud._panel_style(Color(0.05, 0.07, 0.12, 0.97), 14))
+	var menu_style := HudStyle.panel(Color(0.035, 0.05, 0.085, 0.97), HudStyle.RADIUS_PANEL)
+	menu_style.border_color = HudStyle.BORDER
+	menu_style.set_border_width_all(1)
+	menu_style.shadow_color = Color(0, 0, 0, 0.45)
+	menu_style.shadow_size = 18
+	_menu.add_theme_stylebox_override("panel", menu_style)
 	add_child(_menu)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
 	_menu.add_child(column)
-	_menu_title = Hud._label(16, MINE)
+	_menu_title = HudStyle.label(HudStyle.SIZE_BODY, MINE)
 	_menu_title.add_theme_constant_override("outline_size", 0)
 	column.add_child(_menu_title)
 	_menu_steps = VBoxContainer.new()
 	_menu_steps.add_theme_constant_override("separation", 4)
 	column.add_child(_menu_steps)
-	var hint := Hud._label(13, Color(1, 1, 1, 0.6))
+	var hint := HudStyle.label(HudStyle.SIZE_CAPTION, HudStyle.TEXT_DIM)
 	hint.add_theme_constant_override("outline_size", 0)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(280, 0)
@@ -301,7 +303,7 @@ func _refresh_menu() -> void:
 	for entry: Array in PhaseText.stops_of_group(_open_group):
 		var step: String = entry[0]
 		var on: bool = stops.has(step)
-		var button := Hud._button(("●  " if on else "○  ") + Txt.of(entry[1]), on)
+		var button := HudStyle.button(("●  " if on else "○  ") + Txt.of(entry[1]), on)
 		button.custom_minimum_size = Vector2(0, 38)
 		button.add_theme_font_size_override("font_size", 16)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
