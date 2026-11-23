@@ -174,10 +174,8 @@ static func left(d: FxDirector, event: Dictionary, node: CardNode) -> void:
 		return
 	var pos: Vector3 = node.global_position
 	if Txt.of(event.get("to")) == "Exile":
-		Fx.ring(d, pos, Color(0.75, 0.9, 1.0), 1.3, 0.7, 0.25)
-		Fx.burst(d, pos, Color(0.7, 0.85, 1.0), 40, 1.4, 0.7)
-		MomentPieces.spiral(d, pos, Color(0.7, 0.85, 1.0), 12, 0.8, 0.7 / d.speed)
-		node.swirl_away(0.75 / d.speed)
+		# Um portal se abre no tampo e a carta entra nele em espiral (ExilePortal).
+		ExilePortal.swallow(d, node, d.speed)
 	elif event.get("reason") == "sacrificed":
 		Fx.burst(d, pos, Color(0.6, 0.25, 0.85), 40, 1.6, 0.9)
 		node.burn_away(Color(0.7, 0.3, 1.0), 0.9 / d.speed)

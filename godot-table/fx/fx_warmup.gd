@@ -20,7 +20,8 @@ func _ready() -> void:
 	var shaders: Array[Material] = []
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), PermanentFx._dome(), CardDressing._halo(),
 			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER,
-			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER, StackPresence.HAZE_SHADER]:
+			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER, StackPresence.HAZE_SHADER,
+			ExilePortal.SHADER]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
