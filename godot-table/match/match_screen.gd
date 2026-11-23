@@ -83,6 +83,9 @@ func _ready() -> void:
 	_inspector.catalog = _catalog
 	layer.add_child(_inspector)
 	_catalog.texture_ready.connect(_inspector.on_texture_ready)
+	# Nas perguntas, o mouse por cima de uma carta mostra a prévia grande e o clique direito abre a carta de perto.
+	_question.inspector = _inspector
+	_question.inspect_context = _inspect_context
 	_drag = HandDrag.new()
 	_drag.table = _table
 	_drag.state = current_state

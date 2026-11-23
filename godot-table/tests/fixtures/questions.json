@@ -1,0 +1,69 @@
+{
+	"triggers": {"id": 7, "kind": "order", "purpose": "triggers", "canRemember": true, "title": "", "options": [
+		{"kind": "ability", "label": "Eerie", "ability": "Sempre que um encantamento que você controla entrar, coloque um marcador +1/+1 na criatura alvo.", "card": {"id": 31, "name": "Archon of the Wild Rose"}},
+		{"kind": "ability", "label": "Exile", "ability": "Quando Sheltered by Ghosts entrar, exile a permanente não terreno alvo de um oponente.", "card": {"id": 48, "name": "Sheltered by Ghosts"}},
+		{"kind": "ability", "label": "Life", "ability": "Sempre que você ganhar vida, coloque um marcador +1/+1 nesta criatura.", "card": {"id": 52, "name": "Cult Healer"}}]},
+	"order": {"id": 70, "kind": "order", "title": "Ordene as cartas que vão para o fundo do grimório", "firstAt": "bottom", "options": [
+		{"kind": "card", "card": {"id": 71, "name": "Island"}}, {"kind": "card", "card": {"id": 72, "name": "Opt"}}]},
+	"modes": {"id": 8, "kind": "choose", "purpose": "modes", "min": 1, "max": 2, "title": "", "card": {"id": 9, "name": "Kolaghan's Command"},
+		"options": [{"label": "Devolva o card de criatura alvo do seu cemitério para a sua mão."}, {"label": "O jogador alvo descarta um card."}, {"label": "Destrua o artefato alvo."}],
+		"unavailableModes": [{"modeIndex": 4, "label": "Kolaghan's Command causa 2 pontos de dano a qualquer alvo.", "reason": "target"}]},
+	"library": {"id": 9, "kind": "choose", "purpose": "library", "library": "bottom", "min": 0, "max": 3, "title": "Escolha as cartas a serem colocadas no fundo do seu grimório", "options": [
+		{"kind": "card", "label": "Lightning Bolt", "card": {"id": 61, "name": "Lightning Bolt"}}, {"kind": "card", "label": "Counterspell", "card": {"id": 63, "name": "Counterspell"}}, {"kind": "card", "label": "Forest", "card": {"id": 62, "name": "Forest"}}]},
+	"surveil": {"id": 19, "kind": "choose", "purpose": "library", "library": "graveyard", "min": 0, "max": 2, "title": "Escolha as cartas pra colocar no cemitério", "options": [
+		{"kind": "card", "card": {"id": 64, "name": "Serra Angel"}}, {"kind": "card", "card": {"id": 65, "name": "Llanowar Elves"}}]},
+	"library-top": {"id": 20, "kind": "order", "purpose": "library", "library": "top", "title": "Organize as cartas que irão no topo do seu grimório", "options": [
+		{"kind": "card", "card": {"id": 66, "name": "Lightning Bolt"}}, {"kind": "card", "card": {"id": 67, "name": "Counterspell"}}, {"kind": "card", "card": {"id": 68, "name": "Forest"}}]},
+	"combat": {"id": 10, "kind": "amount", "purpose": "combat-damage", "title": "Divida o dano de combate", "total": 6, "ordered": true, "trample": true, "suggested": [1, 2, 3],
+		"card": {"id": 69, "name": "Craw Wurm"}, "options": [
+		{"kind": "card", "label": "Llanowar Elves", "lethal": 1, "card": {"id": 70, "name": "Llanowar Elves"}}, {"kind": "card", "label": "Grizzly Bears", "lethal": 2, "card": {"id": 71, "name": "Grizzly Bears"}}, {"label": "Oponente", "defender": true}]},
+	"amount": {"id": 21, "kind": "amount", "amountOf": "damage", "title": "Divida 5 de dano", "total": 5, "card": {"id": 72, "name": "Fireball"}, "options": [
+		{"kind": "card", "label": "Grizzly Bears", "card": {"id": 73, "name": "Grizzly Bears"}}, {"kind": "card", "label": "Serra Angel", "card": {"id": 74, "name": "Serra Angel"}}]},
+	"piles": {"id": 11, "kind": "choose", "purpose": "piles-split", "title": "Separe as cartas em dois montes", "chosenTo": "hand", "otherTo": "graveyard", "options": [
+		{"kind": "card", "card": {"id": 81, "name": "Island"}}, {"kind": "card", "card": {"id": 82, "name": "Counterspell"}}, {"kind": "card", "card": {"id": 83, "name": "Opt"}}, {"kind": "card", "card": {"id": 84, "name": "Brainstorm"}}, {"kind": "card", "card": {"id": 85, "name": "Forest"}}]},
+	"piles-choose": {"id": 22, "kind": "choose", "purpose": "piles-choose", "title": "Escolha um monte", "min": 1, "max": 1, "options": [
+		{"kind": "card", "label": "-- Pile 1 (2 cards) --", "card": {"id": -2, "name": "-- Pile 1 (2 cards) --"}}, {"kind": "card", "card": {"id": 86, "name": "Lightning Bolt"}}, {"kind": "card", "card": {"id": 87, "name": "Counterspell"}},
+		{"kind": "card", "label": "-- Pile 2 (3 cards) --", "card": {"id": -1, "name": "-- Pile 2 (3 cards) --"}}, {"kind": "card", "card": {"id": 88, "name": "Forest"}}, {"kind": "card", "card": {"id": 89, "name": "Island"}}, {"kind": "card", "card": {"id": 90, "name": "Grizzly Bears"}}],
+		"piles": [{"option": 0, "size": 2, "cards": [1, 2]}, {"option": 3, "size": 3, "cards": [4, 5, 6]}]},
+	"playmode": {"id": 12, "kind": "choose", "purpose": "play-mode", "title": "Como jogar", "card": {"id": 90, "name": "Lightning Bolt"}, "options": [
+		{"label": "Lightning Bolt - Lightning Bolt deals 3 damage to any target. — Custo: {R}", "mode": "cast", "cost": "{R}"}, {"label": "Cycling {2} — Custo: {2}", "mode": "cycling", "cost": "{2}"},
+		{"label": "Plot {1}{R} — Custo: {1}{R}", "mode": "plot", "cost": "{1}{R}"}, {"label": "Evoke — Custo: sacrificar", "mode": "evoke", "cost": "", "extra": ["Sacrificar uma criatura"]}]},
+	"walker": {"id": 23, "kind": "choose", "purpose": "play-mode", "title": "Qual habilidade usar?", "min": 0, "max": 1, "card": {"id": 91, "name": "Jace Beleren", "planeswalker": true, "counters": {"LOYALTY": 3}}, "options": [
+		{"label": "+2: Cada jogador compra um card.", "mode": "ability", "loyalty": "+2"}, {"label": "-1: O jogador alvo compra um card.", "mode": "ability", "loyalty": "-1"}, {"label": "-10: O jogador alvo põe no cemitério os vinte cards do topo.", "mode": "ability", "loyalty": "-10"}]},
+	"confirm": {"id": 24, "kind": "confirm", "title": "Pagar {2} para não sacrificar Sheltered by Ghosts?", "card": {"id": 92, "name": "Sheltered by Ghosts"}},
+	"number": {"id": 25, "kind": "number", "title": "Escolha X para Fireball", "min": 0, "unit": "x", "cancel": "spell", "card": {"id": 93, "name": "Fireball"}, "cost": {"base": "{R}", "each": "{1}", "available": 7}},
+	"times": {"id": 26, "kind": "number", "title": "Quantas vezes pagar {1}{G}?", "min": 0, "unit": "times", "card": {"id": 94, "name": "Gnarlid Pack"}, "cost": {"base": "{1}{G}", "each": "{1}{G}", "available": 6}},
+	"values": {"id": 27, "kind": "number", "title": "Escolha um número", "min": 2, "max": 6, "values": [2, 4, 6], "card": {"id": 95, "name": "Talion, the Kindly Lord"}},
+	"text": {"id": 28, "kind": "text", "title": "Dê um nome", "initial": ""},
+	"reveal": {"id": 29, "kind": "reveal", "title": "Cartas reveladas", "revealed": [{"id": 96, "name": "Forest"}, {"id": 97, "name": "Grizzly Bears"}]},
+	"cards": {"id": 30, "kind": "choose", "title": "Escolha 2 cartas para o cemitério de Oponente. As outras vão para a mão.", "min": 2, "max": 2, "options": [
+		{"kind": "card", "card": {"id": 101, "name": "Lightning Bolt"}}, {"kind": "card", "card": {"id": 102, "name": "Counterspell"}}, {"kind": "card", "card": {"id": 103, "name": "Grizzly Bears"}}, {"kind": "card", "card": {"id": 104, "name": "Serra Angel"}}]},
+	"one-card": {"id": 31, "kind": "choose", "title": "Escolha uma criatura", "min": 1, "max": 1, "options": [
+		{"kind": "card", "card": {"id": 105, "name": "Grizzly Bears"}}, {"kind": "card", "card": {"id": 106, "name": "Serra Angel"}}, {"kind": "card", "card": {"id": 107, "name": "Llanowar Elves"}}]},
+	"tutor": {"id": 32, "kind": "choose", "title": "Escolha uma carta do seu grimório", "min": 0, "max": 1, "options": [
+		{"kind": "card", "card": {"id": 111, "name": "Sol Ring"}}, {"kind": "card", "card": {"id": 112, "name": "Llanowar Elves"}}, {"kind": "card", "card": {"id": 113, "name": "Cultivate"}}, {"kind": "card", "card": {"id": 114, "name": "Counterspell"}},
+		{"kind": "card", "card": {"id": 115, "name": "Forest"}}, {"kind": "card", "card": {"id": 116, "name": "Swords to Plowshares"}}, {"kind": "card", "card": {"id": 117, "name": "Eternal Witness"}}, {"kind": "card", "card": {"id": 118, "name": "Demonic Tutor"}},
+		{"kind": "card", "card": {"id": 119, "name": "Birds of Paradise"}}, {"kind": "card", "card": {"id": 120, "name": "Island"}}, {"kind": "card", "card": {"id": 121, "name": "Beast Within"}}, {"kind": "card", "card": {"id": 122, "name": "Serra Angel"}}]},
+	"revealed": {"id": 33, "kind": "choose", "title": "Escolha um card que não seja terreno", "min": 1, "max": 1, "revealedNote": "Mão de Ana revelada.", "options": [
+		{"kind": "card", "card": {"id": 123, "name": "Lightning Bolt"}}, {"kind": "card", "card": {"id": 124, "name": "Serra Angel"}}], "revealed": [{"id": 125, "name": "Forest"}, {"id": 126, "name": "Island"}]},
+	"list": {"id": 34, "kind": "choose", "title": "Escolha um", "min": 1, "max": 1, "options": ["Compre um card.", "Ganhe 3 pontos de vida.", "Crie uma ficha de Tesouro."]},
+	"color": {"id": 35, "kind": "choose", "title": "Escolha uma cor", "min": 1, "max": 1, "options": ["WHITE", "BLUE", "BLACK", "RED", "GREEN"]},
+	"land": {"id": 36, "kind": "choose", "title": "Escolha um tipo de terreno básico", "min": 1, "max": 1, "options": ["Plains", "Island", "Swamp", "Mountain", "Forest"]},
+	"card-name": {"id": 37, "kind": "choose", "purpose": "card-name", "title": "Escolha o nome da carta nonland.", "min": 1, "max": 1, "padOptions": 140,
+		"card": {"id": 127, "name": "Silverquill Silencer"}, "options": ["Lightning Bolt", "Lightning Helix", "Chain Lightning", "Counterspell", "Llanowar Elves", "Serra Angel", "Sol Ring"]},
+	"creature-type": {"id": 38, "kind": "choose", "purpose": "creature-type", "title": "Escolha um tipo de criatura", "min": 1, "max": 1, "options": [
+		{"label": "Elf", "count": 12}, {"label": "Human", "count": 4}, {"label": "Druid", "count": 7}, {"label": "Angel", "count": 1}, {"label": "Bear", "count": 0}]},
+	"vote": {"id": 39, "kind": "choose", "purpose": "vote", "title": "Vote", "min": 1, "max": 1, "card": {"id": 128, "name": "Council's Judgment"},
+		"votes": [{"player": 2, "label": "Grizzly Bears"}], "options": ["Grizzly Bears", "Serra Angel"]},
+	"commander": {"id": 40, "kind": "confirm", "purpose": "commander-zone", "title": "Mover o comandante para a zona de comando?", "zone": "Graveyard", "card": {"id": 129, "name": "Atraxa, Praetors' Voice"}},
+	"dungeon": {"id": 41, "kind": "choose", "purpose": "dungeon-room", "title": "Escolha a próxima sala", "min": 1, "max": 1, "options": [
+		{"label": "Goblin Lair", "room": "Goblin Lair"}, {"label": "Dark Pool", "room": "Dark Pool"}]},
+	"replacement": {"id": 42, "kind": "choose", "purpose": "replacement-order", "title": "Qual efeito aplicar primeiro?", "min": 1, "max": 1, "applyToAll": true, "options": [
+		{"kind": "ability", "card": {"id": 131, "name": "Corpsejack Menace"}, "label": "Corpsejack Menace", "ability": "Se um ou mais marcadores +1/+1 seriam colocados numa criatura que você controla, o dobro é colocado."},
+		{"kind": "ability", "card": {"id": 132, "name": "Hardened Scales"}, "label": "Hardened Scales", "ability": "Se um ou mais marcadores +1/+1 seriam colocados numa criatura que você controla, é colocado um a mais."}]},
+	"optional-costs": {"id": 43, "kind": "choose", "purpose": "optional-costs", "title": "Pagar o reforço?", "min": 0, "max": 1, "card": {"id": 133, "name": "Burst Lightning"},
+		"cost": {"base": "{R}", "available": 5}, "options": [{"label": "Reforço {4}", "optional": "Kicker1"}]},
+	"split-destinations": {"id": 44, "kind": "choose", "purpose": "split-destinations", "title": "Escolha os terrenos", "min": 0, "max": 2,
+		"destinations": [{"zone": "Battlefield", "count": 1, "tapped": true}, {"zone": "Hand"}], "options": [
+		{"kind": "card", "card": {"id": 134, "name": "Forest"}}, {"kind": "card", "card": {"id": 135, "name": "Island"}}, {"kind": "card", "card": {"id": 136, "name": "Mountain"}}]}
+}

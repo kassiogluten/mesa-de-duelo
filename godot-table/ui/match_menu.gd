@@ -25,7 +25,8 @@ var _pass: OptionButton
 var _concede: Button
 var _exit: Button
 var _confirm: Control
-var _confirm_title: Label
+var _confirm_box: PanelContainer
+var _confirm_title: RichTextLabel
 var _confirm_text: Label
 var _confirm_hint: Label
 
@@ -236,65 +237,94 @@ static func concede_text(state: Dictionary) -> Dictionary:
 
 
 func _build_confirm() -> void:
-	_confirm = ColorRect.new()
-	(_confirm as ColorRect).color = Color(0.01, 0.02, 0.04, 0.72)
+	# A mesa desfocada atrás e o painel das janelas da mesa (ModalStyle), como nas perguntas.
+	_confirm = Control.new()
 	_confirm.top_level = true
 	_confirm.mouse_filter = Control.MOUSE_FILTER_STOP
 	_confirm.visible = false
 	add_child(_confirm)
+	_confirm.add_child(ModalBackdrop.new())
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_confirm.add_child(center)
-	var box := PanelContainer.new()
-	box.add_theme_stylebox_override("panel", Hud._panel_style(Color(0.05, 0.065, 0.11, 0.98), 18))
-	center.add_child(box)
+	_confirm_box = PanelContainer.new()
+	_confirm_box.add_theme_stylebox_override("panel", ModalStyle.panel_style())
+	_confirm_box.resized.connect(func() -> void: _confirm_box.pivot_offset = _confirm_box.size / 2.0)
+	center.add_child(_confirm_box)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 12)
-	column.custom_minimum_size = Vector2(520, 0)
-	box.add_child(column)
-	_confirm_title = _text(28, Hud.GOLD, "", 520)
-	column.add_child(_confirm_title)
-	_confirm_text = _text(18, Color(1, 1, 1, 0.92), "", 520)
+	column.add_theme_constant_override("separation", 14)
+	column.custom_minimum_size = Vector2(500, 0)
+	_confirm_box.add_child(column)
+	var flag := TextureRect.new()
+	flag.texture = HudIcons.texture(HudIcons.FLAG, 72)
+	flag.modulate = Color("#ff8a70")
+	flag.custom_minimum_size = Vector2(36, 36)
+	flag.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	flag.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	flag.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(flag)
+	var heading := ModalStyle.title("", 28)
+	_confirm_title = heading.get_node("Title")
+	column.add_child(heading)
+	_confirm_text = ModalStyle.wrap(18, ModalStyle.INK, "", 500)
 	column.add_child(_confirm_text)
-	_confirm_hint = _text(15, Color(1, 1, 1, 0.6), "", 520)
+	_confirm_hint = ModalStyle.wrap(15, ModalStyle.MUTED, "", 500)
 	column.add_child(_confirm_hint)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	row.alignment = BoxContainer.ALIGNMENT_END
-	column.add_child(row)
-	var leave := MatchBar._small("Conceder e sair")
-	leave.pressed.connect(func() -> void:
-		_confirm.visible = false
-		leave_pressed.emit())
-	row.add_child(leave)
-	var stay := MatchBar._small("Conceder e continuar na mesa")
+	var buttons := VBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 10)
+	column.add_child(buttons)
+	var back := ModalStyle.button("Voltar ao jogo", ModalStyle.Kind.PRIMARY, 320)
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	back.pressed.connect(_close_confirm)
+	buttons.add_child(back)
+	var stay := ModalStyle.button("Conceder e continuar na mesa", ModalStyle.Kind.SECONDARY, 320)
+	stay.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	stay.pressed.connect(func() -> void:
 		_confirm.visible = false
 		action.emit({"type": "concede"}))
-	row.add_child(stay)
-	var back := Hud._button("Voltar ao jogo", true)
-	back.custom_minimum_size = Vector2(0, 38)
-	back.add_theme_font_size_override("font_size", 15)
-	back.pressed.connect(func() -> void: _confirm.visible = false)
-	row.add_child(back)
+	buttons.add_child(stay)
+	var leave := ModalStyle.button("Conceder e sair", ModalStyle.Kind.DANGER, 320)
+	leave.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	leave.pressed.connect(func() -> void:
+		_confirm.visible = false
+		leave_pressed.emit())
+	buttons.add_child(leave)
 
 
 ## A pergunta do Conceder; "Voltar ao jogo" é o destaque: na dúvida, nada acontece.
 func _ask_concede() -> void:
 	var t: Dictionary = concede_text(_state)
-	_confirm_title.text = t["title"]
+	ModalStyle.set_rich(_confirm_title, t["title"], 28, true)
 	_confirm_text.text = t["text"]
 	_confirm_hint.text = t["stay"]
 	_confirm.position = Vector2.ZERO
 	_confirm.size = get_viewport_rect().size
 	_confirm.visible = true
+	var backdrop: ModalBackdrop = _confirm.get_node("Backdrop")
+	backdrop.amount = 0.0
+	backdrop.fade(1.0, 0.24)
+	_confirm_box.modulate.a = 0.0
+	_confirm_box.scale = Vector2(0.96, 0.96)
+	var tween := _confirm_box.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_confirm_box, "modulate:a", 1.0, ModalStyle.ENTER_TIME)
+	tween.tween_property(_confirm_box, "scale", Vector2.ONE, ModalStyle.ENTER_TIME)
+
+
+## Fecha a confirmação com a mesma saída curta das janelas.
+func _close_confirm() -> void:
+	var backdrop: ModalBackdrop = _confirm.get_node("Backdrop")
+	backdrop.fade(0.0, ModalStyle.EXIT_TIME)
+	var tween := _confirm_box.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_confirm_box, "modulate:a", 0.0, ModalStyle.EXIT_TIME)
+	tween.tween_property(_confirm_box, "scale", Vector2(0.97, 0.97), ModalStyle.EXIT_TIME)
+	tween.chain().tween_callback(func() -> void: _confirm.visible = false)
 
 
 ## Esc fecha a confirmação ou o menu.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ESCAPE:
 		if _confirm.visible:
-			_confirm.visible = false
+			_close_confirm()
 			get_viewport().set_input_as_handled()
 		elif _panel.visible:
 			set_open(false)
