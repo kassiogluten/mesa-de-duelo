@@ -48,6 +48,7 @@ func _ready() -> void:
 	label.font_size = 96
 	label.pixel_size = 0.00001
 	holder.add_child(label)
+	ManaPoolFx.warm(self)
 	_free_later(holder)
 
 

@@ -122,6 +122,7 @@ func _ready() -> void:
 	_hud.portrait_slot = _table.portrait_slot
 	_hud.player_count = _table.player_count
 	_hud.hand_rect = _table.hand_rect
+	_hud.table_point = func(key: Variant) -> Vector2: return ManaPoolFx.project(_table, key)
 	_table.hand_area = _hud.hand_area
 	_table.card_clicked.connect(func(node: CardNode) -> void:
 		_inspector.hide_preview(true)

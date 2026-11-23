@@ -41,6 +41,9 @@ var player_count: Callable = func() -> int: return 2
 ## A faixa da tela ocupada pela sua mão (TableView.hand_rect); Rect2() se não se sabe. A coluna da direita sobe acima
 ## dela quando a mão chega até ali, e os selos do seu assento quebram a linha antes dela.
 var hand_rect: Callable = func() -> Rect2: return Rect2()
+## Onde fica na tela um ponto da mesa 3D (id de carta, "stack:<id>"); (-1, -1) se não está à mostra. A reserva de mana
+## usa para a mana voar da permanente virada e até o que foi pago.
+var table_point: Callable = func(_key: Variant) -> Vector2: return Vector2(-1, -1)
 
 var _menu: MatchMenu
 var _history_button: Button
@@ -323,6 +326,7 @@ func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: 
 		seat.portrait_pressed.connect(func(pid: int) -> void: player_clicked.emit(pid))
 		seat.zone_pressed.connect(func(pid: int, zone: String) -> void: zone_requested.emit(pid, zone))
 		seat.mana_pressed.connect(func(message: Dictionary) -> void: action.emit(message))
+		seat.mana_pool().table_point = func(key: Variant) -> Vector2: return table_point.call(key)
 		_seats[id] = seat
 		_portraits[id] = seat.portrait
 	var crowded: bool = int(player_count.call()) > 2
