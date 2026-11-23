@@ -181,6 +181,12 @@ func anchor(key: Variant) -> Variant:
 	return _anchor(key)
 
 
+## O meio da área de um jogador no tampo (onde cai o dado dele no "quem começa").
+func seat_center(player_id: int) -> Vector3:
+	var frame: Dictionary = _frames.get(player_id, SeatLayout.mine())
+	return Vector3(float(frame["cx"]), 0, float(frame["others_z"]) + (0.4 if int(frame["side"]) > 0 else -0.2))
+
+
 ## Onde fica o grimório de um jogador.
 func library_position(player_id: int) -> Vector3:
 	var frame: Dictionary = _frames.get(player_id, SeatLayout.mine())

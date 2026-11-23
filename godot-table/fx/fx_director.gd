@@ -9,8 +9,10 @@ signal finale(won: bool)
 const DURATION := {
 	"damage": 0.26, "spell-cast": 0.32, "ability-activated": 0.22, "entered": 0.24, "left": 0.3,
 	"attackers": 0.3, "blockers": 0.24, "countered": 0.3, "resolved": 0.12, "counters": 0.1, "survived": 0.3,
-	"coin": 0.4, "die": 0.4, "turn": 0.1, "draw": 0.05,
+	"coin": 0.6, "die": 0.6, "starting-roll": 1.2, "turn": 0.1, "draw": 0.05,
 }
+## Onde caem o dado e a moeda: no meio do tampo.
+const TABLE_CENTER := Vector3(0, 0, 0.3)
 ## Tempo máximo para os efeitos de um estado: com muitos eventos (limpa-campo), o ritmo encurta.
 const MAX_BATCH := 2.4
 
@@ -174,9 +176,17 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 			if pile:
 				pile.jolt(0.12)
 		"coin":
-			Fx.float_text(self, Vector3(0, 0.5, 0.3), "Cara" if bool(event.get("heads", false)) else "Coroa", Hud.GOLD, 90, 1.6)
+			Dice3D.coin(self, TABLE_CENTER, bool(event.get("heads", false)), 1.3 / speed)
 		"die":
-			Fx.float_text(self, Vector3(0, 0.5, 0.3), "d%d: %d" % [int(event.get("sides", 6)), int(event.get("result", 0))], Hud.GOLD, 90, 1.6)
+			Dice3D.roll(self, TABLE_CENTER, int(event.get("sides", 6)), int(event.get("result", 1)), 1.4 / speed)
+		"starting-roll":
+			# O d6 de quem começa: um dado na frente de cada jogador.
+			var spots: Dictionary = {}
+			for rolls: Variant in event.get("rolls", []):
+				for entry: Variant in rolls:
+					var player: int = int((entry as Dictionary).get("player", -1))
+					spots[player] = table.seat_center(player)
+			Dice3D.starting_roll(self, spots, event.get("rolls", []))
 
 
 ## Dano: no combate o atacante avança e golpeia; fora dele, um projétil sai da fonte. O alvo pisca, solta faíscas e o número.

@@ -85,6 +85,7 @@ func _panel() -> Control:
 		["Sacrificada", _leave.bind(102, "Graveyard", "sacrificed")], ["Exilada", _leave.bind(201, "Exile", "")],
 		["Ataque", _attack], ["Bloqueio", _block], ["Marcadores +1/+1", _counters], ["Anulada", _countered],
 		["Indestrutível", _survived], ["Limpa-campo", _wrath], ["Moeda", _simple.bind({"type": "coin", "heads": true})], ["Dado", _simple.bind({"type": "die", "sides": 20, "result": 17})],
+		["Quem começa", _simple.bind({"type": "starting-roll", "actor": 0, "rolls": [[{"player": 0, "roll": 4}, {"player": 1, "roll": 4}], [{"player": 0, "roll": 6}, {"player": 1, "roll": 2}]]})],
 		["Seu turno", _simple.bind({"type": "turn", "actor": 0, "turn": 6})], ["Vitória", func() -> void: _fx.game_over(true)],
 		["Derrota", func() -> void: _fx.game_over(false)], ["Remontar mesa", _reset],
 	]:
