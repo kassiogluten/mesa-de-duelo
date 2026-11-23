@@ -277,8 +277,34 @@ func _on_message(msg: Dictionary) -> void:
 				get_tree().create_timer(3.0).timeout.connect(_leave)
 		"toast":
 			_hud.show_toast(Txt.of(msg.get("text", "")))
+		"point":
+			_show_point(int(msg.get("player", -1)), int(msg.get("card", -1)))
 		"gone":
 			_hud.show_toast(Txt.of(msg.get("text", "A partida acabou.")))
+
+
+## Alguém apontou uma carta (o "Apontar" do inspetor): o contorno dela pulsa três vezes na cor do verso de quem apontou,
+## com "Fulano apontou" em cima; se a carta não está à vista na mesa, um aviso diz qual é.
+func _show_point(player: int, card_id: int) -> void:
+	if player < 0 or card_id < 0 or _state.is_empty():
+		return
+	var who: String = "Você"
+	for raw: Variant in _state.get("players", []):
+		if int((raw as Dictionary)["id"]) == player and player != int(_state.get("you", -1)):
+			who = Txt.of((raw as Dictionary).get("name", "Jogador"))
+	var node: CardNode = _table.card_node(card_id)
+	if node == null or not is_instance_valid(node) or node.card_id < 0:
+		var name: String = _catalog.label(Txt.of(_table.card_data(card_id).get("name", ""))) if not _table.card_data(card_id).is_empty() else "uma carta"
+		_hud.show_toast("%s apontou %s." % [who, name])
+		return
+	var color: Color = _table.sleeve_of(player).lightened(0.35)
+	Fx.float_text(_fx, node.global_position + Vector3(0, 0.35, 0), "%s apontou" % who, color, 44, 2.0, 0.3)
+	var ref: WeakRef = weakref(node)
+	for i: int in 3:
+		get_tree().create_timer(i * 0.7).timeout.connect(func() -> void:
+			var target: CardNode = ref.get_ref() as CardNode
+			if target:
+				CardGlow.pulse(target, color, 0.06))
 
 
 ## No fim da partida, a cena final (uma vez por jogo): fogos na vitória, brasas na derrota.
