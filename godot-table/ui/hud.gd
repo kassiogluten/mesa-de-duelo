@@ -6,6 +6,8 @@ extends Control
 signal action(message: Dictionary)
 signal player_clicked(player_id: int)
 signal leave_pressed
+## Tocou num monte do assento ou no dano de comandante: abrir a janela de zona ("graveyard", "exile", "command", "damage", "hand").
+signal zone_requested(player_id: int, zone: String)
 ## O jogador trocou o nível de passar (para guardar).
 signal pass_level_changed(level: String)
 
@@ -35,6 +37,7 @@ var _preview: TextureRect
 var _toast: Label
 var _toast_left: float = 0.0
 var _portraits: Dictionary = {}
+var _seats: Dictionary = {}
 ## A tela do fim do jogo (ui/result_screen.gd).
 var _result: ResultScreen
 var _bar: MatchBar
@@ -158,7 +161,7 @@ func apply_state(state: Dictionary, blocker_name: String = "") -> void:
 	_apply_between(state)
 	var selectable_players: Array = input.get("selectablePlayers", [])
 	for raw: Variant in state.get("players", []):
-		_update_portrait(raw as Dictionary, int((raw as Dictionary)["id"]) == you, selectable_players.has(int((raw as Dictionary)["id"])), active != null and int(active) == int((raw as Dictionary)["id"]))
+		_update_portrait(raw as Dictionary, int((raw as Dictionary)["id"]) == you, selectable_players.has(int((raw as Dictionary)["id"])), active != null and int(active) == int((raw as Dictionary)["id"]), state)
 	# A tela do fim do jogo vê todos os estados (guarda os eventos para o destaque do jogo) e aparece no fim.
 	_result.apply_state(state)
 
@@ -292,58 +295,29 @@ func _apply_action_box(state: Dictionary, blocker_name: String) -> void:
 	_action_panel.visible = _short.visible or not list.is_empty()
 
 
-func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: bool) -> void:
+## O assento de cada jogador (ui/seat_panel.gd): retrato, selos, reserva e montes; o seu no canto de baixo.
+func _update_portrait(player: Dictionary, mine: bool, selectable: bool, active: bool, state: Dictionary = {}) -> void:
 	var id: int = int(player["id"])
-	var portrait: Button = _portraits.get(id)
-	if portrait == null:
-		portrait = Button.new()
-		portrait.custom_minimum_size = Vector2(130, 130)
-		portrait.add_theme_font_size_override("font_size", 52)
-		portrait.pressed.connect(func() -> void: player_clicked.emit(id))
-		var caption := _label(20, Color(1, 1, 1, 0.85))
-		caption.name = "Caption"
-		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		caption.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-		caption.offset_left = -110
-		caption.offset_right = 110
-		caption.offset_top = 2
-		caption.offset_bottom = 30
-		portrait.add_child(caption)
-		if mine:
-			portrait.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-			portrait.offset_left = 34
-			portrait.offset_top = -184
-			portrait.offset_right = 164
-			portrait.offset_bottom = -54
-		else:
-			portrait.set_anchors_preset(Control.PRESET_CENTER_TOP)
-			portrait.offset_left = -65
-			portrait.offset_top = 12
-			portrait.offset_right = 65
-			portrait.offset_bottom = 142
-		add_child(portrait)
-		_portraits[id] = portrait
-	if not mine:
+	var seat: SeatPanel = _seats.get(id)
+	if seat == null:
+		seat = SeatPanel.new()
+		seat.setup(id, mine)
+		add_child(seat)
+		# Atrás do resto do HUD: a carta ampliada e os avisos ficam por cima.
+		move_child(seat, 0)
+		seat.portrait_pressed.connect(func(pid: int) -> void: player_clicked.emit(pid))
+		seat.zone_pressed.connect(func(pid: int, zone: String) -> void: zone_requested.emit(pid, zone))
+		seat.mana_pressed.connect(func(message: Dictionary) -> void: action.emit(message))
+		_seats[id] = seat
+		_portraits[id] = seat.portrait
+	var crowded: bool = int(player_count.call()) > 2
+	if mine:
+		seat.place(Vector2(99, -119), 130.0, 520.0)
+	else:
 		var slot: Vector2 = portrait_slot.call(id)
-		if slot.x >= 0:
-			var side: float = 130.0 if int(player_count.call()) <= 2 else 100.0
-			portrait.set_anchors_preset(Control.PRESET_TOP_LEFT)
-			portrait.custom_minimum_size = Vector2(side, side)
-			portrait.add_theme_font_size_override("font_size", 52 if side > 110 else 40)
-			portrait.position = slot - Vector2(side, side) / 2.0
-			portrait.size = Vector2(side, side)
-	portrait.text = str(int(player.get("life", 0)))
-	var eliminated: bool = bool(player.get("eliminated", false))
-	(portrait.get_node("Caption") as Label).text = ("Você" if mine else Txt.of(player.get("name", ""))) + (" · eliminado" if eliminated else "")
-	portrait.modulate = Color(1, 1, 1, 0.45) if eliminated else Color.WHITE
-	var ring: Color = Color(1.0, 0.82, 0.3) if selectable else (GOLD if active else Color(1, 1, 1, 0.18))
-	for state_name: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := _panel_style(Color(0.08, 0.1, 0.16, 0.92), 65)
-		style.border_color = ring
-		style.set_border_width_all(6 if selectable else 3)
-		if state_name == "hover" and selectable:
-			style.bg_color = Color(0.2, 0.17, 0.08, 0.95)
-		portrait.add_theme_stylebox_override(state_name, style)
+		seat.place(slot if slot.x >= 0 else Vector2(get_viewport_rect().size.x / 2.0, 77), 100.0 if crowded else 130.0, 190.0 if crowded else 460.0)
+	var translate: Callable = func(name: String) -> String: return catalog.label(name) if catalog else name
+	seat.apply(player, state, selectable, active, translate)
 
 
 static func _panel_style(color: Color, radius: int) -> StyleBoxFlat:

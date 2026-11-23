@@ -13,8 +13,8 @@ const CAMERA_LOOK := Vector3(0, 0, 0.6)
 const TAP_ANGLE := -PI / 2.0
 ## Centro do leque da sua mão: perto da câmera, na base da tela.
 const HAND_CENTER := Vector3(0, 3.2, 4.45)
-## Largura máxima de cada fileira no campo (unidades da mesa; a carta tem 0,63).
-const GAP := 0.74
+## Altura das permanentes sobre o tampo: a carta tem espessura, e a face de baixo não pode encostar no tampo.
+const FIELD_Y := CardNode.THICKNESS + 0.004
 
 var catalog: CardCatalog
 var camera: Camera3D
@@ -25,6 +25,10 @@ var _cards: Dictionary = {}
 var _zones: Dictionary = {}
 var _counts: Dictionary = {}
 var _state: Dictionary = {}
+## O que os selos e a arrumação do campo precisam do estado (BadgeSpec.context), refeito a cada estado.
+var _ctx: Dictionary = {}
+## Linha fina entre os grupos de uma fileira (criaturas | planeswalkers; artefatos | terrenos): "sep:<jogador>:<fileira>" → nó.
+var _separators: Dictionary = {}
 ## id do jogador → as zonas dele (SeatLayout)
 var _frames: Dictionary = {}
 var _arrows: Arrows
@@ -92,6 +96,7 @@ func _build_scene() -> void:
 ## Aplica um estado: cria as cartas novas, move as que mudaram e apaga as que saíram.
 func apply_state(state: Dictionary) -> void:
 	_state = state
+	_ctx = BadgeSpec.context(state)
 	var you: int = int(state.get("you", 0))
 	var players: Array = state.get("players", [])
 	var seen: Dictionary = {}
@@ -263,36 +268,99 @@ func highlight(actionable: Array, selectable: Array, selected: Array, dim_others
 
 # — Zonas —
 
+## As permanentes de um jogador (FieldLayout): criaturas e, ao lado, planeswalkers/batalhas na fileira da frente; atrás,
+## artefatos/encantamentos e terrenos. Cópias iguais num monte (a de cima com o "×N") e os anexos em leque atrás da carta.
 func _place_battlefield(player: Dictionary, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
-	var lands: Array = []
-	var others: Array = []
-	for raw: Variant in player.get("battlefield", []):
-		var card: Dictionary = raw
-		if bool(card.get("land", false)) and not bool(card.get("creature", false)):
-			lands.append(card)
-		else:
-			others.append(card)
+	var scale: float = frame["scale"]
+	var rows: Dictionary = FieldLayout.rows(player, _ctx, float(frame["width"]) / scale)
 	var attackers: Dictionary = {}
 	for raw: Variant in _state.get("combat", []):
 		attackers[int((raw as Dictionary).get("attacker", -1))] = true
-	_row(lands, float(frame["lands_z"]), frame, sleeve, seen, names, {})
-	_row(others, float(frame["others_z"]), frame, sleeve, seen, names, attackers)
+	for row: String in ["front", "back"]:
+		var z: float = float(frame["others_z"] if row == "front" else frame["lands_z"])
+		_place_separator("sep:%d:%s" % [int(player["id"]), row], rows[row], frame, z)
+		# Os selos crescem um pouco nas cartas menores e mais longe da câmera, para continuarem legíveis.
+		var boost: float = (1.0 + maxf(0.0, -z) * 0.07) / sqrt(scale)
+		for raw: Variant in rows[row]:
+			var item: Dictionary = raw
+			var cards: Array = item["cards"]
+			var squeeze: float = item["squeeze"]
+			for k: int in cards.size():
+				var card: Dictionary = cards[k]
+				var tapped: bool = bool(card.get("tapped", false))
+				var x: float = float(frame["cx"]) + (float(item["x"]) + k * FieldLayout.copy_step(cards.size(), tapped) * squeeze) * scale
+				var t := Transform3D(_field_basis(tapped, scale), Vector3(x, FIELD_Y + 0.004 * k + 0.008, z))
+				if attackers.has(int(card["id"])) or bool(card.get("attacking", false)):
+					t.origin.z -= int(frame["side"]) * 0.55
+				var top: bool = k == cards.size() - 1
+				_put_permanent(card, t, sleeve, seen, names, BadgeSpec.for_card(card, _ctx, cards.size()) if top else {}, boost)
+				if k == 0:
+					_place_attachments(card, t, scale, squeeze, seen, names)
 
 
-func _row(cards: Array, z: float, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray, attackers: Dictionary) -> void:
-	var count: int = cards.size()
+## Auras e equipamentos presos a `host`: atrás dela, cada um um pouco mais para a direita e para o alto, menores.
+func _place_attachments(host: Dictionary, host_t: Transform3D, scale: float, squeeze: float, seen: Dictionary, names: PackedStringArray) -> void:
+	var atts: Array = (_ctx["attachments"] as Dictionary).get(int(host["id"]), [])
+	var rise: float = FieldLayout.ATTACH_RISE * FieldLayout.CARD.y * minf(1.0, 1.5 / maxf(atts.size(), 1))
+	for i: int in atts.size():
+		var card: Dictionary = atts[i]
+		var n: int = i + 1
+		var offset := Vector3(FieldLayout.ATTACH_STEP * FieldLayout.CARD.x * n * squeeze, -0.003 * n, -rise * n) * scale
+		var att_scale: float = scale * FieldLayout.ATTACH_SCALE
+		var t := Transform3D(_field_basis(bool(card.get("tapped", false)), att_scale), host_t.origin + offset)
+		t.origin.y = maxf(t.origin.y, FIELD_Y)
+		_put_permanent(card, t, sleeve_of(int(card.get("controller", 0))), seen, names, {})
+
+
+func _field_basis(tapped: bool, scale: float) -> Basis:
+	var basis := Basis.from_scale(Vector3(scale, scale, scale))
+	if tapped:
+		basis = Basis(Vector3.UP, TAP_ANGLE).scaled(Vector3(scale, scale, scale))
+	return basis
+
+
+## Põe uma permanente na mesa com os selos dela.
+func _put_permanent(card: Dictionary, t: Transform3D, sleeve: Color, seen: Dictionary, names: PackedStringArray, badges: Dictionary, boost: float = 1.0) -> void:
+	var id: int = int(card["id"])
+	_put(id, card, "battlefield", t, sleeve, seen, names)
+	var node: CardNode = _cards.get(id)
+	if node:
+		node.set_badges(badges, bool(card.get("tapped", false)), bool(card.get("faceDown", false)), boost)
+
+
+## A linha entre o primeiro e o segundo grupo de uma fileira, no meio do vão entre eles (escondida com um grupo só).
+func _place_separator(key: String, items: Array, frame: Dictionary, z: float) -> void:
+	var line: MeshInstance3D = _separators.get(key)
+	var at: float = INF
+	for i: int in range(1, items.size()):
+		var a: Dictionary = items[i - 1]
+		var b: Dictionary = items[i]
+		if int(a["group"]) != int(b["group"]):
+			var squeeze: float = b["squeeze"]
+			var a_right: float = float(a["x"]) + (float(a["width"]) - (FieldLayout.CARD.y if bool(a["tapped"]) else FieldLayout.CARD.x) / 2.0) * squeeze
+			var b_left: float = float(b["x"]) - (FieldLayout.CARD.y if bool(b["tapped"]) else FieldLayout.CARD.x) / 2.0 * squeeze
+			at = (a_right + b_left) / 2.0
+	if at == INF:
+		if line:
+			line.visible = false
+		return
+	if line == null:
+		line = MeshInstance3D.new()
+		var quad := PlaneMesh.new()
+		quad.size = Vector2(0.014, FieldLayout.CARD.y * 0.8)
+		line.mesh = quad
+		var material := StandardMaterial3D.new()
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.albedo_color = Color(0.95, 0.71, 0.3, 0.28)
+		line.material_override = material
+		line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(line)
+		_separators[key] = line
 	var scale: float = frame["scale"]
-	var step: float = min(GAP * scale, float(frame["width"]) / max(count, 1))
-	for i: int in count:
-		var card: Dictionary = cards[i]
-		var x: float = float(frame["cx"]) + (i - (count - 1) / 2.0) * step
-		var basis := Basis.from_scale(Vector3(scale, scale, scale))
-		if bool(card.get("tapped", false)):
-			basis = Basis(Vector3.UP, TAP_ANGLE).scaled(Vector3(scale, scale, scale))
-		var t := Transform3D(basis, Vector3(x, 0.002 * i, z))
-		if attackers.has(int(card["id"])):
-			t.origin.z -= int(frame["side"]) * 0.55
-		_put(int(card["id"]), card, "battlefield", t, sleeve, seen, names)
+	line.visible = true
+	line.scale = Vector3(scale, 1, scale)
+	line.position = Vector3(float(frame["cx"]) + at * scale, -0.006, z)
 
 
 func _place_hand(player: Dictionary, frame: Dictionary, sleeve: Color, seen: Dictionary, names: PackedStringArray) -> void:
@@ -337,7 +405,8 @@ func _place_pile(player: Dictionary, zone: String, frame: Dictionary, sleeve: Co
 	var scale: float = frame["scale"]
 	for i: int in cards.size():
 		var card: Dictionary = cards[i]
-		_put(int(card["id"]), card, key, Transform3D(Basis.from_scale(Vector3(scale, scale, scale)), pos + Vector3(0, 0.003 * i, 0)), sleeve, seen, names)
+		_put(int(card["id"]), card, key, Transform3D(Basis.from_scale(Vector3(scale, scale, scale)), pos + Vector3(0, FIELD_Y + 0.003 * i, 0)), sleeve, seen, names)
+		(_cards[int(card["id"])] as CardNode).set_contact_shadow(i == 0)
 	_count_label("%s:%d" % [key, int(player["id"])], cards.size(), pos + Vector3(0.22, 0.25, 0.3), seen, cards.size() > 1)
 
 
@@ -347,8 +416,11 @@ func _place_library(player: Dictionary, frame: Dictionary, sleeve: Color, seen: 
 	var scale: float = frame["scale"]
 	var key: String = "library:%d" % int(player["id"])
 	if count > 0:
-		var t := Transform3D((Basis(Vector3.FORWARD, PI)).scaled(Vector3(scale, scale, scale)), pos + Vector3(0, min(count, 60) * 0.004, 0))
+		var depth: float = min(count, 60) * 0.004
+		var t := Transform3D((Basis(Vector3.FORWARD, PI)).scaled(Vector3(scale, scale, scale)), pos + Vector3(0, depth + 0.002, 0))
 		_put(key, {}, "library", t, sleeve, seen, PackedStringArray())
+		# Virado para baixo, a face de cima é a de baixo da carta: a borda do monte desce do verso até o tampo.
+		(_cards[key] as CardNode).set_pile_depth(depth)
 	_count_label(key, count, pos + Vector3(0.22, 0.45, 0.3), seen, true)
 
 
@@ -450,8 +522,10 @@ func _put(key: Variant, card: Dictionary, zone: String, t: Transform3D, sleeve: 
 		names.append(name)
 	node.set_data(card, sleeve, catalog.label(name) if name != "" else "", zone == "battlefield")
 	_update_texture(node)
+	node.set_contact_shadow(zone == "battlefield" or zone == "library")
 	if zone != "hand":
 		node.set_lifted(false)
+		node.set_hand_info("", false)
 	var moved_zone: bool = _zones.get(key, zone) != zone
 	_zones[key] = zone
 	node.move_to(t, moved_zone or fresh)
