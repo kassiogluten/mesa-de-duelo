@@ -48,23 +48,14 @@ export function createMomentMotion(kit: MotionKit) {
     later(() => remove(cut), 460 + delay);
   }
 
-  /** As bordas da mesa piscam vermelhas, de leve. */
-  function vignette(ms: number) {
-    const bounds = layer().getBoundingClientRect();
-    const glow = effect('moment-vignette', { cx: bounds.left + bounds.width / 2, cy: bounds.top + bounds.height / 2, w: bounds.width, h: bounds.height });
-    animate(glow, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 0 }], ms, 'ease-out');
-    later(() => remove(glow), ms);
-  }
-
-  /** O primeiro golpe de combate num jogador: o corte vermelho no retrato, a borda da mesa piscando e a faixa. */
+  /** O primeiro golpe de combate num jogador: o corte vermelho no retrato e a faixa pequena, sem a borda da mesa piscar (discreto). */
   function firstBlood(event: PresentationEvent, ms: number) {
     const at = portrait(event.targets?.players?.[0]);
-    const hold = Math.max(ms, 1800);
+    const hold = Math.max(ms, 1300);
     banner('blood', FIRST_BLOOD.title, at, hold);
     if (reduced() || !at) return;
     slash(at, 60, -32);
-    vignette(700);
-    gpu.play('arrive', { at, color: BLOOD, size: Math.max(at.w, at.h) * 2 });
+    gpu.play('arrive', { at, color: BLOOD, size: Math.max(at.w, at.h) * 1.2 });
   }
 
   /**

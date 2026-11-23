@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.242.0] - 2026-11-23
+
+### Mudou
+
+- **Primeiro sangue mais discreto.** O primeiro golpe de combate num jogador continua marcado com o corte vermelho no retrato e a faixa "Primeiro sangue", agora menor e mais curta, com a voz do narrador mais baixa e sem a borda da mesa piscando; na mesa no PC, sem o tremor da câmera e com bem menos respingos e luz.
+
 ## [0.241.0] - 2026-11-23
 
 ### Mudou

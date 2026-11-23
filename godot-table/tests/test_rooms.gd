@@ -62,6 +62,9 @@ func test_public_rooms_list() -> void:
 
 
 func test_deck_choices_follow_the_format() -> void:
+	# Sem os decks de Meus decks desta máquina (eles entram antes de tudo e mudariam a ordem conferida aqui).
+	var previous_path: String = DeckLibrary.path
+	DeckLibrary.path = "user://teste-salas-decks.json"
 	var commander: Array = DeckChoices.for_format("commander")
 	var precon: Array = DeckChoices.for_format("precon")
 	check(not commander.is_empty() and not precon.is_empty(), "há decks de Commander e precons")
@@ -78,6 +81,7 @@ func test_deck_choices_follow_the_format() -> void:
 	check_eq(Txt.of((DeckChoices.for_format("standard")[0] as Dictionary).get("id")), "meu", "os do jogador primeiro")
 	DeckChoices.remove_source(mine)
 	check(Txt.of((DeckChoices.for_format("standard")[0] as Dictionary).get("id")) != "meu", "a fonte sai")
+	DeckLibrary.path = previous_path
 
 
 func test_saved_session_tracks_the_seat() -> void:

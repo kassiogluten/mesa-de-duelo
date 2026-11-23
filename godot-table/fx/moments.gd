@@ -169,19 +169,16 @@ static func play(moment: Dictionary, parent: Node3D, table: TableView) -> void:
 			_ultimate(moment, parent, table)
 
 
-## Primeiro sangue: um corte carmesim atravessa o retrato atingido, um clarão, respingos e faíscas vermelhas, o título que
-## sobe e um tremor.
+## Primeiro sangue: um corte carmesim atravessa o retrato atingido, um respingo curto e o título pequeno ao lado. Discreto
+## (pedido de 23/11/2026): sem tremor de câmera, sem estilhaços, pouca luz; o destaque fica para a eliminação.
 static func _first_blood(moment: Dictionary, parent: Node3D, table: TableView) -> void:
 	var at: Vector3 = _player_at(table, int(moment.get("player", -1)))
-	MomentPieces.slash(parent, at, BLOOD, deg_to_rad(28.0), 3.4, 0.36, 0.0)
+	MomentPieces.slash(parent, at, BLOOD, deg_to_rad(28.0), 2.2, 0.3, 0.0)
 	MomentPieces.after(parent, 0.1, func() -> void:
-		Fx.burst(parent, at, BLOOD, 70, 3.4, 0.8, 0.06)
-		Fx.burst(parent, at, Color(1.0, 0.55, 0.4), 24, 1.8, 0.5, 0.04)
-		MomentExtras.flare(parent, at + Vector3(0, 0.2, 0), BLOOD.lightened(0.2), 2.2, 0.45)
-		MomentExtras.shards(parent, at + Vector3(0, 0.15, 0), Color(0.7, 0.0, 0.05, 0.95), 26, 2.2, 0.7, 0.07, 0.15)
-		Fx.light(parent, at, BLOOD, 6.0, 5.0, 0.6)
-		MomentPieces.shake(table.camera, 0.09, 0.4))
-	MomentPieces.title(parent, MomentPieces.beside(table, at, 230.0), "Primeiro sangue", Color(1.0, 0.3, 0.28), Color(0.25, 0.0, 0.02), 150, 2.0, 0.06)
+		Fx.burst(parent, at, BLOOD, 22, 1.6, 0.6, 0.045)
+		MomentExtras.flare(parent, at + Vector3(0, 0.2, 0), BLOOD.lightened(0.2), 1.0, 0.3)
+		Fx.light(parent, at, BLOOD, 2.2, 3.0, 0.4))
+	MomentPieces.title(parent, MomentPieces.beside(table, at, 200.0), "Primeiro sangue", Color(1.0, 0.36, 0.32), Color(0.25, 0.0, 0.02), 96, 1.4, 0.06)
 
 
 ## Eliminação de vários: cada retrato derrubado ganha um X de cortes, uma onda enorme corre a mesa, fogos escuros e

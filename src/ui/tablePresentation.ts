@@ -134,7 +134,7 @@ export function createPresentationQueue(d: PresentationDeps) {
       if (entry.audible) audio.extra(CREAK_SOUND, .9, .1);
     }
     let hold = duration;
-    if (blood) { motion.firstBlood(blood, duration); if (entry.audible) audio.extra(FIRST_BLOOD.voice, 1, .15); }
+    if (blood) { motion.firstBlood(blood, duration); if (entry.audible) audio.extra(FIRST_BLOOD.voice, .55, .15); }
     if (kill) {
       hold += MULTI_KILL_HOLD;
       motion.multiKill(out, hold);
