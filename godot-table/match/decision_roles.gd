@@ -55,16 +55,18 @@ static func build(s: Dictionary, blocks: BlockFlow, attacks: AttackFlow, dragged
 		"actionable": actionable, "mana_only": _ints(input.get("manaOnly")), "blocking": blocking, "stacks": _ints(input.get("selectableStacks"))}
 
 
-## Setas fixas: ataque (vermelho, até o retrato ou a permanente) e bloqueio (azul) do combate, os alvos sendo
-## escolhidos (dourado) e os do topo da pilha. [{from, to, color}] com o id da carta ou "player:<id>".
+## Setas fixas: ataque (vermelho, até o retrato ou a permanente; com 3 ou 4 jogadores, na cor de quem é atacado) e
+## bloqueio (azul) do combate, os alvos sendo escolhidos (dourado) e os do topo da pilha. [{from, to, color}] com o id
+## da carta ou "player:<id>".
 static func fixed_arrows(s: Dictionary) -> Array:
 	var out: Array = []
 	for raw: Variant in s.get("combat", []):
 		var entry: Dictionary = raw
 		var attacker: int = int(entry.get("attacker", -1))
 		if entry.get("defender") != null:
-			var to: Variant = "player:%d" % int(entry["defender"]) if Txt.of(entry.get("defenderKind", "player")) == "player" else int(entry["defender"])
-			out.append({"from": attacker, "to": to, "color": RED})
+			var kind: String = Txt.of(entry.get("defenderKind", "player"))
+			var to: Variant = "player:%d" % int(entry["defender"]) if kind == "player" else int(entry["defender"])
+			out.append({"from": attacker, "to": to, "color": AttackPanelModel.defender_color(s, {"id": int(entry["defender"]), "kind": kind})})
 		for blocker: Variant in entry.get("blockers", []):
 			out.append({"from": int(blocker), "to": attacker, "color": BLUE})
 	var targeting: Variant = _input(s).get("targeting")

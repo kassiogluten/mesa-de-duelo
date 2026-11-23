@@ -73,7 +73,7 @@ static func build(table: TableView) -> Camera3D:
 	table.add_child(top)
 
 	table.add_child(vignette())
-	# O halo das cartas acesas e o foil das raras (fx/card_dressing.gd).
+	# O halo das cartas acesas (fx/card_dressing.gd); o foil das raras fica só no inspetor.
 	var dressing := CardDressing.new()
 	dressing.table = table
 	table.add_child(dressing)

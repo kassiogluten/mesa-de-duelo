@@ -1,5 +1,6 @@
-# As permanentes no campo (FieldLayout): fileiras, montes de cópias, anexos em leque, a linha entre os grupos e a pose do
-# combate (o atacante avança e inclina para quem ataca; o bloqueador anda até a frente do atacante). Parte da TableView.
+# As permanentes no campo (FieldLayout): fileiras, montes de cópias, anexos em leque, as exiladas saindo por baixo, a linha
+# entre os grupos e a pose do combate (o atacante avança e inclina para quem ataca; o bloqueador anda até a frente do
+# atacante). Parte da TableView.
 class_name FieldPlacement
 extends RefCounted
 
@@ -15,6 +16,12 @@ const BLOCK_REACH := 0.32
 const BLOCK_MAX := 0.95
 ## "Atacar com tudo": os atacantes saem um depois do outro, com este intervalo.
 const ATTACK_STAGGER := 0.07
+## A criatura marcada para atacar, ainda sem defensor: a mesma pose mais leve (quanto do avanço, da subida e da
+## inclinação) e uma inclinação mínima, para se ver que ela está pronta. A lista vem da mesa, na meta MARKED_META
+## (TableInteraction põe: os ids marcados).
+const MARKED_META := &"attack_marked"
+const MARK_SHARE := 0.45
+const MARK_MIN_TILT := deg_to_rad(4.5)
 
 var view: TableView
 ## Linha fina entre os grupos de uma fileira (criaturas | planeswalkers; artefatos | terrenos): "sep:<jogador>:<fileira>" → nó.
@@ -23,6 +30,8 @@ var _separators: Dictionary = {}
 var _attacking_before: Dictionary = {}
 ## Atacantes esperando a vez de avançar: id → a pose final.
 var _staggered: Dictionary = {}
+## As marcadas para atacar na última arrumação (já fora do lugar: quando atacam, não esperam a vez).
+var _marked_before: Dictionary = {}
 
 
 func _init(table: TableView) -> void:
@@ -37,6 +46,18 @@ func _init(table: TableView) -> void:
 static func attack_tilt(dx: float, dz: float, side: int) -> float:
 	var raw: float = atan2(dx, maxf(absf(dz), 0.001))
 	return clampf(raw * 0.35, -ATTACK_MAX_TILT, ATTACK_MAX_TILT) * (-1.0 if side > 0 else 1.0)
+
+
+## A inclinação da marcada para atacar, com os defensores possíveis a (dx, dz) em média: a do ataque mais leve, mas
+## nunca menos que MARK_MIN_TILT para o lado deles (de frente, para o meio da mesa, `center_dx`).
+static func marked_tilt(dx: float, dz: float, side: int, center_dx: float = 0.0) -> float:
+	var tilt: float = attack_tilt(dx, dz, side) * MARK_SHARE
+	if absf(tilt) >= MARK_MIN_TILT:
+		return tilt
+	var toward: float = dx if absf(dx) > 0.05 else center_dx
+	if absf(toward) < 0.001:
+		return tilt
+	return MARK_MIN_TILT * signf(toward) * (-1.0 if side > 0 else 1.0)
 
 
 ## Quanto o bloqueador anda na direção do atacante a `delta` dele (no plano do tampo).
@@ -72,7 +93,10 @@ func place_all(players: Array, frames: Dictionary, seen: Dictionary, names: Pack
 				_schedule_advance(id, delay)
 			_staggered[id] = t
 			t = p["base"]
-		_put_permanent(card, t, p["sleeve"], seen, names, p["badges"], float(p["boost"]))
+		if p.has("exiled_key"):
+			_put_exiled(p, t, seen, names)
+		else:
+			_put_permanent(card, t, p["sleeve"], seen, names, p["badges"], float(p["boost"]))
 
 
 func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
@@ -96,9 +120,10 @@ func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
 				var t := Transform3D(field_basis(tapped, scale), Vector3(x, FIELD_Y + 0.004 * k + 0.008, z))
 				var top: bool = k == cards.size() - 1
 				out.append({"card": card, "t": t, "base": t, "sleeve": sleeve, "side": int(frame["side"]), "boost": boost,
-					"badges": BadgeSpec.for_card(card, ctx, cards.size()) if top else {}})
+					"badges": BadgeSpec.for_pile(cards, ctx) if top else {}})
 				if k == 0:
 					_layout_attachments(card, t, scale, squeeze, out)
+					_layout_exiled(card, t, scale, squeeze, out)
 
 
 ## Auras e equipamentos presos a `host`: atrás dela, cada um um pouco mais para a direita e para o alto, menores.
@@ -114,6 +139,28 @@ func _layout_attachments(host: Dictionary, host_t: Transform3D, scale: float, sq
 		t.origin.y = maxf(t.origin.y, FIELD_Y)
 		out.append({"card": card, "t": t, "base": t, "sleeve": view.sleeve_of(int(card.get("controller", 0))), "side": 0, "boost": 1.0,
 			"badges": {}, "host": int(host["id"])})
+
+
+## As cartas exiladas por `host` (Oblivion Ring) e pelo que está preso a ela: por baixo dela, saindo pela borda de baixo,
+## um pouco para a esquerda, esmaecidas. São cópias de vista (a chave é "exu:<id>"): a carta mesmo continua no exílio.
+func _layout_exiled(host: Dictionary, host_t: Transform3D, scale: float, squeeze: float, out: Array) -> void:
+	var under: Array = (view.badge_context().get("exiled_under", {}) as Dictionary).get(int(host["id"]), [])
+	var tapped: bool = bool(host.get("tapped", false))
+	var usable: Dictionary = view.badge_context().get("usable", {})
+	for j: int in mini(under.size(), FieldLayout.EXILED_SHOWN):
+		var card: Dictionary = (under[j] as Dictionary)["card"]
+		var off: Vector2 = FieldLayout.exiled_offset(j, under.size())
+		# Virada, a carta de baixo vira junto e a faixa que aparece é a da altura da carta deitada.
+		if tapped:
+			off.y *= FieldLayout.CARD.x / FieldLayout.CARD.y
+		var offset := Vector3(off.x * squeeze, -0.003 * (j + 1), off.y) * scale
+		var t := Transform3D(field_basis(tapped, scale * FieldLayout.EXILED_SCALE), host_t.origin + offset)
+		t.origin.y = maxf(t.origin.y, FIELD_Y)
+		# A que acabou de ser exilada sai de baixo da permanente.
+		var from := Transform3D(t.basis, Vector3(host_t.origin.x, t.origin.y, host_t.origin.z))
+		out.append({"card": card, "t": t, "base": t, "from": from, "sleeve": view.sleeve_of(int(card.get("owner", card.get("controller", 0)))),
+			"side": 0, "boost": 1.0, "badges": {}, "host": int(host["id"]), "exiled_key": "exu:%d" % int(card["id"]),
+			"usable": usable.has(int(card["id"]))})
 
 
 ## A pose do combate sobre os lugares já calculados (muda `t` das cartas no combate). Devolve id → atraso do avanço
@@ -143,8 +190,10 @@ func _combat_pose(by_id: Dictionary, frames: Dictionary) -> Dictionary:
 			t.basis = Basis(Vector3.UP, tilt) * t.basis
 		_shift_attachments(by_id, id, t.origin - (p["t"] as Transform3D).origin)
 		p["t"] = t
-		if not _attacking_before.has(id):
+		# A que estava só marcada já tinha saído do lugar: vai direto para a pose cheia, sem esperar a vez.
+		if not _attacking_before.has(id) and not _marked_before.has(id):
 			fresh.append(id)
+	_pose_marked(by_id, attacking, state)
 	# Bloqueadores: andam até a frente do atacante que bloqueiam e ficam lá até o dano.
 	for id: int in attacking:
 		var entry: Variant = attacking[id]
@@ -171,6 +220,34 @@ func _combat_pose(by_id: Dictionary, frames: Dictionary) -> Dictionary:
 			if i > 0:
 				delays[fresh[i]] = i * ATTACK_STAGGER
 	return delays
+
+
+## As marcadas para atacar sem defensor (MARKED_META): avançam, sobem e inclinam um pouco para os defensores possíveis.
+func _pose_marked(by_id: Dictionary, attacking: Dictionary, state: Dictionary) -> void:
+	var marked: Array = view.get_meta(MARKED_META, []) if view.has_meta(MARKED_META) else []
+	_marked_before = {}
+	for raw: Variant in marked:
+		var id: int = int(raw)
+		if attacking.has(id) or not by_id.has(id):
+			continue
+		_marked_before[id] = true
+		var p: Dictionary = by_id[id]
+		var side: int = int(p["side"])
+		var t: Transform3D = p["t"]
+		t.origin.z -= side * ATTACK_ADVANCE * MARK_SHARE
+		t.origin.y += ATTACK_RISE * MARK_SHARE
+		var sum := Vector3.ZERO
+		var count: int = 0
+		for d: Variant in AttackFlow.defenders_for(state, id):
+			var at: Variant = _defender_position({"defender": (d as Dictionary)["id"], "defenderKind": (d as Dictionary)["kind"]}, by_id)
+			if at is Vector3:
+				sum += at
+				count += 1
+		if count > 0:
+			var aim: Vector3 = sum / count
+			t.basis = Basis(Vector3.UP, marked_tilt(aim.x - t.origin.x, aim.z - t.origin.z, side, -t.origin.x)) * t.basis
+		_shift_attachments(by_id, id, t.origin - (p["t"] as Transform3D).origin)
+		p["t"] = t
 
 
 ## Onde está quem o atacante ataca: o retrato do jogador (levado para a mesa) ou a permanente atacada.
@@ -227,6 +304,48 @@ func _put_permanent(card: Dictionary, t: Transform3D, sleeve: Color, seen: Dicti
 	var node: CardNode = view.card_node(id)
 	if node:
 		node.set_badges(badges, bool(card.get("tapped", false)), bool(card.get("faceDown", false)), boost)
+
+
+## Põe a cópia de vista de uma carta exilada por baixo da permanente. O nó responde como a carta exilada (o clique abre
+## o exílio, ou a usa se dá para usar; o mouse mostra a carta); esmaecido por um véu, menos quando dá para usar.
+func _put_exiled(p: Dictionary, t: Transform3D, seen: Dictionary, names: PackedStringArray) -> void:
+	var key: String = p["exiled_key"]
+	var card: Dictionary = p["card"]
+	var fresh: bool = view.card_node(key) == null
+	view.put_card(key, card, "exiled_under", p["from"] if fresh else t, p["sleeve"], seen, names)
+	var node: CardNode = view.card_node(key)
+	if node == null:
+		return
+	node.card_id = int(card["id"])
+	if fresh:
+		node.move_to(t)
+	var veil: MeshInstance3D = node.get_node_or_null("ExileVeil") as MeshInstance3D
+	if veil == null:
+		veil = exile_veil()
+		node.add_child(veil)
+	veil.visible = not bool(p.get("usable", false)) and not bool(card.get("faceDown", false))
+
+
+## O véu da carta exilada por baixo de uma permanente: azul-escuro translúcido, com os cantos da carta e um fio azulado
+## na borda (como o filtro e o contorno de .exu no navegador).
+static func exile_veil() -> MeshInstance3D:
+	var veil := MeshInstance3D.new()
+	veil.name = "ExileVeil"
+	var quad := PlaneMesh.new()
+	quad.size = CardNode.SIZE
+	veil.mesh = quad
+	var w: int = 126
+	var h: int = 176
+	var svg: String = '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d"><rect x="1.5" y="1.5" width="%d" height="%d" rx="6" fill="#0a0f22" fill-opacity=".5" stroke="#8fa6ff" stroke-opacity=".55" stroke-width="2"/></svg>' % [w, h, w - 3, h - 3]
+	var material := StandardMaterial3D.new()
+	material.albedo_texture = CardIcons.svg_texture("exile-veil", svg)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	veil.material_override = material
+	veil.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	veil.position = Vector3(0, 0.0015, 0)
+	return veil
 
 
 ## A linha entre o primeiro e o segundo grupo de uma fileira, no meio do vão entre eles (escondida com um grupo só).

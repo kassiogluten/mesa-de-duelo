@@ -17,8 +17,17 @@ const MINE := Color("#59b5ff")
 const THEIRS := Color("#ff8a3d")
 
 
+## Selos de canto novos (src/style.css): mutada, preparada, Portador do Anel e Game Changer.
+const MUTATED := Color("#b4462f")
+const PREPARED := Color("#2f7d6b")
+const RING := Color("#f2c14e")
+## "Selecionada" na declaração de ataque e de bloqueio (.tag.block-pending).
+const PENDING_BG := Color("#e9edf5")
+const PENDING_INK := Color("#101b2f")
+
+
 ## O que vale para todas as cartas de um estado (o de FieldLayout.context e mais: quem é alvo, comandantes, quantos anexos
-## e quantas exiladas por permanente).
+## e quantas exiladas por permanente, a previsão de lealdade dos planeswalkers atacados e se a partida é de Commander).
 static func context(state: Dictionary) -> Dictionary:
 	var ctx: Dictionary = FieldLayout.context(state)
 	var targets: Dictionary = {}
@@ -30,41 +39,59 @@ static func context(state: Dictionary) -> Dictionary:
 				if not targets.has(int(id)):
 					targets[int(id)] = int(item.get("controller", -1))
 	var commanders: Dictionary = {}
-	var on_field: Dictionary = {}
-	var exiled_ids: Dictionary = {}
 	for raw: Variant in state.get("players", []):
 		var player: Dictionary = raw
 		if player.get("commanders") is Array:
 			for c: Variant in player["commanders"]:
 				if c is Dictionary:
 					commanders[int((c as Dictionary).get("id", -1))] = true
-		for c: Variant in player.get("battlefield", []):
-			on_field[int((c as Dictionary)["id"])] = c
-		if player.get("exile") is Array:
-			for c: Variant in player["exile"]:
-				exiled_ids[int((c as Dictionary)["id"])] = true
 	var attached: Dictionary = {}
 	for host: Variant in ctx["attachments"]:
 		attached[int(host)] = (ctx["attachments"][host] as Array).size()
 	var exiled: Dictionary = {}
-	for id: Variant in on_field:
-		var card: Dictionary = on_field[id]
-		if card.get("exiling") is Array:
-			var n: int = 0
-			for x: Variant in card["exiling"]:
-				if exiled_ids.has(int(x)):
-					n += 1
-			if n > 0:
-				exiled[int(id)] = n
+	for host: Variant in ctx["exiled_under"]:
+		exiled[int(host)] = (ctx["exiled_under"][host] as Array).size()
+	# Previsão do combate (walkerForecast): lealdade agora e depois do dano, por planeswalker.
+	var walkers: Dictionary = {}
+	if state.get("forecast") is Array:
+		for raw: Variant in state["forecast"]:
+			if raw is Dictionary and (raw as Dictionary).get("planeswalkers") is Array:
+				for w: Variant in (raw as Dictionary)["planeswalkers"]:
+					if w is Dictionary and not walkers.has(int((w as Dictionary).get("id", -1))):
+						walkers[int((w as Dictionary)["id"])] = w
+	var input: Dictionary = state.get("input", {}) if state.get("input") is Dictionary else {}
+	var attackers: Dictionary = {}
+	if input.get("attacking") is Dictionary and (input["attacking"] as Dictionary).get("attackers") is Array:
+		for id: Variant in (input["attacking"] as Dictionary)["attackers"]:
+			attackers[int(id)] = true
 	ctx["targets"] = targets
 	ctx["commanders"] = commanders
 	ctx["attached"] = attached
 	ctx["exiled"] = exiled
+	ctx["walkers"] = walkers
+	ctx["can_attack"] = attackers
+	ctx["commander_rules"] = GameChangers.commander_rules(state)
 	return ctx
 
 
+## Os selos do monte inteiro, na carta de cima: os dela, o "×N" e, num monte de atacantes iguais, o dano somado que vem
+## se ninguém bloquear (como .stack-atk no navegador).
+static func for_pile(cards: Array, ctx: Dictionary) -> Dictionary:
+	var top: Dictionary = cards[cards.size() - 1]
+	var spec: Dictionary = for_card(top, ctx, cards.size())
+	if cards.size() > 1 and not FieldLayout.grouped_attack(top, ctx).is_empty():
+		var damage: int = 0
+		for c: Variant in cards:
+			damage += FieldLayout.attack_damage(c)
+		spec["bottom_mid"] = [{"icon": "sword", "text": str(damage), "bg": RED.darkened(0.18), "fg": Color.WHITE, "border": RED.lightened(0.45),
+			"name": "%d atacam juntas: %d de dano se não houver bloqueio" % [cards.size(), damage]}]
+	return spec
+
+
 ## Os selos de uma carta do campo. `copies` > 1 na carta de cima de um monte de cópias iguais.
-## Volta {corner, tag, counters, keywords, pt, top_right, aim}; cada selo é {icon?, text?, bg, fg, border?}.
+## Volta {corner, tag, counters, keywords, pt, top_right, bottom_mid, aim, pending}; cada selo é {icon?, text?, bg, fg,
+## border?, round?}. `pending` é o selo do alto que troca o de combate quando a carta está selecionada na sua declaração de
+## ataque ou de bloqueio (a escolha é local: quem decide é a CardBadges, pelo destaque da mesa).
 static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dictionary:
 	var corner: Array = []
 	var tag: Dictionary = {}
@@ -75,13 +102,22 @@ static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dict
 	var aim: String = ""
 	var id: int = int(card.get("id", -1))
 	var face_down: bool = bool(card.get("faceDown", false))
-	# Selos de canto: comandante (coroa), cópia e ficha.
+	# Selos de canto: comandante (coroa), cópia, mutada, ficha e preparada à esquerda; o Anel e a gema à direita.
 	if bool(card.get("commander", false)) or (ctx.get("commanders", {}) as Dictionary).has(id):
 		corner.append({"icon": "crown", "bg": Color("#e3ad45"), "fg": Color("#2a1a04"), "border": Color("#f7d27a")})
 	if Txt.of(card.get("copyOf", "")) != "":
 		corner.append({"text": "CÓPIA", "bg": Color("#6a4bc4"), "fg": Color.WHITE})
+	var merged: int = (card["merged"] as Array).size() if card.get("merged") is Array else 0
+	if merged > 1:
+		corner.append({"text": "MUTADA ×%d" % merged, "bg": MUTATED, "fg": Color.WHITE})
 	if bool(card.get("token", false)):
 		corner.append({"text": "FICHA", "bg": Color("#e8e2d0"), "fg": PAPER_INK})
+	if bool(card.get("prepared", false)):
+		corner.append({"text": "PREPARADA", "bg": PREPARED, "fg": Color.WHITE})
+	if bool(card.get("ringBearer", false)):
+		top_right.append({"icon": "ring", "round": true, "bg": Color("#2a1d06"), "fg": RING, "border": Color(RING, 0.7), "name": "Portador do Anel"})
+	if game_changer(card, ctx):
+		top_right.append({"icon": "gem", "round": true, "bg": Color("#13203a"), "fg": GOLD, "border": Color(GOLD, 0.8), "name": "Game Changer"})
 	# Selo do alto, no meio: combate; senão o terreno virado que ainda devolve a mana; senão o enjoo.
 	var combat: Array = ctx.get("combat", [])
 	var attacked_by: PackedStringArray = []
@@ -134,6 +170,10 @@ static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dict
 			"pcolor": _delta_color(power, card.get("basePower")), "tcolor": DOWN if damage > 0 else _delta_color(toughness, card.get("baseToughness"))}
 	elif planeswalker:
 		pt = {"kind": "loyalty", "value": int(counters.get("LOYALTY", 0))}
+		# Atacado, na declaração de bloqueadores: a lealdade prevista depois do combate ("3 → 1"), se ela cai.
+		var walker: Dictionary = (ctx.get("walkers", {}) as Dictionary).get(id, {})
+		if not walker.is_empty() and int(walker.get("after", 0)) < int(walker.get("loyalty", 0)):
+			pt = {"kind": "loyalty", "value": int(walker["loyalty"]), "after": int(walker["after"]), "lethal": int(walker["after"]) <= 0}
 	elif card.has("classLevel") and card["classLevel"] != null:
 		pt = {"kind": "level", "value": int(card["classLevel"]), "max": int(card.get("classMaxLevel", 0)) if card.get("classMaxLevel") != null else 0}
 	# Canto de cima à direita: cópias no monte, anexos e cartas exiladas por ela.
@@ -149,7 +189,21 @@ static func for_card(card: Dictionary, ctx: Dictionary, copies: int = 1) -> Dict
 	var targets: Dictionary = ctx.get("targets", {})
 	if targets.has(id):
 		aim = "mine" if int(targets[id]) == int(ctx.get("you", 0)) else "theirs"
-	return {"corner": corner, "tag": tag, "counters": chips, "keywords": keywords, "pt": pt, "top_right": top_right, "aim": aim}
+	# Na sua declaração: a criatura que pode atacar (ou bloquear), quando selecionada, mostra "Selecionada".
+	var pending: Dictionary = {}
+	if (ctx.get("can_attack", {}) as Dictionary).has(id):
+		pending = {"icon": "sword", "text": "Selecionada", "bg": PENDING_BG, "fg": PENDING_INK, "small": true}
+	elif (ctx.get("blockers", {}) as Dictionary).has(id):
+		pending = {"icon": "shield", "text": "Selecionada", "bg": PENDING_BG, "fg": PENDING_INK, "small": true}
+	return {"corner": corner, "tag": tag, "counters": chips, "keywords": keywords, "pt": pt, "top_right": top_right, "bottom_mid": [],
+		"aim": aim, "pending": pending}
+
+
+## Carta da lista de Game Changers numa partida com as regras do Commander, de frente para cima e que não é ficha.
+static func game_changer(card: Dictionary, ctx: Dictionary) -> bool:
+	var name: String = Txt.of(card.get("name", ""))
+	return bool(ctx.get("commander_rules", false)) and name != "" and not bool(card.get("token", false)) \
+		and not bool(card.get("faceDown", false)) and GameChangers.listed(name)
 
 
 ## Verde acima da base, vermelho abaixo, papel quando igual (ou sem base).
@@ -162,8 +216,8 @@ static func _delta_color(value: int, base: Variant) -> Color:
 ## Os ícones de todos os selos de uma especificação, na ordem (para os testes conferirem de relance).
 static func icons_of(spec: Dictionary) -> PackedStringArray:
 	var out: PackedStringArray = []
-	for group: String in ["corner", "counters", "keywords", "top_right"]:
-		for chip: Variant in spec[group]:
+	for group: String in ["corner", "counters", "keywords", "top_right", "bottom_mid"]:
+		for chip: Variant in spec.get(group, []):
 			out.append(Txt.of((chip as Dictionary).get("icon", (chip as Dictionary).get("text", ""))))
 	if not (spec["tag"] as Dictionary).is_empty():
 		out.append("tag:" + Txt.of((spec["tag"] as Dictionary).get("icon", "")))

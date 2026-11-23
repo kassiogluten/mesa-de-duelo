@@ -1,7 +1,9 @@
-# Monta uma mesa sem servidor com o painel da pilha e o HUD e salva prints: a mágica voando até a pilha, a pilha com 3
-# itens com alvos (e um escolhível), a habilidade de lealdade, a mágica modal e as telas do fim do jogo.
+# Monta uma mesa sem servidor com o painel da pilha e o HUD e salva prints: a mágica voando até a pilha, a pilha com 2, 3 e
+# 5 itens com alvos (e um escolhível), o item sob o mouse aceso na mesa, a galeria, a lealdade, a mágica modal, o Commander
+# com quatro jogadores e as telas do fim do jogo.
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_pilha.gd -- <modo> <caminho base>
-# Modos: pilha (grava -voo, -tres, -escolha, -lealdade, -modos, -recolhida), fim (-vitoria, -numeros, -derrota, -campo).
+# Modos: pilha (grava -voo, -dois, -entrando, -tres, -responder, -mouse, -galeria, -cinco, -resolvendo, -escolha,
+# -lealdade, -modos, -recolhida), commander (-commander, -commander-galeria), fim (-vitoria, -numeros, -derrota, -campo).
 extends SceneTree
 
 const NAMES: PackedStringArray = ["Forest", "Mountain", "Island", "Llanowar Elves", "Grizzly Bears", "Shivan Dragon", "Soul Warden",
@@ -13,6 +15,7 @@ var _stack: StackPanel
 var _hud: Hud
 var _catalog: CardCatalog
 var _fx: FxDirector
+var _last: Dictionary = {}
 
 
 func _initialize() -> void:
@@ -39,6 +42,11 @@ func _initialize() -> void:
 	layer.add_child(_hud)
 	_fx.hud = _hud
 	_table.stack_slot = _stack.layer_rect
+	_stack.table = _table
+	_stack.avoid_rect = _hud.action_rect
+	_stack.layout_changed.connect(func() -> void:
+		if not _last.is_empty():
+			_table.apply_state(_last))
 	_table.player_screen_position = _hud.portrait_center
 	_hud.portrait_slot = _table.portrait_slot
 	_stack.preview.connect(_hud.show_preview)
@@ -52,12 +60,15 @@ func _initialize() -> void:
 		_catalog.texture(_catalog.image_url_for({"name": name}))
 	if mode == "fim":
 		await _end_screens()
+	elif mode == "commander":
+		await _commander_screens()
 	else:
 		await _stack_screens()
 	quit()
 
 
 func _apply(state: Dictionary) -> void:
+	_last = state
 	_fx.before_state(state)
 	_table.apply_state(state)
 	_stack.apply_state(state)
@@ -83,15 +94,57 @@ func _stack_screens() -> void:
 	await _shot(0.22, "voo")
 	await _shot(0.3, "voo-pouso")
 	await create_timer(1.0).timeout
-	# O oponente responde: anula a mágica, e um gatilho entra junto.
-	var counter := {"id": 9003, "kind": "spell", "controller": 1, "source": {"id": 300, "name": "Counterspell", "controller": 1},
-		"text": "Counterspell - Counter target spell.", "targets": {"cards": [150]}, "cast": {"mode": "flashback"}}
+	# Um gatilho do oponente entra por cima: dois itens.
 	var warden := {"id": 9002, "kind": "trigger", "controller": 1, "source": state["players"][1]["battlefield"][1],
 		"text": "Soul Warden (202) - You gain 1 life."}
+	state["stack"] = [warden, bolt]
+	_apply(state)
+	await _shot(1.4, "dois")
+	# O mouse no raio da lista: a carta dele acende e a seta vai até o alvo (Ana).
+	var bolt_row: Control = _stack.find_child("Row9001", true, false)
+	if bolt_row:
+		_mouse_at(bolt_row.get_global_rect().get_center())
+	await _shot(1.0, "mouse-alvo")
+	_mouse_at(Vector2(800, 500))
+	# O oponente responde: anula a mágica (a linha do gatilho entra deslizando por cima da lista).
+	var counter := {"id": 9003, "kind": "spell", "controller": 1, "source": {"id": 300, "name": "Counterspell", "controller": 1, "manaCost": "{U}{U}"},
+		"text": "Counterspell - Counter target spell.", "targets": {"cards": [150]}, "cast": {"mode": "flashback"}}
 	state["players"][1]["handCount"] = 3
 	state["stack"] = [counter, warden, bolt]
 	_apply(state)
-	await _shot(1.4, "tres")
+	await _shot(0.12, "entrando")
+	await _shot(1.3, "tres")
+	# A vez é sua e o topo é do oponente: "Você pode responder".
+	state["activePlayer"] = 1
+	_apply(state)
+	await _shot(0.8, "responder")
+	# O mouse no raio da lista: a carta dele e o alvo acendem na mesa.
+	var row: Control = _stack.find_child("Row9002", true, false)
+	if row:
+		_mouse_at(row.get_global_rect().get_center())
+	await _shot(0.9, "mouse")
+	_mouse_at(Vector2(800, 500))
+	_stack.open_gallery()
+	await _shot(0.9, "galeria")
+	_stack.gallery.close()
+	await create_timer(0.4).timeout
+	# Cinco itens: três camadas por trás do topo e o "+1".
+	var extra: Array = [
+		{"id": 9004, "kind": "ability", "controller": 0, "source": state["players"][0]["battlefield"][2], "text": "Llanowar Elves - Add {G}."},
+		{"id": 9005, "kind": "trigger", "controller": 0, "source": state["players"][0]["battlefield"][3], "text": "Grizzly Bears - Draw a card."},
+	]
+	state["stack"] = extra + [counter, warden, bolt]
+	state["activePlayer"] = 0
+	_apply(state)
+	await _shot(1.4, "cinco")
+	# O topo resolve: o clarão se fecha e a próxima carta sobe.
+	state["stack"] = [extra[1], counter, warden, bolt]
+	_apply(state)
+	await _shot(0.15, "resolvendo")
+	await create_timer(1.0).timeout
+	state["stack"] = [counter, warden, bolt]
+	_apply(state)
+	await create_timer(1.0).timeout
 	# Escolhendo: a pilha aceita um item como alvo (o raio, embaixo).
 	state["input"] = {"gen": 9, "priority": false, "ok": {"label": "", "enabled": false}, "cancel": {"label": "Cancelar", "enabled": true}, "selectable": [], "selectableStacks": [9001]}
 	_apply(state)
@@ -118,6 +171,37 @@ func _stack_screens() -> void:
 	_stack.collapsed = true
 	_apply(state)
 	await _shot(0.8, "recolhida")
+
+
+## Move o mouse de verdade (o hover da lista é o do motor).
+func _mouse_at(at: Vector2) -> void:
+	var event := InputEventMouseMotion.new()
+	var screen: Vector2 = root.get_final_transform() * at
+	event.position = screen
+	event.global_position = screen
+	Input.parse_input_event(event)
+
+
+## Commander com quatro jogadores: a pilha não cobre o oponente do canto direito nem a caixa de ação.
+func _commander_screens() -> void:
+	var names: Array = ["Você", "Ana", "Bruno", "Carla"]
+	var players: Array = []
+	for pid: int in 4:
+		var field: Array = []
+		for i: int in 3:
+			field.append({"id": 100 * (pid + 1) + i, "name": ["Forest", "Llanowar Elves", "Serra Angel"][i], "creature": i > 0, "land": i == 0, "power": 2, "toughness": 2, "tapped": false, "controller": pid})
+		players.append({"id": pid, "seat": pid, "name": names[pid], "life": 40, "sleeve": pid + 1, "library": 80, "handCount": 5, "hand": [], "battlefield": field,
+			"graveyard": [], "exile": [], "commandZone": [], "commanders": []})
+	var state: Dictionary = {"type": "state", "you": 0, "turn": 6, "phase": "MAIN1", "activePlayer": 3, "players": players, "combat": [], "events": [], "gameOver": false,
+		"input": _priority(), "stack": [
+			{"id": 9101, "kind": "spell", "controller": 3, "source": {"id": 990, "name": "Fireball", "controller": 3}, "text": "Fireball - deals X damage.", "cast": {"x": 4}, "targets": {"players": [0]}},
+			{"id": 9102, "kind": "trigger", "controller": 2, "source": players[2]["battlefield"][1], "text": "Llanowar Elves - trigger."},
+			{"id": 9103, "kind": "spell", "controller": 1, "source": {"id": 991, "name": "Lightning Bolt", "controller": 1}, "text": "Lightning Bolt deals 3 damage to any target.", "targets": {"cards": [402]}},
+		]}
+	_apply(state)
+	await _shot(3.0, "commander")
+	_stack.open_gallery()
+	await _shot(0.9, "commander-galeria")
 
 
 func _priority() -> Dictionary:
