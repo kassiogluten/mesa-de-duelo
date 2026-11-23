@@ -1,0 +1,44 @@
+/* Mesa no PC (baixar.html): o cartão do botão de baixar e as seções de passos, aviso do Windows e requisitos. */
+.bx-top .vis-back { margin-left: auto; }
+.bx-pagina { max-width: 760px; }
+.vis.bx-pagina h1 { font-size: 38px; }
+.bx-cartao {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  margin: 4px 0 8px; padding: 24px; border-radius: 18px; border: 1px solid var(--line);
+  background: radial-gradient(120% 140% at 100% 0%, #f2b54c14, transparent 60%), var(--surface);
+}
+.bx-baixar { display: inline-flex; align-items: center; justify-content: center; gap: 12px; text-decoration: none; }
+.bx-baixar svg, .bx-aviso svg { flex: none; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.bx-detalhes { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.bx-nota { margin: 0; color: var(--muted); font-size: 14px; }
+.bx-aviso { display: flex; gap: 12px; margin: 0 0 6px; color: var(--muted); line-height: 1.55; }
+.bx-aviso svg { fill: var(--glow); stroke: none; margin-top: 2px; }
+.bx-aviso strong { color: var(--ink); }
+.bx-botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.bx-botoes a { text-decoration: none; text-align: center; }
+.bx-secao { margin-top: 28px; }
+.bx-secao h2 { margin: 0 0 10px; font: 700 20px var(--display); color: var(--gold); }
+.bx-secao p, .bx-secao li { color: var(--azul-c9d0de, #c9d0de); line-height: 1.55; }
+.bx-secao p { margin: 0 0 8px; max-width: 70ch; }
+.bx-secao ul { margin: 0; padding-left: 20px; }
+.bx-secao strong, .bx-secao em { color: var(--ink); }
+.bx-secao code { padding: 1px 6px; border-radius: 6px; background: #ffffff10; font-size: 13px; overflow-wrap: anywhere; }
+.bx-secao .bx-menor { font-size: 14px; color: var(--muted); }
+.bx-passos { display: grid; gap: 10px; margin: 0 0 12px; padding: 0; list-style: none; counter-reset: bx-passo; }
+.bx-passos li {
+  counter-increment: bx-passo; display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: 12px; background: #ffffff08; border: 1px solid var(--line);
+}
+.bx-passos li::before {
+  content: counter(bx-passo); flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  font: 800 18px/1 var(--display); color: #2b1700; background: linear-gradient(180deg, #ffd27a, var(--gold) 45%, var(--gold-deep));
+}
+.bx-windows { padding: 16px 18px; border-radius: 14px; border: 1px solid #59b5ff40; background: #59b5ff0d; }
+.bx-windows h2 { color: var(--glow); }
+.bx-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+@media (max-width: 640px) {
+  .vis.bx-pagina h1 { font-size: 30px; }
+  .bx-cartao { padding: 18px 16px; }
+  .bx-baixar, .bx-botoes, .bx-botoes a { width: 100%; box-sizing: border-box; }
+  .bx-duas { grid-template-columns: 1fr; }
+}

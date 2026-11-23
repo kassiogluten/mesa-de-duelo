@@ -1,4 +1,6 @@
+// Rodapé da tela inicial: créditos, aviso de conteúdo de fã, contato e links das outras páginas.
 import './siteFooter.css';
+import { isWindows } from '../baixar/platform';
 
 /** WhatsApp para contato, no formato do wa.me (país + DDD + número). */
 export const WHATSAPP = { label: '(33) 92000-1670', link: 'https://wa.me/5533920001670' };
@@ -7,9 +9,10 @@ const ext = (href: string, text: string) => `<a href="${href}" target="_blank" r
 
 /**
  * Rodapé da tela inicial: créditos de quem faz o jogo funcionar, o aviso da Política de Conteúdo de Fãs da Wizards
- * (texto pedido pela política, traduzido), o contato, a página de apresentação e a política de privacidade.
+ * (texto pedido pela política, traduzido), o contato, a página de apresentação e a política de privacidade. No Windows,
+ * também o link discreto para baixar a mesa no PC (/baixar); nos outros aparelhos ele não serviria para nada.
  */
-export function siteFooterHTML() {
+export function siteFooterHTML(windows = isWindows()) {
   return `<footer class="site-footer">
     <p class="site-credits"><strong>Créditos.</strong> 
       Imagens e dados das cartas: ${ext('https://scryfall.com', 'Scryfall')}. Importação de decks: ${ext('https://moxfield.com', 'Moxfield')} e ${ext('https://archidekt.com', 'Archidekt')}.
@@ -17,6 +20,6 @@ export function siteFooterHTML() {
     <p class="site-legal">Mesa de Duelo é conteúdo de fã não oficial, gratuito, permitido pela ${ext('https://company.wizards.com/pt-br/legal/fancontentpolicy', 'Política de Conteúdo de Fãs')}.
       Não é aprovado nem endossado pela Wizards of the Coast e não tem nenhum vínculo com ela. Partes dos materiais usados são propriedade da Wizards of the Coast.
       Magic: The Gathering e seus logotipos são marcas da Wizards of the Coast LLC. ©Wizards of the Coast LLC.</p>
-    <p class="site-contact">Contato: ${ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`)} · <a href="/sobre">Sobre a Mesa de Duelo</a> · <a href="/privacidade">Política de privacidade</a></p>
+    <p class="site-contact">Contato: ${ext(WHATSAPP.link, `WhatsApp ${WHATSAPP.label}`)} · <a href="/sobre">Sobre a Mesa de Duelo</a> · <a href="/privacidade">Política de privacidade</a>${windows ? ' · <a href="/baixar" data-mesa-pc>Mesa no PC</a>' : ''}</p>
   </footer>`;
 }

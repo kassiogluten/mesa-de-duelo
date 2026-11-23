@@ -188,7 +188,7 @@ async function sources(dir) {
   }
   return out;
 }
-const SITE_PAGES = ['salas', 'partidas', 'torneios', 'contador', 'rever', 'novidades', 'privacidade', 'vincular'];
+const SITE_PAGES = ['salas', 'partidas', 'torneios', 'contador', 'rever', 'novidades', 'privacidade', 'vincular', 'baixar'];
 
 test('links to the other pages use the address without .html', async () => {
   const old = new RegExp(`["'\`}/](${SITE_PAGES.join('|')})\\.html`);
