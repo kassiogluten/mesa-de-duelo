@@ -1,5 +1,6 @@
 # Acabamento das cartas da mesa: o halo macio por baixo da carta acesa (pode jogar, escolhível, selecionada), que vaza
-# para fora da borda, e o foil das raras e míticas pela raridade. Olha as cartas da mesa algumas vezes por segundo.
+# para fora da borda. Olha as cartas da mesa algumas vezes por segundo. O foil das raras e míticas não aparece na mesa
+# (só ao ver a carta de perto, no inspetor); `foil_level` diz o nível de cada raridade para quem mostra.
 class_name CardDressing
 extends Node
 
@@ -25,8 +26,8 @@ func _process(delta: float) -> void:
 			dress(child as CardNode, table.catalog)
 
 
-## Põe na carta o halo (se ela está acesa) e o foil (pela raridade, quando se sabe).
-static func dress(node: CardNode, catalog: CardCatalog = null) -> void:
+## Põe na carta o halo (se ela está acesa) e garante a carta da mesa sem foil.
+static func dress(node: CardNode, _catalog: CardCatalog = null) -> void:
 	var material: ShaderMaterial = material_of(node)
 	if material == null:
 		return
@@ -41,9 +42,9 @@ static func dress(node: CardNode, catalog: CardCatalog = null) -> void:
 		(halo.material_override as ShaderMaterial).set_shader_parameter("color", Color(g.x, g.y, g.z, g.w))
 	elif halo and is_instance_valid(halo):
 		halo.visible = false
-	var level: float = foil_level(rarity_of(node.data, catalog))
-	if material.get_shader_parameter("foil") != level:
-		material.set_shader_parameter("foil", level)
+	# Na partida, nada de foil no campo: ele distrai numa mesa cheia (pedido do jogador). Só no inspetor.
+	if material.get_shader_parameter("foil") != 0.0:
+		material.set_shader_parameter("foil", 0.0)
 
 
 ## A raridade da carta: a do estado, se vier, ou a do catálogo (Scryfall); "" quando não se sabe.

@@ -1,4 +1,5 @@
 # Desenha os selos de uma permanente (BadgeSpec) nos cantos da carta: pequenos, sempre de frente para a câmera e por cima da arte.
+# Os selos acompanham a carta girando (virar, transformar) e trocam o selo do alto por "Selecionada" na sua declaração.
 # Também monta o selo de custo da carta da mão (deitado na carta, que já está de frente para a câmera).
 class_name CardBadges
 extends Node3D
@@ -8,8 +9,12 @@ const PX := 0.0024
 const CHIP_H := 62
 const KEYWORD_H := 52
 const PT_H := 72
+## Selos redondos de canto (Portador do Anel, Game Changer): menores, como no navegador.
+const ROUND_H := 50
 const GAP := 6
 const MARGIN := 0.045
+## O selo do dano somado do monte de atacantes fica por fora da borda de baixo.
+const BOTTOM_OUT := 0.03
 ## Altura dos selos sobre a carta: o selo fica de frente para a câmera, e a parte de baixo dele desce em direção à carta;
 ## alto assim, o selo do alto da carta não entra nela.
 const LIFT := 0.12
@@ -24,6 +29,16 @@ var _key: String = ""
 var _boost: float = 1.0
 var _dim: float = 0.0
 var _aim_tween: Tween
+## O pedido da última vez (para refazer quando a seleção local muda).
+var _spec: Dictionary = {}
+var _size := Vector2.ZERO
+var _tapped: bool = false
+## A carta está selecionada na sua declaração de ataque ou de bloqueio (o selo do alto vira "Selecionada").
+var _selected: bool = false
+## Cada canto: {node, up, tap}, com o lugar na carta de pé e na carta virada (no espaço da carta de pé).
+var _regions: Array = []
+## O giro da carta da última vez que os cantos foram postos (virada de 0 a 1, de lado de 0 a 1).
+var _pose := Vector2(-1, -1)
 
 
 ## Mostra os selos de `spec` numa carta de `size` (virada: deitada de lado). Só refaz quando algo muda.
@@ -32,33 +47,67 @@ func show_spec(spec: Dictionary, size: Vector2, tapped: bool, boost: float = 1.0
 	if key == _key:
 		return
 	_key = key
-	clear()
+	_spec = spec
+	_size = size
+	_tapped = tapped
 	_boost = boost
+	if (spec.get("pending", {}) as Dictionary).is_empty():
+		_selected = false
+	_build()
+	set_process(not spec.is_empty())
+
+
+func _build() -> void:
+	clear()
+	var spec: Dictionary = _spec
 	if spec.is_empty():
 		return
-	# A metade da carta na tela (virada, largura e altura trocam), e os cantos onde cada grupo de selos se ancora.
-	var half := Vector2(size.y, size.x) / 2.0 if tapped else size / 2.0
-	var top_left: Node3D = _region(Vector2(-half.x + MARGIN, -half.y + MARGIN), tapped)
-	var top_mid: Node3D = _region(Vector2(0, -half.y + MARGIN * 0.6), tapped)
-	var top_right: Node3D = _region(Vector2(half.x - MARGIN, -half.y + MARGIN), tapped)
-	var bottom_left: Node3D = _region(Vector2(-half.x + MARGIN, half.y - MARGIN), tapped)
-	var bottom_right: Node3D = _region(Vector2(half.x - MARGIN, half.y - MARGIN), tapped)
-	# Colunas dos cantos de cima: comandante, cópia e ficha à esquerda; cópias, anexos e exiladas à direita.
+	var size: Vector2 = _size
+	var tapped: bool = _tapped
+	# Os cantos onde cada grupo de selos se ancora, na carta de pé e na virada (largura e altura trocam na tela); enquanto
+	# a carta gira, cada canto anda de um lugar para o outro junto com ela (_follow).
+	var top_left: Node3D = _region(Vector2(-1, -1), Vector2(MARGIN, MARGIN))
+	var top_mid: Node3D = _region(Vector2(0, -1), Vector2(0, MARGIN * 0.6))
+	var top_right: Node3D = _region(Vector2(1, -1), Vector2(MARGIN, MARGIN))
+	var bottom_left: Node3D = _region(Vector2(-1, 1), Vector2(MARGIN, MARGIN))
+	var bottom_right: Node3D = _region(Vector2(1, 1), Vector2(MARGIN, MARGIN))
+	# Colunas dos cantos de cima: comandante, cópia, mutada, ficha e preparada à esquerda; o Anel, a gema, cópias, anexos e
+	# exiladas à direita.
 	_stack_column(top_left, spec.get("corner", []), 1.0)
 	_stack_column(top_right, spec.get("top_right", []), -1.0)
 	var tag: Dictionary = spec.get("tag", {})
+	if _selected and not (spec.get("pending", {}) as Dictionary).is_empty():
+		tag = spec["pending"]
 	if not tag.is_empty():
 		if bool(tag.get("bare", false)):
 			_icon_sprite(top_mid, Txt.of(tag["icon"]), tag["fg"], 104, Vector2(0, -46))
 		else:
-			_chip(top_mid, tag, CHIP_H, Vector2(0, -CHIP_H / 2.0), 0.0)
+			var tag_h: int = KEYWORD_H if bool(tag.get("small", false)) else CHIP_H
+			_chip(top_mid, tag, tag_h, Vector2(0, -tag_h / 2.0), 0.0)
 	# P/T (ou lealdade, ou nível) embaixo à direita; as palavras-chave em fileiras acima dele; os marcadores embaixo à esquerda.
 	var pt_h: float = _pt(bottom_right, spec.get("pt", {}))
-	_row(bottom_left, spec.get("counters", []), CHIP_H, 1.0, 0.0, size.x / PX / boost * (0.62 if not tapped else 0.9))
-	_row(bottom_right, spec.get("keywords", []), KEYWORD_H, -1.0, pt_h + (GAP if pt_h > 0 else 0), size.x / PX / boost * 0.55)
+	_row(bottom_left, spec.get("counters", []), CHIP_H, 1.0, 0.0, size.x / PX / _boost * (0.62 if not tapped else 0.9))
+	_row(bottom_right, spec.get("keywords", []), KEYWORD_H, -1.0, pt_h + (GAP if pt_h > 0 else 0), size.x / PX / _boost * 0.55)
+	# O dano somado do monte de atacantes, no meio da borda de baixo, por fora.
+	var bottom: Array = spec.get("bottom_mid", [])
+	if not bottom.is_empty():
+		var bottom_mid: Node3D = _region(Vector2(0, 1), Vector2(0, -BOTTOM_OUT))
+		_chip(bottom_mid, bottom[0], CHIP_H, Vector2(0, 0), 0.0)
 	var aim: String = Txt.of(spec.get("aim", ""))
 	if aim != "":
 		_aim(BadgeSpec.MINE if aim == "mine" else BadgeSpec.THEIRS, size)
+	_pose = Vector2(-1, -1)
+	_follow()
+
+
+func _ready() -> void:
+	# Só a permanente com selos acompanha o giro (as cartas da mão e dos montes não gastam nada por quadro).
+	set_process(not _spec.is_empty())
+
+
+func _process(_delta: float) -> void:
+	_follow()
+	_watch_selection()
 
 
 ## Esmaece os selos junto com a carta (a que não pode ser escolhida no prompt atual).
@@ -73,20 +122,74 @@ func set_dim(amount: float) -> void:
 func clear() -> void:
 	if _aim_tween:
 		_aim_tween.kill()
+	_regions.clear()
 	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
 
 
-## Um ponto de ancoragem na tela da carta (x para a direita, y para baixo, em unidades da mesa), levado para a carta.
-func _region(screen: Vector2, tapped: bool) -> Node3D:
+## Um canto da carta: `corner` diz qual (x de −1 a 1 da esquerda para a direita, y de −1 a 1 de cima para baixo na tela) e
+## `inset` quanto ele entra na carta. Guarda o lugar dele na carta de pé e na virada; _follow põe no meio do caminho.
+func _region(corner: Vector2, inset: Vector2) -> Node3D:
 	var node := Node3D.new()
-	screen.y += LIFT_SHIFT
-	# Virada (−90° em Y), o "direita" da tela é o +Z da carta e o "baixo" da tela é o −X dela.
-	node.position = Vector3(screen.y, LIFT, -screen.x) if tapped else Vector3(screen.x, LIFT, screen.y)
 	node.scale = Vector3.ONE * _boost
 	add_child(node)
+	_regions.append({"node": node, "up": region_anchor(corner, inset, _size, false), "tap": region_anchor(corner, inset, _size, true)})
 	return node
+
+
+## O lugar de um canto no espaço da carta de pé (sem a virada nem o giro do desenho), para a carta de pé ou virada.
+static func region_anchor(corner: Vector2, inset: Vector2, size: Vector2, tapped: bool) -> Vector3:
+	var half := Vector2(size.y, size.x) / 2.0 if tapped else size / 2.0
+	var screen := Vector2(corner.x * (half.x - inset.x), corner.y * (half.y - inset.y) + LIFT_SHIFT)
+	# Virada (−90° em Y), o "direita" da tela é o −Z da carta e o "baixo" da tela é o +X dela.
+	return Vector3(screen.y, LIFT, -screen.x) if tapped else Vector3(screen.x, LIFT, screen.y)
+
+
+## Quanto a carta está virada (0 de pé, 1 deitada de lado) pelo eixo comprido dela, `long_axis` (o +Z da carta na mesa):
+## o seno² do giro em torno do eixo vertical, que anda junto com a animação de virar.
+static func tap_amount(long_axis: Vector3) -> float:
+	var flat: float = long_axis.x * long_axis.x + long_axis.z * long_axis.z
+	return long_axis.x * long_axis.x / flat if flat > 0.000001 else 0.0
+
+
+## Leva cada canto para onde a carta está agora: no meio do caminho entre de pé e virada enquanto ela vira; deitados no
+## tampo e apertados para o meio enquanto ela gira de lado ao transformar (e somem quando ela fica de perfil).
+func _follow() -> void:
+	var visual: Node3D = get_parent() as Node3D
+	if visual == null or _regions.is_empty():
+		return
+	var card: Node3D = visual.get_parent() as Node3D
+	var tap: float = tap_amount(card.basis.z) if card else (1.0 if _tapped else 0.0)
+	var edge: float = absf(cos(visual.rotation.z))
+	edge = 1.0 if edge > 0.95 else edge
+	var pose := Vector2(tap, edge)
+	if pose.distance_squared_to(_pose) < 0.000001 and visual.basis.is_equal_approx(Basis.IDENTITY):
+		return
+	_pose = pose
+	# O desenho pode estar girando (transformar) ou inclinado (mouse): os cantos ficam no espaço da carta de pé.
+	var undo: Basis = (visual.basis * basis).inverse() * basis
+	for raw: Variant in _regions:
+		var region: Dictionary = raw
+		var at: Vector3 = (region["up"] as Vector3).lerp(region["tap"], tap)
+		at.x *= edge
+		var node: Node3D = region["node"]
+		node.position = undo * at
+		node.scale = Vector3(_boost * maxf(edge, 0.01), _boost, _boost)
+		node.visible = edge > 0.12
+
+
+## Na sua declaração de ataque ou de bloqueio, a escolha é local (a mesa a acende como "selecionada"): o selo do alto
+## troca para "Selecionada" enquanto ela durar.
+func _watch_selection() -> void:
+	if (_spec.get("pending", {}) as Dictionary).is_empty():
+		return
+	var card: CardNode = get_parent().get_parent() as CardNode if get_parent() else null
+	var view: TableView = card.get_parent() as TableView if card else null
+	var on: bool = view != null and view.highlights.role(card.card_id) == "selected"
+	if on != _selected:
+		_selected = on
+		_build()
 
 
 ## Selos empilhados numa coluna, descendo a partir da âncora; `side` 1 alinha à esquerda, −1 à direita.
@@ -94,7 +197,7 @@ func _stack_column(region: Node3D, chips: Array, side: float) -> void:
 	var y: float = 0.0
 	for raw: Variant in chips:
 		var chip: Dictionary = raw
-		var h: int = CHIP_H if chip.has("icon") else 46
+		var h: int = (ROUND_H if bool(chip.get("round", false)) else CHIP_H) if chip.has("icon") else 46
 		_chip(region, chip, h, Vector2(0, -y - h / 2.0), side)
 		y += h + GAP
 
@@ -130,7 +233,7 @@ func _chip(region: Node3D, chip: Dictionary, h: int, at: Vector2, side: float) -
 	var bg: Color = chip.get("bg", BadgeSpec.DARK)
 	var border: Color = chip.get("border", bg.darkened(0.45) if bg.a > 0.95 else Color(1, 1, 1, 0.14))
 	var icon_key: String = Txt.of(chip.get("icon", ""))
-	var radius: float = -1.0 if text != "" or icon_key == "" else h * 0.28
+	var radius: float = -1.0 if text != "" or icon_key == "" or bool(chip.get("round", false)) else h * 0.28
 	var tex: Texture2D = CardIcons.chip_texture(int(w), h, bg, border, icon_key if text != "" else "", chip.get("fg", Color.WHITE), radius)
 	_sprite(region, tex, center, PRIORITY_BG)
 	if text == "":
@@ -144,7 +247,8 @@ func _chip(region: Node3D, chip: Dictionary, h: int, at: Vector2, side: float) -
 	return w
 
 
-## P/T (base x atual, dano em vermelho), lealdade ou nível de Classe; volta a altura usada (0 sem nenhum).
+## P/T (base x atual, dano em vermelho), lealdade (com a prevista depois do combate, "3 → 1") ou nível de Classe; volta a
+## altura usada (0 sem nenhum). Cada parte é [texto, cor, tamanho relativo].
 func _pt(region: Node3D, pt: Dictionary) -> float:
 	if pt.is_empty():
 		return 0.0
@@ -154,19 +258,25 @@ func _pt(region: Node3D, pt: Dictionary) -> float:
 	var border: Color = Color(0, 0, 0, 0.55)
 	match Txt.of(pt.get("kind", "")):
 		"pt":
-			parts = [[str(pt["power"]), pt["pcolor"]], ["/", BadgeSpec.PAPER_INK], [str(pt["toughness"]), pt["tcolor"]]]
+			parts = [[str(pt["power"]), pt["pcolor"], 1.0], ["/", BadgeSpec.PAPER_INK, 1.0], [str(pt["toughness"]), pt["tcolor"], 1.0]]
 		"loyalty":
-			parts = [[str(pt["value"]), BadgeSpec.PAPER]]
+			parts = [[str(pt["value"]), BadgeSpec.PAPER, 1.0]]
 			bg = BadgeSpec.PAPER_INK
 			border = BadgeSpec.PAPER
+			if pt.has("after"):
+				# A de agora menor e apagada, a seta e a prevista; letal, a borda e o número em vermelho.
+				var lethal: bool = bool(pt.get("lethal", false))
+				parts = [[str(pt["value"]), Color(BadgeSpec.PAPER, 0.65), 0.85], [" → ", BadgeSpec.PAPER, 0.8],
+					[str(pt["after"]), Color("#ffb3a4") if lethal else BadgeSpec.PAPER, 1.0]]
+				border = BadgeSpec.RED if lethal else BadgeSpec.PAPER
 		"level":
-			parts = [["Nv " + str(pt["value"]) + ("/%d" % int(pt["max"]) if int(pt.get("max", 0)) > 0 else ""), BadgeSpec.PAPER]]
+			parts = [["Nv " + str(pt["value"]) + ("/%d" % int(pt["max"]) if int(pt.get("max", 0)) > 0 else ""), BadgeSpec.PAPER, 1.0]]
 			bg = BadgeSpec.PAPER_INK
 			border = BadgeSpec.GOLD
 	var widths: Array[float] = []
 	var total: float = 0.0
 	for part: Array in parts:
-		var tw: float = _text_width(Txt.of(part[0]), size)
+		var tw: float = _text_width(Txt.of(part[0]), int(size * float(part[2])))
 		widths.append(tw)
 		total += tw
 	var w: float = ceilf(total + PT_H * 0.42)
@@ -174,7 +284,7 @@ func _pt(region: Node3D, pt: Dictionary) -> float:
 	var x: float = -w + PT_H * 0.21
 	for i: int in parts.size():
 		var part: Array = parts[i]
-		_label(region, Txt.of(part[0]), part[1], size, Vector2(x + widths[i] / 2.0, PT_H / 2.0 + 1.0))
+		_label(region, Txt.of(part[0]), part[1], int(size * float(part[2])), Vector2(x + widths[i] / 2.0, PT_H / 2.0 + 1.0))
 		x += widths[i]
 	return float(PT_H)
 

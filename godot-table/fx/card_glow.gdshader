@@ -38,7 +38,7 @@ void fragment() {
 	float inside = smoothstep(0.004, -0.004, d);
 	float s = (p.x / card.x + p.y / card.y) * 0.5 + 0.5;
 	float band = exp(-pow((s - sweep) / 0.08, 2.0)) * inside;
-	light += mix(tint, vec3(1.0), 0.7) * band * sweep_alpha * 0.9;
+	light += mix(tint, vec3(1.0), 0.45) * band * sweep_alpha * 0.55;
 
 	float t = atan(p.y, p.x) / 6.2831853 + 0.5;
 	float tail = exp(-fract(trace - t) * 7.0) + exp(-fract(trace + 0.5 - t) * 7.0);

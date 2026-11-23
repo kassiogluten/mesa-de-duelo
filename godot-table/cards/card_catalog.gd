@@ -11,13 +11,17 @@ signal texture_ready(url: String, texture: Texture2D)
 const BATCH := 200
 const MAX_DOWNLOADS := 6
 const CACHE_DIR := "user://cards"
-## O nome muda quando o formato dos dados guardados muda (v2: sem a imagem traduzida que é só um aviso).
-const INFO_FILE := "user://cards/info-v2.json"
+## O nome muda quando o formato dos dados guardados muda (v2: sem a imagem traduzida que é só um aviso; v3: com a
+## raridade e as faces).
+const INFO_FILE := "user://cards/info-v3.json"
 ## Imagem de uma carta pelo nome, quando o servidor não a conhece (o Scryfall redireciona para a imagem).
 const NAMED_IMAGE := "https://api.scryfall.com/cards/named?format=image&version=normal&exact="
 
-## nome em inglês → {label, type_line, text, image, small}
+## nome em inglês → {label, type_line, text, image, small, rarity, layout, faces}; faces: [{name, label, cost, type_line,
+## text, power, toughness, image, small}] nas cartas de mais de uma face (vazio nas outras).
 var _info: Dictionary = {}
+## Nome em inglês de uma face (a de trás de uma carta transformada) → a chave da carta inteira em _info.
+var _face_keys: Dictionary = {}
 var _asked: Dictionary = {}
 var _textures: Dictionary = {}
 var _queue: PackedStringArray = []
@@ -41,6 +45,10 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_save_info()
+	# Espera as imagens que ainda estão sendo decodificadas (fecha a mesa ou o teste sem deixar fio solto).
+	for job: Dictionary in _decoding.values():
+		WorkerThreadPool.wait_for_task_completion(int(job["task"]))
+	_decoding.clear()
 
 
 ## Os dados de uma carta, ou {} enquanto não chegam (peça antes com request()).
@@ -51,6 +59,32 @@ func info(name: String) -> Dictionary:
 ## O nome que o jogador vê: o impresso em português, ou o em inglês enquanto não chega.
 func label(name: String) -> String:
 	return Txt.of(info(name).get("label", name))
+
+
+## A carta de que `name` é uma das faces, e qual ({"entry", "index"}), ou {} quando não se sabe. Acha também a face
+## de trás ("Insectile Aberration"), que o estado traz quando a carta está transformada e que info() não conhece.
+func face_of(name: String) -> Dictionary:
+	if name == "":
+		return {}
+	var key: String = Txt.of(_face_keys.get(name, ""))
+	if key == "" or not _info.has(key):
+		key = ""
+		for candidate: String in _info:
+			for face: Variant in (_info[candidate] as Dictionary).get("faces", []):
+				if face is Dictionary and Txt.of((face as Dictionary).get("name")) == name:
+					key = candidate
+					break
+			if key != "":
+				break
+		if key == "":
+			return {}
+		_face_keys[name] = key
+	var entry: Dictionary = _info[key]
+	var faces: Array = entry.get("faces", [])
+	for i: int in faces.size():
+		if faces[i] is Dictionary and Txt.of((faces[i] as Dictionary).get("name")) == name:
+			return {"entry": entry, "index": i}
+	return {}
 
 
 ## Pede ao servidor os dados das cartas que ainda não conhece.
@@ -166,7 +200,42 @@ static func _entry(card: Dictionary) -> Dictionary:
 		"text": Txt.of(pt.get("printed_text", card.get("oracle_text", ""))),
 		"image": GameConfig.image_url(Txt.of(images.get("normal", ""))),
 		"small": GameConfig.image_url(Txt.of(images.get("small", ""))),
+		"rarity": Txt.of(card.get("rarity")),
+		"layout": Txt.of(card.get("layout")),
+		"faces": _faces(card, pt, no_scan),
 	}
+
+
+## As faces de uma carta de duas faces (transformar, modal, flip, dividida), cada uma com o nome, o tipo e o texto em
+## português quando a impressão traduzida tem, e a imagem da face quando ela tem uma (dupla face).
+static func _faces(card: Dictionary, pt: Dictionary, no_scan: bool) -> Array:
+	var faces: Array = card.get("card_faces", []) if card.get("card_faces") is Array else []
+	if faces.size() < 2:
+		return []
+	var pt_faces: Array = pt.get("card_faces", []) if pt.get("card_faces") is Array else []
+	var out: Array = []
+	for i: int in faces.size():
+		if not faces[i] is Dictionary:
+			return []
+		var face: Dictionary = faces[i]
+		var translated: Dictionary = pt_faces[i] if i < pt_faces.size() and pt_faces[i] is Dictionary else {}
+		var images: Dictionary = {}
+		if not no_scan and translated.get("image_uris") is Dictionary:
+			images = translated["image_uris"]
+		if images.is_empty() and face.get("image_uris") is Dictionary:
+			images = face["image_uris"]
+		out.append({
+			"name": Txt.of(face.get("name")),
+			"label": Txt.of(translated.get("printed_name", face.get("name", ""))),
+			"cost": Txt.of(face.get("mana_cost")),
+			"type_line": Txt.of(translated.get("printed_type_line", face.get("type_line", ""))),
+			"text": Txt.of(translated.get("printed_text", face.get("oracle_text", ""))),
+			"power": Txt.of(face.get("power")),
+			"toughness": Txt.of(face.get("toughness")),
+			"image": GameConfig.image_url(Txt.of(images.get("normal", ""))),
+			"small": GameConfig.image_url(Txt.of(images.get("small", ""))),
+		})
+	return out
 
 
 static func _images(card: Dictionary) -> Dictionary:
@@ -240,11 +309,14 @@ func _process(_delta: float) -> void:
 
 ## Decodifica a imagem (JPG/PNG/WebP e as mipmaps) noutro fio, para a mesa não engasgar quando muitas chegam juntas.
 func _decode_async(url: String, bytes: PackedByteArray, save: bool) -> void:
+	# A trava e o dicionário vão como locais: se o catálogo sair da cena no meio, o fio não toca num objeto já liberado.
+	var lock: Mutex = _decoded_lock
+	var store: Dictionary = _decoded
 	var task: int = WorkerThreadPool.add_task(func() -> void:
 		var image: Image = _decode_image(bytes)
-		_decoded_lock.lock()
-		_decoded[url] = image
-		_decoded_lock.unlock())
+		lock.lock()
+		store[url] = image
+		lock.unlock())
 	_decoding[url] = {"task": task, "bytes": bytes, "save": save}
 
 
