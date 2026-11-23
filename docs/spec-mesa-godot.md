@@ -179,13 +179,14 @@ Depois da segunda rodada, ainda na lapidação (22 e 23/11/2026, aprovada pelo j
 ### Fase 4: Fora da partida
 Decisão (23/11/2026): o login no PC é **vinculado pelo site**, como num login de TV: a mesa no PC abre o navegador numa página do site com o login do Google que já existe, e recebe a sessão sozinha. O servidor só aceita o token do Google feito para a mesa do navegador, então o fluxo de app instalado do plano original foi trocado. A sessão fica em `net/account_session.gd` (`AccountSession`).
 
-- [ ] Salas públicas, criar/entrar em sala por código, sala de espera.
-- [ ] Decks: importar por texto e pela conta (sincronia REST de `/api/conta/`). Login Google pelo fluxo de app instalado (navegador do sistema + retorno local); conferir se `Accounts.java` aceita o token desse cliente.
-- [ ] Enviar relato (`/api/relatos`) com o estado da partida.
+- [x] Salas públicas, criar/entrar em sala por código ou link de convite, sala de espera (deck, pronto, mensagens prontas, completar com computadores) e "Voltar à partida". Crossplay conferido nos dois sentidos, pelo código e pela lista pública (`npm run godot:crossplay`).
+- [x] Decks: Meus decks (`user://decks.json`, mesmo formato do navegador), importar por texto (Arena, MTGO, Moxfield, seções de comandante), conferência no servidor e sincronia com a conta pelas rotas de `/api/conta/`. No primeiro login, os decks do computador e os da conta se juntam sem perguntar. Login vinculado pelo site: rotas `/api/conta/vincular/` (`AccountLinks.java`) e a página `/vincular`.
+- [x] Relatar um problema (`/api/relatos`, com a gravação da partida, o registro da mesa e um print) e Meus relatos.
+- Ficou para depois: importar por link, editor de cartas, exportar lista, nomes de carta em português na lista colada (pede rota no servidor), arte do comandante nos lugares da sala, fila de relatos sem conexão.
 
 ### Fase 5: Distribuição
 - [ ] Instalador do Windows (Inno Setup, por usuário) assinado; página de download no site.
-- [ ] Aviso de versão nova com a mesa aberta e recusa educada de cliente velho pelo `protocolVersion`.
+- [x] Aviso de versão nova com a mesa aberta e recusa educada de cliente velho pelo `protocolVersion` (o servidor manda `minProtocolVersion` no hello e recusa a mesa no PC abaixo dele).
 - [ ] Decidir como as novidades da mesa nova aparecem para o jogador (seção própria no painel Novidades ou changelog próprio).
 
 ## Verificação
