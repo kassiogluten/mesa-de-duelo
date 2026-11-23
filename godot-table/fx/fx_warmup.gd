@@ -59,6 +59,11 @@ func _ready() -> void:
 	# As gotas de mana (núcleo, cometa e faíscas) e os fiapos de luz que saem do grimório.
 	ManaOrb.warm(self, spot)
 	FlightPieces.flutter(self, spot, Color(0, 0, 0, 0), 3)
+	# O combate: a onda que lê a tela, o escudo, a linha, o rastro, os cacos, a fumaça e as faíscas esticadas.
+	CombatPieces.warm(self, spot)
+	# Os tipos de partícula e de material padrão ficam vivos (sem isso, cada um recompila o shader na primeira vez depois
+	# de uma pausa, ~6 ms).
+	CombatPieces.keep_materials(self)
 	# Os números do dano e os textos (com contorno, na fonte dos títulos e na comum), já com os algarismos.
 	for font: Font in [MomentPieces._font(), null]:
 		var label := Label3D.new()
