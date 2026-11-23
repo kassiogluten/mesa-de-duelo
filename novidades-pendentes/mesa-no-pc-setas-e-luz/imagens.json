@@ -10,5 +10,11 @@
       "img": "cartas-menos-brancas.webp",
       "legenda": "Antes, à esquerda, o branco das cartas estourava sob a luz; depois, à direita, a moldura e o texto aparecem sem brilho demais."
     }
+  ],
+  "Aura menor nas cartas que dá para usar": [
+    {
+      "img": "pode-usar.webp",
+      "legenda": "Em cima, como era: a aura azul vazava para fora das cartas; embaixo, como ficou: colada à borda e mais suave."
+    }
   ]
 }

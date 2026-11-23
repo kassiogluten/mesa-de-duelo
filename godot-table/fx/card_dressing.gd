@@ -152,13 +152,13 @@ void fragment() {
 		// Aura limpa: um brilho macio em volta, ondas lentas correndo pelo contorno e duas luzes viajando por ele.
 		float a = atan(p.y, p.x);
 		float waves = 0.62 + 0.24 * sin(a * 3.0 - TIME * 1.4) + 0.14 * sin(a * 5.0 + TIME * 0.9);
-		float soft = exp(-d / (0.035 + 0.025 * waves)) * step(0.0, d);
-		float comet = pow(0.5 + 0.5 * sin(a - TIME * 1.8), 28.0) + pow(0.5 + 0.5 * sin(a + 3.14159 - TIME * 1.8), 28.0);
+		float soft = exp(-d / (0.018 + 0.012 * waves)) * step(0.0, d);
+		float comet = pow(0.5 + 0.5 * sin(a - TIME * 1.8), 36.0) + pow(0.5 + 0.5 * sin(a + 3.14159 - TIME * 1.8), 36.0);
 		// Some antes da borda da malha (senão o retângulo dela aparece).
-		float edge_fade = smoothstep(margin, margin * 0.45, d);
-		float aura = (soft * waves * 0.95 + comet * exp(-d / 0.022) * step(0.0, d) * 0.9) * edge_fade;
-		ALBEDO = mix(color.rgb, vec3(1.0), 0.04 + 0.55 * comet) * 1.35;
-		ALPHA = clamp(aura, 0.0, 1.0) * color.a * 0.85;
+		float edge_fade = smoothstep(margin * 0.6, margin * 0.25, d);
+		float aura = (soft * waves * 0.7 + comet * exp(-d / 0.014) * step(0.0, d) * 0.6) * edge_fade;
+		ALBEDO = mix(color.rgb, vec3(1.0), 0.04 + 0.4 * comet) * 1.1;
+		ALPHA = clamp(aura, 0.0, 1.0) * color.a * 0.7;
 	}
 }
 """
