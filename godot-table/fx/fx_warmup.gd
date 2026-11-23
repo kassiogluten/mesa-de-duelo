@@ -19,7 +19,8 @@ func _ready() -> void:
 	holder.position = Vector3(0, 0, -1.5)
 	var shaders: Array[Material] = []
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), PermanentFx._dome(), CardDressing._halo(),
-			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash()]:
+			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash(),
+			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
@@ -27,6 +28,8 @@ func _ready() -> void:
 	shaders.append(Medallions._metal(Color.WHITE, 0.9, 0.25, 0.5))
 	shaders.append(ArrivalFx._material(Color(1, 1, 1, 0.5), 0.0, 0.1, 0.2))
 	shaders.append(ArrivalFx._material(Color.WHITE, 0.85, 0.28, 0.0))
+	# A moeda do Tesouro (metal com brilho próprio): sem ela, o primeiro Tesouro travava ~30 ms.
+	shaders.append(ArrivalFx._material(Color.WHITE, 0.85, 0.28, 0.15))
 	shaders.append(Critters._mat(Color.WHITE))
 	shaders.append(Fx._glow_material(Color.WHITE))
 	var quad := QuadMesh.new()
@@ -41,6 +44,7 @@ func _ready() -> void:
 	var spot: Vector3 = camera.global_transform * Vector3(0, 0, -1.5)
 	Fx.burst(self, spot, Color(0, 0, 0, 0), 4, 0.01, 0.2, 0.001)
 	BoardSweep._front_sparks(self, spot, Color(0, 0, 0, 0), 0.2)
+	SpellMissile.warm(self, spot)
 	CombatFx.sparks(self, spot, Vector3.FORWARD, Color(0, 0, 0, 0), 4, 0.01)
 	TouchFx.dust(self, spot, Color(0, 0, 0, 0), 1.0)
 	# Os números do dano e os textos (com contorno, na fonte dos títulos e na comum), já com os algarismos.

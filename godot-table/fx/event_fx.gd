@@ -4,8 +4,8 @@ class_name EventFx
 extends RefCounted
 
 
-## Dano: no combate o atacante recua, avança e golpeia; fora dele, um projétil sai da fonte. O alvo pisca, solta
-## faíscas e o número estoura.
+## Dano: no combate o atacante recua, avança e golpeia; fora dele, um projétil no estilo da cor da carta sai da fonte
+## (SpellMissile). O alvo pisca, solta faíscas e o número estoura.
 static func damage(d: FxDirector, event: Dictionary) -> void:
 	var amount: int = absi(int(event.get("delta", 0)))
 	var targets: Dictionary = event.get("targets", {}) if event.get("targets") is Dictionary else {}
@@ -28,7 +28,8 @@ static func damage(d: FxDirector, event: Dictionary) -> void:
 			CombatFx.strike(attacker, target, d.speed)
 		MomentPieces.after(d, CombatFx.impact_delay() / d.speed, impact)
 	elif source is Vector3:
-		Fx.bolt(d, source, target, color, 0.32 / d.speed, impact)
+		var struck: CardNode = d.table.card_node(int(to_key)) if to_key is int else null
+		SpellMissile.launch(d, source, target, card, impact, d.speed, struck)
 	else:
 		impact.call()
 
@@ -44,14 +45,19 @@ static func _impact(d: FxDirector, target: Vector3, to_key: Variant, amount: int
 		return
 	var lethal: bool = bool(event.get("lethal", false))
 	var big: bool = amount >= 5 or lethal
-	CombatFx.impact(d, target, source, color, amount, d.table.camera, d.speed)
+	# O projétil da mágica (SpellMissile) já faz o clarão, os estilhaços e a luz no ponto do golpe: aqui só no combate
+	# e no dano sem projétil (limpa-campo de dano).
+	var by_missile: bool = not bool(event.get("combat", false)) and source is Vector3
+	if not by_missile:
+		CombatFx.impact(d, target, source, color, amount, d.table.camera, d.speed)
 	Fx.burst(d, target, color, 24 + amount * 5, 1.8 + minf(amount, 10) * 0.12, 0.55)
 	# Na carta, o contorno dela acende e se afasta; no jogador, a onda de choque no tampo.
 	if to_key is int:
 		CardGlow.pulse(d.table.card_node(int(to_key)), color, 0.03 + minf(amount, 8) * 0.006, d.speed)
 	else:
 		Fx.ring(d, target, color, 0.9 + minf(amount, 10) * 0.08, 0.45, 0.1)
-	Fx.light(d, target, color, 3.0 + minf(amount, 10) * 0.4, 4.0)
+	if not by_missile:
+		Fx.light(d, target, color, 3.0 + minf(amount, 10) * 0.4, 4.0)
 	DamageNumber.pop(d, target, DamageNumber.text_for(event, amount), color, amount, not to_key is int, lethal)
 	if bool(event.get("combat", false)) and bool(event.get("doubleStrike", false)):
 		PermanentFx.double_strike(d, target, Txt.of(event.get("step")) == "regular")

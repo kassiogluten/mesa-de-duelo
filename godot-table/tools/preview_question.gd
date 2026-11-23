@@ -1,53 +1,116 @@
-# Mostra uma pergunta de exemplo e salva um print, para conferir as telas das perguntas.
-# npm run godot -- --script res://tools/preview_question.gd -- <exemplo> <saída.png>
-# Exemplos: triggers, modes, library, combat, piles, playmode.
+# Mostra uma pergunta de exemplo sobre a mesa de uma partida gravada e salva um print, para conferir as telas das perguntas.
+# npm run godot -- --resolution 1600x900 --script res://tools/preview_question.gd -- <exemplo|all> <saída.png|pasta> [teclas]
+# Os exemplos estão em res://tests/fixtures/questions.json; "all" salva um print de cada um na pasta e "room" mostra a
+# sala de espera. [teclas]: apertadas
+# antes do print, separadas por vírgula ("1,3", "enter", "esc"); "hover" põe o mouse na primeira carta.
 extends SceneTree
 
-const SAMPLES := {
-	"triggers": {"id": 7, "kind": "order", "purpose": "triggers", "canRemember": true, "title": "", "options": [
-		{"kind": "ability", "label": "Eerie", "ability": "Sempre que um encantamento que você controla entrar, coloque um marcador +1/+1 na criatura alvo.", "card": {"id": 31, "name": "Archon of the Wild Rose"}},
-		{"kind": "ability", "label": "Exile", "ability": "Quando Sheltered by Ghosts entrar, exile a permanente não terreno alvo de um oponente.", "card": {"id": 48, "name": "Sheltered by Ghosts"}},
-		{"kind": "ability", "label": "Life", "ability": "Sempre que você ganhar vida, coloque um marcador +1/+1 nesta criatura.", "card": {"id": 52, "name": "Cult Healer"}}]},
-	"modes": {"id": 8, "kind": "choose", "purpose": "modes", "min": 1, "max": 2, "title": "", "card": {"id": 9, "name": "Kolaghan's Command"},
-		"options": [{"label": "Devolva o card de criatura alvo do seu cemitério para a sua mão."}, {"label": "O jogador alvo descarta um card."}, {"label": "Destrua o artefato alvo."}],
-		"unavailableModes": [{"modeIndex": 4, "label": "Kolaghan's Command causa 2 pontos de dano a qualquer alvo.", "reason": "target"}]},
-	"library": {"id": 9, "kind": "choose", "purpose": "library", "library": "bottom", "min": 0, "max": 2, "title": "Vidência 2", "options": [
-		{"kind": "card", "label": "Lightning Bolt", "card": {"id": 61, "name": "Lightning Bolt"}}, {"kind": "card", "label": "Forest", "card": {"id": 62, "name": "Forest"}}]},
-	"combat": {"id": 10, "kind": "amount", "purpose": "combat-damage", "title": "Divida o dano de combate", "total": 6, "ordered": true, "trample": true, "suggested": [2, 3, 1], "options": [
-		{"kind": "card", "label": "Llanowar Elves", "lethal": 1, "card": {"id": 70, "name": "Llanowar Elves"}}, {"kind": "card", "label": "Grizzly Bears", "lethal": 2, "card": {"id": 71, "name": "Grizzly Bears"}}, {"label": "Oponente", "defender": true}]},
-	"piles": {"id": 11, "kind": "choose", "purpose": "piles-split", "title": "Separe as cartas em dois montes", "chosenTo": "hand", "otherTo": "graveyard", "options": [
-		{"kind": "card", "card": {"id": 81, "name": "Island"}}, {"kind": "card", "card": {"id": 82, "name": "Counterspell"}}, {"kind": "card", "card": {"id": 83, "name": "Opt"}}, {"kind": "card", "card": {"id": 84, "name": "Brainstorm"}}]},
-	"playmode": {"id": 12, "kind": "choose", "purpose": "play-mode", "title": "Como jogar", "card": {"id": 90, "name": "Bonecrusher Giant"}, "options": [
-		{"label": "Conjurar Bonecrusher Giant", "mode": "cast", "cost": "{2}{R}"}, {"label": "Aventura: Pisotear", "mode": "adventure", "cost": "{1}{R}"}]},
-}
+const SAMPLES := "res://tests/fixtures/questions.json"
+const TABLE_STATE := "res://tests/fixtures/abertura.json"
+
+
+## Os exemplos, com as opções completadas quando pedem muitas ("padOptions": nomes de mentira para a busca).
+static func samples() -> Dictionary:
+	var all: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAMPLES))
+	for key: String in all.keys():
+		var sample: Dictionary = all[key]
+		var pad: int = int(sample.get("padOptions", 0))
+		var options: Array = sample.get("options", [])
+		for i: int in maxi(0, pad - options.size()):
+			options.append("Carta de exemplo %d" % i)
+	return all
 
 
 func _initialize() -> void:
 	await process_frame
 	var args: PackedStringArray = OS.get_cmdline_user_args()
-	var sample: Dictionary = SAMPLES[args[0]]
+	var all: Dictionary = samples()
+	var names: Array = all.keys() if args[0] == "all" else ([] if args[0] == "room" else [args[0]])
+	var steps: PackedStringArray = args[2].split(",") if args.size() > 2 else PackedStringArray()
 	var catalog := CardCatalog.new()
 	root.add_child(catalog)
-	var names: PackedStringArray = []
-	for raw: Variant in sample.get("options", []):
-		if raw is Dictionary and (raw as Dictionary).get("card") is Dictionary:
-			names.append(Txt.of(((raw as Dictionary)["card"] as Dictionary).get("name")))
-	if sample.get("card") is Dictionary:
-		names.append(Txt.of((sample["card"] as Dictionary)["name"]))
-	catalog.request(names)
+	var wanted: PackedStringArray = []
+	for key: Variant in names:
+		var sample: Dictionary = all[key]
+		for raw: Variant in sample.get("options", []):
+			if raw is Dictionary and (raw as Dictionary).get("card") is Dictionary:
+				wanted.append(Txt.of(((raw as Dictionary)["card"] as Dictionary).get("name")))
+		for raw: Variant in sample.get("revealed", []):
+			wanted.append(Txt.of((raw as Dictionary).get("name")))
+		if sample.get("card") is Dictionary:
+			wanted.append(Txt.of((sample["card"] as Dictionary)["name"]))
+	catalog.request(wanted)
+	# A mesa de uma partida de verdade atrás, para o fundo desfocado ter o que mostrar.
+	var states: Array = JSON.parse_string(FileAccess.get_file_as_string(TABLE_STATE))
+	var state: Dictionary = states[-3]
+	var table := TableView.new()
+	table.catalog = catalog
+	root.add_child(table)
+	catalog.texture_ready.connect(table.on_texture_ready)
 	var layer := CanvasLayer.new()
 	root.add_child(layer)
-	var bg := ColorRect.new()
-	bg.color = Color(0.1, 0.13, 0.22)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(bg)
+	var hud := Hud.new()
+	hud.catalog = catalog
+	layer.add_child(hud)
+	table.player_screen_position = hud.portrait_center
+	hud.portrait_slot = table.portrait_slot
+	hud.player_count = table.player_count
+	table.apply_state(state)
+	hud.apply_state(state)
 	var dialog := QuestionDialog.new()
 	dialog.catalog = catalog
 	layer.add_child(dialog)
+	var inspector := CardInspector.new()
+	inspector.catalog = catalog
+	layer.add_child(inspector)
+	catalog.texture_ready.connect(inspector.on_texture_ready)
+	dialog.inspector = inspector
 	dialog.answered.connect(func(message: Dictionary) -> void: print("RESPOSTA ", JSON.stringify(message)))
 	# Os nomes podem já estar no cache em disco (aí nada é pedido): espera um pouco em vez do sinal.
 	await create_timer(1.5).timeout
-	dialog.show_question(sample)
-	await create_timer(3.5).timeout
-	root.get_texture().get_image().save_png(args[1])
+	table.refresh_textures()
+	if args[0] == "room":
+		# A sala de espera, com dois jogadores dentro (um pronto) e dois lugares livres.
+		var room := RoomPanel.new()
+		layer.add_child(room)
+		room.show_room({"code": "K7QX", "seat": 0, "capacity": 4, "players": [
+			{"seat": 0, "name": "Bia", "ready": true, "confirmed": true}, {"seat": 1, "name": "Ana", "ready": false}]})
+		await create_timer(1.0).timeout
+		root.get_texture().get_image().save_png(args[1])
+	for key: Variant in names:
+		dialog.show_question({})
+		await create_timer(0.3).timeout
+		dialog.show_question(all[key])
+		await create_timer(2.0 if names.size() == 1 else 1.0).timeout
+		for step: String in steps:
+			_press(step.strip_edges(), dialog)
+			await create_timer(0.45).timeout
+		var out: String = args[1] if names.size() == 1 else args[1].path_join("%s.png" % key)
+		root.get_texture().get_image().save_png(out)
+		print("print: ", out)
 	quit()
+
+
+## Uma tecla ("1", "enter", "esc") ou o mouse sobre a primeira carta ("hover").
+func _press(step: String, dialog: QuestionDialog) -> void:
+	if step == "hover":
+		var cards: Array[Node] = dialog.find_children("*", "ChoiceCard", true, false)
+		if cards.is_empty():
+			return
+		var target: ChoiceCard = cards[0]
+		var motion := InputEventMouseMotion.new()
+		motion.position = target.get_global_rect().get_center()
+		motion.global_position = motion.position
+		root.push_input(motion)
+		target._set_hover(true)
+		return
+	var key := InputEventKey.new()
+	key.pressed = true
+	match step:
+		"enter":
+			key.keycode = KEY_ENTER
+		"esc":
+			key.keycode = KEY_ESCAPE
+		_:
+			key.keycode = (KEY_0 + int(step)) as Key
+	root.push_input(key)

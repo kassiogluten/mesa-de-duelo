@@ -83,6 +83,9 @@ func _ready() -> void:
 	_inspector.catalog = _catalog
 	layer.add_child(_inspector)
 	_catalog.texture_ready.connect(_inspector.on_texture_ready)
+	# Nas perguntas, o mouse por cima de uma carta mostra a prévia grande e o clique direito abre a carta de perto.
+	_question.inspector = _inspector
+	_question.inspect_context = _inspect_context
 	_drag = HandDrag.new()
 	_drag.table = _table
 	_drag.state = current_state
@@ -102,6 +105,7 @@ func _ready() -> void:
 	_table.player_screen_position = _hud.portrait_center
 	_hud.portrait_slot = _table.portrait_slot
 	_hud.player_count = _table.player_count
+	_hud.hand_rect = _table.hand_rect
 	_table.card_clicked.connect(_on_card_clicked)
 	_table.card_hovered.connect(_on_card_hovered)
 	_hud.action.connect(func(message: Dictionary) -> void: _client.send(message))
@@ -119,9 +123,9 @@ func _ready() -> void:
 	_client.connected.connect(func() -> void: _client.send(start_message))
 	_client.message.connect(_on_message)
 	_client.disconnected.connect(func(_code: int, _reason: String, retry: bool) -> void:
-		_hud.show_toast("A conexão com o servidor caiu. Tentando voltar…" if retry else "A conexão com o servidor caiu."))
-	_client.reconnected.connect(func() -> void: _hud.show_toast("De volta à partida."))
-	_client.gave_up.connect(func(reason: String) -> void: _hud.show_toast(reason if reason != "" else "Não foi possível voltar à partida."))
+		_hud.show_toast("A conexão com o servidor caiu. Tentando voltar…" if retry else "A conexão com o servidor caiu.", "error"))
+	_client.reconnected.connect(func() -> void: _hud.show_toast("De volta à partida.", "success"))
+	_client.gave_up.connect(func(reason: String) -> void: _hud.show_toast(reason if reason != "" else "Não foi possível voltar à partida.", "error"))
 	_client.connect_to(GameConfig.forge_url())
 
 
@@ -225,7 +229,7 @@ func _on_message(msg: Dictionary) -> void:
 			_refresh_highlights()
 			_probe_click.call_deferred()
 		"error":
-			_hud.show_toast(Txt.of(msg.get("text", "")))
+			_hud.show_toast(Txt.of(msg.get("text", "")), "error")
 			# Recusado antes de começar (código errado, sala cheia): volta ao início depois de mostrar o aviso.
 			if _state.is_empty() and not _room.visible:
 				get_tree().create_timer(3.0).timeout.connect(_leave)

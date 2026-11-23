@@ -68,30 +68,13 @@ func _ready() -> void:
 	visible = false
 
 
-## Um selo escuro arredondado com uma fileira dentro (o mesmo das pílulas do topo da mesa do navegador).
+## Um selo escuro arredondado com uma fileira dentro (o mesmo das pílulas do alto: ui/hud_style.gd).
 static func chip() -> PanelContainer:
-	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.06, 0.1, 0.82)
-	style.set_corner_radius_all(20)
-	style.border_color = Color(1, 1, 1, 0.08)
-	style.set_border_width_all(1)
-	style.content_margin_left = 10
-	style.content_margin_right = 14
-	style.content_margin_top = 5
-	style.content_margin_bottom = 5
-	panel.add_theme_stylebox_override("panel", style)
-	panel.mouse_filter = Control.MOUSE_FILTER_PASS
-	panel.custom_minimum_size = Vector2(0, 40)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	panel.add_child(row)
-	return panel
+	return HudStyle.chip()
 
 
 static func _time_label() -> Label:
-	var label := Hud._label(16, Color(1, 1, 1, 0.9))
+	var label := HudStyle.label(HudStyle.SIZE_BODY, Color(1, 1, 1, 0.9))
 	label.add_theme_constant_override("outline_size", 0)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	return label
