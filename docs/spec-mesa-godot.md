@@ -185,9 +185,11 @@ Decisão (23/11/2026): o login no PC é **vinculado pelo site**, como num login 
 - Ficou para depois: importar por link, editor de cartas, exportar lista, nomes de carta em português na lista colada (pede rota no servidor), arte do comandante nos lugares da sala, fila de relatos sem conexão.
 
 ### Fase 5: Distribuição
-- [ ] Instalador do Windows (Inno Setup, por usuário) assinado; página de download no site.
+Decisões (23/11/2026): **sem instalador e sem assinatura** por enquanto: a mesa no PC sai num zip (`/mesa-pc/mesa-de-duelo-pc.zip`) que o jogador extrai onde quiser; as atualizações continuam indo para `user://updates`, então a pasta não importa. Página **`/baixar`** no site, com link discreto "Mesa no PC" na tela inicial do navegador, só no Windows. **Novidades no mesmo painel**: um só CHANGELOG, e os itens só da mesa no PC levam o selo "Mesa no PC"; a mesa no PC mostra o mesmo painel.
+
+- [ ] Zip da mesa no PC publicado a cada deploy; página de download `/baixar` e link na tela inicial (só no Windows).
 - [x] Aviso de versão nova com a mesa aberta e recusa educada de cliente velho pelo `protocolVersion` (o servidor manda `minProtocolVersion` no hello e recusa a mesa no PC abaixo dele).
-- [ ] Decidir como as novidades da mesa nova aparecem para o jogador (seção própria no painel Novidades ou changelog próprio).
+- [ ] Novidades: selo "Mesa no PC" nos itens só dela, no painel do navegador e no painel da mesa no PC.
 
 ## Verificação
 
