@@ -190,6 +190,11 @@ func _receive(text: String) -> void:
 			var seat_session: Variant = msg.get("session")
 			if seat_session is Dictionary:
 				session = seat_session
+		"room":
+			# Na sala de espera ainda não há estado: o assento vem na sala (code, token), para voltar se a conexão cair.
+			var room: Variant = msg.get("room")
+			if room is Dictionary and not bool((room as Dictionary).get("started", false)) and Txt.of((room as Dictionary).get("token")) != "":
+				session = {"code": Txt.of(room["code"]), "token": Txt.of(room["token"]), "room": true}
 		"gone", "replaced":
 			# A partida acabou para este assento ou outra janela o assumiu: não adianta tentar voltar.
 			session = {}

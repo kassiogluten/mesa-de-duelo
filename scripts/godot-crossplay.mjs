@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Teste de crossplay nos dois sentidos: a mesa no PC (Godot, tools/room_check.gd) cria uma sala e o cliente da mesa do
 // navegador (src/forge/client.ts, o mesmo código do site) entra com o código; depois o site cria e a mesa no PC entra.
-// Nos dois, as duas mesas têm que ver a mesma partida, com os dois nomes.
+// Depois o mesmo pela lista de salas públicas: a mesa no PC cria uma sala pública e o navegador a acha em list-rooms; o site
+// cria a pública e a mesa no PC a acha na lista (tools/room_check.gd -- lista). Em todos, as duas mesas têm que ver a mesma
+// partida, com os dois nomes.
 //   npm run godot:crossplay      (servidor local ligado: npm run forge)
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
@@ -15,8 +17,8 @@ const raw = starter.filter(d => d.format === 'standard')[1];
 const deck = { name: raw.name, cards: raw.cards, sideboard: raw.sideboard ?? [], commanders: [] };
 const NAMES = ['Mesa no PC', 'Mesa do navegador'];
 
-/** Uma rodada: `godotHosts` diz quem cria a sala. Resolve com as duas visões da partida. */
-function round(godotHosts) {
+/** Uma rodada: `godotHosts` diz quem cria a sala; `listed`, se ela é pública e quem entra a acha na lista. Resolve com as duas visões da partida. */
+function round(godotHosts, listed) {
   return new Promise((resolve, reject) => {
     const seen = { godot: null, web: null };
     let web, godot;
@@ -28,13 +30,15 @@ function round(godotHosts) {
       error ? reject(error) : resolve(seen);
     }
     const check = () => { if (seen.godot && seen.web) finish(); };
-    function startGodot(code) {
-      godot = spawn(process.execPath, [join(ROOT, 'scripts', 'godot.mjs'), '--headless', '--script', 'res://tools/room_check.gd', ...(code ? ['--', code] : [])], { cwd: ROOT });
+    function startGodot(args) {
+      godot = spawn(process.execPath, [join(ROOT, 'scripts', 'godot.mjs'), '--headless', '--script', 'res://tools/room_check.gd', ...(args.length ? ['--', ...args] : [])], { cwd: ROOT });
       godot.stderr.on('data', d => { const t = String(d); if (/ERRO|SCRIPT ERROR/.test(t)) console.error(t.trim()); });
       godot.stdout.on('data', data => {
         for (const line of String(data).split('\n').map(l => l.trim()).filter(Boolean)) {
           const room = line.match(/^SALA (\w+)/);
           if (room) joinWeb(room[1]);
+          const found = line.match(/^LISTA (\w+)/);
+          if (found) console.log(`A mesa no PC achou a sala ${found[1]} na lista de salas públicas e vai entrar.`);
           const match = line.match(/^PARTIDA (\S*) JOGADORES (.*)$/);
           if (match) { seen.godot = { match: match[1], players: match[2].split(', ') }; check(); }
         }
@@ -46,26 +50,38 @@ function round(godotHosts) {
       await web.connect(URL_WS);
       let readied = false, states = 0;
       web.onRoom = room => {
-        if (!godotHosts && !seen.code) { seen.code = room.code; console.log(`A mesa do navegador criou a sala ${room.code}; a mesa no PC vai entrar.`); startGodot(room.code); }
+        if (!godotHosts && !seen.code) {
+          seen.code = room.code;
+          console.log(`A mesa do navegador criou a sala ${listed ? 'pública ' : ''}${room.code}; a mesa no PC vai ${listed ? 'procurá-la na lista' : 'entrar'}.`);
+          startGodot(listed ? ['lista', NAMES[1]] : [room.code]);
+        }
         if (!readied && room.players.length >= 2) { readied = true; web.send({ type: 'room-ready', on: true }); }
       };
       web.onState = s => { if (++states === 1) { seen.web = { match: s.matchId, players: s.players.map(p => p.name) }; check(); } };
       web.onNotice = (text, error) => { if (error) console.error(`servidor: ${text}`); };
     }
     async function joinWeb(code) {
-      console.log(`A mesa no PC criou a sala ${code}; a mesa do navegador vai entrar.`);
+      console.log(`A mesa no PC criou a sala ${listed ? 'pública ' : ''}${code}; a mesa do navegador vai ${listed ? 'procurá-la na lista' : 'entrar'}.`);
       await webClient();
+      if (listed) {
+        // Como a lista da tela inicial do site: a sala tem que estar lá, com o nome de quem criou e lugar livre.
+        const rooms = await web.listRooms();
+        const mine = rooms.find(r => r.code === code);
+        if (!mine) return finish(new Error(`a sala ${code} não apareceu na lista de salas públicas`));
+        if (mine.host !== NAMES[0] || mine.started || mine.players >= mine.capacity) return finish(new Error(`a sala ${code} apareceu na lista sem lugar ou com outro nome: ${JSON.stringify(mine)}`));
+        console.log(`  a mesa do navegador achou a sala ${code} na lista (${mine.players}/${mine.capacity}, de ${mine.host}).`);
+      }
       web.send({ type: 'join', code, name: NAMES[1], deck });
     }
-    if (godotHosts) startGodot(null);
-    else webClient().then(() => web.send({ type: 'host', name: NAMES[1], deck, config: { format: 'standard', matchLength: 'bo1', playerCount: 2 }, visibility: 'private' }));
+    if (godotHosts) startGodot(listed ? ['publica'] : []);
+    else webClient().then(() => web.send({ type: 'host', name: NAMES[1], deck, config: { format: 'standard', matchLength: 'bo1', playerCount: 2 }, visibility: listed ? 'public' : 'private' }));
   });
 }
 
 let failed = false;
-for (const godotHosts of [true, false]) {
+for (const [godotHosts, listed] of [[true, false], [false, false], [true, true], [false, true]]) {
   try {
-    const seen = await round(godotHosts);
+    const seen = await round(godotHosts, listed);
     const same = seen.godot.match === seen.web.match;
     const both = NAMES.every(n => seen.godot.players.includes(n) && seen.web.players.includes(n));
     console.log(`  mesa no PC: partida ${seen.godot.match} com ${seen.godot.players.join(' e ')}`);
@@ -74,5 +90,5 @@ for (const godotHosts of [true, false]) {
   } catch (error) { failed = true; console.error(`FALHOU: ${error.message}`); }
   await new Promise(r => setTimeout(r, 1500));
 }
-console.log(failed ? 'Crossplay com falha.' : 'OK: crossplay nos dois sentidos entre a mesa no PC e a mesa do navegador.');
+console.log(failed ? 'Crossplay com falha.' : 'OK: crossplay nos dois sentidos entre a mesa no PC e a mesa do navegador, pelo código e pela lista de salas públicas.');
 process.exit(failed ? 1 : 0);

@@ -13,19 +13,14 @@ static func all() -> Array:
 	return _cache
 
 
-## Os decks prontos de um formato ("standard", "commander"…), na ordem do arquivo.
+## Os decks prontos de um formato ("standard", "commander"…), na ordem do arquivo; no Livre, todos os sem zona de
+## comando (readyDeckFits).
 static func of_format(format: String) -> Array:
+	if format == "free":
+		return all().filter(func(d: Dictionary) -> bool: return not DeckList.has_command_zone(Txt.of(d.get("format", "free"))))
 	return all().filter(func(d: Dictionary) -> bool: return d.get("format", "") == format)
 
 
 ## O deck no formato do `start`/`host`/`join` (forgeDeck de src/app/matchDecks.ts).
 static func forge_deck(deck: Dictionary) -> Dictionary:
-	var out: Dictionary = {
-		"name": deck.get("name", ""),
-		"cards": deck.get("cards", []),
-		"sideboard": deck.get("sideboard", []),
-		"commanders": deck.get("commanders", []),
-	}
-	if not (deck.get("tokens", []) as Array).is_empty():
-		out["tokens"] = deck["tokens"]
-	return out
+	return DeckList.forge_deck(deck)
