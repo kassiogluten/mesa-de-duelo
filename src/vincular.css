@@ -1,0 +1,20 @@
+/* Ligar a mesa no PC (vincular.html): um cartão no meio da página com o código, o login e a confirmação. */
+.vc-top .vis-back { margin-left: auto; }
+.vc-top [data-app-conta] { margin-left: 12px; }
+.vc-pagina { max-width: 640px; }
+.vc-cartao { margin-top: 12px; padding: 22px 24px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.vc-cartao h2 { margin: 0 0 12px; font: 700 22px var(--display); color: var(--gold); }
+.vc-cartao p { margin: 0 0 12px; color: var(--muted); line-height: 1.55; }
+.vc-cartao strong { color: var(--ink); }
+.vc-cartao .vc-codigo {
+  margin: 4px 0 16px; padding: 14px 0; border-radius: 12px; background: #00000040; border: 1px solid var(--line);
+  text-align: center; font: 800 40px/1 var(--display); letter-spacing: 0.14em; color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+}
+.vc-cuidado { font-size: 14px; }
+.vc-botoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.vc-google { min-height: 44px; }
+@media (max-width: 480px) {
+  .vc-cartao { padding: 18px 16px; }
+  .vc-cartao .vc-codigo { font-size: 30px; }
+}

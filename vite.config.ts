@@ -6,14 +6,15 @@ import { VitePWA } from 'vite-plugin-pwa';
 // abrindo o index.html: as novidades em imagens (/novidades, linkada no painel Novidades e guardada com o app), a política
 // de privacidade (/privacidade, no rodapé e no menu da conta), Salas (/salas, no cabeçalho e no menu ⋯), Minhas partidas
 // (/partidas, no menu da conta e no menu ⋯), Torneios (/torneios, nos mesmos dois menus), o Contador de vida das partidas
-// no papel (/contador, no menu ⋯ e em Torneios), Rever partida (/rever, aberta de Minhas partidas), a apresentação
+// no papel (/contador, no menu ⋯ e em Torneios), Rever partida (/rever, aberta de Minhas partidas), Ligar a mesa no PC
+// (/vincular, aberta pela mesa no PC para entrar na conta), a apresentação
 // (/sobre, para quem chega de fora e os buscadores), a área de admin (/admin.html) e as páginas de teste da mesa
 // (/tests/fixtures/*.html), linkadas na área de admin. Cada página é o seu <nome>.html: sem o .html, no `npm run dev` e no
 // preview o Vite acha o arquivo sozinho; na publicação, o deploy/nginx.conf; no app instalado, o service worker (o Workbox
 // tenta <endereço>.html entre as páginas guardadas antes de cair no index.html). Os scripts das duas últimas saem em
 // ferramentas/ e ficam fora do cache do app instalado; os das outras páginas vão em assets/ e são guardados com o app.
 const fixtures = Object.fromEntries(readdirSync('tests/fixtures').filter(f => f.endsWith('.html')).map(f => [f.replace('.html', ''), `tests/fixtures/${f}`]));
-const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'torneios', 'contador', 'rever', 'salas', 'admin'] as const;
+const PAGES = ['novidades', 'privacidade', 'sobre', 'partidas', 'torneios', 'contador', 'rever', 'salas', 'vincular', 'admin'] as const;
 const TOOLS = new Set<string>(['admin', ...Object.keys(fixtures)]);
 
 // /efeitos é o Laboratório de efeitos aberto a todos (menu ⋯); na publicação quem faz a troca é o deploy/nginx.conf.
@@ -89,9 +90,9 @@ export default defineConfig({
         // Toque no aviso "Seu turno" que o service worker mostra no celular (public/sw-avisos.js).
         importScripts: ['sw-avisos.js'],
         navigateFallback: 'index.html',
-        // Páginas guardadas abertas com parâmetros (/rever?id=… e ?mesa) acham a cópia guardada; sem isso, o endereço
+        // Páginas guardadas abertas com parâmetros (/rever?id=…, ?mesa e /vincular?codigo=…) acham a cópia guardada; sem isso, o endereço
         // não batia com nenhuma e caía na tela inicial. utm_ e fbclid são os que o Workbox já ignora por padrão.
-        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^id$/, /^mesa$/],
+        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^id$/, /^mesa$/, /^codigo$/],
         navigateFallbackDenylist: [/^\/sobre/, /^\/efeitos/, /^\/ws/, /^\/api\//, /^\/admin/, /^\/tests\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [

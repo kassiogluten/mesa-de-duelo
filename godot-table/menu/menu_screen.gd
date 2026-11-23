@@ -129,6 +129,13 @@ func _ready() -> void:
 	column.add_child(lab_button)
 	_fill_decks()
 
+	# A conta, no canto de cima (entrar pelo site, a conta ligada e Sair), com os avisos dela no meio da tela.
+	var account := AccountPanel.new()
+	add_child(account)
+	var toasts := ToastStack.new()
+	add_child(toasts)
+	account.toast.connect(toasts.show_toast)
+
 	var version := Hud._label(16, Color(1, 1, 1, 0.4))
 	version.text = version_text
 	version.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
