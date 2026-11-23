@@ -1,0 +1,719 @@
+[
+ {
+  "args": [
+   {
+    "id": "1",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ],
+    "updatedAt": "x"
+   }
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "1",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   },
+   0,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Mountain",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "1",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   },
+   0,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "name": "Só na conta",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Swamp",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "1",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   },
+   0,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "1",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   }
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "1",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Mountain",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Burn#pauper#60 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Mountain",
+      "count": 60
+     }
+    ]
+   },
+   1,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Mountain",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Burn#pauper#60 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos (deste aparelho)",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Forest",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Elfos (deste aparelho)#pauper#60 forest##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos (deste aparelho)",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Island",
+      "count": 60
+     }
+    ]
+   },
+   0,
+   [
+    {
+     "id": "2",
+     "name": "Elfos (deste aparelho)",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Island",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Elfos (deste aparelho)#pauper#60 island##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos (deste aparelho)",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Island",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Elfos (deste aparelho)#pauper#60 island##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Forest",
+      "count": 59
+     },
+     {
+      "name": "Llanowar Elves",
+      "count": 1
+     }
+    ]
+   }
+  ],
+  "out": "Elfos#pauper#59 forest|1 llanowar elves##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Forest",
+      "count": 60
+     }
+    ]
+   },
+   1,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "name": "Só na conta",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Swamp",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Elfos#pauper#60 forest##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Forest",
+      "count": 60
+     }
+    ]
+   },
+   1,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Elfos#pauper#60 forest##"
+ },
+ {
+  "args": [
+   {
+    "id": "2",
+    "name": "Elfos",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Forest",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Elfos#pauper#60 forest##"
+ },
+ {
+  "args": [
+   {
+    "id": "3",
+    "name": "Fadas",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Island",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Fadas#pauper#60 island##"
+ },
+ {
+  "args": [
+   {
+    "id": "9",
+    "name": "Só na conta",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Swamp",
+      "count": 60
+     }
+    ]
+   },
+   2,
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "name": "Só na conta",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Swamp",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": "Só na conta#pauper#60 swamp##"
+ },
+ {
+  "args": [
+   {
+    "id": "9",
+    "name": "Só na conta",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Swamp",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Só na conta#pauper#60 swamp##"
+ },
+ {
+  "args": [
+   {
+    "id": "a",
+    "name": "Burn 2",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   }
+  ],
+  "out": "Burn 2#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "a",
+    "name": "Burn",
+    "format": "free",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   }
+  ],
+  "out": "Burn#free#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "a",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 3
+     },
+     {
+      "name": "Mountain",
+      "count": 57
+     }
+    ]
+   }
+  ],
+  "out": "Burn#pauper#3 lightning bolt|57 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "a",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ],
+    "sideboard": [
+     {
+      "name": "Pyroblast",
+      "count": 1
+     }
+    ]
+   }
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain#1 pyroblast#"
+ },
+ {
+  "args": [
+   {
+    "id": "a",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ],
+    "updatedAt": "2020",
+    "importHistory": [
+     "x"
+    ]
+   }
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "b",
+    "name": "Burn ",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "mountain",
+      "count": 56
+     },
+     {
+      "name": "Lightning Bolt",
+      "count": 2
+     },
+     {
+      "name": "lightning bolt",
+      "count": 2
+     }
+    ]
+   }
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "x",
+    "name": "Burn",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Lightning Bolt",
+      "count": 4
+     },
+     {
+      "name": "Mountain",
+      "count": 56
+     }
+    ]
+   }
+  ],
+  "out": "Burn#pauper#4 lightning bolt|56 mountain##"
+ },
+ {
+  "args": [
+   {
+    "id": "x",
+    "name": "Elfos",
+    "format": "pauper",
+    "cards": [
+     {
+      "name": "Forest",
+      "count": 60
+     }
+    ]
+   }
+  ],
+  "out": "Elfos#pauper#60 forest##"
+ }
+]

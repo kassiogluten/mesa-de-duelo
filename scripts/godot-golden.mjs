@@ -15,7 +15,31 @@ export const GOLDEN_DIR = join(ROOT, 'godot-table', 'tests', 'golden');
 const FIXTURES = join(ROOT, 'godot-table', 'tests', 'fixtures');
 const TESTS = ['tests/forgeText.test.mjs', 'tests/short-instruction.test.mjs', 'tests/forge-request.test.mjs', 'tests/table-parts.test.mjs',
   'tests/phase-hud.test.mjs', 'tests/opponent-stops.test.mjs', 'tests/choice-screens.test.mjs', 'tests/wait-alert.test.mjs', 'tests/event-text.test.mjs',
-  'tests/history-log.test.mjs', 'tests/board-sweep.test.mjs'];
+  'tests/history-log.test.mjs', 'tests/board-sweep.test.mjs', 'tests/decks.test.mjs', 'tests/companion.test.mjs', 'tests/conta-merge.test.mjs'];
+
+/** Listas coladas de verdade para o leitor de listas de Meus decks: os jeitos de exportar de cada site e alguns decks prontos. */
+const DECK_LISTS = [
+  'Deck\n4 Lightning Bolt (M10) 146\n20 Mountain\n\nSideboard\n2 Duress',
+  'About\nName Burn\n\nDeck\n4 Monastery Swiftspear (BRO) 144\n4 Play with Fire (MID) 154\n16 Mountain (DMU) 269\n\nSideboard\n3 Roiling Vortex (ZNR) 156',
+  "// Commander\n1 Atraxa, Praetors' Voice\n// Mainboard\n1 Sol Ring\n98 Forest\n// Maybeboard\n1 Mana Crypt",
+  'Commander\n1 Krenko, Mob Boss (DDT) 52 *CMDR*\nDeck\n1 Goblin Guide\n98 Mountain\nTokens\n1 Goblin',
+  '1 Marwyn, the Nurturer [Commander]\n1 Llanowar Elves [Ramp]\n1 Mana Crypt [Maybeboard]\n97 Forest',
+  '4 Lightning Bolt\r\n20 Mountain\r\n\r\n2 Duress\r\n',
+  '4x Fire // Ice\n2x Wear//Tear (DGM) 135\nSB: 1 Pithing Needle',
+  '1 Sheoldred, the Apocalypse ^Have,#37d67a^\n3 Fable of the Mirror-Breaker (NEO) 141★\n10 Swamp',
+  'Companion\n1 Lurrus of the Dream-Den\n\nDeck\n4 Ragavan, Nimble Pilferer\n56 Mountain',
+  '# comentário\n4 Counterspell\n+2 Island\n-1 Island\n1,5 Island\nconsidering\n2 Opt',
+  '',
+  'Deck (60)\n60 Island\nSideboard (15):\n15 Negate',
+];
+
+/** O leitor de listas com as listas acima e alguns decks prontos exportados (um de cada formato). */
+async function recordDeckLists() {
+  const { parseDeckList, exportDeckList, DEFAULT_DECKS } = await import('../src/decks.ts');
+  const ready = [];
+  for (const deck of DEFAULT_DECKS) if (!ready.some(d => d.format === deck.format)) ready.push(deck);
+  return [...DECK_LISTS, ...ready.map(exportDeckList)].map(text => ({ fn: 'parseDeckList', args: [text], out: parseDeckList(text) }));
+}
 
 /** Grava as chamadas feitas pelos testes de TS. */
 function recordFromTests() {
@@ -37,7 +61,10 @@ async function recordFromMatches() {
   const calls = [];
   if (!existsSync(FIXTURES)) return calls;
   for (const name of readdirSync(FIXTURES).filter(n => n.endsWith('.json'))) {
-    for (const state of JSON.parse(readFileSync(join(FIXTURES, name), 'utf8'))) {
+    const states = JSON.parse(readFileSync(join(FIXTURES, name), 'utf8'));
+    // Só as partidas gravadas (listas de estados); questions.json é dos exemplos das perguntas.
+    if (!Array.isArray(states)) continue;
+    for (const state of states) {
       const input = state?.input;
       if (!input?.message) continue;
       const args = [{ message: input.message, paying: input.paying, payingFor: input.payingFor, canAutoPay: input.canAutoPay, manaCost: input.manaCost, card: input.card ? { name: input.card.name } : undefined, targeting: input.targeting, selectableStacks: input.selectableStacks }];
@@ -60,6 +87,7 @@ async function recordEventCorpus(calls) {
     .map(c => ({ events: c.args[0], state: { you: 1, players: [{ id: 1, name: 'Ana' }, { id: 2, name: 'Bruno' }] } }));
   if (existsSync(FIXTURES)) for (const name of readdirSync(FIXTURES).filter(n => n.endsWith('.json'))) {
     const states = JSON.parse(readFileSync(join(FIXTURES, name), 'utf8'));
+    if (!Array.isArray(states)) continue;
     const events = new Map();
     for (const s of states) for (const e of s.events ?? []) events.set(e.seq, e);
     const last = states.at(-1);
@@ -95,7 +123,7 @@ export function group(calls) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const fromTests = recordFromTests();
-  const grouped = group([...fromTests, ...await recordFromMatches(), ...await recordEventCorpus(fromTests)]);
+  const grouped = group([...fromTests, ...await recordFromMatches(), ...await recordEventCorpus(fromTests), ...await recordDeckLists()]);
   mkdirSync(GOLDEN_DIR, { recursive: true });
   for (const [fn, cases] of Object.entries(grouped)) writeFileSync(join(GOLDEN_DIR, `${fn}.json`), JSON.stringify(cases, null, 1) + '\n');
   console.log(Object.entries(grouped).map(([fn, cases]) => `${fn}: ${cases.length}`).join(', '));

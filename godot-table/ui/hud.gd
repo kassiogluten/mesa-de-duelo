@@ -185,7 +185,7 @@ func _process(delta: float) -> void:
 	_layout_right_column(delta)
 	if not _banner_queue.is_empty() and (_banner_ref == null or _banner_ref.get_ref() == null):
 		var next: Array = _banner_queue.pop_front()
-		_banner_ref = weakref(TurnBanner.play(self, Txt.of(next[0]), next[1]))
+		_banner_ref = weakref(TurnBanner.play(self, Txt.of(next[0]), next[1], bool(next[2]), float(next[3])))
 
 
 ## A coluna da direita encostada no canto de baixo; se a mão chega até ela, sobe para ficar acima das cartas.
@@ -287,13 +287,14 @@ func _apply_between(state: Dictionary) -> void:
 
 ## Faixa que atravessa o meio da tela ("Seu turno", "Ataque!"), com o acabamento da mesa do navegador (ui/turn_banner.gd).
 ## Uma de cada vez: a que chega com outra passando espera ela acabar (no máximo duas na fila, as mais novas).
-func banner(text: String, color: Color) -> void:
+## `top` e `duration`: a faixa no alto e mais curta (a do ataque, para não cobrir o combate no meio da mesa).
+func banner(text: String, color: Color, top: bool = false, duration: float = 0.0) -> void:
 	if _banner_ref != null and _banner_ref.get_ref() != null:
-		_banner_queue.append([text, color])
+		_banner_queue.append([text, color, top, duration])
 		while _banner_queue.size() > 2:
 			_banner_queue.pop_front()
 		return
-	_banner_ref = weakref(TurnBanner.play(self, text, color))
+	_banner_ref = weakref(TurnBanner.play(self, text, color, top, duration))
 
 
 ## O retrato pulsa quando a vida muda: cresce e acende em verde (ganho) ou vermelho (perda).

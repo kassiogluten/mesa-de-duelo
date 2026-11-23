@@ -1,4 +1,4 @@
-# Tela inicial da mesa no PC: escolher o seu deck e o do computador entre os decks prontos e começar a partida.
+# Tela inicial da mesa no PC: escolher o seu deck (Meus decks ou um pronto) e o do computador e começar a partida.
 class_name MenuScreen
 extends Control
 
@@ -12,7 +12,10 @@ signal my_reports
 
 const StarterDecks := preload("res://cards/starter_decks.gd")
 ## Os jeitos de jogar contra o computador: rótulo, formato e quantos jogadores.
-const MODES := [["Standard · 1 contra 1", "standard", 2], ["Commander · 4 jogadores", "commander", 4]]
+const MODES := [
+	["Standard · 1 contra 1", "standard", 2], ["Commander · 4 jogadores", "commander", 4], ["Pauper · 1 contra 1", "pauper", 2],
+	["Sacola 50 · 1 contra 1", "sacola50", 2], ["Oathbreaker · 1 contra 1", "oathbreaker", 2], ["Livre · 1 contra 1", "free", 2],
+]
 
 var version_text: String = ""
 var _mode: OptionButton
@@ -22,6 +25,10 @@ var _start: Button
 var _name: LineEdit
 var _code: LineEdit
 var _decks: Array = []
+## O deck de Meus decks escolhido por último (o id), para continuar escolhido quando a lista é refeita.
+var _chosen_id: String = ""
+var _sync: DeckSync
+var _deck_screen: DeckScreen
 
 
 func _ready() -> void:
@@ -61,6 +68,20 @@ func _ready() -> void:
 	_mode.item_selected.connect(func(_i: int) -> void: _fill_decks())
 	column.add_child(_mode)
 	_yours = _deck_picker(column, "Seu deck", 0)
+	# "Meus decks" ao lado da escolha do seu deck.
+	var yours_row := HBoxContainer.new()
+	yours_row.add_theme_constant_override("separation", 10)
+	column.add_child(yours_row)
+	_yours.reparent(yours_row)
+	_yours.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_yours.item_selected.connect(func(i: int) -> void:
+		var picked: Variant = _yours.get_item_metadata(i)
+		_chosen_id = Txt.of((picked as Dictionary).get("id")) if picked is Dictionary and not bool((picked as Dictionary).get("builtin", false)) else "")
+	var my_decks := Hud._button("Meus decks", false)
+	my_decks.name = "MyDecks"
+	my_decks.custom_minimum_size = Vector2(150, 46)
+	my_decks.pressed.connect(open_decks)
+	yours_row.add_child(my_decks)
 	_theirs = _deck_picker(column, "Deck do computador", 1)
 
 	_start = Hud._button("Jogar contra o computador", true)
@@ -127,6 +148,11 @@ func _ready() -> void:
 	ambient.tooltip_text = "Voar, vínculo com a vida, indestrutível e outras qualidades aparecem de leve nas cartas com a mesa parada."
 	ambient.toggled.connect(func(on: bool) -> void: AmbientFx.set_enabled(on))
 	column.add_child(ambient)
+	_sync = DeckSync.new()
+	add_child(_sync)
+	_sync.decks_changed.connect(_fill_decks)
+	if AccountSession.signed_in():
+		_sync.run()
 	var lab_button := Hud._button("Laboratório de efeitos", false)
 	lab_button.pressed.connect(func() -> void: lab.emit())
 	column.add_child(lab_button)
@@ -164,17 +190,92 @@ func _deck_picker(parent: Control, caption: String, initial: int) -> OptionButto
 	return picker
 
 
-## Os decks prontos do formato escolhido nas duas listas.
+## Os decks do formato escolhido: no seu, os de Meus decks e depois os prontos; no do computador, só os prontos.
 func _fill_decks() -> void:
-	_decks = StarterDecks.of_format(Txt.of((MODES[_mode.selected] as Array)[1]))
-	for picker: OptionButton in [_yours, _theirs]:
-		picker.clear()
-		for deck: Dictionary in _decks:
-			picker.add_item(Txt.of(deck.get("name", "")))
-		var initial: int = int(picker.get_meta("initial"))
-		if _decks.size() > initial:
-			picker.select(initial)
-	_start.disabled = _decks.size() < 2
+	var format: String = Txt.of((MODES[_mode.selected] as Array)[1])
+	_decks = StarterDecks.of_format(format)
+	var mine: Array = DeckLibrary.load_all().filter(func(d: Dictionary) -> bool: return d.get("format") == format)
+	_yours.clear()
+	if not mine.is_empty():
+		_yours.add_separator("Meus decks")
+		for deck: Dictionary in mine:
+			_add_deck_item(_yours, deck)
+		_yours.add_separator("Decks prontos")
+	for deck: Dictionary in _decks:
+		_add_deck_item(_yours, deck)
+	_select_first(_yours, _chosen_id)
+	_theirs.clear()
+	for deck: Dictionary in _decks:
+		_add_deck_item(_theirs, deck)
+	if _decks.size() > int(_theirs.get_meta("initial")):
+		_theirs.select(int(_theirs.get_meta("initial")))
+	_start.disabled = _decks.is_empty() or _your_deck().is_empty()
+
+
+static func _add_deck_item(picker: OptionButton, deck: Dictionary) -> void:
+	picker.add_item(Txt.of(deck.get("name", "")))
+	picker.set_item_metadata(picker.item_count - 1, deck)
+
+
+## Escolhe o deck com o id dado, ou o primeiro deck da lista (pulando os títulos).
+static func _select_first(picker: OptionButton, id: String) -> void:
+	var first: int = -1
+	for i: int in picker.item_count:
+		if picker.is_item_separator(i):
+			continue
+		if first < 0:
+			first = i
+		if id != "" and Txt.of((picker.get_item_metadata(i) as Dictionary).get("id")) == id:
+			picker.select(i)
+			return
+	if first >= 0:
+		picker.select(first)
+
+
+## O seu deck escolhido ({} sem nenhum).
+func _your_deck() -> Dictionary:
+	var picked: Variant = _yours.get_item_metadata(_yours.selected) if _yours.selected >= 0 else null
+	return picked if picked is Dictionary else {}
+
+
+## O seu deck no formato da partida e, com a conta, a ligação da partida a ela e ao deck (matchOwner).
+func _your_seat() -> Dictionary:
+	var deck: Dictionary = _your_deck()
+	var out: Dictionary = {"deck": DeckList.forge_deck(deck)}
+	if AccountSession.signed_in() and not bool(deck.get("builtin", false)):
+		out["conta"] = AccountSession.token()
+		out["deckId"] = deck.get("id")
+	return out
+
+
+## Abre Meus decks por cima da tela inicial.
+func open_decks() -> DeckScreen:
+	if _deck_screen and is_instance_valid(_deck_screen):
+		return _deck_screen
+	_deck_screen = DeckScreen.new()
+	_deck_screen.sync = _sync
+	_deck_screen.chosen.connect(func(deck: Dictionary) -> void:
+		choose_deck(deck)
+		_close_decks())
+	_deck_screen.closed.connect(_close_decks)
+	add_child(_deck_screen)
+	return _deck_screen
+
+
+func _close_decks() -> void:
+	if _deck_screen and is_instance_valid(_deck_screen):
+		_deck_screen.queue_free()
+	_deck_screen = null
+	_fill_decks()
+
+
+## Escolhe um deck de Meus decks para jogar: o modo do formato dele e ele como o seu deck.
+func choose_deck(deck: Dictionary) -> void:
+	_chosen_id = Txt.of(deck.get("id"))
+	for i: int in MODES.size():
+		if (MODES[i] as Array)[1] == deck.get("format"):
+			_mode.select(i)
+	_fill_decks()
 
 
 func _player_name() -> String:
@@ -185,16 +286,16 @@ func _player_name() -> String:
 func _on_host() -> void:
 	var mode: Array = MODES[_mode.selected]
 	play.emit({
-		"type": "host", "name": _player_name(), "deck": StarterDecks.forge_deck(_decks[_yours.selected]),
+		"type": "host", "name": _player_name(),
 		"config": {"format": mode[1], "matchLength": "bo1", "playerCount": int(mode[2])}, "visibility": "private",
-	})
+	}.merged(_your_seat()))
 
 
 func _on_join() -> void:
 	var code: String = _code.text.strip_edges().to_upper()
 	if code == "":
 		return
-	play.emit({"type": "join", "code": code, "name": _player_name(), "deck": StarterDecks.forge_deck(_decks[_yours.selected])})
+	play.emit({"type": "join", "code": code, "name": _player_name()}.merged(_your_seat()))
 
 
 func _on_watch() -> void:
@@ -208,10 +309,14 @@ func _on_play() -> void:
 	var players: int = int(mode[2])
 	var message: Dictionary = {
 		"type": "start",
-		"you": StarterDecks.forge_deck(_decks[_yours.selected]),
+		"you": DeckList.forge_deck(_your_deck()),
 		"opponent": StarterDecks.forge_deck(_decks[_theirs.selected]),
 		"config": {"format": mode[1], "matchLength": "bo1", "playerCount": players},
 	}
+	var seat: Dictionary = _your_seat()
+	if seat.has("conta"):
+		message["conta"] = seat["conta"]
+		message["deckId"] = seat["deckId"]
 	if players > 2:
 		# O deck escolhido para um computador e os outros sorteados pelo servidor.
 		var opponents: Array = [message["opponent"]]

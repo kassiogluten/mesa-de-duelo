@@ -339,7 +339,7 @@ func _declare_attackers(event: Dictionary) -> void:
 	if d.hud:
 		# A faixa entra depois da arrancada (por cima dela, esconderia as cartas avançando).
 		var hud: Hud = d.hud
-		MomentPieces.after(self, 0.3 / d.speed, func() -> void: hud.banner("Ataque!", Color(1.0, 0.45, 0.3)))
+		MomentPieces.after(self, 0.3 / d.speed, func() -> void: hud.banner("Ataque!", Color(1.0, 0.45, 0.3), true, 0.7))
 	if d.sounds:
 		d.sounds.play("attack", first)
 		# O tambor: duas batidas graves, como um coração acelerando.

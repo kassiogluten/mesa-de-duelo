@@ -1,0 +1,478 @@
+[
+ {
+  "args": [
+   [],
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": {
+   "onlyLocal": [],
+   "conflicts": []
+  }
+ },
+ {
+  "args": [
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "x",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "name": "Fadas",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Island",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 59
+      },
+      {
+       "name": "Llanowar Elves",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "id": "pronto",
+     "name": "Pronto",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ],
+     "builtin": true
+    }
+   ],
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": {
+   "onlyLocal": [
+    {
+     "id": "3",
+     "name": "Fadas",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Island",
+       "count": 60
+      }
+     ]
+    }
+   ],
+   "conflicts": [
+    {
+     "local": {
+      "id": "2",
+      "name": "Elfos",
+      "format": "pauper",
+      "cards": [
+       {
+        "name": "Forest",
+        "count": 59
+       },
+       {
+        "name": "Llanowar Elves",
+        "count": 1
+       }
+      ]
+     },
+     "account": {
+      "id": "2",
+      "name": "Elfos",
+      "format": "pauper",
+      "cards": [
+       {
+        "name": "Forest",
+        "count": 60
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "args": [
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    }
+   ],
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": {
+   "onlyLocal": [],
+   "conflicts": []
+  }
+ },
+ {
+  "args": [
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Mountain",
+       "count": 60
+      }
+     ]
+    }
+   ],
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Mountain",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": {
+   "onlyLocal": [],
+   "conflicts": []
+  }
+ },
+ {
+  "args": [
+   [
+    {
+     "id": "2",
+     "name": "Elfos (deste aparelho)",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    }
+   ],
+   [
+    {
+     "id": "2",
+     "name": "Elfos (deste aparelho)",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Island",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": {
+   "onlyLocal": [],
+   "conflicts": [
+    {
+     "local": {
+      "id": "2",
+      "name": "Elfos (deste aparelho)",
+      "format": "pauper",
+      "cards": [
+       {
+        "name": "Forest",
+        "count": 60
+       }
+      ]
+     },
+     "account": {
+      "id": "2",
+      "name": "Elfos (deste aparelho)",
+      "format": "pauper",
+      "cards": [
+       {
+        "name": "Island",
+        "count": 60
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ {
+  "args": [
+   [
+    {
+     "id": "3",
+     "name": "Fadas",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Island",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 59
+      },
+      {
+       "name": "Llanowar Elves",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "id": "x",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    }
+   ],
+   [
+    {
+     "id": "1",
+     "name": "Burn",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Lightning Bolt",
+       "count": 4
+      },
+      {
+       "name": "Mountain",
+       "count": 56
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "name": "Elfos",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Forest",
+       "count": 60
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "name": "Só na conta",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Swamp",
+       "count": 60
+      }
+     ]
+    }
+   ]
+  ],
+  "out": {
+   "onlyLocal": [
+    {
+     "id": "3",
+     "name": "Fadas",
+     "format": "pauper",
+     "cards": [
+      {
+       "name": "Island",
+       "count": 60
+      }
+     ]
+    }
+   ],
+   "conflicts": [
+    {
+     "local": {
+      "id": "2",
+      "name": "Elfos",
+      "format": "pauper",
+      "cards": [
+       {
+        "name": "Forest",
+        "count": 59
+       },
+       {
+        "name": "Llanowar Elves",
+        "count": 1
+       }
+      ]
+     },
+     "account": {
+      "id": "2",
+      "name": "Elfos",
+      "format": "pauper",
+      "cards": [
+       {
+        "name": "Forest",
+        "count": 60
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+]

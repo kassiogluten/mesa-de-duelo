@@ -12,12 +12,12 @@ const BATCH := 200
 const MAX_DOWNLOADS := 6
 const CACHE_DIR := "user://cards"
 ## O nome muda quando o formato dos dados guardados muda (v2: sem a imagem traduzida que é só um aviso; v3: com a
-## raridade e as faces).
-const INFO_FILE := "user://cards/info-v3.json"
+## raridade e as faces; v4: com as cores, para Meus decks).
+const INFO_FILE := "user://cards/info-v4.json"
 ## Imagem de uma carta pelo nome, quando o servidor não a conhece (o Scryfall redireciona para a imagem).
 const NAMED_IMAGE := "https://api.scryfall.com/cards/named?format=image&version=normal&exact="
 
-## nome em inglês → {label, type_line, text, image, small, rarity, layout, faces}; faces: [{name, label, cost, type_line,
+## nome em inglês → {label, type_line, text, image, small, rarity, layout, colors, faces}; faces: [{name, label, cost, type_line,
 ## text, power, toughness, image, small}] nas cartas de mais de uma face (vazio nas outras).
 var _info: Dictionary = {}
 ## Nome em inglês de uma face (a de trás de uma carta transformada) → a chave da carta inteira em _info.
@@ -202,8 +202,24 @@ static func _entry(card: Dictionary) -> Dictionary:
 		"small": GameConfig.image_url(Txt.of(images.get("small", ""))),
 		"rarity": Txt.of(card.get("rarity")),
 		"layout": Txt.of(card.get("layout")),
+		"colors": _colors(card),
 		"faces": _faces(card, pt, no_scan),
 	}
+
+
+## As cores da carta (WUBRG); nas de duas faces sem as cores da carta inteira, as dos custos das faces.
+static func _colors(card: Dictionary) -> Array:
+	var out: Array = []
+	if card.get("colors") is Array:
+		for color: Variant in card["colors"]:
+			out.append(Txt.of(color))
+		return out
+	for face: Variant in (card.get("card_faces", []) if card.get("card_faces") is Array else []):
+		for symbol: String in ManaSymbols.parse(Txt.of((face as Dictionary).get("mana_cost")) if face is Dictionary else ""):
+			for color: String in ["W", "U", "B", "R", "G"]:
+				if symbol.contains(color) and not out.has(color):
+					out.append(color)
+	return out
 
 
 ## As faces de uma carta de duas faces (transformar, modal, flip, dividida), cada uma com o nome, o tipo e o texto em
