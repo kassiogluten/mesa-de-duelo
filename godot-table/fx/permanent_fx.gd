@@ -37,7 +37,6 @@ static func ward(parent: Node3D, pos: Vector3, outcome: String, speed: float = 1
 	match outcome:
 		"hold":
 			tween.tween_callback(func() -> void:
-				Fx.ring(parent, Vector3(pos.x, 0.02, pos.z), WARD, 1.5, 0.5 / speed, 0.15)
 				Fx.light(parent, pos, WARD, 4.0, 4.0, 0.5 / speed)
 				Fx.float_text(parent, pos + Vector3(0, 0.3, 0), "Protegida", WARD.lightened(0.35), 60))
 			tween.tween_method(set_param.bind("flash"), 1.0, 0.0, 0.45 / speed)
@@ -57,8 +56,9 @@ static func ward(parent: Node3D, pos: Vector3, outcome: String, speed: float = 1
 	tween.tween_callback(dome.queue_free)
 
 
-## A aura ou o equipamento se prende: uma corrente de luz corre dela até a carta (ou o jogador) e se fecha num anel.
-static func attach(parent: Node3D, from: Vector3, to: Vector3, color: Color, speed: float = 1.0) -> void:
+## A aura ou o equipamento se prende: uma corrente de luz corre dela até a carta (ou o jogador), e o contorno da carta
+## que a recebe acende.
+static func attach(parent: Node3D, from: Vector3, to: Vector3, color: Color, speed: float = 1.0, host: CardNode = null) -> void:
 	var links: int = 9
 	var lift: float = clampf(from.distance_to(to) * 0.3, 0.3, 1.2)
 	for i: int in links:
@@ -68,18 +68,18 @@ static func attach(parent: Node3D, from: Vector3, to: Vector3, color: Color, spe
 			Fx.burst(parent, at, color.lerp(Color.WHITE, 0.4), 10, 0.4, 0.5, 0.14)
 			Fx.burst(parent, at, Color(1.0, 0.9, 0.6), 4, 0.15, 0.35, 0.2))
 	MomentPieces.after(parent, 0.3 / speed, func() -> void:
-		Fx.ring(parent, Vector3(to.x, 0.02, to.z), color, 0.85, 0.45 / speed, 0.22)
-		Fx.ring(parent, Vector3(to.x, 0.02, to.z), Color(1.0, 0.85, 0.45), 0.6, 0.35 / speed, 0.1)
+		if host:
+			CardGlow.trace(host, color.lerp(Color(1.0, 0.85, 0.45), 0.4), 0.45, speed)
 		Fx.burst(parent, to + Vector3(0, 0.1, 0), color, 26, 1.2, 0.5, 0.07))
 
 
-## Mudou de controle: um rastro roxo do lugar antigo até o novo e um redemoinho em volta da carta.
-static func control(parent: Node3D, from: Variant, to: Vector3, speed: float = 1.0) -> void:
+## Mudou de controle: um rastro roxo do lugar antigo até o novo, um redemoinho e o contorno da carta acendendo.
+static func control(parent: Node3D, from: Variant, to: Vector3, speed: float = 1.0, node: CardNode = null) -> void:
 	if from is Vector3:
 		Fx.bolt(parent, from as Vector3, to, CONTROL, 0.4 / speed)
 	MomentPieces.after(parent, 0.3 / speed, func() -> void:
 		MomentPieces.spiral(parent, to, CONTROL, 14, 0.9, 0.7 / speed)
-		Fx.ring(parent, Vector3(to.x, 0.02, to.z), CONTROL, 1.1, 0.5 / speed, 0.15)
+		CardGlow.pulse(node, CONTROL, 0.06, speed)
 		Fx.float_text(parent, to + Vector3(0, 0.2, 0), "Mudou de lado", CONTROL.lightened(0.35), 54))
 
 
@@ -112,7 +112,7 @@ static func flip(parent: Node3D, node: CardNode, old_tex: Texture2D, face_up: bo
 	tween.tween_property(visual, "rotation:z", 0.0, half * 1.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(visual, "position:y", 0.0, half * 1.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
-		Fx.ring(parent, Vector3(pos.x, 0.02, pos.z), Color(1.0, 0.85, 0.5), 1.1, 0.45 / speed, 0.14)
+		CardGlow.pulse(node, Color(1.0, 0.85, 0.5), 0.06, speed)
 		node.flash_color(Color(1.0, 0.9, 0.7), 0.4)
 		Fx.float_text(parent, pos + Vector3(0, 0.2, 0), "Desvirada" if face_up else "Transformou", Color(1.0, 0.9, 0.65), 54))
 
@@ -135,7 +135,7 @@ static func survive(parent: Node3D, node: CardNode, regenerated: bool, speed: fl
 	tween.tween_interval(0.3 / speed)
 	tween.tween_callback(func() -> void:
 		node.flash_color(color, 0.45)
-		Fx.ring(parent, Vector3(pos.x, 0.02, pos.z), color, 1.0, 0.45 / speed, 0.14)
+		CardGlow.pulse(node, color, 0.05, speed)
 		Fx.light(parent, pos, color, 3.0, 3.5, 0.5 / speed))
 	tween.tween_method(set_cracks, 1.0, 0.0, 0.42 / speed).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 

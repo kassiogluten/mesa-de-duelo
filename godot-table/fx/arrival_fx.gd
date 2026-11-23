@@ -40,8 +40,7 @@ static func commander(parent: Node3D, node: CardNode, camera: Camera3D, color: C
 	tween.tween_property(visual, "position:y", 0.0, dive).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(visual, "scale", Vector3.ONE, dive).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
-		Fx.ring(parent, Vector3(pos.x, 0.02, pos.z), GOLD, 3.2, 0.7 / speed, 0.1)
-		Fx.ring(parent, Vector3(pos.x, 0.02, pos.z), color, 1.8, 0.5 / speed, 0.2)
+		CardGlow.entered(node, color.lerp(GOLD, 0.5), true, speed)
 		Fx.burst(parent, pos + Vector3(0, 0.05, 0), Color(0.75, 0.62, 0.45), 60, 2.2, 0.8, 0.12)
 		Fx.burst(parent, pos + Vector3(0, 0.2, 0), GOLD, 50, 2.8, 0.7, 0.07)
 		Fx.light(parent, pos, GOLD, 7.0, 7.0, 0.8 / speed)
@@ -88,8 +87,7 @@ static func game_changer(parent: Node3D, table: TableView, pos: Vector3, label: 
 	path.tween_property(gem, "position", corner, 0.3 / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	path.parallel().tween_property(gem, "scale", Vector3.ONE * 0.07, 0.3 / speed)
 	path.tween_callback(func() -> void:
-		Fx.burst(parent, corner, GEM.lerp(Color.WHITE, 0.4), 30, 1.4, 0.5, 0.06)
-		Fx.ring(parent, Vector3(corner.x, 0.02, corner.z), GEM, 0.5, 0.35 / speed, 0.2))
+		Fx.burst(parent, corner, GEM.lerp(Color.WHITE, 0.4), 30, 1.4, 0.5, 0.06))
 	path.tween_property(gem, "scale", Vector3.ONE * 0.001, 0.2 / speed)
 	path.tween_callback(gem.queue_free)
 	var at: Vector3 = MomentPieces.beside(table, pos, 0.0)
@@ -126,7 +124,6 @@ static func token(parent: Node3D, pos: Vector3, kind: String, speed: float = 1.0
 	tween.parallel().tween_property(object, "scale", Vector3.ONE * 0.25, 0.22 / speed)
 	tween.parallel().tween_property(glow, "light_energy", 0.0, 0.22 / speed)
 	tween.tween_callback(func() -> void:
-		Fx.ring(parent, Vector3(pos.x, 0.02, pos.z), color, 0.9, 0.4 / speed, 0.18)
 		Fx.burst(parent, pos + Vector3(0, 0.08, 0), color, 26, 1.2, 0.45, 0.07)
 		object.queue_free())
 

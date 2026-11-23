@@ -34,13 +34,20 @@ static func damage(d: FxDirector, event: Dictionary) -> void:
 
 static func _impact(d: FxDirector, target: Vector3, to_key: Variant, amount: int, color: Color, event: Dictionary) -> void:
 	if bool(event.get("prevented", false)):
-		Fx.ring(d, target, Color(0.6, 0.85, 1.0), 1.2, 0.5, 0.2)
+		if to_key is int:
+			CardGlow.pulse(d.table.card_node(int(to_key)), Color(0.6, 0.85, 1.0), 0.05, d.speed)
+		else:
+			Fx.ring(d, target, Color(0.6, 0.85, 1.0), 1.2, 0.5, 0.2)
 		Fx.float_text(d, target, "Prevenido", Color(0.7, 0.9, 1.0), 56)
 		return
 	var big: bool = amount >= 5 or bool(event.get("lethal", false))
 	Fx.burst(d, target, color, 40 + amount * 8, 2.2 + amount * 0.15, 0.6)
 	Fx.burst(d, target, Color(1.0, 0.95, 0.85), 10 + amount * 2, 1.2, 0.25, 0.22)
-	Fx.ring(d, target, color, 1.0 + amount * 0.12, 0.45)
+	# Na carta, o contorno dela acende e se afasta; no jogador, a onda de choque no tampo.
+	if to_key is int:
+		CardGlow.pulse(d.table.card_node(int(to_key)), color, 0.03 + minf(amount, 8) * 0.006, d.speed)
+	else:
+		Fx.ring(d, target, color, 1.0 + amount * 0.12, 0.45)
 	Fx.light(d, target, color, 3.0 + amount * 0.4, 4.0)
 	var text: String = ("%d veneno" % amount) if bool(event.get("infect", false)) else "-%d" % amount
 	Fx.float_text(d, target, text, Color(0.6, 1.0, 0.4) if bool(event.get("infect", false)) else Color(1.0, 0.35, 0.3), 84 if big else 72)
@@ -94,11 +101,10 @@ static func spell(d: FxDirector, event: Dictionary, mana: Array, game_changer: b
 		MomentPieces.after(d, delay, func() -> void:
 			if d.mood:
 				d.mood.pulse(color)
-			if pos.y < 1.2:
-				Fx.ring(d, pos - Vector3(0, pos.y - 0.05, 0), color, 2.2, 0.6)
-			Fx.burst(d, pos, color, 50, 2.0, 0.7)
-			Fx.light(d, pos, color, 3.5, 5.0, 0.5)
 			var node: CardNode = d.table.card_node(int(card.get("id", -1)))
+			CardGlow.trace(node, color, 0.6, d.speed)
+			Fx.burst(d, pos, color, 36, 1.6, 0.6)
+			Fx.light(d, pos, color, 3.5, 5.0, 0.5)
 			if node:
 				node.flash_color(color, 0.5))
 		var tags: PackedStringArray = []
@@ -114,15 +120,15 @@ static func spell(d: FxDirector, event: Dictionary, mana: Array, game_changer: b
 			ArrivalFx.game_changer(d, d.table, pos, d.table.catalog.label(Txt.of(card.get("name"))), d.speed))
 
 
-## Habilidade ativada ou gatilho: a fonte pisca e solta um anel (dourado nos gatilhos); o gatilho do ward ergue a cúpula.
+## Habilidade ativada ou gatilho: a fonte pisca e uma luz dá a volta na borda dela (dourada nos gatilhos); o gatilho do ward ergue a cúpula.
 static func ability(d: FxDirector, event: Dictionary) -> void:
 	d.at_card(event, func(pos: Vector3, card: Dictionary) -> void:
 		var color: Color = Hud.GOLD if bool(event.get("trigger", false)) else Fx.card_color(card)
-		Fx.ring(d, pos, color, 1.0, 0.4, 0.18)
-		Fx.burst(d, pos, color, 20, 1.2, 0.45)
+		var node: CardNode = d.table.card_node(FxDirector.card_id(event))
+		CardGlow.trace(node, color, 0.5, d.speed)
+		Fx.burst(d, pos, color, 14, 1.0, 0.4)
 		if bool(event.get("ward", false)):
 			PermanentFx.ward(d, pos, "rise", d.speed)
-		var node: CardNode = d.table.card_node(FxDirector.card_id(event))
 		if node:
 			node.flash_color(color, 0.35))
 
@@ -136,7 +142,7 @@ static func resolved(d: FxDirector, event: Dictionary) -> void:
 			Fx.burst(d, pos, Fx.card_color(card), 24, 1.6, 0.45))
 
 
-## Entrada no campo: poeira e onda na cor; a lendária desce com coluna de luz e um tremor leve; o comandante saindo da
+## Entrada no campo: o contorno da carta se abre em luz e uma faixa de brilho atravessa a face; a lendária desce com coluna de luz e um tremor leve; o comandante saindo da
 ## zona de comando tem a cena dele; a ficha de Tesouro, Pista, Comida ou Sangue vira objeto.
 static func entered(d: FxDirector, event: Dictionary, commander: bool) -> void:
 	d.at_card(event, func(pos: Vector3, card: Dictionary) -> void:
@@ -147,8 +153,8 @@ static func entered(d: FxDirector, event: Dictionary, commander: bool) -> void:
 			return
 		var type_line: String = Txt.of(card.get("typeLine"))
 		var legendary: bool = type_line.contains("Legendary") or type_line.contains("Lendári")
-		Fx.ring(d, pos, color, 1.4 if legendary else 0.9, 0.5)
-		Fx.burst(d, pos, color.lerp(Color.WHITE, 0.4), 50 if legendary else 22, 1.8 if legendary else 1.1, 0.6, 0.06)
+		CardGlow.entered(node, color, legendary, d.speed)
+		Fx.burst(d, pos, color.lerp(Color.WHITE, 0.4), 40 if legendary else 14, 1.6 if legendary else 0.9, 0.6, 0.05)
 		if node:
 			node.flash_color(color, 0.45)
 		var token: String = ArrivalFx.token_kind(card)
@@ -216,7 +222,8 @@ static func attached(d: FxDirector, event: Dictionary) -> void:
 	if not from is Vector3 or not to is Vector3:
 		return
 	var card: Dictionary = event.get("card", {}) if event.get("card") is Dictionary else d.table.card_data(id)
-	PermanentFx.attach(d, from, to, Fx.card_color(card), d.speed)
+	var host: CardNode = d.table.card_node(int(targets["cards"][0])) if not (targets.get("cards", []) as Array).is_empty() else null
+	PermanentFx.attach(d, from, to, Fx.card_color(card), d.speed, host)
 	var node: CardNode = d.table.card_node(id)
 	if node:
 		node.flash_color(Fx.card_color(card), 0.4)
@@ -228,8 +235,8 @@ static func control(d: FxDirector, event: Dictionary, from: Variant) -> void:
 	var to: Variant = d.table.anchor(id)
 	if not to is Vector3:
 		return
-	PermanentFx.control(d, from, to, d.speed)
 	var node: CardNode = d.table.card_node(id)
+	PermanentFx.control(d, from, to, d.speed, node)
 	if node:
 		node.flash_color(PermanentFx.CONTROL, 0.5)
 

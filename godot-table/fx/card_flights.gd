@@ -211,8 +211,6 @@ static func _hit_moment(parent: Node3D, holder: Node3D, tween: Tween, node: Card
 	tween.tween_callback(func() -> void:
 		trail.emitting = false
 		Fx.burst(parent, spot, GOLD, 70, 2.4, 0.7, 0.1)
-		if not floating:
-			Fx.ring(parent, Vector3(spot.x, 0.0, spot.z), GOLD, 1.6, 0.5)
 		Fx.light(parent, spot, GOLD, 5.0, 5.0, 0.6)
 		node.queue_free())
 
@@ -255,8 +253,7 @@ static func mill(parent: Node3D, catalog: CardCatalog, from: Vector3, to: Vector
 		_move(tween, node, apex, settle, MILL_TRAVEL * 0.45, 0.0, 0.0, trail).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tween.tween_callback(func() -> void:
 			trail.emitting = false
-			Fx.burst(parent, to + Vector3(0, 0.06, 0), DUST_COLOR, 14, 0.9, 0.55, 0.06)
-			Fx.ring(parent, to, color, 0.55, 0.35, 0.16))
+			Fx.burst(parent, to + Vector3(0, 0.06, 0), DUST_COLOR, 14, 0.9, 0.55, 0.06))
 		# Fica no cemitério até o fim e some (a mesa já mostra a de verdade no lugar).
 		tween.tween_interval(maxf(0.0, total - (i * gap + MILL_TRAVEL)))
 		tween.tween_callback(node.queue_free)
@@ -308,7 +305,6 @@ static func scry(parent: Node3D, from: Vector3, top: int, bottom: int, sleeve: C
 static func tutor(parent: Node3D, from: Vector3, to: Vector3, sleeve: Color = DEFAULT_SLEEVE) -> float:
 	var holder: Node3D = _holder(parent, TUTOR_TIME)
 	var view: Transform3D = _view(parent)
-	Fx.ring(parent, from, GOLD, 0.8, 0.5, 0.18)
 	Fx.burst(parent, from + Vector3(0, 0.3, 0), GOLD, 18, 1.0, 0.5, 0.06)
 	Fx.light(parent, from, GOLD, 3.0, 3.5, 0.5)
 	var start := Pose.new(from + LIBRARY_TOP, Basis.IDENTITY, 1.0, 1.0)

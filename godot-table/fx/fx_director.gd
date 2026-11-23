@@ -314,7 +314,7 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 			if leaving and is_instance_valid(leaving):
 				var pos: Vector3 = leaving.global_position
 				Fx.burst(self, pos, Color(0.7, 0.75, 0.85), 60, 3.0, 0.6, 0.15)
-				Fx.ring(self, pos, Color(0.7, 0.8, 1.0), 1.2, 0.5, 0.2)
+				CardGlow.pulse(leaving, Color(0.7, 0.8, 1.0), 0.06, speed)
 				Fx.float_text(self, pos, "Anulada", Color(0.75, 0.85, 1.0), 60)
 				leaving.burn_away(Color(0.6, 0.75, 1.0), 0.7 / speed)
 		"entered":
@@ -331,7 +331,7 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 				if node:
 					node.flash_color(Color(1.0, 0.3, 0.2), 0.5)
 					Fx.burst(self, node.global_position, Color(1.0, 0.35, 0.2), 18, 1.4, 0.5)
-					Fx.ring(self, node.global_position, Color(1.0, 0.35, 0.2), 0.8, 0.4, 0.2)
+					CardGlow.pulse(node, Color(1.0, 0.35, 0.2), 0.04, speed)
 			if not (event.get("cards", []) as Array).is_empty():
 				hud.banner("Ataque!", Color(1.0, 0.45, 0.3))
 		"blockers":
@@ -339,7 +339,7 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 				var node: CardNode = table.card_node(int(id))
 				if node:
 					node.flash_color(Color(0.35, 0.65, 1.0), 0.5)
-					Fx.ring(self, node.global_position, Color(0.4, 0.7, 1.0), 0.9, 0.4)
+					CardGlow.pulse(node, Color(0.4, 0.7, 1.0), 0.05, speed)
 		"counters":
 			EventFx.counters(self, event)
 		"survived":
