@@ -1,6 +1,6 @@
 # Medalhões em 3D quando muda quem é o monarca, quem tem a dianteira (iniciativa) e o dia/noite: a medalha surge girando
 # no meio da mesa com o título, e a do monarca e a da dianteira voam até o retrato de quem ficou com ela; a do dia/noite
-# vira de face (sol de um lado, lua do outro) e a luz da mesa puxa para a cor dela.
+# vira de face (sol de um lado, lua do outro), a luz da mesa puxa para a cor dela e entram raios de sol ou luar e estrelas.
 class_name Medallions
 extends RefCounted
 
@@ -43,7 +43,8 @@ static func crown_holder(parent: Node3D, camera: Camera3D, at: Variant, title: S
 		tween.parallel().tween_property(medal, "scale", Vector3.ONE * 0.35, 0.45 / speed)
 		tween.tween_callback(func() -> void:
 			Fx.burst(parent, goal + Vector3(0, 0.3, 0), GOLD, 40, 1.8, 0.6, 0.07)
-			Fx.ring(parent, Vector3(goal.x, 0.45, goal.z), GOLD, 1.0, 0.45 / speed, 0.15))
+			MomentExtras.flare(parent, goal + Vector3(0, 0.3, 0), GOLD.lightened(0.2), 1.5, 0.45 / speed)
+			MomentExtras.sparkles(parent, goal + Vector3(0, 0.3, 0), GOLD.lightened(0.4), 0.4, 0.5 / speed, 10, 0.18))
 	tween.tween_property(medal, "scale", Vector3.ONE * 0.001, 0.18 / speed)
 	tween.tween_callback(medal.queue_free)
 
@@ -64,6 +65,10 @@ static func day_night(parent: Node3D, camera: Camera3D, day: bool, mood: TableMo
 		Fx.burst(parent, HOME, color, 60, 2.6, 0.8, 0.08)
 		Fx.light(parent, HOME, color, 6.0, 9.0, 1.0 / speed)
 		Fx.ring(parent, Vector3(HOME.x, 0.03, HOME.z), color, 6.0, 0.9 / speed, 0.06)
+		# De dia, raios de sol quentes entram pela mesa; de noite, uma luz fria de lua e estrelas piscando.
+		MomentExtras.shafts(parent, Vector3(HOME.x, 0.0, HOME.z), color.lerp(Color.WHITE, 0.25), 4 if day else 3, 1.8 / speed, 3.0, 0.32 if day else 0.22)
+		if not day:
+			MomentExtras.sparkles(parent, HOME + Vector3(0, 0.8, 0), Color(0.75, 0.82, 1.0), 2.4, 1.4 / speed, 26, 0.16)
 		if mood:
 			mood.pulse(color, 1.6))
 	MomentPieces.title(parent, HOME + Vector3(0, 1.1, 0.3), "Dia" if day else "Noite", color.lerp(Color.WHITE, 0.3), Color(0.02, 0.03, 0.08), 96, 1.5 / speed, 0.6 / speed)

@@ -1,4 +1,5 @@
-# Dados e moeda em 3D de verdade: o dado cai, quica, rola e para com o resultado virado para cima, e a moeda gira no ar e cai na face certa.
+# Dados e moeda em 3D de verdade: o dado cai, quica (com poeira a cada toque), rola com rastro de movimento e sombra de
+# contato e para com o resultado virado para cima; a moeda gira no ar e cai na face certa.
 class_name Dice3D
 extends RefCounted
 
@@ -12,6 +13,9 @@ const BODY := {4: Color(0.05, 0.42, 0.25), 6: Color(0.62, 0.05, 0.09), 8: Color(
 const SHAPES: Array[int] = [4, 6, 8, 10, 12, 20]
 const COIN_RADIUS := 0.42
 const COIN_HALF := 0.03
+## Rastro do giro: quantas cópias translúcidas seguem o dado e quanto cada uma fica para trás (fração da animação).
+const GHOSTS := 2
+const GHOST_LAG := 0.022
 
 static var _pip_mesh: CylinderMesh
 ## [albedo da cara, relevo da cara, albedo da coroa, relevo da coroa]
@@ -34,16 +38,15 @@ static func coin(parent: Node3D, pos: Vector3, heads: bool, duration: float = 1.
 	var phase: float = randf() * TAU
 	var land: float = 0.62
 	var rim: PackedVector3Array = _coin_rim()
-	var pose: Callable = func(t: float) -> void:
-		var basis: Basis
+	var basis_at: Callable = func(t: float) -> Basis:
 		if t < land:
-			basis = Basis(axis, turns * pow(1.0 - t / land, 1.6)) * final
-		else:
-			# Assenta como moeda de verdade: inclinada, girando cada vez mais rápido, até deitar.
-			var k: float = (t - land) / (1.0 - land)
-			var around: float = phase + 16.0 * pow(k, 1.3)
-			basis = Basis(Vector3(cos(around), 0, sin(around)), 0.26 * pow(1.0 - k, 2.0)) * final
-		spin.basis = basis
+			return Basis(axis, turns * pow(1.0 - maxf(t, 0.0) / land, 1.6)) * final
+		# Assenta como moeda de verdade: inclinada, girando cada vez mais rápido, até deitar.
+		var k: float = (t - land) / (1.0 - land)
+		var around: float = phase + 16.0 * pow(k, 1.3)
+		return Basis(Vector3(cos(around), 0, sin(around)), 0.26 * pow(1.0 - k, 2.0)) * final
+	var place_at: Callable = func(t: float) -> Vector3:
+		t = maxf(t, 0.0)
 		var height: float = 0.0
 		if t < land:
 			var k: float = t / land
@@ -52,7 +55,13 @@ static func coin(parent: Node3D, pos: Vector3, heads: bool, duration: float = 1.
 			var k: float = (t - land) / 0.13
 			height = 0.12 * 4.0 * k * (1.0 - k)
 		var flat: Vector3 = start.lerp(pos, 1.0 - pow(1.0 - t, 2.0))
-		root.position = Vector3(flat.x, pos.y + maxf(COIN_HALF + height, -_lowest_of(rim, 0.0, basis)), flat.z)
+		return Vector3(flat.x, pos.y + maxf(COIN_HALF + height, -_lowest_of(rim, 0.0, basis_at.call(t))), flat.z)
+	var shadow: MeshInstance3D = _shadow_of(root, 1.0)
+	var pose: Callable = func(t: float) -> void:
+		spin.basis = basis_at.call(t)
+		root.position = place_at.call(t)
+		_trail(root, basis_at, place_at, t, clampf((land - t) / land * 2.0, 0.0, 1.0))
+		MomentExtras.shadow_at(shadow, root.position, pos.y)
 	pose.call(0.0)
 	root.scale = Vector3.ONE * 0.3
 	parent.add_child(root)
@@ -60,9 +69,10 @@ static func coin(parent: Node3D, pos: Vector3, heads: bool, duration: float = 1.
 	tween.tween_method(pose, 0.0, 1.0, duration)
 	tween.parallel().tween_property(root, "scale", Vector3.ONE, duration * 0.12)
 	tween.parallel().tween_callback(func() -> void: _thud(parent, root, pos.y, 0.7)).set_delay(duration * land)
+	tween.parallel().tween_callback(func() -> void: _thud(parent, root, pos.y, 0.35)).set_delay(duration * (land + 0.13))
 	tween.tween_callback(func() -> void:
 		var ground := Vector3(root.position.x, pos.y, root.position.z)
-		Fx.ring(parent, ground, GOLD, 1.1, 0.5, 0.1)
+		MomentExtras.flare(parent, ground + Vector3(-0.15, 0.12, 0.1), Color(1.0, 0.9, 0.6), 0.9, 0.5, 1.2)
 		Fx.light(parent, ground, GOLD, 3.0, 3.0, 0.5)
 		Fx.burst(parent, ground + Vector3(0, 0.15, 0), GOLD, 18, 1.1, 0.5, 0.07))
 	_fade_out(tween, root, HOLD)
@@ -161,24 +171,33 @@ static func _roll(parent: Node3D, pos: Vector3, sides: int, result: int, duratio
 	wobble_axis = wobble_axis.normalized() if wobble_axis.length() > 0.1 else Vector3.UP
 	var turns: float = TAU * randf_range(2.0, 3.0)
 	var wobble: float = randf_range(1.5, 3.0)
-	var pose: Callable = func(t: float) -> void:
-		var left: float = pow(1.0 - t, 2.4)
-		var basis: Basis = Basis(roll_axis, turns * left) * Basis(wobble_axis, wobble * left * left) * final
-		spin.basis = basis
+	var basis_at: Callable = func(t: float) -> Basis:
+		var left: float = pow(1.0 - clampf(t, 0.0, 1.0), 2.4)
+		return Basis(roll_axis, turns * left) * Basis(wobble_axis, wobble * left * left) * final
+	var place_at: Callable = func(t: float) -> Vector3:
+		t = maxf(t, 0.0)
 		var flat: Vector3 = start.lerp(pos, 1.0 - pow(1.0 - t, 2.0))
 		# O ponto mais baixo nunca entra no tampo: rolando, o dado se apoia nas quinas.
-		die.position = Vector3(flat.x, pos.y + maxf(rest + _bounce(t, start.y - pos.y - rest), -_lowest(shape, basis)), flat.z)
+		return Vector3(flat.x, pos.y + maxf(rest + _bounce(t, start.y - pos.y - rest), -_lowest(shape, basis_at.call(t))), flat.z)
+	var shadow: MeshInstance3D = _shadow_of(die, 0.95 if faces != 4 else 1.1)
+	var pose: Callable = func(t: float) -> void:
+		spin.basis = basis_at.call(t)
+		die.position = place_at.call(t)
+		# O rastro aparece só enquanto o giro é rápido.
+		_trail(die, basis_at, place_at, t, clampf(pow(1.0 - t, 1.4) * 1.8, 0.0, 1.0))
+		MomentExtras.shadow_at(shadow, die.position - Vector3(0, rest, 0), pos.y)
 	pose.call(0.0)
 	die.scale = Vector3.ONE * 0.4
 	parent.add_child(die)
 	var tween := die.create_tween()
 	tween.tween_method(pose, 0.0, 1.0, duration)
 	tween.parallel().tween_property(die, "scale", Vector3.ONE, duration * 0.15)
-	tween.parallel().tween_callback(func() -> void: _thud(parent, die, pos.y, 1.0)).set_delay(duration * 0.3)
-	tween.parallel().tween_callback(func() -> void: _thud(parent, die, pos.y, 0.5)).set_delay(duration * 0.52)
+	for hop: Vector2 in [Vector2(0.3, 1.0), Vector2(0.52, 0.55), Vector2(0.68, 0.3)]:
+		var strength: float = hop.y
+		tween.parallel().tween_callback(func() -> void: _thud(parent, die, pos.y, strength)).set_delay(duration * hop.x)
 	tween.tween_callback(func() -> void:
 		var ground := Vector3(die.position.x, pos.y, die.position.z)
-		Fx.ring(parent, ground, color.lightened(0.45), 1.0, 0.5, 0.1)
+		MomentExtras.sparkles(parent, ground + Vector3(0, 0.45, 0), color.lightened(0.6), 0.35, 0.3, 8, 0.18)
 		Fx.light(parent, ground, color.lightened(0.5), 2.5, 2.5, 0.5)
 		for label: Label3D in die.get_meta("result_labels", []):
 			label.create_tween().tween_property(label, "modulate", Color(1.7, 1.5, 1.1), 0.25)
@@ -201,24 +220,44 @@ static func _bounce(t: float, drop: float) -> float:
 	return 0.0
 
 
-## Poeirinha onde o dado ou a moeda bate no tampo.
+## Poeirinha onde o dado ou a moeda bate no tampo, com umas lascas de luz.
 static func _thud(parent: Node3D, node: Node3D, floor_y: float, strength: float) -> void:
 	if not is_instance_valid(node):
 		return
-	var ground := Vector3(node.position.x, floor_y + 0.04, node.position.z)
-	Fx.burst(parent, ground, Color(0.85, 0.8, 0.7), int(14 * strength), 0.9 * strength, 0.35, 0.06)
-	Fx.ring(parent, ground, Color(0.7, 0.68, 0.62), 0.6 * strength, 0.35, 0.08)
+	var ground := Vector3(node.position.x, floor_y + 0.02, node.position.z)
+	MomentExtras.puff(parent, ground, strength)
+	Fx.burst(parent, ground + Vector3(0, 0.03, 0), Color(0.85, 0.8, 0.7), int(8 * strength) + 2, 0.7 * strength, 0.3, 0.05)
 
 
-## Destaque do vencedor do d6 de quem começa: ondas e faíscas douradas, um halo dourado no tampo e o dado crescendo um pouco.
+## As cópias translúcidas que seguem o objeto (o rastro de movimento): cada uma na pose e no lugar de um instante antes,
+## mais fraca quanto mais atrás. `amount` 0 as esconde.
+static func _trail(root: Node3D, basis_at: Callable, place_at: Callable, t: float, amount: float) -> void:
+	for k: int in GHOSTS:
+		var ghost: MeshInstance3D = root.get_node_or_null("Ghost%d" % k) as MeshInstance3D
+		if ghost == null:
+			continue
+		ghost.visible = amount > 0.02 and Fx.quality > 0
+		if ghost.visible:
+			var back: float = t - GHOST_LAG * (k + 1)
+			ghost.basis = basis_at.call(back)
+			ghost.position = ((place_at.call(back) as Vector3) - root.position) / maxf(root.scale.x, 0.01)
+			ghost.transparency = 1.0 - amount * (0.38 if k == 0 else 0.18)
+
+
+## A sombra de contato do dado ou da moeda: fica no tampo (fora da escala do objeto) e some junto com ele.
+static func _shadow_of(root: Node3D, size: float) -> MeshInstance3D:
+	var blob: MeshInstance3D = MomentExtras.contact_shadow(root, size)
+	blob.top_level = true
+	return blob
+
+
+## Destaque do vencedor do d6 de quem começa: um raio de luz dourado desce nele, um clarão e faíscas, um halo dourado
+## no tampo e o dado crescendo um pouco.
 static func _crown(parent: Node3D, die: Node3D) -> void:
 	var ground := Vector3(die.position.x, 0.0, die.position.z)
-	Fx.ring(parent, ground, GOLD, 1.7, 0.7, 0.14)
-	var weak: WeakRef = weakref(parent)
-	parent.get_tree().create_timer(0.18).timeout.connect(func() -> void:
-		var alive: Node3D = weak.get_ref() as Node3D
-		if alive != null:
-			Fx.ring(alive, ground, GOLD, 1.2, 0.6, 0.1))
+	MomentExtras.shafts(parent, ground, Color(1.0, 0.85, 0.5), 2, 1.6, 0.15, 0.45, 5.0)
+	MomentExtras.flare(parent, ground + Vector3(0, 0.55, 0), GOLD, 1.8, 0.5)
+	MomentExtras.sparkles(parent, ground + Vector3(0, 0.4, 0), GOLD.lightened(0.4), 0.5, 1.2, 12, 0.2)
 	Fx.burst(parent, ground + Vector3(0, 0.5, 0), GOLD, 40, 1.8, 0.8, 0.09)
 	Fx.light(parent, ground, GOLD, 4.0, 3.5, 0.8)
 	var halo := MeshInstance3D.new()
@@ -298,6 +337,7 @@ static func _make_die(sides: int, result: int, color: Color) -> Node3D:
 	body.mesh = shape["mesh"]
 	body.material_override = _body_material(color)
 	spin.add_child(body)
+	_add_ghosts(root, body)
 	var shown: int = face_value(sides, result)
 	var result_labels: Array[Label3D] = []
 	if faces == 6 and sides == 6:
@@ -338,6 +378,18 @@ static func _make_die(sides: int, result: int, color: Color) -> Node3D:
 				result_labels.append(label)
 	root.set_meta("result_labels", result_labels)
 	return root
+
+
+## As cópias do corpo para o rastro do giro (mesma malha e material, translúcidas; _trail as move).
+static func _add_ghosts(root: Node3D, body: MeshInstance3D) -> void:
+	for k: int in GHOSTS:
+		var ghost := MeshInstance3D.new()
+		ghost.name = "Ghost%d" % k
+		ghost.mesh = body.mesh
+		ghost.material_override = body.material_override
+		ghost.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		ghost.transparency = 0.99
+		root.add_child(ghost)
 
 
 static func _number(text: String, size: float) -> Label3D:
@@ -391,6 +443,7 @@ static func _make_coin() -> Node3D:
 	body.mesh = cylinder
 	body.material_override = _gold(null, null)
 	spin.add_child(body)
+	_add_ghosts(root, body)
 	if _coin_textures.is_empty():
 		for heads: bool in [true, false]:
 			_coin_textures.append_array(_coin_face(heads))

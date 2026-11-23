@@ -169,14 +169,16 @@ static func play(moment: Dictionary, parent: Node3D, table: TableView) -> void:
 			_ultimate(moment, parent, table)
 
 
-## Primeiro sangue: um corte carmesim atravessa o retrato atingido, faíscas vermelhas, o título que sobe e um tremor.
+## Primeiro sangue: um corte carmesim atravessa o retrato atingido, um clarão, respingos e faíscas vermelhas, o título que
+## sobe e um tremor.
 static func _first_blood(moment: Dictionary, parent: Node3D, table: TableView) -> void:
 	var at: Vector3 = _player_at(table, int(moment.get("player", -1)))
 	MomentPieces.slash(parent, at, BLOOD, deg_to_rad(28.0), 3.4, 0.36, 0.0)
 	MomentPieces.after(parent, 0.1, func() -> void:
 		Fx.burst(parent, at, BLOOD, 70, 3.4, 0.8, 0.06)
 		Fx.burst(parent, at, Color(1.0, 0.55, 0.4), 24, 1.8, 0.5, 0.04)
-		Fx.ring(parent, at, BLOOD, 1.8, 0.6, 0.08)
+		MomentExtras.flare(parent, at + Vector3(0, 0.2, 0), BLOOD.lightened(0.2), 2.2, 0.45)
+		MomentExtras.shards(parent, at + Vector3(0, 0.15, 0), Color(0.7, 0.0, 0.05, 0.95), 26, 2.2, 0.7, 0.07, 0.15)
 		Fx.light(parent, at, BLOOD, 6.0, 5.0, 0.6)
 		MomentPieces.shake(table.camera, 0.09, 0.4))
 	MomentPieces.title(parent, MomentPieces.beside(table, at, 230.0), "Primeiro sangue", Color(1.0, 0.3, 0.28), Color(0.25, 0.0, 0.02), 150, 2.0, 0.06)
@@ -215,7 +217,7 @@ static func _multi_kill(moment: Dictionary, parent: Node3D, table: TableView) ->
 	MomentPieces.dolly(table.camera, focus, 0.16, 2.2, 0.25)
 
 
-## Golpe de comandante: impacto roxo-dourado no retrato, a coroa se estampa e o placar "X/21" rola até o total, mais forte a
+## Golpe de comandante: impacto roxo-dourado no retrato (clarão em estrela), a coroa se estampa e o placar "X/21" rola até o total, mais forte a
 ## partir de 15, vermelho a partir de 18; no golpe que chega a 21 a coroa treme e se parte.
 static func _commander_hit(moment: Dictionary, parent: Node3D, table: TableView) -> void:
 	var at: Vector3 = _player_at(table, int(moment.get("player", -1)))
@@ -226,11 +228,12 @@ static func _commander_hit(moment: Dictionary, parent: Node3D, table: TableView)
 	var tone: Color = BLOOD if critical else (Color(1.0, 0.6, 0.2) if near else GOLD)
 	Fx.burst(parent, at, VIOLET, 50, 2.4, 0.7, 0.05)
 	Fx.burst(parent, at, tone, 40 if near else 26, 2.0, 0.7, 0.04)
-	Fx.ring(parent, at, VIOLET, 1.2, 0.5, 0.1)
-	MomentPieces.after(parent, 0.08, func() -> void: Fx.ring(parent, at, tone, 1.7 if near else 1.3, 0.6, 0.06))
+	MomentExtras.flare(parent, at + Vector3(0, 0.2, 0), VIOLET.lerp(tone, 0.3), 2.0 if near else 1.6, 0.45, 1.2)
 	Fx.light(parent, at, VIOLET.lerp(tone, 0.5), 4.0 if near else 3.0, 4.0, 0.6)
 	# A coroa e o placar ficam ao lado do retrato, para dentro da mesa: em cima dele, o HUD os cobriria.
 	var spot: Vector3 = MomentPieces.beside(table, at, 230.0, MomentPieces.SCORE_MARGIN)
+	# A coroa e o placar juntos ocupam uma faixa: um título no mesmo lugar (o primeiro sangue do mesmo golpe) vai para outra.
+	spot = MomentPieces.claim(parent, spot, Vector2(1.6, 1.5), 0.0, 2.2)
 	MomentPieces.crown(parent, spot + MomentPieces.screen_up(parent) * 0.42, tone if critical else GOLD, 0.3 if near else 0.25, lethal)
 	var before: int = maxi(0, total - int(moment.get("hit", 0)))
 	MomentPieces.score(parent, spot - Vector3(0, 0.05, 0), before, total, tone, near, critical)

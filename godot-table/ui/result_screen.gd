@@ -205,7 +205,8 @@ func apply_state(state: Dictionary) -> void:
 		_shown_key = key
 		_set_table_view(false)
 		_fill()
-		_enter()
+		# A tela espera um instante: o começo da cena final (fx/finale_fx.gd) aparece sem o desfoque por cima.
+		_enter(1.0, FinaleFx.LEAD)
 	else:
 		_refresh_buttons()
 	visible = true
@@ -355,18 +356,20 @@ func _set_table_view(on: bool) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE if on else Control.MOUSE_FILTER_STOP
 
 
-## A entrada: o fundo desfoca, o título cai grande e encolhe até o lugar, e o resto sobe em sequência.
-func _enter(speed: float = 1.0) -> void:
+## A entrada: o fundo desfoca, o título cai grande e encolhe até o lugar, e o resto sobe em sequência. `lead`: espera
+## antes de começar.
+func _enter(speed: float = 1.0, lead: float = 0.0) -> void:
 	_backdrop_material.set_shader_parameter("amount", 0.0)
 	var fade := create_tween()
+	fade.tween_interval(lead)
 	fade.tween_method(func(v: float) -> void: _backdrop_material.set_shader_parameter("amount", v), 0.0, 1.0, 0.5 * speed)
 	_title.pivot_offset = Vector2(_column.custom_minimum_size.x / 2.0, 70)
 	_title.scale = Vector2(1.7, 1.7)
 	_title.modulate.a = 0.0
 	var title := create_tween().set_parallel(true)
-	title.tween_property(_title, "modulate:a", 1.0, 0.25 * speed).set_delay(0.15 * speed)
-	title.tween_property(_title, "scale", Vector2.ONE, 0.55 * speed).set_delay(0.15 * speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	var delay: float = 0.55 * speed
+	title.tween_property(_title, "modulate:a", 1.0, 0.25 * speed).set_delay(0.15 * speed + lead)
+	title.tween_property(_title, "scale", Vector2.ONE, 0.55 * speed).set_delay(0.15 * speed + lead).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var delay: float = 0.55 * speed + lead
 	for node: Control in [_ribbons, _detail, _reason, _tiles, _toggle, _chart, _table_box, _highlight, _note, _rematch.get_parent()]:
 		if not node.visible:
 			continue

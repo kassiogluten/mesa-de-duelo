@@ -8,6 +8,10 @@ const GOLD := Color(1.0, 0.76, 0.28)
 const GEM := Color(0.35, 1.0, 0.82)
 ## Fichas com objeto: o nome (como o Forge escreve, em inglês) → o objeto.
 const TOKENS := {"Treasure": "coin", "Gold": "coin", "Clue": "glass", "Food": "apple", "Blood": "drop"}
+const GEM_SHADER := preload("res://fx/gem.gdshader")
+const LENS_SHADER := preload("res://fx/lens.gdshader")
+const LIQUID_SHADER := preload("res://fx/liquid.gdshader")
+const DUST := Color(0.74, 0.66, 0.54)
 
 static var _bloom_shader: Shader
 static var _dim_shader: Shader
@@ -24,8 +28,8 @@ static func token_kind(card: Dictionary) -> String:
 	return ""
 
 
-## A entrada do comandante: a carta (já no lugar) sobe grande, paira, mergulha; no impacto a mesa treme, a poeira sobe e a
-## arte sai da moldura, cresce em volta e volta.
+## A entrada do comandante: raios de luz descem enquanto a carta (já no lugar) sobe grande, paira e mergulha; no impacto
+## a câmera dá um tranco, a mesa treme, a poeira corre pelo tampo numa onda e a arte sai da moldura, cresce em volta e volta.
 static func commander(parent: Node3D, node: CardNode, camera: Camera3D, color: Color, speed: float = 1.0) -> void:
 	if node == null or not is_instance_valid(node):
 		return
@@ -33,6 +37,7 @@ static func commander(parent: Node3D, node: CardNode, camera: Camera3D, color: C
 	var pos: Vector3 = node.global_position
 	var rise: float = 0.5 / speed
 	var dive: float = 0.17 / speed
+	MomentExtras.shafts(parent, pos, Color(1.0, 0.88, 0.6), 3, 1.9 / speed, 0.45, 0.4)
 	var tween := visual.create_tween()
 	tween.tween_property(visual, "position:y", 1.7, rise).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(visual, "scale", Vector3.ONE * 1.5, rise).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -41,15 +46,30 @@ static func commander(parent: Node3D, node: CardNode, camera: Camera3D, color: C
 	tween.parallel().tween_property(visual, "scale", Vector3.ONE, dive).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		CardGlow.entered(node, color.lerp(GOLD, 0.5), true, speed)
-		Fx.burst(parent, pos + Vector3(0, 0.05, 0), Color(0.75, 0.62, 0.45), 60, 2.2, 0.8, 0.12)
+		MomentExtras.dust_ring(parent, pos, DUST, 3.4, 120, 1.3, 0.42)
+		Fx.ring(parent, pos, DUST.lerp(GOLD, 0.4), 8.0, 1.1 / speed, 0.035)
 		Fx.burst(parent, pos + Vector3(0, 0.2, 0), GOLD, 50, 2.8, 0.7, 0.07)
+		MomentExtras.flare(parent, pos + Vector3(0, 0.35, 0), GOLD, 2.8, 0.5 / speed)
 		Fx.light(parent, pos, GOLD, 7.0, 7.0, 0.8 / speed)
 		Fx.pillar(parent, pos, GOLD, 5.0, 0.8 / speed)
-		Fx.shake(camera, 0.11, 0.4)
+		Fx.shake(camera, 0.14, 0.45)
+		_punch(camera, speed)
 		node.flash_color(GOLD, 0.5)
 		_art_bloom(parent, node, pos, 1.0 / speed))
 	tween.tween_property(visual, "scale", Vector3(1.06, 1.0, 1.06), 0.06 / speed)
 	tween.tween_property(visual, "scale", Vector3.ONE, 0.14 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## O tranco da câmera no impacto: a lente fecha um pouco e volta com mola.
+static func _punch(camera: Camera3D, speed: float) -> void:
+	if camera == null or Fx.quality == 0:
+		return
+	if not camera.has_meta("base_fov"):
+		camera.set_meta("base_fov", camera.fov)
+	var base: float = float(camera.get_meta("base_fov"))
+	var tween := camera.create_tween()
+	tween.tween_property(camera, "fov", base - 1.8, 0.05 / speed).set_ease(Tween.EASE_OUT)
+	tween.tween_property(camera, "fov", base, 0.4 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## O Game Changer chegando: a mesa escurece em volta da carta, um holofote acende, a gema gira acima dela e pousa no
@@ -79,14 +99,17 @@ static func game_changer(parent: Node3D, table: TableView, pos: Vector3, label: 
 	spin.tween_property(gem, "rotation:y", TAU * 3.0, total).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	var path := gem.create_tween()
 	path.tween_property(gem, "position:y", pos.y + 1.0, 0.45 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	path.parallel().tween_property(gem, "scale", Vector3.ONE * 0.22, 0.45 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	path.parallel().tween_property(gem, "scale", Vector3.ONE * 0.28, 0.45 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	path.tween_callback(func() -> void:
 		Fx.burst(parent, gem.position, GEM, 40, 1.8, 0.6, 0.07)
+		MomentExtras.flare(parent, gem.position, GEM.lerp(Color.WHITE, 0.3), 1.8, 0.45 / speed)
+		MomentExtras.sparkles(parent, gem.position, GEM.lerp(Color.WHITE, 0.5), 0.55, total * 0.42, 16, 0.2)
 		Fx.light(parent, gem.position, GEM, 4.0, 4.0, 0.6 / speed))
 	path.tween_interval(total * 0.42)
 	path.tween_property(gem, "position", corner, 0.3 / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	path.parallel().tween_property(gem, "scale", Vector3.ONE * 0.07, 0.3 / speed)
 	path.tween_callback(func() -> void:
+		MomentExtras.flare(parent, corner, GEM.lerp(Color.WHITE, 0.4), 0.9, 0.4 / speed)
 		Fx.burst(parent, corner, GEM.lerp(Color.WHITE, 0.4), 30, 1.4, 0.5, 0.06))
 	path.tween_property(gem, "scale", Vector3.ONE * 0.001, 0.2 / speed)
 	path.tween_callback(gem.queue_free)
@@ -99,7 +122,9 @@ static func game_changer(parent: Node3D, table: TableView, pos: Vector3, label: 
 			Fx.float_text(parent, below - Vector3(0, 0.5, 0), label, Color(0.92, 1.0, 0.97), 46, 1.4 / speed, 0.05))
 
 
-## A ficha vira objeto: ele salta da carta girando, paira um instante com luz e mergulha nela.
+## A ficha vira objeto: ele salta da carta, paira um instante com luz e volta para ela, cada um do seu jeito: a moeda
+## do Tesouro gira com um reflexo de metal, a lupa da Pista passeia aumentando a carta, a maçã da Comida quica macia e
+## a gota do Sangue treme e respinga.
 static func token(parent: Node3D, pos: Vector3, kind: String, speed: float = 1.0) -> void:
 	var object: Node3D = _token_object(kind)
 	if object == null:
@@ -113,20 +138,77 @@ static func token(parent: Node3D, pos: Vector3, kind: String, speed: float = 1.0
 	glow.omni_range = 1.6
 	glow.light_energy = 0.0
 	object.add_child(glow)
-	var spin := object.create_tween()
-	spin.tween_property(object, "rotation:y", TAU * 2.5, 1.2 / speed)
+	var shadow: MeshInstance3D = MomentExtras.contact_shadow(parent, 0.55)
+	var follow := func(_v: float) -> void: MomentExtras.shadow_at(shadow, object.position, pos.y)
+	follow.call(0.0)
+	_token_spin(object, kind, speed)
 	var tween := object.create_tween()
 	tween.tween_property(object, "position:y", pos.y + 0.9, 0.35 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(object, "scale", Vector3.ONE * 1.5, 0.35 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(glow, "light_energy", 2.0, 0.3 / speed)
+	tween.parallel().tween_method(follow, 0.0, 1.0, 0.35 / speed)
 	tween.tween_callback(func() -> void: Fx.burst(parent, object.position, color.lerp(Color.WHITE, 0.4), 18, 1.0, 0.5, 0.06))
-	tween.tween_property(object, "position:y", pos.y + 1.0, 0.4 / speed).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(object, "position:y", pos.y + 0.05, 0.22 / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(object, "scale", Vector3.ONE * 0.25, 0.22 / speed)
-	tween.parallel().tween_property(glow, "light_energy", 0.0, 0.22 / speed)
+	if kind == "glass":
+		# A lupa passeia por cima da carta, como quem procura uma pista.
+		tween.tween_method(func(t: float) -> void:
+			object.position = pos + Vector3(sin(t * TAU) * 0.16, 1.0 - 0.15 * sin(t * PI), cos(t * TAU) * 0.1 - 0.1)
+			follow.call(0.0), 0.0, 1.0, 0.55 / speed).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	else:
+		tween.tween_property(object, "position:y", pos.y + 1.0, 0.4 / speed).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if kind == "apple":
+		_bounce_in(tween, parent, object, glow, pos, follow, speed)
+	else:
+		tween.tween_property(object, "position", pos + Vector3(0, 0.05, 0), 0.22 / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tween.parallel().tween_property(object, "scale", Vector3.ONE * 0.25, 0.22 / speed)
+		tween.parallel().tween_property(glow, "light_energy", 0.0, 0.22 / speed)
+		tween.parallel().tween_method(follow, 0.0, 1.0, 0.22 / speed)
 	tween.tween_callback(func() -> void:
 		Fx.burst(parent, pos + Vector3(0, 0.08, 0), color, 26, 1.2, 0.45, 0.07)
+		if kind == "drop":
+			MomentExtras.shards(parent, pos + Vector3(0, 0.06, 0), Color(0.75, 0.02, 0.06, 0.95), 22, 1.6, 0.55, 0.06, 0.08)
+		shadow.queue_free()
 		object.queue_free())
+
+
+## O giro de cada objeto no ar; a moeda solta um reflexo em estrela cada vez que a face passa de frente para a câmera.
+static func _token_spin(object: Node3D, kind: String, speed: float) -> void:
+	var spin := object.create_tween()
+	match kind:
+		"glass":
+			# A lente fica virada para a câmera, balançando de leve (girando, ela sumia de lado).
+			object.rotation = Vector3(deg_to_rad(-38.0), 0, 0)
+			spin.tween_property(object, "rotation:y", 0.35, 0.4 / speed).set_trans(Tween.TRANS_SINE)
+			spin.tween_property(object, "rotation:y", -0.3, 0.5 / speed).set_trans(Tween.TRANS_SINE)
+			spin.tween_property(object, "rotation:y", 0.0, 0.3 / speed).set_trans(Tween.TRANS_SINE)
+		"coin":
+			var glint: MeshInstance3D = MomentExtras.star(object, Vector3(-0.1, 0.12, 0.04), Color(1.0, 0.92, 0.7), 0.5, 1.2)
+			var glint_material: ShaderMaterial = glint.material_override
+			spin.tween_method(func(a: float) -> void:
+				object.rotation.y = a
+				# Face de frente para a câmera (a câmera olha de cima e da frente): o reflexo acende forte e apaga rápido.
+				glint_material.set_shader_parameter("alpha", pow(absf(cos(a)), 40.0) * 1.3), 0.0, TAU * 2.5, 1.2 / speed)
+		_:
+			spin.tween_property(object, "rotation:y", TAU * 2.5, 1.2 / speed)
+
+
+## A maçã cai na carta e quica macia, achatando a cada toque, antes de entrar nela.
+static func _bounce_in(tween: Tween, parent: Node3D, object: Node3D, glow: OmniLight3D, pos: Vector3, follow: Callable, speed: float) -> void:
+	var rest: float = pos.y + 0.24
+	for hop: Array in [[0.0, 0.34, 1.0], [0.32, 0.2, 0.6], [0.12, 0.12, 0.35]]:
+		var height: float = hop[0]
+		var time: float = float(hop[1]) / speed
+		var squash: float = hop[2]
+		if height > 0.0:
+			tween.tween_property(object, "position:y", rest + height, time * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tween.parallel().tween_method(follow, 0.0, 1.0, time * 0.5)
+		tween.tween_property(object, "position:y", rest, time * 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tween.parallel().tween_method(follow, 0.0, 1.0, time * 0.5)
+		tween.tween_callback(func() -> void: MomentExtras.puff(parent, pos, 0.5 * squash + 0.3))
+		tween.tween_property(object, "scale", Vector3(1.5 + 0.35 * squash, 1.5 - 0.45 * squash, 1.5 + 0.35 * squash), 0.06 / speed).set_ease(Tween.EASE_OUT)
+		tween.tween_property(object, "scale", Vector3.ONE * 1.5, 0.12 / speed).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(object, "position:y", pos.y + 0.05, 0.16 / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(object, "scale", Vector3.ONE * 0.25, 0.16 / speed)
+	tween.parallel().tween_property(glow, "light_energy", 0.0, 0.16 / speed)
 
 
 ## A arte da carta saindo da moldura: cresce em volta da carta, de frente para a câmera, com as bordas esfumadas.
@@ -200,15 +282,11 @@ static func _gem() -> MeshInstance3D:
 	shape.radius = 1.0
 	shape.height = 2.6
 	gem.mesh = shape
-	var material := StandardMaterial3D.new()
-	material.albedo_color = GEM.darkened(0.3)
-	material.metallic = 0.3
-	material.roughness = 0.12
-	material.emission_enabled = true
-	material.emission = GEM
-	material.emission_energy_multiplier = 1.6
-	material.rim_enabled = true
-	material.rim = 1.0
+	# Vidro lapidado: refrata a mesa atrás, a borda acende e o reflexo corre de faceta em faceta (fx/gem.gdshader).
+	var material := ShaderMaterial.new()
+	material.shader = GEM_SHADER
+	material.set_shader_parameter("color", GEM)
+	material.set_shader_parameter("energy", 1.0)
 	gem.material_override = material
 	gem.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return gem
@@ -225,7 +303,9 @@ static func _token_object(kind: String) -> Node3D:
 		"glass":
 			var ring := _part(root, _torus(0.17, 0.215), _material(Color(0.78, 0.6, 0.3), 0.9, 0.3, 0.05))
 			ring.rotation_degrees = Vector3(90, 0, 0)
-			var lens := _part(root, _cylinder(0.175, 0.012), _material(Color(0.6, 0.85, 1.0, 0.45), 0.0, 0.05, 0.25))
+			var lens_material := ShaderMaterial.new()
+			lens_material.shader = LENS_SHADER
+			var lens := _part(root, _cylinder(0.175, 0.03), lens_material)
 			lens.rotation_degrees = Vector3(90, 0, 0)
 			var handle := _part(root, _cylinder(0.035, 0.28), _material(Color(0.35, 0.2, 0.1), 0.0, 0.6, 0.0))
 			handle.position = Vector3(0.16, -0.26, 0)
@@ -239,7 +319,9 @@ static func _token_object(kind: String) -> Node3D:
 			leaf.position = Vector3(0.07, 0.22, 0)
 			leaf.scale = Vector3(1.4, 1.0, 0.7)
 		"drop":
-			var body := _part(root, _sphere(0.17, 0.34), _material(Color(0.6, 0.02, 0.05), 0.2, 0.08, 0.35))
+			var liquid := ShaderMaterial.new()
+			liquid.shader = LIQUID_SHADER
+			var body := _part(root, _sphere(0.17, 0.34), liquid)
 			body.position = Vector3(0, -0.05, 0)
 			var tip := MeshInstance3D.new()
 			var cone := CylinderMesh.new()
