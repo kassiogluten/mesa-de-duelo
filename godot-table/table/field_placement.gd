@@ -34,6 +34,10 @@ var _staggered: Dictionary = {}
 var _marked_before: Dictionary = {}
 
 
+## Quanto cada cópia de um monte ×N fica acima da de baixo (um pouco mais que a espessura de uma carta).
+const COPY_RISE := 0.012
+
+
 func _init(table: TableView) -> void:
 	view = table
 
@@ -97,6 +101,18 @@ func place_all(players: Array, frames: Dictionary, seen: Dictionary, names: Pack
 			_put_exiled(p, t, seen, names)
 		else:
 			_put_permanent(card, t, p["sleeve"], seen, names, p["badges"], float(p["boost"]))
+	# Física de papel (PaperPhysics): o anexo que acabou de sair entra por baixo da carta em que se prende, e a cópia que
+	# cai num monte ×N empurra de leve a de baixo. Só vale para a carta em voo; as paradas ignoram.
+	for p: Dictionary in placements:
+		if p.has("exiled_key"):
+			continue
+		var node: CardNode = view.card_node(int((p["card"] as Dictionary)["id"]))
+		if node == null:
+			continue
+		if int(p.get("host", -1)) >= 0:
+			node.tuck_under(view.card_node(int(p["host"])))
+		elif int(p.get("below", -1)) >= 0:
+			node.land_on(view.card_node(int(p["below"])))
 
 
 func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
@@ -117,10 +133,12 @@ func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
 				var card: Dictionary = cards[k]
 				var tapped: bool = bool(card.get("tapped", false))
 				var x: float = float(frame["cx"]) + (float(item["x"]) + k * FieldLayout.copy_step(cards.size(), tapped) * squeeze) * scale
-				var t := Transform3D(field_basis(tapped, scale), Vector3(x, FIELD_Y + 0.004 * k + 0.008, z))
+				# Cada cópia apoiada na de baixo (a espessura de uma carta), sem se atravessarem.
+				var t := Transform3D(field_basis(tapped, scale), Vector3(x, FIELD_Y + COPY_RISE * scale * k + 0.008, z))
 				var top: bool = k == cards.size() - 1
 				out.append({"card": card, "t": t, "base": t, "sleeve": sleeve, "side": int(frame["side"]), "boost": boost,
-					"badges": BadgeSpec.for_pile(cards, ctx) if top else {}})
+					"badges": BadgeSpec.for_pile(cards, ctx) if top else {},
+					"below": int((cards[k - 1] as Dictionary)["id"]) if k > 0 else -1})
 				if k == 0:
 					_layout_attachments(card, t, scale, squeeze, out)
 					_layout_exiled(card, t, scale, squeeze, out)
