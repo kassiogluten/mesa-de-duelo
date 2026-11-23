@@ -38,6 +38,10 @@ func _ready() -> void:
 		var wait: float = float(OS.get_environment("MESA_PRINT_APOS")) if OS.get_environment("MESA_PRINT_APOS") != "" else 8.0
 		get_tree().create_timer(wait).timeout.connect(func() -> void:
 			get_viewport().get_texture().get_image().save_png(shot)
+			# MESA_DUMP=<arquivo.json>: guarda também o estado da partida desse momento (para abrir na mesa do navegador).
+			if OS.get_environment("MESA_DUMP") != "" and _screen is MatchScreen:
+				var file: FileAccess = FileAccess.open(OS.get_environment("MESA_DUMP"), FileAccess.WRITE)
+				file.store_string(JSON.stringify((_screen as MatchScreen).current_state()))
 			print(_perf.summary())
 			get_tree().quit())
 

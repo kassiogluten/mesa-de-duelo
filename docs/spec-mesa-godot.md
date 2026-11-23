@@ -157,6 +157,19 @@ Cada fase termina com algo que roda e é medido. Marque as caixas aqui e no item
   - Som de cada tipo de criatura ao entrar (`fx/creature_sounds.gd`, os de `public/audio/criaturas/`), clima da mesa pela cor das mágicas (`fx/table_mood.gd`) e o pouso da carta com um quique pequeno (`fx/card_motion.gd`).
 - [ ] Refinamentos: segurar a mudança da mesa até as cartas voando pousarem (hoje a carta de verdade já aparece no cemitério/exílio enquanto o voo acontece); inclinar a carta para o lado do mouse (`CardMotion.hover_tilt`, ainda não ligado); a voz do narrador nos momentos; e o "Cascata · N cartas" ficando atrás da carta encontrada.
 
+### Lapidação (antes da fase 4): comparar com a mesa do navegador
+
+Pedido em 22/11/2026: "melhorar muito os efeitos e a estrutura básica do jogo; antes da fase 4, lapidar e comparar com a mesa HTML". A comparação (inventário da mesa do navegador e prints das duas mesas no mesmo estado, gerados com `MESA_DUMP=<arquivo.json>` na mesa no PC e carregados na página `tests/fixtures/duel-table.html` com `window.fixture.client.state = …; window.fixture.render()`) mostrou estas faltas, agrupadas como frentes de trabalho:
+
+- [ ] **Permanente**: marcadores em selos com ícone e número; dano marcado e P/T em vermelho/verde (feito em parte); enjoo de invocação; selos de atacando/bloqueando/atacado; palavras-chave com ícone (voar, vínculo, toque mortífero, ward, indestrutível, proteção…); auras e equipamentos presos à carta em leque atrás dela (hoje entram na fileira como cartas soltas); cópias iguais empilhadas "×N" (terrenos); terreno virado para mana com "↺"; mira de alvo; selos de canto (comandante, ficha, cópia); cartas exiladas por ela; organização do campo (criaturas, planeswalkers/batalhas, artefatos/encantamentos e terrenos).
+- [ ] **Mão**: custo jogável aceso e o selo do custo; arrastar para o campo joga; carta comprada chegando voando; ampliar ao passar o mouse.
+- [ ] **Inspetor de carta**: clique direito ou "I" abre a carta grande com nome, tipo e texto em português, P/T com base e dano, palavras-chave, marcadores e notas; a prévia segue o mouse.
+- [ ] **Assento**: marcadores do jogador (veneno /10, energia, experiência…), dano de comandante "X/21", reserva de mana com os pips, monarca/dianteira/bênção, terrenos jogados no turno, contagem da mão do oponente, cemitério e exílio que abrem numa janela com as cartas, zona de comando com a taxa, tempo do turno.
+- [ ] **HUD**: trilha de fases em 5 grupos com as paradas marcadas, relógio da partida e do turno, histórico (gaveta por turno com miniaturas), menu da partida (conceder com confirmação, opções, sair), placar da série, faixa de turno.
+- [ ] **Pilha**: painel lateral com as camadas, selos (mágica/habilidade/gatilho, flashback, X), quem resolve agora, alvos, e a galeria em tela cheia.
+- [ ] **Resultado**: título com motivo (Vitória, Derrota, "Virada!", "Por um fio"), números da partida, gráfico de vida, destaque do jogo, "Ver campo de batalha", Jogar de novo/Revanche.
+- [ ] **Efeitos que faltam ou estão aquém**: limpa-campo com onda na cor, cúpula do ward, entrada do comandante e cena do Game Changer, medalhões em 3D (Monarca, Dianteira, dia/noite), fichas como objetos (Tesouro, Pista, Comida, Sangue), anexar, mudar de controle, transformar, mana voando, bichos atravessando a tela, mesa rangendo com o campo lotado; e acabamento geral (espessura e sombra das cartas, luz, materiais, pós-processamento).
+
 ### Fase 4: Fora da partida
 - [ ] Salas públicas, criar/entrar em sala por código, sala de espera.
 - [ ] Decks: importar por texto e pela conta (sincronia REST de `/api/conta/`). Login Google pelo fluxo de app instalado (navegador do sistema + retorno local); conferir se `Accounts.java` aceita o token desse cliente.

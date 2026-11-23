@@ -85,6 +85,11 @@ func _ready() -> void:
 	_client.connect_to(GameConfig.forge_url())
 
 
+## O último estado recebido do servidor.
+func current_state() -> Dictionary:
+	return _state
+
+
 func _process(delta: float) -> void:
 	_client.poll()
 	if _autoplay:
