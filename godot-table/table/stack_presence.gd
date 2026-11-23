@@ -7,8 +7,9 @@ extends Node3D
 const AURA_SHADER := preload("res://table/stack_aura.gdshader")
 const HAZE_SHADER := preload("res://table/stack_haze.gdshader")
 const PAD := 0.42
-## Quanto o halo de cada camada abaixo do topo apaga.
-const LOWER_DIM := 0.35
+## Quanto o halo de cada camada abaixo do topo apaga; a borda delas continua acesa (fica claro que há mais itens).
+const LOWER_DIM := 0.45
+const LOWER_EDGE := 0.6
 ## Espera a carta terminar o voo até o lugar dela na pilha antes da onda de chegada.
 const ARRIVAL_DELAY := 0.5
 
@@ -195,7 +196,7 @@ static func _perimeter_points() -> ImageTexture:
 	return _points_tex
 
 
-## Topo: tudo aceso; abaixo: só o halo, mais fraco, sem a borda correndo, o ar tremendo e as partículas.
+## Topo: tudo aceso; abaixo: o halo mais fraco e a borda acesa na cor do item, sem o ar tremendo e as partículas.
 func _set_role(key: Variant, top: bool) -> void:
 	var info: Dictionary = _items[key]
 	if bool(info["top"]) == top and info.has("set"):
@@ -204,7 +205,7 @@ func _set_role(key: Variant, top: bool) -> void:
 	info["set"] = true
 	var layers: Dictionary = info["layers"]
 	_fade(layers.get("aura"), 1.0 if top else LOWER_DIM, 0.6)
-	_fade(layers.get("edge"), 1.0 if top else 0.0, 0.4)
+	_fade(layers.get("edge"), 1.0 if top else LOWER_EDGE, 0.4)
 	if layers.get("haze") and is_instance_valid(layers["haze"]):
 		(layers["haze"] as MeshInstance3D).visible = top
 	if layers.get("motes") and is_instance_valid(layers["motes"]):

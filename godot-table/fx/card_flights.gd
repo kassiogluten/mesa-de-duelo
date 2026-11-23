@@ -161,7 +161,10 @@ static func cascade(parent: Node3D, catalog: CardCatalog, from: Vector3, to: Vec
 		var settle := Pose.new(to + Vector3(0, 0.02 + j * 0.004, 0), Basis(Vector3.UP, randf_range(-0.1, 0.1)), 1.0, 0.0)
 		_move(tween, extra, start, settle, 0.42, 0.9, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		if j == 0:
-			tween.tween_callback(func() -> void: Fx.ring(parent, to, EXILE_COLOR, 0.8, 0.4, 0.2))
+			# A primeira pousa no exílio com um lampejo frio (luz e faíscas da própria carta, sem anel no tampo).
+			tween.tween_callback(func() -> void:
+				Fx.burst(parent, to + Vector3(0, 0.05, 0), EXILE_COLOR, 16, 0.8, 0.4, 0.06)
+				Fx.light(parent, to, EXILE_COLOR, 2.0, 2.5, 0.35))
 		_sink(tween, extra)
 
 	var step: float = minf(CARD_SIZE.x * FAN_SIZE * 0.78, 5.0 / shown.size())

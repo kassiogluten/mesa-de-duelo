@@ -21,6 +21,12 @@ const GAME_CHANGER_TIME := 1.6
 const TABLE_CENTER := Vector3(0, 0, 0.3)
 ## Tempo máximo para os efeitos de um estado: com muitos eventos (limpa-campo), o ritmo encurta.
 const MAX_BATCH := 2.4
+## Os estados chegam em rajadas (vários num décimo de segundo): os efeitos de um estado esperam os do anterior, mas
+## nunca mais que isto atrás do estado; com fila, o ritmo aperta para alcançar.
+const MAX_LAG := 0.6
+const CATCH_UP := 0.65
+## Espaço entre dois momentos grandes no mesmo estado (o título do primeiro já está saindo).
+const MOMENT_GAP := 1.1
 
 var table: TableView
 var hud: Hud
@@ -45,6 +51,10 @@ var _commander_rules: bool = false
 var _mana: Dictionary = {}
 var _commander_entries: Dictionary = {}
 var _control_from: Dictionary = {}
+## seq do resolved → onde a carta (ou a habilidade) estava na pilha, guardado antes de a mesa tirá-la de lá.
+var _resolve_from: Dictionary = {}
+## Quando (segundos do relógio do jogo) termina o último efeito agendado: o estado seguinte entra depois dele.
+var _queue_end: float = 0.0
 ## O último estado (a faixa do turno lê dele) e o combate de agora (o segundo em diante ganha a faixa "Combate extra").
 var _state: Dictionary = {}
 var _combat_number: int = 0
@@ -52,7 +62,8 @@ var _combat_number: int = 0
 
 ## Automático (o regulador escolhe) ou fixo pela opção do jogador.
 var automatic: bool = true
-var _ambience: GPUParticles3D
+## Sonda para conferir partidas de verdade (MESA_FX_LOG, MESA_FX_PRINTS); null fora disso.
+var _probe: FxProbe
 
 
 func _ready() -> void:
@@ -60,16 +71,15 @@ func _ready() -> void:
 	var level: String = Txt.of(prefs.get("effects", "auto"))
 	automatic = level == "auto"
 	Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2)
-	if Fx.quality > 0:
-		_ambience = Fx.ambience(self)
+	if FxProbe.wanted():
+		_probe = FxProbe.new()
+		add_child(_probe)
 
 
 func _process(delta: float) -> void:
 	# Regulador: com os quadros caindo por um tempo, os efeitos ficam mais leves (só no Automático).
 	if not automatic:
 		return
-	if _ambience and Fx.quality == 0:
-		_ambience.emitting = false
 	if delta > 1.0 / 45.0:
 		_slow_frames += delta
 		if _slow_frames > 1.5 and Fx.quality > 0:
@@ -117,6 +127,12 @@ func before_state(state: Dictionary) -> void:
 				leaving[id] = node
 		if event.get("type") == "control-changed":
 			_control_from[int(event.get("seq", -1))] = table.anchor(id)
+		if event.get("type") == "resolved":
+			var on_stack: Variant = table.anchor("stack:%d" % int(event["stackId"])) if event.get("stackId") != null else null
+			if not on_stack is Vector3 and table.zone_of(id) == "stack":
+				on_stack = table.anchor(id)
+			if on_stack is Vector3:
+				_resolve_from[int(event.get("seq", -1))] = on_stack
 	# Limpa-campo: as saídas da mesma mágica viram uma onda só, no lugar do primeiro evento do grupo.
 	var sweep_first: Dictionary = {}
 	var sweep_member: Dictionary = {}
@@ -130,7 +146,11 @@ func before_state(state: Dictionary) -> void:
 	for event: Dictionary in fresh:
 		total += _event_time(event, sweep_first, sweep_member)
 	var pace: float = minf(1.0, MAX_BATCH / maxf(total, 0.001)) / speed
-	var at: float = 0.05
+	# Fila entre estados: começa quando o efeito anterior termina (no máximo MAX_LAG atrás do estado) e, com fila, mais rápido.
+	var lag: float = queue_lag(_queue_end, now, speed)
+	if lag > 0.2 / speed:
+		pace *= CATCH_UP
+	var at: float = 0.05 + lag
 	## seq do evento → quando ele toca, para o momento dele tocar junto.
 	var times: Dictionary = {}
 	for event: Dictionary in fresh:
@@ -148,11 +168,21 @@ func before_state(state: Dictionary) -> void:
 			var ref: WeakRef = weakref(leaving.get(card_id(event)))
 			get_tree().create_timer(at).timeout.connect(func() -> void: _play(played, ref.get_ref() as CardNode))
 		at += _event_time(event, sweep_first, sweep_member) * pace
+	_queue_end = maxf(_queue_end, now + at)
+	if _probe:
+		_probe.state(fresh.size(), at, moments.size())
 	# Cada momento junto do evento que o causou; a eliminação múltipla depois do último golpe.
+	# Dois momentos do mesmo golpe (primeiro sangue e dano de comandante) não se atropelam: o segundo espera o título.
+	var last_moment: float = -10.0
 	for raw: Variant in moments:
 		var moment: Dictionary = raw
 		var when: float = at if moment.get("kind") == "multi-kill" else float(times.get(int(moment.get("seq", -1)), at)) + 0.12 / speed
-		get_tree().create_timer(when).timeout.connect(func() -> void: Moments.play(moment, self, table))
+		when = maxf(when, last_moment + MOMENT_GAP / speed)
+		last_moment = when
+		get_tree().create_timer(when).timeout.connect(func() -> void:
+			Moments.play(moment, self, table)
+			if _probe:
+				_probe.shot("momento_" + Txt.of(moment.get("kind"))))
 	# Garantia: uma carta separada que não saiu em cena (evento sem efeito) se apaga mesmo assim.
 	for id: Variant in leaving:
 		var ref: WeakRef = weakref(leaving[id])
@@ -160,6 +190,12 @@ func before_state(state: Dictionary) -> void:
 			var node: CardNode = ref.get_ref() as CardNode
 			if node and not node.is_queued_for_deletion():
 				node.vanish())
+
+
+## Quanto os efeitos de um estado que chega em `now` esperam os do anterior (que terminam em `queue_end`): nunca mais
+## que MAX_LAG, para os efeitos não ficarem para trás da mesa.
+static func queue_lag(queue_end: float, now: float, speed: float = 1.0) -> float:
+	return clampf(queue_end - now, 0.0, MAX_LAG / speed)
 
 
 ## Quanto o evento ocupa na sequência, contando o limpa-campo (o primeiro do grupo leva a onda, os outros não ocupam).
@@ -288,6 +324,16 @@ static func card_id(event: Dictionary) -> int:
 
 
 func _play(event: Dictionary, leaving: CardNode) -> void:
+	if _probe:
+		_probe.played(event, table.anchor(card_id(event)) if card_id(event) >= 0 else null)
+		var started: int = Time.get_ticks_usec()
+		_play_now(event, leaving)
+		_probe.cost(Txt.of(event.get("type")), Time.get_ticks_usec() - started)
+		return
+	_play_now(event, leaving)
+
+
+func _play_now(event: Dictionary, leaving: CardNode) -> void:
 	var seq: int = int(event.get("seq", -1))
 	if sounds:
 		var where: Variant = table.anchor(card_id(event)) if card_id(event) >= 0 else null
@@ -309,11 +355,12 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 		"ability-activated":
 			EventFx.ability(self, event)
 		"resolved":
-			EventFx.resolved(self, event)
+			EventFx.resolved(self, event, _resolve_from.get(seq))
+			_resolve_from.erase(seq)
 		"countered":
 			if leaving and is_instance_valid(leaving):
 				var pos: Vector3 = leaving.global_position
-				Fx.burst(self, pos, Color(0.7, 0.75, 0.85), 60, 3.0, 0.6, 0.15)
+				Fx.burst(self, pos, Color(0.7, 0.75, 0.85), 36, 2.2, 0.55, 0.07)
 				CardGlow.pulse(leaving, Color(0.7, 0.8, 1.0), 0.06, speed)
 				Fx.float_text(self, pos, "Anulada", Color(0.75, 0.85, 1.0), 60)
 				leaving.burn_away(Color(0.6, 0.75, 1.0), 0.7 / speed)
@@ -329,17 +376,17 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 			for id: Variant in event.get("cards", []):
 				var node: CardNode = table.card_node(int(id))
 				if node:
-					node.flash_color(Color(1.0, 0.3, 0.2), 0.5)
-					Fx.burst(self, node.global_position, Color(1.0, 0.35, 0.2), 18, 1.4, 0.5)
 					CardGlow.pulse(node, Color(1.0, 0.35, 0.2), 0.04, speed)
+					TouchFx.dust(self, node.global_position, Color(1.0, 0.45, 0.25), 0.7)
 			if not (event.get("cards", []) as Array).is_empty():
 				hud.banner("Ataque!", Color(1.0, 0.45, 0.3))
 		"blockers":
 			for id: Variant in event.get("cards", []):
 				var node: CardNode = table.card_node(int(id))
 				if node:
-					node.flash_color(Color(0.35, 0.65, 1.0), 0.5)
+					# O bloqueador se ergue um instante (vai para a frente) com o contorno azul; a carta não fica branca.
 					CardGlow.pulse(node, Color(0.4, 0.7, 1.0), 0.05, speed)
+					node.jolt(0.025)
 		"counters":
 			EventFx.counters(self, event)
 		"survived":
@@ -362,7 +409,7 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 				# Busca no grimório (tutor): a carta sai brilhando do grimório e vai para a mão.
 				CardFlights.tutor(self, table.library_position(actor), table.zone_position(actor, "hand"), table.sleeve_of(actor))
 			else:
-				Fx.burst(self, table.library_position(actor) + Vector3(0, 0.3, 0), Color(0.8, 0.9, 1.0), 10, 0.8, 0.4, 0.09)
+				TouchFx.draw(self, table.card_node("library:%d" % actor), table.library_position(actor), actor == _you)
 		"cascade":
 			var digger: int = int(event.get("actor", _you))
 			CardFlights.cascade(self, table.catalog, table.library_position(digger), table.zone_position(digger, "exile"),

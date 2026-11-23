@@ -34,6 +34,18 @@ static func trace(node: CardNode, color: Color, duration: float = 0.5, speed: fl
 	tween.tween_method(func(v: float) -> void: top.set_shader_parameter("trace_alpha", v), 1.2, 0.0, duration / speed).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
+## Terreno pousando: só a poça de luz na cor da mana sai de baixo dele e a borda acende de leve, rápido.
+static func settle(node: CardNode, color: Color, speed: float = 1.0) -> void:
+	if not _usable(node):
+		return
+	var below: ShaderMaterial = _layer(node, color, -CardNode.THICKNESS - 0.004, 0.55 / speed)
+	_tween_of(below).tween_method(func(v: float) -> void: below.set_shader_parameter("under", v), 0.7, 0.0, 0.5 / speed).set_ease(Tween.EASE_IN)
+	var top: ShaderMaterial = _layer(node, color, 0.004, 0.4 / speed)
+	var tween := _tween_of(top)
+	tween.tween_method(func(v: float) -> void: top.set_shader_parameter("outline", v), 0.0, 0.02, 0.35 / speed).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tween.tween_method(func(v: float) -> void: top.set_shader_parameter("outline_alpha", v), 0.55, 0.0, 0.35 / speed).set_ease(Tween.EASE_IN)
+
+
 ## Pulso do contorno (bloqueio, anulada): a borda acende e se afasta um pouco.
 static func pulse(node: CardNode, color: Color, reach: float = 0.05, speed: float = 1.0) -> void:
 	if not _usable(node):
