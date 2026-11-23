@@ -1,5 +1,6 @@
 # Barra do alto da partida: Desfazer (com o pedido e a votação), votação para pular a vez de quem caiu ou demora,
-# o nível de passar automaticamente (os quatro da mesa do navegador, src/ui/passLevel.ts) e "Passando até o fim do turno".
+# o nível de passar automaticamente (os quatro da mesa do navegador, src/ui/passLevel.ts), "Passando até o fim do turno"
+# e os selos da partida (src/ui/matchBar.ts): placar da melhor de três ("Jogo 2 · 1 × 0"), quem caiu e quem só assiste.
 class_name MatchBar
 extends VBoxContainer
 
@@ -19,6 +20,7 @@ var _undo: Button
 var _level: OptionButton
 var _passing: Button
 var _notice: VBoxContainer
+var _chips: HBoxContainer
 
 
 func _ready() -> void:
@@ -27,6 +29,9 @@ func _ready() -> void:
 	row.add_theme_constant_override("separation", 8)
 	row.alignment = BoxContainer.ALIGNMENT_END
 	add_child(row)
+	_chips = HBoxContainer.new()
+	_chips.add_theme_constant_override("separation", 8)
+	row.add_child(_chips)
 	_undo = _small("Desfazer")
 	_undo.pressed.connect(func() -> void: action.emit({"type": "undo-request"}))
 	row.add_child(_undo)
@@ -53,8 +58,12 @@ func _ready() -> void:
 
 func apply_state(state: Dictionary) -> void:
 	var playing: bool = not bool(state.get("gameOver", false)) and not bool(state.get("spectating", false)) and not bool(state.get("watching", false))
-	visible = playing
+	_apply_chips(state)
+	_undo.visible = playing
+	_level.visible = playing
+	_notice.visible = playing
 	if not playing:
+		_passing.visible = false
 		return
 	var prefs: Dictionary = state.get("preferences", {}) if state.get("preferences") is Dictionary else {}
 	var level: String = Txt.of(prefs.get("passLevel"))
@@ -79,6 +88,22 @@ func apply_state(state: Dictionary) -> void:
 			var start := _small("Votar para pular a vez de %s" % name)
 			start.pressed.connect(func() -> void: action.emit({"type": "skip-vote", "target": int(id), "value": true}))
 			_notice.add_child(start)
+
+
+## Os selos da partida (placar da série, desconectados, assistindo), como pílulas antes dos botões.
+func _apply_chips(state: Dictionary) -> void:
+	for child: Node in _chips.get_children():
+		child.queue_free()
+	for raw: Variant in MatchText.match_chips(state):
+		var chip: Dictionary = raw
+		var panel: PanelContainer = TurnClocks.chip()
+		panel.custom_minimum_size = Vector2(0, 38)
+		panel.tooltip_text = Txt.of(chip["label"])
+		var label := Hud._label(15, Color(1, 0.6, 0.5) if chip["kind"] == "offline" else Color(1, 1, 1, 0.92))
+		label.add_theme_constant_override("outline_size", 0)
+		label.text = Txt.of(chip["text"])
+		(panel.get_child(0) as HBoxContainer).add_child(label)
+		_chips.add_child(panel)
 
 
 ## O pedido de desfazer aberto: quem pediu e o que volta; aceitar/recusar ou cancelar o seu.

@@ -383,21 +383,80 @@ func _place_library(player: Dictionary, frame: Dictionary, sleeve: Color, seen: 
 	_count_label(key, count, pos + Vector3(0.22, 0.45, 0.3), seen, true)
 
 
+## Onde fica na tela cada camada da pilha (0 é o topo), o vão do painel da pilha (StackPanel.layer_rect); sem painel
+## (testes, laboratório), Rect2() e a pilha fica no tampo, à direita.
+var stack_slot: Callable = func(_depth: int) -> Rect2: return Rect2()
+## Distância da câmera até a carta do topo da pilha (as de baixo ficam um pouco atrás).
+const STACK_DEPTH := 7.0
+## As cartas que estão na pilha flutuando no painel: sem sombra no tampo (a sombra volta quando saem da pilha).
+var _stack_keys: Dictionary = {}
+
+
+## A pilha: cada item é uma carta de pé, de frente para a câmera, no vão do painel da pilha (o topo na frente e as de
+## baixo aparecendo por trás). A mágica da sua mão voa até lá em arco; a do oponente sai da mão dele, virando; a
+## habilidade e o gatilho saem da permanente que os gerou.
 func _place_stack(stack: Array, you: int, seen: Dictionary, names: PackedStringArray) -> void:
+	var floating: bool = stack_slot.call(0).size.y > 0.0
+	var now: Dictionary = {}
 	for i: int in stack.size():
 		var item: Dictionary = stack[i]
 		var source: Dictionary = item.get("source", {}) if item.get("source") is Dictionary else {}
 		var spell: bool = Txt.of(item.get("kind", "spell")) == "spell" and source.has("id")
 		var key: Variant = int(source["id"]) if spell else "stack:%d" % int(item["id"])
-		var depth: int = stack.size() - 1 - i
-		var t := Transform3D(Basis(Vector3.RIGHT, deg_to_rad(28.0)), Vector3(4.6 + depth * 0.18, 0.9 + depth * 0.05, -0.2 + depth * 0.25))
+		var controller: int = int(item.get("controller", you))
 		var sleeve: Color = SLEEVES[0]
 		for raw: Variant in _state.get("players", []):
-			if int((raw as Dictionary)["id"]) == int(item.get("controller", you)):
+			if int((raw as Dictionary)["id"]) == controller:
 				sleeve = SLEEVES[int((raw as Dictionary).get("sleeve", 0)) % SLEEVES.size()]
 		var card: Dictionary = source.duplicate()
 		card["stackId"] = int(item["id"])
-		_put(key, card, "stack", t, sleeve, seen, names)
+		var t: Transform3D = _stack_transform(i, stack.size())
+		var fresh: bool = not _cards.has(key)
+		var from: Variant = _stack_origin(source, controller, spell) if fresh else null
+		_put(key, card, "stack", from if from is Transform3D else t, sleeve, seen, names)
+		if from is Transform3D:
+			(_cards[key] as CardNode).move_to(t, true)
+		if floating:
+			now[key] = true
+			_cast_shadow(_cards[key], false)
+	for key: Variant in _stack_keys:
+		if not now.has(key) and _cards.has(key):
+			_cast_shadow(_cards[key], true)
+	_stack_keys = now
+
+
+static func _cast_shadow(node: Node3D, on: bool) -> void:
+	for child: Node in node.find_children("*", "GeometryInstance3D", true, false):
+		(child as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## O lugar da camada `depth` da pilha: no vão do painel, ou (sem painel) o monte inclinado no tampo, à direita.
+func _stack_transform(depth: int, count: int) -> Transform3D:
+	var rect: Rect2 = stack_slot.call(depth)
+	if rect.size.y <= 0.0:
+		var d: int = count - 1 - depth
+		return Transform3D(Basis(Vector3.RIGHT, deg_to_rad(28.0)), Vector3(4.6 + d * 0.18, 0.9 + d * 0.05, -0.2 + d * 0.25))
+	# As camadas além da terceira ficam exatamente atrás dela (o painel mostra até três por trás do topo).
+	var distance: float = STACK_DEPTH + 0.12 * depth
+	var pos: Vector3 = camera.project_position(rect.get_center(), distance)
+	var view_h: float = camera.get_viewport().get_visible_rect().size.y
+	var pixels_per_unit: float = view_h / (2.0 * distance * tan(deg_to_rad(camera.fov) / 2.0))
+	var s: float = rect.size.y / pixels_per_unit / CardNode.SIZE.y
+	return Transform3D(_facing_camera(pos).scaled(Vector3(s, s, s)), pos)
+
+
+## De onde vem um item novo da pilha: a habilidade da permanente que a gerou, a mágica do oponente da mão dele (de
+## costas); null para nascer já no lugar (a sua mágica já existe: voa da sua mão).
+func _stack_origin(source: Dictionary, controller: int, spell: bool) -> Variant:
+	if not spell and source.has("id") and _cards.has(int(source["id"])):
+		var origin: CardNode = _cards[int(source["id"])]
+		return Transform3D(origin.global_transform.basis.orthonormalized().scaled(Vector3(0.6, 0.6, 0.6)), origin.global_position + Vector3(0, 0.2, 0))
+	var frame: Dictionary = _frames.get(controller, {})
+	if frame.is_empty():
+		return null
+	var scale: float = frame["scale"]
+	var at: Vector3 = HAND_CENTER if int(frame["side"]) > 0 else frame["hand"]
+	return Transform3D(Basis(Vector3.FORWARD, PI).scaled(Vector3(scale, scale, scale)), at + Vector3(0, 0.1, 0))
 
 
 ## Cria ou atualiza o nó da carta e o manda para `t` (em arco se mudou de zona).

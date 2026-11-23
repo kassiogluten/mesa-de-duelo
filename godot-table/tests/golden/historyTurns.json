@@ -1,0 +1,1697 @@
+[
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "ability-activated",
+     "actor": 1,
+     "trigger": true,
+     "stackId": 9,
+     "card": {
+      "id": 5,
+      "name": "Hare Apparent"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 2,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 100,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 3,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 101,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 4,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 102,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 5,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 103,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 6,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 104,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 7,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 105,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 8,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 106,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 9,
+     "type": "entered",
+     "actor": 1,
+     "card": {
+      "id": 107,
+      "name": "Rabbit",
+      "token": true
+     },
+     "from": null,
+     "stackId": 9,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 10,
+     "type": "resolved",
+     "actor": 1,
+     "trigger": true,
+     "stackId": 9,
+     "card": {
+      "id": 5,
+      "name": "Hare Apparent"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "1": "ability-activated Hare Apparent.",
+       "2": "entered Rabbit.",
+       "3": "entered Rabbit.",
+       "4": "entered Rabbit.",
+       "5": "entered Rabbit.",
+       "6": "entered Rabbit.",
+       "7": "entered Rabbit.",
+       "8": "entered Rabbit.",
+       "9": "entered Rabbit."
+      },
+      "card": {
+       "2": "Rabbit"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "inicio",
+    "turn": null,
+    "actor": null,
+    "lines": [
+     {
+      "key": "e1",
+      "text": "ability-activated Hare Apparent: criou 8 fichas de Rabbit.",
+      "card": "Hare Apparent",
+      "badges": [],
+      "children": [
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       },
+       {
+        "text": "entered Rabbit.",
+        "card": "Rabbit"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "attackers",
+     "actor": 1,
+     "cards": [
+      1
+     ],
+     "frame": {
+      "players": [
+       {
+        "id": 1,
+        "battlefield": [
+         {
+          "id": 1,
+          "name": "Serra Angel"
+         }
+        ]
+       },
+       {
+        "id": 2,
+        "battlefield": [
+         {
+          "id": 2,
+          "name": "Grizzly Bears"
+         }
+        ]
+       }
+      ],
+      "stack": [],
+      "combat": [
+       {
+        "attacker": 1,
+        "blockers": [
+         2
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "seq": 2,
+     "type": "blockers",
+     "actor": 2,
+     "cards": [
+      2
+     ],
+     "frame": {
+      "players": [
+       {
+        "id": 1,
+        "battlefield": [
+         {
+          "id": 1,
+          "name": "Serra Angel"
+         }
+        ]
+       },
+       {
+        "id": 2,
+        "battlefield": [
+         {
+          "id": 2,
+          "name": "Grizzly Bears"
+         }
+        ]
+       }
+      ],
+      "stack": [],
+      "combat": [
+       {
+        "attacker": 1,
+        "blockers": [
+         2
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "1": "attackers.",
+       "2": "blockers."
+      },
+      "cardById": {
+       "1:1": {
+        "id": 1,
+        "name": "Serra Angel"
+       },
+       "2:2": {
+        "id": 2,
+        "name": "Grizzly Bears"
+       },
+       "1:2": {
+        "id": 1,
+        "name": "Serra Angel"
+       }
+      },
+      "label": {
+       "Serra Angel": "Serra Angel",
+       "Grizzly Bears": "Grizzly Bears"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "inicio",
+    "turn": null,
+    "actor": null,
+    "lines": [
+     {
+      "key": "e1",
+      "text": "attackers.",
+      "card": null,
+      "badges": [],
+      "children": [
+       {
+        "text": "Serra Angel",
+        "card": "Serra Angel"
+       }
+      ]
+     },
+     {
+      "key": "e2",
+      "text": "blockers.",
+      "card": null,
+      "badges": [],
+      "children": [
+       {
+        "text": "Grizzly Bears bloqueia Serra Angel",
+        "card": "Grizzly Bears"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "draw",
+     "actor": 1,
+     "count": 7
+    },
+    {
+     "seq": 2,
+     "type": "turn",
+     "actor": 1,
+     "turn": 1
+    },
+    {
+     "seq": 3,
+     "type": "land-played",
+     "actor": 1,
+     "card": {
+      "id": 5,
+      "name": "Forest"
+     }
+    },
+    {
+     "seq": 4,
+     "type": "turn",
+     "actor": 2,
+     "turn": 2
+    },
+    {
+     "seq": 5,
+     "type": "turn",
+     "actor": 1,
+     "turn": 3
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "1": "draw x7.",
+       "3": "land-played Forest."
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "inicio",
+    "turn": null,
+    "actor": null,
+    "lines": [
+     {
+      "key": "e1",
+      "text": "draw x7.",
+      "card": null,
+      "badges": [],
+      "children": []
+     }
+    ]
+   },
+   {
+    "key": "t2",
+    "turn": 1,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e3",
+      "text": "land-played Forest.",
+      "card": "Forest",
+      "badges": [],
+      "children": []
+     }
+    ]
+   },
+   {
+    "key": "t4",
+    "turn": 2,
+    "actor": 2,
+    "lines": []
+   },
+   {
+    "key": "t5",
+    "turn": 3,
+    "actor": 1,
+    "lines": []
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "left",
+     "card": {
+      "id": 1,
+      "name": "A"
+     },
+     "reason": "destroyed"
+    },
+    {
+     "seq": 2,
+     "type": "left",
+     "card": {
+      "id": 2,
+      "name": "B"
+     },
+     "reason": "destroyed"
+    },
+    {
+     "seq": 3,
+     "type": "left",
+     "card": {
+      "id": 3,
+      "name": "C"
+     },
+     "to": "Exile"
+    },
+    {
+     "seq": 4,
+     "type": "entered",
+     "card": {
+      "id": 4,
+      "name": "Zombie"
+     }
+    },
+    {
+     "seq": 5,
+     "type": "entered",
+     "card": {
+      "id": 5,
+      "name": "Zombie"
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "1": "left A.",
+       "2": "left B.",
+       "3": "left C.",
+       "4": "entered Zombie.",
+       "5": "entered Zombie."
+      },
+      "card": {
+       "1": "A",
+       "2": "B",
+       "4": "Zombie"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "inicio",
+    "turn": null,
+    "actor": null,
+    "lines": [
+     {
+      "key": "e1",
+      "text": "2 cartas destruídas: A e B.",
+      "card": "A",
+      "badges": [],
+      "children": [
+       {
+        "text": "left A.",
+        "card": "A"
+       },
+       {
+        "text": "left B.",
+        "card": "B"
+       }
+      ]
+     },
+     {
+      "key": "e3",
+      "text": "left C.",
+      "card": "C",
+      "badges": [],
+      "children": []
+     },
+     {
+      "key": "e4",
+      "text": "2 × Zombie entraram no campo.",
+      "card": "Zombie",
+      "badges": [],
+      "children": [
+       {
+        "text": "entered Zombie.",
+        "card": "Zombie"
+       },
+       {
+        "text": "entered Zombie.",
+        "card": "Zombie"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "spell-cast",
+     "actor": 1,
+     "stackId": 4,
+     "sourceId": 5,
+     "card": {
+      "id": 5,
+      "name": "Llanowar Elves"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 4
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 2,
+     "type": "entered",
+     "actor": 1,
+     "sourceId": 5,
+     "card": {
+      "id": 5,
+      "name": "Llanowar Elves"
+     },
+     "from": "Stack",
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 4
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 3,
+     "type": "resolved",
+     "actor": 1,
+     "stackId": 4,
+     "sourceId": 5,
+     "card": {
+      "id": 5,
+      "name": "Llanowar Elves"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 4
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "1": "spell-cast Llanowar Elves."
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "inicio",
+    "turn": null,
+    "actor": null,
+    "lines": [
+     {
+      "key": "e1",
+      "text": "spell-cast Llanowar Elves.",
+      "card": "Llanowar Elves",
+      "badges": [],
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "turn",
+     "actor": 1,
+     "turn": 2
+    },
+    {
+     "seq": 2,
+     "type": "spell-cast",
+     "actor": 1,
+     "stackId": 1,
+     "card": {
+      "id": 1,
+      "name": "Lightning Bolt"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 1
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 3,
+     "type": "spell-cast",
+     "actor": 2,
+     "stackId": 2,
+     "card": {
+      "id": 2,
+      "name": "Giant Growth"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 2
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 4,
+     "type": "resolved",
+     "actor": 2,
+     "stackId": 2,
+     "card": {
+      "id": 2,
+      "name": "Giant Growth"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 2
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 5,
+     "type": "damage",
+     "actor": 1,
+     "card": {
+      "id": 1,
+      "name": "Lightning Bolt"
+     },
+     "delta": -3,
+     "targets": {
+      "players": [
+       2
+      ]
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 1
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 6,
+     "type": "life-changed",
+     "actor": 2,
+     "delta": -3,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 1
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 7,
+     "type": "resolved",
+     "actor": 1,
+     "stackId": 1,
+     "card": {
+      "id": 1,
+      "name": "Lightning Bolt"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 1
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 8,
+     "type": "spell-cast",
+     "actor": 2,
+     "stackId": 3,
+     "card": {
+      "id": 3,
+      "name": "Shock"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 3
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 9,
+     "type": "countered",
+     "actor": 2,
+     "stackId": 3,
+     "card": {
+      "id": 3,
+      "name": "Shock"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 3
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "2": "spell-cast Lightning Bolt.",
+       "3": "spell-cast Giant Growth.",
+       "5": "damage Lightning Bolt.",
+       "8": "spell-cast Shock."
+      },
+      "player": {
+       "1": "Ana",
+       "2": "Bruno"
+      },
+      "card": {
+       "7": "Lightning Bolt"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "t1",
+    "turn": 2,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e2",
+      "text": "spell-cast Lightning Bolt.",
+      "card": "Lightning Bolt",
+      "badges": [],
+      "children": []
+     },
+     {
+      "key": "e3",
+      "text": "spell-cast Giant Growth.",
+      "card": "Giant Growth",
+      "badges": [],
+      "children": []
+     },
+     {
+      "key": "e7",
+      "text": "Lightning Bolt (Ana) resolveu: causou 3 de dano a Bruno.",
+      "card": "Lightning Bolt",
+      "badges": [],
+      "children": [
+       {
+        "text": "damage Lightning Bolt.",
+        "card": "Lightning Bolt"
+       }
+      ]
+     },
+     {
+      "key": "e8",
+      "text": "spell-cast Shock: não resolveu.",
+      "card": "Shock",
+      "badges": [],
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "turn",
+     "actor": 1,
+     "turn": 3
+    },
+    {
+     "seq": 2,
+     "type": "draw",
+     "actor": 1
+    },
+    {
+     "seq": 3,
+     "type": "spell-cast",
+     "actor": 1,
+     "stackId": 7,
+     "card": {
+      "id": 7,
+      "name": "Divination"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 7
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 4,
+     "type": "draw",
+     "actor": 1
+    },
+    {
+     "seq": 5,
+     "type": "draw",
+     "actor": 1
+    },
+    {
+     "seq": 6,
+     "type": "resolved",
+     "actor": 1,
+     "stackId": 7,
+     "card": {
+      "id": 7,
+      "name": "Divination"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 7
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "2": "draw.",
+       "3": "spell-cast Divination."
+      },
+      "player": {
+       "1": "Ana"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "t1",
+    "turn": 3,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e2",
+      "text": "draw.",
+      "card": null,
+      "badges": [],
+      "children": []
+     },
+     {
+      "key": "e3",
+      "text": "spell-cast Divination: Ana comprou 2 cartas.",
+      "card": "Divination",
+      "badges": [],
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "turn",
+     "actor": 1,
+     "turn": 4
+    },
+    {
+     "seq": 2,
+     "type": "spell-cast",
+     "actor": 1,
+     "stackId": 9,
+     "card": {
+      "id": 30,
+      "name": "Wrath of God"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 3,
+     "type": "left",
+     "actor": 2,
+     "card": {
+      "id": 20,
+      "name": "Llanowar Elves"
+     },
+     "reason": "destroyed",
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 4,
+     "type": "left",
+     "actor": 2,
+     "card": {
+      "id": 21,
+      "name": "Grizzly Bears"
+     },
+     "reason": "destroyed",
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 5,
+     "type": "left",
+     "actor": 1,
+     "card": {
+      "id": 22,
+      "name": "Serra Angel"
+     },
+     "reason": "destroyed",
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 6,
+     "type": "resolved",
+     "actor": 1,
+     "stackId": 9,
+     "card": {
+      "id": 30,
+      "name": "Wrath of God"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "2": "spell-cast Wrath of God.",
+       "3": "left Llanowar Elves.",
+       "4": "left Grizzly Bears.",
+       "5": "left Serra Angel."
+      },
+      "player": {
+       "2": "Bruno"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "t1",
+    "turn": 4,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e2",
+      "text": "spell-cast Wrath of God: destruiu 3 permanentes (1 sua e 2 de Bruno).",
+      "card": "Wrath of God",
+      "badges": [],
+      "children": [
+       {
+        "text": "left Llanowar Elves.",
+        "card": "Llanowar Elves"
+       },
+       {
+        "text": "left Grizzly Bears.",
+        "card": "Grizzly Bears"
+       },
+       {
+        "text": "left Serra Angel.",
+        "card": "Serra Angel"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "turn",
+     "actor": 1,
+     "turn": 4
+    },
+    {
+     "seq": 2,
+     "type": "spell-cast",
+     "actor": 1,
+     "stackId": 9,
+     "card": {
+      "id": 30,
+      "name": "Wrath of God"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 3,
+     "type": "left",
+     "actor": 2,
+     "card": {
+      "id": 20,
+      "name": "Llanowar Elves"
+     },
+     "reason": "destroyed",
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 4,
+     "type": "resolved",
+     "actor": 1,
+     "stackId": 9,
+     "card": {
+      "id": 30,
+      "name": "Wrath of God"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 9
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 5,
+     "type": "draw",
+     "actor": 1,
+     "count": 1
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "2": "spell-cast Wrath of God.",
+       "5": "draw x1."
+      },
+      "card": {
+       "3": "Llanowar Elves"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "t1",
+    "turn": 4,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e2",
+      "text": "spell-cast Wrath of God: destruiu Llanowar Elves.",
+      "card": "Wrath of God",
+      "badges": [],
+      "children": []
+     },
+     {
+      "key": "e5",
+      "text": "draw x1.",
+      "card": null,
+      "badges": [],
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "turn",
+     "actor": 1,
+     "turn": 5
+    },
+    {
+     "seq": 2,
+     "type": "damage",
+     "combat": true,
+     "delta": -4,
+     "targets": {
+      "players": [
+       2
+      ]
+     },
+     "card": {
+      "id": 1,
+      "name": "Serra Angel"
+     }
+    },
+    {
+     "seq": 3,
+     "type": "damage",
+     "combat": true,
+     "delta": -2,
+     "targets": {
+      "cards": [
+       9
+      ]
+     },
+     "card": {
+      "id": 2,
+      "name": "Grizzly Bears"
+     }
+    },
+    {
+     "seq": 4,
+     "type": "life-changed",
+     "actor": 2,
+     "delta": -4
+    },
+    {
+     "seq": 5,
+     "type": "life-changed",
+     "actor": 1,
+     "delta": 4
+    },
+    {
+     "seq": 6,
+     "type": "left",
+     "actor": 2,
+     "card": {
+      "id": 9,
+      "name": "Llanowar Elves"
+     },
+     "reason": "destroyed"
+    },
+    {
+     "seq": 7,
+     "type": "land-played",
+     "actor": 1,
+     "card": {
+      "id": 3,
+      "name": "Plains"
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "describe": {
+       "2": "damage Serra Angel.",
+       "3": "damage Grizzly Bears.",
+       "5": "life-changed.",
+       "6": "left Llanowar Elves.",
+       "7": "land-played Plains."
+      },
+      "player": {
+       "1": "Ana",
+       "2": "Bruno"
+      },
+      "card": {
+       "6": "Llanowar Elves"
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "t1",
+    "turn": 5,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e2",
+      "text": "Dano de combate: Bruno sofreu 4 de dano; Llanowar Elves morreu; Ana ganhou 4 de vida.",
+      "card": "Serra Angel",
+      "badges": [],
+      "children": [
+       {
+        "text": "damage Serra Angel.",
+        "card": "Serra Angel"
+       },
+       {
+        "text": "damage Grizzly Bears.",
+        "card": "Grizzly Bears"
+       },
+       {
+        "text": "life-changed.",
+        "card": null
+       },
+       {
+        "text": "left Llanowar Elves.",
+        "card": "Llanowar Elves"
+       }
+      ]
+     },
+     {
+      "key": "e7",
+      "text": "land-played Plains.",
+      "card": "Plains",
+      "badges": [],
+      "children": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "args": [
+   [
+    {
+     "seq": 1,
+     "type": "turn",
+     "actor": 1,
+     "turn": 6
+    },
+    {
+     "seq": 2,
+     "type": "ability-activated",
+     "trigger": true,
+     "actor": 1,
+     "stackId": 11,
+     "card": {
+      "id": 4,
+      "name": "Blood Artist"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 11
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 3,
+     "type": "ability-activated",
+     "trigger": true,
+     "actor": 1,
+     "stackId": 12,
+     "card": {
+      "id": 4,
+      "name": "Blood Artist"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 12
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 4,
+     "type": "life-changed",
+     "actor": 2,
+     "delta": -1,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 12
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 5,
+     "type": "resolved",
+     "trigger": true,
+     "actor": 1,
+     "stackId": 12,
+     "card": {
+      "id": 4,
+      "name": "Blood Artist"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 12
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 6,
+     "type": "life-changed",
+     "actor": 2,
+     "delta": -1,
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 11
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    },
+    {
+     "seq": 7,
+     "type": "resolved",
+     "trigger": true,
+     "actor": 1,
+     "stackId": 11,
+     "card": {
+      "id": 4,
+      "name": "Blood Artist"
+     },
+     "frame": {
+      "players": [],
+      "stack": [
+       {
+        "id": 11
+       }
+      ],
+      "turn": 3,
+      "phase": "MAIN1",
+      "activePlayer": 1
+     }
+    }
+   ],
+   {
+    "$view": {
+     "you": 1,
+     "$calls": {
+      "card": {
+       "2": "Blood Artist"
+      },
+      "player": {
+       "2": "Bruno"
+      },
+      "describe": {
+       "4": "life-changed.",
+       "6": "life-changed."
+      }
+     }
+    }
+   }
+  ],
+  "out": [
+   {
+    "key": "t1",
+    "turn": 6,
+    "actor": 1,
+    "lines": [
+     {
+      "key": "e2",
+      "text": "2 gatilhos de Blood Artist: Bruno perdeu 2 de vida.",
+      "card": "Blood Artist",
+      "badges": [],
+      "children": [
+       {
+        "text": "life-changed.",
+        "card": null
+       },
+       {
+        "text": "life-changed.",
+        "card": null
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
