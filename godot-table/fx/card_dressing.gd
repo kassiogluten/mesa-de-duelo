@@ -40,6 +40,8 @@ static func dress(node: CardNode, _catalog: CardCatalog = null) -> void:
 		halo.visible = true
 		var g: Vector4 = glow
 		(halo.material_override as ShaderMaterial).set_shader_parameter("color", Color(g.x, g.y, g.z, g.w))
+		var style: Variant = material.get_shader_parameter("glow_style")
+		(halo.material_override as ShaderMaterial).set_shader_parameter("style", int(style) if style != null else 0)
 	elif halo and is_instance_valid(halo):
 		halo.visible = false
 	# Na partida, nada de foil no campo: ele distrai numa mesa cheia (pedido do jogador). Só no inspetor.
@@ -118,6 +120,17 @@ render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabl
 uniform vec4 color : source_color = vec4(0.3, 0.75, 1.0, 1.0);
 uniform vec2 card = vec2(0.63, 0.88);
 uniform float margin = 0.14;
+// 0 o halo que respira; 1 o "pode jogar": uma aura macia com ondas correndo pelo contorno e duas luzes viajando.
+uniform int style = 0;
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float noise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
 float box(vec2 p, vec2 b, float r) {
 	vec2 q = abs(p) - b + r;
 	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
@@ -130,6 +143,18 @@ void fragment() {
 	float breathe = 0.8 + 0.2 * sin(TIME * 3.2);
 	ALBEDO = color.rgb * 1.15;
 	ALPHA = fall * fall * color.a * 0.7 * breathe;
+	if (style == 1) {
+		// Aura limpa: um brilho macio em volta, ondas lentas correndo pelo contorno e duas luzes viajando por ele.
+		float a = atan(p.y, p.x);
+		float waves = 0.62 + 0.24 * sin(a * 3.0 - TIME * 1.4) + 0.14 * sin(a * 5.0 + TIME * 0.9);
+		float soft = exp(-d / (0.035 + 0.025 * waves)) * step(0.0, d);
+		float comet = pow(0.5 + 0.5 * sin(a - TIME * 1.8), 28.0) + pow(0.5 + 0.5 * sin(a + 3.14159 - TIME * 1.8), 28.0);
+		// Some antes da borda da malha (senão o retângulo dela aparece).
+		float edge_fade = smoothstep(margin, margin * 0.45, d);
+		float aura = (soft * waves * 0.95 + comet * exp(-d / 0.022) * step(0.0, d) * 0.9) * edge_fade;
+		ALBEDO = mix(color.rgb, vec3(1.0), 0.04 + 0.55 * comet) * 1.35;
+		ALPHA = clamp(aura, 0.0, 1.0) * color.a * 0.85;
+	}
 }
 """
 	return _halo_shader

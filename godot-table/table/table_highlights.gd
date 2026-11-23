@@ -109,6 +109,10 @@ func _show(key: Variant, node: CardNode, role: String) -> void:
 	var strength: float = float((HOVER_STRENGTH if over else STRENGTH)[role])
 	var color: Color = FOCUS.lerp(color_of(role), 0.35) if TargetSnap.same(key, _focus) else color_of(role)
 	node.fade_glow(color, strength)
+	# O "pode jogar" tem o estilo próprio (energia na borda e aura); os outros estados, a borda que respira.
+	var material: ShaderMaterial = CardDressing.material_of(node)
+	if material:
+		material.set_shader_parameter("glow_style", 1 if role == "actionable" else 0)
 	var raise := Vector3.ZERO
 	if role == "selected":
 		raise = HAND_RAISE if zone == "hand" else FIELD_RAISE

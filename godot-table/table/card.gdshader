@@ -7,6 +7,9 @@ uniform bool has_front = false;
 uniform vec3 sleeve_color : source_color = vec3(0.42, 0.24, 0.12);
 // Destaque: rgb a cor, a a força (pode jogar, alvo, selecionada).
 uniform vec4 glow = vec4(0.35, 0.8, 1.0, 0.0);
+// Estilo do destaque: 0 a borda que respira com um brilho correndo (alvo, selecionada, atacando); 1 o "pode jogar", com
+// filamentos de energia fluindo pela borda, luz entrando por dentro e um brilho que atravessa a face de tempos em tempos.
+uniform int glow_style = 0;
 // Escurece a carta que não pode ser escolhida no prompt atual.
 uniform float dim : hint_range(0.0, 1.0) = 0.0;
 // Brilho de passagem de mouse.
@@ -131,6 +134,21 @@ void fragment() {
 		float edge_band = smoothstep(-0.034, 0.0, d);
 		float veil = smoothstep(-0.08, 0.0, d) * 0.12;
 		glow_light = glow.rgb * glow.a * (edge_band * (1.15 * breathe + run * 1.6) + veil);
+		if (glow_style == 1) {
+			// Pode jogar: energia viva na borda em vez do brilho que corre.
+			float s = angle / 6.2831853 + 0.5;
+			float n1 = noise(vec2(s * 26.0 - TIME * 1.7, TIME * 0.55));
+			float n2 = noise(vec2(s * 57.0 + TIME * 2.6, 3.1 + TIME * 0.8));
+			float plasma = smoothstep(0.42, 0.95, n1 * 0.62 + n2 * 0.48);
+			float line = exp(-pow(d / 0.0035, 2.0));
+			float rim = smoothstep(-0.06, 0.0, d);
+			rim *= rim;
+			float diag2 = UV.x * 0.6 + UV.y * 0.9;
+			float sheen = smoothstep(0.07, 0.0, abs(fract(TIME * 0.26) * 2.6 - 0.8 - diag2));
+			vec3 hot = mix(glow.rgb, vec3(1.0), 0.6);
+			glow_light = glow.a * (hot * line * 1.6 + glow.rgb * rim * (0.45 + 1.4 * plasma) * breathe
+				+ hot * plasma * smoothstep(-0.02, 0.0, d) * 1.4 + vec3(0.9, 0.97, 1.0) * sheen * 0.12);
+		}
 	}
 	EMISSION = glow_light + vec3(hover * 0.06) + dissolve_color * (dissolve > 0.0 ? smoothstep(dissolve * 1.1 + 0.06, dissolve * 1.1 - 0.05, burn) : 0.0) * 4.0 + flash.rgb * flash.a + extra;
 }
