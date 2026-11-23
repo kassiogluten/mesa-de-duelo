@@ -1,8 +1,0 @@
-{
-  "Mesa no PC para Linux": [
-    { "img": "pagina-linux.webp", "legenda": "A página Mesa no PC num PC com Linux: o botão Baixar para Linux com a versão e o tamanho do arquivo .tar.gz." },
-    { "img": "passos-linux.webp", "legenda": "Os três passos no Linux (baixar, extrair, abrir o mesa-de-duelo) e como pôr a mesa no menu de aplicativos com o criar-atalho.sh." },
-    { "img": "requisitos-linux.webp", "legenda": "O que o PC com Linux precisa e como desinstalar, inclusive tirar o atalho do menu." },
-    { "img": "outros-aparelhos.webp", "legenda": "No celular, a página avisa que a mesa no PC é só para Windows e Linux por enquanto e oferece os dois downloads." }
-  ]
-}

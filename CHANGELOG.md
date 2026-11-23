@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.240.0] - 2026-11-23
+
+### Novo
+
+- **Mesa no PC para Linux.** A página Mesa no PC agora também baixa a Mesa de Duelo para Linux: num PC com Linux, o botão Baixar para Linux traz um arquivo .tar.gz com a versão e o tamanho. É só extrair numa pasta de sua escolha e abrir o mesa-de-duelo, sem instalar e sem senha de administrador; a mesa se atualiza sozinha a cada abertura, como no Windows. Para ela aparecer no menu de aplicativos, com o ícone, rode o criar-atalho.sh que vem na pasta. A página explica os passos, o que o PC precisa (Ubuntu 22.04 ou mais novo, ou outro Linux de 64 bits, e placa de vídeo com Vulkan) e como desinstalar. No celular e nos outros aparelhos, ela avisa que a mesa no PC é só para Windows e Linux, por enquanto, e oferece os dois downloads. O link Mesa no PC do rodapé da tela inicial passa a aparecer também no Linux.
+
 ## [0.239.0] - 2026-11-23
 
 ### Novo
