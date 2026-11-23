@@ -29,6 +29,9 @@ func _ready() -> void:
 	shaders.append(ArrivalFx._material(Color(1, 1, 1, 0.5), 0.0, 0.1, 0.2))
 	shaders.append(ArrivalFx._material(Color.WHITE, 0.85, 0.28, 0.0))
 	shaders.append(Critters._mat(Color.WHITE))
+	# Os efeitos contínuos das permanentes (o material compartilhado) e o ponto de luz das partículas deles.
+	shaders.append(AmbientFx.shared_material())
+	shaders.append(AmbientMotes.draw_mesh().material)
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 0.001
 	for material: Material in shaders:
@@ -42,6 +45,11 @@ func _ready() -> void:
 	Fx.burst(self, spot, Color(0, 0, 0, 0), 4, 0.01, 0.2, 0.001)
 	BoardSweep._front_sparks(self, spot, Color(0, 0, 0, 0), 0.2)
 	SpellMissile.warm(self, spot)
+	for mode: int in AmbientTraits.PARTICLE_MODES:
+		var motes: GPUParticles3D = AmbientMotes.emitter(mode)
+		motes.position = Vector3(0, 0, 0)
+		motes.scale = Vector3.ONE * 0.001
+		holder.add_child(motes)
 	var label := Label3D.new()
 	label.text = "Aquecendo 0123456789"
 	label.font = MomentPieces._font()

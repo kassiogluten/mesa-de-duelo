@@ -97,6 +97,13 @@ func _build_panel() -> void:
 		Prefs.save("effects", level)
 		effects_changed.emit(level))
 	column.add_child(_effects)
+	# Efeitos contínuos nas permanentes (fx/ambient_fx.gd): valem na hora.
+	AmbientFx.load_pref()
+	var ambient: CheckBox = ModalStyle.checkbox("Efeitos contínuos nas permanentes", AmbientFx.enabled)
+	ambient.size_flags_horizontal = Control.SIZE_FILL
+	ambient.tooltip_text = "Voar, vínculo com a vida, indestrutível e outras qualidades aparecem de leve nas cartas com a mesa parada."
+	ambient.toggled.connect(func(on: bool) -> void: AmbientFx.set_enabled(on))
+	column.add_child(ambient)
 	var sound := HBoxContainer.new()
 	sound.add_theme_constant_override("separation", 12)
 	sound.add_child(_text(15, Color(1, 1, 1, 0.8), "Som"))

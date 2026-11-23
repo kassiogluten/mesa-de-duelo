@@ -119,6 +119,11 @@ func _ready() -> void:
 	volume.value_changed.connect(func(v: float) -> void: Prefs.save("volume", v))
 	options.add_child(volume)
 	column.add_child(options)
+	AmbientFx.load_pref()
+	var ambient: CheckBox = ModalStyle.checkbox("Efeitos contínuos nas permanentes", AmbientFx.enabled)
+	ambient.tooltip_text = "Voar, vínculo com a vida, indestrutível e outras qualidades aparecem de leve nas cartas com a mesa parada."
+	ambient.toggled.connect(func(on: bool) -> void: AmbientFx.set_enabled(on))
+	column.add_child(ambient)
 	var lab_button := Hud._button("Laboratório de efeitos", false)
 	lab_button.pressed.connect(func() -> void: lab.emit())
 	column.add_child(lab_button)

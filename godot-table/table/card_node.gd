@@ -443,3 +443,27 @@ func _set_hover(on: bool) -> void:
 func _on_input(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape: int) -> void:
 	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		clicked.emit(self)
+
+
+# — Efeitos contínuos (fx/ambient_fx.gd) —
+
+## O desenho que paira (o Voar): um nó entre _visual e o desenho, criado só quando alguém pede, com tudo o que estava em
+## _visual menos a sombra de contato, que fica no tampo. Os tweens de _visual (mão, seleção, pouso, tremor, entrada do
+## comandante) continuam valendo por fora e não brigam com o pairar; só AmbientFx mexe neste nó.
+var _float: Node3D
+
+
+func float_node() -> Node3D:
+	if _float == null:
+		_float = Node3D.new()
+		_float.name = "Float"
+		_visual.add_child(_float)
+		for child: Node in _visual.get_children():
+			if child != _shadow and child != _float:
+				child.reparent(_float, false)
+	return _float
+
+
+## A sombra de contato se espalha (1 = normal) quando o desenho paira mais alto.
+func set_shadow_spread(amount: float) -> void:
+	_shadow.scale = Vector3(amount, 1.0, amount)
