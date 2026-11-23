@@ -45,7 +45,7 @@ void fragment() {
 	float ripple = exp(-pow((down - hit * 1.9) / 0.16, 2.0)) * step(0.001, hit) * (1.0 - hit);
 	float crack = step(1.0 - cracks * 0.9, id) * step(0.001, cracks) * (0.35 + line);
 	vec3 tint = mix(color.rgb, vec3(1.0), clamp(flash * 0.6 + crack * 0.6 + ripple * 0.5, 0.0, 1.0));
-	ALBEDO = tint * (1.25 + flash * 2.5 + crack * 2.5 + ripple * 2.0);
+	ALBEDO = tint * (1.25 + flash * 2.5 + crack * 1.2 + ripple * 2.0);
 	float body = rim * 0.45 + line * (0.32 + 0.6 * rim) * shimmer + band * line * 0.6 + foot * 0.35;
-	ALPHA = clamp(body + flash * 0.25 + ripple * (0.35 + line) + crack, 0.0, 1.0) * alpha;
+	ALPHA = clamp(body + flash * 0.25 + ripple * (0.35 + line) + crack * 0.55, 0.0, 1.0) * alpha;
 }

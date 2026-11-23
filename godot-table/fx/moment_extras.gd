@@ -132,7 +132,7 @@ static func dust_ring(parent: Node3D, pos: Vector3, color: Color, reach: float =
 	process.radial_velocity_max = reach * 2.8
 	process.damping_min = reach * 2.2
 	process.damping_max = reach * 3.4
-	process.gravity = Vector3(0, -0.2, 0)
+	process.gravity = Vector3.ZERO
 	process.scale_min = size * 0.7
 	process.scale_max = size * 1.3
 	var grow := Curve.new()
@@ -143,11 +143,12 @@ static func dust_ring(parent: Node3D, pos: Vector3, color: Color, reach: float =
 	process.scale_curve = grow_tex
 	var fade := Gradient.new()
 	fade.offsets = PackedFloat32Array([0.0, 0.15, 1.0])
-	fade.colors = PackedColorArray([Color(color, 0.0), Color(color, 0.5 * color.a), Color(color, 0.0)])
+	fade.colors = PackedColorArray([Color(color, 0.0), Color(color, 0.4 * color.a), Color(color, 0.0)])
 	process.color_ramp = _texture(fade)
 	particles.process_material = process
 	particles.draw_pass_1 = _dust()
-	particles.position = pos + Vector3(0, 0.06, 0)
+	# Acima do tampo meia baforada (já crescida): virada para a câmera, a metade de baixo não some dentro da mesa.
+	particles.position = pos + Vector3(0, size * 0.8 + 0.03, 0)
 	parent.add_child(particles)
 	particles.emitting = true
 	_free_after(particles, life + 0.3)
@@ -155,7 +156,7 @@ static func dust_ring(parent: Node3D, pos: Vector3, color: Color, reach: float =
 
 ## Uma baforada de poeira pequena (o quique do dado, a comida batendo na carta).
 static func puff(parent: Node3D, pos: Vector3, strength: float = 1.0) -> void:
-	dust_ring(parent, pos, Color(0.62, 0.57, 0.5, 0.55), 0.6 * strength, int(14 * strength) + 4, 0.6, 0.2 * strength + 0.06)
+	dust_ring(parent, pos, Color(0.55, 0.5, 0.44, 0.7), 0.6 * strength, int(14 * strength) + 4, 0.6, 0.2 * strength + 0.06)
 
 
 ## Clarão em estrela em `pos`, de frente para a câmera: abre rápido e some (impacto, reflexo de metal).
@@ -310,7 +311,18 @@ static func _dust() -> QuadMesh:
 		material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 		material.billboard_keep_scale = true
 		material.vertex_color_use_as_albedo = true
-		material.albedo_texture = (Fx._spark().material as StandardMaterial3D).albedo_texture
+		# Borda bem macia (cai devagar até sumir): poeira, não bolhas.
+		var soft := GradientTexture2D.new()
+		soft.fill = GradientTexture2D.FILL_RADIAL
+		soft.fill_from = Vector2(0.5, 0.5)
+		soft.fill_to = Vector2(1.0, 0.5)
+		var falloff := Gradient.new()
+		falloff.offsets = PackedFloat32Array([0.0, 0.35, 0.7, 1.0])
+		falloff.colors = PackedColorArray([Color(1, 1, 1, 0.8), Color(1, 1, 1, 0.45), Color(1, 1, 1, 0.12), Color(1, 1, 1, 0.0)])
+		soft.gradient = falloff
+		soft.width = 64
+		soft.height = 64
+		material.albedo_texture = soft
 		_dust_quad.material = material
 	return _dust_quad
 

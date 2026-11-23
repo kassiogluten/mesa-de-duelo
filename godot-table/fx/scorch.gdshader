@@ -9,25 +9,23 @@ uniform float alpha = 1.0;
 // Quanto as brasas já esfriaram (0: acesas, 1: só fuligem).
 uniform float cool = 0.0;
 
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float noise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+// Manchas por ondas entortadas umas pelas outras: macias, sem a grade de um ruído por células.
+float blotches(vec2 p) {
+	float a = sin(p.x * 1.7 + sin(p.y * 1.3) * 1.8);
+	float b = sin(p.y * 2.1 + sin(p.x * 1.1 + 1.7) * 1.6);
+	float c = sin((p.x + p.y) * 3.3 + sin(p.x * 2.6 - p.y * 1.9) * 1.2);
+	return 0.5 + 0.22 * a + 0.18 * b + 0.1 * c;
 }
 
 void fragment() {
 	vec2 p = (UV - 0.5) * 2.0;
 	float r = length(p);
-	// O ruído girado e em várias escalas: manchas soltas, sem a grade quadrada aparecendo.
-	vec2 q = mat2(vec2(0.8, -0.6), vec2(0.6, 0.8)) * p;
-	float n = noise(q * 5.0) * 0.55 + noise(q * 11.0 + 3.1) * 0.3 + noise(q * 23.0 + 7.7) * 0.15;
+	float n = blotches(p * 6.0);
 	float behind = smoothstep(radius + 0.01, radius - 0.05, r) * smoothstep(1.0, 0.8, r);
 	float soot = behind * smoothstep(0.2, 0.8, n) * 0.7;
 	float edge = exp(-pow((r - radius) / 0.012, 2.0)) * step(0.01, radius) * (0.6 + 0.4 * n);
 	float embers = behind * smoothstep(0.55, 0.9, n) * smoothstep(radius - 0.3, radius - 0.02, r) * (1.0 - cool) * 0.7;
 	vec3 burn = vec3(0.025, 0.018, 0.012);
 	ALBEDO = burn + color.rgb * (edge * 3.5 + embers * 2.5);
-	ALPHA = clamp(soot * 0.6 + edge * 0.9 + embers, 0.0, 1.0) * alpha;
+	ALPHA = clamp(soot * 0.85 + edge * 0.9 + embers, 0.0, 1.0) * alpha;
 }

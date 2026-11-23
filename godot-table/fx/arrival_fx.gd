@@ -11,7 +11,7 @@ const TOKENS := {"Treasure": "coin", "Gold": "coin", "Clue": "glass", "Food": "a
 const GEM_SHADER := preload("res://fx/gem.gdshader")
 const LENS_SHADER := preload("res://fx/lens.gdshader")
 const LIQUID_SHADER := preload("res://fx/liquid.gdshader")
-const DUST := Color(0.74, 0.66, 0.54)
+const DUST := Color(0.5, 0.45, 0.38)
 
 static var _bloom_shader: Shader
 static var _dim_shader: Shader
@@ -47,7 +47,6 @@ static func commander(parent: Node3D, node: CardNode, camera: Camera3D, color: C
 	tween.tween_callback(func() -> void:
 		CardGlow.entered(node, color.lerp(GOLD, 0.5), true, speed)
 		MomentExtras.dust_ring(parent, pos, DUST, 3.4, 120, 1.3, 0.42)
-		Fx.ring(parent, pos, DUST.lerp(GOLD, 0.4), 8.0, 1.1 / speed, 0.035)
 		Fx.burst(parent, pos + Vector3(0, 0.2, 0), GOLD, 50, 2.8, 0.7, 0.07)
 		MomentExtras.flare(parent, pos + Vector3(0, 0.35, 0), GOLD, 2.8, 0.5 / speed)
 		Fx.light(parent, pos, GOLD, 7.0, 7.0, 0.8 / speed)
