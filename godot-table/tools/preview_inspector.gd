@@ -1,7 +1,7 @@
 # Prints do inspetor de carta numa mesa de exemplo: virar a dupla face, o tipo mudado, as cartas ligadas com a seta de
-# voltar, o Apontar e o foil pela raridade (no inspetor e na mesa). Usa o catálogo de verdade (servidor local).
+# voltar, o Apontar e o foil pela raridade (no inspetor e na prévia). Usa o catálogo de verdade (servidor local).
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_inspector.gd -- <cena> <pasta>
-# Cenas: dfc (antes, no meio do giro e depois), tipo, ligadas (e voltar), mutada, foil (inspetor e mesa).
+# Cenas: dfc (antes, no meio do giro e depois), tipo, ligadas (e voltar), mutada, foil (inspetor e prévia).
 extends SceneTree
 
 var _table: TableView
@@ -103,7 +103,13 @@ func _initialize() -> void:
 			_move(Vector2(600, 420))
 			await _shot("foil-rara", 1.6)
 			_inspector.close()
-			await _shot("foil-mesa", 0.6)
+			# A prévia que segue o mouse também tem o foil (a mesa, não).
+			for id: int in [40, 42]:
+				var at := Vector2(500, 450)
+				_move(at)
+				_inspector.show_preview(_table.card_data(id), _ctx(), _table.card_node(id).image_url)
+				await _shot("foil-previa-%s" % ("mitica" if id == 40 else "rara"), 0.8)
+				_inspector.hide_preview(true)
 	quit()
 
 

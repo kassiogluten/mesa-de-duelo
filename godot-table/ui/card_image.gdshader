@@ -17,7 +17,8 @@ uniform vec2 rect_size = vec2(360.0, 503.0);
 uniform vec2 tilt = vec2(0.0);
 uniform float turn = 0.0;
 uniform float spin = 0.0;
-// Foil: 0 comum (só o reflexo), 1 incomum (prateado), 2 rara (dourado), 3 mítica (arco-íris), 4 especial (arco-íris e cintilado).
+// Foil (CardDressing.foil_level): 0 nenhum (comum e incomum, só o reflexo), 1 rara (um brilho dourado que corre), 2 mítica
+// e especial (arco-íris e cintilado). Anda com a luz, que segue o mouse.
 uniform float foil = 0.0;
 
 // Distância do olho à carta, em larguras da carta: quanto menor, mais forte a perspectiva.
@@ -73,12 +74,18 @@ void fragment() {
 		float shift = light.x * 0.9 + light.y * 0.6;
 		float stripes = 0.5 + 0.5 * sin(diag * 10.0 - shift * 7.0 - TIME * 0.6);
 		float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-		vec3 tint = foil < 1.5 ? vec3(0.82, 0.9, 1.0) : foil < 2.5 ? vec3(1.0, 0.82, 0.45) : hue(diag * 1.3 + shift + TIME * 0.04);
-		float k = foil < 1.5 ? 0.16 : foil < 2.5 ? 0.24 : 0.34;
+		bool mythic = foil > 1.5;
+		vec3 tint = mythic ? hue(diag * 1.3 + shift + TIME * 0.04) : vec3(1.0, 0.84, 0.5);
+		float k = mythic ? 0.34 : 0.24;
 		lit += tint * stripes * (0.25 + 0.6 * luma) * k * (0.6 + 0.8 * glow);
-		if (foil > 3.5) {
-			float sparkle = step(0.982, hash(floor(uv * vec2(80.0, 112.0)) + floor(TIME * 4.0)));
-			lit += vec3(sparkle) * 0.5 * (0.4 + glow);
+		// O brilho que passa pela luz, mais estreito que o reflexo.
+		lit += vec3(1.0, 0.97, 0.9) * band * k * 0.5;
+		if (mythic) {
+			// Cintilado: pontos pequenos e macios que acendem e somem, mais perto da luz.
+			vec2 cell = uv * vec2(150.0, 210.0);
+			float on = step(0.988, hash(floor(cell) + floor(TIME * 3.0)));
+			float soft = 1.0 - smoothstep(0.1, 0.5, length(fract(cell) - 0.5));
+			lit += vec3(on * soft) * 0.32 * (0.3 + glow);
 		}
 	}
 	// De lado a carta escurece um pouco: o giro parece ter volume.

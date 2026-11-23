@@ -12,9 +12,6 @@ const OVERSCAN := 0.07
 const TILT_MAX := 0.16
 const FLIP_TIME := 0.44
 const INTRO_TIME := 1.1
-## O foil do inspetor por raridade (o mesmo degrau do navegador, cardFoil.ts): incomum prateado, rara dourada, mítica
-## com arco-íris e especial com arco-íris e cintilado.
-const FOIL := {"uncommon": 1.0, "rare": 2.0, "mythic": 3.0, "special": 4.0, "bonus": 4.0}
 
 var catalog: CardCatalog:
 	set(value):
@@ -289,10 +286,8 @@ func _show(card: Dictionary, ctx: Dictionary, url: String) -> void:
 	_fill(CardDetails.build(card, view))
 	_set_image(url)
 	var material := _image.material as ShaderMaterial
-	var rarity: String = ""
-	if not bool(card.get("faceDown", false)) and not bool(card.get("token", false)) and Txt.of(card.get("name")) != "":
-		rarity = Txt.of(card.get("rarity")) if card.has("rarity") else Txt.of((lookup.call(Txt.of(card["name"])) as Dictionary).get("rarity"))
-	var foil: float = float(FOIL.get(rarity, 0.0))
+	# O foil pela raridade (só aqui e na prévia; a mesa fica sem): a do estado ou a do catálogo.
+	var foil: float = CardDressing.foil_level(CardDressing.rarity_of(card, catalog))
 	material.set_shader_parameter("foil", foil)
 	_intro_left = INTRO_TIME if foil > 0.0 else -1.0
 	var state: Dictionary = ctx.get("state", {}) if ctx.get("state") is Dictionary else {}

@@ -1,4 +1,5 @@
-# A prévia de carta que acompanha o mouse: a imagem grande e, embaixo, a força, os marcadores e os estados da permanente.
+# A prévia de carta que acompanha o mouse: a imagem grande (com o foil das raras e míticas, que anda com o mouse) e,
+# embaixo, a força, os marcadores e os estados da permanente.
 class_name CardPreview
 extends PanelContainer
 
@@ -60,6 +61,7 @@ func show_texture(tex: Texture2D) -> void:
 	_show_left = -1.0
 	_hide_left = -1.0
 	_url = ""
+	(_image.material as ShaderMaterial).set_shader_parameter("foil", 0.0)
 	_image.texture = tex
 	_clear_notes()
 	_notes.visible = false
@@ -97,6 +99,13 @@ func _process(delta: float) -> void:
 			visible = false
 	if visible:
 		_place()
+		# A luz do foil anda com o mouse: a altura dele na prévia e o lado em que ela está.
+		var rect: Rect2 = _image.get_global_rect()
+		if rect.size.y > 0.0:
+			var light := Vector2(0.75 if mouse.x > rect.get_center().x else 0.25, clampf((mouse.y - rect.position.y) / rect.size.y, -0.2, 1.2))
+			var material := _image.material as ShaderMaterial
+			var current: Vector2 = material.get_shader_parameter("light")
+			material.set_shader_parameter("light", current.lerp(light, 1.0 - exp(-10.0 * delta)))
 
 
 func _fill() -> void:
@@ -109,6 +118,7 @@ func _fill() -> void:
 	if Txt.of(sides.get("kind")) == "dfc":
 		_url = (sides["urls"] as PackedStringArray)[int(sides["shown"])]
 	_image.texture = catalog.texture(_url) if catalog else null
+	(_image.material as ShaderMaterial).set_shader_parameter("foil", CardDressing.foil_level(CardDressing.rarity_of(_pending_card, catalog)))
 	_clear_notes()
 	var lines: PackedStringArray = []
 	if Txt.of(details["type_change"]) != "":
