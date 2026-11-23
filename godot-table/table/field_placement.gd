@@ -126,12 +126,25 @@ func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
 		rows = FieldLayout.rows(player, ctx, float(frame["width"]) / scale)
 		frame = frame.duplicate()
 		frame["scale"] = scale
+	# Fileira lotada (as cartas se apertando, em especial as viradas, que são mais largas): antes de apertar, ela se estica
+	# para o lado da mesa sem grimório nem cemitério (SeatLayout: wide_width e wide_shift).
+	var wide_rows: Dictionary = {}
+	var wide: float = float(frame.get("wide_width", 0.0))
+	if wide > float(frame["width"]) and (FieldLayout.squeezed(rows["front"]) or FieldLayout.squeezed(rows["back"])):
+		wide_rows = FieldLayout.rows(player, ctx, wide / scale)
+	var full_frame: Dictionary = frame
 	for row: String in ["front", "back"]:
+		frame = full_frame
+		var items: Array = rows[row]
+		if not wide_rows.is_empty() and FieldLayout.squeezed(items):
+			items = wide_rows[row]
+			frame = full_frame.duplicate()
+			frame["cx"] = float(full_frame["cx"]) + stretch_shift(FieldLayout.natural_width(items) * scale, float(full_frame["width"]), wide, float(full_frame.get("wide_shift", 0.0)))
 		var z: float = float(frame["others_z"] if row == "front" else frame["lands_z"])
-		_place_separator("sep:%d:%s" % [int(player["id"]), row], rows[row], frame, z)
+		_place_separator("sep:%d:%s" % [int(player["id"]), row], items, frame, z)
 		# Os selos crescem um pouco nas cartas menores e mais longe da câmera, para continuarem legíveis.
 		var boost: float = (1.0 + maxf(0.0, -z) * 0.07) / sqrt(scale)
-		for raw: Variant in rows[row]:
+		for raw: Variant in items:
 			var item: Dictionary = raw
 			var cards: Array = item["cards"]
 			var squeeze: float = item["squeeze"]
@@ -148,6 +161,14 @@ func _layout_player(player: Dictionary, frame: Dictionary, out: Array) -> void:
 				if k == 0:
 					_layout_attachments(card, t, scale, squeeze, out)
 					_layout_exiled(card, t, scale, squeeze, out)
+
+
+## Quanto o meio de uma fileira esticada anda para o lado livre (`side`: o sinal e o máximo, de SeatLayout): o bastante para a
+## ponta do lado das pilhas ficar onde ficaria sem esticar. `needed` é a largura que a fileira quer, `width` a normal e
+## `wide` a esticada (unidades da mesa).
+static func stretch_shift(needed: float, width: float, wide: float, side: float) -> float:
+	var used: float = clampf(needed, width, wide)
+	return signf(side) * minf((used - width) * 0.5, absf(side))
 
 
 ## Auras e equipamentos presos a `host`: atrás dela, cada um um pouco mais para a direita e para o alto, menores.

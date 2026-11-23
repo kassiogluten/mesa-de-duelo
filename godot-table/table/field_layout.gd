@@ -265,3 +265,17 @@ static func zoom(rows: Dictionary, width: float) -> float:
 	# Sem apertar: a fileira mais larga ainda cabe inteira no tamanho maior.
 	var fits: float = width / widest if widest > 0.0 else ZOOM_MAX
 	return clampf(minf(wanted, fits), 1.0, ZOOM_MAX)
+
+
+## A largura que a fileira teria sem apertar (unidades da carta, antes da escala).
+static func natural_width(items: Array) -> float:
+	if items.is_empty():
+		return 0.0
+	var last: Dictionary = items[items.size() - 1]
+	return float(last["left"]) + float(last["width"])
+
+
+## A fileira está apertada (não coube na largura dada).
+static func squeezed(items: Array) -> bool:
+	return not items.is_empty() and float((items[0] as Dictionary).get("squeeze", 1.0)) < 0.999
+

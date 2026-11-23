@@ -16,5 +16,11 @@
       "img": "pode-usar.webp",
       "legenda": "Em cima, como era: a aura azul vazava para fora das cartas; embaixo, como ficou: colada à borda e mais suave."
     }
+  ],
+  "Mais espaço para as cartas viradas": [
+    {
+      "img": "cartas-viradas.webp",
+      "legenda": "Em cima, como era: os terrenos virados um por cima do outro; embaixo, como ficou: a fileira usa o espaço livre e as cartas ficam lado a lado."
+    }
   ]
 }

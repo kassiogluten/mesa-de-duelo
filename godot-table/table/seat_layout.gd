@@ -11,6 +11,8 @@ const OPPONENTS_WIDTH := 16.0
 static func mine() -> Dictionary:
 	return {
 		"side": 1, "cx": 0.0, "width": 7.4, "scale": 1.0, "lands_z": 2.2, "others_z": 0.95,
+		# Lotada, a fileira se estica até esta largura para a direita, o lado sem as pilhas (FieldPlacement).
+		"wide_width": 9.3, "wide_shift": 0.95,
 		"library": Vector3(-5.05, 0, 2.25), "graveyard": Vector3(-4.25, 0, 2.25),
 		"exile": Vector3(-5.05, 0, 1.1), "command": Vector3(-4.25, 0, 1.1),
 		"hand": Vector3.ZERO, "hand_spread": 0.0, "portrait": Vector3.ZERO,
@@ -22,6 +24,8 @@ static func opponent(index: int, count: int) -> Dictionary:
 	if count <= 1:
 		return {
 			"side": -1, "cx": 0.0, "width": 7.4, "scale": 1.0, "lands_z": -2.2, "others_z": -0.95,
+			# Lotada, a fileira se estica para a esquerda: as pilhas do oponente ficam à direita.
+			"wide_width": 9.3, "wide_shift": -0.95,
 			"library": Vector3(5.05, 0, -2.25), "graveyard": Vector3(4.25, 0, -2.25),
 			"exile": Vector3(5.05, 0, -1.1), "command": Vector3(4.25, 0, -1.1),
 			"hand": Vector3(2.9, 0, -4.0), "hand_spread": 0.36, "portrait": Vector3(0, 0, -4.7),

@@ -56,3 +56,19 @@ func test_table_places_a_lone_permanent_bigger() -> void:
 		check(is_equal_approx(node.target_transform().basis.get_scale().x, FieldLayout.ZOOM_MAX), "sozinha, ela fica no maior tamanho")
 	catalog.queue_free()
 	table.queue_free()
+
+
+func test_crowded_row_stretches_to_the_free_side() -> void:
+	check_eq(FieldPlacement.stretch_shift(7.0, 7.4, 9.3, 0.95), 0.0, "cabe na largura normal: não anda")
+	check(is_equal_approx(FieldPlacement.stretch_shift(8.4, 7.4, 9.3, 0.95), 0.5), "anda metade do que esticou, para a ponta das pilhas ficar no lugar")
+	check(is_equal_approx(FieldPlacement.stretch_shift(20.0, 7.4, 9.3, 0.95), 0.95), "no máximo até a largura esticada")
+	check(is_equal_approx(FieldPlacement.stretch_shift(20.0, 7.4, 9.3, -0.95), -0.95), "o oponente estica para o outro lado")
+	var player: Dictionary = {"id": 0, "battlefield": _bears(16)}
+	var ctx: Dictionary = FieldLayout.context({"you": 0, "players": [player], "stack": [], "combat": [], "input": {}})
+	check(FieldLayout.squeezed(FieldLayout.rows(player, ctx, 7.4)["front"]), "16 criaturas apertam a fileira normal")
+	check(not FieldLayout.squeezed(FieldLayout.rows(_player_with(2), ctx, 7.4)["front"]), "duas não")
+
+
+func _player_with(count: int) -> Dictionary:
+	return {"id": 0, "battlefield": _bears(count)}
+
