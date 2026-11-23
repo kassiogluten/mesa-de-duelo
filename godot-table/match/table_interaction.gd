@@ -30,11 +30,17 @@ var label: Callable = func(name: String) -> String: return name
 var blocks := BlockFlow.new()
 var attacks := AttackFlow.new()
 var pointer := BoardPointer.new()
+## O painel "Atacar quem?" (ui/attack_panel.gd), ligado por use_attack_panel; null nos testes sem HUD.
+var attack_panel: AttackPanel
 
 ## O gen do pedido em que já se mandou um clique: os cliques repetidos antes do estado novo são ignorados.
 var _sent_gen: int = -1
 ## O alvo marcado pelo Tab (a chave da carta ou "player:<id>"); null sem foco.
 var _focus: Variant = null
+## O defensor sob o mouse no painel "Atacar quem?" (a seta mira nele); null sem nenhum.
+var _panel_hover: Variant = null
+## Um ataque acabou de ir: a pose das marcadas espera o estado novo (para não voltarem ao lugar e saírem de novo).
+var _hold_pose: bool = false
 var _hovered: CardNode
 var _fixed_arrows: Array = []
 var _cursor: int = -1
@@ -47,6 +53,19 @@ func _ready() -> void:
 	pointer.tapped.connect(click_card)
 	pointer.drag_started.connect(_on_drag_started)
 	pointer.dropped.connect(_on_dropped)
+
+
+## Liga o painel "Atacar quem?": escolher um defensor, "Retirar do combate", "Limpar seleção" e a mira ao passar o mouse.
+func use_attack_panel(panel: AttackPanel) -> void:
+	attack_panel = panel
+	panel.chosen.connect(func(defender: Dictionary) -> void: _apply(attacks.choose(_s(), defender, card_name)))
+	panel.remove_pressed.connect(func() -> void: _apply(attacks.remove_selected(_s())))
+	panel.clear_pressed.connect(func() -> void:
+		attacks.clear()
+		_focus = null
+		refresh())
+	panel.hovered.connect(func(defender: Dictionary) -> void:
+		_panel_hover = null if defender.is_empty() else ("player:%d" % int(defender["id"]) if defender["kind"] == "player" else int(defender["id"])))
 
 
 func _s() -> Dictionary:
@@ -67,6 +86,7 @@ func apply_state(_state: Dictionary) -> void:
 	attacks.sync(s)
 	if blocks.blocker != had_blocker:
 		blocker_changed.emit()
+	_hold_pose = false
 	refresh()
 
 
@@ -146,7 +166,8 @@ func click_card(node: CardNode) -> void:
 ## O que uma escolha devolveu: manda, avisa ou só redesenha os destaques.
 func _apply(result: Dictionary, block: bool = false) -> void:
 	if result.has("send"):
-		send_once(result["send"])
+		# As marcadas que acabaram de ir para o ataque ficam na pose até o estado novo (que já as traz atacando).
+		_hold_pose = send_once(result["send"])
 	if result.has("notice"):
 		notice.emit(Txt.of(result["notice"]), "warning")
 	if block:
@@ -222,6 +243,7 @@ func has_pending() -> bool:
 func cancel_pending() -> bool:
 	var had_blocker: bool = blocks.pending()
 	var had: bool = pointer.cancel()
+	_hold_pose = false
 	had = blocks.cancel() or had
 	had = attacks.cancel() or had
 	if _focus != null:
@@ -319,6 +341,23 @@ func refresh() -> void:
 	table.apply_hand_layout(input.get("actionable", []), bool(input.get("priority", false)))
 	_fixed_arrows = DecisionRoles.fixed_arrows(s)
 	table.set_target_marks(DecisionRoles.target_marks(s))
+	if attack_panel != null:
+		attack_panel.show_model(AttackPanelModel.build(s, attacks, card_name))
+	_pose_marked(s)
+
+
+## As marcadas para atacar que ainda não têm defensor já avançam e inclinam de leve (FieldPlacement.MARKED_META): a
+## mesa refaz a arrumação do campo só quando a lista muda.
+func _pose_marked(s: Dictionary) -> void:
+	if _hold_pose:
+		return
+	var marked: Array = attacks.selected.filter(func(id: int) -> bool: return not AttackFlow.assigned(s, id)) if AttackFlow.active(s) else []
+	var before: Array = table.get_meta(FieldPlacement.MARKED_META, [])
+	if marked == before:
+		return
+	table.set_meta(FieldPlacement.MARKED_META, marked)
+	if not table.current_state().is_empty():
+		table.apply_state(table.current_state())
 
 
 func hover(node: CardNode, on: bool) -> void:
@@ -366,10 +405,17 @@ func _live_arrows() -> Array:
 	if sources.is_empty() or sources[0] == null:
 		table.highlights.set_snapped(null)
 		return []
-	var end: Variant = _focus if _focus != null else TargetSnap.pick(pointer.mouse, _candidates(), _hovered_key())
+	# A ponta: o alvo do Tab, o defensor sob o mouse no painel, ou o alvo válido perto do mouse; com o mouse por cima do
+	# painel sem um defensor, a seta some (não aponta para a mesa embaixo dele).
+	var over_panel: bool = attack_panel != null and attack_panel.showing() and attack_panel.get_global_rect().has_point(pointer.mouse)
+	var end: Variant = _focus if _focus != null else (_panel_hover if _panel_hover != null else (null if over_panel else TargetSnap.pick(pointer.mouse, _candidates(), _hovered_key())))
 	table.highlights.set_snapped(end if end is int or end is String else null)
+	if color == RED and end != null:
+		var defender: Dictionary = _defender_of(end)
+		if not defender.is_empty():
+			color = AttackPanelModel.defender_color(s, defender)
 	if end == null:
-		if pointer.mouse.x < 0.0:
+		if pointer.mouse.x < 0.0 or over_panel:
 			return []
 		end = _mouse_on_table()
 		if end == null:

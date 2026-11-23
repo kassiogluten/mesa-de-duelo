@@ -1,5 +1,6 @@
-# Monta a partida sem servidor em cada momento de interação (alvo, ataque, bloqueio, mão cheia, ajuda dos atalhos), mexe
-# o mouse pelo caminho real do motor e salva um print de cada um. Com janela:
+# Monta a partida sem servidor em cada momento de interação (alvo, ataque com o painel "Atacar quem?", retirar do
+# combate, ataque no Commander, bloqueio, mão cheia, ajuda dos atalhos), mexe o mouse pelo caminho real do motor e salva
+# um print de cada um. Com janela:
 # npm run godot -- --resolution 1600x900 --position 0,0 --script res://tools/preview_interactions.gd -- <caminho base>
 extends SceneTree
 
@@ -15,10 +16,16 @@ func _initialize() -> void:
 	_screen.offline = true
 	root.add_child(_screen)
 	await process_frame
-	for scene: String in ["alvo", "ataque", "bloqueio", "mao", "ajuda"]:
+	# MESA_CENAS=ataque,retirar só tira esses.
+	var only: PackedStringArray = OS.get_environment("MESA_CENAS").split(",", false)
+	for scene: String in ["alvo", "ataque", "retirar", "multi", "bloqueio", "mao", "ajuda"]:
+		if not only.is_empty() and not only.has(scene):
+			continue
 		match scene:
 			"alvo": await _scene_alvo()
 			"ataque": await _scene_ataque()
+			"retirar": await _scene_retirar()
+			"multi": await _scene_multi()
 			"bloqueio": await _scene_bloqueio()
 			"mao": await _scene_mao()
 			"ajuda": await _scene_ajuda()
@@ -91,10 +98,81 @@ func _scene_ataque() -> void:
 	s["input"] = _input({"actionable": ids, "attacking": {"attackers": ids, "defenders": defenders, "legalAssignments": legal},
 		"ok": {"label": "OK", "enabled": true}, "cancel": {"label": "Alpha Strike", "enabled": true}})
 	await _show(s)
-	# A terceira criatura marcada (dois defensores): a seta vermelha segue o mouse até o planeswalker.
-	_interaction().attacks.click_attacker(s, ids[2])
-	_interaction().refresh()
+	# A terceira criatura marcada (dois defensores): já avança e inclina de leve, o painel "Atacar quem?" aparece e a
+	# seta vermelha segue o mouse até o planeswalker.
+	_interaction().click_card(_table().card_node(ids[2]))
+	await create_timer(0.6).timeout
 	await _mouse_to(_card_screen(int(walker["id"])) + Vector2(30, 50))
+
+
+## Clicou numa criatura que já ataca, com dois defensores possíveis: ela fica marcada e o painel oferece trocar o
+## defensor ou "Retirar do combate"; o mouse sobre o planeswalker no painel faz a seta mirar nele.
+func _scene_retirar() -> void:
+	var s: Dictionary = await _attack_scene_state()
+	var ids: Array = s["ids"]
+	_interaction().click_card(_table().card_node(ids[0]))
+	await create_timer(0.6).timeout
+	var panel: AttackPanel = _interaction().attack_panel
+	var rows: Array = panel.find_children("*", "Button", true, false)
+	if rows.size() > 1:
+		await _mouse_to((rows[1] as Button).get_global_rect().get_center())
+
+
+## Commander com 4: dois atacantes já declarados contra dois oponentes (setas na cor de cada um) e uma criatura marcada
+## com o painel mostrando os três oponentes e o planeswalker, com quantos atacantes já vão em cada um.
+func _scene_multi() -> void:
+	var s: Dictionary = _duel()
+	var players: Array = s["players"]
+	var mine: Array = (players[0] as Dictionary)["battlefield"]
+	mine.append(_card("Craw Wurm", "Creature — Wurm", 0, {"power": 6, "toughness": 4}))
+	for i: int in [2, 3]:
+		var theirs: Array = [_card("Wall of Omens", "Creature — Wall", i, {"power": 0, "toughness": 4}), _card("Island", "Basic Land — Island", i)]
+		players.append({"id": i, "seat": i, "name": "Oponente %d" % i, "life": 40 - i * 3, "sleeve": i + 1, "library": 60, "handCount": 4, "hand": [],
+			"battlefield": theirs, "graveyard": [], "exile": []})
+	(players[1] as Dictionary)["name"] = "Oponente 1"
+	(players[1] as Dictionary)["life"] = 40
+	(players[0] as Dictionary)["life"] = 40
+	var walker: Dictionary = _card("Jace Beleren", "Legendary Planeswalker — Jace", 3, {"planeswalker": true, "counters": {"LOYALTY": 4}})
+	((players[3] as Dictionary)["battlefield"] as Array).append(walker)
+	var ids: Array = []
+	for c: Variant in mine:
+		if bool((c as Dictionary).get("creature", false)):
+			ids.append(int((c as Dictionary)["id"]))
+	var defenders: Array = [{"id": 1, "kind": "player"}, {"id": 2, "kind": "player"}, {"id": 3, "kind": "player"}, {"id": int(walker["id"]), "kind": "card"}]
+	s["phase"] = "COMBAT_DECLARE_ATTACKERS"
+	s["combat"] = [{"attacker": ids[0], "defender": 1, "defenderKind": "player", "blockers": []}, {"attacker": ids[1], "defender": 3, "defenderKind": "player", "blockers": []}]
+	s["input"] = _input({"actionable": ids, "attacking": {"attackers": ids, "defenders": defenders,
+		"legalAssignments": ids.map(func(id: int) -> Dictionary: return {"attacker": id, "defenders": defenders})},
+		"ok": {"label": "OK", "enabled": true}, "cancel": {"label": "Alpha Strike", "enabled": true}})
+	await _show(s)
+	_interaction().click_card(_table().card_node(ids[3]))
+	await create_timer(0.6).timeout
+	var rows: Array = _interaction().attack_panel.find_children("*", "Button", true, false)
+	if rows.size() > 2:
+		await _mouse_to((rows[2] as Button).get_global_rect().get_center())
+
+
+## Duelo na declaração de ataque com um planeswalker do oponente e dois atacantes já declarados; devolve o estado com
+## "ids" (as suas criaturas).
+func _attack_scene_state() -> Dictionary:
+	var s: Dictionary = _duel()
+	var players: Array = s["players"]
+	var mine: Array = (players[0] as Dictionary)["battlefield"]
+	var walker: Dictionary = _card("Liliana of the Veil", "Legendary Planeswalker — Liliana", 1, {"planeswalker": true, "counters": {"LOYALTY": 3}})
+	((players[1] as Dictionary)["battlefield"] as Array).append(walker)
+	var ids: Array = []
+	for c: Variant in mine:
+		if bool((c as Dictionary).get("creature", false)):
+			ids.append(int((c as Dictionary)["id"]))
+	var defenders: Array = [{"id": 1, "kind": "player"}, {"id": int(walker["id"]), "kind": "card"}]
+	s["phase"] = "COMBAT_DECLARE_ATTACKERS"
+	s["combat"] = [{"attacker": ids[0], "defender": 1, "defenderKind": "player", "blockers": []}, {"attacker": ids[1], "defender": int(walker["id"]), "defenderKind": "card", "blockers": []}]
+	s["input"] = _input({"actionable": ids, "attacking": {"attackers": ids, "defenders": defenders,
+		"legalAssignments": ids.map(func(id: int) -> Dictionary: return {"attacker": id, "defenders": defenders})},
+		"ok": {"label": "OK", "enabled": true}, "cancel": {"label": "Alpha Strike", "enabled": true}})
+	await _show(s)
+	s["ids"] = ids
+	return s
 
 
 func _scene_bloqueio() -> void:

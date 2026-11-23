@@ -37,6 +37,8 @@ var _autoplay: bool = OS.get_environment("MESA_AUTOJOGAR") == "1"
 var _autoplay_wait: float = 0.0
 var _autoplay_gen: int = -1
 var _autoplay_tries: int = 0
+## MESA_TESTE_PAINEL=1: passa pelo painel "Atacar quem?" na primeira declaração de ataque (match/attack_probe.gd).
+var _panel_probe: AttackProbe
 
 
 func _ready() -> void:
@@ -101,6 +103,16 @@ func _ready() -> void:
 	_interaction.state = current_state
 	_interaction.label = func(name: String) -> String: return _catalog.label(name)
 	add_child(_interaction)
+	# "Atacar quem?" logo acima da caixa de ação, embaixo das janelas de pergunta e do inspetor.
+	var attack_panel := AttackPanel.new()
+	attack_panel.anchor = _hud.action_rect
+	layer.add_child(attack_panel)
+	layer.move_child(attack_panel, _hud.get_index() + 1)
+	_interaction.use_attack_panel(attack_panel)
+	if OS.get_environment("MESA_TESTE_PAINEL") == "1":
+		_panel_probe = AttackProbe.new()
+		_panel_probe.screen = self
+		add_child(_panel_probe)
 	_interaction.send.connect(func(message: Dictionary) -> void:
 		_inspector.hide_preview(true)
 		_client.send(message))
@@ -172,6 +184,8 @@ func _process(delta: float) -> void:
 
 func _autoplay_step() -> void:
 	if _state.is_empty() or bool(_state.get("gameOver", false)):
+		return
+	if _panel_probe != null and _panel_probe.claim(_state):
 		return
 	var input: Dictionary = _input_data()
 	# MESA_TESTE_ATAQUE=1: no primeiro ataque, a criatura é clicada de verdade (o mouse do motor), para conferir que o

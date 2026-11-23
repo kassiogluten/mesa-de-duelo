@@ -15,6 +15,12 @@ const BLOCK_REACH := 0.32
 const BLOCK_MAX := 0.95
 ## "Atacar com tudo": os atacantes saem um depois do outro, com este intervalo.
 const ATTACK_STAGGER := 0.07
+## A criatura marcada para atacar, ainda sem defensor: a mesma pose mais leve (quanto do avanço, da subida e da
+## inclinação) e uma inclinação mínima, para se ver que ela está pronta. A lista vem da mesa, na meta MARKED_META
+## (TableInteraction põe: os ids marcados).
+const MARKED_META := &"attack_marked"
+const MARK_SHARE := 0.45
+const MARK_MIN_TILT := deg_to_rad(4.5)
 
 var view: TableView
 ## Linha fina entre os grupos de uma fileira (criaturas | planeswalkers; artefatos | terrenos): "sep:<jogador>:<fileira>" → nó.
@@ -23,6 +29,8 @@ var _separators: Dictionary = {}
 var _attacking_before: Dictionary = {}
 ## Atacantes esperando a vez de avançar: id → a pose final.
 var _staggered: Dictionary = {}
+## As marcadas para atacar na última arrumação (já fora do lugar: quando atacam, não esperam a vez).
+var _marked_before: Dictionary = {}
 
 
 func _init(table: TableView) -> void:
@@ -37,6 +45,18 @@ func _init(table: TableView) -> void:
 static func attack_tilt(dx: float, dz: float, side: int) -> float:
 	var raw: float = atan2(dx, maxf(absf(dz), 0.001))
 	return clampf(raw * 0.35, -ATTACK_MAX_TILT, ATTACK_MAX_TILT) * (-1.0 if side > 0 else 1.0)
+
+
+## A inclinação da marcada para atacar, com os defensores possíveis a (dx, dz) em média: a do ataque mais leve, mas
+## nunca menos que MARK_MIN_TILT para o lado deles (de frente, para o meio da mesa, `center_dx`).
+static func marked_tilt(dx: float, dz: float, side: int, center_dx: float = 0.0) -> float:
+	var tilt: float = attack_tilt(dx, dz, side) * MARK_SHARE
+	if absf(tilt) >= MARK_MIN_TILT:
+		return tilt
+	var toward: float = dx if absf(dx) > 0.05 else center_dx
+	if absf(toward) < 0.001:
+		return tilt
+	return MARK_MIN_TILT * signf(toward) * (-1.0 if side > 0 else 1.0)
 
 
 ## Quanto o bloqueador anda na direção do atacante a `delta` dele (no plano do tampo).
@@ -143,8 +163,10 @@ func _combat_pose(by_id: Dictionary, frames: Dictionary) -> Dictionary:
 			t.basis = Basis(Vector3.UP, tilt) * t.basis
 		_shift_attachments(by_id, id, t.origin - (p["t"] as Transform3D).origin)
 		p["t"] = t
-		if not _attacking_before.has(id):
+		# A que estava só marcada já tinha saído do lugar: vai direto para a pose cheia, sem esperar a vez.
+		if not _attacking_before.has(id) and not _marked_before.has(id):
 			fresh.append(id)
+	_pose_marked(by_id, attacking, state)
 	# Bloqueadores: andam até a frente do atacante que bloqueiam e ficam lá até o dano.
 	for id: int in attacking:
 		var entry: Variant = attacking[id]
@@ -171,6 +193,34 @@ func _combat_pose(by_id: Dictionary, frames: Dictionary) -> Dictionary:
 			if i > 0:
 				delays[fresh[i]] = i * ATTACK_STAGGER
 	return delays
+
+
+## As marcadas para atacar sem defensor (MARKED_META): avançam, sobem e inclinam um pouco para os defensores possíveis.
+func _pose_marked(by_id: Dictionary, attacking: Dictionary, state: Dictionary) -> void:
+	var marked: Array = view.get_meta(MARKED_META, []) if view.has_meta(MARKED_META) else []
+	_marked_before = {}
+	for raw: Variant in marked:
+		var id: int = int(raw)
+		if attacking.has(id) or not by_id.has(id):
+			continue
+		_marked_before[id] = true
+		var p: Dictionary = by_id[id]
+		var side: int = int(p["side"])
+		var t: Transform3D = p["t"]
+		t.origin.z -= side * ATTACK_ADVANCE * MARK_SHARE
+		t.origin.y += ATTACK_RISE * MARK_SHARE
+		var sum := Vector3.ZERO
+		var count: int = 0
+		for d: Variant in AttackFlow.defenders_for(state, id):
+			var at: Variant = _defender_position({"defender": (d as Dictionary)["id"], "defenderKind": (d as Dictionary)["kind"]}, by_id)
+			if at is Vector3:
+				sum += at
+				count += 1
+		if count > 0:
+			var aim: Vector3 = sum / count
+			t.basis = Basis(Vector3.UP, marked_tilt(aim.x - t.origin.x, aim.z - t.origin.z, side, -t.origin.x)) * t.basis
+		_shift_attachments(by_id, id, t.origin - (p["t"] as Transform3D).origin)
+		p["t"] = t
 
 
 ## Onde está quem o atacante ataca: o retrato do jogador (levado para a mesa) ou a permanente atacada.
