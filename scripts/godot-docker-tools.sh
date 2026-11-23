@@ -15,11 +15,22 @@ if ! command -v wget >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
     || echo "AVISO: não consegui instalar wget e unzip."
 fi
 
+# O Godot da arquitetura do servidor do build (o de produção é ARM64): o editor x86_64 não abre num ARM. Os templates
+# (Windows e Linux x86_64) são só arquivos que ele copia para os downloads, então servem em qualquer arquitetura.
+case "$(uname -m)" in
+  aarch64|arm64) ARCH="arm64" ;;
+  *) ARCH="x86_64" ;;
+esac
+# Um Godot que não abre (de outra arquitetura, guardado no cache de um build anterior) sai para baixar o certo.
+if [ -x /usr/local/bin/godot ] && ! /usr/local/bin/godot --headless --version >/dev/null 2>&1; then
+  echo "AVISO: o Godot em /usr/local/bin/godot não abre nesta máquina ($(uname -m)); baixando de novo."
+  rm -f /usr/local/bin/godot
+fi
 if [ ! -x /usr/local/bin/godot ]; then
-  echo "Baixando o Godot ${V} de $REL"
-  { wget -nv "$REL/Godot_v${V}-stable_linux.x86_64.zip" -O /tmp/godot.zip \
+  echo "Baixando o Godot ${V} (linux.${ARCH}) de $REL"
+  { wget -nv "$REL/Godot_v${V}-stable_linux.${ARCH}.zip" -O /tmp/godot.zip \
     && unzip -q -o /tmp/godot.zip -d /tmp/godot \
-    && mv /tmp/godot/Godot_v*_linux.x86_64 /usr/local/bin/godot; } \
+    && mv /tmp/godot/Godot_v*_linux.${ARCH} /usr/local/bin/godot; } \
     || echo "AVISO: o Godot ${V} não foi baixado; a mesa no PC fica sem pacote neste deploy."
   rm -rf /tmp/godot.zip /tmp/godot
 fi
