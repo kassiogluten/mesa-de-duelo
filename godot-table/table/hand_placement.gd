@@ -69,11 +69,42 @@ func _searched_draw(player_id: int) -> bool:
 ## Leque da sua mão, de frente para a câmera, na base da tela; a carta jogável fica um pouco mais alta que as outras.
 func transform_at(index: int, count: int, id: int) -> Transform3D:
 	var offset: float = index - (count - 1) / 2.0
-	var spread: float = min(0.6, 6.4 / max(count, 1))
-	var pos := HAND_CENTER + Vector3(offset * spread, index * 0.006 - abs(offset) * abs(offset) * 0.01, abs(offset) * abs(offset) * 0.006)
+	var fan: Vector2 = fan_fit(count)
+	var pos := HAND_CENTER + view.camera.global_basis.x * fan.y + Vector3(offset * fan.x, index * 0.006 - abs(offset) * abs(offset) * 0.01, abs(offset) * abs(offset) * 0.006)
 	if playable.has(id):
 		pos += view.camera.global_basis.y * PLAYABLE_RISE
 	return Transform3D(facing_camera(pos) * Basis(Vector3.UP, -offset * 0.05), pos)
+
+
+## O leque de `count` cartas: x é a distância entre uma carta e a seguinte e y quanto o centro anda para o lado (unidades
+## da mesa), para o leque caber na faixa que o HUD deixa livre (Hud.hand_area, entre o seu retrato e a coluna da direita).
+## Sem faixa (testes, laboratório), o leque de sempre, no meio.
+func fan_fit(count: int) -> Vector2:
+	var spread: float = minf(0.6, 6.4 / maxf(count, 1))
+	var area: Rect2 = view.hand_area.call()
+	if area.size.x <= 0.0 or count <= 0 or view.camera == null:
+		return Vector2(spread, 0.0)
+	var center_px: float = view.camera.unproject_position(HAND_CENTER).x
+	var ppu: float = absf(view.camera.unproject_position(HAND_CENTER + view.camera.global_basis.x).x - center_px)
+	if ppu <= 1.0:
+		return Vector2(spread, 0.0)
+	return fit_fan(spread, count, area.position.x / ppu, area.end.x / ppu, center_px / ppu, CardNode.SIZE.x * 1.1)
+
+
+## A conta do fan_fit em unidades da mesa (sem cena, para os testes): o espaço entre as cartas encolhe até o leque caber
+## entre `left` e `right`, e o centro anda o mínimo para dentro da faixa. Devolve (espaço, deslocamento do centro).
+static func fit_fan(spread: float, count: int, left: float, right: float, center: float, card_width: float) -> Vector2:
+	var avail: float = right - left
+	var fitted: float = spread
+	if count > 1:
+		fitted = clampf(minf(spread, (avail - card_width) / (count - 1)), 0.1, spread)
+	var half: float = (fitted * (count - 1) + card_width) / 2.0
+	var target: float = center
+	if half * 2.0 >= avail:
+		target = (left + right) / 2.0
+	else:
+		target = clampf(center, left + half, right - half)
+	return Vector2(fitted, target - center)
 
 
 ## Uma carta de pé de frente para a câmera: a face (+Y) olha para ela e o alto da carta (-Z) aponta para cima na tela.

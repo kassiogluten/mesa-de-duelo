@@ -6,8 +6,8 @@ extends Node
 
 ## Mensagem pronta para o servidor (já conferida contra cliques repetidos no mesmo prompt).
 signal send(message: Dictionary)
-## Aviso curto para o jogador (ataque não permitido, nada para desfazer...).
-signal notice(text: String)
+## Aviso curto para o jogador (ataque não permitido, nada para desfazer...); `kind` como Hud.show_toast.
+signal notice(text: String, kind: String)
 ## Abrir a janela de uma zona (cemitério, exílio, comando).
 signal zone_requested(player_id: int, zone: String)
 ## A criatura escolhida para bloquear mudou (a caixa de ação muda o texto).
@@ -148,7 +148,7 @@ func _apply(result: Dictionary, block: bool = false) -> void:
 	if result.has("send"):
 		send_once(result["send"])
 	if result.has("notice"):
-		notice.emit(Txt.of(result["notice"]))
+		notice.emit(Txt.of(result["notice"]), "warning")
 	if block:
 		blocker_changed.emit()
 	if not result.is_empty():
@@ -268,7 +268,7 @@ func handle_key(action: String) -> bool:
 			if undo.get("last") is Dictionary and not bool(undo.get("pending", false)):
 				send.emit({"type": "undo-request"})
 			else:
-				notice.emit("Nada para desfazer agora.")
+				notice.emit("Nada para desfazer agora.", "info")
 			return true
 		"control":
 			_toggle_control(s)
@@ -292,16 +292,16 @@ func _toggle_control(s: Dictionary) -> void:
 	var prefs: Dictionary = s.get("preferences", {}) if s.get("preferences") is Dictionary else {}
 	if bool(prefs.get("passingTurn", false)):
 		send.emit({"type": "pass-turn-stop"})
-		notice.emit("Parou de passar até o fim do turno.")
+		notice.emit("Parou de passar até o fim do turno.", "info")
 		return
 	var level: String = Txt.of(prefs.get("passLevel"))
 	if level != "sempre":
 		_level_before = level if level != "" else "acoes"
 		send.emit({"type": "preferences", "passLevel": "sempre"})
-		notice.emit("Controle total: a mesa para em toda etapa. Aperte F para voltar.")
+		notice.emit("Controle total: a mesa para em toda etapa. Aperte F para voltar.", "info")
 	else:
 		send.emit({"type": "preferences", "passLevel": _level_before if _level_before != "" else "acoes"})
-		notice.emit("Controle total desligado.")
+		notice.emit("Controle total desligado.", "info")
 
 
 # — Destaques, setas e mira —

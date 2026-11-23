@@ -36,6 +36,8 @@ var player_screen_position: Callable = func(_id: int) -> Vector2: return Vector2
 ## Onde fica na tela cada camada da pilha (0 é o topo), o vão do painel da pilha (StackPanel.layer_rect); sem painel
 ## (testes, laboratório), Rect2() e a pilha fica no tampo, à direita.
 var stack_slot: Callable = func(_depth: int) -> Rect2: return Rect2()
+## A faixa da tela onde a sua mão deve caber (Hud.hand_area: entre o seu retrato e a coluna da direita); Rect2() sem HUD.
+var hand_area: Callable = func() -> Rect2: return Rect2()
 
 ## As partes da mesa: o campo, a mão, a pilha e os destaques.
 var _field := FieldPlacement.new(self)
