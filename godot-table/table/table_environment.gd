@@ -1,6 +1,7 @@
-# Luz, ambiente e pós-processamento da mesa 3D: câmera, sol com sombra macia, lâmpada quente, contraluz fria, céu só para
+# Luz, ambiente e pós-processamento da mesa 3D: câmera, sol quente com sombra macia, lâmpada, contraluz fria, céu só para
 # os reflexos, brilho calibrado, vinheta e o tampo. O clima (TableMood) acha o sol, a lâmpada e o ambiente.
-# Fica na mesa como um nó que acompanha a qualidade dos efeitos (no "leve", sem sombra).
+# Fica na mesa como um nó que acompanha a qualidade dos efeitos (no "leve", sem sombra) e leva a poça de luz do tampo
+# para o lado de quem joga o turno.
 class_name TableEnvironment
 extends Node
 
@@ -8,12 +9,21 @@ const TOP_SHADER := preload("res://table/table_top.gdshader")
 ## Cor do fundo (quase nunca aparece: o tampo enche a tela) e da luz ambiente.
 const BACKGROUND := Color(0.02, 0.026, 0.05)
 const AMBIENT := Color(0.46, 0.52, 0.68)
+## A poça de luz de quem joga o turno: quanto ela passa da área do jogador (unidades da mesa) e a velocidade com que vai
+## de um lado para o outro (por segundo, aproximação exponencial).
+const POOL_MARGIN := Vector2(0.9, 0.75)
+const POOL_SPEED := 2.2
 
 static var _vignette_shader: Shader
 
 var sun: DirectionalLight3D
 var env: Environment
+var table: TableView
+var felt: ShaderMaterial
 var _quality: int = -1
+## A poça agora (centro x, z e meia largura e profundidade) e a força dela.
+var _pool := Vector4(0.0, 1.6, 4.4, 1.4)
+var _pool_strength: float = 0.0
 
 
 ## Monta a cena em volta da mesa (filhos diretos dela, nesta ordem: o sol é o primeiro DirectionalLight3D e a lâmpada o
@@ -27,8 +37,9 @@ static func build(table: TableView) -> Camera3D:
 	var key_light := DirectionalLight3D.new()
 	# Quase de cima: a sombra da mão (perto da câmera) cai atrás dela, e a das cartas no ar ainda aparece embaixo delas.
 	key_light.rotation_degrees = Vector3(-76, -25, 0)
-	key_light.light_energy = 0.95
-	key_light.light_color = Color(1.0, 0.97, 0.92)
+	# Quente: a face da carta pega um tom de lâmpada, e a contraluz fria desenha as bordas (profundidade por contraste).
+	key_light.light_energy = 0.97
+	key_light.light_color = Color(1.0, 0.955, 0.89)
 	key_light.shadow_enabled = true
 	# Sombra macia por filtro (a sombra "de verdade", com o tamanho do sol, sai pontilhada sem o antisserrilhado temporal).
 	key_light.shadow_blur = 2.5
@@ -51,9 +62,9 @@ static func build(table: TableView) -> Camera3D:
 	# Contraluz fria do lado do oponente: desenha o contorno das cartas e dos objetos no ar.
 	var rim := DirectionalLight3D.new()
 	rim.rotation_degrees = Vector3(-25, 170, 0)
-	rim.light_energy = 0.28
-	rim.light_color = Color(0.55, 0.68, 1.0)
-	rim.light_specular = 1.0
+	rim.light_energy = 0.4
+	rim.light_color = Color(0.5, 0.64, 1.0)
+	rim.light_specular = 1.2
 	table.add_child(rim)
 
 	var world := WorldEnvironment.new()
@@ -85,14 +96,47 @@ static func build(table: TableView) -> Camera3D:
 	keeper.name = "Ambiente"
 	keeper.sun = key_light
 	keeper.env = world.environment
+	keeper.table = table
+	keeper.felt = felt
 	table.add_child(keeper)
 	return camera
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Fx.quality != _quality:
 		_quality = Fx.quality
 		apply_quality(_quality)
+	_follow_turn(delta)
+
+
+## A poça de luz do tampo vai devagar para a área de quem joga o turno (e apaga sem partida na mesa).
+func _follow_turn(delta: float) -> void:
+	if felt == null or table == null:
+		return
+	var target: Vector4 = pool_for(table.current_state(), table)
+	var strength: float = 1.0 if target.z > 0.0 else 0.0
+	var k: float = 1.0 - exp(-POOL_SPEED * delta)
+	if strength > 0.0:
+		# Sem poça acesa, ela já nasce no lugar certo (só a força sobe).
+		_pool = target if _pool_strength < 0.02 else _pool.lerp(target, k)
+	_pool_strength = lerpf(_pool_strength, strength, k)
+	felt.set_shader_parameter("pool", _pool)
+	felt.set_shader_parameter("pool_strength", _pool_strength)
+
+
+## O retângulo da poça (centro x, z, meia largura, meia profundidade) de quem joga o turno; z da meia largura 0 sem ninguém.
+static func pool_for(state: Dictionary, view: TableView) -> Vector4:
+	var active: Variant = state.get("activePlayer")
+	if not (active is int or active is float):
+		return Vector4.ZERO
+	var frame: Dictionary = view.frame_of(int(active))
+	if frame.is_empty():
+		return Vector4.ZERO
+	var lands: float = float(frame["lands_z"])
+	var others: float = float(frame["others_z"])
+	var half_width: float = float(frame["width"]) * 0.5 + POOL_MARGIN.x * float(frame["scale"])
+	var half_depth: float = absf(lands - others) * 0.5 + POOL_MARGIN.y * float(frame["scale"])
+	return Vector4(float(frame["cx"]), (lands + others) * 0.5, half_width, half_depth)
 
 
 ## No "leve" (0) a mesa fica sem sombra e com o brilho mais curto; do médio para cima, tudo ligado.

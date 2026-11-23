@@ -115,8 +115,9 @@ static func cue_for(event: Dictionary, you: int) -> String:
 	return ""
 
 
-## Toca o som em `pos` (no meio da mesa, sem posição); ignora se o arquivo não existe.
-func play(cue: String, pos: Vector3 = Vector3.ZERO, pitch: float = 1.0) -> void:
+## Toca o som em `pos` (no meio da mesa, sem posição); ignora se o arquivo não existe. `gain` (0 a 1) abaixa o som (o
+## tambor do combate é o impacto mais grave e mais baixo).
+func play(cue: String, pos: Vector3 = Vector3.ZERO, pitch: float = 1.0, gain: float = 1.0) -> void:
 	if cue == "" or volume <= 0.0 or not FILES.has(cue):
 		return
 	var stream: AudioStream = _stream(cue)
@@ -126,7 +127,7 @@ func play(cue: String, pos: Vector3 = Vector3.ZERO, pitch: float = 1.0) -> void:
 	_next = (_next + 1) % _players.size()
 	player.stream = stream
 	player.position = Vector3(pos.x, 1.0, pos.z)
-	player.volume_db = linear_to_db(volume)
+	player.volume_db = linear_to_db(volume * clampf(gain, 0.01, 1.0))
 	player.pitch_scale = pitch * randf_range(0.97, 1.03)
 	player.play()
 

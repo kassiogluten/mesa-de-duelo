@@ -1,4 +1,5 @@
-// Carta na mesa: frente com a imagem e verniz, verso com a cor do jogador, cantos arredondados, brilho de destaque que corre a borda e foil nas raras e míticas.
+// Carta na mesa: frente com a imagem e verniz acetinado, verso de papel com a cor do jogador, cantos arredondados com o fio
+// da borda pegando luz, brilho de destaque que corre a borda e foil nas raras e míticas.
 shader_type spatial;
 render_mode cull_disabled;
 
@@ -34,18 +35,6 @@ float card_sdf(vec2 uv) {
 	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - CORNER;
 }
 
-vec3 card_back(vec2 uv) {
-	vec2 p = (uv - 0.5) * SIZE;
-	float border = step(card_sdf(uv), -0.03);
-	vec3 base = mix(sleeve_color * 0.35, sleeve_color, border);
-	// Losango central e um brilho suave no meio.
-	float diamond = abs(p.x) / 0.16 + abs(p.y) / 0.22;
-	base = mix(base, sleeve_color * 1.8 + 0.1, smoothstep(1.0, 0.94, diamond) * border);
-	base = mix(base, base * 0.55, smoothstep(0.62, 0.58, diamond) * smoothstep(0.5, 0.56, diamond));
-	base *= 0.85 + 0.25 * (1.0 - length(p) * 1.6);
-	return base;
-}
-
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -55,6 +44,41 @@ float noise(vec2 p) {
 	vec2 f = fract(p);
 	vec2 u = f * f * (3.0 - 2.0 * f);
 	return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+}
+
+// O verso: a moldura escura, um filete claro por dentro, o losango com as faces em relevo e um brilho suave no meio.
+vec3 card_back(vec2 uv) {
+	vec2 p = (uv - 0.5) * SIZE;
+	float d = card_sdf(uv);
+	float border = smoothstep(-0.028, -0.032, d);
+	vec3 base = mix(sleeve_color * 0.35, sleeve_color, border);
+	float line = 1.0 - smoothstep(0.0, 0.0025, abs(d + 0.042));
+	base = mix(base, sleeve_color * 1.45 + 0.05, line * 0.7);
+	float diamond = abs(p.x) / 0.16 + abs(p.y) / 0.22;
+	// As quatro faces do losango: a de cima à esquerda mais clara, a de baixo à direita mais escura.
+	float facet = 1.0 - 0.07 * (sign(p.x) + sign(p.y));
+	base = mix(base, (sleeve_color * 1.8 + 0.1) * facet, smoothstep(1.0, 0.96, diamond) * border);
+	base = mix(base, base * 0.55, smoothstep(0.62, 0.58, diamond) * smoothstep(0.5, 0.56, diamond));
+	base *= 0.85 + 0.25 * (1.0 - length(p) * 1.6);
+	return base;
+}
+
+// Papel: o grão das fibras e a textura de linho do cartão (o verso não é plástico). `fine` (de 0 a 1) apaga o linho
+// quando ele fica menor que um pixel, para não cintilar com a carta longe.
+float paper(vec2 uv, float fine) {
+	vec2 q = uv * vec2(230.0, 320.0);
+	float linen = (sin(q.x) * 0.5 + 0.5) * 0.5 + (sin(q.y * 1.02) * 0.5 + 0.5) * 0.5;
+	return mix(0.5, linen, fine) * 0.55 + noise(uv * vec2(46.0, 64.0)) * 0.45;
+}
+
+// O fio da borda: a direção para fora da carta (no plano dela) e quanto o canto chanfrado inclina ali (0 no miolo).
+vec3 bevel(vec2 uv) {
+	vec2 p = (uv - 0.5) * SIZE;
+	vec2 q = abs(p) - (SIZE * 0.5 - vec2(CORNER));
+	vec2 out_dir = q.x > 0.0 && q.y > 0.0 ? normalize(q) : (q.x > q.y ? vec2(1.0, 0.0) : vec2(0.0, 1.0));
+	out_dir *= sign(p);
+	float slope = smoothstep(-0.005, 0.0, card_sdf(uv));
+	return vec3(out_dir, slope);
 }
 
 vec3 hue(float h) {
@@ -79,6 +103,8 @@ float crack_lines(vec2 p) {
 }
 
 void fragment() {
+	// Quanto da carta cabe num pixel (antes do discard, que bagunça as derivadas): o linho do verso só aparece de perto.
+	float fine = 1.0 - smoothstep(0.0012, 0.003, length(fwidth(UV)));
 	float d = card_sdf(UV);
 	// O corte dos cantos é seco (alfa deixaria a carta translúcida e misturaria com a de baixo); o SMAA da tela
 	// (project.godot) é quem suaviza essa borda.
@@ -120,12 +146,28 @@ void fragment() {
 		color = mix(color, color * 0.25, lines);
 		extra += crack_color * lines * 3.0 * cracks;
 	}
+	// O fio da borda chanfrado: a normal se inclina para fora, e a luz quente e a contraluz fria riscam o contorno.
+	vec3 edge = bevel(UV);
+	vec2 tilt = edge.xy * edge.z * 0.4;
+	if (FRONT_FACING) {
+		// Verniz acetinado de cartão impresso: o reflexo é largo e fraco (não é plástico); só a laca fina dá um fio de
+		// brilho quando a carta fica de lado.
+		NORMAL_MAP = normalize(vec3(tilt.x, -tilt.y, 1.0)) * 0.5 + 0.5;
+		ROUGHNESS = 0.6;
+		SPECULAR = 0.34;
+		CLEARCOAT = 0.1;
+		CLEARCOAT_ROUGHNESS = 0.32;
+	} else {
+		// O verso é papel: grão e linho no relevo e na cor, mais fosco que a frente.
+		float g = paper(UV, fine);
+		float gx = paper(UV + vec2(0.004, 0.0), fine) - g;
+		float gy = paper(UV + vec2(0.0, 0.003), fine) - g;
+		color *= 0.94 + 0.1 * g;
+		NORMAL_MAP = normalize(vec3(tilt.x - gx * 0.9, -tilt.y - gy * 0.9, 1.0)) * 0.5 + 0.5;
+		ROUGHNESS = 0.74;
+		SPECULAR = 0.3;
+	}
 	ALBEDO = color;
-	// Verniz de carta: um pouco brilhante, com uma camada de laca por cima.
-	ROUGHNESS = 0.58;
-	SPECULAR = 0.28;
-	CLEARCOAT = 0.18;
-	CLEARCOAT_ROUGHNESS = 0.5;
 	vec3 glow_light = vec3(0.0);
 	if (glow.a > 0.0) {
 		// Destaque: a borda acesa respira, um brilho corre em volta e um véu suave entra um pouco na carta.

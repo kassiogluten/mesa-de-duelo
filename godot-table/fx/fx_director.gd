@@ -45,6 +45,8 @@ var _slow_frames: float = 0.0
 var _watch := StateWatch.new()
 var _sweeps := BoardSweep.new()
 var _critters := Critters.new()
+## Os selos do assento que aparecem ou mudam (veneno, monarca, o Anel…): fx/state_seats.gd.
+var _seat_badges := SeatBadgeFx.new()
 var _commander_rules: bool = false
 ## Do estado em andamento: seq do spell-cast → os terrenos que pagaram; seq das entradas do comandante; seq do
 ## control-changed → onde a carta estava antes.
@@ -64,6 +66,8 @@ var _combat_number: int = 0
 var automatic: bool = true
 ## Sonda para conferir partidas de verdade (MESA_FX_LOG, MESA_FX_PRINTS); null fora disso.
 var _probe: FxProbe
+## Combate (fx/combat_stage.gd): declarar, bloquear, as trocas de golpes, as mortes despedaçando e o clima.
+var combat := CombatStage.new()
 
 
 func _ready() -> void:
@@ -71,9 +75,13 @@ func _ready() -> void:
 	var level: String = Txt.of(prefs.get("effects", "auto"))
 	automatic = level == "auto"
 	Fx.quality = {"alto": 2, "medio": 1, "leve": 0}.get(level, 2)
+	combat.director = self
+	add_child(combat)
 	if FxProbe.wanted():
 		_probe = FxProbe.new()
 		add_child(_probe)
+	if table:
+		CardTrails.attach(self, table)
 
 
 func _process(delta: float) -> void:
@@ -111,6 +119,9 @@ func before_state(state: Dictionary) -> void:
 	_mana = watch["mana"]
 	_commander_entries = watch["commander_entries"]
 	_schedule_changes(watch)
+	_seat_badges.observe(state, fresh, hud)
+	# Combate: quem ataca e bloqueia agora (e o fim do combate, que espera os golpes na fila).
+	combat.observe(state)
 	# Os momentos olham o estado inteiro (vida, eliminados), mesmo sem eventos novos.
 	var moments: Array = _moments.observe(state)
 	if fresh.is_empty() and moments.is_empty():
@@ -133,6 +144,8 @@ func before_state(state: Dictionary) -> void:
 				on_stack = table.anchor(id)
 			if on_stack is Vector3:
 				_resolve_from[int(event.get("seq", -1))] = on_stack
+	# Combate: os golpes do mesmo atacante (e de quem o bloqueia) viram uma troca só, tocada no primeiro deles.
+	combat.plan(fresh, leaving)
 	# Limpa-campo: as saídas da mesma mágica viram uma onda só, no lugar do primeiro evento do grupo.
 	var sweep_first: Dictionary = {}
 	var sweep_member: Dictionary = {}
@@ -156,14 +169,14 @@ func before_state(state: Dictionary) -> void:
 	for event: Dictionary in fresh:
 		var played: Dictionary = event
 		var seq: int = int(event.get("seq", -1))
-		times[seq] = at
+		times[seq] = at + combat.lead_in(seq) / speed
 		if sweep_first.has(seq):
 			var group: Dictionary = sweep_first[seq]
 			var refs: Dictionary = {}
 			for member: Variant in group["events"]:
 				refs[int((member as Dictionary).get("seq", -1))] = weakref(leaving.get(card_id(member as Dictionary)))
 			get_tree().create_timer(at).timeout.connect(func() -> void: EventFx.sweep(self, group, refs))
-		elif not sweep_member.has(seq):
+		elif not sweep_member.has(seq) and not combat.absorbed(seq):
 			# Referência fraca: a carta pode já ter sumido quando o temporizador dispara.
 			var ref: WeakRef = weakref(leaving.get(card_id(event)))
 			get_tree().create_timer(at).timeout.connect(func() -> void: _play(played, ref.get_ref() as CardNode))
@@ -205,6 +218,9 @@ func _event_time(event: Dictionary, sweep_first: Dictionary, sweep_member: Dicti
 		return SWEEP_TIME if bool((sweep_first[seq] as Dictionary).get("wave", true)) else 0.5
 	if sweep_member.has(seq):
 		return 0.0
+	var fight: float = combat.event_time(seq)
+	if fight >= 0.0:
+		return fight
 	if _commander_entries.has(seq):
 		return COMMANDER_TIME
 	if GameChangers.play(event, _commander_rules):
@@ -334,6 +350,9 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 
 
 func _play_now(event: Dictionary, leaving: CardNode) -> void:
+	# Declarar atacantes e bloqueadores, as trocas de golpes e as mortes em combate: o palco do combate (com os sons dele).
+	if combat.handles(event, leaving):
+		return
 	var seq: int = int(event.get("seq", -1))
 	if sounds:
 		var where: Variant = table.anchor(card_id(event)) if card_id(event) >= 0 else null
@@ -372,21 +391,6 @@ func _play_now(event: Dictionary, leaving: CardNode) -> void:
 				Critters.spawn(self, critter, speed)
 		"left":
 			EventFx.left(self, event, leaving)
-		"attackers":
-			for id: Variant in event.get("cards", []):
-				var node: CardNode = table.card_node(int(id))
-				if node:
-					CardGlow.pulse(node, Color(1.0, 0.35, 0.2), 0.04, speed)
-					TouchFx.dust(self, node.global_position, Color(1.0, 0.45, 0.25), 0.7)
-			if not (event.get("cards", []) as Array).is_empty():
-				hud.banner("Ataque!", Color(1.0, 0.45, 0.3))
-		"blockers":
-			for id: Variant in event.get("cards", []):
-				var node: CardNode = table.card_node(int(id))
-				if node:
-					# O bloqueador se ergue um instante (vai para a frente) com o contorno azul; a carta não fica branca.
-					CardGlow.pulse(node, Color(0.4, 0.7, 1.0), 0.05, speed)
-					node.jolt(0.025)
 		"counters":
 			EventFx.counters(self, event)
 		"survived":
@@ -407,21 +411,21 @@ func _play_now(event: Dictionary, leaving: CardNode) -> void:
 			var actor: int = int(event.get("actor", _you))
 			if bool(event.get("searched", false)):
 				# Busca no grimório (tutor): a carta sai brilhando do grimório e vai para a mão.
-				CardFlights.tutor(self, table.library_position(actor), table.zone_position(actor, "hand"), table.sleeve_of(actor))
+				CardFlights.tutor(self, table.library_position(actor), table.zone_position(actor, "hand"), table.sleeve_of(actor), CardFlights.piles(table, actor))
 			else:
 				TouchFx.draw(self, table.card_node("library:%d" % actor), table.library_position(actor), actor == _you)
 		"cascade":
 			var digger: int = int(event.get("actor", _you))
 			CardFlights.cascade(self, table.catalog, table.library_position(digger), table.zone_position(digger, "exile"),
 				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger),
-				landing(int(event.get("hit", -1))) if int(event.get("hit", -1)) >= 0 else null)
+				landing(int(event.get("hit", -1))) if int(event.get("hit", -1)) >= 0 else null, CardFlights.piles(table, digger, "exile", event.get("revealed", [])))
 		"mill":
 			var miller: int = int(event.get("actor", _you))
 			CardFlights.mill(self, table.catalog, table.library_position(miller), table.zone_position(miller, "graveyard"),
-				event.get("milled", []), bool(event.get("surveil", false)), table.sleeve_of(miller))
+				event.get("milled", []), bool(event.get("surveil", false)), table.sleeve_of(miller), CardFlights.piles(table, miller, "graveyard", event.get("milled", [])))
 		"scry":
 			var seer: int = int(event.get("actor", _you))
-			CardFlights.scry(self, table.library_position(seer), int(event.get("top", 0)), int(event.get("bottom", 0)), table.sleeve_of(seer))
+			CardFlights.scry(self, table.library_position(seer), int(event.get("top", 0)), int(event.get("bottom", 0)), table.sleeve_of(seer), CardFlights.piles(table, seer))
 		"shuffle":
 			var pile: CardNode = table.card_node("library:%d" % int(event.get("actor", _you)))
 			if pile:

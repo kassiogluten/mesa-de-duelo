@@ -28,8 +28,8 @@ func _ready() -> void:
 	for shader: Shader in [Fx._ring(), Fx._pillar(), BoardSweep._front(), ShieldFx.DOME, CardDressing._halo(),
 			ArrivalFx._bloom(), ArrivalFx._dim_material(), MomentPieces._slash_material(), CardGlow.SHADER, CombatFx._flash(),
 			SpellMissile.CORE_SHADER, SpellMissile.TRAIL_SHADER, StackPresence.AURA_SHADER, StackPresence.HAZE_SHADER,
-			ExilePortal.SHADER, MomentExtras.SHAFT, MomentExtras.LEAF, MomentExtras.STAR, FinaleFx.GRADE, BoardSweep.SCORCH,
-			BoardSweep.HEAT, ArrivalFx.GEM_SHADER, ArrivalFx.LENS_SHADER, ArrivalFx.LIQUID_SHADER]:
+			ExilePortal.SHADER, TrailRibbon.SHADER, EnergyBeam.SHADER, MomentExtras.SHAFT, MomentExtras.LEAF, MomentExtras.STAR,
+			FinaleFx.GRADE, BoardSweep.SCORCH, BoardSweep.HEAT, ArrivalFx.GEM_SHADER, ArrivalFx.LENS_SHADER, ArrivalFx.LIQUID_SHADER]:
 		var material := ShaderMaterial.new()
 		material.shader = shader
 		shaders.append(material)
@@ -44,6 +44,9 @@ func _ready() -> void:
 	# Os efeitos contínuos das permanentes (o material compartilhado) e o ponto de luz das partículas deles.
 	shaders.append(AmbientFx.shared_material())
 	shaders.append(AmbientMotes.draw_mesh().material)
+	# As estrelinhas e os brilhos dos selos e o giro do selo do enjoo (fx/state_badges.gd, fx/sickness_fx.gd).
+	shaders.append(BadgeFx.star_material())
+	shaders.append(SicknessFx.orbit_material())
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE * 0.001
 	_kept.append_array(shaders)
@@ -60,6 +63,14 @@ func _ready() -> void:
 	SpellMissile.warm(self, spot)
 	CombatFx.sparks(self, spot, Vector3.FORWARD, Color(0, 0, 0, 0), 4, 0.01)
 	TouchFx.dust(self, spot, Color(0, 0, 0, 0), 1.0)
+	# As gotas de mana (núcleo, cometa e faíscas) e os fiapos de luz que saem do grimório.
+	ManaOrb.warm(self, spot)
+	FlightPieces.flutter(self, spot, Color(0, 0, 0, 0), 3)
+	# O combate: a onda que lê a tela, o escudo, a linha, o rastro, os cacos, a fumaça e as faíscas esticadas.
+	CombatPieces.warm(self, spot)
+	# Os tipos de partícula e de material padrão ficam vivos (sem isso, cada um recompila o shader na primeira vez depois
+	# de uma pausa, ~6 ms).
+	CombatPieces.keep_materials(self)
 	# As peças dos momentos grandes (folhas e cinzas, poeira, cintilas, cacos e a sombra de contato), transparentes.
 	var clear := Color(0, 0, 0, 0)
 	MomentExtras.leaves(self, spot, [clear], 8, 0.2, Vector2(0.01, 0.01), 0.001, 0.0, 1.0, 0.1, 0.0, 0.0)
