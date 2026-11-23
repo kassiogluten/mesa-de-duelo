@@ -6,19 +6,27 @@ extends Control
 
 const DURATION := 1.2
 const HEIGHT := 112.0
+## Faixa no alto: o centro fica nesta fração da altura da tela (acima do campo do oponente, longe do combate).
+const TOP_CENTER := 0.19
 const DARK := Color("#060912")
 
 var _clip: Control
 var _content: Control
 var _font: FontVariation
 var _t: float = 0.0
+var _duration: float = DURATION
 
 
-## Mostra a faixa por cima de `parent` (ela se apaga sozinha).
-static func play(parent: Control, text: String, color: Color) -> TurnBanner:
+## Mostra a faixa por cima de `parent` (ela se apaga sozinha). `top` a põe no alto da tela, em vez do meio; `duration`
+## (0 = a de sempre) encurta ou alonga.
+static func play(parent: Control, text: String, color: Color, top: bool = false, duration: float = 0.0) -> TurnBanner:
 	var banner := TurnBanner.new()
+	banner._duration = duration if duration > 0.0 else DURATION
 	parent.add_child(banner)
 	banner._build(text, color)
+	if top:
+		banner.anchor_top = TOP_CENTER
+		banner.anchor_bottom = TOP_CENTER
 	return banner
 
 
@@ -91,13 +99,13 @@ static func _gradient(offsets: Array, colors: Array) -> GradientTexture2D:
 func _process(delta: float) -> void:
 	_t += delta
 	_step(_t)
-	if _t >= DURATION:
+	if _t >= _duration:
 		queue_free()
 
 
 ## O quadro da animação no tempo `t` (keyframes de @keyframes banner: abre até 18%, fica até 75%, some crescendo).
 func _step(t: float) -> void:
-	var p: float = clampf(t / DURATION, 0.0, 1.0)
+	var p: float = clampf(t / _duration, 0.0, 1.0)
 	var width: float = size.x if size.x > 0.0 else get_viewport_rect().size.x
 	var open: float = ease(clampf(p / 0.18, 0.0, 1.0), 0.35)
 	_clip.size = Vector2(width * open, HEIGHT)
