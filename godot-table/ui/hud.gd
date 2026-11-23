@@ -251,6 +251,11 @@ func portrait_center(player_id: int) -> Vector2:
 	return portrait.get_global_rect().get_center() if portrait else Vector2(-1, -1)
 
 
+## O assento de um jogador (para os efeitos acharem os selos dele); null se não há.
+func seat_panel(player_id: int) -> SeatPanel:
+	return _seats.get(player_id)
+
+
 ## Onde está a caixa de ação na tela (vazio quando escondida): para quem precisa desviar dela.
 func action_rect() -> Rect2:
 	return _action.box_rect()

@@ -45,6 +45,8 @@ var _slow_frames: float = 0.0
 var _watch := StateWatch.new()
 var _sweeps := BoardSweep.new()
 var _critters := Critters.new()
+## Os selos do assento que aparecem ou mudam (veneno, monarca, o Anel…): fx/state_seats.gd.
+var _seat_badges := SeatBadgeFx.new()
 var _commander_rules: bool = false
 ## Do estado em andamento: seq do spell-cast → os terrenos que pagaram; seq das entradas do comandante; seq do
 ## control-changed → onde a carta estava antes.
@@ -74,6 +76,8 @@ func _ready() -> void:
 	if FxProbe.wanted():
 		_probe = FxProbe.new()
 		add_child(_probe)
+	if table:
+		CardTrails.attach(self, table)
 
 
 func _process(delta: float) -> void:
@@ -111,6 +115,7 @@ func before_state(state: Dictionary) -> void:
 	_mana = watch["mana"]
 	_commander_entries = watch["commander_entries"]
 	_schedule_changes(watch)
+	_seat_badges.observe(state, fresh, hud)
 	# Os momentos olham o estado inteiro (vida, eliminados), mesmo sem eventos novos.
 	var moments: Array = _moments.observe(state)
 	if fresh.is_empty() and moments.is_empty():
@@ -407,21 +412,21 @@ func _play_now(event: Dictionary, leaving: CardNode) -> void:
 			var actor: int = int(event.get("actor", _you))
 			if bool(event.get("searched", false)):
 				# Busca no grimório (tutor): a carta sai brilhando do grimório e vai para a mão.
-				CardFlights.tutor(self, table.library_position(actor), table.zone_position(actor, "hand"), table.sleeve_of(actor))
+				CardFlights.tutor(self, table.library_position(actor), table.zone_position(actor, "hand"), table.sleeve_of(actor), CardFlights.piles(table, actor))
 			else:
 				TouchFx.draw(self, table.card_node("library:%d" % actor), table.library_position(actor), actor == _you)
 		"cascade":
 			var digger: int = int(event.get("actor", _you))
 			CardFlights.cascade(self, table.catalog, table.library_position(digger), table.zone_position(digger, "exile"),
 				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger),
-				landing(int(event.get("hit", -1))) if int(event.get("hit", -1)) >= 0 else null)
+				landing(int(event.get("hit", -1))) if int(event.get("hit", -1)) >= 0 else null, CardFlights.piles(table, digger, "exile", event.get("revealed", [])))
 		"mill":
 			var miller: int = int(event.get("actor", _you))
 			CardFlights.mill(self, table.catalog, table.library_position(miller), table.zone_position(miller, "graveyard"),
-				event.get("milled", []), bool(event.get("surveil", false)), table.sleeve_of(miller))
+				event.get("milled", []), bool(event.get("surveil", false)), table.sleeve_of(miller), CardFlights.piles(table, miller, "graveyard", event.get("milled", [])))
 		"scry":
 			var seer: int = int(event.get("actor", _you))
-			CardFlights.scry(self, table.library_position(seer), int(event.get("top", 0)), int(event.get("bottom", 0)), table.sleeve_of(seer))
+			CardFlights.scry(self, table.library_position(seer), int(event.get("top", 0)), int(event.get("bottom", 0)), table.sleeve_of(seer), CardFlights.piles(table, seer))
 		"shuffle":
 			var pile: CardNode = table.card_node("library:%d" % int(event.get("actor", _you)))
 			if pile:

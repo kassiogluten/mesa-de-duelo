@@ -1,5 +1,6 @@
 # O toque das cartas na mesa: espera a carta que ainda voa pousar antes do efeito dela, a poeira de luz que se espalha
-# rente ao feltro quando um terreno ou uma permanente pousa, e o grimório que cede um pouco quando alguém compra.
+# rente ao feltro quando uma carta pousa, o grimório que cede e acende a borda quando alguém compra, e o grimório
+# remexido e aceso da busca.
 class_name TouchFx
 extends RefCounted
 
@@ -62,13 +63,82 @@ static func dust(parent: Node3D, pos: Vector3, color: Color, strength: float = 1
 	parent.get_tree().create_timer(0.9).timeout.connect(particles.queue_free)
 
 
-## Comprou: o grimório cede um pouco (a carta de cima saiu) e uma luz fraca pisca nele. Na sua compra, um pouco mais.
+## Comprou: o grimório cede um pouco (a carta de cima saiu), a borda dele acende num fio de luz que se abre e some, e
+## uns fiapos de luz saem da borda. Na sua compra, um pouco mais (e um clarão fraco).
 static func draw(parent: Node3D, pile: CardNode, at: Vector3, mine: bool) -> void:
+	var top: Vector3 = pile_top(pile, at)
 	if pile and is_instance_valid(pile):
 		pile.jolt(0.02 if mine else 0.012)
+		var edge: ShaderMaterial = _pile_glow(parent, pile, top, Color(0.8, 0.9, 1.0), 0.45)
+		var tween: Tween = _glow_tween(edge)
+		if tween:
+			tween.tween_method(func(v: float) -> void: edge.set_shader_parameter("outline", v), 0.0, 0.022, 0.34).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+			tween.tween_method(func(v: float) -> void: edge.set_shader_parameter("outline_alpha", v), 0.95 if mine else 0.55, 0.0, 0.38).set_ease(Tween.EASE_IN)
+	FlightPieces.flutter(parent, top, Color(0.82, 0.9, 1.0), 4 if mine else 2)
 	if mine:
-		Fx.burst(parent, at + Vector3(0, 0.25, 0), Color(0.8, 0.9, 1.0), 8, 0.6, 0.35, 0.06)
-		Fx.light(parent, at, Color(0.75, 0.85, 1.0), 1.2, 2.0, 0.25)
+		Fx.light(parent, at, Color(0.75, 0.85, 1.0), 1.0, 2.0, 0.25)
+
+
+## Remexendo no grimório (a busca): a borda do monte acende, duas luzes dão a volta nele, o monte treme e solta fiapos
+## de luz, durante `duration`. Sem `pile`, só a luz e os fiapos em `top`.
+static func rummage(parent: Node3D, pile: CardNode, top: Vector3, color: Color, duration: float) -> void:
+	var glow: ShaderMaterial = _pile_glow(parent, pile, top, color, duration + 0.4)
+	var tween: Tween = _glow_tween(glow)
+	if tween:
+		tween.tween_method(func(v: float) -> void: glow.set_shader_parameter("trace", v), 0.0, 1.5, duration + 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_method(func(v: float) -> void: glow.set_shader_parameter("trace_alpha", v), 1.3, 0.0, duration + 0.35).set_ease(Tween.EASE_IN)
+		tween.tween_method(func(v: float) -> void: glow.set_shader_parameter("outline_alpha", v), 0.8, 0.0, duration + 0.3).set_ease(Tween.EASE_IN)
+		tween.tween_method(func(v: float) -> void: glow.set_shader_parameter("under", v), 0.7, 0.0, duration + 0.35).set_ease(Tween.EASE_IN)
+		glow.set_shader_parameter("outline", 0.012)
+	if pile and is_instance_valid(pile):
+		pile.jolt(0.018)
+		var ref: WeakRef = weakref(pile)
+		MomentPieces.after(parent, duration * 0.5, func() -> void:
+			var again: CardNode = ref.get_ref() as CardNode
+			if again:
+				again.jolt(0.024))
+	for i: int in 2:
+		MomentPieces.after(parent, i * duration * 0.45, func() -> void: FlightPieces.flutter(parent, top, color, 4))
+	Fx.light(parent, top, color, 1.6, 2.8, duration + 0.2)
+
+
+## O alto do grimório `pile` (a face de cima do monte, pela espessura dele); sem o monte, um pouco acima de `fallback`.
+static func pile_top(pile: CardNode, fallback: Vector3) -> Vector3:
+	if pile == null or not is_instance_valid(pile) or not pile.is_inside_tree():
+		return fallback + Vector3(0, 0.2, 0)
+	var depth: Variant = pile.get("_depth")
+	var scale: float = pile.global_basis.get_scale().x
+	return pile.global_position + Vector3(0, (float(depth) if depth != null else 0.1) * scale, 0)
+
+
+## Uma camada de luz no formato da carta deitada sobre o alto do monte (o mesmo brilho do CardGlow), que se apaga
+## sozinha depois de `life`; null sem o monte.
+static func _pile_glow(parent: Node3D, pile: CardNode, top: Vector3, color: Color, life: float) -> ShaderMaterial:
+	if pile == null or not is_instance_valid(pile) or not pile.is_inside_tree():
+		return null
+	var mesh := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = CardNode.SIZE + Vector2(CardGlow.PAD, CardGlow.PAD) * 2.0
+	mesh.mesh = plane
+	var material := ShaderMaterial.new()
+	material.shader = CardGlow.SHADER
+	material.set_shader_parameter("color", color)
+	material.set_shader_parameter("card", CardNode.SIZE)
+	material.set_shader_parameter("pad", CardGlow.PAD)
+	mesh.material_override = material
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mesh)
+	mesh.global_transform = Transform3D(Basis.from_scale(Vector3.ONE * pile.global_basis.get_scale().x), top + Vector3(0, 0.003, 0))
+	mesh.get_tree().create_timer(life).timeout.connect(mesh.queue_free)
+	material.set_meta("mesh", weakref(mesh))
+	return material
+
+
+static func _glow_tween(material: ShaderMaterial) -> Tween:
+	if material == null:
+		return null
+	var mesh: MeshInstance3D = (material.get_meta("mesh") as WeakRef).get_ref() as MeshInstance3D
+	return mesh.create_tween().set_parallel(true) if mesh else null
 
 
 ## Espera a carta pousar e roda o efeito (ou desiste quando ela some, ou roda mesmo assim depois de `left` segundos).

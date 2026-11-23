@@ -55,6 +55,11 @@ var day_time: String = ""
 var format: String = ""
 ## Cartas extras no campo de um jogador (a mesa lotada): jogador → quantos terrenos a mais.
 var crowd: Dictionary = {}
+## Os estados das permanentes e dos jogadores (lab/lab_states.gd): id da carta → campos que trocam os de card_of
+## (sick, counters, power…); id do jogador → campos a mais (counters, ringTempted…); e o número do turno.
+var extra: Dictionary = {}
+var player_extra: Dictionary = {}
+var turn: int = 5
 
 var catalog: CardCatalog
 var table: TableView
@@ -126,6 +131,7 @@ func _panel() -> Control:
 		["Derrota", func() -> void: fx.game_over(false)],
 	]
 	buttons.append_array(LabPlays.buttons(self))
+	buttons.append_array(LabStates.buttons(self))
 	buttons.append(["Remontar mesa", reset])
 	for entry: Array in buttons:
 		var button := Hud._button(Txt.of(entry[0]), false)
@@ -191,10 +197,12 @@ func _series(folder: String, names: PackedStringArray) -> void:
 ## A carta da mesa de teste, como o servidor a manda (com a face, o dono e a virada de agora).
 func card_of(id: int) -> Dictionary:
 	var face: int = int(faces.get(id, id))
-	var c: Array = CARDS[face]
-	return {"id": id, "name": c[0], "manaCost": c[1], "typeLine": c[2], "creature": c[3], "land": c[4], "power": c[5], "toughness": c[6],
+	var c: Array = CARDS[face] if CARDS.has(face) else LabStates.CARDS[face]
+	var card: Dictionary = {"id": id, "name": c[0], "manaCost": c[1], "typeLine": c[2], "creature": c[3], "land": c[4], "power": c[5], "toughness": c[6],
 		"basePower": c[5], "baseToughness": c[6], "tapped": tapped.has(id), "controller": int(controller.get(id, c[7])), "damage": 0,
 		"token": c.size() > 8 and bool(c[8]), "rarity": Txt.of(RARITY.get(face, "common"))}
+	card.merge(extra.get(id, {}), true)
+	return card
 
 
 func _state(events: Array = []) -> Dictionary:
@@ -214,11 +222,12 @@ func _state(events: Array = []) -> Dictionary:
 		players.append({"id": pid, "name": "Você" if pid == 0 else "Oponente", "life": 20, "sleeve": 1 if pid == 0 else 2, "library": 40,
 			"handCount": in_hand.size() if pid == 0 else 4, "hand": in_hand, "battlefield": cards, "graveyard": [], "exile": [],
 			"monarch": monarch == pid, "initiative": initiative == pid})
+		(players[players.size() - 1] as Dictionary).merge(player_extra.get(pid, {}), true)
 	var stack: Array = []
 	if stack_card >= 0:
 		var source: Dictionary = card_of(stack_card)
 		stack.append({"id": 900, "text": source["name"], "kind": "spell", "controller": source["controller"], "source": source})
-	var state: Dictionary = {"type": "state", "you": 0, "turn": 5, "phase": "MAIN1", "activePlayer": 0, "players": players, "stack": stack, "combat": [],
+	var state: Dictionary = {"type": "state", "you": 0, "turn": turn, "phase": "MAIN1", "activePlayer": 0, "players": players, "stack": stack, "combat": [],
 		"input": {"gen": 1, "ok": {"label": "", "enabled": false}, "cancel": {"label": "", "enabled": false}, "selectable": []}, "events": events, "gameOver": false}
 	if day_time != "":
 		state["dayTime"] = day_time
@@ -256,6 +265,9 @@ func reset() -> void:
 	tapped = {}
 	faces = {}
 	crowd = {}
+	extra = {}
+	player_extra = {}
+	turn = 5
 	monarch = -1
 	initiative = -1
 	day_time = ""
@@ -328,6 +340,7 @@ func _block() -> void:
 
 
 func _counters() -> void:
+	extra[103] = {"counters": {"P1P1": 2}, "power": 4, "toughness": 4}
 	rebuild([make_event({"type": "counters", "sourceId": 103, "counter": "P1P1", "delta": 2})])
 
 
