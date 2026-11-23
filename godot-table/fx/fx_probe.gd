@@ -63,6 +63,12 @@ func played(event: Dictionary, where: Variant) -> void:
 	shot(kind)
 
 
+## Quanto custou montar o efeito (na linha principal): diz quando passa de 4 ms.
+func cost(kind: String, usec: int) -> void:
+	if log_enabled and usec > 4000:
+		print("[fx %7.2f] efeito caro: %s levou %.1f ms para montar" % [_now(), kind, usec / 1000.0])
+
+
 ## Salva um print daqui a pouco, com o nome do que aconteceu (se ainda há cota e espaço desde o último).
 func shot(label: String) -> void:
 	if shots_dir == "" or _shots >= max_shots or _now() - _last_shot < SHOT_GAP:

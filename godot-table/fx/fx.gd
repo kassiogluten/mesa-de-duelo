@@ -159,7 +159,9 @@ static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, durat
 	var lift: float = clampf(from.distance_to(to) * 0.25, 0.4, 1.8)
 	var tween := orb.create_tween()
 	tween.tween_method(func(t: float) -> void:
-		orb.position = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift, 0), 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		orb.position = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift, 0)
+		# Chegando perto da câmera (a pilha no painel), a bola encolhe: o mesmo tamanho na tela, não um sol branco.
+		orb.scale = Vector3.ONE * depth_scale(parent, orb.position), 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		trail.emitting = false
 		for child: Node in orb.get_children():

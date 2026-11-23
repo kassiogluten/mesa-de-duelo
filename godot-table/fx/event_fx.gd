@@ -114,8 +114,10 @@ static func spell(d: FxDirector, event: Dictionary, mana: Array, game_changer: b
 				d.mood.pulse(color)
 			var node: CardNode = d.table.card_node(int(card.get("id", -1)))
 			CardGlow.trace(node, color, 0.6, d.speed)
-			Fx.burst(d, pos, color, 36, 1.6, 0.6)
-			Fx.light(d, pos, color, 3.5, 5.0, 0.5)
+			# Na pilha do painel (perto da câmera) a própria carta acende; a luz e as faíscas ficam para a carta no tampo.
+			if Fx.depth_scale(d, pos) > 0.7:
+				Fx.burst(d, pos, color, 36, 1.6, 0.6)
+				Fx.light(d, pos, color, 3.5, 5.0, 0.5)
 			if node:
 				node.flash_color(color, 0.5))
 		var tags: PackedStringArray = []
@@ -149,7 +151,8 @@ static func resolved(d: FxDirector, event: Dictionary, from: Variant = null) -> 
 		var card: Dictionary = event.get("card", {}) if event.get("card") is Dictionary else d.table.card_data(FxDirector.card_id(event))
 		var color: Color = Fx.card_color(card)
 		Fx.burst(d, from, color.lerp(Color.WHITE, 0.25), 22, 1.3, 0.45, 0.07, 1.5)
-		Fx.light(d, from, color, 2.2, 3.0, 0.3)
+		if Fx.depth_scale(d, from) > 0.7:
+			Fx.light(d, from, color, 2.2, 3.0, 0.3)
 		return
 	d.at_card(event, func(pos: Vector3, card: Dictionary) -> void:
 		if bool(event.get("ward", false)):

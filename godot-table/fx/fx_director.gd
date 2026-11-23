@@ -25,6 +25,8 @@ const MAX_BATCH := 2.4
 ## nunca mais que isto atrás do estado; com fila, o ritmo aperta para alcançar.
 const MAX_LAG := 0.6
 const CATCH_UP := 0.65
+## Espaço entre dois momentos grandes no mesmo estado (o título do primeiro já está saindo).
+const MOMENT_GAP := 1.1
 
 var table: TableView
 var hud: Hud
@@ -175,9 +177,13 @@ func before_state(state: Dictionary) -> void:
 	if _probe:
 		_probe.state(fresh.size(), at, moments.size())
 	# Cada momento junto do evento que o causou; a eliminação múltipla depois do último golpe.
+	# Dois momentos do mesmo golpe (primeiro sangue e dano de comandante) não se atropelam: o segundo espera o título.
+	var last_moment: float = -10.0
 	for raw: Variant in moments:
 		var moment: Dictionary = raw
 		var when: float = at if moment.get("kind") == "multi-kill" else float(times.get(int(moment.get("seq", -1)), at)) + 0.12 / speed
+		when = maxf(when, last_moment + MOMENT_GAP / speed)
+		last_moment = when
 		get_tree().create_timer(when).timeout.connect(func() -> void:
 			Moments.play(moment, self, table)
 			if _probe:
@@ -323,9 +329,17 @@ static func card_id(event: Dictionary) -> int:
 
 
 func _play(event: Dictionary, leaving: CardNode) -> void:
-	var seq: int = int(event.get("seq", -1))
 	if _probe:
 		_probe.played(event, table.anchor(card_id(event)) if card_id(event) >= 0 else null)
+		var started: int = Time.get_ticks_usec()
+		_play_now(event, leaving)
+		_probe.cost(Txt.of(event.get("type")), Time.get_ticks_usec() - started)
+		return
+	_play_now(event, leaving)
+
+
+func _play_now(event: Dictionary, leaving: CardNode) -> void:
+	var seq: int = int(event.get("seq", -1))
 	if sounds:
 		var where: Variant = table.anchor(card_id(event)) if card_id(event) >= 0 else null
 		sounds.play(Sounds.cue_for(event, _you), where if where is Vector3 else Vector3.ZERO)

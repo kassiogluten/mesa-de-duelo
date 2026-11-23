@@ -8,6 +8,8 @@ extends Node3D
 const FRAMES := 4
 
 var camera: Camera3D
+var _coin_task: int = -1
+var _coin_images: Array[Image] = []
 
 
 func _ready() -> void:
@@ -68,7 +70,39 @@ func _ready() -> void:
 	spot_light.light_energy = 0.001
 	spot_light.spot_range = 0.01
 	holder.add_child(spot_light)
+	# Os objetos montados na hora (dados, fichas): a primeira montagem gera as malhas e compila os materiais deles.
+	var objects := Node3D.new()
+	objects.scale = Vector3.ONE * 0.001
+	holder.add_child(objects)
+	for sides: int in [6, 20]:
+		objects.add_child(Dice3D._make_die(sides, 1, Color.WHITE))
+	for kind: String in ArrivalFx.TOKENS.values():
+		var object: Node3D = ArrivalFx._token_object(kind)
+		if object:
+			objects.add_child(object)
+	_coin_task = WorkerThreadPool.add_task(_draw_coin)
 	_free_later(holder)
+
+
+## As faces da moeda, desenhadas fora da linha principal; as texturas saem quando ficam prontas (em _process).
+func _draw_coin() -> void:
+	var images: Array[Image] = []
+	for heads: bool in [true, false]:
+		images.append_array(Dice3D.coin_images(heads))
+	_coin_images = images
+
+
+func _process(_delta: float) -> void:
+	if _coin_task >= 0 and WorkerThreadPool.is_task_completed(_coin_task):
+		WorkerThreadPool.wait_for_task_completion(_coin_task)
+		_coin_task = -1
+		Dice3D.set_coin_images(_coin_images)
+		# Com as faces prontas, a moeda inteira aparece uns quadros (compila o ouro com relevo).
+		var coin: Node3D = Dice3D._make_coin()
+		coin.position = Vector3(0, 0, -1.5)
+		coin.scale = Vector3.ONE * 0.001
+		camera.add_child(coin)
+		_free_later(coin)
 
 
 func _free_later(holder: Node3D) -> void:
@@ -78,5 +112,11 @@ func _free_later(holder: Node3D) -> void:
 	var node: Node3D = ref.get_ref() as Node3D
 	if node:
 		node.queue_free()
+	if holder.name == "Coin3D":
+		return
 	await get_tree().create_timer(1.0).timeout
+	# A moeda ainda desenhando: espera terminar (a tarefa usa este nó) e a moeda aparecer antes de sair.
+	while _coin_task >= 0:
+		await get_tree().process_frame
+	await get_tree().create_timer(0.3).timeout
 	queue_free()
