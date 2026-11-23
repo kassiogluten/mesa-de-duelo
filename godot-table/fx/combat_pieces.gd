@@ -227,22 +227,19 @@ static func trample(parent: Node3D, from: Vector3, to: Vector3, color: Color, du
 	tween.tween_callback(ribbon.queue_free)
 
 
-## Toque mortífero: a carta suga a luz (um clarão escuro), sobe fumaça preta-violeta em fiapos, faíscas violeta e um
-## anel apertado.
+## Toque mortífero: a carta suga a luz (um clarão escuro), sobe fumaça preta-violeta em fiapos e faíscas violeta.
 static func necrotic(parent: Node3D, pos: Vector3) -> void:
 	smoke(parent, pos + Vector3(0, 0.08, 0), Color(0.16, 0.02, 0.24, 0.95), 30, 0.7, 1.4, 1.3, 0.4)
 	smoke(parent, pos + Vector3(0, 0.2, 0), Color(0.25, 0.05, 0.4, 0.8), 14, 1.6, 0.6, 0.8, 0.22)
 	Fx.burst(parent, pos + Vector3(0, 0.2, 0), NECROTIC, 26, 1.4, 0.7, 0.06)
-	Fx.ring(parent, pos, NECROTIC.darkened(0.2), 0.75, 0.45, 0.1)
 	Fx.light(parent, pos, NECROTIC, 2.2, 3.0, 0.5)
 
 
-## Infectar e murchar: bolhas verde-ácido, gotas que caem e o anel tóxico.
+## Infectar e murchar: bolhas verde-ácido e gotas que caem.
 static func toxic(parent: Node3D, pos: Vector3) -> void:
 	Fx.burst(parent, pos + Vector3(0, 0.2, 0), TOXIC, 30, 1.3, 0.8, 0.07)
 	smoke(parent, pos + Vector3(0, 0.25, 0), Color(0.18, 0.5, 0.05, 0.85), 22, 1.2, -4.0, 0.8, 0.1)
 	smoke(parent, pos + Vector3(0, 0.1, 0), Color(0.12, 0.3, 0.04, 0.6), 10, 0.5, 0.5, 1.0, 0.35)
-	Fx.ring(parent, pos, TOXIC, 0.7, 0.45, 0.1)
 	Fx.light(parent, pos, TOXIC, 2.0, 3.0, 0.45)
 
 

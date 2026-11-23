@@ -328,11 +328,10 @@ func _declare_attackers(event: Dictionary) -> void:
 		var base: Vector3 = node.global_position
 		if i == 0:
 			first = base
-		# A arrancada: poeira e um anel de energia na base, o contorno aceso e o rastro de calor seguindo a carta.
+		# A arrancada: poeira na base, o contorno aceso e o rastro de calor seguindo a carta.
 		CardGlow.pulse(node, ATTACK, 0.04, d.speed)
 		TouchFx.dust(d, base, Color(1.0, 0.45, 0.25), 0.8)
 		CombatPieces.smoke(d, base + Vector3(0, 0.03, 0), Color(0.3, 0.24, 0.2, 0.45), 10, 1.0, 0.25, 0.8, 0.26)
-		Fx.ring(d, Vector3(base.x, 0.02, base.z), ATTACK, 0.45, 0.34, 0.08)
 		CombatPieces.heat_trail(d, node, ATTACK, (0.75 + i * FieldPlacement.ATTACK_STAGGER) / d.speed, 0.5, 0.32)
 		# Enquanto ataca, a criatura arde (as fagulhas sobem das bordas dela até o fim do combate).
 		if Fx.quality > 0 and not _smolder.has(id):

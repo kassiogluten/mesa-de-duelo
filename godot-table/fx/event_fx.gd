@@ -40,7 +40,7 @@ static func _impact(d: FxDirector, target: Vector3, to_key: Variant, amount: int
 		if to_key is int:
 			CardGlow.pulse(d.table.card_node(int(to_key)), Color(0.6, 0.85, 1.0), 0.05, d.speed)
 		else:
-			Fx.ring(d, target, Color(0.6, 0.85, 1.0), 1.0, 0.5, 0.12)
+			MomentExtras.flare(d, target, Color(0.6, 0.85, 1.0), 1.0, 0.4)
 		Fx.float_text(d, target, "Prevenido", Color(0.7, 0.9, 1.0), 56)
 		return
 	var lethal: bool = bool(event.get("lethal", false))
@@ -51,11 +51,11 @@ static func _impact(d: FxDirector, target: Vector3, to_key: Variant, amount: int
 	if not by_missile:
 		CombatFx.impact(d, target, source, color, amount, d.table.camera, d.speed)
 	Fx.burst(d, target, color, 24 + amount * 5, 1.8 + minf(amount, 10) * 0.12, 0.55)
-	# Na carta, o contorno dela acende e se afasta; no jogador, a onda de choque no tampo.
+	# Na carta, o contorno dela acende e se afasta; no jogador, um clarão em estrela (sem anel em volta do retrato).
 	if to_key is int:
 		CardGlow.pulse(d.table.card_node(int(to_key)), color, 0.03 + minf(amount, 8) * 0.006, d.speed)
 	else:
-		Fx.ring(d, target, color, 0.9 + minf(amount, 10) * 0.08, 0.45, 0.1)
+		MomentExtras.flare(d, target, color, 0.9 + minf(amount, 10) * 0.06, 0.4)
 	if not by_missile:
 		Fx.light(d, target, color, 3.0 + minf(amount, 10) * 0.4, 4.0)
 	DamageNumber.pop(d, target, DamageNumber.text_for(event, amount), color, amount, not to_key is int, lethal)

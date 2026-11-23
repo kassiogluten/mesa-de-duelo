@@ -177,7 +177,7 @@ static func _player_slam(stage: CombatStage, blow: Dictionary, target: Vector3, 
 	var poison: bool = bool(event.get("infect", false))
 	var tint: Color = CombatPieces.TOXIC if poison else color
 	CombatPieces.scorch(d, ground, tint, lerpf(1.6, 3.0, weight))
-	Fx.ring(d, ground, tint, lerpf(1.4, 2.6, weight), 0.5, 0.14)
+	MomentExtras.dust_ring(d, ground, Color(0.55, 0.47, 0.38), lerpf(1.4, 2.6, weight), 40 + int(weight * 40), 0.9)
 	CombatPieces.smoke(d, ground + Vector3(0, 0.05, 0), Color(0.32, 0.26, 0.2, 0.55), 16 + int(weight * 16), 1.4, 0.4, 1.0, 0.3)
 	CombatPieces.smoke(d, ground + Vector3(0, 0.1, 0), Color(0.12, 0.09, 0.07, 0.9), 10 + int(weight * 10), 2.4, -6.0, 0.6, 0.07)
 	var player: int = blow["player"]
@@ -244,7 +244,6 @@ static func _prevented(stage: CombatStage, blow: Dictionary) -> void:
 		return
 	var target: Vector3 = at
 	CombatFx.flash(d, target + Vector3(0, 0.25, 0), PREVENTED, 1.1, 0.16 / d.speed)
-	Fx.ring(d, target, PREVENTED, 1.1, 0.45, 0.12)
 	Fx.float_text(d, target, "Prevenido", PREVENTED.lightened(0.2), 56)
 	if d.sounds:
 		d.sounds.play("shield", target)
