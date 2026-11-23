@@ -76,7 +76,10 @@ static func life(d: FxDirector, event: Dictionary) -> void:
 ## Mágica conjurada: a mana voa dos terrenos até ela, a carta na pilha acende na cor dela, com onda e luz; cópia, reforço
 ## e X ganham um selo; o Game Changer ganha a cena dele.
 static func spell(d: FxDirector, event: Dictionary, mana: Array, game_changer: bool) -> void:
-	d.at_card(event, func(pos: Vector3, card: Dictionary) -> void:
+	d.at_card(event, func(now: Vector3, card: Dictionary) -> void:
+		# A carta ainda está saindo da mão: o efeito acende onde ela vai parar na pilha.
+		var landing: Variant = d.landing(int(card.get("id", -1)))
+		var pos: Vector3 = landing if landing is Vector3 else now
 		var color: Color = Fx.card_color(card)
 		var delay: float = 0.0
 		if not mana.is_empty():
@@ -91,7 +94,8 @@ static func spell(d: FxDirector, event: Dictionary, mana: Array, game_changer: b
 		MomentPieces.after(d, delay, func() -> void:
 			if d.mood:
 				d.mood.pulse(color)
-			Fx.ring(d, pos - Vector3(0, pos.y - 0.05, 0), color, 2.2, 0.6)
+			if pos.y < 1.2:
+				Fx.ring(d, pos - Vector3(0, pos.y - 0.05, 0), color, 2.2, 0.6)
 			Fx.burst(d, pos, color, 50, 2.0, 0.7)
 			Fx.light(d, pos, color, 3.5, 5.0, 0.5)
 			var node: CardNode = d.table.card_node(int(card.get("id", -1)))

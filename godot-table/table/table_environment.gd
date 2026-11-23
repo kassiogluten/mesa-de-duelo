@@ -25,7 +25,8 @@ static func build(table: TableView) -> Camera3D:
 	camera.look_at_from_position(TableView.CAMERA_POS, TableView.CAMERA_LOOK)
 
 	var key_light := DirectionalLight3D.new()
-	key_light.rotation_degrees = Vector3(-60, -30, 0)
+	# Quase de cima: a sombra da mão (perto da câmera) cai atrás dela, e a das cartas no ar ainda aparece embaixo delas.
+	key_light.rotation_degrees = Vector3(-76, -25, 0)
 	key_light.light_energy = 0.95
 	key_light.light_color = Color(1.0, 0.97, 0.92)
 	key_light.shadow_enabled = true
@@ -76,6 +77,10 @@ static func build(table: TableView) -> Camera3D:
 	var dressing := CardDressing.new()
 	dressing.table = table
 	table.add_child(dressing)
+	# Os materiais dos efeitos compilados logo na abertura (fx/fx_warmup.gd).
+	var warmup := FxWarmup.new()
+	warmup.camera = camera
+	table.add_child(warmup)
 	var keeper := TableEnvironment.new()
 	keeper.name = "Ambiente"
 	keeper.sun = key_light

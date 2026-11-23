@@ -45,6 +45,9 @@ var _commander_rules: bool = false
 var _mana: Dictionary = {}
 var _commander_entries: Dictionary = {}
 var _control_from: Dictionary = {}
+## O último estado (a faixa do turno lê dele) e o combate de agora (o segundo em diante ganha a faixa "Combate extra").
+var _state: Dictionary = {}
+var _combat_number: int = 0
 
 
 ## Automático (o regulador escolhe) ou fixo pela opção do jogador.
@@ -79,7 +82,9 @@ func _process(delta: float) -> void:
 ## Chamar com cada estado ANTES de a mesa aplicá-lo: separa as cartas que vão sair e agenda os efeitos.
 func before_state(state: Dictionary) -> void:
 	_you = int(state.get("you", 0))
+	_state = state
 	_commander_rules = GameChangers.commander_rules(state)
+	_combat_banner(state)
 	for p: Variant in state.get("players", []):
 		_names[int((p as Dictionary)["id"])] = Txt.of((p as Dictionary).get("name"))
 	var fresh: Array = []
@@ -198,6 +203,28 @@ func _schedule_changes(watch: Dictionary) -> void:
 			Critters.creak(self, table.camera, side)
 			if sounds:
 				sounds.play("creak", side))
+
+
+## Começou um combate extra (o segundo combate do turno em diante): a faixa "Combate extra", como na mesa do navegador.
+func _combat_banner(state: Dictionary) -> void:
+	var n: int = int(state.get("combatNumber", 0)) if state.get("combatNumber") != null else 0
+	if n > 1 and n > _combat_number and hud:
+		var mine: bool = state.get("activePlayer") != null and int(state["activePlayer"]) == _you
+		var text: String = "Combate extra" + (" (%dº combate)" % n if n > 2 else "")
+		get_tree().create_timer(0.1).timeout.connect(func() -> void: hud.banner(text, PhaseTrack.MINE if mine else PhaseTrack.THEIRS))
+	_combat_number = n
+
+
+## Onde a carta vai ficar: o destino do voo dela (a pilha no painel, o lugar no campo), ou onde está agora; null se não
+## está à mostra. O efeito da mágica conjurada acende ali, e não na mão de onde ela ainda está saindo.
+func landing(id: int) -> Variant:
+	var node: CardNode = table.card_node(id)
+	if node == null:
+		return table.anchor(id)
+	var target: Variant = node.get("_target")
+	if target is Transform3D:
+		return table.global_transform * (target as Transform3D).origin
+	return node.global_position
 
 
 ## A medalha do monarca (ou da dianteira) indo para o jogador.
@@ -324,10 +351,7 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 			_control_from.erase(seq)
 		"turn":
 			var mine: bool = int(event.get("actor", -1)) == _you
-			var title: String = "Seu turno" if mine else "Turno de %s" % _names.get(int(event.get("actor", -1)), "Oponente")
-			if bool(event.get("extra", false)):
-				title += " extra"
-			hud.banner(title, Hud.GOLD if mine else Color(0.75, 0.85, 1.0))
+			hud.banner(PhaseText.turn_banner_text(_state), PhaseTrack.MINE if mine else PhaseTrack.THEIRS)
 			# De vez em quando, um bicho atravessa a mesa na virada do turno.
 			var critter: String = _critters.on_turn(Time.get_ticks_msec() / 1000.0, randf())
 			if critter != "":
@@ -342,7 +366,8 @@ func _play(event: Dictionary, leaving: CardNode) -> void:
 		"cascade":
 			var digger: int = int(event.get("actor", _you))
 			CardFlights.cascade(self, table.catalog, table.library_position(digger), table.zone_position(digger, "exile"),
-				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger))
+				event.get("revealed", []), int(event.get("hit", -1)), Txt.of(event.get("dig")) == "discover", table.sleeve_of(digger),
+				landing(int(event.get("hit", -1))) if int(event.get("hit", -1)) >= 0 else null)
 		"mill":
 			var miller: int = int(event.get("actor", _you))
 			CardFlights.mill(self, table.catalog, table.library_position(miller), table.zone_position(miller, "graveyard"),

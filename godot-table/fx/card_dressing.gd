@@ -127,8 +127,8 @@ void fragment() {
 	float d = box(p, card * 0.5, 0.035);
 	float fall = smoothstep(margin, 0.0, d) * step(0.0, d);
 	float breathe = 0.8 + 0.2 * sin(TIME * 3.2);
-	ALBEDO = color.rgb * 1.6;
-	ALPHA = fall * fall * color.a * 0.75 * breathe;
+	ALBEDO = color.rgb * 1.15;
+	ALPHA = fall * fall * color.a * 0.7 * breathe;
 }
 """
 	return _halo_shader

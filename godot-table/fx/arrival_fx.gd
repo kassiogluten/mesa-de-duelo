@@ -57,7 +57,7 @@ static func commander(parent: Node3D, node: CardNode, camera: Camera3D, color: C
 ## canto, com a faixa "Game Changer" e o nome da carta.
 static func game_changer(parent: Node3D, table: TableView, pos: Vector3, label: String, speed: float = 1.0) -> void:
 	var total: float = 2.1 / speed
-	_dim(parent, pos, total)
+	_dim(parent, pos, total, table.camera)
 	var spot := SpotLight3D.new()
 	spot.position = pos + Vector3(0, 4.0, 0.4)
 	spot.look_at_from_position(spot.position, pos)
@@ -161,7 +161,7 @@ static func _art_bloom(parent: Node3D, node: CardNode, pos: Vector3, duration: f
 
 
 ## Véu escuro sobre o tampo com um furo em volta de `pos`, que entra e sai em `total` segundos.
-static func _dim(parent: Node3D, pos: Vector3, total: float) -> MeshInstance3D:
+static func _dim(parent: Node3D, pos: Vector3, total: float, camera: Camera3D = null) -> MeshInstance3D:
 	if Fx.quality == 0:
 		return null
 	var veil := MeshInstance3D.new()
@@ -170,10 +170,19 @@ static func _dim(parent: Node3D, pos: Vector3, total: float) -> MeshInstance3D:
 	veil.mesh = plane
 	var material := ShaderMaterial.new()
 	material.shader = _dim_material()
-	material.set_shader_parameter("hole", Vector2(pos.x, pos.z))
+	var height: float = 0.55
+	# O furo fica onde a carta aparece na tela: no ponto do véu na linha entre a câmera e ela (a pilha flutua no painel).
+	var hole := Vector2(pos.x, pos.z)
+	if camera and pos.y > height:
+		var eye: Vector3 = camera.global_position
+		var ray: Vector3 = pos - eye
+		if absf(ray.y) > 0.001:
+			var at: Vector3 = eye + ray * ((height - eye.y) / ray.y)
+			hole = Vector2(at.x, at.z)
+	material.set_shader_parameter("hole", hole)
 	veil.material_override = material
 	veil.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	veil.position = Vector3(0, minf(pos.y, 0.3) + 0.25, 0)
+	veil.position = Vector3(0, height, 0)
 	parent.add_child(veil)
 	var set_amount: Callable = func(a: float) -> void: material.set_shader_parameter("amount", a)
 	var tween := veil.create_tween()

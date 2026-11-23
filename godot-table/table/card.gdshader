@@ -97,7 +97,7 @@ void fragment() {
 			float band = 0.5 + 0.5 * sin(diag * 9.0 - TIME * 0.7 + (1.0 - facing) * 8.0);
 			float luma = dot(color, vec3(0.299, 0.587, 0.114));
 			float sparkle = step(0.985, hash(floor(UV * vec2(90.0, 126.0)) + floor(TIME * 3.0))) * band;
-			float k = foil >= 1.5 ? 1.0 : 0.45;
+			float k = foil >= 1.5 ? 0.55 : 0.3;
 			extra += hue(h) * band * (0.1 + 0.25 * luma) * k + vec3(sparkle) * 0.6 * k;
 			// O brilho que passa de tempos em tempos.
 			float sweep = smoothstep(0.08, 0.0, abs(fract(TIME * 0.12) * 3.0 - 1.0 - diag * 0.9));
@@ -117,10 +117,10 @@ void fragment() {
 	}
 	ALBEDO = color;
 	// Verniz de carta: um pouco brilhante, com uma camada de laca por cima.
-	ROUGHNESS = 0.48;
-	SPECULAR = 0.35;
-	CLEARCOAT = 0.35;
-	CLEARCOAT_ROUGHNESS = 0.25;
+	ROUGHNESS = 0.58;
+	SPECULAR = 0.28;
+	CLEARCOAT = 0.18;
+	CLEARCOAT_ROUGHNESS = 0.5;
 	vec3 glow_light = vec3(0.0);
 	if (glow.a > 0.0) {
 		// Destaque: a borda acesa respira, um brilho corre em volta e um véu suave entra um pouco na carta.
@@ -129,8 +129,8 @@ void fragment() {
 		float run = pow(0.5 + 0.5 * sin(angle - TIME * 2.6), 10.0) + pow(0.5 + 0.5 * sin(angle + 3.14159 - TIME * 2.6), 10.0);
 		float breathe = 0.82 + 0.18 * sin(TIME * 3.2);
 		float edge_band = smoothstep(-0.034, 0.0, d);
-		float veil = smoothstep(-0.11, 0.0, d) * 0.22;
-		glow_light = glow.rgb * glow.a * (edge_band * (1.7 * breathe + run * 2.2) + veil + 0.04);
+		float veil = smoothstep(-0.08, 0.0, d) * 0.12;
+		glow_light = glow.rgb * glow.a * (edge_band * (1.15 * breathe + run * 1.6) + veil);
 	}
 	EMISSION = glow_light + vec3(hover * 0.06) + dissolve_color * (dissolve > 0.0 ? smoothstep(dissolve * 1.1 + 0.06, dissolve * 1.1 - 0.05, burn) : 0.0) * 4.0 + flash.rgb * flash.a + extra;
 }

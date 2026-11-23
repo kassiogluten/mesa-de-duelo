@@ -122,8 +122,9 @@ static func _mill_gap(count: int) -> float:
 
 ## Cascata e descobrir: as cartas saem do grimório (`from`) uma a uma, viram de face no ar e abrem em leque; a achada
 ## (`hit`, o id da carta, como no evento; -1 sem achada) acende dourada, sobe, para grande na frente da câmera e voa para
-## a pilha com faíscas; as outras seguem para o exílio (`to`). Devolve a duração.
-static func cascade(parent: Node3D, catalog: CardCatalog, from: Vector3, to: Vector3, cards: Array, hit: int, discover: bool = false, sleeve: Color = DEFAULT_SLEEVE) -> float:
+## a pilha com faíscas (`stack_spot`, onde a carta fica na pilha; sem ele, o lugar antigo no tampo); as outras seguem
+## para o exílio (`to`). Devolve a duração.
+static func cascade(parent: Node3D, catalog: CardCatalog, from: Vector3, to: Vector3, cards: Array, hit: int, discover: bool = false, sleeve: Color = DEFAULT_SLEEVE, stack_spot: Variant = null) -> float:
 	var list: Array[Dictionary] = _cards_of(cards)
 	if list.is_empty():
 		return 0.0
@@ -175,7 +176,7 @@ static func cascade(parent: Node3D, catalog: CardCatalog, from: Vector3, to: Vec
 		_move(tween, node, start, fan, CASCADE_TRAVEL, 0.5, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		var waiting: float = maxf(0.0, arrive - (i * gap + CASCADE_TRAVEL))
 		if has_hit and i == shown.size() - 1:
-			_hit_moment(parent, holder, tween, node, fan, view)
+			_hit_moment(parent, holder, tween, node, fan, view, stack_spot)
 			continue
 		tween.tween_interval(waiting)
 		tween.tween_method(node.set_dim, 0.0, 0.4, 0.2)
@@ -189,7 +190,7 @@ static func cascade(parent: Node3D, catalog: CardCatalog, from: Vector3, to: Vec
 
 
 ## A achada: acende dourada no leque, sobe grande para a frente da câmera, para um instante e voa até a pilha.
-static func _hit_moment(parent: Node3D, holder: Node3D, tween: Tween, node: CardNode, fan: Pose, view: Transform3D) -> void:
+static func _hit_moment(parent: Node3D, holder: Node3D, tween: Tween, node: CardNode, fan: Pose, view: Transform3D, stack_spot: Variant = null) -> void:
 	tween.tween_callback(func() -> void:
 		node.set_glow(GOLD, 1.0)
 		Fx.burst(parent, fan.pos, GOLD, 40, 1.6, 0.6, 0.08)
@@ -202,13 +203,17 @@ static func _hit_moment(parent: Node3D, holder: Node3D, tween: Tween, node: Card
 	tween.tween_interval(HIT_PAUSE)
 	var trail: GPUParticles3D = _trail(holder, GOLD)
 	tween.tween_callback(func() -> void: trail.emitting = true)
-	var pile := Pose.new(STACK_SPOT, Basis(Vector3.RIGHT, deg_to_rad(STACK_TILT)), 1.0, 0.0)
+	# A pilha de agora é a carta de pé no painel da direita (`stack_spot`); sem ela, o monte antigo no tampo.
+	var floating: bool = stack_spot is Vector3
+	var spot: Vector3 = stack_spot if floating else STACK_SPOT
+	var pile := Pose.new(spot, _facing(view, spot) if floating else Basis(Vector3.RIGHT, deg_to_rad(STACK_TILT)), 1.0, 0.0)
 	_move(tween, node, showcase, pile, HIT_FLY, 0.5, 0.0, trail).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		trail.emitting = false
-		Fx.burst(parent, STACK_SPOT, GOLD, 70, 2.4, 0.7, 0.1)
-		Fx.ring(parent, Vector3(STACK_SPOT.x, 0.0, STACK_SPOT.z), GOLD, 1.6, 0.5)
-		Fx.light(parent, STACK_SPOT, GOLD, 5.0, 5.0, 0.6)
+		Fx.burst(parent, spot, GOLD, 70, 2.4, 0.7, 0.1)
+		if not floating:
+			Fx.ring(parent, Vector3(spot.x, 0.0, spot.z), GOLD, 1.6, 0.5)
+		Fx.light(parent, spot, GOLD, 5.0, 5.0, 0.6)
 		node.queue_free())
 
 
