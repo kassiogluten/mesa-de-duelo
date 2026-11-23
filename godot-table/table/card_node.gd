@@ -171,6 +171,7 @@ func set_glow(color: Color, strength: float) -> void:
 
 func set_dim(amount: float) -> void:
 	_material.set_shader_parameter("dim", amount)
+	_badges.set_dim(amount)
 
 
 ## Leva a carta até `target`; com `arc`, sobe no meio do caminho (mudança de zona).

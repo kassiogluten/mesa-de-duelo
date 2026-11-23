@@ -22,6 +22,7 @@ static var _font: SystemFont
 
 var _key: String = ""
 var _boost: float = 1.0
+var _dim: float = 0.0
 var _aim_tween: Tween
 
 
@@ -58,6 +59,15 @@ func show_spec(spec: Dictionary, size: Vector2, tapped: bool, boost: float = 1.0
 	var aim: String = Txt.of(spec.get("aim", ""))
 	if aim != "":
 		_aim(BadgeSpec.MINE if aim == "mine" else BadgeSpec.THEIRS, size)
+
+
+## Esmaece os selos junto com a carta (a que não pode ser escolhida no prompt atual).
+func set_dim(amount: float) -> void:
+	if is_equal_approx(amount, _dim):
+		return
+	_dim = amount
+	for node: Node in find_children("*", "GeometryInstance3D", true, false):
+		(node as GeometryInstance3D).transparency = _dim * 0.7
 
 
 func clear() -> void:
@@ -201,6 +211,7 @@ func _sprite(region: Node3D, tex: Texture2D, at: Vector2, priority: int, scale: 
 	sprite.render_priority = priority
 	sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sprite.transparency = _dim * 0.7
 	region.add_child(sprite)
 
 
@@ -218,6 +229,7 @@ func _label(region: Node3D, text: String, color: Color, size: int, at: Vector2) 
 	label.render_priority = PRIORITY_TEXT
 	label.outline_render_priority = PRIORITY_TEXT - 1
 	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	label.transparency = _dim * 0.7
 	region.add_child(label)
 
 
