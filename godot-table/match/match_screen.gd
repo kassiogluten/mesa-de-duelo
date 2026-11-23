@@ -171,6 +171,16 @@ func _autoplay_step() -> void:
 	if _state.is_empty() or bool(_state.get("gameOver", false)):
 		return
 	var input: Dictionary = _input_data()
+	# MESA_TESTE_ATAQUE=1: no primeiro ataque, a criatura é clicada de verdade (o mouse do motor), para conferir que o
+	# clique vira o attack-group da mesa do navegador; com MESA_TESTE_ARRASTO=1, é arrastada até o retrato do oponente.
+	if OS.get_environment("MESA_TESTE_ATAQUE") == "1" and input.get("attacking") is Dictionary and not _attack_probe_done:
+		var attackers: Array = AttackFlow.attackers(_state)
+		if not attackers.is_empty():
+			_attack_probe_done = true
+			_autoplay_wait = 3.0
+			var opponent: int = int((AttackFlow.defenders_for(_state, int(attackers[0])).front() as Dictionary)["id"])
+			_real_click(int(attackers[0]), "atacante", _hud.portrait_center(opponent) if OS.get_environment("MESA_TESTE_ARRASTO") == "1" else Vector2(-1, -1))
+			return
 	var gen: int = int(input.get("gen", 0))
 	_autoplay_tries = _autoplay_tries + 1 if gen == _autoplay_gen else 0
 	_autoplay_gen = gen
@@ -303,6 +313,7 @@ func _input_data() -> Dictionary:
 ## MESA_TESTE_CLIQUE=1: com a prioridade e uma carta da mão para jogar, move o mouse até ela, espera e clica, pelo
 ## caminho real do motor (Input.parse_input_event), para conferir que o clique na mão chega ao servidor.
 var _probe_done: bool = false
+var _attack_probe_done: bool = false
 
 
 func _probe_click() -> void:
@@ -325,27 +336,47 @@ func _probe_click() -> void:
 	_probe_done = true
 	# A carta acabada de comprar ainda está voando do grimório: espera ela chegar na mão.
 	await get_tree().create_timer(HandMotion.ARRIVE_TIME + 0.4).timeout
+	await _real_click(target, "da mão")
+
+
+## Move o mouse até a carta e clica, pelo caminho real do motor (os testes MESA_TESTE_CLIQUE e MESA_TESTE_ATAQUE); com
+## `drop_at` (pixels da mesa), aperta na carta, arrasta até lá e solta.
+func _real_click(target: int, where: String, drop_at: Vector2 = Vector2(-1, -1)) -> void:
+	if _table.card_node(target) == null:
+		return
 	# A mesa desenha em 1920x1080 e a janela pode ter outro tamanho: o evento vai em coordenadas da janela.
-	var screen: Vector2 = get_viewport().get_final_transform() * _table.camera.unproject_position(_table.card_node(target).global_position)
-	print("TESTE: clicando na carta %d da mão em %s" % [target, screen])
-	var move := InputEventMouseMotion.new()
-	move.position = screen
-	move.global_position = screen
-	Input.parse_input_event(move)
+	var to_window: Transform2D = get_viewport().get_final_transform()
+	var screen: Vector2 = to_window * _table.camera.unproject_position(_table.card_node(target).global_position)
+	print("TESTE: %s na carta %d %s em %s" % ["arrastando" if drop_at.x >= 0.0 else "clicando", target, where, screen])
+	_probe_mouse(InputEventMouseMotion.new(), screen)
 	await get_tree().create_timer(0.8).timeout
-	for pressed: bool in [true, false]:
-		var click := InputEventMouseButton.new()
-		click.button_index = MOUSE_BUTTON_LEFT
-		click.pressed = pressed
-		click.position = screen
-		click.global_position = screen
-		Input.parse_input_event(click)
-		await get_tree().create_timer(0.1).timeout
+	var press := InputEventMouseButton.new()
+	press.pressed = true
+	_probe_mouse(press, screen)
+	await get_tree().create_timer(0.1).timeout
+	var end: Vector2 = screen
+	if drop_at.x >= 0.0:
+		end = to_window * drop_at
+		for step: int in range(1, 11):
+			_probe_mouse(InputEventMouseMotion.new(), screen.lerp(end, step / 10.0))
+			await get_tree().create_timer(0.05).timeout
+		await get_tree().create_timer(0.4).timeout
+	_probe_mouse(InputEventMouseButton.new(), end)
+	await get_tree().create_timer(0.1).timeout
+
+
+func _probe_mouse(event: InputEventMouse, at: Vector2) -> void:
+	if event is InputEventMouseButton:
+		(event as InputEventMouseButton).button_index = MOUSE_BUTTON_LEFT
+	event.position = at
+	event.global_position = at
+	Input.parse_input_event(event)
 
 
 ## A carta sob o mouse: a prévia grande ao lado dele (fora do arrasto). A da sua mão não tem prévia: ela mesma sobe e
 ## cresce até o tamanho da prévia, e outra carta ao lado só cobriria as vizinhas.
 func _on_card_hovered(node: CardNode, on: bool) -> void:
+	_interaction.hover(node, on)
 	if on:
 		_hovered = node
 	elif _hovered == node:

@@ -88,7 +88,10 @@ func fan_fit(count: int) -> Vector2:
 	var ppu: float = absf(view.camera.unproject_position(HAND_CENTER + view.camera.global_basis.x).x - center_px)
 	if ppu <= 1.0:
 		return Vector2(spread, 0.0)
-	return fit_fan(spread, count, area.position.x / ppu, area.end.x / ppu, center_px / ppu, CardNode.SIZE.x * 1.1)
+	# As cartas das pontas giram um pouco (e chegam mais perto da câmera): ocupam mais que a largura da carta.
+	var turn: float = (count - 1) / 2.0 * 0.05
+	var card_width: float = (CardNode.SIZE.x * cos(turn) + CardNode.SIZE.y * sin(turn)) * 1.08
+	return fit_fan(spread, count, area.position.x / ppu, area.end.x / ppu, center_px / ppu, card_width)
 
 
 ## A conta do fan_fit em unidades da mesa (sem cena, para os testes): o espaço entre as cartas encolhe até o leque caber

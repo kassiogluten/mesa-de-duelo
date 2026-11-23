@@ -35,6 +35,11 @@ static func order(candidates: Array) -> Array:
 	return sorted.map(func(c: Dictionary) -> Variant: return c["key"])
 
 
+## Duas chaves iguais (id de carta, "player:<id>" ou um ponto), sem erro ao comparar tipos diferentes; null nunca é igual.
+static func same(a: Variant, b: Variant) -> bool:
+	return a != null and b != null and typeof(a) == typeof(b) and a == b
+
+
 ## O próximo alvo do Tab (`step` 1) ou do Shift+Tab (-1), dando a volta; o primeiro (ou o último) quando não há foco.
 static func cycle(keys: Array, current: Variant, step: int) -> Variant:
 	if keys.is_empty():

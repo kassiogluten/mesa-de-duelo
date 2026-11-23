@@ -167,7 +167,7 @@ func choose(state: Dictionary, defender: Dictionary, name_of: Callable = Callabl
 		return {"send": message(ids, defender, gen)}
 	if not _has(all_targets(state), defender):
 		return {}
-	pinned = {} if _has([pinned], defender) and not pinned.is_empty() else defender
+	pinned = {} if not pinned.is_empty() and _has([pinned], defender) else defender
 	return {"changed": true}
 
 

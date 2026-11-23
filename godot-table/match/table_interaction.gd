@@ -364,8 +364,10 @@ func _live_arrows() -> Array:
 	elif _aiming_targets(s):
 		sources = [_target_source(s)]
 	if sources.is_empty() or sources[0] == null:
+		table.highlights.set_snapped(null)
 		return []
 	var end: Variant = _focus if _focus != null else TargetSnap.pick(pointer.mouse, _candidates(), _hovered_key())
+	table.highlights.set_snapped(end if end is int or end is String else null)
 	if end == null:
 		if pointer.mouse.x < 0.0:
 			return []
@@ -374,7 +376,7 @@ func _live_arrows() -> Array:
 			return []
 	var out: Array = []
 	for source: Variant in sources:
-		if source != end:
+		if not TargetSnap.same(source, end):
 			out.append({"from": source, "to": end, "color": color, "live": true})
 	return out
 

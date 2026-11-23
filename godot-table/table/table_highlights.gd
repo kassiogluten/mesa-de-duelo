@@ -32,6 +32,8 @@ var view: TableView
 var _role: Dictionary = {}
 ## A carta escolhida pelo Tab (a seta mira nela e o Enter a escolhe); null sem foco.
 var _focus: Variant = null
+## O alvo em que a ponta da seta que segue o mouse grudou (acende como se o mouse estivesse em cima); null sem nenhum.
+var _snapped: Variant = null
 var _hovered: CardNode
 
 
@@ -98,14 +100,14 @@ func apply(roles: Dictionary, dim_others: bool) -> void:
 
 ## O destaque de uma carta pelo estado dela, com o mouse (ou o foco do Tab) em cima ou não.
 func _show(key: Variant, node: CardNode, role: String) -> void:
-	var over: bool = (node == _hovered and node.hovered) or (_focus != null and key == _focus)
+	var over: bool = (node == _hovered and node.hovered) or TargetSnap.same(key, _focus) or TargetSnap.same(key, _snapped)
 	var zone: String = view.zone_of(key)
 	if role == "":
 		node.fade_glow(Color.BLACK, 0.0)
 		node.set_raise(Vector3.ZERO)
 		return
 	var strength: float = float((HOVER_STRENGTH if over else STRENGTH)[role])
-	var color: Color = FOCUS.lerp(color_of(role), 0.35) if _focus != null and key == _focus else color_of(role)
+	var color: Color = FOCUS.lerp(color_of(role), 0.35) if TargetSnap.same(key, _focus) else color_of(role)
 	node.fade_glow(color, strength)
 	var raise := Vector3.ZERO
 	if role == "selected":
@@ -131,9 +133,20 @@ func role(key: Variant) -> String:
 	return Txt.of(_role.get(key, ""))
 
 
+## O alvo em que a seta viva grudou; null tira.
+func set_snapped(key: Variant) -> void:
+	if TargetSnap.same(key, _snapped) or (key == null and _snapped == null):
+		return
+	var before: Variant = _snapped
+	_snapped = key
+	for k: Variant in [before, key]:
+		if k != null and view.card_node(k) != null:
+			_show(k, view.card_node(k), role(k))
+
+
 ## O foco do Tab (a carta que a seta mira e o Enter escolhe); null tira.
 func set_focus(key: Variant) -> void:
-	if key == _focus:
+	if TargetSnap.same(key, _focus):
 		return
 	var before: Variant = _focus
 	_focus = key
