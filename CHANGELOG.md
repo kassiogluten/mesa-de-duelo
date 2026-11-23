@@ -8,6 +8,12 @@ Todas as mudanças que você sente na mesa. As versões seguem o formato **X.Y.Z
 
 As versões anteriores à 0.100.0 estão em [docs/changelog-antigo.md](docs/changelog-antigo.md).
 
+## [0.242.1] - 2026-11-23
+
+### Corrigido
+
+- **Mana a mais de Solo Fértil na reserva.** Virar no meio do pagamento o terreno encantado com Solo Fértil (ou outro encantamento que dá mana a mais quando o terreno é virado) punha a mana extra na reserva, e o botão ficava em "Mana insuficiente" mesmo com ela pagando o que faltava. Agora o **Pagar automaticamente** volta a valer assim que a reserva fecha o custo; tocar na mana da reserva, no seu retrato, também paga com ela.
+
 ## [0.242.0] - 2026-11-23
 
 ### Mudou

@@ -301,9 +301,10 @@ final class Seat {
                     inputGen.incrementAndGet();
                     okLabel = CoinFlipText.label(String.valueOf(a[1])); cancelLabel = CoinFlipText.label(String.valueOf(a[2]));
                     okEnabled = Boolean.TRUE.equals(a[3]); cancelEnabled = Boolean.TRUE.equals(a[4]);
-                    // O Automático que só fecha com a mana extra do Caged Sun: o Forge o deixa desligado (AutoPay).
+                    // O Automático que só fecha com a mana extra do Caged Sun, ou com a que um gatilho pôs na reserva
+                    // no meio do pagamento (Fertile Ground): o Forge o deixa desligado (AutoPay).
                     if (!okEnabled && controller() instanceof PlayerControllerHuman pch && pch.getInputQueue().getInput() instanceof InputPayMana pay
-                        && AutoPay.payableWithLandBonus(pay)) okEnabled = true;
+                        && (AutoPay.payableWithLandBonus(pay) || AutoPay.payableWithPool(pay))) okEnabled = true;
                     // Tripular/Selar abaixo do poder necessário: o OK do Forge só desistiria; fica o Cancelar para isso.
                     if (okEnabled && controller() instanceof PlayerControllerHuman pch && CrewSelection.shortOfPower(pch.getInputQueue().getInput())) okEnabled = false;
                     passResponseIfAsked();

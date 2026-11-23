@@ -1,5 +1,20 @@
 [
   {
+    "nome": "Solo Fértil: a mana a mais na reserva paga a mágica",
+    "versao": "0.242.1",
+    "item": "Mana a mais de Solo Fértil na reserva",
+    "conferir": "Conjure Solo Fértil (Fertile Ground) na Montanha, pagando com duas Florestas. Depois conjure Animar, Soul of Elements ({U}{R}{G}): vire a Montanha (escolha azul para a mana a mais do Solo Fértil) e a Floresta que sobrou. Falta {U}, e o {U} está na reserva: o botão deve mostrar Pagar automaticamente (não Mana insuficiente) e pagar o Animar; tocar na mana azul do seu retrato também paga.",
+    "cenario": {
+      "active": 0,
+      "phase": "main1",
+      "players": [
+        { "life": 40, "poison": 0, "hand": ["Fertile Ground", "Animar, Soul of Elements"], "library": ["Forest", "Mountain", "Island", "Forest", "Mountain"], "graveyard": [], "exile": [],
+          "battlefield": [{ "name": "Mountain" }, { "name": "Forest" }, { "name": "Forest" }, { "name": "Forest" }] },
+        { "life": 40, "poison": 0, "hand": [], "library": ["Plains", "Plains", "Plains", "Plains", "Plains"], "graveyard": [], "exile": [], "battlefield": [{ "name": "Plains" }] }
+      ]
+    }
+  },
+  {
     "nome": "Masmorra: escolher a masmorra e a sala com Nadaar e Fates' Reversal",
     "tipo": "conferir",
     "conferir": "Conjure Nadaar, Selfless Paladin. Quando ele entra, você se aventura: aparecem as cartas das três masmorras lado a lado, com quantos passos cada uma tem até completar. A lupa no canto de cada carta a amplia sem escolher; tocar na carta escolhe. Escolha Lost Mine of Phandelver: você entra na Cave Entrance (vidência 1). Conjure Fates' Reversal sem alvo: agora a escolha é da sala, com a carta da masmorra à esquerda do mapa (toque nela para ampliar) e as duas salas seguintes marcadas. Conjure o segundo Fates' Reversal para andar mais uma sala.",

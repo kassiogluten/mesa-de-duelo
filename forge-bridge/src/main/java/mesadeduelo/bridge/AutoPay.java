@@ -80,6 +80,27 @@ final class AutoPay {
         } catch (ReflectiveOperationException | RuntimeException e) { return false; }
     }
 
+    /**
+     * O Forge guarda o teste do Automático feito no começo do pagamento e só o refaz quando a fonte virada tem custo de
+     * mana. A mana que um gatilho põe na reserva no meio do pagamento (Fertile Ground, Wild Growth no terreno virado)
+     * não o refazia, e o botão ficava em "Mana insuficiente" com a reserva fechando o custo. Com mana na reserva, o
+     * teste é refeito como o do Forge (com a IA no controle, numa cópia do custo, sem gastar nada).
+     */
+    static boolean payableWithPool(InputPayMana pay) {
+        if (!ForgeReflection.present(PLAYER, COST, PAID_FOR, EFFECT, SUPPORTS_AUTO, RUN_AS_AI)) return false;
+        try {
+            Player player = (Player) PLAYER.get(pay);
+            ManaCostBeingPaid cost = (ManaCostBeingPaid) COST.get(pay);
+            if (!(boolean) SUPPORTS_AUTO.invoke(pay) || player.getManaPool().isEmpty() || cost == null || cost.isPaid()) return false;
+            ManaCostBeingPaid copy = new ManaCostBeingPaid(cost);
+            SpellAbility paidFor = (SpellAbility) PAID_FOR.get(pay);
+            boolean effect = (boolean) EFFECT.get(pay);
+            boolean[] payable = new boolean[1];
+            RUN_AS_AI.invoke(pay, (Runnable) () -> payable[0] = ComputerUtilMana.getManaSourcesToPayCost(copy, paidFor, player, effect) != null);
+            return payable[0];
+        } catch (ReflectiveOperationException | RuntimeException e) { return false; }
+    }
+
     /** Na thread do jogo, com a IA no controle (como o Automático do Forge): vira as pedras escolhidas e paga o resto. */
     private static void pay(InputPayMana pay, Player player) {
         ManaCostBeingPaid cost = (ManaCostBeingPaid) COST.get(pay);

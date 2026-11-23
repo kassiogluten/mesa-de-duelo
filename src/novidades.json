@@ -1,4 +1,10 @@
 {
+  "0.242.1": {
+    "Mana a mais de Solo Fértil na reserva": [
+      { "img": "0.242.1/pagar-com-a-reserva.webp", "legenda": "Falta {U} para Animar, e o {U} que o Solo Fértil deu está na reserva: o **Pagar automaticamente** fica aceso e paga com ela." },
+      { "img": "0.242.1/mana-na-reserva.webp", "legenda": "A mana da reserva no seu retrato: no meio do pagamento, tocar nela paga o que falta." }
+    ]
+  },
   "0.241.0": {
     "Setas de energia": [
       { "img": "0.241.0/setas.webp", "legenda": "A seta dourada que segue o mouse, com os pulsos correndo até a ponta, a de ataque em vermelho e a de bloqueio em azul." }
