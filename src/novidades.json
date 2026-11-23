@@ -1,4 +1,21 @@
 {
+  "0.241.0": {
+    "Setas de energia": [
+      { "img": "0.241.0/setas.webp", "legenda": "A seta dourada que segue o mouse, com os pulsos correndo até a ponta, a de ataque em vermelho e a de bloqueio em azul." }
+    ],
+    "Cartas menos estouradas": [
+      { "img": "0.241.0/cartas-menos-brancas.webp", "legenda": "Antes, à esquerda, o branco das cartas estourava sob a luz; depois, à direita, a moldura e o texto aparecem sem brilho demais." }
+    ],
+    "Aura menor nas cartas que dá para usar": [
+      { "img": "0.241.0/pode-usar.webp", "legenda": "Em cima, como era: a aura azul vazava para fora das cartas; embaixo, como ficou: colada à borda e mais suave." }
+    ],
+    "Mais espaço para as cartas viradas": [
+      { "img": "0.241.0/cartas-viradas.webp", "legenda": "Em cima, como era: os terrenos virados um por cima do outro; embaixo, como ficou: a fileira usa o espaço livre e as cartas ficam lado a lado." }
+    ],
+    "Pilha maior": [
+      { "img": "0.241.0/pilha-maior.webp", "legenda": "À esquerda, como era: a carta do topo pequena; à direita, como ficou: maior, com o texto legível." }
+    ]
+  },
   "0.240.0": {
     "Mesa no PC para Linux": [
       { "img": "0.240.0/pagina-linux.webp", "legenda": "A página Mesa no PC num PC com Linux: o botão Baixar para Linux com a versão e o tamanho do arquivo .tar.gz." },
