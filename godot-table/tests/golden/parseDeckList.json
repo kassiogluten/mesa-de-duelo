@@ -1,0 +1,1717 @@
+[
+ {
+  "args": [
+   ""
+  ],
+  "out": {
+   "main": [],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "// Commander\n1 Atraxa, Praetors' Voice\n// Mainboard\n1 Sol Ring\n98 Forest\n// Maybeboard\n1 Mana Crypt"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Sol Ring",
+     "count": 1
+    },
+    {
+     "name": "Forest",
+     "count": 98
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Atraxa, Praetors' Voice",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": [
+    "1 Mana Crypt"
+   ]
+  }
+ },
+ {
+  "args": [
+   "# comentário\n4 Counterspell\n+2 Island\n-1 Island\n1,5 Island\nconsidering\n2 Opt"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Counterspell",
+     "count": 4
+    }
+   ],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [
+    "+2 Island",
+    "-1 Island",
+    "1,5 Island"
+   ],
+   "ignored": [
+    "2 Opt"
+   ]
+  }
+ },
+ {
+  "args": [
+   "1 Marwyn, the Nurturer (DOM) 172 [Commander]\n\n99 Forest"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Forest",
+     "count": 99
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Marwyn, the Nurturer",
+     "count": 1,
+     "set": "dom",
+     "cn": "172"
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "1 Marwyn, the Nurturer (DOM) 172 [Commander]\n99 Forest"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Forest",
+     "count": 99
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Marwyn, the Nurturer",
+     "count": 1,
+     "set": "dom",
+     "cn": "172"
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "1 Marwyn, the Nurturer (DOM) 172 *CMDR*\n\n99 Forest"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Forest",
+     "count": 99
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Marwyn, the Nurturer",
+     "count": 1,
+     "set": "dom",
+     "cn": "172"
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "1 Marwyn, the Nurturer (DOM) 172 *CMDR*\n99 Forest"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Forest",
+     "count": 99
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Marwyn, the Nurturer",
+     "count": 1,
+     "set": "dom",
+     "cn": "172"
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "1 Marwyn, the Nurturer [Commander]\n\n99 Forest\nSB: 1 Island"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Forest",
+     "count": 99
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Island",
+     "count": 1
+    }
+   ],
+   "commanders": [
+    {
+     "name": "Marwyn, the Nurturer",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "1 Marwyn, the Nurturer [Commander]\n1 Llanowar Elves [Ramp]\n1 Mana Crypt [Maybeboard]\n97 Forest"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Llanowar Elves",
+     "count": 1
+    },
+    {
+     "name": "Forest",
+     "count": 97
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Marwyn, the Nurturer",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": [
+    "1 Mana Crypt [Maybeboard]"
+   ]
+  }
+ },
+ {
+  "args": [
+   "1 Sheoldred, the Apocalypse ^Have,#37d67a^\n3 Fable of the Mirror-Breaker (NEO) 141★\n10 Swamp"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Sheoldred, the Apocalypse",
+     "count": 1
+    },
+    {
+     "name": "Fable of the Mirror-Breaker",
+     "count": 3,
+     "set": "neo",
+     "cn": "141★"
+    },
+    {
+     "name": "Swamp",
+     "count": 10
+    }
+   ],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "3 Plains (DMU) 277\n2 Plains (ONE) 267\n1 Plains (DMU) 277\n1x Lightning Bolt (m10) 146 [Burn]\n1 Llanowar Elves (DOM)\n4 Shock"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Plains",
+     "count": 4,
+     "set": "dmu",
+     "cn": "277"
+    },
+    {
+     "name": "Plains",
+     "count": 2,
+     "set": "one",
+     "cn": "267"
+    },
+    {
+     "name": "Lightning Bolt",
+     "count": 1,
+     "set": "m10",
+     "cn": "146"
+    },
+    {
+     "name": "Llanowar Elves",
+     "count": 1,
+     "set": "dom"
+    },
+    {
+     "name": "Shock",
+     "count": 4
+    }
+   ],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "4 Lightning Bolt\n20 Mountain\n\n2 Duress"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4
+    },
+    {
+     "name": "Mountain",
+     "count": 20
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "4 Lightning Bolt\n20 Mountain\n2 Duress [Sideboard]"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4
+    },
+    {
+     "name": "Mountain",
+     "count": 20
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "4 Lightning Bolt\r\n20 Mountain\r\n\r\n2 Duress\r\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4
+    },
+    {
+     "name": "Mountain",
+     "count": 20
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "4x Fire // Ice\n2x Wear//Tear (DGM) 135\nSB: 1 Pithing Needle"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Fire // Ice",
+     "count": 4
+    },
+    {
+     "name": "Wear // Tear",
+     "count": 2,
+     "set": "dgm",
+     "cn": "135"
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Pithing Needle",
+     "count": 1
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "4x Lightning Bolt\n20 Mountain\nSB: 2 Duress"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4
+    },
+    {
+     "name": "Mountain",
+     "count": 20
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "About\nName Burn\n\nDeck\n4 Monastery Swiftspear (BRO) 144\n4 Play with Fire (MID) 154\n16 Mountain (DMU) 269\n\nSideboard\n3 Roiling Vortex (ZNR) 156"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "About",
+     "count": 1
+    },
+    {
+     "name": "Monastery Swiftspear",
+     "count": 4,
+     "set": "bro",
+     "cn": "144"
+    },
+    {
+     "name": "Play with Fire",
+     "count": 4,
+     "set": "mid",
+     "cn": "154"
+    },
+    {
+     "name": "Mountain",
+     "count": 16,
+     "set": "dmu",
+     "cn": "269"
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Roiling Vortex",
+     "count": 3,
+     "set": "znr",
+     "cn": "156"
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Commander\n1 Ayli, Eternal Pilgrim\n\nDeck\n99 Plains\n\nCompanion\n1 Lurrus of the Dream-Den"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Plains",
+     "count": 99
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Lurrus of the Dream-Den",
+     "count": 1
+    }
+   ],
+   "commanders": [
+    {
+     "name": "Ayli, Eternal Pilgrim",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Commander\n1 Elvish Archdruid\n\nDeck\n99 Forest\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Forest",
+     "count": 99
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Elvish Archdruid",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Commander\n1 Krenko, Mob Boss (DDT) 52 *CMDR*\nDeck\n1 Goblin Guide\n98 Mountain\nTokens\n1 Goblin"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Goblin Guide",
+     "count": 1
+    },
+    {
+     "name": "Mountain",
+     "count": 98
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Krenko, Mob Boss",
+     "count": 1,
+     "set": "ddt",
+     "cn": "52"
+    }
+   ],
+   "skipped": [],
+   "ignored": [
+    "1 Goblin"
+   ]
+  }
+ },
+ {
+  "args": [
+   "Commander\n1 Locutus of Borg\n\nDeck\n1 Academy Ruins\n1 Ambulatory Reactor\n1 Ancient Den\n1 Anguished Unmaking\n1 Antagonist Incorporator\n1 Arcane Sanctum\n1 Arcane Signet\n1 Assimilate the Wounded\n1 Assimilation Assessor\n1 Battle of Wolf 359\n1 Bio-Asset Allocator\n1 Borg Cube\n1 Borg Incursion\n1 Borg Scout Sphere\n1 Choked Estuary\n1 Class-4 Tactical Cube\n1 Co-Option Adjutant\n1 Collation Trimatrix\n1 Collective Override\n1 Command Subadjunct\n1 Command Tower\n1 Conquest Mission\n1 Counterspell\n1 Cyberman Patrol\n1 Death Is Irrelevant\n1 Deliver from Chaos\n1 Despark\n1 Drowned Catacomb\n1 Eclipsed Steppe\n1 Emergency Regeneration\n1 Esper Sentinel\n1 Etherium Sculptor\n1 Exotic Orchard\n1 Extraction Integrant\n1 Foundry Inspector\n1 Glacial Fortress\n1 Godless Shrine\n1 Hallowed Fountain\n1 Hive Mind Coprocessor\n1 Hugh, First of Many\n4 Island\n1 Isolated Chapel\n1 Join the Collective\n1 Jurati, Cordial Queen\n1 Korok, Liberated Rage\n1 Locutus, the One Who Speaks\n1 Maturation Chamber\n1 Morphic Pool\n1 One, Borg Evolved\n1 Organic Extinction\n1 Path of Ancestry\n1 Path to Exile\n5 Plains\n1 Port Town\n1 Prairie Stream\n1 Primary Unimatrix Adjunct\n1 Reclamation Specialist\n1 Rogue's Passage\n1 Sea of Clouds\n1 Seat of the Synod\n1 Shore Leave Planet\n1 Simulacrum Synthesizer\n1 Skorpekh Lord\n1 Skullclamp\n1 Sol Ring\n1 Spire of Industry\n1 Steel Overseer\n1 Stratagem Emulator\n1 Stridehangar Automaton\n1 Sunken Hollow\n1 Supplementation Node\n3 Swamp\n1 Swiftfoot Boots\n1 Swords to Plowshares\n1 Talisman of Dominance\n1 Talisman of Hierarchy\n1 Talisman of Progress\n1 Tempered Steel\n1 The Borg Queen\n1 The Immortal Sun\n1 Thopter Spy Network\n1 Thought Monitor\n1 Thoughtcast\n1 Type-03 Borg Vessel\n1 Underground River\n1 Unwinding Clock\n1 Uthros Research Craft\n1 Vault of Champions\n1 Võx, Child of the Collective\n1 Watery Grave\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Academy Ruins",
+     "count": 1
+    },
+    {
+     "name": "Ambulatory Reactor",
+     "count": 1
+    },
+    {
+     "name": "Ancient Den",
+     "count": 1
+    },
+    {
+     "name": "Anguished Unmaking",
+     "count": 1
+    },
+    {
+     "name": "Antagonist Incorporator",
+     "count": 1
+    },
+    {
+     "name": "Arcane Sanctum",
+     "count": 1
+    },
+    {
+     "name": "Arcane Signet",
+     "count": 1
+    },
+    {
+     "name": "Assimilate the Wounded",
+     "count": 1
+    },
+    {
+     "name": "Assimilation Assessor",
+     "count": 1
+    },
+    {
+     "name": "Battle of Wolf 359",
+     "count": 1
+    },
+    {
+     "name": "Bio-Asset Allocator",
+     "count": 1
+    },
+    {
+     "name": "Borg Cube",
+     "count": 1
+    },
+    {
+     "name": "Borg Incursion",
+     "count": 1
+    },
+    {
+     "name": "Borg Scout Sphere",
+     "count": 1
+    },
+    {
+     "name": "Choked Estuary",
+     "count": 1
+    },
+    {
+     "name": "Class-4 Tactical Cube",
+     "count": 1
+    },
+    {
+     "name": "Co-Option Adjutant",
+     "count": 1
+    },
+    {
+     "name": "Collation Trimatrix",
+     "count": 1
+    },
+    {
+     "name": "Collective Override",
+     "count": 1
+    },
+    {
+     "name": "Command Subadjunct",
+     "count": 1
+    },
+    {
+     "name": "Command Tower",
+     "count": 1
+    },
+    {
+     "name": "Conquest Mission",
+     "count": 1
+    },
+    {
+     "name": "Counterspell",
+     "count": 1
+    },
+    {
+     "name": "Cyberman Patrol",
+     "count": 1
+    },
+    {
+     "name": "Death Is Irrelevant",
+     "count": 1
+    },
+    {
+     "name": "Deliver from Chaos",
+     "count": 1
+    },
+    {
+     "name": "Despark",
+     "count": 1
+    },
+    {
+     "name": "Drowned Catacomb",
+     "count": 1
+    },
+    {
+     "name": "Eclipsed Steppe",
+     "count": 1
+    },
+    {
+     "name": "Emergency Regeneration",
+     "count": 1
+    },
+    {
+     "name": "Esper Sentinel",
+     "count": 1
+    },
+    {
+     "name": "Etherium Sculptor",
+     "count": 1
+    },
+    {
+     "name": "Exotic Orchard",
+     "count": 1
+    },
+    {
+     "name": "Extraction Integrant",
+     "count": 1
+    },
+    {
+     "name": "Foundry Inspector",
+     "count": 1
+    },
+    {
+     "name": "Glacial Fortress",
+     "count": 1
+    },
+    {
+     "name": "Godless Shrine",
+     "count": 1
+    },
+    {
+     "name": "Hallowed Fountain",
+     "count": 1
+    },
+    {
+     "name": "Hive Mind Coprocessor",
+     "count": 1
+    },
+    {
+     "name": "Hugh, First of Many",
+     "count": 1
+    },
+    {
+     "name": "Island",
+     "count": 4
+    },
+    {
+     "name": "Isolated Chapel",
+     "count": 1
+    },
+    {
+     "name": "Join the Collective",
+     "count": 1
+    },
+    {
+     "name": "Jurati, Cordial Queen",
+     "count": 1
+    },
+    {
+     "name": "Korok, Liberated Rage",
+     "count": 1
+    },
+    {
+     "name": "Locutus, the One Who Speaks",
+     "count": 1
+    },
+    {
+     "name": "Maturation Chamber",
+     "count": 1
+    },
+    {
+     "name": "Morphic Pool",
+     "count": 1
+    },
+    {
+     "name": "One, Borg Evolved",
+     "count": 1
+    },
+    {
+     "name": "Organic Extinction",
+     "count": 1
+    },
+    {
+     "name": "Path of Ancestry",
+     "count": 1
+    },
+    {
+     "name": "Path to Exile",
+     "count": 1
+    },
+    {
+     "name": "Plains",
+     "count": 5
+    },
+    {
+     "name": "Port Town",
+     "count": 1
+    },
+    {
+     "name": "Prairie Stream",
+     "count": 1
+    },
+    {
+     "name": "Primary Unimatrix Adjunct",
+     "count": 1
+    },
+    {
+     "name": "Reclamation Specialist",
+     "count": 1
+    },
+    {
+     "name": "Rogue's Passage",
+     "count": 1
+    },
+    {
+     "name": "Sea of Clouds",
+     "count": 1
+    },
+    {
+     "name": "Seat of the Synod",
+     "count": 1
+    },
+    {
+     "name": "Shore Leave Planet",
+     "count": 1
+    },
+    {
+     "name": "Simulacrum Synthesizer",
+     "count": 1
+    },
+    {
+     "name": "Skorpekh Lord",
+     "count": 1
+    },
+    {
+     "name": "Skullclamp",
+     "count": 1
+    },
+    {
+     "name": "Sol Ring",
+     "count": 1
+    },
+    {
+     "name": "Spire of Industry",
+     "count": 1
+    },
+    {
+     "name": "Steel Overseer",
+     "count": 1
+    },
+    {
+     "name": "Stratagem Emulator",
+     "count": 1
+    },
+    {
+     "name": "Stridehangar Automaton",
+     "count": 1
+    },
+    {
+     "name": "Sunken Hollow",
+     "count": 1
+    },
+    {
+     "name": "Supplementation Node",
+     "count": 1
+    },
+    {
+     "name": "Swamp",
+     "count": 3
+    },
+    {
+     "name": "Swiftfoot Boots",
+     "count": 1
+    },
+    {
+     "name": "Swords to Plowshares",
+     "count": 1
+    },
+    {
+     "name": "Talisman of Dominance",
+     "count": 1
+    },
+    {
+     "name": "Talisman of Hierarchy",
+     "count": 1
+    },
+    {
+     "name": "Talisman of Progress",
+     "count": 1
+    },
+    {
+     "name": "Tempered Steel",
+     "count": 1
+    },
+    {
+     "name": "The Borg Queen",
+     "count": 1
+    },
+    {
+     "name": "The Immortal Sun",
+     "count": 1
+    },
+    {
+     "name": "Thopter Spy Network",
+     "count": 1
+    },
+    {
+     "name": "Thought Monitor",
+     "count": 1
+    },
+    {
+     "name": "Thoughtcast",
+     "count": 1
+    },
+    {
+     "name": "Type-03 Borg Vessel",
+     "count": 1
+    },
+    {
+     "name": "Underground River",
+     "count": 1
+    },
+    {
+     "name": "Unwinding Clock",
+     "count": 1
+    },
+    {
+     "name": "Uthros Research Craft",
+     "count": 1
+    },
+    {
+     "name": "Vault of Champions",
+     "count": 1
+    },
+    {
+     "name": "Võx, Child of the Collective",
+     "count": 1
+    },
+    {
+     "name": "Watery Grave",
+     "count": 1
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Locutus of Borg",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Commander\n1 Ral, Crackling Wit\n1 Jeska's Will\n\nDeck\n1 Aetherflux Reservoir\n1 Ancient Tomb\n1 Arcane Bombardment\n1 Aria of Flame\n1 Arid Mesa\n1 Big Score\n1 Birgi, God of Storytelling // Harnfel, Horn of Bounty\n1 Bloodstained Mire\n1 Brainstorm\n1 Case of the Ransacked Lab\n1 Command Tower\n1 Consider\n1 Cyclonic Rift\n1 Deflecting Swat\n1 Expressive Iteration\n1 Fierce Guardianship\n1 Fiery Islet\n1 Flooded Strand\n1 Frantic Search\n1 Galvanic Iteration\n1 Grapeshot\n1 Island\n1 Lightning Bolt\n1 Memory Deluge\n1 Mind's Desire\n1 Misty Rainforest\n2 Mountain\n1 Mystic Sanctuary\n1 Mystical Tutor\n1 Opt\n1 Otawara, Soaring City\n1 Polluted Delta\n1 Ponder\n1 Preordain\n1 Pyretic Ritual\n1 Ral, Monsoon Mage // Ral, Leyline Prodigy\n1 Riverglide Pathway // Lavaglide Pathway\n1 Ruby Medallion\n1 Sapphire Medallion\n1 Scalding Tarn\n1 Seething Song\n1 Shivan Reef\n1 Snap\n1 Snapcaster Mage\n1 Sokenzan, Crucible of Defiance\n1 Spirebluff Canal\n1 Steam Vents\n1 Storm-Kiln Artist\n1 Stormcarved Coast\n1 Stormcatch Mentor\n1 Strike It Rich\n1 Sulfur Falls\n1 Thrill of Possibility\n1 Thunderclap Drake\n1 Thundering Falls\n1 Volcanic Island\n1 Wooded Foothills\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Aetherflux Reservoir",
+     "count": 1
+    },
+    {
+     "name": "Ancient Tomb",
+     "count": 1
+    },
+    {
+     "name": "Arcane Bombardment",
+     "count": 1
+    },
+    {
+     "name": "Aria of Flame",
+     "count": 1
+    },
+    {
+     "name": "Arid Mesa",
+     "count": 1
+    },
+    {
+     "name": "Big Score",
+     "count": 1
+    },
+    {
+     "name": "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
+     "count": 1
+    },
+    {
+     "name": "Bloodstained Mire",
+     "count": 1
+    },
+    {
+     "name": "Brainstorm",
+     "count": 1
+    },
+    {
+     "name": "Case of the Ransacked Lab",
+     "count": 1
+    },
+    {
+     "name": "Command Tower",
+     "count": 1
+    },
+    {
+     "name": "Consider",
+     "count": 1
+    },
+    {
+     "name": "Cyclonic Rift",
+     "count": 1
+    },
+    {
+     "name": "Deflecting Swat",
+     "count": 1
+    },
+    {
+     "name": "Expressive Iteration",
+     "count": 1
+    },
+    {
+     "name": "Fierce Guardianship",
+     "count": 1
+    },
+    {
+     "name": "Fiery Islet",
+     "count": 1
+    },
+    {
+     "name": "Flooded Strand",
+     "count": 1
+    },
+    {
+     "name": "Frantic Search",
+     "count": 1
+    },
+    {
+     "name": "Galvanic Iteration",
+     "count": 1
+    },
+    {
+     "name": "Grapeshot",
+     "count": 1
+    },
+    {
+     "name": "Island",
+     "count": 1
+    },
+    {
+     "name": "Lightning Bolt",
+     "count": 1
+    },
+    {
+     "name": "Memory Deluge",
+     "count": 1
+    },
+    {
+     "name": "Mind's Desire",
+     "count": 1
+    },
+    {
+     "name": "Misty Rainforest",
+     "count": 1
+    },
+    {
+     "name": "Mountain",
+     "count": 2
+    },
+    {
+     "name": "Mystic Sanctuary",
+     "count": 1
+    },
+    {
+     "name": "Mystical Tutor",
+     "count": 1
+    },
+    {
+     "name": "Opt",
+     "count": 1
+    },
+    {
+     "name": "Otawara, Soaring City",
+     "count": 1
+    },
+    {
+     "name": "Polluted Delta",
+     "count": 1
+    },
+    {
+     "name": "Ponder",
+     "count": 1
+    },
+    {
+     "name": "Preordain",
+     "count": 1
+    },
+    {
+     "name": "Pyretic Ritual",
+     "count": 1
+    },
+    {
+     "name": "Ral, Monsoon Mage // Ral, Leyline Prodigy",
+     "count": 1
+    },
+    {
+     "name": "Riverglide Pathway // Lavaglide Pathway",
+     "count": 1
+    },
+    {
+     "name": "Ruby Medallion",
+     "count": 1
+    },
+    {
+     "name": "Sapphire Medallion",
+     "count": 1
+    },
+    {
+     "name": "Scalding Tarn",
+     "count": 1
+    },
+    {
+     "name": "Seething Song",
+     "count": 1
+    },
+    {
+     "name": "Shivan Reef",
+     "count": 1
+    },
+    {
+     "name": "Snap",
+     "count": 1
+    },
+    {
+     "name": "Snapcaster Mage",
+     "count": 1
+    },
+    {
+     "name": "Sokenzan, Crucible of Defiance",
+     "count": 1
+    },
+    {
+     "name": "Spirebluff Canal",
+     "count": 1
+    },
+    {
+     "name": "Steam Vents",
+     "count": 1
+    },
+    {
+     "name": "Storm-Kiln Artist",
+     "count": 1
+    },
+    {
+     "name": "Stormcarved Coast",
+     "count": 1
+    },
+    {
+     "name": "Stormcatch Mentor",
+     "count": 1
+    },
+    {
+     "name": "Strike It Rich",
+     "count": 1
+    },
+    {
+     "name": "Sulfur Falls",
+     "count": 1
+    },
+    {
+     "name": "Thrill of Possibility",
+     "count": 1
+    },
+    {
+     "name": "Thunderclap Drake",
+     "count": 1
+    },
+    {
+     "name": "Thundering Falls",
+     "count": 1
+    },
+    {
+     "name": "Volcanic Island",
+     "count": 1
+    },
+    {
+     "name": "Wooded Foothills",
+     "count": 1
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Ral, Crackling Wit",
+     "count": 1
+    },
+    {
+     "name": "Jeska's Will",
+     "count": 1
+    }
+   ],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Companion\n1 Lurrus of the Dream-Den\n\nDeck\n4 Ragavan, Nimble Pilferer\n56 Mountain"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Ragavan, Nimble Pilferer",
+     "count": 4
+    },
+    {
+     "name": "Mountain",
+     "count": 56
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Lurrus of the Dream-Den",
+     "count": 1
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck (60)\n60 Island\nSideboard (15):\n15 Negate"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Island",
+     "count": 60
+    },
+    {
+     "name": "Sideboard (15):",
+     "count": 1
+    },
+    {
+     "name": "Negate",
+     "count": 15
+    }
+   ],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n0 Lightning Bolt\n-1 Forest\n1.5 Island\n9007199254740992 Swamp\n4 Mountain\nMaybeboard\n2 Duress\nCommander\n1 Atraxa, Praetors' Voice"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Mountain",
+     "count": 4
+    }
+   ],
+   "sideboard": [],
+   "commanders": [
+    {
+     "name": "Atraxa, Praetors' Voice",
+     "count": 1
+    }
+   ],
+   "skipped": [
+    "0 Lightning Bolt",
+    "-1 Forest",
+    "1.5 Island",
+    "9007199254740992 Swamp"
+   ],
+   "ignored": [
+    "2 Duress"
+   ]
+  }
+ },
+ {
+  "args": [
+   "Deck\n0 Lightning Bolt\n-2 Mountain"
+  ],
+  "out": {
+   "main": [],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [
+    "0 Lightning Bolt",
+    "-2 Mountain"
+   ],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n17 Plains\n2 Idyllic Grange\n4 Thraben Inspector\n4 Novice Inspector\n4 Raffine's Informant\n4 Kor Skyfisher\n3 Leonardo, Big Brother\n2 Spider-Man, Web-Slinger\n4 Thraben Charm\n2 Guardians' Pledge\n3 Prismatic Strands\n1 Greatsword of Tyr\n1 Eagles of the North\n4 Lunarch Veteran\n1 Journey to Nowhere\n4 Battle Screech\n\nSideboard\n2 Journey to Nowhere\n4 Dust to Dust\n2 Destroy Evil\n2 Palace Sentinels\n3 Martyr of Sands\n2 Standard Bearer\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Plains",
+     "count": 17
+    },
+    {
+     "name": "Idyllic Grange",
+     "count": 2
+    },
+    {
+     "name": "Thraben Inspector",
+     "count": 4
+    },
+    {
+     "name": "Novice Inspector",
+     "count": 4
+    },
+    {
+     "name": "Raffine's Informant",
+     "count": 4
+    },
+    {
+     "name": "Kor Skyfisher",
+     "count": 4
+    },
+    {
+     "name": "Leonardo, Big Brother",
+     "count": 3
+    },
+    {
+     "name": "Spider-Man, Web-Slinger",
+     "count": 2
+    },
+    {
+     "name": "Thraben Charm",
+     "count": 4
+    },
+    {
+     "name": "Guardians' Pledge",
+     "count": 2
+    },
+    {
+     "name": "Prismatic Strands",
+     "count": 3
+    },
+    {
+     "name": "Greatsword of Tyr",
+     "count": 1
+    },
+    {
+     "name": "Eagles of the North",
+     "count": 1
+    },
+    {
+     "name": "Lunarch Veteran",
+     "count": 4
+    },
+    {
+     "name": "Journey to Nowhere",
+     "count": 1
+    },
+    {
+     "name": "Battle Screech",
+     "count": 4
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Journey to Nowhere",
+     "count": 2
+    },
+    {
+     "name": "Dust to Dust",
+     "count": 4
+    },
+    {
+     "name": "Destroy Evil",
+     "count": 2
+    },
+    {
+     "name": "Palace Sentinels",
+     "count": 2
+    },
+    {
+     "name": "Martyr of Sands",
+     "count": 3
+    },
+    {
+     "name": "Standard Bearer",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n2 Lightning Bolt\n2 lightning bolt\nSideboard\n1 Lightning Bolt"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Lightning Bolt",
+     "count": 1
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n2 Mishra's Factory\n1 Barren Moor\n18 Swamp\n1 Nether Spirit\n4 The Rack\n1 Funeral Charm\n2 Power Word Kill\n3 Raven's Crime\n2 Bloodchief's Thirst\n4 Inquisition of Kozilek\n4 Smallpox\n4 Wrench Mind\n4 Hymn to Tourach\n4 Shrieking Affliction\n2 Hopeless Nightmare\n2 Bandit's Talent\n2 Dark Tutelage\n\nSideboard\n2 Soul-Guide Lantern\n2 Lantern of the Lost\n1 Ratchet Bomb\n3 Duress\n2 Innocent Blood\n2 Dreams of Steel and Oil\n2 Infest\n1 Lost Legacy\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Mishra's Factory",
+     "count": 2
+    },
+    {
+     "name": "Barren Moor",
+     "count": 1
+    },
+    {
+     "name": "Swamp",
+     "count": 18
+    },
+    {
+     "name": "Nether Spirit",
+     "count": 1
+    },
+    {
+     "name": "The Rack",
+     "count": 4
+    },
+    {
+     "name": "Funeral Charm",
+     "count": 1
+    },
+    {
+     "name": "Power Word Kill",
+     "count": 2
+    },
+    {
+     "name": "Raven's Crime",
+     "count": 3
+    },
+    {
+     "name": "Bloodchief's Thirst",
+     "count": 2
+    },
+    {
+     "name": "Inquisition of Kozilek",
+     "count": 4
+    },
+    {
+     "name": "Smallpox",
+     "count": 4
+    },
+    {
+     "name": "Wrench Mind",
+     "count": 4
+    },
+    {
+     "name": "Hymn to Tourach",
+     "count": 4
+    },
+    {
+     "name": "Shrieking Affliction",
+     "count": 4
+    },
+    {
+     "name": "Hopeless Nightmare",
+     "count": 2
+    },
+    {
+     "name": "Bandit's Talent",
+     "count": 2
+    },
+    {
+     "name": "Dark Tutelage",
+     "count": 2
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Soul-Guide Lantern",
+     "count": 2
+    },
+    {
+     "name": "Lantern of the Lost",
+     "count": 2
+    },
+    {
+     "name": "Ratchet Bomb",
+     "count": 1
+    },
+    {
+     "name": "Duress",
+     "count": 3
+    },
+    {
+     "name": "Innocent Blood",
+     "count": 2
+    },
+    {
+     "name": "Dreams of Steel and Oil",
+     "count": 2
+    },
+    {
+     "name": "Infest",
+     "count": 2
+    },
+    {
+     "name": "Lost Legacy",
+     "count": 1
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n4 Blazemire Verge\n3 Gev, Scaled Scorch\n1 Hired Claw\n1 Valley Flamecaller\n2 Burst Lightning\n2 Thought-Stalker Warlock\n4 Blood Crypt\n3 Ingris Stingerquill\n2 Starting Town\n4 Master of Barbs\n1 Haunted Ridge\n1 Valley Flamecaller\n3 Stingerquill Charm\n4 Flamecache Gecko\n2 Fireglass Mentor\n3 Hired Claw\n2 Rockface Village\n2 Cavern of Souls\n1 Mountain\n1 Mountain\n2 Mountain\n1 Swamp\n3 Swamp\n1 Stingerquill Charm\n4 Iridescent Vinelasher\n2 Stinging Vitriol\n1 Ravine Raider\n\nSideboard\n3 Duress\n2 Laughing Jasper Flint\n3 Requiting Hex\n2 Thought-Stalker Warlock\n3 Vengeful Tracker\n1 Sunspine Lynx\n1 The Legend of Roku\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Blazemire Verge",
+     "count": 4
+    },
+    {
+     "name": "Gev, Scaled Scorch",
+     "count": 3
+    },
+    {
+     "name": "Hired Claw",
+     "count": 4
+    },
+    {
+     "name": "Valley Flamecaller",
+     "count": 2
+    },
+    {
+     "name": "Burst Lightning",
+     "count": 2
+    },
+    {
+     "name": "Thought-Stalker Warlock",
+     "count": 2
+    },
+    {
+     "name": "Blood Crypt",
+     "count": 4
+    },
+    {
+     "name": "Ingris Stingerquill",
+     "count": 3
+    },
+    {
+     "name": "Starting Town",
+     "count": 2
+    },
+    {
+     "name": "Master of Barbs",
+     "count": 4
+    },
+    {
+     "name": "Haunted Ridge",
+     "count": 1
+    },
+    {
+     "name": "Stingerquill Charm",
+     "count": 4
+    },
+    {
+     "name": "Flamecache Gecko",
+     "count": 4
+    },
+    {
+     "name": "Fireglass Mentor",
+     "count": 2
+    },
+    {
+     "name": "Rockface Village",
+     "count": 2
+    },
+    {
+     "name": "Cavern of Souls",
+     "count": 2
+    },
+    {
+     "name": "Mountain",
+     "count": 4
+    },
+    {
+     "name": "Swamp",
+     "count": 4
+    },
+    {
+     "name": "Iridescent Vinelasher",
+     "count": 4
+    },
+    {
+     "name": "Stinging Vitriol",
+     "count": 2
+    },
+    {
+     "name": "Ravine Raider",
+     "count": 1
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 3
+    },
+    {
+     "name": "Laughing Jasper Flint",
+     "count": 2
+    },
+    {
+     "name": "Requiting Hex",
+     "count": 3
+    },
+    {
+     "name": "Thought-Stalker Warlock",
+     "count": 2
+    },
+    {
+     "name": "Vengeful Tracker",
+     "count": 3
+    },
+    {
+     "name": "Sunspine Lynx",
+     "count": 1
+    },
+    {
+     "name": "The Legend of Roku",
+     "count": 1
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n4 Lightning Bolt (M10) 146\n20 Mountain\n\nSideboard\n2 Duress"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4,
+     "set": "m10",
+     "cn": "146"
+    },
+    {
+     "name": "Mountain",
+     "count": 20
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n4 Lightning Bolt\n2 Fire // Ice\n\nSideboard\n2 Duress\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Lightning Bolt",
+     "count": 4
+    },
+    {
+     "name": "Fire // Ice",
+     "count": 2
+    }
+   ],
+   "sideboard": [
+    {
+     "name": "Duress",
+     "count": 2
+    }
+   ],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ },
+ {
+  "args": [
+   "Deck\n4 Plains (DMU) 277\n2 Plains (ONE) 267\n1 Lightning Bolt (M10) 146\n1 Llanowar Elves (DOM)\n4 Shock\n"
+  ],
+  "out": {
+   "main": [
+    {
+     "name": "Plains",
+     "count": 4,
+     "set": "dmu",
+     "cn": "277"
+    },
+    {
+     "name": "Plains",
+     "count": 2,
+     "set": "one",
+     "cn": "267"
+    },
+    {
+     "name": "Lightning Bolt",
+     "count": 1,
+     "set": "m10",
+     "cn": "146"
+    },
+    {
+     "name": "Llanowar Elves",
+     "count": 1,
+     "set": "dom"
+    },
+    {
+     "name": "Shock",
+     "count": 4
+    }
+   ],
+   "sideboard": [],
+   "commanders": [],
+   "skipped": [],
+   "ignored": []
+  }
+ }
+]

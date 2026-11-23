@@ -31,6 +31,9 @@ var PORTS: Dictionary = {
 	"eventDescription": [EventText, "describe"],
 	"historyTurns": [HistoryLog, "history_turns"],
 	"listNames": [EventText, "list_names"],
+	"parseDeckList": [DeckList, "parse"],
+	"deckFingerprint": [DeckMerge, "fingerprint"],
+	"planFirstLogin": [DeckMerge, "plan_first_login"],
 }
 ## Saídas guardadas enxutas (PROJECT de scripts/godot-golden-record.mjs): o porte passa pela mesma redução.
 var PROJECT: Dictionary = {"historyTurns": HistoryLog.project}
