@@ -457,6 +457,13 @@ static func _coin_rim() -> PackedVector3Array:
 
 ## Textura de uma face da moeda: borda em relevo e o símbolo (um sol com rosto na cara, uma coroa na coroa).
 static func _coin_face(heads: bool) -> Array[ImageTexture]:
+	var images: Array[Image] = coin_images(heads)
+	return [ImageTexture.create_from_image(images[0]), ImageTexture.create_from_image(images[1])]
+
+
+## As imagens de uma face da moeda (cor e relevo). Só mexe em imagens: roda fora da linha principal (o aquecimento faz
+## isso ao abrir a mesa; desenhar pixel a pixel na hora da primeira moeda travava a mesa por ~110 ms).
+static func coin_images(heads: bool) -> Array[Image]:
 	var size: int = 160
 	var heights := PackedFloat32Array()
 	heights.resize(size * size)
@@ -479,7 +486,15 @@ static func _coin_face(heads: bool) -> Array[ImageTexture]:
 			relief.set_pixel(px, py, Color(n.x * 0.5 + 0.5, n.y * 0.5 + 0.5, n.z * 0.5 + 0.5))
 	albedo.generate_mipmaps()
 	relief.generate_mipmaps()
-	return [ImageTexture.create_from_image(albedo), ImageTexture.create_from_image(relief)]
+	return [albedo, relief]
+
+
+## Guarda as texturas da moeda já desenhadas (cara: cor e relevo, coroa: cor e relevo), feitas pelo aquecimento.
+static func set_coin_images(images: Array[Image]) -> void:
+	if not _coin_textures.is_empty() or images.size() != 4:
+		return
+	for image: Image in images:
+		_coin_textures.append(ImageTexture.create_from_image(image))
 
 
 ## Altura (0 a 1) de um ponto da face da moeda, com `p` de -1 a 1 (y para cima).

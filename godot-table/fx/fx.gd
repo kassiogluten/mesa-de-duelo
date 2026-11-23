@@ -6,6 +6,9 @@ extends RefCounted
 ## 0: leve (metade das partículas), 1: normal, 2: caprichado. O diretor baixa quando os quadros caem.
 static var quality: int = 2
 
+## Distância da câmera ao meio da mesa: o tamanho dos efeitos é pensado para lá.
+const TABLE_DISTANCE := 10.2
+
 static var _spark_mesh: QuadMesh
 static var _ring_shader: Shader
 static var _pillar_shader: Shader
@@ -26,7 +29,13 @@ static func card_color(card: Dictionary) -> Color:
 
 
 ## Faíscas que explodem em `pos`: `amount` partículas na cor, espalhadas por `spread`, durante `life` segundos.
-static func burst(parent: Node3D, pos: Vector3, color: Color, amount: int = 60, spread: float = 2.6, life: float = 0.7, size: float = 0.13) -> void:
+## `gravity` puxa para baixo (negativo) ou faz subir (positivo, as brasas).
+static func burst(parent: Node3D, pos: Vector3, color: Color, amount: int = 60, spread: float = 2.6, life: float = 0.7, size: float = 0.13, gravity: float = -3.5) -> void:
+	# Perto da câmera (a pilha no painel, o cemitério na beirada de baixo) as faíscas encolhem junto: o mesmo tamanho na
+	# tela que no meio da mesa, em vez de bolhas enormes.
+	var near: float = depth_scale(parent, pos)
+	size *= near
+	spread *= near
 	var particles := GPUParticles3D.new()
 	particles.one_shot = true
 	particles.explosiveness = 0.95
@@ -38,7 +47,7 @@ static func burst(parent: Node3D, pos: Vector3, color: Color, amount: int = 60, 
 	process.spread = 180.0
 	process.initial_velocity_min = spread * 0.4
 	process.initial_velocity_max = spread
-	process.gravity = Vector3(0, -3.5, 0)
+	process.gravity = Vector3(0, gravity, 0)
 	process.damping_min = 1.5
 	process.damping_max = 3.0
 	process.scale_min = size * 0.6
@@ -55,6 +64,14 @@ static func burst(parent: Node3D, pos: Vector3, color: Color, amount: int = 60, 
 	parent.add_child(particles)
 	particles.emitting = true
 	_free_after(particles, life + 0.3)
+
+
+## Quanto encolher um efeito em `pos` para ele ter na tela o tamanho que teria no meio da mesa (1 lá, menos perto da câmera).
+static func depth_scale(parent: Node3D, pos: Vector3) -> float:
+	var camera: Camera3D = parent.get_viewport().get_camera_3d() if parent.is_inside_tree() else null
+	if camera == null:
+		return 1.0
+	return clampf(camera.global_position.distance_to(pos) / TABLE_DISTANCE, 0.3, 1.15)
 
 
 ## Onda de choque deitada no tampo, que abre a partir de `pos`.
@@ -94,23 +111,27 @@ static func light(parent: Node3D, pos: Vector3, color: Color, energy: float = 4.
 
 
 ## Projétil em arco de `from` até `to`, com rastro de faíscas; `on_hit` roda quando chega.
-static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, duration: float = 0.35, on_hit: Callable = Callable()) -> void:
+## `size` escala a bola e o rastro (a mana voando usa bolas pequenas, que não estouram em disco branco no brilho).
+static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, duration: float = 0.35, on_hit: Callable = Callable(), size: float = 1.0) -> void:
+	# A bola é luz, não um objeto: um halo na cor e um núcleo quente, de frente para a câmera (a esfera chapada
+	# virava um disco cor de pele no brilho da cena, com sombra no tampo).
 	var orb := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.12
-	sphere.height = 0.24
-	orb.mesh = sphere
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color.lightened(0.6)
-	material.emission_enabled = true
-	material.emission = color
-	material.emission_energy_multiplier = 6.0
-	orb.material_override = material
+	var quad := QuadMesh.new()
+	quad.size = Vector2.ONE * 0.62 * size
+	orb.mesh = quad
+	orb.material_override = _glow_material(color)
+	orb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var core := MeshInstance3D.new()
+	var core_quad := QuadMesh.new()
+	core_quad.size = Vector2.ONE * 0.24 * size
+	core.mesh = core_quad
+	core.material_override = _glow_material(color.lerp(Color.WHITE, 0.75))
+	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	orb.add_child(core)
 	orb.position = from
 	parent.add_child(orb)
 	var trail := GPUParticles3D.new()
-	trail.amount = 70 if quality > 0 else 24
+	trail.amount = int((70 if quality > 0 else 24) * clampf(size, 0.4, 1.0))
 	trail.lifetime = 0.4
 	trail.local_coords = false
 	var process := ParticleProcessMaterial.new()
@@ -118,8 +139,8 @@ static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, durat
 	process.initial_velocity_min = 0.1
 	process.initial_velocity_max = 0.4
 	process.gravity = Vector3.ZERO
-	process.scale_min = 0.06
-	process.scale_max = 0.14
+	process.scale_min = 0.06 * size
+	process.scale_max = 0.14 * size
 	var ramp := Gradient.new()
 	ramp.set_color(0, Color(color.lerp(Color.WHITE, 0.3), 0.9))
 	ramp.set_color(1, Color(color, 0.0))
@@ -132,27 +153,31 @@ static func bolt(parent: Node3D, from: Vector3, to: Vector3, color: Color, durat
 	if quality > 0:
 		var glow := OmniLight3D.new()
 		glow.light_color = color
-		glow.light_energy = 2.5
-		glow.omni_range = 2.2
+		glow.light_energy = 2.5 * size
+		glow.omni_range = 2.2 * maxf(size, 0.5)
 		orb.add_child(glow)
 	var lift: float = clampf(from.distance_to(to) * 0.25, 0.4, 1.8)
 	var tween := orb.create_tween()
 	tween.tween_method(func(t: float) -> void:
-		orb.position = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift, 0), 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		orb.position = from.lerp(to, t) + Vector3(0, sin(t * PI) * lift, 0)
+		# Chegando perto da câmera (a pilha no painel), a bola encolhe: o mesmo tamanho na tela, não um sol branco.
+		orb.scale = Vector3.ONE * depth_scale(parent, orb.position), 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		trail.emitting = false
 		for child: Node in orb.get_children():
 			if child is OmniLight3D:
 				(child as OmniLight3D).visible = false
-		orb.transparency = 1.0
+		# Some a luz; o rastro que já saiu termina sozinho.
+		orb.mesh = null
+		core.visible = false
 		if on_hit.is_valid():
 			on_hit.call())
 	tween.tween_interval(0.4)
 	tween.tween_callback(orb.queue_free)
 
 
-## Texto que sobe e some (dano, vida, marcadores), sempre de frente para a câmera.
-static func float_text(parent: Node3D, pos: Vector3, text: String, color: Color, size: int = 72, duration: float = 1.1) -> void:
+## Texto que sobe e some (marcadores, avisos), sempre de frente para a câmera e sem sair da tela pelos lados. `rise`: quanto sobe.
+static func float_text(parent: Node3D, pos: Vector3, text: String, color: Color, size: int = 72, duration: float = 1.1, rise: float = 0.9) -> void:
 	var label := Label3D.new()
 	label.text = text
 	label.font_size = size
@@ -163,19 +188,36 @@ static func float_text(parent: Node3D, pos: Vector3, text: String, color: Color,
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.render_priority = 20
-	label.position = pos + Vector3(0, 0.5, 0)
+	label.position = inside_screen(parent, pos + Vector3(0, 0.5, 0), text.length() * size * 0.006 * 0.55)
 	label.scale = Vector3.ONE * 0.4
 	parent.add_child(label)
 	var tween := label.create_tween()
 	tween.tween_property(label, "scale", Vector3.ONE * 1.15, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(label, "scale", Vector3.ONE, 0.1)
-	tween.parallel().tween_property(label, "position:y", label.position.y + 0.9, duration).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(label, "position:y", label.position.y + rise, duration).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, duration * 0.5).set_delay(duration * 0.5)
 	tween.tween_callback(label.queue_free)
 
 
+## O ponto `pos` puxado para dentro da tela na horizontal, para um texto de `width` (unidades da mesa) caber inteiro
+## (a pilha fica na beirada direita: "Anulada" saía cortado).
+static func inside_screen(parent: Node3D, pos: Vector3, width: float, margin: float = 16.0) -> Vector3:
+	var camera: Camera3D = parent.get_viewport().get_camera_3d() if parent.is_inside_tree() else null
+	if camera == null or camera.is_position_behind(pos):
+		return pos
+	var screen: Vector2 = camera.unproject_position(pos)
+	var right: Vector3 = camera.global_basis.x
+	var half: float = absf(camera.unproject_position(pos + right * width * 0.5).x - screen.x)
+	var view: float = camera.get_viewport().get_visible_rect().size.x
+	var x: float = clampf(screen.x, margin + half, view - margin - half) if view > 2.0 * (margin + half) else view * 0.5
+	if is_equal_approx(x, screen.x):
+		return pos
+	var depth: float = -(camera.global_transform.affine_inverse() * pos).z
+	return camera.project_position(Vector2(x, screen.y), depth)
+
+
 ## Coluna de luz que desce sobre `pos` (lendária entrando, mágica grande resolvendo): núcleo claro e bordas que se
-## esfumam, mais forte embaixo, com um anel que corre para cima.
+## esfumam, mais forte embaixo, com faixas que correm para cima.
 static func pillar(parent: Node3D, pos: Vector3, color: Color, height: float = 6.0, duration: float = 0.9) -> void:
 	var beam := MeshInstance3D.new()
 	var cylinder := CylinderMesh.new()
@@ -202,14 +244,14 @@ static func pillar(parent: Node3D, pos: Vector3, color: Color, height: float = 6
 	tween.chain().tween_method(set_alpha, 1.0, 0.0, duration * 0.7).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(beam, "scale", Vector3(0.1, 1, 0.1), duration * 0.7).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(beam.queue_free)
-	ring(parent, Vector3(pos.x, 0.02, pos.z), color, 1.6, duration * 0.7, 0.1)
 
 
 ## A câmera se aproxima um pouco do lance (momento grande) e volta: `amount` é quanto do caminho até ele.
 static func focus(camera: Camera3D, target: Vector3, amount: float = 0.12, duration: float = 0.9) -> void:
 	if camera == null or quality == 0:
 		return
-	var home: Vector3 = camera.position
+	# Volta para o lugar de sempre da câmera, não para onde ela estava: dois focos seguidos não a deixam torta.
+	var home: Vector3 = TableView.CAMERA_POS
 	var near: Vector3 = home.lerp(target, amount)
 	var tween := camera.create_tween()
 	tween.tween_property(camera, "position", near, duration * 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -254,17 +296,27 @@ static func ambience(parent: Node3D) -> GPUParticles3D:
 	return dust
 
 
-## Tremor de câmera curto (golpe grande, eliminação).
+## Tremor de câmera curto (golpe grande, eliminação), pelo deslocamento da lente: não mexe na posição, que o foco anima.
 static func shake(camera: Camera3D, strength: float = 0.12, duration: float = 0.35) -> void:
-	if camera == null or quality == 0:
+	MomentPieces.shake(camera, strength, duration)
+
+
+## Empurrão da câmera na direção do golpe (só nos golpes grandes): a lente vai um pouco para o lado em que o golpe
+## corre e volta com uma mola. `direction` é a direção do golpe na mesa.
+static func nudge(camera: Camera3D, direction: Vector3, strength: float = 0.08, duration: float = 0.32) -> void:
+	if camera == null or quality == 0 or direction.length() < 0.001:
 		return
-	var home: Vector3 = camera.position
+	var side: Vector2 = Vector2(direction.dot(camera.global_basis.x), direction.dot(camera.global_basis.y) - direction.dot(camera.global_basis.z) * 0.5)
+	side = side.normalized() * strength if side.length() > 0.001 else Vector2(0, -strength)
 	var tween := camera.create_tween()
-	var steps: int = 8
-	for i: int in steps:
-		var fade: float = 1.0 - float(i) / steps
-		tween.tween_property(camera, "position", home + Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * strength * fade, duration / steps)
-	tween.tween_property(camera, "position", home, 0.05)
+	tween.tween_method(func(t: float) -> void:
+		# Chega rápido e volta oscilando (mola amortecida).
+		var k: float = sin(minf(t * 3.2, 1.0) * PI * 0.5) if t < 0.3 else exp(-6.0 * (t - 0.3)) * cos((t - 0.3) * 18.0)
+		camera.h_offset = side.x * k
+		camera.v_offset = side.y * k, 0.0, 1.0, duration)
+	tween.tween_callback(func() -> void:
+		camera.h_offset = 0.0
+		camera.v_offset = 0.0)
 
 
 static func _spark() -> QuadMesh:
@@ -293,6 +345,16 @@ static func _spark() -> QuadMesh:
 		material.albedo_texture = dot
 		_spark_mesh.material = material
 	return _spark_mesh
+
+
+## Material de luz macia de frente para a câmera (a bola do projétil): um ponto radial somando luz, na cor.
+static func _glow_material(color: Color) -> StandardMaterial3D:
+	var base: StandardMaterial3D = _spark().material as StandardMaterial3D
+	var material: StandardMaterial3D = base.duplicate() as StandardMaterial3D
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	material.vertex_color_use_as_albedo = false
+	material.albedo_color = color
+	return material
 
 
 static func _ring() -> Shader:

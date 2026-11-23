@@ -44,6 +44,8 @@ var _field := FieldPlacement.new(self)
 var _hand := HandPlacement.new(self)
 var _stack := StackPlacement.new(self)
 var highlights := TableHighlights.new(self)
+## O destaque da pilha (chamas de luz, ar tremendo, partículas e as ondas de chegar e resolver).
+var stack_presence: StackPresence
 
 
 func _ready() -> void:
@@ -60,6 +62,8 @@ func _build_scene() -> void:
 	add_child(_arrows)
 	_marks = TargetMarks.new()
 	add_child(_marks)
+	stack_presence = StackPresence.new(self)
+	add_child(stack_presence)
 
 
 ## Aplica um estado: cria as cartas novas, move as que mudaram e apaga as que saíram.
