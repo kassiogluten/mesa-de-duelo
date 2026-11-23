@@ -29,6 +29,8 @@ var _signatures: Dictionary = {}
 var _order: Array = []
 var _more: Label
 var _height_tween: Tween
+## O item sob o mouse (-1 sem nenhum): se a linha dele sai ou é refeita, a mesa apaga o destaque.
+var _hover_id: int = -1
 
 
 func _ready() -> void:
@@ -64,6 +66,7 @@ func show_items(state: Dictionary, max_rows: int) -> void:
 		if ids.has(id):
 			continue
 		var row: Control = _rows[id]
+		_unhover(id)
 		_rows.erase(id)
 		_signatures.erase(id)
 		if int(in_stack.get(id, -1)) == 0:
@@ -82,6 +85,7 @@ func show_items(state: Dictionary, max_rows: int) -> void:
 		if row != null and _signatures.get(id) != signature:
 			var old_y: float = row.position.y
 			row.name = "Gone"
+			_unhover(id)
 			row.queue_free()
 			row = _make_row(g, selectable, state)
 			row.position.y = old_y
@@ -166,6 +170,13 @@ func _collapse(row: Control) -> void:
 	tween.tween_callback(row.queue_free)
 
 
+func _unhover(id: int) -> void:
+	if _hover_id == id:
+		_hover_id = -1
+		hovered.emit({})
+		preview.emit(null)
+
+
 func _leave(row: Control) -> void:
 	# Libera o nome "Row<id>" para a linha nova do mesmo item.
 	row.name = "Gone"
@@ -248,10 +259,13 @@ func _make_row(g: Dictionary, selectable: Array, state: Dictionary) -> Button:
 		else:
 			opened.emit(id))
 	button.mouse_entered.connect(func() -> void:
+		_hover_id = id
 		hovered.emit(item)
 		if catalog and not source.is_empty():
 			preview.emit(catalog.texture(catalog.image_url_for(source))))
 	button.mouse_exited.connect(func() -> void:
+		if _hover_id == id:
+			_hover_id = -1
 		hovered.emit({})
 		preview.emit(null))
 	return button
